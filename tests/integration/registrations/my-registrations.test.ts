@@ -181,6 +181,8 @@ describe("BR-REQ-036-04 my registrations", () => {
         payloadJson: {},
         idempotencyKey: "test:1",
         requestedByStaffUserId: null,
+        cause: null,
+        pressId: null,
         isManualResend: false,
         status: "PROCESSING",
         attemptCount: 1,

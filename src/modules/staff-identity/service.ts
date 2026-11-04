@@ -241,12 +241,17 @@ async function holdGivableTier<T extends Record<string, unknown>>(tx: Database<T
  * the level by id, never a name or an address). A level goes to a club member's account only (`canHoldMemberTier`): any
  * other role with a level is refused, naming the box. The invitation email is the same with or without one — the level is
  * the staff's label and the member is never told it.
+ *
+ * `sendEmail: false` («Trimite invitația acum» unticked — the design «telling the owner about every email a staff press
+ * sends», slice 4): the row is written as ever and no invitation is queued; one `staff.invitation_not_sent` audit row says
+ * so (the row and the message by id and name, never an address). The action then asks nothing of Zitadel either, and
+ * «Retrimite invitația» later sends both — making the account first when it is missing.
  */
 export async function inviteStaffUser<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: StaffUser,
   input: unknown,
-  options: { tierId?: string | null } = {},
+  options: { tierId?: string | null; sendEmail?: boolean } = {},
 ): Promise<StaffUser> {
   assertAdministrator(actor);
 
@@ -291,8 +296,21 @@ export async function inviteStaffUser<T extends Record<string, unknown>>(
         now,
       });
     }
-    await enqueueStaffInvitation(tx, actor, member, now);
+    if (options.sendEmail !== false) await enqueueStaffInvitation(tx, actor, member, now);
+    else await recordInvitationNotSent(tx, actor, member, now);
     return member;
+  });
+}
+
+/** The trail of an invitation left unsent at the add (slice 4): who added whom, as which message, and that nothing left. */
+async function recordInvitationNotSent<T extends Record<string, unknown>>(tx: Database<T>, actor: StaffUser, member: StaffUser, now: Date): Promise<void> {
+  await recordAuditEvent(tx, {
+    actorStaffUserId: actor.id,
+    action: "staff.invitation_not_sent",
+    entityType: "staff_user",
+    entityId: member.id,
+    metadata: { staffUserId: member.id, messageType: invitationMessageType(member), emailSkipped: true },
+    now,
   });
 }
 
@@ -313,11 +331,14 @@ export async function inviteStaffUser<T extends Record<string, unknown>>(
  *
  * The existing-address check is a courtesy, as in `inviteStaffUser`: the unique index is the
  * authority, and a colleague adding the same person at the same moment rolls the whole press back.
+ *
+ * `sendEmail: false` («Trimite invitațiile acum» unticked, slice 4): the rows are written and no invitation is queued; the
+ * action asks nothing of Zitadel and writes `emailSkipped` on its `staff.members_invited` row.
  */
 export async function inviteMembers<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: StaffUser,
-  input: { rows: readonly MemberRow[]; preferredLocale: "ro" | "en"; tierId?: string | null },
+  input: { rows: readonly MemberRow[]; preferredLocale: "ro" | "en"; tierId?: string | null; sendEmail?: boolean },
 ): Promise<{ added: StaffUser[]; existing: StaffUser[] }> {
   assertAdministrator(actor);
   assertMayAssign(actor, "MEMBER");
@@ -356,7 +377,7 @@ export async function inviteMembers<T extends Record<string, unknown>>(
       const email = normalizeStaffEmail(invite.email);
       if (existing.has(email)) continue;
       const member = await insertStaffUser(tx, { ...invite, email, memberTierId: tierId });
-      await enqueueStaffInvitation(tx, actor, member, now);
+      if (input.sendEmail !== false) await enqueueStaffInvitation(tx, actor, member, now);
       members.push(member);
     }
     return members;

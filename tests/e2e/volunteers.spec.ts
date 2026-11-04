@@ -2,6 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { existsSync } from "node:fs";
 import pg from "pg";
 import { capturedEmail } from "./support/captured-email";
+import { confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox, openFold } from "./support/fold";
 import { chooseSex } from "./support/sex-choice";
@@ -716,8 +717,10 @@ test.describe("§754 volunteers for a race", () => {
       await expect(give).toContainText("Sosire · 0 din 1");
       expect((await give.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       // She ticked both of the event's roles: each has its own button, and «Alt rol», which offers only the others, is not drawn.
-      await expect(row.getByTestId("volunteer-assign-form")).toHaveCount(2);
+      await expect(row.getByTestId("volunteer-assign").getByRole("button", { name: /^Dă-i rolul/ })).toHaveCount(2);
       await expect(row.getByTestId("volunteer-assign-other")).toHaveCount(0);
+      // One form for her roles, so its one «Trimite emailul» reaches every button of it (slice 4), ticked as drawn.
+      await expect(row.getByTestId("volunteer-roles-mail-send-email").getByRole("checkbox")).toBeChecked();
       await give.click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
@@ -905,6 +908,9 @@ test.describe("§754 volunteers for a race", () => {
     const send = ionRow.getByRole("button", { name: /^Trimite linkul contractului/ });
     expect((await send.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await send.click();
+    // It asks first, naming the person, the address and the email (the design «telling the owner about every email a staff press sends», slice 3).
+    await expect(page.getByRole("dialog", { name: "Trimiți linkul contractului?" }).getByTestId("confirm-email")).toContainText("„Contractul de voluntariat”");
+    await confirmDialog(page, "Trimiți linkul contractului?");
     await page.waitForURL(/#box-volunteers$/);
     await hydrated(page);
     await expect(ionRow.getByTestId("volunteer-agreement")).toContainText("Ultimul link trimis");
@@ -1100,6 +1106,9 @@ test.describe("§754 volunteers for a race", () => {
       // «Trimite linkul părintelui»: one more email, a press never a secret.
       await openVolunteerRow(row);
       await row.getByRole("button", { name: /^Trimite (din nou )?linkul părintelui/ }).click();
+      // It asks first, naming the parent's address (the design «telling the owner about every email a staff press sends», slice 3).
+      await expect(page.getByRole("dialog", { name: "Trimiți linkul părintelui?" }).getByTestId("confirm-email")).toContainText(parent);
+      await confirmDialog(page, "Trimiți linkul părintelui?");
       // The address already ends in the card's anchor after the refusal, so the press is waited for by what it wrote: a second queued email.
       await expect
         .poll(async () => (await client.query(`SELECT 1 FROM email_outbox WHERE message_type = 'VOLUNTEER_GUARDIAN_REQUEST' AND payload_json->>'volunteerId' = $1`, [danId])).rowCount, { timeout: 30_000 })
@@ -1682,6 +1691,9 @@ test.describe("§754 volunteers for a race", () => {
       await expect(fold.getByTestId("volunteer-invite-empty")).toBeVisible();
       await fold.getByLabel("Adrese (una pe rând)").fill(`nu-e-adresa\n${invited}`);
       await fold.getByRole("button", { name: "Trimite invitațiile", exact: true }).click();
+      // It asks first, counting at most one email per line typed (the design «telling the owner about every email a staff press sends», slice 3).
+      await expect(page.getByRole("dialog", { name: "Trimiți invitațiile?" }).getByTestId("confirm-email")).toContainText("cel mult 2 emailuri");
+      await confirmDialog(page, "Trimiți invitațiile?");
       // A refusal keeps what was typed and names the line it could not read; nothing was sent.
       await expect(fold.getByText("Nu pot citi aceste adrese: nu-e-adresa. Nu s-a trimis nimic.")).toBeVisible({ timeout: 30_000 });
       await expect(fold.getByLabel("Adrese (una pe rând)")).toHaveValue(`nu-e-adresa\n${invited}`);
@@ -1695,11 +1707,13 @@ test.describe("§754 volunteers for a race", () => {
       // The club's line is in both languages or neither (§354): Romanian alone is refused, naming the language still owed.
       await fold.getByLabel("Mesaj (română)").fill("Ne bucurăm să te vedem!");
       await fold.getByRole("button", { name: "Trimite invitațiile", exact: true }).click();
+      await confirmDialog(page, "Trimiți invitațiile?");
       await expect(fold.getByText("Scrie mesajul și în română, și în engleză, sau lasă ambele casete goale.")).toBeVisible({ timeout: 30_000 });
       expect(await invitedAddressesOf(event.id)).toEqual([]);
       await fold.getByRole("tab", { name: /^English/ }).click();
       await fold.getByLabel("Message (English)").fill("We are glad to see you!");
       await fold.getByRole("button", { name: "Trimite invitațiile", exact: true }).click();
+      await confirmDialog(page, "Trimiți invitațiile?");
       await page.waitForURL(/#box-volunteers$/, { timeout: 30_000 });
       await hydrated(page);
       const row = page.getByTestId("volunteer-invite-row").filter({ hasText: invited });

@@ -81,17 +81,18 @@ const COUNT_PARAMETERS = [
 const KEY = /^[A-Za-z][A-Za-z0-9_]{0,63}$/;
 
 /**
- * The sentences whose number is not the first counting parameter present, and the other numbers
- * a sentence names. A series save that also told its participants carries `applied` (the dates)
- * and `queued` (the emails): "Salvat pe {count} date ale seriei" counts `applied`, and the
- * notified sentence counts `queued` and names the dates as `{dates}`.
+ * The sentences whose number is not the first counting parameter present — or that count nothing —, and the other
+ * numbers a sentence names. A series save carries `applied` (the dates): "Salvat pe {count} date ale seriei" counts it.
+ * The notice's sentences count nothing since the mail line says how many emails left (the design «telling the owner
+ * about every email a staff press sends», slice 2): «Salvat; participanții sunt anunțați.», the series' naming its dates
+ * as `{dates}` — so no `queued` is read for them, and an entry without `count` takes no fallback count.
  */
 const SENTENCES: Readonly<Record<string, { count?: string; values?: Readonly<Record<string, string>> }>> = {
   eventSeries: { count: "applied" },
-  eventNotified: { count: "queued" },
-  eventCancelled: { count: "queued" },
-  eventSeriesNotified: { count: "queued", values: { dates: "applied" } },
-  eventSeriesCancelled: { count: "queued", values: { dates: "applied" } },
+  eventNotified: {},
+  eventCancelled: {},
+  eventSeriesNotified: { values: { dates: "applied" } },
+  eventSeriesCancelled: { values: { dates: "applied" } },
   // A press of the older pictures' button (§430): how many got their ladder, and how many are left.
   picturesLaddered: { count: "count", values: { left: "left" } },
   picturesLadderedFailed: { count: "count", values: { left: "left", failed: "failed" } },
@@ -103,9 +104,10 @@ const SENTENCES: Readonly<Record<string, { count?: string; values?: Readonly<Rec
 
 /**
  * The event editor's save names what it did beyond saving (§331): an update notice or a
- * cancellation queued is a sentence of its own, with the number of emails — the brief's "the
- * toast states how many were queued". The URL keeps `saved=event` for the page's banner; only
- * the toast's key is chosen here.
+ * cancellation is a sentence of its own. How many emails, and when they leave, is the mail line's
+ * since the design «telling the owner about every email a staff press sends» (slice 2): it says
+ * what the press really queued (`flash.ts#withPressMail`), so the act's sentence names no email.
+ * The URL keeps `saved=event` for the page's banner; only the toast's key is chosen here.
  */
 function sentenceKeyOf(saved: string, notice: string | number | undefined): string {
   if (saved !== "event" && saved !== "eventSeries") return saved;
@@ -130,6 +132,19 @@ export const DERIVED_TOAST_KEYS: readonly string[] = [
  */
 const PROVIDER_DONE: ReadonlySet<string> = new Set(["invited", "exists", "done"]);
 const PROVIDER_FIELDS = ["invite", "account"] as const;
+
+/** Whether a provider's answer means the verb happened (above): the actions choose their toast by it. */
+export function providerDone(answer: string): boolean {
+  return PROVIDER_DONE.has(answer);
+}
+
+/**
+ * The invitations whose Zitadel half did not happen while the club's own email still left (the design «telling the
+ * owner about every email a staff press sends», slice 2): an `info` toast that says the account is not ready and what
+ * the club's queue sent — never a green tick (§171, §288) — and none at all when nothing was queued
+ * (`flash.ts#withPressMail`): the banner says why.
+ */
+export const PROVIDER_FAILED_TOASTS: ReadonlySet<string> = new Set(["invitedProviderFailed", "reinvitedProviderFailed", "membersInvitedProviderFailed"]);
 
 /** Sentences that say nothing happened, however the action got there: an `info`, never a green tick. */
 const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
@@ -194,7 +209,8 @@ export function noticeOf(outcome: Readonly<Record<string, string | number | unde
   if (testCount !== undefined && testCount !== "0") key = "registrationsCancelledTest";
   const sentence = SENTENCES[key];
   const values: Record<string, string> = {};
-  const counted = sentence?.count ?? COUNT_PARAMETERS.find((name) => numberOf(name) !== undefined);
+  // A sentence listed here counts what it names, or nothing; any other counts the first counting parameter present.
+  const counted = sentence ? sentence.count : COUNT_PARAMETERS.find((name) => numberOf(name) !== undefined);
   const count = counted ? numberOf(counted) : undefined;
   if (count !== undefined) values.count = count;
   for (const [placeholder, name] of Object.entries(sentence?.values ?? {})) {
@@ -202,7 +218,8 @@ export function noticeOf(outcome: Readonly<Record<string, string | number | unde
     if (value !== undefined) values[placeholder] = value;
   }
   if (key === "registrationsCancelledTest" && testCount !== undefined) values.test = testCount;
-  const kind: NoticeKind = (count === "0" && key !== "registrationsCancelledTest") || NOTHING_HAPPENED.has(key) ? "info" : "success";
+  const kind: NoticeKind =
+    (count === "0" && key !== "registrationsCancelledTest") || NOTHING_HAPPENED.has(key) || PROVIDER_FAILED_TOASTS.has(key) ? "info" : "success";
   return { kind, key, ...(Object.keys(values).length > 0 ? { values } : {}) };
 }
 
@@ -274,7 +291,8 @@ export const TOAST_AUTO_HIDE_MS = 5500;
 /**
  * The translate press's toasts stay longer (the owner, 2026-09-27: a confirmation that
  * everything was translated): the sentence names a count and asks for a check before Save, and
- * a refusal's reason (today's budget, DeepL's month) is a longer read.
+ * a refusal's reason (today's budget, DeepL's month) is a longer read. So is an emailing press's toast,
+ * whose mail line says what left, to how many and when (`mail-line.ts`).
  */
 export const LONG_TOAST_AUTO_HIDE_MS = 8000;
 
@@ -295,11 +313,18 @@ export type ConfirmSpec = {
    */
   destructive?: boolean;
   /**
-   * "An email will be sent to N participants", worded on the server from the same count the
-   * send uses (the owner: "I need to know each time a participant will be emailed!"). Absent
-   * for an action that writes to nobody, which then says nothing about email.
+   * The email the press sends, named before it (the design «telling the owner about every email a staff press sends»,
+   * slice 3): «Pleacă 1 email către Ana Pop: „Înscriere anulată”.», or «Nu pleacă niciun email către Ana Pop.» for a
+   * press that writes to nobody — worded on the server by the one builder, `confirmWords().mail(…)`, from the same count
+   * the send uses (the owner: "I need to know each time a participant will be emailed!"). Bold, so it is never missed.
    */
   email?: string;
+  /**
+   * The quieter lines under the email line and its road (`ConfirmAlso`): the club's copies as a count, what else the
+   * press sets off — the freed place's offer to the next in line, Zitadel's own email —, each drawn only while the
+   * form as posted meets its `when` (`resolveAlso`). Worded by the same builder.
+   */
+  also?: readonly ConfirmAlso[];
   /**
    * The same sentence, counted from the form as posted, for a press whose reach the reader chose
    * in the browser: a series save reaches the ticked dates, and each date's registrants are
@@ -356,6 +381,17 @@ export type ConfirmSpec = {
    * and the server refuses naming it.
    */
   tick?: ConfirmTick;
+  /**
+   * «Trimite emailul» (the design «telling the owner about every email a staff press sends», slice 4): a box under the
+   * email line, ticked as the dialog opens. Unticked, the bold line says `offLine` instead, the road is not offered and
+   * the quieter lines that belong to the email (`ConfirmAlso.withEmail`: the club's copies of it) are not said; what the
+   * press sends to anybody else — the freed place's offer — is still said, and still goes. The confirm writes `on` or
+   * `off` into the form's hidden `field` (`emailOptOutAnswer`), which the action reads (`shared/forms/send-email.ts`).
+   * Worded by the builder (`confirmWords().mail({ …, optOut: true })`), on the presses where the person's email may
+   * sensibly stay unsent — never where the email is the point: a resend, an offer, a declaration to sign, the copy of a
+   * document the person signed.
+   */
+  emailOptOut?: ConfirmEmailOptOut;
 };
 
 /** `ConfirmSpec.tick`: the hidden input the tick fills, and the box's words. */
@@ -364,6 +400,33 @@ export type ConfirmTick = { field: string; label: string };
 /** What a confirmed dialog with a tick writes into its form: `on` in the tick's hidden input; null without one. Pure. */
 export function tickAnswer(spec: ConfirmSpec): { field: string; value: "on" } | null {
   return spec.tick ? { field: spec.tick.field, value: "on" } : null;
+}
+
+/** `ConfirmSpec.emailOptOut`: the hidden input the answer fills, the box's words, and the bold line while it is unticked. */
+export type ConfirmEmailOptOut = { field: string; label: string; offLine: string };
+
+/**
+ * What a confirmed dialog with «Trimite emailul» writes into its form: `on` while the box stayed ticked, `off` once
+ * unticked; null for a dialog without the box. Pure, like `tickAnswer`.
+ */
+export function emailOptOutAnswer(spec: ConfirmSpec, emailOff: boolean): { field: string; value: "on" | "off" } | null {
+  return spec.emailOptOut ? { field: spec.emailOptOut.field, value: emailOff ? "off" : "on" } : null;
+}
+
+/** Every opt-out field the dialogs of one form may answer: the island draws each as a hidden `on`, and sets them all before a press. */
+export function emailOptOutFields(specs: ConfirmSpec | readonly ConfirmSpec[] | undefined): string[] {
+  const list = !specs ? [] : Array.isArray(specs) ? (specs as readonly ConfirmSpec[]) : [specs as ConfirmSpec];
+  return [...new Set(list.flatMap((spec) => (spec.emailOptOut ? [spec.emailOptOut.field] : [])))];
+}
+
+/**
+ * The dialog as it reads with «Trimite emailul» unticked: the bold line is `offLine`, the road goes, and the quieter
+ * lines that belong to the email (`withEmail`) are not said. The spec unchanged while ticked, or without the box. Pure.
+ */
+export function withEmailOff(spec: ConfirmSpec, emailOff: boolean): ConfirmSpec {
+  if (!spec.emailOptOut || !emailOff) return spec;
+  const kept = (spec.also ?? []).filter((line) => !line.withEmail);
+  return { ...spec, email: spec.emailOptOut.offLine, road: undefined, also: kept.length > 0 ? kept : undefined };
 }
 
 /** `ConfirmSpec.road`: the facts and the words of the dialog's road line, worded on the server. */
@@ -447,15 +510,50 @@ export function resolveBodyCount(spec: ConfirmSpec, valuesOf: (field: string) =>
   return { ...spec, bodyCount: undefined, body: counted.forms[countForm(total, counted.locale)].replace("{count}", String(total)) };
 }
 
-/** `body` with each `fillFrom` field's posted value in its `{name}`; the spec unchanged without one. */
+/**
+ * `body`, the email line and every `also` line with each `fillFrom` field's posted value in its `{name}` — «Pleacă 1
+ * email către {firstName} {lastName}: …» for a person typed into the form; the spec unchanged without one.
+ */
 export function fillFromForm(spec: ConfirmSpec, valueOf: (field: string) => string | null): ConfirmSpec {
   if (!spec.fillFrom || spec.fillFrom.length === 0) return spec;
-  let body = spec.body;
-  for (const field of spec.fillFrom) body = body.split(`{${field}}`).join((valueOf(field) ?? "").trim());
-  return { ...spec, body, fillFrom: undefined };
+  const fields = spec.fillFrom;
+  const fill = (text: string) => {
+    let filled = text;
+    for (const field of fields) filled = filled.split(`{${field}}`).join((valueOf(field) ?? "").trim());
+    return filled;
+  };
+  return {
+    ...spec,
+    body: fill(spec.body),
+    ...(spec.email !== undefined ? { email: fill(spec.email) } : {}),
+    ...(spec.also ? { also: spec.also.map((line) => ({ ...line, text: fill(line.text) })) } : {}),
+    ...(spec.emailOptOut ? { emailOptOut: { ...spec.emailOptOut, offLine: fill(spec.emailOptOut.offLine) } } : {}),
+    fillFrom: undefined,
+  };
 }
 
-export type FormCondition = { field: string; equals?: string; notEquals?: string };
+/**
+ * A condition on the form as posted: `equals` / `notEquals` a value, or `raisedFrom` a number — the box holds a whole
+ * number above it, or is empty, which an unlimited capacity posts (the editor's «Număr de locuri» raised: the places
+ * it frees go to the waiting list). `anyOf`: any one of several conditions — the editor's window moved by any of its
+ * four boxes — where a list of conditions means all of them.
+ */
+export type FormCondition = { field: string; equals?: string; notEquals?: string; raisedFrom?: number } | { anyOf: readonly FormCondition[] };
+
+/**
+ * One quieter line of a dialog (`ConfirmSpec.also`): the words, and — when it is true only for some presses — the
+ * conditions the posted form must meet for it to be said, as `ConfirmSpec.when`. `withEmail`: the line belongs to the
+ * person's email — the club's copies of it, a test address's sentence — and goes unsaid while «Trimite emailul» is
+ * unticked (`withEmailOff`).
+ */
+export type ConfirmAlso = { text: string; when?: readonly FormCondition[]; withEmail?: boolean };
+
+/** The dialog with only the `also` lines whose conditions the posted form meets; the spec unchanged without any. */
+export function resolveAlso(spec: ConfirmSpec, valueOf: (field: string) => string | null): ConfirmSpec {
+  if (!spec.also) return spec;
+  const kept = spec.also.filter((line) => (line.when ?? []).every((condition) => holds(condition, valueOf)));
+  return { ...spec, also: kept.length > 0 ? kept : undefined };
+}
 
 /**
  * "An email will be sent to N participants" for the dates a series save reaches (§331, §384):
@@ -472,19 +570,58 @@ export type EmailCount = {
    * nothing (`announceSave`), and the date being edited is `base`, never counted twice.
    */
   counts: Readonly<Record<string, number>>;
-  /** `Admin.confirm.email`'s three forms, raw, each with `{count}`. */
+  /**
+   * Count the lines of the one posted value instead (the design «telling the owner about every email a staff press
+   * sends», slice 3): each distinct non-empty line, trimmed and without regard to case, is one address — «Trimite
+   * invitațiile» to the addresses typed one per line. `base` and `counts` are not read then.
+   */
+  lines?: true;
+  /**
+   * The club's mailboxes' line, counted from the same total: `each` copies per email (the per-message Bcc, §320) and
+   * `once` per send (a bulk send's one copy, §419) — one send for each value that writes to somebody, `base` included: a
+   * series save tells each date apart —, in `forms` with `{count}`. Said first among the `also` lines, and only when it
+   * counts something.
+   */
+  club?: { each: number; once: number; forms: Readonly<Record<CountForm, string>> };
+  /** The email line's three forms, raw, each with `{count}` (`Admin.confirm.mail.toMany` or `upTo`, with its type and audience). */
   forms: Readonly<Record<CountForm, string>>;
   locale: string;
 };
+
+/** How many addresses the lines of a typed list hold: distinct, non-empty, trimmed, without regard to case. */
+export function countLines(value: string): number {
+  return new Set(
+    value
+      .split(/\r?\n/)
+      .map((line) => line.trim().toLowerCase())
+      .filter((line) => line !== ""),
+  ).size;
+}
 
 /** The dialog with its email line counted from the posted values, or without one when nobody is written to. */
 export function resolveEmailCount(spec: ConfirmSpec, valuesOf: (field: string) => readonly string[]): ConfirmSpec {
   const counted = spec.emailCount;
   if (!counted) return spec;
   let total = counted.base;
-  for (const value of new Set(valuesOf(counted.field))) total += counted.counts[value] ?? 0;
+  // How many sends the press makes: a bulk send's club copy is one per send (§419), and each date of a series is its own.
+  let sends = counted.base > 0 ? 1 : 0;
+  if (counted.lines) {
+    total = countLines(valuesOf(counted.field)[0] ?? "");
+    sends = total > 0 ? 1 : 0;
+  } else {
+    for (const value of new Set(valuesOf(counted.field))) {
+      const adds = counted.counts[value] ?? 0;
+      total += adds;
+      if (adds > 0) sends += 1;
+    }
+  }
   const rest: ConfirmSpec = { ...spec, emailCount: undefined, email: undefined };
-  return total > 0 ? { ...rest, email: counted.forms[countForm(total, counted.locale)].replace("{count}", String(total)) } : rest;
+  // Nobody written to: no email line, and no «Trimite emailul» either — there is nothing to leave unsent.
+  if (total <= 0) return { ...rest, emailOptOut: undefined };
+  const club = counted.club ? total * counted.club.each + sends * counted.club.once : 0;
+  const clubLine = counted.club && club > 0 ? [{ text: counted.club.forms[countForm(club, counted.locale)].replace("{count}", String(club)), withEmail: true }] : [];
+  const also = [...clubLine, ...(spec.also ?? [])];
+  return { ...rest, email: counted.forms[countForm(total, counted.locale)].replace("{count}", String(total)), ...(also.length > 0 ? { also } : {}) };
 }
 
 /**
@@ -497,12 +634,20 @@ export function pickConfirm(
 ): ConfirmSpec | null {
   if (!specs) return null;
   const list = Array.isArray(specs) ? (specs as readonly ConfirmSpec[]) : [specs as ConfirmSpec];
-  return list.find((spec) => (spec.when ?? []).every((condition) => holds(condition, valueOf(condition.field)))) ?? null;
+  return list.find((spec) => (spec.when ?? []).every((condition) => holds(condition, valueOf))) ?? null;
 }
 
-function holds(condition: FormCondition, value: string | null): boolean {
+function holds(condition: FormCondition, valueOf: (field: string) => string | null): boolean {
+  if ("anyOf" in condition) return condition.anyOf.some((one) => holds(one, valueOf));
+  const value = valueOf(condition.field);
   if (condition.equals !== undefined && value !== condition.equals) return false;
   if (condition.notEquals !== undefined && value === condition.notEquals) return false;
+  if (condition.raisedFrom !== undefined) {
+    // Empty is unlimited — raised from any number; anything else holds only as a whole number above it. A form without the box is not raised.
+    if (value === null) return false;
+    const typed = value.trim();
+    if (typed !== "" && !(/^\d{1,9}$/.test(typed) && Number(typed) > condition.raisedFrom)) return false;
+  }
   return true;
 }
 

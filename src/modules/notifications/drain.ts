@@ -2,6 +2,16 @@ import { after } from "next/server";
 import { getDb } from "@/db/client";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { env } from "@/shared/config/env";
+import { inEmailPress } from "./press";
+
+/**
+ * A drain is the outbox job's work, done early: it runs in the job's email press scope (`press.ts`), never in the
+ * scope of the press whose response it follows — Next's `after()` carries every async scope of the request into
+ * its callback, and a road's notice the relay queues here would otherwise be stamped as that press's email.
+ */
+function asTheOutboxJob(work: () => Promise<void>): Promise<void> {
+  return inEmailPress("job.emailOutbox", work);
+}
 
 /**
  * Send what was just queued, after the response (AGENTS.md §16.2, `DECISIONS.md` §68).
@@ -31,7 +41,7 @@ import { env } from "@/shared/config/env";
 export function drainOutboxAfterResponse(): void {
   if (env.APP_ENV === "test" && !env.E2E_DRAIN_OUTBOX) return;
   try {
-    after(async () => {
+    after(() => asTheOutboxJob(async () => {
       try {
         const [{ processOutboxBatch }, { createOutboxRenderer }, { readDeliveryTiming }, { nextOutboxWork }, { createOutboxSender }] = await Promise.all([
           import("./outbox"),
@@ -81,7 +91,7 @@ export function drainOutboxAfterResponse(): void {
         console.error("[email-outbox] drain after response failed", error);
         wakeJobs("email-outbox");
       }
-    });
+    }));
   } catch {
     // Outside a request scope — a script, a test — there is no "after" and nothing to do.
   }
@@ -99,7 +109,7 @@ export function drainOutboxRowsAfterResponse(ids: readonly string[]): void {
   if (ids.length === 0) return;
   if (env.APP_ENV === "test" && !env.E2E_DRAIN_OUTBOX) return;
   try {
-    after(async () => {
+    after(() => asTheOutboxJob(async () => {
       try {
         const [{ sendOutboxRowsNow }, { nextOutboxWork }] = await Promise.all([import("./send-rows-now"), import("@/modules/jobs/next-work")]);
         const db = getDb();
@@ -110,7 +120,7 @@ export function drainOutboxRowsAfterResponse(ids: readonly string[]): void {
         console.error("[email-outbox] send-now drain after response failed", error);
         wakeJobs("email-outbox");
       }
-    });
+    }));
   } catch {
     // Outside a request scope: the rows stay PENDING for the outbox job.
     wakeJobs("email-outbox");
@@ -133,7 +143,7 @@ export function drainRelayAfterResponse(ids: readonly string[]): void {
   if (ids.length === 0) return;
   if (env.APP_ENV === "test" && !env.E2E_DRAIN_OUTBOX) return;
   try {
-    after(async () => {
+    after(() => asTheOutboxJob(async () => {
       try {
         const [{ processRelayBatch }, { createRelayRoads }, { nextOutboxWork }] = await Promise.all([
           import("./relay"),
@@ -155,7 +165,7 @@ export function drainRelayAfterResponse(ids: readonly string[]): void {
         console.error("[email-relay] drain after response failed", error);
         wakeJobs("email-outbox");
       }
-    });
+    }));
   } catch {
     // Outside a request scope — a script, a test — there is no "after": the row stays PENDING for the outbox job.
     wakeJobs("email-outbox");

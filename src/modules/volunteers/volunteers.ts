@@ -1656,7 +1656,7 @@ async function queueRoleAssigned<T extends Record<string, unknown>>(
   now: Date,
   why: "given" | "readdressed" | "reopened" = "given",
 ): Promise<void> {
-  if (volunteer.email === null || volunteer.state === "CANCELLED" || roleIds.length === 0) return;
+  if (volunteer.email === null || !announcesRoles(volunteer, roleIds)) return;
   const sorted = [...roleIds].sort();
   await enqueueEmail(tx, {
     participantId: null,
@@ -1675,6 +1675,11 @@ async function queueRoleAssigned<T extends Record<string, unknown>>(
 /** How long the roles' email waits for the next press before it may leave (`queueRoleAssigned`). */
 export const ROLE_EMAIL_SETTLE_MINUTES = 2;
 
+/** Whether a change would tell the person their roles (`queueRoleAssigned`): an address, not cancelled, a role that stands. */
+function announcesRoles(volunteer: { email: string | null; state: VolunteerState }, roleIds: readonly string[]): boolean {
+  return volunteer.email !== null && volunteer.state !== "CANCELLED" && roleIds.length > 0;
+}
+
 /**
  * One change to one event's volunteers, by one staff member: enter one by hand, change what was typed
  * (the name, the address, the telephone number, the roles they would do, the roles given, the organizers' note),
@@ -1690,14 +1695,24 @@ export const ROLE_EMAIL_SETTLE_MINUTES = 2;
  * nothing writes nothing. Every change is audited with the ids and the names of the fields — never the person's own
  * words — and every change of the roles given is told to the person by one email naming the roles that stand
  * (`VOLUNTEER_ROLE_ASSIGNED`). `event_volunteers.role_id` mirrors the first role given until its contract release (§837).
+ *
+ * `sendEmail: false` («Trimite emailul» unticked beside the role buttons or the form, or in the reopening's question —
+ * the design «telling the owner about every email a staff press sends», slice 4): the change is the same and nothing is
+ * queued; its audit row says `emailSkipped` when the press would have emailed. A roles email an earlier press queued and
+ * still holding is withdrawn at the send as ever once the roles it names no longer stand (`render.ts`).
  */
 export async function changeVolunteer<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Actor,
   request: VolunteerRequest,
   now: Date,
+  options: { sendEmail?: boolean } = {},
 ): Promise<VolunteerResult> {
   assertMayManage(actor);
+  const sendEmail = options.sendEmail !== false;
+  /** The audit row's mark when the box kept back an email the change would have sent. */
+  const skippedFor = (volunteer: { email: string | null; state: VolunteerState }, roleIds: readonly string[]) =>
+    !sendEmail && announcesRoles(volunteer, roleIds) ? { emailSkipped: true } : {};
   assertIds(request.eventId, ...(request.kind === "add" ? [] : [request.id]));
   let input: ReturnType<typeof staffInputOf> | null = null;
   // What an empty date box means on a row from before the date existed (§773): the age it holds, kept — see `volunteerStaffInputSchemaFor`.
@@ -1867,9 +1882,10 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         roleIds: input.choiceIds,
         ...(input.listOptIn ? { listOptIn: true } : {}),
         ...(input.hasKit ? { hasKit: true } : {}),
+        ...skippedFor(row, input.assignedRoleIds),
       });
       // Nothing for a row with no address (§865): `queueRoleAssigned` queues no row at all.
-      await queueRoleAssigned(tx, row, input.assignedRoleIds, actor.id, now);
+      if (sendEmail) await queueRoleAssigned(tx, row, input.assignedRoleIds, actor.id, now);
       return { changed: true, volunteer: { id: row.id, hasAddress: row.email !== null } };
     }
 
@@ -1912,10 +1928,17 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         throw new DomainError("VOLUNTEER_GUARDIAN_MISSING", "the parent's or guardian's agreement is missing", ["guardian"]);
       }
       await tx.update(eventVolunteers).set({ state, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
-      await audit("volunteer.state_changed", { volunteerId: current.id, assignedRoleIds: heldRoleIds, from: current.state, to: state });
+      const reopened = current.state === "CANCELLED";
+      await audit("volunteer.state_changed", {
+        volunteerId: current.id,
+        assignedRoleIds: heldRoleIds,
+        from: current.state,
+        to: state,
+        ...(reopened ? skippedFor({ ...current, state }, heldRoleIds) : {}),
+      });
       // A cancelled person reopened with roles given is told them: the email queued when they were given was withdrawn at
       // the send while they were cancelled, or never queued (`queueRoleAssigned`), and the receipt promised one.
-      if (current.state === "CANCELLED") await queueRoleAssigned(tx, { ...current, state }, heldRoleIds, actor.id, now, "reopened");
+      if (reopened && sendEmail) await queueRoleAssigned(tx, { ...current, state }, heldRoleIds, actor.id, now, "reopened");
       return { changed: true, volunteer: summary };
     }
 
@@ -1927,8 +1950,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       const next = [...heldRoleIds, assigned].sort();
       await writeAssignments(current.id, next);
       await tx.update(eventVolunteers).set({ updatedAt: now }).where(eq(eventVolunteers.id, current.id));
-      await audit("volunteer.assigned", { volunteerId: current.id, roleId: assigned, assignedRoleIds: next, from: heldRoleIds });
-      await queueRoleAssigned(tx, current, next, actor.id, now);
+      await audit("volunteer.assigned", { volunteerId: current.id, roleId: assigned, assignedRoleIds: next, from: heldRoleIds, ...skippedFor(current, next) });
+      if (sendEmail) await queueRoleAssigned(tx, current, next, actor.id, now);
       return { changed: true, volunteer: summary };
     }
 
@@ -1950,8 +1973,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       const next = heldRoleIds.filter((roleId) => roleId !== assigned);
       await writeAssignments(current.id, next);
       await tx.update(eventVolunteers).set({ updatedAt: now }).where(eq(eventVolunteers.id, current.id));
-      await audit("volunteer.unassigned", { volunteerId: current.id, roleId: assigned, assignedRoleIds: next, from: heldRoleIds });
-      await queueRoleAssigned(tx, current, next, actor.id, now);
+      await audit("volunteer.unassigned", { volunteerId: current.id, roleId: assigned, assignedRoleIds: next, from: heldRoleIds, ...skippedFor(current, next) });
+      if (sendEmail) await queueRoleAssigned(tx, current, next, actor.id, now);
       return { changed: true, volunteer: summary };
     }
 
@@ -2127,13 +2150,19 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     }
     if (changedFields.includes("roleIds")) await writeChoices(current.id, input.choiceIds);
     if (rolesGivenChanged) await writeAssignments(current.id, input.assignedRoleIds);
-    await audit("volunteer.edited", { volunteerId: current.id, fields: changedFields, assignedRoleIds: input.assignedRoleIds });
     // Roles newly given or changed are told to the person, at the address the row now holds — and so are roles kept
     // when the address was corrected: the earlier email went to the old address (or is withdrawn at the send for it).
     // An address typed into a row that had none (§865) is a correction too: the person hears the roles they hold. A row
     // left with no address hears nothing — `queueRoleAssigned` queues no row for it.
     const addressCorrected = nextCanonical !== current.canonicalEmail;
-    if (rolesGivenChanged || addressCorrected) {
+    const told = rolesGivenChanged || addressCorrected;
+    await audit("volunteer.edited", {
+      volunteerId: current.id,
+      fields: changedFields,
+      assignedRoleIds: input.assignedRoleIds,
+      ...(told ? skippedFor({ ...current, email: next.email }, input.assignedRoleIds) : {}),
+    });
+    if (told && sendEmail) {
       await queueRoleAssigned(tx, { ...current, email: next.email }, input.assignedRoleIds, actor.id, now, rolesGivenChanged ? "given" : "readdressed");
     }
     return { changed: true, volunteer: { id: current.id, hasAddress: next.email !== null } };

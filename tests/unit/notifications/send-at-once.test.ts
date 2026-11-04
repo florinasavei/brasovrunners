@@ -113,10 +113,14 @@ describe("§540 a send to many past what one press sends (review)", () => {
   });
 
   it("the toast names how many leave now and how many at the scheduled pass, in both languages", () => {
+    // Since the design «telling the owner about every email a staff press sends» (slice 2), the toast's mail line
+    // says it from the press's rows: «Pleacă acum: … către 40 de persoane; celelalte 5 pleacă la 10:30 (estimat).»
     for (const messages of [ro, en]) {
-      const part = messages.Feedback.toast.participantMessageSentNowPart;
-      for (const form of ["one", "few", "other"] as const) expect(part[form]).toContain("{later}");
-      expect(part.other).toContain("{count}");
+      const later = messages.Feedback.mail.later;
+      for (const form of ["one", "few", "other"] as const) {
+        expect(later[form]).toContain("{count}");
+        expect(later[form]).toContain("{when}");
+      }
     }
   });
 });

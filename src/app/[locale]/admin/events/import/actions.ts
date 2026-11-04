@@ -13,7 +13,9 @@ import type { AsNewOutcome, DiffOutcome, ImportRefusal, ImportTarget, OverOutcom
 import { typedStartShape } from "@/modules/events/domain/provisional-start";
 import { canTransferEvents } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { inEmailPress } from "@/modules/notifications/press";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
+import { withPressMail } from "@/shared/feedback/flash";
 
 /**
  * The import page's Server Actions (§751): each asks the session who is calling and the service
@@ -153,23 +155,40 @@ const overInput = z.object({
 
 /** «Peste un eveniment existent»: after the diff was shown and confirmed, through the editor's own save. */
 export async function importEventOverAction(input: z.input<typeof overInput>): Promise<OverOutcome> {
-  const asked = await administrator();
-  if ("ok" in asked) return asked;
-  const parsed = overInput.safeParse(input);
-  if (!parsed.success) return refusal(new DomainError("VALIDATION_ERROR", "the confirmation is not complete", []));
-  const read = readFile(parsed.data.json);
-  if ("ok" in read) return read;
-  try {
-    const result = await importEventOver(getDb(), {
-      actor: asked.actor,
-      file: read.file,
-      eventId: parsed.data.eventId,
-      expectedVersion: parsed.data.expectedVersion,
-      translationVersions: parsed.data.translationVersions,
-      confirmation: parsed.data.typedTitle === undefined || parsed.data.registrations === undefined ? undefined : { typedTitle: parsed.data.typedTitle, registrations: parsed.data.registrations },
-    });
-    return { ok: true, eventId: parsed.data.eventId, path: editorPath(localeOf(parsed.data.locale), parsed.data.eventId), changed: result.changed, media: result.media, offered: result.offered };
-  } catch (error) {
-    return refusal(error);
-  }
+  // An email press (`notifications/press.ts`): through the editor's save, a raised capacity offers places and a
+  // moved window re-sends declarations — every row carries this cause, its id and who pressed.
+  return inEmailPress("events.importOver", async (press) => {
+    const asked = await administrator();
+    if ("ok" in asked) return asked;
+    press.by(asked.actor.id);
+    const parsed = overInput.safeParse(input);
+    if (!parsed.success) return refusal(new DomainError("VALIDATION_ERROR", "the confirmation is not complete", []));
+    const read = readFile(parsed.data.json);
+    if ("ok" in read) return read;
+    try {
+      const result = await importEventOver(getDb(), {
+        actor: asked.actor,
+        file: read.file,
+        eventId: parsed.data.eventId,
+        expectedVersion: parsed.data.expectedVersion,
+        translationVersions: parsed.data.translationVersions,
+        confirmation: parsed.data.typedTitle === undefined || parsed.data.registrations === undefined ? undefined : { typedTitle: parsed.data.typedTitle, registrations: parsed.data.registrations },
+      });
+      // What the save emailed (the design «telling the owner about every email a staff press sends»): a toast only when
+      // it queued something, with what and when; the page's own sentence says the rest.
+      const told = await withPressMail({ kind: "success", key: "eventImportedOver" });
+      const notice = told?.values?.mail ? told : undefined;
+      return {
+        ok: true,
+        eventId: parsed.data.eventId,
+        path: editorPath(localeOf(parsed.data.locale), parsed.data.eventId),
+        changed: result.changed,
+        media: result.media,
+        offered: result.offered,
+        ...(notice ? { notice } : {}),
+      };
+    } catch (error) {
+      return refusal(error);
+    }
+  });
 }

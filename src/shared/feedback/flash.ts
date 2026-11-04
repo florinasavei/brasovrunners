@@ -1,6 +1,10 @@
 import { cookies } from "next/headers";
+import { getDb } from "@/db/client";
+import { mailSkippedCount } from "@/shared/forms/send-email";
+import { currentEmailPress } from "@/modules/notifications/press";
+import { pressMailValues } from "@/modules/notifications/press-receipt";
 import { consumeEmailRoadChoice, emailRoadChoice } from "./email-road-request";
-import { decodeFlash, encodeFlash, FLASH_COOKIE, FLASH_MAX_AGE_SECONDS, type FormNotice, noticeOf } from "./notice";
+import { decodeFlash, encodeFlash, FLASH_COOKIE, FLASH_MAX_AGE_SECONDS, type FormNotice, noticeOf, PROVIDER_FAILED_TOASTS } from "./notice";
 import { isPublicToastKey, PUBLIC_INFO_TOAST_KEYS, type PublicToastKey } from "./public-toasts";
 
 /**
@@ -23,6 +27,8 @@ import { isPublicToastKey, PUBLIC_INFO_TOAST_KEYS, type PublicToastKey } from ".
  * holds a key and a few counts, never a name or an address: `noticeOf` keeps only the numbers a
  * sentence counts, so neither the desk's search box (a participant's name) nor a provider's error
  * text, both of which may ride on the redirect's query, reaches a cookie every request carries.
+ * An emailing press adds what it sent (`withPressMail`): an email's type by its name in the code,
+ * how many, a departure word and its instants — still never a name or an address.
  */
 export async function flash(notice: FormNotice): Promise<void> {
   let jar: Awaited<ReturnType<typeof cookies>>;
@@ -45,18 +51,67 @@ export async function flash(notice: FormNotice): Promise<void> {
 /**
  * The flash for a redirect's outcome, when it has one: `{ saved: "event", offered: "2" }` is
  * the toast `event` with `offered` and `count` as its values; `{ error: "CONFLICT" }` is none.
- * The one line every `backTo` calls before `redirect()`.
- *
- * A press whose dialog named the email's road (§841) carries it here as `via`, and the toast ends
- * «Pleacă prin Mailgun.» — the road the dialog promised, the one `enqueueEmail` stamped on the
- * row in this same request. A press with no dialog, or one that announced no email, says nothing.
+ * The one line every `backTo` calls before `redirect()`, and so the one place every emailing
+ * press's toast learns what it sent (`withPressMail`). Outside a request — an action driven from
+ * a test — there is no cookie to write, and nothing is read for one.
  */
 export async function flashOutcome(outcome: Readonly<Record<string, string | number | undefined>>): Promise<void> {
   const notice = noticeOf(outcome);
   if (!notice) return;
-  const road = (await emailRoadChoice())?.road;
+  try {
+    await cookies();
+  } catch {
+    return;
+  }
+  // Zitadel's own email (§123): its answer rides on the outcome of an invitation to the team. What the press chose not
+  // to send (slice 4): `mailSkipped`, how many emails «Trimite emailul» unticked kept back, `alert` for a publication's
+  // new-event alert.
+  const alert = outcome.alert === "later" || outcome.alert === "skipped" ? outcome.alert : undefined;
+  const told = await withPressMail(notice, { zitadel: outcome.invite === "invited", skipped: mailSkippedCount(outcome.mailSkipped) ?? 0, alert });
+  if (told) await flash(told);
+}
+
+/**
+ * The notice with what the press emailed (the design «telling the owner about every email a staff press sends»,
+ * slice 2): inside an email press (`notifications/press.ts`), the press's rows read back once its transaction
+ * committed (`notifications/press-receipt.ts`) and merged in as `mail…` values — the toast's line «Pleacă la 10:30
+ * (estimat): „Înscriere anulată” către 1 persoană și 1 email pentru club.» (`mail-line.ts`). A press that queued
+ * nothing adds nothing, and its toast says nothing about email. Tokens, counts and instants only: the dialog before
+ * the press is what names the person.
+ *
+ * The road the press's dialog promised (§841) is spent here either way: told inside the mail line, or — outside an
+ * email press — as `via`, «Pleacă prin Mailgun.», as before. A press that queued nothing names no road.
+ *
+ * A Zitadel failure on an invitation (`PROVIDER_FAILED_TOASTS`) is toasted only for the club's emails that still left
+ * (null otherwise: the banner alone says why), never as a green tick. The toast is a courtesy: a read that fails falls
+ * back to the plain notice. Exported for the presses that flash or answer with a notice themselves.
+ *
+ * What the press chose not to send is said whatever it queued (slice 4): `skipped` — how many emails «Trimite emailul»
+ * unticked kept back, the person's or the people's of a bulk press (`mailSkipped`) — and a publication's new-event
+ * alert, left to the job's next pass or not sent at all (`mailAlert`).
+ */
+export async function withPressMail(
+  notice: FormNotice,
+  extras: { zitadel?: boolean; skipped?: number; alert?: "later" | "skipped" } = {},
+): Promise<FormNotice | null> {
+  const road = (await emailRoadChoice())?.road ?? null;
   if (road) await consumeEmailRoadChoice();
-  await flash(road ? { ...notice, values: { ...notice.values, via: road } } : notice);
+  const onlyWithMail = PROVIDER_FAILED_TOASTS.has(notice.key);
+  const skipped = extras.skipped ?? 0;
+  const chosen: Record<string, string> = { ...(skipped > 0 ? { mailSkipped: String(skipped) } : {}), ...(extras.alert ? { mailAlert: extras.alert } : {}) };
+  const told = (base: FormNotice): FormNotice => (Object.keys(chosen).length > 0 ? { ...base, values: { ...base.values, ...chosen } } : base);
+  const plain = road ? { ...notice, values: { ...notice.values, via: road } } : notice;
+  const press = currentEmailPress();
+  if (!press) return onlyWithMail ? null : told(plain);
+  let mail: Record<string, string>;
+  try {
+    mail = await pressMailValues(getDb(), press, { road, zitadel: extras.zitadel === true }, new Date());
+  } catch (error) {
+    console.error("[flash] the press's emails could not be read for its toast", error);
+    return onlyWithMail ? null : told(plain);
+  }
+  if (!mail.mail) return onlyWithMail ? null : told(notice);
+  return told({ ...notice, values: { ...notice.values, ...mail } });
 }
 
 /**

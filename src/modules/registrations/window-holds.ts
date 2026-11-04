@@ -74,6 +74,18 @@ export function movedEmailKey(
 }
 
 /**
+ * Whether «Trimite din nou „Semnează declarația”» unticked (`sendEmail.window`; the design «telling the owner about every
+ * email a staff press sends», 2026-11-03, slice 4, and its Critic correction 3) keeps a moved row's email back: only a
+ * deadline moved **later** — the email the person has states an earlier one, still safe to act on — and only when the
+ * email would go under its own key (`deadlineMovedKey`). When the move's email is the new deadline's last call or the
+ * window's own ask (`movedEmailKey`'s first two cases), keeping it back would only leave that key free for the job to
+ * send the same email at its next pass: it goes. A deadline moved earlier is always told.
+ */
+export function windowEmailSkippable(move: { id: string; from: Date; to: Date }, key: string): boolean {
+  return move.to.getTime() > move.from.getTime() && key === deadlineMovedKey(move.id, move.to);
+}
+
+/**
  * Whether a declaration email that left within the hour (§606's `RECENT_DECLARATION_EMAIL_MS`) holds the
  * move's email back (§665). Only when the deadline moved later: the recent email stated an earlier
  * deadline, still safe to act on. A deadline moved earlier is told whatever left within the hour —
@@ -95,9 +107,11 @@ export type WindowHoldsMoved = {
   to: Date | null;
   /** Declaration emails queued because the window was already open (real and test alike: each is a message). */
   queued: number;
+  /** Emails kept back by «Trimite din nou „Semnează declarația”» unticked (`windowEmailSkippable`), real and test alike. */
+  skipped: number;
 };
 
-const NOTHING: WindowHoldsMoved = { moved: 0, test: 0, to: null, queued: 0 };
+const NOTHING: WindowHoldsMoved = { moved: 0, test: 0, to: null, queued: 0, skipped: 0 };
 
 type EventRow = Pick<typeof events.$inferSelect, "id" | "startsAt" | "confirmationOpensDaysBefore" | "confirmationDeadlineDaysBefore" | "registrationClosesAt" | "eventStatus" | "registrationMode">;
 
@@ -133,6 +147,10 @@ async function heldRowsOf<T extends Record<string, unknown>>(db: Database<T>, ev
  * (`recentEmailHoldsBack`). Before the window opens nothing is sent: the window's own ask (§104) says the
  * new deadline on its day. The caller drains the outbox once after the commit when `queued` is above zero.
  *
+ * `sendEmail: false` — the editor's «Trimite din nou „Semnează declarația”» unticked (slice 4): the holds move exactly
+ * the same, and a row's email is kept back only where `windowEmailSkippable` says (a later deadline, under its own key);
+ * the event's audit row then says `emailSkipped` and how many (`skipped`).
+ *
  * A scheduled event with internal registration only: a cancelled event's queue is left as it was
  * cancelled (§331), and a save that puts it back on aligns its holds then.
  */
@@ -145,6 +163,8 @@ export async function moveWindowHolds<T extends Record<string, unknown>>(
     after: EventRow;
     now: Date;
     deadlines: Pick<Deadlines, "holdMinutes" | "lastCallHours">;
+    /** «Trimite din nou „Semnează declarația”» as the editor posted it; absent: true. */
+    sendEmail?: boolean;
   },
 ): Promise<WindowHoldsMoved> {
   const { after, now } = input;
@@ -205,6 +225,7 @@ export async function moveWindowHolds<T extends Record<string, unknown>>(
   let moved = 0;
   let test = 0;
   let queued = 0;
+  let skipped = 0;
   let to: Date | null = null;
   for (const move of moves) {
     const row = byId.get(move.id);
@@ -229,6 +250,11 @@ export async function moveWindowHolds<T extends Record<string, unknown>>(
     else moved += 1;
     to = move.to;
     if (windowOpen && !waitingToLeave.has(move.id) && !recentEmailHoldsBack(move, recentKeysOf(move.id))) {
+      const key = movedEmailKey(move.id, after, move.to, now, lastCallHours, participationQueued.has(move.id));
+      if (input.sendEmail === false && windowEmailSkippable(move, key)) {
+        skipped += 1;
+        continue;
+      }
       const inserted = await enqueueEmail(tx, {
         participantId: row.participantId,
         registrationId: move.id,
@@ -236,7 +262,7 @@ export async function moveWindowHolds<T extends Record<string, unknown>>(
         locale: row.locale,
         recipientEmail: row.deliveryEmail,
         payload: {},
-        idempotencyKey: movedEmailKey(move.id, after, move.to, now, lastCallHours, participationQueued.has(move.id)),
+        idempotencyKey: key,
         requestedByStaffUserId: input.actorStaffUserId,
         // One drain for the whole save, after its commit, never one per row (§606's discipline).
         drainAfter: false,
@@ -252,10 +278,10 @@ export async function moveWindowHolds<T extends Record<string, unknown>>(
     action: "event.holds_moved_by_window",
     entityType: "event",
     entityId: after.id,
-    metadata: { moved, test, to: to?.toISOString() ?? null, queued },
+    metadata: { moved, test, to: to?.toISOString() ?? null, queued, ...(skipped > 0 ? { emailSkipped: true, skipped } : {}) },
     now,
   });
-  return { moved, test, to, queued };
+  return { moved, test, to, queued, skipped };
 }
 
 /**

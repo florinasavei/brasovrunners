@@ -1,5 +1,6 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
@@ -67,6 +68,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import MovedFragmentHop from "@/modules/staff-identity/ui/MovedFragmentHop";
 import SettingsSubNav from "@/modules/staff-identity/ui/SettingsSubNav";
 import { env } from "@/shared/config/env";
+import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -276,6 +278,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         : t(`emails.whenShort.${type}`, whenValues);
 
   const emailsPath = getPathname({ locale, href: "/admin/settings/emails" });
+  // «Emailuri azi» names people: offered to the roles its page admits, the Administrator and the Superadministrator.
+  const journalHref = maySendNow ? getPathname({ locale, href: "/admin/settings/emails/today" }) : undefined;
   // The club's deadlines (§377), as the outbox gives every message: the numbers the words say.
   const timings = {
     confirmationHours: deadlines.deadlines.confirmationHours,
@@ -370,6 +374,14 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       <SettingsSubNav locale={locale} role={staff.role} active="emails" />
       {/* An old `/admin/emails#contact-recipients` or `#deadlines` goes on to the card's own tab (§520). */}
       <MovedFragmentHop />
+      {/* «Emailuri azi»: the day's emails with the names, for the two roles its page lets in (it asserts it again). */}
+      {journalHref && (
+        <Typography variant="body2" data-testid="emails-today-link">
+          <MuiLink href={journalHref} sx={{ ...TAP_TARGET, display: "inline-flex", alignItems: "center" }}>
+            {t("emails.today.tabLink")}
+          </MuiLink>
+        </Typography>
+      )}
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {error && (
@@ -437,6 +449,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
           mayEditTiming={mayEditEmail}
           openWhen={{ saved: saved === "outboxSent" || saved === "deliveryTiming" || saved === "failedRetried", refused: Boolean(error) }}
           failedRetryable={failedRetryable}
+          journalHref={journalHref}
         />
       )}
 

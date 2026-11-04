@@ -80,6 +80,9 @@ export const STAFF_CLIENT_MESSAGES = [
   // ToastProvider (`shared/feedback`): every "it worked" sentence, looked up by a `saved` code
   // at runtime, so the whole namespace — a few kilobytes, on pages only staff open (§384).
   "Feedback",
+  // …and the email types an emailing press's toast names (`mail-line.ts`, the design «telling the
+  // owner about every email a staff press sends»), looked up by the type the press queued.
+  "Admin.emails.types",
   // A save a network refused (§436): the notice with its «Trimite pe calea simplă» button
   // (SaveBlockedNotice), the line after that button was pressed (SaveFallbackNotice), and the admin
   // boundary's "try again".

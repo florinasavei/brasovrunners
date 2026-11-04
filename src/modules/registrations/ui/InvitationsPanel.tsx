@@ -86,6 +86,9 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
     const free = forecast?.free ?? null;
     waiting = forecast?.waiting ?? 0;
     const counted = (key: string) => ({ one: t.raw(`${key}.one`) as string, few: t.raw(`${key}.few`) as string, other: t.raw(`${key}.other`) as string });
+    // The email line, counted in the island from the people ticked and typed (the design «telling the owner about every email a
+    // staff press sends», slice 3): the one builder's forms, the invitation named; an invitation is copied to no club mailbox (§647).
+    const inviteMail = dialog.mailCount({ field: "", counts: {}, type: "EVENT_INVITATION", audience: "invited" });
     const words: InviteFormWords = {
       membersLegend: t("invitations.membersLegend"),
       membersSearch: t("invitations.membersSearch"),
@@ -114,8 +117,10 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
       dialogOutside: t("invitations.dialog.outside"),
       dialogDays: counted("invitations.dialog.days"),
       dialogLocale: t.raw("invitations.dialog.locale") as string,
-      dialogEmail: counted("confirm.email"),
-      dialogRoad: dialog.road("links"),
+      dialogEmail: inviteMail.emailCount.forms,
+      dialogRoad: inviteMail.road ?? dialog.road("links"),
+      // Whoever waits is served first (§647): a free place goes to them, with its offer, before an invitation counts.
+      dialogAlso: waiting > 0 ? [dialog.line("invitesServeLine").text] : [],
       confirmRaise: counted("invitations.dialog.confirmRaise"),
       confirm: t("invitations.dialog.confirm"),
       cancel: dialog.cancel,
@@ -254,8 +259,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                             confirm={deadlineFixed ? {
                               title: t("invitations.resendTitle"),
                               body: t("invitations.resendBodyWaiting", { name: row.name }),
-                              email: dialog.email(1),
-                              road: dialog.road("links"),
+                              ...dialog.mail({ to: row.name, type: "EVENT_INVITATION" }),
                               confirmLabel: t("invitations.resend"),
                               cancelLabel: dialog.cancel,
                             } : [
@@ -264,8 +268,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                                 title: t("invitations.resendTitle"),
                                 body: t("invitations.resendBodyKept", { name: row.name }),
                                 when: [{ field: "days", equals: "" }],
-                                email: dialog.email(1),
-                                road: dialog.road("links"),
+                                ...dialog.mail({ to: row.name, type: "EVENT_INVITATION" }),
                                 confirmLabel: t("invitations.resend"),
                                 cancelLabel: dialog.cancel,
                               },
@@ -273,8 +276,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                                 title: t("invitations.resendTitle"),
                                 body: t.raw("invitations.resendBody").replace("{name}", row.name) as string,
                                 fillFrom: ["days"],
-                                email: dialog.email(1),
-                                road: dialog.road("links"),
+                                ...dialog.mail({ to: row.name, type: "EVENT_INVITATION" }),
                                 confirmLabel: t("invitations.resend"),
                                 cancelLabel: dialog.cancel,
                               },
@@ -301,6 +303,8 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                             confirm={{
                               title: t("invitations.withdrawTitle"),
                               body: t("invitations.withdrawBody", { name: row.name }),
+                              // The invitee is told nothing; the place it held may go to the next in line, with its offer.
+                              ...dialog.noMail(row.name, row.outsideCapacity ? [] : [dialog.nextInLineMaybe()]),
                               destructive: true,
                               confirmLabel: t("invitations.withdraw"),
                               cancelLabel: dialog.cancel,

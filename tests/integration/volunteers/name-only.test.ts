@@ -388,7 +388,7 @@ describe("§865 nothing is ever queued for a person with no address", () => {
   it("queues no outbox row when roles are given, given again, taken back, changed in «Modifică», or the person is reopened", async () => {
     const id = await addByHand({ name: "Doar Nume", assignedRoleIds: [waterId] });
     expect(await press(actions.assignVolunteerAction, form({ volunteerId: id, roleId: finishId }))).not.toContain("volunteerError");
-    expect(await press(actions.unassignVolunteerAction, form({ volunteerId: id, roleId: waterId }))).not.toContain("volunteerError");
+    expect(await press(actions.unassignVolunteerAction.bind(null, waterId), form({ volunteerId: id }))).not.toContain("volunteerError");
     expect(await post(actions.editVolunteerAction, form({ volunteerId: id, name: "Doar Nume", email: "", phone: "", note: "", roleIds: [waterId], assignedRoleIds: [waterId, finishId] }))).toBe("redirected");
     await press(actions.setVolunteerStateAction, form({ volunteerId: id, state: "CANCELLED" }));
     await press(actions.setVolunteerStateAction, form({ volunteerId: id, state: "REGISTERED" }));

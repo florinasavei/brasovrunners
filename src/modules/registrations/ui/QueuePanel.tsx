@@ -271,8 +271,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
                   confirm={{
                     title: t("confirm.offerPlaceTitle"),
                     ...staffOfferQuestion((key, values) => t(key, values), row.registeredName, offerForecast),
-                    ...(row.kind === "TEST" ? {} : { email: dialog.email(1) }),
-                    road: dialog.road("links"),
+                    ...dialog.mail({ to: row.registeredName, type: "WAITLIST_SPOT_OFFER", test: row.kind === "TEST" }),
                     cancelLabel: dialog.cancel,
                   }}
                   data-testid="queue-offer-form"

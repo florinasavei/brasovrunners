@@ -59,7 +59,10 @@ export default async function WaitlistAddForm({
   // «Oferă-i un loc acum»'s question (§642): the supplementary place and the close; null once the event has started.
   const forecast = await staffOfferIfMadeNow(eventId, locale);
   const offer = forecast ? waitlistOfferQuestion((key, values) => t(key, values), "{email}", forecast) : null;
-  const emailLine = { fillFrom: ["email"], email: words.email(1), road: words.road("links"), cancelLabel: words.cancel };
+  // The person typed in the boxes, named in the email line once the dialog opens (`fillFrom`), and the email the entry sends by
+  // its outcome — the design «telling the owner about every email a staff press sends», slice 3; no road where the two travel apart.
+  const person = "{firstName} {lastName}";
+  const shared = { fillFrom: ["email", "firstName", "lastName"], cancelLabel: words.cancel };
 
   return (
     <Box component="section" aria-labelledby={heading ? `${scope}-title` : undefined} data-testid="waitlist-add">
@@ -80,9 +83,21 @@ export default async function WaitlistAddForm({
         // The entry emails the person — the waiting-list message, the declaration or the offer — and says so (§384);
         // which question asks is the button pressed (`intent`).
         confirm={[
-          ...(offer ? [{ ...emailLine, when: [{ field: "intent", equals: "offer" }], title: t("confirm.waitlistOfferTitle"), body: offer.body, confirmLabel: offer.confirmLabel }] : []),
+          ...(offer
+            ? [
+                {
+                  ...shared,
+                  ...words.mail({ to: person, type: "COMPLETE_DECLARATION", or: "WAITLIST_SPOT_OFFER" }),
+                  when: [{ field: "intent", equals: "offer" }],
+                  title: t("confirm.waitlistOfferTitle"),
+                  body: offer.body,
+                  confirmLabel: offer.confirmLabel,
+                },
+              ]
+            : []),
           {
-            ...emailLine,
+            ...shared,
+            ...words.mail({ to: person, type: "WAITLIST_JOINED", or: "COMPLETE_DECLARATION" }),
             title: t("confirm.waitlistAddTitle"),
             // Names the address typed in the form (§875), as «Dă-i un loc acum» does (§637): the safeguard against a dictated typo.
             body: t("confirm.waitlistAddBody", { email: "{email}" }),

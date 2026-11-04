@@ -280,6 +280,8 @@ export const routing = defineRouting({
     "/admin/settings": "/admin/settings",
     /** Every email the platform sends, rendered with sample data (`DECISIONS.md` §91), and the email settings. */
     "/admin/settings/emails": "/admin/settings/emails",
+    /** «Emailuri azi»: every email of the club's day, with the names, grouped by the press that sent it (the Administrator's). */
+    "/admin/settings/emails/today": "/admin/settings/emails/today",
     "/admin/settings/deadlines": "/admin/settings/deadlines",
     "/admin/settings/appearance": "/admin/settings/appearance",
     "/admin/settings/costs": "/admin/settings/costs",

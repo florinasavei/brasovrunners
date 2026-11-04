@@ -336,6 +336,8 @@ describe("BR-REQ-038-01 §548 a race number only once a registration is confirme
           payloadJson: messageType === "BIB_ASSIGNED" ? { bibNumber: 777 } : {},
           idempotencyKey: `render:${messageType}`,
           requestedByStaffUserId: null,
+          cause: null,
+          pressId: null,
           isManualResend: false,
           status: "PROCESSING",
           attemptCount: 1,

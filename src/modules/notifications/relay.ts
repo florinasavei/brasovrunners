@@ -21,6 +21,7 @@ import {
   withFailure,
 } from "./domain/road-failover";
 import { nextAttemptAt, PROCESSING_LOCK_TIMEOUT_MS, sanitizeProviderError } from "./domain/retry";
+import { pressStamp } from "./press";
 import { type RelayNoticeFacts, type RelayNoticeKind, relayNoticeContent } from "./relay-notice-words";
 
 /**
@@ -114,6 +115,8 @@ export async function enqueueRelay<T extends Record<string, unknown>>(db: Databa
       recipientEmail: params.to,
       payloadJson: payload,
       idempotencyKey: params.idempotencyKey ?? `relay:${randomUUID()}`,
+      // A road's notice queued by the outbox job (`press.ts`, `job.emailOutbox`); a visitor's message — a public form — none.
+      ...pressStamp(),
       status: "PENDING",
       attemptCount: 0,
       nextAttemptAt: null,
