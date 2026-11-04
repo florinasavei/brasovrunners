@@ -49,28 +49,41 @@ export type MissingAnswersFieldsInput = {
    * and the rule's own sentence when one refused (a minor's date under a signed declaration, a name of record).
    */
   refused?: { note: string; sentences: readonly string[] } | null;
+  /**
+   * The name the club typed, drawn in the two name boxes for the person to check and correct before signing (§907,
+   * `missing-answers.ts#asksNameCheck`): the declaration's page of a staff row not yet signed, and nowhere else. Null:
+   * the name boxes are drawn only when the name is missing, empty, as every missing answer.
+   */
+  checkedName?: { firstName: string | null; lastName: string | null } | null;
 };
+
+/** A box's id on the page: what a refusal's links point at, and what the signature's island reads the name from (§907). */
+export function answerBoxId(name: string, idPrefix = ""): string {
+  return `f-${idPrefix}${name}`;
+}
 
 /**
  * **«Completează-ți datele» (§905)** — the answers a registration still owes, drawn with the public form's own
  * boxes, labels, bounds and browser checks (`registration-form.tsx`): the birth date typed day first with its
  * echo, the country pickers on Romania, the telephone with its country, the emergency contact who must be
  * somebody else, «Feminin» / «Masculin», the T-shirt with «Fără tricou», the guardian shown by a minor's date.
- * Only the missing ones; nothing already on the registration is shown or asked again. Awaited, not mounted, like
- * `registrationForm`, so the pages that draw it stay one tree a synchronous renderer can draw.
+ * Only the missing ones; nothing already on the registration is asked again — but the name the club typed, on the
+ * declaration's page of a staff row not yet signed (`checkedName`, §907): the form's own two name boxes, prefilled,
+ * first, under the one line that says why it matters. Awaited, not mounted, like `registrationForm`, so the pages that
+ * draw it stay one tree a synchronous renderer can draw.
  *
  * The boxes only — the caller owns the `<form>`: the declaration's, where they are saved with the signature, or
  * the manage page's own, with its save button.
  */
 export async function missingAnswersFields(input: MissingAnswersFieldsInput): Promise<ReactNode> {
-  const { fields, guardianIfMinor, locale, birthDate, minorOn, invalid, refusal, draft, idPrefix = "", heading, headingLevel = "h2", refused = null } = input;
+  const { fields, guardianIfMinor, locale, birthDate, minorOn, invalid, refusal, draft, idPrefix = "", heading, headingLevel = "h2", refused = null, checkedName = null } = input;
   if (fields.length === 0 && !guardianIfMinor) return null;
   const t = await getTranslations("Registration");
   const tc = await getTranslations("Registrations");
   const asks = (field: MissingAnswer) => fields.includes(field);
   // Every box this card draws, in order: what a refusal's links may point at.
   const drawn: MissingAnswer[] = guardianIfMinor ? [...fields, "guardianName"] : [...fields];
-  const idOf = (name: string) => `f-${idPrefix}${name}`;
+  const idOf = (name: string) => answerBoxId(name, idPrefix);
   // What the refused press typed (§142): named `prefill`, never `t…`, so the catalogue checker does not read it as a key.
   const prefill = (name: string, fallback?: string) => draft?.[name] ?? fallback;
   const box = (name: string, help?: string) => ({
@@ -80,6 +93,21 @@ export async function missingAnswersFields(input: MissingAnswersFieldsInput): Pr
     helperText: invalid.has(name) ? t("errors.field") : help,
     defaultValue: prefill(name),
   });
+  /*
+    A checked name box (§907): what the club typed, until a refused press — then what that press typed, as every
+    box here (a draft keeps only what was not blank, so a box cleared comes back cleared).
+  */
+  const nameBox = (name: "firstName" | "lastName") => ({
+    ...box(name),
+    defaultValue: checkedName === null ? prefill(name) : draft !== null ? (draft[name] ?? "") : (checkedName[name] ?? ""),
+  });
+  // Anything beyond the name to complete: the intro says why the form asks it, after the name's own line (§907).
+  const completesMore = guardianIfMinor || fields.some((field) => field !== "firstName" && field !== "lastName");
+  const intro = (
+    <Typography variant="body2" color="text.secondary" sx={checkedName === null ? { mb: 2 } : undefined}>
+      {tc("complete.intro")}
+    </Typography>
+  );
   const minimumAge = { age: yearsPhrase(birthDate.minAge, locale) };
   const countries = asks("country") || asks("nationality") ? countryOptions(locale, (code) => countryName(code, locale)) : [];
   const countrySearchWords = {
@@ -114,9 +142,8 @@ export async function missingAnswersFields(input: MissingAnswersFieldsInput): Pr
         <ContactPageIcon aria-hidden="true" />
         {heading}
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        {tc("complete.intro")}
-      </Typography>
+      {/* The name checked comes first, under its own line; the intro then speaks of what is missing (§907). */}
+      {checkedName === null && intro}
       {/* The refusal, where the redirect lands (§47's summary): focusable, announced, a link to each box it names. */}
       {refused && (
         <Alert severity="error" role="alert" tabIndex={-1} sx={{ mb: 2 }} data-testid="complete-answers-refused">
@@ -134,13 +161,23 @@ export async function missingAnswersFields(input: MissingAnswersFieldsInput): Pr
           ))}
         </Alert>
       )}
-      <Stack spacing={2}>
+      <Stack spacing={2} sx={checkedName !== null ? { mt: 1 } : undefined}>
+        {/*
+          The public form's own two name boxes. Checked (§907): prefilled with the club's typing, under the line that says
+          what the name is for — the declaration is signed with it and the race number prints it.
+        */}
+        {checkedName !== null && (
+          <Typography variant="body2" data-testid="complete-name-check">
+            {tc("complete.nameCheck")}
+          </Typography>
+        )}
         {(asks("firstName") || asks("lastName")) && (
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-            {asks("firstName") && <TextField {...box("firstName")} label={t("firstName")} required autoComplete="given-name" fullWidth />}
-            {asks("lastName") && <TextField {...box("lastName")} label={t("lastName")} required autoComplete="family-name" fullWidth />}
+            {asks("firstName") && <TextField {...nameBox("firstName")} label={t("firstName")} required autoComplete="given-name" fullWidth />}
+            {asks("lastName") && <TextField {...nameBox("lastName")} label={t("lastName")} required autoComplete="family-name" fullWidth />}
           </Stack>
         )}
+        {checkedName !== null && completesMore && intro}
         {asks("birthDate") && (
           <BirthDateField
             id={idOf("birthDate")}

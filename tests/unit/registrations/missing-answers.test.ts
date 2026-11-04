@@ -10,9 +10,11 @@ import {
   readAnswersRefusal,
   registrationAfterCompletion,
 } from "@/modules/registrations/complete-answers";
+import { registrationNameKey } from "@/modules/registrations/domain/name-key";
 import { expectedSignatures } from "@/modules/registrations/domain/signature-name";
 import { anotherPersonSubmissionSchema, registrationSubmissionSchema, staffRegistrationSubmissionSchema, UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
-import { ANSWERS_MISSING, answersToAsk, type AnswersOnRow, missingAnswers, missingAnswersHeld } from "@/modules/registrations/missing-answers";
+import { ANSWERS_MISSING, answersToAsk, type AnswersOnRow, asksNameCheck, missingAnswers, missingAnswersHeld } from "@/modules/registrations/missing-answers";
+import { resolveDisplayName } from "@/modules/registrations/names";
 import { TYPED_ANSWERS } from "../../helpers/missing-answers";
 
 /**
@@ -251,14 +253,86 @@ describe("BR-REQ-037-05 criterion 23: who signs follows the answers typed above 
 
   it("judges by the event's own row, as the write does: its day in its zone, its minimum age, the T-shirt, the members' bib", () => {
     const event = { kitShirt: true, startsAt: new Date("2026-11-20T23:30:00.000Z"), timezone: "Europe/Bucharest", minAge: 16, bibDesign: null };
-    expect(completionContext(event, context.now, true)).toEqual({
+    expect(completionContext(event, context.now, true, "MANAGE_LINK")).toEqual({
       kitShirt: true,
       eventDay: "2026-11-21",
       minAge: 16,
       now: context.now,
       declarationSigned: true,
       memberBibOffered: false,
+      checksName: false,
     });
+    // The declaration's door reads the name the club typed as well (§907); the manage link never does.
+    expect(completionContext(event, context.now, false, "DECLARATION").checksName).toBe(true);
+  });
+});
+
+describe("BR-REQ-037-05: the name the club typed, checked by the person before signing (§907)", () => {
+  /** A line of the internal list moved onto the official one: «Sebi Sebi» and an address, the list's name derived. */
+  const sebi = { ...row, firstName: "Sebi", lastName: "Sebi", registeredName: "Sebi Sebi", displayName: "Sebi Sebi" } as unknown as Registration;
+  const atSigning = { ...context, checksName: true };
+  const corrected = { ...TYPED_ANSWERS, firstName: "Sebastian", lastName: "Popescu" };
+
+  it("is asked of a staff row while no declaration is signed — never of a public row, never under a signed one", () => {
+    expect(asksNameCheck({ source: "STAFF" }, false)).toBe(true);
+    expect(asksNameCheck({ source: "STAFF" }, true)).toBe(false);
+    expect(asksNameCheck({ source: "PUBLIC" }, false)).toBe(false);
+  });
+
+  it("draws the two name boxes first, as the form asks them — alone when nothing else is missing, never under a signature", () => {
+    expect(answersToAsk(["birthDate", "city"], false, true)).toEqual({ fields: ["firstName", "lastName", "birthDate", "city"], guardianIfMinor: true });
+    expect(answersToAsk([], false, true)).toEqual({ fields: ["firstName", "lastName"], guardianIfMinor: false });
+    expect(answersToAsk(["city"], true, true)).toEqual({ fields: ["city"], guardianIfMinor: false });
+    // A name missing outright is asked once.
+    expect(answersToAsk(["firstName", "city"], false, true).fields).toEqual(["firstName", "lastName", "city"]);
+  });
+
+  it("writes a corrected name with the answers: the name of record and its key, the list's name derived from it as the form derives it", () => {
+    const plan = planAnswerCompletion(sebi, corrected, atSigning);
+    expect(plan?.set).toMatchObject({
+      firstName: "Sebastian",
+      lastName: "Popescu",
+      registeredName: "Sebastian Popescu",
+      nameKey: registrationNameKey("Sebastian Popescu"),
+      displayName: resolveDisplayName({ firstName: "Sebastian", lastName: "Popescu", legalName: "Sebastian Popescu" }),
+      city: "Sibiu",
+    });
+    expect(plan?.nameChange).toEqual({ from: "Sebi Sebi", to: "Sebastian Popescu" });
+    expect(plan?.corrected.map((answer) => answer.field)).toEqual(expect.arrayContaining(["firstName", "lastName", "displayName"]));
+  });
+
+  it("a name left as the club typed it, or a box left blank, writes nothing of the name — and asks no more than that", () => {
+    const kept = planAnswerCompletion(sebi, { ...TYPED_ANSWERS, firstName: " Sebi ", lastName: "Sebi" }, atSigning);
+    expect(kept?.set).not.toHaveProperty("firstName");
+    expect(kept?.set).not.toHaveProperty("registeredName");
+    expect(kept?.nameChange).toBeNull();
+    expect(planAnswerCompletion(sebi, TYPED_ANSWERS, atSigning)?.nameChange).toBeNull();
+    // Nothing missing: the name alone, unchanged, is nothing to do; corrected, it is the whole write.
+    const whole = { ...sebi, ...complete, source: "STAFF", firstName: "Sebi", lastName: "Sebi" } as unknown as Registration;
+    expect(planAnswerCompletion(whole, { firstName: "Sebi", lastName: "Sebi" }, atSigning)).toBeNull();
+    expect(planAnswerCompletion(whole, {}, atSigning)).toBeNull();
+    expect(planAnswerCompletion(whole, { firstName: "Sebastian", lastName: "Popescu" }, atSigning)?.set).toMatchObject({ registeredName: "Sebastian Popescu" });
+  });
+
+  it("refuses a name the form refuses, by its box", () => {
+    expect(refusalOf(() => planAnswerCompletion(sebi, { ...corrected, firstName: "S".repeat(101) }, atSigning))).toEqual(["firstName"]);
+  });
+
+  it("keeps a list name chosen apart from the name, as every correction of the two names does", () => {
+    const chosen = { ...sebi, displayName: "Sebi" } as unknown as Registration;
+    expect(planAnswerCompletion(chosen, corrected, atSigning)?.set).not.toHaveProperty("displayName");
+  });
+
+  it("never reads the name of a public row, under a signed declaration, or from the manage link", () => {
+    expect(planAnswerCompletion({ ...sebi, source: "PUBLIC" } as unknown as Registration, corrected, atSigning)?.set).not.toHaveProperty("firstName");
+    expect(planAnswerCompletion(sebi, corrected, { ...atSigning, declarationSigned: true })?.set).not.toHaveProperty("firstName");
+    expect(planAnswerCompletion(sebi, corrected, context)?.set).not.toHaveProperty("firstName");
+  });
+
+  it("after a refused press, the signature is checked against the name the kept draft corrected", () => {
+    const keptDraft = { firstName: "Sebastian", lastName: "Popescu", birthDate: "11.05.1990", sex: "FEMALE", nationality: "RO", city: "Sibiu", phoneCountry: "RO", phone: "0712345678", emergencyContactName: "Ion Pop", emergencyContactPhoneCountry: "RO", emergencyContactPhone: "0722345678" };
+    const after = registrationAfterCompletion(sebi, draftAnswers(keptDraft, "ro"), atSigning);
+    expect(after && expectedSignatures(after, { minorSigns: false })).toEqual({ typedName: "Sebastian Popescu", minorTypedName: null });
   });
 });
 

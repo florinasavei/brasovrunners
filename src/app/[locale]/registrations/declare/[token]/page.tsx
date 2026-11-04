@@ -39,8 +39,8 @@ import {
   registrationAfterCompletion,
 } from "@/modules/registrations/complete-answers";
 import { birthDateBounds } from "@/modules/registrations/form-view";
-import { answersToAsk, COMPLETE_ANSWERS_ID, missingAnswers } from "@/modules/registrations/missing-answers";
-import { missingAnswersFields } from "@/modules/registrations/ui/MissingAnswersFields";
+import { answersToAsk, asksNameCheck, COMPLETE_ANSWERS_ID, missingAnswers } from "@/modules/registrations/missing-answers";
+import { answerBoxId, missingAnswersFields } from "@/modules/registrations/ui/MissingAnswersFields";
 import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
 import { listSocialsMergeValues } from "@/modules/registrations/list-socials-words";
 import { listNumbersMergeValues } from "@/modules/registrations/list-number-words";
@@ -59,7 +59,7 @@ import LegalLink from "@/shared/ui/LegalLink";
 import { readFormDraft } from "@/modules/registrations/form-draft";
 import { DECLARATION_ACCEPT_BOX_ID, DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import UntickedBoxSummary from "@/modules/registrations/ui/UntickedBoxSummary";
-import { countEligibleWaitlisted, findRegistrationById } from "@/modules/registrations/repository";
+import { countEligibleWaitlisted, findRegistrationById, offersWaitlistAutomatically } from "@/modules/registrations/repository";
 import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-deadlines";
 import { declarantValues, identityDocumentValues } from "@/modules/registrations/signed-declaration";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
@@ -100,7 +100,7 @@ import {
   passFitsLink,
   readFamilySigningPass,
 } from "@/modules/registrations/family-signing";
-import { spentLinkHasFamilyLeft } from "@/modules/registrations/token-actions";
+import { spentLinkHasFamilyLeft, spentLinkOffersByItself } from "@/modules/registrations/token-actions";
 import FamilySigningSteps from "@/modules/registrations/ui/FamilySigningSteps";
 
 /**
@@ -118,15 +118,17 @@ async function heldPass(token: string, pass: FamilySigningPass | null, now: Date
  * next — a confirmed person's desk code and QR, the waiting list, or the emailed link that still
  * signs a person left for later — then «Gata», back to the event.
  */
-async function FamilyDone({ steps, doneHref }: { steps: readonly FamilyStep[]; doneHref: string }) {
+async function FamilyDone({ steps, doneHref, eventId }: { steps: readonly FamilyStep[]; doneHref: string; eventId: string }) {
   const t = await getTranslations("Registrations");
   const later = steps.some((step) => step.state === "later");
+  // Who gives the places, for anybody now in the line (§908): the allocator's own rule, read off the event — only then.
+  const byItself = steps.some((step) => step.status === "WAITLISTED") ? await offersWaitlistAutomatically(getDb(), eventId) : true;
   return (
     <Box data-testid="family-signing-done" sx={{ mt: 3 }}>
       <Typography variant="h2" sx={{ fontSize: "1.125rem", mb: 1 }}>
         {t("declare.family.doneTitle")}
       </Typography>
-      <FamilySigningSteps steps={steps} detailed />
+      <FamilySigningSteps steps={steps} detailed byItself={byItself} />
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {later ? t("declare.family.doneLater") : t("declare.family.doneAll")}
       </Typography>
@@ -236,6 +238,23 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     // The last person of a family signed: everybody on the address, each with their state.
     const held = await heldPass(token, pass, now);
     const familySteps = held ? await familyStepsOfPass(getDb(), held) : null;
+    /*
+      Who gives the places (§908): while no place reaches the line by itself — «Nu», or «Locurile libere le dau doar eu» —
+      the person now in the line is told the organizers write when they can give one, never «when a place frees up»; the
+      person confirmed, that the organizers may give their place on to the line if they cancel, never that it goes there by
+      itself. The allocator's own rule, read off the event: the family's pass names it, else the link.
+    */
+    const byItself = held
+      ? await offersWaitlistAutomatically(getDb(), held.eventId)
+      : await spentLinkOffersByItself(token, ["COMPLETE_DECLARATION", "WAITLIST_OFFER", "REGISTER_ANOTHER_PERSON"], now);
+    const nextKey =
+      done === "waitlisted"
+        ? byItself
+          ? "declare.nextWaitlisted"
+          : "declare.nextWaitlistedByHand"
+        : byItself
+          ? "declare.nextConfirmed"
+          : "declare.nextConfirmedByHand";
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
@@ -252,7 +271,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           {await spamHintWords()}
         </Alert>
         {held && familySteps && isFamilyWizard(familySteps) && (
-          <FamilyDone steps={familySteps} doneHref={await familyDoneHref(held.eventId, locale)} />
+          <FamilyDone steps={familySteps} doneHref={await familyDoneHref(held.eventId, locale)} eventId={held.eventId} />
         )}
         {/* The toast the signature flashed (§427): the one that matches this outcome, never the other. */}
         {flashSlot}
@@ -261,7 +280,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           {t("declare.nextTitle")}
         </Typography>
         <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { mb: 0.75 } }}>
-          {nextLines(t.raw(done === "waitlisted" ? "declare.nextWaitlisted" : "declare.nextConfirmed") as string[], locale, reminderHours(reminder, await cachedDeadlines())).map((line, index) => (
+          {nextLines(t.raw(nextKey) as string[], locale, reminderHours(reminder, await cachedDeadlines())).map((line, index) => (
             <Typography component="li" key={index}>
               {line}
             </Typography>
@@ -517,24 +536,33 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     signature, with the form's own boxes, and saved with it in one transaction; the signature is refused while any
     is missing. A complete registration reads nothing more and draws nothing more.
   */
-  // The event's row only when something may be owed: an answer whatever the event, or a T-shirt size never given.
-  const mayOwe = formBelow && registration ? registration.tshirtSize === null || missingAnswers({}, registration).length > 0 : false;
+  /*
+    «Verifică-ți numele complet» (§907): the name of a staff row — the club typed it — drawn in the form's two name
+    boxes above the signature for the person to check and correct, while no declaration is signed; saved with the
+    answers and the signature in the one press, the signature checked against the name it leaves.
+  */
+  const staffRow = formBelow && registration?.source === "STAFF";
+  // The event's row only when something may be asked: an answer whatever the event, a T-shirt size never given, a name the club typed.
+  const mayOwe = formBelow && registration ? staffRow || registration.tshirtSize === null || missingAnswers({}, registration).length > 0 : false;
   const formEvent = mayOwe && registration ? await findEventForRegistrationById(db, registration.eventId) : undefined;
   const owed = formEvent && registration ? missingAnswers(formEvent, registration) : [];
   // Signed before (a declaration on paper, an older acceptance): the boxes the write will judge by (`answers.ts#GUARDIAN_SIGNED`).
-  const signedBefore = owed.length > 0 && registration ? await declarationSignedFor(db, registration.id) : false;
-  const answersAsked = answersToAsk(owed, signedBefore);
+  const signedBefore = (owed.length > 0 || staffRow) && registration ? await declarationSignedFor(db, registration.id) : false;
+  const nameCheck = Boolean(formEvent && registration && asksNameCheck(registration, signedBefore));
+  const answersAsked = answersToAsk(owed, signedBefore, nameCheck);
+  const asksAnswers = owed.length > 0 || nameCheck;
   /*
     Who signs follows the answers (§108, §314): a minor's birth date typed above brings a parent or guardian, who
     signs as the declarant. After a refused press the kept answers say who, through the planner the press runs
     (`registrationAfterCompletion`), so the boxes below, the text's declarant and the server's check are one person.
     Before anything is typed, while the birth date or the guardian is still asked, nobody can know it yet: the
     signature then names no person to match while typing (`signerOpen`), says whose name it takes in either case,
-    and the server checks it against the row the answers leave.
+    and the server checks it against the row the answers leave. A name corrected above (§907) is read the same way —
+    the box follows the name boxes as they are typed, too (`SignatureField#nameFrom`).
   */
   const afterPress =
-    owed.length > 0 && registration && formEvent
-      ? registrationAfterCompletion(registration, draftAnswers(draft, locale), completionContext(formEvent, now, signedBefore))
+    asksAnswers && registration && formEvent
+      ? registrationAfterCompletion(registration, draftAnswers(draft, locale), completionContext(formEvent, now, signedBefore, "DECLARATION"))
       : null;
   const signer = afterPress ?? registration;
   const signerOpen = afterPress === null && (answersAsked.guardianIfMinor || answersAsked.fields.includes("guardianName"));
@@ -544,6 +572,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const signsForMinor = signer?.guardianName ? signer.registeredName : null;
   // The declarant is a guardian the boxes above brought, not one the row holds: still the person's to correct there.
   const guardianTypedAbove = signsForMinor !== null && !registration?.guardianName;
+  // The name boxes above, while the person checks the name the club typed (§907): the signature follows them as typed.
+  const nameFrom = nameCheck ? { firstName: answerBoxId("firstName"), lastName: answerBoxId("lastName") } : undefined;
   const contactHref = getPathname({ locale, href: "/contact" });
   /*
     Where a parent whose own name was mistyped goes (§314, found in review): "Înscrierile mele",
@@ -615,7 +645,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
 
       {familyMode && !familyCurrent && passSteps && walking ? (
         /* The family's wizard with nobody left to sign (§471): who was signed, and nothing to press. */
-        <FamilyDone steps={passSteps} doneHref={await familyDoneHref(walking.eventId, locale)} />
+        <FamilyDone steps={passSteps} doneHref={await familyDoneHref(walking.eventId, locale)} eventId={walking.eventId} />
       ) : blocked || !declaration || movedOnNotice ? (
         <>
           <ActionLinkNotice locale={locale} status={notice} replaced={notice ? null : replaced} />
@@ -685,9 +715,14 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             «Completează-ți datele» (§905), said before the declaration's text: the boxes are above the signature,
             and nobody should reach the end of a page of legal text to learn that something is still asked of them.
           */}
-          {owed.length > 0 && (
+          {/* The name checked too (§907): the lead says so — the declaration's text below still names the club's typing. */}
+          {asksAnswers && (
             <Alert severity="warning" sx={{ mb: 3 }} data-testid="complete-answers-lead">
-              {t.rich("complete.declareLead", { link: completeLink })}
+              {owed.length === 0
+                ? t.rich("complete.nameLead", { link: completeLink })
+                : nameCheck
+                  ? t.rich("complete.declareLeadName", { link: completeLink })
+                  : t.rich("complete.declareLead", { link: completeLink })}
             </Alert>
           )}
 
@@ -762,8 +797,11 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   <MuiLink href={`#${box}`}>{boxLabel(box)}</MuiLink>
                 </Box>
               ))}
+              {/* A name checked above (§907) is the person's to correct there — never a message to the club. */}
               {refusedBoxes.includes("minorTypedName") && (
-                <Box sx={{ mt: 0.5 }}>{t.rich(canReply ? "declare.minorNameWrongReply" : "declare.minorNameWrong", { contact })}</Box>
+                <Box sx={{ mt: 0.5 }}>
+                  {nameCheck ? t("complete.minorNameTypedAbove") : t.rich(canReply ? "declare.minorNameWrongReply" : "declare.minorNameWrong", { contact })}
+                </Box>
               )}
               {refusedBoxes.includes("typedName") && (
                 <Box sx={{ mt: 0.5 }}>
@@ -772,7 +810,9 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                     ? t("complete.guardianTypedAbove")
                     : signsForMinor !== null
                       ? t.rich(canReply ? "declare.signatureNameWrongForMinorReply" : "declare.signatureNameWrongForMinor", { contact, mine })
-                      : t.rich(canReply ? "declare.signatureNameWrongReply" : "declare.signatureNameWrong", { contact })}
+                      : nameCheck
+                        ? t("complete.nameTypedAbove")
+                        : t.rich(canReply ? "declare.signatureNameWrongReply" : "declare.signatureNameWrong", { contact })}
                 </Box>
               )}
             </Alert>
@@ -818,11 +858,14 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               <input type="hidden" name="contentSha256" value={declaration?.contentSha256 ?? ""} />
               {/*
                 «Completează-ți datele» (§905), first in the form: only the answers missing, with the public form's
-                own boxes, saved with the signature in one transaction — a refusal of either keeps what was typed.
+                own boxes, saved with the signature in one transaction — a refusal of either keeps what was typed. On a
+                staff row not yet signed, the name the club typed first of all, prefilled, to check (§907).
               */}
-              {owed.length > 0 && formEvent && registration &&
+              {asksAnswers && formEvent && registration &&
                 (await missingAnswersFields({
                   ...answersAsked,
+                  // The name the club typed, prefilled for the person to check (§907); null on a public row.
+                  checkedName: nameCheck ? { firstName: registration.firstName, lastName: registration.lastName } : null,
                   locale,
                   birthDate: {
                     ...birthDateBounds(effectiveMinimumAge(formEvent.minAge), dayIn(formEvent.startsAt, formEvent.timezone), now),
@@ -833,7 +876,15 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   invalid: answersRefusal?.invalid ?? new Set(),
                   refusal: { tooYoung: answersRefusal?.tooYoung === true, emergencySame: answersRefusal?.emergencySame === true },
                   draft,
-                  heading: familyCurrent ? t("complete.titleFor", { name: registration.registeredName }) : t("complete.title"),
+                  // Only the name to check (§907): its own heading — nothing is missing, so nothing is «to complete».
+                  heading:
+                    nameCheck && owed.length === 0
+                      ? familyCurrent
+                        ? t("complete.nameTitleFor", { name: registration.registeredName })
+                        : t("complete.nameTitle")
+                      : familyCurrent
+                        ? t("complete.titleFor", { name: registration.registeredName })
+                        : t("complete.title"),
                   // The rule's own sentence beside the boxes, as on the manage page: a declaration signed before names its declarant.
                   refused: answersRefusal
                     ? {
@@ -890,8 +941,9 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                     page says whose signature it wants. Not for a minor — the parent signs there,
                     and the box below already says so.
                   */}
+                  {/* With the name check on, the name the club typed may be corrected above: the line names nobody. */}
                   {!signerOpen && signsForMinor === null && expectedName !== null && (
-                    <Typography>{t("declare.signPersonally", { participant: expectedName })}</Typography>
+                    <Typography>{nameCheck ? t("declare.signPersonallyNameAbove") : t("declare.signPersonally", { participant: expectedName })}</Typography>
                   )}
                   {needsDocuments && (
                     <IdDocumentFields
@@ -924,7 +976,15 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                     canReply={canReply}
                     defaultValue={draft?.typedName}
                     refused={nameRefused}
-                    help={signerOpen && registration ? t("complete.signatureOpen", { name: registration.registeredName }) : undefined}
+                    // With the name checked above (§907), whose name it is is typed there: the sentence names none.
+                    help={
+                      signerOpen && registration
+                        ? nameCheck
+                          ? t("complete.signatureOpenName")
+                          : t("complete.signatureOpen", { name: registration.registeredName })
+                        : undefined
+                    }
+                    nameFrom={nameFrom}
                   />
                 </>
               ) : (
@@ -968,6 +1028,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                     canReply={canReply}
                     defaultValue={draft?.minorTypedName}
                     refused={nameRefused}
+                    nameFrom={nameFrom}
                   />
                   <Typography variant="h2" sx={{ fontSize: "1.125rem", pt: 1 }}>
                     {t("declare.guardianSection", { name: expectedName ?? "" })}
@@ -998,6 +1059,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                     canReply={canReply}
                     defaultValue={draft?.typedName}
                     refused={nameRefused}
+                    nameFrom={nameFrom}
                   />
                 </>
               )}
