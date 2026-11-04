@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.23` | «Planul locurilor» and «Istoric capacitate» for each race (§911) |
 | `BR-V4.22` | the kits as runners plus volunteers, an «Elite» fold on the registrations list, the elites at the start and beside the bibs, the site's tick offered once, «Voluntari» counted like «Înscrieri» (§909) · an elite's «Apare în clasament» and «Apare pe site» (§910) |
 | `BR-V4.21` | the person checks and corrects the full name the club typed, on the declaration's and the offer's page, before signing (§907) · every waiting-list page says who gives the places, «Nu» and the tick alike (§908) |
 | `BR-V4.20` | the Administrator controls the site's door: public registration tick, free places by offer only, «Pe site acum», places alert (§906) |

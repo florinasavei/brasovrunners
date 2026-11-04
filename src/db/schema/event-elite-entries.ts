@@ -18,6 +18,7 @@ export const ELITE_NUMBER_MAX = 99_999;
  * summary and export, the sponsors' list and the desk never read this table, and the results read only which
  * lines run hors concours (§910, below). The declaration rule stays whole precisely because an elite line is a
  * name to print and nothing else.
+ * Beside the registrations list, «Planul locurilor» counts the lines too — among the runners, a kit and a bib each to order — never in the places.
  *
  * Read by whoever reads the registrations (`canReadRegistrations`: the Organizer and above), written by the
  * Administrator (`canManageRegistrations`), asserted in `elite-list.ts`. **Deleted with the event**
