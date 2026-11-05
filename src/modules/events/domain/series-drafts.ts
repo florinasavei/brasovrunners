@@ -42,6 +42,12 @@ export type SeriesDraftMember = {
 export function seriesDrafts<M extends SeriesDraftMember>(
   members: readonly M[],
   now: Date,
+  /**
+   * The date that holds the rule when `members` are only the dates a list's state kept — a past
+   * source under «Viitoare» (`arrangeEventList`'s `source`) — so the reason and the switch are
+   * still named; the drafts counted stay the members'. Ignored when a member holds the rule.
+   */
+  ruleHolder: M | null = null,
 ): {
   drafts: M[];
   reason: DraftReason | null;
@@ -52,7 +58,7 @@ export function seriesDrafts<M extends SeriesDraftMember>(
    */
   source: M | null;
 } {
-  const source = members.find((member) => readRepeatRule(member.repeatRule) !== null) ?? null;
+  const source = members.find((member) => readRepeatRule(member.repeatRule) !== null) ?? ruleHolder ?? null;
   const ahead = members
     .filter((member) => member.editorialStatus === "DRAFT" && member.startsAt.getTime() >= now.getTime())
     .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
