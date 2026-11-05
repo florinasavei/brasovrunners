@@ -143,17 +143,39 @@ export function drawPosterCells(ctx: CanvasRenderingContext2D, data: CalendarIma
     return [...sizes, to];
   };
   /**
-   * `lines` with the first of `details` that fit after the last line, « · » between, else on a line of their own
-   * — the climb dropped first, then the distance, then the place; nothing when not even the place fits. The
-   * first line is `lead` narrower (the glyphs before an hour).
+   * `lines` with `details` together after the last line, « · » between, else on a line of their own; when no
+   * line holds them all, the first of them that fit so, dropped from the end — the place's name first (§873),
+   * then the climb, then the distance — and nothing when not even the first fits. With `each`, one word at a
+   * time instead of dropping: after the last line while it fits there, else on a line of its own, the first that
+   * fits nowhere ending it — for the key, whose row may grow a line, so a series' place (the owner, 2026-11-05:
+   * «Nu văd locul aici la poza pentru alergarea din parc») is not lost for want of room on the rhythm's line.
+   * The first line is `lead` narrower (the glyphs before an hour).
    */
-  const withDetails = (lines: string[], details: string[], width: number, font: string, lead = 0): string[] => {
+  const withDetails = (lines: string[], details: string[], width: number, font: string, lead = 0, each = false): string[] => {
     const room = (index: number) => width - (index === 0 ? lead : 0);
-    for (let count = details.length; count > 0; count -= 1) {
+    /** The first `count` details together, after the last line or on a line of their own; null when neither holds them. */
+    const together = (count: number): string[] | null => {
       const words = details.slice(0, count).join(" · ");
       const last = lines.length - 1;
       if (last >= 0 && measure(`${lines[last]} · ${words}`, font) <= room(last)) return [...lines.slice(0, -1), `${lines[last]} · ${words}`];
-      if (measure(words, font) <= room(lines.length)) return [...lines, words];
+      return measure(words, font) <= room(lines.length) ? [...lines, words] : null;
+    };
+    if (details.length === 0) return lines;
+    const whole = together(details.length);
+    if (whole) return whole;
+    if (each) {
+      const grown = [...lines];
+      for (const word of details) {
+        const last = grown.length - 1;
+        if (last >= 0 && measure(`${grown[last]} · ${word}`, font) <= room(last)) grown[last] = `${grown[last]} · ${word}`;
+        else if (measure(word, font) <= room(grown.length)) grown.push(word);
+        else break;
+      }
+      return grown;
+    }
+    for (let count = details.length - 1; count > 0; count -= 1) {
+      const some = together(count);
+      if (some) return some;
     }
     return lines;
   };
@@ -715,18 +737,21 @@ export function drawPosterCells(ctx: CanvasRenderingContext2D, data: CalendarIma
   };
   type KeyMetrics = ReturnType<typeof keyMetrics>;
   /**
-   * How much the key says: each series' rhythm and details, and the special dates' details. The series give way
-   * first (the owner's order: the special dates outrank the weekly rhythm) — their details, then the specials'
-   * details, then their rhythm, the row its chip and its name on a line, side by side where the panel is wide.
-   * The series' rows themselves never go: the key is the one place a series is named. The last (`rescue`) only to
-   * name a date that would be named nowhere whole, or to squeeze a week less.
+   * How much the key says: each series' rhythm and details, and the special dates' details. First every word,
+   * a row growing a line for a detail its rhythm's line has no room for (`lines`); then the details that fit
+   * together on one line, the rest dropped from the end. The series give way next (the owner's order: the
+   * special dates outrank the weekly rhythm) — their details, then the specials' details, then their rhythm,
+   * the row its chip and its name on a line, side by side where the panel is wide. The series' rows themselves
+   * never go: the key is the one place a series is named. The last (`rescue`) only to name a date that would be
+   * named nowhere whole, or to squeeze a week less.
    */
-  type Trim = { name: string; rhythm: boolean; series: boolean; special: boolean; rescue: boolean };
+  type Trim = { name: string; rhythm: boolean; series: boolean; special: boolean; lines: boolean; rescue: boolean };
   const TRIMS: readonly Trim[] = [
-    { name: "all", rhythm: true, series: true, special: true, rescue: false },
-    { name: "special details", rhythm: true, series: false, special: true, rescue: false },
-    { name: "rhythm", rhythm: true, series: false, special: false, rescue: false },
-    { name: "names", rhythm: false, series: false, special: false, rescue: true },
+    { name: "all", rhythm: true, series: true, special: true, lines: true, rescue: false },
+    { name: "all on one line", rhythm: true, series: true, special: true, lines: false, rescue: false },
+    { name: "special details", rhythm: true, series: false, special: true, lines: false, rescue: false },
+    { name: "rhythm", rhythm: true, series: false, special: false, lines: false, rescue: false },
+    { name: "names", rhythm: false, series: false, special: false, lines: false, rescue: true },
   ];
   type KeyItem = { row: KeyRow; lines: string[]; notes: string[]; h: number };
   /**
@@ -757,7 +782,7 @@ export function drawPosterCells(ctx: CanvasRenderingContext2D, data: CalendarIma
       if (measure(row.note, noteFont) > textW - lead) return null;
       notes = row.note ? [row.note] : [];
     }
-    if (row.kind === "series" ? trim.series : trim.special) notes = withDetails(notes, row.details, textW, noteFont, lead);
+    if (row.kind === "series" ? trim.series : trim.special) notes = withDetails(notes, row.details, textW, noteFont, lead, trim.lines);
     const textH = lines.length * size * 1.16 + notes.length * m.note * 1.3;
     return { row, lines, notes, h: Math.max(row.kind === "series" ? m.chip : m.badge, textH) + 2 * m.pad };
   };
