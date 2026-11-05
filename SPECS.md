@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.29-2026-11-04 -->
+<!-- PROJECT_BASELINE: BR-V4.30-2026-11-05 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V4.29-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.30-2026-11-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -451,6 +451,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 243. Given a month in the calendar, when a visitor presses «Salvează ca imagine», then the month is drawn in their browser as a PNG in the chosen theme and format — each date on its day in the club's zone, with its hour and title, the recurring and special events listed when asked — and downloaded or shared, with no request to the server beyond the page itself (2026-10-27, `DECISIONS.md` §855).
 244. Given a month in the calendar, when a visitor saves it as a picture, then they may choose the month or one of its weeks, any of seven styles in any of the three layouts, and which details follow each hour (the short place, the distance, the climb); every special date of the period is named whole somewhere on the picture and the race in every list drawn, no word is set under 17 px on a 1080-wide picture (21 on 16:9), a story keeps its words out of its top 250 and bottom 340 px, and a period with no event says so (2026-10-28, `DECISIONS.md` §859).
 245. Given «Calendarul lunii ca imagine» with «Locul» ticked, when a date has no «Locul, pe scurt», then it shows its place's name up to the first comma after its distance and climb — the first word dropped when the cell is short — and the tick is greyed only while no date of the period has its place announced (2026-10-31, `DECISIONS.md` §873).
+246. Given «Calendarul lunii ca imagine» in «Legenda în celule» with «Locul» ticked, when a date's details have no room together on its key row's line, then the row grows a line for them, word by word, before any is dropped — a series' place on the line under its rhythm (2026-11-05, `DECISIONS.md` §918).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 

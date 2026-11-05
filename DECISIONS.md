@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.29-2026-11-04 -->
+<!-- PROJECT_BASELINE: BR-V4.30-2026-11-05 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.29-2026-11-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.30-2026-11-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -29087,3 +29087,17 @@ Baseline `BR-V4.28-2026-11-04`.
 **An invitation is its own door — pinned (the owner, 2026-11-04: «trebuie să poată lumea să se înscrie prin invitație, chiar dacă înscrierile pe site sunt închise»).** Already so by §647 and §906 — an invitation's form is a staff channel, past «Înscrieri publice deschise», «Locurile libere le dau doar eu» and the registration window — and now held by a test (`tests/integration/registrations/elite-at-entry-and-invitation.test.ts`): with the switch unticked, offers-only ticked and the window closed, the public form is refused and nothing written, while an invitation is sent, its link reads open, it is accepted into a held place and signed.
 
 Baseline `BR-V4.29-2026-11-04`.
+
+## 918. The key of «Legenda în celule» grows a line for a place its rhythm's line cannot hold
+
+**The owner, 2026-11-05,** with a screenshot of «Calendarul lunii ca imagine» on production — «Legenda în celule» on 4:5, «Locul» ticked: «Nu văd locul aici la poza pentru alergarea din parc.» The Monday series' row read «În fiecare luni, la 18:30 · 10 km · 30 m D+», the Wednesday's «În fiecare miercuri, la 19:00 · 10 km · 380 m D+ · Sub Tâmpa».
+
+**Problem.** The key's row put a date's details after its rhythm on one line: all of them, else all on a line of their own, else the first of them that so fit, dropped from the end. Since §873 the place's name of a date with no short place is the last word, so a name too long for its column went first and quietly: «Sub Tâmpa» fit, «Parcul …» did not, and nothing tried a line more — though the key is the one place in the picture a series is named whole, and its row may grow.
+
+**Decision.** The key's first measure («all» in `TRIMS`, `calendar-image-poster-cells.ts`) lets a row grow a line: the details together after the rhythm or on a line of their own, as before, and when no line holds them all, one word at a time — after the last line while it fits there, else on a line of its own, the first that fits nowhere ending it (the rule «Seriile în cap» already wraps its notes by). The planner reads the taller row from its height and gives the key's week the room or takes a smaller size; where even that does not fit, the next measure, «all on one line», is what the key did until now, so a busy month's key keeps its distance and climb before giving way to the special dates' details, in the owner's order. A day's cell keeps its rule: it has no line to grow, and the key names the date whole.
+
+**Refused.** Putting the name back before the distance and the climb — §873's reason stands: in a short cell the name must be the first word to go. Growing a line at every measure: the series give way to the special dates in the owner's order, and a key already squeezed has no line to spare. Touching «Seriile în cap» and «Legenda dedesubt», which wrap the rhythm and the details already.
+
+**Checked.** The club's November — two weekday series, the Monday's name longer than its column's line, the race on the 21st — in «Legenda în celule» on 4:5 draws «Parcul Nicolae Titulescu» on the line under its rhythm, and nothing unticked (`tests/unit/events/calendar-image-overflow.test.ts`); every sample month still crosses no box and falls under no readable floor in every theme, layout and format.
+
+Baseline `BR-V4.30-2026-11-05`.
