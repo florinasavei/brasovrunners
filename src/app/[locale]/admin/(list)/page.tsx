@@ -114,6 +114,8 @@ type ListRow = {
   key: string;
   members: EventRow[];
   next: EventRow;
+  /** The date holding the series' rule, among every date read — a past one under «Viitoare» (`arrangeEventList`). */
+  source: EventRow | null;
   sentence: string | null;
   /** The dates unlike the series' others (§122), by event id. */
   notes: Map<string, EditionNote>;
@@ -219,7 +221,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   // The M of «N din M evenimente»: the lines with nothing narrowing them.
   const allLineCount = countEventLines(rows);
   const lines: ListRow[] = await Promise.all(
-    arrangeEventList(rows, listQuery, now, locale).map(async ({ key, members, next }) => {
+    arrangeEventList(rows, listQuery, now, locale).map(async ({ key, members, next, source }) => {
       const usual = members.length > 1 ? usualOf(members.map((member) => member.event)) : { place: null, time: null };
       const notes = new Map<string, EditionNote>();
       for (const member of members) {
@@ -230,6 +232,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         key,
         members,
         next,
+        source,
         sentence: members.length > 1 ? await recurrenceSentence(members.map((member) => member.event), next.event.timezone, locale) : null,
         notes,
       };
@@ -292,7 +295,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
       key: "title",
       label: t("events.columnTitle"),
       primary: true,
-      render: ({ members, next, sentence, notes }) => {
+      render: ({ members, next, source: ruleHolder, sentence, notes }) => {
         const { event, translations } = next;
         return (
           <Stack spacing={0.5}>
@@ -359,7 +362,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                 so far, which read as an end; this line is the rule itself — for ever, or until
                 the day the club chose — and the horizon the platform keeps ahead (§122). */}
             {(() => {
-              const renewal = renewalOf(members.map((member) => member.event.repeatRule));
+              const renewal = renewalOf([ruleHolder?.event.repeatRule, ...members.map((member) => member.event.repeatRule)]);
               if (!renewal) return null;
               // The robot (§398; the owner: "aici am nevoie de o iconiță gen «robot» ca să știu
               // că se reînnoiește automat"), leading the sentence unchanged — decorative, since
@@ -433,7 +436,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
       key: "status",
       label: t("events.columnStatus"),
       essential: true,
-      render: ({ members, next }) => {
+      render: ({ members, next, source: ruleHolder }) => {
         // One chip per state the series is in, with how many dates are in it ("Publicat · 8 date";
         // the owner: "not sure what these statuses are"); one event, one chip. The registration
         // mode is a chip of its own, with a title saying which setting it is.
@@ -449,7 +452,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
           exactly these dates, "Publică automat de acum" for the rule, or "Deschide seria".
         */
         const { drafts, reason, source } = isSeries
-          ? seriesDrafts(members.map((member) => member.event), now)
+          ? seriesDrafts(members.map((member) => member.event), now, ruleHolder?.event ?? null)
           : { drafts: [], reason: null, source: null };
         const remedies = draftRemedies(reason);
         const DRAFT_LINKS = 6;

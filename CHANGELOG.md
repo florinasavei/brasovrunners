@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.31-2026-11-05
+
+- **The events list names why a series' date is a draft under «Viitoare» too** — the line reads the series' rule from its source even when the state keeps only the dates to come, so a date the series made says so, with «Publică automat de acum» beside «Publică», and the renewal note stays on the row. §919.
 ## BR-V4.30-2026-11-05
 
 - **The calendar picture's key names a series' place even when its line is full** — in «Legenda în celule» a place with no room after the rhythm goes on a line of its own, where before it was left out. §918.

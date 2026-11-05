@@ -1,3 +1,4 @@
+import { readRepeatRule } from "@/modules/events/domain/repeat";
 import { groupSeries } from "@/modules/events/domain/series";
 import { foldForSearch } from "@/modules/registrations/country-search";
 
@@ -243,8 +244,11 @@ export function sortEventLines<T>(
 
 /** What the list reads of one fetched date: the event and its translations. */
 export type ListedRow = {
-  /** `featured` is the club's one main event (§762); a row that does not say is not it. */
-  event: ListedEvent & { id: string; type: string; featured?: boolean };
+  /**
+   * `featured` is the club's one main event (§762); a row that does not say is not it. `repeatRule`
+   * is the series' rule on the one date that holds it (§122), so a line can find its source.
+   */
+  event: ListedEvent & { id: string; type: string; featured?: boolean; repeatRule?: unknown };
   translations: readonly ListedTranslation[];
 };
 
@@ -271,6 +275,15 @@ export type ArrangedLine<T> = {
   members: T[];
   /** The line's date: the first still to come, else the last. */
   next: T;
+  /**
+   * The date of the series that holds its rule (§122) — among every date the list read, not only
+   * the ones the state and the search kept. Under «Viitoare» the source is usually a past date,
+   * months behind the eight weeks the job keeps ahead, so a line narrowed to its dates to come
+   * would otherwise know no rule: no renewal note, and a draft the series made named as one made
+   * by hand, without the switch that ends it (§341, §351; the owner, 2026-11-05, of «1 dată în
+   * ciornă, nu e pe site»: «astea nu se publicau automat?»). Null for a set of dates with no rule.
+   */
+  source: T | null;
 };
 
 /**
@@ -278,10 +291,16 @@ export type ArrangedLine<T> = {
  * lines (§113), pick each line's `next`, order the lines. The page decorates the result.
  */
 export function arrangeEventList<T extends ListedRow>(rows: readonly T[], query: EventListQuery, now: Date, locale: string): ArrangedLine<T>[] {
+  // The rule's holder per series, read off the whole list before the narrowing takes it away.
+  const sources = new Map<string, T>();
+  for (const series of groupRows(rows)) {
+    const holder = series.members.find((member) => readRepeatRule(member.row.event.repeatRule) !== null);
+    if (holder) sources.set(series.key, holder.row);
+  }
   const lines = groupRows(rows.filter((row) => matchesEventList(row.event, row.translations, query, now))).map((series) => {
     const members = series.members.map((member) => member.row);
     const next = members.find((member) => member.event.startsAt.getTime() >= now.getTime()) ?? members[members.length - 1];
-    return { key: series.key, members, next };
+    return { key: series.key, members, next, source: sources.get(series.key) ?? null };
   });
   const ordered = sortEventLines(
     lines,

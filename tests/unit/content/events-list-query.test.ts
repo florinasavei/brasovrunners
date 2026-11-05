@@ -237,6 +237,25 @@ describe("arrangeEventList — a series is one line, sorted by its next date", (
     expect(countEventLines(rows)).toBe(3);
     expect(arrange({ q: "stafeta" })).toHaveLength(1);
   });
+
+  // The owner, 2026-11-05, of a series' «1 dată în ciornă, nu e pe site» with «Publică» alone: «astea nu se
+  // publicau automat?» — under «Viitoare» the past date that holds the rule was not among the members, so the
+  // line could name neither the rule nor its switch (§919).
+  it("knows the series' source under «Viitoare», though the state kept only the dates to come (§341, §351)", () => {
+    const rule = { cadence: "WEEKLY", weekdays: [], until: null, publish: false };
+    const [first, ...others] = rows;
+    const ruled = [{ ...first, event: { ...first.event, repeatRule: rule } }, ...others];
+    const lines = arrangeEventList(ruled, parseEventListQuery({}), NOW, "ro");
+    const weekly = lines.find((line) => line.next.translations[0].title === "Alergare de marți");
+    // The two dates to come are the members; the past date that holds the rule is the source.
+    expect(weekly?.members.map((member) => member.event.id)).toEqual([rows[2].event.id, rows[3].event.id]);
+    expect(weekly?.source?.event.id).toBe(first.event.id);
+    // A set of dates with no rule among them has no source.
+    expect(lines.find((line) => line.next.translations[0].title === "Crosul")?.source).toBeNull();
+    // Under «Toate» the source is a member as well, and the same date.
+    const whole = arrangeEventList(ruled, parseEventListQuery({ state: "ALL" }), NOW, "ro").find((line) => line.members.length === 4);
+    expect(whole?.source?.event.id).toBe(first.event.id);
+  });
 });
 
 describe("arrangeEventList — the main event stands first in every order (§762, amending §527)", () => {
