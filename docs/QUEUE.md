@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.30` | the key of «Legenda în celule» grows a line for a place its rhythm's line cannot hold (§918) |
 | `BR-V4.29` | «Elită» ticked at the staff entry and on an invitation (§917) |
 | `BR-V4.28` | the deadline release's emails under their own cause (§916) |
 | `BR-V4.27` | a person's emails with their tries on the registration's and the volunteer's page, and «Emailuri azi»'s names as links (§915) |
