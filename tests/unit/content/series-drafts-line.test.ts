@@ -144,8 +144,11 @@ describe("§341 §351 the events list's wiring of the draft line", () => {
     expect(page).toContain('.filter(([status]) => !(isSeries && status === "DRAFT"))');
   });
 
-  it("derives the drafts, the reason and the source from the members' own events, only for a series", () => {
-    expect(page).toContain("const { drafts, reason, source } = isSeries\n          ? seriesDrafts(members.map((member) => member.event), now)\n          : { drafts: [], reason: null, source: null };");
+  it("derives the drafts, the reason and the source from the members' own events — the rule's holder handed in when the state narrowed it away — only for a series", () => {
+    expect(page).toContain("const { drafts, reason, source } = isSeries\n          ? seriesDrafts(members.map((member) => member.event), now, ruleHolder?.event ?? null)\n          : { drafts: [], reason: null, source: null };");
+    expect(page).toContain("render: ({ members, next, source: ruleHolder, sentence, notes }) => {");
+    expect(page).toContain("render: ({ members, next, source: ruleHolder }) => {");
+    expect(page).toContain("const renewal = renewalOf([ruleHolder?.event.repeatRule, ...members.map((member) => member.event.repeatRule)]);");
     expect(page).toContain("const remedies = draftRemedies(reason);");
   });
 

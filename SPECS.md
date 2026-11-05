@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.30-2026-11-05 -->
+<!-- PROJECT_BASELINE: BR-V4.31-2026-11-05 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V4.30-2026-11-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.31-2026-11-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -2430,6 +2430,7 @@ way through every step, and none of them is a way around the allocator.
 212. The editor's «Locuri păstrate pentru club» (empty is 0, saved as 0 on an uncapped event, copied by a duplicate and every date of a series, carried by a series save, exported and imported in the event file when above 0) shows the places the site announces under it, and «De ce schimbi locurile? (opțional)» under the places is kept on the history; «Locuri» on the registrations list splits the free places into the site's and the club's, and «Pe site acum» says only the kept places are left only while the page reads full by its own door (2026-11-04, `DECISIONS.md` §914).
 213. Before the event editor's save commits a change to a place setting — the capacity, the waiting list's choice and limit, «Da»/«Nu», «Înscrieri publice deschise», «Locurile libere le dau doar eu», «Locuri păstrate pentru club», «Eliberează singur locurile nesemnate la termen», the places alert, or the window's days moving an armed release — one confirmation lists each change before → after and its effect from the counts the page read: the places the site announces, the free places on the site and kept for the club, whether offers are emailed, a lowering under the places taken; a save that changes none asks nothing; RO and EN (2026-11-04, `DECISIONS.md` §914).
 214. The editor's «Eliberează singur locurile nesemnate la termen» is a tick with its marker under the declaration's deadline, off by default, audited, carried by the event file only when on and never copied by a duplicate, a series save or the dates a series makes; its help names the saved deadline, says when it has no effect and that it ran; «Când se pierde un loc» says the deadline's release while armed and after it ran (2026-11-04, `DECISIONS.md` §914).
+215. Given a series whose source the list's state does not show (a past source under «Viitoare»), when the backoffice list renders its row, then the row still knows the series' rule: the renewal note is drawn, and a draft the series made is named as such, with «Publică automat de acum» beside «Publică» for a role that may use them — the drafts counted being the dates shown (2026-11-05, `DECISIONS.md` §919).
 - only the lines with a date whose title, page address or place contains every typed word in either language (accents and case ignored) and whose state matches are listed;
 - the state is an editorial state, «Anulat» (the event's own status), «Viitoare» or «Trecute»;
 - a series is narrowed to its matching dates before it is grouped;

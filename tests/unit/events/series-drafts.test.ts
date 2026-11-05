@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { draftRemedies, seriesDrafts } from "@/modules/events/domain/series-drafts";
+import { draftRemedies, seriesDrafts, type SeriesDraftMember } from "@/modules/events/domain/series-drafts";
 
 /**
  * `DECISIONS.md` §341 — the owner, of a series row reading "Publicat · 8 date · Ciornă · 1
@@ -61,6 +61,18 @@ describe("§341 seriesDrafts — the dates a series is missing from the site", (
   it("names 'autoPublishOff' when the source is published but the rule would not publish", () => {
     const members = [source({ cadence: "WEEKLY", weekdays: [], until: null, publish: false }), child("2026-01-08", "DRAFT")];
     expect(seriesDrafts(members, new Date("2026-01-01")).reason).toBe("autoPublishOff");
+  });
+
+  it("names the reason from a rule holder handed in — the past source a list's «Viitoare» kept out of the members (§919)", () => {
+    const holder: SeriesDraftMember = source({ cadence: "WEEKLY", weekdays: [], until: null, publish: false });
+    const members: SeriesDraftMember[] = [child("2026-01-08", "DRAFT"), child("2026-01-15")];
+    const named = seriesDrafts(members, new Date("2026-01-01"), holder);
+    expect(named.reason).toBe("autoPublishOff");
+    expect(named.source).toBe(holder);
+    // The drafts counted stay the members': the holder is not one of them.
+    expect(named.drafts).toEqual([members[0]]);
+    // Without the holder the same members name no rule, and so no reason.
+    expect(seriesDrafts(members, new Date("2026-01-01")).reason).toBeNull();
   });
 
   it("names 'sourceNotPublished' when the rule would publish but its source is not published", () => {
