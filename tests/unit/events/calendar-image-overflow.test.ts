@@ -122,10 +122,29 @@ describe("«Locul» without a short place: the place's name is drawn where there
   // June as a club with no short place typed would have it: each date's place's name, as long as a real one.
   const parks = <T extends { place: string | null }>(row: T): T => (row.place ? { ...row, place: null, placeName: `Parcul ${row.place}` } : row);
   const juneNames = { ...june, entries: june.entries.map(parks), recurring: june.recurring.map(parks), specials: june.specials.map(parks) } as CalendarImageData;
+  // The owner, 2026-11-05, of «Legenda în celule» on production: «Nu văd locul aici la poza pentru alergarea din
+  // parc» — the Monday series' name, after its distance and climb, had no room on its rhythm's line, and the key
+  // dropped it rather than grow the row a line. The club's November: two weekday series and the race on the 21st.
+  const sparse = read.find((each) => each.name === "sparse")!.data;
+  const series = (title: string, surface: "ASPHALT" | "TRAIL", placeName: string, distance: string, elevation: string, sentence: string) =>
+    ({ title, tone: "weekly", type: "GROUP_RUN", surface, place: null, placeName, distance, elevation, sentence }) as const;
+  const monday = series("Happy Monday – alergare ușoară cu Brașov Runners", "ASPHALT", "Parcul Nicolae Titulescu", "10 km", "30 m D+", "În fiecare luni, la 18:30");
+  const wednesday = series("Running up that hilly Tâmpa cu Brașov Runners", "TRAIL", "Sub Tâmpa", "10 km", "380 m D+", "În fiecare miercuri, la 19:00");
+  const november = {
+    ...sparse,
+    entries: [
+      ...[2, 9, 16, 23, 30].map((day) => ({ ...monday, day, time: "18:30", special: false, cancelled: false })),
+      ...[4, 11, 18, 25].map((day) => ({ ...wednesday, day, time: "19:00", special: false, cancelled: false })),
+      ...sparse.entries.filter((entry) => entry.day === 21),
+    ],
+    recurring: [monday, wednesday],
+    specials: sparse.specials.filter((row) => row.day === 21),
+  } as CalendarImageData;
   const every = { place: true, distance: true, elevation: true };
   for (const [what, data, options, name] of [
     ["the month in «Seriile în cap» on 4:5, the dialog's first picture", juneNames, { theme: "poster", ratio: "portrait", layout: "heads", week: null, legend: true, details: every }, "Parcul "],
     ["a busy month's week, a row a day on 9:16, with long names", months.find((each) => each.name === "busy-names")!.data, { theme: "poster", ratio: "story", layout: "heads", week: 1, legend: true, details: every }, "Stația de telecabină"],
+    ["the club's November in «Legenda în celule» on 4:5: a series' name the rhythm's line has no room for, on a line of its own", november, { theme: "poster", ratio: "portrait", layout: "cells", week: null, legend: true, details: every }, "Parcul Nicolae Titulescu"],
   ] as const) {
     it(what, () => {
       const { ctx, records } = stubCanvas();
