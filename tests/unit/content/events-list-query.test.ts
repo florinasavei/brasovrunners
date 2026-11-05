@@ -240,7 +240,7 @@ describe("arrangeEventList — a series is one line, sorted by its next date", (
 
   // The owner, 2026-11-05, of a series' «1 dată în ciornă, nu e pe site» with «Publică» alone: «astea nu se
   // publicau automat?» — under «Viitoare» the past date that holds the rule was not among the members, so the
-  // line could name neither the rule nor its switch (§NNN).
+  // line could name neither the rule nor its switch (§919).
   it("knows the series' source under «Viitoare», though the state kept only the dates to come (§341, §351)", () => {
     const rule = { cadence: "WEEKLY", weekdays: [], until: null, publish: false };
     const [first, ...others] = rows;

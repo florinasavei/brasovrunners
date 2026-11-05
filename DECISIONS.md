@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.30-2026-11-05 -->
+<!-- PROJECT_BASELINE: BR-V4.31-2026-11-05 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.30-2026-11-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.31-2026-11-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -29101,3 +29101,17 @@ Baseline `BR-V4.29-2026-11-04`.
 **Checked.** The club's November — two weekday series, the Monday's name longer than its column's line, the race on the 21st — in «Legenda în celule» on 4:5 draws «Parcul Nicolae Titulescu» on the line under its rhythm, and nothing unticked (`tests/unit/events/calendar-image-overflow.test.ts`); every sample month still crosses no box and falls under no readable floor in every theme, layout and format.
 
 Baseline `BR-V4.30-2026-11-05`.
+
+## 919. The events list reads a series' rule from its source under «Viitoare» too, so a date the series made is named as such, with its switch
+
+**The owner, 2026-11-05,** with a screenshot of «Alergări» on production under «Viitoare»: the Wednesday series read «Publicat · 7 date», then «1 dată în ciornă, nu e pe site: Mie., 30 dec. 2026» with «Publică» alone, no «?» and no renewal note, while the Monday series had its eight dates published. «Astea nu se publicau automat?»
+
+**Problem.** A series' new dates are published by the job only while the rule's «Publică datele noi automat» is on and the source is published (§122); otherwise each new date is a draft, and the line under the row is meant to say so and carry the switch (§341, §351). But the list narrows the dates by the state before it groups them (`arrangeEventList`, §527), and the rule lives on one date, the source — under «Viitoare» a past one, months behind the eight weeks the job keeps ahead. With the source out of the members, `seriesDrafts` found no rule: the reason came back null, the line wore the words for a draft made by hand, offered «Publică» alone, and `renewalOf` drew no «se reînnoiește automat» either. The club could neither read why the date was a draft nor turn the switch on from the list — exactly the two things §351 built the line for — and the default state is where this happened.
+
+**Decision.** `arrangeEventList` reads each series' rule holder off the whole list before narrowing, and every line carries it as `source` (`ArrangedLine`, `ListedRow.event.repeatRule`). The page hands it to `renewalOf` ahead of the members' rules and to `seriesDrafts` as a third argument, `ruleHolder`, which stands in only when no member holds the rule; the drafts counted stay the members', so «Publică» still posts exactly the dates the line names. The switch and «Deschide seria» aim at the holder, as before. Nothing changes under «Toate», where the source was a member all along.
+
+**Refused.** Reading the source with a query of its own: the list already holds every date (`listEventsForBackoffice`), the narrowing alone hid it. Turning the rule's switch on when a draft source is published: a rule change of its own, asked as a question, not made here.
+
+**Checked.** `content/events-list-query.test.ts`: under «Viitoare» the line's members are the dates to come and its source the past date with the rule, null for a set with none, the same date under «Toate». `events/series-drafts.test.ts`: the holder handed in names «autoPublishOff» and is the source, the drafts stay the members', and without it there is no reason. `content/series-drafts-line.test.ts` pins the page's wiring.
+
+Baseline `BR-V4.31-2026-11-05`.

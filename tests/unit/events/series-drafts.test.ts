@@ -63,7 +63,7 @@ describe("§341 seriesDrafts — the dates a series is missing from the site", (
     expect(seriesDrafts(members, new Date("2026-01-01")).reason).toBe("autoPublishOff");
   });
 
-  it("names the reason from a rule holder handed in — the past source a list's «Viitoare» kept out of the members (§NNN)", () => {
+  it("names the reason from a rule holder handed in — the past source a list's «Viitoare» kept out of the members (§919)", () => {
     const holder: SeriesDraftMember = source({ cadence: "WEEKLY", weekdays: [], until: null, publish: false });
     const members: SeriesDraftMember[] = [child("2026-01-08", "DRAFT"), child("2026-01-15")];
     const named = seriesDrafts(members, new Date("2026-01-01"), holder);
