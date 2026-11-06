@@ -19,7 +19,7 @@ import { readRepeatRule } from "./repeat";
  *   regardless of what was ticked, so the flag alone cannot tell the two cases apart.
  * - `autoPublishOff` — the source is published, but the rule's own `publish` is off: every new
  *   date is a draft until somebody publishes it. The remedy is the rule's own switch — and that
- *   switch only takes effect once the source is live. Since §NNN publishing the source turns the
+ *   switch only takes effect once the source is live. Since §920 publishing the source turns the
  *   switch on, so this names a series switched off afterwards, or one published before that.
  * - `null` — no rule among the dates (a hand-made set, §64), or a rule that publishes from a
  *   published source: the drafts were made some other way (by hand, before the switch was on,

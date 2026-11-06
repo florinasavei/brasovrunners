@@ -1418,7 +1418,7 @@ export async function transitionEvent<T extends Record<string, unknown>>(
   }
 
   /*
-    A series goes live with its source (§NNN; the owner, 2026-11-05, of a date the series had made
+    A series goes live with its source (§920; the owner, 2026-11-05, of a date the series had made
     as a draft: «astea nu se publicau automat?» — «Da mă da»): publishing the date that holds the
     rule turns «Publică datele noi automat» on when it was off, so every date the job makes from
     now on goes live as it is made. The dates already made keep their state — the list's line
@@ -4340,7 +4340,7 @@ export async function stopRepeat<T extends Record<string, unknown>>(
  * on a draft source the switch is stored and waits, because the copies of an unpublished event
  * are drafts anyway (`materializeSeries`) — the dates go live as they are made once the source is
  * live, and until then the Recurență box says the series is waiting for exactly that. Publishing
- * the source turns the switch on by itself (`transitionEvent`, §NNN); this is the way to turn it
+ * the source turns the switch on by itself (`transitionEvent`, §920); this is the way to turn it
  * off again, or on for a series published before that.
  */
 export async function setRepeatPublish<T extends Record<string, unknown>>(

@@ -138,7 +138,7 @@ describe("§341 setRepeatPublish — the running series' publish switch", () => 
   });
 
   // The owner, 2026-11-05, of a date the series had made as a draft: «astea nu se publicau automat?» —
-  // and of publishing the source starting the switch as well: «Da mă da» (§NNN).
+  // and of publishing the source starting the switch as well: «Da mă da» (§920).
   it("turns a draft source's switch on as the source is published, audited with the cause, the rest of the rule untouched", async () => {
     const source = await seedSource({ published: false, rule: { cadence: "WEEKLY", weekdays: [1, 3], until: "2026-12-01", publish: false } });
     const published = await publishEvent(db, { actor: admin, eventId: source.id, expectedVersion: source.version });

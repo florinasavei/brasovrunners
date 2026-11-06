@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.32` | publishing a series' source turns its automatic publication on (§920) |
 | `BR-V4.31` | the events list reads a series' rule from its source under «Viitoare» too (§919) |
 | `BR-V4.30` | the key of «Legenda în celule» grows a line for a place its rhythm's line cannot hold (§918) |
 | `BR-V4.29` | «Elită» ticked at the staff entry and on an invitation (§917) |
