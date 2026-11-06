@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.32-2026-11-06
+
+- **A published series publishes its new dates** — publishing the date a series starts from turns «Publică datele noi automat» on when it was off, audited, so every date the series makes from then on goes live as it is made; the dates already made still take «Publică». §920.
 ## BR-V4.31-2026-11-05
 
 - **The events list names why a series' date is a draft under «Viitoare» too** — the line reads the series' rule from its source even when the state keeps only the dates to come, so a date the series made says so, with «Publică automat de acum» beside «Publică», and the renewal note stays on the row. §919.
