@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { events, eventTranslations } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { setRepeatPublish, stopRepeat } from "@/modules/content/events/service";
+import { publishEvent, setRepeatPublish, stopRepeat } from "@/modules/content/events/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -135,6 +135,25 @@ describe("§341 setRepeatPublish — the running series' publish switch", () => 
     const refused = await setRepeatPublish(db, { actor: contributor, eventId: source.id, publish: true }).catch((e: unknown) => e);
     expect(isDomainError(refused) && refused.code).toBe("FORBIDDEN");
     expect(await ruleOf(source.id)).toEqual(weekly(false));
+  });
+
+  // The owner, 2026-11-05, of a date the series had made as a draft: «astea nu se publicau automat?» —
+  // and of publishing the source starting the switch as well: «Da mă da» (§920).
+  it("turns a draft source's switch on as the source is published, audited with the cause, the rest of the rule untouched", async () => {
+    const source = await seedSource({ published: false, rule: { cadence: "WEEKLY", weekdays: [1, 3], until: "2026-12-01", publish: false } });
+    const published = await publishEvent(db, { actor: admin, eventId: source.id, expectedVersion: source.version });
+    expect(published.editorialStatus).toBe("PUBLISHED");
+    expect(await ruleOf(source.id)).toEqual({ cadence: "WEEKLY", weekdays: [1, 3], until: "2026-12-01", publish: true });
+    const trail = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.repeat_publish_changed"));
+    expect(trail).toHaveLength(1);
+    expect(trail[0]).toMatchObject({ actorStaffUserId: admin.id, entityId: source.id, metadataJson: { from: false, to: true, cause: "published" } });
+  });
+
+  it("leaves a switch already on as it is when the source is published, with no audit row", async () => {
+    const source = await seedSource({ published: false, rule: weekly(true) });
+    await publishEvent(db, { actor: admin, eventId: source.id, expectedVersion: source.version });
+    expect(await ruleOf(source.id)).toEqual(weekly(true));
+    expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "event.repeat_publish_changed"))).toHaveLength(0);
   });
 
   it("refuses an event that does not repeat — a series is switched from its first event", async () => {

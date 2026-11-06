@@ -241,11 +241,14 @@ describe("§915 a registration's emails", () => {
     expect(page).toContain("+ 1 pentru căsuțele clubului");
     expect(page.match(/data-testid="email-history-row"/g)).toHaveLength(6);
     // Never a table, never the payload's words, the provider's own words, a retry's answer or a link.
+    // The provider's code is looked for with every press id blanked first: a random id can spell any
+    // three figures, and «…-4406-9552-…» once did, in CI.
+    const withoutIds = page.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g, "<id>");
     expect(page).not.toContain("<table");
     expect(page).not.toContain(PAYLOAD_WORDS);
     expect(page).not.toContain(PROVIDER_WORDS);
     expect(page).not.toContain("421 try again later");
-    expect(page).not.toContain("552");
+    expect(withoutIds).not.toContain("552");
     expect(page).not.toMatch(/href="http/);
     expect(page).not.toMatch(/emails\.(history|today|causes|types)\./);
   });

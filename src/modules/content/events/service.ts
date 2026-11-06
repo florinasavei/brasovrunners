@@ -1417,7 +1417,32 @@ export async function transitionEvent<T extends Record<string, unknown>>(
     if (current.publishedAt === null) changes.publishedAt = now;
   }
 
-  const moved = await updateEventWithVersionGuard(db, input.eventId, input.expectedVersion, changes, now);
+  /*
+    A series goes live with its source (§920; the owner, 2026-11-05, of a date the series had made
+    as a draft: «astea nu se publicau automat?» — «Da mă da»): publishing the date that holds the
+    rule turns «Publică datele noi automat» on when it was off, so every date the job makes from
+    now on goes live as it is made. The dates already made keep their state — the list's line
+    names them and «Publică» publishes exactly them (§351). Audited as the switch itself is, with
+    the cause; the switch stays the organizer's to turn off afterwards (`setRepeatPublish`).
+  */
+  const rule = input.to === "PUBLISHED" ? readRepeatRule(current.repeatRule) : null;
+  const switchOn = rule !== null && !rule.publish;
+  if (switchOn) changes.repeatRule = { ...rule, publish: true };
+
+  const moved = switchOn
+    ? await db.transaction(async (tx) => {
+        const row = await updateEventWithVersionGuard(tx, input.eventId, input.expectedVersion, changes, now);
+        await recordAuditEvent(tx, {
+          actorStaffUserId: input.actor.id,
+          action: "event.repeat_publish_changed",
+          entityType: "event",
+          entityId: input.eventId,
+          metadata: { from: false, to: true, cause: "published" },
+          now,
+        });
+        return row;
+      })
+    : await updateEventWithVersionGuard(db, input.eventId, input.expectedVersion, changes, now);
   // Published, unpublished, archived: the listing, the page, the calendar and the feeds change.
   revalidatePublicContent("events");
   // And the announcements of §146 wait on publication, so the maintenance job looks again at its
@@ -4314,7 +4339,9 @@ export async function stopRepeat<T extends Record<string, unknown>>(
  * publishes, as the first creation did (`repeatEvent`). It does not ask for a published source:
  * on a draft source the switch is stored and waits, because the copies of an unpublished event
  * are drafts anyway (`materializeSeries`) — the dates go live as they are made once the source is
- * live, and until then the Recurență box says the series is waiting for exactly that.
+ * live, and until then the Recurență box says the series is waiting for exactly that. Publishing
+ * the source turns the switch on by itself (`transitionEvent`, §920); this is the way to turn it
+ * off again, or on for a series published before that.
  */
 export async function setRepeatPublish<T extends Record<string, unknown>>(
   db: Database<T>,

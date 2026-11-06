@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.31-2026-11-05 -->
+<!-- PROJECT_BASELINE: BR-V4.32-2026-11-06 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.31-2026-11-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.32-2026-11-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -29115,3 +29115,17 @@ Baseline `BR-V4.30-2026-11-05`.
 **Checked.** `content/events-list-query.test.ts`: under «Viitoare» the line's members are the dates to come and its source the past date with the rule, null for a set with none, the same date under «Toate». `events/series-drafts.test.ts`: the holder handed in names «autoPublishOff» and is the source, the drafts stay the members', and without it there is no reason. `content/series-drafts-line.test.ts` pins the page's wiring.
 
 Baseline `BR-V4.31-2026-11-05`.
+
+## 920. Publishing a series' source turns «Publică datele noi automat» on
+
+**The owner, 2026-11-05,** of the Wednesday series' «1 dată în ciornă, nu e pe site» on production: «astea nu se publicau automat?» — and, asked whether publishing a series created as a draft should start its automatic publication as well: «Da mă da.»
+
+**Problem.** A series' new dates go live as the job makes them only while the rule's «Publică datele noi automat» is on and the source is published (§122). Since §350 the create page's tick is on by default and stored even for a draft source, so a series created as a draft usually publishes its dates once the source goes live. A series started before that, or with the tick taken off, keeps the switch off for good: the source is published, every date the job makes is a draft, and nothing says so but the list's line (§341, §351) — the one the club read as «weren't these published automatically?». To the club a published series is a series whose dates are on the site.
+
+**Decision.** `transitionEvent` turns the rule's `publish` on when the date that holds the rule is published and the switch was off — in the publication's own transaction, with the version guard, and audited as `event.repeat_publish_changed` with `cause: "published"`, as the switch itself is audited. From then on every date the job makes goes live as it is made. The dates already made keep their state: the list's line names them and «Publică» publishes exactly them, as §351 decided. The switch stays the organizer's: `setRepeatPublish` turns it off again afterwards, and on for a series published before this. A date of the series that holds no rule changes nothing when published.
+
+**Refused.** Publishing the series' existing draft dates along with the source: each date is its own publication, with its own checks and its own version, and §351 keeps «Publică» for exactly those. Honouring a tick taken off before the source was published: the create page offers the tick on a draft only since §350, nobody takes it off on purpose, and the switch is one press away on the list and in the Recurență box.
+
+**Checked.** `tests/integration/cms/repeat-publish.test.ts`: a draft source with the switch off, published, has it on with one audit row naming the cause; a source whose switch is already on gets no second row; the cadence, weekdays and end stay as they were.
+
+Baseline `BR-V4.32-2026-11-06`.
