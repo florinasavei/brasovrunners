@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.33-2026-11-07
+
+- **The outage email says it plainly** — «Site-ul nu a răspuns o vreme: termenele au fost prelungite», what happened in one sentence, and «Nu trebuie să faci nimic.» when nothing is. §921.
 ## BR-V4.32-2026-11-06
 
 - **A published series publishes its new dates** — publishing the date a series starts from turns «Publică datele noi automat» on when it was off, audited, so every date the series makes from then on goes live as it is made; the dates already made still take «Publică». §920.

@@ -1,7 +1,0 @@
-{
-  "branch": "ccr-018a8a0c-twtq7s",
-  "decisionsTitle": "The outage email in plain words",
-  "decisionsSection": "**The owner, 2026-11-07,** of «Ceasul termenelor a stat pe loc: ce s-a mutat» (§657): «Wtf, nu înțeleg nimic… fă asta mai clar». The email to the Administrators after an outage now says what happened in the reader's words: the subject is «Site-ul nu a răspuns o vreme: termenele au fost prelungite» («The site did not answer for a while: deadlines were extended»); the first sentence says the site did not answer (or could not be opened, for a lost name); the second that the running deadlines — offers, held places, confirmation links — were extended by the outage so nobody lost a place; and when nothing is left to decide, «Nu trebuie să faci nimic.». The facts line, the list of claims not revived and their remedies are unchanged; the screens that name the email use the new subject.",
-  "changelogLine": "- **The outage email says it plainly** — «Site-ul nu a răspuns o vreme: termenele au fost prelungite», what happened in one sentence, and «Nu trebuie să faci nimic.» when nothing is. §NNN.",
-  "batchLine": "the outage email in plain words"
-}
