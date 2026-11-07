@@ -4914,7 +4914,7 @@
           "notRevived": "The outage from {windowFrom} to {windowUntil} left claims lapsed that were not revived; still waiting, with the verb the email names: {windowNotRevived}.",
           "how": [
             "Check the domain at the registrar: the account, the contact verification emails, the renewal payment.",
-            "While the name is gone, nothing lapses. When it is back, the scheduled jobs move the deadlines by themselves and send «The deadlines' clock stood still».",
+            "While the name is gone, nothing lapses. When it is back, the scheduled jobs move the deadlines by themselves and send «The site did not answer for a while: deadlines were extended».",
             "The email names each person whose claim was not revived and what can be done for them: nobody is seated beyond the advertised places by itself.",
             "A lapsed offer, declaration hold or address link: the person registers again (or «Add the registration»); once they wait, «Send them the offer» seats them.",
             "A family reservation: «Give them a place now» on its registration, the address being still unconfirmed. An expired invitation: a new one to the same address, from «Send invitations».",
@@ -7363,7 +7363,7 @@
         "DECLARATION_HOLD_EXPIRED": "The held place expired",
         "LEGAL_TEMPLATES_CHANGED": "The legal templates changed",
         "UNREACHABLE_WINDOW_OPENED": "The site's name does not resolve",
-        "UNREACHABLE_WINDOW_CLOSED": "The deadlines' clock stood still",
+        "UNREACHABLE_WINDOW_CLOSED": "The site did not answer for a while: deadlines were extended",
         "EVENT_INVITATION": "Invitation to an event",
         "SHOP_ORDER_PLACED": "Your order has been received",
         "SHOP_ORDER_PAID": "Your order is paid",

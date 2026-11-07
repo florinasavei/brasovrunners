@@ -884,7 +884,7 @@ decision in this release (`docs/PLATFORM.md` § When the name is gone), stops th
   the maintenance job sees the name fail twice ten minutes apart, holds every running deadline
   still and emails the Administrators «Site-ul nu se găsește după nume». If the pings call the
   public name, no job runs at all and the grace sees the silence at the first run after.
-- **After**, the Administrators get «Ceasul termenelor a stat pe loc»: how long, what was moved,
+- **After**, the Administrators get «Site-ul nu a răspuns o vreme: termenele au fost prelungite»: how long, what was moved,
   and each claim that lapsed and could not be revived (its place was taken, or the platform had
   already expired it). «Sarcini» shows «Site-ul de negăsit: ceasul termenelor» in red until every
   one is handled. **That email is the list to work from:** under its bold line it names each claim

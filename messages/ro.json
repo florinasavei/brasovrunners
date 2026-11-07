@@ -4914,7 +4914,7 @@
           "notRevived": "Întreruperea de la {windowFrom} până la {windowUntil} a lăsat expirate cereri care nu au fost reluate; așteaptă încă, cu verbul spus în email: {windowNotRevived}.",
           "how": [
             "Verifică domeniul la registrar: contul, emailurile de verificare a datelor de contact, plata reînnoirii.",
-            "Cât lipsește numele, nu expiră nimic. Când revine, sarcinile programate mută singure termenele și trimit emailul «Ceasul termenelor a stat pe loc».",
+            "Cât lipsește numele, nu expiră nimic. Când revine, sarcinile programate mută singure termenele și trimit emailul «Site-ul nu a răspuns o vreme: termenele au fost prelungite».",
             "Emailul numește fiecare persoană a cărei cerere nu a fost reluată și ce se poate face pentru ea: nimeni nu e așezat de la sine peste locurile anunțate.",
             "Ofertă, loc pentru declarație sau link expirat: persoana se înscrie din nou (sau «Adaugă înscrierea»); cât așteaptă, «Trimite-i oferta» o așază.",
             "Rezervare de familie: «Dă-i un loc acum» pe înscrierea ei, adresa fiind încă neconfirmată. Invitație expirată: una nouă la aceeași adresă, din «Trimite invitații».",
@@ -7363,7 +7363,7 @@
         "DECLARATION_HOLD_EXPIRED": "Locul ținut a expirat",
         "LEGAL_TEMPLATES_CHANGED": "Șabloanele textelor legale s-au schimbat",
         "UNREACHABLE_WINDOW_OPENED": "Site-ul nu se găsește după nume",
-        "UNREACHABLE_WINDOW_CLOSED": "Ceasul termenelor a stat pe loc",
+        "UNREACHABLE_WINDOW_CLOSED": "Site-ul nu a răspuns o vreme: termenele au fost prelungite",
         "EVENT_INVITATION": "Invitația la un eveniment",
         "SHOP_ORDER_PLACED": "Comanda ta a fost primită",
         "SHOP_ORDER_PAID": "Comanda ta e plătită",
