@@ -202,11 +202,11 @@ export function windowClosedBody(locale: Lang, facts?: UnreachableWindowFacts): 
   if (locale === "en") {
     return [
       pings
-        ? "No scheduled call reached the platform in the stretch above for longer than the monitors allow: the site may not have been reachable."
-        : "The site's name did not resolve in the stretch above: nobody could open the site, the backoffice or an email's links by it.",
+        ? "The site did not answer in the hours above: the automatic checks could not reach it."
+        : "Nobody could open the site in the hours above: its name could not be found on the internet.",
       off
         ? "«Deadlines» has the moving switched off: no deadline moved. The outage is recorded on «Tasks»."
-        : "The participants' deadlines that were running then moved later by the time above, at most what «Deadlines» says.",
+        : "So that nobody lost a place because of it, the deadlines that were running (offers, held places, confirmation links) were extended by the length of the outage, at most what «Deadlines» says.",
       ...(left
         ? [
             "The claims listed above lapsed while the site could not be reached, and their place was given meanwhile or they had already ended: they were not revived.",
@@ -218,7 +218,7 @@ export function windowClosedBody(locale: Lang, facts?: UnreachableWindowFacts): 
       pings
         ? left
           ? "Check that the hours above look right, then decide for each person above, once they are back where a verb applies."
-          : "Nothing to do, unless the hours above look wrong: then check that the monitors call the site."
+          : "You do not need to do anything."
         : left
           ? "Check at the registrar why the name was gone, then decide for each person above, once they are back where a verb applies."
           : "Nothing to do for the participants. Check at the registrar why the name was gone, so it does not happen again.",
@@ -226,11 +226,11 @@ export function windowClosedBody(locale: Lang, facts?: UnreachableWindowFacts): 
   }
   return [
     pings
-      ? "Nicio verificare programată nu a ajuns la platformă în intervalul de mai sus mai mult decât permit monitoarele: site-ul poate să nu fi răspuns."
-      : "Numele site-ului nu se găsea în intervalul de mai sus: nimeni nu putea deschide site-ul, backoffice-ul sau linkurile din emailuri.",
+      ? "Site-ul nu a răspuns în orele de mai sus: verificările automate nu au ajuns la el."
+      : "Nimeni nu a putut deschide site-ul în orele de mai sus: numele lui nu se găsea pe internet.",
     off
       ? "«Termene» are mutarea oprită: niciun termen nu s-a mutat. Întreruperea e înregistrată în «Sarcini»."
-      : "Termenele participanților care curgeau atunci s-au mutat mai târziu cu timpul de mai sus, cel mult cât spune «Termene».",
+      : "Ca nimeni să nu piardă un loc din cauza asta, termenele în curs (oferte, locuri ținute, linkuri de confirmare) au fost prelungite cu durata pauzei, cel mult cât spune «Termene».",
     ...(left
       ? [
           "Cererile de mai sus expiraseră cât site-ul nu putea fi accesat, iar locul lor fusese dat între timp sau se încheiaseră deja: nu au fost reluate.",
@@ -242,7 +242,7 @@ export function windowClosedBody(locale: Lang, facts?: UnreachableWindowFacts): 
     pings
       ? left
         ? "Verifică dacă orele de mai sus par corecte, apoi decide pentru fiecare persoană de mai sus, când e din nou acolo unde un verb se aplică."
-        : "Nimic de făcut, doar dacă orele de mai sus par greșite: atunci verifică dacă monitoarele apelează site-ul."
+        : "Nu trebuie să faci nimic."
       : left
         ? "Verifică la registrar de ce lipsea numele, apoi decide pentru fiecare persoană de mai sus, când e din nou acolo unde un verb se aplică."
         : "Nimic de făcut pentru participanți. Verifică la registrar de ce lipsea numele, ca să nu se repete.",

@@ -410,7 +410,7 @@ describe("§657 the Administrators' two emails", () => {
       }
     }
     const last = (overrides: Record<string, unknown>) => windowClosedBody("en", facts(overrides)).at(-1);
-    expect(last({ source: "pings", notRevived: 0 })).toContain("unless the hours above look wrong");
+    expect(last({ source: "pings", notRevived: 0 })).toContain("You do not need to do anything.");
     expect(last({ source: "dns", notRevived: 0 })).toContain("registrar");
     expect(last({ source: "pings", notRevived: 2 })).toContain("once they are back where a verb applies");
     expect(last({ source: "dns", notRevived: 2 })).toContain("once they are back where a verb applies");

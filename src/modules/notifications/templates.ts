@@ -2026,7 +2026,7 @@ const T = {
     },
     // To the Administrators (§657): the window is over, what moved, and what to check.
     unreachableWindowClosed: {
-      subject: "Ceasul termenelor a stat pe loc: ce s-a mutat",
+      subject: "Site-ul nu a răspuns o vreme: termenele au fost prelungite",
       facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowClosedFactsLine("ro", d.unreachableWindow), links: notRevivedLinks("ro", d.unreachableWindow) } : undefined),
       body: (d: TemplateData) => windowClosedBody("ro", d.unreachableWindow),
       action: "Deschide «Sarcini»",
@@ -2922,7 +2922,7 @@ const T = {
       body: (d: TemplateData) => windowOpenedBody("en", d.unreachableWindow),
     },
     unreachableWindowClosed: {
-      subject: "The deadlines' clock stood still: what moved",
+      subject: "The site did not answer for a while: deadlines were extended",
       facts: (d: TemplateData) => (d.unreachableWindow ? { line: windowClosedFactsLine("en", d.unreachableWindow), links: notRevivedLinks("en", d.unreachableWindow) } : undefined),
       body: (d: TemplateData) => windowClosedBody("en", d.unreachableWindow),
       action: "Open «Tasks»",

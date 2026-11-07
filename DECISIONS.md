@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.32-2026-11-06 -->
+<!-- PROJECT_BASELINE: BR-V4.33-2026-11-07 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.32-2026-11-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.33-2026-11-07`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -29129,3 +29129,9 @@ Baseline `BR-V4.31-2026-11-05`.
 **Checked.** `tests/integration/cms/repeat-publish.test.ts`: a draft source with the switch off, published, has it on with one audit row naming the cause; a source whose switch is already on gets no second row; the cadence, weekdays and end stay as they were.
 
 Baseline `BR-V4.32-2026-11-06`.
+
+## 921. The outage email in plain words
+
+**The owner, 2026-11-07,** of «Ceasul termenelor a stat pe loc: ce s-a mutat» (§657): «Wtf, nu înțeleg nimic… fă asta mai clar». The email to the Administrators after an outage now says what happened in the reader's words: the subject is «Site-ul nu a răspuns o vreme: termenele au fost prelungite» («The site did not answer for a while: deadlines were extended»); the first sentence says the site did not answer (or could not be opened, for a lost name); the second that the running deadlines — offers, held places, confirmation links — were extended by the outage so nobody lost a place; and when nothing is left to decide, «Nu trebuie să faci nimic.». The facts line, the list of claims not revived and their remedies are unchanged; the screens that name the email use the new subject.
+
+Baseline `BR-V4.33-2026-11-07`.
