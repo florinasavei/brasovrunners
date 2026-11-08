@@ -872,6 +872,7 @@ October (both projects, Launch). Azure Database for PostgreSQL or Google Cloud S
 would save that — about $60–130 a year — at the price of a migration: the data, `db:migrate:env`,
 `db:sizes`, `idle:measure`, the Neon readers behind `/devs` and `/admin/tasks`, the restore
 rehearsal, and the CU-hour limits that stand in for a budget today. Not before the 21 November race.
+The plan with its steps, and the email move beside it: [`docs/AZURE.md`](./AZURE.md) (2026-11-08).
 At the December review (§ Subscriptions above) the choice is **one** of Neon Free, Azure or Google
 Cloud, by what each grant gives and for how long — never the database split across providers. A
 grant is renewed every year: one that lapses either bills a card on file or stops what runs on it,
