@@ -11100,6 +11100,9 @@
       "removeRow": "Delete row {row}",
       "removeShort": "Remove",
       "addRow": "Add another person",
+      "placesLabel": "Places",
+      "placesHelp": "«Places»: how many people can register with the row's address, the one named included (at most {max}); each extra place gets its own email, with its own link.",
+      "anotherPerson": "Extra place on this address",
       "tableCaption": "The invitations sent for this event",
       "sendTitle": "Send new invitations",
       "columns": {
@@ -12295,6 +12298,7 @@
       "addressLabel": "The invitation's address",
       "addressHelp": "The invitation is for this address: the emails about the registration come here.",
       "banner": "Invitation for {name} to {event}, valid until {deadline}.",
+      "bannerAnother": "A place for one more person who registers with this address, at {event}, valid until {deadline}: fill in the details of the person who is coming.",
       "bannerHelp": "The name and address come from the invitation; you fill in the rest. After sending you get the email with the declaration, with no other address confirmation.",
       "doneTitle": "Done: the place is yours",
       "done": "You are registered. We have sent you the email with the self-declaration: sign it from its link, by the deadline in the email.",

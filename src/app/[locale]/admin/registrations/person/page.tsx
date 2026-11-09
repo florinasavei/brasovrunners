@@ -288,7 +288,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                   <>
                     {data.eventInvitations.map((invitation, index) => (
                       <Typography key={index} variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }} data-testid="person-event-invitation">
-                        {t(`invitations.state.${invitation.state}`)} · {invitation.eventTitle ?? invitation.eventId} · {invitation.name} · {invitation.deliveryEmail} · {invitation.locale}
+                        {t(`invitations.state.${invitation.state}`)} · {invitation.eventTitle ?? invitation.eventId} · {invitation.name || t("invitations.anotherPerson")} · {invitation.deliveryEmail} · {invitation.locale}
                         {` · ${t("invitations.until", { deadline: show(invitation.expiresAt) })}`}
                         {` · ${t("person.volunteerInvitationSent", { when: show(invitation.sentAt) })}`}
                         {invitation.resendCount > 0 ? ` · ${t("person.volunteerInvitationResent", { when: show(invitation.lastSentAt) })}` : ""}

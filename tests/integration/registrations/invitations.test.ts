@@ -489,6 +489,46 @@ describe("§923 a family on one address: one invitation per person, each by its 
     expect((await countOccupied(db, event.id, at(3))).invitationHolds).toBe(1);
   });
 
+  it("«Locuri» 3 on one row (§925): the person named and two places with no name on the address, each its own email, link and place", async () => {
+    const event = await createEvent(6);
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Munteanu", email: "fam@example.invalid", places: 3 }], days: 7, outsideCapacity: false }, admin, NOW);
+    const rows = await invitationsOf(event.id);
+    expect(rows.map((row) => row.name).sort()).toEqual(["", "", "Ana Munteanu"]);
+    expect(new Set(rows.map((row) => row.participantId)).size).toBe(1);
+    expect((await invitationEmails()).filter((row) => row.recipientEmail === "fam@example.invalid")).toHaveLength(3);
+    expect(await occupied(event.id, at(1))).toBe(3);
+
+    // A place with no name: its email greets nobody by name and says what it is for; its link opens an empty form.
+    const extra = rows.find((row) => row.name === "")!;
+    const row = (await invitationEmails()).find((each) => (each.payloadJson as { invitationId?: string }).invitationId === extra.id)!;
+    const message = await renderOutboxMessage({ ...row, status: "PROCESSING", attemptCount: 1, lockedAt: at(2) }, db, at(2));
+    expect(message.subject).toContain("încă o persoană");
+    expect(message.text).toContain("Salut,");
+    expect(message.text).not.toContain("Salut, ,");
+    expect(message.text).toContain("un loc pentru încă o persoană");
+    const secret = /\/(?:inregistrari\/invitatie|registrations\/invitation)\/([A-Za-z0-9_-]{43})(?![A-Za-z0-9_-])/.exec(message.text)![1];
+    expect(await readInvitationLink(db, secret, "ro", at(3))).toMatchObject({ kind: "open", name: "", email: "fam@example.invalid" });
+    const accepted = await acceptInvitation(db, secret, form("Carmen", at(4)), at(4));
+    expect(accepted.ok && accepted.registration).toMatchObject({ registeredName: "Carmen Munteanu", status: "PENDING_DECLARATION" });
+    expect(await countOccupied(db, event.id, at(5))).toMatchObject({ invitationHolds: 2, pendingDeclarationHolds: 1 });
+
+    // The person named still has their own invitation and link, untouched.
+    expect((await invitationsOf(event.id)).find((each) => each.name === "Ana Munteanu")).toMatchObject({ acceptedAt: null });
+  });
+
+  it("«Locuri» past the club's limit of four on an address is refused by the row's name, nothing written", async () => {
+    const event = await createEvent(9);
+    expect(
+      await refusal(inviteToEventByStaff(db, event, { people: [{ name: "Dan Munteanu", email: "dan@example.invalid", places: 5 }], days: 7, outsideCapacity: false }, admin, NOW)),
+    ).toMatchObject({ refusal: "INVITATION_ADDRESS_FULL", person: "Dan Munteanu" });
+    // Two invited already on the address: a row asking for three more is past the limit too.
+    await inviteToEventByStaff(db, event, { people: family, days: 7, outsideCapacity: false }, admin, NOW);
+    expect(
+      await refusal(inviteToEventByStaff(db, event, { people: [{ name: "Carmen Munteanu", email: "fam@example.invalid", places: 3 }], days: 7, outsideCapacity: false }, admin, at(1))),
+    ).toMatchObject({ refusal: "INVITATION_ADDRESS_FULL", person: "Carmen Munteanu" });
+    expect(await invitationsOf(event.id)).toHaveLength(2);
+  });
+
   it("a person whose registration comes back through the allocator never takes the other's open invitation (the review of 2026-11-09)", async () => {
     const event = await createEvent(4);
     await inviteToEventByStaff(db, event, { people: family, days: 7, outsideCapacity: false }, admin, NOW);

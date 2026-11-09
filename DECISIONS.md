@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.35-2026-11-09 -->
+<!-- PROJECT_BASELINE: BR-V4.36-2026-11-09 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.35-2026-11-09`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.36-2026-11-09`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -29173,3 +29173,15 @@ Baseline `BR-V4.34-2026-11-09`.
 **Known and left, minor.** A person who registers by the public form instead of the link takes their invitation over only when the name is typed as the Administrator typed it (`sameRunner` keeps word order); otherwise their invitation keeps its place until its deadline or «Retrage». The public form's per-address limit counts registrations, not open invitations. «Retrage și șterge invitațiile» on a person's page withdraws every open invitation of the address. `/admin/tasks`' outage count treats a sibling's newer invitation as handling a lapsed one.
 
 Baseline `BR-V4.35-2026-11-09`.
+
+## 925. «Locuri» on an invitation's row: how many people may register with the address
+
+**The owner, 2026-11-09**, after the first family on one address was invited by typing each name: "Next time I want to set how many people can register with this email when sending an invite." Asked for the shape, he chose a «Locuri» box per row over one invitation holding several places.
+
+**Decision.** Each row of «Invită pe email» has a third box, «Locuri» (1 by default): how many people may register with the row's address, the one named included. The send writes that many invitations on the address — the first in the typed name, each place beyond it an invitation with **no name** — so every place is still one invitation holding one counted place until its deadline, and the capacity formula is untouched (`AGENTS.md` §10.6). The places count against the club's per-address limit with the address's live registrations and open invitations (§923); a row asking past it is refused by its name, nothing written. The dialog's count, its supplementary places on a full race and the email count include them; so does the send's limit of 50 invitations.
+
+An invitation with no name is «Loc în plus pe această adresă» in the backoffice table and its dialogs. Its email greets nobody by name («Salut,»), its subject is «Un loc pentru încă o persoană la …», and it says that the link registers one person who registers with this address and that each such email's link registers one person; it always uses the platform's words, since the club's own invitation text speaks to the person named. Its link opens the form with the address and no name, and the page says it is a place for one more person. It is never matched by a name, so only its own link takes it (`invitationToAdopt`, §924): a person who registers by the public form instead leaves that place held until its deadline or «Retrage».
+
+**Refused.** One invitation holding several places, filled in one sitting by one link — it would make an invitation hold several places in the capacity formula, a trust rule; the owner chose the box per row.
+
+Baseline `BR-V4.36-2026-11-09`.
