@@ -23,6 +23,7 @@ export const PREFETCHED_PATHNAMES: ReadonlySet<string> = new Set([
   "/calendar/[...period]",
   "/faq",
   "/team",
+  "/tools",
   "/gallery",
   "/gallery/[slug]",
   "/pages/[slug]",

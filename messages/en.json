@@ -35,6 +35,7 @@
       "gallery": "Gallery",
       "team": "Team",
       "faq": "FAQ",
+      "tools": "Tools",
       "more": "Menu",
       "contact": "Contact"
     },
@@ -6629,7 +6630,8 @@
         "contact": "Contact",
         "gallery": "Gallery",
         "team": "Team",
-        "faq": "Frequently asked questions"
+        "faq": "Frequently asked questions",
+        "tools": "Tools"
       }
     },
     "homePage": {
@@ -11185,6 +11187,7 @@
         "INVITATION_ALREADY_INVITED": "{name} already has an invitation waiting: no invitation was sent.",
         "INVITATION_BAD_ADDRESS": "The address of {name} is not a valid email address: no invitation was sent.",
         "INVITATION_DUPLICATE": "{name} appears twice in the list: no invitation was sent.",
+        "INVITATION_ADDRESS_FULL": "{name}'s address already holds as many people as the club takes on one address (registrations and invitations): no invitation was sent.",
         "INVITATION_NO_NAME": "A line has no name: no invitation was sent.",
         "INVITATION_NOBODY": "Tick at least one member or type a line.",
         "INVITATION_TOO_MANY": "At most 50 people per press: split the list.",
@@ -14229,6 +14232,35 @@
     "empty": "The club's questions will be here soon.",
     "listLabel": "The club's questions and answers",
     "contact": "Can't find the answer? <contact>Write to us</contact>."
+  },
+  "Tools": {
+    "title": "Tools for runners",
+    "description": "Small helpers for training and racing. The first: the pace calculator.",
+    "pace": {
+      "title": "Pace calculator",
+      "intro": "Choose what you want to work out and fill in the other two; the answer appears as you type.",
+      "solveFor": "What do you want to work out?",
+      "solvePace": "Pace",
+      "solveTime": "Time",
+      "solveDistance": "Distance",
+      "distance": "Distance",
+      "distanceUnit": "Kilometres",
+      "distanceHelp": "A comma works too: 21,1",
+      "presets": "Race distances",
+      "preset5": "5 km",
+      "preset10": "10 km",
+      "presetHalf": "Half marathon",
+      "presetMarathon": "Marathon",
+      "time": "Time",
+      "hours": "Hours",
+      "minutes": "Minutes",
+      "seconds": "Seconds",
+      "pace": "Pace, per kilometre",
+      "paceResult": "{pace} min/km",
+      "distanceResult": "{distance} km",
+      "speed": "Speed: {speed} km/h",
+      "missing": "Fill in the boxes above and the answer appears here."
+    }
   },
   "Translate": {
     "button": "Translate from Romanian",

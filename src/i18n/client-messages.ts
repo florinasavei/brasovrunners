@@ -35,6 +35,8 @@ export const PUBLIC_CLIENT_MESSAGES = [
   "Site.newBuild",
   // `[locale]/error.tsx` — the boundary every route's failure reaches, the backoffice's included.
   "Error",
+  // PaceCalculator, on «Unelte»: its labels, its answer and the race presets.
+  "Tools.pace",
   // PictureLightbox (§601): a picture in a rich text that opens large — its name and the ✕.
   "Picture",
   // SignatureField, on the declaration page: the hint, the refusal and the wrong-name sentence,

@@ -27,6 +27,7 @@ export type StaticPublicRoute =
   | "/gallery"
   | "/team"
   | "/faq"
+  | "/tools"
   | "/members"
   | "/contact"
   | "/legal/privacy"

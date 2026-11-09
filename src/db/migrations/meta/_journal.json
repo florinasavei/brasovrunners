@@ -1303,6 +1303,13 @@
       "when": 1793823228015,
       "tag": "0194_invitation_elite",
       "breakpoints": true
+    },
+    {
+      "idx": 186,
+      "version": "7",
+      "when": 1794225196807,
+      "tag": "0195_invitations_per_person",
+      "breakpoints": true
     }
   ]
 }

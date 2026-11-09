@@ -21,7 +21,7 @@
  * «Membri» left the list with §591: the members' zone is a link in the footer's fold, not an entry of the
  * menu, so a stored order that still names `members` simply loses that key (the merge rule's deleted page).
  */
-export const MENU_SECTION_KEYS = ["events", "calendar", "contact", "gallery", "team", "faq"] as const;
+export const MENU_SECTION_KEYS = ["events", "calendar", "contact", "gallery", "team", "faq", "tools"] as const;
 export type MenuSectionKey = (typeof MENU_SECTION_KEYS)[number];
 
 /** A custom page's key: its id, never its address, which differs per language and may change. */

@@ -127,7 +127,7 @@ describe("§647 a refused send hands the next dialog the server's numbers", () =
 
   it("any refusal carries the numbers too: a duplicate line is refused by name with the forecast beside it", async () => {
     const eventId = await createEvent(3);
-    const refused = await inviteAction(null, press(eventId, "Ana Pop <ana@example.invalid>\nAna P. <ana@example.invalid>", null));
+    const refused = await inviteAction(null, press(eventId, "Ana Pop <ana@example.invalid>\nAna Pop <ana@example.invalid>", null));
     expect(refused).toMatchObject({ error: "INVITATION_DUPLICATE", forecast: { capacity: 3, free: 3 } });
     expect(await db.execute(sql`select count(*)::int as n from event_invitations`)).toMatchObject({ rows: [{ n: 0 }] });
   });

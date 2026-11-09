@@ -35,6 +35,7 @@
       "gallery": "Galerie",
       "team": "Echipa",
       "faq": "Întrebări",
+      "tools": "Unelte",
       "more": "Meniu",
       "contact": "Contact"
     },
@@ -6629,7 +6630,8 @@
         "contact": "Contact",
         "gallery": "Galerie",
         "team": "Echipa",
-        "faq": "Întrebări frecvente"
+        "faq": "Întrebări frecvente",
+        "tools": "Unelte"
       }
     },
     "homePage": {
@@ -11185,6 +11187,7 @@
         "INVITATION_ALREADY_INVITED": "{name} are deja o invitație în așteptare: nu s-a trimis nicio invitație.",
         "INVITATION_BAD_ADDRESS": "Adresa lui {name} nu e o adresă de email validă: nu s-a trimis nicio invitație.",
         "INVITATION_DUPLICATE": "{name} apare de două ori în listă: nu s-a trimis nicio invitație.",
+        "INVITATION_ADDRESS_FULL": "Adresa lui {name} are deja câte persoane primește clubul pe o adresă (înscrieri și invitații): nu s-a trimis nicio invitație.",
         "INVITATION_NO_NAME": "Un rând nu are nume: nu s-a trimis nicio invitație.",
         "INVITATION_NOBODY": "Bifează cel puțin un membru sau scrie un rând.",
         "INVITATION_TOO_MANY": "Cel mult 50 de persoane la o apăsare: împarte lista.",
@@ -14229,6 +14232,35 @@
     "empty": "Întrebările clubului apar aici în curând.",
     "listLabel": "Întrebările și răspunsurile clubului",
     "contact": "Nu găsești răspunsul? <contact>Scrie-ne</contact>."
+  },
+  "Tools": {
+    "title": "Unelte pentru alergători",
+    "description": "Mici ajutoare pentru antrenament și concurs. Primul: calculatorul de ritm.",
+    "pace": {
+      "title": "Calculator de ritm",
+      "intro": "Alege ce vrei să afli și completează celelalte două; rezultatul apare pe măsură ce scrii.",
+      "solveFor": "Ce vrei să afli?",
+      "solvePace": "Ritmul",
+      "solveTime": "Timpul",
+      "solveDistance": "Distanța",
+      "distance": "Distanța",
+      "distanceUnit": "Kilometri",
+      "distanceHelp": "Poți scrie și cu virgulă: 21,1",
+      "presets": "Distanțe de concurs",
+      "preset5": "5 km",
+      "preset10": "10 km",
+      "presetHalf": "Semimaraton",
+      "presetMarathon": "Maraton",
+      "time": "Timpul",
+      "hours": "Ore",
+      "minutes": "Minute",
+      "seconds": "Secunde",
+      "pace": "Ritmul, pe kilometru",
+      "paceResult": "{pace} min/km",
+      "distanceResult": "{distance} km",
+      "speed": "Viteza: {speed} km/h",
+      "missing": "Completează câmpurile de mai sus și rezultatul apare aici."
+    }
   },
   "Translate": {
     "button": "Tradu din română",

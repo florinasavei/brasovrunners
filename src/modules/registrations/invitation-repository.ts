@@ -95,18 +95,20 @@ export async function findInvitationById<T extends Record<string, unknown>>(db: 
   return row;
 }
 
-/** The open invitation of an address at an event, if any (the one-live index's own question). */
-export async function findOpenInvitation<T extends Record<string, unknown>>(
+/**
+ * The open invitations of an address at an event, oldest first: one per person of a family on that
+ * address (§923), each by its own name — the send asks them for the same name and for the limit.
+ */
+export async function findOpenInvitations<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
   canonicalEmail: string,
-): Promise<EventInvitation | undefined> {
-  const [row] = await db
+): Promise<EventInvitation[]> {
+  return db
     .select()
     .from(eventInvitations)
     .where(and(eq(eventInvitations.eventId, eventId), eq(eventInvitations.canonicalEmail, canonicalEmail), invitationOpen()))
-    .limit(1);
-  return row;
+    .orderBy(asc(eventInvitations.createdAt), asc(eventInvitations.id));
 }
 
 /**
@@ -115,20 +117,20 @@ export async function findOpenInvitation<T extends Record<string, unknown>>(
  * the public form's confirmation, a staff entry, the desk, a restart, «Dă-i un loc acum» — so no place
  * stays held in a seated person's name until the deadline. By the participant row the invitation was
  * sent to: the address's one row, which every registration of that address carries. The deadline is
- * compared here, whatever the sweep has stamped (§10.6).
+ * compared here, whatever the sweep has stamped (§10.6). Every one, oldest first — a family's address
+ * holds one per person (§923), and the caller picks the one that is this registration's.
  */
-export async function findLiveInvitationOfParticipant<T extends Record<string, unknown>>(
+export async function findLiveInvitationsOfParticipant<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
   participantId: string,
   now: Date,
-): Promise<EventInvitation | undefined> {
-  const [row] = await db
+): Promise<EventInvitation[]> {
+  return db
     .select()
     .from(eventInvitations)
     .where(and(eq(eventInvitations.eventId, eventId), eq(eventInvitations.participantId, participantId), gt(eventInvitations.expiresAt, now), invitationOpen()))
-    .limit(1);
-  return row;
+    .orderBy(asc(eventInvitations.createdAt), asc(eventInvitations.id));
 }
 
 /**

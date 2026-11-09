@@ -53,7 +53,7 @@ function hrefs(markup: string): string[] {
 }
 
 describe("§537 the public menu's order", () => {
-  it("is Alergări, Calendar, Contact, Echipa, Întrebări frecvente, then the club's pages", async () => {
+  it("is Alergări, Calendar, Contact, Echipa, Întrebări frecvente, Unelte, then the club's pages", async () => {
     const markup = await html(
       createElement(SiteNav, {
         showTeam: true,
@@ -65,14 +65,14 @@ describe("§537 the public menu's order", () => {
         ],
       }),
     );
-    expect(hrefs(markup)).toEqual(["/ro/events", "/ro/calendar", "/ro/contact", "/ro/team", "/ro/faq", "/ro/pages/despre", "/ro/pages/istoric"]);
+    expect(hrefs(markup)).toEqual(["/ro/events", "/ro/calendar", "/ro/contact", "/ro/team", "/ro/faq", "/ro/tools", "/ro/pages/despre", "/ro/pages/istoric"]);
   });
 
   it("keeps «Galerie» just before «Echipa», and no «Membri» in the menu (§591: it is the footer's)", async () => {
     const markup = await html(
       createElement(SiteNav, { showGallery: true, showTeam: true, showFaq: true, showContact: true }),
     );
-    expect(hrefs(markup)).toEqual(["/ro/events", "/ro/calendar", "/ro/contact", "/ro/gallery", "/ro/team", "/ro/faq"]);
+    expect(hrefs(markup)).toEqual(["/ro/events", "/ro/calendar", "/ro/contact", "/ro/gallery", "/ro/team", "/ro/faq", "/ro/tools"]);
   });
 });
 
@@ -92,7 +92,7 @@ describe("§571 the club's one menu order", () => {
         order: [`page:${ISTORIC}`, "events", "calendar", `page:${DESPRE}`, "contact", "faq", "team"],
       }),
     );
-    expect(hrefs(markup)).toEqual(["/ro/pages/istoric", "/ro/events", "/ro/calendar", "/ro/pages/despre", "/ro/contact", "/ro/faq", "/ro/team"]);
+    expect(hrefs(markup)).toEqual(["/ro/pages/istoric", "/ro/events", "/ro/calendar", "/ro/pages/despre", "/ro/contact", "/ro/faq", "/ro/team", "/ro/tools"]);
   });
 
   it("leaves an entry the order does not name at the end, in its default place, and skips one the menu does not offer", async () => {
@@ -104,7 +104,7 @@ describe("§571 the club's one menu order", () => {
         order: ["contact", "team", `page:${DESPRE}`, "events"],
       }),
     );
-    expect(hrefs(markup)).toEqual(["/ro/contact", "/ro/pages/despre", "/ro/events", "/ro/calendar", "/ro/pages/istoric"]);
+    expect(hrefs(markup)).toEqual(["/ro/contact", "/ro/pages/despre", "/ro/events", "/ro/calendar", "/ro/tools", "/ro/pages/istoric"]);
   });
 
   it("draws no rule between the sections and the pages: one list", async () => {
