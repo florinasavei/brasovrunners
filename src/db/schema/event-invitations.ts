@@ -83,7 +83,7 @@ export const eventInvitations = pgTable(
   },
   (t) => [
     /*
-      No longer one live invitation per address (§NNN, a family on one address): one inbox may hold an
+      No longer one live invitation per address (§923, a family on one address): one inbox may hold an
       invitation for each of several people, each by its own name, up to the club's per-address limit.
       The send refuses the same person twice — the same name on the address, already invited or
       registered — and the address over its limit, in code, under the event lock that serialises every

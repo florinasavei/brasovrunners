@@ -204,7 +204,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     nor is a row «În afara locurilor» (§643), which needs no counted place. The server decides.
   */
   const givePlaceNowFacts = mayManage && registration.status === "PENDING_EMAIL_CONFIRMATION" ? await givePlaceNowAhead(registration.eventId) : null;
-  // The open invitation the press would take over (§647; by the name on a family's address, §NNN) is the row's own place: it adds none.
+  // The open invitation the press would take over (§647; by the name on a family's address, §923) is the row's own place: it adds none.
   const heldByInvitation = givePlaceNowFacts !== null && (await invitationHeldForRegistration(db, registration.eventId, registration.id, new Date()));
   const givePlaceNow = givePlaceNowFacts
     ? {

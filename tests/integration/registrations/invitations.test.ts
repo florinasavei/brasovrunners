@@ -378,7 +378,7 @@ describe("§647 the send refuses, naming the person, and writes nothing", () => 
     return error as InvitationRefusal;
   };
 
-  it("the same person registered already, invited already or twice in the list (the same name on the address, §NNN), a bad address", async () => {
+  it("the same person registered already, invited already or twice in the list (the same name on the address, §923), a bad address", async () => {
     const event = await createEvent(5);
     await registered(event, "Ioana", 0);
     const send = (people: { name: string; email: string }[]) => inviteToEventByStaff(db, event, { people, days: 7, outsideCapacity: false }, admin, at(1));
@@ -414,7 +414,7 @@ describe("§647 the send refuses, naming the person, and writes nothing", () => 
   });
 });
 
-describe("§NNN a family on one address: one invitation per person, each by its name, up to the club's limit", () => {
+describe("§923 a family on one address: one invitation per person, each by its name, up to the club's limit", () => {
   const refusal = async (promise: Promise<unknown>) => {
     const error = await refusalOf(promise);
     expect(error).toBeInstanceOf(InvitationRefusal);

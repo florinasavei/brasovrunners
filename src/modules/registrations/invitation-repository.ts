@@ -97,7 +97,7 @@ export async function findInvitationById<T extends Record<string, unknown>>(db: 
 
 /**
  * The open invitations of an address at an event, oldest first: one per person of a family on that
- * address (§NNN), each by its own name — the send asks them for the same name and for the limit.
+ * address (§923), each by its own name — the send asks them for the same name and for the limit.
  */
 export async function findOpenInvitations<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -118,7 +118,7 @@ export async function findOpenInvitations<T extends Record<string, unknown>>(
  * stays held in a seated person's name until the deadline. By the participant row the invitation was
  * sent to: the address's one row, which every registration of that address carries. The deadline is
  * compared here, whatever the sweep has stamped (§10.6). Every one, oldest first — a family's address
- * holds one per person (§NNN), and the caller picks the one that is this registration's.
+ * holds one per person (§923), and the caller picks the one that is this registration's.
  */
 export async function findLiveInvitationsOfParticipant<T extends Record<string, unknown>>(
   db: Database<T>,

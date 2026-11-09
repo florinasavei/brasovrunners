@@ -787,7 +787,7 @@ async function participantIdOfAddress<T extends Record<string, unknown>>(tx: Tra
  * a row in the line (`WAITLISTED`, `WAITLIST_OFFERED`), whose place comes as an offer. Read under the
  * caller's event lock.
  *
- * By the name first (§NNN): one address may hold an invitation for each person of a family, so the one
+ * By the name first (§923): one address may hold an invitation for each person of a family, so the one
  * kept in this runner's name (`sameRunner`) is theirs, and a sibling registered under another name never
  * takes it. Without a name match, only §647's case is decided by the address: the address's one open
  * invitation, sent before this registration was made, while no other registration of the address is
@@ -4525,7 +4525,7 @@ function invitationIdentity(person: InvitationInvitee) {
 }
 
 /**
- * Would a place given to this registration now take an open invitation of its address over (§647, §NNN)?
+ * Would a place given to this registration now take an open invitation of its address over (§647, §923)?
  * The registration page's question before «Dă-i un loc acum» says whether a supplementary place is added:
  * the allocator's own rule (`invitationToAdopt`), so the page and the press never disagree.
  */
@@ -4557,7 +4557,7 @@ export async function invitationHeldForRegistration<T extends Record<string, unk
  *    name (`sameRunner`) on the same address — already holds a registration at the event in any live
  *    state, or a live invitation, or appears twice in the list; and when the address would go past the
  *    club's per-address limit, counting its live registrations, its open invitations and this list's
- *    lines for it. One inbox may hold an invitation for each person of a family (§NNN), each by its name.
+ *    lines for it. One inbox may hold an invitation for each person of a family (§923), each by its name.
  *    A member picked from the members' zone is read from the account (name, address, language), never
  *    from what was posted.
  * 4. **The places.** An invitation «În afara locurilor» holds none. Otherwise it holds a counted place
@@ -4648,7 +4648,7 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
       if (person.name === "" || person.name.length > 200) throw new InvitationRefusal("INVITATION_NO_NAME", person.email || null);
       const identity = invitationIdentity(person);
       /*
-        A family on one address (§NNN): one inbox may hold an invitation for each of several people, each
+        A family on one address (§923): one inbox may hold an invitation for each of several people, each
         by its own name. The same person — the same name (`sameRunner`) on the same address — is refused
         twice in the list, registered there already in a live state, or invited already; and the address
         past the club's limit, counting its live registrations, its open invitations and this list's lines.

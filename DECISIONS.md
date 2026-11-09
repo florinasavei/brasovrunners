@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.33-2026-11-07 -->
+<!-- PROJECT_BASELINE: BR-V4.34-2026-11-09 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.33-2026-11-07`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.34-2026-11-09`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -29135,3 +29135,29 @@ Baseline `BR-V4.32-2026-11-06`.
 **The owner, 2026-11-07,** of «Ceasul termenelor a stat pe loc: ce s-a mutat» (§657): «Wtf, nu înțeleg nimic… fă asta mai clar». The email to the Administrators after an outage now says what happened in the reader's words: the subject is «Site-ul nu a răspuns o vreme: termenele au fost prelungite» («The site did not answer for a while: deadlines were extended»); the first sentence says the site did not answer (or could not be opened, for a lost name); the second that the running deadlines — offers, held places, confirmation links — were extended by the outage so nobody lost a place; and when nothing is left to decide, «Nu trebuie să faci nimic.». The facts line, the list of claims not revived and their remedies are unchanged; the screens that name the email use the new subject.
 
 Baseline `BR-V4.33-2026-11-07`.
+
+## 922. «Unelte»: a page of runner tools, the pace calculator first
+
+**The owner, 2026-11-09:** "I want a new page here, called tools, so I can offer runner help, such as pace calculator, that should be the first useful one." Asked where it goes, what the calculator does and its Romanian address, he chose the header menu, «type two of three, get the third» and `/ro/unelte`.
+
+**Decision.** A platform page at `/ro/unelte` and `/en/tools`, like «Echipa» and «Întrebări frecvente»: its address and words are the platform's, and it needs nothing from the club, so it is always in the menu — a new section key, `tools`, after `faq` by default and placed like every other entry in «Ordinea meniului» (§571). The page is static and kept by the CDN like the other public pages (§549); it reads no database and no request, and is in the sitemap in both languages. Each tool is a calm card with its own client island.
+
+The first tool is the pace calculator: a radio picks which of distance, time and pace to work out (a choice, never a toggle), the other two are typed, and the answer and the speed in km/h follow every keystroke — no button computes and nothing is sent anywhere. Four race distances fill the distance in one press (5 km, 10 km, the half marathon at 21.0975 km and the marathon at 42.195 km). A distance may be typed with the Romanian comma. Switching what is worked out carries the last answer into the boxes that now need it, so the three stay one consistent run. The arithmetic is a pure module (`src/modules/tools/pace.ts`) with its own test.
+
+**Refused.** A split table and a race-time predictor in this first version — the owner chose the calculator alone; each can be a card on the same page later. A footer link instead of the menu entry — the owner chose the menu.
+
+Baseline `BR-V4.34-2026-11-09`.
+
+## 923. Invitations for a family on one address: one per person, each by its name
+
+**The owner, 2026-11-09:** "I need to be able to invite people as a family and offer 2–4 places when I send the invite: I have a case where two people from our sponsors are requesting two invitations, but over the same email." Asked for the shape, he chose «one invite per person» over one invitation holding 2–4 places, and said yes to dropping the index that held one open invitation per address.
+
+**Decision.** One inbox may hold an open invitation for each of several people at an event, each by its own name: «Invită pe email» takes the same address on several lines. Each line is its own invitation — its own email, its own link, its own kept place until its deadline — so the capacity formula is untouched (`invitationHolds` still counts one place per invitation, `AGENTS.md` §10.6). The send refuses, by name and writing nothing, the same person — the same name on the address (`sameRunner`, the family's rule, §389) — twice in the list, already registered there in a live state, or already invited; and the address past the club's per-address limit (four by default, §576), counting its live registrations, its open invitations and the list's lines for it. Each link registers its own person under the staff entry's name rule, as before. The link's acceptance never takes a sibling's invitation (the allocator's `invited` flag, §647).
+
+**The takeover is by the name first.** A registration of the address that reaches a place by another route (the public form's confirmation, a staff entry, the desk, «Dă-i un loc acum») takes over the open invitation kept in its own name. Without a name match, only §647's own case is decided by the address: the address's one open invitation, sent before the registration was made, while no other registration of the address is live at the event — its link registers whoever the inbox names. A family's invitation is never taken by a sibling registered under another name. The registration page's «Dă-i un loc acum» asks the same rule (`invitationHeldForRegistration`), so the page and the press agree on whether a supplementary place is added.
+
+**The data.** Migration `0195` drops `event_invitations_live_address_unique`, a contract: every release since §647 already refused a second open invitation per address in code, under the event lock, before the insert, so the release still serving while it runs never writes two. The limit and the same-person rule are kept in code under that same lock, which serialises every send.
+
+**Refused.** One invitation holding 2–4 places, filled in one sitting — it would make an invitation hold several places in the capacity formula, a trust rule, and take longer; the owner chose one invitation per person.
+
+Baseline `BR-V4.34-2026-11-09`.
