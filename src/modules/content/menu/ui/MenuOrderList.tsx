@@ -16,6 +16,7 @@ import type { SvgIconProps } from "@mui/material/SvgIcon";
 import Typography from "@mui/material/Typography";
 import { type ComponentType, useEffect, useRef, useState } from "react";
 import { useRecall } from "@/shared/forms/recall";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { type MenuSectionKey, moveMenuEntry, sortByMenuOrder } from "../order";
 
 /** One entry of the menu, as the card shows it. A name, never an element, crosses from the server (§370). */
@@ -50,6 +51,8 @@ const GLYPHS: Record<MenuSectionKey, ComponentType<SvgIconProps>> = {
   gallery: PhotoLibraryIcon,
   team: GroupsIcon,
   faq: HelpOutlineIcon,
+  // «Unelte»: the hourglass — time, which its pace calculator works out — asked from the action table by name (§694).
+  tools: ACTION_ICONS.waiting,
 };
 
 function glyphOf(entry: MenuOrderEntry): ComponentType<SvgIconProps> {

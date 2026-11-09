@@ -40,6 +40,8 @@ const SECTIONS = [
   // «Întrebări frecvente» (§525): another page this application ships, offered while a question is
   // on the site (`showFaq`).
   { segment: "faq", href: "/faq" },
+  // «Unelte» (the pace calculator first): a page this application ships with nothing from the club, so always offered.
+  { segment: "tools", href: "/tools" },
 ] as const;
 
 /** A custom page in the menu: its id is its key in the club's order (`page:<id>`), its slug its address. */

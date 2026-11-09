@@ -159,6 +159,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
+  // «Unelte», once per locale: a platform page with nothing from the club, always on the site.
+  for (const locale of routing.locales) {
+    entries.push({
+      url: staticRouteUrl(env.APP_BASE_URL, "/tools", locale),
+      alternates: { languages: hreflangLanguages(staticRouteUrls(env.APP_BASE_URL, "/tools")) },
+      changeFrequency: "monthly",
+      priority: 0.4,
+    });
+  }
+
   // «Beneficiile membrilor» (§524), once per locale, while the footer's fold links it (§591,
   // `offersMembersEntry`: published, with its words) — a DRAFT page is a 404. Never the members' zone: it is behind the
   // sign-in, and `robots.txt` names it.

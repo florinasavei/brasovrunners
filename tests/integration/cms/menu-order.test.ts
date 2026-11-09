@@ -82,7 +82,7 @@ describe("«Ordinea meniului», the site menu's one order", () => {
 
   it("saves the Administrator's order whole, with an audit row and the public pages expired", async () => {
     const saved = await saveMenuOrder(db, admin, [`page:${first}`, "contact", "events"], NOW);
-    const whole = [`page:${first}`, "contact", "events", "calendar", "gallery", "team", "faq", `page:${second}`];
+    const whole = [`page:${first}`, "contact", "events", "calendar", "gallery", "team", "faq", "tools", `page:${second}`];
     expect(saved).toEqual({ stored: whole, updatedAt: NOW });
     expect(await readMenuOrder(db)).toEqual({ stored: whole, updatedAt: NOW });
     expect(cache.revalidatePublicContent).toHaveBeenCalledTimes(1);
@@ -150,6 +150,6 @@ describe("«Ordinea meniului», the site menu's one order", () => {
     await stream.allReady;
     const markup = await new Response(stream).text();
     const hrefs = [...markup.matchAll(/<a[^>]*href="([^"]+)"/g)].map((match) => match[1]);
-    expect(hrefs).toEqual(["/ro/pages/despre", "/ro/contact", "/ro/events", "/ro/calendar", "/ro/pages/istoric"]);
+    expect(hrefs).toEqual(["/ro/pages/despre", "/ro/contact", "/ro/events", "/ro/calendar", "/ro/pages/istoric", "/ro/tools"]);
   });
 });
