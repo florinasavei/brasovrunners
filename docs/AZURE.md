@@ -19,6 +19,30 @@ Microsoft Nonprofits **Azure Grant** gives $2,000 of Azure credit a year (PLATFO
 | **Hosting** | Vercel Pro, $20 a month | **Stays on Vercel** | PLATFORM § (c) already has the rule for returning to Hobby. Moving hosting is the biggest change on this list and saves nothing that rule does not | Only if Hobby does not fit (Part 3) |
 | **Staff sign-in** | Zitadel Free, $0 | **Stays on Zitadel** | Microsoft Entra ID would also cost $0, but every staff member would have to be invited again and `DECISIONS.md` §26 would change, for no saving | Not planned (Part 4) |
 
+## The bill before the move, measured
+
+The baseline any Azure month is compared against, copied from the providers' billing pages. Each snapshot
+is dated and kept, never overwritten: a new one goes on top. «At this pace» is the amount so far, divided
+by the days gone and multiplied by the period's days. The live figures are on «Setări» → «Costuri» →
+«Luna aceasta».
+
+### 2026-11-09
+
+| Provider | Period | So far | At this pace, the whole period | What is billed |
+| --- | --- | --- | --- | --- |
+| **Vercel Pro** | the cycle, 21 days left (about 9 gone) | $3.97 of usage, inside the $20 included credit; on-demand $0 | about $13 of usage, still inside the credit | **$20**, the seat. Usage costs extra only above the $20 credit |
+| **Neon Launch** | 1 Nov to 1 Dec | $2.60: compute 24.52 CU-hours $2.59, storage 0.02 GB-month $0.01 | about **$9.40**, about 89 CU-hours | the usage. Neon emails at $15 (its spending notification) |
+| **Mailgun Foundation** | the month | not in this snapshot | | **$35**, from PLATFORM § Cost; Free from December |
+| **Total** | | | | **about $64 a month** |
+
+Vercel's $3.97, line by line: Build CPU Minutes $2.12, Function Storage $0.87, Fluid Active CPU $0.28,
+Observability Events $0.23, ISR Writes $0.22, Fluid Provisioned Memory $0.09, Deployment Storage $0.09,
+Fast Origin Transfer $0.05, Function Invocations $0.02, ISR Reads $0.01.
+
+What this says for the plan: **more than half of Vercel's usage is building the site, not serving it.**
+Builds would cost on Azure too (GitHub Actions minutes instead), which is one more reason Part 3 keeps
+hosting on Vercel. The money to save is Mailgun's $35 (Part 1) and Neon's $9 to $11 (Part 2).
+
 ## The grant, and what a missed renewal really costs
 
 From Microsoft's renewal page:
