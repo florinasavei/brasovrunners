@@ -125,7 +125,7 @@ import {
 import * as repo from "./repository";
 import { watchPlacesAlert } from "./places-alert";
 import { publicDoorOpen, publicRegistrationPausedError } from "./domain/public-door";
-import { findInvitationById, findLiveInvitationsOfParticipant, findOpenInvitations, invitationOpen } from "./invitation-repository";
+import { countInvitationsOfParticipant, findInvitationById, findLiveInvitationsOfParticipant, findOpenInvitations, invitationOpen } from "./invitation-repository";
 import { writeRegistrationEliteMark } from "./elite-mark";
 import { confirmsInvitationRaises, INVITATION_BATCH_MAX, InvitationRefusal, invitationDeadline, invitationFreePlaces, invitationRaises, invitationState, validInvitationDays } from "./domain/invitations";
 import { waitlistRefusalOf } from "./domain/waitlist";
@@ -789,10 +789,12 @@ async function participantIdOfAddress<T extends Record<string, unknown>>(tx: Tra
  *
  * By the name first (§923): one address may hold an invitation for each person of a family, so the one
  * kept in this runner's name (`sameRunner`) is theirs, and a sibling registered under another name never
- * takes it. Without a name match, only §647's case is decided by the address: the address's one open
- * invitation, sent before this registration was made, while no other registration of the address is
- * live at the event — its link registers whoever the inbox names, so the first registration of that
- * address to reach a place is the one the club kept it for.
+ * takes it. Without a name match, only §647's case is decided by the address: an address invited once at
+ * the event, its one open invitation sent before this registration was made, while no other registration
+ * of the address is live at the event — its link registers whoever the inbox names, so the first
+ * registration of that address to reach a place is the one the club kept it for. An address invited more
+ * than once is a family's, matched by the name alone: a person whose own invitation is spent, coming back
+ * through the allocator (a late signature after the hold went, a restart), never takes a sibling's.
  */
 async function invitationToAdopt<T extends Record<string, unknown>>(db: Database<T>, eventId: string, registrationId: string, now: Date) {
   const registration = await repo.findRegistrationById(db, registrationId);
@@ -802,6 +804,7 @@ async function invitationToAdopt<T extends Record<string, unknown>>(db: Database
   if (named || open.length !== 1) return named;
   const [only] = open;
   if (only.createdAt.getTime() > registration.createdAt.getTime()) return undefined;
+  if ((await countInvitationsOfParticipant(db, eventId, registration.participantId)) > 1) return undefined;
   const rows = await repo.findRegistrationsByEventAndParticipant(db, eventId, registration.participantId);
   return rows.some((row) => row.id !== registration.id && isActiveStatus(row.status)) ? undefined : only;
 }

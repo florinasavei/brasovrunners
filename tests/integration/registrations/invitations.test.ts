@@ -59,7 +59,7 @@ vi.mock("@/modules/notifications/drain", () => ({
 const { submitRegistration, confirmEmail, givePlaceNowByStaff, inviteToEventByStaff, readPublicPlaces, signDeclaration, withdrawInvitationByStaff, resendInvitationByStaff } = await import(
   "@/modules/registrations/service"
 );
-const { inviteToEvent } = await import("@/modules/registrations/admin-service");
+const { inviteToEvent, cancelRegistrationByStaff, deleteRegistrationByStaff } = await import("@/modules/registrations/admin-service");
 const { acceptInvitation, readInvitationLink } = await import("@/modules/registrations/invitations");
 const { countOccupied, findEventsNeedingMaintenance } = await import("@/modules/registrations/repository");
 const { countPendingInvitations } = await import("@/modules/registrations/invitation-repository");
@@ -487,6 +487,33 @@ describe("§923 a family on one address: one invitation per person, each by its 
     expect(rows.find((row) => row.name === "Ana Munteanu")).toMatchObject({ acceptedRegistrationId: pending.id });
     expect(rows.find((row) => row.name === "Bianca Munteanu")).toMatchObject({ acceptedAt: null, acceptedRegistrationId: null });
     expect((await countOccupied(db, event.id, at(3))).invitationHolds).toBe(1);
+  });
+
+  it("a person whose registration comes back through the allocator never takes the other's open invitation (the review of 2026-11-09)", async () => {
+    const event = await createEvent(4);
+    await inviteToEventByStaff(db, event, { people: family, days: 7, outsideCapacity: false }, admin, NOW);
+    const accepted = await acceptInvitation(db, await linkFor(event.id, "Ana Munteanu", at(1)), form("Ana", at(1)), at(1));
+    expect(accepted.ok).toBe(true);
+    await cancelRegistrationByStaff(db, admin, accepted.ok ? accepted.registration.id : "", "changed her mind", at(2));
+    // Ana registers again by the public form, her address proved by her link: seated through the allocator.
+    await submitRegistration(db, event, { ...form("Ana", at(3)), email: "fam@example.invalid" }, at(3), "REAL", PUBLIC);
+    const bianca = (await invitationsOf(event.id)).find((row) => row.name === "Bianca Munteanu");
+    expect(bianca).toMatchObject({ acceptedAt: null, acceptedRegistrationId: null });
+    expect((await countOccupied(db, event.id, at(4))).invitationHolds).toBe(1);
+    expect(await readInvitationLink(db, await linkFor(event.id, "Bianca Munteanu", at(4)), "ro", at(4))).toMatchObject({ kind: "open", name: "Bianca Munteanu" });
+  });
+
+  it("erasing one person's registration keeps the address while the other's invitation is open: her link and kept place stay (the review of 2026-11-09)", async () => {
+    const event = await createEvent(4);
+    await inviteToEventByStaff(db, event, { people: family, days: 7, outsideCapacity: false }, admin, NOW);
+    const accepted = await acceptInvitation(db, await linkFor(event.id, "Ana Munteanu", at(1)), form("Ana", at(1)), at(1));
+    expect(accepted.ok).toBe(true);
+    await deleteRegistrationByStaff(db, admin, accepted.ok ? accepted.registration.id : "", "asked to be erased", at(2));
+    const rows = await invitationsOf(event.id);
+    expect(rows.map((row) => row.name)).toEqual(["Bianca Munteanu"]);
+    expect(rows[0]).toMatchObject({ acceptedAt: null });
+    expect((await countOccupied(db, event.id, at(3))).invitationHolds).toBe(1);
+    expect(await readInvitationLink(db, await linkFor(event.id, "Bianca Munteanu", at(3)), "ro", at(3))).toMatchObject({ kind: "open", name: "Bianca Munteanu" });
   });
 });
 

@@ -1,6 +1,7 @@
 import { and, asc, count, eq, isNull, or, sql } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { type EmailMessageType, emailOutbox } from "@/db/schema/email-outbox";
+import { eventInvitations } from "@/db/schema/event-invitations";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { type Registration, type RegistrationStatus, registrations } from "@/db/schema/registrations";
@@ -30,6 +31,7 @@ import {
 import { clearOptionalData, OPTIONAL_DATA_FIELDS, type OptionalDataField } from "./consent-withdrawal";
 import { setPromoConsent } from "./promo-consent";
 import { eraseConfirmationMatches } from "./domain/erase-confirmation";
+import { invitationOpen } from "./invitation-repository";
 import type { SexChoice } from "./domain/sex";
 import { heldRefusal, refuseIfRegistrationHeld, registrationIsHeld } from "./declaration-hold";
 import { bibNumberInUse, isEventSpareNumber, retiredBibNumbers } from "./bibs";
@@ -1826,12 +1828,18 @@ async function eraseRegistration<T extends Record<string, unknown>>(
     // Erased means gone (`DECISIONS.md` §88): when this was the person's last registration,
     // the participant row goes too — and with it, by cascade, their action tokens and outbox
     // rows (the address). The audit row above keeps `participant_id` as null from here, which
-    // is the point: nothing left says who. A participant with another registration stays.
+    // is the point: nothing left says who. A participant with another registration stays — and
+    // one an open invitation still holds (§924): one inbox may keep another person's invitation,
+    // whose link and kept place the cascade would take with it.
     const [remaining] = await tx
       .select({ n: count() })
       .from(registrations)
       .where(eq(registrations.participantId, current.participantId));
-    if ((remaining?.n ?? 0) === 0) {
+    const [invited] = await tx
+      .select({ n: count() })
+      .from(eventInvitations)
+      .where(and(eq(eventInvitations.participantId, current.participantId), invitationOpen()));
+    if ((remaining?.n ?? 0) === 0 && (invited?.n ?? 0) === 0) {
       // A row about the person, not the registration — an access copy made for them — keeps
       // their uuid in `entity_id`, which the foreign key never reaches (§322).
       await scrubParticipantFromAudit(tx, current.participantId);
