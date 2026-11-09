@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.34` | «Unelte» with a pace calculator (§922) · invitations for a family on one address (§923) |
 | `BR-V4.33` | the outage email in plain words (§921) |
 | `BR-V4.32` | publishing a series' source turns its automatic publication on (§920) |
 | `BR-V4.31` | the events list reads a series' rule from its source under «Viitoare» too (§919) |

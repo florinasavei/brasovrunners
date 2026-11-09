@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.33-2026-11-07 -->
+<!-- PROJECT_BASELINE: BR-V4.34-2026-11-09 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V4.33-2026-11-07`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V4.34-2026-11-09`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.

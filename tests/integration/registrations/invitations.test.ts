@@ -378,22 +378,22 @@ describe("§647 the send refuses, naming the person, and writes nothing", () => 
     return error as InvitationRefusal;
   };
 
-  it("somebody registered already, somebody invited already, a line twice, a bad address", async () => {
+  it("the same person registered already, invited already or twice in the list (the same name on the address, §923), a bad address", async () => {
     const event = await createEvent(5);
     await registered(event, "Ioana", 0);
     const send = (people: { name: string; email: string }[]) => inviteToEventByStaff(db, event, { people, days: 7, outsideCapacity: false }, admin, at(1));
-    expect(await refusal(send([{ name: "Ana Pop", email: "ana@example.invalid" }, { name: "Ioana M", email: "IOANA@example.invalid" }]))).toMatchObject({
+    expect(await refusal(send([{ name: "Ana Pop", email: "ana@example.invalid" }, { name: "IOANA munteanu", email: "IOANA@example.invalid" }]))).toMatchObject({
       refusal: "INVITATION_ALREADY_REGISTERED",
-      person: "Ioana M",
+      person: "IOANA munteanu",
     });
-    expect(await refusal(send([{ name: "Ana Pop", email: "ana@example.invalid" }, { name: "Ana Again", email: "ana@example.invalid" }]))).toMatchObject({ refusal: "INVITATION_DUPLICATE" });
+    expect(await refusal(send([{ name: "Ana Pop", email: "ana@example.invalid" }, { name: "ana pop", email: "ana@example.invalid" }]))).toMatchObject({ refusal: "INVITATION_DUPLICATE" });
     expect(await refusal(send([{ name: "Ana Pop", email: "not an address" }]))).toMatchObject({ refusal: "INVITATION_BAD_ADDRESS", person: "Ana Pop" });
     expect(await refusal(inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 0, outsideCapacity: false }, admin, at(1)))).toMatchObject({
       refusal: "INVITATION_BAD_DAYS",
     });
     expect(await invitationsOf(event.id)).toHaveLength(0);
     await send([{ name: "Ana Pop", email: "ana@example.invalid" }]);
-    expect(await refusal(send([{ name: "Ana", email: "ana@example.invalid" }]))).toMatchObject({ refusal: "INVITATION_ALREADY_INVITED", person: "Ana" });
+    expect(await refusal(send([{ name: "ANA POP", email: "ana@example.invalid" }]))).toMatchObject({ refusal: "INVITATION_ALREADY_INVITED", person: "ANA POP" });
     expect(await invitationsOf(event.id)).toHaveLength(1);
   });
 
@@ -411,6 +411,82 @@ describe("§647 the send refuses, naming the person, and writes nothing", () => 
     expect((await inviteToEventByStaff(db, closed, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW)).sent).toBe(1);
     const forbidden = await refusalOf(inviteToEvent(db, organizer, closed.id, { people: [{ name: "Ioana M", email: "ioana@example.invalid" }], days: 7, outsideCapacity: false }, NOW));
     expect(isDomainError(forbidden) && forbidden.code).toBe("FORBIDDEN");
+  });
+});
+
+describe("§923 a family on one address: one invitation per person, each by its name, up to the club's limit", () => {
+  const refusal = async (promise: Promise<unknown>) => {
+    const error = await refusalOf(promise);
+    expect(error).toBeInstanceOf(InvitationRefusal);
+    return error as InvitationRefusal;
+  };
+  /** The link of this person's invitation, among the several emails one address received. */
+  async function linkFor(eventId: string, name: string, when: Date): Promise<string> {
+    const invitation = (await invitationsOf(eventId)).find((row) => row.name === name);
+    const row = (await invitationEmails()).find((each) => (each.payloadJson as { invitationId?: string }).invitationId === invitation?.id);
+    if (!row) throw new Error(`no invitation email for ${name}`);
+    const message = await renderOutboxMessage({ ...row, status: "PROCESSING", attemptCount: 1, lockedAt: when }, db, when);
+    const match = /\/(?:inregistrari\/invitatie|registrations\/invitation)\/([A-Za-z0-9_-]{43})(?![A-Za-z0-9_-])/.exec(message.text);
+    if (!match) throw new Error("no invitation link in the message");
+    return match[1];
+  }
+  const family = [
+    { name: "Ana Munteanu", email: "fam@example.invalid" },
+    { name: "Bianca Munteanu", email: "fam@example.invalid" },
+  ];
+
+  it("one inbox holds an invitation and a place per name; the same name again, or past the limit of four, is refused and nothing written", async () => {
+    const event = await createEvent(6);
+    const send = (people: { name: string; email: string }[], minute: number) => inviteToEventByStaff(db, event, { people, days: 7, outsideCapacity: false }, admin, at(minute));
+    await send(family, 1);
+    expect(await invitationsOf(event.id)).toHaveLength(2);
+    expect((await invitationEmails()).filter((row) => row.recipientEmail === "fam@example.invalid")).toHaveLength(2);
+    expect(await occupied(event.id, at(2))).toBe(2);
+    expect(await refusal(send([{ name: "BIANCA munteanu", email: "fam@example.invalid" }], 2))).toMatchObject({ refusal: "INVITATION_ALREADY_INVITED", person: "BIANCA munteanu" });
+    // Two invited, so two more fit the default limit of four; a third line for the address is refused.
+    const three = [
+      { name: "Carmen Munteanu", email: "fam@example.invalid" },
+      { name: "Dan Munteanu", email: "fam@example.invalid" },
+      { name: "Elena Munteanu", email: "fam@example.invalid" },
+    ];
+    expect(await refusal(send(three, 3))).toMatchObject({ refusal: "INVITATION_ADDRESS_FULL", person: "Elena Munteanu" });
+    expect(await invitationsOf(event.id)).toHaveLength(2);
+    await send(three.slice(0, 2), 4);
+    expect(await invitationsOf(event.id)).toHaveLength(4);
+    expect(await occupied(event.id, at(5))).toBe(4);
+  });
+
+  it("each link registers its own person in its own place; the first acceptance leaves the other's invitation and link as they were", async () => {
+    const event = await createEvent(2, { auto: true });
+    await inviteToEventByStaff(db, event, { people: family, days: 7, outsideCapacity: false }, admin, NOW);
+    const ana = await linkFor(event.id, "Ana Munteanu", at(1));
+    const bianca = await linkFor(event.id, "Bianca Munteanu", at(1));
+    expect(ana).not.toBe(bianca);
+
+    const first = await acceptInvitation(db, ana, form("Ana", at(2)), at(2));
+    expect(first.ok && first.registration).toMatchObject({ status: "PENDING_DECLARATION", registeredName: "Ana Munteanu" });
+    expect((await countOccupied(db, event.id, at(3))).invitationHolds).toBe(1);
+    expect(await readInvitationLink(db, bianca, "ro", at(3))).toMatchObject({ kind: "open", name: "Bianca Munteanu", email: "fam@example.invalid" });
+
+    const second = await acceptInvitation(db, bianca, form("Bianca", at(4)), at(4));
+    expect(second.ok && second.registration).toMatchObject({ status: "PENDING_DECLARATION", registeredName: "Bianca Munteanu" });
+    expect(first.ok && second.ok && first.registration.participantId === second.registration.participantId).toBe(true);
+    expect(await countOccupied(db, event.id, at(5))).toMatchObject({ invitationHolds: 0, pendingDeclarationHolds: 2 });
+    expect((await invitationsOf(event.id)).every((row) => row.acceptedAt !== null)).toBe(true);
+  });
+
+  it("registered by another route, a person takes the invitation in their own name, never a sibling's — even the older one", async () => {
+    const event = await createEvent(4);
+    // Bianca's invitation first, so «the address's oldest» would be hers: the name decides, not the age.
+    await inviteToEventByStaff(db, event, { people: [family[1]], days: 7, outsideCapacity: false }, admin, NOW);
+    await inviteToEventByStaff(db, event, { people: [family[0]], days: 7, outsideCapacity: false }, admin, at(1));
+    await submitRegistration(db, event, { ...form("Ana", at(2)), email: "fam@example.invalid" }, at(2), "REAL", PUBLIC);
+    const [pending] = await db.select().from(registrations).where(and(eq(registrations.eventId, event.id), eq(registrations.registeredName, "Ana Munteanu")));
+    expect((await confirmEmail(db, event, pending.id, at(3))).status).toBe("PENDING_DECLARATION");
+    const rows = await invitationsOf(event.id);
+    expect(rows.find((row) => row.name === "Ana Munteanu")).toMatchObject({ acceptedRegistrationId: pending.id });
+    expect(rows.find((row) => row.name === "Bianca Munteanu")).toMatchObject({ acceptedAt: null, acceptedRegistrationId: null });
+    expect((await countOccupied(db, event.id, at(3))).invitationHolds).toBe(1);
   });
 });
 

@@ -11187,6 +11187,7 @@
         "INVITATION_ALREADY_INVITED": "{name} already has an invitation waiting: no invitation was sent.",
         "INVITATION_BAD_ADDRESS": "The address of {name} is not a valid email address: no invitation was sent.",
         "INVITATION_DUPLICATE": "{name} appears twice in the list: no invitation was sent.",
+        "INVITATION_ADDRESS_FULL": "{name}'s address already holds as many people as the club takes on one address (registrations and invitations): no invitation was sent.",
         "INVITATION_NO_NAME": "A line has no name: no invitation was sent.",
         "INVITATION_NOBODY": "Tick at least one member or type a line.",
         "INVITATION_TOO_MANY": "At most 50 people per press: split the list.",
