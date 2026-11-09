@@ -109,7 +109,8 @@ import { countForm } from "@/i18n/count-form";
 import Panel from "@/shared/ui/Panel";
 import { whatToTell } from "@/modules/registrations/ui/tell-words";
 import { givePlaceNowAhead, staffOfferIfMadeNow, staffOfferQuestion } from "@/modules/registrations/give-place-tip";
-import { findInvitationOfRegistration, findLiveInvitationOfParticipant } from "@/modules/registrations/invitation-repository";
+import { findInvitationOfRegistration } from "@/modules/registrations/invitation-repository";
+import { invitationHeldForRegistration } from "@/modules/registrations/service";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -203,9 +204,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     nor is a row «În afara locurilor» (§643), which needs no counted place. The server decides.
   */
   const givePlaceNowFacts = mayManage && registration.status === "PENDING_EMAIL_CONFIRMATION" ? await givePlaceNowAhead(registration.eventId) : null;
-  // The address's open invitation (§647) is the row's own place: the press takes it over and adds none.
-  const heldByInvitation =
-    givePlaceNowFacts !== null && (await findLiveInvitationOfParticipant(db, registration.eventId, registration.participantId, new Date())) !== undefined;
+  // The open invitation the press would take over (§647; by the name on a family's address, §NNN) is the row's own place: it adds none.
+  const heldByInvitation = givePlaceNowFacts !== null && (await invitationHeldForRegistration(db, registration.eventId, registration.id, new Date()));
   const givePlaceNow = givePlaceNowFacts
     ? {
         raisedTo:

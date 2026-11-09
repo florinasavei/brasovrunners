@@ -1,5 +1,4 @@
-import { sql } from "drizzle-orm";
-import { boolean, index, integer, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { events } from "./events";
 import { locale } from "./locale";
 import { participants } from "./participants";
@@ -84,14 +83,12 @@ export const eventInvitations = pgTable(
   },
   (t) => [
     /*
-      One live invitation per address per event: a second send for the same person is refused by name,
-      and this makes it structural. An ended one (accepted, withdrawn, stamped expired) leaves room for
-      a new invitation; one past its deadline the sweep has not stamped yet is stamped by the send's own
-      sweep, under the event lock, before the insert.
+      No longer one live invitation per address (§NNN, a family on one address): one inbox may hold an
+      invitation for each of several people, each by its own name, up to the club's per-address limit.
+      The send refuses the same person twice — the same name on the address, already invited or
+      registered — and the address over its limit, in code, under the event lock that serialises every
+      send (`inviteToEventByStaff`); migration 0195 dropped the unique index that held one per address.
     */
-    uniqueIndex("event_invitations_live_address_unique")
-      .on(t.eventId, t.canonicalEmail)
-      .where(sql`${t.acceptedAt} IS NULL AND ${t.withdrawnAt} IS NULL AND ${t.expiredAt} IS NULL`),
     // The count and the sweep read an event's open invitations.
     index("event_invitations_event_expires_idx").on(t.eventId, t.expiresAt),
     // The retention sweep and the erasure find a person's invitations.

@@ -11185,6 +11185,7 @@
         "INVITATION_ALREADY_INVITED": "{name} are deja o invitație în așteptare: nu s-a trimis nicio invitație.",
         "INVITATION_BAD_ADDRESS": "Adresa lui {name} nu e o adresă de email validă: nu s-a trimis nicio invitație.",
         "INVITATION_DUPLICATE": "{name} apare de două ori în listă: nu s-a trimis nicio invitație.",
+        "INVITATION_ADDRESS_FULL": "Adresa lui {name} are deja câte persoane primește clubul pe o adresă (înscrieri și invitații): nu s-a trimis nicio invitație.",
         "INVITATION_NO_NAME": "Un rând nu are nume: nu s-a trimis nicio invitație.",
         "INVITATION_NOBODY": "Bifează cel puțin un membru sau scrie un rând.",
         "INVITATION_TOO_MANY": "Cel mult 50 de persoane la o apăsare: împarte lista.",

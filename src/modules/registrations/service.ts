@@ -125,7 +125,7 @@ import {
 import * as repo from "./repository";
 import { watchPlacesAlert } from "./places-alert";
 import { publicDoorOpen, publicRegistrationPausedError } from "./domain/public-door";
-import { findInvitationById, findLiveInvitationOfParticipant, findOpenInvitation, invitationOpen } from "./invitation-repository";
+import { findInvitationById, findLiveInvitationsOfParticipant, findOpenInvitations, invitationOpen } from "./invitation-repository";
 import { writeRegistrationEliteMark } from "./elite-mark";
 import { confirmsInvitationRaises, INVITATION_BATCH_MAX, InvitationRefusal, invitationDeadline, invitationFreePlaces, invitationRaises, invitationState, validInvitationDays } from "./domain/invitations";
 import { waitlistRefusalOf } from "./domain/waitlist";
@@ -787,14 +787,23 @@ async function participantIdOfAddress<T extends Record<string, unknown>>(tx: Tra
  * a row in the line (`WAITLISTED`, `WAITLIST_OFFERED`), whose place comes as an offer. Read under the
  * caller's event lock.
  *
- * By the address, not by the name: the invitation is the address's — one open per address per event,
- * refused at the send while the address holds a registration, and its link registers whoever the inbox
- * names — so the first registration of that address to reach a place is the one the club kept it for.
+ * By the name first (§NNN): one address may hold an invitation for each person of a family, so the one
+ * kept in this runner's name (`sameRunner`) is theirs, and a sibling registered under another name never
+ * takes it. Without a name match, only §647's case is decided by the address: the address's one open
+ * invitation, sent before this registration was made, while no other registration of the address is
+ * live at the event — its link registers whoever the inbox names, so the first registration of that
+ * address to reach a place is the one the club kept it for.
  */
-async function invitationToAdopt<T extends Record<string, unknown>>(db: Transaction<T>, eventId: string, registrationId: string, now: Date) {
+async function invitationToAdopt<T extends Record<string, unknown>>(db: Database<T>, eventId: string, registrationId: string, now: Date) {
   const registration = await repo.findRegistrationById(db, registrationId);
   if (!registration || registration.status === "WAITLISTED" || registration.status === "WAITLIST_OFFERED") return undefined;
-  return findLiveInvitationOfParticipant(db, eventId, registration.participantId, now);
+  const open = await findLiveInvitationsOfParticipant(db, eventId, registration.participantId, now);
+  const named = open.find((invitation) => sameRunner(invitation.name, registration.registeredName));
+  if (named || open.length !== 1) return named;
+  const [only] = open;
+  if (only.createdAt.getTime() > registration.createdAt.getTime()) return undefined;
+  const rows = await repo.findRegistrationsByEventAndParticipant(db, eventId, registration.participantId);
+  return rows.some((row) => row.id !== registration.id && isActiveStatus(row.status)) ? undefined : only;
 }
 
 /**
@@ -4516,6 +4525,20 @@ function invitationIdentity(person: InvitationInvitee) {
 }
 
 /**
+ * Would a place given to this registration now take an open invitation of its address over (§647, §NNN)?
+ * The registration page's question before «Dă-i un loc acum» says whether a supplementary place is added:
+ * the allocator's own rule (`invitationToAdopt`), so the page and the press never disagree.
+ */
+export async function invitationHeldForRegistration<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  registrationId: string,
+  now: Date,
+): Promise<boolean> {
+  return (await invitationToAdopt(db, eventId, registrationId, now)) !== undefined;
+}
+
+/**
  * «Trimite invitațiile» (§647; the owner, 2026-10-02: «vreau să trimit „invitații speciale” pe email
  * pentru membrii BVR, un fel de adaugă manual» — «Dar vreau și pentru non-membrii»). The Administrator's
  * alone (`canManageRegistrations`, asserted here, in the admin service and in the action): the Organizer
@@ -4530,8 +4553,11 @@ function invitationIdentity(person: InvitationInvitee) {
  *    late), as «Trimite-i oferta» offers after the close (§642).
  * 2. **The line is served first** and the stale holds expire (`fillAvailableSpots`, as `placeForNewcomer`):
  *    a place somebody waiting is owed is offered to them before any invitation counts what is left.
- * 3. **Each person**, in order: the address canonicalized (§10.4); refused when the address already holds
- *    a registration at the event in any live state, or a live invitation, or appears twice in the list.
+ * 3. **Each person**, in order: the address canonicalized (§10.4); refused when the same person — the same
+ *    name (`sameRunner`) on the same address — already holds a registration at the event in any live
+ *    state, or a live invitation, or appears twice in the list; and when the address would go past the
+ *    club's per-address limit, counting its live registrations, its open invitations and this list's
+ *    lines for it. One inbox may hold an invitation for each person of a family (§NNN), each by its name.
  *    A member picked from the members' zone is read from the account (name, address, language), never
  *    from what was posted.
  * 4. **The places.** An invitation «În afara locurilor» holds none. Otherwise it holds a counted place
@@ -4565,6 +4591,8 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
   if (input.people.length > INVITATION_BATCH_MAX) throw new InvitationRefusal("INVITATION_TOO_MANY");
   if (!validInvitationDays(input.days)) throw new InvitationRefusal("INVITATION_BAD_DAYS");
   const settings = await currentDeadlines(db);
+  // Read before the transaction, never under the event's lock (§377's rule), as the public form reads it.
+  const addressCap = await currentAddressCap(db);
 
   const result = await db.transaction(async (tx) => {
     const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
@@ -4596,6 +4624,7 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
 
     // Who, read and refused before anything is written.
     const seen = new Set<string>();
+    const linesOnAddress = new Map<string, number>();
     const invitees: {
       name: string;
       email: string;
@@ -4618,14 +4647,23 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
       }
       if (person.name === "" || person.name.length > 200) throw new InvitationRefusal("INVITATION_NO_NAME", person.email || null);
       const identity = invitationIdentity(person);
-      if (seen.has(identity.canonicalEmail)) throw new InvitationRefusal("INVITATION_DUPLICATE", person.name);
-      seen.add(identity.canonicalEmail);
+      /*
+        A family on one address (§NNN): one inbox may hold an invitation for each of several people, each
+        by its own name. The same person — the same name (`sameRunner`) on the same address — is refused
+        twice in the list, registered there already in a live state, or invited already; and the address
+        past the club's limit, counting its live registrations, its open invitations and this list's lines.
+      */
+      const personKey = `${identity.canonicalEmail} ${registrationNameKey(person.name)}`;
+      if (seen.has(personKey)) throw new InvitationRefusal("INVITATION_DUPLICATE", person.name);
+      seen.add(personKey);
       const known = await findParticipantByCanonicalEmail(tx, identity.canonicalEmail);
-      if (known) {
-        const rows = await repo.findRegistrationsByEventAndParticipant(tx, event.id, known.id);
-        if (rows.some((row) => isActiveStatus(row.status))) throw new InvitationRefusal("INVITATION_ALREADY_REGISTERED", person.name);
-      }
-      if (await findOpenInvitation(tx, event.id, identity.canonicalEmail)) throw new InvitationRefusal("INVITATION_ALREADY_INVITED", person.name);
+      const live = known ? (await repo.findRegistrationsByEventAndParticipant(tx, event.id, known.id)).filter((row) => isActiveStatus(row.status)) : [];
+      if (live.some((row) => sameRunner(row.registeredName, person.name))) throw new InvitationRefusal("INVITATION_ALREADY_REGISTERED", person.name);
+      const open = await findOpenInvitations(tx, event.id, identity.canonicalEmail);
+      if (open.some((invitation) => sameRunner(invitation.name, person.name))) throw new InvitationRefusal("INVITATION_ALREADY_INVITED", person.name);
+      const lines = (linesOnAddress.get(identity.canonicalEmail) ?? 0) + 1;
+      linesOnAddress.set(identity.canonicalEmail, lines);
+      if (live.length + open.length + lines > addressCap.registrationsPerAddress) throw new InvitationRefusal("INVITATION_ADDRESS_FULL", person.name);
       /*
         The person's language: a member's account says it; an address the club knows says it on its
         participant row — the language that person registered in — and only an address never seen is
