@@ -153,6 +153,18 @@ describe("§647 a refused send hands the next dialog the server's numbers", () =
     expect(sent.map((row) => row.name).sort()).toEqual(["Ana Pop", "Bogdan Pop"]);
   });
 
+  it("«Locuri» on a row (§NNN): the row's places are sent as that many invitations on its address, the extra ones with no name", async () => {
+    const eventId = await createEvent(5);
+    const form = press(eventId, "", null);
+    form.append("inviteeName", "Ana Pop");
+    form.append("inviteeEmail", "ana@example.invalid");
+    form.append("inviteePlaces", "2");
+    await expect(inviteAction(null, form)).rejects.toThrow(/REDIRECT .*saved=invitationsSent&count=2/);
+    const sent = await db.select({ name: eventInvitations.name, email: eventInvitations.email }).from(eventInvitations).where(eq(eventInvitations.eventId, eventId));
+    expect(sent.map((row) => row.name).sort()).toEqual(["", "Ana Pop"]);
+    expect(new Set(sent.map((row) => row.email))).toEqual(new Set(["ana@example.invalid"]));
+  });
+
   it("«Pe lista ascunsă» posted on an event whose «Folosește lista ascunsă» is off: refused with HIDDEN_LIST_OFF, the registration page's sentence", async () => {
     const eventId = await createEvent(3);
     const form = press(eventId, "Ana Pop <ana@example.invalid>", null);

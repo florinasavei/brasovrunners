@@ -132,8 +132,12 @@ export function invitationState(row: { acceptedAt: Date | null; withdrawnAt: Dat
   return "sent";
 }
 
-/** One person of the typed list: a name and an address as typed, and the line it came from. */
-export type TypedInvitee = { name: string; email: string; line: number };
+/**
+ * One person of the typed list: a name and an address as typed, and the line it came from — and, from a
+ * form row's «Locuri» (§NNN), how many people may register with that address, the one named included,
+ * when more than one (absent means one).
+ */
+export type TypedInvitee = { name: string; email: string; line: number; places?: number };
 
 /**
  * «Nume <adresă>, una pe rând» read into people (§647). A line is the name and the address — the
@@ -174,8 +178,17 @@ export function parseInvitationLines(text: string): { people: TypedInvitee[]; un
  * same order. A row with both boxes empty is ignored (the empty row the form always offers); a row with
  * only one of them, or an address that is not one word with an «@», is unread and named by its number —
  * refused before anything is sent, as a typed line was.
+ *
+ * «Locuri» (§NNN; the owner: «I wanna set how many people can register with this email when sending an
+ * invite»): a third list, the row's places — empty or 1 is the person named alone; a whole number above it
+ * is that many people on the address, the one named included. Anything else names its row, as above. The
+ * club's per-address limit is the send's to ask, under the lock.
  */
-export function readInviteeRows(names: readonly string[], emails: readonly string[]): { people: TypedInvitee[]; unread: number[] } {
+export function readInviteeRows(
+  names: readonly string[],
+  emails: readonly string[],
+  places: readonly string[] = [],
+): { people: TypedInvitee[]; unread: number[] } {
   const people: TypedInvitee[] = [];
   const unread: number[] = [];
   const rows = Math.max(names.length, emails.length);
@@ -183,11 +196,13 @@ export function readInviteeRows(names: readonly string[], emails: readonly strin
     const name = (names[index] ?? "").replace(/\s+/g, " ").trim();
     const email = (emails[index] ?? "").trim();
     if (name === "" && email === "") continue;
-    if (name === "" || !/^[^\s@<>,;]+@[^\s@<>,;]+$/.test(email)) {
+    const placesText = (places[index] ?? "").trim();
+    const count = placesText === "" ? 1 : /^\d{1,2}$/.test(placesText) ? Number(placesText) : 0;
+    if (name === "" || !/^[^\s@<>,;]+@[^\s@<>,;]+$/.test(email) || count < 1) {
       unread.push(index + 1);
       continue;
     }
-    people.push({ name, email, line: index + 1 });
+    people.push(count > 1 ? { name, email, line: index + 1, places: count } : { name, email, line: index + 1 });
   }
   return { people, unread };
 }

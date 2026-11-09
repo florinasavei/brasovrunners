@@ -115,6 +115,21 @@ describe("§737 «Nume» and «Email», one row per person", () => {
     expect(rows.unread).toEqual([3, 4, 5]);
     expect(readInviteeRows([], [])).toEqual({ people: [], unread: [] });
   });
+
+  it("«Locuri» (§NNN): a row's places, the person named alone when empty or 1; a box that is not a whole number from 1 names its row", () => {
+    const rows = readInviteeRows(
+      ["Ana Pop", "Dan Pop", "Ion Pop", "Eva Pop", "Rita Pop", "", "Mara Pop"],
+      ["ana@example.invalid", "dan@example.invalid", "ion@example.invalid", "eva@example.invalid", "rita@example.invalid", "", "mara@example.invalid"],
+      ["3", "", "0", "doi", " 1 ", "2", "-1"],
+    );
+    expect(rows.people).toEqual([
+      { name: "Ana Pop", email: "ana@example.invalid", line: 1, places: 3 },
+      { name: "Dan Pop", email: "dan@example.invalid", line: 2 },
+      { name: "Rita Pop", email: "rita@example.invalid", line: 5 },
+    ]);
+    // An empty row stays ignored whatever its «Locuri» says; 0, a word and a sign name their rows.
+    expect(rows.unread).toEqual([3, 4, 7]);
+  });
 });
 
 describe("§647 the EVENT_INVITATION email", () => {

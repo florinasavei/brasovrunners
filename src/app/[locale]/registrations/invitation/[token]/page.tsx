@@ -158,7 +158,11 @@ export default async function InvitationPage({ params, searchParams }: Props) {
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       {await registrationFacts({ view, locale, slug: link.slug, submitted: false })}
       <Alert severity="success" icon={false} sx={{ mb: 2 }} data-testid="invitation-banner">
-        <AlertTitle>{t("invitation.banner", { name: link.name, event: link.eventTitle, deadline })}</AlertTitle>
+        <AlertTitle>
+          {link.name === ""
+            ? t("invitation.bannerAnother", { event: link.eventTitle, deadline })
+            : t("invitation.banner", { name: link.name, event: link.eventTitle, deadline })}
+        </AlertTitle>
         <Typography variant="body2">{t("invitation.bannerHelp")}</Typography>
       </Alert>
       <RegistrationJourney current="details" />

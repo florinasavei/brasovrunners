@@ -11100,6 +11100,9 @@
       "removeRow": "Șterge rândul {row}",
       "removeShort": "Scoate",
       "addRow": "Adaugă încă o persoană",
+      "placesLabel": "Locuri",
+      "placesHelp": "«Locuri»: câte persoane se pot înscrie cu adresa de pe rând, cea numită inclusă (cel mult {max}); fiecare loc în plus primește emailul lui, cu linkul lui.",
+      "anotherPerson": "Loc în plus pe această adresă",
       "tableCaption": "Invitațiile trimise la acest eveniment",
       "sendTitle": "Trimite invitații noi",
       "columns": {
@@ -12295,6 +12298,7 @@
       "addressLabel": "Adresa invitației",
       "addressHelp": "Invitația e pentru această adresă: emailurile despre înscriere vin aici.",
       "banner": "Invitație pentru {name} la {event}, valabilă până {deadline}.",
+      "bannerAnother": "Un loc pentru încă o persoană care se înscrie cu această adresă, la {event}, valabil până {deadline}: completează datele persoanei care vine.",
       "bannerHelp": "Numele și adresa sunt cele din invitație; completezi restul. După trimitere primești emailul cu declarația, fără altă confirmare a adresei.",
       "doneTitle": "Gata: locul e al tău",
       "done": "Înscrierea e făcută. Ți-am trimis emailul cu declarația pe proprie răspundere: semneaz-o din linkul lui, până la termenul din email.",

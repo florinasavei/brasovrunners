@@ -298,7 +298,10 @@ describe("§369 the club's name leaves the platform only through the constant", 
  * is pinned here and hands the value from its one constant.
  */
 describe("§887 the club's short mark, card example, safety form, slug, bucket and zone arrive as arguments", () => {
-  const sources = new Map(sourceFiles(path.join(process.cwd(), "src")).map((file) => [path.relative(process.cwd(), file).split(path.sep).join("/"), readFileSync(file, "utf8")]));
+  // Line endings normalised: the pins below span lines with `\n`, and a Windows checkout writes `\r\n`.
+  const sources = new Map(
+    sourceFiles(path.join(process.cwd(), "src")).map((file) => [path.relative(process.cwd(), file).split(path.sep).join("/"), readFileSync(file, "utf8").replace(/\r\n/g, "\n")]),
+  );
   const read = (file: string) => {
     const text = sources.get(file);
     expect(text, file).toBeDefined();

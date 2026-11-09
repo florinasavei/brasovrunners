@@ -4491,7 +4491,16 @@ export async function unregister<T extends Record<string, unknown>>(
 // --- §647 Invitations by email -----------------------------------------------------------------
 
 /** One person of a send: a member picked from the members' zone (§524), or a name and an address typed. */
-export type InvitationInvitee = { name: string; email: string; memberStaffUserId?: string | null };
+/**
+ * One line of a send. `places` (§NNN, «Locuri»): how many people may register with the address, the one
+ * named included — absent or 1 is that person alone; each place beyond is an invitation with no name.
+ */
+export type InvitationInvitee = { name: string; email: string; memberStaffUserId?: string | null; places?: number };
+
+/** A line's places as the send counts them: a whole number from one. */
+function invitationPlaces(person: InvitationInvitee): number {
+  return Math.max(1, Math.floor(person.places ?? 1));
+}
 
 export type InvitationSendInput = {
   people: readonly InvitationInvitee[];
@@ -4591,7 +4600,8 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not invite anybody`);
   }
   if (input.people.length === 0) throw new InvitationRefusal("INVITATION_NOBODY");
-  if (input.people.length > INVITATION_BATCH_MAX) throw new InvitationRefusal("INVITATION_TOO_MANY");
+  // Every invitation the send would write, a line's extra places included (§NNN).
+  if (input.people.reduce((sum, person) => sum + invitationPlaces(person), 0) > INVITATION_BATCH_MAX) throw new InvitationRefusal("INVITATION_TOO_MANY");
   if (!validInvitationDays(input.days)) throw new InvitationRefusal("INVITATION_BAD_DAYS");
   const settings = await currentDeadlines(db);
   // Read before the transaction, never under the event's lock (§377's rule), as the public form reads it.
@@ -4674,6 +4684,18 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
       */
       const locale = person.memberStaffUserId ? person.locale : (known?.preferredLocale ?? input.locale ?? "ro");
       invitees.push({ ...person, locale, identity, known });
+      /*
+        «Locuri» (§NNN): each place beyond the person named is one more invitation on the same address with
+        no name — a place for one more person who registers with this address, by that invitation's own link
+        and email. Counted against the address's limit like a named line; never matched by a name, so only
+        its own link takes it (`invitationToAdopt`).
+      */
+      for (let extra = 1; extra < invitationPlaces(posted); extra += 1) {
+        const more = (linesOnAddress.get(identity.canonicalEmail) ?? 0) + 1;
+        linesOnAddress.set(identity.canonicalEmail, more);
+        if (live.length + open.length + more > addressCap.registrationsPerAddress) throw new InvitationRefusal("INVITATION_ADDRESS_FULL", person.name);
+        invitees.push({ ...person, name: "", memberStaffUserId: null, locale, identity, known });
+      }
     }
 
     /*
