@@ -176,6 +176,8 @@ export const routing = defineRouting({
      * address under `/pagini/`.
      */
     "/faq": { ro: "/intrebari", en: "/faq" },
+    /** «Unelte» / "Tools": small helpers for a runner — the pace calculator first. A platform page, static, nothing from the database. */
+    "/tools": { ro: "/unelte", en: "/tools" },
     /**
      * The members' pages (§524): «Beneficiile membrilor», public, with the sign-in button; and the
      * members' zone behind the sign-in, at an address of its own rather than under `/membri/`, so

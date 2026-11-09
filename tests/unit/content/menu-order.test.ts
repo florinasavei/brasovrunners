@@ -26,7 +26,7 @@ const C = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
 
 describe("§571 the menu's keys", () => {
   it("names every section the header offers, in today's default order", () => {
-    expect([...MENU_SECTION_KEYS]).toEqual(["events", "calendar", "contact", "gallery", "team", "faq"]);
+    expect([...MENU_SECTION_KEYS]).toEqual(["events", "calendar", "contact", "gallery", "team", "faq", "tools"]);
     expect(isMenuSectionKey("faq")).toBe(true);
     expect(isMenuSectionKey("page:x")).toBe(false);
   });
@@ -64,6 +64,7 @@ describe("§571 the merge rule", () => {
       "gallery",
       "team",
       "faq",
+      "tools",
       `page:${B}`,
       `page:${C}`,
     ]);
@@ -71,7 +72,7 @@ describe("§571 the merge rule", () => {
 
   it("drops a key for a page deleted since the save, and a key no release knows", () => {
     const stored = [`page:${C}`, "faq", "newsletter", `page:${A}`];
-    expect(resolveMenuOrder(stored, [A])).toEqual(["faq", `page:${A}`, "events", "calendar", "contact", "gallery", "team"]);
+    expect(resolveMenuOrder(stored, [A])).toEqual(["faq", `page:${A}`, "events", "calendar", "contact", "gallery", "team", "tools"]);
   });
 
   it("gives an unpublished entry its place: the rule orders every key, the reader leaves out what it does not offer", () => {
