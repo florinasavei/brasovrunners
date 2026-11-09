@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.37` | «Unelte» on or off, its tools, the calculator's formula (§926) |
 | `BR-V4.36` | «Locuri» when inviting (§925) |
 | `BR-V4.35` | family invitations stay each person's own (§924) |
 | `BR-V4.34` | «Unelte» with a pace calculator (§922) · invitations for a family on one address (§923) |

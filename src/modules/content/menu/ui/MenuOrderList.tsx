@@ -52,7 +52,7 @@ const GLYPHS: Record<MenuSectionKey, ComponentType<SvgIconProps>> = {
   team: GroupsIcon,
   faq: HelpOutlineIcon,
   // «Unelte»: the hourglass — time, which its pace calculator works out — asked from the action table by name (§694).
-  tools: ACTION_ICONS.waiting,
+  tools: ACTION_ICONS.tools,
 };
 
 function glyphOf(entry: MenuOrderEntry): ComponentType<SvgIconProps> {

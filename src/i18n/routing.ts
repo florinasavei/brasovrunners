@@ -336,6 +336,7 @@ export const routing = defineRouting({
     "/admin/pages/team": "/admin/pages/team",
     /** The questions of «Întrebări frecvente» (§525): a standard page, beside «Echipa». */
     "/admin/pages/faq": "/admin/pages/faq",
+    "/admin/pages/tools": "/admin/pages/tools",
     /** The members' pages (§524): the public benefits and the member-only words, beside «Echipa». */
     "/admin/pages/members": "/admin/pages/members",
     "/admin/pages/[id]": "/admin/pages/[id]",

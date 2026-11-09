@@ -36,12 +36,13 @@ const ADDRESSES = [
   { path: "/admin/pages/team", entry: "team" },
   { path: "/admin/pages/faq", entry: "faq" },
   { path: "/admin/pages/members", entry: "members" },
+  { path: "/admin/pages/tools", entry: "tools" },
   { path: "/admin/pages", entry: "pages" },
 ] as const;
 
 describe("«Pagini»'s row: every entry an address of the section", () => {
   it("routes every entry under /admin/pages, to a route in the table and a page on disk", () => {
-    expect([...PAGES_ROW_ENTRIES]).toEqual(["contact", "team", "faq", "members", "pages"]);
+    expect([...PAGES_ROW_ENTRIES]).toEqual(["contact", "team", "faq", "members", "tools", "pages"]);
     for (const entry of PAGES_ROW_ENTRIES) {
       const route = PAGES_ROW_ROUTE[entry];
       expect(route === "/admin/pages" || route.startsWith("/admin/pages/"), entry).toBe(true);
@@ -100,7 +101,7 @@ describe("«Pagini»'s row: every entry an address of the section", () => {
     expect(nav).not.toContain("/admin/settings");
     // The list's standard cards open the same addresses.
     const list = read("src/app/[locale]/admin/pages/(list)/page.tsx");
-    for (const entry of ["contact", "team", "faq", "members"]) expect(list, entry).toContain(`href: PAGES_ROW_ROUTE.${entry},`);
+    for (const entry of ["contact", "team", "faq", "members", "tools"]) expect(list, entry).toContain(`href: PAGES_ROW_ROUTE.${entry},`);
     expect(list).not.toContain("/admin/settings/contact");
   });
 

@@ -40,7 +40,8 @@ const SECTIONS = [
   // «Întrebări frecvente» (§525): another page this application ships, offered while a question is
   // on the site (`showFaq`).
   { segment: "faq", href: "/faq" },
-  // «Unelte» (the pace calculator first): a page this application ships with nothing from the club, so always offered.
+  // «Unelte» (the pace calculator first): a page this application ships, offered while it is published with a tool on
+  // it (`showTools`, §926) — the club switches it off like «Întrebări frecvente».
   { segment: "tools", href: "/tools" },
 ] as const;
 
@@ -112,6 +113,7 @@ export default function SiteNav({
   showTeam = false,
   showFaq = false,
   showContact = false,
+  showTools = false,
   order = [],
   children,
 }: {
@@ -120,6 +122,8 @@ export default function SiteNav({
   showTeam?: boolean;
   showFaq?: boolean;
   showContact?: boolean;
+  /** «Unelte» on the site (§926): published with a tool on it (`toolsOnSite`), as the page itself asks. */
+  showTools?: boolean;
   /** The club's stored order, keys first to last (§571); an entry it does not name keeps its default place after them. */
   order?: readonly string[];
   /**
@@ -139,7 +143,8 @@ export default function SiteNav({
         (section.segment !== "gallery" || showGallery) &&
         (section.segment !== "team" || showTeam) &&
         (section.segment !== "faq" || showFaq) &&
-        (section.segment !== "contact" || showContact),
+        (section.segment !== "contact" || showContact) &&
+        (section.segment !== "tools" || showTools),
     ).map((section) => ({
       key: section.segment,
       href: section.href as Href,

@@ -6606,7 +6606,8 @@
       "customTitle": "Custom pages",
       "groupStandard": "Standard pages",
       "groupCustom": "Custom pages",
-      "tabMembers": "Members"
+      "tabMembers": "Members",
+      "tabTools": "Tools"
     },
     "menuOrder": {
       "title": "Menu order",
@@ -10636,6 +10637,35 @@
       "unpublishTitle": "Take the FAQ page down?",
       "unpublishBody": "The page leaves the site in both languages and disappears from the menu. The questions stay here; you can publish it again at any time."
     },
+    "toolsPage": {
+      "title": "Tools",
+      "intro": "The page of tools for runners. Its address and its tools come ready-made; you choose whether the page is on the site and which tools it shows.",
+      "viewPublic": "See the page on the site",
+      "readOnly": "Only an Administrator puts the page on the site, takes it off or chooses its tools.",
+      "pageHeading": "The page",
+      "pagePublished": "Published",
+      "pageDraft": "Draft",
+      "pagePublishedHelp": "On the site, in the menu and in the sitemap: {ro} and {en}.",
+      "pageNoTool": "Published, but no tool is ticked «On the site», so it does not appear on the site.",
+      "pageDraftHelp": "Not on the site: it is missing from the menu and the sitemap, and its address answers that the page does not exist.",
+      "publish": "Publish the page",
+      "unpublish": "Take off the site",
+      "publishTitle": "Publish the «Tools» page?",
+      "publishBody": "It appears in the menu and at {ro} and {en}, with the tools ticked «On the site».",
+      "unpublishTitle": "Take the «Tools» page off the site?",
+      "unpublishBody": "It disappears from the menu and the sitemap, and its address answers that the page does not exist. You can publish it again at any time.",
+      "listHeading": "The page's tools",
+      "listHelp": "Tick «On the site» for each tool the page shows; a page with no tool ticked is not on the site.",
+      "onSite": "On the site",
+      "offSite": "Not on the site",
+      "save": "Save",
+      "hideTitle": "Take «{tool}» off the page?",
+      "hideBody": "The tool is no longer shown on the «Tools» page. If it was the only one, the page disappears from the site.",
+      "hideConfirm": "Take off the page",
+      "showTitle": "Put «{tool}» on the page?",
+      "showBody": "The tool appears on the «Tools» page, if the page is published.",
+      "showConfirm": "Put on the page"
+    },
     "settingsTabs": {
       "emails": "Emails",
       "deadlines": "Deadlines",
@@ -13735,6 +13765,9 @@
       "faqPageSaved": "The FAQ page was saved.",
       "faqPagePublished": "The FAQ page is on the site, in both languages.",
       "faqPageUnpublished": "The FAQ page was taken off the site.",
+      "toolsPagePublished": "The Tools page is on the site.",
+      "toolsPageUnpublished": "The Tools page was taken off the site.",
+      "toolsShown": "The Tools page's tools were saved.",
       "translationBudget": "The translation budget was saved.",
       "translatedAll": {
         "one": "Done: {count} box translated from Romanian into English. Check it and press Save.",
@@ -14255,7 +14288,7 @@
       "preset10": "10 km",
       "presetHalf": "Half marathon",
       "presetMarathon": "Marathon",
-      "time": "Time",
+      "time": "Target time",
       "hours": "Hours",
       "minutes": "Minutes",
       "seconds": "Seconds",
@@ -14263,6 +14296,10 @@
       "paceResult": "{pace} min/km",
       "distanceResult": "{distance} km",
       "speed": "Speed: {speed} km/h",
+      "formulaPace": "Pace = time ÷ distance (for example, 50:00 ÷ 10 km = 5:00 min/km).",
+      "formulaTime": "Time = pace × distance (for example, 5:00 min/km × 10 km = 50:00).",
+      "formulaDistance": "Distance = time ÷ pace (for example, 50:00 ÷ 5:00 min/km = 10 km).",
+      "formulaSpeed": "Speed in km/h = 60 ÷ the pace in minutes per kilometre (5:00 min/km means 12 km/h).",
       "missing": "Fill in the boxes above and the answer appears here."
     }
   },
