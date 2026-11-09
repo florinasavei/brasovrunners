@@ -138,6 +138,8 @@ describe("«Ordinea meniului», the site menu's one order", () => {
     const { default: SiteNav } = await import("@/shared/ui/SiteNav");
     const nav = createElement(SiteNav, {
       showContact: true,
+      // «Unelte» on the site, as `menuSectionsOnSite` says with no row (§NNN): the header passes it.
+      showTools: true,
       pages: [
         { id: second, slug: "istoric", title: "Istoric" },
         { id: first, slug: "despre", title: "Despre" },

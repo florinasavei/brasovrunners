@@ -59,6 +59,7 @@ describe("§537 the public menu's order", () => {
         showTeam: true,
         showFaq: true,
         showContact: true,
+        showTools: true,
         pages: [
           { id: DESPRE, slug: "despre", title: "Despre" },
           { id: ISTORIC, slug: "istoric", title: "Istoric" },
@@ -70,7 +71,7 @@ describe("§537 the public menu's order", () => {
 
   it("keeps «Galerie» just before «Echipa», and no «Membri» in the menu (§591: it is the footer's)", async () => {
     const markup = await html(
-      createElement(SiteNav, { showGallery: true, showTeam: true, showFaq: true, showContact: true }),
+      createElement(SiteNav, { showGallery: true, showTeam: true, showFaq: true, showContact: true, showTools: true }),
     );
     expect(hrefs(markup)).toEqual(["/ro/events", "/ro/calendar", "/ro/contact", "/ro/gallery", "/ro/team", "/ro/faq", "/ro/tools"]);
   });
@@ -88,6 +89,7 @@ describe("§571 the club's one menu order", () => {
         showTeam: true,
         showFaq: true,
         showContact: true,
+        showTools: true,
         pages,
         order: [`page:${ISTORIC}`, "events", "calendar", `page:${DESPRE}`, "contact", "faq", "team"],
       }),
@@ -99,12 +101,19 @@ describe("§571 the club's one menu order", () => {
     const markup = await html(
       createElement(SiteNav, {
         showContact: true,
+        showTools: true,
         pages,
         // «Echipa» is placed but not offered; «Istoric» is offered but not placed.
         order: ["contact", "team", `page:${DESPRE}`, "events"],
       }),
     );
     expect(hrefs(markup)).toEqual(["/ro/contact", "/ro/pages/despre", "/ro/events", "/ro/calendar", "/ro/tools", "/ro/pages/istoric"]);
+  });
+
+  it("offers «Unelte» only while it is on the site (§NNN): taken off, or with no tool shown, it leaves the menu", async () => {
+    const markup = await html(createElement(SiteNav, { showContact: true, pages }));
+    expect(hrefs(markup)).not.toContain("/ro/tools");
+    expect(hrefs(await html(createElement(SiteNav, { showContact: true, showTools: true, pages })))).toContain("/ro/tools");
   });
 
   it("draws no rule between the sections and the pages: one list", async () => {
