@@ -62,7 +62,7 @@ export async function renderInvitationRow(
 
   const data: TemplateData = {
     participantName: invitation.name,
-    // A place for one more person on the address (§NNN): an invitation with no name.
+    // A place for one more person on the address (§925): an invitation with no name.
     ...(invitation.name === "" ? { invitationForAnother: true } : {}),
     eventTitle: details?.title,
     eventStartsAtFormatted: details ? inSentence(details.startsAt, locale) : undefined,
@@ -92,7 +92,7 @@ export async function renderInvitationRow(
     messageType: row.messageType,
     data,
     actionUrl,
-    // The club's own text for invitations speaks to the person named; a place for one more person keeps the platform's words (§NNN).
+    // The club's own text for invitations speaks to the person named; a place for one more person keeps the platform's words (§925).
     overrides: invitation.name === "" ? null : await readEmailCopyForSending(db, now),
   });
 }

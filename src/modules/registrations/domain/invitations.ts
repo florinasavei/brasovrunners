@@ -134,7 +134,7 @@ export function invitationState(row: { acceptedAt: Date | null; withdrawnAt: Dat
 
 /**
  * One person of the typed list: a name and an address as typed, and the line it came from — and, from a
- * form row's «Locuri» (§NNN), how many people may register with that address, the one named included,
+ * form row's «Locuri» (§925), how many people may register with that address, the one named included,
  * when more than one (absent means one).
  */
 export type TypedInvitee = { name: string; email: string; line: number; places?: number };
@@ -179,7 +179,7 @@ export function parseInvitationLines(text: string): { people: TypedInvitee[]; un
  * only one of them, or an address that is not one word with an «@», is unread and named by its number —
  * refused before anything is sent, as a typed line was.
  *
- * «Locuri» (§NNN; the owner: «I wanna set how many people can register with this email when sending an
+ * «Locuri» (§925; the owner: «I wanna set how many people can register with this email when sending an
  * invite»): a third list, the row's places — empty or 1 is the person named alone; a whole number above it
  * is that many people on the address, the one named included. Anything else names its row, as above. The
  * club's per-address limit is the send's to ask, under the lock.

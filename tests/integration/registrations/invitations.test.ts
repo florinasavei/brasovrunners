@@ -489,7 +489,7 @@ describe("§923 a family on one address: one invitation per person, each by its 
     expect((await countOccupied(db, event.id, at(3))).invitationHolds).toBe(1);
   });
 
-  it("«Locuri» 3 on one row (§NNN): the person named and two places with no name on the address, each its own email, link and place", async () => {
+  it("«Locuri» 3 on one row (§925): the person named and two places with no name on the address, each its own email, link and place", async () => {
     const event = await createEvent(6);
     await inviteToEventByStaff(db, event, { people: [{ name: "Ana Munteanu", email: "fam@example.invalid", places: 3 }], days: 7, outsideCapacity: false }, admin, NOW);
     const rows = await invitationsOf(event.id);

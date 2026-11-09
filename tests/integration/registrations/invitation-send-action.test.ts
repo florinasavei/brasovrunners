@@ -153,7 +153,7 @@ describe("§647 a refused send hands the next dialog the server's numbers", () =
     expect(sent.map((row) => row.name).sort()).toEqual(["Ana Pop", "Bogdan Pop"]);
   });
 
-  it("«Locuri» on a row (§NNN): the row's places are sent as that many invitations on its address, the extra ones with no name", async () => {
+  it("«Locuri» on a row (§925): the row's places are sent as that many invitations on its address, the extra ones with no name", async () => {
     const eventId = await createEvent(5);
     const form = press(eventId, "", null);
     form.append("inviteeName", "Ana Pop");

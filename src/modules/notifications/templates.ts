@@ -776,7 +776,7 @@ type WaitlistStandingLine = { position: number; length: number; autoOffer: boole
 /** What every template needs beyond the locale — never a rendered body, never a token. */
 export type TemplateData = {
   participantName: string;
-  /** An invitation with no name (§NNN, «Locuri»): a place for one more person who registers with the address. */
+  /** An invitation with no name (§925, «Locuri»): a place for one more person who registers with the address. */
   invitationForAnother?: boolean;
   /**
    * This is the club's copy of a participant's message (§320): "[Copie club]" in front of the
@@ -1632,7 +1632,7 @@ function invitationEmphasis(d: TemplateData, b: readonly string[]): Emphasis {
 }
 
 /**
- * An invitation with no name (§NNN, «Locuri»): a place for one more person who registers with the address.
+ * An invitation with no name (§925, «Locuri»): a place for one more person who registers with the address.
  * It greets nobody by name, says what the place is for, and that each such email's link registers one person.
  */
 function invitationForAnotherBody(locale: EmailLocale, d: TemplateData): string[] {
@@ -2013,7 +2013,7 @@ const T = {
     eventInvitation: {
       subject: (d: TemplateData) =>
         d.invitationForAnother ? `Un loc pentru încă o persoană la ${d.eventTitle ?? "eveniment"}` : `Invitație la ${d.eventTitle ?? "eveniment"}`,
-      // A place for one more person on the address (§NNN): no name to greet, and its own words.
+      // A place for one more person on the address (§925): no name to greet, and its own words.
       greeting: (d: TemplateData) => (d.invitationForAnother ? "Salut," : `Salut, ${d.participantName},`),
       body: (d: TemplateData) => (d.invitationForAnother ? invitationForAnotherBody("ro", d) : [
         `${CLUB_NAME} te invită la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}: **ți-am păstrat un loc**.`,

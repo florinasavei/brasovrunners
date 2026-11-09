@@ -216,7 +216,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                 holds no counted place and keeps both.
               */
               const deadlineFixed = !row.outsideCapacity && waiting > 0;
-              // A place for one more person on the address (§NNN, «Locuri»): an invitation with no name.
+              // A place for one more person on the address (§925, «Locuri»): an invitation with no name.
               const who = row.name || t("invitations.anotherPerson");
               return (
                 <tr key={row.id} data-testid="invitation-row">

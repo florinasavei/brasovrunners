@@ -35,7 +35,7 @@ export type InviteFormWords = {
   removeShort: string;
   /** «Adaugă încă o persoană». */
   addRow: string;
-  /** «Locuri», a row's third box (§NNN), and the sentence saying what it counts, with the club's limit. */
+  /** «Locuri», a row's third box (§925), and the sentence saying what it counts, with the club's limit. */
   placesLabel: string;
   placesHelp: string;
   daysLabel: string;
@@ -205,7 +205,7 @@ export default function InviteForm({
       setLocalError(fill(words.errors.INVITATION_UNREAD_ROW ?? words.errorGeneric, { lines: lines.unread.join(", ") }));
       return;
     }
-    // Every invitation the press sends: a row's «Locuri» are that many (§NNN).
+    // Every invitation the press sends: a row's «Locuri» are that many (§925).
     const count = ticked.size + lines.people.reduce((sum, person) => sum + (person.places ?? 1), 0);
     if (count === 0) {
       setLocalError(words.nobody);
@@ -344,7 +344,7 @@ export default function InviteForm({
                   sx={{ flex: { sm: "1 1 0" } }}
                   slotProps={{ htmlInput: { spellCheck: false, autoCapitalize: "off", inputMode: "email", "aria-label": `${words.emailLabel} ${index + 1}` } }}
                 />
-                {/* «Locuri» (§NNN): how many people may register with this row's address, the one named included. */}
+                {/* «Locuri» (§925): how many people may register with this row's address, the one named included. */}
                 <TextField
                   name="inviteePlaces"
                   label={words.placesLabel}
