@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.35-2026-11-09
+
+- **Family invitations stay each person's own** — a person whose registration comes back (a late signature, a cancellation and a new registration) never takes the other's open invitation on the same address, and erasing one person's registration keeps the other's link and kept place. §924.
 ## BR-V4.34-2026-11-09
 
 - **«Unelte» with a pace calculator** — a new page in the menu (`/ro/unelte`, `/en/tools`): pick pace, time or distance, type the other two, and the answer and the speed appear as you type; one press fills 5 km, 10 km, the half or the marathon. §922.

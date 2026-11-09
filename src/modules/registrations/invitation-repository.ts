@@ -96,7 +96,7 @@ export async function findInvitationById<T extends Record<string, unknown>>(db: 
 }
 
 /**
- * How many invitations an address was sent at an event, whatever became of them (§NNN): more than one
+ * How many invitations an address was sent at an event, whatever became of them (§924): more than one
  * is a family's address, whose invitations are matched to registrations by the name alone.
  */
 export async function countInvitationsOfParticipant<T extends Record<string, unknown>>(

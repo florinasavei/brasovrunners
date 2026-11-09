@@ -1829,7 +1829,7 @@ async function eraseRegistration<T extends Record<string, unknown>>(
     // the participant row goes too — and with it, by cascade, their action tokens and outbox
     // rows (the address). The audit row above keeps `participant_id` as null from here, which
     // is the point: nothing left says who. A participant with another registration stays — and
-    // one an open invitation still holds (§NNN): one inbox may keep another person's invitation,
+    // one an open invitation still holds (§924): one inbox may keep another person's invitation,
     // whose link and kept place the cascade would take with it.
     const [remaining] = await tx
       .select({ n: count() })
