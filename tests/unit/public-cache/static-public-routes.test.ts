@@ -51,6 +51,7 @@ const STATIC_PAGES = [
   "src/app/[locale]/calendar/[...period]/page.tsx",
   "src/app/[locale]/faq/page.tsx",
   "src/app/[locale]/team/page.tsx",
+  "src/app/[locale]/tools/page.tsx",
   "src/app/[locale]/gallery/page.tsx",
   "src/app/[locale]/gallery/[slug]/page.tsx",
   "src/app/[locale]/pages/[slug]/page.tsx",

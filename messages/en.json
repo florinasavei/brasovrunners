@@ -35,6 +35,7 @@
       "gallery": "Gallery",
       "team": "Team",
       "faq": "FAQ",
+      "tools": "Tools",
       "more": "Menu",
       "contact": "Contact"
     },
@@ -6629,7 +6630,8 @@
         "contact": "Contact",
         "gallery": "Gallery",
         "team": "Team",
-        "faq": "Frequently asked questions"
+        "faq": "Frequently asked questions",
+        "tools": "Tools"
       }
     },
     "homePage": {
@@ -14229,6 +14231,35 @@
     "empty": "The club's questions will be here soon.",
     "listLabel": "The club's questions and answers",
     "contact": "Can't find the answer? <contact>Write to us</contact>."
+  },
+  "Tools": {
+    "title": "Tools for runners",
+    "description": "Small helpers for training and racing. The first: the pace calculator.",
+    "pace": {
+      "title": "Pace calculator",
+      "intro": "Choose what you want to work out and fill in the other two; the answer appears as you type.",
+      "solveFor": "What do you want to work out?",
+      "solvePace": "Pace",
+      "solveTime": "Time",
+      "solveDistance": "Distance",
+      "distance": "Distance",
+      "distanceUnit": "Kilometres",
+      "distanceHelp": "A comma works too: 21,1",
+      "presets": "Race distances",
+      "preset5": "5 km",
+      "preset10": "10 km",
+      "presetHalf": "Half marathon",
+      "presetMarathon": "Marathon",
+      "time": "Time",
+      "hours": "Hours",
+      "minutes": "Minutes",
+      "seconds": "Seconds",
+      "pace": "Pace, per kilometre",
+      "paceResult": "{pace} min/km",
+      "distanceResult": "{distance} km",
+      "speed": "Speed: {speed} km/h",
+      "missing": "Fill in the boxes above and the answer appears here."
+    }
   },
   "Translate": {
     "button": "Translate from Romanian",

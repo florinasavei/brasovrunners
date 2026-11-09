@@ -187,6 +187,10 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/faq/page.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
   { file: "src/app/[locale]/faq/page.tsx", prop: "pl", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/app/[locale]/faq/page.tsx", prop: "pb", step: "gapSm", sm: 2, xsBefore: 2 },
+  // «Unelte», born on the scale: «Întrebări frecvente»'s container and lead, and the tool's card.
+  { file: "src/app/[locale]/tools/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  { file: "src/app/[locale]/tools/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3 },
+  { file: "src/app/[locale]/tools/page.tsx", prop: "p", step: "sectionGap", sm: 3, xsBefore: 3 },
   // The members' pages (§524), born on the scale — «Echipa»'s spacing: the page, the lead or the
   // club's words, the sign-in card; the zone's greeting, its words or the sentence in their place.
   { file: "src/app/[locale]/members/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },

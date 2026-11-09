@@ -76,7 +76,7 @@ async function offersContact(): Promise<boolean> {
   }
 }
 
-/** Whether each of the platform's sections is in the menu now. «Alergări» and «Calendar» always are. */
+/** Whether each of the platform's sections is in the menu now. «Alergări», «Calendar» and «Unelte» always are. */
 export async function menuSectionsOnSite(locale: Locale): Promise<Record<MenuSectionKey, boolean>> {
   const [gallery, team, faq, contact] = await Promise.all([
     hasPublishedAlbum(locale),
@@ -85,7 +85,8 @@ export async function menuSectionsOnSite(locale: Locale): Promise<Record<MenuSec
     faqOnSite(locale),
     offersContact(),
   ]);
-  return { events: true, calendar: true, contact, gallery, team, faq };
+  // «Unelte» needs nothing from the club: always in the menu, like «Alergări».
+  return { events: true, calendar: true, contact, gallery, team, faq, tools: true };
 }
 
 /**
