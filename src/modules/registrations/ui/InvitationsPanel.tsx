@@ -21,6 +21,7 @@ import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import StatusChip from "@/shared/ui/StatusChip";
 import { readInvitationForecast } from "../admin-service";
+import { currentAddressCap } from "../address-cap";
 import { HIDDEN_LIST_OFF } from "../domain/hidden-list";
 import { INVITATION_DAYS_DEFAULT, INVITATION_DAYS_MAX, INVITATION_REFUSALS, invitationState } from "../domain/invitations";
 import { listEventInvitations } from "../invitation-repository";
@@ -83,7 +84,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
   let waiting = 0;
   if (mayManage) {
     // The waiting always subtracted, as the server does under the lock — whatever the auto-offer setting or the close.
-    const [members, forecast] = await Promise.all([listStaffUsers(db), readInvitationForecast(db, eventId, now)]);
+    const [members, forecast, addressCap] = await Promise.all([listStaffUsers(db), readInvitationForecast(db, eventId, now), currentAddressCap(db)]);
     const free = forecast?.free ?? null;
     waiting = forecast?.waiting ?? 0;
     const counted = (key: string) => ({ one: t.raw(`${key}.one`) as string, few: t.raw(`${key}.few`) as string, other: t.raw(`${key}.other`) as string });
@@ -101,6 +102,8 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
       removeRow: t.raw("invitations.removeRow") as string,
       removeShort: t("invitations.removeShort"),
       addRow: t("invitations.addRow"),
+      placesLabel: t("invitations.placesLabel"),
+      placesHelp: t("invitations.placesHelp", { max: addressCap.registrationsPerAddress }),
       daysLabel: t("invitations.daysLabel"),
       daysHelp: t("invitations.daysHelp", { max: INVITATION_DAYS_MAX }),
       outsideLabel: t("invitations.outsideLabel"),
@@ -147,6 +150,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
         daysDefault={INVITATION_DAYS_DEFAULT}
         daysMax={INVITATION_DAYS_MAX}
         hiddenListEnabled={event.hiddenListEnabled}
+        placesMax={addressCap.registrationsPerAddress}
         words={words}
       />
     );
@@ -212,10 +216,12 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                 holds no counted place and keeps both.
               */
               const deadlineFixed = !row.outsideCapacity && waiting > 0;
+              // A place for one more person on the address (§925, «Locuri»): an invitation with no name.
+              const who = row.name || t("invitations.anotherPerson");
               return (
                 <tr key={row.id} data-testid="invitation-row">
                   <td>
-                    <Typography sx={{ fontWeight: 600 }}>{row.name}</Typography>
+                    <Typography sx={{ fontWeight: 600 }}>{who}</Typography>
                     <Typography variant="body2" sx={{ wordBreak: "break-all" }}>
                       {row.email}
                     </Typography>
@@ -267,25 +273,25 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                             action={resendAction}
                             confirm={deadlineFixed ? {
                               title: t("invitations.resendTitle"),
-                              body: t("invitations.resendBodyWaiting", { name: row.name }),
-                              ...dialog.mail({ to: row.name, type: "EVENT_INVITATION" }),
+                              body: t("invitations.resendBodyWaiting", { name: who }),
+                              ...dialog.mail({ to: who, type: "EVENT_INVITATION" }),
                               confirmLabel: t("invitations.resend"),
                               cancelLabel: dialog.cancel,
                             } : [
                               // The box left empty keeps the deadline: only a number typed in it moves it, and the dialog says which.
                               {
                                 title: t("invitations.resendTitle"),
-                                body: t("invitations.resendBodyKept", { name: row.name }),
+                                body: t("invitations.resendBodyKept", { name: who }),
                                 when: [{ field: "days", equals: "" }],
-                                ...dialog.mail({ to: row.name, type: "EVENT_INVITATION" }),
+                                ...dialog.mail({ to: who, type: "EVENT_INVITATION" }),
                                 confirmLabel: t("invitations.resend"),
                                 cancelLabel: dialog.cancel,
                               },
                               {
                                 title: t("invitations.resendTitle"),
-                                body: t.raw("invitations.resendBody").replace("{name}", row.name) as string,
+                                body: t.raw("invitations.resendBody").replace("{name}", who) as string,
                                 fillFrom: ["days"],
-                                ...dialog.mail({ to: row.name, type: "EVENT_INVITATION" }),
+                                ...dialog.mail({ to: who, type: "EVENT_INVITATION" }),
                                 confirmLabel: t("invitations.resend"),
                                 cancelLabel: dialog.cancel,
                               },
@@ -311,9 +317,9 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                             action={withdrawAction}
                             confirm={{
                               title: t("invitations.withdrawTitle"),
-                              body: t("invitations.withdrawBody", { name: row.name }),
+                              body: t("invitations.withdrawBody", { name: who }),
                               // The invitee is told nothing; the place it held may go to the next in line, with its offer.
-                              ...dialog.noMail(row.name, row.outsideCapacity ? [] : [dialog.nextInLineMaybe()]),
+                              ...dialog.noMail(who, row.outsideCapacity ? [] : [dialog.nextInLineMaybe()]),
                               destructive: true,
                               confirmLabel: t("invitations.withdraw"),
                               cancelLabel: dialog.cancel,

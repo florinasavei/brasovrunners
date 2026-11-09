@@ -35,6 +35,9 @@ export type InviteFormWords = {
   removeShort: string;
   /** «Adaugă încă o persoană». */
   addRow: string;
+  /** «Locuri», a row's third box (§925), and the sentence saying what it counts, with the club's limit. */
+  placesLabel: string;
+  placesHelp: string;
   daysLabel: string;
   daysHelp: string;
   outsideLabel: string;
@@ -119,6 +122,7 @@ export default function InviteForm({
   daysDefault,
   daysMax,
   hiddenListEnabled,
+  placesMax,
   words,
 }: {
   action: (state: InviteFormState, form: FormData) => Promise<InviteFormState>;
@@ -131,6 +135,8 @@ export default function InviteForm({
   daysMax: number;
   /** The event's «Folosește lista ascunsă» (§648; the send obeys it, §647): off, the tick is not drawn and the server refuses it anyway. */
   hiddenListEnabled: boolean;
+  /** The club's people per address (§576): the most a row's «Locuri» may ask; the server asks it again under the lock. */
+  placesMax: number;
   words: InviteFormWords;
 }) {
   const [state, formAction, pending] = useActionState(action, null);
@@ -145,7 +151,7 @@ export default function InviteForm({
     its own, so removing one never moves another's typing into it.
   */
   const nextKey = useRef(1);
-  const [rows, setRows] = useState<readonly { key: number; name: string; email: string }[]>([{ key: 0, name: "", email: "" }]);
+  const [rows, setRows] = useState<readonly { key: number; name: string; email: string; places: string }[]>([{ key: 0, name: "", email: "", places: "1" }]);
   const [outside, setOutside] = useState(false);
   // «Elită» (§917): controlled like «Pe lista ascunsă», so a refused send keeps it for the corrected press.
   const [elite, setElite] = useState(false);
@@ -193,12 +199,14 @@ export default function InviteForm({
     const lines = readInviteeRows(
       rows.map((row) => row.name),
       rows.map((row) => row.email),
+      rows.map((row) => row.places),
     );
     if (lines.unread.length > 0) {
       setLocalError(fill(words.errors.INVITATION_UNREAD_ROW ?? words.errorGeneric, { lines: lines.unread.join(", ") }));
       return;
     }
-    const count = ticked.size + lines.people.length;
+    // Every invitation the press sends: a row's «Locuri» are that many (§925).
+    const count = ticked.size + lines.people.reduce((sum, person) => sum + (person.places ?? 1), 0);
     if (count === 0) {
       setLocalError(words.nobody);
       return;
@@ -306,8 +314,11 @@ export default function InviteForm({
           <Typography component="legend" variant="subtitle2" sx={{ mb: 0.5 }}>
             {words.typedLabel}
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
             {words.typedHelp}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {words.placesHelp}
           </Typography>
           <Stack spacing={1}>
             {rows.map((row, index) => (
@@ -333,6 +344,18 @@ export default function InviteForm({
                   sx={{ flex: { sm: "1 1 0" } }}
                   slotProps={{ htmlInput: { spellCheck: false, autoCapitalize: "off", inputMode: "email", "aria-label": `${words.emailLabel} ${index + 1}` } }}
                 />
+                {/* «Locuri» (§925): how many people may register with this row's address, the one named included. */}
+                <TextField
+                  name="inviteePlaces"
+                  label={words.placesLabel}
+                  value={row.places}
+                  onChange={(event) => setRows(rows.map((other) => (other.key === row.key ? { ...other, places: event.target.value } : other)))}
+                  size="small"
+                  autoComplete="off"
+                  sx={{ flex: { sm: "0 0 96px" } }}
+                  slotProps={{ htmlInput: { inputMode: "numeric", min: 1, max: placesMax, "aria-label": `${words.placesLabel} ${index + 1}` } }}
+                  data-testid="invite-row-places"
+                />
                 {/* The only row stays, emptied rather than removed: there is always one to type in. */}
                 <GlyphButton
                   icon="delete"
@@ -340,7 +363,7 @@ export default function InviteForm({
                   color="inherit"
                   size="small"
                   aria-label={fill(words.removeRow, { row: index + 1 })}
-                  onClick={() => setRows(rows.length > 1 ? rows.filter((other) => other.key !== row.key) : [{ key: row.key, name: "", email: "" }])}
+                  onClick={() => setRows(rows.length > 1 ? rows.filter((other) => other.key !== row.key) : [{ key: row.key, name: "", email: "", places: "1" }])}
                   sx={{ ...TAP_TARGET, alignSelf: { xs: "flex-start", sm: "center" } }}
                   data-testid="invite-row-remove"
                 >
@@ -354,7 +377,7 @@ export default function InviteForm({
             variant="outlined"
             size="small"
             onClick={() => {
-              setRows([...rows, { key: nextKey.current, name: "", email: "" }]);
+              setRows([...rows, { key: nextKey.current, name: "", email: "", places: "1" }]);
               nextKey.current += 1;
             }}
             sx={{ ...TAP_TARGET, mt: 1 }}

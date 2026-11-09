@@ -776,6 +776,8 @@ type WaitlistStandingLine = { position: number; length: number; autoOffer: boole
 /** What every template needs beyond the locale — never a rendered body, never a token. */
 export type TemplateData = {
   participantName: string;
+  /** An invitation with no name (§925, «Locuri»): a place for one more person who registers with the address. */
+  invitationForAnother?: boolean;
   /**
    * This is the club's copy of a participant's message (§320): "[Copie club]" in front of the
    * subject, one line at the top saying the personal links were taken out, no action button, and
@@ -1630,6 +1632,30 @@ function invitationEmphasis(d: TemplateData, b: readonly string[]): Emphasis {
 }
 
 /**
+ * An invitation with no name (§925, «Locuri»): a place for one more person who registers with the address.
+ * It greets nobody by name, says what the place is for, and that each such email's link registers one person.
+ */
+function invitationForAnotherBody(locale: EmailLocale, d: TemplateData): string[] {
+  const when = d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : "";
+  if (locale === "ro") {
+    return [
+      `${CLUB_NAME} îți păstrează la ${d.eventTitle ?? "eveniment"}${when} **un loc pentru încă o persoană** care se înscrie cu această adresă de email.`,
+      ...(d.holdExpiresAtFormatted ? [`Locul e păstrat până **${d.holdExpiresAtFormatted}**; după termen se eliberează.`] : []),
+      "Apasă butonul de mai jos: se deschide formularul de înscriere cu această adresă. Completezi numele și datele persoanei care vine și accepți termenii; apoi la această adresă vine emailul cu declarația, pe care o semnează persoana care vine.",
+      "Fiecare link înscrie o singură persoană: dacă ai primit mai multe emailuri ca acesta, folosește câte unul pentru fiecare persoană.",
+      "Dacă nu te așteptai la acest email, ignoră-l: nu se întâmplă nimic.",
+    ];
+  }
+  return [
+    `${CLUB_NAME} is keeping **a place for one more person** who registers with this email address at ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}.`,
+    ...(d.holdExpiresAtFormatted ? [`The place is kept until **${d.holdExpiresAtFormatted}**; after the deadline it is released.`] : []),
+    "Press the button below: the registration form opens with this address. Fill in the name and details of the person who is coming and accept the terms; the email with the declaration then comes to this address, and that person signs it.",
+    "Each link registers one person: if you received several emails like this one, use one for each person.",
+    "If you were not expecting this email, ignore it: nothing happens.",
+  ];
+}
+
+/**
  * The texts whose template moved (§639), on the message's bold line: «Șablon nou: GDPR · Termeni de
  * concurs», the chip's own words and the names `/admin/legal` lists, in this half's language. None
  * when the payload names no text the catalogue knows.
@@ -1985,14 +2011,17 @@ const T = {
     },
     // A personal invitation to an event (§647): the place kept until the deadline, one link to the form.
     eventInvitation: {
-      subject: (d: TemplateData) => `Invitație la ${d.eventTitle ?? "eveniment"}`,
-      body: (d: TemplateData) => [
+      subject: (d: TemplateData) =>
+        d.invitationForAnother ? `Un loc pentru încă o persoană la ${d.eventTitle ?? "eveniment"}` : `Invitație la ${d.eventTitle ?? "eveniment"}`,
+      // A place for one more person on the address (§925): no name to greet, and its own words.
+      greeting: (d: TemplateData) => (d.invitationForAnother ? "Salut," : `Salut, ${d.participantName},`),
+      body: (d: TemplateData) => (d.invitationForAnother ? invitationForAnotherBody("ro", d) : [
         `${CLUB_NAME} te invită la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}: **ți-am păstrat un loc**.`,
         // Its own paragraph, so a club text that names the deadline leaves it out with the deadline (§359).
         ...(d.holdExpiresAtFormatted ? [`Locul e al tău dacă accepți invitația până **${d.holdExpiresAtFormatted}**; după termen se eliberează.`] : []),
         "Apasă butonul de mai jos: se deschide formularul de înscriere cu numele și adresa ta. Completezi restul și accepți termenii; apoi primești emailul cu declarația, pe care o semnezi tu.",
         "Dacă nu te așteptai la acest email, ignoră-l: nu se întâmplă nimic.",
-      ],
+      ]),
       action: "Acceptă invitația",
       emphasis: invitationEmphasis,
     },
@@ -2890,13 +2919,15 @@ const T = {
       links: (d: TemplateData) => (d.privacyUrl ? [{ label: "Privacy notice", url: d.privacyUrl }] : []),
     },
     eventInvitation: {
-      subject: (d: TemplateData) => `Invitation to ${d.eventTitle ?? "the event"}`,
-      body: (d: TemplateData) => [
+      subject: (d: TemplateData) =>
+        d.invitationForAnother ? `A place for one more person at ${d.eventTitle ?? "the event"}` : `Invitation to ${d.eventTitle ?? "the event"}`,
+      greeting: (d: TemplateData) => (d.invitationForAnother ? "Hi," : `Hi ${d.participantName},`),
+      body: (d: TemplateData) => (d.invitationForAnother ? invitationForAnotherBody("en", d) : [
         `${CLUB_NAME} invites you to ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}: **we are keeping a place for you**.`,
         ...(d.holdExpiresAtFormatted ? [`The place is yours if you accept the invitation by **${d.holdExpiresAtFormatted}**; after the deadline it is released.`] : []),
         "Press the button below: the registration form opens with your name and address. You fill in the rest and accept the terms; then you receive the email with the declaration, which you sign yourself.",
         "If you were not expecting this email, ignore it: nothing happens.",
-      ],
+      ]),
       action: "Accept the invitation",
       emphasis: invitationEmphasis,
     },

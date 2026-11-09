@@ -890,7 +890,8 @@ async function renderRow(
       } else if (claim.kind === "invitation") {
         const [guest] = await db.select({ name: eventInvitations.name }).from(eventInvitations).where(eq(eventInvitations.id, claim.id)).limit(1);
         if (!guest) continue;
-        facts.claims.push({ kind: claim.kind, name: guest.name, event, url: list });
+        // A place for one more person on an address (§925, «Locuri») has no name: said like the nameless kinds.
+        facts.claims.push({ kind: claim.kind, name: guest.name || null, event, url: list });
       } else {
         facts.claims.push({ kind: claim.kind, name: null, event, url: list });
       }
