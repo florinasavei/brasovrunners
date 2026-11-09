@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, lte, min, type SQL, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, lte, min, type SQL, sql } from "drizzle-orm";
 import { type EventInvitation, eventInvitations } from "@/db/schema/event-invitations";
 import { events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
@@ -93,6 +93,22 @@ export async function countPendingInvitations<T extends Record<string, unknown>>
 export async function findInvitationById<T extends Record<string, unknown>>(db: Database<T>, id: string): Promise<EventInvitation | undefined> {
   const [row] = await db.select().from(eventInvitations).where(eq(eventInvitations.id, id)).limit(1);
   return row;
+}
+
+/**
+ * How many invitations an address was sent at an event, whatever became of them (§924): more than one
+ * is a family's address, whose invitations are matched to registrations by the name alone.
+ */
+export async function countInvitationsOfParticipant<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  participantId: string,
+): Promise<number> {
+  const [row] = await db
+    .select({ n: count() })
+    .from(eventInvitations)
+    .where(and(eq(eventInvitations.eventId, eventId), eq(eventInvitations.participantId, participantId)));
+  return row?.n ?? 0;
 }
 
 /**

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.34-2026-11-09 -->
+<!-- PROJECT_BASELINE: BR-V4.35-2026-11-09 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.34-2026-11-09`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.35-2026-11-09`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -29161,3 +29161,15 @@ Baseline `BR-V4.34-2026-11-09`.
 **Refused.** One invitation holding 2–4 places, filled in one sitting — it would make an invitation hold several places in the capacity formula, a trust rule, and take longer; the owner chose one invitation per person.
 
 Baseline `BR-V4.34-2026-11-09`.
+
+## 924. A family's invitations stay each person's own: matched by name only, and kept when a sibling's registration is erased (amending §923)
+
+**The review of 2026-11-09**, run on §923 before the first family on one address was invited in production (three lenses, each finding put to a skeptic), confirmed two defects; the owner said to fix them once the invitations were sent.
+
+**1. A person coming back through the allocator took the sibling's invitation.** §923 kept §647's by-address fallback for a registration whose name matched no open invitation: the address's one open invitation, sent before the registration, with no other live registration on the address. On a family's address that fallback also fired for a person whose own invitation was already spent: Ana accepts by her link, later loses her place (a late signature after her hold went to somebody waiting, or a cancellation and a new registration), and Mihai has not pressed his link yet — the allocator found one open invitation (Mihai's), sent before Ana's registration, no other live registration, and gave Ana Mihai's place, stamping his invitation accepted with her registration; his link then said «folosită». **Now** the fallback applies only to an address invited once at the event (`countInvitationsOfParticipant`, every invitation the address was sent there, whatever became of it): an address invited more than once is a family's, and its invitations are matched to registrations by the name alone.
+
+**2. Erasing one person's registration took the other's invitation with the address.** Erasure deletes the participant row when it held the person's last registration (§88), and `event_invitations.participant_id` cascades — so erasing Ana's registration while Mihai's invitation was open deleted his invitation, its link and its kept place with the address. **Now** the participant row stays while an open invitation holds it, as it stays while another registration does: the address is no longer the erased person's alone.
+
+**Known and left, minor.** A person who registers by the public form instead of the link takes their invitation over only when the name is typed as the Administrator typed it (`sameRunner` keeps word order); otherwise their invitation keeps its place until its deadline or «Retrage». The public form's per-address limit counts registrations, not open invitations. «Retrage și șterge invitațiile» on a person's page withdraws every open invitation of the address. `/admin/tasks`' outage count treats a sibling's newer invitation as handling a lapsed one.
+
+Baseline `BR-V4.35-2026-11-09`.
