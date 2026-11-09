@@ -160,7 +160,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  // «Unelte», once per locale, while it is on the site (§NNN): published with a tool on it — the FAQ's rule.
+  // «Unelte», once per locale, while it is on the site (§926): published with a tool on it — the FAQ's rule.
   if ((await readWithLastGood("sitemap:tools", async () => toolsPageOnSite(await cachedToolsPage()), now)).value) {
     for (const locale of routing.locales) {
       entries.push({

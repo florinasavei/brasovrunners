@@ -575,7 +575,7 @@ export function canShowFaqItem(subject: StaffSubject): boolean {
 }
 
 /**
- * «Unelte» on the site or off it, and which of its tools it shows (§NNN): crossing public view, the Administrator's —
+ * «Unelte» on the site or off it, and which of its tools it shows (§926): crossing public view, the Administrator's —
  * «Întrebări frecvente»'s threshold (§201).
  */
 export function canPublishToolsPage(subject: StaffSubject): boolean {

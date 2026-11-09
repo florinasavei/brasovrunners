@@ -85,7 +85,7 @@ export async function menuSectionsOnSite(locale: Locale): Promise<Record<MenuSec
     // «Întrebări frecvente» (§525): the page published with a question on it — «Echipa»'s rule.
     faqOnSite(locale),
     offersContact(),
-    // «Unelte» (§NNN): the page published with a tool on it — the FAQ's rule; on until the club takes it off.
+    // «Unelte» (§926): the page published with a tool on it — the FAQ's rule; on until the club takes it off.
     toolsOnSite(),
   ]);
   return { events: true, calendar: true, contact, gallery, team, faq, tools };

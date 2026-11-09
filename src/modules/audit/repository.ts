@@ -773,7 +773,7 @@ export type AuditAction =
   | "faq_page.saved"
   | "faq_page.published"
   | "faq_page.unpublished"
-  /** «Unelte» (§NNN): the page on the site or off it, and which tools it shows (the keys hidden before and after). */
+  /** «Unelte» (§926): the page on the site or off it, and which tools it shows (the keys hidden before and after). */
   | "tools_page.published"
   | "tools_page.unpublished"
   | "tools_page.tools_changed"

@@ -32,7 +32,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * «Unelte» in the backoffice (§NNN; the owner, 2026-11-09: «vreau ca pagina de "Unelte" să fie controlabilă ca și restul
+ * «Unelte» in the backoffice (§926; the owner, 2026-11-09: «vreau ca pagina de "Unelte" să fie controlabilă ca și restul
  * paginilor, să pot să îi dau OFF»): a standard page like «Întrebări frecvente» (§525) — its address and its tools are the
  * platform's — so the screen is the page's switch, published or a draft, asked first (§384), and the page's tools, each with
  * «Pe site» and one save (each tool's card is the platform's; there is nothing of the club's to write). A page with no tool

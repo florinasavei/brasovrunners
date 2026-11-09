@@ -20,7 +20,7 @@ type Props = { params: Promise<{ locale: string }> };
 
 /**
  * Static and kept by the CDN like every public page (§549): the one thing read is the page's switch, from the public cache under
- * `pages`, which the switch's every save expires (§NNN); the day is only the public pages' common ceiling. A literal, as Next
+ * `pages`, which the switch's every save expires (§926); the day is only the public pages' common ceiling. A literal, as Next
  * requires: it equals `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together).
  */
 export const revalidate = 86400;
@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: t("title"),
     description: t("description"),
-    // Off the site (§NNN): the address answers 404, and says so to a crawler that still has it.
+    // Off the site (§926): the address answers 404, and says so to a crawler that still has it.
     ...(settings && !toolsPageOnSite(settings) ? { robots: { index: false, follow: true } } : {}),
     alternates: pageAlternates(locale, staticRouteUrls(env.APP_BASE_URL, "/tools")),
     openGraph: {
@@ -63,7 +63,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 /**
  * «Unelte» / "Tools" (§922): small helpers for a runner, one calm card each. The first is the pace
  * calculator — two of distance, time and pace give the third. A standard page like «Întrebări frecvente»
- * (§NNN): its address and its tools are the platform's, and the club puts it on the site or takes it off and
+ * (§926): its address and its tools are the platform's, and the club puts it on the site or takes it off and
  * chooses which tools it shows (`/admin/pages/tools`); off, or with no tool shown, it is a 404. A Server
  * Component; each tool is its own client island, since it answers as the visitor types.
  */

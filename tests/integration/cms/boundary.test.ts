@@ -230,7 +230,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/pages/new",
       // «Echipa»'s cards (§459): one screen, written here by hand.
       "/admin/pages/team",
-      // «Unelte» (§NNN): the page's switch and its tools' ticks, one screen by hand.
+      // «Unelte» (§926): the page's switch and its tools' ticks, one screen by hand.
       "/admin/pages/tools",
       "/admin/registrations",
       "/admin/registrations/[id]",

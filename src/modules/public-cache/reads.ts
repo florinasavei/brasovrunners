@@ -1014,7 +1014,7 @@ export async function cachedFaqPage(locale: Locale) {
 }
 
 /**
- * `readToolsPageSettings`: «Unelte» (§NNN) — whether the page is on the site and which tools it shows, for the page, the
+ * `readToolsPageSettings`: «Unelte» (§926) — whether the page is on the site and which tools it shows, for the page, the
  * navigation's entry and the sitemap. One for both languages; filed under `pages`, as «Întrebări frecvente» is: the switch's
  * every write expires that kind (`tools/page-settings.ts`).
  */

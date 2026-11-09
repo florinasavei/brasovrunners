@@ -41,7 +41,7 @@ const SECTIONS = [
   // on the site (`showFaq`).
   { segment: "faq", href: "/faq" },
   // «Unelte» (the pace calculator first): a page this application ships, offered while it is published with a tool on
-  // it (`showTools`, §NNN) — the club switches it off like «Întrebări frecvente».
+  // it (`showTools`, §926) — the club switches it off like «Întrebări frecvente».
   { segment: "tools", href: "/tools" },
 ] as const;
 
@@ -122,7 +122,7 @@ export default function SiteNav({
   showTeam?: boolean;
   showFaq?: boolean;
   showContact?: boolean;
-  /** «Unelte» on the site (§NNN): published with a tool on it (`toolsOnSite`), as the page itself asks. */
+  /** «Unelte» on the site (§926): published with a tool on it (`toolsOnSite`), as the page itself asks. */
   showTools?: boolean;
   /** The club's stored order, keys first to last (§571); an entry it does not name keeps its default place after them. */
   order?: readonly string[];

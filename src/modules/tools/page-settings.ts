@@ -9,7 +9,7 @@ import { canPublishToolsPage } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 
 /**
- * «Unelte» as a standard page (§NNN; the owner, 2026-11-09: «vreau ca pagina de "Unelte" să fie controlabilă ca și restul
+ * «Unelte» as a standard page (§926; the owner, 2026-11-09: «vreau ca pagina de "Unelte" să fie controlabilă ca și restul
  * paginilor, să pot să îi dau OFF» — «și asta e doar o unealtă … vin mai multe unelte pe viitor»): one `platform_settings` row,
  * like «Întrebări frecvente» (§525), holding the page's DRAFT/PUBLISHED state and which of the platform's tools are off it.
  * The tools themselves are the platform's code (`TOOLS`, each a card of its own); the club only says whether the page is on the

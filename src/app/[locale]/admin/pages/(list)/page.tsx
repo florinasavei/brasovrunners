@@ -155,7 +155,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
       line: t("members.count", { count: members }),
     },
     {
-      // «Unelte» (§NNN): the platform's tools, the club's switch and ticks; its line counts the tools shown, as the FAQ's does.
+      // «Unelte» (§926): the platform's tools, the club's switch and ticks; its line counts the tools shown, as the FAQ's does.
       key: "tools",
       icon: <ToolsGlyph aria-hidden fontSize="small" color="action" />,
       href: PAGES_ROW_ROUTE.tools,

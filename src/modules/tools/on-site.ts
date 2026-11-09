@@ -3,7 +3,7 @@ import { readWithLastGood } from "@/modules/resilience/last-good";
 import { toolsPageOnSite } from "./page-settings";
 
 /**
- * Whether «Unelte» is offered (§NNN), for the header and the «Ordinea meniului» card: the page published with a tool on it —
+ * Whether «Unelte» is offered (§926), for the header and the «Ordinea meniului» card: the page published with a tool on it —
  * «Întrebări frecvente»'s rule (§525) — read from the public cache, false on any failure: never an error page.
  */
 export async function toolsOnSite(): Promise<boolean> {

@@ -269,7 +269,7 @@ export type ActionIconName =
   | "results"
   // «Voluntari» (§839): the tab's icon, the event card's «Voluntari» box's heart in the hand.
   | "volunteers"
-  // «Unelte» (§NNN): the speed dial its public page wears, on its «Pagini» row and its «Ordinea meniului» entry.
+  // «Unelte» (§926): the speed dial its public page wears, on its «Pagini» row and its «Ordinea meniului» entry.
   | "tools";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,
 // because this table must never reach a public page (above).

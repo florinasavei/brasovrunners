@@ -11,7 +11,7 @@ import { flashOutcome } from "@/shared/feedback/flash";
 import type { FormOutcome } from "@/shared/forms/outcome";
 
 /**
- * «Unelte» in the backoffice (§NNN): the page on the site or off it, and the tools it shows. Each verb asserts the role again
+ * «Unelte» in the backoffice (§926): the page on the site or off it, and the tools it shows. Each verb asserts the role again
  * in the service (BR-REQ-060-01); the screen only offers it.
  */
 

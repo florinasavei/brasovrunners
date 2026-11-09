@@ -110,7 +110,7 @@ describe("§571 the club's one menu order", () => {
     expect(hrefs(markup)).toEqual(["/ro/contact", "/ro/pages/despre", "/ro/events", "/ro/calendar", "/ro/tools", "/ro/pages/istoric"]);
   });
 
-  it("offers «Unelte» only while it is on the site (§NNN): taken off, or with no tool shown, it leaves the menu", async () => {
+  it("offers «Unelte» only while it is on the site (§926): taken off, or with no tool shown, it leaves the menu", async () => {
     const markup = await html(createElement(SiteNav, { showContact: true, pages }));
     expect(hrefs(markup)).not.toContain("/ro/tools");
     expect(hrefs(await html(createElement(SiteNav, { showContact: true, showTools: true, pages })))).toContain("/ro/tools");

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_TOOLS_PAGE, parseToolsPageSettings, shownTools, TOOLS, toolsPageOnSite } from "@/modules/tools/page-settings";
 
-describe("§NNN «Unelte» is a standard page: on by default, off by its switch or with no tool shown", () => {
+describe("§926 «Unelte» is a standard page: on by default, off by its switch or with no tool shown", () => {
   it("no row, or an unreadable one, reads as published with every tool shown — the page has been on the site since §922", () => {
     expect(DEFAULT_TOOLS_PAGE).toEqual({ status: "PUBLISHED", hiddenTools: [] });
     expect(parseToolsPageSettings(null)).toEqual(DEFAULT_TOOLS_PAGE);

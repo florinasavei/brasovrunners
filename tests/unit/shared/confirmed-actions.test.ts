@@ -187,7 +187,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // taken off or deleted (and nothing else), and the page's own publish switch.
   saveFaqPageAction: [],
   setFaqPagePublishedAction: [],
-  // «Unelte» (§NNN): the page's own switch, and its tools' «Pe site» — each asks before a tool goes on or off the page.
+  // «Unelte» (§926): the page's own switch, and its tools' «Pe site» — each asks before a tool goes on or off the page.
   setToolsPagePublishedAction: [],
   saveShownToolsAction: [],
   // «Beneficiile membrilor» on the site or off it (§524).

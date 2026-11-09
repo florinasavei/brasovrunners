@@ -13,7 +13,7 @@ import {
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
-describe("§NNN «Unelte»: the page's switch and its tools, the Administrator's", () => {
+describe("§926 «Unelte»: the page's switch and its tools, the Administrator's", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   const staff: Partial<Record<StaffRole, StaffUser>> = {};
