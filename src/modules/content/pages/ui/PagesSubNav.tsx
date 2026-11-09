@@ -7,6 +7,7 @@ import { getTranslations } from "next-intl/server";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import type { ReactNode } from "react";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import SubNav from "@/shared/ui/SubNav";
 import { PAGES_ROW_ROUTE, type PagesRowEntry } from "../pages-row";
 
@@ -17,6 +18,9 @@ import { PAGES_ROW_ROUTE, type PagesRowEntry } from "../pages-row";
  * `canReadContent`, like its page; `active` comes from `pagesRowEntryOf` (unit-tested). Hrefs are
  * resolved on the server because `SubNav` (§360) takes strings.
  */
+/** «Unelte»'s glyph, asked of `action-icons.ts` by name (§318): the speed dial its public page wears. */
+const ToolsGlyph = ACTION_ICONS.tools;
+
 export default async function PagesSubNav({ locale, active }: { locale: Locale; active: PagesRowEntry }) {
   const t = await getTranslations("Admin");
   const standard = t("pages.groupStandard");
@@ -37,6 +41,7 @@ export default async function PagesSubNav({ locale, active }: { locale: Locale; 
         entry("team", t("pages.tabTeam"), standard, <GroupsIcon />),
         entry("faq", t("pages.tabFaq"), standard, <HelpOutlineIcon />),
         entry("members", t("pages.tabMembers"), standard, <CardMembershipIcon />),
+        entry("tools", t("pages.tabTools"), standard, <ToolsGlyph />),
         entry("pages", t("pages.tabPages"), custom, <ArticleIcon />),
       ]}
     />

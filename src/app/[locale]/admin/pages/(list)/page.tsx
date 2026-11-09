@@ -15,6 +15,8 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { readFaqPageSettings } from "@/modules/content/faq/page-settings";
+import { readToolsPageSettings, shownTools, TOOLS } from "@/modules/tools/page-settings";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { listFaqItemsForAdmin } from "@/modules/content/faq/repository";
 import { readMembersPageSettings } from "@/modules/content/members/page-settings";
 import { listPagesForAdmin, type PageListRow } from "@/modules/content/pages/repository";
@@ -78,7 +80,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
   const current = await searchParams;
   const { saved, error } = current;
   const db = getDb();
-  const [pageRows, menuState, teamSettings, teamMembers, faqSettings, faqItems, membersSettings, members, contactFormReaches, contactAddresses] = await Promise.all([
+  const [pageRows, menuState, teamSettings, teamMembers, faqSettings, faqItems, membersSettings, members, contactFormReaches, contactAddresses, toolsSettings] = await Promise.all([
     listPagesForAdmin(db, locale),
     readMenuOrder(db),
     readTeamPageSettings(db),
@@ -89,6 +91,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
     countMembers(db),
     cachedContactFormReaches(),
     cachedShownContactAddresses(),
+    readToolsPageSettings(db),
   ]);
   // The menu's one order (§571): every entry, the custom pages among them; the table follows it.
   const menuOrder = resolveMenuOrder(menuState.stored, pageRows.map((row) => row.id));
@@ -110,6 +113,8 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
   ]
     .filter(Boolean)
     .join(" · ");
+  // «Unelte»'s glyph, asked of `action-icons.ts` by name (§318).
+  const ToolsGlyph = ACTION_ICONS.tools;
   const standard = [
     {
       key: "contact",
@@ -148,6 +153,15 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
       title: t("pages.tabMembers"),
       published: membersSettings.status === "PUBLISHED",
       line: t("members.count", { count: members }),
+    },
+    {
+      // «Unelte» (§NNN): the platform's tools, the club's switch and ticks; its line counts the tools shown, as the FAQ's does.
+      key: "tools",
+      icon: <ToolsGlyph aria-hidden fontSize="small" color="action" />,
+      href: PAGES_ROW_ROUTE.tools,
+      title: t("pages.tabTools"),
+      published: toolsSettings.status === "PUBLISHED",
+      line: t("pages.standardShown", { shown: String(shownTools(toolsSettings).length), total: String(TOOLS.length) }),
     },
   ];
   const words = await confirmWords();

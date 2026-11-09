@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
 import { LEGAL_PAGE_ROUTE, legalDocumentsInForce } from "@/modules/legal-documents/public-page";
-import { cachedFaqPage, cachedHomePage, cachedMembersPage, cachedSitemapAlbums, cachedSitemapEvents, cachedSitemapPages, cachedTeamPage } from "@/modules/public-cache/reads";
+import { cachedFaqPage, cachedHomePage, cachedMembersPage, cachedSitemapAlbums, cachedSitemapEvents, cachedSitemapPages, cachedTeamPage, cachedToolsPage } from "@/modules/public-cache/reads";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { faqPageOnSite } from "@/modules/content/faq/repository";
+import { toolsPageOnSite } from "@/modules/tools/page-settings";
 import { offersMembersEntry } from "@/modules/content/members/page-settings";
 import { teamPageOnSite } from "@/modules/content/team/repository";
 import { hreflangLanguages, slugRouteUrls, staticRouteUrl, staticRouteUrls } from "@/modules/seo/alternates";
@@ -159,14 +160,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  // «Unelte», once per locale: a platform page with nothing from the club, always on the site.
-  for (const locale of routing.locales) {
-    entries.push({
-      url: staticRouteUrl(env.APP_BASE_URL, "/tools", locale),
-      alternates: { languages: hreflangLanguages(staticRouteUrls(env.APP_BASE_URL, "/tools")) },
-      changeFrequency: "monthly",
-      priority: 0.4,
-    });
+  // «Unelte», once per locale, while it is on the site (§NNN): published with a tool on it — the FAQ's rule.
+  if ((await readWithLastGood("sitemap:tools", async () => toolsPageOnSite(await cachedToolsPage()), now)).value) {
+    for (const locale of routing.locales) {
+      entries.push({
+        url: staticRouteUrl(env.APP_BASE_URL, "/tools", locale),
+        alternates: { languages: hreflangLanguages(staticRouteUrls(env.APP_BASE_URL, "/tools")) },
+        changeFrequency: "monthly",
+        priority: 0.4,
+      });
+    }
   }
 
   // «Beneficiile membrilor» (§524), once per locale, while the footer's fold links it (§591,

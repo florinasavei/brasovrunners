@@ -511,6 +511,7 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     // «Întrebări frecvente» (§525): «Echipa»'s two thresholds, for questions.
     canEditFaqPage: /*        */ [false, false, true, false, false, true, true],
     canShowFaqItem: /*        */ [false, false, false, false, false, true, true],
+    canPublishToolsPage: /*   */ [false, false, false, false, false, true, true],
     canDeleteEvent: /*        */ [false, false, false, false, false, true, true],
     canHardDeleteEvent: /*    */ [false, false, false, false, false, true, true],
     // An event as a JSON file (§751): taking one out and bringing one in is the Administrator's.

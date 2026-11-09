@@ -6606,7 +6606,8 @@
       "customTitle": "Pagini personalizate",
       "groupStandard": "Pagini standard",
       "groupCustom": "Pagini personalizate",
-      "tabMembers": "Membri"
+      "tabMembers": "Membri",
+      "tabTools": "Unelte"
     },
     "menuOrder": {
       "title": "Ordinea meniului",
@@ -10636,6 +10637,35 @@
       "unpublishTitle": "Retragi pagina «Întrebări frecvente»?",
       "unpublishBody": "Pagina iese de pe site în ambele limbi și dispare din meniu. Întrebările rămân aici; o poți publica din nou oricând."
     },
+    "toolsPage": {
+      "title": "Unelte",
+      "intro": "Pagina cu uneltele pentru alergători. Adresa și uneltele vin gata făcute; tu alegi dacă pagina e pe site și ce unelte arată.",
+      "viewPublic": "Vezi pagina pe site",
+      "readOnly": "Doar un Administrator pune pagina pe site, o retrage sau alege uneltele ei.",
+      "pageHeading": "Pagina",
+      "pagePublished": "Publicat",
+      "pageDraft": "Ciornă",
+      "pagePublishedHelp": "E pe site, în meniu și în sitemap: {ro} și {en}.",
+      "pageNoTool": "E publicată, dar nicio unealtă nu e bifată «Pe site», așa că nu apare pe site.",
+      "pageDraftHelp": "Nu e pe site: lipsește din meniu și din sitemap, iar adresa ei răspunde că pagina nu există.",
+      "publish": "Publică pagina",
+      "unpublish": "Retrage de pe site",
+      "publishTitle": "Publici pagina «Unelte»?",
+      "publishBody": "Apare în meniu și la adresele {ro} și {en}, cu uneltele bifate «Pe site».",
+      "unpublishTitle": "Retragi pagina «Unelte» de pe site?",
+      "unpublishBody": "Dispare din meniu și din sitemap, iar adresa ei răspunde că pagina nu există. O poți publica oricând din nou.",
+      "listHeading": "Uneltele de pe pagină",
+      "listHelp": "Bifează «Pe site» pentru fiecare unealtă pe care o arată pagina; o pagină fără nicio unealtă bifată nu e pe site.",
+      "onSite": "Pe site",
+      "offSite": "Nu e pe site",
+      "save": "Salvează",
+      "hideTitle": "Scoți «{tool}» de pe pagină?",
+      "hideBody": "Unealta nu se mai vede pe pagina «Unelte». Dacă era singura, pagina dispare de pe site.",
+      "hideConfirm": "Scoate de pe pagină",
+      "showTitle": "Pui «{tool}» pe pagină?",
+      "showBody": "Unealta apare pe pagina «Unelte», dacă pagina e publicată.",
+      "showConfirm": "Pune pe pagină"
+    },
     "settingsTabs": {
       "emails": "Emailuri",
       "deadlines": "Termene",
@@ -13735,6 +13765,9 @@
       "faqPageSaved": "Pagina «Întrebări frecvente» a fost salvată.",
       "faqPagePublished": "Pagina «Întrebări frecvente» este pe site, în ambele limbi.",
       "faqPageUnpublished": "Pagina «Întrebări frecvente» a fost retrasă de pe site.",
+      "toolsPagePublished": "Pagina «Unelte» este pe site.",
+      "toolsPageUnpublished": "Pagina «Unelte» a fost retrasă de pe site.",
+      "toolsShown": "Uneltele paginii «Unelte» au fost salvate.",
       "translationBudget": "Bugetul de traduceri a fost salvat.",
       "translatedAll": {
         "one": "Gata: {count} câmp tradus din română în engleză. Verifică textul și apasă Salvează.",
@@ -14255,7 +14288,7 @@
       "preset10": "10 km",
       "presetHalf": "Semimaraton",
       "presetMarathon": "Maraton",
-      "time": "Timpul",
+      "time": "Timpul propus",
       "hours": "Ore",
       "minutes": "Minute",
       "seconds": "Secunde",
@@ -14263,6 +14296,10 @@
       "paceResult": "{pace} min/km",
       "distanceResult": "{distance} km",
       "speed": "Viteza: {speed} km/h",
+      "formulaPace": "Ritmul = timpul ÷ distanța (de exemplu, 50:00 ÷ 10 km = 5:00 min/km).",
+      "formulaTime": "Timpul = ritmul × distanța (de exemplu, 5:00 min/km × 10 km = 50:00).",
+      "formulaDistance": "Distanța = timpul ÷ ritmul (de exemplu, 50:00 ÷ 5:00 min/km = 10 km).",
+      "formulaSpeed": "Viteza în km/h = 60 ÷ ritmul în minute pe kilometru (5:00 min/km înseamnă 12 km/h).",
       "missing": "Completează câmpurile de mai sus și rezultatul apare aici."
     }
   },

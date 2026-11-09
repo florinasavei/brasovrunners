@@ -35,6 +35,7 @@ import GridOnIcon from "@mui/icons-material/GridOn";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import HeightIcon from "@mui/icons-material/Height";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
+import SpeedIcon from "@mui/icons-material/Speed";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import ImageIcon from "@mui/icons-material/Image";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
@@ -267,7 +268,9 @@ export type ActionIconName =
   // «Clasament» (§808): the podium bars, on the links to a race's results page — never the trophy, which is the desk's.
   | "results"
   // «Voluntari» (§839): the tab's icon, the event card's «Voluntari» box's heart in the hand.
-  | "volunteers";
+  | "volunteers"
+  // «Unelte» (§NNN): the speed dial its public page wears, on its «Pagini» row and its «Ordinea meniului» entry.
+  | "tools";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,
 // because this table must never reach a public page (above).
 
@@ -373,4 +376,5 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   results: LeaderboardIcon,
   // «Voluntari» (§839): the heart in the hand the event card's «Voluntari» box wears, so the tab and the box read as one subject.
   volunteers: VolunteerActivismIcon,
+  tools: SpeedIcon,
 };

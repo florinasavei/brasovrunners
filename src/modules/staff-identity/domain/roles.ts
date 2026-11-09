@@ -575,6 +575,15 @@ export function canShowFaqItem(subject: StaffSubject): boolean {
 }
 
 /**
+ * «Unelte» on the site or off it, and which of its tools it shows (§NNN): crossing public view, the Administrator's —
+ * «Întrebări frecvente»'s threshold (§201).
+ */
+export function canPublishToolsPage(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
+  return atLeast(role, "ADMIN");
+}
+
+/**
  * Deleting is the one editorial action that destroys rather than moves, so it starts at ADMIN.
  * Archiving is what an event that happened gets; deletion is for a row that should never have
  * existed. An event with any registration against it is refused outright by the service,

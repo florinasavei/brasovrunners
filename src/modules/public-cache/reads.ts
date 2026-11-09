@@ -35,6 +35,7 @@ import {
   listPublishedPages,
 } from "@/modules/content/pages/repository";
 import { readPublicFaqPage } from "@/modules/content/faq/repository";
+import { readToolsPageSettings } from "@/modules/tools/page-settings";
 import { memberDefinitionFor, parseMemberDefinition, readMemberDefinition } from "@/modules/content/members/member-definition";
 import { readPublicMembersPage } from "@/modules/content/members/page-settings";
 import { readPublicTeamPage } from "@/modules/content/team/repository";
@@ -1010,6 +1011,15 @@ export async function cachedTeamPage(locale: Locale) {
  */
 export async function cachedFaqPage(locale: Locale) {
   return publicRead(["faq.page", locale], ["pages"], () => readPublicFaqPage(getDb(), locale));
+}
+
+/**
+ * `readToolsPageSettings`: «Unelte» (§NNN) — whether the page is on the site and which tools it shows, for the page, the
+ * navigation's entry and the sitemap. One for both languages; filed under `pages`, as «Întrebări frecvente» is: the switch's
+ * every write expires that kind (`tools/page-settings.ts`).
+ */
+export async function cachedToolsPage() {
+  return publicRead(["tools.page"], ["pages"], () => readToolsPageSettings(getDb()));
 }
 
 /**

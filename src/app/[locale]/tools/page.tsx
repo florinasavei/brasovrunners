@@ -5,9 +5,11 @@ import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { notFound, unstable_rethrow } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import { cachedToolsPage } from "@/modules/public-cache/reads";
 import { pageAlternates, staticRouteUrl, staticRouteUrls } from "@/modules/seo/alternates";
+import { shownTools, TOOLS, type ToolsPageSettings, toolsPageOnSite } from "@/modules/tools/page-settings";
 import PaceCalculator from "@/modules/tools/ui/PaceCalculator";
 import { env } from "@/shared/config/env";
 import { PAGE_WIDTH } from "@/theme/brand";
@@ -17,19 +19,36 @@ import { headingRule } from "@/theme/surfaces";
 type Props = { params: Promise<{ locale: string }> };
 
 /**
- * Static and kept by the CDN like every public page (§549): nothing here reads the database or the
- * request, so the day is only the public pages' common ceiling. A literal, as Next requires: it equals
- * `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together).
+ * Static and kept by the CDN like every public page (§549): the one thing read is the page's switch, from the public cache under
+ * `pages`, which the switch's every save expires (§NNN); the day is only the public pages' common ceiling. A literal, as Next
+ * requires: it equals `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together).
  */
 export const revalidate = 86400;
+
+/**
+ * The page's switch and its tools, or null when the database cannot say — «Întrebări frecvente»'s rule for a read that may not
+ * answer (§281): the page needs nothing else, so it stands with every tool rather than become an error.
+ */
+async function toolsOrNull(): Promise<ToolsPageSettings | null> {
+  try {
+    return await cachedToolsPage();
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("[tools] the page's switch did not answer; it stands with every tool", error);
+    return null;
+  }
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
   const t = await getTranslations({ locale, namespace: "Tools" });
+  const settings = await toolsOrNull();
   return {
     title: t("title"),
     description: t("description"),
+    // Off the site (§NNN): the address answers 404, and says so to a crawler that still has it.
+    ...(settings && !toolsPageOnSite(settings) ? { robots: { index: false, follow: true } } : {}),
     alternates: pageAlternates(locale, staticRouteUrls(env.APP_BASE_URL, "/tools")),
     openGraph: {
       title: t("title"),
@@ -42,15 +61,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /**
- * «Unelte» / "Tools" (§NNN): small helpers for a runner, one calm card each. The first is the pace
- * calculator — two of distance, time and pace give the third. A platform page like «Echipa»: its
- * address and words are the platform's, and it needs nothing from the club. A Server Component; each
- * tool is its own client island, since it answers as the visitor types.
+ * «Unelte» / "Tools" (§922): small helpers for a runner, one calm card each. The first is the pace
+ * calculator — two of distance, time and pace give the third. A standard page like «Întrebări frecvente»
+ * (§NNN): its address and its tools are the platform's, and the club puts it on the site or takes it off and
+ * chooses which tools it shows (`/admin/pages/tools`); off, or with no tool shown, it is a 404. A Server
+ * Component; each tool is its own client island, since it answers as the visitor types.
  */
 export default async function ToolsPage({ params }: Props) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
+  const settings = await toolsOrNull();
+  if (settings && !toolsPageOnSite(settings)) notFound();
+  const shown = settings ? shownTools(settings) : [...TOOLS];
   const t = await getTranslations("Tools");
 
   return (
@@ -62,6 +85,7 @@ export default async function ToolsPage({ params }: Props) {
         {t("description")}
       </Typography>
 
+      {shown.includes("pace") && (
       <Box
         component="section"
         aria-labelledby="tool-pace"
@@ -77,6 +101,7 @@ export default async function ToolsPage({ params }: Props) {
         </Typography>
         <PaceCalculator />
       </Box>
+      )}
     </Container>
   );
 }
