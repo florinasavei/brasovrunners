@@ -8,6 +8,7 @@ import Typography from "@mui/material/Typography";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import PressButton from "@/shared/ui/PressButton";
+import QuietHelp from "@/shared/ui/QuietHelp";
 import RadioField from "@/shared/ui/RadioField";
 import { durationSeconds, formatDuration, type PaceResult, type PaceSolve, parseDecimal, RACE_DISTANCES, solvePace, speedKmh, splitDuration } from "../pace";
 
@@ -101,28 +102,34 @@ export default function PaceCalculator() {
           <Typography component="legend" sx={LEGEND_SX}>
             {t("pace.distance")}
           </Typography>
-          <TextField
-            label={t("pace.distanceUnit")}
-            value={fields.distance}
-            onChange={set("distance")}
-            helperText={t("pace.distanceHelp")}
-            error={parseDecimal(fields.distance) === null}
-            slotProps={numeric("pace-distance", "decimal")}
-            sx={{ width: { xs: "100%", sm: "12rem" } }}
-          />
-          <Box role="group" aria-label={t("pace.presets")} sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1.5 }}>
-            {RACE_DISTANCES.map((race) => (
-              <PressButton
-                key={race.key}
-                icon={OutlinedFlagIcon}
-                variant="outlined"
-                size="small"
-                onClick={() => setFields((previous) => ({ ...previous, distance: distanceText(race.km) }))}
-                data-testid={`pace-${race.key}`}
-              >
-                {raceLabel[race.key]}
-              </PressButton>
-            ))}
+          {/*
+            The box and the four races on one row (the owner, 2026-11-09: «asta vreau să fie inline»), the races level with
+            the box rather than its help line; a phone too narrow for all of them wraps the rest under it.
+          */}
+          <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", columnGap: 2, rowGap: 1 }}>
+            <TextField
+              label={t("pace.distanceUnit")}
+              value={fields.distance}
+              onChange={set("distance")}
+              helperText={t("pace.distanceHelp")}
+              error={parseDecimal(fields.distance) === null}
+              slotProps={numeric("pace-distance", "decimal")}
+              sx={{ width: { xs: "100%", sm: "12rem" } }}
+            />
+            <Box role="group" aria-label={t("pace.presets")} sx={{ display: "flex", flexWrap: "wrap", gap: 1, pt: 1.5 }}>
+              {RACE_DISTANCES.map((race) => (
+                <PressButton
+                  key={race.key}
+                  icon={OutlinedFlagIcon}
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setFields((previous) => ({ ...previous, distance: distanceText(race.km) }))}
+                  data-testid={`pace-${race.key}`}
+                >
+                  {raceLabel[race.key]}
+                </PressButton>
+              ))}
+            </Box>
           </Box>
         </Box>
       )}
@@ -152,13 +159,26 @@ export default function PaceCalculator() {
         </Box>
       )}
 
-      {/* The answer, said once to a screen reader each time it changes. */}
-      <Box role="status" aria-live="polite" sx={{ borderTop: 1, borderColor: "divider", pt: 2 }} data-testid="pace-result">
-        {result ? (
-          <>
+      <Box sx={{ borderTop: 1, borderColor: "divider", pt: 2 }}>
+        {/*
+          What is worked out, and the «?» with how (the owner, 2026-11-09: «tooltip cu ? cu formula de calcul»): outside the
+          live region below, so a screen reader is not read the formula again at every keystroke.
+        */}
+        {result && (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <Typography variant="body2" color="text.secondary">
               {solve === "pace" ? t("pace.solvePace") : solve === "time" ? t("pace.solveTime") : t("pace.solveDistance")}
             </Typography>
+            <QuietHelp
+              text={`${solve === "pace" ? t("pace.formulaPace") : solve === "time" ? t("pace.formulaTime") : t("pace.formulaDistance")} ${t("pace.formulaSpeed")}`}
+              testId="pace-formula-help"
+            />
+          </Box>
+        )}
+      {/* The answer, said once to a screen reader each time it changes. */}
+      <Box role="status" aria-live="polite" data-testid="pace-result">
+        {result ? (
+          <>
             <Typography sx={{ fontSize: { xs: "2rem", sm: "2.5rem" }, fontWeight: 700, lineHeight: 1.2, fontVariantNumeric: "tabular-nums" }}>
               {solve === "pace"
                 ? t("pace.paceResult", { pace: formatDuration(result.paceSeconds) })
@@ -175,6 +195,7 @@ export default function PaceCalculator() {
             {t("pace.missing")}
           </Typography>
         )}
+      </Box>
       </Box>
     </Stack>
   );

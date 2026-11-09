@@ -240,6 +240,7 @@ export default async function SiteHeader() {
             showTeam={sections.team}
             showFaq={sections.faq}
             showContact={sections.contact}
+            showTools={sections.tools}
             order={order}
           />
         </Box>

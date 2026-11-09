@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.36-2026-11-09 -->
+<!-- PROJECT_BASELINE: BR-V4.37-2026-11-09 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.36-2026-11-09`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.37-2026-11-09`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -29185,3 +29185,15 @@ An invitation with no name is «Loc în plus pe această adresă» in the backof
 **Refused.** One invitation holding several places, filled in one sitting by one link — it would make an invitation hold several places in the capacity formula, a trust rule; the owner chose the box per row.
 
 Baseline `BR-V4.36-2026-11-09`.
+
+## 926. «Unelte» is a standard page: the club's switch and a «Pe site» per tool; the calculator's distance row inline, «Timpul propus» and its formula behind «?» (amending §922)
+
+**The owner, 2026-11-09**, on «Pagini»: «vreau ca pagina de "Unelte" să fie controlabilă ca și restul paginilor, să pot să îi dau OFF» — and «asta e doar o unealtă … vin mai multe unelte pe viitor». On the calculator: the distance box and the race buttons «inline»; «Timpul propus» where the time is typed; and «tooltip cu ? cu formula de calcul». Asked, he kept the card's title «Calculator de ritm» and chose a switch for the page plus one per tool.
+
+**Decision.** «Unelte» joins «Pagini standard» beside «Întrebări frecvente» (§525), with its own screen, `/admin/pages/tools`: the page's «Publică pagina» / «Retrage de pe site», asked first (§384), and «Uneltele de pe pagină», each of the platform's tools with «Pe site» and one save, asked first for a tool taken off or put on. One `platform_settings` row, `toolsPage`, holds the state and the tools hidden — no migration; no row reads as published with every tool shown, so the page stays as §922 put it until the club takes it off. The page is on the site while it is published with a tool on it — the FAQ's rule: otherwise the address is a 404 (noindex in its metadata), the header leaves it out and «Ordinea meniului» greys it, and the sitemap omits it. The public page reads the row from the public cache under `pages`, which each write expires (§333); a read that does not answer leaves the page standing with every tool. The switch and the ticks are the Administrator's (`canPublishToolsPage`, «Întrebări frecvente»'s threshold, §201), each audited (`tools_page.published`, `tools_page.unpublished`, `tools_page.tools_changed`, from → to). The tools are the platform's code (`TOOLS`); a new tool is a key there, its card and its name. The glyph is `ACTION_ICONS.tools`, the speed dial the public page wears.
+
+The calculator: «Kilometri» and the four race buttons share one row, the buttons level with the box; a phone too narrow for them wraps the rest under it. The time's legend reads «Timpul propus» (EN «Target time») — it is drawn only while the time is typed. Beside what is worked out, a «?» (`QuietHelp`) gives its formula with an example and the speed's: ritmul = timpul ÷ distanța, timpul = ritmul × distanța, distanța = timpul ÷ ritmul, viteza = 60 ÷ ritmul în minute. It sits outside the live region, so a screen reader is not read the formula again at each keystroke.
+
+**Refused.** Renaming the card «Calculatorul de obiective» — the owner kept «Calculator de ritm». Ticks before there is a second tool only on the page — the owner chose the per-tool tick now.
+
+Baseline `BR-V4.37-2026-11-09`.

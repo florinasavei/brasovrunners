@@ -3,6 +3,7 @@ import { contactFormReaches } from "@/modules/contact/delivery";
 import { faqOnSite } from "@/modules/content/faq/on-site";
 import { offersMembersEntry } from "@/modules/content/members/page-settings";
 import { teamPageOnSite } from "@/modules/content/team/repository";
+import { toolsOnSite } from "@/modules/tools/on-site";
 import {
   cachedContactFormReaches,
   cachedMenuOrder,
@@ -76,17 +77,18 @@ async function offersContact(): Promise<boolean> {
   }
 }
 
-/** Whether each of the platform's sections is in the menu now. «Alergări», «Calendar» and «Unelte» always are. */
+/** Whether each of the platform's sections is in the menu now. «Alergări» and «Calendar» always are. */
 export async function menuSectionsOnSite(locale: Locale): Promise<Record<MenuSectionKey, boolean>> {
-  const [gallery, team, faq, contact] = await Promise.all([
+  const [gallery, team, faq, contact, tools] = await Promise.all([
     hasPublishedAlbum(locale),
     hasVisibleTeam(locale),
     // «Întrebări frecvente» (§525): the page published with a question on it — «Echipa»'s rule.
     faqOnSite(locale),
     offersContact(),
+    // «Unelte» (§926): the page published with a tool on it — the FAQ's rule; on until the club takes it off.
+    toolsOnSite(),
   ]);
-  // «Unelte» needs nothing from the club: always in the menu, like «Alergări».
-  return { events: true, calendar: true, contact, gallery, team, faq, tools: true };
+  return { events: true, calendar: true, contact, gallery, team, faq, tools };
 }
 
 /**

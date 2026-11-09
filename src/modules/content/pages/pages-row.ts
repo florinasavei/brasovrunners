@@ -5,7 +5,7 @@ import { routing } from "@/i18n/routing";
  * bar lights «Pagini» on each. «Contact» moved here from «Setări» (the old address answers 308,
  * `src/i18n/moved-paths.ts`); a unit test holds each page's `active` to `pagesRowEntryOf`.
  */
-export const PAGES_ROW_ENTRIES = ["contact", "team", "faq", "members", "pages"] as const;
+export const PAGES_ROW_ENTRIES = ["contact", "team", "faq", "members", "tools", "pages"] as const;
 export type PagesRowEntry = (typeof PAGES_ROW_ENTRIES)[number];
 
 /** The internal route of each entry — the key `routing.pathnames` knows it by. */
@@ -14,6 +14,7 @@ export const PAGES_ROW_ROUTE = {
   team: "/admin/pages/team",
   faq: "/admin/pages/faq",
   members: "/admin/pages/members",
+  tools: "/admin/pages/tools",
   pages: "/admin/pages",
 } as const satisfies Record<PagesRowEntry, string>;
 

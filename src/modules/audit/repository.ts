@@ -773,6 +773,10 @@ export type AuditAction =
   | "faq_page.saved"
   | "faq_page.published"
   | "faq_page.unpublished"
+  /** «Unelte» (§926): the page on the site or off it, and which tools it shows (the keys hidden before and after). */
+  | "tools_page.published"
+  | "tools_page.unpublished"
+  | "tools_page.tools_changed"
   /**
    * The members' pages (§524): «Beneficiile membrilor» on or off the site, and either of its two
    * texts saved — which text, and whether it is written; never the words.

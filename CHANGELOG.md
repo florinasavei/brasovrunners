@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.37-2026-11-09
+
+- **«Unelte» on or off, and its tools** — «Pagini standard» → «Unelte»: publish the page or take it off the site, and tick «Pe site» per tool; the pace calculator's distance box and race buttons share one row, the typed time reads «Timpul propus», and a «?» shows the formula. §926.
 ## BR-V4.36-2026-11-09
 
 - **«Locuri» when inviting** — each row of «Invită pe email» says how many people may register with its address: each place beyond the person named is an invitation of its own, with its own email and link, «Loc în plus pe această adresă» in the table. §925.
