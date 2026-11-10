@@ -39,7 +39,7 @@ export default async function KitCount({
   locale: string;
   volunteers?: number;
   elites?: number;
-  /** The editor's elite card (`/admin/events/[id]#bib-elite`, which opens the fold): the elites' words link there. */
+  /** The editor's elite card (`/admin/events/[id]#bib-elite`, scrolled to, the folds around it opened, the card left closed): the elites' words link there. */
   eliteHref?: string;
   spaceAbove?: number;
 }) {
@@ -47,7 +47,7 @@ export default async function KitCount({
   const counted = (key: Counted, count: number) => t(`registrations.kits.${key}.${countForm(count, locale)}`, { count });
   const runners = kits.registrations + kits.invitations + elites;
   const who = { holding: counted("holding", kits.registrations), invitations: counted("invitations", kits.invitations) };
-  // A plain anchor from the server, so the editor's fold opens from `#bib-elite` (`OpenFoldFromHash`).
+  // A plain anchor from the server: the editor opens the folds around `#bib-elite` and scrolls to the card, which stays closed (`OpenFoldFromHash`).
   const eliteLink = (chunks: ReactNode) =>
     eliteHref ? (
       <Box component="a" href={eliteHref} sx={{ color: "primary.main" }} data-testid="registrations-kits-elites">

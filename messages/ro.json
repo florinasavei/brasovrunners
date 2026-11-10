@@ -1212,7 +1212,9 @@
         "letIn": "Locurile libere merg întâi la lista oficială («Trimite-i oferta»), apoi la cea internă («Oferă-i un loc acum»).",
         "raises": "Ca să intre toți cei care așteaptă, capacitatea ar trebui să ajungă la {capacity} (+{count}); fiecare ofertă adaugă locul ei, după ce confirmi.",
         "total": "Invitați speciali: {outside} (nu ocupă loc). Oameni la start dacă intră toți: {count}.",
-        "totalWithElites": "Invitați speciali: {outside} (nu ocupă loc). Oameni la start dacă intră toți: {count}, inclusiv {elites}."
+        "totalWithElites": "Invitați speciali: {outside} (nu ocupă loc). Oameni la start dacă intră toți: {count}, inclusiv {elites}.",
+        "totalWithInvitations": "Invitați speciali: {outside} (nu ocupă loc). Oameni la start dacă intră toți: {count}, inclusiv {invitations}.",
+        "totalWithElitesAndInvitations": "Invitați speciali: {outside} (nu ocupă loc). Oameni la start dacă intră toți: {count}, inclusiv {elites} și {invitations}."
       },
       "publicNow": {
         "direct": "Pe site acum: butonul «Înscrie-te» — primul venit ia un loc liber.",
@@ -7112,8 +7114,8 @@
       "eliteDownload": "Descarcă BIB-urile de elită ({count})",
       "eliteSampleAlt": "Un BIB de elită: numele în locul numărului",
       "eliteSampleCaption": "Așa se tipărește un BIB de elită, cu designul salvat și un nume de probă.",
-      "eliteRegistered": "înscris",
-      "eliteRegisteredHelp": "Un alergător înscris se marchează din lista de înscrieri: «⋮» → «Marchează ca elită». Rămâne înscris, cu locul și numărul lui, și apare aici de când e confirmat.",
+      "eliteRegistered": "cu înscriere",
+      "eliteRegisteredHelp": "Un alergător înscris se marchează din lista de înscrieri: «⋮» → «Marchează ca elită». Rămâne înscris și apare aici cu starea lui; BIB-ul de elită i se tipărește când e confirmat.",
       "eliteRegisteredOnce": "Foaia obișnuită îi tipărește și ea, tot ca BIB-uri de elită: tipărește-i dintr-o singură foaie, nu din amândouă.",
       "eliteInResults": "Apare în clasament",
       "eliteOnSite": "Apare pe site",

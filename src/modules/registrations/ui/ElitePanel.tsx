@@ -21,7 +21,7 @@ import RegistrationStatusChip from "./RegistrationStatusChip";
  *   its state chip and its number when it has one.
  *
  * The lists change where they always did — the separate one on the editor's elite card, the mark on a row's «⋮» — so the
- * fold ends with a link to that card (`/admin/events/[id]#bib-elite`, a plain anchor, so the editor's fold opens on it):
+ * fold ends with a link to that card (`/admin/events/[id]#bib-elite`, a plain anchor: the editor scrolls to the card, closed):
  * «Gestionează lista de elite» for the Administrator, who adds and deletes there, «Vezi lista de elite în editor» for
  * the Organizer, who reads it. Presentation only: the page reads the rows, through readers that assert the role again.
  */

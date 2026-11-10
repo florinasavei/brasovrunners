@@ -1212,7 +1212,9 @@
         "letIn": "The free places go to the official list first («Send them the offer»), then to the internal list («Offer them a place now»).",
         "raises": "To let in everybody waiting, the capacity would have to reach {capacity} (+{count}); each offer adds its own place, once you confirm.",
         "total": "Special guests: {outside} (take no place). People at the start if everybody comes: {count}.",
-        "totalWithElites": "Special guests: {outside} (take no place). People at the start if everybody comes: {count}, including {elites}."
+        "totalWithElites": "Special guests: {outside} (take no place). People at the start if everybody comes: {count}, including {elites}.",
+        "totalWithInvitations": "Special guests: {outside} (take no place). People at the start if everybody comes: {count}, including {invitations}.",
+        "totalWithElitesAndInvitations": "Special guests: {outside} (take no place). People at the start if everybody comes: {count}, including {elites} and {invitations}."
       },
       "publicNow": {
         "direct": "On the site now: the «Register» button — the first to come takes a free place.",
@@ -7113,7 +7115,7 @@
       "eliteSampleAlt": "An elite bib: the name where the number goes",
       "eliteSampleCaption": "How an elite bib prints, with the saved design and a sample name.",
       "eliteRegistered": "registered",
-      "eliteRegisteredHelp": "A registered runner is marked from the registrations list: «⋮» → «Mark as elite». They stay registered, with their place and number, and appear here once confirmed.",
+      "eliteRegisteredHelp": "A registered runner is marked from the registrations list: «⋮» → «Mark as elite». They stay registered and appear here with their state; their elite bib prints once they are confirmed.",
       "eliteRegisteredOnce": "The ordinary sheet prints them too, as elite bibs: print them from one sheet, not both.",
       "eliteInResults": "In the results",
       "eliteOnSite": "On the site",

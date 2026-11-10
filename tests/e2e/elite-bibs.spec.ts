@@ -16,7 +16,7 @@ import { openEditorBox, openFold } from "./support/fold";
  * box with what was typed kept; «Salvează» on the event posts nothing of the card — its required name box empty does not
  * block the save, and no line is added or doubled; the delete asks first, naming the person. As the Organizer: the list
  * and its sheet, never the add box or a delete. And a registered runner marked «Elită» (§897) from the registrations
- * list's «⋮» — a client menu submitting a hidden form — wears the chip, is listed «înscris» on the card and counted in
+ * list's «⋮» — a client menu submitting a hidden form — wears the chip, is listed «cu înscriere» on the card and counted in
  * its sheet, and comes off from the same menu.
  *
  * The race is written straight into the database — the setup, not the subject — one per project and test, so the two
@@ -185,7 +185,7 @@ test.describe("§895 «Elită — doar numele pe BIB»", () => {
   });
 
   // §897 (the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită oricând», «Rămâne înscris»).
-  test("the Administrator marks a registered runner elite from the list's «⋮» and unmarks them; the elite card lists them «înscris»", async ({ page }) => {
+  test("the Administrator marks a registered runner elite from the list's «⋮» and unmarks them; the elite card lists them «cu înscriere»", async ({ page }) => {
     const tag = `${test.info().project.name}-mark-${Date.now().toString(36)}`;
     const eventId = await seedRace(tag);
     const name = `Ana Elita ${tag}`;
@@ -219,7 +219,7 @@ test.describe("§895 «Elită — doar numele pe BIB»", () => {
     const card = await openEliteCard(page);
     await expect(card.getByTestId("bib-elite-registered")).toHaveCount(1);
     await expect(card.getByTestId("bib-elite-registered")).toContainText(name);
-    await expect(card.getByTestId("bib-elite-registered")).toContainText("înscris");
+    await expect(card.getByTestId("bib-elite-registered")).toContainText("cu înscriere");
     await expect(card.getByTestId("bib-elite-registered")).toContainText("nr. 21");
     await expect(card.getByTestId("bib-elite-registered").getByRole("button")).toHaveCount(0);
     // The ordinary sheet prints them too, elite-style: the card says so, so nobody prints that bib twice.
