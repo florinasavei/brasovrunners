@@ -397,12 +397,17 @@ describe("BR-REQ-037-07 «La retrimitere»: the deadlines a resend can give, by 
 
   it("an old draw only ever brings the deadline earlier, never earlier than it was: the email leaves, the deadline stays", async () => {
     const event = await createEvent(10);
-    await invite(event, "Ana Pop", 7);
+    for (const name of ["Ana Pop", "Dan Pop"]) await invite(event, name, 7);
     const before = await invitationOf("Ana Pop");
     // Five days counted from a page drawn two days ago reach the 13th: earlier than the 17th it has.
     const resent = await resendInvitationByStaff(db, before.id, { days: 5, countedFrom: at(-2 * 24 * 60) }, admin, at(5));
     expect(resent).toEqual({ expiresAt: before.expiresAt, kept: null });
     expect(await invitationOf("Ana Pop")).toMatchObject({ expiresAt: before.expiresAt, resendCount: 1 });
+    // The same through the form itself, posted with the draw of two days ago.
+    const view = await panel(event, at(2));
+    const dan = await invitationOf("Dan Pop");
+    expect(await press(view.get("Dan Pop")!, "5", at(5), { drawnAt: at(-2 * 24 * 60).toISOString() })).toContain("saved=invitationResent");
+    expect(await invitationOf("Dan Pop")).toMatchObject({ expiresAt: dan.expiresAt, resendCount: 1 });
   });
 
   it("asks a question that names the outcome: the deadline kept, or the chosen line in its own words — each with its email line", async () => {
@@ -444,6 +449,11 @@ describe("BR-REQ-037-07 «La retrimitere»: the deadlines a resend can give, by 
     expect(question(ana, null).body).toBe(
       "Ana Pop primește invitația din nou, cu un link nou; cel vechi nu mai merge. Termenul rămâne cel de acum: cineva așteaptă pe listă, iar dacă invitația nu e acceptată până atunci, locul trece la listă.",
     );
+    // Days posted by hand for her all the same, with a draw moment beside them: the email leaves, the deadline stays
+    // while Elena waits, and the message says it stayed.
+    const before = await invitationOf("Ana Pop");
+    expect(await press(ana, "9", at(5), { drawnAt: at(3).toISOString() })).toContain("saved=invitationResentKept");
+    expect(await invitationOf("Ana Pop")).toMatchObject({ expiresAt: before.expiresAt, resendCount: 1 });
     // «Pe lista de invitați speciali» holds no counted place: nobody waits for it, and its deadline may move.
     const dana = view.get("Dana Pop")!;
     expect(dana.lines?.map((line) => line.value)).toEqual(["", "8", "9", "10", "11"]);
