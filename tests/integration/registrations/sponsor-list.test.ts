@@ -769,18 +769,18 @@ describe("BR-REQ-071-01 §NNN «Liste date sponsorilor»: the lists given, read 
 
     // The table: a heading per fact, a row per list, newest first.
     const table = fold.slice(fold.indexOf('data-testid="sponsor-register-table"'), fold.indexOf("</table>"));
-    expect([...table.matchAll(/<th[^>]*>([^<]*)<\/th>/g)].map((match) => match[1])).toEqual(["Cui", "Când", "Eveniment", "Persoane", "Fișier", "Descărcată de", "Ștergi copia până la"]);
+    expect([...table.matchAll(/<th[^>]*>([^<]*)<\/th>/g)].map((match) => match[1])).toEqual(["Cui", "Când", "Eveniment", "Persoane", "Fișier", "Descărcată de", "Șterge fișierul tău până pe"]);
     const rows = [...table.matchAll(/<tr[^>]*data-testid="sponsor-register-row"[^>]*>([\s\S]*?)<\/tr>/g)].map((match) => words(match[1]));
     expect(rows).toEqual([
       "Decathlon dum., 20 sept. 2026, la 12:00 toate evenimentele 3 CSV ADMIN mar., 20 oct. 2026",
       // Past their thirty days on 15 October: said in words.
-      "club sâm., 12 sept. 2026, la 12:00 Crosul toamnei 2 Excel MODERATOR lun., 12 oct. 2026 · termen trecut",
-      "Sport Shop SRL joi, 10 sept. 2026, la 12:00 Crosul toamnei 2 CSV MODERATOR sâm., 10 oct. 2026 · termen trecut",
+      "club sâm., 12 sept. 2026, la 12:00 Crosul toamnei 2 Excel MODERATOR lun., 12 oct. 2026 · termen trecut: șterge fișierul tău",
+      "Sport Shop SRL joi, 10 sept. 2026, la 12:00 Crosul toamnei 2 CSV MODERATOR sâm., 10 oct. 2026 · termen trecut: șterge fișierul tău",
     ]);
     // The phone's lines: the same lists, a line per fact under the recipient.
     const lines = fold.slice(fold.indexOf('data-testid="sponsor-register-lines"'));
     expect(lines.match(/<li/g)).toHaveLength(3);
-    expect(words(lines)).toContain("Decathlon Când dum., 20 sept. 2026, la 12:00 Eveniment toate evenimentele Persoane 3 Fișier CSV Descărcată de ADMIN Ștergi copia până la mar., 20 oct. 2026");
+    expect(words(lines)).toContain("Decathlon Când dum., 20 sept. 2026, la 12:00 Eveniment toate evenimentele Persoane 3 Fișier CSV Descărcată de ADMIN Șterge fișierul tău până pe mar., 20 oct. 2026");
     // Never a participant in it.
     expect(html).not.toMatch(/@example\.ro|Ana|Bogdan/);
   });
@@ -850,7 +850,7 @@ describe("BR-REQ-071-01 §NNN «Liste date sponsorilor»: the lists given, read 
     }
     // Midnight in Brașov: the day named has passed.
     const nextDay = await at("2026-10-12T21:00:00.000Z");
-    expect(rowsOf(nextDay)).toEqual(["Sport Shop sâm., 12 sept. 2026, la 12:00 toate evenimentele 1 CSV cont șters lun., 12 oct. 2026 · termen trecut"]);
+    expect(rowsOf(nextDay)).toEqual(["Sport Shop sâm., 12 sept. 2026, la 12:00 toate evenimentele 1 CSV cont șters lun., 12 oct. 2026 · termen trecut: șterge fișierul tău"]);
     // The phone's lines say it too.
     expect(nextDay.match(/data-testid="sponsor-register-overdue"/g)).toHaveLength(2);
   });
@@ -883,11 +883,11 @@ describe("BR-REQ-071-01 §NNN «Liste date sponsorilor»: the lists given, read 
     expect(fold).toMatch(/<h2[^>]*>[\s\S]*?Lists given to sponsors/);
     expect(words(fold)).toContain("3 lists · latest: Decathlon, Sun, 20 Sept 2026");
     const table = fold.slice(fold.indexOf('data-testid="sponsor-register-table"'), fold.indexOf("</table>"));
-    expect([...table.matchAll(/<th[^>]*>([^<]*)<\/th>/g)].map((match) => match[1])).toEqual(["To whom", "When", "Event", "People", "File", "Downloaded by", "Delete your copy by"]);
+    expect([...table.matchAll(/<th[^>]*>([^<]*)<\/th>/g)].map((match) => match[1])).toEqual(["To whom", "When", "Event", "People", "File", "Downloaded by", "Delete your file by"]);
     expect(rowsOf(table)).toEqual([
       "Decathlon Sun, 20 Sept 2026, at 12:00 every event 3 CSV account removed Tue, 20 Oct 2026",
-      "club Sat, 12 Sept 2026, at 12:00 Crosul toamnei (en) 2 Excel MODERATOR Mon, 12 Oct 2026 · past due",
-      "Sport Shop SRL Thu, 10 Sept 2026, at 12:00 Crosul toamnei (en) 2 CSV MODERATOR Sat, 10 Oct 2026 · past due",
+      "club Sat, 12 Sept 2026, at 12:00 Crosul toamnei (en) 2 Excel MODERATOR Mon, 12 Oct 2026 · past due: delete your file",
+      "Sport Shop SRL Thu, 10 Sept 2026, at 12:00 Crosul toamnei (en) 2 CSV MODERATOR Sat, 10 Oct 2026 · past due: delete your file",
     ]);
   });
 

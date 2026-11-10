@@ -9322,7 +9322,7 @@
                 "Tick members from the list or type other people, one per line: the name, then the address. Choose «Days until it expires» and «Language of the invitation» (for new addresses); tick «On the special guests list (takes no place)» for organizers, volunteers and pacemakers. You can send after registration closes too, until the start.",
                 "«Send the invitations» asks first: how many invitations, how many places are free and, on a full race, how many supplementary places are added and what the capacity becomes.",
                 "Each invitation holds a place until its deadline; if it is not accepted, the place frees up by itself. The person fills in the rest and signs the declaration themselves.",
-                "On the invitation's row: «Resend» sends a new link. The «On resend» list rests on «The deadline stays»; to move the deadline later, choose the new day in it. On an invitation that takes a place, the list is not shown while someone waits for a place; nor is it shown when the deadline cannot be moved any later. «Withdraw» closes the invitation and frees the place.",
+                "On the invitation's row: «Resend» sends a new link. The «On resend» list rests on «The deadline stays»; to move the deadline later, choose the new day in it. The «On resend» list is missing when the deadline cannot be moved: it is already as late as it can be, at the start; or the invitation takes a place and someone is on the waiting list — for a special guest the list is shown even while someone waits. «Withdraw» closes the invitation and frees the place.",
                 "If somebody invited registers anyway, through the public form or at the desk, their registration takes the invitation's place once their address is confirmed or they are given a place: the invitation reads «Accepted»."
               ]
             },
@@ -11077,10 +11077,10 @@
       "recipientTitle": "Write who receives the list.",
       "given": {
         "title": "Lists given to sponsors",
-        "intro": "Every download of the list: whom you gave it to, how many people it held and the day your copy must be deleted by.",
+        "intro": "Every download of the list: whom you gave it to, how many people it held and the day your file must be deleted by.",
         "aside": "{lists} · latest: {recipient}, {date}",
         "everyEvent": "every event",
-        "overdue": "past due",
+        "overdue": "past due: delete your file",
         "formats": {
           "csv": "CSV",
           "xlsx": "Excel"
@@ -11092,7 +11092,7 @@
           "count": "People",
           "file": "File",
           "actor": "Downloaded by",
-          "deleteBy": "Delete your copy by"
+          "deleteBy": "Delete your file by"
         }
       },
       "columns": {
@@ -13901,8 +13901,8 @@
         "other": "{count} people invited; the capacity is now {capacity}."
       },
       "invitationResent": "Invitation resent, with a new link.",
-      "invitationResentKept": "Invitation resent, with a new link. The deadline stayed as it was: someone is on the waiting list.",
-      "invitationResentAlreadyLater": "Invitation resent, with a new link. The deadline stayed as it was: it was already later than the one chosen.",
+      "invitationResentKept": "Invitation resent, with a new link. The deadline you chose was not applied: someone is on the waiting list. The one in force, as in the email, is on its row.",
+      "invitationResentAlreadyLater": "Invitation resent, with a new link. The deadline you chose was not applied: meanwhile someone else, or another tab, moved the deadline later. The one in force, as in the email, is on its row.",
       "invitationWithdrawn": "Invitation withdrawn; the place was released.",
       "memberTickCleared": "Member tick cleared.",
       "memberTickSet": "Member tick set.",

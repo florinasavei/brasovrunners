@@ -206,7 +206,7 @@ describe("BR-REQ-071-01 §NNN the register of the lists given", () => {
 
   it("says «termen trecut» from the day after the one the register names, on the club's clock — never during that day", () => {
     const ZONE = "Europe/Bucharest";
-    // Downloaded on 12 September at 12:00 in Brașov: «Ștergi copia până la» reads 12 October.
+    // Downloaded on 12 September at 12:00 in Brașov: «Șterge fișierul tău până pe» reads 12 October.
     const deleteBy = copyDeleteBy(new Date("2026-09-12T09:00:00.000Z"));
     expect(copyOverdue(deleteBy, new Date("2026-10-11T20:00:00.000Z"), ZONE)).toBe(false);
     // The named day itself, before and after the download's hour, up to its last minute.
@@ -249,22 +249,23 @@ describe("BR-REQ-071-01 §NNN the register of the lists given", () => {
     expect(en.Admin.sponsors.help).toContain("Write whom it goes to, or “club” if it stays with the club.");
     expect(ro.Admin.sponsors.given.title).toBe("Liste date sponsorilor");
     expect(en.Admin.sponsors.given.title).toBe("Lists given to sponsors");
-    expect(ro.Admin.sponsors.given.columns).toEqual({ recipient: "Cui", at: "Când", event: "Eveniment", count: "Persoane", file: "Fișier", actor: "Descărcată de", deleteBy: "Ștergi copia până la" });
+    expect(ro.Admin.sponsors.given.columns).toEqual({ recipient: "Cui", at: "Când", event: "Eveniment", count: "Persoane", file: "Fișier", actor: "Descărcată de", deleteBy: "Șterge fișierul tău până pe" });
     expect(Object.keys(en.Admin.sponsors.given.columns)).toEqual(Object.keys(ro.Admin.sponsors.given.columns));
     expect(Object.keys(en.Admin.sponsors.given.formats)).toEqual(["csv", "xlsx"]);
     // The English register word for word: a file named as the other, or «past due» saying the opposite, is a different register.
     expect(en.Admin.sponsors.recipientTitle).toBe("Write who receives the list.");
     expect(en.Admin.sponsors.given).toEqual({
       title: "Lists given to sponsors",
-      intro: "Every download of the list: whom you gave it to, how many people it held and the day your copy must be deleted by.",
+      intro: "Every download of the list: whom you gave it to, how many people it held and the day your file must be deleted by.",
       aside: "{lists} · latest: {recipient}, {date}",
       everyEvent: "every event",
-      overdue: "past due",
+      overdue: "past due: delete your file",
       formats: { csv: "CSV", xlsx: "Excel" },
-      columns: { recipient: "To whom", at: "When", event: "Event", count: "People", file: "File", actor: "Downloaded by", deleteBy: "Delete your copy by" },
+      columns: { recipient: "To whom", at: "When", event: "Event", count: "People", file: "File", actor: "Downloaded by", deleteBy: "Delete your file by" },
     });
     expect(ro.Admin.sponsors.given.formats).toEqual({ csv: "CSV", xlsx: "Excel" });
-    expect(ro.Admin.sponsors.given.overdue).toBe("termen trecut");
+    expect(ro.Admin.sponsors.given.overdue).toBe("termen trecut: șterge fișierul tău");
+    expect(ro.Admin.sponsors.given.intro).toBe("Fiecare descărcare a listei: cui ai dat-o, câte persoane avea și până când ștergi fișierul tău.");
     for (const catalogue of [ro, en]) {
       expect(JSON.stringify(catalogue.Admin.sponsors)).not.toMatch(/opțional|optional/i);
       // The guide tells the same story: the box by its name, and where the lists are read back.

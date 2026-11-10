@@ -337,17 +337,18 @@ describe("BR-REQ-037-07 the deadlines «La retrimitere» offers", () => {
     }
     // The step whole, in both languages: which way the deadline moves, and when there is no list.
     expect(ro.Admin.guide.sections.flatMap((section) => section.tasks.flatMap((task) => task.steps))).toContain(
-      "Pe rândul invitației: «Retrimite» trimite un link nou. Lista «La retrimitere» stă pe «Termenul rămâne»; ca să muți termenul mai târziu, alege din ea ziua nouă. La o invitație care ocupă un loc, lista nu apare cât cineva așteaptă un loc; nu apare nici când termenul nu mai poate fi mutat mai târziu. «Retrage» închide invitația și eliberează locul.",
+      "Pe rândul invitației: «Retrimite» trimite un link nou. Lista «La retrimitere» stă pe «Termenul rămâne»; ca să muți termenul mai târziu, alege din ea ziua nouă. Lista «La retrimitere» lipsește când termenul nu mai poate fi mutat: e deja cel mai târziu posibil, la start; sau invitația ocupă un loc și cineva e pe lista de așteptare — la un invitat special lista apare chiar dacă cineva așteaptă. «Retrage» închide invitația și eliberează locul.",
     );
     expect(en.Admin.guide.sections.flatMap((section) => section.tasks.flatMap((task) => task.steps))).toContain(
-      "On the invitation's row: «Resend» sends a new link. The «On resend» list rests on «The deadline stays»; to move the deadline later, choose the new day in it. On an invitation that takes a place, the list is not shown while someone waits for a place; nor is it shown when the deadline cannot be moved any later. «Withdraw» closes the invitation and frees the place.",
+      "On the invitation's row: «Resend» sends a new link. The «On resend» list rests on «The deadline stays»; to move the deadline later, choose the new day in it. The «On resend» list is missing when the deadline cannot be moved: it is already as late as it can be, at the start; or the invitation takes a place and someone is on the waiting list — for a special guest the list is shown even while someone waits. «Withdraw» closes the invitation and frees the place.",
     );
-    // What the page is told after the press, in both languages: resent; kept for somebody waiting; kept because it was already later.
+    // What the page is told after the press, in both languages: resent; the chosen deadline not applied for somebody waiting, or because it
+    // was moved later meanwhile — and where the deadline in force is read, which is the one the email carries.
     expect(ro.Feedback.toast.invitationResent).toBe("Invitație retrimisă, cu un link nou.");
-    expect(ro.Feedback.toast.invitationResentKept).toBe("Invitație retrimisă, cu un link nou. Termenul a rămas cel de acum: cineva așteaptă pe lista de așteptare.");
-    expect(ro.Feedback.toast.invitationResentAlreadyLater).toBe("Invitație retrimisă, cu un link nou. Termenul a rămas cel de acum: era deja mai târziu decât cel ales.");
+    expect(ro.Feedback.toast.invitationResentKept).toBe("Invitație retrimisă, cu un link nou. Termenul ales nu s-a aplicat: cineva așteaptă pe lista de așteptare. Termenul valabil, cel din email, e pe rândul invitației.");
+    expect(ro.Feedback.toast.invitationResentAlreadyLater).toBe("Invitație retrimisă, cu un link nou. Termenul ales nu s-a aplicat: între timp, termenul a fost mutat mai târziu de altcineva sau din altă filă. Termenul valabil, cel din email, e pe rândul invitației.");
     expect(en.Feedback.toast.invitationResent).toBe("Invitation resent, with a new link.");
-    expect(en.Feedback.toast.invitationResentKept).toBe("Invitation resent, with a new link. The deadline stayed as it was: someone is on the waiting list.");
-    expect(en.Feedback.toast.invitationResentAlreadyLater).toBe("Invitation resent, with a new link. The deadline stayed as it was: it was already later than the one chosen.");
+    expect(en.Feedback.toast.invitationResentKept).toBe("Invitation resent, with a new link. The deadline you chose was not applied: someone is on the waiting list. The one in force, as in the email, is on its row.");
+    expect(en.Feedback.toast.invitationResentAlreadyLater).toBe("Invitation resent, with a new link. The deadline you chose was not applied: meanwhile someone else, or another tab, moved the deadline later. The one in force, as in the email, is on its row.");
   });
 });

@@ -76,7 +76,7 @@ export function copyDeleteBy(at: Date): Date {
 }
 
 /**
- * Whether the day the register names for a copy — «Ștergi copia până la» — has passed, on the zone's calendar.
+ * Whether the day the register names for a copy — «Șterge fișierul tău până pe» — has passed, on the zone's calendar.
  * The cell names a day, not an hour, so the whole of that day is still in time whatever the hour the file was made
  * at: «termen trecut» is said from the next day, never during the one the cell names as the last.
  */
