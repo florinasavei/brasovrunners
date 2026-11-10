@@ -10,10 +10,30 @@ import { useState, type ChangeEvent, type FormEvent } from "react";
 import PressButton from "@/shared/ui/PressButton";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import RadioField from "@/shared/ui/RadioField";
-import { durationSeconds, formatDuration, type PaceResult, type PaceSolve, parseDecimal, RACE_DISTANCES, solvePace, speedKmh, splitDuration } from "../pace";
+import {
+  convertDistance,
+  convertPace,
+  type DistanceUnit,
+  durationSeconds,
+  formatDuration,
+  type PaceResult,
+  type PaceSolve,
+  parseDecimal,
+  RACE_DISTANCES,
+  solvePace,
+  speedPerHour,
+  splitDuration,
+} from "../pace";
 
 /** What the boxes hold, as typed: text, so a half-typed `21,` stays on the screen while it is wrong. */
 type Fields = { distance: string; hours: string; minutes: string; seconds: string; paceMinutes: string; paceSeconds: string };
+
+/**
+ * A distance or a pace the calculator wrote into its boxes — an answer carried, a race picked, a unit converted — kept
+ * whole while the boxes still show it. The boxes round (four places, whole seconds), so without it a switch would round
+ * the run: a marathon moved to miles and back would come back 42,1951 km and seconds slower. Typing in a box lets it go.
+ */
+type Written = { distance?: { text: string; exact: number }; pace?: { minutes: string; seconds: string; exact: number } };
 
 /** A first answer on the screen before anything is typed: 10 km in 50 minutes, 5:00 a kilometre — consistent, so a switch keeps it. */
 const START: Fields = { distance: "10", hours: "0", minutes: "50", seconds: "00", paceMinutes: "5", paceSeconds: "00" };
@@ -25,24 +45,33 @@ const PART_SX = { width: { xs: "5.5rem", sm: "6.5rem" } } as const;
 
 /**
  * «Calculator de ritm» on «Unelte»: the visitor picks which of distance, time and pace to work out (a
- * radio — a choice, never a toggle) and types the other two; the answer, and the speed in km/h, follow
- * every keystroke. Nothing is sent anywhere: no form posts, no button computes. A switch carries the
- * last answer into the boxes it now needs, so the three stay one consistent run.
+ * radio — a choice, never a toggle) and types the other two; the answer, and the speed, follow every
+ * keystroke. Kilometres unless «Unitatea de măsură» says miles. Nothing is sent anywhere: no form posts,
+ * no button computes. A switch — of what is worked out, or of the unit — keeps the same run on the screen.
  */
 export default function PaceCalculator() {
   const t = useTranslations("Tools");
   const locale = useLocale();
   const [solve, setSolve] = useState<PaceSolve>("pace");
+  const [unit, setUnit] = useState<DistanceUnit>("km");
   const [fields, setFields] = useState<Fields>(START);
+  const [written, setWritten] = useState<Written>({});
+  const miles = unit === "mi";
 
+  // The distance and the pace as typed — or, while a box still shows what the calculator wrote there, that value unrounded.
+  const distance = written.distance?.text === fields.distance ? written.distance.exact : parseDecimal(fields.distance);
+  const pace =
+    written.pace?.minutes === fields.paceMinutes && written.pace.seconds === fields.paceSeconds
+      ? written.pace.exact
+      : durationSeconds("", fields.paceMinutes, fields.paceSeconds);
   const result = solvePace(solve, {
-    distanceKm: parseDecimal(fields.distance),
+    distance,
     timeSeconds: durationSeconds(fields.hours, fields.minutes, fields.seconds),
-    paceSeconds: durationSeconds("", fields.paceMinutes, fields.paceSeconds),
+    paceSeconds: pace,
   });
 
   // The field's own spelling of a distance: the locale's decimal sign, no grouping, four places for a half marathon.
-  const distanceText = (km: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 4, useGrouping: false }).format(km);
+  const distanceText = (distance: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 4, useGrouping: false }).format(distance);
   const shownNumber = (value: number, digits: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: digits }).format(value);
 
   // Each key spelled out, so the catalogue's checker sees every message the island asks for.
@@ -55,28 +84,73 @@ export default function PaceCalculator() {
 
   const set = (name: keyof Fields) => (event: ChangeEvent<HTMLInputElement>) => setFields((previous) => ({ ...previous, [name]: event.target.value }));
 
+  // A distance or a pace into its boxes, the unrounded value kept beside them. Called from a handler, never from a state update.
+  const writeDistance = (exact: number, shown = exact): Partial<Fields> => {
+    const text = distanceText(shown);
+    setWritten((previous) => ({ ...previous, distance: { text, exact } }));
+    return { distance: text };
+  };
+  const writePace = (exact: number): Partial<Fields> => {
+    const { hours, minutes, seconds } = splitDuration(exact);
+    const boxes = { paceMinutes: String(hours * 60 + minutes), paceSeconds: String(seconds).padStart(2, "0") };
+    setWritten((previous) => ({ ...previous, pace: { minutes: boxes.paceMinutes, seconds: boxes.paceSeconds, exact } }));
+    return boxes;
+  };
+
   /** The answer, written into the boxes of the value it answered, before that value becomes one the visitor types. */
   const carried = (from: PaceSolve, answer: PaceResult): Partial<Fields> => {
-    if (from === "distance") return { distance: distanceText(Math.round(answer.distanceKm * 100) / 100) };
+    if (from === "distance") return writeDistance(answer.distance, Math.round(answer.distance * 100) / 100);
     if (from === "time") {
       const { hours, minutes, seconds } = splitDuration(answer.timeSeconds);
       return { hours: String(hours), minutes: String(minutes).padStart(2, "0"), seconds: String(seconds).padStart(2, "0") };
     }
-    const { hours, minutes, seconds } = splitDuration(answer.paceSeconds);
-    return { paceMinutes: String(hours * 60 + minutes), paceSeconds: String(seconds).padStart(2, "0") };
+    return writePace(answer.paceSeconds);
   };
 
   // The radios are native (`RadioField`): their change bubbles to the group, which is the one place that listens.
   const choose = (event: FormEvent<HTMLFieldSetElement>) => {
     const next = (event.target as HTMLInputElement).value as PaceSolve;
     if (next === solve) return;
-    if (result) setFields((previous) => ({ ...previous, ...carried(solve, result) }));
+    if (result) {
+      const patch = carried(solve, result);
+      setFields((previous) => ({ ...previous, ...patch }));
+    }
     setSolve(next);
+  };
+
+  // «Unitatea de măsură»: the distance and the pace convert, the time is the time — the same run, in the other unit.
+  const switchUnit = (event: FormEvent<HTMLFieldSetElement>) => {
+    const next = (event.target as HTMLInputElement).value as DistanceUnit;
+    if (next === unit) return;
+    const patch: Partial<Fields> = {
+      ...(distance === null ? {} : writeDistance(convertDistance(distance, unit, next))),
+      ...(pace === null ? {} : writePace(convertPace(pace, unit, next))),
+    };
+    setFields((previous) => ({ ...previous, ...patch }));
+    setUnit(next);
   };
 
   const numeric = (testId: string, mode: "numeric" | "decimal" = "numeric") => ({
     htmlInput: { inputMode: mode, autoComplete: "off", "data-testid": testId },
   });
+
+  // What is worked out and how, in the unit picked: the formula behind the «?», the answer and the speed.
+  const formula = miles
+    ? `${solve === "pace" ? t("pace.formulaPaceMiles") : solve === "time" ? t("pace.formulaTimeMiles") : t("pace.formulaDistanceMiles")} ${t("pace.formulaSpeedMiles")} ${t("pace.formulaMile")}`
+    : `${solve === "pace" ? t("pace.formulaPace") : solve === "time" ? t("pace.formulaTime") : t("pace.formulaDistance")} ${t("pace.formulaSpeed")}`;
+  const answer = (shown: PaceResult) => {
+    if (solve === "time") return formatDuration(shown.timeSeconds);
+    if (solve === "pace") {
+      const value = { pace: formatDuration(shown.paceSeconds) };
+      return miles ? t("pace.paceResultMiles", value) : t("pace.paceResult", value);
+    }
+    const value = { distance: shownNumber(shown.distance, 2) };
+    return miles ? t("pace.distanceResultMiles", value) : t("pace.distanceResult", value);
+  };
+  const speed = (shown: PaceResult) => {
+    const value = { speed: shownNumber(speedPerHour(shown.paceSeconds), 1) };
+    return miles ? t("pace.speedMiles", value) : t("pace.speed", value);
+  };
 
   return (
     <Stack spacing={3} data-testid="pace-calculator">
@@ -97,6 +171,21 @@ export default function PaceCalculator() {
         </Box>
       </Box>
 
+      {/* The owner, 2026-11-10: «vreau să pot schimba și unitatea de măsură, deși default să fie km și minute». */}
+      <Box component="fieldset" sx={FIELDSET_SX} onChange={switchUnit} data-testid="pace-unit">
+        <Typography component="legend" sx={LEGEND_SX}>
+          {t("pace.unit")}
+        </Typography>
+        <Box sx={{ display: "flex", flexWrap: "wrap", columnGap: 2 }}>
+          <RadioField name="unit" value="km" defaultChecked>
+            {t("pace.unitKm")}
+          </RadioField>
+          <RadioField name="unit" value="mi">
+            {t("pace.unitMiles")}
+          </RadioField>
+        </Box>
+      </Box>
+
       {solve !== "distance" && (
         <Box component="fieldset" sx={FIELDSET_SX}>
           <Typography component="legend" sx={LEGEND_SX}>
@@ -104,11 +193,12 @@ export default function PaceCalculator() {
           </Typography>
           {/*
             The box and the four races on one row (the owner, 2026-11-09: «asta vreau să fie inline»), the races level with
-            the box rather than its help line; a phone too narrow for all of them wraps the rest under it.
+            the box rather than its help line; a phone too narrow for all of them wraps the rest under it. A race fills in
+            its length in the unit picked: the half marathon is 13,1094 miles.
           */}
           <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", columnGap: 2, rowGap: 1 }}>
             <TextField
-              label={t("pace.distanceUnit")}
+              label={miles ? t("pace.distanceUnitMiles") : t("pace.distanceUnit")}
               value={fields.distance}
               onChange={set("distance")}
               helperText={t("pace.distanceHelp")}
@@ -123,7 +213,10 @@ export default function PaceCalculator() {
                   icon={OutlinedFlagIcon}
                   variant="outlined"
                   size="small"
-                  onClick={() => setFields((previous) => ({ ...previous, distance: distanceText(race.km) }))}
+                  onClick={() => {
+                    const patch = writeDistance(convertDistance(race.km, "km", unit));
+                    setFields((previous) => ({ ...previous, ...patch }));
+                  }}
                   data-testid={`pace-${race.key}`}
                 >
                   {raceLabel[race.key]}
@@ -150,7 +243,7 @@ export default function PaceCalculator() {
       {solve !== "pace" && (
         <Box component="fieldset" sx={FIELDSET_SX}>
           <Typography component="legend" sx={LEGEND_SX}>
-            {t("pace.pace")}
+            {miles ? t("pace.paceMiles") : t("pace.pace")}
           </Typography>
           <Stack direction="row" spacing={1}>
             <TextField label={t("pace.minutes")} value={fields.paceMinutes} onChange={set("paceMinutes")} slotProps={numeric("pace-pace-minutes")} sx={PART_SX} />
@@ -169,33 +262,26 @@ export default function PaceCalculator() {
             <Typography variant="body2" color="text.secondary">
               {solve === "pace" ? t("pace.solvePace") : solve === "time" ? t("pace.solveTime") : t("pace.solveDistance")}
             </Typography>
-            <QuietHelp
-              text={`${solve === "pace" ? t("pace.formulaPace") : solve === "time" ? t("pace.formulaTime") : t("pace.formulaDistance")} ${t("pace.formulaSpeed")}`}
-              testId="pace-formula-help"
-            />
+            <QuietHelp text={formula} testId="pace-formula-help" />
           </Box>
         )}
-      {/* The answer, said once to a screen reader each time it changes. */}
-      <Box role="status" aria-live="polite" data-testid="pace-result">
-        {result ? (
-          <>
-            <Typography sx={{ fontSize: { xs: "2rem", sm: "2.5rem" }, fontWeight: 700, lineHeight: 1.2, fontVariantNumeric: "tabular-nums" }}>
-              {solve === "pace"
-                ? t("pace.paceResult", { pace: formatDuration(result.paceSeconds) })
-                : solve === "time"
-                  ? formatDuration(result.timeSeconds)
-                  : t("pace.distanceResult", { distance: shownNumber(result.distanceKm, 2) })}
-            </Typography>
+        {/* The answer, said once to a screen reader each time it changes. */}
+        <Box role="status" aria-live="polite" data-testid="pace-result">
+          {result ? (
+            <>
+              <Typography sx={{ fontSize: { xs: "2rem", sm: "2.5rem" }, fontWeight: 700, lineHeight: 1.2, fontVariantNumeric: "tabular-nums" }}>
+                {answer(result)}
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                {speed(result)}
+              </Typography>
+            </>
+          ) : (
             <Typography variant="body1" color="text.secondary">
-              {t("pace.speed", { speed: shownNumber(speedKmh(result.paceSeconds), 1) })}
+              {t("pace.missing")}
             </Typography>
-          </>
-        ) : (
-          <Typography variant="body1" color="text.secondary">
-            {t("pace.missing")}
-          </Typography>
-        )}
-      </Box>
+          )}
+        </Box>
       </Box>
     </Stack>
   );
