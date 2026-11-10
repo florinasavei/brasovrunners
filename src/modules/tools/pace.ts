@@ -1,14 +1,21 @@
 /**
  * The pace calculator's arithmetic («Unelte» → «Calculator de ritm»): two of distance, time and pace
- * give the third. Pure, so the island and its test share it — kilometres and seconds throughout,
- * rounded only where a value is shown.
+ * give the third. Pure, so the island and its test share it — one distance unit throughout (kilometres,
+ * or miles if the visitor picks them: the arithmetic is the same in either) and seconds, rounded only
+ * where a value is shown.
  */
 
 /** Which of the three the calculator works out; the other two are typed. */
 export type PaceSolve = "pace" | "time" | "distance";
 
-/** The three, whole: what a solved calculation knows. */
-export type PaceResult = { distanceKm: number; timeSeconds: number; paceSeconds: number };
+/** The unit a distance is typed in and a pace is counted per: kilometres unless the visitor picks miles. */
+export type DistanceUnit = "km" | "mi";
+
+/** A statute mile in kilometres, exactly. */
+export const KM_PER_MILE = 1.609344;
+
+/** The three, whole, in the calculation's unit: what a solved calculation knows. */
+export type PaceResult = { distance: number; timeSeconds: number; paceSeconds: number };
 
 /** The races a runner times most, in kilometres — the half and the marathon at their official length. */
 export const RACE_DISTANCES = [
@@ -51,21 +58,44 @@ export function durationSeconds(hours: string, minutes: string, seconds: string)
 /** The third value from the two typed, or null while one of those two is missing or wrong. */
 export function solvePace(
   solve: PaceSolve,
-  { distanceKm, timeSeconds, paceSeconds }: { distanceKm: number | null; timeSeconds: number | null; paceSeconds: number | null },
+  { distance, timeSeconds, paceSeconds }: { distance: number | null; timeSeconds: number | null; paceSeconds: number | null },
 ): PaceResult | null {
-  if (solve === "pace") return distanceKm && timeSeconds ? { distanceKm, timeSeconds, paceSeconds: timeSeconds / distanceKm } : null;
-  if (solve === "time") return distanceKm && paceSeconds ? { distanceKm, paceSeconds, timeSeconds: distanceKm * paceSeconds } : null;
-  return timeSeconds && paceSeconds ? { timeSeconds, paceSeconds, distanceKm: timeSeconds / paceSeconds } : null;
+  if (solve === "pace") return distance && timeSeconds ? { distance, timeSeconds, paceSeconds: timeSeconds / distance } : null;
+  if (solve === "time") return distance && paceSeconds ? { distance, paceSeconds, timeSeconds: distance * paceSeconds } : null;
+  return timeSeconds && paceSeconds ? { timeSeconds, paceSeconds, distance: timeSeconds / paceSeconds } : null;
 }
 
-/** Kilometres an hour at a pace of `paceSeconds` a kilometre. */
-export function speedKmh(paceSeconds: number): number {
+/** Kilometres in one of `unit`. */
+function kmIn(unit: DistanceUnit): number {
+  return unit === "mi" ? KM_PER_MILE : 1;
+}
+
+/** A distance in the other unit: 10 km are 6.2137 mi. */
+export function convertDistance(distance: number, from: DistanceUnit, to: DistanceUnit): number {
+  return (distance * kmIn(from)) / kmIn(to);
+}
+
+/** A pace — seconds per unit — in the other unit: 5:00 a kilometre is 8:02.8 a mile. */
+export function convertPace(paceSeconds: number, from: DistanceUnit, to: DistanceUnit): number {
+  return (paceSeconds * kmIn(to)) / kmIn(from);
+}
+
+/** Units an hour at a pace of `paceSeconds` a unit: km/h for a pace per kilometre, mph for one per mile. */
+export function speedPerHour(paceSeconds: number): number {
   return 3600 / paceSeconds;
+}
+
+/**
+ * A computed value without the float residue a conversion leaves (12658.499999999998 → 12658.5): six places, far below
+ * anything shown, so a run that lands on a rounding boundary rounds the same in kilometres and in miles.
+ */
+export function settled(value: number): number {
+  return Number(value.toFixed(6));
 }
 
 /** A duration rounded to the second, split for the boxes: hours, then minutes under 60, then seconds. */
 export function splitDuration(totalSeconds: number): { hours: number; minutes: number; seconds: number } {
-  const rounded = Math.round(totalSeconds);
+  const rounded = Math.round(settled(totalSeconds));
   return { hours: Math.floor(rounded / 3600), minutes: Math.floor((rounded % 3600) / 60), seconds: rounded % 60 };
 }
 

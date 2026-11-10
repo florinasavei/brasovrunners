@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.38` | the pace calculator in kilometres or miles (§927) · the start counts the invitations; every elite on the elite card, closed on a link (§928) |
 | `BR-V4.37` | «Unelte» on or off, its tools, the calculator's formula (§926) |
 | `BR-V4.36` | «Locuri» when inviting (§925) |
 | `BR-V4.35` | family invitations stay each person's own (§924) |

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HELD_KINDS, peopleAtStartIfAll, placeOutlook, type PlaceOutlookCounts } from "@/modules/registrations/domain/place-outlook";
+import { HELD_KINDS, openInvitationsAtStart, peopleAtStartIfAll, placeOutlook, type PlaceOutlookCounts } from "@/modules/registrations/domain/place-outlook";
 
 /**
  * «Locuri» (the owner, 2026-11-03): the free places go to the official waiting list first, then to the
@@ -64,5 +64,24 @@ describe("placeOutlook", () => {
     expect(peopleAtStartIfAll(outlook, 0)).toBe(outlook.totalIfAll);
     // The places are the allocator's: an elite name takes none.
     expect([outlook.free, outlook.raises, outlook.totalIfAll]).toEqual([10, 0, 16]);
+  });
+
+  it("counts the special guests' open invitations among the people at the start, and in no place (the owner, 2026-11-10)", () => {
+    // The race on 2026-11-10: 171 places taken, 4 special guests, 1 line on the internal list, 4 invitations «Invitat special».
+    const outlook = placeOutlook(counts({ capacity: 175, occupied: 171, confirmed: 167, declaration: 4, waiting: 0, internal: 1, outside: 4, invitedOutside: 4 }));
+    expect(outlook.totalIfAll).toBe(180);
+    expect(peopleAtStartIfAll(outlook, 1)).toBe(181);
+    expect(openInvitationsAtStart(outlook)).toBe(4);
+    // The places are the allocator's: an invitation that holds none frees and adds nothing.
+    expect([outlook.free, outlook.raises]).toEqual([4, 0]);
+  });
+
+  it("names every open invitation at the start: those holding a place, in `occupied` already, and the special guests'", () => {
+    const outlook = placeOutlook(counts({ capacity: 20, occupied: 12, confirmed: 10, invited: 2, waiting: 0, internal: 0, outside: 0, invitedOutside: 3 }));
+    expect(outlook.totalIfAll).toBe(15);
+    expect(openInvitationsAtStart(outlook)).toBe(5);
+    // A caller from before the count reads none.
+    const before = placeOutlook(counts({ capacity: 20, occupied: 12, confirmed: 10, invited: 2, waiting: 0, internal: 0, outside: 0 }));
+    expect([before.totalIfAll, openInvitationsAtStart(before)]).toEqual([12, 2]);
   });
 });

@@ -24,7 +24,7 @@ let close: () => Promise<void>;
 vi.mock("@/db/client", () => ({ getDb: () => db }));
 vi.mock("next-intl/server", async () => (await import("../../helpers/intl-server")).intlServerMock);
 
-const { readPlaceOutlook } = await import("@/modules/registrations/admin-repository");
+const { countKits, readPlaceOutlook } = await import("@/modules/registrations/admin-repository");
 const { default: PlaceOutlook } = await import("@/modules/registrations/ui/PlaceOutlook");
 
 async function drawn(eventId: string, elites?: number): Promise<string> {
@@ -34,15 +34,15 @@ async function drawn(eventId: string, elites?: number): Promise<string> {
 }
 
 let invited = 0;
-/** A live invitation (§647): a place kept for the person until its deadline. */
-async function invite(eventId: string, expiresAt: Date) {
+/** A live invitation (§647): a place kept for the person until its deadline — none when sent «Pe lista de invitați speciali». */
+async function invite(eventId: string, expiresAt: Date, extra: Partial<typeof eventInvitations.$inferInsert> = {}) {
   invited += 1;
   const email = `invited${invited}@example.org`;
   const [participant] = await db
     .insert(participants)
     .values({ deliveryEmail: email, normalizedEmail: email, canonicalEmail: email, canonicalizationVersion: 1, defaultName: "Ioana Test", preferredLocale: "ro" })
     .returning();
-  await db.insert(eventInvitations).values({ eventId, participantId: participant.id, name: "Ioana Test", email, canonicalEmail: email, sentAt: NOW, lastSentAt: NOW, expiresAt });
+  await db.insert(eventInvitations).values({ eventId, participantId: participant.id, name: "Ioana Test", email, canonicalEmail: email, sentAt: NOW, lastSentAt: NOW, expiresAt, ...extra });
 }
 
 beforeAll(async () => {
@@ -146,6 +146,29 @@ describe("«Locuri»", () => {
     expect(one).toContain("Invitați speciali: 1 (nu ocupă loc). Oameni la start dacă intră toți: 14, inclusiv 1 elită din lista separată.");
     expect(await drawn(race.id, 2)).toContain("Oameni la start dacă intră toți: 15, inclusiv 2 elite din lista separată.");
     expect(await drawn(race.id, 20)).toContain("Oameni la start dacă intră toți: 33, inclusiv 20 de elite din lista separată.");
+  });
+
+  it("counts every invitation still open among the people at the start, a special guest's too (the owner, 2026-11-10: «Are we even counting the invitations??»)", async () => {
+    const race = await createRace(db, { capacity: 10 });
+    await runners(race.id, 5);
+    await runners(race.id, 1, { outsideCapacity: true });
+    const later = new Date(NOW.getTime() + 86_400_000);
+    // One holding a counted place, two «Pe lista de invitați speciali» holding none.
+    await invite(race.id, later);
+    await invite(race.id, later, { outsideCapacity: true });
+    await invite(race.id, later, { outsideCapacity: true });
+    // Nobody comes from a special guest's invitation past its deadline, withdrawn, or answered.
+    await invite(race.id, new Date(NOW.getTime() - 1000), { outsideCapacity: true });
+    await invite(race.id, later, { outsideCapacity: true, withdrawnAt: NOW });
+    await invite(race.id, later, { outsideCapacity: true, acceptedAt: NOW });
+
+    const outlook = await readPlaceOutlook(db, race.id, NOW);
+    // The places are the allocator's: a special guest's invitation takes none.
+    expect(outlook).toMatchObject({ occupied: 6, invited: 1, outside: 1, invitedOutside: 2, free: 4, totalIfAll: 9 });
+    // The same open invitations «Kituri de pregătit» packs for.
+    expect((await countKits(db, race.id, NOW)).invitations).toBe(3);
+    expect(await drawn(race.id)).toContain("Invitați speciali: 1 (nu ocupă loc). Oameni la start dacă intră toți: 9, inclusiv 3 invitații fără răspuns.");
+    expect(await drawn(race.id, 1)).toContain("Oameni la start dacă intră toți: 10, inclusiv 1 elită din lista separată și 3 invitații fără răspuns.");
   });
 
   it("says when no place is free, and when nobody waits", async () => {

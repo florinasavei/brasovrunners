@@ -697,11 +697,16 @@ export async function readPlaceOutlook<T extends Record<string, unknown>>(db: Da
     .where(eq(events.id, eventId))
     .limit(1);
   if (!event || event.capacity === null) return null;
-  const [counts, waiting, outside, [internal]] = await Promise.all([
+  const [counts, waiting, outside, [internal], [invitedOutside]] = await Promise.all([
     countOccupied(db, eventId, now),
     countEligibleWaitlisted(db, eventId),
     countOutsideCapacity(db, eventId),
     db.select({ total: count() }).from(eventReserveEntries).where(eq(eventReserveEntries.eventId, eventId)),
+    // The special guests' invitations still open (§647): no counted place, but a person at the start once accepted.
+    db
+      .select({ total: count() })
+      .from(eventInvitations)
+      .where(and(eq(eventInvitations.eventId, eventId), eq(eventInvitations.outsideCapacity, true), gt(eventInvitations.expiresAt, now), invitationOpen())),
   ]);
   return placeOutlook({
     ...placesTaken(event.capacity, counts),
@@ -709,6 +714,7 @@ export async function readPlaceOutlook<T extends Record<string, unknown>>(db: Da
     waiting,
     internal: internal?.total ?? 0,
     outside,
+    invitedOutside: invitedOutside?.total ?? 0,
     // «Locuri păstrate pentru club» (§914): the free places split into the site's and the club's.
     kept: event.placesKeptForClub,
     offersOnly: event.freePlacesByOfferOnly,

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.37-2026-11-09 -->
+<!-- PROJECT_BASELINE: BR-V4.38-2026-11-10 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.37-2026-11-09`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.38-2026-11-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -29197,3 +29197,25 @@ The calculator: «Kilometri» and the four race buttons share one row, the butto
 **Refused.** Renaming the card «Calculatorul de obiective» — the owner kept «Calculator de ritm». Ticks before there is a second tool only on the page — the owner chose the per-tool tick now.
 
 Baseline `BR-V4.37-2026-11-09`.
+
+## 927. «Calculator de ritm» in kilometres or miles: «Unitatea de măsură», kilometres by default (amending §922, §926)
+
+**The owner, 2026-11-10**, on «Unelte»: «vreau să pot schimba și unitatea de măsură, deși default să fie km și minute». Asked, he chose one choice between kilometres and miles over a second one for typing the pace as a speed.
+
+**Decision.** Under «Ce vrei să afli?», a second radio, «Unitatea de măsură»: «Kilometri (km)», checked on every visit, or «Mile (mi)» — the statute mile, 1,609344 km. The unit is the distance's and the pace's; the time is the time. In miles the distance box reads «Mile», the pace «Ritmul, pe milă», the answer «min/milă» or «mi», the speed «mph»; a race button fills in its official length in the unit picked (the half marathon is 13,1094 miles). Switching converts the distance and the pace on the screen, so the run stays the same run. The calculator keeps the unrounded value of a distance or a pace it wrote — a race picked, an answer carried by a switch of «Ce vrei să afli?», a unit converted — while the box still shows it, so a marathon taken to miles and back reads 42,195 km again and the time does not move by the boxes' rounding; typing in the box lets it go. A figure that lands on a rounding boundary rounds the same in either unit: a conversion's float residue is dropped before anything is rounded (`settled`). A radio the browser checked before the page listened — Firefox's restore on reload, a press before hydration — is read once on load and taken as if pressed, §337's rule for the phone's country. The «?» gives the formulas with a mile example, and the mile's length. Nothing is stored and nothing is sent: the unit is the island's own state (`src/modules/tools/ui/PaceCalculator.tsx`; the conversions in `src/modules/tools/pace.ts`, tested in `tests/unit/tools/pace.test.ts`).
+
+**Refused.** A second choice to type the pace as a speed (km/h, the treadmill's way) — offered, not chosen. Remembering the unit between visits — kilometres are the default the owner asked for.
+
+Baseline `BR-V4.38-2026-11-10`.
+
+## 928. The people at the start count every open invitation; the elite card lists every marked registration and stays closed on a link (amending §892, §897, §909)
+
+**The owner, 2026-11-10**, on the race's registrations page: «Are we even counting the invitations??» — «Kituri de pregătit» did, but «Oameni la start dacă intră toți» left out the four invitations sent «Pe lista de invitați speciali». Then, on the editor's elite card: «Luisa Rasina e Elită și nu apare aici», while «Elite» on the registrations page said 3, and «zona asta trebuie să fie collapsed». Asked, he chose to add the invitations to the people at the start, to list every marked registration on the card, and to keep the card closed even when a link jumps to it.
+
+**Decision — the people at the start.** «Locuri»'s last line adds the special guests' invitations still open before their deadline (`placeOutlook`'s `invitedOutside`, which `readPlaceOutlook` reads as `invitationHoldsCount` reads the others, with `outside_capacity` true): they hold no counted place and are no registration yet, so they were in none of the line's terms, but each is a person at the start once accepted. An open invitation holding a place was in `occupied` already, so the line now counts every open invitation, and names them when there is one: «Oameni la start dacă intră toți: 181, inclusiv 1 elită din lista separată și 4 invitații fără răspuns» — the same figure «Kituri de pregătit» packs for (`countKits`). The free places, the places to add and the kits do not move.
+
+**Decision — the elite card.** «Elită — doar numele pe BIB» lists every registration marked «Elită», in every state, as «Elite» on the registrations page does (`listEliteMarkedRegistrations`): the name, «cu înscriere» (it read «înscris», which a cancelled row's chip contradicted), its state chip and «nr. N» once it has a number, with its two ticks (§910) from the start. Its closed line counts every line («3 nume», as «3 elite» there). «Descarcă BIB-urile de elită (N)» counts what the sheet prints — the list's names and the marked registrations it has a bib for (`listBibs` with `elite`), so a registration still to sign waits for its number — and the line about the ordinary sheet is said only while that sheet prints one. Its help: «… Rămâne înscris și apare aici cu starea lui; BIB-ul de elită i se tipărește când e confirmat.»
+
+**Decision — closed on a link.** The address `#bib-elite` — «Kituri de pregătit»'s elites, «Gestionează lista de elite», and «Deschide lista de elită» after «Mută pe lista de elită» (§903) — names a wrapper around the card, not its fold: `OpenFoldFromHash` opens the folds around it and scrolls there, and the card waits closed for a press. Back from its own add, delete or tick it still opens by itself (`openWhen`).
+
+Baseline `BR-V4.38-2026-11-10`.
