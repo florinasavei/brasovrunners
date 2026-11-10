@@ -6,7 +6,7 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useLocale, useTranslations } from "next-intl";
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import PressButton from "@/shared/ui/PressButton";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import RadioField from "@/shared/ui/RadioField";
@@ -20,6 +20,7 @@ import {
   type PaceSolve,
   parseDecimal,
   RACE_DISTANCES,
+  settled,
   solvePace,
   speedPerHour,
   splitDuration,
@@ -70,9 +71,10 @@ export default function PaceCalculator() {
     paceSeconds: pace,
   });
 
-  // The field's own spelling of a distance: the locale's decimal sign, no grouping, four places for a half marathon.
-  const distanceText = (distance: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 4, useGrouping: false }).format(distance);
-  const shownNumber = (value: number, digits: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: digits }).format(value);
+  // The field's own spelling of a distance: the locale's decimal sign, no grouping, four places for a half marathon. Both
+  // spellings round a settled value, so a conversion's float residue never tips a figure on a boundary (`settled`).
+  const distanceText = (value: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 4, useGrouping: false }).format(settled(value));
+  const shownNumber = (value: number, digits: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: digits }).format(settled(value));
 
   // Each key spelled out, so the catalogue's checker sees every message the island asks for.
   const raceLabel: Record<(typeof RACE_DISTANCES)[number]["key"], string> = {
@@ -82,7 +84,13 @@ export default function PaceCalculator() {
     presetMarathon: t("pace.presetMarathon"),
   };
 
-  const set = (name: keyof Fields) => (event: ChangeEvent<HTMLInputElement>) => setFields((previous) => ({ ...previous, [name]: event.target.value }));
+  // Typing in a box lets go of what the calculator wrote there: the box is the visitor's again, whatever is typed next.
+  const set = (name: keyof Fields) => (event: ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setFields((previous) => ({ ...previous, [name]: value }));
+    if (name === "distance") setWritten((previous) => ({ ...previous, distance: undefined }));
+    if (name === "paceMinutes" || name === "paceSeconds") setWritten((previous) => ({ ...previous, pace: undefined }));
+  };
 
   // A distance or a pace into its boxes, the unrounded value kept beside them. Called from a handler, never from a state update.
   const writeDistance = (exact: number, shown = exact): Partial<Fields> => {
@@ -107,9 +115,8 @@ export default function PaceCalculator() {
     return writePace(answer.paceSeconds);
   };
 
-  // The radios are native (`RadioField`): their change bubbles to the group, which is the one place that listens.
-  const choose = (event: FormEvent<HTMLFieldSetElement>) => {
-    const next = (event.target as HTMLInputElement).value as PaceSolve;
+  /** «Ce vrei să afli?» set to `next`: the answer carried into the boxes it now needs. From a handler or the mount read below. */
+  const applySolve = (next: PaceSolve) => {
     if (next === solve) return;
     if (result) {
       const patch = carried(solve, result);
@@ -118,9 +125,8 @@ export default function PaceCalculator() {
     setSolve(next);
   };
 
-  // «Unitatea de măsură»: the distance and the pace convert, the time is the time — the same run, in the other unit.
-  const switchUnit = (event: FormEvent<HTMLFieldSetElement>) => {
-    const next = (event.target as HTMLInputElement).value as DistanceUnit;
+  /** «Unitatea de măsură» set to `next`: the distance and the pace convert, the time is the time — the same run, in the other unit. */
+  const applyUnit = (next: DistanceUnit) => {
     if (next === unit) return;
     const patch: Partial<Fields> = {
       ...(distance === null ? {} : writeDistance(convertDistance(distance, unit, next))),
@@ -129,6 +135,26 @@ export default function PaceCalculator() {
     setFields((previous) => ({ ...previous, ...patch }));
     setUnit(next);
   };
+
+  // The radios are native (`RadioField`): their change bubbles to the group, which is the one place that listens.
+  const choose = (event: FormEvent<HTMLFieldSetElement>) => applySolve((event.target as HTMLInputElement).value as PaceSolve);
+  const switchUnit = (event: FormEvent<HTMLFieldSetElement>) => applyUnit((event.target as HTMLInputElement).value as DistanceUnit);
+
+  /*
+    A choice the browser made before the island listened — §337's rule for the phone's country: Firefox restores a radio on
+    reload, and a press can land before hydration, each with no change event — would leave the dot saying miles while the
+    boxes count kilometres. Read once, right after mount, and taken as if pressed.
+  */
+  const solveGroup = useRef<HTMLFieldSetElement>(null);
+  const unitGroup = useRef<HTMLFieldSetElement>(null);
+  useEffect(() => {
+    const checked = (group: HTMLFieldSetElement | null) => group?.querySelector<HTMLInputElement>("input:checked")?.value;
+    const solveNow = checked(solveGroup.current);
+    if (solveNow === "time" || solveNow === "distance") applySolve(solveNow);
+    if (checked(unitGroup.current) === "mi") applyUnit("mi");
+    // Once, right after mount: the two read this first render's state, which is what the boxes show.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const numeric = (testId: string, mode: "numeric" | "decimal" = "numeric") => ({
     htmlInput: { inputMode: mode, autoComplete: "off", "data-testid": testId },
@@ -154,7 +180,7 @@ export default function PaceCalculator() {
 
   return (
     <Stack spacing={3} data-testid="pace-calculator">
-      <Box component="fieldset" sx={FIELDSET_SX} onChange={choose}>
+      <Box component="fieldset" ref={solveGroup} sx={FIELDSET_SX} onChange={choose}>
         <Typography component="legend" sx={LEGEND_SX}>
           {t("pace.solveFor")}
         </Typography>
@@ -172,7 +198,7 @@ export default function PaceCalculator() {
       </Box>
 
       {/* The owner, 2026-11-10: «vreau să pot schimba și unitatea de măsură, deși default să fie km și minute». */}
-      <Box component="fieldset" sx={FIELDSET_SX} onChange={switchUnit} data-testid="pace-unit">
+      <Box component="fieldset" ref={unitGroup} sx={FIELDSET_SX} onChange={switchUnit} data-testid="pace-unit">
         <Typography component="legend" sx={LEGEND_SX}>
           {t("pace.unit")}
         </Typography>

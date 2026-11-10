@@ -8,6 +8,7 @@ import {
   parseDecimal,
   parseWhole,
   RACE_DISTANCES,
+  settled,
   solvePace,
   speedPerHour,
   splitDuration,
@@ -92,5 +93,13 @@ describe("«Unitatea de măsură»: kilometres or miles, the same run in either"
     const inMiles = solvePace("time", { distance: convertDistance(42.195, "km", "mi"), timeSeconds: null, paceSeconds: convertPace(300, "km", "mi") });
     expect(inMiles?.timeSeconds).toBeCloseTo(12658.5, 6);
     expect(formatDuration(inMiles?.timeSeconds ?? 0)).toBe("3:30:59");
+  });
+
+  it("rounds a run on a half second the same in either unit: the conversion's float residue is dropped first", () => {
+    // 10,5 km at 5:31 is 57:55,5 exactly; in miles the product is 3475.4999999999995 without `settled`.
+    expect(formatDuration(10.5 * 331)).toBe("57:56");
+    expect(formatDuration(convertDistance(10.5, "km", "mi") * convertPace(331, "km", "mi"))).toBe("57:56");
+    expect(settled(12658.499999999998)).toBe(12658.5);
+    expect(settled(6.213711922373339)).toBe(6.213712);
   });
 });

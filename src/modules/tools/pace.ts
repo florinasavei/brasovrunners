@@ -85,9 +85,17 @@ export function speedPerHour(paceSeconds: number): number {
   return 3600 / paceSeconds;
 }
 
+/**
+ * A computed value without the float residue a conversion leaves (12658.499999999998 → 12658.5): six places, far below
+ * anything shown, so a run that lands on a rounding boundary rounds the same in kilometres and in miles.
+ */
+export function settled(value: number): number {
+  return Number(value.toFixed(6));
+}
+
 /** A duration rounded to the second, split for the boxes: hours, then minutes under 60, then seconds. */
 export function splitDuration(totalSeconds: number): { hours: number; minutes: number; seconds: number } {
-  const rounded = Math.round(totalSeconds);
+  const rounded = Math.round(settled(totalSeconds));
   return { hours: Math.floor(rounded / 3600), minutes: Math.floor((rounded % 3600) / 60), seconds: rounded % 60 };
 }
 
