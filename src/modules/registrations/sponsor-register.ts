@@ -3,6 +3,7 @@ import { auditLogs } from "@/db/schema/audit-logs";
 import { eventTranslations } from "@/db/schema/events";
 import { staffUsers, type StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
+import { calendarDayIn } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { assertMayExport, sponsorListFormat, type SponsorListFormat } from "./sponsor-list";
 
@@ -32,7 +33,7 @@ import { assertMayExport, sponsorListFormat, type SponsorListFormat } from "./sp
 /** How many days the club keeps its own copy of a list: the notice's section 7, «în cel mult 30 de zile de la descărcare». */
 export const SPONSOR_COPY_DAYS = 30;
 
-/** The newest lists the register reads: years of a club's sponsors, and a bound on the read. */
+/** The newest lists the register hands a page: years of a club's sponsors, and a bound on what is returned and drawn. */
 export const SPONSOR_REGISTER_LIMIT = 500;
 
 /** How many earlier recipients the box suggests. */
@@ -75,6 +76,15 @@ export function copyDeleteBy(at: Date): Date {
 }
 
 /**
+ * Whether the day the register names for a copy — «Ștergi copia până la» — has passed, on the zone's calendar.
+ * The cell names a day, not an hour, so the whole of that day is still in time whatever the hour the file was made
+ * at: «termen trecut» is said from the next day, never during the one the cell names as the last.
+ */
+export function copyOverdue(deleteBy: Date, now: Date, timeZone: string): boolean {
+  return calendarDayIn(now, timeZone) > calendarDayIn(deleteBy, timeZone);
+}
+
+/**
  * The recipients a box suggests: each name once, whatever its capitals («Sport Shop» and «sport
  * shop» are one sponsor, spelled as it was last written), newest first.
  */
@@ -102,8 +112,12 @@ export function listsOfDoor<List extends Pick<GivenSponsorList, "eventId">>(list
  * Asserts the role (BR-REQ-060-01): whoever may take the list — the Organizer, the Administrator, the
  * Superadministrator — reads what was taken.
  *
- * One read of the trail by its indexed key (`audit_logs_entity_idx`: the export's rows are about an
- * event), three values out of each row's metadata and never the ids beside them.
+ * One read of the trail: the rows about an event (the first column of `audit_logs_entity_idx`), kept
+ * when their action is the export's, three values out of each row's metadata and never the ids beside
+ * them. No index serves the action, and the limit bounds what is returned, not what is read: the cost
+ * grows with everything the trail holds about events — a few milliseconds at a club's scale, as
+ * `bibs.ts#erasedBibNumbers` and `audit/repository.ts#listPartnerShares` read it. Should the trail grow
+ * past that, a partial index on the action is the remedy.
  */
 export async function readSponsorRegister<T extends Record<string, unknown>>(
   db: Database<T>,

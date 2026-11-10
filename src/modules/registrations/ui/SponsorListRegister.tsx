@@ -13,7 +13,7 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import Panel from "@/shared/ui/Panel";
 import { ROW_SX } from "@/shared/ui/row-fold";
-import type { GivenSponsorList } from "../sponsor-register";
+import { copyOverdue, type GivenSponsorList } from "../sponsor-register";
 
 type Props = {
   locale: Locale;
@@ -78,7 +78,8 @@ export default async function SponsorListRegister({ locale, lists, now, level }:
       key: "deleteBy",
       label: t("sponsors.given.columns.deleteBy"),
       render: (list) =>
-        list.deleteBy.getTime() <= now.getTime() ? (
+        // By the day the cell names, on the club's clock: never «termen trecut» during that day itself.
+        copyOverdue(list.deleteBy, now, CLUB_TIME_ZONE) ? (
           <>
             {day(list.deleteBy)} ·{" "}
             <Box component="span" sx={{ fontWeight: 700 }} data-testid="sponsor-register-overdue">
@@ -99,7 +100,12 @@ export default async function SponsorListRegister({ locale, lists, now, level }:
       collapsible
       title={title}
       intro={t("sponsors.given.intro")}
-      aside={t("sponsors.given.aside", { lists: counted, recipient: latest.recipient ?? unnamed, date: day(latest.at) })}
+      // The latest recipient is free text: an address with no space in it wraps here too, as in its cell, or the page scrolls sideways on a phone.
+      aside={
+        <Box component="span" sx={{ overflowWrap: "anywhere" }}>
+          {t("sponsors.given.aside", { lists: counted, recipient: latest.recipient ?? unnamed, date: day(latest.at) })}
+        </Box>
+      }
       data-testid="sponsor-register"
     >
       <Box sx={{ display: { xs: "none", md: "block" }, border: 1, borderColor: "divider", borderRadius: 1, overflowX: "auto" }}>

@@ -54,7 +54,14 @@ export const SPONSOR_RECIPIENT_MAX = 120;
  * since §NNN a download that names nobody is refused, so every list in the register has its recipient.
  */
 export function sponsorRecipient(raw: string | null): string | null {
-  const text = (raw ?? "").replace(/\p{Cc}+/gu, " ").replace(/\s+/g, " ").trim().slice(0, SPONSOR_RECIPIENT_MAX).trim();
+  const text = (raw ?? "")
+    .replace(/\p{Cc}+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, SPONSOR_RECIPIENT_MAX)
+    // A cut through a character written on two code units (an emoji) leaves its first half, which the audit row's JSON refuses: the half goes too.
+    .replace(/[\uD800-\uDBFF]$/, "")
+    .trim();
   return text === "" ? null : text;
 }
 
