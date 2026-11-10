@@ -20,15 +20,16 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *
  * What is protected, read from the panel as the server draws it for a real database (PGlite) and pressed through
  * the real action:
- * - the list rests on «Termenul rămâne», and every other line is a deadline by its day and hour, one line a day,
- *   the start last;
+ * - the list rests on «Termenul rămâne», and every other line is a deadline by its day and hour, one line a day
+ *   on the event's clock, the start last — a list of one line when the start is the only later deadline;
  * - a line names exactly the moment its press stores — twenty minutes later, after midnight, or the next morning
  *   from a tab left open: the form posts when it was drawn, and the server counts the days from then;
  * - that anchor only ever brings a deadline earlier than the press alone would: never from a moment still to
  *   come, and a post without it counts from the press, as it always did;
  * - the question each choice asks names its outcome: the deadline kept, or the chosen line in its own words;
- * - no list where the deadline cannot move: a counted place while somebody waits, a deadline already at the
- *   start, an event that is not scheduled — and none for the Organizer, who has no «Retrimite» at all.
+ * - no list where the deadline cannot move: a counted place while somebody waits (a special guest keeps hers,
+ *   and her questions), no later day left — the deadline already the start, or sixty days ending on its own day —
+ *   an event that is not scheduled — and none for the Organizer, who has no «Retrimite» at all.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, locale: "ro" as "ro" | "en", actor: undefined as unknown }));
 
@@ -187,9 +188,15 @@ function elementsOf(node: ReactNode): Element[] {
   return [element, ...elementsOf(element.props.children as ReactNode)];
 }
 
-/** What one invitation's row offers: the list's label and lines (null without a list), the questions of «Retrimite», and what its form posts unseen. */
+/**
+ * What one invitation's row offers: the list's label and lines (null without a list), the value it rests on and
+ * whether it is the browser's own list — it posts with JavaScript off — the questions of «Retrimite», and what its
+ * form posts unseen.
+ */
 type RowView = {
   label: string | null;
+  rests: string | null;
+  native: boolean | null;
   lines: { value: string; words: string }[] | null;
   confirm: ConfirmSpec | readonly ConfirmSpec[] | undefined;
   hasResend: boolean;
@@ -213,6 +220,8 @@ async function panel(event: EventInput, now: Date, mayManage = true): Promise<Ma
       hasResend: form !== undefined,
       confirm: form?.props.confirm as RowView["confirm"],
       label: list ? (list.props.label as string) : null,
+      rests: list ? (list.props.defaultValue as string) : null,
+      native: list ? ((list.props.slotProps as { select?: { native?: boolean } } | undefined)?.select?.native ?? false) : null,
       lines: list ? elementsOf(list.props.children as ReactNode).filter((element) => element.type === "option").map((option) => ({ value: String(option.props.value), words: String(option.props.children) })) : null,
     });
   }
@@ -262,6 +271,9 @@ describe("BR-REQ-037-07 «La retrimitere»: the deadlines a resend can give, by 
       // Eleven days from the draw is past the start: the start itself, once.
       { value: "11", words: "Termen nou: la start, sâm., 21 nov., 09:00" },
     ]);
+    // At rest the list posts no days — a plain «Retrimite» moves nothing — and it is the browser's own list.
+    expect(ana.rests).toBe("");
+    expect(ana.native).toBe(true);
     // The form says when it was drawn, for the server to count from.
     expect(ana.hidden.drawnAt).toBe(at(2).toISOString());
 
@@ -293,6 +305,42 @@ describe("BR-REQ-037-07 «La retrimitere»: the deadlines a resend can give, by 
     expect(words.at(-1)).toBe("Termen nou: la start, dum., 20 dec., 10:00");
     // «Termenul rămâne», thirty-nine days and the start.
     expect(words).toHaveLength(41);
+  });
+
+  it("draws a list of one line when the start is the only later deadline, and asks about that line", async () => {
+    // The race on Tuesday the 17th at 22:00; the invitation ends that morning at 10:00. Eight days on is past the start.
+    const startsAt = new Date(NOW.getTime() + 7.5 * DAY);
+    const event = await createEvent(10, { startsAt });
+    await invite(event, "Ana Pop", 7);
+    const ana = (await panel(event, at(2))).get("Ana Pop")!;
+    expect(ana.lines).toEqual([
+      { value: "", words: "Termenul rămâne" },
+      { value: "8", words: "Termen nou: la start, mar., 17 nov., 22:00" },
+    ]);
+    expect(ana.rests).toBe("");
+    expect(ana.hidden.drawnAt).toBe(at(2).toISOString());
+    // One line is a list like any other: left alone the deadline stays, chosen it is the start.
+    expect(question(ana, "").body).toBe(`Ana Pop ${LINK_AGAIN} Termenul rămâne: mar., 17 nov. 2026, la 10:00.`);
+    expect(question(ana, "8").body).toBe(`Ana Pop ${LINK_AGAIN} Termen nou: la start, mar., 17 nov., 22:00.`);
+    expect(await press(ana, "8", at(22))).toContain("saved=invitationResent");
+    expect((await invitationOf("Ana Pop")).expiresAt).toEqual(startsAt);
+  });
+
+  it("reads «a later day» on the event's clock: a page drawn after midnight offers the day that has just begun there", async () => {
+    const event = await createEvent(10);
+    // Sent on Monday the 9th at 23:30 with seven days: it ends on the 16th at 23:30. Drawn an hour later, at 00:30:
+    // seven days on is the 17th at 00:30 — a later day in Brașov, the 16th still by UTC's clock.
+    await invite(event, "Ana Pop", 7, new Date("2026-11-09T21:30:00.000Z"));
+    const ana = (await panel(event, new Date("2026-11-09T22:30:00.000Z"))).get("Ana Pop")!;
+    expect(ana.lines).toEqual([
+      { value: "", words: "Termenul rămâne" },
+      { value: "7", words: "Termen nou: mar., 17 nov., 00:30" },
+      { value: "8", words: "Termen nou: mie., 18 nov., 00:30" },
+      { value: "9", words: "Termen nou: joi, 19 nov., 00:30" },
+      { value: "10", words: "Termen nou: vin., 20 nov., 00:30" },
+      // Eleven days on is the 21st at 00:30, the start's own day: «la start»'s.
+      { value: "12", words: "Termen nou: la start, sâm., 21 nov., 09:00" },
+    ]);
   });
 
   it.each([
@@ -331,7 +379,7 @@ describe("BR-REQ-037-07 «La retrimitere»: the deadlines a resend can give, by 
 
   it("counts from the press, as it always did, when the post says nothing usable of its draw — and never from a moment still to come", async () => {
     const event = await createEvent(10);
-    for (const name of ["Ana Pop", "Dan Pop", "Ema Pop"]) await invite(event, name, 3);
+    for (const name of ["Ana Pop", "Dan Pop", "Ema Pop", "Ion Pop"]) await invite(event, name, 3);
     const view = await panel(event, at(2));
     // No `drawnAt` at all (a days post by hand), and one that is no instant: both count from the press.
     const withoutDraw = { ...view.get("Ana Pop")!, hidden: Object.fromEntries(Object.entries(view.get("Ana Pop")!.hidden).filter(([name]) => name !== "drawnAt")) };
@@ -339,6 +387,9 @@ describe("BR-REQ-037-07 «La retrimitere»: the deadlines a resend can give, by 
     expect((await invitationOf("Ana Pop")).expiresAt).toEqual(new Date(at(60).getTime() + 5 * DAY));
     await press(view.get("Dan Pop")!, "5", at(60), { drawnAt: "ieri la prânz" });
     expect((await invitationOf("Dan Pop")).expiresAt).toEqual(new Date(at(60).getTime() + 5 * DAY));
+    // A day without its time is a date, not the instant the form writes: counted from its first minute the deadline would come nine hours early.
+    await press(view.get("Ion Pop")!, "5", at(60), { drawnAt: "2026-11-10" });
+    expect((await invitationOf("Ion Pop")).expiresAt).toEqual(new Date(at(60).getTime() + 5 * DAY));
     // A draw an hour ahead of the press buys no extra hour.
     const resent = await resendInvitationByStaff(db, (await invitationOf("Ema Pop")).id, { days: 5, countedFrom: at(120) }, admin, at(60));
     expect(resent.expiresAt).toEqual(new Date(at(60).getTime() + 5 * DAY));
@@ -394,7 +445,11 @@ describe("BR-REQ-037-07 «La retrimitere»: the deadlines a resend can give, by 
       "Ana Pop primește invitația din nou, cu un link nou; cel vechi nu mai merge. Termenul rămâne cel de acum: cineva așteaptă pe listă, iar dacă invitația nu e acceptată până atunci, locul trece la listă.",
     );
     // «Pe lista de invitați speciali» holds no counted place: nobody waits for it, and its deadline may move.
-    expect(view.get("Dana Pop")!.lines?.map((line) => line.value)).toEqual(["", "8", "9", "10", "11"]);
+    const dana = view.get("Dana Pop")!;
+    expect(dana.lines?.map((line) => line.value)).toEqual(["", "8", "9", "10", "11"]);
+    // Her questions are the list's own — the deadline kept, or the chosen line — never the one about somebody waiting.
+    expect(question(dana, "").body).toBe(`Dana Pop ${LINK_AGAIN} Termenul rămâne: mar., 17 nov. 2026, la 10:02.`);
+    expect(question(dana, "9").body).toBe(`Dana Pop ${LINK_AGAIN} Termen nou: joi, 19 nov., 10:03.`);
   });
 
   it("draws no list when no later day is left — the deadline is already the start — and the one question says it stays", async () => {
@@ -406,6 +461,18 @@ describe("BR-REQ-037-07 «La retrimitere»: the deadlines a resend can give, by 
     expect(ana.lines).toBeNull();
     expect(Array.isArray(ana.confirm)).toBe(false);
     expect(question(ana, null).body).toBe(`Ana Pop ${LINK_AGAIN} Termenul rămâne: vin., 13 nov. 2026, la 10:00.`);
+  });
+
+  it("draws no list when sixty days end on the deadline's own day, short of the start — and the question names the deadline, not the start", async () => {
+    // A race a hundred days away, an invitation sent with the sixty a deadline may run: sixty days from the draw is the same 9 January, two minutes later.
+    const event = await createEvent(10, { startsAt: new Date(NOW.getTime() + 100 * DAY) });
+    await invite(event, "Ana Pop", 60);
+    const ana = (await panel(event, at(2))).get("Ana Pop")!;
+    expect(ana.hasResend).toBe(true);
+    expect(ana.lines).toBeNull();
+    expect(ana.hidden.drawnAt).toBeUndefined();
+    expect(Array.isArray(ana.confirm)).toBe(false);
+    expect(question(ana, null).body).toBe(`Ana Pop ${LINK_AGAIN} Termenul rămâne: sâm., 9 ian. 2027, la 10:00.`);
   });
 
   it("draws no list on an event that is not scheduled: every resend is refused there, so no line may promise a day", async () => {
