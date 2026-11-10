@@ -171,7 +171,7 @@ export type EliteTicks = { inResults: boolean; onSite: boolean };
 
 /**
  * The two ticks of every registration of an event marked «Elită» (§910), by registration — for the elite card's lines, which read
- * the sheet's rows (`listBibs`) and need nothing else of them. Whoever reads the registrations (`canReadRegistrations`): the Organizer
+ * the marked registrations (`listEliteMarkedRegistrations`) and need nothing else of them. Whoever reads the registrations (`canReadRegistrations`): the Organizer
  * sees them, the Administrator ticks them. Test rows are never marked on a sheet, and are left out like everywhere a count is read.
  */
 export async function listEliteTicks<T extends Record<string, unknown>>(db: Database<T>, actor: Pick<StaffUser, "role">, eventId: string): Promise<Map<string, EliteTicks>> {
@@ -188,8 +188,8 @@ export async function listEliteTicks<T extends Record<string, unknown>>(db: Data
 export type EliteMarkedRow = { id: string; name: string; status: RegistrationStatus; bibNumber: number | null };
 
 /**
- * The registrations marked «Elită» at one event, for the registrations page's «Elite» panel — read-only, beside the race's
- * separate elite list (the owner, 2026-11-04, who looked for an elite on the registrations page and did not find her). Every
+ * The registrations marked «Elită» at one event, for the registrations page's «Elite» panel and the editor's elite card —
+ * read-only, beside the race's separate elite list (the owner, 2026-11-04, who looked for an elite on the registrations page and did not find her). Every
  * state, each said by its chip there — the mark is kept on a cancelled row, which a restart keeps — by name; a test row is
  * left out, as from every figure the club is given (`AGENTS.md` §12.6). The Organizer and above (`canReadRegistrations`, the
  * list's own gate), asserted here as at the page (BR-REQ-060-01).

@@ -137,7 +137,7 @@ import { readBibDesign } from "@/modules/registrations/bib-design";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
 import { bibPictureStamp } from "@/modules/registrations/domain/bib-stamp";
 import { listEliteEntries } from "@/modules/registrations/elite-list";
-import { listEliteTicks } from "@/modules/registrations/elite-mark";
+import { listEliteMarkedRegistrations, listEliteTicks } from "@/modules/registrations/elite-mark";
 import { countRsvpsForAdmin, listRsvpsForAdmin } from "@/modules/rsvp/rsvp";
 import { SPARE_BIBS_PER_PRINT, spareRangeOfQuery } from "@/modules/registrations/domain/spare-bibs";
 import { countInterests } from "@/modules/registrations/interest";
@@ -275,8 +275,13 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     registrations, so nothing above counts them.
   */
   const eliteEntries = bibCounts ? await listEliteEntries(db, staffUser, event.id) : null;
-  // The registrations marked «Elită» (§897) that the elite sheet prints beside the list: lines of its card, with their two ticks (§910).
-  const eliteRegistered = bibCounts ? await listBibs(db, event.id, { elite: true }) : null;
+  /*
+    The registrations marked «Elită» (§897): every one a line of its card, in every state, as «Elite» on the registrations page
+    lists them (the owner, 2026-11-10: «Luisa Rasina e Elită și nu apare aici»), with their two ticks (§910); the elite sheet
+    prints the ones it has a bib for (`listBibs`), which the card's download counts.
+  */
+  const eliteRegistered = bibCounts ? await listEliteMarkedRegistrations(db, staffUser, event.id) : null;
+  const eliteSheet = eliteRegistered && eliteRegistered.length > 0 ? new Set((await listBibs(db, event.id, { elite: true })).map((row) => row.id)) : null;
   const eliteRegisteredTicks = eliteRegistered && eliteRegistered.length > 0 ? await listEliteTicks(db, staffUser, event.id) : null;
   // The range the print just reserved, for its banner (§444) — only two real numbers from the address.
   const reservedRange = saved === "sparesReserved" ? spareRangeOfQuery(spareFrom, spareTo) : null;
@@ -441,11 +446,13 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const elite = eliteEntries
     ? {
         entries: eliteEntries,
-        // A marked registration's ticks are ticked unless the club hid it (§910): the sheet's rows and the ticks are one event's, read a moment apart.
+        // A marked registration's ticks are ticked unless the club hid it (§910): the marked rows and the ticks are one event's, read a moment apart.
         registered: (eliteRegistered ?? []).map((row) => ({
           id: row.id,
-          name: row.registeredName,
+          name: row.name,
+          status: row.status,
           bibNumber: row.bibNumber,
+          printed: eliteSheet?.has(row.id) ?? false,
           ...(eliteRegisteredTicks?.get(row.id) ?? { inResults: true, onSite: true }),
         })),
         previewSrc: bibPreviewUrl({

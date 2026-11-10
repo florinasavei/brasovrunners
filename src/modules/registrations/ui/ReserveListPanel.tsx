@@ -68,7 +68,7 @@ export default async function ReserveListPanel({
   eliteMoveAction?: ActionFormAction;
   /** The list's own query (filters, sort, page), posted by «Mută pe lista de elită» so the press comes back to the same list. */
   listQuery?: string;
-  /** Back from «Mută pe lista de elită»: the editor's elite card (`/admin/events/[id]#bib-elite`), linked at the top. */
+  /** Back from «Mută pe lista de elită»: the editor's elite card (`/admin/events/[id]#bib-elite`, scrolled to, closed), linked at the top. */
   eliteCardHref?: string;
   opened: boolean;
 }) {
@@ -128,7 +128,7 @@ export default async function ReserveListPanel({
   return (
     <Panel glyph="queue" collapsible title={t("reserve.title")} intro={t("reserve.intro")} aside={aside} openWhen={{ saved: opened }} id="registrations-reserve" data-testid="registrations-reserve">
       <Stack spacing={3}>
-        {/* Back from «Mută pe lista de elită» (§903): where the name is now, one press away — a plain link, so the editor's fold opens from `#bib-elite`. */}
+        {/* Back from «Mută pe lista de elită» (§903): where the name is now — a plain link; the editor opens the folds around `#bib-elite` and scrolls to the card, which stays closed. */}
         {eliteCardHref && (
           <Alert severity="success" data-testid="reserve-moved-to-elite">
             <Box component="p" sx={{ m: 0 }}>

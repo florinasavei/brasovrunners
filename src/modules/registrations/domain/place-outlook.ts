@@ -34,6 +34,13 @@ export type PlaceOutlookCounts = {
   /** Seated «Pe lista de invitați speciali» with a place outside the capacity (§643). */
   outside: number;
   /**
+   * The invitations sent «Pe lista de invitați speciali» still open before their deadline (§647): no counted place and no
+   * registration yet, so in none of the terms above, but each a person at the start once accepted (the owner, 2026-11-10:
+   * «Are we even counting the invitations??»). The open invitations that hold a place are `invited`, in `occupied` already.
+   * Optional, 0 when absent — a caller from before it reads as none.
+   */
+  invitedOutside?: number;
+  /**
    * «Locuri păstrate pentru club» (§914): of the capacity, the places the site never gives. Optional, 0 when absent —
    * a caller from before it reads as nothing kept.
    */
@@ -64,7 +71,10 @@ export type PlaceOutlook = PlaceOutlookCounts & {
   fromInternal: number;
   /** The supplementary places it would take to let in everybody left on both lists. */
   raises: number;
-  /** Everybody, if everybody on both lists came: the places taken, the special guests and both lists. */
+  /**
+   * Everybody, if everybody on both lists came and every open invitation were accepted: the places taken (the invitations
+   * holding one among them), the special guests, both lists and the special guests' open invitations.
+   */
   totalIfAll: number;
 };
 
@@ -82,8 +92,17 @@ export function placeOutlook(counts: PlaceOutlookCounts): PlaceOutlook {
     fromWaiting,
     fromInternal,
     raises: counts.waiting - fromWaiting + (counts.internal - fromInternal),
-    totalIfAll: counts.occupied + counts.outside + counts.waiting + counts.internal,
+    totalIfAll: counts.occupied + counts.outside + counts.waiting + counts.internal + (counts.invitedOutside ?? 0),
   };
+}
+
+/**
+ * The open invitations «Oameni la start dacă intră toți» counts, of both kinds: the ones holding a counted place (`invited`)
+ * and the special guests' (`invitedOutside`) — what its «inclusiv N invitații fără răspuns» names, the figure «Kituri de
+ * pregătit» packs for (`countKits`).
+ */
+export function openInvitationsAtStart(outlook: Pick<PlaceOutlook, "invited" | "invitedOutside">): number {
+  return outlook.invited + (outlook.invitedOutside ?? 0);
 }
 
 /**

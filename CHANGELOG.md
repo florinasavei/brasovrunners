@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.38-2026-11-10
+
+- **The pace calculator in miles too** — «Unelte» → «Calculator de ritm»: «Unitatea de măsură», kilometres (min/km, km/h) by default or miles (min/milă, mph); switching converts the boxes and keeps the same run. §927.
+- **The start counts the invitations; every elite on the elite card** — «Oameni la start dacă intră toți» adds the special guests' open invitations and names them («… și 4 invitații fără răspuns»); «Elită — doar numele pe BIB» lists every registration marked «Elită» with its state, the sheet still printing only those with a bib, and a link to the card lands on it closed. §928.
 ## BR-V4.37-2026-11-09
 
 - **«Unelte» on or off, and its tools** — «Pagini standard» → «Unelte»: publish the page or take it off the site, and tick «Pe site» per tool; the pace calculator's distance box and race buttons share one row, the typed time reads «Timpul propus», and a «?» shows the formula. §926.

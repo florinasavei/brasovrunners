@@ -5,8 +5,10 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { ELITE_NAME_MAX } from "@/db/schema/event-elite-entries";
+import type { RegistrationStatus } from "@/db/schema/registrations";
 import { countForm } from "@/i18n/count-form";
 import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
+import RegistrationStatusChip from "@/modules/registrations/ui/RegistrationStatusChip";
 import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import DetachedActionForm, { DetachedFields, DetachedForm } from "@/shared/forms/DetachedActionForm";
 import RecallField from "@/shared/forms/recall";
@@ -75,11 +77,13 @@ export type EliteCard = {
   /** The names in the order typed, with the number the club gave each, if any, and the line's two ticks (§910). */
   entries: ReadonlyArray<{ id: string; name: string; bibNumber: number | null } & EliteTicks>;
   /**
-   * The registrations an Administrator marked «Elită» (§897) whose bib the sheet prints — confirmed, with their number
-   * (`bibs.ts#listBibs` with `elite`), and their two ticks (§910, `elite-mark.ts#listEliteTicks`). Marked and unmarked from the
+   * The registrations an Administrator marked «Elită» (§897), in every state, as «Elite» on the registrations page lists them
+   * (`elite-mark.ts#listEliteMarkedRegistrations`; the owner, 2026-11-10: «Luisa Rasina e Elită și nu apare aici») — each with
+   * its state, its number when it has one, whether the sheet prints its bib now (`printed`: confirmed with a number,
+   * `bibs.ts#listBibs` with `elite`) and its two ticks (§910, `elite-mark.ts#listEliteTicks`). Marked and unmarked from the
    * registrations list's «⋮»; the ticks are the card's too.
    */
-  registered?: ReadonlyArray<{ id: string; name: string; bibNumber: number } & EliteTicks>;
+  registered?: ReadonlyArray<{ id: string; name: string; status: RegistrationStatus; bibNumber: number | null; printed: boolean } & EliteTicks>;
   /** The sample elite bib: the preview route with `elite=1` and the stored design (`bib-design-query.ts#bibPreviewUrl`). */
   previewSrc: string;
   /** The sheet of every elite bib: the bibs route with `elite=1`. */
@@ -209,8 +213,13 @@ function EliteTickButtons({
  * stand beside it (`EliteBibForms`, `BibPrintForms`): «Salvează» never posts a name, and a refused add keeps what
  * was typed, said right above the boxes.
  *
- * Under the names, the registrations an Administrator marked «Elită» on the registrations list (§897) — each «înscris»,
- * with its number — since the same sheet prints them: in the closed line's count and the download's.
+ * Under the names, every registration an Administrator marked «Elită» on the registrations list (§897), in every state, as
+ * «Elite» on the registrations page lists them (the owner, 2026-11-10: «Luisa Rasina e Elită și nu apare aici») — each
+ * «cu înscriere», with its state chip and its number when it has one: in the closed line's count, and in the download's only
+ * while the sheet prints it (`printed`), so a registration still to sign waits for its number.
+ *
+ * `#bib-elite` names the wrapper around the fold, not the fold (the owner, 2026-11-10: closed «even via link»): every link to
+ * the card scrolls to it closed.
  *
  * Every line, a name of the list or a marked registration, carries the two ticks (§910, `EliteTickButtons`): «Apare în
  * clasament» and «Apare pe site», the Administrator's to change; the help under the list says what each does and that a
@@ -219,132 +228,145 @@ function EliteTickButtons({
 async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; mayEdit: boolean; saved: boolean }) {
   const t = await getTranslations("Admin");
   const locale = await getLocale();
-  // The registrations marked «Elită» (§897) print on the same sheet, so they are in its count and its closed line.
+  // Every elite is a line and in the closed line's count, as on the registrations page's «Elite»; the sheet prints the list's
+  // names and the marked registrations with a bib now (§897) — a registration still to sign waits for its number.
   const registered = elite.registered ?? [];
   const count = elite.entries.length + registered.length;
+  const printedRegistered = registered.filter((entry) => entry.printed).length;
+  const printed = elite.entries.length + printedRegistered;
   const aside = count === 0 ? t("bibs.eliteNone") : t(`bibs.eliteCount.${countForm(count, locale)}`, { count });
   const tickLabels: Record<EliteTickName, string> = { inResults: t("bibs.eliteInResults"), onSite: t("bibs.eliteOnSite") };
   return (
-    <Panel glyph="bibElite" collapsible level={5} id="bib-elite" title={t("bibs.eliteTitle")} aside={aside} openWhen={{ saved }} data-testid="bib-elite">
-      <Stack spacing={1.5}>
-        <Typography variant="body2" color="text.secondary">
-          {t("bibs.eliteHelp")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" data-testid="bib-elite-registered-help">
-          {t("bibs.eliteRegisteredHelp")}
-        </Typography>
-        {/* The ordinary sheet prints a marked registration too, elite-style (§897): said only while there is one. */}
-        {registered.length > 0 ? (
-          <Typography variant="body2" color="text.secondary" data-testid="bib-elite-registered-once">
-            {t("bibs.eliteRegisteredOnce")}
-          </Typography>
-        ) : null}
-        {count === 0 ? (
-          <Typography variant="body2" color="text.secondary" data-testid="bib-elite-empty">
-            {t("bibs.eliteEmpty")}
-          </Typography>
-        ) : (
-          <Stack component="ol" spacing={0.5} sx={{ m: 0, pl: 3 }} data-testid="bib-elite-list">
-            {elite.entries.map((entry) => (
-              <Box key={entry.id} component="li" data-testid="bib-elite-entry">
-                <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", columnGap: 1 }}>
-                  <Typography sx={{ fontWeight: 600, overflowWrap: "anywhere" }}>{entry.name}</Typography>
-                  {entry.bibNumber !== null && (
-                    <Typography variant="body2" color="text.secondary">
-                      {t("bibs.eliteNumberShown", { number: entry.bibNumber })}
-                    </Typography>
-                  )}
-                  {mayEdit && (
-                    // The question is the line's own form (`BibPrintForms`, §384); this button only submits it.
-                    <GlyphButton icon="delete" type="submit" form={bibEliteDeleteForm(entry.id)} variant="text" color="error" size="small" sx={{ minHeight: 44 }}>
-                      {t("bibs.eliteDelete")}
-                    </GlyphButton>
-                  )}
-                </Stack>
-                <EliteTickButtons ticks={entry} formOf={(tick) => bibEliteTickForm(entry.id, tick)} mayEdit={mayEdit} labels={tickLabels} />
-              </Box>
-            ))}
-            {/* A registration marked «Elită» (§897): never deleted here — the mark is the registrations list's; its two ticks are the card's too (§910). */}
-            {registered.map((entry) => (
-              <Box key={entry.id} component="li" data-testid="bib-elite-registered">
-                <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", columnGap: 1 }}>
-                  <Typography sx={{ fontWeight: 600, overflowWrap: "anywhere" }}>{entry.name}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {t("bibs.eliteRegistered")}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {t("bibs.eliteNumberShown", { number: entry.bibNumber })}
-                  </Typography>
-                </Stack>
-                <EliteTickButtons ticks={entry} formOf={(tick) => bibEliteRegisteredTickForm(entry.id, tick)} mayEdit={mayEdit} labels={tickLabels} />
-              </Box>
-            ))}
-          </Stack>
-        )}
-        {/*
-          What the two ticks do (§910), once for every line: the agreement the site tick needs, said; what each tick does and a
-          registered runner's own ticks, behind the «?» (the owner's rule: one sentence, the rest behind «?», §511).
-        */}
-        {count > 0 && (
-          <Typography variant="caption" color="text.secondary" component="p" sx={{ m: 0, overflowWrap: "anywhere" }} data-testid="bib-elite-ticks-help">
-            {t("bibs.eliteTicksHelp")}{" "}
-            <QuietHelp text={[t("bibs.eliteInResultsHelp"), t("bibs.eliteOnSiteHelp"), t("bibs.eliteRegisteredSiteHelp")].join("\n")} size={14} testId="bib-elite-ticks-more" />
-          </Typography>
-        )}
-        {mayEdit ? (
-          <DetachedFields form={BIB_ELITE_ADD_FORM}>
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { xs: "stretch", sm: "flex-start" } }} data-testid="bib-elite-add">
-              <RecallField
-                name="eliteName"
-                label={t("bibs.eliteName")}
-                helperText={t("bibs.eliteNameHelp", { max: ELITE_NAME_MAX })}
-                required
-                fullWidth
-                size="small"
-                slotProps={{ htmlInput: { maxLength: ELITE_NAME_MAX, autoComplete: "off" } }}
-              />
-              <RecallField
-                name="eliteNumber"
-                label={t("bibs.eliteNumber")}
-                helperText={t("bibs.eliteNumberHelp")}
-                size="small"
-                slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[0-9]*", maxLength: 5, autoComplete: "off" } }}
-                sx={{ width: { sm: 200 }, flexShrink: 0 }}
-              />
-              <Box sx={{ flexShrink: 0 }}>
-                <GlyphSubmitButton label={t("bibs.eliteAdd")} pendingLabel={t("bibs.eliteAdding")} icon="add" />
-              </Box>
-            </Stack>
-          </DetachedFields>
-        ) : (
+    /*
+      `#bib-elite` names this wrapper, not the fold (the owner, 2026-11-10: the card stays closed «even via link»): a link to it —
+      «Kituri de pregătit»'s elites, «Gestionează lista de elite» — opens the folds around it and scrolls here
+      (`OpenFoldFromHash`), and the card waits closed for a press. Back from its own add or delete it opens (`openWhen`).
+    */
+    <Box id="bib-elite" sx={{ scrollMarginTop: 16 }}>
+      <Panel glyph="bibElite" collapsible level={5} title={t("bibs.eliteTitle")} aside={aside} openWhen={{ saved }} data-testid="bib-elite">
+        <Stack spacing={1.5}>
           <Typography variant="body2" color="text.secondary">
-            {t("bibs.eliteReadOnly")}
+            {t("bibs.eliteHelp")}
           </Typography>
-        )}
-        {count > 0 && (
-          <Box>
-            <GlyphButton icon="pdf" href={elite.downloadHref} variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="bib-elite-download">
-              {t("bibs.eliteDownload", { count })}
-            </GlyphButton>
+          <Typography variant="body2" color="text.secondary" data-testid="bib-elite-registered-help">
+            {t("bibs.eliteRegisteredHelp")}
+          </Typography>
+          {/* The ordinary sheet prints a marked registration too, elite-style (§897): said only while it prints one. */}
+          {printedRegistered > 0 ? (
+            <Typography variant="body2" color="text.secondary" data-testid="bib-elite-registered-once">
+              {t("bibs.eliteRegisteredOnce")}
+            </Typography>
+          ) : null}
+          {count === 0 ? (
+            <Typography variant="body2" color="text.secondary" data-testid="bib-elite-empty">
+              {t("bibs.eliteEmpty")}
+            </Typography>
+          ) : (
+            <Stack component="ol" spacing={0.5} sx={{ m: 0, pl: 3 }} data-testid="bib-elite-list">
+              {elite.entries.map((entry) => (
+                <Box key={entry.id} component="li" data-testid="bib-elite-entry">
+                  <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", columnGap: 1 }}>
+                    <Typography sx={{ fontWeight: 600, overflowWrap: "anywhere" }}>{entry.name}</Typography>
+                    {entry.bibNumber !== null && (
+                      <Typography variant="body2" color="text.secondary">
+                        {t("bibs.eliteNumberShown", { number: entry.bibNumber })}
+                      </Typography>
+                    )}
+                    {mayEdit && (
+                      // The question is the line's own form (`BibPrintForms`, §384); this button only submits it.
+                      <GlyphButton icon="delete" type="submit" form={bibEliteDeleteForm(entry.id)} variant="text" color="error" size="small" sx={{ minHeight: 44 }}>
+                        {t("bibs.eliteDelete")}
+                      </GlyphButton>
+                    )}
+                  </Stack>
+                  <EliteTickButtons ticks={entry} formOf={(tick) => bibEliteTickForm(entry.id, tick)} mayEdit={mayEdit} labels={tickLabels} />
+                </Box>
+              ))}
+              {/* A registration marked «Elită» (§897): never deleted here — the mark is the registrations list's; its two ticks are the card's too (§910). */}
+              {registered.map((entry) => (
+                <Box key={entry.id} component="li" data-testid="bib-elite-registered">
+                  <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", columnGap: 1 }}>
+                    <Typography sx={{ fontWeight: 600, overflowWrap: "anywhere" }}>{entry.name}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {t("bibs.eliteRegistered")}
+                    </Typography>
+                    <RegistrationStatusChip status={entry.status} testId="bib-elite-registered-status" />
+                    {entry.bibNumber !== null && (
+                      <Typography variant="body2" color="text.secondary">
+                        {t("bibs.eliteNumberShown", { number: entry.bibNumber })}
+                      </Typography>
+                    )}
+                  </Stack>
+                  <EliteTickButtons ticks={entry} formOf={(tick) => bibEliteRegisteredTickForm(entry.id, tick)} mayEdit={mayEdit} labels={tickLabels} />
+                </Box>
+              ))}
+            </Stack>
+          )}
+          {/*
+            What the two ticks do (§910), once for every line: the agreement the site tick needs, said; what each tick does and a
+            registered runner's own ticks, behind the «?» (the owner's rule: one sentence, the rest behind «?», §511).
+          */}
+          {count > 0 && (
+            <Typography variant="caption" color="text.secondary" component="p" sx={{ m: 0, overflowWrap: "anywhere" }} data-testid="bib-elite-ticks-help">
+              {t("bibs.eliteTicksHelp")}{" "}
+              <QuietHelp text={[t("bibs.eliteInResultsHelp"), t("bibs.eliteOnSiteHelp"), t("bibs.eliteRegisteredSiteHelp")].join("\n")} size={14} testId="bib-elite-ticks-more" />
+            </Typography>
+          )}
+          {mayEdit ? (
+            <DetachedFields form={BIB_ELITE_ADD_FORM}>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { xs: "stretch", sm: "flex-start" } }} data-testid="bib-elite-add">
+                <RecallField
+                  name="eliteName"
+                  label={t("bibs.eliteName")}
+                  helperText={t("bibs.eliteNameHelp", { max: ELITE_NAME_MAX })}
+                  required
+                  fullWidth
+                  size="small"
+                  slotProps={{ htmlInput: { maxLength: ELITE_NAME_MAX, autoComplete: "off" } }}
+                />
+                <RecallField
+                  name="eliteNumber"
+                  label={t("bibs.eliteNumber")}
+                  helperText={t("bibs.eliteNumberHelp")}
+                  size="small"
+                  slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[0-9]*", maxLength: 5, autoComplete: "off" } }}
+                  sx={{ width: { sm: 200 }, flexShrink: 0 }}
+                />
+                <Box sx={{ flexShrink: 0 }}>
+                  <GlyphSubmitButton label={t("bibs.eliteAdd")} pendingLabel={t("bibs.eliteAdding")} icon="add" />
+                </Box>
+              </Stack>
+            </DetachedFields>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              {t("bibs.eliteReadOnly")}
+            </Typography>
+          )}
+          {printed > 0 && (
+            <Box>
+              <GlyphButton icon="pdf" href={elite.downloadHref} variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="bib-elite-download">
+                {t("bibs.eliteDownload", { count: printed })}
+              </GlyphButton>
+            </Box>
+          )}
+          {/* One elite bib as it prints, with the saved design and a sample name — never a name of the list. */}
+          <Box component="figure" sx={{ m: 0, maxWidth: 320 }} data-testid="bib-elite-sample">
+            <Box
+              component="img"
+              src={elite.previewSrc}
+              alt={t("bibs.eliteSampleAlt")}
+              width={BIB_IMAGE.width}
+              height={BIB_IMAGE.height}
+              loading="lazy"
+              sx={{ width: "100%", height: "auto", display: "block", border: 1, borderColor: "divider" }}
+            />
+            <Typography component="figcaption" variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+              {t("bibs.eliteSampleCaption")}
+            </Typography>
           </Box>
-        )}
-        {/* One elite bib as it prints, with the saved design and a sample name — never a name of the list. */}
-        <Box component="figure" sx={{ m: 0, maxWidth: 320 }} data-testid="bib-elite-sample">
-          <Box
-            component="img"
-            src={elite.previewSrc}
-            alt={t("bibs.eliteSampleAlt")}
-            width={BIB_IMAGE.width}
-            height={BIB_IMAGE.height}
-            loading="lazy"
-            sx={{ width: "100%", height: "auto", display: "block", border: 1, borderColor: "divider" }}
-          />
-          <Typography component="figcaption" variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-            {t("bibs.eliteSampleCaption")}
-          </Typography>
-        </Box>
-      </Stack>
-    </Panel>
+        </Stack>
+      </Panel>
+    </Box>
   );
 }
 
