@@ -4825,11 +4825,17 @@ async function lockOpenInvitation<T extends Record<string, unknown>>(tx: Transac
  * the lock (`countEligibleWaitlisted`); the link and the email are re-issued, the deadline kept, and the
  * result says so (`kept: "waiting"`). An invitation «Pe lista ascunsă» holds no counted place and may
  * be extended whoever waits.
+ *
+ * **The days count from the moment the page that offered them was drawn** (`countedFrom`, the list «La
+ * retrimitere»): its line named a day and an hour, and a press after midnight, or from a tab left open, must
+ * store that moment and not a day later. Never from a moment still to come — then, as with no `countedFrom`,
+ * they count from the press — so the anchor can only bring the deadline earlier than the press alone would:
+ * nothing is reachable with it that the days did not already reach, and every guard above still holds.
  */
 export async function resendInvitationByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
   invitationId: string,
-  input: { days: number | null },
+  input: { days: number | null; countedFrom?: Date | null },
   actor: { id: string; role: StaffRole },
   now: Date,
 ): Promise<{ expiresAt: Date; kept: "waiting" | null }> {
@@ -4839,7 +4845,9 @@ export async function resendInvitationByStaff<T extends Record<string, unknown>>
   const result = await db.transaction(async (tx) => {
     const { invitation, lockedEvent } = await lockOpenInvitation(tx, invitationId, now);
     if (lockedEvent.eventStatus !== "SCHEDULED" || lockedEvent.startsAt.getTime() <= now.getTime()) throw new InvitationRefusal("INVITATION_EVENT_CLOSED", invitation.name);
-    const moved = input.days === null ? null : invitationDeadline({ now, days: input.days, startsAt: lockedEvent.startsAt });
+    // Counted from the draw of the page that offered them, when the press says when that was; never from a moment ahead of the press.
+    const countedFrom = input.countedFrom && input.countedFrom.getTime() <= now.getTime() ? input.countedFrom : now;
+    const moved = input.days === null ? null : invitationDeadline({ now: countedFrom, days: input.days, startsAt: lockedEvent.startsAt });
     const later = moved !== null && moved.getTime() > invitation.expiresAt.getTime();
     // A counted place is never held longer while anybody eligible waits for one; the hidden list holds none.
     const waitingBlocks = later && !invitation.outsideCapacity && (await repo.countEligibleWaitlisted(tx, invitation.eventId)) > 0;

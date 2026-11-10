@@ -134,8 +134,19 @@ function refusalOf(error: unknown): { error: string } {
 }
 
 /**
- * «Retrimite» (§647): a new email and link; the deadline kept, or moved to the days typed when that is
- * later — but kept for a counted invitation while anyone eligible waits, and the toast says which.
+ * When the page that offered the days was drawn: the form's hidden `drawnAt`, an ISO instant as
+ * `Date.prototype.toISOString` writes it, or null for anything else — then the days count from the press.
+ */
+function drawnAtOf(raw: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(raw)) return null;
+  const at = new Date(raw);
+  return Number.isNaN(at.getTime()) ? null : at;
+}
+
+/**
+ * «Retrimite» (§647): a new email and link; the deadline kept, or moved to the day chosen in «La retrimitere»
+ * — its days, counted from the moment the page was drawn, so the press stores the moment the line named — when
+ * that is later; but kept for a counted invitation while anyone eligible waits, and the toast says which.
  */
 export async function resendInvitationAction(_previous: unknown, form: FormData): Promise<null> {
   // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
@@ -146,7 +157,7 @@ export async function resendInvitationAction(_previous: unknown, form: FormData)
     try {
       const actor = await requireStaffCapability(canManageRegistrations);
       press.by(actor.id);
-      const resent = await resendInvitation(getDb(), actor, text(form, "invitationId"), wholeDigits(text(form, "days")), new Date());
+      const resent = await resendInvitation(getDb(), actor, text(form, "invitationId"), wholeDigits(text(form, "days")), new Date(), drawnAtOf(text(form, "drawnAt")));
       outcome = { saved: resent.kept === "waiting" ? "invitationResentKept" : "invitationResent" };
     } catch (error) {
       outcome = refusalOf(error);

@@ -3081,8 +3081,9 @@ BR-REQ-037-05):
    A registration of the invited address that reaches its place by another route takes the invitation
    over in the same transaction (`event.invitation_accepted` with `adopted`).
    «Retrimite» mints a new link (the old one superseded, §619) and moves the deadline only when days
-   are posted and the result is later — the page offers them as the list «La retrimitere», each line a
-   later day the press really reaches, resting on «Termenul rămâne» (§NNN) — **and never, for an
+   are posted and the result is later — the page offers them as the list «La retrimitere», resting on
+   «Termenul rămâne», each other line the day and hour its press stores: the days are counted from the
+   moment the page was drawn (`countedFrom`), never from one still to come — **and never, for an
    invitation that holds a counted place, while
    anyone eligible waits** (`countEligibleWaitlisted > 0` under the lock): the waiting row queued behind
    that deadline, and moving it would keep a counted place ahead of them at every resend without the

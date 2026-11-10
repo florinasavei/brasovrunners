@@ -1041,9 +1041,11 @@ export async function resendInvitation<T extends Record<string, unknown>>(
   invitationId: string,
   days: number | null,
   now: Date,
+  /** When the page that offered the days was drawn («La retrimitere»): they count from then. */
+  countedFrom: Date | null = null,
 ): Promise<{ expiresAt: Date; kept: "waiting" | null }> {
   if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not resend an invitation`);
-  return resendInvitationByStaff(db, invitationId, { days }, actor, now);
+  return resendInvitationByStaff(db, invitationId, { days, countedFrom }, actor, now);
 }
 
 /** «Retrage» an invitation (§647): the Administrator's alone, asserted here and in the service. */

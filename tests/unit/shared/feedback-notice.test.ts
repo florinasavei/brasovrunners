@@ -234,6 +234,21 @@ describe("§511 a typed value named in the question", () => {
   it("leaves a spec without `fillFrom` exactly as it was", () => {
     const plain = { title: "t", body: "Salvezi {x}?", confirmLabel: "", cancelLabel: "" };
     expect(fillFromForm(plain, values({ x: "1" }))).toBe(plain);
+    expect(fillFromForm(plain, values({ x: "1" }), values({ x: "unu" }))).toBe(plain);
+  });
+
+  it("fills a list's `{field}` with its chosen line's own words, never with the value it posts («La retrimitere»)", () => {
+    const resend = { title: "t", body: "Linkul vechi nu mai merge. {days}.", email: "Pleacă 1 email: {days}", confirmLabel: "", cancelLabel: "", fillFromChosen: ["days"] };
+    const filled = fillFromForm(resend, values({ days: "9" }), values({ days: " Termen nou: joi, 19 nov., 14:42 " }));
+    expect(filled.body).toBe("Linkul vechi nu mai merge. Termen nou: joi, 19 nov., 14:42.");
+    expect(filled.fillFromChosen).toBeUndefined();
+    // The body alone: an email line keeps what it says.
+    expect(filled.email).toBe("Pleacă 1 email: {days}");
+    // Beside a typed value, each fills its own.
+    const both = { title: "t", body: "{name}: {days}.", confirmLabel: "", cancelLabel: "", fillFrom: ["name"], fillFromChosen: ["days"] };
+    expect(fillFromForm(both, values({ name: "Ana", days: "9" }), values({ days: "Termen nou: joi" })).body).toBe("Ana: Termen nou: joi.");
+    // No reader of the list: the placeholder is emptied, never left as text.
+    expect(fillFromForm(resend, values({ days: "9" })).body).toBe("Linkul vechi nu mai merge. .");
   });
 });
 

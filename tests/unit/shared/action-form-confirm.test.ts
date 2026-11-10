@@ -40,7 +40,9 @@ describe("§384 ActionForm asks first", () => {
     // the offers a raised capacity sends, the window's re-sent links — then a typed value named in the sentences, the email line's
     // person included, is filled from the form at the press (§511), and asked.
     expect(source).toMatch(/const said = resolveAlso\(counted, valueOf\);/);
-    expect(source).toMatch(/const resolved = fillFromForm\(said, valueOf\);\s*setAsking\(\{ spec: resolved, submitter \}\);/);
+    expect(source).toMatch(/const resolved = fillFromForm\(said, valueOf, chosenOf\);\s*setAsking\(\{ spec: resolved, submitter \}\);/);
+    // …and a list's chosen line in its own words («La retrimitere»): read from the `<select>` itself, never from the posted value.
+    expect(source).toMatch(/const chosenOf = \(field: string\) => \{\s*const list = element\.elements\.namedItem\(field\);\s*return list instanceof HTMLSelectElement \? \(list\.selectedOptions\[0\]\?\.textContent \?\? null\) : null;/);
   });
 
   it("reads the form with its submitter, so a two-verb form asks the right question", () => {

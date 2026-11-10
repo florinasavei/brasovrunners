@@ -78,9 +78,9 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
   for (const row of invitations) byState[invitationState(row, now)] += 1;
   const pending = byState.sent;
   const deadline = (at: Date) => formatDay(at, { locale, timeZone: event.timezone, style: "short", withTime: true });
-  // The same moment inside a sentence of a question («Termenul rămâne mar., 17 nov. 2026, la 09:40.»), and a day alone in a list's line.
+  // The same moment inside a sentence of a question («Termenul rămâne: mar., 17 nov. 2026, la 09:40.»), and as a list's line («joi, 19 nov., 14:42»).
   const inSentence = (at: Date) => formatDay(at, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" });
-  const dayOnly = (at: Date) => formatDay(at, { locale, timeZone: event.timezone, style: "short", year: false, position: "inline" });
+  const inLine = (at: Date) => formatDay(at, { locale, timeZone: event.timezone, style: "short", year: false, withTime: true, position: "continues" });
 
   let form: ReactNode = null;
   // Everyone eligible who waits: while it is not 0, «Retrimite» keeps a counted invitation's deadline (§10.6).
@@ -222,13 +222,16 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
               // A place for one more person on the address (§925, «Locuri»): an invitation with no name.
               const who = row.name || t("invitations.anotherPerson");
               /*
-                «La retrimitere» (§NNN; the owner, of the bare box «Zile (opțional)» that stood here: «nu înțeleg ce
-                înseamnă asta»): the later deadlines a resend can give this invitation, each a day the server would
-                really move it to (`resendDeadlineChoices`). None while the deadline is fixed, and none to compute for a
-                row with no «Retrimite».
+                «La retrimitere» (the owner, 2026-11-10, of the bare box «Zile (opțional)» that stood here: «nu înțeleg
+                ce înseamnă asta»): the later deadlines a resend can give this invitation, each the moment its press
+                stores (`resendDeadlineChoices`; the form posts `drawnAt`, and the server counts the days from it). None
+                while the deadline is fixed, none on an event that is not scheduled — every resend is refused there —
+                and none to compute for a row with no «Retrimite».
               */
-              const choices = mayManage && state === "sent" && !deadlineFixed ? resendDeadlineChoices({ now, expiresAt: row.expiresAt, startsAt: event.startsAt, timeZone: event.timezone }) : [];
-              const startChoice = choices.find((choice) => choice.atStart);
+              const choices =
+                mayManage && state === "sent" && !deadlineFixed && event.eventStatus === "SCHEDULED"
+                  ? resendDeadlineChoices({ drawnAt: now, expiresAt: row.expiresAt, startsAt: event.startsAt, timeZone: event.timezone })
+                  : [];
               // What every question of «Retrimite» says, whichever deadline its body names: the email and to whom, the two buttons.
               const resendAsks = (body: string) => ({
                 title: t("invitations.resendTitle"),
@@ -293,27 +296,26 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                             confirm={deadlineFixed
                               ? resendAsks(t("invitations.resendBodyWaiting", { name: who }))
                               : choices.length === 0
-                                // No later day to offer — the deadline is already the start: no list, and the one question says it stays.
+                                // No later day to offer — most often the deadline is already the start: no list, and the one question says it stays.
                                 ? resendAsks(t("invitations.resendBodyKept", { name: who, deadline: inSentence(row.expiresAt) }))
                                 : [
                                     // The list left on «Termenul rămâne» posts no days: the deadline stays, and the question names it.
                                     { ...resendAsks(t("invitations.resendBodyKept", { name: who, deadline: inSentence(row.expiresAt) })), when: [{ field: "days", equals: "" }] },
-                                    // «la start»: the one choice whose moment the page knows to the minute.
-                                    ...(startChoice
-                                      ? [{ ...resendAsks(t("invitations.resendBodyStart", { name: who, start: inSentence(event.startsAt) })), when: [{ field: "days", equals: String(startChoice.days) }] }]
-                                      : []),
-                                    // Any other day of the list: the question repeats the days it was offered by, read from the list at the press.
-                                    { ...resendAsks((t.raw("invitations.resendBody") as string).replace("{name}", who)), fillFrom: ["days"] },
+                                    // Any other line: the question repeats the line's own words — its day and hour, which the press stores.
+                                    { ...resendAsks((t.raw("invitations.resendBody") as string).replace("{name}", who)), fillFromChosen: ["days"] },
                                   ]}
                             data-testid="invitation-resend-form"
                           >
                             <input type="hidden" name="uiLocale" value={locale} />
                             <input type="hidden" name="eventId" value={eventId} />
                             <input type="hidden" name="invitationId" value={row.id} />
+                            {/* When this list was drawn: the server counts a line's days from here, so a press after midnight, or from
+                                a tab left open, still stores the day and the hour the line names. */}
+                            {choices.length > 0 && <input type="hidden" name="drawnAt" value={now.toISOString()} />}
                             <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: { xs: "wrap", lg: "nowrap" }, alignItems: "flex-end" }}>
                               {/* A native list, so it posts with JavaScript off; at rest it reads «La retrimitere: Termenul rămâne», and
-                                  opened, each line is a deadline by its day. Drawn only with a later day to offer. On a wide screen
-                                  the list and «Retrimite» share a line, as the box did; narrower, the button goes under the list. */}
+                                  opened, each line is a deadline by its day and hour. Drawn only with a later day to offer. On a wide
+                                  screen the list and «Retrimite» share a line, as the box did; narrower, the button goes under the list. */}
                               {choices.length > 0 && (
                                 <TextField
                                   select
@@ -322,15 +324,13 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                                   defaultValue=""
                                   size="small"
                                   slotProps={{ select: { native: true }, inputLabel: { shrink: true }, htmlInput: { "data-testid": "invitation-resend-days" } }}
-                                  // Wide enough for «Termenul rămâne» and for a chosen day up to its date; the three controls stay on one line.
-                                  sx={{ width: { xs: "100%", sm: 230 } }}
+                                  // Wide enough for a chosen line, «Termen nou: joi, 19 nov., 14:42».
+                                  sx={{ width: { xs: "100%", sm: 290 } }}
                                 >
                                   <option value="">{t("invitations.resendKeep")}</option>
                                   {choices.map((choice) => (
                                     <option key={choice.days} value={choice.days}>
-                                      {choice.atStart
-                                        ? t("invitations.resendMoveStart", { day: dayOnly(choice.deadline) })
-                                        : t(`invitations.resendMove.${countForm(choice.days, locale)}`, { day: dayOnly(choice.deadline), count: choice.days })}
+                                      {t(choice.atStart ? "invitations.resendMoveStart" : "invitations.resendMove", { moment: inLine(choice.deadline) })}
                                     </option>
                                   ))}
                                 </TextField>
