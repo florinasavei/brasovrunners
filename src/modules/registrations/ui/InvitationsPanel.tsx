@@ -290,7 +290,9 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                   {mayManage && (
                     <td>
                   {mayManage && state === "sent" && (
-                        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 1, alignItems: { sm: "flex-end" } }}>
+                        // Side by side from `md`; on a tablet «Retrage» may go under — the list is wider than the box it replaced, and
+                        // must not push a narrow page sideways.
+                        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} useFlexGap sx={{ mt: 1, flexWrap: { sm: "wrap", md: "nowrap" }, alignItems: { sm: "flex-end" } }}>
                           <ActionForm
                             action={resendAction}
                             confirm={deadlineFixed
@@ -314,7 +316,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                             {choices.length > 0 && <input type="hidden" name="drawnAt" value={now.toISOString()} />}
                             <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: { xs: "wrap", lg: "nowrap" }, alignItems: "flex-end" }}>
                               {/* A native list, so it posts with JavaScript off; at rest it reads «La retrimitere: Termenul rămâne», and
-                                  opened, each line is a deadline by its day and hour. Drawn only with a later day to offer. On a wide
+                                  opened, each line is a deadline by its day and hour. Drawn only with a later deadline to offer. On a wide
                                   screen the list and «Retrimite» share a line, as the box did; narrower, the button goes under the list. */}
                               {choices.length > 0 && (
                                 <TextField
@@ -324,8 +326,10 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                                   defaultValue=""
                                   size="small"
                                   slotProps={{ select: { native: true }, inputLabel: { shrink: true }, htmlInput: { "data-testid": "invitation-resend-days" } }}
-                                  // Wide enough for a chosen line, «Termen nou: joi, 19 nov., 14:42».
-                                  sx={{ width: { xs: "100%", sm: 290 } }}
+                                  // The closed list shows the chosen line: wide enough for an ordinary one from `sm` («Termen nou: joi, 19
+                                  // nov., 14:42») and, from `md`, for the longest — «la start» in either language. Narrower, a long line
+                                  // loses its end there — the start's hour first — and only there: the opened list and the question carry it whole.
+                                  sx={{ width: { xs: "100%", sm: 290, md: 360 } }}
                                 >
                                   <option value="">{t("invitations.resendKeep")}</option>
                                   {choices.map((choice) => (

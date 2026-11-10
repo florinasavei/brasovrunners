@@ -4814,9 +4814,12 @@ async function lockOpenInvitation<T extends Record<string, unknown>>(tx: Transac
 
 /**
  * «Retrimite» (§647): the email again, with a new link — the old one superseded when the new is minted
- * (§619: its page says a newer email has it) — and the deadline kept (no `days`) or moved to `days` from
- * now, capped by the start as at the send. Never earlier than it was: a resend does not take time back.
- * `resend_count + 1`, audited. The Administrator's alone.
+ * (§619: its page says a newer email has it) — and the deadline kept (no `days`) or moved to `days`
+ * counted from the draw of the page that offered them (below), else from now, capped by the start as at
+ * the send. Never earlier than it was: a resend does not take time back — and when the days asked for an
+ * earlier deadline than the one it has (it was moved since that page was drawn: a second tab, another
+ * Administrator), the result says so (`kept: "alreadyLater"`), so the message after the press does not
+ * leave the line's promise standing. `resend_count + 1`, audited. The Administrator's alone.
  *
  * Never later while anyone eligible waits, for an invitation that holds a counted place (the
  * invitations review of 2026-10-03): the place goes back «only at the deadline» (AGENTS.md §10.6), and
@@ -4838,7 +4841,7 @@ export async function resendInvitationByStaff<T extends Record<string, unknown>>
   input: { days: number | null; countedFrom?: Date | null },
   actor: { id: string; role: StaffRole },
   now: Date,
-): Promise<{ expiresAt: Date; kept: "waiting" | null }> {
+): Promise<{ expiresAt: Date; kept: "waiting" | "alreadyLater" | null }> {
   if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not resend an invitation`);
   if (input.days !== null && !validInvitationDays(input.days)) throw new InvitationRefusal("INVITATION_BAD_DAYS");
   const settings = await currentDeadlines(db);
@@ -4877,7 +4880,9 @@ export async function resendInvitationByStaff<T extends Record<string, unknown>>
       metadata: { invitationId: invitation.id, from: invitation.expiresAt.toISOString(), to: expiresAt.toISOString(), ...(waitingBlocks ? { keptForWaiting: true } : {}) },
       now,
     });
-    return { expiresAt, lockedEvent, kept: waitingBlocks ? ("waiting" as const) : null };
+    // Why a deadline did not go where the days asked: somebody waits, or it was already later than that.
+    const alreadyLater = moved !== null && moved.getTime() < invitation.expiresAt.getTime();
+    return { expiresAt, lockedEvent, kept: waitingBlocks ? ("waiting" as const) : alreadyLater ? ("alreadyLater" as const) : null };
   });
   // The kept place's deadline may have moved: the public count's instants with it (§333).
   revalidatePublicContent("places");

@@ -220,6 +220,19 @@ describe("BR-REQ-037-07 the deadlines «La retrimitere» offers", () => {
     expect(choices.some((choice) => choice.atStart)).toBe(false);
   });
 
+  it("leaves the start's own day to «la start» at the sixty days' edge too: the fifty-ninth reach on that day is no line when the sixtieth is the start", () => {
+    // The race fifty-nine days and three hours away: fifty-nine days on is its own day, three hours before the start.
+    const startsAt = new Date(NOW.getTime() + 59 * DAY + 3 * HOUR);
+    const choices = resendDeadlineChoices({ drawnAt: NOW, expiresAt: new Date(NOW.getTime() + 7 * DAY), startsAt, timeZone: ZONE });
+    expect(daysOf(choices).slice(-2)).toEqual([58, 60]);
+    expect(choices.at(-1)).toEqual({ days: 60, deadline: startsAt, atStart: true });
+    // The start exactly sixty days on, at the end of the Sunday of twenty-five hours: the fifty-ninth reach is that Sunday at 00:30.
+    const sunday = new Date("2026-10-25T21:30:00.000Z");
+    const exact = resendDeadlineChoices({ drawnAt: new Date(sunday.getTime() - 60 * DAY), expiresAt: new Date(sunday.getTime() - 53 * DAY), startsAt: sunday, timeZone: ZONE });
+    expect(daysOf(exact).slice(-2)).toEqual([58, 60]);
+    expect(exact.at(-1)).toEqual({ days: 60, deadline: sunday, atStart: true });
+  });
+
   it("offers the start even on the deadline's own day — «la start» is a deadline of its own — and nothing once the deadline is the start", () => {
     const startsAt = new Date(NOW.getTime() + 3 * DAY);
     const twoHoursBefore = new Date(startsAt.getTime() - 2 * HOUR);
@@ -268,6 +281,12 @@ describe("BR-REQ-037-07 the deadlines «La retrimitere» offers", () => {
     const sunday = resendDeadlineChoices({ drawnAt: new Date("2026-10-18T21:30:00.000Z"), expiresAt: new Date("2026-10-19T10:00:00.000Z"), startsAt: new Date("2026-10-25T21:30:00.000Z"), timeZone: ZONE });
     expect(daysOf(sunday)).toEqual([1, 2, 3, 4, 5, 7]);
     expect(sunday.at(-1)?.atStart).toBe(true);
+    // A quarter of an hour later, at 23:45, two reaches land on that Sunday before the start — 00:30 and 23:30: neither
+    // is a line, the day is still «la start»'s alone.
+    const later = resendDeadlineChoices({ drawnAt: new Date("2026-10-18T21:30:00.000Z"), expiresAt: new Date("2026-10-19T10:00:00.000Z"), startsAt: new Date("2026-10-25T21:45:00.000Z"), timeZone: ZONE });
+    expect(daysOf(later)).toEqual([1, 2, 3, 4, 5, 8]);
+    expect(later.at(-1)).toEqual({ days: 8, deadline: new Date("2026-10-25T21:45:00.000Z"), atStart: true });
+    expect(new Set(later.map((choice) => dayIn(choice.deadline))).size).toBe(later.length);
     // Saturday 20 Mar 2027, 23:30: eight days on is Monday the 29th at 00:30 — the clocks went forward — and no day is written twice.
     const spring = resendDeadlineChoices({ drawnAt: new Date("2027-03-20T21:30:00.000Z"), expiresAt: new Date("2027-03-21T10:00:00.000Z"), startsAt: new Date("2027-06-10T08:00:00.000Z"), timeZone: ZONE });
     expect(new Set(spring.map((choice) => dayIn(choice.deadline))).size).toBe(spring.length);
@@ -318,10 +337,17 @@ describe("BR-REQ-037-07 the deadlines «La retrimitere» offers", () => {
     }
     // The step whole, in both languages: which way the deadline moves, and when there is no list.
     expect(ro.Admin.guide.sections.flatMap((section) => section.tasks.flatMap((task) => task.steps))).toContain(
-      "Pe rândul invitației: «Retrimite» trimite un link nou. Lista «La retrimitere» stă pe «Termenul rămâne»; ca să muți termenul mai târziu, alege din ea ziua nouă. Lista nu apare cât cineva așteaptă un loc sau când nu mai e nicio zi mai târzie. «Retrage» închide invitația și eliberează locul.",
+      "Pe rândul invitației: «Retrimite» trimite un link nou. Lista «La retrimitere» stă pe «Termenul rămâne»; ca să muți termenul mai târziu, alege din ea ziua nouă. La o invitație care ocupă un loc, lista nu apare cât cineva așteaptă un loc; nu apare nici când termenul nu mai poate fi mutat mai târziu. «Retrage» închide invitația și eliberează locul.",
     );
     expect(en.Admin.guide.sections.flatMap((section) => section.tasks.flatMap((task) => task.steps))).toContain(
-      "On the invitation's row: «Resend» sends a new link. The «On resend» list rests on «The deadline stays»; to move the deadline later, choose the new day in it. The list is not shown while someone waits for a place or when no later day is left. «Withdraw» closes the invitation and frees the place.",
+      "On the invitation's row: «Resend» sends a new link. The «On resend» list rests on «The deadline stays»; to move the deadline later, choose the new day in it. On an invitation that takes a place, the list is not shown while someone waits for a place; nor is it shown when the deadline cannot be moved any later. «Withdraw» closes the invitation and frees the place.",
     );
+    // What the page is told after the press, in both languages: resent; kept for somebody waiting; kept because it was already later.
+    expect(ro.Feedback.toast.invitationResent).toBe("Invitație retrimisă, cu un link nou.");
+    expect(ro.Feedback.toast.invitationResentKept).toBe("Invitație retrimisă, cu un link nou. Termenul a rămas cel de acum: cineva așteaptă pe lista de așteptare.");
+    expect(ro.Feedback.toast.invitationResentAlreadyLater).toBe("Invitație retrimisă, cu un link nou. Termenul a rămas cel de acum: era deja mai târziu decât cel ales.");
+    expect(en.Feedback.toast.invitationResent).toBe("Invitation resent, with a new link.");
+    expect(en.Feedback.toast.invitationResentKept).toBe("Invitation resent, with a new link. The deadline stayed as it was: someone is on the waiting list.");
+    expect(en.Feedback.toast.invitationResentAlreadyLater).toBe("Invitation resent, with a new link. The deadline stayed as it was: it was already later than the one chosen.");
   });
 });

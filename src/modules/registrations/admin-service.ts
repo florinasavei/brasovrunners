@@ -1043,7 +1043,7 @@ export async function resendInvitation<T extends Record<string, unknown>>(
   now: Date,
   /** When the page that offered the days was drawn («La retrimitere»): they count from then. */
   countedFrom: Date | null = null,
-): Promise<{ expiresAt: Date; kept: "waiting" | null }> {
+): Promise<{ expiresAt: Date; kept: "waiting" | "alreadyLater" | null }> {
   if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not resend an invitation`);
   return resendInvitationByStaff(db, invitationId, { days, countedFrom }, actor, now);
 }

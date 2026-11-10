@@ -1723,8 +1723,8 @@ languages go live together; that is the rule, not a setting.
      anybody is on the waiting list, «Retrimite» on an invitation that holds a counted place sends the
      link and the email again but keeps the deadline — the row shows no list, the dialog says why,
      and the message after it says the deadline stayed: if the invitation is not accepted by then, the
-     place goes to the waiting list. An invitation «Pe lista de invitați speciali» can still be extended. The Organizer sees the list, not
-     the buttons.
+     place goes to the waiting list. An invitation «Pe lista de invitați speciali» can still be extended. The Organizer sees the
+     invitations, not the buttons or the list «La retrimitere».
    - Somebody invited who registers anyway, through the public form or at the desk, takes the
      invitation's place once their address is confirmed or a place is given to them: the invitation
      reads «Acceptată» and links the registration, and their registration's page says «Înscriere pe

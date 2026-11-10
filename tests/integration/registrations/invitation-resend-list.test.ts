@@ -26,7 +26,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *   from a tab left open: the form posts when it was drawn, and the server counts the days from then;
  * - that anchor only ever brings a deadline earlier than the press alone would: never from a moment still to
  *   come, and a post without it counts from the press, as it always did;
- * - the question each choice asks names its outcome: the deadline kept, or the chosen line in its own words;
+ * - the question each choice asks names its outcome: the deadline kept, or the chosen line in its own words —
+ *   and when that promise cannot be kept, because the deadline was moved later from another page meanwhile, the
+ *   message after the press says the deadline stayed;
  * - no list where the deadline cannot move: a counted place while somebody waits (a special guest keeps hers,
  *   and her questions), no later day left — the deadline already the start, or sixty days ending on its own day —
  *   an event that is not scheduled — and none for the Organizer, who has no «Retrimite» at all.
@@ -197,6 +199,8 @@ type RowView = {
   label: string | null;
   rests: string | null;
   native: boolean | null;
+  /** The list's widths by screen, as its `sx` gives them. */
+  width: unknown;
   lines: { value: string; words: string }[] | null;
   confirm: ConfirmSpec | readonly ConfirmSpec[] | undefined;
   hasResend: boolean;
@@ -222,6 +226,7 @@ async function panel(event: EventInput, now: Date, mayManage = true): Promise<Ma
       label: list ? (list.props.label as string) : null,
       rests: list ? (list.props.defaultValue as string) : null,
       native: list ? ((list.props.slotProps as { select?: { native?: boolean } } | undefined)?.select?.native ?? false) : null,
+      width: list ? (list.props.sx as { width?: unknown } | undefined)?.width : null,
       lines: list ? elementsOf(list.props.children as ReactNode).filter((element) => element.type === "option").map((option) => ({ value: String(option.props.value), words: String(option.props.children) })) : null,
     });
   }
@@ -237,7 +242,10 @@ function question(view: RowView, days: string | null): ConfirmSpec {
   return fillFromForm(spec, valueOf, chosenOf);
 }
 
-/** «Retrimite» pressed at `pressedAt` with the row's form as the page drew it and `days` chosen in its list: the real action. */
+/**
+ * «Retrimite» pressed at `pressedAt` with the row's form as the page drew it and `days` chosen in its list: the real
+ * action. Answers what the page it redirects to is told, exactly — `saved=invitationResent`, `error=FORBIDDEN`.
+ */
 async function press(view: RowView, days: string, pressedAt: Date, over: Record<string, string> = {}): Promise<string> {
   const form = new FormData();
   for (const [name, value] of Object.entries({ ...view.hidden, days, ...over })) form.set(name, value);
@@ -245,8 +253,10 @@ async function press(view: RowView, days: string, pressedAt: Date, over: Record<
     await atTheClock(pressedAt, () => resendInvitationAction(null, form));
   } catch (error) {
     const digest = String((error as { digest?: unknown } | null)?.digest ?? "");
-    if (digest.startsWith("NEXT_REDIRECT")) return digest;
-    throw error;
+    if (!digest.startsWith("NEXT_REDIRECT")) throw error;
+    const told = /[?&](saved|error)=([A-Za-z_]+)(?=[&#;]|$)/.exec(digest);
+    if (!told) throw new Error(`the redirect says neither saved nor error: ${digest}`);
+    return `${told[1]}=${told[2]}`;
   }
   throw new Error("expected a redirect");
 }
@@ -274,6 +284,9 @@ describe("BR-REQ-037-07 «La retrimitere»: the deadlines a resend can give, by 
     // At rest the list posts no days — a plain «Retrimite» moves nothing — and it is the browser's own list.
     expect(ana.rests).toBe("");
     expect(ana.native).toBe(true);
+    // The closed list shows the chosen line: from 900 pixels wide enough for the longest of a year in either language —
+    // «la start», 311 pixels in English, and the control's own 46; an ordinary line from 600; a phone's whole block.
+    expect(ana.width).toEqual({ xs: "100%", sm: 290, md: 360 });
     // The form says when it was drawn, for the server to count from.
     expect(ana.hidden.drawnAt).toBe(at(2).toISOString());
 
@@ -322,7 +335,7 @@ describe("BR-REQ-037-07 «La retrimitere»: the deadlines a resend can give, by 
     // One line is a list like any other: left alone the deadline stays, chosen it is the start.
     expect(question(ana, "").body).toBe(`Ana Pop ${LINK_AGAIN} Termenul rămâne: mar., 17 nov. 2026, la 10:00.`);
     expect(question(ana, "8").body).toBe(`Ana Pop ${LINK_AGAIN} Termen nou: la start, mar., 17 nov., 22:00.`);
-    expect(await press(ana, "8", at(22))).toContain("saved=invitationResent");
+    expect(await press(ana, "8", at(22))).toBe("saved=invitationResent");
     expect((await invitationOf("Ana Pop")).expiresAt).toEqual(startsAt);
   });
 
@@ -357,7 +370,7 @@ describe("BR-REQ-037-07 «La retrimitere»: the deadlines a resend can give, by 
     expect(offered.map((line) => line.value)).toEqual(["8", "9", "10", "11"]);
     for (const [index, line] of offered.entries()) {
       const before = await invitationOf(people[index]);
-      expect(await press(view.get(people[index])!, line.value, pressedAt), line.words).toContain("saved=invitationResent");
+      expect(await press(view.get(people[index])!, line.value, pressedAt), line.words).toBe("saved=invitationResent");
       const after = await invitationOf(people[index]);
       expect(after.expiresAt.getTime(), line.words).toBeGreaterThan(before.expiresAt.getTime());
       expect(after.resendCount, line.words).toBe(1);
@@ -373,7 +386,7 @@ describe("BR-REQ-037-07 «La retrimitere»: the deadlines a resend can give, by 
     await invite(event, "Ana Pop", 7);
     const view = await panel(event, at(2));
     const before = await invitationOf("Ana Pop");
-    expect(await press(view.get("Ana Pop")!, "", at(30))).toContain("saved=invitationResent");
+    expect(await press(view.get("Ana Pop")!, "", at(30))).toBe("saved=invitationResent");
     expect(await invitationOf("Ana Pop")).toMatchObject({ expiresAt: before.expiresAt, resendCount: 1, lastSentAt: at(30) });
   });
 
@@ -401,13 +414,40 @@ describe("BR-REQ-037-07 «La retrimitere»: the deadlines a resend can give, by 
     const before = await invitationOf("Ana Pop");
     // Five days counted from a page drawn two days ago reach the 13th: earlier than the 17th it has.
     const resent = await resendInvitationByStaff(db, before.id, { days: 5, countedFrom: at(-2 * 24 * 60) }, admin, at(5));
-    expect(resent).toEqual({ expiresAt: before.expiresAt, kept: null });
+    // The answer says why the deadline did not go where the days asked: it was already later.
+    expect(resent).toEqual({ expiresAt: before.expiresAt, kept: "alreadyLater" });
     expect(await invitationOf("Ana Pop")).toMatchObject({ expiresAt: before.expiresAt, resendCount: 1 });
-    // The same through the form itself, posted with the draw of two days ago.
+    // The same through the form itself, posted with the draw of two days ago: the message after the press says it stayed.
     const view = await panel(event, at(2));
     const dan = await invitationOf("Dan Pop");
-    expect(await press(view.get("Dan Pop")!, "5", at(5), { drawnAt: at(-2 * 24 * 60).toISOString() })).toContain("saved=invitationResent");
+    expect(await press(view.get("Dan Pop")!, "5", at(5), { drawnAt: at(-2 * 24 * 60).toISOString() })).toBe("saved=invitationResentAlreadyLater");
     expect(await invitationOf("Dan Pop")).toMatchObject({ expiresAt: dan.expiresAt, resendCount: 1 });
+  });
+
+  it("says after the press when a line's promise could not be kept: the deadline was moved later from another page meanwhile", async () => {
+    const event = await createEvent(10);
+    for (const name of ["Ana Pop", "Dan Pop"]) await invite(event, name, 7);
+    // Two pages open on the same invitations: one drawn at 10:02, the other at 10:05.
+    const first = await panel(event, at(2));
+    const second = await panel(event, at(5));
+    // On the second, the 20th is chosen and pressed.
+    const twentieth = second.get("Ana Pop")!.lines!.find((line) => line.words === "Termen nou: vin., 20 nov., 10:05")!;
+    expect(await press(second.get("Ana Pop")!, twentieth.value, at(6))).toBe("saved=invitationResent");
+    const moved = new Date(at(5).getTime() + 10 * DAY);
+    expect((await invitationOf("Ana Pop")).expiresAt).toEqual(moved);
+
+    // The first page still offers the 18th, and its question still promises it: the server keeps the later deadline,
+    // as a resend never takes time back — and the message says the deadline stayed, and why.
+    const eighteenth = first.get("Ana Pop")!.lines!.find((line) => line.words === "Termen nou: mie., 18 nov., 10:02")!;
+    expect(question(first.get("Ana Pop")!, eighteenth.value).body).toBe(`Ana Pop ${LINK_AGAIN} Termen nou: mie., 18 nov., 10:02.`);
+    expect(await press(first.get("Ana Pop")!, eighteenth.value, at(8))).toBe("saved=invitationResentAlreadyLater");
+    expect(await invitationOf("Ana Pop")).toMatchObject({ expiresAt: moved, resendCount: 2 });
+
+    // The very deadline the line names, reached meanwhile from the other page — here the start — is no surprise: the plain message.
+    expect(await press(second.get("Dan Pop")!, "11", at(9))).toBe("saved=invitationResent");
+    expect((await invitationOf("Dan Pop")).expiresAt).toEqual(STARTS);
+    expect(await press(first.get("Dan Pop")!, "11", at(10))).toBe("saved=invitationResent");
+    expect(await invitationOf("Dan Pop")).toMatchObject({ expiresAt: STARTS, resendCount: 2 });
   });
 
   it("asks a question that names the outcome: the deadline kept, or the chosen line in its own words — each with its email line", async () => {
@@ -452,7 +492,7 @@ describe("BR-REQ-037-07 «La retrimitere»: the deadlines a resend can give, by 
     // Days posted by hand for her all the same, with a draw moment beside them: the email leaves, the deadline stays
     // while Elena waits, and the message says it stayed.
     const before = await invitationOf("Ana Pop");
-    expect(await press(ana, "9", at(5), { drawnAt: at(3).toISOString() })).toContain("saved=invitationResentKept");
+    expect(await press(ana, "9", at(5), { drawnAt: at(3).toISOString() })).toBe("saved=invitationResentKept");
     expect(await invitationOf("Ana Pop")).toMatchObject({ expiresAt: before.expiresAt, resendCount: 1 });
     // «Pe lista de invitați speciali» holds no counted place: nobody waits for it, and its deadline may move.
     const dana = view.get("Dana Pop")!;
@@ -495,7 +535,7 @@ describe("BR-REQ-037-07 «La retrimitere»: the deadlines a resend can give, by 
     expect(Array.isArray(ana.confirm)).toBe(false);
     // The press itself is refused, as before, and nothing moves.
     const before = await invitationOf("Ana Pop");
-    expect(await press(ana, "", at(5))).toContain("error=INVITATION_EVENT_CLOSED");
+    expect(await press(ana, "", at(5))).toBe("error=INVITATION_EVENT_CLOSED");
     expect(await invitationOf("Ana Pop")).toMatchObject({ expiresAt: before.expiresAt, resendCount: 0 });
   });
 
@@ -509,7 +549,7 @@ describe("BR-REQ-037-07 «La retrimitere»: the deadlines a resend can give, by 
     // The form the Administrator's page drew, posted by the Organizer: refused, nothing sent, nothing moved.
     state.actor = organizer;
     const before = await invitationOf("Ana Pop");
-    expect(await press(asAdministrator, "9", at(3))).toContain("error=FORBIDDEN");
+    expect(await press(asAdministrator, "9", at(3))).toBe("error=FORBIDDEN");
     expect(await invitationOf("Ana Pop")).toMatchObject({ expiresAt: before.expiresAt, resendCount: 0 });
   });
 });

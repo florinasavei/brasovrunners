@@ -146,7 +146,8 @@ function drawnAtOf(raw: string): Date | null {
 /**
  * «Retrimite» (§647): a new email and link; the deadline kept, or moved to the day chosen in «La retrimitere»
  * — its days, counted from the moment the page was drawn, so the press stores the moment the line named — when
- * that is later; but kept for a counted invitation while anyone eligible waits, and the toast says which.
+ * that is later; but kept for a counted invitation while anyone eligible waits, and kept when it is already later
+ * than the line (moved since the page was drawn) — and the toast says which.
  */
 export async function resendInvitationAction(_previous: unknown, form: FormData): Promise<null> {
   // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
@@ -158,7 +159,8 @@ export async function resendInvitationAction(_previous: unknown, form: FormData)
       const actor = await requireStaffCapability(canManageRegistrations);
       press.by(actor.id);
       const resent = await resendInvitation(getDb(), actor, text(form, "invitationId"), wholeDigits(text(form, "days")), new Date(), drawnAtOf(text(form, "drawnAt")));
-      outcome = { saved: resent.kept === "waiting" ? "invitationResentKept" : "invitationResent" };
+      const said = { waiting: "invitationResentKept", alreadyLater: "invitationResentAlreadyLater" } as const;
+      outcome = { saved: resent.kept ? said[resent.kept] : "invitationResent" };
     } catch (error) {
       outcome = refusalOf(error);
     }

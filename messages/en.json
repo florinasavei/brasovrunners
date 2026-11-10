@@ -9322,7 +9322,7 @@
                 "Tick members from the list or type other people, one per line: the name, then the address. Choose «Days until it expires» and «Language of the invitation» (for new addresses); tick «On the special guests list (takes no place)» for organizers, volunteers and pacemakers. You can send after registration closes too, until the start.",
                 "«Send the invitations» asks first: how many invitations, how many places are free and, on a full race, how many supplementary places are added and what the capacity becomes.",
                 "Each invitation holds a place until its deadline; if it is not accepted, the place frees up by itself. The person fills in the rest and signs the declaration themselves.",
-                "On the invitation's row: «Resend» sends a new link. The «On resend» list rests on «The deadline stays»; to move the deadline later, choose the new day in it. The list is not shown while someone waits for a place or when no later day is left. «Withdraw» closes the invitation and frees the place.",
+                "On the invitation's row: «Resend» sends a new link. The «On resend» list rests on «The deadline stays»; to move the deadline later, choose the new day in it. On an invitation that takes a place, the list is not shown while someone waits for a place; nor is it shown when the deadline cannot be moved any later. «Withdraw» closes the invitation and frees the place.",
                 "If somebody invited registers anyway, through the public form or at the desk, their registration takes the invitation's place once their address is confirmed or they are given a place: the invitation reads «Accepted»."
               ]
             },
@@ -13902,6 +13902,7 @@
       },
       "invitationResent": "Invitation resent, with a new link.",
       "invitationResentKept": "Invitation resent, with a new link. The deadline stayed as it was: someone is on the waiting list.",
+      "invitationResentAlreadyLater": "Invitation resent, with a new link. The deadline stayed as it was: it was already later than the one chosen.",
       "invitationWithdrawn": "Invitation withdrawn; the place was released.",
       "memberTickCleared": "Member tick cleared.",
       "memberTickSet": "Member tick set.",

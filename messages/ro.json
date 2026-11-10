@@ -9322,7 +9322,7 @@
                 "Bifează membrii din listă sau scrie alte persoane, câte una pe rând: numele, apoi adresa. Alege «Zile până expiră» și «Limba invitației» (pentru adresele noi); bifează «Pe lista de invitați speciali (nu ocupă un loc)» pentru organizatori, voluntari și pacemakeri. Se poate trimite și după închiderea înscrierilor, până la start.",
                 "«Trimite invitațiile» întreabă întâi: câte invitații, câte locuri libere și, pe o cursă plină, câte locuri suplimentare se adaugă și cât devine capacitatea.",
                 "Fiecare invitație ține un loc până la termen; dacă nu e acceptată, locul se eliberează singur. Persoana completează restul și semnează ea declarația.",
-                "Pe rândul invitației: «Retrimite» trimite un link nou. Lista «La retrimitere» stă pe «Termenul rămâne»; ca să muți termenul mai târziu, alege din ea ziua nouă. Lista nu apare cât cineva așteaptă un loc sau când nu mai e nicio zi mai târzie. «Retrage» închide invitația și eliberează locul.",
+                "Pe rândul invitației: «Retrimite» trimite un link nou. Lista «La retrimitere» stă pe «Termenul rămâne»; ca să muți termenul mai târziu, alege din ea ziua nouă. La o invitație care ocupă un loc, lista nu apare cât cineva așteaptă un loc; nu apare nici când termenul nu mai poate fi mutat mai târziu. «Retrage» închide invitația și eliberează locul.",
                 "Dacă cineva invitat se înscrie oricum, din formularul public sau la masă, înscrierea lui ia locul invitației când i se confirmă adresa sau primește un loc: invitația apare «Acceptată»."
               ]
             },
@@ -13902,6 +13902,7 @@
       },
       "invitationResent": "Invitație retrimisă, cu un link nou.",
       "invitationResentKept": "Invitație retrimisă, cu un link nou. Termenul a rămas cel de acum: cineva așteaptă pe lista de așteptare.",
+      "invitationResentAlreadyLater": "Invitație retrimisă, cu un link nou. Termenul a rămas cel de acum: era deja mai târziu decât cel ales.",
       "invitationWithdrawn": "Invitație retrasă; locul s-a eliberat.",
       "memberTickCleared": "Bifa de membru a fost scoasă.",
       "memberTickSet": "Bifa de membru a fost pusă.",

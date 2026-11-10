@@ -1,3 +1,4 @@
+import { calendarDayIn } from "@/i18n/dates";
 import { DomainError } from "@/shared/errors/domain-error";
 
 /**
@@ -70,19 +71,6 @@ export function invitationDeadline(input: { now: Date; days: number; startsAt: D
 /** One later deadline «Retrimite»'s list offers: the days it posts, the moment they reach, and whether that is the start. */
 export type ResendDeadlineChoice = { days: number; deadline: Date; atStart: boolean };
 
-// One formatter per zone: the list asks the day of up to sixty instants for every open invitation on a page, and a formatter is not cheap to build.
-const dayFormatters = new Map<string, Intl.DateTimeFormat>();
-
-/** The calendar day an instant falls on in a zone, `YYYY-MM-DD` (`en-CA` writes it that way): days compare as text. */
-function dayIn(at: Date, timeZone: string): string {
-  let formatter = dayFormatters.get(timeZone);
-  if (!formatter) {
-    formatter = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" });
-    dayFormatters.set(timeZone, formatter);
-  }
-  return formatter.format(at);
-}
-
 /**
  * The later deadlines «Retrimite» can give an open invitation, as its list «La retrimitere» offers them (the owner,
  * 2026-11-10, of the bare box «Zile (opțional)»: «nu înțeleg ce înseamnă asta»): for each whole number of days
@@ -94,8 +82,8 @@ function dayIn(at: Date, timeZone: string): string {
  * **One line a day, each on a later day than the deadline it replaces.** Never a later minute of the same day: seven
  * days on an invitation sent with seven an hour ago would move its deadline by that hour, which nobody chooses.
  * Never two lines for one day (the night the clocks go back makes two reaches land on the same one), and never the
- * start's own day beside «la start», which is that day's line. The start is the one line a day may share with the
- * deadline it replaces: «la start» is a deadline of its own, however close.
+ * start's own day beside «la start», which is that day's line whenever the sixty days reach the start. The start is
+ * the one line a day may share with the deadline it replaces: «la start» is a deadline of its own, however close.
  *
  * Empty once the event has started, when the deadline is already the start, and whenever no whole number of days
  * lands on a later day. Who may not move a deadline at all — a counted place while somebody waits, an event that is
@@ -104,8 +92,10 @@ function dayIn(at: Date, timeZone: string): string {
 export function resendDeadlineChoices(input: { drawnAt: Date; expiresAt: Date; startsAt: Date; timeZone: string }): ResendDeadlineChoice[] {
   const choices: ResendDeadlineChoice[] = [];
   const start = input.startsAt.getTime();
-  const startDay = dayIn(input.startsAt, input.timeZone);
-  let lastDay = dayIn(input.expiresAt, input.timeZone);
+  const startDay = calendarDayIn(input.startsAt, input.timeZone);
+  // «la start» is a line of this list when some reach of the sixty lands on the start: then the start's own day is that line's.
+  const startReached = input.drawnAt.getTime() + INVITATION_DAYS_MAX * 24 * 60 * 60_000 >= start;
+  let lastDay = calendarDayIn(input.expiresAt, input.timeZone);
   for (let days = 1; days <= INVITATION_DAYS_MAX; days += 1) {
     const deadline = invitationDeadline({ now: input.drawnAt, days, startsAt: input.startsAt });
     // The event has started: a resend is refused, and there is nothing to offer.
@@ -115,10 +105,8 @@ export function resendDeadlineChoices(input: { drawnAt: Date; expiresAt: Date; s
       if (start > input.expiresAt.getTime()) choices.push({ days, deadline, atStart: true });
       break;
     }
-    const day = dayIn(deadline, input.timeZone);
-    // The start's own day is «la start»'s, when one more day reaches the start.
-    const nextIsStart = days < INVITATION_DAYS_MAX && input.drawnAt.getTime() + (days + 1) * 24 * 60 * 60_000 >= start;
-    if (day > lastDay && !(day === startDay && nextIsStart)) {
+    const day = calendarDayIn(deadline, input.timeZone);
+    if (day > lastDay && !(day === startDay && startReached)) {
       choices.push({ days, deadline, atStart: false });
       lastDay = day;
     }
