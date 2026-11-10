@@ -9322,7 +9322,7 @@
                 "Tick members from the list or type other people, one per line: the name, then the address. Choose «Days until it expires» and «Language of the invitation» (for new addresses); tick «On the special guests list (takes no place)» for organizers, volunteers and pacemakers. You can send after registration closes too, until the start.",
                 "«Send the invitations» asks first: how many invitations, how many places are free and, on a full race, how many supplementary places are added and what the capacity becomes.",
                 "Each invitation holds a place until its deadline; if it is not accepted, the place frees up by itself. The person fills in the rest and signs the declaration themselves.",
-                "On the invitation's row: «Resend» sends a new link; the deadline stays, unless you type a number of days that moves it later. «Withdraw» closes it and frees the place.",
+                "On the invitation's row: «Resend» sends a new link. The «On resend» list rests on «The deadline stays»; to move the deadline later, choose the new day in it. «Withdraw» closes the invitation and frees the place.",
                 "If somebody invited registers anyway, through the public form or at the desk, their registration takes the invitation's place once their address is confirmed or they are given a place: the invitation reads «Accepted»."
               ]
             },
@@ -11228,10 +11228,18 @@
       "raised": "with a supplementary place added",
       "openRegistration": "Open the registration",
       "resendTitle": "Resend the invitation?",
-      "resendBody": "{name} gets the invitation again, with a new link; the old link stops working. The deadline moves to {days} days from now, if that is later than the current one.",
+      "resendBody": "{name} gets the invitation again, with a new link; the old link stops working. The deadline moves to the day chosen in the list (days from now: {days}).",
+      "resendBodyStart": "{name} gets the invitation again, with a new link; the old link stops working. The deadline moves to the start: {start}.",
       "resendBodyWaiting": "{name} gets the invitation again with a new link; the old one stops working. The deadline stays: someone is waiting, and if the invitation is not accepted by then, the place goes to the waiting list.",
-      "resendBodyKept": "{name} gets the invitation again, with a new link; the old link stops working. The deadline stays as it is; to move it later, type a number of days.",
-      "resendDays": "Days (optional)",
+      "resendBodyKept": "{name} gets the invitation again, with a new link; the old link stops working. The deadline stays {deadline}.",
+      "resendWhen": "On resend",
+      "resendKeep": "The deadline stays",
+      "resendMove": {
+        "one": "New deadline: {day} (in a day)",
+        "few": "New deadline: {day} (in {count} days)",
+        "other": "New deadline: {day} (in {count} days)"
+      },
+      "resendMoveStart": "New deadline: the start, {day}",
       "resend": "Resend",
       "resending": "Sending…",
       "withdrawTitle": "Withdraw the invitation?",

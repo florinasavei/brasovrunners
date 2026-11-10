@@ -17,6 +17,7 @@ import {
   invitationState,
   parseInvitationLines,
   readInviteeRows,
+  resendDeadlineChoices,
   validInvitationDays,
 } from "@/modules/registrations/domain/invitations";
 import { eventInvitationsClause } from "@/modules/registrations/invitation-words";
@@ -176,3 +177,106 @@ describe("§647 BR-REQ-053-01 the privacy notice's sentence", () => {
     }
   });
 });
+
+/**
+ * §NNN — «La retrimitere», the list beside «Retrimite» (the owner, 2026-11-10, of the bare box «Zile (opțional)»: «nu
+ * înțeleg ce înseamnă asta»): which later deadlines the list offers, as a pure rule. The panel drawn from a real
+ * database, and each line pressed against the server, are `tests/integration/registrations/invitation-resend-list.test.ts`.
+ */
+describe("§NNN BR-REQ-037-07 the deadlines «La retrimitere» offers", () => {
+  const ZONE = "Europe/Bucharest";
+  const FAR = new Date(NOW.getTime() + 100 * DAY);
+  const daysOf = (choices: ReturnType<typeof resendDeadlineChoices>) => choices.map((choice) => choice.days);
+
+  it("offers each whole number of days from now that lands a day later than the deadline it has, never a later minute of the same day", () => {
+    // Sent an hour ago with seven days: seven days from now is the same day, an hour later — not a choice.
+    const expiresAt = new Date(NOW.getTime() + 7 * DAY - 3_600_000);
+    const choices = resendDeadlineChoices({ now: NOW, expiresAt, startsAt: FAR, timeZone: ZONE });
+    expect(daysOf(choices)).toEqual(Array.from({ length: 53 }, (_, index) => index + 8));
+    expect(choices[0]).toEqual({ days: 8, deadline: new Date(NOW.getTime() + 8 * DAY), atStart: false });
+    // Sixty days is the longest reach, and none of these is the start.
+    expect(choices.at(-1)).toEqual({ days: 60, deadline: new Date(NOW.getTime() + 60 * DAY), atStart: false });
+  });
+
+  it("ends at the start, once, when the days reach it — however many longer reaches would land there too", () => {
+    const startsAt = new Date(NOW.getTime() + 10 * DAY + 3 * 3_600_000);
+    const choices = resendDeadlineChoices({ now: NOW, expiresAt: new Date(NOW.getTime() + 7 * DAY), startsAt, timeZone: ZONE });
+    expect(daysOf(choices)).toEqual([8, 9, 10, 11]);
+    expect(choices.map((choice) => choice.atStart)).toEqual([false, false, false, true]);
+    expect(choices.at(-1)?.deadline).toEqual(startsAt);
+  });
+
+  it("offers the start even on the deadline's own day — «la start» is a deadline of its own — and nothing once the deadline is the start", () => {
+    const startsAt = new Date(NOW.getTime() + 3 * DAY);
+    const twoHoursBefore = new Date(startsAt.getTime() - 2 * 3_600_000);
+    expect(resendDeadlineChoices({ now: NOW, expiresAt: twoHoursBefore, startsAt, timeZone: ZONE })).toEqual([{ days: 3, deadline: startsAt, atStart: true }]);
+    expect(resendDeadlineChoices({ now: NOW, expiresAt: startsAt, startsAt, timeZone: ZONE })).toEqual([]);
+  });
+
+  it("offers nothing once the event has started", () => {
+    const expiresAt = new Date(NOW.getTime() - DAY);
+    expect(resendDeadlineChoices({ now: NOW, expiresAt, startsAt: new Date(NOW.getTime() - 60_000), timeZone: ZONE })).toEqual([]);
+    expect(resendDeadlineChoices({ now: NOW, expiresAt, startsAt: NOW, timeZone: ZONE })).toEqual([]);
+  });
+
+  it("reads «a later day» on the event's own clock, not on UTC's", () => {
+    // 23:30 on the 9th in Brașov; a week from 00:30 on the 3rd is 00:30 on the 10th there — the 9th still, by UTC.
+    const expiresAt = new Date("2026-10-09T20:30:00.000Z");
+    const now = new Date("2026-10-02T21:30:00.000Z");
+    expect(daysOf(resendDeadlineChoices({ now, expiresAt, startsAt: FAR, timeZone: ZONE }))[0]).toBe(7);
+    // Read on UTC's clock both instants are the 9th: seven days is no later day there, and eight is the first.
+    expect(daysOf(resendDeadlineChoices({ now, expiresAt, startsAt: FAR, timeZone: "UTC" }))[0]).toBe(8);
+  });
+
+  it("is the server's own arithmetic, and stays true for a press made later: every choice still lands after the deadline it replaces", () => {
+    const startsAt = new Date(NOW.getTime() + 20 * DAY + 5 * 3_600_000);
+    for (const sentDaysAgo of [0, 1, 3, 6]) {
+      const expiresAt = new Date(NOW.getTime() + (7 - sentDaysAgo) * DAY);
+      const choices = resendDeadlineChoices({ now: NOW, expiresAt, startsAt, timeZone: ZONE });
+      expect(choices.length).toBeGreaterThan(0);
+      expect(daysOf(choices)).toEqual([...new Set(daysOf(choices))].sort((a, b) => a - b));
+      expect(choices.filter((choice) => choice.atStart)).toHaveLength(1);
+      expect(choices.at(-1)?.atStart).toBe(true);
+      for (const choice of choices) {
+        expect(validInvitationDays(choice.days)).toBe(true);
+        expect(choice.deadline).toEqual(invitationDeadline({ now: NOW, days: choice.days, startsAt }));
+        expect(choice.deadline.getTime()).toBeGreaterThan(expiresAt.getTime());
+        expect(choice.deadline.getTime()).toBeLessThanOrEqual(startsAt.getTime());
+        // Pressed an hour or a day after the page was drawn: later still, never past the start.
+        for (const waited of [3_600_000, DAY]) {
+          const pressed = invitationDeadline({ now: new Date(NOW.getTime() + waited), days: choice.days, startsAt });
+          expect(pressed!.getTime()).toBeGreaterThanOrEqual(choice.deadline.getTime());
+          expect(pressed!.getTime()).toBeLessThanOrEqual(startsAt.getTime());
+        }
+      }
+    }
+  });
+
+  it("has its words in both languages: the list's name, its resting line, a day in three forms, the start — and the bare box's are gone", () => {
+    expect(ro.Admin.invitations.resendWhen).toBe("La retrimitere");
+    expect(ro.Admin.invitations.resendKeep).toBe("Termenul rămâne");
+    expect(ro.Admin.invitations.resendMove).toEqual({
+      one: "Termen nou: {day} (peste o zi)",
+      few: "Termen nou: {day} (peste {count} zile)",
+      other: "Termen nou: {day} (peste {count} de zile)",
+    });
+    expect(ro.Admin.invitations.resendMoveStart).toBe("Termen nou: la start, {day}");
+    expect(en.Admin.invitations.resendWhen).toBe("On resend");
+    expect(en.Admin.invitations.resendKeep).toBe("The deadline stays");
+    expect(Object.keys(en.Admin.invitations.resendMove)).toEqual(["one", "few", "other"]);
+    for (const catalogue of [ro, en]) {
+      const words = catalogue.Admin.invitations as Record<string, unknown>;
+      expect(words.resendDays).toBeUndefined();
+      // Each question names what it fills in: the person always, then the deadline kept, the start, or the days chosen.
+      expect(words.resendBodyKept).toMatch(/\{name\}.*\{deadline\}/);
+      expect(words.resendBodyStart).toMatch(/\{name\}.*\{start\}/);
+      expect(words.resendBody).toMatch(/\{name\}.*\{days\}/);
+      expect(JSON.stringify(words)).not.toMatch(/Zile \(opțional\)|Days \(optional\)|scrie numărul de zile|type a number of days/);
+      // The guide tells the same story, by the screen's own words.
+      const step = catalogue.Admin.guide.sections.flatMap((section) => section.tasks.flatMap((task) => task.steps)).filter((text) => text.includes(`«${words.resendWhen}»`));
+      expect(step).toHaveLength(1);
+      expect(step[0]).toContain(`«${words.resendKeep}»`);
+    }
+  });
+});
+

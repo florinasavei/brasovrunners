@@ -23,7 +23,7 @@ import StatusChip from "@/shared/ui/StatusChip";
 import { readInvitationForecast } from "../admin-service";
 import { currentAddressCap } from "../address-cap";
 import { HIDDEN_LIST_OFF } from "../domain/hidden-list";
-import { INVITATION_DAYS_DEFAULT, INVITATION_DAYS_MAX, INVITATION_REFUSALS, invitationState } from "../domain/invitations";
+import { INVITATION_DAYS_DEFAULT, INVITATION_DAYS_MAX, INVITATION_REFUSALS, invitationState, resendDeadlineChoices } from "../domain/invitations";
 import { listEventInvitations } from "../invitation-repository";
 import HiddenListChip from "./HiddenListChip";
 import InviteForm, { type InviteFormState, type InviteFormWords } from "./InviteForm";
@@ -78,6 +78,9 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
   for (const row of invitations) byState[invitationState(row, now)] += 1;
   const pending = byState.sent;
   const deadline = (at: Date) => formatDay(at, { locale, timeZone: event.timezone, style: "short", withTime: true });
+  // The same moment inside a sentence of a question («Termenul rămâne mar., 17 nov. 2026, la 09:40.»), and a day alone in a list's line.
+  const inSentence = (at: Date) => formatDay(at, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" });
+  const dayOnly = (at: Date) => formatDay(at, { locale, timeZone: event.timezone, style: "short", year: false, position: "inline" });
 
   let form: ReactNode = null;
   // Everyone eligible who waits: while it is not 0, «Retrimite» keeps a counted invitation's deadline (§10.6).
@@ -212,12 +215,28 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
               const state = invitationState(row, now);
               /*
                 A counted place while somebody waits: the deadline cannot move later (the server keeps it
-                under the lock whatever is typed), so no days box and the dialog says so. The hidden list
-                holds no counted place and keeps both.
+                under the lock whatever is posted), so no «La retrimitere» list and the dialog says so. The
+                hidden list holds no counted place and keeps both.
               */
               const deadlineFixed = !row.outsideCapacity && waiting > 0;
               // A place for one more person on the address (§925, «Locuri»): an invitation with no name.
               const who = row.name || t("invitations.anotherPerson");
+              /*
+                «La retrimitere» (§NNN; the owner, of the bare box «Zile (opțional)» that stood here: «nu înțeleg ce
+                înseamnă asta»): the later deadlines a resend can give this invitation, each a day the server would
+                really move it to (`resendDeadlineChoices`). None while the deadline is fixed, and none to compute for a
+                row with no «Retrimite».
+              */
+              const choices = mayManage && state === "sent" && !deadlineFixed ? resendDeadlineChoices({ now, expiresAt: row.expiresAt, startsAt: event.startsAt, timeZone: event.timezone }) : [];
+              const startChoice = choices.find((choice) => choice.atStart);
+              // What every question of «Retrimite» says, whichever deadline its body names: the email and to whom, the two buttons.
+              const resendAsks = (body: string) => ({
+                title: t("invitations.resendTitle"),
+                body,
+                ...dialog.mail({ to: who, type: "EVENT_INVITATION" }),
+                confirmLabel: t("invitations.resend"),
+                cancelLabel: dialog.cancel,
+              });
               return (
                 <tr key={row.id} data-testid="invitation-row">
                   <td>
@@ -271,45 +290,51 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                         <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 1, alignItems: { sm: "flex-end" } }}>
                           <ActionForm
                             action={resendAction}
-                            confirm={deadlineFixed ? {
-                              title: t("invitations.resendTitle"),
-                              body: t("invitations.resendBodyWaiting", { name: who }),
-                              ...dialog.mail({ to: who, type: "EVENT_INVITATION" }),
-                              confirmLabel: t("invitations.resend"),
-                              cancelLabel: dialog.cancel,
-                            } : [
-                              // The box left empty keeps the deadline: only a number typed in it moves it, and the dialog says which.
-                              {
-                                title: t("invitations.resendTitle"),
-                                body: t("invitations.resendBodyKept", { name: who }),
-                                when: [{ field: "days", equals: "" }],
-                                ...dialog.mail({ to: who, type: "EVENT_INVITATION" }),
-                                confirmLabel: t("invitations.resend"),
-                                cancelLabel: dialog.cancel,
-                              },
-                              {
-                                title: t("invitations.resendTitle"),
-                                body: t.raw("invitations.resendBody").replace("{name}", who) as string,
-                                fillFrom: ["days"],
-                                ...dialog.mail({ to: who, type: "EVENT_INVITATION" }),
-                                confirmLabel: t("invitations.resend"),
-                                cancelLabel: dialog.cancel,
-                              },
-                            ]}
+                            confirm={deadlineFixed
+                              ? resendAsks(t("invitations.resendBodyWaiting", { name: who }))
+                              : choices.length === 0
+                                // No later day to offer — the deadline is already the start: no list, and the one question says it stays.
+                                ? resendAsks(t("invitations.resendBodyKept", { name: who, deadline: inSentence(row.expiresAt) }))
+                                : [
+                                    // The list left on «Termenul rămâne» posts no days: the deadline stays, and the question names it.
+                                    { ...resendAsks(t("invitations.resendBodyKept", { name: who, deadline: inSentence(row.expiresAt) })), when: [{ field: "days", equals: "" }] },
+                                    // «la start»: the one choice whose moment the page knows to the minute.
+                                    ...(startChoice
+                                      ? [{ ...resendAsks(t("invitations.resendBodyStart", { name: who, start: inSentence(event.startsAt) })), when: [{ field: "days", equals: String(startChoice.days) }] }]
+                                      : []),
+                                    // Any other day of the list: the question repeats the days it was offered by, read from the list at the press.
+                                    { ...resendAsks((t.raw("invitations.resendBody") as string).replace("{name}", who)), fillFrom: ["days"] },
+                                  ]}
                             data-testid="invitation-resend-form"
                           >
                             <input type="hidden" name="uiLocale" value={locale} />
                             <input type="hidden" name="eventId" value={eventId} />
                             <input type="hidden" name="invitationId" value={row.id} />
-                            <Stack direction="row" spacing={1} sx={{ alignItems: "flex-end" }}>
-                              {!deadlineFixed && <TextField
-                                name="days"
-                                label={t("invitations.resendDays")}
-                                type="number"
-                                size="small"
-                                slotProps={{ htmlInput: { min: 1, max: INVITATION_DAYS_MAX, step: 1, inputMode: "numeric" } }}
-                                sx={{ width: 150 }}
-                              />}
+                            <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: { xs: "wrap", lg: "nowrap" }, alignItems: "flex-end" }}>
+                              {/* A native list, so it posts with JavaScript off; at rest it reads «La retrimitere: Termenul rămâne», and
+                                  opened, each line is a deadline by its day. Drawn only with a later day to offer. On a wide screen
+                                  the list and «Retrimite» share a line, as the box did; narrower, the button goes under the list. */}
+                              {choices.length > 0 && (
+                                <TextField
+                                  select
+                                  name="days"
+                                  label={t("invitations.resendWhen")}
+                                  defaultValue=""
+                                  size="small"
+                                  slotProps={{ select: { native: true }, inputLabel: { shrink: true }, htmlInput: { "data-testid": "invitation-resend-days" } }}
+                                  // Wide enough for «Termenul rămâne» and for a chosen day up to its date; the three controls stay on one line.
+                                  sx={{ width: { xs: "100%", sm: 230 } }}
+                                >
+                                  <option value="">{t("invitations.resendKeep")}</option>
+                                  {choices.map((choice) => (
+                                    <option key={choice.days} value={choice.days}>
+                                      {choice.atStart
+                                        ? t("invitations.resendMoveStart", { day: dayOnly(choice.deadline) })
+                                        : t(`invitations.resendMove.${countForm(choice.days, locale)}`, { day: dayOnly(choice.deadline), count: choice.days })}
+                                    </option>
+                                  ))}
+                                </TextField>
+                              )}
                               <GlyphSubmitButton icon="resend" label={t("invitations.resend")} pendingLabel={t("invitations.resending")} variant="outlined" size="small" />
                             </Stack>
                           </ActionForm>

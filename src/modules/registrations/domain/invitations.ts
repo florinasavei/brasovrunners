@@ -67,6 +67,46 @@ export function invitationDeadline(input: { now: Date; days: number; startsAt: D
   return at > input.now.getTime() ? new Date(at) : null;
 }
 
+/** One later deadline «Retrimite»'s list offers: the days it posts, where they land, and whether that is the start. */
+export type ResendDeadlineChoice = { days: number; deadline: Date; atStart: boolean };
+
+/** The calendar day an instant falls on in a zone, `YYYY-MM-DD` (`en-CA` writes it that way): days compare as text. */
+function dayIn(at: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(at);
+}
+
+/**
+ * The later deadlines «Retrimite» can give an open invitation, as its list «La retrimitere» offers them (§NNN; the
+ * owner, 2026-11-10, of the bare box «Zile (opțional)»: «nu înțeleg ce înseamnă asta»): one for each whole number of
+ * days from now that lands on a later day than the deadline the invitation has, ending at the start when the days
+ * reach it. Each is the server's own arithmetic (`invitationDeadline`, as `resendInvitationByStaff` asks it), so no
+ * choice promises a move the press would not make — a resend never moves a deadline earlier, and never past the start.
+ *
+ * **A later day, not merely a later minute.** Seven days from now, on an invitation sent with seven days an hour ago,
+ * would move its deadline by that hour: nothing anybody chooses, and a line that reads like «Termenul rămâne». The
+ * start is the one exception — «la start» is a deadline of its own, however close the one it replaces.
+ *
+ * **Still true at a later press.** The clock only adds: a choice drawn now lands no earlier when it is pressed, so it
+ * still moves the deadline. Empty once the event has started, when the deadline is already the start, and whenever
+ * no whole number of days lands a day later. Who may not move a deadline at all — a counted place while somebody
+ * waits — is the caller's to ask (`deadlineFixed`), and the server's under the lock.
+ */
+export function resendDeadlineChoices(input: { now: Date; expiresAt: Date; startsAt: Date; timeZone: string }): ResendDeadlineChoice[] {
+  const choices: ResendDeadlineChoice[] = [];
+  const keptAt = input.expiresAt.getTime();
+  const keptDay = dayIn(input.expiresAt, input.timeZone);
+  for (let days = 1; days <= INVITATION_DAYS_MAX; days += 1) {
+    const deadline = invitationDeadline({ now: input.now, days, startsAt: input.startsAt });
+    // The event has started: a resend is refused, and there is nothing to offer.
+    if (deadline === null) break;
+    const atStart = deadline.getTime() === input.startsAt.getTime();
+    if (deadline.getTime() > keptAt && (atStart || dayIn(deadline, input.timeZone) > keptDay)) choices.push({ days, deadline, atStart });
+    // Every longer reach lands on the start too: one line says it.
+    if (atStart) break;
+  }
+  return choices;
+}
+
 /**
  * The places free for invitations (§647): the allocator's count against the capacity, **less everyone
  * eligible who waits** (`countEligibleWaitlisted`: `WAITLISTED`, no offer yet) — whatever the event's
