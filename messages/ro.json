@@ -9099,7 +9099,7 @@
                 "«Newsletter» → deschide cardul «Abonați». Linia lui spune câți sunt confirmați și câți în așteptare.",
                 "Caută la «Caută adresa» sau alege «Tema» și «Starea», apoi apasă «Filtrează». «Descarcă CSV» ia lista așa cum e filtrată.",
                 "Cardul «Participanți care au bifat oferte și beneficii»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul.",
-                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Notează cui dai fișierul; șterge-l în 30 de zile.",
+                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Scrie la «Cui dai lista» cui dai fișierul: fără nume nu se descarcă. «Liste date sponsorilor», sub butoane, arată fiecare listă dată. Șterge fișierul în 30 de zile.",
                 "Scoaterea unei adrese e a Administratorului: scrie-i cine a cerut-o."
               ]
             },
@@ -9467,7 +9467,7 @@
                 "«Descarcă CSV» ia lista așa cum e filtrată, cu aceleași coloane. Păstrează fișierul doar cât îți trebuie, apoi șterge-l.",
                 "Ca să scoți pe cineva, la cererea lui: «Dezabonează» pe rândul lui, apoi confirmă. Adresa se șterge cu temele ei, ca atunci când se dezabonează singură.",
                 "Cardul «Participanți care au bifat oferte și beneficii»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul.",
-                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Notează cui dai fișierul; șterge-l în 30 de zile."
+                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Scrie la «Cui dai lista» cui dai fișierul: fără nume nu se descarcă. «Liste date sponsorilor», sub butoane, arată fiecare listă dată. Șterge fișierul în 30 de zile."
               ]
             },
             {
@@ -11071,9 +11071,30 @@
         "other": "{count} de persoane"
       },
       "noticeMissing": "Nota de confidențialitate în vigoare nu spune că lista poate fi dată partenerilor.",
-      "help": "Prenume, nume, adresă, eveniment și data acordului: doar adulții, cu acordul dat sub o notă care permite asta. Scrie cui dai lista: rămâne la fiecare înscriere din ea. Șterge fișierul în 30 de zile.",
+      "help": "Prenume, nume, adresă, eveniment și data acordului: doar adulții, cu acordul dat sub o notă care permite asta. Scrie cui o dai, sau „club” dacă rămâne la club. Șterge fișierul în 30 de zile.",
       "helpExcel": "Excelul are în plus toate bifele fiecăruia, ca să vezi la ce și-a dat acordul. Partenerului dă-i CSV-ul.",
-      "recipient": "Cui dai lista (opțional)",
+      "recipient": "Cui dai lista",
+      "recipientTitle": "Scrie cui dai lista.",
+      "given": {
+        "title": "Liste date sponsorilor",
+        "intro": "Fiecare descărcare a listei: cui ai dat-o, câte persoane avea și până când ștergi copia ta.",
+        "aside": "{lists} · ultima: {recipient}, {date}",
+        "everyEvent": "toate evenimentele",
+        "overdue": "termen trecut",
+        "formats": {
+          "csv": "CSV",
+          "xlsx": "Excel"
+        },
+        "columns": {
+          "recipient": "Cui",
+          "at": "Când",
+          "event": "Eveniment",
+          "count": "Persoane",
+          "file": "Fișier",
+          "actor": "Descărcată de",
+          "deleteBy": "Ștergi copia până la"
+        }
+      },
       "columns": {
         "firstName": "Prenume",
         "lastName": "Nume",

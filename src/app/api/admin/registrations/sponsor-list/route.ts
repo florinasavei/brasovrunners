@@ -28,10 +28,16 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * refused whatever the link. Refused too (409) while the privacy notice in force does not say the
  * list may be given to partners — the page's disabled button is the same rule, not the rule. The
  * one write is the audit row: who, which event (or null), which file (`format`), how many rows, the registrations the file
- * held (their ids — never a name or an address) and whom it was given to when the download named
- * one (`to`, «Cui dai lista»). A registration's page reads that back as «Dată partenerilor», so the
- * club can answer the notice's art. 15 and 19 promise — which partner received whose data — long
- * after its own copy of the file is deleted (review finding).
+ * held (their ids — never a name or an address) and whom it was given to (`to`, «Cui dai lista»).
+ * A registration's page reads that back as «Dată partenerilor», so the club can answer the notice's
+ * art. 15 and 19 promise — which partner received whose data — long after its own copy of the file
+ * is deleted (review finding).
+ *
+ * **«Cui dai lista» is required (§NNN, amending §570).** A download that names nobody is refused
+ * (400 `RECIPIENT_REQUIRED`) before anything is read or written: no file, no audit row. The box is
+ * `required` in the form; this is the rule. So every list in the register
+ * (`registrations/sponsor-register.ts`) says whom it went to; only a download older than this reads
+ * «destinatar nenotat».
  */
 export async function GET(request: Request): Promise<Response> {
   let actor;
@@ -49,6 +55,9 @@ export async function GET(request: Request): Promise<Response> {
   const eventParam = url.searchParams.get("event");
   if (eventParam !== null && eventParam !== "" && !UUID.test(eventParam)) return NextResponse.json({ error: "VALIDATION_ERROR" }, { status: 400 });
   const eventId = eventParam || undefined;
+  // A list that names nobody is not made (§NNN): nothing read, nothing written.
+  const recipient = sponsorRecipient(url.searchParams.get("to"));
+  if (recipient === null) return NextResponse.json({ error: "RECIPIENT_REQUIRED" }, { status: 400 });
 
   const now = new Date();
   const db = getDb();
@@ -68,7 +77,7 @@ export async function GET(request: Request): Promise<Response> {
       // Which of the two files (§581): the same rows either way.
       format,
       count: list.rows.length,
-      recipient: sponsorRecipient(url.searchParams.get("to")),
+      recipient,
       registrationIds: list.rows.map((row) => row.registrationId),
     },
     now,

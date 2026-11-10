@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
@@ -7,6 +8,23 @@ import type { Locale } from "@/i18n/routing";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { SPONSOR_RECIPIENT_MAX, type SponsorListSummary } from "../sponsor-list";
+import type { SponsorRegister } from "../sponsor-register";
+import SponsorListRegister from "./SponsorListRegister";
+
+/** The box's suggestions: one list of names per page, so one id. */
+const RECIPIENTS_ID = "sponsor-list-recipients";
+
+type Props = {
+  locale: Locale;
+  eventId: string | null;
+  list: SponsorListSummary;
+  /** The lists already given and the recipients written before (`readSponsorRegister`, §NNN). */
+  register: SponsorRegister;
+  /** The page's clock, for the register's «termen trecut». */
+  now: Date;
+  /** The register's heading level: 2 on a page, 3 inside a card. */
+  registerLevel: 2 | 3;
+};
 
 /**
  * «Descarcă lista pentru sponsori» with «N persoane» beside it (§570) — on an event's registrations
@@ -15,14 +33,20 @@ import { SPONSOR_RECIPIENT_MAX, type SponsorListSummary } from "../sponsor-list"
  * role) and passes it. While the notice in force does not describe the sharing the button is a
  * disabled `<button>` with no form, and one sentence says why — the route refuses it all the same.
  *
- * A plain GET form, no script: the optional «Cui dai lista» travels as `to` and the route writes it
- * into the audit row beside the registrations in the file, so a registration's page can later say
- * which partner received it (the notice's art. 15 and 19 promise; review finding).
+ * A plain GET form, no script: «Cui dai lista» travels as `to` and the route writes it into the
+ * audit row beside the registrations in the file, so a registration's page can later say which
+ * partner received it (the notice's art. 15 and 19 promise; review finding).
+ *
+ * **The box is required (§NNN, amending §570).** `required`, and at least one character that is not
+ * a space: the browser asks for it before either file leaves, and the route refuses a download
+ * without it. It suggests the recipients written before (a `<datalist>`, no script), so one sponsor
+ * keeps one spelling. Under the captions, «Liste date sponsorilor» is every list already given —
+ * drawn even while the button is off, since what was given stays given.
  *
  * Two submits, one form (§581): «Descarcă lista pentru sponsori (Excel)» posts `format=xlsx`, the
  * same rows with every tick the person gave; «Descarcă CSV» the five columns, the file for a partner.
  */
-export default async function SponsorListButton({ locale, eventId, list }: { locale: Locale; eventId: string | null; list: SponsorListSummary }) {
+export default async function SponsorListButton({ locale, eventId, list, register, now, registerLevel }: Props) {
   const t = await getTranslations("Admin");
   const count = list.count;
   return (
@@ -40,10 +64,27 @@ export default async function SponsorListButton({ locale, eventId, list }: { loc
           <TextField
             name="to"
             size="small"
+            required
             label={t("sponsors.recipient")}
-            slotProps={{ htmlInput: { maxLength: SPONSOR_RECIPIENT_MAX, "data-testid": "sponsor-list-recipient" } }}
+            slotProps={{
+              htmlInput: {
+                maxLength: SPONSOR_RECIPIENT_MAX,
+                // Spaces alone name nobody: the browser says so, with the title's words.
+                pattern: ".*\\S.*",
+                title: t("sponsors.recipientTitle"),
+                list: RECIPIENTS_ID,
+                // The suggestions are the register's names, not this browser's history of the box.
+                autoComplete: "off",
+                "data-testid": "sponsor-list-recipient",
+              },
+            }}
             sx={{ minWidth: 0, flex: "1 1 14rem", maxWidth: "24rem" }}
           />
+          <datalist id={RECIPIENTS_ID} data-testid="sponsor-list-recipients">
+            {register.recipients.map((name) => (
+              <option key={name} value={name} />
+            ))}
+          </datalist>
           {/* Excel first, with every tick beside the five columns (§581); the CSV, the five alone, for a partner. */}
           <GlyphButton icon="sponsors" type="submit" name="format" value="xlsx" variant="outlined" size="small" sx={TAP_TARGET} data-testid="sponsor-list-button">
             {t("sponsors.button")}
@@ -69,6 +110,11 @@ export default async function SponsorListButton({ locale, eventId, list }: { loc
         <Typography variant="caption" color="text.secondary" data-testid="sponsor-list-help-excel">
           {t("sponsors.helpExcel")}
         </Typography>
+      )}
+      {register.lists.length > 0 && (
+        <Box sx={{ pt: 1 }}>
+          <SponsorListRegister locale={locale} lists={register.lists} now={now} level={registerLevel} />
+        </Box>
       )}
     </Stack>
   );

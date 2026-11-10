@@ -9099,7 +9099,7 @@
                 "«Newsletter» → open the «Subscribers» card. Its line says how many are confirmed and how many pending.",
                 "Search under «Search the address» or choose «Topic» and «State», then press «Filter». «Download CSV» takes the list as filtered.",
                 "The «Participants who ticked offers and benefits» card: who ticked it when registering, with the address, the event and the date. «Download CSV» takes all of it. It is not the newsletter.",
-                "«Download the list for sponsors (Excel)»: the same people as the CSV, with every tick of each (offers, the public list, socials, terms, declaration, state) — for the club. Give the partner «Download CSV»: first name, last name, address, event and date. Only consents given under a notice that allows it. Note whom you give the file to; delete it within 30 days.",
+                "«Download the list for sponsors (Excel)»: the same people as the CSV, with every tick of each (offers, the public list, socials, terms, declaration, state) — for the club. Give the partner «Download CSV»: first name, last name, address, event and date. Only consents given under a notice that allows it. Write whom the file goes to in «Who receives the list»: without a name it does not download. «Lists given to sponsors», under the buttons, shows every list given. Delete the file within 30 days.",
                 "Removing an address is the Administrator's: tell them who asked."
               ]
             },
@@ -9467,7 +9467,7 @@
                 "«Download CSV» takes the list as filtered, with the same columns. Keep the file only as long as you need it, then delete it.",
                 "To remove someone, at their request: «Unsubscribe» on their row, then confirm. The address is deleted with its topics, as when the person unsubscribes.",
                 "The «Participants who ticked offers and benefits» card: who ticked it when registering, with the address, the event and the date. «Download CSV» takes all of it. It is not the newsletter.",
-                "«Download the list for sponsors (Excel)»: the same people as the CSV, with every tick of each (offers, the public list, socials, terms, declaration, state) — for the club. Give the partner «Download CSV»: first name, last name, address, event and date. Only consents given under a notice that allows it. Note whom you give the file to; delete it within 30 days."
+                "«Download the list for sponsors (Excel)»: the same people as the CSV, with every tick of each (offers, the public list, socials, terms, declaration, state) — for the club. Give the partner «Download CSV»: first name, last name, address, event and date. Only consents given under a notice that allows it. Write whom the file goes to in «Who receives the list»: without a name it does not download. «Lists given to sponsors», under the buttons, shows every list given. Delete the file within 30 days."
               ]
             },
             {
@@ -11071,9 +11071,30 @@
         "other": "{count} people"
       },
       "noticeMissing": "The privacy notice in force does not say the list may be given to partners.",
-      "help": "First name, last name, address, event, consent date: adults only, consent given under a notice that allows it. Write whom it goes to: it stays on each registration in it. Delete the file in 30 days.",
+      "help": "First name, last name, address, event, consent date: adults only, consent given under a notice that allows it. Write whom it goes to, or “club” if it stays with the club. Delete the file in 30 days.",
       "helpExcel": "The Excel file also has every tick of each person, so you see what they agreed to. Give the partner the CSV.",
-      "recipient": "Who receives the list (optional)",
+      "recipient": "Who receives the list",
+      "recipientTitle": "Write who receives the list.",
+      "given": {
+        "title": "Lists given to sponsors",
+        "intro": "Every download of the list: whom you gave it to, how many people it held and the day your copy must be deleted by.",
+        "aside": "{lists} · latest: {recipient}, {date}",
+        "everyEvent": "every event",
+        "overdue": "past due",
+        "formats": {
+          "csv": "CSV",
+          "xlsx": "Excel"
+        },
+        "columns": {
+          "recipient": "To whom",
+          "at": "When",
+          "event": "Event",
+          "count": "People",
+          "file": "File",
+          "actor": "Downloaded by",
+          "deleteBy": "Delete your copy by"
+        }
+      },
       "columns": {
         "firstName": "First name",
         "lastName": "Last name",

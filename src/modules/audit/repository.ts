@@ -328,8 +328,10 @@ export type AuditAction =
   /**
    * «Descarcă lista pentru sponsori» (§570): the minimal CSV a partner receives — the event, or
    * null for every event, how many rows, the ids of the registrations in it (never a name or an
-   * address) and the recipient the download named, or null. The file is the one copy a withdrawal
-   * cannot reach, so the trail says which registrations went to whom (`listPartnerShares`).
+   * address) and the recipient the download named — required since §NNN, null only on an older row.
+   * The file is the one copy a withdrawal cannot reach, so the trail says which registrations went
+   * to whom (`listPartnerShares`), and the lists themselves are read back as «Liste date sponsorilor»
+   * (`registrations/sponsor-register.ts`).
    */
   | "registrations.sponsor_list_exported"
   /**

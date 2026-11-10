@@ -65,6 +65,7 @@ import { countRegistrationNotes } from "@/modules/registrations/notes";
 import { resultsDoorOpen } from "@/modules/results/domain/event-type";
 import NotesMark from "@/modules/registrations/ui/NotesMark";
 import { sponsorListSummary } from "@/modules/registrations/sponsor-list";
+import { readSponsorRegister } from "@/modules/registrations/sponsor-register";
 import SponsorListButton from "@/modules/registrations/ui/SponsorListButton";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
@@ -258,7 +259,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const featuredEvent = events.find((event) => event.featured) ?? null;
 
   const deadlinesNow = new Date();
-  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places, publicDoor, volunteerKits] = await Promise.all([
+  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places, publicDoor, volunteerKits, sponsorRegister] = await Promise.all([
     listRegistrationsForAdmin(
       db,
       filters,
@@ -304,6 +305,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId ? readPublicDoor(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
     // The kits' volunteers (§904): the event's volunteers ticked «Are kit», said in the kits' title — `countKits` is untouched.
     filters.eventId ? countVolunteersWithKit(db, filters.eventId) : Promise.resolve(0),
+    // «Liste date sponsorilor» (§NNN): the lists already given for this event and for every event, and the recipients written before.
+    filters.eventId && canExportSponsorList(actor.role) ? readSponsorRegister(db, actor, { eventId: filters.eventId, locale }) : Promise.resolve(null),
   ]);
 
   // A family's rows side by side (§588), where its first row falls in the chosen order; phone cards read the same rows.
@@ -1131,9 +1134,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         The list for sponsors (§570; the owner: "export the participants list but filter out just
         the ones who agreed to receive marketing emails so we can share it with our sponsors"): its
         own minimal file, never columns of the export beside it. For one chosen event; every event's
-        list is on «Newsletter». The role is asserted in the read and in the route.
+        list is on «Newsletter». The role is asserted in the read and in the route. Under it, since
+        §NNN, «Liste date sponsorilor»: this event's lists and those made for every event.
       */}
-      {sponsors && filters.eventId && <SponsorListButton locale={locale} eventId={filters.eventId} list={sponsors} />}
+      {sponsors && sponsorRegister && filters.eventId && (
+        <SponsorListButton locale={locale} eventId={filters.eventId} list={sponsors} register={sponsorRegister} now={deadlinesNow} registerLevel={2} />
+      )}
 
       {/*
         The bibs of this event, as a batch (§264; the owner: "ar trebui să pot descărca BID-urile
