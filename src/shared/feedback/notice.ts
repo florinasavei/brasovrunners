@@ -166,6 +166,8 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   "volunteerUnchanged",
   // «Trimite invitațiile» when every address already had an invitation or had already offered (§820).
   "volunteerInvitationsNone",
+  // «Corectează numele» on a line of the internal list, saved with the name it already had.
+  "reserveRenameUnchanged",
   // «Salvează toate rolurile» with every role as it was (§791).
   "volunteerRolesUnchanged",
   // «Salvează toate nivelurile» with every member level as it was, and «Nivel» on a member's row left as it was (§811).

@@ -74,7 +74,7 @@ vi.mock("@/modules/notifications/send-now-choice", () => ({ sendNowChoiceFor: as
 
 const { default: AdminRegistrationsPage } = await import("@/app/[locale]/admin/registrations/(list)/page");
 const { default: ReserveListPanel } = await import("@/modules/registrations/ui/ReserveListPanel");
-const { moveReserveEntryToEliteAction } = await import("@/app/[locale]/admin/registrations/reserve-actions");
+const { moveReserveEntryToEliteAction, renameReserveEntryAction } = await import("@/app/[locale]/admin/registrations/reserve-actions");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
 type Confirm = { title: string; body: string; confirmLabel: string; email?: unknown };
@@ -237,5 +237,50 @@ describe("§903 «Mută pe lista de elită» on the internal list, as drawn", ()
   it("is never reached by Tehnic: the page itself is not there", async () => {
     state.actor = await staff("DEV");
     await expect(listPage({ eventId })).rejects.toThrow("NOT_FOUND");
+  });
+});
+
+describe("«Corectează numele» on the internal list, as drawn", () => {
+  it("gives the Organizer and above a native fold on every line: the name as it stands, «Salvează numele», 44 pixels, the list's own query", async () => {
+    for (const role of ["MODERATOR", "ADMIN"] as const) {
+      state.actor = await staff(role);
+      const { props, drawn } = await reservePanel({ eventId });
+      expect(props.renameAction, role).toBe(renameReserveEntryAction);
+      for (const [name, first, last] of [
+        ["Ana Pop", "Ana", "Pop"],
+        ["Ion Ionescu", "Ion", "Ionescu"],
+      ]) {
+        const line = lineOf(drawn, name);
+        const [fold] = byTestId(line, "reserve-rename");
+        expect(fold.props.component, role).toBe("details");
+        expect(words(fold)).toContain("Corectează numele");
+        const [form] = byTestId(line, "reserve-rename-form");
+        expect(form.props.action).toBe(renameReserveEntryAction);
+        const inner = elements(form);
+        const box = (fieldName: string) => inner.find((element) => element.props.name === fieldName)?.props;
+        expect(box("firstName")?.defaultValue).toBe(first);
+        expect(box("lastName")?.defaultValue).toBe(last);
+        expect(box("entryId")?.value).toBe(lineIds.get(name));
+        expect(box("listQuery")?.value).toBe(props.listQuery);
+        const [save] = byTestId(line, "reserve-rename-save");
+        expect(save.props).toMatchObject({ icon: "save", type: "submit", children: "Salvează numele" });
+        expect((save.props.sx as { minHeight: number }).minHeight).toBe(44);
+      }
+    }
+  });
+
+  it("draws no fold when the panel is handed no rename press, and Tehnic never reaches the page", async () => {
+    state.actor = await staff("ADMIN");
+    const { props } = await reservePanel({ eventId });
+    const drawn = elements(await ReserveListPanel({ ...props, renameAction: undefined } as never));
+    expect(byTestId(drawn, "reserve-entry")).toHaveLength(2);
+    for (const id of ["reserve-rename", "reserve-rename-form", "reserve-rename-save"]) expect(byTestId(drawn, id), id).toHaveLength(0);
+    state.actor = await staff("DEV");
+    await expect(listPage({ eventId })).rejects.toThrow("NOT_FOUND");
+  });
+
+  it("opens the panel after a rename, or a rename that changed nothing", async () => {
+    state.actor = await staff("ADMIN");
+    for (const saved of ["reserveRenamed", "reserveRenameUnchanged"]) expect((await reservePanel({ eventId, saved })).props.opened, saved).toBe(true);
   });
 });

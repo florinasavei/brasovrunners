@@ -8,7 +8,7 @@ import type { Locale } from "@/i18n/routing";
 import { inEmailPress } from "@/modules/notifications/press";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
-import { addReserveEntry, deleteReserveEntry, moveReserveEntryToElite, moveReserveEntryToOwnAddress, saveReserveNote } from "@/modules/registrations/reserve-list";
+import { addReserveEntry, deleteReserveEntry, moveReserveEntryToElite, moveReserveEntryToOwnAddress, renameReserveEntry, saveReserveNote } from "@/modules/registrations/reserve-list";
 import { canKeepRegistrationNotes, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -16,10 +16,11 @@ import { flash, flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /**
- * The three presses of «Lista internă de așteptare» (§854) on an event's registrations list: «Adaugă»,
- * «Salvează nota» and «Șterge». The coarse gate here (`canKeepRegistrationNotes`) and the service's own
+ * The presses of «Lista internă de așteptare» (§854) on an event's registrations list: «Adaugă»,
+ * «Salvează nota», «Salvează numele» and «Șterge». The coarse gate here (`canKeepRegistrationNotes`) and the service's own
  * (BR-REQ-060-01). A refusal keeps what was typed (§315); a success returns to the panel, open. Nothing
- * typed goes in the URL or the flash, and nothing is ever sent to the person. A fourth, the Administrator's
+ * typed goes in the URL or the flash, and nothing is ever sent to the person. «Corectează numele» («Lista internă»,
+ * amended by «Corectează numele pe lista internă») is the Organizer's like them. A fourth, the Administrator's
  * alone: «Mută pe lista de elită» (§903), below; and a fifth, the Administrator's too and the one that emails —
  * the declaration, to the Administrator's own address: «Pe adresa mea, invitat special».
  */
@@ -44,6 +45,19 @@ async function backToPanel(locale: Locale, eventId: string, saved: string): Prom
   redirect(`${getPathname({ locale, href: "/admin/registrations" })}?eventId=${encodeURIComponent(eventId)}&saved=${saved}#registrations-reserve`);
 }
 
+/**
+ * Back to the list as it was (its filters, sort and page, from the form's `listQuery`; the path is rebuilt here), the
+ * panel open: an outcome an earlier press left in the query is never repeated, and the event is the line's, whatever
+ * the query said.
+ */
+function backToList(locale: Locale, eventId: string, saved: string, form: FormData): never {
+  const params = new URLSearchParams(text(form, "listQuery"));
+  for (const key of ["saved", "error", "from", "count", "erase", "memberSweep"]) params.delete(key);
+  params.set("eventId", eventId);
+  params.set("saved", saved);
+  redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${params.toString()}#registrations-reserve`);
+}
+
 export async function addReserveEntryAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
@@ -66,6 +80,27 @@ export async function saveReserveNoteAction(_previous: FormOutcome | null, form:
     return refused(error, form);
   }
   return backToPanel(locale, eventId, "reserveNoteSaved");
+}
+
+/**
+ * «Corectează numele» on a line: the first and last name through the add's own parse. The coarse gate here and the
+ * service's own (BR-REQ-060-01). A refusal keeps what was typed; a success comes back to the list as it was (its
+ * filters, sort and page, from the form's `listQuery`, the path rebuilt here) with the panel open and a toast, the
+ * name in neither the address nor the flash. A save of the same name says so quietly.
+ */
+export async function renameReserveEntryAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  let eventId: string;
+  let changed: boolean;
+  try {
+    const actor = await requireStaffCapability(canKeepRegistrationNotes);
+    ({ eventId, changed } = await renameReserveEntry(getDb(), actor, text(form, "entryId"), { firstName: form.get("firstName"), lastName: form.get("lastName") }, new Date()));
+  } catch (error) {
+    return refused(error, form);
+  }
+  const saved = changed ? "reserveRenamed" : "reserveRenameUnchanged";
+  await flash({ kind: changed ? "success" : "info", key: saved });
+  return backToList(locale, eventId, saved, form);
 }
 
 export async function deleteReserveEntryAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
@@ -105,12 +140,7 @@ export async function moveReserveEntryToEliteAction(_previous: FormOutcome | nul
     return refusal;
   }
   await flash({ kind: "success", key: "reserveMovedToElite" });
-  const params = new URLSearchParams(text(form, "listQuery"));
-  // An outcome an earlier press left in the query, never repeated; the event is the line's, whatever the query said.
-  for (const key of ["saved", "error", "from", "count", "erase", "memberSweep"]) params.delete(key);
-  params.set("eventId", eventId);
-  params.set("saved", "reserveMovedToElite");
-  redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${params.toString()}#registrations-reserve`);
+  return backToList(locale, eventId, "reserveMovedToElite", form);
 }
 
 /**
