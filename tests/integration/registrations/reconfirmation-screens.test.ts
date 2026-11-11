@@ -4,6 +4,7 @@ import { createTranslator } from "next-intl";
 import { and, eq, inArray } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { platformSettings } from "@/db/schema/platform-settings";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrationReconfirmations } from "@/db/schema/registration-reconfirmations";
@@ -21,7 +22,18 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * in both languages for «Completează cu textul de reminder», the pace line before «Trimite», and on each «Mesaje trimise» row
  * the three numbers and the progress. The pages are Server Components, so they are called and their element trees walked.
  */
-const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en" }));
+const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en", gmail: false }));
+
+// The club's Gmail, configured only where a test says so (`gmailIsConfigured` reads the account and its app password).
+vi.mock("@/shared/config/env", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/shared/config/env")>();
+  const gmailKeys = new Set<PropertyKey>(["CONTACT_SMTP_USER", "CONTACT_SMTP_PASSWORD"]);
+  return {
+    env: new Proxy(actual.env, {
+      get: (target, key) => (gmailKeys.has(key) ? (state.gmail ? "club-test-account" : undefined) : Reflect.get(target, key)),
+    }),
+  };
+});
 
 vi.mock("next-intl/server", () => ({
   getTranslations: async (arg: string | { locale?: "ro" | "en"; namespace: string }) => {
@@ -208,6 +220,7 @@ afterAll(async () => close());
 beforeEach(async () => {
   await resetTables(db);
   state.locale = "ro";
+  state.gmail = false;
 });
 
 describe("«A reconfirmat» and «Reconfirmare» on the registrations list", () => {
@@ -316,14 +329,15 @@ describe("«Trimite un mesaj participanților»", () => {
     for (let index = 0; index < 3; index += 1) await register(race.id);
     state.actor = await staff("MODERATOR");
     const form = elements(await messagesPage(race.id)).find((element) => element.type === ActionForm);
-    const specs = form?.props.confirm as Array<{ when: { field: string; equals: string }[]; body: string }>;
+    const specs = form?.props.confirm as Array<{ when: { field: string; equals: string }[]; body: string; warning?: string }>;
     const all = specs.find((spec) => spec.when[0]?.equals === "ALL_ACTIVE");
-    // Three messages, nothing ahead, Free's day: one hour at twenty every fifteen minutes, and it fits.
-    expect(all?.body).toContain("Pleacă treptat, câte 20 la 15 minute ziua (noaptea mai rar): cam 1 oră pe ritmul de zi.");
-    expect(all?.body).toContain("Încape în cota de azi.");
+    // Three messages, nothing ahead, Free's day: one hour at twenty every fifteen minutes, it fits, and the registrations' own go first.
+    expect(all?.body).toContain("Pleacă treptat, câte 20 la 15 minute ziua (noaptea mai rar): cam 1 oră pe ritmul de zi. Încape în cota de azi. Emailurile înscrierilor pleacă înaintea lor.");
+    expect(all?.warning).toBeUndefined();
   });
 
-  it("on Free's 100 a day, 201 messages: 90 today at their own pace, the other 111 over at least two more days, never all after one midnight", async () => {
+  /** 201 confirmed registrations of one race, and the page's question and composer line for «Toți cei înscriși». */
+  async function twoHundredAndOne() {
     const race = await createRace();
     const people = await db
       .insert(participants)
@@ -350,18 +364,94 @@ describe("«Trimite un mesaj participanților»", () => {
       })),
     );
     state.actor = await staff("MODERATOR");
-    const form = elements(await messagesPage(race.id)).find((element) => element.type === ActionForm);
-    const specs = form?.props.confirm as Array<{ when: { field: string; equals: string }[]; body: string }>;
-    const body = specs.find((spec) => spec.when[0]?.equals === "ALL_ACTIVE")?.body ?? "";
-    // 100 less the reserve of 10 is 90 a day: 90 now, and 111 need two more midnights at 90 each.
-    expect(body).toContain(
-      "Azi pot pleca 90 dintre ele; celelalte 111 rămân la coadă și pleacă singure în cel puțin încă 2 zile, cel mult 90 pe zi, cât lasă cota refăcută la miezul nopții (UTC).",
+    const tree = await messagesPage(race.id);
+    const form = elements(tree).find((element) => element.type === ActionForm);
+    const specs = form?.props.confirm as Array<{ when: { field: string; equals: string }[]; body: string; warning?: string }>;
+    const spec = specs.find((candidate) => candidate.when[0]?.equals === "ALL_ACTIVE");
+    const composer = elements(tree).find((element) => element.type === ParticipantMessageComposer);
+    const audience = (composer?.props.audiences as Array<{ value: string; costLine?: string; deferredLine?: string; warningLine?: string }>).find((choice) => choice.value === "ALL_ACTIVE");
+    return { body: spec?.body ?? "", warning: spec?.warning, audience };
+  }
+
+  /** Messages Mailgun already carried today, a minute ago. */
+  async function sentToday(count: number) {
+    const sentAt = new Date(Date.now() - 60_000);
+    await db.insert(emailOutbox).values(
+      Array.from({ length: count }, () => {
+        serial += 1;
+        return { participantId: null, registrationId: null, messageType: "STAFF_INVITATION" as const, locale: "ro" as const, recipientEmail: `sent${serial}@example.org`, payloadJson: {}, idempotencyKey: `sent:${serial}`, status: "SENT" as const, sentAt, createdAt: sentAt };
+      }),
     );
-    // The hours are today's 90 at 80 an hour, not all 201.
-    expect(body).toContain("cam 2 ore pe ritmul de zi.");
+  }
+
+  it("(a) on a monthly plan, 201 messages: the pace as it is, that it fits the month, that the registrations' own leave first — and no warning", async () => {
+    await db.insert(platformSettings).values({ key: "emailPlan", value: { plan: "BASIC", dailyAllowance: null, monthlyAllowance: null, hourlyAllowance: 100, note: "" } });
+    const { body, warning, audience } = await twoHundredAndOne();
+    expect(body).toContain("Pleacă treptat, câte 20 la 15 minute ziua (noaptea mai rar): cam 3 ore pe ritmul de zi. Încape în cota lunii. Emailurile înscrierilor pleacă înaintea lor.");
+    expect(audience?.costLine).toMatch(/^Emailuri, cu tot cu copiile pentru club: 201 — se scad din cota Mailgun \(planul Basic: încă 10000 luna aceasta\)\.$/);
+    expect(warning).toBeUndefined();
+    expect(audience?.warningLine).toBeUndefined();
+    expect(body).not.toMatch(/rezerv|păstrat/i);
+  });
+
+  it("(b) on Free's 100 a day with 5 sent, 201 messages: 95 today in about 2 hours, 106 over 2 more days at 100 a day, and a warning that cannot be missed", async () => {
+    await sentToday(5);
+    const { body, warning, audience } = await twoHundredAndOne();
+    expect(body).toContain(
+      "Azi pot pleca 95 dintre ele; celelalte 106 rămân la coadă și pleacă singure în cel puțin încă 2 zile, cel mult 100 pe zi, cât lasă cota refăcută la miezul nopții (UTC). Nu se pierde niciunul.",
+    );
+    // The hours are today's 95 at 80 an hour, not all 201.
+    expect(body).toContain("cam 2 ore pe ritmul de zi. Emailurile înscrierilor pleacă înaintea lor.");
     expect(body).not.toContain("cam 3 ore");
-    expect(body).not.toContain("pleacă singure după miezul nopții");
     expect(body).not.toContain("Încape în cota de azi.");
+    const expected =
+      "Pe un plan cu cotă zilnică, mesajul acesta ocupă cota zilnică timp de 3 zile. Emailurile înscrierilor pleacă înaintea lui, dar din aceeași cotă: după ce se termină, așteaptă ziua următoare. Un mesaj mare se trimite pe un plan lunar: «Setări» → «Emailuri» → «Planul Mailgun și cât mai putem trimite».";
+    // In the dialog's warning and on the composer, beside the deferral: the same sentence, worded on the server.
+    expect(warning).toBe(expected);
+    expect(audience?.warningLine).toBe(expected);
+    expect(audience?.deferredLine).toContain("Azi pot pleca 95 dintre ele");
+    // Gmail is not configured here, so the Gmail way out is not said.
+    expect(warning).not.toContain("Gmail");
+    expect(body).not.toMatch(/rezerv|păstrat/i);
+  });
+
+  it("(d) counts the send's club copy on the road it really takes: by the club's Gmail, out of Mailgun's count, said apart", async () => {
+    state.gmail = true;
+    await db.insert(platformSettings).values({ key: "emailPlan", value: { plan: "BASIC", dailyAllowance: null, monthlyAllowance: null, hourlyAllowance: 100, note: "" } });
+    await db.insert(platformSettings).values({ key: "clubNotices", value: { participants: { bcc: ["copies@example.org"] } } });
+    // The default roads: the participants' by Mailgun, the club's copies by Gmail.
+    const { body, audience } = await twoHundredAndOne();
+    expect(audience?.costLine).toBe(
+      "Emailuri: 201 — se scad din cota Mailgun (planul Basic: încă 10000 luna aceasta). Copiile pentru club, 1, pleacă prin Gmail-ul clubului.",
+    );
+    // 201 on Mailgun's road, not 202: three hours at twenty every fifteen minutes either way, and it fits the month.
+    expect(body).toContain("cam 3 ore pe ritmul de zi. Încape în cota lunii.");
+  });
+
+  it("(c) on the club's Gmail road, 201 messages: Gmail's own room, cap and pace, and not one Mailgun sentence", async () => {
+    state.gmail = true;
+    await db.insert(platformSettings).values({
+      key: "emailTransport",
+      value: {
+        groups: { links: "mailgun", confirmations: "mailgun", reminders: "mailgun", announcements: "gmail", club: "gmail", newsletter: "mailgun" },
+        gmailDailyCap: 200,
+        gmailPaceSeconds: 6,
+        atGmailCap: "defer",
+        overflowToGmail: false,
+        fallbackToGmail: true,
+      },
+    });
+    const { body, warning, audience } = await twoHundredAndOne();
+    expect(body).toContain(
+      "Acum pot pleca 200 dintre ele; celelalte 1 așteaptă să se facă loc în limita Gmail de 200 pe 24 de ore. Nu se pierde niciunul. Pleacă prin Gmail-ul clubului, câte 4 la 15 minute ziua (noaptea mai rar): cam 13 ore pe ritmul de zi. Emailurile înscrierilor pleacă înaintea lor.",
+    );
+    expect(audience?.costLine).toBe("Emailuri prin Gmail-ul clubului: 201. Gmail mai poate trimite 200 din 200 în 24 de ore.");
+    for (const line of [body, audience?.costLine ?? "", audience?.deferredLine ?? ""]) {
+      expect(line).not.toContain("Mailgun");
+      expect(line).not.toContain("cota");
+      expect(line).not.toContain("20 la 15 minute");
+    }
+    expect(warning).toBeUndefined();
   });
 
   it("gives each «Mesaje trimise» row the three numbers of a send that asked and how far it has left; neither for a send that did not ask", async () => {

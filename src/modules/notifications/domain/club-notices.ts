@@ -262,14 +262,6 @@ const NO_CLUB_COPY_PER_MESSAGE: ReadonlySet<EmailMessageType> = new Set<EmailMes
 export const BULK_CLUB_COPY_MESSAGES = ["ORGANIZER_MESSAGE", "EVENT_UPDATE_NOTICE"] as const satisfies readonly EmailMessageType[];
 export type BulkClubCopyMessage = (typeof BULK_CLUB_COPY_MESSAGES)[number];
 
-/**
- * Whether a row is one of the staff sends to many (the decision «Cere reconfirmarea», part two): the outbox's middle
- * tier, after every registration's own message and before the bulk ones, its club copy with it.
- */
-export function isStaffSendMessage(messageType: EmailMessageType): boolean {
-  return (BULK_CLUB_COPY_MESSAGES as readonly EmailMessageType[]).includes(messageType);
-}
-
 /** Whether each message of this type gets a club copy of its own when it is queued (§320, §419). */
 export function isCopiedPerMessage(messageType: EmailMessageType): boolean {
   return isParticipantMessage(messageType) && !NO_CLUB_COPY_PER_MESSAGE.has(messageType);

@@ -44,6 +44,11 @@ export type ComposerAudience = {
   /** Set when some of it waits for the allowance to come back (§40) — never a refusal. */
   deferredLine?: string;
   /**
+   * Set when a daily allowance cannot hold the send today (the decision «Cere reconfirmarea», part two): the days it
+   * takes that allowance, which the registrations' own emails share meanwhile, and where a monthly plan is chosen.
+   */
+  warningLine?: string;
+  /**
    * The line the question before «Trimite» carries (the decision «Cere reconfirmarea», part two): how long the send
    * takes at the queue's pace, and whether it fits the allowance — worded on the server.
    */
@@ -289,6 +294,11 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
             {chosen.deferredLine && (
               <Alert severity="info" sx={{ mt: 1 }} data-testid="participant-message-deferred">
                 {chosen.deferredLine}
+              </Alert>
+            )}
+            {chosen.warningLine && (
+              <Alert severity="warning" sx={{ mt: 1 }} data-testid="participant-message-daily-warning">
+                {chosen.warningLine}
               </Alert>
             )}
           </Box>

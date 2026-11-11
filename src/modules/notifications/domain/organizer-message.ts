@@ -191,33 +191,58 @@ export function readOrganizerAskReconfirm(payload: unknown): boolean {
 }
 
 /**
- * How long a send takes to leave, in whole hours from its first message, for the line before «Trimite» (the decision
- * «Cere reconfirmarea», part two): the messages already waiting ahead of it in the
- * registrations' and the staff sends' tiers (bulk mail goes after it) and its own, at the scheduled pass's pace — one
- * batch per run — or Mailgun's hour when that is slower. At least one hour. It promises no start: when the first leaves
- * is «Când pleacă emailurile»'s, and a spent allowance is the deferral line's.
+ * What the line before «Trimite» says about a send (the decision «Cere reconfirmarea», part two), worked out on the
+ * server for the road the send's messages take, with no reserve: the outbox claims a send to many after every
+ * registration's own message on its road (`domain/bulk.ts#SEND_TO_MANY_MESSAGE_TYPES`) and holds none of it back.
+ *
+ * - **Mailgun, no daily ceiling** (a monthly plan, or none): every message can go now, or this month's part of it;
+ *   `hours` at the queue's pace for those, behind what waits ahead.
+ * - **Mailgun, a daily ceiling** (Free): what can go today is what the day's allowance has left less what waits ahead
+ *   of the send; `hours` for today's part only, the rest at most the allowance a day over `restDays` more days, and
+ *   `daysUsed` the days the send takes the day's allowance — the registrations' own emails share it meanwhile.
+ * - **Gmail**: its own room in the rolling day less what waits ahead on its road, at its own pace a pass.
+ *
+ * `hours` is at least one when anything leaves now, zero when nothing can; it promises no start: when the first leaves
+ * is «Când pleacă emailurile»'s. `ahead` is every row waiting on the same road but the bulk kind, which goes after it.
  */
-export function organizerMessagePace(input: {
-  messages: number;
-  ahead: number;
-  batchSize: number;
-  minutesPerRun: number;
-  hourlyAllowance: number | null;
-}): { hours: number } {
-  const perHourByRuns = (Math.max(1, input.batchSize) * 60) / Math.max(1, input.minutesPerRun);
-  const perHour = input.hourlyAllowance === null ? perHourByRuns : Math.min(perHourByRuns, Math.max(1, input.hourlyAllowance));
-  const total = Math.max(0, input.ahead) + Math.max(0, input.messages);
-  return { hours: Math.max(1, Math.ceil(total / perHour)) };
-}
+export type OrganizerSendOutlook =
+  | { road: "mailgun"; period: "none"; messages: number; now: number; deferred: 0; hours: number }
+  | { road: "mailgun"; period: "month"; messages: number; now: number; deferred: number; hours: number }
+  | { road: "mailgun"; period: "day"; messages: number; now: number; deferred: number; hours: number; restDays: number; perDay: number; daysUsed: number }
+  | { road: "gmail"; messages: number; now: number; waiting: number; hours: number; perPass: number };
 
-/**
- * How many more resets of the allowance the deferred part of a send waits for (the decision «Cere reconfirmarea», part
- * two): a staff send may take only what the plan allows less the reserve, so on Free's 100 a day the 111 left of a
- * 201-message send need two midnights, not one. At least one when anything waits; `perPeriod` below one counts as one.
- */
-export function organizerMessageResets(deferred: number, perPeriod: number): number {
-  if (deferred <= 0) return 0;
-  return Math.ceil(deferred / Math.max(1, Math.floor(perPeriod)));
+export function organizerSendOutlook(
+  input: {
+    messages: number;
+    ahead: number;
+    batchSize: number;
+    minutesPerRun: number;
+  } & (
+    | { road: "mailgun"; period: "day" | "month" | "none"; allowance: number | null; remaining: number | null; hourlyAllowance: number | null }
+    | { road: "gmail"; gmailRoom: number; gmailPerPass: number }
+  ),
+): OrganizerSendOutlook {
+  const messages = Math.max(0, input.messages);
+  const ahead = Math.max(0, input.ahead);
+  const minutes = Math.max(1, input.minutesPerRun);
+  const hoursFor = (count: number, perHour: number) => (count <= 0 ? 0 : Math.max(1, Math.ceil((ahead + count) / Math.max(1, perHour))));
+  if (input.road === "gmail") {
+    const perPass = Math.max(1, input.gmailPerPass);
+    const now = Math.min(messages, Math.max(0, input.gmailRoom - ahead));
+    return { road: "gmail", messages, now, waiting: messages - now, hours: hoursFor(now, (perPass * 60) / minutes), perPass };
+  }
+  const byRuns = (Math.max(1, input.batchSize) * 60) / minutes;
+  const perHour = input.hourlyAllowance === null ? byRuns : Math.min(byRuns, Math.max(1, input.hourlyAllowance));
+  if (input.period === "none" || input.allowance === null || input.remaining === null) {
+    return { road: "mailgun", period: "none", messages, now: messages, deferred: 0, hours: hoursFor(messages, perHour) };
+  }
+  const now = Math.min(messages, Math.max(0, input.remaining - ahead));
+  const deferred = messages - now;
+  const hours = hoursFor(now, perHour);
+  if (input.period === "month") return { road: "mailgun", period: "month", messages, now, deferred, hours };
+  const perDay = Math.max(1, Math.floor(input.allowance));
+  const restDays = deferred > 0 ? Math.ceil(deferred / perDay) : 0;
+  return { road: "mailgun", period: "day", messages, now, deferred, hours, restDays, perDay, daysUsed: (now > 0 ? 1 : 0) + restDays };
 }
 
 /**

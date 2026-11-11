@@ -7724,7 +7724,6 @@
           "reset": "Leaves once Mailgun resumes: {at} (estimated)."
         },
         "lastError": "The provider's last answer: {error}",
-        "staffReserveHeld": "Waiting: the rest of the allowance is kept for the registrations' own emails. It leaves by itself when the allowance comes back.",
         "manual": "Sent again by hand",
         "more": "And {count} more in the queue, not shown here.",
         "status": {
@@ -10365,6 +10364,25 @@
       },
       "fitsToday": "It fits today's allowance.",
       "fitsMonth": "It fits this month's allowance.",
+      "ownFirst": "The registrations' own emails leave before them.",
+      "costGmail": "Emails by the club's Gmail: {messages}. Gmail can still send {room} of {cap} in 24 hours.",
+      "costCopiesGmail": "Emails: {messages} — taken from the Mailgun allowance ({allowance}). The club's copies, {copies}, leave by the club's Gmail.",
+      "paceGmail": {
+        "one": "It leaves by the club's Gmail, {batch} every {minutes} minutes by day (less often at night): about {hours} hour at the day's pace.",
+        "few": "It leaves by the club's Gmail, {batch} every {minutes} minutes by day (less often at night): about {hours} hours at the day's pace.",
+        "other": "It leaves by the club's Gmail, {batch} every {minutes} minutes by day (less often at night): about {hours} hours at the day's pace."
+      },
+      "gmailFits": "It fits Gmail's limit for 24 hours.",
+      "gmailWaits": "{now} of them can go now; the other {waiting} wait for room under Gmail's limit of {cap} in 24 hours. None is lost.",
+      "gmailOverflow": "{now} of them can go by Gmail now; the other {waiting} leave by Mailgun, as set for Gmail's limit.",
+      "dailyWarning": {
+        "one": "On a plan with a daily allowance, this message takes the daily allowance for {days} day.",
+        "few": "On a plan with a daily allowance, this message takes the daily allowance for {days} days.",
+        "other": "On a plan with a daily allowance, this message takes the daily allowance for {days} days."
+      },
+      "dailyShare": "The registrations' own emails leave before it but from the same allowance: once it is spent, they wait for the next day.",
+      "dailyShareGmail": "The registrations' own emails leave before it but from the same allowance: once it is spent, they leave by the club's Gmail.",
+      "dailyPlan": "A large send belongs on a monthly plan: «{settings}» → «{emails}» → «{plan}».",
       "historyAnswers": "Reconfirmed {yes} · Cancelled {cancelled} · No answer {none}",
       "historyProgress": "Left {left} · Waiting {waiting}",
       "historyFailed": "Not sent {failed}"

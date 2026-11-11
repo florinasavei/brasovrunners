@@ -8,7 +8,6 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { countForm } from "@/i18n/count-form";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { STAFF_RESERVE_HELD_ERROR } from "@/modules/notifications/domain/bulk";
 import { type DepartureContext, departureOf } from "@/modules/notifications/domain/departure";
 import { emailLeavesWords } from "@/modules/notifications/domain/email-wait";
 import { isJobCause } from "@/modules/notifications/domain/press-causes";
@@ -271,16 +270,10 @@ function Line({ line, t, typeName, locale, now, departure }: LineProps) {
           {leaves.text}
         </Typography>
       )}
-      {line.lastError === STAFF_RESERVE_HELD_ERROR ? (
-        <Typography variant="caption" component="p" sx={{ mt: 0.5 }} data-testid="outbox-reserve-held">
-          {t("emails.queue.staffReserveHeld")}
+      {line.lastError && (
+        <Typography variant="caption" color="error" component="p" sx={{ mt: 0.5, wordBreak: "break-word" }}>
+          {t("emails.queue.lastError", { error: line.lastError })}
         </Typography>
-      ) : (
-        line.lastError && (
-          <Typography variant="caption" color="error" component="p" sx={{ mt: 0.5, wordBreak: "break-word" }} data-testid="outbox-row-error">
-            {t("emails.queue.lastError", { error: line.lastError })}
-          </Typography>
-        )
       )}
       {line.copies.length > 0 && <ClubFold rows={line.copies} t={t} typeName={typeName} locale={locale} now={now} />}
     </Box>

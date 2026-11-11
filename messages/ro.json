@@ -7724,7 +7724,6 @@
           "reset": "Pleacă după ce Mailgun reia: {at} (estimat)."
         },
         "lastError": "Ultimul răspuns al furnizorului: {error}",
-        "staffReserveHeld": "Așteaptă: restul cotei e păstrat pentru emailurile înscrierilor. Pleacă singur când cota se reface.",
         "manual": "Retrimis manual",
         "more": "Și încă {count} în coadă, neafișate aici.",
         "status": {
@@ -10365,6 +10364,25 @@
       },
       "fitsToday": "Încape în cota de azi.",
       "fitsMonth": "Încape în cota lunii.",
+      "ownFirst": "Emailurile înscrierilor pleacă înaintea lor.",
+      "costGmail": "Emailuri prin Gmail-ul clubului: {messages}. Gmail mai poate trimite {room} din {cap} în 24 de ore.",
+      "costCopiesGmail": "Emailuri: {messages} — se scad din cota Mailgun ({allowance}). Copiile pentru club, {copies}, pleacă prin Gmail-ul clubului.",
+      "paceGmail": {
+        "one": "Pleacă prin Gmail-ul clubului, câte {batch} la {minutes} minute ziua (noaptea mai rar): cam {hours} oră pe ritmul de zi.",
+        "few": "Pleacă prin Gmail-ul clubului, câte {batch} la {minutes} minute ziua (noaptea mai rar): cam {hours} ore pe ritmul de zi.",
+        "other": "Pleacă prin Gmail-ul clubului, câte {batch} la {minutes} minute ziua (noaptea mai rar): cam {hours} de ore pe ritmul de zi."
+      },
+      "gmailFits": "Încape în limita Gmail pe 24 de ore.",
+      "gmailWaits": "Acum pot pleca {now} dintre ele; celelalte {waiting} așteaptă să se facă loc în limita Gmail de {cap} pe 24 de ore. Nu se pierde niciunul.",
+      "gmailOverflow": "Prin Gmail pot pleca acum {now} dintre ele; celelalte {waiting} pleacă prin Mailgun, cum e setat la limita Gmail.",
+      "dailyWarning": {
+        "one": "Pe un plan cu cotă zilnică, mesajul acesta ocupă cota zilnică timp de {days} zi.",
+        "few": "Pe un plan cu cotă zilnică, mesajul acesta ocupă cota zilnică timp de {days} zile.",
+        "other": "Pe un plan cu cotă zilnică, mesajul acesta ocupă cota zilnică timp de {days} de zile."
+      },
+      "dailyShare": "Emailurile înscrierilor pleacă înaintea lui, dar din aceeași cotă: după ce se termină, așteaptă ziua următoare.",
+      "dailyShareGmail": "Emailurile înscrierilor pleacă înaintea lui, dar din aceeași cotă: după ce se termină, pleacă prin Gmail-ul clubului.",
+      "dailyPlan": "Un mesaj mare se trimite pe un plan lunar: «{settings}» → «{emails}» → «{plan}».",
       "historyAnswers": "Au reconfirmat {yes} · Au anulat {cancelled} · N-au răspuns {none}",
       "historyProgress": "Au plecat {left} · Așteaptă {waiting}",
       "historyFailed": "Nu au plecat {failed}"

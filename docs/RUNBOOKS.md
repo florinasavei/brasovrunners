@@ -1103,7 +1103,9 @@ or off; it goes when the queue is through. Four causes, told apart by the same p
    function log line `[jobs] <job>: finished after the response in <ms> ms` is the authority:
    `SETUP.md` §40, `DECISIONS.md` §667). Run
    `yarn smoke` on the environment; `jobs[].status` names which one is stale. Pressing
-   "Trimite acum" on `/admin/registrations` drains the outbox by hand meanwhile.
+   "Trimite acum" on `/admin/registrations` drains the outbox by hand meanwhile. A send to many — an organizers'
+   message, the reminder, «Detalii actualizate» — waiting behind the registrations' own emails is not a stall and is not
+   counted overdue: it leaves at the queue's pace, and its own «Mesaje trimise» row on the event says «Au plecat · Așteaptă».
 3. **Paused by the provider** (§605) — `lastError` starts "paused by the provider:". Mailgun
    answered 429, or 400 "not allowed to send" with the probation's words («You are sending too fast.
    Your account is on probation…»): the message waits, due at `Retry-After` or fifteen minutes, and no

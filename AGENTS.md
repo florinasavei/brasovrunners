@@ -2423,7 +2423,9 @@ INDEX(job_name, started_at)
 `job_runs` exists so a stalled scheduler is visible. The health check reports degraded
 when the last successful run of a job is older than its agreed threshold, and when the outbox
 holds a message deferred by the provider's allowance, overdue, or failed
-(`notifications/health.ts`). Every status but `ok` is an HTTP 503 (`DECISIONS.md` §98): the
+(`notifications/health.ts`). A send to many (§16.1, steps 2–4) is not overdue for waiting past its turn: it waits behind
+the registrations' own messages and drains at the queue's pace; a stopped scheduler is the job check's to report, and a
+provider's refusal, pause or stop on such a row is counted by the other buckets as on any row. Every status but `ok` is an HTTP 503 (`DECISIONS.md` §98): the
 external monitor's failure notification is how the club hears that email has stopped, and it
 must not go through email.
 
@@ -3214,15 +3216,18 @@ Worker:
 
 PostgreSQL `FOR UPDATE SKIP LOCKED` may be used when supported by implementation.
 
-**The order of the claim** (`DECISIONS.md` «Cere reconfirmarea», `notifications/outbox.ts`): the outbox claims a
-registration's own messages first, then the staff sends to many (`BULK_CLUB_COPY_MESSAGES`: «Trimite un mesaj
-participanților», «Detalii actualizate», each send's club copy with it) within the allowance less a reserve, then the
-bulk ones (`BULK_MESSAGE_TYPES`, §445) — three claims, each oldest first, so a send of two hundred never stands in
-front of a verification queued after it. The staff sends' reserve is `max(10, 10%)` of a daily allowance (10% of a
-monthly one, none without a ceiling): what the registrations' own emails keep; the rest of a send on Mailgun's road
-waits for the reset, marked, and `/api/health` reads it as the reserve working, as it reads the newsletter's; `/admin/emails`
-draws such a row as one plain sentence (`Admin.emails.queue.staffReserveHeld`), never as the provider's answer. «Trimite
-acum» (§540) is not held to it; the batch size, the pinger and the hourly pace are unchanged.
+**The order of the claim** (`DECISIONS.md` «Cere reconfirmarea», `notifications/outbox.ts`): on each road, each step
+oldest first and in the room the steps before it left — (1) a registration's own messages, every type that is neither a
+send to many nor bulk; (2) `EVENT_UPDATE_NOTICE`; (3) `EVENT_REMINDER`; (4) `ORGANIZER_MESSAGE`; (5) the bulk ones
+(`BULK_MESSAGE_TYPES`, §445) under their cap. Steps 2–4 are `domain/bulk.ts#SEND_TO_MANY_MESSAGE_TYPES`: one message per
+registration of an event, queued by one press or one job, a moved start more urgent than a reminder and a reminder than
+an organizers' message; a club copy rides with its type. The same order in Gmail's carried path and for a press's own
+rows, and in the batch handed to the worker. So a send of two hundred — or the reminder's two hundred — never stands in
+front of a verification or an offer queued after it. **No reserve**: steps 2–4 get no cap, no hold and no mark. A hold
+until the reset kept Mailgun's stop marks on the held rows and could close Mailgun's road until midnight, and on a monthly
+plan it would never have acted; the order keeps the registrations' own emails first, and the line before «Trimite» tells
+the Administrator the truth about the send on the road it takes. «Trimite acum» (§540), the batch size, the pinger, the
+hourly pace and the newsletter's reserve are unchanged.
 
 ### 16.2 Job endpoints
 

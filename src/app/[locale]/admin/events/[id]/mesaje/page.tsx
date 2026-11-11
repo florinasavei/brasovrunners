@@ -21,12 +21,13 @@ import {
   ORGANIZER_SUBJECT_PLACEHOLDERS,
   ORGANIZER_SUBJECT_MAX,
   organizerMessageCost,
-  organizerMessageDeferral,
-  organizerMessagePace,
-  organizerMessageResets,
+  type OrganizerSendOutlook,
+  organizerSendOutlook,
   PARTICIPANT_MESSAGE_AUDIENCES,
 } from "@/modules/notifications/domain/organizer-message";
-import { staffReserve } from "@/modules/notifications/domain/bulk";
+import { gmailClaimSize, preferredTransport } from "@/modules/notifications/domain/email-transport";
+import { readEmailTransport } from "@/modules/notifications/email-transport";
+import { GMAIL_PACE_BUDGET_MS } from "@/infrastructure/email/delivery";
 import { OUTBOX_BATCH_SIZE } from "@/modules/notifications/outbox";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { PINGER_SLOT_MINUTES } from "@/modules/jobs/schedule";
@@ -111,28 +112,21 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
   const [reminderRo, reminderEn] = await Promise.all([reminderOf("ro"), reminderOf("en")]);
 
   /*
-    What a send costs and how much of it waits (§100, §40), worded here for every choice so the
-    composer switches sentences and does no arithmetic. The headroom is what the plan has left over
-    its period minus what already waits in the queue ahead of this send.
+    What a send costs, how it leaves and how much of it waits (§100, §40; the decision «Cere reconfirmarea», part two),
+    worded here for every choice so the composer switches sentences and does no arithmetic — on the road the send's
+    messages really take: the participants' on the group's road, the club's copy on its own (`preferredTransport`), both
+    Mailgun's where Gmail is not configured. No reserve: the outbox claims a send to many after every registration's own
+    message on its road and holds none of it back, so what waits ahead of it is every waiting row on that road but the
+    bulk kind (`volume.waitingAhead`), and the line says only what the queue will do.
   */
-  /*
-    The headroom for a staff send (the decision «Cere reconfirmarea», part two): what the plan has left, less what the
-    registrations' own emails keep (`staffReserve`), less what waits ahead of it — every row but the bulk ones, which go
-    after it. The same reading the outbox claims by, so the line cannot promise what the queue will not do.
-  */
-  const ahead = Math.max(0, volume.waitingMessages - volume.bulkWaitingMessages);
-  const headroom = volume.remaining === null ? null : Math.max(0, volume.remaining - staffReserve(volume) - ahead);
-  // How long it takes (part two): the scheduled pass's batch at the pinger's pace by day, or Mailgun's hour when slower.
-  const cadence = await readJobCadence(db);
+  const [transport, cadence] = await Promise.all([readEmailTransport(db), readJobCadence(db)]);
+  const roadOf = (clubCopy: boolean) => (volume.gmailConfigured ? preferredTransport(transport, "ORGANIZER_MESSAGE", clubCopy) : "mailgun");
+  const participantsRoad = roadOf(false);
+  const copiesRoad = roadOf(true);
+  // How long it takes: the scheduled pass's batch at the pinger's pace by day, or Mailgun's hour when slower; Gmail's own pace a pass.
   const minutesPerRun = Math.max(PINGER_SLOT_MINUTES, cadence.minutes);
-  const perHourByRuns = (OUTBOX_BATCH_SIZE * 60) / minutesPerRun;
-  const hourBinds = volume.hourlyAllowance !== null && volume.hourlyAllowance < perHourByRuns;
-  const paceLineOf = (messages: number): string => {
-    const { hours } = organizerMessagePace({ messages, ahead, batchSize: OUTBOX_BATCH_SIZE, minutesPerRun, hourlyAllowance: volume.hourlyAllowance });
-    return hourBinds
-      ? t(`participantMessages.paceHour.${countForm(hours, locale)}`, { hourly: String(volume.hourlyAllowance), hours: String(hours) })
-      : t(`participantMessages.paceRuns.${countForm(hours, locale)}`, { batch: String(OUTBOX_BATCH_SIZE), minutes: String(minutesPerRun), hours: String(hours) });
-  };
+  const hourBinds = volume.hourlyAllowance !== null && volume.hourlyAllowance < (OUTBOX_BATCH_SIZE * 60) / minutesPerRun;
+  const gmailPerPass = gmailClaimSize(transport.gmailPaceSeconds, GMAIL_PACE_BUDGET_MS, OUTBOX_BATCH_SIZE);
   const allowance =
     volume.remaining === null
       ? t("editor.notice.allowanceNone", { plan: volume.planName })
@@ -140,35 +134,83 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
           plan: volume.planName,
           remaining: String(volume.remaining),
         })}${volume.waitingMessages > 0 ? `; ${t("participantMessages.waiting", { waiting: String(volume.waitingMessages) })}` : ""}`;
+  const hoursKey = (hours: number) => countForm(hours, locale);
+  const paceOf = (outlook: OrganizerSendOutlook): string =>
+    outlook.road === "gmail"
+      ? t(`participantMessages.paceGmail.${hoursKey(outlook.hours)}`, { batch: String(outlook.perPass), minutes: String(minutesPerRun), hours: String(outlook.hours) })
+      : hourBinds
+        ? t(`participantMessages.paceHour.${hoursKey(outlook.hours)}`, { hourly: String(volume.hourlyAllowance), hours: String(outlook.hours) })
+        : t(`participantMessages.paceRuns.${hoursKey(outlook.hours)}`, { batch: String(OUTBOX_BATCH_SIZE), minutes: String(minutesPerRun), hours: String(outlook.hours) });
+  // Where a large send belongs, by the screen's own labels: «Setări» → «Emailuri» → the plan's heading.
+  const planPath = { settings: t("nav.settings"), emails: t("settingsTabs.emails"), plan: t("emails.plan.title") };
 
   const audiences: ComposerAudience[] = PARTICIPANT_MESSAGE_AUDIENCES.map((audience) => {
     const { real, test: testCount } = counts[audience];
     const messages = organizerMessageCost({ real, test: testCount }, volume.participantBccCount);
-    const deferral = organizerMessageDeferral(messages, headroom);
-    // On a daily plan the deferred part waits for as many midnights as the next days' allowance, less the reserve, needs.
-    const days = volume.allowance === null ? 0 : organizerMessageResets(deferral.deferred, volume.allowance - staffReserve(volume));
-    const deferredLine =
-      deferral.deferred === 0
-        ? undefined
-        : volume.period === "month"
-          ? t("participantMessages.deferredMonth", { now: String(deferral.now), deferred: String(deferral.deferred) })
-          : days > 1
-            ? t(`participantMessages.deferredDays.${countForm(days, locale)}`, {
-                now: String(deferral.now),
-                deferred: String(deferral.deferred),
-                days: String(days),
-                perDay: String(Math.max(1, (volume.allowance ?? 0) - staffReserve(volume))),
-              })
-            : t("participantMessages.deferredDay", { now: String(deferral.now), deferred: String(deferral.deferred) });
-    // Before «Trimite» (part two): how long it takes, and whether it fits the allowance — the deferral's own words when not,
-    // first, and then the pace of only what can leave now, so no hour is promised for a message that waits for a reset.
-    const fitsLine = volume.remaining === null ? "" : t(volume.period === "month" ? "participantMessages.fitsMonth" : "participantMessages.fitsToday");
-    const paceLine =
-      messages === 0
-        ? undefined
-        : deferredLine
-          ? [deferredLine, deferral.now > 0 ? paceLineOf(deferral.now) : ""].filter((line) => line !== "").join(" ")
-          : [paceLineOf(messages), fitsLine].filter((line) => line !== "").join(" ");
+    const copies = messages - real - testCount;
+    // The send's messages on the participants' road: theirs, and the club's copy when it takes the same road (§419).
+    const onRoad = real + testCount + (copiesRoad === participantsRoad ? copies : 0);
+    const outlook =
+      participantsRoad === "gmail"
+        ? organizerSendOutlook({ road: "gmail", messages: onRoad, ahead: volume.waitingAhead.gmail, batchSize: OUTBOX_BATCH_SIZE, minutesPerRun, gmailRoom: volume.gmailRoom, gmailPerPass })
+        : organizerSendOutlook({
+            road: "mailgun",
+            messages: onRoad,
+            ahead: volume.waitingAhead.mailgun,
+            batchSize: OUTBOX_BATCH_SIZE,
+            minutesPerRun,
+            period: volume.period,
+            allowance: volume.allowance,
+            remaining: volume.remaining,
+            hourlyAllowance: volume.hourlyAllowance,
+          });
+    const ownFirst = t("participantMessages.ownFirst");
+    let deferredLine: string | undefined;
+    let warningLine: string | undefined;
+    let costLine: string | undefined;
+    let paceLine: string | undefined;
+    if (outlook.road === "gmail") {
+      // The club's Gmail (§443): its own room, cap and pace — nothing of Mailgun's allowance or pace is true here.
+      costLine = t("participantMessages.costGmail", { messages: String(outlook.messages), room: String(volume.gmailRoom), cap: String(volume.gmailDailyCap) });
+      if (outlook.waiting > 0) {
+        deferredLine = t(transport.atGmailCap === "mailgun" ? "participantMessages.gmailOverflow" : "participantMessages.gmailWaits", {
+          now: String(outlook.now),
+          waiting: String(outlook.waiting),
+          cap: String(volume.gmailDailyCap),
+        });
+      }
+      paceLine = [deferredLine, outlook.now > 0 ? paceOf(outlook) : "", outlook.waiting === 0 ? t("participantMessages.gmailFits") : "", ownFirst]
+        .filter(Boolean)
+        .join(" ");
+    } else {
+      costLine =
+        copies > 0 && copiesRoad !== participantsRoad
+          ? t("participantMessages.costCopiesGmail", { messages: String(outlook.messages), allowance, copies: String(copies) })
+          : t("participantMessages.cost", { messages: String(outlook.messages), allowance });
+      if (outlook.deferred > 0) {
+        deferredLine =
+          outlook.period === "month"
+            ? t("participantMessages.deferredMonth", { now: String(outlook.now), deferred: String(outlook.deferred) })
+            : outlook.period === "day" && outlook.restDays > 1
+              ? t(`participantMessages.deferredDays.${countForm(outlook.restDays, locale)}`, {
+                  now: String(outlook.now),
+                  deferred: String(outlook.deferred),
+                  days: String(outlook.restDays),
+                  perDay: String(outlook.perDay),
+                })
+              : t("participantMessages.deferredDay", { now: String(outlook.now), deferred: String(outlook.deferred) });
+      }
+      // A daily plan the send does not fit (part two): a warning, since the registrations' own emails share that allowance.
+      if (outlook.period === "day" && outlook.deferred > 0) {
+        warningLine = [
+          t(`participantMessages.dailyWarning.${countForm(outlook.daysUsed, locale)}`, { days: String(outlook.daysUsed) }),
+          t(volume.fallbackToGmail ? "participantMessages.dailyShareGmail" : "participantMessages.dailyShare"),
+          t("participantMessages.dailyPlan", planPath),
+        ].join(" ");
+      }
+      const fitsLine = outlook.period === "none" || outlook.deferred > 0 ? "" : t(outlook.period === "month" ? "participantMessages.fitsMonth" : "participantMessages.fitsToday");
+      paceLine = [deferredLine, outlook.now > 0 ? paceOf(outlook) : "", fitsLine, ownFirst].filter(Boolean).join(" ");
+    }
     return {
       value: audience,
       label: t(`participantMessages.audiences.${audience}`),
@@ -177,9 +219,10 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
       recipientsLine:
         real + testCount === 0 ? t("participantMessages.nobody") : t(`participantMessages.recipients.${countForm(real, locale)}`, { count: real }),
       ...(testCount > 0 ? { testLine: t("participantMessages.testLine", { test: String(testCount) }) } : {}),
-      ...(messages > 0 ? { costLine: t("participantMessages.cost", { messages: String(messages), allowance }) } : {}),
-      ...(deferredLine ? { deferredLine } : {}),
-      ...(paceLine ? { paceLine } : {}),
+      ...(messages > 0 && costLine ? { costLine } : {}),
+      ...(messages > 0 && deferredLine ? { deferredLine } : {}),
+      ...(messages > 0 && warningLine ? { warningLine } : {}),
+      ...(messages > 0 && paceLine ? { paceLine } : {}),
       confirmTitle: t(`participantMessages.confirmTitle.${countForm(real, locale)}`, { count: real }),
     };
   });
@@ -199,6 +242,8 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
         title: choice.confirmTitle,
         // The pace and the allowance (the decision «Cere reconfirmarea», part two) after «Când pleacă», then the test rows.
         body: [t("participantMessages.confirmBody"), choice.paceLine, choice.testLine].filter(Boolean).join(" "),
+        // A daily plan the send does not fit: the warning the Administrator cannot miss, in the dialog's own warning.
+        ...(choice.warningLine ? { warning: choice.warningLine } : {}),
         // No "0 participants" for a group of test rows alone: the test line says who is written to. The message named, and
         // the club's one copy of the send (§419) — the design «telling the owner about every email a staff press sends», slice 3.
         ...words.mail({ to: { count: choice.real, audience: "participants" }, type: "ORGANIZER_MESSAGE" }),

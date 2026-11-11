@@ -132,6 +132,12 @@ export type EmailVolumeToday = {
    */
   bulkWaitingMessages: number;
   /**
+   * The rest of them — every waiting row but the newsletter's kind — by the road the claim takes it on (§442,
+   * `outboxRoadsFor`): what stands ahead of a send to many on each road (the decision «Cere reconfirmarea», part two),
+   * the bulk kind going after it. Every one is Mailgun's where Gmail carries nothing.
+   */
+  waitingAhead: { mailgun: number; gmail: number };
+  /**
    * Outbox rows Mailgun transmitted today. What the allowance has actually paid for — the rows the
    * club's Gmail carried (§443) are not in it: they cost Mailgun nothing.
    */
@@ -260,17 +266,6 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     .from(emailOutbox)
     .where(and(gte(emailOutbox.sentAt, since), sql`${emailOutbox.sentAt} IS NOT NULL`, carriedByMailgun));
 
-  const [waiting] = await db
-    .select({
-      value: count(),
-      bulk: count(sql`CASE WHEN ${emailOutbox.messageType} IN (${sql.join(
-        BULK_MESSAGE_TYPES.map((type) => sql`${type}`),
-        sql`, `,
-      )}) THEN 1 END`),
-    })
-    .from(emailOutbox)
-    .where(sql`${emailOutbox.status} IN ('PENDING', 'PROCESSING')`);
-
   const [sentMonth] = await db
     .select({ value: count() })
     .from(emailOutbox)
@@ -307,6 +302,21 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
   const fallbackDisclosed = await noticeDescribesGmailFallback(db, now);
   const roads = outboxRoadsFor(transport, gmail.configured, fallbackDisclosed);
   const mailgunRoad = roads ? not(gmailRoadCondition(roads)) : undefined;
+  // What waits, the bulk kind apart, and the rest by road as the claim splits it: one query.
+  const bulkType = sql`${emailOutbox.messageType} IN (${sql.join(
+    BULK_MESSAGE_TYPES.map((type) => sql`${type}`),
+    sql`, `,
+  )})`;
+  const [waiting] = await db
+    .select({
+      value: count(),
+      bulk: count(sql`CASE WHEN ${bulkType} THEN 1 END`),
+      gmailAhead: count(sql`CASE WHEN NOT ${bulkType} AND ${roads ? gmailRoadCondition(roads) : sql`false`} THEN 1 END`),
+    })
+    .from(emailOutbox)
+    .where(sql`${emailOutbox.status} IN ('PENDING', 'PROCESSING')`);
+  const bulkWaiting = waiting?.bulk ?? 0;
+  const gmailAhead = waiting?.gmailAhead ?? 0;
   const hour = await readMailgunHour(db, now, {
     hourlyAllowance: setting.hourlyAllowance,
     alwaysCount: true,
@@ -332,7 +342,8 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     gmailFailedLastDay: gmailLastFailure !== null && now.getTime() - gmailLastFailure.at.getTime() < GMAIL_WINDOW_MS,
     queuedMessages: queued?.value ?? 0,
     waitingMessages: waiting?.value ?? 0,
-    bulkWaitingMessages: waiting?.bulk ?? 0,
+    bulkWaitingMessages: bulkWaiting,
+    waitingAhead: { mailgun: Math.max(0, (waiting?.value ?? 0) - bulkWaiting - gmailAhead), gmail: gmailAhead },
     sentMessages,
     sentThisMonth,
     plan: setting.plan,

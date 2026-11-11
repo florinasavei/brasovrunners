@@ -1,14 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { RECONFIRM_STATUSES, reconfirmApplies, reconfirmUrlOf } from "@/modules/notifications/domain/cannot-come";
-import { STAFF_RESERVE_DAY_MINIMUM, staffBudget, staffReserve } from "@/modules/notifications/domain/bulk";
-import { ORGANIZER_SUBJECT_PLACEHOLDERS, organizerMessagePace, organizerMessageResets, organizerParagraphs, readOrganizerAskReconfirm, unknownOrganizerPlaceholders } from "@/modules/notifications/domain/organizer-message";
+import { isSendToManyMessage, SEND_TO_MANY_MESSAGE_TYPES, sendOrderOf } from "@/modules/notifications/domain/bulk";
+import { BULK_CLUB_COPY_MESSAGES } from "@/modules/notifications/domain/club-notices";
+import { ORGANIZER_SUBJECT_PLACEHOLDERS, organizerParagraphs, organizerSendOutlook, readOrganizerAskReconfirm, unknownOrganizerPlaceholders } from "@/modules/notifications/domain/organizer-message";
 import { fillReminderBoxes, REMINDER_BOXES, reminderOverwrites } from "@/modules/notifications/ui/reminder-fill";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
  * «Cere reconfirmarea» (the decision «Cere reconfirmarea»; BR-REQ-036-01, BR-REQ-080-02) — the pure parts: which
- * registrations «Vin» goes to, the link it carries, the staff sends' reserve, the pace line's arithmetic, the fill button's
+ * registrations «Vin» goes to, the link it carries, the claim's order, the line before «Trimite»'s arithmetic, the fill button's
  * rule, and the ready reminder text in both catalogues.
  */
 const NOW = new Date("2026-11-11T10:00:00.000Z");
@@ -54,47 +55,78 @@ describe("«Vin» goes only where a send asked", () => {
   });
 });
 
-describe("the staff sends' reserve (decided for the owner: max(10, 10%))", () => {
-  it("keeps ten a day on Mailgun Free, a tenth of a bigger daily allowance, a tenth of a monthly one, nothing with no ceiling", () => {
-    expect(STAFF_RESERVE_DAY_MINIMUM).toBe(10);
-    expect(staffReserve({ period: "day", allowance: 100 })).toBe(10);
-    expect(staffReserve({ period: "day", allowance: 50 })).toBe(10);
-    expect(staffReserve({ period: "day", allowance: 300 })).toBe(30);
-    expect(staffReserve({ period: "month", allowance: 50_000 })).toBe(5000);
-    expect(staffReserve({ period: "month", allowance: 40 })).toBe(4);
-    expect(staffReserve({ period: "none", allowance: null })).toBe(0);
+describe("the order of the claim (part two): steps 2–4 in one constant, no reserve", () => {
+  it("puts «Detalii actualizate» before the reminder and the reminder before the organizers' message, after every registration's own", () => {
+    expect([...SEND_TO_MANY_MESSAGE_TYPES]).toEqual(["EVENT_UPDATE_NOTICE", "EVENT_REMINDER", "ORGANIZER_MESSAGE"]);
+    expect(sendOrderOf("VERIFY_REGISTRATION_EMAIL")).toBe(0);
+    expect(sendOrderOf("WAITLIST_SPOT_OFFER")).toBe(0);
+    expect(sendOrderOf("EVENT_UPDATE_NOTICE")).toBe(1);
+    expect(sendOrderOf("EVENT_REMINDER")).toBe(2);
+    expect(sendOrderOf("ORGANIZER_MESSAGE")).toBe(3);
+    for (const type of SEND_TO_MANY_MESSAGE_TYPES) expect(isSendToManyMessage(type), type).toBe(true);
+    for (const type of ["EVENT_CANCELLED", "REGISTRATION_CONFIRMED", "NEWSLETTER"] as const) expect(isSendToManyMessage(type), type).toBe(false);
   });
 
-  it("lets a staff send use what is left less the reserve, never below zero, and sets no limit without a ceiling", () => {
-    expect(staffBudget({ period: "day", allowance: 100, remaining: 15 })).toBe(5);
-    expect(staffBudget({ period: "day", allowance: 100, remaining: 8 })).toBe(0);
-    expect(staffBudget({ period: "day", allowance: 100, remaining: 100 })).toBe(90);
-    expect(staffBudget({ period: "none", allowance: null, remaining: null })).toBeNull();
-  });
-});
-
-describe("the pace line's arithmetic (part two)", () => {
-  it("counts the queue ahead and the send at one batch a run, or at Mailgun's hour when slower, never under an hour", () => {
-    // Twenty every fifteen minutes is eighty an hour: 201 messages and nothing ahead, three hours.
-    expect(organizerMessagePace({ messages: 201, ahead: 0, batchSize: 20, minutesPerRun: 15, hourlyAllowance: 100 })).toEqual({ hours: 3 });
-    // Forty ahead of it: 241, four hours.
-    expect(organizerMessagePace({ messages: 201, ahead: 40, batchSize: 20, minutesPerRun: 15, hourlyAllowance: 100 })).toEqual({ hours: 4 });
-    // Mailgun's hour slower than the runs: fifty an hour, five hours.
-    expect(organizerMessagePace({ messages: 250, ahead: 0, batchSize: 20, minutesPerRun: 15, hourlyAllowance: 50 })).toEqual({ hours: 5 });
-    // No pace: the runs alone. A small send: one hour.
-    expect(organizerMessagePace({ messages: 400, ahead: 0, batchSize: 20, minutesPerRun: 15, hourlyAllowance: null })).toEqual({ hours: 5 });
-    expect(organizerMessagePace({ messages: 3, ahead: 0, batchSize: 20, minutesPerRun: 15, hourlyAllowance: 100 })).toEqual({ hours: 1 });
+  it("keeps the club-copy rule apart: one copy per send for the organizers' message and «Detalii actualizate» only", () => {
+    expect([...BULK_CLUB_COPY_MESSAGES].sort()).toEqual(["EVENT_UPDATE_NOTICE", "ORGANIZER_MESSAGE"]);
+    expect(SEND_TO_MANY_MESSAGE_TYPES).not.toBe(BULK_CLUB_COPY_MESSAGES);
   });
 });
 
-describe("how many more resets a deferred staff send waits for (part two)", () => {
-  it("divides what waits by the day's allowance less the reserve: on Free, 111 at 90 a day need two midnights", () => {
-    expect(organizerMessageResets(111, 90)).toBe(2);
-    expect(organizerMessageResets(90, 90)).toBe(1);
-    expect(organizerMessageResets(1, 90)).toBe(1);
-    expect(organizerMessageResets(0, 90)).toBe(0);
-    // A reserve as large as the allowance still counts one a day, never a division by zero.
-    expect(organizerMessageResets(5, 0)).toBe(5);
+describe("the line before «Trimite», worked out per road with no reserve (part two)", () => {
+  const MAILGUN = { road: "mailgun" as const, batchSize: 20, minutesPerRun: 15, hourlyAllowance: 100 };
+
+  it("on Free's 100 a day with 5 sent, 201 messages: 95 today in about 2 hours, the other 106 over 2 more days at 100 a day, 3 days of the allowance", () => {
+    expect(organizerSendOutlook({ ...MAILGUN, messages: 201, ahead: 0, period: "day", allowance: 100, remaining: 95 })).toEqual({
+      road: "mailgun",
+      period: "day",
+      messages: 201,
+      now: 95,
+      deferred: 106,
+      hours: 2,
+      restDays: 2,
+      perDay: 100,
+      daysUsed: 3,
+    });
+  });
+
+  it("counts what waits ahead on the same road out of today's room and into the hours", () => {
+    const outlook = organizerSendOutlook({ ...MAILGUN, messages: 201, ahead: 15, period: "day", allowance: 100, remaining: 95 });
+    expect(outlook).toMatchObject({ now: 80, deferred: 121, hours: 2, restDays: 2, daysUsed: 3 });
+    // Today already spent: nothing today, the days of the rest alone.
+    expect(organizerSendOutlook({ ...MAILGUN, messages: 201, ahead: 0, period: "day", allowance: 100, remaining: 0 })).toMatchObject({ now: 0, hours: 0, restDays: 3, daysUsed: 3 });
+    // It fits: no deferral, no rest.
+    expect(organizerSendOutlook({ ...MAILGUN, messages: 50, ahead: 0, period: "day", allowance: 100, remaining: 95 })).toMatchObject({ now: 50, deferred: 0, restDays: 0, daysUsed: 1, hours: 1 });
+  });
+
+  it("on a monthly plan, 201 messages leave now in about three hours at twenty every fifteen minutes; more with a queue ahead, or Mailgun's slower hour", () => {
+    expect(organizerSendOutlook({ ...MAILGUN, messages: 201, ahead: 0, period: "month", allowance: 10_000, remaining: 9_000 })).toEqual({
+      road: "mailgun",
+      period: "month",
+      messages: 201,
+      now: 201,
+      deferred: 0,
+      hours: 3,
+    });
+    expect(organizerSendOutlook({ ...MAILGUN, messages: 201, ahead: 40, period: "month", allowance: 10_000, remaining: 9_000 }).hours).toBe(4);
+    expect(organizerSendOutlook({ ...MAILGUN, hourlyAllowance: 50, messages: 250, ahead: 0, period: "month", allowance: 10_000, remaining: 9_000 }).hours).toBe(5);
+    expect(organizerSendOutlook({ ...MAILGUN, messages: 201, ahead: 0, period: "month", allowance: 10_000, remaining: 150 })).toMatchObject({ now: 150, deferred: 51 });
+    // No ceiling and no pace: the runs alone; a small send is one hour.
+    expect(organizerSendOutlook({ ...MAILGUN, hourlyAllowance: null, messages: 400, ahead: 0, period: "none", allowance: null, remaining: null })).toMatchObject({ now: 400, deferred: 0, hours: 5 });
+    expect(organizerSendOutlook({ ...MAILGUN, messages: 3, ahead: 0, period: "none", allowance: null, remaining: null }).hours).toBe(1);
+  });
+
+  it("on the club's Gmail, its own room and pace: four a pass is sixteen an hour, and what the rolling day has no room for waits", () => {
+    expect(organizerSendOutlook({ road: "gmail", messages: 201, ahead: 0, batchSize: 20, minutesPerRun: 15, gmailRoom: 200, gmailPerPass: 4 })).toEqual({
+      road: "gmail",
+      messages: 201,
+      now: 200,
+      waiting: 1,
+      hours: 13,
+      perPass: 4,
+    });
+    expect(organizerSendOutlook({ road: "gmail", messages: 30, ahead: 10, batchSize: 20, minutesPerRun: 15, gmailRoom: 200, gmailPerPass: 4 })).toMatchObject({ now: 30, waiting: 0, hours: 3 });
+    expect(organizerSendOutlook({ road: "gmail", messages: 30, ahead: 0, batchSize: 20, minutesPerRun: 15, gmailRoom: 0, gmailPerPass: 4 })).toMatchObject({ now: 0, waiting: 30, hours: 0 });
   });
 });
 

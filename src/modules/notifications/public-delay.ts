@@ -7,7 +7,7 @@ import { readJobCadence } from "@/modules/jobs/cadence";
 import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
 import { FAMILY_HELD, FAMILY_HELD_UNTIL, SITTING_HELD } from "@/modules/registrations/domain/family-sitting";
 import { env } from "@/shared/config/env";
-import { isBulkMessage } from "./domain/bulk";
+import { isBulkMessage, isSendToManyMessage } from "./domain/bulk";
 import { CLUB_COPY_FLAG } from "./domain/club-notices";
 import { type EmailDelay, type EmailDelayFacts, isWaitedFor, judgeEmailDelay } from "./domain/email-delay";
 import { isRelayMessage } from "./domain/relay";
@@ -165,7 +165,7 @@ function factsFromGroups(groups: readonly FactsGroup[], noticeNamesFallback: boo
     if (mailgun) {
       inFlight += group.inFlight;
       facts.pausedUntil = latest(facts.pausedUntil, asDate(group.pausedUntil));
-      if (!isBulkMessage(group.messageType)) facts.aheadOnMailgun += group.waiting;
+      if (!isBulkMessage(group.messageType) && !isSendToManyMessage(group.messageType)) facts.aheadOnMailgun += group.waiting;
     }
     if (!isWaitedFor(group.messageType, group.clubCopy) || group.waiting === 0) continue;
     facts.queued += group.waiting;

@@ -1,6 +1,6 @@
 import { and, count, desc, eq, gt, inArray, isNotNull, lt, not, or, type SQL, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
-import { BULK_MESSAGE_TYPES, STAFF_RESERVE_HELD_ERROR } from "./domain/bulk";
+import { BULK_MESSAGE_TYPES, SEND_TO_MANY_MESSAGE_TYPES } from "./domain/bulk";
 import { GMAIL_CAP_DEFERRED_ERROR } from "./domain/email-transport";
 import { RELAY_MESSAGE_TYPES } from "./domain/relay";
 import { PACE_EVIDENCE_MS, paceHolds, RATE_PAUSE_ERROR_PREFIX } from "./domain/hourly-pace";
@@ -169,12 +169,6 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
   */
   const pending = and(eq(emailOutbox.status, "PENDING"), not(inArray(emailOutbox.messageType, [...BULK_MESSAGE_TYPES])));
   /*
-    A staff send's row the reserve holds until the reset (the decision «Cere reconfirmarea», part two,
-    `STAFF_RESERVE_HELD_ERROR`) is that reserve working, as the newsletter's is: neither deferred nor a provider's
-    error here. It still counts as waiting, and once its turn has passed by the overdue allowance it is late.
-  */
-  const staffReserveHeld = sql`coalesce(${emailOutbox.lastError} = ${STAFF_RESERVE_HELD_ERROR}, false)`;
-  /*
     A row waiting out Gmail's rolling day because the club chose "wait at the cap" (§443) is not a
     stall either (§493): the club set the cap and the choice on `/admin/emails`, the row goes when the
     oldest send leaves the day, and a monitor that alarmed on it would alarm every busy day for a
@@ -183,12 +177,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
   */
   const gmailCapWait = sql`${emailOutbox.lastError} = ${GMAIL_CAP_DEFERRED_ERROR}`;
   const gmailDeferredWhere = and(pending, gt(emailOutbox.nextAttemptAt, deferredFrom), gmailCapWait);
-  const deferredWhere = and(
-    pending,
-    gt(emailOutbox.nextAttemptAt, deferredFrom),
-    sql`${emailOutbox.lastError} IS DISTINCT FROM ${GMAIL_CAP_DEFERRED_ERROR}`,
-    sql`NOT ${staffReserveHeld}`,
-  );
+  const deferredWhere = and(pending, gt(emailOutbox.nextAttemptAt, deferredFrom), sql`${emailOutbox.lastError} IS DISTINCT FROM ${GMAIL_CAP_DEFERRED_ERROR}`);
   // A row the worker never touched has no `next_attempt_at`; its turn was its creation.
   const overdueWhere = and(
     pending,
@@ -278,8 +267,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     AND ${emailOutbox.lastError} NOT LIKE ${`${RATE_PAUSE_ERROR_PREFIX}%`}
     AND ${emailOutbox.lastError} NOT LIKE ${`${ALLOWANCE_DEFERRED_ERROR_PREFIX}%`}
     AND ${emailOutbox.lastError} NOT LIKE ${`${FALLBACK_WAITING_ERROR_PREFIX}%`}
-    AND ${emailOutbox.lastError} <> ${GMAIL_CAP_DEFERRED_ERROR}
-    AND ${emailOutbox.lastError} <> ${STAFF_RESERVE_HELD_ERROR})`;
+    AND ${emailOutbox.lastError} <> ${GMAIL_CAP_DEFERRED_ERROR})`;
   const retryingLateWhere = and(
     pending,
     plainError,
@@ -287,8 +275,22 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     turnWithinDeferral,
     sql`${emailOutbox.nextAttemptAt} >= ${overdueBefore.toISOString()}::timestamptz`,
   );
-  // Each late row counted once: a recent pause and a stop nothing carries have counts of their own.
-  const lateWhere = and(overdueWhere, sql`NOT coalesce(${recentPause}, false)`, stopUncarried ? sql`NOT coalesce(${fallbackWaiting}, false)` : undefined);
+  /*
+    A send to many (the decision «Cere reconfirmarea», part two: «Detalii actualizate», the reminder, the organizers'
+    message — `SEND_TO_MANY_MESSAGE_TYPES`) is not late for waiting past its turn: it waits behind the registrations' own
+    messages by design and drains at the queue's pace — 201 rows at 80 an hour take about two and a half hours, and its
+    tail would read «late» from minute ninety while the queue works. What still catches a real stall is said elsewhere,
+    and stays: a scheduler that stopped is the job check's (`jobs/health.ts#checkJobHealth`, the outbox job's last run);
+    a provider's refusal, pause or stop is the other buckets' — deferred, paused late, stopped late, retrying late, failed
+    — which count such a row exactly as any other; and a registration's own message waiting past its turn is late here.
+    Each late row counted once: a recent pause and a stop nothing carries have counts of their own.
+  */
+  const lateWhere = and(
+    overdueWhere,
+    not(inArray(emailOutbox.messageType, [...SEND_TO_MANY_MESSAGE_TYPES])),
+    sql`NOT coalesce(${recentPause}, false)`,
+    stopUncarried ? sql`NOT coalesce(${fallbackWaiting}, false)` : undefined,
+  );
   const deferredCounted = notCarried(deferredWhere);
   // «Sarcini»'s red row (§622): stopped rows queued past the allowance that nothing carries now.
   // A mark counts only while a stop is in force and nothing carries it; an old mark past its stop is a row waiting its turn.

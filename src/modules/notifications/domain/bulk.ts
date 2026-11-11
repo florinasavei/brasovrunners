@@ -44,33 +44,32 @@ export function bulkBudget(headroom: { period: "day" | "month" | "none"; allowan
 }
 
 /**
- * The staff sends to many (the decision «Cere reconfirmarea», part two): «Trimite un mesaj participanților» and «Detalii
- * actualizate» — `BULK_CLUB_COPY_MESSAGES`, one message per registration of an event, queued by one press. The outbox
- * claims them after every registration's own message (the address to confirm, the declaration, the offer, the
- * confirmation) and before the bulk types above, so a send of two hundred never stands in front of a verification queued
- * after it. They are about the person's own registration, so they keep a smaller reserve than the newsletter's: a tenth
- * of the allowance, and on a daily plan at least ten messages — what the registrations' own emails need for the rest of
- * the day. Decided for the owner (the brief's first open decision): the default, `max(10, 10%)`.
+ * The sends to many (the decision «Cere reconfirmarea», part two): one message per registration of an event, queued by
+ * one press or one job, so two hundred at a time — and each of them about a registration that is already made. The
+ * outbox claims them after every registration's own message (the address to confirm, the declaration, the offer, the
+ * confirmation), which a person may be waiting for on a page right now, and before the bulk types above; among
+ * themselves, in this order:
+ *
+ * 1. `EVENT_UPDATE_NOTICE` — «Detalii actualizate», a moved start or place: the most urgent of the three;
+ * 2. `EVENT_REMINDER` — the automatic reminder, about two hundred rows queued by the maintenance job in one transaction
+ *    a reminder lead before the start (`event-mail.ts#queueEventReminders`);
+ * 3. `ORGANIZER_MESSAGE` — «Trimite un mesaj participanților», the organizers' own words.
+ *
+ * An order and nothing else: no cap, no hold and no mark — they leave at the queue's pace, in the room the
+ * registrations' own messages leave, and a club copy rides with its type. So a send of two hundred never stands in
+ * front of a verification queued after it. `/api/health` does not call one of them late for waiting its turn
+ * (`health.ts`), and the public «emailurile întârzie» does not count them (`email-delay.ts`, `public-delay.ts`).
  */
-export const STAFF_RESERVE_SHARE = 0.1;
-export const STAFF_RESERVE_DAY_MINIMUM = 10;
+export const SEND_TO_MANY_MESSAGE_TYPES = ["EVENT_UPDATE_NOTICE", "EVENT_REMINDER", "ORGANIZER_MESSAGE"] as const satisfies readonly EmailMessageType[];
 
-/** The messages a staff send leaves to the registrations' own emails, by the plan's period; none without a ceiling. */
-export function staffReserve(headroom: { period: "day" | "month" | "none"; allowance: number | null }): number {
-  if (headroom.period === "none" || headroom.allowance === null) return 0;
-  const share = Math.ceil(headroom.allowance * STAFF_RESERVE_SHARE);
-  return headroom.period === "day" ? Math.max(STAFF_RESERVE_DAY_MINIMUM, share) : share;
-}
-
-/** How many staff-send messages may go now: what the plan has left less `staffReserve`, never below zero; `null` with no ceiling. */
-export function staffBudget(headroom: { period: "day" | "month" | "none"; allowance: number | null; remaining: number | null }): number | null {
-  if (headroom.period === "none" || headroom.allowance === null || headroom.remaining === null) return null;
-  return Math.max(0, headroom.remaining - staffReserve(headroom));
+export function isSendToManyMessage(messageType: EmailMessageType): boolean {
+  return (SEND_TO_MANY_MESSAGE_TYPES as readonly EmailMessageType[]).includes(messageType);
 }
 
 /**
- * The mark a staff-send row carries while the reserve holds it until the allowance comes back: the reserve working, not
- * a fault — `/api/health` counts such a row neither as deferred nor as a provider's error, as it counts no bulk row held
- * for its own reserve. Once its turn has passed by the overdue allowance, it is late like any row.
+ * A non-bulk message's place in the claim's order: 0 for a registration's own, then 1, 2, 3 by
+ * `SEND_TO_MANY_MESSAGE_TYPES`. The bulk ones are claimed apart, last, under their cap.
  */
-export const STAFF_RESERVE_HELD_ERROR = "staff send: held for the registrations' own emails";
+export function sendOrderOf(messageType: EmailMessageType): number {
+  return (SEND_TO_MANY_MESSAGE_TYPES as readonly EmailMessageType[]).indexOf(messageType) + 1;
+}
