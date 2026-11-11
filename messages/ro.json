@@ -6233,7 +6233,9 @@
         "paper": "Acordul părintelui pe hârtie",
         "paperTitle": "Părintele lui {name} a semnat contractul pe hârtie?",
         "paperBody": "Se înregistrează că părintele sau tutorele lui {name} a semnat contractul tipărit, versiunea în vigoare, și că tu ai înregistrat semnătura. Păstrează foaia semnată.",
-        "minorsClosed": "Linkul părintelui și „Acordul părintelui pe hârtie” așteaptă: nota sau contractul în vigoare nu descriu minorii («Sarcini»)."
+        "minorsClosed": "Linkul părintelui și „Acordul părintelui pe hârtie” așteaptă: nota sau contractul în vigoare nu descriu minorii («Sarcini»).",
+        "nameMissing": "Numele părintelui lipsește, deci linkul și foaia nu au pe cine numi. Îl scrii în „Modifică”, pe pagina voluntarului.",
+        "nameMissingOpen": "Deschide pagina lui {name}"
       },
       "otherCategory": "Alte roluri",
       "categories": {

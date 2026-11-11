@@ -50,6 +50,7 @@ import {
   earliestVolunteerBirthDate,
   groupRolesByCategory,
   groupsNeedHeadings,
+  guardianAskOf,
   guardianSharesAddress,
   guardianStandingOf,
   isVolunteerMinor,
@@ -59,6 +60,7 @@ import {
   roleLabel,
   rolesWithCategoryWords,
   type VolunteerAgreementStanding,
+  type VolunteerGuardianAsk,
   type VolunteerState,
 } from "../domain/volunteer";
 import { ROLE_EMAIL_SETTLE_MINUTES, type VolunteerCategory, type VolunteerItem, type VolunteerRole } from "../volunteers";
@@ -118,6 +120,138 @@ export const GUARDIAN_CHIP: Record<"accepted" | "missing", { glyph: StatusGlyphN
   accepted: { glyph: "done", color: "success" },
   missing: { glyph: "open", color: "warning" },
 };
+
+/**
+ * The parent's or guardian's agreement as chips («Confirmarea minorilor din lista de voluntari»), the person's block and the «Voluntari» list's
+ * row alike — the one place that decides them: «Acordul părintelui lipsește» or received, and «Link trimis părintelui» while a link is live; in
+ * words, never by colour alone. Nothing for an adult, and nothing for a cancelled person waiting on nothing.
+ */
+export function guardianChips(person: Pick<VolunteerItem, "age" | "state" | "guardianAcceptedAt" | "guardianTokenExpiresAt">, now: Date, t: Awaited<ReturnType<typeof getTranslations<"Admin">>>) {
+  const standing = guardianStandingOf(person, now);
+  if (standing === "notNeeded" || (person.state === "CANCELLED" && standing !== "accepted")) return null;
+  const chip = GUARDIAN_CHIP[standing === "accepted" ? "accepted" : "missing"];
+  return (
+    <>
+      <StatusChip
+        glyph={chip.glyph}
+        color={chip.color}
+        variant="outlined"
+        label={t(standing === "accepted" ? "volunteers.guardian.accepted" : "volunteers.guardian.missing")}
+        testId="volunteer-guardian-state"
+      />
+      {standing === "linkSent" && <StatusChip glyph="link" variant="outlined" label={t("volunteers.guardian.linkSent")} testId="volunteer-guardian-link" />}
+    </>
+  );
+}
+
+/**
+ * What the organizer does about a minor whose parent has not agreed (§768, «Confirmarea minorilor din lista de voluntari»), the person's block and
+ * the «Voluntari» list's row alike — the same buttons under the same conditions (`guardianAskOf` decides), each asking first and posting to the
+ * card's own actions, which ask the service for the role and the texts again: «Trimite linkul părintelui» (to the parent's address, when both
+ * addresses exist), the sheet to print, «Acordul părintelui pe hârtie». `hidden` carries the language, the event and where the press comes back to.
+ */
+export function GuardianVerbs({
+  person,
+  ask,
+  locale,
+  eventId,
+  agreementDocumentId,
+  hidden,
+  words,
+  t,
+}: {
+  person: Pick<VolunteerItem, "id" | "name" | "email" | "guardianName" | "guardianEmail" | "guardianRequestedAt" | "agreementAcceptedAt" | "roleIds" | "choiceIds">;
+  ask: Extract<VolunteerGuardianAsk, { kind: "ask" }>;
+  locale: Locale;
+  eventId: string;
+  /** The agreement in force in the volunteer's language, the one the sheet prints (§768): the service refuses the record if it changed since. */
+  agreementDocumentId: string;
+  hidden: ReactNode;
+  words: ConfirmWords;
+  t: Awaited<ReturnType<typeof getTranslations<"Admin">>>;
+}) {
+  const day = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
+  const pdfHref = `/api/admin/events/${eventId}/volunteers/${person.id}/agreement`;
+  const sendLabel = ask.sent ? t("volunteers.guardian.resend") : t("volunteers.guardian.send");
+  return (
+    <Stack spacing={1} sx={{ mt: 0.5 }} data-testid="volunteer-guardian">
+      {person.guardianRequestedAt && (
+        <Typography variant="caption" color="text.secondary">
+          {t("volunteers.guardian.requestedLine", { when: day(person.guardianRequestedAt) })}
+        </Typography>
+      )}
+      <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
+        {ask.send === "volunteerNoEmail" ? (
+          // A volunteer the club typed with no address (§865) is sent nothing, the parent's link included: one line says why, the paper stays.
+          <Typography variant="body2" color="text.secondary" sx={{ alignSelf: "center" }} data-testid="volunteer-guardian-volunteer-no-email">
+            {t("volunteers.guardian.volunteerNoEmail")}
+          </Typography>
+        ) : ask.send === "ok" && person.guardianEmail !== null && person.guardianName !== null ? (
+          // One email to the parent's address per press, each link replacing the last (§768): asked first, naming the parent and the address.
+          <Box component="form" action={requestVolunteerGuardianAction} data-testid="volunteer-guardian-send-form">
+            {hidden}
+            <input type="hidden" name="volunteerId" value={person.id} />
+            <ConfirmSubmitButton
+              label={sendLabel}
+              icon={ask.sent ? "resend" : "send"}
+              ariaLabel={`${sendLabel}: ${shortText(person.name)}`}
+              title={t("volunteers.guardian.sendTitle")}
+              body={t("volunteers.guardian.sendBody", { name: shortText(person.name) })}
+              mail={words.mail({
+                to: { name: person.guardianName, address: person.guardianEmail },
+                type: "VOLUNTEER_GUARDIAN_REQUEST",
+                also: person.guardianRequestedAt ? [words.line("linkReplaced", { date: day(person.guardianRequestedAt) })] : [],
+              })}
+              confirmLabel={sendLabel}
+              cancelLabel={words.cancel}
+              size="medium"
+            />
+          </Box>
+        ) : (
+          <Typography variant="body2" color="text.secondary" data-testid="volunteer-guardian-no-email">
+            {t("volunteers.guardian.noEmail")}
+          </Typography>
+        )}
+        <GlyphButton icon="print" href={`${pdfHref}?for=guardian`} variant="outlined" sx={{ minHeight: 44 }} aria-label={`${t("volunteers.guardian.pdfToSign")}: ${shortText(person.name)}`} data-testid="volunteer-guardian-pdf-to-sign">
+          {t("volunteers.guardian.pdfToSign")}
+        </GlyphButton>
+        <ActionForm
+          action={recordPaperVolunteerGuardianAction}
+          confirm={{
+            title: t("volunteers.guardian.paperTitle", { name: shortText(person.name) }),
+            body: t("volunteers.guardian.paperBody", { name: shortText(person.name) }),
+            // The volunteer's second copy of their agreement, now with the parent's consent — only once they accepted their own,
+            // and only to an address (`guardian.ts#queueVolunteerCopy`); the parent is sent nothing. A second copy, so it may
+            // stay unsent (slice 4): the first, of what the volunteer signed, reached them when they accepted.
+            ...(person.agreementAcceptedAt !== null && person.email !== null
+              ? words.mail({
+                  to: { name: person.name, address: person.email },
+                  type: "VOLUNTEER_AGREEMENT_ACCEPTED",
+                  also: [{ ...words.line("guardianCopy"), withEmail: true }],
+                  optOut: true,
+                })
+              : words.noMail(person.name, [words.line("guardianNone")])),
+            confirmLabel: t("volunteers.guardian.paper"),
+            cancelLabel: words.cancel,
+          }}
+        >
+          {hidden}
+          <input type="hidden" name="volunteerId" value={person.id} />
+          {/* What the PDF beside it prints (§768): the service refuses the record if either changed since. */}
+          <input type="hidden" name="agreementDocumentId" value={agreementDocumentId} />
+          <input type="hidden" name="agreementRoles" value={agreementRolesStamp(person.roleIds, person.choiceIds)} />
+          <GlyphSubmitButton
+            icon="declaration"
+            label={t("volunteers.guardian.paper")}
+            pendingLabel={t("volunteers.guardian.paper")}
+            ariaLabel={`${t("volunteers.guardian.paper")}: ${shortText(person.name)}`}
+            variant="outlined"
+          />
+        </ActionForm>
+      </Stack>
+    </Stack>
+  );
+}
 
 export function shortText(text: string): string {
   const flat = text.replace(/\s+/g, " ").trim();
@@ -643,83 +777,10 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
         </Stack>
       );
     }
-    if (person.state === "CANCELLED") return null;
     // While the texts do not describe minors the link and the paper wait: the card says so once (`guardianNote`), not on every row.
-    if (!minorsOpen) return null;
-    const sent = guardianStandingOf(person, now) === "linkSent" || person.guardianRequestedAt !== null;
-    const sendLabel = sent ? t("volunteers.guardian.resend") : t("volunteers.guardian.send");
-    return (
-      <Stack spacing={1} sx={{ mt: 0.5 }} data-testid="volunteer-guardian">
-        {person.guardianRequestedAt && (
-          <Typography variant="caption" color="text.secondary">
-            {t("volunteers.guardian.requestedLine", { when: day(person.guardianRequestedAt) })}
-          </Typography>
-        )}
-        <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
-          {person.email === null ? (
-            // A volunteer the club typed with no address (§865) is sent nothing, the parent's link included: one line says why, the paper stays.
-            <Typography variant="body2" color="text.secondary" sx={{ alignSelf: "center" }} data-testid="volunteer-guardian-volunteer-no-email">
-              {t("volunteers.guardian.volunteerNoEmail")}
-            </Typography>
-          ) : person.guardianEmail !== null ? (
-            // One email to the parent's address per press, each link replacing the last (§768): asked first, naming the parent and the address.
-            <Box component="form" action={requestVolunteerGuardianAction} data-testid="volunteer-guardian-send-form">
-              {hidden}
-              <input type="hidden" name="volunteerId" value={person.id} />
-              <ConfirmSubmitButton
-                label={sendLabel}
-                icon={sent ? "resend" : "send"}
-                ariaLabel={`${sendLabel}: ${shortText(person.name)}`}
-                title={t("volunteers.guardian.sendTitle")}
-                body={t("volunteers.guardian.sendBody", { name: shortText(person.name) })}
-                mail={words.mail({
-                  to: { name: person.guardianName, address: person.guardianEmail },
-                  type: "VOLUNTEER_GUARDIAN_REQUEST",
-                  also: person.guardianRequestedAt ? [words.line("linkReplaced", { date: day(person.guardianRequestedAt) })] : [],
-                })}
-                confirmLabel={sendLabel}
-                cancelLabel={words.cancel}
-                size="medium"
-              />
-            </Box>
-          ) : (
-            <Typography variant="body2" color="text.secondary" data-testid="volunteer-guardian-no-email">
-              {t("volunteers.guardian.noEmail")}
-            </Typography>
-          )}
-          <GlyphButton icon="print" href={`${pdfHref}?for=guardian`} variant="outlined" sx={{ minHeight: 44 }} data-testid="volunteer-guardian-pdf-to-sign">
-            {t("volunteers.guardian.pdfToSign")}
-          </GlyphButton>
-          <ActionForm
-            action={recordPaperVolunteerGuardianAction}
-            confirm={{
-              title: t("volunteers.guardian.paperTitle", { name: shortText(person.name) }),
-              body: t("volunteers.guardian.paperBody", { name: shortText(person.name) }),
-              // The volunteer's second copy of their agreement, now with the parent's consent — only once they accepted their own,
-              // and only to an address (`guardian.ts#queueVolunteerCopy`); the parent is sent nothing. A second copy, so it may
-              // stay unsent (slice 4): the first, of what the volunteer signed, reached them when they accepted.
-              ...(person.agreementAcceptedAt !== null && person.email !== null
-                ? words.mail({
-                    to: { name: person.name, address: person.email },
-                    type: "VOLUNTEER_AGREEMENT_ACCEPTED",
-                    also: [{ ...words.line("guardianCopy"), withEmail: true }],
-                    optOut: true,
-                  })
-                : words.noMail(person.name, [words.line("guardianNone")])),
-              confirmLabel: t("volunteers.guardian.paper"),
-              cancelLabel: words.cancel,
-            }}
-          >
-            {hidden}
-            <input type="hidden" name="volunteerId" value={person.id} />
-            {/* What the PDF beside it prints (§768): the service refuses the record if either changed since. */}
-            <input type="hidden" name="agreementDocumentId" value={agreementDocumentIds[person.locale] ?? ""} />
-            <input type="hidden" name="agreementRoles" value={agreementRolesStamp(person.roleIds, person.choiceIds)} />
-            <GlyphSubmitButton icon="declaration" label={t("volunteers.guardian.paper")} pendingLabel={t("volunteers.guardian.paper")} variant="outlined" />
-          </ActionForm>
-        </Stack>
-      </Stack>
-    );
+    const ask = guardianAskOf(person, minorsOpen, now);
+    if (ask.kind !== "ask") return null;
+    return <GuardianVerbs person={person} ask={ask} locale={locale} eventId={eventId} agreementDocumentId={agreementDocumentIds[person.locale] ?? ""} hidden={hidden} words={words} t={t} />;
   };
 
   /** A role's name with how it stands, «Sosire · 1 din 1»: what the organizer sees before one press fills it. */
@@ -897,25 +958,7 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
         })()}
         {/* The parent's or guardian's agreement (§768), for a volunteer under eighteen only: «Acordul părintelui lipsește», a link sent, or received —
             in words, never by colour alone. A cancelled person waiting on nothing shows none. */}
-        {(() => {
-          const standing = guardianStandingOf(person, now);
-          if (standing === "notNeeded" || (person.state === "CANCELLED" && standing !== "accepted")) return null;
-          const chip = GUARDIAN_CHIP[standing === "accepted" ? "accepted" : "missing"];
-          return (
-            <>
-              <StatusChip
-                glyph={chip.glyph}
-                color={chip.color}
-                variant="outlined"
-                label={t(standing === "accepted" ? "volunteers.guardian.accepted" : "volunteers.guardian.missing")}
-                testId="volunteer-guardian-state"
-              />
-              {standing === "linkSent" && (
-                <StatusChip glyph="link" variant="outlined" label={t("volunteers.guardian.linkSent")} testId="volunteer-guardian-link" />
-              )}
-            </>
-          );
-        })()}
+        {guardianChips(person, now, t)}
       </Stack>
       {/* What the person said about themselves (§765), small: two chips — «a mai fost voluntar» and the club's group, the person's own claims, in words and a glyph —
           and one line of the rest in the row's details. Nothing for a person who said nothing. */}

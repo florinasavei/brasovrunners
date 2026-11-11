@@ -6233,7 +6233,9 @@
         "paper": "Parent's consent on paper",
         "paperTitle": "Did {name}'s parent sign the agreement on paper?",
         "paperBody": "This records that {name}'s parent or guardian signed the printed agreement, the version in force, and that you recorded the signature. Keep the signed sheet.",
-        "minorsClosed": "The parent's link and “Parent's consent on paper” wait: the notice or the agreement in force does not describe minors (“Tasks”)."
+        "minorsClosed": "The parent's link and “Parent's consent on paper” wait: the notice or the agreement in force does not describe minors (“Tasks”).",
+        "nameMissing": "The parent's name is missing, so the link and the sheet have nobody to name. Type it in “Edit”, on the volunteer's page.",
+        "nameMissingOpen": "Open {name}'s page"
       },
       "otherCategory": "Other roles",
       "categories": {
