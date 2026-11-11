@@ -85,7 +85,7 @@ import InvitationsPanel from "@/modules/registrations/ui/InvitationsPanel";
 import ReserveListPanel from "@/modules/registrations/ui/ReserveListPanel";
 import WaitlistAddForm from "@/modules/registrations/ui/WaitlistAddForm";
 import { listReserveEntries } from "@/modules/registrations/reserve-list";
-import { addReserveEntryAction, deleteReserveEntryAction, moveReserveEntryToEliteAction, saveReserveNoteAction } from "../reserve-actions";
+import { addReserveEntryAction, deleteReserveEntryAction, moveReserveEntryToEliteAction, moveReserveEntryToOwnAddressAction, saveReserveNoteAction } from "../reserve-actions";
 import { inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
@@ -122,7 +122,7 @@ import { previewMemberTickSweep } from "@/modules/registrations/admin-service";
 import { countForm, type CountForm } from "@/i18n/count-form";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { mayEndWaitlisted, rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
-import { givePlaceRefusalAhead, staffOfferIfMadeNow, staffOfferQuestion, waitlistAddDoorOpen } from "@/modules/registrations/give-place-tip";
+import { givePlaceRefusalAhead, specialGuestsListOn, staffOfferIfMadeNow, staffOfferQuestion, waitlistAddDoorOpen } from "@/modules/registrations/give-place-tip";
 import { noFreePlaceValues } from "@/modules/registrations/domain/capacity";
 import { outsideMarkConfirm } from "@/modules/registrations/ui/outside-mark-body";
 import MailLine from "@/shared/feedback/MailLine";
@@ -435,6 +435,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const mayManage = canManageRegistrations(actor.role);
   // «Adaugă pe lista de așteptare» (§875) is drawn only where the press can succeed: the door of «Dă-i un loc acum» (§637).
   const waitlistAddOpen = mayManage && filters.eventId ? await waitlistAddDoorOpen(filters.eventId) : false;
+  // «Pe adresa mea, invitat special» on a line of the internal list: the press while the event's switch is on, else the sentence that says where it is.
+  const specialGuestsOn = waitlistAddOpen && filters.eventId ? await specialGuestsListOn(filters.eventId) : false;
   // The editor's elite card (§895): the kits' elites, the «Elite» fold and the way back from «Mută pe lista de elită» link there.
   const eliteCardHref = filters.eventId ? `${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: filters.eventId } } })}#bib-elite` : null;
   /*
@@ -1505,9 +1507,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           deleteAction={deleteReserveEntryAction}
           moveAction={mayManage && waitlistAddOpen ? moveReserveEntryAction : undefined}
           eliteMoveAction={mayManage ? moveReserveEntryToEliteAction : undefined}
+          ownAddressAction={mayManage && waitlistAddOpen && specialGuestsOn ? moveReserveEntryToOwnAddressAction : undefined}
+          ownAddressEmail={mayManage ? actor.email : undefined}
+          ownAddressSwitchOff={mayManage && waitlistAddOpen && !specialGuestsOn}
           listQuery={listQueryString}
           eliteCardHref={mayManage && saved === "reserveMovedToElite" ? (eliteCardHref ?? undefined) : undefined}
-          opened={saved === "reserveAdded" || saved === "reserveNoteSaved" || saved === "reserveDeleted" || saved === "reserveMovedToElite" || current.from === "reserve"}
+          opened={
+            saved === "reserveAdded" || saved === "reserveNoteSaved" || saved === "reserveDeleted" || saved === "reserveMovedToElite" || saved === "reserveOwnAddressGuest" || current.from === "reserve"
+          }
         />
       )}
 

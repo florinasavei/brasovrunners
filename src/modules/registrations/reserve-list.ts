@@ -12,10 +12,11 @@ import { canKeepRegistrationNotes, canManageRegistrations } from "@/modules/staf
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { enterOnWaitlistByStaff, type WaitlistEntryByStaffResult } from "./admin-service";
+import { HIDDEN_LIST_OFF } from "./domain/hidden-list";
 import { parseEliteEntry } from "./elite-list";
 import { addRegistrationNote } from "./notes";
 import { lockEventForCapacity } from "./repository";
-import type { StaffPlaceOptions } from "./service";
+import { OWN_ADDRESS_GUEST, type StaffPlaceOptions } from "./service";
 
 /**
  * «Lista internă de așteptare» (§854): the people who asked — usually through the contact form — to be kept
@@ -25,7 +26,9 @@ import type { StaffPlaceOptions } from "./service";
  * press (`moveReserveEntryToWaitlist`); the full form, prefilled, stays one link away, and `settleReserveEntry`
  * then carries the entry's note onto the registration as an internal note (§777) and removes the line.
  * «Mută pe lista de elită» (§903) takes a line the other way, onto no list of registrations at all: its name onto
- * the race's elite list (§895), printed on a bib, nobody registered (`moveReserveEntryToElite`).
+ * the race's elite list (§895), printed on a bib, nobody registered (`moveReserveEntryToElite`). «Pe adresa mea, invitat
+ * special» registers a line with no address of its own on the Administrator's address, on «Lista de invitați speciali»
+ * (`moveReserveEntryToOwnAddress`).
  *
  * **Who** — the Organizer and above (`canKeepRegistrationNotes`, the internal notes' own rule) add, note and
  * delete; moving a line is the Administrator's (`canManageRegistrations`, §888). Asserted in every function
@@ -236,6 +239,85 @@ export async function moveReserveEntryToWaitlist<T extends Record<string, unknow
   // After the commit, as every raise tells the public count (§333).
   if (result.capacityRaisedTo !== null) revalidatePublicContent("places");
   return result;
+}
+
+export type ReserveOwnAddressInput = {
+  /** The relay tick (§33), asked in the dialog as the move asks it. */
+  relayedByParticipantRequest: boolean;
+  /** The backoffice's language: the person's emails leave in it, as from the move. */
+  locale: Locale;
+};
+
+/**
+ * «Pe adresa mea, invitat special» on one line (the decision «A line of the internal list on the Administrator's own
+ * address, as a special guest»; the owner, 2026-11-11, of a partners' guest with no address: «trebuie să pot să o pun și
+ * fără mail»). The person is registered on **the pressing Administrator's own address** — `staff_users.email`, read
+ * here by the actor's id, never an address posted by the form — and put on «Lista de invitați speciali» (§643) before
+ * the allocator runs: a place outside the announced ones, the vouched hold's deadline (`computeVouchedPlaceExpiry`),
+ * the ordinary declaration email to that address, no verification email. The declaration stays the person's: signed
+ * from the link the Administrator forwards, or on paper at the start («Confirmă pe hârtie»).
+ *
+ * The Administrator's (`canManageRegistrations`, asserted here and again by the entry). One transaction under the event
+ * row's lock — the lock every allocation takes (`AGENTS.md` §10.6): the switch «Folosește lista de invitați speciali»
+ * (`HIDDEN_LIST_OFF`) and the start (`VOUCHED_ENTRY_AFTER_START`) asked before anything is written, then the line, then
+ * the vouched entry (`enterOnWaitlistByStaff`: the name rule of several people on one address, `ALREADY_ON_ADDRESS` /
+ * `ADDRESS_AT_CAP`, decided under that same lock), the line's note onto the registration (§777) and the line deleted.
+ * Any refusal writes nothing and the line stays. The trail: the entry's rows, the special list's row and
+ * `event_reserve.moved`, each tagged `via: OWN_ADDRESS_GUEST`, ids only.
+ */
+export async function moveReserveEntryToOwnAddress<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  entryId: string,
+  input: ReserveOwnAddressInput,
+  now: Date,
+): Promise<WaitlistEntryByStaffResult & { eventId: string }> {
+  assertMayKeep(actor);
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not register a line of the internal list on their own address`);
+  }
+  if (!isUuid(entryId)) throw new DomainError("NOT_FOUND", "the line is not there");
+  return db.transaction(async (tx) => {
+    const [line] = await tx.select({ eventId: eventReserveEntries.eventId }).from(eventReserveEntries).where(eq(eventReserveEntries.id, entryId)).limit(1);
+    if (!line) throw new DomainError("NOT_FOUND", "the line is not there");
+    const event = await lockEventForCapacity(tx, line.eventId);
+    if (!event) throw new DomainError("NOT_FOUND", "no such event");
+    if (!event.hiddenListEnabled) {
+      throw new DomainError("VALIDATION_ERROR", "the special guests list is off for this event: tick «Folosește lista de invitați speciali» in the event's settings first", [HIDDEN_LIST_OFF]);
+    }
+    if (event.startsAt.getTime() <= now.getTime()) {
+      throw new DomainError("VOUCHED_ENTRY_AFTER_START", "the event has started: enter the person at the desk instead");
+    }
+    const entry = await lockedEntry(tx, entryId);
+    // The address is the actor's own, read from the account by its id: nothing the form posts reaches it.
+    const [own] = await tx.select({ email: staffUsers.email }).from(staffUsers).where(eq(staffUsers.id, actor.id)).limit(1);
+    if (!own) throw new DomainError("FORBIDDEN", "the account pressing is not there");
+    const placed = await enterOnWaitlistByStaff(
+      tx,
+      actor,
+      {
+        eventId: entry.eventId,
+        firstName: entry.firstName,
+        lastName: entry.lastName,
+        email: own.email,
+        locale: input.locale,
+        relayedByParticipantRequest: input.relayedByParticipantRequest,
+        note: entry.note,
+        outsideCapacityVia: OWN_ADDRESS_GUEST,
+      },
+      now,
+    );
+    await tx.delete(eventReserveEntries).where(eq(eventReserveEntries.id, entry.id));
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event_reserve.moved",
+      entityType: "event",
+      entityId: entry.eventId,
+      metadata: { entryId: entry.id, registrationId: placed.registrationId, via: OWN_ADDRESS_GUEST },
+      now,
+    });
+    return { ...placed, eventId: entry.eventId };
+  });
 }
 
 /**

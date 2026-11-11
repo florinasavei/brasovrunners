@@ -2585,6 +2585,7 @@
       "WALK_IN_BIB_TAKEN": "The person is entered, but somebody just gave that number away, so they are unconfirmed. Find them in the list and press “Confirm here” with another number.",
       "STAFF_ALREADY_ON_ADDRESS": "This person is already registered for the event with this email address. Look them up in the registrations list; for another person, type their name.",
       "STAFF_ADDRESS_AT_CAP": "This address already has as many registrations for the event as the club allows per address (“Deadlines”). Use another email address for this person.",
+      "STAFF_OWN_ADDRESS_AT_CAP": "Your address already holds the most registrations this event allows on one address. Raise the limit under Settings → “Deadlines”, or use “Move to the official list” with another address.",
       "MEMBERS_ON_TEAM": "Already on the team: {addresses}. Take them off the list. Nobody was added.",
       "LEGAL_BATCH_CONFIRMATION_MISMATCH": "The typed confirmation is not the one asked for. Nothing was deleted — type exactly the text under the box, for example \"DELETE 2\".",
       "LEGAL_BATCH_VERSION_BLOCKED": "Nothing was deleted: meanwhile, {version} can no longer be deleted. Reload the page: it is listed under what stays, with the reason; the others go on the next press.",
@@ -7741,6 +7742,7 @@
           "waitlistAdd": "Add to the waiting list",
           "offerNow": "Offer them a place now",
           "reserveMove": "Move to the official list",
+          "reserveOwnAddress": "On my address, special guest",
           "invite": "Send invitations",
           "invitationResend": "Resend the invitation",
           "invitationWithdraw": "Withdraw the invitation",
@@ -9057,7 +9059,8 @@
                 "Ready for the official list? An Administrator presses «Move to the official list»: the window names the address and asks for the tick «I confirm this person asked me to register them…». The person joins the back of the line or a free place, with the ordinary email; the note moves onto the registration, and the line goes.",
                 "«Offer them a place now» does the same and gives them a place: a free one, or an offer by email. On a full race the window says what the capacity becomes, and the button reads «Add a place and offer it».",
                 "Other details or another language? «The full form: other details, another language» opens the registration form with their details.",
-                "Check the address first: an email goes out when they are registered, and a wrong address reaches nobody."
+                "Check the address first: an email goes out when they are registered, and a wrong address reaches nobody.",
+                "No address, say a partners' guest? The Administrator presses «On my address, special guest»: the person is registered on the Administrator's address, on the «Special guests list», taking no announced place, and the email with the declaration comes to the Administrator, who forwards it to the person, or they sign on paper at the start. The button appears only with «Use the special guests list» ticked."
               ]
             },
             {
@@ -11749,6 +11752,13 @@
       "emailForOfficial": "Email for the official list",
       "emailForOfficialHelp": "This line has no address: type it here to move it. The emails go here.",
       "eliteNoAddress": "An elite runner? No address needed: “Move to the elite list”.",
+      "ownAddressNoAddress": "No address, say a partners' guest? “On my address, special guest”: the emails come to you.",
+      "ownAddress": "On my address, special guest",
+      "ownAddressTitle": "Register this person on your address, as a special guest?",
+      "ownAddressBody": "{name} is registered on your address, {email}: every email of the registration comes to you.",
+      "ownAddressPlace": "They go on the «Special guests list»: they take none of the announced places, and the place is not released before the start for want of a signature.",
+      "ownAddressDeclaration": "The declaration is the person's own: they sign it from the link in the email you forward to them, or on paper at the start.",
+      "ownAddressSwitchOff": "“On my address, special guest” appears once you tick «Use the special guests list» in the event's settings, under «Public participant list».",
       "moveToElite": "Move to the elite list",
       "moveToEliteTitle": "Move them to the elite list?",
       "moveToEliteBody": "{name}: not a registration — no place, no email, no declaration in the app. The bib prints the name. The internal note is not kept, and the line leaves the internal list.",
@@ -14016,6 +14026,7 @@
       "reserveNoteSaved": "The note was saved.",
       "reserveDeleted": "The person was removed from the internal list.",
       "reserveMovedToElite": "Moved to the elite list.",
+      "reserveOwnAddressGuest": "Registered on your address, as a special guest. Forward them the email with the declaration to sign from its link, or they sign on paper at the start.",
       "eliteAdded": "The name is on the elite list. It is not a registration, and nothing was sent.",
       "eliteDeleted": "The name was deleted from the elite list.",
       "eliteMarked": "Marked as elite: their bib prints the name where the number goes. The registration stays as it is.",
