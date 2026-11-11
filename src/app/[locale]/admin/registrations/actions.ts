@@ -42,9 +42,9 @@ import { inEmailPress } from "@/modules/notifications/press";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canKeepRegistrationNotes, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { moveReserveEntryToWaitlist, settleReserveEntry } from "@/modules/registrations/reserve-list";
-import { parseNoteBody } from "@/modules/registrations/notes";
+import { addRegistrationNote, parseNoteBody } from "@/modules/registrations/notes";
 import type { StaffPlaceOptions } from "@/modules/registrations/service";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
@@ -556,6 +556,27 @@ async function backToList(locale: Locale, listQuery: string, outcome: Record<str
   for (const [key, value] of Object.entries(outcome)) params.set(key, value);
   await flashOutcome(outcome);
   redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${params.toString()}#admin-alert`);
+}
+
+/**
+ * «Salvează nota» from a row of the list («Note interne» first on the registration's page, and a note from a row of the
+ * list, amending §777): one internal note on the registration of the row, written in a dialog over the list.
+ *
+ * The coarse gate here (`canKeepRegistrationNotes`: the Organizer and above), and the service asserts the role again
+ * (BR-REQ-060-01: the hidden control is a courtesy, never the permission). A refusal — an empty note, one too long, a
+ * registration erased meanwhile — comes back as the form's own state with the words still in the box; nothing typed
+ * ever goes into the address or the toast. A save returns to the list as it stands, through the one validated return of
+ * a row's press (`backToList`: only the query travels, the path is rebuilt), with the toast «Nota a fost salvată».
+ */
+export async function addRegistrationNoteFromListAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  try {
+    const actor = await requireStaffCapability(canKeepRegistrationNotes);
+    await addRegistrationNote(getDb(), actor, text(form, "registrationId"), form.get("body"), new Date());
+  } catch (error) {
+    return refused(error, form);
+  }
+  return backToList(locale, text(form, "listQuery"), { saved: "noteAdded" });
 }
 
 /**

@@ -166,6 +166,8 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   "volunteerUnchanged",
   // «Trimite invitațiile» when every address already had an invitation or had already offered (§820).
   "volunteerInvitationsNone",
+  // «Corectează numele» on a line of the internal list, saved with the name it already had.
+  "reserveRenameUnchanged",
   // «Salvează toate rolurile» with every role as it was (§791).
   "volunteerRolesUnchanged",
   // «Salvează toate nivelurile» with every member level as it was, and «Nivel» on a member's row left as it was (§811).
@@ -360,6 +362,12 @@ export type ConfirmSpec = {
    */
   fillFrom?: readonly string[];
   /**
+   * Lists whose chosen line, as it reads on the screen at the press, replaces `{name}` in `body`: «Termen nou: joi,
+   * 19 nov., 14:42.» for the day picked in an invitation's «La retrimitere» — the line's own words, which the server
+   * drew and the posted value (a number of days) cannot carry. Filled beside `fillFrom`, by the same call.
+   */
+  fillFromChosen?: readonly string[];
+  /**
    * The body counted from the form as posted (§532): «Ștergi 2 declarații semnate…» for the
    * signatures ticked at the press — the ticks exist only in the browser. Replaces `body` once the
    * dialog opens (`resolveBodyCount`); with nothing ticked there is no question to ask, and the
@@ -551,23 +559,32 @@ export function resolveBodyCount(spec: ConfirmSpec, valuesOf: (field: string) =>
 
 /**
  * `body`, the email line and every `also` line with each `fillFrom` field's posted value in its `{name}` — «Pleacă 1
- * email către {firstName} {lastName}: …» for a person typed into the form; the spec unchanged without one.
+ * email către {firstName} {lastName}: …» for a person typed into the form — and `body` with each `fillFromChosen`
+ * list's chosen line in its `{name}` (`chosenOf`: the words of the line as the screen shows it); the spec unchanged
+ * without either.
  */
-export function fillFromForm(spec: ConfirmSpec, valueOf: (field: string) => string | null): ConfirmSpec {
-  if (!spec.fillFrom || spec.fillFrom.length === 0) return spec;
-  const fields = spec.fillFrom;
+export function fillFromForm(spec: ConfirmSpec, valueOf: (field: string) => string | null, chosenOf: (field: string) => string | null = () => null): ConfirmSpec {
+  const fields = spec.fillFrom ?? [];
+  const lists = spec.fillFromChosen ?? [];
+  if (fields.length === 0 && lists.length === 0) return spec;
   const fill = (text: string) => {
     let filled = text;
     for (const field of fields) filled = filled.split(`{${field}}`).join((valueOf(field) ?? "").trim());
     return filled;
   };
+  const fillChosen = (text: string) => {
+    let filled = text;
+    for (const field of lists) filled = filled.split(`{${field}}`).join((chosenOf(field) ?? "").trim());
+    return filled;
+  };
   return {
     ...spec,
-    body: fill(spec.body),
+    body: fillChosen(fill(spec.body)),
     ...(spec.email !== undefined ? { email: fill(spec.email) } : {}),
     ...(spec.also ? { also: spec.also.map((line) => ({ ...line, text: fill(line.text) })) } : {}),
     ...(spec.emailOptOut ? { emailOptOut: { ...spec.emailOptOut, offLine: fill(spec.emailOptOut.offLine) } } : {}),
     fillFrom: undefined,
+    fillFromChosen: undefined,
   };
 }
 

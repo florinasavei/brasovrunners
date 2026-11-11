@@ -46,7 +46,7 @@ import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
 import KitCount from "@/modules/registrations/ui/KitCount";
-import { countVolunteersWithKit } from "@/modules/volunteers/admin-list";
+import { readVolunteerKitFigures, volunteerKitHrefs } from "@/modules/volunteers/admin-list";
 import { listEliteEntries } from "@/modules/registrations/elite-list";
 import { listEliteMarkedRegistrations } from "@/modules/registrations/elite-mark";
 import ElitePanel from "@/modules/registrations/ui/ElitePanel";
@@ -64,7 +64,10 @@ import { canEnterResults, canExportSponsorList, canKeepRegistrationNotes, canMan
 import { countRegistrationNotes } from "@/modules/registrations/notes";
 import { resultsDoorOpen } from "@/modules/results/domain/event-type";
 import NotesMark from "@/modules/registrations/ui/NotesMark";
+import RowNoteDialog from "@/shared/ui/RowNoteDialog";
+import { REGISTRATION_NOTE_MAX } from "@/db/schema/registration-notes";
 import { sponsorListSummary } from "@/modules/registrations/sponsor-list";
+import { readSponsorRegister } from "@/modules/registrations/sponsor-register";
 import SponsorListButton from "@/modules/registrations/ui/SponsorListButton";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
@@ -82,7 +85,7 @@ import InvitationsPanel from "@/modules/registrations/ui/InvitationsPanel";
 import ReserveListPanel from "@/modules/registrations/ui/ReserveListPanel";
 import WaitlistAddForm from "@/modules/registrations/ui/WaitlistAddForm";
 import { listReserveEntries } from "@/modules/registrations/reserve-list";
-import { addReserveEntryAction, deleteReserveEntryAction, moveReserveEntryToEliteAction, saveReserveNoteAction } from "../reserve-actions";
+import { addReserveEntryAction, deleteReserveEntryAction, moveReserveEntryToEliteAction, moveReserveEntryToOwnAddressAction, renameReserveEntryAction, saveReserveNoteAction } from "../reserve-actions";
 import { inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
@@ -92,7 +95,7 @@ import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { countBibs, voidBibsFor } from "@/modules/registrations/bibs";
-import { addToWaitlistAction, bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, moveReserveEntryAction, sendOutboxNowAction, setPublicRegistrationOpenAction } from "../actions";
+import { addRegistrationNoteFromListAction, addToWaitlistAction, bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, moveReserveEntryAction, sendOutboxNowAction, setPublicRegistrationOpenAction } from "../actions";
 import { resendFamilyEmailAction, resendRegistrationEmailAction } from "../[id]/actions";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
@@ -119,7 +122,7 @@ import { previewMemberTickSweep } from "@/modules/registrations/admin-service";
 import { countForm, type CountForm } from "@/i18n/count-form";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { mayEndWaitlisted, rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
-import { givePlaceRefusalAhead, staffOfferIfMadeNow, staffOfferQuestion, waitlistAddDoorOpen } from "@/modules/registrations/give-place-tip";
+import { givePlaceRefusalAhead, specialGuestsListOn, staffOfferIfMadeNow, staffOfferQuestion, waitlistAddDoorOpen } from "@/modules/registrations/give-place-tip";
 import { noFreePlaceValues } from "@/modules/registrations/domain/capacity";
 import { outsideMarkConfirm } from "@/modules/registrations/ui/outside-mark-body";
 import MailLine from "@/shared/feedback/MailLine";
@@ -258,7 +261,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const featuredEvent = events.find((event) => event.featured) ?? null;
 
   const deadlinesNow = new Date();
-  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places, publicDoor, volunteerKits] = await Promise.all([
+  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places, publicDoor, volunteerKits, sponsorRegister] = await Promise.all([
     listRegistrationsForAdmin(
       db,
       filters,
@@ -302,8 +305,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId ? readPlaceOutlook(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
     // «Pe site acum» (§906): what the public meets this minute, by the public card's predicate, and the tick beside it — one event only.
     filters.eventId ? readPublicDoor(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
-    // The kits' volunteers (§904): the event's volunteers ticked «Are kit», said in the kits' title — `countKits` is untouched.
-    filters.eventId ? countVolunteersWithKit(db, filters.eventId) : Promise.resolve(0),
+    // The kits' volunteers (§904): the event's volunteers by state and «Are kit» in one read — «cu kit» in the kits' title and line, «fără kit» in the line; `countKits` is untouched.
+    filters.eventId ? readVolunteerKitFigures(db, filters.eventId) : Promise.resolve(null),
+    // «Liste date sponsorilor» (§929): the lists already given for this event and for every event, and the recipients written before.
+    filters.eventId && canExportSponsorList(actor.role) ? readSponsorRegister(db, actor, { eventId: filters.eventId, locale }) : Promise.resolve(null),
   ]);
 
   // A family's rows side by side (§588), where its first row falls in the chosen order; phone cards read the same rows.
@@ -335,6 +340,17 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   ]);
   // Every verb that writes asks first and says who is emailed (§384).
   const words = await confirmWords();
+  /*
+    «Adaugă o notă» on every row (the owner, 2026-11-11: «trebuie sa pot adauga comentarii direct de aici»): only for a role
+    that may keep notes, with the refusal's words cut to the four sentences the dialog can meet — the whole catalogue
+    would travel with every row. The press asks the role again on the server (BR-REQ-060-01).
+  */
+  const noteRefusal = canKeepRegistrationNotes(actor.role)
+    ? await refusalMessages({ body: t("registrations.notes.label") }).then((all) => ({
+        ...all,
+        errors: Object.fromEntries(["NOTE_EMPTY", "NOTE_TOO_LONG", "NOT_FOUND", "FORBIDDEN"].map((code) => [code, all.errors[code]])),
+      }))
+    : null;
   /*
     Why «Dă-i un loc» would be refused, per event on the page (§592): the rows grouped by event,
     one door read each (cached per request), and only where a waiting row offers the verb.
@@ -419,6 +435,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const mayManage = canManageRegistrations(actor.role);
   // «Adaugă pe lista de așteptare» (§875) is drawn only where the press can succeed: the door of «Dă-i un loc acum» (§637).
   const waitlistAddOpen = mayManage && filters.eventId ? await waitlistAddDoorOpen(filters.eventId) : false;
+  // «Pe adresa mea, invitat special» on a line of the internal list: the press while the event's switch is on, else the sentence that says where it is.
+  const specialGuestsOn = waitlistAddOpen && filters.eventId ? await specialGuestsListOn(filters.eventId) : false;
   // The editor's elite card (§895): the kits' elites, the «Elite» fold and the way back from «Mută pe lista de elită» link there.
   const eliteCardHref = filters.eventId ? `${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: filters.eventId } } })}#bib-elite` : null;
   /*
@@ -552,6 +570,28 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             />
             );
           })()}
+          {/* «Adaugă o notă» («Note interne» first on the registration's page, and a note from a row of the list): beside the
+              marker, or alone; a dialog over the list, and without JavaScript a link to the card. The save comes back here. */}
+          {noteRefusal && (
+            <RowNoteDialog
+              action={addRegistrationNoteFromListAction}
+              actionKey={actionKeyOf(addRegistrationNoteFromListAction)}
+              messages={noteRefusal}
+              fields={{ uiLocale: locale, registrationId: row.id, listQuery: rowReturnQueryString }}
+              fallbackHref={`${getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: row.id } } })}#note-interne`}
+              label={t("registrations.notes.add")}
+              ariaLabel={t("registrations.notes.addFor", { name: row.registeredName })}
+              title={t("registrations.notes.dialog", { name: row.registeredName })}
+              help={t("registrations.notes.help")}
+              boxName="body"
+              boxLabel={t("registrations.notes.add")}
+              limitText={t("registrations.notes.limit", { max: REGISTRATION_NOTE_MAX })}
+              max={REGISTRATION_NOTE_MAX}
+              saveLabel={t("registrations.notes.save")}
+              cancelLabel={words.cancel}
+              settledKey={`${notesCounts.get(row.id) ?? 0}:${saved ?? ""}`}
+            />
+          )}
           {/* The email state in one line under the name and its chips (§663, §671): only while somebody must
               act — the cause, the email, the day — itself the link to the registration's «Emailuri». An email
               sent again waits quietly here; the registration's page says it. */}
@@ -1131,9 +1171,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         The list for sponsors (§570; the owner: "export the participants list but filter out just
         the ones who agreed to receive marketing emails so we can share it with our sponsors"): its
         own minimal file, never columns of the export beside it. For one chosen event; every event's
-        list is on «Newsletter». The role is asserted in the read and in the route.
+        list is on «Newsletter». The role is asserted in the read and in the route. Under it, since
+        §929, «Liste date sponsorilor»: this event's lists and those made for every event.
       */}
-      {sponsors && filters.eventId && <SponsorListButton locale={locale} eventId={filters.eventId} list={sponsors} />}
+      {sponsors && sponsorRegister && filters.eventId && (
+        <SponsorListButton locale={locale} eventId={filters.eventId} list={sponsors} register={sponsorRegister} now={deadlinesNow} registerLevel={2} />
+      )}
 
       {/*
         The bibs of this event, as a batch (§264; the owner: "ar trebui să pot descărca BID-urile
@@ -1357,7 +1400,21 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         </GlyphButton>
       )}
       {/* «Kituri de pregătit» (the owner, 2026-11-04): the runners — the separate elite list among them — plus the volunteers with a kit. */}
-      {kits && <KitCount kits={kits} locale={locale} volunteers={volunteerKits} elites={eliteNames} eliteHref={eliteCardHref ?? undefined} spaceAbove={1.5} />}
+      {kits && (
+        <KitCount
+          kits={kits}
+          locale={locale}
+          volunteers={volunteerKits?.withKit ?? 0}
+          volunteerLine={
+            volunteerKits && filters.eventId
+              ? { withoutKit: volunteerKits.withoutKit, cancelled: volunteerKits.cancelled, ...volunteerKitHrefs(getPathname({ locale, href: "/admin/volunteers" }), filters.eventId, volunteerKits) }
+              : undefined
+          }
+          elites={eliteNames}
+          eliteHref={eliteCardHref ?? undefined}
+          spaceAbove={1.5}
+        />
+      )}
       {/*
         «Când pierde lumea locul?» (§635; the owner, 2026-10-02): until when the people of this event
         keep their place, and what a passed deadline does — right under the counts, and only when the list
@@ -1447,19 +1504,33 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           }
           addAction={addReserveEntryAction}
           saveNoteAction={saveReserveNoteAction}
+          renameAction={renameReserveEntryAction}
           deleteAction={deleteReserveEntryAction}
           moveAction={mayManage && waitlistAddOpen ? moveReserveEntryAction : undefined}
           eliteMoveAction={mayManage ? moveReserveEntryToEliteAction : undefined}
+          ownAddressAction={mayManage && waitlistAddOpen && specialGuestsOn ? moveReserveEntryToOwnAddressAction : undefined}
+          ownAddressEmail={mayManage ? actor.email : undefined}
+          ownAddressSwitchOff={mayManage && waitlistAddOpen && !specialGuestsOn}
           listQuery={listQueryString}
           eliteCardHref={mayManage && saved === "reserveMovedToElite" ? (eliteCardHref ?? undefined) : undefined}
-          opened={saved === "reserveAdded" || saved === "reserveNoteSaved" || saved === "reserveDeleted" || saved === "reserveMovedToElite" || current.from === "reserve"}
+          opened={
+            saved === "reserveAdded" ||
+            saved === "reserveNoteSaved" ||
+            saved === "reserveRenamed" ||
+            saved === "reserveRenameUnchanged" ||
+            saved === "reserveDeleted" ||
+            saved === "reserveMovedToElite" ||
+            saved === "reserveOwnAddressGuest" ||
+            current.from === "reserve"
+          }
         />
       )}
 
       {/*
         «Elite» (the owner, 2026-11-04, who looked here for an elite and did not find her): the race's separate elite list
-        (§895) and the registrations marked «Elită» (§897), read-only, for every role that reads this list — each reader
-        asserts the role again — with the link to the editor's elite card, where the separate list changes.
+        (§895) and the registrations marked «Elită» (§897), for every role that reads this list — each reader asserts the
+        role again — with the link to the editor's elite card, where the separate list changes, and, for the Administrator,
+        the one-press «Nu mai e elită» beside each registered line (the owner, 2026-11-11), the row menu's own action.
       */}
       {eliteLists && eliteCardHref && (
         <ElitePanel
@@ -1469,6 +1540,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           cardHref={eliteCardHref}
           registrationHref={(registrationId) => getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: registrationId } } })}
           mayManage={mayManage}
+          unmark={mayManage ? { action: setRegistrationEliteAction, listQuery: rowReturnQueryString } : undefined}
         />
       )}
 

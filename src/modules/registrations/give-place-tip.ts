@@ -81,6 +81,16 @@ export const waitlistAddDoorOpen = cache(async (eventId: string): Promise<boolea
 });
 
 /**
+ * Whether the event's «Folosește lista de invitați speciali» is on (§647), for a page that holds only the id: whether a
+ * line of the internal list offers «Pe adresa mea, invitat special» or the sentence saying where the switch is. Once per
+ * event per request; a forecast, the service asks it again under the lock.
+ */
+export const specialGuestsListOn = cache(async (eventId: string): Promise<boolean> => {
+  const [row] = await getDb().select({ on: events.hiddenListEnabled }).from(events).where(eq(events.id, eventId)).limit(1);
+  return row?.on === true;
+});
+
+/**
  * The tooltip's sentence, or null while a place is free: the refusal banner's own words
  * (`Admin.errors.NO_FREE_PLACE`, §589) with the numbers read now — one text for both, so the
  * button says before the press exactly what the banner would say after it.

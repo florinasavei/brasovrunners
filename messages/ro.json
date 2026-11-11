@@ -1153,6 +1153,10 @@
           "few": "{count} voluntari",
           "other": "{count} de voluntari"
         },
+        "volunteersLine": "Voluntari: <yes>{withKit}</yes> · <no>{withoutKit}</no>.",
+        "volunteersLineCancelled": "Voluntari: <yes>{withKit}</yes> · <no>{withoutKit}</no>. Cei anulați nu intră.",
+        "volunteersWithKit": "{count} cu kit",
+        "volunteersWithoutKit": "{count} fără kit",
         "who": "Alergători: {holding} · {invitations}. Lista de așteptare nu intră.",
         "whoWithElites": "Alergători: {holding} · {invitations} · <link>{elites}</link>. Lista de așteptare nu intră.",
         "holding": {
@@ -1272,6 +1276,7 @@
         "chip": "Elită",
         "mark": "Marchează ca elită",
         "unmark": "Nu mai e elită",
+        "unmarkNamed": "Nu mai e elită: {name}",
         "inResults": "Apare în clasament",
         "onSite": "Apare pe site",
         "onSiteHint": "Debifat, numele nu apare pe site: nici la «Cine vine», nici în clasament. Bifat, decide bifa lui „Vreau să apar”.",
@@ -1563,6 +1568,8 @@
         "label": "Nota",
         "limit": "Cel mult {max} de caractere.",
         "save": "Salvează nota",
+        "dialog": "Notă internă pentru {name}",
+        "addFor": "Adaugă o notă la {name}",
         "exportMore": "… (mai multe note pe pagina înscrierii)",
         "exportGone": "cont șters",
         "exportRole": {
@@ -2578,6 +2585,7 @@
       "WALK_IN_BIB_TAKEN": "Persoana e înscrisă, dar numărul tocmai l-a dat altcineva, deci e neconfirmată. Caut-o în listă și apasă „Confirmă aici” cu alt număr.",
       "STAFF_ALREADY_ON_ADDRESS": "Persoana aceasta este deja înscrisă la eveniment cu această adresă de email. Caut-o în lista înscrierilor; pentru altă persoană, scrie numele ei.",
       "STAFF_ADDRESS_AT_CAP": "Adresa aceasta are deja atâtea înscrieri la eveniment câte permite clubul pe o adresă („Termene”). Folosește altă adresă de email pentru această persoană.",
+      "STAFF_OWN_ADDRESS_AT_CAP": "Adresa ta are deja numărul maxim de înscrieri la acest eveniment. Ridică limita din „Setări” → „Termene” sau folosește „Mută pe lista oficială” cu altă adresă.",
       "MEMBERS_ON_TEAM": "Sunt deja în echipă: {addresses}. Scoate-le din listă. Nu s-a adăugat nimeni.",
       "LEGAL_BATCH_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este cea cerută. Nu s-a șters nimic — scrie exact textul de sub casetă, de exemplu „DELETE 2”.",
       "LEGAL_BATCH_VERSION_BLOCKED": "Nu s-a șters nimic: între timp, {version} nu se mai poate șterge. Reîncarcă pagina: apare la „Rămân”, cu motivul; celelalte se șterg la apăsarea următoare.",
@@ -5833,6 +5841,10 @@
       }
     },
     "volunteers": {
+      "notes": {
+        "authorUnknown": "autor necunoscut",
+        "exportMore": "… (mai multe note pe pagina voluntarului)"
+      },
       "title": "Voluntari",
       "intro": "Oamenii care ajută la eveniment: fiecare bifează ce ar face, tu îi dai un rol. Rolurile se definesc aici, în ambele limbi. Adresele și telefoanele nu apar pe nicio pagină publică.",
       "notAccounts": "Voluntarii de aici nu sunt conturi: cine lucrează la masa de ridicare primește un cont din „Echipa”, cu rolul Voluntar.",
@@ -5962,9 +5974,8 @@
         "phoneHelp": "Opțional. Cu prefixul țării (+40 712 345 678); un număr românesc merge și cu 0 în față.",
         "noEmail": "Fără adresă de email: e doar pe listă și nu primește niciun email.",
         "note": "Nota ta (doar organizatorii)",
-        "noteHelp": "Cel mult {max} de caractere. Nu apare pe nicio pagină publică.",
+        "noteHelp": "Cel mult {max} de caractere. Devine prima notă internă a persoanei și nu apare pe nicio pagină publică.",
         "messageLabel": "Mesajul trimis",
-        "noteLabel": "Notă",
         "addTitle": "Adaugă un voluntar de mână",
         "add": "Adaugă voluntarul",
         "adding": "Se adaugă…",
@@ -6230,7 +6241,9 @@
         "paper": "Acordul părintelui pe hârtie",
         "paperTitle": "Părintele lui {name} a semnat contractul pe hârtie?",
         "paperBody": "Se înregistrează că părintele sau tutorele lui {name} a semnat contractul tipărit, versiunea în vigoare, și că tu ai înregistrat semnătura. Păstrează foaia semnată.",
-        "minorsClosed": "Linkul părintelui și „Acordul părintelui pe hârtie” așteaptă: nota sau contractul în vigoare nu descriu minorii («Sarcini»)."
+        "minorsClosed": "Linkul părintelui și „Acordul părintelui pe hârtie” așteaptă: nota sau contractul în vigoare nu descriu minorii («Sarcini»).",
+        "nameMissing": "Numele părintelui lipsește, deci linkul și foaia nu au pe cine numi. Îl scrii în „Modifică”, pe pagina voluntarului.",
+        "nameMissingOpen": "Deschide pagina lui {name}"
       },
       "otherCategory": "Alte roluri",
       "categories": {
@@ -7729,6 +7742,7 @@
           "waitlistAdd": "Adaugă pe lista de așteptare",
           "offerNow": "Oferă-i un loc acum",
           "reserveMove": "Mută pe lista oficială",
+          "reserveOwnAddress": "Pe adresa mea, invitat special",
           "invite": "Trimite invitații",
           "invitationResend": "Retrimite invitația",
           "invitationWithdraw": "Retrage invitația",
@@ -9002,7 +9016,7 @@
             {
               "title": "Lasă o notă pe o înscriere",
               "steps": [
-                "«Înscrieri» → caută numele → deschide înscrierea → «Note interne». Cardul închis spune câte note are.",
+                "«Înscrieri» → caută numele → apasă «Adaugă o notă» pe rând. Sau deschide înscrierea: «Note interne» e primul card, deschis când are note.",
                 "Scrie în «Adaugă o notă» și apasă «Salvează nota». Notele apar de la cea mai nouă, cu numele celui care a scris și momentul.",
                 "Doar organizatorii și administratorii văd notele. Nu apar la masă sau pe lista publică; în exportul Excel și CSV sunt ultima coloană, «Note interne». Nu scrie date medicale sau alte date sensibile.",
                 "Pe lista înscrierilor, un rând cu note are un semn cu numărul lor; apasă-l ca să deschizi notele.",
@@ -9045,7 +9059,8 @@
                 "Gata să intre pe lista oficială? Administratorul apasă «Mută pe lista oficială»: fereastra numește adresa și cere bifa «Confirm că această persoană mi-a cerut să o înscriu…». Persoana intră la coadă sau pe un loc liber, cu emailul obișnuit; nota trece pe înscriere, iar rândul dispare.",
                 "«Oferă-i un loc acum» face același lucru și îi dă și un loc: unul liber sau o ofertă pe email. Pe o cursă plină fereastra spune cât devine capacitatea, iar butonul e «Adaugă un loc și oferă-i locul».",
                 "Alte date sau altă limbă? «Formularul complet: alte date, altă limbă» deschide formularul de înscriere cu datele ei.",
-                "Verifică adresa înainte: la înscriere pleacă un email și o adresă greșită nu ajunge la nimeni."
+                "Verifică adresa înainte: la înscriere pleacă un email și o adresă greșită nu ajunge la nimeni.",
+                "Fără adresă, de exemplu un invitat al partenerilor? Administratorul apasă «Pe adresa mea, invitat special»: persoana se înscrie pe adresa lui, pe «Lista de invitați speciali», fără să ia un loc anunțat, iar emailul cu declarația vine la el. I-l trimite persoanei, sau ea semnează pe hârtie la start. Butonul apare doar cu «Folosește lista de invitați speciali» bifat."
               ]
             },
             {
@@ -9099,7 +9114,7 @@
                 "«Newsletter» → deschide cardul «Abonați». Linia lui spune câți sunt confirmați și câți în așteptare.",
                 "Caută la «Caută adresa» sau alege «Tema» și «Starea», apoi apasă «Filtrează». «Descarcă CSV» ia lista așa cum e filtrată.",
                 "Cardul «Participanți care au bifat oferte și beneficii»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul.",
-                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Notează cui dai fișierul; șterge-l în 30 de zile.",
+                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Scrie la «Cui dai lista» cui dai fișierul: fără nume nu se descarcă. «Liste date sponsorilor», sub butoane, arată fiecare listă dată. Șterge fișierul în 30 de zile.",
                 "Scoaterea unei adrese e a Administratorului: scrie-i cine a cerut-o."
               ]
             },
@@ -9322,7 +9337,7 @@
                 "Bifează membrii din listă sau scrie alte persoane, câte una pe rând: numele, apoi adresa. Alege «Zile până expiră» și «Limba invitației» (pentru adresele noi); bifează «Pe lista de invitați speciali (nu ocupă un loc)» pentru organizatori, voluntari și pacemakeri. Se poate trimite și după închiderea înscrierilor, până la start.",
                 "«Trimite invitațiile» întreabă întâi: câte invitații, câte locuri libere și, pe o cursă plină, câte locuri suplimentare se adaugă și cât devine capacitatea.",
                 "Fiecare invitație ține un loc până la termen; dacă nu e acceptată, locul se eliberează singur. Persoana completează restul și semnează ea declarația.",
-                "Pe rândul invitației: «Retrimite» trimite un link nou; termenul rămâne, dacă nu scrii un număr de zile care îl mută mai târziu. «Retrage» o închide și eliberează locul.",
+                "Pe rândul invitației: «Retrimite» trimite un link nou. Lista «La retrimitere» stă pe «Termenul rămâne»; ca să muți termenul mai târziu, alege din ea ziua nouă. Lista «La retrimitere» lipsește când termenul nu mai poate fi mutat: e deja cel mai târziu posibil, la start; sau invitația ocupă un loc și cineva e pe lista de așteptare — la un invitat special lista apare chiar dacă cineva așteaptă. «Retrage» închide invitația și eliberează locul.",
                 "Dacă cineva invitat se înscrie oricum, din formularul public sau la masă, înscrierea lui ia locul invitației când i se confirmă adresa sau primește un loc: invitația apare «Acceptată»."
               ]
             },
@@ -9387,7 +9402,7 @@
             {
               "title": "Lasă o notă pe o înscriere",
               "steps": [
-                "«Înscrieri» → caută numele → deschide înscrierea → «Note interne». Cardul închis spune câte note are.",
+                "«Înscrieri» → caută numele → apasă «Adaugă o notă» pe rând. Sau deschide înscrierea: «Note interne» e primul card, deschis când are note.",
                 "Scrie în «Adaugă o notă» și apasă «Salvează nota». Notele apar de la cea mai nouă, cu numele celui care a scris și momentul.",
                 "Doar organizatorii și administratorii văd notele. Nu apar la masă sau pe lista publică; în exportul Excel și CSV sunt ultima coloană, «Note interne». Nu scrie date medicale sau alte date sensibile.",
                 "Pe lista înscrierilor, un rând cu note are un semn cu numărul lor; apasă-l ca să deschizi notele.",
@@ -9467,7 +9482,7 @@
                 "«Descarcă CSV» ia lista așa cum e filtrată, cu aceleași coloane. Păstrează fișierul doar cât îți trebuie, apoi șterge-l.",
                 "Ca să scoți pe cineva, la cererea lui: «Dezabonează» pe rândul lui, apoi confirmă. Adresa se șterge cu temele ei, ca atunci când se dezabonează singură.",
                 "Cardul «Participanți care au bifat oferte și beneficii»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul.",
-                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Notează cui dai fișierul; șterge-l în 30 de zile."
+                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Scrie la «Cui dai lista» cui dai fișierul: fără nume nu se descarcă. «Liste date sponsorilor», sub butoane, arată fiecare listă dată. Șterge fișierul în 30 de zile."
               ]
             },
             {
@@ -11071,9 +11086,30 @@
         "other": "{count} de persoane"
       },
       "noticeMissing": "Nota de confidențialitate în vigoare nu spune că lista poate fi dată partenerilor.",
-      "help": "Prenume, nume, adresă, eveniment și data acordului: doar adulții, cu acordul dat sub o notă care permite asta. Scrie cui dai lista: rămâne la fiecare înscriere din ea. Șterge fișierul în 30 de zile.",
+      "help": "Prenume, nume, adresă, eveniment și data acordului: doar adulții, cu acordul dat sub o notă care permite asta. Scrie cui o dai, sau „club” dacă rămâne la club. Șterge fișierul în 30 de zile.",
       "helpExcel": "Excelul are în plus toate bifele fiecăruia, ca să vezi la ce și-a dat acordul. Partenerului dă-i CSV-ul.",
-      "recipient": "Cui dai lista (opțional)",
+      "recipient": "Cui dai lista",
+      "recipientTitle": "Scrie cui dai lista.",
+      "given": {
+        "title": "Liste date sponsorilor",
+        "intro": "Fiecare descărcare a listei: cui ai dat-o, câte persoane avea și până când ștergi fișierul tău.",
+        "aside": "{lists} · ultima: {recipient}, {date}",
+        "everyEvent": "toate evenimentele",
+        "overdue": "termen trecut: șterge fișierul tău",
+        "formats": {
+          "csv": "CSV",
+          "xlsx": "Excel"
+        },
+        "columns": {
+          "recipient": "Cui",
+          "at": "Când",
+          "event": "Eveniment",
+          "count": "Persoane",
+          "file": "Fișier",
+          "actor": "Descărcată de",
+          "deleteBy": "Șterge fișierul tău până pe"
+        }
+      },
       "columns": {
         "firstName": "Prenume",
         "lastName": "Nume",
@@ -11115,7 +11151,7 @@
       "openTitle": "Invitații fără răspuns, pe evenimente:",
       "link": "Trimite invitații",
       "title": "Invitații",
-      "intro": "Un loc păstrat pentru o persoană aleasă, până la un termen: primește un email cu un link spre formular.",
+      "intro": "Un loc păstrat pentru o persoană aleasă, până la un termen: primește un email cu un link spre formular. Linkul merge și cu înscrierile de pe site oprite sau închise.",
       "aside": {
         "one": "{count} în așteptare",
         "few": "{count} în așteptare",
@@ -11207,10 +11243,13 @@
       "raised": "cu un loc suplimentar adăugat",
       "openRegistration": "Deschide înscrierea",
       "resendTitle": "Retrimiți invitația?",
-      "resendBody": "{name} primește invitația din nou, cu un link nou; linkul vechi nu mai merge. Termenul devine peste {days} zile de acum, dacă e mai târziu decât cel de acum.",
+      "resendBody": "{name} primește invitația din nou, cu un link nou; linkul vechi nu mai merge. {days}.",
       "resendBodyWaiting": "{name} primește invitația din nou, cu un link nou; cel vechi nu mai merge. Termenul rămâne cel de acum: cineva așteaptă pe listă, iar dacă invitația nu e acceptată până atunci, locul trece la listă.",
-      "resendBodyKept": "{name} primește invitația din nou, cu un link nou; linkul vechi nu mai merge. Termenul rămâne cel de acum; ca să-l muți mai târziu, scrie numărul de zile.",
-      "resendDays": "Zile (opțional)",
+      "resendBodyKept": "{name} primește invitația din nou, cu un link nou; linkul vechi nu mai merge. Termenul rămâne: {deadline}.",
+      "resendWhen": "La retrimitere",
+      "resendKeep": "Termenul rămâne",
+      "resendMove": "Termen nou: {moment}",
+      "resendMoveStart": "Termen nou: la start, {moment}",
       "resend": "Retrimite",
       "resending": "Se trimite…",
       "withdrawTitle": "Retragi invitația?",
@@ -11705,6 +11744,8 @@
       "by": "Adăugat de {name}, {date}",
       "note": "Notă internă",
       "noteHelp": "Doar pentru organizatori; trece pe înscriere odată cu persoana. Nu scrieți date despre sănătate.",
+      "rename": "Corectează numele",
+      "renameSave": "Salvează numele",
       "saveNote": "Salvează nota",
       "move": "Mută pe lista oficială",
       "moveTitle": "Muți pe lista oficială de așteptare?",
@@ -11713,6 +11754,13 @@
       "emailForOfficial": "Email pentru lista oficială",
       "emailForOfficialHelp": "Rândul nu are adresă: scrie-o aici ca să-l muți. Aici îi ajung emailurile.",
       "eliteNoAddress": "Alergător de elită? Nu-i trebuie adresă: „Mută pe lista de elită”.",
+      "ownAddressNoAddress": "Fără adresă, de exemplu un invitat al partenerilor? „Pe adresa mea, invitat special”: emailurile vin la tine.",
+      "ownAddress": "Pe adresa mea, invitat special",
+      "ownAddressTitle": "Înscrii persoana pe adresa ta, ca invitat special?",
+      "ownAddressBody": "{name} se înscrie pe adresa ta, {email}: toate emailurile înscrierii vin la tine.",
+      "ownAddressPlace": "Intră pe «Lista de invitați speciali»: nu ia niciunul dintre locurile anunțate, iar locul nu se eliberează înainte de start pentru lipsa semnăturii.",
+      "ownAddressDeclaration": "Declarația e a persoanei: o semnează din linkul din emailul pe care i-l trimiți, sau pe hârtie la start.",
+      "ownAddressSwitchOff": "„Pe adresa mea, invitat special” apare după ce bifezi «Folosește lista de invitați speciali» în setările evenimentului, la «Lista publică a participanților».",
       "moveToElite": "Mută pe lista de elită",
       "moveToEliteTitle": "Muți pe lista de elită?",
       "moveToEliteBody": "{name}: nu e o înscriere — niciun loc, niciun email, nicio declarație în aplicație. Pe BIB se tipărește numele. Nota internă nu se păstrează, iar rândul dispare de pe lista internă.",
@@ -13877,7 +13925,8 @@
         "other": "{count} de persoane invitate; capacitatea e acum {capacity}."
       },
       "invitationResent": "Invitație retrimisă, cu un link nou.",
-      "invitationResentKept": "Invitație retrimisă, cu un link nou. Termenul a rămas cel de acum: cineva așteaptă pe lista de așteptare.",
+      "invitationResentKept": "Invitație retrimisă, cu un link nou. Termenul ales nu s-a aplicat: cineva așteaptă pe lista de așteptare. Termenul valabil, cel din email, e pe rândul invitației.",
+      "invitationResentAlreadyLater": "Invitație retrimisă, cu un link nou. Termenul ales nu s-a aplicat: între timp, termenul a fost mutat mai târziu de altcineva sau din altă filă. Termenul valabil, cel din email, e pe rândul invitației.",
       "invitationWithdrawn": "Invitație retrasă; locul s-a eliberat.",
       "memberTickCleared": "Bifa de membru a fost scoasă.",
       "memberTickSet": "Bifa de membru a fost pusă.",
@@ -13976,9 +14025,12 @@
       "resultsAwardsSaved": "Am salvat premiile.",
       "resultsAwardsUnchanged": "Premiile erau deja așa; nimic de schimbat.",
       "reserveAdded": "Persoana e pe lista internă. Nu i s-a trimis nimic.",
+      "reserveRenamed": "Numele a fost corectat.",
+      "reserveRenameUnchanged": "Numele era deja așa; nimic de schimbat.",
       "reserveNoteSaved": "Nota a fost salvată.",
       "reserveDeleted": "Persoana a fost ștearsă de pe lista internă.",
       "reserveMovedToElite": "Numele a trecut pe lista de elită.",
+      "reserveOwnAddressGuest": "E pe adresa ta, ca invitat special. Trimite-i emailul cu declarația, s-o semneze din link, sau o semnează pe hârtie la start.",
       "eliteAdded": "Numele e pe lista de elită. Nu e o înscriere și nu s-a trimis nimic.",
       "eliteDeleted": "Numele a fost șters de pe lista de elită.",
       "eliteMarked": "Marcat ca elită: BIB-ul lui se tipărește cu numele în locul numărului. Înscrierea rămâne neschimbată.",

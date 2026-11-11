@@ -3,6 +3,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { countForm } from "@/i18n/count-form";
+import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
 import type { EliteEntryRow } from "../elite-list";
@@ -13,14 +14,18 @@ import RegistrationStatusChip from "./RegistrationStatusChip";
  * «Elite» on one event's registrations list (the owner, 2026-11-04, who looked here for an elite on the race's separate
  * list and did not find her: that list lived only in the event's editor; then, of two sub-lists counted apart, «ce
  * înseamnă asta? nu înțeleg, sunt 2 elite»). A closed fold, its line «N elite», holding every elite of the event in one
- * numbered list, read-only, each line saying which kind it is:
+ * numbered list, each line saying which kind it is:
  *
  * - a name on the separate list (§895), not a registration: «fără înscriere — doar numele pe BIB», with its number when
  *   it has one;
  * - a registration marked «Elită» (§897), in every state: «cu înscriere», the name a link to the registration's page,
  *   its state chip and its number when it has one.
  *
- * The lists change where they always did — the separate one on the editor's elite card, the mark on a row's «⋮» — so the
+ * The lists change where they always did — the separate one on the editor's elite card, the mark on a row's «⋮» — and,
+ * for the Administrator (the owner, 2026-11-11, «Nu mai e elită» from the panel that shows the line), a one-press
+ * «Nu mai e elită» beside every «cu înscriere» line, posting to the row menu's own action with the row menu's own hidden
+ * fields (`unmark`): it asks nothing, the same menu's «Marchează ca elită» undoes it, the Organizer is offered none and
+ * the server refuses a forged post (`elite-mark.ts`). The lines without a registration carry no press. So the
  * fold ends with a link to that card (`/admin/events/[id]#bib-elite`, a plain anchor: the editor scrolls to the card, closed):
  * «Gestionează lista de elite» for the Administrator, who adds and deletes there, «Vezi lista de elite în editor» for
  * the Organizer, who reads it. Presentation only: the page reads the rows, through readers that assert the role again.
@@ -32,6 +37,7 @@ export default async function ElitePanel({
   cardHref,
   registrationHref,
   mayManage,
+  unmark,
 }: {
   locale: string;
   /** The event's separate elite list, in the order the club typed it (`elite-list.ts#listEliteEntries`). */
@@ -44,6 +50,11 @@ export default async function ElitePanel({
   registrationHref: (registrationId: string) => string;
   /** The Administrator's words on the link; the Organizer's say he reads. */
   mayManage: boolean;
+  /**
+   * The one-press «Nu mai e elită» beside each registered line: the row menu's action (`setRegistrationEliteAction`) and
+   * the list's return query. Given only to a role that may change registrations; absent, the panel is read-only.
+   */
+  unmark?: { action: ActionFormAction; listQuery: string };
 }) {
   const t = await getTranslations("Admin");
   const total = entries.length + marked.length;
@@ -90,6 +101,25 @@ export default async function ElitePanel({
                   </Typography>
                   <RegistrationStatusChip status={row.status} testId="registrations-elite-status" />
                   {number(row.bibNumber)}
+                  {unmark && (
+                    <ActionForm action={unmark.action} data-testid="registrations-elite-unmark-form">
+                      <input type="hidden" name="uiLocale" value={locale} />
+                      <input type="hidden" name="registrationId" value={row.id} />
+                      <input type="hidden" name="elite" value="0" />
+                      <input type="hidden" name="listQuery" value={unmark.listQuery} />
+                      <GlyphButton
+                        icon="elite"
+                        type="submit"
+                        variant="outlined"
+                        size="small"
+                        sx={{ minHeight: 44, minWidth: 44 }}
+                        aria-label={t("registrations.elite.unmarkNamed", { name: row.name })}
+                        data-testid="registrations-elite-unmark"
+                      >
+                        {t("registrations.elite.unmark")}
+                      </GlyphButton>
+                    </ActionForm>
+                  )}
                 </Stack>
               </Box>
             ))}

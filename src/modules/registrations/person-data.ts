@@ -7,6 +7,7 @@ import { eventReserveEntries } from "@/db/schema/event-reserve-entries";
 import { eventResults } from "@/db/schema/event-results";
 import { eventRsvps, rsvpAskRefusals, rsvpRefuseTokens } from "@/db/schema/event-rsvps";
 import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
+import { eventVolunteerNotes } from "@/db/schema/event-volunteer-notes";
 import { eventVolunteerCategories, eventVolunteerRoleAssignments, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { events, eventTranslations } from "@/db/schema/events";
 import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
@@ -167,7 +168,7 @@ export type PersonData = {
   }>;
   /**
    * What the person offered as a volunteer (§754): the event, the role, the state, where it came from and
-   * what was typed — name, address, telephone number, their message and the organizers' note, every column
+   * what was typed — name, address, telephone number, their message and the organizers' notes, every column
    * of the row (art. 15 GDPR). Deleted by the event's «Voluntari» card, or thirty days after the event.
    */
   volunteerOffers: Array<{
@@ -193,7 +194,17 @@ export type PersonData = {
     deliveryEmail: string | null;
     phone: string | null;
     message: string | null;
+    /**
+     * The old single organizers' line (`event_volunteers.note`), printed only while no live note below carries the same words: migration
+     * `0196` carried each into a note, and a line typed by the previous release's code after the migration ran has no note yet. Null
+     * otherwise. Read until the column's contract release carries what is left and drops it.
+     */
     note: string | null;
+    /**
+     * The organizers' internal notes on this offer («Note interne» for volunteers; art. 15 GDPR): the live ones, oldest first as the rest
+     * of this page — the words, the moment and the author's **role**, never the colleague's name, as a registration's notes (§777).
+     */
+    notes: Array<{ body: string; createdAt: Date; authorRole: StaffUser["role"] | null }>;
     /** What the person said about themselves (§765), every answer as stored: nulls and false for a row from before. */
     age: number | null;
     /** The date of birth the age was derived from, `YYYY-MM-DD` (§773): a row from before has none (art. 15 GDPR: every column of the row). */
@@ -532,13 +543,32 @@ async function collectPersonData<T extends Record<string, unknown>>(
       : [];
   const choiceRows = await linkedRoles(eventVolunteerRoleChoices);
   const givenRows = await linkedRoles(eventVolunteerRoleAssignments);
+  // The offers' internal notes: one read for every offer of the person, live ones only, the author as a role — never a name.
+  const offerNoteRows =
+    offerRows.length > 0
+      ? await db
+          .select({
+            volunteerId: eventVolunteerNotes.volunteerId,
+            body: eventVolunteerNotes.body,
+            createdAt: eventVolunteerNotes.createdAt,
+            authorRole: staffUsers.role,
+          })
+          .from(eventVolunteerNotes)
+          .leftJoin(staffUsers, eq(staffUsers.id, eventVolunteerNotes.authorStaffUserId))
+          .where(and(inArray(eventVolunteerNotes.volunteerId, offerRows.map((offer) => offer.id)), isNull(eventVolunteerNotes.deletedAt)))
+          .orderBy(asc(eventVolunteerNotes.createdAt), asc(eventVolunteerNotes.id))
+      : [];
   // A role is named as a role is named alone (§774): «Direcționare (Traseu)», so the same name under two categories is two roles to read;
   // several roles given are joined by «, » (§837), none is null.
   const volunteerOffers = offerRows.map(({ id, ...offer }) => {
     const chosen = choiceRows.filter((choice) => choice.volunteerId === id);
     const given = givenRows.filter((role) => role.volunteerId === id);
+    const notes = offerNoteRows.filter((note) => note.volunteerId === id).map((note) => ({ body: note.body, createdAt: note.createdAt, authorRole: note.authorRole }));
     return {
       ...offer,
+      // The old line only while no live note carries its words (a line typed after the carry by the code it replaced).
+      note: offer.note !== null && !notes.some((note) => note.body === offer.note) ? offer.note : null,
+      notes,
       roleNameRo: given.length > 0 ? given.map((role) => roleLabel(role, "ro")).join(", ") : null,
       roleNameEn: given.length > 0 ? given.map((role) => roleLabel(role, "en")).join(", ") : null,
       chosenRolesRo: chosen.map((choice) => roleLabel(choice, "ro")),
@@ -1018,6 +1048,7 @@ export async function exportPersonData<T extends Record<string, unknown>>(
       askRefusals: data.askRefusals.length,
       rememberedBrowsers: data.rememberedBrowsers.length,
       volunteerOffers: data.volunteerOffers.length,
+      volunteerNotes: data.volunteerOffers.reduce((total, offer) => total + offer.notes.length, 0),
       volunteerInvitations: data.volunteerInvitations.length,
       groupRunDeclarations: data.groupRunDeclarations.length,
       results: data.results.length,

@@ -1,6 +1,9 @@
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { shirtSizeShown } from "@/modules/registrations/domain/kit";
 import { sexCell } from "@/modules/registrations/domain/sex";
+import { STAFF_ROLES, type StaffRole } from "@/modules/staff-identity/domain/roles";
+import { type ExportNote, exportNotesCell, type ExportNotesWords } from "@/shared/notes/note-text";
 import type { VolunteerCsvHeader, VolunteerCsvRow } from "./csv";
 import { countsAgainstRole, isVolunteerMinor, roleLabel, rolesWithCategoryWords, standingOf } from "./domain/volunteer";
 import type { exportVolunteers } from "./volunteers";
@@ -58,6 +61,21 @@ export function volunteerExportHeader(t: Words): VolunteerCsvHeader {
   };
 }
 
+/**
+ * The «Notă» cell of every volunteer of a file («Note interne» for volunteers): each one's live notes — read by the route in one grouped
+ * query per file and handed here as rows, never the table — in a registration's cell format (§785, `exportNotesCell`): one note a line, newest first,
+ * «dd.mm.yyyy hh:mm · <rolul autorului>: <text>» on the club's clock, as the file's other dates are, the author a ROLE and never a
+ * name, cut at a note's end below what Excel keeps with «… (mai multe note pe pagina voluntarului)». A volunteer with none is absent.
+ */
+export function volunteerNotesCells(notes: ReadonlyMap<string, readonly ExportNote<StaffRole>[]>, t: Words): Map<string, string> {
+  const words: ExportNotesWords<StaffRole> = {
+    roles: Object.fromEntries(STAFF_ROLES.map((role) => [role, t(`registrations.notes.exportRole.${role}`)])) as Record<StaffRole, string>,
+    authorGone: t("volunteers.notes.authorUnknown"),
+    more: t("volunteers.notes.exportMore"),
+  };
+  return new Map([...notes].map(([volunteerId, list]) => [volunteerId, exportNotesCell(list, CLUB_TIME_ZONE, words)]));
+}
+
 /** The spreadsheet's own words (`workbook.ts`) in the reader's language: the sheets, «De repartizat», the states, «Pe roluri». */
 export function volunteerSheetWords(t: Words): VolunteerSheetWords {
   const sheet = (key: string) => t(`volunteers.sheet.${key}`);
@@ -87,7 +105,13 @@ export function volunteerSheetWords(t: Words): VolunteerSheetWords {
  * role. The roles name themselves under their categories as «Direcționare (Traseu)» (§774); the category's contact person is
  * never in the file. Shared by the event's download and the «Voluntari» screen's every-event download, so the two never drift.
  */
-export function volunteerExport(data: VolunteerExportData, locale: Locale, t: Words): { rows: VolunteerCsvRow[]; roles: VolunteerRoleSheetRow[] } {
+export function volunteerExport(
+  data: VolunteerExportData,
+  locale: Locale,
+  t: Words,
+  /** Each volunteer's «Notă» cell (`volunteerNotesCells`), by id; a volunteer absent has none. */
+  notes: ReadonlyMap<string, string>,
+): { rows: VolunteerCsvRow[]; roles: VolunteerRoleSheetRow[] } {
   const roles = rolesWithCategoryWords(data.categories, data.roles);
   const roleNames = new Map(roles.map((role) => [role.id, roleLabel(role, locale)]));
   const order = new Map(roles.map((role, index) => [role.id, index]));
@@ -106,7 +130,8 @@ export function volunteerExport(data: VolunteerExportData, locale: Locale, t: Wo
     state: t(`volunteers.states.${person.state}`),
     source: t(`volunteers.sources.${person.source}`),
     message: person.message,
-    note: person.note,
+    // The volunteer's internal notes, in the column the single organizers' line had (its place and heading kept).
+    note: notes.get(person.id) || null,
     signedUpAt: person.createdAt,
     age: person.age,
     dateOfBirth: person.dateOfBirth,

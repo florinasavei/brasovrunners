@@ -68,6 +68,8 @@ const BACKOFFICE = [
   "src/modules/registrations/ui/DeclarationHoldForm.tsx",
   "src/modules/content/rich-text/ui/LazyRichTextEditor.tsx",
   "src/modules/registrations/ui/DeskRow.tsx",
+  // «Lista internă» on the registrations list: only the admin page imports it.
+  "src/modules/registrations/ui/ReserveListPanel.tsx",
   "src/shared/ui/Panel.tsx",
 ];
 

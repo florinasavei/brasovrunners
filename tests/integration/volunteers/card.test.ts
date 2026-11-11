@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { eventVolunteerNotes, VOLUNTEER_NOTE_MAX } from "@/db/schema/event-volunteer-notes";
 import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
@@ -288,15 +289,31 @@ describe("§754 an event's volunteers, entered by hand", () => {
       phone: "+40712345678",
       state: "REGISTERED",
       source: "STAFF",
-      note: "Prietena lui Dan",
       message: null,
     });
     // The identity and who entered it live on the row, not in the list the card draws.
     const [stored] = await db.select().from(eventVolunteers).where(eq(eventVolunteers.id, row.id));
     expect(stored).toMatchObject({ canonicalEmail: "maria@example.test", canonicalizationVersion: 2, createdByStaffUserId: staff.ADMIN!.id, privacyNoticeVersion: null });
+    // «Nota ta (doar organizatorii)» is the person's first internal note («Note interne» for volunteers), by whoever added them, in the
+    // add's own transaction — never the old single line, which stays empty.
+    expect(stored.note).toBeNull();
+    const firstNotes = await db.select().from(eventVolunteerNotes).where(eq(eventVolunteerNotes.volunteerId, row.id));
+    expect(firstNotes).toMatchObject([{ body: "Prietena lui Dan", authorStaffUserId: staff.ADMIN!.id, deletedAt: null }]);
+    expect(firstNotes[0].createdAt.getTime()).toBe(stored.createdAt.getTime());
     const added = (await trail()).find((entry) => entry.action === "volunteer.added");
     expect(added?.metadataJson).toMatchObject({ volunteerId: row.id, assignedRoleIds: [role.id] });
     expect(JSON.stringify(added?.metadataJson)).not.toMatch(/Maria|maria@|\+4071|Prietena/);
+    // The note's own trail row: who and when, `{ volunteerId }` and nothing else — never the words.
+    const noted = (await trail()).filter((entry) => entry.action === "volunteer.note_added");
+    expect(noted.map((entry) => [entry.entityType, entry.actorStaffUserId, entry.metadataJson])).toEqual([["event", staff.ADMIN!.id, { volunteerId: row.id }]]);
+    // An empty box writes no note at all.
+    const quiet = await addPerson(role.id, { name: "Ion Fără Notă", email: "ion@example.test" });
+    expect(await db.select().from(eventVolunteerNotes).where(eq(eventVolunteerNotes.volunteerId, quiet.id))).toEqual([]);
+    // Words too many are refused on the box itself, every box keeping what was typed, and nobody is added.
+    const long = await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], email: "lung@example.test", note: "x".repeat(VOLUNTEER_NOTE_MAX + 1) }));
+    expect(long).toMatchObject({ error: "NOTE_TOO_LONG", fields: ["note"] });
+    expect((long as FormOutcome).values.email?.[0]).toBe("lung@example.test");
+    expect((await listVolunteers(db, eventId)).map((person) => person.email)).not.toContain("lung@example.test");
   });
 
   it("takes a number typed with the country code, and refuses one that cannot be dialled", async () => {
@@ -350,6 +367,8 @@ describe("§754 an event's volunteers, entered by hand", () => {
     const finish = await addRole({ nameRo: "Sosire", nameEn: "Finish" });
     const maria = await addPerson(water.id);
     const ion = await addPerson(water.id, { name: "Ion Test", email: "ion@example.test" });
+    // A line in the old column (`event_volunteers.note`), as the code before «Note interne» for volunteers wrote it.
+    await db.update(eventVolunteers).set({ note: "Linia veche" }).where(eq(eventVolunteers.id, maria.id));
     expect(
       await post(
         actions.editVolunteerAction,
@@ -357,10 +376,16 @@ describe("§754 an event's volunteers, entered by hand", () => {
       ),
     ).toBe("redirected");
     const [changed] = (await listVolunteers(db, eventId)).filter((row) => row.id === maria.id);
-    expect(changed).toMatchObject({ roleIds: [finish.id], choiceIds: [water.id, finish.id], name: "Maria Nouă", email: "Maria.Noua@Example.test", note: "Confirmată pe telefon", phone: "+40712345678" });
+    expect(changed).toMatchObject({ roleIds: [finish.id], choiceIds: [water.id, finish.id], name: "Maria Nouă", email: "Maria.Noua@Example.test", phone: "+40712345678" });
+    // «Modifică» has no note any more («Note interne» for volunteers): a `note` a stale form posts is neither written, nor diffed, nor audited.
+    expect(changed).not.toHaveProperty("note");
     const [edited] = (await trail()).filter((row) => row.action === "volunteer.edited");
-    expect(edited.metadataJson).toMatchObject({ volunteerId: maria.id, fields: ["name", "email", "note", "roleIds", "assignedRoleIds"] });
+    expect(edited.metadataJson).toMatchObject({ volunteerId: maria.id, fields: ["name", "email", "roleIds", "assignedRoleIds"] });
     expect(JSON.stringify(edited.metadataJson)).not.toMatch(/Maria|maria|Confirmată/);
+    // The old single line, a word the previous release typed, is left as it was: no save empties it.
+    const [stored] = await db.select({ note: eventVolunteers.note }).from(eventVolunteers).where(eq(eventVolunteers.id, maria.id));
+    expect(stored.note).toBe("Linia veche");
+    expect(await db.select().from(eventVolunteerNotes).where(eq(eventVolunteerNotes.volunteerId, maria.id))).toEqual([]);
     // The role newly given is told to the person, at the address the row now holds.
     const toldMaria = async () =>
       (await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "VOLUNTEER_ROLE_ASSIGNED"))).filter(

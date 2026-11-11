@@ -94,8 +94,10 @@ const staff = { roleIds: [ID], assignedRoleIds: [], name: " Ana  Test ", email: 
 
 describe("§754 a person, entered by hand or offering on the page", () => {
 
-  it("takes the staff's boxes: the roles ticked, the role given or none, a name, an address, an E.164 telephone number, an optional note", () => {
-    expect(volunteerStaffInputSchema.parse(staff)).toMatchObject({ roleIds: [ID], assignedRoleIds: [], name: "Ana Test", phone: "+40712345678", note: null });
+  it("takes the staff's boxes: the roles ticked, the role given or none, a name, an address, an E.164 telephone number — and no note, which is a note of its own", () => {
+    expect(volunteerStaffInputSchema.parse(staff)).toMatchObject({ roleIds: [ID], assignedRoleIds: [], name: "Ana Test", phone: "+40712345678" });
+    // «Note interne» for volunteers: the organizers' note is no box of the person any more — the add's first note travels on its own.
+    expect(volunteerStaffInputSchema.parse(staff)).not.toHaveProperty("note");
     expect(volunteerStaffInputSchema.parse({ ...staff, assignedRoleIds: [` ${ID2} `] })).toMatchObject({ roleIds: [ID], assignedRoleIds: [ID2] });
   });
 

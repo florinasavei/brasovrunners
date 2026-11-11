@@ -8,6 +8,17 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.39-2026-11-11
+
+- **«Liste date sponsorilor»** — under «Descarcă lista pentru sponsori», on an event's registrations page and on «Newsletter», every list already given: whom, when, the event, how many people, which file, who downloaded it and the day your own copy must be deleted by. «Cui dai lista» is now required — write «club» for a list that stays with the club — and suggests the names written before. §929.
+- **«La retrimitere» on an invitation** — the box «Zile (opțional)» beside «Retrimite» is now a list: «Termenul rămâne», or a new deadline by its day and hour — «Termen nou: joi, 19 nov., 14:42» — up to «la start». The line you choose is the deadline you get, whenever you press, and the question asked before the email leaves repeats it. §930.
+- **«Note interne» first, and a note from the list** — on a registration's page the notes card is the first card and opens by itself when it holds a note; every row of the registrations list has «Adaugă o notă», a dialog that saves without leaving the list and comes back to the same filters and page. §931.
+- **«Nu mai e elită» on the «Elite» panel** — beside each registered elite, for the Administrator: the bib prints with its number again and the person runs as any other, without opening the row's «⋮». §932.
+- **A minor's parent from the «Voluntari» list.** A volunteer under eighteen whose parent has not agreed wears «Acordul părintelui lipsește» on the list and gets, in place of «Confirmă», the person's own verbs — «Trimite linkul părintelui», «PDF de semnat de părinte», «Acordul părintelui pe hârtie» — so the organizer records the agreement and then confirms, without leaving the list; the server's rule is unchanged. §933.
+- **Volunteers with and without a kit in «Kituri de pregătit»** — one line under the runners', «Voluntari: 11 cu kit · 23 fără kit.», each number a link to the «Voluntari» list when the list shows exactly that many, the cancelled left out and said so. §934.
+- **«Note interne» for volunteers** — several dated notes on each volunteer, each with its author: the card stands first on the volunteer's page and opens when it holds one, the «Voluntari» list and the event card count them and «Adaugă o notă» works from a row, the volunteers' files carry them in the «Notă» column with the author's role, and «Toate datele unei persoane» lists them; the old single note became the first one. §935.
+- **«Corectează numele» on the internal list** — each line has a fold with the first and last name and «Salvează numele», for the Organizer and above; the line keeps its place, note and address, and the trail records the fix without the name. §936.
+- **«Pe adresa mea, invitat special» on a line of the internal list** — an Administrator registers a person with no address of their own, a partners' guest say, on their own address and on «Lista de invitați speciali» in one press: no announced place taken, nobody waiting passed over, and the declaration still the person's own, from the forwarded email or on paper at the start. §937.
 ## BR-V4.38-2026-11-10
 
 - **The pace calculator in miles too** — «Unelte» → «Calculator de ritm»: «Unitatea de măsură», kilometres (min/km, km/h) by default or miles (min/milă, mph); switching converts the boxes and keeps the same run. §927.

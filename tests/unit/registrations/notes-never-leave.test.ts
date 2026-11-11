@@ -21,12 +21,14 @@ const SRC = path.join(ROOT, "src");
 
 const READERS = new Set(
   [
-    // The table, the service and the one card that draws the notes.
+    // The table and the service. The card that draws the notes (`ui/NotesCard.tsx`) left this list when it became generic («Note
+    // interne» for volunteers draws it too): it imports neither kind of note, and is handed its rows and its limit by the pages below.
     "src/modules/registrations/notes.ts",
-    "src/modules/registrations/ui/NotesCard.tsx",
     // «Toate datele unei persoane» (art. 15).
     "src/modules/registrations/person-data.ts",
-    // The registration's page, its two presses, and the list's marker.
+    // The registration's page, its two presses, and the list's marker — and, on the list, the row's «Adaugă o notă» (one grouped
+    // count for the marker, the length of the box; the dialog `shared/ui/RowNoteDialog.tsx` imports nothing of the notes and
+    // lists none; its press is in `actions.ts` below, which writes one note through the service).
     "src/app/[locale]/admin/registrations/[id]/page.tsx",
     "src/app/[locale]/admin/registrations/[id]/note-actions.ts",
     "src/app/[locale]/admin/registrations/(list)/page.tsx",

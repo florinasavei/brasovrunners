@@ -49,11 +49,19 @@ export const PROMO_LISTED_STATUSES = ["PENDING_DECLARATION", "WAITLISTED", "WAIT
 export const SPONSOR_RECIPIENT_MAX = 120;
 
 /**
- * The optional recipient a download names (`?to=`), as the audit row keeps it: control characters
- * gone, whitespace collapsed, at most `SPONSOR_RECIPIENT_MAX` characters; null when nothing is left.
+ * The recipient a download names (`?to=`), as the audit row keeps it: control characters gone,
+ * whitespace collapsed, at most `SPONSOR_RECIPIENT_MAX` characters; null when nothing is left — and
+ * since §929 a download that names nobody is refused, so every list in the register has its recipient.
  */
 export function sponsorRecipient(raw: string | null): string | null {
-  const text = (raw ?? "").replace(/\p{Cc}+/gu, " ").replace(/\s+/g, " ").trim().slice(0, SPONSOR_RECIPIENT_MAX).trim();
+  const text = (raw ?? "")
+    .replace(/\p{Cc}+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, SPONSOR_RECIPIENT_MAX)
+    // A cut through a character written on two code units (an emoji) leaves its first half, which the audit row's JSON refuses: the half goes too.
+    .replace(/[\uD800-\uDBFF]$/, "")
+    .trim();
   return text === "" ? null : text;
 }
 
@@ -172,7 +180,8 @@ function mayReachPartner(row: { consentedAt: Date | null; privacyNoticeVersion: 
   return reachesPartner({ promoConsent: true, promoConsentAt: row.consentedAt, privacyNoticeVersion: row.privacyNoticeVersion, birthDate: row.birthDate }, gate, now);
 }
 
-function assertMayExport(actor: Pick<StaffUser, "role">): void {
+/** The role, asserted in every read of the list and of its register (`sponsor-register.ts`, §929). */
+export function assertMayExport(actor: Pick<StaffUser, "role">): void {
   if (!canExportSponsorList(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not take the sponsor list; §570 keeps it to the Organizer and the Administrator`);
   }

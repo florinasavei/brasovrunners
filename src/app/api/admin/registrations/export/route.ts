@@ -22,8 +22,9 @@ import { defaultEventFilter } from "@/modules/registrations/domain/default-event
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
 import { rowDeadlineOf } from "@/modules/registrations/domain/row-deadline";
 import { ageOnRaceDay, dayIn, timeIn } from "@/modules/registrations/domain/age";
-import { exportNotesCell, type ExportNotesWords, listRegistrationNotesForExport } from "@/modules/registrations/notes";
-import { STAFF_ROLES, canKeepRegistrationNotes, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { listRegistrationNotesForExport } from "@/modules/registrations/notes";
+import { exportNotesCell, type ExportNotesWords } from "@/shared/notes/note-text";
+import { STAFF_ROLES, type StaffRole, canKeepRegistrationNotes, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { needsEmailAction } from "@/modules/registrations/domain/email-state";
@@ -159,8 +160,8 @@ export async function GET(request: Request): Promise<Response> {
   const notes = new Map<string, string>();
   if (withNotes) {
     const t = await getTranslations({ locale, namespace: "Admin" });
-    const words: ExportNotesWords = {
-      roles: Object.fromEntries(STAFF_ROLES.map((role) => [role, t(`registrations.notes.exportRole.${role}`)])) as ExportNotesWords["roles"],
+    const words: ExportNotesWords<StaffRole> = {
+      roles: Object.fromEntries(STAFF_ROLES.map((role) => [role, t(`registrations.notes.exportRole.${role}`)])) as ExportNotesWords<StaffRole>["roles"],
       authorGone: t("registrations.notes.exportGone"),
       more: t("registrations.notes.exportMore"),
     };

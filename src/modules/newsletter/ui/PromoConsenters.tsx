@@ -12,6 +12,7 @@ import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import type { SponsorListSummary } from "@/modules/registrations/sponsor-list";
+import type { SponsorRegister } from "@/modules/registrations/sponsor-register";
 import SponsorListButton from "@/modules/registrations/ui/SponsorListButton";
 import { PROMO_TABLE_LIMIT, type PromoConsenterList, type PromoConsenterRow } from "../promo-consenters";
 
@@ -24,6 +25,10 @@ type Props = {
   paged: boolean;
   /** The list for sponsors across every event (§570), or null for a role that may not take it. */
   sponsors?: SponsorListSummary | null;
+  /** Every list already given and the recipients written before (§929), for the same roles. */
+  sponsorRegister?: SponsorRegister | null;
+  /** The page's clock, for the register's «termen trecut». */
+  now: Date;
 };
 
 /** The fold's own anchor, beside «Abonați»'s. */
@@ -38,10 +43,11 @@ export const PROMO_ANCHOR = "newsletter-promo";
  * A Server Component with no form of its own: the page reads the list (`listPromoConsenters`, which
  * asserts the role) and hands it here. The words say the two consents apart: this is not the
  * newsletter, and the partners receive only the list for sponsors (§570) — the button under the
- * club's own, for every event, the same query and the same file as an event's registrations page.
+ * club's own, for every event, the same query and the same file as an event's registrations page,
+ * with every list already given under it («Liste date sponsorilor», §929).
  * The rows are the backoffice's table since §847 (`AdminTable`), paged through the address.
  */
-export default async function PromoConsenters({ locale, list, listQuery, paged, sponsors = null }: Props) {
+export default async function PromoConsenters({ locale, list, listQuery, paged, sponsors = null, sponsorRegister = null, now }: Props) {
   const t = await getTranslations("Admin");
   const csvHref = `/api/admin/newsletter/promo?${new URLSearchParams({ lang: locale }).toString()}`;
   const dayTime = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
@@ -82,7 +88,7 @@ export default async function PromoConsenters({ locale, list, listQuery, paged, 
             {t("newsletter.promo.csv")}
           </GlyphButton>
         </Stack>
-        {sponsors && <SponsorListButton locale={locale} eventId={null} list={sponsors} />}
+        {sponsors && sponsorRegister && <SponsorListButton locale={locale} eventId={null} list={sponsors} register={sponsorRegister} now={now} registerLevel={3} />}
         {list.truncated && (
           <Typography variant="body2" color="text.secondary">
             {t("newsletter.promo.truncated", { count: String(PROMO_TABLE_LIMIT) })}

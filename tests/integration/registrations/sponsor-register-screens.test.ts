@@ -1,0 +1,209 @@
+import { isValidElement, type ReactElement, type ReactNode } from "react";
+import { createTranslator } from "next-intl";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import en from "../../../messages/en.json";
+import ro from "../../../messages/ro.json";
+import { auditLogs } from "@/db/schema/audit-logs";
+import { events, eventTranslations } from "@/db/schema/events";
+import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import type { SponsorRegister } from "@/modules/registrations/sponsor-register";
+import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+
+/**
+ * «Liste date sponsorilor» (§929) on its two screens — BR-REQ-071-01 and, for who gets it, BR-REQ-060-01: what an
+ * event's registrations page and «Newsletter» hand the block. The read and the drawing are
+ * `sponsor-list.test.ts`; this is the step between them, which a review by mutation found no test reached: the
+ * event's own door (never another event's lists), the three roles that may take the list, the reader's language
+ * and the page's clock.
+ *
+ * The pages are Server Components, so each is called and its element tree walked, as `results-door.test.ts` does.
+ */
+const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en" }));
+
+vi.mock("next-intl/server", () => ({
+  getTranslations: async (arg: string | { namespace: string }) => {
+    const namespace = typeof arg === "string" ? arg : arg.namespace;
+    const catalogue = (state.locale === "ro" ? ro : en) as unknown as Record<string, Record<string, unknown>>;
+    return createTranslator({ locale: state.locale, messages: catalogue[namespace] as never });
+  },
+  getLocale: async () => state.locale,
+  setRequestLocale: () => undefined,
+}));
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
+  notFound: () => {
+    throw new Error("NOT_FOUND");
+  },
+}));
+vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, set: () => {}, delete: () => {} }), headers: async () => new Headers() }));
+vi.mock("next/cache", async () => (await import("../../helpers/next-cache")).fakeNextCache.module);
+vi.mock("@/auth", () => ({ auth: async () => null, signIn: async () => {}, signOut: async () => {} }));
+vi.mock("@/db/client", () => ({ getDb: () => state.db }));
+vi.mock("@/i18n/navigation", () => ({ getPathname: ({ href }: { href: string | { pathname: string } }) => (typeof href === "string" ? href : href.pathname), Link: () => null }));
+vi.mock("@/modules/staff-identity/session", () => ({
+  DEV_STAFF_COOKIE: "dev-staff",
+  requireStaff: async () => state.actor,
+  requireStaffCapability: async () => state.actor,
+}));
+// The list page's own actions: imported by it, not under test here.
+vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
+  addToWaitlistAction: vi.fn(),
+  moveReserveEntryAction: vi.fn(),
+  addRegistrationNoteFromListAction: vi.fn(),
+  offerPlaceAction: vi.fn(),
+  bulkCancelRegistrationsAction: vi.fn(),
+  bulkDeleteRegistrationsAction: vi.fn(),
+  markBibsPrintedAction: vi.fn(),
+  sendOutboxNowAction: vi.fn(),
+  setPublicRegistrationOpenAction: vi.fn(),
+  cancelRegistrationFromRowAction: vi.fn(),
+  eraseRegistrationFromListAction: vi.fn(),
+  setBibPrintedAction: vi.fn(),
+  checkInAction: vi.fn(),
+  confirmRegistrationNowAction: vi.fn(),
+  promoteRegistrationAction: vi.fn(),
+  setOutsideCapacityAction: vi.fn(),
+  setRegistrationEliteAction: vi.fn(),
+  setClubMemberDeclaredAction: vi.fn(),
+  clearMemberTicksAction: vi.fn(),
+}));
+vi.mock("@/app/[locale]/admin/registrations/[id]/actions", () => ({
+  resendFamilyEmailAction: vi.fn(),
+  resendRegistrationEmailAction: vi.fn(),
+}));
+vi.mock("@/modules/notifications/send-now-choice", () => ({ sendNowChoiceFor: async () => null }));
+
+const { default: AdminRegistrationsPage } = await import("@/app/[locale]/admin/registrations/(list)/page");
+const { default: NewsletterPage } = await import("@/app/[locale]/admin/newsletter/page");
+const { default: SponsorListButton } = await import("@/modules/registrations/ui/SponsorListButton");
+const { default: PromoConsenters } = await import("@/modules/newsletter/ui/PromoConsenters");
+
+type Props = Record<string, unknown> & { children?: ReactNode };
+
+/** Every element of a tree: the children, and any element handed through another prop (the «Abonați» slot). */
+function elements(node: unknown, acc: ReactElement<Props>[] = []): ReactElement<Props>[] {
+  if (Array.isArray(node)) {
+    for (const child of node) elements(child, acc);
+    return acc;
+  }
+  if (!isValidElement<Props>(node)) return acc;
+  acc.push(node);
+  for (const value of Object.values(node.props)) if (Array.isArray(value) || isValidElement(value)) elements(value, acc);
+  return acc;
+}
+
+let db: TestDatabase;
+let close: () => Promise<void>;
+
+async function createEvent(title: string) {
+  const [event] = await db
+    .insert(events)
+    .values({ type: "RACE", surface: "ASPHALT", startsAt: new Date("2099-11-21T08:00:00.000Z"), timezone: "Europe/Bucharest", capacity: 150, registrationMode: "INTERNAL", editorialStatus: "PUBLISHED", publishedAt: new Date("2026-09-01T10:00:00.000Z") })
+    .returning();
+  await db.insert(eventTranslations).values([
+    { eventId: event.id, locale: "ro", slug: `${title}-ro`, title },
+    { eventId: event.id, locale: "en", slug: `${title}-en`, title: `${title} (en)` },
+  ]);
+  return event;
+}
+
+let seq = 0;
+async function staff(role: StaffUser["role"]): Promise<StaffUser> {
+  const [user] = await db.insert(staffUsers).values({ email: `${role.toLowerCase()}-${seq++}@dev.test`, displayName: role, role }).returning();
+  return user;
+}
+
+/** Three lists: the autumn race's, the winter race's, and one made for every event — the newest. */
+async function threeLists() {
+  const autumn = await createEvent("toamna");
+  const winter = await createEvent("iarna");
+  const list = (at: string, eventId: string | null, recipient: string) => ({
+    action: "registrations.sponsor_list_exported" as const,
+    entityType: "event",
+    entityId: eventId,
+    metadataJson: { eventId, format: "csv", count: 1, recipient, registrationIds: [] },
+    createdAt: new Date(at),
+  });
+  await db.insert(auditLogs).values([
+    list("2026-09-10T09:00:00.000Z", autumn.id, "Sport Shop"),
+    list("2026-09-12T09:00:00.000Z", winter.id, "Intersport"),
+    list("2026-09-20T09:00:00.000Z", null, "Decathlon"),
+  ]);
+  return { autumn, winter };
+}
+
+const facts = (register: SponsorRegister) => register.lists.map((list) => [list.recipient, list.eventTitle]);
+
+beforeAll(async () => {
+  ({ db, close } = await createTestDatabase());
+  state.db = db;
+});
+afterAll(async () => close());
+beforeEach(async () => {
+  await resetTables(db);
+  state.locale = "ro";
+});
+
+describe("BR-REQ-071-01 §929 an event's registrations page hands the block its own door", () => {
+  it.each([["MODERATOR"], ["ADMIN"], ["SUPERADMIN"]] as const)(
+    "BR-REQ-060-01 the %s gets the event's lists and every event's — never another event's — in the reader's language, on the page's clock",
+    async (role) => {
+      const { autumn } = await threeLists();
+      state.actor = await staff(role);
+      state.locale = "en";
+      const before = Date.now();
+      const tree = await AdminRegistrationsPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({ eventId: autumn.id }) } as never);
+      const block = elements(tree).find((element) => element.type === SponsorListButton);
+      expect(block, role).toBeDefined();
+      const props = block!.props as unknown as Parameters<typeof SponsorListButton>[0];
+      expect(props.eventId).toBe(autumn.id);
+      expect(props.locale).toBe("en");
+      expect(props.registerLevel).toBe(2);
+      // The winter race's list is another event's: never on this door.
+      expect(facts(props.register)).toEqual([
+        ["Decathlon", null],
+        ["Sport Shop", "toamna (en)"],
+      ]);
+      // The suggestions are every event's: one sponsor, one spelling.
+      expect(props.register.recipients).toEqual(["Decathlon", "Intersport", "Sport Shop"]);
+      // «termen trecut» is judged by the page's own clock.
+      expect(props.now.getTime()).toBeGreaterThanOrEqual(before);
+      expect(props.now.getTime()).toBeLessThanOrEqual(Date.now());
+    },
+  );
+});
+
+describe("BR-REQ-071-01 §929 «Newsletter» hands the fold every list", () => {
+  it.each([["MODERATOR"], ["ADMIN"], ["SUPERADMIN"]] as const)(
+    "BR-REQ-060-01 the %s gets every list, in the reader's language, on the page's clock, and the fold draws the block for every event a level down",
+    async (role) => {
+      await threeLists();
+      state.actor = await staff(role);
+      state.locale = "en";
+      const before = Date.now();
+      const tree = await NewsletterPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({}) } as never);
+      const fold = elements(tree).find((element) => element.type === PromoConsenters);
+      expect(fold, role).toBeDefined();
+      const props = fold!.props as unknown as Parameters<typeof PromoConsenters>[0];
+      expect(props.sponsors).toEqual({ offered: false, count: 0 });
+      // Without it the fold draws neither the register nor the button.
+      expect(props.sponsorRegister, "the register reaches the fold").toBeTruthy();
+      expect(facts(props.sponsorRegister!)).toEqual([
+        ["Decathlon", null],
+        ["Intersport", "iarna (en)"],
+        ["Sport Shop", "toamna (en)"],
+      ]);
+      expect(props.now.getTime()).toBeGreaterThanOrEqual(before);
+      expect(props.now.getTime()).toBeLessThanOrEqual(Date.now());
+
+      // The fold hands it on: the block for every event, inside the card.
+      const block = elements(await PromoConsenters(props)).find((element) => element.type === SponsorListButton);
+      expect(block, role).toBeDefined();
+      const inner = block!.props as unknown as Parameters<typeof SponsorListButton>[0];
+      expect(inner.eventId).toBeNull();
+      expect(inner.registerLevel).toBe(3);
+      expect(inner.register).toBe(props.sponsorRegister);
+      expect(inner.now).toBe(props.now);
+    },
+  );
+});

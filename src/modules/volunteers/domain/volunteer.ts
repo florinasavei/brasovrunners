@@ -38,7 +38,6 @@ export const VOLUNTEER_GUARDIAN_NAME_MAX = 120;
 export const VOLUNTEER_NEEDED_MAX = 1000;
 export const VOLUNTEER_NAME_MAX = 120;
 export const VOLUNTEER_MESSAGE_MAX = 300;
-export const VOLUNTEER_NOTE_MAX = 500;
 /** How many roles one event may define: a list a person can read, and a bound on a forged form. */
 export const VOLUNTEER_ROLES_MAX = 30;
 /** How many categories one event may define (§774): headings a person can read on a phone, and a bound on a forged form. */
@@ -509,7 +508,8 @@ function staffContactBoxes(required: boolean) {
 }
 
 /**
- * A person as an organizer types them: the same boxes as the public form, plus the organizers' own note — the roles
+ * A person as an organizer types them: the same boxes as the public form — the organizers' notes are notes of their own
+ * («Note interne» for volunteers, `volunteer-notes.ts`), never a box of the person — plus the roles
  * the person would do (`roleIds`, the ticks) and, optionally, the roles the organizers give them (`assignedRoleIds`,
  * «Rolurile date»: one or several of the event's, ticked by the person or not, §837). At least one of the two
  * (`roleIds` named in the refusal); a person entered with roles given and nothing ticked has those roles as their
@@ -523,7 +523,6 @@ const volunteerStaffInputBase = (eventDay: string, contactRequired: boolean) =>
     assignedRoleIds: roleIdsField,
     name: line(VOLUNTEER_NAME_MAX),
     ...staffContactBoxes(contactRequired),
-    note: optionalLine(VOLUNTEER_NOTE_MAX),
     /** What the person told the organizers (§765): every box optional here, a date that gives an age below the minimum on the event's day refused (§773). */
     birthDate: optionalBirthDate(eventDay),
     sex: optionalSex,
@@ -1016,6 +1015,42 @@ export function guardianStandingOf(
   if (volunteer.guardianAcceptedAt) return "accepted";
   if (volunteer.guardianTokenExpiresAt && volunteer.guardianTokenExpiresAt.getTime() > now.getTime()) return "linkSent";
   return "missing";
+}
+
+/**
+ * What the organizer is offered for a volunteer whose parent has not agreed yet — one decision for the person's block and for the
+ * «Voluntari» list's row («Confirmarea minorilor din lista de voluntari»; the owner, 2026-11-11: «as vrea sa pot confirma si
+ * voluntarele minore»), so the two screens cannot drift:
+ * - `none` — an adult, a parent who agreed, or a cancelled person: nothing to ask;
+ * - `noName` — a minor with no parent's name on the row: no link and no sheet can name anybody, the name is typed in «Modifică»;
+ * - `closed` — the club's texts do not describe minors yet: the link and the paper wait (the service refuses both);
+ * - `ask` — the link by email (`send`: ready, or why it cannot go), the sheet to print and the paper record. `sent` says a link
+ *   was sent or is live: the button then reads «Trimite din nou linkul părintelui».
+ */
+export type VolunteerGuardianAsk =
+  | { kind: "none" | "noName" | "closed" }
+  | { kind: "ask"; sent: boolean; send: "ok" | "volunteerNoEmail" | "guardianNoEmail" };
+
+export function guardianAskOf(
+  volunteer: {
+    age: number | null;
+    state: "REGISTERED" | "CONFIRMED" | "CANCELLED";
+    email: string | null;
+    guardianName: string | null;
+    guardianEmail: string | null;
+    guardianAcceptedAt: Date | null;
+    guardianTokenExpiresAt: Date | null;
+    guardianRequestedAt: Date | null;
+  },
+  minorsOpen: boolean,
+  now: Date,
+): VolunteerGuardianAsk {
+  if (!isVolunteerMinor(volunteer.age) || volunteer.guardianAcceptedAt || volunteer.state === "CANCELLED") return { kind: "none" };
+  if (volunteer.guardianName === null) return { kind: "noName" };
+  if (!minorsOpen) return { kind: "closed" };
+  const sent = guardianStandingOf(volunteer, now) === "linkSent" || volunteer.guardianRequestedAt !== null;
+  const send = volunteer.email === null ? "volunteerNoEmail" : volunteer.guardianEmail === null ? "guardianNoEmail" : "ok";
+  return { kind: "ask", sent, send };
 }
 
 /**

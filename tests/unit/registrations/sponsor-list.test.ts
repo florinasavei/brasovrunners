@@ -6,7 +6,8 @@ import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/temp
 import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
 import { noticeVersionInForceAt, sharedWithSponsors, sponsorShareGate } from "@/modules/registrations/domain/sponsor-share";
 import { promotionalMaterialsMergeValues, promotionalMaterialsSharedClause } from "@/modules/registrations/promo-consent-words";
-import { buildSponsorListCsv, sponsorListFileName } from "@/modules/registrations/sponsor-list";
+import { buildSponsorListCsv, sponsorListFileName, sponsorRecipient, SPONSOR_RECIPIENT_MAX } from "@/modules/registrations/sponsor-list";
+import { copyDeleteBy, copyOverdue, listsOfDoor, recipientSuggestions, SPONSOR_COPY_DAYS, SPONSOR_RECIPIENT_SUGGESTIONS } from "@/modules/registrations/sponsor-register";
 
 /**
  * §570 — the list for sponsors (amending §562) and the public-list tick's words (amending §143):
@@ -168,3 +169,113 @@ describe("§570 the public-list tick names the list and the results", () => {
     expect(en4).not.toContain("ask you separately");
   });
 });
+
+/**
+ * §929 (amending §570, §581) — «Liste date sponsorilor»: the register's own arithmetic and its words.
+ * The read, the route's refusal and the drawing are `tests/integration/registrations/sponsor-list.test.ts`.
+ */
+describe("BR-REQ-071-01 §929 the register of the lists given", () => {
+  it("keeps the club's copy thirty days from the download — the number the notice's section 7 and the captions say", () => {
+    expect(SPONSOR_COPY_DAYS).toBe(30);
+    expect(copyDeleteBy(new Date("2026-09-10T09:00:00.000Z"))).toEqual(new Date("2026-10-10T09:00:00.000Z"));
+    // One number, said in every place a person reads it.
+    expect(section(privacyNoticeRo, "7.")).toContain(`ștearsă în cel mult ${SPONSOR_COPY_DAYS} de zile de la descărcare`);
+    expect(section(privacyNoticeEn, "7.")).toContain(`deleted within ${SPONSOR_COPY_DAYS} days of the download`);
+    expect(ro.Admin.sponsors.help).toContain(`Șterge fișierul în ${SPONSOR_COPY_DAYS} de zile.`);
+    expect(en.Admin.sponsors.help).toContain(`Delete the file in ${SPONSOR_COPY_DAYS} days.`);
+  });
+
+  it("names nobody for an empty box, spaces or control characters alone — what the route refuses", () => {
+    for (const raw of [null, "", "   ", "\t\n", String.fromCharCode(7)]) expect(sponsorRecipient(raw)).toBeNull();
+    expect(sponsorRecipient("  Sport   Shop SRL ")).toBe("Sport Shop SRL");
+    expect(sponsorRecipient("x".repeat(300))).toHaveLength(SPONSOR_RECIPIENT_MAX);
+  });
+
+  it("cuts a long name between characters: an emoji at the limit goes whole or not at all, never as a half the audit row would refuse", () => {
+    // The 120th and 121st code units are one emoji: the cut would leave its first half.
+    const cutThrough = sponsorRecipient(`${"x".repeat(SPONSOR_RECIPIENT_MAX - 1)}😀`);
+    expect(cutThrough).toBe("x".repeat(SPONSOR_RECIPIENT_MAX - 1));
+    expect(cutThrough?.isWellFormed()).toBe(true);
+    // One place earlier it fits, both halves.
+    const fits = sponsorRecipient(`${"x".repeat(SPONSOR_RECIPIENT_MAX - 2)}😀`);
+    expect(fits).toBe(`${"x".repeat(SPONSOR_RECIPIENT_MAX - 2)}😀`);
+    expect(fits).toHaveLength(SPONSOR_RECIPIENT_MAX);
+    // The row is JSON: what is kept must survive the trip.
+    expect(JSON.parse(JSON.stringify({ recipient: cutThrough }))).toEqual({ recipient: cutThrough });
+  });
+
+  it("says «termen trecut» from the day after the one the register names, on the club's clock — never during that day", () => {
+    const ZONE = "Europe/Bucharest";
+    // Downloaded on 12 September at 12:00 in Brașov: «Șterge fișierul tău până pe» reads 12 October.
+    const deleteBy = copyDeleteBy(new Date("2026-09-12T09:00:00.000Z"));
+    expect(copyOverdue(deleteBy, new Date("2026-10-11T20:00:00.000Z"), ZONE)).toBe(false);
+    // The named day itself, before and after the download's hour, up to its last minute.
+    expect(copyOverdue(deleteBy, new Date("2026-10-12T06:00:00.000Z"), ZONE)).toBe(false);
+    expect(copyOverdue(deleteBy, new Date("2026-10-12T09:01:00.000Z"), ZONE)).toBe(false);
+    expect(copyOverdue(deleteBy, new Date("2026-10-12T20:59:00.000Z"), ZONE)).toBe(false);
+    // Midnight in Brașov — 21:00 by UTC, still the 12th there.
+    expect(copyOverdue(deleteBy, new Date("2026-10-12T21:00:00.000Z"), ZONE)).toBe(true);
+    expect(copyOverdue(deleteBy, new Date("2026-10-15T09:00:00.000Z"), ZONE)).toBe(true);
+    // A file made at 01:30 in Brașov is that day's there, the day before by UTC: the day named, and judged, is Brașov's.
+    const afterMidnight = copyDeleteBy(new Date("2026-09-11T22:30:00.000Z"));
+    expect(copyOverdue(afterMidnight, new Date("2026-10-12T20:00:00.000Z"), ZONE)).toBe(false);
+    expect(copyOverdue(afterMidnight, new Date("2026-10-12T20:00:00.000Z"), "UTC")).toBe(true);
+  });
+
+  it("suggests each recipient once whatever its capitals, as last written, newest first, never a list without one", () => {
+    const lists = [{ recipient: "sport shop srl" }, { recipient: null }, { recipient: "Decathlon" }, { recipient: "Sport Shop SRL" }, { recipient: "DECATHLON" }, { recipient: "club" }];
+    expect(recipientSuggestions(lists)).toEqual(["sport shop srl", "Decathlon", "club"]);
+    expect(recipientSuggestions(lists, 2)).toEqual(["sport shop srl", "Decathlon"]);
+    expect(recipientSuggestions([])).toEqual([]);
+  });
+
+  it("suggests at most fifty recipients unless told otherwise", () => {
+    const lists = Array.from({ length: 60 }, (_, index) => ({ recipient: `Sponsor ${index}` }));
+    expect(SPONSOR_RECIPIENT_SUGGESTIONS).toBe(50);
+    expect(recipientSuggestions(lists)).toEqual(lists.slice(0, 50).map((list) => list.recipient));
+  });
+
+  it("shows an event's door its own lists and those made for every event; «Newsletter» all of them", () => {
+    const lists = [{ eventId: "autumn" }, { eventId: null }, { eventId: "winter" }, { eventId: "autumn" }];
+    expect(listsOfDoor(lists, "autumn")).toEqual([{ eventId: "autumn" }, { eventId: null }, { eventId: "autumn" }]);
+    expect(listsOfDoor(lists, "spring")).toEqual([{ eventId: null }]);
+    expect(listsOfDoor(lists)).toEqual(lists);
+  });
+
+  it("has its words in both languages: the box no longer optional, what to write when the list stays with the club, the register's headings", () => {
+    expect(ro.Admin.sponsors.recipient).toBe("Cui dai lista");
+    expect(en.Admin.sponsors.recipient).toBe("Who receives the list");
+    expect(ro.Admin.sponsors.help).toContain("Scrie cui o dai, sau „club” dacă rămâne la club.");
+    expect(en.Admin.sponsors.help).toContain("Write whom it goes to, or “club” if it stays with the club.");
+    expect(ro.Admin.sponsors.given.title).toBe("Liste date sponsorilor");
+    expect(en.Admin.sponsors.given.title).toBe("Lists given to sponsors");
+    expect(ro.Admin.sponsors.given.columns).toEqual({ recipient: "Cui", at: "Când", event: "Eveniment", count: "Persoane", file: "Fișier", actor: "Descărcată de", deleteBy: "Șterge fișierul tău până pe" });
+    expect(Object.keys(en.Admin.sponsors.given.columns)).toEqual(Object.keys(ro.Admin.sponsors.given.columns));
+    expect(Object.keys(en.Admin.sponsors.given.formats)).toEqual(["csv", "xlsx"]);
+    // The English register word for word: a file named as the other, or «past due» saying the opposite, is a different register.
+    expect(en.Admin.sponsors.recipientTitle).toBe("Write who receives the list.");
+    expect(en.Admin.sponsors.given).toEqual({
+      title: "Lists given to sponsors",
+      intro: "Every download of the list: whom you gave it to, how many people it held and the day your file must be deleted by.",
+      aside: "{lists} · latest: {recipient}, {date}",
+      everyEvent: "every event",
+      overdue: "past due: delete your file",
+      formats: { csv: "CSV", xlsx: "Excel" },
+      columns: { recipient: "To whom", at: "When", event: "Event", count: "People", file: "File", actor: "Downloaded by", deleteBy: "Delete your file by" },
+    });
+    expect(ro.Admin.sponsors.given.formats).toEqual({ csv: "CSV", xlsx: "Excel" });
+    expect(ro.Admin.sponsors.given.overdue).toBe("termen trecut: șterge fișierul tău");
+    expect(ro.Admin.sponsors.given.intro).toBe("Fiecare descărcare a listei: cui ai dat-o, câte persoane avea și până când ștergi fișierul tău.");
+    for (const catalogue of [ro, en]) {
+      expect(JSON.stringify(catalogue.Admin.sponsors)).not.toMatch(/opțional|optional/i);
+      // The guide tells the same story: the box by its name, and where the lists are read back.
+      const steps = catalogue.Admin.guide.sections.flatMap((entry) => entry.tasks.flatMap((task) => task.steps)).filter((step) => step.includes(`«${catalogue.Admin.sponsors.button}»`));
+      expect(steps).toHaveLength(2);
+      for (const step of steps) {
+        expect(step).toContain(`«${catalogue.Admin.sponsors.recipient}»`);
+        expect(step).toContain(`«${catalogue.Admin.sponsors.given.title}»`);
+      }
+    }
+  });
+});
+

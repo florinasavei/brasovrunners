@@ -282,8 +282,15 @@ jobs:
       # Only Chromium, and only its dependencies: the full install pulls three browsers.
       - run: yarn playwright install --with-deps chromium
         if: steps.pw-cache.outputs.cache-hit != 'true'
-      - run: yarn playwright install-deps chromium
+      # With the browser cached, what is left are apt packages. The runner's image already carries Chromium's
+      # libraries; what apt adds are nine font packages. On 2026-11-11 the runners could not resolve Ubuntu's
+      # package hosts for an hour: every shard stopped here ten minutes in, before any test ran, three times.
+      # So the step is bounded and its failure is a warning — a library really missing fails the first test.
+      - name: Chromium's system packages (bounded; a warning when the package archive does not answer)
         if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: |
+          timeout 150 yarn playwright install-deps chromium \
+            || echo "::warning::playwright install-deps did not finish: the package archive did not answer. Continuing with the image's own libraries."
 
       - run: yarn db:migrate
 
