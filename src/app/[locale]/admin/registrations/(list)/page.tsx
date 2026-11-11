@@ -800,16 +800,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         «Partener» (the decision on the list's column; the owner, 2026-11-11: «o coloeana separata de "partener"»): the partner's
         or sponsor's name as plain text — nothing on a row without one — for every role that reads the list; the chip «Partener:
         {name}» left the name column for it, and stays on every other screen. Sorted by the name without regard to case, the rows
-        with none last either way. Optional like its neighbours: «Coloane» hides it, the wide table drops it below `lg`, and on a
+        with none last either way. Optional like its neighbours: «Coloane» hides it; unlike the address it stays on the wide table at
+        every width it is drawn (`md` and up, its bounded 16rem keeping it narrow), so a landscape tablet sees and sets it too; on a
         phone it is a line of the card only where there is a name or a press. A long name wraps anywhere, never widening the page.
-        The press is the Administrator's, with one event chosen (`partnerRefusal`).
+        The press is the Administrator's, with one event chosen (`partnerRefusal`); its accessible name begins with the words it
+        shows («Alege…» / «Schimbă…», WCAG 2.5.3), and its dialog closes on every page drawn after a save — the render's own
+        instant in `settledKey` — so a second «unchanged» in a row closes it too.
       */
       key: "partner",
       label: t("partner.column"),
       hint: t("partner.columnHint"),
       sortable: true,
       initialDir: "asc",
-      hideBelow: "lg",
+      hideBelow: "md",
       omitEmptyOnPhone: true,
       render: (row) => {
         const press = partnerRefusal && (
@@ -819,7 +822,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             messages={partnerRefusal}
             fields={{ uiLocale: locale, registrationId: row.id, listQuery: rowReturnQueryString }}
             label={row.partnerName ? t("partner.rowChange") : t("partner.rowChoose")}
-            ariaLabel={t("partner.rowPressFor", { name: row.registeredName })}
+            ariaLabel={t(row.partnerName ? "partner.rowChangeFor" : "partner.rowPressFor", { name: row.registeredName })}
             title={t("partner.rowTitle", { name: row.registeredName })}
             help={t("partner.rowHelp")}
             choiceName={PARTNER_CHOICE_FIELD}
@@ -833,7 +836,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             max={PARTNER_NAME_MAX}
             saveLabel={t("partner.save")}
             cancelLabel={words.cancel}
-            settledKey={`${row.partnerName ?? ""}:${saved ?? ""}`}
+            settledKey={`${row.partnerName ?? ""}:${saved ?? ""}:${deadlinesNow.getTime()}`}
           />
         );
         if (!row.partnerName && !press) return null;

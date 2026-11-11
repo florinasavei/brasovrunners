@@ -12044,6 +12044,7 @@
       "rowChoose": "Choose",
       "rowChange": "Change",
       "rowPressFor": "Choose the partner for {name}",
+      "rowChangeFor": "Change the partner for {name}",
       "rowTitle": "Partner for {name}",
       "rowHelp": "Choose one of the event's partners or type a new one. Internal: the person is not told.",
       "rowChoice": "One of the event's partners",

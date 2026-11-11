@@ -77,7 +77,7 @@ export default function RowPartnerDialog({
   max: number;
   saveLabel: string;
   cancelLabel: string;
-  /** Changes when a save has landed (the row's partner, and the return's own flag): the dialog closes by itself then. */
+  /** Changes when a save has landed — the row's partner, the return's flag and the page's render instant, so two «unchanged» in a row still differ — and the dialog closes by itself then. A refusal draws no new page: it stays open. */
   settledKey: string;
 }) {
   const [open, setOpen] = useState(false);

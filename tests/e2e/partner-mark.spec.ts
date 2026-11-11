@@ -207,8 +207,10 @@ test.describe("the list's column «Partener»: seen, hidden, set from the row, f
   test.describe.configure({ timeout: 150_000 });
 
   /** The row's editor of one person, on the layout this project shows (the table's copy or the phone card's). */
-  async function openEditor(page: Page, name: string) {
-    const press = page.locator("#main").getByRole("button", { name: `Alege partenerul pentru ${name}`, exact: true }).filter({ visible: true });
+  // The press's accessible name begins with the word it shows (WCAG 2.5.3): «Alege…» on a row with no partner, «Schimbă…» on one with.
+  async function openEditor(page: Page, name: string, verb: "Alege" | "Schimbă" = "Alege") {
+    const press = page.locator("#main").getByRole("button", { name: `${verb} partenerul pentru ${name}`, exact: true }).filter({ visible: true });
+    await expect(press).toContainText(verb);
     await expect(press).toHaveCount(1);
     expect((await press.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await press.click();
@@ -266,7 +268,7 @@ test.describe("the list's column «Partener»: seen, hidden, set from the row, f
     await expect(main.getByTestId("row-partner").filter({ visible: true })).toHaveText([bakery, bakery]);
 
     // Ana's row again: a new partner typed wins over the select.
-    dialog = await openEditor(page, `Ana ${seeded.surname}`);
+    dialog = await openEditor(page, `Ana ${seeded.surname}`, "Schimbă");
     await expect(dialog.getByTestId("partner-row-choice")).toHaveValue(bakery);
     await dialog.getByTestId("partner-row-new").fill(cafe);
     await dialog.getByTestId("partner-row-save").click();

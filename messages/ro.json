@@ -12044,6 +12044,7 @@
       "rowChoose": "Alege",
       "rowChange": "Schimbă",
       "rowPressFor": "Alege partenerul pentru {name}",
+      "rowChangeFor": "Schimbă partenerul pentru {name}",
       "rowTitle": "Partenerul pentru {name}",
       "rowHelp": "Alege un partener al evenimentului sau scrie unul nou. Intern: persoana nu e anunțată.",
       "rowChoice": "Partener al evenimentului",

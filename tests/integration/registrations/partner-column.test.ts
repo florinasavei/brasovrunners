@@ -192,8 +192,8 @@ async function staff(role: StaffRole): Promise<StaffUser> {
   return user;
 }
 
-const listPage = (searchParams: Record<string, string>) =>
-  AdminRegistrationsPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve(searchParams) } as never);
+const listPage = (searchParams: Record<string, string>, locale: "ro" | "en" = "ro") =>
+  AdminRegistrationsPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve(searchParams) } as never);
 const tableOf = (tree: ReactNode) => elements(tree).find((element) => element.type === AdminTable);
 const rowsOf = (tree: ReactNode) => (tableOf(tree)?.props.rows as ListRow[]) ?? [];
 const columnOf = (tree: ReactNode, key: string) => (tableOf(tree)?.props.columns as Column[]).find((column) => column.key === key);
@@ -248,11 +248,12 @@ describe("the column «Partener» on the registrations list", () => {
     expect(column?.hint).toBe((await import("../../../messages/ro.json")).default.Admin.partner.columnHint);
     expect(column?.sortable).toBe(true);
     expect(column?.initialDir).toBe("asc");
-    // Like its optional neighbours: «Coloane» hides it, the wide table drops it below `lg`.
+    // Optional like its neighbours — «Coloane» hides it — but on the wide table at every width it is drawn (`md` and up),
+    // unlike the address, which leaves it below `lg`: a landscape tablet sees and sets the partner too.
     expect(column?.essential).toBeUndefined();
     expect(column?.primary).toBeUndefined();
-    expect(column?.hideBelow).toBe("lg");
-    expect(column?.hideBelow).toBe(columnOf(tree, "email")?.hideBelow);
+    expect(column?.hideBelow).toBe("md");
+    expect(columnOf(tree, "email")?.hideBelow).toBe("lg");
     expect(column?.omitEmptyOnPhone).toBe(true);
     // After «Eveniment», before the address.
     const keys = (tableOf(tree)?.props.columns as Column[]).map((candidate) => candidate.key);
@@ -466,7 +467,7 @@ describe("the row's own editor", () => {
       // Every row gets the same array: one read handed to all.
       expect(new Set(dialogs.map((dialog) => dialog?.props.partners)).size, role).toBe(1);
       const ana = dialogs.find((dialog) => dialog?.props.current === BAKERY);
-      expect(ana?.props.ariaLabel, role).toBe("Alege partenerul pentru Ana Pop");
+      expect(ana?.props.ariaLabel, role).toBe("Schimbă partenerul pentru Ana Pop");
       expect(ana?.props.label, role).toBe("Schimbă");
       expect(ana?.props.choiceName, role).toBe("partnerChoice");
       expect(ana?.props.boxName, role).toBe("partnerName");
@@ -477,6 +478,21 @@ describe("the row's own editor", () => {
       expect([back.get("eventId"), back.get("sort"), back.get("dir"), back.get("page"), back.get("perPage")], role).toEqual([race.id, "partner", "asc", "1", "50"]);
       const bare = dialogs.find((dialog) => dialog?.props.current === null);
       expect(bare?.props.label, role).toBe("Alege");
+      expect(bare?.props.ariaLabel, role).toMatch(/^Alege partenerul pentru (Bia|Cip|Dan) Pop$/);
+    }
+    // WCAG 2.5.3, label in name: on every row, in both languages, the press's accessible name holds the words it shows.
+    for (const locale of ["ro", "en"] as const) {
+      const tree = await listPage({ eventId: race.id, page: "1", perPage: "50" }, locale);
+      const pressed = rowsOf(tree).map((row) => elements(cellOf(tree, "partner", row.id)).find((element) => element.type === RowPartnerDialog));
+      expect(pressed.length, locale).toBeGreaterThan(0);
+      const labels = new Set<string>();
+      for (const dialog of pressed) {
+        const { label, ariaLabel } = dialog?.props as { label: string; ariaLabel: string };
+        labels.add(label);
+        expect(ariaLabel.toLocaleLowerCase(locale), locale).toContain(label.toLocaleLowerCase(locale));
+      }
+      // Both presses met: «Alege» and «Schimbă» (or "Choose" and "Change").
+      expect(labels.size, locale).toBe(2);
     }
     // With every event listed: no press (the hint says so), the names still shown, and no suggestions read.
     vi.mocked(partnerMark.listPartnerSuggestions).mockClear();
