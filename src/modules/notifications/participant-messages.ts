@@ -1,7 +1,9 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { participants } from "@/db/schema/participants";
-import { registrations } from "@/db/schema/registrations";
+import { registrationReconfirmations } from "@/db/schema/registration-reconfirmations";
+import { ACTIVE_REGISTRATION_STATUSES, registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
@@ -17,6 +19,7 @@ import { lockEventForCapacity } from "@/modules/registrations/repository";
 import { canMessageParticipants } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
+import { isReconfirmStatus } from "./domain/cannot-come";
 import { EMAIL_SAMPLE } from "./domain/email-sample";
 import {
   AUDIENCE_STATUSES,
@@ -95,6 +98,12 @@ export type SendParticipantMessageInput = {
    * day's allowance (§540); «queue», the default, leaves it to «Când pleacă emailurile».
    */
   delivery?: DeliveryChoice;
+  /**
+   * «Cere reconfirmarea» (the decision «Cere reconfirmarea»): each registration of this send in `RECONFIRM_STATUSES`
+   * gets an ask row, and its email alone carries the flag that draws «Vin» beside «Nu mai pot ajunge». Optional for the
+   * participant: nothing in a state, a place, a deadline, the allocator or the capacity formula reads the answer.
+   */
+  askReconfirm?: boolean;
 };
 
 export type SendParticipantMessageResult =
@@ -184,6 +193,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         registrationId: registrations.id,
         participantId: registrations.participantId,
         kind: registrations.kind,
+        status: registrations.status,
         locale: registrations.locale,
         recipientEmail: participants.deliveryEmail,
       })
@@ -209,16 +219,28 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       split = sendNowSplit({ recipients: rows.length, copies: copies.length });
       await assertRoomToSendNow(tx, rows.slice(0, split.now).map(() => "ORGANIZER_MESSAGE" as const), now, split.copiesNow ? copies : []);
     }
+    const askReconfirm = input.askReconfirm === true;
     const words = { subject: { ro: message.subject.ro, en: message.subject.en }, body: { ro: message.body.ro, en: message.body.en } };
+    /*
+      «Cere reconfirmarea» (the decision «Cere reconfirmarea»): the flag rides on a row, never on the send — only the rows
+      whose registration this send asks (`isReconfirmStatus` at queue time, the very test that fills `asked`) carry it,
+      beside the words, so the renderer draws «Vin» only where an ask row exists. A flag, never a token.
+    */
+    const askingWords = { ...words, askReconfirm: true };
     // Marked for the queue panel's «Pleacă acum» (§540) — only a row this press sends now.
     const nowPayload = markedForNow(words, delivery);
+    const askingNowPayload = markedForNow(askingWords, delivery);
 
     let real = 0;
     let test = 0;
     let sentNow = 0;
+    // The registrations this send asks (the decision «Cere reconfirmarea»), test ones counted apart as every number here.
+    const asked: string[] = [];
+    let askedTest = 0;
     for (const [index, row] of rows.entries()) {
       const leavesNow = delivery === "now" && index < split.now;
-      const payload = leavesNow ? nowPayload : words;
+      const asks = askReconfirm && isReconfirmStatus(row.status);
+      const payload = asks ? (leavesNow ? askingNowPayload : askingWords) : leavesNow ? nowPayload : words;
       const inserted = await enqueueEmail(tx, {
         participantId: row.participantId,
         registrationId: row.registrationId,
@@ -238,8 +260,23 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       if (leavesNow) sentNow += 1;
       if (row.kind === "TEST") test += 1;
       else real += 1;
+      if (asks) {
+        asked.push(row.registrationId);
+        if (row.kind === "TEST") askedTest += 1;
+      }
     }
     if (real + test === 0) return { kind: "duplicate" } as const;
+    /*
+      The asks (the decision «Cere reconfirmarea»): one row per registration this send asked, in the send's own
+      transaction — so the send, its messages and its asks commit together. The answer changes nothing about the
+      registration; the backoffice alone reads it.
+    */
+    if (asked.length > 0) {
+      await tx
+        .insert(registrationReconfirmations)
+        .values(asked.map((registrationId) => ({ registrationId, eventId: input.eventId, sendId: input.sendId, askedAt: now })))
+        .onConflictDoNothing();
+    }
     // The club's one copy of this send (§419): the words and how many real participants it reached.
     await enqueueBulkClubCopies(tx, {
       messageType: "ORGANIZER_MESSAGE",
@@ -267,6 +304,8 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         test,
         subject: { ro: message.subject.ro, en: message.subject.en },
         ...(delivery === "now" ? { delivery: "now", bypassedSchedule: true } : {}),
+        // «Cere reconfirmarea» (the decision «Cere reconfirmarea»): the tick, and how many were asked — real and test apart.
+        ...(askReconfirm ? { askReconfirm: true, asked: asked.length - askedTest, askedTest } : {}),
       },
       now,
     });
@@ -279,19 +318,48 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
   return result;
 }
 
+/**
+ * What the people a send asked did since (the decision «Cere reconfirmarea»), real registrations only (§12.6). The first
+ * that matches wins, per ask: «Au anulat» — cancelled at or after the ask, by the person or by an Administrator (decided
+ * for the owner: any cancellation after the ask); «Au reconfirmat» — still registered and pressed «Vin» on any ask of
+ * the registration, this send's or another's; «N-au răspuns» — still registered and answered none. An expired registration is in none of the three. Information for the organizers,
+ * never a state.
+ */
+export type ReconfirmAnswers = { yes: number; cancelled: number; none: number };
+
+/**
+ * How far a send has left (the decision «Cere reconfirmarea», part two): its rows to the real registrations, read from
+ * the outbox — sent, bounced or complained count as left; pending or being sent, as waiting; failed apart. All zero
+ * once the sent rows were swept by the retention job, and the line is not drawn then.
+ */
+export type SendProgress = { left: number; waiting: number; failed: number };
+
 export type SentParticipantMessage = {
   at: Date;
+  /** The send's own id, from its audit row; null for a hand-made row that carries none. */
+  sendId: string | null;
   subject: { ro: string; en: string };
   audience: ParticipantMessageAudience | null;
   recipients: number;
   test: number;
   /** The sender's name, or null when their staff account has since been removed. */
   senderName: string | null;
+  /** «Cere reconfirmarea» was ticked on this send. */
+  askReconfirm: boolean;
+  /** The three numbers of a send that asked; null for one that did not. */
+  answers: ReconfirmAnswers | null;
+  progress: SendProgress;
 };
+
+/** The registration states that still stand — the two «still registered» buckets read them. */
+const STANDING = sql.raw(ACTIVE_REGISTRATION_STATUSES.map((status) => `'${status}'`).join(", "));
 
 /**
  * "Mesaje trimise": the event's sends, newest first, read from their audit rows — the date, the
  * subject, the group, how many and who. Nothing here says who received one; the rows never did.
+ *
+ * Two grouped reads for the whole history, never one per send (the decision «Cere reconfirmarea»): the answers of the
+ * sends that asked, and each send's progress through the outbox — test registrations left out of both.
  */
 export async function listParticipantMessages<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -305,18 +373,99 @@ export async function listParticipantMessages<T extends Record<string, unknown>>
     .where(and(eq(auditLogs.entityType, "event"), eq(auditLogs.entityId, eventId), eq(auditLogs.action, "event.participant_message_sent")))
     .orderBy(desc(auditLogs.createdAt))
     .limit(limit);
-  return rows.map((row) => {
-    const metadata = (row.metadata ?? {}) as { audience?: unknown; recipients?: unknown; test?: unknown; subject?: { ro?: unknown; en?: unknown } };
+  const read = rows.map((row) => {
+    const metadata = (row.metadata ?? {}) as {
+      sendId?: unknown;
+      audience?: unknown;
+      recipients?: unknown;
+      test?: unknown;
+      subject?: { ro?: unknown; en?: unknown };
+      askReconfirm?: unknown;
+    };
     const words = (value: unknown) => (typeof value === "string" ? value : "");
     return {
       at: row.at,
+      sendId: typeof metadata.sendId === "string" && UUID.test(metadata.sendId) ? metadata.sendId : null,
       subject: { ro: words(metadata.subject?.ro), en: words(metadata.subject?.en) },
       audience: isParticipantMessageAudience(metadata.audience) ? metadata.audience : null,
       recipients: typeof metadata.recipients === "number" ? metadata.recipients : 0,
       test: typeof metadata.test === "number" ? metadata.test : 0,
       senderName: row.senderName ?? null,
+      askReconfirm: metadata.askReconfirm === true,
     };
   });
+  const sendIds = read.flatMap((entry) => (entry.sendId ? [entry.sendId] : []));
+  const askingIds = read.flatMap((entry) => (entry.sendId && entry.askReconfirm ? [entry.sendId] : []));
+  const [answers, progress] = await Promise.all([readReconfirmAnswers(db, eventId, askingIds), readSendProgress(db, sendIds)]);
+  return read.map((entry) => ({
+    ...entry,
+    answers: entry.askReconfirm ? (answers.get(entry.sendId ?? "") ?? { yes: 0, cancelled: 0, none: 0 }) : null,
+    progress: progress.get(entry.sendId ?? "") ?? { left: 0, waiting: 0, failed: 0 },
+  }));
+}
+
+/** The three numbers of each asking send, one grouped read (the decision «Cere reconfirmarea»). Real registrations only. */
+async function readReconfirmAnswers<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  sendIds: readonly string[],
+): Promise<Map<string, ReconfirmAnswers>> {
+  if (sendIds.length === 0) return new Map();
+  const cancelledAfter = sql`(${registrations.status} = 'CANCELLED' and ${registrations.cancelledAt} >= ${registrationReconfirmations.askedAt})`;
+  const standing = sql`(${registrations.status} in (${STANDING}))`;
+  /*
+    One rule on every screen (the decision «Cere reconfirmarea»): a registration has re-confirmed when ANY of its asks is
+    answered — the list's chip, its filter and the export read the same. So a person who pressed «Vin» after one send and
+    stays silent after the next counts under «Au reconfirmat» on both rows. A correlated EXISTS inside the FILTER keeps it
+    one grouped read.
+  */
+  const answeredAny = sql`exists (select 1 from ${registrationReconfirmations} as answered where answered.registration_id = ${registrations.id} and answered.reconfirmed_at is not null)`;
+  const rows = await db
+    .select({
+      sendId: registrationReconfirmations.sendId,
+      yes: sql<number>`count(*) filter (where ${standing} and ${answeredAny})::int`,
+      cancelled: sql<number>`count(*) filter (where ${cancelledAfter})::int`,
+      none: sql<number>`count(*) filter (where ${standing} and not ${answeredAny})::int`,
+    })
+    .from(registrationReconfirmations)
+    .innerJoin(registrations, eq(registrations.id, registrationReconfirmations.registrationId))
+    .where(
+      and(
+        eq(registrationReconfirmations.eventId, eventId),
+        inArray(registrationReconfirmations.sendId, [...sendIds]),
+        eq(registrations.kind, "REAL"),
+      ),
+    )
+    .groupBy(registrationReconfirmations.sendId);
+  return new Map(rows.map((row) => [row.sendId, { yes: Number(row.yes), cancelled: Number(row.cancelled), none: Number(row.none) }]));
+}
+
+/**
+ * Each send's progress through the outbox (the decision «Cere reconfirmarea», part two): its rows keyed
+ * `organizer-message:<send id>:registration:<id>`, grouped by the send, the club's copy and test registrations left out.
+ */
+async function readSendProgress<T extends Record<string, unknown>>(db: Database<T>, sendIds: readonly string[]): Promise<Map<string, SendProgress>> {
+  if (sendIds.length === 0) return new Map();
+  const send = sql<string>`split_part(${emailOutbox.idempotencyKey}, ':', 2)`;
+  const rows = await db
+    .select({
+      sendId: send,
+      left: sql<number>`count(*) filter (where ${emailOutbox.status} in ('SENT', 'BOUNCED', 'COMPLAINED'))::int`,
+      waiting: sql<number>`count(*) filter (where ${emailOutbox.status} in ('PENDING', 'PROCESSING'))::int`,
+      failed: sql<number>`count(*) filter (where ${emailOutbox.status} = 'FAILED')::int`,
+    })
+    .from(emailOutbox)
+    .leftJoin(registrations, eq(registrations.id, emailOutbox.registrationId))
+    .where(
+      and(
+        eq(emailOutbox.messageType, "ORGANIZER_MESSAGE"),
+        sql`${emailOutbox.idempotencyKey} like 'organizer-message:%:registration:%'`,
+        inArray(send, [...sendIds]),
+        sql`coalesce(${registrations.kind}::text, 'REAL') <> 'TEST'`,
+      ),
+    )
+    .groupBy(send);
+  return new Map(rows.map((row) => [row.sendId, { left: Number(row.left), waiting: Number(row.waiting), failed: Number(row.failed) }]));
 }
 
 export type ParticipantMessagePreview = {
@@ -340,7 +489,14 @@ export type ParticipantMessagePreview = {
 export async function previewParticipantMessage<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
-  input: { eventId: string; locale: Locale; subject: { ro?: string | null; en?: string | null }; body: { ro?: string | null; en?: string | null } },
+  input: {
+    eventId: string;
+    locale: Locale;
+    subject: { ro?: string | null; en?: string | null };
+    body: { ro?: string | null; en?: string | null };
+    /** «Cere reconfirmarea» as the box stands: the preview draws «Vin» beside «Nu mai pot ajunge» (the decision «Cere reconfirmarea»). */
+    askReconfirm?: boolean;
+  },
 ): Promise<ParticipantMessagePreview> {
   if (!canMessageParticipants(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not write to an event's participants`);
@@ -392,6 +548,13 @@ export async function previewParticipantMessage<T extends Record<string, unknown
     replyTo,
     feedbackLink: feedbackOpen ? howItWentUrl(locale, details.slug ?? null, day) : contactOf(locale),
     feedbackLinkOther: feedbackOpen ? howItWentUrl(other, otherDetails?.slug ?? null, day) : contactOf(other),
+    /*
+      The buttons a registrant's copy carries (§558; the decision «Cere reconfirmarea»): «Nu mai pot ajunge» always, «Vin»
+      when the box is ticked — both on an inert example link, as every `/admin/emails` preview's (`email-copy-fields.ts`):
+      no token is minted, so nothing in the preview can be acted on.
+    */
+    cannotComeUrl: `${env.APP_BASE_URL}/${locale}/EXAMPLE#cancel`,
+    ...(input.askReconfirm === true ? { reconfirmUrl: `${env.APP_BASE_URL}/${locale}/EXAMPLE#reconfirm` } : {}),
     ...(words.subject[locale] ? { organizerSubject: words.subject[locale] } : {}),
     ...(words.subject[other] ? { organizerSubjectOther: words.subject[other] } : {}),
     ...(words.body[locale] ? { organizerBody: words.body[locale] } : {}),

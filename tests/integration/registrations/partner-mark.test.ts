@@ -574,19 +574,21 @@ describe("the registrations' Excel and CSV", () => {
       const { rows } = readSheet(Buffer.from(await (await exportRegistrations(new Request(url(event.id, "&format=xlsx")))).arrayBuffer()));
       const header = rows[0] as string[];
       expect(header.at(-1), role).toBe("Note interne");
-      expect(header.at(-2), role).toBe("Partener");
+      // «Reconfirmat» (the decision «Cere reconfirmarea») between «Partener» and the notes.
+      expect(header.at(-2), role).toBe("Reconfirmat");
+      expect(header.at(-3), role).toBe("Partener");
       const cell = (name: string) => rows.find((row) => row?.[header.indexOf("Name")] === name)?.[header.indexOf("Partener")] ?? "";
       expect(cell("Ana Munteanu"), role).toBe(PARTNER);
       expect(cell("Bia Munteanu"), role).toBe("");
       const csv = await (await exportRegistrations(new Request(url(event.id)))).text();
       const [csvHeader, ...lines] = csv.split("\r\n");
-      expect(csvHeader.split(",").slice(-2), role).toEqual(["Partener", "Note interne"]);
-      expect(lines.find((line) => line.includes("Ana Munteanu"))?.split(",").at(-2), role).toBe(PARTNER);
+      expect(csvHeader.split(",").slice(-3), role).toEqual(["Partener", "Reconfirmat", "Note interne"]);
+      expect(lines.find((line) => line.includes("Ana Munteanu"))?.split(",").at(-3), role).toBe(PARTNER);
     }
     // In English, its English word.
     state.actor = admin;
     const english = readSheet(Buffer.from(await (await exportRegistrations(new Request(url(event.id, "&format=xlsx&lang=en")))).arrayBuffer()));
-    expect((english.rows[0] as string[]).slice(-2)).toEqual(["Partner", "Internal notes"]);
+    expect((english.rows[0] as string[]).slice(-3)).toEqual(["Partner", "Reconfirmed", "Internal notes"]);
   });
 
   it("follows the list's filter: the file is the rows on screen", async () => {
@@ -698,7 +700,10 @@ describe("the migration and its CHECKs", () => {
 
   it("is 0199, expand only: three nullable columns and their three CHECKs, nothing dropped or rewritten", () => {
     const journal = JSON.parse(readFileSync(path.join(MIGRATIONS, "meta", "_journal.json"), "utf8")) as { entries: { tag: string }[] };
-    expect(journal.entries.at(-1)?.tag).toBe("0199_partner_mark");
+    // One entry of the chain, right after the address change's; later migrations follow it (0200, «Cere reconfirmarea»).
+    const tags = journal.entries.map((entry) => entry.tag);
+    expect(tags).toContain("0199_partner_mark");
+    expect(tags.indexOf("0199_partner_mark")).toBe(tags.indexOf("0198_registration_address_changed") + 1);
     const statements = readFileSync(path.join(MIGRATIONS, "0199_partner_mark.sql"), "utf8")
       .split("\n")
       .filter((line) => !line.startsWith("--"))

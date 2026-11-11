@@ -27,7 +27,7 @@ import { env } from "@/shared/config/env";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { type EventForecast, forecastPlaceName } from "@/modules/weather/domain/forecast";
 import { weatherLabel, weatherSpanWords } from "@/modules/weather/words";
-import { CANNOT_COME_GLYPH_PATH, CANNOT_COME_MESSAGES } from "./domain/cannot-come";
+import { CANNOT_COME_GLYPH_PATH, CANNOT_COME_MESSAGES, RECONFIRM_GLYPH_PATH } from "./domain/cannot-come";
 import type { HoldLapsedNext } from "./domain/hold-lapsed";
 import { legalTemplateNames, legalTemplatesWords } from "./legal-templates-words";
 import { type ShopOrderFacts, shopOrderLine, shopOrderLines, shopOrderTitle } from "./shop-order-words";
@@ -88,6 +88,12 @@ export type TemplateContent = {
    * a club copy (§320).
    */
   cannotCome?: { label: string; url: string; note: string };
+  /**
+   * «Vin» / "I'm coming" (the decision «Cere reconfirmarea»): on an organizer's message whose send ticked «Cere
+   * reconfirmarea», a full-width filled button in the club's blue just above «Nu mai pot ajunge», to the same manage
+   * page's `#reconfirm`, and one plain sentence under it saying it is optional. Never on a club copy (§320).
+   */
+  reconfirm?: { label: string; url: string; note: string };
   /** Further links after the action — the signed declaration as a PDF (§95). */
   links?: { label: string; url: string }[];
   /** Present on the confirmation: the QR the participant shows to pick up their number. */
@@ -521,6 +527,7 @@ export function renderContent(
     ...(content.eventFacts ? ["", ...content.eventFacts.text.split("\n")] : []),
     ...(content.image ? ["", `${content.image.caption}: ${content.image.url}`] : []),
     ...(content.action && !actionEarly ? ["", ...actionText] : []),
+    ...(content.reconfirm ? ["", `${content.reconfirm.label}: ${content.reconfirm.url}`, content.reconfirm.note] : []),
     ...(content.cannotCome ? ["", `${content.cannotCome.label}: ${content.cannotCome.url}`, content.cannotCome.note] : []),
     ...(content.links ?? []).map((link) => `${link.label}: ${link.url}`),
     "",
@@ -549,6 +556,21 @@ export function renderContent(
         ]
       : []),
     ...(actionEarly ? [] : actionHtml),
+    /*
+      «Vin» (the decision «Cere reconfirmarea»): the answer the club asked for, filled in the club's blue so it reads as
+      the message's point, just above «Nu mai pot ajunge» — the same width, the same 48 pixels at least, its glyph a
+      hosted PNG (`alt=""`), and its one sentence saying it is optional.
+    */
+    ...(content.reconfirm
+      ? [
+          `<div data-email-part="reconfirm" style="margin:20px 0">` +
+            `<a href="${content.reconfirm.url}" style="display:block;box-sizing:border-box;width:100%;text-align:center;background:${COLOR.blueInk};color:${COLOR.surface};text-decoration:none;font-weight:700;font-size:16px;line-height:20px;padding:14px 16px;border:2px solid ${COLOR.blueInk};border-radius:10px">` +
+            `<img src="${env.APP_BASE_URL}${RECONFIRM_GLYPH_PATH}" alt="" width="20" height="20" style="display:inline-block;width:20px;height:20px;vertical-align:-4px;margin:0 8px 0 0;border:0">` +
+            `${escapeHtml(content.reconfirm.label)}</a>` +
+            `<p style="margin:8px 0 0;text-align:center;color:${COLOR.inkMuted};font-size:14px;line-height:1.4">${escapeHtml(content.reconfirm.note)}</p>` +
+            `</div>`,
+        ]
+      : []),
     /*
       «Nu mai pot ajunge» (§558; the owner: «în fiecare mail trebuie să fie clar butonul»): the whole
       card's width, so a thumb finds it on a phone and the eye on a desktop, outlined in the club's
@@ -991,6 +1013,12 @@ export type TemplateData = {
    * address; drawn only on those, and never on a club copy (§320).
    */
   cannotComeUrl?: string;
+  /**
+   * «Vin» (the decision «Cere reconfirmarea»): the same manage page at `#reconfirm`, on the same token as
+   * `cannotComeUrl`. Set by the renderer only on an organizer's message whose send ticked «Cere reconfirmarea», for a
+   * registration in `RECONFIRM_STATUSES` (`reconfirmApplies`); drawn only there, and never on a club copy (§320).
+   */
+  reconfirmUrl?: string;
   /**
    * The public participant list's own switch, on the confirmation (BR-REQ-039-01; `DECISIONS.md`
    * §143): its own token, read at send time. `listed` is whether the name is on the list today,
@@ -2647,6 +2675,11 @@ const T = {
       label: "Nu mai pot ajunge",
       note: "Locul se eliberează pentru altcineva.",
     },
+    /** «Vin» (the decision «Cere reconfirmarea»), on a send that asked, and its one sentence: the answer is optional. */
+    reconfirm: {
+      label: "Vin",
+      note: "Ne spui că vii. Nu e obligatoriu.",
+    },
     /** Under "you are already registered", on a re-send for a slip (§446): the one way to register somebody else. */
     anotherPersonHint: "Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.",
     /** In front of the verification email re-sent by itself (§653): why it came, and that the deadline did not move. */
@@ -3515,6 +3548,10 @@ const T = {
       label: "I can't make it any more",
       note: "Your place goes to someone else.",
     },
+    reconfirm: {
+      label: "I'm coming",
+      note: "Tells us you are coming. It is optional.",
+    },
     anotherPersonHint: "If you want to register someone else, send the form with that person's full name and birth date.",
     /** In front of the verification email re-sent by itself (§653): why it came, and that the deadline did not move. */
     confirmationRetry: (deadline: string) =>
@@ -3965,6 +4002,8 @@ export function buildTemplateContent(
       manageUrl: undefined,
       // «Nu mai pot ajunge» is the participant's own cancel (§558): never in a club mailbox.
       cannotComeUrl: undefined,
+      // «Vin» (the decision «Cere reconfirmarea») is the participant's own answer, on the same token: never in a club mailbox.
+      reconfirmUrl: undefined,
       listConsentUrl: undefined,
       declarationPdfUrl: undefined,
       checkinCode: undefined,
@@ -4428,6 +4467,14 @@ export function buildTemplateContent(
       // persoană» sits beside it, and a second "no" there would cancel the person already registered.
       (messageType !== "REGISTER_ANOTHER_PERSON" || familySittingShape)
         ? { label: copy.cannotCome.label, url: data.cannotComeUrl, note: copy.cannotCome.note }
+        : undefined,
+    /*
+      «Vin» (the decision «Cere reconfirmarea»): only on an organizer's message, only beside «Nu mai pot ajunge» and only
+      with the link the renderer set for a send that asked — never on a club copy, whose data lost it above (§320).
+    */
+    reconfirm:
+      !clubCopy && messageType === "ORGANIZER_MESSAGE" && data.cannotComeUrl && data.reconfirmUrl
+        ? { label: copy.reconfirm.label, url: data.reconfirmUrl, note: copy.reconfirm.note }
         : undefined,
     image: entry.image?.(data),
     eventFacts: factsBlock,

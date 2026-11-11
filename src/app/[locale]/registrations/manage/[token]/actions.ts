@@ -8,6 +8,7 @@ import { isSelfServiceField, withdrawFromManageLink } from "@/modules/registrati
 import { setListConsentFromManageLink } from "@/modules/registrations/list-consent";
 import { parseCancelReason } from "@/modules/registrations/domain/cancel-reason";
 import { setPromoConsentFromManageLink } from "@/modules/registrations/promo-consent";
+import { reconfirmFromManageLink } from "@/modules/registrations/reconfirmation";
 import { setResultsNameConsentFromManageLink } from "@/modules/registrations/results-consent";
 import { checkInSelf, completeAnswersFromManageLink, consumeAndCancel } from "@/modules/registrations/token-actions";
 import { answersRefusalParam, readPostedAnswers } from "@/modules/registrations/complete-answers";
@@ -144,6 +145,30 @@ export async function setResultsNameConsentFromManageAction(form: FormData): Pro
     redirect(result.ok ? `${path}?results=1${who}#results` : `${path}?invalid=1`);
   } catch (error) {
     if (isDomainError(error)) redirect(`${path}?results=0${who}#results`);
+    throw error;
+  }
+}
+
+/**
+ * «Da, vin la cursă» from the participant's own link (the decision «Cere reconfirmarea»), per person like the switches
+ * above: the token read, never spent. Records the answer once — a second press lands on the same success and writes
+ * nothing. A registration that no longer answers (cancelled, expired, an offer, the event started or cancelled) is
+ * refused with nothing written; a link the registration has left is the refused link.
+ */
+export async function reconfirmFromManageAction(form: FormData): Promise<void> {
+  const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
+  const token = String(form.get("token") ?? "");
+  const person = personOf(form);
+  const path = getPathname({ locale, href: { pathname: "/registrations/manage/[token]", params: { token } } });
+  const who = person ? `&person=${encodeURIComponent(person)}` : "";
+
+  try {
+    const result = await reconfirmFromManageLink(getDb(), token, new Date(), person);
+    redirect(result.ok ? `${path}?reconfirm=1${who}#reconfirm` : `${path}?invalid=1`);
+  } catch (error) {
+    if (isDomainError(error) && error.code === "VALIDATION_ERROR") redirect(`${path}?reconfirm=0${who}#reconfirm`);
+    // A person the link does not manage: nothing was written, and the page says the press failed.
+    if (isDomainError(error)) redirect(`${path}?invalid=1`);
     throw error;
   }
 }

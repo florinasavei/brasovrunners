@@ -4,7 +4,7 @@ import { isClubRunner } from "@/modules/registrations/domain/club-runner";
 import { sexOfCell } from "@/modules/registrations/domain/sex";
 import { ageBandOf, statisticsOf, statisticsWordsFrom, type StatisticsWords } from "@/modules/registrations/statistics";
 import { buildRegistrationsWorkbook, REGISTRATION_SHEET_HEADERS, type RegistrationSheetRow } from "@/modules/registrations/workbook";
-import { PARTNER_HEADER_DEFAULT } from "@/modules/registrations/csv";
+import { PARTNER_HEADER_DEFAULT, RECONFIRMED_HEADER_DEFAULT } from "@/modules/registrations/csv";
 import { CLUB_NAME } from "@/theme/brand";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -230,8 +230,8 @@ describe("§787 the footer's place and typing in the file", () => {
     const { rows } = readSheet(buffer);
     expect(rows).toHaveLength(1 + 9);
     expect(JSON.stringify(rows)).not.toContain("Statistici");
-    // The fixed columns and «Partener» («De la parteneri»), which every file carries.
-    expect(rows[0]).toEqual([...REGISTRATION_SHEET_HEADERS, PARTNER_HEADER_DEFAULT]);
+    // The fixed columns, «Partener» («De la parteneri») and «Reconfirmat» (the decision «Cere reconfirmarea»), which every file carries.
+    expect(rows[0]).toEqual([...REGISTRATION_SHEET_HEADERS, PARTNER_HEADER_DEFAULT, RECONFIRMED_HEADER_DEFAULT]);
   });
 
   it("writes a footer of zeros for a file with no registrations, never an error", async () => {

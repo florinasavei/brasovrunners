@@ -15,6 +15,7 @@ import {
 import type { Locale } from "@/i18n/routing";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { STAFF_RESERVE_HELD_ERROR } from "@/modules/notifications/domain/bulk";
 import { departureOf } from "@/modules/notifications/domain/departure";
 import type { OutboxDelivery } from "@/modules/notifications/outbox-delivery";
 import { departureContextOf, departureWords } from "@/modules/notifications/ui/departure-words";
@@ -322,10 +323,16 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
                 >
                   {departure.text}
                 </Typography>
-                {row.lastError && (
-                  <Typography variant="caption" color="error" component="p" sx={{ mt: 0.5, wordBreak: "break-word" }}>
-                    {t("emails.queue.lastError", { error: row.lastError })}
+                {row.lastError === STAFF_RESERVE_HELD_ERROR ? (
+                  <Typography variant="caption" component="p" sx={{ mt: 0.5 }} data-testid="outbox-reserve-held">
+                    {t("emails.queue.staffReserveHeld")}
                   </Typography>
+                ) : (
+                  row.lastError && (
+                    <Typography variant="caption" color="error" component="p" sx={{ mt: 0.5, wordBreak: "break-word" }} data-testid="outbox-row-error">
+                      {t("emails.queue.lastError", { error: row.lastError })}
+                    </Typography>
+                  )
                 )}
               </Box>
             );

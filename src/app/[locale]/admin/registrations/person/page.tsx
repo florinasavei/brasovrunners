@@ -222,6 +222,28 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
               </Box>
               <Divider />
               {/*
+                «Cere reconfirmarea» (the decision «Cere reconfirmarea»; art. 15 GDPR): each ask of an organizer's message and,
+                when the person pressed «Vin», when — the registration's own rows, erased with it.
+              */}
+              <Box component="section" data-testid="person-reconfirmations">
+                <Typography variant="h3" sx={{ ...HEADING_SX[3], mb: 1 }}>
+                  {t("person.reconfirmations", { count: data.reconfirmations.length })}
+                </Typography>
+                {data.reconfirmations.length === 0 ? (
+                  <Typography variant="body2">{t("person.none")}</Typography>
+                ) : (
+                  <Stack spacing={0.5}>
+                    {data.reconfirmations.map((ask, index) => (
+                      <Typography key={index} variant="body2" data-testid="person-reconfirmation">
+                        {ask.eventTitle ?? ask.eventId} · {t("reconfirm.personAsked", { asked: show(ask.askedAt) })}
+                        {ask.reconfirmedAt ? ` · ${t("reconfirm.personAnswered", { at: show(ask.reconfirmedAt) })}` : ""}
+                      </Typography>
+                    ))}
+                  </Stack>
+                )}
+              </Box>
+              <Divider />
+              {/*
                 «Lista internă de așteptare» (§854, §876; art. 15 GDPR): the lines written down with this address — the event, the name and the
                 address as typed, the organizers' note and who wrote it as a role (§777) — erased here on request (art. 17). They hold no place.
               */}

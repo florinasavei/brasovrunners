@@ -39,13 +39,13 @@ import { bulkCopyRecipients, declarationPdfAudience, isClubCopy, isParticipantMe
 import { type CalendarPart, calendarPartFor } from "./domain/calendar-part";
 import { renderCalendarPart } from "./calendar-part";
 import { calendarRsvpToForSending } from "./calendar-rsvp";
-import { CANNOT_COME_MESSAGES, cannotComeApplies, cannotComeUrlOf } from "./domain/cannot-come";
+import { CANNOT_COME_MESSAGES, cannotComeApplies, cannotComeUrlOf, reconfirmApplies, reconfirmUrlOf } from "./domain/cannot-come";
 import { CONFIRMATION_RETRY_LEAST_LEFT_MS, isConfirmationRetry } from "./domain/automatic-sends";
 import { type HoldLapsedNext, holdLapsedNext } from "./domain/hold-lapsed";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { declarationAsksMinorToSign } from "@/modules/legal-documents/repository";
 import { missingAnswers } from "@/modules/registrations/missing-answers";
-import { readOrganizerMessagePayload } from "./domain/organizer-message";
+import { readOrganizerAskReconfirm, readOrganizerMessagePayload } from "./domain/organizer-message";
 import { registrationStatusWords } from "./domain/registration-status-words";
 import { readEmailCopyForSending } from "./email-copy";
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
@@ -1667,8 +1667,23 @@ async function renderRow(
         now,
       })
     ) {
+      /*
+        «Vin» (the decision «Cere reconfirmarea»): the cancel's sibling on the same token, to the same page's `#reconfirm`,
+        only on an organizer's message whose own row carries the ask's flag — set only on a row the send wrote an ask for —
+        and only for a registration still asked when it renders (`reconfirmApplies`). No new token, no new purpose: the page reads the manage token and never spends it.
+      */
+      const reconfirm = reconfirmApplies({
+        askReconfirm: row.messageType === "ORGANIZER_MESSAGE" && readOrganizerAskReconfirm(row.payloadJson),
+        messageType: row.messageType,
+        clubCopy,
+        recipientParticipantId: row.participantId,
+        registration: cannotComeFor,
+        event: eventState,
+        now,
+      });
       if (data.manageUrl && !familyConfirmed && cannotComeFor.id === row.registrationId) {
         data.cannotComeUrl = cannotComeUrlOf(data.manageUrl);
+        if (reconfirm) data.reconfirmUrl = reconfirmUrlOf(data.manageUrl);
       } else if (familyConfirmed && actionUrl) {
         data.cannotComeUrl = actionUrl;
       } else if (familySitting && data.familyMineUrl) {
@@ -1682,7 +1697,10 @@ async function renderRow(
           now,
         });
         const path = getPathname({ locale, href: { pathname: ROUTE_BY_PURPOSE.MANAGE_REGISTRATION, params: { token: issued.secret } } });
-        data.cannotComeUrl = cannotComeUrlOf(`${env.APP_BASE_URL}${path}`);
+        const base = `${env.APP_BASE_URL}${path}`;
+        data.cannotComeUrl = cannotComeUrlOf(base);
+        // The organizer's message lands here (it mints no token of its own): «Vin» on the same one.
+        if (reconfirm && cannotComeFor.id === row.registrationId) data.reconfirmUrl = reconfirmUrlOf(base);
       }
     }
   }

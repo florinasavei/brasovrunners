@@ -12,6 +12,7 @@ import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { readClubNotices } from "./club-notices";
 import {
+  BULK_CLUB_COPY_MESSAGES,
   BULK_COPY_RECIPIENTS,
   type BulkClubCopyMessage,
   CLUB_COPY_FLAG,
@@ -20,12 +21,13 @@ import {
   isClubCopy,
   isCopiedPerMessage,
   isParticipantMessage,
+  isStaffSendMessage,
   participantMessageBcc,
 } from "./domain/club-notices";
 import { enhancedStatusIn, type RejectionCause, rejectionCause } from "./domain/rejection-cause";
 import { isParticipantMeant, lockParticipantFacts, noteSentAgain, settleDelivery, settleRejection } from "./delivery-facts";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
-import { readBulkLimit } from "./bulk-budget";
+import { readBulkLimit, readStaffLimit } from "./bulk-budget";
 import { readEmailPlan } from "./email-plan";
 import { readMailgunHour } from "./hourly-pace";
 import { RATE_PAUSE_ERROR_PREFIX } from "./domain/hourly-pace";
@@ -42,7 +44,7 @@ import { applyDeadlineRebase, type DeadlineRebase, planDeadlineRebase } from "./
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { forgetUnsentVolunteerAgreementLink } from "@/modules/volunteers/unsent-link";
-import { BULK_MESSAGE_TYPES, isBulkMessage } from "./domain/bulk";
+import { BULK_MESSAGE_TYPES, isBulkMessage, STAFF_RESERVE_HELD_ERROR } from "./domain/bulk";
 import { RELAY_MESSAGE_TYPES } from "./domain/relay";
 import { drainOutboxAfterResponse } from "./drain";
 import { pressStamp } from "./press";
@@ -472,6 +474,12 @@ async function claimOutboxBatchWithStop(
      */
     bulkLimit?: number | null;
     /**
+     * The most staff-send messages (`BULK_CLUB_COPY_MESSAGES`) this batch may take on Mailgun's road (the decision «Cere
+     * reconfirmarea», part two, `readStaffLimit`); `null` or absent is no limit. Either way they come after every
+     * registration's own message and before the bulk ones, on each road. Gmail's road is not held to it.
+     */
+    staffLimit?: number | null;
+    /**
      * Only these rows (§540): a backoffice press that sends its own message now, past the scheduled
      * pass — never the rest of the queue. Still only a row the claim would take (PENDING and due, or a
      * stale PROCESSING): a row already sent, bounced or failed is never sent again by this path (§39).
@@ -489,6 +497,7 @@ async function claimOutboxBatchWithStop(
   // The setting once per claim, before the transaction: one primary-key lookup (`readEmailPlan`).
   const hourlyAllowance = params.hourlyAllowance !== undefined ? params.hourlyAllowance : (await readEmailPlan(db)).hourlyAllowance;
   const bulkLimit = params.bulkLimit ?? null;
+  const staffLimit = params.staffLimit ?? null;
   const staleBefore = new Date(now.getTime() - PROCESSING_LOCK_TIMEOUT_MS);
   // A visitor’s message and the road notice (§778) are the relay’s: no template, no participant, a road of their own.
   const notRelay = notInArray(emailOutbox.messageType, [...RELAY_MESSAGE_TYPES]);
@@ -501,6 +510,8 @@ async function claimOutboxBatchWithStop(
   );
   const due = params.ids ? and(claimable, inArray(emailOutbox.id, [...params.ids])) : claimable;
   const bulk = inArray(emailOutbox.messageType, [...BULK_MESSAGE_TYPES]);
+  // The staff sends to many (the decision «Cere reconfirmarea»): the middle tier, its club copies with it (the same type).
+  const staff = inArray(emailOutbox.messageType, [...BULK_CLUB_COPY_MESSAGES]);
 
   return db.transaction(async (tx) => {
     /*
@@ -534,15 +545,23 @@ async function claimOutboxBatchWithStop(
         .returning();
     };
 
-    // One road's claim: everything that is not a newsletter first, oldest first; then the
-    // newsletter, in the room left and at most `bulkCap` of it (§445).
-    const claimRoadWhere = async (where: SQL | undefined, limit: number, bulkCap: number | null = null) => {
-      const first = await claim(and(where, not(bulk)), limit);
-      const room = limit - first.length;
+    /*
+      One road's claim, in three tiers (the decision «Cere reconfirmarea», part two), each oldest first: a registration's
+      own messages — everything that is neither a staff send to many nor bulk — up to the limit; then the staff sends
+      (`BULK_CLUB_COPY_MESSAGES`, their club copies with them) in the room left and at most `staffCap` of it; then the
+      newsletter's kind, in the room left after that and at most `bulkCap` of it (§445). Three claims and not one
+      `ORDER BY CASE`: an order alone would not cap a tier — the bulk tier's own pattern, once more.
+    */
+    const claimRoadWhere = async (where: SQL | undefined, limit: number, bulkCap: number | null = null, staffCap: number | null = null) => {
+      const first = await claim(and(where, not(bulk), not(staff)), limit);
+      const staffRoom = limit - first.length;
+      const middle = await claim(and(where, staff), staffCap === null ? staffRoom : Math.min(staffRoom, staffCap));
+      const room = staffRoom - middle.length;
       const second = await claim(and(where, bulk), bulkCap === null ? room : Math.min(room, bulkCap));
-      return { first, second };
+      return { first, middle, second };
     };
-    const claimRoad = (road: SQL | undefined, limit: number, bulkCap: number | null) => claimRoadWhere(and(due, road), limit, bulkCap);
+    const claimRoad = (road: SQL | undefined, limit: number, bulkCap: number | null, staffCap: number | null = null) =>
+      claimRoadWhere(and(due, road), limit, bulkCap, staffCap);
 
     /*
       One claim per road when Gmail carries anything (§443 review). Gmail's rows wait on its pace
@@ -590,7 +609,7 @@ async function claimOutboxBatchWithStop(
     const carried = stop !== null && roads?.fallbackToGmail === true;
     const paused = stop?.kind === "paused" || hour?.paused === true;
     const mailgunLimit = carried || paused ? 0 : hour === null ? batchSize : Math.min(batchSize, hour.remaining ?? batchSize);
-    const mailgun = await claimRoad(mailgunRoad, mailgunLimit, bulkLimit);
+    const mailgun = await claimRoad(mailgunRoad, mailgunLimit, bulkLimit, staffLimit);
     const gmailLimit = Math.min(batchSize, roads?.gmailBatchSize ?? batchSize);
     const heldNow = and(notRelay, eq(emailOutbox.status, "PENDING"), heldByMailgunCondition(), params.ids ? inArray(emailOutbox.id, [...params.ids]) : undefined);
     const gmail = carried
@@ -598,13 +617,18 @@ async function claimOutboxBatchWithStop(
         await claimRoadWhere(and(or(due, heldNow), gmailRoad ? or(not(bulk), gmailRoad) : not(bulk)), gmailLimit)
       : gmailRoad
         ? await claimRoad(gmailRoad, gmailLimit, null)
-        : { first: [], second: [] };
+        : { first: [], middle: [], second: [] };
 
     // The picking SELECT orders which rows are claimed; RETURNING has no defined order at all.
     // Sorting here makes the batch oldest-first for the worker too, so a participant who has
-    // been waiting longest is not overtaken within a batch — each half on its own, the bulk last.
+    // been waiting longest is not overtaken within a batch — each tier on its own, the staff sends
+    // after the registrations' own and the bulk last.
     const byAge = (a: OutboxRow, b: OutboxRow) => a.createdAt.getTime() - b.createdAt.getTime();
-    const rows = [...[...mailgun.first, ...gmail.first].sort(byAge), ...[...mailgun.second, ...gmail.second].sort(byAge)];
+    const rows = [
+      ...[...mailgun.first, ...gmail.first].sort(byAge),
+      ...[...mailgun.middle, ...gmail.middle].sort(byAge),
+      ...[...mailgun.second, ...gmail.second].sort(byAge),
+    ];
     return { rows, stop, carried };
   });
 }
@@ -615,14 +639,28 @@ async function claimOutboxBatchWithStop(
  * reset as their next turn (`nextOutboxWork`) rather than "due now" on every ping. Only Mailgun's
  * road (`road`) when Gmail carries some of the mail: the reserve is Mailgun's allowance.
  */
-async function holdBulkUntilReset(db: Db, now: Date, road: SQL | undefined): Promise<void> {
+async function holdBulkUntilReset(
+  db: Db,
+  now: Date,
+  road: SQL | undefined,
+  /**
+   * Which types the reserve holds: the bulk ones (§445), or the staff sends to many under theirs (the decision «Cere
+   * reconfirmarea»), which carry `mark` so `/api/health` reads the reserve working, not a stall.
+   */
+  types: readonly EmailMessageType[] = BULK_MESSAGE_TYPES,
+  mark?: string,
+): Promise<void> {
   await db
     .update(emailOutbox)
-    .set({ nextAttemptAt: nextAllowanceResetAt(now) })
+    .set({
+      nextAttemptAt: nextAllowanceResetAt(now),
+      // The mark replaces no real error: a row retrying after a provider's answer keeps its text, and health keeps reading it.
+      ...(mark ? { lastError: sql`CASE WHEN coalesce(${emailOutbox.lastError}, '') IN ('', ${mark}) THEN ${mark} ELSE ${emailOutbox.lastError} END` } : {}),
+    })
     .where(
       and(
         eq(emailOutbox.status, "PENDING"),
-        inArray(emailOutbox.messageType, [...BULK_MESSAGE_TYPES]),
+        inArray(emailOutbox.messageType, [...types]),
         or(isNull(emailOutbox.nextAttemptAt), lte(emailOutbox.nextAttemptAt, now)),
         road,
       ),
@@ -713,13 +751,24 @@ export async function processOutboxBatch(
   // Mailgun's road — Gmail's rows cost the allowance nothing.
   const mailgunRoad = roads ? not(gmailRoadCondition(roads)) : undefined;
   const bulkLimit = await readBulkLimit(db, now, mailgunRoad);
-  const claim = await claimOutboxBatchWithStop(db, { now, batchSize, bulkLimit, ...(roads ? { roads } : {}), ...(ids ? { ids } : {}) });
+  /*
+    The staff sends' share (the decision «Cere reconfirmarea», part two): what Mailgun's plan has left less what the
+    registrations' own emails keep (`staffReserve`). Not for a press's own rows (§540): «Trimite acum» asked the
+    allowance for exactly them before it queued anything, and sends them as it always did.
+  */
+  const staffLimit = ids ? null : await readStaffLimit(db, now, mailgunRoad);
+  const claim = await claimOutboxBatchWithStop(db, { now, batchSize, bulkLimit, staffLimit, ...(roads ? { roads } : {}), ...(ids ? { ids } : {}) });
   const claimed = claim.rows;
   // The reserve is reached: whatever newsletter is still due on Mailgun's road waits for the reset, untouched.
   const mailgunBulk = claimed.filter((row) => isBulkMessage(row.messageType) && !(roads && onGmailRoad(row, roads)));
   // A press's own rows (§540) say nothing about the rest of the queue: the reserve's hold is the job's.
   if (!ids && bulkLimit !== null && mailgunBulk.length >= bulkLimit) {
     await holdBulkUntilReset(db, now, mailgunRoad);
+  }
+  // And the staff sends' reserve: the rest of them on Mailgun's road waits for the reset, marked, no attempt spent.
+  const mailgunStaff = claimed.filter((row) => isStaffSendMessage(row.messageType) && !(roads && onGmailRoad(row, roads)));
+  if (staffLimit !== null && mailgunStaff.length >= staffLimit) {
+    await holdBulkUntilReset(db, now, mailgunRoad, BULK_CLUB_COPY_MESSAGES, STAFF_RESERVE_HELD_ERROR);
   }
   const summary: OutboxBatchSummary = {
     claimed: claimed.length,

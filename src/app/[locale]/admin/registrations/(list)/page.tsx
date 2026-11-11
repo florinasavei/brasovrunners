@@ -29,6 +29,8 @@ import {
   listResubmissionMarks,
   readPlaceDeadlines,
   readPlaceOutlook,
+  isReconfirmFilter,
+  type ReconfirmFilter,
   REGISTRATION_SORT_KEYS,
   type RegistrationListRow,
   type RegistrationSortKey,
@@ -204,7 +206,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canReadRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, bounced, promo, outside, memberBib, partner, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test, memberSweep } = current;
+  const { eventId, status, clubMember, bounced, promo, outside, memberBib, partner, reconfirm, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test, memberSweep } = current;
   // What «Trimite acum» said about Mailgun's stop (§622): from the action's own address; unreadable says nothing.
   const untilParsed = current.until ? new Date(current.until) : null;
   const untilAt = untilParsed && !Number.isNaN(untilParsed.getTime()) ? untilParsed : null;
@@ -236,6 +238,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     outsideCapacity?: true;
     memberBibAsked?: true;
     fromPartner?: true;
+    reconfirm?: ReconfirmFilter;
     search?: string;
   } = {
     status: isRegistrationStatus(status) ? status : undefined,
@@ -251,6 +254,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     memberBibAsked: memberBib === "asked" || undefined,
     // «De la parteneri» (the decision «De la parteneri»): the rows with a partner's name — in the list's one `WHERE`, so its count and pages too.
     fromPartner: partner === "1" || undefined,
+    // «Reconfirmare» (the decision «Cere reconfirmarea»): one of three answers — in the same `WHERE`, so its count and pages too.
+    reconfirm: isReconfirmFilter(reconfirm) ? reconfirm : undefined,
     search: q || undefined,
   };
 
@@ -391,6 +396,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     memberBib: memberBib === "asked" ? "asked" : undefined,
     // «De la parteneri»: rides with every sort, page and export link, as the promo filter does — the file is the rows on screen.
     partner: partner === "1" ? "1" : undefined,
+    // «Reconfirmare»: rides with every sort, page and export link, as the partner filter does.
+    reconfirm: isReconfirmFilter(reconfirm) ? reconfirm : undefined,
     q,
     sort: current.sort,
     dir: current.dir,
@@ -407,7 +414,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     `defaultEventFilter` over it, so `all` and a bookmarked link mean there what they mean here.
   */
   const exportQueryString = buildListHref("", listParams, { eventId: eventFilter.eventId ?? ALL_EVENTS }).replace(/^\?/, "");
-  const hasFilters = Boolean(eventId || status || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || partner === "1" || q);
+  const hasFilters = Boolean(eventId || status || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || partner === "1" || isReconfirmFilter(reconfirm) || q);
   /*
     Nobody chose a filter, yet the list is still narrowed: `defaultEventFilter` scoped it to the
     featured event with no URL parameter to show for it (§178). This is the shape §277 named —
@@ -523,6 +530,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {row.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={t("registrations.elite.chip")} testId="elite-chip" />}
           {/* «Partener: {name}» (the decision «De la parteneri»): the organizers' own label, for every role that reads the list. */}
           {row.partnerName && <StatusChip glyph="fromPartner" variant="outlined" label={t("partner.chip", { name: row.partnerName })} testId="partner-chip" wrap />}
+          {/* «A reconfirmat» (the decision «Cere reconfirmarea»): the person said «Vin» and is still registered — information, never a state. */}
+          {row.reconfirmedAt && isActiveStatus(row.status) && <StatusChip glyph="reconfirmed" color="success" variant="outlined" label={t("reconfirm.chip")} testId="reconfirm-chip" />}
           {/* «Date lipsă» (§905): a registration still standing lacks answers the form requires — the person completes them
               from their own link, or the Administrator types them; the registration's page says which and how. */}
           {isActiveStatus(row.status) && missingAnswersHeld(row).length > 0 && (
@@ -784,7 +793,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filter: an invitation has no state, number or city a filter could ask about, and it is not counted in
     the results.
   */
-  const otherFilters = Boolean(status || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || partner === "1" || q);
+  const otherFilters = Boolean(status || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || partner === "1" || isReconfirmFilter(reconfirm) || q);
   const leadEvent = filters.eventId && query.page === 1 && !otherFilters ? filters.eventId : null;
   const leadNow = new Date();
   const leadInvitations = leadEvent ? (await listEventInvitations(db, leadEvent)).filter((row) => invitationState(row, leadNow) !== "accepted") : [];
@@ -1796,6 +1805,24 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               {t("partner.filter")}
             </CheckboxField>
           </Box>
+          {/*
+            «Reconfirmare» (the decision «Cere reconfirmarea»): among the people an organizer's message asked — who said «Vin»,
+            who cancelled since, who did not answer. Answering is optional; none of the three is a state.
+          */}
+          <TextField
+            select
+            name="reconfirm"
+            label={t("reconfirm.filter")}
+            defaultValue={isReconfirmFilter(reconfirm) ? reconfirm : ""}
+            helperText={t("reconfirm.filterHelp")}
+            sx={{ minWidth: 220, maxWidth: 320 }}
+            data-testid="registrations-filter-reconfirm"
+          >
+            <MenuItem value="">{t("reconfirm.filterAll")}</MenuItem>
+            <MenuItem value="yes">{t("reconfirm.filterYes")}</MenuItem>
+            <MenuItem value="cancelled">{t("reconfirm.filterCancelled")}</MenuItem>
+            <MenuItem value="none">{t("reconfirm.filterNone")}</MenuItem>
+          </TextField>
           <TextField
             select
             name="status"

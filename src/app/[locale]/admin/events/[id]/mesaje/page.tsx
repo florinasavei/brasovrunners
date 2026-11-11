@@ -22,8 +22,14 @@ import {
   ORGANIZER_SUBJECT_MAX,
   organizerMessageCost,
   organizerMessageDeferral,
+  organizerMessagePace,
+  organizerMessageResets,
   PARTICIPANT_MESSAGE_AUDIENCES,
 } from "@/modules/notifications/domain/organizer-message";
+import { staffReserve } from "@/modules/notifications/domain/bulk";
+import { OUTBOX_BATCH_SIZE } from "@/modules/notifications/outbox";
+import { readJobCadence } from "@/modules/jobs/cadence";
+import { PINGER_SLOT_MINUTES } from "@/modules/jobs/schedule";
 import { countParticipantMessageAudiences, listParticipantMessages } from "@/modules/notifications/participant-messages";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
@@ -92,13 +98,41 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
 
   const t = await getTranslations("Admin");
   const tSite = await getTranslations("Site");
+  /*
+    «Completează cu textul de reminder» (the decision «Cere reconfirmarea»): the ready text in Romanian and in English
+    from both catalogues, whatever the backoffice's language, its `{placeholders}` literal (`t.raw`) for the send to fill;
+    the body is the paragraphs, a blank line between each, as `organizerParagraphs` reads them.
+  */
+  const reminderOf = async (language: "ro" | "en") => {
+    const words = await getTranslations({ locale: language, namespace: "Admin" });
+    const raw = (key: string) => words.raw(`participantMessages.reminderText.${key}`) as string;
+    return { subject: raw("subject"), body: ["p1", "p2", "p3", "p4", "p5", "p6"].map(raw).join("\n\n") };
+  };
+  const [reminderRo, reminderEn] = await Promise.all([reminderOf("ro"), reminderOf("en")]);
 
   /*
     What a send costs and how much of it waits (§100, §40), worded here for every choice so the
     composer switches sentences and does no arithmetic. The headroom is what the plan has left over
     its period minus what already waits in the queue ahead of this send.
   */
-  const headroom = volume.remaining === null ? null : Math.max(0, volume.remaining - volume.waitingMessages);
+  /*
+    The headroom for a staff send (the decision «Cere reconfirmarea», part two): what the plan has left, less what the
+    registrations' own emails keep (`staffReserve`), less what waits ahead of it — every row but the bulk ones, which go
+    after it. The same reading the outbox claims by, so the line cannot promise what the queue will not do.
+  */
+  const ahead = Math.max(0, volume.waitingMessages - volume.bulkWaitingMessages);
+  const headroom = volume.remaining === null ? null : Math.max(0, volume.remaining - staffReserve(volume) - ahead);
+  // How long it takes (part two): the scheduled pass's batch at the pinger's pace by day, or Mailgun's hour when slower.
+  const cadence = await readJobCadence(db);
+  const minutesPerRun = Math.max(PINGER_SLOT_MINUTES, cadence.minutes);
+  const perHourByRuns = (OUTBOX_BATCH_SIZE * 60) / minutesPerRun;
+  const hourBinds = volume.hourlyAllowance !== null && volume.hourlyAllowance < perHourByRuns;
+  const paceLineOf = (messages: number): string => {
+    const { hours } = organizerMessagePace({ messages, ahead, batchSize: OUTBOX_BATCH_SIZE, minutesPerRun, hourlyAllowance: volume.hourlyAllowance });
+    return hourBinds
+      ? t(`participantMessages.paceHour.${countForm(hours, locale)}`, { hourly: String(volume.hourlyAllowance), hours: String(hours) })
+      : t(`participantMessages.paceRuns.${countForm(hours, locale)}`, { batch: String(OUTBOX_BATCH_SIZE), minutes: String(minutesPerRun), hours: String(hours) });
+  };
   const allowance =
     volume.remaining === null
       ? t("editor.notice.allowanceNone", { plan: volume.planName })
@@ -111,6 +145,30 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
     const { real, test: testCount } = counts[audience];
     const messages = organizerMessageCost({ real, test: testCount }, volume.participantBccCount);
     const deferral = organizerMessageDeferral(messages, headroom);
+    // On a daily plan the deferred part waits for as many midnights as the next days' allowance, less the reserve, needs.
+    const days = volume.allowance === null ? 0 : organizerMessageResets(deferral.deferred, volume.allowance - staffReserve(volume));
+    const deferredLine =
+      deferral.deferred === 0
+        ? undefined
+        : volume.period === "month"
+          ? t("participantMessages.deferredMonth", { now: String(deferral.now), deferred: String(deferral.deferred) })
+          : days > 1
+            ? t(`participantMessages.deferredDays.${countForm(days, locale)}`, {
+                now: String(deferral.now),
+                deferred: String(deferral.deferred),
+                days: String(days),
+                perDay: String(Math.max(1, (volume.allowance ?? 0) - staffReserve(volume))),
+              })
+            : t("participantMessages.deferredDay", { now: String(deferral.now), deferred: String(deferral.deferred) });
+    // Before «Trimite» (part two): how long it takes, and whether it fits the allowance — the deferral's own words when not,
+    // first, and then the pace of only what can leave now, so no hour is promised for a message that waits for a reset.
+    const fitsLine = volume.remaining === null ? "" : t(volume.period === "month" ? "participantMessages.fitsMonth" : "participantMessages.fitsToday");
+    const paceLine =
+      messages === 0
+        ? undefined
+        : deferredLine
+          ? [deferredLine, deferral.now > 0 ? paceLineOf(deferral.now) : ""].filter((line) => line !== "").join(" ")
+          : [paceLineOf(messages), fitsLine].filter((line) => line !== "").join(" ");
     return {
       value: audience,
       label: t(`participantMessages.audiences.${audience}`),
@@ -120,14 +178,8 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
         real + testCount === 0 ? t("participantMessages.nobody") : t(`participantMessages.recipients.${countForm(real, locale)}`, { count: real }),
       ...(testCount > 0 ? { testLine: t("participantMessages.testLine", { test: String(testCount) }) } : {}),
       ...(messages > 0 ? { costLine: t("participantMessages.cost", { messages: String(messages), allowance }) } : {}),
-      ...(deferral.deferred > 0
-        ? {
-            deferredLine: t(volume.period === "month" ? "participantMessages.deferredMonth" : "participantMessages.deferredDay", {
-              now: String(deferral.now),
-              deferred: String(deferral.deferred),
-            }),
-          }
-        : {}),
+      ...(deferredLine ? { deferredLine } : {}),
+      ...(paceLine ? { paceLine } : {}),
       confirmTitle: t(`participantMessages.confirmTitle.${countForm(real, locale)}`, { count: real }),
     };
   });
@@ -145,7 +197,8 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
       {
         when: [{ field: "audience", equals: choice.value }],
         title: choice.confirmTitle,
-        body: choice.testLine ? `${t("participantMessages.confirmBody")} ${choice.testLine}` : t("participantMessages.confirmBody"),
+        // The pace and the allowance (the decision «Cere reconfirmarea», part two) after «Când pleacă», then the test rows.
+        body: [t("participantMessages.confirmBody"), choice.paceLine, choice.testLine].filter(Boolean).join(" "),
         // No "0 participants" for a group of test rows alone: the test line says who is written to. The message named, and
         // the club's one copy of the send (§419) — the design «telling the owner about every email a staff press sends», slice 3.
         ...words.mail({ to: { count: choice.real, audience: "participants" }, type: "ORGANIZER_MESSAGE" }),
@@ -254,6 +307,19 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
               previewUnknown: t.raw("participantMessages.previewUnknown") as string,
               previewSubject: t("emails.subject"),
               send: t("participantMessages.send"),
+              reconfirm: t("participantMessages.reconfirm"),
+              reconfirmHelp: t("participantMessages.reconfirmHelp"),
+              reminderFill: {
+                button: t("participantMessages.reminderFill.button"),
+                confirmTitle: t("participantMessages.reminderFill.confirmTitle"),
+                confirmBody: t("participantMessages.reminderFill.confirmBody"),
+                confirmGo: t("participantMessages.reminderFill.confirmGo"),
+                confirmCancel: t("participantMessages.reminderFill.confirmCancel"),
+                subjectRo: reminderRo.subject,
+                subjectEn: reminderEn.subject,
+                bodyRo: reminderRo.body,
+                bodyEn: reminderEn.body,
+              },
             }}
           />
         </ActionForm>
@@ -287,6 +353,23 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
                   {t(`participantMessages.recipients.${countForm(entry.recipients, locale)}`, { count: entry.recipients })}
                   {entry.test > 0 ? ` · ${t("participantMessages.historyTest", { test: String(entry.test) })}` : ""}
                 </Typography>
+                {/* How far it has left (the decision «Cere reconfirmarea», part two): hidden once the rows were swept. */}
+                {entry.progress.left + entry.progress.waiting + entry.progress.failed > 0 && (
+                  <Typography variant="body2" color="text.secondary" data-testid="participant-message-history-progress">
+                    {t("participantMessages.historyProgress", { left: String(entry.progress.left), waiting: String(entry.progress.waiting) })}
+                    {entry.progress.failed > 0 ? ` · ${t("participantMessages.historyFailed", { failed: String(entry.progress.failed) })}` : ""}
+                  </Typography>
+                )}
+                {/* «Cere reconfirmarea»: who said «Vin», who cancelled since, who did not answer — information, never a state. */}
+                {entry.answers && (
+                  <Typography variant="body2" data-testid="participant-message-history-answers">
+                    {t("participantMessages.historyAnswers", {
+                      yes: String(entry.answers.yes),
+                      cancelled: String(entry.answers.cancelled),
+                      none: String(entry.answers.none),
+                    })}
+                  </Typography>
+                )}
               </Box>
             ))}
           </Stack>

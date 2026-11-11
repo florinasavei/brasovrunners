@@ -324,8 +324,8 @@ describe("§664 the sheet prints the members' bib for wanted AND verified only",
       })),
     );
     const lines = csv.split("\r\n");
-    expect(lines[0].split(",").at(-3)).toBe("Member bib");
-    const cellOf = (email: string) => lines.find((line) => line.includes(email))?.split(",").at(-3);
+    expect(lines[0].split(",").at(-4)).toBe("Member bib");
+    const cellOf = (email: string) => lines.find((line) => line.includes(email))?.split(",").at(-4);
     expect(cellOf("membru@example.ro")).toBe("yes");
     expect(cellOf("declarat@example.ro")).toBe("asked");
     expect(cellOf("nimic@example.ro")).toBe("");

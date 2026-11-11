@@ -78,6 +78,18 @@ const OUTPUTS = [
     background: null,
     fill: colours.primaryInk,
   },
+  {
+    source: "public/brand/email-reconfirm.svg",
+    target: "public/brand/email-reconfirm.png",
+    /*
+      The glyph before «Vin» on an organizer's message that asks (the decision «Cere reconfirmarea»): the manage page's
+      «Da, vin la cursă» glyph (`EventAvailable`) in white, on the button filled with the club's ink blue — drawn at
+      20 px, so 2× here. With alpha, so it sits on the fill and on a dark theme's re-coloured one alike. White whatever
+      the palette: it is the button's text colour, not the club's.
+    */
+    width: 40,
+    background: null,
+  },
 ];
 
 for (const { source, target, width, background, canvas, fill } of lockOnly ? [] : OUTPUTS) {

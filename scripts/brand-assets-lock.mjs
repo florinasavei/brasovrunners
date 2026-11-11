@@ -11,7 +11,7 @@ import path from "node:path";
  */
 
 /** The SVG sources the rasters are drawn from, repository-relative. */
-export const BRAND_SOURCES = ["public/brand/logo.svg", "public/brand/logo-white.svg", "public/brand/email-cannot-come.svg"];
+export const BRAND_SOURCES = ["public/brand/logo.svg", "public/brand/logo-white.svg", "public/brand/email-cannot-come.svg", "public/brand/email-reconfirm.svg"];
 
 /**
  * The club's palette, as the script paints with it: `tints.emailBand` behind the white lockup (the primary when the

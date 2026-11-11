@@ -1675,7 +1675,8 @@
           "answers_viewed": "Answers opened, with the phone and the emergency contact",
           "note_added": "Internal note added",
           "note_deleted": "Internal note deleted",
-          "partner_set": "From partners: the partner's name changed"
+          "partner_set": "From partners: the partner's name changed",
+          "reconfirmed": "Said they are coming, from their own link"
         },
         "event": {
           "capacity_raised_for_offer": "Supplementary place added for an offer (“Send them the offer”): {from} → {to}",
@@ -7275,7 +7276,8 @@
       "eventInvitationsEraseTitle": "Withdraw and erase this person's invitations?",
       "eventInvitationsEraseBody": "Open invitations are withdrawn first, as with “Withdraw”: their place passes through the waiting list. Then unaccepted ones are erased; accepted ones stay with their registration. Cannot be undone.",
       "eventInvitationsErased": "This address's invitations were withdrawn and erased; accepted ones stay with their registrations.",
-      "eventInvitationsAcceptedKept": "An accepted invitation is part of its registration: it is erased with the registration, from the registration's page."
+      "eventInvitationsAcceptedKept": "An accepted invitation is part of its registration: it is erased with the registration, from the registration's page.",
+      "reconfirmations": "Reconfirmations ({count})"
     },
     "desk": {
       "title": "Number pickup desk",
@@ -7722,6 +7724,7 @@
           "reset": "Leaves once Mailgun resumes: {at} (estimated)."
         },
         "lastError": "The provider's last answer: {error}",
+        "staffReserveHeld": "Waiting: the rest of the allowance is kept for the registrations' own emails. It leaves by itself when the allowance comes back.",
         "manual": "Sent again by hand",
         "more": "And {count} more in the queue, not shown here.",
         "status": {
@@ -9131,6 +9134,7 @@
                 "«Events» → «Open» → the «Registrations received» card → «Send a message to participants».",
                 "Under «Who receives it» pick the group (everyone, «Only the confirmed», the waiting list or those without a declaration) and see how many they are.",
                 "Write the «Subject» and the «Message», in Romanian and in English.",
+                "For a reminder, press «Fill in the reminder text»: it writes the text and ticks «Ask them to reconfirm». Whoever presses “I'm coming” shows as «Reconfirmed»; nobody is cancelled automatically.",
                 "Under «How the email looks» read both versions: «Registered in Romanian» and «Registered in English».",
                 "Press «Send the message», then «Send» in the window. The message stays under «Messages sent».",
                 "About this event only: no advertising, no sponsors' offers, no other events."
@@ -10292,6 +10296,11 @@
       "waiting": "{waiting} already waiting in the queue",
       "deferredDay": "{now} of them can go today; the other {deferred} stay in the queue and go by themselves after midnight (UTC), when the daily allowance comes back. None is lost.",
       "deferredMonth": "{now} of them can go this month; the other {deferred} stay in the queue and go by themselves when the monthly allowance comes back. None is lost.",
+      "deferredDays": {
+        "one": "{now} of them can go today; the other {deferred} stay in the queue and go by themselves over at least {days} more day, at most {perDay} a day, as the allowance comes back each midnight (UTC). None is lost.",
+        "few": "{now} of them can go today; the other {deferred} stay in the queue and go by themselves over at least {days} more days, at most {perDay} a day, as the allowance comes back each midnight (UTC). None is lost.",
+        "other": "{now} of them can go today; the other {deferred} stay in the queue and go by themselves over at least {days} more days, at most {perDay} a day, as the allowance comes back each midnight (UTC). None is lost."
+      },
       "subject": "Subject",
       "subjectHelp": "In both languages, required, at most {max} characters each. You can use the fields {list}; they are filled in for each participant.",
       "body": "Message",
@@ -10325,7 +10334,40 @@
       "historyEmpty": "No message sent from here for this event yet.",
       "historyWhen": "Sent {date} by {sender}",
       "historyNoSender": "a removed account",
-      "historyTest": "test registrations: {test}"
+      "historyTest": "test registrations: {test}",
+      "reconfirm": "Ask them to reconfirm",
+      "reconfirmHelp": "The email also gets the “I'm coming” button. Nobody is cancelled automatically; “No answer” is only information for the organizers.",
+      "reminderFill": {
+        "button": "Fill in the reminder text",
+        "confirmTitle": "Replace the text you wrote?",
+        "confirmBody": "The subject and the message, in both languages, will be replaced with the reminder text.",
+        "confirmGo": "Replace",
+        "confirmCancel": "Cancel"
+      },
+      "reminderText": {
+        "subject": "See you at {eventTitle}? Tell us if you're coming",
+        "p1": "Hi {participantName}!",
+        "p2": "{eventTitle} is close: {eventStartsAtFormatted}, at {eventLocationName}.",
+        "p3": "If you are coming and see the “I'm coming” button below, press it, so we know who to expect.",
+        "p4": "If you can no longer make it, press “I can't make it any more”, so your place can go to someone on the waiting list.",
+        "p5": "If you press nothing, your registration stays exactly as it is.",
+        "p6": "Thank you, and see you at the start!"
+      },
+      "paceRuns": {
+        "one": "It leaves gradually, {batch} every {minutes} minutes by day (less often at night): about {hours} hour at the day's pace.",
+        "few": "It leaves gradually, {batch} every {minutes} minutes by day (less often at night): about {hours} hours at the day's pace.",
+        "other": "It leaves gradually, {batch} every {minutes} minutes by day (less often at night): about {hours} hours at the day's pace."
+      },
+      "paceHour": {
+        "one": "It leaves gradually, at most {hourly} an hour: about {hours} hour.",
+        "few": "It leaves gradually, at most {hourly} an hour: about {hours} hours.",
+        "other": "It leaves gradually, at most {hourly} an hour: about {hours} hours."
+      },
+      "fitsToday": "It fits today's allowance.",
+      "fitsMonth": "It fits this month's allowance.",
+      "historyAnswers": "Reconfirmed {yes} · Cancelled {cancelled} · No answer {none}",
+      "historyProgress": "Left {left} · Waiting {waiting}",
+      "historyFailed": "Not sent {failed}"
     },
     "groupRunDeclarations": {
       "title": "Signed declarations (group run)",
@@ -11998,6 +12040,19 @@
       "title": "From partners",
       "save": "Save the partner",
       "dialog": "The registrations will be marked «Partner: {name}» — internal, the people are not told."
+    },
+    "reconfirm": {
+      "chip": "Reconfirmed",
+      "filter": "Reconfirmation",
+      "filterAll": "All",
+      "filterYes": "Reconfirmed",
+      "filterCancelled": "Cancelled after the ask",
+      "filterNone": "No answer",
+      "filterHelp": "Only for messages sent with “Ask them to reconfirm”. Answering is optional.",
+      "detail": "Said they are coming on {date}.",
+      "column": "Reconfirmed",
+      "personAsked": "Reconfirmation asked on {asked}",
+      "personAnswered": "said they are coming on {at}"
     }
   },
   "NotFound": {
@@ -12910,6 +12965,18 @@
       "signatureOpenName": "Sign with the full name typed above, exactly as it is there. For a minor, the parent or guardian signs, with their name typed above.",
       "nameTypedAbove": "The name you sign with is the one typed above, in your details: if it is wrong, correct it there and sign with it.",
       "minorNameTypedAbove": "The minor's name is the one typed above, in their details: if it is wrong, correct it there and sign with it."
+    },
+    "reconfirm": {
+      "title": "Are you coming to {event}?",
+      "titleNoEvent": "Are you coming to the race?",
+      "yes": "Yes, I'm coming to the race",
+      "optional": "Answering is optional: if you press nothing, your registration stays exactly as it is.",
+      "pending": "You still have the declaration to sign: without it the registration is not confirmed.",
+      "waitlisted": "You are on the waiting list; your place on it stays the same whatever you answer.",
+      "offered": "You have been offered a place: sign the declaration from the offer's email.",
+      "cannot": "Can't make it any more? Use “Cancel the registration” below.",
+      "done": "You told us you are coming, on {date}.",
+      "failed": "Your answer was not recorded for this registration."
     }
   },
   "Devs": {

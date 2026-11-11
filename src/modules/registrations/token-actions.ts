@@ -769,6 +769,11 @@ export async function readRaceDayContext(secret: string, now: Date) {
     registration,
     eventCancelled,
     selfCheckinOpen: checkinOpenFor(registration.status),
+    /**
+     * «Vin» (the decision «Cere reconfirmarea»): the event still runs and has not started — the only time the page asks
+     * whether the person comes, and the only time `reconfirmation.ts` records the answer.
+     */
+    eventAhead: event.eventStatus === "SCHEDULED" && event.startsAt.getTime() > now.getTime(),
     selfCheckinOpensAt: opensAt,
     /** How many hours before the start that is, for the sentence that says so (§377). */
     selfCheckinHours: deadlines.selfCheckinHours,

@@ -182,6 +182,45 @@ export function readOrganizerMessagePayload(payload: unknown): OrganizerMessage 
 }
 
 /**
+ * Whether this row asks «Cere reconfirmarea» (the decision «Cere reconfirmarea»): the payload's `askReconfirm`, beside
+ * the words — set by the send only on the rows whose registration it wrote an ask for, never send-wide; anything but
+ * `true` — an unasked row, an older one, a hand-made one, a club copy — is no.
+ */
+export function readOrganizerAskReconfirm(payload: unknown): boolean {
+  return Boolean(payload && typeof payload === "object" && (payload as { askReconfirm?: unknown }).askReconfirm === true);
+}
+
+/**
+ * How long a send takes to leave, in whole hours from its first message, for the line before «Trimite» (the decision
+ * «Cere reconfirmarea», part two): the messages already waiting ahead of it in the
+ * registrations' and the staff sends' tiers (bulk mail goes after it) and its own, at the scheduled pass's pace — one
+ * batch per run — or Mailgun's hour when that is slower. At least one hour. It promises no start: when the first leaves
+ * is «Când pleacă emailurile»'s, and a spent allowance is the deferral line's.
+ */
+export function organizerMessagePace(input: {
+  messages: number;
+  ahead: number;
+  batchSize: number;
+  minutesPerRun: number;
+  hourlyAllowance: number | null;
+}): { hours: number } {
+  const perHourByRuns = (Math.max(1, input.batchSize) * 60) / Math.max(1, input.minutesPerRun);
+  const perHour = input.hourlyAllowance === null ? perHourByRuns : Math.min(perHourByRuns, Math.max(1, input.hourlyAllowance));
+  const total = Math.max(0, input.ahead) + Math.max(0, input.messages);
+  return { hours: Math.max(1, Math.ceil(total / perHour)) };
+}
+
+/**
+ * How many more resets of the allowance the deferred part of a send waits for (the decision «Cere reconfirmarea», part
+ * two): a staff send may take only what the plan allows less the reserve, so on Free's 100 a day the 111 left of a
+ * 201-message send need two midnights, not one. At least one when anything waits; `perPeriod` below one counts as one.
+ */
+export function organizerMessageResets(deferred: number, perPeriod: number): number {
+  if (deferred <= 0) return 0;
+  return Math.ceil(deferred / Math.max(1, Math.floor(perPeriod)));
+}
+
+/**
  * What one send costs against the Mailgun allowance (§100), in messages: every recipient's own —
  * a test row's `@test.invalid` address still spends a message — plus **one** club copy per address
  * on the club's list for the whole send (§419; one per registration under §320), and none when the

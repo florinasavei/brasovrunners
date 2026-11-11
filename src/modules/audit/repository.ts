@@ -235,6 +235,12 @@ export type AuditAction =
    * Never the name.
    */
   | "registration.results_name_consent_changed"
+  /**
+   * «Da, vin la cursă» pressed on the registration's own manage page, answering «Cere reconfirmarea» (the decision «Cere
+   * reconfirmarea», `registrations/reconfirmation.ts`): no staff actor, the door and how many asks it answered — once,
+   * a second press writes nothing. Never a name.
+   */
+  | "registration.reconfirmed"
   /** The registrations exported to a file (§322): the event, the format and the row count — never a row. */
   | "registration.exported"
   /**
