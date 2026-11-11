@@ -9,8 +9,10 @@ import { mayReconfirmNow } from "../domain/reconfirm-press";
  * page's pattern (`rsvp/ui/AutoConfirm.tsx`; the owner, 2026-10-19: «Asta ar trebui să se auto-bifeze când deschid»).
  * It wraps the page's form — drawn by the Server Component with its button, so without JavaScript the button stands and
  * works — and, after hydration, calls the form's `requestSubmit()`, which is the very press: the POST in `actions.ts`
- * reads the token, never spends it, records the first moment and lands on `?reconfirm=1#reconfirm`, where the page shows
- * the noted answer and draws no island.
+ * (`reconfirmFromManageAction`) reads the token, never spends it, records the first moment and lands on the same manage
+ * page at `?reconfirm=1&person=<the registration's id>#reconfirm` (a refusal at `?reconfirm=0&person=…#reconfirm`), where
+ * the page shows the noted answer and draws no island. That landing REPLACES this page in the history, so Back never
+ * mounts the island again. While the POST is in flight the button wears its pending label («Notăm că vii…»).
  *
  * **Why the GET is still safe** (AGENTS.md §12.8, BR-REQ-036-02 criterion 4): the GET renders and writes nothing. A
  * scanner that fetches the link without running its scripts, and a browser without JavaScript, see the button and count

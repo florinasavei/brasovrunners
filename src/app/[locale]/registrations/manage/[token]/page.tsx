@@ -310,16 +310,21 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
             const confirmed = one.status === "CONFIRMED" && one.checkinCode && !live.eventCancelled ? one.checkinCode : null;
             const active = isActiveStatus(one.status);
             const answered = answeredFor === one.id;
-            // «Da, vin la cursă» (the decision «Cere reconfirmarea»): the one form, pressed by the button or, at `#reconfirm`, by itself.
+            /*
+              «Da, vin la cursă» (the decision «Cere reconfirmarea»): the one form, pressed by the button or, at `#reconfirm`, by
+              itself — and while that POST is in flight the button wears its pending label («Notăm că vii…»), as the «Da, vin»
+              link page's does, so nobody reads «Răspunsul e opțional…» under a page that seems to do nothing.
+            */
             const reconfirmForm = (
               <form action={reconfirmFromManageAction}>
                 <input type="hidden" name="locale" value={locale} />
                 <input type="hidden" name="token" value={token} />
                 <input type="hidden" name="registrationId" value={one.id} />
-                <Button type="submit" variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="manage-reconfirm-yes">
-                  <EventAvailableIcon aria-hidden="true" sx={glyphSx("medium")} />
-                  {reconfirmYes}
-                </Button>
+                <Box sx={{ display: "inline-block" }} data-testid="manage-reconfirm-yes">
+                  <SubmitButton label={reconfirmYes} pendingLabel={t("reconfirm.yesPending")} size="medium">
+                    <EventAvailableIcon />
+                  </SubmitButton>
+                </Box>
               </form>
             );
             /*
@@ -644,6 +649,12 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                         <Typography variant={family ? "body1" : "h2"} sx={family ? { fontWeight: 700, mb: 1 } : { fontSize: "1.25rem", mb: 1 }}>
                           {eventTitle ? t("reconfirm.title", { event: eventTitle }) : reconfirmOnRace ? t("reconfirm.titleNoEvent") : t("reconfirm.titleNoEventOther")}
                         </Typography>
+                        {/*
+                          What is still owed, whatever the answer: drawn before the press, during it and after it, so a person
+                          who still has the declaration to sign never reads «Am notat că vii…» as being in.
+                        */}
+                        {one.status === "PENDING_DECLARATION" && <Typography sx={{ mb: 1 }} data-testid="manage-reconfirm-owed">{t("reconfirm.pending")}</Typography>}
+                        {one.status === "WAITLISTED" && <Typography sx={{ mb: 1 }} data-testid="manage-reconfirm-owed">{t("reconfirm.waitlisted")}</Typography>}
                         {one.status === "WAITLIST_OFFERED" ? (
                           <Typography sx={{ mb: 1 }} data-testid="manage-reconfirm-offered">
                             {t("reconfirm.offered")}
@@ -656,8 +667,6 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                           </Alert>
                         ) : (
                           <>
-                            {one.status === "PENDING_DECLARATION" && <Typography sx={{ mb: 1 }}>{t("reconfirm.pending")}</Typography>}
-                            {one.status === "WAITLISTED" && <Typography sx={{ mb: 1 }}>{t("reconfirm.waitlisted")}</Typography>}
                             {reconfirmPressesItself({ own: one.own, questionOpen: one.reconfirmOpen, outcome: reconfirm }) ? (
                               <ReconfirmOnArrival>{reconfirmForm}</ReconfirmOnArrival>
                             ) : (

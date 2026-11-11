@@ -41,6 +41,9 @@ const DAY = 86_400_000;
 let db: TestDatabase;
 let close: () => Promise<void>;
 
+/** The language a page is drawn in (`managePage`'s last argument): what `getTranslations("…")` reads. */
+const page = vi.hoisted(() => ({ locale: "ro" as "ro" | "en" }));
+
 vi.mock("@/db/client", () => ({ getDb: () => db }));
 vi.mock("next/cache", async () => (await import("../../helpers/next-cache")).fakeNextCache.module);
 vi.mock("next/headers", () => ({
@@ -49,8 +52,8 @@ vi.mock("next/headers", () => ({
 }));
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
-  redirect: (url: string) => {
-    throw Object.assign(new Error("NEXT_REDIRECT"), { redirectTo: url });
+  redirect: (url: string, type?: string) => {
+    throw Object.assign(new Error("NEXT_REDIRECT"), { redirectTo: url, redirectType: type ?? "push" });
   },
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
@@ -63,10 +66,10 @@ vi.mock("next-intl/server", async (importOriginal) => {
     ...(await importOriginal<Record<string, unknown>>()),
     getTranslations: async (arg: string | { locale?: string; namespace: string }) => {
       const namespace = typeof arg === "string" ? arg : arg.namespace;
-      const locale = (typeof arg === "string" ? "ro" : (arg.locale ?? "ro")) as "ro" | "en";
+      const locale = (typeof arg === "string" ? page.locale : (arg.locale ?? page.locale)) as "ro" | "en";
       return createTranslator({ locale, messages: catalogues[locale], namespace: namespace as "Registrations" });
     },
-    getLocale: async () => "ro",
+    getLocale: async () => page.locale,
     setRequestLocale: () => {},
   };
 });
@@ -230,11 +233,15 @@ function cancelTokenOf(text: string): string | null {
   return url ? decodeURIComponent(url.split("/").pop() ?? "") : null;
 }
 
+/** The last redirect's kind, «push» or «replace» (Back must not return to the page that pressed by itself). */
+let lastRedirectType: string | undefined;
+
 async function redirectOf(press: Promise<void>): Promise<string> {
   try {
     await press;
   } catch (error) {
     const to = (error as { redirectTo?: string }).redirectTo;
+    lastRedirectType = (error as { redirectType?: string }).redirectType;
     if (to) return to;
     throw error;
   }
@@ -253,8 +260,13 @@ function drawn(page: ReactElement, locale: "ro" | "en" = "ro"): string {
   return renderToStaticMarkup(createElement(NextIntlClientProvider, { locale, messages: locale === "ro" ? ro : en } as unknown as ComponentProps<typeof NextIntlClientProvider>, page));
 }
 
-async function managePage(secret: string, query: Record<string, string> = {}): Promise<string> {
-  return drawn((await ManageRegistrationPage({ params: Promise.resolve({ locale: "ro", token: secret }), searchParams: Promise.resolve(query) })) as ReactElement);
+async function managePage(secret: string, query: Record<string, string> = {}, locale: "ro" | "en" = "ro"): Promise<string> {
+  page.locale = locale;
+  try {
+    return drawn((await ManageRegistrationPage({ params: Promise.resolve({ locale, token: secret }), searchParams: Promise.resolve(query) })) as ReactElement, locale);
+  } finally {
+    page.locale = "ro";
+  }
 }
 
 async function rowOf(id: string): Promise<Registration> {
@@ -437,6 +449,8 @@ describe("the manage page: the GET asks and writes nothing, the POST records onc
     const { ana, secret } = await askedOne();
     const before = await rowOf(ana.id);
     expect(await pressVin(secret)).toMatch(/\?reconfirm=1#reconfirm$/);
+    // The answer replaces the page that pressed: Back never mounts the automatic press again.
+    expect(lastRedirectType).toBe("replace");
     const [first] = await asks();
     expect(first.reconfirmedAt).not.toBeNull();
     const audits = await reconfirmAudits();
@@ -580,6 +594,31 @@ describe("which states answer", () => {
       expect((await rowOf(row.id)).status, row.registeredName).toBe(row.status);
     }
     expect((await asks()).every((ask) => ask.reconfirmedAt !== null)).toBe(true);
+  });
+
+  it("still says what is owed after the answer: the answered page of a declaration owed keeps «Mai ai de semnat declarația…», in both languages", async () => {
+    const elena = await person("Elena", "PENDING_DECLARATION");
+    const carmen = await person("Carmen", "WAITLISTED");
+    await send();
+    for (const [row, key] of [
+      [elena, "pending"],
+      [carmen, "waitlisted"],
+    ] as const) {
+      const secret = vinTokenOf((await emailTo(row.id)).text)!;
+      await pressVin(secret);
+      for (const [locale, catalogue] of [
+        ["ro", ro],
+        ["en", en],
+      ] as const) {
+        for (const query of [{ reconfirm: "1" }, {}] as Record<string, string>[]) {
+          const html = await managePage(secret, query, locale);
+          expect(html, `${row.registeredName} ${locale}`).toContain('data-testid="manage-reconfirm-done"');
+          expect(html, `${row.registeredName} ${locale}`).toContain(catalogue.Registrations.reconfirm[key]);
+          // Before the green answer, so it is read first.
+          expect(html.indexOf(catalogue.Registrations.reconfirm[key])).toBeLessThan(html.indexOf('data-testid="manage-reconfirm-done"'));
+        }
+      }
+    }
   });
 
   it("points an offer made since the ask at its own email: no button, and a press is refused", async () => {

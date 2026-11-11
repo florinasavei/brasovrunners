@@ -1,6 +1,6 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { redirect, RedirectType } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -154,6 +154,10 @@ export async function setResultsNameConsentFromManageAction(form: FormData): Pro
  * above: the token read, never spent. Records the answer once — a second press lands on the same success and writes
  * nothing. A registration that no longer answers (cancelled, expired, an offer, the event started or cancelled) is
  * refused with nothing written; a link the registration has left is the refused link.
+ *
+ * The answer's page REPLACES the page that pressed, never stacks on it: opened at `#reconfirm`, that page pressed by itself
+ * (`ReconfirmOnArrival`), and a Back to it would mount the island again, spend another attempt and bounce the person
+ * forward. Replaced, Back leaves for wherever the link was opened from.
  */
 export async function reconfirmFromManageAction(form: FormData): Promise<void> {
   const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
@@ -164,9 +168,9 @@ export async function reconfirmFromManageAction(form: FormData): Promise<void> {
 
   try {
     const result = await reconfirmFromManageLink(getDb(), token, new Date(), person);
-    redirect(result.ok ? `${path}?reconfirm=1${who}#reconfirm` : `${path}?invalid=1`);
+    redirect(result.ok ? `${path}?reconfirm=1${who}#reconfirm` : `${path}?invalid=1`, RedirectType.replace);
   } catch (error) {
-    if (isDomainError(error) && error.code === "VALIDATION_ERROR") redirect(`${path}?reconfirm=0${who}#reconfirm`);
+    if (isDomainError(error) && error.code === "VALIDATION_ERROR") redirect(`${path}?reconfirm=0${who}#reconfirm`, RedirectType.replace);
     // A person the link does not manage: nothing was written, and the page says the press failed.
     if (isDomainError(error)) redirect(`${path}?invalid=1`);
     throw error;

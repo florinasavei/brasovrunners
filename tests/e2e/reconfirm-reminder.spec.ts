@@ -13,7 +13,8 @@ import { hydrated, signIn } from "./support/featured-event";
  * One press counts: the email's «Vin» opens the person's own manage page at `#reconfirm`, and in a browser the page
  * presses «Da, vin la cursă» by itself once and shows the noted answer; opening the link again keeps the first moment;
  * `#cancel` and a bare link record nothing; a browser without scripts sees «Vii la …?» with the button, a 44-pixel target,
- * records nothing on the GET and records on the press, the cancel still there. Each project seeds its own made-up event
+ * records nothing on the GET and records on the press, the cancel still there; after the automatic press, Back leaves the
+ * page and presses nothing again. Each project seeds its own made-up event
  * and people straight into the database — the setup, not the subject, as `support/action-link.ts` argues.
  */
 
@@ -180,6 +181,9 @@ test.describe("«Cere reconfirmarea»: the ready reminder, «Vin» and the answe
     // The email's «Vin», opened as a mail client opens it — a new tab, a fresh load (the same document with only a new hash
     // would be no load at all): opening it is the press — no click from the spec — and the page says the answer is noted.
     const fromEmail = await page.context().newPage();
+    // A page before it in the tab's history, so Back has somewhere to go (a mail client's own page, here the site's).
+    await fromEmail.goto("/ro");
+    const before = fromEmail.url();
     await fromEmail.goto(`${link}#reconfirm`, { waitUntil: "commit" });
     // The form names its person, so the answer's address carries it: `?reconfirm=1&person=<id>#reconfirm`.
     await fromEmail.waitForURL(new RegExp(`\\?reconfirm=1&person=${ana.id}#reconfirm$`), { timeout: 30_000 });
@@ -189,6 +193,13 @@ test.describe("«Cere reconfirmarea»: the ready reminder, «Vin» and the answe
     expect(first).not.toBeNull();
     // The link was read, never spent: the cancel is still on the page.
     await expect(fromEmail.getByTestId("manage-person-cancel")).toBeVisible();
+
+    // Back does not press again: the answer replaced the page that pressed, so Back leaves the manage page and stays left.
+    await fromEmail.goBack();
+    await expect(fromEmail).toHaveURL(before);
+    await fromEmail.waitForTimeout(2_000);
+    await expect(fromEmail).toHaveURL(before);
+    expect((await answeredAt(eventId, ana.id))?.getTime()).toBe(first?.getTime());
 
     // Opened again from the email: the noted answer, no second press, the first moment kept.
     const again = await page.context().newPage();

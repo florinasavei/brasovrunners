@@ -2529,7 +2529,10 @@ GET must be read-only. Preferred flow:
 
 1. email link opens GET token page;
 2. server validates enough to display safe context but does not consume/change state;
-3. participant submits explicit POST;
+3. participant submits explicit POST — the one exception is an answer that changes no state, place or deadline (the
+   «Da, vin» link page, `rsvp/ui/AutoConfirm.tsx`; «Vin» at `#reconfirm` on the manage page,
+   `registrations/ui/ReconfirmOnArrival.tsx`): there the page's own island submits that same POST once, while the page is
+   shown and not prerendered, and without scripts the button stays and is the press;
 4. server consumes token or exchanges it for a short-lived, purpose-limited HTTP-only action session;
 5. redirect to clean URL without token;
 6. subsequent allowed actions use restricted session;
@@ -3219,17 +3222,24 @@ Worker:
 PostgreSQL `FOR UPDATE SKIP LOCKED` may be used when supported by implementation.
 
 **The order of the claim** (`DECISIONS.md` «Cere reconfirmarea», `notifications/outbox.ts`): on each road, each step
-oldest first and in the room the steps before it left — (1) a registration's own messages, every type that is neither a
-send to many nor bulk; (2) `EVENT_UPDATE_NOTICE`; (3) `EVENT_REMINDER`; (4) `ORGANIZER_MESSAGE`; (5) the bulk ones
-(`BULK_MESSAGE_TYPES`, §445) under their cap. Steps 2–4 are `domain/bulk.ts#SEND_TO_MANY_MESSAGE_TYPES`: one message per
-registration of an event, queued by one press or one job, a moved start more urgent than a reminder and a reminder than
-an organizers' message; a club copy rides with its type. The same order in Gmail's carried path and for a press's own
-rows, and in the batch handed to the worker. So a send of two hundred — or the reminder's two hundred — never stands in
-front of a verification or an offer queued after it. **No reserve**: steps 2–4 get no cap, no hold and no mark. A hold
-until the reset kept Mailgun's stop marks on the held rows and could close Mailgun's road until midnight, and on a monthly
-plan it would never have acted; the order keeps the registrations' own emails first, and the line before «Trimite» tells
-the Administrator the truth about the send on the road it takes. «Trimite acum» (§540), the batch size, the pinger, the
-hourly pace and the newsletter's reserve are unchanged.
+oldest first and in the room the steps before it left — (0) a registration's own messages, every type that is neither a
+send to many nor bulk, and an Administrator's manual resend (`is_manual_resend`) of any type, which is that runner's own
+message; (1) `EVENT_CANCELLED`; (2) `EVENT_UPDATE_NOTICE`; (3) `EVENT_REMINDER`; (4) `ORGANIZER_MESSAGE`; (5)
+`EVENT_THANKS`; (6) `REGISTRATION_OPENED`; (7) the bulk ones (`BULK_MESSAGE_TYPES`, §445) under their cap. Steps 1–6 are
+`domain/bulk.ts#SEND_TO_MANY_MESSAGE_TYPES`: one message per registration (or per address that asked) queued by one press
+or one job, about two hundred at a time, the most urgent first — a race called off, then a moved start, the reminder, the
+organizers' words, the thank-you after the race, and the announcement to people not yet registered; a club copy rides
+with its type. The same order for a press's own rows and in the batch handed to the worker. So a send of two hundred never
+stands in front of a verification or an offer queued after it. **No reserve**: the sends to many get no cap, no hold and
+no mark; `/api/health`, the queue panel and the public «emailurile întârzie» never call one late for waiting its turn —
+the deferred, paused-late, stopped-late, retrying-late and failed counts still catch it — while a manual resend of one is
+judged as the person's own. **During a Mailgun stop Gmail carries only the registrations' own messages**: in the carried
+path a send to many on Mailgun's road, like the bulk kind, is not claimed — no mark, no attempt spent — and leaves by
+Mailgun in its order when the stop ends; one whose own road is Gmail leaves by Gmail, and a press's own «Trimite acum»
+rows (§540), let through only with Gmail's room for all of them, leave by Gmail as the press said. **The bulk hold never carries a stop
+mark into the future**: a due row the newsletter's hold moves to the reset loses Mailgun's pause or allowance mark (its
+stop has ended; a stop in force is `platform_settings.mailgunStop`), which before closed Mailgun's whole road until
+00:05 UTC. «Trimite acum» (§540), the batch size, the pinger, the hourly pace and the newsletter's reserve are unchanged.
 
 ### 16.2 Job endpoints
 
@@ -3437,7 +3447,11 @@ asked, per send) — the manage token read through the reader bound to the regis
 spent, and a second press keeps the first moment. A registration has re-confirmed when any of its asks is answered — the
 list's chip, its filter, the export and every «Mesaje trimise» row read that one rule. Answering is optional: nothing
 reads the answer but the backoffice and the person's own manage page — no state, place, hold, deadline, allocator or
-capacity term — and nobody is cancelled for not answering.
+capacity term — and nobody is cancelled for not answering. After the answer the page still says what is owed: for a
+registration owing the declaration «Mai ai de semnat declarația: fără ea înscrierea nu e confirmată.» (and the waiting
+list's line for a waiting entry) is drawn before the press, during it and after it, above «Am notat că vii…». While the
+automatic POST is in flight the button wears its pending label («Notăm că vii…»). The answer's page replaces the page that
+pressed in the history (`redirect(…, RedirectType.replace)`), so Back never mounts the island again.
 
 `EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
 event before its start — the club's reminder lead or the event's own (§377; 48 hours by default) — once per registration (`registration:<id>:reminder`), with

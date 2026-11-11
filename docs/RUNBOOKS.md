@@ -1103,9 +1103,14 @@ or off; it goes when the queue is through. Four causes, told apart by the same p
    function log line `[jobs] <job>: finished after the response in <ms> ms` is the authority:
    `SETUP.md` §40, `DECISIONS.md` §667). Run
    `yarn smoke` on the environment; `jobs[].status` names which one is stale. Pressing
-   "Trimite acum" on `/admin/registrations` drains the outbox by hand meanwhile. A send to many — an organizers'
-   message, the reminder, «Detalii actualizate» — waiting behind the registrations' own emails is not a stall and is not
-   counted overdue: it leaves at the queue's pace, and its own «Mesaje trimise» row on the event says «Au plecat · Așteaptă».
+   "Trimite acum" on `/admin/registrations` drains the outbox by hand meanwhile. A send to many — the
+   cancellation, «Detalii actualizate», the reminder, an organizers' message, «Mulțumește» and «s-au deschis înscrierile»
+   (`SEND_TO_MANY_MESSAGE_TYPES`, in the order they leave) — waiting behind the registrations' own emails is not a stall
+   and is not counted overdue: it leaves at the queue's pace. Only an organizers' message has a «Mesaje trimise» row on the
+   event, which says «Au plecat · Așteaptă»; every other one shows on «Setări» → «Emailuri» → «Emailuri azi». An
+   Administrator's «Retrimite» of one of them for one runner is that runner's own message and is judged as one. While
+   Mailgun is stopped, «Gmail preia când Mailgun se oprește» carries only the registrations' own messages: a send to many
+   waits for Mailgun and leaves when the stop ends.
 3. **Paused by the provider** (§605) — `lastError` starts "paused by the provider:". Mailgun
    answered 429, or 400 "not allowed to send" with the probation's words («You are sending too fast.
    Your account is on probation…»): the message waits, due at `Retry-After` or fifteen minutes, and no

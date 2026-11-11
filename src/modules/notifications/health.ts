@@ -234,7 +234,17 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
   const carried = whileStopped.road === "gmail";
   const held = heldByMailgunCondition();
   const fallbackWaiting = sql`${emailOutbox.lastError} LIKE ${`${FALLBACK_WAITING_ERROR_PREFIX}%`}`;
-  const notCarried = (where: SQL | undefined) => (carried ? and(where, sql`NOT coalesce(${held}, false)`) : where);
+  /*
+    A send to many on Mailgun's road, its manual resends left out (`SEND_TO_MANY_MESSAGE_TYPES`): during a stop Gmail does not
+    carry it (the decision «Cere reconfirmarea», part two) — it waits for Mailgun, so a held one is counted as any row nothing
+    carries, never as carried.
+  */
+  const sendToMany = sql`(${emailOutbox.messageType} IN (${sql.join(
+    SEND_TO_MANY_MESSAGE_TYPES.map((type) => sql`${type}`),
+    sql`, `,
+  )}) AND NOT ${emailOutbox.isManualResend})`;
+  const carriedNow = sql`(coalesce(${held}, false) AND NOT (${sendToMany} AND NOT coalesce(${gmailRoad}, false)))`;
+  const notCarried = (where: SQL | undefined) => (carried ? and(where, sql`NOT ${carriedNow}`) : where);
   const evidenceSince = new Date(now.getTime() - PACE_EVIDENCE_MS);
   const recentPause = sql`(${emailOutbox.lastError} LIKE ${`${RATE_PAUSE_ERROR_PREFIX}%`} AND ${emailOutbox.nextAttemptAt} > ${evidenceSince.toISOString()}::timestamptz)`;
   const turnWithinDeferral = sql`${emailOutbox.nextAttemptAt} <= ${deferredFrom.toISOString()}::timestamptz`;
@@ -276,18 +286,19 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     sql`${emailOutbox.nextAttemptAt} >= ${overdueBefore.toISOString()}::timestamptz`,
   );
   /*
-    A send to many (the decision «Cere reconfirmarea», part two: «Detalii actualizate», the reminder, the organizers'
-    message — `SEND_TO_MANY_MESSAGE_TYPES`) is not late for waiting past its turn: it waits behind the registrations' own
-    messages by design and drains at the queue's pace — 201 rows at 80 an hour take about two and a half hours, and its
-    tail would read «late» from minute ninety while the queue works. What still catches a real stall is said elsewhere,
-    and stays: a scheduler that stopped is the job check's (`jobs/health.ts#checkJobHealth`, the outbox job's last run);
+    A send to many (the decision «Cere reconfirmarea», part two: the cancellation, «Detalii actualizate», the reminder, the
+    organizers' message, the thank-you, «s-au deschis înscrierile» — `SEND_TO_MANY_MESSAGE_TYPES`) is not late for waiting
+    past its turn: it waits behind the registrations' own messages by design and drains at the queue's pace — 201 rows at
+    80 an hour take about two and a half hours, and its tail would read «late» from minute ninety while the queue works.
+    An Administrator's manual resend of one of them, for one runner, is that person's own message, and late as one.
+    What still catches a real stall is said elsewhere, and stays: a scheduler that stopped is the job check's (`jobs/health.ts#checkJobHealth`, the outbox job's last run);
     a provider's refusal, pause or stop is the other buckets' — deferred, paused late, stopped late, retrying late, failed
     — which count such a row exactly as any other; and a registration's own message waiting past its turn is late here.
     Each late row counted once: a recent pause and a stop nothing carries have counts of their own.
   */
   const lateWhere = and(
     overdueWhere,
-    not(inArray(emailOutbox.messageType, [...SEND_TO_MANY_MESSAGE_TYPES])),
+    sql`NOT ${sendToMany}`,
     sql`NOT coalesce(${recentPause}, false)`,
     stopUncarried ? sql`NOT coalesce(${fallbackWaiting}, false)` : undefined,
   );

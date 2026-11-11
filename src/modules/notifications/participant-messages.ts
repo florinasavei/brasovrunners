@@ -322,8 +322,10 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
  * What the people a send asked did since (the decision «Cere reconfirmarea»), real registrations only (§12.6). The first
  * that matches wins, per ask: «Au anulat» — cancelled at or after the ask, by the person or by an Administrator (decided
  * for the owner: any cancellation after the ask); «Au reconfirmat» — still registered and pressed «Vin» on any ask of
- * the registration, this send's or another's; «N-au răspuns» — still registered and answered none. An expired registration is in none of the three. Information for the organizers,
- * never a state.
+ * the registration, this send's or another's; «N-au răspuns» — in a state that can answer (`RECONFIRM_STATUSES`: confirmed,
+ * owing the declaration, on the waiting list) and answered none. A waiting-list offer has no button: silent, it is in
+ * neither «Au reconfirmat» nor «N-au răspuns» (one that answered before its offer stays under «Au reconfirmat»). An expired
+ * registration is in none of the three. Information for the organizers, never a state.
  */
 export type ReconfirmAnswers = { yes: number; cancelled: number; none: number };
 

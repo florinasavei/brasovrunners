@@ -48,6 +48,7 @@ export async function pressMailValues<T extends Record<string, unknown>>(
       nextAttemptAt: emailOutbox.nextAttemptAt,
       createdAt: emailOutbox.createdAt,
       lastError: emailOutbox.lastError,
+      isManualResend: emailOutbox.isManualResend,
       // The payload's flags only — a family's hold (§519), a press's «now» (§540), a club copy (§320) — never its words.
       familyHeld: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> 'sittingHeld') = 'true' or (${emailOutbox.payloadJson} ->> 'familyHeld') = 'true', false)`,
       sentNow: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> ${SENT_NOW_FLAG}::text) = 'true', false)`,

@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * «Cere reconfirmarea» (the decision «Cere reconfirmarea»; BR-REQ-070-01, BR-REQ-060-01) — who said «Vin» is the
+ * «Cere reconfirmarea» (the decision «Cere reconfirmarea»; BR-REQ-070-01) — who said «Vin» is the
  * organizers' information, never a disclosure and never a rule. It is written by the send and by the person's own manage
  * page, read back by that same page (its noted answer), and read by the backoffice: the registrations list (its chip and its filter), the registration's page,
  * «Mesaje trimise», the registrations' Excel and CSV and «Toate datele unei persoane». Never by another public page (the

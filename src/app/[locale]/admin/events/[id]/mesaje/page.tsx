@@ -143,6 +143,16 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
         : t(`participantMessages.paceRuns.${hoursKey(outlook.hours)}`, { batch: String(OUTBOX_BATCH_SIZE), minutes: String(minutesPerRun), hours: String(outlook.hours) });
   // Where a large send belongs, by the screen's own labels: «Setări» → «Emailuri» → the plan's heading.
   const planPath = { settings: t("nav.settings"), emails: t("settingsTabs.emails"), plan: t("emails.plan.title") };
+  /*
+    Mailgun stopped now (§622), read once with the volume, as `/api/health` reads it (`readMailgunStop` on Mailgun's road):
+    a send to many on Mailgun's road waits for it — Gmail carries only the registrations' own messages — so the line says
+    so, until when, and no sentence about what leaves now or today stands beside it.
+  */
+  const mailgunStoppedLine = volume.mailgunStop
+    ? t("participantMessages.mailgunStopped", {
+        until: formatDay(volume.mailgunStop.until, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" }),
+      })
+    : null;
 
   const audiences: ComposerAudience[] = PARTICIPANT_MESSAGE_AUDIENCES.map((audience) => {
     const { real, test: testCount } = counts[audience];
@@ -179,7 +189,10 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
           cap: String(volume.gmailDailyCap),
         });
       }
-      paceLine = [deferredLine, outlook.now > 0 ? paceOf(outlook) : "", outlook.waiting === 0 ? t("participantMessages.gmailFits") : "", ownFirst]
+      // Gmail's limit is the club's other Gmail mail's too: always said, and the dialog's warning when the send does not fit now.
+      const shared = t("participantMessages.gmailShared");
+      if (outlook.waiting > 0) warningLine = shared;
+      paceLine = [deferredLine, outlook.now > 0 ? paceOf(outlook) : "", outlook.waiting === 0 ? `${t("participantMessages.gmailFits")} ${shared}` : "", ownFirst]
         .filter(Boolean)
         .join(" ");
     } else {
@@ -187,7 +200,8 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
         copies > 0 && copiesRoad !== participantsRoad
           ? t("participantMessages.costCopiesGmail", { messages: String(outlook.messages), allowance, copies: String(copies) })
           : t("participantMessages.cost", { messages: String(outlook.messages), allowance });
-      if (outlook.deferred > 0) {
+      // While Mailgun is stopped nothing of this send leaves now or today: the counts of «now» and «today» are not said.
+      if (outlook.deferred > 0 && !mailgunStoppedLine) {
         deferredLine =
           outlook.period === "month"
             ? t("participantMessages.deferredMonth", { now: String(outlook.now), deferred: String(outlook.deferred) })
@@ -200,7 +214,12 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
                 })
               : t("participantMessages.deferredDay", { now: String(outlook.now), deferred: String(outlook.deferred) });
       }
-      // A daily plan the send does not fit (part two): a warning, since the registrations' own emails share that allowance.
+      /*
+        A daily plan the send does not fit (part two): a warning, since the registrations' own emails share that allowance —
+        they leave first, and once the day's allowance is spent Mailgun sends nothing more that day; by the club's Gmail
+        then only where «Gmail preia când Mailgun se oprește» is in force (`volume.fallbackToGmail`), and Gmail carries
+        only them, never the rest of this send (`outbox.ts`).
+      */
       if (outlook.period === "day" && outlook.deferred > 0) {
         warningLine = [
           t(`participantMessages.dailyWarning.${countForm(outlook.daysUsed, locale)}`, { days: String(outlook.daysUsed) }),
@@ -208,8 +227,9 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
           t("participantMessages.dailyPlan", planPath),
         ].join(" ");
       }
-      const fitsLine = outlook.period === "none" || outlook.deferred > 0 ? "" : t(outlook.period === "month" ? "participantMessages.fitsMonth" : "participantMessages.fitsToday");
-      paceLine = [deferredLine, outlook.now > 0 ? paceOf(outlook) : "", fitsLine, ownFirst].filter(Boolean).join(" ");
+      const fitsLine =
+        mailgunStoppedLine || outlook.period === "none" || outlook.deferred > 0 ? "" : t(outlook.period === "month" ? "participantMessages.fitsMonth" : "participantMessages.fitsToday");
+      paceLine = [mailgunStoppedLine, deferredLine, outlook.now > 0 ? paceOf(outlook) : "", fitsLine, ownFirst].filter(Boolean).join(" ");
     }
     return {
       value: audience,

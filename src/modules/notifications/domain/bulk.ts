@@ -44,32 +44,59 @@ export function bulkBudget(headroom: { period: "day" | "month" | "none"; allowan
 }
 
 /**
- * The sends to many (the decision «Cere reconfirmarea», part two): one message per registration of an event, queued by
- * one press or one job, so two hundred at a time — and each of them about a registration that is already made. The
- * outbox claims them after every registration's own message (the address to confirm, the declaration, the offer, the
- * confirmation), which a person may be waiting for on a page right now, and before the bulk types above; among
- * themselves, in this order:
+ * The sends to many (the decision «Cere reconfirmarea», part two): one message per registration of an event — or per
+ * address that asked to hear of one — queued by one press or one job, so about two hundred at a time, and each of them
+ * about a registration already made (or, for the last, not made at all). The outbox claims them after every registration's
+ * own message (the address to confirm, the declaration, the offer, the confirmation), which a person may be waiting for
+ * on a page right now, and before the bulk types above; among themselves, in this order, the most urgent first:
  *
- * 1. `EVENT_UPDATE_NOTICE` — «Detalii actualizate», a moved start or place: the most urgent of the three;
- * 2. `EVENT_REMINDER` — the automatic reminder, about two hundred rows queued by the maintenance job in one transaction
- *    a reminder lead before the start (`event-mail.ts#queueEventReminders`);
- * 3. `ORGANIZER_MESSAGE` — «Trimite un mesaj participanților», the organizers' own words.
+ * 1. `EVENT_CANCELLED` — «{event} a fost anulat», queued for everyone registered when an organizer cancels a date with
+ *    the notice ticked (`event-notices.ts`): first, because somebody may be about to travel to a race that will not run;
+ * 2. `EVENT_UPDATE_NOTICE` — «Detalii actualizate», a moved start or place, queued the same way: what changed about a race
+ *    that still runs;
+ * 3. `EVENT_REMINDER` — the automatic reminder, about two hundred rows queued by the maintenance job in one transaction
+ *    a reminder lead before the start (`event-mail.ts#queueEventReminders`): the day and the place, already known;
+ * 4. `ORGANIZER_MESSAGE` — «Trimite un mesaj participanților», the organizers' own words (and «Cere reconfirmarea»),
+ *    which an organizer writes days ahead and can wait for the three above;
+ * 5. `EVENT_THANKS` — «Mulțumește», to everyone checked in, the afternoon of the race (`event-mail.ts#sendEventThanks`):
+ *    after the race, nothing in it to act on before another message;
+ * 6. `REGISTRATION_OPENED` — one per address that asked «Anunță-mă când se deschid înscrierile», queued by the maintenance
+ *    job when the window opens (`registrations/interest.ts`): to people with no registration yet, so after every message
+ *    to somebody registered, and still before the newsletter's kind, since each of them asked for this one.
  *
  * An order and nothing else: no cap, no hold and no mark — they leave at the queue's pace, in the room the
  * registrations' own messages leave, and a club copy rides with its type. So a send of two hundred never stands in
- * front of a verification queued after it. `/api/health` does not call one of them late for waiting its turn
- * (`health.ts`), and the public «emailurile întârzie» does not count them (`email-delay.ts`, `public-delay.ts`).
+ * front of a verification queued after it. One exception: an Administrator's «Retrimite» of one of them for one runner
+ * (`is_manual_resend`) is that person's own message, and goes with the registrations' own (`sendOrderOf`,
+ * `waitsAsSendToMany`). While Mailgun is stopped, Gmail carries only the registrations' own messages: a send to many on
+ * Mailgun's road waits for Mailgun, untouched (`outbox.ts`). `/api/health` does not call one of them late for waiting its
+ * turn (`health.ts`), and the public «emailurile întârzie» does not count them (`email-delay.ts`, `public-delay.ts`).
  */
-export const SEND_TO_MANY_MESSAGE_TYPES = ["EVENT_UPDATE_NOTICE", "EVENT_REMINDER", "ORGANIZER_MESSAGE"] as const satisfies readonly EmailMessageType[];
+export const SEND_TO_MANY_MESSAGE_TYPES = [
+  "EVENT_CANCELLED",
+  "EVENT_UPDATE_NOTICE",
+  "EVENT_REMINDER",
+  "ORGANIZER_MESSAGE",
+  "EVENT_THANKS",
+  "REGISTRATION_OPENED",
+] as const satisfies readonly EmailMessageType[];
 
 export function isSendToManyMessage(messageType: EmailMessageType): boolean {
   return (SEND_TO_MANY_MESSAGE_TYPES as readonly EmailMessageType[]).includes(messageType);
 }
 
 /**
- * A non-bulk message's place in the claim's order: 0 for a registration's own, then 1, 2, 3 by
- * `SEND_TO_MANY_MESSAGE_TYPES`. The bulk ones are claimed apart, last, under their cap.
+ * Whether a row waits as a send to many: its type is one, and it is not an Administrator's manual resend for one runner —
+ * that one is the person's own message, claimed, judged late and counted ahead as the registrations' own are.
  */
-export function sendOrderOf(messageType: EmailMessageType): number {
-  return (SEND_TO_MANY_MESSAGE_TYPES as readonly EmailMessageType[]).indexOf(messageType) + 1;
+export function waitsAsSendToMany(messageType: EmailMessageType, isManualResend = false): boolean {
+  return !isManualResend && isSendToManyMessage(messageType);
+}
+
+/**
+ * A non-bulk message's place in the claim's order: 0 for a registration's own (a manual resend of any type included),
+ * then 1 to 6 by `SEND_TO_MANY_MESSAGE_TYPES`. The bulk ones are claimed apart, last, under their cap.
+ */
+export function sendOrderOf(messageType: EmailMessageType, isManualResend = false): number {
+  return isManualResend ? 0 : (SEND_TO_MANY_MESSAGE_TYPES as readonly EmailMessageType[]).indexOf(messageType) + 1;
 }

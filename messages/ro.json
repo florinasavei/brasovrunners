@@ -1676,7 +1676,7 @@
           "note_added": "Notă internă adăugată",
           "note_deleted": "Notă internă ștearsă",
           "partner_set": "De la parteneri: numele partenerului schimbat",
-          "reconfirmed": "A spus că vine, din linkul propriu"
+          "reconfirmed": "A apăsat „Vin”, din linkul propriu"
         },
         "event": {
           "capacity_raised_for_offer": "Loc suplimentar adăugat pentru o ofertă («Trimite-i oferta»): {from} → {to}",
@@ -9135,7 +9135,7 @@
                 "Scrie «Subiect» și «Mesajul», în română și în engleză.",
                 "Pentru un reminder, apasă «Completează cu textul de reminder»: scrie textul și bifează «Cere reconfirmarea». Cine apasă „Vin” apare cu «A reconfirmat»; nu se anulează nimeni automat.",
                 "La «Cum arată emailul» citește ambele variante: «Înscris în română» și «Înscris în engleză».",
-                "Apasă «Trimite mesajul», apoi în fereastră «Trimite»: fereastra spune cât durează și câte pleacă azi. În «Mesaje trimise» vezi câte au plecat și câți au reconfirmat.",
+                "Apasă «Trimite mesajul», apoi în fereastră «Trimite»: fereastra spune cât durează și dacă încap toate acum. În «Mesaje trimise» vezi câte au plecat și câți au reconfirmat.",
                 "Doar despre acest eveniment: fără reclame, oferte de la sponsori sau alte evenimente."
               ]
             },
@@ -10293,12 +10293,12 @@
       "testLine": "Înscrieri de test, care primesc și ele mesajul și nu sunt numărate nicăieri: {test}.",
       "cost": "Emailuri, cu tot cu copiile pentru club: {messages} — se scad din cota Mailgun ({allowance}).",
       "waiting": "{waiting} așteaptă deja la coadă",
-      "deferredDay": "Azi pot pleca {now} dintre ele; celelalte {deferred} rămân la coadă și pleacă singure după miezul nopții (UTC), când se reface cota zilnică. Nu se pierde niciunul.",
-      "deferredMonth": "Luna aceasta pot pleca {now} dintre ele; celelalte {deferred} rămân la coadă și pleacă singure când se reface cota lunară. Nu se pierde niciunul.",
+      "deferredDay": "Azi pot pleca {now} dintre ele; restul așteaptă la coadă și pleacă după miezul nopții (UTC), când se reface cota zilnică. Nu se pierde niciunul.",
+      "deferredMonth": "Luna aceasta pot pleca {now} dintre ele; restul așteaptă la coadă și pleacă când se reface cota lunară. Nu se pierde niciunul.",
       "deferredDays": {
-        "one": "Azi pot pleca {now} dintre ele; celelalte {deferred} rămân la coadă și pleacă singure în cel puțin încă {days} zi, cel mult {perDay} pe zi, cât lasă cota refăcută la miezul nopții (UTC). Nu se pierde niciunul.",
-        "few": "Azi pot pleca {now} dintre ele; celelalte {deferred} rămân la coadă și pleacă singure în cel puțin încă {days} zile, cel mult {perDay} pe zi, cât lasă cota refăcută la miezul nopții (UTC). Nu se pierde niciunul.",
-        "other": "Azi pot pleca {now} dintre ele; celelalte {deferred} rămân la coadă și pleacă singure în cel puțin încă {days} de zile, cel mult {perDay} pe zi, cât lasă cota refăcută la miezul nopții (UTC). Nu se pierde niciunul."
+        "one": "Azi pot pleca {now} dintre ele; restul așteaptă la coadă și pleacă în cel puțin încă {days} zi, cel mult {perDay} pe zi, cât lasă cota refăcută la miezul nopții (UTC). Nu se pierde niciunul.",
+        "few": "Azi pot pleca {now} dintre ele; restul așteaptă la coadă și pleacă în cel puțin încă {days} zile, cel mult {perDay} pe zi, cât lasă cota refăcută la miezul nopții (UTC). Nu se pierde niciunul.",
+        "other": "Azi pot pleca {now} dintre ele; restul așteaptă la coadă și pleacă în cel puțin încă {days} de zile, cel mult {perDay} pe zi, cât lasă cota refăcută la miezul nopții (UTC). Nu se pierde niciunul."
       },
       "subject": "Subiect",
       "subjectHelp": "În ambele limbi, obligatoriu, cel mult {max} de caractere în fiecare. Poți folosi câmpurile {list}; se completează pentru fiecare participant.",
@@ -10350,7 +10350,7 @@
         "p3": "Dacă vii și vezi butonul „Vin” mai jos, apasă-l. Așa știm pe cine așteptăm.",
         "p4": "Dacă nu mai poți ajunge, apasă „Nu mai pot ajunge”, ca să poată veni altcineva în locul tău.",
         "p5": "„Vin” e opțional: dacă nu-l apeși, nu se schimbă nimic la înscrierea ta.",
-        "p6": "Dacă mai ai de semnat declarația sau ai primit un loc oferit, semnează din emailul primit, până la termenul din el.",
+        "p6": "Dacă mai ai de semnat declarația sau ai primit un loc oferit, urmează pașii din emailul primit.",
         "p7": "Mulțumim și ne vedem la start!"
       },
       "paceRuns": {
@@ -10366,23 +10366,25 @@
       "fitsToday": "Încape în cota de azi.",
       "fitsMonth": "Încape în cota lunii.",
       "ownFirst": "Emailurile înscrierilor pleacă înaintea lor.",
-      "costGmail": "Emailuri prin Gmail-ul clubului: {messages}. Gmail mai poate trimite {room} din {cap} în 24 de ore.",
+      "mailgunStopped": "Mailgun e oprit acum, până {until}. Mesajul începe să plece când repornește.",
+      "costGmail": "Emailuri prin Gmail-ul clubului: {messages}. Gmail mai poate trimite acum {room} din limita de {cap}.",
       "costCopiesGmail": "Emailuri: {messages} — se scad din cota Mailgun ({allowance}). Copiile pentru club, {copies}, pleacă prin Gmail-ul clubului.",
       "paceGmail": {
         "one": "Pleacă prin Gmail-ul clubului, câte {batch} la {minutes} minute ziua (noaptea mai rar): cam {hours} oră pe ritmul de zi.",
         "few": "Pleacă prin Gmail-ul clubului, câte {batch} la {minutes} minute ziua (noaptea mai rar): cam {hours} ore pe ritmul de zi.",
         "other": "Pleacă prin Gmail-ul clubului, câte {batch} la {minutes} minute ziua (noaptea mai rar): cam {hours} de ore pe ritmul de zi."
       },
-      "gmailFits": "Încape în limita Gmail pe 24 de ore.",
-      "gmailWaits": "Acum pot pleca {now} dintre ele; celelalte {waiting} așteaptă să se facă loc în limita Gmail de {cap} pe 24 de ore. Nu se pierde niciunul.",
-      "gmailOverflow": "Prin Gmail pot pleca acum {now} dintre ele; celelalte {waiting} pleacă prin Mailgun, cum e setat la limita Gmail.",
+      "gmailFits": "Încape acum în limita Gmail.",
+      "gmailShared": "Limita Gmail e comună cu celelalte emailuri care pleacă prin Gmail-ul clubului.",
+      "gmailWaits": "Acum pot pleca {now} dintre ele; restul așteaptă să se facă loc în limita Gmail de {cap}. Nu se pierde niciunul.",
+      "gmailOverflow": "Prin Gmail pot pleca acum {now} dintre ele; restul pleacă prin Mailgun, cum e setat la limita Gmail, și se scade din cota Mailgun.",
       "dailyWarning": {
-        "one": "Pe un plan cu cotă zilnică, mesajul acesta ocupă cota zilnică timp de {days} zi.",
-        "few": "Pe un plan cu cotă zilnică, mesajul acesta ocupă cota zilnică timp de {days} zile.",
-        "other": "Pe un plan cu cotă zilnică, mesajul acesta ocupă cota zilnică timp de {days} de zile."
+        "one": "Pe un plan cu cotă zilnică, mesajul acesta folosește cota zilnică în cel puțin {days} zi.",
+        "few": "Pe un plan cu cotă zilnică, mesajul acesta folosește cota zilnică în cel puțin {days} zile.",
+        "other": "Pe un plan cu cotă zilnică, mesajul acesta folosește cota zilnică în cel puțin {days} de zile."
       },
-      "dailyShare": "Emailurile înscrierilor pleacă înaintea lui, dar din aceeași cotă: după ce se termină, așteaptă ziua următoare.",
-      "dailyShareGmail": "Emailurile înscrierilor pleacă înaintea lui, dar din aceeași cotă: după ce se termină, pleacă prin Gmail-ul clubului.",
+      "dailyShare": "Emailurile înscrierilor pleacă înaintea lui și din aceeași cotă: după ce se termină cota zilei, Mailgun nu mai trimite nimic în ziua aceea, nici emailurile înscrierilor.",
+      "dailyShareGmail": "Emailurile înscrierilor pleacă înaintea lui și din aceeași cotă: după ce se termină cota zilei, Mailgun nu mai trimite nimic în ziua aceea, iar ele pleacă prin Gmail-ul clubului.",
       "dailyPlan": "Un mesaj mare se trimite pe un plan lunar: «{settings}» → «{emails}» → «{plan}».",
       "historyAnswers": "Au reconfirmat {yes} · Au anulat {cancelled} · N-au răspuns {none}",
       "historyProgress": "Au plecat {left} · Așteaptă {waiting}",
@@ -13005,6 +13007,7 @@
       "titleNoEventOther": "Vii la eveniment?",
       "yes": "Da, vin la cursă",
       "yesOther": "Da, vin la eveniment",
+      "yesPending": "Notăm că vii…",
       "optional": "Răspunsul e opțional: dacă nu apeși „{button}”, nu se schimbă nimic la înscrierea ta.",
       "pending": "Mai ai de semnat declarația: fără ea înscrierea nu e confirmată.",
       "waitlisted": "Ești pe lista de așteptare; locul tău în ea nu se schimbă, oricum ai răspunde.",

@@ -7,7 +7,7 @@ import { readJobCadence } from "@/modules/jobs/cadence";
 import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
 import { FAMILY_HELD, FAMILY_HELD_UNTIL, SITTING_HELD } from "@/modules/registrations/domain/family-sitting";
 import { env } from "@/shared/config/env";
-import { isBulkMessage, isSendToManyMessage } from "./domain/bulk";
+import { isBulkMessage, waitsAsSendToMany } from "./domain/bulk";
 import { CLUB_COPY_FLAG } from "./domain/club-notices";
 import { type EmailDelay, type EmailDelayFacts, isWaitedFor, judgeEmailDelay } from "./domain/email-delay";
 import { isRelayMessage } from "./domain/relay";
@@ -30,8 +30,8 @@ import { fallbackNoticeForOutbox, outboxRoadsFor } from "./outbox-roads";
  * (`cachedEmailDelay`, a minute), never directly.
  *
  * **One query.** A public read is paid for in Neon's wakes (§333), so the facts come in a single
- * statement: the outbox grouped by message type and club-copy flag — the two things the roads and the
- * "waited for" rule are decided by — with the email plan and the transport setting as two scalar
+ * statement: the outbox grouped by message type, club-copy flag and manual resend — what the roads, the
+ * "waited for" rule and the claim's order are decided by — with the email plan and the transport setting as two scalar
  * sub-selects beside them. The groups are classified here, in memory: a handful of rows. The scan is
  * the rows not yet sent and the ones sent in the last ninety minutes, the same ranges
  * `/api/health` and the claim already read through their indexes (§98, §605).
@@ -40,10 +40,11 @@ import { fallbackNoticeForOutbox, outboxRoadsFor } from "./outbox-roads";
 /** A row more than this far in the future, put off by a provider, is waiting for its allowance's reset (`health.ts`'s `DEFERRED_BEYOND_MS`). */
 const DEFERRED_BEYOND_MS = 60 * 60_000;
 
-/** One group of the query: a message type, club copy or not. */
+/** One group of the query: a message type, club copy or not, manual resend or not. */
 type FactsGroup = {
   messageType: EmailMessageType;
   clubCopy: boolean;
+  manualResend: boolean;
   waiting: number;
   waitingSince: unknown;
   deferredUntil: unknown;
@@ -105,6 +106,7 @@ export async function readEmailDelayFacts<T extends Record<string, unknown>>(db:
     .select({
       messageType: emailOutbox.messageType,
       clubCopy,
+      manualResend: emailOutbox.isManualResend,
       waiting: sql<number>`(count(*) FILTER (WHERE ${waiting}))::int`,
       waitingSince: sql<unknown>`min(${waitedSince}) FILTER (WHERE ${waiting})`,
       deferredUntil: sql<unknown>`min(${emailOutbox.nextAttemptAt}) FILTER (WHERE ${waiting} AND ${deferred})`,
@@ -119,7 +121,7 @@ export async function readEmailDelayFacts<T extends Record<string, unknown>>(db:
     })
     .from(emailOutbox)
     .where(or(inArray(emailOutbox.status, ["PENDING", "PROCESSING"]), gt(emailOutbox.sentAt, new Date(now.getTime() - PACE_EVIDENCE_MS))))
-    .groupBy(emailOutbox.messageType, clubCopy);
+    .groupBy(emailOutbox.messageType, clubCopy, emailOutbox.isManualResend);
 
   // The Gmail takeover (§622) carries a stop only once the notice in force names it: the outbox's own
   // reader, asked only when the switch could act — so a stop Gmail carries is not read as a stop here.
@@ -165,7 +167,8 @@ function factsFromGroups(groups: readonly FactsGroup[], noticeNamesFallback: boo
     if (mailgun) {
       inFlight += group.inFlight;
       facts.pausedUntil = latest(facts.pausedUntil, asDate(group.pausedUntil));
-      if (!isBulkMessage(group.messageType) && !isSendToManyMessage(group.messageType)) facts.aheadOnMailgun += group.waiting;
+      // A manual resend of a send to many is the person's own message, ahead as one (the decision «Cere reconfirmarea», part two).
+      if (!isBulkMessage(group.messageType) && !waitsAsSendToMany(group.messageType, group.manualResend)) facts.aheadOnMailgun += group.waiting;
     }
     if (!isWaitedFor(group.messageType, group.clubCopy) || group.waiting === 0) continue;
     facts.queued += group.waiting;

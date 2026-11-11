@@ -10,13 +10,15 @@ import { participants } from "@/db/schema/participants";
 import { registrationReconfirmations } from "@/db/schema/registration-reconfirmations";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { recordMailgunStop } from "@/modules/notifications/mailgun-stop";
+import { nextAllowanceResetAt } from "@/modules/notifications/domain/retry";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Cere reconfirmarea» on the backoffice's screens (the decision «Cere reconfirmarea»; BR-REQ-060-01, BR-REQ-080-01, BR-REQ-080-02): the
+ * «Cere reconfirmarea» on the backoffice's screens (the decision «Cere reconfirmarea»; BR-REQ-070-01, BR-REQ-080-01, BR-REQ-080-02): the
  * chip «A reconfirmat» on a list row whose person said «Vin» and is still registered, the filter «Reconfirmare» with its three
  * answers, the line on the registration's page; on «Trimite un mesaj participanților» the tick, its help line, the ready text
  * in both languages for «Completează cu textul de reminder», the pace line before «Trimite», and on each «Mesaje trimise» row
@@ -341,11 +343,13 @@ describe("«Trimite un mesaj participanților»", () => {
   /** 201 confirmed registrations of one race, and the page's question and composer line for «Toți cei înscriși». */
   async function twoHundredAndOne() {
     const race = await createRace();
+    serial += 1;
+    const batch = serial;
     const people = await db
       .insert(participants)
       .values(
         Array.from({ length: 201 }, (_, index) => {
-          const email = `crowd${index}@example.org`;
+          const email = `crowd${batch}-${index}@example.org`;
           return { deliveryEmail: email, normalizedEmail: email, canonicalEmail: email, canonicalizationVersion: 2, defaultName: `Crowd ${index}`, preferredLocale: "ro" as const };
         }),
       )
@@ -400,14 +404,15 @@ describe("«Trimite un mesaj participanților»", () => {
     await sentToday(5);
     const { body, warning, audience } = await twoHundredAndOne();
     expect(body).toContain(
-      "Azi pot pleca 95 dintre ele; celelalte 106 rămân la coadă și pleacă singure în cel puțin încă 2 zile, cel mult 100 pe zi, cât lasă cota refăcută la miezul nopții (UTC). Nu se pierde niciunul.",
+      "Azi pot pleca 95 dintre ele; restul așteaptă la coadă și pleacă în cel puțin încă 2 zile, cel mult 100 pe zi, cât lasă cota refăcută la miezul nopții (UTC). Nu se pierde niciunul.",
     );
     // The hours are today's 95 at 80 an hour, not all 201.
     expect(body).toContain("cam 2 ore pe ritmul de zi. Emailurile înscrierilor pleacă înaintea lor.");
     expect(body).not.toContain("cam 3 ore");
     expect(body).not.toContain("Încape în cota de azi.");
+    // Today 95, then 100 and 6: the allowance on at least three days; once a day's is spent Mailgun sends nothing more that day.
     const expected =
-      "Pe un plan cu cotă zilnică, mesajul acesta ocupă cota zilnică timp de 3 zile. Emailurile înscrierilor pleacă înaintea lui, dar din aceeași cotă: după ce se termină, așteaptă ziua următoare. Un mesaj mare se trimite pe un plan lunar: «Setări» → «Emailuri» → «Planul Mailgun și cât mai putem trimite».";
+      "Pe un plan cu cotă zilnică, mesajul acesta folosește cota zilnică în cel puțin 3 zile. Emailurile înscrierilor pleacă înaintea lui și din aceeași cotă: după ce se termină cota zilei, Mailgun nu mai trimite nimic în ziua aceea, nici emailurile înscrierilor. Un mesaj mare se trimite pe un plan lunar: «Setări» → «Emailuri» → «Planul Mailgun și cât mai putem trimite».";
     // In the dialog's warning and on the composer, beside the deferral: the same sentence, worded on the server.
     expect(warning).toBe(expected);
     expect(audience?.warningLine).toBe(expected);
@@ -430,30 +435,93 @@ describe("«Trimite un mesaj participanților»", () => {
     expect(body).toContain("cam 3 ore pe ritmul de zi. Încape în cota lunii.");
   });
 
-  it("(c) on the club's Gmail road, 201 messages: Gmail's own room, cap and pace, and not one Mailgun sentence", async () => {
+  /** The club's Gmail carries the organizers' group («announcements»), with this cap and this choice at the cap. */
+  async function gmailRoad(cap: number, atGmailCap: "defer" | "mailgun") {
     state.gmail = true;
     await db.insert(platformSettings).values({
       key: "emailTransport",
       value: {
         groups: { links: "mailgun", confirmations: "mailgun", reminders: "mailgun", announcements: "gmail", club: "gmail", newsletter: "mailgun" },
-        gmailDailyCap: 200,
+        gmailDailyCap: cap,
         gmailPaceSeconds: 6,
-        atGmailCap: "defer",
+        atGmailCap,
         overflowToGmail: false,
         fallbackToGmail: true,
       },
     });
+  }
+  const GMAIL_SHARED = "Limita Gmail e comună cu celelalte emailuri care pleacă prin Gmail-ul clubului.";
+  const GMAIL_PACE = "Pleacă prin Gmail-ul clubului, câte 4 la 15 minute ziua (noaptea mai rar): cam 13 ore pe ritmul de zi.";
+
+  for (const atGmailCap of ["defer", "mailgun"] as const) {
+    it(`(c) on the club's Gmail road, 201 messages that fit Gmail's room («${atGmailCap}» at the cap): Gmail's room, its limit shared, no warning`, async () => {
+      await gmailRoad(250, atGmailCap);
+      const { body, warning, audience } = await twoHundredAndOne();
+      expect(body).toContain(`${GMAIL_PACE} Încape acum în limita Gmail. ${GMAIL_SHARED} Emailurile înscrierilor pleacă înaintea lor.`);
+      expect(audience?.costLine).toBe("Emailuri prin Gmail-ul clubului: 201. Gmail mai poate trimite acum 250 din limita de 250.");
+      expect(warning).toBeUndefined();
+      expect(audience?.deferredLine).toBeUndefined();
+      for (const line of [body, audience?.costLine ?? ""]) {
+        expect(line).not.toContain("Mailgun");
+        expect(line).not.toContain("cota");
+        expect(line).not.toContain("24 de ore");
+      }
+    });
+  }
+
+  it("(c) on the club's Gmail road, 201 messages that do not fit and wait at the cap: the rest wait, and the shared limit is the dialog's warning", async () => {
+    await gmailRoad(200, "defer");
     const { body, warning, audience } = await twoHundredAndOne();
     expect(body).toContain(
-      "Acum pot pleca 200 dintre ele; celelalte 1 așteaptă să se facă loc în limita Gmail de 200 pe 24 de ore. Nu se pierde niciunul. Pleacă prin Gmail-ul clubului, câte 4 la 15 minute ziua (noaptea mai rar): cam 13 ore pe ritmul de zi. Emailurile înscrierilor pleacă înaintea lor.",
+      `Acum pot pleca 200 dintre ele; restul așteaptă să se facă loc în limita Gmail de 200. Nu se pierde niciunul. ${GMAIL_PACE} Emailurile înscrierilor pleacă înaintea lor.`,
     );
-    expect(audience?.costLine).toBe("Emailuri prin Gmail-ul clubului: 201. Gmail mai poate trimite 200 din 200 în 24 de ore.");
+    expect(audience?.costLine).toBe("Emailuri prin Gmail-ul clubului: 201. Gmail mai poate trimite acum 200 din limita de 200.");
+    expect(warning).toBe(GMAIL_SHARED);
+    expect(audience?.warningLine).toBe(GMAIL_SHARED);
+    expect(body).not.toContain(GMAIL_SHARED);
     for (const line of [body, audience?.costLine ?? "", audience?.deferredLine ?? ""]) {
       expect(line).not.toContain("Mailgun");
       expect(line).not.toContain("cota");
       expect(line).not.toContain("20 la 15 minute");
+      // «the rest», never «celelalte 1».
+      expect(line).not.toMatch(/celelalte \d/);
     }
+  });
+
+  it("(c) on the club's Gmail road, 201 messages that do not fit and overflow to Mailgun at the cap: the rest by Mailgun, against its allowance", async () => {
+    await gmailRoad(200, "mailgun");
+    const { body, warning } = await twoHundredAndOne();
+    expect(body).toContain(
+      `Prin Gmail pot pleca acum 200 dintre ele; restul pleacă prin Mailgun, cum e setat la limita Gmail, și se scade din cota Mailgun. ${GMAIL_PACE} Emailurile înscrierilor pleacă înaintea lor.`,
+    );
+    expect(warning).toBe(GMAIL_SHARED);
+    expect(body).not.toMatch(/celelalte \d/);
+  });
+
+  it("(e) Mailgun stopped now (a pause, on a monthly plan): one sentence says until when and that the message starts when it restarts, and nothing leaves «now»", async () => {
+    await db.insert(platformSettings).values({ key: "emailPlan", value: { plan: "BASIC", dailyAllowance: null, monthlyAllowance: null, hourlyAllowance: 100, note: "" } });
+    await recordMailgunStop(db, { kind: "paused", until: new Date(Date.now() + 20 * 60_000) }, new Date());
+    const { body, warning } = await twoHundredAndOne();
+    expect(body).toMatch(
+      /Mailgun e oprit acum, până \p{L}+, \d{1,2} \p{L}+\.? \d{4}, la \d{2}:\d{2}\. Mesajul începe să plece când repornește\. Pleacă treptat, câte 20 la 15 minute ziua \(noaptea mai rar\): cam 3 ore pe ritmul de zi\. Emailurile înscrierilor pleacă înaintea lor\./u,
+    );
+    expect(body).not.toContain("Încape în cota lunii.");
+    expect(body).not.toContain("pot pleca");
     expect(warning).toBeUndefined();
+    state.locale = "en";
+    const english = await twoHundredAndOne();
+    expect(english.body).toMatch(/Mailgun is stopped now, until .+\. The message starts leaving when it restarts\./);
+    expect(english.body).not.toContain("It fits this month's allowance.");
+  });
+
+  it("(e) Mailgun stopped now (its daily allowance spent, Free with 5 sent): the stop said, no «Azi pot pleca», the daily warning kept", async () => {
+    await sentToday(5);
+    await recordMailgunStop(db, { kind: "allowance", until: nextAllowanceResetAt(new Date()) }, new Date());
+    const { body, warning } = await twoHundredAndOne();
+    expect(body).toMatch(/Mailgun e oprit acum, până .+\. Mesajul începe să plece când repornește\./);
+    expect(body).not.toContain("Azi pot pleca");
+    expect(body).not.toContain("Încape în cota de azi.");
+    expect(warning).toContain("Pe un plan cu cotă zilnică, mesajul acesta folosește cota zilnică în cel puțin 3 zile.");
   });
 
   it("gives each «Mesaje trimise» row the three numbers of a send that asked and how far it has left; neither for a send that did not ask", async () => {

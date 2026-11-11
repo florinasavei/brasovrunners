@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { RECONFIRM_STATUSES, reconfirmApplies, reconfirmUrlOf } from "@/modules/notifications/domain/cannot-come";
-import { isSendToManyMessage, SEND_TO_MANY_MESSAGE_TYPES, sendOrderOf } from "@/modules/notifications/domain/bulk";
+import { isSendToManyMessage, SEND_TO_MANY_MESSAGE_TYPES, sendOrderOf, waitsAsSendToMany } from "@/modules/notifications/domain/bulk";
 import { BULK_CLUB_COPY_MESSAGES } from "@/modules/notifications/domain/club-notices";
 import { ORGANIZER_SUBJECT_PLACEHOLDERS, organizerParagraphs, organizerSendOutlook, readOrganizerAskReconfirm, unknownOrganizerPlaceholders } from "@/modules/notifications/domain/organizer-message";
 import { fillReminderBoxes, REMINDER_BOXES, reminderOverwrites } from "@/modules/notifications/ui/reminder-fill";
@@ -55,16 +55,30 @@ describe("«Vin» goes only where a send asked", () => {
   });
 });
 
-describe("the order of the claim (part two): steps 2–4 in one constant, no reserve", () => {
-  it("puts «Detalii actualizate» before the reminder and the reminder before the organizers' message, after every registration's own", () => {
-    expect([...SEND_TO_MANY_MESSAGE_TYPES]).toEqual(["EVENT_UPDATE_NOTICE", "EVENT_REMINDER", "ORGANIZER_MESSAGE"]);
+describe("the order of the claim (part two): the sends to many in one constant, no reserve", () => {
+  it("puts the six sends to many after every registration's own, the cancellation first and «s-au deschis înscrierile» last", () => {
+    expect([...SEND_TO_MANY_MESSAGE_TYPES]).toEqual([
+      "EVENT_CANCELLED",
+      "EVENT_UPDATE_NOTICE",
+      "EVENT_REMINDER",
+      "ORGANIZER_MESSAGE",
+      "EVENT_THANKS",
+      "REGISTRATION_OPENED",
+    ]);
     expect(sendOrderOf("VERIFY_REGISTRATION_EMAIL")).toBe(0);
     expect(sendOrderOf("WAITLIST_SPOT_OFFER")).toBe(0);
-    expect(sendOrderOf("EVENT_UPDATE_NOTICE")).toBe(1);
-    expect(sendOrderOf("EVENT_REMINDER")).toBe(2);
-    expect(sendOrderOf("ORGANIZER_MESSAGE")).toBe(3);
+    SEND_TO_MANY_MESSAGE_TYPES.forEach((type, index) => expect(sendOrderOf(type), type).toBe(index + 1));
     for (const type of SEND_TO_MANY_MESSAGE_TYPES) expect(isSendToManyMessage(type), type).toBe(true);
-    for (const type of ["EVENT_CANCELLED", "REGISTRATION_CONFIRMED", "NEWSLETTER"] as const) expect(isSendToManyMessage(type), type).toBe(false);
+    for (const type of ["REGISTRATION_CONFIRMED", "WAITLIST_SPOT_OFFER", "NEWSLETTER", "RSVP_ASK"] as const) expect(isSendToManyMessage(type), type).toBe(false);
+  });
+
+  it("makes a manual resend of any of them the person's own message: step 0, and not waiting as a send to many", () => {
+    for (const type of SEND_TO_MANY_MESSAGE_TYPES) {
+      expect(sendOrderOf(type, true), type).toBe(0);
+      expect(waitsAsSendToMany(type, true), type).toBe(false);
+      expect(waitsAsSendToMany(type), type).toBe(true);
+    }
+    expect(waitsAsSendToMany("VERIFY_REGISTRATION_EMAIL")).toBe(false);
   });
 
   it("keeps the club-copy rule apart: one copy per send for the organizers' message and «Detalii actualizate» only", () => {
@@ -179,8 +193,9 @@ describe("the ready reminder text, in both catalogues", () => {
     expect(textOf(en).p4).toBe("If you can no longer make it, press “I can't make it any more”, so someone else can come in your place.");
     expect(textOf(ro).p5).toBe("„Vin” e opțional: dacă nu-l apeși, nu se schimbă nimic la înscrierea ta.");
     expect(textOf(en).p5).toBe("“I'm coming” is optional: if you don't press it, nothing about your registration changes.");
-    expect(textOf(ro).p6).toBe("Dacă mai ai de semnat declarația sau ai primit un loc oferit, semnează din emailul primit, până la termenul din el.");
-    expect(textOf(en).p6).toBe("If you still have to sign the declaration or were offered a place, sign from the email you received, by the deadline in it.");
+    // No deadline promised: an offer or a declaration may have none in its email.
+    expect(textOf(ro).p6).toBe("Dacă mai ai de semnat declarația sau ai primit un loc oferit, urmează pașii din emailul primit.");
+    expect(textOf(en).p6).toBe("If you still have to sign the declaration or were offered a place, follow the steps in the email you received.");
     for (const catalogue of [ro, en]) {
       const all = PARTS.map((part) => textOf(catalogue)[part]).join(" ");
       // The old sentences: a waiting person's «place» promised to the waiting list, and «exactly as it is» for somebody who still owes a signature.

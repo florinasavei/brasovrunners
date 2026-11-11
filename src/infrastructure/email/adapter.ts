@@ -61,8 +61,9 @@ export type OutgoingEmail = {
    */
   gmailOnly?: true;
   /**
-   * A newsletter or a new-event alert (§443): never spilled to Gmail when Mailgun refuses, unless
-   * the club chose Gmail for the group — a bulk send from a personal Gmail is what Google restricts.
+   * A newsletter or a new-event alert (§443), or a send to many (`SEND_TO_MANY_MESSAGE_TYPES`, the decision «Cere
+   * reconfirmarea»): never spilled to Gmail when Mailgun refuses, unless the club chose Gmail for the group — a bulk
+   * send from a personal Gmail is what Google restricts, and during Mailgun's stop Gmail's room is the registrations' own.
    */
   bulk?: true;
   /**
