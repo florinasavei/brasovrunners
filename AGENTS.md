@@ -3012,6 +3012,22 @@ BR-REQ-037-05):
      transaction under the event row's lock (the one `addEliteEntry` takes). The name is stored as the elite
      list stores one (`parseEliteEntry`; longer than `ELITE_NAME_MAX`, refused and nothing written), with no
      number and without the note. Audited `event_elite.added` and `event_reserve.moved`, ids only.
+     A fourth, the Administrator's too, for a person the club has no address for (a partners' guest):
+     **«Pe adresa mea, invitat special»** (`moveReserveEntryToOwnAddressAction` → `moveReserveEntryToOwnAddress`;
+     the decision «A line of the internal list on the Administrator's own address, as a special guest») is the
+     vouched entry above fed from the line, on **the pressing Administrator's own address** — `staff_users.email`
+     read by the actor's id, through the canonicalizer, never an address the form posts — and put on «Lista de
+     invitați speciali» (verb 6) **before** the allocator runs (`RegistrationOrigin.outsideCapacityVia`): the
+     formula's one existing exclusion seats it `PENDING_DECLARATION` outside the announced places, with the vouched
+     hold's deadline, whatever the counts — never a counted place, never the waiting list, never refused by its
+     limit, no «Ești pe lista de așteptare», no verification email, the ordinary declaration email to that address.
+     One transaction under the event row's lock: `HIDDEN_LIST_OFF` while the event's «Folosește lista de invitați
+     speciali» is off and `VOUCHED_ENTRY_AFTER_START`, both before anything is written; the name rule of several
+     people on one address (`ALREADY_ON_ADDRESS`, `ADDRESS_AT_CAP`) under that lock; the note carried and the line
+     deleted. Asked first, with the relay tick. The declaration stays the person's own — from the link the
+     Administrator forwards, or on paper at the start — and an address-less registration is still refused (§903).
+     Audited as each verb writes it (`registration.created_by_staff`, `registration.outside_capacity_changed`,
+     `event_reserve.moved`), each tagged `via: "ownAddressGuest"`, ids only.
    - **An offer to a named person** («Trimite-i oferta», `offerPlaceToByStaff`, `DECISIONS.md`
      §615, §642). Administrator only (`canManageRegistrations`). The ordinary offer and its email
      to the waiting-list entry the Administrator picks, at any moment before the start — after the
@@ -3060,7 +3076,9 @@ BR-REQ-037-05):
    its address applies when the address is confirmed; unmarking a row that would then hold a counted place
    is refused while none is free (§589's sentence). An ended row's flag is read, never changed, and a
    restart of it through the form clears it (the club marks the new cycle again if it wants). Audited
-   as `registration.outside_capacity_changed` with `from` and `to`.
+   as `registration.outside_capacity_changed` with `from` and `to`. One more door puts a row on it: «Pe adresa
+   mea, invitat special» on a line of the internal list (verb 5, above) marks the new row in the entry's own
+   transaction before the allocator runs, under the same switch and lock, audited the same with `via`.
 
 7. **Invitations by email (2026-10-02, §647).** The Administrator (`canManageRegistrations`; the
    Organizer reads the section and is offered no verb) invites named people to one event from its

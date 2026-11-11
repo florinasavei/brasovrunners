@@ -60,6 +60,7 @@ import {
   type InvitationSendInput,
   type InvitationSendResult,
   inviteToEventByStaff,
+  type OWN_ADDRESS_GUEST,
   offerPlaceToByStaff,
   resendInvitationByStaff,
   withdrawInvitationByStaff,
@@ -519,6 +520,13 @@ export type CreateRegistrationByStaffInput = {
    */
   thenOffered?: boolean;
   /**
+   * «Pe adresa mea, invitat special» (`reserve-list.ts#moveReserveEntryToOwnAddress`): with `vouchAddress`, the row is put
+   * on «Lista de invitați speciali» before the allocator runs (`RegistrationOrigin.outsideCapacityVia`), so it takes a place
+   * outside the announced ones and never the line. The press's tag, on the entry's trail row too. Only
+   * `enterOnWaitlistByStaff` passes it, and the Administrator alone reaches it (`vouchAddress`).
+   */
+  outsideCapacityVia?: typeof OWN_ADDRESS_GUEST;
+  /**
    * «Elită» (§917): the registration is marked elite from the start, in the entry's own transaction, exactly as
    * «Marchează ca elită» marks it afterwards (`elite-mark.ts#writeRegistrationEliteMark`, audited `via: "entry"`) —
    * how its bib prints, and nothing else. The Administrator's (`canManageRegistrations`): any other role posting it
@@ -675,7 +683,14 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
       },
       now,
       "REAL",
-      { source: "STAFF", createdByStaffUserId: actor.id, atTheDesk: input.fastTrack === true, addressVouched: vouchAddress, thenOffered: vouchAddress && input.thenOffered === true },
+      {
+        source: "STAFF",
+        createdByStaffUserId: actor.id,
+        atTheDesk: input.fastTrack === true,
+        addressVouched: vouchAddress,
+        thenOffered: vouchAddress && input.thenOffered === true,
+        ...(vouchAddress && input.outsideCapacityVia ? { outsideCapacityVia: input.outsideCapacityVia } : {}),
+      },
     );
 
     const participant = await findParticipantByCanonicalEmail(conn, identity.canonicalEmail);
@@ -692,7 +707,14 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
       action: "registration.created_by_staff",
       entityType: "registration",
       entityId: written?.id ?? event.id,
-      metadata: { eventId: event.id, status: written?.status ?? null, fastTrack: Boolean(input.fastTrack), ...(vouchAddress ? { addressVouched: true } : {}) },
+      metadata: {
+        eventId: event.id,
+        status: written?.status ?? null,
+        fastTrack: Boolean(input.fastTrack),
+        ...(vouchAddress ? { addressVouched: true } : {}),
+        // «Pe adresa mea, invitat special»: the press, by its tag — ids and words only.
+        ...(vouchAddress && input.outsideCapacityVia ? { outsideCapacity: true, via: input.outsideCapacityVia } : {}),
+      },
       now,
     });
     return written;
@@ -777,6 +799,12 @@ export type WaitlistEntryByStaffInput = {
   offerNow?: StaffPlaceOptions | null;
   /** «Elită» (§917): marked from the start, in the entry's transaction, as the full form's tick marks it (`createRegistrationByStaff`). */
   elite?: boolean;
+  /**
+   * «Pe adresa mea, invitat special»: the row on «Lista de invitați speciali» before the allocator runs, so it ends
+   * `PENDING_DECLARATION` outside the announced places — never waiting, so the waiting list's limit is not asked.
+   * Never beside `offerNow`, which is for a row left waiting.
+   */
+  outsideCapacityVia?: typeof OWN_ADDRESS_GUEST;
 };
 
 export type WaitlistEntryByStaffResult = { registrationId: string; status: RegistrationStatus; capacityRaisedTo: number | null };
@@ -809,6 +837,7 @@ export async function enterOnWaitlistByStaff<T extends Record<string, unknown>>(
   if (!canManageRegistrations(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not enter a person on the waiting list with the address vouched for`);
   }
+  if (input.outsideCapacityVia && input.offerNow) throw new DomainError("VALIDATION_ERROR", "a special guest takes no offer: the place is outside the announced ones");
   const result = await db.transaction(async (tx) => {
     const created = await createRegistrationByStaff(
       tx,
@@ -831,6 +860,7 @@ export async function enterOnWaitlistByStaff<T extends Record<string, unknown>>(
         */
         thenOffered: Boolean(input.offerNow),
         elite: input.elite === true,
+        ...(input.outsideCapacityVia ? { outsideCapacityVia: input.outsideCapacityVia } : {}),
       },
       now,
     );

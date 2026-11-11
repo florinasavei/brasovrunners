@@ -7729,6 +7729,7 @@
           "waitlistAdd": "Adaugă pe lista de așteptare",
           "offerNow": "Oferă-i un loc acum",
           "reserveMove": "Mută pe lista oficială",
+          "reserveOwnAddress": "Pe adresa mea, invitat special",
           "invite": "Trimite invitații",
           "invitationResend": "Retrimite invitația",
           "invitationWithdraw": "Retrage invitația",
@@ -9045,7 +9046,8 @@
                 "Gata să intre pe lista oficială? Administratorul apasă «Mută pe lista oficială»: fereastra numește adresa și cere bifa «Confirm că această persoană mi-a cerut să o înscriu…». Persoana intră la coadă sau pe un loc liber, cu emailul obișnuit; nota trece pe înscriere, iar rândul dispare.",
                 "«Oferă-i un loc acum» face același lucru și îi dă și un loc: unul liber sau o ofertă pe email. Pe o cursă plină fereastra spune cât devine capacitatea, iar butonul e «Adaugă un loc și oferă-i locul».",
                 "Alte date sau altă limbă? «Formularul complet: alte date, altă limbă» deschide formularul de înscriere cu datele ei.",
-                "Verifică adresa înainte: la înscriere pleacă un email și o adresă greșită nu ajunge la nimeni."
+                "Verifică adresa înainte: la înscriere pleacă un email și o adresă greșită nu ajunge la nimeni.",
+                "Fără adresă, de exemplu un invitat al partenerilor? Administratorul apasă «Pe adresa mea, invitat special»: persoana se înscrie pe adresa lui, pe «Lista de invitați speciali», fără să ia un loc anunțat, iar emailul cu declarația vine la el. I-l trimite persoanei, sau ea semnează pe hârtie la start. Butonul apare doar cu «Folosește lista de invitați speciali» bifat."
               ]
             },
             {
@@ -11713,6 +11715,13 @@
       "emailForOfficial": "Email pentru lista oficială",
       "emailForOfficialHelp": "Rândul nu are adresă: scrie-o aici ca să-l muți. Aici îi ajung emailurile.",
       "eliteNoAddress": "Alergător de elită? Nu-i trebuie adresă: „Mută pe lista de elită”.",
+      "ownAddressNoAddress": "Fără adresă, de exemplu un invitat al partenerilor? „Pe adresa mea, invitat special”: emailurile vin la tine.",
+      "ownAddress": "Pe adresa mea, invitat special",
+      "ownAddressTitle": "Înscrii persoana pe adresa ta, ca invitat special?",
+      "ownAddressBody": "{name} se înscrie pe adresa ta, {email}: toate emailurile înscrierii vin la tine.",
+      "ownAddressPlace": "Intră pe «Lista de invitați speciali»: nu ia niciunul dintre locurile anunțate, iar locul nu se eliberează înainte de start pentru lipsa semnăturii.",
+      "ownAddressDeclaration": "Declarația e a persoanei: o semnează din linkul din emailul pe care i-l trimiți, sau pe hârtie la start.",
+      "ownAddressSwitchOff": "„Pe adresa mea, invitat special” apare după ce bifezi «Folosește lista de invitați speciali» în setările evenimentului, la «Lista publică a participanților».",
       "moveToElite": "Mută pe lista de elită",
       "moveToEliteTitle": "Muți pe lista de elită?",
       "moveToEliteBody": "{name}: nu e o înscriere — niciun loc, niciun email, nicio declarație în aplicație. Pe BIB se tipărește numele. Nota internă nu se păstrează, iar rândul dispare de pe lista internă.",
@@ -13979,6 +13988,7 @@
       "reserveNoteSaved": "Nota a fost salvată.",
       "reserveDeleted": "Persoana a fost ștearsă de pe lista internă.",
       "reserveMovedToElite": "Numele a trecut pe lista de elită.",
+      "reserveOwnAddressGuest": "E pe adresa ta, ca invitat special. Trimite-i emailul cu declarația, s-o semneze din link, sau o semnează pe hârtie la start.",
       "eliteAdded": "Numele e pe lista de elită. Nu e o înscriere și nu s-a trimis nimic.",
       "eliteDeleted": "Numele a fost șters de pe lista de elită.",
       "eliteMarked": "Marcat ca elită: BIB-ul lui se tipărește cu numele în locul numărului. Înscrierea rămâne neschimbată.",

@@ -5,11 +5,14 @@ import { getDb } from "@/db/client";
 import { ELITE_NAME_MAX } from "@/db/schema/event-elite-entries";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { addReserveEntry, deleteReserveEntry, moveReserveEntryToElite, saveReserveNote } from "@/modules/registrations/reserve-list";
+import { inEmailPress } from "@/modules/notifications/press";
+import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
+import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
+import { addReserveEntry, deleteReserveEntry, moveReserveEntryToElite, moveReserveEntryToOwnAddress, saveReserveNote } from "@/modules/registrations/reserve-list";
 import { canKeepRegistrationNotes, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
-import { flash } from "@/shared/feedback/flash";
+import { flash, flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /**
@@ -17,7 +20,8 @@ import { type FormOutcome, refused } from "@/shared/forms/outcome";
  * «Salvează nota» and «Șterge». The coarse gate here (`canKeepRegistrationNotes`) and the service's own
  * (BR-REQ-060-01). A refusal keeps what was typed (§315); a success returns to the panel, open. Nothing
  * typed goes in the URL or the flash, and nothing is ever sent to the person. A fourth, the Administrator's
- * alone: «Mută pe lista de elită» (§903), below.
+ * alone: «Mută pe lista de elită» (§903), below; and a fifth, the Administrator's too and the one that emails —
+ * the declaration, to the Administrator's own address: «Pe adresa mea, invitat special».
  */
 
 /**
@@ -107,4 +111,48 @@ export async function moveReserveEntryToEliteAction(_previous: FormOutcome | nul
   params.set("eventId", eventId);
   params.set("saved", "reserveMovedToElite");
   redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${params.toString()}#registrations-reserve`);
+}
+
+/**
+ * «Pe adresa mea, invitat special» on a line of «Lista internă (doar notițe)» (the decision «A line of the internal list
+ * on the Administrator's own address, as a special guest»): the line's person registered on the pressing Administrator's
+ * own address, on «Lista de invitați speciali», in one transaction (`moveReserveEntryToOwnAddress`). The Administrator's
+ * alone — the coarse gate here, the service's own assertion again (BR-REQ-060-01). Nothing the form posts names the
+ * address: only the line, the dialog's relay tick, the language and the list's own query travel.
+ *
+ * A refusal is said on the line, nothing written: the switch off (`HIDDEN_LIST_OFF`), after the start, this person on the
+ * address already or the address at the club's limit — the staff entry's own sentences, with no box to point at. A
+ * success comes back to the list as it was (its filters, sort and page, from `listQuery`, as «Mută pe lista de elită»),
+ * the internal list open and the toast's fixed words saying what to do next: the declaration from the email, or on paper.
+ */
+export async function moveReserveEntryToOwnAddressAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  return inEmailPress("registrations.reserveOwnAddress", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    let eventId: string;
+    try {
+      const actor = await requireStaffCapability(canManageRegistrations);
+      press.by(actor.id);
+      ({ eventId } = await moveReserveEntryToOwnAddress(
+        getDb(),
+        actor,
+        text(form, "entryId"),
+        { relayedByParticipantRequest: form.get("relayedByParticipantRequest") === "on", locale },
+        new Date(),
+      ));
+    } catch (error) {
+      // The form has no address box: the address is the account's, so the two address sentences point at nothing.
+      const refusal = refused(error, form, { fieldNames: (failure) => failure.fields.filter((name) => name === "relayedByParticipantRequest") });
+      if (isDomainError(error) && error.fields.includes(HIDDEN_LIST_OFF)) return { ...refusal, error: HIDDEN_LIST_OFF };
+      if (isDomainError(error) && error.fields.includes(ALREADY_ON_ADDRESS)) return { ...refusal, error: "STAFF_ALREADY_ON_ADDRESS" };
+      if (isDomainError(error) && error.fields.includes(ADDRESS_AT_CAP)) return { ...refusal, error: "STAFF_ADDRESS_AT_CAP" };
+      return refusal;
+    }
+    await flashOutcome({ saved: "reserveOwnAddressGuest" });
+    const params = new URLSearchParams(text(form, "listQuery"));
+    // An outcome an earlier press left in the query, never repeated; the event is the line's, whatever the query said.
+    for (const key of ["saved", "error", "from", "count", "erase", "memberSweep"]) params.delete(key);
+    params.set("eventId", eventId);
+    params.set("saved", "reserveOwnAddressGuest");
+    redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${params.toString()}#registrations-reserve`);
+  });
 }
