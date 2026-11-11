@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { auditLogs } from "@/db/schema/audit-logs";
 import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { events } from "@/db/schema/events";
+import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
@@ -40,6 +41,8 @@ vi.mock("@/modules/staff-identity/session", () => ({
 vi.mock("@/modules/notifications/drain", () => ({ drainOutboxAfterResponse: () => undefined, drainOutboxRowsAfterResponse: () => undefined }));
 
 const { addEliteEntryAction, deleteEliteEntryAction } = await import("@/app/[locale]/admin/actions");
+const { setRegistrationEliteAction } = await import("@/app/[locale]/admin/registrations/actions");
+const { listEliteMarkedRegistrations } = await import("@/modules/registrations/elite-mark");
 
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -130,5 +133,62 @@ describe("§895 the elite list's Server Actions", () => {
     expect(await db.select().from(eventEliteEntries)).toHaveLength(0);
     expect((await db.select().from(auditLogs)).map((row) => [row.action, row.metadataJson])).toEqual([["event_elite.deleted", { entryId: line.id }]]);
     expect(await outcomeOf(deleteEliteEntryAction(null, form({ entryId: line.id })))).toEqual({ redirect: "/ro/admin/events/x?error=NOT_FOUND#admin-alert" });
+  });
+});
+
+/**
+ * The «Elite» panel's one-press «Nu mai e elită» (the owner, 2026-11-11) posts to `setRegistrationEliteAction` with the row
+ * menu's fields: through the real action, the mark comes off a registration still waiting for its declaration, the trail
+ * says so, the press returns to the list address it came from, and the panel's read no longer lists the line. A forged
+ * post from the Organizer is refused and writes nothing.
+ */
+describe("the elite panel's «Nu mai e elită» press (2026-11-11)", () => {
+  async function markedRegistration(name: string): Promise<string> {
+    serial += 1;
+    const email = `runner${serial}@example.org`;
+    const [participant] = await db
+      .insert(participants)
+      .values({ deliveryEmail: email, normalizedEmail: email, canonicalEmail: email, canonicalizationVersion: 2, defaultName: name, preferredLocale: "ro" })
+      .returning();
+    const [created] = await db
+      .insert(registrations)
+      .values({
+        eventId,
+        participantId: participant.id,
+        kind: "REAL",
+        locale: "ro",
+        registeredName: name,
+        displayName: name,
+        privacyNoticeVersion: 1,
+        privacyAcknowledgedAt: new Date(),
+        resultsNameConsent: false,
+        resultsConsentVersion: 1,
+        status: "PENDING_DECLARATION",
+        elite: true,
+      })
+      .returning({ id: registrations.id });
+    return created.id;
+  }
+  const pressed = (registrationId: string) => form({ registrationId, elite: "0", listQuery: `eventId=${eventId}&page=2` });
+
+  it("takes the mark off a registration still waiting for its declaration, writes the trail and returns to the list", async () => {
+    const admin = await as("ADMIN");
+    const id = await markedRegistration("Runner Panou");
+    expect((await listEliteMarkedRegistrations(db, admin, eventId)).map((row) => row.id)).toEqual([id]);
+    const done = await outcomeOf(setRegistrationEliteAction(null, pressed(id)));
+    expect(done).toEqual({ redirect: `/ro/admin/events/x?eventId=${eventId}&page=2&saved=eliteUnmarked#admin-alert` });
+    const [row] = await db.select().from(registrations);
+    expect([row.elite, row.status]).toEqual([false, "PENDING_DECLARATION"]);
+    expect((await db.select().from(auditLogs)).map((entry) => entry.action)).toEqual(["registration.elite_unmarked"]);
+    expect(await listEliteMarkedRegistrations(db, admin, eventId)).toEqual([]);
+  });
+
+  it("refuses a forged post from the Organizer: the mark stays, nothing is written", async () => {
+    const id = await markedRegistration("Runner Panou");
+    await as("MODERATOR");
+    const done = await outcomeOf(setRegistrationEliteAction(null, pressed(id)));
+    expect(JSON.stringify(done)).toContain("error=FORBIDDEN");
+    expect((await db.select().from(registrations))[0].elite).toBe(true);
+    expect(await db.select().from(auditLogs)).toHaveLength(0);
   });
 });

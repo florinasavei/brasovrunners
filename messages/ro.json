@@ -1272,6 +1272,7 @@
         "chip": "Elită",
         "mark": "Marchează ca elită",
         "unmark": "Nu mai e elită",
+        "unmarkNamed": "Nu mai e elită: {name}",
         "inResults": "Apare în clasament",
         "onSite": "Apare pe site",
         "onSiteHint": "Debifat, numele nu apare pe site: nici la «Cine vine», nici în clasament. Bifat, decide bifa lui „Vreau să apar”.",

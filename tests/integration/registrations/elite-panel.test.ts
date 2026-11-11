@@ -17,7 +17,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * «Elite» on the registrations list (the owner, 2026-11-04, who looked there for an elite on the race's separate list
  * and did not find her: that list lived only in the event's editor; then, of two sub-lists counted apart, «sunt 2
  * elite»). For the event chosen, a closed fold — the medal, its line «N elite» — holding every elite in one numbered list,
- * read-only, each line saying its kind: the separate list's names «fără înscriere — doar numele pe BIB» (and numbers),
+ * each line saying its kind: the separate list's names «fără înscriere — doar numele pe BIB» (and numbers),
  * then the registrations marked «Elită» in every state, «cu înscriere», each a link to its page with its state chip;
  * never another event's line, an unmarked registration or a test row. It ends with the link to the editor's elite card,
  * «Gestionează lista de elite» for the Administrator, «Vezi lista de elite în editor» for the Organizer. No fold while
@@ -93,6 +93,7 @@ const { default: ElitePanel } = await import("@/modules/registrations/ui/ElitePa
 const { default: KitCount } = await import("@/modules/registrations/ui/KitCount");
 const { default: PlaceOutlook } = await import("@/modules/registrations/ui/PlaceOutlook");
 const { listEliteMarkedRegistrations } = await import("@/modules/registrations/elite-mark");
+const { setRegistrationEliteAction } = await import("@/app/[locale]/admin/registrations/actions");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
 
@@ -248,9 +249,9 @@ describe("«Elite» on the registrations list (2026-11-04)", () => {
     expect(html.match(/data-testid="registrations-elite-status"/g)).toHaveLength(2);
     expect(text).toContain("Anulată");
     expect(text).toContain("Confirmată");
-    // Read-only here: no form, no button but the link to the card.
-    expect(html).not.toContain("<form");
-    expect(html).not.toContain("<button");
+    // The Administrator's press (2026-11-11) is on the registered lines only: one form and one button each, none on the names.
+    expect(html.match(/<form/g)).toHaveLength(2);
+    expect(html.match(/<button/g)).toHaveLength(2);
     expect(html).toMatch(new RegExp(`<a[^>]*href="${card}"[^>]*data-testid="registrations-elite-card"[^>]*>[\\s\\S]*Gestionează lista de elite</a>`));
 
     // The kits on the same page link their elites to the same card.
@@ -292,6 +293,34 @@ describe("«Elite» on the registrations list (2026-11-04)", () => {
     expect(panelOf(await listPage({ eventId: "all" }))).toBeUndefined();
   });
 
+  it("the Administrator gets a one-press «Nu mai e elită» on each registered line, with the row menu's fields and a named button; none on a name without a registration", async () => {
+    const { race, silviu, mara } = await seed();
+    state.actor = await staff("ADMIN");
+    const panel = panelOf(await listPage({ eventId: race.id }));
+    const unmark = panel?.props.unmark as { action: unknown; listQuery: string } | undefined;
+    expect(unmark).toBeDefined();
+    expect(unmark?.action).toBe(setRegistrationEliteAction);
+    const html = await drawn(panel!);
+    const forms = html.match(/<form[\s\S]*?<\/form>/g) ?? [];
+    expect(forms).toHaveLength(2);
+    for (const [id, name] of [[mara, "Mara Anulata"], [silviu, "Silviu Stoica"]]) {
+      const one = forms.find((form) => form.includes(`name="registrationId" value="${id}"`));
+      expect(one).toBeDefined();
+      expect(one).toContain('name="uiLocale" value="ro"');
+      expect(one).toContain('name="elite" value="0"');
+      expect(one).toMatch(/name="listQuery" value="[^"]*"/);
+      expect(one).toContain(`aria-label="Nu mai e elită: ${name}"`);
+      expect(one).toContain('data-testid="registrations-elite-unmark"');
+    }
+    // The names on the bib only carry no press.
+    expect(forms.join("")).not.toContain("Ingrid Elita");
+    expect(html.match(/data-testid="registrations-elite-unmark"/g)).toHaveLength(2);
+    // English: the name in the accessible name too.
+    state.locale = "en";
+    const english = await drawn(panelOf(await listPage({ eventId: race.id }))!);
+    expect(english).toContain('aria-label="No longer elite: Silviu Stoica"');
+  });
+
   it("the Organizer reads it, his link saying he reads; the readers refuse every role that may not read the list", async () => {
     const { race } = await seed();
     state.actor = await staff("MODERATOR");
@@ -300,6 +329,12 @@ describe("«Elite» on the registrations list (2026-11-04)", () => {
     const text = words(await drawn(panel!));
     expect(text).toContain("Vezi lista de elite în editor");
     expect(text).not.toContain("Gestionează");
+    // No press for him: no prop, no form, no button but the link.
+    expect(panel?.props.unmark).toBeUndefined();
+    const html = await drawn(panel!);
+    expect(html).not.toContain("<form");
+    expect(html).not.toContain("<button");
+    expect(html).not.toContain("registrations-elite-unmark");
     // The Tehnic role never reaches the page; the reader refuses it all the same (BR-REQ-060-01).
     const tehnic = await staff("DEV");
     await expect(listEliteMarkedRegistrations(db, tehnic, race.id)).rejects.toSatisfy((error) => isDomainError(error) && error.code === "FORBIDDEN");
