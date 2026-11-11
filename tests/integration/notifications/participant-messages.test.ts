@@ -280,8 +280,20 @@ describe("§364 the organizer's message to an event's participants", () => {
     expect(trail).not.toContain("Startul se mută");
 
     // "Mesaje trimise" is read from these rows: date, subject, group, count, sender.
+    // Since «Cere reconfirmarea»: the send's id, its tick (no ask here, so no answers) and its progress, the test row left out.
     expect(await listParticipantMessages(db, event.id)).toEqual([
-      { at: NOW, subject: WORDS.subject, audience: "CONFIRMED", recipients: 2, test: 1, senderName: "Mihai Organizatorul" },
+      {
+        at: NOW,
+        sendId: SEND_ID,
+        subject: WORDS.subject,
+        audience: "CONFIRMED",
+        recipients: 2,
+        test: 1,
+        senderName: "Mihai Organizatorul",
+        askReconfirm: false,
+        answers: null,
+        progress: { left: 0, waiting: 2, failed: 0 },
+      },
     ]);
   });
 

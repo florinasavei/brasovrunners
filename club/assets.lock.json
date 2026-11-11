@@ -2,7 +2,8 @@
   "sources": {
     "public/brand/logo.svg": "2865b856a426ddfb791b2c2b92e114c4e5d90f2ddd5c0b293ee335aaca95aaa8",
     "public/brand/logo-white.svg": "04686b7c05ffc39425b3f272779fa39851e317287c56777eb73a899abb0a8b07",
-    "public/brand/email-cannot-come.svg": "739a63dabd4f6aa7c0ae70fb6faca7d57d7a6f58852f7b11585e193ce3c3ab55"
+    "public/brand/email-cannot-come.svg": "739a63dabd4f6aa7c0ae70fb6faca7d57d7a6f58852f7b11585e193ce3c3ab55",
+    "public/brand/email-reconfirm.svg": "c4c544f2bcafbbd29640d2b43b537167d9cf6c08595ab65adaf8f84c1a682242"
   },
   "colours": {
     "emailBand": "#1a1aff",

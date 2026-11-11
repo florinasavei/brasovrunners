@@ -1,6 +1,7 @@
-import { and, desc, eq, inArray, or } from "drizzle-orm";
+import { and, desc, eq, inArray, max, or, sql } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
+import { registrationReconfirmations } from "@/db/schema/registration-reconfirmations";
 import { ACTIVE_REGISTRATION_STATUSES, type Registration, registrations, type RegistrationStatus } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { isUuid } from "@/shared/ids";
@@ -77,6 +78,14 @@ export type ManagedPerson = {
    * length and how freed places are given. Null unless the registration is `WAITLISTED`.
    */
   waitlistStanding: WaitlistStanding | null;
+  /**
+   * «Cere reconfirmarea» (the decision «Cere reconfirmarea»): whether an organizer's message asked this registration
+   * whether the person comes, whether an ask is still unanswered, and when they last said «Vin» — the page's question
+   * and its answer. Nothing else on the page reads them, and nothing anywhere decides by them.
+   */
+  reconfirmAsked: boolean;
+  reconfirmOpen: boolean;
+  reconfirmedAt: Date | null;
 };
 
 /**
@@ -139,6 +148,22 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
       .orderBy(desc(declarationAcceptances.acceptedAt));
     for (const row of acceptances) if (row.registrationId && !methods.has(row.registrationId)) methods.set(row.registrationId, row.method);
   }
+  // The asks of «Cere reconfirmarea» (the decision «Cere reconfirmarea»), one grouped read for the page's people.
+  const asks = new Map<string, { open: boolean; reconfirmedAt: Date | null }>();
+  if (ids.length > 0) {
+    const grouped = await db
+      .select({
+        registrationId: registrationReconfirmations.registrationId,
+        open: sql<boolean>`bool_or(${registrationReconfirmations.reconfirmedAt} is null)`,
+        reconfirmedAt: max(registrationReconfirmations.reconfirmedAt),
+      })
+      .from(registrationReconfirmations)
+      .where(inArray(registrationReconfirmations.registrationId, ids))
+      .groupBy(registrationReconfirmations.registrationId);
+    for (const row of grouped) {
+      asks.set(row.registrationId, { open: row.open === true, reconfirmedAt: row.reconfirmedAt ? new Date(row.reconfirmedAt) : null });
+    }
+  }
   const ordered = withFamilyRank(rows, await sittingOrderFor(db, own.participantId, own.eventId)).sort(compareFamilyOrder);
   // Only a waiting row asks where it stands (§629): one read each, from the one reader the other pages use.
   const standings = new Map<string, WaitlistStanding | null>(
@@ -164,6 +189,9 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
     answersWrittenAt: row.answersWrittenAt,
     own: row.id === own.id,
     waitlistStanding: standings.get(row.id) ?? null,
+    reconfirmAsked: asks.has(row.id),
+    reconfirmOpen: asks.get(row.id)?.open ?? false,
+    reconfirmedAt: asks.get(row.id)?.reconfirmedAt ?? null,
   }));
 }
 

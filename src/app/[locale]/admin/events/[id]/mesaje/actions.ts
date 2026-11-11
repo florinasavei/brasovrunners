@@ -62,7 +62,15 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
       result = await sendParticipantMessage(
         getDb(),
         actor,
-        { eventId, audience: posted(form, "audience"), sendId: posted(form, "sendId"), delivery, ...words },
+        {
+          eventId,
+          audience: posted(form, "audience"),
+          sendId: posted(form, "sendId"),
+          delivery,
+          // «Cere reconfirmarea» (the decision «Cere reconfirmarea»): the tick posts `1`; anything else is no.
+          askReconfirm: posted(form, "askReconfirm") === "1",
+          ...words,
+        },
         new Date(),
       );
     } catch (error) {
@@ -117,6 +125,8 @@ export async function previewParticipantMessageAction(input: {
   subjectEn: unknown;
   bodyRo: unknown;
   bodyEn: unknown;
+  /** «Cere reconfirmarea» as the box stands: only `true` draws «Vin» in the preview. */
+  askReconfirm?: unknown;
 }): Promise<ParticipantMessagePreview | null> {
   // From the network: every field is read as a string, whatever was sent.
   const read = (value: unknown, max: number) => (typeof value === "string" ? value.slice(0, max) : "");
@@ -127,6 +137,7 @@ export async function previewParticipantMessageAction(input: {
       locale: localeOf(typeof input.language === "string" ? input.language : null),
       subject: { ro: read(input.subjectRo, 1000), en: read(input.subjectEn, 1000) },
       body: { ro: read(input.bodyRo, 20_000), en: read(input.bodyEn, 20_000) },
+      askReconfirm: input.askReconfirm === true,
     });
   } catch (error) {
     if (isDomainError(error)) return null;

@@ -203,3 +203,34 @@ describe("§558 when a send carries it", () => {
     expect(cannotComeUrlOf("https://example.test/ro/inregistrari/gestionare/SECRET")).toBe(LINK);
   });
 });
+
+describe("«Vin» beside «Nu mai pot ajunge» (the decision «Cere reconfirmarea»)", () => {
+  const VIN = "https://example.test/ro/inregistrari/gestionare/SECRET#reconfirm";
+
+  it("is drawn only on the organizer's message, only with the link the renderer set for a send that asked, above the cancel", () => {
+    const asked = rendered("ORGANIZER_MESSAGE", { reconfirmUrl: VIN });
+    expect(asked.html).toContain('data-email-part="reconfirm"');
+    expect(asked.html.indexOf('data-email-part="reconfirm"')).toBeLessThan(asked.html.indexOf('data-email-part="cannot-come"'));
+    expect(asked.text).toContain(`Vin: ${VIN}`);
+    expect(asked.text).toContain("Ne spui că vii. Nu e obligatoriu.");
+    // Without the flag's link, nothing.
+    expect(rendered("ORGANIZER_MESSAGE").html).not.toContain('data-email-part="reconfirm"');
+    // On every other message, even handed a link by mistake, nothing.
+    for (const messageType of [...CANNOT_COME_MESSAGES].filter((type) => type !== "ORGANIZER_MESSAGE")) {
+      expect(rendered(messageType, { reconfirmUrl: VIN }).html, messageType).not.toContain('data-email-part="reconfirm"');
+    }
+    // A filled, full-width button of at least 44 pixels, as the cancel's (BR-REQ-041-01 criterion 6).
+    const anchor = /<div data-email-part="reconfirm"[^>]*><a href="[^"]+" style="([^"]+)"/.exec(asked.html)?.[1] ?? "";
+    expect(anchor).toContain("display:block");
+    expect(anchor).toContain("width:100%");
+    expect(anchor).toContain("line-height:20px");
+    expect(anchor).toContain("padding:14px 16px");
+  });
+
+  it("is never in the club's copy, whatever it is handed (§320)", () => {
+    const { html, text } = rendered("ORGANIZER_MESSAGE", { reconfirmUrl: VIN, clubCopy: true });
+    expect(html).not.toContain('data-email-part="reconfirm"');
+    expect(text).not.toContain("#reconfirm");
+    expect(text).not.toContain("Ne spui că vii.");
+  });
+});

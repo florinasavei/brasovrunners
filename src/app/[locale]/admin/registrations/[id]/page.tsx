@@ -554,6 +554,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <Typography variant="body2" color="text.secondary">
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}
       </Typography>
+      {/* «Cere reconfirmarea» (the decision «Cere reconfirmarea»): when the person said «Vin» — information, never a state. */}
+      {registration.reconfirmedAt && (
+        <Typography variant="body2" data-testid="registration-reconfirmed">
+          {tr("reconfirm.detail", { date: dtInline(registration.reconfirmedAt) ?? "" })}
+        </Typography>
+      )}
       {/*
         Under the address it is about (§663, §671): the list's own line — a link to «Emailuri» below, where the
         whole story is — and what to do, by who reads it. Never the address's change: that is the person's (§645).

@@ -174,10 +174,18 @@ export type RegistrationCsvRow = {
    * role that gets the file, just before «Note interne», which stays last.
    */
   partnerName?: string | null;
+  /**
+   * «Reconfirmat» (the decision «Cere reconfirmarea»): when the person last said «Vin», as an ISO moment, or empty — after
+   * «Partener», before «Note interne», which stays last.
+   */
+  reconfirmedAt?: string | null;
 };
 
 /** «Partener»'s header when the caller names none (`partnerHeader`): the export route passes it in the reader's language. */
 export const PARTNER_HEADER_DEFAULT = "Partner";
+
+/** «Reconfirmat»'s header when the caller names none (`reconfirmedHeader`): the route passes it in the reader's language. */
+export const RECONFIRMED_HEADER_DEFAULT = "Reconfirmed";
 
 const HEADER = [
   "Event",
@@ -248,8 +256,12 @@ const HEADER = [
  * it, the last — passed by the route only for a role that `canKeepRegistrationNotes`; without it no such column, which is
  * every other caller's file. A note's line breaks stay inside the quoted cell (`csvCell` quotes on `\n`).
  */
-export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[], options: { notesHeader?: string; partnerHeader?: string } = {}): string {
-  const withPartner = [...HEADER, options.partnerHeader ?? PARTNER_HEADER_DEFAULT];
+export function buildRegistrationsCsv(
+  rows: readonly RegistrationCsvRow[],
+  options: { notesHeader?: string; partnerHeader?: string; reconfirmedHeader?: string } = {},
+): string {
+  // «Reconfirmat» (the decision «Cere reconfirmarea») after «Partener», in every file; the notes after both.
+  const withPartner = [...HEADER, options.partnerHeader ?? PARTNER_HEADER_DEFAULT, options.reconfirmedHeader ?? RECONFIRMED_HEADER_DEFAULT];
   const header = options.notesHeader ? [...withPartner, options.notesHeader] : withPartner;
   const lines = [
     // Through the same cell function as the data. No header needs quoting today; one added
@@ -294,6 +306,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[], optio
         memberBibExportCell(row),
         clubRunnerCell(row.clubRunner),
         row.partnerName ?? "",
+        row.reconfirmedAt ?? "",
         ...(options.notesHeader ? [row.notes ?? ""] : []),
       ]
         .map(csvCell)

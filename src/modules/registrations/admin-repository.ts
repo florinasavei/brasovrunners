@@ -5,7 +5,9 @@ import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
+import { registrationReconfirmations } from "@/db/schema/registration-reconfirmations";
 import {
+  ACTIVE_REGISTRATION_STATUSES,
   type RegistrationCancelReasonKind,
   type RegistrationKind,
   type RegistrationSex,
@@ -72,6 +74,11 @@ export type RegistrationListRow = {
    * and the export's «Partener». Read by no surface outside the backoffice (`partner-never-leaves.test.ts`).
    */
   partnerName: string | null;
+  /**
+   * «Cere reconfirmarea» (the decision «Cere reconfirmarea»): when the person last said «Vin», or null — the row's chip
+   * «A reconfirmat» and the export's «Reconfirmat». Read by no public page (`reconfirmation-never-leaves.test.ts`).
+   */
+  reconfirmedAt: Date | null;
   /** The two ticks of a marked elite (§910), stored as what the club hid: the «⋮»'s «Apare în clasament» and «Apare pe site». */
   eliteHiddenFromResults: boolean;
   eliteHiddenFromSite: boolean;
@@ -242,12 +249,51 @@ export type RegistrationListFilters = {
   /** «De la parteneri» (the decision «De la parteneri»): only the rows with a partner's name. Narrows only. */
   fromPartner?: boolean;
   /**
+   * «Reconfirmare» (the decision «Cere reconfirmarea»): among the registrations an organizer's message asked — «yes» those
+   * still registered who said «Vin», «cancelled» those cancelled at or after an ask (by the person or an Administrator),
+   * «none» those still registered who did not answer. Information, never a state. Narrows only.
+   */
+  reconfirm?: ReconfirmFilter;
+  /**
    * The members' race number asked for and not verified (§664): the real rows with a number that want it,
    * at an event that offers it, whose address is no member account's — the bibs page's link, the same set
    * its line counts. Narrows only.
    */
   memberBibAsked?: boolean;
 };
+
+/** The three answers of «Reconfirmare», as the list's URL carries them. */
+export const RECONFIRM_FILTERS = ["yes", "cancelled", "none"] as const;
+export type ReconfirmFilter = (typeof RECONFIRM_FILTERS)[number];
+
+export function isReconfirmFilter(value: unknown): value is ReconfirmFilter {
+  return typeof value === "string" && (RECONFIRM_FILTERS as readonly string[]).includes(value);
+}
+
+/** The registration states that still stand, as SQL — «yes» and «none» are about people still registered. */
+const STANDING_STATUSES = sql.raw(ACTIVE_REGISTRATION_STATUSES.map((status) => `'${status}'`).join(", "));
+
+/**
+ * One `EXISTS` per answer (the decision «Cere reconfirmarea»), on the registration's own asks — so the list, its count
+ * and its summary narrow alike, each in its one query.
+ */
+function reconfirmCondition(filter: ReconfirmFilter): SQL {
+  const asked = (extra: SQL) =>
+    sql`exists (select 1 from ${registrationReconfirmations} where ${registrationReconfirmations.registrationId} = ${registrations.id} and ${extra})`;
+  if (filter === "cancelled") {
+    return sql`(${registrations.status} = 'CANCELLED' and ${asked(sql`${registrationReconfirmations.askedAt} <= ${registrations.cancelledAt}`)})`;
+  }
+  const standing = sql`${registrations.status} in (${STANDING_STATUSES})`;
+  if (filter === "yes") return sql`(${standing} and ${asked(sql`${registrationReconfirmations.reconfirmedAt} is not null`)})`;
+  return sql`(${standing} and ${asked(sql`true`)} and not ${asked(sql`${registrationReconfirmations.reconfirmedAt} is not null`)})`;
+}
+
+/** When the person last said «Vin», or null: one correlated `max()` on the asks' index, as `latestDeclarationAcceptedAt`. */
+const latestReconfirmedAt = sql<Date | null>`(
+  SELECT max(${registrationReconfirmations.reconfirmedAt})
+  FROM ${registrationReconfirmations}
+  WHERE ${registrationReconfirmations.registrationId} = ${registrations.id}
+)`.mapWith(registrationReconfirmations.reconfirmedAt);
 
 /**
  * The columns the list may be ordered by, and the only strings that ever reach an `ORDER BY`.
@@ -349,6 +395,7 @@ function registrationConditions(filters: RegistrationListFilters, members: reado
     filters.promoConsented ? promoListed() : undefined,
     filters.outsideCapacity ? eq(registrations.outsideCapacity, true) : undefined,
     filters.fromPartner ? isNotNull(registrations.partnerName) : undefined,
+    filters.reconfirm ? reconfirmCondition(filters.reconfirm) : undefined,
     filters.memberBibAsked ? memberBibAskedUnverified(members) : undefined,
     /*
       Name only, and deliberately not the email address. An organizer at a desk is holding a
@@ -503,6 +550,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       outsideCapacity: registrations.outsideCapacity,
       elite: registrations.elite,
       partnerName: registrations.partnerName,
+      reconfirmedAt: latestReconfirmedAt,
       eliteHiddenFromResults: registrations.eliteHiddenFromResults,
       eliteHiddenFromSite: registrations.eliteHiddenFromSite,
       eventHiddenListEnabled: events.hiddenListEnabled,
@@ -821,6 +869,8 @@ export type RegistrationDetail = {
   elite: boolean;
   /** «De la parteneri» (the decision «De la parteneri»): the partner's name — the page's chip for every role, its form the Administrator's. */
   partnerName: string | null;
+  /** «Cere reconfirmarea» (the decision «Cere reconfirmarea»): when the person last said «Vin», or null — one line on the page. */
+  reconfirmedAt: Date | null;
   /** The two ticks of a marked elite (§910), stored as what the club hid: the page's «Elită» card, read by every role, changed by the Administrator. */
   eliteHiddenFromResults: boolean;
   eliteHiddenFromSite: boolean;
@@ -989,6 +1039,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       outsideCapacity: registrations.outsideCapacity,
       elite: registrations.elite,
       partnerName: registrations.partnerName,
+      reconfirmedAt: latestReconfirmedAt,
       eliteHiddenFromResults: registrations.eliteHiddenFromResults,
       eliteHiddenFromSite: registrations.eliteHiddenFromSite,
       source: registrations.source,

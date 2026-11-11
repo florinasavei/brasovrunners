@@ -3214,6 +3214,15 @@ Worker:
 
 PostgreSQL `FOR UPDATE SKIP LOCKED` may be used when supported by implementation.
 
+**The order of the claim** (`DECISIONS.md` «Cere reconfirmarea», `notifications/outbox.ts`): the outbox claims a
+registration's own messages first, then the staff sends to many (`BULK_CLUB_COPY_MESSAGES`: «Trimite un mesaj
+participanților», «Detalii actualizate», each send's club copy with it) within the allowance less a reserve, then the
+bulk ones (`BULK_MESSAGE_TYPES`, §445) — three claims, each oldest first, so a send of two hundred never stands in
+front of a verification queued after it. The staff sends' reserve is `max(10, 10%)` of a daily allowance (10% of a
+monthly one, none without a ceiling): what the registrations' own emails keep; the rest of a send on Mailgun's road
+waits for the reset, marked, and `/api/health` reads it as the reserve working, as it reads the newsletter's. «Trimite
+acum» (§540) is not held to it; the batch size, the pinger and the hourly pace are unchanged.
+
 ### 16.2 Job endpoints
 
 ```text
@@ -3405,6 +3414,15 @@ QR, self check-in and the list's switch the older one did. Never on the family l
 there), never after the fact (the cancellations,
 the thank-you), never on a club copy (`DECISIONS.md` §320), never to an address that is not the
 registration's, never once the event has started or will not run.
+
+**«Vin» / "I'm coming" is on the organizer's message only when its send ticked «Cere reconfirmarea»**
+(`DECISIONS.md` «Cere reconfirmarea», `notifications/domain/cannot-come.ts#reconfirmApplies`): beside «Nu mai pot
+ajunge», on the same token, to the same manage page at `#reconfirm`, for a confirmed, pending-declaration or waiting
+registration of an event still ahead. The page's GET asks and writes nothing; «Da, vin la cursă» is a POST that records
+the first moment in `registration_reconfirmations` (one row per registration asked, per send) — the manage token read
+through the reader bound to the registration's current participant, never spent, and a second press keeps the first
+moment. Answering is optional: nothing reads the answer but the backoffice — no state, place, hold, deadline, allocator
+or capacity term — and nobody is cancelled for not answering.
 
 `EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
 event before its start — the club's reminder lead or the event's own (§377; 48 hours by default) — once per registration (`registration:<id>:reminder`), with

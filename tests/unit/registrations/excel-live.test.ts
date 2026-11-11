@@ -1,7 +1,7 @@
 import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import { registrationStatus } from "@/db/schema/registrations";
-import { buildRegistrationsCsv, PARTNER_HEADER_DEFAULT, type RegistrationCsvRow } from "@/modules/registrations/csv";
+import { buildRegistrationsCsv, PARTNER_HEADER_DEFAULT, RECONFIRMED_HEADER_DEFAULT, type RegistrationCsvRow } from "@/modules/registrations/csv";
 import { YES_CELL, clubRunnerCell, isClubRunner, memberTickCell } from "@/modules/registrations/domain/club-runner";
 import { colourRules, ROW_TINTS, STATUS_TINT, statusesOfTint, TINT_FILL } from "@/modules/registrations/sheet-colours";
 import { buildSponsorListWorkbook } from "@/modules/registrations/sponsor-sheet";
@@ -199,8 +199,11 @@ function rulesOf(buffer: Buffer): Rule[] {
   return rules;
 }
 
-/** The fixed columns, then «Partener» («De la parteneri»), every file's: the sheet's header row without the notes. */
-const SHEET_HEADER = [...REGISTRATION_SHEET_HEADERS, PARTNER_HEADER_DEFAULT];
+/**
+ * The fixed columns, then «Partener» («De la parteneri») and «Reconfirmat» (the decision «Cere reconfirmarea»), every file's:
+ * the sheet's header row without the notes.
+ */
+const SHEET_HEADER = [...REGISTRATION_SHEET_HEADERS, PARTNER_HEADER_DEFAULT, RECONFIRMED_HEADER_DEFAULT];
 const LAST_COLUMN = columnLetter(SHEET_HEADER.length - 1);
 const STATUS = columnLetter(headerAt("Status"));
 const CLUB_RUNNER = columnLetter(headerAt("Club runner"));
@@ -280,17 +283,18 @@ describe("§787 the «Club runner» column: the one predicate, written where a f
     const [header, club, other] = buildRegistrationsCsv([{ ...base, clubRunner: true }, base]).split("\r\n");
     const columns = header.split(",");
     // After «Member bib», as a script that reads by position expects: every earlier column keeps its index. «Partener» («De la
-    // parteneri») came after it, the last fixed column.
-    expect(columns.at(-2)).toBe("Club runner");
-    expect(columns.at(-3)).toBe("Member bib");
-    expect(columns.at(-1)).toBe(PARTNER_HEADER_DEFAULT);
+    // parteneri») came after it, then «Reconfirmat» (the decision «Cere reconfirmarea»), the last fixed column.
+    expect(columns.at(-3)).toBe("Club runner");
+    expect(columns.at(-4)).toBe("Member bib");
+    expect(columns.at(-2)).toBe(PARTNER_HEADER_DEFAULT);
+    expect(columns.at(-1)).toBe(RECONFIRMED_HEADER_DEFAULT);
     expect(columns.indexOf("Club member") + 1).toBe(columns.indexOf("Medically fit (declared)"));
     const at = columns.indexOf("Club runner");
     expect(club.split(",")[at]).toBe("Yes");
     expect(other.split(",")[at]).toBe("");
     // With «Note interne» the notes stay the very last column.
     const withNotes = buildRegistrationsCsv([base], { notesHeader: "Note interne" }).split("\r\n")[0].split(",");
-    expect(withNotes.slice(-3)).toEqual(["Club runner", PARTNER_HEADER_DEFAULT, "Note interne"]);
+    expect(withNotes.slice(-4)).toEqual(["Club runner", PARTNER_HEADER_DEFAULT, RECONFIRMED_HEADER_DEFAULT, "Note interne"]);
     // The same rows, no styling and no footer: the legend and the statistics are the spreadsheet's alone.
     expect(buildRegistrationsCsv([base]).split("\r\n")).toHaveLength(2);
     expect(buildRegistrationsCsv([base])).not.toMatch(/Culori|Colours|Statistici|COUNTIF/);
@@ -334,8 +338,9 @@ describe("§796 the «Member tick (declared)» column: the tick alone, in the sp
     };
     const [header, line] = buildRegistrationsCsv([base]).split("\r\n");
     expect(header).toBe(
-      // The old header, then «Partener» («De la parteneri») appended: every earlier column keeps its position.
-      "Event,Name,First name,Last name,Identity document,Email,Status,Club member,Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City,Member bib,Club runner,Partner",
+      // The old header, then «Partener» («De la parteneri») and «Reconfirmat» (the decision «Cere reconfirmarea») appended:
+      // every earlier column keeps its position.
+      "Event,Name,First name,Last name,Identity document,Email,Status,Club member,Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City,Member bib,Club runner,Partner,Reconfirmed",
     );
     expect(header).not.toContain("Member tick");
     expect(line.split(",")[header.split(",").indexOf("Club member")]).toBe("declared");
@@ -1142,8 +1147,9 @@ describe("§790 (amended) «Status» right after the race number, and a drop-dow
       memberVerified: false, clubRunner: false, fitnessDeclaredAt: null, stravaUrl: "", instagramHandle: "", guardianName: "", guardianIdDocument: "", submittedAt: "", confirmedAt: "", checkedInAt: "", emailBounced: false,
     };
     expect(buildRegistrationsCsv([base]).split("\r\n")[0]).toBe(
-      // The old header, then «Partener» («De la parteneri») appended: every earlier column keeps its position.
-      "Event,Name,First name,Last name,Identity document,Email,Status,Club member,Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City,Member bib,Club runner,Partner",
+      // The old header, then «Partener» («De la parteneri») and «Reconfirmat» (the decision «Cere reconfirmarea») appended:
+      // every earlier column keeps its position.
+      "Event,Name,First name,Last name,Identity document,Email,Status,Club member,Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City,Member bib,Club runner,Partner,Reconfirmed",
     );
   });
 

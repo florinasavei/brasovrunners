@@ -72,3 +72,38 @@ export const CANNOT_COME_GLYPH_PATH = "/brand/email-cannot-come.png";
 export function cannotComeUrlOf(manageUrl: string): string {
   return `${manageUrl}#cancel`;
 }
+
+/**
+ * «Vin» / "I'm coming" (the decision «Cere reconfirmarea»): the states a send that ticked
+ * «Cere reconfirmarea» asks — a confirmed registration, one owed its declaration, one waiting. A waiting-list offer is
+ * not asked: its own email already asks for the declaration. The send writes an ask only for these (the table of asks,
+ * which this module never reads), the renderer draws the button only for these, and the manage page accepts the answer
+ * only from these. Answering is optional: nothing reads it but the backoffice.
+ */
+export const RECONFIRM_STATUSES = ["CONFIRMED", "PENDING_DECLARATION", "WAITLISTED"] as const satisfies readonly RegistrationStatus[];
+
+export function isReconfirmStatus(status: RegistrationStatus): boolean {
+  return (RECONFIRM_STATUSES as readonly RegistrationStatus[]).includes(status);
+}
+
+/**
+ * Whether «Vin» goes on this send: an organizer's message whose send ticked «Cere reconfirmarea», where «Nu mai pot
+ * ajunge» goes too (`cannotComeApplies`: the registration's own address, active, the event still ahead and running), and
+ * the registration in one of `RECONFIRM_STATUSES`. Never on a club copy.
+ */
+export function reconfirmApplies(params: Parameters<typeof cannotComeApplies>[0] & { askReconfirm: boolean }): boolean {
+  if (!params.askReconfirm || params.messageType !== "ORGANIZER_MESSAGE") return false;
+  if (!cannotComeApplies(params)) return false;
+  return params.registration ? isReconfirmStatus(params.registration.status) : false;
+}
+
+/**
+ * «Vin»'s glyph: the manage page's «Da, vin la cursă» glyph (`EventAvailable`) in white on the filled button, rasterised
+ * by `scripts/brand-assets.mjs` from `public/brand/email-reconfirm.svg` and served from `APP_BASE_URL`, as the cancel's.
+ */
+export const RECONFIRM_GLYPH_PATH = "/brand/email-reconfirm.png";
+
+/** Where «Vin» lands: the same manage page, the question at its own person's `#reconfirm` — the same token as the cancel. */
+export function reconfirmUrlOf(manageUrl: string): string {
+  return `${manageUrl}#reconfirm`;
+}
