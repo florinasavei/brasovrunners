@@ -16,7 +16,7 @@ import { participants } from "./participants";
 import { registrations } from "./registrations";
 import { staffUsers } from "./staff-users";
 
-/** The ten message types of AGENTS.md §16.3. No message may be sent that is not one of them. */
+/** The message types of AGENTS.md §16.3. No message may be sent that is not one of them. */
 export const emailMessageType = pgEnum("email_message_type", [
   "VERIFY_REGISTRATION_EMAIL",
   "COMPLETE_DECLARATION",
@@ -173,6 +173,14 @@ export const emailMessageType = pgEnum("email_message_type", [
   // (`{deadline, released, test, unsigned, free, capacity, waiting, offerOnlyTicked}`); no participant, no
   // registration, no token — the button opens the event's registrations.
   "UNSIGNED_RELEASED",
+  // «Schimbă adresa» («Adresa de email a înscrierii a fost schimbată»): an Administrator moved a registration to
+  // another address. To the old address, its participant's: the organizers changed the address of «name»'s
+  // registration at the event, the links this address received no longer work, and the contact page to object —
+  // never the new address. Queued whatever this address's refusals say; no token.
+  "REGISTRATION_ADDRESS_REMOVED",
+  // The same change, to the new address: from now on it receives this registration's messages, the next step
+  // follows in its own email, and the contact page if the registration is not theirs. No token.
+  "REGISTRATION_ADDRESS_ADDED",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

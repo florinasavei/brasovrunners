@@ -278,7 +278,7 @@ Requires an owner decision recorded in `DECISIONS.md` before any of it is built:
 - configurable questions/forms;
 - medical/emergency/identity-document data; birth year and gender, and therefore result categories;
 - paper/offline declaration capture (a bounded form is proposed in `DECISIONS.md` §10);
-- verified-email changes and participant-record merges;
+- participant-record merges;
 - race-day check-in, timing integration, leaderboards;
 - points, badges, streaks, rankings;
 - recurring-event engine;
@@ -1175,7 +1175,7 @@ Store:
 
 Do not use public profile slug/social link/device/IP as identity.
 
-The canonical email is immutable in V1. Admin may correct a participant name, but must not overwrite a verified email or merge participant rows. An unverified typo is handled by cancelling the pending registration and starting again with the correct address. A future verified email-change or merge workflow requires an explicit scope decision and migration/audit design.
+The canonical email of a participant row is immutable; an Administrator may move a registration to another participant («Schimbă adresa», §15.11 verb 8), never overwrite or merge one. Admin may correct a participant name. A merge workflow requires an explicit scope decision and migration/audit design.
 
 ### 10.4 Email canonicalization
 
@@ -2910,8 +2910,8 @@ BR-REQ-037-05):
    the changed columns and one `registration.answer_corrected` `{ field, from, to }` row per
    column (`registration.name_corrected` for the name of record); no state, no place, no email;
    any status, a TEST row like a real one. A key outside the allowlist is refused by name. **Three
-   kinds stay the person's:** the address (the identity, §10.4 — a typo is fixed by cancelling and
-   registering again; no verified-email edit and no participant merge, BR-REQ-037-03 criterion 2),
+   kinds stay the person's:** the address (the identity, §10.4 — changed only by §15.11 verb 8
+   «Schimbă adresa», never here; no participant merge, BR-REQ-037-03 criterion 2),
    the consents (staff only withdraw them, §322) and the declaration with its statements (§10.8)
    — once one is signed, the guardian it names too, since the signed text reads its declarant from
    that answer. A corrected value leaves the trail when the data does: the erase, the emergency
@@ -3113,20 +3113,49 @@ BR-REQ-037-05):
    `event.invitation_resent`, `event.invitation_withdrawn`, `event.invitation_expired`,
    `event.invitation_accepted` and `event.capacity_raised_for_invitation`, by the invitation's id, never
    a name or an address.
+8. **Moving a registration to another address (2026-11-11, «Schimbă adresa»; the owner: «aparent nu
+   pot modifica mailul unei persoane???», choosing «Orice adresă, oricând»).** The Administrator
+   (`canManageRegistrations`, asserted by the action, `admin-service.ts#changeRegistrationAddress` and
+   `service.ts#changeRegistrationAddressByStaff`; the Organizer reads the address and gets no form), on the
+   registration's own card «Adresa de email», one registration per press, in any state and at any time. Under
+   the event lock, in one transaction: `registrations.participant_id` is re-pointed to the participant of the
+   new canonical address — an existing one reused unchanged, its name and language untouched, a missing one
+   created; no participant row is rewritten or merged (§10.4) — and `address_changed_at` /
+   `address_changed_by_staff_user_id` record it. State, place, waiting position and race number do not move;
+   the allocator is asked nothing. Every live action link of the registration is revoked for cause (never
+   superseded, so never «a newer email exists»), and every registration-scoped token is bound to the
+   registration's current participant at read and at spend (`action-tokens/repository.ts`), as a spent
+   invitation link speaks of its registration only while it is on the invitation's participant; the old
+   address's queued participant mail for the row is withdrawn — the event's own news, which carries no
+   link, re-addressed instead — and the renderer withdraws a retry rather than mint a link for the old
+   address. A confirmed row gets a new check-in code, and its declaration's copy to the new address masks
+   the identity document until that address is confirmed by its own link. «Vreau să primesc oferte
+   și beneficii» is withdrawn, as staff withdraws it. Both addresses are told — `REGISTRATION_ADDRESS_REMOVED`
+   to the old one (never naming the new one, the contact page to object, queued whatever its refusals say)
+   and `REGISTRATION_ADDRESS_ADDED` to the new — and the new one gets the state's own message, with a fresh
+   email-link window for a row still waiting for its address; a running hold or offer keeps its deadline,
+   or a day from the move when less remains, capped by the start and never for a counted place while
+   anybody waits. A cancelled or lapsed row, or an event that is over, gets the two notices alone. Refused
+   with nothing written: an invalid or unchanged address (a provider's variant included), the same runner
+   already on the target at the event in any state or at another event of the race, the target at the
+   club's limit per address, a family form waiting on the row, an open invitation of the target to the
+   event, an erased row. Nobody vouches or signs in the same press: a declaration signed afterwards is the
+   person's, from the new address's own link — which signs but confirms no address — and the trail shows
+   it as signed after a staff address change. Audited as `registration.address_changed_by_staff` with ids and counts, never an address.
 
-Every one of the seven writes an `audit_logs` row (§12.12). MUST NOT: a second write path into
+Every one of the eight writes an `audit_logs` row (§12.12). MUST NOT: a second write path into
 `registrations`, a staff-signed declaration (a paper one is the participant's, recorded), a
 confirmation that bypasses the allocator or the approved declaration, a staff-entered row that is
 allocated ahead of anybody already waiting, or a delete that skips the allocator and strands the
 place it held.
 
-What sits beside the seven and is none of them: «Ce îi spui» on the registration's page (§654) — the
+What sits beside the eight and is none of them: «Ce îi spui» on the registration's page (§654) — the
 sentences a staff member tells a person who asks where their registration stands, in the
 registration's language — reads nothing beyond the page's own query and stores nothing:
 no audit row, no address, no link (only the expiry of the one the state waits on), shown alike to
 every role that reads the page and never at the desk.
 
-Beside the seven too, and a write that governs none of what they do: **the elite mark** («Marchează ca elită» /
+Beside the eight too, and a write that governs none of what they do: **the elite mark** («Marchează ca elită» /
 «Nu mai e elită» on the list's «⋮», 2026-11-03, `DECISIONS.md` §897). The Administrator's (`canManageRegistrations`,
 asserted by `setRegistrationEliteAction` and `elite-mark.ts`; the Organizer reads the «Elită» chip, Tehnic nothing), at
 any time and in any state, audited (`registration.elite_marked` / `registration.elite_unmarked`, the new value only). The
@@ -3145,6 +3174,23 @@ published results and of everybody's position — and «Apare pe site» — unti
 not tick «Vreau să apar» (§10.10). Both only ever hide: ticked, the person's own ticks decide, and nothing a staff member
 ticks can show anybody. Audited (`registration.elite_in_results` / `_out_of_results` / `_on_site` / `_off_site`, the new
 value only); no state, place, number, count or email moves; the Organizer reads them, Tehnic nothing.
+
+Beside the elite mark, and like it an internal label that changes nothing else: **«De la parteneri»** (2026-11-11, the
+decision «De la parteneri»), the name of the partner or sponsor through whom a person came — one nullable `partner_name`
+on a registration, a line of «Lista internă (doar notițe)» and an invitation, a name present meaning «de la parteneri».
+Set by the tick «E de la parteneri» with its box «Numele partenerului sau sponsorului» (a tick without a name is refused
+at the box; unticking clears it): on a line — at the add and in its own fold — by the Organizer and above, as the line's
+add and note; at an invitation's send, one name for the whole press, by the Administrator; on a registration's page by
+the Administrator alone (`canManageRegistrations`, asserted by `setRegistrationPartnerAction` and
+`partner-mark.ts#setRegistrationPartner`; the Organizer reads the «Partener: {name}» chip). It travels with the person:
+every move of a line that makes a registration carries it in the move's transaction, «Mută pe lista de elită» drops it,
+and an invitation's name is written where its «Elită» is honoured — at the link's press and at an adoption — through
+`partner-mark.ts#writeRegistrationPartnerName`. Audited (`registration.partner_set`, whether a name is now present and,
+carried, `via`; `event_reserve.partner_saved` on a line) — never the name. Read by the registrations list (its chip and
+the filter «De la parteneri»), the registration's page, the internal list, «Invitații», the registrations' Excel and CSV
+(«Partener», before the notes) and «Toate datele unei persoane»; never by a public page, an email, the desk, the file
+given to sponsors, the allocator or the capacity formula (`tests/unit/registrations/partner-never-leaves.test.ts`). No
+state, place, count, email or declaration moves.
 
 ---
 
@@ -3287,7 +3333,18 @@ DECLARATION_HOLD_EXPIRED
 EVENT_INVITATION
 PLACES_ALERT
 UNSIGNED_RELEASED
+REGISTRATION_ADDRESS_REMOVED
+REGISTRATION_ADDRESS_ADDED
 ```
+
+`REGISTRATION_ADDRESS_REMOVED` and `REGISTRATION_ADDRESS_ADDED` («Schimbă adresa», §15.11 verb 8) are queued
+by `service.ts#changeRegistrationAddressByStaff`, in the move's own transaction, once each
+(`registration:<id>:address-changed:<old|new>:<instant>`), in the registration's language: the first to the
+old address, its participant's — the organizers changed the address, its links no longer work, the contact
+page to object, never the new address — queued whatever that address's refusals say; the second to the new
+address, that it now receives the registration's messages and whether the next step follows. Neither carries
+a token. The renderer withdraws every other participant message of the registration whose participant is no
+longer the registration's; the first is the one it lets through.
 
 `UNSIGNED_RELEASED` (§914) is queued by `unsigned-release.ts#completeDeadlineRelease`, in the transaction
 of the window deadline's own release, to the `PLACES_ALERT` audience (every Administrator and

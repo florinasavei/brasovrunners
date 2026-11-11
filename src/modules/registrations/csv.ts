@@ -169,7 +169,15 @@ export type RegistrationCsvRow = {
    * the table: this file does not import the notes module (`notes-never-leave.test.ts`).
    */
   notes?: string;
+  /**
+   * «Partener» (the decision «De la parteneri»): the partner's or sponsor's name on the registration, or empty — for every
+   * role that gets the file, just before «Note interne», which stays last.
+   */
+  partnerName?: string | null;
 };
+
+/** «Partener»'s header when the caller names none (`partnerHeader`): the export route passes it in the reader's language. */
+export const PARTNER_HEADER_DEFAULT = "Partner";
 
 const HEADER = [
   "Event",
@@ -235,12 +243,14 @@ const HEADER = [
 ];
 
 /**
- * The file. `notesHeader` adds the «Note interne» column (§785) after «Member bib», the last — passed by the
- * route only for a role that `canKeepRegistrationNotes`; without it no such column, which is every other
- * caller's file. A note's line breaks stay inside the quoted cell (`csvCell` quotes on `\n`).
+ * The file. «Partener» (the decision «De la parteneri») comes after «Club runner» in every file, headed `partnerHeader` (the
+ * reader's language, from the route) or `PARTNER_HEADER_DEFAULT`. `notesHeader` adds the «Note interne» column (§785) after
+ * it, the last — passed by the route only for a role that `canKeepRegistrationNotes`; without it no such column, which is
+ * every other caller's file. A note's line breaks stay inside the quoted cell (`csvCell` quotes on `\n`).
  */
-export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[], options: { notesHeader?: string } = {}): string {
-  const header = options.notesHeader ? [...HEADER, options.notesHeader] : HEADER;
+export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[], options: { notesHeader?: string; partnerHeader?: string } = {}): string {
+  const withPartner = [...HEADER, options.partnerHeader ?? PARTNER_HEADER_DEFAULT];
+  const header = options.notesHeader ? [...withPartner, options.notesHeader] : withPartner;
   const lines = [
     // Through the same cell function as the data. No header needs quoting today; one added
     // later with a comma in it would silently split every row into an extra column.
@@ -283,6 +293,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[], optio
         row.city ?? "",
         memberBibExportCell(row),
         clubRunnerCell(row.clubRunner),
+        row.partnerName ?? "",
         ...(options.notesHeader ? [row.notes ?? ""] : []),
       ]
         .map(csvCell)

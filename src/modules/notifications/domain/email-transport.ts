@@ -60,6 +60,9 @@ export const EMAIL_GROUP_OF: Readonly<Record<Exclude<EmailMessageType, RelayMess
   // A held place that lapsed to somebody else (§638): the answer to the runner's own unsigned hold, as a cancellation is.
   DECLARATION_HOLD_EXPIRED: "confirmations",
   REGISTRATION_STATE_NOTICE: "confirmations",
+  // «Schimbă adresa»: the two notices of a moved registration say what happened, as a state notice does; no link acts.
+  REGISTRATION_ADDRESS_REMOVED: "confirmations",
+  REGISTRATION_ADDRESS_ADDED: "confirmations",
   BIB_ASSIGNED: "confirmations",
   DECLARATION_SIGNED: "confirmations",
   GROUP_RUN_DECLARATION_SIGNED: "confirmations",

@@ -210,9 +210,9 @@ function deskTellKey(cause: RejectionCause, confirmed: boolean): string {
  * «Email respins», said in full (§663; amending §650, §76, §83) — of the registration's one email state
  * (the data decision §670), by its cause and for who reads it (§671): which email did not arrive (its
  * name in the «Emailuri» catalogue, short on a card), when (club time, §452), why in plain words, whether
- * the address had been confirmed before it, and what to do. Staff never change the address (§645,
- * `AGENTS.md` §15.11): only the person can, by registering again — said only while the registration is
- * not confirmed.
+ * the address had been confirmed before it, and what to do. An address that does not exist is the person's
+ * to replace: asked for on the telephone (or at the desk), and moved by an Administrator with «Schimbă
+ * adresa» (`AGENTS.md` §15.11 verb 8) — said only while the registration is not confirmed, as before.
  *
  * Pure: the staff member's language, who reads it, the facts the list, the page and the desk already read.
  * One rule for who does what, by the reader:

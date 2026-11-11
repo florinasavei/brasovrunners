@@ -43,6 +43,7 @@ vi.mock("@/i18n/navigation", async (importOriginal) => {
 });
 
 const { renderOutboxMessage } = await import("@/modules/notifications/render");
+const { OutboxMessageWithdrawn } = await import("@/modules/notifications/outbox");
 const { readActionTokenContext } = await import("@/modules/action-tokens/repository");
 const { consumeAndCancel } = await import("@/modules/registrations/token-actions");
 const { default: ManageRegistrationPage } = await import("@/app/[locale]/registrations/manage/[token]/page");
@@ -300,10 +301,10 @@ describe("§558 «Nu mai pot ajunge» from the email to the cancelled registrati
     expect(copy.html).not.toContain('data-email-part="cannot-come"');
     expect(await manageTokens(ana.id)).toHaveLength(0);
 
-    // A message to an address that is not the registration's.
+    // A message to an address that is not the registration's: since «Schimbă adresa» it is withdrawn, never sent — so
+    // no button and no manage link either.
     const other = await participantFor("vecina@example.ro", "Vecina");
-    const misaddressed = await renderOutboxMessage(row("ORGANIZER_MESSAGE", ana.id, {}, other), db, NOW);
-    expect(misaddressed.text).not.toContain("Nu mai pot ajunge");
+    await expect(renderOutboxMessage(row("ORGANIZER_MESSAGE", ana.id, {}, other), db, NOW)).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
     expect(await manageTokens(ana.id)).toHaveLength(0);
 
     // After the start the page refuses a participant's cancel: no button promising it.

@@ -238,6 +238,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                         <Box key={index} data-testid="person-reserve-entry">
                           <Typography variant="body2" sx={{ overflowWrap: "anywhere" }}>
                             {entry.eventTitle ?? entry.eventId} · {entry.firstName} {entry.lastName} · {entry.deliveryEmail}
+                            {entry.partnerName ? ` · ${t("partner.chip", { name: entry.partnerName })}` : ""}
                           </Typography>
                           {entry.note && (
                             <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
@@ -294,6 +295,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                         {invitation.resendCount > 0 ? ` · ${t("person.volunteerInvitationResent", { when: show(invitation.lastSentAt) })}` : ""}
                         {invitation.outsideCapacity ? ` · ${t("person.eventInvitationOutside")}` : ""}
                         {invitation.supplementaryRaise ? ` · ${t("invitations.raised")}` : ""}
+                        {invitation.partnerName ? ` · ${t("partner.chip", { name: invitation.partnerName })}` : ""}
                         {invitation.acceptedAt ? ` · ${t("invitations.acceptedAt", { at: show(invitation.acceptedAt) })}` : ""}
                         {invitation.withdrawnAt ? ` · ${t("invitations.withdrawnAt", { at: show(invitation.withdrawnAt) })}` : ""}
                         {invitation.expiredAt ? ` · ${t("invitations.expiredAt", { at: show(invitation.expiredAt) })}` : ""}

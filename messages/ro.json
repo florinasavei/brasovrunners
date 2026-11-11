@@ -1309,6 +1309,7 @@
       "timeline": "Cronologie",
       "submitted": "Formular trimis",
       "emailConfirmed": "Email confirmat",
+      "addressChangedLine": "Adresa schimbată de echipă",
       "waitlisted": "Pe lista de așteptare",
       "offerCreated": "Ofertă creată",
       "holdExpires": "Rezervarea expiră",
@@ -1424,7 +1425,7 @@
         "confirmedAfter": "Adresa a fost confirmată {date}, după acest email.",
         "neverConfirmed": "Adresa nu a fost confirmată niciodată.",
         "placeKept": "Locul rămâne confirmat; la masă îl găsiți după nume.",
-        "todo": "Sună persoana; adresa o poate schimba doar ea, printr-o înscriere nouă.",
+        "todo": "Sună persoana și cere-i adresa corectă; un administrator o schimbă din „Adresa de email”.",
         "todoKept": "Sună persoana: emailurile clubului nu ajung la adresa ei.",
         "todoCause": {
           "account": "Nu a plecat atunci (contul clubului era refuzat de Mailgun), nu din cauza adresei.",
@@ -1456,7 +1457,7 @@
           "update": "Spune-i persoanei: nu a primit „Detalii actualizate” — ce s-a schimbat e pe pagina evenimentului.",
           "cancelled": "Spune-i persoanei: nu a primit anunțul — evenimentul s-a anulat."
         },
-        "todoTellUnreachable": "Spune-i persoanei că emailurile clubului nu ajung la ea; adresa o poate schimba doar ea, printr-o înscriere nouă.",
+        "todoTellUnreachable": "Spune-i persoanei că emailurile clubului nu ajung la ea și cere-i altă adresă; un administrator o schimbă din „Adresa de email”.",
         "todoTellKept": "Spune-i persoanei că emailurile clubului nu ajung la ea; locul ei rămâne confirmat.",
         "todoTellCause": {
           "mailbox-full": "Spune-i persoanei că are căsuța plină: să-și facă loc, ca emailurile clubului să ajungă.",
@@ -1658,6 +1659,7 @@
           "offered_by_staff": "Ofertă trimisă înaintea listei de așteptare («Trimite-i oferta»)",
           "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)",
           "address_vouched_on_entry": "Adresă garantată de echipă la înscriere; loc sau lista de așteptare pe loc («Direct pe lista de așteptare»)",
+          "address_changed_by_staff": "Adresa de email schimbată de echipă («Schimbă adresa»): linkurile vechi nu mai merg, ambele adrese anunțate",
           "outside_capacity_changed": "Pus pe lista de invitați speciali sau scos de pe ea",
           "elite_marked": "Marcat ca elită: BIB-ul se tipărește cu numele în locul numărului",
           "elite_unmarked": "Nu mai e elită: BIB-ul se tipărește din nou cu numărul",
@@ -1672,7 +1674,8 @@
           "answers_completed": "Date completate de participant, din linkul propriu: {fields}",
           "answers_viewed": "Datele înscrierii deschise, cu telefonul și persoana de contact",
           "note_added": "Notă internă adăugată",
-          "note_deleted": "Notă internă ștearsă"
+          "note_deleted": "Notă internă ștearsă",
+          "partner_set": "De la parteneri: numele partenerului schimbat"
         },
         "event": {
           "capacity_raised_for_offer": "Loc suplimentar adăugat pentru o ofertă («Trimite-i oferta»): {from} → {to}",
@@ -1773,6 +1776,7 @@
       "declarationForm": "Formular declarație pe hârtie (PDF)",
       "declarationFormMinor": "Formular declarație pentru un minor (PDF)",
       "declarationPaper": "pe hârtie, înregistrată de {who}",
+      "declarationAfterAddressChange": "semnată din linkul trimis la adresa schimbată de echipă",
       "signedByMinor": "minorul",
       "signedByGuardian": "părintele sau tutorele",
       "confirmOnPaperBodyMinor": "Confirmi că minorul și părintele ({guardian}) au semnat amândoi pe hârtie. Doar cu hârtia cu ambele semnături în față. Apoi emailul de confirmare; dacă nu e loc, lista de așteptare, fără email acum.",
@@ -1943,7 +1947,7 @@
         "clubNameHelp": "Cât timp bifa de membru e pusă, clubul e {club}.",
         "memberHelp": "Debifată, clubul {club} dispare și de pe listă.",
         "lockedTitle": "Ce nu se schimbă de aici",
-        "lockedAddress": "Adresa de email e identitatea înscrierii: pentru o adresă greșită, anulează și adaugă din nou.",
+        "lockedAddress": "Adresa de email se schimbă din cardul „Adresa de email”, nu de aici.",
         "lockedConsents": "Consimțămintele le dă doar persoana — tu le poți doar retrage, cu butonul lor.",
         "lockedDeclaration": "Declarația o semnează doar persoana; odată semnată, și părintele sau tutorele numit în ea rămâne cel care a semnat.",
         "fields": {
@@ -1968,6 +1972,24 @@
           "memberBibWanted": "Vreau numărul de membru"
         },
         "memberBibHelp": "Se păstrează doar cu bifa de membru și cât timp evenimentul oferă numărul membrilor."
+      },
+      "address": {
+        "title": "Adresa de email",
+        "current": "Emailurile înscrierii merg la: {email}",
+        "changed": "Schimbată de echipă: {date}, de {who}.",
+        "label": "Adresa nouă",
+        "help": "Adresa pe care ți-a dat-o persoana. Se schimbă doar la această înscriere.",
+        "submit": "Schimbă adresa",
+        "pending": "Se schimbă…",
+        "confirmTitle": "Schimbi adresa?",
+        "confirmBody": "Linkurile trimise la adresa veche nu mai funcționează. Ambele adrese primesc un email despre schimbare, iar cea nouă primește pasul următor.",
+        "confirmBodyNoticesOnly": "Linkurile trimise la adresa veche nu mai funcționează. Ambele adrese primesc un email despre schimbare, iar adresa nouă nu primește niciun pas de făcut.",
+        "confirmPromo": "Acordul pentru oferte și beneficii se retrage: îl dă din nou persoana, de la adresa nouă.",
+        "confirmAlso": "Adresa veche primește „Adresa de email a fost schimbată”; cea nouă primește și emailul pasului următor.",
+        "confirmAlsoNoticesOnly": "Adresa veche primește „Adresa de email a fost schimbată”.",
+        "confirmFollows": "Emailurile evenimentului care n-au plecat încă merg la adresa nouă.",
+        "confirmFamily": "Dacă altcineva de la adresa veche mai are un pas de făcut la eveniment, adresa veche primește din nou emailul acelui pas.",
+        "readOnly": "Adresa o schimbă un administrator."
       },
       "missingAnswers": {
         "chip": "Date lipsă",
@@ -2046,7 +2068,7 @@
             "other": "serverul tău de email l-a refuzat"
           },
           "can": {
-            "no-such-address": "Adresa o poți schimba doar printr-o înscriere nouă.",
+            "no-such-address": "Spune-ne adresa corectă și o schimbăm noi.",
             "mailbox-full": "Fă loc în căsuță și îți retrimitem.",
             "blocked": "Adaugă adresa clubului în contacte și îți retrimitem.",
             "suppressed": "Am oprit trimiterile după un refuz; spune-ne dacă adresa e bună.",
@@ -2665,7 +2687,15 @@
       "RESULT_FINISH_NOT_STARTED": "Cursa nu a început încă: o sosire nu poate fi înainte de start.",
       "RESULT_FINISH_CLOSED": "Startul a fost cu mai mult de o zi în urmă: timpii se scriu la «Clasament».",
       "REFUSAL_NEEDS_EMAIL": "Nu s-a anulat nimic: refuzul clubului pleacă întotdeauna cu emailul care îi spune persoanei motivul.",
-      "ELITE_NOT_MARKED": "Înscrierea nu mai e marcată ca elită, așa că bifele de elită nu se mai schimbă. Nu s-a scris nimic."
+      "ELITE_NOT_MARKED": "Înscrierea nu mai e marcată ca elită, așa că bifele de elită nu se mai schimbă. Nu s-a scris nimic.",
+      "ADDRESS_FAMILY_FORM_PENDING": "Nu s-a schimbat nimic: un formular de familie așteaptă confirmarea pe adresa veche. Schimbă adresa după ce e confirmat sau expiră.",
+      "ADDRESS_INVITED": "Nu s-a schimbat nimic: adresa nouă are o invitație deschisă la acest eveniment. Retrage întâi invitația din «Invitații».",
+      "ADDRESS_UNCHANGED": "Nu s-a schimbat nimic: e aceeași căsuță de email ca adresa de acum a înscrierii — un punct sau un „+” în plus duc tot acolo.",
+      "ADDRESS_ALREADY_HELD": "Nu s-a schimbat nimic: adresa aceasta are deja o înscriere la acest eveniment sau la altă distanță a cursei. Caut-o în lista înscrierilor.",
+      "ADDRESS_HOLDS_ENOUGH": "Nu s-a schimbat nimic: adresa aceasta are deja la eveniment atâtea înscrieri câte îi permit regulile clubului pentru o adresă. Folosește altă adresă.",
+      "ADDRESS_INVALID": "Nu s-a schimbat nimic: adresa nu e o adresă de email validă. Verifică ce ai scris.",
+      "ADDRESS_TRY_AGAIN": "Nu s-a schimbat nimic: înscrierea se schimba chiar în acel moment. Apasă din nou «Schimbă adresa».",
+      "PARTNER_NAME_MISSING": "Scrie numele partenerului sau sponsorului, sau debifează «E de la parteneri»."
     },
     "editor": {
       "draftPreview": {
@@ -7360,6 +7390,8 @@
         "REGISTRATION_MANAGE_LINK": "Linkul tău de înscriere",
         "PROFILE_MANAGE_LINK": "Înscrierile mele",
         "REGISTRATION_STATE_NOTICE": "Starea înscrierii",
+        "REGISTRATION_ADDRESS_REMOVED": "Adresa de email a fost schimbată",
+        "REGISTRATION_ADDRESS_ADDED": "Primești emailurile înscrierii",
         "EVENT_REMINDER": "Reminderul dinaintea startului",
         "EVENT_THANKS": "Mulțumim după cursă",
         "DECLARATION_SIGNED": "Declarația semnată (PDF atașat)",
@@ -7409,6 +7441,8 @@
         "REGISTRATION_MANAGE_LINK": "Linkul înscrierii",
         "PROFILE_MANAGE_LINK": "Înscrierile mele",
         "REGISTRATION_STATE_NOTICE": "Starea înscrierii",
+        "REGISTRATION_ADDRESS_REMOVED": "Adresa schimbată",
+        "REGISTRATION_ADDRESS_ADDED": "Adresa nouă",
         "EVENT_REMINDER": "Reminderul",
         "EVENT_THANKS": "Mulțumirile",
         "DECLARATION_SIGNED": "Declarația semnată",
@@ -7434,6 +7468,8 @@
         "REGISTRATION_MANAGE_LINK": "Nu se mai trimite: „Retrimite linkul” trimite confirmarea întreagă, cu linkul de gestionare, codul QR și numărul; „Înscrierile mele” are mesajul lui.",
         "PROFILE_MANAGE_LINK": "La cerere, când cineva vrea să-și vadă toate înscrierile.",
         "REGISTRATION_STATE_NOTICE": "Retrimis de un organizator, când cineva întreabă unde a rămas.",
+        "REGISTRATION_ADDRESS_REMOVED": "Când un administrator schimbă adresa unei înscrieri: la adresa veche, fără adresa nouă, cu pagina de contact.",
+        "REGISTRATION_ADDRESS_ADDED": "Când un administrator schimbă adresa unei înscrieri: la adresa nouă. Pasul următor vine într-un email separat.",
         "EVENT_REMINDER": "Automat, cu {reminder} înainte de start (sau cât e ales pe eveniment), tuturor celor confirmați, o singură dată. Doar pentru evenimentele programate: unul anulat nu mai trimite nimic automat.",
         "EVENT_THANKS": "Manual, din pagina evenimentului, după ce a trecut ora de start; o singură dată, celor bifați ca prezenți la masă. Niciodată pentru un eveniment anulat.",
         "DECLARATION_SIGNED": "Nu se mai trimite: declarația semnată, în PDF, pleacă atașată la „Înscriere confirmată”, împreună cu linkul către ea.",
@@ -7483,6 +7519,8 @@
         "REGISTRATION_MANAGE_LINK": "la cerere, „Retrimite linkul”",
         "PROFILE_MANAGE_LINK": "la cerere, toate înscrierile",
         "REGISTRATION_STATE_NOTICE": "retrimis de un organizator",
+        "REGISTRATION_ADDRESS_REMOVED": "când se schimbă adresa, la cea veche",
+        "REGISTRATION_ADDRESS_ADDED": "când se schimbă adresa, la cea nouă",
         "EVENT_REMINDER": "cu {reminder} înainte de start",
         "EVENT_THANKS": "manual, după eveniment",
         "DECLARATION_SIGNED": "după semnarea declarației, cu PDF",
@@ -7746,7 +7784,8 @@
           "invite": "Trimite invitații",
           "invitationResend": "Retrimite invitația",
           "invitationWithdraw": "Retrage invitația",
-          "invitationsErase": "Șterge invitațiile persoanei"
+          "invitationsErase": "Șterge invitațiile persoanei",
+          "changeAddress": "Schimbă adresa"
         },
         "events": {
           "save": "Salvează evenimentul",
@@ -9377,7 +9416,7 @@
               "steps": [
                 "Când: persoana a scris greșit numele, data nașterii, telefonul, orașul, clubul sau altceva din formular, sau a bifat că e membru fără să fie.",
                 "«Înscrieri» → apasă pe nume → «Datele înscrierii» → «Modifică datele». Schimbă doar ce e greșit → «Salvează datele»; întrebarea numește persoana și câmpurile.",
-                "Nu se schimbă de aici: adresa de email (anulează și adaugă din nou), consimțămintele (doar le retragi, cu butonul lor) și declarația (o semnează doar persoana).",
+                "Nu se schimbă de aici: adresa de email (din cardul «Adresa de email»), consimțămintele (doar le retragi, cu butonul lor) și declarația (o semnează doar persoana).",
                 "Nu se trimite niciun email și nu se mută niciun loc. Fiecare câmp schimbat rămâne în jurnal, cu valoarea veche și cea nouă."
               ]
             },
@@ -9552,6 +9591,16 @@
                 "Pe «Clasament», la «Pe pagina evenimentului», bifează «Clasamentul e public pe pagina evenimentului» și apasă «Salvează». Pagina arată locul, numărul, timpul și categoria; numele doar la cine a bifat lista la înscriere sau la alergătorul neînscris care a acceptat — ceilalți apar ca „Participant #număr”.",
                 "Clasamentul stă pe pagină cât lista publică a participanților, de la sfârșitul cursei («Setări» → «Termene»). Debifezi oricând; rezultatele rămân salvate.",
                 "Cine s-a înscris sub o notă de confidențialitate mai veche, care nu descria clasamentul, apare ca „Participant #număr”, chiar dacă a bifat lista. Abia după ce clubul aprobă o notă de confidențialitate care numește bifa lângă clasament (câmpul {{resultsNameAsk}}, în «Documente legale») — după ce clubul și avocatul modifică fraza care le spune că apar doar cu numărul — pagina înscrierii lor (linkul din emailul ei) le arată «Vreau să apar cu numele în clasament». Clubul nu trimite un email nou pentru asta: spune-le cu «Trimite un mesaj participanților», din editorul cursei, că pot bifa din linkul înscrierii și că pot debifa oricând."
+              ]
+            },
+            {
+              "title": "Schimbă adresa de email a unei înscrieri",
+              "steps": [
+                "Când: persoana a scris greșit adresa, adresa nu există sau persoana vrea emailurile pe altă adresă.",
+                "«Înscrieri» → apasă pe nume → «Adresa de email» → scrie «Adresa nouă» → «Schimbă adresa». Întrebarea spune ce se întâmplă; confirmă.",
+                "Linkurile trimise la adresa veche nu mai funcționează. Adresa veche primește un email despre schimbare, fără adresa nouă; cea nouă primește un email și pasul următor.",
+                "Locul, starea, poziția pe lista de așteptare și numărul nu se schimbă. Acordul pentru oferte și beneficii se retrage. Declarația o semnează tot persoana, din linkul primit la adresa nouă.",
+                "Se schimbă o singură înscriere la o apăsare: o familie de pe aceeași adresă se mută persoană cu persoană."
               ]
             }
           ]
@@ -11937,6 +11986,18 @@
         "waiting": "pe lista de așteptare {waiting}",
         "ticked": "s-a bifat «Locurile libere le dau doar eu»"
       }
+    },
+    "partner": {
+      "tick": "E de la parteneri",
+      "name": "Numele partenerului sau sponsorului",
+      "nameHelp": "Intern: persoana nu e anunțată. Debifat, numele se șterge.",
+      "chip": "Partener: {name}",
+      "filter": "De la parteneri",
+      "filterHelp": "Doar înscrierile cu numele unui partener sau sponsor.",
+      "column": "Partener",
+      "title": "De la parteneri",
+      "save": "Salvează partenerul",
+      "dialog": "Înscrierile vor fi marcate «Partener: {name}» — intern, persoanele nu sunt anunțate."
     }
   },
   "NotFound": {
@@ -14042,7 +14103,11 @@
       "membersInvitedProviderFailed": "Unele conturi Zitadel nu sunt gata: vezi raportul de sus.",
       "eventInvitationsErased": "Invitații retrase și șterse.",
       "eventImportedOver": "Importat peste eveniment.",
-      "eliteTicked": "Bifa de elită a fost salvată. Nu s-a trimis nimic nimănui."
+      "eliteTicked": "Bifa de elită a fost salvată. Nu s-a trimis nimic nimănui.",
+      "addressChanged": "Adresa a fost schimbată; ambele adrese primesc un email.",
+      "partnerSaved": "Partenerul a fost salvat. Nu s-a trimis nimic nimănui.",
+      "partnerCleared": "Nu mai e de la parteneri. Nu s-a trimis nimic nimănui.",
+      "partnerUnchanged": "Era deja așa; nimic de schimbat."
     },
     "mail": {
       "now": "Pleacă acum{road}: {what}.",

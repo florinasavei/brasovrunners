@@ -22,6 +22,9 @@ const EVERY_MESSAGE: Record<Exclude<EmailMessageType, RelayMessageType>, { butto
   REGISTRATION_MANAGE_LINK: { button: true, why: "the manage link" },
   PROFILE_MANAGE_LINK: { button: false, why: "«Înscrierile mele»: its button lists every person's cancel" },
   REGISTRATION_STATE_NOTICE: { button: false, why: "the resend for a cancelled or expired registration, no token (AGENTS.md §16.3)" },
+  // «Schimbă adresa»: neither carries a token; the old address no longer holds the registration, the new one gets its state's own message.
+  REGISTRATION_ADDRESS_REMOVED: { button: false, why: "to the old address, which no longer holds the registration: no link of it may act" },
+  REGISTRATION_ADDRESS_ADDED: { button: false, why: "a notice with no token; the state's own message that follows carries the button" },
   EVENT_REMINDER: { button: true, why: "the reminder: its one button" },
   EVENT_THANKS: { button: false, why: "after the fact" },
   DECLARATION_SIGNED: { button: true, why: "the signed declaration of a confirmed registration" },

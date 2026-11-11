@@ -1,7 +1,7 @@
 import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import { registrationStatus } from "@/db/schema/registrations";
-import { buildRegistrationsCsv, type RegistrationCsvRow } from "@/modules/registrations/csv";
+import { buildRegistrationsCsv, PARTNER_HEADER_DEFAULT, type RegistrationCsvRow } from "@/modules/registrations/csv";
 import { YES_CELL, clubRunnerCell, isClubRunner, memberTickCell } from "@/modules/registrations/domain/club-runner";
 import { colourRules, ROW_TINTS, STATUS_TINT, statusesOfTint, TINT_FILL } from "@/modules/registrations/sheet-colours";
 import { buildSponsorListWorkbook } from "@/modules/registrations/sponsor-sheet";
@@ -199,7 +199,9 @@ function rulesOf(buffer: Buffer): Rule[] {
   return rules;
 }
 
-const LAST_COLUMN = columnLetter(REGISTRATION_SHEET_HEADERS.length - 1);
+/** The fixed columns, then «Partener» («De la parteneri»), every file's: the sheet's header row without the notes. */
+const SHEET_HEADER = [...REGISTRATION_SHEET_HEADERS, PARTNER_HEADER_DEFAULT];
+const LAST_COLUMN = columnLetter(SHEET_HEADER.length - 1);
 const STATUS = columnLetter(headerAt("Status"));
 const CLUB_RUNNER = columnLetter(headerAt("Club runner"));
 const MEMBER_TICK = columnLetter(headerAt("Member tick (declared)"));
@@ -277,16 +279,18 @@ describe("§787 the «Club runner» column: the one predicate, written where a f
     };
     const [header, club, other] = buildRegistrationsCsv([{ ...base, clubRunner: true }, base]).split("\r\n");
     const columns = header.split(",");
-    // Last, after «Member bib», as a script that reads by position expects: every earlier column keeps its index.
-    expect(columns.at(-1)).toBe("Club runner");
-    expect(columns.at(-2)).toBe("Member bib");
+    // After «Member bib», as a script that reads by position expects: every earlier column keeps its index. «Partener» («De la
+    // parteneri») came after it, the last fixed column.
+    expect(columns.at(-2)).toBe("Club runner");
+    expect(columns.at(-3)).toBe("Member bib");
+    expect(columns.at(-1)).toBe(PARTNER_HEADER_DEFAULT);
     expect(columns.indexOf("Club member") + 1).toBe(columns.indexOf("Medically fit (declared)"));
     const at = columns.indexOf("Club runner");
     expect(club.split(",")[at]).toBe("Yes");
     expect(other.split(",")[at]).toBe("");
     // With «Note interne» the notes stay the very last column.
     const withNotes = buildRegistrationsCsv([base], { notesHeader: "Note interne" }).split("\r\n")[0].split(",");
-    expect(withNotes.slice(-2)).toEqual(["Club runner", "Note interne"]);
+    expect(withNotes.slice(-3)).toEqual(["Club runner", PARTNER_HEADER_DEFAULT, "Note interne"]);
     // The same rows, no styling and no footer: the legend and the statistics are the spreadsheet's alone.
     expect(buildRegistrationsCsv([base]).split("\r\n")).toHaveLength(2);
     expect(buildRegistrationsCsv([base])).not.toMatch(/Culori|Colours|Statistici|COUNTIF/);
@@ -330,7 +334,8 @@ describe("§796 the «Member tick (declared)» column: the tick alone, in the sp
     };
     const [header, line] = buildRegistrationsCsv([base]).split("\r\n");
     expect(header).toBe(
-      "Event,Name,First name,Last name,Identity document,Email,Status,Club member,Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City,Member bib,Club runner",
+      // The old header, then «Partener» («De la parteneri») appended: every earlier column keeps its position.
+      "Event,Name,First name,Last name,Identity document,Email,Status,Club member,Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City,Member bib,Club runner,Partner",
     );
     expect(header).not.toContain("Member tick");
     expect(line.split(",")[header.split(",").indexOf("Club member")]).toBe("declared");
@@ -812,8 +817,8 @@ describe("§787 the statistics are formulas with today's number cached beside th
       const buffer = await build(data, words, { notesHeader });
       const formulas = formulasOf(buffer);
       for (const [reference, result] of evaluated(buffer)) expect(String(result), reference).toBe(formulas.get(reference)!.cached);
-      // The colour rules reach the notes column too: the last column of the table.
-      expect(rulesOf(buffer).find((rule) => rule.sqref.startsWith("A2:"))!.sqref).toBe(`A2:${columnLetter(REGISTRATION_SHEET_HEADERS.length)}${data.length + 1}`);
+      // The colour rules reach the notes column too: the last column of the table, after «Partener».
+      expect(rulesOf(buffer).find((rule) => rule.sqref.startsWith("A2:"))!.sqref).toBe(`A2:${columnLetter(SHEET_HEADER.length)}${data.length + 1}`);
     }
   });
 });
@@ -832,13 +837,13 @@ describe("§787 a file of several events: an «Event» column the per-event coun
     const { rows } = readSheet(await build(several()));
     const header = rows[0] as string[];
     expect(header[header.indexOf("Name") + 1]).toBe("Event");
-    expect(header.filter((cell) => cell !== "Event")).toEqual([...REGISTRATION_SHEET_HEADERS]);
+    expect(header.filter((cell) => cell !== "Event")).toEqual(SHEET_HEADER);
     expect(rows.slice(1, 6).map((line) => line?.[header.indexOf("Event")])).toEqual([
       "Alergare · 18.10.2026", "Alergare · 18.10.2026", "Alergare · 25.10.2026", "Alergare · 25.10.2026", "Alergare · 25.10.2026",
     ]);
-    expect(readSheet(await build(mixed())).rows[0]).toEqual([...REGISTRATION_SHEET_HEADERS]);
+    expect(readSheet(await build(mixed())).rows[0]).toEqual(SHEET_HEADER);
     // Without a footer to count them, a several-events file has no use for the column either.
-    expect(readSheet(await buildRegistrationsWorkbook(several(), "S")).rows[0]).toEqual([...REGISTRATION_SHEET_HEADERS]);
+    expect(readSheet(await buildRegistrationsWorkbook(several(), "S")).rows[0]).toEqual(SHEET_HEADER);
   });
 
   it("counts per event by the column, then over all of them, and every formula comes to its cached number", async () => {
@@ -1079,9 +1084,9 @@ describe("§787 (amended) the special guests: three lines of their own, formulas
     expect(buildRegistrationsCsv([base])).not.toMatch(/Statistici|COUNTIF|Invitați speciali|Special guests/);
     // The sheet has the same columns with and without the footer, and the footer only words them.
     const plain = await buildRegistrationsWorkbook(withGuests(), "S");
-    expect(readSheet(plain).rows[0]).toEqual([...REGISTRATION_SHEET_HEADERS]);
+    expect(readSheet(plain).rows[0]).toEqual(SHEET_HEADER);
     expect(JSON.stringify(readSheet(plain).rows)).not.toContain(RO.specialGuests);
-    expect(readSheet(await build(withGuests())).rows[0]).toEqual([...REGISTRATION_SHEET_HEADERS]);
+    expect(readSheet(await build(withGuests())).rows[0]).toEqual(SHEET_HEADER);
   });
 
   it("says in a note that a guest takes no place and is inside «Total», in both languages", async () => {
@@ -1137,7 +1142,8 @@ describe("§790 (amended) «Status» right after the race number, and a drop-dow
       memberVerified: false, clubRunner: false, fitnessDeclaredAt: null, stravaUrl: "", instagramHandle: "", guardianName: "", guardianIdDocument: "", submittedAt: "", confirmedAt: "", checkedInAt: "", emailBounced: false,
     };
     expect(buildRegistrationsCsv([base]).split("\r\n")[0]).toBe(
-      "Event,Name,First name,Last name,Identity document,Email,Status,Club member,Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City,Member bib,Club runner",
+      // The old header, then «Partener» («De la parteneri») appended: every earlier column keeps its position.
+      "Event,Name,First name,Last name,Identity document,Email,Status,Club member,Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City,Member bib,Club runner,Partner",
     );
   });
 

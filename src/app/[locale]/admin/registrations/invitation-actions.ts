@@ -8,6 +8,7 @@ import { inviteToEvent, readInvitationForecast, resendInvitation, withdrawInvita
 import { confirmedCapacityOf, SUPPLEMENTARY_PLACE_UNCONFIRMED, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
 import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
 import { INVITATION_DAYS_DEFAULT, InvitationRefusal, parseInvitationLines, readInviteeRows } from "@/modules/registrations/domain/invitations";
+import { parsePartnerMark, partnerMarkOf } from "@/modules/registrations/partner-mark";
 import type { InvitationInvitee } from "@/modules/registrations/service";
 import { inEmailPress } from "@/modules/notifications/press";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -88,6 +89,8 @@ export async function inviteAction(_previous: InvitationSendState, form: FormDat
     try {
       const actor = await requireStaffCapability(canManageRegistrations);
       press.by(actor.id);
+      // «E de la parteneri» for the whole send (the decision «De la parteneri»): the tick without a name is refused, nothing sent.
+      const partnerName = parsePartnerMark(partnerMarkOf(form));
       sent = await inviteToEvent(
         db,
         actor,
@@ -98,6 +101,7 @@ export async function inviteAction(_previous: InvitationSendState, form: FormDat
           outsideCapacity: form.get("outside") === "1",
           // «Elită» for the whole send (§917), beside «Pe lista de invitați speciali»: the registration each becomes is marked.
           elite: form.get("elite") === "1",
+          partnerName,
           locale: form.get("inviteLocale") === "en" ? "en" : "ro",
           addPlaceTo: confirmedCapacityOf(form.get("addPlace")),
         },

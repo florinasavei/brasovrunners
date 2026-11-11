@@ -109,6 +109,12 @@ export type AuditAction =
   | "registration.elite_out_of_results"
   | "registration.elite_on_site"
   | "registration.elite_off_site"
+  /**
+   * «E de la parteneri» (the decision «De la parteneri»): the partner's or sponsor's name set, changed or cleared on this
+   * registration — by the Administrator on its page, or carried from a line of the internal list or an invitation (`via`).
+   * The metadata is whether a name is now present (`{ partner }`) and, carried, where from — never the name typed.
+   */
+  | "registration.partner_set"
   /** Confirmed at the desk: address vouched for, declaration on paper (BR-REQ-037-07). */
   | "registration.confirmed_by_staff"
   /** Given a place ahead of the queue, into a free one (BR-REQ-037-07). */
@@ -132,6 +138,13 @@ export type AuditAction =
    * declaration hold (`PENDING_DECLARATION`), the declaration still the person's to sign. Never a name or an address.
    */
   | "registration.address_vouched_on_entry"
+  /**
+   * «Schimbă adresa»: an Administrator moved the registration to another address — `participant_id` is the old
+   * address's participant, the entity the registration. `{ fromParticipantId, toParticipantId, status, newParticipant,
+   * linksRevoked, messagesWithdrawn, stateMessage, holdLengthened, promoWithdrawn }`: ids, counts and flags, never an
+   * address. The erase removes the two participant ids with the rest of the person (`scrubRegistrationsFromAudit`).
+   */
+  | "registration.address_changed_by_staff"
   /**
    * «În afara locurilor» set or cleared by an Administrator (§643): `from` and `to` (the flag before
    * and after), the state the row was in and, when the change moved it, the state after — never a name.
@@ -579,6 +592,8 @@ export type AuditAction =
   | "event_reserve.added"
   | "event_reserve.note_saved"
   | "event_reserve.renamed"
+  /** «E de la parteneri» on a line (the decision «De la parteneri»): `{ entryId, partner }` — whether a name is now present, never the name. */
+  | "event_reserve.partner_saved"
   | "event_reserve.deleted"
   | "event_reserve.moved"
   /**
@@ -995,6 +1010,11 @@ export async function scrubRegistrationsFromAudit<T extends Record<string, unkno
     .set({ metadataJson: sql`(${auditLogs.metadataJson} - 'from' - 'to')` })
     // A rename's two names, and a corrected answer's two values (§645): the person's data, gone with the row.
     .where(and(aboutThisRegistration, inArray(auditLogs.action, ["registration.name_corrected", "registration.answer_corrected"])));
+  // «Schimbă adresa»: the two participants a move named — the old address's and the new one's — go with the person.
+  await db
+    .update(auditLogs)
+    .set({ metadataJson: sql`(${auditLogs.metadataJson} - 'fromParticipantId' - 'toParticipantId')` })
+    .where(and(aboutThisRegistration, eq(auditLogs.action, "registration.address_changed_by_staff")));
   await db
     .update(auditLogs)
     .set({ metadataJson: sql`(${auditLogs.metadataJson} - 'reason')` })

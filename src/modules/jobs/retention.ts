@@ -278,6 +278,24 @@ async function deleteOrphanParticipants<T extends Record<string, unknown>>(db: D
         notExists(db.select({ id: registrations.id }).from(registrations).where(eq(registrations.participantId, participants.id))),
         // Nor an address the club invited (§647): the invitation's link is scoped to it until the invitation goes.
         notExists(db.select({ id: eventInvitations.id }).from(eventInvitations).where(eq(eventInvitations.participantId, participants.id))),
+        /*
+          Nor an address whose notice of a move is still to leave: «Schimbă adresa» moves a registration away and tells
+          the old address so (`REGISTRATION_ADDRESS_REMOVED`), and the cascade would take that notice with the participant
+          before it is sent. Gone with the next sweep once it has left. Only that notice: any other message of an address
+          with nothing left at the club goes with it, as before.
+        */
+        notExists(
+          db
+            .select({ id: emailOutbox.id })
+            .from(emailOutbox)
+            .where(
+              and(
+                eq(emailOutbox.participantId, participants.id),
+                eq(emailOutbox.messageType, "REGISTRATION_ADDRESS_REMOVED"),
+                inArray(emailOutbox.status, ["PENDING", "PROCESSING"]),
+              ),
+            ),
+        ),
       ),
     )
     .returning({ id: participants.id });
