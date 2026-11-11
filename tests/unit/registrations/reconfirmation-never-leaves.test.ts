@@ -3,17 +3,17 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * «Cere reconfirmarea» (the decision «Cere reconfirmarea»; BR-REQ-036-01, BR-REQ-060-01) — who said «Vin» is the
+ * «Cere reconfirmarea» (the decision «Cere reconfirmarea»; BR-REQ-070-01, BR-REQ-060-01) — who said «Vin» is the
  * organizers' information, never a disclosure and never a rule. It is written by the send and by the person's own manage
- * page, and read by the backoffice: the registrations list (its chip and its filter), the registration's page,
+ * page, read back by that same page (its noted answer), and read by the backoffice: the registrations list (its chip and its filter), the registration's page,
  * «Mesaje trimise», the registrations' Excel and CSV and «Toate datele unei persoane». Never by another public page (the
- * participants' list, the results, «Cine vine»), never by the email's renderer (which reads only the send's flag), never
+ * participants' list, the results, «Cine vine»), never by the email's renderer (which reads only the row's flag), never
  * by the race-day desk, never by the file given to sponsors, and never by the allocator or the capacity formula —
  * answering is optional, so nothing may decide by the answer.
  *
  * The structural half of that promise, in the style of `partner-never-leaves.test.ts`: the files that name the table,
  * its columns or its module are a reviewed list, and the surfaces below name none of it. (The behavioural half is
- * `tests/integration/registrations/reconfirmation.test.ts`.) `askReconfirm` and `reconfirmUrl` — the send's flag and
+ * `tests/integration/registrations/reconfirmation.test.ts`.) `askReconfirm` and `reconfirmUrl` — the row's flag and
  * the email's link — are not the answer, and the pattern matches neither.
  */
 const ROOT = process.cwd();
@@ -149,7 +149,7 @@ describe("«Cere reconfirmarea»'s answer reaches only the backoffice and the pe
     expect(route).toMatch(/reconfirmedHeader = \(await getTranslations\(\{ locale, namespace: "Admin" \}\)\)\("reconfirm\.column"\)/);
   });
 
-  it("reaches the email only as the send's flag and the link, never the answer", () => {
+  it("reaches the email only as the row's flag and the link, never the answer", () => {
     for (const file of ["src/modules/notifications/render.ts", "src/modules/notifications/templates.ts"]) {
       const source = readFileSync(path.join(ROOT, file), "utf8");
       expect(source, file).toMatch(/reconfirmUrl/);

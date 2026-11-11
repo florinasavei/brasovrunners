@@ -69,6 +69,8 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
     if (typeof value === "object") return JSON.stringify(value);
     return String(value);
   };
+  /** A moment inside a sentence (§452): the weekday in lower case and «la» / "at" before the hour. */
+  const inline = (value: Date): string => formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
   /** Every column of a row, in the order the table stores them. */
   const fields = (row: object) => (
     <Box component="dl" sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "minmax(160px, max-content) 1fr" }, columnGap: 2, rowGap: 0.25, m: 0 }}>
@@ -235,8 +237,8 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                   <Stack spacing={0.5}>
                     {data.reconfirmations.map((ask, index) => (
                       <Typography key={index} variant="body2" data-testid="person-reconfirmation">
-                        {ask.eventTitle ?? ask.eventId} · {t("reconfirm.personAsked", { asked: show(ask.askedAt) })}
-                        {ask.reconfirmedAt ? ` · ${t("reconfirm.personAnswered", { at: show(ask.reconfirmedAt) })}` : ""}
+                        {ask.eventTitle ?? ask.eventId} · {t("reconfirm.personAsked", { asked: inline(ask.askedAt) })}
+                        {ask.reconfirmedAt ? ` · ${t("reconfirm.personAnswered", { at: inline(ask.reconfirmedAt) })}` : ""}
                       </Typography>
                     ))}
                   </Stack>

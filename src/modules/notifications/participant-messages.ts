@@ -19,7 +19,7 @@ import { lockEventForCapacity } from "@/modules/registrations/repository";
 import { canMessageParticipants } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
-import { isReconfirmStatus } from "./domain/cannot-come";
+import { isReconfirmStatus, RECONFIRM_STATUSES } from "./domain/cannot-come";
 import { EMAIL_SAMPLE } from "./domain/email-sample";
 import {
   AUDIENCE_STATUSES,
@@ -351,8 +351,13 @@ export type SentParticipantMessage = {
   progress: SendProgress;
 };
 
-/** The registration states that still stand — the two «still registered» buckets read them. */
+/** The registration states that still stand — «Au reconfirmat» reads them. */
 const STANDING = sql.raw(ACTIVE_REGISTRATION_STATUSES.map((status) => `'${status}'`).join(", "));
+/**
+ * The states that can answer (`RECONFIRM_STATUSES`) — «N-au răspuns» reads only them: a waiting-list offer has no button
+ * and is not silent. The same set as the list's filter (`admin-repository.ts#reconfirmCondition`).
+ */
+const ANSWERING = sql.raw(RECONFIRM_STATUSES.map((status) => `'${status}'`).join(", "));
 
 /**
  * "Mesaje trimise": the event's sends, newest first, read from their audit rows — the date, the
@@ -413,11 +418,13 @@ async function readReconfirmAnswers<T extends Record<string, unknown>>(
   if (sendIds.length === 0) return new Map();
   const cancelledAfter = sql`(${registrations.status} = 'CANCELLED' and ${registrations.cancelledAt} >= ${registrationReconfirmations.askedAt})`;
   const standing = sql`(${registrations.status} in (${STANDING}))`;
+  const answering = sql`(${registrations.status} in (${ANSWERING}))`;
   /*
     One rule on every screen (the decision «Cere reconfirmarea»): a registration has re-confirmed when ANY of its asks is
     answered — the list's chip, its filter and the export read the same. So a person who pressed «Vin» after one send and
-    stays silent after the next counts under «Au reconfirmat» on both rows. A correlated EXISTS inside the FILTER keeps it
-    one grouped read.
+    stays silent after the next counts under «Au reconfirmat» on both rows. «N-au răspuns» counts only a registration that
+    can answer (`RECONFIRM_STATUSES`): one holding a waiting-list offer has no button and is in neither. A correlated
+    EXISTS inside the FILTER keeps it one grouped read.
   */
   const answeredAny = sql`exists (select 1 from ${registrationReconfirmations} as answered where answered.registration_id = ${registrations.id} and answered.reconfirmed_at is not null)`;
   const rows = await db
@@ -425,7 +432,7 @@ async function readReconfirmAnswers<T extends Record<string, unknown>>(
       sendId: registrationReconfirmations.sendId,
       yes: sql<number>`count(*) filter (where ${standing} and ${answeredAny})::int`,
       cancelled: sql<number>`count(*) filter (where ${cancelledAfter})::int`,
-      none: sql<number>`count(*) filter (where ${standing} and not ${answeredAny})::int`,
+      none: sql<number>`count(*) filter (where ${answering} and not ${answeredAny})::int`,
     })
     .from(registrationReconfirmations)
     .innerJoin(registrations, eq(registrations.id, registrationReconfirmations.registrationId))

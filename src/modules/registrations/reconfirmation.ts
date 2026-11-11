@@ -13,12 +13,13 @@ import { managedRegistration } from "./manage-family";
 import { findRegistrationById } from "./repository";
 
 /**
- * «Da, vin la cursă» — the answer to «Cere reconfirmarea» (the decision «Cere reconfirmarea»; the owner: the club sees
- * who pressed «Vin», and answering is optional).
+ * «Da, vin la cursă» — the answer to «Cere reconfirmarea» (the decision «Cere reconfirmarea»; the owner's «…dar e
+ * opțional», as the decision reads it: the club sees who pressed «Vin», and answering is optional).
  *
  * An organizer's message whose send ticked «Cere reconfirmarea» carries «Vin» beside «Nu mai pot ajunge», on the same
  * manage link (`#reconfirm`). The page's GET draws the question and writes nothing (BR-REQ-036-02 criterion 4); the
- * POST lands here. The shape of `results-consent.ts`:
+ * POST lands here — pressed by the button or, when the page opened at `#reconfirm`, by the page itself once
+ * (`ui/ReconfirmOnArrival.tsx`: one press counts). The shape of `results-consent.ts`:
  *
  * 1. the attempt throttled per presented token (`tokenAttemptAllowed`);
  * 2. the `MANAGE_REGISTRATION` token **read, never spent** — the same page must still be able to cancel — through
@@ -26,11 +27,12 @@ import { findRegistrationById } from "./repository";
  *    sent to an address the registration has since left is answered as a missing token, and nothing is recorded;
  * 3. the person the press names checked against the link (`managedRegistration`, §547): the link's own registration,
  *    or another of the same address at the same event — a stranger's id is refused;
- * 4. one transaction: the registration locked, its state and its event checked, then every open ask of it answered —
- *    the answer is about the event, not about one email.
+ * 4. one transaction: the registration locked and checked to be still on the address the token was read for (a
+ *    «Schimbă adresa» that committed after the read is answered as a missing registration, nothing written), its state
+ *    and its event checked, then every open ask of it answered — the answer is about the event, not about one email.
  *
  * **What it changes: nothing about the registration.** No state, place, hold, deadline, allocator or capacity term
- * reads `registration_reconfirmations`; only the backoffice does. A second press writes nothing and makes no audit row —
+ * reads `registration_reconfirmations`; only the backoffice and the person's own manage page do. A second press writes nothing and makes no audit row —
  * the first moment is kept, «set, not flip», because the club may already have acted on the first answer.
  *
  * **Which states answer.** Confirmed, owed the declaration, waiting (`RECONFIRM_STATUSES`), of an event still scheduled
@@ -46,11 +48,12 @@ export type ReconfirmOutcome = { ok: true; changed: boolean; reconfirmedAt: Date
 /** Record the answer for one registration: every open ask answered once, audited only when one was. */
 export async function recordReconfirmation<T extends Record<string, unknown>>(
   db: Database<T>,
-  input: { registrationId: string; now: Date },
+  input: { registrationId: string; participantId: string; now: Date },
 ): Promise<{ changed: boolean; answered: number }> {
   return db.transaction(async (tx) => {
     const [current] = await tx.select().from(registrations).where(eq(registrations.id, input.registrationId)).for("update");
-    if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+    // A «Schimbă adresa» that committed between the token's read and this lock: the link is no longer this registration's.
+    if (!current || current.participantId !== input.participantId) throw new DomainError("NOT_FOUND", "no such registration on this address");
     const [event] = await tx
       .select({ startsAt: events.startsAt, eventStatus: events.eventStatus })
       .from(events)
@@ -105,6 +108,6 @@ export async function reconfirmFromManageLink<T extends Record<string, unknown>>
     .limit(1);
   if (!asked) throw new DomainError("VALIDATION_ERROR", "nobody asked this registration whether it comes", [RECONFIRM_NOT_TAKEN]);
 
-  const result = await recordReconfirmation(db, { registrationId: target.id, now });
+  const result = await recordReconfirmation(db, { registrationId: target.id, participantId: context.token.participantId, now });
   return { ok: true as const, changed: result.changed };
 }

@@ -42,6 +42,7 @@ import type { QueueOrder } from "./domain/waitlist";
 import { isRejectionCause, rejectionCause, type RejectionCause } from "@/modules/notifications/domain/rejection-cause";
 import { recipientRoleOf, type RecipientRole } from "@/modules/notifications/domain/email-audience";
 import { isClubCopy } from "@/modules/notifications/domain/club-notices";
+import { RECONFIRM_STATUSES } from "@/modules/notifications/domain/cannot-come";
 import type { DeskEmailState, RegistrationEmailState, RegistrationEmailStateDetail } from "./domain/email-state";
 import { deskEmailStateSql, needsEmailActionSql, registrationEmailStateDetailSql, registrationEmailStateSql } from "./email-state";
 import type { PlaceDeadlineCounts, PlaceDeadlineEvent } from "./domain/place-deadlines";
@@ -270,8 +271,13 @@ export function isReconfirmFilter(value: unknown): value is ReconfirmFilter {
   return typeof value === "string" && (RECONFIRM_FILTERS as readonly string[]).includes(value);
 }
 
-/** The registration states that still stand, as SQL — «yes» and «none» are about people still registered. */
+/** The registration states that still stand, as SQL — «yes» is about people still registered. */
 const STANDING_STATUSES = sql.raw(ACTIVE_REGISTRATION_STATUSES.map((status) => `'${status}'`).join(", "));
+/**
+ * The states that can answer (`RECONFIRM_STATUSES`), as SQL — «none» counts only those: a waiting-list offer has no button
+ * and is not silent. The same set as `participant-messages.ts#readReconfirmAnswers`.
+ */
+const ANSWERING_STATUSES = sql.raw(RECONFIRM_STATUSES.map((status) => `'${status}'`).join(", "));
 
 /**
  * One `EXISTS` per answer (the decision «Cere reconfirmarea»), on the registration's own asks — so the list, its count
@@ -285,7 +291,8 @@ function reconfirmCondition(filter: ReconfirmFilter): SQL {
   }
   const standing = sql`${registrations.status} in (${STANDING_STATUSES})`;
   if (filter === "yes") return sql`(${standing} and ${asked(sql`${registrationReconfirmations.reconfirmedAt} is not null`)})`;
-  return sql`(${standing} and ${asked(sql`true`)} and not ${asked(sql`${registrationReconfirmations.reconfirmedAt} is not null`)})`;
+  const answering = sql`${registrations.status} in (${ANSWERING_STATUSES})`;
+  return sql`(${answering} and ${asked(sql`true`)} and not ${asked(sql`${registrationReconfirmations.reconfirmedAt} is not null`)})`;
 }
 
 /** When the person last said «Vin», or null: one correlated `max()` on the asks' index, as `latestDeclarationAcceptedAt`. */

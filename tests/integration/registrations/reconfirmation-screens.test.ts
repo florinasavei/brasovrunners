@@ -16,7 +16,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Cere reconfirmarea» on the backoffice's screens (the decision «Cere reconfirmarea»; BR-REQ-060-01, BR-REQ-080-02): the
+ * «Cere reconfirmarea» on the backoffice's screens (the decision «Cere reconfirmarea»; BR-REQ-060-01, BR-REQ-080-01, BR-REQ-080-02): the
  * chip «A reconfirmat» on a list row whose person said «Vin» and is still registered, the filter «Reconfirmare» with its three
  * answers, the line on the registration's page; on «Trimite un mesaj participanților» the tick, its help line, the ready text
  * in both languages for «Completează cu textul de reminder», the pace line before «Trimite», and on each «Mesaje trimise» row
@@ -295,7 +295,8 @@ describe("the registration's page", () => {
     for (const role of ["ADMIN", "MODERATOR"] as const) {
       state.actor = await staff(role);
       const line = elements(await detailPage(yes.id)).find((element) => element.props["data-testid"] === "registration-reconfirmed");
-      expect(textOf(line), role).toMatch(/^A spus că vine .*2099.*\.$/);
+      // When they answered, never the day they come: «A apăsat „Vin”» and the moment in its inline form (§452).
+      expect(textOf(line), role).toMatch(/^A apăsat „Vin” \p{Ll}+\., \d{1,2} \p{L}+\.? 2099, la \d{2}:\d{2}\.$/u);
       expect(elements(await detailPage(silent.id)).some((element) => element.props["data-testid"] === "registration-reconfirmed"), role).toBe(false);
     }
   });
@@ -318,8 +319,9 @@ describe("«Trimite un mesaj participanților»", () => {
       const text = (from: typeof ro) => from.Admin.participantMessages.reminderText;
       expect(labels.reminderFill.subjectRo, locale).toBe(text(ro).subject);
       expect(labels.reminderFill.subjectEn, locale).toBe(text(en).subject);
-      expect(labels.reminderFill.bodyRo, locale).toBe([text(ro).p1, text(ro).p2, text(ro).p3, text(ro).p4, text(ro).p5, text(ro).p6].join("\n\n"));
-      expect(labels.reminderFill.bodyEn, locale).toBe([text(en).p1, text(en).p2, text(en).p3, text(en).p4, text(en).p5, text(en).p6].join("\n\n"));
+      const paragraphs = (from: typeof ro) => [text(from).p1, text(from).p2, text(from).p3, text(from).p4, text(from).p5, text(from).p6, text(from).p7];
+      expect(labels.reminderFill.bodyRo, locale).toBe(paragraphs(ro).join("\n\n"));
+      expect(labels.reminderFill.bodyEn, locale).toBe(paragraphs(en).join("\n\n"));
       expect(labels.reminderFill.bodyRo).toContain("{participantName}");
     }
   });
@@ -520,5 +522,30 @@ describe("«Trimite un mesaj participanților»", () => {
     const exported = await listRegistrationsForAdmin(db, { eventId: race.id, excludeTest: true });
     expect(exported.find((row) => row.id === answered.id)?.reconfirmedAt).toBeInstanceOf(Date);
     expect(exported.find((row) => row.id === silent.id)?.reconfirmedAt).toBeNull();
+  });
+
+  it("counts under «N-au răspuns» only a registration that can answer: an offer made since the ask is not silent, on «Mesaje trimise» and in the filter alike", async () => {
+    const race = await createRace();
+    const actor = await staff("MODERATOR");
+    state.actor = actor;
+    const silent = await register(race.id);
+    const offered = await register(race.id, { status: "WAITLISTED", waitlistedAt: new Date() });
+    const offeredYes = await register(race.id, { status: "WAITLISTED", waitlistedAt: new Date() });
+    const words = { subject: { ro: "Vii?", en: "Coming?" }, body: { ro: "Spune-ne.", en: "Tell us." } };
+    await sendParticipantMessage(db, actor, { eventId: race.id, audience: "ALL_ACTIVE", sendId: randomUUID(), askReconfirm: true, ...words }, new Date(Date.now() - 60_000));
+    await db.update(registrationReconfirmations).set({ reconfirmedAt: new Date() }).where(eq(registrationReconfirmations.registrationId, offeredYes.id));
+    // Both waiting entries are offered a place after the ask: no button any more, still registered.
+    await db
+      .update(registrations)
+      .set({ status: "WAITLIST_OFFERED", offerCreatedAt: new Date(), holdExpiresAt: new Date(Date.now() + 86_400_000) })
+      .where(inArray(registrations.id, [offered.id, offeredYes.id]));
+
+    const [row] = elements(await messagesPage(race.id)).filter((element) => element.props["data-testid"] === "participant-message-history-row");
+    const answers = elements(row).find((element) => element.props["data-testid"] === "participant-message-history-answers");
+    // «Au reconfirmat» keeps the offer that answered (still registered, an ask answered); the silent offer is in neither.
+    expect(textOf(answers)).toBe("Au reconfirmat 1 · Au anulat 0 · N-au răspuns 1");
+    const ids = async (reconfirm: "yes" | "none") => (await listRegistrationsForAdmin(db, { eventId: race.id, reconfirm, excludeTest: true })).map((one) => one.id);
+    expect(await ids("yes")).toEqual([offeredYes.id]);
+    expect(await ids("none")).toEqual([silent.id]);
   });
 });

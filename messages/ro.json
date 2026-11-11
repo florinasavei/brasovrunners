@@ -9135,7 +9135,7 @@
                 "Scrie «Subiect» și «Mesajul», în română și în engleză.",
                 "Pentru un reminder, apasă «Completează cu textul de reminder»: scrie textul și bifează «Cere reconfirmarea». Cine apasă „Vin” apare cu «A reconfirmat»; nu se anulează nimeni automat.",
                 "La «Cum arată emailul» citește ambele variante: «Înscris în română» și «Înscris în engleză».",
-                "Apasă «Trimite mesajul», apoi în fereastră «Trimite». Mesajul rămâne în «Mesaje trimise».",
+                "Apasă «Trimite mesajul», apoi în fereastră «Trimite»: fereastra spune cât durează și câte pleacă azi. În «Mesaje trimise» vezi câte au plecat și câți au reconfirmat.",
                 "Doar despre acest eveniment: fără reclame, oferte de la sponsori sau alte evenimente."
               ]
             },
@@ -10348,9 +10348,10 @@
         "p1": "Bună, {participantName}!",
         "p2": "{eventTitle} e aproape: {eventStartsAtFormatted}, la {eventLocationName}.",
         "p3": "Dacă vii și vezi butonul „Vin” mai jos, apasă-l. Așa știm pe cine așteptăm.",
-        "p4": "Dacă nu mai poți ajunge, apasă „Nu mai pot ajunge”, ca locul să poată fi dat cuiva de pe lista de așteptare.",
-        "p5": "Dacă nu apeși nimic, înscrierea ta rămâne exact cum e.",
-        "p6": "Mulțumim și ne vedem la start!"
+        "p4": "Dacă nu mai poți ajunge, apasă „Nu mai pot ajunge”, ca să poată veni altcineva în locul tău.",
+        "p5": "„Vin” e opțional: dacă nu-l apeși, nu se schimbă nimic la înscrierea ta.",
+        "p6": "Dacă mai ai de semnat declarația sau ai primit un loc oferit, semnează din emailul primit, până la termenul din el.",
+        "p7": "Mulțumim și ne vedem la start!"
       },
       "paceRuns": {
         "one": "Pleacă treptat, câte {batch} la {minutes} minute ziua (noaptea mai rar): cam {hours} oră pe ritmul de zi.",
@@ -12067,10 +12068,10 @@
       "filterCancelled": "Au anulat după cerere",
       "filterNone": "N-au răspuns",
       "filterHelp": "Doar pentru mesajele trimise cu „Cere reconfirmarea”. Răspunsul e opțional.",
-      "detail": "A spus că vine {date}.",
+      "detail": "A apăsat „Vin” {date}.",
       "column": "Reconfirmat",
       "personAsked": "Reconfirmare cerută {asked}",
-      "personAnswered": "a spus că vine {at}"
+      "personAnswered": "a apăsat „Vin” {at}"
     }
   },
   "NotFound": {
@@ -12987,13 +12988,15 @@
     "reconfirm": {
       "title": "Vii la {event}?",
       "titleNoEvent": "Vii la cursă?",
+      "titleNoEventOther": "Vii la eveniment?",
       "yes": "Da, vin la cursă",
-      "optional": "Răspunsul e opțional: dacă nu apeși nimic, înscrierea rămâne exact cum e.",
+      "yesOther": "Da, vin la eveniment",
+      "optional": "Răspunsul e opțional: dacă nu apeși „{button}”, nu se schimbă nimic la înscrierea ta.",
       "pending": "Mai ai de semnat declarația: fără ea înscrierea nu e confirmată.",
       "waitlisted": "Ești pe lista de așteptare; locul tău în ea nu se schimbă, oricum ai răspunde.",
       "offered": "Ai un loc oferit: semnează declarația din emailul cu oferta.",
       "cannot": "Nu mai poți ajunge? Folosește „Anulează înscrierea” mai jos.",
-      "done": "Ne-ai spus că vii: {date}.",
+      "done": "Am notat că vii — ne-ai răspuns {date}.",
       "failed": "Răspunsul nu a fost înregistrat pentru această înscriere."
     }
   },

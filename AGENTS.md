@@ -3427,12 +3427,15 @@ registration's, never once the event has started or will not run.
 ajunge», on the same token, to the same manage page at `#reconfirm`, for a confirmed, pending-declaration or waiting
 registration of an event still ahead. The flag that draws it is the row's, not the send's: only the outbox rows whose
 registration the send wrote an ask for carry `askReconfirm` in their payload, so an offer accepted while the send drains
-gets «Nu mai pot ajunge» and no «Vin». The page's GET asks and writes nothing; «Da, vin la cursă» is a POST that records
-the first moment in `registration_reconfirmations` (one row per registration asked, per send) — the manage token read
-through the reader bound to the registration's current participant, never spent, and a second press keeps the first
-moment. A registration has re-confirmed when any of its asks is answered — the list's chip, its filter, the export and
-every «Mesaje trimise» row read that one rule. Answering is optional: nothing reads the answer but the backoffice — no state, place, hold, deadline, allocator
-or capacity term — and nobody is cancelled for not answering.
+gets «Nu mai pot ajunge» and no «Vin». **One press counts:** the page's GET asks and writes nothing, and opened at
+`#reconfirm` in a browser it presses its own «Da, vin la cursă» once (`registrations/ui/ReconfirmOnArrival.tsx`, the
+«Da, vin» link page's pattern) — without JavaScript the button stays and works, and a scanner that runs no scripts counts
+nobody. The press is a POST that records the first moment in `registration_reconfirmations` (one row per registration
+asked, per send) — the manage token read through the reader bound to the registration's current participant, never
+spent, and a second press keeps the first moment. A registration has re-confirmed when any of its asks is answered — the
+list's chip, its filter, the export and every «Mesaje trimise» row read that one rule. Answering is optional: nothing
+reads the answer but the backoffice and the person's own manage page — no state, place, hold, deadline, allocator or
+capacity term — and nobody is cancelled for not answering.
 
 `EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
 event before its start — the club's reminder lead or the event's own (§377; 48 hours by default) — once per registration (`registration:<id>:reminder`), with

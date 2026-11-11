@@ -3,16 +3,18 @@ import { events } from "./events";
 import { registrations } from "./registrations";
 
 /**
- * «Cere reconfirmarea» (the decision «Cere reconfirmarea»; the owner: the club sees who
- * pressed «Vin»): one row per registration asked, per send of «Trimite un mesaj participanților» that ticked the box.
+ * «Cere reconfirmarea» (the decision «Cere reconfirmarea»; the owner's «…dar e opțional», as the decision reads it: the
+ * club sees who pressed «Vin»): one row per registration asked, per send of «Trimite un mesaj participanților» that ticked the box.
  *
  * - **Written by the send.** In the send's own transaction, one row for each recipient whose registration was confirmed,
  *   owed its declaration or waiting (`RECONFIRM_STATUSES`) — test registrations too, as every send writes to them
  *   (AGENTS.md §12.6); every count the club is given leaves them out.
- * - **Answered by the person.** «Da, vin la cursă» on the registration's own manage page sets `reconfirmed_at` on every
- *   open ask of that registration, once: a second press keeps the first moment.
+ * - **Answered by the person.** «Da, vin la cursă» on the registration's own manage page — pressed by the page itself
+ *   when the email's «Vin» opens it — sets `reconfirmed_at` on every open ask of that registration, once: a second press
+ *   keeps the first moment.
  * - **Read by nothing that decides.** No state, place, hold, deadline, allocator or capacity term reads it; answering is
- *   optional, and «N-au răspuns» is information for the organizers, never a state. Only the backoffice reads it —
+ *   optional, and «N-au răspuns» is information for the organizers, never a state. Only the backoffice and the person's
+ *   own manage page read it —
  *   `tests/unit/registrations/reconfirmation-never-leaves.test.ts` keeps it off every public page and sponsors' file.
  * - **Deleted with the registration.** `ON DELETE CASCADE` from the registration and from its event: an erase, the
  *   retention sweep and an event's delete take the asks with the row.

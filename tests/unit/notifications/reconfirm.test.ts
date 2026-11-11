@@ -8,7 +8,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * «Cere reconfirmarea» (the decision «Cere reconfirmarea»; BR-REQ-036-01, BR-REQ-080-02) — the pure parts: which
+ * «Cere reconfirmarea» (the decision «Cere reconfirmarea»; BR-REQ-080-01, BR-REQ-080-02) — the pure parts: which
  * registrations «Vin» goes to, the link it carries, the claim's order, the line before «Trimite»'s arithmetic, the fill button's
  * rule, and the ready reminder text in both catalogues.
  */
@@ -49,7 +49,7 @@ describe("«Vin» goes only where a send asked", () => {
     expect(reconfirmUrlOf("https://club.test/ro/inscrieri/gestioneaza/abc")).toBe("https://club.test/ro/inscrieri/gestioneaza/abc#reconfirm");
   });
 
-  it("reads the send's flag from the row's payload, and nothing else as a yes", () => {
+  it("reads the row's flag from its payload, and nothing else as a yes", () => {
     expect(readOrganizerAskReconfirm({ subject: {}, body: {}, askReconfirm: true })).toBe(true);
     for (const payload of [null, {}, { askReconfirm: "true" }, { askReconfirm: 1 }, "askReconfirm"]) expect(readOrganizerAskReconfirm(payload)).toBe(false);
   });
@@ -158,7 +158,7 @@ describe("«Completează cu textul de reminder» without the browser", () => {
 });
 
 describe("the ready reminder text, in both catalogues", () => {
-  const PARTS = ["subject", "p1", "p2", "p3", "p4", "p5", "p6"] as const;
+  const PARTS = ["subject", "p1", "p2", "p3", "p4", "p5", "p6", "p7"] as const;
   const textOf = (catalogue: typeof ro) => catalogue.Admin.participantMessages.reminderText;
 
   it("has the same parts and the same placeholders in Romanian and English, each one the message can fill", () => {
@@ -172,15 +172,23 @@ describe("the ready reminder text, in both catalogues", () => {
     }
   });
 
-  it("says that pressing nothing leaves the registration as it is, and never that silence costs the place", () => {
-    expect(textOf(ro).p5).toBe("Dacă nu apeși nimic, înscrierea ta rămâne exact cum e.");
-    expect(textOf(en).p5).toBe("If you press nothing, your registration stays exactly as it is.");
+  it("says that «Vin» is optional and changes nothing, points a declaration or an offer at its own email, and never says silence costs the place", () => {
+    expect(textOf(ro).p2).toContain("{eventTitle} e aproape:");
+    expect(textOf(en).p2).toContain("{eventTitle} is coming up:");
+    expect(textOf(ro).p4).toBe("Dacă nu mai poți ajunge, apasă „Nu mai pot ajunge”, ca să poată veni altcineva în locul tău.");
+    expect(textOf(en).p4).toBe("If you can no longer make it, press “I can't make it any more”, so someone else can come in your place.");
+    expect(textOf(ro).p5).toBe("„Vin” e opțional: dacă nu-l apeși, nu se schimbă nimic la înscrierea ta.");
+    expect(textOf(en).p5).toBe("“I'm coming” is optional: if you don't press it, nothing about your registration changes.");
+    expect(textOf(ro).p6).toBe("Dacă mai ai de semnat declarația sau ai primit un loc oferit, semnează din emailul primit, până la termenul din el.");
+    expect(textOf(en).p6).toBe("If you still have to sign the declaration or were offered a place, sign from the email you received, by the deadline in it.");
     for (const catalogue of [ro, en]) {
       const all = PARTS.map((part) => textOf(catalogue)[part]).join(" ");
+      // The old sentences: a waiting person's «place» promised to the waiting list, and «exactly as it is» for somebody who still owes a signature.
+      expect(all).not.toMatch(/lista de așteptare|waiting list|exact cum e|exactly as it is/i);
       expect(all).not.toMatch(/pierzi|se anulează automat|vei fi anulat|lose your place|cancelled automatically|will be cancelled/i);
     }
-    // Six paragraphs, as the composer joins them and the send reads them back.
-    expect(organizerParagraphs(PARTS.slice(1).map((part) => textOf(ro)[part]).join("\n\n"))).toHaveLength(6);
+    // Seven paragraphs, as the composer joins them and the send reads them back.
+    expect(organizerParagraphs(PARTS.slice(1).map((part) => textOf(ro)[part]).join("\n\n"))).toHaveLength(7);
   });
 
   it("names the buttons by their own words in both languages, and the composer's help line says nobody is cancelled automatically", () => {
@@ -192,6 +200,8 @@ describe("the ready reminder text, in both catalogues", () => {
     expect(en.Admin.participantMessages.reconfirmHelp).toContain("Nobody is cancelled automatically");
     // The page's button is not the RSVP feature's «Da, vin».
     expect(ro.Registrations.reconfirm.yes).toBe("Da, vin la cursă");
-    expect(ro.Registrations.reconfirm.optional).toContain("înscrierea rămâne exact cum e");
+    expect(ro.Registrations.reconfirm.yesOther).toBe("Da, vin la eveniment");
+    expect(ro.Registrations.reconfirm.optional).toBe("Răspunsul e opțional: dacă nu apeși „{button}”, nu se schimbă nimic la înscrierea ta.");
+    expect(en.Registrations.reconfirm.optional).toBe("Answering is optional: if you don't press “{button}”, nothing about your registration changes.");
   });
 });

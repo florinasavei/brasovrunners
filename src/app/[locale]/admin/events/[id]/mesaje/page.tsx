@@ -107,7 +107,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
   const reminderOf = async (language: "ro" | "en") => {
     const words = await getTranslations({ locale: language, namespace: "Admin" });
     const raw = (key: string) => words.raw(`participantMessages.reminderText.${key}`) as string;
-    return { subject: raw("subject"), body: ["p1", "p2", "p3", "p4", "p5", "p6"].map(raw).join("\n\n") };
+    return { subject: raw("subject"), body: ["p1", "p2", "p3", "p4", "p5", "p6", "p7"].map(raw).join("\n\n") };
   };
   const [reminderRo, reminderEn] = await Promise.all([reminderOf("ro"), reminderOf("en")]);
 

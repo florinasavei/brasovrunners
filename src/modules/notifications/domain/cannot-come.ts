@@ -78,7 +78,7 @@ export function cannotComeUrlOf(manageUrl: string): string {
  * «Cere reconfirmarea» asks — a confirmed registration, one owed its declaration, one waiting. A waiting-list offer is
  * not asked: its own email already asks for the declaration. The send writes an ask only for these (the table of asks,
  * which this module never reads), the renderer draws the button only for these, and the manage page accepts the answer
- * only from these. Answering is optional: nothing reads it but the backoffice.
+ * only from these. Answering is optional: nothing reads it but the backoffice and the person's own manage page.
  */
 export const RECONFIRM_STATUSES = ["CONFIRMED", "PENDING_DECLARATION", "WAITLISTED"] as const satisfies readonly RegistrationStatus[];
 

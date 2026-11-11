@@ -24,9 +24,10 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * «Cere reconfirmarea» (the decision «Cere reconfirmarea»; BR-REQ-036-01, BR-REQ-036-02, BR-REQ-080-02, BR-REQ-060-01) —
- * the owner: the club sees who pressed «Vin»; answering is optional, nothing in a state, a place, a deadline, the allocator
- * or the capacity formula reads the answer, and «N-au răspuns» is information for the organizers, not a state.
+ * «Cere reconfirmarea» (the decision «Cere reconfirmarea»; BR-REQ-036-02, BR-REQ-080-01, BR-REQ-070-01, BR-REQ-060-01,
+ * BR-REQ-080-02) — the owner's «…dar e opțional», as the decision reads it: the club sees who pressed «Vin»; answering is
+ * optional, nothing in a state, a place, a deadline, the allocator or the capacity formula reads the answer, and «N-au
+ * răspuns» is information for the organizers, not a state.
  *
  * The send writes one ask per registration it asks (confirmed, owed the declaration, waiting — test rows too), the flag in
  * exactly those rows' payloads and, send-wide, in the audit row; the email carries «Vin» beside «Nu mai pot ajunge» on the same manage token;
@@ -89,6 +90,7 @@ const { listRegistrationsForAdmin, countRegistrationsForAdmin, summariseRegistra
 );
 const { changeRegistrationAddress, deleteRegistrationByStaff } = await import("@/modules/registrations/admin-service");
 const { viewPersonData } = await import("@/modules/registrations/person-data");
+const { recordReconfirmation } = await import("@/modules/registrations/reconfirmation");
 
 const WORDS = {
   subject: { ro: "Ne vedem la {eventTitle}?", en: "See you at {eventTitle}?" },
@@ -424,7 +426,7 @@ describe("the manage page: the GET asks and writes nothing, the POST records onc
     expect(html).toContain('id="reconfirm"');
     expect(html).toContain("Vii la Crosul Tâmpei?");
     expect(html).toContain("Da, vin la cursă");
-    expect(html).toContain(ro.Registrations.reconfirm.optional);
+    expect(html).toContain(ro.Registrations.reconfirm.optional.replace("{button}", "Da, vin la cursă"));
     expect(html).toContain(ro.Registrations.reconfirm.cannot.replace(/„/g, "„"));
     expect((await asks()).every((row) => row.reconfirmedAt === null)).toBe(true);
     expect((await db.select().from(auditLogs)).length).toBe(auditsBefore);
@@ -496,6 +498,68 @@ describe("the manage page: the GET asks and writes nothing, the POST records onc
     const fresh = vinTokenOf((await renderOutboxMessage(moved, db, new Date())).text);
     expect(fresh).not.toBeNull();
     expect(await pressVin(fresh!)).toMatch(/reconfirm=1/);
+  });
+
+  it("refuses, under the row lock, a press for a participant the registration has since left: NOT_FOUND, nothing written", async () => {
+    const { ana } = await askedOne();
+    // The token was read for Ana's old address; «Schimbă adresa» commits before the lock is taken.
+    const stale = ana.participantId;
+    await changeRegistrationAddress(db, await staff("ADMIN"), ana.id, "ana.alta@example.test", new Date());
+    expect(await refusalOf(recordReconfirmation(db, { registrationId: ana.id, participantId: stale, now: new Date() }))).toBe("NOT_FOUND");
+    expect((await asks()).every((row) => row.reconfirmedAt === null)).toBe(true);
+    expect(await reconfirmAudits()).toHaveLength(0);
+    // The registration's current participant is still answered.
+    const current = (await rowOf(ana.id)).participantId;
+    expect(await recordReconfirmation(db, { registrationId: ana.id, participantId: current, now: new Date() })).toEqual({ changed: true, answered: 1 });
+  });
+});
+
+describe("one press counts: the page presses «Da, vin la cursă» by itself only where it should", () => {
+  const ISLAND = 'data-testid="manage-reconfirm-auto"';
+
+  it("wraps the link's own open question in the island, the form and its button still inside it for a browser without scripts", async () => {
+    const ana = await person("Ana", "CONFIRMED");
+    await send();
+    const html = await managePage(vinTokenOf((await emailTo(ana.id)).text)!);
+    expect(html).toContain(ISLAND);
+    expect(html.indexOf(ISLAND)).toBeLessThan(html.indexOf('data-testid="manage-reconfirm-yes"'));
+    // The GET wrote nothing: the island only presses in a browser, at #reconfirm.
+    expect((await asks()).every((row) => row.reconfirmedAt === null)).toBe(true);
+  });
+
+  it("draws no island once the address carries the answer or a refusal, nor once the question is answered: never a second press, never a loop", async () => {
+    const ana = await person("Ana", "CONFIRMED");
+    await send();
+    const secret = vinTokenOf((await emailTo(ana.id)).text)!;
+    expect(await managePage(secret, { reconfirm: "0" })).not.toContain(ISLAND);
+    expect(await managePage(secret, { reconfirm: "1" })).not.toContain(ISLAND);
+    await pressVin(secret);
+    const answered = await managePage(secret);
+    expect(answered).toContain('data-testid="manage-reconfirm-done"');
+    expect(answered).not.toContain(ISLAND);
+  });
+
+  it("presses only the token's own registration, never another person of the same address", async () => {
+    const ana = await person("Ana", "CONFIRMED", { email: "casa@example.test" });
+    const ion = await person("Ion", "CONFIRMED", { email: "casa@example.test" });
+    await send();
+    const html = await managePage(vinTokenOf((await emailTo(ana.id)).text)!);
+    // Two questions, two buttons, one island: Ana's.
+    expect(html.match(/data-testid="manage-reconfirm-yes"/g)).toHaveLength(2);
+    expect(html.match(new RegExp(ISLAND, "g"))).toHaveLength(1);
+    const island = html.indexOf(ISLAND);
+    expect(html.indexOf(`value="${ana.id}"`, island)).toBeGreaterThan(island);
+    expect(html.slice(island, html.indexOf(`value="${ana.id}"`, island))).not.toContain(`value="${ion.id}"`);
+  });
+
+  it("words the question and its button by the event's type: a race's, else the event's — never the RSVP's bare «Da, vin»", async () => {
+    await db.update(events).set({ type: "HIKE" }).where(eq(events.id, eventId));
+    const ana = await person("Ana", "CONFIRMED");
+    await send();
+    const html = await managePage(vinTokenOf((await emailTo(ana.id)).text)!);
+    expect(html).toContain("Da, vin la eveniment");
+    expect(html).not.toContain("Da, vin la cursă");
+    expect(html).toContain(ro.Registrations.reconfirm.optional.replace("{button}", "Da, vin la eveniment"));
   });
 });
 

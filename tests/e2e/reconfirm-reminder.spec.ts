@@ -10,9 +10,11 @@ import { hydrated, signIn } from "./support/featured-event";
  * participanților» the button «Completează cu textul de reminder» writes the four boxes in both languages and ticks
  * «Cere reconfirmarea» — asking first when a box already holds words — and the preview then shows «Vin» above «Nu mai pot
  * ajunge»; the question before «Trimite» says how long the send takes; the send writes one ask per registration it asks.
- * On the person's own manage page «Vii la …?» asks with «Da, vin la cursă», a 44-pixel target, and the press records the
- * answer once, the cancel still there. Each project seeds its own made-up event and people straight into the database —
- * the setup, not the subject, as `support/action-link.ts` argues.
+ * One press counts: the email's «Vin» opens the person's own manage page at `#reconfirm`, and in a browser the page
+ * presses «Da, vin la cursă» by itself once and shows the noted answer; opening the link again keeps the first moment;
+ * `#cancel` and a bare link record nothing; a browser without scripts sees «Vii la …?» with the button, a 44-pixel target,
+ * records nothing on the GET and records on the press, the cancel still there. Each project seeds its own made-up event
+ * and people straight into the database — the setup, not the subject, as `support/action-link.ts` argues.
  */
 
 function databaseUrl(): string {
@@ -114,8 +116,8 @@ test.describe("«Cere reconfirmarea»: the ready reminder, «Vin» and the answe
     await fill.click();
     await expect(field("subjectRo")).toHaveValue("Ne vedem la {eventTitle}? Spune-ne dacă vii");
     await expect(field("subjectEn")).toHaveValue("See you at {eventTitle}? Tell us if you're coming");
-    await expect(field("bodyRo")).toHaveValue(/Dacă nu apeși nimic, înscrierea ta rămâne exact cum e\./);
-    await expect(field("bodyEn")).toHaveValue(/If you press nothing, your registration stays exactly as it is\./);
+    await expect(field("bodyRo")).toHaveValue(/„Vin” e opțional: dacă nu-l apeși, nu se schimbă nimic la înscrierea ta\.\n\nDacă mai ai de semnat declarația/);
+    await expect(field("bodyEn")).toHaveValue(/“I'm coming” is optional: if you don't press it, nothing about your registration changes\.\n\nIf you still have to sign/);
     await expect(tick).toBeChecked();
     // The preview, rendered by the server: «Vin» above «Nu mai pot ajunge», on example links.
     await expect.poll(async () => (await previewHtml(page)).includes('data-email-part="reconfirm"'), { timeout: 15_000 }).toBe(true);
@@ -147,36 +149,86 @@ test.describe("«Cere reconfirmarea»: the ready reminder, «Vin» and the answe
     await expect(page.getByTestId("participant-message-history-answers").first()).toHaveText("Au reconfirmat 0 · Au anulat 0 · N-au răspuns 2");
   });
 
-  test("the manage page asks «Vii la …?», and «Da, vin la cursă» records the answer once, the cancel still there", async ({ page }) => {
+  /** The ask a send would have written: the setup, not the subject. */
+  async function ask(eventId: string, registrationId: string): Promise<void> {
+    await withDatabase((client) =>
+      client.query("INSERT INTO registration_reconfirmations (registration_id, event_id, send_id, asked_at) VALUES ($1, $2, gen_random_uuid(), now())", [registrationId, eventId]),
+    );
+  }
+  const answeredAt = async (eventId: string, registrationId: string) => (await asksOf(eventId)).find((row) => row.registration_id === registrationId)?.reconfirmed_at ?? null;
+
+  test("one press counts: «Vin» opens the page and records once, a second opening keeps the first moment, #cancel and a bare link record nothing", async ({ page }) => {
     test.setTimeout(120_000);
     const tag = `${test.info().project.name}-page-${Date.now().toString(36)}`;
     const { eventId, people } = await seedEvent(tag);
     created.push(eventId);
     const [ana] = people;
-    // The ask a send would have written: the setup, not the subject.
-    await withDatabase((client) =>
-      client.query("INSERT INTO registration_reconfirmations (registration_id, event_id, send_id, asked_at) VALUES ($1, $2, gen_random_uuid(), now())", [ana.id, eventId]),
-    );
+    await ask(eventId, ana.id);
     const secret = await mintActionLink(ana, "MANAGE_REGISTRATION");
+    const link = `/ro/inregistrari/gestionare/${secret}`;
 
-    await page.goto(`/ro/inregistrari/gestionare/${secret}#reconfirm`);
-    await hydrated(page);
-    const section = page.getByTestId("manage-reconfirm");
-    await expect(section).toContainText(`Vii la Crosul reconfirmării ${tag}?`);
-    await expect(section).toContainText("Răspunsul e opțional");
-    const yes = page.getByTestId("manage-reconfirm-yes");
-    await expect(yes).toHaveText("Da, vin la cursă");
-    expect((await yes.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
-    // The GET wrote nothing.
-    expect((await asksOf(eventId))[0].reconfirmed_at).toBeNull();
+    // «Nu mai pot ajunge» and a bare manage link: the question is there, and nothing presses it.
+    for (const opened of [`${link}#cancel`, link]) {
+      await page.goto(opened);
+      await hydrated(page);
+      await expect(page.getByTestId("manage-reconfirm")).toContainText(`Vii la Crosul reconfirmării ${tag}?`);
+      await expect(page.getByTestId("manage-reconfirm-yes")).toBeVisible();
+      await expect(page).not.toHaveURL(/reconfirm=/);
+      expect(await answeredAt(eventId, ana.id), opened).toBeNull();
+    }
 
-    await yes.click();
-    await expect(page).toHaveURL(/reconfirm=1/, { timeout: 30_000 });
-    await expect(page.getByTestId("manage-reconfirm-done")).toContainText("Ne-ai spus că vii");
-    await expect(page.getByTestId("manage-reconfirm-yes")).toHaveCount(0);
+    // The email's «Vin», opened as a mail client opens it — a new tab, a fresh load (the same document with only a new hash
+    // would be no load at all): opening it is the press — no click from the spec — and the page says the answer is noted.
+    const fromEmail = await page.context().newPage();
+    await fromEmail.goto(`${link}#reconfirm`, { waitUntil: "commit" });
+    // The form names its person, so the answer's address carries it: `?reconfirm=1&person=<id>#reconfirm`.
+    await fromEmail.waitForURL(new RegExp(`\\?reconfirm=1&person=${ana.id}#reconfirm$`), { timeout: 30_000 });
+    await expect(fromEmail.getByTestId("manage-reconfirm-done")).toContainText("Am notat că vii — ne-ai răspuns");
+    await expect(fromEmail.getByTestId("manage-reconfirm-yes")).toHaveCount(0);
+    const first = await answeredAt(eventId, ana.id);
+    expect(first).not.toBeNull();
     // The link was read, never spent: the cancel is still on the page.
-    await expect(page.getByTestId("manage-person-cancel")).toBeVisible();
-    const answered = (await asksOf(eventId))[0].reconfirmed_at;
-    expect(answered).not.toBeNull();
+    await expect(fromEmail.getByTestId("manage-person-cancel")).toBeVisible();
+
+    // Opened again from the email: the noted answer, no second press, the first moment kept.
+    const again = await page.context().newPage();
+    await again.goto(`${link}#reconfirm`);
+    await hydrated(again);
+    await expect(again.getByTestId("manage-reconfirm-done")).toBeVisible();
+    await expect(again.getByTestId("manage-reconfirm-auto")).toHaveCount(0);
+    expect((await answeredAt(eventId, ana.id))?.getTime()).toBe(first?.getTime());
+  });
+
+  test("without scripts the question keeps its button: the GET records nothing, and the press records the answer", async ({ browser }) => {
+    test.setTimeout(120_000);
+    const tag = `${test.info().project.name}-noscript-${Date.now().toString(36)}`;
+    const { eventId, people } = await seedEvent(tag);
+    created.push(eventId);
+    const [, bob] = people;
+    await ask(eventId, bob.id);
+    const secret = await mintActionLink(bob, "MANAGE_REGISTRATION");
+
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    try {
+      const page = await context.newPage();
+      // A scanner, or a browser without JavaScript: opened twice, the button stays and nobody is counted.
+      for (let i = 0; i < 2; i += 1) {
+        await page.goto(`/en/registrations/manage/${secret}#reconfirm`);
+        await expect(page.getByTestId("manage-reconfirm")).toContainText(`Are you coming to The reconfirm cross ${tag}?`);
+        await expect(page.getByTestId("manage-reconfirm")).toContainText("Answering is optional");
+        const yes = page.getByTestId("manage-reconfirm-yes");
+        await expect(yes).toHaveText("Yes, I'm coming to the race");
+        expect((await yes.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      }
+      expect(await answeredAt(eventId, bob.id)).toBeNull();
+
+      await page.getByTestId("manage-reconfirm-yes").click();
+      await expect(page).toHaveURL(/reconfirm=1/, { timeout: 30_000 });
+      await expect(page.getByTestId("manage-reconfirm-done")).toContainText("We have noted that you are coming — you told us on");
+      expect(await answeredAt(eventId, bob.id)).not.toBeNull();
+      await expect(page.getByTestId("manage-person-cancel")).toBeVisible();
+    } finally {
+      await context.close();
+    }
   });
 });

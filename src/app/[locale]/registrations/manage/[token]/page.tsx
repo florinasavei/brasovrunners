@@ -40,6 +40,8 @@ import SubmitButton from "@/shared/ui/SubmitButton";
 import { holdsOptionalData } from "@/modules/registrations/consent-withdrawal";
 import { isActiveStatus } from "@/modules/registrations/domain/state-machine";
 import { isReconfirmStatus } from "@/modules/notifications/domain/cannot-come";
+import { reconfirmPressesItself } from "@/modules/registrations/domain/reconfirm-press";
+import ReconfirmOnArrival from "@/modules/registrations/ui/ReconfirmOnArrival";
 import {
   cachedFirstResultsNameAskNoticeVersion,
   cachedFirstResultsNoticeVersion,
@@ -233,6 +235,9 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   const owing = people.filter((one) => isActiveStatus(one.status) && answersToAsk(one.missingAnswers, one.declarationMethod !== null).fields.length > 0);
   const answersEvent = live && owing.length > 0 ? await findEventForRegistrationById(getDb(), live.registration.eventId) : undefined;
   const answersRefusal = answers === "0" ? readAnswersRefusal(answersRefused) : null;
+  // «Vii la …?» names the race only on a race (the neighbours' race/other words); the type is read only when somebody was asked.
+  const reconfirmOnRace = live && people.some((one) => one.reconfirmAsked) ? ((await eventTypeOf(getDb(), live.registration.eventId)) ?? "RACE") === "RACE" : true;
+  const reconfirmYes = reconfirmOnRace ? t("reconfirm.yes") : t("reconfirm.yesOther");
   const answersDraft = answersRefusal ? await readFormDraft() : null;
   const completeCards = new Map<string, ReactNode>(
     answersEvent
@@ -305,6 +310,18 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
             const confirmed = one.status === "CONFIRMED" && one.checkinCode && !live.eventCancelled ? one.checkinCode : null;
             const active = isActiveStatus(one.status);
             const answered = answeredFor === one.id;
+            // «Da, vin la cursă» (the decision «Cere reconfirmarea»): the one form, pressed by the button or, at `#reconfirm`, by itself.
+            const reconfirmForm = (
+              <form action={reconfirmFromManageAction}>
+                <input type="hidden" name="locale" value={locale} />
+                <input type="hidden" name="token" value={token} />
+                <input type="hidden" name="registrationId" value={one.id} />
+                <Button type="submit" variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="manage-reconfirm-yes">
+                  <EventAvailableIcon aria-hidden="true" sx={glyphSx("medium")} />
+                  {reconfirmYes}
+                </Button>
+              </form>
+            );
             /*
               The results' name (§879): held — a yes that names the runner (`holdsResultsNameConsent`, the one predicate the press
               and `publicResultName` read), offered the way out whatever the notice in force says today — or asked: on the list,
@@ -608,8 +625,11 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                 {/*
                   «Vii la …?» (the decision «Cere reconfirmarea»): asked only of a registration an organizer's message asked,
                   while the event is ahead. The GET draws the question and writes nothing; «Da, vin la cursă» is a POST that
-                  reads the manage token and never spends it. Optional: pressing nothing leaves the registration as it is,
-                  and the way out is the cancel below. `#reconfirm` is the link's own person's, where the email's «Vin» lands.
+                  reads the manage token and never spends it. Optional: not pressing changes nothing about the registration,
+                  and the way out is the cancel below. `#reconfirm` is the link's own person's, where the email's «Vin» lands —
+                  and there one press counts: `ReconfirmOnArrival` submits the link's own person's form once, by itself
+                  (`reconfirmPressesItself`: the question open, no answer or refusal in the address); without JavaScript
+                  the button stays and works.
                 */}
                 {((live.eventAhead && one.reconfirmAsked && (isReconfirmStatus(one.status) || one.status === "WAITLIST_OFFERED")) ||
                   (answered && reconfirm === "0")) && (
@@ -622,7 +642,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                     {live.eventAhead && one.reconfirmAsked && (isReconfirmStatus(one.status) || one.status === "WAITLIST_OFFERED") && (
                       <>
                         <Typography variant={family ? "body1" : "h2"} sx={family ? { fontWeight: 700, mb: 1 } : { fontSize: "1.25rem", mb: 1 }}>
-                          {eventTitle ? t("reconfirm.title", { event: eventTitle }) : t("reconfirm.titleNoEvent")}
+                          {eventTitle ? t("reconfirm.title", { event: eventTitle }) : reconfirmOnRace ? t("reconfirm.titleNoEvent") : t("reconfirm.titleNoEventOther")}
                         </Typography>
                         {one.status === "WAITLIST_OFFERED" ? (
                           <Typography sx={{ mb: 1 }} data-testid="manage-reconfirm-offered">
@@ -638,17 +658,13 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                           <>
                             {one.status === "PENDING_DECLARATION" && <Typography sx={{ mb: 1 }}>{t("reconfirm.pending")}</Typography>}
                             {one.status === "WAITLISTED" && <Typography sx={{ mb: 1 }}>{t("reconfirm.waitlisted")}</Typography>}
-                            <form action={reconfirmFromManageAction}>
-                              <input type="hidden" name="locale" value={locale} />
-                              <input type="hidden" name="token" value={token} />
-                              <input type="hidden" name="registrationId" value={one.id} />
-                              <Button type="submit" variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="manage-reconfirm-yes">
-                                <EventAvailableIcon aria-hidden="true" sx={glyphSx("medium")} />
-                                {t("reconfirm.yes")}
-                              </Button>
-                            </form>
+                            {reconfirmPressesItself({ own: one.own, questionOpen: one.reconfirmOpen, outcome: reconfirm }) ? (
+                              <ReconfirmOnArrival>{reconfirmForm}</ReconfirmOnArrival>
+                            ) : (
+                              reconfirmForm
+                            )}
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                              {t("reconfirm.optional")}
+                              {t("reconfirm.optional", { button: reconfirmYes })}
                             </Typography>
                           </>
                         )}

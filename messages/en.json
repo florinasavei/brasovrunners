@@ -9135,7 +9135,7 @@
                 "Write the «Subject» and the «Message», in Romanian and in English.",
                 "For a reminder, press «Fill in the reminder text»: it writes the text and ticks «Ask them to reconfirm». Whoever presses “I'm coming” shows as «Reconfirmed»; nobody is cancelled automatically.",
                 "Under «How the email looks» read both versions: «Registered in Romanian» and «Registered in English».",
-                "Press «Send the message», then «Send» in the window. The message stays under «Messages sent».",
+                "Press «Send the message», then «Send» in the window: it says how long the send takes and how many leave today. «Messages sent» shows how many left and how many re-confirmed.",
                 "About this event only: no advertising, no sponsors' offers, no other events."
               ]
             },
@@ -10346,11 +10346,12 @@
       "reminderText": {
         "subject": "See you at {eventTitle}? Tell us if you're coming",
         "p1": "Hi {participantName}!",
-        "p2": "{eventTitle} is close: {eventStartsAtFormatted}, at {eventLocationName}.",
+        "p2": "{eventTitle} is coming up: {eventStartsAtFormatted}, at {eventLocationName}.",
         "p3": "If you are coming and see the “I'm coming” button below, press it, so we know who to expect.",
-        "p4": "If you can no longer make it, press “I can't make it any more”, so your place can go to someone on the waiting list.",
-        "p5": "If you press nothing, your registration stays exactly as it is.",
-        "p6": "Thank you, and see you at the start!"
+        "p4": "If you can no longer make it, press “I can't make it any more”, so someone else can come in your place.",
+        "p5": "“I'm coming” is optional: if you don't press it, nothing about your registration changes.",
+        "p6": "If you still have to sign the declaration or were offered a place, sign from the email you received, by the deadline in it.",
+        "p7": "Thank you, and see you at the start!"
       },
       "paceRuns": {
         "one": "It leaves gradually, {batch} every {minutes} minutes by day (less often at night): about {hours} hour at the day's pace.",
@@ -12067,10 +12068,10 @@
       "filterCancelled": "Cancelled after the ask",
       "filterNone": "No answer",
       "filterHelp": "Only for messages sent with “Ask them to reconfirm”. Answering is optional.",
-      "detail": "Said they are coming on {date}.",
+      "detail": "Pressed “I'm coming” on {date}.",
       "column": "Reconfirmed",
       "personAsked": "Reconfirmation asked on {asked}",
-      "personAnswered": "said they are coming on {at}"
+      "personAnswered": "pressed “I'm coming” on {at}"
     }
   },
   "NotFound": {
@@ -12987,13 +12988,15 @@
     "reconfirm": {
       "title": "Are you coming to {event}?",
       "titleNoEvent": "Are you coming to the race?",
+      "titleNoEventOther": "Are you coming to the event?",
       "yes": "Yes, I'm coming to the race",
-      "optional": "Answering is optional: if you press nothing, your registration stays exactly as it is.",
+      "yesOther": "Yes, I'm coming to the event",
+      "optional": "Answering is optional: if you don't press “{button}”, nothing about your registration changes.",
       "pending": "You still have the declaration to sign: without it the registration is not confirmed.",
       "waitlisted": "You are on the waiting list; your place on it stays the same whatever you answer.",
       "offered": "You have been offered a place: sign the declaration from the offer's email.",
       "cannot": "Can't make it any more? Use “Cancel the registration” below.",
-      "done": "You told us you are coming, on {date}.",
+      "done": "We have noted that you are coming — you told us on {date}.",
       "failed": "Your answer was not recorded for this registration."
     }
   },
