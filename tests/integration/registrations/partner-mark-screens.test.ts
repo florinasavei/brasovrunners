@@ -58,6 +58,7 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   eraseRegistrationFromListAction: vi.fn(),
   setBibPrintedAction: vi.fn(),
   cancelRegistrationAction: vi.fn(),
+  changeRegistrationAddressAction: vi.fn(),
   checkInAction: vi.fn(),
   confirmRegistrationNowAction: vi.fn(),
   editRegistrationAnswersAction: vi.fn(),
