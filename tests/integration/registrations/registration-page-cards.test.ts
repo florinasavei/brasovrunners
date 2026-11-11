@@ -342,7 +342,7 @@ describe("«Schimbă adresa»: the card «Adresa de email» (BR-REQ-060-01)", ()
     };
     const formOf = async (id: string) => (await confirmOf(id)).body;
     // The question's own lines after the email line, the club's line left out.
-    const ownLines = new Set([...[ro, en].flatMap((words) => [words.Admin.registrations.address.confirmAlso, words.Admin.registrations.address.confirmAlsoNoticesOnly, words.Admin.registrations.address.confirmFamily])]);
+    const ownLines = new Set([...[ro, en].flatMap((words) => [words.Admin.registrations.address.confirmAlso, words.Admin.registrations.address.confirmAlsoNoticesOnly, words.Admin.registrations.address.confirmFollows, words.Admin.registrations.address.confirmFamily])]);
     const alsoOf = async (id: string) => ((await confirmOf(id)).also ?? []).map((line) => line.text).filter((text) => ownLines.has(text));
     const race = await createRace();
     const confirmed = await register(race.id, "CONFIRMED");
@@ -356,16 +356,20 @@ describe("«Schimbă adresa»: the card «Adresa de email» (BR-REQ-060-01)", ()
       expect(await formOf(cancelled)).not.toContain(words.Admin.registrations.address.confirmBody);
       // Only the new address is promised silence: the old one may still get its family's own message again.
       expect(words.Admin.registrations.address.confirmBodyNoticesOnly).not.toMatch(/nimic altceva|nothing else/);
-      expect(await alsoOf(confirmed)).toEqual([words.Admin.registrations.address.confirmAlso, words.Admin.registrations.address.confirmFamily]);
-      expect(await alsoOf(cancelled)).toEqual([words.Admin.registrations.address.confirmAlsoNoticesOnly, words.Admin.registrations.address.confirmFamily]);
+      // Nor is the new address promised no email: the event's news still waiting follows the registration there.
+      expect(words.Admin.registrations.address.confirmBodyNoticesOnly).not.toMatch(/nu primește alt email|no other email/);
+      expect(words.Admin.registrations.address.confirmBodyNoticesOnly).toMatch(/niciun pas de făcut|no step to take/);
+      expect(words.Admin.registrations.address.confirmFollows).toMatch(/Emailurile evenimentului care n-au plecat încă merg la adresa nouă|The event's emails not sent yet go to the new address/);
+      expect(await alsoOf(confirmed)).toEqual([words.Admin.registrations.address.confirmAlso, words.Admin.registrations.address.confirmFollows, words.Admin.registrations.address.confirmFamily]);
+      expect(await alsoOf(cancelled)).toEqual([words.Admin.registrations.address.confirmAlsoNoticesOnly, words.Admin.registrations.address.confirmFollows, words.Admin.registrations.address.confirmFamily]);
     }
     await db.update(events).set({ eventStatus: "COMPLETED" }).where(eq(events.id, race.id));
     for (const [locale, words] of languages) {
       state.locale = locale;
       expect(await formOf(confirmed)).toContain(words.Admin.registrations.address.confirmBodyNoticesOnly);
       expect(await formOf(confirmed)).not.toContain(words.Admin.registrations.address.confirmBody);
-      // Over, the move sends no family message either.
-      expect(await alsoOf(confirmed)).toEqual([words.Admin.registrations.address.confirmAlsoNoticesOnly]);
+      // Over, the move sends no family message either; the event's news still waiting (a thanks, say) still follows the row.
+      expect(await alsoOf(confirmed)).toEqual([words.Admin.registrations.address.confirmAlsoNoticesOnly, words.Admin.registrations.address.confirmFollows]);
     }
   });
 

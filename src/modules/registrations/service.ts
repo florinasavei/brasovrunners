@@ -78,7 +78,7 @@ import { announcedCapacity, capacityForEntry, keptPlacesInUse, lineRoom } from "
 import { canManageRegistrations, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { deriveAllowedResendMessageType, familyResendTarget } from "./domain/resend";
 import { PARTICIPANT_MESSAGE_TYPES } from "@/modules/notifications/domain/email-audience";
-import { ADDRESS_FAMILY_FORM_PENDING, ADDRESS_INVITED, deadlineKeptOnMove, eventOverForMove, stateMessageOnMove } from "./domain/address-change";
+import { ADDRESS_CHANGED_MEANWHILE, ADDRESS_FAMILY_FORM_PENDING, ADDRESS_INVITED, deadlineKeptOnMove, eventOverForMove, stateMessageOnMove } from "./domain/address-change";
 import { expectedSignatures, mismatchedSignatures } from "./domain/signature-name";
 import { allowedFromStatuses, holdsAPlace, isActiveStatus } from "./domain/state-machine";
 import { isUuid } from "@/shared/ids";
@@ -5149,6 +5149,18 @@ const CHECKIN_CODE_UNIQUE_CONSTRAINT = "registrations_checkin_code_unique";
 /** How many check-in codes a move draws before it gives up; 50 bits each, so a second is already a curiosity. */
 const MOVE_CHECKIN_CODE_ATTEMPTS = 5;
 
+/**
+ * Whether PostgreSQL ended the transaction for a lock cycle (40P01) or a serialization failure (40001), wherever the driver
+ * nests the error — the two errors that mean «somebody else was on these rows at that moment», never a fault of the move.
+ */
+function isLockClash(error: unknown): boolean {
+  for (let cause = error, depth = 0; cause && typeof cause === "object" && depth < 5; cause = (cause as { cause?: unknown }).cause, depth++) {
+    const { code } = cause as { code?: unknown };
+    if (code === "40P01" || code === "40001") return true;
+  }
+  return false;
+}
+
 const alreadyOnAddress = () => new DomainError("VALIDATION_ERROR", "this runner already has a registration on the new address at this event or race", ["email", ALREADY_ON_ADDRESS]);
 
 
@@ -5174,8 +5186,8 @@ const FOLLOWS_THE_MOVE = ["EVENT_REMINDER", "ORGANIZER_MESSAGE", "EVENT_UPDATE_N
  * already holds this runner at the event, in any state, or at another event of the race while this one is active
  * (`ALREADY_ON_ADDRESS`); it is at the club's limit per address (`ADDRESS_AT_CAP`); a family form waits on the row
  * (`ADDRESS_FAMILY_FORM_PENDING`); the new address has an open invitation to the event (`ADDRESS_INVITED`). An erased
- * registration is NOT_FOUND, and so is one taken between the read and the UPDATE (an erase, retention's sweep): the
- * UPDATE that matches nothing ends the move, rolled back. Of the unique violations the checks did not foresee, only the
+ * registration is NOT_FOUND — gone before the read under the event's lock, or (should anything take it after) an UPDATE
+ * that matches nothing, which ends the move rolled back, never retried. Of the unique violations the checks did not foresee, only the
  * two address indexes answer `ALREADY_ON_ADDRESS`; a confirmed row's fresh check-in code meeting another row's is drawn
  * again, at most `MOVE_CHECKIN_CODE_ATTEMPTS` times, and the last collision is rethrown; anything else is rethrown.
  *
@@ -5200,6 +5212,32 @@ const FOLLOWS_THE_MOVE = ["EVENT_REMINDER", "ORGANIZER_MESSAGE", "EVENT_UPDATE_N
  *    message again, to the old address: a family link scoped to the moved row died with it.
  * 7. One audit row, `registration.address_changed_by_staff`, with ids and counts only.
  *
+ * Lock order. Under the event's lock the move locks the registration row `FOR NO KEY UPDATE`, then (step 1, when the
+ * consent to offers is on) the same row `FOR UPDATE` in `setPromoConsent`, the row's live tokens (2), its waiting outbox
+ * rows (3), and the row again at its UPDATE (4) — `FOR UPDATE` there only for a confirmed row, whose check-in code is a key
+ * column. The paths that write a registration's tokens or outbox rows without holding the event's lock, and their order:
+ * - the erase of a row that holds no place (`admin-service.ts#eraseRegistration`, no event lock): the registration row
+ *   first (its DELETE), its tokens and outbox rows after (the cascade) — registration first;
+ * - retention's sweep, each step its own transaction: spent tokens alone, sent outbox rows alone, a visitor's relay rows
+ *   (no registration); its registration deletes take the registration row first and the cascade after — registration
+ *   first;
+ * - the outbox drain: `claimOutboxBatch` locks outbox rows alone and commits; the render runs in no transaction, and the
+ *   link it mints (`issueActionToken`, also every resend's and press's) locks the registration's live tokens to supersede
+ *   them, then inserts one whose foreign key takes a KEY SHARE lock on the registration row — tokens first; a check-in
+ *   code drawn at the render is one UPDATE of the registration row alone;
+ * - the mail webhook and a refusal at the send (`applyMailgunEvent`, `recordBounceAtSend`, `noteSentAgain`): the
+ *   participant's advisory lock, then outbox rows alone — sent or refused ones, never a waiting one the move touches;
+ * - the desk's presses: the event's lock (the allocator's verbs) or one UPDATE of the registration row alone (check-in);
+ * - a link's own press (`token-actions.ts`, `consumeActionToken`): the token row first, then the verb, which takes the
+ *   event's lock or the registration row.
+ * So the first lock is not `FOR UPDATE`: that blocks the KEY SHARE of a link being minted, whose transaction already holds
+ * the live tokens the move goes for next — a cycle. `FOR NO KEY UPDATE` does not block a KEY SHARE, and does block the
+ * erase's and retention's DELETE, which now wait for the move instead of meeting it in a cycle; a link minted meanwhile
+ * either finished before the move reaches the tokens or waits on the move's tokens before it takes its KEY SHARE. What can
+ * still cycle — a link's press holding its token while waiting for the event's lock the move holds — PostgreSQL breaks
+ * (40P01), rolling the whole move back, and the move answers a plain «press again» (`ADDRESS_CHANGED_MEANWHILE`), as it
+ * does a serialization failure (40001): nothing written, nothing raw on the screen.
+ *
  * The Administrator's alone (`canManageRegistrations`), asserted here as well as by the wrapper and the action.
  */
 export async function changeRegistrationAddressByStaff<T extends Record<string, unknown>>(
@@ -5223,11 +5261,40 @@ export async function changeRegistrationAddressByStaff<T extends Record<string, 
   const settings = await currentDeadlines(db);
   const cap = await currentAddressCap(db);
 
-  const result = await db.transaction(async (tx) => {
+  let result;
+  try {
+    result = await moveInOneTransaction(db, actor, registrationId, identity, settings, cap, now);
+  } catch (error) {
+    // Outside the transaction, which PostgreSQL has already rolled back whole: a plain «press again», never a raw error.
+    if (isLockClash(error)) {
+      throw new DomainError("CONFLICT", "the registration was being changed at the same moment; nothing was written", [ADDRESS_CHANGED_MEANWHILE]);
+    }
+    throw error;
+  }
+  const { event, ...change } = result;
+  // A lengthened hold or a new email link is a deadline the job should know of (§334).
+  wakeMaintenance(event, now, settings, change.holdLengthened ? change.registration.holdExpiresAt : null, change.registration.status === "PENDING_EMAIL_CONFIRMATION" ? change.registration.emailLinkExpiresAt : null);
+  return change;
+}
+
+/** The move's one transaction (`changeRegistrationAddressByStaff`, whose docstring is the whole rule). */
+async function moveInOneTransaction<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: { id: string; role: StaffRole },
+  registrationId: string,
+  identity: CanonicalEmail,
+  settings: Awaited<ReturnType<typeof currentDeadlines>>,
+  cap: Awaited<ReturnType<typeof currentAddressCap>>,
+  now: Date,
+) {
+  return db.transaction(async (tx) => {
     const before = await repo.findRegistrationById(tx, registrationId);
     if (!before) throw new DomainError("NOT_FOUND", "no such registration");
     const lockedEvent = await repo.lockEventForCapacity(tx, before.eventId);
     if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
+    // The registration row, locked before its links and its mail, as the erase and retention lock it (the docstring's lock order).
+    const [held] = await tx.select({ id: registrations.id }).from(registrations).where(eq(registrations.id, registrationId)).for("no key update");
+    if (!held) throw new DomainError("NOT_FOUND", "no such registration");
     const current = await repo.findRegistrationById(tx, registrationId);
     if (!current) throw new DomainError("NOT_FOUND", "no such registration");
     const [old] = await tx.select().from(participants).where(eq(participants.id, current.participantId)).limit(1);
@@ -5412,8 +5479,9 @@ export async function changeRegistrationAddressByStaff<T extends Record<string, 
     /*
       Each attempt in its own savepoint, so a unique violation leaves the transaction usable. Only the two address
       indexes are «already on the address»; another row's check-in code met by the fresh one is drawn again, a bounded
-      number of times; anything else is rethrown as it is. The row was read without a row lock, so an erase or retention's
-      sweep may have taken it since: an UPDATE that matches nothing is NOT_FOUND, and the whole move rolls back with it.
+      number of times; anything else is rethrown as it is. The row is locked since the read under the event's lock, so an erase
+      or retention's sweep waits for the move; an UPDATE that matches nothing all the same is NOT_FOUND, never a retry, and
+      the whole move rolls back with it.
     */
     let moved: Registration;
     for (let attempt = 1; ; attempt++) {
@@ -5492,15 +5560,17 @@ export async function changeRegistrationAddressByStaff<T extends Record<string, 
       .sort((a, b) => a.submittedAt.getTime() - b.submittedAt.getTime());
     const familyTarget = familyResendTarget(family);
     const familyMessage = familyTarget && familyTarget.status !== "CONFIRMED" ? deriveAllowedResendMessageType(familyTarget.status) : null;
-    if (familyTarget && familyMessage && !eventOverForMove(lockedEvent, now)) {
+    // One condition for the message and for the trail: the trail names a family resend only when one was queued.
+    const familySent = familyTarget && familyMessage && !eventOverForMove(lockedEvent, now) ? familyTarget : null;
+    if (familySent && familyMessage) {
       await enqueueEmail(tx, {
         participantId: old.id,
-        registrationId: familyTarget.id,
+        registrationId: familySent.id,
         messageType: familyMessage,
-        locale: familyTarget.locale,
+        locale: familySent.locale,
         recipientEmail: old.deliveryEmail,
         payload: {},
-        idempotencyKey: `registration:${familyTarget.id}:address-changed-family:${at}`,
+        idempotencyKey: `registration:${familySent.id}:address-changed-family:${at}`,
         requestedByStaffUserId: actor.id,
         now,
       });
@@ -5524,7 +5594,7 @@ export async function changeRegistrationAddressByStaff<T extends Record<string, 
         stateMessage,
         holdLengthened,
         promoWithdrawn: promo?.changed === true,
-        ...(familyTarget && familyMessage ? { familyResentFor: familyTarget.id } : {}),
+        ...(familySent ? { familyResentFor: familySent.id } : {}),
       },
       now,
     });
@@ -5539,8 +5609,4 @@ export async function changeRegistrationAddressByStaff<T extends Record<string, 
       event: lockedEvent,
     };
   });
-  const { event, ...change } = result;
-  // A lengthened hold or a new email link is a deadline the job should know of (§334).
-  wakeMaintenance(event, now, settings, change.holdLengthened ? change.registration.holdExpiresAt : null, change.registration.status === "PENDING_EMAIL_CONFIRMATION" ? change.registration.emailLinkExpiresAt : null);
-  return change;
 }

@@ -15,6 +15,12 @@ export const ADDRESS_FAMILY_FORM_PENDING = "addressFamilyFormPending";
 /** The new address has an open invitation to this event: withdraw it first, or it would be adopted by surprise. */
 export const ADDRESS_INVITED = "addressInvited";
 
+/**
+ * The move met another transaction on the same rows at the same moment — PostgreSQL broke a lock cycle (40P01) or refused
+ * a serialization (40001) — and rolled the whole move back: nothing is written, and the Administrator presses again.
+ */
+export const ADDRESS_CHANGED_MEANWHILE = "addressChangedMeanwhile";
+
 /** The least a running hold or offer keeps after a move: a day from the change, so the new address has time to act. */
 export const ADDRESS_CHANGE_MIN_REMAINING_MS = 24 * 60 * 60_000;
 

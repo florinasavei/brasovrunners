@@ -13,6 +13,7 @@ import { forgetCachedAddressCap } from "@/modules/registrations/address-cap-memo
 import { ADDRESS_CAP_SETTING_KEY } from "@/modules/registrations/address-cap";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
+import { ADDRESS_CHANGED_MEANWHILE } from "@/modules/registrations/domain/address-change";
 import { deleteRegistrationByStaff } from "@/modules/registrations/admin-service";
 import { changeRegistrationAddressByStaff, type EventForRegistration, submitRegistration } from "@/modules/registrations/service";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -23,7 +24,10 @@ import { approveNotices, removeApprovedNotices } from "./legal-fixture";
  * the event's lock — the lock every entry takes before it reads an address (§389) — so two moves onto one address cannot
  * both find room under the club's limit, and a move racing a public form of the same runner on the new address never
  * reaches the database's unique index as a raw failure: one of the two wins, the other is answered in words.
- * PGlite cannot express either race (`tests/helpers/db.ts`); this runs against the real server `yarn test:concurrency` uses.
+ * An erase of a row that holds no place takes no event lock: the move's row lock (`FOR NO KEY UPDATE`, before the row's
+ * links and mail) makes it wait for the move instead of meeting it in a lock cycle; a cycle that remains is answered
+ * «press again» (`ADDRESS_CHANGED_MEANWHILE`), never raw.
+ * PGlite cannot express these races (`tests/helpers/db.ts`); this runs against the real server `yarn test:concurrency` uses.
  */
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
@@ -170,7 +174,7 @@ describe("«Schimbă adresa» under real concurrency", () => {
     expect((await registrationOn(event.id, target)).filter((row) => row.registeredName === "Ana Pop")).toHaveLength(1);
   });
 
-  it("an erase racing the move of a cancelled row: both calls end, the move succeeds or is NOT_FOUND, never raw, the row gone", { timeout: 30_000 }, async () => {
+  it("an erase racing the move of a cancelled row: both calls end, the move moves, is NOT_FOUND or says «press again», never raw; the row gone", { timeout: 30_000 }, async () => {
     const event = await createEvent();
     const actor = { id: adminId, role: "ADMIN" as const };
     for (let round = 0; round < 5; round++) {
@@ -186,7 +190,9 @@ describe("«Schimbă adresa» under real concurrency", () => {
         deleteRegistrationByStaff(db, actor, anaRow.id, "cerere de ștergere", later),
       ]);
       if (move.status === "rejected") {
-        expect(isDomainError(move.reason) && move.reason.code, String(move.reason)).toBe("NOT_FOUND");
+        // The three endings: moved (fulfilled), gone before the lock, or a lock cycle broken and answered in words.
+        const ending = isDomainError(move.reason) ? (move.reason.fields.includes(ADDRESS_CHANGED_MEANWHILE) ? "TRY_AGAIN" : move.reason.code) : String(move.reason);
+        expect(["NOT_FOUND", "TRY_AGAIN"], String(move.reason)).toContain(ending);
       }
       if (erase.status === "rejected") {
         expect(isDomainError(erase.reason) && erase.reason.code, String(erase.reason)).toBe("NOT_FOUND");

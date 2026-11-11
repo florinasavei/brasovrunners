@@ -37,7 +37,7 @@ import { effectiveMinimumAge, yearsPhrase } from "@/modules/registrations/domain
 import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { ANSWER_MARKERS, ANSWERS_UNCHANGED, answersRefusalCode, EDITABLE_ANSWERS } from "@/modules/registrations/answers";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
-import { ADDRESS_FAMILY_FORM_PENDING, ADDRESS_INVITED } from "@/modules/registrations/domain/address-change";
+import { ADDRESS_CHANGED_MEANWHILE, ADDRESS_FAMILY_FORM_PENDING, ADDRESS_INVITED } from "@/modules/registrations/domain/address-change";
 import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
 import { PLACES_TAKEN_KEYS, confirmedCapacityOf, noFreePlaceOutcome, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
 import { inEmailPress } from "@/modules/notifications/press";
@@ -581,6 +581,8 @@ function addressChangeRefusalCode(fields: readonly string[]): string | null {
   if (fields.includes(ADDRESS_AT_CAP)) return "ADDRESS_HOLDS_ENOUGH";
   if (fields.includes(ADDRESS_FAMILY_FORM_PENDING)) return "ADDRESS_FAMILY_FORM_PENDING";
   if (fields.includes(ADDRESS_INVITED)) return "ADDRESS_INVITED";
+  // A lock cycle or a serialization failure with another transaction: rolled back whole, pressed again.
+  if (fields.includes(ADDRESS_CHANGED_MEANWHILE)) return "ADDRESS_TRY_AGAIN";
   if (fields.includes("email")) return "ADDRESS_INVALID";
   return null;
 }

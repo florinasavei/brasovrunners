@@ -1408,6 +1408,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   test: registration.kind === "TEST",
                   also: [
                     { text: tr(addressMoveSendsNextStep ? "registrations.address.confirmAlso" : "registrations.address.confirmAlsoNoticesOnly") },
+                    // Always true: the event's own news still waiting follows the registration to the new address.
+                    { text: tr("registrations.address.confirmFollows") },
                     ...(addressEventOver ? [] : [{ text: tr("registrations.address.confirmFamily") }]),
                   ],
                 }),

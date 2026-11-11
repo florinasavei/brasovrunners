@@ -15,7 +15,7 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { STAFF_ROLES, type StaffRole } from "@/modules/staff-identity/domain/roles";
-import { ADDRESS_FAMILY_FORM_PENDING, ADDRESS_INVITED, signedAfterStaffAddressChange } from "@/modules/registrations/domain/address-change";
+import { ADDRESS_CHANGED_MEANWHILE, ADDRESS_FAMILY_FORM_PENDING, ADDRESS_INVITED, signedAfterStaffAddressChange } from "@/modules/registrations/domain/address-change";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { ANSWERS_UNCHANGED } from "@/modules/registrations/answers";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -51,13 +51,25 @@ let admin: StaffUser;
 vi.mock("@/db/client", () => ({ getDb: () => db }));
 /** Check-in codes a test forces on the next draws, before the real ones resume. */
 const forcedCheckinCodes = vi.hoisted(() => [] as string[]);
+/**
+ * Every draw counted; armed, the eleventh throws a named error, so a loop that never ends fails at once instead of hanging
+ * (PGlite's awaits keep such a loop going past any per-test timeout).
+ */
+const checkinDraws = vi.hoisted(() => ({ count: 0, armed: false }));
 vi.mock("@/modules/registrations/checkin-code", async (original) => {
   const actual = await original<typeof import("@/modules/registrations/checkin-code")>();
-  return { ...actual, newCheckinCode: () => forcedCheckinCodes.shift() ?? actual.newCheckinCode() };
+  return {
+    ...actual,
+    newCheckinCode: () => {
+      if (++checkinDraws.count > 10 && checkinDraws.armed) throw new Error("unbounded");
+      return forcedCheckinCodes.shift() ?? actual.newCheckinCode();
+    },
+  };
 });
 /**
- * A registration a test takes away right after the move's read under the lock — as an erase or retention's sweep that
- * takes no event lock would, between that read and the UPDATE — deleted through the move's own transaction.
+ * A registration a test takes away right after the move's read under the lock — which the row lock now keeps an erase or
+ * retention's sweep from doing, so this pins the guard behind it: an UPDATE that matches nothing ends the move, never a
+ * retry — deleted through the move's own transaction.
  */
 const takenAfterRead = vi.hoisted(() => ({ id: null as string | null, reads: 0 }));
 vi.mock("@/modules/registrations/repository", async (original) => {
@@ -69,6 +81,8 @@ vi.mock("@/modules/registrations/repository", async (original) => {
       // The second read of the row is the one under the event's lock: the row is gone the moment after it.
       if (row && row.id === takenAfterRead.id && ++takenAfterRead.reads === 2) {
         const [tx] = args;
+        // As the erase does: its declaration first (a confirmed row's), then the row.
+        await tx.delete(declarationAcceptances).where(eq(declarationAcceptances.registrationId, row.id));
         await tx.delete(registrations).where(eq(registrations.id, row.id));
         takenAfterRead.id = null;
       }
@@ -498,6 +512,27 @@ describe("«Schimbă adresa»: each refusal writes nothing", () => {
     }
   });
 
+  it("a confirmed row taken between the read and the UPDATE: NOT_FOUND after one draw of a check-in code, never a loop", { timeout: 10_000 }, async () => {
+    const event = await createEvent(5);
+    const ana = await confirmedRow(event, "Ana", 0);
+    takenAfterRead.id = ana.id;
+    takenAfterRead.reads = 0;
+    checkinDraws.count = 0;
+    checkinDraws.armed = true;
+    try {
+      // Each pass of the UPDATE draws a code: a loop that retried a missing row would throw «unbounded» on the eleventh.
+      const error = await refusal(changeRegistrationAddressByStaff(db, admin, ana.id, NEW, at(60)));
+      expect(isDomainError(error) ? error.code : String(error)).toBe("NOT_FOUND");
+      expect(checkinDraws.count).toBeLessThanOrEqual(1);
+      expect(takenAfterRead.reads).toBe(2);
+      expect(await db.select().from(participants).where(eq(participants.canonicalEmail, canonicalizeEmail(NEW).canonicalEmail))).toEqual([]);
+      expect((await rowOf(ana.id)).participantId).toBe(ana.participantId);
+    } finally {
+      takenAfterRead.id = null;
+      checkinDraws.armed = false;
+    }
+  });
+
   it("every role but the Administrator's, by the service and by its wrapper", async () => {
     const ana = await confirmedAddress(await createEvent(5), "Ana");
     for (const role of STAFF_ROLES.filter((role: StaffRole) => role !== "ADMIN" && role !== "SUPERADMIN")) {
@@ -805,6 +840,21 @@ describe("«Schimbă adresa»: the trail, the person's record, the family and th
     const again = (await queued(ana.id)).filter((row) => row.idempotencyKey.includes(":address-changed-family:"));
     expect(again).toHaveLength(1);
     expect(again[0]).toMatchObject({ messageType: "VERIFY_REGISTRATION_EMAIL", participantId: ana.participantId, recipientEmail: "familie@example.ro" });
+    const [trail] = await trailOf(maria.id);
+    expect((trail.metadataJson as Record<string, unknown>).familyResentFor).toBe(ana.id);
+  });
+
+  it("after the event is over, the family on the old address is sent nothing, and the trail names no family resend", async () => {
+    const event = await createEvent(5, { startsAt: new Date(NOW.getTime() + 2 * HOUR) });
+    const ana = await unconfirmed(event, "Ana", 0, "familie@example.ro");
+    await createRegistrationByStaff(db, admin, { eventId: event.id, firstName: "Maria", lastName: "Munteanu", email: "familie@example.ro", locale: "ro", listOptOut: false, relayedByParticipantRequest: true }, at(1));
+    const maria = await byName("Maria");
+    expect(maria.participantId).toBe(ana.participantId);
+    // The next midnight after its start day: over.
+    await changeRegistrationAddressByStaff(db, admin, maria.id, NEW, new Date(NOW.getTime() + 24 * HOUR));
+    expect((await queued(ana.id)).filter((row) => row.idempotencyKey.includes(":address-changed-family:"))).toEqual([]);
+    const [trail] = await trailOf(maria.id);
+    expect(trail.metadataJson).not.toHaveProperty("familyResentFor");
   });
 
   it("the orphan sweep keeps the old address while its notice waits, and takes it once the notice has left", async () => {
@@ -827,4 +877,28 @@ describe("«Schimbă adresa»: the trail, the person's record, the family and th
     expect(await db.select().from(participants).where(eq(participants.id, ana.participantId))).toHaveLength(0);
     expect(await db.select().from(registrations).where(and(eq(registrations.id, ana.id), isNull(registrations.cancelledAt)))).toHaveLength(1);
   });
+});
+
+describe("«Schimbă adresa»: a lock clash inside the move is a plain «press again»", () => {
+  for (const [code, condition] of [["40P01", "deadlock_detected"], ["40001", "serialization_failure"]] as const) {
+    it(`${code} raised inside the transaction: the try-again refusal, nothing written`, async () => {
+      const event = await createEvent(5);
+      const ana = await confirmedAddress(event, "Ana");
+      const before = await snapshot();
+      // A statement of the move fails as PostgreSQL fails the side of a lock cycle it breaks, or a serialization.
+      await db.execute(sql.raw(`CREATE FUNCTION test_forced_clash() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'forced ${condition}' USING ERRCODE = '${condition}'; END $$`));
+      await db.execute(sql.raw("CREATE TRIGGER test_forced_clash BEFORE UPDATE OF participant_id ON registrations FOR EACH ROW EXECUTE FUNCTION test_forced_clash()"));
+      let error: unknown;
+      try {
+        error = await refusal(changeRegistrationAddressByStaff(db, admin, ana.id, NEW, at(60)));
+      } finally {
+        await db.execute(sql.raw("DROP TRIGGER test_forced_clash ON registrations"));
+        await db.execute(sql.raw("DROP FUNCTION test_forced_clash()"));
+      }
+      expect(isDomainError(error) && error.code === "CONFLICT" && error.fields.includes(ADDRESS_CHANGED_MEANWHILE), String(error)).toBe(true);
+      // Never the address's field: the sentence is «press again», not «check what you typed».
+      expect(isDomainError(error) && error.fields.includes("email")).toBe(false);
+      expect(await snapshot()).toEqual(before);
+    });
+  }
 });
