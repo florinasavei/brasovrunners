@@ -205,6 +205,19 @@ describe("BR-REQ-080-02 the outbox's three tiers and the staff sends' reserve", 
     expect(sent[0].lastError).toBeNull();
   });
 
+  it("keeps a real provider's error on a staff row the reserve holds: the mark replaces only no error or its own", async () => {
+    await sentToday(85);
+    await burst(30, new Date(NOW.getTime() - 60_000));
+    const retrying = await queue("ORGANIZER_MESSAGE", new Date(NOW.getTime() - 30_000), { attemptCount: 1, lastError: "mailgun 503: try later", nextAttemptAt: new Date(NOW.getTime() - 1_000) });
+    await processOutboxBatch(db, { sender: recordingSender(), render, now: NOW });
+    const [kept] = await db.select().from(emailOutbox).where(eq(emailOutbox.id, retrying.id));
+    expect(kept.status).toBe("PENDING");
+    expect(kept.lastError).toBe("mailgun 503: try later");
+    expect(kept.nextAttemptAt?.getTime()).toBe(nextAllowanceResetAt(NOW).getTime());
+    const held = await db.select().from(emailOutbox).where(eq(emailOutbox.lastError, STAFF_RESERVE_HELD_ERROR));
+    expect(held.length).toBeGreaterThan(0);
+  });
+
   it("holds nothing when a press sends its own rows now: «Trimite acum» is as it was", async () => {
     await sentToday(85);
     await burst(8, new Date(NOW.getTime() - 60_000));

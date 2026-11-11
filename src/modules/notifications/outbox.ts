@@ -652,7 +652,11 @@ async function holdBulkUntilReset(
 ): Promise<void> {
   await db
     .update(emailOutbox)
-    .set({ nextAttemptAt: nextAllowanceResetAt(now), ...(mark ? { lastError: mark } : {}) })
+    .set({
+      nextAttemptAt: nextAllowanceResetAt(now),
+      // The mark replaces no real error: a row retrying after a provider's answer keeps its text, and health keeps reading it.
+      ...(mark ? { lastError: sql`CASE WHEN coalesce(${emailOutbox.lastError}, '') IN ('', ${mark}) THEN ${mark} ELSE ${emailOutbox.lastError} END` } : {}),
+    })
     .where(
       and(
         eq(emailOutbox.status, "PENDING"),

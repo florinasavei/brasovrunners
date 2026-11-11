@@ -322,6 +322,47 @@ describe("«Trimite un mesaj participanților»", () => {
     expect(all?.body).toContain("Încape în cota de azi.");
   });
 
+  it("on Free's 100 a day, 201 messages: 90 today at their own pace, the other 111 over at least two more days, never all after one midnight", async () => {
+    const race = await createRace();
+    const people = await db
+      .insert(participants)
+      .values(
+        Array.from({ length: 201 }, (_, index) => {
+          const email = `crowd${index}@example.org`;
+          return { deliveryEmail: email, normalizedEmail: email, canonicalEmail: email, canonicalizationVersion: 2, defaultName: `Crowd ${index}`, preferredLocale: "ro" as const };
+        }),
+      )
+      .returning({ id: participants.id });
+    await db.insert(registrations).values(
+      people.map((person, index) => ({
+        eventId: race.id,
+        participantId: person.id,
+        kind: "REAL" as const,
+        locale: "ro" as const,
+        registeredName: `Crowd ${index}`,
+        displayName: resolveDisplayName({ legalName: `Crowd ${index}` }),
+        privacyNoticeVersion: 1,
+        privacyAcknowledgedAt: new Date(),
+        resultsNameConsent: false,
+        resultsConsentVersion: 1,
+        status: "CONFIRMED" as const,
+      })),
+    );
+    state.actor = await staff("MODERATOR");
+    const form = elements(await messagesPage(race.id)).find((element) => element.type === ActionForm);
+    const specs = form?.props.confirm as Array<{ when: { field: string; equals: string }[]; body: string }>;
+    const body = specs.find((spec) => spec.when[0]?.equals === "ALL_ACTIVE")?.body ?? "";
+    // 100 less the reserve of 10 is 90 a day: 90 now, and 111 need two more midnights at 90 each.
+    expect(body).toContain(
+      "Azi pot pleca 90 dintre ele; celelalte 111 rămân la coadă și pleacă singure în cel puțin încă 2 zile, cel mult 90 pe zi, cât lasă cota refăcută la miezul nopții (UTC).",
+    );
+    // The hours are today's 90 at 80 an hour, not all 201.
+    expect(body).toContain("cam 2 ore pe ritmul de zi.");
+    expect(body).not.toContain("cam 3 ore");
+    expect(body).not.toContain("pleacă singure după miezul nopții");
+    expect(body).not.toContain("Încape în cota de azi.");
+  });
+
   it("gives each «Mesaje trimise» row the three numbers of a send that asked and how far it has left; neither for a send that did not ask", async () => {
     const race = await createRace();
     const actor = await staff("MODERATOR");

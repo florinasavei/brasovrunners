@@ -210,6 +210,16 @@ export function organizerMessagePace(input: {
 }
 
 /**
+ * How many more resets of the allowance the deferred part of a send waits for (the decision «Cere reconfirmarea», part
+ * two): a staff send may take only what the plan allows less the reserve, so on Free's 100 a day the 111 left of a
+ * 201-message send need two midnights, not one. At least one when anything waits; `perPeriod` below one counts as one.
+ */
+export function organizerMessageResets(deferred: number, perPeriod: number): number {
+  if (deferred <= 0) return 0;
+  return Math.ceil(deferred / Math.max(1, Math.floor(perPeriod)));
+}
+
+/**
  * What one send costs against the Mailgun allowance (§100), in messages: every recipient's own —
  * a test row's `@test.invalid` address still spends a message — plus **one** club copy per address
  * on the club's list for the whole send (§419; one per registration under §320), and none when the

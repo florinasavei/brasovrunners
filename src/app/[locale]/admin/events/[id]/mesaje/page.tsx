@@ -23,6 +23,7 @@ import {
   organizerMessageCost,
   organizerMessageDeferral,
   organizerMessagePace,
+  organizerMessageResets,
   PARTICIPANT_MESSAGE_AUDIENCES,
 } from "@/modules/notifications/domain/organizer-message";
 import { staffReserve } from "@/modules/notifications/domain/bulk";
@@ -144,16 +145,30 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
     const { real, test: testCount } = counts[audience];
     const messages = organizerMessageCost({ real, test: testCount }, volume.participantBccCount);
     const deferral = organizerMessageDeferral(messages, headroom);
+    // On a daily plan the deferred part waits for as many midnights as the next days' allowance, less the reserve, needs.
+    const days = volume.allowance === null ? 0 : organizerMessageResets(deferral.deferred, volume.allowance - staffReserve(volume));
     const deferredLine =
-      deferral.deferred > 0
-        ? t(volume.period === "month" ? "participantMessages.deferredMonth" : "participantMessages.deferredDay", {
-            now: String(deferral.now),
-            deferred: String(deferral.deferred),
-          })
-        : undefined;
-    // Before «Trimite» (part two): how long it takes, and whether it fits the allowance — the deferral's own words when not.
+      deferral.deferred === 0
+        ? undefined
+        : volume.period === "month"
+          ? t("participantMessages.deferredMonth", { now: String(deferral.now), deferred: String(deferral.deferred) })
+          : days > 1
+            ? t(`participantMessages.deferredDays.${countForm(days, locale)}`, {
+                now: String(deferral.now),
+                deferred: String(deferral.deferred),
+                days: String(days),
+                perDay: String(Math.max(1, (volume.allowance ?? 0) - staffReserve(volume))),
+              })
+            : t("participantMessages.deferredDay", { now: String(deferral.now), deferred: String(deferral.deferred) });
+    // Before «Trimite» (part two): how long it takes, and whether it fits the allowance — the deferral's own words when not,
+    // first, and then the pace of only what can leave now, so no hour is promised for a message that waits for a reset.
     const fitsLine = volume.remaining === null ? "" : t(volume.period === "month" ? "participantMessages.fitsMonth" : "participantMessages.fitsToday");
-    const paceLine = messages > 0 ? [paceLineOf(messages), deferredLine ?? fitsLine].filter((line) => line !== "").join(" ") : undefined;
+    const paceLine =
+      messages === 0
+        ? undefined
+        : deferredLine
+          ? [deferredLine, deferral.now > 0 ? paceLineOf(deferral.now) : ""].filter((line) => line !== "").join(" ")
+          : [paceLineOf(messages), fitsLine].filter((line) => line !== "").join(" ");
     return {
       value: audience,
       label: t(`participantMessages.audiences.${audience}`),

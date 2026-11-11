@@ -10295,6 +10295,11 @@
       "waiting": "{waiting} already waiting in the queue",
       "deferredDay": "{now} of them can go today; the other {deferred} stay in the queue and go by themselves after midnight (UTC), when the daily allowance comes back. None is lost.",
       "deferredMonth": "{now} of them can go this month; the other {deferred} stay in the queue and go by themselves when the monthly allowance comes back. None is lost.",
+      "deferredDays": {
+        "one": "{now} of them can go today; the other {deferred} stay in the queue and go by themselves over at least {days} more day, at most {perDay} a day, as the allowance comes back each midnight (UTC). None is lost.",
+        "few": "{now} of them can go today; the other {deferred} stay in the queue and go by themselves over at least {days} more days, at most {perDay} a day, as the allowance comes back each midnight (UTC). None is lost.",
+        "other": "{now} of them can go today; the other {deferred} stay in the queue and go by themselves over at least {days} more days, at most {perDay} a day, as the allowance comes back each midnight (UTC). None is lost."
+      },
       "subject": "Subject",
       "subjectHelp": "In both languages, required, at most {max} characters each. You can use the fields {list}; they are filled in for each participant.",
       "body": "Message",
@@ -10342,7 +10347,7 @@
         "subject": "See you at {eventTitle}? Tell us if you're coming",
         "p1": "Hi {participantName}!",
         "p2": "{eventTitle} is close: {eventStartsAtFormatted}, at {eventLocationName}.",
-        "p3": "If you are coming, press “I'm coming” below, so we know who to expect.",
+        "p3": "If you are coming and see the “I'm coming” button below, press it, so we know who to expect.",
         "p4": "If you can no longer make it, press “I can't make it any more”, so your place can go to someone on the waiting list.",
         "p5": "If you press nothing, your registration stays exactly as it is.",
         "p6": "Thank you, and see you at the start!"
@@ -12966,11 +12971,11 @@
       "yes": "Yes, I'm coming to the race",
       "optional": "Answering is optional: if you press nothing, your registration stays exactly as it is.",
       "pending": "You still have the declaration to sign: without it the registration is not confirmed.",
-      "waitlisted": "You are on the waiting list. Tell us if you still want a place.",
+      "waitlisted": "You are on the waiting list; your place on it stays the same whatever you answer.",
       "offered": "You have been offered a place: sign the declaration from the offer's email.",
       "cannot": "Can't make it any more? Use “Cancel the registration” below.",
       "done": "You told us you are coming, on {date}.",
-      "failed": "Your answer was not recorded: the registration is no longer active or the event has started."
+      "failed": "Your answer was not recorded for this registration."
     }
   },
   "Devs": {

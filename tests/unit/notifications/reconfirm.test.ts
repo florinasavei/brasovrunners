@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { RECONFIRM_STATUSES, reconfirmApplies, reconfirmUrlOf } from "@/modules/notifications/domain/cannot-come";
 import { STAFF_RESERVE_DAY_MINIMUM, staffBudget, staffReserve } from "@/modules/notifications/domain/bulk";
-import { ORGANIZER_SUBJECT_PLACEHOLDERS, organizerMessagePace, organizerParagraphs, readOrganizerAskReconfirm, unknownOrganizerPlaceholders } from "@/modules/notifications/domain/organizer-message";
+import { ORGANIZER_SUBJECT_PLACEHOLDERS, organizerMessagePace, organizerMessageResets, organizerParagraphs, readOrganizerAskReconfirm, unknownOrganizerPlaceholders } from "@/modules/notifications/domain/organizer-message";
 import { fillReminderBoxes, REMINDER_BOXES, reminderOverwrites } from "@/modules/notifications/ui/reminder-fill";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -84,6 +84,17 @@ describe("the pace line's arithmetic (part two)", () => {
     // No pace: the runs alone. A small send: one hour.
     expect(organizerMessagePace({ messages: 400, ahead: 0, batchSize: 20, minutesPerRun: 15, hourlyAllowance: null })).toEqual({ hours: 5 });
     expect(organizerMessagePace({ messages: 3, ahead: 0, batchSize: 20, minutesPerRun: 15, hourlyAllowance: 100 })).toEqual({ hours: 1 });
+  });
+});
+
+describe("how many more resets a deferred staff send waits for (part two)", () => {
+  it("divides what waits by the day's allowance less the reserve: on Free, 111 at 90 a day need two midnights", () => {
+    expect(organizerMessageResets(111, 90)).toBe(2);
+    expect(organizerMessageResets(90, 90)).toBe(1);
+    expect(organizerMessageResets(1, 90)).toBe(1);
+    expect(organizerMessageResets(0, 90)).toBe(0);
+    // A reserve as large as the allowance still counts one a day, never a division by zero.
+    expect(organizerMessageResets(5, 0)).toBe(5);
   });
 });
 

@@ -10295,6 +10295,11 @@
       "waiting": "{waiting} așteaptă deja la coadă",
       "deferredDay": "Azi pot pleca {now} dintre ele; celelalte {deferred} rămân la coadă și pleacă singure după miezul nopții (UTC), când se reface cota zilnică. Nu se pierde niciunul.",
       "deferredMonth": "Luna aceasta pot pleca {now} dintre ele; celelalte {deferred} rămân la coadă și pleacă singure când se reface cota lunară. Nu se pierde niciunul.",
+      "deferredDays": {
+        "one": "Azi pot pleca {now} dintre ele; celelalte {deferred} rămân la coadă și pleacă singure în cel puțin încă {days} zi, cel mult {perDay} pe zi, cât lasă cota refăcută la miezul nopții (UTC). Nu se pierde niciunul.",
+        "few": "Azi pot pleca {now} dintre ele; celelalte {deferred} rămân la coadă și pleacă singure în cel puțin încă {days} zile, cel mult {perDay} pe zi, cât lasă cota refăcută la miezul nopții (UTC). Nu se pierde niciunul.",
+        "other": "Azi pot pleca {now} dintre ele; celelalte {deferred} rămân la coadă și pleacă singure în cel puțin încă {days} de zile, cel mult {perDay} pe zi, cât lasă cota refăcută la miezul nopții (UTC). Nu se pierde niciunul."
+      },
       "subject": "Subiect",
       "subjectHelp": "În ambele limbi, obligatoriu, cel mult {max} de caractere în fiecare. Poți folosi câmpurile {list}; se completează pentru fiecare participant.",
       "body": "Mesajul",
@@ -10342,7 +10347,7 @@
         "subject": "Ne vedem la {eventTitle}? Spune-ne dacă vii",
         "p1": "Bună, {participantName}!",
         "p2": "{eventTitle} e aproape: {eventStartsAtFormatted}, la {eventLocationName}.",
-        "p3": "Dacă vii, apasă „Vin” mai jos. Așa știm pe cine așteptăm.",
+        "p3": "Dacă vii și vezi butonul „Vin” mai jos, apasă-l. Așa știm pe cine așteptăm.",
         "p4": "Dacă nu mai poți ajunge, apasă „Nu mai pot ajunge”, ca locul să poată fi dat cuiva de pe lista de așteptare.",
         "p5": "Dacă nu apeși nimic, înscrierea ta rămâne exact cum e.",
         "p6": "Mulțumim și ne vedem la start!"
@@ -12966,11 +12971,11 @@
       "yes": "Da, vin la cursă",
       "optional": "Răspunsul e opțional: dacă nu apeși nimic, înscrierea rămâne exact cum e.",
       "pending": "Mai ai de semnat declarația: fără ea înscrierea nu e confirmată.",
-      "waitlisted": "Ești pe lista de așteptare. Spune-ne dacă vrei în continuare un loc.",
+      "waitlisted": "Ești pe lista de așteptare; locul tău în ea nu se schimbă, oricum ai răspunde.",
       "offered": "Ai un loc oferit: semnează declarația din emailul cu oferta.",
       "cannot": "Nu mai poți ajunge? Folosește „Anulează înscrierea” mai jos.",
       "done": "Ne-ai spus că vii: {date}.",
-      "failed": "Răspunsul nu a fost înregistrat: înscrierea nu mai e activă sau evenimentul a început."
+      "failed": "Răspunsul nu a fost înregistrat pentru această înscriere."
     }
   },
   "Devs": {
