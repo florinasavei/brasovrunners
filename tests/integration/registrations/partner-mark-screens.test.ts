@@ -13,10 +13,10 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «De la parteneri» on the backoffice's screens (the decision «De la parteneri»; BR-REQ-060-01): «Partener: {name}» on the
- * registrations list's row — in the one name column both copies of the table draw — on the registration's page, on a line of
- * the internal list and on an invitation's row; nothing for a row without a name. The filter «De la parteneri» among the
- * list's filters, the rows it keeps. On the registration's page the Administrator gets the tick and the box in a form, the
+ * «De la parteneri» on the backoffice's screens (the decision «De la parteneri»; BR-REQ-060-01): on the registrations list the
+ * partner's name in its own column «Partener» (the list's column), which both copies of the table draw, and no chip in the
+ * name column any more; «Partener: {name}» on the registration's page, on a line of the internal list and on an invitation's
+ * row; nothing for a row without a name. The filter «De la parteneri» among the list's filters, a select now, the rows it keeps. On the registration's page the Administrator gets the tick and the box in a form, the
  * Organizer the chip alone. The pages are Server Components, so they are called and their element trees walked.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en" }));
@@ -87,7 +87,7 @@ const { default: AdminTable } = await import("@/modules/staff-identity/ui/AdminT
 const { default: ReserveListPanel } = await import("@/modules/registrations/ui/ReserveListPanel");
 const { default: PartnerMarkFields, PartnerSuggestionList } = await import("@/modules/registrations/ui/PartnerMarkFields");
 const { default: InvitationsPanel } = await import("@/modules/registrations/ui/InvitationsPanel");
-const { default: CheckboxField } = await import("@/shared/ui/CheckboxField");
+const { default: PartnerFilterSelect } = await import("@/modules/registrations/ui/PartnerFilterSelect");
 const reserveActions = await import("@/app/[locale]/admin/registrations/reserve-actions");
 const partnerActions = await import("@/app/[locale]/admin/registrations/[id]/partner-actions");
 const { setRegistrationPartner } = await import("@/modules/registrations/partner-mark");
@@ -175,11 +175,11 @@ const listPage = (searchParams: Record<string, string>) =>
 const detailPage = (id: string) => RegistrationDetailPage({ params: Promise.resolve({ locale: "ro", id }), searchParams: Promise.resolve({}) } as never);
 const tableOf = (tree: ReactNode) => elements(tree).find((element) => element.type === AdminTable);
 
-/** The «Nume» cell of one row, walked: where the row's chips are — the one render both copies of the table draw. */
-function nameCellOf(tree: ReactNode, id: string): ReactElement<Props>[] {
+/** One cell of one row, walked — the «Nume» cell by default, where the row's chips are: the one render both copies of the table draw. */
+function nameCellOf(tree: ReactNode, id: string, key = "name"): ReactElement<Props>[] {
   const table = tableOf(tree);
   const row = (table?.props.rows as { id: string }[]).find((candidate) => candidate.id === id);
-  const column = (table?.props.columns as Column[]).find((candidate) => candidate.key === "name");
+  const column = (table?.props.columns as Column[]).find((candidate) => candidate.key === key);
   return row && column ? elements(column.render(row)) : [];
 }
 
@@ -203,24 +203,30 @@ beforeEach(async () => {
   state.locale = "ro";
 });
 
-describe("«Partener: {name}» on the registrations list", () => {
-  it("is on a row with a name, for every role that reads the list, in the name column both copies draw; nothing on a row without", async () => {
+describe("the partner on the registrations list", () => {
+  it("is in the column «Partener» on a row with a name, for every role that reads the list, both copies drawing it; no chip in the name column; nothing on a row without", async () => {
     const race = await createRace();
     const from = await register(race.id, { partnerName: PARTNER });
     const plain = await register(race.id);
     for (const role of ["ADMIN", "MODERATOR"] as const) {
       state.actor = await staff(role);
       const tree = await listPage({ eventId: race.id });
-      const chip = chipOf(nameCellOf(tree, from.id));
-      expect(chip?.props.label, role).toBe(`Partener: ${PARTNER}`);
-      expect(chip?.props.glyph, role).toBe("fromPartner");
+      // The column «Partener» says it now (the list's column): the chip left the name cell of this list.
+      const cell = nameCellOf(tree, from.id, "partner");
+      expect(textOf(cell.find((element) => element.props["data-testid"] === "row-partner")), role).toBe(PARTNER);
+      expect(chipOf(nameCellOf(tree, from.id)), role).toBeUndefined();
+      expect(chipOf(cell), role).toBeUndefined();
+      expect(nameCellOf(tree, plain.id, "partner").some((element) => element.props["data-testid"] === "row-partner"), role).toBe(false);
       expect(chipOf(nameCellOf(tree, plain.id)), role).toBeUndefined();
-      // The name column is the table's primary one: the desktop table and the phone cards draw it with this one render.
+      // The table draws every column on both layouts: the desktop table and the phone cards read this one render.
       expect((tableOf(tree)?.props.columns as Column[]).find((column) => column.key === "name")?.primary, role).toBe(true);
+      expect((tableOf(tree)?.props.columns as Column[]).some((column) => column.key === "partner"), role).toBe(true);
     }
     state.locale = "en";
     const english = await listPage({ eventId: race.id });
-    expect(chipOf(nameCellOf(english, from.id))?.props.label).toBe(`Partner: ${PARTNER}`);
+    expect((tableOf(english)?.props.columns as (Column & { label: string })[]).find((column) => column.key === "partner")?.label).toBe("Partner");
+    expect(textOf(nameCellOf(english, from.id, "partner").find((element) => element.props["data-testid"] === "row-partner"))).toBe(PARTNER);
+    expect(chipOf(nameCellOf(english, from.id))).toBeUndefined();
   });
 
   it("offers the filter «De la parteneri», which keeps the rows with a name, its count beside them", async () => {
@@ -229,12 +235,13 @@ describe("«Partener: {name}» on the registrations list", () => {
     const from = await register(race.id, { partnerName: PARTNER });
     await register(race.id);
     const all = await listPage({ eventId: race.id });
-    const box = elements(all).find((element) => element.type === CheckboxField && element.props.name === "partner");
-    expect(box?.props.value).toBe("1");
-    expect(box?.props.defaultChecked).toBe(false);
+    // A select now (the list's column «Partener»): «de la orice partener» posts `partner` = 1, as the tick did.
+    const box = elements(all).find((element) => element.type === PartnerFilterSelect);
+    expect(box?.props.anyName).toBe("partner");
+    expect(box?.props.anyChosen).toBe(false);
     // Its words, and the help under them.
-    expect([box?.props.children].flat()).toContain("De la parteneri");
-    expect(box?.props.help).toBe("Doar înscrierile cu numele unui partener sau sponsor.");
+    expect(box?.props.label).toBe("De la parteneri");
+    expect(box?.props.help).toBe(ro.Admin.partner.filterHelp);
     expect(tableOf(all)?.props.total).toBe(2);
 
     const filtered = await listPage({ eventId: race.id, partner: "1" });
@@ -243,7 +250,7 @@ describe("«Partener: {name}» on the registrations list", () => {
     expect(table?.props.total).toBe(1);
     // It rides with every sort, page and export link: the file is the rows on screen.
     expect((table?.props.currentParams as Record<string, string | undefined>).partner).toBe("1");
-    expect(elements(filtered).find((element) => element.type === CheckboxField && element.props.name === "partner")?.props.defaultChecked).toBe(true);
+    expect(elements(filtered).find((element) => element.type === PartnerFilterSelect)?.props.anyChosen).toBe(true);
   });
 });
 

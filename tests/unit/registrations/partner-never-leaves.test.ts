@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 /**
  * «De la parteneri» (the decision «De la parteneri»; BR-REQ-060-01) — the partner's name is the organizers' own label, staff
- * only. It is read by the registrations list (its chip and its filter), the registration's page, the internal list, the
+ * only. It is read by the registrations list (its column «Partener», its sort, its filter and the row's editor), the registration's page, the internal list, the
  * invitations, the registrations' Excel and CSV and «Toate datele unei persoane», and by nothing else: never a public page
  * (the participants' list, the results, «Cine vine»), never an email, never the race-day desk, never the file given to
  * sponsors («Descarcă lista pentru sponsori» — close words, another thing: that file holds people who agreed to offers), and
@@ -54,7 +54,9 @@ const READERS = new Set([
   "src/modules/registrations/ui/InvitationsPanel.tsx",
   "src/modules/registrations/ui/InviteForm.tsx",
   "src/app/[locale]/admin/registrations/invitation-actions.ts",
-  // The registrations list (the chip, the filter), its reader, the registration's page and its press.
+  // The registrations list (the column «Partener», its sort, the filter, the row's editor — whose two islands,
+  // `ui/RowPartnerDialog.tsx` and `ui/PartnerFilterSelect.tsx`, are handed strings and name none of it), its reader, the
+  // registration's page and the label's two presses (the page's card and the list row's editor, in `partner-actions.ts`).
   "src/modules/registrations/admin-repository.ts",
   "src/app/[locale]/admin/registrations/(list)/page.tsx",
   "src/app/[locale]/admin/registrations/[id]/page.tsx",

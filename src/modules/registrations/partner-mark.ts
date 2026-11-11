@@ -16,7 +16,8 @@ import { isUuid } from "@/shared/ids";
  *
  * Every screen that sets it shows one tick, «E de la parteneri», with the box «Numele partenerului sau sponsorului»: the box is
  * what is stored, the tick without a name is refused at the box (`PARTNER_NAME_MISSING`), and unticking clears the name
- * (`parsePartnerMark`). The box suggests the names already written at the event (`listPartnerSuggestions`).
+ * (`parsePartnerMark`). The box suggests the names already written at the event (`listPartnerSuggestions`). The registrations
+ * list's row editor is the one exception to the tick: a select of those names and a box (`partnerMarkOfRow`), the same parse.
  *
  * **A label, and nothing else.** No state, no place, no count, no email, no declaration: nothing here is read by the allocator,
  * the capacity formula, a public page, the race-day desk, an email or the file given to sponsors — only by the backoffice's
@@ -44,6 +45,37 @@ export type PartnerMarkInput = { partner: unknown; partnerName: unknown };
 /** The tick and the box from a posted form, for `parsePartnerMark`. */
 export function partnerMarkOf(form: FormData): PartnerMarkInput {
   return { partner: form.get(PARTNER_TICK_FIELD), partnerName: form.get(PARTNER_NAME_FIELD) };
+}
+
+/** The list row's editor: the select of the event's partners («Fără partener» posts empty); its box is `PARTNER_NAME_FIELD`. */
+export const PARTNER_CHOICE_FIELD = "partnerChoice";
+
+/**
+ * The list row's editor as the tick and the box (the decision on the list's column «Partener»): a name typed in the box wins
+ * over the select, the select's partner otherwise, and «Fără partener» with an empty box clears. The name then goes through
+ * `parsePartnerMark` like every other form's — the same trim, the same 1–120 limit, refused at the box.
+ */
+export function partnerMarkOfRow(form: FormData): PartnerMarkInput {
+  const typed = form.get(PARTNER_NAME_FIELD);
+  const chosen = form.get(PARTNER_CHOICE_FIELD);
+  const name = typeof typed === "string" && typed.trim() !== "" ? typed : typeof chosen === "string" ? chosen : "";
+  return { partner: name.trim() === "" ? null : "on", partnerName: name };
+}
+
+/** The list's URL parameter of the filter by one partner; `partner=1` stays «de la orice partener». */
+export const PARTNER_FILTER_PARAM = "partnerName";
+
+/**
+ * The partner the list is filtered to, from its URL parameter: one of the chosen event's partners (`listPartnerSuggestions`),
+ * compared without regard to case and returned in the event's own spelling — or null for anything else (empty, over-long,
+ * unknown at the event, a repeated key), which the list ignores rather than refuses.
+ */
+export function chosenPartnerOf(raw: unknown, eventPartners: readonly string[]): string | null {
+  if (typeof raw !== "string") return null;
+  const name = raw.trim();
+  if (name === "" || [...name].length > PARTNER_NAME_MAX) return null;
+  const key = name.toLocaleLowerCase("ro");
+  return eventPartners.find((partner) => partner.toLocaleLowerCase("ro") === key) ?? null;
 }
 
 /**

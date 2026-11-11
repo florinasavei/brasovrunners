@@ -7,8 +7,9 @@ import { openFold } from "./support/fold";
 /**
  * «De la parteneri» (the decision «De la parteneri»; BR-REQ-037-05, BR-REQ-060-01) in a real browser, on both projects: the tick
  * «E de la parteneri» with its box on a line of the internal list (the add, the line's fold, unticking), on a registration's page
- * (the Administrator's card; the Organizer reads the chip and has no form), the chip on the list's row and the list's filter —
- * and nothing of the new card, fold or filter wider than the screen at 320 px.
+ * (the Administrator's card; the Organizer reads the chip and has no form), the name in the list's column «Partener» and the list's
+ * filter — and, since the list's column «Partener», the column itself: «Coloane», the row's editor (a partner picked and one
+ * typed), the filter by one partner, the Organizer's column without a press, a long name — and nothing wider than the screen.
  *
  * The event and its two confirmed runners are written straight into the database — the setup, not the subject — one event per
  * project and run. Made-up people and made-up partners only.
@@ -30,7 +31,7 @@ async function withDatabase<T>(work: (client: pg.Client) => Promise<T>): Promise
   }
 }
 
-type Seeded = { eventId: string; ana: string; surname: string };
+type Seeded = { eventId: string; ana: string; bia: string; surname: string };
 
 /** An event with room, and two confirmed registrations: Ana and Bia, one surname per run. */
 async function seed(tag: string): Promise<Seeded> {
@@ -63,7 +64,7 @@ async function seed(tag: string): Promise<Seeded> {
       );
       ids[first] = rows[0].id;
     }
-    return { eventId, ana: ids.Ana, surname };
+    return { eventId, ana: ids.Ana, bia: ids.Bia, surname };
   });
 }
 
@@ -158,28 +159,31 @@ test.describe("«De la parteneri»: the tick and its box, the chip, the filter",
     await expect(page.getByTestId("registration-partner").getByTestId("partner-name")).toHaveValue(partner);
     await fitsTheScreen(page);
 
-    // The list's row wears the chip (the table's copy or the phone card's: one of them is shown).
+    // The list's row shows the name in its column «Partener» (the table's copy or the phone card's: one of them is shown),
+    // and no chip any more: the column says it (the list's column «Partener»).
     const listUrl = `/ro/admin/registrations?eventId=${seeded.eventId}&q=${encodeURIComponent(seeded.surname)}`;
     await page.goto(listUrl);
     await hydrated(page);
     const main = page.locator("#main");
-    await expect(main.getByTestId("partner-chip").filter({ visible: true })).toHaveCount(1);
-    await expect(main.getByTestId("partner-chip").filter({ visible: true })).toContainText(`Partener: ${partner}`);
+    await expect(main.getByTestId("row-partner").filter({ visible: true })).toHaveCount(1);
+    await expect(main.getByTestId("row-partner").filter({ visible: true })).toHaveText(partner);
+    await expect(main.getByTestId("partner-chip").filter({ visible: true })).toHaveCount(0);
     await expect(main.getByText(`Bia ${seeded.surname}`).filter({ visible: true }).first()).toBeVisible();
     await fitsTheScreen(page);
 
-    // The filter «De la parteneri»: only Ana's row is left.
+    // The filter «De la parteneri», a select now: «De la orice partener» leaves only Ana's row, and still says `partner=1`.
     const filter = main.getByTestId("registrations-filter-partner");
     await filter.scrollIntoViewIfNeeded();
     await expect(filter).toBeVisible();
     await fitsTheScreen(page);
-    await filter.getByRole("checkbox", { name: "De la parteneri" }).check();
+    await filter.getByRole("combobox").click();
+    await page.getByRole("option", { name: "De la orice partener", exact: true }).click();
     await main.getByRole("button", { name: "Filtrează" }).click();
     await page.waitForURL(/partner=1/);
     await hydrated(page);
     await expect(main.getByText(`Ana ${seeded.surname}`).filter({ visible: true }).first()).toBeVisible();
     await expect(main.getByText(`Bia ${seeded.surname}`).filter({ visible: true })).toHaveCount(0);
-    await expect(main.getByTestId("registrations-filter-partner").getByRole("checkbox", { name: "De la parteneri" })).toBeChecked();
+    await expect(main.getByTestId("registrations-filter-partner").getByRole("combobox")).toHaveText("De la orice partener");
     await fitsTheScreen(page);
   });
 
@@ -195,6 +199,139 @@ test.describe("«De la parteneri»: the tick and its box, the chip, the filter",
     await expect(page.locator("#main").getByTestId("partner-chip").filter({ visible: true })).toContainText(`Partener: ${partner}`);
     await expect(page.getByTestId("registration-partner")).toHaveCount(0);
     await expect(page.getByTestId("registration-partner-form")).toHaveCount(0);
+    await fitsTheScreen(page);
+  });
+});
+
+test.describe("the list's column «Partener»: seen, hidden, set from the row, filtered by one partner", () => {
+  test.describe.configure({ timeout: 150_000 });
+
+  /** The row's editor of one person, on the layout this project shows (the table's copy or the phone card's). */
+  async function openEditor(page: Page, name: string) {
+    const press = page.locator("#main").getByRole("button", { name: `Alege partenerul pentru ${name}`, exact: true }).filter({ visible: true });
+    await expect(press).toHaveCount(1);
+    expect((await press.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await press.click();
+    const dialog = page.getByTestId("partner-row-dialog");
+    await expect(dialog).toBeVisible();
+    return dialog;
+  }
+
+  test("the Administrator sees the column, «Coloane» hides it, the row sets a picked and a typed partner, the filter keeps one partner", async ({ page }) => {
+    const tag = `${test.info().project.name}-col-${Date.now().toString(36)}`;
+    const seeded = await seed(tag);
+    const bakery = `Brutaria Exemplu ${tag}`;
+    const cafe = `Cafeneaua de Test ${tag}`;
+    await withDatabase((client) => client.query("UPDATE registrations SET partner_name = $2 WHERE id = $1", [seeded.bia, bakery]));
+    const desktop = test.info().project.name === "desktop";
+
+    await signIn(page, "Dev Administrator");
+    const listUrl = `/ro/admin/registrations?eventId=${seeded.eventId}&q=${encodeURIComponent(seeded.surname)}&sort=name&dir=asc`;
+    await page.goto(listUrl);
+    await hydrated(page);
+    const main = page.locator("#main");
+    // Bia's partner in the column, as plain text; Ana has none yet.
+    await expect(main.getByTestId("row-partner").filter({ visible: true })).toHaveText([bakery]);
+    await fitsTheScreen(page);
+
+    if (desktop) {
+      // «Coloane» hides it and brings it back (the phone's cards have no such menu: every field is a line).
+      const heading = main.locator('table[data-table-id="registrations"] th[data-column="partner"]');
+      await expect(heading).toBeVisible();
+      await main.getByTestId("admin-table-columns").click();
+      const toggle = page.getByRole("menuitemcheckbox", { name: "Partener", exact: true });
+      await expect(toggle).toHaveAttribute("aria-checked", "true");
+      await toggle.click();
+      await page.keyboard.press("Escape");
+      await expect(heading).toBeHidden();
+      await expect(main.getByTestId("row-partner").filter({ visible: true })).toHaveCount(0);
+      await main.getByTestId("admin-table-columns").click();
+      await page.getByRole("menuitemcheckbox", { name: "Partener", exact: true }).click();
+      await page.keyboard.press("Escape");
+      await expect(heading).toBeVisible();
+      await expect(main.getByTestId("row-partner").filter({ visible: true })).toHaveText([bakery]);
+    }
+
+    // Ana's row: the event's partner picked from the select.
+    let dialog = await openEditor(page, `Ana ${seeded.surname}`);
+    await fitsTheScreen(page);
+    await dialog.getByTestId("partner-row-choice").selectOption({ label: bakery });
+    await dialog.getByTestId("partner-row-save").click();
+    await page.waitForURL(/saved=partnerSaved/);
+    await hydrated(page);
+    // Back on the same list: the event, the search and the sort kept.
+    const back = new URL(page.url());
+    expect([back.searchParams.get("eventId"), back.searchParams.get("q"), back.searchParams.get("sort"), back.searchParams.get("dir")]).toEqual([seeded.eventId, seeded.surname, "name", "asc"]);
+    await expect(main.getByTestId("partner-saved-alert")).toContainText("Partenerul a fost salvat");
+    await expect(main.getByTestId("row-partner").filter({ visible: true })).toHaveText([bakery, bakery]);
+
+    // Ana's row again: a new partner typed wins over the select.
+    dialog = await openEditor(page, `Ana ${seeded.surname}`);
+    await expect(dialog.getByTestId("partner-row-choice")).toHaveValue(bakery);
+    await dialog.getByTestId("partner-row-new").fill(cafe);
+    await dialog.getByTestId("partner-row-save").click();
+    await expect(main.getByTestId("row-partner").filter({ visible: true })).toHaveText([cafe, bakery], { timeout: 30_000 });
+    await hydrated(page);
+    await fitsTheScreen(page);
+
+    // The filter by one partner: the new one leaves Ana alone, and the export links carry it.
+    const filter = main.getByTestId("registrations-filter-partner");
+    await filter.scrollIntoViewIfNeeded();
+    await filter.getByRole("combobox").click();
+    await page.getByRole("option", { name: cafe, exact: true }).click();
+    await main.getByRole("button", { name: "Filtrează" }).click();
+    await page.waitForURL(/partnerName=/);
+    await hydrated(page);
+    await expect(main.getByText(`Ana ${seeded.surname}`).filter({ visible: true }).first()).toBeVisible();
+    await expect(main.getByText(`Bia ${seeded.surname}`).filter({ visible: true })).toHaveCount(0);
+    await expect(main.getByTestId("row-partner").filter({ visible: true })).toHaveText([cafe]);
+    for (const link of await main.locator('a[href^="/api/admin/registrations/export"]').all()) {
+      expect(new URL((await link.getAttribute("href")) ?? "", "http://localhost").searchParams.get("partnerName")).toBe(cafe);
+    }
+    await fitsTheScreen(page);
+  });
+
+  test("the Organizer sees the column and no press; a 120-character name widens nothing", async ({ page }) => {
+    const tag = `${test.info().project.name}-long-${Date.now().toString(36)}`;
+    const seeded = await seed(tag);
+    // One word of 120 characters, the harder case: nothing to break between but the column's own wrap.
+    const long = "Partenerulcunumefoartelung".repeat(5).slice(0, 120);
+    const desktop = test.info().project.name === "desktop";
+    const listUrl = `/ro/admin/registrations?eventId=${seeded.eventId}&q=${encodeURIComponent(seeded.surname)}`;
+    // The wide table's own width (it may scroll inside its frame at any name): what a long name must not change.
+    const tableWidth = () => page.evaluate(() => document.querySelector('table[data-table-id="registrations"]')?.scrollWidth ?? 0);
+
+    await signIn(page, "Dev Moderator");
+    const main = page.locator("#main");
+    const shown = main.getByTestId("row-partner").filter({ visible: true });
+    await withDatabase((client) => client.query("UPDATE registrations SET partner_name = $2 WHERE id = $1", [seeded.ana, "Scurt"]));
+    await page.goto(listUrl);
+    await hydrated(page);
+    await expect(shown).toHaveText(["Scurt"]);
+    const shortWidth = await tableWidth();
+
+    await withDatabase((client) => client.query("UPDATE registrations SET partner_name = $2 WHERE id = $1", [seeded.ana, long]));
+    await page.goto(listUrl);
+    await hydrated(page);
+    await expect(shown).toHaveText([long]);
+    await expect(main.getByTestId("partner-row-open")).toHaveCount(0);
+    await fitsTheScreen(page);
+    // The name wraps inside its column: on a phone never past the screen's edge, on the wide table never wider than the column
+    // a short name gets, and never wider than its bound.
+    const box = await shown.boundingBox();
+    if (desktop) {
+      expect(Math.abs((await tableWidth()) - shortWidth)).toBeLessThanOrEqual(1);
+      expect(box?.width ?? Infinity).toBeLessThanOrEqual(16 * 16 + 1);
+    } else {
+      expect(box ? box.x + box.width : Infinity).toBeLessThanOrEqual(page.viewportSize()?.width ?? 0);
+    }
+
+    // The Administrator's press sits under the same long name and still fits.
+    await page.context().clearCookies();
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/registrations?eventId=${seeded.eventId}&q=${encodeURIComponent(seeded.surname)}`);
+    await hydrated(page);
+    await expect(main.getByTestId("partner-row-open").filter({ visible: true })).toHaveCount(2);
     await fitsTheScreen(page);
   });
 });

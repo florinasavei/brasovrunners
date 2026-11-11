@@ -249,6 +249,11 @@ export type RegistrationListFilters = {
   /** «De la parteneri» (the decision «De la parteneri»): only the rows with a partner's name. Narrows only. */
   fromPartner?: boolean;
   /**
+   * One partner's rows (the list's column «Partener»): the name compared without regard to case. The caller passes only a name
+   * it validated against the event's partners (`partner-mark.ts#chosenPartnerOf`). Narrows only.
+   */
+  partner?: string;
+  /**
    * «Reconfirmare» (the decision «Cere reconfirmarea»): among the registrations an organizer's message asked — «yes» those
    * still registered who said «Vin», «cancelled» those cancelled at or after an ask (by the person or an Administrator),
    * «none» those still registered who did not answer. Information, never a state. Narrows only.
@@ -301,7 +306,7 @@ const latestReconfirmedAt = sql<Date | null>`(
  * An allowlist rather than a mapping built from the request: `?sort=` arrives from a URL anybody
  * can type, and the one thing that must not be possible is for it to name a column.
  */
-export const REGISTRATION_SORT_KEYS = ["name", "status", "event", "submitted", "bib", "untilWhen", "city", "age"] as const;
+export const REGISTRATION_SORT_KEYS = ["name", "status", "event", "submitted", "bib", "untilWhen", "city", "age", "partner"] as const;
 export type RegistrationSortKey = (typeof REGISTRATION_SORT_KEYS)[number];
 
 /**
@@ -395,6 +400,7 @@ function registrationConditions(filters: RegistrationListFilters, members: reado
     filters.promoConsented ? promoListed() : undefined,
     filters.outsideCapacity ? eq(registrations.outsideCapacity, true) : undefined,
     filters.fromPartner ? isNotNull(registrations.partnerName) : undefined,
+    filters.partner ? sql`lower(${registrations.partnerName}) = lower(${filters.partner})` : undefined,
     filters.reconfirm ? reconfirmCondition(filters.reconfirm) : undefined,
     filters.memberBibAsked ? memberBibAskedUnverified(members) : undefined,
     /*
@@ -513,6 +519,12 @@ function registrationOrderBy(sort: RegistrationSortKey, dir: "asc" | "desc", now
     */
     case "age":
       return dir === "asc" ? sql`${registrations.birthDate} desc nulls last` : sql`${registrations.birthDate} asc nulls last`;
+    /*
+      «Partener» (the list's column): by the partner's name without regard to case, a row with none last either way — so one
+      partner's people stand together at the top — then the list's own tie-breakers.
+    */
+    case "partner":
+      return dir === "asc" ? sql`lower(${registrations.partnerName}) asc nulls last` : sql`lower(${registrations.partnerName}) desc nulls last`;
   }
 }
 

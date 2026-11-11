@@ -3180,15 +3180,17 @@ decision «De la parteneri»), the name of the partner or sponsor through whom a
 on a registration, a line of «Lista internă (doar notițe)» and an invitation, a name present meaning «de la parteneri».
 Set by the tick «E de la parteneri» with its box «Numele partenerului sau sponsorului» (a tick without a name is refused
 at the box; unticking clears it): on a line — at the add and in its own fold — by the Organizer and above, as the line's
-add and note; at an invitation's send, one name for the whole press, by the Administrator; on a registration's page by
-the Administrator alone (`canManageRegistrations`, asserted by `setRegistrationPartnerAction` and
-`partner-mark.ts#setRegistrationPartner`; the Organizer reads the «Partener: {name}» chip). It travels with the person:
-every move of a line that makes a registration carries it in the move's transaction, «Mută pe lista de elită» drops it,
-and an invitation's name is written where its «Elită» is honoured — at the link's press and at an adoption — through
-`partner-mark.ts#writeRegistrationPartnerName`. Audited (`registration.partner_set`, whether a name is now present and,
-carried, `via`; `event_reserve.partner_saved` on a line) — never the name. Read by the registrations list (its chip and
-the filter «De la parteneri»), the registration's page, the internal list, «Invitații», the registrations' Excel and CSV
-(«Partener», before the notes) and «Toate datele unei persoane»; never by a public page, an email, the desk, the file
+add and note; at an invitation's send, one name for the whole press, by the Administrator; on a registration's page and
+from its row on the registrations list (a select of the event's partners and a box, a typed name winning; one event
+chosen) by the Administrator alone (`canManageRegistrations`, asserted by `setRegistrationPartnerAction`,
+`setRegistrationPartnerFromListAction` and `partner-mark.ts#setRegistrationPartner`; the Organizer reads the name). It
+travels with the person: every move of a line that makes a registration carries it in the move's transaction, «Mută pe
+lista de elită» drops it, and an invitation's name is written where its «Elită» is honoured — at the link's press and at
+an adoption — through `partner-mark.ts#writeRegistrationPartnerName`. Audited (`registration.partner_set`, whether a name
+is now present and, carried, `via`; `event_reserve.partner_saved` on a line) — never the name. Read by the registrations
+list (its column «Partener», sorted by it, and the filter «De la parteneri» — any partner or one of the event's), the
+registration's page, the internal list, «Invitații», the registrations' Excel and CSV («Partener», before the notes) and
+«Toate datele unei persoane»; never by a public page, an email, the desk, the file
 given to sponsors, the allocator or the capacity formula (`tests/unit/registrations/partner-never-leaves.test.ts`). No
 state, place, count, email or declaration moves.
 
