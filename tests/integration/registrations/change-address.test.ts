@@ -707,6 +707,39 @@ describe("«Schimbă adresa»: the old links die, the old mail is withdrawn, the
     expect(trail.metadataJson).toMatchObject({ messagesReaddressed: 2 });
   });
 
+  it("the organizers' message between two attempts follows the move and renders for the new address; a claimed one is withdrawn", async () => {
+    const event = await createEvent(5);
+    const ana = await confirmedAddress(event, "Ana");
+    const organizerMessage = (key: string, status: "PENDING" | "PROCESSING") => ({
+      participantId: ana.participantId,
+      registrationId: ana.id,
+      messageType: "ORGANIZER_MESSAGE" as const,
+      locale: "ro" as const,
+      recipientEmail: mail("Ana"),
+      payloadJson: {},
+      idempotencyKey: `test:organizer:${key}:${ana.id}`,
+      status,
+      attemptCount: 1,
+      lockedAt: status === "PROCESSING" ? at(50) : null,
+      createdAt: at(30),
+    });
+    // Tried once and waiting for its next attempt: not claimed, so it follows the registration.
+    const [retry] = await db.insert(emailOutbox).values(organizerMessage("retry", "PENDING")).returning();
+    // Claimed by a worker at the moment of the move: the renderer's to withdraw.
+    const [claimed] = await db.insert(emailOutbox).values(organizerMessage("claimed", "PROCESSING")).returning();
+    await changeRegistrationAddressByStaff(db, admin, ana.id, NEW, at(60));
+    const target = await participantOf(NEW);
+
+    const [followed] = await db.select().from(emailOutbox).where(eq(emailOutbox.id, retry.id));
+    expect(followed).toMatchObject({ participantId: target.id, recipientEmail: NEW, status: "PENDING", attemptCount: 1 });
+    const message = await renderOutboxMessage({ ...followed, status: "PROCESSING", attemptCount: 2, lockedAt: at(61) }, db, at(61));
+    expect(message.to).toBe(NEW);
+
+    const [stillOld] = await db.select().from(emailOutbox).where(eq(emailOutbox.id, claimed.id));
+    expect(stillOld).toMatchObject({ participantId: ana.participantId, recipientEmail: mail("Ana") });
+    await expect(renderOutboxMessage(stillOld, db, at(61))).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
+  });
+
   it("moved away and back: the first notice to the address that holds the registration again is withdrawn at render", async () => {
     const event = await createEvent(5);
     const ana = await confirmedAddress(event, "Ana");

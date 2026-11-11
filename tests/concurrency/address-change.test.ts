@@ -15,6 +15,7 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { ADDRESS_CHANGED_MEANWHILE } from "@/modules/registrations/domain/address-change";
 import { deleteRegistrationByStaff } from "@/modules/registrations/admin-service";
+import { issueActionToken } from "@/modules/action-tokens/repository";
 import { changeRegistrationAddressByStaff, type EventForRegistration, submitRegistration } from "@/modules/registrations/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { approveNotices, removeApprovedNotices } from "./legal-fixture";
@@ -26,7 +27,8 @@ import { approveNotices, removeApprovedNotices } from "./legal-fixture";
  * reaches the database's unique index as a raw failure: one of the two wins, the other is answered in words.
  * An erase of a row that holds no place takes no event lock: the move's row lock (`FOR NO KEY UPDATE`, before the row's
  * links and mail) makes it wait for the move instead of meeting it in a lock cycle; a cycle that remains is answered
- * «press again» (`ADDRESS_CHANGED_MEANWHILE`), never raw.
+ * «press again» (`ADDRESS_CHANGED_MEANWHILE`), never raw. A link minted at the same moment, on a row that consents to
+ * offers, meets no cycle: the move takes no `FOR UPDATE` on the row before it holds the row's live tokens.
  * PGlite cannot express these races (`tests/helpers/db.ts`); this runs against the real server `yarn test:concurrency` uses.
  */
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -199,5 +201,92 @@ describe("«Schimbă adresa» under real concurrency", () => {
       }
       expect(await db.select({ id: registrations.id }).from(registrations).where(eq(registrations.id, anaRow.id))).toEqual([]);
     }
+  });
+
+  /*
+    A link being minted (`issueActionToken`: the live tokens of its purpose first, then an INSERT whose foreign key takes a
+    KEY SHARE on the registration) racing the move of a row whose consent to offers is on. The move takes no FOR UPDATE on
+    the row before it holds the tokens — the consent's withdrawal and the final UPDATE both come after — so the two never
+    wait on each other in a cycle: the minter ends with its link, the move ends moved or, at worst, «press again».
+  */
+  it("a link minted racing the move of a row that consents to offers: both calls end, the minter never meets a lock cycle", { timeout: 60_000 }, async () => {
+    const event = await createEvent();
+    const actor = { id: adminId, role: "ADMIN" as const };
+    const endings: string[] = [];
+    for (let round = 0; round < 10; round++) {
+      const ana = address(`ana-minted-${round}`);
+      const target = address(`target-minted-${round}`);
+      await submitRegistration(db, event, submission(ana, "Ana"), NOW);
+      const [anaRow] = await registrationOn(event.id, ana);
+      await db.update(registrations).set({ promoConsent: true, promoConsentAt: NOW }).where(eq(registrations.id, anaRow.id));
+      const later = new Date(NOW.getTime() + 60_000);
+      const link = () => issueActionToken(db, { participantId: anaRow.participantId, registrationId: anaRow.id, purpose: "MANAGE_REGISTRATION", expiresAt: new Date(later.getTime() + 86_400_000), now: later });
+      // A live link of the purpose already, so the minter has a token row to supersede and lock first.
+      await link();
+      const [move, minted] = await Promise.allSettled([changeRegistrationAddressByStaff(db, actor, anaRow.id, target, later), link()]);
+      endings.push(`${move.status === "fulfilled" ? "moved" : isDomainError(move.reason) && move.reason.fields.includes(ADDRESS_CHANGED_MEANWHILE) ? "press-again" : "raw"}/${minted.status === "fulfilled" ? "minted" : "raw"}`);
+      if (move.status === "rejected") {
+        expect(isDomainError(move.reason) && move.reason.fields, String(move.reason)).toContain(ADDRESS_CHANGED_MEANWHILE);
+      }
+      expect(minted.status, minted.status === "rejected" ? String(minted.reason) : "").toBe("fulfilled");
+      if (move.status === "fulfilled") {
+        const [row] = await db.select({ promoConsent: registrations.promoConsent }).from(registrations).where(eq(registrations.id, anaRow.id));
+        expect(row.promoConsent).toBe(false);
+        expect(await registrationOn(event.id, target)).toHaveLength(1);
+      }
+    }
+    // The endings, one per round, for whoever runs the race again (`ADDRESS_CHANGE_ENDINGS=1`).
+    if (process.env.ADDRESS_CHANGE_ENDINGS) process.stderr.write(`endings: ${endings.join(" ")}\n`);
+  });
+
+  /*
+    The same race with its one dangerous interleaving forced, since free-running calls rarely meet in it: a minter's own
+    connection supersedes the live link (its first statement), the move is started and left to block on that token, and
+    only then does the minter take the KEY SHARE its INSERT's foreign key takes. Had the move locked the row FOR UPDATE
+    before the tokens (the consent's withdrawal first), that KEY SHARE would wait on the move while the move waits on the
+    minter — PostgreSQL's 40P01. It must instead be granted at once, and both ends must finish.
+  */
+  it("the minter's KEY SHARE taken while the move waits on its token: granted, no cycle, the move ends moved", { timeout: 30_000 }, async () => {
+    const event = await createEvent();
+    const actor = { id: adminId, role: "ADMIN" as const };
+    const ana = address("ana-forced");
+    const target = address("target-forced");
+    await submitRegistration(db, event, submission(ana, "Ana"), NOW);
+    const [anaRow] = await registrationOn(event.id, ana);
+    await db.update(registrations).set({ promoConsent: true, promoConsentAt: NOW }).where(eq(registrations.id, anaRow.id));
+    const later = new Date(NOW.getTime() + 60_000);
+    await issueActionToken(db, { participantId: anaRow.participantId, registrationId: anaRow.id, purpose: "MANAGE_REGISTRATION", expiresAt: new Date(later.getTime() + 86_400_000), now: later });
+
+    const minter = await pool.connect();
+    let move: Promise<unknown> | null = null;
+    try {
+      await minter.query("BEGIN");
+      await minter.query("SET LOCAL lock_timeout = '10s'");
+      const { rows: [own] } = await minter.query<{ pid: number }>("SELECT pg_backend_pid() AS pid");
+      // The minter's first statement: the live link of its purpose, superseded (`issueActionToken`).
+      await minter.query("UPDATE email_action_tokens SET invalidated_at = $2 WHERE registration_id = $1 AND purpose = 'MANAGE_REGISTRATION' AND used_at IS NULL AND invalidated_at IS NULL", [anaRow.id, later]);
+      move = changeRegistrationAddressByStaff(db, actor, anaRow.id, target, later).then(
+        () => "moved",
+        (error: unknown) => error,
+      );
+      // Until the move is waiting on a lock the minter holds.
+      for (let tries = 0; ; tries++) {
+        const { rows } = await pool.query<{ n: number }>("SELECT count(*)::int AS n FROM pg_stat_activity WHERE $1 = ANY(pg_blocking_pids(pid))", [own.pid]);
+        if (rows[0].n > 0) break;
+        if (tries > 200) throw new Error("the move never waited on the minter's token");
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      // The minter's second statement's lock: the KEY SHARE its INSERT's foreign key takes on the registration row.
+      await minter.query("SELECT id FROM registrations WHERE id = $1 FOR KEY SHARE", [anaRow.id]);
+      await minter.query("COMMIT");
+    } catch (error) {
+      await minter.query("ROLLBACK").catch(() => undefined);
+      throw error;
+    } finally {
+      minter.release();
+    }
+    expect(await move).toBe("moved");
+    const [row] = await db.select({ promoConsent: registrations.promoConsent }).from(registrations).where(eq(registrations.id, anaRow.id));
+    expect(row.promoConsent).toBe(false);
   });
 });
