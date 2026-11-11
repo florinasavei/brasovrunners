@@ -1,5 +1,5 @@
 import type { EmailMessageType, EmailOutboxStatus } from "@/db/schema/email-outbox";
-import { isBulkMessage, waitsAsSendToMany } from "./bulk";
+import { isBulkMessage, waitsAsSendToMany, waitsForMailgunDuringStop } from "./bulk";
 import type { DeliveryTiming } from "./delivery-timing";
 import { outboxRowLeavesAt, outboxRowOverdue } from "./email-wait";
 import { pauseIsRecent } from "./hourly-pace";
@@ -66,8 +66,9 @@ export type DepartureContext = {
   /** When Mailgun's road opens again for a row nothing else carries (`mailgunReopensAt`); null while it is open. */
   mailgunReopensAt: Date | null;
   /**
-   * While Gmail carries for a stopped Mailgun, the stop's end: a send to many on Mailgun's road is not carried and waits
-   * for it (the decision «Cere reconfirmarea», part two). Null or absent otherwise.
+   * While Gmail carries for a stopped Mailgun, the stop's end: a send to many on Mailgun's road that is not one of the
+   * event's urgent notices is not carried and waits for it (the decision «Cere reconfirmarea», part two,
+   * `waitsForMailgunDuringStop`). Null or absent otherwise.
    */
   sendsToManyWaitUntil?: Date | null;
   /** The pinger's cadence at an instant (`jobs/quiet-hours.ts#pingerCadenceMinutes`). */
@@ -115,12 +116,22 @@ export function departureOf(row: DepartureRow, ctx: DepartureContext): Departure
   const dueAt = row.nextAttemptAt ?? row.createdAt;
   const sendToMany = waitsAsSendToMany(row.messageType, row.isManualResend === true);
   /*
-    Mailgun stopped with nothing carrying it, or the plan's day spent (§622) — or, for a send to many, Mailgun stopped while
-    Gmail carries only the registrations' own messages: the stop's end, unless the row's own turn is later.
+    Mailgun stopped with nothing carrying it, or the plan's day spent (§622): the stop's end, unless the row's own turn is
+    later. Or a send to many that waits for Mailgun while Gmail carries for it: the stop's end, unless its own turn is
+    later — and its turn may be the stop's end itself, which the claim gives it (`outbox.ts`): it still leaves after
+    Mailgun resumes.
   */
-  const reopensAt = row.onMailgunRoad ? (ctx.mailgunReopensAt ?? (sendToMany ? (ctx.sendsToManyWaitUntil ?? null) : null)) : null;
-  if (reopensAt && reopensAt.getTime() > now.getTime() && reopensAt.getTime() > dueAt.getTime()) {
-    return { kind: "reset", at: outboxRowLeavesAt({ dueAt: reopensAt, nextTickAt: ctx.nextTickAt, intervalMinutes: ctx.runIntervalMinutes, pingerMinutesAt: ctx.pingerMinutesAt }) };
+  const reopensAt = row.onMailgunRoad ? ctx.mailgunReopensAt : null;
+  const waitsUntil =
+    row.onMailgunRoad && !reopensAt && waitsForMailgunDuringStop(row.messageType, row.isManualResend === true) ? (ctx.sendsToManyWaitUntil ?? null) : null;
+  const resumesAt =
+    reopensAt && reopensAt.getTime() > now.getTime() && reopensAt.getTime() > dueAt.getTime()
+      ? reopensAt
+      : waitsUntil && waitsUntil.getTime() > now.getTime() && waitsUntil.getTime() >= dueAt.getTime()
+        ? waitsUntil
+        : null;
+  if (resumesAt) {
+    return { kind: "reset", at: outboxRowLeavesAt({ dueAt: resumesAt, nextTickAt: ctx.nextTickAt, intervalMinutes: ctx.runIntervalMinutes, pingerMinutesAt: ctx.pingerMinutesAt }) };
   }
   // The «imediat» timing: the request that queued it drains it after its response (§68) — only past the stop above,
   // which that drain's claim honours like the job's: a Mailgun-road row it holds is never «now».

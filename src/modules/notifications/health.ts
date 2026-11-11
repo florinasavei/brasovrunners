@@ -19,7 +19,7 @@ import {
   type StopWaitReason,
 } from "./domain/mailgun-stop";
 import { MAX_SEND_ATTEMPTS } from "./domain/retry";
-import { heldByMailgunCondition, readMailgunStop } from "./mailgun-stop";
+import { heldByMailgunCondition, readMailgunStop, waitsForMailgunCondition } from "./mailgun-stop";
 import { type OutboxDelivery, outboxOverdueCadenceMinutes, readOutboxDelivery } from "./outbox-delivery";
 
 /**
@@ -70,7 +70,8 @@ export type EmailHealth = {
   /**
    * `stalled` — something needs a person: a deferral, an overdue row, a failure (§98); `/api/health`
    * answers `degraded` and a 503 for it, and the monitor emails the owner. `degraded` (§622) — Mailgun
-   * said stop and Gmail is carrying every group for it: reported here and on «Sarcini», and not a 503 —
+   * said stop and Gmail is carrying for it (the registrations' own messages and the event's urgent notices; the other
+   * sends to many wait for Mailgun, the decision «Cere reconfirmarea», part two): reported here and on «Sarcini», and not a 503 —
    * a monitor that emailed the owner every time Mailgun paused for a quarter of an hour would be
    * emailing about the platform doing what it was built to do. Nothing overdue, deferred or failed
    * stands behind it, or it would be `stalled`.
@@ -213,9 +214,9 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
   const [roads, transport] = await Promise.all([readOutboxRoads(db, now), readEmailTransport(db)]);
   const gmailRoad = roads ? gmailRoadCondition(roads) : sql`false`;
   /*
-    Mailgun's stop and who carries for it (§622), as the claim reads them: while Gmail carries every
-    group, the rows Mailgun held back are Gmail's to send at once — not deferred to Mailgun's reset and
-    not paused — so they count in neither; a row Gmail could not carry, queued longer ago than the
+    Mailgun's stop and who carries for it (§622), as the claim reads them: while Gmail carries for it,
+    the rows Mailgun held back that Gmail carries are Gmail's to send at once — not deferred to Mailgun's reset and
+    not paused — so they count in neither (the sends to many that wait for Mailgun apart, below); a row Gmail could not carry, queued longer ago than the
     overdue allowance, is overdue while the stop it waits on is in force and nothing carries it.
   */
   const gmailHealth = await checkGmailHealth(db, now);
@@ -234,17 +235,25 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
   const carried = whileStopped.road === "gmail";
   const held = heldByMailgunCondition();
   const fallbackWaiting = sql`${emailOutbox.lastError} LIKE ${`${FALLBACK_WAITING_ERROR_PREFIX}%`}`;
-  /*
-    A send to many on Mailgun's road, its manual resends left out (`SEND_TO_MANY_MESSAGE_TYPES`): during a stop Gmail does not
-    carry it (the decision «Cere reconfirmarea», part two) — it waits for Mailgun, so a held one is counted as any row nothing
-    carries, never as carried.
-  */
+  // A send to many, its manual resends left out (`SEND_TO_MANY_MESSAGE_TYPES`): never late for waiting its turn (below).
   const sendToMany = sql`(${emailOutbox.messageType} IN (${sql.join(
     SEND_TO_MANY_MESSAGE_TYPES.map((type) => sql`${type}`),
     sql`, `,
   )}) AND NOT ${emailOutbox.isManualResend})`;
-  const carriedNow = sql`(coalesce(${held}, false) AND NOT (${sendToMany} AND NOT coalesce(${gmailRoad}, false)))`;
+  /*
+    What waits for Mailgun during a stop Gmail carries (the decision «Cere reconfirmarea», part two,
+    `waitsForMailgunCondition`): a send to many on Mailgun's road that is neither a manual resend nor one of the event's
+    urgent notices. A held one — refused, marked — is counted as any row nothing carries, never as carried. One the claim
+    gave the stop's end as its turn (no mark: `outbox.ts`) is the stop's, which `mailgunStop` reports: counted as waiting,
+    never as deferred by a provider, since nothing refused it.
+  */
+  const waitsForMailgun = sql`(${waitsForMailgunCondition()} AND NOT coalesce(${gmailRoad}, false))`;
+  const carriedNow = sql`(coalesce(${held}, false) AND NOT ${waitsForMailgun})`;
   const notCarried = (where: SQL | undefined) => (carried ? and(where, sql`NOT ${carriedNow}`) : where);
+  const turnAtStopEnd =
+    carried && stop
+      ? sql`(${waitsForMailgun} AND NOT coalesce(${held}, false) AND ${emailOutbox.nextAttemptAt} <= ${stop.until.toISOString()}::timestamptz)`
+      : sql`false`;
   const evidenceSince = new Date(now.getTime() - PACE_EVIDENCE_MS);
   const recentPause = sql`(${emailOutbox.lastError} LIKE ${`${RATE_PAUSE_ERROR_PREFIX}%`} AND ${emailOutbox.nextAttemptAt} > ${evidenceSince.toISOString()}::timestamptz)`;
   const turnWithinDeferral = sql`${emailOutbox.nextAttemptAt} <= ${deferredFrom.toISOString()}::timestamptz`;
@@ -302,7 +311,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     sql`NOT coalesce(${recentPause}, false)`,
     stopUncarried ? sql`NOT coalesce(${fallbackWaiting}, false)` : undefined,
   );
-  const deferredCounted = notCarried(deferredWhere);
+  const deferredCounted = and(notCarried(deferredWhere), sql`NOT coalesce(${turnAtStopEnd}, false)`);
   // «Sarcini»'s red row (§622): stopped rows queued past the allowance that nothing carries now.
   // A mark counts only while a stop is in force and nothing carries it; an old mark past its stop is a row waiting its turn.
   const stoppedLongWhere = stopUncarried

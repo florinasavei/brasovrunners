@@ -24,7 +24,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * in both languages for «Completează cu textul de reminder», the pace line before «Trimite», and on each «Mesaje trimise» row
  * the three numbers and the progress. The pages are Server Components, so they are called and their element trees walked.
  */
-const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en", gmail: false }));
+const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en", gmail: false, sendNow: false }));
 
 // The club's Gmail, configured only where a test says so (`gmailIsConfigured` reads the account and its app password).
 vi.mock("@/shared/config/env", async (importOriginal) => {
@@ -101,7 +101,19 @@ vi.mock("@/app/[locale]/admin/events/[id]/mesaje/actions", () => ({
   sendParticipantMessageAction: vi.fn(),
   previewParticipantMessageAction: vi.fn(),
 }));
-vi.mock("@/modules/notifications/send-now-choice", () => ({ sendNowChoiceFor: async () => null }));
+// The scheduled timing's «Trimite acum» / «Pune la coadă» choice, offered only where a test says so.
+vi.mock("@/modules/notifications/send-now-choice", () => ({
+  sendNowChoiceFor: async () =>
+    state.sendNow
+      ? {
+          choice: { field: "delivery", confirmValue: "now", alternativeValue: "queue", alternativeLabel: "Pune la coadă" },
+          note: "Pleacă acum sau la următoarea trecere.",
+          confirmLabel: "Trimite acum",
+          field: "delivery",
+          value: "now",
+        }
+      : null,
+}));
 
 const { default: AdminRegistrationsPage } = await import("@/app/[locale]/admin/registrations/(list)/page");
 const { default: RegistrationDetailPage } = await import("@/app/[locale]/admin/registrations/[id]/page");
@@ -223,6 +235,7 @@ beforeEach(async () => {
   await resetTables(db);
   state.locale = "ro";
   state.gmail = false;
+  state.sendNow = false;
 });
 
 describe("«A reconfirmat» and «Reconfirmare» on the registrations list", () => {
@@ -512,6 +525,28 @@ describe("«Trimite un mesaj participanților»", () => {
     const english = await twoHundredAndOne();
     expect(english.body).toMatch(/Mailgun is stopped now, until .+\. The message starts leaving when it restarts\./);
     expect(english.body).not.toContain("It fits this month's allowance.");
+  });
+
+  it("(e) Mailgun stopped now: the dialog offers no «Trimite acum», so the press queues and the message waits as the line says; with Mailgun open the choice is there", async () => {
+    state.sendNow = true;
+    const choicesOf = async () => {
+      const race = await createRace();
+      for (let index = 0; index < 2; index += 1) await register(race.id);
+      const tree = await messagesPage(race.id);
+      const form = elements(tree).find((element) => element.type === ActionForm);
+      const specs = form?.props.confirm as Array<{ choice?: unknown; confirmLabel: string }>;
+      const hidden = elements(tree).filter((element) => element.type === "input" && element.props.name === "delivery");
+      return { specs, hidden };
+    };
+    state.actor = await staff("MODERATOR");
+    const open = await choicesOf();
+    expect(open.specs.every((spec) => spec.choice !== undefined && spec.confirmLabel === "Trimite acum")).toBe(true);
+    expect(open.hidden).toHaveLength(1);
+
+    await recordMailgunStop(db, { kind: "paused", until: new Date(Date.now() + 20 * 60_000) }, new Date());
+    const stopped = await choicesOf();
+    expect(stopped.specs.every((spec) => spec.choice === undefined && spec.confirmLabel !== "Trimite acum")).toBe(true);
+    expect(stopped.hidden).toHaveLength(0);
   });
 
   it("(e) Mailgun stopped now (its daily allowance spent, Free with 5 sent): the stop said, no «Azi pot pleca», the daily warning kept", async () => {

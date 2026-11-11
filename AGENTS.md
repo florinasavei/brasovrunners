@@ -3233,13 +3233,21 @@ with its type. The same order for a press's own rows and in the batch handed to 
 stands in front of a verification or an offer queued after it. **No reserve**: the sends to many get no cap, no hold and
 no mark; `/api/health`, the queue panel and the public «emailurile întârzie» never call one late for waiting its turn —
 the deferred, paused-late, stopped-late, retrying-late and failed counts still catch it — while a manual resend of one is
-judged as the person's own. **During a Mailgun stop Gmail carries only the registrations' own messages**: in the carried
-path a send to many on Mailgun's road, like the bulk kind, is not claimed — no mark, no attempt spent — and leaves by
-Mailgun in its order when the stop ends; one whose own road is Gmail leaves by Gmail, and a press's own «Trimite acum»
-rows (§540), let through only with Gmail's room for all of them, leave by Gmail as the press said. **The bulk hold never carries a stop
+judged as the person's own. **During a Mailgun stop Gmail carries the registrations' own messages and the event's urgent
+notices** — `EVENT_CANCELLED` and `EVENT_UPDATE_NOTICE` (`URGENT_SEND_TO_MANY_MESSAGE_TYPES`), in their place in the
+order. The other sends to many on Mailgun's road (`waitsForMailgunDuringStop`: the reminder, the organizers' message, the
+thanks, the announcement), like the bulk kind, are not carried: the carried claim gives them the stop's end as their
+turn, in its own transaction — no mark, no attempt spent, so the job's plan (`nextOutboxWork`) reads no work due now
+until then — one caught mid-batch is handed back for the same instant, they are sent with the `bulk` flag so a refusal
+never spills them to Gmail, and they leave by Mailgun in their order when the stop ends; `/api/health` counts them as
+waiting, never as deferred. One whose own road is Gmail leaves by Gmail, and a press's own «Trimite acum» rows (§540),
+let through only with Gmail's room for all of them, leave by Gmail as the press said; «Trimite un mesaj participanților»
+offers no «Trimite acum» while the stop is drawn. One predicate, `domain/bulk.ts#waitsForMailgunDuringStop` (its SQL
+`mailgun-stop.ts#waitsForMailgunCondition`), is read by the claim, the hand-back, the sender's flag, health and the queue
+panel. **The bulk hold never carries a stop
 mark into the future**: a due row the newsletter's hold moves to the reset loses Mailgun's pause or allowance mark (its
-stop has ended; a stop in force is `platform_settings.mailgunStop`), which before closed Mailgun's whole road until
-00:05 UTC. «Trimite acum» (§540), the batch size, the pinger, the hourly pace and the newsletter's reserve are unchanged.
+stop has ended; a stop in force is `platform_settings.mailgunStop`), which before closed Mailgun's whole road until the
+next reset — up to sixteen hours. «Trimite acum» (§540), the batch size, the pinger, the hourly pace and the newsletter's reserve are unchanged.
 
 ### 16.2 Job endpoints
 

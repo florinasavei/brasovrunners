@@ -171,8 +171,8 @@ export async function reconfirmFromManageAction(form: FormData): Promise<void> {
     redirect(result.ok ? `${path}?reconfirm=1${who}#reconfirm` : `${path}?invalid=1`, RedirectType.replace);
   } catch (error) {
     if (isDomainError(error) && error.code === "VALIDATION_ERROR") redirect(`${path}?reconfirm=0${who}#reconfirm`, RedirectType.replace);
-    // A person the link does not manage: nothing was written, and the page says the press failed.
-    if (isDomainError(error)) redirect(`${path}?invalid=1`);
+    // A person the link does not manage: nothing was written, and the page says the press failed — replacing, as every answer does.
+    if (isDomainError(error)) redirect(`${path}?invalid=1`, RedirectType.replace);
     throw error;
   }
 }

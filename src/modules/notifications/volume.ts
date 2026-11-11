@@ -4,7 +4,7 @@ import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { env } from "@/shared/config/env";
 import { readClubNotices } from "./club-notices";
-import { BULK_MESSAGE_TYPES } from "./domain/bulk";
+import { BULK_MESSAGE_TYPES, sendsToManyAfter } from "./domain/bulk";
 import { declarationArchiveIsConfigured, participantMessageBcc } from "./domain/club-notices";
 import { type EmailPlanId, EMAIL_PLANS, emailCeilings, emailHeadroom } from "./domain/email-plan";
 import { readEmailPlan } from "./email-plan";
@@ -132,9 +132,11 @@ export type EmailVolumeToday = {
    */
   bulkWaitingMessages: number;
   /**
-   * The rest of them — every waiting row but the newsletter's kind — by the road the claim takes it on (§442,
-   * `outboxRoadsFor`): what stands ahead of a send to many on each road (the decision «Cere reconfirmarea», part two),
-   * the bulk kind going after it. Every one is Mailgun's where Gmail carries nothing.
+   * What stands ahead of a new organizers' message on each road, counted as the claim's order runs it (the decision
+   * «Cere reconfirmarea», part two, `domain/bulk.ts`): the registrations' own waiting rows and the manual resends, the
+   * rows of the earlier steps (the cancellation, «Detalii actualizate», the reminder) and the older organizers' messages —
+   * not the thanks or «s-au deschis înscrierile», which leave after it (`sendsToManyAfter`), nor the bulk kind. By the
+   * road the claim takes each on (§442, `outboxRoadsFor`); every one is Mailgun's where Gmail carries nothing.
    */
   waitingAhead: { mailgun: number; gmail: number };
   /**
@@ -302,16 +304,23 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
   const fallbackDisclosed = await noticeDescribesGmailFallback(db, now);
   const roads = outboxRoadsFor(transport, gmail.configured, fallbackDisclosed);
   const mailgunRoad = roads ? not(gmailRoadCondition(roads)) : undefined;
-  // What waits, the bulk kind apart, and the rest by road as the claim splits it: one query.
-  const bulkType = sql`${emailOutbox.messageType} IN (${sql.join(
-    BULK_MESSAGE_TYPES.map((type) => sql`${type}`),
-    sql`, `,
-  )})`;
+  // What waits, the bulk kind apart, and what stands ahead of an organizers' message by road as the claim splits it: one query.
+  const typeIn = (types: readonly string[]) =>
+    types.length === 0
+      ? sql`false`
+      : sql`${emailOutbox.messageType} IN (${sql.join(
+          types.map((type) => sql`${type}`),
+          sql`, `,
+        )})`;
+  const bulkType = typeIn(BULK_MESSAGE_TYPES);
+  const behind = sql`(${typeIn(sendsToManyAfter("ORGANIZER_MESSAGE"))} AND NOT ${emailOutbox.isManualResend})`;
+  const ahead = sql`(NOT ${bulkType} AND NOT ${behind})`;
   const [waiting] = await db
     .select({
       value: count(),
       bulk: count(sql`CASE WHEN ${bulkType} THEN 1 END`),
-      gmailAhead: count(sql`CASE WHEN NOT ${bulkType} AND ${roads ? gmailRoadCondition(roads) : sql`false`} THEN 1 END`),
+      ahead: count(sql`CASE WHEN ${ahead} THEN 1 END`),
+      gmailAhead: count(sql`CASE WHEN ${ahead} AND ${roads ? gmailRoadCondition(roads) : sql`false`} THEN 1 END`),
     })
     .from(emailOutbox)
     .where(sql`${emailOutbox.status} IN ('PENDING', 'PROCESSING')`);
@@ -343,7 +352,7 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     queuedMessages: queued?.value ?? 0,
     waitingMessages: waiting?.value ?? 0,
     bulkWaitingMessages: bulkWaiting,
-    waitingAhead: { mailgun: Math.max(0, (waiting?.value ?? 0) - bulkWaiting - gmailAhead), gmail: gmailAhead },
+    waitingAhead: { mailgun: Math.max(0, (waiting?.ahead ?? 0) - gmailAhead), gmail: gmailAhead },
     sentMessages,
     sentThisMonth,
     plan: setting.plan,

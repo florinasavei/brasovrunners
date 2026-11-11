@@ -484,9 +484,16 @@ own fault, `BOUNCED` for the address — and everything else waits.
 probation), or its daily or monthly allowance spent — and «Setări» → «Emailuri» → «Prin ce pleacă
 emailurile» → «Gmail preia când Mailgun se oprește» is on (the default wherever the club's Gmail is
 configured) and the privacy notice in force names `{{gmailFallback}}` in every language (a participant's
-name, links and signed PDF reach Google only under a notice that says so, §443), the outbox claims **every** group's due mail on Gmail's road, inside Gmail's own cap
+name, links and signed PDF reach Google only under a notice that says so, §443), the outbox claims on Gmail's road
+the due mail Gmail carries — the registrations' own messages, the event's urgent notices (the cancellation and
+«Detalii actualizate») and any group whose road is Gmail — inside Gmail's own cap
 («Limita Gmail pe zi», at most 500 recipients in a rolling day, shared with the people who send from
-that account by hand) and pace. The rows Mailgun held back leave at once; the `transport` column
+that account by hand) and pace. The other sends to many on Mailgun's road — the reminder, an organizers' message, the
+thanks, «s-au deschis înscrierile» — and the newsletter's kind are not carried (the decision «Cere reconfirmarea», part
+two): the claim gives them the stop's end as their turn, in its own transaction, with no mark and no attempt spent, so
+the job's plan reads no work due now on every ping until then, and they leave by Mailgun when it reopens; one caught
+mid-batch is handed back for the same instant. So a send of two hundred never spends Gmail's day, which stays for the
+registrations' own. The rows Mailgun held back that Gmail carries leave at once; the `transport` column
 records which road each row left on. The stop is recorded (`platform_settings.mailgunStop`) so the road
 stays closed after the refused row itself has left by Gmail, and Mailgun's groups return to Mailgun on
 their own when the pause ends or the reset comes. Off, under a notice that does not name it, or with

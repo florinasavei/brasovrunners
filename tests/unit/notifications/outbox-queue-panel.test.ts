@@ -362,13 +362,14 @@ describe("OutboxQueuePanel for a reader who cannot send (§529)", () => {
 describe("§622 the queue panel says Mailgun's stop, who carries for it, and offers the failed back", () => {
   const paused = { kind: "paused" as const, until: new Date(NOW.getTime() + 15 * 60_000) };
 
-  it("says «Mailgun în pauză până la HH:MM — Gmail preia» while Gmail carries, as information", async () => {
+  it("says «Mailgun în pauză până la HH:MM — Gmail preia emailurile înscrierilor și anunțurile urgente» while Gmail carries, as information", async () => {
     const volume = { ...VOLUME, mailgunStop: paused, whileStopped: { road: "gmail", stop: paused } } as Props["volume"];
     const html = await render("ro", { volume });
     expect(html).toMatch(/data-testid="outbox-stop"[^>]*data-carried="gmail"/);
-    expect(html).toMatch(/Mailgun în pauză până la \d{2}:\d{2} — Gmail preia\./);
+    // What Gmail carries, never «every group»: the other sends to many wait for Mailgun (the decision «Cere reconfirmarea», part two).
+    expect(html).toMatch(/Mailgun în pauză până la \d{2}:\d{2} — Gmail preia emailurile înscrierilor și anunțurile urgente\./);
     const english = await render("en", { volume });
-    expect(english).toMatch(/Mailgun paused until \d{2}:\d{2} — Gmail takes over\./);
+    expect(english).toMatch(/Mailgun paused until \d{2}:\d{2} — Gmail takes over the registrations/);
   });
 
   it("names why nothing carries it, as a warning: the switch, the account, the cap", async () => {

@@ -1277,7 +1277,10 @@ Ask Mailgun's support to lift the probation, then raise or clear the field on pr
 oprește» (same page, «Prin ce pleacă emailurile»; on by default wherever the club's Gmail of §38 is set
 and the privacy notice in force names `{{gmailFallback}}` — until a notice from the template is approved
 it is greyed, and «Sarcini» carries the row «Nota de confidențialitate: Gmail preia când Mailgun se oprește»)
-sends every group through Gmail until Mailgun reopens, and a refusal that is not about the message never
+sends through Gmail, until Mailgun reopens, the registrations' own emails, the event's urgent notices (the
+cancellation, «Detalii actualizate») and any group whose road is Gmail; the reminder, the organizers' messages, the
+thanks, «s-au deschis înscrierile» and the newsletter wait for Mailgun, their turn set to the stop's end, and leave when
+it reopens — so a send of two hundred never spends Gmail's day. A refusal that is not about the message never
 marks it failed; the failed come back with «Reîncearcă emailurile eșuate» on the queue (`DECISIONS.md` §622).
 
 ## 36. The anti-bot check and the health monitors — done (2026-09-19)
@@ -1353,7 +1356,8 @@ Locally the development switcher is the provider, so nothing is sent and the ale
 ## 38. The contact form — the club's Gmail lends it an app password — done (2026-09-20)
 
 **The same account is the outbox's fallback road (`DECISIONS.md` §622):** while Mailgun says stop, «Gmail
-preia când Mailgun se oprește» sends the whole queue through it — once the approved privacy notice names it
+preia când Mailgun se oprește» sends through it the registrations' own emails and the event's urgent notices — the other
+sends to many wait for Mailgun (§35) — once the approved privacy notice names it
 (`{{gmailFallback}}`, section 6 of the template), never before — at most «Limita Gmail pe zi» recipients in
 a rolling day (500 is Google's own ceiling, shared with the people who write by hand and with QA) — on a
 race morning that cap, not Mailgun's, is what decides how many confirmations still leave, so raise it there

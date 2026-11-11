@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { RECONFIRM_STATUSES, reconfirmApplies, reconfirmUrlOf } from "@/modules/notifications/domain/cannot-come";
-import { isSendToManyMessage, SEND_TO_MANY_MESSAGE_TYPES, sendOrderOf, waitsAsSendToMany } from "@/modules/notifications/domain/bulk";
+import {
+  isSendToManyMessage,
+  SEND_TO_MANY_MESSAGE_TYPES,
+  sendOrderOf,
+  sendsToManyAfter,
+  URGENT_SEND_TO_MANY_MESSAGE_TYPES,
+  WAITS_FOR_MAILGUN_MESSAGE_TYPES,
+  waitsAsSendToMany,
+  waitsForMailgunDuringStop,
+} from "@/modules/notifications/domain/bulk";
 import { BULK_CLUB_COPY_MESSAGES } from "@/modules/notifications/domain/club-notices";
 import { ORGANIZER_SUBJECT_PLACEHOLDERS, organizerParagraphs, organizerSendOutlook, readOrganizerAskReconfirm, unknownOrganizerPlaceholders } from "@/modules/notifications/domain/organizer-message";
 import { fillReminderBoxes, REMINDER_BOXES, reminderOverwrites } from "@/modules/notifications/ui/reminder-fill";
@@ -79,6 +88,23 @@ describe("the order of the claim (part two): the sends to many in one constant, 
       expect(waitsAsSendToMany(type), type).toBe(true);
     }
     expect(waitsAsSendToMany("VERIFY_REGISTRATION_EMAIL")).toBe(false);
+  });
+
+  it("names the event's two urgent notices, and only the other four wait for Mailgun during a stop", () => {
+    expect([...URGENT_SEND_TO_MANY_MESSAGE_TYPES]).toEqual(["EVENT_CANCELLED", "EVENT_UPDATE_NOTICE"]);
+    expect([...WAITS_FOR_MAILGUN_MESSAGE_TYPES]).toEqual(["EVENT_REMINDER", "ORGANIZER_MESSAGE", "EVENT_THANKS", "REGISTRATION_OPENED"]);
+    for (const type of WAITS_FOR_MAILGUN_MESSAGE_TYPES) {
+      expect(waitsForMailgunDuringStop(type), type).toBe(true);
+      expect(waitsForMailgunDuringStop(type, true), type).toBe(false);
+    }
+    for (const type of [...URGENT_SEND_TO_MANY_MESSAGE_TYPES, "VERIFY_REGISTRATION_EMAIL", "WAITLIST_SPOT_OFFER", "NEWSLETTER"] as const) {
+      expect(waitsForMailgunDuringStop(type), type).toBe(false);
+    }
+  });
+
+  it("says what a new organizers' message does not wait behind: the thanks and «s-au deschis înscrierile»", () => {
+    expect([...sendsToManyAfter("ORGANIZER_MESSAGE")]).toEqual(["EVENT_THANKS", "REGISTRATION_OPENED"]);
+    expect([...sendsToManyAfter("REGISTRATION_OPENED")]).toEqual([]);
   });
 
   it("keeps the club-copy rule apart: one copy per send for the organizers' message and «Detalii actualizate» only", () => {

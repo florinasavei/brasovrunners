@@ -4,6 +4,7 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import type { Database } from "@/db/types";
 import { ALLOWANCE_DEFERRED_ERROR_PREFIX, type MailgunStop, stopInForce } from "./domain/mailgun-stop";
 import { RATE_PAUSE_ERROR_PREFIX } from "./domain/hourly-pace";
+import { WAITS_FOR_MAILGUN_MESSAGE_TYPES } from "./domain/bulk";
 
 /**
  * Whether Mailgun's road is closed now, and until when (§622, `domain/mailgun-stop.ts`).
@@ -25,6 +26,18 @@ export const MAILGUN_STOP_KEY = "mailgunStop";
 /** The waiting rows a provider's stop holds, as SQL: marked, not yet due. */
 export function heldByMailgunCondition(): SQL {
   return sql`(${emailOutbox.lastError} LIKE ${`${RATE_PAUSE_ERROR_PREFIX}%`} OR ${emailOutbox.lastError} LIKE ${`${ALLOWANCE_DEFERRED_ERROR_PREFIX}%`})`;
+}
+
+/**
+ * `domain/bulk.ts#waitsForMailgunDuringStop` as SQL (the decision «Cere reconfirmarea», part two): a send to many that is
+ * neither an Administrator's manual resend nor one of the event's urgent notices — what waits for Mailgun while Gmail
+ * carries for it. The carried claim and `/api/health` read it; the road is the caller's to add.
+ */
+export function waitsForMailgunCondition(): SQL {
+  return sql`(${emailOutbox.messageType} IN (${sql.join(
+    WAITS_FOR_MAILGUN_MESSAGE_TYPES.map((type) => sql`${type}`),
+    sql`, `,
+  )}) AND NOT ${emailOutbox.isManualResend})`;
 }
 
 /**

@@ -11,6 +11,8 @@ import { EMAIL_PLAN_SETTING_KEY } from "@/modules/notifications/email-plan";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import { readMailgunStop, recordMailgunStop } from "@/modules/notifications/mailgun-stop";
 import { claimOutboxBatch, type OutboxRoads, type OutboxRow, processOutboxBatch } from "@/modules/notifications/outbox";
+import { readEmailVolumeToday } from "@/modules/notifications/volume";
+import { nextOutboxWork } from "@/modules/jobs/next-work";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -20,8 +22,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * many — the cancellation, «Detalii actualizate», the automatic reminder, the organizers' message, the thank-you and
  * «s-au deschis înscrierile» (`SEND_TO_MANY_MESSAGE_TYPES`, a club copy with its type); (7) the bulk ones under their cap.
  * No reserve, no hold and no mark for the sends to many: so a provider's pause on one of their rows never outlives the
- * pause, and `/api/health` reads a send draining at the queue's pace as `ok`. While Mailgun is stopped Gmail carries only
- * the registrations' own messages; the bulk hold never carries a stop mark into the future. PGlite is one connection: the
+ * pause, and `/api/health` reads a send draining at the queue's pace as `ok`. While Mailgun is stopped Gmail carries the
+ * registrations' own messages and the event's urgent notices; the other sends to many wait for Mailgun, their turn the
+ * stop's end; the bulk hold never carries a stop mark into the future. PGlite is one connection: the
  * order and the caps are what is proven here, never `SKIP LOCKED` (see `outbox.test.ts`).
  */
 // 10:00 in Brașov (UTC+2 in November): a day hour, the pinger every fifteen minutes.
@@ -334,59 +337,114 @@ describe("BR-REQ-080-02 the bulk hold never carries a stop mark into the future 
   });
 });
 
-describe("BR-REQ-080-02 during a Mailgun stop Gmail carries only the registrations' own messages", () => {
+describe("BR-REQ-080-02 during a Mailgun stop Gmail carries the registrations' own messages and the event's urgent notices", () => {
   const FALLBACK: OutboxRoads = { gmailMessageTypes: [], gmailClubCopies: false, gmailBatchSize: 20, fallbackToGmail: true };
 
-  /** A verification and one of each of three sends to many on Mailgun's road, the sends queued first. */
+  /** A verification, the event's two urgent notices and one of each of the four sends that wait, on Mailgun's road, the sends queued first. */
   async function queueRoad() {
+    const cancelled = [await queue("EVENT_CANCELLED", at(-29)), await queue("EVENT_CANCELLED", at(-28))];
     const notice = await queue("EVENT_UPDATE_NOTICE", at(-30));
     const reminder = await queue("EVENT_REMINDER", at(-31));
     const message = await queue("ORGANIZER_MESSAGE", at(-32));
+    const thanks = await queue("EVENT_THANKS", at(-33));
+    const opened = await queue("REGISTRATION_OPENED", at(-34));
     const verification = await queue("VERIFY_REGISTRATION_EMAIL", at(-1));
-    return { notice, reminder, message, verification };
+    return { cancelled, notice, waiting: [reminder, message, thanks, opened], verification };
   }
 
   for (const kind of ["paused", "allowance"] as const) {
-    it(`stopped by ${kind === "paused" ? "a pause" : "a spent daily allowance"}: the verification is carried by Gmail, the three sends wait untouched and leave by Mailgun in order once the stop ends`, async () => {
+    it(`stopped by ${kind === "paused" ? "a pause" : "a spent daily allowance"}: the verification, then the cancellation and «Detalii actualizate» by Gmail; the reminder, the organizers' message, the thanks and «s-au deschis înscrierile» wait and leave by Mailgun in order once the stop ends`, async () => {
       if (kind === "allowance") await sentToday(100);
       else await noCeiling();
       const until = kind === "paused" ? at(15) : nextAllowanceResetAt(NOW);
       await recordMailgunStop(db, { kind, until }, NOW);
-      const { notice, reminder, message, verification } = await queueRoad();
+      const { cancelled, notice, waiting, verification } = await queueRoad();
 
       const sender = recordingSender();
       const summary = await processOutboxBatch(db, { sender, render, now: NOW, roads: FALLBACK });
-      expect(sender.calls.map((call) => call.idempotencyKey)).toEqual([verification.idempotencyKey]);
-      expect(sender.calls[0].gmailOnly).toBe(true);
+      expect(sender.calls.map((call) => call.idempotencyKey)).toEqual([verification, ...cancelled, notice].map((row) => row.idempotencyKey));
+      expect(sender.calls.every((call) => call.gmailOnly === true)).toBe(true);
       expect(summary.carried?.stop.kind).toBe(kind);
-      for (const row of [notice, reminder, message]) {
+      for (const row of waiting) {
+        // No mark and no attempt spent: only their turn, the stop's end (no wake on every ping in between).
         const [now] = await db.select().from(emailOutbox).where(eq(emailOutbox.id, row.id));
-        expect(now, row.messageType).toMatchObject({ status: "PENDING", attemptCount: 0, lastError: null, nextAttemptAt: null, lockedAt: null });
+        expect(now, row.messageType).toMatchObject({ status: "PENDING", attemptCount: 0, lastError: null, lockedAt: null });
+        expect(now.nextAttemptAt?.getTime(), row.messageType).toBe(until.getTime());
       }
 
       // The stop over (and, for the allowance, the day's count with it): they leave by Mailgun, in the claim's order.
       const after = new Date(until.getTime() + MINUTE);
       const later = recordingSender();
       await processOutboxBatch(db, { sender: later, render, now: after, roads: FALLBACK });
-      expect(later.calls.map((call) => call.idempotencyKey)).toEqual([notice.idempotencyKey, reminder.idempotencyKey, message.idempotencyKey]);
+      expect(later.calls.map((call) => call.idempotencyKey)).toEqual(waiting.map((row) => row.idempotencyKey));
       // …and never spilled to Gmail should Mailgun refuse one: marked as the bulk kind is.
       expect(later.calls.every((call) => call.gmailOnly === undefined && call.bulk === true)).toBe(true);
     });
   }
 
+  it("sends the urgent notices without the bulk flag, so a refusal by Mailgun may still spill them to Gmail as before", async () => {
+    await noCeiling();
+    const notice = await queue("EVENT_UPDATE_NOTICE", at(-2));
+    const cancelled = await queue("EVENT_CANCELLED", at(-1));
+    const message = await queue("ORGANIZER_MESSAGE", at(-3));
+    const sender = recordingSender();
+    await processOutboxBatch(db, { sender, render, now: NOW, roads: FALLBACK });
+    const byKey = new Map(sender.calls.map((call) => [call.idempotencyKey, call]));
+    expect(byKey.get(cancelled.idempotencyKey)?.bulk).toBeUndefined();
+    expect(byKey.get(notice.idempotencyKey)?.bulk).toBeUndefined();
+    expect(byKey.get(message.idempotencyKey)?.bulk).toBe(true);
+  });
+
+  it("gives a waiting organizers' message its turn at the stop's end: no mark, no attempt spent, the job's plan not due now, and it leaves by Mailgun when the stop ends", async () => {
+    await noCeiling();
+    const until = at(45);
+    await recordMailgunStop(db, { kind: "paused", until }, NOW);
+    const message = await queue("ORGANIZER_MESSAGE", at(-10), { attemptCount: 2 });
+    expect((await nextOutboxWork(db))?.getTime()).toBeLessThanOrEqual(NOW.getTime());
+
+    await processOutboxBatch(db, { sender: recordingSender(), render, now: NOW, roads: FALLBACK });
+    const [held] = await db.select().from(emailOutbox).where(eq(emailOutbox.id, message.id));
+    expect(held).toMatchObject({ status: "PENDING", attemptCount: 2, lastError: null });
+    expect(held.nextAttemptAt?.getTime()).toBe(until.getTime());
+    // The job's plan reads the stop's end, not work due now: no wake on every ping until then.
+    expect((await nextOutboxWork(db))?.getTime()).toBe(until.getTime());
+    // A second pass during the stop changes nothing.
+    await processOutboxBatch(db, { sender: recordingSender(), render, now: at(15), roads: FALLBACK });
+    expect((await db.select().from(emailOutbox).where(eq(emailOutbox.id, message.id)))[0]).toMatchObject({ attemptCount: 2, lastError: null });
+
+    const later = recordingSender();
+    await processOutboxBatch(db, { sender: later, render, now: new Date(until.getTime() + MINUTE), roads: FALLBACK });
+    expect(later.calls.map((call) => call.idempotencyKey)).toEqual([message.idempotencyKey]);
+    expect(later.calls[0].gmailOnly).toBeUndefined();
+  });
+
+  it("clears an old stop mark off a due reminder it gives the stop's end, as the bulk hold does: no witness of a stop is carried ahead", async () => {
+    await noCeiling();
+    const until = at(45);
+    await recordMailgunStop(db, { kind: "paused", until }, NOW);
+    const reminder = await queue("EVENT_REMINDER", at(-60), { lastError: `${RATE_PAUSE_ERROR_PREFIX}429 too many requests`, nextAttemptAt: at(-1) });
+    const other = await queue("ORGANIZER_MESSAGE", at(-60), { lastError: "mailgun 503: try later", nextAttemptAt: at(-1) });
+    await processOutboxBatch(db, { sender: recordingSender(), render, now: NOW, roads: FALLBACK });
+    const [moved] = await db.select().from(emailOutbox).where(eq(emailOutbox.id, reminder.id));
+    expect(moved).toMatchObject({ status: "PENDING", lastError: null });
+    expect(moved.nextAttemptAt?.getTime()).toBe(until.getTime());
+    const [kept] = await db.select().from(emailOutbox).where(eq(emailOutbox.id, other.id));
+    expect(kept.lastError).toBe("mailgun 503: try later");
+  });
+
   it("with the organizers' group on Gmail's road, the organizers' message leaves by Gmail during the stop, as its road says", async () => {
     await noCeiling();
     await recordMailgunStop(db, { kind: "paused", until: at(15) }, NOW);
-    const { notice, reminder, message, verification } = await queueRoad();
+    const { cancelled, notice, waiting, verification } = await queueRoad();
     const roads: OutboxRoads = { ...FALLBACK, gmailMessageTypes: ["ORGANIZER_MESSAGE"] };
     const sender = recordingSender();
     await processOutboxBatch(db, { sender, render, now: NOW, roads });
-    expect(sender.calls.map((call) => call.idempotencyKey)).toEqual([verification.idempotencyKey, message.idempotencyKey]);
+    const [reminder] = waiting;
+    const message = waiting[1];
+    expect(sender.calls.map((call) => call.idempotencyKey)).toEqual([verification, ...cancelled, notice, message].map((row) => row.idempotencyKey));
     expect(sender.calls.every((call) => call.transport === "gmail" || call.gmailOnly === true)).toBe(true);
-    for (const row of [notice, reminder]) {
-      const [now] = await db.select().from(emailOutbox).where(eq(emailOutbox.id, row.id));
-      expect(now, row.messageType).toMatchObject({ status: "PENDING", attemptCount: 0, lastError: null });
-    }
+    const [now] = await db.select().from(emailOutbox).where(eq(emailOutbox.id, reminder.id));
+    expect(now).toMatchObject({ status: "PENDING", attemptCount: 0, lastError: null });
   });
 
   it("a press's own «Trimite acum» rows still leave by Gmail during the stop: the press was let through with Gmail's room for all of it", async () => {
@@ -408,6 +466,25 @@ describe("BR-REQ-080-02 during a Mailgun stop Gmail carries only the registratio
     const roads: OutboxRoads = { gmailMessageTypes: [], gmailClubCopies: false, gmailBatchSize: 4, fallbackToGmail: true };
     const claimed = await claimOutboxBatch(db, { now: NOW, batchSize: 20, roads });
     expect(claimed.map((row) => row.id)).toEqual([verification.id]);
+  });
+});
+
+describe("BR-REQ-080-02 what waits ahead of a new organizers' message, counted as the claim's order runs it", () => {
+  it("counts the registrations' own, a manual resend, the earlier steps and the older organizers' messages — not the thanks, «s-au deschis înscrierile» or the bulk kind", async () => {
+    await queue("VERIFY_REGISTRATION_EMAIL", at(-5));
+    await queue("EVENT_THANKS", at(-5), { isManualResend: true });
+    await queue("EVENT_CANCELLED", at(-5));
+    await queue("EVENT_UPDATE_NOTICE", at(-5));
+    await queue("EVENT_REMINDER", at(-5));
+    await burst(3, at(-5));
+    await burst(4, at(-5), "EVENT_THANKS");
+    await burst(2, at(-5), "REGISTRATION_OPENED");
+    await queue("NEWSLETTER", at(-5));
+    const volume = await readEmailVolumeToday(db, NOW);
+    // 1 verification + 1 manual resend + the cancellation, the notice and the reminder + 3 organizers' messages.
+    expect(volume.waitingAhead).toEqual({ mailgun: 8, gmail: 0 });
+    expect(volume.waitingMessages).toBe(15);
+    expect(volume.bulkWaitingMessages).toBe(1);
   });
 });
 

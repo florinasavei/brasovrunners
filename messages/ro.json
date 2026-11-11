@@ -5186,9 +5186,11 @@
           "title": "Emailuri pe care nu le duce nimeni",
           "todo": "Mailgun a spus stop de peste 90 de minute și nimic nu duce emailurile, un email e refuzat temporar și după șase încercări sau unul a eșuat în ultimele 7 zile.",
           "broken": "Mailgun a spus stop de peste 90 de minute și nimic nu duce emailurile, un email e refuzat temporar și după șase încercări sau unul a eșuat în 7 zile. Nimic nu s-a pierdut.",
-          "done": "Niciun email blocat sau eșuat. Dacă Mailgun spune stop, Gmail preia (când comutatorul e pornit).",
+          "done": "Niciun email blocat sau eșuat. Dacă Mailgun spune stop, Gmail duce emailurile înscrierilor și anunțurile urgente (când comutatorul e pornit).",
           "how": [
-            "«Setări» → «Emailuri» → «Prin ce pleacă emailurile» → «Gmail preia când Mailgun se oprește»: Da → «Salvează drumurile». Cât timp Mailgun e în pauză sau fără cotă, Gmail duce toate grupurile.",
+            "«Setări» → «Emailuri» → «Prin ce pleacă emailurile» → «Gmail preia când Mailgun se oprește»: Da → «Salvează drumurile».",
+            "Cât timp Mailgun e în pauză sau fără cotă, Gmail duce emailurile înscrierilor, anulările, „Detalii actualizate” și grupurile care pleacă oricum prin Gmail.",
+            "Reminderul, mesajele organizatorilor, mulțumirile, „Înscrierile s-au deschis” și newsletterul așteaptă Mailgun și pleacă singure când reia.",
             "Dacă Gmail și-a atins limita: tot acolo, «Limita Gmail pe zi» mai sus (cel mult 500, din care oamenii clubului mai trimit și de mână).",
             "Emailurile eșuate: «Setări» → «Emailuri» → «Coada de trimitere» → «Reîncearcă emailurile eșuate». Le pune înapoi în coadă, de la prima încercare.",
             "Un email refuzat temporar (5xx, 404) se reîncearcă singur în fiecare oră; motivul e pe rândul lui din coadă. Un 404 care nu trece: verifică MAILGUN_API_BASE_URL și MAILGUN_DOMAIN pe Vercel.",
@@ -7745,7 +7747,7 @@
           "allowance": "Cota Mailgun epuizată până la {hour}",
           "line": "{stop} — {carried}.",
           "carried": {
-            "gmail": "Gmail preia",
+            "gmail": "Gmail preia emailurile înscrierilor și anunțurile urgente",
             "fallbackOff": "Gmail nu preia: «Gmail preia când Mailgun se oprește» e oprit",
             "gmailUnconfigured": "Gmail nu e configurat",
             "gmailCapSpent": "Gmail și-a atins limita pe zi",
@@ -8069,7 +8071,7 @@
         },
         "overflow": "Când Mailgun a terminat mesajele de azi",
         "overflowOptions": {
-          "yes": "Trimite prin Gmail, în limita lui",
+          "yes": "Prin Gmail, în limita lui: emailurile înscrierilor, anulările și „Detalii actualizate”; restul așteaptă până mâine",
           "no": "Așteaptă până mâine"
         },
         "lastFailure": "Ultima eroare Gmail: {when}, „{error}”. Mesajele de atunci au plecat prin Mailgun sau așteaptă o nouă încercare. Dacă eroarea e „smtp EAUTH”, parola de aplicație a contului trebuie refăcută.",
@@ -8081,7 +8083,7 @@
         "readOnly": "Setarea o schimbă Administratorul.",
         "updatedAt": "Setat {when}.",
         "fallback": "Gmail preia când Mailgun se oprește",
-        "fallbackHelp": "Cât timp Mailgun a cerut o pauză sau cota lui e epuizată, toate grupurile pleacă prin Gmail, în limita și ritmul lui; când Mailgun reia, grupurile lui se întorc singure la el.",
+        "fallbackHelp": "Gmail duce atunci emailurile înscrierilor, anulările și „Detalii actualizate”. Reminderul, mesajele organizatorilor, mulțumirile, „Înscrierile s-au deschis” și newsletterul așteaptă Mailgun.",
         "fallbackUnconfigured": "Indisponibil: Gmail-ul clubului nu e configurat pe acest mediu (CONTACT_SMTP_USER și CONTACT_SMTP_PASSWORD).",
         "fallbackNotice": "Oprit până la aprobarea notei din șablonul nou: nota în vigoare nu spune încă că un mesaj poate pleca prin Gmail. Pornește singur după aprobare.",
         "fallbackOptions": {
@@ -13144,7 +13146,7 @@
     "emailHealth": {
       "ok": "Trimiterea funcționează: nimic amânat, întârziat sau eșuat. /api/health?deep=1 răspunde 200.",
       "stalled": "Trimiterea s-a oprit — amânate (limita zilnică): {deferred}; întârziate: {overdue}; eșuate în 7 zile: {failed}. Motiv: „{reason}”. /api/health?deep=1 răspunde 503 până se rezolvă.",
-      "degraded": "Mailgun a spus stop și Gmail duce toate grupurile până reia; nimic întârziat sau eșuat. /api/health?deep=1 răspunde 200 și o spune în blocul „email”."
+      "degraded": "Mailgun a spus stop. Până reia, Gmail duce emailurile înscrierilor și anunțurile urgente; restul așteaptă Mailgun. /api/health?deep=1 răspunde 200 și o spune în blocul „email”."
     },
     "registrationsToday": "Înscrieri astăzi",
     "testRegistrations": "de test",

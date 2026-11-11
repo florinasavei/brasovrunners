@@ -116,8 +116,9 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
     worded here for every choice so the composer switches sentences and does no arithmetic — on the road the send's
     messages really take: the participants' on the group's road, the club's copy on its own (`preferredTransport`), both
     Mailgun's where Gmail is not configured. No reserve: the outbox claims a send to many after every registration's own
-    message on its road and holds none of it back, so what waits ahead of it is every waiting row on that road but the
-    bulk kind (`volume.waitingAhead`), and the line says only what the queue will do.
+    message on its road and holds none of it back, so what waits ahead of it is what the claim's order takes first on that
+    road — the registrations' own, the earlier sends to many and the older organizers' messages (`volume.waitingAhead`) —
+    and the line says only what the queue will do.
   */
   const [transport, cadence] = await Promise.all([readEmailTransport(db), readJobCadence(db)]);
   const roadOf = (clubCopy: boolean) => (volume.gmailConfigured ? preferredTransport(transport, "ORGANIZER_MESSAGE", clubCopy) : "mailgun");
@@ -145,8 +146,9 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
   const planPath = { settings: t("nav.settings"), emails: t("settingsTabs.emails"), plan: t("emails.plan.title") };
   /*
     Mailgun stopped now (§622), read once with the volume, as `/api/health` reads it (`readMailgunStop` on Mailgun's road):
-    a send to many on Mailgun's road waits for it — Gmail carries only the registrations' own messages — so the line says
-    so, until when, and no sentence about what leaves now or today stands beside it.
+    an organizers' message on Mailgun's road waits for it — Gmail carries the registrations' own messages and the event's
+    urgent notices, never this one (`waitsForMailgunDuringStop`) — so the line says so, until when, and no sentence about
+    what leaves now or today stands beside it. Drawn only on Mailgun's road, where the send's messages go.
   */
   const mailgunStoppedLine = volume.mailgunStop
     ? t("participantMessages.mailgunStopped", {
@@ -253,8 +255,14 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
     number — `countParticipantMessageAudiences`, the count the send itself queues from. One spec
     per radio choice, picked by the `audience` the form posts, so the dialog is the group's own.
   */
-  // «Trimite acum» or «Pune la coadă» (§540): under the scheduled timing, the send asks which.
-  const sendNow = await sendNowChoiceFor(db, locale);
+  /*
+    «Trimite acum» or «Pune la coadă» (§540): under the scheduled timing, the send asks which — but not while the line
+    «Mailgun e oprit acum…» is drawn: «now» would either send the whole group by the club's Gmail at once or be refused,
+    and both contradict the line. With no choice the press queues, and the message waits as the line says. The queue
+    panel's own «Trimite acum» for chosen rows keeps its exception: an Administrator's deliberate press (`outbox.ts`).
+  */
+  const stopLineDrawn = participantsRoad !== "gmail" && mailgunStoppedLine !== null;
+  const sendNow = stopLineDrawn ? null : await sendNowChoiceFor(db, locale);
   const sendConfirm = audiences.map((choice) =>
     withSendNowChoice(
       {
