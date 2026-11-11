@@ -86,6 +86,8 @@ export async function GET(request: Request): Promise<Response> {
   const outside = url.searchParams.get("outside");
   // The bibs page's filter (§664): the file is the rows on screen.
   const memberBib = url.searchParams.get("memberBib");
+  // «De la parteneri» (the decision «De la parteneri»): the list's filter, so the file is the rows on screen.
+  const partner = url.searchParams.get("partner");
   // The reader's language (§785), as the sponsor list's `lang`: the words of «Note interne» — its header, its roles.
   const lang = url.searchParams.get("lang");
   const locale: Locale = (routing.locales as readonly string[]).includes(lang ?? "") ? (lang as Locale) : routing.defaultLocale;
@@ -127,6 +129,7 @@ export async function GET(request: Request): Promise<Response> {
     promoConsented: promo === "1" || undefined,
     outsideCapacity: outside === "1" || undefined,
     memberBibAsked: memberBib === "asked" || undefined,
+    fromPartner: partner === "1" || undefined,
     search: search || undefined,
     excludeTest: true,
     },
@@ -156,6 +159,8 @@ export async function GET(request: Request): Promise<Response> {
     One grouped query for the exported rows (never one per row), the author as a role, the date on each event's own clock.
   */
   const withNotes = canKeepRegistrationNotes(actor.role);
+  // «Partener» (the decision «De la parteneri»): in every file, for every role that gets one, headed in the reader's language.
+  const partnerHeader = (await getTranslations({ locale, namespace: "Admin" }))("partner.column");
   let notesHeader: string | undefined;
   const notes = new Map<string, string>();
   if (withNotes) {
@@ -262,6 +267,7 @@ export async function GET(request: Request): Promise<Response> {
         // «Până când» (§650): the moment on the club's clock and what it is for, in words.
         deadline: deadlineOf(row)?.at ?? null,
         deadlineFor: deadlineOf(row)?.kind ?? null,
+        partnerName: row.partnerName,
         notes: notes.get(row.id) ?? "",
         // The footer's inputs (§787): is this one of the club's runners, and which event.
         clubRunner: isClubRunner(row),
@@ -271,7 +277,7 @@ export async function GET(request: Request): Promise<Response> {
       })),
       eventTitle ?? "Participants",
       // «Status» is a drop-down (§790, amended), its error box in the reader's language.
-      { notesHeader, statistics, statusPick: { title: statsT("registrations.sheetpick.title"), error: statsT("registrations.sheetpick.error") } },
+      { notesHeader, partnerHeader, statistics, statusPick: { title: statsT("registrations.sheetpick.title"), error: statsT("registrations.sheetpick.error") } },
     );
 
     return new NextResponse(new Uint8Array(workbook), {
@@ -335,10 +341,12 @@ export async function GET(request: Request): Promise<Response> {
       ageOnRaceDay: ageOnRaceDay(row.birthDate, row.eventStartsAt, row.eventTimezone),
       country: row.country,
       city: row.city,
+      // «Partener» (the decision «De la parteneri»), before the notes.
+      partnerName: row.partnerName,
       // «Note interne» (§785), last, written only with the header — a role that may keep notes.
       notes: notes.get(row.id) ?? "",
     })),
-    { notesHeader },
+    { notesHeader, partnerHeader },
   );
 
   return new NextResponse(csv, {

@@ -170,20 +170,21 @@ export async function findInvitationOfRegistration<T extends Record<string, unkn
 /**
  * An event's invitations, the newest first, for the backoffice's «Invitații», each with who sent it (a staff name, or null
  * once that row is gone) and, once accepted, whether the registration it became is marked «Elită» now (`acceptedElite`,
- * §917) — the mark as it stands, which «Nu mai e elită» may have taken off since the send's tick; null while not accepted.
+ * §917) — the mark as it stands, which «Nu mai e elită» may have taken off since the send's tick; null while not accepted —
+ * and, the same way, the partner's name on that registration now (`acceptedPartnerName`, the decision «De la parteneri»).
  */
 export async function listEventInvitations<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
-): Promise<(EventInvitation & { invitedByName: string | null; acceptedElite: boolean | null })[]> {
+): Promise<(EventInvitation & { invitedByName: string | null; acceptedElite: boolean | null; acceptedPartnerName: string | null })[]> {
   const rows = await db
-    .select({ invitation: eventInvitations, invitedByName: staffUsers.displayName, acceptedElite: registrations.elite })
+    .select({ invitation: eventInvitations, invitedByName: staffUsers.displayName, acceptedElite: registrations.elite, acceptedPartnerName: registrations.partnerName })
     .from(eventInvitations)
     .leftJoin(staffUsers, eq(staffUsers.id, eventInvitations.invitedByStaffUserId))
     .leftJoin(registrations, eq(registrations.id, eventInvitations.acceptedRegistrationId))
     .where(eq(eventInvitations.eventId, eventId))
     .orderBy(desc(eventInvitations.createdAt), asc(eventInvitations.id));
-  return rows.map((row) => ({ ...row.invitation, invitedByName: row.invitedByName ?? null, acceptedElite: row.acceptedElite ?? null }));
+  return rows.map((row) => ({ ...row.invitation, invitedByName: row.invitedByName ?? null, acceptedElite: row.acceptedElite ?? null, acceptedPartnerName: row.acceptedPartnerName ?? null }));
 }
 
 /**

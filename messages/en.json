@@ -2665,7 +2665,8 @@
       "RESULT_FINISH_NOT_STARTED": "The race has not started yet: a finish cannot be before the start.",
       "RESULT_FINISH_CLOSED": "The start was more than a day ago: the times are entered under «Results».",
       "REFUSAL_NEEDS_EMAIL": "Nothing was cancelled: the club's refusal always goes with the email that tells the person its ground.",
-      "ELITE_NOT_MARKED": "The registration is no longer marked elite, so its elite ticks no longer change. Nothing was written."
+      "ELITE_NOT_MARKED": "The registration is no longer marked elite, so its elite ticks no longer change. Nothing was written.",
+      "PARTNER_NAME_MISSING": "Write the partner's or sponsor's name, or untick «From a partner»."
     },
     "editor": {
       "draftPreview": {
@@ -11778,6 +11779,18 @@
       "fromList": "Moving from the internal list: {name}. The note moves onto the registration and the line leaves the internal list. From here it is an ordinary registration, with its email.",
       "fromListClosed": "{name} is on the internal list of an event that takes no registrations now; the form is not filled."
     },
+    "partner": {
+      "tick": "From a partner",
+      "name": "Partner's or sponsor's name",
+      "nameHelp": "Internal: the person is not told. Unticked, the name is cleared.",
+      "chip": "Partner: {name}",
+      "filter": "From partners",
+      "filterHelp": "Only the registrations with a partner's or sponsor's name.",
+      "column": "Partner",
+      "title": "From partners",
+      "save": "Save the partner",
+      "dialog": "The registrations will be marked «Partner: {name}» — internal, the people are not told."
+    },
     "waitlistAdd": {
       "title": "Add to the waiting list",
       "panelTitle": "Official waiting list",
@@ -14042,7 +14055,10 @@
       "membersInvitedProviderFailed": "Some Zitadel accounts are not ready: see the report above.",
       "eventInvitationsErased": "Invitations withdrawn and erased.",
       "eventImportedOver": "Imported over the event.",
-      "eliteTicked": "The elite tick was saved. Nothing was sent to anyone."
+      "eliteTicked": "The elite tick was saved. Nothing was sent to anyone.",
+      "partnerSaved": "The partner was saved. Nothing was sent to anybody.",
+      "partnerCleared": "No longer from a partner. Nothing was sent to anybody.",
+      "partnerUnchanged": "It already was; nothing to change."
     },
     "mail": {
       "now": "Leaving now{road}: {what}.",

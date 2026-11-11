@@ -85,7 +85,16 @@ import InvitationsPanel from "@/modules/registrations/ui/InvitationsPanel";
 import ReserveListPanel from "@/modules/registrations/ui/ReserveListPanel";
 import WaitlistAddForm from "@/modules/registrations/ui/WaitlistAddForm";
 import { listReserveEntries } from "@/modules/registrations/reserve-list";
-import { addReserveEntryAction, deleteReserveEntryAction, moveReserveEntryToEliteAction, moveReserveEntryToOwnAddressAction, renameReserveEntryAction, saveReserveNoteAction } from "../reserve-actions";
+import { listPartnerSuggestions } from "@/modules/registrations/partner-mark";
+import {
+  addReserveEntryAction,
+  deleteReserveEntryAction,
+  moveReserveEntryToEliteAction,
+  moveReserveEntryToOwnAddressAction,
+  renameReserveEntryAction,
+  saveReserveNoteAction,
+  saveReservePartnerAction,
+} from "../reserve-actions";
 import { inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
@@ -147,6 +156,8 @@ type Props = {
 
 /** «Invită pe email»'s glyph, from the one registry by name (§694). */
 const SendIcon = ACTION_ICONS.send;
+/** «De la parteneri»'s filter glyph: the partners' handshake, from the same registry by name. */
+const PartnerFilterIcon = ACTION_ICONS.sponsors;
 
 export const dynamic = "force-dynamic";
 
@@ -193,7 +204,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canReadRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, bounced, promo, outside, memberBib, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test, memberSweep } = current;
+  const { eventId, status, clubMember, bounced, promo, outside, memberBib, partner, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test, memberSweep } = current;
   // What «Trimite acum» said about Mailgun's stop (§622): from the action's own address; unreadable says nothing.
   const untilParsed = current.until ? new Date(current.until) : null;
   const untilAt = untilParsed && !Number.isNaN(untilParsed.getTime()) ? untilParsed : null;
@@ -224,6 +235,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     promoConsented?: true;
     outsideCapacity?: true;
     memberBibAsked?: true;
+    fromPartner?: true;
     search?: string;
   } = {
     status: isRegistrationStatus(status) ? status : undefined,
@@ -237,6 +249,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     outsideCapacity: outside === "1" || undefined,
     // The bibs page's link (§664): who asked for the members' bib and is no member account's.
     memberBibAsked: memberBib === "asked" || undefined,
+    // «De la parteneri» (the decision «De la parteneri»): the rows with a partner's name — in the list's one `WHERE`, so its count and pages too.
+    fromPartner: partner === "1" || undefined,
     search: q || undefined,
   };
 
@@ -375,6 +389,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     promo: promo === "1" ? "1" : undefined,
     outside: outside === "1" ? "1" : undefined,
     memberBib: memberBib === "asked" ? "asked" : undefined,
+    // «De la parteneri»: rides with every sort, page and export link, as the promo filter does — the file is the rows on screen.
+    partner: partner === "1" ? "1" : undefined,
     q,
     sort: current.sort,
     dir: current.dir,
@@ -391,7 +407,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     `defaultEventFilter` over it, so `all` and a bookmarked link mean there what they mean here.
   */
   const exportQueryString = buildListHref("", listParams, { eventId: eventFilter.eventId ?? ALL_EVENTS }).replace(/^\?/, "");
-  const hasFilters = Boolean(eventId || status || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || q);
+  const hasFilters = Boolean(eventId || status || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || partner === "1" || q);
   /*
     Nobody chose a filter, yet the list is still narrowed: `defaultEventFilter` scoped it to the
     featured event with no URL parameter to show for it (§178). This is the shape §277 named —
@@ -505,6 +521,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="outside-chip" />}
           {/* «Elită» (§897): the bib prints with the name where the number goes — for every role that reads the list. */}
           {row.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={t("registrations.elite.chip")} testId="elite-chip" />}
+          {/* «Partener: {name}» (the decision «De la parteneri»): the organizers' own label, for every role that reads the list. */}
+          {row.partnerName && <StatusChip glyph="fromPartner" variant="outlined" label={t("partner.chip", { name: row.partnerName })} testId="partner-chip" />}
           {/* «Date lipsă» (§905): a registration still standing lacks answers the form requires — the person completes them
               from their own link, or the Administrator types them; the registration's page says which and how. */}
           {isActiveStatus(row.status) && missingAnswersHeld(row).length > 0 && (
@@ -766,7 +784,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filter: an invitation has no state, number or city a filter could ask about, and it is not counted in
     the results.
   */
-  const otherFilters = Boolean(status || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || q);
+  const otherFilters = Boolean(status || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || partner === "1" || q);
   const leadEvent = filters.eventId && query.page === 1 && !otherFilters ? filters.eventId : null;
   const leadNow = new Date();
   const leadInvitations = leadEvent ? (await listEventInvitations(db, leadEvent)).filter((row) => invitationState(row, leadNow) !== "accepted") : [];
@@ -796,6 +814,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               {row.name}
             </Box>
             <Chip size="small" variant="outlined" color="info" label={t("registrations.invitationRow.chip")} />
+            {/* «Partener: {name}» from the send (the decision «De la parteneri»), as on «Invitații». */}
+            {row.partnerName && <StatusChip glyph="fromPartner" variant="outlined" label={t("partner.chip", { name: row.partnerName })} testId="partner-chip" />}
           </Stack>
         ),
         status: <Chip size="small" color={state === "sent" ? "info" : "default"} label={t(`registrations.invitationRow.state.${state}`)} />,
@@ -1476,6 +1496,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       {filters.eventId && (
         <InvitationsPanel
           db={db}
+          actor={actor}
           locale={locale}
           eventId={filters.eventId}
           mayManage={mayManage}
@@ -1499,6 +1520,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           locale={locale}
           eventId={filters.eventId}
           entries={await listReserveEntries(db, actor, filters.eventId)}
+          // «E de la parteneri» (the decision «De la parteneri»): the line's fold for the Organizer and above, as the rename; the boxes' suggestions.
+          partnerAction={saveReservePartnerAction}
+          partnerSuggestions={await listPartnerSuggestions(db, actor, filters.eventId)}
           fullFormHref={
             mayManage ? (entryId) => `${getPathname({ locale, href: "/admin/registrations/new" })}?${new URLSearchParams({ eventId: filters.eventId ?? "", reserve: entryId }).toString()}` : undefined
           }
@@ -1521,6 +1545,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             saved === "reserveDeleted" ||
             saved === "reserveMovedToElite" ||
             saved === "reserveOwnAddressGuest" ||
+            saved === "partnerSaved" ||
+            saved === "partnerUnchanged" ||
             current.from === "reserve"
           }
         />
@@ -1761,6 +1787,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             <CheckboxField name="promo" value="1" defaultChecked={promo === "1"} dense help={t("registrations.promoOnlyHelp")}>
               <CampaignIcon aria-hidden data-testid="registrations-filter-promo-glyph" />
               {t("registrations.promoOnly")}
+            </CheckboxField>
+          </Box>
+          {/* «De la parteneri» (the decision «De la parteneri»): the rows with a partner's or sponsor's name, the handshake of the partners. */}
+          <Box sx={{ minWidth: 220, maxWidth: 320, pt: 0.5 }} data-testid="registrations-filter-partner">
+            <CheckboxField name="partner" value="1" defaultChecked={partner === "1"} dense help={t("partner.filterHelp")}>
+              <PartnerFilterIcon aria-hidden data-testid="registrations-filter-partner-glyph" />
+              {t("partner.filter")}
             </CheckboxField>
           </Box>
           <TextField

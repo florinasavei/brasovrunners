@@ -297,7 +297,7 @@ describe("BR-REQ-037-05 criterion 25: «Date lipsă» on the registration's page
 describe("BR-REQ-037-05 criterion 26: the internal list's dialogs say the details are asked at the signature", () => {
   it("«Mută pe lista oficială» and «Oferă-i un loc acum» each say it, in both languages", async () => {
     const race = await createRace(1);
-    const entry = { id: "00000000-0000-4000-8000-000000000001", eventId: race.id, firstName: "Luca", lastName: "Ionescu", email: "luca@example.ro", note: null, createdAt: new Date(), createdByName: "Admin" };
+    const entry = { id: "00000000-0000-4000-8000-000000000001", eventId: race.id, firstName: "Luca", lastName: "Ionescu", email: "luca@example.ro", note: null, partnerName: null, createdAt: new Date(), createdByName: "Admin" };
     for (const [locale, catalogue] of [
       ["ro", ro],
       ["en", en],

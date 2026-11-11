@@ -328,6 +328,8 @@ describe("§847 the page as it is drawn", () => {
       `h3 ${words.notes.title}nicio notă`,
       `h3 ${words.tell.title}`,
       `h3 ${words.raceDayTitle}`,
+      // «De la parteneri» (the decision «De la parteneri»): the Administrator's tick and box, after the race day's verbs.
+      `h3 ${ro.Admin.partner.title}`,
       `h3 ${words.emails.title}0 emailuri`,
       `h3 ${words.answers.title}`,
       `h3 ${words.emergency.title}`,

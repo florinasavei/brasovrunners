@@ -2665,7 +2665,8 @@
       "RESULT_FINISH_NOT_STARTED": "Cursa nu a început încă: o sosire nu poate fi înainte de start.",
       "RESULT_FINISH_CLOSED": "Startul a fost cu mai mult de o zi în urmă: timpii se scriu la «Clasament».",
       "REFUSAL_NEEDS_EMAIL": "Nu s-a anulat nimic: refuzul clubului pleacă întotdeauna cu emailul care îi spune persoanei motivul.",
-      "ELITE_NOT_MARKED": "Înscrierea nu mai e marcată ca elită, așa că bifele de elită nu se mai schimbă. Nu s-a scris nimic."
+      "ELITE_NOT_MARKED": "Înscrierea nu mai e marcată ca elită, așa că bifele de elită nu se mai schimbă. Nu s-a scris nimic.",
+      "PARTNER_NAME_MISSING": "Scrie numele partenerului sau sponsorului, sau debifează «E de la parteneri»."
     },
     "editor": {
       "draftPreview": {
@@ -11778,6 +11779,18 @@
       "fromList": "Treci de pe lista internă: {name}. Nota trece pe înscriere și linia dispare de pe lista internă. De aici e o înscriere obișnuită, cu emailul ei.",
       "fromListClosed": "{name} e pe lista internă a unui eveniment care nu primește înscrieri acum; formularul nu e completat."
     },
+    "partner": {
+      "tick": "E de la parteneri",
+      "name": "Numele partenerului sau sponsorului",
+      "nameHelp": "Intern: persoana nu e anunțată. Debifat, numele se șterge.",
+      "chip": "Partener: {name}",
+      "filter": "De la parteneri",
+      "filterHelp": "Doar înscrierile cu numele unui partener sau sponsor.",
+      "column": "Partener",
+      "title": "De la parteneri",
+      "save": "Salvează partenerul",
+      "dialog": "Înscrierile vor fi marcate «Partener: {name}» — intern, persoanele nu sunt anunțate."
+    },
     "waitlistAdd": {
       "title": "Adaugă pe lista de așteptare",
       "panelTitle": "Lista oficială de așteptare",
@@ -14042,7 +14055,10 @@
       "membersInvitedProviderFailed": "Unele conturi Zitadel nu sunt gata: vezi raportul de sus.",
       "eventInvitationsErased": "Invitații retrase și șterse.",
       "eventImportedOver": "Importat peste eveniment.",
-      "eliteTicked": "Bifa de elită a fost salvată. Nu s-a trimis nimic nimănui."
+      "eliteTicked": "Bifa de elită a fost salvată. Nu s-a trimis nimic nimănui.",
+      "partnerSaved": "Partenerul a fost salvat. Nu s-a trimis nimic nimănui.",
+      "partnerCleared": "Nu mai e de la parteneri. Nu s-a trimis nimic nimănui.",
+      "partnerUnchanged": "Era deja așa; nimic de schimbat."
     },
     "mail": {
       "now": "Pleacă acum{road}: {what}.",

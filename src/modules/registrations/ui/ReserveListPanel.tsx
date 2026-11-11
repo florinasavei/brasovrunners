@@ -16,11 +16,16 @@ import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { HEADING_SX } from "@/shared/ui/heading-scale";
 import Panel from "@/shared/ui/Panel";
+import StatusChip from "@/shared/ui/StatusChip";
 import { staffOfferIfMadeNow, waitlistOfferQuestion } from "../give-place-tip";
 import type { ReserveEntryRow } from "../reserve-list";
+import PartnerMarkFields, { PartnerSuggestionList } from "./PartnerMarkFields";
 
 /** «Corectează numele»'s glyph. */
 const RenameIcon = ACTION_ICONS.rename;
+
+/** «E de la parteneri»'s fold glyph: the partners' handshake (the decision «De la parteneri»). */
+const PartnerIcon = ACTION_ICONS.sponsors;
 
 /** The address fold's glyph (§521): the email the official list sends to. */
 const AddressIcon = ACTION_ICONS.emailConfirmation;
@@ -49,6 +54,10 @@ const AddressIcon = ACTION_ICONS.emailConfirmation;
  * speciali». Asked first: whose address, where the emails go, the place outside the announced ones and not released
  * unsigned, the declaration the person's own; and the relay tick, as the move asks it. With the switch off
  * (`ownAddressSwitchOff`) the line says in one sentence where to switch it on, never a button the server refuses.
+ *
+ * «De la parteneri» (the decision «De la parteneri»): a line with a partner's name wears «Partener: {name}»; the add asks «E de
+ * la parteneri» with the box, and each line has its own fold for it beside «Corectează numele» (`partnerAction`, the Organizer
+ * and above, as the rename). The boxes suggest the event's earlier names (`partnerSuggestions`, one list for the panel).
  */
 export default async function ReserveListPanel({
   locale,
@@ -58,6 +67,8 @@ export default async function ReserveListPanel({
   addAction,
   saveNoteAction,
   renameAction,
+  partnerAction,
+  partnerSuggestions = [],
   deleteAction,
   moveAction,
   eliteMoveAction,
@@ -77,6 +88,10 @@ export default async function ReserveListPanel({
   saveNoteAction: ActionFormAction;
   /** «Corectează numele»: the Organizer's, like the note and the delete; absent, no line carries the fold. */
   renameAction?: ActionFormAction;
+  /** «E de la parteneri» on a line: the Organizer's, like the rename; absent, no line carries the fold (the chip stays). */
+  partnerAction?: ActionFormAction;
+  /** The event's earlier partners' names, for the boxes' suggestions (`listPartnerSuggestions`). */
+  partnerSuggestions?: readonly string[];
   deleteAction: ActionFormAction;
   /** «Mută pe lista oficială» and «Oferă-i un loc acum»: absent, no line carries them. */
   moveAction?: ActionFormAction;
@@ -101,6 +116,7 @@ export default async function ReserveListPanel({
     lastName: t("reserve.lastName"),
     email: t("reserve.email"),
     note: t("reserve.note"),
+    partnerName: t("partner.name"),
   });
   // A refused move names the boxes of the move: the address typed for the official list, the dialog's tick.
   const moveRefusal = moveAction
@@ -167,6 +183,8 @@ export default async function ReserveListPanel({
   return (
     <Panel glyph="queue" collapsible title={t("reserve.title")} intro={t("reserve.intro")} aside={aside} openWhen={{ saved: opened }} id="registrations-reserve" data-testid="registrations-reserve">
       <Stack spacing={3}>
+        {/* The boxes' suggestions, once for the panel: the add's box and every line's name the same list. */}
+        <PartnerSuggestionList names={partnerSuggestions} />
         {/* Back from «Mută pe lista de elită» (§903): where the name is now — a plain link; the editor opens the folds around `#bib-elite` and scrolls to the card, which stays closed. */}
         {eliteCardHref && (
           <Alert severity="success" data-testid="reserve-moved-to-elite">
@@ -187,6 +205,12 @@ export default async function ReserveListPanel({
             {entries.map((entry) => (
               <Box key={entry.id} component="li" data-testid="reserve-entry">
                 <Typography sx={{ fontWeight: 600 }}>{`${entry.firstName} ${entry.lastName}`}</Typography>
+                {/* «Partener: {name}» (the decision «De la parteneri»): staff only, carried onto the registration by a move. */}
+                {entry.partnerName && (
+                  <Box sx={{ my: 0.5 }}>
+                    <StatusChip glyph="fromPartner" variant="outlined" label={t("partner.chip", { name: entry.partnerName })} testId="partner-chip" />
+                  </Box>
+                )}
                 {entry.email && (
                   <Typography variant="body2" sx={{ wordBreak: "break-all" }}>
                     {entry.email}
@@ -216,6 +240,28 @@ export default async function ReserveListPanel({
                         </Stack>
                         <GlyphButton icon="save" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="reserve-rename-save">
                           {t("reserve.renameSave")}
+                        </GlyphButton>
+                      </Stack>
+                    </ActionForm>
+                  </Box>
+                )}
+                {partnerAction && (
+                  // «E de la parteneri» (the decision «De la parteneri»): its own native fold beside «Corectează numele», one form.
+                  <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, boxSizing: "border-box", width: "100%", mt: 1 }} data-testid="reserve-partner">
+                    <Box component="summary">
+                      <PartnerIcon fontSize="small" aria-hidden sx={FOLD_GLYPH_SX} />
+                      <Typography component="span" variant="body2">
+                        {t("partner.tick")}
+                      </Typography>
+                    </Box>
+                    <ActionForm action={partnerAction} messages={refusal} scope={`reserve-partner-${entry.id}`} data-testid="reserve-partner-form">
+                      <input type="hidden" name="uiLocale" value={locale} />
+                      <input type="hidden" name="entryId" value={entry.id} />
+                      <input type="hidden" name="listQuery" value={listQuery ?? ""} />
+                      <Stack spacing={1} sx={{ alignItems: "flex-start", mt: 1 }}>
+                        <PartnerMarkFields name={entry.partnerName} testId="reserve-partner-fields" />
+                        <GlyphButton icon="save" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="reserve-partner-save">
+                          {t("partner.save")}
                         </GlyphButton>
                       </Stack>
                     </ActionForm>
@@ -381,6 +427,7 @@ export default async function ReserveListPanel({
               </Stack>
               <RecallField name="email" type="email" label={t("reserve.email")} helperText={t("reserve.emailHelp")} fullWidth slotProps={{ htmlInput: { maxLength: RESERVE_EMAIL_MAX } }} />
               <RecallField name="note" label={t("reserve.note")} helperText={t("reserve.noteHelp")} multiline minRows={2} fullWidth slotProps={{ htmlInput: { maxLength: RESERVE_NOTE_MAX } }} />
+              <PartnerMarkFields name={null} testId="reserve-add-partner" />
               <GlyphButton icon="add" type="submit" variant="contained" sx={{ minHeight: 44 }}>
                 {t("reserve.add")}
               </GlyphButton>

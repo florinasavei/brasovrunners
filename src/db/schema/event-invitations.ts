@@ -1,8 +1,8 @@
-import { boolean, index, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { events } from "./events";
 import { locale } from "./locale";
 import { participants } from "./participants";
-import { registrations } from "./registrations";
+import { partnerNameCheck, registrations } from "./registrations";
 import { staffUsers } from "./staff-users";
 
 /**
@@ -72,6 +72,13 @@ export const eventInvitations = pgTable(
      * person sees says it. An invitation withdrawn or expired marks nobody.
      */
     elite: boolean("elite").notNull().default(false),
+    /**
+     * «E de la parteneri» at the send (the decision «De la parteneri»): the partner's or sponsor's name, the same for every
+     * person of the press, or null. Written onto the registration this invitation becomes, exactly where «Elită» is honoured
+     * (`acceptInvitation`, `markInvitationAdopted`), under the Administrator who sent it. The club's alone: no email, page or
+     * form the person sees says it. Trimmed, 1 to `PARTNER_NAME_MAX` characters.
+     */
+    partnerName: text("partner_name"),
     acceptedAt: timestamp("accepted_at", { withTimezone: true }),
     acceptedRegistrationId: uuid("accepted_registration_id").references(() => registrations.id, { onDelete: "cascade" }),
     withdrawnAt: timestamp("withdrawn_at", { withTimezone: true }),
@@ -95,6 +102,7 @@ export const eventInvitations = pgTable(
     index("event_invitations_participant_idx").on(t.participantId),
     // The registration's cascade (`accepted_registration_id … on delete cascade`) needs it.
     index("event_invitations_accepted_registration_idx").on(t.acceptedRegistrationId),
+    check("event_invitations_partner_name_length", partnerNameCheck(t.partnerName)),
   ],
 );
 

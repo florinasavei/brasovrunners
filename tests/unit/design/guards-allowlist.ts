@@ -332,6 +332,8 @@ const BACKOFFICE_FILES: ReadonlySet<string> = new Set([
   "src/modules/registrations/ui/InvitationsPanel.tsx",
   "src/modules/registrations/ui/QueuePanel.tsx",
   "src/modules/registrations/ui/RegistrationRowMenu.tsx",
+  // «Lista internă (doar notițe)» on the registrations list (§854), its «Partener: {name}» chip the list's own: the staff's.
+  "src/modules/registrations/ui/ReserveListPanel.tsx",
   // A registration's state chip (§847): drawn by the list, the registration's page and the desk — the staff's.
   "src/modules/registrations/ui/RegistrationStatusChip.tsx",
 ]);
