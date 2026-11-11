@@ -569,8 +569,8 @@ export type AuditAction =
   | "event_todo.reopened"
   | "event_todo.deleted"
   /**
-   * «Lista internă de așteptare» (§854), entity `event`: a person written down, their note saved, the line
-   * deleted, or moved to the official list (`registrationId` the registration it became) or onto the elite list
+   * «Lista internă de așteptare» (§854), entity `event`: a person written down, their note saved, their name corrected
+   * (`event_reserve.renamed`), the line deleted, or moved to the official list (`registrationId` the registration it became) or onto the elite list
    * (`eliteEntryId` the elite line it became, §903). The metadata is ids only — never a name, an address or the
    * note's words.
    */

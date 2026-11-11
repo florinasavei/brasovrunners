@@ -132,6 +132,21 @@ test.describe("§888 the internal list and the official waiting list, told apart
     for (const button of [move, offer]) expect((await button.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await fitsTheScreen(page);
 
+    // «Corectează numele»: the fold opens on its own line, a letter changes, the line carries the new name and the toast.
+    const lucaRename = internal.getByTestId("reserve-entry").filter({ hasText: "Luca" }).getByTestId("reserve-rename");
+    await lucaRename.locator("summary").click();
+    const save = lucaRename.getByTestId("reserve-rename-save");
+    await expect(save).toBeVisible();
+    expect((await save.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await fitsTheScreen(page);
+    await lucaRename.getByRole("textbox", { name: /Prenume/ }).fill("Lucian");
+    await save.click();
+    await page.waitForURL(/saved=reserveRenamed/);
+    await expect(page.getByTestId("toast")).toContainText("Numele a fost corectat.", { timeout: 30_000 });
+    await expect(page.locator("#main").getByTestId("registrations-reserve").getByTestId("reserve-entry").filter({ hasText: "Lucian" })).toHaveCount(1);
+    await hydrated(page);
+    await fitsTheScreen(page);
+
     // «Mută pe lista oficială»: the full race puts Mara at the back of the line, the note with her, the line gone.
     await move.click();
     await tickAndConfirm(page, "Muți pe lista oficială de așteptare?", { address: `mara-${tag}@test.invalid`, button: "Mută pe lista oficială" });
@@ -145,11 +160,11 @@ test.describe("§888 the internal list and the official waiting list, told apart
 
     // «Oferă-i un loc acum» on the full race: the dialog names the capacity it becomes, and its button the added place.
     await hydrated(page);
-    const lucaLine = page.locator("#main").getByTestId("registrations-reserve").getByTestId("reserve-entry").filter({ hasText: "Luca" });
+    const lucaLine = page.locator("#main").getByTestId("registrations-reserve").getByTestId("reserve-entry").filter({ hasText: "Lucian" });
     await lucaLine.getByTestId("reserve-offer").click();
     await tickAndConfirm(page, "Îi oferi un loc acum?", { address: `luca-${tag}@test.invalid`, button: "Adaugă un loc și oferă-i locul", says: "capacitatea devine 2" });
     await page.waitForURL(/saved=registrationOfferedRaised/);
-    const luca = await registrationOf(seeded.eventId, "Luca");
+    const luca = await registrationOf(seeded.eventId, "Lucian");
     expect(luca.status).toBe("WAITLIST_OFFERED");
     expect(luca.notes).toBe("1");
     expect(await capacityOf(seeded.eventId)).toBe(2);
@@ -174,6 +189,7 @@ test.describe("§888 the internal list and the official waiting list, told apart
     await expect(internal.getByTestId("reserve-entry")).toHaveCount(2);
     await expect(internal.getByTestId("reserve-note-form")).toHaveCount(2);
     await expect(internal.getByTestId("reserve-delete-form")).toHaveCount(2);
+    await expect(internal.getByTestId("reserve-rename")).toHaveCount(2);
     await expect(internal.getByTestId("reserve-move")).toHaveCount(0);
     await expect(internal.getByTestId("reserve-offer")).toHaveCount(0);
     await expect(internal.getByTestId("reserve-full-form")).toHaveCount(0);

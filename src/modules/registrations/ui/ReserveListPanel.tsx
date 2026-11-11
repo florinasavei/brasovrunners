@@ -12,7 +12,7 @@ import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
-import { DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { HEADING_SX } from "@/shared/ui/heading-scale";
 import Panel from "@/shared/ui/Panel";
@@ -28,7 +28,7 @@ const AddressIcon = ACTION_ICONS.emailConfirmation;
 /**
  * «Lista internă (doar notițe)» (§854, renamed by §888) on one event's registrations list, for the Organizer and
  * above: the people who asked to be kept in mind, told nothing and emailed nothing. Each line: the name, the
- * address when the club has it, the internal note (edited in place) and «Șterge» — the Organizer's three verbs.
+ * address when the club has it, the internal note (edited in place) and «Șterge» — the Organizer's verbs: the note, «Corectează numele» and delete.
  * For the Administrator (`moveAction`, handed down only to that role and only while the event takes a vouched
  * entry), two one-press verbs onto the official waiting list (§888): «Mută pe lista oficială» — the official
  * list's add form, from the line — and «Oferă-i un loc acum», the same entry with §642's offer; each dialog says
@@ -162,6 +162,32 @@ export default async function ReserveListPanel({
                 <Typography variant="caption" color="text.secondary" component="p">
                   {t("reserve.by", { name: entry.createdByName ?? t("registrations.auditActorRemoved"), date: when(entry.createdAt) })}
                 </Typography>
+                {renameAction && (
+                  // «Corectează numele» («Lista internă», amended by «Corectează numele pe lista internă»): a native fold, one
+                  // form, working without JavaScript; closed, the line carries only its summary.
+                  <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, boxSizing: "border-box", width: "100%", mt: 1 }} data-testid="reserve-rename">
+                    <Box component="summary">
+                      <RenameIcon fontSize="small" aria-hidden sx={FOLD_GLYPH_SX} />
+                      <Typography component="span" variant="body2">
+                        {t("reserve.rename")}
+                      </Typography>
+                    </Box>
+                    <ActionForm action={renameAction} messages={refusal} scope={`reserve-rename-${entry.id}`} data-testid="reserve-rename-form">
+                      <input type="hidden" name="uiLocale" value={locale} />
+                      <input type="hidden" name="entryId" value={entry.id} />
+                      <input type="hidden" name="listQuery" value={listQuery ?? ""} />
+                      <Stack spacing={1} sx={{ alignItems: "flex-start", mt: 1 }}>
+                        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: "100%" }}>
+                          <RecallField name="firstName" label={t("reserve.firstName")} defaultValue={entry.firstName} required fullWidth size="small" slotProps={{ htmlInput: { maxLength: RESERVE_NAME_MAX } }} />
+                          <RecallField name="lastName" label={t("reserve.lastName")} defaultValue={entry.lastName} required fullWidth size="small" slotProps={{ htmlInput: { maxLength: RESERVE_NAME_MAX } }} />
+                        </Stack>
+                        <GlyphButton icon="save" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="reserve-rename-save">
+                          {t("reserve.renameSave")}
+                        </GlyphButton>
+                      </Stack>
+                    </ActionForm>
+                  </Box>
+                )}
                 <ActionForm action={saveNoteAction} messages={refusal} scope={`reserve-note-${entry.id}`} data-testid="reserve-note-form">
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="entryId" value={entry.id} />
@@ -192,7 +218,7 @@ export default async function ReserveListPanel({
                     <Stack spacing={1} sx={{ alignItems: "flex-start", mt: 1.5 }}>
                       {!entry.email && (
                         // A line written without an address (§888): its box behind a fold that says so — a press with it empty opens it (`revealField`).
-                        <Box component="details" sx={{ ...DISCLOSURE_SX, width: "100%" }} data-testid="reserve-move-email">
+                        <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, boxSizing: "border-box", width: "100%" }} data-testid="reserve-move-email">
                           <Box component="summary">
                             <AddressIcon fontSize="small" aria-hidden sx={FOLD_GLYPH_SX} />
                             <Typography component="span" variant="body2">
@@ -257,32 +283,6 @@ export default async function ReserveListPanel({
                         {t("reserve.moveToElite")}
                       </GlyphButton>
                     </ActionForm>
-                  )}
-                  {renameAction && (
-                    // «Corectează numele» («Lista internă», amended by «Corectează numele pe lista internă»): a native fold, one
-                    // form, working without JavaScript; closed, the line carries only its summary.
-                    <Box component="details" sx={{ ...DISCLOSURE_SX, width: { xs: "100%", sm: "auto" } }} data-testid="reserve-rename">
-                      <Box component="summary">
-                        <RenameIcon fontSize="small" aria-hidden sx={FOLD_GLYPH_SX} />
-                        <Typography component="span" variant="body2">
-                          {t("reserve.rename")}
-                        </Typography>
-                      </Box>
-                      <ActionForm action={renameAction} messages={refusal} scope={`reserve-rename-${entry.id}`} data-testid="reserve-rename-form">
-                        <input type="hidden" name="uiLocale" value={locale} />
-                        <input type="hidden" name="entryId" value={entry.id} />
-                        <input type="hidden" name="listQuery" value={listQuery ?? ""} />
-                        <Stack spacing={1} sx={{ alignItems: "flex-start", mt: 1 }}>
-                          <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: "100%" }}>
-                            <RecallField name="firstName" label={t("reserve.firstName")} defaultValue={entry.firstName} required fullWidth size="small" slotProps={{ htmlInput: { maxLength: RESERVE_NAME_MAX } }} />
-                            <RecallField name="lastName" label={t("reserve.lastName")} defaultValue={entry.lastName} required fullWidth size="small" slotProps={{ htmlInput: { maxLength: RESERVE_NAME_MAX } }} />
-                          </Stack>
-                          <GlyphButton icon="save" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="reserve-rename-save">
-                            {t("reserve.renameSave")}
-                          </GlyphButton>
-                        </Stack>
-                      </ActionForm>
-                    </Box>
                   )}
                   <ActionForm
                     action={deleteAction}

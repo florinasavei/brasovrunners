@@ -27,7 +27,7 @@ import type { StaffPlaceOptions } from "./service";
  * «Mută pe lista de elită» (§903) takes a line the other way, onto no list of registrations at all: its name onto
  * the race's elite list (§895), printed on a bib, nobody registered (`moveReserveEntryToElite`).
  *
- * **Who** — the Organizer and above (`canKeepRegistrationNotes`, the internal notes' own rule) add, note and
+ * **Who** — the Organizer and above (`canKeepRegistrationNotes`, the internal notes' own rule) add, note, correct a name and
  * delete; moving a line is the Administrator's (`canManageRegistrations`, §888). Asserted in every function
  * below (BR-REQ-060-01). **The trail** names who, when and which line — never a name, an address or the note's
  * words.

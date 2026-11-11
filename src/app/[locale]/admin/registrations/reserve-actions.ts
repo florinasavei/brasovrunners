@@ -13,8 +13,8 @@ import { flash } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /**
- * The three presses of «Lista internă de așteptare» (§854) on an event's registrations list: «Adaugă»,
- * «Salvează nota» and «Șterge». The coarse gate here (`canKeepRegistrationNotes`) and the service's own
+ * The presses of «Lista internă de așteptare» (§854) on an event's registrations list: «Adaugă»,
+ * «Salvează nota», «Salvează numele» and «Șterge». The coarse gate here (`canKeepRegistrationNotes`) and the service's own
  * (BR-REQ-060-01). A refusal keeps what was typed (§315); a success returns to the panel, open. Nothing
  * typed goes in the URL or the flash, and nothing is ever sent to the person. «Corectează numele» («Lista internă»,
  * amended by «Corectează numele pe lista internă») is the Organizer's like them; «Mută pe lista de elită» (§903),
@@ -39,6 +39,19 @@ function text(form: FormData, name: string): string {
 async function backToPanel(locale: Locale, eventId: string, saved: string): Promise<never> {
   await flash({ kind: "success", key: saved });
   redirect(`${getPathname({ locale, href: "/admin/registrations" })}?eventId=${encodeURIComponent(eventId)}&saved=${saved}#registrations-reserve`);
+}
+
+/**
+ * Back to the list as it was (its filters, sort and page, from the form's `listQuery`; the path is rebuilt here), the
+ * panel open: an outcome an earlier press left in the query is never repeated, and the event is the line's, whatever
+ * the query said.
+ */
+function backToList(locale: Locale, eventId: string, saved: string, form: FormData): never {
+  const params = new URLSearchParams(text(form, "listQuery"));
+  for (const key of ["saved", "error", "from", "count", "erase", "memberSweep"]) params.delete(key);
+  params.set("eventId", eventId);
+  params.set("saved", saved);
+  redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${params.toString()}#registrations-reserve`);
 }
 
 export async function addReserveEntryAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
@@ -83,11 +96,7 @@ export async function renameReserveEntryAction(_previous: FormOutcome | null, fo
   }
   const saved = changed ? "reserveRenamed" : "reserveRenameUnchanged";
   await flash({ kind: changed ? "success" : "info", key: saved });
-  const params = new URLSearchParams(text(form, "listQuery"));
-  for (const key of ["saved", "error", "from", "count", "erase", "memberSweep"]) params.delete(key);
-  params.set("eventId", eventId);
-  params.set("saved", saved);
-  redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${params.toString()}#registrations-reserve`);
+  return backToList(locale, eventId, saved, form);
 }
 
 export async function deleteReserveEntryAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
@@ -127,10 +136,5 @@ export async function moveReserveEntryToEliteAction(_previous: FormOutcome | nul
     return refusal;
   }
   await flash({ kind: "success", key: "reserveMovedToElite" });
-  const params = new URLSearchParams(text(form, "listQuery"));
-  // An outcome an earlier press left in the query, never repeated; the event is the line's, whatever the query said.
-  for (const key of ["saved", "error", "from", "count", "erase", "memberSweep"]) params.delete(key);
-  params.set("eventId", eventId);
-  params.set("saved", "reserveMovedToElite");
-  redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${params.toString()}#registrations-reserve`);
+  return backToList(locale, eventId, "reserveMovedToElite", form);
 }

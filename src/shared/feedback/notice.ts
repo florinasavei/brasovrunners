@@ -160,14 +160,14 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   "neonLimitsSame",
   // «Salvează» on a club to-do line whose words, owner and day were already these (§438).
   "clubTodoUnchanged",
-  // «Corectează numele» on a line of the internal list, saved with the name it already had.
-  "reserveRenameUnchanged",
   // The same on an event's own to-dos (§749).
   "eventTodoUnchanged",
   // The same on an event's volunteers (§754).
   "volunteerUnchanged",
   // «Trimite invitațiile» when every address already had an invitation or had already offered (§820).
   "volunteerInvitationsNone",
+  // «Corectează numele» on a line of the internal list, saved with the name it already had.
+  "reserveRenameUnchanged",
   // «Salvează toate rolurile» with every role as it was (§791).
   "volunteerRolesUnchanged",
   // «Salvează toate nivelurile» with every member level as it was, and «Nivel» on a member's row left as it was (§811).
