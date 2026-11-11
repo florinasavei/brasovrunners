@@ -8,7 +8,7 @@ import type { Locale } from "@/i18n/routing";
 import { assertMayExport, sponsorListFormat, type SponsorListFormat } from "./sponsor-list";
 
 /**
- * «Liste date sponsorilor» (§NNN, amending §570 and §581). The owner, 2026-11-10, of «Descarcă lista
+ * «Liste date sponsorilor» (§929, amending §570 and §581). The owner, 2026-11-10, of «Descarcă lista
  * pentru sponsori»: «trebuie să gestionez mai bine asta, cu trimiterea către sponsori» — and, asked
  * what he wants to be able to do, he chose the register of the lists given.
  *

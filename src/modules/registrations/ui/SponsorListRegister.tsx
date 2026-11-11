@@ -28,7 +28,7 @@ type Props = {
 type Column = { key: string; label: string; align?: "right"; render: (list: GivenSponsorList) => ReactNode };
 
 /**
- * «Liste date sponsorilor» (§NNN): every download of the list for sponsors — whom it was given to,
+ * «Liste date sponsorilor» (§929): every download of the list for sponsors — whom it was given to,
  * when, for which event, how many people it held, which file, who downloaded it and the day the
  * club's own copy must be gone by. Under the buttons on an event's registrations page and in the
  * «Newsletter» fold; a fold, closed, its line saying how many lists and the latest one. Nothing is

@@ -25,7 +25,7 @@ type Props = {
   paged: boolean;
   /** The list for sponsors across every event (§570), or null for a role that may not take it. */
   sponsors?: SponsorListSummary | null;
-  /** Every list already given and the recipients written before (§NNN), for the same roles. */
+  /** Every list already given and the recipients written before (§929), for the same roles. */
   sponsorRegister?: SponsorRegister | null;
   /** The page's clock, for the register's «termen trecut». */
   now: Date;
@@ -44,7 +44,7 @@ export const PROMO_ANCHOR = "newsletter-promo";
  * asserts the role) and hands it here. The words say the two consents apart: this is not the
  * newsletter, and the partners receive only the list for sponsors (§570) — the button under the
  * club's own, for every event, the same query and the same file as an event's registrations page,
- * with every list already given under it («Liste date sponsorilor», §NNN).
+ * with every list already given under it («Liste date sponsorilor», §929).
  * The rows are the backoffice's table since §847 (`AdminTable`), paged through the address.
  */
 export default async function PromoConsenters({ locale, list, listQuery, paged, sponsors = null, sponsorRegister = null, now }: Props) {

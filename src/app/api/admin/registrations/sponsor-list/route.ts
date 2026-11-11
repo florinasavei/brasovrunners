@@ -33,7 +33,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * art. 15 and 19 promise — which partner received whose data — long after its own copy of the file
  * is deleted (review finding).
  *
- * **«Cui dai lista» is required (§NNN, amending §570).** A download that names nobody is refused
+ * **«Cui dai lista» is required (§929, amending §570).** A download that names nobody is refused
  * (400 `RECIPIENT_REQUIRED`) before anything is read or written: no file, no audit row. The box is
  * `required` in the form; this is the rule. So every list in the register
  * (`registrations/sponsor-register.ts`) says whom it went to; only a download older than this reads
@@ -55,7 +55,7 @@ export async function GET(request: Request): Promise<Response> {
   const eventParam = url.searchParams.get("event");
   if (eventParam !== null && eventParam !== "" && !UUID.test(eventParam)) return NextResponse.json({ error: "VALIDATION_ERROR" }, { status: 400 });
   const eventId = eventParam || undefined;
-  // A list that names nobody is not made (§NNN): nothing read, nothing written.
+  // A list that names nobody is not made (§929): nothing read, nothing written.
   const recipient = sponsorRecipient(url.searchParams.get("to"));
   if (recipient === null) return NextResponse.json({ error: "RECIPIENT_REQUIRED" }, { status: 400 });
 

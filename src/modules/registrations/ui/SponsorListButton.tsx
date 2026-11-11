@@ -18,7 +18,7 @@ type Props = {
   locale: Locale;
   eventId: string | null;
   list: SponsorListSummary;
-  /** The lists already given and the recipients written before (`readSponsorRegister`, §NNN). */
+  /** The lists already given and the recipients written before (`readSponsorRegister`, §929). */
   register: SponsorRegister;
   /** The page's clock, for the register's «termen trecut». */
   now: Date;
@@ -37,7 +37,7 @@ type Props = {
  * audit row beside the registrations in the file, so a registration's page can later say which
  * partner received it (the notice's art. 15 and 19 promise; review finding).
  *
- * **The box is required (§NNN, amending §570).** `required`, and at least one character that is not
+ * **The box is required (§929, amending §570).** `required`, and at least one character that is not
  * a space: the browser asks for it before either file leaves, and the route refuses a download
  * without it. It suggests the recipients written before (a `<datalist>`, no script), so one sponsor
  * keeps one spelling. Under the captions, «Liste date sponsorilor» is every list already given —

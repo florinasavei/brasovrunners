@@ -51,7 +51,7 @@ export const SPONSOR_RECIPIENT_MAX = 120;
 /**
  * The recipient a download names (`?to=`), as the audit row keeps it: control characters gone,
  * whitespace collapsed, at most `SPONSOR_RECIPIENT_MAX` characters; null when nothing is left — and
- * since §NNN a download that names nobody is refused, so every list in the register has its recipient.
+ * since §929 a download that names nobody is refused, so every list in the register has its recipient.
  */
 export function sponsorRecipient(raw: string | null): string | null {
   const text = (raw ?? "")
@@ -180,7 +180,7 @@ function mayReachPartner(row: { consentedAt: Date | null; privacyNoticeVersion: 
   return reachesPartner({ promoConsent: true, promoConsentAt: row.consentedAt, privacyNoticeVersion: row.privacyNoticeVersion, birthDate: row.birthDate }, gate, now);
 }
 
-/** The role, asserted in every read of the list and of its register (`sponsor-register.ts`, §NNN). */
+/** The role, asserted in every read of the list and of its register (`sponsor-register.ts`, §929). */
 export function assertMayExport(actor: Pick<StaffUser, "role">): void {
   if (!canExportSponsorList(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not take the sponsor list; §570 keeps it to the Organizer and the Administrator`);

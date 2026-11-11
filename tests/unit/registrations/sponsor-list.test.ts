@@ -171,10 +171,10 @@ describe("§570 the public-list tick names the list and the results", () => {
 });
 
 /**
- * §NNN (amending §570, §581) — «Liste date sponsorilor»: the register's own arithmetic and its words.
+ * §929 (amending §570, §581) — «Liste date sponsorilor»: the register's own arithmetic and its words.
  * The read, the route's refusal and the drawing are `tests/integration/registrations/sponsor-list.test.ts`.
  */
-describe("BR-REQ-071-01 §NNN the register of the lists given", () => {
+describe("BR-REQ-071-01 §929 the register of the lists given", () => {
   it("keeps the club's copy thirty days from the download — the number the notice's section 7 and the captions say", () => {
     expect(SPONSOR_COPY_DAYS).toBe(30);
     expect(copyDeleteBy(new Date("2026-09-10T09:00:00.000Z"))).toEqual(new Date("2026-10-10T09:00:00.000Z"));

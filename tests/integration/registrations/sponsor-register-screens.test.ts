@@ -10,7 +10,7 @@ import type { SponsorRegister } from "@/modules/registrations/sponsor-register";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Liste date sponsorilor» (§NNN) on its two screens — BR-REQ-071-01 and, for who gets it, BR-REQ-060-01: what an
+ * «Liste date sponsorilor» (§929) on its two screens — BR-REQ-071-01 and, for who gets it, BR-REQ-060-01: what an
  * event's registrations page and «Newsletter» hand the block. The read and the drawing are
  * `sponsor-list.test.ts`; this is the step between them, which a review by mutation found no test reached: the
  * event's own door (never another event's lists), the three roles that may take the list, the reader's language
@@ -144,7 +144,7 @@ beforeEach(async () => {
   state.locale = "ro";
 });
 
-describe("BR-REQ-071-01 §NNN an event's registrations page hands the block its own door", () => {
+describe("BR-REQ-071-01 §929 an event's registrations page hands the block its own door", () => {
   it.each([["MODERATOR"], ["ADMIN"], ["SUPERADMIN"]] as const)(
     "BR-REQ-060-01 the %s gets the event's lists and every event's — never another event's — in the reader's language, on the page's clock",
     async (role) => {
@@ -173,7 +173,7 @@ describe("BR-REQ-071-01 §NNN an event's registrations page hands the block its 
   );
 });
 
-describe("BR-REQ-071-01 §NNN «Newsletter» hands the fold every list", () => {
+describe("BR-REQ-071-01 §929 «Newsletter» hands the fold every list", () => {
   it.each([["MODERATOR"], ["ADMIN"], ["SUPERADMIN"]] as const)(
     "BR-REQ-060-01 the %s gets every list, in the reader's language, on the page's clock, and the fold draws the block for every event a level down",
     async (role) => {

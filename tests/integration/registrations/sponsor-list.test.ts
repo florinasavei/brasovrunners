@@ -41,7 +41,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * - the file is offered only while the notice in force says so — the route refuses otherwise;
  * - every download records the registrations it held and whom it was given to, and a
  *   registration's page reads that back (the notice's art. 15 and 19 promise);
- * - since §NNN a download names its recipient or is refused, and the lists given are read back as
+ * - since §929 a download names its recipient or is refused, and the lists given are read back as
  *   «Liste date sponsorilor» — the list, never its people;
  * - one query and one file for one event and for every event;
  * - the Organizer, the Administrator and the Superadministrator take it; Tehnic and the others are
@@ -556,11 +556,11 @@ async function sponsorListCandidates(eventId: string): Promise<string[]> {
 }
 
 /**
- * §NNN (amending §570 and §581) — the owner, 2026-11-10, of «Descarcă lista pentru sponsori»: «trebuie să
+ * §929 (amending §570 and §581) — the owner, 2026-11-10, of «Descarcă lista pentru sponsori»: «trebuie să
  * gestionez mai bine asta, cu trimiterea către sponsori»; asked what he wants to be able to do, he chose the
  * register of the lists given, with «Cui dai lista» required and its earlier names suggested.
  */
-describe("BR-REQ-071-01 §NNN «Cui dai lista» is required", () => {
+describe("BR-REQ-071-01 §929 «Cui dai lista» is required", () => {
   it("refuses a download that names nobody — either file, spaces alone too — and writes nothing", async () => {
     await approveNotice(2, sharing, V1_AT);
     const event = await createEvent("crosul-toamnei", "Crosul toamnei");
@@ -643,7 +643,7 @@ describe("BR-REQ-071-01 §NNN «Cui dai lista» is required", () => {
   });
 });
 
-describe("BR-REQ-071-01 §NNN «Liste date sponsorilor»: the lists given, read back from the trail", () => {
+describe("BR-REQ-071-01 §929 «Liste date sponsorilor»: the lists given, read back from the trail", () => {
   /** A download at its own moment, as the route records it. */
   const download = (when: string, query: string) =>
     atTheClock(new Date(when), () => downloadSponsorListNow(new Request(`http://localhost/api/admin/registrations/sponsor-list?${query}`)));
@@ -711,7 +711,7 @@ describe("BR-REQ-071-01 §NNN «Liste date sponsorilor»: the lists given, read 
     const event = await createEvent("crosul-toamnei", "Crosul toamnei");
     const gone = randomUUID();
     await db.insert(auditLogs).values([
-      // Before §581 the row named no file; before §NNN it could name nobody. Its account was removed since.
+      // Before §581 the row named no file; before §929 it could name nobody. Its account was removed since.
       { action: "registrations.sponsor_list_exported", entityType: "event", entityId: event.id, metadataJson: { eventId: event.id, count: 7, recipient: null, registrationIds: [randomUUID()] }, createdAt: new Date("2026-08-01T08:00:00.000Z") },
       // Its event was erased since: the list stays, without a title.
       { action: "registrations.sponsor_list_exported", entityType: "event", entityId: gone, metadataJson: { eventId: gone, format: "xlsx", count: 2, recipient: "Sport Shop", registrationIds: [] }, createdAt: new Date("2026-08-02T08:00:00.000Z") },

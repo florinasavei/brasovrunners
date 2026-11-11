@@ -71,7 +71,7 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
   // lets the contact page offer the pop-up; the list under its filter.
   // And, since §562, who said yes to offers and benefits on a registration — the same readers (§550).
   // And, since §570, the list for sponsors across every event — the same query as an event's page.
-  // And, since §NNN, the lists already given to sponsors, every one, and the recipients written before.
+  // And, since §929, the lists already given to sponsors, every one, and the recipients written before.
   const [audience, history, volume, offered, subscribers, promo, sponsors, sponsorRegister] = await Promise.all([
     countNewsletterAudience(db),
     listNewsletterSends(db),

@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.39` | «Liste date sponsorilor», the register of the lists given; «Cui dai lista» required, with its earlier names suggested (§929) · «La retrimitere»: an invitation's «Zile (opțional)» box becomes a list of deadlines by their day and hour (§930) · «Note interne» first on a registration's page, open when it has notes, and «Adaugă o notă» from a row of the list (§931) · «Nu mai e elită» on the «Elite» panel's registered lines (§932) · a minor's parent from the «Voluntari» list (§933) · «Kituri de pregătit» says how many volunteers have a kit and how many do not (§934) · «Note interne» for volunteers: several dated notes, first on the volunteer's page, counted and added from the lists, in the files and the person's record (§935) · «Corectează numele» on a line of the internal list (§936) · «Pe adresa mea, invitat special»: a partners' guest on the Administrator's own address, as a special guest (§937) |
 | `BR-V4.38` | the pace calculator in kilometres or miles (§927) · the start counts the invitations; every elite on the elite card, closed on a link (§928) |
 | `BR-V4.37` | «Unelte» on or off, its tools, the calculator's formula (§926) |
 | `BR-V4.36` | «Locuri» when inviting (§925) |

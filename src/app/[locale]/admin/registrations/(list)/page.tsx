@@ -307,7 +307,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId ? readPublicDoor(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
     // The kits' volunteers (§904): the event's volunteers by state and «Are kit» in one read — «cu kit» in the kits' title and line, «fără kit» in the line; `countKits` is untouched.
     filters.eventId ? readVolunteerKitFigures(db, filters.eventId) : Promise.resolve(null),
-    // «Liste date sponsorilor» (§NNN): the lists already given for this event and for every event, and the recipients written before.
+    // «Liste date sponsorilor» (§929): the lists already given for this event and for every event, and the recipients written before.
     filters.eventId && canExportSponsorList(actor.role) ? readSponsorRegister(db, actor, { eventId: filters.eventId, locale }) : Promise.resolve(null),
   ]);
 
@@ -1172,7 +1172,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         the ones who agreed to receive marketing emails so we can share it with our sponsors"): its
         own minimal file, never columns of the export beside it. For one chosen event; every event's
         list is on «Newsletter». The role is asserted in the read and in the route. Under it, since
-        §NNN, «Liste date sponsorilor»: this event's lists and those made for every event.
+        §929, «Liste date sponsorilor»: this event's lists and those made for every event.
       */}
       {sponsors && sponsorRegister && filters.eventId && (
         <SponsorListButton locale={locale} eventId={filters.eventId} list={sponsors} register={sponsorRegister} now={deadlinesNow} registerLevel={2} />
