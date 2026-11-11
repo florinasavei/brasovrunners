@@ -13,7 +13,7 @@ import GlyphButton from "@/shared/ui/GlyphButton";
 
 /**
  * The partner of one row of the registrations list, set without leaving the list (the list's column «Partener»; the owner,
- * 2026-11-11: «unde sa pot selecta si sa pot vedea in gridul cu toti participantii cine de la ce partener e»).
+ * 2026-11-11: «unde să pot selecta și să pot vedea în gridul cu toți participanții cine de la ce partener e»).
  *
  * One small client island, in the shape of `shared/ui/RowNoteDialog.tsx`: a press in the row's «Partener» cell — a real
  * button whose accessible name says whose partner it is — opens a dialog with a native select of the event's partners

@@ -797,7 +797,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     },
     {
       /*
-        «Partener» (the decision on the list's column; the owner, 2026-11-11: «o coloeana separata de "partener"»): the partner's
+        «Partener» (the decision on the list's column; the owner, 2026-11-11: «o coloană separată de „partener”»): the partner's
         or sponsor's name as plain text — nothing on a row without one — for every role that reads the list; the chip «Partener:
         {name}» left the name column for it, and stays on every other screen. Sorted by the name without regard to case, the rows
         with none last either way. Optional like its neighbours: «Coloane» hides it; unlike the address it stays on the wide table at

@@ -14,8 +14,8 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { readSheet } from "../../helpers/xlsx";
 
 /**
- * The registrations list's column «Partener» (the decision on the list's column; the owner, 2026-11-11: «as vrea o coloeana
- * separata de "partener" unde sa pot selecta si sa pot vedea in gridul cu toti participantii cine de la ce partener e»;
+ * The registrations list's column «Partener» (the decision on the list's column; the owner, 2026-11-11: «aș vrea o coloană
+ * separată de „partener” unde să pot selecta și să pot vedea în gridul cu toți participanții cine de la ce partener e»;
  * BR-REQ-037-05, BR-REQ-060-01, BR-REQ-070-01): the partner's name in a column of its own, sorted by it, the filter by any
  * partner or by one, and the row's own editor for the Administrator — the label still a label.
  *
