@@ -212,7 +212,7 @@ export function GuardianVerbs({
             {t("volunteers.guardian.noEmail")}
           </Typography>
         )}
-        <GlyphButton icon="print" href={`${pdfHref}?for=guardian`} variant="outlined" sx={{ minHeight: 44 }} data-testid="volunteer-guardian-pdf-to-sign">
+        <GlyphButton icon="print" href={`${pdfHref}?for=guardian`} variant="outlined" sx={{ minHeight: 44 }} aria-label={`${t("volunteers.guardian.pdfToSign")}: ${shortText(person.name)}`} data-testid="volunteer-guardian-pdf-to-sign">
           {t("volunteers.guardian.pdfToSign")}
         </GlyphButton>
         <ActionForm
@@ -240,7 +240,13 @@ export function GuardianVerbs({
           {/* What the PDF beside it prints (§768): the service refuses the record if either changed since. */}
           <input type="hidden" name="agreementDocumentId" value={agreementDocumentId} />
           <input type="hidden" name="agreementRoles" value={agreementRolesStamp(person.roleIds, person.choiceIds)} />
-          <GlyphSubmitButton icon="declaration" label={t("volunteers.guardian.paper")} pendingLabel={t("volunteers.guardian.paper")} variant="outlined" />
+          <GlyphSubmitButton
+            icon="declaration"
+            label={t("volunteers.guardian.paper")}
+            pendingLabel={t("volunteers.guardian.paper")}
+            ariaLabel={`${t("volunteers.guardian.paper")}: ${shortText(person.name)}`}
+            variant="outlined"
+          />
         </ActionForm>
       </Stack>
     </Stack>

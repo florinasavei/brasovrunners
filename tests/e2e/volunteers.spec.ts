@@ -1194,7 +1194,7 @@ test.describe("§754 volunteers for a race", () => {
       const sheet = await page.request.get(`/api/admin/events/${event.id}/volunteers/${await radu.getAttribute("data-volunteer-id")}/agreement?for=guardian`);
       expect(sheet.status()).toBe(200);
       expect(sheet.headers()["content-type"]).toBe("application/pdf");
-      await radu.getByRole("button", { name: "Acordul părintelui pe hârtie", exact: true }).click();
+      await radu.getByRole("button", { name: /^Acordul părintelui pe hârtie: / }).click();
       await page.getByRole("dialog").getByRole("button", { name: "Acordul părintelui pe hârtie", exact: true }).click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);

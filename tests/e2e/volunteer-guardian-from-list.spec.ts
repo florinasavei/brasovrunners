@@ -73,14 +73,14 @@ test.describe("«Voluntari»: a minor's parent from the list", () => {
     await expect(shown(page, "button", /^Confirmă: /)).toHaveCount(0);
     await expect(shown(page, "button", /^Anulează: /)).toHaveCount(1);
     await expect(shown(page, "button", /^Trimite linkul părintelui/)).toBeVisible();
-    await expect(shown(page, "link", "PDF de semnat de părinte")).toBeVisible();
+    await expect(shown(page, "link", /^PDF de semnat de părinte: /)).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
     // The sheet is a real PDF; the paper record asks first, then comes back to this very address.
-    const sheet = await page.request.get(await shown(page, "link", "PDF de semnat de părinte").getAttribute("href").then((href) => href ?? ""));
+    const sheet = await page.request.get(await shown(page, "link", /^PDF de semnat de părinte: /).getAttribute("href").then((href) => href ?? ""));
     expect(sheet.status()).toBe(200);
     expect(sheet.headers()["content-type"]).toBe("application/pdf");
-    const paper = shown(page, "button", "Acordul părintelui pe hârtie");
+    const paper = shown(page, "button", /^Acordul părintelui pe hârtie: /);
     expect((await paper.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await paper.click();
     const dialog = page.getByRole("dialog");

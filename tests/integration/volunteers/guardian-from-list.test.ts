@@ -3,6 +3,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { createTranslator, NextIntlClientProvider } from "next-intl";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventVolunteerRoleAssignments, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
@@ -266,6 +267,18 @@ describe("a row of the list", () => {
     expect(page).toContain(`value="${raceId}"`);
   });
 
+  it("names the person on the sheet and the paper controls of every row, so two minors on one page are told apart", async () => {
+    await volunteer({ name: "Minor Unu" });
+    await volunteer({ name: "Minor Doi" });
+    state.locale = "ro";
+    const page = await html(await AdminVolunteersPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({ eventId: raceId }) }));
+    for (const name of ["Minor Unu", "Minor Doi"]) {
+      expect(page.split(`aria-label="PDF de semnat de părinte: ${name}"`).length - 1).toBe(2);
+      expect(page.split(`aria-label="Acordul părintelui pe hârtie: ${name}"`).length - 1).toBe(2);
+    }
+    expect(page).not.toMatch(/aria-label="(PDF de semnat de părinte|Acordul părintelui pe hârtie)"/);
+  });
+
   it("says «Link trimis părintelui» and offers the resend once a link was sent", async () => {
     await volunteer({ name: "Minor Sent", linkSent: true });
     const page = await listOf("Minor Sent");
@@ -315,6 +328,8 @@ describe("a row of the list", () => {
     const page = await listOf("Minor Closed");
     expect(count(page, "volunteer-guardian-state")).toBe(2);
     expect(count(page, "volunteer-guardian")).toBe(0);
+    expect(count(page, "volunteer-guardian-closed")).toBe(2);
+    expect(page).toContain("nota sau contractul în vigoare nu descriu minorii");
     expect(count(page, "volunteer-confirmed-form")).toBe(0);
     expect(count(page, "volunteer-cancelled-form")).toBe(2);
   });
@@ -387,6 +402,8 @@ describe("a press on such a row, through the real actions", () => {
     const back = own("Minor Test");
     expect(await press(actions.setVolunteerStateAction, form({ volunteerId: id, state: "CONFIRMED", returnTo: back }))).toBe(`${back}&volunteerError=VOLUNTEER_GUARDIAN_MISSING`);
     expect((await stateOf(id)).state).toBe("REGISTERED");
+    expect((await db.select({ action: auditLogs.action }).from(auditLogs)).filter((row) => row.action.startsWith("volunteer."))).toEqual([]);
+    expect(await db.select({ id: emailOutbox.id }).from(emailOutbox)).toEqual([]);
   });
 
   it("refuses a role that may not manage volunteers, on every press", async () => {

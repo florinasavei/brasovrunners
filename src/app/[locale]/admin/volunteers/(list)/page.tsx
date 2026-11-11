@@ -495,6 +495,11 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
               {ask.kind === "ask" && (
                 <GuardianVerbs person={row} ask={ask} locale={locale} eventId={row.eventId} agreementDocumentId={agreementDocumentIds[row.locale] ?? ""} hidden={hidden(row)} words={words} t={t} />
               )}
+              {ask.kind === "closed" && (
+                <Typography variant="body2" color="text.secondary" data-testid="volunteer-guardian-closed">
+                  {t("volunteers.guardian.minorsClosed")}
+                </Typography>
+              )}
               {ask.kind === "noName" && (
                 <Stack spacing={0.5} data-testid="volunteer-guardian-no-name">
                   <Typography variant="body2" color="text.secondary">
