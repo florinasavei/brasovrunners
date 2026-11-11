@@ -518,7 +518,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {/* «Elită» (§897): the bib prints with the name where the number goes; marked and unmarked from the list's «⋮». */}
         {registration.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={tr("registrations.elite.chip")} testId="elite-chip" />}
         {/* «Partener: {name}» (the decision «De la parteneri»): the organizers' own label, for every role that reads this page. */}
-        {registration.partnerName && <StatusChip glyph="fromPartner" variant="outlined" label={tr("partner.chip", { name: registration.partnerName })} testId="partner-chip" />}
+        {registration.partnerName && <StatusChip glyph="fromPartner" variant="outlined" label={tr("partner.chip", { name: registration.partnerName })} testId="partner-chip" wrap />}
         {/* «Date lipsă» (§905): the list's chip; which answers, and how they are completed, is the line under the address. */}
         {owedAnswers.length > 0 && <StatusChip glyph="missingAnswers" color="warning" variant="outlined" label={tr("registrations.missingAnswers.chip")} testId="missing-answers-chip" />}
         <FamilyChip

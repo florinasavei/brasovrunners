@@ -285,6 +285,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                           variant="outlined"
                           label={t("partner.chip", { name: (state === "accepted" ? row.acceptedPartnerName : row.partnerName) ?? "" })}
                           testId="invitation-partner-chip"
+                          wrap
                         />
                       )}
                     </Stack>

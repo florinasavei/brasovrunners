@@ -21,6 +21,7 @@ export default function StatusChip({
   variant = "filled",
   testId,
   inline = false,
+  wrap = false,
 }: {
   glyph: StatusGlyphName;
   label: string;
@@ -29,6 +30,8 @@ export default function StatusChip({
   testId?: string;
   /** Drawn as a `<span>`, for a chip inside a heading or a summary, where a `<div>` is not phrasing content. */
   inline?: boolean;
+  /** For a label a person typed («Partener: {name}», up to 120 characters): wraps inside the chip instead of widening a phone's table. Every other chip keeps its one line. */
+  wrap?: boolean;
 }) {
   const Icon = STATUS_GLYPHS[glyph];
   return (
@@ -39,8 +42,7 @@ export default function StatusChip({
       variant={variant}
       icon={<Icon />}
       label={label}
-      // A name typed by a person («Partener: {name}», up to 120 characters) wraps instead of widening a phone's table (320 px).
-      sx={{ maxWidth: "100%", height: "auto", minHeight: 24, "& .MuiChip-label": { whiteSpace: "normal", overflowWrap: "anywhere" } }}
+      {...(wrap ? { sx: { height: "auto", minHeight: 24, "& .MuiChip-label": { whiteSpace: "normal", overflowWrap: "anywhere", py: 0.25 } } } : {})}
       {...(testId ? { "data-testid": testId } : {})}
     />
   );

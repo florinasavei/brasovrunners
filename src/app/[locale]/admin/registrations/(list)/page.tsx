@@ -522,7 +522,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {/* «Elită» (§897): the bib prints with the name where the number goes — for every role that reads the list. */}
           {row.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={t("registrations.elite.chip")} testId="elite-chip" />}
           {/* «Partener: {name}» (the decision «De la parteneri»): the organizers' own label, for every role that reads the list. */}
-          {row.partnerName && <StatusChip glyph="fromPartner" variant="outlined" label={t("partner.chip", { name: row.partnerName })} testId="partner-chip" />}
+          {row.partnerName && <StatusChip glyph="fromPartner" variant="outlined" label={t("partner.chip", { name: row.partnerName })} testId="partner-chip" wrap />}
           {/* «Date lipsă» (§905): a registration still standing lacks answers the form requires — the person completes them
               from their own link, or the Administrator types them; the registration's page says which and how. */}
           {isActiveStatus(row.status) && missingAnswersHeld(row).length > 0 && (
@@ -815,7 +815,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             </Box>
             <Chip size="small" variant="outlined" color="info" label={t("registrations.invitationRow.chip")} />
             {/* «Partener: {name}» from the send (the decision «De la parteneri»), as on «Invitații». */}
-            {row.partnerName && <StatusChip glyph="fromPartner" variant="outlined" label={t("partner.chip", { name: row.partnerName })} testId="partner-chip" />}
+            {row.partnerName && <StatusChip glyph="fromPartner" variant="outlined" label={t("partner.chip", { name: row.partnerName })} testId="partner-chip" wrap />}
           </Stack>
         ),
         status: <Chip size="small" color={state === "sent" ? "info" : "default"} label={t(`registrations.invitationRow.state.${state}`)} />,

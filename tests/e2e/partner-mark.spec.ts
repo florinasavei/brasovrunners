@@ -128,7 +128,7 @@ test.describe("«De la parteneri»: the tick and its box, the chip, the filter",
     await openFold(again);
     await again.getByTestId("partner-tick").uncheck();
     await again.getByTestId("reserve-partner-save").click();
-    await expect(page.getByTestId("toast")).toBeVisible({ timeout: 30_000 });
+    await expect(internal.getByTestId("partner-chip")).toHaveCount(0, { timeout: 30_000 });
     await hydrated(page);
     await openFold(internal);
     await expect(internal.getByTestId("reserve-entry").filter({ hasText: "Dana" })).toHaveCount(1);

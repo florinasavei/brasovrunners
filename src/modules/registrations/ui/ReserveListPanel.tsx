@@ -208,7 +208,7 @@ export default async function ReserveListPanel({
                 {/* «Partener: {name}» (the decision «De la parteneri»): staff only, carried onto the registration by a move. */}
                 {entry.partnerName && (
                   <Box sx={{ my: 0.5 }}>
-                    <StatusChip glyph="fromPartner" variant="outlined" label={t("partner.chip", { name: entry.partnerName })} testId="partner-chip" />
+                    <StatusChip glyph="fromPartner" variant="outlined" label={t("partner.chip", { name: entry.partnerName })} testId="partner-chip" wrap />
                   </Box>
                 )}
                 {entry.email && (
