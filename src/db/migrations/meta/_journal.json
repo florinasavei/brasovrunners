@@ -1310,6 +1310,13 @@
       "when": 1794225196807,
       "tag": "0195_invitations_per_person",
       "breakpoints": true
+    },
+    {
+      "idx": 187,
+      "version": "7",
+      "when": 1794385297026,
+      "tag": "0196_event_volunteer_notes",
+      "breakpoints": true
     }
   ]
 }

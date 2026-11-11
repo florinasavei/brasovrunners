@@ -15,12 +15,16 @@ import {
   setVolunteerStateAction,
   unassignVolunteerAction,
 } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
+import { VOLUNTEER_NOTE_MAX } from "@/db/schema/event-volunteer-notes";
+import { countForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
 import { shirtSizeShown, SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import { SEX_CHOICES } from "@/modules/registrations/domain/sex";
 import { formatPhone } from "@/modules/registrations/phone";
+import NotesMark from "@/modules/registrations/ui/NotesMark";
 import { shownTypedDate } from "@/shared/forms/pickers/wall-values";
 import { CLUB_NAME } from "@/theme/brand";
 import { type ConfirmWords, confirmWords } from "@/shared/feedback/confirm-words";
@@ -43,13 +47,13 @@ import {
   VOLUNTEER_GUARDIAN_NAME_MAX,
   VOLUNTEER_MINIMUM_AGE,
   VOLUNTEER_NAME_MAX,
-  VOLUNTEER_NOTE_MAX,
   agreementRolesStamp,
   agreementStandingOf,
   agreementStillNamesRole,
   earliestVolunteerBirthDate,
   groupRolesByCategory,
   groupsNeedHeadings,
+  guardianAskOf,
   guardianSharesAddress,
   guardianStandingOf,
   isVolunteerMinor,
@@ -59,6 +63,7 @@ import {
   roleLabel,
   rolesWithCategoryWords,
   type VolunteerAgreementStanding,
+  type VolunteerGuardianAsk,
   type VolunteerState,
 } from "../domain/volunteer";
 import { ROLE_EMAIL_SETTLE_MINUTES, type VolunteerCategory, type VolunteerItem, type VolunteerRole } from "../volunteers";
@@ -97,6 +102,11 @@ export type VolunteerPersonContext = {
   now: Date;
   /** The admin path a verb returns to, when not the card: the person's own page (§839). */
   returnTo?: string;
+  /**
+   * How many live internal notes each person has («Note interne» for volunteers): the event card's one grouped count, so each row's
+   * closed line carries the marker linking to the person's page. Absent where nobody counted (the person's own page draws the card).
+   */
+  noteCounts?: ReadonlyMap<string, number>;
 };
 
 /** The pencil at the end of a person's line: the edit verb's glyph, by name (§318). */
@@ -118,6 +128,138 @@ export const GUARDIAN_CHIP: Record<"accepted" | "missing", { glyph: StatusGlyphN
   accepted: { glyph: "done", color: "success" },
   missing: { glyph: "open", color: "warning" },
 };
+
+/**
+ * The parent's or guardian's agreement as chips («Confirmarea minorilor din lista de voluntari»), the person's block and the «Voluntari» list's
+ * row alike — the one place that decides them: «Acordul părintelui lipsește» or received, and «Link trimis părintelui» while a link is live; in
+ * words, never by colour alone. Nothing for an adult, and nothing for a cancelled person waiting on nothing.
+ */
+export function guardianChips(person: Pick<VolunteerItem, "age" | "state" | "guardianAcceptedAt" | "guardianTokenExpiresAt">, now: Date, t: Awaited<ReturnType<typeof getTranslations<"Admin">>>) {
+  const standing = guardianStandingOf(person, now);
+  if (standing === "notNeeded" || (person.state === "CANCELLED" && standing !== "accepted")) return null;
+  const chip = GUARDIAN_CHIP[standing === "accepted" ? "accepted" : "missing"];
+  return (
+    <>
+      <StatusChip
+        glyph={chip.glyph}
+        color={chip.color}
+        variant="outlined"
+        label={t(standing === "accepted" ? "volunteers.guardian.accepted" : "volunteers.guardian.missing")}
+        testId="volunteer-guardian-state"
+      />
+      {standing === "linkSent" && <StatusChip glyph="link" variant="outlined" label={t("volunteers.guardian.linkSent")} testId="volunteer-guardian-link" />}
+    </>
+  );
+}
+
+/**
+ * What the organizer does about a minor whose parent has not agreed (§768, «Confirmarea minorilor din lista de voluntari»), the person's block and
+ * the «Voluntari» list's row alike — the same buttons under the same conditions (`guardianAskOf` decides), each asking first and posting to the
+ * card's own actions, which ask the service for the role and the texts again: «Trimite linkul părintelui» (to the parent's address, when both
+ * addresses exist), the sheet to print, «Acordul părintelui pe hârtie». `hidden` carries the language, the event and where the press comes back to.
+ */
+export function GuardianVerbs({
+  person,
+  ask,
+  locale,
+  eventId,
+  agreementDocumentId,
+  hidden,
+  words,
+  t,
+}: {
+  person: Pick<VolunteerItem, "id" | "name" | "email" | "guardianName" | "guardianEmail" | "guardianRequestedAt" | "agreementAcceptedAt" | "roleIds" | "choiceIds">;
+  ask: Extract<VolunteerGuardianAsk, { kind: "ask" }>;
+  locale: Locale;
+  eventId: string;
+  /** The agreement in force in the volunteer's language, the one the sheet prints (§768): the service refuses the record if it changed since. */
+  agreementDocumentId: string;
+  hidden: ReactNode;
+  words: ConfirmWords;
+  t: Awaited<ReturnType<typeof getTranslations<"Admin">>>;
+}) {
+  const day = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
+  const pdfHref = `/api/admin/events/${eventId}/volunteers/${person.id}/agreement`;
+  const sendLabel = ask.sent ? t("volunteers.guardian.resend") : t("volunteers.guardian.send");
+  return (
+    <Stack spacing={1} sx={{ mt: 0.5 }} data-testid="volunteer-guardian">
+      {person.guardianRequestedAt && (
+        <Typography variant="caption" color="text.secondary">
+          {t("volunteers.guardian.requestedLine", { when: day(person.guardianRequestedAt) })}
+        </Typography>
+      )}
+      <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
+        {ask.send === "volunteerNoEmail" ? (
+          // A volunteer the club typed with no address (§865) is sent nothing, the parent's link included: one line says why, the paper stays.
+          <Typography variant="body2" color="text.secondary" sx={{ alignSelf: "center" }} data-testid="volunteer-guardian-volunteer-no-email">
+            {t("volunteers.guardian.volunteerNoEmail")}
+          </Typography>
+        ) : ask.send === "ok" && person.guardianEmail !== null && person.guardianName !== null ? (
+          // One email to the parent's address per press, each link replacing the last (§768): asked first, naming the parent and the address.
+          <Box component="form" action={requestVolunteerGuardianAction} data-testid="volunteer-guardian-send-form">
+            {hidden}
+            <input type="hidden" name="volunteerId" value={person.id} />
+            <ConfirmSubmitButton
+              label={sendLabel}
+              icon={ask.sent ? "resend" : "send"}
+              ariaLabel={`${sendLabel}: ${shortText(person.name)}`}
+              title={t("volunteers.guardian.sendTitle")}
+              body={t("volunteers.guardian.sendBody", { name: shortText(person.name) })}
+              mail={words.mail({
+                to: { name: person.guardianName, address: person.guardianEmail },
+                type: "VOLUNTEER_GUARDIAN_REQUEST",
+                also: person.guardianRequestedAt ? [words.line("linkReplaced", { date: day(person.guardianRequestedAt) })] : [],
+              })}
+              confirmLabel={sendLabel}
+              cancelLabel={words.cancel}
+              size="medium"
+            />
+          </Box>
+        ) : (
+          <Typography variant="body2" color="text.secondary" data-testid="volunteer-guardian-no-email">
+            {t("volunteers.guardian.noEmail")}
+          </Typography>
+        )}
+        <GlyphButton icon="print" href={`${pdfHref}?for=guardian`} variant="outlined" sx={{ minHeight: 44 }} aria-label={`${t("volunteers.guardian.pdfToSign")}: ${shortText(person.name)}`} data-testid="volunteer-guardian-pdf-to-sign">
+          {t("volunteers.guardian.pdfToSign")}
+        </GlyphButton>
+        <ActionForm
+          action={recordPaperVolunteerGuardianAction}
+          confirm={{
+            title: t("volunteers.guardian.paperTitle", { name: shortText(person.name) }),
+            body: t("volunteers.guardian.paperBody", { name: shortText(person.name) }),
+            // The volunteer's second copy of their agreement, now with the parent's consent — only once they accepted their own,
+            // and only to an address (`guardian.ts#queueVolunteerCopy`); the parent is sent nothing. A second copy, so it may
+            // stay unsent (slice 4): the first, of what the volunteer signed, reached them when they accepted.
+            ...(person.agreementAcceptedAt !== null && person.email !== null
+              ? words.mail({
+                  to: { name: person.name, address: person.email },
+                  type: "VOLUNTEER_AGREEMENT_ACCEPTED",
+                  also: [{ ...words.line("guardianCopy"), withEmail: true }],
+                  optOut: true,
+                })
+              : words.noMail(person.name, [words.line("guardianNone")])),
+            confirmLabel: t("volunteers.guardian.paper"),
+            cancelLabel: words.cancel,
+          }}
+        >
+          {hidden}
+          <input type="hidden" name="volunteerId" value={person.id} />
+          {/* What the PDF beside it prints (§768): the service refuses the record if either changed since. */}
+          <input type="hidden" name="agreementDocumentId" value={agreementDocumentId} />
+          <input type="hidden" name="agreementRoles" value={agreementRolesStamp(person.roleIds, person.choiceIds)} />
+          <GlyphSubmitButton
+            icon="declaration"
+            label={t("volunteers.guardian.paper")}
+            pendingLabel={t("volunteers.guardian.paper")}
+            ariaLabel={`${t("volunteers.guardian.paper")}: ${shortText(person.name)}`}
+            variant="outlined"
+          />
+        </ActionForm>
+      </Stack>
+    </Stack>
+  );
+}
 
 export function shortText(text: string): string {
   const flat = text.replace(/\s+/g, " ").trim();
@@ -455,16 +597,19 @@ export async function VolunteerPersonFields({ person, context }: { person: Volun
           {t("volunteers.person.hasKit")}
         </CheckboxField>
       </Box>
-      <RecallField
-        name="note"
-        label={t("volunteers.person.note")}
-        helperText={t("volunteers.person.noteHelp", { max: String(VOLUNTEER_NOTE_MAX) })}
-        defaultValue={person?.note ?? ""}
-        size="small"
-        multiline
-        minRows={2}
-        slotProps={{ htmlInput: { maxLength: VOLUNTEER_NOTE_MAX } }}
-      />
+      {/* «Nota ta (doar organizatorii)» on «Adaugă un voluntar de mână» only: the person's optional first internal note, written as a
+          note of whoever adds, in the add's transaction. «Modifică» has no such box: the notes are kept on the volunteer's «Note interne». */}
+      {person === null && (
+        <RecallField
+          name="note"
+          label={t("volunteers.person.note")}
+          helperText={t("volunteers.person.noteHelp", { max: String(VOLUNTEER_NOTE_MAX) })}
+          size="small"
+          multiline
+          minRows={2}
+          slotProps={{ htmlInput: { maxLength: VOLUNTEER_NOTE_MAX } }}
+        />
+      )}
     </Stack>
   );
 }
@@ -643,83 +788,10 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
         </Stack>
       );
     }
-    if (person.state === "CANCELLED") return null;
     // While the texts do not describe minors the link and the paper wait: the card says so once (`guardianNote`), not on every row.
-    if (!minorsOpen) return null;
-    const sent = guardianStandingOf(person, now) === "linkSent" || person.guardianRequestedAt !== null;
-    const sendLabel = sent ? t("volunteers.guardian.resend") : t("volunteers.guardian.send");
-    return (
-      <Stack spacing={1} sx={{ mt: 0.5 }} data-testid="volunteer-guardian">
-        {person.guardianRequestedAt && (
-          <Typography variant="caption" color="text.secondary">
-            {t("volunteers.guardian.requestedLine", { when: day(person.guardianRequestedAt) })}
-          </Typography>
-        )}
-        <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
-          {person.email === null ? (
-            // A volunteer the club typed with no address (§865) is sent nothing, the parent's link included: one line says why, the paper stays.
-            <Typography variant="body2" color="text.secondary" sx={{ alignSelf: "center" }} data-testid="volunteer-guardian-volunteer-no-email">
-              {t("volunteers.guardian.volunteerNoEmail")}
-            </Typography>
-          ) : person.guardianEmail !== null ? (
-            // One email to the parent's address per press, each link replacing the last (§768): asked first, naming the parent and the address.
-            <Box component="form" action={requestVolunteerGuardianAction} data-testid="volunteer-guardian-send-form">
-              {hidden}
-              <input type="hidden" name="volunteerId" value={person.id} />
-              <ConfirmSubmitButton
-                label={sendLabel}
-                icon={sent ? "resend" : "send"}
-                ariaLabel={`${sendLabel}: ${shortText(person.name)}`}
-                title={t("volunteers.guardian.sendTitle")}
-                body={t("volunteers.guardian.sendBody", { name: shortText(person.name) })}
-                mail={words.mail({
-                  to: { name: person.guardianName, address: person.guardianEmail },
-                  type: "VOLUNTEER_GUARDIAN_REQUEST",
-                  also: person.guardianRequestedAt ? [words.line("linkReplaced", { date: day(person.guardianRequestedAt) })] : [],
-                })}
-                confirmLabel={sendLabel}
-                cancelLabel={words.cancel}
-                size="medium"
-              />
-            </Box>
-          ) : (
-            <Typography variant="body2" color="text.secondary" data-testid="volunteer-guardian-no-email">
-              {t("volunteers.guardian.noEmail")}
-            </Typography>
-          )}
-          <GlyphButton icon="print" href={`${pdfHref}?for=guardian`} variant="outlined" sx={{ minHeight: 44 }} data-testid="volunteer-guardian-pdf-to-sign">
-            {t("volunteers.guardian.pdfToSign")}
-          </GlyphButton>
-          <ActionForm
-            action={recordPaperVolunteerGuardianAction}
-            confirm={{
-              title: t("volunteers.guardian.paperTitle", { name: shortText(person.name) }),
-              body: t("volunteers.guardian.paperBody", { name: shortText(person.name) }),
-              // The volunteer's second copy of their agreement, now with the parent's consent — only once they accepted their own,
-              // and only to an address (`guardian.ts#queueVolunteerCopy`); the parent is sent nothing. A second copy, so it may
-              // stay unsent (slice 4): the first, of what the volunteer signed, reached them when they accepted.
-              ...(person.agreementAcceptedAt !== null && person.email !== null
-                ? words.mail({
-                    to: { name: person.name, address: person.email },
-                    type: "VOLUNTEER_AGREEMENT_ACCEPTED",
-                    also: [{ ...words.line("guardianCopy"), withEmail: true }],
-                    optOut: true,
-                  })
-                : words.noMail(person.name, [words.line("guardianNone")])),
-              confirmLabel: t("volunteers.guardian.paper"),
-              cancelLabel: words.cancel,
-            }}
-          >
-            {hidden}
-            <input type="hidden" name="volunteerId" value={person.id} />
-            {/* What the PDF beside it prints (§768): the service refuses the record if either changed since. */}
-            <input type="hidden" name="agreementDocumentId" value={agreementDocumentIds[person.locale] ?? ""} />
-            <input type="hidden" name="agreementRoles" value={agreementRolesStamp(person.roleIds, person.choiceIds)} />
-            <GlyphSubmitButton icon="declaration" label={t("volunteers.guardian.paper")} pendingLabel={t("volunteers.guardian.paper")} variant="outlined" />
-          </ActionForm>
-        </Stack>
-      </Stack>
-    );
+    const ask = guardianAskOf(person, minorsOpen, now);
+    if (ask.kind !== "ask") return null;
+    return <GuardianVerbs person={person} ask={ask} locale={locale} eventId={eventId} agreementDocumentId={agreementDocumentIds[person.locale] ?? ""} hidden={hidden} words={words} t={t} />;
   };
 
   /** A role's name with how it stands, «Sosire · 1 din 1»: what the organizer sees before one press fills it. */
@@ -897,25 +969,7 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
         })()}
         {/* The parent's or guardian's agreement (§768), for a volunteer under eighteen only: «Acordul părintelui lipsește», a link sent, or received —
             in words, never by colour alone. A cancelled person waiting on nothing shows none. */}
-        {(() => {
-          const standing = guardianStandingOf(person, now);
-          if (standing === "notNeeded" || (person.state === "CANCELLED" && standing !== "accepted")) return null;
-          const chip = GUARDIAN_CHIP[standing === "accepted" ? "accepted" : "missing"];
-          return (
-            <>
-              <StatusChip
-                glyph={chip.glyph}
-                color={chip.color}
-                variant="outlined"
-                label={t(standing === "accepted" ? "volunteers.guardian.accepted" : "volunteers.guardian.missing")}
-                testId="volunteer-guardian-state"
-              />
-              {standing === "linkSent" && (
-                <StatusChip glyph="link" variant="outlined" label={t("volunteers.guardian.linkSent")} testId="volunteer-guardian-link" />
-              )}
-            </>
-          );
-        })()}
+        {guardianChips(person, now, t)}
       </Stack>
       {/* What the person said about themselves (§765), small: two chips — «a mai fost voluntar» and the club's group, the person's own claims, in words and a glyph —
           and one line of the rest in the row's details. Nothing for a person who said nothing. */}
@@ -991,14 +1045,6 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
             {t("volunteers.person.messageLabel")}:{" "}
           </Box>
           {person.message}
-        </Typography>
-      )}
-      {person.note && (
-        <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
-          <Box component="span" sx={{ fontWeight: 600 }}>
-            {t("volunteers.person.noteLabel")}:{" "}
-          </Box>
-          {person.note}
         </Typography>
       )}
       <Typography variant="caption" color="text.secondary">
@@ -1092,6 +1138,8 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
     verb that changed it — «Confirmă», a role given — draws it closed on its new line; one that did not leaves it as it was.
   */
   const given = rolesOf(person).assigned;
+  const noteCount = context.noteCounts?.get(person.id) ?? 0;
+  const counted = t(`registrations.notes.count.${countForm(noteCount, locale)}`, { count: noteCount });
   return (
     <Box component="li" data-testid="volunteer-row" data-volunteer-id={person.id} data-state={person.state} sx={ROW_SX}>
       <Box component="details" id={`volunteer-${person.id}`} key={[person.name, person.state, ...person.roleIds].join("\u0001")} data-testid="volunteer-edit">
@@ -1108,6 +1156,14 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
             ) : person.state !== "CANCELLED" ? (
               <StatusChip glyph="open" color="warning" variant="outlined" label={t("volunteers.unassigned.title")} testId="volunteer-row-roles" />
             ) : null}
+            {/* «Note interne»: the count when somebody left a note, a link to the person's page with the card open — the notes are read there. */}
+            {noteCount > 0 && (
+              <NotesMark
+                label={counted}
+                ariaLabel={t("registrations.notes.mark", { name: person.name, counted })}
+                href={`${getPathname({ locale, href: { pathname: "/admin/volunteers/[id]", params: { id: person.id } } })}#note-interne`}
+              />
+            )}
           </Box>
           <PencilIcon aria-hidden fontSize="small" sx={PENCIL_SX} />
         </Box>

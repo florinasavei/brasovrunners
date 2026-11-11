@@ -58,7 +58,6 @@ const staffFields = (form: FormData) => ({
   // Each optional for a row the club types (§865): an empty box is none — the person is then on the list only, never emailed.
   email: field(form, "email"),
   phone: phoneOf(form),
-  note: field(form, "note"),
   // What the person told the organizers (§765), all optional: the boxes as typed, the two ticks true only when posted. The date of
   // birth is what the card's box posts (§773, the registration form's own box); the service reads it as typed, day first, and derives the age.
   birthDate: field(form, "birthDate"),
@@ -419,7 +418,8 @@ export async function addVolunteerAction(_previous: FormOutcome | null, form: Fo
     // «Trimite emailul» beside the form's button (slice 4).
     const sendEmail = sendEmailOf(form);
     try {
-      await runVolunteer({ kind: "add", eventId: eventIdOf(form), fields: staffFields(form) }, press, sendEmail);
+      // «Nota ta (doar organizatorii)»: the person's optional first internal note, written in the add's own transaction.
+      await runVolunteer({ kind: "add", eventId: eventIdOf(form), fields: staffFields(form), firstNote: field(form, "note") }, press, sendEmail);
     } catch (error) {
       return refused(error, form);
     }

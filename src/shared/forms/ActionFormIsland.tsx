@@ -377,8 +377,13 @@ export default function ActionFormIsland({
     const counted = resolveEmailCount(placed, valuesOf);
     // The quieter lines true of this press alone: the offers a raised capacity sends, the window's re-sent links.
     const said = resolveAlso(counted, valueOf);
+    // A list's chosen line, in the words the screen shows: «Termen nou: joi, 19 nov., 14:42.» («La retrimitere»).
+    const chosenOf = (field: string) => {
+      const list = element.elements.namedItem(field);
+      return list instanceof HTMLSelectElement ? (list.selectedOptions[0]?.textContent ?? null) : null;
+    };
     // A typed value named in the sentence (§511): «Limita nouă: 100 ore-CU.», «Pleacă 1 email către {firstName} {lastName}…».
-    const resolved = fillFromForm(said, valueOf);
+    const resolved = fillFromForm(said, valueOf, chosenOf);
     setAsking({ spec: resolved, submitter });
   };
 

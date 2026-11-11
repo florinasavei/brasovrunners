@@ -89,6 +89,8 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   declarationHoldAction: vi.fn(),
   setClubMemberDeclaredAction: vi.fn(),
   clearMemberTicksAction: vi.fn(),
+  // «Adaugă o notă» on a row (the dialog's press): the list page hands it to the row's control; tested in `note-from-list-action.test.ts`.
+  addRegistrationNoteFromListAction: vi.fn(),
 }));
 vi.mock("@/app/[locale]/admin/registrations/[id]/actions", () => ({
   resendFamilyEmailAction: vi.fn(),
@@ -102,8 +104,11 @@ const { default: AdminTable } = await import("@/modules/staff-identity/ui/AdminT
 const { default: NotesCard } = await import("@/modules/registrations/ui/NotesCard");
 const { default: NotesMark } = await import("@/modules/registrations/ui/NotesMark");
 const { default: Panel } = await import("@/shared/ui/Panel");
+const { default: RowNoteDialog } = await import("@/shared/ui/RowNoteDialog");
+const listActions = await import("@/app/[locale]/admin/registrations/actions");
 const { default: ActionForm } = await import("@/shared/forms/ActionForm");
 const { addRegistrationNote } = await import("@/modules/registrations/notes");
+const { opensByItself } = await import("@/shared/ui/fold");
 const noteActions = await import("@/app/[locale]/admin/registrations/[id]/note-actions");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
@@ -234,6 +239,44 @@ describe("«Note interne» on the registration's page", () => {
     expect(await aside()).toBe("20 notes");
   });
 
+  it("stands FIRST on the page, before every other card, for every role that may keep notes — and is not drawn for the others", async () => {
+    const race = await createRace("Crosul");
+    const id = await register(race.id);
+    for (const role of ["MODERATOR", "ADMIN", "SUPERADMIN"] as const) {
+      state.actor = await staff(role);
+      const all = elements(await detailPage(id));
+      const first = all.findIndex((element) => element.type === NotesCard);
+      expect(first, role).toBeGreaterThanOrEqual(0);
+      // No other card (a `Panel`, or the page's «Ce îi spui») stands above it.
+      const above = all.slice(0, first).filter((element) => element.type === Panel || element.props["data-testid"] === "resend-form");
+      expect(above.map((element) => String(element.props["data-testid"] ?? element.props.title)), role).toEqual([]);
+    }
+  });
+
+  it("opens by itself exactly when it holds a note: closed on «nicio notă», open with one — through the fold's own reason", async () => {
+    const race = await createRace("Crosul");
+    const organizer = await staff("MODERATOR");
+    state.actor = organizer;
+    const id = await register(race.id);
+    const openWhen = async () => {
+      const [panel] = elements((await cardOf(await detailPage(id)))!.drawn).filter((element) => element.type === Panel);
+      return panel.props.openWhen as { saved?: boolean; holds?: boolean };
+    };
+    expect(await openWhen()).toEqual({ saved: false, holds: false });
+    expect(opensByItself(await openWhen())).toBe(false);
+    await addRegistrationNote(db, organizer, id, "una", new Date("2026-10-15T10:00:00.000Z"));
+    expect(await openWhen()).toEqual({ saved: false, holds: true });
+    expect(opensByItself(await openWhen())).toBe(true);
+    // The card still opens after its own save or delete, with or without a note left, and for the fragment (the shell's).
+    const { deleteRegistrationNote } = await import("@/modules/registrations/notes");
+    const [only] = await db.select().from(registrationNotes);
+    await deleteRegistrationNote(db, organizer, only.id, new Date("2026-10-15T10:05:00.000Z"));
+    const afterDelete = (await cardOf(await detailPage(id, { saved: "noteDeleted" })))!;
+    const [panel] = elements(afterDelete.drawn).filter((element) => element.type === Panel);
+    expect(panel.props.openWhen).toEqual({ saved: true, holds: false });
+    expect(panel.props.id).toBe("note-interne");
+  });
+
   it("lists the notes newest first with the author and when, and carries the help line", async () => {
     const race = await createRace("Crosul");
     state.actor = await staff("MODERATOR", "Ioana Organizer");
@@ -357,6 +400,128 @@ describe("the list's marker", () => {
     const id = await register(race.id);
     await addRegistrationNote(db, organizer, id, "una", new Date("2026-10-15T10:00:00.000Z"));
     expect(elements(await nameCellOf(await listPage({ eventId: race.id }), id)).filter((element) => element.type === NotesMark)).toHaveLength(1);
+  });
+});
+
+describe("the list's «Adaugă o notă» — the row's control", () => {
+  const controlsOf = async (tree: ReactNode, id: string) => elements(await nameCellOf(tree, id)).filter((element) => element.type === RowNoteDialog);
+
+  it("is drawn on every row for a role that may keep notes — beside the marker when the row has notes, alone when it has none", async () => {
+    const race = await createRace("Crosul");
+    const organizer = await staff("MODERATOR");
+    state.actor = organizer;
+    const withNotes = await register(race.id);
+    const without = await register(race.id);
+    await addRegistrationNote(db, organizer, withNotes, "una", new Date("2026-10-15T10:00:00.000Z"));
+    const tree = await listPage({ eventId: race.id });
+
+    const [alone] = await controlsOf(tree, without);
+    expect(elements(await nameCellOf(tree, without)).filter((element) => element.type === NotesMark)).toHaveLength(0);
+    const [beside] = await controlsOf(tree, withNotes);
+    expect(elements(await nameCellOf(tree, withNotes)).filter((element) => element.type === NotesMark)).toHaveLength(1);
+    expect(alone).toBeDefined();
+    expect(beside).toBeDefined();
+  });
+
+  it("carries the words, the action, the hidden fields and the fallback link — the person named in the accessible name and the title", async () => {
+    const race = await createRace("Crosul");
+    state.actor = await staff("MODERATOR");
+    const id = await register(race.id);
+    const [control] = await controlsOf(await listPage({ eventId: race.id, sort: "name", dir: "asc" }), id);
+    const props = control.props as Parameters<typeof RowNoteDialog>[0];
+    expect(props.action).toBe(listActions.addRegistrationNoteFromListAction);
+    expect(props).toMatchObject({
+      label: "Adaugă o notă",
+      ariaLabel: expect.stringContaining("Runner"),
+      title: expect.stringContaining("Runner"),
+      help: "Doar organizatorii și administratorii văd notele. Nu scrie date medicale sau alte date sensibile.",
+      boxName: "body",
+      boxLabel: "Adaugă o notă",
+      limitText: `Cel mult ${REGISTRATION_NOTE_MAX} de caractere.`,
+      max: REGISTRATION_NOTE_MAX,
+      saveLabel: "Salvează nota",
+      fallbackHref: `/ro/admin/registrations/${id}#note-interne`,
+      settledKey: "0:",
+    });
+    expect(props.cancelLabel).toBeTruthy();
+    // The hidden fields: the row, the language and the list's own query (filters, sort, page) — never a word of a note.
+    expect(props.fields).toMatchObject({ uiLocale: "ro", registrationId: id });
+    const query = new URLSearchParams(props.fields.listQuery);
+    expect(query.get("eventId")).toBe(race.id);
+    expect(query.get("sort")).toBe("name");
+    // Only strings and a Server Action cross to the client: no element, no component.
+    for (const [name, value] of Object.entries(props)) {
+      if (name === "action") continue;
+      expect(isValidElement(value), name).toBe(false);
+      expect(typeof value === "function", name).toBe(false);
+    }
+    // The key is the row's note count plus the return's own `saved` flag: a return that carries `saved` changes it,
+    // so the dialog closes after any successful save, not only when the count moves.
+    const saved = await controlsOf(await listPage({ eventId: race.id, saved: "noteSaved" }), id);
+    expect((saved[0].props as Parameters<typeof RowNoteDialog>[0]).settledKey).toBe("0:noteSaved");
+    // Only the four sentences the dialog can meet travel with the row, not the whole catalogue.
+    expect(Object.keys(props.messages.errors).sort()).toEqual(["FORBIDDEN", "NOTE_EMPTY", "NOTE_TOO_LONG", "NOT_FOUND"]);
+  });
+
+  it("is drawn for the Administrator and the Superadministrator too", async () => {
+    const race = await createRace("Crosul");
+    const id = await register(race.id);
+    for (const role of ["ADMIN", "SUPERADMIN"] as const) {
+      state.actor = await staff(role);
+      expect(await controlsOf(await listPage({ eventId: race.id }), id), role).toHaveLength(1);
+    }
+  });
+
+  it("is absent for a role that may not keep notes — the list itself is the Organizer's and above, and the press refuses the rest", async () => {
+    const race = await createRace("Crosul");
+    const id = await register(race.id);
+    state.actor = await staff("MODERATOR");
+    const tree = await listPage({ eventId: race.id });
+    const table = elements(tree).find((element) => element.type === AdminTable)!;
+    expect((table.props.rows as unknown[]).length).toBeGreaterThan(0);
+    // The same column drawn for a role that may not keep notes holds no control (a stand-in actor: the cell asks the role).
+    const columns = table.props.columns as Array<{ key: string; render: (row: unknown) => ReactNode }>;
+    expect(columns.find((column) => column.key === "name")).toBeDefined();
+    for (const role of ["DEV", "CONTRIBUTOR", "COPYWRITER"] as const) {
+      expect(canKeepRegistrationNotes(role)).toBe(false);
+      state.actor = await staff(role, `Tester ${role}`);
+      // Today the list is refused to these roles altogether (the same role set reads it and keeps notes); if the
+      // list is ever opened to more roles, the same loop guards that the control is still not drawn.
+      let refusal: unknown;
+      let drawn: ReactNode = null;
+      try {
+        drawn = await nameCellOf(await listPage({ eventId: race.id }), id);
+      } catch (error) {
+        refusal = error;
+      }
+      // The refusal is the page's own not-found; any other error fails the test.
+      if (refusal !== undefined) expect((refusal as Error).message, role).toBe("NOT_FOUND");
+      else expect(elements(drawn).filter((element) => element.type === RowNoteDialog), role).toHaveLength(0);
+    }
+  });
+
+  it("reads the notes of the page in ONE grouped count — no query per row", async () => {
+    const race = await createRace("Crosul");
+    const organizer = await staff("MODERATOR");
+    state.actor = organizer;
+    for (let n = 0; n < 5; n += 1) await addRegistrationNote(db, organizer, await register(race.id), `nota ${n}`, new Date("2026-10-15T10:00:00.000Z"));
+    const reads: string[] = [];
+    const real = db.select.bind(db);
+    const spy = vi.spyOn(db, "select").mockImplementation(((...args: unknown[]) => {
+      const query = (real as (...a: unknown[]) => { from: (table: unknown) => unknown })(...args);
+      const from = query.from.bind(query);
+      query.from = ((table: unknown) => {
+        if (table === registrationNotes) reads.push("notes");
+        return from(table);
+      }) as never;
+      return query as never;
+    }) as never);
+    try {
+      await listPage({ eventId: race.id });
+    } finally {
+      spy.mockRestore();
+    }
+    expect(reads).toEqual(["notes"]);
   });
 });
 

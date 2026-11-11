@@ -1,3 +1,4 @@
+import { calendarDayIn } from "@/i18n/dates";
 import { DomainError } from "@/shared/errors/domain-error";
 
 /**
@@ -65,6 +66,52 @@ export function invitationDeadline(input: { now: Date; days: number; startsAt: D
   const days = Math.min(Math.max(Math.trunc(input.days), 1), INVITATION_DAYS_MAX);
   const at = Math.min(input.now.getTime() + days * 24 * 60 * 60_000, input.startsAt.getTime());
   return at > input.now.getTime() ? new Date(at) : null;
+}
+
+/** One later deadline «Retrimite»'s list offers: the days it posts, the moment they reach, and whether that is the start. */
+export type ResendDeadlineChoice = { days: number; deadline: Date; atStart: boolean };
+
+/**
+ * The later deadlines «Retrimite» can give an open invitation, as its list «La retrimitere» offers them (the owner,
+ * 2026-11-10, of the bare box «Zile (opțional)»: «nu înțeleg ce înseamnă asta»): for each whole number of days
+ * counted from `drawnAt` — the moment the page is drawn — the moment those days reach, up to the 60 a deadline may
+ * run, ending at the start when they reach it. The arithmetic is the server's own (`invitationDeadline`), and the
+ * press counts the same days from the same moment (`resendInvitationByStaff`'s `countedFrom`), so a line names
+ * exactly the deadline its press stores — the same day and the same minute, whenever it is pressed.
+ *
+ * **One line a day, each on a later day than the deadline it replaces.** Never a later minute of the same day: seven
+ * days on an invitation sent with seven an hour ago would move its deadline by that hour, which nobody chooses.
+ * Never two lines for one day (the night the clocks go back makes two reaches land on the same one), and never the
+ * start's own day beside «la start», which is that day's line whenever the sixty days reach the start. The start is
+ * the one line a day may share with the deadline it replaces: «la start» is a deadline of its own, however close.
+ *
+ * Empty once the event has started, when the deadline is already the start, and whenever no whole number of days
+ * lands on a later day. Who may not move a deadline at all — a counted place while somebody waits, an event that is
+ * not scheduled — is the caller's to ask, and the server's under the lock.
+ */
+export function resendDeadlineChoices(input: { drawnAt: Date; expiresAt: Date; startsAt: Date; timeZone: string }): ResendDeadlineChoice[] {
+  const choices: ResendDeadlineChoice[] = [];
+  const start = input.startsAt.getTime();
+  const startDay = calendarDayIn(input.startsAt, input.timeZone);
+  // «la start» is a line of this list when some reach of the sixty lands on the start: then the start's own day is that line's.
+  const startReached = input.drawnAt.getTime() + INVITATION_DAYS_MAX * 24 * 60 * 60_000 >= start;
+  let lastDay = calendarDayIn(input.expiresAt, input.timeZone);
+  for (let days = 1; days <= INVITATION_DAYS_MAX; days += 1) {
+    const deadline = invitationDeadline({ now: input.drawnAt, days, startsAt: input.startsAt });
+    // The event has started: a resend is refused, and there is nothing to offer.
+    if (deadline === null) break;
+    if (deadline.getTime() === start) {
+      // Every longer reach lands on the start too: one line says it, when it is later than the deadline the invitation has.
+      if (start > input.expiresAt.getTime()) choices.push({ days, deadline, atStart: true });
+      break;
+    }
+    const day = calendarDayIn(deadline, input.timeZone);
+    if (day > lastDay && !(day === startDay && startReached)) {
+      choices.push({ days, deadline, atStart: false });
+      lastDay = day;
+    }
+  }
+  return choices;
 }
 
 /**

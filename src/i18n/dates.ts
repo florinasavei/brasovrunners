@@ -134,6 +134,14 @@ function formatter(locale: string, options: Intl.DateTimeFormatOptions): Intl.Da
   return found;
 }
 
+/**
+ * The calendar day an instant falls on in a zone, `YYYY-MM-DD` (`en-CA` writes it that way): two days compare as
+ * text. For a rule decided by the day — a deadline a screen names by its day, a line a list offers once a day.
+ */
+export function calendarDayIn(at: Date, timeZone: string): string {
+  return formatter("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(at);
+}
+
 /** The first letter in capitals, in the language's own rules ("ș" → "Ș"); the rest untouched. */
 export function capitalizeFirst(text: string, locale: string): string {
   if (text === "") return text;

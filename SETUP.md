@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.38-2026-11-10 -->
+<!-- PROJECT_BASELINE: BR-V4.39-2026-11-11 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V4.38-2026-11-10`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.39-2026-11-11`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1717,13 +1717,14 @@ languages go live together; that is the rule, not a setting.
      name and address filled in; they fill in the rest, accept the terms and sign the declaration
      themselves, from the email that follows.
    - Each invitation keeps its place until its deadline; unaccepted, the place goes back to the line by
-     itself. On the invitation's row: «Retrimite» (a new link; the deadline stays, unless you type a
-     number of days in the box and that comes later) and «Retrage» (the place goes back at once). While
+     itself. On the invitation's row: «Retrimite» (a new link; the list «La retrimitere» beside it rests on
+     «Termenul rămâne», and to move the deadline later you choose its new day and hour in it) and
+     «Retrage» (the place goes back at once). While
      anybody is on the waiting list, «Retrimite» on an invitation that holds a counted place sends the
-     link and the email again but keeps the deadline — the row shows no days box, the dialog says why,
+     link and the email again but keeps the deadline — the row shows no list, the dialog says why,
      and the message after it says the deadline stayed: if the invitation is not accepted by then, the
-     place goes to the waiting list. An invitation «Pe lista de invitați speciali» can still be extended. The Organizer sees the list, not
-     the buttons.
+     place goes to the waiting list. An invitation «Pe lista de invitați speciali» can still be extended. The Organizer sees the
+     invitations, not the buttons or the list «La retrimitere».
    - Somebody invited who registers anyway, through the public form or at the desk, takes the
      invitation's place once their address is confirmed or a place is given to them: the invitation
      reads «Acceptată» and links the registration, and their registration's page says «Înscriere pe

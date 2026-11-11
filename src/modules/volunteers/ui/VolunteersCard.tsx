@@ -158,6 +158,8 @@ type Props = {
   now: Date;
   /** A refused one-button form's code, already translated. */
   error?: string;
+  /** How many live internal notes each person has («Note interne» for volunteers): one grouped count, each row's marker. */
+  noteCounts?: ReadonlyMap<string, number>;
 };
 
 /** A line's words cut for an accessible name. */
@@ -188,6 +190,7 @@ export default async function VolunteersCard({
   agreementEvent,
   now,
   error,
+  noteCounts,
 }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
@@ -256,6 +259,7 @@ export default async function VolunteersCard({
     agreementDocumentIds,
     agreementEvent,
     now,
+    noteCounts,
   };
 
   /** The id of the small form behind one role's «Șterge rolul»: the button sits in the role's row, inside the one form of «Salvează toate rolurile», and names this one (`form=`). */
@@ -1059,7 +1063,7 @@ export default async function VolunteersCard({
           </Stack>
         )}
 
-        {/* A person the club enters by hand: the same boxes as the public form, and the organizers' note. */}
+        {/* A person the club enters by hand: the same boxes as the public form, and the organizers' optional first note. */}
         {roles.length > 0 && (
           <Panel glyph="add" collapsible level={3} title={t("volunteers.person.addTitle")} data-testid="volunteer-add">
             <ActionForm action={addVolunteerAction} scope="volunteer-new" messages={personBoxes}>

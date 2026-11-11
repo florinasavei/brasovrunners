@@ -6,6 +6,7 @@ import { eventTranslations, events } from "@/db/schema/events";
 import { legalDocuments } from "@/db/schema/legal-documents";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
+import { buildListHref } from "@/modules/staff-identity/domain/admin-list-query";
 import { VOLUNTEER_STATES, type VolunteerState } from "./domain/volunteer";
 import { type VolunteerItem, volunteerItemsOf } from "./volunteers";
 
@@ -194,16 +195,65 @@ export async function summariseVolunteersForAdmin<T extends Record<string, unkno
 }
 
 /**
- * The volunteers in the registrations' «Kituri de pregătit» (§904; its title's «+ N voluntari» since 2026-11-04): one event's volunteers
- * the organizers ticked «Are kit» on, the cancelled left out — the same figure as the «Voluntari» screen's «Cu kit», for one event. A
- * count of its own: `countKits` and every export keep counting the registrations alone.
+ * What the «Voluntari» list's address has to carry so it shows exactly the people one of the kits' two figures counts:
+ * `{}` the kit filter alone (nobody cancelled has that tick), `{ state }` the kit filter and the one active state left
+ * when the cancelled have to be filtered out, or `null` when no filter of the list can say it (both active states and a
+ * cancelled person share the tick: the list has one state filter, not two).
  */
-export async function countVolunteersWithKit<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
-  const [row] = await db
-    .select({ n: count() })
+export type KitListFilter = { state?: VolunteerState } | null;
+
+/** One event's volunteers by «Are kit», for the registrations' «Kituri de pregătit» (see `readVolunteerKitFigures`). */
+export type VolunteerKitFigures = {
+  /** «Cu kit»: «Înscris» and «Confirmat» ticked «Are kit» — the headline's «+ N voluntari», the same figure as the «Voluntari» strip's «Cu kit». */
+  withKit: number;
+  /** «Fără kit»: «Înscris» and «Confirmat» not ticked — a cancelled person is handed nothing either way. */
+  withoutKit: number;
+  /** «Anulat», ticked or not: left out of both figures, and what the line's closing sentence names. */
+  cancelled: number;
+  /** The list's filter that shows exactly «cu kit» (`kit=yes`) and exactly «fără kit» (`kit=no`), or `null`: a number with no link. */
+  list: { yes: KitListFilter; no: KitListFilter };
+};
+
+/** `kit=yes|no`'s list filter, from that tick's count in each state (see `KitListFilter`). */
+function kitListFilterOf(registered: number, confirmed: number, cancelled: number): KitListFilter {
+  if (cancelled === 0) return {};
+  if (registered === 0) return { state: "CONFIRMED" };
+  if (confirmed === 0) return { state: "REGISTERED" };
+  return null;
+}
+
+/**
+ * The volunteers in the registrations' «Kituri de pregătit» (§904; its title's «+ N voluntari» since 2026-11-04, the line
+ * «Voluntari: N cu kit · M fără kit» under the runners' line since 2026-11-11): one event's volunteers by state and by the
+ * organizers' «Are kit» tick, in one grouped read — «cu kit» is the figure the headline adds, «fără kit» the rest of the
+ * same rule's people (the cancelled left out of both). A read of its own: `countKits` and every export keep counting the
+ * registrations alone.
+ */
+export async function readVolunteerKitFigures<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<VolunteerKitFigures> {
+  const grouped = await db
+    .select({ state: eventVolunteers.state, hasKit: eventVolunteers.hasKit, n: count() })
     .from(eventVolunteers)
-    .where(and(eq(eventVolunteers.eventId, eventId), eq(eventVolunteers.hasKit, true), sql`${eventVolunteers.state} <> 'CANCELLED'`));
-  return row?.n ?? 0;
+    .where(eq(eventVolunteers.eventId, eventId))
+    .groupBy(eventVolunteers.state, eventVolunteers.hasKit);
+  const at = (state: VolunteerState, hasKit: boolean) => grouped.find((row) => row.state === state && row.hasKit === hasKit)?.n ?? 0;
+  const [yes, no] = [true, false].map((hasKit) => ({ registered: at("REGISTERED", hasKit), confirmed: at("CONFIRMED", hasKit), cancelled: at("CANCELLED", hasKit) }));
+  return {
+    withKit: yes.registered + yes.confirmed,
+    withoutKit: no.registered + no.confirmed,
+    cancelled: yes.cancelled + no.cancelled,
+    list: { yes: kitListFilterOf(yes.registered, yes.confirmed, yes.cancelled), no: kitListFilterOf(no.registered, no.confirmed, no.cancelled) },
+  };
+}
+
+/** The «Voluntari» list's addresses for «cu kit» and «fără kit» of one event (`listPath` is the list's own path), each only where the list shows exactly that many people. */
+export function volunteerKitHrefs(listPath: string, eventId: string, figures: Pick<VolunteerKitFigures, "list">): { yesHref?: string; noHref?: string } {
+  const href = (kit: "yes" | "no", filter: KitListFilter) => (filter ? buildListHref(listPath, { eventId, kit, state: filter.state }, {}) : undefined);
+  return { yesHref: href("yes", figures.list.yes), noHref: href("no", figures.list.no) };
+}
+
+/** «Cu kit» alone, for the readers that need no more (the race plan, the tests): `readVolunteerKitFigures`' figure. */
+export async function countVolunteersWithKit<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
+  return (await readVolunteerKitFigures(db, eventId)).withKit;
 }
 
 /** The «Voluntari» tab's figures: everyone still in, and how many of them wait for the organizers. */

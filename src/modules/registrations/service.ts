@@ -13,7 +13,7 @@ import type {
   RegistrationSource,
 } from "@/db/schema/registrations";
 import { events } from "@/db/schema/events";
-import { registrations } from "@/db/schema/registrations";
+import { type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import { startHeldBack } from "@/modules/events/domain/dated";
 import { registrationState } from "@/modules/events/domain/registration-window";
@@ -1605,6 +1605,12 @@ export type SubmitRegistrationResult = {
 };
 
 /**
+ * The tag «Pe adresa mea, invitat special» leaves on every trail row it writes — the entry's, the special guests list's
+ * and the internal list's move (`reserve-list.ts#moveReserveEntryToOwnAddress`): ids and this word, never a name or an address.
+ */
+export const OWN_ADDRESS_GUEST = "ownAddressGuest";
+
+/**
  * How this submission arrived: the public form, or an organizer entering it for somebody
  * (BR-REQ-037-05, `DECISIONS.md` §33).
  *
@@ -1642,6 +1648,16 @@ export type RegistrationOrigin = {
    * the allocator. Should the offer be refused, the whole entry goes with it. Ignored without `addressVouched`.
    */
   thenOffered?: boolean;
+  /**
+   * «Pe adresa mea, invitat special» (the decision «A line of the internal list on the Administrator's own address, as a
+   * special guest»): with `addressVouched`, the row is put on «Lista de invitați speciali» (`outside_capacity`) in this
+   * transaction **before** the allocator runs, so the allocator's existing exclusion (§643) gives it a place outside the
+   * announced ones whatever the counts: never a counted place, never the waiting list, never refused by the line's limit
+   * or by «Fără listă de așteptare», never «Ești pe lista de așteptare». Refused `HIDDEN_LIST_OFF` under the lock while the
+   * event's «Folosește lista de invitați speciali» is off. The value is the press's tag on the trail. Ignored without
+   * `addressVouched`.
+   */
+  outsideCapacityVia?: typeof OWN_ADDRESS_GUEST;
   /**
    * What the public form already learned before calling (§282): Cloudflare's verdict, and
    * whether this is the try after a refusal. Both are the caller's to know — the token is
@@ -1915,6 +1931,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   const entryChannel: EntryChannel = origin.source === "PUBLIC" && !invited ? "public" : "staff";
   // «Oferă-i un loc acum» (§888): the vouched entry the caller offers a place in this same transaction (§906).
   const thenOffered = vouched && origin.thenOffered === true;
+  // «Pe adresa mea, invitat special»: the vouched entry put on «Lista de invitați speciali» before the allocator runs.
+  const outsideOnEntry = vouched && origin.outsideCapacityVia !== undefined ? origin.outsideCapacityVia : null;
   // «Înscrieri publice deschise» off (§906): the public door is shut before anything is parsed or spent; asked again under the lock.
   if (entryChannel === "public" && !publicDoorOpen(event)) throw publicRegistrationPausedError();
   assertRegistrationOpen(event, now, atTheDesk || invited || vouched);
@@ -2040,7 +2058,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   */
   // Never for an invitation (§647): its place is held for the person, whatever the line holds.
   // Nor for «Oferă-i un loc acum» (§906): the row is offered a place in the same transaction, never left waiting.
-  if (!invited && !thenOffered) await assertWaitlistCanTakeOneMore(db, event.id, now, entryChannel);
+  // Nor for a row put on «Lista de invitați speciali» at the entry: it takes a place outside the announced ones, never the line.
+  if (!invited && !thenOffered && outsideOnEntry === null) await assertWaitlistCanTakeOneMore(db, event.id, now, entryChannel);
 
   const privacyNotice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", input.locale, now);
   if (!privacyNotice) {
@@ -2310,6 +2329,10 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     if (!invited) assertMembersDoor(locked.membersOnly, origin);
     // «Înscrieri publice deschise» (§906), asked under the lock too: the tick taken off by a save that committed after the caller read the row.
     if (entryChannel === "public" && !locked.publicRegistrationOpen) throw publicRegistrationPausedError();
+    // «Folosește lista de invitați speciali» (§647), read under the lock before anything is written: off, nobody is put on it.
+    if (outsideOnEntry !== null && !locked.hiddenListEnabled) {
+      throw new DomainError("VALIDATION_ERROR", "the special guests list is off for this event: tick «Folosește lista de invitați speciali» in the event's settings first", [HIDDEN_LIST_OFF]);
+    }
     if (!invited && locked.membersOnly && origin.source === "PUBLIC" && origin.member && !sameCanonical(origin.member.email, identity.canonicalEmail)) {
       throw new DomainError("VALIDATION_ERROR", "a members' event is registered for with the account's own address", ["email"]);
     }
@@ -2857,12 +2880,31 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       verification email: there is no step left for the person before the one that email asks. A full line
       refuses the whole entry (§348), so nothing is written. Audited under the Administrator's id.
     */
+    /*
+      «Pe adresa mea, invitat special»: the row's «Lista de invitați speciali» mark (§643) is written in the same update as
+      the vouching, before the allocator below reads it — so the allocator's one existing exclusion seats it outside the
+      announced places, and no term or condition is added to the formula. Its trail row is the special list's own
+      (`registration.outside_capacity_changed`, as `setOutsideCapacityByStaff` writes it), tagged with the press.
+    */
+    const recordOutsideOnEntry = async (registrationId: string, status: RegistrationStatus, statusAfter: RegistrationStatus) => {
+      if (outsideOnEntry === null) return;
+      await recordAuditEvent(tx, {
+        actorStaffUserId: origin.createdByStaffUserId ?? null,
+        participantId: participant.id,
+        action: "registration.outside_capacity_changed",
+        entityType: "registration",
+        entityId: registrationId,
+        metadata: { from: false, to: true, status, ...(statusAfter !== status ? { statusAfter } : {}), via: outsideOnEntry },
+        now,
+      });
+    };
     const vouchAndAllocate = async (registration: Registration): Promise<Registration> => {
       await tx
         .update(registrations)
-        .set({ emailConfirmedAt: now, emailConfirmedByStaffUserId: origin.createdByStaffUserId ?? null, updatedAt: now })
+        .set({ emailConfirmedAt: now, emailConfirmedByStaffUserId: origin.createdByStaffUserId ?? null, ...(outsideOnEntry !== null ? { outsideCapacity: true } : {}), updatedAt: now })
         .where(eq(registrations.id, registration.id));
       const allocated = await allocateOrWaitlist(tx, lockedEvent, registration.id, now, settings, { vouched: true, channel: "staff", thenOffered });
+      await recordOutsideOnEntry(allocated.id, "PENDING_EMAIL_CONFIRMATION", allocated.status);
       await enqueueAllocationEmail(tx, allocated, participant.deliveryEmail, `registration:${allocated.id}:address-vouched-on-entry:${now.toISOString()}`, now);
       await recordAuditEvent(tx, {
         actorStaffUserId: origin.createdByStaffUserId ?? null,
@@ -2911,7 +2953,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         restarts through the form is a new cycle that queues and counts like anybody's; the club marks it
         again if it still wants to.
       */
-      outsideCapacity: false,
+      // …unless the Administrator puts it there now, at the entry («Pe adresa mea, invitat special»): before the allocator.
+      outsideCapacity: outsideOnEntry !== null,
       /*
         The answers above were judged on this instant — a guardian kept only for a minor today, no
         socials for one (`rowDetails`) — so the row says so (§654): on a restart `created_at` stays
@@ -2982,6 +3025,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       // An Administrator's vouched entry (§872) of an address the person proved before: nothing to vouch,
       // but the place waits as a vouched one does and the close is not its cap — the window was not consulted.
       const allocated = await allocateOrWaitlist(tx, withLockedRow(event, locked), existing.id, now, settings, { vouched, channel: entryChannel, thenOffered });
+      await recordOutsideOnEntry(allocated.id, existing.status, allocated.status);
       // In a sitting (§543): the place the allocator gave, or the line — never a held place besides.
       if (inSitting) placeResult = allocated.status === "WAITLISTED" ? "waitlist" : "reserved";
       await enqueueAllocationEmail(tx, allocated, participant.deliveryEmail, `registration:${allocated.id}:restart:${now.toISOString()}`, now);
@@ -4814,9 +4858,12 @@ async function lockOpenInvitation<T extends Record<string, unknown>>(tx: Transac
 
 /**
  * «Retrimite» (§647): the email again, with a new link — the old one superseded when the new is minted
- * (§619: its page says a newer email has it) — and the deadline kept (no `days`) or moved to `days` from
- * now, capped by the start as at the send. Never earlier than it was: a resend does not take time back.
- * `resend_count + 1`, audited. The Administrator's alone.
+ * (§619: its page says a newer email has it) — and the deadline kept (no `days`) or moved to `days`
+ * counted from the draw of the page that offered them (below), else from now, capped by the start as at
+ * the send. Never earlier than it was: a resend does not take time back — and when the days asked for an
+ * earlier deadline than the one it has (it was moved since that page was drawn: a second tab, another
+ * Administrator), the result says so (`kept: "alreadyLater"`), so the message after the press does not
+ * leave the line's promise standing. `resend_count + 1`, audited. The Administrator's alone.
  *
  * Never later while anyone eligible waits, for an invitation that holds a counted place (the
  * invitations review of 2026-10-03): the place goes back «only at the deadline» (AGENTS.md §10.6), and
@@ -4825,21 +4872,29 @@ async function lockOpenInvitation<T extends Record<string, unknown>>(tx: Transac
  * the lock (`countEligibleWaitlisted`); the link and the email are re-issued, the deadline kept, and the
  * result says so (`kept: "waiting"`). An invitation «Pe lista ascunsă» holds no counted place and may
  * be extended whoever waits.
+ *
+ * **The days count from the moment the page that offered them was drawn** (`countedFrom`, the list «La
+ * retrimitere»): its line named a day and an hour, and a press after midnight, or from a tab left open, must
+ * store that moment and not a day later. Never from a moment still to come — then, as with no `countedFrom`,
+ * they count from the press — so the anchor can only bring the deadline earlier than the press alone would:
+ * nothing is reachable with it that the days did not already reach, and every guard above still holds.
  */
 export async function resendInvitationByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
   invitationId: string,
-  input: { days: number | null },
+  input: { days: number | null; countedFrom?: Date | null },
   actor: { id: string; role: StaffRole },
   now: Date,
-): Promise<{ expiresAt: Date; kept: "waiting" | null }> {
+): Promise<{ expiresAt: Date; kept: "waiting" | "alreadyLater" | null }> {
   if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not resend an invitation`);
   if (input.days !== null && !validInvitationDays(input.days)) throw new InvitationRefusal("INVITATION_BAD_DAYS");
   const settings = await currentDeadlines(db);
   const result = await db.transaction(async (tx) => {
     const { invitation, lockedEvent } = await lockOpenInvitation(tx, invitationId, now);
     if (lockedEvent.eventStatus !== "SCHEDULED" || lockedEvent.startsAt.getTime() <= now.getTime()) throw new InvitationRefusal("INVITATION_EVENT_CLOSED", invitation.name);
-    const moved = input.days === null ? null : invitationDeadline({ now, days: input.days, startsAt: lockedEvent.startsAt });
+    // Counted from the draw of the page that offered them, when the press says when that was; never from a moment ahead of the press.
+    const countedFrom = input.countedFrom && input.countedFrom.getTime() <= now.getTime() ? input.countedFrom : now;
+    const moved = input.days === null ? null : invitationDeadline({ now: countedFrom, days: input.days, startsAt: lockedEvent.startsAt });
     const later = moved !== null && moved.getTime() > invitation.expiresAt.getTime();
     // A counted place is never held longer while anybody eligible waits for one; the hidden list holds none.
     const waitingBlocks = later && !invitation.outsideCapacity && (await repo.countEligibleWaitlisted(tx, invitation.eventId)) > 0;
@@ -4869,7 +4924,9 @@ export async function resendInvitationByStaff<T extends Record<string, unknown>>
       metadata: { invitationId: invitation.id, from: invitation.expiresAt.toISOString(), to: expiresAt.toISOString(), ...(waitingBlocks ? { keptForWaiting: true } : {}) },
       now,
     });
-    return { expiresAt, lockedEvent, kept: waitingBlocks ? ("waiting" as const) : null };
+    // Why a deadline did not go where the days asked: somebody waits, or it was already later than that.
+    const alreadyLater = moved !== null && moved.getTime() < invitation.expiresAt.getTime();
+    return { expiresAt, lockedEvent, kept: waitingBlocks ? ("waiting" as const) : alreadyLater ? ("alreadyLater" as const) : null };
   });
   // The kept place's deadline may have moved: the public count's instants with it (§333).
   revalidatePublicContent("places");

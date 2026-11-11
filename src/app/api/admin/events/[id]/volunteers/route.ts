@@ -5,7 +5,8 @@ import { getDb } from "@/db/client";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { routing, type Locale } from "@/i18n/routing";
 import { buildVolunteersCsv, volunteersCsvFileName } from "@/modules/volunteers/csv";
-import { volunteerExport, volunteerExportHeader, volunteerSheetWords } from "@/modules/volunteers/export";
+import { volunteerExport, volunteerExportHeader, volunteerNotesCells, volunteerSheetWords } from "@/modules/volunteers/export";
+import { listVolunteerNotesForExport } from "@/modules/volunteers/volunteer-notes";
 import { buildVolunteersWorkbook, volunteersWorkbookFileName } from "@/modules/volunteers/workbook";
 import { exportVolunteers } from "@/modules/volunteers/volunteers";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
@@ -55,7 +56,9 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
   const t = await getTranslations({ locale, namespace: "Admin" });
   const header = volunteerExportHeader(t);
-  const { rows, roles } = volunteerExport(data, locale, t);
+  // «Notă»: the event's volunteers' internal notes, one grouped read for the file, the author a role (`volunteerNotesCells`).
+  const notes = await listVolunteerNotesForExport(getDb(), actor, data.volunteers.map((person) => person.id));
+  const { rows, roles } = volunteerExport(data, locale, t, volunteerNotesCells(notes, t));
 
   const day = new Intl.DateTimeFormat("en-CA", { timeZone: CLUB_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
   if (format === "xlsx") {

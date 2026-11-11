@@ -18,6 +18,7 @@ import NewsletterSubscribers from "@/modules/newsletter/ui/NewsletterSubscribers
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { canExportSponsorList, canManageRegistrations, canSendNewsletter } from "@/modules/staff-identity/domain/roles";
 import { sponsorListSummary } from "@/modules/registrations/sponsor-list";
+import { readSponsorRegister } from "@/modules/registrations/sponsor-register";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 
@@ -70,7 +71,8 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
   // lets the contact page offer the pop-up; the list under its filter.
   // And, since §562, who said yes to offers and benefits on a registration — the same readers (§550).
   // And, since §570, the list for sponsors across every event — the same query as an event's page.
-  const [audience, history, volume, offered, subscribers, promo, sponsors] = await Promise.all([
+  // And, since §929, the lists already given to sponsors, every one, and the recipients written before.
+  const [audience, history, volume, offered, subscribers, promo, sponsors, sponsorRegister] = await Promise.all([
     countNewsletterAudience(db),
     listNewsletterSends(db),
     readEmailVolumeToday(db, now),
@@ -78,6 +80,7 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
     listNewsletterSubscribers(db, query, now),
     listPromoConsenters(db, staff, locale),
     canExportSponsorList(staff.role) ? sponsorListSummary(db, staff, { now }) : Promise.resolve(null),
+    canExportSponsorList(staff.role) ? readSponsorRegister(db, staff, { locale }) : Promise.resolve(null),
   ]);
   const sentCount = /^\d{1,9}$/.test(recipients ?? "") ? Number(recipients) : 0;
   const t = await getTranslations("Admin");
@@ -117,7 +120,7 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
               saved={saved === "newsletterUnsubscribed" || saved === "newsletterUnsubscribedGone"}
             />
             {/* The second fold (§562): a consent on a registration, not a subscription — its own list and its own CSV. */}
-            <PromoConsenters locale={locale} list={promo} listQuery={listQuery} paged={paged} sponsors={sponsors} />
+            <PromoConsenters locale={locale} list={promo} listQuery={listQuery} paged={paged} sponsors={sponsors} sponsorRegister={sponsorRegister} now={now} />
           </>
         }
       />

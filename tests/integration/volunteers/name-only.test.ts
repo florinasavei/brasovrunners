@@ -371,7 +371,8 @@ describe("§865 «Adaugă» and «Modifică» take a person the club types with 
     ).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["email"] });
     // A change that keeps both is a save, as before.
     expect(await post(actions.editVolunteerAction, form({ volunteerId: ana.id, name: "Ana Public", email: "ana@example.test", phone: "+40712345670", note: "Sună după 18", roleIds: [waterId] }))).toBe("redirected");
-    expect((await rowOf(ana.id)).note).toBe("Sună după 18");
+    // «Modifică» writes no note any more («Note interne» for volunteers): the old single line stays as it was.
+    expect((await rowOf(ana.id)).note).toBeNull();
   });
 
   it("leaves the public sign-up asking an address and a telephone number: refused, naming both, nothing kept", async () => {

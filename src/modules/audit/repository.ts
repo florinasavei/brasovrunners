@@ -328,8 +328,10 @@ export type AuditAction =
   /**
    * «Descarcă lista pentru sponsori» (§570): the minimal CSV a partner receives — the event, or
    * null for every event, how many rows, the ids of the registrations in it (never a name or an
-   * address) and the recipient the download named, or null. The file is the one copy a withdrawal
-   * cannot reach, so the trail says which registrations went to whom (`listPartnerShares`).
+   * address) and the recipient the download named — required since §929, null only on an older row.
+   * The file is the one copy a withdrawal cannot reach, so the trail says which registrations went
+   * to whom (`listPartnerShares`), and the lists themselves are read back as «Liste date sponsorilor»
+   * (`registrations/sponsor-register.ts`).
    */
   | "registrations.sponsor_list_exported"
   /**
@@ -569,13 +571,14 @@ export type AuditAction =
   | "event_todo.reopened"
   | "event_todo.deleted"
   /**
-   * «Lista internă de așteptare» (§854), entity `event`: a person written down, their note saved, the line
-   * deleted, or moved to the official list (`registrationId` the registration it became) or onto the elite list
+   * «Lista internă de așteptare» (§854), entity `event`: a person written down, their note saved, their name corrected
+   * (`event_reserve.renamed`), the line deleted, or moved to the official list (`registrationId` the registration it became) or onto the elite list
    * (`eliteEntryId` the elite line it became, §903). The metadata is ids only — never a name, an address or the
    * note's words.
    */
   | "event_reserve.added"
   | "event_reserve.note_saved"
+  | "event_reserve.renamed"
   | "event_reserve.deleted"
   | "event_reserve.moved"
   /**
@@ -643,6 +646,13 @@ export type AuditAction =
   | "volunteer.assigned"
   /** «Ia-i rolul …» (§837): one role given was taken back — the same ids. */
   | "volunteer.unassigned"
+  /**
+   * An internal note added to a volunteer, or deleted («Note interne» for volunteers): entity `event`, the event's id, and
+   * `{ volunteerId }` — the staff member (the actor) and the moment, and nothing of the words, ever. The text lives in
+   * `event_volunteer_notes` and nowhere else; a trail row that carried it would outlive the volunteer it is about.
+   */
+  | "volunteer.note_added"
+  | "volunteer.note_deleted"
   /**
    * An event's checkpoints saved on its editor's «Puncte pe traseu» card (§757), or taken from the
    * route's GPX: how many were added, changed and removed, and the list before and after — each

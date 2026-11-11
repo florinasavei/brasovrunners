@@ -6,7 +6,8 @@ import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { routing, type Locale } from "@/i18n/routing";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { listEventsWithVolunteers } from "@/modules/volunteers/admin-list";
-import { volunteerExport, volunteerExportHeader, volunteerSheetWords } from "@/modules/volunteers/export";
+import { volunteerExport, volunteerExportHeader, volunteerNotesCells, volunteerSheetWords } from "@/modules/volunteers/export";
+import { listVolunteerNotesForExport } from "@/modules/volunteers/volunteer-notes";
 import { buildVolunteersWorkbook, type VolunteerSheetEvent, volunteersWorkbookFileName } from "@/modules/volunteers/workbook";
 import { exportVolunteers } from "@/modules/volunteers/volunteers";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
@@ -42,14 +43,16 @@ export async function GET(request: Request): Promise<Response> {
   // The event's day in the sheet's own date format (`STAMP_FORMAT`'s day, in both languages): a column, not a sentence —
   // the club's wall clock read as digits, as the sheet's other dates are (`onClubClock`), never a formatter of its own.
   const eventDay = (at: Date) => toWallTimeInput(at, CLUB_TIME_ZONE).slice(0, 10).split("-").reverse().join(".");
-  const sheetEvents: VolunteerSheetEvent[] = [];
+  const read: { label: string; data: Awaited<ReturnType<typeof exportVolunteers>> }[] = [];
   for (const event of await listEventsWithVolunteers(db, locale)) {
     const data = await exportVolunteers(db, actor, event.id, now);
     // «Crosul Brașovului · 21.11.2026»: the title as the select shows it, and the day, so two editions are told apart.
     const day = event.startsAt ? eventDay(event.startsAt) : null;
-    const label = [event.title ?? event.id, day].filter(Boolean).join(" · ");
-    sheetEvents.push({ label, ...volunteerExport(data, locale, t) });
+    read.push({ label: [event.title ?? event.id, day].filter(Boolean).join(" · "), data });
   }
+  // «Notă»: every event's volunteers' internal notes in ONE grouped read for the whole file, never one per event or per row.
+  const notes = volunteerNotesCells(await listVolunteerNotesForExport(db, actor, read.flatMap(({ data }) => data.volunteers.map((person) => person.id))), t);
+  const sheetEvents: VolunteerSheetEvent[] = read.map(({ label, data }) => ({ label, ...volunteerExport(data, locale, t, notes) }));
 
   const workbook = await buildVolunteersWorkbook(volunteerExportHeader(t), sheetEvents, volunteerSheetWords(t));
   const day = new Intl.DateTimeFormat("en-CA", { timeZone: CLUB_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);

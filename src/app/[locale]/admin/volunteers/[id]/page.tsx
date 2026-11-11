@@ -6,24 +6,28 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
+import { VOLUNTEER_NOTE_MAX } from "@/db/schema/event-volunteer-notes";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { readEmailHistory } from "@/modules/notifications/email-history";
 import EmailHistoryPanel from "@/modules/notifications/ui/EmailHistory";
+import NotesCard from "@/modules/registrations/ui/NotesCard";
 import { canManageRegistrations, canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { findVolunteerForAdmin } from "@/modules/volunteers/admin-list";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
 import VolunteerPerson, { STATE_CHIP } from "@/modules/volunteers/ui/VolunteerPerson";
+import { listVolunteerNotes } from "@/modules/volunteers/volunteer-notes";
 import { isUuid } from "@/shared/ids";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import StatusChip from "@/shared/ui/StatusChip";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { addVolunteerNoteAction, deleteVolunteerNoteAction } from "./note-actions";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ volunteerError?: string }>;
+  searchParams: Promise<{ volunteerError?: string; saved?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -34,6 +38,10 @@ export const dynamic = "force-dynamic";
  * «Ia-i rolul …», the agreement, the guardian, the state verbs and «Modifică» — reached from the list's row. The
  * same three roles as the card; an id nobody has, or a guessed one, is a 404 (BR-REQ-060-01). Every verb comes
  * back here (`returnTo`), the refused ones with their code in the address.
+ *
+ * «Note interne» stands first, right under the heading block («Note interne» for volunteers, the registration's page's shape):
+ * what the organizers tell each other about the person, newest first, open by itself when there is one, after its own save or
+ * delete (`saved`) and for `#note-interne`; closed on «nicio notă» otherwise. Its two presses are `note-actions.ts`.
  */
 export default async function AdminVolunteerPage({ params, searchParams }: Props) {
   const { locale, id } = await params;
@@ -51,12 +59,14 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
 
   const t = await getTranslations("Admin");
   const path = getPathname({ locale, href: { pathname: "/admin/volunteers/[id]", params: { id } } });
-  const [context, emails] = await Promise.all([
+  const [context, emails, notes] = await Promise.all([
     volunteerPersonContextOf(db, person.event, locale, now, path),
     // «Emailuri» (§915): read only for the Administrator and the Superadministrator; the reader asks again.
     canManageRegistrations(actor) ? readEmailHistory(db, actor, { volunteerId: person.id }, now) : Promise.resolve(null),
+    // «Note interne»: the person's live notes, newest first; the service asks for the role again.
+    listVolunteerNotes(db, actor, person.id),
   ]);
-  const { volunteerError } = await searchParams;
+  const { volunteerError, saved } = await searchParams;
   const errorCode = volunteerError && /^[A-Z_]{1,48}$/.test(volunteerError) && t.has(`errors.${volunteerError}`) ? volunteerError : null;
   const eventCardHref = `${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: person.eventId } } })}#box-volunteers`;
   const when = person.eventStartsAt && !person.eventDateToBeAnnounced ? formatDay(person.eventStartsAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }) : null;
@@ -87,6 +97,18 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
           {t("volunteers.screen.eventCard")}
         </GlyphButton>
       </Stack>
+
+      {/* «Note interne» first, before the person's block: what the organizers left about the person is read before anything else. */}
+      <NotesCard
+        locale={locale}
+        owner={{ field: "volunteerId", id: person.id }}
+        max={VOLUNTEER_NOTE_MAX}
+        authorGone={t("volunteers.notes.authorUnknown")}
+        notes={notes}
+        addAction={addVolunteerNoteAction}
+        deleteAction={deleteVolunteerNoteAction}
+        opened={saved === "noteAdded" || saved === "noteDeleted"}
+      />
 
       <VolunteerPerson person={person} context={context} as="section" />
 

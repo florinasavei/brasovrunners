@@ -53,6 +53,7 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   addToWaitlistAction: vi.fn(),
   // «Mută pe lista oficială» / «Oferă-i un loc acum» on the internal list (§888): imported by the list page.
   moveReserveEntryAction: vi.fn(),
+  addRegistrationNoteFromListAction: vi.fn(),
   setOutsideCapacityAction: vi.fn(),
   setRegistrationEliteAction: vi.fn(),
   resendRegistrationEmailAction: vi.fn(),
@@ -190,12 +191,14 @@ describe("§847 the registration's page: every section a card", () => {
     const at = (predicate: (element: ReactElement<Props>) => boolean) => all.findIndex(predicate);
     const card = (testId: string) => at((element) => element.type === Panel && element.props["data-testid"] === testId);
 
+    // «Note interne» stands first, right under the heading block («Note interne» first on the registration's page, and a note
+    // from a row of the list, amending §777): what the organizers left for each other is read before the verbs.
     const order = [
+      at((element) => element.type === NotesCard),
       at((element) => element.type === WhatToTell),
       at((element) => element.props["data-testid"] === "resend-form"),
       card("race-day"),
       card("emails-section"),
-      at((element) => element.type === NotesCard),
       card("answers"),
       at((element) => element.type === Panel && element.props.id === "emergency"),
       card("timeline"),
@@ -321,10 +324,11 @@ describe("§847 the page as it is drawn", () => {
     const words = ro.Admin.registrations;
     expect(headings).toEqual([
       expect.stringMatching(/^h2 Runner \d+$/),
+      // First, right under the name: the organizers' notes («Note interne» first on the registration's page).
+      `h3 ${words.notes.title}nicio notă`,
       `h3 ${words.tell.title}`,
       `h3 ${words.raceDayTitle}`,
       `h3 ${words.emails.title}0 emailuri`,
-      `h3 ${words.notes.title}nicio notă`,
       `h3 ${words.answers.title}`,
       `h3 ${words.emergency.title}`,
       `h3 ${words.timeline}`,

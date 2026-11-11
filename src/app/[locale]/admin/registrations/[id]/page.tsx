@@ -13,6 +13,7 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { emailMessageType } from "@/db/schema/email-outbox";
+import { REGISTRATION_NOTE_MAX } from "@/db/schema/registration-notes";
 import { registrationStatus } from "@/db/schema/registrations";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
@@ -466,8 +467,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   /*
     The page's cards (§847; the owner, 2026-10-21: «they look like they are from a different app»): under the
     person's name and state, every section is a `Panel` — the house's card, its glyph before its title, a count
-    beside it where one belongs — in the order a reader needs them: what to tell somebody who asks, the verbs of
-    the messages, race day and the places, the emails and the notes, the answers and the emergency details, the
+    beside it where one belongs — in the order a reader needs them: «Note interne» first, right under the heading
+    block (open when it holds a note), then what to tell somebody who asks, the verbs of the messages, race day
+    and the places, the emails, the answers and the emergency details, the
     timeline, then what the team did and who received the data, folded, and last the three verbs that end or
     take something away, folded too, the erase in red. Each card holds its own verbs, gated exactly as before.
   */
@@ -559,6 +561,27 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         <Typography variant="body2" color="text.secondary" data-testid="registration-invited">
           {tr("registrations.invitedBy", { who: invitedBy.invitedByName ?? tr("invitations.byNobody"), when: dtInline(invitedBy.sentAt) ?? "" })}
         </Typography>
+      )}
+
+      {/*
+        «Note interne» (§777; the owner, 2026-10-15): what the organizers tell each other about this
+        registration, for the Organizer and above — never the Tehnic role, the volunteer or the desk. Drawn
+        only when `listRegistrationNotes` ran (it asks `canKeepRegistrationNotes` itself); the two actions and
+        the service refuse every other role again (BR-REQ-060-01). A note is not the registration: the
+        Organizer still changes nothing on it (§289). The card stands FIRST, right under the heading block, and is open
+        when there is a note to read («Note interne» first on the registration's page, and a note from a row of the list, amending §777).
+      */}
+      {notes !== null && (
+        <NotesCard
+          locale={locale}
+          owner={{ field: "registrationId", id: registration.id }}
+          max={REGISTRATION_NOTE_MAX}
+          authorGone={tr("registrations.auditActorRemoved")}
+          notes={notes}
+          addAction={addRegistrationNoteAction}
+          deleteAction={deleteRegistrationNoteAction}
+          opened={saved === "noteAdded" || saved === "noteDeleted"}
+        />
       )}
 
       {/*
@@ -1087,24 +1110,6 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           </Typography>
         </Stack>
       </Panel>
-
-      {/*
-        «Note interne» (§777; the owner, 2026-10-15): what the organizers tell each other about this
-        registration, for the Organizer and above — never the Tehnic role, the volunteer or the desk. Drawn
-        only when `listRegistrationNotes` ran (it asks `canKeepRegistrationNotes` itself); the two actions and
-        the service refuse every other role again (BR-REQ-060-01). A note is not the registration: the
-        Organizer still changes nothing on it (§289).
-      */}
-      {notes !== null && (
-        <NotesCard
-          locale={locale}
-          registrationId={registration.id}
-          notes={notes}
-          addAction={addRegistrationNoteAction}
-          deleteAction={deleteRegistrationNoteAction}
-          opened={saved === "noteAdded" || saved === "noteDeleted"}
-        />
-      )}
 
       {/*
         «Datele înscrierii» (§645; the owner, 2026-10-02: «Nu vreau să se numească „curăță”, dar practic

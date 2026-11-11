@@ -475,35 +475,59 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                   <Typography variant="body2">{t("person.none")}</Typography>
                 ) : (
                   data.volunteerOffers.map((offer, index) => (
-                    <Typography key={index} variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>
-                      {show(offer.createdAt)} · {offer.eventTitle ?? offer.eventId} ·{" "}
-                      {/* The role given, or «De repartizat» (§761), then the roles the person offered for. */}
-                      {(locale === "en" ? offer.roleNameEn : offer.roleNameRo) ?? t("volunteers.unassigned.title")} ·{" "}
-                      {t("volunteers.person.choicesLine", { roles: (locale === "en" ? offer.chosenRolesEn : offer.chosenRolesRo).join(", ") || "—" })} · {t(`volunteers.states.${offer.state}`)} · {t(`volunteers.sources.${offer.source}`)} · {offer.name}
-                      {/* The address and the telephone number as stored; one the club typed without is simply absent (§865). */}
-                      {offer.deliveryEmail ? ` · ${offer.deliveryEmail}` : ""}
-                      {offer.phone ? ` · ${offer.phone}` : ""}
-                      {offer.message ? ` · ${offer.message}` : ""}
-                      {offer.note ? ` · ${offer.note}` : ""}
-                      {/* What the person said about themselves (§765): every column of the row, art. 15 GDPR. */}
-                      <VolunteerAnswers offer={offer} />
-                      {/* The volunteer agreement (§758): accepted — which version, how, when — or not yet. */}
-                      {" · "}
-                      {offer.agreementAcceptedAt && offer.agreementMethod
-                        ? `${t("volunteers.agreement.accepted")} (${t("volunteers.agreement.acceptedLine", {
-                            version: String(offer.agreementVersion ?? ""),
-                            how: t(`volunteers.agreement.methods.${offer.agreementMethod}`),
-                            when: show(offer.agreementAcceptedAt),
-                          })})`
-                        : t("volunteers.agreement.notAccepted")}
-                      {/* The electronic acceptance's trace (§771): the IP address and browser of each press, the volunteer's and the guardian's. */}
-                      {offer.agreementIp || offer.agreementUserAgent
-                        ? ` · ${t("person.traceVolunteer", { ip: show(offer.agreementIp), browser: show(offer.agreementUserAgent) })}`
-                        : ""}
-                      {offer.guardianIp || offer.guardianUserAgent
-                        ? ` · ${t("person.traceGuardian", { ip: show(offer.guardianIp), browser: show(offer.guardianUserAgent) })}`
-                        : ""}
-                    </Typography>
+                    <Box key={index} data-testid="person-volunteer-offer">
+                      <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>
+                        {show(offer.createdAt)} · {offer.eventTitle ?? offer.eventId} ·{" "}
+                        {/* The role given, or «De repartizat» (§761), then the roles the person offered for. */}
+                        {(locale === "en" ? offer.roleNameEn : offer.roleNameRo) ?? t("volunteers.unassigned.title")} ·{" "}
+                        {t("volunteers.person.choicesLine", { roles: (locale === "en" ? offer.chosenRolesEn : offer.chosenRolesRo).join(", ") || "—" })} · {t(`volunteers.states.${offer.state}`)} · {t(`volunteers.sources.${offer.source}`)} · {offer.name}
+                        {/* The address and the telephone number as stored; one the club typed without is simply absent (§865). */}
+                        {offer.deliveryEmail ? ` · ${offer.deliveryEmail}` : ""}
+                        {offer.phone ? ` · ${offer.phone}` : ""}
+                        {offer.message ? ` · ${offer.message}` : ""}
+                        {offer.note ? ` · ${offer.note}` : ""}
+                        {/* What the person said about themselves (§765): every column of the row, art. 15 GDPR. */}
+                        <VolunteerAnswers offer={offer} />
+                        {/* The volunteer agreement (§758): accepted — which version, how, when — or not yet. */}
+                        {" · "}
+                        {offer.agreementAcceptedAt && offer.agreementMethod
+                          ? `${t("volunteers.agreement.accepted")} (${t("volunteers.agreement.acceptedLine", {
+                              version: String(offer.agreementVersion ?? ""),
+                              how: t(`volunteers.agreement.methods.${offer.agreementMethod}`),
+                              when: show(offer.agreementAcceptedAt),
+                            })})`
+                          : t("volunteers.agreement.notAccepted")}
+                        {/* The electronic acceptance's trace (§771): the IP address and browser of each press, the volunteer's and the guardian's. */}
+                        {offer.agreementIp || offer.agreementUserAgent
+                          ? ` · ${t("person.traceVolunteer", { ip: show(offer.agreementIp), browser: show(offer.agreementUserAgent) })}`
+                          : ""}
+                        {offer.guardianIp || offer.guardianUserAgent
+                          ? ` · ${t("person.traceGuardian", { ip: show(offer.guardianIp), browser: show(offer.guardianUserAgent) })}`
+                          : ""}
+                      </Typography>
+                      {/*
+                        The organizers' internal notes on the offer («Note interne» for volunteers; art. 15 GDPR): the words, the moment and the
+                        author's role — never the colleague's name; «autor necunoscut» where nobody can be named. Deleted with the offer.
+                      */}
+                      {offer.notes.length > 0 && (
+                        <Stack spacing={0.5} sx={{ mt: 0.5, pl: 1.5, borderLeft: 3, borderColor: "divider" }} data-testid="person-volunteer-notes">
+                          {offer.notes.map((note, noteIndex) => (
+                            <Box key={noteIndex} data-testid="person-volunteer-note">
+                              <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
+                                {note.body}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {t("person.noteBy", {
+                                  role: note.authorRole ? STAFF_ROLE_LABEL[note.authorRole] : t("volunteers.notes.authorUnknown"),
+                                  date: show(note.createdAt),
+                                  event: offer.eventTitle ?? offer.eventId,
+                                })}
+                              </Typography>
+                            </Box>
+                          ))}
+                        </Stack>
+                      )}
+                    </Box>
                   ))
                 )}
               </Box>

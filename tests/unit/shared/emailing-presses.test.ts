@@ -23,6 +23,7 @@ const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8");
 
 const REGISTRATIONS = "src/app/[locale]/admin/registrations/actions.ts";
+const RESERVE = "src/app/[locale]/admin/registrations/reserve-actions.ts";
 const REGISTRATION = "src/app/[locale]/admin/registrations/[id]/actions.ts";
 const INVITATIONS = "src/app/[locale]/admin/registrations/invitation-actions.ts";
 const PERSON = "src/app/[locale]/admin/registrations/person/actions.ts";
@@ -60,6 +61,7 @@ export const EMAILING_PRESSES: Readonly<Record<string, Press>> = {
   createRegistrationAction: { file: REGISTRATIONS, causes: ["registrations.create"], actor: "named" },
   addToWaitlistAction: { file: REGISTRATIONS, causes: ["registrations.waitlistAdd", "registrations.offerNow"], actor: "named" },
   moveReserveEntryAction: { file: REGISTRATIONS, causes: ["registrations.reserveMove"], actor: "named" },
+  moveReserveEntryToOwnAddressAction: { file: RESERVE, causes: ["registrations.reserveOwnAddress"], actor: "named" },
   inviteAction: { file: INVITATIONS, causes: ["registrations.invite"], actor: "named" },
   resendInvitationAction: { file: INVITATIONS, causes: ["registrations.invitationResend"], actor: "named" },
   withdrawInvitationAction: { file: INVITATIONS, causes: ["registrations.invitationWithdraw"], actor: "named" },

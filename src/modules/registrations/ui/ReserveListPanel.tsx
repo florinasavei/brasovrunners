@@ -12,12 +12,15 @@ import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
-import { DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { HEADING_SX } from "@/shared/ui/heading-scale";
 import Panel from "@/shared/ui/Panel";
 import { staffOfferIfMadeNow, waitlistOfferQuestion } from "../give-place-tip";
 import type { ReserveEntryRow } from "../reserve-list";
+
+/** «Corectează numele»'s glyph. */
+const RenameIcon = ACTION_ICONS.rename;
 
 /** The address fold's glyph (§521): the email the official list sends to. */
 const AddressIcon = ACTION_ICONS.emailConfirmation;
@@ -25,7 +28,7 @@ const AddressIcon = ACTION_ICONS.emailConfirmation;
 /**
  * «Lista internă (doar notițe)» (§854, renamed by §888) on one event's registrations list, for the Organizer and
  * above: the people who asked to be kept in mind, told nothing and emailed nothing. Each line: the name, the
- * address when the club has it, the internal note (edited in place) and «Șterge» — the Organizer's three verbs.
+ * address when the club has it, the internal note (edited in place) and «Șterge» — the Organizer's verbs: the note, «Corectează numele» and delete.
  * For the Administrator (`moveAction`, handed down only to that role and only while the event takes a vouched
  * entry), two one-press verbs onto the official waiting list (§888): «Mută pe lista oficială» — the official
  * list's add form, from the line — and «Oferă-i un loc acum», the same entry with §642's offer; each dialog says
@@ -39,6 +42,13 @@ const AddressIcon = ACTION_ICONS.emailConfirmation;
  * app) and that the internal note is not kept. Under a line's «Email pentru lista oficială», the same role reads
  * that an elite runner needs no address. Back from the move (`eliteCardHref`), the panel's first line links to
  * the editor's elite card.
+ *
+ * And for the Administrator alone, while the event takes a vouched entry: «Pe adresa mea, invitat special»
+ * (`ownAddressAction`, handed down only while the event's «Folosește lista de invitați speciali» is on) — the person
+ * registered on the Administrator's own address (`ownAddressEmail`, shown in the question), on «Lista de invitați
+ * speciali». Asked first: whose address, where the emails go, the place outside the announced ones and not released
+ * unsigned, the declaration the person's own; and the relay tick, as the move asks it. With the switch off
+ * (`ownAddressSwitchOff`) the line says in one sentence where to switch it on, never a button the server refuses.
  */
 export default async function ReserveListPanel({
   locale,
@@ -47,9 +57,13 @@ export default async function ReserveListPanel({
   fullFormHref,
   addAction,
   saveNoteAction,
+  renameAction,
   deleteAction,
   moveAction,
   eliteMoveAction,
+  ownAddressAction,
+  ownAddressEmail,
+  ownAddressSwitchOff = false,
   listQuery,
   eliteCardHref,
   opened,
@@ -61,11 +75,19 @@ export default async function ReserveListPanel({
   fullFormHref?: (entryId: string) => string;
   addAction: ActionFormAction;
   saveNoteAction: ActionFormAction;
+  /** «Corectează numele»: the Organizer's, like the note and the delete; absent, no line carries the fold. */
+  renameAction?: ActionFormAction;
   deleteAction: ActionFormAction;
   /** «Mută pe lista oficială» and «Oferă-i un loc acum»: absent, no line carries them. */
   moveAction?: ActionFormAction;
   /** «Mută pe lista de elită» (§903), the Administrator's: absent, no line carries it, nor the no-address line. */
   eliteMoveAction?: ActionFormAction;
+  /** «Pe adresa mea, invitat special»: the Administrator's, only while the event takes a vouched entry and its special guests list is on. */
+  ownAddressAction?: ActionFormAction;
+  /** The pressing Administrator's own address, named in the question: the server reads it again from the account. */
+  ownAddressEmail?: string;
+  /** The Administrator's line while the event's «Folosește lista de invitați speciali» is off: where to switch it on. */
+  ownAddressSwitchOff?: boolean;
   /** The list's own query (filters, sort, page), posted by «Mută pe lista de elită» so the press comes back to the same list. */
   listQuery?: string;
   /** Back from «Mută pe lista de elită»: the editor's elite card (`/admin/events/[id]#bib-elite`, scrolled to, closed), linked at the top. */
@@ -125,6 +147,23 @@ export default async function ReserveListPanel({
     return questions;
   };
 
+  /** «Pe adresa mea, invitat special»'s question: whose address, where the emails go, the place, the declaration, and the relay tick. */
+  const ownAddressQuestion = (entry: ReserveEntryRow): ConfirmSpec => {
+    const name = `${entry.firstName} ${entry.lastName}`;
+    const email = ownAddressEmail ?? "";
+    return {
+      cancelLabel: words.cancel,
+      tick: { field: "relayedByParticipantRequest", label: t("registrations.relayConfirmation") },
+      // The declaration's email, to the Administrator's own address: the person named, the address beside.
+      ...words.mail({ to: { name, address: email }, type: "COMPLETE_DECLARATION" }),
+      title: t("reserve.ownAddressTitle"),
+      body: `${t("reserve.ownAddressBody", { name, email })} ${t("reserve.ownAddressPlace")} ${t("reserve.ownAddressDeclaration")} ${t("reserve.noteFollows")}`,
+      confirmLabel: t("reserve.ownAddress"),
+    };
+  };
+  /** With the special guests list on, or the sentence saying where it is: the pointer under a line's missing address. */
+  const ownAddressShown = ownAddressAction !== undefined || ownAddressSwitchOff;
+
   return (
     <Panel glyph="queue" collapsible title={t("reserve.title")} intro={t("reserve.intro")} aside={aside} openWhen={{ saved: opened }} id="registrations-reserve" data-testid="registrations-reserve">
       <Stack spacing={3}>
@@ -156,6 +195,32 @@ export default async function ReserveListPanel({
                 <Typography variant="caption" color="text.secondary" component="p">
                   {t("reserve.by", { name: entry.createdByName ?? t("registrations.auditActorRemoved"), date: when(entry.createdAt) })}
                 </Typography>
+                {renameAction && (
+                  // «Corectează numele» («Lista internă», amended by «Corectează numele pe lista internă»): a native fold, one
+                  // form, working without JavaScript; closed, the line carries only its summary.
+                  <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, boxSizing: "border-box", width: "100%", mt: 1 }} data-testid="reserve-rename">
+                    <Box component="summary">
+                      <RenameIcon fontSize="small" aria-hidden sx={FOLD_GLYPH_SX} />
+                      <Typography component="span" variant="body2">
+                        {t("reserve.rename")}
+                      </Typography>
+                    </Box>
+                    <ActionForm action={renameAction} messages={refusal} scope={`reserve-rename-${entry.id}`} data-testid="reserve-rename-form">
+                      <input type="hidden" name="uiLocale" value={locale} />
+                      <input type="hidden" name="entryId" value={entry.id} />
+                      <input type="hidden" name="listQuery" value={listQuery ?? ""} />
+                      <Stack spacing={1} sx={{ alignItems: "flex-start", mt: 1 }}>
+                        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: "100%" }}>
+                          <RecallField name="firstName" label={t("reserve.firstName")} defaultValue={entry.firstName} required fullWidth size="small" slotProps={{ htmlInput: { maxLength: RESERVE_NAME_MAX } }} />
+                          <RecallField name="lastName" label={t("reserve.lastName")} defaultValue={entry.lastName} required fullWidth size="small" slotProps={{ htmlInput: { maxLength: RESERVE_NAME_MAX } }} />
+                        </Stack>
+                        <GlyphButton icon="save" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="reserve-rename-save">
+                          {t("reserve.renameSave")}
+                        </GlyphButton>
+                      </Stack>
+                    </ActionForm>
+                  </Box>
+                )}
                 <ActionForm action={saveNoteAction} messages={refusal} scope={`reserve-note-${entry.id}`} data-testid="reserve-note-form">
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="entryId" value={entry.id} />
@@ -186,7 +251,7 @@ export default async function ReserveListPanel({
                     <Stack spacing={1} sx={{ alignItems: "flex-start", mt: 1.5 }}>
                       {!entry.email && (
                         // A line written without an address (§888): its box behind a fold that says so — a press with it empty opens it (`revealField`).
-                        <Box component="details" sx={{ ...DISCLOSURE_SX, width: "100%" }} data-testid="reserve-move-email">
+                        <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, boxSizing: "border-box", width: "100%" }} data-testid="reserve-move-email">
                           <Box component="summary">
                             <AddressIcon fontSize="small" aria-hidden sx={FOLD_GLYPH_SX} />
                             <Typography component="span" variant="body2">
@@ -211,6 +276,12 @@ export default async function ReserveListPanel({
                           {t("reserve.eliteNoAddress")}
                         </Typography>
                       )}
+                      {/* No address at all — a partners' guest, say: the Administrator's own address, as a special guest. */}
+                      {!entry.email && ownAddressShown && (
+                        <Typography variant="body2" color="text.secondary" data-testid="reserve-own-address-pointer">
+                          {t("reserve.ownAddressNoAddress")}
+                        </Typography>
+                      )}
                       <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: { xs: "100%", sm: "auto" } }}>
                         <GlyphButton icon="waiting" type="submit" name="intent" value="move" variant="contained" size="small" sx={{ minHeight: 44 }} data-testid="reserve-move">
                           {t("reserve.move")}
@@ -223,6 +294,24 @@ export default async function ReserveListPanel({
                       </Stack>
                     </Stack>
                   </ActionForm>
+                )}
+                {ownAddressAction && (
+                  // «Pe adresa mea, invitat special»: asked first; the address is the account's, so the form posts none.
+                  <ActionForm action={ownAddressAction} messages={moveRefusal} confirm={ownAddressQuestion(entry)} scope={`reserve-own-${entry.id}`} data-testid="reserve-own-address-form">
+                    <input type="hidden" name="uiLocale" value={locale} />
+                    <input type="hidden" name="entryId" value={entry.id} />
+                    <input type="hidden" name="listQuery" value={listQuery ?? ""} />
+                    {/* The relay tick, asked in the dialog (§33), as the move asks it. */}
+                    <input type="hidden" name="relayedByParticipantRequest" value="" />
+                    <GlyphButton icon="hiddenList" type="submit" variant="outlined" size="small" sx={{ minHeight: 44, mt: 1 }} data-testid="reserve-own-address">
+                      {t("reserve.ownAddress")}
+                    </GlyphButton>
+                  </ActionForm>
+                )}
+                {ownAddressSwitchOff && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }} data-testid="reserve-own-address-off">
+                    {t("reserve.ownAddressSwitchOff")}
+                  </Typography>
                 )}
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ alignItems: "flex-start", mt: 0.5 }}>
                   {fullFormHref && (
