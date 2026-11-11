@@ -7,6 +7,7 @@ import { type Registration, registrations } from "@/db/schema/registrations";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { releaseDeadlineOfHold } from "@/modules/registrations/domain/unsigned-release";
+import { declarationPdfAudienceAfterMove } from "@/modules/registrations/domain/address-change";
 import { eventDay, howItWentOpen, howItWentUrl } from "@/modules/feedback/links";
 import type { Locale } from "@/i18n/routing";
 import { issueActionToken } from "@/modules/action-tokens/repository";
@@ -286,6 +287,10 @@ async function renderRow(
     row.messageType !== "REGISTRATION_ADDRESS_REMOVED"
   ) {
     throw new OutboxMessageWithdrawn("the registration was moved to another address since this message was queued");
+  }
+  // Moved back since: the address the notice says lost the registration holds it again — nothing true is left to tell it.
+  if (row.messageType === "REGISTRATION_ADDRESS_REMOVED" && row.participantId && stored && stored.participantId === row.participantId) {
+    throw new OutboxMessageWithdrawn("the registration was moved back to this address since the notice was queued");
   }
 
   /*
@@ -1741,7 +1746,15 @@ async function renderRow(
     the whole document stays in the event's bundle in the backoffice for those seven days. A
     club copy of a participant's message attaches nothing, and says when it was signed anyway.
   */
-  const pdfAudience = declarationPdfAudience(row.messageType, clubCopy);
+  /*
+    «Schimbă adresa»: an address the Administrator typed, never confirmed since by its own link, gets the masked copy — one
+    typo must not send the identity document to a stranger (`declarationPdfAudienceAfterMove`).
+  */
+  const pdfAudience = declarationPdfAudienceAfterMove(
+    declarationPdfAudience(row.messageType, clubCopy),
+    registration?.addressChangedAt ?? null,
+    participant?.emailVerifiedAt ?? null,
+  );
   if (
     (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "DECLARATION_SIGNED" || row.messageType === "DECLARATION_ARCHIVE") &&
     registration &&

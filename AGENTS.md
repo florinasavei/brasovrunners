@@ -3107,8 +3107,10 @@ BR-REQ-037-05):
    the allocator is asked nothing. Every live action link of the registration is revoked for cause (never
    superseded, so never «a newer email exists»), and every registration-scoped token is bound to the
    registration's current participant at read and at spend (`action-tokens/repository.ts`); the old
-   address's queued participant mail for the row is withdrawn, and the renderer withdraws a retry rather
-   than mint a link for the old address. A confirmed row gets a new check-in code. «Vreau să primesc oferte
+   address's queued participant mail for the row is withdrawn — the event's own news, which carries no
+   link, re-addressed instead — and the renderer withdraws a retry rather than mint a link for the old
+   address. A confirmed row gets a new check-in code, and its declaration's copy to the new address masks
+   the identity document until that address is confirmed by its own link. «Vreau să primesc oferte
    și beneficii» is withdrawn, as staff withdraws it. Both addresses are told — `REGISTRATION_ADDRESS_REMOVED`
    to the old one (never naming the new one, the contact page to object, queued whatever its refusals say)
    and `REGISTRATION_ADDRESS_ADDED` to the new — and the new one gets the state's own message, with a fresh
@@ -3119,8 +3121,8 @@ BR-REQ-037-05):
    already on the target at the event in any state or at another event of the race, the target at the
    club's limit per address, a family form waiting on the row, an open invitation of the target to the
    event, an erased row. Nobody vouches or signs in the same press: a declaration signed afterwards is the
-   person's, from the new address's own link, and the trail shows it as signed after a staff address
-   change. Audited as `registration.address_changed_by_staff` with ids and counts, never an address.
+   person's, from the new address's own link — which signs but confirms no address — and the trail shows
+   it as signed after a staff address change. Audited as `registration.address_changed_by_staff` with ids and counts, never an address.
 
 Every one of the eight writes an `audit_logs` row (§12.12). MUST NOT: a second write path into
 `registrations`, a staff-signed declaration (a paper one is the participant's, recorded), a

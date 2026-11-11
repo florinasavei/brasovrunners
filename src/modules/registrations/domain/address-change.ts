@@ -1,5 +1,6 @@
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import type { RegistrationStatus } from "@/db/schema/registrations";
+import { nextMidnightIn } from "@/i18n/dates";
 import { deriveAllowedResendMessageType } from "./resend";
 
 /**
@@ -37,12 +38,20 @@ export function deadlineKeptOnMove(input: {
 }
 
 /**
- * Whether the event is over for the move's emails: cancelled, completed, or past its end (its start when it has no end).
+ * When an event has ended for the move's emails — the same end `email-state.ts#eventEndSql` reads (§670): its `ends_at`,
+ * else the next midnight after its start day in its own time zone, so race day after the start is not «over».
+ */
+export function eventEndForMove(event: { startsAt: Date; endsAt: Date | null; timezone: string }): Date {
+  return event.endsAt ?? nextMidnightIn(event.startsAt, event.timezone);
+}
+
+/**
+ * Whether the event is over for the move's emails: cancelled, completed, or past its end (`eventEndForMove`).
  * Over, the move sends the two notices alone — there is no step left to take from a link.
  */
-export function eventOverForMove(event: { eventStatus: string; startsAt: Date; endsAt: Date | null }, now: Date): boolean {
+export function eventOverForMove(event: { eventStatus: string; startsAt: Date; endsAt: Date | null; timezone: string }, now: Date): boolean {
   if (event.eventStatus !== "SCHEDULED") return true;
-  return (event.endsAt ?? event.startsAt).getTime() <= now.getTime();
+  return eventEndForMove(event).getTime() <= now.getTime();
 }
 
 /**
@@ -65,4 +74,19 @@ export function signedAfterStaffAddressChange(
   addressChangedAt: Date | null,
 ): boolean {
   return acceptance.method === "EMAIL_LINK" && addressChangedAt !== null && acceptance.acceptedAt.getTime() > addressChangedAt.getTime();
+}
+
+/**
+ * Which copy of the signed declaration a participant's message carries once its address was set by staff: the copy with the
+ * identity document masked (the archive copy's, §320, §419) until the person confirmed the new address with its own link
+ * after the move — one typo of the Administrator must not send a person's identity document to a stranger's inbox, and the
+ * whole copy is promised to the confirmed address. The club's copies are left as they are.
+ */
+export function declarationPdfAudienceAfterMove(
+  audience: "participant" | "club" | null,
+  addressChangedAt: Date | null,
+  emailVerifiedAt: Date | null,
+): "participant" | "club" | null {
+  if (audience !== "participant" || addressChangedAt === null) return audience;
+  return emailVerifiedAt !== null && emailVerifiedAt.getTime() > addressChangedAt.getTime() ? "participant" : "club";
 }

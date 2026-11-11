@@ -5137,6 +5137,13 @@ function isUniqueViolation(error: unknown): boolean {
 
 const alreadyOnAddress = () => new DomainError("VALIDATION_ERROR", "this runner already has a registration on the new address at this event or race", ["email", ALREADY_ON_ADDRESS]);
 
+
+/**
+ * «Schimbă adresa»: the participant messages still waiting that follow a moved registration to its new address — the
+ * event's own news, which carries no link of the old address — rather than being withdrawn with the rest.
+ */
+const FOLLOWS_THE_MOVE = ["EVENT_REMINDER", "ORGANIZER_MESSAGE", "EVENT_UPDATE_NOTICE", "EVENT_CANCELLED", "EVENT_THANKS"] as const satisfies readonly EmailMessageType[];
+
 /**
  * «Schimbă adresa» (the owner, 2026-11-11: «aparent nu pot modifica mailul unei persoane???», choosing «Orice adresă,
  * oricând» among three): an Administrator moves ONE registration to the address the person gave — any state, at any
@@ -5332,7 +5339,25 @@ export async function changeRegistrationAddressByStaff<T extends Record<string, 
       .where(and(eq(emailActionTokens.registrationId, current.id), isNull(emailActionTokens.usedAt), isNull(emailActionTokens.invalidatedAt)))
       .returning({ id: emailActionTokens.id });
 
-    // 3. The old address's messages for the row still waiting and never tried, with their club copies.
+    /*
+      3. The old address's messages for the row still waiting and never tried. The event's own news — a reminder, the
+      organizers' message, a change or cancellation of the event, the thanks — carries no link of the old address (the
+      renderer mints any at sending, for the registration's participant then), so it follows the registration to the new
+      address rather than being lost; every other one is withdrawn, with its club copies.
+    */
+    const readdressed = await tx
+      .update(emailOutbox)
+      .set({ participantId: destination.id, recipientEmail: destination.deliveryEmail })
+      .where(
+        and(
+          eq(emailOutbox.registrationId, current.id),
+          eq(emailOutbox.participantId, old.id),
+          eq(emailOutbox.status, "PENDING"),
+          eq(emailOutbox.attemptCount, 0),
+          inArray(emailOutbox.messageType, [...FOLLOWS_THE_MOVE]),
+        ),
+      )
+      .returning({ id: emailOutbox.id });
     const withdrawn = await tx
       .delete(emailOutbox)
       .where(
@@ -5462,6 +5487,7 @@ export async function changeRegistrationAddressByStaff<T extends Record<string, 
         newParticipant,
         linksRevoked: revoked.length,
         messagesWithdrawn: withdrawn.length,
+        messagesReaddressed: readdressed.length,
         stateMessage,
         holdLengthened,
         promoWithdrawn: promo?.changed === true,

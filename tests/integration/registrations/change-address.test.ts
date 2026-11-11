@@ -3,6 +3,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { emailActionTokens, type EmailActionTokenPurpose } from "@/db/schema/email-action-tokens";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { events, eventTranslations } from "@/db/schema/events";
@@ -62,6 +63,8 @@ const { updateAddressCap } = await import("@/modules/registrations/address-cap")
 const { consumeActionToken, issueActionToken, readActionTokenContext, readSpentActionTokenScope, readSupersededActionTokenScope } = await import("@/modules/action-tokens/repository");
 const { consumeAndConfirmEmail, consumeAndSignDeclaration } = await import("@/modules/registrations/token-actions");
 const { renderOutboxMessage } = await import("@/modules/notifications/render");
+const { findSignedDeclaration, renderSignedDeclarationPdf } = await import("@/modules/registrations/signed-declaration");
+const { declarationWords } = await import("@/modules/registrations/declaration-labels");
 const { OutboxMessageWithdrawn } = await import("@/modules/notifications/outbox");
 const { listDeclarationAcceptances } = await import("@/modules/registrations/admin-repository");
 const { viewPersonData } = await import("@/modules/registrations/person-data");
@@ -315,9 +318,40 @@ describe("«Schimbă adresa»: the registration moves, each state keeps what it 
   it("after the event has ended: the two notices alone, whatever the state", async () => {
     const event = await createEvent(5, { startsAt: new Date(NOW.getTime() + 2 * HOUR) });
     const confirmed = await confirmedRow(event, "Ana");
-    const moved = await changeRegistrationAddressByStaff(db, admin, confirmed.id, NEW, new Date(NOW.getTime() + 3 * HOUR));
+    // No end of its own: it ends at the next midnight of its start day in its zone, as everywhere else (`eventEndSql`).
+    const moved = await changeRegistrationAddressByStaff(db, admin, confirmed.id, NEW, new Date(NOW.getTime() + 24 * HOUR));
     expect(moved.stateMessage).toBeNull();
     expect((await rowOf(confirmed.id)).status).toBe("CONFIRMED");
+  });
+
+  it("on race day after the start, an event with no end is not over: a confirmed runner still gets the confirmation and a new code", async () => {
+    const event = await createEvent(5, { startsAt: new Date(NOW.getTime() + 2 * HOUR) });
+    const confirmed = await confirmedRow(event, "Ana");
+    const moved = await changeRegistrationAddressByStaff(db, admin, confirmed.id, NEW, new Date(NOW.getTime() + 3 * HOUR));
+    expect(moved.stateMessage).toBe("REGISTRATION_CONFIRMED");
+    expect((await rowOf(confirmed.id)).checkinCode).not.toBe(confirmed.checkinCode);
+  });
+
+  it("a confirmed row moved to an address nobody confirmed: the confirmation's declaration masks the identity document until the new address is confirmed", async () => {
+    const event = await createEvent(5);
+    const held = await confirmedAddress(event, "Ana");
+    await signDeclaration(db, event, held.id, await signingInput(db, at(1), "Ana Munteanu"), at(1));
+    // The test's declaration asks for no document; the signed row is given one, as a text naming it would have asked.
+    await db.update(declarationAcceptances).set({ idDocument: "BV 123456" }).where(eq(declarationAcceptances.registrationId, held.id));
+    await changeRegistrationAddressByStaff(db, admin, held.id, NEW, at(60));
+    const [confirmation] = (await queued(held.id)).filter((row) => row.messageType === "REGISTRATION_CONFIRMED" && row.recipientEmail === NEW);
+    const signed = await findSignedDeclaration(db, held.id);
+    const copy = (audience: "club" | "participant", when: Date) => renderSignedDeclarationPdf(db, signed!, held.eventId, declarationWords(signed!.locale, when), when, audience);
+    const attached = async (when: Date) => {
+      const message = await renderOutboxMessage({ ...confirmation, status: "PROCESSING", attemptCount: 1, lockedAt: when }, db, when);
+      return message.attachments?.find((file) => file.contentType === "application/pdf")?.data;
+    };
+    // The whole copy and the masked one differ: the comparison below tells them apart.
+    expect((await copy("club", at(61)))!.equals((await copy("participant", at(61)))!)).toBe(false);
+    expect((await attached(at(61)))!.equals((await copy("club", at(61)))!)).toBe(true);
+    // Confirmed by its own link after the move: the whole copy, as on every confirmed address.
+    await db.update(participants).set({ emailVerifiedAt: at(70) }).where(eq(participants.canonicalEmail, NEW));
+    expect((await attached(at(71)))!.equals((await copy("participant", at(71)))!)).toBe(true);
   });
 
   it("reuses an existing participant of the new address exactly as it is — its name and language untouched", async () => {
@@ -490,6 +524,49 @@ describe("«Schimbă adresa»: the old links die, the old mail is withdrawn, the
     expect(message.text).not.toMatch(/[/=][A-Za-z0-9_-]{43}(?![A-Za-z0-9_-])/);
     expect((await db.select().from(emailActionTokens)).length).toBe(tokensBefore);
     expect(message.text).toContain("Linkurile primite la această adresă pentru această înscriere nu mai funcționează.");
+  });
+
+  it("the event's own news still waiting follows the registration to the new address; a link-bearing message is withdrawn", async () => {
+    const event = await createEvent(5);
+    const ana = await confirmedAddress(event, "Ana");
+    for (const messageType of ["EVENT_REMINDER", "ORGANIZER_MESSAGE"] as const) {
+      await db.insert(emailOutbox).values({
+        participantId: ana.participantId,
+        registrationId: ana.id,
+        messageType,
+        locale: "ro",
+        recipientEmail: mail("Ana"),
+        payloadJson: {},
+        idempotencyKey: `test:${messageType}:${ana.id}`,
+        status: "PENDING",
+        attemptCount: 0,
+        createdAt: at(30),
+      });
+    }
+    await changeRegistrationAddressByStaff(db, admin, ana.id, NEW, at(60));
+    const target = await participantOf(NEW);
+    const rows = await queued(ana.id);
+    for (const messageType of ["EVENT_REMINDER", "ORGANIZER_MESSAGE"]) {
+      expect(rows.filter((row) => row.messageType === messageType), messageType).toEqual([
+        expect.objectContaining({ participantId: target.id, recipientEmail: NEW, status: "PENDING" }),
+      ]);
+    }
+    // The old address's declaration request, which carries a link, is gone; the new address has its own.
+    expect(rows.filter((row) => row.messageType === "COMPLETE_DECLARATION").map((row) => row.recipientEmail)).toEqual([NEW]);
+    const [trail] = await trailOf(ana.id);
+    expect(trail.metadataJson).toMatchObject({ messagesReaddressed: 2 });
+  });
+
+  it("moved away and back: the first notice to the address that holds the registration again is withdrawn at render", async () => {
+    const event = await createEvent(5);
+    const ana = await confirmedAddress(event, "Ana");
+    await changeRegistrationAddressByStaff(db, admin, ana.id, NEW, at(60));
+    await changeRegistrationAddressByStaff(db, admin, ana.id, mail("Ana"), at(61));
+    const [first] = (await queued(ana.id)).filter((row) => row.messageType === "REGISTRATION_ADDRESS_REMOVED" && row.recipientEmail === mail("Ana"));
+    await expect(renderOutboxMessage({ ...first, status: "PROCESSING", attemptCount: 1, lockedAt: at(62) }, db, at(62))).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
+    // The second address's notice of losing it is true, and leaves.
+    const [second] = (await queued(ana.id)).filter((row) => row.messageType === "REGISTRATION_ADDRESS_REMOVED" && row.recipientEmail === NEW);
+    expect((await renderOutboxMessage({ ...second, status: "PROCESSING", attemptCount: 1, lockedAt: at(62) }, db, at(62))).to).toBe(NEW);
   });
 
   it("the old address's notice is queued even while that address has an open refusal", async () => {

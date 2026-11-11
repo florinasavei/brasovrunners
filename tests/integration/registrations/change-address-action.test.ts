@@ -189,7 +189,7 @@ describe("«Schimbă adresa» — every role", () => {
 describe("«Schimbă adresa» — a refusal is said at the box and writes nothing", () => {
   const cases: [string, () => Promise<string>, string][] = [
     ["an address that is not one", async () => "nu-e-o-adresa", "ADDRESS_INVALID"],
-    ["the same address", async () => "ANA@example.org", "ANSWERS_UNCHANGED"],
+    ["the same address", async () => "ANA@example.org", "ADDRESS_UNCHANGED"],
     [
       "the same runner already on the new address",
       async () => {
@@ -197,7 +197,7 @@ describe("«Schimbă adresa» — a refusal is said at the box and writes nothin
         await seedRegistration(dora.id, "Ana Test");
         return NEW;
       },
-      "STAFF_ALREADY_ON_ADDRESS",
+      "ADDRESS_ALREADY_HELD",
     ],
   ];
   for (const [what, setUp, code] of cases) {

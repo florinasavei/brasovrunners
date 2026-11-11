@@ -574,9 +574,11 @@ export async function changeRegistrationAddressAction(_previous: FormOutcome | n
 
 /** The sentence a refused «Schimbă adresa» says at the box, by the marker the service named; null for the generic ones. */
 function addressChangeRefusalCode(fields: readonly string[]): string | null {
-  if (fields.includes(ANSWERS_UNCHANGED)) return "ANSWERS_UNCHANGED";
-  if (fields.includes(ALREADY_ON_ADDRESS)) return "STAFF_ALREADY_ON_ADDRESS";
-  if (fields.includes(ADDRESS_AT_CAP)) return "STAFF_ADDRESS_AT_CAP";
+  // The move's own sentences, never «Modifică datele»'s or the staff entry's: a provider's variant is the same inbox, and the race's
+  // index is per address, so the row the new address holds may be another person's.
+  if (fields.includes(ANSWERS_UNCHANGED)) return "ADDRESS_UNCHANGED";
+  if (fields.includes(ALREADY_ON_ADDRESS)) return "ADDRESS_ALREADY_HELD";
+  if (fields.includes(ADDRESS_AT_CAP)) return "ADDRESS_HOLDS_ENOUGH";
   if (fields.includes(ADDRESS_FAMILY_FORM_PENDING)) return "ADDRESS_FAMILY_FORM_PENDING";
   if (fields.includes(ADDRESS_INVITED)) return "ADDRESS_INVITED";
   if (fields.includes("email")) return "ADDRESS_INVALID";

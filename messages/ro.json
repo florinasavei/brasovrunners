@@ -1981,7 +1981,7 @@
         "submit": "Schimbă adresa",
         "pending": "Se schimbă…",
         "confirmTitle": "Schimbi adresa?",
-        "confirmBody": "Linkurile trimise la adresa veche nu mai funcționează. Ambele adrese primesc un email despre schimbare, iar cea nouă primește pasul următor. Schimbi adresa?",
+        "confirmBody": "Linkurile trimise la adresa veche nu mai funcționează. Ambele adrese primesc un email despre schimbare, iar cea nouă primește pasul următor.",
         "confirmPromo": "Acordul pentru oferte și beneficii se retrage: îl dă din nou persoana, de la adresa nouă.",
         "confirmAlso": "Adresa veche primește „Adresa de email a fost schimbată”; cea nouă și emailul pasului următor, când există.",
         "readOnly": "Adresa o schimbă un administrator."
@@ -2604,6 +2604,9 @@
       "STAFF_ADDRESS_AT_CAP": "Adresa aceasta are deja atâtea înscrieri la eveniment câte permite clubul pe o adresă („Termene”). Folosește altă adresă de email pentru această persoană.",
       "ADDRESS_FAMILY_FORM_PENDING": "Nu s-a schimbat nimic: un formular de familie așteaptă confirmarea pe adresa veche. Schimbă adresa după ce e confirmat sau expiră.",
       "ADDRESS_INVITED": "Nu s-a schimbat nimic: adresa nouă are o invitație deschisă la acest eveniment. Retrage întâi invitația din «Invitații».",
+      "ADDRESS_UNCHANGED": "Nu s-a schimbat nimic: e aceeași căsuță de email ca adresa de acum a înscrierii — un punct sau un „+” în plus duc tot acolo.",
+      "ADDRESS_ALREADY_HELD": "Nu s-a schimbat nimic: adresa aceasta are deja o înscriere la acest eveniment sau la altă distanță a cursei. Caut-o în lista înscrierilor.",
+      "ADDRESS_HOLDS_ENOUGH": "Nu s-a schimbat nimic: adresa aceasta are deja la eveniment atâtea înscrieri câte îi permit regulile clubului pentru o adresă. Folosește altă adresă.",
       "ADDRESS_INVALID": "Nu s-a schimbat nimic: adresa nu e o adresă de email validă. Verifică ce ai scris.",
       "MEMBERS_ON_TEAM": "Sunt deja în echipă: {addresses}. Scoate-le din listă. Nu s-a adăugat nimeni.",
       "LEGAL_BATCH_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este cea cerută. Nu s-a șters nimic — scrie exact textul de sub casetă, de exemplu „DELETE 2”.",

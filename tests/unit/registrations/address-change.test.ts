@@ -3,6 +3,8 @@ import { registrationStatus } from "@/db/schema/registrations";
 import {
   ADDRESS_CHANGE_MIN_REMAINING_MS,
   deadlineKeptOnMove,
+  declarationPdfAudienceAfterMove,
+  eventEndForMove,
   eventOverForMove,
   signedAfterStaffAddressChange,
   stateMessageOnMove,
@@ -63,12 +65,40 @@ describe("stateMessageOnMove and eventOverForMove", () => {
     }
   });
 
-  it("an event is over once cancelled, completed, or past its end (its start without one)", () => {
-    expect(eventOverForMove({ eventStatus: "SCHEDULED", startsAt: START, endsAt: null }, NOW)).toBe(false);
-    expect(eventOverForMove({ eventStatus: "CANCELLED", startsAt: START, endsAt: null }, NOW)).toBe(true);
-    expect(eventOverForMove({ eventStatus: "COMPLETED", startsAt: START, endsAt: null }, NOW)).toBe(true);
-    expect(eventOverForMove({ eventStatus: "SCHEDULED", startsAt: new Date(NOW.getTime() - HOUR), endsAt: null }, NOW)).toBe(true);
-    expect(eventOverForMove({ eventStatus: "SCHEDULED", startsAt: new Date(NOW.getTime() - HOUR), endsAt: new Date(NOW.getTime() + HOUR) }, NOW)).toBe(false);
+  it("an event is over once cancelled, completed, or past its end", () => {
+    const zone = "Europe/Bucharest";
+    expect(eventOverForMove({ eventStatus: "SCHEDULED", startsAt: START, endsAt: null, timezone: zone }, NOW)).toBe(false);
+    expect(eventOverForMove({ eventStatus: "CANCELLED", startsAt: START, endsAt: null, timezone: zone }, NOW)).toBe(true);
+    expect(eventOverForMove({ eventStatus: "COMPLETED", startsAt: START, endsAt: null, timezone: zone }, NOW)).toBe(true);
+    expect(eventOverForMove({ eventStatus: "SCHEDULED", startsAt: new Date(NOW.getTime() - HOUR), endsAt: new Date(NOW.getTime() + HOUR), timezone: zone }, NOW)).toBe(false);
+    expect(eventOverForMove({ eventStatus: "SCHEDULED", startsAt: new Date(NOW.getTime() - 2 * HOUR), endsAt: new Date(NOW.getTime() - HOUR), timezone: zone }, NOW)).toBe(true);
+  });
+
+  it("with no end, the event lasts to the end of its start day in its own zone — race day after the start is not over", () => {
+    // 10:00 in Brașov on 4 October (summer time, UTC+3): over at the next midnight there, 21:00 UTC.
+    const race = { eventStatus: "SCHEDULED", startsAt: new Date("2026-10-04T07:00:00.000Z"), endsAt: null, timezone: "Europe/Bucharest" };
+    expect(eventEndForMove(race).toISOString()).toBe("2026-10-04T21:00:00.000Z");
+    expect(eventOverForMove(race, new Date("2026-10-04T12:00:00.000Z"))).toBe(false);
+    expect(eventOverForMove(race, new Date("2026-10-04T21:00:00.000Z"))).toBe(true);
+    // The night summer time ends (25 October 2026, 04:00 → 03:00): the next midnight is in winter time, UTC+2.
+    expect(eventEndForMove({ ...race, startsAt: new Date("2026-10-24T07:00:00.000Z") }).toISOString()).toBe("2026-10-24T21:00:00.000Z");
+    expect(eventEndForMove({ ...race, startsAt: new Date("2026-10-25T07:00:00.000Z") }).toISOString()).toBe("2026-10-25T22:00:00.000Z");
+    expect(eventEndForMove({ ...race, timezone: "UTC" }).toISOString()).toBe("2026-10-05T00:00:00.000Z");
+  });
+});
+
+describe("declarationPdfAudienceAfterMove", () => {
+  const moved = new Date(NOW.getTime() - HOUR);
+  it("masks the participant's copy after a staff move until the address is confirmed after it", () => {
+    expect(declarationPdfAudienceAfterMove("participant", null, null)).toBe("participant");
+    expect(declarationPdfAudienceAfterMove("participant", moved, null)).toBe("club");
+    // Verified before the move — the address of somebody else, perhaps: still masked.
+    expect(declarationPdfAudienceAfterMove("participant", moved, new Date(moved.getTime() - HOUR))).toBe("club");
+    expect(declarationPdfAudienceAfterMove("participant", moved, NOW)).toBe("participant");
+  });
+  it("leaves the club's copies as they are", () => {
+    expect(declarationPdfAudienceAfterMove("club", moved, null)).toBe("club");
+    expect(declarationPdfAudienceAfterMove(null, moved, null)).toBeNull();
   });
 });
 

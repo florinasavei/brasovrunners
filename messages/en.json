@@ -1981,7 +1981,7 @@
         "submit": "Change the address",
         "pending": "Changing…",
         "confirmTitle": "Change the address?",
-        "confirmBody": "The links sent to the old address stop working. Both addresses get an email about the change, and the new one gets the next step. Change the address?",
+        "confirmBody": "The links sent to the old address stop working. Both addresses get an email about the change, and the new one gets the next step.",
         "confirmPromo": "The consent to offers and benefits is withdrawn: the person gives it again, from the new address.",
         "confirmAlso": "The old address gets “The email address was changed”; the new one also gets the next step's email, when there is one.",
         "readOnly": "An administrator changes the address."
@@ -2604,6 +2604,9 @@
       "STAFF_ADDRESS_AT_CAP": "This address already has as many registrations for the event as the club allows per address (“Deadlines”). Use another email address for this person.",
       "ADDRESS_FAMILY_FORM_PENDING": "Nothing changed: a family form waits to be confirmed on the old address. Change the address once it is confirmed or lapses.",
       "ADDRESS_INVITED": "Nothing changed: the new address has an open invitation to this event. Withdraw the invitation in “Invitations” first.",
+      "ADDRESS_UNCHANGED": "Nothing changed: it is the same inbox as the registration’s address now — an extra dot or “+” still leads there.",
+      "ADDRESS_ALREADY_HELD": "Nothing changed: this address already has a registration at this event or at another distance of the race. Look it up in the registrations list.",
+      "ADDRESS_HOLDS_ENOUGH": "Nothing changed: this address already has as many registrations at the event as the club’s rules allow one address. Use another address.",
       "ADDRESS_INVALID": "Nothing changed: that is not a valid email address. Check what you typed.",
       "MEMBERS_ON_TEAM": "Already on the team: {addresses}. Take them off the list. Nobody was added.",
       "LEGAL_BATCH_CONFIRMATION_MISMATCH": "The typed confirmation is not the one asked for. Nothing was deleted — type exactly the text under the box, for example \"DELETE 2\".",
