@@ -144,7 +144,7 @@ export async function moveReserveEntryToOwnAddressAction(_previous: FormOutcome 
       const refusal = refused(error, form, { fieldNames: (failure) => failure.fields.filter((name) => name === "relayedByParticipantRequest") });
       if (isDomainError(error) && error.fields.includes(HIDDEN_LIST_OFF)) return { ...refusal, error: HIDDEN_LIST_OFF };
       if (isDomainError(error) && error.fields.includes(ALREADY_ON_ADDRESS)) return { ...refusal, error: "STAFF_ALREADY_ON_ADDRESS" };
-      if (isDomainError(error) && error.fields.includes(ADDRESS_AT_CAP)) return { ...refusal, error: "STAFF_ADDRESS_AT_CAP" };
+      if (isDomainError(error) && error.fields.includes(ADDRESS_AT_CAP)) return { ...refusal, error: "STAFF_OWN_ADDRESS_AT_CAP" };
       return refusal;
     }
     await flashOutcome({ saved: "reserveOwnAddressGuest" });

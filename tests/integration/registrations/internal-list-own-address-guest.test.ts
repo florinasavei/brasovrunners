@@ -393,7 +393,7 @@ describe("«Pe adresa mea, invitat special»: every refusal writes nothing and i
     await expectNothingWritten(event.id, entryId);
   });
 
-  it("refuses the same name already on the Administrator's address with the staff entry's sentence, and the second line stays", async () => {
+  it("refuses the same name already on the Administrator's address with its own sentence, and the second line stays", async () => {
     const event = await createRace(3);
     await expect(moveReserveEntryToOwnAddressAction(null, press(await line(event.id)))).rejects.toThrow(/REDIRECT/);
     const second = await line(event.id);
@@ -403,7 +403,7 @@ describe("«Pe adresa mea, invitat special»: every refusal writes nothing and i
     expect(await trail("event_reserve.moved")).toHaveLength(1);
   });
 
-  it("refuses at the club's limit per address with the staff entry's sentence, and writes nothing", async () => {
+  it("refuses at the club's limit per address with its own sentence, and writes nothing", async () => {
     await updateAddressCap(db, (await staff("SUPERADMIN")) as StaffUser, { registrationsPerAddress: 2 }, NOW);
     forgetCachedAddressCap();
     const event = await createRace(5);
@@ -411,12 +411,12 @@ describe("«Pe adresa mea, invitat special»: every refusal writes nothing and i
       await expect(moveReserveEntryToOwnAddressAction(null, press(await line(event.id, first)))).rejects.toThrow(/REDIRECT/);
     }
     const third = await line(event.id, "Teodora");
-    expect(await moveReserveEntryToOwnAddressAction(null, press(third))).toMatchObject({ error: "STAFF_ADDRESS_AT_CAP", fields: [] });
+    expect(await moveReserveEntryToOwnAddressAction(null, press(third))).toMatchObject({ error: "STAFF_OWN_ADDRESS_AT_CAP", fields: [] });
     expect(await rowOf("Teodora")).toBeUndefined();
     expect((await linesOf(event.id)).map((row) => row.id)).toEqual([third]);
     for (const catalogue of [ro, en]) {
       expect(catalogue.Admin.errors.STAFF_ALREADY_ON_ADDRESS.length).toBeGreaterThan(0);
-      expect(catalogue.Admin.errors.STAFF_ADDRESS_AT_CAP.length).toBeGreaterThan(0);
+      expect(catalogue.Admin.errors.STAFF_OWN_ADDRESS_AT_CAP.length).toBeGreaterThan(0);
     }
   });
 

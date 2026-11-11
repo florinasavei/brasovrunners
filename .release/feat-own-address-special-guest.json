@@ -10,7 +10,7 @@
     },
     {
       "requirement": "BR-REQ-034-02",
-      "text": "A registration put on «Lista de invitați speciali» by «Pe adresa mea, invitat special» consumes no place and adds no term to the capacity formula; its hold is left by the maintenance run and by the deadline's release until the start, and «Confirmă pe hârtie» confirms it; three presses at once for one address one below the club's limit per address, on two real connections, end with exactly one registration and two `ADDRESS_AT_CAP` refusals, the refused lines kept. Verification: integration `registrations/internal-list-own-address-guest.test.ts`, concurrency `own-address-guest.test.ts` (2026-11-11, `DECISIONS.md` §NNN)."
+      "text": "A registration put on «Lista de invitați speciali» by «Pe adresa mea, invitat special» consumes no place and adds no term to the capacity formula; its hold is left by the maintenance run and by the deadline's release until the start, and «Confirmă pe hârtie» confirms it; three presses at once for one address one below the club's limit per address, on separate real connections from one pool, end with exactly one registration and two `ADDRESS_AT_CAP` refusals, the refused lines kept. Verification: integration `registrations/internal-list-own-address-guest.test.ts`, concurrency `own-address-guest.test.ts` (2026-11-11, `DECISIONS.md` §NNN)."
     },
     {
       "requirement": "BR-REQ-060-01",
