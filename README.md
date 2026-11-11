@@ -344,7 +344,7 @@ Email comparison is case-insensitive and trims surrounding whitespace. For consu
 
 This prevents common aliases of the same inbox from creating duplicate registrations. It does not claim to prove that two completely different email addresses belong to the same human.
 
-Because the verified email is the participant identity, the backoffice does not silently edit it or merge participant records. An unverified typo is handled by cancelling the pending registration and starting again with the correct address. Verified email changes and participant merges are explicitly deferred until a safe verified workflow is approved.
+Because the verified email is the participant identity, the backoffice does not silently edit it or merge participant records. An Administrator may move one registration to another address with «Schimbă adresa» (`AGENTS.md` §15.11 verb 8): one registration per press, audited, both addresses told, and no participant row rewritten. Participant merges stay deferred.
 
 ## Public runner profiles
 

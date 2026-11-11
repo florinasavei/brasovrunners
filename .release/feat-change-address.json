@@ -6,11 +6,31 @@
   "specsCriteria": [
     {
       "requirement": "BR-REQ-037-03",
-      "text": "Amends the status line and criterion 2. Given the backoffice, when it renders, then it offers no participant merge and rewrites no participant row; an address is changed only by «Schimbă adresa», which re-points one registration to the participant of the new canonical address (2026-11-11, `DECISIONS.md` §NNN)."
+      "text": "Criterion 2 (amended): Given the backoffice, when it renders, then it offers no participant merge and rewrites no participant row; an address is changed only by «Schimbă adresa», which re-points one registration to the participant of the new canonical address (2026-11-11, `DECISIONS.md` §NNN)."
     },
     {
       "requirement": "BR-REQ-037-03",
-      "text": "Amends criterion 19. Given a registration's page, then the Administrator — and nobody else — is offered «Schimbă adresa» on the card «Adresa de email», the Organizer reading the address with no form; the question before the press says the next step is sent to the new address only when the move sends one (`moveSendsNextStep`, the move's own rule), and otherwise that both addresses are told and the new address gets no step to take — never that it gets no other email — and, always, that the event's emails not sent yet go to the new address, and, while the event is not over, that the old address may get its family's own message again, never promising the old address silence, in both languages; and the words on the rejected-email line and in «Ce îi spui» say to ask for the right address, which an administrator changes in «Adresa de email», never that only the person can, by registering again (2026-11-11, `DECISIONS.md` §NNN)."
+      "text": "Criterion 19 (amended): Replaces criterion 14's name of the tick. Given the registrations list, when its filter row renders, then the `bounced=1` tick reads «Doar cu un email respins» / “Only with a rejected email”, its help saying that it can happen after the confirmation and that the row's «Email respins» says which email, when and why, as §663 decided; and the words on the rejected-email line and in «Ce îi spui» say to ask for the right address, which an Administrator changes in «Adresa de email», never that only the person can, by registering again (2026-11-11, `DECISIONS.md` §NNN)."
+    },
+    {
+      "requirement": "BR-REQ-037-03",
+      "text": "Amends the status line and §6's «Verified-email change» bullet: «no verified-email edit» no longer stands — an Administrator moves one registration to another address with «Schimbă adresa» — and only the participant merge stays deferred (2026-11-11, `DECISIONS.md` §NNN)."
+    },
+    {
+      "requirement": "BR-REQ-037-03",
+      "text": "Given a registration's page, then the Administrator — and nobody else — is offered «Schimbă adresa» on the card «Adresa de email», the Organizer reading the address with no form; the question before the press says the next step is sent to the new address only when the move sends one (`moveSendsNextStep`, the move's own rule), and otherwise that both addresses are told and the new address gets no step to take — never that it gets no other email — and, always, that the event's emails not sent yet go to the new address, and, while the event is not over, that the old address may get its family's own message again, never promising the old address silence, in both languages; and the words on the rejected-email line and in «Ce îi spui» say to ask for the right address, which an administrator changes in «Adresa de email», never that only the person can, by registering again (2026-11-11, `DECISIONS.md` §NNN)."
+    },
+    {
+      "requirement": "BR-REQ-032-04",
+      "text": "Criterion 2 (amended): Given a participant, when an administrator works in the backoffice, then no interface offers to rewrite a participant's email or to merge two participants, and any direct attempt is rejected; an Administrator may only move one registration to the participant of another address, with «Schimbă adresa» (2026-11-11, `DECISIONS.md` §NNN)."
+    },
+    {
+      "requirement": "BR-REQ-032-04",
+      "text": "Criterion 3 (amended): Given an address typed wrong, confirmed or not, when an Administrator resolves it, then the path is «Schimbă adresa» on the registration's card «Adresa de email» — the registration keeps its state, its place and its number — and no longer cancelling the pending registration to start again (2026-11-11, `DECISIONS.md` §NNN)."
+    },
+    {
+      "requirement": "BR-REQ-060-01",
+      "text": "Criterion 40 (amended): Criterion 36: the guide's «Ce NU se poate face» lists the hard limits: no rewriting or merging of participants' addresses — a registration moves to another address only by the Administrator's «Schimbă adresa» —, no merge of registrations, no staff-signed declaration, no legal text in effect without an approved version, no registration past capacity; its health step reads only the top-level `status` of /api/health, as §441 decided (2026-11-11, `DECISIONS.md` §NNN)."
     },
     {
       "requirement": "BR-REQ-037-03",

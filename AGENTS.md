@@ -3344,7 +3344,8 @@ old address, its participant's — the organizers changed the address, its links
 page to object, never the new address — queued whatever that address's refusals say; the second to the new
 address, that it now receives the registration's messages and whether the next step follows. Neither carries
 a token. The renderer withdraws every other participant message of the registration whose participant is no
-longer the registration's; the first is the one it lets through.
+longer the registration's; the first is the one it lets through, unless the registration was moved back to
+that address since.
 
 `UNSIGNED_RELEASED` (§914) is queued by `unsigned-release.ts#completeDeadlineRelease`, in the transaction
 of the window deadline's own release, to the `PLACES_ALERT` audience (every Administrator and

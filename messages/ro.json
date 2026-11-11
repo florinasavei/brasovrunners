@@ -8845,7 +8845,7 @@
             {
               "title": "Ce NU se poate face",
               "steps": [
-                "Nimeni nu schimbă adresa de email confirmată a unui participant, nici un Administrator.",
+                "Nimeni nu rescrie și nu unește adresele participanților. O înscriere trece pe altă adresă doar cu «Schimbă adresa», a Administratorului.",
                 "Nimeni nu unește două înscrieri într-una.",
                 "Nimeni din echipă nu semnează declarația în locul participantului: la masă înregistrezi doar declarația de hârtie pe care a semnat-o el.",
                 "Niciun text legal nu intră în vigoare fără o versiune aprobată; fără termeni, notă și declarație aprobate nu se poate înscrie nimeni.",
@@ -9598,7 +9598,7 @@
               "steps": [
                 "Când: persoana a scris greșit adresa, adresa nu există sau persoana vrea emailurile pe altă adresă.",
                 "«Înscrieri» → apasă pe nume → «Adresa de email» → scrie «Adresa nouă» → «Schimbă adresa». Întrebarea spune ce se întâmplă; confirmă.",
-                "Linkurile trimise la adresa veche nu mai funcționează. Adresa veche primește un email despre schimbare, fără adresa nouă; cea nouă primește un email și pasul următor.",
+                "Linkurile trimise la adresa veche nu mai funcționează. Adresa veche primește un email despre schimbare, fără adresa nouă; cea nouă primește un email și pasul următor, cât mai are unul.",
                 "Locul, starea, poziția pe lista de așteptare și numărul nu se schimbă. Acordul pentru oferte și beneficii se retrage. Declarația o semnează tot persoana, din linkul primit la adresa nouă.",
                 "Se schimbă o singură înscriere la o apăsare: o familie de pe aceeași adresă se mută persoană cu persoană."
               ]

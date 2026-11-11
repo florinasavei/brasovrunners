@@ -8845,7 +8845,7 @@
             {
               "title": "What cannot be done",
               "steps": [
-                "Nobody changes a participant's confirmed email address, not even an Administrator.",
+                "Nobody rewrites or merges participants' addresses. A registration moves to another address only by the Administrator's «Change the address».",
                 "Nobody merges two registrations into one.",
                 "Nobody on the team signs the declaration for the participant: at the desk you only record the paper declaration they signed themselves.",
                 "No legal text takes effect without an approved version; without approved terms, notice and declaration nobody can register.",
@@ -9598,7 +9598,7 @@
               "steps": [
                 "When: the person mistyped the address, the address does not exist, or the person wants the emails at another address.",
                 "«Registrations» → press the name → «Email address» → type «New address» → «Change the address». The question says what happens; confirm.",
-                "The links sent to the old address stop working. The old address gets an email about the change, without the new address; the new one gets an email and the next step.",
+                "The links sent to the old address stop working. The old address gets an email about the change, without the new address; the new one gets an email and the next step, while there is one.",
                 "The place, the state, the position on the waiting list and the number do not change. The consent to offers and benefits is withdrawn. The person still signs the declaration, from the link sent to the new address.",
                 "One registration changes per press: a family on the same address moves one person at a time."
               ]

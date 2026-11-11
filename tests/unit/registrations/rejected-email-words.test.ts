@@ -527,7 +527,7 @@ describe("«Ce îi spui» on a row whose email did not arrive (§663, §670)", (
       expect(whatToTell(locale, pending, now)).toContain(spamHint);
       const bounced = whatToTell(locale, { ...pending, emailState: verify() }, now);
       expect(bounced).not.toContain(spamHint);
-      // Not confirmed: the address is the person's to change, by a new registration.
+      // Not confirmed: ask for the right address; an Administrator moves the registration to it («Schimbă adresa»).
       expect(bounced.slice(-2)).toEqual([lost("no-such-address", short.VERIFY_REGISTRATION_EMAIL), tell.can["no-such-address"]]);
       expect(whatToTell(locale, { ...pending, emailState: verify({ status: "COMPLAINED", cause: "complained" }) }, now)).toContain(spamHint);
       // Never left (the club's account), or owed to an address that works again: not in spam either.

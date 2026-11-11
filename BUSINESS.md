@@ -476,7 +476,7 @@ somebody asking to be forgotten, and "we cannot remove you" is not a reply the c
 Erasing is deliberately the heavier action: it asks for a reason, it says plainly that it cannot
 be undone, and it is available to an Administrator alone.
 
-The email is the participant identity: a participant row's address is never overwritten, and participant records are never merged in V1. An Administrator may move one registration to another address with «Schimbă adresa» (`AGENTS.md` §10.3, §15.11 verb 8): the registration is re-pointed to the participant of the new address, keeping its state, place and number; every link sent to the old address stops working; both addresses are told; and the new address receives the next step. It is one registration per press, audited, and never an unaudited database edit.
+The email is the participant identity: a participant row's address is never overwritten, and participant records are never merged in V1. An Administrator may move one registration to another address with «Schimbă adresa» (`AGENTS.md` §10.3, §15.11 verb 8): the registration is re-pointed to the participant of the new address, keeping its state, place and number; every link sent to the old address stops working; both addresses are told; and the new address receives the next step while there is one. It is one registration per press, audited, and never an unaudited database edit.
 
 ### BR-BUS-038 — Optional public runner profile
 
