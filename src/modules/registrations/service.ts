@@ -129,6 +129,7 @@ import { watchPlacesAlert } from "./places-alert";
 import { publicDoorOpen, publicRegistrationPausedError } from "./domain/public-door";
 import { countInvitationsOfParticipant, findInvitationById, findLiveInvitationsOfParticipant, findOpenInvitations, invitationOpen } from "./invitation-repository";
 import { writeRegistrationEliteMark } from "./elite-mark";
+import { normalizePartnerName, writeRegistrationPartnerName } from "./partner-mark";
 import { confirmsInvitationRaises, INVITATION_BATCH_MAX, InvitationRefusal, invitationDeadline, invitationFreePlaces, invitationRaises, invitationState, validInvitationDays } from "./domain/invitations";
 import { waitlistRefusalOf } from "./domain/waitlist";
 import { memberBibKept } from "./domain/member-bib";
@@ -824,10 +825,14 @@ async function invitationToAdopt<T extends Record<string, unknown>>(db: Database
  * filed under both `places` and `events` (`public-cache/reads.ts`), so the `places` this place's move tells
  * (`transitionRegistration`, expired again after the response by the cache itself, past this commit) expires them too.
  * The mark's own `public` flag is therefore not carried out to the many routes that reach the allocator.
+ *
+ * An invitation sent with «E de la parteneri» (the decision «De la parteneri») writes its partner's name onto that
+ * registration the same way and in the same place (`writeRegistrationPartnerName`, `via: "invitation"`): a label read by no
+ * public page, so nothing more is told.
  */
 async function markInvitationAdopted<T extends Record<string, unknown>>(
   db: Transaction<T>,
-  invitation: { id: string; eventId: string; elite: boolean; invitedByStaffUserId: string | null },
+  invitation: { id: string; eventId: string; elite: boolean; partnerName: string | null; invitedByStaffUserId: string | null },
   registrationId: string,
   now: Date,
 ): Promise<void> {
@@ -847,6 +852,7 @@ async function markInvitationAdopted<T extends Record<string, unknown>>(
     now,
   });
   if (invitation.elite) await writeRegistrationEliteMark(db, invitation.invitedByStaffUserId, registrationId, true, now, "invitation");
+  if (invitation.partnerName) await writeRegistrationPartnerName(db, invitation.invitedByStaffUserId, registrationId, invitation.partnerName, now, "invitation");
 }
 
 /**
@@ -4560,6 +4566,12 @@ export type InvitationSendInput = {
    */
   elite?: boolean;
   /**
+   * «E de la parteneri» for the whole send (the decision «De la parteneri»): the partner's or sponsor's name, stored on every
+   * invitation of the press and written onto the registration each becomes, where «Elită» is (`acceptInvitation`,
+   * `markInvitationAdopted`) — internal, nothing the person is told. Null or absent: none.
+   */
+  partnerName?: string | null;
+  /**
    * «Limba invitației» for a typed address the club has never seen (Romanian by default): a member is
    * written to in the account's language, and an address the club knows in its participant's.
    */
@@ -4649,6 +4661,8 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
   // Every invitation the send would write, a line's extra places included (§925).
   if (input.people.reduce((sum, person) => sum + invitationPlaces(person), 0) > INVITATION_BATCH_MAX) throw new InvitationRefusal("INVITATION_TOO_MANY");
   if (!validInvitationDays(input.days)) throw new InvitationRefusal("INVITATION_BAD_DAYS");
+  // «E de la parteneri» (the decision «De la parteneri»): trimmed and bounded before anything is read, a long name refused naming the box.
+  const partnerName = normalizePartnerName(input.partnerName ?? null);
   const settings = await currentDeadlines(db);
   // Read before the transaction, never under the event's lock (§377's rule), as the public form reads it.
   const addressCap = await currentAddressCap(db);
@@ -4800,6 +4814,7 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
         outsideCapacity: input.outsideCapacity,
         supplementaryRaise: raised,
         elite: input.elite === true,
+        partnerName,
         lastSentAt: now,
       });
       const idempotencyKey = `invitation:${invitationId}:sent:${now.toISOString()}`;
@@ -4827,6 +4842,8 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
           supplementaryRaise: raised,
           ...(person.memberStaffUserId ? { member: true } : {}),
           ...(input.elite === true ? { elite: true } : {}),
+          // «E de la parteneri»: that the send carried a partner's name, never the name.
+          ...(partnerName !== null ? { partner: true } : {}),
         },
         now,
       });

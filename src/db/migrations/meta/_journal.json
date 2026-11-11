@@ -1331,6 +1331,13 @@
       "when": 1794393139492,
       "tag": "0198_registration_address_changed",
       "breakpoints": true
+    },
+    {
+      "idx": 190,
+      "version": "7",
+      "when": 1794398385129,
+      "tag": "0199_partner_mark",
+      "breakpoints": true
     }
   ]
 }

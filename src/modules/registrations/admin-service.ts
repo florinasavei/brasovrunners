@@ -79,6 +79,7 @@ import { listMemberTickCandidates, type MemberTickCandidate, type MemberTickScop
 import { ANSWERS_UNCHANGED } from "./answers";
 import { addRegistrationNote } from "./notes";
 import { writeRegistrationEliteMark } from "./elite-mark";
+import { writeRegistrationPartnerName } from "./partner-mark";
 import { rerankEventResults } from "@/modules/results/results";
 
 /**
@@ -808,6 +809,13 @@ export type WaitlistEntryByStaffInput = {
    * Never beside `offerNow`, which is for a row left waiting.
    */
   outsideCapacityVia?: typeof OWN_ADDRESS_GUEST;
+  /**
+   * «E de la parteneri» (the decision «De la parteneri»): a line of the internal list's partner's name, written on the
+   * registration in the entry's transaction (`partner-mark.ts#writeRegistrationPartnerName`, audited `via: "reserve"`). A
+   * label and nothing else: the allocator above never reads it. Absent or null, nothing is written — a restarted row keeps
+   * the name staff set on it.
+   */
+  partnerName?: string | null;
 };
 
 export type WaitlistEntryByStaffResult = { registrationId: string; status: RegistrationStatus; capacityRaisedTo: number | null };
@@ -887,6 +895,7 @@ export async function enterOnWaitlistByStaff<T extends Record<string, unknown>>(
         );
     }
     if (input.note) await addRegistrationNote(tx, actor, created.registrationId, input.note, now);
+    if (input.partnerName) await writeRegistrationPartnerName(tx, actor.id, created.registrationId, input.partnerName, now, "reserve");
     return { registrationId: created.registrationId, status, capacityRaisedTo, elitePublic: created.elitePublic };
   });
   const { elitePublic, ...entered } = result;

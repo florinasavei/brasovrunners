@@ -109,6 +109,12 @@ export type AuditAction =
   | "registration.elite_out_of_results"
   | "registration.elite_on_site"
   | "registration.elite_off_site"
+  /**
+   * «E de la parteneri» (the decision «De la parteneri»): the partner's or sponsor's name set, changed or cleared on this
+   * registration — by the Administrator on its page, or carried from a line of the internal list or an invitation (`via`).
+   * The metadata is whether a name is now present (`{ partner }`) and, carried, where from — never the name typed.
+   */
+  | "registration.partner_set"
   /** Confirmed at the desk: address vouched for, declaration on paper (BR-REQ-037-07). */
   | "registration.confirmed_by_staff"
   /** Given a place ahead of the queue, into a free one (BR-REQ-037-07). */
@@ -586,6 +592,8 @@ export type AuditAction =
   | "event_reserve.added"
   | "event_reserve.note_saved"
   | "event_reserve.renamed"
+  /** «E de la parteneri» on a line (the decision «De la parteneri»): `{ entryId, partner }` — whether a name is now present, never the name. */
+  | "event_reserve.partner_saved"
   | "event_reserve.deleted"
   | "event_reserve.moved"
   /**

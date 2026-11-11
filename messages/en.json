@@ -1674,7 +1674,8 @@
           "answers_completed": "Details completed by the participant, from their own link: {fields}",
           "answers_viewed": "Answers opened, with the phone and the emergency contact",
           "note_added": "Internal note added",
-          "note_deleted": "Internal note deleted"
+          "note_deleted": "Internal note deleted",
+          "partner_set": "From partners: the partner's name changed"
         },
         "event": {
           "capacity_raised_for_offer": "Supplementary place added for an offer (“Send them the offer”): {from} → {to}",
@@ -2693,7 +2694,8 @@
       "ADDRESS_ALREADY_HELD": "Nothing changed: this address already has a registration at this event or at another distance of the race. Look it up in the registrations list.",
       "ADDRESS_HOLDS_ENOUGH": "Nothing changed: this address already has as many registrations at the event as the club’s rules allow one address. Use another address.",
       "ADDRESS_INVALID": "Nothing changed: that is not a valid email address. Check what you typed.",
-      "ADDRESS_TRY_AGAIN": "Nothing changed: the registration was being changed at the same moment. Press “Change the address” again."
+      "ADDRESS_TRY_AGAIN": "Nothing changed: the registration was being changed at the same moment. Press “Change the address” again.",
+      "PARTNER_NAME_MISSING": "Write the partner's or sponsor's name, or untick «From a partner»."
     },
     "editor": {
       "draftPreview": {
@@ -11984,6 +11986,18 @@
         "waiting": "on the waiting list {waiting}",
         "ticked": "«I hand out the free places myself» was ticked"
       }
+    },
+    "partner": {
+      "tick": "From a partner",
+      "name": "Partner's or sponsor's name",
+      "nameHelp": "Internal: the person is not told. Unticked, the name is cleared.",
+      "chip": "Partner: {name}",
+      "filter": "From partners",
+      "filterHelp": "Only the registrations with a partner's or sponsor's name.",
+      "column": "Partner",
+      "title": "From partners",
+      "save": "Save the partner",
+      "dialog": "The registrations will be marked «Partner: {name}» — internal, the people are not told."
     }
   },
   "NotFound": {
@@ -14090,7 +14104,10 @@
       "eventInvitationsErased": "Invitations withdrawn and erased.",
       "eventImportedOver": "Imported over the event.",
       "eliteTicked": "The elite tick was saved. Nothing was sent to anyone.",
-      "addressChanged": "The address was changed; both addresses get an email."
+      "addressChanged": "The address was changed; both addresses get an email.",
+      "partnerSaved": "The partner was saved. Nothing was sent to anybody.",
+      "partnerCleared": "No longer from a partner. Nothing was sent to anybody.",
+      "partnerUnchanged": "It already was; nothing to change."
     },
     "mail": {
       "now": "Leaving now{road}: {what}.",

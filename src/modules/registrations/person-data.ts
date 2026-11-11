@@ -304,6 +304,8 @@ export type PersonData = {
     lastName: string;
     deliveryEmail: string;
     note: string | null;
+    /** «E de la parteneri» (the decision «De la parteneri»): the partner's or sponsor's name the organizers wrote, or null. */
+    partnerName: string | null;
     createdAt: Date;
     updatedAt: Date;
     createdByRole: StaffUser["role"] | null;
@@ -324,6 +326,8 @@ export type PersonData = {
     expiresAt: Date;
     outsideCapacity: boolean;
     supplementaryRaise: boolean;
+    /** «E de la parteneri» at the send (the decision «De la parteneri»): the partner's or sponsor's name, or null. */
+    partnerName: string | null;
     fromMemberAccount: boolean;
     sentAt: Date;
     lastSentAt: Date;
@@ -599,6 +603,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
               lastName: eventReserveEntries.lastName,
               deliveryEmail: eventReserveEntries.email,
               note: eventReserveEntries.note,
+              partnerName: eventReserveEntries.partnerName,
               createdAt: eventReserveEntries.createdAt,
               updatedAt: eventReserveEntries.updatedAt,
               createdByRole: staffUsers.role,
@@ -622,6 +627,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
       expiresAt: eventInvitations.expiresAt,
       outsideCapacity: eventInvitations.outsideCapacity,
       supplementaryRaise: eventInvitations.supplementaryRaise,
+      partnerName: eventInvitations.partnerName,
       memberStaffUserId: eventInvitations.memberStaffUserId,
       sentAt: eventInvitations.sentAt,
       lastSentAt: eventInvitations.lastSentAt,
@@ -646,6 +652,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
     expiresAt: row.expiresAt,
     outsideCapacity: row.outsideCapacity,
     supplementaryRaise: row.supplementaryRaise,
+    partnerName: row.partnerName,
     fromMemberAccount: memberStaffUserId !== null,
     sentAt: row.sentAt,
     lastSentAt: row.lastSentAt,

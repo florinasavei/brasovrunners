@@ -502,7 +502,7 @@ describe("§917 «Invitații» wears the «Elită» chip on an elite invitation,
     const [ion] = await db.select().from(eventInvitations).where(eq(eventInvitations.name, "Ion Pop"));
     await withdrawInvitationByStaff(db, ion.id, admin, at(1));
 
-    const tree = await InvitationsPanel({ db, locale, eventId: event.id, mayManage: false, sendAction: (async () => null) as never, resendAction: (async () => null) as never, withdrawAction: (async () => null) as never, now: at(2) });
+    const tree = await InvitationsPanel({ db, actor: { role: "MODERATOR" }, locale, eventId: event.id, mayManage: false, sendAction: (async () => null) as never, resendAction: (async () => null) as never, withdrawAction: (async () => null) as never, now: at(2) });
     const rows = elementsOf(tree).filter((element) => element.props["data-testid"] === "invitation-row");
     expect(rows).toHaveLength(3);
     const chipsOf = (row: ReactElement<Record<string, unknown>>) => elementsOf(row).filter((element) => element.type === StatusChip && element.props.testId === "invitation-elite-chip");
@@ -525,7 +525,7 @@ describe("§917 «Invitații» wears the «Elită» chip on an elite invitation,
     }
 
     const chipsNow = async () => {
-      const tree = await InvitationsPanel({ db, locale: "ro", eventId: event.id, mayManage: false, sendAction: (async () => null) as never, resendAction: (async () => null) as never, withdrawAction: (async () => null) as never, now: at(3) });
+      const tree = await InvitationsPanel({ db, actor: { role: "MODERATOR" }, locale: "ro", eventId: event.id, mayManage: false, sendAction: (async () => null) as never, resendAction: (async () => null) as never, withdrawAction: (async () => null) as never, now: at(3) });
       const rows = elementsOf(tree).filter((element) => element.props["data-testid"] === "invitation-row");
       const nameOf = (row: ReactElement<Record<string, unknown>>) => elementsOf(row).map((element) => element.props.children).find((child) => typeof child === "string" && / Pop$/.test(child));
       return Object.fromEntries(rows.map((row) => [nameOf(row), elementsOf(row).some((element) => element.type === StatusChip && element.props.testId === "invitation-elite-chip")]));

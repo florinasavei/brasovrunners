@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, gt, inArray, max, ne, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, inArray, isNotNull, max, ne, sql, type SQL } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
@@ -67,6 +67,11 @@ export type RegistrationListRow = {
   outsideCapacity: boolean;
   /** «Elită» (§897): the bib prints as an elite bib — the row's chip and the «⋮»'s mark or unmark. */
   elite: boolean;
+  /**
+   * «De la parteneri» (the decision «De la parteneri»): the partner's or sponsor's name, or null — the row's chip «Partener: {name}»
+   * and the export's «Partener». Read by no surface outside the backoffice (`partner-never-leaves.test.ts`).
+   */
+  partnerName: string | null;
   /** The two ticks of a marked elite (§910), stored as what the club hid: the «⋮»'s «Apare în clasament» and «Apare pe site». */
   eliteHiddenFromResults: boolean;
   eliteHiddenFromSite: boolean;
@@ -234,6 +239,8 @@ export type RegistrationListFilters = {
   promoConsented?: boolean;
   /** «În afara locurilor» (§643): only the rows seated outside the places — the summary strip's pill. Narrows only. */
   outsideCapacity?: boolean;
+  /** «De la parteneri» (the decision «De la parteneri»): only the rows with a partner's name. Narrows only. */
+  fromPartner?: boolean;
   /**
    * The members' race number asked for and not verified (§664): the real rows with a number that want it,
    * at an event that offers it, whose address is no member account's — the bibs page's link, the same set
@@ -341,6 +348,7 @@ function registrationConditions(filters: RegistrationListFilters, members: reado
     // The same condition as the club's list on «Newsletter» and the sponsor list's candidates (§570, §581).
     filters.promoConsented ? promoListed() : undefined,
     filters.outsideCapacity ? eq(registrations.outsideCapacity, true) : undefined,
+    filters.fromPartner ? isNotNull(registrations.partnerName) : undefined,
     filters.memberBibAsked ? memberBibAskedUnverified(members) : undefined,
     /*
       Name only, and deliberately not the email address. An organizer at a desk is holding a
@@ -494,6 +502,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       kind: registrations.kind,
       outsideCapacity: registrations.outsideCapacity,
       elite: registrations.elite,
+      partnerName: registrations.partnerName,
       eliteHiddenFromResults: registrations.eliteHiddenFromResults,
       eliteHiddenFromSite: registrations.eliteHiddenFromSite,
       eventHiddenListEnabled: events.hiddenListEnabled,
@@ -810,6 +819,8 @@ export type RegistrationDetail = {
   outsideCapacity: boolean;
   /** «Elită» (§897): the bib prints as an elite bib — the page's chip, for every role that reads it. */
   elite: boolean;
+  /** «De la parteneri» (the decision «De la parteneri»): the partner's name — the page's chip for every role, its form the Administrator's. */
+  partnerName: string | null;
   /** The two ticks of a marked elite (§910), stored as what the club hid: the page's «Elită» card, read by every role, changed by the Administrator. */
   eliteHiddenFromResults: boolean;
   eliteHiddenFromSite: boolean;
@@ -977,6 +988,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       kind: registrations.kind,
       outsideCapacity: registrations.outsideCapacity,
       elite: registrations.elite,
+      partnerName: registrations.partnerName,
       eliteHiddenFromResults: registrations.eliteHiddenFromResults,
       eliteHiddenFromSite: registrations.eliteHiddenFromSite,
       source: registrations.source,

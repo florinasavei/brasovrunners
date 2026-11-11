@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildRegistrationsCsv, type RegistrationCsvRow } from "@/modules/registrations/csv";
+import { buildRegistrationsCsv, PARTNER_HEADER_DEFAULT, type RegistrationCsvRow } from "@/modules/registrations/csv";
 import { REGISTRATION_SHEET_HEADERS, buildRegistrationsWorkbook, type RegistrationSheetRow } from "@/modules/registrations/workbook";
 import { STAFF_ROLES, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
@@ -129,7 +129,9 @@ describe("§785 the spreadsheet's «Note interne» column", () => {
     const buffer = await buildRegistrationsWorkbook([sheetRow({ notes: TWO_NOTES })], "Test", { notesHeader: ro.Admin.registrations.notes.title });
     const { rows } = readSheet(buffer);
     expect(rows[0].at(-1)).toBe("Note interne");
-    expect(rows[0]).toHaveLength(REGISTRATION_SHEET_HEADERS.length + 1);
+    // The fixed columns, then «Partener» («De la parteneri») in every file, then the notes.
+    expect(rows[0]).toHaveLength(REGISTRATION_SHEET_HEADERS.length + 2);
+    expect(rows[0].at(-2)).toBe(PARTNER_HEADER_DEFAULT);
     expect(rows[1].at(-1)).toBe(TWO_NOTES);
     // Wrap text is on for the cell: a style with `wrapText` exists, and the cell uses a style with it.
     const parts = unzip(buffer);
@@ -141,12 +143,14 @@ describe("§785 the spreadsheet's «Note interne» column", () => {
 
   it("keeps every earlier column where it was: the header row is the old one with one more at the end", async () => {
     const { rows } = readSheet(await buildRegistrationsWorkbook([sheetRow()], "Test", { notesHeader: "Note interne" }));
-    expect(rows[0].slice(0, -1)).toEqual(REGISTRATION_SHEET_HEADERS);
+    // The old one, then «Partener» («De la parteneri», every file's), then the notes: still the last.
+    expect(rows[0].slice(0, -1)).toEqual([...REGISTRATION_SHEET_HEADERS, PARTNER_HEADER_DEFAULT]);
   });
 
   it("has no such column without the header: every other caller's file, and a role without notes rights", async () => {
     const { rows } = readSheet(await buildRegistrationsWorkbook([sheetRow({ notes: TWO_NOTES })], "Test"));
-    expect(rows[0]).toEqual(REGISTRATION_SHEET_HEADERS);
+    // The fixed columns and «Partener» («De la parteneri»), which every file carries; no notes.
+    expect(rows[0]).toEqual([...REGISTRATION_SHEET_HEADERS, PARTNER_HEADER_DEFAULT]);
     expect(rows[0]).not.toContain("Note interne");
     // …and the words handed to the writer by mistake are not written either.
     expect(JSON.stringify(rows)).not.toContain("prima");
@@ -189,8 +193,10 @@ describe("§785 the CSV's «Note interne» column", () => {
     const csv = buildRegistrationsCsv([csvRow({ notes: TWO_NOTES }), csvRow({ registeredName: "Fără Note" })], { notesHeader: "Note interne" });
     const header = csv.split("\r\n")[0].split(",");
     expect(header.at(-1)).toBe("Note interne");
-    expect(header.at(-2)).toBe("Club runner");
-    expect(header.at(-3)).toBe("Member bib");
+    // «Partener» («De la parteneri») just before the notes, after «Club runner» and «Member bib».
+    expect(header.at(-2)).toBe(PARTNER_HEADER_DEFAULT);
+    expect(header.at(-3)).toBe("Club runner");
+    expect(header.at(-4)).toBe("Member bib");
     // The cell is quoted and holds the newline: the file is one header and two records, not four lines.
     expect(csv).toContain(`"${TWO_NOTES}"`);
     const records = csv.split("\r\n");
@@ -202,7 +208,9 @@ describe("§785 the CSV's «Note interne» column", () => {
     const csv = buildRegistrationsCsv([csvRow({ notes: TWO_NOTES })]);
     expect(csv).not.toContain("Note interne");
     expect(csv).not.toContain("prima");
-    expect(csv.split("\r\n")[0].split(",").at(-1)).toBe("Club runner");
+    // «Partener» («De la parteneri») is every file's last fixed column, after «Club runner».
+    expect(csv.split("\r\n")[0].split(",").at(-1)).toBe(PARTNER_HEADER_DEFAULT);
+    expect(csv.split("\r\n")[0].split(",").at(-2)).toBe("Club runner");
   });
 });
 

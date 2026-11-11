@@ -35,8 +35,9 @@ describe("BR-REQ-031-05 criterion 4 the exports leave the emergency details out"
       expect(REGISTRATION_SHEET_HEADERS, `${header} is on the spreadsheet`).toContain(header);
       expect(csvHeader, `${header} is in the CSV`).toContain(header);
     }
-    // Then «Member bib» (§664) and «Club runner» (§787), the last column since.
-    expect(csvHeader.slice(-5)).toEqual(["Age on race day", "Country", "City", "Member bib", "Club runner"]);
+    // Then «Member bib» (§664) and «Club runner» (§787), then «Partener» («De la parteneri»), the last fixed column since.
+    expect(csvHeader.slice(-6, -1)).toEqual(["Age on race day", "Country", "City", "Member bib", "Club runner"]);
+    expect(csvHeader.at(-1)).toBe("Partner");
     // The country of residence (§510) right before the city it makes sense of, in both.
     expect(REGISTRATION_SHEET_HEADERS.indexOf("Country")).toBe(REGISTRATION_SHEET_HEADERS.indexOf("City") - 1);
   });

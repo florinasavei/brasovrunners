@@ -1674,7 +1674,8 @@
           "answers_completed": "Date completate de participant, din linkul propriu: {fields}",
           "answers_viewed": "Datele înscrierii deschise, cu telefonul și persoana de contact",
           "note_added": "Notă internă adăugată",
-          "note_deleted": "Notă internă ștearsă"
+          "note_deleted": "Notă internă ștearsă",
+          "partner_set": "De la parteneri: numele partenerului schimbat"
         },
         "event": {
           "capacity_raised_for_offer": "Loc suplimentar adăugat pentru o ofertă («Trimite-i oferta»): {from} → {to}",
@@ -2693,7 +2694,8 @@
       "ADDRESS_ALREADY_HELD": "Nu s-a schimbat nimic: adresa aceasta are deja o înscriere la acest eveniment sau la altă distanță a cursei. Caut-o în lista înscrierilor.",
       "ADDRESS_HOLDS_ENOUGH": "Nu s-a schimbat nimic: adresa aceasta are deja la eveniment atâtea înscrieri câte îi permit regulile clubului pentru o adresă. Folosește altă adresă.",
       "ADDRESS_INVALID": "Nu s-a schimbat nimic: adresa nu e o adresă de email validă. Verifică ce ai scris.",
-      "ADDRESS_TRY_AGAIN": "Nu s-a schimbat nimic: înscrierea se schimba chiar în acel moment. Apasă din nou «Schimbă adresa»."
+      "ADDRESS_TRY_AGAIN": "Nu s-a schimbat nimic: înscrierea se schimba chiar în acel moment. Apasă din nou «Schimbă adresa».",
+      "PARTNER_NAME_MISSING": "Scrie numele partenerului sau sponsorului, sau debifează «E de la parteneri»."
     },
     "editor": {
       "draftPreview": {
@@ -11984,6 +11986,18 @@
         "waiting": "pe lista de așteptare {waiting}",
         "ticked": "s-a bifat «Locurile libere le dau doar eu»"
       }
+    },
+    "partner": {
+      "tick": "E de la parteneri",
+      "name": "Numele partenerului sau sponsorului",
+      "nameHelp": "Intern: persoana nu e anunțată. Debifat, numele se șterge.",
+      "chip": "Partener: {name}",
+      "filter": "De la parteneri",
+      "filterHelp": "Doar înscrierile cu numele unui partener sau sponsor.",
+      "column": "Partener",
+      "title": "De la parteneri",
+      "save": "Salvează partenerul",
+      "dialog": "Înscrierile vor fi marcate «Partener: {name}» — intern, persoanele nu sunt anunțate."
     }
   },
   "NotFound": {
@@ -14090,7 +14104,10 @@
       "eventInvitationsErased": "Invitații retrase și șterse.",
       "eventImportedOver": "Importat peste eveniment.",
       "eliteTicked": "Bifa de elită a fost salvată. Nu s-a trimis nimic nimănui.",
-      "addressChanged": "Adresa a fost schimbată; ambele adrese primesc un email."
+      "addressChanged": "Adresa a fost schimbată; ambele adrese primesc un email.",
+      "partnerSaved": "Partenerul a fost salvat. Nu s-a trimis nimic nimănui.",
+      "partnerCleared": "Nu mai e de la parteneri. Nu s-a trimis nimic nimănui.",
+      "partnerUnchanged": "Era deja așa; nimic de schimbat."
     },
     "mail": {
       "now": "Pleacă acum{road}: {what}.",

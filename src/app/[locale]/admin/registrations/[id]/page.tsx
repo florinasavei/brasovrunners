@@ -90,7 +90,10 @@ import {
 import { CLUB_NAME } from "@/theme/brand";
 import { resendRegistrationEmailAction } from "./actions";
 import { addRegistrationNoteAction, deleteRegistrationNoteAction } from "./note-actions";
+import { setRegistrationPartnerAction } from "./partner-actions";
 import DeclarationHoldForm from "@/modules/registrations/ui/DeclarationHoldForm";
+import { listPartnerSuggestions } from "@/modules/registrations/partner-mark";
+import PartnerMarkFields, { PartnerSuggestionList } from "@/modules/registrations/ui/PartnerMarkFields";
 import MemberChip from "@/modules/registrations/ui/MemberChip";
 import { membershipOf } from "@/modules/registrations/domain/membership";
 import TextHashTip from "@/modules/registrations/ui/TextHashTip";
@@ -476,6 +479,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // sentence is "correct it and send again", not a colleague's save to reload for.
   const bibRefusal = await refusalMessages({ bibNumber: tr("registrations.bibNumber") });
   bibRefusal.keptConflict = bibRefusal.kept;
+  // «E de la parteneri» (the decision «De la parteneri»): the Administrator's form — its box named in a refusal, and the event's earlier names.
+  const partnerRefusal = mayManage ? await refusalMessages({ partnerName: tr("partner.name") }) : null;
+  const partnerSuggestions = mayManage ? await listPartnerSuggestions(db, actor, registration.eventId) : [];
 
   /*
     The page's cards (§847; the owner, 2026-10-21: «they look like they are from a different app»): under the
@@ -524,6 +530,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {registration.outsideCapacity && <HiddenListChip label={tr("registrations.outside.chip")} hint={tr("registrations.outside.hint")} testId="outside-chip" />}
         {/* «Elită» (§897): the bib prints with the name where the number goes; marked and unmarked from the list's «⋮». */}
         {registration.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={tr("registrations.elite.chip")} testId="elite-chip" />}
+        {/* «Partener: {name}» (the decision «De la parteneri»): the organizers' own label, for every role that reads this page. */}
+        {registration.partnerName && <StatusChip glyph="fromPartner" variant="outlined" label={tr("partner.chip", { name: registration.partnerName })} testId="partner-chip" wrap />}
         {/* «Date lipsă» (§905): the list's chip; which answers, and how they are completed, is the line under the address. */}
         {owedAnswers.length > 0 && <StatusChip glyph="missingAnswers" color="warning" variant="outlined" label={tr("registrations.missingAnswers.chip")} testId="missing-answers-chip" />}
         <FamilyChip
@@ -1016,6 +1024,26 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               {tr("registrations.outside.help")}
             </Typography>
           </Stack>
+        </Panel>
+      )}
+
+      {/*
+        «De la parteneri» (the decision «De la parteneri»): the tick «E de la parteneri» and the box «Numele partenerului sau
+        sponsorului», the Administrator's alone — one form, one save, asking nothing (§384): it tells nobody and changes nothing
+        else of the registration. The Organizer reads the chip under the name and is handed no form.
+      */}
+      {mayManage && partnerRefusal && (
+        <Panel glyph="partners" level={3} title={tr("partner.title")} id="registration-partner" data-testid="registration-partner">
+          <PartnerSuggestionList names={partnerSuggestions} />
+          <ActionForm action={setRegistrationPartnerAction} messages={partnerRefusal} scope="registration-partner" data-testid="registration-partner-form">
+            {deskHidden}
+            <Stack spacing={1} sx={{ alignItems: "flex-start", maxWidth: 480 }}>
+              <PartnerMarkFields name={registration.partnerName} testId="registration-partner-fields" />
+              <GlyphButton icon="save" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="registration-partner-save">
+                {tr("partner.save")}
+              </GlyphButton>
+            </Stack>
+          </ActionForm>
         </Panel>
       )}
 
