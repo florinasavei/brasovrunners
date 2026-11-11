@@ -65,6 +65,7 @@ vi.mock("@/modules/staff-identity/session", () => ({
 vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   addToWaitlistAction: vi.fn(),
   moveReserveEntryAction: vi.fn(),
+  addRegistrationNoteFromListAction: vi.fn(),
   offerPlaceAction: vi.fn(),
   bulkCancelRegistrationsAction: vi.fn(),
   bulkDeleteRegistrationsAction: vi.fn(),

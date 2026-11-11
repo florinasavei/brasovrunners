@@ -441,7 +441,7 @@ describe("the list's «Adaugă o notă» — the row's control", () => {
       max: REGISTRATION_NOTE_MAX,
       saveLabel: "Salvează nota",
       fallbackHref: `/ro/admin/registrations/${id}#note-interne`,
-      settledKey: "0",
+      settledKey: "0:",
     });
     expect(props.cancelLabel).toBeTruthy();
     // The hidden fields: the row, the language and the list's own query (filters, sort, page) — never a word of a note.
@@ -455,6 +455,10 @@ describe("the list's «Adaugă o notă» — the row's control", () => {
       expect(isValidElement(value), name).toBe(false);
       expect(typeof value === "function", name).toBe(false);
     }
+    // The key is the row's note count plus the return's own `saved` flag: a return that carries `saved` changes it,
+    // so the dialog closes after any successful save, not only when the count moves.
+    const saved = await controlsOf(await listPage({ eventId: race.id, saved: "noteSaved" }), id);
+    expect((saved[0].props as Parameters<typeof RowNoteDialog>[0]).settledKey).toBe("0:noteSaved");
     // Only the four sentences the dialog can meet travel with the row, not the whole catalogue.
     expect(Object.keys(props.messages.errors).sort()).toEqual(["FORBIDDEN", "NOTE_EMPTY", "NOTE_TOO_LONG", "NOT_FOUND"]);
   });
@@ -483,14 +487,16 @@ describe("the list's «Adaugă o notă» — the row's control", () => {
       state.actor = await staff(role, `Tester ${role}`);
       // Today the list is refused to these roles altogether (the same role set reads it and keeps notes); if the
       // list is ever opened to more roles, the same loop guards that the control is still not drawn.
+      let refusal: unknown;
       let drawn: ReactNode = null;
-      let refused = false;
       try {
         drawn = await nameCellOf(await listPage({ eventId: race.id }), id);
-      } catch {
-        refused = true;
+      } catch (error) {
+        refusal = error;
       }
-      if (!refused) expect(elements(drawn).filter((element) => element.type === RowNoteDialog), role).toHaveLength(0);
+      // The refusal is the page's own not-found; any other error fails the test.
+      if (refusal !== undefined) expect((refusal as Error).message, role).toBe("NOT_FOUND");
+      else expect(elements(drawn).filter((element) => element.type === RowNoteDialog), role).toHaveLength(0);
     }
   });
 
