@@ -280,6 +280,8 @@ describe("the status chip's wrapping is the partner chips' alone", () => {
       return found;
     });
     expect(passing.filter((line) => line.endsWith("other"))).toEqual([]);
-    expect(passing.length).toBeGreaterThanOrEqual(5);
+    // The registration's page, the internal list's line and the invitations' rows: the registrations list's two copies left
+    // when its column «Partener» took the name as plain text (the list's column).
+    expect(passing.length).toBeGreaterThanOrEqual(3);
   });
 });

@@ -27,6 +27,7 @@ import { listRegistrationNotesForExport } from "@/modules/registrations/notes";
 import { exportNotesCell, type ExportNotesWords } from "@/shared/notes/note-text";
 import { STAFF_ROLES, type StaffRole, canKeepRegistrationNotes, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { chosenPartnerOf, listPartnerSuggestions, PARTNER_FILTER_PARAM } from "@/modules/registrations/partner-mark";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { needsEmailAction } from "@/modules/registrations/domain/email-state";
 
@@ -106,6 +107,10 @@ export async function GET(request: Request): Promise<Response> {
   */
   const db = getDb();
   const scope = defaultEventFilter(eventId ?? undefined, await listEventsWithRegistrations(db, locale), search ?? undefined);
+  // One partner (the list's column «Partener»): validated as the list validates it — a partner of the one event in scope, in the
+  // event's spelling — and ignored otherwise, so the file of a list filtered to one partner holds exactly that partner's rows.
+  const onePartner = url.searchParams.get(PARTNER_FILTER_PARAM);
+  const chosenPartner = scope.eventId && onePartner ? chosenPartnerOf(onePartner, await listPartnerSuggestions(db, actor, scope.eventId)) : null;
 
   /**
    * `TEST` rows are omitted, not labelled (`DECISIONS.md` §30). The export is the club's own
@@ -133,6 +138,7 @@ export async function GET(request: Request): Promise<Response> {
     outsideCapacity: outside === "1" || undefined,
     memberBibAsked: memberBib === "asked" || undefined,
     fromPartner: partner === "1" || undefined,
+    partner: chosenPartner ?? undefined,
     reconfirm: isReconfirmFilter(reconfirm) ? reconfirm : undefined,
     search: search || undefined,
     excludeTest: true,
