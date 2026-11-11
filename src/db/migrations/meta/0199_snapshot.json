@@ -1,6 +1,6 @@
 {
   "id": "d42e92c1-08ba-49fa-841e-f8085ab7e10d",
-  "prevId": "e204b997-f98b-415c-a89e-f8d808ebac6b",
+  "prevId": "1427bf5a-8817-4416-9dd1-c947f4fa72f5",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -9271,6 +9271,18 @@
           "primaryKey": false,
           "notNull": false
         },
+        "address_changed_at": {
+          "name": "address_changed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address_changed_by_staff_user_id": {
+          "name": "address_changed_by_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "answers_written_at": {
           "name": "answers_written_at",
           "type": "timestamp with time zone",
@@ -9558,6 +9570,19 @@
           "tableTo": "staff_users",
           "columnsFrom": [
             "email_confirmed_by_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "registrations_address_changed_by_staff_user_id_staff_users_id_fk": {
+          "name": "registrations_address_changed_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "registrations",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "address_changed_by_staff_user_id"
           ],
           "columnsTo": [
             "id"
@@ -11353,7 +11378,9 @@
         "RSVP_ASK",
         "VOLUNTEER_INVITATION",
         "PLACES_ALERT",
-        "UNSIGNED_RELEASED"
+        "UNSIGNED_RELEASED",
+        "REGISTRATION_ADDRESS_REMOVED",
+        "REGISTRATION_ADDRESS_ADDED"
       ]
     },
     "public.email_outbox_status": {
