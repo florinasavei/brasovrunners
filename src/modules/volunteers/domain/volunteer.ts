@@ -1019,6 +1019,42 @@ export function guardianStandingOf(
 }
 
 /**
+ * What the organizer is offered for a volunteer whose parent has not agreed yet — one decision for the person's block and for the
+ * «Voluntari» list's row («Confirmarea minorilor din lista de voluntari»; the owner, 2026-11-11: «as vrea sa pot confirma si
+ * voluntarele minore»), so the two screens cannot drift:
+ * - `none` — an adult, a parent who agreed, or a cancelled person: nothing to ask;
+ * - `noName` — a minor with no parent's name on the row: no link and no sheet can name anybody, the name is typed in «Modifică»;
+ * - `closed` — the club's texts do not describe minors yet: the link and the paper wait (the service refuses both);
+ * - `ask` — the link by email (`send`: ready, or why it cannot go), the sheet to print and the paper record. `sent` says a link
+ *   was sent or is live: the button then reads «Trimite din nou linkul părintelui».
+ */
+export type VolunteerGuardianAsk =
+  | { kind: "none" | "noName" | "closed" }
+  | { kind: "ask"; sent: boolean; send: "ok" | "volunteerNoEmail" | "guardianNoEmail" };
+
+export function guardianAskOf(
+  volunteer: {
+    age: number | null;
+    state: "REGISTERED" | "CONFIRMED" | "CANCELLED";
+    email: string | null;
+    guardianName: string | null;
+    guardianEmail: string | null;
+    guardianAcceptedAt: Date | null;
+    guardianTokenExpiresAt: Date | null;
+    guardianRequestedAt: Date | null;
+  },
+  minorsOpen: boolean,
+  now: Date,
+): VolunteerGuardianAsk {
+  if (!isVolunteerMinor(volunteer.age) || volunteer.guardianAcceptedAt || volunteer.state === "CANCELLED") return { kind: "none" };
+  if (volunteer.guardianName === null) return { kind: "noName" };
+  if (!minorsOpen) return { kind: "closed" };
+  const sent = guardianStandingOf(volunteer, now) === "linkSent" || volunteer.guardianRequestedAt !== null;
+  const send = volunteer.email === null ? "volunteerNoEmail" : volunteer.guardianEmail === null ? "guardianNoEmail" : "ok";
+  return { kind: "ask", sent, send };
+}
+
+/**
  * Whether a volunteer may be confirmed (§768): a minor needs the guardian's agreement first — the confirm action
  * refuses with «Acordul părintelui lipsește» until it is recorded; an adult is never held up by it.
  */

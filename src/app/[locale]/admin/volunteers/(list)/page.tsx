@@ -12,8 +12,10 @@ import { setVolunteerKitAction } from "@/app/[locale]/admin/volunteers/actions";
 import { getDb } from "@/db/client";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
-import { routing } from "@/i18n/routing";
+import { type Locale, routing } from "@/i18n/routing";
 import { findEventForRegistrationById } from "@/modules/events/repository";
+import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
+import { findCurrentApprovedDocument, volunteerMinorsOpen } from "@/modules/legal-documents/repository";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { buildListHref, pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
@@ -33,9 +35,9 @@ import {
   type VolunteerAdminRow,
   type VolunteerSortKey,
 } from "@/modules/volunteers/admin-list";
-import { roleLabel, VOLUNTEER_STATES, type VolunteerState } from "@/modules/volunteers/domain/volunteer";
+import { guardianAllowsConfirm, guardianAskOf, roleLabel, VOLUNTEER_STATES, type VolunteerState } from "@/modules/volunteers/domain/volunteer";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
-import { shortText, STATE_CHIP, VolunteerPersonFields, VolunteerStateForm, volunteerHiddenFields, volunteerPersonBoxes } from "@/modules/volunteers/ui/VolunteerPerson";
+import { GuardianVerbs, guardianChips, shortText, STATE_CHIP, VolunteerPersonFields, VolunteerStateForm, volunteerHiddenFields, volunteerPersonBoxes } from "@/modules/volunteers/ui/VolunteerPerson";
 import { ROLE_EMAIL_SETTLE_MINUTES } from "@/modules/volunteers/volunteers";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import MailLine from "@/shared/feedback/MailLine";
@@ -156,6 +158,19 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   // The action's language-neutral code (AGENTS.md §14.3) becomes a sentence here; an unknown code says nothing.
   const errorCode = volunteerError && /^[A-Z_]{1,48}$/.test(volunteerError) && t.has(`errors.${volunteerError}`) ? volunteerError : null;
 
+  // The parent's agreement on the rows of minors («Confirmarea minorilor din lista de voluntari»): the club's texts and the sheet's version are
+  // read once for the page, and only when a row of it is a minor still waiting on a parent — never per row.
+  const now = new Date();
+  const waitsOnParent = rows.some((row) => guardianAskOf(row, true, now).kind !== "none");
+  const minorsOpen = waitsOnParent ? await volunteerMinorsOpen(db, now) : false;
+  const agreementDocumentIds: Partial<Record<Locale, string>> = {};
+  if (minorsOpen) {
+    for (const language of routing.locales) {
+      const version = await findCurrentApprovedDocument(db, VOLUNTEER_AGREEMENT_KEY, language, now);
+      if (version) agreementDocumentIds[language] = version.id;
+    }
+  }
+
   const day = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
   const eventCardHref = (id: string) => `${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id } } })}#box-volunteers`;
   const hidden = (row: VolunteerAdminRow) => volunteerHiddenFields({ locale, eventId: row.eventId, returnTo });
@@ -204,7 +219,17 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       sortable: true,
       initialDir: "asc",
       essential: true,
-      render: (row) => <StatusChip glyph={STATE_CHIP[row.state].glyph} color={STATE_CHIP[row.state].color} label={t(`volunteers.states.${row.state}`)} testId="volunteer-state" />,
+      render: (row) => (
+        <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
+          <StatusChip glyph={STATE_CHIP[row.state].glyph} color={STATE_CHIP[row.state].color} label={t(`volunteers.states.${row.state}`)} testId="volunteer-state" />
+          {/* A minor whose parent has not agreed: the person's block's own chips — the parent's agreement missing, or a link sent — never a second condition. */}
+          {guardianAskOf(row, true, now).kind !== "none" && (
+            <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.5 }}>
+              {guardianChips(row, now, t)}
+            </Stack>
+          )}
+        </Stack>
+      ),
     },
     {
       key: "given",
@@ -461,14 +486,38 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           sortBy: (column) => t("list.sortBy", { column }),
         }}
         empty={<Typography variant="body1">{hasFilters ? t("volunteers.screen.emptyFiltered") : t("volunteers.screen.empty")}</Typography>}
-        rowActions={(row) => (
-          // The card's state verbs (§754), one line: confirm, cancel, or back to registered; the roles and the rest are on the person's page.
-          <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end", alignItems: "center", flexWrap: "nowrap", gap: 0.5 }}>
-            {row.state !== "CONFIRMED" && stateButton(row, "CONFIRMED", t("volunteers.confirm"), "confirm")}
-            {row.state !== "CANCELLED" && stateButton(row, "CANCELLED", t("volunteers.cancel"), "cancel")}
-            {row.state === "CANCELLED" && stateButton(row, "REGISTERED", t("volunteers.reopen"), "undo")}
-          </Stack>
-        )}
+        rowActions={(row) => {
+          const ask = guardianAskOf(row, minorsOpen, now);
+          return (
+            <Stack spacing={1} sx={{ alignItems: "flex-end", minWidth: 0, ...(ask.kind === "none" ? {} : { maxWidth: 360 }) }}>
+              {/* A minor whose parent has not agreed (§768, «Confirmarea minorilor din lista de voluntari»): the person's block's own verbs in place of «Confirmă», which the
+                  server would refuse (`guardianAllowsConfirm`); with no parent's name, one sentence and the way to the page where «Modifică» takes it. */}
+              {ask.kind === "ask" && (
+                <GuardianVerbs person={row} ask={ask} locale={locale} eventId={row.eventId} agreementDocumentId={agreementDocumentIds[row.locale] ?? ""} hidden={hidden(row)} words={words} t={t} />
+              )}
+              {ask.kind === "noName" && (
+                <Stack spacing={0.5} data-testid="volunteer-guardian-no-name">
+                  <Typography variant="body2" color="text.secondary">
+                    {t("volunteers.guardian.nameMissing")}
+                  </Typography>
+                  <Link
+                    href={{ pathname: "/admin/volunteers/[id]", params: { id: row.id } }}
+                    style={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
+                    data-testid="volunteer-guardian-no-name-link"
+                  >
+                    {t("volunteers.guardian.nameMissingOpen", { name: shortText(row.name) })}
+                  </Link>
+                </Stack>
+              )}
+              {/* The card's state verbs (§754), one line: confirm, cancel, or back to registered; the roles and the rest are on the person's page. */}
+              <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end", alignItems: "center", flexWrap: ask.kind === "none" ? "nowrap" : "wrap", gap: 0.5 }}>
+                {row.state !== "CONFIRMED" && guardianAllowsConfirm(row) && stateButton(row, "CONFIRMED", t("volunteers.confirm"), "confirm")}
+                {row.state !== "CANCELLED" && stateButton(row, "CANCELLED", t("volunteers.cancel"), "cancel")}
+                {row.state === "CANCELLED" && stateButton(row, "REGISTERED", t("volunteers.reopen"), "undo")}
+              </Stack>
+            </Stack>
+          );
+        }}
       />
     </Stack>
   );
