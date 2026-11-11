@@ -3106,7 +3106,8 @@ BR-REQ-037-05):
    `address_changed_by_staff_user_id` record it. State, place, waiting position and race number do not move;
    the allocator is asked nothing. Every live action link of the registration is revoked for cause (never
    superseded, so never «a newer email exists»), and every registration-scoped token is bound to the
-   registration's current participant at read and at spend (`action-tokens/repository.ts`); the old
+   registration's current participant at read and at spend (`action-tokens/repository.ts`), as a spent
+   invitation link speaks of its registration only while it is on the invitation's participant; the old
    address's queued participant mail for the row is withdrawn — the event's own news, which carries no
    link, re-addressed instead — and the renderer withdraws a retry rather than mint a link for the old
    address. A confirmed row gets a new check-in code, and its declaration's copy to the new address masks

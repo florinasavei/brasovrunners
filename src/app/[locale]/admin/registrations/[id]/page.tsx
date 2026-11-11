@@ -113,7 +113,7 @@ import { whatToTell } from "@/modules/registrations/ui/tell-words";
 import { givePlaceNowAhead, staffOfferIfMadeNow, staffOfferQuestion } from "@/modules/registrations/give-place-tip";
 import { findInvitationOfRegistration } from "@/modules/registrations/invitation-repository";
 import { invitationHeldForRegistration } from "@/modules/registrations/service";
-import { signedAfterStaffAddressChange } from "@/modules/registrations/domain/address-change";
+import { moveSendsNextStep, signedAfterStaffAddressChange } from "@/modules/registrations/domain/address-change";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -1390,7 +1390,22 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               messages={addressRefusal}
               confirm={{
                 title: tr("registrations.address.confirmTitle"),
-                body: [tr("registrations.address.confirmBody"), ...(registration.promoConsent ? [tr("registrations.address.confirmPromo")] : [])].join(" "),
+                body: [
+                  tr(
+                    moveSendsNextStep(
+                      registration.status,
+                      {
+                        eventStatus: registration.eventStatus,
+                        startsAt: registration.eventStartsAt,
+                        endsAt: registration.eventEndsAt,
+                        timezone: registration.eventTimezone,
+                      },
+                      timelineNow,
+                    )
+                      ? "registrations.address.confirmBody"
+                      : "registrations.address.confirmBodyNoticesOnly",
+                  ),
+                  ...(registration.promoConsent ? [tr("registrations.address.confirmPromo")] : [])].join(" "),
                 ...words.mail({
                   to: registration.registeredName,
                   type: "REGISTRATION_ADDRESS_ADDED",

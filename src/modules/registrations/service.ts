@@ -5128,12 +5128,27 @@ export type AddressChange = {
 };
 
 /** PostgreSQL's unique violation (23505), wherever the driver nests it: the database's backstop for the checks below. */
-function isUniqueViolation(error: unknown): boolean {
+/**
+ * The unique constraint a PostgreSQL unique violation (23505) names, wherever the driver nests it — read from the error's
+ * `constraint`, else from its message, as `volunteers.ts#isAddressClash` reads one — or null for any other error.
+ */
+function violatedUniqueConstraint(error: unknown): string | null {
   for (let cause = error, depth = 0; cause && typeof cause === "object" && depth < 5; cause = (cause as { cause?: unknown }).cause, depth++) {
-    if ((cause as { code?: unknown }).code === "23505") return true;
+    const { code, constraint, message } = cause as { code?: unknown; constraint?: unknown; message?: unknown };
+    if (code !== "23505") continue;
+    if (typeof constraint === "string" && constraint) return constraint;
+    const named = typeof message === "string" ? /unique constraint "([^"]+)"/.exec(message) : null;
+    return named?.[1] ?? "";
   }
-  return false;
+  return null;
 }
+
+/** «Schimbă adresa»: the two unique indexes that mean «this runner already has a registration on the new address». */
+const ADDRESS_UNIQUE_CONSTRAINTS: ReadonlySet<string> = new Set(["registrations_event_participant_name_unique", "registrations_race_participant_active_unique"]);
+/** The check-in code's: a fresh code drawn on a move that met another row's is drawn again, never a refusal. */
+const CHECKIN_CODE_UNIQUE_CONSTRAINT = "registrations_checkin_code_unique";
+/** How many check-in codes a move draws before it gives up; 50 bits each, so a second is already a curiosity. */
+const MOVE_CHECKIN_CODE_ATTEMPTS = 5;
 
 const alreadyOnAddress = () => new DomainError("VALIDATION_ERROR", "this runner already has a registration on the new address at this event or race", ["email", ALREADY_ON_ADDRESS]);
 
@@ -5392,25 +5407,36 @@ export async function changeRegistrationAddressByStaff<T extends Record<string, 
       : current.holdExpiresAt;
     const holdLengthened = holdExpiresAt?.getTime() !== current.holdExpiresAt?.getTime();
     const linkExpiresAt = current.status === "PENDING_EMAIL_CONFIRMATION" ? emailLinkExpiresAt(now, settings) : null;
-    let moved: Registration;
-    try {
-      [moved] = await tx
-        .update(registrations)
-        .set({
-          participantId: destination.id,
-          addressChangedAt: now,
-          addressChangedByStaffUserId: actor.id,
-          updatedAt: now,
-          ...(holdLengthened ? { holdExpiresAt } : {}),
-          ...(linkExpiresAt ? { emailLinkExpiresAt: linkExpiresAt } : {}),
-          // The QR the old address holds opens nothing any more: a new code for the new address's confirmation.
-          ...(current.status === "CONFIRMED" ? { checkinCode: newCheckinCode() } : {}),
-        })
-        .where(eq(registrations.id, current.id))
-        .returning();
-    } catch (error) {
-      if (isUniqueViolation(error)) throw alreadyOnAddress();
-      throw error;
+    /*
+      Each attempt in its own savepoint, so a unique violation leaves the transaction usable. Only the two address
+      indexes are «already on the address»; another row's check-in code met by the fresh one is drawn again, a bounded
+      number of times; anything else is rethrown as it is.
+    */
+    let moved: Registration | undefined;
+    for (let attempt = 1; moved === undefined; attempt++) {
+      try {
+        [moved] = await tx.transaction((savepoint) =>
+          savepoint
+            .update(registrations)
+            .set({
+              participantId: destination.id,
+              addressChangedAt: now,
+              addressChangedByStaffUserId: actor.id,
+              updatedAt: now,
+              ...(holdLengthened ? { holdExpiresAt } : {}),
+              ...(linkExpiresAt ? { emailLinkExpiresAt: linkExpiresAt } : {}),
+              // The QR the old address holds opens nothing any more: a new code for the new address's confirmation.
+              ...(current.status === "CONFIRMED" ? { checkinCode: newCheckinCode() } : {}),
+            })
+            .where(eq(registrations.id, current.id))
+            .returning(),
+        );
+      } catch (error) {
+        const violated = violatedUniqueConstraint(error);
+        if (violated !== null && ADDRESS_UNIQUE_CONSTRAINTS.has(violated)) throw alreadyOnAddress();
+        if (violated === CHECKIN_CODE_UNIQUE_CONSTRAINT && current.status === "CONFIRMED" && attempt < MOVE_CHECKIN_CODE_ATTEMPTS) continue;
+        throw error;
+      }
     }
 
     // 5. The two notices, then the state's own message to the new address. The old one carries no token and no new address.

@@ -909,6 +909,9 @@ export type RegistrationDetail = {
   emailState: RegistrationEmailStateDetail | null;
   /** For "send the reminder": only while the event is ahead (§81). */
   eventStartsAt: Date;
+  /** «Schimbă adresa»: the event's own end, for whether a move still sends the next step (`moveSendsNextStep`). */
+  eventEndsAt: Date | null;
+  eventStatus: "SCHEDULED" | "COMPLETED" | "CANCELLED";
   /** When the current cycle began (`privacy_acknowledged_at`, rewritten on a restart); §145. */
   cycleStartedAt: Date;
   /**
@@ -967,6 +970,8 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       addressChangedByName: addressChangedBy.displayName,
       emailState: registrationEmailStateDetailSql(),
       eventStartsAt: events.startsAt,
+      eventEndsAt: events.endsAt,
+      eventStatus: events.eventStatus,
       id: registrations.id,
       status: registrations.status,
       kind: registrations.kind,

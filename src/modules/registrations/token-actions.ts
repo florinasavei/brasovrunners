@@ -397,7 +397,11 @@ export async function spentLinkReleaseMoment(secret: string, purposes: readonly 
   return null;
 }
 
-/** The registration a spent invitation link created (§647): the token names the invitation, the invitation its accepted row. */
+/**
+ * The registration a spent invitation link created (§647): the token names the invitation, the invitation its accepted row —
+ * only while that row is still on the invitation's own participant, the one the acceptance used. After «Schimbă adresa»
+ * the old address's spent link names no registration, like a spent link with nothing to speak of: no deadline, no state.
+ */
 async function acceptedRegistrationOfSpentInvitation(secret: string): Promise<string | null> {
   if (!isWellFormedTokenSecret(secret)) return null;
   const db = getDb();
@@ -406,6 +410,10 @@ async function acceptedRegistrationOfSpentInvitation(secret: string): Promise<st
       .select({ registrationId: eventInvitations.acceptedRegistrationId })
       .from(emailActionTokens)
       .innerJoin(eventInvitations, eq(eventInvitations.id, emailActionTokens.invitationId))
+      .innerJoin(
+        registrations,
+        and(eq(registrations.id, eventInvitations.acceptedRegistrationId), eq(registrations.participantId, eventInvitations.participantId)),
+      )
       .where(and(eq(emailActionTokens.tokenHash, hashTokenSecret(secret)), eq(emailActionTokens.purpose, "ACCEPT_INVITATION"), isNotNull(emailActionTokens.usedAt)))
       .limit(1);
     return row?.registrationId ?? null;

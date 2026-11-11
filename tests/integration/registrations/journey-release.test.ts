@@ -7,6 +7,7 @@ import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations, type RegistrationStatus } from "@/db/schema/registrations";
+import { staffUsers } from "@/db/schema/staff-users";
 import { formatDay } from "@/i18n/dates";
 import { withClientWords } from "../../helpers/client-words";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -41,6 +42,7 @@ let close: () => Promise<void>;
 const state = vi.hoisted(() => ({ locale: "ro" as "ro" | "en" }));
 
 vi.mock("@/db/client", () => ({ getDb: () => db }));
+vi.mock("@/modules/notifications/drain", () => ({ drainOutboxAfterResponse: () => undefined, drainOutboxRowsAfterResponse: () => undefined }));
 vi.mock("next/cache", async () => (await import("../../helpers/next-cache")).fakeNextCache.module);
 vi.mock("next/headers", () => ({
   headers: async () => new Headers(),
@@ -67,6 +69,7 @@ vi.mock("next-intl/server", async (importOriginal) => {
 const { fakeNextCache } = await import("../../helpers/next-cache");
 const { issueActionToken } = await import("@/modules/action-tokens/repository");
 const { spentLinkReleaseMoment } = await import("@/modules/registrations/token-actions");
+const { changeRegistrationAddressByStaff } = await import("@/modules/registrations/service");
 const { default: ConfirmEmailPage } = await import("@/app/[locale]/registrations/confirm/[token]/page");
 const { default: FamilyConfirmPage } = await import("@/app/[locale]/registrations/family/[token]/page");
 const { default: InvitationPage } = await import("@/app/[locale]/registrations/invitation/[token]/page");
@@ -149,8 +152,13 @@ async function spentLink(registration: { id: string; participantId: string }, pu
   return secret;
 }
 
-/** An invitation accepted with its link: the registration it created, and the spent link. */
+/** An invitation accepted with its link: the spent link. */
 async function acceptedInvitation(eventId: string): Promise<string> {
+  return (await acceptedInvitationAndRow(eventId)).secret;
+}
+
+/** An invitation accepted with its link: the registration it created, and the spent link. */
+async function acceptedInvitationAndRow(eventId: string) {
   const registration = await register(eventId, "PENDING_DECLARATION");
   const [invitation] = await db
     .insert(eventInvitations)
@@ -176,7 +184,7 @@ async function acceptedInvitation(eventId: string): Promise<string> {
     now: NOW,
   });
   await db.update(emailActionTokens).set({ usedAt: NOW }).where(eq(emailActionTokens.id, token.id));
-  return secret;
+  return { secret, registration };
 }
 
 const said = (locale: "ro" | "en") => formatDay(DEADLINE, { locale, timeZone: "Europe/Bucharest", style: "long", withTime: true, position: "inline" });
@@ -205,6 +213,33 @@ beforeEach(async () => {
 });
 afterEach(() => {
   vi.useRealTimers();
+});
+
+describe("«Schimbă adresa»: the old address's spent invitation link says nothing of the moved registration", () => {
+  it("before the move it names the deadline; after it, no deadline and no state — as a spent link with nothing to speak of", async () => {
+    const race = await createRace(true);
+    const { secret, registration } = await acceptedInvitationAndRow(race.id);
+    const deadline = { at: DEADLINE, timeZone: "Europe/Bucharest" };
+    expect(await spentLinkReleaseMoment(secret, ["ACCEPT_INVITATION"], NOW)).toEqual(deadline);
+    for (const locale of LOCALES) {
+      state.locale = locale;
+      const before = await html((await InvitationPage({ params: Promise.resolve({ locale, token: secret }), searchParams: Promise.resolve({ done: "1" }) })) as ReactElement);
+      expect(before).toContain(said(locale));
+    }
+
+    const [admin] = await db.insert(staffUsers).values({ email: "admin@example.ro", displayName: "Admin", role: "ADMIN" }).returning();
+    await changeRegistrationAddressByStaff(db, admin, registration.id, "adresa.noua@example.org", NOW);
+    expect((await db.select().from(registrations).where(eq(registrations.id, registration.id)))[0].status).toBe("PENDING_DECLARATION");
+
+    expect(await spentLinkReleaseMoment(secret, ["ACCEPT_INVITATION"], NOW)).toBeNull();
+    for (const locale of LOCALES) {
+      state.locale = locale;
+      const after = await html((await InvitationPage({ params: Promise.resolve({ locale, token: secret }), searchParams: Promise.resolve({ done: "1" }) })) as ReactElement);
+      // Exactly the page of a spent link that names no registration: today's words, no deadline.
+      expect(after).not.toContain(said(locale));
+      expect(after).toContain(DESK[locale]);
+    }
+  });
 });
 
 describe("§914 the reader the pages ask: when the release will take the place a spent link speaks of", () => {

@@ -65,6 +65,18 @@ export function stateMessageOnMove(status: RegistrationStatus, eventOver: boolea
 }
 
 /**
+ * Whether a move sends the new address a next step — the question «Schimbi adresa?» says which before the press. The
+ * same rule the move applies (`stateMessageOnMove` over `eventOverForMove`), never a second copy of it.
+ */
+export function moveSendsNextStep(
+  status: RegistrationStatus,
+  event: { eventStatus: string; startsAt: Date; endsAt: Date | null; timezone: string },
+  now: Date,
+): boolean {
+  return stateMessageOnMove(status, eventOverForMove(event, now)) !== null;
+}
+
+/**
  * A declaration signed from an emailed link after the registration's address was set by staff: shown in the trail as
  * signed from the link sent to the address the club changed. Still the person's signature — never a staff one; this only
  * makes the order of the two facts visible, so «no staff-signed declaration» stays checkable.

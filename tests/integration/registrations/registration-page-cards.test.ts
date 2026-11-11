@@ -332,6 +332,30 @@ describe("«Schimbă adresa»: the card «Adresa de email» (BR-REQ-060-01)", ()
     expect(box?.props).toMatchObject({ type: "email", required: true });
   });
 
+  it("the question says the next step only when the move sends one: both languages, a cancelled row or an event that is over", async () => {
+    const formOf = async (id: string) => {
+      const inside = elements(byTestId(await detailPage(id), "address-card"));
+      return (inside.find((element) => element.type === ActionForm && element.props["data-testid"] === "address-form")?.props.confirm as { body: string }).body;
+    };
+    const race = await createRace();
+    const confirmed = await register(race.id, "CONFIRMED");
+    const cancelled = await register(race.id, "CANCELLED");
+    state.actor = await staff("ADMIN");
+    const languages = [["ro", ro], ["en", en]] as const;
+    for (const [locale, words] of languages) {
+      state.locale = locale;
+      expect(await formOf(confirmed)).toContain(words.Admin.registrations.address.confirmBody);
+      expect(await formOf(cancelled)).toContain(words.Admin.registrations.address.confirmBodyNoticesOnly);
+      expect(await formOf(cancelled)).not.toContain(words.Admin.registrations.address.confirmBody);
+    }
+    await db.update(events).set({ eventStatus: "COMPLETED" }).where(eq(events.id, race.id));
+    for (const [locale, words] of languages) {
+      state.locale = locale;
+      expect(await formOf(confirmed)).toContain(words.Admin.registrations.address.confirmBodyNoticesOnly);
+      expect(await formOf(confirmed)).not.toContain(words.Admin.registrations.address.confirmBody);
+    }
+  });
+
   it("the Organizer's: the address read, no form", async () => {
     const race = await createRace();
     const id = await register(race.id, "CONFIRMED");

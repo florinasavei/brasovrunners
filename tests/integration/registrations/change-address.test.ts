@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { emailActionTokens, type EmailActionTokenPurpose } from "@/db/schema/email-action-tokens";
@@ -49,6 +49,12 @@ let close: () => Promise<void>;
 let admin: StaffUser;
 
 vi.mock("@/db/client", () => ({ getDb: () => db }));
+/** Check-in codes a test forces on the next draws, before the real ones resume. */
+const forcedCheckinCodes = vi.hoisted(() => [] as string[]);
+vi.mock("@/modules/registrations/checkin-code", async (original) => {
+  const actual = await original<typeof import("@/modules/registrations/checkin-code")>();
+  return { ...actual, newCheckinCode: () => forcedCheckinCodes.shift() ?? actual.newCheckinCode() };
+});
 vi.mock("@/modules/notifications/drain", () => ({ drainOutboxAfterResponse: () => undefined, drainOutboxRowsAfterResponse: () => undefined }));
 vi.mock("@/modules/public-cache/cache", async (original) => ({
   ...(await original<typeof import("@/modules/public-cache/cache")>()),
@@ -461,6 +467,60 @@ describe("«Schimbă adresa»: each refusal writes nothing", () => {
       await refusedWith(changeRegistrationAddressByStaff(db, actor, ana.id, NEW, at(60)), null, "FORBIDDEN");
       await refusedWith(changeRegistrationAddress(db, actor, ana.id, NEW, at(60)), null, "FORBIDDEN");
     }
+  });
+});
+
+describe("«Schimbă adresa»: a unique-key failure is ALREADY_ON_ADDRESS only when it is about the address", () => {
+  /** A trigger that fails the move's UPDATE as the named unique index would, so the mapping itself is what is tested. */
+  async function failingUpdateAs(constraint: string, work: () => Promise<void>) {
+    await db.execute(
+      sql.raw(`CREATE FUNCTION test_forced_unique_failure() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'duplicate key value violates unique constraint "${constraint}"' USING ERRCODE = 'unique_violation', CONSTRAINT = '${constraint}'; END $$`),
+    );
+    await db.execute(sql.raw("CREATE TRIGGER test_forced_unique_failure BEFORE UPDATE OF participant_id ON registrations FOR EACH ROW EXECUTE FUNCTION test_forced_unique_failure()"));
+    try {
+      await work();
+    } finally {
+      await db.execute(sql.raw("DROP TRIGGER test_forced_unique_failure ON registrations"));
+      await db.execute(sql.raw("DROP FUNCTION test_forced_unique_failure()"));
+    }
+  }
+
+  it("the fresh check-in code meets another row's: another code is drawn and the row moves, never ALREADY_ON_ADDRESS", async () => {
+    const event = await createEvent(5);
+    const ana = await confirmedRow(event, "Ana", 0);
+    const dora = await confirmedRow(event, "Dora", 1);
+    expect(dora.checkinCode).not.toBeNull();
+    forcedCheckinCodes.push(dora.checkinCode as string);
+    const moved = await changeRegistrationAddressByStaff(db, admin, ana.id, NEW, at(60));
+    expect(forcedCheckinCodes).toEqual([]);
+    expect(moved.stateMessage).toBe("REGISTRATION_CONFIRMED");
+    const row = await rowOf(ana.id);
+    expect(row.participantId).toBe((await participantOf(NEW)).id);
+    expect(row.checkinCode).not.toBeNull();
+    expect([ana.checkinCode, dora.checkinCode]).not.toContain(row.checkinCode);
+    expect((await rowOf(dora.id)).checkinCode).toBe(dora.checkinCode);
+  });
+
+  it("the address's own unique indexes still answer ALREADY_ON_ADDRESS, writing nothing", async () => {
+    const event = await createEvent(5);
+    const ana = await confirmedAddress(event, "Ana", 0);
+    for (const constraint of ["registrations_event_participant_name_unique", "registrations_race_participant_active_unique"]) {
+      await failingUpdateAs(constraint, async () => {
+        const before = await snapshot();
+        const error = await refusal(changeRegistrationAddressByStaff(db, admin, ana.id, NEW, at(60)));
+        expect(isDomainError(error) && error.fields, String(error)).toContain(ALREADY_ON_ADDRESS);
+        expect(await snapshot()).toEqual(before);
+      });
+    }
+  });
+
+  it("any other unique index is rethrown as it is, never answered as ALREADY_ON_ADDRESS", async () => {
+    const event = await createEvent(5);
+    const ana = await confirmedAddress(event, "Ana", 0);
+    await failingUpdateAs("registrations_event_bib_number_unique", async () => {
+      const error = await refusal(changeRegistrationAddressByStaff(db, admin, ana.id, NEW, at(60)));
+      expect(isDomainError(error)).toBe(false);
+    });
   });
 });
 

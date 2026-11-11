@@ -1982,6 +1982,7 @@
         "pending": "Changing…",
         "confirmTitle": "Change the address?",
         "confirmBody": "The links sent to the old address stop working. Both addresses get an email about the change, and the new one gets the next step.",
+        "confirmBodyNoticesOnly": "The links sent to the old address stop working. Both addresses get an email about the change, and nothing else is sent.",
         "confirmPromo": "The consent to offers and benefits is withdrawn: the person gives it again, from the new address.",
         "confirmAlso": "The old address gets “The email address was changed”; the new one also gets the next step's email, when there is one.",
         "readOnly": "An administrator changes the address."

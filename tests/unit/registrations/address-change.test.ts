@@ -6,6 +6,7 @@ import {
   declarationPdfAudienceAfterMove,
   eventEndForMove,
   eventOverForMove,
+  moveSendsNextStep,
   signedAfterStaffAddressChange,
   stateMessageOnMove,
 } from "@/modules/registrations/domain/address-change";
@@ -45,6 +46,21 @@ describe("deadlineKeptOnMove", () => {
     const passed = new Date(NOW.getTime() - HOUR);
     expect(deadlineKeptOnMove({ holdExpiresAt: passed, now: NOW, eventStartsAt: START, mayLengthen: true })).toBe(passed);
     expect(deadlineKeptOnMove({ holdExpiresAt: null, now: NOW, eventStartsAt: START, mayLengthen: true })).toBeNull();
+  });
+});
+
+describe("moveSendsNextStep: the question's words follow the move's own rule", () => {
+  it("true exactly when stateMessageOnMove sends a message, for every state, before and after the event", () => {
+    const zone = "Europe/Bucharest";
+    const ahead = { eventStatus: "SCHEDULED", startsAt: START, endsAt: null, timezone: zone };
+    const cancelled = { ...ahead, eventStatus: "CANCELLED" };
+    for (const status of registrationStatus.enumValues) {
+      expect(moveSendsNextStep(status, ahead, NOW), status).toBe(stateMessageOnMove(status, eventOverForMove(ahead, NOW)) !== null);
+      expect(moveSendsNextStep(status, cancelled, NOW), status).toBe(false);
+    }
+    expect(moveSendsNextStep("CONFIRMED", ahead, NOW)).toBe(true);
+    expect(moveSendsNextStep("CANCELLED", ahead, NOW)).toBe(false);
+    expect(moveSendsNextStep("EXPIRED", ahead, NOW)).toBe(false);
   });
 });
 
