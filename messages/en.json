@@ -1272,6 +1272,7 @@
         "chip": "Elite",
         "mark": "Mark as elite",
         "unmark": "No longer elite",
+        "unmarkNamed": "No longer elite: {name}",
         "inResults": "In the results",
         "onSite": "On the site",
         "onSiteHint": "Unticked, the name does not show on the site: not under «Who's coming», not in the results. Ticked, their own “I want to appear” tick decides.",

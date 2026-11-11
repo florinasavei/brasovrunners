@@ -1464,8 +1464,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
 
       {/*
         «Elite» (the owner, 2026-11-04, who looked here for an elite and did not find her): the race's separate elite list
-        (§895) and the registrations marked «Elită» (§897), read-only, for every role that reads this list — each reader
-        asserts the role again — with the link to the editor's elite card, where the separate list changes.
+        (§895) and the registrations marked «Elită» (§897), for every role that reads this list — each reader asserts the
+        role again — with the link to the editor's elite card, where the separate list changes, and, for the Administrator,
+        the one-press «Nu mai e elită» beside each registered line (the owner, 2026-11-11), the row menu's own action.
       */}
       {eliteLists && eliteCardHref && (
         <ElitePanel
@@ -1475,6 +1476,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           cardHref={eliteCardHref}
           registrationHref={(registrationId) => getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: registrationId } } })}
           mayManage={mayManage}
+          unmark={mayManage ? { action: setRegistrationEliteAction, listQuery: rowReturnQueryString } : undefined}
         />
       )}
 
