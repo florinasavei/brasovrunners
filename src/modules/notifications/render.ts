@@ -105,6 +105,7 @@ import { readNotRevivedRefs, readUnreachableWindowFacts } from "./outage-grace-w
 import { emailEventFacts } from "./event-facts-row";
 import { type EmailRenderer, OutboxMessageWithdrawn, type OutboxRow } from "./outbox";
 import type { DeadlineRebase } from "./deadline-rebase";
+import { audienceOf } from "./domain/email-audience";
 
 /**
  * Turns one outbox row into the message to send (AGENTS.md §16.1, §16.3; BR-REQ-080-01).
@@ -268,6 +269,24 @@ async function renderRow(
         ? { ...stored, emailLinkExpiresAt: rebase.to }
         : { ...stored, holdExpiresAt: rebase.to }
       : stored;
+
+  /*
+    «Schimbă adresa»: the registration was moved to another address since this row was queued. A participant's message
+    for it, to the address it no longer belongs to, has nothing to say there — and a link minted now would be a link of
+    the old address. Withdrawn rather than sent, whether it waits or is a retry already claimed: the move deleted the
+    rows never tried, this catches the rest. The old address's own notice of the move is the one exception. Only the
+    participant's own mail (`audienceOf`): the club's archive copy and its notice carry the participant's id too, and
+    stay the club's; a club copy names no participant and is left to its own rules.
+  */
+  if (
+    row.participantId &&
+    stored &&
+    stored.participantId !== row.participantId &&
+    audienceOf(row.messageType) === "participant" &&
+    row.messageType !== "REGISTRATION_ADDRESS_REMOVED"
+  ) {
+    throw new OutboxMessageWithdrawn("the registration was moved to another address since this message was queued");
+  }
 
   /*
     A declaration request held while a family signed in the wizard (§519, `enqueueAllocationEmail`):
@@ -471,6 +490,8 @@ async function renderRow(
   }
   // The subject's "[Copie club]" and the line that says the personal links were taken out.
   if (clubCopy) data.clubCopy = true;
+  // «Schimbă adresa»: whether the move queued the state's own message to the new address too, as the move said it would.
+  if (row.messageType === "REGISTRATION_ADDRESS_ADDED") data.addressNextStep = (row.payloadJson as { nextStep?: unknown } | null)?.nextStep === true;
   // A bulk send's one copy: how many it went to, and nobody's name (§419).
   if (bulkRecipients !== null) data.clubCopyRecipients = bulkRecipients;
   /*

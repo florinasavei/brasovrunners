@@ -65,6 +65,8 @@ import {
   withdrawInvitationByStaff,
   promoteFromWaitlistByStaff,
   editRegistrationAnswersByStaff,
+  type AddressChange,
+  changeRegistrationAddressByStaff,
   setOutsideCapacityByStaff,
   type PlacedByStaff,
   type StaffPlaceOptions,
@@ -413,10 +415,11 @@ export async function resendFamilyMessage<T extends Record<string, unknown>>(
  * What every function below shares, and why it is worth stating once.
  *
  * These are the three administrative changes to a registration that exist: entering one for
- * somebody, correcting the name it carries, and cancelling it. There is deliberately no fourth.
- * There is no verified-email edit and no participant merge (BR-REQ-037-03 criterion 2) — the
- * verified address *is* the identity (AGENTS.md §10.3), and a typo is fixed by cancelling and
- * registering again with the right one. There is no delete: a registration records what
+ * somebody, correcting the name it carries, and cancelling it. There is no participant merge
+ * (BR-REQ-037-03 criterion 2) — the participant row *is* the address (AGENTS.md §10.3, §10.4)
+ * and is never rewritten. A wrong address is fixed by «Schimbă adresa» (`changeRegistrationAddress`
+ * above), which re-points the one registration to the participant of the right address and
+ * leaves both participant rows as they are. There is no delete: a registration records what
  * somebody agreed to and when, and cancelling is what "remove them" means (§10.5).
  *
  * None of them writes to `registrations` directly except the name correction, which changes one
@@ -1360,6 +1363,26 @@ export async function editRegistrationAnswers<T extends Record<string, unknown>>
   const edited = await editRegistrationAnswersByStaff(db, actor, registrationId, changes, now);
   revalidatePublicContent("places");
   return edited;
+}
+
+/**
+ * «Schimbă adresa» on one registration: an Administrator moves it to the address the person gave. The Administrator's
+ * (`assertAdministrator` here, the service's own check and the action's gate: three times, BR-REQ-060-01). The work —
+ * the re-pointed row, the revoked links, the withdrawn mail, the two notices, the state's message and the audit row —
+ * is `changeRegistrationAddressByStaff`, in one transaction; this sends its mail after the response (§68) and tells the
+ * public cache, because «Înscrierile mele» and the start list read the row by its address.
+ */
+export async function changeRegistrationAddress<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationId: string,
+  typedEmail: string,
+  now: Date,
+): Promise<AddressChange> {
+  assertAdministrator(actor);
+  const change = await changeRegistrationAddressByStaff(db, actor, registrationId, typedEmail, now);
+  revalidatePublicContent("places");
+  return change;
 }
 
 /**

@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
-import { and, count, eq, gt, isNull, lt, lte } from "drizzle-orm";
+import { and, count, eq, gt, inArray, isNull, like, lt, lte, ne, sql } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { staffUsers } from "@/db/schema/staff-users";
-import { emailOutbox } from "@/db/schema/email-outbox";
+import { type EmailMessageType, emailOutbox } from "@/db/schema/email-outbox";
 import { type Participant, participants } from "@/db/schema/participants";
-import { familyPlaceHolds, familySittings } from "@/db/schema/family-entries";
+import { familyPlaceHolds, familySittings, pendingFamilyEntries } from "@/db/schema/family-entries";
 import type {
   Registration,
   RegistrationKind,
@@ -38,7 +38,7 @@ import { deadlineReleaseDue, type DeadlineReleaseRules } from "./domain/unsigned
 import { healthNoteKept, withoutHealthNote } from "./domain/health-note";
 import { asksForIdDocument, asksForMinorSignature, describesListSocials, describesPromotionalMaterials } from "@/modules/legal-documents/domain/merge-fields";
 import { newCheckinCode } from "./checkin-code";
-import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
+import { type CanonicalEmail, canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import {
   findOrCreateParticipant,
   findParticipantByCanonicalEmail,
@@ -76,14 +76,16 @@ import {
 } from "./domain/waitlist";
 import { announcedCapacity, capacityForEntry, keptPlacesInUse, lineRoom } from "./domain/kept-places";
 import { canManageRegistrations, type StaffRole } from "@/modules/staff-identity/domain/roles";
-import { deriveAllowedResendMessageType } from "./domain/resend";
+import { deriveAllowedResendMessageType, familyResendTarget } from "./domain/resend";
+import { PARTICIPANT_MESSAGE_TYPES } from "@/modules/notifications/domain/email-audience";
+import { ADDRESS_FAMILY_FORM_PENDING, ADDRESS_INVITED, deadlineKeptOnMove, eventOverForMove, stateMessageOnMove } from "./domain/address-change";
 import { expectedSignatures, mismatchedSignatures } from "./domain/signature-name";
 import { allowedFromStatuses, holdsAPlace, isActiveStatus } from "./domain/state-machine";
 import { isUuid } from "@/shared/ids";
 import { dayIn, MIN_PARTICIPANT_AGE } from "./domain/age";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS, ANOTHER_LINK_INVALID, decideSubmission } from "./domain/family";
 import { registrationNameKey } from "./domain/name-key";
-import { planAnswerEdit } from "./answers";
+import { ANSWERS_UNCHANGED, planAnswerEdit } from "./answers";
 import { ANSWERS_MISSING, missingAnswers } from "./missing-answers";
 import { forgetRegisteredBadgeCount } from "./nav-count";
 import { currentAddressCap } from "./address-cap";
@@ -5104,4 +5106,382 @@ export async function editRegistrationAnswersByStaff<T extends Record<string, un
       corrected: [...plan.corrected.map((answer) => answer.field), ...(plan.nameChange ? ["registeredName"] : [])],
     };
   });
+}
+
+// --- «Schimbă adresa»: an Administrator moves a registration to another address ------------
+
+/** What one move did: the registration as it now stands, and the facts its toast and its trail say. */
+export type AddressChange = {
+  registration: Registration;
+  /** No participant had the new address: one was created for it, unverified, with the registration's name and language. */
+  newParticipant: boolean;
+  /** The live links of the registration revoked for cause at the move — never «a newer email exists». */
+  linksRevoked: number;
+  /** The old address's messages for the registration still queued and never tried, withdrawn. */
+  messagesWithdrawn: number;
+  /** The state's own message queued to the new address, or null (cancelled, lapsed, or the event is over). */
+  stateMessage: EmailMessageType | null;
+  /** A running hold or offer with less than a day left was given a day from the move (nobody waiting for its place). */
+  holdLengthened: boolean;
+  /** «Vreau să primesc oferte și beneficii» was on, and the move withdrew it. */
+  promoWithdrawn: boolean;
+};
+
+/** PostgreSQL's unique violation (23505), wherever the driver nests it: the database's backstop for the checks below. */
+function isUniqueViolation(error: unknown): boolean {
+  for (let cause = error, depth = 0; cause && typeof cause === "object" && depth < 5; cause = (cause as { cause?: unknown }).cause, depth++) {
+    if ((cause as { code?: unknown }).code === "23505") return true;
+  }
+  return false;
+}
+
+const alreadyOnAddress = () => new DomainError("VALIDATION_ERROR", "this runner already has a registration on the new address at this event or race", ["email", ALREADY_ON_ADDRESS]);
+
+/**
+ * «Schimbă adresa» (the owner, 2026-11-11: «aparent nu pot modifica mailul unei persoane???», choosing «Orice adresă,
+ * oricând» among three): an Administrator moves ONE registration to the address the person gave — any state, at any
+ * time, a cancelled or lapsed one and an event that is over included (those get the two notices alone).
+ *
+ * The participant row is the address (§10.4) and stays immutable: the registration is re-pointed. An existing
+ * participant of the new canonical address is reused exactly as it is — its name and language untouched, which is why
+ * `findOrCreateParticipant` (which refreshes both on an unverified row) is not used — and a missing one is created. No
+ * participant row is ever rewritten or merged. Under the event's lock, the lock every entry takes before it reads an
+ * address's rows (§389), so the refusals below cannot be raced by a form or another move; the row is read again under it.
+ *
+ * Refused, writing nothing (each `VALIDATION_ERROR` naming `email` and a marker): the address is not valid; it is the
+ * same address (its canonical form or its inbox, a provider's variant included — `ANSWERS_UNCHANGED`); the new address
+ * already holds this runner at the event, in any state, or at another event of the race while this one is active
+ * (`ALREADY_ON_ADDRESS`); it is at the club's limit per address (`ADDRESS_AT_CAP`); a family form waits on the row
+ * (`ADDRESS_FAMILY_FORM_PENDING`); the new address has an open invitation to the event (`ADDRESS_INVITED`). An erased
+ * registration is NOT_FOUND. A unique violation the checks did not foresee is the same `ALREADY_ON_ADDRESS`, never raw.
+ *
+ * In the one transaction, when it passes:
+ * 1. «Vreau să primesc oferte și beneficii» is withdrawn, as staff withdraws it (`setPromoConsent`, `STAFF`), on the
+ *    old participant's trail: a consent is a person's, and the address that gave it is not the one that will read.
+ * 2. Every live link of the registration is revoked for cause (`invalidated_at`, no `superseded_by_token_id`): the old
+ *    links get the generic refusal. The token binding (`action-tokens/repository.ts`) refuses any registration-scoped
+ *    token whose participant is not the registration's current one, which catches a superseded or spent link as well.
+ * 3. The old address's participant messages for the row still waiting and never tried are withdrawn, with their club
+ *    copies; the renderer withdraws a retry or a claimed one (`render.ts`), so no link is minted for the old address.
+ * 4. The row: the new participant, `address_changed_at` and `address_changed_by_staff_user_id`. Its state, place, waiting
+ *    position and race number do not move — the allocator is not asked anything. A row waiting for its address gets the
+ *    club's email-link window again from now; a confirmed row gets a new check-in code, so the QR the old address holds
+ *    opens nothing; a running hold or offer keeps its deadline, or — under a day left — a day from now, capped by the
+ *    start, only for a place nobody waits for (`deadlineKeptOnMove`).
+ * 5. The two notices: to the old address, that the organizers changed it, that its links are dead and the contact page
+ *    to object — never the new address — whatever its refusals say; to the new one, that it now receives the messages.
+ *    Then the state's own message to the new address (`stateMessageOnMove`). No vouching, no signature: a declaration
+ *    is still the person's to sign from the new address's own link, and the trail says it was signed after the move.
+ * 6. The old address's other people at the event (a family, §389) who still have a step to take get the family's own
+ *    message again, to the old address: a family link scoped to the moved row died with it.
+ * 7. One audit row, `registration.address_changed_by_staff`, with ids and counts only.
+ *
+ * The Administrator's alone (`canManageRegistrations`), asserted here as well as by the wrapper and the action.
+ */
+export async function changeRegistrationAddressByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: { id: string; role: StaffRole },
+  registrationId: string,
+  typedEmail: string,
+  now: Date,
+): Promise<AddressChange> {
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not change a registration's address`);
+  }
+  if (!isUuid(registrationId)) throw new DomainError("NOT_FOUND", "no such registration");
+  let identity: CanonicalEmail;
+  try {
+    identity = canonicalizeEmail(typedEmail);
+  } catch {
+    throw new DomainError("VALIDATION_ERROR", "the new address is not a valid email address", ["email"]);
+  }
+  // Read before the transaction, from the instance's memo, as every entry reads them (§377, §389): never under the lock.
+  const settings = await currentDeadlines(db);
+  const cap = await currentAddressCap(db);
+
+  const result = await db.transaction(async (tx) => {
+    const before = await repo.findRegistrationById(tx, registrationId);
+    if (!before) throw new DomainError("NOT_FOUND", "no such registration");
+    const lockedEvent = await repo.lockEventForCapacity(tx, before.eventId);
+    if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
+    const current = await repo.findRegistrationById(tx, registrationId);
+    if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+    const [old] = await tx.select().from(participants).where(eq(participants.id, current.participantId)).limit(1);
+    if (!old) throw new DomainError("NOT_FOUND", "no such participant");
+
+    // The same address: its identity, or the same inbox under another spelling (a provider's variant).
+    const oldNow = (() => {
+      try {
+        return canonicalizeEmail(old.deliveryEmail);
+      } catch {
+        return null;
+      }
+    })();
+    if (old.canonicalEmail === identity.canonicalEmail || (oldNow !== null && (oldNow.canonicalEmail === identity.canonicalEmail || oldNow.inboxEmail === identity.inboxEmail))) {
+      throw new DomainError("VALIDATION_ERROR", "the new address is the registration's address already", ["email", ANSWERS_UNCHANGED]);
+    }
+
+    // A family form waiting on this row (§519, §446): its one link and its kept forms are the old address's.
+    const [sitting] = await tx
+      .select({ id: familySittings.id })
+      .from(familySittings)
+      .where(
+        and(
+          gt(familySittings.expiresAt, now),
+          isNull(familySittings.confirmedAt),
+          sql`(${familySittings.registrationId} = ${current.id} OR ${familySittings.registrationIds} @> jsonb_build_array(${current.id}::text))`,
+        ),
+      )
+      .limit(1);
+    const [kept] = await tx
+      .select({ id: pendingFamilyEntries.id })
+      .from(pendingFamilyEntries)
+      .where(and(eq(pendingFamilyEntries.registrationId, current.id), gt(pendingFamilyEntries.expiresAt, now)))
+      .limit(1);
+    if (sitting || kept) throw new DomainError("VALIDATION_ERROR", "a family form waits on this registration", ["email", ADDRESS_FAMILY_FORM_PENDING]);
+
+    const target = await findParticipantByCanonicalEmail(tx, identity.canonicalEmail);
+    // An open invitation of the new address to this event (§647) would be adopted by the moved row: withdraw it first.
+    const [invited] = await tx
+      .select({ id: eventInvitations.id })
+      .from(eventInvitations)
+      .where(
+        and(
+          eq(eventInvitations.eventId, current.eventId),
+          gt(eventInvitations.expiresAt, now),
+          invitationOpen(),
+          target
+            ? sql`(${eventInvitations.participantId} = ${target.id} OR ${eventInvitations.canonicalEmail} = ${identity.canonicalEmail})`
+            : eq(eventInvitations.canonicalEmail, identity.canonicalEmail),
+        ),
+      )
+      .limit(1);
+    if (invited) throw new DomainError("VALIDATION_ERROR", "the new address has an open invitation to this event", ["email", ADDRESS_INVITED]);
+
+    /** What the new address already holds, asked of an existing participant: the event's rows, and the race's. */
+    const refuseWhatTheAddressHolds = async (holder: Participant) => {
+      // The address's rows at the event decide as a staff entry's would (§493): only «a new registration» may pass.
+      const rows = await repo.findRegistrationsByEventAndParticipant(tx, current.eventId, holder.id);
+      if (rows.length > 0) {
+        const decision = decideSubmission({
+          rows,
+          legalName: current.registeredName,
+          birthDate: current.birthDate,
+          sex: current.sex,
+          via: "staff",
+          familyOpen: await familyRegistrationOpen(tx),
+          cap,
+        });
+        // The same runner, in any state: a restart is refused too — the name's unique index would refuse the row.
+        if (decision.kind === "refuseAlreadyRegistered" || decision.kind === "restart") throw alreadyOnAddress();
+        if (decision.kind !== "insert") {
+          throw new DomainError("VALIDATION_ERROR", "the new address already carries the club's limit of registrations at this event", ["email", ADDRESS_AT_CAP]);
+        }
+      }
+      // One distance per race while the registration is active (AGENTS.md §10.1): another event of the race counts.
+      if (current.raceId !== null && isActiveStatus(current.status)) {
+        const [sameRace] = await tx
+          .select({ id: registrations.id })
+          .from(registrations)
+          .where(
+            and(
+              eq(registrations.raceId, current.raceId),
+              eq(registrations.participantId, holder.id),
+              ne(registrations.id, current.id),
+              inArray(registrations.status, ["PENDING_EMAIL_CONFIRMATION", "PENDING_DECLARATION", "WAITLISTED", "WAITLIST_OFFERED", "CONFIRMED"]),
+            ),
+          )
+          .limit(1);
+        if (sameRace) throw alreadyOnAddress();
+      }
+    };
+    if (target) await refuseWhatTheAddressHolds(target);
+
+    // The new address's participant: the one there is, as it is, or a new one — never a rewrite, never a merge.
+    let destination = target;
+    let newParticipant = false;
+    if (!destination) {
+      const [created] = await tx
+        .insert(participants)
+        .values({
+          deliveryEmail: identity.deliveryEmail,
+          normalizedEmail: identity.normalizedEmail,
+          canonicalEmail: identity.canonicalEmail,
+          canonicalizationVersion: identity.canonicalizationVersion,
+          defaultName: current.registeredName,
+          preferredLocale: current.locale,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .onConflictDoNothing({ target: participants.canonicalEmail })
+        .returning();
+      destination = created ?? (await findParticipantByCanonicalEmail(tx, identity.canonicalEmail));
+      newParticipant = created !== undefined;
+      if (!destination) throw new DomainError("CONFLICT", "the new address's participant could not be read");
+      // Written a moment ago by a form at another event, outside this event's lock: what it holds is asked now.
+      if (!newParticipant) await refuseWhatTheAddressHolds(destination);
+    }
+
+    // 1. The consent to offers and benefits is the person's who gave it, from the address that gave it (decided for the owner).
+    const promo = current.promoConsent ? await setPromoConsent(tx, { registrationId: current.id, consent: false, via: "STAFF", actorStaffUserId: actor.id, now }) : null;
+
+    // 2. Every live link of the registration, revoked for cause: no `superseded_by_token_id`, so never «a newer email exists».
+    const revoked = await tx
+      .update(emailActionTokens)
+      .set({ invalidatedAt: now })
+      .where(and(eq(emailActionTokens.registrationId, current.id), isNull(emailActionTokens.usedAt), isNull(emailActionTokens.invalidatedAt)))
+      .returning({ id: emailActionTokens.id });
+
+    // 3. The old address's messages for the row still waiting and never tried, with their club copies.
+    const withdrawn = await tx
+      .delete(emailOutbox)
+      .where(
+        and(
+          eq(emailOutbox.registrationId, current.id),
+          eq(emailOutbox.participantId, old.id),
+          eq(emailOutbox.status, "PENDING"),
+          eq(emailOutbox.attemptCount, 0),
+          inArray(emailOutbox.messageType, [...PARTICIPANT_MESSAGE_TYPES]),
+        ),
+      )
+      .returning({ idempotencyKey: emailOutbox.idempotencyKey });
+    for (const row of withdrawn) {
+      await tx
+        .delete(emailOutbox)
+        .where(
+          and(
+            eq(emailOutbox.registrationId, current.id),
+            isNull(emailOutbox.participantId),
+            eq(emailOutbox.status, "PENDING"),
+            eq(emailOutbox.attemptCount, 0),
+            like(emailOutbox.idempotencyKey, `${row.idempotencyKey.replace(/[\\%_]/g, (c) => `\\${c}`)}:club-copy:%`),
+          ),
+        );
+    }
+
+    // 4. The row. A counted place's deadline is lengthened only while nobody waits for a place (decided for the owner).
+    const running = current.status === "PENDING_DECLARATION" || current.status === "WAITLIST_OFFERED";
+    const waiting = running && !current.outsideCapacity ? await repo.countEligibleWaitlisted(tx, current.eventId) : 0;
+    const holdExpiresAt = running
+      ? deadlineKeptOnMove({ holdExpiresAt: current.holdExpiresAt, now, eventStartsAt: lockedEvent.startsAt, mayLengthen: current.outsideCapacity || waiting === 0 })
+      : current.holdExpiresAt;
+    const holdLengthened = holdExpiresAt?.getTime() !== current.holdExpiresAt?.getTime();
+    const linkExpiresAt = current.status === "PENDING_EMAIL_CONFIRMATION" ? emailLinkExpiresAt(now, settings) : null;
+    let moved: Registration;
+    try {
+      [moved] = await tx
+        .update(registrations)
+        .set({
+          participantId: destination.id,
+          addressChangedAt: now,
+          addressChangedByStaffUserId: actor.id,
+          updatedAt: now,
+          ...(holdLengthened ? { holdExpiresAt } : {}),
+          ...(linkExpiresAt ? { emailLinkExpiresAt: linkExpiresAt } : {}),
+          // The QR the old address holds opens nothing any more: a new code for the new address's confirmation.
+          ...(current.status === "CONFIRMED" ? { checkinCode: newCheckinCode() } : {}),
+        })
+        .where(eq(registrations.id, current.id))
+        .returning();
+    } catch (error) {
+      if (isUniqueViolation(error)) throw alreadyOnAddress();
+      throw error;
+    }
+
+    // 5. The two notices, then the state's own message to the new address. The old one carries no token and no new address.
+    const at = now.toISOString();
+    await enqueueEmail(tx, {
+      participantId: old.id,
+      registrationId: moved.id,
+      messageType: "REGISTRATION_ADDRESS_REMOVED",
+      locale: moved.locale,
+      recipientEmail: old.deliveryEmail,
+      payload: {},
+      idempotencyKey: `registration:${moved.id}:address-changed:old:${at}`,
+      requestedByStaffUserId: actor.id,
+      now,
+    });
+    const stateMessage = stateMessageOnMove(moved.status, eventOverForMove(lockedEvent, now));
+    await enqueueEmail(tx, {
+      participantId: destination.id,
+      registrationId: moved.id,
+      messageType: "REGISTRATION_ADDRESS_ADDED",
+      locale: moved.locale,
+      recipientEmail: destination.deliveryEmail,
+      payload: { nextStep: stateMessage !== null },
+      idempotencyKey: `registration:${moved.id}:address-changed:new:${at}`,
+      requestedByStaffUserId: actor.id,
+      now,
+    });
+    if (stateMessage) {
+      await enqueueEmail(tx, {
+        participantId: destination.id,
+        registrationId: moved.id,
+        messageType: stateMessage,
+        locale: moved.locale,
+        recipientEmail: destination.deliveryEmail,
+        // The verification starts the new link's window from its send (§513); every other message keeps the row's deadline.
+        payload: stateMessage === "VERIFY_REGISTRATION_EMAIL" ? startingDeadline() : {},
+        idempotencyKey: `registration:${moved.id}:address-changed:state:${at}`,
+        requestedByStaffUserId: actor.id,
+        now,
+      });
+    }
+
+    // 6. The old address's family at the event, when one of them still has a step to take: the family's own message again.
+    const family = (await repo.findRegistrationsByEventAndParticipant(tx, moved.eventId, old.id))
+      .filter((row) => isActiveStatus(row.status))
+      .sort((a, b) => a.submittedAt.getTime() - b.submittedAt.getTime());
+    const familyTarget = familyResendTarget(family);
+    const familyMessage = familyTarget && familyTarget.status !== "CONFIRMED" ? deriveAllowedResendMessageType(familyTarget.status) : null;
+    if (familyTarget && familyMessage && !eventOverForMove(lockedEvent, now)) {
+      await enqueueEmail(tx, {
+        participantId: old.id,
+        registrationId: familyTarget.id,
+        messageType: familyMessage,
+        locale: familyTarget.locale,
+        recipientEmail: old.deliveryEmail,
+        payload: {},
+        idempotencyKey: `registration:${familyTarget.id}:address-changed-family:${at}`,
+        requestedByStaffUserId: actor.id,
+        now,
+      });
+    }
+
+    // 7. The trail: ids, counts and flags — never an address (AGENTS.md §12.12).
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      participantId: old.id,
+      action: "registration.address_changed_by_staff",
+      entityType: "registration",
+      entityId: moved.id,
+      metadata: {
+        fromParticipantId: old.id,
+        toParticipantId: destination.id,
+        status: moved.status,
+        newParticipant,
+        linksRevoked: revoked.length,
+        messagesWithdrawn: withdrawn.length,
+        stateMessage,
+        holdLengthened,
+        promoWithdrawn: promo?.changed === true,
+        ...(familyTarget && familyMessage ? { familyResentFor: familyTarget.id } : {}),
+      },
+      now,
+    });
+    return {
+      registration: moved,
+      newParticipant,
+      linksRevoked: revoked.length,
+      messagesWithdrawn: withdrawn.length,
+      stateMessage,
+      holdLengthened,
+      promoWithdrawn: promo?.changed === true,
+      event: lockedEvent,
+    };
+  });
+  const { event, ...change } = result;
+  // A lengthened hold or a new email link is a deadline the job should know of (§334).
+  wakeMaintenance(event, now, settings, change.holdLengthened ? change.registration.holdExpiresAt : null, change.registration.status === "PENDING_EMAIL_CONFIRMATION" ? change.registration.emailLinkExpiresAt : null);
+  return change;
 }

@@ -237,7 +237,7 @@ describe("rejectedEmailWords", () => {
       expect(rejectedEmailWords(facts({ emailConfirmedAt: null, messageType: "VERIFY_REGISTRATION_EMAIL" }), locale, "organizer").context).toBe(words.neverConfirmed);
     });
 
-    it(`tells the Administrator and the Organizer to phone, the address being the person's to change; the desk what to say to the person (${locale})`, () => {
+    it(`tells the Administrator and the Organizer to phone for the right address, which an Administrator changes; the desk what to say to the person (${locale})`, () => {
       expect(rejectedEmailWords(facts(), locale, "administrator").todo).toBe(words.todo);
       expect(rejectedEmailWords(facts(), locale, "organizer").todo).toBe(words.todo);
       // The desk tells the person what they can do — never that somebody will phone them, which nothing tracks.
@@ -254,8 +254,9 @@ describe("rejectedEmailWords", () => {
           expect(said.todo, `${reader} ${cause}`).not.toContain(newRegistration);
           if (reader !== "desk") expect(said.todo.startsWith(words.placeKept), `${reader} ${cause}`).toBe(true);
         }
-        // Not confirmed: the address is the person's to change, by a new registration (§645).
-        expect(rejectedEmailWords(facts({ confirmed: false }), locale, reader).todo).toContain(newRegistration);
+        // Not confirmed: the right address is asked for, and an Administrator moves the registration to it («Schimbă adresa»).
+        expect(rejectedEmailWords(facts({ confirmed: false }), locale, reader).todo).not.toContain(newRegistration);
+        expect(rejectedEmailWords(facts({ confirmed: false }), locale, reader).todo).toContain(locale === "ro" ? "„Adresa de email”" : "“Email address”");
       }
       // An owed email on a confirmed registration: the place first, then the press.
       expect(rejectedEmailWords(facts({ kind: "missing", confirmed: true }), locale, "administrator").todo).toBe(`${words.placeKept} ${words.todoPress.confirmation}`);

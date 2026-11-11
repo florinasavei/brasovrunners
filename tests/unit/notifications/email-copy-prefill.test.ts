@@ -72,6 +72,9 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   REGISTRATION_MANAGE_LINK: [],
   PROFILE_MANAGE_LINK: [],
   REGISTRATION_STATE_NOTICE: ["eventTitle", "currentStatus"],
+  // «Schimbă adresa»: whose registration, at which event and when; the dead links, the status and the contact page are the platform's lines.
+  REGISTRATION_ADDRESS_REMOVED: ["participantName", "eventTitle", "eventStartsAtFormatted"],
+  REGISTRATION_ADDRESS_ADDED: ["participantName", "eventTitle", "eventStartsAtFormatted"],
   EVENT_REMINDER: ["eventTitle", "bibNumber", "checkinCode", "eventChecklist"],
   EVENT_THANKS: ["eventTitle"],
   DECLARATION_SIGNED: ["eventTitle", "signedAtFormatted"],

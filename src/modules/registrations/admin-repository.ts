@@ -899,6 +899,9 @@ export type RegistrationDetail = {
   checkedInByName: string | null;
   /** Who vouched for the address at the desk, when nobody clicked a link. */
   emailConfirmedByName: string | null;
+  /** «Schimbă adresa»: when an Administrator last moved the registration to another address, and who (null once the account is gone). */
+  addressChangedAt: Date | null;
+  addressChangedByName: string | null;
   /**
    * The registration's one email state (§670, amending §663) — with the provider's code and redacted words
    * for the page's small print, which only this page reads; null when the participant's mail has no open refusal.
@@ -939,6 +942,7 @@ export type RegistrationDetail = {
 
 const checkedInBy = alias(staffUsers, "checked_in_by");
 const emailConfirmedBy = alias(staffUsers, "email_confirmed_by");
+const addressChangedBy = alias(staffUsers, "address_changed_by");
 
 
 
@@ -959,6 +963,8 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       checkedInAt: registrations.checkedInAt,
       checkedInByName: checkedInBy.displayName,
       emailConfirmedByName: emailConfirmedBy.displayName,
+      addressChangedAt: registrations.addressChangedAt,
+      addressChangedByName: addressChangedBy.displayName,
       emailState: registrationEmailStateDetailSql(),
       eventStartsAt: events.startsAt,
       id: registrations.id,
@@ -1059,6 +1065,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
     )
     .leftJoin(checkedInBy, eq(checkedInBy.id, registrations.checkedInByStaffUserId))
     .leftJoin(emailConfirmedBy, eq(emailConfirmedBy.id, registrations.emailConfirmedByStaffUserId))
+    .leftJoin(addressChangedBy, eq(addressChangedBy.id, registrations.addressChangedByStaffUserId))
     .where(eq(registrations.id, id))
     .limit(1);
 

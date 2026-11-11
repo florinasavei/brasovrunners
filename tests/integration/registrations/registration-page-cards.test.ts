@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { createElement, isValidElement, type ReactElement, type ReactNode } from "react";
 import { prerenderToNodeStream } from "react-dom/static";
 import { createTranslator, NextIntlClientProvider } from "next-intl";
@@ -66,6 +67,7 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   checkInAction: vi.fn(),
   confirmRegistrationNowAction: vi.fn(),
   editRegistrationAnswersAction: vi.fn(),
+  changeRegistrationAddressAction: vi.fn(),
   deleteRegistrationAction: vi.fn(),
   offerPlaceAction: vi.fn(),
   promoteRegistrationAction: vi.fn(),
@@ -200,6 +202,7 @@ describe("§847 the registration's page: every section a card", () => {
       card("race-day"),
       card("emails-section"),
       card("answers"),
+      card("address-card"),
       at((element) => element.type === Panel && element.props.id === "emergency"),
       card("timeline"),
       card("withdraw-consent"),
@@ -310,6 +313,50 @@ describe("§847 one state chip for a registration", () => {
   });
 });
 
+describe("«Schimbă adresa»: the card «Adresa de email» (BR-REQ-060-01)", () => {
+  it("the Administrator's: the address, and the form whose question says what happens before it happens", async () => {
+    const race = await createRace();
+    const id = await register(race.id, "CONFIRMED");
+    state.actor = await staff("ADMIN");
+    const all = await detailPage(id);
+    const card = byTestId(all, "address-card");
+    expect(card?.type).toBe(Panel);
+    const inside = elements(card);
+    expect(String(byTestId(inside, "address-current")?.props.children)).toContain(`runner${serial}@example.org`);
+    const form = inside.find((element) => element.type === ActionForm && element.props["data-testid"] === "address-form");
+    expect(form).toBeDefined();
+    const confirm = form?.props.confirm as { title: string; body: string };
+    expect(confirm.title).toBe(ro.Admin.registrations.address.confirmTitle);
+    expect(confirm.body).toContain(ro.Admin.registrations.address.confirmBody);
+    const box = elements(form).find((element) => element.props.name === "email");
+    expect(box?.props).toMatchObject({ type: "email", required: true });
+  });
+
+  it("the Organizer's: the address read, no form", async () => {
+    const race = await createRace();
+    const id = await register(race.id, "CONFIRMED");
+    state.actor = await staff("MODERATOR");
+    const all = await detailPage(id);
+    const inside = elements(byTestId(all, "address-card"));
+    expect(String(byTestId(inside, "address-current")?.props.children)).toContain(`runner${serial}@example.org`);
+    expect(byTestId(inside, "address-form")).toBeUndefined();
+    expect(byTestId(inside, "address-read-only")?.props.children).toBe(ro.Admin.registrations.address.readOnly);
+  });
+
+  it("says the withdrawn consent in the question when the person gave one, and when and by whom a moved row was changed", async () => {
+    const race = await createRace();
+    const id = await register(race.id, "CONFIRMED");
+    const actor = await staff("ADMIN");
+    state.actor = actor;
+    await db.update(registrations).set({ promoConsent: true, promoConsentAt: new Date(), addressChangedAt: new Date("2026-11-11T09:00:00.000Z"), addressChangedByStaffUserId: actor.id }).where(eq(registrations.id, id));
+    const all = await detailPage(id);
+    const inside = elements(byTestId(all, "address-card"));
+    const form = inside.find((element) => element.type === ActionForm && element.props["data-testid"] === "address-form");
+    expect((form?.props.confirm as { body: string }).body).toContain(ro.Admin.registrations.address.confirmPromo);
+    expect(String(byTestId(inside, "address-changed")?.props.children)).toContain("ADMIN");
+  });
+});
+
 describe("§847 the page as it is drawn", () => {
   it("renders one heading per card, under the person's name, in the page's order", async () => {
     const race = await createRace();
@@ -330,6 +377,8 @@ describe("§847 the page as it is drawn", () => {
       `h3 ${words.raceDayTitle}`,
       `h3 ${words.emails.title}0 emailuri`,
       `h3 ${words.answers.title}`,
+      // «Schimbă adresa»: its own card beside «Datele înscrierii».
+      `h3 ${words.address.title}`,
       `h3 ${words.emergency.title}`,
       `h3 ${words.timeline}`,
       `h3 ${words.withdraw.title}`,

@@ -805,6 +805,12 @@ export type TemplateData = {
   eventStartsAtFormattedOther?: string;
   /** A race's gun time, "10:00", when it has one apart from the gathering (§71); on the update notice (§331). */
   eventRaceStartsAtFormatted?: string;
+  /**
+   * «Schimbă adresa», on `REGISTRATION_ADDRESS_ADDED` only: the move queued the state's own message to this address as
+   * well (a verification, the waiting list, the offer, the declaration or the confirmation), so the notice says the next
+   * step follows; false for a cancelled or lapsed registration, or an event that is over, which get the notice alone.
+   */
+  addressNextStep?: boolean;
   currentStatus?: string;
   /** The same status in the other language's words, for the bilingual message's second half (§373, email follow-up). */
   currentStatusOther?: string;
@@ -2283,6 +2289,31 @@ const T = {
       ],
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
+    /*
+      «Schimbă adresa»: an Administrator moved the registration to another address. To the old address: what happened, that
+      its links are dead, and where to object — never the new address, which this inbox has no right to read. No token, no
+      button. The fact is the body the club may reword; that the links are dead and the contact page to object are the
+      platform's lines after it (`addressRemovedLinks`, `addressRemovedObject`), so no rewording loses them.
+    */
+    registrationAddressRemoved: {
+      subject: (d: TemplateData) => `Adresa de email a înscrierii la ${d.eventTitle ?? "eveniment"} a fost schimbată`,
+      body: (d: TemplateData) => [
+        `Organizatorii au schimbat adresa de email a înscrierii${d.participantName ? ` pentru ${d.participantName}` : ""} la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}. **De acum, emailurile despre această înscriere merg la altă adresă.**`,
+      ],
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
+    },
+    /*
+      «Schimbă adresa», to the new address: from now on it receives this registration's messages. Where the registration
+      stands, that the next step follows in an email of its own (a cancelled or lapsed registration has none), and the
+      contact page if it is not this person's, are the platform's lines after the body (`addressAddedStatus`, `addressAddedNotYours`).
+    */
+    registrationAddressAdded: {
+      subject: (d: TemplateData) => `De acum primești emailurile înscrierii la ${d.eventTitle ?? "eveniment"}`,
+      body: (d: TemplateData) => [
+        `Organizatorii au trecut această adresă de email pe înscrierea${d.participantName ? ` pentru ${d.participantName}` : ""} la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}. **De acum, emailurile despre această înscriere vin aici.**`,
+      ],
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
+    },
     eventUpdateNotice: {
       subject: (d: TemplateData) => `Detalii actualizate pentru ${d.eventTitle ?? "eveniment"}`,
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
@@ -2696,6 +2727,13 @@ const T = {
     groupRunMasked: "În copia ta, seria și numărul actului de identitate apar mascate, pentru siguranță: adresa de e-mail nu a fost verificată înainte de trimitere.",
     groupRunNotYou: (contactUrl?: string) =>
       `Dacă nu tu ai semnat această declarație, scrie-ne din pagina de contact${contactUrl ? ` (${contactUrl})` : ""} și o ștergem.`,
+    /** «Schimbă adresa», to the old address: its links are dead, and how to object (the platform's lines, after the body). */
+    addressRemovedLinks: "Linkurile primite la această adresă pentru această înscriere nu mai funcționează.",
+    addressRemovedObject: (contactUrl?: string) => `Dacă nu ai cerut schimbarea, scrie-ne din pagina de contact${contactUrl ? ` (${contactUrl})` : ""}.`,
+    /** «Schimbă adresa», to the new address: where the registration stands, whether the next step follows, and who to tell if it is not theirs. */
+    addressAddedStatus: (status: string | undefined, nextStep: boolean) =>
+      `Înscrierea are starea: ${status ?? "necunoscută"}.${nextStep ? " Pasul următor îl primești într-un email separat." : ""}`,
+    addressAddedNotYours: (contactUrl?: string) => `Dacă înscrierea nu este a ta, scrie-ne din pagina de contact${contactUrl ? ` (${contactUrl})` : ""}.`,
     /** A group run's declaration signed for a minor (§769): who signed, in the signer's copy and in the club's archive copy. */
     groupRunMinor: (parent: string, minor: string, archive: boolean) =>
       archive
@@ -3211,6 +3249,21 @@ const T = {
       ],
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
+    // «Schimbă adresa»: the Romanian entries above say what each one is for.
+    registrationAddressRemoved: {
+      subject: (d: TemplateData) => `The email address of the registration at ${d.eventTitle ?? "the event"} has been changed`,
+      body: (d: TemplateData) => [
+        `The organizers changed the email address of the registration${d.participantName ? ` for ${d.participantName}` : ""} at ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}. **From now on, the emails about this registration go to another address.**`,
+      ],
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
+    },
+    registrationAddressAdded: {
+      subject: (d: TemplateData) => `From now on you receive the emails of the registration at ${d.eventTitle ?? "the event"}`,
+      body: (d: TemplateData) => [
+        `The organizers put this email address on the registration${d.participantName ? ` for ${d.participantName}` : ""} at ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}. **From now on, the emails about this registration come here.**`,
+      ],
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
+    },
     eventUpdateNotice: {
       subject: (d: TemplateData) => `Updated details for ${d.eventTitle ?? "the event"}`,
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
@@ -3518,6 +3571,11 @@ const T = {
     groupRunMasked: "In your copy, your identity document's series and number are masked, for safety: the email address was not verified before sending.",
     groupRunNotYou: (contactUrl?: string) =>
       `If you did not sign this declaration, write to us from the contact page${contactUrl ? ` (${contactUrl})` : ""} and we will delete it.`,
+    addressRemovedLinks: "The links this address received for this registration no longer work.",
+    addressRemovedObject: (contactUrl?: string) => `If you did not ask for this change, write to us from the contact page${contactUrl ? ` (${contactUrl})` : ""}.`,
+    addressAddedStatus: (status: string | undefined, nextStep: boolean) =>
+      `The registration's status: ${status ?? "unknown"}.${nextStep ? " The next step comes in an email of its own." : ""}`,
+    addressAddedNotYours: (contactUrl?: string) => `If the registration is not yours, write to us from the contact page${contactUrl ? ` (${contactUrl})` : ""}.`,
     groupRunMinor: (parent: string, minor: string, archive: boolean) =>
       archive
         ? `The declaration is the minor ${minor}'s: the minor signed it for themselves, and ${parent} signed it as parent or legal guardian.`
@@ -3593,6 +3651,8 @@ const KEY_BY_MESSAGE_TYPE: Record<Exclude<EmailMessageType, RelayMessageType>, k
   VOLUNTEER_INVITATION: "volunteerInvitation",
   PLACES_ALERT: "placesAlert",
   UNSIGNED_RELEASED: "unsignedReleased",
+  REGISTRATION_ADDRESS_REMOVED: "registrationAddressRemoved",
+  REGISTRATION_ADDRESS_ADDED: "registrationAddressAdded",
 };
 
 /**
@@ -4286,6 +4346,14 @@ export function buildTemplateContent(
         : []),
       ...(messageType === "GROUP_RUN_DECLARATION_SIGNED"
         ? [...(data.idDocumentMasked ? [copy.groupRunMasked] : []), copy.groupRunNotYou(data.contactUrl)]
+        : []),
+      /*
+        «Schimbă adresa»: after the body whoever wrote it — to the old address, that its links are dead and the contact
+        page to object; to the new one, where the registration stands, whether its next step follows, and the contact page.
+      */
+      ...(messageType === "REGISTRATION_ADDRESS_REMOVED" ? [copy.addressRemovedLinks, copy.addressRemovedObject(data.contactUrl)] : []),
+      ...(messageType === "REGISTRATION_ADDRESS_ADDED"
+        ? [copy.addressAddedStatus(data.currentStatus, data.addressNextStep === true), copy.addressAddedNotYours(data.contactUrl)]
         : []),
       /*
         A night event (§394, the question §382 left open): the reminder of a date that starts after

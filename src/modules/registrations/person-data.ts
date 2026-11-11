@@ -389,7 +389,15 @@ async function collectPersonData<T extends Record<string, unknown>>(
         .from(emailOutbox)
         .where(
           registrationIds.length > 0
-            ? or(eq(emailOutbox.participantId, participant.id), inArray(emailOutbox.registrationId, registrationIds))
+            ? or(
+                eq(emailOutbox.participantId, participant.id),
+                /*
+                  This person's registrations' messages that name no participant (the club's copies) — never another
+                  address's: a registration moved here by «Schimbă adresa» keeps the old address's mail, which is that
+                  address's to read, not this one's.
+                */
+                and(inArray(emailOutbox.registrationId, registrationIds), isNull(emailOutbox.participantId)),
+              )
             : eq(emailOutbox.participantId, participant.id),
         )
         .orderBy(asc(emailOutbox.createdAt))

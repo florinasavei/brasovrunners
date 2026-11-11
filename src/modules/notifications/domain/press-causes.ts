@@ -45,6 +45,16 @@ export const PRESS_CAUSES = {
   "registrations.waitlistAdd": ["WAITLIST_JOINED", "COMPLETE_DECLARATION"],
   "registrations.offerNow": ["COMPLETE_DECLARATION", "WAITLIST_SPOT_OFFER"],
   "registrations.reserveMove": ["WAITLIST_JOINED", "COMPLETE_DECLARATION", "WAITLIST_SPOT_OFFER"],
+  // «Schimbă adresa»: the two notices — to the old address and to the new — and the state's own message to the new one.
+  "registrations.changeAddress": [
+    "REGISTRATION_ADDRESS_REMOVED",
+    "REGISTRATION_ADDRESS_ADDED",
+    "VERIFY_REGISTRATION_EMAIL",
+    "WAITLIST_JOINED",
+    "WAITLIST_SPOT_OFFER",
+    "COMPLETE_DECLARATION",
+    "REGISTRATION_CONFIRMED",
+  ],
   "registrations.invite": ["EVENT_INVITATION"],
   "registrations.invitationResend": ["EVENT_INVITATION"],
   "registrations.invitationWithdraw": [],

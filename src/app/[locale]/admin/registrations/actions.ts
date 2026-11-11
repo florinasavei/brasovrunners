@@ -23,6 +23,7 @@ import {
   bulkDeleteRegistrationsByStaff,
   setBibNumberByStaff,
   editRegistrationAnswers,
+  changeRegistrationAddress,
   setOutsideCapacity,
   setPublicRegistrationOpenByStaff,
   withdrawOptionalData,
@@ -36,6 +37,7 @@ import { effectiveMinimumAge, yearsPhrase } from "@/modules/registrations/domain
 import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { ANSWER_MARKERS, ANSWERS_UNCHANGED, answersRefusalCode, EDITABLE_ANSWERS } from "@/modules/registrations/answers";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
+import { ADDRESS_FAMILY_FORM_PENDING, ADDRESS_INVITED } from "@/modules/registrations/domain/address-change";
 import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
 import { PLACES_TAKEN_KEYS, confirmedCapacityOf, noFreePlaceOutcome, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
 import { inEmailPress } from "@/modules/notifications/press";
@@ -543,6 +545,42 @@ export async function editRegistrationAnswersAction(_previous: FormOutcome | nul
     .join(", ");
   await flash({ kind: "success", key: "answersCorrected", values: { fields } });
   redirect(`${detailPath(locale, registrationId)}?saved=answersCorrected#admin-alert`);
+}
+
+/**
+ * «Schimbă adresa» on the registration's own page («Adresa de email»): the Administrator moves the registration to the
+ * address the person gave. The Administrator's (`canManageRegistrations`), asserted here, by the wrapper and by the
+ * service (BR-REQ-060-01); a forged post from any other role is refused and writes nothing. An email press: the two
+ * notices and the state's own message carry this cause. A refusal comes back as the form's own state, said at the box,
+ * with what was typed kept; a success flashes a toast that names no address (`flash.ts`) and comes back to the page.
+ */
+export async function changeRegistrationAddressAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  return inEmailPress("registrations.changeAddress", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const registrationId = text(form, "registrationId");
+    try {
+      const actor = await requireStaffCapability(canManageRegistrations);
+      press.by(actor.id);
+      await changeRegistrationAddress(getDb(), actor, registrationId, text(form, "email"), new Date());
+    } catch (error) {
+      const refusal = refused(error, form, { fieldNames: (failure) => failure.fields.filter((name) => name === "email") });
+      const code = isDomainError(error) ? addressChangeRefusalCode(error.fields) : null;
+      return code ? { ...refusal, error: code } : refusal;
+    }
+    // The toast says what the press emailed (`flashOutcome`): counts and the messages' names, never an address.
+    return backTo(detailPath(locale, registrationId), { saved: "addressChanged" });
+  });
+}
+
+/** The sentence a refused «Schimbă adresa» says at the box, by the marker the service named; null for the generic ones. */
+function addressChangeRefusalCode(fields: readonly string[]): string | null {
+  if (fields.includes(ANSWERS_UNCHANGED)) return "ANSWERS_UNCHANGED";
+  if (fields.includes(ALREADY_ON_ADDRESS)) return "STAFF_ALREADY_ON_ADDRESS";
+  if (fields.includes(ADDRESS_AT_CAP)) return "STAFF_ADDRESS_AT_CAP";
+  if (fields.includes(ADDRESS_FAMILY_FORM_PENDING)) return "ADDRESS_FAMILY_FORM_PENDING";
+  if (fields.includes(ADDRESS_INVITED)) return "ADDRESS_INVITED";
+  if (fields.includes("email")) return "ADDRESS_INVALID";
+  return null;
 }
 
 /**

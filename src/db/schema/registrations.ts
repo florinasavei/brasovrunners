@@ -558,6 +558,21 @@ export const registrations = pgTable(
       () => staffUsers.id,
       { onDelete: "set null" },
     ),
+    /**
+     * «Schimbă adresa»: when an Administrator last moved this registration to another address (the participant
+     * behind `participant_id`), and who. Both null on a registration that never moved. The two columns above stay
+     * the old address's facts — who vouched for it — and are not touched by a move.
+     *
+     * Written together by every move, in every state: the address in force was set by staff. A declaration signed
+     * afterwards from an emailed link (`declaration_acceptances.method = 'EMAIL_LINK'`, accepted after
+     * `address_changed_at`) is shown in the trail as signed from the link sent to the address the club changed —
+     * still the person's signature, never a staff one, and checkable as such (`domain/address-change.ts`). The
+     * account may be removed later (`ON DELETE SET NULL`); `address_changed_at` keeps the fact.
+     */
+    addressChangedAt: timestamp("address_changed_at", { withTimezone: true }),
+    addressChangedByStaffUserId: uuid("address_changed_by_staff_user_id").references(() => staffUsers.id, {
+      onDelete: "set null",
+    }),
 
     /*
       When the person's answers were last written by the form (§654): the insert's instant, and a
