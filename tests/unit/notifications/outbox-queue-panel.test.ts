@@ -31,6 +31,7 @@ vi.mock("@/app/[locale]/admin/settings/emails/actions", () => ({
 }));
 
 const { default: OutboxQueuePanel } = await import("@/modules/notifications/ui/OutboxQueuePanel");
+const { STAFF_RESERVE_HELD_ERROR } = await import("@/modules/notifications/domain/bulk");
 type Props = Parameters<typeof OutboxQueuePanel>[0];
 
 // 10:04 in Brașov (UTC+3 in October): a day hour.
@@ -415,5 +416,34 @@ describe("the queue panel's way to «Emailuri azi» (the design «telling the ow
     const html = await render("ro", { volume: stopped, queue: { ...QUEUE, total: 1, rows: [QUEUE.rows[0]!] } });
     const leaves = [...html.matchAll(/data-testid="outbox-row-leaves"[^>]*>([^<]*)</g)].map((match) => match[1]);
     expect(leaves).toEqual([ro.Admin.emails.queue.leaves.reset.replace("{at}", "12:00")]);
+  });
+});
+
+describe("a staff row the reserve holds (the decision «Cere reconfirmarea»)", () => {
+  const held = { ...QUEUE.rows[0]!, id: "h", messageType: "ORGANIZER_MESSAGE" as const, lastError: STAFF_RESERVE_HELD_ERROR };
+  const failed = QUEUE.rows[2]!;
+
+  it("draws one plain sentence in the ordinary colour, never «Ultimul răspuns» nor the English mark; a provider's error as before", async () => {
+    for (const [locale, catalogue] of [
+      ["ro", ro],
+      ["en", en],
+    ] as const) {
+      const tree = await panelElement(locale, { queue: { ...QUEUE, total: 2, rows: [held, failed] } });
+      const sentence = findByTestId(tree, "outbox-reserve-held");
+      expect(sentence?.props.color, locale).toBeUndefined();
+      expect(sentence?.props.children, locale).toBe(catalogue.Admin.emails.queue.staffReserveHeld);
+      const error = findByTestId(tree, "outbox-row-error");
+      expect(error?.props.color, locale).toBe("error");
+      const html = await render(locale, { queue: { ...QUEUE, total: 2, rows: [held, failed] } });
+      expect(html, locale).not.toContain(STAFF_RESERVE_HELD_ERROR.replace("'", "&#x27;"));
+      expect(html, locale).not.toContain(STAFF_RESERVE_HELD_ERROR);
+      expect(html.match(/data-testid="outbox-row-error"/g), locale).toHaveLength(1);
+      expect(html, locale).toContain(catalogue.Admin.emails.queue.lastError.replace("{error}", "550 mailbox unavailable").replace("'", "&#x27;"));
+    }
+  });
+
+  it("says nothing of today or midnight: true on a daily and on a monthly plan", () => {
+    expect(ro.Admin.emails.queue.staffReserveHeld).not.toMatch(/azi|miezul|lun/i);
+    expect(en.Admin.emails.queue.staffReserveHeld).not.toMatch(/today|midnight|month/i);
   });
 });

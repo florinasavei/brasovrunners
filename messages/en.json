@@ -7724,6 +7724,7 @@
           "reset": "Leaves once Mailgun resumes: {at} (estimated)."
         },
         "lastError": "The provider's last answer: {error}",
+        "staffReserveHeld": "Waiting: the rest of the allowance is kept for the registrations' own emails. It leaves by itself when the allowance comes back.",
         "manual": "Sent again by hand",
         "more": "And {count} more in the queue, not shown here.",
         "status": {

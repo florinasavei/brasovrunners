@@ -29,7 +29,7 @@ import ro from "../../../messages/ro.json";
  * or the capacity formula reads the answer, and «N-au răspuns» is information for the organizers, not a state.
  *
  * The send writes one ask per registration it asks (confirmed, owed the declaration, waiting — test rows too), the flag in
- * every row's payload and in the audit row; the email carries «Vin» beside «Nu mai pot ajunge» on the same manage token;
+ * exactly those rows' payloads and, send-wide, in the audit row; the email carries «Vin» beside «Nu mai pot ajunge» on the same manage token;
  * the manage page's GET asks and writes nothing; «Da, vin la cursă» reads the token through the reader «Schimbă adresa»
  * binds to the registration's current participant, never spends it, and records the first moment once. Staff read it on
  * the list (the chip, the filter, the count), on «Mesaje trimise» (three numbers, test rows left out), in the export and
@@ -261,7 +261,7 @@ async function rowOf(id: string): Promise<Registration> {
 }
 
 describe("the send: «Cere reconfirmarea» asks, and only with the tick", () => {
-  it("asks the confirmed, the pending declaration and the waiting — a test row too — never an offer; the flag in every payload and the audit", async () => {
+  it("asks the confirmed, the pending declaration and the waiting — a test row too — never an offer; the flag in exactly the asked rows' payloads, and the audit", async () => {
     const ana = await person("Ana", "CONFIRMED");
     const elena = await person("Elena", "PENDING_DECLARATION");
     const carmen = await person("Carmen", "WAITLISTED");
@@ -277,7 +277,12 @@ describe("the send: «Cere reconfirmarea» asks, and only with the tick", () => 
 
     const rows = await db.select().from(emailOutbox).where(and(eq(emailOutbox.messageType, "ORGANIZER_MESSAGE"), isNotNull(emailOutbox.participantId)));
     expect(rows).toHaveLength(5);
-    for (const row of rows) expect(row.payloadJson).toMatchObject({ ...WORDS, askReconfirm: true });
+    // The flag is the row's, not the send's: exactly the registrations that got an ask row carry it.
+    const flagged = rows.filter((row) => (row.payloadJson as { askReconfirm?: unknown }).askReconfirm === true).map((row) => row.registrationId);
+    expect(flagged.sort()).toEqual(asked.map((row) => row.registrationId).sort());
+    for (const row of rows) expect(row.payloadJson).toMatchObject(WORDS);
+    const [offerRow] = rows.filter((row) => row.registrationId === dan.id);
+    expect(offerRow.payloadJson).toEqual(WORDS);
 
     const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.participant_message_sent"));
     expect(audit.metadataJson).toMatchObject({ sendId, askReconfirm: true, asked: 3, askedTest: 1, recipients: 4, test: 1 });
@@ -350,10 +355,56 @@ describe("the email: «Vin» on the cancel's own token, never on a club copy", (
     expect(offer.html).toContain('data-email-part="cannot-come"');
 
     const [copy] = await db.select().from(emailOutbox).where(and(eq(emailOutbox.messageType, "ORGANIZER_MESSAGE"), eq(emailOutbox.recipientEmail, "arhiva@club.test")));
-    expect(copy.payloadJson).toMatchObject({ askReconfirm: true });
+    // The club's copy asks nobody: it carries no flag and draws no «Vin».
+    expect((copy.payloadJson as { askReconfirm?: unknown }).askReconfirm).toBeUndefined();
     const copied = await renderOutboxMessage(copy, db, new Date());
     expect(copied.html).not.toContain('data-email-part="reconfirm"');
     expect(copied.text).not.toContain("#reconfirm");
+  });
+});
+
+describe("«Vin» follows the row's own ask, not the send", () => {
+  it("an offer at send, accepted before its row renders: «Nu mai pot ajunge» and no «Vin», and no ask row", async () => {
+    const dan = await person("Dan", "WAITLIST_OFFERED");
+    await send();
+    // Dan accepts the offer and signs while the send drains over days.
+    await db
+      .update(registrations)
+      .set({ status: "CONFIRMED", confirmedAt: new Date(), holdExpiresAt: null, checkinCode: "CDAN0001" })
+      .where(eq(registrations.id, dan.id));
+    const email = await emailTo(dan.id);
+    expect(email.html).toContain('data-email-part="cannot-come"');
+    expect(email.html).not.toContain('data-email-part="reconfirm"');
+    expect(vinTokenOf(email.text)).toBeNull();
+    expect((await asks()).some((row) => row.registrationId === dan.id)).toBe(false);
+  });
+
+  it("asked at send and still asked at render: «Vin»; asked and cancelled before render: neither question nor «Vin»", async () => {
+    const ana = await person("Ana", "CONFIRMED");
+    const ion = await person("Ion", "WAITLISTED");
+    await send();
+    expect((await asks()).map((row) => row.registrationId).sort()).toEqual([ana.id, ion.id].sort());
+    await db.update(registrations).set({ status: "CANCELLED", cancelledAt: new Date(), cancellationSource: "PARTICIPANT" }).where(eq(registrations.id, ion.id));
+    const still = await emailTo(ana.id);
+    expect(still.html).toContain('data-email-part="reconfirm"');
+    expect(vinTokenOf(still.text)).not.toBeNull();
+    const gone = await emailTo(ion.id);
+    expect(gone.html).not.toContain('data-email-part="reconfirm"');
+    expect(gone.html).not.toContain('data-email-part="cannot-come"');
+    expect(vinTokenOf(gone.text)).toBeNull();
+  });
+
+  it("«Trimite acum» marks the asked and the unasked rows alike, each keeping its own flag", async () => {
+    const ana = await person("Ana", "CONFIRMED");
+    const dan = await person("Dan", "WAITLIST_OFFERED");
+    await send({ delivery: "now" });
+    const rows = await db.select().from(emailOutbox).where(and(eq(emailOutbox.messageType, "ORGANIZER_MESSAGE"), isNotNull(emailOutbox.participantId)));
+    const payloadOf = (id: string) => rows.find((row) => row.registrationId === id)?.payloadJson as Record<string, unknown>;
+    expect(payloadOf(ana.id).askReconfirm).toBe(true);
+    expect(payloadOf(dan.id).askReconfirm).toBeUndefined();
+    const marks = (payload: Record<string, unknown>) => Object.keys(payload).filter((key) => !["subject", "body", "askReconfirm"].includes(key));
+    expect(marks(payloadOf(ana.id))).toEqual(marks(payloadOf(dan.id)));
+    expect(marks(payloadOf(ana.id)).length).toBe(1);
   });
 });
 

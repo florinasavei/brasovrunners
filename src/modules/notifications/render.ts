@@ -1669,8 +1669,8 @@ async function renderRow(
     ) {
       /*
         «Vin» (the decision «Cere reconfirmarea»): the cancel's sibling on the same token, to the same page's `#reconfirm`,
-        only on an organizer's message whose send ticked «Cere reconfirmarea» and only for a registration it asks
-        (`reconfirmApplies`). No new token, no new purpose: the page reads the manage token and never spends it.
+        only on an organizer's message whose own row carries the ask's flag — set only on a row the send wrote an ask for —
+        and only for a registration still asked when it renders (`reconfirmApplies`). No new token, no new purpose: the page reads the manage token and never spends it.
       */
       const reconfirm = reconfirmApplies({
         askReconfirm: row.messageType === "ORGANIZER_MESSAGE" && readOrganizerAskReconfirm(row.payloadJson),

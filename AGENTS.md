@@ -3220,7 +3220,8 @@ participanților», «Detalii actualizate», each send's club copy with it) with
 bulk ones (`BULK_MESSAGE_TYPES`, §445) — three claims, each oldest first, so a send of two hundred never stands in
 front of a verification queued after it. The staff sends' reserve is `max(10, 10%)` of a daily allowance (10% of a
 monthly one, none without a ceiling): what the registrations' own emails keep; the rest of a send on Mailgun's road
-waits for the reset, marked, and `/api/health` reads it as the reserve working, as it reads the newsletter's. «Trimite
+waits for the reset, marked, and `/api/health` reads it as the reserve working, as it reads the newsletter's; `/admin/emails`
+draws such a row as one plain sentence (`Admin.emails.queue.staffReserveHeld`), never as the provider's answer. «Trimite
 acum» (§540) is not held to it; the batch size, the pinger and the hourly pace are unchanged.
 
 ### 16.2 Job endpoints
@@ -3418,10 +3419,13 @@ registration's, never once the event has started or will not run.
 **«Vin» / "I'm coming" is on the organizer's message only when its send ticked «Cere reconfirmarea»**
 (`DECISIONS.md` «Cere reconfirmarea», `notifications/domain/cannot-come.ts#reconfirmApplies`): beside «Nu mai pot
 ajunge», on the same token, to the same manage page at `#reconfirm`, for a confirmed, pending-declaration or waiting
-registration of an event still ahead. The page's GET asks and writes nothing; «Da, vin la cursă» is a POST that records
+registration of an event still ahead. The flag that draws it is the row's, not the send's: only the outbox rows whose
+registration the send wrote an ask for carry `askReconfirm` in their payload, so an offer accepted while the send drains
+gets «Nu mai pot ajunge» and no «Vin». The page's GET asks and writes nothing; «Da, vin la cursă» is a POST that records
 the first moment in `registration_reconfirmations` (one row per registration asked, per send) — the manage token read
 through the reader bound to the registration's current participant, never spent, and a second press keeps the first
-moment. Answering is optional: nothing reads the answer but the backoffice — no state, place, hold, deadline, allocator
+moment. A registration has re-confirmed when any of its asks is answered — the list's chip, its filter, the export and
+every «Mesaje trimise» row read that one rule. Answering is optional: nothing reads the answer but the backoffice — no state, place, hold, deadline, allocator
 or capacity term — and nobody is cancelled for not answering.
 
 `EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED

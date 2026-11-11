@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { isValidElement, type ReactElement, type ReactNode } from "react";
 import { createTranslator } from "next-intl";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events, eventTranslations } from "@/db/schema/events";
@@ -96,6 +96,7 @@ const { default: AdminTable } = await import("@/modules/staff-identity/ui/AdminT
 const { default: ParticipantMessageComposer } = await import("@/modules/notifications/ui/ParticipantMessageComposer");
 const { default: ActionForm } = await import("@/shared/forms/ActionForm");
 const { sendParticipantMessage } = await import("@/modules/notifications/participant-messages");
+const { listRegistrationsForAdmin } = await import("@/modules/registrations/admin-repository");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
 type Column = { key: string; primary?: boolean; render: (row: unknown) => ReactNode };
@@ -389,5 +390,45 @@ describe("«Trimite un mesaj participanților»", () => {
     const progress = elements(asking).find((element) => element.props["data-testid"] === "participant-message-history-progress");
     expect(textOf(progress)).toBe("Au plecat 1 · Așteaptă 1");
     expect(textOf(elements(plain).find((element) => element.props["data-testid"] === "participant-message-history-progress"))).toBe("Au plecat 0 · Așteaptă 2");
+  });
+
+  it("one rule for «a reconfirmat» after two asking sends — answered after the first, silent after the second: every screen says re-confirmed", async () => {
+    const race = await createRace();
+    const actor = await staff("MODERATOR");
+    state.actor = actor;
+    const answered = await register(race.id);
+    const silent = await register(race.id);
+    const probe = await register(race.id, { kind: "TEST" });
+    const words = { subject: { ro: "Vii?", en: "Coming?" }, body: { ro: "Spune-ne.", en: "Tell us." } };
+    const first = randomUUID();
+    const second = randomUUID();
+    await sendParticipantMessage(db, actor, { eventId: race.id, audience: "ALL_ACTIVE", sendId: first, askReconfirm: true, ...words }, new Date(Date.now() - 120_000));
+    // The first person (and the test row) say «Vin» after the first send; the second send asks everybody again.
+    await db
+      .update(registrationReconfirmations)
+      .set({ reconfirmedAt: new Date(Date.now() - 90_000) })
+      .where(and(eq(registrationReconfirmations.sendId, first), inArray(registrationReconfirmations.registrationId, [answered.id, probe.id])));
+    await sendParticipantMessage(db, actor, { eventId: race.id, audience: "ALL_ACTIVE", sendId: second, askReconfirm: true, ...words }, new Date(Date.now() - 60_000));
+    const open = await db.select().from(registrationReconfirmations).where(eq(registrationReconfirmations.sendId, second));
+    expect(open.every((ask) => ask.reconfirmedAt === null)).toBe(true);
+
+    // «Mesaje trimise»: both rows count the person under «Au reconfirmat», the test row nowhere.
+    const rows = elements(await messagesPage(race.id)).filter((element) => element.props["data-testid"] === "participant-message-history-row");
+    expect(rows).toHaveLength(2);
+    for (const row of rows) {
+      const answers = elements(row).find((element) => element.props["data-testid"] === "participant-message-history-answers");
+      expect(textOf(answers)).toBe("Au reconfirmat 1 · Au anulat 0 · N-au răspuns 1");
+    }
+    // The list's filter, its chip and the export's moment agree.
+    const ids = async (reconfirm: "yes" | "none") => (await listRegistrationsForAdmin(db, { eventId: race.id, reconfirm, excludeTest: true })).map((row) => row.id);
+    expect(await ids("yes")).toEqual([answered.id]);
+    expect(await ids("none")).toEqual([silent.id]);
+    const tree = await listPage({ eventId: race.id });
+    expect(chipOf(nameCellOf(tree, answered.id))?.props.label).toBe("A reconfirmat");
+    expect(chipOf(nameCellOf(tree, silent.id))).toBeUndefined();
+    // The export's «Reconfirmat» is the row's `reconfirmedAt` (`export/route.ts`): filled for the person, empty for the silent.
+    const exported = await listRegistrationsForAdmin(db, { eventId: race.id, excludeTest: true });
+    expect(exported.find((row) => row.id === answered.id)?.reconfirmedAt).toBeInstanceOf(Date);
+    expect(exported.find((row) => row.id === silent.id)?.reconfirmedAt).toBeNull();
   });
 });

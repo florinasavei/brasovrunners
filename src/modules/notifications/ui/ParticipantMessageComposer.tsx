@@ -366,8 +366,8 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
       ))}
 
       {/*
-        «Cere reconfirmarea» (the decision «Cere reconfirmarea»): every email of the send gets «Vin» beside «Nu mai pot
-        ajunge». Optional for the person, and the help line says so: nobody is cancelled for not answering.
+        «Cere reconfirmarea» (the decision «Cere reconfirmarea»): the email of each registration the send asks gets «Vin»
+        beside «Nu mai pot ajunge». Optional for the person, and the help line says so: nobody is cancelled for not answering.
       */}
       <Box data-testid="participant-message-reconfirm">
         <FormControlLabel

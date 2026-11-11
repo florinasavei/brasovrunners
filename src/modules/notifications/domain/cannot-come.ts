@@ -87,9 +87,10 @@ export function isReconfirmStatus(status: RegistrationStatus): boolean {
 }
 
 /**
- * Whether «Vin» goes on this send: an organizer's message whose send ticked «Cere reconfirmarea», where «Nu mai pot
- * ajunge» goes too (`cannotComeApplies`: the registration's own address, active, the event still ahead and running), and
- * the registration in one of `RECONFIRM_STATUSES`. Never on a club copy.
+ * Whether «Vin» goes on this email: an organizer's message whose own row carries the ask's flag (the send sets it only on
+ * the rows it wrote an ask for), where «Nu mai pot ajunge» goes too (`cannotComeApplies`: the registration's own address,
+ * active, the event still ahead and running), and the registration still in one of `RECONFIRM_STATUSES` when it renders.
+ * Never on a club copy.
  */
 export function reconfirmApplies(params: Parameters<typeof cannotComeApplies>[0] & { askReconfirm: boolean }): boolean {
   if (!params.askReconfirm || params.messageType !== "ORGANIZER_MESSAGE") return false;

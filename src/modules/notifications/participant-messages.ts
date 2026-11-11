@@ -99,8 +99,8 @@ export type SendParticipantMessageInput = {
    */
   delivery?: DeliveryChoice;
   /**
-   * «Cere reconfirmarea» (the decision «Cere reconfirmarea»): every email of this send carries «Vin» beside «Nu mai pot
-   * ajunge», for a registration in `RECONFIRM_STATUSES`, and each such registration gets an ask row. Optional for the
+   * «Cere reconfirmarea» (the decision «Cere reconfirmarea»): each registration of this send in `RECONFIRM_STATUSES`
+   * gets an ask row, and its email alone carries the flag that draws «Vin» beside «Nu mai pot ajunge». Optional for the
    * participant: nothing in a state, a place, a deadline, the allocator or the capacity formula reads the answer.
    */
   askReconfirm?: boolean;
@@ -220,14 +220,16 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       await assertRoomToSendNow(tx, rows.slice(0, split.now).map(() => "ORGANIZER_MESSAGE" as const), now, split.copiesNow ? copies : []);
     }
     const askReconfirm = input.askReconfirm === true;
-    const words = {
-      subject: { ro: message.subject.ro, en: message.subject.en },
-      body: { ro: message.body.ro, en: message.body.en },
-      // «Cere reconfirmarea» (the decision «Cere reconfirmarea»): beside the words, so the renderer draws «Vin» — a flag, never a token.
-      ...(askReconfirm ? { askReconfirm: true } : {}),
-    };
+    const words = { subject: { ro: message.subject.ro, en: message.subject.en }, body: { ro: message.body.ro, en: message.body.en } };
+    /*
+      «Cere reconfirmarea» (the decision «Cere reconfirmarea»): the flag rides on a row, never on the send — only the rows
+      whose registration this send asks (`isReconfirmStatus` at queue time, the very test that fills `asked`) carry it,
+      beside the words, so the renderer draws «Vin» only where an ask row exists. A flag, never a token.
+    */
+    const askingWords = { ...words, askReconfirm: true };
     // Marked for the queue panel's «Pleacă acum» (§540) — only a row this press sends now.
     const nowPayload = markedForNow(words, delivery);
+    const askingNowPayload = markedForNow(askingWords, delivery);
 
     let real = 0;
     let test = 0;
@@ -237,7 +239,8 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
     let askedTest = 0;
     for (const [index, row] of rows.entries()) {
       const leavesNow = delivery === "now" && index < split.now;
-      const payload = leavesNow ? nowPayload : words;
+      const asks = askReconfirm && isReconfirmStatus(row.status);
+      const payload = asks ? (leavesNow ? askingNowPayload : askingWords) : leavesNow ? nowPayload : words;
       const inserted = await enqueueEmail(tx, {
         participantId: row.participantId,
         registrationId: row.registrationId,
@@ -257,7 +260,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       if (leavesNow) sentNow += 1;
       if (row.kind === "TEST") test += 1;
       else real += 1;
-      if (askReconfirm && isReconfirmStatus(row.status)) {
+      if (asks) {
         asked.push(row.registrationId);
         if (row.kind === "TEST") askedTest += 1;
       }
@@ -318,8 +321,8 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
 /**
  * What the people a send asked did since (the decision «Cere reconfirmarea»), real registrations only (§12.6). The first
  * that matches wins, per ask: «Au anulat» — cancelled at or after the ask, by the person or by an Administrator (decided
- * for the owner: any cancellation after the ask); «Au reconfirmat» — pressed «Vin» and still registered; «N-au răspuns»
- * — still registered and did not press. An expired registration is in none of the three. Information for the organizers,
+ * for the owner: any cancellation after the ask); «Au reconfirmat» — still registered and pressed «Vin» on any ask of
+ * the registration, this send's or another's; «N-au răspuns» — still registered and answered none. An expired registration is in none of the three. Information for the organizers,
  * never a state.
  */
 export type ReconfirmAnswers = { yes: number; cancelled: number; none: number };
@@ -410,12 +413,19 @@ async function readReconfirmAnswers<T extends Record<string, unknown>>(
   if (sendIds.length === 0) return new Map();
   const cancelledAfter = sql`(${registrations.status} = 'CANCELLED' and ${registrations.cancelledAt} >= ${registrationReconfirmations.askedAt})`;
   const standing = sql`(${registrations.status} in (${STANDING}))`;
+  /*
+    One rule on every screen (the decision «Cere reconfirmarea»): a registration has re-confirmed when ANY of its asks is
+    answered — the list's chip, its filter and the export read the same. So a person who pressed «Vin» after one send and
+    stays silent after the next counts under «Au reconfirmat» on both rows. A correlated EXISTS inside the FILTER keeps it
+    one grouped read.
+  */
+  const answeredAny = sql`exists (select 1 from ${registrationReconfirmations} as answered where answered.registration_id = ${registrations.id} and answered.reconfirmed_at is not null)`;
   const rows = await db
     .select({
       sendId: registrationReconfirmations.sendId,
-      yes: sql<number>`count(*) filter (where ${standing} and ${registrationReconfirmations.reconfirmedAt} is not null)::int`,
+      yes: sql<number>`count(*) filter (where ${standing} and ${answeredAny})::int`,
       cancelled: sql<number>`count(*) filter (where ${cancelledAfter})::int`,
-      none: sql<number>`count(*) filter (where ${standing} and ${registrationReconfirmations.reconfirmedAt} is null)::int`,
+      none: sql<number>`count(*) filter (where ${standing} and not ${answeredAny})::int`,
     })
     .from(registrationReconfirmations)
     .innerJoin(registrations, eq(registrations.id, registrationReconfirmations.registrationId))

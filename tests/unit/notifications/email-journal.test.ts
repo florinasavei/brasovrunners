@@ -405,6 +405,40 @@ describe("the «Emailuri azi» page draws the day", () => {
     expect(page).not.toMatch(/emails\.(today|causes|types)\./);
   });
 
+  it("draws a staff row the reserve holds as one plain sentence, not in the error colour; a provider's error as before", async () => {
+    const failedId = await idOf("k:failed");
+    const { STAFF_RESERVE_HELD_ERROR } = await import("@/modules/notifications/domain/bulk");
+    const withHeld = (journal: Journal): Journal => {
+      const mark = (press: JournalPress): JournalPress => ({
+        ...press,
+        lines: [...press.lines, ...press.lines.filter((line) => line.id === failedId).map((line) => ({ ...line, id: "held", lastError: STAFF_RESERVE_HELD_ERROR }))],
+      });
+      return { ...journal, waiting: journal.waiting.map(mark), departed: journal.departed.map(mark) };
+    };
+    for (const [locale, catalogue] of [
+      ["ro", catalogueOf("ro")],
+      ["en", catalogueOf("en")],
+    ] as const) {
+      state.locale = locale;
+      const words = (catalogue as unknown as { Admin: { emails: { queue: { staffReserveHeld: string; lastError: string } } } }).Admin.emails.queue;
+      const element = await EmailJournal({ locale, journal: withHeld(await readEmailJournal(db, NOW, locale)), volume, departure: departureContextOf({ now: NOW, delivery, volume }), now: NOW });
+      const full = renderToStaticMarkup(element as ReactElement);
+      const page = full.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+      const sentence = new RegExp(`<p class="([^"]*)" data-testid="outbox-reserve-held">${words.staffReserveHeld.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/'/g, "&#x27;")}</p>`).exec(page);
+      expect(sentence, locale).not.toBeNull();
+      expect(page, locale).not.toContain(STAFF_RESERVE_HELD_ERROR.replace("'", "&#x27;"));
+      expect(page, locale).not.toContain(STAFF_RESERVE_HELD_ERROR);
+      // The provider's error keeps its line, in the error colour; the held sentence's class carries no colour of its own.
+      expect(page, locale).toContain(words.lastError.replace("{error}", "550 mailbox unavailable").replace("'", "&#x27;"));
+      const errorClass = /<p class="([^"]*)" data-testid="outbox-row-error">/.exec(page)?.[1].split(" ").find((name) => name.startsWith("css-"));
+      const heldClass = sentence?.[1].split(" ").find((name) => name.startsWith("css-"));
+      const styleOf = (name: string | undefined) => [...full.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((match) => match[1]).find((css) => name !== undefined && css.includes(`.${name}{`)) ?? "";
+      const errorColour = /color:([^;}]+)/.exec(styleOf(errorClass))?.[1];
+      expect(errorColour, locale).toBeTruthy();
+      expect(styleOf(heldClass), locale).not.toContain(`color:${errorColour}`);
+    }
+  });
+
   it("says nothing waits and nothing left on an empty day", async () => {
     const empty = groupEmailJournal([], [], { dayStart: DAY_START, counts: { sent: 0, waiting: 0, failed: 0 }, more: 0 });
     const page = await html("ro", empty);

@@ -182,8 +182,9 @@ export function readOrganizerMessagePayload(payload: unknown): OrganizerMessage 
 }
 
 /**
- * Whether the row's send ticked «Cere reconfirmarea» (the decision «Cere reconfirmarea»):
- * the payload's `askReconfirm`, beside the words; anything but `true` — an older row, a hand-made one — is no.
+ * Whether this row asks «Cere reconfirmarea» (the decision «Cere reconfirmarea»): the payload's `askReconfirm`, beside
+ * the words — set by the send only on the rows whose registration it wrote an ask for, never send-wide; anything but
+ * `true` — an unasked row, an older one, a hand-made one, a club copy — is no.
  */
 export function readOrganizerAskReconfirm(payload: unknown): boolean {
   return Boolean(payload && typeof payload === "object" && (payload as { askReconfirm?: unknown }).askReconfirm === true);
