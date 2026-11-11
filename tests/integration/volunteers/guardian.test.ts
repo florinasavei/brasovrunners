@@ -952,7 +952,9 @@ describe("§768 volunteers under eighteen and their guardian", () => {
       );
       expect(await row(id)).toMatchObject({ age: 18, dateOfBirth: birthDate, guardianName: null });
       const edited = (await db.select().from(auditLogs).where(eq(auditLogs.action, "volunteer.edited")))[0];
-      expect((edited.metadataJson as { fields: string[] }).fields).toEqual(expect.arrayContaining(["age", "note", "guardianCleared"]));
+      expect((edited.metadataJson as { fields: string[] }).fields).toEqual(expect.arrayContaining(["age", "guardianCleared"]));
+      // «Modifică» has no note any more («Note interne» for volunteers): a `note` posted with it is no change, and the trail says none.
+      expect((edited.metadataJson as { fields: string[] }).fields).not.toContain("note");
     });
 
     it("refuses a date the notice in force does not name while the profile boxes are not asked — a hand entry carrying one is refused on the box", async () => {

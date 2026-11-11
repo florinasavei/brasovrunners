@@ -13,6 +13,7 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { emailMessageType } from "@/db/schema/email-outbox";
+import { REGISTRATION_NOTE_MAX } from "@/db/schema/registration-notes";
 import { registrationStatus } from "@/db/schema/registrations";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
@@ -573,7 +574,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       {notes !== null && (
         <NotesCard
           locale={locale}
-          registrationId={registration.id}
+          owner={{ field: "registrationId", id: registration.id }}
+          max={REGISTRATION_NOTE_MAX}
+          authorGone={tr("registrations.auditActorRemoved")}
           notes={notes}
           addAction={addRegistrationNoteAction}
           deleteAction={deleteRegistrationNoteAction}

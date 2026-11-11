@@ -38,7 +38,6 @@ export const VOLUNTEER_GUARDIAN_NAME_MAX = 120;
 export const VOLUNTEER_NEEDED_MAX = 1000;
 export const VOLUNTEER_NAME_MAX = 120;
 export const VOLUNTEER_MESSAGE_MAX = 300;
-export const VOLUNTEER_NOTE_MAX = 500;
 /** How many roles one event may define: a list a person can read, and a bound on a forged form. */
 export const VOLUNTEER_ROLES_MAX = 30;
 /** How many categories one event may define (§774): headings a person can read on a phone, and a bound on a forged form. */
@@ -509,7 +508,8 @@ function staffContactBoxes(required: boolean) {
 }
 
 /**
- * A person as an organizer types them: the same boxes as the public form, plus the organizers' own note — the roles
+ * A person as an organizer types them: the same boxes as the public form — the organizers' notes are notes of their own
+ * («Note interne» for volunteers, `volunteer-notes.ts`), never a box of the person — plus the roles
  * the person would do (`roleIds`, the ticks) and, optionally, the roles the organizers give them (`assignedRoleIds`,
  * «Rolurile date»: one or several of the event's, ticked by the person or not, §837). At least one of the two
  * (`roleIds` named in the refusal); a person entered with roles given and nothing ticked has those roles as their
@@ -523,7 +523,6 @@ const volunteerStaffInputBase = (eventDay: string, contactRequired: boolean) =>
     assignedRoleIds: roleIdsField,
     name: line(VOLUNTEER_NAME_MAX),
     ...staffContactBoxes(contactRequired),
-    note: optionalLine(VOLUNTEER_NOTE_MAX),
     /** What the person told the organizers (§765): every box optional here, a date that gives an age below the minimum on the event's day refused (§773). */
     birthDate: optionalBirthDate(eventDay),
     sex: optionalSex,

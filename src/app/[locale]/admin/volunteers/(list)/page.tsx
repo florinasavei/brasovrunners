@@ -9,7 +9,10 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { addVolunteerAction } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
 import { setVolunteerKitAction } from "@/app/[locale]/admin/volunteers/actions";
+import { addVolunteerNoteFromListAction } from "@/app/[locale]/admin/volunteers/[id]/note-actions";
 import { getDb } from "@/db/client";
+import { VOLUNTEER_NOTE_MAX } from "@/db/schema/event-volunteer-notes";
+import { countForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
@@ -17,6 +20,7 @@ import { findEventForRegistrationById } from "@/modules/events/repository";
 import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
 import { findCurrentApprovedDocument, volunteerMinorsOpen } from "@/modules/legal-documents/repository";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
+import NotesMark from "@/modules/registrations/ui/NotesMark";
 import { buildListHref, pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -38,15 +42,19 @@ import {
 import { guardianAllowsConfirm, guardianAskOf, roleLabel, VOLUNTEER_STATES, type VolunteerState } from "@/modules/volunteers/domain/volunteer";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
 import { GuardianVerbs, guardianChips, shortText, STATE_CHIP, VolunteerPersonFields, VolunteerStateForm, volunteerHiddenFields, volunteerPersonBoxes } from "@/modules/volunteers/ui/VolunteerPerson";
+import { countVolunteerNotes } from "@/modules/volunteers/volunteer-notes";
 import { ROLE_EMAIL_SETTLE_MINUTES } from "@/modules/volunteers/volunteers";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import MailLine from "@/shared/feedback/MailLine";
+import { actionKeyOf } from "@/shared/forms/action-key";
 import ActionForm from "@/shared/forms/ActionForm";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { isUuid } from "@/shared/ids";
 import ChipLink from "@/shared/ui/ChipLink";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
+import RowNoteDialog from "@/shared/ui/RowNoteDialog";
 import StatusChip from "@/shared/ui/StatusChip";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import TickButton from "@/shared/ui/TickButton";
@@ -126,7 +134,17 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const words = await confirmWords();
   // The words of every role the page's rows name, given or offered — one read, whatever their events — each with its category's (§904):
   // «Direcționare (Traseu)», as the card and the person's page say it, so a name standing in two categories is never printed twice alike.
-  const roleNames = await listRoleNames(db, [...new Set(rows.flatMap((row) => [...row.roleIds, ...row.choiceIds]))]);
+  const [roleNames, notesCounts] = await Promise.all([
+    listRoleNames(db, [...new Set(rows.flatMap((row) => [...row.roleIds, ...row.choiceIds]))]),
+    // «Note interne»: how many live notes each row has — ONE grouped count over the page's ids, never a query per row, and only
+    // the number: the words are read on the person's own page. The service asks for the role again.
+    countVolunteerNotes(db, actor, rows.map((row) => row.id)),
+  ]);
+  // The dialog's refusals, cut to the sentences it can meet: the whole catalogue would travel with every row.
+  const noteRefusal = await refusalMessages({ body: t("registrations.notes.label") }).then((all) => ({
+    ...all,
+    errors: Object.fromEntries(["NOTE_EMPTY", "NOTE_TOO_LONG", "NOT_FOUND", "FORBIDDEN"].map((code) => [code, all.errors[code]])),
+  }));
   const roleName = (id: string) => {
     const words = roleNames.get(id);
     return words ? roleLabel(words, locale) : null;
@@ -174,6 +192,41 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const day = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
   const eventCardHref = (id: string) => `${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id } } })}#box-volunteers`;
   const hidden = (row: VolunteerAdminRow) => volunteerHiddenFields({ locale, eventId: row.eventId, returnTo });
+  const personHref = (row: VolunteerAdminRow) => getPathname({ locale, href: { pathname: "/admin/volunteers/[id]", params: { id: row.id } } });
+
+  /**
+   * «Note interne» in the name cell («Note interne» for volunteers, as the registrations list has it): the marker with the count when
+   * somebody left a note — the link to the person's card, open — and «Adaugă o notă», a dialog over the list that comes back to this
+   * very page of it (`returnTo`, the list's validated way back); without JavaScript a link to the card. `AdminTable` draws each row
+   * twice (the table and the phone cards): the dialog keeps its ids unique by itself (`useId`).
+   */
+  const notesOf = (row: VolunteerAdminRow) => {
+    const noteCount = notesCounts.get(row.id) ?? 0;
+    const counted = t(`registrations.notes.count.${countForm(noteCount, locale)}`, { count: noteCount });
+    return (
+      <>
+        {noteCount > 0 && <NotesMark label={counted} ariaLabel={t("registrations.notes.mark", { name: row.name, counted })} href={`${personHref(row)}#note-interne`} />}
+        <RowNoteDialog
+          action={addVolunteerNoteFromListAction}
+          actionKey={actionKeyOf(addVolunteerNoteFromListAction)}
+          messages={noteRefusal}
+          fields={{ uiLocale: locale, eventId: row.eventId, volunteerId: row.id, returnTo }}
+          fallbackHref={`${personHref(row)}#note-interne`}
+          label={t("registrations.notes.add")}
+          ariaLabel={t("registrations.notes.addFor", { name: row.name })}
+          title={t("registrations.notes.dialog", { name: row.name })}
+          help={t("registrations.notes.help")}
+          boxName="body"
+          boxLabel={t("registrations.notes.add")}
+          limitText={t("registrations.notes.limit", { max: VOLUNTEER_NOTE_MAX })}
+          max={VOLUNTEER_NOTE_MAX}
+          saveLabel={t("registrations.notes.save")}
+          cancelLabel={words.cancel}
+          settledKey={String(noteCount)}
+        />
+      </>
+    );
+  };
 
   /** One button that posts the state it wants, the card's own (`VolunteerStateForm`): never a toggle, and a reopening that emails asks first. */
   const stateButton = (row: VolunteerAdminRow, next: VolunteerState, label: string, icon: "confirm" | "cancel" | "undo") => (
@@ -210,6 +263,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           </Link>
           {/* Typed by an organizer rather than offered on the form (§754): said once, on the row. */}
           {row.source === "STAFF" && <StatusChip glyph="club" variant="outlined" label={t("volunteers.sources.STAFF")} testId="volunteer-staff-chip" />}
+          {notesOf(row)}
         </Stack>
       ),
     },

@@ -70,6 +70,7 @@ import { readVolunteerInvitationLink, spendVolunteerInvitation } from "./invitat
 import { checkedRoleColour } from "./badges/badges";
 import { decodeRoleBaseline, descriptionDigest, roleBaselineOf } from "./role-baseline";
 import { type RoleRowBox, roleBox, roleColourBoxesOf } from "./role-rows";
+import { insertVolunteerNote, parseVolunteerNoteBody } from "./volunteer-notes";
 
 /**
  * An event's volunteers (§754; the owner, 2026-10-13: «I want to register volunteers for a race and be
@@ -165,7 +166,6 @@ export type VolunteerItem = {
   state: VolunteerState;
   source: "STAFF" | "PUBLIC";
   message: string | null;
-  note: string | null;
   /** What the person said about themselves (§765), or nulls and false for a row from before — and for one the club typed without. */
   age: number | null;
   /** The day they were born, `YYYY-MM-DD` (§773): the age above is its age on the event's day; null for a row from before, which has an age alone. */
@@ -318,7 +318,6 @@ function volunteerItemOf(joined: VolunteerRowJoined, choiceIds: string[], roleId
     state: row.state,
     source: row.source,
     message: row.message,
-    note: row.note,
     age: row.age,
     dateOfBirth: row.dateOfBirth,
     sex: sexShown(row.sex),
@@ -1482,7 +1481,9 @@ export async function setVolunteersAccess<T extends Record<string, unknown>>(
   return result;
 }
 
-const STAFF_FIELDS = ["name", "email", "phone", "note", "birthDate", "sex", "city", "shirtSize", "guardianName", "guardianEmail"] as const;
+// The organizers' note is no box of the person any more («Note interne» for volunteers): the add's first note travels as the
+// request's own `firstNote`, and «Modifică» neither reads, diffs, writes nor audits `event_volunteers.note`.
+const STAFF_FIELDS = ["name", "email", "phone", "birthDate", "sex", "city", "shirtSize", "guardianName", "guardianEmail"] as const;
 
 /**
  * The day an event's volunteers' ages are counted on (§773, `volunteerEventDay`): the gun's day, else the event's, in the event's own
@@ -1499,7 +1500,8 @@ async function eventDayOf<T extends Record<string, unknown>>(db: Database<T>, ev
 }
 
 export type VolunteerRequest =
-  | { kind: "add"; eventId: string; fields: Record<string, unknown> }
+  /** `firstNote`: «Nota ta (doar organizatorii)» on «Adaugă un voluntar de mână», the person's optional first internal note. */
+  | { kind: "add"; eventId: string; fields: Record<string, unknown>; firstNote?: unknown }
   | { kind: "edit"; eventId: string; id: string; fields: Record<string, unknown> }
   | { kind: "setState"; eventId: string; id: string; state: unknown }
   /** «Dă-i rolul …» / «Dă-i și rolul …» (§761, §837): the organizers give the person one more role of the event, ticked by them or not. */
@@ -1682,7 +1684,8 @@ function announcesRoles(volunteer: { email: string | null; state: VolunteerState
 
 /**
  * One change to one event's volunteers, by one staff member: enter one by hand, change what was typed
- * (the name, the address, the telephone number, the roles they would do, the roles given, the organizers' note),
+ * (the name, the address, the telephone number, the roles they would do, the roles given — the organizers' notes are
+ * `volunteer-notes.ts`'s, the add's optional first one written here, in the add's own transaction),
  * give them a role («Dă-i rolul …», §761; one more, «Dă-i și rolul …», §837) or take one back («Ia-i rolul …»),
  * confirm or cancel, delete. The address goes through the canonicalizer and is unique per event
  * (`VOLUNTEER_ALREADY_LISTED`, naming the box) — and, for a row the club types, it and the telephone number are each
@@ -1738,6 +1741,9 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       throw (await minorsClosedRefusal(db, request, error, eventDay, now)) ?? error;
     }
   }
+  // The add's first note: an empty box is none; words too many are refused on the box itself (`note`), with the rest kept typed.
+  const typedNote = request.kind === "add" && typeof request.firstNote === "string" ? request.firstNote.trim() : "";
+  const firstNote = typedNote === "" ? null : parseVolunteerNoteBody(typedNote, "note");
   // Whether the notice in force names the profile answers (§765): read before the transaction, like the public sign-up does.
   const profileDescribed = input ? await noticeDescribesVolunteerProfile(db, now) : true;
   // Whether the notice in force describes the volunteers' public list (§821): asked only for an entry, like the profile — the organizers' record of the tick waits for it.
@@ -1846,7 +1852,6 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           phone: input.phone,
           state: "REGISTERED",
           source: "STAFF",
-          note: input.note,
           // The date of birth and its age on the event's day (§773): `age` is what every rule reads, the date is what the club asked for.
           age: input.age,
           dateOfBirth: input.birthDate,
@@ -1884,6 +1889,9 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         ...(input.hasKit ? { hasKit: true } : {}),
         ...skippedFor(row, input.assignedRoleIds),
       });
+      // The box «Nota ta (doar organizatorii)» (the model: a staff entry's note, `enterRegistrationByStaff`): the person's first
+      // internal note, by the one who adds, in this transaction — its own trail row, no words — and never into the old column.
+      if (firstNote !== null) await insertVolunteerNote(tx, actor, { id: row.id, eventId: request.eventId }, firstNote, now);
       // Nothing for a row with no address (§865): `queueRoleAssigned` queues no row at all.
       if (sendEmail) await queueRoleAssigned(tx, row, input.assignedRoleIds, actor.id, now);
       return { changed: true, volunteer: { id: row.id, hasAddress: row.email !== null } };
@@ -2048,7 +2056,6 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       name: input.name,
       email: input.identity?.deliveryEmail ?? null,
       phone: input.phone,
-      note: input.note,
       listOptIn: listNext,
       // «Are kit» (§904): the organizers' own mark, saved whatever the notice in force names — no answer of the person's.
       hasKit: input.hasKit,
@@ -2058,7 +2065,6 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       name: current.name,
       email: current.email,
       phone: current.phone,
-      note: current.note,
       birthDate: current.dateOfBirth,
       // The retired «Prefer să nu spun» reads as no answer, as it does everywhere (`sexShown`).
       sex: sexShown(current.sex),

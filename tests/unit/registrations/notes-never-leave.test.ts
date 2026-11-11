@@ -21,9 +21,9 @@ const SRC = path.join(ROOT, "src");
 
 const READERS = new Set(
   [
-    // The table, the service and the one card that draws the notes.
+    // The table and the service. The card that draws the notes (`ui/NotesCard.tsx`) left this list when it became generic («Note
+    // interne» for volunteers draws it too): it imports neither kind of note, and is handed its rows and its limit by the pages below.
     "src/modules/registrations/notes.ts",
-    "src/modules/registrations/ui/NotesCard.tsx",
     // «Toate datele unei persoane» (art. 15).
     "src/modules/registrations/person-data.ts",
     // The registration's page, its two presses, and the list's marker — and, on the list, the row's «Adaugă o notă» (one grouped

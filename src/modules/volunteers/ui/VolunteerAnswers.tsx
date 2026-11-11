@@ -4,7 +4,7 @@ import { shownTypedDate } from "@/shared/forms/pickers/wall-values";
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
- * What a volunteer said about themselves (§765) as «Toate datele unei persoane» lists it, after the organizers' note: the
+ * What a volunteer said about themselves (§765) as «Toate datele unei persoane» lists it, after the offer's line: the
  * age and — since §773 — the date of birth it was derived from, the sex, the city, the two claims and the T-shirt's size, each only when the row holds it — every column of the
  * row, because a person may ask for all of it (art. 15 GDPR). The retired «Prefer să nu spun» and the kit's «Fără
  * tricou» read as no answer, as they do everywhere. Since §768 also the parent or guardian of a volunteer under eighteen — name,

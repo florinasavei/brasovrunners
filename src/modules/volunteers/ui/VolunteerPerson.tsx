@@ -15,12 +15,16 @@ import {
   setVolunteerStateAction,
   unassignVolunteerAction,
 } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
+import { VOLUNTEER_NOTE_MAX } from "@/db/schema/event-volunteer-notes";
+import { countForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
 import { shirtSizeShown, SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import { SEX_CHOICES } from "@/modules/registrations/domain/sex";
 import { formatPhone } from "@/modules/registrations/phone";
+import NotesMark from "@/modules/registrations/ui/NotesMark";
 import { shownTypedDate } from "@/shared/forms/pickers/wall-values";
 import { CLUB_NAME } from "@/theme/brand";
 import { type ConfirmWords, confirmWords } from "@/shared/feedback/confirm-words";
@@ -43,7 +47,6 @@ import {
   VOLUNTEER_GUARDIAN_NAME_MAX,
   VOLUNTEER_MINIMUM_AGE,
   VOLUNTEER_NAME_MAX,
-  VOLUNTEER_NOTE_MAX,
   agreementRolesStamp,
   agreementStandingOf,
   agreementStillNamesRole,
@@ -99,6 +102,11 @@ export type VolunteerPersonContext = {
   now: Date;
   /** The admin path a verb returns to, when not the card: the person's own page (§839). */
   returnTo?: string;
+  /**
+   * How many live internal notes each person has («Note interne» for volunteers): the event card's one grouped count, so each row's
+   * closed line carries the marker linking to the person's page. Absent where nobody counted (the person's own page draws the card).
+   */
+  noteCounts?: ReadonlyMap<string, number>;
 };
 
 /** The pencil at the end of a person's line: the edit verb's glyph, by name (§318). */
@@ -589,16 +597,19 @@ export async function VolunteerPersonFields({ person, context }: { person: Volun
           {t("volunteers.person.hasKit")}
         </CheckboxField>
       </Box>
-      <RecallField
-        name="note"
-        label={t("volunteers.person.note")}
-        helperText={t("volunteers.person.noteHelp", { max: String(VOLUNTEER_NOTE_MAX) })}
-        defaultValue={person?.note ?? ""}
-        size="small"
-        multiline
-        minRows={2}
-        slotProps={{ htmlInput: { maxLength: VOLUNTEER_NOTE_MAX } }}
-      />
+      {/* «Nota ta (doar organizatorii)» on «Adaugă un voluntar de mână» only: the person's optional first internal note, written as a
+          note of whoever adds, in the add's transaction. «Modifică» has no such box: the notes are kept on the volunteer's «Note interne». */}
+      {person === null && (
+        <RecallField
+          name="note"
+          label={t("volunteers.person.note")}
+          helperText={t("volunteers.person.noteHelp", { max: String(VOLUNTEER_NOTE_MAX) })}
+          size="small"
+          multiline
+          minRows={2}
+          slotProps={{ htmlInput: { maxLength: VOLUNTEER_NOTE_MAX } }}
+        />
+      )}
     </Stack>
   );
 }
@@ -1036,14 +1047,6 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
           {person.message}
         </Typography>
       )}
-      {person.note && (
-        <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
-          <Box component="span" sx={{ fontWeight: 600 }}>
-            {t("volunteers.person.noteLabel")}:{" "}
-          </Box>
-          {person.note}
-        </Typography>
-      )}
       <Typography variant="caption" color="text.secondary">
         {t("volunteers.since", { when: day(person.createdAt) })}
       </Typography>
@@ -1135,6 +1138,8 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
     verb that changed it — «Confirmă», a role given — draws it closed on its new line; one that did not leaves it as it was.
   */
   const given = rolesOf(person).assigned;
+  const noteCount = context.noteCounts?.get(person.id) ?? 0;
+  const counted = t(`registrations.notes.count.${countForm(noteCount, locale)}`, { count: noteCount });
   return (
     <Box component="li" data-testid="volunteer-row" data-volunteer-id={person.id} data-state={person.state} sx={ROW_SX}>
       <Box component="details" id={`volunteer-${person.id}`} key={[person.name, person.state, ...person.roleIds].join("\u0001")} data-testid="volunteer-edit">
@@ -1151,6 +1156,14 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
             ) : person.state !== "CANCELLED" ? (
               <StatusChip glyph="open" color="warning" variant="outlined" label={t("volunteers.unassigned.title")} testId="volunteer-row-roles" />
             ) : null}
+            {/* «Note interne»: the count when somebody left a note, a link to the person's page with the card open — the notes are read there. */}
+            {noteCount > 0 && (
+              <NotesMark
+                label={counted}
+                ariaLabel={t("registrations.notes.mark", { name: person.name, counted })}
+                href={`${getPathname({ locale, href: { pathname: "/admin/volunteers/[id]", params: { id: person.id } } })}#note-interne`}
+              />
+            )}
           </Box>
           <PencilIcon aria-hidden fontSize="small" sx={PENCIL_SX} />
         </Box>

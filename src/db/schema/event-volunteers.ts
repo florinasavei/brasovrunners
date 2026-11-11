@@ -180,8 +180,8 @@ export const eventVolunteerRoles = pgTable(
  * NULLs, so two name-only rows of the same name both stand). The public form always asks both, and the
  * table says so too: a `PUBLIC` row has an address and a telephone number (`event_volunteers_public_contact`).
  *
- * `message` is what the person wrote on the public form (at most 300 characters); `note` is the
- * organizers' own line and never leaves the backoffice. `privacy_notice_version` is the notice in force
+ * `message` is what the person wrote on the public form (at most 300 characters); `note` was the
+ * organizers' own line, kept until its contract release — their notes are `event_volunteer_notes` now. `privacy_notice_version` is the notice in force
  * when a person signed up on the page: the consent's record (GDPR art. 7(1)), null for a row the club
  * entered by hand. `locale` is the language of the page the person wrote from: their email's language.
  *
@@ -220,7 +220,13 @@ export const eventVolunteers = pgTable(
     source: eventVolunteerSource("source").notNull(),
     /** What the person wrote on the public form, optional. */
     message: text("message"),
-    /** The organizers' own line; backoffice only. */
+    /**
+     * The organizers' single line (§754) — **kept only until a later contract release** («Note interne» for volunteers): since
+     * migration `0196` a volunteer's notes live in `event_volunteer_notes`, several and dated, each with its author, and every
+     * non-empty line here was carried into one. Nothing new writes or shows this column, with two exceptions that keep a promise
+     * true: deleting a note whose words equal it clears it (`deleteVolunteerNote`), and «Toate datele unei persoane» prints what
+     * it still holds while no live note carries the same words. The contract release carries what is left, then drops it.
+     */
     note: text("note"),
     /*
       What the person says about themselves (§765; the owner, 2026-10-14: «când se înregistrează voluntarul trebuie să

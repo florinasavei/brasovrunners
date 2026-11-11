@@ -5840,6 +5840,10 @@
       }
     },
     "volunteers": {
+      "notes": {
+        "authorUnknown": "autor necunoscut",
+        "exportMore": "… (mai multe note pe pagina voluntarului)"
+      },
       "title": "Voluntari",
       "intro": "Oamenii care ajută la eveniment: fiecare bifează ce ar face, tu îi dai un rol. Rolurile se definesc aici, în ambele limbi. Adresele și telefoanele nu apar pe nicio pagină publică.",
       "notAccounts": "Voluntarii de aici nu sunt conturi: cine lucrează la masa de ridicare primește un cont din „Echipa”, cu rolul Voluntar.",
@@ -5969,9 +5973,8 @@
         "phoneHelp": "Opțional. Cu prefixul țării (+40 712 345 678); un număr românesc merge și cu 0 în față.",
         "noEmail": "Fără adresă de email: e doar pe listă și nu primește niciun email.",
         "note": "Nota ta (doar organizatorii)",
-        "noteHelp": "Cel mult {max} de caractere. Nu apare pe nicio pagină publică.",
+        "noteHelp": "Cel mult {max} de caractere. Devine prima notă internă a persoanei și nu apare pe nicio pagină publică.",
         "messageLabel": "Mesajul trimis",
-        "noteLabel": "Notă",
         "addTitle": "Adaugă un voluntar de mână",
         "add": "Adaugă voluntarul",
         "adding": "Se adaugă…",

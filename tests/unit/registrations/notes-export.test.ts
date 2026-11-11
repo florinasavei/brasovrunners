@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { buildRegistrationsCsv, type RegistrationCsvRow } from "@/modules/registrations/csv";
-import { EXPORT_NOTES_CELL_MAX, type ExportNote, type ExportNotesWords, exportNotesCell } from "@/modules/registrations/notes";
 import { REGISTRATION_SHEET_HEADERS, buildRegistrationsWorkbook, type RegistrationSheetRow } from "@/modules/registrations/workbook";
-import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
+import { STAFF_ROLES, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
+import { EXPORT_NOTES_CELL_MAX, type ExportNote as AnyExportNote, type ExportNotesWords as AnyExportNotesWords, exportNotesCell } from "@/shared/notes/note-text";
 import { readSheet, unzip } from "../../helpers/xlsx";
+
+// The cell's formatter is shared with the volunteers' notes (`shared/notes/note-text.ts`); a registration's author is a staff role.
+type ExportNote = AnyExportNote<StaffRole>;
+type ExportNotesWords = AnyExportNotesWords<StaffRole>;
 
 /**
  * §785 (amends §777, §172, §779; BR-REQ-060-01) — «cum stăm cu coloana de comentarii pentru participanți? asta
