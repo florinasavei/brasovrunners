@@ -627,6 +627,24 @@ describe("the box's suggestions", () => {
   });
 });
 
+describe("the box's suggestions beyond a read's window", () => {
+  it("name an older partner and a newer one once each, however many rows the newer one has", async () => {
+    const event = await createEvent(20);
+    const lines = (count: number, partnerName: string, from: number) =>
+      Array.from({ length: count }, (_, index) => ({
+        eventId: event.id,
+        firstName: `Linia${index}`,
+        lastName: "Munteanu",
+        email: `linia-${from}-${index}@example.invalid`,
+        partnerName,
+        updatedAt: at(from + index / 1000),
+      }));
+    // One older line of another partner, then more than the old window of 200 newer rows of the first, in two spellings.
+    await db.insert(eventReserveEntries).values([...lines(1, OTHER_PARTNER, 1), ...lines(150, PARTNER, 2), ...lines(150, PARTNER.toUpperCase(), 3)]);
+    expect(await listPartnerSuggestions(db, organizer, event.id)).toEqual([PARTNER.toUpperCase(), OTHER_PARTNER]);
+  });
+});
+
 describe("the trail, the person's record, the erase and the sweep", () => {
   it("no trail row holds a partner's name, wherever it was set", async () => {
     const event = await createEvent(5);

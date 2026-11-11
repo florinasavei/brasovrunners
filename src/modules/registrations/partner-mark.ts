@@ -162,29 +162,34 @@ export function suggestPartnerNames(written: readonly WrittenPartnerName[], limi
  * The partners' names already written at one event — on its registrations, its internal list's lines and its invitations — for
  * the box's native suggestions, so one partner keeps one spelling. Whoever may set the mark somewhere at the event reads them:
  * the Organizer and above (`canKeepRegistrationNotes`, the internal list's own rule), asserted here (BR-REQ-060-01). Three
- * small reads of one event's rows that carry a name; when each was written is the row's last write (an invitation's send).
+ * small reads of one event's rows that carry a name, one row per name (`DISTINCT ON`) before the window; when each was written is the row's last write (an invitation's send).
  */
 export async function listPartnerSuggestions<T extends Record<string, unknown>>(db: Database<T>, actor: Pick<StaffUser, "role">, eventId: string): Promise<string[]> {
   if (!canKeepRegistrationNotes(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not read an event's partners`);
   if (!isUuid(eventId)) return [];
-  const onRegistrations = await db
-    .select({ name: registrations.partnerName, at: registrations.updatedAt })
+  // One row per name whatever its capitals, its newest write and that write's spelling — in SQL, before the window — so one
+  // partner with hundreds of rows never pushes an older partner's name out of the box's suggestions.
+  const onRegistrationsDistinct = db
+    .selectDistinctOn([sql`lower(${registrations.partnerName})`], { name: registrations.partnerName, at: registrations.updatedAt })
     .from(registrations)
     .where(and(eq(registrations.eventId, eventId), isNotNull(registrations.partnerName)))
-    .orderBy(desc(registrations.updatedAt))
-    .limit(PARTNER_SUGGESTIONS_MAX * 4);
-  const onLines = await db
-    .select({ name: eventReserveEntries.partnerName, at: eventReserveEntries.updatedAt })
+    .orderBy(sql`lower(${registrations.partnerName})`, desc(registrations.updatedAt))
+    .as("on_registrations");
+  const onRegistrations = await db.select({ name: onRegistrationsDistinct.name, at: onRegistrationsDistinct.at }).from(onRegistrationsDistinct).orderBy(desc(onRegistrationsDistinct.at)).limit(PARTNER_SUGGESTIONS_MAX);
+  const onLinesDistinct = db
+    .selectDistinctOn([sql`lower(${eventReserveEntries.partnerName})`], { name: eventReserveEntries.partnerName, at: eventReserveEntries.updatedAt })
     .from(eventReserveEntries)
     .where(and(eq(eventReserveEntries.eventId, eventId), isNotNull(eventReserveEntries.partnerName)))
-    .orderBy(desc(eventReserveEntries.updatedAt))
-    .limit(PARTNER_SUGGESTIONS_MAX * 4);
-  const onInvitations = await db
-    .select({ name: eventInvitations.partnerName, at: eventInvitations.createdAt })
+    .orderBy(sql`lower(${eventReserveEntries.partnerName})`, desc(eventReserveEntries.updatedAt))
+    .as("on_lines");
+  const onLines = await db.select({ name: onLinesDistinct.name, at: onLinesDistinct.at }).from(onLinesDistinct).orderBy(desc(onLinesDistinct.at)).limit(PARTNER_SUGGESTIONS_MAX);
+  const onInvitationsDistinct = db
+    .selectDistinctOn([sql`lower(${eventInvitations.partnerName})`], { name: eventInvitations.partnerName, at: eventInvitations.createdAt })
     .from(eventInvitations)
     .where(and(eq(eventInvitations.eventId, eventId), isNotNull(eventInvitations.partnerName)))
-    .orderBy(desc(eventInvitations.createdAt))
-    .limit(PARTNER_SUGGESTIONS_MAX * 4);
+    .orderBy(sql`lower(${eventInvitations.partnerName})`, desc(eventInvitations.createdAt))
+    .as("on_invitations");
+  const onInvitations = await db.select({ name: onInvitationsDistinct.name, at: onInvitationsDistinct.at }).from(onInvitationsDistinct).orderBy(desc(onInvitationsDistinct.at)).limit(PARTNER_SUGGESTIONS_MAX);
   const written = [...onRegistrations, ...onLines, ...onInvitations].filter((row): row is WrittenPartnerName => row.name !== null);
   return suggestPartnerNames(written);
 }

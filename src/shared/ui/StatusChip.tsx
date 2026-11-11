@@ -31,5 +31,17 @@ export default function StatusChip({
   inline?: boolean;
 }) {
   const Icon = STATUS_GLYPHS[glyph];
-  return <Chip size="small" {...(inline ? { component: "span" } : {})} color={color} variant={variant} icon={<Icon />} label={label} {...(testId ? { "data-testid": testId } : {})} />;
+  return (
+    <Chip
+      size="small"
+      {...(inline ? { component: "span" } : {})}
+      color={color}
+      variant={variant}
+      icon={<Icon />}
+      label={label}
+      // A name typed by a person («Partener: {name}», up to 120 characters) wraps instead of widening a phone's table (320 px).
+      sx={{ maxWidth: "100%", height: "auto", minHeight: 24, "& .MuiChip-label": { whiteSpace: "normal", overflowWrap: "anywhere" } }}
+      {...(testId ? { "data-testid": testId } : {})}
+    />
+  );
 }
