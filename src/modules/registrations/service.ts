@@ -5192,13 +5192,15 @@ const FOLLOWS_THE_MOVE = ["EVENT_REMINDER", "ORGANIZER_MESSAGE", "EVENT_UPDATE_N
  * again, at most `MOVE_CHECKIN_CODE_ATTEMPTS` times, and the last collision is rethrown; anything else is rethrown.
  *
  * In the one transaction, when it passes:
- * 1. «Vreau să primesc oferte și beneficii» is withdrawn, as staff withdraws it (`setPromoConsent`, `STAFF`), on the
- *    old participant's trail: a consent is a person's, and the address that gave it is not the one that will read.
- * 2. Every live link of the registration is revoked for cause (`invalidated_at`, no `superseded_by_token_id`): the old
+ * 1. Every live link of the registration is revoked for cause (`invalidated_at`, no `superseded_by_token_id`): the old
  *    links get the generic refusal. The token binding (`action-tokens/repository.ts`) refuses any registration-scoped
  *    token whose participant is not the registration's current one, which catches a superseded or spent link as well.
- * 3. The old address's participant messages for the row still waiting and never tried are withdrawn, with their club
- *    copies; the renderer withdraws a retry or a claimed one (`render.ts`), so no link is minted for the old address.
+ * 2. «Vreau să primesc oferte și beneficii» is withdrawn, as staff withdraws it (`setPromoConsent`, `STAFF`), on the
+ *    old participant's trail: a consent is a person's, and the address that gave it is not the one that will read.
+ * 3. The event's own news still waiting (`FOLLOWS_THE_MOVE`, PENDING whatever its attempts) is re-addressed to the new
+ *    participant; the old address's other participant messages for the row still waiting and never tried are withdrawn,
+ *    with their club copies; the renderer withdraws a retry or a claimed one (`render.ts`), so no link is minted for the
+ *    old address.
  * 4. The row: the new participant, `address_changed_at` and `address_changed_by_staff_user_id`. Its state, place, waiting
  *    position and race number do not move — the allocator is not asked anything. A row waiting for its address gets the
  *    club's email-link window again from now; a confirmed row gets a new check-in code, so the QR the old address holds
@@ -5212,10 +5214,12 @@ const FOLLOWS_THE_MOVE = ["EVENT_REMINDER", "ORGANIZER_MESSAGE", "EVENT_UPDATE_N
  *    message again, to the old address: a family link scoped to the moved row died with it.
  * 7. One audit row, `registration.address_changed_by_staff`, with ids and counts only.
  *
- * Lock order. Under the event's lock the move locks the registration row `FOR NO KEY UPDATE`, then (step 1, when the
- * consent to offers is on) the same row `FOR UPDATE` in `setPromoConsent`, the row's live tokens (2), its waiting outbox
- * rows (3), and the row again at its UPDATE (4) — `FOR UPDATE` there only for a confirmed row, whose check-in code is a key
- * column. The paths that write a registration's tokens or outbox rows without holding the event's lock, and their order:
+ * Lock order. Under the event's lock the move locks the registration row `FOR NO KEY UPDATE`; before step 1 it only reads
+ * (and may insert the new participant, a row that references no registration). Then the row's live tokens (1); the row
+ * `FOR UPDATE` in `setPromoConsent`, when the consent to offers is on (2); its waiting outbox rows (3); and the row
+ * `FOR UPDATE` again at its UPDATE (4), on every move, because `participant_id` is a key column of the name's unique
+ * index (`registrations_event_participant_name_unique`). Both `FOR UPDATE`s come after the tokens are held, so neither
+ * meets a link being minted in a cycle; the notices' INSERTs (5) take only a KEY SHARE. The paths that write a registration's tokens or outbox rows without holding the event's lock, and their order:
  * - the erase of a row that holds no place (`admin-service.ts#eraseRegistration`, no event lock): the registration row
  *   first (its DELETE), its tokens and outbox rows after (the cascade) — registration first;
  * - retention's sweep, each step its own transaction: spent tokens alone, sent outbox rows alone, a visitor's relay rows
@@ -5413,10 +5417,7 @@ async function moveInOneTransaction<T extends Record<string, unknown>>(
       if (!newParticipant) await refuseWhatTheAddressHolds(destination);
     }
 
-    // 1. The consent to offers and benefits is the person's who gave it, from the address that gave it (decided for the owner).
-    const promo = current.promoConsent ? await setPromoConsent(tx, { registrationId: current.id, consent: false, via: "STAFF", actorStaffUserId: actor.id, now }) : null;
-
-    // 2. Every live link of the registration, revoked for cause: no `superseded_by_token_id`, so never «a newer email exists».
+    // 1. Every live link of the registration, revoked for cause: no `superseded_by_token_id`, so never «a newer email exists».
     const revoked = await tx
       .update(emailActionTokens)
       .set({ invalidatedAt: now })
@@ -5424,10 +5425,18 @@ async function moveInOneTransaction<T extends Record<string, unknown>>(
       .returning({ id: emailActionTokens.id });
 
     /*
-      3. The old address's messages for the row still waiting and never tried. The event's own news — a reminder, the
-      organizers' message, a change or cancellation of the event, the thanks — carries no link of the old address (the
-      renderer mints any at sending, for the registration's participant then), so it follows the registration to the new
-      address rather than being lost; every other one is withdrawn, with its club copies.
+      2. The consent to offers and benefits is the person's who gave it, from the address that gave it (decided for the
+      owner). After the links: `setPromoConsent` locks the row FOR UPDATE, which a link being minted (tokens first, then a
+      KEY SHARE on the row) must never meet before the move holds the tokens (the docstring's lock order).
+    */
+    const promo = current.promoConsent ? await setPromoConsent(tx, { registrationId: current.id, consent: false, via: "STAFF", actorStaffUserId: actor.id, now }) : null;
+
+    /*
+      3. The old address's messages for the row still waiting. The event's own news — a reminder, the organizers' message,
+      a change or cancellation of the event, the thanks — carries no link of the old address (the renderer mints any at
+      sending, for the registration's participant then), so every such row still PENDING follows the registration to the
+      new address, a retry between attempts included; a claimed one (PROCESSING) stays the renderer's to withdraw. Every
+      other one never tried is withdrawn, with its club copies.
     */
     const readdressed = await tx
       .update(emailOutbox)
@@ -5437,7 +5446,6 @@ async function moveInOneTransaction<T extends Record<string, unknown>>(
           eq(emailOutbox.registrationId, current.id),
           eq(emailOutbox.participantId, old.id),
           eq(emailOutbox.status, "PENDING"),
-          eq(emailOutbox.attemptCount, 0),
           inArray(emailOutbox.messageType, [...FOLLOWS_THE_MOVE]),
         ),
       )
