@@ -11139,7 +11139,7 @@
       "openTitle": "Invitații fără răspuns, pe evenimente:",
       "link": "Trimite invitații",
       "title": "Invitații",
-      "intro": "Un loc păstrat pentru o persoană aleasă, până la un termen: primește un email cu un link spre formular.",
+      "intro": "Un loc păstrat pentru o persoană aleasă, până la un termen: primește un email cu un link spre formular. Linkul merge și cu înscrierile de pe site oprite sau închise.",
       "aside": {
         "one": "{count} în așteptare",
         "few": "{count} în așteptare",

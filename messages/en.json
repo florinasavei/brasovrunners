@@ -11139,7 +11139,7 @@
       "openTitle": "Invitations not answered, by event:",
       "link": "Send invitations",
       "title": "Invitations",
-      "intro": "A place kept for a chosen person until a deadline: they get an email with a link to the form.",
+      "intro": "A place kept for a chosen person until a deadline: they get an email with a link to the form. The link works even while registration on the site is stopped or closed.",
       "aside": {
         "one": "{count} waiting",
         "few": "{count} waiting",
