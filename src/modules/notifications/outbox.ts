@@ -636,8 +636,8 @@ async function claimOutboxBatchWithStop(
  * **A row it moves no longer wears a stop mark** (the decision «Cere reconfirmarea», part two — a defect of the
  * released code, found by its review with a probe). A due row may still carry Mailgun's pause mark (a 429) or its
  * allowance mark from a stop that has ended — due means its stop is over. Moved to the reset with the mark on it,
- * the row read as a stop in force (`readMailgunStop`: a marked row whose turn is ahead) until the next reset — up to
- * sixteen hours — and no verification, offer or confirmation left by Mailgun meanwhile. So the hold clears those two marks
+ * the row read as a stop in force (`readMailgunStop`: a marked row whose turn is ahead) until the next reset — and
+ * no verification, offer or confirmation left by Mailgun meanwhile. So the hold clears those two marks
  * and keeps any other reason (the public page's «emailurile întârzie» read the same mark as a pause until the reset too).
  * Cleared rather than left out of the hold: left out (`notHeldByMailgun` in its WHERE), the row would stay due, and the
  * job's plan (`nextOutboxWork`) would read work due now on every ping until the reset — a database wake every quarter

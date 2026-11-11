@@ -3238,7 +3238,7 @@ judged as the person's own. While Mailgun is stopped and «Gmail preia când Mai
 carries what it always carried, in this same order: the registrations' own first. **The bulk hold never carries a stop
 mark into the future**: a due row the newsletter's hold moves to the reset loses Mailgun's pause or allowance mark (its
 stop has ended; a stop in force is `platform_settings.mailgunStop`), which before closed Mailgun's whole road until the
-next reset — up to sixteen hours. «Trimite acum» (§540), the batch size, the pinger, the hourly pace and the newsletter's reserve are unchanged.
+next reset. «Trimite acum» (§540), the batch size, the pinger, the hourly pace and the newsletter's reserve are unchanged.
 
 ### 16.2 Job endpoints
 

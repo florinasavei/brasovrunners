@@ -58,7 +58,7 @@ export function bulkBudget(headroom: { period: "day" | "month" | "none"; allowan
  *    a reminder lead before the start (`event-mail.ts#queueEventReminders`): the day and the place, already known;
  * 4. `ORGANIZER_MESSAGE` — «Trimite un mesaj participanților», the organizers' own words (and «Cere reconfirmarea»),
  *    which an organizer writes days ahead and can wait for the three above;
- * 5. `EVENT_THANKS` — «Mulțumește», to everyone checked in, the afternoon of the race (`event-mail.ts#sendEventThanks`):
+ * 5. `EVENT_THANKS` — «Mulțumim după cursă» (sent by «Trimite mulțumirile»), to everyone checked in, the afternoon of the race (`event-mail.ts#sendEventThanks`):
  *    after the race, nothing in it to act on before another message;
  * 6. `REGISTRATION_OPENED` — one per address that asked «Anunță-mă când se deschid înscrierile», queued by the maintenance
  *    job when the window opens (`registrations/interest.ts`): to people with no registration yet, so after every message
