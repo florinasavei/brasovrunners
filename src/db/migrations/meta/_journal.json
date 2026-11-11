@@ -1317,6 +1317,20 @@
       "when": 1794385297026,
       "tag": "0196_event_volunteer_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 188,
+      "version": "7",
+      "when": 1794393101203,
+      "tag": "0197_registration_address_types",
+      "breakpoints": true
+    },
+    {
+      "idx": 189,
+      "version": "7",
+      "when": 1794393139492,
+      "tag": "0198_registration_address_changed",
+      "breakpoints": true
     }
   ]
 }

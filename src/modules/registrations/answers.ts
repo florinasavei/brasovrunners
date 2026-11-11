@@ -23,8 +23,10 @@ import { HOME_COUNTRY } from "@/modules/events/domain/place";
  * for something this verb does not do.
  *
  * **Three kinds stay the person's, and the screen says why** (`LOCKED_ANSWER_KINDS`):
- * - the **address** is the registration's identity (§67, `AGENTS.md` §10.4): a wrong one is a
- *   cancellation and a new registration, never an edit;
+ * - the **address** is the registration's identity (§67, `AGENTS.md` §10.4): never an answer
+ *   corrected here; a wrong one is moved by its own verb, «Schimbă adresa»
+ *   (`service.ts#changeRegistrationAddressByStaff`), which re-points the registration and rewrites
+ *   no participant row;
  * - the **consents** — the health note and its consent, the public list, the socials beside the
  *   name, the offers and benefits, the results — are the person's to give; staff may only withdraw
  *   them (§322, §558), with their own button;

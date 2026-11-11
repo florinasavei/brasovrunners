@@ -1309,6 +1309,7 @@
       "timeline": "Timeline",
       "submitted": "Form sent",
       "emailConfirmed": "Email confirmed",
+      "addressChangedLine": "Address changed by the team",
       "waitlisted": "Waitlisted",
       "offerCreated": "Offer created",
       "holdExpires": "Hold expires",
@@ -1424,7 +1425,7 @@
         "confirmedAfter": "The address was confirmed {date}, after this email.",
         "neverConfirmed": "The address was never confirmed.",
         "placeKept": "The place stays confirmed; at the desk you find them by name.",
-        "todo": "Phone the person; only they can change the address, by registering again.",
+        "todo": "Phone the person and ask for the right address; an administrator changes it in “Email address”.",
         "todoKept": "Phone the person: the club's emails do not reach their address.",
         "todoCause": {
           "account": "It never left then (Mailgun refused the club's account), not because of the address.",
@@ -1456,7 +1457,7 @@
           "update": "Tell the person: they did not receive “Updated details” — what changed is on the event page.",
           "cancelled": "Tell the person: they did not receive the notice — the event has been cancelled."
         },
-        "todoTellUnreachable": "Tell the person the club's emails do not reach them; only they can change the address, by registering again.",
+        "todoTellUnreachable": "Tell the person the club's emails do not reach them and ask for another address; an administrator changes it in “Email address”.",
         "todoTellKept": "Tell the person the club's emails do not reach them; their place stays confirmed.",
         "todoTellCause": {
           "mailbox-full": "Tell the person their mailbox is full: they should make room so the club's emails arrive.",
@@ -1658,6 +1659,7 @@
           "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)",
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
           "address_vouched_on_entry": "Address vouched for by the team at the entry; a place or the waiting list at once (“Straight onto the waiting list”)",
+          "address_changed_by_staff": "Email address changed by the team (“Change the address”): the old links stop working, both addresses told",
           "outside_capacity_changed": "Put on the special guests list, or taken off it",
           "elite_marked": "Marked as elite: the bib prints the name where the number goes",
           "elite_unmarked": "No longer elite: the bib prints the number again",
@@ -1773,6 +1775,7 @@
       "declarationForm": "Paper declaration form (PDF)",
       "declarationFormMinor": "Paper declaration form for a minor (PDF)",
       "declarationPaper": "on paper, recorded by {who}",
+      "declarationAfterAddressChange": "signed from the link sent to the address the team changed",
       "signedByMinor": "the minor",
       "signedByGuardian": "the parent or guardian",
       "confirmOnPaperBodyMinor": "You confirm the minor and parent ({guardian}) both signed on paper. Only with the two-signature paper in front of you. Then the confirmation email; if no place, the waiting list, no email yet.",
@@ -1943,7 +1946,7 @@
         "clubNameHelp": "While the member tick is on, the club is {club}.",
         "memberHelp": "Unticked, the club {club} also goes from the list.",
         "lockedTitle": "What does not change here",
-        "lockedAddress": "The email address is the registration's identity: for a wrong address, cancel and add it again.",
+        "lockedAddress": "The email address is changed in the “Email address” card, not here.",
         "lockedConsents": "Only the person gives the consents — you can only withdraw them, with their own button.",
         "lockedDeclaration": "Only the person signs the declaration; once it is signed, the parent or guardian it names stays the one who signed.",
         "fields": {
@@ -1968,6 +1971,24 @@
           "memberBibWanted": "I want the members' number"
         },
         "memberBibHelp": "Kept only with the member tick, and while the event offers the members' number."
+      },
+      "address": {
+        "title": "Email address",
+        "current": "The registration's emails go to: {email}",
+        "changed": "Changed by the team: {date}, by {who}.",
+        "label": "New address",
+        "help": "The address the person gave you. Only this registration changes.",
+        "submit": "Change the address",
+        "pending": "Changing…",
+        "confirmTitle": "Change the address?",
+        "confirmBody": "The links sent to the old address stop working. Both addresses get an email about the change, and the new one gets the next step.",
+        "confirmBodyNoticesOnly": "The links sent to the old address stop working. Both addresses get an email about the change, and the new address gets no step to take.",
+        "confirmPromo": "The consent to offers and benefits is withdrawn: the person gives it again, from the new address.",
+        "confirmAlso": "The old address gets “The email address was changed”; the new one also gets the next step's email.",
+        "confirmAlsoNoticesOnly": "The old address gets “The email address was changed”.",
+        "confirmFollows": "The event's emails not sent yet go to the new address.",
+        "confirmFamily": "If someone else on the old address still has a step to take at the event, the old address gets that step's email again.",
+        "readOnly": "An administrator changes the address."
       },
       "missingAnswers": {
         "chip": "Missing details",
@@ -2046,7 +2067,7 @@
             "other": "your email server refused it"
           },
           "can": {
-            "no-such-address": "You can change the address only by registering again.",
+            "no-such-address": "Tell us the right address and we change it.",
             "mailbox-full": "Make room in your mailbox and we will send it again.",
             "blocked": "Add the club's address to your contacts and we will send it again.",
             "suppressed": "We stopped sending after a rejection; tell us if the address is right.",
@@ -2665,7 +2686,14 @@
       "RESULT_FINISH_NOT_STARTED": "The race has not started yet: a finish cannot be before the start.",
       "RESULT_FINISH_CLOSED": "The start was more than a day ago: the times are entered under «Results».",
       "REFUSAL_NEEDS_EMAIL": "Nothing was cancelled: the club's refusal always goes with the email that tells the person its ground.",
-      "ELITE_NOT_MARKED": "The registration is no longer marked elite, so its elite ticks no longer change. Nothing was written."
+      "ELITE_NOT_MARKED": "The registration is no longer marked elite, so its elite ticks no longer change. Nothing was written.",
+      "ADDRESS_FAMILY_FORM_PENDING": "Nothing changed: a family form waits to be confirmed on the old address. Change the address once it is confirmed or lapses.",
+      "ADDRESS_INVITED": "Nothing changed: the new address has an open invitation to this event. Withdraw the invitation in “Invitations” first.",
+      "ADDRESS_UNCHANGED": "Nothing changed: it is the same inbox as the registration’s address now — an extra dot or “+” still leads there.",
+      "ADDRESS_ALREADY_HELD": "Nothing changed: this address already has a registration at this event or at another distance of the race. Look it up in the registrations list.",
+      "ADDRESS_HOLDS_ENOUGH": "Nothing changed: this address already has as many registrations at the event as the club’s rules allow one address. Use another address.",
+      "ADDRESS_INVALID": "Nothing changed: that is not a valid email address. Check what you typed.",
+      "ADDRESS_TRY_AGAIN": "Nothing changed: the registration was being changed at the same moment. Press “Change the address” again."
     },
     "editor": {
       "draftPreview": {
@@ -7360,6 +7388,8 @@
         "REGISTRATION_MANAGE_LINK": "Your registration link",
         "PROFILE_MANAGE_LINK": "My registrations",
         "REGISTRATION_STATE_NOTICE": "Registration status",
+        "REGISTRATION_ADDRESS_REMOVED": "The email address was changed",
+        "REGISTRATION_ADDRESS_ADDED": "You receive the registration's emails",
         "EVENT_REMINDER": "The reminder before the start",
         "EVENT_THANKS": "Thank you after the race",
         "DECLARATION_SIGNED": "Signed declaration (PDF attached)",
@@ -7409,6 +7439,8 @@
         "REGISTRATION_MANAGE_LINK": "Registration link",
         "PROFILE_MANAGE_LINK": "My registrations",
         "REGISTRATION_STATE_NOTICE": "Registration status",
+        "REGISTRATION_ADDRESS_REMOVED": "Address changed",
+        "REGISTRATION_ADDRESS_ADDED": "New address",
         "EVENT_REMINDER": "The reminder",
         "EVENT_THANKS": "The thank-you",
         "DECLARATION_SIGNED": "Signed declaration",
@@ -7434,6 +7466,8 @@
         "REGISTRATION_MANAGE_LINK": "Not sent any more: “Resend the link” sends the whole confirmation, with the manage link, the QR code and the number; “My registrations” has its own message.",
         "PROFILE_MANAGE_LINK": "On request, when somebody wants to see all their registrations.",
         "REGISTRATION_STATE_NOTICE": "Resent by an organizer when somebody asks where they stand.",
+        "REGISTRATION_ADDRESS_REMOVED": "When an administrator changes a registration's address: to the old address, without the new one, with the contact page.",
+        "REGISTRATION_ADDRESS_ADDED": "When an administrator changes a registration's address: to the new address. The next step comes in an email of its own.",
         "EVENT_REMINDER": "Automatic, {reminder} before the start (or as the event chooses), to everyone confirmed, once. Scheduled events only: a cancelled one sends nothing automatic any more.",
         "EVENT_THANKS": "By hand, from the event page, once the start time has passed; once, to those checked in at the desk. Never for a cancelled event.",
         "DECLARATION_SIGNED": "Not sent any more: the signed declaration, as a PDF, goes attached to “Registration confirmed”, together with a link to it.",
@@ -7483,6 +7517,8 @@
         "REGISTRATION_MANAGE_LINK": "on request, “Resend the link”",
         "PROFILE_MANAGE_LINK": "on request, every registration",
         "REGISTRATION_STATE_NOTICE": "resent by an organizer",
+        "REGISTRATION_ADDRESS_REMOVED": "when the address changes, to the old one",
+        "REGISTRATION_ADDRESS_ADDED": "when the address changes, to the new one",
         "EVENT_REMINDER": "{reminder} before the start",
         "EVENT_THANKS": "by hand, after the event",
         "DECLARATION_SIGNED": "after the declaration is signed, with the PDF",
@@ -7746,7 +7782,8 @@
           "invite": "Send invitations",
           "invitationResend": "Resend the invitation",
           "invitationWithdraw": "Withdraw the invitation",
-          "invitationsErase": "Erase the person's invitations"
+          "invitationsErase": "Erase the person's invitations",
+          "changeAddress": "Change the address"
         },
         "events": {
           "save": "Save the event",
@@ -9377,7 +9414,7 @@
               "steps": [
                 "When: the person mistyped their name, date of birth, phone, city, club or anything else on the form, or ticked that they are a member without being one.",
                 "«Registrations» → press the name → «The registration's answers» → «Change the answers». Change only what is wrong → «Save the answers»; the question names the person and the fields.",
-                "Not changed here: the email address (cancel and add again), the consents (you only withdraw them, with their own button) and the declaration (only the person signs it).",
+                "Not changed here: the email address (in the «Email address» card), the consents (you only withdraw them, with their own button) and the declaration (only the person signs it).",
                 "No email is sent and no place moves. Every field changed stays in the log, with its old and new value."
               ]
             },
@@ -9552,6 +9589,16 @@
                 "On «Results», under «On the event's page», tick «The results are public on the event's page» and press «Save». The page shows the place, the number, the time and the category; a name only for who ticked the list at registration or a runner who did not register and agreed — everyone else is “Participant #number”.",
                 "The results stay on the page as long as the public participant list, from the end of the race («Settings» → «Deadlines»). Untick at any time; the results stay saved.",
                 "Whoever registered under an older privacy notice, which did not describe the results, appears as “Participant #number”, even if they ticked the list. Only once the club approves a privacy notice that names that tick beside the results (the field {{resultsNameAsk}}, in «Legal documents») — after the club and its lawyer amend the sentence telling them they appear only by number — does their registration's page (the link in its email) show them «I want to appear by name in the results». The club sends no new email for it: tell them with «Send a message to participants», from the race's editor, that they can tick it from their registration's link and untick it at any time."
+              ]
+            },
+            {
+              "title": "Change a registration's email address",
+              "steps": [
+                "When: the person mistyped the address, the address does not exist, or the person wants the emails at another address.",
+                "«Registrations» → press the name → «Email address» → type «New address» → «Change the address». The question says what happens; confirm.",
+                "The links sent to the old address stop working. The old address gets an email about the change, without the new address; the new one gets an email and the next step.",
+                "The place, the state, the position on the waiting list and the number do not change. The consent to offers and benefits is withdrawn. The person still signs the declaration, from the link sent to the new address.",
+                "One registration changes per press: a family on the same address moves one person at a time."
               ]
             }
           ]
@@ -14042,7 +14089,8 @@
       "membersInvitedProviderFailed": "Some Zitadel accounts are not ready: see the report above.",
       "eventInvitationsErased": "Invitations withdrawn and erased.",
       "eventImportedOver": "Imported over the event.",
-      "eliteTicked": "The elite tick was saved. Nothing was sent to anyone."
+      "eliteTicked": "The elite tick was saved. Nothing was sent to anyone.",
+      "addressChanged": "The address was changed; both addresses get an email."
     },
     "mail": {
       "now": "Leaving now{road}: {what}.",
