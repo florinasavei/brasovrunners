@@ -160,6 +160,100 @@ test.describe("§777 «Note interne» on a registration", () => {
     }
   });
 
+  test("an Organizer adds a note from a row of the list, and the page shows «Note interne» first and open", async ({ page }) => {
+    test.setTimeout(150_000);
+    const hydrationWarnings: string[] = [];
+    page.on("console", (message) => {
+      if (/hydrat/i.test(message.text())) hydrationWarnings.push(message.text());
+    });
+    const seeded = await seed(`${test.info().project.name}-list-${Date.now().toString(36)}`);
+    try {
+      await signIn(page, "Dev Moderator");
+
+      // With no note the page's first fold is «Note interne», closed, saying «nicio notă».
+      await page.goto(detailUrl(seeded));
+      await hydrated(page);
+      const firstFold = page.locator("#main details").first();
+      await expect(firstFold).toHaveAttribute("id", "note-interne");
+      await expect(firstFold).not.toHaveAttribute("open", "");
+      await expect(firstFold.locator("summary")).toContainText("nicio notă");
+
+      // The list: «Adaugă o notă» on the row, 44 pixels high, its name naming the person; a link to the card without JavaScript.
+      const listAddress = `${listUrl(seeded)}&sort=name&dir=asc`;
+      await page.goto(listAddress);
+      await hydrated(page);
+      const control = page.locator('#main [data-testid="note-add-open"]:visible');
+      await expect(control).toHaveCount(1);
+      await expect(control).toContainText("Adaugă o notă");
+      await expect(control).toHaveAttribute("aria-label", `Adaugă o notă la ${seeded.name}`);
+      await expect(control).toHaveAttribute("href", new RegExp(`/admin/registrations/${seeded.registrationId}#note-interne$`));
+      expect((await control.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      // Both copies of the row (the table and the phone cards) are in the page, and no id is used twice.
+      expect(await page.locator('#main [data-testid="note-add-open"]').count()).toBeGreaterThanOrEqual(1);
+      await expect(page.locator('#main [data-testid="notes-mark"]')).toHaveCount(0);
+      await fitsTheScreen(page);
+
+      // The dialog: whose note, the help, the box with its limit, «Salvează nota» and a cancel — and it keeps the list under it.
+      await control.click();
+      const dialog = page.getByRole("dialog");
+      await expect(dialog).toBeVisible();
+      await expect(dialog).toContainText(`Notă internă pentru ${seeded.name}`);
+      await expect(dialog.getByTestId("note-add-dialog-help")).toHaveText("Doar organizatorii și administratorii văd notele. Nu scrie date medicale sau alte date sensibile.");
+      await expect(dialog).toContainText("Cel mult 2000 de caractere.");
+      await expect(dialog.getByRole("button", { name: "Salvează nota" })).toBeVisible();
+      await expect(dialog.getByRole("button", { name: "Renunță" })).toBeVisible();
+      await fitsTheScreen(page);
+
+      // A refusal is said at the box with the words still in it, and nothing is written.
+      const box = dialog.getByRole("textbox", { name: /Adaugă o notă/ });
+      await box.fill("   ");
+      await dialog.getByRole("button", { name: "Salvează nota" }).click();
+      await expect(dialog.getByTestId("form-refusal")).toBeVisible();
+      await expect(dialog.getByRole("textbox", { name: /Adaugă o notă/ })).toHaveValue("   ");
+      await expect(page).toHaveURL(new RegExp(`sort=name`));
+      expect(page.url()).not.toContain("saved=");
+
+      // A cancel closes it and the typing is not kept in the address.
+      await dialog.getByRole("button", { name: "Renunță" }).click();
+      await expect(dialog).toHaveCount(0);
+
+      // Saved: the same list address (the filters and the sort kept), the toast, the dialog gone, and the marker counts the note.
+      await control.click();
+      const words = "Vine cu un copil, cere tricou M";
+      await page.getByRole("dialog").getByRole("textbox", { name: /Adaugă o notă/ }).fill(words);
+      await page.getByRole("dialog").getByRole("button", { name: "Salvează nota" }).click();
+      await expect(page).toHaveURL(new RegExp(`/admin/registrations\\?.*saved=noteAdded`));
+      await hydrated(page);
+      const address = new URL(page.url());
+      expect(address.searchParams.get("eventId")).toBe(seeded.eventId);
+      expect(address.searchParams.get("q")).toBe(seeded.name);
+      expect(address.searchParams.get("sort")).toBe("name");
+      expect(page.url()).not.toContain("tricou");
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await expect(page.getByText("Nota a fost salvată.").first()).toBeVisible();
+      const mark = page.locator('#main [data-testid="notes-mark"]:visible');
+      await expect(mark).toHaveCount(1);
+      await expect(mark).toContainText("1 notă");
+      await expect(page.locator('#main [data-testid="note-add-open"]:visible')).toHaveCount(1);
+      await expect(page.locator("#main")).not.toContainText("tricou");
+      await fitsTheScreen(page);
+
+      // The registration's page: «Note interne» is the first fold and is open, the note in it, read without a press.
+      await page.goto(detailUrl(seeded));
+      await hydrated(page);
+      const first = page.locator("#main details").first();
+      await expect(first).toHaveAttribute("id", "note-interne");
+      await expect(first).toHaveAttribute("open", "");
+      await expect(first.getByTestId("note-body")).toHaveText(words);
+      await expect(first.getByTestId("note-by")).toContainText("Dev Moderator");
+      await expect(first.locator("summary")).toContainText("1 notă");
+      await fitsTheScreen(page);
+      expect(hydrationWarnings).toEqual([]);
+    } finally {
+      await cleanup(seeded);
+    }
+  });
+
   test("the Tehnic role gets no registration page, so no card and no marker", async ({ page }) => {
     test.setTimeout(90_000);
     const seeded = await seed(`${test.info().project.name}-tehnic-${Date.now().toString(36)}`);
@@ -186,7 +280,8 @@ test.describe("§777 «Note interne» on a registration", () => {
       await hydrated(page);
       const card = page.locator("details#note-interne");
       await expect(card.locator("summary")).toContainText("1 notă");
-      await card.locator("summary").click();
+      // It holds a note, so it is open on arrival: read without a press (a press would close it).
+      await expect(card).toHaveAttribute("open", "");
       await expect(card.getByTestId("note-body")).toHaveText("scrisă de un coleg");
       await expect(card.getByTestId("note-by")).toContainText("cont șters");
       await card.getByRole("button", { name: "Șterge" }).click();

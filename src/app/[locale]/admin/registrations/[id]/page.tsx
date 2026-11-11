@@ -562,6 +562,25 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       )}
 
       {/*
+        «Note interne» (§777; the owner, 2026-10-15): what the organizers tell each other about this
+        registration, for the Organizer and above — never the Tehnic role, the volunteer or the desk. Drawn
+        only when `listRegistrationNotes` ran (it asks `canKeepRegistrationNotes` itself); the two actions and
+        the service refuse every other role again (BR-REQ-060-01). A note is not the registration: the
+        Organizer still changes nothing on it (§289). The card stands FIRST, right under the heading block, and is open
+        when there is a note to read («Note interne» first on the registration's page, and a note from a row of the list, amending §777).
+      */}
+      {notes !== null && (
+        <NotesCard
+          locale={locale}
+          registrationId={registration.id}
+          notes={notes}
+          addAction={addRegistrationNoteAction}
+          deleteAction={deleteRegistrationNoteAction}
+          opened={saved === "noteAdded" || saved === "noteDeleted"}
+        />
+      )}
+
+      {/*
         «Ce îi spui» (§654; the owner: «oamenii mai pierd mailuri, le mai intră în SPAM»): what to tell
         somebody who asks where their registration stands — the participant's own words, in the
         registration's language, under the state and above the verbs. Every role that reads the page.
@@ -1087,24 +1106,6 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           </Typography>
         </Stack>
       </Panel>
-
-      {/*
-        «Note interne» (§777; the owner, 2026-10-15): what the organizers tell each other about this
-        registration, for the Organizer and above — never the Tehnic role, the volunteer or the desk. Drawn
-        only when `listRegistrationNotes` ran (it asks `canKeepRegistrationNotes` itself); the two actions and
-        the service refuse every other role again (BR-REQ-060-01). A note is not the registration: the
-        Organizer still changes nothing on it (§289).
-      */}
-      {notes !== null && (
-        <NotesCard
-          locale={locale}
-          registrationId={registration.id}
-          notes={notes}
-          addAction={addRegistrationNoteAction}
-          deleteAction={deleteRegistrationNoteAction}
-          opened={saved === "noteAdded" || saved === "noteDeleted"}
-        />
-      )}
 
       {/*
         «Datele înscrierii» (§645; the owner, 2026-10-02: «Nu vreau să se numească „curăță”, dar practic

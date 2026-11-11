@@ -23,7 +23,8 @@ import type { RegistrationNoteRow } from "../notes";
  * not to write health data), the notes newest first with their author's display name and when, «Șterge» on
  * the ones the reader may delete (its own; any, for an Administrator — the service decides), and «Adaugă o
  * notă», a textarea that comes back filled after a refusal and works with JavaScript off (`ActionForm`,
- * `RecallField`). It opens by itself when a note was just saved or deleted, and for the `#note-interne` link.
+ * `RecallField`). It opens by itself when it holds a note (the page's first card, read without a press), when a note was just saved or
+ * deleted, and for the `#note-interne` link; with no note it stays closed on «nicio notă».
  *
  * The actions are handed in by the page, so this stays a presentation of rows and a form: no query, no role
  * test, no link to the registrations module's writers.
@@ -51,7 +52,7 @@ export default async function NotesCard({
   const when = (value: Date) => formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
 
   return (
-    <Panel glyph="internalNotes" level={3} collapsible title={t("registrations.notes.title")} aside={aside} openWhen={{ saved: opened }} id="note-interne" data-testid="notes-section">
+    <Panel glyph="internalNotes" level={3} collapsible title={t("registrations.notes.title")} aside={aside} openWhen={{ saved: opened, holds: notes.length > 0 }} id="note-interne" data-testid="notes-section">
       <Stack spacing={2}>
         {/* Who sees the notes, and what never to write in one (a note is personal data about the participant). */}
         <Typography variant="body2" color="text.secondary" data-testid="notes-help">

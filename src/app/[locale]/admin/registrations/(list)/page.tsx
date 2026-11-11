@@ -64,6 +64,8 @@ import { canEnterResults, canExportSponsorList, canKeepRegistrationNotes, canMan
 import { countRegistrationNotes } from "@/modules/registrations/notes";
 import { resultsDoorOpen } from "@/modules/results/domain/event-type";
 import NotesMark from "@/modules/registrations/ui/NotesMark";
+import RowNoteDialog from "@/shared/ui/RowNoteDialog";
+import { REGISTRATION_NOTE_MAX } from "@/db/schema/registration-notes";
 import { sponsorListSummary } from "@/modules/registrations/sponsor-list";
 import SponsorListButton from "@/modules/registrations/ui/SponsorListButton";
 import CheckboxField from "@/shared/ui/CheckboxField";
@@ -92,7 +94,7 @@ import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { countBibs, voidBibsFor } from "@/modules/registrations/bibs";
-import { addToWaitlistAction, bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, moveReserveEntryAction, sendOutboxNowAction, setPublicRegistrationOpenAction } from "../actions";
+import { addRegistrationNoteFromListAction, addToWaitlistAction, bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, moveReserveEntryAction, sendOutboxNowAction, setPublicRegistrationOpenAction } from "../actions";
 import { resendFamilyEmailAction, resendRegistrationEmailAction } from "../[id]/actions";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
@@ -336,6 +338,17 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   // Every verb that writes asks first and says who is emailed (§384).
   const words = await confirmWords();
   /*
+    «Adaugă o notă» on every row (the owner, 2026-11-11: «trebuie sa pot adauga comentarii direct de aici»): only for a role
+    that may keep notes, with the refusal's words cut to the four sentences the dialog can meet — the whole catalogue
+    would travel with every row. The press asks the role again on the server (BR-REQ-060-01).
+  */
+  const noteRefusal = canKeepRegistrationNotes(actor.role)
+    ? await refusalMessages({ body: t("registrations.notes.label") }).then((all) => ({
+        ...all,
+        errors: Object.fromEntries(["NOTE_EMPTY", "NOTE_TOO_LONG", "NOT_FOUND", "FORBIDDEN"].map((code) => [code, all.errors[code]])),
+      }))
+    : null;
+  /*
     Why «Dă-i un loc» would be refused, per event on the page (§592): the rows grouped by event,
     one door read each (cached per request), and only where a waiting row offers the verb.
   */
@@ -552,6 +565,28 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             />
             );
           })()}
+          {/* «Adaugă o notă» («Note interne» first on the registration's page, and a note from a row of the list): beside the
+              marker, or alone; a dialog over the list, and without JavaScript a link to the card. The save comes back here. */}
+          {noteRefusal && (
+            <RowNoteDialog
+              action={addRegistrationNoteFromListAction}
+              actionKey={actionKeyOf(addRegistrationNoteFromListAction)}
+              messages={noteRefusal}
+              fields={{ uiLocale: locale, registrationId: row.id, listQuery: rowReturnQueryString }}
+              fallbackHref={`${getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: row.id } } })}#note-interne`}
+              label={t("registrations.notes.add")}
+              ariaLabel={t("registrations.notes.addFor", { name: row.registeredName })}
+              title={t("registrations.notes.dialog", { name: row.registeredName })}
+              help={t("registrations.notes.help")}
+              boxName="body"
+              boxLabel={t("registrations.notes.add")}
+              limitText={t("registrations.notes.limit", { max: REGISTRATION_NOTE_MAX })}
+              max={REGISTRATION_NOTE_MAX}
+              saveLabel={t("registrations.notes.save")}
+              cancelLabel={words.cancel}
+              settledKey={String(notesCounts.get(row.id) ?? 0)}
+            />
+          )}
           {/* The email state in one line under the name and its chips (§663, §671): only while somebody must
               act — the cause, the email, the day — itself the link to the registration's «Emailuri». An email
               sent again waits quietly here; the registration's page says it. */}

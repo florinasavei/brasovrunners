@@ -1563,6 +1563,8 @@
         "label": "Note",
         "limit": "At most {max} characters.",
         "save": "Save the note",
+        "dialog": "Internal note for {name}",
+        "addFor": "Add a note to {name}",
         "exportMore": "… (more notes on the registration's page)",
         "exportGone": "account removed",
         "exportRole": {
@@ -9002,7 +9004,7 @@
             {
               "title": "Leave a note on a registration",
               "steps": [
-                "«Registrations» → search the name → open the registration → «Internal notes». The closed card says how many notes it holds.",
+                "«Registrations» → search the name → press «Add a note» on the row. Or open the registration: «Internal notes» is the first card, open when it holds notes.",
                 "Write in «Add a note» and press «Save the note». The notes come newest first, with the name of who wrote them and the moment.",
                 "Only organizers and administrators see the notes. They do not show at the desk or on the public list; in the Excel and CSV export they are the last column, «Internal notes». Do not write medical or other sensitive data.",
                 "On the registrations list, a row with notes has a marker with their number; press it to open the notes.",
@@ -9387,7 +9389,7 @@
             {
               "title": "Leave a note on a registration",
               "steps": [
-                "«Registrations» → search the name → open the registration → «Internal notes». The closed card says how many notes it holds.",
+                "«Registrations» → search the name → press «Add a note» on the row. Or open the registration: «Internal notes» is the first card, open when it holds notes.",
                 "Write in «Add a note» and press «Save the note». The notes come newest first, with the name of who wrote them and the moment.",
                 "Only organizers and administrators see the notes. They do not show at the desk or on the public list; in the Excel and CSV export they are the last column, «Internal notes». Do not write medical or other sensitive data.",
                 "On the registrations list, a row with notes has a marker with their number; press it to open the notes.",
