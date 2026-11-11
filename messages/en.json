@@ -1665,6 +1665,7 @@
           "elite_out_of_results": "Elite: «In the results» unticked — out of the results",
           "elite_on_site": "Elite: «On the site» ticked — on the site as the person's own ticks allow",
           "elite_off_site": "Elite: «On the site» unticked — the name no longer shows on the site",
+          "partner_set": "From partners: the partner's name changed",
           "deadline_moved_for_outage": "Deadline moved: the site could not be reached, the clock stood still",
           "hold_moved_by_window": "Signing deadline moved with the changed confirmation window",
           "not_revived_for_outage": "Not revived after the outage: the deadline had passed while the site could not be reached, and the place had been given meanwhile or the claim had already lapsed",

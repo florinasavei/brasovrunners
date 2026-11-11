@@ -89,6 +89,7 @@ const { default: InvitationsPanel } = await import("@/modules/registrations/ui/I
 const { default: CheckboxField } = await import("@/shared/ui/CheckboxField");
 const reserveActions = await import("@/app/[locale]/admin/registrations/reserve-actions");
 const partnerActions = await import("@/app/[locale]/admin/registrations/[id]/partner-actions");
+const { setRegistrationPartner } = await import("@/modules/registrations/partner-mark");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
 type Column = { key: string; primary?: boolean; render: (row: unknown) => ReactNode };
@@ -181,6 +182,14 @@ function nameCellOf(tree: ReactNode, id: string): ReactElement<Props>[] {
   return row && column ? elements(column.render(row)) : [];
 }
 
+/** Every string under `node`, joined: what the reader sees of it. */
+function textOf(node: ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map((child) => textOf(child as ReactNode)).join("");
+  if (!isValidElement<Props>(node)) return "";
+  return textOf(node.props.children);
+}
+
 const chipOf = (nodes: ReactElement<Props>[], testId = "partner-chip") => nodes.find((element) => element.props.testId === testId);
 
 beforeAll(async () => {
@@ -262,6 +271,27 @@ describe("«De la parteneri» on the registration's page", () => {
     expect(page.find((element) => element.type === PartnerSuggestionList)?.props.names).toEqual([PARTNER]);
     // A registration without one: the tick drawn unticked, the box empty.
     expect(elements(await detailPage(plain.id)).find((element) => element.type === PartnerMarkFields)?.props.name).toBeNull();
+  });
+
+  it("renders with a real `registration.partner_set` row, and «Istoric» says it in words, never the name", async () => {
+    const race = await createRace();
+    const target = await register(race.id);
+    const admin = await staff("ADMIN");
+    state.actor = admin;
+    await setRegistrationPartner(db, admin, target.id, { partner: "on", partnerName: PARTNER }, new Date());
+    for (const locale of ["ro", "en"] as const) {
+      state.locale = locale;
+      const page = elements(
+        await RegistrationDetailPage({ params: Promise.resolve({ locale, id: target.id }), searchParams: Promise.resolve({}) } as never),
+      );
+      const trail = page.find((element) => element.props["data-testid"] === "audit-trail");
+      expect(trail, locale).toBeDefined();
+      const text = textOf(trail);
+      const label = (locale === "ro" ? ro : en).Admin.registrations.audit.registration.partner_set;
+      expect(text, locale).toContain(label);
+      expect(text, locale).not.toContain("partner_set");
+      expect(text, locale).not.toContain(PARTNER);
+    }
   });
 });
 

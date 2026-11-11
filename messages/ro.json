@@ -1665,6 +1665,7 @@
           "elite_out_of_results": "Elită: «Apare în clasament» debifat — în afara clasamentului",
           "elite_on_site": "Elită: «Apare pe site» bifat — pe site după bifele persoanei",
           "elite_off_site": "Elită: «Apare pe site» debifat — numele nu mai apare pe site",
+          "partner_set": "De la parteneri: numele partenerului schimbat",
           "deadline_moved_for_outage": "Termen mutat: site-ul nu a putut fi accesat, ceasul a stat pe loc",
           "hold_moved_by_window": "Termenul semnării mutat după fereastra de confirmare schimbată",
           "not_revived_for_outage": "Nereluat după întreruperea site-ului: termenul trecuse cât nu putea fi accesat, iar locul fusese dat între timp sau cererea expirase deja",

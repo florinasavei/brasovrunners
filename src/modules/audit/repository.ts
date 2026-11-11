@@ -105,16 +105,16 @@ export type AuditAction =
    * «Apare pe site» (`_on_site` / `_off_site`), as the Administrator set them. A staff tick only hides: ticked, the person's
    * own ticks decide. The metadata is the new value alone (`{ inResults }` or `{ onSite }`) — never a name or a number.
    */
+  | "registration.elite_in_results"
+  | "registration.elite_out_of_results"
+  | "registration.elite_on_site"
+  | "registration.elite_off_site"
   /**
    * «E de la parteneri» (the decision «De la parteneri»): the partner's or sponsor's name set, changed or cleared on this
    * registration — by the Administrator on its page, or carried from a line of the internal list or an invitation (`via`).
    * The metadata is whether a name is now present (`{ partner }`) and, carried, where from — never the name typed.
    */
   | "registration.partner_set"
-  | "registration.elite_in_results"
-  | "registration.elite_out_of_results"
-  | "registration.elite_on_site"
-  | "registration.elite_off_site"
   /** Confirmed at the desk: address vouched for, declaration on paper (BR-REQ-037-07). */
   | "registration.confirmed_by_staff"
   /** Given a place ahead of the queue, into a free one (BR-REQ-037-07). */
