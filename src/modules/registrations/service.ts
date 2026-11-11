@@ -5127,7 +5127,6 @@ export type AddressChange = {
   promoWithdrawn: boolean;
 };
 
-/** PostgreSQL's unique violation (23505), wherever the driver nests it: the database's backstop for the checks below. */
 /**
  * The unique constraint a PostgreSQL unique violation (23505) names, wherever the driver nests it — read from the error's
  * `constraint`, else from its message, as `volunteers.ts#isAddressClash` reads one — or null for any other error.
@@ -5175,7 +5174,10 @@ const FOLLOWS_THE_MOVE = ["EVENT_REMINDER", "ORGANIZER_MESSAGE", "EVENT_UPDATE_N
  * already holds this runner at the event, in any state, or at another event of the race while this one is active
  * (`ALREADY_ON_ADDRESS`); it is at the club's limit per address (`ADDRESS_AT_CAP`); a family form waits on the row
  * (`ADDRESS_FAMILY_FORM_PENDING`); the new address has an open invitation to the event (`ADDRESS_INVITED`). An erased
- * registration is NOT_FOUND. A unique violation the checks did not foresee is the same `ALREADY_ON_ADDRESS`, never raw.
+ * registration is NOT_FOUND, and so is one taken between the read and the UPDATE (an erase, retention's sweep): the
+ * UPDATE that matches nothing ends the move, rolled back. Of the unique violations the checks did not foresee, only the
+ * two address indexes answer `ALREADY_ON_ADDRESS`; a confirmed row's fresh check-in code meeting another row's is drawn
+ * again, at most `MOVE_CHECKIN_CODE_ATTEMPTS` times, and the last collision is rethrown; anything else is rethrown.
  *
  * In the one transaction, when it passes:
  * 1. «Vreau să primesc oferte și beneficii» is withdrawn, as staff withdraws it (`setPromoConsent`, `STAFF`), on the
@@ -5410,12 +5412,14 @@ export async function changeRegistrationAddressByStaff<T extends Record<string, 
     /*
       Each attempt in its own savepoint, so a unique violation leaves the transaction usable. Only the two address
       indexes are «already on the address»; another row's check-in code met by the fresh one is drawn again, a bounded
-      number of times; anything else is rethrown as it is.
+      number of times; anything else is rethrown as it is. The row was read without a row lock, so an erase or retention's
+      sweep may have taken it since: an UPDATE that matches nothing is NOT_FOUND, and the whole move rolls back with it.
     */
-    let moved: Registration | undefined;
-    for (let attempt = 1; moved === undefined; attempt++) {
+    let moved: Registration;
+    for (let attempt = 1; ; attempt++) {
+      let row: Registration | undefined;
       try {
-        [moved] = await tx.transaction((savepoint) =>
+        [row] = await tx.transaction((savepoint) =>
           savepoint
             .update(registrations)
             .set({
@@ -5437,6 +5441,9 @@ export async function changeRegistrationAddressByStaff<T extends Record<string, 
         if (violated === CHECKIN_CODE_UNIQUE_CONSTRAINT && current.status === "CONFIRMED" && attempt < MOVE_CHECKIN_CODE_ATTEMPTS) continue;
         throw error;
       }
+      if (!row) throw new DomainError("NOT_FOUND", "no such registration");
+      moved = row;
+      break;
     }
 
     // 5. The two notices, then the state's own message to the new address. The old one carries no token and no new address.

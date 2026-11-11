@@ -1982,9 +1982,11 @@
         "pending": "Se schimbă…",
         "confirmTitle": "Schimbi adresa?",
         "confirmBody": "Linkurile trimise la adresa veche nu mai funcționează. Ambele adrese primesc un email despre schimbare, iar cea nouă primește pasul următor.",
-        "confirmBodyNoticesOnly": "Linkurile trimise la adresa veche nu mai funcționează. Ambele adrese primesc un email despre schimbare și nimic altceva nu se trimite.",
+        "confirmBodyNoticesOnly": "Linkurile trimise la adresa veche nu mai funcționează. Ambele adrese primesc un email despre schimbare, iar adresa nouă nu primește alt email.",
         "confirmPromo": "Acordul pentru oferte și beneficii se retrage: îl dă din nou persoana, de la adresa nouă.",
-        "confirmAlso": "Adresa veche primește „Adresa de email a fost schimbată”; cea nouă și emailul pasului următor, când există.",
+        "confirmAlso": "Adresa veche primește „Adresa de email a fost schimbată”; cea nouă primește și emailul pasului următor.",
+        "confirmAlsoNoticesOnly": "Adresa veche primește „Adresa de email a fost schimbată”.",
+        "confirmFamily": "Dacă altcineva de la adresa veche mai are un pas de făcut la eveniment, adresa veche primește din nou emailul acelui pas.",
         "readOnly": "Adresa o schimbă un administrator."
       },
       "missingAnswers": {

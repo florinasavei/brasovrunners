@@ -13,6 +13,7 @@ import { forgetCachedAddressCap } from "@/modules/registrations/address-cap-memo
 import { ADDRESS_CAP_SETTING_KEY } from "@/modules/registrations/address-cap";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
+import { deleteRegistrationByStaff } from "@/modules/registrations/admin-service";
 import { changeRegistrationAddressByStaff, type EventForRegistration, submitRegistration } from "@/modules/registrations/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { approveNotices, removeApprovedNotices } from "./legal-fixture";
@@ -167,5 +168,30 @@ describe("«Schimbă adresa» under real concurrency", () => {
     }
     // One «Ana Pop» on the new address at the event, whichever press came first.
     expect((await registrationOn(event.id, target)).filter((row) => row.registeredName === "Ana Pop")).toHaveLength(1);
+  });
+
+  it("an erase racing the move of a cancelled row: both calls end, the move succeeds or is NOT_FOUND, never raw, the row gone", { timeout: 30_000 }, async () => {
+    const event = await createEvent();
+    const actor = { id: adminId, role: "ADMIN" as const };
+    for (let round = 0; round < 5; round++) {
+      const ana = address(`ana-erased-${round}`);
+      const target = address(`target-erased-${round}`);
+      await submitRegistration(db, event, submission(ana, "Ana"), NOW);
+      const [anaRow] = await registrationOn(event.id, ana);
+      // A cancelled row holds no place: its erase takes no event lock, and its move is allowed.
+      await db.update(registrations).set({ status: "CANCELLED", cancelledAt: NOW, cancellationSource: "ADMIN" }).where(eq(registrations.id, anaRow.id));
+      const later = new Date(NOW.getTime() + 60_000);
+      const [move, erase] = await Promise.allSettled([
+        changeRegistrationAddressByStaff(db, actor, anaRow.id, target, later),
+        deleteRegistrationByStaff(db, actor, anaRow.id, "cerere de ștergere", later),
+      ]);
+      if (move.status === "rejected") {
+        expect(isDomainError(move.reason) && move.reason.code, String(move.reason)).toBe("NOT_FOUND");
+      }
+      if (erase.status === "rejected") {
+        expect(isDomainError(erase.reason) && erase.reason.code, String(erase.reason)).toBe("NOT_FOUND");
+      }
+      expect(await db.select({ id: registrations.id }).from(registrations).where(eq(registrations.id, anaRow.id))).toEqual([]);
+    }
   });
 });

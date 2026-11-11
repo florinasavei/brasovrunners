@@ -333,10 +333,17 @@ describe("«Schimbă adresa»: the card «Adresa de email» (BR-REQ-060-01)", ()
   });
 
   it("the question says the next step only when the move sends one: both languages, a cancelled row or an event that is over", async () => {
-    const formOf = async (id: string) => {
+    const confirmOf = async (id: string) => {
       const inside = elements(byTestId(await detailPage(id), "address-card"));
-      return (inside.find((element) => element.type === ActionForm && element.props["data-testid"] === "address-form")?.props.confirm as { body: string }).body;
+      return inside.find((element) => element.type === ActionForm && element.props["data-testid"] === "address-form")?.props.confirm as {
+        body: string;
+        also?: readonly { text: string }[];
+      };
     };
+    const formOf = async (id: string) => (await confirmOf(id)).body;
+    // The question's own lines after the email line, the club's line left out.
+    const ownLines = new Set([...[ro, en].flatMap((words) => [words.Admin.registrations.address.confirmAlso, words.Admin.registrations.address.confirmAlsoNoticesOnly, words.Admin.registrations.address.confirmFamily])]);
+    const alsoOf = async (id: string) => ((await confirmOf(id)).also ?? []).map((line) => line.text).filter((text) => ownLines.has(text));
     const race = await createRace();
     const confirmed = await register(race.id, "CONFIRMED");
     const cancelled = await register(race.id, "CANCELLED");
@@ -347,12 +354,18 @@ describe("«Schimbă adresa»: the card «Adresa de email» (BR-REQ-060-01)", ()
       expect(await formOf(confirmed)).toContain(words.Admin.registrations.address.confirmBody);
       expect(await formOf(cancelled)).toContain(words.Admin.registrations.address.confirmBodyNoticesOnly);
       expect(await formOf(cancelled)).not.toContain(words.Admin.registrations.address.confirmBody);
+      // Only the new address is promised silence: the old one may still get its family's own message again.
+      expect(words.Admin.registrations.address.confirmBodyNoticesOnly).not.toMatch(/nimic altceva|nothing else/);
+      expect(await alsoOf(confirmed)).toEqual([words.Admin.registrations.address.confirmAlso, words.Admin.registrations.address.confirmFamily]);
+      expect(await alsoOf(cancelled)).toEqual([words.Admin.registrations.address.confirmAlsoNoticesOnly, words.Admin.registrations.address.confirmFamily]);
     }
     await db.update(events).set({ eventStatus: "COMPLETED" }).where(eq(events.id, race.id));
     for (const [locale, words] of languages) {
       state.locale = locale;
       expect(await formOf(confirmed)).toContain(words.Admin.registrations.address.confirmBodyNoticesOnly);
       expect(await formOf(confirmed)).not.toContain(words.Admin.registrations.address.confirmBody);
+      // Over, the move sends no family message either.
+      expect(await alsoOf(confirmed)).toEqual([words.Admin.registrations.address.confirmAlsoNoticesOnly]);
     }
   });
 

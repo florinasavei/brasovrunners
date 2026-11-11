@@ -113,7 +113,7 @@ import { whatToTell } from "@/modules/registrations/ui/tell-words";
 import { givePlaceNowAhead, staffOfferIfMadeNow, staffOfferQuestion } from "@/modules/registrations/give-place-tip";
 import { findInvitationOfRegistration } from "@/modules/registrations/invitation-repository";
 import { invitationHeldForRegistration } from "@/modules/registrations/service";
-import { moveSendsNextStep, signedAfterStaffAddressChange } from "@/modules/registrations/domain/address-change";
+import { eventOverForMove, moveSendsNextStep, signedAfterStaffAddressChange } from "@/modules/registrations/domain/address-change";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -259,6 +259,15 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     nothing any more (`countOccupied`), reads «Rezervarea expiră» like an ended row.
   */
   const rowDeadline = rowDeadlineOf(registration, timelineNow);
+  // «Schimbi adresa?» says what the move sends, by the move's own rules (`domain/address-change.ts`).
+  const addressEvent = {
+    eventStatus: registration.eventStatus,
+    startsAt: registration.eventStartsAt,
+    endsAt: registration.eventEndsAt,
+    timezone: registration.eventTimezone,
+  };
+  const addressMoveSendsNextStep = moveSendsNextStep(registration.status, addressEvent, timelineNow);
+  const addressEventOver = eventOverForMove(addressEvent, timelineNow);
   const holdLine: [string, string | null] = [
     tr(deadlineHoldsAPlace(rowDeadline) ? "registrations.holdKeeps" : "registrations.holdExpires"),
     rowDeadline?.kind === "kept" ? `${dt(registration.holdExpiresAt)} — ${tr("registrations.journey.heldKept")}` : dt(registration.holdExpiresAt),
@@ -1391,26 +1400,16 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               confirm={{
                 title: tr("registrations.address.confirmTitle"),
                 body: [
-                  tr(
-                    moveSendsNextStep(
-                      registration.status,
-                      {
-                        eventStatus: registration.eventStatus,
-                        startsAt: registration.eventStartsAt,
-                        endsAt: registration.eventEndsAt,
-                        timezone: registration.eventTimezone,
-                      },
-                      timelineNow,
-                    )
-                      ? "registrations.address.confirmBody"
-                      : "registrations.address.confirmBodyNoticesOnly",
-                  ),
+                  tr(addressMoveSendsNextStep ? "registrations.address.confirmBody" : "registrations.address.confirmBodyNoticesOnly"),
                   ...(registration.promoConsent ? [tr("registrations.address.confirmPromo")] : [])].join(" "),
                 ...words.mail({
                   to: registration.registeredName,
                   type: "REGISTRATION_ADDRESS_ADDED",
                   test: registration.kind === "TEST",
-                  also: [{ text: tr("registrations.address.confirmAlso") }],
+                  also: [
+                    { text: tr(addressMoveSendsNextStep ? "registrations.address.confirmAlso" : "registrations.address.confirmAlsoNoticesOnly") },
+                    ...(addressEventOver ? [] : [{ text: tr("registrations.address.confirmFamily") }]),
+                  ],
                 }),
                 confirmLabel: tr("registrations.address.submit"),
                 cancelLabel: words.cancel,

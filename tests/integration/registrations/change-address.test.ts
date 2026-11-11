@@ -55,6 +55,27 @@ vi.mock("@/modules/registrations/checkin-code", async (original) => {
   const actual = await original<typeof import("@/modules/registrations/checkin-code")>();
   return { ...actual, newCheckinCode: () => forcedCheckinCodes.shift() ?? actual.newCheckinCode() };
 });
+/**
+ * A registration a test takes away right after the move's read under the lock — as an erase or retention's sweep that
+ * takes no event lock would, between that read and the UPDATE — deleted through the move's own transaction.
+ */
+const takenAfterRead = vi.hoisted(() => ({ id: null as string | null, reads: 0 }));
+vi.mock("@/modules/registrations/repository", async (original) => {
+  const actual = await original<typeof import("@/modules/registrations/repository")>();
+  return {
+    ...actual,
+    findRegistrationById: async (...args: Parameters<typeof actual.findRegistrationById>) => {
+      const row = await actual.findRegistrationById(...args);
+      // The second read of the row is the one under the event's lock: the row is gone the moment after it.
+      if (row && row.id === takenAfterRead.id && ++takenAfterRead.reads === 2) {
+        const [tx] = args;
+        await tx.delete(registrations).where(eq(registrations.id, row.id));
+        takenAfterRead.id = null;
+      }
+      return row;
+    },
+  };
+});
 vi.mock("@/modules/notifications/drain", () => ({ drainOutboxAfterResponse: () => undefined, drainOutboxRowsAfterResponse: () => undefined }));
 vi.mock("@/modules/public-cache/cache", async (original) => ({
   ...(await original<typeof import("@/modules/public-cache/cache")>()),
@@ -460,6 +481,23 @@ describe("«Schimbă adresa»: each refusal writes nothing", () => {
     await refusedWith(changeRegistrationAddressByStaff(db, admin, randomUUID(), NEW, at(60)), null, "NOT_FOUND");
   });
 
+  it("a row taken between the read and the UPDATE (a cancelled one, erased meanwhile): NOT_FOUND, nothing written, and the call returns", { timeout: 10_000 }, async () => {
+    const event = await createEvent(5);
+    const ana = await unconfirmed(event, "Ana", 0);
+    await db.update(registrations).set({ status: "CANCELLED", cancelledAt: at(1), cancellationSource: "ADMIN" }).where(eq(registrations.id, ana.id));
+    takenAfterRead.id = ana.id;
+    takenAfterRead.reads = 0;
+    try {
+      // The new address's participant the move creates is rolled back with it: no orphan is left for the sweep.
+      await refusedWith(changeRegistrationAddressByStaff(db, admin, ana.id, NEW, at(60)), null, "NOT_FOUND");
+      expect(takenAfterRead.reads).toBe(2);
+      expect(await db.select().from(participants).where(eq(participants.canonicalEmail, canonicalizeEmail(NEW).canonicalEmail))).toEqual([]);
+      expect((await rowOf(ana.id)).participantId).toBe(ana.participantId);
+    } finally {
+      takenAfterRead.id = null;
+    }
+  });
+
   it("every role but the Administrator's, by the service and by its wrapper", async () => {
     const ana = await confirmedAddress(await createEvent(5), "Ana");
     for (const role of STAFF_ROLES.filter((role: StaffRole) => role !== "ADMIN" && role !== "SUPERADMIN")) {
@@ -499,6 +537,23 @@ describe("«Schimbă adresa»: a unique-key failure is ALREADY_ON_ADDRESS only w
     expect(row.checkinCode).not.toBeNull();
     expect([ana.checkinCode, dora.checkinCode]).not.toContain(row.checkinCode);
     expect((await rowOf(dora.id)).checkinCode).toBe(dora.checkinCode);
+  });
+
+  it("the fresh check-in code meets another row's on every draw: the move ends after the bound, not about the address, nothing written", { timeout: 10_000 }, async () => {
+    const event = await createEvent(5);
+    const ana = await confirmedRow(event, "Ana", 0);
+    const dora = await confirmedRow(event, "Dora", 1);
+    const before = await snapshot();
+    // One more forced draw than the bound allows: the one left over proves the move stopped drawing.
+    for (let draw = 0; draw < 6; draw++) forcedCheckinCodes.push(dora.checkinCode as string);
+    try {
+      const error = await refusal(changeRegistrationAddressByStaff(db, admin, ana.id, NEW, at(60)));
+      expect(isDomainError(error) && error.fields.includes(ALREADY_ON_ADDRESS), String(error)).toBeFalsy();
+      expect(forcedCheckinCodes).toHaveLength(1);
+      expect(await snapshot()).toEqual(before);
+    } finally {
+      forcedCheckinCodes.length = 0;
+    }
   });
 
   it("the address's own unique indexes still answer ALREADY_ON_ADDRESS, writing nothing", async () => {
