@@ -1,6 +1,6 @@
 "use client";
 
-import StickyNote2Icon from "@mui/icons-material/StickyNote2";
+import AddIcon from "@mui/icons-material/Add";
 import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -13,7 +13,7 @@ import GlyphButton from "./GlyphButton";
 
 /**
  * «Adaugă o notă» on a row of a list, without leaving the list: «Note interne» first on the registration's page,
- * and a note from a row of the list, amending §777 (the owner: «trebuie sa pot adauga comentarii direct de aici»).
+ * and a note from a row of the list, amending the internal notes (the owner: «trebuie sa pot adauga comentarii direct de aici»).
  *
  * One small client island, generic on purpose — the next list that keeps notes (the volunteers') passes its own
  * action, its own hidden fields and its own words and gets the same control. It knows nothing of registrations:
@@ -70,7 +70,7 @@ export default function RowNoteDialog({
   max: number;
   saveLabel: string;
   cancelLabel: string;
-  /** Changes when a save has landed: the dialog closes by itself then. */
+  /** Changes when a save has landed (the row's count, and the return's own flag): the dialog closes by itself then. The simple way (no JavaScript) is the link, never this form: it exists only in the browser. */
   settledKey: string;
   testId?: string;
 }) {
@@ -97,6 +97,7 @@ export default function RowNoteDialog({
         component="a"
         href={fallbackHref}
         aria-label={ariaLabel}
+        aria-haspopup="dialog"
         onClick={press}
         data-testid={testId}
         sx={{
@@ -114,16 +115,14 @@ export default function RowNoteDialog({
             display: "inline-flex",
             alignItems: "center",
             gap: 0.5,
-            px: 1,
+            px: 0.5,
             py: 0.25,
-            border: 1,
-            borderColor: "divider",
-            borderRadius: 999,
+            textDecoration: "underline",
             fontSize: "0.8125rem",
             lineHeight: 1.4,
           }}
         >
-          <StickyNote2Icon aria-hidden="true" sx={{ fontSize: "1rem" }} />
+          <AddIcon aria-hidden="true" sx={{ fontSize: "1rem" }} />
           {label}
         </Box>
       </Box>

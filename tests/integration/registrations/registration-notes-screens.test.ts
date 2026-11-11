@@ -481,13 +481,16 @@ describe("the list's «Adaugă o notă» — the row's control", () => {
     for (const role of ["DEV", "CONTRIBUTOR", "COPYWRITER"] as const) {
       expect(canKeepRegistrationNotes(role)).toBe(false);
       state.actor = await staff(role, `Tester ${role}`);
+      // Today the list is refused to these roles altogether (the same role set reads it and keeps notes); if the
+      // list is ever opened to more roles, the same loop guards that the control is still not drawn.
       let drawn: ReactNode = null;
+      let refused = false;
       try {
         drawn = await nameCellOf(await listPage({ eventId: race.id }), id);
       } catch {
-        // The list is refused to this role altogether: no control is drawn either way.
+        refused = true;
       }
-      expect(elements(drawn).filter((element) => element.type === RowNoteDialog), role).toHaveLength(0);
+      if (!refused) expect(elements(drawn).filter((element) => element.type === RowNoteDialog), role).toHaveLength(0);
     }
   });
 

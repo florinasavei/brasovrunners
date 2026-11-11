@@ -189,7 +189,10 @@ test.describe("§777 «Note interne» on a registration", () => {
       await expect(control).toHaveAttribute("href", new RegExp(`/admin/registrations/${seeded.registrationId}#note-interne$`));
       expect((await control.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       // Both copies of the row (the table and the phone cards) are in the page, and no id is used twice.
-      expect(await page.locator('#main [data-testid="note-add-open"]').count()).toBeGreaterThanOrEqual(1);
+      expect(await page.locator('#main [data-testid="note-add-open"]').count()).toBe(2);
+      // The two copies' own ids (the control's, the dialog's) are not shared; the list's other ids are not this test's.
+      const ids = await page.locator('#main [id*="note"]').evaluateAll((els) => els.map((el) => el.id));
+      expect(ids.length).toBe(new Set(ids).size);
       await expect(page.locator('#main [data-testid="notes-mark"]')).toHaveCount(0);
       await fitsTheScreen(page);
 

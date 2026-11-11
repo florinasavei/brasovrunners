@@ -584,7 +584,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               max={REGISTRATION_NOTE_MAX}
               saveLabel={t("registrations.notes.save")}
               cancelLabel={words.cancel}
-              settledKey={String(notesCounts.get(row.id) ?? 0)}
+              settledKey={`${notesCounts.get(row.id) ?? 0}:${saved ?? ""}`}
             />
           )}
           {/* The email state in one line under the name and its chips (§663, §671): only while somebody must

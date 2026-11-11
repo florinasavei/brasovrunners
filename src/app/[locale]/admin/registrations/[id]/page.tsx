@@ -466,8 +466,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   /*
     The page's cards (§847; the owner, 2026-10-21: «they look like they are from a different app»): under the
     person's name and state, every section is a `Panel` — the house's card, its glyph before its title, a count
-    beside it where one belongs — in the order a reader needs them: what to tell somebody who asks, the verbs of
-    the messages, race day and the places, the emails and the notes, the answers and the emergency details, the
+    beside it where one belongs — in the order a reader needs them: «Note interne» first, right under the heading
+    block (open when it holds a note), then what to tell somebody who asks, the verbs of the messages, race day
+    and the places, the emails, the answers and the emergency details, the
     timeline, then what the team did and who received the data, folded, and last the three verbs that end or
     take something away, folded too, the erase in red. Each card holds its own verbs, gated exactly as before.
   */
