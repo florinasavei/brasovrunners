@@ -576,6 +576,7 @@ export type AuditAction =
    */
   | "event_reserve.added"
   | "event_reserve.note_saved"
+  | "event_reserve.renamed"
   | "event_reserve.deleted"
   | "event_reserve.moved"
   /**

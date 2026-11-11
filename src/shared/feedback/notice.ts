@@ -160,6 +160,8 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   "neonLimitsSame",
   // «Salvează» on a club to-do line whose words, owner and day were already these (§438).
   "clubTodoUnchanged",
+  // «Corectează numele» on a line of the internal list, saved with the name it already had.
+  "reserveRenameUnchanged",
   // The same on an event's own to-dos (§749).
   "eventTodoUnchanged",
   // The same on an event's volunteers (§754).

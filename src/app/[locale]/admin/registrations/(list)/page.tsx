@@ -82,7 +82,7 @@ import InvitationsPanel from "@/modules/registrations/ui/InvitationsPanel";
 import ReserveListPanel from "@/modules/registrations/ui/ReserveListPanel";
 import WaitlistAddForm from "@/modules/registrations/ui/WaitlistAddForm";
 import { listReserveEntries } from "@/modules/registrations/reserve-list";
-import { addReserveEntryAction, deleteReserveEntryAction, moveReserveEntryToEliteAction, saveReserveNoteAction } from "../reserve-actions";
+import { addReserveEntryAction, deleteReserveEntryAction, moveReserveEntryToEliteAction, renameReserveEntryAction, saveReserveNoteAction } from "../reserve-actions";
 import { inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
@@ -1447,12 +1447,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           }
           addAction={addReserveEntryAction}
           saveNoteAction={saveReserveNoteAction}
+          renameAction={renameReserveEntryAction}
           deleteAction={deleteReserveEntryAction}
           moveAction={mayManage && waitlistAddOpen ? moveReserveEntryAction : undefined}
           eliteMoveAction={mayManage ? moveReserveEntryToEliteAction : undefined}
           listQuery={listQueryString}
           eliteCardHref={mayManage && saved === "reserveMovedToElite" ? (eliteCardHref ?? undefined) : undefined}
-          opened={saved === "reserveAdded" || saved === "reserveNoteSaved" || saved === "reserveDeleted" || saved === "reserveMovedToElite" || current.from === "reserve"}
+          opened={saved === "reserveAdded" || saved === "reserveNoteSaved" || saved === "reserveRenamed" || saved === "reserveRenameUnchanged" || saved === "reserveDeleted" || saved === "reserveMovedToElite" || current.from === "reserve"}
         />
       )}
 

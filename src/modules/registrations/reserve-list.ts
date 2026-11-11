@@ -67,19 +67,28 @@ export function parseReserveNote(raw: unknown): string | null {
   return note;
 }
 
-/** The typed line, ready to store; every refusal names its box. */
-export function parseReserveEntry(input: ReserveEntryInput): { firstName: string; lastName: string; email: string | null; note: string | null } {
+/**
+ * The typed name, ready to store: both boxes trimmed, 1 to `RESERVE_NAME_MAX` characters each, the refusal naming
+ * the box (or both). The one parse the add and «Corectează numele» share.
+ */
+export function parseReserveName(input: { firstName: unknown; lastName: unknown }): { firstName: string; lastName: string } {
   const firstName = trimmed(input.firstName);
   const lastName = trimmed(input.lastName);
-  const email = trimmed(input.email);
   const missing = [firstName === "" || [...firstName].length > RESERVE_NAME_MAX ? "firstName" : null, lastName === "" || [...lastName].length > RESERVE_NAME_MAX ? "lastName" : null].filter(
     (field): field is string => field !== null,
   );
   if (missing.length > 0) throw new DomainError("VALIDATION_ERROR", `a name of 1 to ${RESERVE_NAME_MAX} characters is required`, missing);
+  return { firstName, lastName };
+}
+
+/** The typed line, ready to store; every refusal names its box. */
+export function parseReserveEntry(input: ReserveEntryInput): { firstName: string; lastName: string; email: string | null; note: string | null } {
+  const name = parseReserveName(input);
+  const email = trimmed(input.email);
   if (email !== "" && (email.length > RESERVE_EMAIL_MAX || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
     throw new DomainError("VALIDATION_ERROR", "the address is not an email address", ["email"]);
   }
-  return { firstName, lastName, email: email === "" ? null : email, note: parseReserveNote(input.note) };
+  return { ...name, email: email === "" ? null : email, note: parseReserveNote(input.note) };
 }
 
 /** One event's internal list, in the order it was written down. */
@@ -145,6 +154,32 @@ export async function saveReserveNote<T extends Record<string, unknown>>(db: Dat
     if (current.note === note) return { eventId: current.eventId, changed: false };
     await tx.update(eventReserveEntries).set({ note, updatedAt: now }).where(eq(eventReserveEntries.id, current.id));
     await recordAuditEvent(tx, { actorStaffUserId: actor.id, action: "event_reserve.note_saved", entityType: "event", entityId: current.eventId, metadata: { entryId: current.id }, now });
+    return { eventId: current.eventId, changed: true };
+  });
+}
+
+/**
+ * «Corectează numele» on one line («Lista internă», amended by «Corectează numele pe lista internă»; the owner:
+ * a name written down wrong must be fixable): the first and last name, through the add's own parse
+ * (`parseReserveName`). The Organizer and above, as add, note and delete are (asserted here and again at the action's
+ * door, BR-REQ-060-01). The line keeps its place, address, note, author and creation moment; a save of the same
+ * name writes nothing. A line moved or deleted meanwhile is NOT_FOUND. The trail names who, when and which line,
+ * never the old or the new name.
+ */
+export async function renameReserveEntry<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  entryId: string,
+  rawName: { firstName: unknown; lastName: unknown },
+  now: Date,
+): Promise<{ eventId: string; changed: boolean }> {
+  assertMayKeep(actor);
+  const name = parseReserveName(rawName);
+  return db.transaction(async (tx) => {
+    const current = await lockedEntry(tx, entryId);
+    if (current.firstName === name.firstName && current.lastName === name.lastName) return { eventId: current.eventId, changed: false };
+    await tx.update(eventReserveEntries).set({ ...name, updatedAt: now }).where(eq(eventReserveEntries.id, current.id));
+    await recordAuditEvent(tx, { actorStaffUserId: actor.id, action: "event_reserve.renamed", entityType: "event", entityId: current.eventId, metadata: { entryId: current.id }, now });
     return { eventId: current.eventId, changed: true };
   });
 }

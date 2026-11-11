@@ -5,7 +5,7 @@ import { getDb } from "@/db/client";
 import { ELITE_NAME_MAX } from "@/db/schema/event-elite-entries";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { addReserveEntry, deleteReserveEntry, moveReserveEntryToElite, saveReserveNote } from "@/modules/registrations/reserve-list";
+import { addReserveEntry, deleteReserveEntry, moveReserveEntryToElite, renameReserveEntry, saveReserveNote } from "@/modules/registrations/reserve-list";
 import { canKeepRegistrationNotes, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -16,8 +16,9 @@ import { type FormOutcome, refused } from "@/shared/forms/outcome";
  * The three presses of «Lista internă de așteptare» (§854) on an event's registrations list: «Adaugă»,
  * «Salvează nota» and «Șterge». The coarse gate here (`canKeepRegistrationNotes`) and the service's own
  * (BR-REQ-060-01). A refusal keeps what was typed (§315); a success returns to the panel, open. Nothing
- * typed goes in the URL or the flash, and nothing is ever sent to the person. A fourth, the Administrator's
- * alone: «Mută pe lista de elită» (§903), below.
+ * typed goes in the URL or the flash, and nothing is ever sent to the person. «Corectează numele» («Lista internă»,
+ * amended by «Corectează numele pe lista internă») is the Organizer's like them; «Mută pe lista de elită» (§903),
+ * below, the Administrator's alone.
  */
 
 /**
@@ -62,6 +63,31 @@ export async function saveReserveNoteAction(_previous: FormOutcome | null, form:
     return refused(error, form);
   }
   return backToPanel(locale, eventId, "reserveNoteSaved");
+}
+
+/**
+ * «Corectează numele» on a line: the first and last name through the add's own parse. The coarse gate here and the
+ * service's own (BR-REQ-060-01). A refusal keeps what was typed; a success comes back to the list as it was (its
+ * filters, sort and page, from the form's `listQuery`, the path rebuilt here) with the panel open and a toast, the
+ * name in neither the address nor the flash. A save of the same name says so quietly.
+ */
+export async function renameReserveEntryAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  let eventId: string;
+  let changed: boolean;
+  try {
+    const actor = await requireStaffCapability(canKeepRegistrationNotes);
+    ({ eventId, changed } = await renameReserveEntry(getDb(), actor, text(form, "entryId"), { firstName: form.get("firstName"), lastName: form.get("lastName") }, new Date()));
+  } catch (error) {
+    return refused(error, form);
+  }
+  const saved = changed ? "reserveRenamed" : "reserveRenameUnchanged";
+  await flash({ kind: changed ? "success" : "info", key: saved });
+  const params = new URLSearchParams(text(form, "listQuery"));
+  for (const key of ["saved", "error", "from", "count", "erase", "memberSweep"]) params.delete(key);
+  params.set("eventId", eventId);
+  params.set("saved", saved);
+  redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${params.toString()}#registrations-reserve`);
 }
 
 export async function deleteReserveEntryAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
