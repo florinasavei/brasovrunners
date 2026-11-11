@@ -46,7 +46,7 @@ import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
 import KitCount from "@/modules/registrations/ui/KitCount";
-import { countVolunteersWithKit } from "@/modules/volunteers/admin-list";
+import { readVolunteerKitFigures, volunteerKitHrefs } from "@/modules/volunteers/admin-list";
 import { listEliteEntries } from "@/modules/registrations/elite-list";
 import { listEliteMarkedRegistrations } from "@/modules/registrations/elite-mark";
 import ElitePanel from "@/modules/registrations/ui/ElitePanel";
@@ -302,8 +302,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId ? readPlaceOutlook(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
     // «Pe site acum» (§906): what the public meets this minute, by the public card's predicate, and the tick beside it — one event only.
     filters.eventId ? readPublicDoor(db, filters.eventId, deadlinesNow) : Promise.resolve(null),
-    // The kits' volunteers (§904): the event's volunteers ticked «Are kit», said in the kits' title — `countKits` is untouched.
-    filters.eventId ? countVolunteersWithKit(db, filters.eventId) : Promise.resolve(0),
+    // The kits' volunteers (§904): the event's volunteers by state and «Are kit» in one read — «cu kit» in the kits' title and line, «fără kit» in the line; `countKits` is untouched.
+    filters.eventId ? readVolunteerKitFigures(db, filters.eventId) : Promise.resolve(null),
   ]);
 
   // A family's rows side by side (§588), where its first row falls in the chosen order; phone cards read the same rows.
@@ -1357,7 +1357,21 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         </GlyphButton>
       )}
       {/* «Kituri de pregătit» (the owner, 2026-11-04): the runners — the separate elite list among them — plus the volunteers with a kit. */}
-      {kits && <KitCount kits={kits} locale={locale} volunteers={volunteerKits} elites={eliteNames} eliteHref={eliteCardHref ?? undefined} spaceAbove={1.5} />}
+      {kits && (
+        <KitCount
+          kits={kits}
+          locale={locale}
+          volunteers={volunteerKits?.withKit ?? 0}
+          volunteerLine={
+            volunteerKits && filters.eventId
+              ? { withoutKit: volunteerKits.withoutKit, cancelled: volunteerKits.cancelled, ...volunteerKitHrefs(getPathname({ locale, href: "/admin/volunteers" }), filters.eventId, volunteerKits) }
+              : undefined
+          }
+          elites={eliteNames}
+          eliteHref={eliteCardHref ?? undefined}
+          spaceAbove={1.5}
+        />
+      )}
       {/*
         «Când pierde lumea locul?» (§635; the owner, 2026-10-02): until when the people of this event
         keep their place, and what a passed deadline does — right under the counts, and only when the list

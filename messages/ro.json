@@ -1153,6 +1153,10 @@
           "few": "{count} voluntari",
           "other": "{count} de voluntari"
         },
+        "volunteersLine": "Voluntari: <yes>{withKit}</yes> · <no>{withoutKit}</no>.",
+        "volunteersLineCancelled": "Voluntari: <yes>{withKit}</yes> · <no>{withoutKit}</no>. Cei anulați nu intră.",
+        "volunteersWithKit": "{count} cu kit",
+        "volunteersWithoutKit": "{count} fără kit",
         "who": "Alergători: {holding} · {invitations}. Lista de așteptare nu intră.",
         "whoWithElites": "Alergători: {holding} · {invitations} · <link>{elites}</link>. Lista de așteptare nu intră.",
         "holding": {

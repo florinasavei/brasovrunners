@@ -1153,6 +1153,10 @@
           "few": "{count} volunteers",
           "other": "{count} volunteers"
         },
+        "volunteersLine": "Volunteers: <yes>{withKit}</yes> · <no>{withoutKit}</no>.",
+        "volunteersLineCancelled": "Volunteers: <yes>{withKit}</yes> · <no>{withoutKit}</no>. Cancelled ones are not counted.",
+        "volunteersWithKit": "{count} with a kit",
+        "volunteersWithoutKit": "{count} without a kit",
         "who": "Runners: {holding} · {invitations}. The waiting list is not counted.",
         "whoWithElites": "Runners: {holding} · {invitations} · <link>{elites}</link>. The waiting list is not counted.",
         "holding": {

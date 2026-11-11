@@ -32,6 +32,7 @@ export default async function KitCount({
   volunteers = 0,
   elites = 0,
   eliteHref,
+  volunteerLine,
   spaceAbove = 0,
 }: {
   kits: Kits;
@@ -41,6 +42,12 @@ export default async function KitCount({
   elites?: number;
   /** The editor's elite card (`/admin/events/[id]#bib-elite`, scrolled to, the folds around it opened, the card left closed): the elites' words link there. */
   eliteHref?: string;
+  /**
+   * The line under the runners' (the owner, 2026-11-11: «cați voluntari cu kit am și cați fără kit»): `volunteers` above is its «cu
+   * kit», the headline's own figure; `withoutKit` the event's other volunteers under the same rule, `cancelled` the ones left out of
+   * both. Each number links to the «Voluntari» list only where that list shows exactly that many people (`yesHref`, `noHref`).
+   */
+  volunteerLine?: { withoutKit: number; cancelled: number; yesHref?: string; noHref?: string };
   spaceAbove?: number;
 }) {
   const t = await getTranslations("Admin");
@@ -51,6 +58,14 @@ export default async function KitCount({
   const eliteLink = (chunks: ReactNode) =>
     eliteHref ? (
       <Box component="a" href={eliteHref} sx={{ color: "primary.main" }} data-testid="registrations-kits-elites">
+        {chunks}
+      </Box>
+    ) : (
+      chunks
+    );
+  const volunteerLink = (href: string | undefined, testId: string, chunks: ReactNode) =>
+    href ? (
+      <Box component="a" href={href} sx={{ color: "primary.main" }} data-testid={testId}>
         {chunks}
       </Box>
     ) : (
@@ -71,6 +86,16 @@ export default async function KitCount({
       <Typography variant="body2" color="text.secondary" data-testid="registrations-kits-runners">
         {elites > 0 ? t.rich("registrations.kits.whoWithElites", { ...who, elites: counted("elites", elites), link: eliteLink }) : t("registrations.kits.who", who)}
       </Typography>
+      {volunteerLine && volunteers + volunteerLine.withoutKit > 0 && (
+        <Typography variant="body2" color="text.secondary" data-testid="registrations-kits-volunteers">
+          {t.rich(volunteerLine.cancelled > 0 ? "registrations.kits.volunteersLineCancelled" : "registrations.kits.volunteersLine", {
+            withKit: t("registrations.kits.volunteersWithKit", { count: volunteers }),
+            withoutKit: t("registrations.kits.volunteersWithoutKit", { count: volunteerLine.withoutKit }),
+            yes: (chunks) => volunteerLink(volunteerLine.yesHref, "registrations-kits-volunteers-yes", chunks),
+            no: (chunks) => volunteerLink(volunteerLine.noHref, "registrations-kits-volunteers-no", chunks),
+          })}
+        </Typography>
+      )}
       {kits.kitShirt && shirts.length > 0 && (
         <Typography variant="body2" color="text.secondary" data-testid="registrations-kits-shirts">
           {t("registrations.kits.shirts", { sizes: shirts.join(" · ") })}
