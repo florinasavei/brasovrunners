@@ -10294,6 +10294,7 @@
       "cost": "Emailuri, cu tot cu copiile pentru club: {messages} — se scad din cota Mailgun ({allowance}).",
       "waiting": "{waiting} așteaptă deja la coadă",
       "deferredDay": "Azi pot pleca {now} dintre ele; restul așteaptă la coadă și pleacă după miezul nopții (UTC), când se reface cota zilnică. Nu se pierde niciunul.",
+      "deferredDayGmail": "Azi pot pleca {now} prin Mailgun; restul pleacă apoi prin Gmail-ul clubului, în limita lui, și prin Mailgun când se reface cota.",
       "deferredMonth": "Luna aceasta pot pleca {now} dintre ele; restul așteaptă la coadă și pleacă când se reface cota lunară. Nu se pierde niciunul.",
       "deferredDays": {
         "one": "Azi pot pleca {now} dintre ele; restul așteaptă la coadă și pleacă în cel puțin încă {days} zi, cel mult {perDay} pe zi, cât lasă cota refăcută la miezul nopții (UTC). Nu se pierde niciunul.",
@@ -10367,6 +10368,7 @@
       "fitsMonth": "Încape în cota lunii.",
       "ownFirst": "Emailurile înscrierilor pleacă înaintea lor.",
       "mailgunStopped": "Mailgun e oprit acum, până {until}. Mesajul începe să plece când repornește.",
+      "mailgunStoppedGmail": "Mailgun e oprit acum, până {until}. Până atunci emailurile pleacă prin Gmail-ul clubului, în limita lui.",
       "costGmail": "Emailuri prin Gmail-ul clubului: {messages}. Gmail mai poate trimite acum {room} din limita de {cap}.",
       "costCopiesGmail": "Emailuri: {messages} — se scad din cota Mailgun ({allowance}). Copiile pentru club, {copies}, pleacă prin Gmail-ul clubului.",
       "paceGmail": {
@@ -10384,7 +10386,7 @@
         "other": "Pe un plan cu cotă zilnică, mesajul acesta folosește cota zilnică în cel puțin {days} de zile."
       },
       "dailyShare": "Emailurile înscrierilor pleacă înaintea lui și din aceeași cotă: după ce se termină cota zilei, Mailgun nu mai trimite nimic în ziua aceea, nici emailurile înscrierilor.",
-      "dailyShareGmail": "Emailurile înscrierilor pleacă înaintea lui și din aceeași cotă: după ce se termină cota zilei, Mailgun nu mai trimite nimic în ziua aceea, iar ele pleacă prin Gmail-ul clubului.",
+      "dailyShareGmail": "Emailurile înscrierilor pleacă primele, dar împart cu acest mesaj cota zilei și limita Gmail.",
       "dailyPlan": "Un mesaj mare se trimite pe un plan lunar: «{settings}» → «{emails}» → «{plan}».",
       "historyAnswers": "Au reconfirmat {yes} · Au anulat {cancelled} · N-au răspuns {none}",
       "historyProgress": "Au plecat {left} · Așteaptă {waiting}",

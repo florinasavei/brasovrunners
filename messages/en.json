@@ -10294,6 +10294,7 @@
       "cost": "Emails, the club's copies included: {messages} — taken from the Mailgun allowance ({allowance}).",
       "waiting": "{waiting} already waiting in the queue",
       "deferredDay": "{now} of them can go today; the rest wait in the queue and go after midnight (UTC), when the daily allowance comes back. None is lost.",
+      "deferredDayGmail": "{now} can go by Mailgun today; the rest then leave by the club's Gmail, within its limit, and by Mailgun when the allowance comes back.",
       "deferredMonth": "{now} of them can go this month; the rest wait in the queue and go when the monthly allowance comes back. None is lost.",
       "deferredDays": {
         "one": "{now} of them can go today; the rest wait in the queue and go over at least {days} more day, at most {perDay} a day, as the allowance comes back each midnight (UTC). None is lost.",
@@ -10367,6 +10368,7 @@
       "fitsMonth": "It fits this month's allowance.",
       "ownFirst": "The registrations' own emails leave before them.",
       "mailgunStopped": "Mailgun is stopped now, until {until}. The message starts leaving when it restarts.",
+      "mailgunStoppedGmail": "Mailgun is stopped now, until {until}. Until then the emails leave by the club's Gmail, within its limit.",
       "costGmail": "Emails by the club's Gmail: {messages}. Gmail can send {room} more now, of its limit of {cap}.",
       "costCopiesGmail": "Emails: {messages} — taken from the Mailgun allowance ({allowance}). The club's copies, {copies}, leave by the club's Gmail.",
       "paceGmail": {
@@ -10384,7 +10386,7 @@
         "other": "On a plan with a daily allowance, this message uses the daily allowance on at least {days} days."
       },
       "dailyShare": "The registrations' own emails leave before it and from the same allowance: once the day's allowance is spent, Mailgun sends nothing more that day, theirs included.",
-      "dailyShareGmail": "The registrations' own emails leave before it and from the same allowance: once the day's allowance is spent, Mailgun sends nothing more that day, and they leave by the club's Gmail.",
+      "dailyShareGmail": "The registrations' own emails leave first, but they share the day's allowance and Gmail's limit with this message.",
       "dailyPlan": "A large send belongs on a monthly plan: «{settings}» → «{emails}» → «{plan}».",
       "historyAnswers": "Reconfirmed {yes} · Cancelled {cancelled} · No answer {none}",
       "historyProgress": "Left {left} · Waiting {waiting}",

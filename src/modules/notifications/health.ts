@@ -234,17 +234,12 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
   const carried = whileStopped.road === "gmail";
   const held = heldByMailgunCondition();
   const fallbackWaiting = sql`${emailOutbox.lastError} LIKE ${`${FALLBACK_WAITING_ERROR_PREFIX}%`}`;
-  /*
-    A send to many on Mailgun's road, its manual resends left out (`SEND_TO_MANY_MESSAGE_TYPES`): during a stop Gmail does not
-    carry it (the decision «Cere reconfirmarea», part two) — it waits for Mailgun, so a held one is counted as any row nothing
-    carries, never as carried.
-  */
+  const notCarried = (where: SQL | undefined) => (carried ? and(where, sql`NOT coalesce(${held}, false)`) : where);
+  // A send to many, its manual resends left out (`SEND_TO_MANY_MESSAGE_TYPES`): not late for waiting its turn (below).
   const sendToMany = sql`(${emailOutbox.messageType} IN (${sql.join(
     SEND_TO_MANY_MESSAGE_TYPES.map((type) => sql`${type}`),
     sql`, `,
   )}) AND NOT ${emailOutbox.isManualResend})`;
-  const carriedNow = sql`(coalesce(${held}, false) AND NOT (${sendToMany} AND NOT coalesce(${gmailRoad}, false)))`;
-  const notCarried = (where: SQL | undefined) => (carried ? and(where, sql`NOT ${carriedNow}`) : where);
   const evidenceSince = new Date(now.getTime() - PACE_EVIDENCE_MS);
   const recentPause = sql`(${emailOutbox.lastError} LIKE ${`${RATE_PAUSE_ERROR_PREFIX}%`} AND ${emailOutbox.nextAttemptAt} > ${evidenceSince.toISOString()}::timestamptz)`;
   const turnWithinDeferral = sql`${emailOutbox.nextAttemptAt} <= ${deferredFrom.toISOString()}::timestamptz`;

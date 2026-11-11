@@ -68,9 +68,9 @@ export function bulkBudget(headroom: { period: "day" | "month" | "none"; allowan
  * registrations' own messages leave, and a club copy rides with its type. So a send of two hundred never stands in
  * front of a verification queued after it. One exception: an Administrator's «Retrimite» of one of them for one runner
  * (`is_manual_resend`) is that person's own message, and goes with the registrations' own (`sendOrderOf`,
- * `waitsAsSendToMany`). While Mailgun is stopped, Gmail carries only the registrations' own messages: a send to many on
- * Mailgun's road waits for Mailgun, untouched (`outbox.ts`). `/api/health` does not call one of them late for waiting its
- * turn (`health.ts`), and the public «emailurile întârzie» does not count them (`email-delay.ts`, `public-delay.ts`).
+ * `waitsAsSendToMany`). While Mailgun is stopped and Gmail carries for it, Gmail keeps this same order (`outbox.ts`).
+ * `/api/health` does not call one of them late for waiting its turn (`health.ts`), and the public «emailurile întârzie»
+ * does not count them (`email-delay.ts`, `public-delay.ts`).
  */
 export const SEND_TO_MANY_MESSAGE_TYPES = [
   "EVENT_CANCELLED",
@@ -80,6 +80,8 @@ export const SEND_TO_MANY_MESSAGE_TYPES = [
   "EVENT_THANKS",
   "REGISTRATION_OPENED",
 ] as const satisfies readonly EmailMessageType[];
+
+export type SendToManyMessageType = (typeof SEND_TO_MANY_MESSAGE_TYPES)[number];
 
 export function isSendToManyMessage(messageType: EmailMessageType): boolean {
   return (SEND_TO_MANY_MESSAGE_TYPES as readonly EmailMessageType[]).includes(messageType);
@@ -91,6 +93,14 @@ export function isSendToManyMessage(messageType: EmailMessageType): boolean {
  */
 export function waitsAsSendToMany(messageType: EmailMessageType, isManualResend = false): boolean {
   return !isManualResend && isSendToManyMessage(messageType);
+}
+
+/**
+ * The sends to many the claim takes after `messageType`'s own step — what a new send of it does not wait behind
+ * (`volume.ts#waitingAhead`). Every row of an earlier step, and the older rows of its own step, stand ahead of it.
+ */
+export function sendsToManyAfter(messageType: SendToManyMessageType): readonly SendToManyMessageType[] {
+  return SEND_TO_MANY_MESSAGE_TYPES.slice(SEND_TO_MANY_MESSAGE_TYPES.indexOf(messageType) + 1);
 }
 
 /**

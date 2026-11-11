@@ -42,7 +42,7 @@ import { applyDeadlineRebase, type DeadlineRebase, planDeadlineRebase } from "./
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { forgetUnsentVolunteerAgreementLink } from "@/modules/volunteers/unsent-link";
-import { BULK_MESSAGE_TYPES, isBulkMessage, SEND_TO_MANY_MESSAGE_TYPES, sendOrderOf, waitsAsSendToMany } from "./domain/bulk";
+import { BULK_MESSAGE_TYPES, isBulkMessage, SEND_TO_MANY_MESSAGE_TYPES, sendOrderOf } from "./domain/bulk";
 import { RELAY_MESSAGE_TYPES } from "./domain/relay";
 import { drainOutboxAfterResponse } from "./drain";
 import { pressStamp } from "./press";
@@ -509,8 +509,6 @@ async function claimOutboxBatchWithStop(
     SEND_TO_MANY_MESSAGE_TYPES.map((type, index) => sql`when ${emailOutbox.messageType} = ${type} then ${sql.raw(String(index + 1))}`),
     sql` `,
   )} else 0 end`;
-  // A send to many as SQL, its manual resends left out: what waits for Mailgun during a stop (below).
-  const sendToMany = and(inArray(emailOutbox.messageType, [...SEND_TO_MANY_MESSAGE_TYPES]), not(emailOutbox.isManualResend)) as SQL;
 
   return db.transaction(async (tx) => {
     /*
@@ -603,13 +601,6 @@ async function claimOutboxBatchWithStop(
       Gmail's pace lets one batch send. Its cap is the sender's to keep, row by row. With the switch
       off, BR-V2.53's road: a pause holds Mailgun's rows, a spent allowance does not (the provider's own
       refusal defers each row, §40), and Gmail's groups go as ever.
-
-      Gmail carries only the registrations' own messages (the decision «Cere reconfirmarea», part two): a send to many
-      on Mailgun's road, like the bulk kind, is not carried — it waits for Mailgun, untouched (no mark, no attempt spent),
-      and leaves by Mailgun in its order when the stop ends. Gmail's room stays for the address to confirm, the
-      declaration and the offer; a send to many whose own road is Gmail leaves by Gmail, as its road says. One more
-      exception: a press's own rows (`ids`, «Trimite acum», §540) — the Administrator asked for them now, and the press
-      was let through only with room in Gmail's day for every message of it (`assertRoomToSendNow`), as its page said.
     */
     const carried = stop !== null && roads?.fallbackToGmail === true;
     const paused = stop?.kind === "paused" || hour?.paused === true;
@@ -617,10 +608,9 @@ async function claimOutboxBatchWithStop(
     const mailgun = await claimRoad(mailgunRoad, mailgunLimit, bulkLimit);
     const gmailLimit = Math.min(batchSize, roads?.gmailBatchSize ?? batchSize);
     const heldNow = and(notRelay, eq(emailOutbox.status, "PENDING"), heldByMailgunCondition(), params.ids ? inArray(emailOutbox.id, [...params.ids]) : undefined);
-    // The newsletter's kind and the sends to many stay on Mailgun's road during a stop unless the club routed them to Gmail (§443, §622).
-    const carriable = params.ids ? not(bulk) : (and(not(bulk), not(sendToMany)) as SQL);
     const gmail = carried
-      ? await claimRoadWhere(and(or(due, heldNow), gmailRoad ? or(carriable, gmailRoad) : carriable), gmailLimit)
+      ? // The newsletter and the new-event alert stay on Mailgun's road during a stop unless the club routed them to Gmail (§443, §622).
+        await claimRoadWhere(and(or(due, heldNow), gmailRoad ? or(not(bulk), gmailRoad) : not(bulk)), gmailLimit)
       : gmailRoad
         ? await claimRoad(gmailRoad, gmailLimit, null)
         : { first: [], second: [] };
@@ -646,8 +636,8 @@ async function claimOutboxBatchWithStop(
  * **A row it moves no longer wears a stop mark** (the decision «Cere reconfirmarea», part two — a defect of the
  * released code, found by its review with a probe). A due row may still carry Mailgun's pause mark (a 429) or its
  * allowance mark from a stop that has ended — due means its stop is over. Moved to the reset with the mark on it,
- * the row read as a stop in force (`readMailgunStop`: a marked row whose turn is ahead) until 00:05 UTC, and no
- * verification, offer or confirmation left by Mailgun for up to sixteen hours. So the hold clears those two marks
+ * the row read as a stop in force (`readMailgunStop`: a marked row whose turn is ahead) until the next reset — up to
+ * sixteen hours — and no verification, offer or confirmation left by Mailgun meanwhile. So the hold clears those two marks
  * and keeps any other reason (the public page's «emailurile întârzie» read the same mark as a pause until the reset too).
  * Cleared rather than left out of the hold: left out (`notHeldByMailgun` in its WHERE), the row would stay due, and the
  * job's plan (`nextOutboxWork`) would read work due now on every ping until the reset — a database wake every quarter
@@ -813,10 +803,8 @@ export async function processOutboxBatch(
         summary.deferred += 1;
         continue;
       }
-      // A send to many as the scheduled pass sends it: a press's own rows (§540) are the press's, asked for now.
-      const sendToMany = !ids && waitsAsSendToMany(row.messageType, row.isManualResend);
-      if (carrying && (isBulkMessage(row.messageType) || sendToMany) && !(roads && onGmailRoad(row, roads))) {
-        // Mailgun's stop began mid-batch: a bulk row or a send to many waits for Mailgun, never a personal Gmail (§443, §622).
+      if (carrying && isBulkMessage(row.messageType) && !(roads && onGmailRoad(row, roads))) {
+        // Mailgun's stop began mid-batch: a bulk row waits for Mailgun, never a personal Gmail (§443, §622).
         await releaseForPause(db, row, carrying.until, null);
         summary.deferred += 1;
         continue;
@@ -834,9 +822,7 @@ export async function processOutboxBatch(
         message = await render(row, db, now, rebase);
         if (route) message = { ...message, transport: route(row) };
         if (gmailOnly) message = { ...message, transport: "gmail", gmailOnly: true };
-        // Never spilled to Gmail when Mailgun refuses: the bulk kind (§443), and a send to many — during a stop Gmail
-        // carries only the registrations' own messages (the decision «Cere reconfirmarea», part two).
-        else if (isBulkMessage(row.messageType) || sendToMany) message = { ...message, bulk: true };
+        else if (isBulkMessage(row.messageType)) message = { ...message, bulk: true };
       } catch (error) {
         if (error instanceof OutboxMessageWithdrawn) {
           await db.delete(emailOutbox).where(eq(emailOutbox.id, row.id));

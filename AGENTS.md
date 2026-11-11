@@ -2423,7 +2423,8 @@ INDEX(job_name, started_at)
 `job_runs` exists so a stalled scheduler is visible. The health check reports degraded
 when the last successful run of a job is older than its agreed threshold, and when the outbox
 holds a message deferred by the provider's allowance, overdue, or failed
-(`notifications/health.ts`). A send to many (§16.1, steps 2–4) is not overdue for waiting past its turn: it waits behind
+(`notifications/health.ts`). A send to many (§16.1, steps 1–6: the cancellation, «Detalii actualizate», the reminder,
+the organizers' message, the thank-you, «s-au deschis înscrierile») is not overdue for waiting past its turn: it waits behind
 the registrations' own messages and drains at the queue's pace; a stopped scheduler is the job check's to report, and a
 provider's refusal, pause or stop on such a row is counted by the other buckets as on any row. Every status but `ok` is an HTTP 503 (`DECISIONS.md` §98): the
 external monitor's failure notification is how the club hears that email has stopped, and it
@@ -3233,13 +3234,11 @@ with its type. The same order for a press's own rows and in the batch handed to 
 stands in front of a verification or an offer queued after it. **No reserve**: the sends to many get no cap, no hold and
 no mark; `/api/health`, the queue panel and the public «emailurile întârzie» never call one late for waiting its turn —
 the deferred, paused-late, stopped-late, retrying-late and failed counts still catch it — while a manual resend of one is
-judged as the person's own. **During a Mailgun stop Gmail carries only the registrations' own messages**: in the carried
-path a send to many on Mailgun's road, like the bulk kind, is not claimed — no mark, no attempt spent — and leaves by
-Mailgun in its order when the stop ends; one whose own road is Gmail leaves by Gmail, and a press's own «Trimite acum»
-rows (§540), let through only with Gmail's room for all of them, leave by Gmail as the press said. **The bulk hold never carries a stop
+judged as the person's own. While Mailgun is stopped and «Gmail preia când Mailgun se oprește» carries (§622), Gmail
+carries what it always carried, in this same order: the registrations' own first. **The bulk hold never carries a stop
 mark into the future**: a due row the newsletter's hold moves to the reset loses Mailgun's pause or allowance mark (its
-stop has ended; a stop in force is `platform_settings.mailgunStop`), which before closed Mailgun's whole road until
-00:05 UTC. «Trimite acum» (§540), the batch size, the pinger, the hourly pace and the newsletter's reserve are unchanged.
+stop has ended; a stop in force is `platform_settings.mailgunStop`), which before closed Mailgun's whole road until the
+next reset — up to sixteen hours. «Trimite acum» (§540), the batch size, the pinger, the hourly pace and the newsletter's reserve are unchanged.
 
 ### 16.2 Job endpoints
 

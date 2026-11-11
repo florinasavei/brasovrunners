@@ -24,7 +24,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * in both languages for «Completează cu textul de reminder», the pace line before «Trimite», and on each «Mesaje trimise» row
  * the three numbers and the progress. The pages are Server Components, so they are called and their element trees walked.
  */
-const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en", gmail: false }));
+const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en", gmail: false, noticeNamesFallback: false }));
 
 // The club's Gmail, configured only where a test says so (`gmailIsConfigured` reads the account and its app password).
 vi.mock("@/shared/config/env", async (importOriginal) => {
@@ -36,6 +36,13 @@ vi.mock("@/shared/config/env", async (importOriginal) => {
     }),
   };
 });
+
+// Whether the privacy notice in force names `{{gmailFallback}}` (§622): with the club's Gmail and the default switch, «Gmail
+// preia când Mailgun se oprește» is in force only where a test says so.
+vi.mock("@/modules/legal-documents/repository", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/legal-documents/repository")>()),
+  noticeDescribesGmailFallback: async () => state.noticeNamesFallback,
+}));
 
 vi.mock("next-intl/server", () => ({
   getTranslations: async (arg: string | { locale?: "ro" | "en"; namespace: string }) => {
@@ -223,6 +230,7 @@ beforeEach(async () => {
   await resetTables(db);
   state.locale = "ro";
   state.gmail = false;
+  state.noticeNamesFallback = false;
 });
 
 describe("«A reconfirmat» and «Reconfirmare» on the registrations list", () => {
@@ -422,6 +430,28 @@ describe("«Trimite un mesaj participanților»", () => {
     expect(body).not.toMatch(/rezerv|păstrat/i);
   });
 
+  it("(b) the same with «Gmail preia când Mailgun se oprește» in force: 95 today by Mailgun, the rest by Gmail after it, no count of days, and the shared limits the warning", async () => {
+    state.gmail = true;
+    state.noticeNamesFallback = true;
+    await sentToday(5);
+    const { body, warning, audience } = await twoHundredAndOne();
+    const deferral = "Azi pot pleca 95 prin Mailgun; restul pleacă apoi prin Gmail-ul clubului, în limita lui, și prin Mailgun când se reface cota.";
+    expect(body).toContain(deferral);
+    expect(audience?.deferredLine).toBe(deferral);
+    // Gmail carries it once the day's allowance is spent: it waits for no reset.
+    expect(body).not.toContain("în cel puțin încă");
+    const expected =
+      "Emailurile înscrierilor pleacă primele, dar împart cu acest mesaj cota zilei și limita Gmail. Un mesaj mare se trimite pe un plan lunar: «Setări» → «Emailuri» → «Planul Mailgun și cât mai putem trimite».";
+    expect(warning).toBe(expected);
+    expect(audience?.warningLine).toBe(expected);
+    expect(warning).not.toContain("în cel puțin");
+    for (const line of [body, warning ?? ""]) expect(line).not.toMatch(/restul \d|\d+ de ore|24/);
+    state.locale = "en";
+    const english = await twoHundredAndOne();
+    expect(english.body).toContain("95 can go by Mailgun today; the rest then leave by the club's Gmail, within its limit, and by Mailgun when the allowance comes back.");
+    expect(english.warning).toMatch(/^The registrations' own emails leave first, but they share the day's allowance and Gmail's limit with this message\. /);
+  });
+
   it("(d) counts the send's club copy on the road it really takes: by the club's Gmail, out of Mailgun's count, said apart", async () => {
     state.gmail = true;
     await db.insert(platformSettings).values({ key: "emailPlan", value: { plan: "BASIC", dailyAllowance: null, monthlyAllowance: null, hourlyAllowance: 100, note: "" } });
@@ -498,31 +528,47 @@ describe("«Trimite un mesaj participanților»", () => {
     expect(body).not.toMatch(/celelalte \d/);
   });
 
-  it("(e) Mailgun stopped now (a pause, on a monthly plan): one sentence says until when and that the message starts when it restarts, and nothing leaves «now»", async () => {
-    await db.insert(platformSettings).values({ key: "emailPlan", value: { plan: "BASIC", dailyAllowance: null, monthlyAllowance: null, hourlyAllowance: 100, note: "" } });
-    await recordMailgunStop(db, { kind: "paused", until: new Date(Date.now() + 20 * 60_000) }, new Date());
-    const { body, warning } = await twoHundredAndOne();
-    expect(body).toMatch(
-      /Mailgun e oprit acum, până \p{L}+, \d{1,2} \p{L}+\.? \d{4}, la \d{2}:\d{2}\. Mesajul începe să plece când repornește\. Pleacă treptat, câte 20 la 15 minute ziua \(noaptea mai rar\): cam 3 ore pe ritmul de zi\. Emailurile înscrierilor pleacă înaintea lor\./u,
-    );
-    expect(body).not.toContain("Încape în cota lunii.");
-    expect(body).not.toContain("pot pleca");
-    expect(warning).toBeUndefined();
-    state.locale = "en";
-    const english = await twoHundredAndOne();
-    expect(english.body).toMatch(/Mailgun is stopped now, until .+\. The message starts leaving when it restarts\./);
-    expect(english.body).not.toContain("It fits this month's allowance.");
-  });
+  const STOPPED_UNTIL = String.raw`Mailgun e oprit acum, până \p{L}+, \d{1,2} \p{L}+\.? \d{4}, la \d{2}:\d{2}\.`;
+  for (const inForce of [false, true]) {
+    const switchWords = inForce ? "«Gmail preia când Mailgun se oprește» in force" : "no fallback in force";
+    const after = inForce ? "Până atunci emailurile pleacă prin Gmail-ul clubului, în limita lui." : "Mesajul începe să plece când repornește.";
 
-  it("(e) Mailgun stopped now (its daily allowance spent, Free with 5 sent): the stop said, no «Azi pot pleca», the daily warning kept", async () => {
-    await sentToday(5);
-    await recordMailgunStop(db, { kind: "allowance", until: nextAllowanceResetAt(new Date()) }, new Date());
-    const { body, warning } = await twoHundredAndOne();
-    expect(body).toMatch(/Mailgun e oprit acum, până .+\. Mesajul începe să plece când repornește\./);
-    expect(body).not.toContain("Azi pot pleca");
-    expect(body).not.toContain("Încape în cota de azi.");
-    expect(warning).toContain("Pe un plan cu cotă zilnică, mesajul acesta folosește cota zilnică în cel puțin 3 zile.");
-  });
+    it(`(e) Mailgun stopped now (a pause, on a monthly plan, ${switchWords}): one sentence says until when and who sends meanwhile, and nothing leaves «now»`, async () => {
+      state.gmail = inForce;
+      state.noticeNamesFallback = inForce;
+      await db.insert(platformSettings).values({ key: "emailPlan", value: { plan: "BASIC", dailyAllowance: null, monthlyAllowance: null, hourlyAllowance: 100, note: "" } });
+      await recordMailgunStop(db, { kind: "paused", until: new Date(Date.now() + 20 * 60_000) }, new Date());
+      const { body, warning } = await twoHundredAndOne();
+      expect(body).toMatch(
+        new RegExp(`${STOPPED_UNTIL} ${after.replace(/[.()]/g, "\\$&")} Pleacă treptat, câte 20 la 15 minute ziua \\(noaptea mai rar\\): cam 3 ore pe ritmul de zi\\. Emailurile înscrierilor pleacă înaintea lor\\.`, "u"),
+      );
+      expect(body).not.toContain(inForce ? "Mesajul începe să plece când repornește." : "Gmail");
+      expect(body).not.toContain("Încape în cota lunii.");
+      expect(body).not.toContain("pot pleca");
+      expect(warning).toBeUndefined();
+      state.locale = "en";
+      const english = await twoHundredAndOne();
+      expect(english.body).toMatch(
+        inForce
+          ? /Mailgun is stopped now, until .+\. Until then the emails leave by the club's Gmail, within its limit\./
+          : /Mailgun is stopped now, until .+\. The message starts leaving when it restarts\./,
+      );
+      expect(english.body).not.toContain("It fits this month's allowance.");
+    });
+
+    it(`(e) Mailgun stopped now (its daily allowance spent, Free with 5 sent, ${switchWords}): the stop said, no «Azi pot pleca», the daily warning kept`, async () => {
+      state.gmail = inForce;
+      state.noticeNamesFallback = inForce;
+      await sentToday(5);
+      await recordMailgunStop(db, { kind: "allowance", until: nextAllowanceResetAt(new Date()) }, new Date());
+      const { body, warning } = await twoHundredAndOne();
+      expect(body).toMatch(new RegExp(`${STOPPED_UNTIL} ${after.replace(/[.()]/g, "\\$&")}`, "u"));
+      expect(body).not.toContain("Azi pot pleca");
+      expect(body).not.toContain("Încape în cota de azi.");
+      if (inForce) expect(warning).toMatch(/^Emailurile înscrierilor pleacă primele, dar împart cu acest mesaj cota zilei și limita Gmail\. /);
+      else expect(warning).toContain("Pe un plan cu cotă zilnică, mesajul acesta folosește cota zilnică în cel puțin 3 zile.");
+    });
+  }
 
   it("gives each «Mesaje trimise» row the three numbers of a send that asked and how far it has left; neither for a send that did not ask", async () => {
     const race = await createRace();

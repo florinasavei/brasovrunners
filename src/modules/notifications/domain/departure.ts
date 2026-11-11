@@ -65,11 +65,6 @@ export type DepartureContext = {
   hourPaceHolds: boolean;
   /** When Mailgun's road opens again for a row nothing else carries (`mailgunReopensAt`); null while it is open. */
   mailgunReopensAt: Date | null;
-  /**
-   * While Gmail carries for a stopped Mailgun, the stop's end: a send to many on Mailgun's road is not carried and waits
-   * for it (the decision «Cere reconfirmarea», part two). Null or absent otherwise.
-   */
-  sendsToManyWaitUntil?: Date | null;
   /** The pinger's cadence at an instant (`jobs/quiet-hours.ts#pingerCadenceMinutes`). */
   pingerMinutesAt: (instant: Date) => number;
 };
@@ -113,14 +108,9 @@ export function departureOf(row: DepartureRow, ctx: DepartureContext): Departure
   if (leavesNow(row, now)) return { kind: "now" };
 
   const dueAt = row.nextAttemptAt ?? row.createdAt;
-  const sendToMany = waitsAsSendToMany(row.messageType, row.isManualResend === true);
-  /*
-    Mailgun stopped with nothing carrying it, or the plan's day spent (§622) — or, for a send to many, Mailgun stopped while
-    Gmail carries only the registrations' own messages: the stop's end, unless the row's own turn is later.
-  */
-  const reopensAt = row.onMailgunRoad ? (ctx.mailgunReopensAt ?? (sendToMany ? (ctx.sendsToManyWaitUntil ?? null) : null)) : null;
-  if (reopensAt && reopensAt.getTime() > now.getTime() && reopensAt.getTime() > dueAt.getTime()) {
-    return { kind: "reset", at: outboxRowLeavesAt({ dueAt: reopensAt, nextTickAt: ctx.nextTickAt, intervalMinutes: ctx.runIntervalMinutes, pingerMinutesAt: ctx.pingerMinutesAt }) };
+  // Mailgun stopped with nothing carrying it, or the plan's day spent (§622): the stop's end, unless the row's own turn is later.
+  if (row.onMailgunRoad && ctx.mailgunReopensAt && ctx.mailgunReopensAt.getTime() > now.getTime() && ctx.mailgunReopensAt.getTime() > dueAt.getTime()) {
+    return { kind: "reset", at: outboxRowLeavesAt({ dueAt: ctx.mailgunReopensAt, nextTickAt: ctx.nextTickAt, intervalMinutes: ctx.runIntervalMinutes, pingerMinutesAt: ctx.pingerMinutesAt }) };
   }
   // The «imediat» timing: the request that queued it drains it after its response (§68) — only past the stop above,
   // which that drain's claim honours like the job's: a Mailgun-road row it holds is never «now».
@@ -137,6 +127,7 @@ export function departureOf(row: DepartureRow, ctx: DepartureContext): Departure
     working, and is late here only as health counts it — paused recently by the provider. A manual resend of one is the
     person's own message, late as one.
   */
+  const sendToMany = waitsAsSendToMany(row.messageType, row.isManualResend === true);
   const overdueSince = (at: Date) =>
     outboxRowOverdue({ now, dueAt: at, overdueAfterMs: ctx.overdueAfterMs, intervalMinutes: ctx.overdueCadenceMinutes });
   const late =

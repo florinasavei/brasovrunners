@@ -154,6 +154,17 @@ describe("§623 readEmailDelay", () => {
     expect((await readEmailDelayFacts(db, NOW)).aheadOnMailgun).toBe(0);
   });
 
+  it("groups by the manual-resend flag: an Administrator's «Retrimite» of a reminder stands ahead of a new registration's email, the job's own reminders do not", async () => {
+    await insert(...Array.from({ length: 40 }, () => ({ messageType: "EVENT_REMINDER" as const, createdAt: ago(120) })));
+    await insert({ messageType: "EVENT_REMINDER", isManualResend: true, createdAt: ago(5) }, { messageType: "ORGANIZER_MESSAGE", isManualResend: true, createdAt: ago(5) });
+    const facts = await readEmailDelayFacts(db, NOW);
+    // The two resends are the persons' own messages in the claim's order: ahead of a new registration's email.
+    expect(facts.aheadOnMailgun).toBe(2);
+    // Still nobody's on a public page: a staff press for a registration already made is not what a visitor waits for.
+    expect(facts.queued).toBe(0);
+    expect(await readEmailDelay(db, NOW, 15)).toMatchObject({ late: false, queued: 0 });
+  });
+
   it("still reads a waited-for row late beside a send to many, which is neither queued for a visitor nor ahead of it", async () => {
     await insert(...Array.from({ length: 150 }, () => ({ messageType: "ORGANIZER_MESSAGE" as const, createdAt: ago(120) })));
     await insert({ createdAt: ago(40) });

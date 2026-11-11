@@ -170,18 +170,6 @@ describe("departureOf — the one judgement of when a waiting email leaves", () 
     expect(departureOf(ROW, { ...stoppedNow, mailgunReopensAt: minutes(-1) })).toEqual({ kind: "now" });
   });
 
-  it("«Cere reconfirmarea», part two: while Gmail carries a stop, a send to many on Mailgun's road waits for the stop's end; a registration's own and a manual resend do not", () => {
-    const carried = { ...CTX, mailgunReopensAt: null, sendsToManyWaitUntil: minutes(116) }; // 12:00
-    for (const messageType of ["EVENT_CANCELLED", "EVENT_REMINDER", "ORGANIZER_MESSAGE", "REGISTRATION_OPENED"] as const) {
-      expect(departureOf({ ...ROW, messageType }, carried), messageType).toEqual({ kind: "reset", at: new Date("2026-10-01T09:00:00.000Z") });
-      // An Administrator's «Retrimite» for one runner is that runner's own message: Gmail carries it.
-      expect(departureOf({ ...ROW, messageType, isManualResend: true }, carried), messageType).toMatchObject({ kind: "at", at: NEXT_TICK });
-      // On Gmail's road its own road carries it.
-      expect(departureOf({ ...ROW, messageType, onMailgunRoad: false }, carried), messageType).toMatchObject({ kind: "at", at: NEXT_TICK });
-    }
-    expect(departureOf(ROW, carried)).toMatchObject({ kind: "at", at: NEXT_TICK });
-  });
-
   it("judges a manual resend of a send to many late as the person's own message, and the send itself never late for waiting its turn", () => {
     const stale = { ...ROW, messageType: "EVENT_REMINDER" as const, createdAt: minutes(-5 * 60) };
     expect(departureOf(stale, CTX)).toMatchObject({ kind: "at", late: false });

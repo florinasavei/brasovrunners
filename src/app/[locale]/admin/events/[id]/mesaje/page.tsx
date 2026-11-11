@@ -145,11 +145,12 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
   const planPath = { settings: t("nav.settings"), emails: t("settingsTabs.emails"), plan: t("emails.plan.title") };
   /*
     Mailgun stopped now (§622), read once with the volume, as `/api/health` reads it (`readMailgunStop` on Mailgun's road):
-    a send to many on Mailgun's road waits for it — Gmail carries only the registrations' own messages — so the line says
-    so, until when, and no sentence about what leaves now or today stands beside it.
+    the line says until when and who sends meanwhile — the club's Gmail, within its limit, where «Gmail preia când Mailgun
+    se oprește» is in force (`volume.fallbackToGmail`), nobody otherwise — and no sentence about what leaves now or today
+    stands beside it.
   */
   const mailgunStoppedLine = volume.mailgunStop
-    ? t("participantMessages.mailgunStopped", {
+    ? t(volume.fallbackToGmail ? "participantMessages.mailgunStoppedGmail" : "participantMessages.mailgunStopped", {
         until: formatDay(volume.mailgunStop.until, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" }),
       })
     : null;
@@ -205,7 +206,10 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
         deferredLine =
           outlook.period === "month"
             ? t("participantMessages.deferredMonth", { now: String(outlook.now), deferred: String(outlook.deferred) })
-            : outlook.period === "day" && outlook.restDays > 1
+            : // Once the day's allowance is spent, the fallback in force carries the rest (§622): it waits for no reset.
+              outlook.period === "day" && volume.fallbackToGmail
+              ? t("participantMessages.deferredDayGmail", { now: String(outlook.now) })
+              : outlook.period === "day" && outlook.restDays > 1
               ? t(`participantMessages.deferredDays.${countForm(outlook.restDays, locale)}`, {
                   now: String(outlook.now),
                   deferred: String(outlook.deferred),
@@ -216,16 +220,21 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
       }
       /*
         A daily plan the send does not fit (part two): a warning, since the registrations' own emails share that allowance —
-        they leave first, and once the day's allowance is spent Mailgun sends nothing more that day; by the club's Gmail
-        then only where «Gmail preia când Mailgun se oprește» is in force (`volume.fallbackToGmail`), and Gmail carries
-        only them, never the rest of this send (`outbox.ts`).
+        they leave first, and once the day's allowance is spent Mailgun sends nothing more that day. Where «Gmail preia când
+        Mailgun se oprește» is in force (`volume.fallbackToGmail`) Gmail then carries every group, in the claim's order
+        (`outbox.ts`): the registrations' own and this send share the day's allowance and Gmail's limit, and the days the
+        allowance is used are not counted — how many depends on Gmail's room, not on the allowance alone.
       */
       if (outlook.period === "day" && outlook.deferred > 0) {
-        warningLine = [
-          t(`participantMessages.dailyWarning.${countForm(outlook.daysUsed, locale)}`, { days: String(outlook.daysUsed) }),
-          t(volume.fallbackToGmail ? "participantMessages.dailyShareGmail" : "participantMessages.dailyShare"),
-          t("participantMessages.dailyPlan", planPath),
-        ].join(" ");
+        warningLine = (
+          volume.fallbackToGmail
+            ? [t("participantMessages.dailyShareGmail"), t("participantMessages.dailyPlan", planPath)]
+            : [
+                t(`participantMessages.dailyWarning.${countForm(outlook.daysUsed, locale)}`, { days: String(outlook.daysUsed) }),
+                t("participantMessages.dailyShare"),
+                t("participantMessages.dailyPlan", planPath),
+              ]
+        ).join(" ");
       }
       const fitsLine =
         mailgunStoppedLine || outlook.period === "none" || outlook.deferred > 0 ? "" : t(outlook.period === "month" ? "participantMessages.fitsMonth" : "participantMessages.fitsToday");
