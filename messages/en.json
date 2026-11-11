@@ -5835,6 +5835,10 @@
       }
     },
     "volunteers": {
+      "notes": {
+        "authorUnknown": "unknown author",
+        "exportMore": "… (more notes on the volunteer's page)"
+      },
       "title": "Volunteers",
       "intro": "The people who help at this event: each ticks what they would do, you give them a role. Roles are set here, in both languages. Addresses and telephone numbers never appear on a public page.",
       "notAccounts": "The volunteers here are not accounts: whoever works the race-day desk gets an account on “Echipa”, with the role Voluntar.",
@@ -5964,9 +5968,8 @@
         "phoneHelp": "Optional. With the country code (+40 712 345 678); a Romanian number also works with a leading 0.",
         "noEmail": "No email address: on the list only, and receives no email.",
         "note": "Your note (organizers only)",
-        "noteHelp": "At most {max} characters. Never shown on any public page.",
+        "noteHelp": "At most {max} characters. Becomes the person's first internal note and is never shown on any public page.",
         "messageLabel": "Their message",
-        "noteLabel": "Note",
         "addTitle": "Add a volunteer by hand",
         "add": "Add the volunteer",
         "adding": "Adding…",

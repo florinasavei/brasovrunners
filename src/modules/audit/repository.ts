@@ -644,6 +644,13 @@ export type AuditAction =
   /** «Ia-i rolul …» (§837): one role given was taken back — the same ids. */
   | "volunteer.unassigned"
   /**
+   * An internal note added to a volunteer, or deleted («Note interne» for volunteers): entity `event`, the event's id, and
+   * `{ volunteerId }` — the staff member (the actor) and the moment, and nothing of the words, ever. The text lives in
+   * `event_volunteer_notes` and nowhere else; a trail row that carried it would outlive the volunteer it is about.
+   */
+  | "volunteer.note_added"
+  | "volunteer.note_deleted"
+  /**
    * An event's checkpoints saved on its editor's «Puncte pe traseu» card (§757), or taken from the
    * route's GPX: how many were added, changed and removed, and the list before and after — each
    * point's kilometre, its name and its cut-off. Entity `event`. The club's own work about a route,

@@ -10,8 +10,17 @@ import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
-import { REGISTRATION_NOTE_MAX } from "@/db/schema/registration-notes";
-import type { RegistrationNoteRow } from "../notes";
+
+/** One note as the card draws it — a registration's (`RegistrationNoteRow`) or a volunteer's (`VolunteerNoteRow`), the same shape. */
+export type NotesCardRow = {
+  id: string;
+  body: string;
+  createdAt: Date;
+  /** The author's display name; null when nobody can be named (the card then says `authorGone`). */
+  authorName: string | null;
+  /** Whether the reader may delete it (the service decides; the card draws «Șterge» only where it would succeed). */
+  deletable: boolean;
+};
 
 /**
  * «Note interne» on a registration's page (§777): what the organizers tell each other about one registration,
@@ -27,19 +36,30 @@ import type { RegistrationNoteRow } from "../notes";
  * deleted, and for the `#note-interne` link; with no note it stays closed on «nicio notă».
  *
  * The actions are handed in by the page, so this stays a presentation of rows and a form: no query, no role
- * test, no link to the registrations module's writers.
+ * test, no link to the registrations module's writers. Generic in what tied it to a registration («Note interne» for
+ * volunteers): the hidden field naming whose notes they are (`owner`: `registrationId` or `volunteerId`, and the id), the
+ * limit (`max`, each table's own constant) and the words for a note nobody can be named for (`authorGone`: «cont șters» on
+ * a registration, «autor necunoscut» on a volunteer, whose carried notes may never have had an author). It imports neither
+ * kind of note: the pages that hand it the rows are the readers `notes-never-leave.test.ts` and its volunteers' twin list.
  */
 export default async function NotesCard({
   locale,
-  registrationId,
+  owner,
+  max,
+  authorGone,
   notes,
   addAction,
   deleteAction,
   opened,
 }: {
   locale: string;
-  registrationId: string;
-  notes: readonly RegistrationNoteRow[];
+  /** The hidden field both forms post: whose notes these are. */
+  owner: { field: "registrationId" | "volunteerId"; id: string };
+  /** The longest note, in characters: the table's own constant. */
+  max: number;
+  /** What a note's line says for an author nobody can name. */
+  authorGone: string;
+  notes: readonly NotesCardRow[];
   addAction: ActionFormAction;
   deleteAction: ActionFormAction;
   /** A note was just saved or deleted: the card opens to show the result. */
@@ -73,7 +93,7 @@ export default async function NotesCard({
                 </Typography>
                 <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", columnGap: 1 }}>
                   <Typography variant="caption" color="text.secondary" data-testid="note-by">
-                    {t("registrations.notes.by", { name: note.authorName ?? t("registrations.auditActorRemoved"), date: when(note.createdAt) })}
+                    {t("registrations.notes.by", { name: note.authorName ?? authorGone, date: when(note.createdAt) })}
                   </Typography>
                   {note.deletable && (
                     <ActionForm
@@ -90,7 +110,7 @@ export default async function NotesCard({
                       data-testid="note-delete-form"
                     >
                       <input type="hidden" name="uiLocale" value={locale} />
-                      <input type="hidden" name="registrationId" value={registrationId} />
+                      <input type="hidden" name={owner.field} value={owner.id} />
                       <input type="hidden" name="noteId" value={note.id} />
                       <GlyphButton icon="delete" type="submit" variant="text" color="error" size="small" sx={{ minHeight: 44 }}>
                         {t("registrations.notes.delete")}
@@ -105,7 +125,7 @@ export default async function NotesCard({
 
         <ActionForm action={addAction} messages={refusal} scope="note" data-testid="note-add-form">
           <input type="hidden" name="uiLocale" value={locale} />
-          <input type="hidden" name="registrationId" value={registrationId} />
+          <input type="hidden" name={owner.field} value={owner.id} />
           <Stack spacing={1.5} sx={{ alignItems: "flex-start" }}>
             <RecallField
               name="body"
@@ -114,8 +134,8 @@ export default async function NotesCard({
               minRows={3}
               fullWidth
               required
-              helperText={t("registrations.notes.limit", { max: REGISTRATION_NOTE_MAX })}
-              slotProps={{ htmlInput: { maxLength: REGISTRATION_NOTE_MAX } }}
+              helperText={t("registrations.notes.limit", { max })}
+              slotProps={{ htmlInput: { maxLength: max } }}
             />
             <GlyphButton icon="save" type="submit" variant="contained" sx={{ minHeight: 44 }}>
               {t("registrations.notes.save")}

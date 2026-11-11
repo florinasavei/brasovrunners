@@ -348,6 +348,9 @@ describe("the list page (§839)", () => {
     expect(page.match(/data-testid="volunteer-unassigned"/g)).toHaveLength(2);
     // Mihai was typed by an organizer.
     expect(page.match(/data-testid="volunteer-staff-chip"/g)).toHaveLength(2);
+    // «Adaugă o notă» («Note interne» for volunteers) on each of the four rows, in both copies; nobody has a note yet, so no marker.
+    expect(page.match(/data-testid="note-add-open"/g)).toHaveLength(8);
+    expect(page).not.toContain('data-testid="notes-mark"');
     expect(page).toContain("Roluri date");
     expect(page).toContain("Punct de apă, Sosire");
     expect(new Set(returnTos(page))).toEqual(new Set(["/ro/admin/volunteers"]));

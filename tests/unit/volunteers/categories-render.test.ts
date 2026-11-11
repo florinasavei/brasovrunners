@@ -127,7 +127,6 @@ const person = (over: Partial<VolunteerItem>): VolunteerItem => ({
   state: "REGISTERED",
   source: "PUBLIC",
   message: null,
-  note: null,
   age: null,
   dateOfBirth: null,
   sex: null,
