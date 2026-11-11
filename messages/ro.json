@@ -1564,6 +1564,8 @@
         "label": "Nota",
         "limit": "Cel mult {max} de caractere.",
         "save": "Salvează nota",
+        "dialog": "Notă internă pentru {name}",
+        "addFor": "Adaugă o notă la {name}",
         "exportMore": "… (mai multe note pe pagina înscrierii)",
         "exportGone": "cont șters",
         "exportRole": {
@@ -9003,7 +9005,7 @@
             {
               "title": "Lasă o notă pe o înscriere",
               "steps": [
-                "«Înscrieri» → caută numele → deschide înscrierea → «Note interne». Cardul închis spune câte note are.",
+                "«Înscrieri» → caută numele → apasă «Adaugă o notă» pe rând. Sau deschide înscrierea: «Note interne» e primul card, deschis când are note.",
                 "Scrie în «Adaugă o notă» și apasă «Salvează nota». Notele apar de la cea mai nouă, cu numele celui care a scris și momentul.",
                 "Doar organizatorii și administratorii văd notele. Nu apar la masă sau pe lista publică; în exportul Excel și CSV sunt ultima coloană, «Note interne». Nu scrie date medicale sau alte date sensibile.",
                 "Pe lista înscrierilor, un rând cu note are un semn cu numărul lor; apasă-l ca să deschizi notele.",
@@ -9388,7 +9390,7 @@
             {
               "title": "Lasă o notă pe o înscriere",
               "steps": [
-                "«Înscrieri» → caută numele → deschide înscrierea → «Note interne». Cardul închis spune câte note are.",
+                "«Înscrieri» → caută numele → apasă «Adaugă o notă» pe rând. Sau deschide înscrierea: «Note interne» e primul card, deschis când are note.",
                 "Scrie în «Adaugă o notă» și apasă «Salvează nota». Notele apar de la cea mai nouă, cu numele celui care a scris și momentul.",
                 "Doar organizatorii și administratorii văd notele. Nu apar la masă sau pe lista publică; în exportul Excel și CSV sunt ultima coloană, «Note interne». Nu scrie date medicale sau alte date sensibile.",
                 "Pe lista înscrierilor, un rând cu note are un semn cu numărul lor; apasă-l ca să deschizi notele.",

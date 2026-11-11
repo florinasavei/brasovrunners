@@ -92,7 +92,8 @@ test.describe("§785 «Note interne» in the registrations export", () => {
       await page.goto(`/ro/admin/registrations/${seeded.registrationId}`);
       await hydrated(page);
       const card = page.locator("details#note-interne");
-      await card.locator("summary").click();
+      // It holds the older note, so it is open on arrival (a press would close it).
+      await expect(card).toHaveAttribute("open", "");
       await card.getByRole("textbox", { name: /Adaugă o notă/ }).fill(newer);
       await card.getByRole("button", { name: "Salvează nota" }).click();
       await expect(page).toHaveURL(new RegExp(`${seeded.registrationId}\\?saved=noteAdded#note-interne$`));
