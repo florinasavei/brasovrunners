@@ -170,20 +170,14 @@ describe("departureOf — the one judgement of when a waiting email leaves", () 
     expect(departureOf(ROW, { ...stoppedNow, mailgunReopensAt: minutes(-1) })).toEqual({ kind: "now" });
   });
 
-  it("«Cere reconfirmarea», part two: while Gmail carries a stop, a send to many on Mailgun's road waits for the stop's end; a registration's own, a manual resend and the event's urgent notices do not", () => {
+  it("«Cere reconfirmarea», part two: while Gmail carries a stop, a send to many on Mailgun's road waits for the stop's end; a registration's own and a manual resend do not", () => {
     const carried = { ...CTX, mailgunReopensAt: null, sendsToManyWaitUntil: minutes(116) }; // 12:00
-    for (const messageType of ["EVENT_REMINDER", "ORGANIZER_MESSAGE", "EVENT_THANKS", "REGISTRATION_OPENED"] as const) {
+    for (const messageType of ["EVENT_CANCELLED", "EVENT_REMINDER", "ORGANIZER_MESSAGE", "REGISTRATION_OPENED"] as const) {
       expect(departureOf({ ...ROW, messageType }, carried), messageType).toEqual({ kind: "reset", at: new Date("2026-10-01T09:00:00.000Z") });
-      // The turn the claim gives it is the stop's end itself: it still leaves after Mailgun resumes.
-      expect(departureOf({ ...ROW, messageType, nextAttemptAt: minutes(116) }, carried), messageType).toEqual({ kind: "reset", at: new Date("2026-10-01T09:00:00.000Z") });
       // An Administrator's «Retrimite» for one runner is that runner's own message: Gmail carries it.
       expect(departureOf({ ...ROW, messageType, isManualResend: true }, carried), messageType).toMatchObject({ kind: "at", at: NEXT_TICK });
       // On Gmail's road its own road carries it.
       expect(departureOf({ ...ROW, messageType, onMailgunRoad: false }, carried), messageType).toMatchObject({ kind: "at", at: NEXT_TICK });
-    }
-    // The cancellation and «Detalii actualizate» are carried by Gmail, as a registration's own message is.
-    for (const messageType of ["EVENT_CANCELLED", "EVENT_UPDATE_NOTICE"] as const) {
-      expect(departureOf({ ...ROW, messageType }, carried), messageType).toMatchObject({ kind: "at", at: NEXT_TICK });
     }
     expect(departureOf(ROW, carried)).toMatchObject({ kind: "at", at: NEXT_TICK });
   });

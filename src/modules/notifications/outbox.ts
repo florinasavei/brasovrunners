@@ -37,12 +37,12 @@ import {
 } from "./domain/mailgun-stop";
 import { emailGroupOf, GMAIL_CAP_DEFERRED_ERROR } from "./domain/email-transport";
 import { emailRoadChoice } from "@/shared/feedback/email-road-request";
-import { heldByMailgunCondition, notHeldByMailgun, readMailgunStop, recordMailgunStop, waitsForMailgunCondition } from "./mailgun-stop";
+import { heldByMailgunCondition, notHeldByMailgun, readMailgunStop, recordMailgunStop } from "./mailgun-stop";
 import { applyDeadlineRebase, type DeadlineRebase, planDeadlineRebase } from "./deadline-rebase";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { forgetUnsentVolunteerAgreementLink } from "@/modules/volunteers/unsent-link";
-import { BULK_MESSAGE_TYPES, isBulkMessage, SEND_TO_MANY_MESSAGE_TYPES, sendOrderOf, waitsForMailgunDuringStop } from "./domain/bulk";
+import { BULK_MESSAGE_TYPES, isBulkMessage, SEND_TO_MANY_MESSAGE_TYPES, sendOrderOf, waitsAsSendToMany } from "./domain/bulk";
 import { RELAY_MESSAGE_TYPES } from "./domain/relay";
 import { drainOutboxAfterResponse } from "./drain";
 import { pressStamp } from "./press";
@@ -369,8 +369,8 @@ export type OutboxRoads = {
   gmailBatchSize: number;
   /**
    * «Gmail preia când Mailgun se oprește» as it acts (§622, `fallbackActive`): while Mailgun's road is
-   * stopped, the due rows Gmail carries are claimed on Gmail's road — every group's but the sends to many that wait for
-   * Mailgun and the bulk kind (`waitsForMailgunDuringStop`). Absent or false, a stop holds Mailgun's rows as before.
+   * stopped, every group's due rows are claimed on Gmail's road. Absent or false, a stop holds Mailgun's
+   * rows as before.
    */
   fallbackToGmail?: boolean;
 };
@@ -509,8 +509,8 @@ async function claimOutboxBatchWithStop(
     SEND_TO_MANY_MESSAGE_TYPES.map((type, index) => sql`when ${emailOutbox.messageType} = ${type} then ${sql.raw(String(index + 1))}`),
     sql` `,
   )} else 0 end`;
-  // What waits for Mailgun during a stop (below): a send to many, neither a manual resend nor an urgent notice of the event.
-  const waitsForMailgun = waitsForMailgunCondition();
+  // A send to many as SQL, its manual resends left out: what waits for Mailgun during a stop (below).
+  const sendToMany = and(inArray(emailOutbox.messageType, [...SEND_TO_MANY_MESSAGE_TYPES]), not(emailOutbox.isManualResend)) as SQL;
 
   return db.transaction(async (tx) => {
     /*
@@ -597,20 +597,18 @@ async function claimOutboxBatchWithStop(
     */
     const stop = await readMailgunStop(tx, now, mailgunRoad);
     /*
-      And while it is stopped, with «Gmail preia când Mailgun se oprește» on, Gmail carries for it
-      (§622): Mailgun's road takes nothing, and Gmail's claim takes every due row it carries — Mailgun's held rows
+      And while it is stopped, with «Gmail preia când Mailgun se oprește» on, Gmail carries every group
+      (§622): Mailgun's road takes nothing, and Gmail's claim takes every due row — Mailgun's held rows
       at once, their `next_attempt_at` being Mailgun's deferral, not the message's turn — as many as
       Gmail's pace lets one batch send. Its cap is the sender's to keep, row by row. With the switch
       off, BR-V2.53's road: a pause holds Mailgun's rows, a spent allowance does not (the provider's own
       refusal defers each row, §40), and Gmail's groups go as ever.
 
-      What Gmail carries (the decision «Cere reconfirmarea», part two): the registrations' own messages, and the event's
-      urgent notices — the cancellation and «Detalii actualizate» (`URGENT_SEND_TO_MANY_MESSAGE_TYPES`) — in the claim's
-      order. The other sends to many on Mailgun's road (`waitsForMailgunDuringStop`: the reminder, the organizers' message,
-      the thanks, «s-au deschis înscrierile»), like the bulk kind, are not carried: they wait for Mailgun, with no mark and
-      no attempt spent, and leave by Mailgun in their order when the stop ends. So Gmail's room stays for the address to
-      confirm, the declaration and the offer. A send to many whose own road is Gmail leaves by Gmail, as its road says. One
-      more exception: a press's own rows (`ids`, «Trimite acum», §540) — the Administrator asked for them now, and the press
+      Gmail carries only the registrations' own messages (the decision «Cere reconfirmarea», part two): a send to many
+      on Mailgun's road, like the bulk kind, is not carried — it waits for Mailgun, untouched (no mark, no attempt spent),
+      and leaves by Mailgun in its order when the stop ends. Gmail's room stays for the address to confirm, the
+      declaration and the offer; a send to many whose own road is Gmail leaves by Gmail, as its road says. One more
+      exception: a press's own rows (`ids`, «Trimite acum», §540) — the Administrator asked for them now, and the press
       was let through only with room in Gmail's day for every message of it (`assertRoomToSendNow`), as its page said.
     */
     const carried = stop !== null && roads?.fallbackToGmail === true;
@@ -619,36 +617,13 @@ async function claimOutboxBatchWithStop(
     const mailgun = await claimRoad(mailgunRoad, mailgunLimit, bulkLimit);
     const gmailLimit = Math.min(batchSize, roads?.gmailBatchSize ?? batchSize);
     const heldNow = and(notRelay, eq(emailOutbox.status, "PENDING"), heldByMailgunCondition(), params.ids ? inArray(emailOutbox.id, [...params.ids]) : undefined);
-    // The newsletter's kind and the sends to many that wait stay on Mailgun's road during a stop unless the club routed them to Gmail (§443, §622).
-    const carriable = params.ids ? not(bulk) : (and(not(bulk), not(waitsForMailgun)) as SQL);
+    // The newsletter's kind and the sends to many stay on Mailgun's road during a stop unless the club routed them to Gmail (§443, §622).
+    const carriable = params.ids ? not(bulk) : (and(not(bulk), not(sendToMany)) as SQL);
     const gmail = carried
       ? await claimRoadWhere(and(or(due, heldNow), gmailRoad ? or(carriable, gmailRoad) : carriable), gmailLimit)
       : gmailRoad
         ? await claimRoad(gmailRoad, gmailLimit, null)
         : { first: [], second: [] };
-    /*
-      The rows the carried claim left on Mailgun's road for Mailgun get their turn at the stop's end, in this claim's
-      transaction — the turn a row caught mid-batch is handed back for (`processOutboxBatch`): no mark written, no attempt
-      spent. Left due, the job's plan (`nextOutboxWork`) would read work due now on every ping until the stop ends — a
-      database wake every quarter of an hour for rows that may not leave, what the bulk hold's docblock refuses
-      (`holdBulkUntilReset`). As that hold does, a due row's old stop mark is cleared and any other reason kept: moved
-      ahead with it, the row would be read as a witness of a stop (`readMailgunStop`). A stop that lasts longer moves
-      them again at the next claim. A press's own rows (`ids`) say nothing about the rest of the queue.
-    */
-    if (carried && stop && !params.ids) {
-      await tx
-        .update(emailOutbox)
-        .set({ nextAttemptAt: stop.until, lastError: sql`case when ${notHeldByMailgun()} then ${emailOutbox.lastError} else null end` })
-        .where(
-          and(
-            notRelay,
-            eq(emailOutbox.status, "PENDING"),
-            or(isNull(emailOutbox.nextAttemptAt), lte(emailOutbox.nextAttemptAt, now)),
-            waitsForMailgun,
-            mailgunRoad,
-          ),
-        );
-    }
 
     // The picking SELECT orders which rows are claimed; RETURNING has no defined order at all.
     // Sorting here hands the worker the batch in the claim's order, both roads together: a
@@ -671,8 +646,8 @@ async function claimOutboxBatchWithStop(
  * **A row it moves no longer wears a stop mark** (the decision «Cere reconfirmarea», part two — a defect of the
  * released code, found by its review with a probe). A due row may still carry Mailgun's pause mark (a 429) or its
  * allowance mark from a stop that has ended — due means its stop is over. Moved to the reset with the mark on it,
- * the row read as a stop in force (`readMailgunStop`: a marked row whose turn is ahead) until the next reset — up to
- * sixteen hours — and no verification, offer or confirmation left by Mailgun until then. So the hold clears those two marks
+ * the row read as a stop in force (`readMailgunStop`: a marked row whose turn is ahead) until 00:05 UTC, and no
+ * verification, offer or confirmation left by Mailgun for up to sixteen hours. So the hold clears those two marks
  * and keeps any other reason (the public page's «emailurile întârzie» read the same mark as a pause until the reset too).
  * Cleared rather than left out of the hold: left out (`notHeldByMailgun` in its WHERE), the row would stay due, and the
  * job's plan (`nextOutboxWork`) would read work due now on every ping until the reset — a database wake every quarter
@@ -809,10 +784,9 @@ export async function processOutboxBatch(
   let withdrawn = 0;
 
   /*
-    Gmail carries for Mailgun (§622): the stop the claim read, when it put what Gmail carries on Gmail's road
+    Gmail carries for Mailgun (§622): the stop the claim read, when it put every group on Gmail's road
     — or one Mailgun announces during this batch, with «Gmail preia când Mailgun se oprește» on. While
-    it is set, every row of the batch it carries leaves by Gmail alone (`gmailOnly`) — a bulk row or a send to many that
-    waits for Mailgun is handed back for the stop's end instead (below): Gmail's cap and pace as ever,
+    it is set, every row of the batch leaves by Gmail alone (`gmailOnly`): Gmail's cap and pace as ever,
     and a row Gmail cannot take now is held for Gmail's room or Mailgun's return, never sent to Mailgun.
   */
   const fallbackOn = roads?.fallbackToGmail === true;
@@ -839,10 +813,10 @@ export async function processOutboxBatch(
         summary.deferred += 1;
         continue;
       }
-      // A send to many that waits for Mailgun during a stop, as the scheduled pass sends it: a press's own rows (§540) are the press's.
-      const waitsForMailgun = !ids && waitsForMailgunDuringStop(row.messageType, row.isManualResend);
-      if (carrying && (isBulkMessage(row.messageType) || waitsForMailgun) && !(roads && onGmailRoad(row, roads))) {
-        // Mailgun's stop began mid-batch: a bulk row or a send to many that waits is handed back for the stop's end, never a personal Gmail (§443, §622).
+      // A send to many as the scheduled pass sends it: a press's own rows (§540) are the press's, asked for now.
+      const sendToMany = !ids && waitsAsSendToMany(row.messageType, row.isManualResend);
+      if (carrying && (isBulkMessage(row.messageType) || sendToMany) && !(roads && onGmailRoad(row, roads))) {
+        // Mailgun's stop began mid-batch: a bulk row or a send to many waits for Mailgun, never a personal Gmail (§443, §622).
         await releaseForPause(db, row, carrying.until, null);
         summary.deferred += 1;
         continue;
@@ -860,9 +834,9 @@ export async function processOutboxBatch(
         message = await render(row, db, now, rebase);
         if (route) message = { ...message, transport: route(row) };
         if (gmailOnly) message = { ...message, transport: "gmail", gmailOnly: true };
-        // Never spilled to Gmail when Mailgun refuses: the bulk kind (§443), and a send to many that waits for Mailgun
-        // during a stop (the decision «Cere reconfirmarea», part two) — the event's urgent notices may spill, as they did.
-        else if (isBulkMessage(row.messageType) || waitsForMailgun) message = { ...message, bulk: true };
+        // Never spilled to Gmail when Mailgun refuses: the bulk kind (§443), and a send to many — during a stop Gmail
+        // carries only the registrations' own messages (the decision «Cere reconfirmarea», part two).
+        else if (isBulkMessage(row.messageType) || sendToMany) message = { ...message, bulk: true };
       } catch (error) {
         if (error instanceof OutboxMessageWithdrawn) {
           await db.delete(emailOutbox).where(eq(emailOutbox.id, row.id));

@@ -30,8 +30,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *
  * The day of the probation: Mailgun paused the account, 148 confirmations waited, and the owner
  * released them by SQL from a phone and set Gmail by hand. Now, while Mailgun says stop — a pause it
- * asked for, or its allowance spent — Gmail carries for it when the switch is on (every group but the sends to many that
- * wait for Mailgun, the decision «Cere reconfirmarea»); a refusal that
+ * asked for, or its allowance spent — Gmail carries every group when the switch is on; a refusal that
  * is not about the message never marks it FAILED; the failed come back with one press; «Trimite
  * acum» says what it did; health and «Sarcini» name the remedy.
  *
@@ -203,34 +202,6 @@ describe("§622 Gmail takes over while Mailgun is paused, with the switch on", (
     await batch(new Date(NOW.getTime() + 15 * MINUTE));
     expect(roads.calls.mailgun).toHaveLength(2);
     expect((await rows()).at(-1)).toMatchObject({ status: "SENT", transport: "mailgun" });
-  });
-});
-
-describe("«Cere reconfirmarea», part two: a stop that begins mid-batch hands the sends that wait back for its end", () => {
-  it("carries the registrations' own by Gmail after Mailgun's first 429; the organizers' messages end PENDING at the stop's end, no reason, their attempt given back", async () => {
-    roads.mailgun = () => ({ outcome: "throttled", error: "mailgun 429: Too Many Requests", paced: true, rateRefused: true, retryAfter: PAUSE_UNTIL });
-    const [confirmation] = await db.insert(emailOutbox).values(row({ createdAt: new Date(NOW.getTime() - 30 * MINUTE) })).returning();
-    const [verification] = await db.insert(emailOutbox).values(row({ messageType: "VERIFY_REGISTRATION_EMAIL" })).returning();
-    const messages = await db
-      .insert(emailOutbox)
-      .values([row({ messageType: "ORGANIZER_MESSAGE", createdAt: new Date(NOW.getTime() - 40 * MINUTE) }), row({ messageType: "ORGANIZER_MESSAGE" })])
-      .returning();
-
-    const summary = await batch();
-    // The first Mailgun call (the oldest own message) met the 429; nobody knocked on Mailgun again.
-    expect(roads.calls.mailgun.map((message) => message.idempotencyKey)).toEqual([confirmation.idempotencyKey]);
-    expect(roads.calls.gmail.map((message) => message.idempotencyKey)).toEqual([verification.idempotencyKey]);
-    expect(summary).toMatchObject({ claimed: 4, sent: 1, deferred: 3 });
-    for (const message of messages) {
-      const [now] = await db.select().from(emailOutbox).where(eq(emailOutbox.id, message.id));
-      expect(now).toMatchObject({ status: "PENDING", attemptCount: 0, lastError: null, lockedAt: null });
-      expect(now.nextAttemptAt?.getTime()).toBe(PAUSE_UNTIL.getTime());
-    }
-
-    // The next pass carries the refused confirmation by Gmail; the organizers' messages still wait for Mailgun.
-    await batch(new Date(NOW.getTime() + MINUTE));
-    expect(roads.calls.gmail.map((message) => message.idempotencyKey)).toEqual([verification.idempotencyKey, confirmation.idempotencyKey]);
-    expect(roads.calls.mailgun).toHaveLength(1);
   });
 });
 
@@ -514,31 +485,6 @@ describe("§622 health and «Sarcini» name the remedy", () => {
     const health = await checkEmailHealth(db, NOW);
     expect(health).toMatchObject({ status: "degraded", deferred: 0, overdue: 0, failed: 0, stoppedLong: 0 });
     expect(health.mailgunStop).toEqual({ kind: "paused", until: PAUSE_UNTIL.toISOString(), carriedBy: "gmail", waitReason: null });
-  });
-
-  it("«Cere reconfirmarea», part two: during a carried stop a refused reminder queued past the allowance is paused late, never carried; the same row as a manual resend reads carried", async () => {
-    const late = new Date(NOW.getTime() - EMAIL_HEALTH_THRESHOLDS.OVERDUE_AFTER_MS - 5 * MINUTE);
-    await db.insert(emailOutbox).values(pausedRow({ messageType: "EVENT_REMINDER", createdAt: late }));
-    const held = await checkEmailHealth(db, NOW);
-    expect(held.mailgunStop).toMatchObject({ kind: "paused", carriedBy: "gmail" });
-    expect(held).toMatchObject({ status: "stalled", overdue: 1, deferred: 0 });
-    expect(held.lastError).toContain(RATE_PAUSE_ERROR_PREFIX);
-
-    await db.update(emailOutbox).set({ isManualResend: true });
-    const resend = await checkEmailHealth(db, NOW);
-    expect(resend).toMatchObject({ status: "degraded", overdue: 0, deferred: 0 });
-  });
-
-  it("«Cere reconfirmarea», part two: an organizers' message the carried claim gave the stop's end is the stop's, not a provider's deferral", async () => {
-    await recordMailgunStop(db, { kind: "allowance", until: RESET }, NOW);
-    await db.insert(emailOutbox).values(row({ messageType: "ORGANIZER_MESSAGE" }));
-    await batch();
-    const [waiting] = await rows();
-    expect(waiting).toMatchObject({ status: "PENDING", attemptCount: 0, lastError: null });
-    expect(waiting.nextAttemptAt?.getTime()).toBe(RESET.getTime());
-    const health = await checkEmailHealth(db, NOW);
-    expect(health).toMatchObject({ status: "degraded", waiting: 1, deferred: 0, overdue: 0, lastError: null, resumesAt: null });
-    expect(health.mailgunStop).toMatchObject({ kind: "allowance", carriedBy: "gmail" });
   });
 
   it("is stalled when nothing can carry a row for ninety minutes — Gmail's cap spent — and counts it for «Sarcini»", async () => {

@@ -5186,11 +5186,9 @@
           "title": "Emails nothing is carrying",
           "todo": "Mailgun said stop over 90 minutes ago and nothing carries the emails, an email is still refused for now after six attempts, or one failed in the last 7 days.",
           "broken": "Mailgun said stop over 90 minutes ago and nothing carries the emails, an email is still refused for now after six attempts, or one failed in 7 days. Nothing is lost.",
-          "done": "No email stuck or failed. If Mailgun says stop, Gmail carries the registrations' emails and the urgent notices (when the switch is on).",
+          "done": "No email stuck or failed. If Mailgun says stop, Gmail takes over (when the switch is on).",
           "how": [
-            "«Settings» → «Emails» → «How emails leave» → «Gmail takes over when Mailgun stops»: Yes → «Save the routes».",
-            "While Mailgun is paused or out of allowance, Gmail carries the registrations' emails, the cancellations, “Details updated” and the groups that leave through Gmail anyway.",
-            "The reminder, the organizers' messages, the thanks, “Registration is open” and the newsletter wait for Mailgun and leave by themselves when it resumes.",
+            "«Settings» → «Emails» → «How emails leave» → «Gmail takes over when Mailgun stops»: Yes → «Save the routes». While Mailgun is paused or out of allowance, Gmail carries every group.",
             "If Gmail has reached its limit: in the same place, «Gmail limit per day» above it (500 at most, and the club's people also send by hand from that account).",
             "The failed emails: «Settings» → «Emails» → «The sending queue» → «Retry the failed emails». It puts them back in the queue, from the first attempt.",
             "An email refused for now (5xx, 404) is retried on its own every hour; its reason is on its row in the queue. A 404 that does not pass: check MAILGUN_API_BASE_URL and MAILGUN_DOMAIN on Vercel.",
@@ -7747,7 +7745,7 @@
           "allowance": "Mailgun's allowance spent until {hour}",
           "line": "{stop} — {carried}.",
           "carried": {
-            "gmail": "Gmail takes over the registrations' emails and the urgent notices",
+            "gmail": "Gmail takes over",
             "fallbackOff": "Gmail does not take over: «Gmail takes over when Mailgun stops» is off",
             "gmailUnconfigured": "Gmail is not configured",
             "gmailCapSpent": "Gmail has reached its daily limit",
@@ -8071,7 +8069,7 @@
         },
         "overflow": "When Mailgun has used up today's messages",
         "overflowOptions": {
-          "yes": "Through Gmail, within its limit: the registrations' emails, the cancellations and “Details updated”; the rest waits until tomorrow",
+          "yes": "Send through Gmail, within its limit",
           "no": "Wait until tomorrow"
         },
         "lastFailure": "Last Gmail error: {when}, “{error}”. The messages since then left through Mailgun or wait for another try. If the error is “smtp EAUTH”, the account's app password must be made again.",
@@ -8083,7 +8081,7 @@
         "readOnly": "An Administrator changes this setting.",
         "updatedAt": "Set {when}.",
         "fallback": "Gmail takes over when Mailgun stops",
-        "fallbackHelp": "Gmail then carries the registrations' emails, the cancellations and “Details updated”. The reminder, organizers' messages, thanks, “Registration is open” and newsletter wait for Mailgun.",
+        "fallbackHelp": "While Mailgun has asked for a pause or its allowance is spent, every group leaves through Gmail, within its limit and pace; when Mailgun resumes, its groups return to it on their own.",
         "fallbackUnconfigured": "Unavailable: the club's Gmail is not configured on this environment (CONTACT_SMTP_USER and CONTACT_SMTP_PASSWORD).",
         "fallbackNotice": "Off until the notice from the new template is approved: the notice in force does not yet say a message may leave through Gmail. It turns on by itself once approved.",
         "fallbackOptions": {
@@ -13146,7 +13144,7 @@
     "emailHealth": {
       "ok": "Sending works: nothing deferred, overdue or failed. /api/health?deep=1 answers 200.",
       "stalled": "Sending has stopped — deferred (daily allowance): {deferred}; overdue: {overdue}; failed in 7 days: {failed}. Reason: “{reason}”. /api/health?deep=1 answers 503 until this clears.",
-      "degraded": "Mailgun said stop. Until it resumes, Gmail carries the registrations' emails and the urgent notices; the rest waits for Mailgun. /api/health?deep=1 answers 200 and says so in its “email” block."
+      "degraded": "Mailgun said stop and Gmail carries every group until it resumes; nothing overdue or failed. /api/health?deep=1 answers 200 and says so in its “email” block."
     },
     "registrationsToday": "Registrations today",
     "testRegistrations": "test",

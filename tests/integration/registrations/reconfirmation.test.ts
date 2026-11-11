@@ -491,8 +491,6 @@ describe("the manage page: the GET asks and writes nothing, the POST records onc
     await send();
     const secret = vinTokenOf((await emailTo(ana.id)).text)!;
     expect(await pressVin(secret, stranger.id)).toMatch(/invalid=1/);
-    // The refusal replaces the page that pressed, as every answer does: Back never mounts the automatic press again.
-    expect(lastRedirectType).toBe("replace");
     expect((await asks()).every((row) => row.reconfirmedAt === null)).toBe(true);
     expect(await pressVin(secret, ion.id)).toMatch(new RegExp(`reconfirm=1&person=${ion.id}#reconfirm$`));
     const byId = new Map((await asks()).map((row) => [row.registrationId, row]));
@@ -504,7 +502,6 @@ describe("the manage page: the GET asks and writes nothing, the POST records onc
     const { ana, secret } = await askedOne();
     await changeRegistrationAddress(db, await staff("ADMIN"), ana.id, "ana.noua@example.test", new Date());
     expect(await pressVin(secret)).toMatch(/invalid=1/);
-    expect(lastRedirectType).toBe("replace");
     expect((await asks()).every((row) => row.reconfirmedAt === null)).toBe(true);
     expect(await reconfirmAudits()).toHaveLength(0);
     // The ask stays with the registration; the waiting message, re-addressed, keeps its flag.

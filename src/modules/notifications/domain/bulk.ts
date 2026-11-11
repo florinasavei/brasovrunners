@@ -58,7 +58,7 @@ export function bulkBudget(headroom: { period: "day" | "month" | "none"; allowan
  *    a reminder lead before the start (`event-mail.ts#queueEventReminders`): the day and the place, already known;
  * 4. `ORGANIZER_MESSAGE` — «Trimite un mesaj participanților», the organizers' own words (and «Cere reconfirmarea»),
  *    which an organizer writes days ahead and can wait for the three above;
- * 5. `EVENT_THANKS` — «Trimite mulțumirile», to everyone checked in, the afternoon of the race (`event-mail.ts#sendEventThanks`):
+ * 5. `EVENT_THANKS` — «Mulțumește», to everyone checked in, the afternoon of the race (`event-mail.ts#sendEventThanks`):
  *    after the race, nothing in it to act on before another message;
  * 6. `REGISTRATION_OPENED` — one per address that asked «Anunță-mă când se deschid înscrierile», queued by the maintenance
  *    job when the window opens (`registrations/interest.ts`): to people with no registration yet, so after every message
@@ -68,10 +68,9 @@ export function bulkBudget(headroom: { period: "day" | "month" | "none"; allowan
  * registrations' own messages leave, and a club copy rides with its type. So a send of two hundred never stands in
  * front of a verification queued after it. One exception: an Administrator's «Retrimite» of one of them for one runner
  * (`is_manual_resend`) is that person's own message, and goes with the registrations' own (`sendOrderOf`,
- * `waitsAsSendToMany`). While Mailgun is stopped, Gmail carries the registrations' own messages and the event's urgent
- * notices (`URGENT_SEND_TO_MANY_MESSAGE_TYPES`); the other sends to many on Mailgun's road wait for Mailgun
- * (`waitsForMailgunDuringStop`, `outbox.ts`). `/api/health` does not call one of them late for waiting its turn
- * (`health.ts`), and the public «emailurile întârzie» does not count them (`email-delay.ts`, `public-delay.ts`).
+ * `waitsAsSendToMany`). While Mailgun is stopped, Gmail carries only the registrations' own messages: a send to many on
+ * Mailgun's road waits for Mailgun, untouched (`outbox.ts`). `/api/health` does not call one of them late for waiting its
+ * turn (`health.ts`), and the public «emailurile întârzie» does not count them (`email-delay.ts`, `public-delay.ts`).
  */
 export const SEND_TO_MANY_MESSAGE_TYPES = [
   "EVENT_CANCELLED",
@@ -81,19 +80,6 @@ export const SEND_TO_MANY_MESSAGE_TYPES = [
   "EVENT_THANKS",
   "REGISTRATION_OPENED",
 ] as const satisfies readonly EmailMessageType[];
-
-export type SendToManyMessageType = (typeof SEND_TO_MANY_MESSAGE_TYPES)[number];
-
-/**
- * The event's urgent notices among the sends to many (the decision «Cere reconfirmarea», part two): the date cancelled
- * (`EVENT_CANCELLED`) and its start or place moved (`EVENT_UPDATE_NOTICE`). Each says something a person acts on at once —
- * not to travel, or to come at another hour or to another place — so while Mailgun is stopped «Gmail preia când Mailgun se
- * oprește» carries them as it carried every group before this change: after the registrations' own messages, in the place
- * the order gives them. That uses Gmail's day, and is the price of a cancellation reaching everyone that day. The other four
- * — the reminder, the organizers' message, the thanks and «s-au deschis înscrierile» — say nothing that cannot wait for
- * Mailgun: they wait, so Gmail's room stays for the registrations' own (`waitsForMailgunDuringStop`).
- */
-export const URGENT_SEND_TO_MANY_MESSAGE_TYPES = ["EVENT_CANCELLED", "EVENT_UPDATE_NOTICE"] as const satisfies readonly SendToManyMessageType[];
 
 export function isSendToManyMessage(messageType: EmailMessageType): boolean {
   return (SEND_TO_MANY_MESSAGE_TYPES as readonly EmailMessageType[]).includes(messageType);
@@ -105,29 +91,6 @@ export function isSendToManyMessage(messageType: EmailMessageType): boolean {
  */
 export function waitsAsSendToMany(messageType: EmailMessageType, isManualResend = false): boolean {
   return !isManualResend && isSendToManyMessage(messageType);
-}
-
-/**
- * Whether a row waits for Mailgun while Mailgun is stopped and «Gmail preia când Mailgun se oprește» carries for it (the
- * decision «Cere reconfirmarea», part two): a send to many, not a manual resend, not one of the event's urgent notices.
- * The one predicate of that rule — the carried claim (as SQL, `mailgun-stop.ts#waitsForMailgunCondition`), the batch's
- * hand-back of a row caught mid-batch, the sender's `bulk` flag, `/api/health`'s reading of what is carried now and the
- * queue panel's «Pleacă după ce Mailgun reia» all ask it. Its callers keep their two exceptions: a row whose own road is
- * Gmail, and a press's own «Trimite acum» rows (§540).
- */
-export function waitsForMailgunDuringStop(messageType: EmailMessageType, isManualResend = false): boolean {
-  return waitsAsSendToMany(messageType, isManualResend) && !(URGENT_SEND_TO_MANY_MESSAGE_TYPES as readonly EmailMessageType[]).includes(messageType);
-}
-
-/** The types `waitsForMailgunDuringStop` holds (a manual resend apart), for the SQL that reads the rule. */
-export const WAITS_FOR_MAILGUN_MESSAGE_TYPES: readonly SendToManyMessageType[] = SEND_TO_MANY_MESSAGE_TYPES.filter((type) => waitsForMailgunDuringStop(type));
-
-/**
- * The sends to many the claim takes after `messageType`'s own step — what a new send of it does not wait behind
- * (`volume.ts#waitingAhead`). Every row of an earlier step, and the older rows of its own step, stand ahead of it.
- */
-export function sendsToManyAfter(messageType: SendToManyMessageType): readonly SendToManyMessageType[] {
-  return SEND_TO_MANY_MESSAGE_TYPES.slice(SEND_TO_MANY_MESSAGE_TYPES.indexOf(messageType) + 1);
 }
 
 /**

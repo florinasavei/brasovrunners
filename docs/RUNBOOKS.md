@@ -1074,18 +1074,13 @@ hourly `/api/health` is shallow since §577 and says only whether the site answe
 `/admin/tasks` is red at the top (`DECISIONS.md` §98), or its row «Emailuri pe care nu le duce nimeni»
 is red (§622). First look at «Setări» → «Emailuri» → «Coada de trimitere»: its header says whether
 Mailgun has said stop, until when, and who carries the mail meanwhile («Mailgun în pauză până la 10:15 —
-Gmail preia emailurile înscrierilor și anunțurile urgente», «… — Gmail nu e configurat»). **The switch:** «Prin ce pleacă emailurile» → «Gmail preia când
+Gmail preia», «… — Gmail nu e configurat»). **The switch:** «Prin ce pleacă emailurile» → «Gmail preia când
 Mailgun se oprește» → Da → «Salvează drumurile» (greyed «până la aprobarea notei din șablonul nou» until the
-privacy notice in force names `{{gmailFallback}}`: approve it from the template on «Documente legale» first): while Mailgun is paused or out of allowance,
-the club's Gmail carries the registrations' own emails, the event's urgent notices — the cancellation and «Detalii
-actualizate» — and any group whose road is Gmail anyway, within «Limita Gmail pe zi» (raise it there, 500 at most, if
-Gmail is the one that is full); all of it returns to Mailgun on its own afterwards. The other sends to many on Mailgun's
-road — the reminder, an organizers' message, the thanks, «s-au deschis înscrierile» — and the newsletter are not
-carried: they wait for Mailgun, their turn set to the stop's end (no mark, no attempt spent), and leave by Mailgun when
-it resumes; the queue panel says «Pleacă după ce Mailgun reia». While Gmail carries what it carries,
-`/api/health?deep=1` answers 200 with `email.status: "degraded"` and the monitor stays quiet — the sends that wait for
-Mailgun count as waiting there, never as deferred or overdue; it answers 503 once a row Gmail should carry has waited
-ninety minutes with nothing to carry it, or a send that waits was itself refused by Mailgun past the allowance.
+privacy notice in force names `{{gmailFallback}}`: approve it from the template on «Documente legale» first): while Mailgun is paused or out of allowance, every group
+leaves through the club's Gmail, within «Limita Gmail pe zi» (raise it there, 500 at most, if Gmail is
+the one that is full), and returns to Mailgun on its own afterwards. While Gmail carries everything,
+`/api/health?deep=1` answers 200 with `email.status: "degraded"` and the monitor stays quiet; it answers
+503 once a row has waited ninety minutes with nothing to carry it.
 Meanwhile the public pages say it themselves,
 for as long as it lasts: every page that waits for an email shows «Emailurile noastre întârzie acum»
 with how many messages wait, the oldest's wait, the estimate when there is one and that the deadline
@@ -1099,9 +1094,8 @@ or off; it goes when the queue is through. Four causes, told apart by the same p
    plan" → Basic → save, so the counters and "Trimite acum" stop counting against a hundred
    (`DECISIONS.md` §100) — saving also reopens Mailgun's road at once and makes the allowance-deferred rows due, so Gmail stops carrying (§622); the next scheduler tick — or "Trimite acum" — sends everything. When
    the month is over and the plan is cancelled, set it back to Free there. `docs/PLATFORM.md`
-   has the price. With «Gmail preia când Mailgun se oprește» on, the deferred rows Gmail carries leave through Gmail
-   at once instead (§622) — the sends to many that wait for Mailgun stay until the reset — and «Trimite acum» says
-   «N prin Gmail — cota Mailgun epuizată până la …».
+   has the price. With «Gmail preia când Mailgun se oprește» on, the deferred rows leave through Gmail
+   at once instead (§622), and «Trimite acum» says «N prin Gmail — cota Mailgun epuizată până la …».
 2. **Overdue** — messages waited more than ninety minutes for a scheduler. cron-job.org →
    the two job monitors: paused, disabled after failures, or the `JOB_SECRET` changed (a history
    entry that is a 200 taking about twenty seconds is a long run that finished after the response,
@@ -1110,24 +1104,21 @@ or off; it goes when the queue is through. Four causes, told apart by the same p
    `SETUP.md` §40, `DECISIONS.md` §667). Run
    `yarn smoke` on the environment; `jobs[].status` names which one is stale. Pressing
    "Trimite acum" on `/admin/registrations` drains the outbox by hand meanwhile. A send to many — the
-   cancellation, «Detalii actualizate», the reminder, an organizers' message, the thanks («Alergări» → «Editează» →
-   «Înscrierile primite» → «Mulțumiri după cursă» → «Trimite mulțumirile») and «s-au deschis înscrierile»
+   cancellation, «Detalii actualizate», the reminder, an organizers' message, «Mulțumește» and «s-au deschis înscrierile»
    (`SEND_TO_MANY_MESSAGE_TYPES`, in the order they leave) — waiting behind the registrations' own emails is not a stall
    and is not counted overdue: it leaves at the queue's pace. Only an organizers' message has a «Mesaje trimise» row on the
    event, which says «Au plecat · Așteaptă»; every other one shows on «Setări» → «Emailuri» → «Emailuri azi». An
    Administrator's «Retrimite» of one of them for one runner is that runner's own message and is judged as one. While
-   Mailgun is stopped, «Gmail preia când Mailgun se oprește» carries the registrations' own messages and the event's two
-   urgent notices (the cancellation, «Detalii actualizate»); the reminder, an organizers' message, the thanks and
-   «s-au deschis înscrierile» wait for Mailgun and leave when the stop ends. «Trimite un mesaj participanților» offers no
-   «Trimite acum» during the stop: the press queues; the queue panel's «Trimite acum» for chosen rows still sends them by Gmail.
+   Mailgun is stopped, «Gmail preia când Mailgun se oprește» carries only the registrations' own messages: a send to many
+   waits for Mailgun and leaves when the stop ends.
 3. **Paused by the provider** (§605) — `lastError` starts "paused by the provider:". Mailgun
    answered 429, or 400 "not allowed to send" with the probation's words («You are sending too fast.
    Your account is on probation…»): the message waits, due at `Retry-After` or fifteen minutes, and no
    attempt is spent, and no other Mailgun message is tried until the pause ends, so nothing fails.
    A row paused recently and queued longer ago than the overdue allowance turns **overdue**: ask
    Mailgun's support to lift the probation or check Sending → Logs, and lower «Limita pe oră» (90 while
-   the probation lasts). With the switch on, Gmail carries the registrations' own emails and the urgent notices during
-   the pause (§622) — no SQL, no setting by hand; the other sends to many wait for the pause's end. Mailgun rows only waiting for the
+   the probation lasts). With the switch on, Gmail carries the queue during the pause (§622) — no SQL,
+   no setting by hand. Mailgun rows only waiting for the
    hour's pace (`hourPaced` in `/api/health`, «Limita pe oră» on «Emailuri») are not an alert while
    Mailgun's hour is full; a Gmail row, or a Mailgun row behind an hour with room, is.
 4. **Failed** — since §622 only a refusal *of the message or the account*: a `401` or `403` (the

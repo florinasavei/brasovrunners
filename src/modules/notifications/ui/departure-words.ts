@@ -29,7 +29,7 @@ export function departureContextOf(input: {
     deferredBeyondMs: EMAIL_HEALTH_THRESHOLDS.DEFERRED_BEYOND_MS,
     hourPaceHolds: volume.hourPaceHolds === true,
     mailgunReopensAt: mailgunReopensAt(volume, now),
-    // Gmail carries for a stopped Mailgun, but not every send to many: one that waits for Mailgun leaves after the stop's end.
+    // Gmail carries for a stopped Mailgun, but only the registrations' own: a send to many waits for the stop's end.
     sendsToManyWaitUntil: volume.whileStopped.road === "gmail" ? volume.whileStopped.stop.until : null,
     pingerMinutesAt: (instant) => pingerCadenceMinutes(instant),
   };
