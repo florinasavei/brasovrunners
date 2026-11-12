@@ -25,6 +25,7 @@ import { fillPlaceholders } from "./domain/email-copy";
 import {
   AUDIENCE_STATUSES,
   checkOrganizerMessage,
+  isOrganizerQrStatus,
   isParticipantMessageAudience,
   type OrganizerMessage,
   PARTICIPANT_MESSAGE_AUDIENCES,
@@ -105,6 +106,14 @@ export type SendParticipantMessageInput = {
    * participant: nothing in a state, a place, a deadline, the allocator or the capacity formula reads the answer.
    */
   askReconfirm?: boolean;
+  /**
+   * «Trimite și numărul de concurs și codul QR» (§NNN; the owner, 2026-11-12: «trebuie să le și reamintesc oamenilor care
+   * e numărul lor de concurs și să le retrimit QR»): each confirmed registration of this send gets, under the organizers'
+   * words, its own race number, QR and desk code — the confirmation's own block. Only those rows carry the flag, and the
+   * renderer asks the registration's state again when the email leaves; everybody else gets the message as it was.
+   * Nothing in a state, a place, a deadline, the allocator or the capacity formula reads it.
+   */
+  sendQr?: boolean;
 };
 
 export type SendParticipantMessageResult =
@@ -221,16 +230,8 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       await assertRoomToSendNow(tx, rows.slice(0, split.now).map(() => "ORGANIZER_MESSAGE" as const), now, split.copiesNow ? copies : []);
     }
     const askReconfirm = input.askReconfirm === true;
+    const sendQr = input.sendQr === true;
     const words = { subject: { ro: message.subject.ro, en: message.subject.en }, body: { ro: message.body.ro, en: message.body.en } };
-    /*
-      «Cere reconfirmarea» (the decision «Cere reconfirmarea»): the flag rides on a row, never on the send — only the rows
-      whose registration this send asks (`isReconfirmStatus` at queue time, the very test that fills `asked`) carry it,
-      beside the words, so the renderer draws «Vin» only where an ask row exists. A flag, never a token.
-    */
-    const askingWords = { ...words, askReconfirm: true };
-    // Marked for the queue panel's «Pleacă acum» (§540) — only a row this press sends now.
-    const nowPayload = markedForNow(words, delivery);
-    const askingNowPayload = markedForNow(askingWords, delivery);
 
     let real = 0;
     let test = 0;
@@ -238,10 +239,26 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
     // The registrations this send asks (the decision «Cere reconfirmarea»), test ones counted apart as every number here.
     const asked: string[] = [];
     let askedTest = 0;
+    // The confirmed registrations whose email carries the number and the QR (§NNN), test ones apart likewise.
+    let withQr = 0;
+    let withQrTest = 0;
     for (const [index, row] of rows.entries()) {
       const leavesNow = delivery === "now" && index < split.now;
+      /*
+        «Cere reconfirmarea» (the decision «Cere reconfirmarea»): the flag rides on a row, never on the send — only the rows
+        whose registration this send asks (`isReconfirmStatus` at queue time, the very test that fills `asked`) carry it,
+        beside the words, so the renderer draws «Vin» only where an ask row exists. A flag, never a token.
+
+        «Trimite și numărul de concurs și codul QR» (§NNN) rides the same way: `sendQr` only on the rows whose registration
+        is confirmed as the send queues them (`isOrganizerQrStatus`) — a flag, never the code, which the renderer reads off
+        the registration when the email leaves, and only if it is confirmed still.
+      */
       const asks = askReconfirm && isReconfirmStatus(row.status);
-      const payload = asks ? (leavesNow ? askingNowPayload : askingWords) : leavesNow ? nowPayload : words;
+      const carriesQr = sendQr && isOrganizerQrStatus(row.status);
+      // The words, and each flag only on its own rows: a row neither concerns carries the words alone, as it always did.
+      const own = asks || carriesQr ? { ...words, ...(asks ? { askReconfirm: true } : {}), ...(carriesQr ? { sendQr: true } : {}) } : words;
+      // Marked for the queue panel's «Pleacă acum» (§540) — only a row this press sends now.
+      const payload = leavesNow ? markedForNow(own, delivery) : own;
       const inserted = await enqueueEmail(tx, {
         participantId: row.participantId,
         registrationId: row.registrationId,
@@ -265,6 +282,10 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         asked.push(row.registrationId);
         if (row.kind === "TEST") askedTest += 1;
       }
+      if (carriesQr) {
+        if (row.kind === "TEST") withQrTest += 1;
+        else withQr += 1;
+      }
     }
     if (real + test === 0) return { kind: "duplicate" } as const;
     /*
@@ -278,11 +299,12 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         .values(asked.map((registrationId) => ({ registrationId, eventId: input.eventId, sendId: input.sendId, askedAt: now })))
         .onConflictDoNothing();
     }
-    // The club's one copy of this send (§419): the words and how many real participants it reached.
+    // The club's one copy of this send (§419): the words and how many real participants it reached — never a row's
+    // flag: it asks nobody, and it carries nobody's number, QR or desk code (§320, §NNN). Marked like a row when it leaves now.
     await enqueueBulkClubCopies(tx, {
       messageType: "ORGANIZER_MESSAGE",
       eventId: input.eventId,
-      payload: split.copiesNow ? nowPayload : words,
+      payload: split.copiesNow ? markedForNow(words, delivery) : words,
       sendKey: `organizer-message:${input.sendId}`,
       realRecipients: real,
       requestedByStaffUserId: actor.id,
@@ -307,6 +329,9 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         ...(delivery === "now" ? { delivery: "now", bypassedSchedule: true } : {}),
         // «Cere reconfirmarea» (the decision «Cere reconfirmarea»): the tick, and how many were asked — real and test apart.
         ...(askReconfirm ? { askReconfirm: true, asked: asked.length - askedTest, askedTest } : {}),
+        // «Trimite și numărul de concurs și codul QR» (§NNN): the tick, and in how many confirmed registrations' emails —
+        // real and test apart; «Mesaje trimise» reads both. Never who, and never a code.
+        ...(sendQr ? { sendQr: true, withQr, withQrTest } : {}),
       },
       now,
     });
@@ -351,6 +376,13 @@ export type SentParticipantMessage = {
   askReconfirm: boolean;
   /** The three numbers of a send that asked; null for one that did not. */
   answers: ReconfirmAnswers | null;
+  /** «Trimite și numărul de concurs și codul QR» was ticked on this send (§NNN). */
+  sendQr: boolean;
+  /**
+   * In how many confirmed registrations' emails the send queued the number and the QR, as its audit row counted them
+   * then — test registrations left out; 0 for a send that did not tick.
+   */
+  withQr: number;
   progress: SendProgress;
 };
 
@@ -389,6 +421,8 @@ export async function listParticipantMessages<T extends Record<string, unknown>>
       test?: unknown;
       subject?: { ro?: unknown; en?: unknown };
       askReconfirm?: unknown;
+      sendQr?: unknown;
+      withQr?: unknown;
     };
     const words = (value: unknown) => (typeof value === "string" ? value : "");
     return {
@@ -400,6 +434,9 @@ export async function listParticipantMessages<T extends Record<string, unknown>>
       test: typeof metadata.test === "number" ? metadata.test : 0,
       senderName: row.senderName ?? null,
       askReconfirm: metadata.askReconfirm === true,
+      // «Trimite și numărul de concurs și codul QR» (§NNN): the tick and its count, as the send's own audit row wrote them.
+      sendQr: metadata.sendQr === true,
+      withQr: metadata.sendQr === true && typeof metadata.withQr === "number" ? metadata.withQr : 0,
     };
   });
   const sendIds = read.flatMap((entry) => (entry.sendId ? [entry.sendId] : []));
@@ -506,6 +543,8 @@ export async function previewParticipantMessage<T extends Record<string, unknown
     body: { ro?: string | null; en?: string | null };
     /** «Cere reconfirmarea» as the box stands: the preview draws «Vin» beside «Nu mai pot ajunge» (the decision «Cere reconfirmarea»). */
     askReconfirm?: boolean;
+    /** «Trimite și numărul de concurs și codul QR» as the box stands: the preview draws the example runner's block under the words (§NNN). */
+    sendQr?: boolean;
   },
 ): Promise<ParticipantMessagePreview> {
   if (!canMessageParticipants(actor.role)) {
@@ -565,6 +604,15 @@ export async function previewParticipantMessage<T extends Record<string, unknown
     */
     cannotComeUrl: `${env.APP_BASE_URL}/${locale}/EXAMPLE#cancel`,
     ...(input.askReconfirm === true ? { reconfirmUrl: `${env.APP_BASE_URL}/${locale}/EXAMPLE#reconfirm` } : {}),
+    /*
+      The block a confirmed runner's copy carries when the box is ticked (§NNN): the example runner is confirmed — her
+      number is in the line above the preview — so she is shown her number, the QR's place and the sample's desk code, as
+      the confirmation's preview on «Setări» → «Emailuri» shows them (`emailSampleData`). The code is the sample's, nobody's:
+      its picture's address answers nothing, so the preview draws the picture's description where a real QR arrives.
+    */
+    ...(input.sendQr === true
+      ? { organizerQr: { checkinCode: EMAIL_SAMPLE[locale].checkinCode, qrUrl: `${env.APP_BASE_URL}/api/registrations/qr/${EMAIL_SAMPLE[locale].checkinCode}.png` } }
+      : {}),
     ...(words.subject[locale] ? { organizerSubject: words.subject[locale] } : {}),
     ...(words.subject[other] ? { organizerSubjectOther: words.subject[other] } : {}),
     ...(words.body[locale] ? { organizerBody: words.body[locale] } : {}),

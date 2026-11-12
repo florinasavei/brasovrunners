@@ -6,7 +6,7 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
-import { DESK_CODE_MESSAGE_TYPES } from "@/modules/registrations/domain/email-state";
+import { DESK_CODE_MESSAGE_TYPES, isDeskQrMessage } from "@/modules/registrations/domain/email-state";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { hoursPhrase } from "@/modules/deadlines/domain/duration-words";
@@ -460,19 +460,19 @@ describe("BR-REQ-080-01 outbox renderer", () => {
 
   it("gives the desk code and its QR to exactly the messages the email state says carry it (§671)", async () => {
     await db.update(registrations).set({ status: "CONFIRMED", confirmedAt: NOW, holdExpiresAt: null }).where(eq(registrations.id, registrationId));
-    const candidates: EmailMessageType[] = ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED", "DECLARATION_SIGNED", "EVENT_UPDATE_NOTICE", "REGISTRATION_CANCELLED"];
-    const carrying: EmailMessageType[] = [];
-    for (const [index, messageType] of candidates.entries()) {
-      const message = await renderOutboxMessage(
+    // The organizers' message is a candidate since §NNN: by its type alone — a row with no flag — it carries none.
+    const candidates: EmailMessageType[] = ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED", "DECLARATION_SIGNED", "EVENT_UPDATE_NOTICE", "REGISTRATION_CANCELLED", "ORGANIZER_MESSAGE"];
+    const rendered = (messageType: EmailMessageType, key: string, payloadJson: Record<string, unknown> = {}) =>
+      renderOutboxMessage(
         {
-          id: `row-desk-${index}`,
+          id: `row-desk-${key}`,
           participantId,
           registrationId,
           messageType,
           locale: "ro",
           recipientEmail: "ana@example.ro",
-          payloadJson: {},
-          idempotencyKey: `test:desk:${index}`,
+          payloadJson,
+          idempotencyKey: `test:desk:${key}`,
           requestedByStaffUserId: null,
           cause: null,
           pressId: null,
@@ -492,10 +492,26 @@ describe("BR-REQ-080-01 outbox renderer", () => {
         db,
         NOW,
       );
+    const carrying: EmailMessageType[] = [];
+    for (const [index, messageType] of candidates.entries()) {
+      const message = await rendered(messageType, String(index));
       if (message.html.includes("/api/registrations/qr/")) carrying.push(messageType);
     }
     // The desk's chip («Fără QR pe email») reads `DESK_CODE_MESSAGE_TYPES`: the renderer and it agree.
     expect(carrying.sort()).toEqual([...DESK_CODE_MESSAGE_TYPES].sort());
+    /*
+      The one message that carries it by its row and not by its type (§NNN): an organizers' message whose send ticked
+      «Trimite și numărul de concurs și codul QR». The email state does not list it — refused, it leaves the
+      confirmation's QR in the inbox, so the desk's chip has nothing to say — and no other type reads the flag.
+    */
+    const words = { subject: { ro: "Subiect", en: "Subject" }, body: { ro: "Mesaj.", en: "Message." } };
+    expect((await rendered("ORGANIZER_MESSAGE", "flagged", { ...words, sendQr: true })).html).toContain("/api/registrations/qr/");
+    expect((await rendered("ORGANIZER_MESSAGE", "unflagged", words)).html).not.toContain("/api/registrations/qr/");
+    for (const messageType of ["DECLARATION_SIGNED", "EVENT_UPDATE_NOTICE", "REGISTRATION_CANCELLED"] as const) {
+      expect((await rendered(messageType, `flagged-${messageType}`, { sendQr: true })).html, messageType).not.toContain("/api/registrations/qr/");
+    }
+    expect(DESK_CODE_MESSAGE_TYPES).not.toContain("ORGANIZER_MESSAGE");
+    expect(isDeskQrMessage("ORGANIZER_MESSAGE")).toBe(false);
   });
 
   it("renders a message with no token and no action link", async () => {

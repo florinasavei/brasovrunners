@@ -45,7 +45,7 @@ import { type HoldLapsedNext, holdLapsedNext } from "./domain/hold-lapsed";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { declarationAsksMinorToSign } from "@/modules/legal-documents/repository";
 import { missingAnswers } from "@/modules/registrations/missing-answers";
-import { readOrganizerAskReconfirm, readOrganizerMessagePayload } from "./domain/organizer-message";
+import { organizerQrApplies, readOrganizerAskReconfirm, readOrganizerMessagePayload, readOrganizerSendQr } from "./domain/organizer-message";
 import { registrationStatusWords } from "./domain/registration-status-words";
 import { readEmailCopyForSending } from "./email-copy";
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
@@ -1297,8 +1297,19 @@ async function renderRow(
     data.bibNumber = writtenNumber(raceNumberOf(registration));
   }
 
+  /*
+    «Trimite și numărul de concurs și codul QR» (§NNN): the organizers' message carries the same code, QR and number as the
+    three below only when its own row carries the send's flag — set only on the rows of registrations confirmed when it
+    was queued — at the registration's own address, and only for a registration confirmed now, as it renders
+    (`organizerQrApplies`; the condition below asks the state once more): a send drains over hours, and a runner who
+    cancelled since reads the words alone. Never the club's copy (§320).
+  */
+  const organizerQr =
+    row.messageType === "ORGANIZER_MESSAGE" &&
+    organizerQrApplies({ sendQr: readOrganizerSendQr(row.payloadJson), clubCopy, recipientParticipantId: row.participantId, registration });
+
   if (
-    (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "EVENT_REMINDER" || row.messageType === "BIB_ASSIGNED") &&
+    (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "EVENT_REMINDER" || row.messageType === "BIB_ASSIGNED" || organizerQr) &&
     registration?.status === "CONFIRMED" &&
     !familyConfirmed
   ) {
@@ -1310,8 +1321,16 @@ async function renderRow(
         code = newCheckinCode();
         await db.update(registrations).set({ checkinCode: code }).where(eq(registrations.id, registration.id));
       }
-      data.checkinCode = code;
-      data.checkinQrUrl = `${env.APP_BASE_URL}/api/registrations/qr/${code}.png`;
+      const qrUrl = `${env.APP_BASE_URL}/api/registrations/qr/${code}.png`;
+      /*
+        On the organizers' message the two are the block's own (§NNN), never a field of the words: `{checkinCode}` stays
+        empty in whatever the organizers wrote (`placeholdersFilledBy`), since those words are the same for everybody.
+      */
+      if (organizerQr) data.organizerQr = { checkinCode: code, qrUrl };
+      else {
+        data.checkinCode = code;
+        data.checkinQrUrl = qrUrl;
+      }
     }
     /*
       The number the confirmation gave (§548; the owner: "peste tot trebuie să apară BID-ul!!"):

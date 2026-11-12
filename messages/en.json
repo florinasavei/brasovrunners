@@ -9141,6 +9141,7 @@
                 "Under «Who receives it» pick the group (everyone, «Only the confirmed», the waiting list or those without a declaration) and see how many they are.",
                 "Write the «Subject» and the «Message», in Romanian and in English.",
                 "For a reminder, press «Fill in the reminder text»: it writes the text and ticks «Ask them to reconfirm». Whoever presses “I'm coming” shows as «Reconfirmed»; nobody is cancelled automatically.",
+                "For each confirmed runner to get their own race number and QR code under the message, tick «Also send the race number and the QR code». Everyone else gets the message without them.",
                 "Under «How the email looks» read both versions: «Registered in Romanian» and «Registered in English».",
                 "Press «Send the message», then «Send» in the window: it says how long the send takes and whether they all fit now. «Messages sent» shows how many left and how many re-confirmed.",
                 "About this event only: no advertising, no sponsors' offers, no other events."
@@ -10344,6 +10345,8 @@
       "historyTest": "test registrations: {test}",
       "reconfirm": "Ask them to reconfirm",
       "reconfirmHelp": "The email also gets the “I'm coming” button. Nobody is cancelled automatically; “No answer” is only information for the organizers.",
+      "sendQr": "Also send the race number and the QR code",
+      "sendQrHelp": "Only the confirmed get them, each their own, under your message. Everyone else gets the message without them.",
       "reminderFill": {
         "button": "Fill in the reminder text",
         "confirmTitle": "Replace the text you wrote?",
@@ -10396,6 +10399,7 @@
       "dailyShareGmail": "The registrations' own emails leave first, but they share the day's allowance and Gmail's limit with this message.",
       "dailyPlan": "A large send belongs on a monthly plan: «{settings}» → «{emails}» → «{plan}».",
       "historyAnswers": "Reconfirmed {yes} · Cancelled {cancelled} · No answer {none}",
+      "historyQr": "With the race number and the QR code for the confirmed: {count}",
       "historyProgress": "Left {left} · Waiting {waiting}",
       "historyFailed": "Not sent {failed}"
     },

@@ -161,7 +161,10 @@ export function pressThatClears(messageType: string, status: RegistrationStatus 
 
 /**
  * The messages that carry the desk code and its QR (`render.ts`: the confirmation, the reminder and the
- * race number's email of a confirmed registration) — what the person shows at the desk.
+ * race number's email of a confirmed registration) — what the person shows at the desk. By their type,
+ * always: the organizers' message carries them only on a row whose send ticked «Trimite și numărul de
+ * concurs și codul QR» (§NNN), so it is not listed — refused, it leaves the confirmation's QR in the
+ * inbox, as a refused reminder does.
  */
 export const DESK_CODE_MESSAGE_TYPES: readonly EmailMessageType[] = ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED"];
 

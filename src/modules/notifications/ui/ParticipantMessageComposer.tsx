@@ -85,6 +85,9 @@ export type ComposerLabels = {
   /** «Cere reconfirmarea» (the decision «Cere reconfirmarea») and its help line: nobody is cancelled automatically. */
   reconfirm: string;
   reconfirmHelp: string;
+  /** «Trimite și numărul de concurs și codul QR» (§NNN) and its help line: only the confirmed get them, each their own. */
+  sendQr: string;
+  sendQrHelp: string;
   /**
    * «Completează cu textul de reminder»: the button, its question before it replaces typed words, and the ready text in
    * both languages — read on the server from both catalogues with its `{placeholders}` literal, whatever the UI language.
@@ -111,6 +114,8 @@ export type PreviewInput = {
   bodyEn: string;
   /** The tick «Cere reconfirmarea» as it stands: the preview draws «Vin» beside «Nu mai pot ajunge». */
   askReconfirm: boolean;
+  /** The tick «Trimite și numărul de concurs și codul QR» as it stands: the preview draws the example runner's block (§NNN). */
+  sendQr: boolean;
 };
 export type PreviewResult = { subject: string; html: string; unknown: string[] } | null;
 
@@ -171,8 +176,11 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
     refused send like every box (§315). The preview reads it from the form, as it reads the words.
   */
   const [askReconfirm, setAskReconfirm] = useState(() => recall.value("askReconfirm") === "1");
-  const readAsk = useCallback(
-    (): boolean => root.current?.querySelector<HTMLInputElement>('input[name="askReconfirm"]')?.checked === true,
+  // «Trimite și numărul de concurs și codul QR» (§NNN): off unless ticked; controlled too, so a refused send keeps it (§315).
+  const [sendQr, setSendQr] = useState(() => recall.value("sendQr") === "1");
+  // Either tick as the form holds it now — what a press would post.
+  const readTick = useCallback(
+    (name: "askReconfirm" | "sendQr"): boolean => root.current?.querySelector<HTMLInputElement>(`input[name="${name}"]`)?.checked === true,
     [],
   );
 
@@ -187,7 +195,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
     (nextLanguage: PreviewLanguage) => {
       const ticket = ++asked.current;
       const words = readWords();
-      preview({ eventId, language: nextLanguage, ...words, askReconfirm: readAsk() })
+      preview({ eventId, language: nextLanguage, ...words, askReconfirm: readTick("askReconfirm"), sendQr: readTick("sendQr") })
         .then((result) => {
           if (ticket !== asked.current) return;
           setShown(result ? { state: "ready", result } : { state: "unavailable", result: null });
@@ -196,7 +204,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
           if (ticket === asked.current) setShown({ state: "unavailable", result: null });
         });
     },
-    [eventId, preview, readWords, readAsk],
+    [eventId, preview, readWords, readTick],
   );
 
   // The first preview once the boxes exist — after a refusal too, when they hold what was typed.
@@ -209,8 +217,9 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
   }, [recall.generation]);
 
   const onInput = (event: FormEvent<HTMLDivElement>) => {
-    // The tick asks for its own preview at once (below), never a second one after the pause.
-    if ((event.target as HTMLInputElement | null)?.name === "askReconfirm") return;
+    // A tick asks for its own preview at once (below), never a second one after the pause.
+    const from = (event.target as HTMLInputElement | null)?.name;
+    if (from === "askReconfirm" || from === "sendQr") return;
     const words = readWords();
     setIdentical(identicalInBothLanguages(words.bodyRo, words.bodyEn));
     // Asked when the pause ends, for the tab open then — not the one open when the key was pressed.
@@ -401,6 +410,34 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
         />
         <Typography id="participant-message-reconfirm-help" variant="caption" color="text.secondary" component="p">
           {labels.reconfirmHelp}
+        </Typography>
+      </Box>
+
+      {/*
+        «Trimite și numărul de concurs și codul QR» (§NNN): each confirmed runner's email gets, under these words, their own
+        race number, QR and desk code — the confirmation's block. The help line says who gets them and who does not.
+      */}
+      <Box data-testid="participant-message-qr">
+        <FormControlLabel
+          control={
+            <Checkbox
+              name="sendQr"
+              value="1"
+              checked={sendQr}
+              onChange={(event) => {
+                setSendQr(event.target.checked);
+                // The preview at once, as the tick above: the box decides a block, not words being typed.
+                pause.cancel();
+                refresh(language);
+              }}
+              slotProps={{ input: { "aria-describedby": "participant-message-qr-help" } }}
+              sx={CHECKBOX_TAP_TARGET}
+            />
+          }
+          label={labels.sendQr}
+        />
+        <Typography id="participant-message-qr-help" variant="caption" color="text.secondary" component="p">
+          {labels.sendQrHelp}
         </Typography>
       </Box>
 
