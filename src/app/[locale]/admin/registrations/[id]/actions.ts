@@ -8,6 +8,7 @@ import { DELIVERY_CHOICE_FIELD, deliveryChoiceOf } from "@/modules/notifications
 import { inEmailPress } from "@/modules/notifications/press";
 import { sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { resendFamilyMessage, resendRegistrationMessage } from "@/modules/registrations/admin-service";
+import { listReturnHref } from "@/modules/registrations/domain/list-row";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
@@ -15,6 +16,15 @@ import type { FormOutcome } from "@/shared/forms/outcome";
 
 function toLocale(value: FormDataEntryValue | null): Locale {
   return value === "en" ? "en" : "ro";
+}
+
+/**
+ * «Retrimite» pressed from a row of the registrations list (§943): the form carries the list's query, and the press
+ * comes back to that row with the toast — it used to open the registration's own page under the hand. A refusal lands
+ * on the list's alert. Only the query travels; the path is rebuilt here (`listReturnHref`).
+ */
+function backOnTheList(locale: Locale, form: FormData, registrationId: string, outcome: Record<string, string>): string {
+  return listReturnHref(getPathname({ locale, href: "/admin/registrations" }), String(form.get("listQuery") ?? ""), outcome.error === undefined ? { ...outcome, from: "row" } : outcome, registrationId);
 }
 
 /** «Retrimite familiei» (§588): one email for everybody on the row's address at its event. */
@@ -37,6 +47,7 @@ export async function resendFamilyEmailAction(_previous: FormOutcome | null, for
     }
     const now = delivery === "now";
     if (error === null) await flashOutcome(now ? { saved: "resentNow" } : { saved: "resent" });
+    if (form.has("listQuery")) redirect(backOnTheList(locale, form, registrationId, error !== null ? { error } : now ? { saved: "resentNow" } : { saved: "resent" }));
     redirect(error === null ? `${path}?resent=${now ? "now" : "1"}#admin-alert` : `${path}?error=${error}#admin-alert`);
   });
 }
@@ -73,8 +84,20 @@ export async function resendRegistrationEmailAction(_previous: FormOutcome | nul
 
     // `#admin-alert`, like every other backoffice redirect: land on the outcome — and the toast
     // (§384) says which message went, from the same flag, and whether it left now (§540).
-    if (outcome === "sent" && delivery === "now") await flashOutcome({ saved: wanted === "EVENT_REMINDER" ? "reminderSentNow" : "resentNow" });
-    else if (outcome === "sent") await flashOutcome({ saved: wanted === "EVENT_REMINDER" ? "reminderSent" : "resent" });
+    // What the toast says, and the list's address when the press came from a row: which message went, and whether it left now.
+    const reminder = wanted === "EVENT_REMINDER";
+    const sentAs =
+      outcome !== "sent"
+        ? null
+        : delivery === "now"
+          ? reminder
+            ? { saved: "reminderSentNow" }
+            : { saved: "resentNow" }
+          : reminder
+            ? { saved: "reminderSent" }
+            : { saved: "resent" };
+    if (sentAs !== null) await flashOutcome(sentAs);
+    if (form.has("listQuery")) redirect(backOnTheList(locale, form, registrationId, sentAs ?? { error: (outcome as { error: string }).error }));
     redirect(
       outcome === "sent"
         ? `${path}?resent=${delivery === "now" ? "now" : "1"}#admin-alert`

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.40-2026-11-12 -->
+<!-- PROJECT_BASELINE: BR-V4.41-2026-11-12 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.40-2026-11-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.41-2026-11-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -3451,6 +3451,19 @@ registration owing the declaration «Mai ai de semnat declarația: fără ea în
 list's line for a waiting entry) is drawn before the press, during it and after it, above «Am notat că vii…». While the
 automatic POST is in flight the button wears its pending label («Notăm că vii…»). The answer's page replaces the page that
 pressed in the history (`redirect(…, RedirectType.replace)`), so Back never mounts the island again.
+
+**The organizer's message carries a runner's race number, QR and desk code only when its send ticked «Trimite și
+numărul de concurs și codul QR»** (`DECISIONS.md` §943, `notifications/domain/organizer-message.ts#organizerQrApplies`;
+off by default): under the organizers' words, the confirmation's own block — the number and the code on the band, then
+the QR with whose it is — once per message. The flag is the row's, as «Vin»'s is: `sendQr` in the payload of exactly
+the outbox rows whose registration is CONFIRMED when the send queues them, a flag and never a code; the renderer reads
+the code off the registration when the email leaves and asks the state again, so a runner who cancelled since reads
+the words alone, a registration confirmed after the send gets none in that message, and everybody else's email is
+byte for byte what it was. Never on the club's one copy of the send (§320, §419), never at an address that is not the
+registration's own, and `{checkinCode}` stays refused in the organizers' own words. The send's audit row says the tick
+and in how many confirmed registrations' emails, real and test apart; «Mesaje trimise» reads it. Nothing in a state, a
+place, a deadline, the allocator or the capacity formula reads the flag, and the desk's «Fără QR pe email» does not
+count this message (`DESK_CODE_MESSAGE_TYPES` is by type).
 
 `EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
 event before its start — the club's reminder lead or the event's own (§377; 48 hours by default) — once per registration (`registration:<id>:reminder`), with

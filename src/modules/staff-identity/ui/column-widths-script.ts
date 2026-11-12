@@ -75,6 +75,8 @@ export function earlyWidthsScript(tableId: string): string {
     "if(!hit)return;",
     "var e=document.createElement('style');e.setAttribute('data-column-widths',i);",
     "e.textContent=q+'{table-layout:fixed;width:'+sum+'px}'+q+'>thead>tr>th{white-space:normal}'",
+    // A heading wraps to its column's own width here, not to the automatic layout's box (`HEADINGS` in `AdminTable`).
+    "+q+'>thead>tr>th [data-column-heading]{display:inline;width:auto;max-width:none}'",
     "+q+'>tbody>tr>td{overflow:hidden;overflow-wrap:anywhere}'+css;",
     "document.head.appendChild(e);}catch(x){}})(" + JSON.stringify(tableId) + ",0,document.currentScript);",
   ].join("");

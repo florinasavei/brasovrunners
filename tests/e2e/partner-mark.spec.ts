@@ -237,22 +237,31 @@ test.describe("the list's column «Partener»: seen, hidden, set from the row, f
     await fitsTheScreen(page);
 
     if (desktop) {
-      // At 1280 px the column and the row's partner are wholly inside the table's frame without scrolling it sideways:
-      // «Partener» stands right after «Stare», so it is never the cell the frame cuts.
+      // «Partener» is the last column, right before the row's verbs (the owner, 2026-11-12: «Coloana de partener ar trebui să
+      // apară ultima»). At 1280 px the table is wider than its frame: the verbs' column is pinned and never the cell the frame
+      // cuts, and the column and the row's partner, scrolled to, stand whole between the frame's left edge and the verbs.
       await page.setViewportSize({ width: 1280, height: 900 });
       const table = main.locator('table[data-table-id="registrations"]');
       const header = table.locator('th[data-column="partner"]');
       await expect(header).toBeVisible();
-      const inFrame = async (target: import("@playwright/test").Locator) =>
-        target.evaluate((element) => {
-          let frame: HTMLElement | null = element.parentElement;
-          while (frame && !(frame.scrollWidth > frame.clientWidth && /(auto|scroll)/.test(getComputedStyle(frame).overflowX))) frame = frame.parentElement;
+      expect(await table.locator("thead th").evaluateAll((cells) => cells.map((cell) => (cell as HTMLElement).dataset.column).slice(-2))).toEqual(["partner", "__actions"]);
+      const beside = async (target: import("@playwright/test").Locator) => {
+        await target.scrollIntoViewIfNeeded();
+        return target.evaluate((element) => {
+          const frame = (element.closest("table") as HTMLTableElement).parentElement as HTMLElement;
+          const verbs = (element.closest("table") as HTMLTableElement).querySelector("thead th[data-pinned]") as HTMLElement;
           const box = element.getBoundingClientRect();
-          const edge = frame ? frame.getBoundingClientRect() : { left: 0, right: window.innerWidth };
-          return { left: box.left >= edge.left - 0.5, right: box.right <= edge.right + 0.5, scrolled: frame ? frame.scrollLeft : 0 };
+          const edge = frame.getBoundingClientRect();
+          const pinned = verbs.getBoundingClientRect();
+          return {
+            left: box.left >= edge.left - 0.5,
+            right: box.right <= pinned.left + 0.5,
+            verbsInFrame: pinned.left >= edge.left - 0.5 && pinned.right <= edge.right + 0.5,
+          };
         });
-      expect(await inFrame(header)).toEqual({ left: true, right: true, scrolled: 0 });
-      expect(await inFrame(table.getByTestId("row-partner").first())).toEqual({ left: true, right: true, scrolled: 0 });
+      };
+      expect(await beside(header)).toEqual({ left: true, right: true, verbsInFrame: true });
+      expect(await beside(table.getByTestId("row-partner").first())).toEqual({ left: true, right: true, verbsInFrame: true });
       // «Coloane» hides it and brings it back (the phone's cards have no such menu: every field is a line).
       const heading = main.locator('table[data-table-id="registrations"] th[data-column="partner"]');
       await expect(heading).toBeVisible();
@@ -270,13 +279,27 @@ test.describe("the list's column «Partener»: seen, hidden, set from the row, f
       await expect(main.getByTestId("row-partner").filter({ visible: true })).toHaveText([bakery]);
     }
 
+    /** Where Ana's row stands in the window: its row of the wide table, or the block that stands for it on a phone. */
+    const placeOf = () =>
+      page.evaluate((anchor) => {
+        const drawn = [document.getElementById(anchor), ...document.querySelectorAll(`[data-row-anchor="${anchor}"]`)].find((element) => element !== null && element.getClientRects().length > 0);
+        return drawn ? Math.round(drawn.getBoundingClientRect().top) : null;
+      }, `reg-${seeded.ana}`);
+
     // Ana's row: the event's partner picked from the select.
     let dialog = await openEditor(page, `Ana ${seeded.surname}`);
     await fitsTheScreen(page);
+    const pressedAt = await placeOf();
+    expect(pressedAt).not.toBeNull();
     await dialog.getByTestId("partner-row-choice").selectOption({ label: bakery });
     await dialog.getByTestId("partner-row-save").click();
     await page.waitForURL(/saved=partnerSaved/);
     await hydrated(page);
+    // The press came back to the row it changed, and the row stands where it was pressed (the owner, 2026-11-12: «Mă disperă
+    // … că atunci când fac un edit gen „aleg partenerul” și navighezi»): the list did not jump to its top, nor the row to the window's.
+    expect(new URL(page.url()).hash).toBe(`#reg-${seeded.ana}`);
+    await expect.poll(async () => Math.abs(((await placeOf()) ?? 99_999) - (pressedAt ?? 0)), { timeout: 10_000 }).toBeLessThanOrEqual(3);
+    await expect(page.getByTestId("toast")).toContainText("Partenerul a fost salvat");
     // Back on the same list: the event, the search and the sort kept.
     const back = new URL(page.url());
     expect([back.searchParams.get("eventId"), back.searchParams.get("q"), back.searchParams.get("sort"), back.searchParams.get("dir")]).toEqual([seeded.eventId, seeded.surname, "name", "asc"]);

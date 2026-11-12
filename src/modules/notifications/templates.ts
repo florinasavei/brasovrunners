@@ -271,7 +271,11 @@ function qrImage(locale: EmailLocale, d: TemplateData): TemplateContent["image"]
     : { url: d.checkinQrUrl, alt: `QR code ${code}${name ? ` — ${name}` : ""}`, caption: `${qrIdentityLine("en", d)} · Your code: ${code}` };
 }
 
-/** The messages that draw the QR (§547): the club's copy of these says whose it was, without it (§320). */
+/**
+ * The messages that draw the QR (§547): the club's copy of these says whose it was, without it (§320). The organizers'
+ * message is not one of them: it draws the QR only where its send asked (`organizerQrLines`, §943), and the club's one
+ * copy of a send names nobody (§419).
+ */
 const QR_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED"]);
 
 /** A name's first word, for the family marker's list (§543): «Ana, Mihai și Ioana». */
@@ -839,6 +843,13 @@ export type TemplateData = {
   /** The desk code and the address of its QR image, on the confirmation and the reminder (BR-REQ-037-08). */
   checkinCode?: string;
   checkinQrUrl?: string;
+  /**
+   * The same two on an organizers' message whose send ticked «Trimite și numărul de concurs și codul QR», for a
+   * registration confirmed as it renders (§943) — the block's own, apart from `checkinCode`: that one is a field the
+   * club's words may name (§247), and the organizers' words, the same for everybody, never fill it
+   * (`ORGANIZER_MESSAGE_PLACEHOLDERS`). Set by the renderer and by the composer's preview, never by a sample.
+   */
+  organizerQr?: { checkinCode: string; qrUrl: string };
   /** The race number, given at the confirmation (§87, §548) — on the confirmation and the reminder, never before — as the event writes it («007», §735). */
   bibNumber?: number | string;
   /** The event's map link and Strava event link, when set (§81). */
@@ -1644,6 +1655,29 @@ function confirmedCodeLine(locale: EmailLocale, code: string): string {
 }
 
 /**
+ * «Trimite și numărul de concurs și codul QR» (§943): under the organizers' words, the two sentences the confirmation
+ * writes for the desk — the number, when the runner has one, and the code — on the same band; the QR picture follows
+ * them (`organizerQrImage`). Only with `organizerQr` in hand: the renderer sets it only for a row its send flagged whose
+ * registration is confirmed as it leaves, and a club copy has lost it (§320) — so a message without it is built exactly
+ * as before, whatever else its data holds.
+ */
+function organizerQrLines(locale: EmailLocale, d: TemplateData): string[] {
+  if (!d.organizerQr) return [];
+  return [...(d.bibNumber ? [confirmedNumberLine(locale, d.bibNumber)] : []), confirmedCodeLine(locale, d.organizerQr.checkinCode)];
+}
+
+/** Those sentences on the band (§580), as the confirmation draws its own; nothing to emphasise without them. */
+function organizerQrEmphasis(locale: EmailLocale, d: TemplateData): Emphasis {
+  const lines = organizerQrLines(locale, d);
+  return lines.length > 0 ? { highlight: lines } : {};
+}
+
+/** …and the confirmation's own QR figure — whose it is, the number, the code — under them (§943, §547). */
+function organizerQrImage(locale: EmailLocale, d: TemplateData): TemplateContent["image"] {
+  return d.organizerQr ? qrImage(locale, { ...d, checkinCode: d.organizerQr.checkinCode, checkinQrUrl: d.organizerQr.qrUrl }) : undefined;
+}
+
+/**
  * The link for another person (§389, §446): its first line on the band and the button under it;
  * "ignore it" and the consent line quieter. At the limit and once the kept form is gone there is no
  * button, only the fact and the one quieter line.
@@ -2369,6 +2403,9 @@ const T = {
      * "Trimite un mesaj participanților" (§364): the organizer's subject and body, written for this
      * send; the platform adds only the facts line, one sentence saying who writes and why this
      * person receives it, the event's page as the button and the usual links. Nothing to act on.
+     *
+     * And, where the send ticked «Trimite și numărul de concurs și codul QR» and the runner is confirmed (§943), the
+     * confirmation's own block under the organizers' words: the number and the desk code on the band, then the QR.
      */
     organizerMessage: {
       // Without a title the sentences name no event — never the club's name standing in for one (§357).
@@ -2380,6 +2417,8 @@ const T = {
           : "Un mesaj de la organizatorii evenimentului la care te-ai înscris:",
       ],
       action: "Vezi pagina evenimentului",
+      image: (d: TemplateData) => organizerQrImage("ro", d),
+      emphasis: (d: TemplateData): Emphasis => organizerQrEmphasis("ro", d),
       links: (d: TemplateData) => (d.myRegistrationsUrl ? [{ label: "Înscrierile mele (îți trimitem linkul pe email)", url: d.myRegistrationsUrl }] : []),
     },
     /**
@@ -3326,6 +3365,8 @@ const T = {
           : "A message from the organizers of the event you registered for:",
       ],
       action: "See the event's page",
+      image: (d: TemplateData) => organizerQrImage("en", d),
+      emphasis: (d: TemplateData): Emphasis => organizerQrEmphasis("en", d),
       links: (d: TemplateData) => (d.myRegistrationsUrl ? [{ label: "My registrations (we email you the link)", url: d.myRegistrationsUrl }] : []),
     },
     registerAnotherPerson: {
@@ -4008,6 +4049,8 @@ export function buildTemplateContent(
       declarationPdfUrl: undefined,
       checkinCode: undefined,
       checkinQrUrl: undefined,
+      // …nor the same two as an organizers' message carries them for one runner (§943).
+      organizerQr: undefined,
       thanksUrl: undefined,
       // «Spune-ne cum a fost» (§676) goes with the button it may be, as the results link does.
       feedbackUrl: undefined,
@@ -4416,6 +4459,8 @@ export function buildTemplateContent(
       ...noticeParts(messageType, locale, data),
       // The organizer's message itself, after its one framing sentence (§364).
       ...organizerMessageParts(messageType, data, locale, bulkCopy),
+      // …and under it, where the send asked for them, the confirmed runner's own number and desk code (§943).
+      ...(messageType === "ORGANIZER_MESSAGE" ? organizerQrLines(locale, data) : []),
       // A newsletter's own words, and what the platform says around every newsletter message (§445).
       ...newsletterParts(messageType, data),
       ...newsletterLines(messageType, locale, data),

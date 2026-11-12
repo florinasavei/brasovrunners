@@ -204,6 +204,21 @@ export function releaseLayout(table: HTMLTableElement): void {
 }
 
 /**
+ * Room for the pinned verbs' column beside anything the browser scrolls into view (§943): the
+ * frame's scroll padding on that side, as wide as the column is now. A press reached with Tab in
+ * the column next to it — «Partener»'s, the last one — would otherwise be scrolled exactly under the
+ * verbs (WCAG 2.4.11, focus not obscured); the page's own scroll padding does the same for the
+ * sticky header. Nothing when the table has no verbs' column or is not displayed.
+ */
+export function clearPinnedEdge(table: HTMLTableElement): void {
+  const frame = table.parentElement;
+  if (!frame) return;
+  const pinned = table.querySelector<HTMLElement>(":scope > thead th[data-pinned]");
+  const width = pinned ? Math.ceil(pinned.getBoundingClientRect().width) : 0;
+  frame.style.scrollPaddingRight = width > 0 ? `${width}px` : "";
+}
+
+/**
  * The narrowest a column may go so that no word of its heading is cut: the heading's longest word,
  * plus whatever sits beside the words on the heading's line (the sort arrow, a hint) and the cell's
  * padding. Measured in the automatic layout, where a heading is one line (`nowrap`): the line's

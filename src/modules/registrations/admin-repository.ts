@@ -1,4 +1,5 @@
 import { and, asc, count, desc, eq, gt, inArray, isNotNull, max, ne, sql, type SQL } from "drizzle-orm";
+import { isUuid } from "@/shared/ids";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
@@ -195,7 +196,8 @@ export type RegistrationListRow = {
 /**
  * What «Date lipsă» reads (§905, `missing-answers.ts`), beside the answers the row already carries: the answers
  * themselves where the list may show them, and for the telephone and the emergency contact only whether one is
- * held (`answerHeldSql`) — the list never reads either (§322).
+ * held (`answerHeldSql`) — this query reads neither (§322); the list's page reads the telephones of its rows in a
+ * query of its own (§943, `findPhonesOf`), the emergency contact never.
  */
 export type AnswersForChip = {
   sex: RegistrationSex | null;
@@ -1191,6 +1193,24 @@ export type EmergencyDetails = {
 function gatedHealth<R extends { healthNotes: string | null; healthConsentAt: Date | null; eventAsksHealthNote: boolean }>(row: R): R {
   const healthNotes = healthNoteShown(row.eventAsksHealthNote, row.healthNotes);
   return { ...row, healthNotes, healthConsentAt: healthNotes ? row.healthConsentAt : null };
+}
+
+/**
+ * The telephones of these registrations (§943), for the registrations list's «Contact» column: **their own query**, for
+ * that page alone. The list's shared query still carries only whether a telephone is held (`phoneHeld`), so nothing
+ * that reuses it — and neither the desk's query nor an export — can carry a number by accident. A registration without
+ * one is absent from the map. The one caller asserts the role first (`admin-service.ts#readRowPhones`).
+ */
+export async function findPhonesOf<T extends Record<string, unknown>>(db: Database<T>, registrationIds: readonly string[]): Promise<Map<string, string>> {
+  const phones = new Map<string, string>();
+  const ids = registrationIds.filter(isUuid);
+  if (ids.length === 0) return phones;
+  const rows = await db.select({ id: registrations.id, phone: registrations.phone }).from(registrations).where(inArray(registrations.id, ids));
+  for (const row of rows) {
+    const phone = row.phone?.trim();
+    if (phone) phones.set(row.id, phone);
+  }
+  return phones;
 }
 
 export async function findEmergencyDetails<T extends Record<string, unknown>>(

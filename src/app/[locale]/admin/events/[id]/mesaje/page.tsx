@@ -385,6 +385,8 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
               send: t("participantMessages.send"),
               reconfirm: t("participantMessages.reconfirm"),
               reconfirmHelp: t("participantMessages.reconfirmHelp"),
+              sendQr: t("participantMessages.sendQr"),
+              sendQrHelp: t("participantMessages.sendQrHelp"),
               reminderFill: {
                 button: t("participantMessages.reminderFill.button"),
                 confirmTitle: t("participantMessages.reminderFill.confirmTitle"),
@@ -429,6 +431,12 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
                   {t(`participantMessages.recipients.${countForm(entry.recipients, locale)}`, { count: entry.recipients })}
                   {entry.test > 0 ? ` · ${t("participantMessages.historyTest", { test: String(entry.test) })}` : ""}
                 </Typography>
+                {/* «Trimite și numărul de concurs și codul QR» (§943): that the send was ticked, and for how many confirmed — never who. */}
+                {entry.sendQr && (
+                  <Typography variant="body2" data-testid="participant-message-history-qr">
+                    {t("participantMessages.historyQr", { count: String(entry.withQr) })}
+                  </Typography>
+                )}
                 {/* How far it has left (the decision «Cere reconfirmarea», part two): hidden once the rows were swept. */}
                 {entry.progress.left + entry.progress.waiting + entry.progress.failed > 0 && (
                   <Typography variant="body2" color="text.secondary" data-testid="participant-message-history-progress">

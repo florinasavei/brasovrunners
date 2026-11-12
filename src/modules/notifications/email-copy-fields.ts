@@ -451,7 +451,10 @@ const ONLY_IN: Partial<Record<EmailCopyPlaceholder, readonly EmailMessageType[]>
 export function placeholdersFilledBy(messageType: EmailMessageType): EmailCopyPlaceholder[] {
   // The organizer's message fills its own closed set (`ORGANIZER_MESSAGE_PLACEHOLDERS`) — its
   // `{bibNumber}` is the settled number only, and it carries no `{currentStatus}` at all, which
-  // the rules below would otherwise get wrong for it (§373, email follow-up).
+  // the rules below would otherwise get wrong for it (§373, email follow-up). The desk code is no
+  // field of it either: a send that ticks «Trimite și numărul de concurs și codul QR» draws it as the
+  // confirmation's block under the words (§943, `TemplateData.organizerQr`), never through
+  // `{checkinCode}`, which stays empty in the organizers' words — and no sample sets the block.
   if (messageType === "ORGANIZER_MESSAGE") {
     const organizerSet = new Set<EmailCopyPlaceholder>(ORGANIZER_MESSAGE_PLACEHOLDERS);
     return EMAIL_COPY_PLACEHOLDERS.filter((name) => organizerSet.has(name));

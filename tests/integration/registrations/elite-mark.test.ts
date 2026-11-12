@@ -254,10 +254,11 @@ describe("§897 «Marchează ca elită» from the list's «⋮»", () => {
     await as("ADMIN");
     const ana = await runner("Ana Pop", "CONFIRMED", 12);
     const marked = await redirectOf(setRegistrationEliteAction(null, form({ registrationId: ana, elite: "1", listQuery: `eventId=${eventId}&page=2` })));
-    expect(marked).toBe(`/ro/admin/registrations?eventId=${eventId}&page=2&saved=eliteMarked#admin-alert`);
+    // On the row itself (§943): a press that went through no longer throws the list back to its top; a refusal lands on the alert.
+    expect(marked).toBe(`/ro/admin/registrations?eventId=${eventId}&page=2&saved=eliteMarked&from=row#reg-${ana}`);
     expect(await eliteOf(ana)).toBe(true);
     const unmarked = await redirectOf(setRegistrationEliteAction(null, form({ registrationId: ana, elite: "0", listQuery: `eventId=${eventId}` })));
-    expect(unmarked).toBe(`/ro/admin/registrations?eventId=${eventId}&saved=eliteUnmarked#admin-alert`);
+    expect(unmarked).toBe(`/ro/admin/registrations?eventId=${eventId}&saved=eliteUnmarked&from=row#reg-${ana}`);
     expect(await eliteOf(ana)).toBe(false);
     expect((await db.select().from(auditLogs)).map((row) => row.action).sort()).toEqual(["registration.elite_marked", "registration.elite_unmarked"]);
     expect(await db.select().from(emailOutbox)).toHaveLength(0);
