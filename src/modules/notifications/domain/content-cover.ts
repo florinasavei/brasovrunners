@@ -24,8 +24,10 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
  *   email and «Mesaj de la organizatori» carry one line only — the date, the event's start and the place
  *   — never the race's own start or the programme, so they answer no update notice.
  *
- * Every other type covers only itself: a delivered «Mesaj de la organizatori» does not give the runner
- * the QR a refused confirmation carried, and a reminder does not carry the signed declaration. Nothing
+ * Every other type covers only itself: a delivered «Mesaj de la organizatori» answers no refused
+ * confirmation — it carries the QR only where its send ticked «Trimite și numărul de concurs și codul QR»
+ * (§943), a fact of the row this map of types cannot read, and never the signed declaration — and a
+ * reminder does not carry the signed declaration. Nothing
  * here says what the person must be told by phone instead (`domain/email-state.ts`, `callInstead`): a
  * covering message that leaves anyway answers the refusal all the same.
  */

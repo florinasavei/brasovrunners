@@ -49,7 +49,9 @@ export function isParticipantMessageAudience(value: unknown): value is Participa
  * §247 applies — and so, deliberately, are the members of that set this message never carries:
  * `{staffRole}`, `{holdExpiresAtFormatted}`, `{signedAtFormatted}` would each print as nothing
  * in every copy, and the desk code (`{checkinCode}`) is something only the participant may hold,
- * which a message written for everybody at once has no business spelling out.
+ * which a message written for everybody at once has no business spelling out. It stays refused in
+ * the words since §943 too: «Trimite și numărul de concurs și codul QR» puts each confirmed runner's
+ * own code under the words (`organizerQrApplies`), never in them — the club's one copy repeats the words.
  *
  * `{bibNumber}` is the race number of a confirmed registration, empty for whoever is not
  * confirmed yet: a number exists only from the confirmation (§548).
@@ -188,6 +190,43 @@ export function readOrganizerMessagePayload(payload: unknown): OrganizerMessage 
  */
 export function readOrganizerAskReconfirm(payload: unknown): boolean {
   return Boolean(payload && typeof payload === "object" && (payload as { askReconfirm?: unknown }).askReconfirm === true);
+}
+
+/**
+ * Whether this row carries «Trimite și numărul de concurs și codul QR» (§943): the payload's `sendQr`, beside the words —
+ * set by the send only on the rows whose registration was confirmed when it was queued, never send-wide; anything but
+ * `true` — a row of somebody not confirmed, an older one, a hand-made one, the club's copy — is no. A flag, never a code:
+ * the code is read off the registration when the email leaves.
+ */
+export function readOrganizerSendQr(payload: unknown): boolean {
+  return Boolean(payload && typeof payload === "object" && (payload as { sendQr?: unknown }).sendQr === true);
+}
+
+/**
+ * The one state whose email gets the race number, the QR and the desk code (§943): a number and a code exist only from
+ * the confirmation (§548, BR-REQ-037-08). The send asks it when it queues a row, the renderer again when the row leaves.
+ */
+export function isOrganizerQrStatus(status: RegistrationStatus): boolean {
+  return status === "CONFIRMED";
+}
+
+/**
+ * Whether the organizers' message draws the runner's own race number, QR and desk code under its words (§943): the row
+ * carries the flag, it goes to the registration's own address, and the registration is confirmed **when it renders** —
+ * a send drains over hours, and a runner who cancelled since reads the message without them. Never on a club copy
+ * (§320): a club mailbox holds nobody's code.
+ */
+export function organizerQrApplies(params: {
+  sendQr: boolean;
+  clubCopy: boolean;
+  /** The outbox row's participant: the address the message goes to. */
+  recipientParticipantId: string | null;
+  registration: { participantId: string; status: RegistrationStatus } | null | undefined;
+}): boolean {
+  const { sendQr, clubCopy, recipientParticipantId, registration } = params;
+  if (!sendQr || clubCopy) return false;
+  if (!registration || !recipientParticipantId || registration.participantId !== recipientParticipantId) return false;
+  return isOrganizerQrStatus(registration.status);
 }
 
 /**

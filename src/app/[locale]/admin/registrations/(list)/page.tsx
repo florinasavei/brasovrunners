@@ -63,9 +63,12 @@ import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { familiesTogether, familyOf } from "@/modules/registrations/family-marker";
 import { canEnterResults, canExportSponsorList, canKeepRegistrationNotes, canManageRegistrations, canMessageParticipants, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
-import { countRegistrationNotes } from "@/modules/registrations/notes";
+import { type ExportNote, listRegistrationNotesForExport } from "@/modules/registrations/notes";
 import { resultsDoorOpen } from "@/modules/results/domain/event-type";
+import KeepRowPlace from "@/modules/registrations/ui/KeepRowPlace";
 import NotesMark from "@/modules/registrations/ui/NotesMark";
+import { notesTip } from "@/shared/notes/note-text";
+import TipSpan from "@/shared/ui/TipSpan";
 import RowNoteDialog from "@/shared/ui/RowNoteDialog";
 import { REGISTRATION_NOTE_MAX } from "@/db/schema/registration-notes";
 import { sponsorListSummary } from "@/modules/registrations/sponsor-list";
@@ -80,7 +83,8 @@ import {
   pageCount,
 } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn, type AdminLeadRow } from "@/modules/staff-identity/ui/AdminTable";
-import { invitationState, inviteTarget } from "@/modules/registrations/domain/invitations";
+import { INVITATION_FILTERS, type InvitationFilter, invitationFilterOf, invitationState, inviteTarget } from "@/modules/registrations/domain/invitations";
+import { registrationRowAnchor } from "@/modules/registrations/domain/list-row";
 import { listEventInvitations, listOpenInvitationCountsByEvent } from "@/modules/registrations/invitation-repository";
 import Panel from "@/shared/ui/Panel";
 import InvitationsPanel from "@/modules/registrations/ui/InvitationsPanel";
@@ -132,7 +136,7 @@ import {
   setRegistrationEliteAction,
   setRegistrationEliteTickAction,
 } from "../actions";
-import { previewMemberTickSweep } from "@/modules/registrations/admin-service";
+import { previewMemberTickSweep, readRowPhones } from "@/modules/registrations/admin-service";
 import { countForm, type CountForm } from "@/i18n/count-form";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { mayEndWaitlisted, rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
@@ -166,6 +170,17 @@ export const dynamic = "force-dynamic";
 
 /** The id of the bulk form, which lives below the table but owns the checkboxes inside it. */
 const BULK_FORM = "bulk-cancel";
+
+/**
+ * An address in the list's «E-mail» column (§943). It may break at any character, so that a long one never widens the page —
+ * and for that very reason the browser's table layout counted the column as one character wide: on a full table it was squeezed
+ * to its heading's width and every address stood five characters to a line, eight lines to a row. The floor is the width of an
+ * ordinary address, on the wide table only (`md`, where it is drawn): a phone's card keeps its own width.
+ */
+const EMAIL_CELL_SX = { display: "inline-block", minWidth: { xs: 0, md: "12rem" }, wordBreak: "break-all" } as const;
+
+/** An event's title in «Eveniment» (§943): the same floor, for the same reason — a few lines, not a word to a line. */
+const EVENT_CELL_SX = { display: "inline-block", minWidth: { xs: 0, md: "12rem" } } as const;
 
 /** Where a one-press entry onto the official waiting list landed (§872, §888): the toasts that open its panel on the way back. */
 const WAITLIST_ENTRY_SAVED: ReadonlySet<string> = new Set(["waitlistAdded", "waitlistPlaced", "registrationOffered", "registrationOfferedRaised"]);
@@ -295,7 +310,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   filters.partner = chosenPartner ?? undefined;
 
   const deadlinesNow = new Date();
-  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places, publicDoor, volunteerKits, sponsorRegister] = await Promise.all([
+  const [sortedRows, registrationsTotal, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places, publicDoor, volunteerKits, sponsorRegister] = await Promise.all([
     listRegistrationsForAdmin(
       db,
       filters,
@@ -345,18 +360,27 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId && canExportSponsorList(actor.role) ? readSponsorRegister(db, actor, { eventId: filters.eventId, locale }) : Promise.resolve(null),
   ]);
 
+  /*
+    «Stare» asking for invitations (§943): the grid is that state's invitations and nothing else — a registration has no
+    such state — so the page's own rows and its count stand empty, and the invitations are drawn as the lead rows below.
+    Only with one event chosen, where invitations are listed; with every event the three choices are not offered and the
+    parameter says nothing.
+  */
+  const invitationFilter = filters.eventId ? invitationFilterOf(status) : null;
+  // What the table counts under itself: the registrations that match — none of them while the invitations are asked for.
+  const total = invitationFilter ? 0 : registrationsTotal;
   // A family's rows side by side (§588), where its first row falls in the chosen order; phone cards read the same rows.
-  const rows = familiesTogether(sortedRows);
+  const rows = invitationFilter ? [] : familiesTogether(sortedRows);
   /*
     Who filled the form again, for the rows on this page only (§312): one grouped read of the
     audit trail keyed on the ids just fetched, so a page of twenty-five costs one query, not
     twenty-five. Beside the translations, which it does not depend on.
   */
-  const [resubmissions, notesCounts, family, t, minorSigns] = await Promise.all([
+  const [resubmissions, rowNotes, family, t, minorSigns] = await Promise.all([
     listResubmissionMarks(db, rows.map((row) => row.id)),
-    // «Note interne» (§777): how many live notes each row has — one grouped count, only for a role that may keep notes,
-    // and only the number: the words are read on the registration's own page. Never in the export or on the desk.
-    canKeepRegistrationNotes(actor.role) ? countRegistrationNotes(db, actor, rows.map((row) => row.id)) : Promise.resolve(new Map<string, number>()),
+    // «Note interne» (§777, §943): each row's live notes, newest first — one grouped read over the page's ids, only for a
+    // role that may keep notes. The marker says how many and, in its tooltip, the words; never on the desk.
+    canKeepRegistrationNotes(actor.role) ? listRegistrationNotesForExport(db, actor, rows.map((row) => row.id)) : Promise.resolve(new Map<string, ExportNote[]>()),
     // The family marker (§543): the other people on each row's address at its event, one query per page.
     familyOf(db, rows),
     getTranslations("Admin"),
@@ -532,6 +556,23 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     counts: Object.fromEntries(rows.filter((row) => row.kind !== "TEST" && canTransition(row.status, "CANCELLED")).map((row) => [row.id, 1])),
   };
 
+  /*
+    The telephones of the page's rows, for «Contact» (§943; the owner's decision: always shown, no trail): this page's own
+    read, role-gated in the service — the list's shared query never carries a telephone, so neither the desk nor an
+    export can. The emergency contact and the health note stay on demand and recorded (§322).
+  */
+  const rowPhones = await readRowPhones(db, actor, rows.map((row) => row.id));
+
+  // The marker's number, from the same read as its tooltip's words.
+  const notesCounts = new Map([...rowNotes].map(([id, notes]) => [id, notes.length]));
+  // The marker's tooltip (§943): the newest notes' words, each with its day and hour, the older ones counted.
+  const notesTipOf = (registrationId: string) =>
+    notesTip(
+      rowNotes.get(registrationId),
+      (at) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }),
+      (left) => t("registrations.notes.tipMore", { counted: t(`registrations.notes.count.${countForm(left, locale)}`, { count: left }) }),
+    );
+
   // «Membru (verificat)» / «Membru (declarat)» (§662): one chip, or none; its sentence is the tooltip.
   const memberChipOf = (row: RegistrationListRow) => {
     const membership = membershipOf({ declared: row.clubMemberDeclared, verified: row.memberVerified });
@@ -620,11 +661,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             const noteCount = notesCounts.get(row.id) ?? 0;
             const counted = t(`registrations.notes.count.${countForm(noteCount, locale)}`, { count: noteCount });
             return (
+            // The words under the pointer, without opening the registration (§943): the newest notes, the rest counted.
+            <TipSpan title={notesTipOf(row.id)}>
             <NotesMark
               label={counted}
               ariaLabel={t("registrations.notes.mark", { name: row.registeredName, counted })}
               href={`${getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: row.id } } })}#note-interne`}
             />
+            </TipSpan>
             );
           })()}
           {/* «Adaugă o notă» («Note interne» first on the registration's page, and a note from a row of the list): beside the
@@ -666,69 +710,41 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       ),
     },
     {
+      /*
+        «Contact» (§943; the owner, 2026-11-12: «Aș vrea să afișez și numărul de telefon al alergătorilor în grid ca să pot
+        să-i sun rapid», then, told what it annuls of §322, «Da … YOLO»): the address and, under it, the telephone — as
+        the person typed it, on one line, a `tel:` link a phone rings. One column for both, so the number costs the table
+        no width (a column of its own did not fit the owner's 1858-px screen), and right after the name, so it is in view
+        at every width and never under the pinned verbs. Always drawn on the wide table: the address used to leave it
+        below `lg`, and the number is what the list is opened for on a small laptop too. «Coloane» hides it, both at once.
+        An address on a line of its own, broken only when it is longer than the column (`EMAIL_CELL_SX`).
+      */
+      key: "email",
+      label: t("registrations.columnContact"),
+      hint: t("registrations.contactHint"),
+      render: (row) => {
+        const phone = rowPhones.get(row.id);
+        return (
+          <Stack spacing={0.25} sx={{ alignItems: { xs: "flex-end", md: "flex-start" } }}>
+            <Box component="span" sx={EMAIL_CELL_SX}>
+              {row.participantEmail}
+            </Box>
+            {phone && (
+              <Box component="a" href={`tel:${phone.replace(/[^\d+]/g, "")}`} data-testid="row-phone" sx={{ whiteSpace: "nowrap", color: "primary.main" }}>
+                {phone}
+              </Box>
+            )}
+          </Stack>
+        );
+      },
+    },
+    {
       key: "status",
       label: t("registrations.columnStatus"),
       essential: true,
       sortable: true,
       // The state as the registration's page and the desk draw it (§847): one table, the glyph before the word.
       render: (row) => <RegistrationStatusChip status={row.status} />,
-    },
-    {
-      /*
-        «Partener» (the decision on the list's column; the owner, 2026-11-11: «o coloană separată de „partener”»): the partner's
-        or sponsor's name as plain text — nothing on a row without one — for every role that reads the list; the chip «Partener:
-        {name}» left the name column for it, and stays on every other screen. Sorted by the name without regard to case, the rows
-        with none last either way. Optional like its neighbours: «Coloane» hides it; unlike the address it stays on the wide table at
-        every width it is drawn (`md` and up, its bounded 16rem keeping it narrow), so a landscape tablet sees and sets it too; on a
-        phone it is a line of the card only where there is a name or a press. A long name wraps anywhere, never widening the page.
-        The press is the Administrator's, with one event chosen (`partnerRefusal`); its accessible name begins with the words it
-        shows («Alege…» / «Schimbă…», WCAG 2.5.3), and its dialog closes on every page drawn after a save — the render's own
-        instant in `settledKey` — so a second «unchanged» in a row closes it too.
-      */
-      key: "partner",
-      label: t("partner.column"),
-      hint: t("partner.columnHint"),
-      sortable: true,
-      initialDir: "asc",
-      hideBelow: "md",
-      omitEmptyOnPhone: true,
-      render: (row) => {
-        const press = partnerRefusal && (
-          <RowPartnerDialog
-            action={setRegistrationPartnerFromListAction}
-            actionKey={actionKeyOf(setRegistrationPartnerFromListAction)}
-            messages={partnerRefusal}
-            fields={{ uiLocale: locale, registrationId: row.id, listQuery: rowReturnQueryString }}
-            label={row.partnerName ? t("partner.rowChange") : t("partner.rowChoose")}
-            ariaLabel={t(row.partnerName ? "partner.rowChangeFor" : "partner.rowPressFor", { name: row.registeredName })}
-            title={t("partner.rowTitle", { name: row.registeredName })}
-            help={t("partner.rowHelp")}
-            choiceName={PARTNER_CHOICE_FIELD}
-            choiceLabel={t("partner.rowChoice")}
-            noneLabel={t("partner.none")}
-            partners={partnerSuggestions}
-            current={row.partnerName}
-            boxName={PARTNER_NAME_FIELD}
-            boxLabel={t("partner.rowNew")}
-            boxHelp={t("partner.rowNewHelp", { max: PARTNER_NAME_MAX })}
-            max={PARTNER_NAME_MAX}
-            saveLabel={t("partner.save")}
-            cancelLabel={words.cancel}
-            settledKey={`${row.partnerName ?? ""}:${saved ?? ""}:${deadlinesNow.getTime()}`}
-          />
-        );
-        if (!row.partnerName && !press) return null;
-        return (
-          <Stack spacing={0.25} sx={{ alignItems: { xs: "flex-end", md: "flex-start" }, minWidth: 0, maxWidth: { md: "16rem" } }}>
-            {row.partnerName && (
-              <Box component="span" data-testid="row-partner" sx={{ overflowWrap: "anywhere", minWidth: 0, maxWidth: "100%" }}>
-                {row.partnerName}
-              </Box>
-            )}
-            {press}
-          </Stack>
-        );
-      },
     },
     {
       // The owner's "what step each participant is in" (§145): steps done out of six and the
@@ -845,23 +861,26 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         );
       },
     },
-    {
-      key: "event",
-      label: t("registrations.columnEvent"),
-      sortable: true,
-      initialDir: "asc",
-      render: (row) => row.eventTitle ?? row.eventId,
-    },
-    {
-      key: "email",
-      label: t("registrations.columnEmail"),
-      hideBelow: "lg",
-      render: (row) => (
-        <Box component="span" sx={{ wordBreak: "break-all" }}>
-          {row.participantEmail}
-        </Box>
-      ),
-    },
+    /*
+      «Eveniment» only while every event is listed (§943): with one event chosen every row said the filter's own choice again,
+      the title wrapped down a narrow column and each row grew to its height. Its floor (`EVENT_CELL_SX`) keeps a title to a few
+      lines where the column is drawn.
+    */
+    ...(filters.eventId
+      ? []
+      : [
+          {
+            key: "event",
+            label: t("registrations.columnEvent"),
+            sortable: true,
+            initialDir: "asc",
+            render: (row) => (
+              <Box component="span" sx={EVENT_CELL_SX}>
+                {row.eventTitle ?? row.eventId}
+              </Box>
+            ),
+          } satisfies AdminColumn<RegistrationListRow>,
+        ]),
     {
       key: "submitted",
       label: t("registrations.columnSubmitted"),
@@ -869,6 +888,65 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       initialDir: "desc",
       hideBelow: "lg",
       render: (row) => formatDay(row.submittedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }),
+    },
+    {
+      /*
+        «Partener» (the decision on the list's column; the owner, 2026-11-11: «o coloană separată de „partener”»): the partner's
+        or sponsor's name as plain text — nothing on a row without one — for every role that reads the list; the chip «Partener:
+        {name}» left the name column for it, and stays on every other screen. Sorted by the name without regard to case, the rows
+        with none last either way. The last column, right before the row's verbs (§943; the owner, 2026-11-12: «Coloana de partener
+        ar trebui să apară ultima»): it stood third only while the frame cut whatever stood last, and the verbs' column is pinned
+        now, so nothing is cut. Optional like its neighbours: «Coloane» hides it; unlike the address it stays on the wide table at
+        every width it is drawn (`md` and up, its bounded 16rem keeping it narrow), so a landscape tablet sees and sets it too; on a
+        phone it is a line of the card only where there is a name or a press. A long name wraps anywhere, never widening the page.
+        The press is the Administrator's, with one event chosen (`partnerRefusal`); its accessible name begins with the words it
+        shows («Alege…» / «Schimbă…», WCAG 2.5.3), and its dialog closes on every page drawn after a save — the render's own
+        instant in `settledKey` — so a second «unchanged» in a row closes it too.
+      */
+      key: "partner",
+      label: t("partner.column"),
+      hint: t("partner.columnHint"),
+      sortable: true,
+      initialDir: "asc",
+      hideBelow: "md",
+      omitEmptyOnPhone: true,
+      render: (row) => {
+        const press = partnerRefusal && (
+          <RowPartnerDialog
+            action={setRegistrationPartnerFromListAction}
+            actionKey={actionKeyOf(setRegistrationPartnerFromListAction)}
+            messages={partnerRefusal}
+            fields={{ uiLocale: locale, registrationId: row.id, listQuery: rowReturnQueryString }}
+            label={row.partnerName ? t("partner.rowChange") : t("partner.rowChoose")}
+            ariaLabel={t(row.partnerName ? "partner.rowChangeFor" : "partner.rowPressFor", { name: row.registeredName })}
+            title={t("partner.rowTitle", { name: row.registeredName })}
+            help={t("partner.rowHelp")}
+            choiceName={PARTNER_CHOICE_FIELD}
+            choiceLabel={t("partner.rowChoice")}
+            noneLabel={t("partner.none")}
+            partners={partnerSuggestions}
+            current={row.partnerName}
+            boxName={PARTNER_NAME_FIELD}
+            boxLabel={t("partner.rowNew")}
+            boxHelp={t("partner.rowNewHelp", { max: PARTNER_NAME_MAX })}
+            max={PARTNER_NAME_MAX}
+            saveLabel={t("partner.save")}
+            cancelLabel={words.cancel}
+            settledKey={`${row.partnerName ?? ""}:${saved ?? ""}:${deadlinesNow.getTime()}`}
+          />
+        );
+        if (!row.partnerName && !press) return null;
+        return (
+          <Stack spacing={0.25} sx={{ alignItems: { xs: "flex-end", md: "flex-start" }, minWidth: 0, maxWidth: { md: "16rem" } }}>
+            {row.partnerName && (
+              <Box component="span" data-testid="row-partner" sx={{ overflowWrap: "anywhere", minWidth: 0, maxWidth: "100%" }}>
+                {row.partnerName}
+              </Box>
+            )}
+            {press}
+          </Stack>
+        );
+      },
     },
   ];
 
@@ -880,10 +958,20 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filter: an invitation has no state, number or city a filter could ask about, and it is not counted in
     the results.
   */
-  const otherFilters = Boolean(status || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || partner === "1" || chosenPartner || isReconfirmFilter(reconfirm) || q);
-  const leadEvent = filters.eventId && query.page === 1 && !otherFilters ? filters.eventId : null;
+  // A filter an invitation cannot answer hides the invitations; with «Stare» on an invitation state the search box is theirs.
+  const otherFilters = Boolean((status && !invitationFilter) || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || partner === "1" || chosenPartner || isReconfirmFilter(reconfirm) || (q && !invitationFilter));
+  // With «Stare» on an invitation state (§943) the invitations are the list itself: every one of that state, whatever the page.
+  const leadEvent = filters.eventId && !otherFilters && (invitationFilter || query.page === 1) ? filters.eventId : null;
   const leadNow = new Date();
-  const leadInvitations = leadEvent ? (await listEventInvitations(db, leadEvent)).filter((row) => invitationState(row, leadNow) !== "accepted") : [];
+  // …and the search box then looks in their names and addresses, as it looks in the registrations'.
+  const sought = invitationFilter && q ? q.trim().toLocaleLowerCase(locale) : "";
+  const leadInvitations = leadEvent
+    ? (await listEventInvitations(db, leadEvent)).filter((row) => {
+        const state = invitationState(row, leadNow);
+        if (!invitationFilter) return state !== "accepted";
+        return state === invitationFilter && (sought === "" || row.name.toLocaleLowerCase(locale).includes(sought) || row.email.toLocaleLowerCase(locale).includes(sought));
+      })
+    : [];
   /*
     «Invită pe email» from anywhere, and every invited person seen (§740). On a list about one event the
     button goes to that event's panel. On «toate evenimentele» it leads to a panel by the event: the
@@ -896,7 +984,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const openInvitations = filters.eventId ? [] : await listOpenInvitationCountsByEvent(db, leadNow);
   const inviteWhere = inviteTarget(filters.eventId, inviteEvents);
   const invitationsHref = (id: string) => `${basePath}?eventId=${encodeURIComponent(id)}#registrations-invitations`;
-  const leadTitle = leadEvent ? (events.find((event) => event.id === leadEvent)?.title ?? null) : null;
   const leadWhen = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
   const leadRows: AdminLeadRow[] = leadInvitations.map((row) => {
     const state = invitationState(row, leadNow);
@@ -925,9 +1012,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             : state === "withdrawn" && row.withdrawnAt
               ? t("invitations.withdrawnAt", { at: leadWhen(row.withdrawnAt) })
               : t("invitations.expiredAt", { at: leadWhen(row.expiredAt ?? row.expiresAt) }),
-        event: leadTitle ?? "",
         email: (
-          <Box component="span" sx={{ wordBreak: "break-all" }}>
+          <Box component="span" sx={EMAIL_CELL_SX}>
             {row.email}
           </Box>
         ),
@@ -1011,7 +1097,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         )}
         {/* How many bibs the mark actually touched (§264) — "Salvat." would leave the club
             wondering whether it hit the batch it had just downloaded. */}
-        {(saved === "bibsPrinted" || saved === "bibsUnprinted") && (
+        {/* A batch's sentence, with its count; one row's mark from its «⋮» (`from=row`, §943) is said by the toast. */}
+        {(saved === "bibsPrinted" || saved === "bibsUnprinted") && current.from !== "row" && (
           <Alert severity="success">
             {t(saved === "bibsPrinted" ? "registrations.bibsPrintedAlert" : "registrations.bibsUnprintedAlert", {
               count: Number(marked ?? "0"),
@@ -1339,7 +1426,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           // and after a batch was marked — the undo is in here (§336).
           openWhen={{
             attention: bibs.unprinted > 0 || voidBibs.length > 0,
-            saved: saved === "bibsPrinted" || saved === "bibsUnprinted",
+            // …a batch, not one row's mark from its «⋮», whose undo is in the same menu (§943).
+            saved: (saved === "bibsPrinted" || saved === "bibsUnprinted") && current.from !== "row",
           }}
           id="registrations-bibs"
           data-testid="registrations-bibs"
@@ -1937,7 +2025,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             name="status"
             label={t("registrations.statusLabel")}
             // The same reading of the address the summary's pills use (§626): a pill and this select never disagree about the state in force.
-            defaultValue={isRegistrationStatus(status) ? status : ""}
+            defaultValue={isRegistrationStatus(status) || invitationFilter ? status : ""}
             sx={{ minWidth: 220 }}
           >
             {/* Its own words for "no state chosen" (§650): «Toate evenimentele» is the events select's alone. */}
@@ -1947,6 +2035,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 {REGISTRATION_STATUS_LABEL[value]}
               </MenuItem>
             ))}
+            {/* The event's invitations by state (§943), in the words their rows wear; only where invitations are listed. */}
+            {filters.eventId &&
+              (Object.keys(INVITATION_FILTERS) as InvitationFilter[]).map((value) => (
+                <MenuItem key={value} value={value} data-testid={`status-${value}`}>
+                  {t(`registrations.invitationRow.state.${INVITATION_FILTERS[value]}`)}
+                </MenuItem>
+              ))}
           </TextField>
           <Stack direction="row" spacing={1} sx={{ pt: 1, flexWrap: "wrap", gap: 1 }}>
             <GlyphButton icon="filter" type="submit" variant="contained" sx={TAP_TARGET}>
@@ -2069,6 +2164,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         </Box>
       )}
 
+      {/* A row's press leaves the row where it stood on screen (§943): strings only, no row crosses to it. */}
+      <KeepRowPlace anchorPrefix={registrationRowAnchor("")} />
       <AdminTable
         caption={t("registrations.tableCaption")}
         tableId="registrations"
@@ -2076,12 +2173,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         rows={rows}
         leadRows={leadRows}
         rowKey={(row) => row.id}
+        // A row's own press comes back to the row (§943, `listReturnAnchor`), not to the top of the page.
+        rowId={(row) => registrationRowAnchor(row.id)}
         basePath={basePath}
         currentParams={listParams}
         query={query}
-        total={total}
+        total={invitationFilter ? leadRows.length : total}
         labels={{
-          results: t("list.results", { count: total }),
+          results: t("list.results", { count: invitationFilter ? leadRows.length : total }),
           page: t("list.page", { page: query.page, pages: pageCount(total, query.perPage) }),
           previous: t("list.previous"),
           next: t("list.next"),
@@ -2146,6 +2245,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="registrationId" value={row.id} />
+                {/* Back to this row, not to the registration's page (§943). */}
+                <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                 {/* «Trimite acum» or «Pune la coadă» (§540), under the scheduled timing only. */}
                 {sendNow && <input type="hidden" name={sendNow.field} value={sendNow.value} />}
                 {/*
@@ -2200,6 +2301,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="registrationId" value={row.id} />
+                <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                 {sendNow && <input type="hidden" name={sendNow.field} value={sendNow.value} />}
                 <GlyphSubmitButton
                   icon="family"
@@ -2228,10 +2330,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 // The elite mark (§897): the row's own mark decides which of the two words.
                 elite: row.elite,
               });
+              // Every press of the row comes back to this list, on the row, its page and filters kept (§747, §943):
+              // the forms carry the list's query, never a path.
               const hidden = (
                 <>
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="registrationId" value={row.id} />
+                  <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                 </>
               );
               const items: RegistrationMenuItem[] = [
@@ -2374,8 +2479,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       }}
                     >
                       {hidden}
-                      {/* The press comes back to this list, its page and filters kept, not to the registration's page. */}
-                      <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                       {/* The capacity the question named (§642): the server adds that one place and no other, and none unasked. */}
                       {offerForecast.raisedTo !== null && <input type="hidden" name="addPlace" value={offerForecast.raisedTo} />}
                     </ActionForm>
@@ -2423,7 +2526,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                     >
                       {hidden}
                       <input type="hidden" name="outside" value={row.outsideCapacity ? "false" : "true"} />
-                      <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                     </ActionForm>
                   )}
                   {verbs.includes("cancel") && (
@@ -2467,8 +2569,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                     >
                       {hidden}
                       <input type="hidden" name="to" value={row.clubMemberDeclared ? "0" : "1"} />
-                      {/* Back to this list, as it stands (§180): only the query travels. */}
-                      <input type="hidden" name="listQuery" value={listQueryString} />
                     </ActionForm>
                   )}
                   {(verbs.includes("eliteMark") || verbs.includes("eliteUnmark")) && (
@@ -2481,7 +2581,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       {hidden}
                       <input type="hidden" name="elite" value={row.elite ? "0" : "1"} />
                       {/* Back to this list and its page, as it stands (§180, §747): only the query travels. */}
-                      <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                     </ActionForm>
                   )}
                   {/* The two ticks of a marked elite (§910): ask nothing (§384) — they tell nobody, only hide, and the same tick undoes them. */}
@@ -2494,7 +2593,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                         {hidden}
                         <input type="hidden" name="tick" value={tick} />
                         <input type="hidden" name="on" value={shown ? "0" : "1"} />
-                        <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                       </ActionForm>
                     ))}
                   {(verbs.includes("markBibPrinted") || verbs.includes("unmarkBibPrinted")) && (

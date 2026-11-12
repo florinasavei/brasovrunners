@@ -65,3 +65,24 @@ export function exportNotesCell<R extends string>(notes: readonly ExportNote<R>[
   }
   return lines.join("\n");
 }
+
+/** How many notes a marker's tooltip shows, newest first, and how much of each. */
+export const TIP_NOTES = 3;
+export const TIP_NOTE_CHARS = 280;
+
+/**
+ * A row's notes as its marker's tooltip (§943; the owner, 2026-11-12, of «1 notă» on the registrations list: «Ar trebui să văd
+ * nota și pe tooltip, fără să deschid înscrierea»): the newest `TIP_NOTES`, as given, each «<when>: <words>» with a blank line
+ * between two — a note's own line breaks kept (the tooltip is `pre-line`), a long one cut at `TIP_NOTE_CHARS` with «…» — and
+ * `more(left)` as the last line when there are older ones. Empty for no notes. The caller says the clock and the words; nothing
+ * here knows whose notes they are, and no author is named: who wrote it is the card's to say.
+ */
+export function notesTip(notes: readonly { createdAt: Date; body: string }[] | undefined, when: (at: Date) => string, more: (left: number) => string): string {
+  if (!notes || notes.length === 0) return "";
+  const shown = notes.slice(0, TIP_NOTES).map((note) => {
+    const words = [...note.body.replace(/\r\n?/g, "\n").trim()];
+    return `${when(note.createdAt)}: ${words.length > TIP_NOTE_CHARS ? `${words.slice(0, TIP_NOTE_CHARS).join("").trimEnd()}…` : words.join("")}`;
+  });
+  const left = notes.length - shown.length;
+  return [...shown, ...(left > 0 ? [more(left)] : [])].join("\n\n");
+}

@@ -90,6 +90,7 @@ vi.mock("@/modules/notifications/send-now-choice", () => ({ sendNowChoiceFor: as
 const { default: AdminRegistrationsPage } = await import("@/app/[locale]/admin/registrations/(list)/page");
 const { default: AdminTable } = await import("@/modules/staff-identity/ui/AdminTable");
 const { default: RowPartnerDialog } = await import("@/modules/registrations/ui/RowPartnerDialog");
+const { default: ActionForm } = await import("@/shared/forms/ActionForm");
 const { default: PartnerFilterSelect } = await import("@/modules/registrations/ui/PartnerFilterSelect");
 const { default: ReserveListPanel } = await import("@/modules/registrations/ui/ReserveListPanel");
 const { setRegistrationPartnerFromListAction } = await import("@/app/[locale]/admin/registrations/[id]/partner-actions");
@@ -248,17 +249,18 @@ describe("the column «Partener» on the registrations list", () => {
     expect(column?.hint).toBe((await import("../../../messages/ro.json")).default.Admin.partner.columnHint);
     expect(column?.sortable).toBe(true);
     expect(column?.initialDir).toBe("asc");
-    // Optional like its neighbours — «Coloane» hides it — but on the wide table at every width it is drawn (`md` and up),
-    // unlike the address, which leaves it below `lg`: a landscape tablet sees and sets the partner too.
+    // Optional like its neighbours — «Coloane» hides it — and on the wide table at every width it is drawn (`md` and up):
+    // a landscape tablet sees and sets the partner too. («Contact» stays at every width as well, since it holds the telephone.)
     expect(column?.essential).toBeUndefined();
     expect(column?.primary).toBeUndefined();
     expect(column?.hideBelow).toBe("md");
-    expect(columnOf(tree, "email")?.hideBelow).toBe("lg");
+    expect(columnOf(tree, "email")?.hideBelow).toBeUndefined();
     expect(column?.omitEmptyOnPhone).toBe(true);
-    // Right after «Stare» (third), so it is in view at 1280 px.
+    // The last column, right before the row's verbs (the owner, 2026-11-12: «Coloana de partener ar trebui să apară ultima»):
+    // the verbs' column is pinned now, so the frame cuts nothing that stands last.
     const keys = (tableOf(tree)?.props.columns as Column[]).map((candidate) => candidate.key);
-    expect(keys.indexOf("partner")).toBe(keys.indexOf("status") + 1);
-    expect(keys.indexOf("partner")).toBe(2);
+    expect(keys.indexOf("partner")).toBe(keys.length - 1);
+    expect(keys.indexOf("partner")).toBe(keys.indexOf("submitted") + 1);
 
     const cell = elements(cellOf(tree, "partner", from.id));
     expect(textOf(cell.find((element) => element.props["data-testid"] === "row-partner"))).toBe(BAKERY);
@@ -522,7 +524,8 @@ describe("the row's own editor", () => {
       // Picked from the select.
       const set = new URL(await press({ partnerChoice: BAKERY, partnerName: "" }), "https://example.test");
       expect(set.pathname, role).toBe("/ro/admin/registrations");
-      expect(set.hash, role).toBe("#admin-alert");
+      // On the row itself (§943): the list stays where the Administrator was working, the toast says what was saved.
+      expect(set.hash, role).toBe(`#reg-${target.id}`);
       expect(Object.fromEntries(set.searchParams), role).toEqual({ eventId: race.id, partner: "1", sort: "partner", dir: "desc", page: "2", perPage: "50", saved: "partnerSaved", from: "row" });
       expect(decodeURIComponent(set.toString()), role).not.toContain(BAKERY);
       expect(await partnerOf(target.id), role).toBe(BAKERY);
@@ -597,6 +600,252 @@ describe("the row's own editor", () => {
     }
     // A line's own fold still opens its panel on the way back.
     expect(elements(await listPage({ eventId: race.id, saved: "partnerSaved" })).find((element) => element.type === ReserveListPanel)?.props.opened).toBe(true);
+  });
+});
+
+/**
+ * BR-REQ-041-01, `DECISIONS.md` §943 — the owner, 2026-11-12, of this list on a wide screen: «Aici mi se face crop!». Besides the
+ * verbs' column pinned in `AdminTable` (`tests/unit/staff/admin-table-pinned-verbs.test.ts`), the list no longer asks for width
+ * it does not use: «Eveniment» is drawn only while every event is listed, and an address reads on a line of its own.
+ */
+describe("§943 the list asks for no width it does not use", () => {
+  const keysOf = (tree: ReactNode) => (tableOf(tree)?.props.columns as Column[]).map((column) => column.key);
+
+  it("draws «Eveniment» only while every event is listed: one event chosen is the filter's own choice on every row", async () => {
+    const race = await createRace("Crosul aniversar — ediția a II-a");
+    const row = await register(race.id, "Ana Pop");
+    state.actor = await staff("ADMIN");
+
+    const one = await listPage({ eventId: race.id });
+    expect(columnOf(one, "event")).toBeUndefined();
+
+    const every = await listPage({ eventId: "all" });
+    const column = columnOf(every, "event");
+    expect(column?.label).toBe("Eveniment");
+    expect(column?.sortable).toBe(true);
+    // The title on a floor of its own on the wide table, so it is a few lines and never a word to a line; a phone's card keeps its width.
+    const cell = elements(cellOf(every, "event", row.id))[0];
+    expect(textOf(cell)).toBe("Crosul aniversar — ediția a II-a");
+    expect(cell.props.sx).toEqual({ display: "inline-block", minWidth: { xs: 0, md: "12rem" } });
+    // Nothing else moves: the same columns in the same order, «Eveniment» after the age and before «Trimisă».
+    expect(keysOf(one)).toEqual(keysOf(every).filter((key) => key !== "event"));
+    expect(keysOf(every).indexOf("event")).toBe(keysOf(every).indexOf("submitted") - 1);
+    expect(keysOf(every).indexOf("event")).toBe(keysOf(every).indexOf("age") + 1);
+  });
+
+  it("an address breaks anywhere and still reads on a line: a floor on the wide table, none on a phone's card — a lead row's too", async () => {
+    const race = await createRace();
+    const admin = await staff("ADMIN");
+    state.actor = admin;
+    const row = await register(race.id, "Ana Pop");
+    const now = new Date();
+    await db.insert(eventInvitations).values({
+      eventId: race.id,
+      participantId: row.participantId,
+      email: "mara@example.org",
+      canonicalEmail: "mara@example.org",
+      name: "Mara Invitata",
+      invitedByStaffUserId: admin.id,
+      createdAt: now,
+      sentAt: now,
+      lastSentAt: now,
+      expiresAt: new Date(now.getTime() + 3 * 24 * 3_600_000),
+    });
+    const tree = await listPage({ eventId: race.id });
+    const address = { display: "inline-block", minWidth: { xs: 0, md: "12rem" }, wordBreak: "break-all" };
+    // `md` is where the wide table is drawn, so the floor never reaches the phone's card.
+    const typed = (rowsOf(tree).find((candidate) => candidate.id === row.id) as unknown as { participantEmail: string }).participantEmail;
+    const drawn = elements(cellOf(tree, "email", row.id)).find((element) => textOf(element) === typed && element.props.component === "span");
+    expect(drawn?.props.sx).toEqual(address);
+    const lead = (tableOf(tree)?.props.leadRows as { cells: Record<string, ReactNode> }[])[0];
+    expect(textOf(lead.cells.email)).toBe("mara@example.org");
+    expect(elements(lead.cells.email)[0].props.sx).toEqual(address);
+    // The lead rows stand only where one event is chosen, where «Eveniment» is not drawn: they carry no cell for it.
+    expect(Object.keys(lead.cells)).not.toContain("event");
+  });
+});
+
+/**
+ * BR-REQ-037-07, BR-REQ-070-01, `DECISIONS.md` §943 — the owner, 2026-11-12: «trebuie să pot filtra și invitațiile după stare».
+ * The list's «Stare» offers the three states of an invitation not accepted yet; choosing one makes the grid that state's
+ * invitations and nothing else.
+ */
+describe("§943 «Stare» filters the event's invitations too", () => {
+  const leadNames = (tree: ReactNode) => ((tableOf(tree)?.props.leadRows as { cells: Record<string, ReactNode> }[]) ?? []).map((lead) => textOf(lead.cells.name).replace("Invitație", ""));
+  const offered = (tree: ReactNode) => elements(tree).map((element) => element.props["data-testid"]).filter((id): id is string => typeof id === "string" && id.startsWith("status-invitation-"));
+
+  async function raceWithInvitations() {
+    const race = await createRace();
+    const admin = await staff("ADMIN");
+    state.actor = admin;
+    const ana = await register(race.id, "Ana Pop");
+    const now = new Date();
+    const day = 24 * 3_600_000;
+    const invite = (name: string, row: Partial<typeof eventInvitations.$inferInsert>) =>
+      db.insert(eventInvitations).values({
+        eventId: race.id,
+        participantId: ana.participantId,
+        email: `${name.split(" ")[0].toLowerCase()}@example.org`,
+        canonicalEmail: `${name.split(" ")[0].toLowerCase()}@example.org`,
+        name,
+        invitedByStaffUserId: admin.id,
+        createdAt: new Date(now.getTime() - 5 * day),
+        sentAt: new Date(now.getTime() - 5 * day),
+        lastSentAt: new Date(now.getTime() - 5 * day),
+        expiresAt: new Date(now.getTime() + 3 * day),
+        ...row,
+      });
+    await invite("Sara Trimisa", {});
+    await invite("Sorin Trimisul", {});
+    await invite("Emil Expiratul", { expiresAt: new Date(now.getTime() - day) });
+    await invite("Radu Retrasul", { withdrawnAt: new Date(now.getTime() - day), withdrawnByStaffUserId: admin.id });
+    return { race, ana };
+  }
+
+  it("offers the three states with one event chosen, in the words the rows wear; one of them lists that state's invitations and no registration", async () => {
+    const { race, ana } = await raceWithInvitations();
+    const plain = await listPage({ eventId: race.id });
+    expect(offered(plain)).toEqual(["status-invitation-sent", "status-invitation-expired", "status-invitation-withdrawn"]);
+    expect(rowsOf(plain).map((row) => row.id)).toEqual([ana.id]);
+    expect(leadNames(plain).sort()).toEqual(["Emil Expiratul", "Radu Retrasul", "Sara Trimisa", "Sorin Trimisul"]);
+
+    for (const [status, names] of [
+      ["invitation-sent", ["Sara Trimisa", "Sorin Trimisul"]],
+      ["invitation-expired", ["Emil Expiratul"]],
+      ["invitation-withdrawn", ["Radu Retrasul"]],
+    ] as const) {
+      const tree = await listPage({ eventId: race.id, status });
+      expect(rowsOf(tree), status).toEqual([]);
+      expect(leadNames(tree).sort(), status).toEqual([...names]);
+      // The table counts what it lists: the invitations.
+      expect(tableOf(tree)?.props.total, status).toBe(names.length);
+    }
+    // The select's words are the rows' own.
+    const option = elements(plain).find((element) => element.props["data-testid"] === "status-invitation-expired");
+    expect(textOf(option)).toBe("Invitație expirată");
+  });
+
+  it("lists them on any page, and the search box looks in their names and addresses", async () => {
+    const { race } = await raceWithInvitations();
+    expect(leadNames(await listPage({ eventId: race.id, status: "invitation-sent", page: "3" })).sort()).toEqual(["Sara Trimisa", "Sorin Trimisul"]);
+    expect(leadNames(await listPage({ eventId: race.id, status: "invitation-sent", q: "sORin" }))).toEqual(["Sorin Trimisul"]);
+    expect(leadNames(await listPage({ eventId: race.id, status: "invitation-sent", q: "sara@example" }))).toEqual(["Sara Trimisa"]);
+    expect(leadNames(await listPage({ eventId: race.id, status: "invitation-sent", q: "nimeni" }))).toEqual([]);
+    // A filter an invitation cannot answer hides them, as it did.
+    expect(leadNames(await listPage({ eventId: race.id, status: "invitation-sent", partner: "1" }))).toEqual([]);
+    expect(leadNames(await listPage({ eventId: race.id, status: "CONFIRMED" }))).toEqual([]);
+  });
+
+  it("with every event listed the three are not offered and the parameter says nothing", async () => {
+    const { ana } = await raceWithInvitations();
+    const every = await listPage({ eventId: "all", status: "invitation-sent" });
+    expect(offered(every)).toEqual([]);
+    expect(rowsOf(every).map((row) => row.id)).toEqual([ana.id]);
+    expect(leadNames(every)).toEqual([]);
+  });
+});
+
+/**
+ * BR-REQ-031-05, BR-REQ-070-01, `DECISIONS.md` §943 — the owner, 2026-11-12: «Aș vrea să afișez și numărul de telefon al
+ * alergătorilor în grid ca să pot să-i sun rapid», and, told that showing it always annuls §322's "read only when asked
+ * for, each read recorded" for the telephone, «Da … YOLO». The runner's own telephone is on every page of the list, under
+ * the address, for whoever may read the registrations, and nothing is written for it. The emergency contact and the health
+ * note are untouched (`emergency-details.test.ts`), and neither the list's shared query, the desk's nor an export carries a number.
+ */
+describe("§943 «Contact»: the telephone under the address, on every page of the list", () => {
+  it("is the second column, at every width of the wide table, hideable from «Coloane»; the number is a link a phone rings", async () => {
+    const race = await createRace();
+    state.actor = await staff("ADMIN");
+    const ana = await register(race.id, "Ana Pop", { phone: "0722 123 456" });
+    const ion = await register(race.id, "Ion Pop");
+    const far = await register(race.id, "Zoe Pop", { phone: "+40 (722) 000-111" });
+
+    const tree = await listPage({ eventId: race.id, sort: "name", dir: "asc" });
+    const keys = (tableOf(tree)?.props.columns as Column[]).map((candidate) => candidate.key);
+    // Right after the name: in view at every width, never under the pinned verbs. No column of the telephone's own.
+    expect(keys.slice(0, 3)).toEqual(["name", "email", "status"]);
+    expect(keys).not.toContain("phone");
+    const column = columnOf(tree, "email");
+    expect(column?.label).toBe("Contact");
+    expect(column?.hint).toContain("telefonul");
+    expect(column?.hideBelow).toBeUndefined();
+    expect(column?.essential).toBeUndefined();
+
+    // The address, then the number as typed on a `tel:` link of its digits; nothing typed, the address alone.
+    const addressOf = (id: string) => (rowsOf(tree).find((candidate) => candidate.id === id) as unknown as { participantEmail: string }).participantEmail;
+    const cell = elements(cellOf(tree, "email", ana.id));
+    expect(textOf(cellOf(tree, "email", ana.id))).toBe(`${addressOf(ana.id)}0722 123 456`);
+    const link = cell.find((element) => element.props["data-testid"] === "row-phone");
+    expect(textOf(link)).toBe("0722 123 456");
+    expect(link?.props.href).toBe("tel:0722123456");
+    expect(elements(cellOf(tree, "email", far.id)).find((element) => element.props["data-testid"] === "row-phone")?.props.href).toBe("tel:+40722000111");
+    expect(elements(cellOf(tree, "email", ion.id)).some((element) => element.props["data-testid"] === "row-phone")).toBe(false);
+    expect(textOf(cellOf(tree, "email", ion.id))).toBe(addressOf(ion.id));
+  });
+
+  it("writes nothing to the trail, and no switch stands above the table", async () => {
+    const race = await createRace();
+    state.actor = await staff("MODERATOR");
+    await register(race.id, "Ana Pop", { phone: "0722 123 456" });
+    const tree = await listPage({ eventId: race.id });
+    expect(elements(tree).some((element) => element.props["data-testid"] === "registrations-phones")).toBe(false);
+    expect(await db.select().from(auditLogs)).toHaveLength(0);
+    // `?phones=` is no parameter of the list any more: it changes nothing and rides on no link.
+    const asked = await listPage({ eventId: race.id, phones: "1" });
+    expect((tableOf(asked)?.props.currentParams as Record<string, string | undefined>).phones).toBeUndefined();
+  });
+
+  it("is the page's own read: the list's shared query carries no telephone, only whether one is held", async () => {
+    const race = await createRace();
+    const ana = await register(race.id, "Ana Pop", { phone: "0722 123 456" });
+    const rows = await listRegistrationsForAdmin(db, { eventId: race.id }, { limit: 10, offset: 0, sort: "name", dir: "asc" }, new Date());
+    expect(rows.map((row) => row.id)).toEqual([ana.id]);
+    expect(Object.keys(rows[0])).not.toContain("phone");
+    expect(JSON.stringify(rows[0])).not.toContain("0722");
+    expect((rows[0] as unknown as { phoneHeld: boolean }).phoneHeld).toBe(true);
+  });
+
+  it("is read by whoever may read the registrations and by nobody else — the service refuses", async () => {
+    const race = await createRace();
+    const ana = await register(race.id, "Ana Pop", { phone: "0722 123 456" });
+    const { readRowPhones } = await import("@/modules/registrations/admin-service");
+    const { canReadRegistrations } = await import("@/modules/staff-identity/domain/roles");
+    for (const role of STAFF_ROLES) {
+      const actor = await staff(role);
+      const read = readRowPhones(db, actor, [ana.id, "not-a-uuid"]);
+      if (canReadRegistrations(actor.role)) expect(await read, role).toEqual(new Map([[ana.id, "0722 123 456"]]));
+      else await expect(read, role).rejects.toMatchObject({ code: "FORBIDDEN" });
+    }
+    expect(await db.select().from(auditLogs)).toHaveLength(0);
+  });
+});
+
+/**
+ * BR-REQ-060-01, `DECISIONS.md` §943 — the owner, 2026-11-12: «Mă disperă în general că atunci când fac un edit gen „aleg
+ * partenerul” și navighezi». The page's half of it (the actions' half is `row-press-returns.test.ts`): the table names its
+ * rows, and every form of a row carries the list's own query.
+ */
+describe("§943 a row's press comes back to the row", () => {
+  it("names each row and hands every one of its forms the list's query, once", async () => {
+    const race = await createRace();
+    state.actor = await staff("ADMIN");
+    const ana = await register(race.id, "Ana Pop", { bibNumber: 4, confirmedAt: new Date(), emailConfirmedAt: new Date() });
+    const tree = await listPage({ eventId: race.id, sort: "name", dir: "asc" });
+    const table = tableOf(tree);
+    const row = rowsOf(tree)[0];
+    expect((table?.props.rowId as (row: ListRow) => string)(row)).toBe(`reg-${ana.id}`);
+
+    const drawn = elements((table?.props.rowActions as (row: ListRow) => ReactNode)(row));
+    const forms = drawn.filter((element) => element.type === ActionForm || element.props.component === "form");
+    // The resend, the desk's verbs, the special guests list, the cancel, the member tick, the elite mark, the printing mark.
+    expect(forms.length).toBeGreaterThanOrEqual(6);
+    for (const one of forms) {
+      const queries = elements(one.props.children).filter((element) => element.type === "input" && element.props.name === "listQuery");
+      expect(queries, String(one.props.id)).toHaveLength(1);
+      const query = new URLSearchParams(queries[0].props.value as string);
+      expect(query.get("eventId"), String(one.props.id)).toBe(race.id);
+      expect(query.get("sort"), String(one.props.id)).toBe("name");
+    }
   });
 });
 

@@ -274,6 +274,8 @@ describe("§650 the pre-paint script, run against a stand-in for the page", () =
     expect(css).toContain(`${q}>colgroup>col[data-column="state"]{width:90px}`);
     expect(css).toContain(`${q}>colgroup>col[data-column="${ACTIONS_COLUMN}"]{width:70px}`);
     expect(css).not.toContain('"club"');
+    // A heading wraps to its column's own width, not to the automatic layout's box (§943).
+    expect(css).toContain(`${q}>thead>tr>th [data-column-heading]{display:inline;width:auto;max-width:none}`);
   });
 
   it("waits for a list streamed in hidden to be revealed, and stops once hydration removed it", () => {

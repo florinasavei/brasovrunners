@@ -336,6 +336,45 @@ describe("«Trimite un mesaj participanților»", () => {
     }
   });
 
+  it("§943 hands the composer «Trimite și numărul de concurs și codul QR» and its help line, in the backoffice's language", async () => {
+    const race = await createRace();
+    await register(race.id);
+    state.actor = await staff("MODERATOR");
+    for (const locale of ["ro", "en"] as const) {
+      state.locale = locale;
+      const composer = elements(await messagesPage(race.id)).find((element) => element.type === ParticipantMessageComposer);
+      const labels = composer?.props.labels as Record<string, unknown>;
+      const catalogue = locale === "ro" ? ro : en;
+      expect(labels.sendQr, locale).toBe(catalogue.Admin.participantMessages.sendQr);
+      expect(labels.sendQrHelp, locale).toBe(catalogue.Admin.participantMessages.sendQrHelp);
+    }
+    expect(ro.Admin.participantMessages.sendQr).toBe("Trimite și numărul de concurs și codul QR");
+  });
+
+  it("§943 says on a «Mesaje trimise» row that the send carried the number and the QR, and for how many confirmed; nothing on a send that did not", async () => {
+    const race = await createRace();
+    const actor = await staff("MODERATOR");
+    state.actor = actor;
+    await register(race.id);
+    await register(race.id);
+    await register(race.id, { status: "WAITLISTED", waitlistedAt: new Date() });
+    // A test registration is flagged like a real one and counted in no number the club reads (§12.6).
+    await register(race.id, { kind: "TEST" });
+    const words = { subject: { ro: "Numărul tău", en: "Your number" }, body: { ro: "Ne vedem la start.", en: "See you at the start." } };
+    await sendParticipantMessage(db, actor, { eventId: race.id, audience: "ALL_ACTIVE", sendId: randomUUID(), sendQr: true, ...words }, new Date(Date.now() - 60_000));
+    await sendParticipantMessage(db, actor, { eventId: race.id, audience: "ALL_ACTIVE", sendId: randomUUID(), ...words }, new Date());
+
+    const line = (row: ReactElement<Props>) => elements(row).find((element) => element.props["data-testid"] === "participant-message-history-qr");
+    const rows = elements(await messagesPage(race.id)).filter((element) => element.props["data-testid"] === "participant-message-history-row");
+    expect(rows).toHaveLength(2);
+    const [plain, ticked] = rows;
+    expect(line(plain)).toBeUndefined();
+    expect(textOf(line(ticked))).toBe("Cu numărul de concurs și codul QR pentru cei confirmați: 2");
+    state.locale = "en";
+    const english = elements(await messagesPage(race.id)).filter((element) => element.props["data-testid"] === "participant-message-history-row");
+    expect(textOf(line(english[1]))).toBe("With the race number and the QR code for the confirmed: 2");
+  });
+
   it("words the pace and the allowance in the question before «Trimite», from the server, promising no start", async () => {
     const race = await createRace();
     for (let index = 0; index < 3; index += 1) await register(race.id);

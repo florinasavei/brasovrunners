@@ -7,6 +7,7 @@ import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_INLINE_SX } from "./disclosure";
 import { HEADING_SX } from "./heading-scale";
 import { PANEL_GLYPHS, type PanelGlyphName } from "./panel-glyphs";
 import QuietHelp from "./QuietHelp";
+import { ON_CARD_SX } from "./surface";
 import { type FoldOpenWhen, opensByItself } from "./fold";
 
 /**
@@ -260,6 +261,7 @@ export default function Panel({
         px: nested ? NESTED_PADDING : 2,
         py: 2,
         bgcolor: "background.paper",
+        ...ON_CARD_SX,
         scrollMarginTop: 16,
         ...toneSx(tone),
       } as const);

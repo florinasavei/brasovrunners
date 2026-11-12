@@ -26,6 +26,7 @@ import {
   type EmergencyDetails,
   type EmergencySheetRow,
   findEmergencyDetails,
+  findPhonesOf,
   listEmergencySheet,
 } from "./admin-repository";
 import { clearOptionalData, OPTIONAL_DATA_FIELDS, type OptionalDataField } from "./consent-withdrawal";
@@ -1967,6 +1968,27 @@ export async function readEmergencyDetails<T extends Record<string, unknown>>(
   const details = await findEmergencyDetails(db, current.id);
   if (!details) throw new DomainError("NOT_FOUND", "no such registration");
   return details;
+}
+
+/**
+ * The telephones of the rows on one page of the registrations list (§943; the owner, 2026-11-12: «Aș vrea să afișez și
+ * numărul de telefon al alergătorilor în grid ca să pot să-i sun rapid»).
+ *
+ * §322 had put the runner's own telephone with the emergency details: read only when asked for, each read recorded. It
+ * was first built here that way — a switch above the table, an audit row per page drawn — and the owner, told that
+ * showing it always annuls that rule for the telephone, chose it: «Da … YOLO». So the list shows it on every page, to
+ * whoever may read the registrations (the gate the list itself has, asserted again here), and no row is written for
+ * it. What §322 keeps: the emergency contact's name and number and the health note are still read only on demand, each
+ * read recorded (`readEmergencyDetails`, `readEmergencySheet`); the telephone is still never at the desk and never in
+ * an export — which is why it is this page's own read and no column of the list's shared query.
+ */
+export async function readRowPhones<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationIds: readonly string[],
+): Promise<Map<string, string>> {
+  assertMayRead(actor);
+  return findPhonesOf(db, registrationIds);
 }
 
 /**
