@@ -22,7 +22,8 @@ export const participants = pgTable("participants", {
   deliveryEmail: text("delivery_email").notNull(),
   // Lowercased, submitted domain intact — googlemail stays googlemail.
   normalizedEmail: text("normalized_email").notNull(),
-  // The duplicate-detection identity. Immutable in V1: no merge, no verified-email change.
+  // The duplicate-detection identity. Immutable: no merge and no rewrite. «Schimbă adresa» moves a
+  // registration to another participant row (`registrations.participant_id`), never this column.
   canonicalEmail: text("canonical_email").notNull().unique(),
   canonicalizationVersion: integer("canonicalization_version").notNull(),
 

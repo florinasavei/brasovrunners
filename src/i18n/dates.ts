@@ -142,6 +142,29 @@ export function calendarDayIn(at: Date, timeZone: string): string {
   return formatter("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(at);
 }
 
+/**
+ * The next midnight after the calendar day `at` falls on in a zone, as an instant — the zone's own midnight, so a summer-time
+ * change that night is the zone's. What `email-state.ts#eventEndSql` computes in SQL for an event with no end.
+ */
+export function nextMidnightIn(at: Date, timeZone: string): Date {
+  const [y, m, d] = calendarDayIn(at, timeZone).split("-").map(Number);
+  const wall = Date.UTC(y, m - 1, d + 1);
+  // The zone's offset at that wall time, asked twice so a change of offset that night lands on the zone's own midnight.
+  const first = wall - zoneOffsetMs(new Date(wall), timeZone);
+  return new Date(wall - zoneOffsetMs(new Date(first), timeZone));
+}
+
+/** How far the zone's wall clock is ahead of UTC at `at`, in milliseconds. */
+function zoneOffsetMs(at: Date, timeZone: string): number {
+  const parts = Object.fromEntries(
+    formatter("en-GB", { timeZone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })
+      .formatToParts(at)
+      .map((part) => [part.type, part.value]),
+  );
+  const wall = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute), Number(parts.second));
+  return wall - Math.floor(at.getTime() / 1000) * 1000;
+}
+
 /** The first letter in capitals, in the language's own rules ("ș" → "Ș"); the rest untouched. */
 export function capitalizeFirst(text: string, locale: string): string {
   if (text === "") return text;

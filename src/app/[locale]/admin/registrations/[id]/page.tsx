@@ -73,6 +73,7 @@ import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { env } from "@/shared/config/env";
 import {
   cancelRegistrationAction,
+  changeRegistrationAddressAction,
   checkInAction,
   confirmRegistrationNowAction,
   deleteRegistrationAction,
@@ -89,7 +90,10 @@ import {
 import { CLUB_NAME } from "@/theme/brand";
 import { resendRegistrationEmailAction } from "./actions";
 import { addRegistrationNoteAction, deleteRegistrationNoteAction } from "./note-actions";
+import { setRegistrationPartnerAction } from "./partner-actions";
 import DeclarationHoldForm from "@/modules/registrations/ui/DeclarationHoldForm";
+import { listPartnerSuggestions } from "@/modules/registrations/partner-mark";
+import PartnerMarkFields, { PartnerSuggestionList } from "@/modules/registrations/ui/PartnerMarkFields";
 import MemberChip from "@/modules/registrations/ui/MemberChip";
 import { membershipOf } from "@/modules/registrations/domain/membership";
 import TextHashTip from "@/modules/registrations/ui/TextHashTip";
@@ -112,6 +116,7 @@ import { whatToTell } from "@/modules/registrations/ui/tell-words";
 import { givePlaceNowAhead, staffOfferIfMadeNow, staffOfferQuestion } from "@/modules/registrations/give-place-tip";
 import { findInvitationOfRegistration } from "@/modules/registrations/invitation-repository";
 import { invitationHeldForRegistration } from "@/modules/registrations/service";
+import { eventOverForMove, moveSendsNextStep, signedAfterStaffAddressChange } from "@/modules/registrations/domain/address-change";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -257,6 +262,15 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     nothing any more (`countOccupied`), reads «Rezervarea expiră» like an ended row.
   */
   const rowDeadline = rowDeadlineOf(registration, timelineNow);
+  // «Schimbi adresa?» says what the move sends, by the move's own rules (`domain/address-change.ts`).
+  const addressEvent = {
+    eventStatus: registration.eventStatus,
+    startsAt: registration.eventStartsAt,
+    endsAt: registration.eventEndsAt,
+    timezone: registration.eventTimezone,
+  };
+  const addressMoveSendsNextStep = moveSendsNextStep(registration.status, addressEvent, timelineNow);
+  const addressEventOver = eventOverForMove(addressEvent, timelineNow);
   const holdLine: [string, string | null] = [
     tr(deadlineHoldsAPlace(rowDeadline) ? "registrations.holdKeeps" : "registrations.holdExpires"),
     rowDeadline?.kind === "kept" ? `${dt(registration.holdExpiresAt)} — ${tr("registrations.journey.heldKept")}` : dt(registration.holdExpiresAt),
@@ -324,6 +338,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     return value;
   };
   const answersRefusal = await refusalMessages(answerLabels);
+  // «Schimbă adresa»: the one box a refusal points at.
+  const addressRefusal = await refusalMessages({ email: tr("registrations.address.label") });
   const detailPath = getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: registration.id } } });
   // Everything held about this person, one link away for the Administrator (§322) — the address
   // sealed, never written into the URL (`person-data.ts`).
@@ -463,6 +479,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // sentence is "correct it and send again", not a colleague's save to reload for.
   const bibRefusal = await refusalMessages({ bibNumber: tr("registrations.bibNumber") });
   bibRefusal.keptConflict = bibRefusal.kept;
+  // «E de la parteneri» (the decision «De la parteneri»): the Administrator's form — its box named in a refusal, and the event's earlier names.
+  const partnerRefusal = mayManage ? await refusalMessages({ partnerName: tr("partner.name") }) : null;
+  const partnerSuggestions = mayManage ? await listPartnerSuggestions(db, actor, registration.eventId) : [];
 
   /*
     The page's cards (§847; the owner, 2026-10-21: «they look like they are from a different app»): under the
@@ -511,6 +530,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {registration.outsideCapacity && <HiddenListChip label={tr("registrations.outside.chip")} hint={tr("registrations.outside.hint")} testId="outside-chip" />}
         {/* «Elită» (§897): the bib prints with the name where the number goes; marked and unmarked from the list's «⋮». */}
         {registration.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={tr("registrations.elite.chip")} testId="elite-chip" />}
+        {/* «Partener: {name}» (the decision «De la parteneri»): the organizers' own label, for every role that reads this page. */}
+        {registration.partnerName && <StatusChip glyph="fromPartner" variant="outlined" label={tr("partner.chip", { name: registration.partnerName })} testId="partner-chip" wrap />}
         {/* «Date lipsă» (§905): the list's chip; which answers, and how they are completed, is the line under the address. */}
         {owedAnswers.length > 0 && <StatusChip glyph="missingAnswers" color="warning" variant="outlined" label={tr("registrations.missingAnswers.chip")} testId="missing-answers-chip" />}
         <FamilyChip
@@ -533,6 +554,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <Typography variant="body2" color="text.secondary">
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}
       </Typography>
+      {/* «Cere reconfirmarea» (the decision «Cere reconfirmarea»): when the person said «Vin» — information, never a state. */}
+      {registration.reconfirmedAt && (
+        <Typography variant="body2" data-testid="registration-reconfirmed">
+          {tr("reconfirm.detail", { date: dtInline(registration.reconfirmedAt) ?? "" })}
+        </Typography>
+      )}
       {/*
         Under the address it is about (§663, §671): the list's own line — a link to «Emailuri» below, where the
         whole story is — and what to do, by who reads it. Never the address's change: that is the person's (§645).
@@ -1007,6 +1034,26 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       )}
 
       {/*
+        «De la parteneri» (the decision «De la parteneri»): the tick «E de la parteneri» and the box «Numele partenerului sau
+        sponsorului», the Administrator's alone — one form, one save, asking nothing (§384): it tells nobody and changes nothing
+        else of the registration. The Organizer reads the chip under the name and is handed no form.
+      */}
+      {mayManage && partnerRefusal && (
+        <Panel glyph="partners" level={3} title={tr("partner.title")} id="registration-partner" data-testid="registration-partner">
+          <PartnerSuggestionList names={partnerSuggestions} />
+          <ActionForm action={setRegistrationPartnerAction} messages={partnerRefusal} scope="registration-partner" data-testid="registration-partner-form">
+            {deskHidden}
+            <Stack spacing={1} sx={{ alignItems: "flex-start", maxWidth: 480 }}>
+              <PartnerMarkFields name={registration.partnerName} testId="registration-partner-fields" />
+              <GlyphButton icon="save" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="registration-partner-save">
+                {tr("partner.save")}
+              </GlyphButton>
+            </Stack>
+          </ActionForm>
+        </Panel>
+      )}
+
+      {/*
         «Elită: clasament și site» (§910; the owner, 2026-11-04: per elite, «Apare în clasament» and «Apare pe site»): drawn while the
         registration is marked «Elită» (§897), for every role that reads the page; the two ticks are the Administrator's — the house's
         `TickButton`, each in a form posting the state it wants — and read-only, the same boxes disabled, for the others. They ask
@@ -1360,6 +1407,79 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       </Panel>
 
       {/*
+        «Adresa de email» («Schimbă adresa»; the owner, 2026-11-11: «aparent nu pot modifica mailul unei persoane???»):
+        the address the registration's emails go to, and — the Administrator's alone (`canManageRegistrations`, asserted
+        again by the action, the wrapper and the service) — the form that moves this one registration to another address.
+        Its own card beside «Datele înscrierii», never inside it: a move revokes links and sends email, an answer's
+        correction does neither. The question says what happens before it happens. The Organizer reads the address and
+        gets no form (§289).
+      */}
+      <Panel glyph="email" level={3} title={tr("registrations.address.title")} id="adresa" data-testid="address-card">
+        <Stack spacing={1.5}>
+          <Typography variant="body2" sx={{ wordBreak: "break-word" }} data-testid="address-current">
+            {tr("registrations.address.current", { email: registration.participantEmail })}
+          </Typography>
+          {registration.addressChangedAt && (
+            <Typography variant="body2" color="text.secondary" data-testid="address-changed">
+              {tr("registrations.address.changed", {
+                date: dtInline(registration.addressChangedAt) ?? "",
+                who: registration.addressChangedByName ?? tr("registrations.auditActorRemoved"),
+              })}
+            </Typography>
+          )}
+          {mayManage ? (
+            <ActionForm
+              action={changeRegistrationAddressAction}
+              messages={addressRefusal}
+              confirm={{
+                title: tr("registrations.address.confirmTitle"),
+                body: [
+                  tr(addressMoveSendsNextStep ? "registrations.address.confirmBody" : "registrations.address.confirmBodyNoticesOnly"),
+                  ...(registration.promoConsent ? [tr("registrations.address.confirmPromo")] : [])].join(" "),
+                ...words.mail({
+                  to: registration.registeredName,
+                  type: "REGISTRATION_ADDRESS_ADDED",
+                  test: registration.kind === "TEST",
+                  also: [
+                    { text: tr(addressMoveSendsNextStep ? "registrations.address.confirmAlso" : "registrations.address.confirmAlsoNoticesOnly") },
+                    // Always true: the event's own news still waiting follows the registration to the new address.
+                    { text: tr("registrations.address.confirmFollows") },
+                    ...(addressEventOver ? [] : [{ text: tr("registrations.address.confirmFamily") }]),
+                  ],
+                }),
+                confirmLabel: tr("registrations.address.submit"),
+                cancelLabel: words.cancel,
+              }}
+              scope="address"
+              data-testid="address-form"
+            >
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="registrationId" value={registration.id} />
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
+                <RecallField
+                  name="email"
+                  type="email"
+                  required
+                  label={tr("registrations.address.label")}
+                  helperText={tr("registrations.address.help")}
+                  autoComplete="off"
+                  sx={{ flex: 1, minWidth: 0 }}
+                  slotProps={{ htmlInput: { maxLength: 254 } }}
+                />
+                <Box sx={{ flexShrink: 0, pt: { sm: 1 } }}>
+                  <GlyphSubmitButton label={tr("registrations.address.submit")} pendingLabel={tr("registrations.address.pending")} icon="send" variant="outlined" />
+                </Box>
+              </Stack>
+            </ActionForm>
+          ) : (
+            <Typography variant="caption" color="text.secondary" data-testid="address-read-only">
+              {tr("registrations.address.readOnly")}
+            </Typography>
+          )}
+        </Stack>
+      </Panel>
+
+      {/*
         Emergency and health (§322): for the people they are for, and only when asked. Behind a plain
         link rather than rendered with the page, so opening a registration to fix a name does not
         read — and record reading — somebody's health note. An open card: the link is its fold.
@@ -1460,6 +1580,13 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 ? `${dt(registration.emailConfirmedAt)}${registration.emailConfirmedByName ? ` (${tr("registrations.emailVouched", { who: registration.emailConfirmedByName })})` : ""}`
                 : null,
             ],
+            // «Schimbă adresa»: when the club last moved the registration to another address, and who.
+            [
+              tr("registrations.addressChangedLine"),
+              registration.addressChangedAt
+                ? `${dt(registration.addressChangedAt)} (${registration.addressChangedByName ?? tr("registrations.auditActorRemoved")})`
+                : null,
+            ],
             [tr("registrations.waitlisted"), dt(registration.waitlistedAt)],
             [tr("registrations.offerCreated"), dt(registration.offerCreatedAt)],
             linkLine,
@@ -1541,6 +1668,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   )}
                   {acceptance.method === "PAPER" &&
                     ` — ${tr("registrations.declarationPaper", { who: acceptance.attestedByName ?? tr("registrations.auditActorRemoved") })}`}
+                  {/* «Schimbă adresa»: signed from the link sent to the address the club set — the person's signature, never staff's. */}
+                  {signedAfterStaffAddressChange(acceptance, registration.addressChangedAt) && (
+                    <Box component="span" data-testid="declaration-after-address-change">
+                      {` — ${tr("registrations.declarationAfterAddressChange")}`}
+                    </Box>
+                  )}
                   {/* The proof of signing (§556): the signed text's fingerprint, twelve characters and the whole in a tooltip. */}
                   {acceptance.textHash && (
                     <>

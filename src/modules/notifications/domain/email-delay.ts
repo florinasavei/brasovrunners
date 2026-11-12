@@ -1,5 +1,5 @@
 import type { EmailMessageType } from "@/db/schema/email-outbox";
-import { BULK_MESSAGE_TYPES } from "./bulk";
+import { BULK_MESSAGE_TYPES, SEND_TO_MANY_MESSAGE_TYPES } from "./bulk";
 
 /**
  * Whether the club's emails are late, as a person waiting for one is told (§623, amending §513 and
@@ -52,6 +52,9 @@ export const LATE_MARGIN_MINUTES = 10;
  */
 const NOT_WAITED_FOR: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>([
   ...BULK_MESSAGE_TYPES,
+  // The sends to many (the decision «Cere reconfirmarea», part two): about a registration already made, sent at a press or by
+  // the reminder's job, and claimed after every registration's own message — nobody on a public page waits for one.
+  ...SEND_TO_MANY_MESSAGE_TYPES,
   "DECLARATION_ARCHIVE",
   "GROUP_RUN_DECLARATION_ARCHIVE",
   "CLUB_CONFIRMATION_NOTICE",
@@ -105,8 +108,9 @@ export type EmailDelayFacts = {
   /** Of them, the ones on Mailgun's road: what a Mailgun pause or a spent hour holds. */
   queuedOnMailgun: number;
   /**
-   * Every non-newsletter row waiting on Mailgun's road, club copies included: what the hourly pace
-   * must carry before the queue is through — the estimate's numerator.
+   * Every row waiting on Mailgun's road ahead of a new registration's own email, club copies included — neither
+   * the newsletter's kind nor a send to many, which the claim takes after it: what the hourly pace must carry
+   * before that email leaves — the estimate's numerator.
    */
   aheadOnMailgun: number;
   /** Since when the oldest of `queued` has waited; null when nothing waits. */

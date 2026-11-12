@@ -8,7 +8,16 @@ import type { Locale } from "@/i18n/routing";
 import { inEmailPress } from "@/modules/notifications/press";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
-import { addReserveEntry, deleteReserveEntry, moveReserveEntryToElite, moveReserveEntryToOwnAddress, renameReserveEntry, saveReserveNote } from "@/modules/registrations/reserve-list";
+import { partnerMarkOf } from "@/modules/registrations/partner-mark";
+import {
+  addReserveEntry,
+  deleteReserveEntry,
+  moveReserveEntryToElite,
+  moveReserveEntryToOwnAddress,
+  renameReserveEntry,
+  saveReservePartner,
+  saveReserveNote,
+} from "@/modules/registrations/reserve-list";
 import { canKeepRegistrationNotes, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -20,7 +29,8 @@ import { type FormOutcome, refused } from "@/shared/forms/outcome";
  * «Salvează nota», «Salvează numele» and «Șterge». The coarse gate here (`canKeepRegistrationNotes`) and the service's own
  * (BR-REQ-060-01). A refusal keeps what was typed (§315); a success returns to the panel, open. Nothing
  * typed goes in the URL or the flash, and nothing is ever sent to the person. «Corectează numele» («Lista internă»,
- * amended by «Corectează numele pe lista internă») is the Organizer's like them. A fourth, the Administrator's
+ * amended by «Corectează numele pe lista internă») is the Organizer's like them, and so is «E de la parteneri» — at the add
+ * and in a line's own fold (the decision «De la parteneri»). A fourth, the Administrator's
  * alone: «Mută pe lista de elită» (§903), below; and a fifth, the Administrator's too and the one that emails —
  * the declaration, to the Administrator's own address: «Pe adresa mea, invitat special».
  */
@@ -63,7 +73,13 @@ export async function addReserveEntryAction(_previous: FormOutcome | null, form:
   const eventId = text(form, "eventId");
   try {
     const actor = await requireStaffCapability(canKeepRegistrationNotes);
-    await addReserveEntry(getDb(), actor, eventId, { firstName: form.get("firstName"), lastName: form.get("lastName"), email: form.get("email"), note: form.get("note") }, new Date());
+    await addReserveEntry(
+      getDb(),
+      actor,
+      eventId,
+      { firstName: form.get("firstName"), lastName: form.get("lastName"), email: form.get("email"), note: form.get("note"), ...partnerMarkOf(form) },
+      new Date(),
+    );
   } catch (error) {
     return refused(error, form);
   }
@@ -99,6 +115,27 @@ export async function renameReserveEntryAction(_previous: FormOutcome | null, fo
     return refused(error, form);
   }
   const saved = changed ? "reserveRenamed" : "reserveRenameUnchanged";
+  await flash({ kind: changed ? "success" : "info", key: saved });
+  return backToList(locale, eventId, saved, form);
+}
+
+/**
+ * «E de la parteneri» on a line (the decision «De la parteneri»), in its own fold beside «Corectează numele»: the tick and the
+ * box, set, changed or cleared. The Organizer and above — the coarse gate here and the service's own (BR-REQ-060-01). A tick
+ * without a name is refused at the box, with what was typed kept; a success comes back to the list as it was (its filters,
+ * sort and page, from `listQuery`) with the panel open and a toast, the name in neither the address nor the flash.
+ */
+export async function saveReservePartnerAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  let eventId: string;
+  let changed: boolean;
+  try {
+    const actor = await requireStaffCapability(canKeepRegistrationNotes);
+    ({ eventId, changed } = await saveReservePartner(getDb(), actor, text(form, "entryId"), partnerMarkOf(form), new Date()));
+  } catch (error) {
+    return refused(error, form);
+  }
+  const saved = changed ? "partnerSaved" : "partnerUnchanged";
   await flash({ kind: changed ? "success" : "info", key: saved });
   return backToList(locale, eventId, saved, form);
 }

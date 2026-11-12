@@ -15,6 +15,7 @@ import { enterOnWaitlistByStaff, type WaitlistEntryByStaffResult } from "./admin
 import { HIDDEN_LIST_OFF } from "./domain/hidden-list";
 import { parseEliteEntry } from "./elite-list";
 import { addRegistrationNote } from "./notes";
+import { type PartnerMarkInput, parsePartnerMark, writeRegistrationPartnerName } from "./partner-mark";
 import { lockEventForCapacity } from "./repository";
 import { OWN_ADDRESS_GUEST, type StaffPlaceOptions } from "./service";
 
@@ -30,8 +31,8 @@ import { OWN_ADDRESS_GUEST, type StaffPlaceOptions } from "./service";
  * special» registers a line with no address of its own on the Administrator's address, on «Lista de invitați speciali»
  * (`moveReserveEntryToOwnAddress`).
  *
- * **Who** — the Organizer and above (`canKeepRegistrationNotes`, the internal notes' own rule) add, note, correct a name and
- * delete; moving a line is the Administrator's (`canManageRegistrations`, §888). Asserted in every function
+ * **Who** — the Organizer and above (`canKeepRegistrationNotes`, the internal notes' own rule) add, note, correct a name,
+ * mark «E de la parteneri» (the decision «De la parteneri») and delete; moving a line is the Administrator's (`canManageRegistrations`, §888). Asserted in every function
  * below (BR-REQ-060-01). **The trail** names who, when and which line — never a name, an address or the note's
  * words.
  */
@@ -45,12 +46,22 @@ export type ReserveEntryRow = {
   lastName: string;
   email: string | null;
   note: string | null;
+  /** «E de la parteneri» (the decision «De la parteneri»): the partner's or sponsor's name, or null. */
+  partnerName: string | null;
   createdAt: Date;
   /** Who wrote it down; null once the account is gone. */
   createdByName: string | null;
 };
 
-export type ReserveEntryInput = { firstName: unknown; lastName: unknown; email: unknown; note: unknown };
+export type ReserveEntryInput = {
+  firstName: unknown;
+  lastName: unknown;
+  email: unknown;
+  note: unknown;
+  /** «E de la parteneri» and its box (the decision «De la parteneri»): absent is unticked. */
+  partner?: unknown;
+  partnerName?: unknown;
+};
 
 function assertMayKeep(actor: Pick<StaffUser, "role">): void {
   if (!canKeepRegistrationNotes(actor.role)) {
@@ -85,13 +96,13 @@ export function parseReserveName(input: { firstName: unknown; lastName: unknown 
 }
 
 /** The typed line, ready to store; every refusal names its box. */
-export function parseReserveEntry(input: ReserveEntryInput): { firstName: string; lastName: string; email: string | null; note: string | null } {
+export function parseReserveEntry(input: ReserveEntryInput): { firstName: string; lastName: string; email: string | null; note: string | null; partnerName: string | null } {
   const name = parseReserveName(input);
   const email = trimmed(input.email);
   if (email !== "" && (email.length > RESERVE_EMAIL_MAX || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
     throw new DomainError("VALIDATION_ERROR", "the address is not an email address", ["email"]);
   }
-  return { ...name, email: email === "" ? null : email, note: parseReserveNote(input.note) };
+  return { ...name, email: email === "" ? null : email, note: parseReserveNote(input.note), partnerName: parsePartnerMark({ partner: input.partner, partnerName: input.partnerName }) };
 }
 
 /** One event's internal list, in the order it was written down. */
@@ -111,6 +122,7 @@ export async function listReserveEntries<T extends Record<string, unknown>>(db: 
     lastName: row.lastName,
     email: row.email,
     note: row.note,
+    partnerName: row.partnerName,
     createdAt: row.createdAt,
     createdByName,
   }));
@@ -124,7 +136,7 @@ export async function findReserveEntry<T extends Record<string, unknown>>(db: Da
   return row ? { ...row, createdByName: null } : undefined;
 }
 
-/** «Adaugă pe lista internă»: one person, one event, nobody told. */
+/** «Adaugă pe lista internă»: one person, one event, nobody told; «E de la parteneri» with it, its trail a flag and never the name. */
 export async function addReserveEntry<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, eventId: string, input: ReserveEntryInput, now: Date): Promise<{ id: string }> {
   assertMayKeep(actor);
   const values = parseReserveEntry(input);
@@ -136,7 +148,14 @@ export async function addReserveEntry<T extends Record<string, unknown>>(db: Dat
       .insert(eventReserveEntries)
       .values({ eventId, ...values, createdByStaffUserId: actor.id, createdAt: now, updatedAt: now })
       .returning({ id: eventReserveEntries.id });
-    await recordAuditEvent(tx, { actorStaffUserId: actor.id, action: "event_reserve.added", entityType: "event", entityId: eventId, metadata: { entryId: row.id }, now });
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event_reserve.added",
+      entityType: "event",
+      entityId: eventId,
+      metadata: values.partnerName ? { entryId: row.id, partner: true } : { entryId: row.id },
+      now,
+    });
     return row;
   });
 }
@@ -187,6 +206,38 @@ export async function renameReserveEntry<T extends Record<string, unknown>>(
   });
 }
 
+/**
+ * «E de la parteneri» on one line (the decision «De la parteneri»), in its own fold beside «Corectează numele»: the tick and the
+ * box «Numele partenerului sau sponsorului» — ticked without a name is refused naming the box, unticked clears it
+ * (`parsePartnerMark`). The Organizer and above, as add, note and rename are (asserted here and again at the action's door,
+ * BR-REQ-060-01). The line keeps everything else; a save of the same name writes nothing. A line moved or deleted meanwhile
+ * is NOT_FOUND. The trail: `event_reserve.partner_saved`, `{ entryId, partner }` — whether a name is now present, never the name.
+ */
+export async function saveReservePartner<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  entryId: string,
+  input: PartnerMarkInput,
+  now: Date,
+): Promise<{ eventId: string; changed: boolean }> {
+  assertMayKeep(actor);
+  const partnerName = parsePartnerMark(input);
+  return db.transaction(async (tx) => {
+    const current = await lockedEntry(tx, entryId);
+    if (current.partnerName === partnerName) return { eventId: current.eventId, changed: false };
+    await tx.update(eventReserveEntries).set({ partnerName, updatedAt: now }).where(eq(eventReserveEntries.id, current.id));
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event_reserve.partner_saved",
+      entityType: "event",
+      entityId: current.eventId,
+      metadata: { entryId: current.id, partner: partnerName !== null },
+      now,
+    });
+    return { eventId: current.eventId, changed: true };
+  });
+}
+
 /** «Șterge» on one line: the name, the address and the note are gone. */
 export async function deleteReserveEntry<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, entryId: string, now: Date): Promise<{ eventId: string }> {
   assertMayKeep(actor);
@@ -223,7 +274,7 @@ export type ReserveMoveInput = {
  * the line — the order an event's delete takes them in — then the line's person entered as the official list's
  * add form enters one (`enterOnWaitlistByStaff`: the address vouched for, the one allocator, the ordinary email,
  * no verification email; with `offerNow`, §642's offer when the row is left waiting), the line's note onto the new
- * registration (§777), and the line removed, audited `event_reserve.moved`. Any refusal writes nothing: the line
+ * registration (§777) and its partner's name («De la parteneri»), and the line removed, audited `event_reserve.moved`. Any refusal writes nothing: the line
  * stays, with its note. The address is the line's; a line written without one takes the one typed in the dialog's
  * form, refused naming the box when there is none. A second press on a line already moved finds it gone.
  */
@@ -255,6 +306,8 @@ export async function moveReserveEntryToWaitlist<T extends Record<string, unknow
         locale: input.locale,
         relayedByParticipantRequest: input.relayedByParticipantRequest,
         note: entry.note,
+        // «E de la parteneri» (the decision «De la parteneri»): the line's partner onto the registration, in this transaction.
+        partnerName: entry.partnerName,
         // The offer's raise, if any, is the move's in «Istoric capacitate» (§914).
         offerNow: input.offerNow ? { ...input.offerNow, via: "moveAndOffer" } : null,
       },
@@ -296,7 +349,8 @@ export type ReserveOwnAddressInput = {
  * row's lock — the lock every allocation takes (`AGENTS.md` §10.6): the switch «Folosește lista de invitați speciali»
  * (`HIDDEN_LIST_OFF`) and the start (`VOUCHED_ENTRY_AFTER_START`) asked before anything is written, then the line, then
  * the vouched entry (`enterOnWaitlistByStaff`: the name rule of several people on one address, `ALREADY_ON_ADDRESS` /
- * `ADDRESS_AT_CAP`, decided under that same lock), the line's note onto the registration (§777) and the line deleted.
+ * `ADDRESS_AT_CAP`, decided under that same lock), the line's note onto the registration (§777), its partner's name («De la
+ * parteneri») and the line deleted.
  * Any refusal writes nothing and the line stays. The trail: the entry's rows, the special list's row and
  * `event_reserve.moved`, each tagged `via: OWN_ADDRESS_GUEST`, ids only.
  */
@@ -338,6 +392,8 @@ export async function moveReserveEntryToOwnAddress<T extends Record<string, unkn
         locale: input.locale,
         relayedByParticipantRequest: input.relayedByParticipantRequest,
         note: entry.note,
+        // «E de la parteneri» (the decision «De la parteneri»): the line's partner onto the registration, in this transaction.
+        partnerName: entry.partnerName,
         outsideCapacityVia: OWN_ADDRESS_GUEST,
       },
       now,
@@ -357,7 +413,7 @@ export async function moveReserveEntryToOwnAddress<T extends Record<string, unkn
 
 /**
  * After «Trece pe lista oficială» made a registration of the line: its note becomes the registration's
- * internal note (§777) and the line is removed. Nothing happens when the registration is not of the line's
+ * internal note (§777), its partner's name («De la parteneri») the registration's, and the line is removed. Nothing happens when the registration is not of the line's
  * event — another event chosen on the form, or a forged one: the note never lands on another event's row —
  * or when the line is already gone. The Administrator's since §888, as the one-press move.
  */
@@ -377,6 +433,8 @@ export async function settleReserveEntry<T extends Record<string, unknown>>(db: 
   await db.transaction(async (tx) => {
     const deleted = await tx.delete(eventReserveEntries).where(eq(eventReserveEntries.id, entry.id)).returning({ id: eventReserveEntries.id });
     if (deleted.length === 0) return;
+    // The line's partner, with the line's removal: a line already gone writes nothing on the registration.
+    if (entry.partnerName) await writeRegistrationPartnerName(tx, actor.id, registration.id, entry.partnerName, now, "reserve");
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
       action: "event_reserve.moved",
@@ -402,7 +460,8 @@ export async function settleReserveEntry<T extends Record<string, unknown>>(db: 
  * first and last name through `parseEliteEntry` (trimmed, inner spaces collapsed, 1 to `ELITE_NAME_MAX`
  * characters; a longer name is refused naming `name`, and nothing is written) and **no number** (the editor's
  * card is where a number is given, with its checks), and the line deleted. The note is not carried — an elite
- * line has none — and the address, if any, goes with the line. The trail: `event_elite.added` for the new line
+ * line has none — nor the partner's name («De la parteneri»: it labels a registration, and nobody is registered), and the
+ * address, if any, goes with the line. The trail: `event_elite.added` for the new line
  * and `event_reserve.moved` for the old one, ids only. A second press on a line already moved finds it gone.
  */
 export async function moveReserveEntryToElite<T extends Record<string, unknown>>(

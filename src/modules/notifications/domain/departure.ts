@@ -1,5 +1,5 @@
 import type { EmailMessageType, EmailOutboxStatus } from "@/db/schema/email-outbox";
-import { isBulkMessage } from "./bulk";
+import { isBulkMessage, waitsAsSendToMany } from "./bulk";
 import type { DeliveryTiming } from "./delivery-timing";
 import { outboxRowLeavesAt, outboxRowOverdue } from "./email-wait";
 import { pauseIsRecent } from "./hourly-pace";
@@ -44,6 +44,8 @@ export type DepartureRow = {
   sentNow: boolean;
   /** Whether the claim takes it on Mailgun's road (§442, `outboxRoadsFor`). */
   onMailgunRoad: boolean;
+  /** An Administrator's «Retrimite» for one runner: the person's own message, whatever its type. Absent reads as no. */
+  isManualResend?: boolean;
 };
 
 export type DepartureContext = {
@@ -120,15 +122,19 @@ export function departureOf(row: DepartureRow, ctx: DepartureContext): Departure
     counts it too: a Mailgun-road row is not late while Mailgun's hour binds (a Gmail row never waits for it),
     and a row Mailgun paused recently is late once it has waited past the allowance since it was queued (unless
     its pause runs past the hour, a deferral); a row whose pause mark is older is judged like any other waiting
-    row. A newsletter held for the allowance's reserve (§445) is the reserve working, never late.
+    row. A newsletter held for the allowance's reserve (§445) is the reserve working, never late; a send to many
+    (the decision «Cere reconfirmarea», part two) waiting its turn behind the registrations' own messages is the order
+    working, and is late here only as health counts it — paused recently by the provider. A manual resend of one is the
+    person's own message, late as one.
   */
+  const sendToMany = waitsAsSendToMany(row.messageType, row.isManualResend === true);
   const overdueSince = (at: Date) =>
     outboxRowOverdue({ now, dueAt: at, overdueAfterMs: ctx.overdueAfterMs, intervalMinutes: ctx.overdueCadenceMinutes });
   const late =
     !isBulkMessage(row.messageType) &&
     (pauseIsRecent(row, now)
       ? overdueSince(row.createdAt) && row.nextAttemptAt !== null && row.nextAttemptAt.getTime() <= now.getTime() + ctx.deferredBeyondMs
-      : !(ctx.hourPaceHolds && row.onMailgunRoad) && overdueSince(dueAt));
+      : !sendToMany && !(ctx.hourPaceHolds && row.onMailgunRoad) && overdueSince(dueAt));
   const at = outboxRowLeavesAt({ dueAt, nextTickAt: ctx.nextTickAt, intervalMinutes: ctx.runIntervalMinutes, pingerMinutesAt: ctx.pingerMinutesAt });
   // A family sitting's hold (§519): a turn in the future and no attempt made yet — not a retry, not the reserve.
   const heldUntil = row.nextAttemptAt && row.nextAttemptAt.getTime() > now.getTime() && row.familyHeld ? row.nextAttemptAt : null;

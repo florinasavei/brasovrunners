@@ -27,6 +27,7 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import { registrationInterests } from "@/db/schema/registration-interests";
 import { registrationNotes } from "@/db/schema/registration-notes";
+import { registrationReconfirmations } from "@/db/schema/registration-reconfirmations";
 import { eventReserveEntries } from "@/db/schema/event-reserve-entries";
 import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { newsletterSends, newsletterSubscribers, newsletterTokens } from "@/db/schema/newsletter";
@@ -161,6 +162,8 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   // documents — the reverse of the order either child appears in the schema files.
   // The internal notes (§777) cascade from their registration; named first like the other children, so the list says what owns what.
   await db.delete(registrationNotes);
+  // The asks of «Cere reconfirmarea» cascade from their registration and their event; named first likewise.
+  await db.delete(registrationReconfirmations);
   // The internal waiting list (§854) cascades from its event; emptied here like the event's other children.
   await db.delete(eventReserveEntries);
   // The elite list (§895) cascades from its event too; emptied here likewise.

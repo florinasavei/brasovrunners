@@ -69,6 +69,8 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
     if (typeof value === "object") return JSON.stringify(value);
     return String(value);
   };
+  /** A moment inside a sentence (§452): the weekday in lower case and «la» / "at" before the hour. */
+  const inline = (value: Date): string => formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
   /** Every column of a row, in the order the table stores them. */
   const fields = (row: object) => (
     <Box component="dl" sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "minmax(160px, max-content) 1fr" }, columnGap: 2, rowGap: 0.25, m: 0 }}>
@@ -222,6 +224,28 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
               </Box>
               <Divider />
               {/*
+                «Cere reconfirmarea» (the decision «Cere reconfirmarea»; art. 15 GDPR): each ask of an organizer's message and,
+                when the person pressed «Vin», when — the registration's own rows, erased with it.
+              */}
+              <Box component="section" data-testid="person-reconfirmations">
+                <Typography variant="h3" sx={{ ...HEADING_SX[3], mb: 1 }}>
+                  {t("person.reconfirmations", { count: data.reconfirmations.length })}
+                </Typography>
+                {data.reconfirmations.length === 0 ? (
+                  <Typography variant="body2">{t("person.none")}</Typography>
+                ) : (
+                  <Stack spacing={0.5}>
+                    {data.reconfirmations.map((ask, index) => (
+                      <Typography key={index} variant="body2" data-testid="person-reconfirmation">
+                        {ask.eventTitle ?? ask.eventId} · {t("reconfirm.personAsked", { asked: inline(ask.askedAt) })}
+                        {ask.reconfirmedAt ? ` · ${t("reconfirm.personAnswered", { at: inline(ask.reconfirmedAt) })}` : ""}
+                      </Typography>
+                    ))}
+                  </Stack>
+                )}
+              </Box>
+              <Divider />
+              {/*
                 «Lista internă de așteptare» (§854, §876; art. 15 GDPR): the lines written down with this address — the event, the name and the
                 address as typed, the organizers' note and who wrote it as a role (§777) — erased here on request (art. 17). They hold no place.
               */}
@@ -238,6 +262,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                         <Box key={index} data-testid="person-reserve-entry">
                           <Typography variant="body2" sx={{ overflowWrap: "anywhere" }}>
                             {entry.eventTitle ?? entry.eventId} · {entry.firstName} {entry.lastName} · {entry.deliveryEmail}
+                            {entry.partnerName ? ` · ${t("partner.chip", { name: entry.partnerName })}` : ""}
                           </Typography>
                           {entry.note && (
                             <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
@@ -294,6 +319,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                         {invitation.resendCount > 0 ? ` · ${t("person.volunteerInvitationResent", { when: show(invitation.lastSentAt) })}` : ""}
                         {invitation.outsideCapacity ? ` · ${t("person.eventInvitationOutside")}` : ""}
                         {invitation.supplementaryRaise ? ` · ${t("invitations.raised")}` : ""}
+                        {invitation.partnerName ? ` · ${t("partner.chip", { name: invitation.partnerName })}` : ""}
                         {invitation.acceptedAt ? ` · ${t("invitations.acceptedAt", { at: show(invitation.acceptedAt) })}` : ""}
                         {invitation.withdrawnAt ? ` · ${t("invitations.withdrawnAt", { at: show(invitation.withdrawnAt) })}` : ""}
                         {invitation.expiredAt ? ` · ${t("invitations.expiredAt", { at: show(invitation.expiredAt) })}` : ""}

@@ -1309,6 +1309,7 @@
       "timeline": "Cronologie",
       "submitted": "Formular trimis",
       "emailConfirmed": "Email confirmat",
+      "addressChangedLine": "Adresa schimbată de echipă",
       "waitlisted": "Pe lista de așteptare",
       "offerCreated": "Ofertă creată",
       "holdExpires": "Rezervarea expiră",
@@ -1424,7 +1425,7 @@
         "confirmedAfter": "Adresa a fost confirmată {date}, după acest email.",
         "neverConfirmed": "Adresa nu a fost confirmată niciodată.",
         "placeKept": "Locul rămâne confirmat; la masă îl găsiți după nume.",
-        "todo": "Sună persoana; adresa o poate schimba doar ea, printr-o înscriere nouă.",
+        "todo": "Sună persoana și cere-i adresa corectă; un administrator o schimbă din „Adresa de email”.",
         "todoKept": "Sună persoana: emailurile clubului nu ajung la adresa ei.",
         "todoCause": {
           "account": "Nu a plecat atunci (contul clubului era refuzat de Mailgun), nu din cauza adresei.",
@@ -1456,7 +1457,7 @@
           "update": "Spune-i persoanei: nu a primit „Detalii actualizate” — ce s-a schimbat e pe pagina evenimentului.",
           "cancelled": "Spune-i persoanei: nu a primit anunțul — evenimentul s-a anulat."
         },
-        "todoTellUnreachable": "Spune-i persoanei că emailurile clubului nu ajung la ea; adresa o poate schimba doar ea, printr-o înscriere nouă.",
+        "todoTellUnreachable": "Spune-i persoanei că emailurile clubului nu ajung la ea și cere-i altă adresă; un administrator o schimbă din „Adresa de email”.",
         "todoTellKept": "Spune-i persoanei că emailurile clubului nu ajung la ea; locul ei rămâne confirmat.",
         "todoTellCause": {
           "mailbox-full": "Spune-i persoanei că are căsuța plină: să-și facă loc, ca emailurile clubului să ajungă.",
@@ -1658,6 +1659,7 @@
           "offered_by_staff": "Ofertă trimisă înaintea listei de așteptare («Trimite-i oferta»)",
           "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)",
           "address_vouched_on_entry": "Adresă garantată de echipă la înscriere; loc sau lista de așteptare pe loc («Direct pe lista de așteptare»)",
+          "address_changed_by_staff": "Adresa de email schimbată de echipă («Schimbă adresa»): linkurile vechi nu mai merg, ambele adrese anunțate",
           "outside_capacity_changed": "Pus pe lista de invitați speciali sau scos de pe ea",
           "elite_marked": "Marcat ca elită: BIB-ul se tipărește cu numele în locul numărului",
           "elite_unmarked": "Nu mai e elită: BIB-ul se tipărește din nou cu numărul",
@@ -1672,7 +1674,9 @@
           "answers_completed": "Date completate de participant, din linkul propriu: {fields}",
           "answers_viewed": "Datele înscrierii deschise, cu telefonul și persoana de contact",
           "note_added": "Notă internă adăugată",
-          "note_deleted": "Notă internă ștearsă"
+          "note_deleted": "Notă internă ștearsă",
+          "partner_set": "De la parteneri: numele partenerului schimbat",
+          "reconfirmed": "A apăsat „Vin”, din linkul propriu"
         },
         "event": {
           "capacity_raised_for_offer": "Loc suplimentar adăugat pentru o ofertă («Trimite-i oferta»): {from} → {to}",
@@ -1773,6 +1777,7 @@
       "declarationForm": "Formular declarație pe hârtie (PDF)",
       "declarationFormMinor": "Formular declarație pentru un minor (PDF)",
       "declarationPaper": "pe hârtie, înregistrată de {who}",
+      "declarationAfterAddressChange": "semnată din linkul trimis la adresa schimbată de echipă",
       "signedByMinor": "minorul",
       "signedByGuardian": "părintele sau tutorele",
       "confirmOnPaperBodyMinor": "Confirmi că minorul și părintele ({guardian}) au semnat amândoi pe hârtie. Doar cu hârtia cu ambele semnături în față. Apoi emailul de confirmare; dacă nu e loc, lista de așteptare, fără email acum.",
@@ -1943,7 +1948,7 @@
         "clubNameHelp": "Cât timp bifa de membru e pusă, clubul e {club}.",
         "memberHelp": "Debifată, clubul {club} dispare și de pe listă.",
         "lockedTitle": "Ce nu se schimbă de aici",
-        "lockedAddress": "Adresa de email e identitatea înscrierii: pentru o adresă greșită, anulează și adaugă din nou.",
+        "lockedAddress": "Adresa de email se schimbă din cardul „Adresa de email”, nu de aici.",
         "lockedConsents": "Consimțămintele le dă doar persoana — tu le poți doar retrage, cu butonul lor.",
         "lockedDeclaration": "Declarația o semnează doar persoana; odată semnată, și părintele sau tutorele numit în ea rămâne cel care a semnat.",
         "fields": {
@@ -1968,6 +1973,24 @@
           "memberBibWanted": "Vreau numărul de membru"
         },
         "memberBibHelp": "Se păstrează doar cu bifa de membru și cât timp evenimentul oferă numărul membrilor."
+      },
+      "address": {
+        "title": "Adresa de email",
+        "current": "Emailurile înscrierii merg la: {email}",
+        "changed": "Schimbată de echipă: {date}, de {who}.",
+        "label": "Adresa nouă",
+        "help": "Adresa pe care ți-a dat-o persoana. Se schimbă doar la această înscriere.",
+        "submit": "Schimbă adresa",
+        "pending": "Se schimbă…",
+        "confirmTitle": "Schimbi adresa?",
+        "confirmBody": "Linkurile trimise la adresa veche nu mai funcționează. Ambele adrese primesc un email despre schimbare, iar cea nouă primește pasul următor.",
+        "confirmBodyNoticesOnly": "Linkurile trimise la adresa veche nu mai funcționează. Ambele adrese primesc un email despre schimbare, iar adresa nouă nu primește niciun pas de făcut.",
+        "confirmPromo": "Acordul pentru oferte și beneficii se retrage: îl dă din nou persoana, de la adresa nouă.",
+        "confirmAlso": "Adresa veche primește „Adresa de email a fost schimbată”; cea nouă primește și emailul pasului următor.",
+        "confirmAlsoNoticesOnly": "Adresa veche primește „Adresa de email a fost schimbată”.",
+        "confirmFollows": "Emailurile evenimentului care n-au plecat încă merg la adresa nouă.",
+        "confirmFamily": "Dacă altcineva de la adresa veche mai are un pas de făcut la eveniment, adresa veche primește din nou emailul acelui pas.",
+        "readOnly": "Adresa o schimbă un administrator."
       },
       "missingAnswers": {
         "chip": "Date lipsă",
@@ -2046,7 +2069,7 @@
             "other": "serverul tău de email l-a refuzat"
           },
           "can": {
-            "no-such-address": "Adresa o poți schimba doar printr-o înscriere nouă.",
+            "no-such-address": "Spune-ne adresa corectă și o schimbăm noi.",
             "mailbox-full": "Fă loc în căsuță și îți retrimitem.",
             "blocked": "Adaugă adresa clubului în contacte și îți retrimitem.",
             "suppressed": "Am oprit trimiterile după un refuz; spune-ne dacă adresa e bună.",
@@ -2665,7 +2688,15 @@
       "RESULT_FINISH_NOT_STARTED": "Cursa nu a început încă: o sosire nu poate fi înainte de start.",
       "RESULT_FINISH_CLOSED": "Startul a fost cu mai mult de o zi în urmă: timpii se scriu la «Clasament».",
       "REFUSAL_NEEDS_EMAIL": "Nu s-a anulat nimic: refuzul clubului pleacă întotdeauna cu emailul care îi spune persoanei motivul.",
-      "ELITE_NOT_MARKED": "Înscrierea nu mai e marcată ca elită, așa că bifele de elită nu se mai schimbă. Nu s-a scris nimic."
+      "ELITE_NOT_MARKED": "Înscrierea nu mai e marcată ca elită, așa că bifele de elită nu se mai schimbă. Nu s-a scris nimic.",
+      "ADDRESS_FAMILY_FORM_PENDING": "Nu s-a schimbat nimic: un formular de familie așteaptă confirmarea pe adresa veche. Schimbă adresa după ce e confirmat sau expiră.",
+      "ADDRESS_INVITED": "Nu s-a schimbat nimic: adresa nouă are o invitație deschisă la acest eveniment. Retrage întâi invitația din «Invitații».",
+      "ADDRESS_UNCHANGED": "Nu s-a schimbat nimic: e aceeași căsuță de email ca adresa de acum a înscrierii — un punct sau un „+” în plus duc tot acolo.",
+      "ADDRESS_ALREADY_HELD": "Nu s-a schimbat nimic: adresa aceasta are deja o înscriere la acest eveniment sau la altă distanță a cursei. Caut-o în lista înscrierilor.",
+      "ADDRESS_HOLDS_ENOUGH": "Nu s-a schimbat nimic: adresa aceasta are deja la eveniment atâtea înscrieri câte îi permit regulile clubului pentru o adresă. Folosește altă adresă.",
+      "ADDRESS_INVALID": "Nu s-a schimbat nimic: adresa nu e o adresă de email validă. Verifică ce ai scris.",
+      "ADDRESS_TRY_AGAIN": "Nu s-a schimbat nimic: înscrierea se schimba chiar în acel moment. Apasă din nou «Schimbă adresa».",
+      "PARTNER_NAME_MISSING": "Scrie numele partenerului sau sponsorului, sau debifează «E de la parteneri»."
     },
     "editor": {
       "draftPreview": {
@@ -7245,7 +7276,8 @@
       "eventInvitationsEraseTitle": "Retragi și ștergi invitațiile acestei persoane?",
       "eventInvitationsEraseBody": "Invitațiile deschise se retrag întâi, ca la „Retrage”: locul lor trece prin lista de așteptare. Apoi se șterg cele neacceptate; cele acceptate rămân cu înscrierea. Nu se poate anula.",
       "eventInvitationsErased": "Invitațiile acestei adrese au fost retrase și șterse; cele acceptate rămân cu înscrierile lor.",
-      "eventInvitationsAcceptedKept": "O invitație acceptată e parte din înscrierea ei: se șterge odată cu înscrierea, din pagina înscrierii."
+      "eventInvitationsAcceptedKept": "O invitație acceptată e parte din înscrierea ei: se șterge odată cu înscrierea, din pagina înscrierii.",
+      "reconfirmations": "Reconfirmări ({count})"
     },
     "desk": {
       "title": "Masa de ridicare a numerelor",
@@ -7360,6 +7392,8 @@
         "REGISTRATION_MANAGE_LINK": "Linkul tău de înscriere",
         "PROFILE_MANAGE_LINK": "Înscrierile mele",
         "REGISTRATION_STATE_NOTICE": "Starea înscrierii",
+        "REGISTRATION_ADDRESS_REMOVED": "Adresa de email a fost schimbată",
+        "REGISTRATION_ADDRESS_ADDED": "Primești emailurile înscrierii",
         "EVENT_REMINDER": "Reminderul dinaintea startului",
         "EVENT_THANKS": "Mulțumim după cursă",
         "DECLARATION_SIGNED": "Declarația semnată (PDF atașat)",
@@ -7409,6 +7443,8 @@
         "REGISTRATION_MANAGE_LINK": "Linkul înscrierii",
         "PROFILE_MANAGE_LINK": "Înscrierile mele",
         "REGISTRATION_STATE_NOTICE": "Starea înscrierii",
+        "REGISTRATION_ADDRESS_REMOVED": "Adresa schimbată",
+        "REGISTRATION_ADDRESS_ADDED": "Adresa nouă",
         "EVENT_REMINDER": "Reminderul",
         "EVENT_THANKS": "Mulțumirile",
         "DECLARATION_SIGNED": "Declarația semnată",
@@ -7434,6 +7470,8 @@
         "REGISTRATION_MANAGE_LINK": "Nu se mai trimite: „Retrimite linkul” trimite confirmarea întreagă, cu linkul de gestionare, codul QR și numărul; „Înscrierile mele” are mesajul lui.",
         "PROFILE_MANAGE_LINK": "La cerere, când cineva vrea să-și vadă toate înscrierile.",
         "REGISTRATION_STATE_NOTICE": "Retrimis de un organizator, când cineva întreabă unde a rămas.",
+        "REGISTRATION_ADDRESS_REMOVED": "Când un administrator schimbă adresa unei înscrieri: la adresa veche, fără adresa nouă, cu pagina de contact.",
+        "REGISTRATION_ADDRESS_ADDED": "Când un administrator schimbă adresa unei înscrieri: la adresa nouă. Pasul următor vine într-un email separat.",
         "EVENT_REMINDER": "Automat, cu {reminder} înainte de start (sau cât e ales pe eveniment), tuturor celor confirmați, o singură dată. Doar pentru evenimentele programate: unul anulat nu mai trimite nimic automat.",
         "EVENT_THANKS": "Manual, din pagina evenimentului, după ce a trecut ora de start; o singură dată, celor bifați ca prezenți la masă. Niciodată pentru un eveniment anulat.",
         "DECLARATION_SIGNED": "Nu se mai trimite: declarația semnată, în PDF, pleacă atașată la „Înscriere confirmată”, împreună cu linkul către ea.",
@@ -7483,6 +7521,8 @@
         "REGISTRATION_MANAGE_LINK": "la cerere, „Retrimite linkul”",
         "PROFILE_MANAGE_LINK": "la cerere, toate înscrierile",
         "REGISTRATION_STATE_NOTICE": "retrimis de un organizator",
+        "REGISTRATION_ADDRESS_REMOVED": "când se schimbă adresa, la cea veche",
+        "REGISTRATION_ADDRESS_ADDED": "când se schimbă adresa, la cea nouă",
         "EVENT_REMINDER": "cu {reminder} înainte de start",
         "EVENT_THANKS": "manual, după eveniment",
         "DECLARATION_SIGNED": "după semnarea declarației, cu PDF",
@@ -7746,7 +7786,8 @@
           "invite": "Trimite invitații",
           "invitationResend": "Retrimite invitația",
           "invitationWithdraw": "Retrage invitația",
-          "invitationsErase": "Șterge invitațiile persoanei"
+          "invitationsErase": "Șterge invitațiile persoanei",
+          "changeAddress": "Schimbă adresa"
         },
         "events": {
           "save": "Salvează evenimentul",
@@ -8806,7 +8847,7 @@
             {
               "title": "Ce NU se poate face",
               "steps": [
-                "Nimeni nu schimbă adresa de email confirmată a unui participant, nici un Administrator.",
+                "Nimeni nu rescrie și nu unește adresele participanților. O înscriere trece pe altă adresă doar cu «Schimbă adresa», a Administratorului.",
                 "Nimeni nu unește două înscrieri într-una.",
                 "Nimeni din echipă nu semnează declarația în locul participantului: la masă înregistrezi doar declarația de hârtie pe care a semnat-o el.",
                 "Niciun text legal nu intră în vigoare fără o versiune aprobată; fără termeni, notă și declarație aprobate nu se poate înscrie nimeni.",
@@ -9092,8 +9133,9 @@
                 "«Alergări» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților».",
                 "La «Cui îi trimiți» alege grupul (toți, «Doar confirmații», lista de așteptare sau cei fără declarație) și vezi câți sunt.",
                 "Scrie «Subiect» și «Mesajul», în română și în engleză.",
+                "Pentru un reminder, apasă «Completează cu textul de reminder»: scrie textul și bifează «Cere reconfirmarea». Cine apasă „Vin” apare cu «A reconfirmat»; nu se anulează nimeni automat.",
                 "La «Cum arată emailul» citește ambele variante: «Înscris în română» și «Înscris în engleză».",
-                "Apasă «Trimite mesajul», apoi în fereastră «Trimite». Mesajul rămâne în «Mesaje trimise».",
+                "Apasă «Trimite mesajul», apoi în fereastră «Trimite»: fereastra spune cât durează și dacă încap toate acum. În «Mesaje trimise» vezi câte au plecat și câți au reconfirmat.",
                 "Doar despre acest eveniment: fără reclame, oferte de la sponsori sau alte evenimente."
               ]
             },
@@ -9377,7 +9419,7 @@
               "steps": [
                 "Când: persoana a scris greșit numele, data nașterii, telefonul, orașul, clubul sau altceva din formular, sau a bifat că e membru fără să fie.",
                 "«Înscrieri» → apasă pe nume → «Datele înscrierii» → «Modifică datele». Schimbă doar ce e greșit → «Salvează datele»; întrebarea numește persoana și câmpurile.",
-                "Nu se schimbă de aici: adresa de email (anulează și adaugă din nou), consimțămintele (doar le retragi, cu butonul lor) și declarația (o semnează doar persoana).",
+                "Nu se schimbă de aici: adresa de email (din cardul «Adresa de email»), consimțămintele (doar le retragi, cu butonul lor) și declarația (o semnează doar persoana).",
                 "Nu se trimite niciun email și nu se mută niciun loc. Fiecare câmp schimbat rămâne în jurnal, cu valoarea veche și cea nouă."
               ]
             },
@@ -9552,6 +9594,16 @@
                 "Pe «Clasament», la «Pe pagina evenimentului», bifează «Clasamentul e public pe pagina evenimentului» și apasă «Salvează». Pagina arată locul, numărul, timpul și categoria; numele doar la cine a bifat lista la înscriere sau la alergătorul neînscris care a acceptat — ceilalți apar ca „Participant #număr”.",
                 "Clasamentul stă pe pagină cât lista publică a participanților, de la sfârșitul cursei («Setări» → «Termene»). Debifezi oricând; rezultatele rămân salvate.",
                 "Cine s-a înscris sub o notă de confidențialitate mai veche, care nu descria clasamentul, apare ca „Participant #număr”, chiar dacă a bifat lista. Abia după ce clubul aprobă o notă de confidențialitate care numește bifa lângă clasament (câmpul {{resultsNameAsk}}, în «Documente legale») — după ce clubul și avocatul modifică fraza care le spune că apar doar cu numărul — pagina înscrierii lor (linkul din emailul ei) le arată «Vreau să apar cu numele în clasament». Clubul nu trimite un email nou pentru asta: spune-le cu «Trimite un mesaj participanților», din editorul cursei, că pot bifa din linkul înscrierii și că pot debifa oricând."
+              ]
+            },
+            {
+              "title": "Schimbă adresa de email a unei înscrieri",
+              "steps": [
+                "Când: persoana a scris greșit adresa, adresa nu există sau persoana vrea emailurile pe altă adresă.",
+                "«Înscrieri» → apasă pe nume → «Adresa de email» → scrie «Adresa nouă» → «Schimbă adresa». Întrebarea spune ce se întâmplă; confirmă.",
+                "Linkurile trimise la adresa veche nu mai funcționează. Adresa veche primește un email despre schimbare, fără adresa nouă; cea nouă primește un email și pasul următor, cât mai are unul.",
+                "Locul, starea, poziția pe lista de așteptare și numărul nu se schimbă. Acordul pentru oferte și beneficii se retrage. Declarația o semnează tot persoana, din linkul primit la adresa nouă.",
+                "Se schimbă o singură înscriere la o apăsare: o familie de pe aceeași adresă se mută persoană cu persoană."
               ]
             }
           ]
@@ -10241,8 +10293,14 @@
       "testLine": "Înscrieri de test, care primesc și ele mesajul și nu sunt numărate nicăieri: {test}.",
       "cost": "Emailuri, cu tot cu copiile pentru club: {messages} — se scad din cota Mailgun ({allowance}).",
       "waiting": "{waiting} așteaptă deja la coadă",
-      "deferredDay": "Azi pot pleca {now} dintre ele; celelalte {deferred} rămân la coadă și pleacă singure după miezul nopții (UTC), când se reface cota zilnică. Nu se pierde niciunul.",
-      "deferredMonth": "Luna aceasta pot pleca {now} dintre ele; celelalte {deferred} rămân la coadă și pleacă singure când se reface cota lunară. Nu se pierde niciunul.",
+      "deferredDay": "Azi pot pleca {now} dintre ele; restul așteaptă la coadă și pleacă după miezul nopții (UTC), când se reface cota zilnică. Nu se pierde niciunul.",
+      "deferredDayGmail": "Azi pot pleca {now} prin Mailgun; restul pleacă apoi prin Gmail-ul clubului, în limita lui, și prin Mailgun când se reface cota.",
+      "deferredMonth": "Luna aceasta pot pleca {now} dintre ele; restul așteaptă la coadă și pleacă când se reface cota lunară. Nu se pierde niciunul.",
+      "deferredDays": {
+        "one": "Azi pot pleca {now} dintre ele; restul așteaptă la coadă și pleacă în cel puțin încă {days} zi, cel mult {perDay} pe zi, cât lasă cota refăcută la miezul nopții (UTC). Nu se pierde niciunul.",
+        "few": "Azi pot pleca {now} dintre ele; restul așteaptă la coadă și pleacă în cel puțin încă {days} zile, cel mult {perDay} pe zi, cât lasă cota refăcută la miezul nopții (UTC). Nu se pierde niciunul.",
+        "other": "Azi pot pleca {now} dintre ele; restul așteaptă la coadă și pleacă în cel puțin încă {days} de zile, cel mult {perDay} pe zi, cât lasă cota refăcută la miezul nopții (UTC). Nu se pierde niciunul."
+      },
       "subject": "Subiect",
       "subjectHelp": "În ambele limbi, obligatoriu, cel mult {max} de caractere în fiecare. Poți folosi câmpurile {list}; se completează pentru fiecare participant.",
       "body": "Mesajul",
@@ -10276,7 +10334,63 @@
       "historyEmpty": "Niciun mesaj trimis încă de aici pentru acest eveniment.",
       "historyWhen": "Trimis {date} de {sender}",
       "historyNoSender": "un cont șters",
-      "historyTest": "înscrieri de test: {test}"
+      "historyTest": "înscrieri de test: {test}",
+      "reconfirm": "Cere reconfirmarea",
+      "reconfirmHelp": "Emailul primește și butonul „Vin”. Nu se anulează nimeni automat; „N-au răspuns” e doar o informație pentru organizatori.",
+      "reminderFill": {
+        "button": "Completează cu textul de reminder",
+        "confirmTitle": "Înlocuiești textul scris?",
+        "confirmBody": "Subiectul și mesajul, în ambele limbi, vor fi înlocuite cu textul de reminder.",
+        "confirmGo": "Înlocuiește",
+        "confirmCancel": "Renunță"
+      },
+      "reminderText": {
+        "subject": "Ne vedem la {eventTitle}? Spune-ne dacă vii",
+        "p1": "Bună, {participantName}!",
+        "p2": "{eventTitle} e aproape: {eventStartsAtFormatted}, la {eventLocationName}.",
+        "p3": "Dacă vii și vezi butonul „Vin” mai jos, apasă-l. Așa știm pe cine așteptăm.",
+        "p4": "Dacă nu mai poți ajunge, apasă „Nu mai pot ajunge”, ca să poată veni altcineva în locul tău.",
+        "p5": "„Vin” e opțional: dacă nu-l apeși, nu se schimbă nimic la înscrierea ta.",
+        "p6": "Dacă mai ai de semnat declarația sau ai primit un loc oferit, urmează pașii din emailul primit.",
+        "p7": "Mulțumim și ne vedem la start!"
+      },
+      "paceRuns": {
+        "one": "Pleacă treptat, câte {batch} la {minutes} minute ziua (noaptea mai rar): cam {hours} oră pe ritmul de zi.",
+        "few": "Pleacă treptat, câte {batch} la {minutes} minute ziua (noaptea mai rar): cam {hours} ore pe ritmul de zi.",
+        "other": "Pleacă treptat, câte {batch} la {minutes} minute ziua (noaptea mai rar): cam {hours} de ore pe ritmul de zi."
+      },
+      "paceHour": {
+        "one": "Pleacă treptat, cel mult {hourly} pe oră: cam {hours} oră.",
+        "few": "Pleacă treptat, cel mult {hourly} pe oră: cam {hours} ore.",
+        "other": "Pleacă treptat, cel mult {hourly} pe oră: cam {hours} de ore."
+      },
+      "fitsToday": "Încape în cota de azi.",
+      "fitsMonth": "Încape în cota lunii.",
+      "ownFirst": "Emailurile înscrierilor pleacă înaintea lor.",
+      "mailgunStopped": "Mailgun e oprit acum, până {until}. Mesajul începe să plece când repornește.",
+      "mailgunStoppedGmail": "Mailgun e oprit acum, până {until}. Până atunci emailurile pleacă prin Gmail-ul clubului, în limita lui.",
+      "costGmail": "Emailuri prin Gmail-ul clubului: {messages}. Gmail mai poate trimite acum {room} din limita de {cap}.",
+      "costCopiesGmail": "Emailuri: {messages} — se scad din cota Mailgun ({allowance}). Copiile pentru club, {copies}, pleacă prin Gmail-ul clubului.",
+      "paceGmail": {
+        "one": "Pleacă prin Gmail-ul clubului, câte {batch} la {minutes} minute ziua (noaptea mai rar): cam {hours} oră pe ritmul de zi.",
+        "few": "Pleacă prin Gmail-ul clubului, câte {batch} la {minutes} minute ziua (noaptea mai rar): cam {hours} ore pe ritmul de zi.",
+        "other": "Pleacă prin Gmail-ul clubului, câte {batch} la {minutes} minute ziua (noaptea mai rar): cam {hours} de ore pe ritmul de zi."
+      },
+      "gmailFits": "Încape acum în limita Gmail.",
+      "gmailShared": "Limita Gmail e comună cu celelalte emailuri care pleacă prin Gmail-ul clubului.",
+      "gmailWaits": "Acum pot pleca {now} dintre ele; restul așteaptă să se facă loc în limita Gmail de {cap}. Nu se pierde niciunul.",
+      "gmailOverflow": "Prin Gmail pot pleca acum {now} dintre ele; restul pleacă prin Mailgun, cum e setat la limita Gmail, și se scade din cota Mailgun.",
+      "dailyWarning": {
+        "one": "Pe un plan cu cotă zilnică, mesajul acesta folosește cota zilnică în cel puțin {days} zi.",
+        "few": "Pe un plan cu cotă zilnică, mesajul acesta folosește cota zilnică în cel puțin {days} zile.",
+        "other": "Pe un plan cu cotă zilnică, mesajul acesta folosește cota zilnică în cel puțin {days} de zile."
+      },
+      "dailyShare": "Emailurile înscrierilor pleacă înaintea lui și din aceeași cotă: după ce se termină cota zilei, Mailgun nu mai trimite nimic în ziua aceea, nici emailurile înscrierilor.",
+      "dailyShareGmail": "Emailurile înscrierilor pleacă primele, dar împart cu acest mesaj cota zilei și limita Gmail.",
+      "dailyPlan": "Un mesaj mare se trimite pe un plan lunar: «{settings}» → «{emails}» → «{plan}».",
+      "historyAnswers": "Au reconfirmat {yes} · Au anulat {cancelled} · N-au răspuns {none}",
+      "historyProgress": "Au plecat {left} · Așteaptă {waiting}",
+      "historyFailed": "Nu au plecat {failed}"
     },
     "groupRunDeclarations": {
       "title": "Declarații semnate (alergare de grup)",
@@ -11937,6 +12051,45 @@
         "waiting": "pe lista de așteptare {waiting}",
         "ticked": "s-a bifat «Locurile libere le dau doar eu»"
       }
+    },
+    "partner": {
+      "tick": "E de la parteneri",
+      "name": "Numele partenerului sau sponsorului",
+      "nameHelp": "Intern: persoana nu e anunțată. Debifat, numele se șterge.",
+      "chip": "Partener: {name}",
+      "filter": "De la parteneri",
+      "filterHelp": "Toate înscrierile, cele de la orice partener sau cele de la un partener anume al evenimentului.",
+      "filterHelpAll": "Alege un eveniment ca să poți filtra după un partener anume.",
+      "filterAll": "Toate înscrierile",
+      "filterAny": "De la orice partener",
+      "column": "Partener",
+      "columnHint": "Partenerul sau sponsorul prin care a venit persoana. Intern: persoana nu e anunțată. Administratorul îl alege din rând, cu un eveniment ales, sau pe pagina înscrierii.",
+      "rowChoose": "Alege",
+      "rowChange": "Schimbă",
+      "rowPressFor": "Alege partenerul pentru {name}",
+      "rowChangeFor": "Schimbă partenerul pentru {name}",
+      "rowTitle": "Partenerul pentru {name}",
+      "rowHelp": "Alege un partener al evenimentului sau scrie unul nou. Intern: persoana nu e anunțată.",
+      "rowChoice": "Partener al evenimentului",
+      "none": "Fără partener",
+      "rowNew": "Sau un partener nou",
+      "rowNewHelp": "Scris aici, înlocuiește alegerea de mai sus. Cel mult {max} de caractere.",
+      "title": "De la parteneri",
+      "save": "Salvează partenerul",
+      "dialog": "Înscrierile vor fi marcate «Partener: {name}» — intern, persoanele nu sunt anunțate."
+    },
+    "reconfirm": {
+      "chip": "A reconfirmat",
+      "filter": "Reconfirmare",
+      "filterAll": "Toate",
+      "filterYes": "Au reconfirmat",
+      "filterCancelled": "Au anulat după cerere",
+      "filterNone": "N-au răspuns",
+      "filterHelp": "Doar pentru mesajele trimise cu „Cere reconfirmarea”. Răspunsul e opțional.",
+      "detail": "A apăsat „Vin” {date}.",
+      "column": "Reconfirmat",
+      "personAsked": "Reconfirmare cerută {asked}",
+      "personAnswered": "a apăsat „Vin” {at}"
     }
   },
   "NotFound": {
@@ -12849,6 +13002,21 @@
       "signatureOpenName": "Semnează cu numele complet scris mai sus, exact cum apare acolo. Pentru un minor semnează părintele sau tutorele, cu numele lui scris mai sus.",
       "nameTypedAbove": "Numele cu care semnezi e cel scris mai sus, la datele tale: dacă e greșit, corectează-l acolo și semnează cu el.",
       "minorNameTypedAbove": "Numele minorului e cel scris mai sus, la datele lui: dacă e greșit, corectează-l acolo și semnează cu el."
+    },
+    "reconfirm": {
+      "title": "Vii la {event}?",
+      "titleNoEvent": "Vii la cursă?",
+      "titleNoEventOther": "Vii la eveniment?",
+      "yes": "Da, vin la cursă",
+      "yesOther": "Da, vin la eveniment",
+      "yesPending": "Notăm că vii…",
+      "optional": "Răspunsul e opțional: dacă nu apeși „{button}”, nu se schimbă nimic la înscrierea ta.",
+      "pending": "Mai ai de semnat declarația: fără ea înscrierea nu e confirmată.",
+      "waitlisted": "Ești pe lista de așteptare; locul tău în ea nu se schimbă, oricum ai răspunde.",
+      "offered": "Ai un loc oferit: semnează declarația din emailul cu oferta.",
+      "cannot": "Nu mai poți ajunge? Folosește „Anulează înscrierea” mai jos.",
+      "done": "Am notat că vii — ne-ai răspuns {date}.",
+      "failed": "Răspunsul nu a fost înregistrat pentru această înscriere."
     }
   },
   "Devs": {
@@ -14042,7 +14210,11 @@
       "membersInvitedProviderFailed": "Unele conturi Zitadel nu sunt gata: vezi raportul de sus.",
       "eventInvitationsErased": "Invitații retrase și șterse.",
       "eventImportedOver": "Importat peste eveniment.",
-      "eliteTicked": "Bifa de elită a fost salvată. Nu s-a trimis nimic nimănui."
+      "eliteTicked": "Bifa de elită a fost salvată. Nu s-a trimis nimic nimănui.",
+      "addressChanged": "Adresa a fost schimbată; ambele adrese primesc un email.",
+      "partnerSaved": "Partenerul a fost salvat. Nu s-a trimis nimic nimănui.",
+      "partnerCleared": "Nu mai e de la parteneri. Nu s-a trimis nimic nimănui.",
+      "partnerUnchanged": "Era deja așa; nimic de schimbat."
     },
     "mail": {
       "now": "Pleacă acum{road}: {what}.",

@@ -387,9 +387,11 @@ describe("health while the pace holds", () => {
   });
 
   it("calls a late Gmail row overdue even while Mailgun's hour is full: the pace does not hold that road", async () => {
-    gmailDeployment.current = { roads: ROADS, sender: sender(() => ({ outcome: "sent", providerMessageId: "unused" })) };
+    // A registration's own message on Gmail's road: a send to many waiting its turn — a cancellation's notice among them —
+    // is never late by that alone (the decision «Cere reconfirmarea», part two), so the Gmail row here is a waiting-list offer.
+    gmailDeployment.current = { roads: { ...ROADS, gmailMessageTypes: ["WAITLIST_SPOT_OFFER"] }, sender: sender(() => ({ outcome: "sent", providerMessageId: "unused" })) };
     await sent(100, new Date(NOW.getTime() - 10 * MINUTE));
-    await db.insert(emailOutbox).values([row({ createdAt: late }), row({ createdAt: late, messageType: "ORGANIZER_MESSAGE" })]);
+    await db.insert(emailOutbox).values([row({ createdAt: late }), row({ createdAt: late, messageType: "WAITLIST_SPOT_OFFER" })]);
     expect(await checkEmailHealth(db, NOW)).toMatchObject({ status: "stalled", overdue: 1, hourPaced: 1 });
   });
 });

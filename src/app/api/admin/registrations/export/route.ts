@@ -13,6 +13,7 @@ import { isClubRunner } from "@/modules/registrations/domain/club-runner";
 import { statisticsWordsFrom } from "@/modules/registrations/statistics";
 import { CLUB_NAME } from "@/theme/brand";
 import {
+  isReconfirmFilter,
   listEventsWithRegistrations,
   listLatestDeclarationAcceptances,
   listRegistrationsForAdmin,
@@ -26,6 +27,7 @@ import { listRegistrationNotesForExport } from "@/modules/registrations/notes";
 import { exportNotesCell, type ExportNotesWords } from "@/shared/notes/note-text";
 import { STAFF_ROLES, type StaffRole, canKeepRegistrationNotes, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { chosenPartnerOf, listPartnerSuggestions, PARTNER_FILTER_PARAM } from "@/modules/registrations/partner-mark";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { needsEmailAction } from "@/modules/registrations/domain/email-state";
 
@@ -86,6 +88,10 @@ export async function GET(request: Request): Promise<Response> {
   const outside = url.searchParams.get("outside");
   // The bibs page's filter (§664): the file is the rows on screen.
   const memberBib = url.searchParams.get("memberBib");
+  // «De la parteneri» (the decision «De la parteneri»): the list's filter, so the file is the rows on screen.
+  const partner = url.searchParams.get("partner");
+  // «Reconfirmare» (the decision «Cere reconfirmarea»): the list's filter, so the file is the rows on screen.
+  const reconfirm = url.searchParams.get("reconfirm");
   // The reader's language (§785), as the sponsor list's `lang`: the words of «Note interne» — its header, its roles.
   const lang = url.searchParams.get("lang");
   const locale: Locale = (routing.locales as readonly string[]).includes(lang ?? "") ? (lang as Locale) : routing.defaultLocale;
@@ -101,6 +107,10 @@ export async function GET(request: Request): Promise<Response> {
   */
   const db = getDb();
   const scope = defaultEventFilter(eventId ?? undefined, await listEventsWithRegistrations(db, locale), search ?? undefined);
+  // One partner (the list's column «Partener»): validated as the list validates it — a partner of the one event in scope, in the
+  // event's spelling — and ignored otherwise, so the file of a list filtered to one partner holds exactly that partner's rows.
+  const onePartner = url.searchParams.get(PARTNER_FILTER_PARAM);
+  const chosenPartner = scope.eventId && onePartner ? chosenPartnerOf(onePartner, await listPartnerSuggestions(db, actor, scope.eventId)) : null;
 
   /**
    * `TEST` rows are omitted, not labelled (`DECISIONS.md` §30). The export is the club's own
@@ -127,6 +137,9 @@ export async function GET(request: Request): Promise<Response> {
     promoConsented: promo === "1" || undefined,
     outsideCapacity: outside === "1" || undefined,
     memberBibAsked: memberBib === "asked" || undefined,
+    fromPartner: partner === "1" || undefined,
+    partner: chosenPartner ?? undefined,
+    reconfirm: isReconfirmFilter(reconfirm) ? reconfirm : undefined,
     search: search || undefined,
     excludeTest: true,
     },
@@ -156,6 +169,10 @@ export async function GET(request: Request): Promise<Response> {
     One grouped query for the exported rows (never one per row), the author as a role, the date on each event's own clock.
   */
   const withNotes = canKeepRegistrationNotes(actor.role);
+  // «Partener» (the decision «De la parteneri»): in every file, for every role that gets one, headed in the reader's language.
+  const partnerHeader = (await getTranslations({ locale, namespace: "Admin" }))("partner.column");
+  // «Reconfirmat» (the decision «Cere reconfirmarea»): in every file, after «Partener», headed in the reader's language.
+  const reconfirmedHeader = (await getTranslations({ locale, namespace: "Admin" }))("reconfirm.column");
   let notesHeader: string | undefined;
   const notes = new Map<string, string>();
   if (withNotes) {
@@ -262,6 +279,8 @@ export async function GET(request: Request): Promise<Response> {
         // «Până când» (§650): the moment on the club's clock and what it is for, in words.
         deadline: deadlineOf(row)?.at ?? null,
         deadlineFor: deadlineOf(row)?.kind ?? null,
+        partnerName: row.partnerName,
+        reconfirmedAt: row.reconfirmedAt,
         notes: notes.get(row.id) ?? "",
         // The footer's inputs (§787): is this one of the club's runners, and which event.
         clubRunner: isClubRunner(row),
@@ -271,7 +290,7 @@ export async function GET(request: Request): Promise<Response> {
       })),
       eventTitle ?? "Participants",
       // «Status» is a drop-down (§790, amended), its error box in the reader's language.
-      { notesHeader, statistics, statusPick: { title: statsT("registrations.sheetpick.title"), error: statsT("registrations.sheetpick.error") } },
+      { notesHeader, partnerHeader, reconfirmedHeader, statistics, statusPick: { title: statsT("registrations.sheetpick.title"), error: statsT("registrations.sheetpick.error") } },
     );
 
     return new NextResponse(new Uint8Array(workbook), {
@@ -335,10 +354,14 @@ export async function GET(request: Request): Promise<Response> {
       ageOnRaceDay: ageOnRaceDay(row.birthDate, row.eventStartsAt, row.eventTimezone),
       country: row.country,
       city: row.city,
+      // «Partener» (the decision «De la parteneri»), before the notes.
+      partnerName: row.partnerName,
+      // «Reconfirmat» (the decision «Cere reconfirmarea»), after «Partener»: an ISO moment, empty when the person did not say «Vin».
+      reconfirmedAt: row.reconfirmedAt?.toISOString() ?? "",
       // «Note interne» (§785), last, written only with the header — a role that may keep notes.
       notes: notes.get(row.id) ?? "",
     })),
-    { notesHeader },
+    { notesHeader, partnerHeader, reconfirmedHeader },
   );
 
   return new NextResponse(csv, {

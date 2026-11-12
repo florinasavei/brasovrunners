@@ -27,7 +27,7 @@ import { env } from "@/shared/config/env";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { type EventForecast, forecastPlaceName } from "@/modules/weather/domain/forecast";
 import { weatherLabel, weatherSpanWords } from "@/modules/weather/words";
-import { CANNOT_COME_GLYPH_PATH, CANNOT_COME_MESSAGES } from "./domain/cannot-come";
+import { CANNOT_COME_GLYPH_PATH, CANNOT_COME_MESSAGES, RECONFIRM_GLYPH_PATH } from "./domain/cannot-come";
 import type { HoldLapsedNext } from "./domain/hold-lapsed";
 import { legalTemplateNames, legalTemplatesWords } from "./legal-templates-words";
 import { type ShopOrderFacts, shopOrderLine, shopOrderLines, shopOrderTitle } from "./shop-order-words";
@@ -88,6 +88,12 @@ export type TemplateContent = {
    * a club copy (§320).
    */
   cannotCome?: { label: string; url: string; note: string };
+  /**
+   * «Vin» / "I'm coming" (the decision «Cere reconfirmarea»): on an organizer's message whose send ticked «Cere
+   * reconfirmarea», a full-width filled button in the club's blue just above «Nu mai pot ajunge», to the same manage
+   * page's `#reconfirm`, and one plain sentence under it saying it is optional. Never on a club copy (§320).
+   */
+  reconfirm?: { label: string; url: string; note: string };
   /** Further links after the action — the signed declaration as a PDF (§95). */
   links?: { label: string; url: string }[];
   /** Present on the confirmation: the QR the participant shows to pick up their number. */
@@ -521,6 +527,7 @@ export function renderContent(
     ...(content.eventFacts ? ["", ...content.eventFacts.text.split("\n")] : []),
     ...(content.image ? ["", `${content.image.caption}: ${content.image.url}`] : []),
     ...(content.action && !actionEarly ? ["", ...actionText] : []),
+    ...(content.reconfirm ? ["", `${content.reconfirm.label}: ${content.reconfirm.url}`, content.reconfirm.note] : []),
     ...(content.cannotCome ? ["", `${content.cannotCome.label}: ${content.cannotCome.url}`, content.cannotCome.note] : []),
     ...(content.links ?? []).map((link) => `${link.label}: ${link.url}`),
     "",
@@ -549,6 +556,21 @@ export function renderContent(
         ]
       : []),
     ...(actionEarly ? [] : actionHtml),
+    /*
+      «Vin» (the decision «Cere reconfirmarea»): the answer the club asked for, filled in the club's blue so it reads as
+      the message's point, just above «Nu mai pot ajunge» — the same width, the same 48 pixels at least, its glyph a
+      hosted PNG (`alt=""`), and its one sentence saying it is optional.
+    */
+    ...(content.reconfirm
+      ? [
+          `<div data-email-part="reconfirm" style="margin:20px 0">` +
+            `<a href="${content.reconfirm.url}" style="display:block;box-sizing:border-box;width:100%;text-align:center;background:${COLOR.blueInk};color:${COLOR.surface};text-decoration:none;font-weight:700;font-size:16px;line-height:20px;padding:14px 16px;border:2px solid ${COLOR.blueInk};border-radius:10px">` +
+            `<img src="${env.APP_BASE_URL}${RECONFIRM_GLYPH_PATH}" alt="" width="20" height="20" style="display:inline-block;width:20px;height:20px;vertical-align:-4px;margin:0 8px 0 0;border:0">` +
+            `${escapeHtml(content.reconfirm.label)}</a>` +
+            `<p style="margin:8px 0 0;text-align:center;color:${COLOR.inkMuted};font-size:14px;line-height:1.4">${escapeHtml(content.reconfirm.note)}</p>` +
+            `</div>`,
+        ]
+      : []),
     /*
       «Nu mai pot ajunge» (§558; the owner: «în fiecare mail trebuie să fie clar butonul»): the whole
       card's width, so a thumb finds it on a phone and the eye on a desktop, outlined in the club's
@@ -805,6 +827,12 @@ export type TemplateData = {
   eventStartsAtFormattedOther?: string;
   /** A race's gun time, "10:00", when it has one apart from the gathering (§71); on the update notice (§331). */
   eventRaceStartsAtFormatted?: string;
+  /**
+   * «Schimbă adresa», on `REGISTRATION_ADDRESS_ADDED` only: the move queued the state's own message to this address as
+   * well (a verification, the waiting list, the offer, the declaration or the confirmation), so the notice says the next
+   * step follows; false for a cancelled or lapsed registration, or an event that is over, which get the notice alone.
+   */
+  addressNextStep?: boolean;
   currentStatus?: string;
   /** The same status in the other language's words, for the bilingual message's second half (§373, email follow-up). */
   currentStatusOther?: string;
@@ -985,6 +1013,12 @@ export type TemplateData = {
    * address; drawn only on those, and never on a club copy (§320).
    */
   cannotComeUrl?: string;
+  /**
+   * «Vin» (the decision «Cere reconfirmarea»): the same manage page at `#reconfirm`, on the same token as
+   * `cannotComeUrl`. Set by the renderer only on an organizer's message whose send ticked «Cere reconfirmarea», for a
+   * registration in `RECONFIRM_STATUSES` (`reconfirmApplies`); drawn only there, and never on a club copy (§320).
+   */
+  reconfirmUrl?: string;
   /**
    * The public participant list's own switch, on the confirmation (BR-REQ-039-01; `DECISIONS.md`
    * §143): its own token, read at send time. `listed` is whether the name is on the list today,
@@ -2283,6 +2317,31 @@ const T = {
       ],
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
+    /*
+      «Schimbă adresa»: an Administrator moved the registration to another address. To the old address: what happened, that
+      its links are dead, and where to object — never the new address, which this inbox has no right to read. No token, no
+      button. The fact is the body the club may reword; that the links are dead and the contact page to object are the
+      platform's lines after it (`addressRemovedLinks`, `addressRemovedObject`), so no rewording loses them.
+    */
+    registrationAddressRemoved: {
+      subject: (d: TemplateData) => `Adresa de email a înscrierii la ${d.eventTitle ?? "eveniment"} a fost schimbată`,
+      body: (d: TemplateData) => [
+        `Organizatorii au schimbat adresa de email a înscrierii${d.participantName ? ` pentru ${d.participantName}` : ""} la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}. **De acum, emailurile despre această înscriere merg la altă adresă.**`,
+      ],
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
+    },
+    /*
+      «Schimbă adresa», to the new address: from now on it receives this registration's messages. Where the registration
+      stands, that the next step follows in an email of its own (a cancelled or lapsed registration has none), and the
+      contact page if it is not this person's, are the platform's lines after the body (`addressAddedStatus`, `addressAddedNotYours`).
+    */
+    registrationAddressAdded: {
+      subject: (d: TemplateData) => `De acum primești emailurile înscrierii la ${d.eventTitle ?? "eveniment"}`,
+      body: (d: TemplateData) => [
+        `Organizatorii au trecut această adresă de email pe înscrierea${d.participantName ? ` pentru ${d.participantName}` : ""} la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}. **De acum, emailurile despre această înscriere vin aici.**`,
+      ],
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
+    },
     eventUpdateNotice: {
       subject: (d: TemplateData) => `Detalii actualizate pentru ${d.eventTitle ?? "eveniment"}`,
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
@@ -2616,6 +2675,11 @@ const T = {
       label: "Nu mai pot ajunge",
       note: "Locul se eliberează pentru altcineva.",
     },
+    /** «Vin» (the decision «Cere reconfirmarea»), on a send that asked, and its one sentence: the answer is optional. */
+    reconfirm: {
+      label: "Vin",
+      note: "Ne spui că vii. Nu e obligatoriu.",
+    },
     /** Under "you are already registered", on a re-send for a slip (§446): the one way to register somebody else. */
     anotherPersonHint: "Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.",
     /** In front of the verification email re-sent by itself (§653): why it came, and that the deadline did not move. */
@@ -2696,6 +2760,13 @@ const T = {
     groupRunMasked: "În copia ta, seria și numărul actului de identitate apar mascate, pentru siguranță: adresa de e-mail nu a fost verificată înainte de trimitere.",
     groupRunNotYou: (contactUrl?: string) =>
       `Dacă nu tu ai semnat această declarație, scrie-ne din pagina de contact${contactUrl ? ` (${contactUrl})` : ""} și o ștergem.`,
+    /** «Schimbă adresa», to the old address: its links are dead, and how to object (the platform's lines, after the body). */
+    addressRemovedLinks: "Linkurile primite la această adresă pentru această înscriere nu mai funcționează.",
+    addressRemovedObject: (contactUrl?: string) => `Dacă nu ai cerut schimbarea, scrie-ne din pagina de contact${contactUrl ? ` (${contactUrl})` : ""}.`,
+    /** «Schimbă adresa», to the new address: where the registration stands, whether the next step follows, and who to tell if it is not theirs. */
+    addressAddedStatus: (status: string | undefined, nextStep: boolean) =>
+      `Înscrierea are starea: ${status ?? "necunoscută"}.${nextStep ? " Pasul următor îl primești într-un email separat." : ""}`,
+    addressAddedNotYours: (contactUrl?: string) => `Dacă înscrierea nu este a ta, scrie-ne din pagina de contact${contactUrl ? ` (${contactUrl})` : ""}.`,
     /** A group run's declaration signed for a minor (§769): who signed, in the signer's copy and in the club's archive copy. */
     groupRunMinor: (parent: string, minor: string, archive: boolean) =>
       archive
@@ -3211,6 +3282,21 @@ const T = {
       ],
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
+    // «Schimbă adresa»: the Romanian entries above say what each one is for.
+    registrationAddressRemoved: {
+      subject: (d: TemplateData) => `The email address of the registration at ${d.eventTitle ?? "the event"} has been changed`,
+      body: (d: TemplateData) => [
+        `The organizers changed the email address of the registration${d.participantName ? ` for ${d.participantName}` : ""} at ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}. **From now on, the emails about this registration go to another address.**`,
+      ],
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
+    },
+    registrationAddressAdded: {
+      subject: (d: TemplateData) => `From now on you receive the emails of the registration at ${d.eventTitle ?? "the event"}`,
+      body: (d: TemplateData) => [
+        `The organizers put this email address on the registration${d.participantName ? ` for ${d.participantName}` : ""} at ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}. **From now on, the emails about this registration come here.**`,
+      ],
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
+    },
     eventUpdateNotice: {
       subject: (d: TemplateData) => `Updated details for ${d.eventTitle ?? "the event"}`,
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
@@ -3462,6 +3548,10 @@ const T = {
       label: "I can't make it any more",
       note: "Your place goes to someone else.",
     },
+    reconfirm: {
+      label: "I'm coming",
+      note: "Tells us you are coming. It is optional.",
+    },
     anotherPersonHint: "If you want to register someone else, send the form with that person's full name and birth date.",
     /** In front of the verification email re-sent by itself (§653): why it came, and that the deadline did not move. */
     confirmationRetry: (deadline: string) =>
@@ -3518,6 +3608,11 @@ const T = {
     groupRunMasked: "In your copy, your identity document's series and number are masked, for safety: the email address was not verified before sending.",
     groupRunNotYou: (contactUrl?: string) =>
       `If you did not sign this declaration, write to us from the contact page${contactUrl ? ` (${contactUrl})` : ""} and we will delete it.`,
+    addressRemovedLinks: "The links this address received for this registration no longer work.",
+    addressRemovedObject: (contactUrl?: string) => `If you did not ask for this change, write to us from the contact page${contactUrl ? ` (${contactUrl})` : ""}.`,
+    addressAddedStatus: (status: string | undefined, nextStep: boolean) =>
+      `The registration's status: ${status ?? "unknown"}.${nextStep ? " The next step comes in an email of its own." : ""}`,
+    addressAddedNotYours: (contactUrl?: string) => `If the registration is not yours, write to us from the contact page${contactUrl ? ` (${contactUrl})` : ""}.`,
     groupRunMinor: (parent: string, minor: string, archive: boolean) =>
       archive
         ? `The declaration is the minor ${minor}'s: the minor signed it for themselves, and ${parent} signed it as parent or legal guardian.`
@@ -3593,6 +3688,8 @@ const KEY_BY_MESSAGE_TYPE: Record<Exclude<EmailMessageType, RelayMessageType>, k
   VOLUNTEER_INVITATION: "volunteerInvitation",
   PLACES_ALERT: "placesAlert",
   UNSIGNED_RELEASED: "unsignedReleased",
+  REGISTRATION_ADDRESS_REMOVED: "registrationAddressRemoved",
+  REGISTRATION_ADDRESS_ADDED: "registrationAddressAdded",
 };
 
 /**
@@ -3905,6 +4002,8 @@ export function buildTemplateContent(
       manageUrl: undefined,
       // «Nu mai pot ajunge» is the participant's own cancel (§558): never in a club mailbox.
       cannotComeUrl: undefined,
+      // «Vin» (the decision «Cere reconfirmarea») is the participant's own answer, on the same token: never in a club mailbox.
+      reconfirmUrl: undefined,
       listConsentUrl: undefined,
       declarationPdfUrl: undefined,
       checkinCode: undefined,
@@ -4288,6 +4387,14 @@ export function buildTemplateContent(
         ? [...(data.idDocumentMasked ? [copy.groupRunMasked] : []), copy.groupRunNotYou(data.contactUrl)]
         : []),
       /*
+        «Schimbă adresa»: after the body whoever wrote it — to the old address, that its links are dead and the contact
+        page to object; to the new one, where the registration stands, whether its next step follows, and the contact page.
+      */
+      ...(messageType === "REGISTRATION_ADDRESS_REMOVED" ? [copy.addressRemovedLinks, copy.addressRemovedObject(data.contactUrl)] : []),
+      ...(messageType === "REGISTRATION_ADDRESS_ADDED"
+        ? [copy.addressAddedStatus(data.currentStatus, data.addressNextStep === true), copy.addressAddedNotYours(data.contactUrl)]
+        : []),
+      /*
         A night event (§394, the question §382 left open): the reminder of a date that starts after
         dusk says the sunset and to bring a light. After the body — a fact about this date, not a matter of how the club writes — so a reminder the club
         reworded still says it. Only when the renderer set it, and it sets it only on the reminder.
@@ -4360,6 +4467,14 @@ export function buildTemplateContent(
       // persoană» sits beside it, and a second "no" there would cancel the person already registered.
       (messageType !== "REGISTER_ANOTHER_PERSON" || familySittingShape)
         ? { label: copy.cannotCome.label, url: data.cannotComeUrl, note: copy.cannotCome.note }
+        : undefined,
+    /*
+      «Vin» (the decision «Cere reconfirmarea»): only on an organizer's message, only beside «Nu mai pot ajunge» and only
+      with the link the renderer set for a send that asked — never on a club copy, whose data lost it above (§320).
+    */
+    reconfirm:
+      !clubCopy && messageType === "ORGANIZER_MESSAGE" && data.cannotComeUrl && data.reconfirmUrl
+        ? { label: copy.reconfirm.label, url: data.reconfirmUrl, note: copy.reconfirm.note }
         : undefined,
     image: entry.image?.(data),
     eventFacts: factsBlock,

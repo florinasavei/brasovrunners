@@ -13,6 +13,7 @@ import { countForm } from "@/i18n/count-form";
 import { formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import type { StaffUser } from "@/db/schema/staff-users";
 import { listStaffUsers } from "@/modules/staff-identity/repository";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
@@ -25,6 +26,7 @@ import { currentAddressCap } from "../address-cap";
 import { HIDDEN_LIST_OFF } from "../domain/hidden-list";
 import { INVITATION_DAYS_DEFAULT, INVITATION_DAYS_MAX, INVITATION_REFUSALS, invitationState, resendDeadlineChoices } from "../domain/invitations";
 import { listEventInvitations } from "../invitation-repository";
+import { listPartnerSuggestions, PARTNER_NAME_MAX } from "../partner-mark";
 import HiddenListChip from "./HiddenListChip";
 import InviteForm, { type InviteFormState, type InviteFormWords } from "./InviteForm";
 
@@ -48,6 +50,7 @@ const INVITATION_STATES = ["sent", "accepted", "expired", "withdrawn"] as const;
  */
 export default async function InvitationsPanel<T extends Record<string, unknown>>({
   db,
+  actor,
   locale,
   eventId,
   mayManage,
@@ -57,6 +60,8 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
   now,
 }: {
   db: Database<T>;
+  /** Who reads the panel: the box's suggestions are read for the role that may send (`listPartnerSuggestions` asks again). */
+  actor: Pick<StaffUser, "role">;
   locale: Locale;
   eventId: string;
   mayManage: boolean;
@@ -87,7 +92,13 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
   let waiting = 0;
   if (mayManage) {
     // The waiting always subtracted, as the server does under the lock — whatever the auto-offer setting or the close.
-    const [members, forecast, addressCap] = await Promise.all([listStaffUsers(db), readInvitationForecast(db, eventId, now), currentAddressCap(db)]);
+    const [members, forecast, addressCap, partnerSuggestions] = await Promise.all([
+      listStaffUsers(db),
+      readInvitationForecast(db, eventId, now),
+      currentAddressCap(db),
+      // «E de la parteneri» (the decision «De la parteneri»): the event's earlier partners' names, for the send's box.
+      listPartnerSuggestions(db, actor, eventId),
+    ]);
     const free = forecast?.free ?? null;
     waiting = forecast?.waiting ?? 0;
     const counted = (key: string) => ({ one: t.raw(`${key}.one`) as string, few: t.raw(`${key}.few`) as string, other: t.raw(`${key}.other`) as string });
@@ -113,6 +124,10 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
       outsideHelp: t("invitations.outsideHelp"),
       eliteLabel: t("invitations.eliteLabel"),
       eliteHelp: t("invitations.eliteHelp"),
+      partnerLabel: t("partner.tick"),
+      partnerNameLabel: t("partner.name"),
+      partnerHelp: t("partner.nameHelp"),
+      partnerMissing: t("errors.PARTNER_NAME_MISSING"),
       localeLegend: t("invitations.localeLegend"),
       localeRo: t("invitations.localeRo"),
       localeEn: t("invitations.localeEn"),
@@ -125,6 +140,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
       dialogNoRaise: t("invitations.dialog.noRaise"),
       dialogOutside: t("invitations.dialog.outside"),
       dialogElite: t("invitations.dialog.elite"),
+      dialogPartner: t.raw("partner.dialog") as string,
       dialogDays: counted("invitations.dialog.days"),
       dialogLocale: t.raw("invitations.dialog.locale") as string,
       dialogEmail: inviteMail.emailCount.forms,
@@ -139,6 +155,8 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
         ...Object.fromEntries([...INVITATION_REFUSALS, "SUPPLEMENTARY_PLACE_UNCONFIRMED", "FORBIDDEN", "NOT_FOUND"].map((code) => [code, t.raw(`invitations.errors.${code}`) as string])),
         // The switch turned off after the page was drawn: the registration page's own sentence (§648; the send obeys the switch, §647).
         [HIDDEN_LIST_OFF]: t("errors.HIDDEN_LIST_OFF"),
+        // «E de la parteneri» ticked with no name, should a send without JavaScript reach the server so (the decision «De la parteneri»).
+        PARTNER_NAME_MISSING: t("errors.PARTNER_NAME_MISSING"),
       },
       errorGeneric: t("invitations.errors.generic"),
     };
@@ -154,6 +172,8 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
         daysMax={INVITATION_DAYS_MAX}
         hiddenListEnabled={event.hiddenListEnabled}
         placesMax={addressCap.registrationsPerAddress}
+        partnerSuggestions={partnerSuggestions}
+        partnerNameMax={PARTNER_NAME_MAX}
         words={words}
       />
     );
@@ -256,6 +276,17 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                           accepted one by the registration it became as it stands now («Nu mai e elită» takes it off here too). */}
                       {(state === "sent" ? row.elite : state === "accepted" && row.acceptedElite === true) && (
                         <StatusChip glyph="elite" color="secondary" variant="outlined" label={t("registrations.elite.chip")} testId="invitation-elite-chip" />
+                      )}
+                      {/* «Partener: {name}» (the decision «De la parteneri»): staff-only — the send's name, and once accepted the
+                          registration's as it stands now (its page may have changed or cleared it). */}
+                      {(state === "accepted" ? row.acceptedPartnerName : row.partnerName) && (
+                        <StatusChip
+                          glyph="fromPartner"
+                          variant="outlined"
+                          label={t("partner.chip", { name: (state === "accepted" ? row.acceptedPartnerName : row.partnerName) ?? "" })}
+                          testId="invitation-partner-chip"
+                          wrap
+                        />
                       )}
                     </Stack>
                   </td>

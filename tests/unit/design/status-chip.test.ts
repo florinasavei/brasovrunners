@@ -1,9 +1,11 @@
 import path from "node:path";
 import ts from "typescript";
+import { isValidElement, type ReactElement } from "react";
 import { describe, expect, it } from "vitest";
 import { FILTER_FLAGS } from "@/modules/events/domain/listing-filter";
 import { GLYPHS } from "@/modules/events/ui/glyphs";
 import { STATUS_GLYPHS } from "@/shared/ui/status-glyphs";
+import StatusChip from "@/shared/ui/StatusChip";
 import { isBackoffice } from "./guards-allowlist";
 import { importFacts, SOURCES, type Source } from "./scan";
 
@@ -249,5 +251,37 @@ describe("§694 the status chip keeps the public glyph table public", () => {
       expect(publicNames([admin]).has("nowhere")).toBe(false);
       expect("nowhere" in GLYPHS || "nowhere" in STATUS_GLYPHS).toBe(false);
     });
+  });
+});
+
+describe("the status chip's wrapping is the partner chips' alone", () => {
+  const chipProps = (props: Record<string, unknown>): Record<string, unknown> => {
+    const element = (StatusChip as unknown as (p: Record<string, unknown>) => ReactElement)({ glyph: "done", label: "x", ...props });
+    expect(isValidElement(element)).toBe(true);
+    return element.props as Record<string, unknown>;
+  };
+
+  it("without `wrap` the chip carries no sx; with it, the wrapping label", () => {
+    expect("sx" in chipProps({})).toBe(false);
+    expect(chipProps({ wrap: true }).sx).toEqual({ height: "auto", minHeight: 24, "& .MuiChip-label": { whiteSpace: "normal", overflowWrap: "anywhere", py: 0.25 } });
+  });
+
+  it("only the chips that show a partner's name pass `wrap`", () => {
+    const passing = SOURCES.filter(usesStatusChip).flatMap((source) => {
+      const found: string[] = [];
+      const visit = (node: ts.Node) => {
+        if ((ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node)) && node.tagName.getText(source.tree) === "StatusChip") {
+          const attrs = node.attributes.properties.filter(ts.isJsxAttribute);
+          if (attrs.some((attr) => attr.name.getText(source.tree) === "wrap")) found.push(`${source.file}: ${node.getText(source.tree).includes("partner.chip") ? "partner" : "other"}`);
+        }
+        ts.forEachChild(node, visit);
+      };
+      visit(source.tree);
+      return found;
+    });
+    expect(passing.filter((line) => line.endsWith("other"))).toEqual([]);
+    // The registration's page, the internal list's line and the invitations' rows: the registrations list's two copies left
+    // when its column «Partener» took the name as plain text (the list's column).
+    expect(passing.length).toBeGreaterThanOrEqual(3);
   });
 });

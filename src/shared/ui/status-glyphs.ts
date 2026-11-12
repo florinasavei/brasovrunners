@@ -12,10 +12,12 @@ import DrawIcon from "@mui/icons-material/Draw";
 import ErrorOutlinedIcon from "@mui/icons-material/ErrorOutlined";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import EventSeatIcon from "@mui/icons-material/EventSeat";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import FlagIcon from "@mui/icons-material/Flag";
 import GroupsIcon from "@mui/icons-material/Groups";
+import HandshakeIcon from "@mui/icons-material/Handshake";
 import HelpIcon from "@mui/icons-material/Help";
 import HistoryIcon from "@mui/icons-material/History";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
@@ -122,6 +124,12 @@ export const STATUS_GLYPHS = {
   kit: CheckroomIcon,
   // «Date lipsă» on a registration (§905): answers the form requires that the row does not hold — the late form.
   missingAnswers: AssignmentLateIcon,
+  // «Partener: {name}» on a registration, a line of the internal list or an invitation (the decision «De la parteneri»): the
+  // handshake «Descarcă lista pentru sponsori» wears — the partners' glyph — on the organizers' own label.
+  fromPartner: HandshakeIcon,
+  // «A reconfirmat» on a registration (the decision «Cere reconfirmarea»): the calendar-with-tick the manage page's
+  // «Da, vin la cursă» and the email's «Vin» wear — the person said they come; information, never a state.
+  reconfirmed: EventAvailableIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type StatusGlyphName = keyof typeof STATUS_GLYPHS;

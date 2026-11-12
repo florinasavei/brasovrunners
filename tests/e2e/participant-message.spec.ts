@@ -200,9 +200,10 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     await expect(page.getByTestId("participant-message-sent")).toContainText("Mesaj pus la coadă pentru 2 participanți.", { timeout: 30_000 });
     await expect(page).toHaveURL(/sent=2/);
 
-    // The history names the send: the subject as written, the group, how many, and who.
+    // The history names the send: the subject with the event's own fields filled, the group, how many, and who.
     const row = page.getByTestId("participant-message-history-row").first();
-    await expect(row).toContainText("Vreme rea la {eventTitle}");
+    await expect(row).toContainText(`Vreme rea la Cursa furtunii ${tag}`);
+    await expect(row).not.toContainText("{eventTitle}");
     await expect(row).toContainText("Toți cei înscriși");
     await expect(row).toContainText("2 destinatari");
     await expect(row).toContainText("Dev Administrator");

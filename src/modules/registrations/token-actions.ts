@@ -397,7 +397,11 @@ export async function spentLinkReleaseMoment(secret: string, purposes: readonly 
   return null;
 }
 
-/** The registration a spent invitation link created (§647): the token names the invitation, the invitation its accepted row. */
+/**
+ * The registration a spent invitation link created (§647): the token names the invitation, the invitation its accepted row —
+ * only while that row is still on the invitation's own participant, the one the acceptance used. After «Schimbă adresa»
+ * the old address's spent link names no registration, like a spent link with nothing to speak of: no deadline, no state.
+ */
 async function acceptedRegistrationOfSpentInvitation(secret: string): Promise<string | null> {
   if (!isWellFormedTokenSecret(secret)) return null;
   const db = getDb();
@@ -406,6 +410,10 @@ async function acceptedRegistrationOfSpentInvitation(secret: string): Promise<st
       .select({ registrationId: eventInvitations.acceptedRegistrationId })
       .from(emailActionTokens)
       .innerJoin(eventInvitations, eq(eventInvitations.id, emailActionTokens.invitationId))
+      .innerJoin(
+        registrations,
+        and(eq(registrations.id, eventInvitations.acceptedRegistrationId), eq(registrations.participantId, eventInvitations.participantId)),
+      )
       .where(and(eq(emailActionTokens.tokenHash, hashTokenSecret(secret)), eq(emailActionTokens.purpose, "ACCEPT_INVITATION"), isNotNull(emailActionTokens.usedAt)))
       .limit(1);
     return row?.registrationId ?? null;
@@ -761,6 +769,11 @@ export async function readRaceDayContext(secret: string, now: Date) {
     registration,
     eventCancelled,
     selfCheckinOpen: checkinOpenFor(registration.status),
+    /**
+     * «Vin» (the decision «Cere reconfirmarea»): the event still runs and has not started — the only time the page asks
+     * whether the person comes, and the only time `reconfirmation.ts` records the answer.
+     */
+    eventAhead: event.eventStatus === "SCHEDULED" && event.startsAt.getTime() > now.getTime(),
     selfCheckinOpensAt: opensAt,
     /** How many hours before the start that is, for the sentence that says so (§377). */
     selfCheckinHours: deadlines.selfCheckinHours,

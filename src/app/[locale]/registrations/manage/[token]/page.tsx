@@ -2,6 +2,7 @@ import CampaignIcon from "@mui/icons-material/Campaign";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import SaveIcon from "@mui/icons-material/Save";
@@ -38,6 +39,9 @@ import { missingAnswersFields } from "@/modules/registrations/ui/MissingAnswersF
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { holdsOptionalData } from "@/modules/registrations/consent-withdrawal";
 import { isActiveStatus } from "@/modules/registrations/domain/state-machine";
+import { isReconfirmStatus } from "@/modules/notifications/domain/cannot-come";
+import { reconfirmPressesItself } from "@/modules/registrations/domain/reconfirm-press";
+import ReconfirmOnArrival from "@/modules/registrations/ui/ReconfirmOnArrival";
 import {
   cachedFirstResultsNameAskNoticeVersion,
   cachedFirstResultsNoticeVersion,
@@ -61,6 +65,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 import {
   cancelRegistrationAction,
   completeAnswersFromManageAction,
+  reconfirmFromManageAction,
   selfCheckInAction,
   setListConsentFromManageAction,
   setPromoConsentFromManageAction,
@@ -91,6 +96,8 @@ type Props = {
     /** «Completează-ți datele»'s outcome (§905): 1 saved, 0 refused — then `answersRefused` names the boxes and the rule. */
     answers?: string;
     answersRefused?: string;
+    /** «Da, vin la cursă»'s outcome (the decision «Cere reconfirmarea»): 1 recorded or already recorded, 0 refused. */
+    reconfirm?: string;
   }>;
 };
 
@@ -119,7 +126,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, started, here, list, withdrawn, promo, results, person, reason, answers, answersRefused } = await searchParams;
+  const { done, invalid, started, here, list, withdrawn, promo, results, person, reason, answers, answersRefused, reconfirm } = await searchParams;
   const t = await getTranslations("Registrations");
   // The words beside every QR (§547): whose it is, their number, the code.
   const qrWords: QrWords = {
@@ -228,6 +235,9 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   const owing = people.filter((one) => isActiveStatus(one.status) && answersToAsk(one.missingAnswers, one.declarationMethod !== null).fields.length > 0);
   const answersEvent = live && owing.length > 0 ? await findEventForRegistrationById(getDb(), live.registration.eventId) : undefined;
   const answersRefusal = answers === "0" ? readAnswersRefusal(answersRefused) : null;
+  // «Vii la …?» names the race only on a race (the neighbours' race/other words); the type is read only when somebody was asked.
+  const reconfirmOnRace = live && people.some((one) => one.reconfirmAsked) ? ((await eventTypeOf(getDb(), live.registration.eventId)) ?? "RACE") === "RACE" : true;
+  const reconfirmYes = reconfirmOnRace ? t("reconfirm.yes") : t("reconfirm.yesOther");
   const answersDraft = answersRefusal ? await readFormDraft() : null;
   const completeCards = new Map<string, ReactNode>(
     answersEvent
@@ -300,6 +310,23 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
             const confirmed = one.status === "CONFIRMED" && one.checkinCode && !live.eventCancelled ? one.checkinCode : null;
             const active = isActiveStatus(one.status);
             const answered = answeredFor === one.id;
+            /*
+              «Da, vin la cursă» (the decision «Cere reconfirmarea»): the one form, pressed by the button or, at `#reconfirm`, by
+              itself — and while that POST is in flight the button wears its pending label («Notăm că vii…»), as the «Da, vin»
+              link page's does, so nobody reads «Răspunsul e opțional…» under a page that seems to do nothing.
+            */
+            const reconfirmForm = (
+              <form action={reconfirmFromManageAction}>
+                <input type="hidden" name="locale" value={locale} />
+                <input type="hidden" name="token" value={token} />
+                <input type="hidden" name="registrationId" value={one.id} />
+                <Box sx={{ display: "inline-block" }} data-testid="manage-reconfirm-yes">
+                  <SubmitButton label={reconfirmYes} pendingLabel={t("reconfirm.yesPending")} size="medium">
+                    <EventAvailableIcon />
+                  </SubmitButton>
+                </Box>
+              </form>
+            );
             /*
               The results' name (§879): held — a yes that names the runner (`holdsResultsNameConsent`, the one predicate the press
               and `publicResultName` read), offered the way out whatever the notice in force says today — or asked: on the list,
@@ -596,6 +623,67 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                       {t("resultsName.help")}
                     </Typography>
+                    {!family && <Divider sx={{ mt: 3 }} />}
+                  </Box>
+                )}
+
+                {/*
+                  «Vii la …?» (the decision «Cere reconfirmarea»): asked only of a registration an organizer's message asked,
+                  while the event is ahead. The GET draws the question and writes nothing; «Da, vin la cursă» is a POST that
+                  reads the manage token and never spends it. Optional: not pressing changes nothing about the registration,
+                  and the way out is the cancel below. `#reconfirm` is the link's own person's, where the email's «Vin» lands —
+                  and there one press counts: `ReconfirmOnArrival` submits the link's own person's form once, by itself
+                  (`reconfirmPressesItself`: the question open, no answer or refusal in the address); without JavaScript
+                  the button stays and works.
+                */}
+                {((live.eventAhead && one.reconfirmAsked && (isReconfirmStatus(one.status) || one.status === "WAITLIST_OFFERED")) ||
+                  (answered && reconfirm === "0")) && (
+                  <Box id={one.own ? "reconfirm" : undefined} sx={{ mb: 2 }} data-testid="manage-reconfirm">
+                    {answered && reconfirm === "0" && (
+                      <Alert severity="warning" sx={{ mb: 2 }} data-testid="manage-reconfirm-failed">
+                        {t("reconfirm.failed")}
+                      </Alert>
+                    )}
+                    {live.eventAhead && one.reconfirmAsked && (isReconfirmStatus(one.status) || one.status === "WAITLIST_OFFERED") && (
+                      <>
+                        <Typography variant={family ? "body1" : "h2"} sx={family ? { fontWeight: 700, mb: 1 } : { fontSize: "1.25rem", mb: 1 }}>
+                          {eventTitle ? t("reconfirm.title", { event: eventTitle }) : reconfirmOnRace ? t("reconfirm.titleNoEvent") : t("reconfirm.titleNoEventOther")}
+                        </Typography>
+                        {/*
+                          What is still owed, whatever the answer: drawn before the press, during it and after it, so a person
+                          who still has the declaration to sign never reads «Am notat că vii…» as being in.
+                        */}
+                        {one.status === "PENDING_DECLARATION" && <Typography sx={{ mb: 1 }} data-testid="manage-reconfirm-owed">{t("reconfirm.pending")}</Typography>}
+                        {one.status === "WAITLISTED" && <Typography sx={{ mb: 1 }} data-testid="manage-reconfirm-owed">{t("reconfirm.waitlisted")}</Typography>}
+                        {one.status === "WAITLIST_OFFERED" ? (
+                          <Typography sx={{ mb: 1 }} data-testid="manage-reconfirm-offered">
+                            {t("reconfirm.offered")}
+                          </Typography>
+                        ) : !one.reconfirmOpen && one.reconfirmedAt ? (
+                          <Alert severity="success" sx={{ mb: 1 }} data-testid="manage-reconfirm-done">
+                            {t("reconfirm.done", {
+                              date: formatDay(one.reconfirmedAt, { locale, timeZone: live.eventTimezone, style: "long", withTime: true, position: "inline" }),
+                            })}
+                          </Alert>
+                        ) : (
+                          <>
+                            {reconfirmPressesItself({ own: one.own, questionOpen: one.reconfirmOpen, outcome: reconfirm }) ? (
+                              <ReconfirmOnArrival>{reconfirmForm}</ReconfirmOnArrival>
+                            ) : (
+                              reconfirmForm
+                            )}
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                              {t("reconfirm.optional", { button: reconfirmYes })}
+                            </Typography>
+                          </>
+                        )}
+                        {one.status !== "WAITLIST_OFFERED" && (
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                            {t("reconfirm.cannot")}
+                          </Typography>
+                        )}
+                      </>
+                    )}
                     {!family && <Divider sx={{ mt: 3 }} />}
                   </Box>
                 )}

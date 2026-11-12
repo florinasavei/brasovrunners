@@ -115,8 +115,19 @@ export type AdminColumn<Row> = {
    * The first column and the `primary` one are essential without saying so.
    */
   essential?: boolean;
+  /**
+   * On a phone, a row whose cell renders nothing (null, undefined, false or "") gets no line for this column — an optional
+   * value most rows lack («Partener»), where a label over an empty value is noise. Off by default: every other column keeps
+   * its line on every row.
+   */
+  omitEmptyOnPhone?: boolean;
   render: (row: Row) => ReactNode;
 };
+
+/** Whether a phone line has nothing to show (`omitEmptyOnPhone`). */
+function isEmptyCell(value: ReactNode): boolean {
+  return value === null || value === undefined || value === false || value === "";
+}
 
 export type AdminTableLabels = {
   results: string;
@@ -487,18 +498,22 @@ export default function AdminTable<Row>({
               {primary.render(row)}
             </Typography>
             <Stack spacing={0.5}>
-              {secondary.map((column) => (
-                <Stack
-                  key={column.key}
-                  direction="row"
-                  sx={{ justifyContent: "space-between", alignItems: "baseline", gap: 1 }}
-                >
-                  <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
-                    {column.label}
-                  </Typography>
-                  <Box sx={{ textAlign: "right", minWidth: 0 }}>{column.render(row)}</Box>
-                </Stack>
-              ))}
+              {secondary.map((column) => {
+                const value = column.render(row);
+                if (column.omitEmptyOnPhone && isEmptyCell(value)) return null;
+                return (
+                  <Stack
+                    key={column.key}
+                    direction="row"
+                    sx={{ justifyContent: "space-between", alignItems: "baseline", gap: 1 }}
+                  >
+                    <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
+                      {column.label}
+                    </Typography>
+                    <Box sx={{ textAlign: "right", minWidth: 0 }}>{value}</Box>
+                  </Stack>
+                );
+              })}
             </Stack>
             {rowActions && <Box sx={{ mt: 1.5 }}>{rowActions(row)}</Box>}
           </Box>

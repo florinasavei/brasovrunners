@@ -1,11 +1,13 @@
-import { and, asc, count, desc, eq, gt, inArray, max, ne, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, inArray, isNotNull, max, ne, sql, type SQL } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
+import { registrationReconfirmations } from "@/db/schema/registration-reconfirmations";
 import {
+  ACTIVE_REGISTRATION_STATUSES,
   type RegistrationCancelReasonKind,
   type RegistrationKind,
   type RegistrationSex,
@@ -40,6 +42,7 @@ import type { QueueOrder } from "./domain/waitlist";
 import { isRejectionCause, rejectionCause, type RejectionCause } from "@/modules/notifications/domain/rejection-cause";
 import { recipientRoleOf, type RecipientRole } from "@/modules/notifications/domain/email-audience";
 import { isClubCopy } from "@/modules/notifications/domain/club-notices";
+import { RECONFIRM_STATUSES } from "@/modules/notifications/domain/cannot-come";
 import type { DeskEmailState, RegistrationEmailState, RegistrationEmailStateDetail } from "./domain/email-state";
 import { deskEmailStateSql, needsEmailActionSql, registrationEmailStateDetailSql, registrationEmailStateSql } from "./email-state";
 import type { PlaceDeadlineCounts, PlaceDeadlineEvent } from "./domain/place-deadlines";
@@ -67,6 +70,16 @@ export type RegistrationListRow = {
   outsideCapacity: boolean;
   /** «Elită» (§897): the bib prints as an elite bib — the row's chip and the «⋮»'s mark or unmark. */
   elite: boolean;
+  /**
+   * «De la parteneri» (the decision «De la parteneri»): the partner's or sponsor's name, or null — the row's chip «Partener: {name}»
+   * and the export's «Partener». Read by no surface outside the backoffice (`partner-never-leaves.test.ts`).
+   */
+  partnerName: string | null;
+  /**
+   * «Cere reconfirmarea» (the decision «Cere reconfirmarea»): when the person last said «Vin», or null — the row's chip
+   * «A reconfirmat» and the export's «Reconfirmat». Read by no public page (`reconfirmation-never-leaves.test.ts`).
+   */
+  reconfirmedAt: Date | null;
   /** The two ticks of a marked elite (§910), stored as what the club hid: the «⋮»'s «Apare în clasament» and «Apare pe site». */
   eliteHiddenFromResults: boolean;
   eliteHiddenFromSite: boolean;
@@ -234,6 +247,19 @@ export type RegistrationListFilters = {
   promoConsented?: boolean;
   /** «În afara locurilor» (§643): only the rows seated outside the places — the summary strip's pill. Narrows only. */
   outsideCapacity?: boolean;
+  /** «De la parteneri» (the decision «De la parteneri»): only the rows with a partner's name. Narrows only. */
+  fromPartner?: boolean;
+  /**
+   * One partner's rows (the list's column «Partener»): the name compared without regard to case. The caller passes only a name
+   * it validated against the event's partners (`partner-mark.ts#chosenPartnerOf`). Narrows only.
+   */
+  partner?: string;
+  /**
+   * «Reconfirmare» (the decision «Cere reconfirmarea»): among the registrations an organizer's message asked — «yes» those
+   * still registered who said «Vin», «cancelled» those cancelled at or after an ask (by the person or an Administrator),
+   * «none» those still registered who did not answer. Information, never a state. Narrows only.
+   */
+  reconfirm?: ReconfirmFilter;
   /**
    * The members' race number asked for and not verified (§664): the real rows with a number that want it,
    * at an event that offers it, whose address is no member account's — the bibs page's link, the same set
@@ -242,13 +268,52 @@ export type RegistrationListFilters = {
   memberBibAsked?: boolean;
 };
 
+/** The three answers of «Reconfirmare», as the list's URL carries them. */
+export const RECONFIRM_FILTERS = ["yes", "cancelled", "none"] as const;
+export type ReconfirmFilter = (typeof RECONFIRM_FILTERS)[number];
+
+export function isReconfirmFilter(value: unknown): value is ReconfirmFilter {
+  return typeof value === "string" && (RECONFIRM_FILTERS as readonly string[]).includes(value);
+}
+
+/** The registration states that still stand, as SQL — «yes» is about people still registered. */
+const STANDING_STATUSES = sql.raw(ACTIVE_REGISTRATION_STATUSES.map((status) => `'${status}'`).join(", "));
+/**
+ * The states that can answer (`RECONFIRM_STATUSES`), as SQL — «none» counts only those: a waiting-list offer has no button
+ * and is not silent. The same set as `participant-messages.ts#readReconfirmAnswers`.
+ */
+const ANSWERING_STATUSES = sql.raw(RECONFIRM_STATUSES.map((status) => `'${status}'`).join(", "));
+
+/**
+ * One `EXISTS` per answer (the decision «Cere reconfirmarea»), on the registration's own asks — so the list, its count
+ * and its summary narrow alike, each in its one query.
+ */
+function reconfirmCondition(filter: ReconfirmFilter): SQL {
+  const asked = (extra: SQL) =>
+    sql`exists (select 1 from ${registrationReconfirmations} where ${registrationReconfirmations.registrationId} = ${registrations.id} and ${extra})`;
+  if (filter === "cancelled") {
+    return sql`(${registrations.status} = 'CANCELLED' and ${asked(sql`${registrationReconfirmations.askedAt} <= ${registrations.cancelledAt}`)})`;
+  }
+  const standing = sql`${registrations.status} in (${STANDING_STATUSES})`;
+  if (filter === "yes") return sql`(${standing} and ${asked(sql`${registrationReconfirmations.reconfirmedAt} is not null`)})`;
+  const answering = sql`${registrations.status} in (${ANSWERING_STATUSES})`;
+  return sql`(${answering} and ${asked(sql`true`)} and not ${asked(sql`${registrationReconfirmations.reconfirmedAt} is not null`)})`;
+}
+
+/** When the person last said «Vin», or null: one correlated `max()` on the asks' index, as `latestDeclarationAcceptedAt`. */
+const latestReconfirmedAt = sql<Date | null>`(
+  SELECT max(${registrationReconfirmations.reconfirmedAt})
+  FROM ${registrationReconfirmations}
+  WHERE ${registrationReconfirmations.registrationId} = ${registrations.id}
+)`.mapWith(registrationReconfirmations.reconfirmedAt);
+
 /**
  * The columns the list may be ordered by, and the only strings that ever reach an `ORDER BY`.
  *
  * An allowlist rather than a mapping built from the request: `?sort=` arrives from a URL anybody
  * can type, and the one thing that must not be possible is for it to name a column.
  */
-export const REGISTRATION_SORT_KEYS = ["name", "status", "event", "submitted", "bib", "untilWhen", "city", "age"] as const;
+export const REGISTRATION_SORT_KEYS = ["name", "status", "event", "submitted", "bib", "untilWhen", "city", "age", "partner"] as const;
 export type RegistrationSortKey = (typeof REGISTRATION_SORT_KEYS)[number];
 
 /**
@@ -341,6 +406,9 @@ function registrationConditions(filters: RegistrationListFilters, members: reado
     // The same condition as the club's list on «Newsletter» and the sponsor list's candidates (§570, §581).
     filters.promoConsented ? promoListed() : undefined,
     filters.outsideCapacity ? eq(registrations.outsideCapacity, true) : undefined,
+    filters.fromPartner ? isNotNull(registrations.partnerName) : undefined,
+    filters.partner ? sql`lower(${registrations.partnerName}) = lower(${filters.partner})` : undefined,
+    filters.reconfirm ? reconfirmCondition(filters.reconfirm) : undefined,
     filters.memberBibAsked ? memberBibAskedUnverified(members) : undefined,
     /*
       Name only, and deliberately not the email address. An organizer at a desk is holding a
@@ -458,6 +526,12 @@ function registrationOrderBy(sort: RegistrationSortKey, dir: "asc" | "desc", now
     */
     case "age":
       return dir === "asc" ? sql`${registrations.birthDate} desc nulls last` : sql`${registrations.birthDate} asc nulls last`;
+    /*
+      «Partener» (the list's column): by the partner's name without regard to case, a row with none last either way — so one
+      partner's people stand together at the top — then the list's own tie-breakers.
+    */
+    case "partner":
+      return dir === "asc" ? sql`lower(${registrations.partnerName}) asc nulls last` : sql`lower(${registrations.partnerName}) desc nulls last`;
   }
 }
 
@@ -494,6 +568,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       kind: registrations.kind,
       outsideCapacity: registrations.outsideCapacity,
       elite: registrations.elite,
+      partnerName: registrations.partnerName,
+      reconfirmedAt: latestReconfirmedAt,
       eliteHiddenFromResults: registrations.eliteHiddenFromResults,
       eliteHiddenFromSite: registrations.eliteHiddenFromSite,
       eventHiddenListEnabled: events.hiddenListEnabled,
@@ -810,6 +886,10 @@ export type RegistrationDetail = {
   outsideCapacity: boolean;
   /** «Elită» (§897): the bib prints as an elite bib — the page's chip, for every role that reads it. */
   elite: boolean;
+  /** «De la parteneri» (the decision «De la parteneri»): the partner's name — the page's chip for every role, its form the Administrator's. */
+  partnerName: string | null;
+  /** «Cere reconfirmarea» (the decision «Cere reconfirmarea»): when the person last said «Vin», or null — one line on the page. */
+  reconfirmedAt: Date | null;
   /** The two ticks of a marked elite (§910), stored as what the club hid: the page's «Elită» card, read by every role, changed by the Administrator. */
   eliteHiddenFromResults: boolean;
   eliteHiddenFromSite: boolean;
@@ -899,6 +979,9 @@ export type RegistrationDetail = {
   checkedInByName: string | null;
   /** Who vouched for the address at the desk, when nobody clicked a link. */
   emailConfirmedByName: string | null;
+  /** «Schimbă adresa»: when an Administrator last moved the registration to another address, and who (null once the account is gone). */
+  addressChangedAt: Date | null;
+  addressChangedByName: string | null;
   /**
    * The registration's one email state (§670, amending §663) — with the provider's code and redacted words
    * for the page's small print, which only this page reads; null when the participant's mail has no open refusal.
@@ -906,6 +989,9 @@ export type RegistrationDetail = {
   emailState: RegistrationEmailStateDetail | null;
   /** For "send the reminder": only while the event is ahead (§81). */
   eventStartsAt: Date;
+  /** «Schimbă adresa»: the event's own end, for whether a move still sends the next step (`moveSendsNextStep`). */
+  eventEndsAt: Date | null;
+  eventStatus: "SCHEDULED" | "COMPLETED" | "CANCELLED";
   /** When the current cycle began (`privacy_acknowledged_at`, rewritten on a restart); §145. */
   cycleStartedAt: Date;
   /**
@@ -939,6 +1025,7 @@ export type RegistrationDetail = {
 
 const checkedInBy = alias(staffUsers, "checked_in_by");
 const emailConfirmedBy = alias(staffUsers, "email_confirmed_by");
+const addressChangedBy = alias(staffUsers, "address_changed_by");
 
 
 
@@ -959,13 +1046,19 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       checkedInAt: registrations.checkedInAt,
       checkedInByName: checkedInBy.displayName,
       emailConfirmedByName: emailConfirmedBy.displayName,
+      addressChangedAt: registrations.addressChangedAt,
+      addressChangedByName: addressChangedBy.displayName,
       emailState: registrationEmailStateDetailSql(),
       eventStartsAt: events.startsAt,
+      eventEndsAt: events.endsAt,
+      eventStatus: events.eventStatus,
       id: registrations.id,
       status: registrations.status,
       kind: registrations.kind,
       outsideCapacity: registrations.outsideCapacity,
       elite: registrations.elite,
+      partnerName: registrations.partnerName,
+      reconfirmedAt: latestReconfirmedAt,
       eliteHiddenFromResults: registrations.eliteHiddenFromResults,
       eliteHiddenFromSite: registrations.eliteHiddenFromSite,
       source: registrations.source,
@@ -1059,6 +1152,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
     )
     .leftJoin(checkedInBy, eq(checkedInBy.id, registrations.checkedInByStaffUserId))
     .leftJoin(emailConfirmedBy, eq(emailConfirmedBy.id, registrations.emailConfirmedByStaffUserId))
+    .leftJoin(addressChangedBy, eq(addressChangedBy.id, registrations.addressChangedByStaffUserId))
     .where(eq(registrations.id, id))
     .limit(1);
 

@@ -10,7 +10,7 @@ import { ageOnRaceDay } from "./domain/age";
 import { ROW_DEADLINE_EXPORT_WORDS, type RowDeadlineKind } from "./domain/row-deadline";
 import { shirtSizeShown } from "./domain/kit";
 import { raceNumberOf } from "./domain/race-number";
-import { memberBibExportCell, membershipCell } from "./csv";
+import { memberBibExportCell, membershipCell, PARTNER_HEADER_DEFAULT, RECONFIRMED_HEADER_DEFAULT } from "./csv";
 import { clubRunnerCell, memberTickCell } from "./domain/club-runner";
 import { sexCell } from "./domain/sex";
 import { colourRules, columnLetters, type ColourRule } from "./sheet-colours";
@@ -41,8 +41,10 @@ import { eventLabelsOf, hasSeveralEvents, statisticsCells, statisticsOf, type St
 /** A row as the sheet wants it: the same data the CSV carries, with the dates still dates. */
 export type RegistrationSheetRow = Omit<
   RegistrationCsvRow,
-  "submittedAt" | "confirmedAt" | "checkedInAt" | "fitnessDeclaredAt" | "termsAcceptedAt" | "declarationSignedAt" | "promoConsentAt" | "deadline" | "deadlineFor"
+  "submittedAt" | "confirmedAt" | "checkedInAt" | "fitnessDeclaredAt" | "termsAcceptedAt" | "declarationSignedAt" | "promoConsentAt" | "deadline" | "deadlineFor" | "reconfirmedAt"
 > & {
+  /** «Reconfirmat» (the decision «Cere reconfirmarea»): when the person last said «Vin», a date like the others; null when not. */
+  reconfirmedAt?: Date | null;
   /** «Până când» (§650): the moment the row waits on (`rowDeadlineOf`), a date like the others; null when none. */
   deadline?: Date | null;
   /** What that moment is for (§650): its kind, written out in the sheet's words; null when none. */
@@ -357,6 +359,22 @@ export const REGISTRATION_SHEET_HEADERS = COLUMNS.map((column) => column.header)
 const EVENT_COLUMN: SheetColumn<RegistrationSheetRow> = { header: "Event", width: 34, cell: (row) => ({ value: row.eventLabel ?? row.eventTitle, type: String }) };
 
 /**
+ * «Partener» (the decision «De la parteneri»): after the fixed columns in every file, just before «Note interne» so the notes
+ * stay last; headed in the reader's language (`partnerHeader`) or `PARTNER_HEADER_DEFAULT`, text-typed like every cell.
+ */
+function partnerColumn(header: string): SheetColumn<RegistrationSheetRow> {
+  return { header, width: 24, cell: (row) => ({ value: row.partnerName ?? "", type: String }) };
+}
+
+/**
+ * «Reconfirmat» (the decision «Cere reconfirmarea»): when the person last said «Vin», on the club's clock like every moment
+ * of the sheet, empty when not — after «Partener», before «Note interne», which stays last.
+ */
+function reconfirmedColumn(header: string): SheetColumn<RegistrationSheetRow> {
+  return { header, width: 18, cell: (row) => ({ value: onClubClock(row.reconfirmedAt ?? null), type: Date, format: STAMP_FORMAT }) };
+}
+
+/**
  * «Note interne» (§785), the one column only some roles get: last, wide, with wrap on so the lines of a cell
  * (one note a line) show as lines. Headed in the reader's language (`notesHeader`, the card's own title) and
  * text-typed like every cell, so a note that begins with `=` is never evaluated.
@@ -377,7 +395,8 @@ const STATUS_WORDS: readonly string[] = registrationStatus.enumValues;
 export type StatusPickWords = { title: string; error: string };
 
 /**
- * The workbook. `notesHeader` adds the «Note interne» column (§785) — passed by the route only for a role that
+ * The workbook. «Partener» (the decision «De la parteneri») follows the fixed columns in every file, headed `partnerHeader`.
+ * `notesHeader` adds the «Note interne» column (§785) after it, the last — passed by the route only for a role that
  * `canKeepRegistrationNotes`; without it the file has no such column, which is every other caller's file.
  * `statistics` adds the footer under the rows (`statistics.ts`). `statusPick` makes «Status» a drop-down over the data
  * rows (§790, amended) — a pick from `STATUS_WORDS`, anything else refused with these words; without it the cells are free text.
@@ -391,7 +410,7 @@ export type StatusPickWords = { title: string; error: string };
 export async function buildRegistrationsWorkbook(
   rows: readonly RegistrationSheetRow[],
   sheetName: string,
-  options: { notesHeader?: string; statistics?: StatisticsWords; statusPick?: StatusPickWords } = {},
+  options: { notesHeader?: string; partnerHeader?: string; reconfirmedHeader?: string; statistics?: StatisticsWords; statusPick?: StatusPickWords } = {},
 ): Promise<Buffer> {
   const several = options.statistics !== undefined && hasSeveralEvents(rows);
   // What each row's event is called, one string to one event, for the column and for the footer's blocks alike.
@@ -399,6 +418,8 @@ export async function buildRegistrationsWorkbook(
   const sheetRows = several ? rows.map((row, at) => ({ ...row, eventLabel: labels[at] })) : rows;
   const columns = [...COLUMNS];
   if (several) columns.splice(columns.findIndex((column) => column.header === "Name") + 1, 0, EVENT_COLUMN);
+  columns.push(partnerColumn(options.partnerHeader ?? PARTNER_HEADER_DEFAULT));
+  columns.push(reconfirmedColumn(options.reconfirmedHeader ?? RECONFIRMED_HEADER_DEFAULT));
   if (options.notesHeader) columns.push(notesColumn(options.notesHeader));
   const at = (header: string) => columns.findIndex((column) => column.header === header);
 

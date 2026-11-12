@@ -182,6 +182,70 @@ export function readOrganizerMessagePayload(payload: unknown): OrganizerMessage 
 }
 
 /**
+ * Whether this row asks «Cere reconfirmarea» (the decision «Cere reconfirmarea»): the payload's `askReconfirm`, beside
+ * the words — set by the send only on the rows whose registration it wrote an ask for, never send-wide; anything but
+ * `true` — an unasked row, an older one, a hand-made one, a club copy — is no.
+ */
+export function readOrganizerAskReconfirm(payload: unknown): boolean {
+  return Boolean(payload && typeof payload === "object" && (payload as { askReconfirm?: unknown }).askReconfirm === true);
+}
+
+/**
+ * What the line before «Trimite» says about a send (the decision «Cere reconfirmarea», part two), worked out on the
+ * server for the road the send's messages take, with no reserve: the outbox claims a send to many after every
+ * registration's own message on its road (`domain/bulk.ts#SEND_TO_MANY_MESSAGE_TYPES`) and holds none of it back.
+ *
+ * - **Mailgun, no daily ceiling** (a monthly plan, or none): every message can go now, or this month's part of it;
+ *   `hours` at the queue's pace for those, behind what waits ahead.
+ * - **Mailgun, a daily ceiling** (Free): what can go today is what the day's allowance has left less what waits ahead
+ *   of the send; `hours` for today's part only, the rest at most the allowance a day over `restDays` more days, and
+ *   `daysUsed` the days the send takes the day's allowance — the registrations' own emails share it meanwhile.
+ * - **Gmail**: its own room in the rolling day less what waits ahead on its road, at its own pace a pass.
+ *
+ * `hours` is at least one when anything leaves now, zero when nothing can; it promises no start: when the first leaves
+ * is «Când pleacă emailurile»'s. `ahead` is every row waiting on the same road but the bulk kind, which goes after it.
+ */
+export type OrganizerSendOutlook =
+  | { road: "mailgun"; period: "none"; messages: number; now: number; deferred: 0; hours: number }
+  | { road: "mailgun"; period: "month"; messages: number; now: number; deferred: number; hours: number }
+  | { road: "mailgun"; period: "day"; messages: number; now: number; deferred: number; hours: number; restDays: number; perDay: number; daysUsed: number }
+  | { road: "gmail"; messages: number; now: number; waiting: number; hours: number; perPass: number };
+
+export function organizerSendOutlook(
+  input: {
+    messages: number;
+    ahead: number;
+    batchSize: number;
+    minutesPerRun: number;
+  } & (
+    | { road: "mailgun"; period: "day" | "month" | "none"; allowance: number | null; remaining: number | null; hourlyAllowance: number | null }
+    | { road: "gmail"; gmailRoom: number; gmailPerPass: number }
+  ),
+): OrganizerSendOutlook {
+  const messages = Math.max(0, input.messages);
+  const ahead = Math.max(0, input.ahead);
+  const minutes = Math.max(1, input.minutesPerRun);
+  const hoursFor = (count: number, perHour: number) => (count <= 0 ? 0 : Math.max(1, Math.ceil((ahead + count) / Math.max(1, perHour))));
+  if (input.road === "gmail") {
+    const perPass = Math.max(1, input.gmailPerPass);
+    const now = Math.min(messages, Math.max(0, input.gmailRoom - ahead));
+    return { road: "gmail", messages, now, waiting: messages - now, hours: hoursFor(now, (perPass * 60) / minutes), perPass };
+  }
+  const byRuns = (Math.max(1, input.batchSize) * 60) / minutes;
+  const perHour = input.hourlyAllowance === null ? byRuns : Math.min(byRuns, Math.max(1, input.hourlyAllowance));
+  if (input.period === "none" || input.allowance === null || input.remaining === null) {
+    return { road: "mailgun", period: "none", messages, now: messages, deferred: 0, hours: hoursFor(messages, perHour) };
+  }
+  const now = Math.min(messages, Math.max(0, input.remaining - ahead));
+  const deferred = messages - now;
+  const hours = hoursFor(now, perHour);
+  if (input.period === "month") return { road: "mailgun", period: "month", messages, now, deferred, hours };
+  const perDay = Math.max(1, Math.floor(input.allowance));
+  const restDays = deferred > 0 ? Math.ceil(deferred / perDay) : 0;
+  return { road: "mailgun", period: "day", messages, now, deferred, hours, restDays, perDay, daysUsed: (now > 0 ? 1 : 0) + restDays };
+}
+
+/**
  * What one send costs against the Mailgun allowance (§100), in messages: every recipient's own —
  * a test row's `@test.invalid` address still spends a message — plus **one** club copy per address
  * on the club's list for the whole send (§419; one per registration under §320), and none when the

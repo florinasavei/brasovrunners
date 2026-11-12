@@ -112,6 +112,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   moveReserveEntryToEliteAction: ["eliteMoveAction"],
   // «Modifică datele» (§645): asks, naming the person and the fields the press changes.
   editRegistrationAnswersAction: [],
+  // «Schimbă adresa»: asks first — the old links stop working, both addresses are told, the consent to offers withdrawn.
+  changeRegistrationAddressAction: [],
   // «Nu e membru» / «E membru» from the list's ⋮ and the sweep «Scoate bifa la cele {n}» (§645): each names whom it changes.
   setClubMemberDeclaredAction: [],
   // «Înscrieri publice deschise» beside «Locuri» (§906): shuts or opens the site's door, asked first either way.

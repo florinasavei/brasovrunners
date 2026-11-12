@@ -22,6 +22,9 @@ const EVERY_MESSAGE: Record<Exclude<EmailMessageType, RelayMessageType>, { butto
   REGISTRATION_MANAGE_LINK: { button: true, why: "the manage link" },
   PROFILE_MANAGE_LINK: { button: false, why: "«Înscrierile mele»: its button lists every person's cancel" },
   REGISTRATION_STATE_NOTICE: { button: false, why: "the resend for a cancelled or expired registration, no token (AGENTS.md §16.3)" },
+  // «Schimbă adresa»: neither carries a token; the old address no longer holds the registration, the new one gets its state's own message.
+  REGISTRATION_ADDRESS_REMOVED: { button: false, why: "to the old address, which no longer holds the registration: no link of it may act" },
+  REGISTRATION_ADDRESS_ADDED: { button: false, why: "a notice with no token; the state's own message that follows carries the button" },
   EVENT_REMINDER: { button: true, why: "the reminder: its one button" },
   EVENT_THANKS: { button: false, why: "after the fact" },
   DECLARATION_SIGNED: { button: true, why: "the signed declaration of a confirmed registration" },
@@ -198,5 +201,36 @@ describe("§558 when a send carries it", () => {
 
   it("lands on the manage page's own person's cancel", () => {
     expect(cannotComeUrlOf("https://example.test/ro/inregistrari/gestionare/SECRET")).toBe(LINK);
+  });
+});
+
+describe("«Vin» beside «Nu mai pot ajunge» (the decision «Cere reconfirmarea»)", () => {
+  const VIN = "https://example.test/ro/inregistrari/gestionare/SECRET#reconfirm";
+
+  it("is drawn only on the organizer's message, only with the link the renderer set for a send that asked, above the cancel", () => {
+    const asked = rendered("ORGANIZER_MESSAGE", { reconfirmUrl: VIN });
+    expect(asked.html).toContain('data-email-part="reconfirm"');
+    expect(asked.html.indexOf('data-email-part="reconfirm"')).toBeLessThan(asked.html.indexOf('data-email-part="cannot-come"'));
+    expect(asked.text).toContain(`Vin: ${VIN}`);
+    expect(asked.text).toContain("Ne spui că vii. Nu e obligatoriu.");
+    // Without the flag's link, nothing.
+    expect(rendered("ORGANIZER_MESSAGE").html).not.toContain('data-email-part="reconfirm"');
+    // On every other message, even handed a link by mistake, nothing.
+    for (const messageType of [...CANNOT_COME_MESSAGES].filter((type) => type !== "ORGANIZER_MESSAGE")) {
+      expect(rendered(messageType, { reconfirmUrl: VIN }).html, messageType).not.toContain('data-email-part="reconfirm"');
+    }
+    // A filled, full-width button of at least 44 pixels, as the cancel's (BR-REQ-041-01 criterion 6).
+    const anchor = /<div data-email-part="reconfirm"[^>]*><a href="[^"]+" style="([^"]+)"/.exec(asked.html)?.[1] ?? "";
+    expect(anchor).toContain("display:block");
+    expect(anchor).toContain("width:100%");
+    expect(anchor).toContain("line-height:20px");
+    expect(anchor).toContain("padding:14px 16px");
+  });
+
+  it("is never in the club's copy, whatever it is handed (§320)", () => {
+    const { html, text } = rendered("ORGANIZER_MESSAGE", { reconfirmUrl: VIN, clubCopy: true });
+    expect(html).not.toContain('data-email-part="reconfirm"');
+    expect(text).not.toContain("#reconfirm");
+    expect(text).not.toContain("Ne spui că vii.");
   });
 });

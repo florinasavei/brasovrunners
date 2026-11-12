@@ -284,7 +284,7 @@ jobs:
         if: steps.pw-cache.outputs.cache-hit != 'true'
       # With the browser cached, what is left are apt packages. The runner's image already carries Chromium's
       # libraries; what apt adds are nine font packages. On 2026-11-11 the runners could not resolve Ubuntu's
-      # package hosts for an hour: every shard stopped here ten minutes in, before any test ran, three times.
+      # package hosts for over two hours: every shard stopped here ten minutes in, before any test ran, four times.
       # So the step is bounded and its failure is a warning — a library really missing fails the first test.
       - name: Chromium's system packages (bounded; a warning when the package archive does not answer)
         if: steps.pw-cache.outputs.cache-hit == 'true'
