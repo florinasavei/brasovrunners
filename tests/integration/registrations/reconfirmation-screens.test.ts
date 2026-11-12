@@ -570,6 +570,28 @@ describe("«Trimite un mesaj participanților»", () => {
     });
   }
 
+  it("draws «Mesaje trimise» subjects with the event's own fields filled, and keeps a participant's field as typed", async () => {
+    const race = await createRace();
+    const actor = await staff("MODERATOR");
+    state.actor = actor;
+    await register(race.id);
+    const ready = { ro: "Ne vedem la {eventTitle}? Spune-ne dacă vii", en: "See you at {eventTitle}? Tell us if you come" };
+    await sendParticipantMessage(db, actor, { eventId: race.id, audience: "ALL_ACTIVE", sendId: randomUUID(), subject: ready, body: { ro: "Spune-ne.", en: "Tell us." } }, new Date(Date.now() - 60_000));
+    await sendParticipantMessage(
+      db,
+      actor,
+      { eventId: race.id, audience: "ALL_ACTIVE", sendId: randomUUID(), subject: { ro: "{participantName}, vii la {eventTitle}?", en: "{participantName}, coming?" }, body: { ro: "Spune-ne.", en: "Tell us." } },
+      new Date(),
+    );
+    const rows = elements(await messagesPage(race.id)).filter((element) => element.props["data-testid"] === "participant-message-history-row");
+    const texts = rows.map((row) => textOf(row));
+    const readySubject = texts.find((text) => text.includes("Ne vedem la"));
+    expect(readySubject).toContain("Ne vedem la Crosul? Spune-ne dacă vii");
+    expect(readySubject).not.toContain("{eventTitle}");
+    const personal = texts.find((text) => text.includes("{participantName}"));
+    expect(personal).toContain("{participantName}, vii la Crosul?");
+  });
+
   it("gives each «Mesaje trimise» row the three numbers of a send that asked and how far it has left; neither for a send that did not ask", async () => {
     const race = await createRace();
     const actor = await staff("MODERATOR");

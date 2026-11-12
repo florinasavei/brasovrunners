@@ -10,6 +10,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { countForm } from "@/i18n/count-form";
 import { formatDay } from "@/i18n/dates";
+import { findEventNotificationDetails } from "@/modules/events/repository";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing } from "@/modules/content/events/repository";
@@ -31,7 +32,7 @@ import { GMAIL_PACE_BUDGET_MS } from "@/infrastructure/email/delivery";
 import { OUTBOX_BATCH_SIZE } from "@/modules/notifications/outbox";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { PINGER_SLOT_MINUTES } from "@/modules/jobs/schedule";
-import { countParticipantMessageAudiences, listParticipantMessages } from "@/modules/notifications/participant-messages";
+import { countParticipantMessageAudiences, listParticipantMessages, subjectAsDrawn } from "@/modules/notifications/participant-messages";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
 import ParticipantMessageComposer, { type ComposerAudience } from "@/modules/notifications/ui/ParticipantMessageComposer";
@@ -91,10 +92,11 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
   const { sent, test, duplicate } = await searchParams;
 
   const now = new Date();
-  const [counts, volume, history] = await Promise.all([
+  const [counts, volume, history, eventDetails] = await Promise.all([
     countParticipantMessageAudiences(db, event.id),
     readEmailVolumeToday(db, now),
     listParticipantMessages(db, event.id),
+    findEventNotificationDetails(db, event.id, locale),
   ]);
 
   const t = await getTranslations("Admin");
@@ -419,7 +421,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
                 </Typography>
                 {/* The subject in the backoffice's language — the audit row keeps both — and the Romanian one should a row carry no other. */}
                 <Typography variant="body1" sx={{ fontWeight: 600, wordBreak: "break-word" }}>
-                  {entry.subject[locale] || entry.subject.ro}
+                  {eventDetails ? subjectAsDrawn(entry.subject[locale] || entry.subject.ro, eventDetails, locale) : entry.subject[locale] || entry.subject.ro}
                 </Typography>
                 <Typography variant="body2">
                   {entry.audience ? t(`participantMessages.audiencesShort.${entry.audience}`) : "—"}

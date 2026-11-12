@@ -237,6 +237,22 @@ test.describe("the list's column «Partener»: seen, hidden, set from the row, f
     await fitsTheScreen(page);
 
     if (desktop) {
+      // At 1280 px the column and the row's partner are wholly inside the table's frame without scrolling it sideways:
+      // «Partener» stands right after «Stare», so it is never the cell the frame cuts.
+      await page.setViewportSize({ width: 1280, height: 900 });
+      const table = main.locator('table[data-table-id="registrations"]');
+      const header = table.locator('th[data-column="partner"]');
+      await expect(header).toBeVisible();
+      const inFrame = async (target: import("@playwright/test").Locator) =>
+        target.evaluate((element) => {
+          let frame: HTMLElement | null = element.parentElement;
+          while (frame && !(frame.scrollWidth > frame.clientWidth && /(auto|scroll)/.test(getComputedStyle(frame).overflowX))) frame = frame.parentElement;
+          const box = element.getBoundingClientRect();
+          const edge = frame ? frame.getBoundingClientRect() : { left: 0, right: window.innerWidth };
+          return { left: box.left >= edge.left - 0.5, right: box.right <= edge.right + 0.5, scrolled: frame ? frame.scrollLeft : 0 };
+        });
+      expect(await inFrame(header)).toEqual({ left: true, right: true, scrolled: 0 });
+      expect(await inFrame(table.getByTestId("row-partner").first())).toEqual({ left: true, right: true, scrolled: 0 });
       // «Coloane» hides it and brings it back (the phone's cards have no such menu: every field is a line).
       const heading = main.locator('table[data-table-id="registrations"] th[data-column="partner"]');
       await expect(heading).toBeVisible();

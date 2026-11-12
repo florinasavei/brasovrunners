@@ -255,9 +255,10 @@ describe("the column «Partener» on the registrations list", () => {
     expect(column?.hideBelow).toBe("md");
     expect(columnOf(tree, "email")?.hideBelow).toBe("lg");
     expect(column?.omitEmptyOnPhone).toBe(true);
-    // After «Eveniment», before the address.
+    // Right after «Stare» (third), so it is in view at 1280 px.
     const keys = (tableOf(tree)?.props.columns as Column[]).map((candidate) => candidate.key);
-    expect(keys.indexOf("partner")).toBe(keys.indexOf("event") + 1);
+    expect(keys.indexOf("partner")).toBe(keys.indexOf("status") + 1);
+    expect(keys.indexOf("partner")).toBe(2);
 
     const cell = elements(cellOf(tree, "partner", from.id));
     expect(textOf(cell.find((element) => element.props["data-testid"] === "row-partner"))).toBe(BAKERY);

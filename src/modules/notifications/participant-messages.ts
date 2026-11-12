@@ -21,6 +21,7 @@ import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isReconfirmStatus, RECONFIRM_STATUSES } from "./domain/cannot-come";
 import { EMAIL_SAMPLE } from "./domain/email-sample";
+import { fillPlaceholders } from "./domain/email-copy";
 import {
   AUDIENCE_STATUSES,
   checkOrganizerMessage,
@@ -577,4 +578,26 @@ export async function previewParticipantMessage<T extends Record<string, unknown
     ]),
   ];
   return { subject: rendered.subject, html: rendered.html, unknown };
+}
+
+/**
+ * A sent message's subject as «Mesaje trimise» draws it: the event's own fields filled — `{eventTitle}`,
+ * `{eventStartsAtFormatted}`, `{eventLocationName}` — in the reader's language, by the one filler the email and its preview use
+ * (`fillPlaceholders`). The fields of one participant (`{participantName}`, `{bibNumber}`) and the checklist stay as the
+ * organizer typed them: a whole send has no one person. The audit row keeps the typed text; only the drawing changes.
+ */
+export function subjectAsDrawn(
+  subject: string,
+  details: { title: string; startsAt: Date; timezone: string; locationName?: string | null; locationToBeAnnounced?: boolean | null },
+  locale: Locale,
+): string {
+  const kept = (name: string) => `{${name}}`;
+  return fillPlaceholders(subject, {
+    participantName: kept("participantName"),
+    bibNumber: kept("bibNumber"),
+    eventChecklist: kept("eventChecklist"),
+    eventTitle: details.title,
+    eventStartsAtFormatted: formatDay(details.startsAt, { locale, timeZone: details.timezone, style: "long", withTime: true, position: "inline" }),
+    eventLocationName: details.locationToBeAnnounced === true ? placeToBeAnnouncedWords(locale) : (details.locationName ?? undefined),
+  });
 }
