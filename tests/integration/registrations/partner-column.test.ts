@@ -255,10 +255,11 @@ describe("the column «Partener» on the registrations list", () => {
     expect(column?.hideBelow).toBe("md");
     expect(columnOf(tree, "email")?.hideBelow).toBe("lg");
     expect(column?.omitEmptyOnPhone).toBe(true);
-    // Right after «Stare» (third), so it is in view at 1280 px.
+    // The last column, right before the row's verbs (the owner, 2026-11-12: «Coloana de partener ar trebui să apară ultima»):
+    // the verbs' column is pinned now, so the frame cuts nothing that stands last.
     const keys = (tableOf(tree)?.props.columns as Column[]).map((candidate) => candidate.key);
-    expect(keys.indexOf("partner")).toBe(keys.indexOf("status") + 1);
-    expect(keys.indexOf("partner")).toBe(2);
+    expect(keys.indexOf("partner")).toBe(keys.length - 1);
+    expect(keys.indexOf("partner")).toBe(keys.indexOf("submitted") + 1);
 
     const cell = elements(cellOf(tree, "partner", from.id));
     expect(textOf(cell.find((element) => element.props["data-testid"] === "row-partner"))).toBe(BAKERY);
@@ -597,6 +598,66 @@ describe("the row's own editor", () => {
     }
     // A line's own fold still opens its panel on the way back.
     expect(elements(await listPage({ eventId: race.id, saved: "partnerSaved" })).find((element) => element.type === ReserveListPanel)?.props.opened).toBe(true);
+  });
+});
+
+/**
+ * BR-REQ-041-01, `DECISIONS.md` §NNN — the owner, 2026-11-12, of this list on a wide screen: «Aici mi se face crop!». Besides the
+ * verbs' column pinned in `AdminTable` (`tests/unit/staff/admin-table-pinned-verbs.test.ts`), the list no longer asks for width
+ * it does not use: «Eveniment» is drawn only while every event is listed, and an address reads on a line of its own.
+ */
+describe("§NNN the list asks for no width it does not use", () => {
+  const keysOf = (tree: ReactNode) => (tableOf(tree)?.props.columns as Column[]).map((column) => column.key);
+
+  it("draws «Eveniment» only while every event is listed: one event chosen is the filter's own choice on every row", async () => {
+    const race = await createRace("Crosul aniversar — ediția a II-a");
+    const row = await register(race.id, "Ana Pop");
+    state.actor = await staff("ADMIN");
+
+    const one = await listPage({ eventId: race.id });
+    expect(columnOf(one, "event")).toBeUndefined();
+
+    const every = await listPage({ eventId: "all" });
+    const column = columnOf(every, "event");
+    expect(column?.label).toBe("Eveniment");
+    expect(column?.sortable).toBe(true);
+    // The title on a floor of its own on the wide table, so it is a few lines and never a word to a line; a phone's card keeps its width.
+    const cell = elements(cellOf(every, "event", row.id))[0];
+    expect(textOf(cell)).toBe("Crosul aniversar — ediția a II-a");
+    expect(cell.props.sx).toEqual({ display: "inline-block", minWidth: { xs: 0, md: "12rem" } });
+    // Nothing else moves: the same columns in the same order, «Eveniment» before the address.
+    expect(keysOf(one)).toEqual(keysOf(every).filter((key) => key !== "event"));
+    expect(keysOf(every).indexOf("event")).toBe(keysOf(every).indexOf("email") - 1);
+  });
+
+  it("an address breaks anywhere and still reads on a line: a floor on the wide table, none on a phone's card — a lead row's too", async () => {
+    const race = await createRace();
+    const admin = await staff("ADMIN");
+    state.actor = admin;
+    const row = await register(race.id, "Ana Pop");
+    const now = new Date();
+    await db.insert(eventInvitations).values({
+      eventId: race.id,
+      participantId: row.participantId,
+      email: "mara@example.org",
+      canonicalEmail: "mara@example.org",
+      name: "Mara Invitata",
+      invitedByStaffUserId: admin.id,
+      createdAt: now,
+      sentAt: now,
+      lastSentAt: now,
+      expiresAt: new Date(now.getTime() + 3 * 24 * 3_600_000),
+    });
+    const tree = await listPage({ eventId: race.id });
+    const address = { display: "inline-block", minWidth: { xs: 0, lg: "12rem" }, wordBreak: "break-all" };
+    // `lg` is where the column is drawn (`hideBelow`), so the floor never reaches the phone's card.
+    expect(columnOf(tree, "email")?.hideBelow).toBe("lg");
+    expect(elements(cellOf(tree, "email", row.id))[0].props.sx).toEqual(address);
+    const lead = (tableOf(tree)?.props.leadRows as { cells: Record<string, ReactNode> }[])[0];
+    expect(textOf(lead.cells.email)).toBe("mara@example.org");
+    expect(elements(lead.cells.email)[0].props.sx).toEqual(address);
+    // The lead rows stand only where one event is chosen, where «Eveniment» is not drawn: they carry no cell for it.
+    expect(Object.keys(lead.cells)).not.toContain("event");
   });
 });
 

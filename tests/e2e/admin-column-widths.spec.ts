@@ -14,8 +14,13 @@ import { FEATURED, hydrated, signIn } from "./support/featured-event";
  * reload (drawn hidden before hydration too), keeps its width, has no edge to tab to, and comes back
  * by the menu or the reset; the name and the state have no checkbox.
  *
+ * §NNN — and the row verbs' column stays in view: on a frame narrower than the table it is pinned to the
+ * frame's right edge, opaque, fading into the columns under it; a press the keyboard reaches beside it is
+ * not left under it; and on the owner's 1858-px screen the whole table fits.
+ *
  * Everything here is the browser's own layout — `col` alignment under `table-layout: fixed` with
- * collapsed borders, pointer capture, the restore after a reload — which no unit test can reach.
+ * collapsed borders, pointer capture, the restore after a reload, `position: sticky` in a scrolling
+ * frame — which no unit test can reach.
  *
  * One registration is written straight into the database so the list is not empty (the setup, not
  * the subject, as `promo-filter.spec.ts` argues), and removed afterwards.
@@ -255,6 +260,85 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
       await expect(email).toBeVisible();
       await expect(main.getByTestId("admin-table-reset-widths")).toHaveCount(0);
       expect(await page.evaluate(() => localStorage.getItem("br.table.registrations.hidden"))).toBeNull();
+    } finally {
+      await cleanup(seeded);
+    }
+  });
+
+  test("§NNN the row verbs stay in view: pinned while the table scrolls, and on a wide screen the table fits", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "the table is a desktop layout: the phone's blocks have no columns to scroll");
+    test.setTimeout(90_000);
+    const seeded = await seed(`${testInfo.project.name}-${Date.now().toString(36)}`);
+    try {
+      // A small laptop: eleven columns ask for more than this frame has.
+      await page.setViewportSize({ width: 1000, height: 800 });
+      await signIn(page, "Dev Administrator");
+      await page.goto(`/ro/admin/registrations?eventId=${seeded.eventId}&q=${encodeURIComponent(seeded.tag)}`);
+      await hydrated(page);
+
+      const main = page.locator("#main");
+      const table = main.locator('table[data-table-id="registrations"]');
+      const frame = table.locator("xpath=..");
+      const verbs = table.locator("thead th[data-pinned]");
+      const rowVerbs = table.locator("tbody td[data-pinned]").first();
+      /** Where a cell stands against the frame's edges and against the verbs' column. */
+      const place = (target: Locator) =>
+        target.evaluate((element) => {
+          const own = element.closest("table") as HTMLTableElement;
+          const edge = (own.parentElement as HTMLElement).getBoundingClientRect();
+          const pinned = (own.querySelector("thead th[data-pinned]") as HTMLElement).getBoundingClientRect();
+          const box = element.getBoundingClientRect();
+          return {
+            inFrame: box.left >= edge.left - 0.5 && box.right <= edge.right + 0.5,
+            clearOfVerbs: box.right <= pinned.left + 0.5,
+          };
+        });
+      const scrolls = () => frame.evaluate((element) => ({ wider: element.scrollWidth > element.clientWidth, left: element.scrollLeft }));
+
+      // The table scrolls inside its frame, the page never does — and the verbs are wholly in the frame without scrolling:
+      // the heading with «Coloane», and the row's own.
+      expect(await scrolls()).toEqual({ wider: true, left: 0 });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      expect((await place(verbs)).inFrame).toBe(true);
+      expect((await place(rowVerbs)).inFrame).toBe(true);
+      await expect(main.getByTestId("admin-table-columns")).toBeVisible();
+      // «Eveniment» is not drawn with one event chosen: every row would say the filter's own choice.
+      await expect(table.locator('th[data-column="event"]')).toHaveCount(0);
+
+      // Columns lie under the verbs: the frame says so and the verbs' edge fades into them.
+      await expect(frame).toHaveAttribute("data-more-end", "");
+      const fade = () => rowVerbs.evaluate((cell) => getComputedStyle(cell, "::before").opacity);
+      await expect.poll(fade).toBe("1");
+      // The verbs' cell is opaque, so what passes under it is not read through it.
+      expect(await rowVerbs.evaluate((cell) => getComputedStyle(cell).backgroundColor)).not.toMatch(/rgba\([^)]*,\s*0\)|transparent/);
+
+      // A press reached with the keyboard in the last column is scrolled beside the verbs, not under them (WCAG 2.4.11).
+      const partner = table.locator('th[data-column="partner"]');
+      const press = table.locator("tbody tr").first().locator("td").nth(-2).getByRole("button");
+      await expect(press).toHaveCount(1);
+      await press.focus();
+      await expect.poll(async () => (await place(press)).clearOfVerbs).toBe(true);
+      expect(await place(press)).toEqual({ inFrame: true, clearOfVerbs: true });
+      // At the frame's end the last column stands whole beside the verbs, and nothing more lies that way: no fade.
+      await frame.evaluate((element) => element.scrollTo({ left: element.scrollWidth }));
+      await expect(frame).not.toHaveAttribute("data-more-end");
+      await expect.poll(fade).toBe("0");
+      expect(await place(partner)).toEqual({ inFrame: true, clearOfVerbs: true });
+      expect((await place(verbs)).inFrame).toBe(true);
+
+      // The owner's screen, 1858 px (2026-11-12: «Aici mi se face crop!»): the whole table fits its frame, nothing scrolls
+      // sideways, no edge fades. A column added to this list has to fit here, or leave below a breakpoint.
+      await page.setViewportSize({ width: 1858, height: 900 });
+      await expect.poll(async () => (await scrolls()).wider).toBe(false);
+      await expect(frame).not.toHaveAttribute("data-more-end");
+      expect((await place(verbs)).inFrame).toBe(true);
+      expect(await place(partner)).toEqual({ inFrame: true, clearOfVerbs: true });
+      // An address reads on one line there, not a few characters to a line.
+      const address = table.locator("tbody tr").first().locator("td").filter({ hasText: `columns-${seeded.tag}@test.invalid` });
+      expect(await address.locator("span").first().evaluate((span) => span.getClientRects().length)).toBe(1);
+      // The long heading is two lines, not the column's width.
+      const bib = table.locator('th[data-column="bib"]');
+      expect(await bib.locator("[data-column-heading]").evaluate((span) => Math.round(span.getBoundingClientRect().height / Number.parseFloat(getComputedStyle(span).lineHeight)))).toBe(2);
     } finally {
       await cleanup(seeded);
     }

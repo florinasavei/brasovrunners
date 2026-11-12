@@ -18,6 +18,7 @@ import {
   sortHref,
 } from "@/modules/staff-identity/domain/admin-list-query";
 import { ACTIONS_COLUMN, isEssentialColumn, TABLE_ID_PATTERN } from "@/modules/staff-identity/domain/column-widths";
+import { ADMIN_TABLE_SURFACE } from "@/shared/ui/surface";
 import ColumnResizeHandle from "./ColumnResizeHandle";
 import ColumnVisibility from "./ColumnVisibility";
 import ColumnWidths from "./ColumnWidths";
@@ -78,6 +79,19 @@ import ColumnWidthsScript from "./ColumnWidthsScript";
  * A resized table switches to `table-layout: fixed` at the sum of its columns' widths: wider
  * than the frame, the frame scrolls sideways inside its border; narrower, it stops short. The
  * phone layout has no columns and is untouched.
+ *
+ * ## The row verbs stay in view (§NNN)
+ *
+ * The owner, 2026-11-12, of the registrations list on a 1858-px screen: «Aici mi se face crop!» —
+ * twelve columns ask for more than the frame has, the frame scrolls sideways, and the column that
+ * fell outside it was the last one: the row's verbs, the bulk tick and «Coloane» itself. So the
+ * verbs' column is pinned to the frame's right edge (`position: sticky`, CSS alone, so it holds
+ * before hydration and with JavaScript off): the other columns scroll under it, and a row's verbs
+ * are never the cells a narrow screen cuts. A pinned cell is opaque — the surface the table stands
+ * on (`ADMIN_TABLE_SURFACE`: the page, or the card a `Panel` or a fold says it is), then the row's
+ * own fill again (the heading's, a lead row's, the hover's). While columns lie under it, its left
+ * edge fades into them: `ColumnWidths` keeps `data-more-end` on the frame (`watchScrollRow`, the
+ * chips rows' own watcher), so a table that fits wears no edge at all.
  *
  * ## Two layouts, one definition
  *
@@ -226,12 +240,83 @@ const HIDE_COL = {
  * inside its column rather than pushing the column wider, and a body cell clips what still does
  * not fit. A heading wraps between its words only, never inside one: no column goes narrower than
  * its heading's longest word (`headingFloor`). A heading cell does not clip: its resize handle
- * reaches past its edge.
+ * reaches past its edge. Nor does the verbs' cell: its width is always the measured one, so its
+ * one line fits, and its fade lies outside its edge.
  */
 const RESIZED = {
   "&[data-resized] > thead > tr > th": { whiteSpace: "normal" },
-  "&[data-resized] > tbody > tr > td": { overflow: "hidden", overflowWrap: "anywhere" },
+  "&[data-resized] > tbody > tr > td:not([data-pinned])": { overflow: "hidden", overflowWrap: "anywhere" },
 } as const;
+
+/**
+ * The row verbs' column, pinned to the frame's right edge (§NNN): the cells are marked
+ * `data-pinned` and styled from the table, so a hovered row can reach its own. The fill is the
+ * table's surface made opaque, then the tint its row wears — a heading, a lead row, a hovered row —
+ * laid over it as an image, so a pinned cell is the colour of the cells beside it. Above the
+ * column edges (`ColumnResizeHandle`, 1) of the columns that pass under it. The fade is each
+ * cell's own, outside its left edge, shown only while the frame says more lies that way.
+ */
+const ROW_TINT = "linear-gradient(var(--mui-palette-action-hover), var(--mui-palette-action-hover))";
+const PINNED = {
+  "& > thead > tr > th[data-pinned], & > tbody > tr > td[data-pinned]": {
+    position: "sticky",
+    right: 0,
+    zIndex: 2,
+    backgroundColor: ADMIN_TABLE_SURFACE,
+    // Not over the rows' rules: with collapsed borders they are the table's, and a browser that
+    // leaves a pinned cell's own border where the cell came from would lose the line under it.
+    backgroundClip: "padding-box",
+    "&::before": {
+      content: '""',
+      position: "absolute",
+      top: 0,
+      bottom: 0,
+      right: "100%",
+      width: 12,
+      pointerEvents: "none",
+      opacity: 0,
+      backgroundImage: "linear-gradient(to left, var(--mui-palette-divider), transparent)",
+    },
+  },
+  "& > thead > tr > th[data-pinned], & > tbody > tr[data-row-kind='lead'] > td[data-pinned], & > tbody > tr.MuiTableRow-hover:hover > td[data-pinned]": {
+    backgroundImage: ROW_TINT,
+  },
+  "[data-more-end] > & [data-pinned]::before": { opacity: 1 },
+} as const;
+
+/**
+ * A heading takes no more room than it needs (§NNN). On the registrations list «Număr de concurs
+ * (BIB)», one line with its arrow and its «?», held 247 px for a column of two digits — while the
+ * addresses beside it were squeezed to five characters a line. So, in the automatic layout:
+ *
+ *   - a heading longer than about two short words wraps onto a second line (a box as wide as its
+ *     text, never wider than 7em) rather than widening its column. Its width is definite, so a
+ *     squeezed table cannot wrap it further, a word to a line. A resized table lets it go: there a
+ *     heading wraps to its column's own width, as before (`RESIZED`), and the pre-paint script
+ *     says the same before hydration;
+ *   - under a mouse the «?» is its glyph and a small ring, 30 px, not the 44 a thumb needs — a
+ *     touch screen keeps the 44 (`Hint`), and so does the phone layout's line of hints;
+ *   - under a mouse a cell's side padding is 12 px, not 16: a dozen columns gave a hundred pixels
+ *     to air. A column's edge under a mouse reaches 8 px into each cell, so it stays in that
+ *     padding; a finger's reaches 16, and a touch screen keeps the 16.
+ *
+ * The arrow and the «?» sit at the middle of a heading of two lines.
+ */
+const HEADINGS = {
+  "&:not([data-resized]) > thead > tr > th [data-column-heading]": {
+    display: "inline-block",
+    width: "max-content",
+    maxWidth: "7em",
+    whiteSpace: "normal",
+  },
+  "& > thead > tr > th[data-column]:not([data-pinned]) > .MuiIconButton-root": {
+    verticalAlign: "middle",
+    "@media (pointer: fine)": { minWidth: 0, minHeight: 0, my: "-3px" },
+  },
+  "@media (pointer: fine)": { "& > thead > tr > th, & > tbody > tr > td": { px: 1.5 } },
+} as const;
+
+const TABLE_SX = { ...RESIZED, ...PINNED, ...HEADINGS } as const;
 
 /**
  * Every link here is a `next/link` element wrapping a styled `<span>`, never
@@ -312,7 +397,7 @@ export default function AdminTable<Row>({
           overflowY: "hidden",
         }}
       >
-        <Table size="small" data-table-id={tableId} sx={RESIZED}>
+        <Table size="small" data-table-id={tableId} sx={TABLE_SX}>
           <Box component="caption" sx={VISUALLY_HIDDEN}>
             {caption}
           </Box>
@@ -361,6 +446,7 @@ export default function AdminTable<Row>({
                         sx={{
                           display: "inline-flex",
                           alignItems: "center",
+                          verticalAlign: "middle",
                           gap: 0.5,
                           minHeight: 44,
                           color: "inherit",
@@ -395,6 +481,7 @@ export default function AdminTable<Row>({
                 <TableCell
                   align="right"
                   data-column={ACTIONS_COLUMN}
+                  data-pinned=""
                   sx={{ fontWeight: 700, whiteSpace: "nowrap", ...HEAD_RULE }}
                 >
                   {labels.actions}
@@ -412,7 +499,7 @@ export default function AdminTable<Row>({
                     {lead.cells[column.key] ?? null}
                   </TableCell>
                 ))}
-                {rowActions && <TableCell align="right">{lead.actions ?? null}</TableCell>}
+                {rowActions && <TableCell align="right" data-pinned="">{lead.actions ?? null}</TableCell>}
               </TableRow>
             ))}
             {rows.map((row, index) => (
@@ -432,7 +519,7 @@ export default function AdminTable<Row>({
                     {column.render(row)}
                   </TableCell>
                 ))}
-                {rowActions && <TableCell align="right">{rowActions(row)}</TableCell>}
+                {rowActions && <TableCell align="right" data-pinned="">{rowActions(row)}</TableCell>}
               </TableRow>
             ))}
           </TableBody>

@@ -167,6 +167,17 @@ export const dynamic = "force-dynamic";
 /** The id of the bulk form, which lives below the table but owns the checkboxes inside it. */
 const BULK_FORM = "bulk-cancel";
 
+/**
+ * An address in the list's «E-mail» column (§NNN). It may break at any character, so that a long one never widens the page —
+ * and for that very reason the browser's table layout counted the column as one character wide: on a full table it was squeezed
+ * to its heading's width and every address stood five characters to a line, eight lines to a row. The floor is the width of an
+ * ordinary address, on the wide table only (`lg`, where the column is drawn): a phone's card keeps its own width.
+ */
+const EMAIL_CELL_SX = { display: "inline-block", minWidth: { xs: 0, lg: "12rem" }, wordBreak: "break-all" } as const;
+
+/** An event's title in «Eveniment» (§NNN): the same floor, for the same reason — a few lines, not a word to a line. */
+const EVENT_CELL_SX = { display: "inline-block", minWidth: { xs: 0, md: "12rem" } } as const;
+
 /** Where a one-press entry onto the official waiting list landed (§872, §888): the toasts that open its panel on the way back. */
 const WAITLIST_ENTRY_SAVED: ReadonlySet<string> = new Set(["waitlistAdded", "waitlistPlaced", "registrationOffered", "registrationOfferedRaised"]);
 
@@ -674,63 +685,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       render: (row) => <RegistrationStatusChip status={row.status} />,
     },
     {
-      /*
-        «Partener» (the decision on the list's column; the owner, 2026-11-11: «o coloană separată de „partener”»): the partner's
-        or sponsor's name as plain text — nothing on a row without one — for every role that reads the list; the chip «Partener:
-        {name}» left the name column for it, and stays on every other screen. Sorted by the name without regard to case, the rows
-        with none last either way. Optional like its neighbours: «Coloane» hides it; unlike the address it stays on the wide table at
-        every width it is drawn (`md` and up, its bounded 16rem keeping it narrow), so a landscape tablet sees and sets it too; on a
-        phone it is a line of the card only where there is a name or a press. A long name wraps anywhere, never widening the page.
-        The press is the Administrator's, with one event chosen (`partnerRefusal`); its accessible name begins with the words it
-        shows («Alege…» / «Schimbă…», WCAG 2.5.3), and its dialog closes on every page drawn after a save — the render's own
-        instant in `settledKey` — so a second «unchanged» in a row closes it too.
-      */
-      key: "partner",
-      label: t("partner.column"),
-      hint: t("partner.columnHint"),
-      sortable: true,
-      initialDir: "asc",
-      hideBelow: "md",
-      omitEmptyOnPhone: true,
-      render: (row) => {
-        const press = partnerRefusal && (
-          <RowPartnerDialog
-            action={setRegistrationPartnerFromListAction}
-            actionKey={actionKeyOf(setRegistrationPartnerFromListAction)}
-            messages={partnerRefusal}
-            fields={{ uiLocale: locale, registrationId: row.id, listQuery: rowReturnQueryString }}
-            label={row.partnerName ? t("partner.rowChange") : t("partner.rowChoose")}
-            ariaLabel={t(row.partnerName ? "partner.rowChangeFor" : "partner.rowPressFor", { name: row.registeredName })}
-            title={t("partner.rowTitle", { name: row.registeredName })}
-            help={t("partner.rowHelp")}
-            choiceName={PARTNER_CHOICE_FIELD}
-            choiceLabel={t("partner.rowChoice")}
-            noneLabel={t("partner.none")}
-            partners={partnerSuggestions}
-            current={row.partnerName}
-            boxName={PARTNER_NAME_FIELD}
-            boxLabel={t("partner.rowNew")}
-            boxHelp={t("partner.rowNewHelp", { max: PARTNER_NAME_MAX })}
-            max={PARTNER_NAME_MAX}
-            saveLabel={t("partner.save")}
-            cancelLabel={words.cancel}
-            settledKey={`${row.partnerName ?? ""}:${saved ?? ""}:${deadlinesNow.getTime()}`}
-          />
-        );
-        if (!row.partnerName && !press) return null;
-        return (
-          <Stack spacing={0.25} sx={{ alignItems: { xs: "flex-end", md: "flex-start" }, minWidth: 0, maxWidth: { md: "16rem" } }}>
-            {row.partnerName && (
-              <Box component="span" data-testid="row-partner" sx={{ overflowWrap: "anywhere", minWidth: 0, maxWidth: "100%" }}>
-                {row.partnerName}
-              </Box>
-            )}
-            {press}
-          </Stack>
-        );
-      },
-    },
-    {
       // The owner's "what step each participant is in" (§145): steps done out of six and the
       // last one done, from the same derivation the registration's page shows in full.
       // Not sortable — the status column beside it is the ordered one.
@@ -845,19 +799,33 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         );
       },
     },
-    {
-      key: "event",
-      label: t("registrations.columnEvent"),
-      sortable: true,
-      initialDir: "asc",
-      render: (row) => row.eventTitle ?? row.eventId,
-    },
+    /*
+      «Eveniment» only while every event is listed (§NNN): with one event chosen every row said the filter's own choice again,
+      the title wrapped down a narrow column and each row grew to its height. Its floor (`EVENT_CELL_SX`) keeps a title to a few
+      lines where the column is drawn.
+    */
+    ...(filters.eventId
+      ? []
+      : [
+          {
+            key: "event",
+            label: t("registrations.columnEvent"),
+            sortable: true,
+            initialDir: "asc",
+            render: (row) => (
+              <Box component="span" sx={EVENT_CELL_SX}>
+                {row.eventTitle ?? row.eventId}
+              </Box>
+            ),
+          } satisfies AdminColumn<RegistrationListRow>,
+        ]),
     {
       key: "email",
       label: t("registrations.columnEmail"),
       hideBelow: "lg",
+      // An address on a line of its own, broken only when it is longer than the column (`EMAIL_CELL_SX`, §NNN).
       render: (row) => (
-        <Box component="span" sx={{ wordBreak: "break-all" }}>
+        <Box component="span" sx={EMAIL_CELL_SX}>
           {row.participantEmail}
         </Box>
       ),
@@ -869,6 +837,65 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       initialDir: "desc",
       hideBelow: "lg",
       render: (row) => formatDay(row.submittedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }),
+    },
+    {
+      /*
+        «Partener» (the decision on the list's column; the owner, 2026-11-11: «o coloană separată de „partener”»): the partner's
+        or sponsor's name as plain text — nothing on a row without one — for every role that reads the list; the chip «Partener:
+        {name}» left the name column for it, and stays on every other screen. Sorted by the name without regard to case, the rows
+        with none last either way. The last column, right before the row's verbs (§NNN; the owner, 2026-11-12: «Coloana de partener
+        ar trebui să apară ultima»): it stood third only while the frame cut whatever stood last, and the verbs' column is pinned
+        now, so nothing is cut. Optional like its neighbours: «Coloane» hides it; unlike the address it stays on the wide table at
+        every width it is drawn (`md` and up, its bounded 16rem keeping it narrow), so a landscape tablet sees and sets it too; on a
+        phone it is a line of the card only where there is a name or a press. A long name wraps anywhere, never widening the page.
+        The press is the Administrator's, with one event chosen (`partnerRefusal`); its accessible name begins with the words it
+        shows («Alege…» / «Schimbă…», WCAG 2.5.3), and its dialog closes on every page drawn after a save — the render's own
+        instant in `settledKey` — so a second «unchanged» in a row closes it too.
+      */
+      key: "partner",
+      label: t("partner.column"),
+      hint: t("partner.columnHint"),
+      sortable: true,
+      initialDir: "asc",
+      hideBelow: "md",
+      omitEmptyOnPhone: true,
+      render: (row) => {
+        const press = partnerRefusal && (
+          <RowPartnerDialog
+            action={setRegistrationPartnerFromListAction}
+            actionKey={actionKeyOf(setRegistrationPartnerFromListAction)}
+            messages={partnerRefusal}
+            fields={{ uiLocale: locale, registrationId: row.id, listQuery: rowReturnQueryString }}
+            label={row.partnerName ? t("partner.rowChange") : t("partner.rowChoose")}
+            ariaLabel={t(row.partnerName ? "partner.rowChangeFor" : "partner.rowPressFor", { name: row.registeredName })}
+            title={t("partner.rowTitle", { name: row.registeredName })}
+            help={t("partner.rowHelp")}
+            choiceName={PARTNER_CHOICE_FIELD}
+            choiceLabel={t("partner.rowChoice")}
+            noneLabel={t("partner.none")}
+            partners={partnerSuggestions}
+            current={row.partnerName}
+            boxName={PARTNER_NAME_FIELD}
+            boxLabel={t("partner.rowNew")}
+            boxHelp={t("partner.rowNewHelp", { max: PARTNER_NAME_MAX })}
+            max={PARTNER_NAME_MAX}
+            saveLabel={t("partner.save")}
+            cancelLabel={words.cancel}
+            settledKey={`${row.partnerName ?? ""}:${saved ?? ""}:${deadlinesNow.getTime()}`}
+          />
+        );
+        if (!row.partnerName && !press) return null;
+        return (
+          <Stack spacing={0.25} sx={{ alignItems: { xs: "flex-end", md: "flex-start" }, minWidth: 0, maxWidth: { md: "16rem" } }}>
+            {row.partnerName && (
+              <Box component="span" data-testid="row-partner" sx={{ overflowWrap: "anywhere", minWidth: 0, maxWidth: "100%" }}>
+                {row.partnerName}
+              </Box>
+            )}
+            {press}
+          </Stack>
+        );
+      },
     },
   ];
 
@@ -896,7 +923,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const openInvitations = filters.eventId ? [] : await listOpenInvitationCountsByEvent(db, leadNow);
   const inviteWhere = inviteTarget(filters.eventId, inviteEvents);
   const invitationsHref = (id: string) => `${basePath}?eventId=${encodeURIComponent(id)}#registrations-invitations`;
-  const leadTitle = leadEvent ? (events.find((event) => event.id === leadEvent)?.title ?? null) : null;
   const leadWhen = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
   const leadRows: AdminLeadRow[] = leadInvitations.map((row) => {
     const state = invitationState(row, leadNow);
@@ -925,9 +951,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             : state === "withdrawn" && row.withdrawnAt
               ? t("invitations.withdrawnAt", { at: leadWhen(row.withdrawnAt) })
               : t("invitations.expiredAt", { at: leadWhen(row.expiredAt ?? row.expiresAt) }),
-        event: leadTitle ?? "",
         email: (
-          <Box component="span" sx={{ wordBreak: "break-all" }}>
+          <Box component="span" sx={EMAIL_CELL_SX}>
             {row.email}
           </Box>
         ),

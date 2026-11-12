@@ -1,3 +1,4 @@
+import { ON_CARD_SX } from "./surface";
 import { TAP_TARGET } from "./tap-target";
 
 /**
@@ -143,6 +144,8 @@ export const BOXED_DISCLOSURE_SX = {
   borderRadius: 1,
   px: 2,
   bgcolor: "background.paper",
+  // What stands inside stands on the card (§NNN): a table's pinned cells take this colour.
+  ...ON_CARD_SX,
   "& > summary": {
     ...DISCLOSURE_SUMMARY_SX,
     // The backoffice's bars keep the height the owner approved them at (§269): the 360-px density
