@@ -528,7 +528,8 @@ describe("«Trimite un mesaj participanților»", () => {
     expect(body).not.toMatch(/celelalte \d/);
   });
 
-  const STOPPED_UNTIL = String.raw`Mailgun e oprit acum, până \p{L}+, \d{1,2} \p{L}+\.? \d{4}, la \d{2}:\d{2}\.`;
+  // The weekday is the house's short form: «joi» has no dot, «vin.» has one — either, so the test holds on every day (CI, 2026-11-12).
+  const STOPPED_UNTIL = String.raw`Mailgun e oprit acum, până \p{L}+\.?, \d{1,2} \p{L}+\.? \d{4}, la \d{2}:\d{2}\.`;
   for (const inForce of [false, true]) {
     const switchWords = inForce ? "«Gmail preia când Mailgun se oprește» in force" : "no fallback in force";
     const after = inForce ? "Până atunci emailurile pleacă prin Gmail-ul clubului, în limita lui." : "Mesajul începe să plece când repornește.";
