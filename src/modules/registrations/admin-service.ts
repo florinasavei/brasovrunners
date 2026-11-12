@@ -1972,29 +1972,23 @@ export async function readEmergencyDetails<T extends Record<string, unknown>>(
 
 /**
  * The telephones of the rows on one page of the registrations list (§NNN; the owner, 2026-11-12: «Aș vrea să afișez și
- * numărul de telefon al alergătorilor în grid ca să pot să-i sun rapid»). §322's rule, kept: a telephone is read by
- * whoever may read the registrations, only when asked for («Arată telefoanele», a plain link), and each read is
- * recorded before the values come back — `registrations.phones_viewed`, the event when one is chosen and how many
- * rows, never a number or a name — once per page drawn, as the emergency sheet is. A page of no rows reads nothing
- * and records nothing. Never at the desk and never in an export.
+ * numărul de telefon al alergătorilor în grid ca să pot să-i sun rapid»).
+ *
+ * §322 had put the runner's own telephone with the emergency details: read only when asked for, each read recorded. It
+ * was first built here that way — a switch above the table, an audit row per page drawn — and the owner, told that
+ * showing it always annuls that rule for the telephone, chose it: «Da … YOLO». So the list shows it on every page, to
+ * whoever may read the registrations (the gate the list itself has, asserted again here), and no row is written for
+ * it. What §322 keeps: the emergency contact's name and number and the health note are still read only on demand, each
+ * read recorded (`readEmergencyDetails`, `readEmergencySheet`); the telephone is still never at the desk and never in
+ * an export — which is why it is this page's own read and no column of the list's shared query.
  */
 export async function readRowPhones<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
-  input: { registrationIds: readonly string[]; eventId: string | null },
-  now: Date,
+  registrationIds: readonly string[],
 ): Promise<Map<string, string>> {
   assertMayRead(actor);
-  if (input.registrationIds.length === 0) return new Map();
-  await recordAuditEvent(db, {
-    actorStaffUserId: actor.id,
-    action: "registrations.phones_viewed",
-    entityType: "event",
-    entityId: input.eventId,
-    metadata: { rowCount: input.registrationIds.length },
-    now,
-  });
-  return findPhonesOf(db, input.registrationIds);
+  return findPhonesOf(db, registrationIds);
 }
 
 /**

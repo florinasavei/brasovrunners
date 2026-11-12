@@ -175,9 +175,9 @@ const BULK_FORM = "bulk-cancel";
  * An address in the list's «E-mail» column (§NNN). It may break at any character, so that a long one never widens the page —
  * and for that very reason the browser's table layout counted the column as one character wide: on a full table it was squeezed
  * to its heading's width and every address stood five characters to a line, eight lines to a row. The floor is the width of an
- * ordinary address, on the wide table only (`lg`, where the column is drawn): a phone's card keeps its own width.
+ * ordinary address, on the wide table only (`md`, where it is drawn): a phone's card keeps its own width.
  */
-const EMAIL_CELL_SX = { display: "inline-block", minWidth: { xs: 0, lg: "12rem" }, wordBreak: "break-all" } as const;
+const EMAIL_CELL_SX = { display: "inline-block", minWidth: { xs: 0, md: "12rem" }, wordBreak: "break-all" } as const;
 
 /** An event's title in «Eveniment» (§NNN): the same floor, for the same reason — a few lines, not a word to a line. */
 const EVENT_CELL_SX = { display: "inline-block", minWidth: { xs: 0, md: "12rem" } } as const;
@@ -227,7 +227,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canReadRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, bounced, promo, outside, memberBib, partner, reconfirm, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test, memberSweep, phones } = current;
+  const { eventId, status, clubMember, bounced, promo, outside, memberBib, partner, reconfirm, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test, memberSweep } = current;
   // What «Trimite acum» said about Mailgun's stop (§622): from the action's own address; unreadable says nothing.
   const untilParsed = current.until ? new Date(current.until) : null;
   const untilAt = untilParsed && !Number.isNaN(untilParsed.getTime()) ? untilParsed : null;
@@ -454,8 +454,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     [PARTNER_FILTER_PARAM]: chosenPartner ?? undefined,
     // «Reconfirmare»: rides with every sort, page and export link, as the partner filter does.
     reconfirm: isReconfirmFilter(reconfirm) ? reconfirm : undefined,
-    // «Arată telefoanele» (§NNN) stays on while the list is sorted, paged and worked on; each page drawn is recorded.
-    phones: phones === "1" ? "1" : undefined,
     q,
     sort: current.sort,
     dir: current.dir,
@@ -559,11 +557,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   };
 
   /*
-    «Telefon» (§NNN): the page's telephones, read only when asked for («Arată telefoanele», `?phones=1`, a plain link so no
-    prefetch asks on somebody's behalf) and recorded before they come back — §322's rule for the emergency details, kept.
-    Null while the column is not asked for: the list's own query never carries a telephone.
+    The telephones of the page's rows, for «Contact» (§NNN; the owner's decision: always shown, no trail): this page's own
+    read, role-gated in the service — the list's shared query never carries a telephone, so neither the desk nor an
+    export can. The emergency contact and the health note stay on demand and recorded (§322).
   */
-  const rowPhones = phones === "1" ? await readRowPhones(db, actor, { registrationIds: rows.map((row) => row.id), eventId: filters.eventId ?? null }, new Date()) : null;
+  const rowPhones = await readRowPhones(db, actor, rows.map((row) => row.id));
 
   // The marker's number, from the same read as its tooltip's words.
   const notesCounts = new Map([...rowNotes].map(([id, notes]) => [id, notes.length]));
@@ -711,38 +709,35 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         </Stack>
       ),
     },
-    /*
-      «Telefon» (§NNN; the owner, 2026-11-12: «ca să pot să-i sun rapid»): drawn only while «Arată telefoanele» is on. The number
-      as the person typed it, on one line, a `tel:` link — a tap rings it on a phone. «—» without one. Right after the name:
-      a column asked for in order to be read now must not be one the table's width leaves under the pinned verbs (at 1600 px
-      it was, when it stood after the address).
-    */
-    ...(rowPhones
-      ? [
-          {
-            key: "phone",
-            label: t("registrations.columnPhone"),
-            hint: t("registrations.phoneHint"),
-            // Its own switch shows and hides it, and each showing is a recorded read: not one of «Coloane»'s to hide.
-            essential: true,
-            render: (row) => {
-              const phone = rowPhones.get(row.id);
-              if (!phone) {
-                return (
-                  <Box component="span" sx={{ color: "text.disabled" }}>
-                    —
-                  </Box>
-                );
-              }
-              return (
-                <Box component="a" href={`tel:${phone.replace(/[^\d+]/g, "")}`} data-testid="row-phone" sx={{ whiteSpace: "nowrap", color: "primary.main" }}>
-                  {phone}
-                </Box>
-              );
-            },
-          } satisfies AdminColumn<RegistrationListRow>,
-        ]
-      : []),
+    {
+      /*
+        «Contact» (§NNN; the owner, 2026-11-12: «Aș vrea să afișez și numărul de telefon al alergătorilor în grid ca să pot
+        să-i sun rapid», then, told what it annuls of §322, «Da … YOLO»): the address and, under it, the telephone — as
+        the person typed it, on one line, a `tel:` link a phone rings. One column for both, so the number costs the table
+        no width (a column of its own did not fit the owner's 1858-px screen), and right after the name, so it is in view
+        at every width and never under the pinned verbs. Always drawn on the wide table: the address used to leave it
+        below `lg`, and the number is what the list is opened for on a small laptop too. «Coloane» hides it, both at once.
+        An address on a line of its own, broken only when it is longer than the column (`EMAIL_CELL_SX`).
+      */
+      key: "email",
+      label: t("registrations.columnContact"),
+      hint: t("registrations.contactHint"),
+      render: (row) => {
+        const phone = rowPhones.get(row.id);
+        return (
+          <Stack spacing={0.25} sx={{ alignItems: { xs: "flex-end", md: "flex-start" } }}>
+            <Box component="span" sx={EMAIL_CELL_SX}>
+              {row.participantEmail}
+            </Box>
+            {phone && (
+              <Box component="a" href={`tel:${phone.replace(/[^\d+]/g, "")}`} data-testid="row-phone" sx={{ whiteSpace: "nowrap", color: "primary.main" }}>
+                {phone}
+              </Box>
+            )}
+          </Stack>
+        );
+      },
+    },
     {
       key: "status",
       label: t("registrations.columnStatus"),
@@ -886,17 +881,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             ),
           } satisfies AdminColumn<RegistrationListRow>,
         ]),
-    {
-      key: "email",
-      label: t("registrations.columnEmail"),
-      hideBelow: "lg",
-      // An address on a line of its own, broken only when it is longer than the column (`EMAIL_CELL_SX`, §NNN).
-      render: (row) => (
-        <Box component="span" sx={EMAIL_CELL_SX}>
-          {row.participantEmail}
-        </Box>
-      ),
-    },
     {
       key: "submitted",
       label: t("registrations.columnSubmitted"),
@@ -2179,19 +2163,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           )}
         </Box>
       )}
-
-      {/*
-        «Arată telefoanele» (§NNN): the telephones are read on demand and each page drawn with them is recorded (§322), so the
-        column is a choice made here, in sight, and not one of «Coloane»'s — a plain link, the same with scripts off.
-      */}
-      <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", columnGap: 1.5, rowGap: 0.5 }} data-testid="registrations-phones">
-        <GlyphButton icon={rowPhones ? "dismiss" : "preview"} href={buildListHref(basePath, listParams, { phones: rowPhones ? undefined : "1", page: current.page })} variant="text" size="small" sx={TAP_TARGET}>
-          {t(rowPhones ? "registrations.phonesHide" : "registrations.phonesShow")}
-        </GlyphButton>
-        <Typography variant="body2" color="text.secondary">
-          {t(rowPhones ? "registrations.phonesShown" : "registrations.phonesHelp")}
-        </Typography>
-      </Stack>
 
       {/* A row's press leaves the row where it stood on screen (§NNN): strings only, no row crosses to it. */}
       <KeepRowPlace anchorPrefix={registrationRowAnchor("")} />

@@ -196,7 +196,8 @@ export type RegistrationListRow = {
 /**
  * What «Date lipsă» reads (§905, `missing-answers.ts`), beside the answers the row already carries: the answers
  * themselves where the list may show them, and for the telephone and the emergency contact only whether one is
- * held (`answerHeldSql`) — the list never reads either (§322).
+ * held (`answerHeldSql`) — this query reads neither (§322); the list's page reads the telephones of its rows in a
+ * query of its own (§NNN, `findPhonesOf`), the emergency contact never.
  */
 export type AnswersForChip = {
   sex: RegistrationSex | null;
@@ -1195,10 +1196,10 @@ function gatedHealth<R extends { healthNotes: string | null; healthConsentAt: Da
 }
 
 /**
- * The telephones of these registrations (§NNN), for the registrations list's «Telefon» column: **their own query**,
- * asked only when the reader asked to see them, as the emergency details are — the list's own query still carries
- * only whether a telephone is held (`phoneHeld`). A registration without one is absent from the map. The one caller
- * asserts the role and writes the audit row first (`admin-service.ts#readRowPhones`).
+ * The telephones of these registrations (§NNN), for the registrations list's «Contact» column: **their own query**, for
+ * that page alone. The list's shared query still carries only whether a telephone is held (`phoneHeld`), so nothing
+ * that reuses it — and neither the desk's query nor an export — can carry a number by accident. A registration without
+ * one is absent from the map. The one caller asserts the role first (`admin-service.ts#readRowPhones`).
  */
 export async function findPhonesOf<T extends Record<string, unknown>>(db: Database<T>, registrationIds: readonly string[]): Promise<Map<string, string>> {
   const phones = new Map<string, string>();

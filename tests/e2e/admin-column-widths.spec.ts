@@ -223,7 +223,7 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
       await expect(menu.locator('[data-column-toggle="name"]')).toHaveCount(0);
       await expect(menu.locator('[data-column-toggle="status"]')).toHaveCount(0);
       await expect(menu.getByText("Mereu afișate:")).toBeVisible();
-      const toggle = menu.getByRole("menuitemcheckbox", { name: "E-mail", exact: true });
+      const toggle = menu.getByRole("menuitemcheckbox", { name: "Contact", exact: true });
       await expect(toggle).toHaveAttribute("aria-checked", "true");
       await toggle.click();
       await expect(toggle).toHaveAttribute("aria-checked", "false");
@@ -253,7 +253,7 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
 
       // Hidden again, then the reset: every column back, every width automatic.
       await button.click();
-      await page.getByRole("menuitemcheckbox", { name: "E-mail", exact: true }).click();
+      await page.getByRole("menuitemcheckbox", { name: "Contact", exact: true }).click();
       await page.keyboard.press("Escape");
       await expect(email).toBeHidden();
       await main.getByTestId("admin-table-reset-widths").click();

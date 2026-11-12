@@ -249,12 +249,12 @@ describe("the column «Partener» on the registrations list", () => {
     expect(column?.hint).toBe((await import("../../../messages/ro.json")).default.Admin.partner.columnHint);
     expect(column?.sortable).toBe(true);
     expect(column?.initialDir).toBe("asc");
-    // Optional like its neighbours — «Coloane» hides it — but on the wide table at every width it is drawn (`md` and up),
-    // unlike the address, which leaves it below `lg`: a landscape tablet sees and sets the partner too.
+    // Optional like its neighbours — «Coloane» hides it — and on the wide table at every width it is drawn (`md` and up):
+    // a landscape tablet sees and sets the partner too. («Contact» stays at every width as well, since it holds the telephone.)
     expect(column?.essential).toBeUndefined();
     expect(column?.primary).toBeUndefined();
     expect(column?.hideBelow).toBe("md");
-    expect(columnOf(tree, "email")?.hideBelow).toBe("lg");
+    expect(columnOf(tree, "email")?.hideBelow).toBeUndefined();
     expect(column?.omitEmptyOnPhone).toBe(true);
     // The last column, right before the row's verbs (the owner, 2026-11-12: «Coloana de partener ar trebui să apară ultima»):
     // the verbs' column is pinned now, so the frame cuts nothing that stands last.
@@ -627,9 +627,10 @@ describe("§NNN the list asks for no width it does not use", () => {
     const cell = elements(cellOf(every, "event", row.id))[0];
     expect(textOf(cell)).toBe("Crosul aniversar — ediția a II-a");
     expect(cell.props.sx).toEqual({ display: "inline-block", minWidth: { xs: 0, md: "12rem" } });
-    // Nothing else moves: the same columns in the same order, «Eveniment» before the address.
+    // Nothing else moves: the same columns in the same order, «Eveniment» after the age and before «Trimisă».
     expect(keysOf(one)).toEqual(keysOf(every).filter((key) => key !== "event"));
-    expect(keysOf(every).indexOf("event")).toBe(keysOf(every).indexOf("email") - 1);
+    expect(keysOf(every).indexOf("event")).toBe(keysOf(every).indexOf("submitted") - 1);
+    expect(keysOf(every).indexOf("event")).toBe(keysOf(every).indexOf("age") + 1);
   });
 
   it("an address breaks anywhere and still reads on a line: a floor on the wide table, none on a phone's card — a lead row's too", async () => {
@@ -651,10 +652,11 @@ describe("§NNN the list asks for no width it does not use", () => {
       expiresAt: new Date(now.getTime() + 3 * 24 * 3_600_000),
     });
     const tree = await listPage({ eventId: race.id });
-    const address = { display: "inline-block", minWidth: { xs: 0, lg: "12rem" }, wordBreak: "break-all" };
-    // `lg` is where the column is drawn (`hideBelow`), so the floor never reaches the phone's card.
-    expect(columnOf(tree, "email")?.hideBelow).toBe("lg");
-    expect(elements(cellOf(tree, "email", row.id))[0].props.sx).toEqual(address);
+    const address = { display: "inline-block", minWidth: { xs: 0, md: "12rem" }, wordBreak: "break-all" };
+    // `md` is where the wide table is drawn, so the floor never reaches the phone's card.
+    const typed = (rowsOf(tree).find((candidate) => candidate.id === row.id) as unknown as { participantEmail: string }).participantEmail;
+    const drawn = elements(cellOf(tree, "email", row.id)).find((element) => textOf(element) === typed && element.props.component === "span");
+    expect(drawn?.props.sx).toEqual(address);
     const lead = (tableOf(tree)?.props.leadRows as { cells: Record<string, ReactNode> }[])[0];
     expect(textOf(lead.cells.email)).toBe("mara@example.org");
     expect(elements(lead.cells.email)[0].props.sx).toEqual(address);
@@ -744,96 +746,77 @@ describe("§NNN «Stare» filters the event's invitations too", () => {
 });
 
 /**
- * BR-REQ-060-01, BR-REQ-070-01, `DECISIONS.md` §NNN — the owner, 2026-11-12: «Aș vrea să afișez și numărul de telefon al
- * alergătorilor în grid ca să pot să-i sun rapid». §322's rule is kept: a telephone is read only when asked for, by whoever
- * may read the registrations, and each read is recorded — here once per page drawn, with the count and never a number.
+ * BR-REQ-031-05, BR-REQ-070-01, `DECISIONS.md` §NNN — the owner, 2026-11-12: «Aș vrea să afișez și numărul de telefon al
+ * alergătorilor în grid ca să pot să-i sun rapid», and, told that showing it always annuls §322's "read only when asked
+ * for, each read recorded" for the telephone, «Da … YOLO». The runner's own telephone is on every page of the list, under
+ * the address, for whoever may read the registrations, and nothing is written for it. The emergency contact and the health
+ * note are untouched (`emergency-details.test.ts`), and neither the list's shared query, the desk's nor an export carries a number.
  */
-describe("§NNN «Arată telefoanele»: the telephones on demand, each page recorded", () => {
-  const phoneViews = () => db.select().from(auditLogs).where(eq(auditLogs.action, "registrations.phones_viewed"));
-  const switchOf = (tree: ReactNode) => {
-    const box = elements(tree).find((element) => element.props["data-testid"] === "registrations-phones");
-    const link = elements(box).find((element) => typeof element.props.href === "string");
-    return { href: link?.props.href as string | undefined, words: textOf(link), help: textOf(elements(box).at(-1)) };
-  };
-
-  it("draws no «Telefon» column and reads no telephone until asked; asked, the numbers are links and the page is recorded once", async () => {
+describe("§NNN «Contact»: the telephone under the address, on every page of the list", () => {
+  it("is the second column, at every width of the wide table, hideable from «Coloane»; the number is a link a phone rings", async () => {
     const race = await createRace();
-    const admin = await staff("ADMIN");
-    state.actor = admin;
+    state.actor = await staff("ADMIN");
     const ana = await register(race.id, "Ana Pop", { phone: "0722 123 456" });
     const ion = await register(race.id, "Ion Pop");
+    const far = await register(race.id, "Zoe Pop", { phone: "+40 (722) 000-111" });
 
-    const plain = await listPage({ eventId: race.id, sort: "name", dir: "asc" });
-    expect(columnOf(plain, "phone")).toBeUndefined();
-    expect(await phoneViews()).toHaveLength(0);
-    // The switch is a plain link to the same list, as it stands, with the telephones asked for.
-    const off = switchOf(plain);
-    expect(off.words).toBe("Arată telefoanele");
-    expect(new URL(off.href ?? "", "https://example.test").searchParams.get("phones")).toBe("1");
-    expect(new URL(off.href ?? "", "https://example.test").searchParams.get("sort")).toBe("name");
-    expect(off.help).toContain("jurnal");
+    const tree = await listPage({ eventId: race.id, sort: "name", dir: "asc" });
+    const keys = (tableOf(tree)?.props.columns as Column[]).map((candidate) => candidate.key);
+    // Right after the name: in view at every width, never under the pinned verbs. No column of the telephone's own.
+    expect(keys.slice(0, 3)).toEqual(["name", "email", "status"]);
+    expect(keys).not.toContain("phone");
+    const column = columnOf(tree, "email");
+    expect(column?.label).toBe("Contact");
+    expect(column?.hint).toContain("telefonul");
+    expect(column?.hideBelow).toBeUndefined();
+    expect(column?.essential).toBeUndefined();
 
-    const shown = await listPage({ eventId: race.id, sort: "name", dir: "asc", phones: "1" });
-    const column = columnOf(shown, "phone");
-    expect(column?.label).toBe("Telefon");
-    expect(column?.hint).toContain("jurnal");
-    // «Coloane» does not offer it: showing it is a recorded read, and its own switch takes it away.
-    expect(column?.essential).toBe(true);
-    // Right after the name, so the column asked for is in view at every width — never under the pinned verbs.
-    const keys = (tableOf(shown)?.props.columns as Column[]).map((candidate) => candidate.key);
-    expect(keys.slice(0, 3)).toEqual(["name", "phone", "status"]);
-    // The number as typed, on a link a phone rings; nothing typed, a dash.
-    const cell = elements(cellOf(shown, "phone", ana.id))[0];
-    expect(textOf(cell)).toBe("0722 123 456");
-    expect(cell.props.href).toBe("tel:0722123456");
-    expect(textOf(cellOf(shown, "phone", ion.id))).toBe("—");
-    // One row in the trail for the page: who, which event, how many rows — never a number.
-    const views = await phoneViews();
-    expect(views).toHaveLength(1);
-    expect(views[0]).toMatchObject({ actorStaffUserId: admin.id, participantId: null, entityType: "event", entityId: race.id, metadataJson: { rowCount: 2 } });
-    expect(JSON.stringify(views[0])).not.toContain("0722");
-    // The switch now takes the column away, and every sort and page link keeps it on meanwhile.
-    const on = switchOf(shown);
-    expect(on.words).toBe("Ascunde telefoanele");
-    expect(new URL(on.href ?? "", "https://example.test").searchParams.get("phones")).toBeNull();
-    expect((tableOf(shown)?.props.currentParams as Record<string, string | undefined>).phones).toBe("1");
-    // Anything but «1» is not the ask.
-    await db.delete(auditLogs);
-    expect(columnOf(await listPage({ eventId: race.id, phones: "yes" }), "phone")).toBeUndefined();
-    expect(await phoneViews()).toHaveLength(0);
+    // The address, then the number as typed on a `tel:` link of its digits; nothing typed, the address alone.
+    const addressOf = (id: string) => (rowsOf(tree).find((candidate) => candidate.id === id) as unknown as { participantEmail: string }).participantEmail;
+    const cell = elements(cellOf(tree, "email", ana.id));
+    expect(textOf(cellOf(tree, "email", ana.id))).toBe(`${addressOf(ana.id)}0722 123 456`);
+    const link = cell.find((element) => element.props["data-testid"] === "row-phone");
+    expect(textOf(link)).toBe("0722 123 456");
+    expect(link?.props.href).toBe("tel:0722123456");
+    expect(elements(cellOf(tree, "email", far.id)).find((element) => element.props["data-testid"] === "row-phone")?.props.href).toBe("tel:+40722000111");
+    expect(elements(cellOf(tree, "email", ion.id)).some((element) => element.props["data-testid"] === "row-phone")).toBe(false);
+    expect(textOf(cellOf(tree, "email", ion.id))).toBe(addressOf(ion.id));
   });
 
-  it("records every event's list with no event, and a page of no rows not at all", async () => {
+  it("writes nothing to the trail, and no switch stands above the table", async () => {
     const race = await createRace();
     state.actor = await staff("MODERATOR");
-    await register(race.id, "Ana Pop", { phone: "+40 722 000 111" });
-    const every = await listPage({ eventId: "all", phones: "1" });
-    expect(textOf(cellOf(every, "phone", rowsOf(every)[0].id))).toBe("+40 722 000 111");
-    expect((elements(cellOf(every, "phone", rowsOf(every)[0].id))[0].props.href as string)).toBe("tel:+40722000111");
-    expect((await phoneViews()).map((row) => [row.entityId, row.metadataJson])).toEqual([[null, { rowCount: 1 }]]);
-
-    await db.delete(auditLogs);
-    await listPage({ eventId: race.id, phones: "1", q: "nimeni-cu-numele-asta" });
-    expect(await phoneViews()).toHaveLength(0);
+    await register(race.id, "Ana Pop", { phone: "0722 123 456" });
+    const tree = await listPage({ eventId: race.id });
+    expect(elements(tree).some((element) => element.props["data-testid"] === "registrations-phones")).toBe(false);
+    expect(await db.select().from(auditLogs)).toHaveLength(0);
+    // `?phones=` is no parameter of the list any more: it changes nothing and rides on no link.
+    const asked = await listPage({ eventId: race.id, phones: "1" });
+    expect((tableOf(asked)?.props.currentParams as Record<string, string | undefined>).phones).toBeUndefined();
   });
 
-  it("is read by whoever may read the registrations and by nobody else — the service refuses and records nothing", async () => {
+  it("is the page's own read: the list's shared query carries no telephone, only whether one is held", async () => {
+    const race = await createRace();
+    const ana = await register(race.id, "Ana Pop", { phone: "0722 123 456" });
+    const rows = await listRegistrationsForAdmin(db, { eventId: race.id }, { limit: 10, offset: 0, sort: "name", dir: "asc" }, new Date());
+    expect(rows.map((row) => row.id)).toEqual([ana.id]);
+    expect(Object.keys(rows[0])).not.toContain("phone");
+    expect(JSON.stringify(rows[0])).not.toContain("0722");
+    expect((rows[0] as unknown as { phoneHeld: boolean }).phoneHeld).toBe(true);
+  });
+
+  it("is read by whoever may read the registrations and by nobody else — the service refuses", async () => {
     const race = await createRace();
     const ana = await register(race.id, "Ana Pop", { phone: "0722 123 456" });
     const { readRowPhones } = await import("@/modules/registrations/admin-service");
     const { canReadRegistrations } = await import("@/modules/staff-identity/domain/roles");
     for (const role of STAFF_ROLES) {
-      await db.delete(auditLogs);
       const actor = await staff(role);
-      const read = readRowPhones(db, actor, { registrationIds: [ana.id], eventId: race.id }, new Date());
-      if (canReadRegistrations(actor.role)) {
-        expect(await read, role).toEqual(new Map([[ana.id, "0722 123 456"]]));
-        expect(await phoneViews(), role).toHaveLength(1);
-      } else {
-        await expect(read, role).rejects.toMatchObject({ code: "FORBIDDEN" });
-        expect(await phoneViews(), role).toHaveLength(0);
-      }
+      const read = readRowPhones(db, actor, [ana.id, "not-a-uuid"]);
+      if (canReadRegistrations(actor.role)) expect(await read, role).toEqual(new Map([[ana.id, "0722 123 456"]]));
+      else await expect(read, role).rejects.toMatchObject({ code: "FORBIDDEN" });
     }
+    expect(await db.select().from(auditLogs)).toHaveLength(0);
   });
 });
 
