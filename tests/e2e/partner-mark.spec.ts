@@ -279,13 +279,27 @@ test.describe("the list's column «Partener»: seen, hidden, set from the row, f
       await expect(main.getByTestId("row-partner").filter({ visible: true })).toHaveText([bakery]);
     }
 
+    /** Where Ana's row stands in the window: its row of the wide table, or the block that stands for it on a phone. */
+    const placeOf = () =>
+      page.evaluate((anchor) => {
+        const drawn = [document.getElementById(anchor), ...document.querySelectorAll(`[data-row-anchor="${anchor}"]`)].find((element) => element !== null && element.getClientRects().length > 0);
+        return drawn ? Math.round(drawn.getBoundingClientRect().top) : null;
+      }, `reg-${seeded.ana}`);
+
     // Ana's row: the event's partner picked from the select.
     let dialog = await openEditor(page, `Ana ${seeded.surname}`);
     await fitsTheScreen(page);
+    const pressedAt = await placeOf();
+    expect(pressedAt).not.toBeNull();
     await dialog.getByTestId("partner-row-choice").selectOption({ label: bakery });
     await dialog.getByTestId("partner-row-save").click();
     await page.waitForURL(/saved=partnerSaved/);
     await hydrated(page);
+    // The press came back to the row it changed, and the row stands where it was pressed (the owner, 2026-11-12: «Mă disperă
+    // … că atunci când fac un edit gen „aleg partenerul” și navighezi»): the list did not jump to its top, nor the row to the window's.
+    expect(new URL(page.url()).hash).toBe(`#reg-${seeded.ana}`);
+    await expect.poll(async () => Math.abs(((await placeOf()) ?? 99_999) - (pressedAt ?? 0)), { timeout: 10_000 }).toBeLessThanOrEqual(3);
+    await expect(page.getByTestId("toast")).toContainText("Partenerul a fost salvat");
     // Back on the same list: the event, the search and the sort kept.
     const back = new URL(page.url());
     expect([back.searchParams.get("eventId"), back.searchParams.get("q"), back.searchParams.get("sort"), back.searchParams.get("dir")]).toEqual([seeded.eventId, seeded.surname, "name", "asc"]);

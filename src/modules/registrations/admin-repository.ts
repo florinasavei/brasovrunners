@@ -1,4 +1,5 @@
 import { and, asc, count, desc, eq, gt, inArray, isNotNull, max, ne, sql, type SQL } from "drizzle-orm";
+import { isUuid } from "@/shared/ids";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
@@ -1191,6 +1192,24 @@ export type EmergencyDetails = {
 function gatedHealth<R extends { healthNotes: string | null; healthConsentAt: Date | null; eventAsksHealthNote: boolean }>(row: R): R {
   const healthNotes = healthNoteShown(row.eventAsksHealthNote, row.healthNotes);
   return { ...row, healthNotes, healthConsentAt: healthNotes ? row.healthConsentAt : null };
+}
+
+/**
+ * The telephones of these registrations (§NNN), for the registrations list's «Telefon» column: **their own query**,
+ * asked only when the reader asked to see them, as the emergency details are — the list's own query still carries
+ * only whether a telephone is held (`phoneHeld`). A registration without one is absent from the map. The one caller
+ * asserts the role and writes the audit row first (`admin-service.ts#readRowPhones`).
+ */
+export async function findPhonesOf<T extends Record<string, unknown>>(db: Database<T>, registrationIds: readonly string[]): Promise<Map<string, string>> {
+  const phones = new Map<string, string>();
+  const ids = registrationIds.filter(isUuid);
+  if (ids.length === 0) return phones;
+  const rows = await db.select({ id: registrations.id, phone: registrations.phone }).from(registrations).where(inArray(registrations.id, ids));
+  for (const row of rows) {
+    const phone = row.phone?.trim();
+    if (phone) phones.set(row.id, phone);
+  }
+  return phones;
 }
 
 export async function findEmergencyDetails<T extends Record<string, unknown>>(

@@ -63,9 +63,12 @@ import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { familiesTogether, familyOf } from "@/modules/registrations/family-marker";
 import { canEnterResults, canExportSponsorList, canKeepRegistrationNotes, canManageRegistrations, canMessageParticipants, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
-import { countRegistrationNotes } from "@/modules/registrations/notes";
+import { type ExportNote, listRegistrationNotesForExport } from "@/modules/registrations/notes";
 import { resultsDoorOpen } from "@/modules/results/domain/event-type";
+import KeepRowPlace from "@/modules/registrations/ui/KeepRowPlace";
 import NotesMark from "@/modules/registrations/ui/NotesMark";
+import { notesTip } from "@/shared/notes/note-text";
+import TipSpan from "@/shared/ui/TipSpan";
 import RowNoteDialog from "@/shared/ui/RowNoteDialog";
 import { REGISTRATION_NOTE_MAX } from "@/db/schema/registration-notes";
 import { sponsorListSummary } from "@/modules/registrations/sponsor-list";
@@ -80,7 +83,8 @@ import {
   pageCount,
 } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn, type AdminLeadRow } from "@/modules/staff-identity/ui/AdminTable";
-import { invitationState, inviteTarget } from "@/modules/registrations/domain/invitations";
+import { INVITATION_FILTERS, type InvitationFilter, invitationFilterOf, invitationState, inviteTarget } from "@/modules/registrations/domain/invitations";
+import { registrationRowAnchor } from "@/modules/registrations/domain/list-row";
 import { listEventInvitations, listOpenInvitationCountsByEvent } from "@/modules/registrations/invitation-repository";
 import Panel from "@/shared/ui/Panel";
 import InvitationsPanel from "@/modules/registrations/ui/InvitationsPanel";
@@ -132,7 +136,7 @@ import {
   setRegistrationEliteAction,
   setRegistrationEliteTickAction,
 } from "../actions";
-import { previewMemberTickSweep } from "@/modules/registrations/admin-service";
+import { previewMemberTickSweep, readRowPhones } from "@/modules/registrations/admin-service";
 import { countForm, type CountForm } from "@/i18n/count-form";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { mayEndWaitlisted, rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
@@ -223,7 +227,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canReadRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, bounced, promo, outside, memberBib, partner, reconfirm, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test, memberSweep } = current;
+  const { eventId, status, clubMember, bounced, promo, outside, memberBib, partner, reconfirm, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test, memberSweep, phones } = current;
   // What «Trimite acum» said about Mailgun's stop (§622): from the action's own address; unreadable says nothing.
   const untilParsed = current.until ? new Date(current.until) : null;
   const untilAt = untilParsed && !Number.isNaN(untilParsed.getTime()) ? untilParsed : null;
@@ -306,7 +310,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   filters.partner = chosenPartner ?? undefined;
 
   const deadlinesNow = new Date();
-  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places, publicDoor, volunteerKits, sponsorRegister] = await Promise.all([
+  const [sortedRows, registrationsTotal, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places, publicDoor, volunteerKits, sponsorRegister] = await Promise.all([
     listRegistrationsForAdmin(
       db,
       filters,
@@ -356,18 +360,27 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId && canExportSponsorList(actor.role) ? readSponsorRegister(db, actor, { eventId: filters.eventId, locale }) : Promise.resolve(null),
   ]);
 
+  /*
+    «Stare» asking for invitations (§NNN): the grid is that state's invitations and nothing else — a registration has no
+    such state — so the page's own rows and its count stand empty, and the invitations are drawn as the lead rows below.
+    Only with one event chosen, where invitations are listed; with every event the three choices are not offered and the
+    parameter says nothing.
+  */
+  const invitationFilter = filters.eventId ? invitationFilterOf(status) : null;
+  // What the table counts under itself: the registrations that match — none of them while the invitations are asked for.
+  const total = invitationFilter ? 0 : registrationsTotal;
   // A family's rows side by side (§588), where its first row falls in the chosen order; phone cards read the same rows.
-  const rows = familiesTogether(sortedRows);
+  const rows = invitationFilter ? [] : familiesTogether(sortedRows);
   /*
     Who filled the form again, for the rows on this page only (§312): one grouped read of the
     audit trail keyed on the ids just fetched, so a page of twenty-five costs one query, not
     twenty-five. Beside the translations, which it does not depend on.
   */
-  const [resubmissions, notesCounts, family, t, minorSigns] = await Promise.all([
+  const [resubmissions, rowNotes, family, t, minorSigns] = await Promise.all([
     listResubmissionMarks(db, rows.map((row) => row.id)),
-    // «Note interne» (§777): how many live notes each row has — one grouped count, only for a role that may keep notes,
-    // and only the number: the words are read on the registration's own page. Never in the export or on the desk.
-    canKeepRegistrationNotes(actor.role) ? countRegistrationNotes(db, actor, rows.map((row) => row.id)) : Promise.resolve(new Map<string, number>()),
+    // «Note interne» (§777, §NNN): each row's live notes, newest first — one grouped read over the page's ids, only for a
+    // role that may keep notes. The marker says how many and, in its tooltip, the words; never on the desk.
+    canKeepRegistrationNotes(actor.role) ? listRegistrationNotesForExport(db, actor, rows.map((row) => row.id)) : Promise.resolve(new Map<string, ExportNote[]>()),
     // The family marker (§543): the other people on each row's address at its event, one query per page.
     familyOf(db, rows),
     getTranslations("Admin"),
@@ -441,6 +454,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     [PARTNER_FILTER_PARAM]: chosenPartner ?? undefined,
     // «Reconfirmare»: rides with every sort, page and export link, as the partner filter does.
     reconfirm: isReconfirmFilter(reconfirm) ? reconfirm : undefined,
+    // «Arată telefoanele» (§NNN) stays on while the list is sorted, paged and worked on; each page drawn is recorded.
+    phones: phones === "1" ? "1" : undefined,
     q,
     sort: current.sort,
     dir: current.dir,
@@ -543,6 +558,23 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     counts: Object.fromEntries(rows.filter((row) => row.kind !== "TEST" && canTransition(row.status, "CANCELLED")).map((row) => [row.id, 1])),
   };
 
+  /*
+    «Telefon» (§NNN): the page's telephones, read only when asked for («Arată telefoanele», `?phones=1`, a plain link so no
+    prefetch asks on somebody's behalf) and recorded before they come back — §322's rule for the emergency details, kept.
+    Null while the column is not asked for: the list's own query never carries a telephone.
+  */
+  const rowPhones = phones === "1" ? await readRowPhones(db, actor, { registrationIds: rows.map((row) => row.id), eventId: filters.eventId ?? null }, new Date()) : null;
+
+  // The marker's number, from the same read as its tooltip's words.
+  const notesCounts = new Map([...rowNotes].map(([id, notes]) => [id, notes.length]));
+  // The marker's tooltip (§NNN): the newest notes' words, each with its day and hour, the older ones counted.
+  const notesTipOf = (registrationId: string) =>
+    notesTip(
+      rowNotes.get(registrationId),
+      (at) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }),
+      (left) => t("registrations.notes.tipMore", { counted: t(`registrations.notes.count.${countForm(left, locale)}`, { count: left }) }),
+    );
+
   // «Membru (verificat)» / «Membru (declarat)» (§662): one chip, or none; its sentence is the tooltip.
   const memberChipOf = (row: RegistrationListRow) => {
     const membership = membershipOf({ declared: row.clubMemberDeclared, verified: row.memberVerified });
@@ -631,11 +663,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             const noteCount = notesCounts.get(row.id) ?? 0;
             const counted = t(`registrations.notes.count.${countForm(noteCount, locale)}`, { count: noteCount });
             return (
+            // The words under the pointer, without opening the registration (§NNN): the newest notes, the rest counted.
+            <TipSpan title={notesTipOf(row.id)}>
             <NotesMark
               label={counted}
               ariaLabel={t("registrations.notes.mark", { name: row.registeredName, counted })}
               href={`${getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: row.id } } })}#note-interne`}
             />
+            </TipSpan>
             );
           })()}
           {/* «Adaugă o notă» («Note interne» first on the registration's page, and a note from a row of the list): beside the
@@ -830,6 +865,34 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         </Box>
       ),
     },
+    /*
+      «Telefon» (§NNN; the owner, 2026-11-12: «ca să pot să-i sun rapid»): drawn only while «Arată telefoanele» is on. The number
+      as the person typed it, on one line, a `tel:` link — a tap rings it on a phone. «—» without one.
+    */
+    ...(rowPhones
+      ? [
+          {
+            key: "phone",
+            label: t("registrations.columnPhone"),
+            hint: t("registrations.phoneHint"),
+            render: (row) => {
+              const phone = rowPhones.get(row.id);
+              if (!phone) {
+                return (
+                  <Box component="span" sx={{ color: "text.disabled" }}>
+                    —
+                  </Box>
+                );
+              }
+              return (
+                <Box component="a" href={`tel:${phone.replace(/[^\d+]/g, "")}`} data-testid="row-phone" sx={{ whiteSpace: "nowrap", color: "primary.main" }}>
+                  {phone}
+                </Box>
+              );
+            },
+          } satisfies AdminColumn<RegistrationListRow>,
+        ]
+      : []),
     {
       key: "submitted",
       label: t("registrations.columnSubmitted"),
@@ -907,10 +970,20 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filter: an invitation has no state, number or city a filter could ask about, and it is not counted in
     the results.
   */
-  const otherFilters = Boolean(status || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || partner === "1" || chosenPartner || isReconfirmFilter(reconfirm) || q);
-  const leadEvent = filters.eventId && query.page === 1 && !otherFilters ? filters.eventId : null;
+  // A filter an invitation cannot answer hides the invitations; with «Stare» on an invitation state the search box is theirs.
+  const otherFilters = Boolean((status && !invitationFilter) || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || partner === "1" || chosenPartner || isReconfirmFilter(reconfirm) || (q && !invitationFilter));
+  // With «Stare» on an invitation state (§NNN) the invitations are the list itself: every one of that state, whatever the page.
+  const leadEvent = filters.eventId && !otherFilters && (invitationFilter || query.page === 1) ? filters.eventId : null;
   const leadNow = new Date();
-  const leadInvitations = leadEvent ? (await listEventInvitations(db, leadEvent)).filter((row) => invitationState(row, leadNow) !== "accepted") : [];
+  // …and the search box then looks in their names and addresses, as it looks in the registrations'.
+  const sought = invitationFilter && q ? q.trim().toLocaleLowerCase(locale) : "";
+  const leadInvitations = leadEvent
+    ? (await listEventInvitations(db, leadEvent)).filter((row) => {
+        const state = invitationState(row, leadNow);
+        if (!invitationFilter) return state !== "accepted";
+        return state === invitationFilter && (sought === "" || row.name.toLocaleLowerCase(locale).includes(sought) || row.email.toLocaleLowerCase(locale).includes(sought));
+      })
+    : [];
   /*
     «Invită pe email» from anywhere, and every invited person seen (§740). On a list about one event the
     button goes to that event's panel. On «toate evenimentele» it leads to a panel by the event: the
@@ -1962,7 +2035,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             name="status"
             label={t("registrations.statusLabel")}
             // The same reading of the address the summary's pills use (§626): a pill and this select never disagree about the state in force.
-            defaultValue={isRegistrationStatus(status) ? status : ""}
+            defaultValue={isRegistrationStatus(status) || invitationFilter ? status : ""}
             sx={{ minWidth: 220 }}
           >
             {/* Its own words for "no state chosen" (§650): «Toate evenimentele» is the events select's alone. */}
@@ -1972,6 +2045,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 {REGISTRATION_STATUS_LABEL[value]}
               </MenuItem>
             ))}
+            {/* The event's invitations by state (§NNN), in the words their rows wear; only where invitations are listed. */}
+            {filters.eventId &&
+              (Object.keys(INVITATION_FILTERS) as InvitationFilter[]).map((value) => (
+                <MenuItem key={value} value={value} data-testid={`status-${value}`}>
+                  {t(`registrations.invitationRow.state.${INVITATION_FILTERS[value]}`)}
+                </MenuItem>
+              ))}
           </TextField>
           <Stack direction="row" spacing={1} sx={{ pt: 1, flexWrap: "wrap", gap: 1 }}>
             <GlyphButton icon="filter" type="submit" variant="contained" sx={TAP_TARGET}>
@@ -2094,6 +2174,21 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         </Box>
       )}
 
+      {/*
+        «Arată telefoanele» (§NNN): the telephones are read on demand and each page drawn with them is recorded (§322), so the
+        column is a choice made here, in sight, and not one of «Coloane»'s — a plain link, the same with scripts off.
+      */}
+      <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", columnGap: 1.5, rowGap: 0.5 }} data-testid="registrations-phones">
+        <GlyphButton icon={rowPhones ? "dismiss" : "preview"} href={buildListHref(basePath, listParams, { phones: rowPhones ? undefined : "1", page: current.page })} variant="text" size="small" sx={TAP_TARGET}>
+          {t(rowPhones ? "registrations.phonesHide" : "registrations.phonesShow")}
+        </GlyphButton>
+        <Typography variant="body2" color="text.secondary">
+          {t(rowPhones ? "registrations.phonesShown" : "registrations.phonesHelp")}
+        </Typography>
+      </Stack>
+
+      {/* A row's press leaves the row where it stood on screen (§NNN): strings only, no row crosses to it. */}
+      <KeepRowPlace anchorPrefix={registrationRowAnchor("")} />
       <AdminTable
         caption={t("registrations.tableCaption")}
         tableId="registrations"
@@ -2101,12 +2196,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         rows={rows}
         leadRows={leadRows}
         rowKey={(row) => row.id}
+        // A row's own press comes back to the row (§NNN, `listReturnAnchor`), not to the top of the page.
+        rowId={(row) => registrationRowAnchor(row.id)}
         basePath={basePath}
         currentParams={listParams}
         query={query}
-        total={total}
+        total={invitationFilter ? leadRows.length : total}
         labels={{
-          results: t("list.results", { count: total }),
+          results: t("list.results", { count: invitationFilter ? leadRows.length : total }),
           page: t("list.page", { page: query.page, pages: pageCount(total, query.perPage) }),
           previous: t("list.previous"),
           next: t("list.next"),
@@ -2171,6 +2268,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="registrationId" value={row.id} />
+                {/* Back to this row, not to the registration's page (§NNN). */}
+                <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                 {/* «Trimite acum» or «Pune la coadă» (§540), under the scheduled timing only. */}
                 {sendNow && <input type="hidden" name={sendNow.field} value={sendNow.value} />}
                 {/*
@@ -2225,6 +2324,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="registrationId" value={row.id} />
+                <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                 {sendNow && <input type="hidden" name={sendNow.field} value={sendNow.value} />}
                 <GlyphSubmitButton
                   icon="family"
@@ -2253,10 +2353,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 // The elite mark (§897): the row's own mark decides which of the two words.
                 elite: row.elite,
               });
+              // Every press of the row comes back to this list, on the row, its page and filters kept (§747, §NNN):
+              // the forms carry the list's query, never a path.
               const hidden = (
                 <>
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="registrationId" value={row.id} />
+                  <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                 </>
               );
               const items: RegistrationMenuItem[] = [
@@ -2399,8 +2502,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       }}
                     >
                       {hidden}
-                      {/* The press comes back to this list, its page and filters kept, not to the registration's page. */}
-                      <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                       {/* The capacity the question named (§642): the server adds that one place and no other, and none unasked. */}
                       {offerForecast.raisedTo !== null && <input type="hidden" name="addPlace" value={offerForecast.raisedTo} />}
                     </ActionForm>
@@ -2448,7 +2549,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                     >
                       {hidden}
                       <input type="hidden" name="outside" value={row.outsideCapacity ? "false" : "true"} />
-                      <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                     </ActionForm>
                   )}
                   {verbs.includes("cancel") && (
@@ -2492,8 +2592,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                     >
                       {hidden}
                       <input type="hidden" name="to" value={row.clubMemberDeclared ? "0" : "1"} />
-                      {/* Back to this list, as it stands (§180): only the query travels. */}
-                      <input type="hidden" name="listQuery" value={listQueryString} />
                     </ActionForm>
                   )}
                   {(verbs.includes("eliteMark") || verbs.includes("eliteUnmark")) && (
@@ -2506,7 +2604,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       {hidden}
                       <input type="hidden" name="elite" value={row.elite ? "0" : "1"} />
                       {/* Back to this list and its page, as it stands (§180, §747): only the query travels. */}
-                      <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                     </ActionForm>
                   )}
                   {/* The two ticks of a marked elite (§910): ask nothing (§384) — they tell nobody, only hide, and the same tick undoes them. */}
@@ -2519,7 +2616,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                         {hidden}
                         <input type="hidden" name="tick" value={tick} />
                         <input type="hidden" name="on" value={shown ? "0" : "1"} />
-                        <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                       </ActionForm>
                     ))}
                   {(verbs.includes("markBibPrinted") || verbs.includes("unmarkBibPrinted")) && (

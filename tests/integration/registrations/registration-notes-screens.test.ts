@@ -104,6 +104,7 @@ const { default: RegistrationDetailPage } = await import("@/app/[locale]/admin/r
 const { default: AdminTable } = await import("@/modules/staff-identity/ui/AdminTable");
 const { default: NotesCard } = await import("@/modules/registrations/ui/NotesCard");
 const { default: NotesMark } = await import("@/modules/registrations/ui/NotesMark");
+const { default: TipSpan } = await import("@/shared/ui/TipSpan");
 const { default: Panel } = await import("@/shared/ui/Panel");
 const { default: RowNoteDialog } = await import("@/shared/ui/RowNoteDialog");
 const listActions = await import("@/app/[locale]/admin/registrations/actions");
@@ -381,6 +382,35 @@ describe("the list's marker", () => {
     expect(marked).toHaveLength(1);
     expect(marked[0].props).toMatchObject({ label: "2 note", href: `/ro/admin/registrations/${withNotes}#note-interne` });
     expect(elements(await nameCellOf(tree, without)).filter((element) => element.type === NotesMark)).toHaveLength(0);
+  });
+
+  it("says the notes' own words in the marker's tooltip — newest first, each with its day and hour, the older ones counted (§NNN)", async () => {
+    const race = await createRace("Crosul");
+    const organizer = await staff("MODERATOR");
+    state.actor = organizer;
+    const id = await register(race.id);
+    const without = await register(race.id);
+    for (const [minute, words] of [["00", "prima"], ["01", "a doua"], ["02", "a treia"], ["03", "a patra\ncu două rânduri"]] as const) {
+      await addRegistrationNote(db, organizer, id, words, new Date(`2026-10-15T10:${minute}:00.000Z`));
+    }
+    const tree = await listPage({ eventId: race.id });
+    const tips = elements(await nameCellOf(tree, id)).filter((element) => element.type === TipSpan);
+    expect(tips).toHaveLength(1);
+    // The marker stays the link to the card; the tooltip is around it.
+    const marker = elements(tips[0].props.children as ReactNode).filter((element) => element.type === NotesMark);
+    expect(marker).toHaveLength(1);
+    expect(marker[0].props).toMatchObject({ label: "4 note", href: `/ro/admin/registrations/${id}#note-interne` });
+    const said = (tips[0].props.title as string).split("\n\n");
+    // The three newest, then how many are older — in the count's own words.
+    expect(said).toHaveLength(4);
+    expect(said[0]).toBe("Joi, 15 oct. 2026, 13:03: a patra\ncu două rânduri");
+    expect(said[1]).toMatch(/13:02: a treia$/);
+    expect(said[2]).toMatch(/13:01: a doua$/);
+    expect(said[3]).toBe("… și încă 1 notă");
+    // Nobody's name: who wrote a note is the card's to say.
+    expect(tips[0].props.title).not.toContain(organizer.displayName);
+    // A row without notes has no marker and no tooltip.
+    expect(elements(await nameCellOf(tree, without)).filter((element) => element.type === TipSpan)).toHaveLength(0);
   });
 
   it("counts only live notes: a deleted one leaves the marker", async () => {

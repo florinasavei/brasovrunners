@@ -579,6 +579,9 @@ export default function AdminTable<Row>({
           <Box
             key={rowKey(row)}
             component="li"
+            // The row's address, as a mark: the `id` is the wide table's alone (`rowId`), and an island that keeps a pressed
+            // row in place (the registrations list, §NNN) finds the block that stands for it here.
+            data-row-anchor={rowId?.(row)}
             sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}
           >
             <Typography component="div" sx={{ fontWeight: 700, fontSize: "1rem", mb: 1 }}>

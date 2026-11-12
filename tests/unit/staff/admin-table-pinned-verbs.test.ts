@@ -28,7 +28,7 @@ const columns: AdminColumn<Row>[] = [
   { key: "bib", label: "Număr de concurs (BIB)", hint: "Numărul de pe piept.", render: () => "12" },
 ];
 
-function render(options: { verbs?: boolean; lead?: boolean } = {}) {
+function render(options: { verbs?: boolean; lead?: boolean; named?: boolean } = {}) {
   return renderToStaticMarkup(
     withClientWords(
       createElement(AdminTable<Row>, {
@@ -38,6 +38,7 @@ function render(options: { verbs?: boolean; lead?: boolean } = {}) {
         rows,
         leadRows: options.lead ? [{ key: "i1", cells: { name: "Ana Pop" }, actions: "Vezi invitația" }] : [],
         rowKey: (r: Row) => r.id,
+        rowId: options.named ? (r: Row) => `reg-${r.id}` : undefined,
         basePath: "/ro/admin/registrations",
         currentParams: {},
         query: { page: 1, perPage: 25, sort: "name", dir: "asc" } as never,
@@ -117,6 +118,20 @@ describe("§NNN the row verbs stay in view", () => {
     // The two cards a backoffice table stands in: a boxed fold, and a `Panel` that does not fold.
     expect(BOXED_DISCLOSURE_SX).toMatchObject({ bgcolor: "background.paper", ...ON_CARD_SX });
     expect(read("src", "shared", "ui", "Panel.tsx")).toMatch(/bgcolor: "background\.paper",\n\s+\.\.\.ON_CARD_SX,/);
+  });
+});
+
+describe("§NNN a named row can be found in both layouts", () => {
+  it("is the wide table's row by its id and the phone's block by a mark — one id in the page, never two", () => {
+    const html = render({ named: true });
+    const wide = html.slice(html.indexOf("<table"), html.indexOf("</table>"));
+    const phone = html.slice(html.indexOf("</table>"));
+    expect(wide.match(/<tr[^>]* id="reg-a"/g)).toHaveLength(1);
+    expect(phone).not.toMatch(/ id="reg-a"/);
+    expect(phone.match(/<li[^>]*data-row-anchor="reg-a"/g)).toHaveLength(1);
+    expect(phone.match(/<li[^>]*data-row-anchor="reg-b"/g)).toHaveLength(1);
+    // A list that names no rows marks none.
+    expect(render()).not.toContain("data-row-anchor");
   });
 });
 

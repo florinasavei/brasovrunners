@@ -277,6 +277,11 @@ export type AuditAction =
   /** One event's emergency sheet rendered (§322): the event and the row count, never a value. */
   | "event.emergency_sheet_viewed"
   /**
+   * A page of the registrations list drawn with its «Telefon» column (§NNN): the event when one is chosen (null with
+   * every event listed) and how many rows — never a number or a name.
+   */
+  | "registrations.phones_viewed"
+  /**
    * Everything the platform holds about one person, downloaded as a file by an Administrator
    * (§322) — the answer to an access request (art. 15 GDPR). Counts only in the metadata.
    */

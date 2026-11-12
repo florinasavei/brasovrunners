@@ -142,7 +142,8 @@ describe("«Salvează nota» from a row of the list — every role", () => {
       const notes = await db.select().from(registrationNotes);
       const trail = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.note_added"));
       if (may) {
-        expect(to).toBe(`/ro/admin/registrations?${new URLSearchParams({ ...Object.fromEntries(new URLSearchParams(LIST_QUERY)), saved: "noteAdded" }).toString()}#admin-alert`);
+        // The same list, on the row the note was written for (§NNN): the toast says «Nota a fost salvată».
+        expect(to).toBe(`/ro/admin/registrations?${new URLSearchParams({ ...Object.fromEntries(new URLSearchParams(LIST_QUERY)), saved: "noteAdded" }).toString()}#reg-${registrationId}`);
         expect(notes).toHaveLength(1);
         expect(notes[0]).toMatchObject({ registrationId, body: "cere tricou S", authorStaffUserId: actor.id });
         expect(trail).toHaveLength(1);
@@ -208,6 +209,6 @@ describe("a refusal and the return", () => {
     expect(to).not.toContain("evil.example/x");
     expect(new URL(`http://x${to}`).searchParams.get("saved")).toBe("noteAdded");
     // An empty query comes back to the plain list.
-    expect(await redirectedTo(press({ body: "doua", listQuery: "" }))).toBe("/ro/admin/registrations?saved=noteAdded#admin-alert");
+    expect(await redirectedTo(press({ body: "doua", listQuery: "" }))).toBe(`/ro/admin/registrations?saved=noteAdded#reg-${registrationId}`);
   });
 });

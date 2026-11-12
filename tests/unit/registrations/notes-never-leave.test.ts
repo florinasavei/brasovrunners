@@ -6,7 +6,8 @@ import { describe, expect, it } from "vitest";
  * §777, BR-REQ-060-01 — an internal note reaches only the screens that draw it.
  *
  * The owner: notes «doar pentru organizatori și administratori». A note is read by the registration's own page
- * (the card), counted by the registrations list (the marker) and listed in «Toate datele unei persoane»; it is
+ * (the card), by the registrations list (the marker: how many, and since §NNN — the owner: «Ar trebui să văd nota
+ * și pe tooltip, fără să deschid înscrierea» — the newest ones' words in its tooltip) and listed in «Toate datele unei persoane»; it is
  * on no other surface — not the race-day desk (§67: a name, a state and a number), not the public list, not an
  * email — and, since §785 (the owner: «asta trebuie de asemenea să fie și în Excel!»), in one file: the
  * registrations export's last column «Note interne». The export route is the one reader on the list for it; it
@@ -88,6 +89,16 @@ describe("§777 who reads the notes", () => {
       const source = readFileSync(file, "utf8");
       expect(source, path.relative(ROOT, file)).not.toMatch(/registration[_-]notes|registrationNotes|listRegistrationNotes|RegistrationNote\b/);
     }
+  });
+
+  it("is read by the list only behind the role's own rule, in one grouped read, and handed on as words alone (§NNN)", () => {
+    const list = readFileSync(path.join(ROOT, "src/app/[locale]/admin/registrations/(list)/page.tsx"), "utf8");
+    // The role is asked before the notes are, and the page's rows are read once, never per row.
+    expect(list).toMatch(/canKeepRegistrationNotes\(actor\.role\) \? listRegistrationNotesForExport\(db, actor, rows\.map\(\(row\) => row\.id\)\)/);
+    expect(list.match(/listRegistrationNotesForExport\(/g)).toHaveLength(1);
+    // The tooltip is a string built on the server; the island around the marker imports nothing of the notes.
+    const island = readFileSync(path.join(ROOT, "src/shared/ui/TipSpan.tsx"), "utf8");
+    expect(island).not.toMatch(/notes/i);
   });
 
   it("is read by the export only behind the role's own rule, and in one grouped read", () => {

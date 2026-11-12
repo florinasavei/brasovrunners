@@ -171,6 +171,20 @@ export function confirmsInvitationRaises(capacity: number, raises: number, confi
 
 export type InvitationState = "sent" | "accepted" | "expired" | "withdrawn";
 
+/**
+ * The registrations list's «Stare» also filters the event's invitations (§NNN; the owner, 2026-11-12: «trebuie să pot
+ * filtra și invitațiile după stare»): three more choices of the same select, each one state of an invitation not
+ * accepted yet. An accepted one is a registration already and is found by its own state. The value rides in the same
+ * `status` parameter and can never be mistaken for a registration's state, which is written in capitals.
+ */
+export const INVITATION_FILTERS = { "invitation-sent": "sent", "invitation-expired": "expired", "invitation-withdrawn": "withdrawn" } as const;
+export type InvitationFilter = keyof typeof INVITATION_FILTERS;
+
+/** The invitation state a `status` parameter asks for, or null: anything else is not this filter. */
+export function invitationFilterOf(raw: unknown): Exclude<InvitationState, "accepted"> | null {
+  return typeof raw === "string" && Object.hasOwn(INVITATION_FILTERS, raw) ? INVITATION_FILTERS[raw as InvitationFilter] : null;
+}
+
 /** What the backoffice and the link's page say an invitation is now: the stamps, then the deadline. */
 export function invitationState(row: { acceptedAt: Date | null; withdrawnAt: Date | null; expiredAt: Date | null; expiresAt: Date }, now: Date): InvitationState {
   if (row.acceptedAt) return "accepted";

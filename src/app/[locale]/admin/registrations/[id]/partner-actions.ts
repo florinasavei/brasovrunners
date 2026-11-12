@@ -3,7 +3,7 @@
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { PLACES_TAKEN_KEYS } from "@/modules/registrations/domain/capacity";
+import { listReturnHref } from "@/modules/registrations/domain/list-row";
 import { partnerMarkOf, partnerMarkOfRow, setRegistrationPartner } from "@/modules/registrations/partner-mark";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
@@ -67,9 +67,6 @@ export async function setRegistrationPartnerFromListAction(_previous: FormOutcom
     return refused(error, form);
   }
   await flashOutcome({ saved });
-  const params = new URLSearchParams(text(form, "listQuery"));
-  for (const key of ["erase", "memberSweep", "error", "saved", "count", "cancelled", "erased", "failed", "test", "voided", "from", ...PLACES_TAKEN_KEYS]) params.delete(key);
-  params.set("saved", saved);
-  params.set("from", "row");
-  redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${params.toString()}#admin-alert`);
+  // Back on the row itself, the outcome in the toast (§NNN): the list no longer jumps to its top after a row's edit.
+  redirect(listReturnHref(getPathname({ locale, href: "/admin/registrations" }), text(form, "listQuery"), { saved, from: "row" }, text(form, "registrationId")));
 }

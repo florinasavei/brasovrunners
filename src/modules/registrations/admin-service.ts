@@ -26,6 +26,7 @@ import {
   type EmergencyDetails,
   type EmergencySheetRow,
   findEmergencyDetails,
+  findPhonesOf,
   listEmergencySheet,
 } from "./admin-repository";
 import { clearOptionalData, OPTIONAL_DATA_FIELDS, type OptionalDataField } from "./consent-withdrawal";
@@ -1967,6 +1968,33 @@ export async function readEmergencyDetails<T extends Record<string, unknown>>(
   const details = await findEmergencyDetails(db, current.id);
   if (!details) throw new DomainError("NOT_FOUND", "no such registration");
   return details;
+}
+
+/**
+ * The telephones of the rows on one page of the registrations list (§NNN; the owner, 2026-11-12: «Aș vrea să afișez și
+ * numărul de telefon al alergătorilor în grid ca să pot să-i sun rapid»). §322's rule, kept: a telephone is read by
+ * whoever may read the registrations, only when asked for («Arată telefoanele», a plain link), and each read is
+ * recorded before the values come back — `registrations.phones_viewed`, the event when one is chosen and how many
+ * rows, never a number or a name — once per page drawn, as the emergency sheet is. A page of no rows reads nothing
+ * and records nothing. Never at the desk and never in an export.
+ */
+export async function readRowPhones<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  input: { registrationIds: readonly string[]; eventId: string | null },
+  now: Date,
+): Promise<Map<string, string>> {
+  assertMayRead(actor);
+  if (input.registrationIds.length === 0) return new Map();
+  await recordAuditEvent(db, {
+    actorStaffUserId: actor.id,
+    action: "registrations.phones_viewed",
+    entityType: "event",
+    entityId: input.eventId,
+    metadata: { rowCount: input.registrationIds.length },
+    now,
+  });
+  return findPhonesOf(db, input.registrationIds);
 }
 
 /**

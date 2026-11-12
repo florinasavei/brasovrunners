@@ -29,6 +29,7 @@ import {
   withdrawOptionalData,
   type WaitlistEntryByStaffResult,
 } from "@/modules/registrations/admin-service";
+import { listReturnHref } from "@/modules/registrations/domain/list-row";
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
 import { isRegistrationEliteTick, setRegistrationElite, setRegistrationEliteTick } from "@/modules/registrations/elite-mark";
 import { holdDeclarationAcceptance, releaseDeclarationAcceptance } from "@/modules/registrations/declaration-hold";
@@ -39,7 +40,7 @@ import { ANSWER_MARKERS, ANSWERS_UNCHANGED, answersRefusalCode, EDITABLE_ANSWERS
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { ADDRESS_CHANGED_MEANWHILE, ADDRESS_FAMILY_FORM_PENDING, ADDRESS_INVITED } from "@/modules/registrations/domain/address-change";
 import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
-import { PLACES_TAKEN_KEYS, confirmedCapacityOf, noFreePlaceOutcome, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
+import { confirmedCapacityOf, noFreePlaceOutcome, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
 import { inEmailPress } from "@/modules/notifications/press";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
@@ -151,6 +152,12 @@ function returnTo(
 
 /** `backTo`, for a desk verb: the page's own query first, then the outcome. */
 async function backToDesk(form: FormData, locale: Locale, registrationId: string, outcome: Record<string, string | undefined>): Promise<never> {
+  // Pressed from a row of the registrations list (§NNN): the form carries the list's query, and the press comes back
+  // to that row — it used to open the registration's own page under the hand.
+  if (form.has("listQuery")) {
+    const said = Object.fromEntries(Object.entries(outcome).filter((entry): entry is [string, string] => entry[1] !== undefined));
+    return backToList(locale, text(form, "listQuery"), said, registrationId);
+  }
   const target = returnTo(form, locale, registrationId);
   return backTo(target.path, outcome, target.params);
 }
@@ -230,7 +237,7 @@ export async function offerPlaceAction(_previous: FormOutcome | null, form: Form
       outcome = supplementaryPlaceRefusalOutcome(error) ?? noFreePlaceOutcome(error) ?? outcomeOf(error);
     }
     // From the list's «⋮» the form carries the list's query: back to the list, as it stands (§747).
-    if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome as Record<string, string>);
+    if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome as Record<string, string>, registrationId);
     return backToDesk(form, locale, registrationId, outcome);
   });
 }
@@ -286,7 +293,7 @@ export async function setOutsideCapacityAction(_previous: FormOutcome | null, fo
       outcome = isDomainError(error) && error.fields.includes(HIDDEN_LIST_OFF) ? { error: HIDDEN_LIST_OFF } : (noFreePlaceOutcome(error) ?? outcomeOf(error));
     }
     // From the list's «⋮» (§747) the form carries the list's query: back to the list, as it stands.
-    if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome as Record<string, string>);
+    if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome as Record<string, string>, registrationId);
     return backTo(detailPath(locale, registrationId), outcome);
   });
 }
@@ -592,12 +599,10 @@ function addressChangeRefusalCode(fields: readonly string[]): string | null {
  * the path is rebuilt here, so the field can choose which rows come back and never where the browser
  * goes. The keys that would reopen a panel or repeat an old outcome are dropped first.
  */
-async function backToList(locale: Locale, listQuery: string, outcome: Record<string, string>): Promise<never> {
-  const params = new URLSearchParams(listQuery);
-  for (const key of ["erase", "memberSweep", "error", "saved", "count", "cancelled", "erased", "failed", "test", "voided", ...PLACES_TAKEN_KEYS]) params.delete(key);
-  for (const [key, value] of Object.entries(outcome)) params.set(key, value);
+async function backToList(locale: Locale, listQuery: string, outcome: Record<string, string>, registrationId?: string): Promise<never> {
   await flashOutcome(outcome);
-  redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${params.toString()}#admin-alert`);
+  // One row's press that went through comes back to that row, its outcome in the toast; a refusal, to the alert (§NNN).
+  redirect(listReturnHref(getPathname({ locale, href: "/admin/registrations" }), listQuery, outcome, registrationId));
 }
 
 /**
@@ -618,7 +623,7 @@ export async function addRegistrationNoteFromListAction(_previous: FormOutcome |
   } catch (error) {
     return refused(error, form);
   }
-  return backToList(locale, text(form, "listQuery"), { saved: "noteAdded" });
+  return backToList(locale, text(form, "listQuery"), { saved: "noteAdded" }, text(form, "registrationId"));
 }
 
 /**
@@ -640,7 +645,7 @@ export async function setClubMemberDeclaredAction(_previous: FormOutcome | null,
   } catch (error) {
     outcome = isDomainError(error) && error.fields.includes(ANSWERS_UNCHANGED) ? { error: "ANSWERS_UNCHANGED" } : outcomeOf(error);
   }
-  return backToList(locale, text(form, "listQuery"), outcome);
+  return backToList(locale, text(form, "listQuery"), outcome, registrationId);
 }
 
 /**
@@ -663,7 +668,7 @@ export async function setRegistrationEliteAction(_previous: FormOutcome | null, 
   } catch (error) {
     outcome = outcomeOf(error);
   }
-  if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome);
+  if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome, registrationId);
   return backTo(detailPath(locale, registrationId), outcome);
 }
 
@@ -689,7 +694,7 @@ export async function setRegistrationEliteTickAction(_previous: FormOutcome | nu
   } catch (error) {
     outcome = outcomeOf(error);
   }
-  if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome);
+  if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome, registrationId);
   return backTo(detailPath(locale, registrationId), outcome);
 }
 
@@ -766,7 +771,10 @@ export async function cancelRegistrationAction(_previous: FormOutcome | null, fo
       return refused(error, form);
     }
 
-    return backTo(detailPath(locale, registrationId), { saved: "registrationCancelled", ...mailSkippedOf(sendEmail) });
+    const cancelled = { saved: "registrationCancelled", ...mailSkippedOf(sendEmail) };
+    // From the list's «⋮» (§NNN): back to the row, which now says «Anulată»; from the registration's page, to that page.
+    if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), cancelled, registrationId);
+    return backTo(detailPath(locale, registrationId), cancelled);
   });
 }
 
