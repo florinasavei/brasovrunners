@@ -85,7 +85,7 @@ export type ComposerLabels = {
   /** «Cere reconfirmarea» (the decision «Cere reconfirmarea») and its help line: nobody is cancelled automatically. */
   reconfirm: string;
   reconfirmHelp: string;
-  /** «Trimite și numărul de concurs și codul QR» (§NNN) and its help line: only the confirmed get them, each their own. */
+  /** «Trimite și numărul de concurs și codul QR» (§943) and its help line: only the confirmed get them, each their own. */
   sendQr: string;
   sendQrHelp: string;
   /**
@@ -114,7 +114,7 @@ export type PreviewInput = {
   bodyEn: string;
   /** The tick «Cere reconfirmarea» as it stands: the preview draws «Vin» beside «Nu mai pot ajunge». */
   askReconfirm: boolean;
-  /** The tick «Trimite și numărul de concurs și codul QR» as it stands: the preview draws the example runner's block (§NNN). */
+  /** The tick «Trimite și numărul de concurs și codul QR» as it stands: the preview draws the example runner's block (§943). */
   sendQr: boolean;
 };
 export type PreviewResult = { subject: string; html: string; unknown: string[] } | null;
@@ -176,7 +176,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
     refused send like every box (§315). The preview reads it from the form, as it reads the words.
   */
   const [askReconfirm, setAskReconfirm] = useState(() => recall.value("askReconfirm") === "1");
-  // «Trimite și numărul de concurs și codul QR» (§NNN): off unless ticked; controlled too, so a refused send keeps it (§315).
+  // «Trimite și numărul de concurs și codul QR» (§943): off unless ticked; controlled too, so a refused send keeps it (§315).
   const [sendQr, setSendQr] = useState(() => recall.value("sendQr") === "1");
   // Either tick as the form holds it now — what a press would post.
   const readTick = useCallback(
@@ -414,7 +414,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
       </Box>
 
       {/*
-        «Trimite și numărul de concurs și codul QR» (§NNN): each confirmed runner's email gets, under these words, their own
+        «Trimite și numărul de concurs și codul QR» (§943): each confirmed runner's email gets, under these words, their own
         race number, QR and desk code — the confirmation's block. The help line says who gets them and who does not.
       */}
       <Box data-testid="participant-message-qr">

@@ -336,7 +336,7 @@ describe("«Trimite un mesaj participanților»", () => {
     }
   });
 
-  it("§NNN hands the composer «Trimite și numărul de concurs și codul QR» and its help line, in the backoffice's language", async () => {
+  it("§943 hands the composer «Trimite și numărul de concurs și codul QR» and its help line, in the backoffice's language", async () => {
     const race = await createRace();
     await register(race.id);
     state.actor = await staff("MODERATOR");
@@ -351,7 +351,7 @@ describe("«Trimite un mesaj participanților»", () => {
     expect(ro.Admin.participantMessages.sendQr).toBe("Trimite și numărul de concurs și codul QR");
   });
 
-  it("§NNN says on a «Mesaje trimise» row that the send carried the number and the QR, and for how many confirmed; nothing on a send that did not", async () => {
+  it("§943 says on a «Mesaje trimise» row that the send carried the number and the QR, and for how many confirmed; nothing on a send that did not", async () => {
     const race = await createRace();
     const actor = await staff("MODERATOR");
     state.actor = actor;

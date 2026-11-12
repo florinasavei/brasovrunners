@@ -10,7 +10,7 @@ import { ADMIN_TABLE_SURFACE, ON_CARD_SX, SURFACE_VARIABLE } from "@/shared/ui/s
 import { withClientWords } from "../../helpers/client-words";
 
 /**
- * BR-REQ-041-01, `DECISIONS.md` §NNN — the owner, 2026-11-12, of the registrations list on a wide
+ * BR-REQ-041-01, `DECISIONS.md` §943 — the owner, 2026-11-12, of the registrations list on a wide
  * screen: «Aici mi se face crop!». A backoffice table wider than its frame scrolls inside it, and
  * what fell outside was the last column: the row's verbs. They are pinned to the frame's right edge
  * now, by CSS alone; a heading takes no more room than it needs; and a mouse gets a denser table.
@@ -61,7 +61,7 @@ function cssOf(html: string) {
 const ROOT = process.cwd();
 const read = (...parts: string[]) => readFileSync(path.join(ROOT, ...parts), "utf8").replace(/\r\n/g, "\n");
 
-describe("§NNN the row verbs stay in view", () => {
+describe("§943 the row verbs stay in view", () => {
   it("marks the verbs' heading and every row's verbs, a lead row's too; a table without verbs marks nothing", () => {
     const html = render({ lead: true });
     // The wide table alone: the phone's blocks have no columns to scroll.
@@ -121,7 +121,7 @@ describe("§NNN the row verbs stay in view", () => {
   });
 });
 
-describe("§NNN a named row can be found in both layouts", () => {
+describe("§943 a named row can be found in both layouts", () => {
   it("is the wide table's row by its id and the phone's block by a mark — one id in the page, never two", () => {
     const html = render({ named: true });
     const wide = html.slice(html.indexOf("<table"), html.indexOf("</table>"));
@@ -135,7 +135,7 @@ describe("§NNN a named row can be found in both layouts", () => {
   });
 });
 
-describe("§NNN a heading takes no more room than it needs", () => {
+describe("§943 a heading takes no more room than it needs", () => {
   it("wraps a long heading onto a second line in the automatic layout, at a width a squeezed table cannot shrink", () => {
     const { css, table } = cssOf(render());
     const heading = new RegExp(`${table}:not\\(\\[data-resized\\]\\)>thead>tr>th \\[data-column-heading\\]\\{([^}]*)\\}`).exec(css)?.[1] ?? "";

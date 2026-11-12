@@ -172,7 +172,7 @@ export function confirmsInvitationRaises(capacity: number, raises: number, confi
 export type InvitationState = "sent" | "accepted" | "expired" | "withdrawn";
 
 /**
- * The registrations list's «Stare» also filters the event's invitations (§NNN; the owner, 2026-11-12: «trebuie să pot
+ * The registrations list's «Stare» also filters the event's invitations (§943; the owner, 2026-11-12: «trebuie să pot
  * filtra și invitațiile după stare»): three more choices of the same select, each one state of an invitation not
  * accepted yet. An accepted one is a registration already and is found by its own state. The value rides in the same
  * `status` parameter and can never be mistaken for a registration's state, which is written in capitals.

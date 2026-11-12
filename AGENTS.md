@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.40-2026-11-12 -->
+<!-- PROJECT_BASELINE: BR-V4.41-2026-11-12 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.40-2026-11-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.41-2026-11-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -3453,7 +3453,7 @@ automatic POST is in flight the button wears its pending label («Notăm că vii
 pressed in the history (`redirect(…, RedirectType.replace)`), so Back never mounts the island again.
 
 **The organizer's message carries a runner's race number, QR and desk code only when its send ticked «Trimite și
-numărul de concurs și codul QR»** (`DECISIONS.md` §NNN, `notifications/domain/organizer-message.ts#organizerQrApplies`;
+numărul de concurs și codul QR»** (`DECISIONS.md` §943, `notifications/domain/organizer-message.ts#organizerQrApplies`;
 off by default): under the organizers' words, the confirmation's own block — the number and the code on the band, then
 the QR with whose it is — once per message. The flag is the row's, as «Vin»'s is: `sendQr` in the payload of exactly
 the outbox rows whose registration is CONFIRMED when the send queues them, a flag and never a code; the renderer reads

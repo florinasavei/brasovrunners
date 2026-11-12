@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
  * §777, BR-REQ-060-01 — an internal note reaches only the screens that draw it.
  *
  * The owner: notes «doar pentru organizatori și administratori». A note is read by the registration's own page
- * (the card), by the registrations list (the marker: how many, and since §NNN — the owner: «Ar trebui să văd nota
+ * (the card), by the registrations list (the marker: how many, and since §943 — the owner: «Ar trebui să văd nota
  * și pe tooltip, fără să deschid înscrierea» — the newest ones' words in its tooltip) and listed in «Toate datele unei persoane»; it is
  * on no other surface — not the race-day desk (§67: a name, a state and a number), not the public list, not an
  * email — and, since §785 (the owner: «asta trebuie de asemenea să fie și în Excel!»), in one file: the
@@ -91,7 +91,7 @@ describe("§777 who reads the notes", () => {
     }
   });
 
-  it("is read by the list only behind the role's own rule, in one grouped read, and handed on as words alone (§NNN)", () => {
+  it("is read by the list only behind the role's own rule, in one grouped read, and handed on as words alone (§943)", () => {
     const list = readFileSync(path.join(ROOT, "src/app/[locale]/admin/registrations/(list)/page.tsx"), "utf8");
     // The role is asked before the notes are, and the page's rows are read once, never per row.
     expect(list).toMatch(/canKeepRegistrationNotes\(actor\.role\) \? listRegistrationNotesForExport\(db, actor, rows\.map\(\(row\) => row\.id\)\)/);

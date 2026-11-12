@@ -71,7 +71,7 @@ export const TIP_NOTES = 3;
 export const TIP_NOTE_CHARS = 280;
 
 /**
- * A row's notes as its marker's tooltip (§NNN; the owner, 2026-11-12, of «1 notă» on the registrations list: «Ar trebui să văd
+ * A row's notes as its marker's tooltip (§943; the owner, 2026-11-12, of «1 notă» on the registrations list: «Ar trebui să văd
  * nota și pe tooltip, fără să deschid înscrierea»): the newest `TIP_NOTES`, as given, each «<when>: <words>» with a blank line
  * between two — a note's own line breaks kept (the tooltip is `pre-line`), a long one cut at `TIP_NOTE_CHARS` with «…» — and
  * `more(left)` as the last line when there are older ones. Empty for no notes. The caller says the clock and the words; nothing

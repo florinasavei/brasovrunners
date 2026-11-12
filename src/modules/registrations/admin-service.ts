@@ -1971,7 +1971,7 @@ export async function readEmergencyDetails<T extends Record<string, unknown>>(
 }
 
 /**
- * The telephones of the rows on one page of the registrations list (§NNN; the owner, 2026-11-12: «Aș vrea să afișez și
+ * The telephones of the rows on one page of the registrations list (§943; the owner, 2026-11-12: «Aș vrea să afișez și
  * numărul de telefon al alergătorilor în grid ca să pot să-i sun rapid»).
  *
  * §322 had put the runner's own telephone with the emergency details: read only when asked for, each read recorded. It

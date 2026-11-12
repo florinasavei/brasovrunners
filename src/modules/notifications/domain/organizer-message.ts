@@ -50,7 +50,7 @@ export function isParticipantMessageAudience(value: unknown): value is Participa
  * `{staffRole}`, `{holdExpiresAtFormatted}`, `{signedAtFormatted}` would each print as nothing
  * in every copy, and the desk code (`{checkinCode}`) is something only the participant may hold,
  * which a message written for everybody at once has no business spelling out. It stays refused in
- * the words since §NNN too: «Trimite și numărul de concurs și codul QR» puts each confirmed runner's
+ * the words since §943 too: «Trimite și numărul de concurs și codul QR» puts each confirmed runner's
  * own code under the words (`organizerQrApplies`), never in them — the club's one copy repeats the words.
  *
  * `{bibNumber}` is the race number of a confirmed registration, empty for whoever is not
@@ -193,7 +193,7 @@ export function readOrganizerAskReconfirm(payload: unknown): boolean {
 }
 
 /**
- * Whether this row carries «Trimite și numărul de concurs și codul QR» (§NNN): the payload's `sendQr`, beside the words —
+ * Whether this row carries «Trimite și numărul de concurs și codul QR» (§943): the payload's `sendQr`, beside the words —
  * set by the send only on the rows whose registration was confirmed when it was queued, never send-wide; anything but
  * `true` — a row of somebody not confirmed, an older one, a hand-made one, the club's copy — is no. A flag, never a code:
  * the code is read off the registration when the email leaves.
@@ -203,7 +203,7 @@ export function readOrganizerSendQr(payload: unknown): boolean {
 }
 
 /**
- * The one state whose email gets the race number, the QR and the desk code (§NNN): a number and a code exist only from
+ * The one state whose email gets the race number, the QR and the desk code (§943): a number and a code exist only from
  * the confirmation (§548, BR-REQ-037-08). The send asks it when it queues a row, the renderer again when the row leaves.
  */
 export function isOrganizerQrStatus(status: RegistrationStatus): boolean {
@@ -211,7 +211,7 @@ export function isOrganizerQrStatus(status: RegistrationStatus): boolean {
 }
 
 /**
- * Whether the organizers' message draws the runner's own race number, QR and desk code under its words (§NNN): the row
+ * Whether the organizers' message draws the runner's own race number, QR and desk code under its words (§943): the row
  * carries the flag, it goes to the registration's own address, and the registration is confirmed **when it renders** —
  * a send drains over hours, and a runner who cancelled since reads the message without them. Never on a club copy
  * (§320): a club mailbox holds nobody's code.

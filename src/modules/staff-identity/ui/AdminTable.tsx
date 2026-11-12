@@ -80,7 +80,7 @@ import ColumnWidthsScript from "./ColumnWidthsScript";
  * than the frame, the frame scrolls sideways inside its border; narrower, it stops short. The
  * phone layout has no columns and is untouched.
  *
- * ## The row verbs stay in view (§NNN)
+ * ## The row verbs stay in view (§943)
  *
  * The owner, 2026-11-12, of the registrations list on a 1858-px screen: «Aici mi se face crop!» —
  * twelve columns ask for more than the frame has, the frame scrolls sideways, and the column that
@@ -249,7 +249,7 @@ const RESIZED = {
 } as const;
 
 /**
- * The row verbs' column, pinned to the frame's right edge (§NNN): the cells are marked
+ * The row verbs' column, pinned to the frame's right edge (§943): the cells are marked
  * `data-pinned` and styled from the table, so a hovered row can reach its own. The fill is the
  * table's surface made opaque, then the tint its row wears — a heading, a lead row, a hovered row —
  * laid over it as an image, so a pinned cell is the colour of the cells beside it. Above the
@@ -285,7 +285,7 @@ const PINNED = {
 } as const;
 
 /**
- * A heading takes no more room than it needs (§NNN). On the registrations list «Număr de concurs
+ * A heading takes no more room than it needs (§943). On the registrations list «Număr de concurs
  * (BIB)», one line with its arrow and its «?», held 247 px for a column of two digits — while the
  * addresses beside it were squeezed to five characters a line. So, in the automatic layout:
  *
@@ -580,7 +580,7 @@ export default function AdminTable<Row>({
             key={rowKey(row)}
             component="li"
             // The row's address, as a mark: the `id` is the wide table's alone (`rowId`), and an island that keeps a pressed
-            // row in place (the registrations list, §NNN) finds the block that stands for it here.
+            // row in place (the registrations list, §943) finds the block that stands for it here.
             data-row-anchor={rowId?.(row)}
             sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}
           >

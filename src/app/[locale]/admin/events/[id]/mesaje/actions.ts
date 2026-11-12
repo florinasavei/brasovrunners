@@ -69,7 +69,7 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
           delivery,
           // «Cere reconfirmarea» (the decision «Cere reconfirmarea»): the tick posts `1`; anything else is no.
           askReconfirm: posted(form, "askReconfirm") === "1",
-          // «Trimite și numărul de concurs și codul QR» (§NNN): the same; which registrations get them is the service's.
+          // «Trimite și numărul de concurs și codul QR» (§943): the same; which registrations get them is the service's.
           sendQr: posted(form, "sendQr") === "1",
           ...words,
         },
@@ -129,7 +129,7 @@ export async function previewParticipantMessageAction(input: {
   bodyEn: unknown;
   /** «Cere reconfirmarea» as the box stands: only `true` draws «Vin» in the preview. */
   askReconfirm?: unknown;
-  /** «Trimite și numărul de concurs și codul QR» as the box stands (§NNN): only `true` draws the example runner's block. */
+  /** «Trimite și numărul de concurs și codul QR» as the box stands (§943): only `true` draws the example runner's block. */
   sendQr?: unknown;
 }): Promise<ParticipantMessagePreview | null> {
   // From the network: every field is read as a string, whatever was sent.

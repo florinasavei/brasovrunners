@@ -431,7 +431,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
                   {t(`participantMessages.recipients.${countForm(entry.recipients, locale)}`, { count: entry.recipients })}
                   {entry.test > 0 ? ` · ${t("participantMessages.historyTest", { test: String(entry.test) })}` : ""}
                 </Typography>
-                {/* «Trimite și numărul de concurs și codul QR» (§NNN): that the send was ticked, and for how many confirmed — never who. */}
+                {/* «Trimite și numărul de concurs și codul QR» (§943): that the send was ticked, and for how many confirmed — never who. */}
                 {entry.sendQr && (
                   <Typography variant="body2" data-testid="participant-message-history-qr">
                     {t("participantMessages.historyQr", { count: String(entry.withQr) })}

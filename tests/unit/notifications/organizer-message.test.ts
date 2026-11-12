@@ -286,13 +286,13 @@ describe("§364 §96 §354 the message as it arrives", () => {
 });
 
 /**
- * §NNN — «Trimite și numărul de concurs și codul QR» (the owner, 2026-11-12: «în acel mail de comunicare, trebuie să le
+ * §943 — «Trimite și numărul de concurs și codul QR» (the owner, 2026-11-12: «în acel mail de comunicare, trebuie să le
  * și reamintesc oamenilor care e numărul lor de concurs și să le retrimit QR»; BR-REQ-080-01, BR-REQ-037-08). The pure
  * half: the row's flag, who it draws for, and the block itself — the confirmation's own number line, code line and QR
  * figure, under the organizers' words. The send, the renderer and the screens are
  * `tests/integration/notifications/participant-message-qr.test.ts`.
  */
-describe("§NNN «Trimite și numărul de concurs și codul QR»: the row's flag, and who it draws for", () => {
+describe("§943 «Trimite și numărul de concurs și codul QR»: the row's flag, and who it draws for", () => {
   it("reads the flag from the row's payload, and nothing else as a yes", () => {
     expect(readOrganizerSendQr({ subject: {}, body: {}, sendQr: true })).toBe(true);
     for (const payload of [null, undefined, {}, { sendQr: "true" }, { sendQr: 1 }, { askReconfirm: true }, "sendQr"]) expect(readOrganizerSendQr(payload)).toBe(false);
@@ -323,7 +323,7 @@ describe("§NNN «Trimite și numărul de concurs și codul QR»: the row's flag
   });
 });
 
-describe("§NNN the block in the message: the confirmation's own, under the organizers' words", () => {
+describe("§943 the block in the message: the confirmation's own, under the organizers' words", () => {
   const CODE = "K7Q2XRABCD";
   const QR = `https://example.test/api/registrations/qr/${CODE}.png`;
   const DATA: TemplateData = {
@@ -479,7 +479,7 @@ describe("§NNN the block in the message: the confirmation's own, under the orga
   });
 });
 
-describe("§NNN the tick's words, in both catalogues", () => {
+describe("§943 the tick's words, in both catalogues", () => {
   const wordsOf = (catalogue: typeof ro) => catalogue.Admin.participantMessages;
 
   it("names the tick, says who gets them and who does not, and how «Mesaje trimise» says it", () => {
@@ -502,11 +502,11 @@ describe("§NNN the tick's words, in both catalogues", () => {
 });
 
 /**
- * The structural half of «nothing reads the flag but the send and the renderer» (§NNN), in the style of
+ * The structural half of «nothing reads the flag but the send and the renderer» (§943), in the style of
  * `reconfirmation-never-leaves.test.ts`: the files that name the flag or its two rules are a reviewed list — none of the
  * allocator's, the capacity formula's, a state's or a deadline's is on it.
  */
-describe("§NNN the flag decides a block of an email, and nothing else", () => {
+describe("§943 the flag decides a block of an email, and nothing else", () => {
   const ROOT = process.cwd();
   const NAMES_THE_FLAG = /\bsendQr\b|readOrganizerSendQr|organizerQrApplies|isOrganizerQrStatus/;
   const READERS = [

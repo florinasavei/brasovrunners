@@ -273,7 +273,7 @@ function qrImage(locale: EmailLocale, d: TemplateData): TemplateContent["image"]
 
 /**
  * The messages that draw the QR (§547): the club's copy of these says whose it was, without it (§320). The organizers'
- * message is not one of them: it draws the QR only where its send asked (`organizerQrLines`, §NNN), and the club's one
+ * message is not one of them: it draws the QR only where its send asked (`organizerQrLines`, §943), and the club's one
  * copy of a send names nobody (§419).
  */
 const QR_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED"]);
@@ -845,7 +845,7 @@ export type TemplateData = {
   checkinQrUrl?: string;
   /**
    * The same two on an organizers' message whose send ticked «Trimite și numărul de concurs și codul QR», for a
-   * registration confirmed as it renders (§NNN) — the block's own, apart from `checkinCode`: that one is a field the
+   * registration confirmed as it renders (§943) — the block's own, apart from `checkinCode`: that one is a field the
    * club's words may name (§247), and the organizers' words, the same for everybody, never fill it
    * (`ORGANIZER_MESSAGE_PLACEHOLDERS`). Set by the renderer and by the composer's preview, never by a sample.
    */
@@ -1655,7 +1655,7 @@ function confirmedCodeLine(locale: EmailLocale, code: string): string {
 }
 
 /**
- * «Trimite și numărul de concurs și codul QR» (§NNN): under the organizers' words, the two sentences the confirmation
+ * «Trimite și numărul de concurs și codul QR» (§943): under the organizers' words, the two sentences the confirmation
  * writes for the desk — the number, when the runner has one, and the code — on the same band; the QR picture follows
  * them (`organizerQrImage`). Only with `organizerQr` in hand: the renderer sets it only for a row its send flagged whose
  * registration is confirmed as it leaves, and a club copy has lost it (§320) — so a message without it is built exactly
@@ -1672,7 +1672,7 @@ function organizerQrEmphasis(locale: EmailLocale, d: TemplateData): Emphasis {
   return lines.length > 0 ? { highlight: lines } : {};
 }
 
-/** …and the confirmation's own QR figure — whose it is, the number, the code — under them (§NNN, §547). */
+/** …and the confirmation's own QR figure — whose it is, the number, the code — under them (§943, §547). */
 function organizerQrImage(locale: EmailLocale, d: TemplateData): TemplateContent["image"] {
   return d.organizerQr ? qrImage(locale, { ...d, checkinCode: d.organizerQr.checkinCode, checkinQrUrl: d.organizerQr.qrUrl }) : undefined;
 }
@@ -2404,7 +2404,7 @@ const T = {
      * send; the platform adds only the facts line, one sentence saying who writes and why this
      * person receives it, the event's page as the button and the usual links. Nothing to act on.
      *
-     * And, where the send ticked «Trimite și numărul de concurs și codul QR» and the runner is confirmed (§NNN), the
+     * And, where the send ticked «Trimite și numărul de concurs și codul QR» and the runner is confirmed (§943), the
      * confirmation's own block under the organizers' words: the number and the desk code on the band, then the QR.
      */
     organizerMessage: {
@@ -4049,7 +4049,7 @@ export function buildTemplateContent(
       declarationPdfUrl: undefined,
       checkinCode: undefined,
       checkinQrUrl: undefined,
-      // …nor the same two as an organizers' message carries them for one runner (§NNN).
+      // …nor the same two as an organizers' message carries them for one runner (§943).
       organizerQr: undefined,
       thanksUrl: undefined,
       // «Spune-ne cum a fost» (§676) goes with the button it may be, as the results link does.
@@ -4459,7 +4459,7 @@ export function buildTemplateContent(
       ...noticeParts(messageType, locale, data),
       // The organizer's message itself, after its one framing sentence (§364).
       ...organizerMessageParts(messageType, data, locale, bulkCopy),
-      // …and under it, where the send asked for them, the confirmed runner's own number and desk code (§NNN).
+      // …and under it, where the send asked for them, the confirmed runner's own number and desk code (§943).
       ...(messageType === "ORGANIZER_MESSAGE" ? organizerQrLines(locale, data) : []),
       // A newsletter's own words, and what the platform says around every newsletter message (§445).
       ...newsletterParts(messageType, data),

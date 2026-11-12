@@ -2,7 +2,7 @@ import { isUuid } from "@/shared/ids";
 import { PLACES_TAKEN_KEYS } from "./capacity";
 
 /**
- * Where one registration's row stands on the registrations list (§NNN): the `id` of its row in the wide
+ * Where one registration's row stands on the registrations list (§943): the `id` of its row in the wide
  * table (`AdminTable`'s `rowId`) and the fragment a row's own press comes back to.
  *
  * The owner, 2026-11-12: «Mă disperă în general că atunci când fac un edit gen „aleg partenerul” și navighezi».
@@ -31,7 +31,7 @@ export function listReturnAnchor(outcome: Readonly<Record<string, string | undef
 const SPENT_KEYS: readonly string[] = ["erase", "memberSweep", "error", "saved", "count", "cancelled", "erased", "failed", "test", "voided", "from", "resent", ...PLACES_TAKEN_KEYS];
 
 /**
- * The address a press on the list comes back to (§NNN, §180's shape): the list's path, rebuilt by the caller and
+ * The address a press on the list comes back to (§943, §180's shape): the list's path, rebuilt by the caller and
  * never read from the form, its own query with the outcome in it, and `listReturnAnchor`'s fragment. Only the query
  * travels in a field, so the field chooses which rows come back and never where the browser goes.
  */

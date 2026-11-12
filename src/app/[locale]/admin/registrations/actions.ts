@@ -152,7 +152,7 @@ function returnTo(
 
 /** `backTo`, for a desk verb: the page's own query first, then the outcome. */
 async function backToDesk(form: FormData, locale: Locale, registrationId: string, outcome: Record<string, string | undefined>): Promise<never> {
-  // Pressed from a row of the registrations list (§NNN): the form carries the list's query, and the press comes back
+  // Pressed from a row of the registrations list (§943): the form carries the list's query, and the press comes back
   // to that row — it used to open the registration's own page under the hand.
   if (form.has("listQuery")) {
     const said = Object.fromEntries(Object.entries(outcome).filter((entry): entry is [string, string] => entry[1] !== undefined));
@@ -601,7 +601,7 @@ function addressChangeRefusalCode(fields: readonly string[]): string | null {
  */
 async function backToList(locale: Locale, listQuery: string, outcome: Record<string, string>, registrationId?: string): Promise<never> {
   await flashOutcome(outcome);
-  // One row's press that went through comes back to that row, its outcome in the toast; a refusal, to the alert (§NNN).
+  // One row's press that went through comes back to that row, its outcome in the toast; a refusal, to the alert (§943).
   // `from=row` says so in the address: the page's panels and batch sentences are not this press's to open or to say.
   redirect(listReturnHref(getPathname({ locale, href: "/admin/registrations" }), listQuery, registrationId && outcome.error === undefined ? { ...outcome, from: "row" } : outcome, registrationId));
 }
@@ -773,7 +773,7 @@ export async function cancelRegistrationAction(_previous: FormOutcome | null, fo
     }
 
     const cancelled = { saved: "registrationCancelled", ...mailSkippedOf(sendEmail) };
-    // From the list's «⋮» (§NNN): back to the row, which now says «Anulată»; from the registration's page, to that page.
+    // From the list's «⋮» (§943): back to the row, which now says «Anulată»; from the registration's page, to that page.
     if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), cancelled, registrationId);
     return backTo(detailPath(locale, registrationId), cancelled);
   });

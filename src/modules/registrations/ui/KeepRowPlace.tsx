@@ -62,7 +62,7 @@ function watchForTheRoutersScroll(id: string, top: number): void {
 }
 
 /**
- * A press on a row of the registrations list leaves the row where it was on screen (§NNN; the owner, 2026-11-12: «Mă
+ * A press on a row of the registrations list leaves the row where it was on screen (§943; the owner, 2026-11-12: «Mă
  * disperă în general că atunci când fac un edit gen „aleg partenerul” și navighezi»).
  *
  * The press comes back to the row's own address (`listReturnAnchor`), and a browser answers a fragment by putting its

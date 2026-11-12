@@ -10,7 +10,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-060-01, BR-REQ-070-01, `DECISIONS.md` §NNN — the owner, 2026-11-12: «Mă disperă în general că atunci când fac un
+ * BR-REQ-060-01, BR-REQ-070-01, `DECISIONS.md` §943 — the owner, 2026-11-12: «Mă disperă în general că atunci când fac un
  * edit gen „aleg partenerul” și navighezi». A press on a row of the registrations list — «Retrimite», check-in, «Anulează»,
  * and the rest of the row's verbs — comes back to that row of the same list, through the real actions on a real database:
  * the form carries the list's query (`listQuery`), the path is rebuilt, the toast says the outcome. Pressed from the
@@ -137,7 +137,7 @@ function expectBackOnTheRow(to: URL, saved: string) {
   expect(Object.fromEntries(to.searchParams)).toEqual({ eventId, sort: "name", dir: "asc", page: "2", saved, from: "row" });
 }
 
-describe("§NNN a press on a row of the list comes back to that row", () => {
+describe("§943 a press on a row of the list comes back to that row", () => {
   it("«Retrimite»: to the row with the toast, from the list; to the registration's page, from that page", async () => {
     state.actor = await staff("ADMIN");
     const fromList = await redirectedTo(resendRegistrationEmailAction(null, form({ listQuery: listQuery() })));

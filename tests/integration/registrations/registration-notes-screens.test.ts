@@ -384,7 +384,7 @@ describe("the list's marker", () => {
     expect(elements(await nameCellOf(tree, without)).filter((element) => element.type === NotesMark)).toHaveLength(0);
   });
 
-  it("says the notes' own words in the marker's tooltip — newest first, each with its day and hour, the older ones counted (§NNN)", async () => {
+  it("says the notes' own words in the marker's tooltip — newest first, each with its day and hour, the older ones counted (§943)", async () => {
     const race = await createRace("Crosul");
     const organizer = await staff("MODERATOR");
     state.actor = organizer;

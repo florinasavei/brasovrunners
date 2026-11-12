@@ -67,6 +67,6 @@ export async function setRegistrationPartnerFromListAction(_previous: FormOutcom
     return refused(error, form);
   }
   await flashOutcome({ saved });
-  // Back on the row itself, the outcome in the toast (§NNN): the list no longer jumps to its top after a row's edit.
+  // Back on the row itself, the outcome in the toast (§943): the list no longer jumps to its top after a row's edit.
   redirect(listReturnHref(getPathname({ locale, href: "/admin/registrations" }), text(form, "listQuery"), { saved, from: "row" }, text(form, "registrationId")));
 }

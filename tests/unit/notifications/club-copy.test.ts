@@ -24,7 +24,7 @@ const WITH_PERSONAL_LINKS: TemplateData = {
   bibNumber: 42,
   checkinCode: "K7Q2XR",
   checkinQrUrl: "https://example.test/api/registrations/qr/K7Q2XR.png",
-  // The same two as the organizers' message carries them for one confirmed runner (§NNN): the participant's alone, too.
+  // The same two as the organizers' message carries them for one confirmed runner (§943): the participant's alone, too.
   organizerQr: { checkinCode: "K7Q2XR", qrUrl: "https://example.test/api/registrations/qr/K7Q2XR.png" },
   manageUrl: `https://example.test/ro/inregistrari/gestionare/${SECRET}`,
   listConsentUrl: `https://example.test/ro/inregistrari/lista/${SECRET}`,
@@ -111,7 +111,7 @@ describe("BR-REQ-033-02 criterion 14 the club copy prints nothing only the parti
     expect(own.html).toContain(SECRET);
     expect(own.html).toContain("K7Q2XR");
     expect(own.text).not.toContain("Copie pentru club");
-    // The organizers' message draws its block from the field its copy must lose (§NNN): the fixture's is live.
+    // The organizers' message draws its block from the field its copy must lose (§943): the fixture's is live.
     const organizers = buildOutgoingEmail({ to: "ana@example.ro", locale: "ro", idempotencyKey: "test:own:organizers", messageType: "ORGANIZER_MESSAGE", data: WITH_PERSONAL_LINKS, actionUrl: ACTION });
     expect(organizers.html).toContain("/api/registrations/qr/K7Q2XR.png");
     expect(organizers.text).toContain("K7Q2XR");

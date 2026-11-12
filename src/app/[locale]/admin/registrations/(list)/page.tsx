@@ -172,14 +172,14 @@ export const dynamic = "force-dynamic";
 const BULK_FORM = "bulk-cancel";
 
 /**
- * An address in the list's «E-mail» column (§NNN). It may break at any character, so that a long one never widens the page —
+ * An address in the list's «E-mail» column (§943). It may break at any character, so that a long one never widens the page —
  * and for that very reason the browser's table layout counted the column as one character wide: on a full table it was squeezed
  * to its heading's width and every address stood five characters to a line, eight lines to a row. The floor is the width of an
  * ordinary address, on the wide table only (`md`, where it is drawn): a phone's card keeps its own width.
  */
 const EMAIL_CELL_SX = { display: "inline-block", minWidth: { xs: 0, md: "12rem" }, wordBreak: "break-all" } as const;
 
-/** An event's title in «Eveniment» (§NNN): the same floor, for the same reason — a few lines, not a word to a line. */
+/** An event's title in «Eveniment» (§943): the same floor, for the same reason — a few lines, not a word to a line. */
 const EVENT_CELL_SX = { display: "inline-block", minWidth: { xs: 0, md: "12rem" } } as const;
 
 /** Where a one-press entry onto the official waiting list landed (§872, §888): the toasts that open its panel on the way back. */
@@ -361,7 +361,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   ]);
 
   /*
-    «Stare» asking for invitations (§NNN): the grid is that state's invitations and nothing else — a registration has no
+    «Stare» asking for invitations (§943): the grid is that state's invitations and nothing else — a registration has no
     such state — so the page's own rows and its count stand empty, and the invitations are drawn as the lead rows below.
     Only with one event chosen, where invitations are listed; with every event the three choices are not offered and the
     parameter says nothing.
@@ -378,7 +378,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   */
   const [resubmissions, rowNotes, family, t, minorSigns] = await Promise.all([
     listResubmissionMarks(db, rows.map((row) => row.id)),
-    // «Note interne» (§777, §NNN): each row's live notes, newest first — one grouped read over the page's ids, only for a
+    // «Note interne» (§777, §943): each row's live notes, newest first — one grouped read over the page's ids, only for a
     // role that may keep notes. The marker says how many and, in its tooltip, the words; never on the desk.
     canKeepRegistrationNotes(actor.role) ? listRegistrationNotesForExport(db, actor, rows.map((row) => row.id)) : Promise.resolve(new Map<string, ExportNote[]>()),
     // The family marker (§543): the other people on each row's address at its event, one query per page.
@@ -557,7 +557,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   };
 
   /*
-    The telephones of the page's rows, for «Contact» (§NNN; the owner's decision: always shown, no trail): this page's own
+    The telephones of the page's rows, for «Contact» (§943; the owner's decision: always shown, no trail): this page's own
     read, role-gated in the service — the list's shared query never carries a telephone, so neither the desk nor an
     export can. The emergency contact and the health note stay on demand and recorded (§322).
   */
@@ -565,7 +565,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
 
   // The marker's number, from the same read as its tooltip's words.
   const notesCounts = new Map([...rowNotes].map(([id, notes]) => [id, notes.length]));
-  // The marker's tooltip (§NNN): the newest notes' words, each with its day and hour, the older ones counted.
+  // The marker's tooltip (§943): the newest notes' words, each with its day and hour, the older ones counted.
   const notesTipOf = (registrationId: string) =>
     notesTip(
       rowNotes.get(registrationId),
@@ -661,7 +661,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             const noteCount = notesCounts.get(row.id) ?? 0;
             const counted = t(`registrations.notes.count.${countForm(noteCount, locale)}`, { count: noteCount });
             return (
-            // The words under the pointer, without opening the registration (§NNN): the newest notes, the rest counted.
+            // The words under the pointer, without opening the registration (§943): the newest notes, the rest counted.
             <TipSpan title={notesTipOf(row.id)}>
             <NotesMark
               label={counted}
@@ -711,7 +711,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     },
     {
       /*
-        «Contact» (§NNN; the owner, 2026-11-12: «Aș vrea să afișez și numărul de telefon al alergătorilor în grid ca să pot
+        «Contact» (§943; the owner, 2026-11-12: «Aș vrea să afișez și numărul de telefon al alergătorilor în grid ca să pot
         să-i sun rapid», then, told what it annuls of §322, «Da … YOLO»): the address and, under it, the telephone — as
         the person typed it, on one line, a `tel:` link a phone rings. One column for both, so the number costs the table
         no width (a column of its own did not fit the owner's 1858-px screen), and right after the name, so it is in view
@@ -862,7 +862,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       },
     },
     /*
-      «Eveniment» only while every event is listed (§NNN): with one event chosen every row said the filter's own choice again,
+      «Eveniment» only while every event is listed (§943): with one event chosen every row said the filter's own choice again,
       the title wrapped down a narrow column and each row grew to its height. Its floor (`EVENT_CELL_SX`) keeps a title to a few
       lines where the column is drawn.
     */
@@ -894,7 +894,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         «Partener» (the decision on the list's column; the owner, 2026-11-11: «o coloană separată de „partener”»): the partner's
         or sponsor's name as plain text — nothing on a row without one — for every role that reads the list; the chip «Partener:
         {name}» left the name column for it, and stays on every other screen. Sorted by the name without regard to case, the rows
-        with none last either way. The last column, right before the row's verbs (§NNN; the owner, 2026-11-12: «Coloana de partener
+        with none last either way. The last column, right before the row's verbs (§943; the owner, 2026-11-12: «Coloana de partener
         ar trebui să apară ultima»): it stood third only while the frame cut whatever stood last, and the verbs' column is pinned
         now, so nothing is cut. Optional like its neighbours: «Coloane» hides it; unlike the address it stays on the wide table at
         every width it is drawn (`md` and up, its bounded 16rem keeping it narrow), so a landscape tablet sees and sets it too; on a
@@ -960,7 +960,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   */
   // A filter an invitation cannot answer hides the invitations; with «Stare» on an invitation state the search box is theirs.
   const otherFilters = Boolean((status && !invitationFilter) || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || partner === "1" || chosenPartner || isReconfirmFilter(reconfirm) || (q && !invitationFilter));
-  // With «Stare» on an invitation state (§NNN) the invitations are the list itself: every one of that state, whatever the page.
+  // With «Stare» on an invitation state (§943) the invitations are the list itself: every one of that state, whatever the page.
   const leadEvent = filters.eventId && !otherFilters && (invitationFilter || query.page === 1) ? filters.eventId : null;
   const leadNow = new Date();
   // …and the search box then looks in their names and addresses, as it looks in the registrations'.
@@ -1097,7 +1097,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         )}
         {/* How many bibs the mark actually touched (§264) — "Salvat." would leave the club
             wondering whether it hit the batch it had just downloaded. */}
-        {/* A batch's sentence, with its count; one row's mark from its «⋮» (`from=row`, §NNN) is said by the toast. */}
+        {/* A batch's sentence, with its count; one row's mark from its «⋮» (`from=row`, §943) is said by the toast. */}
         {(saved === "bibsPrinted" || saved === "bibsUnprinted") && current.from !== "row" && (
           <Alert severity="success">
             {t(saved === "bibsPrinted" ? "registrations.bibsPrintedAlert" : "registrations.bibsUnprintedAlert", {
@@ -1426,7 +1426,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           // and after a batch was marked — the undo is in here (§336).
           openWhen={{
             attention: bibs.unprinted > 0 || voidBibs.length > 0,
-            // …a batch, not one row's mark from its «⋮», whose undo is in the same menu (§NNN).
+            // …a batch, not one row's mark from its «⋮», whose undo is in the same menu (§943).
             saved: (saved === "bibsPrinted" || saved === "bibsUnprinted") && current.from !== "row",
           }}
           id="registrations-bibs"
@@ -2035,7 +2035,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 {REGISTRATION_STATUS_LABEL[value]}
               </MenuItem>
             ))}
-            {/* The event's invitations by state (§NNN), in the words their rows wear; only where invitations are listed. */}
+            {/* The event's invitations by state (§943), in the words their rows wear; only where invitations are listed. */}
             {filters.eventId &&
               (Object.keys(INVITATION_FILTERS) as InvitationFilter[]).map((value) => (
                 <MenuItem key={value} value={value} data-testid={`status-${value}`}>
@@ -2164,7 +2164,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         </Box>
       )}
 
-      {/* A row's press leaves the row where it stood on screen (§NNN): strings only, no row crosses to it. */}
+      {/* A row's press leaves the row where it stood on screen (§943): strings only, no row crosses to it. */}
       <KeepRowPlace anchorPrefix={registrationRowAnchor("")} />
       <AdminTable
         caption={t("registrations.tableCaption")}
@@ -2173,7 +2173,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         rows={rows}
         leadRows={leadRows}
         rowKey={(row) => row.id}
-        // A row's own press comes back to the row (§NNN, `listReturnAnchor`), not to the top of the page.
+        // A row's own press comes back to the row (§943, `listReturnAnchor`), not to the top of the page.
         rowId={(row) => registrationRowAnchor(row.id)}
         basePath={basePath}
         currentParams={listParams}
@@ -2245,7 +2245,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="registrationId" value={row.id} />
-                {/* Back to this row, not to the registration's page (§NNN). */}
+                {/* Back to this row, not to the registration's page (§943). */}
                 <input type="hidden" name="listQuery" value={rowReturnQueryString} />
                 {/* «Trimite acum» or «Pune la coadă» (§540), under the scheduled timing only. */}
                 {sendNow && <input type="hidden" name={sendNow.field} value={sendNow.value} />}
@@ -2330,7 +2330,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 // The elite mark (§897): the row's own mark decides which of the two words.
                 elite: row.elite,
               });
-              // Every press of the row comes back to this list, on the row, its page and filters kept (§747, §NNN):
+              // Every press of the row comes back to this list, on the row, its page and filters kept (§747, §943):
               // the forms carry the list's query, never a path.
               const hidden = (
                 <>

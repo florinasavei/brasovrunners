@@ -460,7 +460,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
 
   it("gives the desk code and its QR to exactly the messages the email state says carry it (§671)", async () => {
     await db.update(registrations).set({ status: "CONFIRMED", confirmedAt: NOW, holdExpiresAt: null }).where(eq(registrations.id, registrationId));
-    // The organizers' message is a candidate since §NNN: by its type alone — a row with no flag — it carries none.
+    // The organizers' message is a candidate since §943: by its type alone — a row with no flag — it carries none.
     const candidates: EmailMessageType[] = ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED", "DECLARATION_SIGNED", "EVENT_UPDATE_NOTICE", "REGISTRATION_CANCELLED", "ORGANIZER_MESSAGE"];
     const rendered = (messageType: EmailMessageType, key: string, payloadJson: Record<string, unknown> = {}) =>
       renderOutboxMessage(
@@ -500,7 +500,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     // The desk's chip («Fără QR pe email») reads `DESK_CODE_MESSAGE_TYPES`: the renderer and it agree.
     expect(carrying.sort()).toEqual([...DESK_CODE_MESSAGE_TYPES].sort());
     /*
-      The one message that carries it by its row and not by its type (§NNN): an organizers' message whose send ticked
+      The one message that carries it by its row and not by its type (§943): an organizers' message whose send ticked
       «Trimite și numărul de concurs și codul QR». The email state does not list it — refused, it leaves the
       confirmation's QR in the inbox, so the desk's chip has nothing to say — and no other type reads the flag.
     */

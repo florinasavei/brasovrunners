@@ -1,5 +1,5 @@
 /**
- * The colour of the surface a piece of the backoffice stands on, as a CSS variable (§NNN).
+ * The colour of the surface a piece of the backoffice stands on, as a CSS variable (§943).
  *
  * A cell pinned over the columns that scroll under it (`AdminTable`'s row verbs) has to be opaque,
  * and opaque in the colour of what is behind the table: the page, or — inside a `Panel` or a boxed

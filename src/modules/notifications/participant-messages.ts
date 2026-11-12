@@ -107,7 +107,7 @@ export type SendParticipantMessageInput = {
    */
   askReconfirm?: boolean;
   /**
-   * «Trimite și numărul de concurs și codul QR» (§NNN; the owner, 2026-11-12: «trebuie să le și reamintesc oamenilor care
+   * «Trimite și numărul de concurs și codul QR» (§943; the owner, 2026-11-12: «trebuie să le și reamintesc oamenilor care
    * e numărul lor de concurs și să le retrimit QR»): each confirmed registration of this send gets, under the organizers'
    * words, its own race number, QR and desk code — the confirmation's own block. Only those rows carry the flag, and the
    * renderer asks the registration's state again when the email leaves; everybody else gets the message as it was.
@@ -239,7 +239,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
     // The registrations this send asks (the decision «Cere reconfirmarea»), test ones counted apart as every number here.
     const asked: string[] = [];
     let askedTest = 0;
-    // The confirmed registrations whose email carries the number and the QR (§NNN), test ones apart likewise.
+    // The confirmed registrations whose email carries the number and the QR (§943), test ones apart likewise.
     let withQr = 0;
     let withQrTest = 0;
     for (const [index, row] of rows.entries()) {
@@ -249,7 +249,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         whose registration this send asks (`isReconfirmStatus` at queue time, the very test that fills `asked`) carry it,
         beside the words, so the renderer draws «Vin» only where an ask row exists. A flag, never a token.
 
-        «Trimite și numărul de concurs și codul QR» (§NNN) rides the same way: `sendQr` only on the rows whose registration
+        «Trimite și numărul de concurs și codul QR» (§943) rides the same way: `sendQr` only on the rows whose registration
         is confirmed as the send queues them (`isOrganizerQrStatus`) — a flag, never the code, which the renderer reads off
         the registration when the email leaves, and only if it is confirmed still.
       */
@@ -300,7 +300,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         .onConflictDoNothing();
     }
     // The club's one copy of this send (§419): the words and how many real participants it reached — never a row's
-    // flag: it asks nobody, and it carries nobody's number, QR or desk code (§320, §NNN). Marked like a row when it leaves now.
+    // flag: it asks nobody, and it carries nobody's number, QR or desk code (§320, §943). Marked like a row when it leaves now.
     await enqueueBulkClubCopies(tx, {
       messageType: "ORGANIZER_MESSAGE",
       eventId: input.eventId,
@@ -329,7 +329,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         ...(delivery === "now" ? { delivery: "now", bypassedSchedule: true } : {}),
         // «Cere reconfirmarea» (the decision «Cere reconfirmarea»): the tick, and how many were asked — real and test apart.
         ...(askReconfirm ? { askReconfirm: true, asked: asked.length - askedTest, askedTest } : {}),
-        // «Trimite și numărul de concurs și codul QR» (§NNN): the tick, and in how many confirmed registrations' emails —
+        // «Trimite și numărul de concurs și codul QR» (§943): the tick, and in how many confirmed registrations' emails —
         // real and test apart; «Mesaje trimise» reads both. Never who, and never a code.
         ...(sendQr ? { sendQr: true, withQr, withQrTest } : {}),
       },
@@ -376,7 +376,7 @@ export type SentParticipantMessage = {
   askReconfirm: boolean;
   /** The three numbers of a send that asked; null for one that did not. */
   answers: ReconfirmAnswers | null;
-  /** «Trimite și numărul de concurs și codul QR» was ticked on this send (§NNN). */
+  /** «Trimite și numărul de concurs și codul QR» was ticked on this send (§943). */
   sendQr: boolean;
   /**
    * In how many confirmed registrations' emails the send queued the number and the QR, as its audit row counted them
@@ -434,7 +434,7 @@ export async function listParticipantMessages<T extends Record<string, unknown>>
       test: typeof metadata.test === "number" ? metadata.test : 0,
       senderName: row.senderName ?? null,
       askReconfirm: metadata.askReconfirm === true,
-      // «Trimite și numărul de concurs și codul QR» (§NNN): the tick and its count, as the send's own audit row wrote them.
+      // «Trimite și numărul de concurs și codul QR» (§943): the tick and its count, as the send's own audit row wrote them.
       sendQr: metadata.sendQr === true,
       withQr: metadata.sendQr === true && typeof metadata.withQr === "number" ? metadata.withQr : 0,
     };
@@ -543,7 +543,7 @@ export async function previewParticipantMessage<T extends Record<string, unknown
     body: { ro?: string | null; en?: string | null };
     /** «Cere reconfirmarea» as the box stands: the preview draws «Vin» beside «Nu mai pot ajunge» (the decision «Cere reconfirmarea»). */
     askReconfirm?: boolean;
-    /** «Trimite și numărul de concurs și codul QR» as the box stands: the preview draws the example runner's block under the words (§NNN). */
+    /** «Trimite și numărul de concurs și codul QR» as the box stands: the preview draws the example runner's block under the words (§943). */
     sendQr?: boolean;
   },
 ): Promise<ParticipantMessagePreview> {
@@ -605,7 +605,7 @@ export async function previewParticipantMessage<T extends Record<string, unknown
     cannotComeUrl: `${env.APP_BASE_URL}/${locale}/EXAMPLE#cancel`,
     ...(input.askReconfirm === true ? { reconfirmUrl: `${env.APP_BASE_URL}/${locale}/EXAMPLE#reconfirm` } : {}),
     /*
-      The block a confirmed runner's copy carries when the box is ticked (§NNN): the example runner is confirmed — her
+      The block a confirmed runner's copy carries when the box is ticked (§943): the example runner is confirmed — her
       number is in the line above the preview — so she is shown her number, the QR's place and the sample's desk code, as
       the confirmation's preview on «Setări» → «Emailuri» shows them (`emailSampleData`). The code is the sample's, nobody's:
       its picture's address answers nothing, so the preview draws the picture's description where a real QR arrives.

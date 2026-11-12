@@ -142,7 +142,7 @@ describe("«Salvează nota» from a row of the list — every role", () => {
       const notes = await db.select().from(registrationNotes);
       const trail = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.note_added"));
       if (may) {
-        // The same list, on the row the note was written for (§NNN): the toast says «Nota a fost salvată».
+        // The same list, on the row the note was written for (§943): the toast says «Nota a fost salvată».
         expect(to).toBe(`/ro/admin/registrations?${new URLSearchParams({ ...Object.fromEntries(new URLSearchParams(LIST_QUERY)), saved: "noteAdded", from: "row" }).toString()}#reg-${registrationId}`);
         expect(notes).toHaveLength(1);
         expect(notes[0]).toMatchObject({ registrationId, body: "cere tricou S", authorStaffUserId: actor.id });

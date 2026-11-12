@@ -1298,7 +1298,7 @@ async function renderRow(
   }
 
   /*
-    «Trimite și numărul de concurs și codul QR» (§NNN): the organizers' message carries the same code, QR and number as the
+    «Trimite și numărul de concurs și codul QR» (§943): the organizers' message carries the same code, QR and number as the
     three below only when its own row carries the send's flag — set only on the rows of registrations confirmed when it
     was queued — at the registration's own address, and only for a registration confirmed now, as it renders
     (`organizerQrApplies`; the condition below asks the state once more): a send drains over hours, and a runner who
@@ -1323,7 +1323,7 @@ async function renderRow(
       }
       const qrUrl = `${env.APP_BASE_URL}/api/registrations/qr/${code}.png`;
       /*
-        On the organizers' message the two are the block's own (§NNN), never a field of the words: `{checkinCode}` stays
+        On the organizers' message the two are the block's own (§943), never a field of the words: `{checkinCode}` stays
         empty in whatever the organizers wrote (`placeholdersFilledBy`), since those words are the same for everybody.
       */
       if (organizerQr) data.organizerQr = { checkinCode: code, qrUrl };

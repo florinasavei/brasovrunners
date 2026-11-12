@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { listReturnAnchor, listReturnHref, registrationRowAnchor } from "@/modules/registrations/domain/list-row";
 
 /**
- * BR-REQ-060-01, BR-REQ-070-01, `DECISIONS.md` §NNN — the owner, 2026-11-12: «Mă disperă în general că atunci când fac
+ * BR-REQ-060-01, BR-REQ-070-01, `DECISIONS.md` §943 — the owner, 2026-11-12: «Mă disperă în general că atunci când fac
  * un edit gen „aleg partenerul” și navighezi». A press on a row of the registrations list comes back to that row, its
  * outcome in the toast; a refusal still lands on the alert, where its sentence is. Only the list's query travels in the
  * form — the path is the caller's — so the field chooses which rows come back and never where the browser goes.
@@ -10,7 +10,7 @@ import { listReturnAnchor, listReturnHref, registrationRowAnchor } from "@/modul
 const ID = "8f0c5d0e-1b7a-4c1d-9c55-0a1b2c3d4e5f";
 const LIST = "/ro/admin/registrations";
 
-describe("§NNN where a row's press comes back", () => {
+describe("§943 where a row's press comes back", () => {
   it("is the row of the registration when the press went through", () => {
     expect(registrationRowAnchor(ID)).toBe(`reg-${ID}`);
     expect(listReturnAnchor({ saved: "partnerSaved" }, ID)).toBe(`reg-${ID}`);

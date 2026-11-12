@@ -14,7 +14,7 @@ import { FEATURED, hydrated, signIn } from "./support/featured-event";
  * reload (drawn hidden before hydration too), keeps its width, has no edge to tab to, and comes back
  * by the menu or the reset; the name and the state have no checkbox.
  *
- * §NNN — and the row verbs' column stays in view: on a frame narrower than the table it is pinned to the
+ * §943 — and the row verbs' column stays in view: on a frame narrower than the table it is pinned to the
  * frame's right edge, opaque, fading into the columns under it; a press the keyboard reaches beside it is
  * not left under it; and on the owner's 1858-px screen the whole table fits.
  *
@@ -265,7 +265,7 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
     }
   });
 
-  test("§NNN the row verbs stay in view: pinned while the table scrolls, and on a wide screen the table fits", async ({ page }, testInfo) => {
+  test("§943 the row verbs stay in view: pinned while the table scrolls, and on a wide screen the table fits", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "the table is a desktop layout: the phone's blocks have no columns to scroll");
     test.setTimeout(90_000);
     const seeded = await seed(`${testInfo.project.name}-${Date.now().toString(36)}`);

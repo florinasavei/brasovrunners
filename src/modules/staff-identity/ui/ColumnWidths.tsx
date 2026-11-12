@@ -37,7 +37,7 @@ import {
  * changes this table's widths lays it out here too (`storage`), and the reset hands the keyboard's
  * focus to the table's first column edge rather than dropping it with the button.
  *
- * It also says, on the table's frame, whether columns lie past its right edge (§NNN): the pinned
+ * It also says, on the table's frame, whether columns lie past its right edge (§943): the pinned
  * verbs' column fades into them only then — and keeps that column's width as the frame's scroll
  * padding, so a press the browser scrolls into view is never left under it.
  */
@@ -98,7 +98,7 @@ export default function ColumnWidths({ tableId }: { tableId: string }) {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(apply);
     });
-    // And whether more of the table lies past the frame's edge (§NNN): `data-more-end` on the frame
+    // And whether more of the table lies past the frame's edge (§943): `data-more-end` on the frame
     // is what gives the pinned verbs' column its fading edge, true to the scroll, to a drag that
     // widens the table and to a column hidden or shown — the chips rows' own watcher.
     const unwatch: (() => void)[] = [];

@@ -18,7 +18,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Trimite și numărul de concurs și codul QR» on «Trimite un mesaj participanților» (the owner, 2026-11-12: «în
+ * §943 — «Trimite și numărul de concurs și codul QR» on «Trimite un mesaj participanților» (the owner, 2026-11-12: «în
  * acel mail de comunicare, trebuie să le și reamintesc oamenilor care e numărul lor de concurs și să le retrimit QR»;
  * BR-REQ-080-01, BR-REQ-080-02, BR-REQ-037-08, BR-REQ-060-01).
  *
@@ -191,7 +191,7 @@ const BLOCK_WORDS = /Numărul tău de concurs|Your race number|Codul tău|Your c
 /** A message with the one thing two renders of it differ by — the manage link's secret, minted at each render — settled. */
 const settled = (text: string) => text.replace(/(\/(?:inregistrari\/gestionare|registrations\/manage)\/)[A-Za-z0-9_-]+/g, "$1TOKEN");
 
-describe("§NNN the send: the flag rides on the rows of confirmed registrations alone", () => {
+describe("§943 the send: the flag rides on the rows of confirmed registrations alone", () => {
   it("flags exactly the rows of registrations confirmed at the send — a test row too — and the audit row counts them, real and test apart", async () => {
     const ana = await person("Ana", "CONFIRMED", { bib: 7 });
     const bogdan = await person("Bogdan", "CONFIRMED", { locale: "en" });
@@ -293,7 +293,7 @@ describe("§NNN the send: the flag rides on the rows of confirmed registrations 
   });
 });
 
-describe("§NNN the email of a confirmed runner: their own number, QR and desk code, under the organizers' words", () => {
+describe("§943 the email of a confirmed runner: their own number, QR and desk code, under the organizers' words", () => {
   it("draws the confirmation's block once, after the words and before the button, in the registrant's language first", async () => {
     const ana = await person("Ana", "CONFIRMED", { bib: 7 });
     const bogdan = await person("Bogdan", "CONFIRMED", { locale: "en", bib: 12 });
@@ -387,7 +387,7 @@ describe("§NNN the email of a confirmed runner: their own number, QR and desk c
   });
 });
 
-describe("§NNN everybody else gets the message as it was", () => {
+describe("§943 everybody else gets the message as it was", () => {
   it("a waiting, an offered and a declaration-owing recipient: byte for byte the email of a send without the tick", async () => {
     await person("Ana", "CONFIRMED", { bib: 7 });
     const others = [await person("Carmen", "WAITLISTED"), await person("Dan", "WAITLIST_OFFERED", { locale: "en" }), await person("Elena", "PENDING_DECLARATION")];
@@ -504,7 +504,7 @@ describe("§NNN everybody else gets the message as it was", () => {
   });
 });
 
-describe("§NNN the preview on the form", () => {
+describe("§943 the preview on the form", () => {
   it("draws the example runner's block with the tick — on the sample's inert code — and nothing of it without; nothing is queued or minted", async () => {
     await person("Ana", "CONFIRMED", { bib: 7 });
     const sample = EMAIL_SAMPLE.ro;
@@ -546,7 +546,7 @@ describe("§NNN the preview on the form", () => {
   });
 });
 
-describe("§NNN «Mesaje trimise» says the tick was on", () => {
+describe("§943 «Mesaje trimise» says the tick was on", () => {
   it("names the send that carried them and for how many confirmed, test registrations left out; a send without it says nothing", async () => {
     await person("Ana", "CONFIRMED");
     await person("Bogdan", "CONFIRMED");
@@ -572,7 +572,7 @@ describe("§NNN «Mesaje trimise» says the tick was on", () => {
   });
 });
 
-describe("§NNN the form's tick reaches the send and the preview", () => {
+describe("§943 the form's tick reaches the send and the preview", () => {
   function form(fields: Record<string, string>): FormData {
     const posted = new FormData();
     posted.set("uiLocale", "ro");

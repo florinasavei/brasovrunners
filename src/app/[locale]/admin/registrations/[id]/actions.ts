@@ -19,7 +19,7 @@ function toLocale(value: FormDataEntryValue | null): Locale {
 }
 
 /**
- * «Retrimite» pressed from a row of the registrations list (§NNN): the form carries the list's query, and the press
+ * «Retrimite» pressed from a row of the registrations list (§943): the form carries the list's query, and the press
  * comes back to that row with the toast — it used to open the registration's own page under the hand. A refusal lands
  * on the list's alert. Only the query travels; the path is rebuilt here (`listReturnHref`).
  */

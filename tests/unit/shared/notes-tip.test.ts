@@ -2,14 +2,14 @@ import { describe, expect, it } from "vitest";
 import { notesTip, TIP_NOTE_CHARS, TIP_NOTES } from "@/shared/notes/note-text";
 
 /**
- * BR-REQ-070-01, `DECISIONS.md` §NNN — the owner, 2026-11-12, of the marker «1 notă» on the registrations list: «Ar trebui
+ * BR-REQ-070-01, `DECISIONS.md` §943 — the owner, 2026-11-12, of the marker «1 notă» on the registrations list: «Ar trebui
  * să văd nota și pe tooltip, fără să deschid înscrierea». The marker's tooltip is the newest notes' own words.
  */
 const when = (at: Date) => `ziua ${at.getUTCDate()}`;
 const more = (left: number) => `… și încă ${left}`;
 const note = (day: number, body: string) => ({ createdAt: new Date(Date.UTC(2026, 10, day, 9)), body });
 
-describe("§NNN the notes marker's tooltip", () => {
+describe("§943 the notes marker's tooltip", () => {
   it("is nothing without notes", () => {
     expect(notesTip(undefined, when, more)).toBe("");
     expect(notesTip([], when, more)).toBe("");

@@ -144,7 +144,7 @@ export const BOXED_DISCLOSURE_SX = {
   borderRadius: 1,
   px: 2,
   bgcolor: "background.paper",
-  // What stands inside stands on the card (§NNN): a table's pinned cells take this colour.
+  // What stands inside stands on the card (§943): a table's pinned cells take this colour.
   ...ON_CARD_SX,
   "& > summary": {
     ...DISCLOSURE_SUMMARY_SX,

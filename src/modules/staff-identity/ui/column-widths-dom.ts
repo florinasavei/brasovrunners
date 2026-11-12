@@ -204,7 +204,7 @@ export function releaseLayout(table: HTMLTableElement): void {
 }
 
 /**
- * Room for the pinned verbs' column beside anything the browser scrolls into view (§NNN): the
+ * Room for the pinned verbs' column beside anything the browser scrolls into view (§943): the
  * frame's scroll padding on that side, as wide as the column is now. A press reached with Tab in
  * the column next to it — «Partener»'s, the last one — would otherwise be scrolled exactly under the
  * verbs (WCAG 2.4.11, focus not obscured); the page's own scroll padding does the same for the

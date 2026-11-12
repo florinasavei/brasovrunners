@@ -524,7 +524,7 @@ describe("the row's own editor", () => {
       // Picked from the select.
       const set = new URL(await press({ partnerChoice: BAKERY, partnerName: "" }), "https://example.test");
       expect(set.pathname, role).toBe("/ro/admin/registrations");
-      // On the row itself (§NNN): the list stays where the Administrator was working, the toast says what was saved.
+      // On the row itself (§943): the list stays where the Administrator was working, the toast says what was saved.
       expect(set.hash, role).toBe(`#reg-${target.id}`);
       expect(Object.fromEntries(set.searchParams), role).toEqual({ eventId: race.id, partner: "1", sort: "partner", dir: "desc", page: "2", perPage: "50", saved: "partnerSaved", from: "row" });
       expect(decodeURIComponent(set.toString()), role).not.toContain(BAKERY);
@@ -604,11 +604,11 @@ describe("the row's own editor", () => {
 });
 
 /**
- * BR-REQ-041-01, `DECISIONS.md` §NNN — the owner, 2026-11-12, of this list on a wide screen: «Aici mi se face crop!». Besides the
+ * BR-REQ-041-01, `DECISIONS.md` §943 — the owner, 2026-11-12, of this list on a wide screen: «Aici mi se face crop!». Besides the
  * verbs' column pinned in `AdminTable` (`tests/unit/staff/admin-table-pinned-verbs.test.ts`), the list no longer asks for width
  * it does not use: «Eveniment» is drawn only while every event is listed, and an address reads on a line of its own.
  */
-describe("§NNN the list asks for no width it does not use", () => {
+describe("§943 the list asks for no width it does not use", () => {
   const keysOf = (tree: ReactNode) => (tableOf(tree)?.props.columns as Column[]).map((column) => column.key);
 
   it("draws «Eveniment» only while every event is listed: one event chosen is the filter's own choice on every row", async () => {
@@ -666,11 +666,11 @@ describe("§NNN the list asks for no width it does not use", () => {
 });
 
 /**
- * BR-REQ-037-07, BR-REQ-070-01, `DECISIONS.md` §NNN — the owner, 2026-11-12: «trebuie să pot filtra și invitațiile după stare».
+ * BR-REQ-037-07, BR-REQ-070-01, `DECISIONS.md` §943 — the owner, 2026-11-12: «trebuie să pot filtra și invitațiile după stare».
  * The list's «Stare» offers the three states of an invitation not accepted yet; choosing one makes the grid that state's
  * invitations and nothing else.
  */
-describe("§NNN «Stare» filters the event's invitations too", () => {
+describe("§943 «Stare» filters the event's invitations too", () => {
   const leadNames = (tree: ReactNode) => ((tableOf(tree)?.props.leadRows as { cells: Record<string, ReactNode> }[]) ?? []).map((lead) => textOf(lead.cells.name).replace("Invitație", ""));
   const offered = (tree: ReactNode) => elements(tree).map((element) => element.props["data-testid"]).filter((id): id is string => typeof id === "string" && id.startsWith("status-invitation-"));
 
@@ -746,13 +746,13 @@ describe("§NNN «Stare» filters the event's invitations too", () => {
 });
 
 /**
- * BR-REQ-031-05, BR-REQ-070-01, `DECISIONS.md` §NNN — the owner, 2026-11-12: «Aș vrea să afișez și numărul de telefon al
+ * BR-REQ-031-05, BR-REQ-070-01, `DECISIONS.md` §943 — the owner, 2026-11-12: «Aș vrea să afișez și numărul de telefon al
  * alergătorilor în grid ca să pot să-i sun rapid», and, told that showing it always annuls §322's "read only when asked
  * for, each read recorded" for the telephone, «Da … YOLO». The runner's own telephone is on every page of the list, under
  * the address, for whoever may read the registrations, and nothing is written for it. The emergency contact and the health
  * note are untouched (`emergency-details.test.ts`), and neither the list's shared query, the desk's nor an export carries a number.
  */
-describe("§NNN «Contact»: the telephone under the address, on every page of the list", () => {
+describe("§943 «Contact»: the telephone under the address, on every page of the list", () => {
   it("is the second column, at every width of the wide table, hideable from «Coloane»; the number is a link a phone rings", async () => {
     const race = await createRace();
     state.actor = await staff("ADMIN");
@@ -821,11 +821,11 @@ describe("§NNN «Contact»: the telephone under the address, on every page of t
 });
 
 /**
- * BR-REQ-060-01, `DECISIONS.md` §NNN — the owner, 2026-11-12: «Mă disperă în general că atunci când fac un edit gen „aleg
+ * BR-REQ-060-01, `DECISIONS.md` §943 — the owner, 2026-11-12: «Mă disperă în general că atunci când fac un edit gen „aleg
  * partenerul” și navighezi». The page's half of it (the actions' half is `row-press-returns.test.ts`): the table names its
  * rows, and every form of a row carries the list's own query.
  */
-describe("§NNN a row's press comes back to the row", () => {
+describe("§943 a row's press comes back to the row", () => {
   it("names each row and hands every one of its forms the list's query, once", async () => {
     const race = await createRace();
     state.actor = await staff("ADMIN");

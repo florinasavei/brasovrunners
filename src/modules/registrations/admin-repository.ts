@@ -197,7 +197,7 @@ export type RegistrationListRow = {
  * What «Date lipsă» reads (§905, `missing-answers.ts`), beside the answers the row already carries: the answers
  * themselves where the list may show them, and for the telephone and the emergency contact only whether one is
  * held (`answerHeldSql`) — this query reads neither (§322); the list's page reads the telephones of its rows in a
- * query of its own (§NNN, `findPhonesOf`), the emergency contact never.
+ * query of its own (§943, `findPhonesOf`), the emergency contact never.
  */
 export type AnswersForChip = {
   sex: RegistrationSex | null;
@@ -1196,7 +1196,7 @@ function gatedHealth<R extends { healthNotes: string | null; healthConsentAt: Da
 }
 
 /**
- * The telephones of these registrations (§NNN), for the registrations list's «Contact» column: **their own query**, for
+ * The telephones of these registrations (§943), for the registrations list's «Contact» column: **their own query**, for
  * that page alone. The list's shared query still carries only whether a telephone is held (`phoneHeld`), so nothing
  * that reuses it — and neither the desk's query nor an export — can carry a number by accident. A registration without
  * one is absent from the map. The one caller asserts the role first (`admin-service.ts#readRowPhones`).
