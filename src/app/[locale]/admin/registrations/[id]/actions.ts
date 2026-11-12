@@ -24,7 +24,7 @@ function toLocale(value: FormDataEntryValue | null): Locale {
  * on the list's alert. Only the query travels; the path is rebuilt here (`listReturnHref`).
  */
 function backOnTheList(locale: Locale, form: FormData, registrationId: string, outcome: Record<string, string>): string {
-  return listReturnHref(getPathname({ locale, href: "/admin/registrations" }), String(form.get("listQuery") ?? ""), outcome, registrationId);
+  return listReturnHref(getPathname({ locale, href: "/admin/registrations" }), String(form.get("listQuery") ?? ""), outcome.error === undefined ? { ...outcome, from: "row" } : outcome, registrationId);
 }
 
 /** «Retrimite familiei» (§588): one email for everybody on the row's address at its event. */

@@ -777,8 +777,11 @@ describe("§NNN «Arată telefoanele»: the telephones on demand, each page reco
     const column = columnOf(shown, "phone");
     expect(column?.label).toBe("Telefon");
     expect(column?.hint).toContain("jurnal");
+    // «Coloane» does not offer it: showing it is a recorded read, and its own switch takes it away.
+    expect(column?.essential).toBe(true);
+    // Right after the name, so the column asked for is in view at every width — never under the pinned verbs.
     const keys = (tableOf(shown)?.props.columns as Column[]).map((candidate) => candidate.key);
-    expect(keys.indexOf("phone")).toBe(keys.indexOf("email") + 1);
+    expect(keys.slice(0, 3)).toEqual(["name", "phone", "status"]);
     // The number as typed, on a link a phone rings; nothing typed, a dash.
     const cell = elements(cellOf(shown, "phone", ana.id))[0];
     expect(textOf(cell)).toBe("0722 123 456");

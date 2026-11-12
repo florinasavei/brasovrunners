@@ -177,7 +177,7 @@ describe("the elite panel's «Nu mai e elită» press (2026-11-11)", () => {
     expect((await listEliteMarkedRegistrations(db, admin, eventId)).map((row) => row.id)).toEqual([id]);
     const done = await outcomeOf(setRegistrationEliteAction(null, pressed(id)));
     // Back on the row it changed, the outcome in the toast (§NNN) — not the top of the list.
-    expect(done).toEqual({ redirect: `/ro/admin/events/x?eventId=${eventId}&page=2&saved=eliteUnmarked#reg-${id}` });
+    expect(done).toEqual({ redirect: `/ro/admin/events/x?eventId=${eventId}&page=2&saved=eliteUnmarked&from=row#reg-${id}` });
     const [row] = await db.select().from(registrations);
     expect([row.elite, row.status]).toEqual([false, "PENDING_DECLARATION"]);
     expect((await db.select().from(auditLogs)).map((entry) => entry.action)).toEqual(["registration.elite_unmarked"]);

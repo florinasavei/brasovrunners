@@ -133,7 +133,8 @@ beforeEach(async () => {
 function expectBackOnTheRow(to: URL, saved: string) {
   expect(to.pathname).toBe(LIST);
   expect(to.hash).toBe(`#reg-${registrationId}`);
-  expect(Object.fromEntries(to.searchParams)).toMatchObject({ eventId, sort: "name", dir: "asc", page: "2", saved });
+  // `from=row`: the page's panels and batch sentences are not this press's to open or to say.
+  expect(Object.fromEntries(to.searchParams)).toEqual({ eventId, sort: "name", dir: "asc", page: "2", saved, from: "row" });
 }
 
 describe("§NNN a press on a row of the list comes back to that row", () => {

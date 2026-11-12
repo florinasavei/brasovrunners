@@ -289,7 +289,7 @@ describe("§910 the ticks' readers and Server Actions (BR-REQ-060-01)", () => {
     expect(await outcomeOf(setRegisteredEliteTickAction(null, form({ registrationId: dan.id, tick: "inResults", on: "0" })))).toEqual({ redirect: "/ro/admin/x?saved=eliteTicked#bib-elite" });
     expect(await outcomeOf(setRegistrationEliteTickAction(null, form({ registrationId: dan.id, tick: "onSite", on: "0", listQuery: "event=x&page=2" })))).toEqual({
       // The list's press comes back to its row (§NNN).
-      redirect: `/ro/admin/x?event=x&page=2&saved=eliteTicked#reg-${dan.id}`,
+      redirect: `/ro/admin/x?event=x&page=2&saved=eliteTicked&from=row#reg-${dan.id}`,
     });
     expect(await outcomeOf(setRegistrationEliteTickAction(null, form({ registrationId: dan.id, tick: "onSite", on: "1" })))).toEqual({ redirect: "/ro/admin/x?saved=eliteTicked#admin-alert" });
     const [stored] = await db.select().from(eventEliteEntries);

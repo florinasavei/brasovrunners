@@ -227,7 +227,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     await page.waitForURL(/saved=bibsPrinted/);
 
     // The bulk cancel names the printed number among the rows it shows, before any press. (The
-    // mark returns to the registration's own page, so back to the list for it.)
+    // mark comes back to this list, on its row; opened afresh so the fold starts closed.)
     await page.goto(`/ro/admin/registrations?q=${encodeURIComponent(suffix)}`);
     await hydrated(page);
     await page.locator("summary", { hasText: "Anulează înscrierile bifate" }).click();

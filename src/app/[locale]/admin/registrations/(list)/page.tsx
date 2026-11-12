@@ -711,6 +711,38 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         </Stack>
       ),
     },
+    /*
+      «Telefon» (§NNN; the owner, 2026-11-12: «ca să pot să-i sun rapid»): drawn only while «Arată telefoanele» is on. The number
+      as the person typed it, on one line, a `tel:` link — a tap rings it on a phone. «—» without one. Right after the name:
+      a column asked for in order to be read now must not be one the table's width leaves under the pinned verbs (at 1600 px
+      it was, when it stood after the address).
+    */
+    ...(rowPhones
+      ? [
+          {
+            key: "phone",
+            label: t("registrations.columnPhone"),
+            hint: t("registrations.phoneHint"),
+            // Its own switch shows and hides it, and each showing is a recorded read: not one of «Coloane»'s to hide.
+            essential: true,
+            render: (row) => {
+              const phone = rowPhones.get(row.id);
+              if (!phone) {
+                return (
+                  <Box component="span" sx={{ color: "text.disabled" }}>
+                    —
+                  </Box>
+                );
+              }
+              return (
+                <Box component="a" href={`tel:${phone.replace(/[^\d+]/g, "")}`} data-testid="row-phone" sx={{ whiteSpace: "nowrap", color: "primary.main" }}>
+                  {phone}
+                </Box>
+              );
+            },
+          } satisfies AdminColumn<RegistrationListRow>,
+        ]
+      : []),
     {
       key: "status",
       label: t("registrations.columnStatus"),
@@ -865,34 +897,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         </Box>
       ),
     },
-    /*
-      «Telefon» (§NNN; the owner, 2026-11-12: «ca să pot să-i sun rapid»): drawn only while «Arată telefoanele» is on. The number
-      as the person typed it, on one line, a `tel:` link — a tap rings it on a phone. «—» without one.
-    */
-    ...(rowPhones
-      ? [
-          {
-            key: "phone",
-            label: t("registrations.columnPhone"),
-            hint: t("registrations.phoneHint"),
-            render: (row) => {
-              const phone = rowPhones.get(row.id);
-              if (!phone) {
-                return (
-                  <Box component="span" sx={{ color: "text.disabled" }}>
-                    —
-                  </Box>
-                );
-              }
-              return (
-                <Box component="a" href={`tel:${phone.replace(/[^\d+]/g, "")}`} data-testid="row-phone" sx={{ whiteSpace: "nowrap", color: "primary.main" }}>
-                  {phone}
-                </Box>
-              );
-            },
-          } satisfies AdminColumn<RegistrationListRow>,
-        ]
-      : []),
     {
       key: "submitted",
       label: t("registrations.columnSubmitted"),
@@ -1109,7 +1113,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         )}
         {/* How many bibs the mark actually touched (§264) — "Salvat." would leave the club
             wondering whether it hit the batch it had just downloaded. */}
-        {(saved === "bibsPrinted" || saved === "bibsUnprinted") && (
+        {/* A batch's sentence, with its count; one row's mark from its «⋮» (`from=row`, §NNN) is said by the toast. */}
+        {(saved === "bibsPrinted" || saved === "bibsUnprinted") && current.from !== "row" && (
           <Alert severity="success">
             {t(saved === "bibsPrinted" ? "registrations.bibsPrintedAlert" : "registrations.bibsUnprintedAlert", {
               count: Number(marked ?? "0"),
@@ -1437,7 +1442,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           // and after a batch was marked — the undo is in here (§336).
           openWhen={{
             attention: bibs.unprinted > 0 || voidBibs.length > 0,
-            saved: saved === "bibsPrinted" || saved === "bibsUnprinted",
+            // …a batch, not one row's mark from its «⋮», whose undo is in the same menu (§NNN).
+            saved: (saved === "bibsPrinted" || saved === "bibsUnprinted") && current.from !== "row",
           }}
           id="registrations-bibs"
           data-testid="registrations-bibs"

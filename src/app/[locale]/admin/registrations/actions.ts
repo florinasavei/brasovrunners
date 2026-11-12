@@ -602,7 +602,8 @@ function addressChangeRefusalCode(fields: readonly string[]): string | null {
 async function backToList(locale: Locale, listQuery: string, outcome: Record<string, string>, registrationId?: string): Promise<never> {
   await flashOutcome(outcome);
   // One row's press that went through comes back to that row, its outcome in the toast; a refusal, to the alert (§NNN).
-  redirect(listReturnHref(getPathname({ locale, href: "/admin/registrations" }), listQuery, outcome, registrationId));
+  // `from=row` says so in the address: the page's panels and batch sentences are not this press's to open or to say.
+  redirect(listReturnHref(getPathname({ locale, href: "/admin/registrations" }), listQuery, registrationId && outcome.error === undefined ? { ...outcome, from: "row" } : outcome, registrationId));
 }
 
 /**
