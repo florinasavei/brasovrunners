@@ -164,7 +164,8 @@ describe("§895 the race's elite list", () => {
       ["event_elite.added", "event", race, { entryId: id }],
       ["event_elite.deleted", "event", race, { entryId: id }],
     ]);
-    const words = JSON.stringify(trail);
+    // Without the rows' own ids: they are random hex, and one run in a few hundred draws one that holds «4321» (CI, 2026-11-11).
+    const words = JSON.stringify(trail).replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g, "<id>");
     for (const typed of ["Eliud", "Kipchoge", "4321"]) expect(words).not.toContain(typed);
   });
 

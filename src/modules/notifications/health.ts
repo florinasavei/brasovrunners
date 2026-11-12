@@ -1,6 +1,6 @@
 import { and, count, desc, eq, gt, inArray, isNotNull, lt, not, or, type SQL, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
-import { BULK_MESSAGE_TYPES } from "./domain/bulk";
+import { BULK_MESSAGE_TYPES, SEND_TO_MANY_MESSAGE_TYPES } from "./domain/bulk";
 import { GMAIL_CAP_DEFERRED_ERROR } from "./domain/email-transport";
 import { RELAY_MESSAGE_TYPES } from "./domain/relay";
 import { PACE_EVIDENCE_MS, paceHolds, RATE_PAUSE_ERROR_PREFIX } from "./domain/hourly-pace";
@@ -235,6 +235,11 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
   const held = heldByMailgunCondition();
   const fallbackWaiting = sql`${emailOutbox.lastError} LIKE ${`${FALLBACK_WAITING_ERROR_PREFIX}%`}`;
   const notCarried = (where: SQL | undefined) => (carried ? and(where, sql`NOT coalesce(${held}, false)`) : where);
+  // A send to many, its manual resends left out (`SEND_TO_MANY_MESSAGE_TYPES`): not late for waiting its turn (below).
+  const sendToMany = sql`(${emailOutbox.messageType} IN (${sql.join(
+    SEND_TO_MANY_MESSAGE_TYPES.map((type) => sql`${type}`),
+    sql`, `,
+  )}) AND NOT ${emailOutbox.isManualResend})`;
   const evidenceSince = new Date(now.getTime() - PACE_EVIDENCE_MS);
   const recentPause = sql`(${emailOutbox.lastError} LIKE ${`${RATE_PAUSE_ERROR_PREFIX}%`} AND ${emailOutbox.nextAttemptAt} > ${evidenceSince.toISOString()}::timestamptz)`;
   const turnWithinDeferral = sql`${emailOutbox.nextAttemptAt} <= ${deferredFrom.toISOString()}::timestamptz`;
@@ -275,8 +280,23 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     turnWithinDeferral,
     sql`${emailOutbox.nextAttemptAt} >= ${overdueBefore.toISOString()}::timestamptz`,
   );
-  // Each late row counted once: a recent pause and a stop nothing carries have counts of their own.
-  const lateWhere = and(overdueWhere, sql`NOT coalesce(${recentPause}, false)`, stopUncarried ? sql`NOT coalesce(${fallbackWaiting}, false)` : undefined);
+  /*
+    A send to many (the decision «Cere reconfirmarea», part two: the cancellation, «Detalii actualizate», the reminder, the
+    organizers' message, the thank-you, «s-au deschis înscrierile» — `SEND_TO_MANY_MESSAGE_TYPES`) is not late for waiting
+    past its turn: it waits behind the registrations' own messages by design and drains at the queue's pace — 201 rows at
+    80 an hour take about two and a half hours, and its tail would read «late» from minute ninety while the queue works.
+    An Administrator's manual resend of one of them, for one runner, is that person's own message, and late as one.
+    What still catches a real stall is said elsewhere, and stays: a scheduler that stopped is the job check's (`jobs/health.ts#checkJobHealth`, the outbox job's last run);
+    a provider's refusal, pause or stop is the other buckets' — deferred, paused late, stopped late, retrying late, failed
+    — which count such a row exactly as any other; and a registration's own message waiting past its turn is late here.
+    Each late row counted once: a recent pause and a stop nothing carries have counts of their own.
+  */
+  const lateWhere = and(
+    overdueWhere,
+    sql`NOT ${sendToMany}`,
+    sql`NOT coalesce(${recentPause}, false)`,
+    stopUncarried ? sql`NOT coalesce(${fallbackWaiting}, false)` : undefined,
+  );
   const deferredCounted = notCarried(deferredWhere);
   // «Sarcini»'s red row (§622): stopped rows queued past the allowance that nothing carries now.
   // A mark counts only while a stop is in force and nothing carries it; an old mark past its stop is a row waiting its turn.

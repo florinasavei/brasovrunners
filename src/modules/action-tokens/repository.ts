@@ -1,9 +1,10 @@
-import { and, eq, gt, inArray, isNull } from "drizzle-orm";
+import { and, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 import { inReadOnlyTransaction } from "@/db/read-only";
 import {
   type EmailActionTokenPurpose,
   emailActionTokens,
 } from "@/db/schema/email-action-tokens";
+import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { generateTokenSecret, hashTokenSecret, isWellFormedTokenSecret } from "./domain/token-secret";
 import {
@@ -23,7 +24,20 @@ import {
  *
  * `now` is always injected: expiry is a business deadline. Generic over the caller's schema
  * because `notifications/render.ts` issues tokens inside the outbox's own transaction.
+ *
+ * **Bound to the registration's address** («Schimbă adresa»): a registration-scoped token acts only while its
+ * participant is the registration's current one. An Administrator may move a registration to another address;
+ * every link the old address holds is revoked at the move, and this binding is what keeps one that escaped the
+ * revoke — a superseded or spent row, a retry — from opening anything. Asked first, before the token's own
+ * state, by every read and by the spend, and answered as a missing token: never «a newer email exists», never
+ * «already used», never «expired».
  */
+
+/**
+ * The SQL the spend and the reads share: a registration-scoped token whose participant is the registration's
+ * current one, or a token scoped to no registration. A registration that no longer exists binds nothing.
+ */
+const boundToRegistrationAddress = sql`(${emailActionTokens.registrationId} IS NULL OR EXISTS (SELECT 1 FROM ${registrations} WHERE ${registrations.id} = ${emailActionTokens.registrationId} AND ${registrations.participantId} = ${emailActionTokens.participantId}))`;
 
 /** What a caller may see about a token. Never the hash, and never the secret. */
 export type ActionTokenContext = {
@@ -199,12 +213,14 @@ export async function readActionTokenContext<T extends Record<string, unknown>>(
         usedAt: emailActionTokens.usedAt,
         invalidatedAt: emailActionTokens.invalidatedAt,
         supersededByTokenId: emailActionTokens.supersededByTokenId,
+        bound: sql<boolean>`${boundToRegistrationAddress}`,
       })
       .from(emailActionTokens)
       .where(eq(emailActionTokens.tokenHash, tokenHash))
       .limit(1);
 
-    if (!row) return TOKEN_NOT_FOUND;
+    // A link of an address the registration was moved away from is a link that does not exist.
+    if (!row || !row.bound) return TOKEN_NOT_FOUND;
 
     const evaluation = evaluateActionToken(row, purpose, now);
     if (!evaluation.ok) return evaluation;
@@ -259,12 +275,14 @@ export async function readSpentActionTokenScope<T extends Record<string, unknown
         usedAt: emailActionTokens.usedAt,
         invalidatedAt: emailActionTokens.invalidatedAt,
         supersededByTokenId: emailActionTokens.supersededByTokenId,
+        bound: sql<boolean>`${boundToRegistrationAddress}`,
       })
       .from(emailActionTokens)
       .where(eq(emailActionTokens.tokenHash, tokenHash))
       .limit(1);
 
-    if (!row) return null;
+    // Bound first («Schimbă adresa»): the old address is told nothing about where the registration stands.
+    if (!row || !row.bound) return null;
 
     const evaluation = evaluateActionToken(row, purpose, now);
     if (evaluation.ok || evaluation.reason !== "ALREADY_USED") return null;
@@ -319,12 +337,14 @@ export async function readSupersededActionTokenScope<T extends Record<string, un
         usedAt: emailActionTokens.usedAt,
         invalidatedAt: emailActionTokens.invalidatedAt,
         supersededByTokenId: emailActionTokens.supersededByTokenId,
+        bound: sql<boolean>`${boundToRegistrationAddress}`,
       })
       .from(emailActionTokens)
       .where(eq(emailActionTokens.tokenHash, tokenHash))
       .limit(1);
 
-    if (!row) return null;
+    // Bound first («Schimbă adresa»): the old address is told nothing about where the registration stands.
+    if (!row || !row.bound) return null;
 
     const evaluation = evaluateActionToken(row, purpose, now);
     if (evaluation.ok || evaluation.reason !== "SUPERSEDED") return null;
@@ -372,6 +392,7 @@ export async function consumeActionToken<T extends Record<string, unknown>>(
         isNull(emailActionTokens.usedAt),
         isNull(emailActionTokens.invalidatedAt),
         gt(emailActionTokens.expiresAt, now),
+        boundToRegistrationAddress,
       ),
     )
     .returning(CONTEXT_COLUMNS);
@@ -385,12 +406,13 @@ export async function consumeActionToken<T extends Record<string, unknown>>(
       usedAt: emailActionTokens.usedAt,
       invalidatedAt: emailActionTokens.invalidatedAt,
       supersededByTokenId: emailActionTokens.supersededByTokenId,
+      bound: sql<boolean>`${boundToRegistrationAddress}`,
     })
     .from(emailActionTokens)
     .where(eq(emailActionTokens.tokenHash, tokenHash))
     .limit(1);
 
-  if (!row) return TOKEN_NOT_FOUND;
+  if (!row || !row.bound) return TOKEN_NOT_FOUND;
 
   const evaluation = evaluateActionToken(row, purpose, now);
   // The UPDATE refused it, so `ok` here means the two rule statements disagree: report invalid.

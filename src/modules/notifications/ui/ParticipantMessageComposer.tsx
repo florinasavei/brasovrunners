@@ -3,6 +3,7 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
@@ -10,13 +11,17 @@ import Stack from "@mui/material/Stack";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
 import { identicalInBothLanguages } from "@/shared/forms/both-languages";
 import RecallField, { useRecall } from "@/shared/forms/recall";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
+import { writePlainBox } from "@/modules/translate/ui/form-fields";
 import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import { previewPause, type PreviewLanguage } from "./preview-pause";
+import { fillReminderBoxes, reminderOverwrites } from "./reminder-fill";
 
 /**
  * One choice of who receives the message, with everything the page says about it already worded
@@ -38,6 +43,16 @@ export type ComposerAudience = {
   costLine?: string;
   /** Set when some of it waits for the allowance to come back (§40) — never a refusal. */
   deferredLine?: string;
+  /**
+   * Set when a daily allowance cannot hold the send today (the decision «Cere reconfirmarea», part two): the days it
+   * takes that allowance, which the registrations' own emails share meanwhile, and where a monthly plan is chosen.
+   */
+  warningLine?: string;
+  /**
+   * The line the question before «Trimite» carries (the decision «Cere reconfirmarea», part two): how long the send
+   * takes at the queue's pace, and whether it fits the allowance — worded on the server.
+   */
+  paceLine?: string;
   /** "Trimiți mesajul la 12 participanți?" */
   confirmTitle: string;
 };
@@ -67,9 +82,36 @@ export type ComposerLabels = {
   previewUnknown: string;
   previewSubject: string;
   send: string;
+  /** «Cere reconfirmarea» (the decision «Cere reconfirmarea») and its help line: nobody is cancelled automatically. */
+  reconfirm: string;
+  reconfirmHelp: string;
+  /**
+   * «Completează cu textul de reminder»: the button, its question before it replaces typed words, and the ready text in
+   * both languages — read on the server from both catalogues with its `{placeholders}` literal, whatever the UI language.
+   */
+  reminderFill: {
+    button: string;
+    confirmTitle: string;
+    confirmBody: string;
+    confirmGo: string;
+    confirmCancel: string;
+    subjectRo: string;
+    subjectEn: string;
+    bodyRo: string;
+    bodyEn: string;
+  };
 };
 
-export type PreviewInput = { eventId: string; language: string; subjectRo: string; subjectEn: string; bodyRo: string; bodyEn: string };
+export type PreviewInput = {
+  eventId: string;
+  language: string;
+  subjectRo: string;
+  subjectEn: string;
+  bodyRo: string;
+  bodyEn: string;
+  /** The tick «Cere reconfirmarea» as it stands: the preview draws «Vin» beside «Nu mai pot ajunge». */
+  askReconfirm: boolean;
+};
 export type PreviewResult = { subject: string; html: string; unknown: string[] } | null;
 
 type Props = {
@@ -124,6 +166,15 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
     const box = (name: string) => root.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${name}"]`)?.value ?? "";
     return { subjectRo: box("subjectRo"), subjectEn: box("subjectEn"), bodyRo: box("bodyRo"), bodyEn: box("bodyEn") };
   }, []);
+  /*
+    «Cere reconfirmarea» (the decision «Cere reconfirmarea»): controlled, because the fill button ticks it; kept after a
+    refused send like every box (§315). The preview reads it from the form, as it reads the words.
+  */
+  const [askReconfirm, setAskReconfirm] = useState(() => recall.value("askReconfirm") === "1");
+  const readAsk = useCallback(
+    (): boolean => root.current?.querySelector<HTMLInputElement>('input[name="askReconfirm"]')?.checked === true,
+    [],
+  );
 
   const [identical, setIdentical] = useState(() => identicalInBothLanguages(recall.value("bodyRo") ?? "", recall.value("bodyEn") ?? ""));
   const [language, setLanguage] = useState<PreviewLanguage>("ro");
@@ -136,7 +187,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
     (nextLanguage: PreviewLanguage) => {
       const ticket = ++asked.current;
       const words = readWords();
-      preview({ eventId, language: nextLanguage, ...words })
+      preview({ eventId, language: nextLanguage, ...words, askReconfirm: readAsk() })
         .then((result) => {
           if (ticket !== asked.current) return;
           setShown(result ? { state: "ready", result } : { state: "unavailable", result: null });
@@ -145,7 +196,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
           if (ticket === asked.current) setShown({ state: "unavailable", result: null });
         });
     },
-    [eventId, preview, readWords],
+    [eventId, preview, readWords, readAsk],
   );
 
   // The first preview once the boxes exist — after a refusal too, when they hold what was typed.
@@ -157,11 +208,34 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per answer; typing asks below
   }, [recall.generation]);
 
-  const onInput = () => {
+  const onInput = (event: FormEvent<HTMLDivElement>) => {
+    // The tick asks for its own preview at once (below), never a second one after the pause.
+    if ((event.target as HTMLInputElement | null)?.name === "askReconfirm") return;
     const words = readWords();
     setIdentical(identicalInBothLanguages(words.bodyRo, words.bodyEn));
     // Asked when the pause ends, for the tab open then — not the one open when the key was pressed.
     pause.typed(refresh);
+  };
+
+  /*
+    «Completează cu textul de reminder» (the decision «Cere reconfirmarea»): the four boxes written from the catalogues'
+    ready text, each as if typed — so the identical-text check and the preview run — and the tick ticked. A box that
+    already holds words is not replaced without asking first (§384).
+  */
+  const [askingFill, setAskingFill] = useState(false);
+  const fill = () => {
+    const texts = {
+      subjectRo: labels.reminderFill.subjectRo,
+      subjectEn: labels.reminderFill.subjectEn,
+      bodyRo: labels.reminderFill.bodyRo,
+      bodyEn: labels.reminderFill.bodyEn,
+    };
+    fillReminderBoxes((name) => root.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${name}"]`), texts, writePlainBox);
+    setAskReconfirm(true);
+  };
+  const pressFill = () => {
+    if (reminderOverwrites(readWords())) setAskingFill(true);
+    else fill();
   };
 
   const SendIcon = ACTION_ICONS.send;
@@ -222,8 +296,34 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
                 {chosen.deferredLine}
               </Alert>
             )}
+            {chosen.warningLine && (
+              <Alert severity="warning" sx={{ mt: 1 }} data-testid="participant-message-daily-warning">
+                {chosen.warningLine}
+              </Alert>
+            )}
           </Box>
         )}
+      </Box>
+
+      {/* The ready reminder (the decision «Cere reconfirmarea»): the four boxes and the tick in one press. */}
+      <Box data-testid="participant-message-reminder-fill">
+        <GlyphButton icon="template" variant="outlined" onClick={pressFill} sx={TAP_TARGET}>
+          {labels.reminderFill.button}
+        </GlyphButton>
+        <ConfirmDialog
+          open={askingFill}
+          spec={{
+            title: labels.reminderFill.confirmTitle,
+            body: labels.reminderFill.confirmBody,
+            confirmLabel: labels.reminderFill.confirmGo,
+            cancelLabel: labels.reminderFill.confirmCancel,
+          }}
+          onCancel={() => setAskingFill(false)}
+          onConfirm={() => {
+            setAskingFill(false);
+            fill();
+          }}
+        />
       </Box>
 
       {/* The words, both languages side by side from `sm` — one text, never behind a tab (§354). */}
@@ -274,6 +374,35 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
           )}
         </Stack>
       ))}
+
+      {/*
+        «Cere reconfirmarea» (the decision «Cere reconfirmarea»): the email of each registration the send asks gets «Vin»
+        beside «Nu mai pot ajunge». Optional for the person, and the help line says so: nobody is cancelled for not answering.
+      */}
+      <Box data-testid="participant-message-reconfirm">
+        <FormControlLabel
+          control={
+            <Checkbox
+              name="askReconfirm"
+              value="1"
+              checked={askReconfirm}
+              onChange={(event) => {
+                setAskReconfirm(event.target.checked);
+                // The preview at once, for the tab open now: the box decides a button, not words being typed. The
+                // browser has already toggled the box when this runs, so the preview reads what it now says.
+                pause.cancel();
+                refresh(language);
+              }}
+              slotProps={{ input: { "aria-describedby": "participant-message-reconfirm-help" } }}
+              sx={CHECKBOX_TAP_TARGET}
+            />
+          }
+          label={labels.reconfirm}
+        />
+        <Typography id="participant-message-reconfirm-help" variant="caption" color="text.secondary" component="p">
+          {labels.reconfirmHelp}
+        </Typography>
+      </Box>
 
       {/* The message as it will arrive (§364): the server renders it, the tabs pick whose copy. */}
       <Box data-testid="participant-message-preview">

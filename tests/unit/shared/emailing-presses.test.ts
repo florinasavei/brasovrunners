@@ -52,6 +52,7 @@ export const EMAILING_PRESSES: Readonly<Record<string, Press>> = {
   promoteRegistrationAction: { file: REGISTRATIONS, causes: ["registrations.givePlace"], actor: "named" },
   setBibNumberAction: { file: REGISTRATIONS, causes: ["registrations.setBib"], actor: "named" },
   setOutsideCapacityAction: { file: REGISTRATIONS, causes: ["registrations.specialGuests"], actor: "named" },
+  changeRegistrationAddressAction: { file: REGISTRATIONS, causes: ["registrations.changeAddress"], actor: "named" },
   cancelRegistrationAction: { file: REGISTRATIONS, causes: ["registrations.cancel"], actor: "named" },
   cancelRegistrationFromRowAction: { file: REGISTRATIONS, causes: ["registrations.cancel"], actor: { delegatesTo: "cancelRegistrationAction" } },
   bulkCancelRegistrationsAction: { file: REGISTRATIONS, causes: ["registrations.bulkCancel"], actor: "named" },

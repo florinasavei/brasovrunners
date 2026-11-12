@@ -16,6 +16,7 @@ import { type Participant, participants } from "@/db/schema/participants";
 import { personSessions } from "@/db/schema/person-sessions";
 import { registrationInterests } from "@/db/schema/registration-interests";
 import { registrationNotes } from "@/db/schema/registration-notes";
+import { registrationReconfirmations } from "@/db/schema/registration-reconfirmations";
 import { type Registration, registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
@@ -291,6 +292,11 @@ export type PersonData = {
    */
   notes: Array<{ registrationId: string; eventId: string; eventTitle: string | null; body: string; createdAt: Date; authorRole: StaffUser["role"] | null }>;
   /**
+   * «Cere reconfirmarea» (the decision «Cere reconfirmarea»; art. 15 GDPR): every time an organizer's message asked one of
+   * this person's registrations whether they come, and when they said «Vin» — the registration's own rows, deleted with it.
+   */
+  reconfirmations: Array<{ registrationId: string; eventId: string; eventTitle: string | null; askedAt: Date; reconfirmedAt: Date | null }>;
+  /**
    * The lines of «Lista internă de așteptare» (§854) written down with this address (§876; art. 15 GDPR): the event, the name and
    * the address as the organizers typed them, their internal note, when it was written and changed, and who wrote it — as a
    * **role**, never the colleague's name, as the internal notes above (§777): the note becomes one of them on «Trece pe lista
@@ -304,6 +310,8 @@ export type PersonData = {
     lastName: string;
     deliveryEmail: string;
     note: string | null;
+    /** «E de la parteneri» (the decision «De la parteneri»): the partner's or sponsor's name the organizers wrote, or null. */
+    partnerName: string | null;
     createdAt: Date;
     updatedAt: Date;
     createdByRole: StaffUser["role"] | null;
@@ -324,6 +332,8 @@ export type PersonData = {
     expiresAt: Date;
     outsideCapacity: boolean;
     supplementaryRaise: boolean;
+    /** «E de la parteneri» at the send (the decision «De la parteneri»): the partner's or sponsor's name, or null. */
+    partnerName: string | null;
     fromMemberAccount: boolean;
     sentAt: Date;
     lastSentAt: Date;
@@ -389,7 +399,15 @@ async function collectPersonData<T extends Record<string, unknown>>(
         .from(emailOutbox)
         .where(
           registrationIds.length > 0
-            ? or(eq(emailOutbox.participantId, participant.id), inArray(emailOutbox.registrationId, registrationIds))
+            ? or(
+                eq(emailOutbox.participantId, participant.id),
+                /*
+                  This person's registrations' messages that name no participant (the club's copies) — never another
+                  address's: a registration moved here by «Schimbă adresa» keeps the old address's mail, which is that
+                  address's to read, not this one's.
+                */
+                and(inArray(emailOutbox.registrationId, registrationIds), isNull(emailOutbox.participantId)),
+              )
             : eq(emailOutbox.participantId, participant.id),
         )
         .orderBy(asc(emailOutbox.createdAt))
@@ -591,6 +609,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
               lastName: eventReserveEntries.lastName,
               deliveryEmail: eventReserveEntries.email,
               note: eventReserveEntries.note,
+              partnerName: eventReserveEntries.partnerName,
               createdAt: eventReserveEntries.createdAt,
               updatedAt: eventReserveEntries.updatedAt,
               createdByRole: staffUsers.role,
@@ -614,6 +633,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
       expiresAt: eventInvitations.expiresAt,
       outsideCapacity: eventInvitations.outsideCapacity,
       supplementaryRaise: eventInvitations.supplementaryRaise,
+      partnerName: eventInvitations.partnerName,
       memberStaffUserId: eventInvitations.memberStaffUserId,
       sentAt: eventInvitations.sentAt,
       lastSentAt: eventInvitations.lastSentAt,
@@ -638,6 +658,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
     expiresAt: row.expiresAt,
     outsideCapacity: row.outsideCapacity,
     supplementaryRaise: row.supplementaryRaise,
+    partnerName: row.partnerName,
     fromMemberAccount: memberStaffUserId !== null,
     sentAt: row.sentAt,
     lastSentAt: row.lastSentAt,
@@ -697,6 +718,25 @@ async function collectPersonData<T extends Record<string, unknown>>(
     return { ...note, eventId: registration?.registration.eventId ?? "", eventTitle: registration?.eventTitle ?? null };
   });
 
+  // The asks of «Cere reconfirmarea» and their answers (the decision «Cere reconfirmarea»): one read for the person's registrations.
+  const askRows =
+    registrationIds.length > 0
+      ? await db
+          .select({
+            registrationId: registrationReconfirmations.registrationId,
+            eventId: registrationReconfirmations.eventId,
+            askedAt: registrationReconfirmations.askedAt,
+            reconfirmedAt: registrationReconfirmations.reconfirmedAt,
+          })
+          .from(registrationReconfirmations)
+          .where(inArray(registrationReconfirmations.registrationId, registrationIds))
+          .orderBy(asc(registrationReconfirmations.askedAt), asc(registrationReconfirmations.id))
+      : [];
+  const reconfirmations = askRows.map((ask) => ({
+    ...ask,
+    eventTitle: rows.find((row) => row.registration.id === ask.registrationId)?.eventTitle ?? null,
+  }));
+
   const aboutThePerson = [
     ...(participant ? [eq(auditLogs.participantId, participant.id)] : []),
     ...(registrationIds.length > 0 ? [and(eq(auditLogs.entityType, "registration"), inArray(auditLogs.entityId, registrationIds))] : []),
@@ -738,6 +778,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
     groupRunDeclarations: groupRuns,
     results: results.map((row) => ({ ...row, registrationId: row.registrationId as string })),
     notes,
+    reconfirmations,
     reserveEntries,
     eventInvitations: invitationsHeld,
     auditTrail,
@@ -1053,6 +1094,7 @@ export async function exportPersonData<T extends Record<string, unknown>>(
       groupRunDeclarations: data.groupRunDeclarations.length,
       results: data.results.length,
       notes: data.notes.length,
+      reconfirmations: data.reconfirmations.length,
       reserveEntries: data.reserveEntries.length,
       eventInvitations: data.eventInvitations.length,
       auditRows: data.auditTrail.length,

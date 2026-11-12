@@ -43,8 +43,9 @@ describe("§384 a TEST row's dialog names no participant the club counts", () =>
 
   it("hands the row's kind to the builder in every single-row email line on the registration page", () => {
     const calls = singleRowMailCalls(read("src/app/[locale]/admin/registrations/[id]/page.tsx"), "registration");
-    // resend, reminder, give-a-place-now (§637), send-the-offer (§615), confirm-on-paper, give-a-place, set-bib, the special list's seat, cancel
-    expect(calls).toHaveLength(9);
+    // resend, reminder, give-a-place-now (§637), send-the-offer (§615), confirm-on-paper, give-a-place, set-bib, the special list's seat, cancel,
+    // and «Schimbă adresa»
+    expect(calls).toHaveLength(10);
     expect(calls.every((call) => call.includes('test: registration.kind === "TEST"'))).toBe(true);
   });
 

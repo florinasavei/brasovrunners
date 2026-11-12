@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V4.39-2026-11-11`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V4.40-2026-11-12`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -1103,7 +1103,13 @@ or off; it goes when the queue is through. Four causes, told apart by the same p
    function log line `[jobs] <job>: finished after the response in <ms> ms` is the authority:
    `SETUP.md` §40, `DECISIONS.md` §667). Run
    `yarn smoke` on the environment; `jobs[].status` names which one is stale. Pressing
-   "Trimite acum" on `/admin/registrations` drains the outbox by hand meanwhile.
+   "Trimite acum" on `/admin/registrations` drains the outbox by hand meanwhile. A send to many — «Eveniment
+   anulat», «Detalii actualizate (loc, oră, program)», «Reminderul dinaintea startului», «Mesaj de la organizatori»,
+   «Mulțumim după cursă» (sent by «Trimite mulțumirile») and «Înscrierile s-au deschis» (`SEND_TO_MANY_MESSAGE_TYPES`, in
+   the order they leave) — waiting behind the registrations' own emails is not a stall and is not counted overdue: it
+   leaves at the queue's pace. An organizers' message shows «Au plecat · Așteaptă» on its «Mesaje trimise» row; the others
+   show on «Setări» → «Emailuri» → «Emailuri azi». An Administrator's «Retrimite» of one of them for one runner is that
+   runner's own message and is judged as one.
 3. **Paused by the provider** (§605) — `lastError` starts "paused by the provider:". Mailgun
    answered 429, or 400 "not allowed to send" with the probation's words («You are sending too fast.
    Your account is on probation…»): the message waits, due at `Retry-After` or fifteen minutes, and no

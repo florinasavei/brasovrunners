@@ -10,6 +10,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { countForm } from "@/i18n/count-form";
 import { formatDay } from "@/i18n/dates";
+import { findEventNotificationDetails } from "@/modules/events/repository";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing } from "@/modules/content/events/repository";
@@ -21,10 +22,17 @@ import {
   ORGANIZER_SUBJECT_PLACEHOLDERS,
   ORGANIZER_SUBJECT_MAX,
   organizerMessageCost,
-  organizerMessageDeferral,
+  type OrganizerSendOutlook,
+  organizerSendOutlook,
   PARTICIPANT_MESSAGE_AUDIENCES,
 } from "@/modules/notifications/domain/organizer-message";
-import { countParticipantMessageAudiences, listParticipantMessages } from "@/modules/notifications/participant-messages";
+import { gmailClaimSize, preferredTransport } from "@/modules/notifications/domain/email-transport";
+import { readEmailTransport } from "@/modules/notifications/email-transport";
+import { GMAIL_PACE_BUDGET_MS } from "@/infrastructure/email/delivery";
+import { OUTBOX_BATCH_SIZE } from "@/modules/notifications/outbox";
+import { readJobCadence } from "@/modules/jobs/cadence";
+import { PINGER_SLOT_MINUTES } from "@/modules/jobs/schedule";
+import { countParticipantMessageAudiences, listParticipantMessages, subjectAsDrawn } from "@/modules/notifications/participant-messages";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
 import ParticipantMessageComposer, { type ComposerAudience } from "@/modules/notifications/ui/ParticipantMessageComposer";
@@ -84,21 +92,43 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
   const { sent, test, duplicate } = await searchParams;
 
   const now = new Date();
-  const [counts, volume, history] = await Promise.all([
+  const [counts, volume, history, eventDetails] = await Promise.all([
     countParticipantMessageAudiences(db, event.id),
     readEmailVolumeToday(db, now),
     listParticipantMessages(db, event.id),
+    findEventNotificationDetails(db, event.id, locale),
   ]);
 
   const t = await getTranslations("Admin");
   const tSite = await getTranslations("Site");
+  /*
+    «Completează cu textul de reminder» (the decision «Cere reconfirmarea»): the ready text in Romanian and in English
+    from both catalogues, whatever the backoffice's language, its `{placeholders}` literal (`t.raw`) for the send to fill;
+    the body is the paragraphs, a blank line between each, as `organizerParagraphs` reads them.
+  */
+  const reminderOf = async (language: "ro" | "en") => {
+    const words = await getTranslations({ locale: language, namespace: "Admin" });
+    const raw = (key: string) => words.raw(`participantMessages.reminderText.${key}`) as string;
+    return { subject: raw("subject"), body: ["p1", "p2", "p3", "p4", "p5", "p6", "p7"].map(raw).join("\n\n") };
+  };
+  const [reminderRo, reminderEn] = await Promise.all([reminderOf("ro"), reminderOf("en")]);
 
   /*
-    What a send costs and how much of it waits (§100, §40), worded here for every choice so the
-    composer switches sentences and does no arithmetic. The headroom is what the plan has left over
-    its period minus what already waits in the queue ahead of this send.
+    What a send costs, how it leaves and how much of it waits (§100, §40; the decision «Cere reconfirmarea», part two),
+    worded here for every choice so the composer switches sentences and does no arithmetic — on the road the send's
+    messages really take: the participants' on the group's road, the club's copy on its own (`preferredTransport`), both
+    Mailgun's where Gmail is not configured. No reserve: the outbox claims a send to many after every registration's own
+    message on its road and holds none of it back, so what waits ahead of it is every waiting row on that road but the
+    bulk kind (`volume.waitingAhead`), and the line says only what the queue will do.
   */
-  const headroom = volume.remaining === null ? null : Math.max(0, volume.remaining - volume.waitingMessages);
+  const [transport, cadence] = await Promise.all([readEmailTransport(db), readJobCadence(db)]);
+  const roadOf = (clubCopy: boolean) => (volume.gmailConfigured ? preferredTransport(transport, "ORGANIZER_MESSAGE", clubCopy) : "mailgun");
+  const participantsRoad = roadOf(false);
+  const copiesRoad = roadOf(true);
+  // How long it takes: the scheduled pass's batch at the pinger's pace by day, or Mailgun's hour when slower; Gmail's own pace a pass.
+  const minutesPerRun = Math.max(PINGER_SLOT_MINUTES, cadence.minutes);
+  const hourBinds = volume.hourlyAllowance !== null && volume.hourlyAllowance < (OUTBOX_BATCH_SIZE * 60) / minutesPerRun;
+  const gmailPerPass = gmailClaimSize(transport.gmailPaceSeconds, GMAIL_PACE_BUDGET_MS, OUTBOX_BATCH_SIZE);
   const allowance =
     volume.remaining === null
       ? t("editor.notice.allowanceNone", { plan: volume.planName })
@@ -106,11 +136,112 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
           plan: volume.planName,
           remaining: String(volume.remaining),
         })}${volume.waitingMessages > 0 ? `; ${t("participantMessages.waiting", { waiting: String(volume.waitingMessages) })}` : ""}`;
+  const hoursKey = (hours: number) => countForm(hours, locale);
+  const paceOf = (outlook: OrganizerSendOutlook): string =>
+    outlook.road === "gmail"
+      ? t(`participantMessages.paceGmail.${hoursKey(outlook.hours)}`, { batch: String(outlook.perPass), minutes: String(minutesPerRun), hours: String(outlook.hours) })
+      : hourBinds
+        ? t(`participantMessages.paceHour.${hoursKey(outlook.hours)}`, { hourly: String(volume.hourlyAllowance), hours: String(outlook.hours) })
+        : t(`participantMessages.paceRuns.${hoursKey(outlook.hours)}`, { batch: String(OUTBOX_BATCH_SIZE), minutes: String(minutesPerRun), hours: String(outlook.hours) });
+  // Where a large send belongs, by the screen's own labels: «Setări» → «Emailuri» → the plan's heading.
+  const planPath = { settings: t("nav.settings"), emails: t("settingsTabs.emails"), plan: t("emails.plan.title") };
+  /*
+    Mailgun stopped now (§622), read once with the volume, as `/api/health` reads it (`readMailgunStop` on Mailgun's road):
+    the line says until when and who sends meanwhile — the club's Gmail, within its limit, where «Gmail preia când Mailgun
+    se oprește» is in force (`volume.fallbackToGmail`), nobody otherwise — and no sentence about what leaves now or today
+    stands beside it.
+  */
+  const mailgunStoppedLine = volume.mailgunStop
+    ? t(volume.fallbackToGmail ? "participantMessages.mailgunStoppedGmail" : "participantMessages.mailgunStopped", {
+        until: formatDay(volume.mailgunStop.until, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" }),
+      })
+    : null;
 
   const audiences: ComposerAudience[] = PARTICIPANT_MESSAGE_AUDIENCES.map((audience) => {
     const { real, test: testCount } = counts[audience];
     const messages = organizerMessageCost({ real, test: testCount }, volume.participantBccCount);
-    const deferral = organizerMessageDeferral(messages, headroom);
+    const copies = messages - real - testCount;
+    // The send's messages on the participants' road: theirs, and the club's copy when it takes the same road (§419).
+    const onRoad = real + testCount + (copiesRoad === participantsRoad ? copies : 0);
+    const outlook =
+      participantsRoad === "gmail"
+        ? organizerSendOutlook({ road: "gmail", messages: onRoad, ahead: volume.waitingAhead.gmail, batchSize: OUTBOX_BATCH_SIZE, minutesPerRun, gmailRoom: volume.gmailRoom, gmailPerPass })
+        : organizerSendOutlook({
+            road: "mailgun",
+            messages: onRoad,
+            ahead: volume.waitingAhead.mailgun,
+            batchSize: OUTBOX_BATCH_SIZE,
+            minutesPerRun,
+            period: volume.period,
+            allowance: volume.allowance,
+            remaining: volume.remaining,
+            hourlyAllowance: volume.hourlyAllowance,
+          });
+    const ownFirst = t("participantMessages.ownFirst");
+    let deferredLine: string | undefined;
+    let warningLine: string | undefined;
+    let costLine: string | undefined;
+    let paceLine: string | undefined;
+    if (outlook.road === "gmail") {
+      // The club's Gmail (§443): its own room, cap and pace — nothing of Mailgun's allowance or pace is true here.
+      costLine = t("participantMessages.costGmail", { messages: String(outlook.messages), room: String(volume.gmailRoom), cap: String(volume.gmailDailyCap) });
+      if (outlook.waiting > 0) {
+        deferredLine = t(transport.atGmailCap === "mailgun" ? "participantMessages.gmailOverflow" : "participantMessages.gmailWaits", {
+          now: String(outlook.now),
+          waiting: String(outlook.waiting),
+          cap: String(volume.gmailDailyCap),
+        });
+      }
+      // Gmail's limit is the club's other Gmail mail's too: always said, and the dialog's warning when the send does not fit now.
+      const shared = t("participantMessages.gmailShared");
+      if (outlook.waiting > 0) warningLine = shared;
+      paceLine = [deferredLine, outlook.now > 0 ? paceOf(outlook) : "", outlook.waiting === 0 ? `${t("participantMessages.gmailFits")} ${shared}` : "", ownFirst]
+        .filter(Boolean)
+        .join(" ");
+    } else {
+      costLine =
+        copies > 0 && copiesRoad !== participantsRoad
+          ? t("participantMessages.costCopiesGmail", { messages: String(outlook.messages), allowance, copies: String(copies) })
+          : t("participantMessages.cost", { messages: String(outlook.messages), allowance });
+      // While Mailgun is stopped nothing of this send leaves now or today: the counts of «now» and «today» are not said.
+      if (outlook.deferred > 0 && !mailgunStoppedLine) {
+        deferredLine =
+          outlook.period === "month"
+            ? t("participantMessages.deferredMonth", { now: String(outlook.now), deferred: String(outlook.deferred) })
+            : // Once the day's allowance is spent, the fallback in force carries the rest (§622): it waits for no reset.
+              outlook.period === "day" && volume.fallbackToGmail
+              ? t("participantMessages.deferredDayGmail", { now: String(outlook.now) })
+              : outlook.period === "day" && outlook.restDays > 1
+              ? t(`participantMessages.deferredDays.${countForm(outlook.restDays, locale)}`, {
+                  now: String(outlook.now),
+                  deferred: String(outlook.deferred),
+                  days: String(outlook.restDays),
+                  perDay: String(outlook.perDay),
+                })
+              : t("participantMessages.deferredDay", { now: String(outlook.now), deferred: String(outlook.deferred) });
+      }
+      /*
+        A daily plan the send does not fit (part two): a warning, since the registrations' own emails share that allowance —
+        they leave first, and once the day's allowance is spent Mailgun sends nothing more that day. Where «Gmail preia când
+        Mailgun se oprește» is in force (`volume.fallbackToGmail`) Gmail then carries every group, in the claim's order
+        (`outbox.ts`): the registrations' own and this send share the day's allowance and Gmail's limit, and the days the
+        allowance is used are not counted — how many depends on Gmail's room, not on the allowance alone.
+      */
+      if (outlook.period === "day" && outlook.deferred > 0) {
+        warningLine = (
+          volume.fallbackToGmail
+            ? [t("participantMessages.dailyShareGmail"), t("participantMessages.dailyPlan", planPath)]
+            : [
+                t(`participantMessages.dailyWarning.${countForm(outlook.daysUsed, locale)}`, { days: String(outlook.daysUsed) }),
+                t("participantMessages.dailyShare"),
+                t("participantMessages.dailyPlan", planPath),
+              ]
+        ).join(" ");
+      }
+      const fitsLine =
+        mailgunStoppedLine || outlook.period === "none" || outlook.deferred > 0 ? "" : t(outlook.period === "month" ? "participantMessages.fitsMonth" : "participantMessages.fitsToday");
+      paceLine = [mailgunStoppedLine, deferredLine, outlook.now > 0 ? paceOf(outlook) : "", fitsLine, ownFirst].filter(Boolean).join(" ");
+    }
     return {
       value: audience,
       label: t(`participantMessages.audiences.${audience}`),
@@ -119,15 +250,10 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
       recipientsLine:
         real + testCount === 0 ? t("participantMessages.nobody") : t(`participantMessages.recipients.${countForm(real, locale)}`, { count: real }),
       ...(testCount > 0 ? { testLine: t("participantMessages.testLine", { test: String(testCount) }) } : {}),
-      ...(messages > 0 ? { costLine: t("participantMessages.cost", { messages: String(messages), allowance }) } : {}),
-      ...(deferral.deferred > 0
-        ? {
-            deferredLine: t(volume.period === "month" ? "participantMessages.deferredMonth" : "participantMessages.deferredDay", {
-              now: String(deferral.now),
-              deferred: String(deferral.deferred),
-            }),
-          }
-        : {}),
+      ...(messages > 0 && costLine ? { costLine } : {}),
+      ...(messages > 0 && deferredLine ? { deferredLine } : {}),
+      ...(messages > 0 && warningLine ? { warningLine } : {}),
+      ...(messages > 0 && paceLine ? { paceLine } : {}),
       confirmTitle: t(`participantMessages.confirmTitle.${countForm(real, locale)}`, { count: real }),
     };
   });
@@ -145,7 +271,10 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
       {
         when: [{ field: "audience", equals: choice.value }],
         title: choice.confirmTitle,
-        body: choice.testLine ? `${t("participantMessages.confirmBody")} ${choice.testLine}` : t("participantMessages.confirmBody"),
+        // The pace and the allowance (the decision «Cere reconfirmarea», part two) after «Când pleacă», then the test rows.
+        body: [t("participantMessages.confirmBody"), choice.paceLine, choice.testLine].filter(Boolean).join(" "),
+        // A daily plan the send does not fit: the warning the Administrator cannot miss, in the dialog's own warning.
+        ...(choice.warningLine ? { warning: choice.warningLine } : {}),
         // No "0 participants" for a group of test rows alone: the test line says who is written to. The message named, and
         // the club's one copy of the send (§419) — the design «telling the owner about every email a staff press sends», slice 3.
         ...words.mail({ to: { count: choice.real, audience: "participants" }, type: "ORGANIZER_MESSAGE" }),
@@ -254,6 +383,19 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
               previewUnknown: t.raw("participantMessages.previewUnknown") as string,
               previewSubject: t("emails.subject"),
               send: t("participantMessages.send"),
+              reconfirm: t("participantMessages.reconfirm"),
+              reconfirmHelp: t("participantMessages.reconfirmHelp"),
+              reminderFill: {
+                button: t("participantMessages.reminderFill.button"),
+                confirmTitle: t("participantMessages.reminderFill.confirmTitle"),
+                confirmBody: t("participantMessages.reminderFill.confirmBody"),
+                confirmGo: t("participantMessages.reminderFill.confirmGo"),
+                confirmCancel: t("participantMessages.reminderFill.confirmCancel"),
+                subjectRo: reminderRo.subject,
+                subjectEn: reminderEn.subject,
+                bodyRo: reminderRo.body,
+                bodyEn: reminderEn.body,
+              },
             }}
           />
         </ActionForm>
@@ -279,7 +421,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
                 </Typography>
                 {/* The subject in the backoffice's language — the audit row keeps both — and the Romanian one should a row carry no other. */}
                 <Typography variant="body1" sx={{ fontWeight: 600, wordBreak: "break-word" }}>
-                  {entry.subject[locale] || entry.subject.ro}
+                  {eventDetails ? subjectAsDrawn(entry.subject[locale] || entry.subject.ro, eventDetails, locale) : entry.subject[locale] || entry.subject.ro}
                 </Typography>
                 <Typography variant="body2">
                   {entry.audience ? t(`participantMessages.audiencesShort.${entry.audience}`) : "—"}
@@ -287,6 +429,23 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
                   {t(`participantMessages.recipients.${countForm(entry.recipients, locale)}`, { count: entry.recipients })}
                   {entry.test > 0 ? ` · ${t("participantMessages.historyTest", { test: String(entry.test) })}` : ""}
                 </Typography>
+                {/* How far it has left (the decision «Cere reconfirmarea», part two): hidden once the rows were swept. */}
+                {entry.progress.left + entry.progress.waiting + entry.progress.failed > 0 && (
+                  <Typography variant="body2" color="text.secondary" data-testid="participant-message-history-progress">
+                    {t("participantMessages.historyProgress", { left: String(entry.progress.left), waiting: String(entry.progress.waiting) })}
+                    {entry.progress.failed > 0 ? ` · ${t("participantMessages.historyFailed", { failed: String(entry.progress.failed) })}` : ""}
+                  </Typography>
+                )}
+                {/* «Cere reconfirmarea»: who said «Vin», who cancelled since, who did not answer — information, never a state. */}
+                {entry.answers && (
+                  <Typography variant="body2" data-testid="participant-message-history-answers">
+                    {t("participantMessages.historyAnswers", {
+                      yes: String(entry.answers.yes),
+                      cancelled: String(entry.answers.cancelled),
+                      none: String(entry.answers.none),
+                    })}
+                  </Typography>
+                )}
               </Box>
             ))}
           </Stack>

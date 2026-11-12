@@ -31,7 +31,9 @@ import type { RaceNumberFormat } from "./domain/race-number";
  * reached the way every participant page is: a single-use-minted, hashed action token,
  * purpose `MANAGE_PROFILE` — the one purpose scoped to a participant rather than to one
  * registration, reserved since §12.8 and unused until now. The link lists registrations and
- * never changes an address: §10.3's immutability holds here as everywhere.
+ * never changes an address: a participant row's address is immutable (§10.4). The list is read
+ * live by participant, so a registration an Administrator moved to another address («Schimbă
+ * adresa») leaves this list and appears on the new address's.
  *
  * The request side follows `requestRegistrationLink` exactly (§19.4's second surface): a form
  * anybody can type any address into answers identically whatever the address turns out to

@@ -233,8 +233,9 @@ describe("§787 the footer, through the route", () => {
     expect(english.slice(13, 16)).toEqual([["Special guests", "3"], ["Special guests, confirmed", "2"], ["Confirmed who take a place", "1"]]);
     // The column the formulas read is the sheet's own, filled from the registration's «outside the capacity» flag.
     const header = rows[0] as string[];
-    // Last but for «Note interne» (§785), which an Administrator's file carries after it.
-    expect(header.slice(-2)).toEqual(["Special guest", "Note interne"]);
+    // Last of the fixed columns, then «Partener» («De la parteneri») and «Reconfirmat» (the decision «Cere reconfirmarea»),
+    // every file's, and «Note interne» (§785), which an Administrator's file carries after them, still the last.
+    expect(header.slice(-4)).toEqual(["Special guest", "Partener", "Reconfirmat", "Note interne"]);
     expect(startListRows(rows).slice(1).map((row) => row[header.indexOf("Special guest")]).sort()).toEqual(["0", "1", "1", "1"]);
   });
 

@@ -313,6 +313,7 @@ export async function readEmailHistory<T extends Record<string, unknown>>(
             familyHeld: row.familyHeld,
             sentNow: row.sentNow,
             onMailgunRoad: roads ? !onGmailRoadOf(row, roads) : true,
+            isManualResend: row.manualResend,
           },
           context,
         ),

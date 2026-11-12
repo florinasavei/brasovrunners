@@ -45,6 +45,14 @@ export type InviteFormWords = {
   /** «Elită» for the whole send (§917) and its one line: internal, the person is not told. */
   eliteLabel: string;
   eliteHelp: string;
+  /**
+   * «E de la parteneri» for the whole send and its box «Numele partenerului sau sponsorului» (the decision «De la parteneri»),
+   * the box's one line, and the sentence when the tick has no name.
+   */
+  partnerLabel: string;
+  partnerNameLabel: string;
+  partnerHelp: string;
+  partnerMissing: string;
   /** «Limba invitației», its two answers and the sentence saying whom it is for. */
   localeLegend: string;
   localeRo: string;
@@ -62,6 +70,8 @@ export type InviteFormWords = {
   dialogOutside: string;
   /** «Înscrierile vor fi marcate «Elită» — intern, persoanele nu sunt anunțate.»: said only with «Elită» ticked. */
   dialogElite: string;
+  /** «Înscrierile vor fi marcate «Partener: {name}» — intern …»: said only with «E de la parteneri» ticked. */
+  dialogPartner: string;
   /** «Invitația expiră în {count} zile, cel mult la start.», counted: the deadline the press sends. */
   dialogDays: Counted;
   /** «Limba pentru adresele pe care clubul nu le cunoaște: {language}.»: the language the press sends. */
@@ -123,6 +133,8 @@ export default function InviteForm({
   daysMax,
   hiddenListEnabled,
   placesMax,
+  partnerSuggestions = [],
+  partnerNameMax,
   words,
 }: {
   action: (state: InviteFormState, form: FormData) => Promise<InviteFormState>;
@@ -137,6 +149,10 @@ export default function InviteForm({
   hiddenListEnabled: boolean;
   /** The club's people per address (§576): the most a row's «Locuri» may ask; the server asks it again under the lock. */
   placesMax: number;
+  /** The event's earlier partners' names (`listPartnerSuggestions`), the box's native suggestions. */
+  partnerSuggestions?: readonly string[];
+  /** The longest name the box keeps (`PARTNER_NAME_MAX`); the server refuses a longer one anyway. */
+  partnerNameMax: number;
   words: InviteFormWords;
 }) {
   const [state, formAction, pending] = useActionState(action, null);
@@ -156,6 +172,14 @@ export default function InviteForm({
   // «Elită» (§917): controlled like «Pe lista ascunsă», so a refused send keeps it for the corrected press.
   const [elite, setElite] = useState(false);
   const eliteHelpId = useId();
+  /*
+    «E de la parteneri» (the decision «De la parteneri»): one tick and one name for the whole send, as «Elită» — controlled, so a
+    refused send keeps them for the corrected press. The box is what is stored; the tick without a name is said at the box.
+  */
+  const [partner, setPartner] = useState(false);
+  const [partnerName, setPartnerName] = useState("");
+  const [partnerNameMissing, setPartnerNameMissing] = useState(false);
+  const partnerListId = useId();
   /*
     Controlled, as the ticks and the lines are: React resets an uncontrolled field of a form once its
     action completes, and a refusal answered with state completes it — the corrected second press would
@@ -211,6 +235,12 @@ export default function InviteForm({
       setLocalError(words.nobody);
       return;
     }
+    if (partner && partnerName.trim() === "") {
+      setPartnerNameMissing(true);
+      setLocalError(words.partnerMissing);
+      return;
+    }
+    setPartnerNameMissing(false);
     // The days as the action reads them: empty is the default; anything else a whole number in range.
     const dayCount = days.trim() === "" ? daysDefault : /^\d+$/.test(days.trim()) ? Number(days.trim()) : NaN;
     if (!Number.isInteger(dayCount) || dayCount < 1 || dayCount > daysMax) {
@@ -226,6 +256,7 @@ export default function InviteForm({
       hiddenListEnabled && outside ? words.dialogOutside : nowFree === null ? null : fill(words.dialogFree, { free: nowFree }),
       (hiddenListEnabled && outside) || nowFree === null ? null : raisedTo !== null ? counted(words.dialogRaise, raises, { capacity: raisedTo }) : words.dialogNoRaise,
       elite ? words.dialogElite : null,
+      partner ? fill(words.dialogPartner, { name: partnerName.trim() }) : null,
       counted(words.dialogDays, dayCount),
       fill(words.dialogLocale, { language: inviteLocale === "en" ? words.localeEn : words.localeRo }),
     ]
@@ -263,6 +294,7 @@ export default function InviteForm({
       <input type="hidden" name="addPlace" value={addPlace} />
       {hiddenListEnabled && outside && <input type="hidden" name="outside" value="1" />}
       {elite && <input type="hidden" name="elite" value="1" />}
+      {partner && <input type="hidden" name="partner" value="on" />}
       <Stack spacing={2}>
         {(localError ?? serverError) && (
           <Alert severity="error" role="alert" data-testid="invite-error">
@@ -430,6 +462,47 @@ export default function InviteForm({
           <Typography id={eliteHelpId} variant="body2" color="text.secondary">
             {words.eliteHelp}
           </Typography>
+        </Box>
+        {/* «E de la parteneri» (the decision «De la parteneri»), beside «Elită»: one tick and one name for the whole send. */}
+        <Box data-testid="invite-partner">
+          <FormControlLabel
+            sx={{ minHeight: TAP_TARGET.minHeight }}
+            control={
+              <Checkbox
+                checked={partner}
+                onChange={(event) => {
+                  setPartner(event.target.checked);
+                  if (!event.target.checked) setPartnerNameMissing(false);
+                }}
+                slotProps={{ input: { "data-testid": "invite-partner-tick" } as Record<string, string> }}
+              />
+            }
+            label={words.partnerLabel}
+          />
+          {partner && (
+            <>
+              <TextField
+                name="partnerName"
+                label={words.partnerNameLabel}
+                helperText={partnerNameMissing ? words.partnerMissing : words.partnerHelp}
+                error={partnerNameMissing}
+                value={partnerName}
+                onChange={(event) => {
+                  setPartnerName(event.target.value);
+                  if (event.target.value.trim() !== "") setPartnerNameMissing(false);
+                }}
+                size="small"
+                fullWidth
+                sx={{ maxWidth: 420 }}
+                slotProps={{ htmlInput: { maxLength: partnerNameMax, list: partnerListId, autoComplete: "off", "data-testid": "invite-partner-name" } }}
+              />
+              <datalist id={partnerListId}>
+                {partnerSuggestions.map((name) => (
+                  <option key={name} value={name} />
+                ))}
+              </datalist>
+            </>
+          )}
         </Box>
         <Box>
           <GlyphButton icon="send" type="submit" variant="contained" disabled={pending} sx={{ minHeight: TAP_TARGET.minHeight }} data-testid="invite-submit">

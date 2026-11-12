@@ -7,6 +7,7 @@ import { type Registration, registrations } from "@/db/schema/registrations";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { releaseDeadlineOfHold } from "@/modules/registrations/domain/unsigned-release";
+import { declarationPdfAudienceAfterMove } from "@/modules/registrations/domain/address-change";
 import { eventDay, howItWentOpen, howItWentUrl } from "@/modules/feedback/links";
 import type { Locale } from "@/i18n/routing";
 import { issueActionToken } from "@/modules/action-tokens/repository";
@@ -38,13 +39,13 @@ import { bulkCopyRecipients, declarationPdfAudience, isClubCopy, isParticipantMe
 import { type CalendarPart, calendarPartFor } from "./domain/calendar-part";
 import { renderCalendarPart } from "./calendar-part";
 import { calendarRsvpToForSending } from "./calendar-rsvp";
-import { CANNOT_COME_MESSAGES, cannotComeApplies, cannotComeUrlOf } from "./domain/cannot-come";
+import { CANNOT_COME_MESSAGES, cannotComeApplies, cannotComeUrlOf, reconfirmApplies, reconfirmUrlOf } from "./domain/cannot-come";
 import { CONFIRMATION_RETRY_LEAST_LEFT_MS, isConfirmationRetry } from "./domain/automatic-sends";
 import { type HoldLapsedNext, holdLapsedNext } from "./domain/hold-lapsed";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { declarationAsksMinorToSign } from "@/modules/legal-documents/repository";
 import { missingAnswers } from "@/modules/registrations/missing-answers";
-import { readOrganizerMessagePayload } from "./domain/organizer-message";
+import { readOrganizerAskReconfirm, readOrganizerMessagePayload } from "./domain/organizer-message";
 import { registrationStatusWords } from "./domain/registration-status-words";
 import { readEmailCopyForSending } from "./email-copy";
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
@@ -105,6 +106,7 @@ import { readNotRevivedRefs, readUnreachableWindowFacts } from "./outage-grace-w
 import { emailEventFacts } from "./event-facts-row";
 import { type EmailRenderer, OutboxMessageWithdrawn, type OutboxRow } from "./outbox";
 import type { DeadlineRebase } from "./deadline-rebase";
+import { audienceOf } from "./domain/email-audience";
 
 /**
  * Turns one outbox row into the message to send (AGENTS.md §16.1, §16.3; BR-REQ-080-01).
@@ -268,6 +270,28 @@ async function renderRow(
         ? { ...stored, emailLinkExpiresAt: rebase.to }
         : { ...stored, holdExpiresAt: rebase.to }
       : stored;
+
+  /*
+    «Schimbă adresa»: the registration was moved to another address since this row was queued. A participant's message
+    for it, to the address it no longer belongs to, has nothing to say there — and a link minted now would be a link of
+    the old address. Withdrawn rather than sent, whether it waits or is a retry already claimed: the move deleted the
+    rows never tried, this catches the rest. The old address's own notice of the move is the one exception. Only the
+    participant's own mail (`audienceOf`): the club's archive copy and its notice carry the participant's id too, and
+    stay the club's; a club copy names no participant and is left to its own rules.
+  */
+  if (
+    row.participantId &&
+    stored &&
+    stored.participantId !== row.participantId &&
+    audienceOf(row.messageType) === "participant" &&
+    row.messageType !== "REGISTRATION_ADDRESS_REMOVED"
+  ) {
+    throw new OutboxMessageWithdrawn("the registration was moved to another address since this message was queued");
+  }
+  // Moved back since: the address the notice says lost the registration holds it again — nothing true is left to tell it.
+  if (row.messageType === "REGISTRATION_ADDRESS_REMOVED" && row.participantId && stored && stored.participantId === row.participantId) {
+    throw new OutboxMessageWithdrawn("the registration was moved back to this address since the notice was queued");
+  }
 
   /*
     A declaration request held while a family signed in the wizard (§519, `enqueueAllocationEmail`):
@@ -471,6 +495,8 @@ async function renderRow(
   }
   // The subject's "[Copie club]" and the line that says the personal links were taken out.
   if (clubCopy) data.clubCopy = true;
+  // «Schimbă adresa»: whether the move queued the state's own message to the new address too, as the move said it would.
+  if (row.messageType === "REGISTRATION_ADDRESS_ADDED") data.addressNextStep = (row.payloadJson as { nextStep?: unknown } | null)?.nextStep === true;
   // A bulk send's one copy: how many it went to, and nobody's name (§419).
   if (bulkRecipients !== null) data.clubCopyRecipients = bulkRecipients;
   /*
@@ -1641,8 +1667,23 @@ async function renderRow(
         now,
       })
     ) {
+      /*
+        «Vin» (the decision «Cere reconfirmarea»): the cancel's sibling on the same token, to the same page's `#reconfirm`,
+        only on an organizer's message whose own row carries the ask's flag — set only on a row the send wrote an ask for —
+        and only for a registration still asked when it renders (`reconfirmApplies`). No new token, no new purpose: the page reads the manage token and never spends it.
+      */
+      const reconfirm = reconfirmApplies({
+        askReconfirm: row.messageType === "ORGANIZER_MESSAGE" && readOrganizerAskReconfirm(row.payloadJson),
+        messageType: row.messageType,
+        clubCopy,
+        recipientParticipantId: row.participantId,
+        registration: cannotComeFor,
+        event: eventState,
+        now,
+      });
       if (data.manageUrl && !familyConfirmed && cannotComeFor.id === row.registrationId) {
         data.cannotComeUrl = cannotComeUrlOf(data.manageUrl);
+        if (reconfirm) data.reconfirmUrl = reconfirmUrlOf(data.manageUrl);
       } else if (familyConfirmed && actionUrl) {
         data.cannotComeUrl = actionUrl;
       } else if (familySitting && data.familyMineUrl) {
@@ -1656,7 +1697,10 @@ async function renderRow(
           now,
         });
         const path = getPathname({ locale, href: { pathname: ROUTE_BY_PURPOSE.MANAGE_REGISTRATION, params: { token: issued.secret } } });
-        data.cannotComeUrl = cannotComeUrlOf(`${env.APP_BASE_URL}${path}`);
+        const base = `${env.APP_BASE_URL}${path}`;
+        data.cannotComeUrl = cannotComeUrlOf(base);
+        // The organizer's message lands here (it mints no token of its own): «Vin» on the same one.
+        if (reconfirm && cannotComeFor.id === row.registrationId) data.reconfirmUrl = reconfirmUrlOf(base);
       }
     }
   }
@@ -1720,7 +1764,15 @@ async function renderRow(
     the whole document stays in the event's bundle in the backoffice for those seven days. A
     club copy of a participant's message attaches nothing, and says when it was signed anyway.
   */
-  const pdfAudience = declarationPdfAudience(row.messageType, clubCopy);
+  /*
+    «Schimbă adresa»: an address the Administrator typed, never confirmed since by its own link, gets the masked copy — one
+    typo must not send the identity document to a stranger (`declarationPdfAudienceAfterMove`).
+  */
+  const pdfAudience = declarationPdfAudienceAfterMove(
+    declarationPdfAudience(row.messageType, clubCopy),
+    registration?.addressChangedAt ?? null,
+    participant?.emailVerifiedAt ?? null,
+  );
   if (
     (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "DECLARATION_SIGNED" || row.messageType === "DECLARATION_ARCHIVE") &&
     registration &&

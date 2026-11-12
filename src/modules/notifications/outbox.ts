@@ -37,12 +37,12 @@ import {
 } from "./domain/mailgun-stop";
 import { emailGroupOf, GMAIL_CAP_DEFERRED_ERROR } from "./domain/email-transport";
 import { emailRoadChoice } from "@/shared/feedback/email-road-request";
-import { heldByMailgunCondition, readMailgunStop, recordMailgunStop } from "./mailgun-stop";
+import { heldByMailgunCondition, notHeldByMailgun, readMailgunStop, recordMailgunStop } from "./mailgun-stop";
 import { applyDeadlineRebase, type DeadlineRebase, planDeadlineRebase } from "./deadline-rebase";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { forgetUnsentVolunteerAgreementLink } from "@/modules/volunteers/unsent-link";
-import { BULK_MESSAGE_TYPES, isBulkMessage } from "./domain/bulk";
+import { BULK_MESSAGE_TYPES, isBulkMessage, SEND_TO_MANY_MESSAGE_TYPES, sendOrderOf } from "./domain/bulk";
 import { RELAY_MESSAGE_TYPES } from "./domain/relay";
 import { drainOutboxAfterResponse } from "./drain";
 import { pressStamp } from "./press";
@@ -501,6 +501,14 @@ async function claimOutboxBatchWithStop(
   );
   const due = params.ids ? and(claimable, inArray(emailOutbox.id, [...params.ids])) : claimable;
   const bulk = inArray(emailOutbox.messageType, [...BULK_MESSAGE_TYPES]);
+  /*
+    The sends to many after a registration's own messages, in their order (`SEND_TO_MANY_MESSAGE_TYPES`): 0, then 1 to 6 —
+    and an Administrator's manual resend of any of them, for one runner, is that person's own message: 0 (`sendOrderOf`).
+  */
+  const sendOrder = sql`case when ${emailOutbox.isManualResend} then 0 ${sql.join(
+    SEND_TO_MANY_MESSAGE_TYPES.map((type, index) => sql`when ${emailOutbox.messageType} = ${type} then ${sql.raw(String(index + 1))}`),
+    sql` `,
+  )} else 0 end`;
 
   return db.transaction(async (tx) => {
     /*
@@ -513,13 +521,13 @@ async function claimOutboxBatchWithStop(
       hour's room and the newsletter's cap with it. A SELECT on its own is run once: it locks and
       returns at most `limit` ids, and the UPDATE changes exactly those, already ours.
     */
-    const claim = async (where: SQL | undefined, limit: number): Promise<OutboxRow[]> => {
+    const claim = async (where: SQL | undefined, limit: number, first?: SQL): Promise<OutboxRow[]> => {
       if (limit <= 0) return [];
       const picked = await tx
         .select({ id: emailOutbox.id })
         .from(emailOutbox)
         .where(where)
-        .orderBy(asc(emailOutbox.createdAt))
+        .orderBy(...(first ? [first] : []), asc(emailOutbox.createdAt))
         .limit(limit)
         .for("update", { skipLocked: true });
       if (picked.length === 0) return [];
@@ -534,10 +542,17 @@ async function claimOutboxBatchWithStop(
         .returning();
     };
 
-    // One road's claim: everything that is not a newsletter first, oldest first; then the
-    // newsletter, in the room left and at most `bulkCap` of it (§445).
+    /*
+      One road's claim, in eight steps (the decision «Cere reconfirmarea», part two), each oldest first and in the room the
+      steps before it left: (0) a registration's own messages — every type that is neither a send to many nor bulk, and a
+      manual resend of any type; (1–6) the sends to many in `SEND_TO_MANY_MESSAGE_TYPES`' order — the cancellation,
+      «Detalii actualizate», the automatic reminder, the organizers' message, the thank-you, «s-au deschis înscrierile» —
+      a club copy with its type; then (7) the newsletter's kind, at most `bulkCap` of it (§445). Steps 0–6 have no cap,
+      so one ordered claim is the seven of them — the same rows seven claims would take, in one statement; only the bulk
+      step needs a claim of its own, for its cap.
+    */
     const claimRoadWhere = async (where: SQL | undefined, limit: number, bulkCap: number | null = null) => {
-      const first = await claim(and(where, not(bulk)), limit);
+      const first = await claim(and(where, not(bulk)), limit, sendOrder);
       const room = limit - first.length;
       const second = await claim(and(where, bulk), bulkCap === null ? room : Math.min(room, bulkCap));
       return { first, second };
@@ -601,10 +616,13 @@ async function claimOutboxBatchWithStop(
         : { first: [], second: [] };
 
     // The picking SELECT orders which rows are claimed; RETURNING has no defined order at all.
-    // Sorting here makes the batch oldest-first for the worker too, so a participant who has
-    // been waiting longest is not overtaken within a batch — each half on its own, the bulk last.
+    // Sorting here hands the worker the batch in the claim's order, both roads together: a
+    // registration's own messages oldest first (a manual resend among them), then each send to many in its step, the bulk
+    // last — so a participant who has been waiting longest is not overtaken within a batch.
     const byAge = (a: OutboxRow, b: OutboxRow) => a.createdAt.getTime() - b.createdAt.getTime();
-    const rows = [...[...mailgun.first, ...gmail.first].sort(byAge), ...[...mailgun.second, ...gmail.second].sort(byAge)];
+    const orderOf = (row: OutboxRow) => sendOrderOf(row.messageType, row.isManualResend);
+    const byOrder = (a: OutboxRow, b: OutboxRow) => orderOf(a) - orderOf(b) || byAge(a, b);
+    const rows = [...[...mailgun.first, ...gmail.first].sort(byOrder), ...[...mailgun.second, ...gmail.second].sort(byAge)];
     return { rows, stop, carried };
   });
 }
@@ -614,11 +632,26 @@ async function claimOutboxBatchWithStop(
  * off until the allowance comes back: no attempt spent, nothing sent, and the job's plan sees the
  * reset as their next turn (`nextOutboxWork`) rather than "due now" on every ping. Only Mailgun's
  * road (`road`) when Gmail carries some of the mail: the reserve is Mailgun's allowance.
+ *
+ * **A row it moves no longer wears a stop mark** (the decision «Cere reconfirmarea», part two — a defect of the
+ * released code, found by its review with a probe). A due row may still carry Mailgun's pause mark (a 429) or its
+ * allowance mark from a stop that has ended — due means its stop is over. Moved to the reset with the mark on it,
+ * the row read as a stop in force (`readMailgunStop`: a marked row whose turn is ahead) until the next reset — and
+ * no verification, offer or confirmation left by Mailgun meanwhile. So the hold clears those two marks
+ * and keeps any other reason (the public page's «emailurile întârzie» read the same mark as a pause until the reset too).
+ * Cleared rather than left out of the hold: left out (`notHeldByMailgun` in its WHERE), the row would stay due, and the
+ * job's plan (`nextOutboxWork`) would read work due now on every ping until the reset — a database wake every quarter
+ * of an hour for a row the reserve will not let leave, the very thing the hold exists to stop. A stop still in force
+ * lives in `platform_settings.mailgunStop` (`recordMailgunStop`), which the hold never touches, and in the marked rows
+ * whose turn is still ahead, which it never moves.
  */
 async function holdBulkUntilReset(db: Db, now: Date, road: SQL | undefined): Promise<void> {
   await db
     .update(emailOutbox)
-    .set({ nextAttemptAt: nextAllowanceResetAt(now) })
+    .set({
+      nextAttemptAt: nextAllowanceResetAt(now),
+      lastError: sql`case when ${notHeldByMailgun()} then ${emailOutbox.lastError} else null end`,
+    })
     .where(
       and(
         eq(emailOutbox.status, "PENDING"),

@@ -1,5 +1,6 @@
-import { sql } from "drizzle-orm";
+import { type SQL, sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   boolean,
   check,
   date,
@@ -16,6 +17,17 @@ import { events } from "./events";
 import { locale } from "./locale";
 import { participants } from "./participants";
 import { staffUsers } from "./staff-users";
+
+/**
+ * The longest partner's or sponsor's name «De la parteneri» keeps — on a registration, a line of the internal list and an
+ * invitation alike (`partner-mark.ts`).
+ */
+export const PARTNER_NAME_MAX = 120;
+
+/** The one CHECK of the three `partner_name` columns: none, or a trimmed name of 1 to `PARTNER_NAME_MAX` characters. */
+export function partnerNameCheck(column: AnyPgColumn): SQL {
+  return sql`${column} IS NULL OR (char_length(${column}) BETWEEN 1 AND ${sql.raw(String(PARTNER_NAME_MAX))} AND ${column} = btrim(${column}))`;
+}
 
 /** AGENTS.md §10.5. */
 export const registrationStatus = pgEnum("registration_status", [
@@ -489,6 +501,15 @@ export const registrations = pgTable(
      */
     eliteHiddenFromResults: boolean("elite_hidden_from_results").notNull().default(false),
     eliteHiddenFromSite: boolean("elite_hidden_from_site").notNull().default(false),
+    /**
+     * «De la parteneri» (the decision «De la parteneri»): the name of the
+     * partner or sponsor through whom this person came — a name present means «de la parteneri», none means not. The
+     * organizers' own label (`partner-mark.ts`): set by the Administrator on the registration's page, carried from a line of
+     * the internal list or an invitation sent with it, audited without the name. Read by the backoffice's list, page, filter,
+     * the registrations' Excel and CSV and «Toate datele unei persoane» — never by the allocator, a state, a count, an email,
+     * the desk, a public page or the file given to sponsors. Trimmed, 1 to `PARTNER_NAME_MAX` characters.
+     */
+    partnerName: text("partner_name"),
 
     submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
     /**
@@ -558,6 +579,21 @@ export const registrations = pgTable(
       () => staffUsers.id,
       { onDelete: "set null" },
     ),
+    /**
+     * «Schimbă adresa»: when an Administrator last moved this registration to another address (the participant
+     * behind `participant_id`), and who. Both null on a registration that never moved. The two columns above stay
+     * the old address's facts — who vouched for it — and are not touched by a move.
+     *
+     * Written together by every move, in every state: the address in force was set by staff. A declaration signed
+     * afterwards from an emailed link (`declaration_acceptances.method = 'EMAIL_LINK'`, accepted after
+     * `address_changed_at`) is shown in the trail as signed from the link sent to the address the club changed —
+     * still the person's signature, never a staff one, and checkable as such (`domain/address-change.ts`). The
+     * account may be removed later (`ON DELETE SET NULL`); `address_changed_at` keeps the fact.
+     */
+    addressChangedAt: timestamp("address_changed_at", { withTimezone: true }),
+    addressChangedByStaffUserId: uuid("address_changed_by_staff_user_id").references(() => staffUsers.id, {
+      onDelete: "set null",
+    }),
 
     /*
       When the person's answers were last written by the form (§654): the insert's instant, and a
@@ -640,6 +676,7 @@ export const registrations = pgTable(
       "registrations_expiry_fields_together",
       sql`(${t.expiryReason} IS NULL) = (${t.expiredAt} IS NULL)`,
     ),
+    check("registrations_partner_name_length", partnerNameCheck(t.partnerName)),
   ],
 );
 

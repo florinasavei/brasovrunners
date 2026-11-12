@@ -130,6 +130,50 @@ test.describe("§740 «Invită pe email»: the button, and every invited person 
     expect(await page.evaluate(fitsTheWidth)).toBe(true);
   });
 
+  test("«E de la parteneri» at the send: the tick reveals its box, a tick without a name is refused at the box, the dialog names the partner, the row wears the chip", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    const eventId = await featuredEventId();
+    const email = `${PREFIX}${test.info().project.name}-partner-${Date.now().toString(36)}@test.invalid`;
+    const partner = `Brutaria Exemplu ${test.info().project.name}-${Date.now().toString(36)}`;
+    await openList(page, eventId);
+
+    await page.getByTestId("registrations-invite-link").click();
+    const panel = page.getByTestId("registrations-invitations");
+    await expect(panel).toHaveAttribute("open", "");
+    const form = panel.getByTestId("invite-form");
+    await form.locator('[name="inviteeName"]').fill("Dana Partenera");
+    await form.locator('[name="inviteeEmail"]').fill(email);
+
+    // The box is there only once the tick is.
+    await expect(form.getByTestId("invite-partner-name")).toHaveCount(0);
+    await form.getByTestId("invite-partner-tick").check();
+    const box = form.getByTestId("invite-partner-name");
+    await expect(box).toBeVisible();
+    expect(await page.evaluate(fitsTheWidth)).toBe(true);
+
+    // A tick without a name: refused at the box, no dialog.
+    await form.getByTestId("invite-submit").click();
+    await expect(form.getByTestId("invite-partner")).toContainText("Scrie numele partenerului sau sponsorului");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+
+    // With a name: the dialog names the partner; confirmed, the invitation's row wears the chip.
+    await box.fill(partner);
+    await form.getByTestId("invite-submit").click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toContainText(`Partener: ${partner}`);
+    await dialog.getByRole("button", { name: /Trimite invitațiile|Adaugă .* și trimite/ }).click();
+    await expect(page).toHaveURL(/saved=invitationsSent/, { timeout: 30_000 });
+
+    await openList(page, eventId);
+    await panel.locator("summary").first().click();
+    await expect(panel).toHaveAttribute("open", "");
+    const invited = page.getByTestId("invitation-row").filter({ hasText: email });
+    await expect(invited).toBeVisible();
+    await expect(invited.getByTestId("invitation-partner-chip")).toContainText(`Partener: ${partner}`);
+    expect(await page.evaluate(fitsTheWidth)).toBe(true);
+  });
+
   test("an invitation is seen with its state after a reload — in the panel and the list — and again once accepted", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);

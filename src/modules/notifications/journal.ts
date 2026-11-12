@@ -152,6 +152,7 @@ export type JournalRowRead = {
   familyHeld: boolean;
   sentNow: boolean;
   onMailgunRoad: boolean;
+  isManualResend: boolean;
   clubCopy: boolean;
   idempotencyKey: string;
   cause: string | null;
@@ -283,6 +284,7 @@ export function groupEmailJournal(
         familyHeld: row.familyHeld,
         sentNow: row.sentNow,
         onMailgunRoad: row.onMailgunRoad,
+        isManualResend: row.isManualResend,
       },
       person: personOf(row),
     };
@@ -385,6 +387,7 @@ export async function readEmailJournal<T extends Record<string, unknown>>(db: Da
       familyHeld: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> 'sittingHeld') = 'true' or (${emailOutbox.payloadJson} ->> 'familyHeld') = 'true', false)`,
       sentNow: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> ${SENT_NOW_FLAG}::text) = 'true', false)`,
       onMailgunRoad: roads ? sql<boolean>`not coalesce((${gmailRoadCondition(roads)}), false)` : sql<boolean>`true`,
+      isManualResend: emailOutbox.isManualResend,
       clubCopy: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> ${CLUB_COPY_FLAG}::text) = 'true', false)`,
       idempotencyKey: emailOutbox.idempotencyKey,
       cause: emailOutbox.cause,

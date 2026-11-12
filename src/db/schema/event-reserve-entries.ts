@@ -2,6 +2,7 @@ import { check, index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-cor
 import { sql } from "drizzle-orm";
 import { REGISTRATION_NOTE_MAX } from "./registration-notes";
 import { events } from "./events";
+import { partnerNameCheck } from "./registrations";
 import { staffUsers } from "./staff-users";
 
 /** The longest name part and address the internal list keeps — the registration form's own bounds. */
@@ -39,6 +40,12 @@ export const eventReserveEntries = pgTable(
     email: text("email"),
     /** The organizers' internal note — plain text, line breaks kept, up to `RESERVE_NOTE_MAX`. */
     note: text("note"),
+    /**
+     * «E de la parteneri» (the decision «De la parteneri»): the partner's or sponsor's name through whom the person asked,
+     * or null. Carried onto the registration by every move that makes one, in the move's transaction; dropped by «Mută pe
+     * lista de elită», which registers nobody. Trimmed, 1 to `PARTNER_NAME_MAX` characters.
+     */
+    partnerName: text("partner_name"),
     createdByStaffUserId: uuid("created_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -49,6 +56,7 @@ export const eventReserveEntries = pgTable(
     check("event_reserve_entries_name_length", sql`char_length(${t.firstName}) BETWEEN 1 AND ${sql.raw(String(RESERVE_NAME_MAX))} AND char_length(${t.lastName}) BETWEEN 1 AND ${sql.raw(String(RESERVE_NAME_MAX))}`),
     check("event_reserve_entries_email_length", sql`${t.email} IS NULL OR char_length(${t.email}) BETWEEN 3 AND ${sql.raw(String(RESERVE_EMAIL_MAX))}`),
     check("event_reserve_entries_note_length", sql`${t.note} IS NULL OR char_length(${t.note}) <= ${sql.raw(String(RESERVE_NOTE_MAX))}`),
+    check("event_reserve_entries_partner_name_length", partnerNameCheck(t.partnerName)),
   ],
 );
 

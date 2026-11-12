@@ -29,6 +29,8 @@ import {
   listResubmissionMarks,
   readPlaceDeadlines,
   readPlaceOutlook,
+  isReconfirmFilter,
+  type ReconfirmFilter,
   REGISTRATION_SORT_KEYS,
   type RegistrationListRow,
   type RegistrationSortKey,
@@ -85,7 +87,19 @@ import InvitationsPanel from "@/modules/registrations/ui/InvitationsPanel";
 import ReserveListPanel from "@/modules/registrations/ui/ReserveListPanel";
 import WaitlistAddForm from "@/modules/registrations/ui/WaitlistAddForm";
 import { listReserveEntries } from "@/modules/registrations/reserve-list";
-import { addReserveEntryAction, deleteReserveEntryAction, moveReserveEntryToEliteAction, moveReserveEntryToOwnAddressAction, renameReserveEntryAction, saveReserveNoteAction } from "../reserve-actions";
+import { chosenPartnerOf, listPartnerSuggestions, PARTNER_CHOICE_FIELD, PARTNER_FILTER_PARAM, PARTNER_NAME_FIELD, PARTNER_NAME_MAX } from "@/modules/registrations/partner-mark";
+import PartnerFilterSelect from "@/modules/registrations/ui/PartnerFilterSelect";
+import RowPartnerDialog from "@/modules/registrations/ui/RowPartnerDialog";
+import { setRegistrationPartnerFromListAction } from "../[id]/partner-actions";
+import {
+  addReserveEntryAction,
+  deleteReserveEntryAction,
+  moveReserveEntryToEliteAction,
+  moveReserveEntryToOwnAddressAction,
+  renameReserveEntryAction,
+  saveReserveNoteAction,
+  saveReservePartnerAction,
+} from "../reserve-actions";
 import { inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
@@ -156,6 +170,11 @@ const BULK_FORM = "bulk-cancel";
 /** Where a one-press entry onto the official waiting list landed (§872, §888): the toasts that open its panel on the way back. */
 const WAITLIST_ENTRY_SAVED: ReadonlySet<string> = new Set(["waitlistAdded", "waitlistPlaced", "registrationOffered", "registrationOfferedRaised"]);
 
+/** The three outcomes of a partner's save, as the registration's page and a line's fold write them. */
+function isPartnerOutcome(value: string | undefined): value is "partnerSaved" | "partnerCleared" | "partnerUnchanged" {
+  return value === "partnerSaved" || value === "partnerCleared" || value === "partnerUnchanged";
+}
+
 function isRegistrationStatus(value: string | undefined): value is RegistrationStatus {
   return !!value && (registrationStatus.enumValues as readonly string[]).includes(value);
 }
@@ -193,7 +212,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canReadRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, bounced, promo, outside, memberBib, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test, memberSweep } = current;
+  const { eventId, status, clubMember, bounced, promo, outside, memberBib, partner, reconfirm, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test, memberSweep } = current;
   // What «Trimite acum» said about Mailgun's stop (§622): from the action's own address; unreadable says nothing.
   const untilParsed = current.until ? new Date(current.until) : null;
   const untilAt = untilParsed && !Number.isNaN(untilParsed.getTime()) ? untilParsed : null;
@@ -224,6 +243,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     promoConsented?: true;
     outsideCapacity?: true;
     memberBibAsked?: true;
+    fromPartner?: true;
+    partner?: string;
+    reconfirm?: ReconfirmFilter;
     search?: string;
   } = {
     status: isRegistrationStatus(status) ? status : undefined,
@@ -237,6 +259,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     outsideCapacity: outside === "1" || undefined,
     // The bibs page's link (§664): who asked for the members' bib and is no member account's.
     memberBibAsked: memberBib === "asked" || undefined,
+    // «De la parteneri» (the decision «De la parteneri»): the rows with a partner's name — in the list's one `WHERE`, so its count and pages too.
+    fromPartner: partner === "1" || undefined,
+    // «Reconfirmare» (the decision «Cere reconfirmarea»): one of three answers — in the same `WHERE`, so its count and pages too.
+    reconfirm: isReconfirmFilter(reconfirm) ? reconfirm : undefined,
     search: q || undefined,
   };
 
@@ -259,6 +285,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const eventFilter = defaultEventFilter(eventId, events, q);
   filters.eventId = eventFilter.eventId;
   const featuredEvent = events.find((event) => event.featured) ?? null;
+  /*
+    The chosen event's partners (the list's column «Partener»), read once for the page: the filter's names, every row's editor
+    and the internal list's boxes. With every event listed there are none — a partner is chosen within one event, as the page's
+    other event-bound tools are. The one-partner filter is a name among them, in their spelling; anything else is ignored.
+  */
+  const partnerSuggestions = filters.eventId ? await listPartnerSuggestions(db, actor, filters.eventId) : [];
+  const chosenPartner = chosenPartnerOf(current[PARTNER_FILTER_PARAM], partnerSuggestions);
+  filters.partner = chosenPartner ?? undefined;
 
   const deadlinesNow = new Date();
   const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines, needingEmailAction, kits, places, publicDoor, volunteerKits, sponsorRegister] = await Promise.all([
@@ -340,6 +374,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   ]);
   // Every verb that writes asks first and says who is emailed (§384).
   const words = await confirmWords();
+  // A partner's save says on the list what its toast says (`Feedback.toast.partner*`).
+  const feedback = await getTranslations("Feedback");
   /*
     «Adaugă o notă» on every row (the owner, 2026-11-11: «trebuie sa pot adauga comentarii direct de aici»): only for a role
     that may keep notes, with the refusal's words cut to the four sentences the dialog can meet — the whole catalogue
@@ -351,6 +387,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         errors: Object.fromEntries(["NOTE_EMPTY", "NOTE_TOO_LONG", "NOT_FOUND", "FORBIDDEN"].map((code) => [code, all.errors[code]])),
       }))
     : null;
+  /*
+    The row's partner (the list's column «Partener»): the press for the role `setRegistrationPartner` lets write it — the
+    Administrator and above, the action and the service asking again (BR-REQ-060-01) — and only while one event is chosen, as
+    the page's other event-bound tools: the select offers that event's partners. The refusal's words cut to what the dialog
+    can meet, as the note's are.
+  */
+  const partnerRefusal =
+    canManageRegistrations(actor.role) && filters.eventId
+      ? await refusalMessages({ [PARTNER_NAME_FIELD]: t("partner.rowNew"), [PARTNER_CHOICE_FIELD]: t("partner.rowChoice") }).then((all) => ({
+          ...all,
+          errors: Object.fromEntries(["VALIDATION_ERROR", "PARTNER_NAME_MISSING", "NOT_FOUND", "FORBIDDEN"].map((code) => [code, all.errors[code]])),
+        }))
+      : null;
   /*
     Why «Dă-i un loc» would be refused, per event on the page (§592): the rows grouped by event,
     one door read each (cached per request), and only where a waiting row offers the verb.
@@ -375,6 +424,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     promo: promo === "1" ? "1" : undefined,
     outside: outside === "1" ? "1" : undefined,
     memberBib: memberBib === "asked" ? "asked" : undefined,
+    // «De la parteneri»: rides with every sort, page and export link, as the promo filter does — the file is the rows on screen.
+    partner: partner === "1" ? "1" : undefined,
+    // One partner (the list's column «Partener»): only as the server validated it, so an unknown name never travels on.
+    [PARTNER_FILTER_PARAM]: chosenPartner ?? undefined,
+    // «Reconfirmare»: rides with every sort, page and export link, as the partner filter does.
+    reconfirm: isReconfirmFilter(reconfirm) ? reconfirm : undefined,
     q,
     sort: current.sort,
     dir: current.dir,
@@ -391,7 +446,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     `defaultEventFilter` over it, so `all` and a bookmarked link mean there what they mean here.
   */
   const exportQueryString = buildListHref("", listParams, { eventId: eventFilter.eventId ?? ALL_EVENTS }).replace(/^\?/, "");
-  const hasFilters = Boolean(eventId || status || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || q);
+  const hasFilters = Boolean(eventId || status || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || partner === "1" || chosenPartner || isReconfirmFilter(reconfirm) || q);
   /*
     Nobody chose a filter, yet the list is still narrowed: `defaultEventFilter` scoped it to the
     featured event with no URL parameter to show for it (§178). This is the shape §277 named —
@@ -505,6 +560,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="outside-chip" />}
           {/* «Elită» (§897): the bib prints with the name where the number goes — for every role that reads the list. */}
           {row.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={t("registrations.elite.chip")} testId="elite-chip" />}
+          {/* «A reconfirmat» (the decision «Cere reconfirmarea»): the person said «Vin» and is still registered — information, never a state. */}
+          {row.reconfirmedAt && isActiveStatus(row.status) && <StatusChip glyph="reconfirmed" color="success" variant="outlined" label={t("reconfirm.chip")} testId="reconfirm-chip" />}
           {/* «Date lipsă» (§905): a registration still standing lacks answers the form requires — the person completes them
               from their own link, or the Administrator types them; the registration's page says which and how. */}
           {isActiveStatus(row.status) && missingAnswersHeld(row).length > 0 && (
@@ -615,6 +672,63 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       sortable: true,
       // The state as the registration's page and the desk draw it (§847): one table, the glyph before the word.
       render: (row) => <RegistrationStatusChip status={row.status} />,
+    },
+    {
+      /*
+        «Partener» (the decision on the list's column; the owner, 2026-11-11: «o coloană separată de „partener”»): the partner's
+        or sponsor's name as plain text — nothing on a row without one — for every role that reads the list; the chip «Partener:
+        {name}» left the name column for it, and stays on every other screen. Sorted by the name without regard to case, the rows
+        with none last either way. Optional like its neighbours: «Coloane» hides it; unlike the address it stays on the wide table at
+        every width it is drawn (`md` and up, its bounded 16rem keeping it narrow), so a landscape tablet sees and sets it too; on a
+        phone it is a line of the card only where there is a name or a press. A long name wraps anywhere, never widening the page.
+        The press is the Administrator's, with one event chosen (`partnerRefusal`); its accessible name begins with the words it
+        shows («Alege…» / «Schimbă…», WCAG 2.5.3), and its dialog closes on every page drawn after a save — the render's own
+        instant in `settledKey` — so a second «unchanged» in a row closes it too.
+      */
+      key: "partner",
+      label: t("partner.column"),
+      hint: t("partner.columnHint"),
+      sortable: true,
+      initialDir: "asc",
+      hideBelow: "md",
+      omitEmptyOnPhone: true,
+      render: (row) => {
+        const press = partnerRefusal && (
+          <RowPartnerDialog
+            action={setRegistrationPartnerFromListAction}
+            actionKey={actionKeyOf(setRegistrationPartnerFromListAction)}
+            messages={partnerRefusal}
+            fields={{ uiLocale: locale, registrationId: row.id, listQuery: rowReturnQueryString }}
+            label={row.partnerName ? t("partner.rowChange") : t("partner.rowChoose")}
+            ariaLabel={t(row.partnerName ? "partner.rowChangeFor" : "partner.rowPressFor", { name: row.registeredName })}
+            title={t("partner.rowTitle", { name: row.registeredName })}
+            help={t("partner.rowHelp")}
+            choiceName={PARTNER_CHOICE_FIELD}
+            choiceLabel={t("partner.rowChoice")}
+            noneLabel={t("partner.none")}
+            partners={partnerSuggestions}
+            current={row.partnerName}
+            boxName={PARTNER_NAME_FIELD}
+            boxLabel={t("partner.rowNew")}
+            boxHelp={t("partner.rowNewHelp", { max: PARTNER_NAME_MAX })}
+            max={PARTNER_NAME_MAX}
+            saveLabel={t("partner.save")}
+            cancelLabel={words.cancel}
+            settledKey={`${row.partnerName ?? ""}:${saved ?? ""}:${deadlinesNow.getTime()}`}
+          />
+        );
+        if (!row.partnerName && !press) return null;
+        return (
+          <Stack spacing={0.25} sx={{ alignItems: { xs: "flex-end", md: "flex-start" }, minWidth: 0, maxWidth: { md: "16rem" } }}>
+            {row.partnerName && (
+              <Box component="span" data-testid="row-partner" sx={{ overflowWrap: "anywhere", minWidth: 0, maxWidth: "100%" }}>
+                {row.partnerName}
+              </Box>
+            )}
+            {press}
+          </Stack>
+        );
+      },
     },
     {
       // The owner's "what step each participant is in" (§145): steps done out of six and the
@@ -766,7 +880,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filter: an invitation has no state, number or city a filter could ask about, and it is not counted in
     the results.
   */
-  const otherFilters = Boolean(status || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || q);
+  const otherFilters = Boolean(status || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || partner === "1" || chosenPartner || isReconfirmFilter(reconfirm) || q);
   const leadEvent = filters.eventId && query.page === 1 && !otherFilters ? filters.eventId : null;
   const leadNow = new Date();
   const leadInvitations = leadEvent ? (await listEventInvitations(db, leadEvent)).filter((row) => invitationState(row, leadNow) !== "accepted") : [];
@@ -798,6 +912,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             <Chip size="small" variant="outlined" color="info" label={t("registrations.invitationRow.chip")} />
           </Stack>
         ),
+        // The send's partner (the decision «De la parteneri») in the list's own column «Partener», as the registrations' rows; none, no cell.
+        partner: row.partnerName ? (
+          <Box component="span" data-testid="lead-partner" sx={{ overflowWrap: "anywhere", minWidth: 0, maxWidth: { xs: "100%", md: "16rem" }, display: "inline-block" }}>
+            {row.partnerName}
+          </Box>
+        ) : undefined,
         status: <Chip size="small" color={state === "sent" ? "info" : "default"} label={t(`registrations.invitationRow.state.${state}`)} />,
         untilWhen:
           state === "sent"
@@ -898,6 +1018,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             })}
           </Alert>
         )}
+        {/* «De la parteneri» (a row's editor, a line's fold): the sentence its toast says, «unchanged» never read as «Salvat.». */}
+        {isPartnerOutcome(saved) && (
+          <Alert severity={saved === "partnerUnchanged" ? "info" : "success"} data-testid="partner-saved-alert">
+            {feedback(`toast.${saved}`)}
+          </Alert>
+        )}
         {saved &&
           saved !== "registrationsCancelled" &&
           saved !== "registrationsErased" &&
@@ -905,7 +1031,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           saved !== "registrationDeleted" &&
           saved !== "memberTicksCleared" &&
           saved !== "bibsPrinted" &&
-          saved !== "bibsUnprinted" && <Alert severity="success">{t("saved")}</Alert>}
+          saved !== "bibsUnprinted" &&
+          !isPartnerOutcome(saved) && <Alert severity="success">{t("saved")}</Alert>}
       </Box>
 
       {/*
@@ -1476,6 +1603,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       {filters.eventId && (
         <InvitationsPanel
           db={db}
+          actor={actor}
           locale={locale}
           eventId={filters.eventId}
           mayManage={mayManage}
@@ -1499,6 +1627,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           locale={locale}
           eventId={filters.eventId}
           entries={await listReserveEntries(db, actor, filters.eventId)}
+          // «E de la parteneri» (the decision «De la parteneri»): the line's fold for the Organizer and above, as the rename; the boxes' suggestions.
+          partnerAction={saveReservePartnerAction}
+          partnerSuggestions={partnerSuggestions}
           fullFormHref={
             mayManage ? (entryId) => `${getPathname({ locale, href: "/admin/registrations/new" })}?${new URLSearchParams({ eventId: filters.eventId ?? "", reserve: entryId }).toString()}` : undefined
           }
@@ -1521,6 +1652,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             saved === "reserveDeleted" ||
             saved === "reserveMovedToElite" ||
             saved === "reserveOwnAddressGuest" ||
+            // A row's own partner editor (the list's column «Partener») comes back with `from=row`: the panel stays as it was.
+            ((saved === "partnerSaved" || saved === "partnerUnchanged") && current.from !== "row") ||
             current.from === "reserve"
           }
         />
@@ -1763,6 +1896,42 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               {t("registrations.promoOnly")}
             </CheckboxField>
           </Box>
+          {/*
+            «De la parteneri» (the decision «De la parteneri», a select since the list's column «Partener»), with the partners'
+            handshake: every registration, any partner's (`partner=1`, as the tick posted, so every older link still works), or
+            one partner of the chosen event, in a parameter of its own that the server validated above.
+          */}
+          <Box sx={{ width: 320, maxWidth: "100%" }} data-testid="registrations-filter-partner">
+            <PartnerFilterSelect
+              label={t("partner.filter")}
+              help={filters.eventId ? t("partner.filterHelp") : t("partner.filterHelpAll")}
+              allLabel={t("partner.filterAll")}
+              anyLabel={t("partner.filterAny")}
+              partners={partnerSuggestions}
+              chosen={chosenPartner}
+              anyChosen={partner === "1"}
+              anyName="partner"
+              oneName={PARTNER_FILTER_PARAM}
+            />
+          </Box>
+          {/*
+            «Reconfirmare» (the decision «Cere reconfirmarea»): among the people an organizer's message asked — who said «Vin»,
+            who cancelled since, who did not answer. Answering is optional; none of the three is a state.
+          */}
+          <TextField
+            select
+            name="reconfirm"
+            label={t("reconfirm.filter")}
+            defaultValue={isReconfirmFilter(reconfirm) ? reconfirm : ""}
+            helperText={t("reconfirm.filterHelp")}
+            sx={{ minWidth: 220, maxWidth: 320 }}
+            data-testid="registrations-filter-reconfirm"
+          >
+            <MenuItem value="">{t("reconfirm.filterAll")}</MenuItem>
+            <MenuItem value="yes">{t("reconfirm.filterYes")}</MenuItem>
+            <MenuItem value="cancelled">{t("reconfirm.filterCancelled")}</MenuItem>
+            <MenuItem value="none">{t("reconfirm.filterNone")}</MenuItem>
+          </TextField>
           <TextField
             select
             name="status"

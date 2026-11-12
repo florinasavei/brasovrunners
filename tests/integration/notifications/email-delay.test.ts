@@ -146,6 +146,32 @@ describe("§623 readEmailDelay", () => {
     expect(await readEmailDelay(db, NOW, 15)).toEqual({ late: true, reason: "paused", queued: 2, oldestWaitMinutes: 2, estimateMinutes: 25 });
   });
 
+  it("never counts a send to many (the decision «Cere reconfirmarea»): 150 organizers' messages waiting alone read no delay", async () => {
+    await insert(...Array.from({ length: 150 }, () => ({ messageType: "ORGANIZER_MESSAGE" as const, createdAt: ago(120) })));
+    await insert({ messageType: "EVENT_REMINDER", createdAt: ago(120) }, { messageType: "EVENT_UPDATE_NOTICE", createdAt: ago(120) });
+    expect(await readEmailDelay(db, NOW, 15)).toEqual({ late: false, reason: null, queued: 0, oldestWaitMinutes: 0, estimateMinutes: null });
+    // Nor stands ahead of a new registration's email: the claim takes them after it.
+    expect((await readEmailDelayFacts(db, NOW)).aheadOnMailgun).toBe(0);
+  });
+
+  it("groups by the manual-resend flag: an Administrator's «Retrimite» of a reminder stands ahead of a new registration's email, the job's own reminders do not", async () => {
+    await insert(...Array.from({ length: 40 }, () => ({ messageType: "EVENT_REMINDER" as const, createdAt: ago(120) })));
+    await insert({ messageType: "EVENT_REMINDER", isManualResend: true, createdAt: ago(5) }, { messageType: "ORGANIZER_MESSAGE", isManualResend: true, createdAt: ago(5) });
+    const facts = await readEmailDelayFacts(db, NOW);
+    // The two resends are the persons' own messages in the claim's order: ahead of a new registration's email.
+    expect(facts.aheadOnMailgun).toBe(2);
+    // Still nobody's on a public page: a staff press for a registration already made is not what a visitor waits for.
+    expect(facts.queued).toBe(0);
+    expect(await readEmailDelay(db, NOW, 15)).toMatchObject({ late: false, queued: 0 });
+  });
+
+  it("still reads a waited-for row late beside a send to many, which is neither queued for a visitor nor ahead of it", async () => {
+    await insert(...Array.from({ length: 150 }, () => ({ messageType: "ORGANIZER_MESSAGE" as const, createdAt: ago(120) })));
+    await insert({ createdAt: ago(40) });
+    expect(await readEmailDelayFacts(db, NOW)).toMatchObject({ queued: 1, queuedOnMailgun: 1, aheadOnMailgun: 1 });
+    expect(await readEmailDelay(db, NOW, 15)).toMatchObject({ late: true, reason: "backlog", queued: 1, oldestWaitMinutes: 40 });
+  });
+
   it("says allowance when Mailgun's hour is spent, with the queue at the pace as the estimate", async () => {
     await insert(...Array.from({ length: 100 }, () => ({ status: "SENT" as const, sentAt: ago(20), transport: "mailgun" as const, recipientCount: 1, createdAt: ago(21) })));
     await insert(...Array.from({ length: 30 }, () => ({ createdAt: ago(2) })));

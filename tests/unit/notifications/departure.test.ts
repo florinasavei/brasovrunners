@@ -170,6 +170,12 @@ describe("departureOf — the one judgement of when a waiting email leaves", () 
     expect(departureOf(ROW, { ...stoppedNow, mailgunReopensAt: minutes(-1) })).toEqual({ kind: "now" });
   });
 
+  it("judges a manual resend of a send to many late as the person's own message, and the send itself never late for waiting its turn", () => {
+    const stale = { ...ROW, messageType: "EVENT_REMINDER" as const, createdAt: minutes(-5 * 60) };
+    expect(departureOf(stale, CTX)).toMatchObject({ kind: "at", late: false });
+    expect(departureOf({ ...stale, isManualResend: true }, CTX)).toMatchObject({ kind: "at", late: true });
+  });
+
   it("finds Mailgun's reopening: the stop's end when nothing carries, the Free day's reset, never while Gmail carries or a month binds", () => {
     const stop = { kind: "paused" as const, until: minutes(30) };
     expect(mailgunReopensAt({ whileStopped: { road: "wait", stop, reason: "fallbackOff" }, remaining: 50, period: "day" }, NOW)).toEqual(stop.until);

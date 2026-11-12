@@ -66,6 +66,7 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   checkInAction: vi.fn(),
   confirmRegistrationNowAction: vi.fn(),
   editRegistrationAnswersAction: vi.fn(),
+  changeRegistrationAddressAction: vi.fn(),
   setClubMemberDeclaredAction: vi.fn(),
   clearMemberTicksAction: vi.fn(),
   deleteRegistrationAction: vi.fn(),
@@ -238,8 +239,8 @@ describe("§660 «Oraș» and «Vârstă» on the registrations list", () => {
     const response = await exportRegistrations(new Request(`http://localhost/api/admin/registrations/export?eventId=${race.id}`));
     expect(response.status).toBe(200);
     const [header, ...lines] = (await response.text()).split("\r\n");
-    expect(header.split(",").slice(-6, -3)).toEqual(["Age on race day", "Country", "City"]);
-    const last = (name: string) => lines.find((line) => line.includes(name))?.split(",").slice(-6, -3);
+    expect(header.split(",").slice(-8, -5)).toEqual(["Age on race day", "Country", "City"]);
+    const last = (name: string) => lines.find((line) => line.includes(name))?.split(",").slice(-8, -5);
     expect(last("Ana Brașov")).toEqual(["36", "RO", "Brașov"]);
     expect(last("Bob Bristol")).toEqual(["17", "GB", "Bristol"]);
     expect(last("Cora Nimic")).toEqual(["", "RO", ""]);

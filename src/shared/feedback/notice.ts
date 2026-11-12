@@ -402,6 +402,11 @@ export type ConfirmSpec = {
    * (`resolvePlaceChanges`). Nothing changed, no lines — and a dialog that exists only for them asks nothing.
    */
   placeChanges?: PlaceChangeSpec;
+  /**
+   * A warning the reader cannot miss, drawn under the body in the warning colour: «Trimite un mesaj participanților»
+   * on a plan with a daily allowance the send does not fit today (the decision «Cere reconfirmarea», part two).
+   */
+  warning?: string;
   /** Lines under the body, one fact each, drawn as a list: a resolved `placeChanges`. */
   lines?: readonly string[];
   /**

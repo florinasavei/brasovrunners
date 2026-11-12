@@ -88,6 +88,12 @@ export const EMAIL_AUDIENCE = {
   PLACES_ALERT: "staff",
   // «Eliberează singur locurile nesemnate la termen» (§914): to the Administrators, about an event's places — no participant.
   UNSIGNED_RELEASED: "staff",
+  /*
+    «Schimbă adresa»: both notices are the participant's own mail — the old address's, about the registration it held
+    until the move, and the new one's. A refusal of either says something about that address and nothing about the other.
+  */
+  REGISTRATION_ADDRESS_REMOVED: "participant",
+  REGISTRATION_ADDRESS_ADDED: "participant",
 } as const satisfies Record<EmailMessageType, EmailAudience>;
 
 export function audienceOf(messageType: EmailMessageType): EmailAudience {
