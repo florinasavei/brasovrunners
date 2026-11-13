@@ -186,8 +186,9 @@ describe("§369 the queue panel's times are the event's own", () => {
   it("reads the club's zone only where the event itself is in it", async () => {
     const event = await createEvent();
     await register(event.id, "Ana Popescu", { status: "CONFIRMED", confirmedAt: NOW });
-    // The form's own time pinned too: left to the clock, a run at 10:05 in Brașov printed the very time this test refuses.
-    await register(event.id, "Maria Asteapta", { status: "WAITLISTED", waitlistedAt: WAITLISTED_AT, createdAt: WAITLISTED_AT });
+    // The form's own time pinned too — `submittedAt` is what «Formular trimis» draws: left to the database's clock, a run at
+    // 10:05 in Brașov printed the very time this test refuses (CI, 2026-11-12, a release stopped on it for ten minutes).
+    await register(event.id, "Maria Asteapta", { status: "WAITLISTED", waitlistedAt: WAITLISTED_AT, createdAt: WAITLISTED_AT, submittedAt: WAITLISTED_AT });
 
     const html = await renderPanel({ ...event, timezone: CLUB_TIME_ZONE });
     expect(html).toContain("17:05");
