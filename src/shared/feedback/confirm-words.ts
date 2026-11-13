@@ -27,15 +27,17 @@ export type MailAudience =
 /**
  * Whom the email goes to (`mail`): a person by name — or `{firstName} {lastName}`, which the dialog fills from the
  * form as posted (`ConfirmSpec.fillFrom`) —, a person by name and address where the page already shows the address
- * (a volunteer, a colleague), a count read on the server with the send's own query, or at most one per line of a box
- * typed in the browser.
+ * (a volunteer, a colleague), a count read on the server with the send's own query, at most one per line of a box
+ * typed in the browser, or one per box ticked in the browser (`ticksOf`: the people ticked are the recipients of one
+ * send; `uncounted` names the ticks that count nobody — a test registration's, §12.6).
  */
 export type MailTo =
   | string
   | { name: string; address: string }
   | { count: number; audience: MailAudience }
   | { upTo: number; audience: MailAudience }
-  | { upToLinesOf: string; audience: MailAudience };
+  | { upToLinesOf: string; audience: MailAudience }
+  | { ticksOf: string; audience: MailAudience; uncounted?: readonly string[] };
 
 export type MailInput = {
   to: MailTo;
@@ -190,6 +192,21 @@ export async function confirmWords() {
         lines: true,
         forms: Object.fromEntries(
           (["one", "few", "other"] as const).map((form) => [form, t(`confirm.mail.upTo.${form}`, { count: "{count}", type: what, audience: t(`confirm.mail.audience.${to.audience}`) })]),
+        ) as Record<CountForm, string>,
+        club: { each: copiesEach(type, copies), once: COPIED_ONCE_PER_SEND.has(type) ? copies.bcc : 0, forms: forms("confirm.mail.club") },
+        locale,
+      };
+      return { emailCount, ...roadOf(type), ...(extra.length > 0 ? { also: extra } : {}), ...optOutOf(optOut, noneOfType()) };
+    }
+    if ("ticksOf" in to) {
+      // One per tick, counted at the press (§NNN): exactly that many, and the club's copy of the one send they make.
+      const emailCount: EmailCount = {
+        field: to.ticksOf,
+        base: 0,
+        counts: Object.fromEntries((to.uncounted ?? []).map((value) => [value, 0])),
+        ticks: true,
+        forms: Object.fromEntries(
+          (["one", "few", "other"] as const).map((form) => [form, t(`confirm.mail.toMany.${form}`, { count: "{count}", type: what, audience: t(`confirm.mail.audience.${to.audience}`) })]),
         ) as Record<CountForm, string>,
         club: { each: copiesEach(type, copies), once: COPIED_ONCE_PER_SEND.has(type) ? copies.bcc : 0, forms: forms("confirm.mail.club") },
         locale,

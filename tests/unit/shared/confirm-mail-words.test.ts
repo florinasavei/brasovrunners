@@ -178,6 +178,31 @@ describe("confirmWords().mail — a count", () => {
     // Two dates write to somebody: two sends, one copy per Bcc address each.
     expect(texts(asked.also)).toEqual(["Și 4 emailuri pentru căsuțele clubului."]);
   });
+
+  it("counts the people ticked as the recipients of one send: one club copy for them all, a test row counting nobody (`ticksOf`, §NNN)", async () => {
+    const words = await confirmWords();
+    const spec: ConfirmSpec = {
+      title: "t",
+      body: "b",
+      confirmLabel: "c",
+      cancelLabel: "x",
+      ...words.mail({ to: { ticksOf: "registrationIds", audience: "participants", uncounted: ["t1"] }, type: "ORGANIZER_MESSAGE" }),
+    };
+    // No number before the press: the ticks exist only in the browser.
+    expect(spec.email).toBeUndefined();
+    const asked = resolveEmailCount(spec, () => ["a", "b", "b", "c", "t1"]);
+    expect(asked.email).toBe("Pleacă 3 emailuri „Mesaj de la organizatori”, câte unul către fiecare participant.");
+    // One send, however many are ticked: one copy per Bcc address (§419) — never one per person, as a ticked date is.
+    expect(texts(asked.also)).toEqual(["Și 2 emailuri pentru căsuțele clubului."]);
+    expect(asked.road?.group).toBe("announcements");
+    expect(resolveEmailCount(spec, () => ["a"]).email).toBe("Pleacă 1 email „Mesaj de la organizatori”, câte unul către fiecare participant.");
+    // Test rows alone, or nobody: no email line and no club line — nothing is said to leave.
+    for (const ticks of [["t1"], []]) {
+      const none = resolveEmailCount(spec, () => ticks);
+      expect(none.email).toBeUndefined();
+      expect(none.also).toBeUndefined();
+    }
+  });
 });
 
 describe("confirmWords — a press that writes to nobody, and the quieter lines", () => {

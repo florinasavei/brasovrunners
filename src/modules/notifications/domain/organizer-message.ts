@@ -1,5 +1,6 @@
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { type BilingualText, isWrittenText, type TextLanguage } from "@/shared/forms/both-languages";
+import { isUuid } from "@/shared/ids";
 import { type EmailCopyPlaceholder, placeholdersIn } from "./email-copy";
 
 /**
@@ -41,6 +42,32 @@ export const AUDIENCE_STATUSES: Readonly<Record<ParticipantMessageAudience, read
 
 export function isParticipantMessageAudience(value: unknown): value is ParticipantMessageAudience {
   return typeof value === "string" && (PARTICIPANT_MESSAGE_AUDIENCES as readonly string[]).includes(value);
+}
+
+/**
+ * «Doar anumiți participanți, pe care îi aleg din listă» (§NNN; the owner, 2026-11-13: «As vrea sa fac un test pentru
+ * mailul asta, sa selectez doar anumiti participanti») — the fifth choice of «Cui îi trimiți», and not a group: the
+ * registrations the organizer ticked on the composer, for a trial of a message before everybody gets it, or a word to a few.
+ *
+ * It widens nothing. Only the ticked that are of this event and in a state `ALL_ACTIVE` holds when the send queues them
+ * are written to — never a cancelled, lapsed or unconfirmed-address registration, ticked or not — so the four groups
+ * above stay the partition they were, and this stands beside them.
+ */
+export const CHOSEN_AUDIENCE = "CHOSEN";
+
+/** What «Cui îi trimiți» posts: one of the four groups, or the people ticked. */
+export type MessageReach = ParticipantMessageAudience | typeof CHOSEN_AUDIENCE;
+
+export function isMessageReach(value: unknown): value is MessageReach {
+  return value === CHOSEN_AUDIENCE || isParticipantMessageAudience(value);
+}
+
+/** The field the ticks post under, one value per registration ticked. */
+export const CHOSEN_FIELD = "registrationIds";
+
+/** The ticks as posted, read as registration ids: each a uuid, once. Anything else names nobody. */
+export function chosenRegistrationIds(values: readonly unknown[]): string[] {
+  return [...new Set(values.filter((value): value is string => typeof value === "string" && isUuid(value)).map((value) => value.toLowerCase()))];
 }
 
 /**

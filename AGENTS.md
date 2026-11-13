@@ -3465,6 +3465,21 @@ and in how many confirmed registrations' emails, real and test apart; «Mesaje t
 place, a deadline, the allocator or the capacity formula reads the flag, and the desk's «Fără QR pe email» does not
 count this message (`DESK_CODE_MESSAGE_TYPES` is by type).
 
+**The organizer's message goes to people ticked by name only when its send chose «Doar anumiți participanți, pe care îi
+aleg din listă»** (`DECISIONS.md` §NNN, `notifications/domain/organizer-message.ts#CHOSEN_AUDIENCE`): a fifth choice of
+«Cui îi trimiți» beside the four groups, and not a group — for a trial of a message before everybody gets it, or a word
+to a few. The composer lists the event's active registrations by name with their state, and nothing else of a person: no
+address, no number. The send reaches exactly the ticked that are this event's and in a state `ALL_ACTIVE` holds when it
+queues them, matched under the event's lock among the rows the widest group reads, so the choice narrows that group and
+never widens it: a tick on a cancelled, lapsed or unconfirmed-address registration, on another event's or on nobody
+writes to nobody, and a press that leaves nobody is refused on the list (`NO_CHOSEN_RECIPIENTS`). Everything else is the
+group's send — one row per registration in its language, `askReconfirm` and `sendQr` each on its own rows, the club's
+one copy with the count of real people reached, a second press that queues nothing — and its audit row says the choice
+(`audience: "CHOSEN"`) and the counts, never who was ticked. After such a send, and after no other, the page comes back
+with the send's own id (`?kept=`) and puts its words and its two ticks back in the boxes — the words from the send's own
+outbox rows, the ticks from its audit row (`readKeptMessage`) — so the same message goes to everybody without being
+typed twice; a send to a group still leaves the boxes empty (§364).
+
 `EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
 event before its start — the club's reminder lead or the event's own (§377; 48 hours by default) — once per registration (`registration:<id>:reminder`), with
 the facts line, the QR and the manage link; never to a waiting-list entry, never for a

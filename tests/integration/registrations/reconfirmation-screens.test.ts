@@ -13,6 +13,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { recordMailgunStop } from "@/modules/notifications/mailgun-stop";
 import { nextAllowanceResetAt } from "@/modules/notifications/domain/retry";
 import { resolveDisplayName } from "@/modules/registrations/names";
+import { type ConfirmSpec, resolveEmailCount } from "@/shared/feedback/notice";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -210,7 +211,8 @@ async function asked(eventId: string, registrationId: string, sendId: string, re
 const listPage = (searchParams: Record<string, string>) =>
   AdminRegistrationsPage({ params: Promise.resolve({ locale: state.locale }), searchParams: Promise.resolve(searchParams) } as never);
 const detailPage = (id: string) => RegistrationDetailPage({ params: Promise.resolve({ locale: "ro", id }), searchParams: Promise.resolve({}) } as never);
-const messagesPage = (id: string) => ParticipantMessagesPage({ params: Promise.resolve({ locale: state.locale, id }), searchParams: Promise.resolve({}) } as never);
+const messagesPage = (id: string, searchParams: Record<string, string> = {}) =>
+  ParticipantMessagesPage({ params: Promise.resolve({ locale: state.locale, id }), searchParams: Promise.resolve(searchParams) } as never);
 const tableOf = (tree: ReactNode) => elements(tree).find((element) => element.type === AdminTable);
 
 function nameCellOf(tree: ReactNode, id: string): ReactElement<Props>[] {
@@ -373,6 +375,105 @@ describe("«Trimite un mesaj participanților»", () => {
     state.locale = "en";
     const english = elements(await messagesPage(race.id)).filter((element) => element.props["data-testid"] === "participant-message-history-row");
     expect(textOf(line(english[1]))).toBe("With the race number and the QR code for the confirmed: 2");
+  });
+
+  it("§NNN hands the composer «Doar anumiți participanți»: everybody who can be ticked, by name with a state, the list's words — and a question that counts the ticks", async () => {
+    const race = await createRace();
+    state.actor = await staff("MODERATOR");
+    const zoe = await register(race.id, { registeredName: "Zoe Albu" });
+    const ana = await register(race.id, { registeredName: "Ana Pop", status: "WAITLISTED", waitlistedAt: new Date() });
+    const probe = await register(race.id, { registeredName: "Test Unu", kind: "TEST" });
+    await register(race.id, { registeredName: "Gabi Anulat", status: "CANCELLED", cancelledAt: new Date(), cancellationSource: "PARTICIPANT" });
+    await register((await createRace()).id, { registeredName: "Ioana Altundeva" });
+    for (const locale of ["ro", "en"] as const) {
+      state.locale = locale;
+      const tree = await messagesPage(race.id);
+      const composer = elements(tree).find((element) => element.type === ParticipantMessageComposer);
+      // The radio's value and the ticks' field are the ones the send reads; nobody cancelled, nobody of another event.
+      expect(composer?.props.chosen, locale).toEqual({
+        value: "CHOSEN",
+        field: "registrationIds",
+        // By name; the state in the backoffice's own word, Romanian once (§35); a name and a state and nothing else.
+        people: [
+          { id: ana.id, name: "Ana Pop", state: "Pe lista de așteptare", test: false },
+          { id: probe.id, name: "Test Unu", state: "Confirmată", test: true },
+          { id: zoe.id, name: "Zoe Albu", state: "Confirmată", test: false },
+        ],
+      });
+      // Nothing is kept on a page that was not returned to from a send to the people ticked.
+      expect(composer?.props.kept, locale).toBeUndefined();
+      const words = (locale === "ro" ? ro : en).Admin.participantMessages.chosen;
+      const { confirmTitle, testNote, kept, ...list } = words;
+      expect((composer?.props.labels as { chosen: Record<string, string> }).chosen, locale).toEqual(list);
+      // The two the composer fills itself arrive with their fields literal.
+      expect(list.count, locale).toContain("{count}");
+      expect(list.count, locale).toContain("{total}");
+      expect(list.names, locale).toContain("{names}");
+      expect(kept, locale).not.toBe("");
+
+      // Its question: the last of the form's, asked for that choice alone, counting at the press who is written to.
+      const form = elements(tree).find((element) => element.type === ActionForm);
+      const specs = form?.props.confirm as ConfirmSpec[];
+      const spec = specs.find((candidate) => (candidate.when?.[0] as { equals?: string } | undefined)?.equals === "CHOSEN")!;
+      expect(specs.at(-1), locale).toBe(spec);
+      expect(spec.when, locale).toEqual([{ field: "audience", equals: "CHOSEN" }]);
+      expect(spec.title, locale).toBe(confirmTitle);
+      // A test registration can be ticked here, so the question says what a ticked one gets.
+      expect(spec.body.endsWith(testNote), locale).toBe(true);
+      expect(spec.email, locale).toBeUndefined();
+      const pressed = resolveEmailCount(spec, () => [zoe.id, ana.id, probe.id]);
+      if (locale === "ro") expect(pressed.email).toBe("Pleacă 2 emailuri „Mesaj de la organizatori”, câte unul către fiecare participant.");
+      else expect(pressed.email).toMatch(/\b2\b/);
+      expect(resolveEmailCount(spec, () => [probe.id]).email, locale).toBeUndefined();
+    }
+    expect(ro.Admin.participantMessages.chosen.label).toBe("Doar anumiți participanți, pe care îi aleg din listă");
+  });
+
+  it("§NNN says no test line in the question of an event without test registrations", async () => {
+    const race = await createRace();
+    state.actor = await staff("MODERATOR");
+    await register(race.id);
+    const form = elements(await messagesPage(race.id)).find((element) => element.type === ActionForm);
+    const spec = (form?.props.confirm as ConfirmSpec[]).at(-1)!;
+    expect(spec.body).toBe(ro.Admin.participantMessages.confirmBody);
+  });
+
+  it("§NNN back from a send to the people ticked, hands the boxes its words and ticks, says so, and names the choice on its «Mesaje trimise» row — nothing after any other send", async () => {
+    const race = await createRace();
+    const actor = await staff("MODERATOR");
+    state.actor = actor;
+    const one = await register(race.id);
+    await register(race.id);
+    const words = { subject: { ro: "Probă: {eventTitle}", en: "Trial: {eventTitle}" }, body: { ro: "Ne vedem la start.\n\nPe curând!", en: "See you at the start.\n\nSoon!" } };
+    const trial = randomUUID();
+    await sendParticipantMessage(db, actor, { eventId: race.id, audience: "CHOSEN", registrationIds: [one.id], sendId: trial, sendQr: true, ...words }, new Date(Date.now() - 60_000));
+    const toEverybody = randomUUID();
+    await sendParticipantMessage(db, actor, { eventId: race.id, audience: "ALL_ACTIVE", sendId: toEverybody, ...words }, new Date(Date.now() - 120_000));
+
+    const composerOf = (tree: ReactNode) => elements(tree).find((element) => element.type === ParticipantMessageComposer);
+    const alertOf = (tree: ReactNode) => elements(tree).find((element) => element.props["data-testid"] === "participant-message-sent");
+    const back = await messagesPage(race.id, { sent: "1", test: "0", kept: trial });
+    expect(composerOf(back)?.props.kept).toEqual({
+      subjectRo: words.subject.ro,
+      subjectEn: words.subject.en,
+      bodyRo: words.body.ro,
+      bodyEn: words.body.en,
+      askReconfirm: false,
+      sendQr: true,
+    });
+    expect(textOf(alertOf(back))).toBe(`${ro.Admin.participantMessages.sent.one.replace("{count}", "1")} ${ro.Admin.participantMessages.chosen.kept}`);
+    // The newest row is the trial's: the choice by its short name, and how many — never who.
+    const [newest, older] = elements(back).filter((element) => element.props["data-testid"] === "participant-message-history-row");
+    expect(textOf(newest)).toContain("Participanți aleși · 1 destinatar");
+    expect(textOf(older)).toContain("Toți cei înscriși · 2 destinatari");
+
+    // A send to a group, an id that names no send, a malformed one, no id at all: empty boxes and no such sentence.
+    const others: Record<string, string>[] = [{ sent: "2", test: "0", kept: toEverybody }, { sent: "1", test: "0", kept: randomUUID() }, { sent: "1", test: "0", kept: "nope" }, { sent: "2", test: "0" }];
+    for (const params of others) {
+      const tree = await messagesPage(race.id, params);
+      expect(composerOf(tree)?.props.kept, JSON.stringify(params)).toBeUndefined();
+      expect(textOf(alertOf(tree)), JSON.stringify(params)).not.toContain(ro.Admin.participantMessages.chosen.kept);
+    }
   });
 
   it("words the pace and the allowance in the question before «Trimite», from the server, promising no start", async () => {

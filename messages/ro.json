@@ -2602,6 +2602,7 @@
       "PLACES_KEPT_ABOVE_CAPACITY_DATED": "La {date}, «Locuri păstrate pentru club» ar fi mai mare decât numărul de locuri al acelei date. Nu s-a salvat nimic, la nicio dată.",
       "SUPPLEMENTARY_PLACE_UNCONFIRMED": "Nu s-a schimbat nimic: locurile s-au schimbat de când ai deschis pagina, iar întrebarea nu spunea că adaugi acest loc suplimentar. Apasă din nou: întrebarea spune acum cât devine capacitatea.",
       "NO_RECIPIENTS": "Nu s-a trimis nimic: nu e nimeni în grupul ales acum. Alege alt grup.",
+      "NO_CHOSEN_RECIPIENTS": "Nu s-a trimis nimic: nu ai bifat pe nimeni, sau cei bifați nu mai sunt înscriși. Bifează cel puțin un participant.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nu s-a trimis nimic: {names} nu este un câmp pe care îl putem completa în acest mesaj. Câmpurile folosibile sunt scrise sub casete.",
       "SAMPLE_VALUE_IN_EMAIL": "Textul conține valoarea de exemplu „{value}” — folosește {placeholder}.",
       "SAMPLE_VALUES_IN_EMAIL": "Textul conține valori de exemplu, nu câmpuri: {found}. Folosește câmpurile în locul lor.",
@@ -9135,6 +9136,7 @@
               "steps": [
                 "«Alergări» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților».",
                 "La «Cui îi trimiți» alege grupul (toți, «Doar confirmații», lista de așteptare sau cei fără declarație) și vezi câți sunt.",
+                "Pentru o probă, alege «Doar anumiți participanți, pe care îi aleg din listă», caută-te după nume și bifează-te. Mesajul pleacă doar la cei bifați, iar după trimitere textul rămâne în căsuțe, ca să-l trimiți apoi tuturor.",
                 "Scrie «Subiect» și «Mesajul», în română și în engleză.",
                 "Pentru un reminder, apasă «Completează cu textul de reminder»: scrie textul și bifează «Cere reconfirmarea». Cine apasă „Vin” apare cu «A reconfirmat»; nu se anulează nimeni automat.",
                 "Ca fiecare confirmat să primească sub mesaj numărul lui de concurs și codul QR, bifează «Trimite și numărul de concurs și codul QR». Ceilalți primesc mesajul fără ele.",
@@ -10284,7 +10286,22 @@
         "ALL_ACTIVE": "Toți cei înscriși",
         "CONFIRMED": "Confirmați",
         "WAITLIST": "Lista de așteptare",
-        "PENDING_DECLARATION": "Declarație nesemnată"
+        "PENDING_DECLARATION": "Declarație nesemnată",
+        "CHOSEN": "Participanți aleși"
+      },
+      "chosen": {
+        "label": "Doar anumiți participanți, pe care îi aleg din listă",
+        "help": "Bifează cine primește mesajul. Bun pentru o probă: trimite-l întâi ție și verifică emailul primit. După trimitere textul rămâne în căsuțe, ca să-l trimiți apoi tuturor.",
+        "search": "Caută după nume",
+        "count": "Bifați: {count} din {total}",
+        "none": "Nu ai bifat pe nimeni încă. Bifează cel puțin un participant.",
+        "names": "Primesc mesajul: {names}.",
+        "noMatch": "Niciun nume nu se potrivește.",
+        "empty": "Nu e nimeni înscris acum, așa că nu ai pe cine bifa.",
+        "test": "înscriere de test",
+        "confirmTitle": "Trimiți mesajul doar participanților bifați?",
+        "testNote": "Înscrierile de test bifate primesc și ele mesajul și nu sunt numărate.",
+        "kept": "Textul a rămas în căsuțe: dacă a fost o probă, verifică emailul primit, apoi alege cui îl trimiți mai departe. Cei bifați acum îl primesc din nou, dacă sunt în grupul ales."
       },
       "recipients": {
         "one": "{count} destinatar",

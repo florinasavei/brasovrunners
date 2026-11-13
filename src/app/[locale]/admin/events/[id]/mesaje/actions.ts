@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
-import { checkOrganizerMessage } from "@/modules/notifications/domain/organizer-message";
+import { checkOrganizerMessage, CHOSEN_AUDIENCE, CHOSEN_FIELD } from "@/modules/notifications/domain/organizer-message";
 import { DELIVERY_CHOICE_FIELD, deliveryChoiceOf } from "@/modules/notifications/domain/send-at-once";
 import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import {
@@ -39,14 +39,21 @@ function posted(form: FormData, name: string): string {
 /**
  * The send, behind `ActionForm` (§315): a refusal comes back as the form's state with every box
  * still filled — the empty language named, an unknown `{placeholder}` named in the sentence, an
- * empty group named on its radio buttons — and a send redirects to the page with what it queued.
- * A second press of the same form lands on the page saying so, with nothing queued again.
+ * empty group named on its radio buttons, nobody ticked named on the list — and a send redirects to
+ * the page with what it queued. A second press of the same form lands on the page saying so, with
+ * nothing queued again.
+ *
+ * A send to the people ticked (§NNN) lands with its own id as `kept`: the page reads that send's words
+ * back into the boxes (`readKeptMessage`), so a trial is followed by the same message to everybody.
  */
 export async function sendParticipantMessageAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
   return inEmailPress("events.participantMessage", async (press) => {
     const locale = localeOf(form.get("uiLocale"));
     const eventId = posted(form, "eventId");
+    const sendId = posted(form, "sendId");
+    // «Doar anumiți participanți» (§NNN): the fifth choice of «Cui îi trimiți» — the people ticked, not a group.
+    const chosen = posted(form, "audience") === CHOSEN_AUDIENCE;
     const words = {
       subject: { ro: posted(form, "subjectRo"), en: posted(form, "subjectEn") },
       body: { ro: posted(form, "bodyRo"), en: posted(form, "bodyEn") },
@@ -65,7 +72,9 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
         {
           eventId,
           audience: posted(form, "audience"),
-          sendId: posted(form, "sendId"),
+          // The ticks; which of them are written to is the service's — only for that choice, only this event's active ones.
+          registrationIds: form.getAll(CHOSEN_FIELD),
+          sendId,
           delivery,
           // «Cere reconfirmarea» (the decision «Cere reconfirmarea»): the tick posts `1`; anything else is no.
           askReconfirm: posted(form, "askReconfirm") === "1",
@@ -101,11 +110,15 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
     }
 
     if (result.kind === "nobody") {
-      return { error: "NO_RECIPIENTS", fields: ["audience"], values: keptValuesOf(form) };
+      // Nobody ticked, or nobody ticked still registered: its own sentence, on the list (§NNN); an empty group, on the radios.
+      return chosen
+        ? { error: "NO_CHOSEN_RECIPIENTS", fields: [CHOSEN_FIELD], values: keptValuesOf(form) }
+        : { error: "NO_RECIPIENTS", fields: ["audience"], values: keptValuesOf(form) };
     }
 
     const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/mesaje", params: { id: eventId } } });
-    const query = result.kind === "duplicate" ? "duplicate=1" : `sent=${result.real}&test=${result.test}`;
+    // `kept` (§NNN): the send's own id — a uuid the service held it to, naming a send and nobody — for the words to stay in the boxes.
+    const query = result.kind === "duplicate" ? "duplicate=1" : `sent=${result.real}&test=${result.test}${chosen ? `&kept=${sendId}` : ""}`;
     // The toast (§384): the send, and what the press queued — how many, and when each part leaves, a press's «now»
     // past the scheduled pass (§540) and the rest of a list longer than one press sends (`SEND_NOW_ROW_LIMIT`)
     // included — is the mail line's (`withPressMail`), read from the rows themselves. A second press queues nothing.
