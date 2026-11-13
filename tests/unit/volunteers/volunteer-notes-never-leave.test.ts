@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 /**
  * «Note interne» for volunteers (BR-REQ-060-01) — a volunteer's internal note reaches only the screens and files that carry it: the
- * volunteer's own page (the card), the «Voluntari» list and the event card's rows (a count, the marker), the volunteers' files (the
+ * volunteer's own page (the card), the «Voluntari» list and the event card's rows (the marker: a count and, in its tooltip, the words), the volunteers' files (the
  * «Notă» column, handed as words) and «Toate datele unei persoane» (art. 15). Never the public volunteers' list, never an email,
  * never a badge. The twin of `tests/unit/registrations/notes-never-leave.test.ts`: the structural half of that promise — no file
  * outside the list below so much as imports the table or the service, so a later join or a helpful new column cannot quietly start
@@ -20,11 +20,12 @@ const READERS = new Set(
     "src/modules/volunteers/volunteer-notes.ts",
     // «Adaugă un voluntar de mână»: the box's words written as the person's first note, in the add's own transaction.
     "src/modules/volunteers/volunteers.ts",
-    // The add form's box: its length alone (`VOLUNTEER_NOTE_MAX`); and the event card's rows draw the count the page hands them.
+    // The add form's box: its length alone (`VOLUNTEER_NOTE_MAX`); and the event card's rows draw the marker from the notes the page hands them.
     "src/modules/volunteers/ui/VolunteerPerson.tsx",
     // «Toate datele unei persoane» (art. 15): each offer's live notes, the author as a role.
     "src/modules/registrations/person-data.ts",
-    // The volunteer's page and its presses; the «Voluntari» list (one grouped count, the row's «Adaugă o notă»); the event card's count.
+    // The volunteer's page and its presses; the «Voluntari» list (one grouped read for the marker and its tooltip, the row's «Adaugă o notă»); the
+    // event card's one grouped read for the same marker.
     "src/app/[locale]/admin/volunteers/[id]/page.tsx",
     "src/app/[locale]/admin/volunteers/[id]/note-actions.ts",
     "src/app/[locale]/admin/volunteers/(list)/page.tsx",

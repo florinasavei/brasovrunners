@@ -84,6 +84,7 @@ const { default: NotesMark } = await import("@/modules/registrations/ui/NotesMar
 const { default: VolunteerPerson } = await import("@/modules/volunteers/ui/VolunteerPerson");
 const { default: Panel } = await import("@/shared/ui/Panel");
 const { default: RowNoteDialog } = await import("@/shared/ui/RowNoteDialog");
+const { default: TipSpan } = await import("@/shared/ui/TipSpan");
 const { default: ActionForm } = await import("@/shared/forms/ActionForm");
 const { opensByItself } = await import("@/shared/ui/fold");
 const { addVolunteerNote, deleteVolunteerNote } = await import("@/modules/volunteers/volunteer-notes");
@@ -284,7 +285,7 @@ describe("«Note interne» on the volunteer's page", () => {
 });
 
 describe("the «Voluntari» list — the marker and «Adaugă o notă»", () => {
-  it("marks only the rows that have notes, from ONE grouped count — no query per row", async () => {
+  it("marks only the rows that have notes, from ONE grouped read — no query per row", async () => {
     const organizer = state.actor as StaffUser;
     const ana = await volunteer("Ana Pop");
     const dan = await volunteer("Dan Ionescu");
@@ -315,6 +316,38 @@ describe("the «Voluntari» list — the marker and «Adaugă o notă»", () => 
     const [marker] = elements(nameCell(ana)).filter((element) => element.type === NotesMark);
     expect(marker.props).toMatchObject({ label: "2 note", ariaLabel: "Note interne la Ana Pop: 2 note", href: `/ro/admin/volunteers/${ana}#note-interne` });
     expect(elements(nameCell(dan)).filter((element) => element.type === NotesMark)).toHaveLength(0);
+  });
+
+  it("says the notes' own words in the marker's tooltip — newest first, each with its day and hour, the older ones counted, no author (§NNN)", async () => {
+    const organizer = state.actor as StaffUser;
+    const ana = await volunteer("Ana Pop");
+    const dan = await volunteer("Dan Ionescu");
+    for (const [minute, words] of [["00", "prima"], ["01", "a doua"], ["02", "a treia"], ["03", "vine doar dimineața\nare mașină"]] as const) {
+      await addVolunteerNote(db, organizer, ana, words, new Date(`2026-11-11T10:${minute}:00.000Z`));
+    }
+    // A deleted note is in no tooltip, and not in the count.
+    const gone = await addVolunteerNote(db, organizer, ana, "ștearsă", new Date("2026-11-11T10:04:00.000Z"));
+    await deleteVolunteerNote(db, organizer, gone.id, new Date("2026-11-11T10:05:00.000Z"));
+
+    const { nameCell } = tableOf(await listPage({ eventId: raceId }));
+    const tips = elements(nameCell(ana)).filter((element) => element.type === TipSpan);
+    expect(tips).toHaveLength(1);
+    // The marker stays the link to the person's card; the tooltip is around it.
+    const marker = elements(tips[0].props.children as ReactNode).filter((element) => element.type === NotesMark);
+    expect(marker).toHaveLength(1);
+    expect(marker[0].props).toMatchObject({ label: "4 note", href: `/ro/admin/volunteers/${ana}#note-interne` });
+    const said = (tips[0].props.title as string).split("\n\n");
+    // The three newest, then how many are older — in the count's own words.
+    expect(said).toHaveLength(4);
+    expect(said[0]).toBe("Mie., 11 nov. 2026, 12:03: vine doar dimineața\nare mașină");
+    expect(said[1]).toMatch(/12:02: a treia$/);
+    expect(said[2]).toMatch(/12:01: a doua$/);
+    expect(said[3]).toBe("… și încă 1 notă");
+    expect(tips[0].props.title).not.toContain("ștearsă");
+    // Nobody's name: who wrote a note is the card's to say.
+    expect(tips[0].props.title).not.toContain(organizer.displayName);
+    // A row without notes has no marker and no tooltip.
+    expect(elements(nameCell(dan)).filter((element) => element.type === TipSpan || element.type === NotesMark)).toHaveLength(0);
   });
 
   it("carries «Adaugă o notă» on every row — the words, the action, the hidden fields with the list's own return, the fallback link — strings only", async () => {
@@ -351,16 +384,30 @@ describe("the «Voluntari» list — the marker and «Adaugă o notă»", () => 
     expect((table.props.columns as Array<{ key: string; primary?: boolean }>).find((column) => column.key === "name")?.primary).toBe(true);
   });
 
-  it("puts the marker on the event card's rows too, from the card's one grouped count, linking to the person's page", async () => {
+  it("puts the marker on the event card's rows too, from the card's one grouped read — the count, the words in its tooltip (§NNN), a link to the person's page", async () => {
     const ana = await volunteer("Ana Pop");
     await addVolunteerNote(db, state.actor as StaffUser, ana, "una", NOW);
     const person = (await findVolunteerForAdmin(db, ana, "ro"))!;
     const context = await volunteerPersonContextOf(db, person.event, "ro", NOW, "");
-    const row = await VolunteerPerson({ person, context: { ...context, returnTo: undefined, noteCounts: new Map([[ana, 1]]) } });
-    const [marker] = elements(row).filter((element) => element.type === NotesMark);
+    const rowNotes = new Map([[ana, [{ createdAt: NOW, body: "una" }]]]);
+    const row = await VolunteerPerson({ person, context: { ...context, returnTo: undefined, rowNotes } });
+    const [tip] = elements(row).filter((element) => element.type === TipSpan);
+    expect(tip.props.title).toBe("Mie., 11 nov. 2026, 12:00: una");
+    const [marker] = elements(tip.props.children as ReactNode).filter((element) => element.type === NotesMark);
     expect(marker.props).toMatchObject({ label: "1 notă", href: `/ro/admin/volunteers/${ana}#note-interne` });
-    // Without a count (the person's own page, which draws the card), no marker.
-    expect(elements(await VolunteerPerson({ person, context, as: "section" })).filter((element) => element.type === NotesMark)).toEqual([]);
+    // Four notes: the three newest in the tooltip, the fourth counted; the marker counts them all.
+    const many = new Map([[ana, ["patru", "trei", "două", "una"].map((body, index) => ({ createdAt: new Date(NOW.getTime() - index * 60_000), body }))]]);
+    const crowded = await VolunteerPerson({ person, context: { ...context, returnTo: undefined, rowNotes: many } });
+    const [crowdedTip] = elements(crowded).filter((element) => element.type === TipSpan);
+    expect((crowdedTip.props.title as string).split("\n\n")).toEqual([
+      "Mie., 11 nov. 2026, 12:00: patru",
+      "Mie., 11 nov. 2026, 11:59: trei",
+      "Mie., 11 nov. 2026, 11:58: două",
+      "… și încă 1 notă",
+    ]);
+    expect(elements(crowdedTip.props.children as ReactNode).find((element) => element.type === NotesMark)?.props.label).toBe("4 note");
+    // Without the notes (the person's own page, which draws the card), no marker and no tooltip.
+    expect(elements(await VolunteerPerson({ person, context, as: "section" })).filter((element) => element.type === NotesMark || element.type === TipSpan)).toEqual([]);
   });
 });
 

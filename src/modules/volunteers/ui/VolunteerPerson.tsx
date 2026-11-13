@@ -26,6 +26,7 @@ import { SEX_CHOICES } from "@/modules/registrations/domain/sex";
 import { formatPhone } from "@/modules/registrations/phone";
 import NotesMark from "@/modules/registrations/ui/NotesMark";
 import { shownTypedDate } from "@/shared/forms/pickers/wall-values";
+import { notesTip } from "@/shared/notes/note-text";
 import { CLUB_NAME } from "@/theme/brand";
 import { type ConfirmWords, confirmWords } from "@/shared/feedback/confirm-words";
 import MailLine from "@/shared/feedback/MailLine";
@@ -42,6 +43,7 @@ import type { StatusGlyphName } from "@/shared/ui/status-glyphs";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { FACTS_SX, PENCIL_SX, ROW_SX, SUMMARY_SX } from "@/shared/ui/row-fold";
 import { INLINE_TAP_TARGET } from "@/shared/ui/tap-target";
+import TipSpan from "@/shared/ui/TipSpan";
 import {
   VOLUNTEER_CITY_MAX,
   VOLUNTEER_GUARDIAN_NAME_MAX,
@@ -103,10 +105,11 @@ export type VolunteerPersonContext = {
   /** The admin path a verb returns to, when not the card: the person's own page (§839). */
   returnTo?: string;
   /**
-   * How many live internal notes each person has («Note interne» for volunteers): the event card's one grouped count, so each row's
-   * closed line carries the marker linking to the person's page. Absent where nobody counted (the person's own page draws the card).
+   * Each person's live internal notes, newest first («Note interne» for volunteers): the event card's one grouped read, so each row's
+   * closed line carries the marker — how many, the words in its tooltip (§NNN), a link to the person's page. Absent where nobody
+   * read them (the person's own page draws the card).
    */
-  noteCounts?: ReadonlyMap<string, number>;
+  rowNotes?: ReadonlyMap<string, readonly { createdAt: Date; body: string }[]>;
 };
 
 /** The pencil at the end of a person's line: the edit verb's glyph, by name (§318). */
@@ -1138,7 +1141,9 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
     verb that changed it — «Confirmă», a role given — draws it closed on its new line; one that did not leaves it as it was.
   */
   const given = rolesOf(person).assigned;
-  const noteCount = context.noteCounts?.get(person.id) ?? 0;
+  // The marker's number, from the same read as its tooltip's words.
+  const notes = context.rowNotes?.get(person.id);
+  const noteCount = notes?.length ?? 0;
   const counted = t(`registrations.notes.count.${countForm(noteCount, locale)}`, { count: noteCount });
   return (
     <Box component="li" data-testid="volunteer-row" data-volunteer-id={person.id} data-state={person.state} sx={ROW_SX}>
@@ -1156,13 +1161,22 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
             ) : person.state !== "CANCELLED" ? (
               <StatusChip glyph="open" color="warning" variant="outlined" label={t("volunteers.unassigned.title")} testId="volunteer-row-roles" />
             ) : null}
-            {/* «Note interne»: the count when somebody left a note, a link to the person's page with the card open — the notes are read there. */}
+            {/* «Note interne»: the count when somebody left a note, a link to the person's page with the card open — and, under the
+                pointer, the newest notes' own words, the older ones counted, no author's name (§NNN, as the registrations list's). */}
             {noteCount > 0 && (
-              <NotesMark
-                label={counted}
-                ariaLabel={t("registrations.notes.mark", { name: person.name, counted })}
-                href={`${getPathname({ locale, href: { pathname: "/admin/volunteers/[id]", params: { id: person.id } } })}#note-interne`}
-              />
+              <TipSpan
+                title={notesTip(
+                  notes,
+                  (at) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }),
+                  (left) => t("registrations.notes.tipMore", { counted: t(`registrations.notes.count.${countForm(left, locale)}`, { count: left }) }),
+                )}
+              >
+                <NotesMark
+                  label={counted}
+                  ariaLabel={t("registrations.notes.mark", { name: person.name, counted })}
+                  href={`${getPathname({ locale, href: { pathname: "/admin/volunteers/[id]", params: { id: person.id } } })}#note-interne`}
+                />
+              </TipSpan>
             )}
           </Box>
           <PencilIcon aria-hidden fontSize="small" sx={PENCIL_SX} />
