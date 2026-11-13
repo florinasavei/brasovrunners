@@ -17,6 +17,7 @@ import { identicalInBothLanguages } from "@/shared/forms/both-languages";
 import RecallField, { NeverKeptField, useRecall } from "@/shared/forms/recall";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import { HEADING_SX } from "@/shared/ui/heading-scale";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { writePlainBox } from "@/modules/translate/ui/form-fields";
 import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
@@ -320,7 +321,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
   return (
     <Stack spacing={3} ref={root} onInput={onInput}>
       <Box>
-        <Typography id="participant-message-audience" variant="subtitle1" component="h3" sx={{ fontWeight: 600 }}>
+        <Typography id="participant-message-audience" variant="h2" component="h3" sx={HEADING_SX[3]}>
           {labels.audience}
         </Typography>
         <RadioGroup
@@ -436,7 +437,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
         ] as const
       ).map(([part, heading, help, max, multiline]) => (
         <Stack key={part} spacing={1} role="group" aria-labelledby={`participant-message-${part}`}>
-          <Typography id={`participant-message-${part}`} variant="subtitle1" component="h3" sx={{ fontWeight: 600 }}>
+          <Typography id={`participant-message-${part}`} variant="h2" component="h3" sx={HEADING_SX[3]}>
             {heading}
           </Typography>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
@@ -538,7 +539,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
 
       {/* The message as it will arrive (§364): the server renders it, the tabs pick whose copy. */}
       <Box data-testid="participant-message-preview">
-        <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 600 }}>
+        <Typography variant="h2" component="h3" sx={HEADING_SX[3]}>
           {labels.preview}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -592,7 +593,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
         server compares it with the rows it is about to write. Never kept: after a refusal it is typed again (§315).
       */}
       <Box data-testid="participant-message-confirm">
-        <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 600 }}>
+        <Typography variant="h2" component="h3" sx={HEADING_SX[3]}>
           {labels.confirm.title}
         </Typography>
         <Box sx={{ mb: 1.5 }} aria-live="polite" data-testid="participant-message-confirm-who">

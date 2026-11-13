@@ -215,7 +215,6 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; t
     { path: "src/modules/legal-documents/ui/LegalRetireSteps.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§848); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 2 },
     { path: "src/modules/newsletter/ui/NewsletterPanel.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§848); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 2 },
     { path: "src/modules/newsletter/ui/NewsletterPreview.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§848); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
-    { path: "src/modules/notifications/ui/ParticipantMessageComposer.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§848); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 3 },
     { path: "src/modules/registrations/ui/BotCheckPanel.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§848); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
     { path: "src/modules/registrations/ui/InvitationsPanel.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§848); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 1 },
     { path: "src/modules/volunteers/ui/VolunteersCard.tsx", reason: "a heading sized by hand from before the backoffice's scale had a name (§848); size it from HEADING_SX by its level, or make it a Panel, when the file is next touched", count: 2 },
@@ -248,7 +247,7 @@ export const PINNED = {
   toggles: { entries: 0, hits: 0 },
   rowBoxes: { entries: 14, hits: 15 },
   pageHeadings: { entries: 0, hits: 0 },
-  headingSizes: { entries: 56, hits: 111 },
+  headingSizes: { entries: 55, hits: 108 },
   rowFolds: { entries: 4, hits: 5 },
 } as const;
 
