@@ -3480,6 +3480,17 @@ with the send's own id (`?kept=`) and puts its words and its two ticks back in t
 outbox rows, the ticks from its audit row (`readKeptMessage`) — so the same message goes to everybody without being
 typed twice; a send to a group still leaves the boxes empty (§364).
 
+**Every send of the organizer's message is confirmed by the number of recipients, typed** (`DECISIONS.md` §NNN,
+`notifications/domain/organizer-message.ts#typedCountMatches`; the owner: «si vreau extra extra confirmare»): right above
+«Trimite mesajul» the composer says again who the message goes to — the group's short name and its number, or the people
+ticked by name — and asks for that number at «Scrie la câți trimiți». `sendParticipantMessage` requires it
+(`confirmCount`) and compares it, under the event's lock, with the real registrations it is about to write to, test
+registrations left out (§12.6). Any other number, nothing typed and a caller that passed none queue and audit nothing
+(`miscounted`), and the form is refused on that box (`MESSAGE_COUNT_MISMATCH`) with the number there is now. It is asked
+after what refuses a send anyway — the role, the words, the event, a form already sent, an empty group — and before the
+allowance is asked or a row is written. The box is never handed back after a refusal (`NEVER_KEPT`): it is typed again,
+and the question still follows it. It is the bulk erase's guard (§287), for a message that cannot be taken back.
+
 `EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
 event before its start — the club's reminder lead or the event's own (§377; 48 hours by default) — once per registration (`registration:<id>:reminder`), with
 the facts line, the QR and the manage link; never to a waiting-list entry, never for a

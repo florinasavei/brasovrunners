@@ -34,6 +34,7 @@ import {
   PARTICIPANT_MESSAGE_AUDIENCES,
   type ParticipantMessageAudience,
   readOrganizerMessagePayload,
+  typedCountMatches,
   unknownOrganizerPlaceholders,
 } from "./domain/organizer-message";
 import { enqueueBulkClubCopies, enqueueEmail } from "./outbox";
@@ -120,6 +121,14 @@ export type SendParticipantMessageInput = {
    * anybody else (cancelled since the page was drawn, another event's, no registration at all) writes to nobody.
    */
   registrationIds?: readonly unknown[];
+  /**
+   * «Scrie la câți trimiți» (§NNN; the owner, 2026-11-13: «si vreau extra extra confirmare»): the number of recipients,
+   * as the organizer typed it beside «Trimite mesajul». The send goes only when it is exactly the number of real
+   * registrations it is about to write to, counted under the lock from the rows themselves; anything else — another
+   * number, nothing typed, a caller that forgot it — queues nothing. Required, so that it is the send's rule and not
+   * the form's: whoever calls this has to say how many they mean to write to.
+   */
+  confirmCount: string;
   subject: { ro?: string | null; en?: string | null };
   body: { ro?: string | null; en?: string | null };
   /**
@@ -159,7 +168,12 @@ export type SendParticipantMessageResult =
   /** This form was sent already: nothing was queued a second time. */
   | { kind: "duplicate" }
   /** Nobody is in the chosen group right now, or nobody ticked can be written to. Nothing was queued, and nothing was audited. */
-  | { kind: "nobody" };
+  | { kind: "nobody" }
+  /**
+   * The number typed at «Scrie la câți trimiți» is not the number of real registrations the send would have written to
+   * (§NNN): nothing was queued, and nothing was audited. `real` is that number now, for the refusal's sentence.
+   */
+  | { kind: "miscounted"; real: number };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -255,6 +269,14 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
     */
     const rows = chosen ? inGroup.filter((row) => chosen.has(row.registrationId)) : inGroup;
     if (rows.length === 0) return { kind: "nobody" } as const;
+    /*
+      «Scrie la câți trimiți» (§NNN): the number the organizer typed against the rows this send is about to write — the
+      real ones, as the page counts them (§12.6) — compared here, under the lock, so it is true of this very send:
+      somebody who believes they write to two and has «Toți cei înscriși» chosen is stopped, and so is a press whose
+      group changed since the page was drawn. Before any row, ask or audit is written, and before the allowance is asked.
+    */
+    const expected = rows.filter((row) => row.kind !== "TEST").length;
+    if (!typedCountMatches(input.confirmCount, expected)) return { kind: "miscounted", real: expected } as const;
     /*
       «Trimite acum» (§540): every message of this send inside the day's allowance, asked before any
       row is written — refused with the allowance's sentence and nothing queued, never a silent

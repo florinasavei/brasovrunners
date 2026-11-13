@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
-import { checkOrganizerMessage, CHOSEN_AUDIENCE, CHOSEN_FIELD } from "@/modules/notifications/domain/organizer-message";
+import { checkOrganizerMessage, CHOSEN_AUDIENCE, CHOSEN_FIELD, CONFIRM_COUNT_FIELD } from "@/modules/notifications/domain/organizer-message";
 import { DELIVERY_CHOICE_FIELD, deliveryChoiceOf } from "@/modules/notifications/domain/send-at-once";
 import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import {
@@ -39,9 +39,10 @@ function posted(form: FormData, name: string): string {
 /**
  * The send, behind `ActionForm` (§315): a refusal comes back as the form's state with every box
  * still filled — the empty language named, an unknown `{placeholder}` named in the sentence, an
- * empty group named on its radio buttons, nobody ticked named on the list — and a send redirects to
- * the page with what it queued. A second press of the same form lands on the page saying so, with
- * nothing queued again.
+ * empty group named on its radio buttons, nobody ticked named on the list, a number typed at «Scrie la
+ * câți trimiți» that is not the number of recipients named on its box with the number now (§NNN) — and
+ * a send redirects to the page with what it queued. A second press of the same form lands on the page
+ * saying so, with nothing queued again.
  *
  * A send to the people ticked (§NNN) lands with its own id as `kept`: the page reads that send's words
  * back into the boxes (`readKeptMessage`), so a trial is followed by the same message to everybody.
@@ -74,6 +75,8 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
           audience: posted(form, "audience"),
           // The ticks; which of them are written to is the service's — only for that choice, only this event's active ones.
           registrationIds: form.getAll(CHOSEN_FIELD),
+          // «Scrie la câți trimiți» (§NNN): the number as typed; the service holds it to the rows it is about to write.
+          confirmCount: posted(form, CONFIRM_COUNT_FIELD),
           sendId,
           delivery,
           // «Cere reconfirmarea» (the decision «Cere reconfirmarea»): the tick posts `1`; anything else is no.
@@ -114,6 +117,11 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
       return chosen
         ? { error: "NO_CHOSEN_RECIPIENTS", fields: [CHOSEN_FIELD], values: keptValuesOf(form) }
         : { error: "NO_RECIPIENTS", fields: ["audience"], values: keptValuesOf(form) };
+    }
+
+    if (result.kind === "miscounted") {
+      // Nothing was queued (§NNN): the sentence says how many there are now, and the box comes back empty (`NEVER_KEPT`).
+      return { error: "MESSAGE_COUNT_MISMATCH", errorValues: { actual: String(result.real) }, fields: [CONFIRM_COUNT_FIELD], values: keptValuesOf(form) };
     }
 
     const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/mesaje", params: { id: eventId } } });

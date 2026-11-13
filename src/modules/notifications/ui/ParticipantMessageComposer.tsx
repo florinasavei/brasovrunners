@@ -14,13 +14,13 @@ import Typography from "@mui/material/Typography";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
 import { identicalInBothLanguages } from "@/shared/forms/both-languages";
-import RecallField, { useRecall } from "@/shared/forms/recall";
+import RecallField, { NeverKeptField, useRecall } from "@/shared/forms/recall";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { writePlainBox } from "@/modules/translate/ui/form-fields";
 import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
-import { type ChoosablePerson, recalledPicks, withPick } from "./chosen-recipients";
+import { type ChoosablePerson, pickedPeople, recalledPicks, tallyPicks, withPick } from "./chosen-recipients";
 import ChosenRecipients, { type ChosenLabels } from "./ChosenRecipients";
 import { previewPause, type PreviewLanguage } from "./preview-pause";
 import { fillReminderBoxes, REMINDER_BOXES, reminderOverwrites } from "./reminder-fill";
@@ -34,6 +34,8 @@ import { fillReminderBoxes, REMINDER_BOXES, reminderOverwrites } from "./reminde
 export type ComposerAudience = {
   value: string;
   label: string;
+  /** The group's short name, as «Mesaje trimise» says it: «Toți cei înscriși» — for the line beside «Scrie la câți trimiți». */
+  short: string;
   /** Real registrations reached — what the club is told (test rows are counted apart, §12.6). */
   real: number;
   test: number;
@@ -70,6 +72,13 @@ export type ComposerChosen = {
 };
 
 /**
+ * «Confirmă trimiterea» (§NNN; the owner: «si vreau extra extra confirmare»): the heading over who the message goes to,
+ * said again where it is sent, and the box the number of recipients is typed into — the field's name, its label and
+ * its one line of help.
+ */
+export type ComposerConfirm = { field: string; title: string; count: string; countHelp: string };
+
+/**
  * What the boxes hold when the page is drawn right after a send to the people ticked (§NNN): that send's words and its
  * two ticks, so a trial is followed by the same message to everybody. Absent after any other send: the boxes are empty.
  */
@@ -87,6 +96,8 @@ export type ComposerLabels = {
   audienceHelp: string;
   /** «Doar anumiți participanți» (§NNN): the radio's words and the list's. */
   chosen: ChosenLabels;
+  /** «Confirmă trimiterea» (§NNN): the typed number of recipients. */
+  confirm: ComposerConfirm;
   languageRo: string;
   languageEn: string;
   subject: string;
@@ -195,6 +206,13 @@ const PREVIEW_PAUSE_MS = 500;
  * the one send after which the boxes are not empty, because a trial's next press is the same
  * message to everybody. Without JavaScript the list never opens, and a press of that choice is
  * refused for having nobody ticked; the four groups send as they always did.
+ *
+ * **«Confirmă trimiterea»** (§NNN; the owner: «si vreau extra extra confirmare») stands right
+ * above «Trimite mesajul»: who the message goes to, said again where it is sent — the group and
+ * its number, or the people ticked by name — and a box the number of recipients is typed into.
+ * The send insists on it, as the bulk erase insists on its own typed count (§287): the server
+ * compares the number with the rows it is about to write and queues nothing on any other. The
+ * box is never handed back after a refusal — it is typed again — and the question still follows.
  */
 export default function ParticipantMessageComposer({ eventId, audiences, chosen, kept, defaultAudience, maxSubject, maxBody, labels, preview }: Props) {
   const recall = useRecall();
@@ -207,6 +225,11 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
   const ticking = audience === chosen.value;
   const group = ticking ? undefined : (audiences.find((choice) => choice.value === audience) ?? audiences[0]);
   const nobody = ticking ? picked.size === 0 : !group || group.real + group.test === 0;
+  // The ticks as the page says them: the real people — the number typed at «Scrie la câți trimiți» — and the test rows apart.
+  const tally = tallyPicks(chosen.people, picked);
+  const tickedLine = labels.chosen.count.replace("{count}", String(tally.real)).replace("{total}", String(tally.listed));
+  const tickedTestLine = tally.test > 0 ? labels.chosen.testTicked.replace("{test}", String(tally.test)) : null;
+  const tickedNames = pickedPeople(chosen.people, picked).map((person) => person.name);
 
   const root = useRef<HTMLDivElement>(null);
   const readWords = useCallback((): Words => {
@@ -346,8 +369,13 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
           // The ticks' own number, where each group says its own: no cost or pace is worked out for a list ticked in the browser.
           <Box sx={{ mt: 1 }} data-testid="participant-message-recipients" aria-live="polite">
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              {labels.chosen.count.replace("{count}", String(picked.size)).replace("{total}", String(chosen.people.length))}
+              {tickedLine}
             </Typography>
+            {tickedTestLine && (
+              <Typography variant="body2" color="text.secondary">
+                {tickedTestLine}
+              </Typography>
+            )}
           </Box>
         )}
         {group && (
@@ -555,6 +583,42 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
             />
           </>
         )}
+      </Box>
+
+      {/*
+        «Confirmă trimiterea» (§NNN; the owner: «si vreau extra extra confirmare»): who the message goes to, said again
+        right where it is sent — the preview stands between the choice and this button — and the number of recipients
+        typed by hand. The send insists on that number (§287's guard, for a message that cannot be taken back): the
+        server compares it with the rows it is about to write. Never kept: after a refusal it is typed again (§315).
+      */}
+      <Box data-testid="participant-message-confirm">
+        <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 600 }}>
+          {labels.confirm.title}
+        </Typography>
+        <Box sx={{ mb: 1.5 }} aria-live="polite" data-testid="participant-message-confirm-who">
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            {ticking ? `${labels.chosen.short} · ${tickedLine}` : group ? `${group.short} · ${group.recipientsLine}` : ""}
+          </Typography>
+          {ticking && tickedNames.length > 0 && (
+            <Typography variant="body2" sx={{ wordBreak: "break-word" }}>
+              {labels.chosen.names.replace("{names}", tickedNames.join(", "))}
+            </Typography>
+          )}
+          {(ticking ? tickedTestLine : group?.testLine) && (
+            <Typography variant="body2" color="text.secondary">
+              {ticking ? tickedTestLine : group?.testLine}
+            </Typography>
+          )}
+        </Box>
+        <NeverKeptField
+          name={labels.confirm.field}
+          label={labels.confirm.count}
+          helperText={labels.confirm.countHelp}
+          required
+          size="small"
+          slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[0-9]{1,5}", maxLength: 5, autoComplete: "off" } }}
+          sx={{ width: "100%", maxWidth: 360 }}
+        />
       </Box>
 
       <Box>

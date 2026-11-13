@@ -8,12 +8,16 @@ import { participants } from "@/db/schema/participants";
 import { registrationReconfirmations } from "@/db/schema/registration-reconfirmations";
 import { type Registration, type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { CHOSEN_AUDIENCE, CHOSEN_FIELD } from "@/modules/notifications/domain/organizer-message";
+import { CHOSEN_AUDIENCE, CHOSEN_FIELD, CONFIRM_COUNT_FIELD } from "@/modules/notifications/domain/organizer-message";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { newCheckinCode } from "@/modules/registrations/checkin-code";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { NEVER_KEPT } from "@/shared/forms/outcome";
+import en from "../../../messages/en.json";
+import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { confirmed } from "../../helpers/typed-count";
 
 /**
  * §NNN — «Doar anumiți participanți, pe care îi aleg din listă» on «Trimite un mesaj participanților» (the owner,
@@ -25,7 +29,12 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * row, a second press that queues nothing — and reaches exactly the ticked that are this event's and active: a tick on a
  * cancelled, lapsed or unconfirmed-address registration, on another event's or on nobody writes to nobody. The audit row
  * says the choice and the counts, never who. After such a send, and after no other, its words can be read back for the
- * boxes. All people here are made up.
+ * boxes.
+ *
+ * And «Scrie la câți trimiți» (the owner, of the same message: «si vreau extra extra confirmare»): every send, to a group
+ * or to the ticked, goes only when the number typed is exactly the number of real registrations it is about to write to,
+ * counted under the lock — the bulk erase's guard (§287). Any other number, nothing typed and a caller that forgot it
+ * queue nothing, and the refusal says how many there are now. All people here are made up.
  */
 const DAY = 86_400_000;
 
@@ -141,9 +150,12 @@ async function person(name: string, status: RegistrationStatus, extra: Extra = {
   return row;
 }
 
-/** A send to the people ticked, each press a form of its own. */
-const sendTo = (ticked: readonly unknown[] | undefined, overrides: Partial<Parameters<typeof sendParticipantMessage>[2]> = {}, actor: StaffUser = organizer) =>
-  sendParticipantMessage(db, actor, { eventId, audience: CHOSEN_AUDIENCE, registrationIds: ticked, sendId: randomUUID(), ...WORDS, ...overrides }, new Date());
+/**
+ * A send to the people ticked, each press a form of its own — by an organizer who typed the number of recipients the page
+ * showed (`confirmed`), unless the test types its own.
+ */
+const sendTo = async (ticked: readonly unknown[] | undefined, overrides: Partial<Parameters<typeof sendParticipantMessage>[2]> = {}, actor: StaffUser = organizer) =>
+  sendParticipantMessage(db, actor, await confirmed(db, { eventId, audience: CHOSEN_AUDIENCE, registrationIds: ticked, sendId: randomUUID(), ...WORDS, ...overrides }), new Date());
 
 /** The participants' own rows of the organizers' message — never the club's copy, which has no participant. */
 const ownRows = () => db.select().from(emailOutbox).where(and(eq(emailOutbox.messageType, "ORGANIZER_MESSAGE"), isNotNull(emailOutbox.participantId)));
@@ -286,6 +298,108 @@ describe("§NNN the send writes to the people ticked, and to nobody else", () =>
   });
 });
 
+describe("§NNN «Scrie la câți trimiți»: the send insists on the number of recipients, typed", () => {
+  /** Three real people active, a test registration and a cancelled one: «Toți cei înscriși» is 3. */
+  async function five() {
+    const ana = await person("Ana", "CONFIRMED");
+    const bogdan = await person("Bogdan", "CONFIRMED");
+    const carmen = await person("Carmen", "WAITLISTED");
+    const probe = await person("Test", "CONFIRMED", { kind: "TEST" });
+    await person("Gabi", "CANCELLED");
+    return { ana, bogdan, carmen, probe };
+  }
+  const toEverybody = (confirmCount: string, sendId: string = randomUUID()) => sendTo(undefined, { audience: "ALL_ACTIVE", confirmCount, sendId });
+  const nothingWritten = async () => {
+    expect(await ownRows()).toEqual([]);
+    expect(await clubCopies()).toEqual([]);
+    expect(await sendAudits()).toEqual([]);
+    expect(await db.select().from(registrationReconfirmations)).toEqual([]);
+  };
+
+  it("queues nothing for any other number, for nothing typed and for a caller that forgot it — and says how many there are now", async () => {
+    await five();
+    for (const typed of ["2", "4", "0", "", " ", "03", "3.0", "+3", "trei", "3 participanți", "3\n3"]) {
+      expect(await sendTo(undefined, { audience: "ALL_ACTIVE", confirmCount: typed, askReconfirm: true }), JSON.stringify(typed)).toEqual({ kind: "miscounted", real: 3 });
+    }
+    // A caller that never asked anybody — past this file's own helper, which types the number: the type forbids it, and
+    // the send refuses it all the same.
+    const forgot = { eventId, audience: "ALL_ACTIVE", sendId: randomUUID(), ...WORDS } as unknown as Parameters<typeof sendParticipantMessage>[2];
+    expect(await sendParticipantMessage(db, organizer, forgot, new Date())).toEqual({ kind: "miscounted", real: 3 });
+    await nothingWritten();
+  });
+
+  it("sends when the number is exactly that of the real registrations it writes to: the test registration is not counted, the keyboard's spaces are forgiven", async () => {
+    await five();
+    expect(await toEverybody("3")).toEqual({ kind: "queued", real: 3, test: 1 });
+    expect(await toEverybody(" 3 ")).toEqual({ kind: "queued", real: 3, test: 1 });
+    // Counting the test registration too is another number.
+    expect(await toEverybody("4")).toEqual({ kind: "miscounted", real: 3 });
+  });
+
+  it("stops the press it is for: two people in mind, and «Toți cei înscriși» chosen", async () => {
+    const { ana, bogdan } = await five();
+    expect(await toEverybody("2")).toEqual({ kind: "miscounted", real: 3 });
+    await nothingWritten();
+    // The same number with those two ticked is the send that was meant.
+    expect(await sendTo([ana.id, bogdan.id], { confirmCount: "2" })).toEqual({ kind: "queued", real: 2, test: 0 });
+    expect(await writtenTo()).toEqual([ana.id, bogdan.id].sort());
+  });
+
+  it("holds a send to the ticked to the real people ticked — whoever else was ticked", async () => {
+    const { ana, bogdan, probe } = await five();
+    const cancelled = (await db.select().from(registrations).where(eq(registrations.registeredName, "Gabi")))[0];
+    const ticked = [ana.id, bogdan.id, probe.id, cancelled.id];
+    // Four ticks, two of them real and active: the number is 2.
+    for (const typed of ["4", "3", "1"]) expect(await sendTo(ticked, { confirmCount: typed }), typed).toEqual({ kind: "miscounted", real: 2 });
+    await nothingWritten();
+    expect(await sendTo(ticked, { confirmCount: "2" })).toEqual({ kind: "queued", real: 2, test: 1 });
+    // Test registrations alone: nobody the club counts, and the number is 0.
+    expect(await sendTo([probe.id], { confirmCount: "1" })).toEqual({ kind: "miscounted", real: 0 });
+    expect(await sendTo([probe.id], { confirmCount: "0" })).toEqual({ kind: "queued", real: 0, test: 1 });
+  });
+
+  it("is true of the very send: a group that changed since the number was read is refused with the number now", async () => {
+    await five();
+    // The page said 3; somebody confirmed before the press.
+    await person("Dana", "CONFIRMED");
+    expect(await toEverybody("3")).toEqual({ kind: "miscounted", real: 4 });
+    await nothingWritten();
+    expect(await toEverybody("4")).toEqual({ kind: "queued", real: 4, test: 1 });
+  });
+
+  it("asks nothing of a press that sends nothing anyway: a form already sent, an empty group", async () => {
+    await five();
+    const sendId = randomUUID();
+    expect(await toEverybody("3", sendId)).toEqual({ kind: "queued", real: 3, test: 1 });
+    expect(await toEverybody("999", sendId)).toEqual({ kind: "duplicate" });
+    expect(await sendTo(undefined, { audience: "PENDING_DECLARATION", confirmCount: "7" })).toEqual({ kind: "nobody" });
+    expect(await sendAudits()).toHaveLength(1);
+  });
+
+  it("is refused before it for a role that may not write, a message in one language and an event that is not there", async () => {
+    await five();
+    expect(await refusalOf(sendTo(undefined, { audience: "ALL_ACTIVE", confirmCount: "3" }, await staff("DEV")))).toMatchObject({ code: "FORBIDDEN" });
+    expect(await refusalOf(sendTo(undefined, { audience: "ALL_ACTIVE", confirmCount: "999", body: { ro: "Doar română.", en: "" } }))).toEqual({ code: "VALIDATION_ERROR", fields: ["bodyEn"] });
+    expect(await refusalOf(sendTo(undefined, { audience: "ALL_ACTIVE", confirmCount: "3", eventId: randomUUID() }))).toMatchObject({ code: "NOT_FOUND" });
+    await nothingWritten();
+  });
+
+  it("is a box the form never hands back, named in both languages with the number now", () => {
+    expect(CONFIRM_COUNT_FIELD).toBe("confirmCount");
+    // Typed again after every refusal (§315): a kept number would be the guard filling itself in.
+    expect(NEVER_KEPT.has(CONFIRM_COUNT_FIELD)).toBe(true);
+    for (const catalogue of [ro, en]) {
+      expect(catalogue.Admin.errors.MESSAGE_COUNT_MISMATCH).toContain("{actual}");
+      expect(catalogue.Admin.participantMessages.typedCount.label).not.toBe("");
+    }
+    expect(ro.Admin.participantMessages.typedCount).toEqual({
+      title: "Confirmă trimiterea",
+      label: "Scrie la câți trimiți",
+      help: "Exact numărul de destinatari de mai sus — altfel nu pleacă nimic.",
+    });
+  });
+});
+
 describe("§NNN who can be ticked", () => {
   it("lists this event's active registrations by name as Romanian sorts it, with a state and a test row's mark — and nothing else of a person", async () => {
     const zoe = await person("Zoe Albu", "CONFIRMED");
@@ -361,6 +475,8 @@ describe("§NNN the form's ticks reach the send", () => {
     posted.set("bodyRo", WORDS.body.ro);
     posted.set("bodyEn", WORDS.body.en);
     for (const id of ticked) posted.append(CHOSEN_FIELD, id);
+    // «Scrie la câți trimiți»: as many as were ticked, unless the test types another number.
+    posted.set(CONFIRM_COUNT_FIELD, String(ticked.length));
     for (const [name, value] of Object.entries(fields)) posted.set(name, value);
     return posted;
   }
@@ -392,7 +508,7 @@ describe("§NNN the form's ticks reach the send", () => {
   it("lands without `kept` after a send to a group: the boxes are empty, as they always were", async () => {
     await person("Ana", "CONFIRMED");
     state.actor = organizer;
-    const landed = await press(form([], { audience: "ALL_ACTIVE" }));
+    const landed = await press(form([], { audience: "ALL_ACTIVE", [CONFIRM_COUNT_FIELD]: "1" }));
     expect(landed).toMatchObject({ redirect: expect.stringMatching(/sent=1&test=0#admin-alert$/) });
   });
 
@@ -412,5 +528,32 @@ describe("§NNN the form's ticks reach the send", () => {
     state.actor = await staff("DEV");
     expect(await press(form([ana.id]))).toMatchObject({ returned: { error: "FORBIDDEN" } });
     expect(await ownRows()).toEqual([]);
+  });
+
+  it("«Scrie la câți trimiți»: a number that is not the recipients' is refused on its own box with the number now, every other box kept and that one empty", async () => {
+    const ana = await person("Ana", "CONFIRMED");
+    const bogdan = await person("Bogdan", "WAITLISTED");
+    await person("Carmen", "CONFIRMED");
+    state.actor = organizer;
+    const refusal = { error: "MESSAGE_COUNT_MISMATCH", fields: [CONFIRM_COUNT_FIELD] };
+    const kept = (returned: unknown) => (returned as { returned: { values: Record<string, string[]> } }).returned.values;
+
+    // Two ticked, five typed.
+    const wrong = await press(form([ana.id, bogdan.id], { [CONFIRM_COUNT_FIELD]: "5", sendQr: "1" }));
+    expect(wrong).toMatchObject({ returned: { ...refusal, errorValues: { actual: "2" }, values: { audience: [CHOSEN_AUDIENCE], subjectRo: [WORDS.subject.ro], sendQr: ["1"], [CHOSEN_FIELD]: [ana.id, bogdan.id] } } });
+    expect(kept(wrong)).not.toHaveProperty(CONFIRM_COUNT_FIELD);
+
+    // Everybody chosen with the trial's number still in mind: three are registered.
+    expect(await press(form([], { audience: "ALL_ACTIVE", [CONFIRM_COUNT_FIELD]: "2" }))).toMatchObject({ returned: { ...refusal, errorValues: { actual: "3" } } });
+
+    // A form that posts no number at all — not this page's, or a press without the box — is refused the same way.
+    const without = form([ana.id]);
+    without.delete(CONFIRM_COUNT_FIELD);
+    expect(await press(without)).toMatchObject({ returned: { ...refusal, errorValues: { actual: "1" } } });
+
+    expect(await ownRows()).toEqual([]);
+    expect(await sendAudits()).toEqual([]);
+    // The right number, and it goes.
+    expect(await press(form([ana.id, bogdan.id]))).toMatchObject({ redirect: expect.stringMatching(/sent=2&test=0&kept=/) });
   });
 });

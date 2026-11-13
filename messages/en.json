@@ -2603,6 +2603,7 @@
       "SUPPLEMENTARY_PLACE_UNCONFIRMED": "Nothing was changed: the places changed since you opened the page, and the question did not say this supplementary place would be added. Press again: the question now says what the capacity becomes.",
       "NO_RECIPIENTS": "Nothing was sent: nobody is in the chosen group right now. Choose another group.",
       "NO_CHOSEN_RECIPIENTS": "Nothing was sent: nobody is ticked, or those ticked are no longer registered. Tick at least one participant.",
+      "MESSAGE_COUNT_MISMATCH": "Nothing was sent: the number typed to confirm is not the number of recipients. There are {actual} now — check «Who receives it», then type the number again.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nothing was sent: {names} is not a field we can fill in this message. The fields you can use are listed under the boxes.",
       "SAMPLE_VALUE_IN_EMAIL": "The text contains the sample value “{value}” — use {placeholder}.",
       "SAMPLE_VALUES_IN_EMAIL": "The text contains sample values, not fields: {found}. Use the fields in their place.",
@@ -9141,6 +9142,7 @@
                 "For a reminder, press «Fill in the reminder text»: it writes the text and ticks «Ask them to reconfirm». Whoever presses “I'm coming” shows as «Reconfirmed»; nobody is cancelled automatically.",
                 "For each confirmed runner to get their own race number and QR code under the message, tick «Also send the race number and the QR code». Everyone else gets the message without them.",
                 "Under «How the email looks» read both versions: «Registered in Romanian» and «Registered in English».",
+                "Under «Confirm the send» you see once more who the message goes to. Type the number of recipients in «Type how many you send to»: unless it is exactly the number there, nothing is sent.",
                 "Press «Send the message», then «Send» in the window: it says how long the send takes and whether they all fit now. «Messages sent» shows how many left and how many re-confirmed.",
                 "About this event only: no advertising, no sponsors' offers, no other events."
               ]
@@ -10341,6 +10343,11 @@
         "other": "Send the message to {count} participants?"
       },
       "confirmBody": "The email enters the email queue now and leaves by «Deadlines» → «When emails leave», to each in their own language. It cannot be withdrawn.",
+      "typedCount": {
+        "title": "Confirm the send",
+        "label": "Type how many you send to",
+        "help": "Exactly the number of recipients above — anything else sends nothing."
+      },
       "confirmSend": "Send",
       "sent": {
         "one": "Message queued for {count} participant. It leaves at once or on the next scheduled round, by «When emails leave» in «Deadlines».",

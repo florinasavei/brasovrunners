@@ -13,11 +13,15 @@ import { type ChoosablePerson, matchingPeople, pickedPeople } from "./chosen-rec
 export type ChosenLabels = {
   /** The fifth radio's own words: «Doar anumiți participanți, pe care îi aleg din listă». */
   label: string;
+  /** Its short name, as «Mesaje trimise» says it — «Participanți aleși» — for the line beside «Scrie la câți trimiți». */
+  short: string;
   /** What the choice is for — a trial before everybody, or a word to a few — and that the words stay after it. */
   help: string;
   search: string;
-  /** «Bifați: {count} din {total}.» — both filled by the composer, for the line every group says its number on. */
+  /** «Bifați: {count} din {total}» — both filled by the composer with the real people, for the line every group says its number on. */
   count: string;
+  /** The test registrations ticked beside them, `{test}` filled by the composer: they receive it too and are counted nowhere. */
+  testTicked: string;
   /** Nobody ticked yet: what to do. */
   none: string;
   /** «Primesc mesajul: {names}.» — who, by name, before the press: the question after it can only count them. */

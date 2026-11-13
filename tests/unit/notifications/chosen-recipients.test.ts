@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type ChoosablePerson, matchingPeople, pickedPeople, recalledPicks, withPick } from "@/modules/notifications/ui/chosen-recipients";
+import { type ChoosablePerson, matchingPeople, pickedPeople, recalledPicks, tallyPicks, withPick } from "@/modules/notifications/ui/chosen-recipients";
 
 /**
  * §NNN — «Doar anumiți participanți» on «Trimite un mesaj participanților», the composer's list without the browser:
@@ -61,5 +61,14 @@ describe("§NNN the ticks", () => {
     const picked = withPick(withPick(withPick(new Set<string>(), "t", true), "a", true), "s", true);
     expect(pickedPeople(PEOPLE, picked).map((person) => person.name)).toEqual(["Ana-Maria Popescu", "Ștefan Țurcanu", "Test Unu"]);
     expect(pickedPeople(PEOPLE, new Set(["gone"]))).toEqual([]);
+  });
+
+  it("are counted as the page counts everybody: the real people — the number typed at «Scrie la câți trimiți» — and the test registrations apart", () => {
+    expect(tallyPicks(PEOPLE, new Set())).toEqual({ real: 0, test: 0, listed: 3 });
+    expect(tallyPicks(PEOPLE, new Set(["a", "s"]))).toEqual({ real: 2, test: 0, listed: 3 });
+    expect(tallyPicks(PEOPLE, new Set(["a", "t"]))).toEqual({ real: 1, test: 1, listed: 3 });
+    // A tick on nobody listed counts nobody.
+    expect(tallyPicks(PEOPLE, new Set(["gone", "t"]))).toEqual({ real: 0, test: 1, listed: 3 });
+    expect(tallyPicks([], new Set(["a"]))).toEqual({ real: 0, test: 0, listed: 0 });
   });
 });

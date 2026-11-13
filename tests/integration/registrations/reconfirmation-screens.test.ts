@@ -17,6 +17,7 @@ import { type ConfirmSpec, resolveEmailCount } from "@/shared/feedback/notice";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { confirmed } from "../../helpers/typed-count";
 
 /**
  * «Cere reconfirmarea» on the backoffice's screens (the decision «Cere reconfirmarea»; BR-REQ-070-01, BR-REQ-080-01, BR-REQ-080-02): the
@@ -363,8 +364,8 @@ describe("«Trimite un mesaj participanților»", () => {
     // A test registration is flagged like a real one and counted in no number the club reads (§12.6).
     await register(race.id, { kind: "TEST" });
     const words = { subject: { ro: "Numărul tău", en: "Your number" }, body: { ro: "Ne vedem la start.", en: "See you at the start." } };
-    await sendParticipantMessage(db, actor, { eventId: race.id, audience: "ALL_ACTIVE", sendId: randomUUID(), sendQr: true, ...words }, new Date(Date.now() - 60_000));
-    await sendParticipantMessage(db, actor, { eventId: race.id, audience: "ALL_ACTIVE", sendId: randomUUID(), ...words }, new Date());
+    await sendParticipantMessage(db, actor, await confirmed(db, { eventId: race.id, audience: "ALL_ACTIVE", sendId: randomUUID(), sendQr: true, ...words }), new Date(Date.now() - 60_000));
+    await sendParticipantMessage(db, actor, await confirmed(db, { eventId: race.id, audience: "ALL_ACTIVE", sendId: randomUUID(), ...words }), new Date());
 
     const line = (row: ReactElement<Props>) => elements(row).find((element) => element.props["data-testid"] === "participant-message-history-qr");
     const rows = elements(await messagesPage(race.id)).filter((element) => element.props["data-testid"] === "participant-message-history-row");
@@ -402,9 +403,14 @@ describe("«Trimite un mesaj participanților»", () => {
       });
       // Nothing is kept on a page that was not returned to from a send to the people ticked.
       expect(composer?.props.kept, locale).toBeUndefined();
-      const words = (locale === "ro" ? ro : en).Admin.participantMessages.chosen;
-      const { confirmTitle, testNote, kept, ...list } = words;
-      expect((composer?.props.labels as { chosen: Record<string, string> }).chosen, locale).toEqual(list);
+      const catalogue = (locale === "ro" ? ro : en).Admin.participantMessages;
+      const { confirmTitle, testNote, kept, ...list } = catalogue.chosen;
+      // The list's own words, the choice's short name for «Confirmă trimiterea», and the test rows' line with its field literal.
+      expect((composer?.props.labels as { chosen: Record<string, string> }).chosen, locale).toEqual({
+        ...list,
+        short: catalogue.audiencesShort.CHOSEN,
+        testTicked: catalogue.testLine,
+      });
       // The two the composer fills itself arrive with their fields literal.
       expect(list.count, locale).toContain("{count}");
       expect(list.count, locale).toContain("{total}");
@@ -429,6 +435,31 @@ describe("«Trimite un mesaj participanților»", () => {
     expect(ro.Admin.participantMessages.chosen.label).toBe("Doar anumiți participanți, pe care îi aleg din listă");
   });
 
+  it("§NNN hands the composer «Confirmă trimiterea»: the box the number of recipients is typed into, each group's short name, and the box's name for a refusal", async () => {
+    const race = await createRace();
+    state.actor = await staff("MODERATOR");
+    await register(race.id);
+    for (const locale of ["ro", "en"] as const) {
+      state.locale = locale;
+      const tree = await messagesPage(race.id);
+      const composer = elements(tree).find((element) => element.type === ParticipantMessageComposer);
+      const catalogue = (locale === "ro" ? ro : en).Admin.participantMessages;
+      // The field is the one the send reads, and the one a refused form never hands back.
+      expect((composer?.props.labels as { confirm: Record<string, string> }).confirm, locale).toEqual({
+        field: "confirmCount",
+        title: catalogue.typedCount.title,
+        count: catalogue.typedCount.label,
+        countHelp: catalogue.typedCount.help,
+      });
+      const audiences = composer?.props.audiences as Array<{ value: keyof typeof catalogue.audiencesShort; short: string }>;
+      for (const audience of audiences) expect(audience.short, `${locale} ${audience.value}`).toBe(catalogue.audiencesShort[audience.value]);
+      // A refusal for that box names it by its own label, so the summary's link reads as the box does.
+      const form = elements(tree).find((element) => element.type === ActionForm);
+      expect((form?.props.messages as { fields: Record<string, string> }).fields.confirmCount, locale).toBe(catalogue.typedCount.label);
+      expect((form?.props.messages as { errors: Record<string, string> }).errors.MESSAGE_COUNT_MISMATCH, locale).toContain("{actual}");
+    }
+  });
+
   it("§NNN says no test line in the question of an event without test registrations", async () => {
     const race = await createRace();
     state.actor = await staff("MODERATOR");
@@ -446,9 +477,9 @@ describe("«Trimite un mesaj participanților»", () => {
     await register(race.id);
     const words = { subject: { ro: "Probă: {eventTitle}", en: "Trial: {eventTitle}" }, body: { ro: "Ne vedem la start.\n\nPe curând!", en: "See you at the start.\n\nSoon!" } };
     const trial = randomUUID();
-    await sendParticipantMessage(db, actor, { eventId: race.id, audience: "CHOSEN", registrationIds: [one.id], sendId: trial, sendQr: true, ...words }, new Date(Date.now() - 60_000));
+    await sendParticipantMessage(db, actor, await confirmed(db, { eventId: race.id, audience: "CHOSEN", registrationIds: [one.id], sendId: trial, sendQr: true, ...words }), new Date(Date.now() - 60_000));
     const toEverybody = randomUUID();
-    await sendParticipantMessage(db, actor, { eventId: race.id, audience: "ALL_ACTIVE", sendId: toEverybody, ...words }, new Date(Date.now() - 120_000));
+    await sendParticipantMessage(db, actor, await confirmed(db, { eventId: race.id, audience: "ALL_ACTIVE", sendId: toEverybody, ...words }), new Date(Date.now() - 120_000));
 
     const composerOf = (tree: ReactNode) => elements(tree).find((element) => element.type === ParticipantMessageComposer);
     const alertOf = (tree: ReactNode) => elements(tree).find((element) => element.props["data-testid"] === "participant-message-sent");
@@ -717,11 +748,11 @@ describe("«Trimite un mesaj participanților»", () => {
     state.actor = actor;
     await register(race.id);
     const ready = { ro: "Ne vedem la {eventTitle}? Spune-ne dacă vii", en: "See you at {eventTitle}? Tell us if you come" };
-    await sendParticipantMessage(db, actor, { eventId: race.id, audience: "ALL_ACTIVE", sendId: randomUUID(), subject: ready, body: { ro: "Spune-ne.", en: "Tell us." } }, new Date(Date.now() - 60_000));
+    await sendParticipantMessage(db, actor, await confirmed(db, { eventId: race.id, audience: "ALL_ACTIVE", sendId: randomUUID(), subject: ready, body: { ro: "Spune-ne.", en: "Tell us." } }), new Date(Date.now() - 60_000));
     await sendParticipantMessage(
       db,
       actor,
-      { eventId: race.id, audience: "ALL_ACTIVE", sendId: randomUUID(), subject: { ro: "{participantName}, vii la {eventTitle}?", en: "{participantName}, coming?" }, body: { ro: "Spune-ne.", en: "Tell us." } },
+      await confirmed(db, { eventId: race.id, audience: "ALL_ACTIVE", sendId: randomUUID(), subject: { ro: "{participantName}, vii la {eventTitle}?", en: "{participantName}, coming?" }, body: { ro: "Spune-ne.", en: "Tell us." } }),
       new Date(),
     );
     const rows = elements(await messagesPage(race.id)).filter((element) => element.props["data-testid"] === "participant-message-history-row");
@@ -742,8 +773,8 @@ describe("«Trimite un mesaj participanților»", () => {
     await register(race.id, { kind: "TEST" });
     const words = { subject: { ro: "Vii?", en: "Coming?" }, body: { ro: "Spune-ne.", en: "Tell us." } };
     const askId = randomUUID();
-    await sendParticipantMessage(db, actor, { eventId: race.id, audience: "ALL_ACTIVE", sendId: askId, askReconfirm: true, ...words }, new Date(Date.now() - 60_000));
-    await sendParticipantMessage(db, actor, { eventId: race.id, audience: "ALL_ACTIVE", sendId: randomUUID(), ...words }, new Date());
+    await sendParticipantMessage(db, actor, await confirmed(db, { eventId: race.id, audience: "ALL_ACTIVE", sendId: askId, askReconfirm: true, ...words }), new Date(Date.now() - 60_000));
+    await sendParticipantMessage(db, actor, await confirmed(db, { eventId: race.id, audience: "ALL_ACTIVE", sendId: randomUUID(), ...words }), new Date());
     await db.update(registrationReconfirmations).set({ reconfirmedAt: new Date() }).where(eq(registrationReconfirmations.registrationId, yes.id));
     await db
       .update(emailOutbox)
@@ -771,13 +802,13 @@ describe("«Trimite un mesaj participanților»", () => {
     const words = { subject: { ro: "Vii?", en: "Coming?" }, body: { ro: "Spune-ne.", en: "Tell us." } };
     const first = randomUUID();
     const second = randomUUID();
-    await sendParticipantMessage(db, actor, { eventId: race.id, audience: "ALL_ACTIVE", sendId: first, askReconfirm: true, ...words }, new Date(Date.now() - 120_000));
+    await sendParticipantMessage(db, actor, await confirmed(db, { eventId: race.id, audience: "ALL_ACTIVE", sendId: first, askReconfirm: true, ...words }), new Date(Date.now() - 120_000));
     // The first person (and the test row) say «Vin» after the first send; the second send asks everybody again.
     await db
       .update(registrationReconfirmations)
       .set({ reconfirmedAt: new Date(Date.now() - 90_000) })
       .where(and(eq(registrationReconfirmations.sendId, first), inArray(registrationReconfirmations.registrationId, [answered.id, probe.id])));
-    await sendParticipantMessage(db, actor, { eventId: race.id, audience: "ALL_ACTIVE", sendId: second, askReconfirm: true, ...words }, new Date(Date.now() - 60_000));
+    await sendParticipantMessage(db, actor, await confirmed(db, { eventId: race.id, audience: "ALL_ACTIVE", sendId: second, askReconfirm: true, ...words }), new Date(Date.now() - 60_000));
     const open = await db.select().from(registrationReconfirmations).where(eq(registrationReconfirmations.sendId, second));
     expect(open.every((ask) => ask.reconfirmedAt === null)).toBe(true);
 
@@ -809,7 +840,7 @@ describe("«Trimite un mesaj participanților»", () => {
     const offered = await register(race.id, { status: "WAITLISTED", waitlistedAt: new Date() });
     const offeredYes = await register(race.id, { status: "WAITLISTED", waitlistedAt: new Date() });
     const words = { subject: { ro: "Vii?", en: "Coming?" }, body: { ro: "Spune-ne.", en: "Tell us." } };
-    await sendParticipantMessage(db, actor, { eventId: race.id, audience: "ALL_ACTIVE", sendId: randomUUID(), askReconfirm: true, ...words }, new Date(Date.now() - 60_000));
+    await sendParticipantMessage(db, actor, await confirmed(db, { eventId: race.id, audience: "ALL_ACTIVE", sendId: randomUUID(), askReconfirm: true, ...words }), new Date(Date.now() - 60_000));
     await db.update(registrationReconfirmations).set({ reconfirmedAt: new Date() }).where(eq(registrationReconfirmations.registrationId, offeredYes.id));
     // Both waiting entries are offered a place after the ask: no button any more, still registered.
     await db

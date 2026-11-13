@@ -18,6 +18,8 @@ import { openEditorBox } from "./support/fold";
  * And §NNN — «Doar anumiți participanți, pe care îi aleg din listă»: a trial to one person found by
  * name and ticked, whose question counts the tick, after which the words are still in the boxes and
  * go to everybody with one more press — one outbox row for the trial, one per registrant after it.
+ * Every send is confirmed by hand at «Scrie la câți trimiți»: the trial's «1» typed again with
+ * everybody chosen sends nothing and says how many there are.
  *
  * Each project writes its own event straight into the database — the setup, not the subject, as
  * `support/action-link.ts` argues — so the two never count each other's rows: a confirmed
@@ -187,6 +189,9 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     await field("subjectEn").fill("Bad weather at {eventTitle}");
     await field("bodyRo").fill("Salut, {participantName}!\n\nStartul se mută la 10:00 din cauza furtunii.");
     await field("bodyEn").fill("   ");
+    // «Confirmă trimiterea»: who it goes to, said again beside the button, and the number typed by hand.
+    await expect(page.getByTestId("participant-message-confirm-who")).toHaveText("Toți cei înscriși · 2 destinatari");
+    await field("confirmCount").fill("2");
     await page.getByRole("button", { name: "Trimite mesajul" }).click();
     await expect(page.getByRole("dialog")).toContainText("Trimiți mesajul la 2 participanți?");
     await confirmDialog(page);
@@ -194,6 +199,8 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     await expect(refusal).toContainText("Mesajul (English)", { timeout: 30_000 });
     await expect(field("bodyRo")).toHaveValue("Salut, {participantName}!\n\nStartul se mută la 10:00 din cauza furtunii.");
     await expect(field("subjectEn")).toHaveValue("Bad weather at {eventTitle}");
+    // The typed number is the one box that does not come back: it is typed again for the next press.
+    await expect(field("confirmCount")).toHaveValue("");
 
     // Both languages now; the preview is the real email, the Romanian registrant's copy first…
     await field("bodyEn").fill("Hi, {participantName}!\n\nThe start moves to 10:00 because of the storm.");
@@ -209,7 +216,8 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     await page.getByRole("tab", { name: "Înscris în engleză" }).click();
     await expect(previewSubject).toContainText(`Bad weather at Storm race ${tag} / Vreme rea la Cursa furtunii ${tag}`, { timeout: 30_000 });
 
-    // Send, behind the question that names how many.
+    // Send, behind the number typed again and the question that names how many.
+    await field("confirmCount").fill("2");
     await page.getByRole("button", { name: "Trimite mesajul" }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toContainText("Trimiți mesajul la 2 participanți?");
@@ -301,6 +309,12 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     await expect(page.getByTestId("participant-message-chosen-names")).toHaveText("Primesc mesajul: Ștefan Probă.");
     await expect(page.getByTestId("participant-message-recipients")).toHaveText("Bifați: 1 din 3");
 
+    // «Confirmă trimiterea», beside the button: the choice, its number and who, by name — then the number typed by hand.
+    const who = page.getByTestId("participant-message-confirm-who");
+    await expect(who).toContainText("Participanți aleși · Bifați: 1 din 3");
+    await expect(who).toContainText("Primesc mesajul: Ștefan Probă.");
+    await field("confirmCount").fill("1");
+
     // The question is about the ticked, and its email line counts them at the press.
     await send.click();
     const dialog = page.getByRole("dialog");
@@ -322,7 +336,21 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     await expect(trial).toContainText("Participanți aleși");
     await expect(trial).toContainText("1 destinatar");
 
-    // One more press sends the same words to everybody — and after a send to a group the boxes are empty again.
+    // Everybody is chosen now, and the trial's «1» typed again: nothing is sent, the refusal says how many there are, the
+    // words stay and the number is asked for again.
+    await expect(who).toHaveText("Toți cei înscriși · 3 destinatari");
+    await field("confirmCount").fill("1");
+    await send.click();
+    await confirmDialog(page);
+    const refusal = page.getByTestId("form-refusal");
+    await expect(refusal).toContainText("numărul scris la confirmare nu este cel al destinatarilor. Acum sunt 3", { timeout: 30_000 });
+    await expect(refusal.getByRole("link", { name: "Scrie la câți trimiți" })).toBeVisible();
+    await expect(field("confirmCount")).toHaveValue("");
+    await expect(field("subjectRo")).toHaveValue("Probă la {eventTitle}");
+    expect(await namesWrittenTo(eventId)).toEqual(["Ștefan Probă"]);
+
+    // The right number sends the same words to everybody — and after a send to a group the boxes are empty again.
+    await field("confirmCount").fill("3");
     await send.click();
     await expect(page.getByRole("dialog")).toContainText("Trimiți mesajul la 3 participanți?");
     await confirmDialog(page);

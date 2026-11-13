@@ -2603,6 +2603,7 @@
       "SUPPLEMENTARY_PLACE_UNCONFIRMED": "Nu s-a schimbat nimic: locurile s-au schimbat de când ai deschis pagina, iar întrebarea nu spunea că adaugi acest loc suplimentar. Apasă din nou: întrebarea spune acum cât devine capacitatea.",
       "NO_RECIPIENTS": "Nu s-a trimis nimic: nu e nimeni în grupul ales acum. Alege alt grup.",
       "NO_CHOSEN_RECIPIENTS": "Nu s-a trimis nimic: nu ai bifat pe nimeni, sau cei bifați nu mai sunt înscriși. Bifează cel puțin un participant.",
+      "MESSAGE_COUNT_MISMATCH": "Nu s-a trimis nimic: numărul scris la confirmare nu este cel al destinatarilor. Acum sunt {actual} — verifică la «Cui îi trimiți», apoi scrie numărul din nou.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nu s-a trimis nimic: {names} nu este un câmp pe care îl putem completa în acest mesaj. Câmpurile folosibile sunt scrise sub casete.",
       "SAMPLE_VALUE_IN_EMAIL": "Textul conține valoarea de exemplu „{value}” — folosește {placeholder}.",
       "SAMPLE_VALUES_IN_EMAIL": "Textul conține valori de exemplu, nu câmpuri: {found}. Folosește câmpurile în locul lor.",
@@ -9141,6 +9142,7 @@
                 "Pentru un reminder, apasă «Completează cu textul de reminder»: scrie textul și bifează «Cere reconfirmarea». Cine apasă „Vin” apare cu «A reconfirmat»; nu se anulează nimeni automat.",
                 "Ca fiecare confirmat să primească sub mesaj numărul lui de concurs și codul QR, bifează «Trimite și numărul de concurs și codul QR». Ceilalți primesc mesajul fără ele.",
                 "La «Cum arată emailul» citește ambele variante: «Înscris în română» și «Înscris în engleză».",
+                "La «Confirmă trimiterea» vezi încă o dată cui pleacă mesajul. Scrie numărul de destinatari în «Scrie la câți trimiți»: dacă nu e exact numărul de acolo, nu pleacă nimic.",
                 "Apasă «Trimite mesajul», apoi în fereastră «Trimite»: fereastra spune cât durează și dacă încap toate acum. În «Mesaje trimise» vezi câte au plecat și câți au reconfirmat.",
                 "Doar despre acest eveniment: fără reclame, oferte de la sponsori sau alte evenimente."
               ]
@@ -10341,6 +10343,11 @@
         "other": "Trimiți mesajul la {count} de participanți?"
       },
       "confirmBody": "Emailul intră acum în coada de emailuri și pleacă după «Termene» → «Când pleacă emailurile», fiecăruia în limba lui. Nu mai poate fi retras.",
+      "typedCount": {
+        "title": "Confirmă trimiterea",
+        "label": "Scrie la câți trimiți",
+        "help": "Exact numărul de destinatari de mai sus — altfel nu pleacă nimic."
+      },
       "confirmSend": "Trimite",
       "sent": {
         "one": "Mesaj pus la coadă pentru {count} participant. Pleacă imediat sau la următoarea trecere programată, după «Când pleacă emailurile» din «Termene».",

@@ -41,6 +41,24 @@ export function withPick(picked: ReadonlySet<string>, id: string, on: boolean): 
   return next;
 }
 
+/**
+ * The ticks as numbers, test registrations apart as in every number the club reads (§12.6): how many real people are
+ * ticked — the number the organizer types at «Scrie la câți trimiți» —, out of how many real ones listed, and how many
+ * test registrations are ticked beside them.
+ */
+export function tallyPicks(people: readonly ChoosablePerson[], picked: ReadonlySet<string>): { real: number; test: number; listed: number } {
+  let real = 0;
+  let test = 0;
+  let listed = 0;
+  for (const person of people) {
+    if (!person.test) listed += 1;
+    if (!picked.has(person.id)) continue;
+    if (person.test) test += 1;
+    else real += 1;
+  }
+  return { real, test, listed };
+}
+
 /** The people ticked, in the list's order — the names the composer says back before the press, and the fields it posts. */
 export function pickedPeople(people: readonly ChoosablePerson[], picked: ReadonlySet<string>): readonly ChoosablePerson[] {
   return people.filter((person) => picked.has(person.id));

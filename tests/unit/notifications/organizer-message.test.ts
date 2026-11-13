@@ -9,6 +9,7 @@ import {
   CHOSEN_AUDIENCE,
   CHOSEN_FIELD,
   chosenRegistrationIds,
+  CONFIRM_COUNT_FIELD,
   isMessageReach,
   isOrganizerQrStatus,
   isParticipantMessageAudience,
@@ -23,6 +24,7 @@ import {
   PARTICIPANT_MESSAGE_AUDIENCES,
   readOrganizerMessagePayload,
   readOrganizerSendQr,
+  typedCountMatches,
   unknownOrganizerPlaceholders,
 } from "@/modules/notifications/domain/organizer-message";
 import { emailSampleData, emailSampleFor } from "@/modules/notifications/email-copy-fields";
@@ -93,6 +95,17 @@ describe("§364 who a message can go to", () => {
     expect(chosenRegistrationIds([a, b, a, a.toUpperCase(), "", "ana", `${a} `, `${a}' OR 1=1`, 7, null, undefined, { id: b }, [b]])).toEqual([a, b]);
     expect(chosenRegistrationIds([])).toEqual([]);
     expect(CHOSEN_FIELD).toBe("registrationIds");
+  });
+
+  it("§NNN «Scrie la câți trimiți»: only the exact number of real recipients, as typed, is a confirmation", () => {
+    expect(CONFIRM_COUNT_FIELD).toBe("confirmCount");
+    for (const typed of ["184", " 184", "184 ", "\t184\n"]) expect(typedCountMatches(typed, 184), JSON.stringify(typed)).toBe(true);
+    expect(typedCountMatches("0", 0)).toBe(true);
+    for (const typed of ["183", "185", "1840", "18", "0184", "184.0", "+184", "1 84", "", " ", "o sută", "184 de participanți", 184, null, undefined, ["184"]]) {
+      expect(typedCountMatches(typed, 184), JSON.stringify(typed)).toBe(false);
+    }
+    // Nothing typed is never «0».
+    expect(typedCountMatches("", 0)).toBe(false);
   });
 });
 

@@ -20,6 +20,7 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { confirmed } from "../../helpers/typed-count";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
@@ -196,8 +197,9 @@ async function person(name: string, status: RegistrationStatus, extra: { kind?: 
   return row;
 }
 
-const send = (overrides: Partial<Parameters<typeof sendParticipantMessage>[2]> = {}, actor: StaffUser = organizer) =>
-  sendParticipantMessage(db, actor, { eventId, audience: "ALL_ACTIVE", sendId: randomUUID(), askReconfirm: true, ...WORDS, ...overrides }, new Date());
+// Each send as an organizer who typed the number of recipients the page showed (`confirmed`).
+const send = async (overrides: Partial<Parameters<typeof sendParticipantMessage>[2]> = {}, actor: StaffUser = organizer) =>
+  sendParticipantMessage(db, actor, await confirmed(db, { eventId, audience: "ALL_ACTIVE", sendId: randomUUID(), askReconfirm: true, ...WORDS, ...overrides }), new Date());
 
 const asks = () => db.select().from(registrationReconfirmations);
 const reconfirmAudits = () => db.select().from(auditLogs).where(eq(auditLogs.action, "registration.reconfirmed"));
