@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.41-2026-11-12 -->
+<!-- PROJECT_BASELINE: BR-V4.42-2026-11-13 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.41-2026-11-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.42-2026-11-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -29675,3 +29675,17 @@ Built by a subagent in its own worktree and reviewed here: its diff read whole, 
 **Tested, the second part.** `tests/unit/registrations/list-row.test.ts` (the row's address, the alert for a refusal or an id that is not one, the query rebuilt, a typed address going nowhere) and `tests/integration/registrations/row-press-returns.test.ts` (the real actions on PGlite: «Retrimite» from the list and from the page, a refused one, the check-in, the printing mark, the cancel). `tests/unit/shared/notes-tip.test.ts` and `registration-notes-screens.test.ts` (the tooltip's words on the page). `partner-column.test.ts`: every form of a row carries the query once and the table names its rows; the three invitation states, the search among them, every event listed; the telephone — second column with the address, the `tel:` link, nothing written to the trail, no switch, the list's shared query without a number, every role. In a browser (`tests/e2e/partner-mark.spec.ts`, 320 px and desktop): a partner saved from a row, the address the row's own, the row or its card within 3 px of where it was pressed. The message's tick, on PGlite (`tests/integration/notifications/participant-message-qr.test.ts`): the flag on confirmed rows alone, test rows counted apart; the rendered email of a confirmed runner with the number, the QR and the code, once, in the registrant's language first; a family's two people each their own; a waiting, an offered and a declaration-owing recipient byte for byte as without the tick; a runner who cancelled before the render, and one confirmed only after the send, without it; the club's copy and a hand-made row without it; the preview; «Mesaje trimise»; every role. `organizer-message.test.ts` and the §671 guard in `render.test.ts` hold the rest. No browser test of the tick: the composer's wiring is covered only through its action.
 
 Baseline `BR-V4.41-2026-11-12`.
+
+## 944. The queue panel's zone test holds at every minute of the day
+
+**What happened, 2026-11-12.** The release of BR-V4.40 stopped for ten minutes on a red unit shard that was not the pull request's. `tests/integration/registrations/queue-panel-zone.test.ts` › «reads the club's zone only where the event itself is in it» refuses the string «10:05» — a fixed moment drawn in the wrong zone reads so — and the shard ran it at 08:05 UTC, 10:05 in Brașov: the panel's «Formular trimis» line printed the run's own clock.
+
+**Why it could.** The test already pinned `createdAt` for exactly this reason, but «Formular trimis» draws `submitted_at`, which the test's helper left to the database's `now()`. So for one minute a day the test failed, and a release started around ten in the morning could meet it.
+
+**Decision.** The test pins `submittedAt` as well. No application code changes. The fix first waited on its branch for the next change to carry it; the owner asked for it to be finished and shipped on its own.
+
+**Verified.** With the clock moved to 10:05 in Brașov (`yarn test:clock 2026-11-13T08:05:20Z -- tests/integration/registrations/queue-panel-zone.test.ts`) the file failed before the change and passes after it; at the real time it passes as before.
+
+**Refused.** Loosening the assertion (the test is right to refuse the other zone's hour), and retrying the shard as the remedy (a second release would meet the same minute).
+
+Baseline `BR-V4.42-2026-11-13`.

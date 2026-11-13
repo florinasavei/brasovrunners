@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.42-2026-11-13
+
+- **A test that could stop a release one minute a day** — the queue panel's zone test now pins the form's own time, so a run at 10:05 in Brașov no longer fails it; nothing in the application changes. §944.
 ## BR-V4.41-2026-11-12
 
 - **The registrations list, worked without leaving it** — «Acțiuni» stays at the frame's right edge on every backoffice list, and one event's registrations fit a 1858-px screen whole («Eveniment» only with every event listed, an address on one line, «Partener» last). A press on a row — choosing a partner, a note, «Retrimite», «Anulează», the check-in — comes back to that row, which stays where it was on screen, with the outcome in the toast. The notes marker shows the notes' words in its tooltip. «Stare» also filters the event's invitations: sent, expired, withdrawn. The address column is now «Contact», right after the name, with the runner's telephone under the address as a number to tap — always shown, by the owner's decision, where §322 had it read only on demand; the emergency contact and the health note stay as they were. And «Trimite un mesaj participanților» gains the tick «Trimite și numărul de concurs și codul QR»: each confirmed runner gets their own race number and QR under the message; everybody else gets the message as it was. §943.
