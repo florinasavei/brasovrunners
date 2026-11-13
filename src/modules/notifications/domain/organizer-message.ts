@@ -45,7 +45,7 @@ export function isParticipantMessageAudience(value: unknown): value is Participa
 }
 
 /**
- * «Doar anumiți participanți, pe care îi aleg din listă» (§NNN; the owner, 2026-11-13: «As vrea sa fac un test pentru
+ * «Doar anumiți participanți, pe care îi aleg din listă» (§945; the owner, 2026-11-13: «As vrea sa fac un test pentru
  * mailul asta, sa selectez doar anumiti participanti») — the fifth choice of «Cui îi trimiți», and not a group: the
  * registrations the organizer ticked on the composer, for a trial of a message before everybody gets it, or a word to a few.
  *
@@ -66,7 +66,7 @@ export function isMessageReach(value: unknown): value is MessageReach {
 export const CHOSEN_FIELD = "registrationIds";
 
 /**
- * «Scrie la câți trimiți» (§NNN; the owner, 2026-11-13, of the same message: «si vreau extra extra confirmare»): the
+ * «Scrie la câți trimiți» (§945; the owner, 2026-11-13, of the same message: «si vreau extra extra confirmare»): the
  * field the organizer types the number of recipients into, beside «Trimite mesajul» — the confirmation every send from
  * this page insists on, as the bulk erase insists on its own (§287: «dar cu super extra confirmare!»). A number the
  * screen has just shown, which changes with the choice and the ticks, so it cannot become the habit a second «yes» does.

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { type ChoosablePerson, matchingPeople, pickedPeople, recalledPicks, tallyPicks, withPick } from "@/modules/notifications/ui/chosen-recipients";
 
 /**
- * §NNN — «Doar anumiți participanți» on «Trimite un mesaj participanților», the composer's list without the browser:
+ * §945 — «Doar anumiți participanți» on «Trimite un mesaj participanților», the composer's list without the browser:
  * who a typed name finds, which ticks a refused send hands back, and what one tick changes. All people are made up.
  */
 const PEOPLE: readonly ChoosablePerson[] = [
@@ -13,7 +13,7 @@ const PEOPLE: readonly ChoosablePerson[] = [
 ];
 const ids = (people: readonly ChoosablePerson[]) => people.map((person) => person.id);
 
-describe("§NNN finding somebody on the list by name", () => {
+describe("§945 finding somebody on the list by name", () => {
   it("finds everybody while nothing is typed, spaces included", () => {
     expect(matchingPeople(PEOPLE, "")).toBe(PEOPLE);
     expect(ids(matchingPeople(PEOPLE, "   "))).toEqual(["a", "i", "s", "t"]);
@@ -39,7 +39,7 @@ describe("§NNN finding somebody on the list by name", () => {
   });
 });
 
-describe("§NNN the ticks", () => {
+describe("§945 the ticks", () => {
   it("start empty, and come back after a refused send as it posted them — kept to the people still on the list", () => {
     expect([...recalledPicks(PEOPLE, undefined)]).toEqual([]);
     expect([...recalledPicks(PEOPLE, [])]).toEqual([]);

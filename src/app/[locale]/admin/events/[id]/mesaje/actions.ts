@@ -40,11 +40,11 @@ function posted(form: FormData, name: string): string {
  * The send, behind `ActionForm` (§315): a refusal comes back as the form's state with every box
  * still filled — the empty language named, an unknown `{placeholder}` named in the sentence, an
  * empty group named on its radio buttons, nobody ticked named on the list, a number typed at «Scrie la
- * câți trimiți» that is not the number of recipients named on its box with the number now (§NNN) — and
+ * câți trimiți» that is not the number of recipients named on its box with the number now (§945) — and
  * a send redirects to the page with what it queued. A second press of the same form lands on the page
  * saying so, with nothing queued again.
  *
- * A send to the people ticked (§NNN) lands with its own id as `kept`: the page reads that send's words
+ * A send to the people ticked (§945) lands with its own id as `kept`: the page reads that send's words
  * back into the boxes (`readKeptMessage`), so a trial is followed by the same message to everybody.
  */
 export async function sendParticipantMessageAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
@@ -53,7 +53,7 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
     const locale = localeOf(form.get("uiLocale"));
     const eventId = posted(form, "eventId");
     const sendId = posted(form, "sendId");
-    // «Doar anumiți participanți» (§NNN): the fifth choice of «Cui îi trimiți» — the people ticked, not a group.
+    // «Doar anumiți participanți» (§945): the fifth choice of «Cui îi trimiți» — the people ticked, not a group.
     const chosen = posted(form, "audience") === CHOSEN_AUDIENCE;
     const words = {
       subject: { ro: posted(form, "subjectRo"), en: posted(form, "subjectEn") },
@@ -75,7 +75,7 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
           audience: posted(form, "audience"),
           // The ticks; which of them are written to is the service's — only for that choice, only this event's active ones.
           registrationIds: form.getAll(CHOSEN_FIELD),
-          // «Scrie la câți trimiți» (§NNN): the number as typed; the service holds it to the rows it is about to write.
+          // «Scrie la câți trimiți» (§945): the number as typed; the service holds it to the rows it is about to write.
           confirmCount: posted(form, CONFIRM_COUNT_FIELD),
           sendId,
           delivery,
@@ -113,19 +113,19 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
     }
 
     if (result.kind === "nobody") {
-      // Nobody ticked, or nobody ticked still registered: its own sentence, on the list (§NNN); an empty group, on the radios.
+      // Nobody ticked, or nobody ticked still registered: its own sentence, on the list (§945); an empty group, on the radios.
       return chosen
         ? { error: "NO_CHOSEN_RECIPIENTS", fields: [CHOSEN_FIELD], values: keptValuesOf(form) }
         : { error: "NO_RECIPIENTS", fields: ["audience"], values: keptValuesOf(form) };
     }
 
     if (result.kind === "miscounted") {
-      // Nothing was queued (§NNN): the sentence says how many there are now, and the box comes back empty (`NEVER_KEPT`).
+      // Nothing was queued (§945): the sentence says how many there are now, and the box comes back empty (`NEVER_KEPT`).
       return { error: "MESSAGE_COUNT_MISMATCH", errorValues: { actual: String(result.real) }, fields: [CONFIRM_COUNT_FIELD], values: keptValuesOf(form) };
     }
 
     const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/mesaje", params: { id: eventId } } });
-    // `kept` (§NNN): the send's own id — a uuid the service held it to, naming a send and nobody — for the words to stay in the boxes.
+    // `kept` (§945): the send's own id — a uuid the service held it to, naming a send and nobody — for the words to stay in the boxes.
     const query = result.kind === "duplicate" ? "duplicate=1" : `sent=${result.real}&test=${result.test}${chosen ? `&kept=${sendId}` : ""}`;
     // The toast (§384): the send, and what the press queued — how many, and when each part leaves, a press's «now»
     // past the scheduled pass (§540) and the rest of a list longer than one press sends (`SEND_NOW_ROW_LIMIT`)

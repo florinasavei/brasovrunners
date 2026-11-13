@@ -318,7 +318,7 @@ describe("the «Voluntari» list — the marker and «Adaugă o notă»", () => 
     expect(elements(nameCell(dan)).filter((element) => element.type === NotesMark)).toHaveLength(0);
   });
 
-  it("says the notes' own words in the marker's tooltip — newest first, each with its day and hour, the older ones counted, no author (§NNN)", async () => {
+  it("says the notes' own words in the marker's tooltip — newest first, each with its day and hour, the older ones counted, no author (§945)", async () => {
     const organizer = state.actor as StaffUser;
     const ana = await volunteer("Ana Pop");
     const dan = await volunteer("Dan Ionescu");
@@ -384,7 +384,7 @@ describe("the «Voluntari» list — the marker and «Adaugă o notă»", () => 
     expect((table.props.columns as Array<{ key: string; primary?: boolean }>).find((column) => column.key === "name")?.primary).toBe(true);
   });
 
-  it("puts the marker on the event card's rows too, from the card's one grouped read — the count, the words in its tooltip (§NNN), a link to the person's page", async () => {
+  it("puts the marker on the event card's rows too, from the card's one grouped read — the count, the words in its tooltip (§945), a link to the person's page", async () => {
     const ana = await volunteer("Ana Pop");
     await addVolunteerNote(db, state.actor as StaffUser, ana, "una", NOW);
     const person = (await findVolunteerForAdmin(db, ana, "ro"))!;

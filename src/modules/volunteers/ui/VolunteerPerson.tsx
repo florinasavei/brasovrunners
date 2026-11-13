@@ -106,7 +106,7 @@ export type VolunteerPersonContext = {
   returnTo?: string;
   /**
    * Each person's live internal notes, newest first («Note interne» for volunteers): the event card's one grouped read, so each row's
-   * closed line carries the marker — how many, the words in its tooltip (§NNN), a link to the person's page. Absent where nobody
+   * closed line carries the marker — how many, the words in its tooltip (§945), a link to the person's page. Absent where nobody
    * read them (the person's own page draws the card).
    */
   rowNotes?: ReadonlyMap<string, readonly { createdAt: Date; body: string }[]>;
@@ -1162,7 +1162,7 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
               <StatusChip glyph="open" color="warning" variant="outlined" label={t("volunteers.unassigned.title")} testId="volunteer-row-roles" />
             ) : null}
             {/* «Note interne»: the count when somebody left a note, a link to the person's page with the card open — and, under the
-                pointer, the newest notes' own words, the older ones counted, no author's name (§NNN, as the registrations list's). */}
+                pointer, the newest notes' own words, the older ones counted, no author's name (§945, as the registrations list's). */}
             {noteCount > 0 && (
               <TipSpan
                 title={notesTip(

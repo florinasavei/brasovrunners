@@ -179,7 +179,7 @@ describe("confirmWords().mail — a count", () => {
     expect(texts(asked.also)).toEqual(["Și 4 emailuri pentru căsuțele clubului."]);
   });
 
-  it("counts the people ticked as the recipients of one send: one club copy for them all, a test row counting nobody (`ticksOf`, §NNN)", async () => {
+  it("counts the people ticked as the recipients of one send: one club copy for them all, a test row counting nobody (`ticksOf`, §945)", async () => {
     const words = await confirmWords();
     const spec: ConfirmSpec = {
       title: "t",

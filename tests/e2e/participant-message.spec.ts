@@ -15,7 +15,7 @@ import { openEditorBox } from "./support/fold";
  * outbox holds exactly one row per recipient, each in its own language, carrying both. A role
  * that may not write to participants (Tehnic) meets a 404.
  *
- * And §NNN — «Doar anumiți participanți, pe care îi aleg din listă»: a trial to one person found by
+ * And §945 — «Doar anumiți participanți, pe care îi aleg din listă»: a trial to one person found by
  * name and ticked, whose question counts the tick, after which the words are still in the boxes and
  * go to everybody with one more press — one outbox row for the trial, one per registrant after it.
  * Every send is confirmed by hand at «Scrie la câți trimiți»: the trial's «1» typed again with
@@ -258,7 +258,7 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     expect(response?.status()).toBe(404);
   });
 
-  test("§NNN a trial to one person ticked on the list, then the same words to everybody", async ({ page }) => {
+  test("§945 a trial to one person ticked on the list, then the same words to everybody", async ({ page }) => {
     test.setTimeout(150_000);
     const tag = `${test.info().project.name}-${Date.now().toString(36)}-proba`;
     const eventId = await seedEvent(tag, [

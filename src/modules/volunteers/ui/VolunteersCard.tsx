@@ -158,7 +158,7 @@ type Props = {
   now: Date;
   /** A refused one-button form's code, already translated. */
   error?: string;
-  /** Each person's live internal notes, newest first («Note interne» for volunteers): one grouped read, each row's marker and its tooltip (§NNN). */
+  /** Each person's live internal notes, newest first («Note interne» for volunteers): one grouped read, each row's marker and its tooltip (§945). */
   rowNotes?: VolunteerPersonContext["rowNotes"];
 };
 

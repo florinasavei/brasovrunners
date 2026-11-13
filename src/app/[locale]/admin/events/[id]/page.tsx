@@ -495,7 +495,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         const people = await listVolunteers(db, event.id);
         const standings = volunteerStandings(roles, people);
         // «Note interne»: each person's live notes, newest first, ONE grouped read over the card's people — each row's marker says how
-        // many and, in its tooltip, the words (§NNN), and links to the person's page. The service asks for the role again.
+        // many and, in its tooltip, the words (§945), and links to the person's page. The service asks for the role again.
         const rowNotes = await listVolunteerNotesForExport(db, staffUser, people.map((person) => person.id));
         // The volunteer agreement in force (§758): the form's fourth condition, and what the link and the paper need.
         const agreementInForce = await volunteerAgreementInForce(db, now);

@@ -6,7 +6,7 @@ import { isUuid } from "@/shared/ids";
 import type { TestDatabase } from "./db";
 
 /**
- * What a careful organizer types at «Scrie la câți trimiți» on «Trimite un mesaj participanților» (§NNN): the number of
+ * What a careful organizer types at «Scrie la câți trimiți» on «Trimite un mesaj participanților» (§945): the number of
  * real registrations a send to `audience` writes to right now — the number the page has just shown them.
  *
  * For the tests that are about something else than that box: each sends as somebody who read the number off the

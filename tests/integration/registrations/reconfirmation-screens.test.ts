@@ -378,7 +378,7 @@ describe("«Trimite un mesaj participanților»", () => {
     expect(textOf(line(english[1]))).toBe("With the race number and the QR code for the confirmed: 2");
   });
 
-  it("§NNN hands the composer «Doar anumiți participanți»: everybody who can be ticked, by name with a state, the list's words — and a question that counts the ticks", async () => {
+  it("§945 hands the composer «Doar anumiți participanți»: everybody who can be ticked, by name with a state, the list's words — and a question that counts the ticks", async () => {
     const race = await createRace();
     state.actor = await staff("MODERATOR");
     const zoe = await register(race.id, { registeredName: "Zoe Albu" });
@@ -435,7 +435,7 @@ describe("«Trimite un mesaj participanților»", () => {
     expect(ro.Admin.participantMessages.chosen.label).toBe("Doar anumiți participanți, pe care îi aleg din listă");
   });
 
-  it("§NNN hands the composer «Confirmă trimiterea»: the box the number of recipients is typed into, each group's short name, and the box's name for a refusal", async () => {
+  it("§945 hands the composer «Confirmă trimiterea»: the box the number of recipients is typed into, each group's short name, and the box's name for a refusal", async () => {
     const race = await createRace();
     state.actor = await staff("MODERATOR");
     await register(race.id);
@@ -460,7 +460,7 @@ describe("«Trimite un mesaj participanților»", () => {
     }
   });
 
-  it("§NNN says no test line in the question of an event without test registrations", async () => {
+  it("§945 says no test line in the question of an event without test registrations", async () => {
     const race = await createRace();
     state.actor = await staff("MODERATOR");
     await register(race.id);
@@ -469,7 +469,7 @@ describe("«Trimite un mesaj participanților»", () => {
     expect(spec.body).toBe(ro.Admin.participantMessages.confirmBody);
   });
 
-  it("§NNN back from a send to the people ticked, hands the boxes its words and ticks, says so, and names the choice on its «Mesaje trimise» row — nothing after any other send", async () => {
+  it("§945 back from a send to the people ticked, hands the boxes its words and ticks, says so, and names the choice on its «Mesaje trimise» row — nothing after any other send", async () => {
     const race = await createRace();
     const actor = await staff("MODERATOR");
     state.actor = actor;

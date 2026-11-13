@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.42-2026-11-13 -->
+<!-- PROJECT_BASELINE: BR-V4.43-2026-11-13 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.42-2026-11-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.43-2026-11-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -3466,7 +3466,7 @@ place, a deadline, the allocator or the capacity formula reads the flag, and the
 count this message (`DESK_CODE_MESSAGE_TYPES` is by type).
 
 **The organizer's message goes to people ticked by name only when its send chose «Doar anumiți participanți, pe care îi
-aleg din listă»** (`DECISIONS.md` §NNN, `notifications/domain/organizer-message.ts#CHOSEN_AUDIENCE`): a fifth choice of
+aleg din listă»** (`DECISIONS.md` §945, `notifications/domain/organizer-message.ts#CHOSEN_AUDIENCE`): a fifth choice of
 «Cui îi trimiți» beside the four groups, and not a group — for a trial of a message before everybody gets it, or a word
 to a few. The composer lists the event's active registrations by name with their state, and nothing else of a person: no
 address, no number. The send reaches exactly the ticked that are this event's and in a state `ALL_ACTIVE` holds when it
@@ -3480,7 +3480,7 @@ with the send's own id (`?kept=`) and puts its words and its two ticks back in t
 outbox rows, the ticks from its audit row (`readKeptMessage`) — so the same message goes to everybody without being
 typed twice; a send to a group still leaves the boxes empty (§364).
 
-**Every send of the organizer's message is confirmed by the number of recipients, typed** (`DECISIONS.md` §NNN,
+**Every send of the organizer's message is confirmed by the number of recipients, typed** (`DECISIONS.md` §945,
 `notifications/domain/organizer-message.ts#typedCountMatches`; the owner: «si vreau extra extra confirmare»): right above
 «Trimite mesajul» the composer says again who the message goes to — the group's short name and its number, or the people
 ticked by name — and asks for that number at «Scrie la câți trimiți». `sendParticipantMessage` requires it

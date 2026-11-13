@@ -639,7 +639,7 @@ export type EmailCount = {
   lines?: true;
   /**
    * Count the ticks themselves instead: each distinct posted value is one person written to, by **one** send — «Doar
-   * anumiți participanți» on «Trimite un mesaj participanților» (§NNN), where the people ticked are the recipients and
+   * anumiți participanți» on «Trimite un mesaj participanților» (§945), where the people ticked are the recipients and
    * the club's copy of a bulk send is one however many are ticked. A value `counts` names adds what it says there — a
    * test registration's 0 (§12.6) — and `base` is not read.
    */

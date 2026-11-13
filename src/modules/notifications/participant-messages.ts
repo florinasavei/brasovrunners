@@ -89,7 +89,7 @@ export async function countParticipantMessageAudiences<T extends Record<string, 
 }
 
 /**
- * One line of the composer's list under «Doar anumiți participanți» (§NNN): a registration that can be ticked — its name
+ * One line of the composer's list under «Doar anumiți participanți» (§945): a registration that can be ticked — its name
  * of record, its state and whether it is a test one. No address, no number and nothing else about the person: the list
  * is for finding somebody by name, which is all the race-day desk shows of a person too.
  */
@@ -116,13 +116,13 @@ export type SendParticipantMessageInput = {
   /** As posted; anything but one of the five choices — the four groups, or the people ticked — is refused. */
   audience: string;
   /**
-   * «Doar anumiți participanți» (§NNN): the registrations ticked on the composer, as posted. Read only when `audience` is
+   * «Doar anumiți participanți» (§945): the registrations ticked on the composer, as posted. Read only when `audience` is
    * `CHOSEN_AUDIENCE`, and only as far as each is a registration of this event in a state `ALL_ACTIVE` holds — a tick on
    * anybody else (cancelled since the page was drawn, another event's, no registration at all) writes to nobody.
    */
   registrationIds?: readonly unknown[];
   /**
-   * «Scrie la câți trimiți» (§NNN; the owner, 2026-11-13: «si vreau extra extra confirmare»): the number of recipients,
+   * «Scrie la câți trimiți» (§945; the owner, 2026-11-13: «si vreau extra extra confirmare»): the number of recipients,
    * as the organizer typed it beside «Trimite mesajul». The send goes only when it is exactly the number of real
    * registrations it is about to write to, counted under the lock from the rows themselves; anything else — another
    * number, nothing typed, a caller that forgot it — queues nothing. Required, so that it is the send's rule and not
@@ -171,7 +171,7 @@ export type SendParticipantMessageResult =
   | { kind: "nobody" }
   /**
    * The number typed at «Scrie la câți trimiți» is not the number of real registrations the send would have written to
-   * (§NNN): nothing was queued, and nothing was audited. `real` is that number now, for the refusal's sentence.
+   * (§945): nothing was queued, and nothing was audited. `real` is that number now, for the refusal's sentence.
    */
   | { kind: "miscounted"; real: number };
 
@@ -183,7 +183,7 @@ export function refusedBoxes(message: ReturnType<typeof checkOrganizerMessage>):
 }
 
 /**
- * Queue the message to everybody in the chosen group — or, for «Doar anumiți participanți» (§NNN), to the people ticked:
+ * Queue the message to everybody in the chosen group — or, for «Doar anumiți participanți» (§945), to the people ticked:
  * the same send in every other respect (the lock, one row a registration in its language, each flag on its own rows, the
  * club's one copy, the audit row), reaching those of the ticked the widest group would reach and nobody else.
  *
@@ -225,7 +225,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
   }
   const message: OrganizerMessage = checked.message;
   const audience: MessageReach = input.audience;
-  // «Doar anumiți participanți» (§NNN): the ticked, as ids; null for a group. They narrow the widest group, never widen it.
+  // «Doar anumiți participanți» (§945): the ticked, as ids; null for a group. They narrow the widest group, never widen it.
   const chosen = audience === CHOSEN_AUDIENCE ? new Set(chosenRegistrationIds(input.registrationIds ?? [])) : null;
   const group: ParticipantMessageAudience = audience === CHOSEN_AUDIENCE ? "ALL_ACTIVE" : audience;
   // A posted id that is not a uuid names no event; asking Postgres would be a syntax error, not an answer.
@@ -263,14 +263,14 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       .innerJoin(participants, eq(participants.id, registrations.participantId))
       .where(and(eq(registrations.eventId, input.eventId), inArray(registrations.status, [...AUDIENCE_STATUSES[group]])));
     /*
-      «Doar anumiți participanți» (§NNN): of this event's active registrations, read under the lock as for a group, the
+      «Doar anumiți participanți» (§945): of this event's active registrations, read under the lock as for a group, the
       ticked ones. Matched here rather than in the query, so a posted list of any length is never a statement's
       parameters, and an id that is not one of these rows — cancelled since, another event's, made up — matches nothing.
     */
     const rows = chosen ? inGroup.filter((row) => chosen.has(row.registrationId)) : inGroup;
     if (rows.length === 0) return { kind: "nobody" } as const;
     /*
-      «Scrie la câți trimiți» (§NNN): the number the organizer typed against the rows this send is about to write — the
+      «Scrie la câți trimiți» (§945): the number the organizer typed against the rows this send is about to write — the
       real ones, as the page counts them (§12.6) — compared here, under the lock, so it is true of this very send:
       somebody who believes they write to two and has «Toți cei înscriși» chosen is stopped, and so is a press whose
       group changed since the page was drawn. Before any row, ask or audit is written, and before the allowance is asked.
@@ -433,7 +433,7 @@ export type SentParticipantMessage = {
   /** The send's own id, from its audit row; null for a hand-made row that carries none. */
   sendId: string | null;
   subject: { ro: string; en: string };
-  /** The group, or `CHOSEN_AUDIENCE` for a send to the people ticked (§NNN) — never who they were. */
+  /** The group, or `CHOSEN_AUDIENCE` for a send to the people ticked (§945) — never who they were. */
   audience: MessageReach | null;
   recipients: number;
   test: number;
@@ -517,13 +517,13 @@ export async function listParticipantMessages<T extends Record<string, unknown>>
 }
 
 /**
- * What the composer's boxes hold again after a send to the people ticked (§NNN): the words in both languages and the
+ * What the composer's boxes hold again after a send to the people ticked (§945): the words in both languages and the
  * two ticks, as that send carried them.
  */
 export type KeptMessage = OrganizerMessage & { askReconfirm: boolean; sendQr: boolean };
 
 /**
- * The words of a send to the people ticked, read back for the composer (§NNN): such a send is a trial as often as not,
+ * The words of a send to the people ticked, read back for the composer (§945): such a send is a trial as often as not,
  * and the same message to everybody must not have to be typed a second time — four boxes, in two languages. Read from
  * what the send itself wrote, and from nothing new: the two ticks from its audit row, the words from the payload of one
  * of its own outbox rows — the one text an outbox row keeps (§364) — for as long as those rows are kept.

@@ -20,7 +20,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { confirmed } from "../../helpers/typed-count";
 
 /**
- * §NNN — «Doar anumiți participanți, pe care îi aleg din listă» on «Trimite un mesaj participanților» (the owner,
+ * §945 — «Doar anumiți participanți, pe care îi aleg din listă» on «Trimite un mesaj participanților» (the owner,
  * 2026-11-13: «As vrea sa fac un test pentru mailul asta, sa selectez doar anumiti participanti»; BR-REQ-080-01,
  * BR-REQ-080-02, BR-REQ-060-01).
  *
@@ -173,7 +173,7 @@ async function refusalOf(attempt: Promise<unknown>) {
   }
 }
 
-describe("§NNN the send writes to the people ticked, and to nobody else", () => {
+describe("§945 the send writes to the people ticked, and to nobody else", () => {
   it("queues one row for each ticked registration that is this event's and active — whatever else was ticked", async () => {
     const ana = await person("Ana", "CONFIRMED");
     const bogdan = await person("Bogdan", "WAITLISTED", { locale: "en" });
@@ -298,7 +298,7 @@ describe("§NNN the send writes to the people ticked, and to nobody else", () =>
   });
 });
 
-describe("§NNN «Scrie la câți trimiți»: the send insists on the number of recipients, typed", () => {
+describe("§945 «Scrie la câți trimiți»: the send insists on the number of recipients, typed", () => {
   /** Three real people active, a test registration and a cancelled one: «Toți cei înscriși» is 3. */
   async function five() {
     const ana = await person("Ana", "CONFIRMED");
@@ -400,7 +400,7 @@ describe("§NNN «Scrie la câți trimiți»: the send insists on the number of 
   });
 });
 
-describe("§NNN who can be ticked", () => {
+describe("§945 who can be ticked", () => {
   it("lists this event's active registrations by name as Romanian sorts it, with a state and a test row's mark — and nothing else of a person", async () => {
     const zoe = await person("Zoe Albu", "CONFIRMED");
     const stefan = await person("Ștefan Pop", "WAITLISTED");
@@ -431,7 +431,7 @@ describe("§NNN who can be ticked", () => {
   });
 });
 
-describe("§NNN the words stay after a send to the people ticked", () => {
+describe("§945 the words stay after a send to the people ticked", () => {
   it("reads back that send's words and its two ticks — for this event only", async () => {
     const ana = await person("Ana", "CONFIRMED");
     const bogdan = await person("Bogdan", "WAITLIST_OFFERED");
@@ -463,7 +463,7 @@ describe("§NNN the words stay after a send to the people ticked", () => {
   });
 });
 
-describe("§NNN the form's ticks reach the send", () => {
+describe("§945 the form's ticks reach the send", () => {
   function form(ticked: readonly string[], fields: Record<string, string> = {}): FormData {
     const posted = new FormData();
     posted.set("uiLocale", "ro");

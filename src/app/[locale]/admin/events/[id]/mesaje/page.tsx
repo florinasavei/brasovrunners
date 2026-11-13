@@ -77,12 +77,12 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * it will arrive, and Send behind a question that names how many. Under it, "Mesaje trimise":
  * what was sent before from here, by whom, to whom as a group, and how many.
  *
- * A fifth choice beside the four groups, «Doar anumiți participanți» (§NNN; the owner, 2026-11-13: «As vrea sa fac un
+ * A fifth choice beside the four groups, «Doar anumiți participanți» (§945; the owner, 2026-11-13: «As vrea sa fac un
  * test pentru mailul asta, sa selectez doar anumiti participanti»): the event's active registrations by name, a tick
  * each, for a trial of a message or a word to a few. The page returned to after such a send (`?kept=<the send's id>`)
  * hands its words back to the boxes, so the same message goes to everybody without being typed twice.
  *
- * And every send is confirmed by hand («Confirmă trimiterea», §NNN; the owner, of the same message: «si vreau extra
+ * And every send is confirmed by hand («Confirmă trimiterea», §945; the owner, of the same message: «si vreau extra
  * extra confirmare»): right above «Trimite mesajul» the page says again who receives it and asks for the number of
  * recipients to be typed, which the send holds to the rows it is about to write — the bulk erase's guard (§287).
  *
@@ -116,7 +116,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
     readEmailVolumeToday(db, now),
     listParticipantMessages(db, event.id),
     findEventNotificationDetails(db, event.id, locale),
-    // «Doar anumiți participanți» (§NNN): everybody who can be ticked, and — back from such a send — its words for the boxes.
+    // «Doar anumiți participanți» (§945): everybody who can be ticked, and — back from such a send — its words for the boxes.
     listChoosableRecipients(db, event.id),
     typeof kept === "string" ? readKeptMessage(db, event.id, kept) : null,
   ]);
@@ -290,7 +290,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
   // «Trimite acum» or «Pune la coadă» (§540): under the scheduled timing, the send asks which.
   const sendNow = await sendNowChoiceFor(db, locale);
   /*
-    «Doar anumiți participanți» (§NNN): the people are ticked in the browser, so its question cannot name a number in its
+    «Doar anumiți participanți» (§945): the people are ticked in the browser, so its question cannot name a number in its
     title — the bold email line counts the ticks at the press instead (`ticksOf`), a test registration's counting nobody
     (§12.6), with the club's one copy of the send. No pace or allowance line: none is worked out for a list ticked there,
     and the outbox defers what a spent allowance cannot carry, as for any send (§40).
@@ -338,7 +338,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
     subjectEn: `${t("participantMessages.subject")} (${languageEn})`,
     bodyRo: `${t("participantMessages.body")} (${languageRo})`,
     bodyEn: `${t("participantMessages.body")} (${languageEn})`,
-    // The typed number is never handed back (§NNN, `NEVER_KEPT`): the summary says the confirmation is asked again.
+    // The typed number is never handed back (§945, `NEVER_KEPT`): the summary says the confirmation is asked again.
   }, { confirmation: true });
 
   const inSeries = event.repeatOf !== null || readRepeatRule(event.repeatRule) !== null;
@@ -380,7 +380,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
           <Alert severity="success" data-testid="participant-message-sent">
             {t(`participantMessages.sent.${countForm(sentCount, locale)}`, { count: sentCount })}
             {sentTest > 0 ? ` ${t("participantMessages.sentTest", { test: String(sentTest) })}` : ""}
-            {/* Back from a send to the people ticked (§NNN): the boxes below still hold its words. */}
+            {/* Back from a send to the people ticked (§945): the boxes below still hold its words. */}
             {keptMessage ? ` ${t("participantMessages.chosen.kept")}` : ""}
           </Alert>
         )}

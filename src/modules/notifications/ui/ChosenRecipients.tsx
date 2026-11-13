@@ -34,7 +34,7 @@ export type ChosenLabels = {
 };
 
 /**
- * «Doar anumiți participanți» (§NNN) — the list under the fifth choice of «Cui îi trimiți»: everybody who can be written
+ * «Doar anumiți participanți» (§945) — the list under the fifth choice of «Cui îi trimiți»: everybody who can be written
  * to, by name with the registration's state, a box to find a name, and a tick each.
  *
  * The ticks are the composer's state (it disables «Trimite» while nobody is ticked and says how many are), so they

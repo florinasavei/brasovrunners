@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.43-2026-11-13
+
+- **«Doar anumiți participanți» on «Trimite un mesaj participanților»** — a fifth choice under «Cui îi trimiți»: tick people by name from the event's registrations and the message goes only to them, for a trial before everybody gets it. The page says who is ticked and the question counts them. After such a send the text and the two ticks stay in the boxes, so the same message goes to everybody without being typed again. And every send is now confirmed by hand: «Confirmă trimiterea», right above «Trimite mesajul», says once more who receives it and asks for the number of recipients to be typed — unless it is exactly that number, nothing is sent. Apart from the message: the «1 notă» marker beside a volunteer, on the «Voluntari» list and on the event's volunteers card, now shows the notes' words when pointed at, as the registrations list's does. §945.
 ## BR-V4.42-2026-11-13
 
 - **A test that could stop a release one minute a day** — the queue panel's zone test now pins the form's own time, so a run at 10:05 in Brașov no longer fails it; nothing in the application changes. §944.

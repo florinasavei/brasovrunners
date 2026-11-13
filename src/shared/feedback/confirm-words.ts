@@ -199,7 +199,7 @@ export async function confirmWords() {
       return { emailCount, ...roadOf(type), ...(extra.length > 0 ? { also: extra } : {}), ...optOutOf(optOut, noneOfType()) };
     }
     if ("ticksOf" in to) {
-      // One per tick, counted at the press (§NNN): exactly that many, and the club's copy of the one send they make.
+      // One per tick, counted at the press (§945): exactly that many, and the club's copy of the one send they make.
       const emailCount: EmailCount = {
         field: to.ticksOf,
         base: 0,

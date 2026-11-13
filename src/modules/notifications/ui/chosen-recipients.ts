@@ -1,7 +1,7 @@
 import { foldName } from "@/modules/registrations/domain/name-fold";
 
 /**
- * «Doar anumiți participanți» (§NNN), the composer's list without the browser: who a typed name finds, which ticks a
+ * «Doar anumiți participanți» (§945), the composer's list without the browser: who a typed name finds, which ticks a
  * refused send hands back, and what a tick changes. The island (`ChosenRecipients.tsx`) draws what these answer, so the
  * rules are tested in Node.
  */

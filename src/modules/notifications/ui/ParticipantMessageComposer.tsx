@@ -63,7 +63,7 @@ export type ComposerAudience = {
 };
 
 /**
- * «Doar anumiți participanți» (§NNN), the fifth choice of «Cui îi trimiți» and not a group: what its radio posts, the
+ * «Doar anumiți participanți» (§945), the fifth choice of «Cui îi trimiți» and not a group: what its radio posts, the
  * field its ticks post under, and everybody who can be ticked — a name and a state each, by name, read on the server.
  */
 export type ComposerChosen = {
@@ -73,14 +73,14 @@ export type ComposerChosen = {
 };
 
 /**
- * «Confirmă trimiterea» (§NNN; the owner: «si vreau extra extra confirmare»): the heading over who the message goes to,
+ * «Confirmă trimiterea» (§945; the owner: «si vreau extra extra confirmare»): the heading over who the message goes to,
  * said again where it is sent, and the box the number of recipients is typed into — the field's name, its label and
  * its one line of help.
  */
 export type ComposerConfirm = { field: string; title: string; count: string; countHelp: string };
 
 /**
- * What the boxes hold when the page is drawn right after a send to the people ticked (§NNN): that send's words and its
+ * What the boxes hold when the page is drawn right after a send to the people ticked (§945): that send's words and its
  * two ticks, so a trial is followed by the same message to everybody. Absent after any other send: the boxes are empty.
  */
 export type ComposerKept = {
@@ -95,9 +95,9 @@ export type ComposerKept = {
 export type ComposerLabels = {
   audience: string;
   audienceHelp: string;
-  /** «Doar anumiți participanți» (§NNN): the radio's words and the list's. */
+  /** «Doar anumiți participanți» (§945): the radio's words and the list's. */
   chosen: ChosenLabels;
-  /** «Confirmă trimiterea» (§NNN): the typed number of recipients. */
+  /** «Confirmă trimiterea» (§945): the typed number of recipients. */
   confirm: ComposerConfirm;
   languageRo: string;
   languageEn: string;
@@ -161,9 +161,9 @@ export type PreviewResult = { subject: string; html: string; unknown: string[] }
 type Props = {
   eventId: string;
   audiences: readonly ComposerAudience[];
-  /** «Doar anumiți participanți» (§NNN): the people who can be ticked. */
+  /** «Doar anumiți participanți» (§945): the people who can be ticked. */
   chosen: ComposerChosen;
-  /** The words of the send to the people ticked that the page was just returned from (§NNN), when it was one. */
+  /** The words of the send to the people ticked that the page was just returned from (§945), when it was one. */
   kept?: ComposerKept;
   defaultAudience: string;
   maxSubject: number;
@@ -200,7 +200,7 @@ const PREVIEW_PAUSE_MS = 500;
  * the chosen radio names. The browser's own checks run before it: an empty box is pointed at
  * before any question, so the question is only ever about sending.
  *
- * **«Doar anumiți participanți»** (§NNN) is the fifth choice and not a group: under its radio, the
+ * **«Doar anumiți participanți»** (§945) is the fifth choice and not a group: under its radio, the
  * list of everybody who can be written to (`ChosenRecipients`), a tick each. The ticks are held
  * here, since «Trimite» waits for one and the recipients line counts them; its question counts
  * them again from the form as posted. After such a send the page hands the words back (`kept`) —
@@ -208,7 +208,7 @@ const PREVIEW_PAUSE_MS = 500;
  * message to everybody. Without JavaScript the list never opens, and a press of that choice is
  * refused for having nobody ticked; the four groups send as they always did.
  *
- * **«Confirmă trimiterea»** (§NNN; the owner: «si vreau extra extra confirmare») stands right
+ * **«Confirmă trimiterea»** (§945; the owner: «si vreau extra extra confirmare») stands right
  * above «Trimite mesajul»: who the message goes to, said again where it is sent — the group and
  * its number, or the people ticked by name — and a box the number of recipients is typed into.
  * The send insists on it, as the bulk erase insists on its own typed count (§287): the server
@@ -221,7 +221,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
   const [audience, setAudience] = useState(
     recalledAudience && (recalledAudience === chosen.value || audiences.some((choice) => choice.value === recalledAudience)) ? recalledAudience : defaultAudience,
   );
-  // The people ticked (§NNN): kept while another choice is looked at, and after a refused send as it posted them (§315).
+  // The people ticked (§945): kept while another choice is looked at, and after a refused send as it posted them (§315).
   const [picked, setPicked] = useState(() => recalledPicks(chosen.people, recall.all(chosen.field)));
   const ticking = audience === chosen.value;
   const group = ticking ? undefined : (audiences.find((choice) => choice.value === audience) ?? audiences[0]);
@@ -243,7 +243,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
   */
   const [askReconfirm, setAskReconfirm] = useState(() => (recall.has ? recall.value("askReconfirm") === "1" : kept?.askReconfirm === true));
   // «Trimite și numărul de concurs și codul QR» (§943): off unless ticked; controlled too, so a refused send keeps it (§315).
-  // Either tick starts as the send to the people ticked left it, when the page comes back from one (§NNN).
+  // Either tick starts as the send to the people ticked left it, when the page comes back from one (§945).
   const [sendQr, setSendQr] = useState(() => (recall.has ? recall.value("sendQr") === "1" : kept?.sendQr === true));
   // Either tick as the form holds it now — what a press would post.
   const readTick = useCallback(
@@ -285,7 +285,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
 
   const onInput = (event: FormEvent<HTMLDivElement>) => {
     // Only the four boxes of words are typing: a tick asks for its own preview at once (below), never a second one after
-    // the pause, and who receives it — a radio, a tick on the list, a name looked for (§NNN) — changes no word of it.
+    // the pause, and who receives it — a radio, a tick on the list, a name looked for (§945) — changes no word of it.
     const from = (event.target as HTMLInputElement | null)?.name;
     if (!(REMINDER_BOXES as readonly string[]).includes(from ?? "")) return;
     const words = readWords();
@@ -349,7 +349,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
               }
             />
           ))}
-          {/* «Doar anumiți participanți» (§NNN): not a group, so no count beside it — its number is the ticks, said below. */}
+          {/* «Doar anumiți participanți» (§945): not a group, so no count beside it — its number is the ticks, said below. */}
           <FormControlLabel value={chosen.value} control={<Radio sx={CHECKBOX_TAP_TARGET} />} data-testid={`audience-${chosen.value}`} label={labels.chosen.label} />
         </RadioGroup>
         {ticking && (
@@ -451,7 +451,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
                 key={name}
                 name={name}
                 label={language}
-                // The words of the send to the people ticked the page came back from (§NNN); nothing after any other.
+                // The words of the send to the people ticked the page came back from (§945); nothing after any other.
                 defaultValue={kept?.[name]}
                 required
                 fullWidth
@@ -587,7 +587,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
       </Box>
 
       {/*
-        «Confirmă trimiterea» (§NNN; the owner: «si vreau extra extra confirmare»): who the message goes to, said again
+        «Confirmă trimiterea» (§945; the owner: «si vreau extra extra confirmare»): who the message goes to, said again
         right where it is sent — the preview stands between the choice and this button — and the number of recipients
         typed by hand. The send insists on that number (§287's guard, for a message that cannot be taken back): the
         server compares it with the rows it is about to write. Never kept: after a refusal it is typed again (§315).

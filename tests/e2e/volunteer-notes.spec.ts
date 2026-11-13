@@ -108,7 +108,7 @@ test.describe("«Note interne» for volunteers", () => {
       await expect(mark).toContainText("1 notă");
       expect((await mark.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       await expect(page.locator("#main")).not.toContainText("dimineața");
-      // …and under a mouse's pointer the marker says the note's own words (§NNN), as the registrations list's does; away from it, gone.
+      // …and under a mouse's pointer the marker says the note's own words (§945), as the registrations list's does; away from it, gone.
       if (test.info().project.name === "desktop") {
         await mark.hover();
         await expect(page.getByRole("tooltip")).toContainText(words);

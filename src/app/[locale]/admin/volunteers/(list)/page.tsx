@@ -139,10 +139,10 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const [roleNames, rowNotes] = await Promise.all([
     listRoleNames(db, [...new Set(rows.flatMap((row) => [...row.roleIds, ...row.choiceIds]))]),
     // «Note interne»: each row's live notes, newest first — ONE grouped read over the page's ids, never a query per row. The marker
-    // says how many and, in its tooltip, the words (§NNN, as the registrations list's, §943). The service asks for the role again.
+    // says how many and, in its tooltip, the words (§945, as the registrations list's, §943). The service asks for the role again.
     listVolunteerNotesForExport(db, actor, rows.map((row) => row.id)),
   ]);
-  // The marker's tooltip (§NNN): the newest notes' words, each with its day and hour, the older ones counted — no author's name.
+  // The marker's tooltip (§945): the newest notes' words, each with its day and hour, the older ones counted — no author's name.
   const notesTipOf = (volunteerId: string) =>
     notesTip(
       rowNotes.get(volunteerId),
@@ -205,7 +205,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
 
   /**
    * «Note interne» in the name cell («Note interne» for volunteers, as the registrations list has it): the marker with the count when
-   * somebody left a note — the link to the person's card, open, and under the pointer the notes' own words (§NNN; the owner, of «1
+   * somebody left a note — the link to the person's card, open, and under the pointer the notes' own words (§945; the owner, of «1
    * notă» on this list: «trebuie sa pot vedea comentariile pe hover») — and «Adaugă o notă», a dialog over the list that comes back to this
    * very page of it (`returnTo`, the list's validated way back); without JavaScript a link to the card. `AdminTable` draws each row
    * twice (the table and the phone cards): the dialog keeps its ids unique by itself (`useId`).
@@ -217,7 +217,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     return (
       <>
         {noteCount > 0 && (
-          // The words under the pointer, without opening the person's page (§NNN): the newest notes, the rest counted.
+          // The words under the pointer, without opening the person's page (§945): the newest notes, the rest counted.
           <TipSpan title={notesTipOf(row.id)}>
             <NotesMark label={counted} ariaLabel={t("registrations.notes.mark", { name: row.name, counted })} href={`${personHref(row)}#note-interne`} />
           </TipSpan>
