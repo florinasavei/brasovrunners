@@ -15,6 +15,12 @@ import { openEditorBox } from "./support/fold";
  * outbox holds exactly one row per recipient, each in its own language, carrying both. A role
  * that may not write to participants (Tehnic) meets a 404.
  *
+ * And §945 — «Doar anumiți participanți, pe care îi aleg din listă»: a trial to one person found by
+ * name and ticked, whose question counts the tick, after which the words are still in the boxes and
+ * go to everybody with one more press — one outbox row for the trial, one per registrant after it.
+ * Every send is confirmed by hand at «Scrie la câți trimiți»: the trial's «1» typed again with
+ * everybody chosen sends nothing and says how many there are.
+ *
  * Each project writes its own event straight into the database — the setup, not the subject, as
  * `support/action-link.ts` argues — so the two never count each other's rows: a confirmed
  * Romanian runner, an English one on the waiting list, and two who must never hear it (a
@@ -38,9 +44,17 @@ async function withDatabase<T>(work: (client: pg.Client) => Promise<T>): Promise
   }
 }
 
-type Person = { status: string; locale: "ro" | "en" };
+type Person = { status: string; locale: "ro" | "en"; name?: string };
 
-async function seedEvent(tag: string): Promise<string> {
+/** The four of the first journey: one confirmed, one waiting, and two who must never hear it. */
+const FOUR: readonly Person[] = [
+  { status: "CONFIRMED", locale: "ro" },
+  { status: "WAITLISTED", locale: "en" },
+  { status: "CANCELLED", locale: "ro" },
+  { status: "PENDING_EMAIL_CONFIRMATION", locale: "ro" },
+];
+
+async function seedEvent(tag: string, people: readonly Person[] = FOUR): Promise<string> {
   return withDatabase(async (client) => {
     const { rows } = await client.query<{ id: string }>(
       `INSERT INTO events (type, starts_at, registration_mode, capacity, editorial_status, published_at, location_name)
@@ -58,12 +72,6 @@ async function seedEvent(tag: string): Promise<string> {
       `message-${tag}`,
       `Storm race ${tag}`,
     ]);
-    const people: Person[] = [
-      { status: "CONFIRMED", locale: "ro" },
-      { status: "WAITLISTED", locale: "en" },
-      { status: "CANCELLED", locale: "ro" },
-      { status: "PENDING_EMAIL_CONFIRMATION", locale: "ro" },
-    ];
     for (const [index, person] of people.entries()) {
       const email = `msg-${tag}-${index}@test.invalid`;
       const { rows: participant } = await client.query<{ id: string }>(
@@ -75,12 +83,12 @@ async function seedEvent(tag: string): Promise<string> {
         `INSERT INTO registrations (event_id, participant_id, status, locale, registered_name, display_name,
            privacy_notice_version, privacy_acknowledged_at, results_name_consent, results_consent_version, list_opt_out,
            confirmed_at, waitlisted_at, cancelled_at, cancellation_source)
-         VALUES ($1, $2, $3::registration_status, $4::locale, 'Runner', 'Runner', 1, now(), false, 1, true,
+         VALUES ($1, $2, $3::registration_status, $4::locale, $5, $5, 1, now(), false, 1, true,
            CASE WHEN $3::text = 'CONFIRMED' THEN now() END,
            CASE WHEN $3::text = 'WAITLISTED' THEN now() END,
            CASE WHEN $3::text = 'CANCELLED' THEN now() END,
            CASE WHEN $3::text = 'CANCELLED' THEN 'PARTICIPANT'::registration_cancellation_source END)`,
-        [eventId, participant[0].id, person.status, person.locale],
+        [eventId, participant[0].id, person.status, person.locale, person.name ?? "Runner"],
       );
     }
     return eventId;
@@ -97,6 +105,19 @@ async function queuedFor(eventId: string): Promise<Array<{ locale: string; paylo
       [eventId],
     );
     return rows;
+  });
+}
+
+/** Whose registrations the event's organizer messages were queued for, by name, oldest first — never the club's copies. */
+async function namesWrittenTo(eventId: string): Promise<string[]> {
+  return withDatabase(async (client) => {
+    const { rows } = await client.query<{ name: string }>(
+      `SELECT r.registered_name AS name FROM email_outbox o JOIN registrations r ON r.id = o.registration_id
+        WHERE r.event_id = $1 AND o.message_type = 'ORGANIZER_MESSAGE' AND o.participant_id IS NOT NULL
+        ORDER BY o.created_at, r.registered_name`,
+      [eventId],
+    );
+    return rows.map((row) => row.name);
   });
 }
 
@@ -168,6 +189,9 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     await field("subjectEn").fill("Bad weather at {eventTitle}");
     await field("bodyRo").fill("Salut, {participantName}!\n\nStartul se mută la 10:00 din cauza furtunii.");
     await field("bodyEn").fill("   ");
+    // «Confirmă trimiterea»: who it goes to, said again beside the button, and the number typed by hand.
+    await expect(page.getByTestId("participant-message-confirm-who")).toHaveText("Toți cei înscriși · 2 destinatari");
+    await field("confirmCount").fill("2");
     await page.getByRole("button", { name: "Trimite mesajul" }).click();
     await expect(page.getByRole("dialog")).toContainText("Trimiți mesajul la 2 participanți?");
     await confirmDialog(page);
@@ -175,6 +199,8 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     await expect(refusal).toContainText("Mesajul (English)", { timeout: 30_000 });
     await expect(field("bodyRo")).toHaveValue("Salut, {participantName}!\n\nStartul se mută la 10:00 din cauza furtunii.");
     await expect(field("subjectEn")).toHaveValue("Bad weather at {eventTitle}");
+    // The typed number is the one box that does not come back: it is typed again for the next press.
+    await expect(field("confirmCount")).toHaveValue("");
 
     // Both languages now; the preview is the real email, the Romanian registrant's copy first…
     await field("bodyEn").fill("Hi, {participantName}!\n\nThe start moves to 10:00 because of the storm.");
@@ -190,7 +216,8 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     await page.getByRole("tab", { name: "Înscris în engleză" }).click();
     await expect(previewSubject).toContainText(`Bad weather at Storm race ${tag} / Vreme rea la Cursa furtunii ${tag}`, { timeout: 30_000 });
 
-    // Send, behind the question that names how many.
+    // Send, behind the number typed again and the question that names how many.
+    await field("confirmCount").fill("2");
     await page.getByRole("button", { name: "Trimite mesajul" }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toContainText("Trimiți mesajul la 2 participanți?");
@@ -229,5 +256,112 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     await signIn(page, "Dev Technical");
     const response = await page.goto(`/ro/admin/events/${eventId}/mesaje`);
     expect(response?.status()).toBe(404);
+  });
+
+  test("§945 a trial to one person ticked on the list, then the same words to everybody", async ({ page }) => {
+    test.setTimeout(150_000);
+    const tag = `${test.info().project.name}-${Date.now().toString(36)}-proba`;
+    const eventId = await seedEvent(tag, [
+      { status: "CONFIRMED", locale: "ro", name: "Ștefan Probă" },
+      { status: "CONFIRMED", locale: "ro", name: "Ana Restul" },
+      { status: "WAITLISTED", locale: "en", name: "Bogdan Waiting" },
+      { status: "CANCELLED", locale: "ro", name: "Gabi Anulat" },
+    ]);
+    created.push(eventId);
+    const field = (name: string) => page.locator(`[name="${name}"]`);
+    const send = page.getByRole("button", { name: "Trimite mesajul" });
+
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/events/${eventId}/mesaje`);
+    await hydrated(page);
+    await field("subjectRo").fill("Probă la {eventTitle}");
+    await field("subjectEn").fill("Trial at {eventTitle}");
+    await field("bodyRo").fill("Salut, {participantName}!\n\nNe vedem la start.");
+    await field("bodyEn").fill("Hi, {participantName}!\n\nSee you at the start.");
+
+    // The fifth choice, a thumb's target like the four groups: it opens the list, and «Trimite» waits for a tick.
+    const choice = page.getByRole("radio", { name: /Doar anumiți participanți/ });
+    const choiceBox = await choice.boundingBox();
+    expect(choiceBox?.width ?? 0).toBeGreaterThanOrEqual(44);
+    expect(choiceBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await choice.check();
+    const list = page.getByTestId("participant-message-chosen");
+    const rows = page.getByTestId("participant-message-chosen-row");
+    // Everybody who can be written to, by name with a state — never the cancelled one.
+    await expect(rows).toHaveText(["Ana Restul · Confirmată", "Bogdan Waiting · Pe lista de așteptare", "Ștefan Probă · Confirmată"]);
+    await expect(page.getByTestId("participant-message-recipients")).toHaveText("Bifați: 0 din 3");
+    await expect(page.getByTestId("participant-message-chosen-names")).toContainText("Nu ai bifat pe nimeni încă.");
+    await expect(send).toBeDisabled();
+
+    // Found without its diacritics; Enter in the search box finds, and never sends the form.
+    const search = list.getByRole("searchbox");
+    await search.fill("stefan");
+    await search.press("Enter");
+    await expect(rows).toHaveText(["Ștefan Probă · Confirmată"]);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    const tick = page.getByRole("checkbox", { name: /Ștefan Probă/ });
+    const tickBox = await tick.boundingBox();
+    expect(tickBox?.width ?? 0).toBeGreaterThanOrEqual(44);
+    expect(tickBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await tick.check();
+    // The tick outlives the search that found it, and the page says who before the press.
+    await search.fill("");
+    await expect(page.getByTestId("participant-message-chosen-names")).toHaveText("Primesc mesajul: Ștefan Probă.");
+    await expect(page.getByTestId("participant-message-recipients")).toHaveText("Bifați: 1 din 3");
+
+    // «Confirmă trimiterea», beside the button: the choice, its number and who, by name — then the number typed by hand.
+    const who = page.getByTestId("participant-message-confirm-who");
+    await expect(who).toContainText("Participanți aleși · Bifați: 1 din 3");
+    await expect(who).toContainText("Primesc mesajul: Ștefan Probă.");
+    await field("confirmCount").fill("1");
+
+    // The question is about the ticked, and its email line counts them at the press.
+    await send.click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toContainText("Trimiți mesajul doar participanților bifați?");
+    await expect(dialog.getByTestId("confirm-email")).toHaveText("Pleacă 1 email „Mesaj de la organizatori”, câte unul către fiecare participant.");
+    await confirmDialog(page);
+    const sent = page.getByTestId("participant-message-sent");
+    await expect(sent).toContainText("Mesaj pus la coadă pentru 1 participant.", { timeout: 30_000 });
+    await expect(sent).toContainText("Textul a rămas în căsuțe");
+    await expect(page).toHaveURL(/sent=1&test=0&kept=[0-9a-f-]{36}/);
+    expect(await namesWrittenTo(eventId)).toEqual(["Ștefan Probă"]);
+
+    // The trial's words are still in the boxes, the choice is back on everybody, and the history names the trial.
+    await hydrated(page);
+    await expect(field("subjectRo")).toHaveValue("Probă la {eventTitle}");
+    await expect(field("bodyEn")).toHaveValue("Hi, {participantName}!\n\nSee you at the start.");
+    await expect(page.getByRole("radio", { name: /Toți cei înscriși/ })).toBeChecked();
+    const trial = page.getByTestId("participant-message-history-row").first();
+    await expect(trial).toContainText("Participanți aleși");
+    await expect(trial).toContainText("1 destinatar");
+
+    // Everybody is chosen now, and the trial's «1» typed again: nothing is sent, the refusal says how many there are, the
+    // words stay and the number is asked for again.
+    await expect(who).toHaveText("Toți cei înscriși · 3 destinatari");
+    await field("confirmCount").fill("1");
+    await send.click();
+    await confirmDialog(page);
+    const refusal = page.getByTestId("form-refusal");
+    await expect(refusal).toContainText("numărul scris la confirmare nu este cel al destinatarilor. Acum sunt 3", { timeout: 30_000 });
+    await expect(refusal.getByRole("link", { name: "Scrie la câți trimiți" })).toBeVisible();
+    await expect(field("confirmCount")).toHaveValue("");
+    await expect(field("subjectRo")).toHaveValue("Probă la {eventTitle}");
+    expect(await namesWrittenTo(eventId)).toEqual(["Ștefan Probă"]);
+
+    // The right number sends the same words to everybody — and after a send to a group the boxes are empty again.
+    await field("confirmCount").fill("3");
+    await send.click();
+    await expect(page.getByRole("dialog")).toContainText("Trimiți mesajul la 3 participanți?");
+    await confirmDialog(page);
+    await expect(sent).toContainText("Mesaj pus la coadă pentru 3 participanți.", { timeout: 30_000 });
+    await expect(sent).not.toContainText("Textul a rămas în căsuțe");
+    await expect(page).not.toHaveURL(/kept=/);
+    await expect(field("subjectRo")).toHaveValue("");
+    expect(await namesWrittenTo(eventId)).toEqual(["Ștefan Probă", "Ana Restul", "Bogdan Waiting", "Ștefan Probă"]);
+
+    // Nothing wider than the phone.
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
   });
 });

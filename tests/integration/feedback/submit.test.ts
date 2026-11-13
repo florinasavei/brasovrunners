@@ -30,6 +30,7 @@ import { sendParticipantMessage } from "@/modules/notifications/participant-mess
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { confirmed } from "../../helpers/typed-count";
 import { deliverRelay, fakeRoads, relayRows, sent } from "../../helpers/relay";
 
 /** Girl Zone's subject as it leaves (§786): the neutral words behind the confidential route's tags. */
@@ -978,7 +979,7 @@ describe("§676 «Spune-ne ceva»", () => {
         subject: { ro: "Cum a fost la {eventTitle}?", en: "How was {eventTitle}?" },
         body: { ro: "Spune-ne aici: {feedbackLink}", en: "Tell us here: {feedbackLink}" },
       };
-      await sendParticipantMessage(db, organizer, { eventId: event.id, audience: "ALL_ACTIVE", sendId: "0b0d5c3e-4f5a-4c1e-9d2b-7a8e9f0a1b21", ...words }, NOW);
+      await sendParticipantMessage(db, organizer, await confirmed(db, { eventId: event.id, audience: "ALL_ACTIVE", sendId: "0b0d5c3e-4f5a-4c1e-9d2b-7a8e9f0a1b21", ...words }), NOW);
       const [row] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "ORGANIZER_MESSAGE"));
       const closed = await renderOutboxMessage({ ...row, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
       expect(closed.text).toMatch(/Spune-ne aici: \S+\/ro\/contact(\s|$)/);
@@ -1003,7 +1004,7 @@ describe("§676 «Spune-ne ceva»", () => {
         subject: { ro: "Cum a fost la {eventTitle}?", en: "How was {eventTitle}?" },
         body: { ro: "Spune-ne aici: {feedbackLink}", en: "Tell us here: {feedbackLink}" },
       };
-      await sendParticipantMessage(db, organizer, { eventId: event.id, audience: "ALL_ACTIVE", sendId: "0b0d5c3e-4f5a-4c1e-9d2b-7a8e9f0a1b22", ...words }, NOW);
+      await sendParticipantMessage(db, organizer, await confirmed(db, { eventId: event.id, audience: "ALL_ACTIVE", sendId: "0b0d5c3e-4f5a-4c1e-9d2b-7a8e9f0a1b22", ...words }), NOW);
       const [row] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "ORGANIZER_MESSAGE"));
       const message = await renderOutboxMessage({ ...row, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
       expect(message.text).toMatch(/Spune-ne aici: \S+\/ro\/contact(\s|$)/);

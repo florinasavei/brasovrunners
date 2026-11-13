@@ -108,6 +108,13 @@ test.describe("«Note interne» for volunteers", () => {
       await expect(mark).toContainText("1 notă");
       expect((await mark.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       await expect(page.locator("#main")).not.toContainText("dimineața");
+      // …and under a mouse's pointer the marker says the note's own words (§945), as the registrations list's does; away from it, gone.
+      if (test.info().project.name === "desktop") {
+        await mark.hover();
+        await expect(page.getByRole("tooltip")).toContainText(words);
+        await page.mouse.move(0, 0);
+        await expect(page.getByRole("tooltip")).toHaveCount(0);
+      }
       await fitsTheScreen(page);
 
       // The marker opens the person's page: «Note interne» is its first fold, open, the note in it.

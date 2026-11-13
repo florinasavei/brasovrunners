@@ -29,7 +29,7 @@ import { volunteerEventAhead, volunteerEventDay, volunteerOfferClosedFor } from 
 import VolunteersCard from "@/modules/volunteers/ui/VolunteersCard";
 import { listVolunteerInvitations } from "@/modules/volunteers/invitations";
 import { listVolunteerCategories, listVolunteerRoles, listVolunteers, volunteerStandings } from "@/modules/volunteers/volunteers";
-import { countVolunteerNotes } from "@/modules/volunteers/volunteer-notes";
+import { listVolunteerNotesForExport } from "@/modules/volunteers/volunteer-notes";
 import {
   findCurrentApprovedDocument,
   noticeDescribesVolunteerAgreement,
@@ -494,9 +494,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         const categories = await listVolunteerCategories(db, event.id);
         const people = await listVolunteers(db, event.id);
         const standings = volunteerStandings(roles, people);
-        // «Note interne»: how many live notes each person has, ONE grouped count over the card's people — each row's marker links to the
-        // person's page, where the notes are read. The service asks for the role again.
-        const noteCounts = await countVolunteerNotes(db, staffUser, people.map((person) => person.id));
+        // «Note interne»: each person's live notes, newest first, ONE grouped read over the card's people — each row's marker says how
+        // many and, in its tooltip, the words (§945), and links to the person's page. The service asks for the role again.
+        const rowNotes = await listVolunteerNotesForExport(db, staffUser, people.map((person) => person.id));
         // The volunteer agreement in force (§758): the form's fourth condition, and what the link and the paper need.
         const agreementInForce = await volunteerAgreementInForce(db, now);
         // The notice describing its acceptance (§758): the form's fifth condition, and the link's and the paper's.
@@ -516,7 +516,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           categories,
           people,
           standings,
-          noteCounts,
+          rowNotes,
           // The invitations to volunteer (§820): addresses, so read only for whoever may manage volunteers — as the people are.
           invitations: await listVolunteerInvitations(db, staffUser, event.id),
           agreementInForce,
@@ -1795,7 +1795,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   agreementEvent={volunteersCard.agreementEvent}
                   now={now}
                   error={volunteerErrorCode ? t(`errors.${volunteerErrorCode}`) : undefined}
-                  noteCounts={volunteersCard.noteCounts}
+                  rowNotes={volunteersCard.rowNotes}
                 />
               )}
 

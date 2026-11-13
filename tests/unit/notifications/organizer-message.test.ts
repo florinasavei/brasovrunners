@@ -6,6 +6,11 @@ import { EMAIL_COPY_PLACEHOLDERS } from "@/modules/notifications/domain/email-co
 import {
   AUDIENCE_STATUSES,
   checkOrganizerMessage,
+  CHOSEN_AUDIENCE,
+  CHOSEN_FIELD,
+  chosenRegistrationIds,
+  CONFIRM_COUNT_FIELD,
+  isMessageReach,
   isOrganizerQrStatus,
   isParticipantMessageAudience,
   ORGANIZER_BODY_MAX,
@@ -19,6 +24,7 @@ import {
   PARTICIPANT_MESSAGE_AUDIENCES,
   readOrganizerMessagePayload,
   readOrganizerSendQr,
+  typedCountMatches,
   unknownOrganizerPlaceholders,
 } from "@/modules/notifications/domain/organizer-message";
 import { emailSampleData, emailSampleFor } from "@/modules/notifications/email-copy-fields";
@@ -69,6 +75,37 @@ describe("§364 who a message can go to", () => {
   it("reads a posted choice only when it is one of the four", () => {
     expect(isParticipantMessageAudience("CONFIRMED")).toBe(true);
     for (const value of ["confirmed", "CANCELLED", "", null, 3, undefined]) expect(isParticipantMessageAudience(value)).toBe(false);
+  });
+
+  it("§945 offers the people ticked beside the four groups: a fifth choice that is not a group and has no states of its own", () => {
+    expect(CHOSEN_AUDIENCE).toBe("CHOSEN");
+    // The four stay the partition they were: nothing is added to the groups, and no set of states is the ticked's own.
+    expect(PARTICIPANT_MESSAGE_AUDIENCES).not.toContain(CHOSEN_AUDIENCE);
+    expect(Object.keys(AUDIENCE_STATUSES)).toEqual([...PARTICIPANT_MESSAGE_AUDIENCES]);
+    expect(isParticipantMessageAudience(CHOSEN_AUDIENCE)).toBe(false);
+    for (const value of [...PARTICIPANT_MESSAGE_AUDIENCES, CHOSEN_AUDIENCE]) expect(isMessageReach(value)).toBe(true);
+    for (const value of ["chosen", "CANCELLED", "", null, 3, undefined]) expect(isMessageReach(value)).toBe(false);
+    // Both catalogues name it where «Mesaje trimise» names a send's group.
+    for (const catalogue of [ro, en]) expect(Object.keys(catalogue.Admin.participantMessages.audiencesShort)).toEqual([...PARTICIPANT_MESSAGE_AUDIENCES, CHOSEN_AUDIENCE]);
+  });
+
+  it("§945 reads the ticks as registration ids: each a uuid, once, whatever else was posted", () => {
+    const a = "0b0d5c3e-4f5a-4c1e-9d2b-7a8e9f0a1b2c";
+    const b = "1b0d5c3e-4f5a-4c1e-9d2b-7a8e9f0a1b2c";
+    expect(chosenRegistrationIds([a, b, a, a.toUpperCase(), "", "ana", `${a} `, `${a}' OR 1=1`, 7, null, undefined, { id: b }, [b]])).toEqual([a, b]);
+    expect(chosenRegistrationIds([])).toEqual([]);
+    expect(CHOSEN_FIELD).toBe("registrationIds");
+  });
+
+  it("§945 «Scrie la câți trimiți»: only the exact number of real recipients, as typed, is a confirmation", () => {
+    expect(CONFIRM_COUNT_FIELD).toBe("confirmCount");
+    for (const typed of ["184", " 184", "184 ", "\t184\n"]) expect(typedCountMatches(typed, 184), JSON.stringify(typed)).toBe(true);
+    expect(typedCountMatches("0", 0)).toBe(true);
+    for (const typed of ["183", "185", "1840", "18", "0184", "184.0", "+184", "1 84", "", " ", "o sută", "184 de participanți", 184, null, undefined, ["184"]]) {
+      expect(typedCountMatches(typed, 184), JSON.stringify(typed)).toBe(false);
+    }
+    // Nothing typed is never «0».
+    expect(typedCountMatches("", 0)).toBe(false);
   });
 });
 

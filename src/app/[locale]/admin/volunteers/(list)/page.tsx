@@ -42,7 +42,7 @@ import {
 import { guardianAllowsConfirm, guardianAskOf, roleLabel, VOLUNTEER_STATES, type VolunteerState } from "@/modules/volunteers/domain/volunteer";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
 import { GuardianVerbs, guardianChips, shortText, STATE_CHIP, VolunteerPersonFields, VolunteerStateForm, volunteerHiddenFields, volunteerPersonBoxes } from "@/modules/volunteers/ui/VolunteerPerson";
-import { countVolunteerNotes } from "@/modules/volunteers/volunteer-notes";
+import { listVolunteerNotesForExport } from "@/modules/volunteers/volunteer-notes";
 import { ROLE_EMAIL_SETTLE_MINUTES } from "@/modules/volunteers/volunteers";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import MailLine from "@/shared/feedback/MailLine";
@@ -50,6 +50,7 @@ import { actionKeyOf } from "@/shared/forms/action-key";
 import ActionForm from "@/shared/forms/ActionForm";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { isUuid } from "@/shared/ids";
+import { notesTip } from "@/shared/notes/note-text";
 import ChipLink from "@/shared/ui/ChipLink";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
@@ -58,6 +59,7 @@ import RowNoteDialog from "@/shared/ui/RowNoteDialog";
 import StatusChip from "@/shared/ui/StatusChip";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import TickButton from "@/shared/ui/TickButton";
+import TipSpan from "@/shared/ui/TipSpan";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -134,12 +136,19 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const words = await confirmWords();
   // The words of every role the page's rows name, given or offered — one read, whatever their events — each with its category's (§904):
   // «Direcționare (Traseu)», as the card and the person's page say it, so a name standing in two categories is never printed twice alike.
-  const [roleNames, notesCounts] = await Promise.all([
+  const [roleNames, rowNotes] = await Promise.all([
     listRoleNames(db, [...new Set(rows.flatMap((row) => [...row.roleIds, ...row.choiceIds]))]),
-    // «Note interne»: how many live notes each row has — ONE grouped count over the page's ids, never a query per row, and only
-    // the number: the words are read on the person's own page. The service asks for the role again.
-    countVolunteerNotes(db, actor, rows.map((row) => row.id)),
+    // «Note interne»: each row's live notes, newest first — ONE grouped read over the page's ids, never a query per row. The marker
+    // says how many and, in its tooltip, the words (§945, as the registrations list's, §943). The service asks for the role again.
+    listVolunteerNotesForExport(db, actor, rows.map((row) => row.id)),
   ]);
+  // The marker's tooltip (§945): the newest notes' words, each with its day and hour, the older ones counted — no author's name.
+  const notesTipOf = (volunteerId: string) =>
+    notesTip(
+      rowNotes.get(volunteerId),
+      (at) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }),
+      (left) => t("registrations.notes.tipMore", { counted: t(`registrations.notes.count.${countForm(left, locale)}`, { count: left }) }),
+    );
   // The dialog's refusals, cut to the sentences it can meet: the whole catalogue would travel with every row.
   const noteRefusal = await refusalMessages({ body: t("registrations.notes.label") }).then((all) => ({
     ...all,
@@ -196,16 +205,23 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
 
   /**
    * «Note interne» in the name cell («Note interne» for volunteers, as the registrations list has it): the marker with the count when
-   * somebody left a note — the link to the person's card, open — and «Adaugă o notă», a dialog over the list that comes back to this
+   * somebody left a note — the link to the person's card, open, and under the pointer the notes' own words (§945; the owner, of «1
+   * notă» on this list: «trebuie sa pot vedea comentariile pe hover») — and «Adaugă o notă», a dialog over the list that comes back to this
    * very page of it (`returnTo`, the list's validated way back); without JavaScript a link to the card. `AdminTable` draws each row
    * twice (the table and the phone cards): the dialog keeps its ids unique by itself (`useId`).
    */
   const notesOf = (row: VolunteerAdminRow) => {
-    const noteCount = notesCounts.get(row.id) ?? 0;
+    // The marker's number, from the same read as its tooltip's words.
+    const noteCount = rowNotes.get(row.id)?.length ?? 0;
     const counted = t(`registrations.notes.count.${countForm(noteCount, locale)}`, { count: noteCount });
     return (
       <>
-        {noteCount > 0 && <NotesMark label={counted} ariaLabel={t("registrations.notes.mark", { name: row.name, counted })} href={`${personHref(row)}#note-interne`} />}
+        {noteCount > 0 && (
+          // The words under the pointer, without opening the person's page (§945): the newest notes, the rest counted.
+          <TipSpan title={notesTipOf(row.id)}>
+            <NotesMark label={counted} ariaLabel={t("registrations.notes.mark", { name: row.name, counted })} href={`${personHref(row)}#note-interne`} />
+          </TipSpan>
+        )}
         <RowNoteDialog
           action={addVolunteerNoteFromListAction}
           actionKey={actionKeyOf(addVolunteerNoteFromListAction)}

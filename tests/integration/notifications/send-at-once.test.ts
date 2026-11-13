@@ -11,6 +11,7 @@ import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { confirmed } from "../../helpers/typed-count";
 
 /**
  * §540 (amending §513, §80, §68; the owner, 2026-09-28: «cand retrimit un mail trebuie sa am optiunea
@@ -342,14 +343,14 @@ describe("§540 the organizer's message with «Trimite acum»", () => {
     const result = await sendParticipantMessage(
       db,
       admin,
-      {
+      await confirmed(db, {
         eventId: event.id,
         audience: "ALL_ACTIVE",
         sendId: "0b0d5c3e-4f5a-4c1e-9d2b-7a8e9f0a1b2c",
         subject: { ro: "Vreme rea", en: "Bad weather" },
         body: { ro: "Startul se mută la 10:00.", en: "The start moves to 10:00." },
         delivery: "now",
-      },
+      }),
       NOW,
     );
     expect(result).toMatchObject({ kind: "queued", real: 1 });
@@ -366,14 +367,14 @@ describe("§540 the organizer's message with «Trimite acum»", () => {
     const result = await sendParticipantMessage(
       db,
       admin,
-      {
+      await confirmed(db, {
         eventId: event.id,
         audience: "ALL_ACTIVE",
         sendId: "1c1e6d4f-5a6b-4d2f-8e3c-8b9f0a1b2c3d",
         subject: { ro: "Vreme rea", en: "Bad weather" },
         body: { ro: "Startul se mută la 10:00.", en: "The start moves to 10:00." },
         delivery: "now",
-      },
+      }),
       NOW,
     );
     expect(result).toMatchObject({ kind: "queued", real: 45, sentNow: SEND_NOW_ROW_LIMIT, later: 45 - SEND_NOW_ROW_LIMIT });

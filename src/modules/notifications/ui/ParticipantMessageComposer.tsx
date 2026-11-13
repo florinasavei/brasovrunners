@@ -14,14 +14,17 @@ import Typography from "@mui/material/Typography";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
 import { identicalInBothLanguages } from "@/shared/forms/both-languages";
-import RecallField, { useRecall } from "@/shared/forms/recall";
+import RecallField, { NeverKeptField, useRecall } from "@/shared/forms/recall";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import { HEADING_SX } from "@/shared/ui/heading-scale";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { writePlainBox } from "@/modules/translate/ui/form-fields";
 import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
+import { type ChoosablePerson, pickedPeople, recalledPicks, tallyPicks, withPick } from "./chosen-recipients";
+import ChosenRecipients, { type ChosenLabels } from "./ChosenRecipients";
 import { previewPause, type PreviewLanguage } from "./preview-pause";
-import { fillReminderBoxes, reminderOverwrites } from "./reminder-fill";
+import { fillReminderBoxes, REMINDER_BOXES, reminderOverwrites } from "./reminder-fill";
 
 /**
  * One choice of who receives the message, with everything the page says about it already worded
@@ -32,6 +35,8 @@ import { fillReminderBoxes, reminderOverwrites } from "./reminder-fill";
 export type ComposerAudience = {
   value: string;
   label: string;
+  /** The group's short name, as «Mesaje trimise» says it: «Toți cei înscriși» — for the line beside «Scrie la câți trimiți». */
+  short: string;
   /** Real registrations reached — what the club is told (test rows are counted apart, §12.6). */
   real: number;
   test: number;
@@ -57,9 +62,43 @@ export type ComposerAudience = {
   confirmTitle: string;
 };
 
+/**
+ * «Doar anumiți participanți» (§945), the fifth choice of «Cui îi trimiți» and not a group: what its radio posts, the
+ * field its ticks post under, and everybody who can be ticked — a name and a state each, by name, read on the server.
+ */
+export type ComposerChosen = {
+  value: string;
+  field: string;
+  people: readonly ChoosablePerson[];
+};
+
+/**
+ * «Confirmă trimiterea» (§945; the owner: «si vreau extra extra confirmare»): the heading over who the message goes to,
+ * said again where it is sent, and the box the number of recipients is typed into — the field's name, its label and
+ * its one line of help.
+ */
+export type ComposerConfirm = { field: string; title: string; count: string; countHelp: string };
+
+/**
+ * What the boxes hold when the page is drawn right after a send to the people ticked (§945): that send's words and its
+ * two ticks, so a trial is followed by the same message to everybody. Absent after any other send: the boxes are empty.
+ */
+export type ComposerKept = {
+  subjectRo: string;
+  subjectEn: string;
+  bodyRo: string;
+  bodyEn: string;
+  askReconfirm: boolean;
+  sendQr: boolean;
+};
+
 export type ComposerLabels = {
   audience: string;
   audienceHelp: string;
+  /** «Doar anumiți participanți» (§945): the radio's words and the list's. */
+  chosen: ChosenLabels;
+  /** «Confirmă trimiterea» (§945): the typed number of recipients. */
+  confirm: ComposerConfirm;
   languageRo: string;
   languageEn: string;
   subject: string;
@@ -122,6 +161,10 @@ export type PreviewResult = { subject: string; html: string; unknown: string[] }
 type Props = {
   eventId: string;
   audiences: readonly ComposerAudience[];
+  /** «Doar anumiți participanți» (§945): the people who can be ticked. */
+  chosen: ComposerChosen;
+  /** The words of the send to the people ticked that the page was just returned from (§945), when it was one. */
+  kept?: ComposerKept;
   defaultAudience: string;
   maxSubject: number;
   maxBody: number;
@@ -156,15 +199,38 @@ const PREVIEW_PAUSE_MS = 500;
  * words one dialog per group, with the count the send queues from, and the form opens the one
  * the chosen radio names. The browser's own checks run before it: an empty box is pointed at
  * before any question, so the question is only ever about sending.
+ *
+ * **«Doar anumiți participanți»** (§945) is the fifth choice and not a group: under its radio, the
+ * list of everybody who can be written to (`ChosenRecipients`), a tick each. The ticks are held
+ * here, since «Trimite» waits for one and the recipients line counts them; its question counts
+ * them again from the form as posted. After such a send the page hands the words back (`kept`) —
+ * the one send after which the boxes are not empty, because a trial's next press is the same
+ * message to everybody. Without JavaScript the list never opens, and a press of that choice is
+ * refused for having nobody ticked; the four groups send as they always did.
+ *
+ * **«Confirmă trimiterea»** (§945; the owner: «si vreau extra extra confirmare») stands right
+ * above «Trimite mesajul»: who the message goes to, said again where it is sent — the group and
+ * its number, or the people ticked by name — and a box the number of recipients is typed into.
+ * The send insists on it, as the bulk erase insists on its own typed count (§287): the server
+ * compares the number with the rows it is about to write and queues nothing on any other. The
+ * box is never handed back after a refusal — it is typed again — and the question still follows.
  */
-export default function ParticipantMessageComposer({ eventId, audiences, defaultAudience, maxSubject, maxBody, labels, preview }: Props) {
+export default function ParticipantMessageComposer({ eventId, audiences, chosen, kept, defaultAudience, maxSubject, maxBody, labels, preview }: Props) {
   const recall = useRecall();
   const recalledAudience = recall.value("audience");
   const [audience, setAudience] = useState(
-    recalledAudience && audiences.some((choice) => choice.value === recalledAudience) ? recalledAudience : defaultAudience,
+    recalledAudience && (recalledAudience === chosen.value || audiences.some((choice) => choice.value === recalledAudience)) ? recalledAudience : defaultAudience,
   );
-  const chosen = audiences.find((choice) => choice.value === audience) ?? audiences[0];
-  const nobody = !chosen || chosen.real + chosen.test === 0;
+  // The people ticked (§945): kept while another choice is looked at, and after a refused send as it posted them (§315).
+  const [picked, setPicked] = useState(() => recalledPicks(chosen.people, recall.all(chosen.field)));
+  const ticking = audience === chosen.value;
+  const group = ticking ? undefined : (audiences.find((choice) => choice.value === audience) ?? audiences[0]);
+  const nobody = ticking ? picked.size === 0 : !group || group.real + group.test === 0;
+  // The ticks as the page says them: the real people — the number typed at «Scrie la câți trimiți» — and the test rows apart.
+  const tally = tallyPicks(chosen.people, picked);
+  const tickedLine = labels.chosen.count.replace("{count}", String(tally.real)).replace("{total}", String(tally.listed));
+  const tickedTestLine = tally.test > 0 ? labels.chosen.testTicked.replace("{test}", String(tally.test)) : null;
+  const tickedNames = pickedPeople(chosen.people, picked).map((person) => person.name);
 
   const root = useRef<HTMLDivElement>(null);
   const readWords = useCallback((): Words => {
@@ -175,16 +241,17 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
     «Cere reconfirmarea» (the decision «Cere reconfirmarea»): controlled, because the fill button ticks it; kept after a
     refused send like every box (§315). The preview reads it from the form, as it reads the words.
   */
-  const [askReconfirm, setAskReconfirm] = useState(() => recall.value("askReconfirm") === "1");
+  const [askReconfirm, setAskReconfirm] = useState(() => (recall.has ? recall.value("askReconfirm") === "1" : kept?.askReconfirm === true));
   // «Trimite și numărul de concurs și codul QR» (§943): off unless ticked; controlled too, so a refused send keeps it (§315).
-  const [sendQr, setSendQr] = useState(() => recall.value("sendQr") === "1");
+  // Either tick starts as the send to the people ticked left it, when the page comes back from one (§945).
+  const [sendQr, setSendQr] = useState(() => (recall.has ? recall.value("sendQr") === "1" : kept?.sendQr === true));
   // Either tick as the form holds it now — what a press would post.
   const readTick = useCallback(
     (name: "askReconfirm" | "sendQr"): boolean => root.current?.querySelector<HTMLInputElement>(`input[name="${name}"]`)?.checked === true,
     [],
   );
 
-  const [identical, setIdentical] = useState(() => identicalInBothLanguages(recall.value("bodyRo") ?? "", recall.value("bodyEn") ?? ""));
+  const [identical, setIdentical] = useState(() => identicalInBothLanguages(recall.value("bodyRo") ?? kept?.bodyRo ?? "", recall.value("bodyEn") ?? kept?.bodyEn ?? ""));
   const [language, setLanguage] = useState<PreviewLanguage>("ro");
   const [shown, setShown] = useState<{ state: "loading" | "ready" | "unavailable"; result: PreviewResult }>({ state: "loading", result: null });
   const asked = useRef(0);
@@ -217,9 +284,10 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
   }, [recall.generation]);
 
   const onInput = (event: FormEvent<HTMLDivElement>) => {
-    // A tick asks for its own preview at once (below), never a second one after the pause.
+    // Only the four boxes of words are typing: a tick asks for its own preview at once (below), never a second one after
+    // the pause, and who receives it — a radio, a tick on the list, a name looked for (§945) — changes no word of it.
     const from = (event.target as HTMLInputElement | null)?.name;
-    if (from === "askReconfirm" || from === "sendQr") return;
+    if (!(REMINDER_BOXES as readonly string[]).includes(from ?? "")) return;
     const words = readWords();
     setIdentical(identicalInBothLanguages(words.bodyRo, words.bodyEn));
     // Asked when the pause ends, for the tab open then — not the one open when the key was pressed.
@@ -253,7 +321,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
   return (
     <Stack spacing={3} ref={root} onInput={onInput}>
       <Box>
-        <Typography id="participant-message-audience" variant="subtitle1" component="h3" sx={{ fontWeight: 600 }}>
+        <Typography id="participant-message-audience" variant="h2" component="h3" sx={HEADING_SX[3]}>
           {labels.audience}
         </Typography>
         <RadioGroup
@@ -281,33 +349,59 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
               }
             />
           ))}
+          {/* «Doar anumiți participanți» (§945): not a group, so no count beside it — its number is the ticks, said below. */}
+          <FormControlLabel value={chosen.value} control={<Radio sx={CHECKBOX_TAP_TARGET} />} data-testid={`audience-${chosen.value}`} label={labels.chosen.label} />
         </RadioGroup>
+        {ticking && (
+          <ChosenRecipients
+            id={recall.idOf(chosen.field)}
+            field={chosen.field}
+            people={chosen.people}
+            picked={picked}
+            onPick={(id, on) => setPicked((current) => withPick(current, id, on))}
+            labels={labels.chosen}
+            refused={recall.named(chosen.field)}
+          />
+        )}
         <Typography id="participant-message-audience-help" variant="caption" color="text.secondary" component="p">
           {labels.audienceHelp}
         </Typography>
-        {chosen && (
+        {ticking && (
+          // The ticks' own number, where each group says its own: no cost or pace is worked out for a list ticked in the browser.
           <Box sx={{ mt: 1 }} data-testid="participant-message-recipients" aria-live="polite">
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              {chosen.recipientsLine}
+              {tickedLine}
             </Typography>
-            {chosen.testLine && (
+            {tickedTestLine && (
               <Typography variant="body2" color="text.secondary">
-                {chosen.testLine}
+                {tickedTestLine}
               </Typography>
             )}
-            {chosen.costLine && (
+          </Box>
+        )}
+        {group && (
+          <Box sx={{ mt: 1 }} data-testid="participant-message-recipients" aria-live="polite">
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {group.recipientsLine}
+            </Typography>
+            {group.testLine && (
               <Typography variant="body2" color="text.secondary">
-                {chosen.costLine}
+                {group.testLine}
               </Typography>
             )}
-            {chosen.deferredLine && (
+            {group.costLine && (
+              <Typography variant="body2" color="text.secondary">
+                {group.costLine}
+              </Typography>
+            )}
+            {group.deferredLine && (
               <Alert severity="info" sx={{ mt: 1 }} data-testid="participant-message-deferred">
-                {chosen.deferredLine}
+                {group.deferredLine}
               </Alert>
             )}
-            {chosen.warningLine && (
+            {group.warningLine && (
               <Alert severity="warning" sx={{ mt: 1 }} data-testid="participant-message-daily-warning">
-                {chosen.warningLine}
+                {group.warningLine}
               </Alert>
             )}
           </Box>
@@ -343,7 +437,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
         ] as const
       ).map(([part, heading, help, max, multiline]) => (
         <Stack key={part} spacing={1} role="group" aria-labelledby={`participant-message-${part}`}>
-          <Typography id={`participant-message-${part}`} variant="subtitle1" component="h3" sx={{ fontWeight: 600 }}>
+          <Typography id={`participant-message-${part}`} variant="h2" component="h3" sx={HEADING_SX[3]}>
             {heading}
           </Typography>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
@@ -357,6 +451,8 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
                 key={name}
                 name={name}
                 label={language}
+                // The words of the send to the people ticked the page came back from (§945); nothing after any other.
+                defaultValue={kept?.[name]}
                 required
                 fullWidth
                 multiline={multiline}
@@ -443,7 +539,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
 
       {/* The message as it will arrive (§364): the server renders it, the tabs pick whose copy. */}
       <Box data-testid="participant-message-preview">
-        <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 600 }}>
+        <Typography variant="h2" component="h3" sx={HEADING_SX[3]}>
           {labels.preview}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -488,6 +584,42 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
             />
           </>
         )}
+      </Box>
+
+      {/*
+        «Confirmă trimiterea» (§945; the owner: «si vreau extra extra confirmare»): who the message goes to, said again
+        right where it is sent — the preview stands between the choice and this button — and the number of recipients
+        typed by hand. The send insists on that number (§287's guard, for a message that cannot be taken back): the
+        server compares it with the rows it is about to write. Never kept: after a refusal it is typed again (§315).
+      */}
+      <Box data-testid="participant-message-confirm">
+        <Typography variant="h2" component="h3" sx={HEADING_SX[3]}>
+          {labels.confirm.title}
+        </Typography>
+        <Box sx={{ mb: 1.5 }} aria-live="polite" data-testid="participant-message-confirm-who">
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            {ticking ? `${labels.chosen.short} · ${tickedLine}` : group ? `${group.short} · ${group.recipientsLine}` : ""}
+          </Typography>
+          {ticking && tickedNames.length > 0 && (
+            <Typography variant="body2" sx={{ wordBreak: "break-word" }}>
+              {labels.chosen.names.replace("{names}", tickedNames.join(", "))}
+            </Typography>
+          )}
+          {(ticking ? tickedTestLine : group?.testLine) && (
+            <Typography variant="body2" color="text.secondary">
+              {ticking ? tickedTestLine : group?.testLine}
+            </Typography>
+          )}
+        </Box>
+        <NeverKeptField
+          name={labels.confirm.field}
+          label={labels.confirm.count}
+          helperText={labels.confirm.countHelp}
+          required
+          size="small"
+          slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[0-9]{1,5}", maxLength: 5, autoComplete: "off" } }}
+          sx={{ width: "100%", maxWidth: 360 }}
+        />
       </Box>
 
       <Box>

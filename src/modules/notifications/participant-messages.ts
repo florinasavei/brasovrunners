@@ -3,7 +3,7 @@ import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { participants } from "@/db/schema/participants";
 import { registrationReconfirmations } from "@/db/schema/registration-reconfirmations";
-import { ACTIVE_REGISTRATION_STATUSES, registrations } from "@/db/schema/registrations";
+import { ACTIVE_REGISTRATION_STATUSES, type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
@@ -25,11 +25,16 @@ import { fillPlaceholders } from "./domain/email-copy";
 import {
   AUDIENCE_STATUSES,
   checkOrganizerMessage,
+  CHOSEN_AUDIENCE,
+  chosenRegistrationIds,
+  isMessageReach,
   isOrganizerQrStatus,
-  isParticipantMessageAudience,
+  type MessageReach,
   type OrganizerMessage,
   PARTICIPANT_MESSAGE_AUDIENCES,
   type ParticipantMessageAudience,
+  readOrganizerMessagePayload,
+  typedCountMatches,
   unknownOrganizerPlaceholders,
 } from "./domain/organizer-message";
 import { enqueueBulkClubCopies, enqueueEmail } from "./outbox";
@@ -83,10 +88,47 @@ export async function countParticipantMessageAudiences<T extends Record<string, 
   return counts;
 }
 
+/**
+ * One line of the composer's list under «Doar anumiți participanți» (§945): a registration that can be ticked — its name
+ * of record, its state and whether it is a test one. No address, no number and nothing else about the person: the list
+ * is for finding somebody by name, which is all the race-day desk shows of a person too.
+ */
+export type ChoosableRecipient = { id: string; name: string; status: RegistrationStatus; test: boolean };
+
+/**
+ * Everybody who can be ticked: this event's registrations in a state `ALL_ACTIVE` holds — the very rows a send to the
+ * ticked chooses among (`sendParticipantMessage`) — by name, as Romanian sorts it (Ș after S and before T: «Ștefan»
+ * after «Stela», never after «Zoe»), whichever language the backoffice is read in: the names are the club's runners'.
+ */
+export async function listChoosableRecipients<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<ChoosableRecipient[]> {
+  const rows = await db
+    .select({ id: registrations.id, name: registrations.registeredName, status: registrations.status, kind: registrations.kind })
+    .from(registrations)
+    .where(and(eq(registrations.eventId, eventId), inArray(registrations.status, [...AUDIENCE_STATUSES.ALL_ACTIVE])));
+  const byName = new Intl.Collator("ro");
+  return rows
+    .map((row) => ({ id: row.id, name: row.name, status: row.status, test: row.kind === "TEST" }))
+    .sort((a, b) => byName.compare(a.name, b.name) || a.id.localeCompare(b.id));
+}
+
 export type SendParticipantMessageInput = {
   eventId: string;
-  /** As posted; anything but one of the four choices is refused. */
+  /** As posted; anything but one of the five choices — the four groups, or the people ticked — is refused. */
   audience: string;
+  /**
+   * «Doar anumiți participanți» (§945): the registrations ticked on the composer, as posted. Read only when `audience` is
+   * `CHOSEN_AUDIENCE`, and only as far as each is a registration of this event in a state `ALL_ACTIVE` holds — a tick on
+   * anybody else (cancelled since the page was drawn, another event's, no registration at all) writes to nobody.
+   */
+  registrationIds?: readonly unknown[];
+  /**
+   * «Scrie la câți trimiți» (§945; the owner, 2026-11-13: «si vreau extra extra confirmare»): the number of recipients,
+   * as the organizer typed it beside «Trimite mesajul». The send goes only when it is exactly the number of real
+   * registrations it is about to write to, counted under the lock from the rows themselves; anything else — another
+   * number, nothing typed, a caller that forgot it — queues nothing. Required, so that it is the send's rule and not
+   * the form's: whoever calls this has to say how many they mean to write to.
+   */
+  confirmCount: string;
   subject: { ro?: string | null; en?: string | null };
   body: { ro?: string | null; en?: string | null };
   /**
@@ -125,8 +167,13 @@ export type SendParticipantMessageResult =
   | { kind: "queued"; real: number; test: number; sentNow?: number; later?: number }
   /** This form was sent already: nothing was queued a second time. */
   | { kind: "duplicate" }
-  /** Nobody is in the chosen group right now. Nothing was queued, and nothing was audited. */
-  | { kind: "nobody" };
+  /** Nobody is in the chosen group right now, or nobody ticked can be written to. Nothing was queued, and nothing was audited. */
+  | { kind: "nobody" }
+  /**
+   * The number typed at «Scrie la câți trimiți» is not the number of real registrations the send would have written to
+   * (§945): nothing was queued, and nothing was audited. `real` is that number now, for the refusal's sentence.
+   */
+  | { kind: "miscounted"; real: number };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -136,7 +183,9 @@ export function refusedBoxes(message: ReturnType<typeof checkOrganizerMessage>):
 }
 
 /**
- * Queue the message to everybody in the chosen group.
+ * Queue the message to everybody in the chosen group — or, for «Doar anumiți participanți» (§945), to the people ticked:
+ * the same send in every other respect (the lock, one row a registration in its language, each flag on its own rows, the
+ * club's one copy, the audit row), reaching those of the ticked the widest group would reach and nobody else.
  *
  * Asserted on the server (BR-REQ-060-01): `canMessageParticipants`, whatever the page showed. The
  * words are checked again here — both languages of both texts, the ceilings, no placeholder this
@@ -158,7 +207,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
   if (!canMessageParticipants(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not write to an event's participants`);
   }
-  if (!isParticipantMessageAudience(input.audience)) {
+  if (!isMessageReach(input.audience)) {
     throw new DomainError("VALIDATION_ERROR", "audience: choose who receives the message", ["audience"]);
   }
   if (!UUID.test(input.sendId)) {
@@ -175,7 +224,10 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
     );
   }
   const message: OrganizerMessage = checked.message;
-  const audience = input.audience;
+  const audience: MessageReach = input.audience;
+  // «Doar anumiți participanți» (§945): the ticked, as ids; null for a group. They narrow the widest group, never widen it.
+  const chosen = audience === CHOSEN_AUDIENCE ? new Set(chosenRegistrationIds(input.registrationIds ?? [])) : null;
+  const group: ParticipantMessageAudience = audience === CHOSEN_AUDIENCE ? "ALL_ACTIVE" : audience;
   // A posted id that is not a uuid names no event; asking Postgres would be a syntax error, not an answer.
   if (!UUID.test(input.eventId)) throw new DomainError("NOT_FOUND", "no such event");
   const delivery: DeliveryChoice = input.delivery ?? "queue";
@@ -198,7 +250,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       .limit(1);
     if (already) return { kind: "duplicate" } as const;
 
-    const rows = await tx
+    const inGroup = await tx
       .select({
         registrationId: registrations.id,
         participantId: registrations.participantId,
@@ -209,8 +261,22 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       })
       .from(registrations)
       .innerJoin(participants, eq(participants.id, registrations.participantId))
-      .where(and(eq(registrations.eventId, input.eventId), inArray(registrations.status, [...AUDIENCE_STATUSES[audience]])));
+      .where(and(eq(registrations.eventId, input.eventId), inArray(registrations.status, [...AUDIENCE_STATUSES[group]])));
+    /*
+      «Doar anumiți participanți» (§945): of this event's active registrations, read under the lock as for a group, the
+      ticked ones. Matched here rather than in the query, so a posted list of any length is never a statement's
+      parameters, and an id that is not one of these rows — cancelled since, another event's, made up — matches nothing.
+    */
+    const rows = chosen ? inGroup.filter((row) => chosen.has(row.registrationId)) : inGroup;
     if (rows.length === 0) return { kind: "nobody" } as const;
+    /*
+      «Scrie la câți trimiți» (§945): the number the organizer typed against the rows this send is about to write — the
+      real ones, as the page counts them (§12.6) — compared here, under the lock, so it is true of this very send:
+      somebody who believes they write to two and has «Toți cei înscriși» chosen is stopped, and so is a press whose
+      group changed since the page was drawn. Before any row, ask or audit is written, and before the allowance is asked.
+    */
+    const expected = rows.filter((row) => row.kind !== "TEST").length;
+    if (!typedCountMatches(input.confirmCount, expected)) return { kind: "miscounted", real: expected } as const;
     /*
       «Trimite acum» (§540): every message of this send inside the day's allowance, asked before any
       row is written — refused with the allowance's sentence and nothing queued, never a silent
@@ -367,7 +433,8 @@ export type SentParticipantMessage = {
   /** The send's own id, from its audit row; null for a hand-made row that carries none. */
   sendId: string | null;
   subject: { ro: string; en: string };
-  audience: ParticipantMessageAudience | null;
+  /** The group, or `CHOSEN_AUDIENCE` for a send to the people ticked (§945) — never who they were. */
+  audience: MessageReach | null;
   recipients: number;
   test: number;
   /** The sender's name, or null when their staff account has since been removed. */
@@ -429,7 +496,7 @@ export async function listParticipantMessages<T extends Record<string, unknown>>
       at: row.at,
       sendId: typeof metadata.sendId === "string" && UUID.test(metadata.sendId) ? metadata.sendId : null,
       subject: { ro: words(metadata.subject?.ro), en: words(metadata.subject?.en) },
-      audience: isParticipantMessageAudience(metadata.audience) ? metadata.audience : null,
+      audience: isMessageReach(metadata.audience) ? metadata.audience : null,
       recipients: typeof metadata.recipients === "number" ? metadata.recipients : 0,
       test: typeof metadata.test === "number" ? metadata.test : 0,
       senderName: row.senderName ?? null,
@@ -447,6 +514,46 @@ export async function listParticipantMessages<T extends Record<string, unknown>>
     answers: entry.askReconfirm ? (answers.get(entry.sendId ?? "") ?? { yes: 0, cancelled: 0, none: 0 }) : null,
     progress: progress.get(entry.sendId ?? "") ?? { left: 0, waiting: 0, failed: 0 },
   }));
+}
+
+/**
+ * What the composer's boxes hold again after a send to the people ticked (§945): the words in both languages and the
+ * two ticks, as that send carried them.
+ */
+export type KeptMessage = OrganizerMessage & { askReconfirm: boolean; sendQr: boolean };
+
+/**
+ * The words of a send to the people ticked, read back for the composer (§945): such a send is a trial as often as not,
+ * and the same message to everybody must not have to be typed a second time — four boxes, in two languages. Read from
+ * what the send itself wrote, and from nothing new: the two ticks from its audit row, the words from the payload of one
+ * of its own outbox rows — the one text an outbox row keeps (§364) — for as long as those rows are kept.
+ *
+ * `null` — and the boxes empty, as after any other send — for an id that names no send of this event, for a send to a
+ * group (§364: after one, the next press is a new message), and once the rows are gone.
+ */
+export async function readKeptMessage<T extends Record<string, unknown>>(db: Database<T>, eventId: string, sendId: string): Promise<KeptMessage | null> {
+  if (!UUID.test(eventId) || !UUID.test(sendId)) return null;
+  const [sent] = await db
+    .select({ metadata: auditLogs.metadataJson })
+    .from(auditLogs)
+    .where(
+      and(
+        eq(auditLogs.entityType, "event"),
+        eq(auditLogs.entityId, eventId),
+        eq(auditLogs.action, "event.participant_message_sent"),
+        sql`${auditLogs.metadataJson}->>'sendId' = ${sendId}`,
+      ),
+    )
+    .limit(1);
+  const metadata = (sent?.metadata ?? null) as { audience?: unknown; askReconfirm?: unknown; sendQr?: unknown } | null;
+  if (metadata?.audience !== CHOSEN_AUDIENCE) return null;
+  const [row] = await db
+    .select({ payload: emailOutbox.payloadJson })
+    .from(emailOutbox)
+    .where(and(eq(emailOutbox.messageType, "ORGANIZER_MESSAGE"), sql`${emailOutbox.idempotencyKey} like ${`organizer-message:${sendId}:registration:%`}`))
+    .limit(1);
+  const words = readOrganizerMessagePayload(row?.payload);
+  return words ? { ...words, askReconfirm: metadata.askReconfirm === true, sendQr: metadata.sendQr === true } : null;
 }
 
 /** The three numbers of each asking send, one grouped read (the decision «Cere reconfirmarea»). Real registrations only. */
