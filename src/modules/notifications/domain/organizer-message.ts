@@ -1,5 +1,6 @@
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { type BilingualText, isWrittenText, type TextLanguage } from "@/shared/forms/both-languages";
+import { isUuid } from "@/shared/ids";
 import { type EmailCopyPlaceholder, placeholdersIn } from "./email-copy";
 
 /**
@@ -41,6 +42,50 @@ export const AUDIENCE_STATUSES: Readonly<Record<ParticipantMessageAudience, read
 
 export function isParticipantMessageAudience(value: unknown): value is ParticipantMessageAudience {
   return typeof value === "string" && (PARTICIPANT_MESSAGE_AUDIENCES as readonly string[]).includes(value);
+}
+
+/**
+ * «Doar anumiți participanți, pe care îi aleg din listă» (§945; the owner, 2026-11-13: «As vrea sa fac un test pentru
+ * mailul asta, sa selectez doar anumiti participanti») — the fifth choice of «Cui îi trimiți», and not a group: the
+ * registrations the organizer ticked on the composer, for a trial of a message before everybody gets it, or a word to a few.
+ *
+ * It widens nothing. Only the ticked that are of this event and in a state `ALL_ACTIVE` holds when the send queues them
+ * are written to — never a cancelled, lapsed or unconfirmed-address registration, ticked or not — so the four groups
+ * above stay the partition they were, and this stands beside them.
+ */
+export const CHOSEN_AUDIENCE = "CHOSEN";
+
+/** What «Cui îi trimiți» posts: one of the four groups, or the people ticked. */
+export type MessageReach = ParticipantMessageAudience | typeof CHOSEN_AUDIENCE;
+
+export function isMessageReach(value: unknown): value is MessageReach {
+  return value === CHOSEN_AUDIENCE || isParticipantMessageAudience(value);
+}
+
+/** The field the ticks post under, one value per registration ticked. */
+export const CHOSEN_FIELD = "registrationIds";
+
+/**
+ * «Scrie la câți trimiți» (§945; the owner, 2026-11-13, of the same message: «si vreau extra extra confirmare»): the
+ * field the organizer types the number of recipients into, beside «Trimite mesajul» — the confirmation every send from
+ * this page insists on, as the bulk erase insists on its own (§287: «dar cu super extra confirmare!»). A number the
+ * screen has just shown, which changes with the choice and the ticks, so it cannot become the habit a second «yes» does.
+ * The name is the bulk erase's, so the form never hands it back after a refusal (`NEVER_KEPT`): it is typed again.
+ */
+export const CONFIRM_COUNT_FIELD = "confirmCount";
+
+/**
+ * Whether the number typed is exactly the number of real registrations the send is about to write to — test
+ * registrations left out, as from every number the club reads (§12.6). Trimmed, because a typed number arrives with
+ * whatever the keyboard added; otherwise exact: nothing typed, another number, «0184» or a word is no.
+ */
+export function typedCountMatches(typed: unknown, real: number): boolean {
+  return typeof typed === "string" && typed.trim() === String(real);
+}
+
+/** The ticks as posted, read as registration ids: each a uuid, once. Anything else names nobody. */
+export function chosenRegistrationIds(values: readonly unknown[]): string[] {
+  return [...new Set(values.filter((value): value is string => typeof value === "string" && isUuid(value)).map((value) => value.toLowerCase()))];
 }
 
 /**

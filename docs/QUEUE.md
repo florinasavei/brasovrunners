@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.43` | the organizers' message to people ticked by name, for a trial before everybody, and every send confirmed by the number of recipients, typed; a volunteer's notes under the pointer (§945) |
 | `BR-V4.42` | the queue panel's zone test holds at every minute of the day (§944) |
 | `BR-V4.41` | the registrations list worked without leaving it, the telephone beside the address, and the organizers' message with each runner's number and QR (§943) |
 | `BR-V4.40` | «Schimbă adresa»: an Administrator moves a registration to another address, old links dead, both addresses told (§938) · «De la parteneri»: a partner's or sponsor's name on a registration, a line and an invitation (§939) · CI: a bounded `playwright install-deps`, and the elite list's trail test without its random ids (§940) · «Cere reconfirmarea» with «Vin» and a ready reminder text; a queue where every send to many — the cancellation, «Detalii actualizate», the reminder, the organizers' message, the thank-you and «s-au deschis înscrierile» — waits behind the registrations' own emails (§941) · the list's column «Partener»: the partner seen, sorted, filtered and set from the registrations list (§942) |

@@ -20,6 +20,7 @@ import {
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { confirmed } from "../../helpers/typed-count";
 
 /**
  * `DECISIONS.md` §364 — "Trimite un mesaj participanților": the organizer writes to the people
@@ -151,8 +152,9 @@ describe("§364 the organizer's message to an event's participants", () => {
       .where(and(eq(emailOutbox.messageType, "ORGANIZER_MESSAGE"), isNotNull(emailOutbox.participantId)))
       .orderBy(asc(emailOutbox.recipientEmail));
 
-  const send = (eventId: string, overrides: Partial<Parameters<typeof sendParticipantMessage>[2]> = {}, actor: StaffUser = organizer) =>
-    sendParticipantMessage(db, actor, { eventId, audience: "ALL_ACTIVE", sendId: SEND_ID, ...WORDS, ...overrides }, NOW);
+  // Each send as an organizer who typed the number of recipients the page showed (`confirmed`), unless the test types its own.
+  const send = async (eventId: string, overrides: Partial<Parameters<typeof sendParticipantMessage>[2]> = {}, actor: StaffUser = organizer) =>
+    sendParticipantMessage(db, actor, await confirmed(db, { eventId, audience: "ALL_ACTIVE", sendId: SEND_ID, ...WORDS, ...overrides }), NOW);
 
   async function refusalOf(attempt: Promise<unknown>) {
     try {

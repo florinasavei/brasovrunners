@@ -140,6 +140,8 @@ test.describe("«Cere reconfirmarea»: the ready reminder, «Vin» and the answe
     await tick.check();
     await expect.poll(async () => (await previewHtml(page)).includes('data-email-part="reconfirm"'), { timeout: 15_000 }).toBe(true);
 
+    // «Scrie la câți trimiți»: the number of recipients, typed — the send insists on it.
+    await page.locator('[name="confirmCount"]').fill("2");
     // The question before «Trimite» says how long it takes, from the server.
     await page.getByRole("button", { name: "Trimite mesajul" }).click();
     const dialog = page.getByRole("dialog");

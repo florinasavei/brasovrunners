@@ -10,6 +10,7 @@ import { countEventNoticeRecipients, queueEventCancelledNotices, queueEventUpdat
 import { PARTICIPANT_MESSAGE_AUDIENCES } from "@/modules/notifications/domain/organizer-message";
 import { countParticipantMessageAudiences, sendParticipantMessage } from "@/modules/notifications/participant-messages";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { confirmed } from "../../helpers/typed-count";
 
 /**
  * `DECISIONS.md` §384 — "I need to know each time a participant will be emailed!"
@@ -125,7 +126,7 @@ describe("§384 the dialog's count is the send's recipients", () => {
     await seedRegistrations(event.id, EVERYONE);
     const counts = await countParticipantMessageAudiences(db, event.id);
     for (const audience of PARTICIPANT_MESSAGE_AUDIENCES) {
-      const result = await sendParticipantMessage(db, organizer, { eventId: event.id, audience, sendId: `00000000-0000-4000-8000-00000000000${PARTICIPANT_MESSAGE_AUDIENCES.indexOf(audience)}`, ...WORDS }, NOW);
+      const result = await sendParticipantMessage(db, organizer, await confirmed(db, { eventId: event.id, audience, sendId: `00000000-0000-4000-8000-00000000000${PARTICIPANT_MESSAGE_AUDIENCES.indexOf(audience)}`, ...WORDS }), NOW);
       if (counts[audience].real + counts[audience].test === 0) {
         expect(result).toEqual({ kind: "nobody" });
         continue;

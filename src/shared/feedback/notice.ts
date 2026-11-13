@@ -638,6 +638,13 @@ export type EmailCount = {
    */
   lines?: true;
   /**
+   * Count the ticks themselves instead: each distinct posted value is one person written to, by **one** send — «Doar
+   * anumiți participanți» on «Trimite un mesaj participanților» (§945), where the people ticked are the recipients and
+   * the club's copy of a bulk send is one however many are ticked. A value `counts` names adds what it says there — a
+   * test registration's 0 (§12.6) — and `base` is not read.
+   */
+  ticks?: true;
+  /**
    * The club's mailboxes' line, counted from the same total: `each` copies per email (the per-message Bcc, §320) and
    * `once` per send (a bulk send's one copy, §419) — one send for each value that writes to somebody, `base` included: a
    * series save tells each date apart —, in `forms` with `{count}`. Said first among the `also` lines, and only when it
@@ -668,6 +675,10 @@ export function resolveEmailCount(spec: ConfirmSpec, valuesOf: (field: string) =
   let sends = counted.base > 0 ? 1 : 0;
   if (counted.lines) {
     total = countLines(valuesOf(counted.field)[0] ?? "");
+    sends = total > 0 ? 1 : 0;
+  } else if (counted.ticks) {
+    total = 0;
+    for (const value of new Set(valuesOf(counted.field))) total += counted.counts[value] ?? 1;
     sends = total > 0 ? 1 : 0;
   } else {
     for (const value of new Set(valuesOf(counted.field))) {

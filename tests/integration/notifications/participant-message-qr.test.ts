@@ -16,6 +16,7 @@ import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { confirmed } from "../../helpers/typed-count";
 
 /**
  * §943 — «Trimite și numărul de concurs și codul QR» on «Trimite un mesaj participanților» (the owner, 2026-11-12: «în
@@ -151,8 +152,9 @@ async function person(name: string, status: RegistrationStatus, extra: Extra = {
   return row;
 }
 
-const send = (overrides: Partial<Parameters<typeof sendParticipantMessage>[2]> = {}, actor: StaffUser = organizer) =>
-  sendParticipantMessage(db, actor, { eventId, audience: "ALL_ACTIVE", sendId: randomUUID(), sendQr: true, ...WORDS, ...overrides }, new Date());
+// Each send as an organizer who typed the number of recipients the page showed (`confirmed`).
+const send = async (overrides: Partial<Parameters<typeof sendParticipantMessage>[2]> = {}, actor: StaffUser = organizer) =>
+  sendParticipantMessage(db, actor, await confirmed(db, { eventId, audience: "ALL_ACTIVE", sendId: randomUUID(), sendQr: true, ...WORDS, ...overrides }), new Date());
 
 /** The participants' own rows of the organizers' message — never the club's copy, which has no participant. */
 const ownRows = () => db.select().from(emailOutbox).where(and(eq(emailOutbox.messageType, "ORGANIZER_MESSAGE"), isNotNull(emailOutbox.participantId)));
@@ -244,7 +246,7 @@ describe("§943 the send: the flag rides on the rows of confirmed registrations 
     await person("Carmen", "WAITLISTED");
     const sendId = randomUUID();
     // The form posts nothing for an unticked box: the input carries no `sendQr` at all.
-    expect(await sendParticipantMessage(db, organizer, { eventId, audience: "ALL_ACTIVE", sendId, ...WORDS }, new Date())).toEqual({ kind: "queued", real: 2, test: 0 });
+    expect(await sendParticipantMessage(db, organizer, await confirmed(db, { eventId, audience: "ALL_ACTIVE", sendId, ...WORDS }), new Date())).toEqual({ kind: "queued", real: 2, test: 0 });
     for (const row of await ownRows()) expect(row.payloadJson).toEqual(WORDS);
     const [audit] = await sendAudits();
     expect(audit.metadataJson).toEqual({ sendId, audience: "ALL_ACTIVE", recipients: 2, test: 0, subject: WORDS.subject });
@@ -554,8 +556,8 @@ describe("§943 «Mesaje trimise» says the tick was on", () => {
     await person("Probe", "CONFIRMED", { kind: "TEST" });
     const ticked = randomUUID();
     const plain = randomUUID();
-    await sendParticipantMessage(db, organizer, { eventId, audience: "ALL_ACTIVE", sendId: plain, ...WORDS }, new Date(Date.now() - 60_000));
-    await sendParticipantMessage(db, organizer, { eventId, audience: "ALL_ACTIVE", sendId: ticked, sendQr: true, ...WORDS }, new Date());
+    await sendParticipantMessage(db, organizer, await confirmed(db, { eventId, audience: "ALL_ACTIVE", sendId: plain, ...WORDS }), new Date(Date.now() - 60_000));
+    await sendParticipantMessage(db, organizer, await confirmed(db, { eventId, audience: "ALL_ACTIVE", sendId: ticked, sendQr: true, ...WORDS }), new Date());
     const [newest, older] = await listParticipantMessages(db, eventId);
     expect(newest).toMatchObject({ sendId: ticked, sendQr: true, withQr: 2, recipients: 3, test: 1, askReconfirm: false, answers: null });
     expect(older).toMatchObject({ sendId: plain, sendQr: false, withQr: 0, recipients: 3, test: 1 });
@@ -579,6 +581,8 @@ describe("§943 the form's tick reaches the send and the preview", () => {
     posted.set("eventId", eventId);
     posted.set("sendId", randomUUID());
     posted.set("audience", "ALL_ACTIVE");
+    // «Scrie la câți trimiți»: each press here writes to the one runner seeded, and the organizer typed so.
+    posted.set("confirmCount", "1");
     posted.set("subjectRo", WORDS.subject.ro);
     posted.set("subjectEn", WORDS.subject.en);
     posted.set("bodyRo", WORDS.body.ro);

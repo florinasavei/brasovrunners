@@ -18,6 +18,9 @@ import { typedStartShape } from "@/modules/events/domain/provisional-start";
 import { readRepeatRule } from "@/modules/events/domain/repeat";
 import { EMAIL_SAMPLE } from "@/modules/notifications/domain/email-sample";
 import {
+  CHOSEN_AUDIENCE,
+  CHOSEN_FIELD,
+  CONFIRM_COUNT_FIELD,
   ORGANIZER_BODY_MAX,
   ORGANIZER_SUBJECT_PLACEHOLDERS,
   ORGANIZER_SUBJECT_MAX,
@@ -32,12 +35,19 @@ import { GMAIL_PACE_BUDGET_MS } from "@/infrastructure/email/delivery";
 import { OUTBOX_BATCH_SIZE } from "@/modules/notifications/outbox";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { PINGER_SLOT_MINUTES } from "@/modules/jobs/schedule";
-import { countParticipantMessageAudiences, listParticipantMessages, subjectAsDrawn } from "@/modules/notifications/participant-messages";
+import {
+  countParticipantMessageAudiences,
+  listChoosableRecipients,
+  listParticipantMessages,
+  readKeptMessage,
+  subjectAsDrawn,
+} from "@/modules/notifications/participant-messages";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
 import ParticipantMessageComposer, { type ComposerAudience } from "@/modules/notifications/ui/ParticipantMessageComposer";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { canMessageParticipants } from "@/modules/staff-identity/domain/roles";
+import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
@@ -48,7 +58,7 @@ import { previewParticipantMessageAction, sendParticipantMessageAction } from ".
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ sent?: string; test?: string; duplicate?: string }>;
+  searchParams: Promise<{ sent?: string; test?: string; duplicate?: string; kept?: string }>;
 };
 
 /** Reads the queue and the history, and is returned to right after a send. */
@@ -66,6 +76,15 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * three, each with its count — the subject and the message in Română and English, the message as
  * it will arrive, and Send behind a question that names how many. Under it, "Mesaje trimise":
  * what was sent before from here, by whom, to whom as a group, and how many.
+ *
+ * A fifth choice beside the four groups, «Doar anumiți participanți» (§945; the owner, 2026-11-13: «As vrea sa fac un
+ * test pentru mailul asta, sa selectez doar anumiti participanti»): the event's active registrations by name, a tick
+ * each, for a trial of a message or a word to a few. The page returned to after such a send (`?kept=<the send's id>`)
+ * hands its words back to the boxes, so the same message goes to everybody without being typed twice.
+ *
+ * And every send is confirmed by hand («Confirmă trimiterea», §945; the owner, of the same message: «si vreau extra
+ * extra confirmare»): right above «Trimite mesajul» the page says again who receives it and asks for the number of
+ * recipients to be typed, which the send holds to the rows it is about to write — the bulk erase's guard (§287).
  *
  * For whoever may write to the participants (`canMessageParticipants`: the Organizer and up, not
  * the Tehnic role); anybody else gets the 404 a typed address to a page that does not exist gets
@@ -89,14 +108,17 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
   if (!record) notFound();
   const { event, translations } = record;
   const title = translations.find((row) => row.locale === locale)?.title || translations[0]?.title || "";
-  const { sent, test, duplicate } = await searchParams;
+  const { sent, test, duplicate, kept } = await searchParams;
 
   const now = new Date();
-  const [counts, volume, history, eventDetails] = await Promise.all([
+  const [counts, volume, history, eventDetails, people, keptMessage] = await Promise.all([
     countParticipantMessageAudiences(db, event.id),
     readEmailVolumeToday(db, now),
     listParticipantMessages(db, event.id),
     findEventNotificationDetails(db, event.id, locale),
+    // «Doar anumiți participanți» (§945): everybody who can be ticked, and — back from such a send — its words for the boxes.
+    listChoosableRecipients(db, event.id),
+    typeof kept === "string" ? readKeptMessage(db, event.id, kept) : null,
   ]);
 
   const t = await getTranslations("Admin");
@@ -245,6 +267,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
     return {
       value: audience,
       label: t(`participantMessages.audiences.${audience}`),
+      short: t(`participantMessages.audiencesShort.${audience}`),
       real,
       test: testCount,
       recipientsLine:
@@ -266,7 +289,25 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
   */
   // «Trimite acum» or «Pune la coadă» (§540): under the scheduled timing, the send asks which.
   const sendNow = await sendNowChoiceFor(db, locale);
-  const sendConfirm = audiences.map((choice) =>
+  /*
+    «Doar anumiți participanți» (§945): the people are ticked in the browser, so its question cannot name a number in its
+    title — the bold email line counts the ticks at the press instead (`ticksOf`), a test registration's counting nobody
+    (§12.6), with the club's one copy of the send. No pace or allowance line: none is worked out for a list ticked there,
+    and the outbox defers what a spent allowance cannot carry, as for any send (§40).
+  */
+  const testPeople = people.filter((person) => person.test).map((person) => person.id);
+  const chosenConfirm = withSendNowChoice(
+    {
+      when: [{ field: "audience", equals: CHOSEN_AUDIENCE }],
+      title: t("participantMessages.chosen.confirmTitle"),
+      body: [t("participantMessages.confirmBody"), testPeople.length > 0 ? t("participantMessages.chosen.testNote") : ""].filter(Boolean).join(" "),
+      ...words.mail({ to: { ticksOf: CHOSEN_FIELD, audience: "participants", uncounted: testPeople }, type: "ORGANIZER_MESSAGE" }),
+      confirmLabel: t("participantMessages.confirmSend"),
+      cancelLabel: words.cancel,
+    },
+    sendNow,
+  );
+  const groupConfirms = audiences.map((choice) =>
     withSendNowChoice(
       {
         when: [{ field: "audience", equals: choice.value }],
@@ -284,17 +325,21 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
       sendNow,
     ),
   );
+  const sendConfirm = [...groupConfirms, chosenConfirm];
   const languageRo = tSite("languageName.ro");
   const languageEn = tSite("languageName.en");
   // The subject's fields, in both helps; the body's one more, `{feedbackLink}`, has its own sentence (§676).
   const placeholderList = ORGANIZER_SUBJECT_PLACEHOLDERS.map((name) => `{${name}}`).join(", ");
   const refusal = await refusalMessages({
     audience: t("participantMessages.audience"),
+    [CHOSEN_FIELD]: t("participantMessages.chosen.label"),
+    [CONFIRM_COUNT_FIELD]: t("participantMessages.typedCount.label"),
     subjectRo: `${t("participantMessages.subject")} (${languageRo})`,
     subjectEn: `${t("participantMessages.subject")} (${languageEn})`,
     bodyRo: `${t("participantMessages.body")} (${languageRo})`,
     bodyEn: `${t("participantMessages.body")} (${languageEn})`,
-  });
+    // The typed number is never handed back (§945, `NEVER_KEPT`): the summary says the confirmation is asked again.
+  }, { confirmation: true });
 
   const inSeries = event.repeatOf !== null || readRepeatRule(event.repeatRule) !== null;
   const nobodyAnywhere = counts.ALL_ACTIVE.real + counts.ALL_ACTIVE.test === 0;
@@ -335,6 +380,8 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
           <Alert severity="success" data-testid="participant-message-sent">
             {t(`participantMessages.sent.${countForm(sentCount, locale)}`, { count: sentCount })}
             {sentTest > 0 ? ` ${t("participantMessages.sentTest", { test: String(sentTest) })}` : ""}
+            {/* Back from a send to the people ticked (§945): the boxes below still hold its words. */}
+            {keptMessage ? ` ${t("participantMessages.chosen.kept")}` : ""}
           </Alert>
         )}
         {duplicate === "1" && <Alert severity="info">{t("participantMessages.duplicate")}</Alert>}
@@ -355,6 +402,24 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
           <ParticipantMessageComposer
             eventId={event.id}
             audiences={audiences}
+            chosen={{
+              value: CHOSEN_AUDIENCE,
+              field: CHOSEN_FIELD,
+              // A name and a state, in the backoffice's own word for it (§35), and a test row's mark — nothing else of a person.
+              people: people.map((person) => ({ id: person.id, name: person.name, state: REGISTRATION_STATUS_LABEL[person.status], test: person.test })),
+            }}
+            {...(keptMessage
+              ? {
+                  kept: {
+                    subjectRo: keptMessage.subject.ro,
+                    subjectEn: keptMessage.subject.en,
+                    bodyRo: keptMessage.body.ro,
+                    bodyEn: keptMessage.body.en,
+                    askReconfirm: keptMessage.askReconfirm,
+                    sendQr: keptMessage.sendQr,
+                  },
+                }
+              : {})}
             defaultAudience="ALL_ACTIVE"
             maxSubject={ORGANIZER_SUBJECT_MAX}
             maxBody={ORGANIZER_BODY_MAX}
@@ -362,6 +427,26 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
             labels={{
               audience: t("participantMessages.audience"),
               audienceHelp: t("participantMessages.audienceHelp"),
+              confirm: {
+                field: CONFIRM_COUNT_FIELD,
+                title: t("participantMessages.typedCount.title"),
+                count: t("participantMessages.typedCount.label"),
+                countHelp: t("participantMessages.typedCount.help"),
+              },
+              chosen: {
+                label: t("participantMessages.chosen.label"),
+                short: t("participantMessages.audiencesShort.CHOSEN"),
+                help: t("participantMessages.chosen.help"),
+                search: t("participantMessages.chosen.search"),
+                // `{count}`, `{total}` and `{names}` stay literal: the composer fills them from the ticks.
+                count: t.raw("participantMessages.chosen.count") as string,
+                testTicked: t.raw("participantMessages.testLine") as string,
+                none: t("participantMessages.chosen.none"),
+                names: t.raw("participantMessages.chosen.names") as string,
+                noMatch: t("participantMessages.chosen.noMatch"),
+                empty: t("participantMessages.chosen.empty"),
+                test: t("participantMessages.chosen.test"),
+              },
               languageRo,
               languageEn,
               subject: t("participantMessages.subject"),

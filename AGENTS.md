@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.42-2026-11-13 -->
+<!-- PROJECT_BASELINE: BR-V4.43-2026-11-13 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.42-2026-11-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.43-2026-11-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -3464,6 +3464,32 @@ registration's own, and `{checkinCode}` stays refused in the organizers' own wor
 and in how many confirmed registrations' emails, real and test apart; «Mesaje trimise» reads it. Nothing in a state, a
 place, a deadline, the allocator or the capacity formula reads the flag, and the desk's «Fără QR pe email» does not
 count this message (`DESK_CODE_MESSAGE_TYPES` is by type).
+
+**The organizer's message goes to people ticked by name only when its send chose «Doar anumiți participanți, pe care îi
+aleg din listă»** (`DECISIONS.md` §945, `notifications/domain/organizer-message.ts#CHOSEN_AUDIENCE`): a fifth choice of
+«Cui îi trimiți» beside the four groups, and not a group — for a trial of a message before everybody gets it, or a word
+to a few. The composer lists the event's active registrations by name with their state, and nothing else of a person: no
+address, no number. The send reaches exactly the ticked that are this event's and in a state `ALL_ACTIVE` holds when it
+queues them, matched under the event's lock among the rows the widest group reads, so the choice narrows that group and
+never widens it: a tick on a cancelled, lapsed or unconfirmed-address registration, on another event's or on nobody
+writes to nobody, and a press that leaves nobody is refused on the list (`NO_CHOSEN_RECIPIENTS`). Everything else is the
+group's send — one row per registration in its language, `askReconfirm` and `sendQr` each on its own rows, the club's
+one copy with the count of real people reached, a second press that queues nothing — and its audit row says the choice
+(`audience: "CHOSEN"`) and the counts, never who was ticked. After such a send, and after no other, the page comes back
+with the send's own id (`?kept=`) and puts its words and its two ticks back in the boxes — the words from the send's own
+outbox rows, the ticks from its audit row (`readKeptMessage`) — so the same message goes to everybody without being
+typed twice; a send to a group still leaves the boxes empty (§364).
+
+**Every send of the organizer's message is confirmed by the number of recipients, typed** (`DECISIONS.md` §945,
+`notifications/domain/organizer-message.ts#typedCountMatches`; the owner: «si vreau extra extra confirmare»): right above
+«Trimite mesajul» the composer says again who the message goes to — the group's short name and its number, or the people
+ticked by name — and asks for that number at «Scrie la câți trimiți». `sendParticipantMessage` requires it
+(`confirmCount`) and compares it, under the event's lock, with the real registrations it is about to write to, test
+registrations left out (§12.6). Any other number, nothing typed and a caller that passed none queue and audit nothing
+(`miscounted`), and the form is refused on that box (`MESSAGE_COUNT_MISMATCH`) with the number there is now. It is asked
+after what refuses a send anyway — the role, the words, the event, a form already sent, an empty group — and before the
+allowance is asked or a row is written. The box is never handed back after a refusal (`NEVER_KEPT`): it is typed again,
+and the question still follows it. It is the bulk erase's guard (§287), for a message that cannot be taken back.
 
 `EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
 event before its start — the club's reminder lead or the event's own (§377; 48 hours by default) — once per registration (`registration:<id>:reminder`), with
