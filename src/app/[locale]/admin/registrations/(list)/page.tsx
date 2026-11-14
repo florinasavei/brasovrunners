@@ -1387,9 +1387,27 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         own minimal file, never columns of the export beside it. For one chosen event; every event's
         list is on «Newsletter». The role is asserted in the read and in the route. Under it, since
         §929, «Liste date sponsorilor»: this event's lists and those made for every event.
+
+        The whole block is one fold, «Lista pentru sponsori», closed on arrival (§NNN; the owner,
+        2026-11-14: «vreau sa fie colapsata intr-o sectiune»): a file given a few times a year stood
+        open above the bibs on the screen the club works from every day. Its closed line says what
+        the block said at a glance — how many people the list holds now, or that it is off, and how
+        many lists were given — and the register is a fold inside it, a level down, as on «Newsletter».
       */}
       {sponsors && sponsorRegister && filters.eventId && (
-        <SponsorListButton locale={locale} eventId={filters.eventId} list={sponsors} register={sponsorRegister} now={deadlinesNow} registerLevel={2} />
+        <Panel
+          glyph="partners"
+          title={t("panels.sponsors")}
+          aside={[
+            sponsors.offered ? t(`sponsors.count.${countForm(sponsors.count, locale)}`, { count: sponsors.count }) : t("sponsors.fold.off"),
+            ...(sponsorRegister.lists.length > 0 ? [t("sponsors.fold.given", { count: sponsorRegister.lists.length })] : []),
+          ].join(" · ")}
+          collapsible
+          id="registrations-sponsors"
+          data-testid="registrations-sponsors"
+        >
+          <SponsorListButton locale={locale} eventId={filters.eventId} list={sponsors} register={sponsorRegister} now={deadlinesNow} registerLevel={3} />
+        </Panel>
       )}
 
       {/*

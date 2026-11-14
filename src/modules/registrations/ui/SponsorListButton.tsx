@@ -22,13 +22,14 @@ type Props = {
   register: SponsorRegister;
   /** The page's clock, for the register's «termen trecut». */
   now: Date;
-  /** The register's heading level: 2 on a page, 3 inside a card. */
+  /** The register's heading level: 2 on a page, 3 inside a card — which both screens are, since §NNN. */
   registerLevel: 2 | 3;
 };
 
 /**
  * «Descarcă lista pentru sponsori» with «N persoane» beside it (§570) — on an event's registrations
- * page for that event, and in the «Newsletter» fold for every event: one button, one route, one
+ * page for that event, inside the page's closed fold «Lista pentru sponsori» (§NNN), and in the
+ * «Newsletter» fold for every event: one button, one route, one
  * file. A Server Component; the caller reads the count (`sponsorListSummary`, which asserts the
  * role) and passes it. While the notice in force does not describe the sharing the button is a
  * disabled `<button>` with no form, and one sentence says why — the route refuses it all the same.

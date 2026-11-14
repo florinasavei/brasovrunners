@@ -10257,6 +10257,7 @@
     },
     "panels": {
       "bibs": "Numere de concurs",
+      "sponsors": "Lista pentru sponsori",
       "summary": "Cine s-a înscris",
       "outbox": "Emailuri de trimis",
       "filters": "Caută și filtrează"
@@ -11235,6 +11236,10 @@
       "helpExcel": "Excelul are în plus toate bifele fiecăruia, ca să vezi la ce și-a dat acordul. Partenerului dă-i CSV-ul.",
       "recipient": "Cui dai lista",
       "recipientTitle": "Scrie cui dai lista.",
+      "fold": {
+        "off": "oprită",
+        "given": "liste date: {count}"
+      },
       "given": {
         "title": "Liste date sponsorilor",
         "intro": "Fiecare descărcare a listei: cui ai dat-o, câte persoane avea și până când ștergi fișierul tău.",

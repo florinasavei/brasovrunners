@@ -10257,6 +10257,7 @@
     },
     "panels": {
       "bibs": "Race numbers",
+      "sponsors": "List for sponsors",
       "summary": "Who has signed up",
       "outbox": "Email waiting to go out",
       "filters": "Search and filter"
@@ -11235,6 +11236,10 @@
       "helpExcel": "The Excel file also has every tick of each person, so you see what they agreed to. Give the partner the CSV.",
       "recipient": "Who receives the list",
       "recipientTitle": "Write who receives the list.",
+      "fold": {
+        "off": "switched off",
+        "given": "lists given: {count}"
+      },
       "given": {
         "title": "Lists given to sponsors",
         "intro": "Every download of the list: whom you gave it to, how many people it held and the day your file must be deleted by.",

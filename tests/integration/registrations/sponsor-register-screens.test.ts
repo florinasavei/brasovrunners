@@ -5,7 +5,12 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { events, eventTranslations } from "@/db/schema/events";
+import { participants } from "@/db/schema/participants";
+import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
+import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
+import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import type { SponsorRegister } from "@/modules/registrations/sponsor-register";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -14,7 +19,8 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * event's registrations page and «Newsletter» hand the block. The read and the drawing are
  * `sponsor-list.test.ts`; this is the step between them, which a review by mutation found no test reached: the
  * event's own door (never another event's lists), the three roles that may take the list, the reader's language
- * and the page's clock.
+ * and the page's clock. And, since §NNN, the fold the registrations page draws around the block: «Lista pentru
+ * sponsori», closed, its line saying how many people and how many lists.
  *
  * The pages are Server Components, so each is called and its element tree walked, as `results-door.test.ts` does.
  */
@@ -77,6 +83,7 @@ const { default: AdminRegistrationsPage } = await import("@/app/[locale]/admin/r
 const { default: NewsletterPage } = await import("@/app/[locale]/admin/newsletter/page");
 const { default: SponsorListButton } = await import("@/modules/registrations/ui/SponsorListButton");
 const { default: PromoConsenters } = await import("@/modules/newsletter/ui/PromoConsenters");
+const { default: Panel } = await import("@/shared/ui/Panel");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
 
@@ -113,17 +120,19 @@ async function staff(role: StaffUser["role"]): Promise<StaffUser> {
   return user;
 }
 
+/** One list in the trail, as the download writes it. */
+const list = (at: string, eventId: string | null, recipient: string) => ({
+  action: "registrations.sponsor_list_exported" as const,
+  entityType: "event",
+  entityId: eventId,
+  metadataJson: { eventId, format: "csv", count: 1, recipient, registrationIds: [] },
+  createdAt: new Date(at),
+});
+
 /** Three lists: the autumn race's, the winter race's, and one made for every event — the newest. */
 async function threeLists() {
   const autumn = await createEvent("toamna");
   const winter = await createEvent("iarna");
-  const list = (at: string, eventId: string | null, recipient: string) => ({
-    action: "registrations.sponsor_list_exported" as const,
-    entityType: "event",
-    entityId: eventId,
-    metadataJson: { eventId, format: "csv", count: 1, recipient, registrationIds: [] },
-    createdAt: new Date(at),
-  });
   await db.insert(auditLogs).values([
     list("2026-09-10T09:00:00.000Z", autumn.id, "Sport Shop"),
     list("2026-09-12T09:00:00.000Z", winter.id, "Intersport"),
@@ -133,6 +142,49 @@ async function threeLists() {
 }
 
 const facts = (register: SponsorRegister) => register.lists.map((list) => [list.recipient, list.eventTitle]);
+
+/** The notice in force says the partners may receive the list: the button is on. */
+async function sharingNoticeInForce() {
+  const body = { sections: [{ paragraphs: ["Oferte și beneficii: doar dacă bifezi {{promotionalMaterials}}.", "Lista pentru parteneri: le putem da {{promotionalMaterialsShared}}."] }] } as LegalDocumentTranslationInput["body"];
+  const translations: LegalDocumentTranslationInput[] = [
+    { locale: "ro", title: "Notă", body },
+    { locale: "en", title: "Notice", body },
+  ];
+  const at = new Date("2026-01-01T00:00:00.000Z");
+  await insertLegalDocumentVersion(db, { key: "PRIVACY_NOTICE", version: 1, effectiveAt: at, isApproved: true, contentSha256: computeContentHash(translations), translations, now: at });
+}
+
+/** An adult, confirmed, who said yes to offers and benefits under that notice. */
+async function consenter(eventId: string, firstName: string) {
+  const identity = canonicalizeEmail(`${firstName.toLowerCase()}-${seq++}@example.ro`);
+  const [participant] = await db
+    .insert(participants)
+    .values({ deliveryEmail: identity.deliveryEmail, normalizedEmail: identity.normalizedEmail, canonicalEmail: identity.canonicalEmail, canonicalizationVersion: identity.canonicalizationVersion, defaultName: firstName })
+    .returning();
+  const saidYesAt = new Date("2026-07-01T10:00:00.000Z");
+  await db.insert(registrations).values({
+    eventId,
+    participantId: participant.id,
+    status: "CONFIRMED",
+    kind: "REAL",
+    locale: "ro",
+    registeredName: `${firstName} Pop`,
+    firstName,
+    lastName: "Pop",
+    displayName: firstName,
+    birthDate: "1985-03-02",
+    phone: "+40711111111",
+    privacyNoticeVersion: 1,
+    privacyAcknowledgedAt: saidYesAt,
+    resultsNameConsent: false,
+    resultsConsentVersion: 1,
+    promoConsent: true,
+    promoConsentAt: saidYesAt,
+  });
+}
+
+/** The fold the registrations page draws around the block (§NNN), as the page hands it to `Panel`. */
+const foldOf = (tree: unknown) => elements(tree).find((element) => element.props["data-testid"] === "registrations-sponsors");
 
 beforeAll(async () => {
   ({ db, close } = await createTestDatabase());
@@ -158,7 +210,13 @@ describe("BR-REQ-071-01 §929 an event's registrations page hands the block its 
       const props = block!.props as unknown as Parameters<typeof SponsorListButton>[0];
       expect(props.eventId).toBe(autumn.id);
       expect(props.locale).toBe("en");
-      expect(props.registerLevel).toBe(2);
+      // Inside the fold «Lista pentru sponsori» (§NNN): the register is a fold a level down, as on «Newsletter».
+      expect(props.registerLevel).toBe(3);
+      const fold = foldOf(tree);
+      expect(fold, role).toBeDefined();
+      expect(fold!.props.title).toBe("List for sponsors");
+      // No notice in force describes the sharing here: the line says the list is off, and counts this door's two lists.
+      expect(fold!.props.aside).toBe("switched off · lists given: 2");
       // The winter race's list is another event's: never on this door.
       expect(facts(props.register)).toEqual([
         ["Decathlon", null],
@@ -171,6 +229,50 @@ describe("BR-REQ-071-01 §929 an event's registrations page hands the block its 
       expect(props.now.getTime()).toBeLessThanOrEqual(Date.now());
     },
   );
+});
+
+describe("BR-REQ-071-01 §NNN on an event's registrations page the block is one closed fold, «Lista pentru sponsori»", () => {
+  const page = (searchParams: Record<string, string>) => AdminRegistrationsPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve(searchParams) } as never);
+
+  it("draws the fold closed with the whole block inside it, and no fold before an event is chosen", async () => {
+    const { autumn } = await threeLists();
+    state.actor = await staff("ADMIN");
+    const tree = await page({ eventId: autumn.id });
+    const fold = foldOf(tree);
+    expect(fold).toBeDefined();
+    expect(fold!.type).toBe(Panel);
+    expect(fold!.props.title).toBe("Lista pentru sponsori");
+    // A fold with no reason to open by itself: closed on every arrival (`shared/ui/fold.ts`).
+    expect(fold!.props.collapsible).toBe(true);
+    expect(fold!.props.openWhen).toBeUndefined();
+    expect(fold!.props.static).toBeUndefined();
+    expect(fold!.props.aside).toBe("oprită · liste date: 2");
+    // The block is drawn once, and inside the fold: nothing of it stands open on the page.
+    const blocks = elements(tree).filter((element) => element.type === SponsorListButton);
+    expect(blocks).toHaveLength(1);
+    expect(elements(fold!.props.children)).toContain(blocks[0]);
+
+    // The list is one event's: with none chosen there is neither a block nor an empty fold.
+    const every = await page({});
+    expect(foldOf(every)).toBeUndefined();
+    expect(elements(every).some((element) => element.type === SponsorListButton)).toBe(false);
+  });
+
+  it("says on its closed line how many people the list holds now, and counts the lists given only once there is one", async () => {
+    await sharingNoticeInForce();
+    const event = await createEvent("toamna");
+    await consenter(event.id, "Ana");
+    await consenter(event.id, "Bogdan");
+    state.actor = await staff("MODERATOR");
+    // Nobody was given a list yet: the people alone, the count the button's own line says inside.
+    const before = await page({ eventId: event.id });
+    expect(foldOf(before)!.props.aside).toBe("2 persoane");
+    const block = elements(before).find((element) => element.type === SponsorListButton);
+    expect((block!.props as unknown as Parameters<typeof SponsorListButton>[0]).list).toEqual({ offered: true, count: 2 });
+
+    await db.insert(auditLogs).values(list("2026-09-10T09:00:00.000Z", event.id, "Sport Shop"));
+    expect(foldOf(await page({ eventId: event.id }))!.props.aside).toBe("2 persoane · liste date: 1");
+  });
 });
 
 describe("BR-REQ-071-01 §929 «Newsletter» hands the fold every list", () => {
