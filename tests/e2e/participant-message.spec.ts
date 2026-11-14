@@ -296,17 +296,14 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     await size.click();
     await expect(size).toHaveText("Micșorează");
     await expect(frame).toHaveAttribute("sandbox", "allow-same-origin");
-    await expect
-      .poll(
-        async () =>
-          frame.evaluate((element: HTMLIFrameElement) => {
-            const root = element.contentDocument?.documentElement;
-            const view = element.contentWindow?.innerHeight ?? 0;
-            return root ? root.scrollHeight <= view && Math.ceil(root.getBoundingClientRect().height) === view : false;
-          }),
-        { timeout: 30_000 },
-      )
-      .toBe(true);
+    /** The frame holds exactly the email: nothing to scroll inside it, and no empty band under it. */
+    const fits = () =>
+      frame.evaluate((element: HTMLIFrameElement) => {
+        const root = element.contentDocument?.documentElement;
+        const view = element.contentWindow?.innerHeight ?? 0;
+        return root ? root.scrollHeight <= view && Math.ceil(root.getBoundingClientRect().height) === view : false;
+      });
+    await expect.poll(fits, { timeout: 30_000 }).toBe(true);
     const whole = await frameHeight();
     expect(whole).toBeGreaterThan(620);
     await expect(picture).toBeVisible();
@@ -314,8 +311,18 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     // It follows the words: more of them and the frame grows, the page never scrolling sideways.
     await page.locator('[name="bodyRo"]').fill("Un rând.\n\n".repeat(8));
     await expect.poll(frameHeight, { timeout: 30_000 }).toBeGreaterThan(whole);
+    await expect.poll(fits, { timeout: 30_000 }).toBe(true);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
+
+    // …and the width: on a narrower page the email wraps onto more lines, and the frame is its height again.
+    const viewport = page.viewportSize() ?? { width: 320, height: 720 };
+    const wide = await frameHeight();
+    await page.setViewportSize({ width: viewport.width > 600 ? 480 : 300, height: viewport.height });
+    await expect.poll(frameHeight, { timeout: 30_000 }).toBeGreaterThan(wide);
+    await expect.poll(fits, { timeout: 30_000 }).toBe(true);
+    await page.setViewportSize(viewport);
+    await expect.poll(frameHeight, { timeout: 30_000 }).toBe(wide);
 
     // «Micșorează»: the window again, as it was. Neither press sent the form.
     await size.click();
