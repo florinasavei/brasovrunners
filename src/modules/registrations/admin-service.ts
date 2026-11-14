@@ -60,6 +60,7 @@ import {
   givePlaceNowByStaff,
   type InvitationSendInput,
   type InvitationSendResult,
+  deleteEndedInvitationByStaff,
   inviteToEventByStaff,
   type OWN_ADDRESS_GUEST,
   offerPlaceToByStaff,
@@ -1100,6 +1101,17 @@ export async function withdrawInvitation<T extends Record<string, unknown>>(
 ): Promise<void> {
   if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not withdraw an invitation`);
   await withdrawInvitationByStaff(db, invitationId, actor, now);
+}
+
+/** «Șterge» on an invitation that ended unaccepted (§NNN): the Administrator's alone, asserted here and in the service. */
+export async function deleteEndedInvitation<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  invitationId: string,
+  now: Date,
+): Promise<{ ended: "withdrawn" | "expired" }> {
+  if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not delete an invitation`);
+  return deleteEndedInvitationByStaff(db, invitationId, actor, now);
 }
 
 /** A place ahead of the queue, into a free one (BR-REQ-037-07); refused when full. */

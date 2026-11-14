@@ -60,6 +60,8 @@ export const PRESS_CAUSES = {
   "registrations.invite": ["EVENT_INVITATION"],
   "registrations.invitationResend": ["EVENT_INVITATION"],
   "registrations.invitationWithdraw": [],
+  // «Șterge» on an ended invitation (§NNN): the invitee is sent nothing; an offer to the next in line, when the sweep makes one, is an other.
+  "registrations.invitationDelete": [],
   "registrations.invitationsErase": [],
 
   // The editor's save: the update or cancel notice to everybody registered; offers and re-sent declarations are others.

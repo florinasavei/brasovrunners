@@ -429,6 +429,11 @@ export type AuditAction =
   | "event.invitation_expired"
   | "event.invitation_accepted"
   /**
+   * «Șterge» on an invitation that ended unaccepted (§NNN): the invitation's id and how it had ended
+   * (`ended`: withdrawn or expired) — the row, its name and its address are gone, and this is what is left.
+   */
+  | "event.invitation_deleted"
+  /**
    * An invitation's deadline moved later by the outage grace (§657): the invitation's id, from and to,
    * the window's id and source — never a name or an address.
    */

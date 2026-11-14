@@ -104,7 +104,7 @@ import {
   saveReserveNoteAction,
   saveReservePartnerAction,
 } from "../reserve-actions";
-import { inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
+import { deleteInvitationAction, inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
@@ -1019,11 +1019,34 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         ),
         submitted: leadWhen(row.sentAt),
       },
-      // To the invitation itself, where «Retrimite» and «Retrage» are.
+      // To the invitation itself, where «Retrimite» and «Retrage» are — and, on one that ended unaccepted, «Șterge» right
+      // here (§NNN; the owner, of a withdrawn invitation's row on this list: «vreau să o pot șterge!»): the Administrator's,
+      // asked first, the panel's own press.
       actions: (
-        <GlyphButton icon="send" href="#registrations-invitations" variant="text" size="small" sx={TAP_TARGET}>
-          {t("registrations.invitationRow.open")}
-        </GlyphButton>
+        <Stack direction="row" useFlexGap sx={{ flexWrap: "wrap", gap: 0.5, alignItems: "center", justifyContent: "flex-end" }}>
+          <GlyphButton icon="send" href="#registrations-invitations" variant="text" size="small" sx={TAP_TARGET}>
+            {t("registrations.invitationRow.open")}
+          </GlyphButton>
+          {mayManage && (state === "withdrawn" || state === "expired") && (
+            <ActionForm
+              action={deleteInvitationAction}
+              confirm={{
+                title: t("invitations.deleteTitle"),
+                body: t("invitations.deleteBody", { name: row.name || t("invitations.anotherPerson") }),
+                ...words.noMail(row.name || t("invitations.anotherPerson")),
+                destructive: true,
+                confirmLabel: t("invitations.delete"),
+                cancelLabel: words.cancel,
+              }}
+              data-testid="registrations-invitation-delete-form"
+            >
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="eventId" value={row.eventId} />
+              <input type="hidden" name="invitationId" value={row.id} />
+              <GlyphSubmitButton icon="delete" label={t("invitations.delete")} pendingLabel={t("invitations.deleting")} variant="text" color="error" size="small" />
+            </ActionForm>
+          )}
+        </Stack>
       ),
     };
   });
@@ -1716,6 +1739,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           sendAction={inviteAction}
           resendAction={resendInvitationAction}
           withdrawAction={withdrawInvitationAction}
+          deleteAction={deleteInvitationAction}
           now={new Date()}
         />
       )}
