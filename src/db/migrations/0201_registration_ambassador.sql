@@ -1,0 +1,1 @@
+ALTER TABLE "registrations" ADD COLUMN "ambassador" boolean DEFAULT false NOT NULL;

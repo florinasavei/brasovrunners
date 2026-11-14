@@ -9,6 +9,7 @@ import ConstructionIcon from "@mui/icons-material/Construction";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
 import DrawIcon from "@mui/icons-material/Draw";
+import EmojiPeopleIcon from "@mui/icons-material/EmojiPeople";
 import ErrorOutlinedIcon from "@mui/icons-material/ErrorOutlined";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
@@ -120,6 +121,8 @@ export const STATUS_GLYPHS = {
   checkedIn: HowToRegIcon,
   // «Elită» on a registration (§897): the medal the elite card and the «⋮»'s «Marchează ca elită» wear.
   elite: MilitaryTechIcon,
+  // «Ambasador» on a registration (§NNN): the person who greets — the club's own guest, beside the elite's medal.
+  ambassador: EmojiPeopleIcon,
   // «Are kit» on a volunteer (§904): the hanger the event editor's «Kit de participare» panel wears (`panel-glyphs.ts#kit`).
   kit: CheckroomIcon,
   // «Date lipsă» on a registration (§905): answers the form requires that the row does not hold — the late form.

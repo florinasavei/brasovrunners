@@ -23,6 +23,7 @@ import DateRangeIcon from "@mui/icons-material/DateRange";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import DrawIcon from "@mui/icons-material/Draw";
+import EmojiPeopleIcon from "@mui/icons-material/EmojiPeople";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import EventIcon from "@mui/icons-material/Event";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
@@ -166,6 +167,8 @@ export const PANEL_GLYPHS = {
   bibElite: MilitaryTechIcon,
   // «Elite» on the registrations list: the same medal, the separate list and the marked registrations read together.
   elite: MilitaryTechIcon,
+  // «Ambasadori» on the registrations list (§NNN): the registrations marked «Ambasador», beside «Elite».
+  ambassador: EmojiPeopleIcon,
   print: PrintIcon,
   startList: GroupsIcon,
   // «Lista de invitați speciali» (§647), a fold of «Lista publică a participanților»: the incognito the
