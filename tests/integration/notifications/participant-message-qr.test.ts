@@ -29,7 +29,8 @@ import { confirmed } from "../../helpers/typed-count";
  * confirmation's block under the organizers' words: the number, the desk code, the QR with whose it is. Everybody else —
  * waiting, offered, owing the declaration, cancelled since — gets the message byte for byte as without the tick, and the
  * club's one copy of the send carries no flag, no QR, no code and nobody's number (§320). The preview draws the example
- * runner's block on the sample's inert code; «Mesaje trimise» says the tick was on. All people here are made up.
+ * runner's block on the sample's inert code, whose picture the route draws as an example (§946); «Mesaje trimise» says
+ * the tick was on. All people here are made up.
  */
 const DAY = 86_400_000;
 
@@ -58,6 +59,7 @@ const { sendParticipantMessage, previewParticipantMessage, listParticipantMessag
 const { renderOutboxMessage } = await import("@/modules/notifications/render");
 const { updateClubNotices } = await import("@/modules/notifications/club-notices");
 const { sendParticipantMessageAction, previewParticipantMessageAction } = await import("@/app/[locale]/admin/events/[id]/mesaje/actions");
+const { GET: qrPicture } = await import("@/app/api/registrations/qr/[code]/route");
 
 const WORDS = {
   subject: { ro: "Ne vedem la {eventTitle}", en: "See you at {eventTitle}" },
@@ -538,9 +540,15 @@ describe("§943 the preview on the form", () => {
     expect(english.html).toContain(`${EMAIL_SAMPLE.en.participantName} · Race number: ${EMAIL_SAMPLE.en.bibNumber} · Your code: ${EMAIL_SAMPLE.en.checkinCode}`);
     expect(english.html.indexOf("Your race number:")).toBeLessThan(english.html.indexOf("Numărul tău de concurs:"));
 
-    // The sample's code is nobody's: not a code the desk or the picture's route would take, and no registration holds it.
+    // The sample's code is nobody's: not a code the desk would take, and no registration holds it.
     expect(isCheckinCode(sample.checkinCode)).toBe(false);
     expect(await db.select().from(registrations).where(eq(registrations.checkinCode, sample.checkinCode))).toEqual([]);
+    // Its picture's address, exactly as the preview wrote it, is one the route draws (§946): the preview shows a QR.
+    const [, pictureName] = on.html.match(/<img src="[^"]*\/api\/registrations\/qr\/([^"]+)"/) ?? [];
+    expect(pictureName).toBe(`${sample.checkinCode}.png`);
+    const shown = await qrPicture(new Request(`http://localhost${QR_ROUTE}${pictureName}`), { params: Promise.resolve({ code: pictureName }) });
+    expect(shown.status).toBe(200);
+    expect(shown.headers.get("Content-Type")).toBe("image/png");
     // A preview queues nothing, mints nothing and audits nothing.
     expect(await ownRows()).toEqual([]);
     expect(await db.select().from(emailActionTokens)).toEqual([]);

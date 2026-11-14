@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.44-2026-11-14
+
+- **«Lista pentru sponsori» is a closed section, and the email preview shows a QR and can be enlarged** — on an event's registrations page, «Cui dai lista», the two downloads and «Liste date sponsorilor» now sit in one fold above «Numere de concurs», closed until you open it; its line says how many people the list holds now and how many lists were given. On «Trimite un mesaj participanților», «Cum arată emailul» now draws an example QR for the example runner where it showed only the picture's description — and so do the cards on «Setări» → «Emailuri» — and «Mărește» above the preview makes it as tall as the whole email, «Micșorează» bringing the small window back. §946.
 ## BR-V4.43-2026-11-13
 
 - **«Doar anumiți participanți» on «Trimite un mesaj participanților»** — a fifth choice under «Cui îi trimiți»: tick people by name from the event's registrations and the message goes only to them, for a trial before everybody gets it. The page says who is ticked and the question counts them. After such a send the text and the two ticks stay in the boxes, so the same message goes to everybody without being typed again. And every send is now confirmed by hand: «Confirmă trimiterea», right above «Trimite mesajul», says once more who receives it and asks for the number of recipients to be typed — unless it is exactly that number, nothing is sent. Apart from the message: the «1 notă» marker beside a volunteer, on the «Voluntari» list and on the event's volunteers card, now shows the notes' words when pointed at, as the registrations list's does. §945.
