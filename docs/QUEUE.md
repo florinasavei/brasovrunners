@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.44` | the list for sponsors as one closed fold; an example QR in the email previews; «Mărește» on the composer's preview (§946) |
 | `BR-V4.43` | the organizers' message to people ticked by name, for a trial before everybody, and every send confirmed by the number of recipients, typed; a volunteer's notes under the pointer (§945) |
 | `BR-V4.42` | the queue panel's zone test holds at every minute of the day (§944) |
 | `BR-V4.41` | the registrations list worked without leaving it, the telephone beside the address, and the organizers' message with each runner's number and QR (§943) |

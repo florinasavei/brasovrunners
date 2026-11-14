@@ -463,6 +463,8 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
               }),
               previewRo: t("participantMessages.previewRo"),
               previewEn: t("participantMessages.previewEn"),
+              previewEnlarge: t("participantMessages.previewEnlarge"),
+              previewShrink: t("participantMessages.previewShrink"),
               previewLoading: t("participantMessages.previewLoading"),
               previewUnavailable: t("participantMessages.previewUnavailable"),
               previewUnknown: t.raw("participantMessages.previewUnknown") as string,

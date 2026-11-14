@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.43-2026-11-13 -->
+<!-- PROJECT_BASELINE: BR-V4.44-2026-11-14 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.43-2026-11-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.44-2026-11-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -29722,3 +29722,50 @@ Baseline `BR-V4.42-2026-11-13`.
 **Not done.** Without JavaScript the list never opens — it is the island's state — and a press of that choice is refused for having nobody ticked; the four groups send as before. The list is every active registration of the event, drawn with the page: right for a club's race of a few hundred, and to be paged should an event ever hold thousands.
 
 Baseline `BR-V4.43-2026-11-13`.
+
+## 946. «Lista pentru sponsori» as one closed fold on an event's registrations page; an example QR in the email previews; and «Mărește» on the composer's preview (amending §929, §943 and §91)
+
+**The owner, 2026-11-14**, three lines of one afternoon, each with a picture: the registrations page of the race eight days away, then «Cum arată emailul» on «Trimite un mesaj participanților».
+
+### Part one: «Lista pentru sponsori» is one closed fold
+
+**The owner**, with a red frame around «Cui dai lista», the two downloads, their two captions and «Liste date sponsorilor»: «Si partea asta cu "descarca lista pentru sponsori" vreau sa fie colapsata intr-o sectiune».
+
+**What was wrong.** §570 put the list for sponsors on the registrations page as loose rows under the toolbar, and §929 added a required box before them and a register under them. Together they stood open on every arrival: a file the club gives a few times a year, above «Numere de concurs» and «Cine s-a înscris», on the screen it works from every day of race week. The blocks beside it are boxes with a heading (§269), and those that are not today's work wait folded (§336); this one was neither.
+
+**Decision.**
+
+1. **On an event's registrations page the whole block is one fold, «Lista pentru sponsori»** — the backoffice's `Panel`, the partners' handshake, a heading of the page's own level — closed on every arrival. It holds no form that comes back refused through the address and nothing in it asks for action today, so none of §336's reasons to open applies; a link to `#registrations-sponsors` opens it, as for any fold.
+2. **Its closed line says what the open block said at a glance:** how many people the list holds now — the count beside the button, which is the file's row count (§570) — or «oprită» while the notice in force does not describe the sharing; and, once a list was given, «liste date: N», this door's lists as the register counts them.
+3. **Inside, nothing changed:** the required box and its suggestions, the two downloads, the captions, and «Liste date sponsorilor» — now a fold inside a fold, a heading level down, the shape it already has on «Newsletter» inside «Participanți care au bifat oferte și beneficii».
+4. **«Newsletter» is untouched:** there the block was already inside a closed card.
+
+**Refused.** *Folding only the register and the captions, the box and the buttons left out:* the frame the owner drew holds all of it, and a required empty box is the loudest part of the block. *Opening the fold by itself while a copy is past its thirty days:* «termen trecut» was never on a closed line — the register's own fold has waited closed since §929 — and a section that opens for a housekeeping date would stand open for most of a season. *Drawing the fold inside `SponsorListButton`:* on «Newsletter» the block already sits in a card, and a card around it there would be a third level; the page that had no card draws one.
+
+### Part two: the example runner has a QR
+
+**The owner**, with a picture of «Cum arată emailul», «Trimite și numărul de concurs și codul QR» ticked, the words «Cod QR EXAMPL — Ana Popescu» standing over an empty square: «Si aici de ce nu vad un exemplu de QR?»
+
+**What was wrong.** Every email preview is addressed to a made-up runner whose desk code is nobody's — «EXAMPL», and «EXAMP2» for the second person of the family's confirmation. The picture's route answers 404 for a code no registration holds, so §943 let the preview draw the picture's description «where a real QR arrives», as the cards of «Setări» → «Emailuri» that carry a QR had always done. That is a broken picture in the one place an organizer checks how the message looks before two hundred people get it.
+
+**Decision.** The route draws the samples' codes too. `SAMPLE_CHECKIN_CODES` (`registrations/checkin-code.ts`) names the two codes the samples carry, each six characters where a registration's code has ten: `isCheckinCode` refuses them, the allocator can never mint one and no registration can hold one. For exactly those, `GET /api/registrations/qr/<code>.png` answers the picture it answers for a real code — the desk's address for that code, so the example has a runner's own size and density — with no row read. Everything else is as it was: a well-formed code that is nobody's is a 404 and so is any other text, so the route still mints no picture for arbitrary words. At the desk a sample's code is «cod necunoscut», like any other that is nobody's. No preview changed a byte — the address was already in the email, and now it answers — so the composer's preview and the cards of «Setări» → «Emailuri» show a QR alike.
+
+**Refused.** *A picture embedded in the preview alone (a `data:` address):* the preview would no longer be the email that leaves, which is its one promise (§364), and the cards on «Setări» would still show a description. *A drawn example among the brand's pictures:* a second drawing of a QR to keep in step with the route's. *A sample code of ten characters:* it must stay one that no registration can ever hold.
+
+### Part three: «Mărește» on the composer's preview
+
+**The owner**, of the same picture: «Si ar trebui sa pot mari sectiunea asta».
+
+**What was wrong.** The preview is a 620-pixel frame that scrolls inside a page that scrolls (§91, §364). An organizers' message with the QR block and both buttons, in its two languages, measured about 2 000 pixels at a desktop's width and 2 700 on a 320-pixel phone: three to four windows, read through a scrollbar inside a scrollbar.
+
+**Decision.**
+
+1. **«Mărește», above the frame, makes it as tall as the email** — nothing scrolls inside it and the page's own scroll reads all of it; «Micșorează» returns the window. The frame is no taller than before until asked, so «Confirmă trimiterea» and «Trimite mesajul» stay right under it for whoever needs no more.
+2. **The window keeps every restriction (`sandbox=""`, §91).** The height of a document in such a frame cannot be read from outside it, so the enlarged frame holds the same document under `sandbox="allow-same-origin"` — still no script, no form, no popup, no navigation of the page around it; the one thing added is that the component may read the document's height. A frame's restrictions are fixed when its document loads, so the frame is made anew on the switch.
+3. **It follows the email:** measured on every load — the composer replaces the document as the words change and when the other tab is picked — when the frame's width changes, since an email wraps on a narrow screen, and once more after a height is drawn; never smaller than the window. The email's root has no height of its own, so the frame also shrinks when words are deleted.
+4. **Neither press sends the form:** the button is `type="button"` inside the composer's form.
+5. **The composer's alone for now.** `EmailPreviewFrame` (`notifications/ui/`) is the frame and its button; «Setări» → «Emailuri» and the newsletter's preview keep their plain windows.
+
+**Refused.** *The whole email always:* it would put three screens between the words and «Trimite mesajul» on every send. *A full-screen window:* its height is the screen's — on the owner's, little more than the 620 pixels he has. *A handle to drag (CSS `resize`):* there is none on a touch screen. *A script inside the frame that reports its height:* a script in the preview that is not in the email, and the first script any preview would run.
+
+Baseline `BR-V4.44-2026-11-14`.

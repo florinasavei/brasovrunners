@@ -21,6 +21,10 @@ import { openEditorBox } from "./support/fold";
  * Every send is confirmed by hand at «Scrie la câți trimiți»: the trial's «1» typed again with
  * everybody chosen sends nothing and says how many there are.
  *
+ * And §946 — the preview itself: with «Trimite și numărul de concurs și codul QR» ticked the example runner's QR is a
+ * picture that loads, and «Mărește» makes the frame as tall as the email — nothing left to scroll inside it — until
+ * «Micșorează» returns the 620-pixel window, the press sending nothing.
+ *
  * Each project writes its own event straight into the database — the setup, not the subject, as
  * `support/action-link.ts` argues — so the two never count each other's rows: a confirmed
  * Romanian runner, an English one on the waiting list, and two who must never hear it (a
@@ -256,6 +260,77 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     await signIn(page, "Dev Technical");
     const response = await page.goto(`/ro/admin/events/${eventId}/mesaje`);
     expect(response?.status()).toBe(404);
+  });
+
+  test("§946 the preview shows the example runner's QR, and «Mărește» makes the frame as tall as the email", async ({ page }) => {
+    test.setTimeout(150_000);
+    const tag = `${test.info().project.name}-${Date.now().toString(36)}-qr`;
+    const eventId = await seedEvent(tag);
+    created.push(eventId);
+
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/events/${eventId}/mesaje`);
+    await hydrated(page);
+    const preview = page.getByTestId("participant-message-preview");
+    const frame = preview.locator("iframe");
+    const inside = page.frameLocator('[data-testid="participant-message-preview"] iframe');
+    const frameHeight = async () => Math.round((await frame.boundingBox())?.height ?? 0);
+
+    // The example runner's QR: the address the preview wrote is a picture, and it loads in the frame.
+    await page.getByTestId("participant-message-qr").getByRole("checkbox").check();
+    const picture = inside.locator('img[alt^="Cod QR"]');
+    await expect(picture).toHaveAttribute("src", new RegExp(`/api/registrations/qr/${EMAIL_SAMPLE.ro.checkinCode}\\.png$`), { timeout: 30_000 });
+    const answer = await page.request.get((await picture.getAttribute("src")) ?? "");
+    expect(answer.status()).toBe(200);
+    expect(answer.headers()["content-type"]).toBe("image/png");
+    await expect.poll(async () => picture.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0), { timeout: 30_000 }).toBe(true);
+
+    // As drawn: a window onto the email, every restriction on, and more email than window.
+    await expect(frame).toHaveAttribute("sandbox", "");
+    expect(await frameHeight()).toBe(620);
+    const size = page.getByTestId("email-preview-size");
+    await expect(size).toHaveText("Mărește");
+    expect((await size.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+
+    // «Mărește»: the frame is as tall as the email — nothing scrolls inside it — and still runs no script.
+    await size.click();
+    await expect(size).toHaveText("Micșorează");
+    await expect(frame).toHaveAttribute("sandbox", "allow-same-origin");
+    /** The frame holds exactly the email: nothing to scroll inside it, and no empty band under it. */
+    const fits = () =>
+      frame.evaluate((element: HTMLIFrameElement) => {
+        const root = element.contentDocument?.documentElement;
+        const view = element.contentWindow?.innerHeight ?? 0;
+        return root ? root.scrollHeight <= view && Math.ceil(root.getBoundingClientRect().height) === view : false;
+      });
+    await expect.poll(fits, { timeout: 30_000 }).toBe(true);
+    const whole = await frameHeight();
+    expect(whole).toBeGreaterThan(620);
+    await expect(picture).toBeVisible();
+
+    // It follows the words: more of them and the frame grows, the page never scrolling sideways.
+    await page.locator('[name="bodyRo"]').fill("Un rând.\n\n".repeat(8));
+    await expect.poll(frameHeight, { timeout: 30_000 }).toBeGreaterThan(whole);
+    await expect.poll(fits, { timeout: 30_000 }).toBe(true);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
+
+    // …and the width: on a narrower page the email wraps onto more lines, and the frame is its height again.
+    const viewport = page.viewportSize() ?? { width: 320, height: 720 };
+    const wide = await frameHeight();
+    await page.setViewportSize({ width: viewport.width > 600 ? 480 : 300, height: viewport.height });
+    await expect.poll(frameHeight, { timeout: 30_000 }).toBeGreaterThan(wide);
+    await expect.poll(fits, { timeout: 30_000 }).toBe(true);
+    await page.setViewportSize(viewport);
+    await expect.poll(frameHeight, { timeout: 30_000 }).toBe(wide);
+
+    // «Micșorează»: the window again, as it was. Neither press sent the form.
+    await size.click();
+    await expect(size).toHaveText("Mărește");
+    await expect(frame).toHaveAttribute("sandbox", "");
+    expect(await frameHeight()).toBe(620);
+    await expect(page).toHaveURL(new RegExp(`/admin/events/${eventId}/mesaje$`));
+    expect(await queuedFor(eventId)).toEqual([]);
   });
 
   test("§945 a trial to one person ticked on the list, then the same words to everybody", async ({ page }) => {

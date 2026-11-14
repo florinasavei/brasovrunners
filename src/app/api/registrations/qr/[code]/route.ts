@@ -3,7 +3,7 @@ import QRCode from "qrcode";
 import { getDb } from "@/db/client";
 import { registrations } from "@/db/schema/registrations";
 import { getPathname } from "@/i18n/navigation";
-import { isCheckinCode } from "@/modules/registrations/checkin-code";
+import { isCheckinCode, isSampleCheckinCode } from "@/modules/registrations/checkin-code";
 import { env } from "@/shared/config/env";
 
 /**
@@ -16,18 +16,26 @@ import { env } from "@/shared/config/env";
  * (`registrations.checkin_code`), the image carries only that code, and the page it points at
  * is behind staff sign-in. An unknown code is a 404, so the route cannot be used to mint QR
  * images for arbitrary text.
+ *
+ * **The sample runners' codes are drawn too (§946).** Every email preview — «Setări» → «Emailuri»
+ * and the organizers' message's own — is addressed to a made-up runner whose code is nobody's
+ * (`SAMPLE_CHECKIN_CODES`, too short to be a registration's), and its picture answered 404: the
+ * preview showed the picture's description where a QR arrives. The route now draws those few
+ * fixed codes as it draws a real one, with no row read; the desk answers such a code as unknown.
  */
 export async function GET(_request: Request, context: { params: Promise<{ code: string }> }): Promise<Response> {
   const { code: raw } = await context.params;
   const code = raw.replace(/\.png$/i, "");
-  if (!isCheckinCode(code)) return new Response(null, { status: 404 });
+  if (!isSampleCheckinCode(code)) {
+    if (!isCheckinCode(code)) return new Response(null, { status: 404 });
 
-  const [row] = await getDb()
-    .select({ id: registrations.id })
-    .from(registrations)
-    .where(eq(registrations.checkinCode, code))
-    .limit(1);
-  if (!row) return new Response(null, { status: 404 });
+    const [row] = await getDb()
+      .select({ id: registrations.id })
+      .from(registrations)
+      .where(eq(registrations.checkinCode, code))
+      .limit(1);
+    if (!row) return new Response(null, { status: 404 });
+  }
 
   const target = `${env.APP_BASE_URL}${getPathname({ locale: "ro", href: { pathname: "/admin/checkin/[code]", params: { code } } })}`;
   const png = await QRCode.toBuffer(target, { type: "png", width: 480, margin: 2, errorCorrectionLevel: "M" });
