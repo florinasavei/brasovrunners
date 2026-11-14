@@ -23,6 +23,7 @@ import { writePlainBox } from "@/modules/translate/ui/form-fields";
 import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import { type ChoosablePerson, pickedPeople, recalledPicks, tallyPicks, withPick } from "./chosen-recipients";
 import ChosenRecipients, { type ChosenLabels } from "./ChosenRecipients";
+import EmailPreviewFrame from "./EmailPreviewFrame";
 import { previewPause, type PreviewLanguage } from "./preview-pause";
 import { fillReminderBoxes, REMINDER_BOXES, reminderOverwrites } from "./reminder-fill";
 
@@ -115,6 +116,9 @@ export type ComposerLabels = {
   previewHelp: string;
   previewRo: string;
   previewEn: string;
+  /** «Mărește» and «Micșorează» (§NNN): the frame as tall as the email, and the window again. */
+  previewEnlarge: string;
+  previewShrink: string;
   previewLoading: string;
   previewUnavailable: string;
   /** "Câmpuri necunoscute: {names}…" — `{names}` filled here with what the preview found. */
@@ -193,7 +197,8 @@ const PREVIEW_PAUSE_MS = 500;
  * the Romanian registrant's copy or the English one, as the tabs choose — and shows it sandboxed,
  * like `/admin/emails` (§91). Answers that arrive out of order are dropped, and a tab picked
  * cancels the pause still running from typing (`preview-pause.ts`), so the copy under a tab is
- * always that tab's. Without JavaScript there is no preview, and the form still sends.
+ * always that tab's. Without JavaScript there is no preview, and the form still sends. The frame is a window onto the
+ * email that «Mărește» makes as tall as the email itself (`EmailPreviewFrame`, §NNN).
  *
  * **Send asks first** — through the form's own question (`ActionForm confirm`, §384): the page
  * words one dialog per group, with the count the send queues from, and the form opens the one
@@ -574,14 +579,8 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
             <Typography variant="body2" sx={{ mb: 1, wordBreak: "break-word" }} data-testid="participant-message-preview-subject">
               {labels.previewSubject}: {shown.result.subject}
             </Typography>
-            {/* Sandboxed: an email has its own `<html>` and styles and must not inherit the backoffice's (§91). */}
-            <Box
-              component="iframe"
-              srcDoc={shown.result.html}
-              sandbox=""
-              title={labels.preview}
-              sx={{ width: "100%", height: 620, border: 1, borderColor: "divider", borderRadius: 1 }}
-            />
+            {/* Sandboxed (§91), a window onto the email until «Mărește» makes it as tall as the email (§NNN). */}
+            <EmailPreviewFrame html={shown.result.html} title={labels.preview} labels={{ enlarge: labels.previewEnlarge, shrink: labels.previewShrink }} />
           </>
         )}
       </Box>

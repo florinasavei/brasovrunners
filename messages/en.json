@@ -9141,7 +9141,7 @@
                 "Write the «Subject» and the «Message», in Romanian and in English.",
                 "For a reminder, press «Fill in the reminder text»: it writes the text and ticks «Ask them to reconfirm». Whoever presses “I'm coming” shows as «Reconfirmed»; nobody is cancelled automatically.",
                 "For each confirmed runner to get their own race number and QR code under the message, tick «Also send the race number and the QR code». Everyone else gets the message without them.",
-                "Under «How the email looks» read both versions: «Registered in Romanian» and «Registered in English».",
+                "Under «How the email looks» read both versions: «Registered in Romanian» and «Registered in English». «Enlarge» shows the whole email; the QR code there is an example.",
                 "Under «Confirm the send» you see once more who the message goes to. Type the number of recipients in «Type how many you send to»: unless it is exactly the number there, nothing is sent.",
                 "Press «Send the message», then «Send» in the window: it says how long the send takes and whether they all fit now. «Messages sent» shows how many left and how many re-confirmed.",
                 "About this event only: no advertising, no sponsors' offers, no other events."
@@ -10334,6 +10334,8 @@
       "previewHelp": "Exactly the email that goes out, for a sample participant, {name}, number {bibNumber}. It updates as you type.",
       "previewRo": "Registered in Romanian",
       "previewEn": "Registered in English",
+      "previewEnlarge": "Enlarge",
+      "previewShrink": "Shrink",
       "previewLoading": "Preparing the preview…",
       "previewUnavailable": "The preview is not available right now. The message can still be sent.",
       "previewUnknown": "Unknown fields: {names}. The message cannot be sent with them — use only the fields listed under the boxes.",

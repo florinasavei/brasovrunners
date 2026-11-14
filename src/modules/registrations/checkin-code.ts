@@ -20,6 +20,20 @@ export function isCheckinCode(value: string): boolean {
   return value.length === CHECKIN_CODE_LENGTH && [...value].every((c) => CHECKIN_CODE_ALPHABET.includes(c));
 }
 
+/**
+ * The desk codes of the made-up runners every email preview is addressed to (`notifications/domain/email-sample.ts`:
+ * the sample runner's, and the second person's of the family's one confirmation). Six characters where a real code has
+ * ten, so `isCheckinCode` refuses them and no registration can ever hold one. The QR route draws its picture for
+ * exactly these beside the registrations' own (§NNN; the owner, of the composer's preview: «de ce nu vad un exemplu
+ * de QR?»), so a preview shows a QR where a real one arrives; at the desk such a code is unknown, like any that is
+ * nobody's.
+ */
+export const SAMPLE_CHECKIN_CODES: readonly string[] = ["EXAMPL", "EXAMP2"];
+
+export function isSampleCheckinCode(value: string): boolean {
+  return SAMPLE_CHECKIN_CODES.includes(value);
+}
+
 /** A typed code arrives lower-case or with spaces; a scanned one arrives as the whole URL. */
 export function normalizeCheckinCode(value: string): string {
   const tail = value.trim().replace(/\/+$/, "").split("/").pop() ?? "";

@@ -11,6 +11,7 @@ import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CloseIcon from "@mui/icons-material/Close";
+import CloseFullscreenIcon from "@mui/icons-material/CloseFullscreen";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -49,6 +50,7 @@ import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import MilitaryTechIcon from "@mui/icons-material/MilitaryTech";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
@@ -164,6 +166,9 @@ export type ActionIconName =
   | "dismiss"
   // Looking and finding.
   | "preview"
+  // «Mărește» and «Micșorează» on an email preview (§NNN): the frame as tall as the email, and the window again.
+  | "enlarge"
+  | "shrink"
   | "picture"
   // «Din galerie» (§485): a picture the club already stored, chosen again — the stack of photos,
   // never the single picture, which is looking at one.
@@ -304,6 +309,8 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   dismiss: CloseIcon,
 
   preview: VisibilityIcon,
+  enlarge: OpenInFullIcon,
+  shrink: CloseFullscreenIcon,
   picture: ImageIcon,
   gallery: PhotoLibraryIcon,
   filter: FilterAltIcon,
