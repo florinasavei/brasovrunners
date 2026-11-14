@@ -21,7 +21,7 @@ import { openEditorBox } from "./support/fold";
  * Every send is confirmed by hand at «Scrie la câți trimiți»: the trial's «1» typed again with
  * everybody chosen sends nothing and says how many there are.
  *
- * And §NNN — the preview itself: with «Trimite și numărul de concurs și codul QR» ticked the example runner's QR is a
+ * And §946 — the preview itself: with «Trimite și numărul de concurs și codul QR» ticked the example runner's QR is a
  * picture that loads, and «Mărește» makes the frame as tall as the email — nothing left to scroll inside it — until
  * «Micșorează» returns the 620-pixel window, the press sending nothing.
  *
@@ -262,7 +262,7 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     expect(response?.status()).toBe(404);
   });
 
-  test("§NNN the preview shows the example runner's QR, and «Mărește» makes the frame as tall as the email", async ({ page }) => {
+  test("§946 the preview shows the example runner's QR, and «Mărește» makes the frame as tall as the email", async ({ page }) => {
     test.setTimeout(150_000);
     const tag = `${test.info().project.name}-${Date.now().toString(36)}-qr`;
     const eventId = await seedEvent(tag);

@@ -166,7 +166,7 @@ export type ActionIconName =
   | "dismiss"
   // Looking and finding.
   | "preview"
-  // «Mărește» and «Micșorează» on an email preview (§NNN): the frame as tall as the email, and the window again.
+  // «Mărește» and «Micșorează» on an email preview (§946): the frame as tall as the email, and the window again.
   | "enlarge"
   | "shrink"
   | "picture"

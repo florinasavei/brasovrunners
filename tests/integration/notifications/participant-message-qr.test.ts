@@ -29,7 +29,7 @@ import { confirmed } from "../../helpers/typed-count";
  * confirmation's block under the organizers' words: the number, the desk code, the QR with whose it is. Everybody else —
  * waiting, offered, owing the declaration, cancelled since — gets the message byte for byte as without the tick, and the
  * club's one copy of the send carries no flag, no QR, no code and nobody's number (§320). The preview draws the example
- * runner's block on the sample's inert code, whose picture the route draws as an example (§NNN); «Mesaje trimise» says
+ * runner's block on the sample's inert code, whose picture the route draws as an example (§946); «Mesaje trimise» says
  * the tick was on. All people here are made up.
  */
 const DAY = 86_400_000;
@@ -543,7 +543,7 @@ describe("§943 the preview on the form", () => {
     // The sample's code is nobody's: not a code the desk would take, and no registration holds it.
     expect(isCheckinCode(sample.checkinCode)).toBe(false);
     expect(await db.select().from(registrations).where(eq(registrations.checkinCode, sample.checkinCode))).toEqual([]);
-    // Its picture's address, exactly as the preview wrote it, is one the route draws (§NNN): the preview shows a QR.
+    // Its picture's address, exactly as the preview wrote it, is one the route draws (§946): the preview shows a QR.
     const [, pictureName] = on.html.match(/<img src="[^"]*\/api\/registrations\/qr\/([^"]+)"/) ?? [];
     expect(pictureName).toBe(`${sample.checkinCode}.png`);
     const shown = await qrPicture(new Request(`http://localhost${QR_ROUTE}${pictureName}`), { params: Promise.resolve({ code: pictureName }) });

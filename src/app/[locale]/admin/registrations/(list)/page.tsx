@@ -1388,7 +1388,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         list is on «Newsletter». The role is asserted in the read and in the route. Under it, since
         §929, «Liste date sponsorilor»: this event's lists and those made for every event.
 
-        The whole block is one fold, «Lista pentru sponsori», closed on arrival (§NNN; the owner,
+        The whole block is one fold, «Lista pentru sponsori», closed on arrival (§946; the owner,
         2026-11-14: «vreau sa fie colapsata intr-o sectiune»): a file given a few times a year stood
         open above the bibs on the screen the club works from every day. Its closed line says what
         the block said at a glance — how many people the list holds now, or that it is off, and how

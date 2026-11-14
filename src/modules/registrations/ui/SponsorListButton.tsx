@@ -22,13 +22,13 @@ type Props = {
   register: SponsorRegister;
   /** The page's clock, for the register's «termen trecut». */
   now: Date;
-  /** The register's heading level: 2 on a page, 3 inside a card — which both screens are, since §NNN. */
+  /** The register's heading level: 2 on a page, 3 inside a card — which both screens are, since §946. */
   registerLevel: 2 | 3;
 };
 
 /**
  * «Descarcă lista pentru sponsori» with «N persoane» beside it (§570) — on an event's registrations
- * page for that event, inside the page's closed fold «Lista pentru sponsori» (§NNN), and in the
+ * page for that event, inside the page's closed fold «Lista pentru sponsori» (§946), and in the
  * «Newsletter» fold for every event: one button, one route, one
  * file. A Server Component; the caller reads the count (`sponsorListSummary`, which asserts the
  * role) and passes it. While the notice in force does not describe the sharing the button is a

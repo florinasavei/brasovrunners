@@ -31,7 +31,7 @@ type Column = { key: string; label: string; align?: "right"; render: (list: Give
  * «Liste date sponsorilor» (§929): every download of the list for sponsors — whom it was given to,
  * when, for which event, how many people it held, which file, who downloaded it and the day the
  * club's own copy must be gone by. Under the buttons on an event's registrations page — inside its
- * fold «Lista pentru sponsori» since §NNN — and in the «Newsletter» fold; a fold, closed, its line
+ * fold «Lista pentru sponsori» since §946 — and in the «Newsletter» fold; a fold, closed, its line
  * saying how many lists and the latest one. Nothing is drawn before the first list.
  *
  * A Server Component with nothing to press: the lists are audit rows, read by the caller. Never a

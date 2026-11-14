@@ -24,7 +24,7 @@ export function isCheckinCode(value: string): boolean {
  * The desk codes of the made-up runners every email preview is addressed to (`notifications/domain/email-sample.ts`:
  * the sample runner's, and the second person's of the family's one confirmation). Six characters where a real code has
  * ten, so `isCheckinCode` refuses them and no registration can ever hold one. The QR route draws its picture for
- * exactly these beside the registrations' own (§NNN; the owner, of the composer's preview: «de ce nu vad un exemplu
+ * exactly these beside the registrations' own (§946; the owner, of the composer's preview: «de ce nu vad un exemplu
  * de QR?»), so a preview shows a QR where a real one arrives; at the desk such a code is unknown, like any that is
  * nobody's.
  */

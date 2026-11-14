@@ -17,7 +17,7 @@ type Props = {
 };
 
 /**
- * An email preview that can be enlarged (§NNN; the owner, of the composer's «Cum arată emailul»: «ar trebui sa pot
+ * An email preview that can be enlarged (§946; the owner, of the composer's «Cum arată emailul»: «ar trebui sa pot
  * mari sectiunea asta»).
  *
  * As drawn, the frame is a 620-pixel window onto the email, scrolled inside while the page scrolls around it — and a

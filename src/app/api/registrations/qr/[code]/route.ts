@@ -17,7 +17,7 @@ import { env } from "@/shared/config/env";
  * is behind staff sign-in. An unknown code is a 404, so the route cannot be used to mint QR
  * images for arbitrary text.
  *
- * **The sample runners' codes are drawn too (§NNN).** Every email preview — «Setări» → «Emailuri»
+ * **The sample runners' codes are drawn too (§946).** Every email preview — «Setări» → «Emailuri»
  * and the organizers' message's own — is addressed to a made-up runner whose code is nobody's
  * (`SAMPLE_CHECKIN_CODES`, too short to be a registration's), and its picture answered 404: the
  * preview showed the picture's description where a QR arrives. The route now draws those few

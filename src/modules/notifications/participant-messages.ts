@@ -715,7 +715,7 @@ export async function previewParticipantMessage<T extends Record<string, unknown
       The block a confirmed runner's copy carries when the box is ticked (§943): the example runner is confirmed — her
       number is in the line above the preview — so she is shown her number, the QR's place and the sample's desk code, as
       the confirmation's preview on «Setări» → «Emailuri» shows them (`emailSampleData`). The code is the sample's, nobody's:
-      its picture's address answers with an example QR (§NNN, `SAMPLE_CHECKIN_CODES`), which the desk reads as unknown.
+      its picture's address answers with an example QR (§946, `SAMPLE_CHECKIN_CODES`), which the desk reads as unknown.
     */
     ...(input.sendQr === true
       ? { organizerQr: { checkinCode: EMAIL_SAMPLE[locale].checkinCode, qrUrl: `${env.APP_BASE_URL}/api/registrations/qr/${EMAIL_SAMPLE[locale].checkinCode}.png` } }

@@ -19,7 +19,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * event's registrations page and «Newsletter» hand the block. The read and the drawing are
  * `sponsor-list.test.ts`; this is the step between them, which a review by mutation found no test reached: the
  * event's own door (never another event's lists), the three roles that may take the list, the reader's language
- * and the page's clock. And, since §NNN, the fold the registrations page draws around the block: «Lista pentru
+ * and the page's clock. And, since §946, the fold the registrations page draws around the block: «Lista pentru
  * sponsori», closed, its line saying how many people and how many lists.
  *
  * The pages are Server Components, so each is called and its element tree walked, as `results-door.test.ts` does.
@@ -183,7 +183,7 @@ async function consenter(eventId: string, firstName: string) {
   });
 }
 
-/** The fold the registrations page draws around the block (§NNN), as the page hands it to `Panel`. */
+/** The fold the registrations page draws around the block (§946), as the page hands it to `Panel`. */
 const foldOf = (tree: unknown) => elements(tree).find((element) => element.props["data-testid"] === "registrations-sponsors");
 
 beforeAll(async () => {
@@ -210,7 +210,7 @@ describe("BR-REQ-071-01 §929 an event's registrations page hands the block its 
       const props = block!.props as unknown as Parameters<typeof SponsorListButton>[0];
       expect(props.eventId).toBe(autumn.id);
       expect(props.locale).toBe("en");
-      // Inside the fold «Lista pentru sponsori» (§NNN): the register is a fold a level down, as on «Newsletter».
+      // Inside the fold «Lista pentru sponsori» (§946): the register is a fold a level down, as on «Newsletter».
       expect(props.registerLevel).toBe(3);
       const fold = foldOf(tree);
       expect(fold, role).toBeDefined();
@@ -231,7 +231,7 @@ describe("BR-REQ-071-01 §929 an event's registrations page hands the block its 
   );
 });
 
-describe("BR-REQ-071-01 §NNN on an event's registrations page the block is one closed fold, «Lista pentru sponsori»", () => {
+describe("BR-REQ-071-01 §946 on an event's registrations page the block is one closed fold, «Lista pentru sponsori»", () => {
   const page = (searchParams: Record<string, string>) => AdminRegistrationsPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve(searchParams) } as never);
 
   it("draws the fold closed with the whole block inside it, and no fold before an event is chosen", async () => {

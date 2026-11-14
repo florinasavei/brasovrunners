@@ -11,7 +11,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 
 /**
  * BR-REQ-037-08 — the QR a runner shows at the desk, as the picture the emails link to
- * (`GET /api/registrations/qr/<code>.png`), and §NNN: the made-up runners of the email previews get a picture too.
+ * (`GET /api/registrations/qr/<code>.png`), and §946: the made-up runners of the email previews get a picture too.
  *
  * The owner, 2026-11-14, with a picture of «Cum arată emailul» on «Trimite un mesaj participanților», the QR's place
  * holding only its description: «Si aici de ce nu vad un exemplu de QR?» The preview is addressed to a sample runner
@@ -101,7 +101,7 @@ describe("BR-REQ-037-08 the QR picture of a registration's desk code", () => {
   });
 });
 
-describe("§NNN the sample runners of the email previews have a QR picture", () => {
+describe("§946 the sample runners of the email previews have a QR picture", () => {
   it("names exactly the codes the samples carry, none of which a registration can ever hold", () => {
     const carried = [...new Set([EMAIL_SAMPLE.ro.checkinCode, EMAIL_SAMPLE.en.checkinCode, ...EMAIL_SAMPLE_FAMILY_CONFIRMED.map((person) => person.checkinCode)])];
     expect([...SAMPLE_CHECKIN_CODES].sort()).toEqual(carried.sort());

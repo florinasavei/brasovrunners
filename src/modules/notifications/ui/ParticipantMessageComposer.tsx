@@ -116,7 +116,7 @@ export type ComposerLabels = {
   previewHelp: string;
   previewRo: string;
   previewEn: string;
-  /** «Mărește» and «Micșorează» (§NNN): the frame as tall as the email, and the window again. */
+  /** «Mărește» and «Micșorează» (§946): the frame as tall as the email, and the window again. */
   previewEnlarge: string;
   previewShrink: string;
   previewLoading: string;
@@ -198,7 +198,7 @@ const PREVIEW_PAUSE_MS = 500;
  * like `/admin/emails` (§91). Answers that arrive out of order are dropped, and a tab picked
  * cancels the pause still running from typing (`preview-pause.ts`), so the copy under a tab is
  * always that tab's. Without JavaScript there is no preview, and the form still sends. The frame is a window onto the
- * email that «Mărește» makes as tall as the email itself (`EmailPreviewFrame`, §NNN).
+ * email that «Mărește» makes as tall as the email itself (`EmailPreviewFrame`, §946).
  *
  * **Send asks first** — through the form's own question (`ActionForm confirm`, §384): the page
  * words one dialog per group, with the count the send queues from, and the form opens the one
@@ -579,7 +579,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
             <Typography variant="body2" sx={{ mb: 1, wordBreak: "break-word" }} data-testid="participant-message-preview-subject">
               {labels.previewSubject}: {shown.result.subject}
             </Typography>
-            {/* Sandboxed (§91), a window onto the email until «Mărește» makes it as tall as the email (§NNN). */}
+            {/* Sandboxed (§91), a window onto the email until «Mărește» makes it as tall as the email (§946). */}
             <EmailPreviewFrame html={shown.result.html} title={labels.preview} labels={{ enlarge: labels.previewEnlarge, shrink: labels.previewShrink }} />
           </>
         )}
