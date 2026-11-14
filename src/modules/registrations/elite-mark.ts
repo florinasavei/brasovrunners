@@ -34,6 +34,11 @@ import { isUuid } from "@/shared/ids";
  * nobody is shown whom their own consent does not show. The ticks have effect only while the mark is on — the mark
  * taken off leaves them inert, the mark put back finds them as they were — which is why a mark put on or taken off
  * ranks the results again and tells the public pages when either is set.
+ *
+ * **«Ambasador» has the same two ticks (§NNN).** They are the registration's, one pair whichever of the two marks it
+ * wears (`ambassador-mark.ts`), and count while it is marked «Elită» or «Ambasador»: every reader asks for either mark
+ * (`repository.ts#namedOnPublicList`, `results/results.ts#loadOutOfRanking`), so on a registration that is both, taking
+ * one mark off changes nothing the ticks do — the ranking pass below is then a no-op.
  */
 type Actor = Pick<StaffUser, "id" | "role">;
 
@@ -120,12 +125,12 @@ function tickAction(tick: RegistrationEliteTick, shown: boolean): AuditAction {
 }
 
 /**
- * «Apare în clasament» / «Apare pe site» on a registration marked «Elită» (§910): `shown` is the tick as it should now stand —
+ * «Apare în clasament» / «Apare pe site» on a registration marked «Elită» (§910) or «Ambasador» (§NNN): `shown` is the tick as it should now stand —
  * false hides (out of the ranking; off the public «Cine vine» by name), true takes the club's hide away and leaves the person's own
  * ticks to decide, exactly as before the mark. Nothing here can show a runner their own ticks do not show.
  *
- * The Administrator's (FORBIDDEN otherwise). A registration that is not there is NOT_FOUND; one that is not marked «Elită» is refused
- * (`ELITE_NOT_MARKED`: the ticks are an elite's — a stale menu, a colleague who took the mark off). A press that finds the tick as asked
+ * The Administrator's (FORBIDDEN otherwise). A registration that is not there is NOT_FOUND; one that wears neither mark is refused
+ * (`ELITE_NOT_MARKED`: the ticks are an elite's or an ambassador's — a stale menu, a colleague who took the mark off). A press that finds the tick as asked
  * writes nothing and no row. Otherwise one statement, one audit row on the registration with the new value alone (`{ inResults }` or
  * `{ onSite }`), the stored results ranked again in the same transaction for «Apare în clasament», and the public pages told after it.
  * No state, place, number, count or email moves.
@@ -146,12 +151,19 @@ export async function setRegistrationEliteTick<T extends Record<string, unknown>
 
   const outcome = await db.transaction(async (tx) => {
     const [current] = await tx
-      .select({ id: registrations.id, eventId: registrations.eventId, elite: registrations.elite, hiddenFromResults: registrations.eliteHiddenFromResults, hiddenFromSite: registrations.eliteHiddenFromSite })
+      .select({
+        id: registrations.id,
+        eventId: registrations.eventId,
+        elite: registrations.elite,
+        ambassador: registrations.ambassador,
+        hiddenFromResults: registrations.eliteHiddenFromResults,
+        hiddenFromSite: registrations.eliteHiddenFromSite,
+      })
       .from(registrations)
       .where(eq(registrations.id, registrationId))
       .for("update");
     if (!current) throw new DomainError("NOT_FOUND", "no such registration");
-    if (!current.elite) throw new DomainError("ELITE_NOT_MARKED", "the registration is not marked elite");
+    if (!current.elite && !current.ambassador) throw new DomainError("ELITE_NOT_MARKED", "the registration is marked neither elite nor ambassador");
     const hidden = tick === "inResults" ? current.hiddenFromResults : current.hiddenFromSite;
     if (hidden === !shown) return { changed: false, eventId: current.eventId };
     await tx

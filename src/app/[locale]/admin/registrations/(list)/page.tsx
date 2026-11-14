@@ -51,6 +51,8 @@ import KitCount from "@/modules/registrations/ui/KitCount";
 import { readVolunteerKitFigures, volunteerKitHrefs } from "@/modules/volunteers/admin-list";
 import { listEliteEntries } from "@/modules/registrations/elite-list";
 import { listEliteMarkedRegistrations } from "@/modules/registrations/elite-mark";
+import { listAmbassadorMarkedRegistrations } from "@/modules/registrations/ambassador-mark";
+import AmbassadorPanel from "@/modules/registrations/ui/AmbassadorPanel";
 import ElitePanel from "@/modules/registrations/ui/ElitePanel";
 import PlaceOutlook from "@/modules/registrations/ui/PlaceOutlook";
 import PublicNowLine from "@/modules/registrations/ui/PublicNowLine";
@@ -104,7 +106,7 @@ import {
   saveReserveNoteAction,
   saveReservePartnerAction,
 } from "../reserve-actions";
-import { inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
+import { deleteInvitationAction, inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
@@ -133,6 +135,7 @@ import {
   setBibPrintedAction,
   setClubMemberDeclaredAction,
   setOutsideCapacityAction,
+  setRegistrationAmbassadorAction,
   setRegistrationEliteAction,
   setRegistrationEliteTickAction,
 } from "../actions";
@@ -524,6 +527,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     start with a kit.
   */
   const eliteLists = filters.eventId ? await Promise.all([listEliteEntries(db, actor, filters.eventId), listEliteMarkedRegistrations(db, actor, filters.eventId)]) : null;
+  // «Ambasadori» (§NNN): the registrations marked «Ambasador», one event only; the reader asks the role again.
+  const ambassadors = filters.eventId ? await listAmbassadorMarkedRegistrations(db, actor, filters.eventId) : null;
   // The separate list's names: among the kits' runners, the people at the start in «Locuri» and the bibs beside the registrations'.
   const eliteNames = eliteLists?.[0].length ?? 0;
   /*
@@ -601,6 +606,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="outside-chip" />}
           {/* «Elită» (§897): the bib prints with the name where the number goes — for every role that reads the list. */}
           {row.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={t("registrations.elite.chip")} testId="elite-chip" />}
+          {/* «Ambasador» (§NNN): the club's label, the bib as any other — for every role that reads the list. */}
+          {row.ambassador && <StatusChip glyph="ambassador" color="secondary" variant="outlined" label={t("registrations.ambassador.chip")} testId="ambassador-chip" />}
           {/* «A reconfirmat» (the decision «Cere reconfirmarea»): the person said «Vin» and is still registered — information, never a state. */}
           {row.reconfirmedAt && isActiveStatus(row.status) && <StatusChip glyph="reconfirmed" color="success" variant="outlined" label={t("reconfirm.chip")} testId="reconfirm-chip" />}
           {/* «Date lipsă» (§905): a registration still standing lacks answers the form requires — the person completes them
@@ -1019,11 +1026,34 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         ),
         submitted: leadWhen(row.sentAt),
       },
-      // To the invitation itself, where «Retrimite» and «Retrage» are.
+      // To the invitation itself, where «Retrimite» and «Retrage» are — and, on one that ended unaccepted, «Șterge» right
+      // here (§NNN; the owner, of a withdrawn invitation's row on this list: «vreau să o pot șterge!»): the Administrator's,
+      // asked first, the panel's own press.
       actions: (
-        <GlyphButton icon="send" href="#registrations-invitations" variant="text" size="small" sx={TAP_TARGET}>
-          {t("registrations.invitationRow.open")}
-        </GlyphButton>
+        <Stack direction="row" useFlexGap sx={{ flexWrap: "wrap", gap: 0.5, alignItems: "center", justifyContent: "flex-end" }}>
+          <GlyphButton icon="send" href="#registrations-invitations" variant="text" size="small" sx={TAP_TARGET}>
+            {t("registrations.invitationRow.open")}
+          </GlyphButton>
+          {mayManage && (state === "withdrawn" || state === "expired") && (
+            <ActionForm
+              action={deleteInvitationAction}
+              confirm={{
+                title: t("invitations.deleteTitle"),
+                body: t("invitations.deleteBody", { name: row.name || t("invitations.anotherPerson") }),
+                ...words.noMail(row.name || t("invitations.anotherPerson")),
+                destructive: true,
+                confirmLabel: t("invitations.delete"),
+                cancelLabel: words.cancel,
+              }}
+              data-testid="registrations-invitation-delete-form"
+            >
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="eventId" value={row.eventId} />
+              <input type="hidden" name="invitationId" value={row.id} />
+              <GlyphSubmitButton icon="delete" label={t("invitations.delete")} pendingLabel={t("invitations.deleting")} variant="text" color="error" size="small" />
+            </ActionForm>
+          )}
+        </Stack>
       ),
     };
   });
@@ -1716,6 +1746,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           sendAction={inviteAction}
           resendAction={resendInvitationAction}
           withdrawAction={withdrawInvitationAction}
+          deleteAction={deleteInvitationAction}
           now={new Date()}
         />
       )}
@@ -1780,6 +1811,20 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           registrationHref={(registrationId) => getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: registrationId } } })}
           mayManage={mayManage}
           unmark={mayManage ? { action: setRegistrationEliteAction, listQuery: rowReturnQueryString } : undefined}
+        />
+      )}
+
+      {/*
+        «Ambasadori» (§NNN; the owner: «pe lângă Elite, adaugă și categoria de „Ambasadori"»): the registrations marked
+        «Ambasador», for every role that reads this list — the reader asserts the role again — with what the club's two
+        ticks hide of each and, for the Administrator, the one-press «Nu mai e ambasador», the row menu's own action.
+      */}
+      {ambassadors && (
+        <AmbassadorPanel
+          locale={locale}
+          marked={ambassadors}
+          registrationHref={(registrationId) => getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: registrationId } } })}
+          unmark={mayManage ? { action: setRegistrationAmbassadorAction, listQuery: rowReturnQueryString } : undefined}
         />
       )}
 
@@ -2347,6 +2392,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 outside: { onList: row.outsideCapacity, enabled: row.eventHiddenListEnabled },
                 // The elite mark (§897): the row's own mark decides which of the two words.
                 elite: row.elite,
+                // The ambassador mark (§NNN): the same, for the club's other label.
+                ambassador: row.ambassador,
               });
               // Every press of the row comes back to this list, on the row, its page and filters kept (§747, §943):
               // the forms carry the list's query, never a path.
@@ -2426,13 +2473,24 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               }
               if (verbs.includes("eliteUnmark")) {
                 items.push({ kind: "submit", icon: "elite", label: t("registrations.elite.unmark"), formId: `elite-${row.id}` });
+              }
+              // «Marchează ca ambasador» / «Nu mai e ambasador» (§NNN): the club's label beside «Elită»; the bib prints as any other.
+              if (verbs.includes("ambassadorMark")) {
+                items.push({ kind: "submit", icon: "ambassador", label: t("registrations.ambassador.mark"), formId: `ambassador-${row.id}` });
+              }
+              if (verbs.includes("ambassadorUnmark")) {
+                items.push({ kind: "submit", icon: "ambassador", label: t("registrations.ambassador.unmark"), formId: `ambassador-${row.id}` });
+              }
+              if (verbs.includes("eliteUnmark") || verbs.includes("ambassadorUnmark")) {
                 /*
-                  The marked elite's two ticks (§910), where the mark is the Administrator's to take off: «Apare în clasament» and «Apare pe
-                  site», each a tick in the menu posting the other state. They only ever hide — ticked, the person's own ticks decide.
+                  The two ticks of a registration marked «Elită» or «Ambasador» (§910, §NNN), where the mark is the Administrator's to take
+                  off: «Apare în clasament» and «Apare pe site», each a tick in the menu posting the other state — one pair, whichever mark
+                  the row wears. They only ever hide — ticked, the person's own ticks decide.
                 */
+                const tickIcon = row.elite ? ("elite" as const) : ("ambassador" as const);
                 items.push(
-                  { kind: "submit", icon: "elite", label: t("registrations.elite.inResults"), formId: `elite-results-${row.id}`, checked: !row.eliteHiddenFromResults, hint: t("registrations.elite.inResultsHelp") },
-                  { kind: "submit", icon: "elite", label: t("registrations.elite.onSite"), formId: `elite-site-${row.id}`, checked: !row.eliteHiddenFromSite, hint: t("registrations.elite.onSiteHint") },
+                  { kind: "submit", icon: tickIcon, label: t("registrations.elite.inResults"), formId: `elite-results-${row.id}`, checked: !row.eliteHiddenFromResults, hint: t("registrations.elite.inResultsHelp") },
+                  { kind: "submit", icon: tickIcon, label: t("registrations.elite.onSite"), formId: `elite-site-${row.id}`, checked: !row.eliteHiddenFromSite, hint: t("registrations.elite.onSiteHint") },
                 );
               }
               if (verbs.includes("cancel")) {
@@ -2601,8 +2659,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       {/* Back to this list and its page, as it stands (§180, §747): only the query travels. */}
                     </ActionForm>
                   )}
-                  {/* The two ticks of a marked elite (§910): ask nothing (§384) — they tell nobody, only hide, and the same tick undoes them. */}
-                  {verbs.includes("eliteUnmark") &&
+                  {(verbs.includes("ambassadorMark") || verbs.includes("ambassadorUnmark")) && (
+                    <ActionForm
+                      id={`ambassador-${row.id}`}
+                      action={setRegistrationAmbassadorAction}
+                      hidden
+                      // Asks nothing (§384): it tells nobody, changes no place, number or bib, and the same menu undoes it.
+                    >
+                      {hidden}
+                      <input type="hidden" name="ambassador" value={row.ambassador ? "0" : "1"} />
+                    </ActionForm>
+                  )}
+                  {/* The two ticks of a marked elite or ambassador (§910, §NNN): ask nothing (§384) — they tell nobody, only hide, and the same tick undoes them. */}
+                  {(verbs.includes("eliteUnmark") || verbs.includes("ambassadorUnmark")) &&
                     ([
                       ["inResults", `elite-results-${row.id}`, !row.eliteHiddenFromResults],
                       ["onSite", `elite-site-${row.id}`, !row.eliteHiddenFromSite],

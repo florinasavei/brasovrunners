@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { inviteToEvent, readInvitationForecast, resendInvitation, withdrawInvitation } from "@/modules/registrations/admin-service";
+import { deleteEndedInvitation, inviteToEvent, readInvitationForecast, resendInvitation, withdrawInvitation } from "@/modules/registrations/admin-service";
 import { confirmedCapacityOf, SUPPLEMENTARY_PLACE_UNCONFIRMED, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
 import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
 import { INVITATION_DAYS_DEFAULT, InvitationRefusal, parseInvitationLines, readInviteeRows } from "@/modules/registrations/domain/invitations";
@@ -18,9 +18,10 @@ import { flashOutcome } from "@/shared/feedback/flash";
 import { wholeDigits } from "@/shared/forms/whole-digits";
 
 /**
- * Invitations by email (§647): the three presses of the «Invitații» section on an event's registrations
- * list. Each is the Administrator's (`canManageRegistrations`), asserted here, in the admin service and
- * in the service; the Organizer reads the section and is offered no verb (§289).
+ * Invitations by email (§647): the presses of the «Invitații» section on an event's registrations
+ * list — the send, «Retrimite», «Retrage» and, on one that ended, «Șterge» (§NNN). Each is the
+ * Administrator's (`canManageRegistrations`), asserted here, in the admin service and in the service;
+ * the Organizer reads the section and is offered no verb (§289).
  */
 
 function toLocale(value: FormDataEntryValue | null): Locale {
@@ -184,6 +185,30 @@ export async function withdrawInvitationAction(_previous: unknown, form: FormDat
       press.by(actor.id);
       await withdrawInvitation(getDb(), actor, text(form, "invitationId"), new Date());
       outcome = { saved: "invitationWithdrawn" };
+    } catch (error) {
+      outcome = refusalOf(error);
+    }
+    return backToSection(locale, eventId, outcome);
+  });
+}
+
+/**
+ * «Șterge» (§NNN; the owner: «am o invitație retrasă, vreau să o pot șterge!»): an invitation that ended
+ * unaccepted — withdrawn or past its deadline — leaves the list, with its link. A press on one still open, or
+ * on one that became a registration, deletes nothing (`INVITATION_NOT_ENDED`).
+ */
+export async function deleteInvitationAction(_previous: unknown, form: FormData): Promise<null> {
+  // An email press (`notifications/press.ts`): the invitee is sent nothing, but an invitation past its deadline that the
+  // job has not swept yet is swept first, and that sweep may offer its place to the next in line.
+  return inEmailPress("registrations.invitationDelete", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    const eventId = text(form, "eventId");
+    let outcome: Record<string, string | undefined>;
+    try {
+      const actor = await requireStaffCapability(canManageRegistrations);
+      press.by(actor.id);
+      await deleteEndedInvitation(getDb(), actor, text(form, "invitationId"), new Date());
+      outcome = { saved: "invitationDeleted" };
     } catch (error) {
       outcome = refusalOf(error);
     }

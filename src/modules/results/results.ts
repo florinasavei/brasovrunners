@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventResults, type EventResultRow } from "@/db/schema/event-results";
 import { events } from "@/db/schema/events";
@@ -91,6 +91,12 @@ type RegisteredRunner = {
    * unticked «Apare pe site» on the registration marked «Elită» (§910, `tickedForTheSite`).
    */
   ticked: boolean;
+  /**
+   * The club's two marks on the registration, «Elită» (§897) and «Ambasador» (§NNN): the backoffice's «Clasament» and «Premii»
+   * say them beside the runner, so the club sees whose result it awards. Staff-only — the public read copies neither.
+   */
+  elite: boolean;
+  ambassador: boolean;
   checkedIn: boolean;
   status: string;
   /** Sits «În afara locurilor» (§643): never named on a public list the event does not show its special guests on (§743). */
@@ -110,12 +116,12 @@ type Runners = { byBib: Map<number, RegisteredRunner>; byRegistration: Map<strin
 
 /**
  * Whether the published results may read the person's own list tick as given (§910): their «Vreau să apar» — and no Administrator
- * unticked «Apare pe site» on the registration while it is marked «Elită». That tick only ever hides: unticked, the runner is
+ * unticked «Apare pe site» on the registration while it is marked «Elită» or «Ambasador» (§NNN). That tick only ever hides: unticked, the runner is
  * «Participant #bib» wherever the ranking still counts them, as one who did not tick; ticked, the person's own answer decides, as before.
  * The public start list reads the same two columns (`registrations/repository.ts#namedOnPublicList`).
  */
-function tickedForTheSite(row: { listOptOut: boolean | null; elite: boolean | null; eliteHiddenFromSite: boolean | null }): boolean {
-  return row.listOptOut === false && !(row.elite === true && row.eliteHiddenFromSite === true);
+function tickedForTheSite(row: { listOptOut: boolean | null; elite: boolean | null; ambassador: boolean | null; eliteHiddenFromSite: boolean | null }): boolean {
+  return row.listOptOut === false && !((row.elite === true || row.ambassador === true) && row.eliteHiddenFromSite === true);
 }
 
 type EventFacts = {
@@ -175,7 +181,7 @@ async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eve
 }
 
 /**
- * What «Apare în clasament» leaves out at this event (§910): the registrations marked «Elită» whose tick is off — wherever their number
+ * What «Apare în clasament» leaves out at this event (§910): the registrations marked «Elită» or «Ambasador» (§NNN) whose tick is off — wherever their number
  * is, never a test row — and the elite list's lines (§895): the unticked ones by number, or by folded name when they have none, and every
  * line's number, so a row its own line holds is never another line's by name.
  */
@@ -184,7 +190,7 @@ async function loadOutOfRanking<T extends Record<string, unknown>>(db: Database<
     db
       .select({ id: registrations.id })
       .from(registrations)
-      .where(and(eq(registrations.eventId, eventId), eq(registrations.kind, "REAL"), eq(registrations.elite, true), eq(registrations.eliteHiddenFromResults, true))),
+      .where(and(eq(registrations.eventId, eventId), eq(registrations.kind, "REAL"), or(eq(registrations.elite, true), eq(registrations.ambassador, true)), eq(registrations.eliteHiddenFromResults, true))),
     db.select({ name: eventEliteEntries.name, bibNumber: eventEliteEntries.bibNumber, inResults: eventEliteEntries.inResults }).from(eventEliteEntries).where(eq(eventEliteEntries.eventId, eventId)),
   ]);
   const bibs = new Set<number>();
@@ -212,6 +218,7 @@ async function loadRegisteredRunners<T extends Record<string, unknown>>(db: Data
         birthDate: registrations.birthDate,
         listOptOut: registrations.listOptOut,
         elite: registrations.elite,
+        ambassador: registrations.ambassador,
         eliteHiddenFromSite: registrations.eliteHiddenFromSite,
         checkedInAt: registrations.checkedInAt,
         status: registrations.status,
@@ -234,6 +241,8 @@ async function loadRegisteredRunners<T extends Record<string, unknown>>(db: Data
       birthDate: row.birthDate,
       // The person's own tick — read as unticked while the club unticked «Apare pe site» on a marked elite (§910): a staff tick only hides.
       ticked: tickedForTheSite(row),
+      elite: row.elite,
+      ambassador: row.ambassador,
       checkedIn: row.checkedInAt !== null,
       status: row.status,
       outsideCapacity: row.outsideCapacity,
@@ -348,6 +357,12 @@ export type ResultRunner = {
    * published results leave it out. For a registered runner, whether or not a result is entered yet; for a typed one, by its line.
    */
   outOfRanking: boolean;
+  /**
+   * The registration's marks, «Elită» and «Ambasador» (§NNN): said beside the runner on this page and at «Premii», so the club sees
+   * whom it awards. False for a typed runner, who has no registration. Never on the published results.
+   */
+  elite: boolean;
+  ambassador: boolean;
   checkedIn: boolean;
   sex: SexChoice | null;
   /** A typed runner's birth date, `YYYY-MM-DD` — what the box shows; null for a registered one, whose registration answers. */
@@ -449,6 +464,8 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
       nameAgreed: null,
       // The registration's own tick (§910): drawn so before a result is typed, and its row, once typed, ranked accordingly.
       outOfRanking: runners.out.registrations.has(runner.registrationId) || (row !== undefined && rankedOf(row).outOfRanking === true),
+      elite: runner.elite,
+      ambassador: runner.ambassador,
       checkedIn: runner.checkedIn,
       sex: runner.sex,
       birthDate: null,
@@ -484,6 +501,8 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
       nameAgreed: row.nameAgreedAt !== null,
       // A separate-list elite's line left out (§910), recognised by its number or, for a line with none, by its name (`hors-concours.ts`).
       outOfRanking: rankedOf(row).outOfRanking === true,
+      elite: false,
+      ambassador: false,
       checkedIn: false,
       sex: sexShown(row.sex),
       birthDate: row.birthDate,
@@ -1180,6 +1199,8 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       registeredName: registrations.displayName,
       listOptOut: registrations.listOptOut,
       elite: registrations.elite,
+      // Read for the site tick alone (`tickedForTheSite`): neither mark is ever copied onto a published row.
+      ambassador: registrations.ambassador,
       eliteHiddenFromSite: registrations.eliteHiddenFromSite,
       registrationStatus: registrations.status,
       outsideCapacity: registrations.outsideCapacity,

@@ -491,13 +491,24 @@ export const registrations = pgTable(
      */
     elite: boolean("elite").notNull().default(false),
     /**
-     * The Administrator's two ticks on a registration marked «Elită» (§910), stored as what they hide — a staff tick may
-     * hide a registered elite, never show one: «Apare în clasament» unticked (`elite_hidden_from_results`) leaves the
-     * runner's result out of the public results and of everybody's positions (hors concours,
-     * `results/domain/hors-concours.ts`); «Apare pe site» unticked (`elite_hidden_from_site`) reads the row on the
-     * public «Cine vine» as one that did not tick «Vreau să apar» — a «Participant (nume ascuns)» row when confirmed, no
-     * row when pending or waiting. Both have effect only while `elite` is true (a mark taken off leaves them inert, and
-     * a mark put back finds them as they were); both false by default, so the person's own ticks decide.
+     * «Ambasador» (§NNN; the owner, 2026-11-14: «pe lângă Elite, adaugă și categoria de „Ambasadori" ca să putem decide
+     * pe cine premiem și pe cine nu», choosing «Ca Elită, fără BIB special»): the club's second category of invited
+     * runner. Set and cleared by an Administrator at any time and in any state (`ambassador-mark.ts`), audited. It
+     * changes nothing by itself — not the bib, which prints as any other, nor a state, a place, a number, a count or an
+     * email, and the allocator never reads it: it is the label the backoffice draws on the list, in «Clasament» and at
+     * «Premii», and it is what gives the registration the two ticks below, as the elite mark does.
+     */
+    ambassador: boolean("ambassador").notNull().default(false),
+    /**
+     * The Administrator's two ticks on a registration marked «Elită» (§910) or «Ambasador» (§NNN), stored as what they
+     * hide — a staff tick may hide such a runner, never show one: «Apare în clasament» unticked
+     * (`elite_hidden_from_results`) leaves the runner's result out of the public results and of everybody's positions
+     * (hors concours, `results/domain/hors-concours.ts`); «Apare pe site» unticked (`elite_hidden_from_site`) reads
+     * the row on the public «Cine vine» as one that did not tick «Vreau să apar» — a «Participant (nume ascuns)» row when
+     * confirmed, no row when pending or waiting. The ticks are the registration's, one pair whichever mark it wears, and
+     * have effect only while `elite` or `ambassador` is true (both marks taken off leave them inert, and a mark put
+     * back finds them as they were); both false by default, so the person's own ticks decide. The columns keep the
+     * name they were given when only an elite had them.
      */
     eliteHiddenFromResults: boolean("elite_hidden_from_results").notNull().default(false),
     eliteHiddenFromSite: boolean("elite_hidden_from_site").notNull().default(false),

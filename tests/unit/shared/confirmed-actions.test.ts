@@ -314,6 +314,9 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Marchează ca elită» / «Nu mai e elită» (§897): how one registration's bib prints, nothing else of it.
   setRegistrationEliteAction:
     "a mark on how one registration's bib prints, undone from the same menu; it tells nobody and changes no state, place, number or count",
+  // «Marchează ca ambasador» / «Nu mai e ambasador» (§NNN): the club's own label on one registration, nothing else of it.
+  setRegistrationAmbassadorAction:
+    "the club's own label on one registration, undone from the same menu and from the «Ambasadori» panel; it tells nobody and changes no state, place, number, count or bib",
   // «Salvează nota» from a row of the list («Note interne» first on the registration's page, and a note from a row of the list).
   addRegistrationNoteFromListAction:
     "writes one internal note the organizers read, the words typed and sent by the dialog's own «Salvează nota»; it tells the person nothing, changes no state, place or count, and «Șterge» on the card asks",

@@ -1538,8 +1538,8 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
 - `NAMES` is refused unless `registration_mode = INTERNAL`, in the service and again as a CHECK.
   For `NONE` there is nobody to list; for `EXTERNAL` the entrants are another organizer's;
 - the published set is exactly `status = CONFIRMED AND kind = 'REAL' AND list_opt_out = false AND NOT
-  (elite AND elite_hidden_from_site)` (the last clause the Administrator's «Apare pe site» on an elite,
-  which only hides, §910), ordered by `confirmed_at` then `id`. The public list shows the display name and club of registrations that ticked «Vreau să apar»: the confirmed always. Only while the privacy notice in force names `{{participantListStates}}` in every language (`describesListStates`, §396) does it also show the pending (`PENDING_DECLARATION`, `WAITLIST_OFFERED`) and the waiting list, each with its state word and without a position. The waiting list shows only when the event's «Lista de așteptare e publică» (`events.waitlist_public`, off by default, stored true only beside `NAMES`; §628) is on as well — a narrowing on top of the notice's gates, never a way round them. How many wait is a separate switch, «Arată public câți așteaptă» (`events.waitlist_count_public`, on by default; §634): off, the card, the page and each waiting person's own page and email say no count of the line and no place in it; it hides a number, never a name, and opens nothing of the list. «Arată public numărătoarea» (`events.participant_count_public`, on by default; §648, §668) hides every number at once: off, «Cine vine» says only the names, and the event's public pages — the page, its card, hero, calendar and series card, the register page — say no number derived from its capacity or its registrations: no places line, no free places, no capacity, no room, no offered or waiting count; only whether places are left, the race is full, the waiting list is open or full, or places are given from it. The waiting count's switch sits under it in the editor (§669): off, each waiting person's own page, «Toate înscrierile mele», email and «Ce îi spui» say no count of the line and no place in it either, whatever «Arată public câți așteaptă» says (`waitlistCountShown`). It never shows `PENDING_EMAIL_CONFIRMATION`, `CANCELLED`, `EXPIRED` or `TEST` rows, and never the raw lifecycle state;
+  ((elite OR ambassador) AND elite_hidden_from_site)` (the last clause the Administrator's «Apare pe site» on an
+  elite or an ambassador, which only hides, §910, §NNN), ordered by `confirmed_at` then `id`. The public list shows the display name and club of registrations that ticked «Vreau să apar»: the confirmed always. Only while the privacy notice in force names `{{participantListStates}}` in every language (`describesListStates`, §396) does it also show the pending (`PENDING_DECLARATION`, `WAITLIST_OFFERED`) and the waiting list, each with its state word and without a position. The waiting list shows only when the event's «Lista de așteptare e publică» (`events.waitlist_public`, off by default, stored true only beside `NAMES`; §628) is on as well — a narrowing on top of the notice's gates, never a way round them. How many wait is a separate switch, «Arată public câți așteaptă» (`events.waitlist_count_public`, on by default; §634): off, the card, the page and each waiting person's own page and email say no count of the line and no place in it; it hides a number, never a name, and opens nothing of the list. «Arată public numărătoarea» (`events.participant_count_public`, on by default; §648, §668) hides every number at once: off, «Cine vine» says only the names, and the event's public pages — the page, its card, hero, calendar and series card, the register page — say no number derived from its capacity or its registrations: no places line, no free places, no capacity, no room, no offered or waiting count; only whether places are left, the race is full, the waiting list is open or full, or places are given from it. The waiting count's switch sits under it in the editor (§669): off, each waiting person's own page, «Toate înscrierile mele», email and «Ce îi spui» say no count of the line and no place in it either, whatever «Arată public câți așteaptă» says (`waitlistCountShown`). It never shows `PENDING_EMAIL_CONFIRMATION`, `CANCELLED`, `EXPIRED` or `TEST` rows, and never the raw lifecycle state;
 - the club column is free text the person typed, so it is shown by the event's `public_list_club`
   («Clubul pe lista publică», `DECISIONS.md` §753 and §756, amending §32/§143/§396): `members_only`
   (the default for every event, existing ones included) fills the cell with the club's own name
@@ -1577,7 +1577,10 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
   the card says it is ticked only with the person's agreement, and asks first, naming them): the name
   and the number, nothing else (`listPublicEliteEntries`). «Apare în clasament» unticked
   (`event_elite_entries.in_results`, `registrations.elite_hidden_from_results`) runs the elite hors
-  concours: out of the published results and of everybody's position, still on «Clasament», marked;
+  concours: out of the published results and of everybody's position, still on «Clasament», marked.
+  A registration marked «Ambasador» (§NNN) — the club's own label, its bib as any other — has the same
+  pair of ticks, in the same two columns, read while `elite` or `ambassador` is true: one pair whichever
+  mark the registration wears, and a staff tick still only hides. The mark itself is on no public page;
 - an event's volunteers (§821, amending §754) follow the same rule, with their own two ticks: the club's
   «Lista voluntarilor e publică pe pagina evenimentului» (`events.volunteers_list_public`, off by default)
   and each volunteer's «Vreau să apar pe lista publică a voluntarilor» (`event_volunteers.list_opt_in`).
@@ -3055,8 +3058,8 @@ BR-REQ-037-05):
      a phone is a CONTRIBUTOR and the desk is their whole backoffice. The desk shows a name, a
      state and a number, never an address. **The list, the export and the race numbers are the
      Organizer's too since §289** (`canReadRegistrations`, a set that excludes DEV); cancel,
-     erase, rename, resend, the printing mark and the elite mark (§897) stay Administrator-only
-     (`canManageRegistrations`). Each verb is audited under the volunteer's own id.
+     erase, rename, resend, the printing mark, the elite mark (§897) and the ambassador mark (§NNN) stay
+     Administrator-only (`canManageRegistrations`). Each verb is audited under the volunteer's own id.
    - **One thing the Organizer writes, and it is not the registration (§777).** An internal note on a
      registration («Note interne», `registration_notes`): the Organizer, the Administrator and the
      Superadministrator read and write them (`canKeepRegistrationNotes`, the same set as
@@ -3115,10 +3118,14 @@ BR-REQ-037-05):
    deadline kept; the dialog says so before the press (no list is drawn), the toast after it
    (`invitationResentKept`), the audit row carries `keptForWaiting`. One «Pe lista de invitați speciali» may be
    extended whoever waits;
-   «Retrage» ends it and the place goes to the line. Audited as `event.invitation_sent`,
-   `event.invitation_resent`, `event.invitation_withdrawn`, `event.invitation_expired`,
-   `event.invitation_accepted` and `event.capacity_raised_for_invitation`, by the invitation's id, never
-   a name or an address.
+   «Retrage» ends it and the place goes to the line. «Șterge» (2026-11-14, `DECISIONS.md` §NNN; the owner:
+   «am o invitație retrasă, vreau să o pot șterge!») deletes an invitation that ended unaccepted — withdrawn,
+   or past its deadline, the event's sweep run first for one the job has not stamped — with its link, where
+   the retention job would have taken it thirty days later; it refuses one still open, which holds a place and
+   is withdrawn first, and one that became a registration (`INVITATION_NOT_ENDED`). Audited as
+   `event.invitation_sent`, `event.invitation_resent`, `event.invitation_withdrawn`, `event.invitation_expired`,
+   `event.invitation_accepted`, `event.invitation_deleted` and `event.capacity_raised_for_invitation`, by the
+   invitation's id, never a name or an address.
 8. **Moving a registration to another address (2026-11-11, «Schimbă adresa»; the owner: «aparent nu
    pot modifica mailul unei persoane???», choosing «Orice adresă, oricând»).** The Administrator
    (`canManageRegistrations`, asserted by the action, `admin-service.ts#changeRegistrationAddress` and
@@ -3180,6 +3187,19 @@ published results and of everybody's position — and «Apare pe site» — unti
 not tick «Vreau să apar» (§10.10). Both only ever hide: ticked, the person's own ticks decide, and nothing a staff member
 ticks can show anybody. Audited (`registration.elite_in_results` / `_out_of_results` / `_on_site` / `_off_site`, the new
 value only); no state, place, number, count or email moves; the Organizer reads them, Tehnic nothing.
+
+Beside it, **the ambassador mark** («Marchează ca ambasador» / «Nu mai e ambasador» on the list's «⋮», and the one-press
+«Nu mai e ambasador» on the «Ambasadori» panel, 2026-11-14, `DECISIONS.md` §NNN; the owner: «pe lângă Elite, adaugă și
+categoria de „Ambasadori" ca să putem decide pe cine premiem și pe cine nu»). The Administrator's
+(`canManageRegistrations`, asserted by `setRegistrationAmbassadorAction` and `ambassador-mark.ts`; the Organizer reads the
+«Ambasador» chip and the panel, Tehnic nothing), at any time and in any state, audited (`registration.ambassador_marked` /
+`registration.ambassador_unmarked`, the new value only). A label and nothing else: the bib prints as any other, and no
+state, place, race number, count, queue or email moves — no allocator call and no outbox row. The backoffice says it on the
+list, the registration's page, «Clasament» and «Premii»; no public page, email, desk screen, bib, registrations export or
+list given to sponsors does (`ambassador-never-leaves.test.ts`) — the person's own data («Toate datele unei persoane», the
+answer to an access request) holds it, with every other column of their registration. A marked registration has the elite's two ticks — the same pair, the same two columns
+— which count while the registration is marked «Elită» or «Ambasador» and are refused on one that wears neither
+(`ELITE_NOT_MARKED`).
 
 Beside the elite mark, and like it an internal label that changes nothing else: **«De la parteneri»** (2026-11-11, the
 decision «De la parteneri»), the name of the partner or sponsor through whom a person came — one nullable `partner_name`

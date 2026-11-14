@@ -66,6 +66,7 @@ export const EMAILING_PRESSES: Readonly<Record<string, Press>> = {
   inviteAction: { file: INVITATIONS, causes: ["registrations.invite"], actor: "named" },
   resendInvitationAction: { file: INVITATIONS, causes: ["registrations.invitationResend"], actor: "named" },
   withdrawInvitationAction: { file: INVITATIONS, causes: ["registrations.invitationWithdraw"], actor: "named" },
+  deleteInvitationAction: { file: INVITATIONS, causes: ["registrations.invitationDelete"], actor: "named" },
   eraseEventInvitationsAction: { file: PERSON, causes: ["registrations.invitationsErase"], actor: "helper" },
   // Events.
   saveEventAndTranslationsAction: { file: ADMIN, causes: ["events.save"], actor: "named" },

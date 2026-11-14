@@ -101,6 +101,12 @@ export type AuditAction =
   | "registration.elite_marked"
   | "registration.elite_unmarked"
   /**
+   * «Marchează ca ambasador» / «Nu mai e ambasador» (§NNN): the club's label on a registration, and what gives it the two
+   * ticks below as the elite mark does — nothing of the bib, the state or the place. The metadata is the new value alone.
+   */
+  | "registration.ambassador_marked"
+  | "registration.ambassador_unmarked"
+  /**
    * The two ticks of a registration marked «Elită» (§910): «Apare în clasament» (`_in_results` / `_out_of_results`) and
    * «Apare pe site» (`_on_site` / `_off_site`), as the Administrator set them. A staff tick only hides: ticked, the person's
    * own ticks decide. The metadata is the new value alone (`{ inResults }` or `{ onSite }`) — never a name or a number.
@@ -428,6 +434,11 @@ export type AuditAction =
   | "event.invitation_withdrawn"
   | "event.invitation_expired"
   | "event.invitation_accepted"
+  /**
+   * «Șterge» on an invitation that ended unaccepted (§NNN): the invitation's id and how it had ended
+   * (`ended`: withdrawn or expired) — the row, its name and its address are gone, and this is what is left.
+   */
+  | "event.invitation_deleted"
   /**
    * An invitation's deadline moved later by the outage grace (§657): the invitation's id, from and to,
    * the window's id and source — never a name or an address.

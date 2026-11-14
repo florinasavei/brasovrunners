@@ -31,6 +31,7 @@ import {
 } from "@/modules/registrations/admin-service";
 import { listReturnHref } from "@/modules/registrations/domain/list-row";
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
+import { setRegistrationAmbassador } from "@/modules/registrations/ambassador-mark";
 import { isRegistrationEliteTick, setRegistrationElite, setRegistrationEliteTick } from "@/modules/registrations/elite-mark";
 import { holdDeclarationAcceptance, releaseDeclarationAcceptance } from "@/modules/registrations/declaration-hold";
 import { findEventForRegistrationById } from "@/modules/events/repository";
@@ -674,7 +675,31 @@ export async function setRegistrationEliteAction(_previous: FormOutcome | null, 
 }
 
 /**
- * «Apare în clasament» / «Apare pe site» on a registration marked «Elită» (§910), from the list's «⋮» or the registration's own page:
+ * «Marchează ca ambasador» / «Nu mai e ambasador» (§NNN) from the list's «⋮», from the «Ambasadori» panel or from the
+ * registration's own page: the club's label beside «Elită», at any time and in any state, nothing else of the registration
+ * touched — the bib prints as any other (`ambassador-mark.ts`). The Administrator's: the coarse gate here, the service
+ * asserts it again (BR-REQ-060-01). It asks nothing (§384): it tells nobody and the same menu undoes it. Back to the list
+ * as it stands; from a form without `listQuery`, to the registration's own page.
+ */
+export async function setRegistrationAmbassadorAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+  const ambassador = text(form, "ambassador") === "1";
+
+  let outcome: Record<string, string>;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    await setRegistrationAmbassador(getDb(), actor, registrationId, ambassador, new Date());
+    outcome = ambassador ? { saved: "ambassadorMarked" } : { saved: "ambassadorUnmarked" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome, registrationId);
+  return backTo(detailPath(locale, registrationId), outcome);
+}
+
+/**
+ * «Apare în clasament» / «Apare pe site» on a registration marked «Elită» (§910) or «Ambasador» (§NNN), from the list's «⋮» or the registration's own page:
  * `tick` names which, `on` the state it should now stand in — a submit posting the state it wants. A staff tick only ever hides
  * (`elite-mark.ts#setRegistrationEliteTick`): ticked, the person's own ticks decide. The Administrator's: the coarse gate here, the
  * service asserts it again (BR-REQ-060-01). It asks nothing (§384): it tells nobody and the same tick undoes it. Back to the list as it

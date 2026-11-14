@@ -70,6 +70,7 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   withdrawConsentAction: vi.fn(),
   setOutsideCapacityAction: vi.fn(),
   setRegistrationEliteAction: vi.fn(),
+  setRegistrationAmbassadorAction: vi.fn(),
   setRegistrationEliteTickAction: vi.fn(),
   declarationHoldAction: vi.fn(),
   setClubMemberDeclaredAction: vi.fn(),
@@ -358,7 +359,7 @@ describe("«De la parteneri» on the internal list and the invitations", () => {
       { ...base, participantId: open.participantId, name: "Eva Fără", email: "y@example.org", canonicalEmail: "y@example.org" },
     ]);
     const tree = elements(
-      await InvitationsPanel({ db, actor: { role: "MODERATOR" }, locale: "ro", eventId: race.id, mayManage: false, sendAction: vi.fn() as never, resendAction: vi.fn() as never, withdrawAction: vi.fn() as never, now }),
+      await InvitationsPanel({ db, actor: { role: "MODERATOR" }, locale: "ro", eventId: race.id, mayManage: false, sendAction: vi.fn() as never, resendAction: vi.fn() as never, withdrawAction: vi.fn() as never, deleteAction: vi.fn() as never, now }),
     );
     const rows = tree.filter((element) => element.props["data-testid"] === "invitation-row");
     const chipIn = (name: string) => {
