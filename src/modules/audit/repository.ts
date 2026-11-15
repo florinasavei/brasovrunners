@@ -107,6 +107,12 @@ export type AuditAction =
   | "registration.ambassador_marked"
   | "registration.ambassador_unmarked"
   /**
+   * «Transformă în voluntar» (§NNN, `volunteers/transform.ts`): the registration was cancelled by the staff verb and its person
+   * entered on the event's volunteers, in one transaction. Beside the cancellation's own row; the metadata is the volunteer's
+   * id, the role given and the state the registration left — never a name.
+   */
+  | "registration.became_volunteer"
+  /**
    * The two ticks of a registration marked «Elită» (§910): «Apare în clasament» (`_in_results` / `_out_of_results`) and
    * «Apare pe site» (`_on_site` / `_off_site`), as the Administrator set them. A staff tick only hides: ticked, the person's
    * own ticks decide. The metadata is the new value alone (`{ inResults }` or `{ onSite }`) — never a name or a number.
@@ -642,6 +648,12 @@ export type AuditAction =
   | "event.volunteers_switched"
   /** «Oferim tricouri voluntarilor» (§765), entity `event`: metadata `{ on }`. */
   | "event.volunteers_shirts_switched"
+  // «Numerele voluntarilor încep de la» (§NNN): the series' first number set, moved or switched off — from, to and how many
+  // confirmed volunteers the press gave a number; never a person.
+  | "event.volunteer_numbers_start_set"
+  // «Lista pentru tombolă» downloaded (§NNN, `volunteers/raffle-list.ts`), entity `event`: how many runners and how many
+  // volunteers the file held — never a name or a number.
+  | "event.raffle_list_exported"
   /** «Arată public câți voluntari mai sunt necesari» (§773), entity `event`: the metadata holds `on` and nothing of a person. */
   | "event.volunteers_counts_switched"
   | "event.volunteers_list_switched"
@@ -675,6 +687,12 @@ export type AuditAction =
   | "volunteer.edited"
   | "volunteer.state_changed"
   | "volunteer.deleted"
+  /**
+   * «Transformă în alergător» (§NNN, `volunteers/transform.ts`), entity `event`: the volunteer was cancelled and entered on the
+   * official waiting list's own entry, in one transaction. The metadata is the volunteer's id, the registration's and the
+   * state it landed in — never a name or an address.
+   */
+  | "volunteer.became_runner"
   | "volunteer.signed_up"
   | "volunteer.exported"
   /** «Dă-i rolul …» (§761, §837): the organizers gave a volunteer one more role — the volunteer's id, the role's, the roles now held and those before. */

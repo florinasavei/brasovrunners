@@ -84,6 +84,7 @@ import {
   setBibNumberAction,
   setOutsideCapacityAction,
   setRegistrationEliteTickAction,
+  turnRunnerIntoVolunteerAction,
   withdrawConsentAction,
   declarationHoldAction,
 } from "../actions";
@@ -92,6 +93,9 @@ import { resendRegistrationEmailAction } from "./actions";
 import { addRegistrationNoteAction, deleteRegistrationNoteAction } from "./note-actions";
 import { setRegistrationPartnerAction } from "./partner-actions";
 import DeclarationHoldForm from "@/modules/registrations/ui/DeclarationHoldForm";
+import { roleLabel, rolesWithCategoryWords } from "@/modules/volunteers/domain/volunteer";
+import TurnIntoVolunteerPanel from "@/modules/volunteers/ui/TurnIntoVolunteerPanel";
+import { listVolunteerCategories, listVolunteerRoles } from "@/modules/volunteers/volunteers";
 import { listPartnerSuggestions } from "@/modules/registrations/partner-mark";
 import PartnerMarkFields, { PartnerSuggestionList } from "@/modules/registrations/ui/PartnerMarkFields";
 import MemberChip from "@/modules/registrations/ui/MemberChip";
@@ -444,6 +448,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // §10.5 has no edge from PENDING_EMAIL_CONFIRMATION to CANCELLED: an unconfirmed address
   // lapses on its own and holds no place, so there is nothing to release and no form to show.
   const canCancel = canTransition(registration.status, "CANCELLED");
+  // «Transformă în voluntar» (§NNN): for the Administrator, on a real registration that can still be cancelled — and the
+  // event's roles, read only then, each by its own name with its category's.
+  const canTurnIntoVolunteer = mayManage && canCancel && registration.kind !== "TEST";
+  const volunteerRoles = canTurnIntoVolunteer
+    ? rolesWithCategoryWords(await listVolunteerCategories(db, registration.eventId), await listVolunteerRoles(db, registration.eventId)).map((role) => ({ id: role.id, label: roleLabel(role, locale) }))
+    : [];
   /*
     A settled number that is on paper (§264), and the same number on a registration that is over
     (§311): the first is what the cancel confirmation warns about before the press, the second is
@@ -1811,6 +1821,23 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             </Typography>
           )}
         </Panel>
+      )}
+
+      {/*
+        «Transformă în voluntar» (§NNN): the cancellation below and the volunteers' hand entry in one press, for a runner
+        who will help instead of running. Above the cancel fold it shares its condition with; the service asserts again.
+      */}
+      {canTurnIntoVolunteer && (
+        <TurnIntoVolunteerPanel
+          locale={locale}
+          registrationId={registration.id}
+          name={registration.registeredName}
+          roles={volunteerRoles}
+          eventCardHref={`${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: registration.eventId } } })}#box-volunteers`}
+          toVolunteerAction={turnRunnerIntoVolunteerAction}
+          printedBib={printedBib !== null ? written(printedBib) : null}
+          freesAPlace={holdsAPlace(registration.status) && !registration.outsideCapacity}
+        />
       )}
 
       {/*

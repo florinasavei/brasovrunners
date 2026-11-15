@@ -279,6 +279,17 @@ export const eventVolunteers = pgTable(
      * header («Cu kit: N», the cancelled left out) and beside the registrations' «Kituri de pregătit». Off by default.
      */
     hasKit: boolean("has_kit").notNull().default(false),
+    /**
+     * The volunteer's number (migration `0203`, §NNN; the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr de
+     * concurs"»): drawn from the event's volunteers' series (`events.volunteer_bib_start`) the moment the organizers
+     * confirm the person, under the event row's lock, and never drawn twice — a cancelled volunteer keeps theirs, as a
+     * cancelled runner does (§173). A runner turned into a volunteer («Transformă în voluntar») draws one here like
+     * anybody confirmed: the number they ran under stays retired with the cancelled registration, never carried over.
+     * One number is one person at the event: every runner's draw reads these as worn
+     * (`registrations/bibs.ts#wornNumbers`), and this table's own index refuses the same number on two volunteers.
+     * Null until confirmed, and on an event that gives its volunteers no number.
+     */
+    bibNumber: integer("bib_number"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     /** The staff member who entered the row; null for the public form, and after that account is removed. */
@@ -357,6 +368,11 @@ export const eventVolunteers = pgTable(
   },
   (t) => [
     unique("event_volunteers_event_canonical_email_unique").on(t.eventId, t.canonicalEmail),
+    // One number once among an event's volunteers (§NNN); against the runners' it is the draw, under the event lock, that decides.
+    uniqueIndex("event_volunteers_event_bib_number_unique")
+      .on(t.eventId, t.bibNumber)
+      .where(sql`${t.bibNumber} IS NOT NULL`),
+    check("event_volunteers_bib_number_positive", sql`${t.bibNumber} IS NULL OR ${t.bibNumber} > 0`),
     // An address is the one typed, its identity and the canonicalizer's version together, or none of the three (§865).
     check(
       "event_volunteers_address_whole",

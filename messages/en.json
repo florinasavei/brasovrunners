@@ -1318,6 +1318,31 @@
         "outOfResults": "out of the results",
         "offSite": "not shown on the site"
       },
+      "toVolunteer": {
+        "title": "Turn into a volunteer",
+        "intro": "The registration is cancelled and its place freed, as with any cancellation. The person goes onto this event's volunteers, confirmed, with the role you choose.",
+        "numberNote": "The registration's race number stays retired. As a volunteer the person gets a number only if the event has the volunteers' number series.",
+        "role": "Volunteer role",
+        "action": "Turn into a volunteer",
+        "noRoles": "The event has no volunteer role yet. Add one in the event's «Volunteers» card, then come back here.",
+        "noRolesLink": "Open the «Volunteers» card",
+        "confirmTitle": "Turn the runner into a volunteer?",
+        "confirmBody": "The registration is cancelled and its place freed. The person goes onto the volunteers, confirmed, with the role chosen. If they change their mind, you turn them back from their volunteer page.",
+        "reason": "Became a volunteer at this event."
+      },
+      "raffle": {
+        "button": "Raffle list (CSV)",
+        "buttonLabel": "Download the raffle list: the confirmed runners and volunteers who have a number, with the number, the name and the category",
+        "columns": {
+          "number": "Number",
+          "name": "Name",
+          "kind": "Category"
+        },
+        "kinds": {
+          "RUNNER": "Runner",
+          "VOLUNTEER": "Volunteer"
+        }
+      },
       "export": "Download CSV",
       "personLink": "Everything held about a person",
       "personThis": "Everything held about this person",
@@ -1684,6 +1709,7 @@
           "elite_unmarked": "No longer elite: the bib prints the number again",
           "ambassador_marked": "Marked as ambassador",
           "ambassador_unmarked": "No longer an ambassador",
+          "became_volunteer": "Turned into a volunteer: the person went onto the event's volunteers («Turn into a volunteer»)",
           "elite_in_results": "Elite or ambassador: «In the results» ticked — the result is ranked again",
           "elite_out_of_results": "Elite or ambassador: «In the results» unticked — out of the results",
           "elite_on_site": "Elite or ambassador: «On the site» ticked — on the site as the person's own ticks allow",
@@ -2684,6 +2710,9 @@
       "BADGE_COLOUR_UNREADABLE": "Not saved: the text does not read well on the chosen colour. Choose a darker or a lighter colour.",
       "BADGE_SIZE_TOO_SMALL": "Not saved: a {width} × {height} mm badge has no room for everything you ticked: {what}. Make it at least {minHeight} mm tall, or untick one.",
       "VOLUNTEER_GUARDIAN_MISSING": "The parent's consent is missing: a volunteer under 18 is confirmed only once their parent or guardian has accepted the agreement, from the link or on paper.",
+      "VOLUNTEER_NUMBERS_IN_RACE_SERIES": "The volunteers' numbers must start above the runners': the race's places, the desk's spares and the numbers already given. Choose a higher number. Nothing was saved.",
+      "RUNNER_TO_VOLUNTEER_MINOR": "The person is under 18 on the event's day. Add them by hand under «Volunteers», with the parent's or guardian's details. Nothing was changed.",
+      "VOLUNTEER_TO_RUNNER_NEEDS_ADDRESS": "The volunteer has no email address, and a registration needs one. Add it with «Edit», then try again. Nothing was changed.",
       "VOLUNTEER_GUARDIAN_ACCEPTED": "The parent or guardian has already accepted the agreement: there is nothing left to send or record.",
       "VOLUNTEER_GUARDIAN_NO_EMAIL": "The parent or guardian has no email address entered, so there is nowhere to send the link. Take the consent on paper, or add the address under “Edit”.",
       "VOLUNTEER_NO_EMAIL": "The volunteer has no email address, so the link has nowhere to go. The agreement and the parent's consent are signed on paper, or add the address under “Edit”.",
@@ -6137,7 +6166,8 @@
         "guardianName": "Parent or guardian",
         "guardianEmail": "Parent or guardian email",
         "guardianConsent": "Parent's consent",
-        "hasKit": "Has a kit"
+        "hasKit": "Has a kit",
+        "bibNumber": "Number"
       },
       "sheet": {
         "people": "Volunteers",
@@ -6204,6 +6234,24 @@
         "withdrawing": "Withdrawing…",
         "withdrawTitle": "Withdraw the invitation?",
         "withdrawBody": "The link stops working. If the person opens it, they read that the invitation was withdrawn."
+      },
+      "numbers": {
+        "label": "Volunteers' numbers start at",
+        "help": "Every confirmed volunteer gets a number of their own series, from here up — never one a runner wears. Choose a number above the runners' numbers. Empty: no numbers.",
+        "save": "Save the numbers",
+        "saving": "Saving…"
+      },
+      "toRunner": {
+        "title": "Turn into a runner",
+        "intro": "The person enters the race as with «Add to the waiting list»: they get a place if one is free, otherwise they join the back of the waiting list. As a volunteer they are cancelled.",
+        "declaration": "The person signs the declaration themselves, from the email they receive. The volunteer number stays retired; they get a race number when they are confirmed.",
+        "firstName": "First name",
+        "lastName": "Last name",
+        "namesHelp": "The volunteers' list keeps the name on one line; a registration has a first and a last name. Check them before you press.",
+        "action": "Turn into a runner",
+        "noAddress": "The volunteer has no email address, and a registration needs one. Add it with «Edit», then you can turn them into a runner.",
+        "confirmTitle": "Turn the volunteer into a runner?",
+        "confirmBody": "The person is registered for the race on the address {email}: a free place or the back of the waiting list. As a volunteer they are cancelled; their roles stay on the row, if you reopen them."
       },
       "shirts": {
         "label": "We give volunteers T-shirts",
@@ -6273,7 +6321,8 @@
         "before": "Volunteered before",
         "club": "From the {club} group",
         "wantsList": "Wants to be on the public list",
-        "kit": "Has a kit"
+        "kit": "Has a kit",
+        "number": "No. {number}"
       },
       "yes": "Yes",
       "no": "No",
@@ -7816,7 +7865,8 @@
           "invitationWithdraw": "Withdraw the invitation",
           "invitationDelete": "Delete the invitation",
           "invitationsErase": "Erase the person's invitations",
-          "changeAddress": "Change the address"
+          "changeAddress": "Change the address",
+          "toVolunteer": "Turn into a volunteer"
         },
         "events": {
           "save": "Save the event",
@@ -7837,7 +7887,8 @@
           "guardianLink": "Send the parent's link",
           "guardianPaper": "The parent's agreement, signed on paper",
           "invite": "Send the volunteer invitations",
-          "invitationResend": "Resend the volunteer invitation"
+          "invitationResend": "Resend the volunteer invitation",
+          "toRunner": "Turn into a runner"
         },
         "club": {
           "newsletter": "Send the newsletter",
@@ -14222,6 +14273,11 @@
       "badgeColoursSaved": "The roles' colours were saved.",
       "badgeColoursUnchanged": "Nothing to change in the colours.",
       "volunteersShirtsOn": "The public form now asks for the T-shirt size.",
+      "volunteerNumbersOn": "The volunteers' number series is saved. Confirmed volunteers without a number got theirs.",
+      "volunteerNumbersOff": "Volunteers get no more numbers. The ones already given stay.",
+      "runnerBecameVolunteer": "The registration was cancelled and the person is now a confirmed volunteer.",
+      "volunteerBecameRunnerPlaced": "A place was free: the person got it and has the declaration to sign. As a volunteer they were cancelled.",
+      "volunteerBecameRunnerWaiting": "The person is on the race's waiting list. As a volunteer they were cancelled.",
       "volunteersAccessSaved": "Saved who can offer.",
       "volunteerInvitationsSent": {
         "one": "{count} person invited.",

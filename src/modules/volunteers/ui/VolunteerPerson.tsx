@@ -976,8 +976,10 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
       </Stack>
       {/* What the person said about themselves (§765), small: two chips — «a mai fost voluntar» and the club's group, the person's own claims, in words and a glyph —
           and one line of the rest in the row's details. Nothing for a person who said nothing. */}
-      {(person.volunteeredBefore || person.clubMember || person.listOptIn || person.hasKit) && (
+      {(person.volunteeredBefore || person.clubMember || person.listOptIn || person.hasKit || person.bibNumber !== null) && (
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.5, mt: 0.5 }} data-testid="volunteer-claims">
+          {/* The volunteer's number (§NNN): first, as a runner's on the registrations list — what the raffle and the badge say. */}
+          {person.bibNumber !== null && <StatusChip glyph="number" color="primary" variant="outlined" label={t("volunteers.chips.number", { number: person.bibNumber })} testId="volunteer-number" />}
           {/* «Vrea pe lista publică» (§821): the person wants to appear — named on the event's page only once confirmed, while the club's list is public and the notice describes it. */}
           {person.listOptIn && <StatusChip glyph="wantsList" variant="outlined" label={t("volunteers.chips.wantsList")} testId="volunteer-on-list" />}
           {person.volunteeredBefore && <StatusChip glyph="experience" variant="outlined" label={t("volunteers.chips.before")} testId="volunteer-before" />}

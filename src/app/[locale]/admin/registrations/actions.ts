@@ -49,6 +49,7 @@ import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { canKeepRegistrationNotes, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { moveReserveEntryToWaitlist, settleReserveEntry } from "@/modules/registrations/reserve-list";
+import { type RunnerToVolunteerResult, turnRunnerIntoVolunteer, turnVolunteerIntoRunner, type VolunteerToRunnerResult } from "@/modules/volunteers/transform";
 import { addRegistrationNote, parseNoteBody } from "@/modules/registrations/notes";
 import type { StaffPlaceOptions } from "@/modules/registrations/service";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -1351,5 +1352,69 @@ export async function moveReserveEntryAction(_previous: FormOutcome | null, form
     // `from=reserve`: the internal list opens on the way back, not the official list's add form.
     const query = new URLSearchParams({ eventId, ...outcome, from: "reserve" });
     redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${query.toString()}#registrations-reserve`);
+  });
+}
+
+/**
+ * «Transformă în voluntar» on a registration's page (§NNN; the owner, 2026-11-15: «aș vrea să pot să „transform" un
+ * alergător în voluntar și invers»): the registration cancelled as «Anulează înscrierea» cancels it — through the
+ * allocator, the place offered to the first in line — and its person entered on the event's volunteers with the role
+ * chosen, confirmed, in one transaction (`volunteers/transform.ts`). The Administrator's alone: the coarse gate here,
+ * the service's own assertion again (BR-REQ-060-01). The question names both of the person's emails and offers
+ * «Trimite emailul» for the two together. A refusal keeps the role chosen and writes nothing; a success lands on the
+ * volunteer's own page, where the roles, the agreement and «Modifică» are.
+ */
+export async function turnRunnerIntoVolunteerAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  // An email press (`notifications/press.ts`): the cancellation, the role's email and the next in line's offer carry this cause, its id and who pressed.
+  return inEmailPress("registrations.toVolunteer", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    // «Trimite emailul» in the question (slice 4): the person's two emails together — never the offer to the next in line.
+    const sendEmail = sendEmailOf(form);
+    let moved: RunnerToVolunteerResult;
+    try {
+      const actor = await requireStaffCapability(canManageRegistrations);
+      press.by(actor.id);
+      // The cancellation's reason, for the registration's own trail: the page's sentence, in the language of who pressed.
+      const reason = (await getTranslations({ locale, namespace: "Admin" }))("registrations.toVolunteer.reason");
+      moved = await turnRunnerIntoVolunteer(getDb(), actor, { registrationId: text(form, "registrationId"), roleId: text(form, "roleId"), reason, sendEmail }, new Date());
+    } catch (error) {
+      return refused(error, form);
+    }
+    return backTo(getPathname({ locale, href: { pathname: "/admin/volunteers/[id]", params: { id: moved.volunteerId } } }), { saved: "runnerBecameVolunteer", ...mailSkippedOf(sendEmail) });
+  });
+}
+
+/**
+ * «Transformă în alergător» on a volunteer's page (§NNN): the person entered as «Adaugă pe lista de așteptare» enters one
+ * (§872: the address vouched for, the one allocator, the declaration theirs to sign) and the volunteer cancelled, in one
+ * transaction (`volunteers/transform.ts`). The Administrator's alone: the coarse gate here, the service's own assertion
+ * again (BR-REQ-060-01); the Organizer, who works the volunteers, is offered no such press. The relay tick is asked in
+ * the form. A refusal keeps what was typed and writes nothing, in the entry's own sentences; a success lands on the new
+ * registration's page, the toast saying where the allocator put it.
+ */
+export async function turnVolunteerIntoRunnerAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  // An email press (`notifications/press.ts`): the state's own email — the declaration to sign, or the waiting list's — carries this cause.
+  return inEmailPress("volunteers.toRunner", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    let moved: VolunteerToRunnerResult;
+    try {
+      const actor = await requireStaffCapability(canManageRegistrations);
+      press.by(actor.id);
+      moved = await turnVolunteerIntoRunner(
+        getDb(),
+        actor,
+        {
+          eventId: text(form, "eventId"),
+          volunteerId: text(form, "volunteerId"),
+          firstName: text(form, "firstName"),
+          lastName: text(form, "lastName"),
+          relayedByParticipantRequest: form.get("relayedByParticipantRequest") === "on",
+        },
+        new Date(),
+      );
+    } catch (error) {
+      return waitlistEntryRefused(error, form, getPathname({ locale, href: { pathname: "/admin/volunteers/[id]", params: { id: text(form, "volunteerId") } } }));
+    }
+    return backTo(detailPath(locale, moved.registrationId), { saved: moved.status === "WAITLISTED" ? "volunteerBecameRunnerWaiting" : "volunteerBecameRunnerPlaced" });
   });
 }

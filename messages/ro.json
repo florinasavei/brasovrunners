@@ -1318,6 +1318,31 @@
         "outOfResults": "în afara clasamentului",
         "offSite": "nu apare pe site"
       },
+      "toVolunteer": {
+        "title": "Transformă în voluntar",
+        "intro": "Înscrierea se anulează și locul se eliberează, ca la orice anulare. Persoana trece pe lista voluntarilor acestui eveniment, confirmată, cu rolul pe care îl alegi.",
+        "numberNote": "Numărul de concurs al înscrierii rămâne retras. Ca voluntar primește un număr numai dacă evenimentul are seria de numere a voluntarilor.",
+        "role": "Rolul de voluntar",
+        "action": "Transformă în voluntar",
+        "noRoles": "Evenimentul nu are încă niciun rol de voluntar. Adaugă unul în cardul «Voluntari» al evenimentului, apoi revino aici.",
+        "noRolesLink": "Deschide cardul «Voluntari»",
+        "confirmTitle": "Transformi alergătorul în voluntar?",
+        "confirmBody": "Înscrierea se anulează și locul se eliberează. Persoana trece pe lista voluntarilor, confirmată, cu rolul ales. Dacă se răzgândește, o transformi la loc de pe pagina ei de voluntar.",
+        "reason": "A devenit voluntar la acest eveniment."
+      },
+      "raffle": {
+        "button": "Lista pentru tombolă (CSV)",
+        "buttonLabel": "Descarcă lista pentru tombolă: alergătorii și voluntarii confirmați care au număr, cu numărul, numele și categoria",
+        "columns": {
+          "number": "Număr",
+          "name": "Nume",
+          "kind": "Categorie"
+        },
+        "kinds": {
+          "RUNNER": "Alergător",
+          "VOLUNTEER": "Voluntar"
+        }
+      },
       "export": "Descarcă CSV",
       "personLink": "Toate datele unei persoane",
       "personThis": "Toate datele acestei persoane",
@@ -1684,6 +1709,7 @@
           "elite_unmarked": "Nu mai e elită: BIB-ul se tipărește din nou cu numărul",
           "ambassador_marked": "Marcat ca ambasador",
           "ambassador_unmarked": "Nu mai e ambasador",
+          "became_volunteer": "Transformat în voluntar: persoana a trecut pe lista voluntarilor evenimentului («Transformă în voluntar»)",
           "elite_in_results": "Elită sau ambasador: «Apare în clasament» bifat — rezultatul intră din nou în clasament",
           "elite_out_of_results": "Elită sau ambasador: «Apare în clasament» debifat — în afara clasamentului",
           "elite_on_site": "Elită sau ambasador: «Apare pe site» bifat — pe site după bifele persoanei",
@@ -2684,6 +2710,9 @@
       "BADGE_COLOUR_UNREADABLE": "Nu s-a salvat: textul nu se citește bine pe culoarea aleasă. Alege o culoare mai închisă sau mai deschisă.",
       "BADGE_SIZE_TOO_SMALL": "Nu s-a salvat: un ecuson de {width} × {height} mm nu are loc pentru tot ce ai bifat: {what}. Fă-l de cel puțin {minHeight} mm înălțime sau debifează unul.",
       "VOLUNTEER_GUARDIAN_MISSING": "Acordul părintelui lipsește: un voluntar sub 18 ani se confirmă doar după ce părintele sau tutorele a acceptat contractul, din link sau pe hârtie.",
+      "VOLUNTEER_NUMBERS_IN_RACE_SERIES": "Numerele voluntarilor trebuie să înceapă peste cele ale alergătorilor: locurile cursei, rezervele de la masă și numerele date deja. Alege un număr mai mare. Nu s-a salvat nimic.",
+      "RUNNER_TO_VOLUNTEER_MINOR": "Persoana are sub 18 ani în ziua evenimentului. Adaug-o de mână la «Voluntari», cu datele părintelui sau ale tutorelui. Nu s-a schimbat nimic.",
+      "VOLUNTEER_TO_RUNNER_NEEDS_ADDRESS": "Voluntarul nu are adresă de email, iar o înscriere are nevoie de una. Completeaz-o cu «Modifică», apoi încearcă din nou. Nu s-a schimbat nimic.",
       "VOLUNTEER_GUARDIAN_ACCEPTED": "Părintele sau tutorele a acceptat deja contractul: nu mai e nimic de trimis sau de înregistrat.",
       "VOLUNTEER_GUARDIAN_NO_EMAIL": "Părintele sau tutorele nu are un email trecut, deci nu are cui să-i plece linkul. Acordul se ia pe hârtie, sau adaugă emailul în „Modifică”.",
       "VOLUNTEER_NO_EMAIL": "Voluntarul nu are adresă de email, deci linkul nu are unde pleca. Contractul și acordul părintelui se semnează pe hârtie, sau adaugă adresa în „Modifică”.",
@@ -6137,7 +6166,8 @@
         "guardianName": "Părinte sau tutore",
         "guardianEmail": "Email părinte sau tutore",
         "guardianConsent": "Acordul părintelui",
-        "hasKit": "Are kit"
+        "hasKit": "Are kit",
+        "bibNumber": "Număr"
       },
       "sheet": {
         "people": "Voluntari",
@@ -6204,6 +6234,24 @@
         "withdrawing": "Se retrage…",
         "withdrawTitle": "Retragi invitația?",
         "withdrawBody": "Linkul nu mai merge. Dacă persoana îl deschide, află că invitația a fost retrasă."
+      },
+      "numbers": {
+        "label": "Numerele voluntarilor încep de la",
+        "help": "Fiecare voluntar confirmat primește un număr din seria lui, de aici în sus — niciodată unul purtat de un alergător. Alege un număr peste cele ale alergătorilor. Gol: fără numere.",
+        "save": "Salvează numerele",
+        "saving": "Se salvează…"
+      },
+      "toRunner": {
+        "title": "Transformă în alergător",
+        "intro": "Persoana intră în cursă ca la «Adaugă pe lista de așteptare»: primește un loc dacă e unul liber, altfel stă la coada listei de așteptare. Ca voluntar e anulată.",
+        "declaration": "Persoana semnează singură declarația, din emailul pe care îl primește. Numărul de voluntar rămâne retras; pe cel de concurs îl primește la confirmare.",
+        "firstName": "Prenume",
+        "lastName": "Nume",
+        "namesHelp": "Lista voluntarilor ține numele într-un singur rând; o înscriere are prenume și nume. Verifică-le înainte să apeși.",
+        "action": "Transformă în alergător",
+        "noAddress": "Voluntarul nu are adresă de email, iar o înscriere are nevoie de una. Completeaz-o cu «Modifică», apoi îl poți transforma în alergător.",
+        "confirmTitle": "Transformi voluntarul în alergător?",
+        "confirmBody": "Persoana e înscrisă la cursă pe adresa {email}: un loc liber sau coada listei de așteptare. Ca voluntar e anulată; rolurile îi rămân pe rând, dacă o reactivezi."
       },
       "shirts": {
         "label": "Oferim tricouri voluntarilor",
@@ -6273,7 +6321,8 @@
         "before": "A mai fost voluntar",
         "club": "Din grupul {club}",
         "wantsList": "Vrea pe lista publică",
-        "kit": "Are kit"
+        "kit": "Are kit",
+        "number": "Nr. {number}"
       },
       "yes": "Da",
       "no": "Nu",
@@ -7816,7 +7865,8 @@
           "invitationWithdraw": "Retrage invitația",
           "invitationDelete": "Șterge invitația",
           "invitationsErase": "Șterge invitațiile persoanei",
-          "changeAddress": "Schimbă adresa"
+          "changeAddress": "Schimbă adresa",
+          "toVolunteer": "Transformă în voluntar"
         },
         "events": {
           "save": "Salvează evenimentul",
@@ -7837,7 +7887,8 @@
           "guardianLink": "Trimite linkul părintelui",
           "guardianPaper": "Acordul părintelui, semnat pe hârtie",
           "invite": "Trimite invitațiile de voluntar",
-          "invitationResend": "Retrimite invitația de voluntar"
+          "invitationResend": "Retrimite invitația de voluntar",
+          "toRunner": "Transformă în alergător"
         },
         "club": {
           "newsletter": "Trimite newsletterul",
@@ -14222,6 +14273,11 @@
       "badgeColoursSaved": "Culorile rolurilor au fost salvate.",
       "badgeColoursUnchanged": "Nimic de schimbat la culori.",
       "volunteersShirtsOn": "Formularul public cere acum mărimea tricoului.",
+      "volunteerNumbersOn": "Seria de numere a voluntarilor e salvată. Voluntarii confirmați care nu aveau număr l-au primit.",
+      "volunteerNumbersOff": "Voluntarii nu mai primesc numere. Cele date deja rămân.",
+      "runnerBecameVolunteer": "Înscrierea a fost anulată, iar persoana e acum voluntar confirmat.",
+      "volunteerBecameRunnerPlaced": "Era un loc liber: persoana l-a primit și are de semnat declarația. Ca voluntar a fost anulată.",
+      "volunteerBecameRunnerWaiting": "Persoana e pe lista de așteptare a cursei. Ca voluntar a fost anulată.",
       "volunteersAccessSaved": "Am salvat cine se poate oferi.",
       "volunteerInvitationsSent": {
         "one": "{count} persoană invitată.",

@@ -3267,6 +3267,7 @@ function blankEventRow(now: Date): EditableEvent {
     acceptsVolunteers: false,
     // «Oferim tricouri voluntarilor» (§765): off the same way.
     volunteersShirts: false,
+    volunteerBibStart: null,
     // «Arată public câți voluntari mai sunt necesari» (§773): off the same way — a public number is the club's choice, event by event.
     volunteersShowCounts: false,
     // «Lista voluntarilor e publică pe pagina evenimentului» (§821): off the same way — a name on a public page is never the default. A copy and a repeat carry the source's tick (`copiedEventValues`).

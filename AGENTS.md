@@ -2101,6 +2101,7 @@ registrations
 - club_member_declared boolean NOT NULL DEFAULT false  -- BR-REQ-031-06; a claim, never verified
 - bib_number integer null              -- BR-REQ-038-01; the race number: drawn when the registration is confirmed, in confirmation order from the event's first number (§548), unique per event (partial index), never reissued; kept, retired, by a cancelled row; per race across distances is M2
 - provisional_bib_number integer null  -- retired by §548 (was §214's held number); nothing writes it, the maintenance job empties it once, a contract release drops it
+  -- an event's volunteers wear numbers of their own series (§NNN): `event_volunteers.bib_number`, from `events.volunteer_bib_start` — refused at or below any number a runner wears or may come to wear — drawn at the volunteer's «Confirmă» under the same event-row lock (`bibs.ts#pickVolunteerNumber`), so one number is one person at an event: a runner's draw and the desk's hand-typed number treat a volunteer's as worn, and the reverse; kept, retired, by a cancelled or a deleted volunteer
 - submitted_at
 - email_confirmed_at null
 - waitlisted_at null
@@ -2904,6 +2905,13 @@ share the purpose. Steps 3–8 remain M4.
 - audit;
 - no public storage/log body.
 
+«Lista pentru tombolă» (§NNN, `volunteers/raffle-list.ts`, `/api/admin/events/[id]/raffle`) is one more such file, for
+one event: everybody who wears a number there — a confirmed registration with a race number, a confirmed volunteer
+with one of the volunteers' series — by the number, as three columns: the number, the name, «Alergător» or «Voluntar».
+Never a test registration, anybody without a number, a cancelled person or a line of the elite list, and nothing else
+of a person. Taken by whoever reads the registrations and works the volunteers (the Organizer and the Administrators),
+asserted in the route and the service; recorded as `event.raffle_list_exported` with the two counts, never a name.
+
 ### 15.11 Staff-entered registration and administrative corrections
 
 The administrative changes to a registration, and there is no other (BR-REQ-037-03,
@@ -3232,6 +3240,36 @@ registration's page, the internal list, «Invitații», the registrations' Excel
 «Toate datele unei persoane»; never by a public page, an email, the desk, the file
 given to sponsors, the allocator or the capacity formula (`tests/unit/registrations/partner-never-leaves.test.ts`). No
 state, place, count, email or declaration moves.
+
+Beside the eight too, and made of them rather than a ninth: **«Transformă în voluntar»** on a registration's page and
+**«Transformă în alergător»** on a volunteer's (2026-11-15, `DECISIONS.md` §NNN; the owner: «aș vrea să pot să „transform"
+un alergător în voluntar și invers»; `volunteers/transform.ts`). The Administrator's (`canManageRegistrations`, asserted
+by `turnRunnerIntoVolunteerAction` / `turnVolunteerIntoRunnerAction` and again by the service and by every verb under
+it; the Organizer, who works the volunteers, is offered neither). A volunteer is still not a registration: each press is
+the two presses an Administrator would make by hand, in one transaction under the event row's lock, so the person is
+never on both lists or on neither —
+
+- **a runner turned volunteer** is cancelled by verb 2 (`cancelRegistrationByStaff`: the allocator, the place offered to
+  the front of the waiting list, the cancellation's own audit row with the page's reason) and entered on the event's
+  volunteers by the volunteers' hand entry (`changeVolunteer`, `add`) with the role the Administrator chose, then
+  confirmed. The entry carries the registered name, the address, the telephone number and the language; the date of
+  birth, sex, city, club-member tick and shirt size only while the privacy notice in force names the volunteers' answers
+  (§765); never a place on a public list. Refused with nothing written: a registration that cannot be cancelled (§10.5),
+  a test one, a person under eighteen on the event's day (`RUNNER_TO_VOLUNTEER_MINOR`: a minor volunteers with a parent's
+  agreement, which the hand entry asks), a role that is not the event's, an address already on the event's volunteers.
+  The person's two emails — «Înscriere anulată» and «Rolul tău de voluntar» — go together or, with «Trimite emailul»
+  unticked, not at all; the next in line's offer always goes;
+- **a volunteer turned runner** is entered by the official waiting list's own entry (`enterOnWaitlistByStaff`, §872: the
+  relay tick, the address vouched for, the one allocator — a counted free place or the back of the line, never ahead of
+  anyone — that state's ordinary email, the declaration the person's own to sign) under the two names the Administrator
+  checked, in the language the volunteer's row holds, and the volunteer is cancelled by the volunteers' own verb, keeping
+  the row and its roles. Refused with nothing written: every refusal of that entry (after the start, the line full, the
+  person already on the address), a cancelled volunteer, one with no address (`VOLUNTEER_TO_RUNNER_NEEDS_ADDRESS`).
+  Nothing the person told the organizers as a volunteer is copied onto the registration.
+
+A number never moves with the person: the runner's stays retired with the cancelled registration and the volunteer's
+with the cancelled row; each list draws its own. One audit row ties the two (`registration.became_volunteer`,
+`volunteer.became_runner`), ids only, beside each verb's own.
 
 ---
 

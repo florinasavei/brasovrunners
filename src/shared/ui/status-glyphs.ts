@@ -5,6 +5,7 @@ import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import AssignmentLateIcon from "@mui/icons-material/AssignmentLate";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CheckroomIcon from "@mui/icons-material/Checkroom";
+import NumbersIcon from "@mui/icons-material/Numbers";
 import ConstructionIcon from "@mui/icons-material/Construction";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
@@ -125,6 +126,8 @@ export const STATUS_GLYPHS = {
   ambassador: EmojiPeopleIcon,
   // «Are kit» on a volunteer (§904): the hanger the event editor's «Kit de participare» panel wears (`panel-glyphs.ts#kit`).
   kit: CheckroomIcon,
+  // A volunteer's number (§NNN): «Nr. 501» on the «Voluntari» list, the sign a number is written with.
+  number: NumbersIcon,
   // «Date lipsă» on a registration (§905): answers the form requires that the row does not hold — the late form.
   missingAnswers: AssignmentLateIcon,
   // «Partener: {name}» on a registration, a line of the internal list or an invitation (the decision «De la parteneri»): the

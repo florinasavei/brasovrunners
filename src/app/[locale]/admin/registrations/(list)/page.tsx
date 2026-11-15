@@ -49,6 +49,7 @@ import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
 import KitCount from "@/modules/registrations/ui/KitCount";
 import { readVolunteerKitFigures, volunteerKitHrefs } from "@/modules/volunteers/admin-list";
+import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 import { listEliteEntries } from "@/modules/registrations/elite-list";
 import { listEliteMarkedRegistrations } from "@/modules/registrations/elite-mark";
 import { listAmbassadorMarkedRegistrations } from "@/modules/registrations/ambassador-mark";
@@ -1370,6 +1371,21 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           >
             {t("registrations.export")}
           </GlyphButton>
+          {/* «Lista pentru tombolă» (§NNN): with one event chosen, everybody who wears a number there — the confirmed
+              runners and the confirmed volunteers — by the number. The route asserts the role again. */}
+          {filters.eventId && canTakeRaffleList(actor.role) && (
+            <GlyphButton
+              icon="download"
+              href={`/api/admin/events/${filters.eventId}/raffle?lang=${locale}`}
+              variant="text"
+              size="small"
+              sx={TAP_TARGET}
+              aria-label={t("registrations.raffle.buttonLabel")}
+              data-testid="registrations-raffle-list"
+            >
+              {t("registrations.raffle.button")}
+            </GlyphButton>
+          )}
           {/* With one event chosen, the organizer's own message to its registrants (§364) —
               the page lives under the event; this is the other door to it. */}
           {filters.eventId && canMessageParticipants(actor.role) && (

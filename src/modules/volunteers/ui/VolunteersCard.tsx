@@ -16,6 +16,7 @@ import {
   switchVolunteersButtonAction,
   switchVolunteersCountsAction,
   switchVolunteersListAction,
+  setVolunteerNumbersStartAction,
   switchVolunteersShirtsAction,
 } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -103,6 +104,8 @@ type Props = {
   volunteersShirts: boolean;
   /** «Arată public câți voluntari mai sunt necesari», as saved (§773): the volunteers' page says how many a role needs only while it is on; the card always does. */
   volunteersShowCounts: boolean;
+  /** «Numerele voluntarilor încep de la», as saved (§NNN): the first number of the volunteers' own series, or null while the event gives them none. */
+  volunteerBibStart?: number | null;
   /**
    * «Lista voluntarilor e publică pe pagina evenimentului», as saved (§821): the event's page draws a card «Voluntarii» with the name and the role given of
    * the confirmed volunteers who ticked «Vreau să apar pe lista publică a voluntarilor»; the card here always shows everybody.
@@ -169,6 +172,7 @@ export default async function VolunteersCard({
   acceptsVolunteers,
   volunteersShirts,
   volunteersShowCounts,
+  volunteerBibStart = null,
   volunteersListPublic = false,
   volunteersButtonShown = true,
   pageLinks = {},
@@ -834,6 +838,26 @@ export default async function VolunteersCard({
             </GlyphButton>
             <Typography variant="caption" color="text.secondary" sx={{ display: "block", pl: 0.5 }}>
               {t("volunteers.shirts.help")}
+            </Typography>
+          </Box>
+          {/* «Numerele voluntarilor încep de la» (§NNN; the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr de concurs"» — «Serie proprie»): the first
+              number of the volunteers' own series, a box with its own «Salvează» like the card's ticks — never the editor's save. Saved, every confirmed
+              volunteer without a number gets theirs at once; emptied, nobody new draws one and the numbers given stay. */}
+          <Box component="form" action={setVolunteerNumbersStartAction} data-testid="volunteer-numbers-form">
+            {hidden}
+            <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1, alignItems: "flex-start" }}>
+              <RecallField
+                name="start"
+                label={t("volunteers.numbers.label")}
+                defaultValue={volunteerBibStart === null ? "" : String(volunteerBibStart)}
+                size="small"
+                slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[0-9]*", maxLength: 5, autoComplete: "off", "data-testid": "volunteer-numbers-start" } }}
+                sx={{ width: { xs: "100%", sm: 280 } }}
+              />
+              <GlyphSubmitButton icon="save" variant="outlined" size="small" label={t("volunteers.numbers.save")} pendingLabel={t("volunteers.numbers.saving")} />
+            </Stack>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", pl: 0.5 }}>
+              {t("volunteers.numbers.help")}
             </Typography>
           </Box>
           {/* «Arată public câți voluntari mai sunt necesari» (§773; the §634 rule on the waiting list's count): the same tick as the two above — a submit

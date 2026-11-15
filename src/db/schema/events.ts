@@ -561,6 +561,16 @@ export const events = pgTable(
      * never writes it, and a copy of an event never inherits it.
      */
     volunteersShirts: boolean("volunteers_shirts").notNull().default(false),
+    /**
+     * «Numerele voluntarilor încep de la» (migration `0203`, §NNN; the owner, 2026-11-15: «și voluntarii trebuie să aibă
+     * un „Nr de concurs"» — and, asked which numbers, «Serie proprie»): the first number of the volunteers' own series at
+     * this event. A volunteer draws the next free number of it when the organizers confirm them
+     * (`event_volunteers.bib_number`, `registrations/bibs.ts#pickVolunteerNumber`), under the event row's lock like every
+     * draw — never a number a runner, a line of the elite list or another volunteer wears. Null: the event gives its
+     * volunteers no number. Set by the «Voluntari» card's own form, never by the editor's save; above the runners'
+     * numbers (`volunteers.ts#setVolunteerNumbersStart`).
+     */
+    volunteerBibStart: integer("volunteer_bib_start"),
 
     /**
      * «Arată public câți voluntari mai sunt necesari» (§773, the §634 rule on the volunteers' count; the owner, 2026-10-14:
@@ -1049,6 +1059,7 @@ export const events = pgTable(
      * Six hex digits, hash included, or nothing.
      */
     check("events_bib_start_number_positive", sql`${t.bibStartNumber} >= 1 AND ${t.bibStartNumber} <= 99000`),
+    check("events_volunteer_bib_start_range", sql`${t.volunteerBibStart} IS NULL OR (${t.volunteerBibStart} >= 1 AND ${t.volunteerBibStart} <= 99000)`),
     check("events_bib_colour_is_hex", sql`${t.bibColour} IS NULL OR ${t.bibColour} ~ '^#[0-9a-fA-F]{6}$'`),
     // The desk's spares (§444): a start and a count or neither, within a five-digit bib, and at
     // most 500 numbers across every print. `domain/spare-bibs.ts` says the same in words; the
