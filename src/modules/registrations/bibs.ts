@@ -784,9 +784,11 @@ export async function isEventSpareNumber<T extends Record<string, unknown>>(
  * all three, never the tick alone. The number is the same number either way.
  *
  * `elite` (§897): an Administrator marked the registration «Elită», so its bib prints as an elite bib — the name where
- * the number goes (§895's drawing) — and never the members' design: an elite row's `member` is false.
+ * the number goes (§895's drawing) — and never the members' design: an elite row's `member` is false. That name is
+ * the person's first name alone (§NNN, `bib-elite.ts#eliteBibName`), which is why the row carries `firstName`: read
+ * by the elite drawing and by nothing else — the ordinary bib's strip keeps the registered name.
  */
-export type BibRow = { id: string; bibNumber: number; registeredName: string; member: boolean; elite: boolean };
+export type BibRow = { id: string; bibNumber: number; registeredName: string; firstName: string | null; member: boolean; elite: boolean };
 
 /**
  * Whether a row prints the members' bib, as one SQL condition over a registration joined to its
@@ -847,6 +849,7 @@ export async function listBibs<T extends Record<string, unknown>>(
       id: registrations.id,
       bibNumber: registrations.bibNumber,
       registeredName: registrations.registeredName,
+      firstName: registrations.firstName,
       member: memberBibPrinted(members),
       elite: registrations.elite,
     })
@@ -856,7 +859,7 @@ export async function listBibs<T extends Record<string, unknown>>(
     .where(bibScopeWhere(eventId, scope))
     .orderBy(asc(registrations.bibNumber));
   // An elite bib is never the members' design (§895, §897): the mark wins over the members' pile.
-  return rows.map((row) => ({ id: row.id, bibNumber: row.bibNumber as number, registeredName: row.registeredName, member: row.member === true && !row.elite, elite: row.elite }));
+  return rows.map((row) => ({ id: row.id, bibNumber: row.bibNumber as number, registeredName: row.registeredName, firstName: row.firstName, member: row.member === true && !row.elite, elite: row.elite }));
 }
 
 /**

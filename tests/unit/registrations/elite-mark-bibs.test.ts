@@ -3,6 +3,7 @@ import path from "node:path";
 import PDFDocument from "pdfkit";
 import { describe, expect, it, vi } from "vitest";
 import { DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
+import { eliteBibName } from "@/modules/registrations/bib-elite";
 import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { bibPictureSrc } from "@/modules/registrations/domain/bib-stamp";
 
@@ -83,6 +84,42 @@ describe("§897 the elite sheet", () => {
     ]);
     expect(pages(await renderBibSheet({ ...base, rows: marked, elite }))).toBe(1);
     expect(pages(await renderBibSheet({ ...base, rows: marked, elite, layout: "one" }))).toBe(2);
+  });
+});
+
+describe("§NNN a marked registration's elite bib prints the first name alone", () => {
+  it("draws the first name where the number goes — never the family name — on the ordinary sheet and on the elite sheet", async () => {
+    const silviu = { bibNumber: 7, registeredName: "Silviu Popescu", firstName: "Silviu", elite: true };
+    const ion = { bibNumber: 8, registeredName: "Ion Ionescu", firstName: "Ion" };
+    const ordinary = await drawn(() => renderBibSheet({ ...base, rows: [silviu, ion], design: { ...DEFAULT_BIB_DESIGN, numberFormat: "pad3" } }));
+    expect(ordinary.filter((run) => run.text === "Silviu")).toEqual([{ text: "Silviu", width: undefined }]);
+    expect(ordinary.map((run) => run.text)).not.toContain("Silviu Popescu");
+    expect(ordinary.some((run) => run.text.includes("Popescu"))).toBe(false);
+    // The runner beside him is not marked: the ordinary bib, the whole registered name in its strip.
+    expect(ordinary.find((run) => run.text === "Ion Ionescu")?.width).toBeGreaterThan(0);
+    expect(ordinary.map((run) => run.text)).not.toContain("Ion");
+
+    // The elite sheet: the list's line as the club typed it — whatever it typed — then the registration's first name.
+    const elite = [{ name: "Ingrid", bibNumber: null }, { name: "Eliud Kipchoge", bibNumber: null }];
+    const sheet = await drawn(() => renderBibSheet({ ...base, rows: [silviu], elite }));
+    expect(sheet.filter((run) => ["Ingrid", "Eliud Kipchoge", "Silviu", "Silviu Popescu"].includes(run.text))).toEqual([
+      { text: "Ingrid", width: undefined },
+      { text: "Eliud Kipchoge", width: undefined },
+      { text: "Silviu", width: undefined },
+    ]);
+  });
+
+  it("keeps the number under the first name with «Număr pe BIB-urile de elită»", async () => {
+    const rows = [{ bibNumber: 7, registeredName: "Delia Marin", firstName: "Delia", elite: true }];
+    const numbered = await drawn(() => renderBibSheet({ ...base, rows, design: { ...DEFAULT_BIB_DESIGN, numberFormat: "pad3", eliteNumber: true } }));
+    expect(numbered.filter((run) => run.text === "Delia" || /^\d+$/.test(run.text)).map((run) => run.text)).toEqual(["Delia", "007"]);
+  });
+
+  it("is one rule: the first name as kept, its spaces folded — and the registered name for a row that keeps none", () => {
+    expect(eliteBibName({ firstName: "Paul", registeredName: "Paul Stan" })).toBe("Paul");
+    expect(eliteBibName({ firstName: "  Ana   Maria ", registeredName: "Ana Maria Pop" })).toBe("Ana Maria");
+    // A registration from before the two halves were kept, or one that never had them: what it printed before.
+    for (const firstName of [null, undefined, "", "   "]) expect(eliteBibName({ firstName, registeredName: "Ana Pop" })).toBe("Ana Pop");
   });
 });
 
