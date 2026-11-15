@@ -10,7 +10,7 @@
  * thing the page renders.
  */
 
-import { publicDoorOpen } from "@/modules/registrations/domain/public-door";
+import { pausedNoteOf, publicDoorOpen } from "@/modules/registrations/domain/public-door";
 import { offersOnItsOwn } from "@/modules/registrations/domain/waitlist";
 import { startHeldBack } from "./dated";
 import { type RegistrationWindowInput, registrationState } from "./registration-window";
@@ -18,6 +18,11 @@ import { type RegistrationWindowInput, registrationState } from "./registration-
 export type RegistrationCtaInput = RegistrationWindowInput & {
   externalRegistrationUrl: string | null;
   externalProvider: string | null;
+  /**
+   * «Mesaj cât înscrierile pe site sunt oprite» (§NNN): the club's own sentence in the reader's language, said in place
+   * of the platform's while the switch shuts the door. Absent or blank, the platform's sentence.
+   */
+  pausedNote?: string | null;
   /**
    * The places a *new* registrant could receive right now
    * (`registrations/domain/capacity.ts#computePublicAvailability`), or `null` for an uncapped
@@ -190,12 +195,13 @@ export type RegistrationCta =
   | { kind: "FULL_NO_WAITLIST" }
   /**
    * The window is open and the site's door is shut by the organizers (§906): a sentence, no button.
-   * `SWITCH` — «Înscrieri publice deschise» unticked: «Înscrierile pe site sunt oprite de organizatori.»
+   * `SWITCH` — «Înscrieri publice deschise» unticked: «Înscrierile pe site sunt închise momentan.», or the club's own
+   * sentence for this event (`note`, §NNN) — present only when the club wrote one in the reader's language.
    * `OFFERS_ONLY` — «Locurile libere le dau doar eu» with places free and a waiting list that takes nobody (a
    * limit of 0, or full): the places are given by the organizers alone, so there is nothing to join and no
    * «s-au ocupat» to say either.
    */
-  | { kind: "PAUSED"; reason: "SWITCH" | "OFFERS_ONLY" };
+  | { kind: "PAUSED"; reason: "SWITCH" | "OFFERS_ONLY"; note?: string };
 
 /**
  * Whether a newcomer would be sent to the waiting list on this event (§615): no free place, or
@@ -245,7 +251,11 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
     case "OPEN": {
       // «Înscrieri publice deschise» unticked (§906): the dates say open, the organizers say not on the site.
       // The one predicate the server and the calendar feed ask too (`publicDoorOpen`).
-      if (!publicDoorOpen(event)) return { kind: "PAUSED", reason: "SWITCH" };
+      if (!publicDoorOpen(event)) {
+        // The club's own sentence, when it wrote one (§NNN): carried here, once, so every surface says the same.
+        const note = pausedNoteOf(event);
+        return note ? { kind: "PAUSED", reason: "SWITCH", note } : { kind: "PAUSED", reason: "SWITCH" };
+      }
       /*
         «Arată public numărătoarea» off (§668): no number at all — the free places said as an uncapped
         event's (null), no offer counted, nobody counted as waiting, no room; the state words stay. Applied

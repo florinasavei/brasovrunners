@@ -1352,6 +1352,13 @@
       "when": 1794691248860,
       "tag": "0201_registration_ambassador",
       "breakpoints": true
+    },
+    {
+      "idx": 193,
+      "version": "7",
+      "when": 1794725320402,
+      "tag": "0202_event_paused_note",
+      "breakpoints": true
     }
   ]
 }

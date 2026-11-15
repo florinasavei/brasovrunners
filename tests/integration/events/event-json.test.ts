@@ -464,6 +464,8 @@ describe("import as a new event", () => {
     ["a race registered elsewhere", { registrationMode: "EXTERNAL", capacity: "", waitlistMode: "UNLIMITED", waitlistCapacity: "", declarationDocumentId: "", participantListVisibility: "HIDDEN", hiddenListEnabled: false, hiddenListBibStart: "", registrationOpensAtWallTime: "", registrationClosesAtWallTime: "", externalProvider: "Altă platformă", externalRegistrationUrl: "https://reg.example.test/x", costType: "PAID", costAmount: "50 lei" }, { ro: { discountNote: "10% pentru membri" }, en: { discountNote: "10% for members" } }],
     ["a group run that offers its declaration", { type: "GROUP_RUN", surface: "ASPHALT", offersGroupRunDeclaration: true, registrationMode: "NONE", capacity: "", declarationDocumentId: "", participantListVisibility: "HIDDEN", hiddenListEnabled: false, hiddenListBibStart: "", nightOverride: true, membersOnly: true, isSpecial: false }, {}],
     ["an event with the club's own weather text and no difficulty", { weatherMode: "custom", difficulty: "", costType: "FREE", costAmount: "", costUrl: "", coHosts: [], links: [], routeStrava: "", routeGarmin: "", coordinates: "" }, { ro: { weatherNote: "Ploaie" }, en: { weatherNote: "Rain" } }],
+    // §NNN: the door shut by the switch, with the club's own sentence for it in both languages.
+    ["an event whose door is shut, with the club's own sentence for it", { publicRegistrationOpen: false }, { ro: { pausedNote: "Înscrierile s-au încheiat. Ne vedem la start!" }, en: { pausedNote: "Registration has ended. See you at the start!" } }],
   ];
 
   it.each(SHAPES)("round-trips %s", async (_name, overrides, extraTexts) => {
@@ -477,6 +479,31 @@ describe("import as a new event", () => {
     expect(created.editorialStatus).toBe("DRAFT");
     expect(created.startsAt.toISOString()).toBe((await reload(event.id)).startsAt.toISOString());
     expect(created.dateToBeAnnounced).toBe((await reload(event.id)).dateToBeAnnounced);
+  });
+
+  it("§NNN carries «Mesaj cât înscrierile pe site sunt oprite» in the file, each language its own; a file made before it existed imports with none", async () => {
+    const own = { ro: "Înscrierile s-au încheiat. Ne vedem la start!", en: "Registration has ended. See you at the start!" };
+    const { event } = await seedRace({ publicRegistrationOpen: false }, { ro: { pausedNote: own.ro }, en: { pausedNote: own.en } }, false);
+    const noteOf = async (id: string) => Object.fromEntries((await texts(id)).map((row) => [row.locale, row.pausedNote]));
+    expect(await noteOf(event.id)).toEqual(own);
+
+    const file = await fileOf(event.id);
+    expect(file.event.translations.ro.pausedNote).toBe(own.ro);
+    expect(file.event.translations.en.pausedNote).toBe(own.en);
+    const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
+    expect(await noteOf(created.eventId)).toEqual(own);
+    expect((await reload(created.eventId)).publicRegistrationOpen).toBe(false);
+
+    // A file written before the note existed has no such key: it still reads, and the event it makes has no note.
+    const old = JSON.parse(JSON.stringify(file)) as { event: { translations: Record<string, Record<string, unknown>> } };
+    delete old.event.translations.ro.pausedNote;
+    delete old.event.translations.en.pausedNote;
+    old.event.translations.ro.slug = "fara-nota";
+    old.event.translations.en.slug = "without-a-note";
+    const read = readEventFile(JSON.stringify(old));
+    if (!read.ok) throw new Error(`an older file did not read: ${read.refusal} ${read.detail ?? ""}`);
+    const older = await importEventAsNew(db, { actor: admin, file: read.file, fetchImpl: serving(), now: NOW });
+    expect(await noteOf(older.eventId)).toEqual({ ro: null, en: null });
   });
 
   it("§753 carries «Clubul pe lista publică» in the file (publicList.club); a file made before it existed imports with the default", async () => {

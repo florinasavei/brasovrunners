@@ -48,6 +48,7 @@ const translation = (suffix: string, body: ReturnType<typeof doc> | null = null)
   seoDescription: null,
   discountNote: null,
   weatherNote: null,
+  pausedNote: null,
 });
 
 /** Every key of the configuration, once — the one object whose leaves are every label there is. */
@@ -282,6 +283,31 @@ describe("the event file's reader", () => {
     expect(readEventFile(JSON.stringify(bad)).ok).toBe(false);
     // The diff names it in both languages.
     expect(FIELD_LABELS).toContain("registration.placesKeptForClub");
+  });
+
+  it("§NNN writes a language's «Mesaj cât înscrierile pe site sunt oprite» only when the club wrote one, and reads it back as it was", () => {
+    const file = sampleFile();
+    // No note, as every event before it: not written, so the release before it still reads the file; read back as none.
+    const plain = serializeEventFile(file);
+    expect(plain).not.toContain("pausedNote");
+    const readDefaults = readEventFile(plain);
+    if (!readDefaults.ok) throw new Error("the file did not read back");
+    expect(readDefaults.file.event.translations.ro.pausedNote).toBeNull();
+    expect(readDefaults.file.event.translations.en.pausedNote).toBeNull();
+
+    file.event.translations.ro.pausedNote = "Înscrierile s-au încheiat. Ne vedem la start!";
+    file.event.translations.en.pausedNote = "Registration has ended. See you at the start!";
+    const written = serializeEventFile(file);
+    const read = readEventFile(written);
+    if (!read.ok) throw new Error("the file did not read back");
+    expect(read.file.event.translations.ro.pausedNote).toBe("Înscrierile s-au încheiat. Ne vedem la start!");
+    expect(read.file.event.translations.en.pausedNote).toBe("Registration has ended. See you at the start!");
+    // Longer than the editor's box takes: refused, as the box refuses it.
+    const bad = JSON.parse(written) as { event: { translations: Record<string, Record<string, unknown>> } };
+    bad.event.translations.ro.pausedNote = "x".repeat(201);
+    expect(readEventFile(JSON.stringify(bad)).ok).toBe(false);
+    // The diff names it, in the language it is in.
+    expect(FIELD_LABELS).toContain("translations.pausedNote");
   });
 
   it("refuses what is not one of ours, saying which of the five reasons it is", () => {

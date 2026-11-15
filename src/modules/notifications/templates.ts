@@ -2746,7 +2746,8 @@ const T = {
         : `Termenul pentru semnare a fost ${deadline ?? "depășit"}. ${toWaitlist ? "Altcineva aștepta un loc, așa că locul tău a fost eliberat." : "Altcineva a cerut un loc, așa că locul tău a devenit liber."}`,
     /**
      * …and what the person can do now, by the event as it stands at the send (`holdLapsedNext`). A site the
-     * organizers keep shut (§906) is said in the card's own words, with «scrie-ne» — the footer's «Scrie-ne» link.
+     * organizers keep shut (§906) is said in the card's own words — the platform's sentence, «închise momentan» since
+     * §NNN, never the event's own note, which the email is not handed — with «scrie-ne», the footer's «Scrie-ne» link.
      */
     holdLapsedNext: (next: HoldLapsedNext) =>
       next === "register"
@@ -2754,7 +2755,7 @@ const T = {
         : next === "waitlist"
           ? "Dacă mai vrei să vii, poți intra pe lista de așteptare."
           : next === "paused"
-            ? "Înscrierile pe site sunt oprite acum de organizatori. Dacă mai vrei să vii, scrie-ne din pagina de contact."
+            ? "Înscrierile pe site sunt închise momentan. Dacă mai vrei să vii, scrie-ne din pagina de contact."
             : next === "offersOnly"
               ? "Locurile rămase le dau organizatorii: nu te poți înscrie direct pe site. Dacă mai vrei să vii, scrie-ne din pagina de contact."
               : "Online nu se mai poate face nimic. Dacă în ziua evenimentului rămân locuri libere, le dă masa de înscriere.",
@@ -3615,7 +3616,7 @@ const T = {
         : next === "waitlist"
           ? "If you still want to come, you can join the waiting list."
           : next === "paused"
-            ? "Registration on the site has been stopped by the organizers for now. If you still want to come, write to us from the contact page."
+            ? "Registration on the site is closed for now. If you still want to come, write to us from the contact page."
             : next === "offersOnly"
               ? "The organizers hand out the remaining places themselves: you cannot register directly on the site. If you still want to come, write to us from the contact page."
               : "Nothing more can be done online. If places are left on the day of the event, the registration desk gives them out.",

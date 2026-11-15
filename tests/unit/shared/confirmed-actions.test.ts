@@ -125,6 +125,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   deleteRegistrationAction: [],
   bulkCancelRegistrationsAction: [],
   bulkDeleteRegistrationsAction: [],
+  // «Șterge» on a row of «Liste date sponsorilor» (§NNN): the register hands it down as `removal.action`.
+  deleteSponsorListRecordAction: ["removal.action"],
   resendRegistrationEmailAction: [],
   resendFamilyEmailAction: [],
   // «Retrimite declarația tuturor care nu au semnat» (§606): asks, counting who is emailed and who is skipped.

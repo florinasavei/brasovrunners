@@ -1090,7 +1090,12 @@ Rules:
   and again under the event lock — whatever the window says, and the site shows no button; every staff
   door is untouched (the staff entry, the desk, «Trimite-i oferta», «Dă-i un loc», «Oferă-i un loc acum»,
   «Mută pe lista oficială», «Adaugă pe lista de așteptare», the invitations), and a registration already
-  sent goes on. Set in the editor's «Perioada de înscriere» and beside «Locuri» by an Administrator, audited;
+  sent goes on. Set in the editor's «Perioada de înscriere» and beside «Locuri» by an Administrator, audited.
+  While it is unticked the card, the event's page, its register page and its calendar entry say «Înscrierile
+  pe site sunt închise momentan.» — or the club's own sentence for that event, «Mesaj cât înscrierile pe site
+  sunt oprite» (`event_translations.paused_note`, plain text, at most 200 characters, both languages or neither,
+  written under the tick; 2026-11-15, `DECISIONS.md` §NNN): the reader's language's own, never the other
+  language's (§28), kept unread while the door is open. The emails keep the platform's sentence;
 - requested locale translation must be published;
 - internal event references approved declaration template version;
 - an event may belong to a race (`race_id`); a race groups child events that share name,
@@ -2437,6 +2442,14 @@ Do not put email body, raw token, declaration body, or full participant export i
 
 `audit_logs` is written by exactly one module — `modules/audit/repository.ts`, called from
 `modules/registrations/admin-service.ts` — and is insert-only: nothing updates or deletes a row.
+One kind of row may be deleted by hand (2026-11-15, `DECISIONS.md` §NNN; the owner, of a list for sponsors downloaded
+by mistake: «vreau să pot șterge (hard delete) și faza asta»): a list's own row, `registrations.sponsor_list_exported`,
+by an Administrator's «Șterge» on «Liste date sponsorilor» (`registrations/sponsor-register.ts#deleteSponsorListRecord`,
+asserted at the action and in the service; the Organizer, who may take the list, may not). The statement names that
+action and entity type beside the id, so no other row of the trail can go that way, and one row is written in its
+place — `registrations.sponsor_list_record_deleted`, the list's moment, count and file, never whom it named or held.
+It is for a list that reached nobody: the dialog says so, since for a list that was given the register is what the
+notice promises a person who asks.
 Three actions exist: `registration.created_by_staff`, `registration.name_corrected` and
 `registration.cancelled_by_staff`. The action is a closed union in code rather than free text, so
 a typo cannot produce a row nothing will ever find. The row is written immediately after the
@@ -3414,8 +3427,8 @@ once per lapsed hold (`registration:<id>:hold-lapsed:<deadline>`: a restarted re
 new hold lapses too is told again, and an older message still queued is withdrawn). It says the deadline that passed, whether
 the place went to the waiting list, and what the person can do now, read at send time: join the
 waiting list, register again, or nothing online — the desk gives free places on the day. The site's
-door is read as the card reads it (§906): «Înscrieri publice deschise» unticked says the organizers
-stopped it, and «Locurile libere le dau doar eu» sends a public entry to the line beside free places, or
+door is read as the card reads it (§906): «Înscrieri publice deschise» unticked says the site's registrations
+are closed for now — the platform's sentence, never the event's own note (§NNN) — and «Locurile libere le dau doar eu» sends a public entry to the line beside free places, or
 — with a line that takes nobody — says the places left are the organizers'; neither has a button, both
 «scrie-ne». No token, no «Nu mai pot ajunge»: the registration is over. Not for a hold the start
 releases, not for a cancelled event (§331), and never for a lapsed waiting-list offer, which stays silent.

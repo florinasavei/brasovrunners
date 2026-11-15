@@ -359,6 +359,9 @@ export type AuditAction =
    * (`registrations/sponsor-register.ts`).
    */
   | "registrations.sponsor_list_exported"
+  // «Șterge» on a row of «Liste date sponsorilor» (§NNN): the export's own row deleted for real — a list made by mistake —
+  // and this one written about the same event: the list's moment, count and file, never whom it named or held.
+  | "registrations.sponsor_list_record_deleted"
   /**
    * An event erased outright, with everyone registered for it (BR-REQ-037-06). Like
    * `registration.deleted_by_staff` it outlives what it describes, and like it, it names the

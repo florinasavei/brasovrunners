@@ -1355,6 +1355,17 @@ export const eventTranslations = pgTable(
      */
     weatherNote: text("weather_note"),
 
+    /**
+     * «Mesaj cât înscrierile pe site sunt oprite», per language (migration `0202`, §NNN; the owner, 2026-11-15, of the
+     * card's «Înscrierile pe site sunt oprite de organizatori.»: «vreau să scrie mai frumos sau să pot customiza
+     * mesajul»): the club's own sentence, shown in place of the platform's while «Înscrieri publice deschise» is
+     * unticked (`events.public_registration_open`, §906) — on the event's card, on its page and in its calendar entry.
+     * Kept, unread, while the door is open, so the next closing finds it. Plain text, at most 200 characters (checked in
+     * `content/events/fields.ts`, as `discount_note` is), both languages or neither (§352). Null means the platform's
+     * sentence. Never the other language's words (§28): a language without one reads the platform's own.
+     */
+    pausedNote: text("paused_note"),
+
     // AGENTS.md §12.4. The author is what turns "an Author edits their own drafts"
     // (BR-REQ-051-01 criterion 1) into a rule the server can check rather than a description.
     authorStaffUserId: uuid("author_staff_user_id").references(() => staffUsers.id, {

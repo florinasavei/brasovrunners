@@ -32,6 +32,7 @@ import {
 import { listReturnHref } from "@/modules/registrations/domain/list-row";
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
 import { setRegistrationAmbassador } from "@/modules/registrations/ambassador-mark";
+import { deleteSponsorListRecord, SPONSOR_REGISTER_ANCHOR } from "@/modules/registrations/sponsor-register";
 import { isRegistrationEliteTick, setRegistrationElite, setRegistrationEliteTick } from "@/modules/registrations/elite-mark";
 import { holdDeclarationAcceptance, releaseDeclarationAcceptance } from "@/modules/registrations/declaration-hold";
 import { findEventForRegistrationById } from "@/modules/events/repository";
@@ -51,6 +52,7 @@ import { moveReserveEntryToWaitlist, settleReserveEntry } from "@/modules/regist
 import { addRegistrationNote, parseNoteBody } from "@/modules/registrations/notes";
 import type { StaffPlaceOptions } from "@/modules/registrations/service";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
+import { isUuid } from "@/shared/ids";
 import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { mailSkippedOf, sendEmailOf } from "@/shared/forms/send-email";
@@ -696,6 +698,34 @@ export async function setRegistrationAmbassadorAction(_previous: FormOutcome | n
   }
   if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome, registrationId);
   return backTo(detailPath(locale, registrationId), outcome);
+}
+
+/**
+ * «Șterge» on a row of «Liste date sponsorilor» (§NNN; the owner, of a list downloaded by mistake: «vreau să pot șterge
+ * (hard delete) și faza asta»): the list's record leaves the register for real, with «Dată partenerilor» on the
+ * registrations it held (`sponsor-register.ts#deleteSponsorListRecord`). The Administrator's: the coarse gate here, the
+ * service asserts it again (BR-REQ-060-01). It asks first (§384) and emails nobody. Back to the register it was pressed
+ * in — an event's registrations list or «Newsletter» — rebuilt from the door's name and the event's id, never from a
+ * path the form carries.
+ */
+export async function deleteSponsorListRecordAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  let outcome: Record<string, string>;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    await deleteSponsorListRecord(getDb(), actor, text(form, "listId"), new Date());
+    outcome = { saved: "sponsorListDeleted" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  await flashOutcome(outcome);
+  const query = new URLSearchParams(outcome);
+  if (text(form, "door") === "newsletter") {
+    redirect(`${getPathname({ locale, href: "/admin/newsletter" })}?${query.toString()}#${SPONSOR_REGISTER_ANCHOR}`);
+  }
+  const eventId = text(form, "eventId");
+  if (isUuid(eventId)) query.set("eventId", eventId);
+  redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${query.toString()}#${SPONSOR_REGISTER_ANCHOR}`);
 }
 
 /**

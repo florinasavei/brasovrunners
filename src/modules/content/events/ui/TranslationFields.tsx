@@ -74,6 +74,7 @@ export type TranslationDraft = Pick<
   | "seoDescription"
   | "discountNote"
   | "weatherNote"
+  | "pausedNote"
 > &
   Partial<Pick<EditableTranslation, "id" | "version" | "eventId">>;
 
@@ -96,6 +97,7 @@ export function blankTranslation(locale: Locale): TranslationDraft {
     seoDescription: null,
     discountNote: null,
     weatherNote: null,
+    pausedNote: null,
   };
 }
 
@@ -447,6 +449,33 @@ export async function WeatherNoteFields({ translation, mayEdit }: PieceProps) {
         {...box("weatherNote")}
       />
       {translateButton(translation, name("weatherNote"))}
+    </>
+  );
+}
+
+/**
+ * «Mesaj cât înscrierile pe site sunt oprite» (§NNN; the owner, 2026-11-15, of the card's «Înscrierile pe site sunt
+ * oprite de organizatori.»: «vreau să scrie mai frumos sau să pot customiza mesajul»): one short line per language,
+ * beside «Înscrieri publice deschise» in the registration card, said in place of the platform's sentence while the tick
+ * is off. Never required — left empty, the platform's own sentence is said. Plain text, 200 characters at most — the
+ * box's own limit, off `fields.ts`.
+ */
+export async function PausedNoteFields({ translation, mayEdit }: PieceProps) {
+  const t = await getTranslations("Admin");
+  const name = named(translation);
+  if (!mayEdit) {
+    return <ReadOnlyLine label={t("editor.pausedNote")} value={translation.pausedNote || t("editor.boxes.summary.empty")} />;
+  }
+  return (
+    <>
+      <RecallField
+        name={name("pausedNote")}
+        label={t("editor.pausedNote")}
+        helperText={t("editor.pausedNoteHelp")}
+        defaultValue={translation.pausedNote ?? ""}
+        {...box("pausedNote")}
+      />
+      {translateButton(translation, name("pausedNote"))}
     </>
   );
 }

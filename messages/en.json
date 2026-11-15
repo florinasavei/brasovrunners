@@ -515,7 +515,7 @@
       "fullOfferByHand": "The organizers give out the places one at a time: when they can give you one, you get an email and {hours} to confirm.",
       "waitlistFull": "All places are taken and the waiting list is full — sorry.",
       "fullNoWaitlist": "All places are taken, and this event has no waiting list.",
-      "paused": "Registration on the site has been stopped by the organizers.",
+      "paused": "Registration on the site is closed for now.",
       "pausedOffersOnly": "The organizers hand out the remaining places themselves: you cannot register directly on the site.",
       "waitlistRoom": {
         "one": "{count} place left on the waiting list",
@@ -2922,6 +2922,8 @@
       "publicRegistrationOpen": "Registration open on the site",
       "publicRegistrationOpenHelp": "Unticked, the button on the site disappears at once, whatever the dates say, and the public form refuses everyone. What the team does keeps working.",
       "publicRegistrationOpenHelpMore": "Still working: an entry by an organizer, the race-day desk, «Send them the offer», «Give a place», «Offer them a place now», «Move to the official list» and the invitations.",
+      "pausedNote": "Message while registration on the site is stopped (optional)",
+      "pausedNoteHelp": "Shown on the card and on the event's page while the tick above is off. Empty: “Registration on the site is closed for now.”",
       "registrationOpensSoonHelp": "Ticked, the page says “Registration opens soon” and the form stays closed. Untick it to open: the people who asked to be told get the email.",
       "kitShirt": "T-shirt",
       "kitShirtHelp": "When ticked, the form asks for the T-shirt size.",
@@ -9186,7 +9188,7 @@
                 "«Newsletter» → open the «Subscribers» card. Its line says how many are confirmed and how many pending.",
                 "Search under «Search the address» or choose «Topic» and «State», then press «Filter». «Download CSV» takes the list as filtered.",
                 "The «Participants who ticked offers and benefits» card: who ticked it when registering, with the address, the event and the date. «Download CSV» takes all of it. It is not the newsletter.",
-                "«Download the list for sponsors (Excel)»: the same people as the CSV, with every tick of each (offers, the public list, socials, terms, declaration, state) — for the club. Give the partner «Download CSV»: first name, last name, address, event and date. Only consents given under a notice that allows it. Write whom the file goes to in «Who receives the list»: without a name it does not download. «Lists given to sponsors», under the buttons, shows every list given. Delete the file within 30 days.",
+                "«Download the list for sponsors (Excel)»: the same people as the CSV, with every tick of each (offers, the public list, socials, terms, declaration, state) — for the club. Give the partner «Download CSV»: first name, last name, address, event and date. Only consents given under a notice that allows it. Write whom the file goes to in «Who receives the list»: without a name it does not download. «Lists given to sponsors», under the buttons, shows every list given. Delete the file within 30 days. A list made by mistake is deleted from the register by an Administrator.",
                 "Removing an address is the Administrator's: tell them who asked."
               ]
             },
@@ -9554,7 +9556,7 @@
                 "«Download CSV» takes the list as filtered, with the same columns. Keep the file only as long as you need it, then delete it.",
                 "To remove someone, at their request: «Unsubscribe» on their row, then confirm. The address is deleted with its topics, as when the person unsubscribes.",
                 "The «Participants who ticked offers and benefits» card: who ticked it when registering, with the address, the event and the date. «Download CSV» takes all of it. It is not the newsletter.",
-                "«Download the list for sponsors (Excel)»: the same people as the CSV, with every tick of each (offers, the public list, socials, terms, declaration, state) — for the club. Give the partner «Download CSV»: first name, last name, address, event and date. Only consents given under a notice that allows it. Write whom the file goes to in «Who receives the list»: without a name it does not download. «Lists given to sponsors», under the buttons, shows every list given. Delete the file within 30 days."
+                "«Download the list for sponsors (Excel)»: the same people as the CSV, with every tick of each (offers, the public list, socials, terms, declaration, state) — for the club. Give the partner «Download CSV»: first name, last name, address, event and date. Only consents given under a notice that allows it. Write whom the file goes to in «Who receives the list»: without a name it does not download. «Lists given to sponsors», under the buttons, shows every list given. Delete the file within 30 days. A list made by mistake is deleted from the register with «Delete», on its row."
               ]
             },
             {
@@ -10228,7 +10230,8 @@
           "seoTitle": "Search title",
           "seoDescription": "Search description",
           "discountNote": "The club's discount",
-          "weatherNote": "Weather text"
+          "weatherNote": "Weather text",
+          "pausedNote": "The message while registration on the site is stopped"
         },
         "badges": {
           "design": {
@@ -11281,7 +11284,16 @@
           "count": "People",
           "file": "File",
           "actor": "Downloaded by",
-          "deleteBy": "Delete your file by"
+          "deleteBy": "Delete your file by",
+          "remove": "Delete from the register"
+        },
+        "remove": {
+          "title": "Delete the list from the register?",
+          "body": "The list given to “{recipient}” ({date}) leaves the register and «Given to partners» on the registrations in it. This cannot be undone.",
+          "onlyMistake": "Delete only a list made by mistake, which reached nobody. For one that was given, the register is the answer to “who did you give my data to?”.",
+          "button": "Delete",
+          "pending": "Deleting…",
+          "named": "Delete from the register the list for {recipient} ({date})"
         }
       },
       "columns": {
@@ -14163,6 +14175,7 @@
       "invitationResentAlreadyLater": "Invitation resent, with a new link. The deadline you chose was not applied: meanwhile someone else, or another tab, moved the deadline later. The one in force, as in the email, is on its row.",
       "invitationWithdrawn": "Invitation withdrawn; the place was released.",
       "invitationDeleted": "Invitation deleted.",
+      "sponsorListDeleted": "The list was deleted from the register.",
       "memberTickCleared": "Member tick cleared.",
       "memberTickSet": "Member tick set.",
       "publicRegistrationOpened": "Registration on the site is open again.",

@@ -515,7 +515,7 @@
       "fullOfferByHand": "Locurile le dau organizatorii, pe rând: când îți pot da unul, primești un email și ai {hours} să confirmi.",
       "waitlistFull": "Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.",
       "fullNoWaitlist": "Locurile s-au ocupat, iar acest eveniment nu are listă de așteptare.",
-      "paused": "Înscrierile pe site sunt oprite de organizatori.",
+      "paused": "Înscrierile pe site sunt închise momentan.",
       "pausedOffersOnly": "Locurile rămase le dau organizatorii: nu te poți înscrie direct pe site.",
       "waitlistRoom": {
         "one": "Mai este {count} loc pe lista de așteptare",
@@ -2922,6 +2922,8 @@
       "publicRegistrationOpen": "Înscrieri publice deschise",
       "publicRegistrationOpenHelp": "Debifat, butonul de pe site dispare imediat, oricare ar fi datele, iar formularul public refuză pe oricine. Ce face echipa merge mai departe.",
       "publicRegistrationOpenHelpMore": "Merg mai departe: înscrierea de către un organizator, masa din ziua cursei, «Trimite-i oferta», «Dă-i un loc», «Oferă-i un loc acum», «Mută pe lista oficială» și invitațiile.",
+      "pausedNote": "Mesaj cât înscrierile pe site sunt oprite (opțional)",
+      "pausedNoteHelp": "Apare pe card și pe pagina evenimentului cât bifa de mai sus e scoasă. Gol: „Înscrierile pe site sunt închise momentan.”",
       "registrationOpensSoonHelp": "Bifat, pagina spune „Înscrierile se deschid în curând” și formularul rămâne închis. Debifează când deschizi: cei de la „Anunță-mă” primesc emailul.",
       "kitShirt": "Tricou",
       "kitShirtHelp": "Dacă e bifat, formularul cere mărimea tricoului.",
@@ -9186,7 +9188,7 @@
                 "«Newsletter» → deschide cardul «Abonați». Linia lui spune câți sunt confirmați și câți în așteptare.",
                 "Caută la «Caută adresa» sau alege «Tema» și «Starea», apoi apasă «Filtrează». «Descarcă CSV» ia lista așa cum e filtrată.",
                 "Cardul «Participanți care au bifat oferte și beneficii»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul.",
-                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Scrie la «Cui dai lista» cui dai fișierul: fără nume nu se descarcă. «Liste date sponsorilor», sub butoane, arată fiecare listă dată. Șterge fișierul în 30 de zile.",
+                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Scrie la «Cui dai lista» cui dai fișierul: fără nume nu se descarcă. «Liste date sponsorilor», sub butoane, arată fiecare listă dată. Șterge fișierul în 30 de zile. O listă făcută din greșeală o șterge din registru un Administrator.",
                 "Scoaterea unei adrese e a Administratorului: scrie-i cine a cerut-o."
               ]
             },
@@ -9554,7 +9556,7 @@
                 "«Descarcă CSV» ia lista așa cum e filtrată, cu aceleași coloane. Păstrează fișierul doar cât îți trebuie, apoi șterge-l.",
                 "Ca să scoți pe cineva, la cererea lui: «Dezabonează» pe rândul lui, apoi confirmă. Adresa se șterge cu temele ei, ca atunci când se dezabonează singură.",
                 "Cardul «Participanți care au bifat oferte și beneficii»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul.",
-                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Scrie la «Cui dai lista» cui dai fișierul: fără nume nu se descarcă. «Liste date sponsorilor», sub butoane, arată fiecare listă dată. Șterge fișierul în 30 de zile."
+                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Scrie la «Cui dai lista» cui dai fișierul: fără nume nu se descarcă. «Liste date sponsorilor», sub butoane, arată fiecare listă dată. Șterge fișierul în 30 de zile. O listă făcută din greșeală o ștergi din registru cu «Șterge», de pe rândul ei."
               ]
             },
             {
@@ -10228,7 +10230,8 @@
           "seoTitle": "Titlul pentru căutare",
           "seoDescription": "Descrierea pentru căutare",
           "discountNote": "Reducerea clubului",
-          "weatherNote": "Textul despre vreme"
+          "weatherNote": "Textul despre vreme",
+          "pausedNote": "Mesajul cât înscrierile pe site sunt oprite"
         },
         "badges": {
           "design": {
@@ -11281,7 +11284,16 @@
           "count": "Persoane",
           "file": "Fișier",
           "actor": "Descărcată de",
-          "deleteBy": "Șterge fișierul tău până pe"
+          "deleteBy": "Șterge fișierul tău până pe",
+          "remove": "Șterge din registru"
+        },
+        "remove": {
+          "title": "Ștergi lista din registru?",
+          "body": "Lista dată către „{recipient}” ({date}) dispare din registru și de la «Dată partenerilor» de pe înscrierile din ea. Nu se poate reveni.",
+          "onlyMistake": "Șterge doar o listă făcută din greșeală, care n-a ajuns la nimeni. Pentru una dată cuiva, registrul e răspunsul la „cui mi-ați dat datele?”.",
+          "button": "Șterge",
+          "pending": "Se șterge…",
+          "named": "Șterge din registru lista pentru {recipient} ({date})"
         }
       },
       "columns": {
@@ -14163,6 +14175,7 @@
       "invitationResentAlreadyLater": "Invitație retrimisă, cu un link nou. Termenul ales nu s-a aplicat: între timp, termenul a fost mutat mai târziu de altcineva sau din altă filă. Termenul valabil, cel din email, e pe rândul invitației.",
       "invitationWithdrawn": "Invitație retrasă; locul s-a eliberat.",
       "invitationDeleted": "Invitație ștearsă.",
+      "sponsorListDeleted": "Lista a fost ștearsă din registru.",
       "memberTickCleared": "Bifa de membru a fost scoasă.",
       "memberTickSet": "Bifa de membru a fost pusă.",
       "publicRegistrationOpened": "Înscrierile pe site sunt deschise din nou.",
