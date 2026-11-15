@@ -58,7 +58,7 @@
     },
     {
       "requirement": "BR-REQ-038-01",
-      "text": "Given an event whose volunteers' series is set, when a volunteer is confirmed, then they draw the lowest free number from the series' start under the event row's lock, once — a reopened or already numbered person keeps theirs — and one number is one person at the event: a runner's draw and the desk's hand-typed number treat a volunteer's number as worn, a volunteer's draw steps over every number a runner, an elite line or a desk spare holds, a cancelled volunteer keeps their number and a deleted volunteer's is never drawn again; the number is shown on the person and in the volunteers' CSV and Excel as the column «Număr» (2026-11-15, `DECISIONS.md` §NNN)."
+      "text": "Given an event whose volunteers' series is set, when a volunteer is confirmed, then they draw the lowest free number from the series' start under the event row's lock, once — a reopened or already numbered person keeps theirs — and one number is one person at the event: a runner's draw and the desk's hand-typed number treat a volunteer's number as worn, a volunteer's draw steps over every number a runner, an elite line or a desk spare holds, a cancelled volunteer keeps their number and a deleted volunteer's is never drawn again; the number is shown on the person and in the volunteers' CSV and Excel as the column «Număr»; and on real connections racing (`tests/concurrency/volunteer-numbers.test.ts`), twenty volunteers confirmed at the same instant draw twenty different numbers, and «Confirmă» and «Transformă în alergător» pressed on one person at once both go through — the event's row, then the person's, in both — never one aborted by a deadlock (2026-11-15, `DECISIONS.md` §NNN)."
     },
     {
       "requirement": "BR-REQ-037-03",
@@ -70,7 +70,7 @@
     },
     {
       "requirement": "BR-REQ-034-01",
-      "text": "Given «Transformă în voluntar» and «Transformă în alergător», then neither gives or takes a place except through the verbs that already do: a runner turned volunteer frees their place through the allocator in the same locked transaction — offered to the first on the waiting list or kept free, by the event's setting, never held for the volunteer — and a runner who only waited frees none; a volunteer turned runner takes a counted free place or joins the back of the waiting list, never ahead of anyone already waiting and never a place by itself on a full race (2026-11-15, `DECISIONS.md` §NNN)."
+      "text": "Given «Transformă în voluntar» and «Transformă în alergător», then neither gives or takes a place except through the verbs that already do: a runner turned volunteer frees their place through the allocator in the same locked transaction — offered to the first on the waiting list or kept free, by the event's setting, never held for the volunteer — and a runner who only waited frees none; a volunteer turned runner takes a counted free place or joins the back of the waiting list, never ahead of anyone already waiting and never a place by itself on a full race; and on real connections racing, five runners of a full race turned into volunteers at once free five places, each offered to one of the five who waited and to nobody twice, with never more places held than the race has (2026-11-15, `DECISIONS.md` §NNN)."
     },
     {
       "requirement": "BR-REQ-060-01",
