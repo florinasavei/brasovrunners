@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.50-2026-11-16
+
+- **«Decizie ziua cursei» on the «Voluntari» list** — a column right after «Note interne» in which the organizers write what they decided for each volunteer on race day («vine la 8:00 la start», «rezervă»): one short line, written or changed from the row («Scrie decizia» / «Modifică decizia») and on the person's page, cleared by saving the box empty, for a person in any state. Seen by the organizers only: nobody is emailed, and it is on no public page, badge, desk or file. Listed in «Toate datele unei persoane». §954.
+- **Race numbers cut from the A4 sheet without the dashed line** — in the number's designer, under «Numărul», the new tick «Fără linia punctată pe tăietură» prints the sheet of two numbers with no dashed line across its middle: only two short marks stay, at the ends of the cut, so nothing is left on the numbers after cutting — least of all on a band that reaches the cut. Unticked, the sheet prints as until now; «Câte unul pe pagină» and the pictures of a number do not change. §955.
 ## BR-V4.49-2026-11-16
 
 - **A picture on «Planul voluntarilor»** — on an event's plan (the «Voluntari» list, one event chosen, «Planul voluntarilor») you can now upload the plan as you drew it, the map of the route with the points on it: «Încarcă poza planului». It shows above the points, as wide as the page; press it to open the whole picture in a new tab; «Tipărește planul» prints it first, in one piece. «Schimbă poza» puts another in its place and «Șterge poza» takes it off, after asking. Only the Organizer and the Administrators can; the picture is on no page of the site and nobody is emailed. Sending it to the volunteers comes next. §952.

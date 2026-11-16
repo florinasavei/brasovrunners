@@ -32,7 +32,7 @@ const PRESS_GLYPHS = { add: AddIcon, edit: EditIcon } as const;
  * address. The dialog lists no note: the marker beside the control is the link to the card that reads them.
  *
  * It also serves a row's one line that is written and then changed — «Decizie ziua cursei» on the «Voluntari» list
- * (§NNN) — with other words and three things said by the caller, each a string or a flag: `defaultValue`, what the
+ * (§954) — with other words and three things said by the caller, each a string or a flag: `defaultValue`, what the
  * line holds now, so the box opens on it; `optional`, a box that may be saved empty (which clears the line);
  * `icon: "edit"`, the pencil on a press that changes what is there. A caller that passes none of them gets the
  * notes' control as it was.

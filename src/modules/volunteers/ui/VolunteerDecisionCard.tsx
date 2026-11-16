@@ -12,7 +12,7 @@ import type { VolunteerItem } from "../volunteers";
 export const DECISION_ANCHOR = "decizie-ziua-cursei";
 
 /**
- * «Decizie pentru ziua cursei» on a volunteer's page (§NNN; the owner, 2026-11-16: «si la voluntar trebuie sa am si decizie pt
+ * «Decizie pentru ziua cursei» on a volunteer's page (§954; the owner, 2026-11-16: «si la voluntar trebuie sa am si decizie pt
  * ziua cursei»): the one short line in which the organizers write what THEY decided for the person on race day — «vine la 8:00
  * la start», «rezervă» — in the organizers' part of the page, beside their notes and before the person's own block, because it
  * is no answer of the person's. Not a note either: there is one line, and saving replaces it.

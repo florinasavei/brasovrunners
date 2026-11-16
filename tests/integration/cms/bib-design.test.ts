@@ -177,7 +177,7 @@ describe("§249 the bib's design, saved and read back", () => {
     // Nor where the figures stand (§804, amended): the strip's right.
     // Nor the elite bibs' two ticks (§895): off, the name alone.
     // Nor the name's size and the band to the paper's edge (§947): the name at its size, the band inside the margin.
-    // Nor «Fără linia punctată pe tăietură» (§NNN): the dashed line every sheet of two printed.
+    // Nor «Fără linia punctată pe tăietură» (§955): the dashed line every sheet of two printed.
     const footerKeys = [
       "showEmail", "showPartners", "showEventInFooter", "showWebsite", "footerText", "headerImageCrop", "sponsorImageCrop", "member", "numberFormat", "sponsorPlace", "showProfile", "showEmergency", "emergencyPhone", "emergencyUpsideDown", "showDistance", "numberStubs", "showCheckpoints", "showCheckpointTimes", "showProfileScale",
       "profileSource", "profileImageSrc", "showProfileFigures", "profileFiguresPlace", "profileOrientation", "emergencyLabel", "emergencyPhoneLabel", "emergencyPhone2", "emergencyPhone2Label", "emergencyPhone3", "emergencyPhone3Label",
@@ -194,10 +194,10 @@ describe("§249 the bib's design, saved and read back", () => {
   });
 
   /**
-   * §NNN — «Fără linia punctată pe tăietură» rides in the same column, saved by the same form: the tick the sheet's
+   * §955 — «Fără linia punctată pe tăietură» rides in the same column, saved by the same form: the tick the sheet's
    * route reads is the one the panel posted, with the cut marks' tick or without it, and unticking it is kept too.
    */
-  it("§NNN stores «Fără linia punctată pe tăietură», apart from the cut marks' tick, and the sheet's route reads it", async () => {
+  it("§955 stores «Fără linia punctată pe tăietură», apart from the cut marks' tick, and the sheet's route reads it", async () => {
     const event = await existingEvent();
     const ticked = { ...DEFAULT_BIB_DESIGN, hideCutLine: true };
     const saved = await saveEventFields(db, { actor: admin, eventId: event.id, expectedVersion: event.version, fields: { ...EVENT_FIELDS, bibDesign: ticked } });

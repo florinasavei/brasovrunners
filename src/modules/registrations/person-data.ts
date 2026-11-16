@@ -229,7 +229,7 @@ export type PersonData = {
      */
     checkpointName: string | null;
     /**
-     * «Decizie pentru ziua cursei» (§NNN): what the organizers decided for the person on race day, in their own words; null while
+     * «Decizie pentru ziua cursei» (§954): what the organizers decided for the person on race day, in their own words; null while
      * there is none. Not something the person said, but a fact the club holds about them — a column of the row like any other
      * (art. 15 GDPR), as the notes above and the point are.
      */

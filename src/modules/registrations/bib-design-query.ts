@@ -73,7 +73,7 @@ export type BibDesignFormValues = {
   headerImageCrop: BibCropValue;
   sponsorImageCrop: BibCropValue;
   cutMarks: boolean;
-  /** «Fără linia punctată pe tăietură» (§NNN): off by default; the sheet's alone — the picture of one number draws no cut. */
+  /** «Fără linia punctată pe tăietură» (§955): off by default; the sheet's alone — the picture of one number draws no cut. */
   hideCutLine: boolean;
   /** The footer's switches and the club's own line (§317; `bib-footer.ts`). */
   showEmail: boolean;

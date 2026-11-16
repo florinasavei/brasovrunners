@@ -309,7 +309,7 @@ export const eventVolunteers = pgTable(
      */
     checkpointId: uuid("checkpoint_id").references(() => eventCheckpoints.id, { onDelete: "set null" }),
     /**
-     * «Decizie pentru ziua cursei» (migration `0209`, §NNN; the owner, 2026-11-16, of the «Voluntari» list: «si la voluntar
+     * «Decizie pentru ziua cursei» (migration `0209`, §954; the owner, 2026-11-16, of the «Voluntari» list: «si la voluntar
      * trebuie sa am si decizie pt ziua cursei»): what the organizers decided for this person on race day — «vine la 8:00 la
      * start», «rezervă» — one short line they keep current, replaced when they change their mind. Not a note (`event_volunteer_notes`:
      * a dated thread with its authors), not the state and not the person's own answer. Plain text, one paragraph, at most
@@ -420,7 +420,7 @@ export const eventVolunteers = pgTable(
     check("event_volunteers_name_length", sql`char_length(${t.name}) BETWEEN 1 AND 120`),
     check("event_volunteers_message_length", sql`${t.message} IS NULL OR char_length(${t.message}) BETWEEN 1 AND 300`),
     check("event_volunteers_note_length", sql`${t.note} IS NULL OR char_length(${t.note}) BETWEEN 1 AND 500`),
-    // «Decizie pentru ziua cursei» (§NNN): one short line or none — never an empty string, never past a person's message's length.
+    // «Decizie pentru ziua cursei» (§954): one short line or none — never an empty string, never past a person's message's length.
     check("event_volunteers_race_day_decision_length", sql`${t.raceDayDecision} IS NULL OR char_length(${t.raceDayDecision}) BETWEEN 1 AND 300`),
     check("event_volunteers_age_range", sql`${t.age} IS NULL OR ${t.age} BETWEEN 1 AND 120`),
     check("event_volunteers_city_length", sql`${t.city} IS NULL OR char_length(${t.city}) BETWEEN 1 AND 80`),

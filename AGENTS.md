@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.49-2026-11-16 -->
+<!-- PROJECT_BASELINE: BR-V4.50-2026-11-16 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.49-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.50-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -3281,7 +3281,7 @@ capacity formula (`tests/unit/registrations/raffle-never-leaves.test.ts`). No st
 declaration moves, and the person is not told.
 
 The «Voluntari» list keeps one more thing of the organizers' own on a volunteer, and it is words rather than a tick:
-**«Decizie pentru ziua cursei»** (2026-11-16, `DECISIONS.md` §NNN; the owner, of that list: «si la voluntar trebuie sa am
+**«Decizie pentru ziua cursei»** (2026-11-16, `DECISIONS.md` §954; the owner, of that list: «si la voluntar trebuie sa am
 si decizie pt ziua cursei»). One nullable line on the person's row (`event_volunteers.race_day_decision`, one paragraph,
 at most 300 characters, held by a CHECK): what the organizers decided for that person on race day — «vine la 8:00 la
 start», «rezervă» — replaced when they change their mind. It is not a note (`event_volunteer_notes`, a dated thread with

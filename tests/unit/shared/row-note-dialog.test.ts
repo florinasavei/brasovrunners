@@ -7,7 +7,7 @@ import RowNoteDialog from "@/shared/ui/RowNoteDialog";
 
 /**
  * `RowNoteDialog` — a row's press and its dialog: «Adaugă o notă» on the registrations' and the volunteers' lists, and, with
- * other words, «Scrie decizia» / «Modifică decizia» on the «Voluntari» list (§NNN, BR-REQ-050-02).
+ * other words, «Scrie decizia» / «Modifică decizia» on the «Voluntari» list (§954, BR-REQ-050-02).
  *
  * The press is what the server draws, and is rendered here: a link that works with no script, 44 pixels tall, its glyph asked
  * by name. The dialog is a portal, which a Node render does not draw (as `confirm-dialog.test.ts` says of the house's other

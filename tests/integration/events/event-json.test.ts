@@ -654,7 +654,7 @@ describe("import as a new event", () => {
     expect((await reload(plain.eventId)).bibDesign).toBeNull();
   });
 
-  it("§NNN carries «Fără linia punctată pe tăietură» of the bib's design: as a new event, over one, and off from a file made before the tick", async () => {
+  it("§955 carries «Fără linia punctată pe tăietură» of the bib's design: as a new event, over one, and off from a file made before the tick", async () => {
     const { event } = await seedRace({ bibDesign: { ...DEFAULT_BIB_DESIGN, showLogo: false, hideCutLine: true } }, {}, false);
     const file = await fileOf(event.id);
     expect(file.event.bib.design).toMatchObject({ hideCutLine: true, cutMarks: false });

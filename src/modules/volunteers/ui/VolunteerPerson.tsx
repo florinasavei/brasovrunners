@@ -1052,7 +1052,7 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
           {person.message}
         </Typography>
       )}
-      {/* «Decizie pentru ziua cursei» (§NNN): what the organizers decided for the person on race day, read in the event card's row.
+      {/* «Decizie pentru ziua cursei» (§954): what the organizers decided for the person on race day, read in the event card's row.
           Written on the «Voluntari» list's row or on the person's page, whose own card stands above this block and says it there. */}
       {as === "li" && person.raceDayDecision && (
         <Typography variant="body2" sx={{ wordBreak: "break-word" }} data-testid="volunteer-decision">

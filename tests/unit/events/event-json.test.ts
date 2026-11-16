@@ -134,7 +134,7 @@ function sampleFile(): EventFile {
     format: EVENT_FILE_FORMAT,
     version: EVENT_FILE_VERSION,
     exportedAt: "2026-10-13T10:00:00.000Z",
-    exportedFrom: { environment: "production", baseline: "BR-V4.49-2026-11-16" },
+    exportedFrom: { environment: "production", baseline: "BR-V4.50-2026-11-16" },
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
     // The volunteers' categories and roles (§774): none in the sample; the round trip with some is in the integration test.
@@ -661,7 +661,7 @@ describe("the diff", () => {
     expect(readBibDesign(old).profileFiguresPlace).toBe("right");
   });
 
-  it("§NNN carries «Fără linia punctată pe tăietură» of the bib's sheet: a file that ticks it shows the change under its own label, in both languages, and one made before the tick reads off", () => {
+  it("§955 carries «Fără linia punctată pe tăietură» of the bib's sheet: a file that ticks it shows the change under its own label, in both languages, and one made before the tick reads off", () => {
     const incoming = sampleConfig();
     incoming.bib.design = { ...incoming.bib.design, hideCutLine: true };
     const changes = diffConfigs(same(incoming), same(sampleConfig()));

@@ -12,7 +12,7 @@ import { changeVolunteer, listVolunteers } from "@/modules/volunteers/volunteers
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-060-01 — «Decizie pentru ziua cursei» (the owner, 2026-11-16, of the «Voluntari» list: «si la
+ * §954, BR-REQ-050-02, BR-REQ-060-01 — «Decizie pentru ziua cursei» (the owner, 2026-11-16, of the «Voluntari» list: «si la
  * voluntar trebuie sa am si decizie pt ziua cursei»): `changeVolunteer`'s kind `setDecision`, on a real PostgreSQL in memory.
  *
  * One short line the organizers keep about what THEY decided for a person on race day. Whoever works the volunteers writes,
@@ -128,7 +128,7 @@ const trail = async () => (await db.select().from(auditLogs).orderBy(asc(auditLo
 const minutesLater = (minutes: number) => new Date(LATER.getTime() + minutes * 60_000);
 const decide = (actor: StaffUser, id: string, decision: unknown, eventId = raceId, now = LATER) => changeVolunteer(db, actor, { kind: "setDecision", eventId, id, decision }, now);
 
-describe("§NNN who writes a volunteer's race-day decision", () => {
+describe("§954 who writes a volunteer's race-day decision", () => {
   it("lets the Organizer, the Administrator and the Superadministrator write it — whoever works the volunteers", async () => {
     expect(await decide(staff.MODERATOR!, people.ana, "vine la 8:00 la start")).toEqual({ changed: true, volunteer: { id: people.ana, hasAddress: true } });
     expect(await decisionOf(people.ana)).toBe("vine la 8:00 la start");
@@ -156,7 +156,7 @@ describe("§NNN who writes a volunteer's race-day decision", () => {
   });
 });
 
-describe("§NNN the words of a race-day decision", () => {
+describe("§954 the words of a race-day decision", () => {
   it("keeps them as one paragraph: trimmed, a line break a space, a run of spaces one", async () => {
     await decide(staff.MODERATOR!, people.ana, "  vine la 8:00\r\nla start,\n\n  cu mașina \t");
     expect(await decisionOf(people.ana)).toBe("vine la 8:00 la start, cu mașina");
@@ -192,7 +192,7 @@ describe("§NNN the words of a race-day decision", () => {
   });
 });
 
-describe("§NNN whose race-day decision it is", () => {
+describe("§954 whose race-day decision it is", () => {
   it("is NOT_FOUND for another event's person, for nobody's id and for an id or an event that is no id — with nothing written", async () => {
     // Mara is the other event's: posted as the race's, she is not there.
     await expect(decide(staff.ADMIN!, people.mara, "rezervă")).rejects.toMatchObject({ code: "NOT_FOUND" });
@@ -221,7 +221,7 @@ describe("§NNN whose race-day decision it is", () => {
   });
 });
 
-describe("§NNN what a race-day decision writes, and what it leaves alone", () => {
+describe("§954 what a race-day decision writes, and what it leaves alone", () => {
   it("writes nothing and audits nothing when the words are the same — as typed, or once read as one paragraph", async () => {
     await decide(staff.MODERATOR!, people.ana, "vine la 8:00 la start", raceId, NOW);
     expect(await trail()).toHaveLength(1);

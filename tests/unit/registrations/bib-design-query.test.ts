@@ -43,7 +43,7 @@ const EVERYTHING_OFF: BibDesign = {
   headerImageCrop: { x: 0, y: 0.3125, w: 1, h: 0.1478 },
   sponsorImageCrop: { x: 0.1, y: 0.4, w: 0.8, h: 0.05 },
   cutMarks: true,
-  // «Fără linia punctată pe tăietură» (§NNN): on, the other way from its default (off).
+  // «Fără linia punctată pe tăietură» (§955): on, the other way from its default (off).
   hideCutLine: true,
   // The footer (§317): every switch the other way, and a line with the characters a URL must
   // escape — the separator's dot, a colon, an ampersand, a plus, diacritics.
@@ -347,7 +347,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
       headerImageCrop: null,
       sponsorImageCrop: null,
       cutMarks: true,
-      // The cut line's box was unticked (§NNN): the dashed line every sheet printed.
+      // The cut line's box was unticked (§955): the dashed line every sheet printed.
       hideCutLine: false,
       // The email box was unticked: the footer prints no address (§317).
       showEmail: false,
@@ -366,7 +366,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
     expect(isBibDesignInput("event.bibDesign.footerText")).toBe(true);
   });
 
-  it("§NNN reads «Fără linia punctată pe tăietură» as the cut marks' box is read, and carries it in the address like any switch", () => {
+  it("§955 reads «Fără linia punctată pe tăietură» as the cut marks' box is read, and carries it in the address like any switch", () => {
     // Ticked, the box posts «on»; unticked it posts nothing — each apart from the cut marks' own box.
     expect(readBibDesignForm(posted({ [`${BIB_DESIGN_FORM_PREFIX}hideCutLine`]: "on" }))).toMatchObject({ hideCutLine: true, cutMarks: false });
     expect(readBibDesignForm(posted({ [`${BIB_DESIGN_FORM_PREFIX}cutMarks`]: "on" }))).toMatchObject({ hideCutLine: false, cutMarks: true });

@@ -395,7 +395,7 @@ export default async function BibDesignPanel({
           </Stack>
         </Panel>
 
-        {/* «Numărul» (§759): its size, how it is written (§735), and the sheet's cut — its marks, and its dashed line or none (§NNN). */}
+        {/* «Numărul» (§759): its size, how it is written (§735), and the sheet's cut — its marks, and its dashed line or none (§955). */}
         <Panel glyph="bibNumber" collapsible level={5} title={t("editor.bibDesign.sections.number")} aside={numberAside} data-testid="bib-section-number">
           <Stack spacing={1.5}>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
@@ -431,7 +431,7 @@ export default async function BibDesignPanel({
               </RecallField>
             </Stack>
             {designTick("cutMarks", t("editor.bibDesign.cutMarks"))}
-            {/* «Fără linia punctată pe tăietură» (§NNN): the sheet of two without its dashed line; the help says what stays at the cut, and why. */}
+            {/* «Fără linia punctată pe tăietură» (§955): the sheet of two without its dashed line; the help says what stays at the cut, and why. */}
             <CheckboxField name="event.bibDesign.hideCutLine" defaultChecked={design.hideCutLine} help={t("editor.bibDesign.hideCutLineHelp")}>
               {t("editor.bibDesign.hideCutLine")}
             </CheckboxField>

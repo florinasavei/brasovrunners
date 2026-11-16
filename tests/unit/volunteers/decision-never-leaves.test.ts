@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * «Decizie pentru ziua cursei» (§NNN, BR-REQ-060-01) — what the organizers decided for a volunteer on race day is their own
+ * «Decizie pentru ziua cursei» (§954, BR-REQ-060-01) — what the organizers decided for a volunteer on race day is their own
  * line: it reaches the «Voluntari» list's column, the person's page, the event card's row of the person and «Toate datele unei
  * persoane» (art. 15), and nothing else. Never a public page, never an email, never a badge, never the desk, never the public
  * volunteers' list, never the raffle's file — and, until a change of its own says so, not the volunteers' files either.
@@ -77,7 +77,7 @@ function sourceFiles(dir: string, acc: string[] = []): string[] {
 
 const relative = (file: string) => path.relative(ROOT, file).replaceAll("\\", "/");
 
-describe("§NNN a volunteer's race-day decision stays with the organizers", () => {
+describe("§954 a volunteer's race-day decision stays with the organizers", () => {
   const files = sourceFiles(SRC);
   const naming = files.filter((file) => namesTheDecision(file, readFileSync(file, "utf8")));
 
@@ -113,7 +113,7 @@ describe("§NNN a volunteer's race-day decision stays with the organizers", () =
         // The raffle's file and its download.
         at === "src/modules/volunteers/raffle-list.ts" ||
         at.startsWith("src/app/api/admin/events/[id]/raffle/") ||
-        // The volunteers' files — the CSV, the spreadsheets and their downloads: a column there is a change of its own (§NNN).
+        // The volunteers' files — the CSV, the spreadsheets and their downloads: a column there is a change of its own (§954).
         at === "src/modules/volunteers/csv.ts" ||
         at === "src/modules/volunteers/workbook.ts" ||
         at === "src/modules/volunteers/export.ts" ||

@@ -192,7 +192,7 @@ export type VolunteerItem = {
   bibNumber: number | null;
   /** «Planul voluntarilor» (§949): the point of the event's route the person stands at, or null — not placed yet, or not on the route. */
   checkpointId: string | null;
-  /** «Decizie pentru ziua cursei» (§NNN): what the organizers decided for the person on race day, one short line they keep current; null while there is none. */
+  /** «Decizie pentru ziua cursei» (§954): what the organizers decided for the person on race day, one short line they keep current; null while there is none. */
   raceDayDecision: string | null;
   shirtSize: Exclude<RegistrationTshirtSize, "NONE"> | null;
   createdAt: Date;
@@ -1680,7 +1680,7 @@ export type VolunteerRequest =
    */
   | { kind: "setCheckpoint"; eventId: string; id: string; checkpointId: unknown }
   /**
-   * «Decizie pentru ziua cursei» (§NNN): what the organizers decided for the person on race day — one short line, written,
+   * «Decizie pentru ziua cursei» (§954): what the organizers decided for the person on race day — one short line, written,
    * changed or, by an empty box, cleared. For a person in any state, a cancelled one included.
    */
   | { kind: "setDecision"; eventId: string; id: string; decision: unknown }
@@ -1857,7 +1857,7 @@ function announcesRoles(volunteer: { email: string | null; state: VolunteerState
 }
 
 /**
- * «Decizie pentru ziua cursei» (§NNN; the owner, 2026-11-16, of the «Voluntari» list: «si la voluntar trebuie sa am si decizie
+ * «Decizie pentru ziua cursei» (§954; the owner, 2026-11-16, of the «Voluntari» list: «si la voluntar trebuie sa am si decizie
  * pt ziua cursei»): `changeVolunteer`'s kind `setDecision` — the one short line in which the organizers write what THEY decided
  * for the person on race day («vine la 8:00 la start», «rezervă»), replaced when they change their mind. Not a note (a dated
  * thread with its authors, `volunteer-notes.ts`), not the state and not the person's answer.
@@ -1947,7 +1947,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
   const skippedFor = (volunteer: { email: string | null; state: VolunteerState }, roleIds: readonly string[]) =>
     !sendEmail && announcesRoles(volunteer, roleIds) ? { emailSkipped: true } : {};
   assertIds(request.eventId, ...(request.kind === "add" ? [] : [request.id]));
-  // «Decizie pentru ziua cursei» (§NNN) leaves here, through a transaction of its own (`setRaceDayDecision`): nothing below is
+  // «Decizie pentru ziua cursei» (§954) leaves here, through a transaction of its own (`setRaceDayDecision`): nothing below is
   // its business — no role, no state, no email — and neither is the expiry of the public pages that ends this function.
   if (request.kind === "setDecision") return setRaceDayDecision(db, actor, request, now);
   let input: ReturnType<typeof staffInputOf> | null = null;

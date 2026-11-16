@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { raceDayDecisionFrom, VOLUNTEER_DECISION_MAX, VOLUNTEER_MESSAGE_MAX } from "@/modules/volunteers/domain/volunteer";
 
 /**
- * §NNN, BR-REQ-050-02 — «Decizie pentru ziua cursei» as the organizers type it (the owner, 2026-11-16: «si la voluntar trebuie
+ * §954, BR-REQ-050-02 — «Decizie pentru ziua cursei» as the organizers type it (the owner, 2026-11-16: «si la voluntar trebuie
  * sa am si decizie pt ziua cursei»): one short line. `raceDayDecisionFrom` is the one reading of the box — the service's and the
  * action's — so what is kept is one paragraph, trimmed, at most as long as a person's own message; nothing left is no decision,
  * and what is no such line is the box's refusal.
  */
-describe("§NNN the race-day decision as typed", () => {
+describe("§954 the race-day decision as typed", () => {
   it("is as long as a person's message at most", () => {
     expect(VOLUNTEER_DECISION_MAX).toBe(300);
     expect(VOLUNTEER_DECISION_MAX).toBe(VOLUNTEER_MESSAGE_MAX);

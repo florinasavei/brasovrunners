@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0209_volunteer_race_day_decision` (§NNN; the owner, 2026-11-16: «si la voluntar trebuie sa am si decizie pt ziua
+ * Migration `0209_volunteer_race_day_decision` (§954; the owner, 2026-11-16: «si la voluntar trebuie sa am si decizie pt ziua
  * cursei»), proven on real PostgreSQL (PGlite): one column on the event's volunteers, `race_day_decision` — nullable text, no
  * default — so every row from before has no decision and a row written without it too; the CHECK holds it to one to three
  * hundred characters, counted as characters and never as bytes, and refuses an empty line; and the file only expands.

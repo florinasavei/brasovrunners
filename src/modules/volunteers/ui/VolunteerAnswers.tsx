@@ -9,7 +9,7 @@ import { CLUB_NAME } from "@/theme/brand";
  * row, because a person may ask for all of it (art. 15 GDPR). The retired «Prefer să nu spun» and the kit's «Fără
  * tricou» read as no answer, as they do everywhere. Since §768 also the parent or guardian of a volunteer under eighteen — name,
  * address and whether they accepted, and how — the same row's data. Since §821 also «Vrea pe lista publică», the person's tick for the event page's list. Since §904
- * also «Are kit», the organizers' own mark — a column of the same row. Since §NNN also «Decizie pentru ziua cursei», what the organizers
+ * also «Are kit», the organizers' own mark — a column of the same row. Since §954 also «Decizie pentru ziua cursei», what the organizers
  * decided for the person on race day, in their words. A Server Component of its own so a test can draw the line without
  * the page's lookup.
  */
@@ -28,7 +28,7 @@ export default async function VolunteerAnswers({
     inRaffle?: boolean;
     /** «Planul voluntarilor» (§949): the point of the route the organizers put the person at, shown when the row holds one. */
     checkpointName?: string | null;
-    /** «Decizie pentru ziua cursei» (§NNN): what the organizers decided for the person on race day, shown when the row holds one. */
+    /** «Decizie pentru ziua cursei» (§954): what the organizers decided for the person on race day, shown when the row holds one. */
     raceDayDecision?: string | null;
   };
 }) {

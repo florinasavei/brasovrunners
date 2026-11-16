@@ -53,7 +53,7 @@ export const VOLUNTEER_CATEGORIES_MAX = 12;
 export const VOLUNTEER_CONTACT_PHONE_MAX = 40;
 export const VOLUNTEER_CONTACT_EMAIL_MAX = 320;
 /**
- * «Decizie pentru ziua cursei» (§NNN): the organizers' one line about a volunteer on race day — as long as a person's own message,
+ * «Decizie pentru ziua cursei» (§954): the organizers' one line about a volunteer on race day — as long as a person's own message,
  * and the database's bound too (`event_volunteers_race_day_decision_length`).
  */
 export const VOLUNTEER_DECISION_MAX = 300;
@@ -190,7 +190,7 @@ const optionalLine = (max: number) =>
 const plainBox = (max: number) => z.string().optional().default("").transform(normalizeTeamText).pipe(z.string().max(max));
 
 /**
- * «Decizie pentru ziua cursei» as the organizers typed it (§NNN), read as one paragraph: every line break, tab and control
+ * «Decizie pentru ziua cursei» as the organizers typed it (§954), read as one paragraph: every line break, tab and control
  * character is a space, a run of them one space, the ends trimmed. Nothing left is no decision (`null`). `undefined` is the box's
  * refusal: something that is not text, or more than `VOLUNTEER_DECISION_MAX` characters — counted as the database counts them
  * (`char_length`), so a letter with a diacritic or an emoji is one. Pure.

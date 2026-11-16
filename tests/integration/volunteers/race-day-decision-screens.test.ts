@@ -18,7 +18,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { unzip } from "../../helpers/xlsx";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-060-01 — «Decizie ziua cursei» on the organizers' screens (the owner, 2026-11-16, working the
+ * §954, BR-REQ-050-02, BR-REQ-060-01 — «Decizie ziua cursei» on the organizers' screens (the owner, 2026-11-16, working the
  * «Voluntari» list on a phone: «si la voluntar trebuie sa am si decizie pt ziua cursei»), read from a real database:
  *
  * - the «Voluntari» list has the column right after «Note interne», under the catalogue's heading with its «?»: the words in the
@@ -261,7 +261,7 @@ async function refusal(fields: Record<string, string>) {
 }
 const decisionOf = async (id: string) => (await db.select({ raceDayDecision: eventVolunteers.raceDayDecision }).from(eventVolunteers).where(eq(eventVolunteers.id, id)))[0].raceDayDecision;
 
-describe("§NNN «Decizie ziua cursei» on the «Voluntari» list — the column", () => {
+describe("§954 «Decizie ziua cursei» on the «Voluntari» list — the column", () => {
   it("stands right after «Note interne», under the catalogue's heading with its «?»; it does not sort, and a phone's card keeps its line on every row", async () => {
     for (const [locale, catalogue] of [["ro", ro], ["en", en]] as const) {
       const { columns } = tableOf(await listTree({}, locale));
@@ -410,7 +410,7 @@ describe("§NNN «Decizie ziua cursei» on the «Voluntari» list — the column
   });
 });
 
-describe("§NNN setVolunteerDecisionAction — the press", () => {
+describe("§954 setVolunteerDecisionAction — the press", () => {
   it("saves from the row's dialog and comes back to the SAME list address — filters, sort and page — with the toast, the words in neither", async () => {
     const back = `/ro/admin/volunteers?eventId=${raceId}&state=REGISTERED&sort=name&dir=asc&page=2`;
     const press = await saved({ volunteerId: people.dan, decision: "  rezervă\nla start ", returnTo: back });
@@ -519,7 +519,7 @@ describe("§NNN setVolunteerDecisionAction — the press", () => {
   });
 });
 
-describe("§NNN «Decizie pentru ziua cursei» on the person's page", () => {
+describe("§954 «Decizie pentru ziua cursei» on the person's page", () => {
   it("stands in the organizers' part — after «Note interne», before the person's own block — handed the list's own action and this page as its way back", async () => {
     const all = elements(await personTree(people.ana));
     const notes = all.findIndex((element) => element.type === NotesCard);
@@ -591,7 +591,7 @@ describe("§NNN «Decizie pentru ziua cursei» on the person's page", () => {
   });
 });
 
-describe("§NNN the race-day decision among what is kept about a person, and out of the volunteers' files", () => {
+describe("§954 the race-day decision among what is kept about a person, and out of the volunteers' files", () => {
   it("is in «Toate datele unei persoane» — the offer's own row, on the page and in the file (art. 15 GDPR)", async () => {
     const before = await viewPersonData(db, staff.ADMIN!, "dan.ene@example.test", NOW);
     expect(before.volunteerOffers.map((offer) => offer.raceDayDecision)).toEqual([null]);

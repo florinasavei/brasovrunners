@@ -8,7 +8,7 @@ import { COLOR } from "@/theme/brand";
 import { drawnRuns } from "../../helpers/pdf-drawn";
 
 /**
- * §NNN, BR-REQ-038-01 — «Fără linia punctată pe tăietură» (the owner, 2026-11-16: «cand decupez vreau sa arate mai
+ * §955, BR-REQ-038-01 — «Fără linia punctată pe tăietură» (the owner, 2026-11-16: «cand decupez vreau sa arate mai
  * frumos», of the numbers cut from the A4 sheet). One more tick of the bib's design, off until the club makes it: the
  * sheet of two draws no dashed line across the page's middle and keeps the two short marks at the ends of the cut,
  * whether or not «Repere de tăiere pe foaie» is ticked. The sheet is checked through what pdfkit is asked to draw, in
@@ -85,7 +85,7 @@ const TICKS: Array<{ cutMarks: boolean; hideCutLine: boolean }> = [
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("§NNN the tick in the design", () => {
+describe("§955 the tick in the design", () => {
   it("is off in the platform's design, and in a design saved before it existed", () => {
     expect(DEFAULT_BIB_DESIGN.hideCutLine).toBe(false);
     expect(readBibDesign({}).hideCutLine).toBe(false);
@@ -121,7 +121,7 @@ describe("§NNN the tick in the design", () => {
   });
 });
 
-describe("§NNN the sheet of two until the tick is made: the page as it always printed", () => {
+describe("§955 the sheet of two until the tick is made: the page as it always printed", () => {
   it("draws the dashed line across the middle of every page, and nothing else, with neither tick", async () => {
     const { pages } = await sheet({});
     // Three numbers: two pages, the second with its lower half blank — and its cut all the same.
@@ -141,7 +141,7 @@ describe("§NNN the sheet of two until the tick is made: the page as it always p
   });
 });
 
-describe("§NNN «Fără linia punctată pe tăietură» on the sheet of two", () => {
+describe("§955 «Fără linia punctată pe tăietură» on the sheet of two", () => {
   it.each([false, true])("draws no dashed line, and the two end marks once, with «Repere de tăiere pe foaie» %s", async (cutMarks) => {
     const { pages } = await sheet({ design: design({ hideCutLine: true, cutMarks }) });
     expect(pages).toHaveLength(2);
@@ -204,7 +204,7 @@ describe("§NNN «Fără linia punctată pe tăietură» on the sheet of two", (
   });
 });
 
-describe("§NNN one number a page (§79) draws what it drew, however the two ticks stand", () => {
+describe("§955 one number a page (§79) draws what it drew, however the two ticks stand", () => {
   /** The centred A5 number's own top and foot on its A4 page: where the trim guide of §249 goes. */
   const top = (A4_PAGE.height - BIB_PAPER.height) / 2;
   const foot = top + BIB_PAPER.height;
@@ -225,7 +225,7 @@ describe("§NNN one number a page (§79) draws what it drew, however the two tic
   });
 });
 
-describe("§NNN the picture of one number has no cut to draw", () => {
+describe("§955 the picture of one number has no cut to draw", () => {
   it("is the same picture, byte for byte, however the two ticks stand — the designer's preview shows one number, never the sheet", async () => {
     const png = async (ticks: Partial<BibDesign>) => {
       const response = await renderBibImage({ bibNumber: 7, registeredName: "Alergător Unu", eventTitle: SHEET.eventTitle, eventDate: SHEET.eventDate, bandColour: null, design: design(ticks) });

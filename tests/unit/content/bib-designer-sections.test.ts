@@ -155,7 +155,7 @@ describe("§759 the bib designer in named sections", () => {
     expect(html.split('name="event.bibColour"').length - 1).toBe(1);
   });
 
-  it("§NNN offers «Fără linia punctată pe tăietură» right under «Repere de tăiere pe foaie», unticked until the club ticks it, with one line of help", async () => {
+  it("§955 offers «Fără linia punctată pe tăietură» right under «Repere de tăiere pe foaie», unticked until the club ticks it, with one line of help", async () => {
     const part = section(await render(), "number");
     const marks = part.indexOf('name="event.bibDesign.cutMarks"');
     const line = part.indexOf('name="event.bibDesign.hideCutLine"');

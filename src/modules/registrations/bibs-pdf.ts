@@ -53,7 +53,7 @@ import { formatRaceNumber } from "./domain/race-number";
  * cut exactly in half — the owner, 2026-09-23: "they will be printed on an A4 page so we gonna
  * have 2 per page, basically their format is A5". The paper's edge is the bib's edge; a dashed
  * line at the middle of the page is the one cut there is — or, once the club ticks «Fără linia
- * punctată pe tăietură» (§NNN), only the two short marks at that cut's ends (`drawCut`).
+ * punctată pe tăietură» (§955), only the two short marks at that cut's ends (`drawCut`).
  *
  * Each bib is laid out as a race number actually is, rather than as a certificate with a logo in
  * the corner, inside an 18-point white margin (`bib-geometry.ts`): a coloured band across the top,
@@ -912,7 +912,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
    * printer drops the dashes. Never a frame round the card: the paper's edge is the bib's edge,
    * and a line round the card would be cut along and leave a bib smaller than A5.
    *
-   * «Fără linia punctată pe tăietură» (§NNN; the owner, 2026-11-16: «cand decupez vreau sa arate mai
+   * «Fără linia punctată pe tăietură» (§955; the owner, 2026-11-16: «cand decupez vreau sa arate mai
    * frumos»): no dashed line at all — after the cut, pieces of it stayed on the numbers' edges, and on
    * the colour of a band that starts at the cut (`bandBleed`). The two end marks are then drawn
    * whether or not the club ticked them, because a sheet with nothing at the cut cannot be cut

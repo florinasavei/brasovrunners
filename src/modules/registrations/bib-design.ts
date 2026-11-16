@@ -454,7 +454,7 @@ export const bibDesignSchema = z
     /** Solid guide rules at each end of the cut line, for a club that takes the sheet to a printer. */
     cutMarks: z.boolean().catch(false),
     /**
-     * «Fără linia punctată pe tăietură» (§NNN; the owner, 2026-11-16: «cand decupez vreau sa arate mai frumos» — asked
+     * «Fără linia punctată pe tăietură» (§955; the owner, 2026-11-16: «cand decupez vreau sa arate mai frumos» — asked
      * what, «BIB-urile tăiate din A4»): the two-up sheet draws no dashed line across the page's middle, so no piece of it
      * stays on a number's edge after the cut — least of all on a band that starts at the cut (`bandBleed`). The short solid
      * marks at the two ends of the cut are drawn instead, `cutMarks`' own, whether or not that tick is on: a sheet with

@@ -164,7 +164,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     ...all,
     errors: Object.fromEntries(["NOTE_EMPTY", "NOTE_TOO_LONG", "NOT_FOUND", "FORBIDDEN"].map((code) => [code, all.errors[code]])),
   }));
-  // «Decizie ziua cursei» (§NNN): its dialog's refusals, cut the same way — a line too long, a person deleted meanwhile, another
+  // «Decizie ziua cursei» (§954): its dialog's refusals, cut the same way — a line too long, a person deleted meanwhile, another
   // role, and a session that ended while the phone lay on the table: every answer the press can give, as a sentence.
   const decisionRefusal = await refusalMessages({ decision: t("volunteers.decision.label") }).then((all) => ({
     ...all,
@@ -271,7 +271,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   };
 
   /**
-   * «Decizie ziua cursei» in its cell (§NNN; the owner, 2026-11-16, minutes after the notes' column: «si la voluntar trebuie sa am
+   * «Decizie ziua cursei» in its cell (§954; the owner, 2026-11-16, minutes after the notes' column: «si la voluntar trebuie sa am
    * si decizie pt ziua cursei»): the organizers' one line as typed, in the «Mesaj» cell's own style, and under it — or alone
    * while there is none — the press that opens a dialog to write or change it: the row's own «Adaugă o notă» control with other
    * words (`RowNoteDialog`; strings only cross to it, the glyph by its name). The box opens on the line as it stands and may be
@@ -447,7 +447,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     },
     {
       /*
-        «Decizie ziua cursei» (§NNN), right after the organizers' notes: what THEY decided for the person on race day — «vine la
+        «Decizie ziua cursei» (§954), right after the organizers' notes: what THEY decided for the person on race day — «vine la
         8:00 la start», «rezervă» — one short line they keep current; not a note (a dated thread), not the state, not the person's
         answer. The cell is `decisionOf` above: the words and the press that writes or changes them. No `omitEmptyOnPhone`: the
         press lives in the cell, so a phone's card keeps the line for a row with no decision too. It neither sorts nor filters.

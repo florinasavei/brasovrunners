@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.50` | «Decizie ziua cursei»: the organizers' line about each volunteer on race day, a column of the «Voluntari» list (§954) · «Fără linia punctată pe tăietură»: the race numbers' sheet of two without its dashed line, the two end marks kept (§955) |
 | `BR-V4.49` | a picture on «Planul voluntarilor»: uploaded on the plan's page, shown above the points, printed with the plan (§952) · the review of «Planul voluntarilor» and the raffle, answered: an import keeps the plan, the raffle tick travels with a person, a refusal lands on its sentence (§953) |
 | `BR-V4.48` | «Cel mult câte roluri poate bifa o persoană»: a per-event limit on the roles ticked on the public volunteers' form (§951) |
 | `BR-V4.47` | «Note interne» as a column of the «Voluntari» list (§950) |

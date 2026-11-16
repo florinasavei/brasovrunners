@@ -11,7 +11,7 @@ import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { backToCard, eventIdOf, field } from "@/app/[locale]/admin/events/[id]/volunteer-return";
 
 /**
- * «Decizie pentru ziua cursei» (§NNN; the owner, 2026-11-16, of the «Voluntari» list: «si la voluntar trebuie sa am si decizie pt
+ * «Decizie pentru ziua cursei» (§954; the owner, 2026-11-16, of the «Voluntari» list: «si la voluntar trebuie sa am si decizie pt
  * ziua cursei»): the one short line the organizers keep about what THEY decided for a volunteer on race day — written, changed
  * or, by an empty box, cleared — from the dialog on the list's row and from the same form on the person's page.
  *
