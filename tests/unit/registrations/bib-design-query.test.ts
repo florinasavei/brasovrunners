@@ -32,6 +32,9 @@ const EVERYTHING_OFF: BibDesign = {
   // «Trei cifre» (§735): a choice the round trip must carry like the size.
   numberFormat: "pad3",
   namePosition: "above",
+  // «Mărimea numelui» and «Banda dintr-un capăt în altul» (§947): each away from its default.
+  nameScale: "larger",
+  bandBleed: true,
   headerImageSrc: OURS,
   sponsorImageSrc: LOCAL,
   // «Deasupra subsolului» (§750): the choice away from the default «Jos de tot».
@@ -69,6 +72,9 @@ const EVERYTHING_OFF: BibDesign = {
   emergencyPhoneLabel: "Coordonator",
   emergencyPhone2: "0700 000 002",
   emergencyPhone2Label: "Medic + cort",
+  // A third number, a short one, with its name (§947).
+  emergencyPhone3: "112",
+  emergencyPhone3Label: "Urgență",
   // The trail practice off, the badge and the stubs on: each the other way from its default (§750).
   emergencyUpsideDown: false,
   showDistance: true,
@@ -300,6 +306,9 @@ describe("§249 the form, read the same way for the save and for the preview", (
       // Nothing posted for «Cum arată numărul» (§735): today's numbers.
       numberFormat: "plain",
       namePosition: "above",
+      // Nothing posted for the name's size, and the band's box unticked (§947): the name and the band every bib had.
+      nameScale: "normal",
+      bandBleed: false,
       // Nothing posted for the sponsors' place (§750): «Jos de tot», the default; and no profile, no phone.
       sponsorPlace: "bottom",
       showProfile: false,
@@ -321,6 +330,8 @@ describe("§249 the form, read the same way for the save and for the preview", (
       emergencyPhoneLabel: "",
       emergencyPhone2: "",
       emergencyPhone2Label: "",
+      emergencyPhone3: "",
+      emergencyPhone3Label: "",
       // An unposted box is an unticked one: no upside-down phone, no badge, no stubs (§750).
       emergencyUpsideDown: false,
       showDistance: false,

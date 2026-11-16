@@ -417,6 +417,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
                     bodyEn: keptMessage.body.en,
                     askReconfirm: keptMessage.askReconfirm,
                     sendQr: keptMessage.sendQr,
+                    signLink: keptMessage.signLink,
                   },
                 }
               : {})}
@@ -454,6 +455,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
               body: t("participantMessages.body"),
               bodyHelp: t("participantMessages.bodyHelp", { max: String(ORGANIZER_BODY_MAX), list: placeholderList, feedback: "{feedbackLink}" }),
               bodyScope: t("participantMessages.bodyScope"),
+              bodyFormat: t("participantMessages.bodyFormat"),
               identical: t("editor.identical.warning"),
               preview: t("participantMessages.preview"),
               // Named from the constant the preview is rendered with, so the line cannot name somebody else.
@@ -474,6 +476,8 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
               reconfirmHelp: t("participantMessages.reconfirmHelp"),
               sendQr: t("participantMessages.sendQr"),
               sendQrHelp: t("participantMessages.sendQrHelp"),
+              signLink: t("participantMessages.signLink"),
+              signLinkHelp: t("participantMessages.signLinkHelp"),
               reminderFill: {
                 button: t("participantMessages.reminderFill.button"),
                 confirmTitle: t("participantMessages.reminderFill.confirmTitle"),
@@ -522,6 +526,12 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
                 {entry.sendQr && (
                   <Typography variant="body2" data-testid="participant-message-history-qr">
                     {t("participantMessages.historyQr", { count: String(entry.withQr) })}
+                  </Typography>
+                )}
+                {/* «Trimite și linkul pentru semnarea declarației» (§947): that the send was ticked, and for how many who owed it — never who. */}
+                {entry.signLink && (
+                  <Typography variant="body2" data-testid="participant-message-history-sign-link">
+                    {t("participantMessages.historySignLink", { count: String(entry.withSignLink) })}
                   </Typography>
                 )}
                 {/* How far it has left (the decision «Cere reconfirmarea», part two): hidden once the rows were swept. */}

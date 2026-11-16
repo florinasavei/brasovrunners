@@ -117,8 +117,8 @@ test.describe("«Cere reconfirmarea»: the ready reminder, «Vin» and the answe
     await fill.click();
     await expect(field("subjectRo")).toHaveValue("Ne vedem la {eventTitle}? Spune-ne dacă vii");
     await expect(field("subjectEn")).toHaveValue("See you at {eventTitle}? Tell us if you're coming");
-    await expect(field("bodyRo")).toHaveValue(/„Vin” e opțional: dacă nu-l apeși, nu se schimbă nimic la înscrierea ta\.\n\nDacă mai ai de semnat declarația/);
-    await expect(field("bodyEn")).toHaveValue(/“I'm coming” is optional: if you don't press it, nothing about your registration changes\.\n\nIf you still have to sign/);
+    await expect(field("bodyRo")).toHaveValue(/Durează o secundă, iar răspunsul tău ne ajută să pregătim startul\.\n\nDacă mai ai de semnat declarația/);
+    await expect(field("bodyEn")).toHaveValue(/It takes a second, and your answer helps us get the start ready\.\n\nIf you still have to sign/);
     await expect(tick).toBeChecked();
     // The preview, rendered by the server: «Vin» above «Nu mai pot ajunge», on example links.
     await expect.poll(async () => (await previewHtml(page)).includes('data-email-part="reconfirm"'), { timeout: 15_000 }).toBe(true);
@@ -195,6 +195,11 @@ test.describe("«Cere reconfirmarea»: the ready reminder, «Vin» and the answe
     expect(first).not.toBeNull();
     // The link was read, never spent: the cancel is still on the page.
     await expect(fromEmail.getByTestId("manage-person-cancel")).toBeVisible();
+    // …and well apart from the answer (§947; the owner: «ca sa nu se confuzeze cumva ca anuleaza»): somebody who has just
+    // said they are coming must not read «Anulează înscrierea» as part of it. It stood 68 pixels under the answer.
+    const noted = (await fromEmail.getByTestId("manage-reconfirm-done").boundingBox())!;
+    const cancelBlock = (await fromEmail.getByTestId("manage-person-cancel").boundingBox())!;
+    expect(cancelBlock.y - (noted.y + noted.height)).toBeGreaterThanOrEqual(100);
 
     // Back does not press again: the answer replaced the page that pressed, so Back leaves the manage page and stays left.
     await fromEmail.goBack();
@@ -228,7 +233,7 @@ test.describe("«Cere reconfirmarea»: the ready reminder, «Vin» and the answe
       for (let i = 0; i < 2; i += 1) {
         await page.goto(`/en/registrations/manage/${secret}#reconfirm`);
         await expect(page.getByTestId("manage-reconfirm")).toContainText(`Are you coming to The reconfirm cross ${tag}?`);
-        await expect(page.getByTestId("manage-reconfirm")).toContainText("Answering is optional");
+        await expect(page.getByTestId("manage-reconfirm")).toContainText("Your answer tells us who to expect at the start.");
         const yes = page.getByTestId("manage-reconfirm-yes");
         await expect(yes).toHaveText("Yes, I'm coming to the race");
         expect((await yes.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);

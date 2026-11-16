@@ -34,14 +34,16 @@ import {
   bibEmergencyFit,
   bibExtrasHeight,
   bibExtrasTurn,
+  bibNameFit,
   bibNameReserve,
+  bibNameStrip,
   bibNumberArea,
   bibNumberFit,
   bibProfileRowHeight,
   bibStubScale,
 } from "./bib-geometry";
 import { type BibEliteEntry, bibElite, bibEliteParts } from "./bib-elite";
-import { bibHeader } from "./bib-header";
+import { bibHeader, bibTitleWidth } from "./bib-header";
 import type { BibRow } from "./bibs";
 import { formatRaceNumber } from "./domain/race-number";
 
@@ -559,7 +561,13 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     } else {
       // The band first, across the card: it is what says which race this is before anybody is
       // close enough to read a word of it.
-      doc.rect(left, top, BIB_CARD.width, L.bandHeight).fill(header.band);
+      /*
+        «Banda dintr-un capăt în altul» (§947): the same band, reaching the paper's left, right and top edges through the
+        white margin (`BIB_MARGIN`) — its foot, the lockup and the race where they always were. Only the coloured band:
+        a header picture and a member's card keep their own shapes.
+      */
+      if (design.bandBleed) doc.rect(slot.x, slot.y, BIB_PAPER.width, BIB_MARGIN + L.bandHeight).fill(header.band);
+      else doc.rect(left, top, BIB_CARD.width, L.bandHeight).fill(header.band);
       drawHeaderWords(header.bandText, header.band, header.words);
     }
 
@@ -620,7 +628,9 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     */
     // An elite bib has no name strip (§895): its name is in the number's place.
     const showName = elite === null && design.showName;
-    const nameBlock = showName ? L.nameBlock : 0;
+    // «Mărimea numelui» (§947): the strip of the size the club chose — its type, its height, the name's offset in it.
+    const nameStrip = bibNameStrip(design.nameScale);
+    const nameBlock = showName ? nameStrip.block : 0;
     const nameAbove = showName && design.namePosition === "above";
     // As the event writes it (§735): «007» under «Trei cifre»; its length sizes it, as ever. An elite bib's own number, or none.
     const digits =
@@ -649,7 +659,8 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     const registeredName = row?.registeredName ?? null;
     const drawName = (stripTop: number) => {
       if (registeredName === null) {
-        const lineY = stripTop + L.blankLineTop;
+        // A taller strip (§947) carries the rule and its mark down with it, to where a name of that size would stand.
+        const lineY = stripTop + L.blankLineTop + nameStrip.blankShift;
         const lineLeft = left + (BIB_CARD.width - L.blankLineWidth) / 2;
         doc
           .moveTo(lineLeft, lineY)
@@ -662,7 +673,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
             .font("body")
             .fontSize(L.blankMarkSize)
             .fillColor(COLOR.inkMuted)
-            .text(input.blankMark, left + L.inset + nameReserve, stripTop + L.blankMarkTop, {
+            .text(input.blankMark, left + L.inset + nameReserve, stripTop + L.blankMarkTop + nameStrip.blankShift, {
               width: BIB_CARD.width - 2 * (L.inset + nameReserve),
               align: "center",
               lineBreak: false,
@@ -671,12 +682,15 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
         }
         return;
       }
+      // A larger size never cuts a name the normal one printed whole (§947): a long name is set smaller, in its line's middle.
+      const nameWidth = BIB_CARD.width - 2 * (L.inset + nameReserve);
+      const fit = bibNameFit(registeredName, nameStrip, nameWidth, bibTitleWidth);
       doc
         .font("bold")
-        .fontSize(L.nameSize)
+        .fontSize(fit.size)
         .fillColor(ink)
-        .text(registeredName, left + L.inset + nameReserve, stripTop + L.nameTop, {
-          width: BIB_CARD.width - 2 * (L.inset + nameReserve),
+        .text(registeredName, left + L.inset + nameReserve, stripTop + fit.top, {
+          width: nameWidth,
           align: "center",
           lineBreak: false,
           ellipsis: true,
@@ -711,7 +725,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     }
 
     // The name under the number, large enough to read at a finish line.
-    if (showName && !nameAbove) drawName(regionFoot - stripeHeight - extrasHeight - L.nameBlock);
+    if (showName && !nameAbove) drawName(regionFoot - stripeHeight - extrasHeight - nameBlock);
 
     /*
       The route's profile (§750): a row of its own under the name, `profileHeight` points, so it cannot

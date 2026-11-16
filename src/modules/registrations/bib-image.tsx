@@ -40,14 +40,16 @@ import {
   bibEmergencyFit,
   bibExtrasHeight,
   bibExtrasTurn,
+  bibNameFit,
   bibNameReserve,
+  bibNameStrip,
   bibNumberArea,
   bibNumberFit,
   bibProfileRowHeight,
   bibStubScale,
 } from "./bib-geometry";
 import { type BibEliteEntry, bibElite, bibEliteParts } from "./bib-elite";
-import { bibHeader } from "./bib-header";
+import { bibHeader, bibTitleWidth } from "./bib-header";
 import { formatRaceNumber } from "./domain/race-number";
 
 /**
@@ -518,6 +520,8 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const asMember = elite === null && input.member === true && design.member.enabled;
   // An elite bib has no name strip: its name is in the number's place.
   const showName = elite === null && design.showName;
+  // «Mărimea numelui» (§947): the strip of the size the club chose, as the sheet reads it.
+  const nameStrip = bibNameStrip(design.nameScale);
   const band = asMember ? bibMemberBandColour(design.member, input.bandColour) : bibBandColour(input.bandColour);
   const bandText = bandTextColour(band);
   const memberLabel = asMember ? bibMemberLabel(design.member, input.memberLabelDefault ?? "") : "";
@@ -590,7 +594,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   // under the band leave it — the sheet's rule — then to pixels (§249, §750).
   const numberArea = bibNumberArea({
     footer: footerHeight,
-    name: showName ? L.nameBlock : 0,
+    name: showName ? nameStrip.block : 0,
     sponsors: sponsorRow,
     stripe: stripe ? L.memberStripeHeight : 0,
     extras: bibExtrasHeight(profileRow !== null, emergency !== null, bibFiguresBelow(profileRow)),
@@ -616,15 +620,17 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const badgeInk = asCard ? COLOR.ink : band;
   /**
    * The name, above the number or below it — and nowhere when the club switched it off — in the
-   * strip the sheet gives it, at the sheet's size, cut with "…" where the sheet cuts it.
+   * strip the sheet gives it, at the sheet's size, cut with "…" where the sheet cuts it. Under a larger
+   * size a long name is set smaller, never cut sooner than the normal size cuts it (§947): the sheet's fit.
    */
+  const nameFit = bibNameFit(input.registeredName ?? "", nameStrip, BIB_CARD.width - 2 * (L.inset + nameReserve), bibTitleWidth);
   const name = showName ? (
     <div
       style={{
         display: "flex",
         flexShrink: 0,
-        height: px(L.nameBlock),
-        padding: `${px(L.nameTop)}px ${px(L.inset + nameReserve)}px 0 ${px(L.inset + nameReserve)}px`,
+        height: px(nameStrip.block),
+        padding: `${px(nameStrip.top)}px ${px(L.inset + nameReserve)}px 0 ${px(L.inset + nameReserve)}px`,
         justifyContent: "center",
       }}
     >
@@ -636,7 +642,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
           <div
             style={{
               display: "flex",
-              marginTop: px(L.blankLineTop - L.nameTop) - px(L.blankLineWeight) / 2,
+              marginTop: px(L.blankLineTop + nameStrip.blankShift - nameStrip.top) - px(L.blankLineWeight) / 2,
               width: px(L.blankLineWidth),
               height: px(L.blankLineWeight),
               background: COLOR.ink,
@@ -656,7 +662,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
           ) : null}
         </div>
       ) : (
-        <div style={{ ...ONE_LINE, fontSize: px(L.nameSize), fontWeight: 700, color: ink }}>{input.registeredName}</div>
+        <div style={{ ...ONE_LINE, marginTop: px(nameFit.top - nameStrip.top), fontSize: px(nameFit.size), fontWeight: 700, color: ink }}>{input.registeredName}</div>
       )}
     </div>
   ) : null;
@@ -782,6 +788,23 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
               />
             ) : null}
           </div>
+        ) : null}
+        {/* «Banda dintr-un capăt în altul» (§947): the band's colour through the white margin to the paper's left, right
+            and top edges, behind the band itself — which keeps its place, its lockup and its race. Never under a header
+            picture or a member's card: only the coloured band reaches the edge, as on the sheet. */}
+        {design.bandBleed && !header && !asCard ? (
+          <div
+            data-testid="bib-band-bleed"
+            style={{
+              display: "flex",
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: width - 2 * PAPER_EDGE,
+              height: px(BIB_MARGIN + L.bandHeight) - PAPER_EDGE,
+              background: band,
+            }}
+          />
         ) : null}
         {/* The club's own header picture across the top (§249), or the coloured band with the
             lockup and the race on it. The picture replaces the band whole: a band *and* a

@@ -281,6 +281,19 @@ describe("the list's repository (§839)", () => {
     expect(names(byEvent)[0]).toBe("Bogdan Vasile");
   });
 
+  it("orders by age and by city, whoever gave none last either way (§947)", async () => {
+    await db.update(eventVolunteers).set({ age: 34, city: "Codlea" }).where(eq(eventVolunteers.id, people.ana));
+    await db.update(eventVolunteers).set({ age: 19, city: "Săcele" }).where(eq(eventVolunteers.id, people.stefan));
+    // Typed without its capital: it still stands among the B's.
+    await db.update(eventVolunteers).set({ age: 52, city: "bran" }).where(eq(eventVolunteers.id, people.dana));
+    const sorted = async (sort: VolunteerSortKey, dir: "asc" | "desc") => names(await listVolunteersForAdmin(db, { eventId: raceId }, { ...firstPage, sort, dir }, "ro"));
+    // Mihai said neither: last, whichever way the column reads.
+    expect(await sorted("age", "asc")).toEqual(["Ștefan Tănase", "Ana Pop", "Dana Ionescu", "Mihai Anulat"]);
+    expect(await sorted("age", "desc")).toEqual(["Dana Ionescu", "Ana Pop", "Ștefan Tănase", "Mihai Anulat"]);
+    expect(await sorted("city", "asc")).toEqual(["Dana Ionescu", "Ana Pop", "Ștefan Tănase", "Mihai Anulat"]);
+    expect(await sorted("city", "desc")).toEqual(["Ștefan Tănase", "Ana Pop", "Dana Ionescu", "Mihai Anulat"]);
+  });
+
   it("summarises the scope by state and how many wait for a role, blind to the state and the role", async () => {
     expect(await summariseVolunteersForAdmin(db, { eventId: raceId })).toEqual({
       total: 4,
@@ -363,6 +376,44 @@ describe("the list page (§839)", () => {
     expect(page).toContain("Voluntari: 4");
     expect(page).toContain("De repartizat: 1");
     expect(page).toContain("Confirmat: 1");
+  });
+
+  it("shows what each person wrote for the organizers in a column of its own, whole, and nothing for whoever wrote none (§947)", async () => {
+    const words = "Pot ajuta doar până la 12.\nVin cu mașina, pot duce apă la punctul de pe traseu.";
+    await db.update(eventVolunteers).set({ message: words }).where(eq(eventVolunteers.id, people.ana));
+    const page = await listPage();
+    // Ana's words, whole and with their line break, once in the table and once in her phone card; the three others have no cell.
+    const cells = [...page.matchAll(/data-testid="volunteer-message"[^>]*>([^<]*)</g)].map((match) => match[1]);
+    expect(cells).toEqual([words, words]);
+    // The heading and what it means, behind its «?».
+    expect(page).toContain(ro.Admin.volunteers.screen.columnMessage);
+    expect(page).toContain(ro.Admin.volunteers.screen.messageHint);
+    // Free text is no sort key: the heading is words, not a link.
+    expect(page).not.toContain("sort=message");
+
+    // With nobody's words, the column stands empty: no cell is drawn for anybody.
+    await db.update(eventVolunteers).set({ message: null }).where(eq(eventVolunteers.id, people.ana));
+    expect(await listPage()).not.toContain('data-testid="volunteer-message"');
+  });
+
+  it("names each person's age and city in columns of their own, sortable, «—» for whoever gave none (§947)", async () => {
+    await db.update(eventVolunteers).set({ age: 34, dateOfBirth: "1992-05-02", city: "Săcele" }).where(eq(eventVolunteers.id, people.ana));
+    const page = await listPage();
+    // Each of the four rows, in the table and in the phone cards.
+    const cells = (testId: string) => [...page.matchAll(new RegExp(`data-testid="${testId}"[^>]*>([^<]*)<`, "g"))].map((match) => match[1]);
+    expect(cells("volunteer-age").sort()).toEqual(["34", "34", "—", "—", "—", "—", "—", "—"]);
+    expect(cells("volunteer-city").sort()).toEqual(["Săcele", "Săcele", "—", "—", "—", "—", "—", "—"]);
+    // The headings sort, the youngest and the A's first; the age's says which age it is.
+    expect(page).toContain('href="/ro/admin/volunteers?sort=age&amp;dir=asc"');
+    expect(page).toContain('href="/ro/admin/volunteers?sort=city&amp;dir=asc"');
+    expect(page).toContain(ro.Admin.volunteers.screen.ageHint);
+    expect(page).toContain(ro.Admin.volunteers.screen.tableCaption);
+    // Sorted by the age, the one person who said it comes first.
+    const youngestFirst = await listPage({ sort: "age", dir: "asc" });
+    expect(youngestFirst.indexOf("Ana Pop")).toBeLessThan(youngestFirst.indexOf("Dana Ionescu"));
+    const english = await listPage({}, "en");
+    expect(english).toContain(en.Admin.registrations.columnAge);
+    expect(english).toContain(en.Admin.registrations.columnCity);
   });
 
   it("spans every event on «all», and widens a name search to every event, saying so", async () => {

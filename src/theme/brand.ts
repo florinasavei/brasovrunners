@@ -312,6 +312,26 @@ export const EMAIL_EMPHASIS = {
 } as const;
 
 /**
+ * The organizers' own words in «Trimite un mesaj participanților» (§947; the owner, 2026-11-16: «as vrea sa aiba alt
+ * font si alt backround acest mesaj, sa fie mai vizibil»): a panel of their own, so the eye tells what the organizers
+ * wrote from what every message says — the club's secondary colour walked pale behind the words, its ink step as the
+ * left edge, the body's ink for the words, and a serif face that no other part of an email wears. No new colour: both
+ * are the secondary look's own shades (`PALETTE.secondaryLook`), so another club's emails wear its own.
+ *
+ * The face is one every mail client has, with ș, ț, ă, â and î in it: a webfont is what a mail client drops. Single
+ * quotes inside it, since it is written into a `style="…"` attribute.
+ *
+ * The pairs hold as sent and as Gmail's app inverts them — `tests/unit/notifications/organizer-words-panel.test.ts`
+ * asserts the words on the panel, the edge beside it and the panel against the card.
+ */
+export const EMAIL_ORGANIZER_WORDS = {
+  panel: PALETTE.secondaryLook.light.accentTint,
+  edge: PALETTE.secondaryLook.light.accent,
+  ink: COLOR.ink,
+  font: "Georgia,'Times New Roman',Times,serif",
+} as const;
+
+/**
  * The club kit's gradient: deep navy at the shoulders, running lighter and more cyan down the
  * body, to white at the hem. It is the most distinctive thing the club already owns, and the
  * one part of the identity that is theirs rather than generic.

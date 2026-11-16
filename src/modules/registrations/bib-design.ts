@@ -77,6 +77,14 @@ export const BIB_NAME_POSITIONS = ["below", "above"] as const;
 export type BibNamePosition = (typeof BIB_NAME_POSITIONS)[number];
 
 /**
+ * «Mărimea numelui» (§947; the owner, 2026-11-16: «vreau ca numele alergatorului sa fie un pic mai mare»): `normal`,
+ * the 24 points every number printed, or one of two larger steps — each takes a taller strip from the number's area
+ * (`bib-geometry.ts#BIB_NAME_STRIPS`). A design saved before this key existed reads `normal` and prints as it did.
+ */
+export const BIB_NAME_SCALES = ["normal", "large", "larger"] as const;
+export type BibNameScale = (typeof BIB_NAME_SCALES)[number];
+
+/**
  * A picture this site stored, and nothing else.
  *
  * The same rule the editorial body's images follow: one of this application's own WebP
@@ -294,13 +302,20 @@ export type BibSponsorPlace = (typeof BIB_SPONSOR_PLACES)[number];
 export const BIB_EMERGENCY_PHONE_MAX = 30;
 
 /**
+ * The fewest digits a number on the bib may have (§947; the owner, 2026-11-16, of the three numbers a trail race prints:
+ * «Organizator…, Salvamont…, Urgenta: 112»): three, so the emergency number itself can be one of them. It was six, the
+ * public phone's floor, and «112» read as no number at all.
+ */
+export const BIB_EMERGENCY_MIN_DIGITS = 3;
+
+/**
  * The emergency phone as the bib keeps it (§750): trimmed, runs of spaces made one, and only a value
  * written like a telephone number (`isPhoneNumberShaped`, the check «Telefon public» applies) — anything
  * else reads as none, never a bib that fails to print, like every field here.
  */
 export function bibEmergencyPhone(value: string): string {
   const typed = value.trim().replace(/\s+/g, " ");
-  return typed.length <= BIB_EMERGENCY_PHONE_MAX && isPhoneNumberShaped(typed) ? typed : "";
+  return typed.length <= BIB_EMERGENCY_PHONE_MAX && isPhoneNumberShaped(typed, BIB_EMERGENCY_MIN_DIGITS) ? typed : "";
 }
 
 /**
@@ -316,15 +331,25 @@ export const BIB_EMERGENCY_NAME_MAX = 24;
 
 /** The emergency line's words as the design keeps them (§759). Absent keys read as none: a design saved before them prints as it did. */
 type BibEmergencyDesign = Pick<BibDesign, "showEmergency" | "emergencyPhone"> &
-  Partial<Pick<BibDesign, "emergencyLabel" | "emergencyPhoneLabel" | "emergencyPhone2" | "emergencyPhone2Label">>;
+  Partial<Pick<BibDesign, "emergencyLabel" | "emergencyPhoneLabel" | "emergencyPhone2" | "emergencyPhone2Label" | "emergencyPhone3" | "emergencyPhone3Label">>;
+
+/** Between two numbers of the line (§947): a bar, as the race number the owner showed prints it — a name may hold a «/» itself («Ajutor start/finish»). */
+export const BIB_EMERGENCY_SEPARATOR = " | ";
 
 /**
- * The line printed on every number (§750, amending it §759): «Urgențe: 07xx xxx xxx», or with the club's
- * label and two numbers, each with its own name, «Urgențe: Coordonator 07xx xxx xxx / Medic 07yy yyy yyy» — on
- * one line, as the owner's trail example prints it. `fallback` is the sheet's language's word, used when
- * the club typed no label. Null while the tick is off or no valid number was typed; a second number alone
- * prints alone. The club's organizers' numbers, typed here: never a participant's own emergency contact,
- * which is personal data on a visible bib that the privacy notice does not describe.
+ * The line printed on every number (§750, amending it §759 and §947): up to three numbers on one line, each after
+ * its own name and a colon, a bar between them — «Ajutor start/finish: 07xx xxx xxx | Ajutor traseu: 07yy yyy yyy |
+ * Salvamont: 07zz zzz zzz» (the owner, 2026-11-16: «de fapt vreau asa: ajutor start/finish: , ajutor traseu: ,
+ * salvamont, cu label customizabil»). Until §947 a name stood before its number with a space and the numbers were
+ * parted by « / ».
+ *
+ * The word before them all is the club's label when it typed one. With none, the sheet's language's own word
+ * (`fallback`, «Urgențe» / "Emergency") prints only while some number stands without a name — «Urgențe: 07xx xxx
+ * xxx» — and nothing is printed before numbers that each say whose they are.
+ *
+ * Null while the tick is off or no valid number was typed; the numbers typed print in their order, whichever
+ * boxes hold them. The club's organizers' numbers, typed here: never a participant's own emergency contact, which
+ * is personal data on a visible bib that the privacy notice does not describe.
  */
 export function bibEmergencyLine(design: BibEmergencyDesign, fallback: string): string | null {
   if (!design.showEmergency) return null;
@@ -332,13 +357,12 @@ export function bibEmergencyLine(design: BibEmergencyDesign, fallback: string): 
     [
       [design.emergencyPhoneLabel ?? "", design.emergencyPhone],
       [design.emergencyPhone2Label ?? "", design.emergencyPhone2 ?? ""],
+      [design.emergencyPhone3Label ?? "", design.emergencyPhone3 ?? ""],
     ] as const
-  )
-    .filter(([, phone]) => phone !== "")
-    .map(([name, phone]) => (name ? `${name} ${phone}` : phone));
+  ).filter(([, phone]) => phone !== "");
   if (numbers.length === 0) return null;
-  const label = design.emergencyLabel || fallback;
-  const joined = numbers.join(" / ");
+  const joined = numbers.map(([name, phone]) => (name ? `${name}: ${phone}` : phone)).join(BIB_EMERGENCY_SEPARATOR);
+  const label = design.emergencyLabel || (numbers.every(([name]) => name !== "") ? "" : fallback);
   return label ? `${label}: ${joined}` : joined;
 }
 
@@ -401,6 +425,16 @@ export const bibDesignSchema = z
      */
     numberFormat: z.enum(RACE_NUMBER_FORMATS).catch("plain"),
     namePosition: z.enum(BIB_NAME_POSITIONS).catch("below"),
+    /** «Mărimea numelui» (§947): today's size, or one of two larger; absent reads today's. */
+    nameScale: z.enum(BIB_NAME_SCALES).catch("normal"),
+    /**
+     * «Banda dintr-un capăt în altul» (§947; the owner, 2026-11-16: «banda cu Brasov runners vreau sa fie dintr-un capat
+     * in altul, ca si fundal»): the coloured band reaches the paper's left, right and top edges instead of stopping at the
+     * white margin (§338). Off by default — an office printer cannot print the last millimetres of a page, and the upper
+     * number of a sheet would then show a white edge the lower one does not: the tick is for a sheet taken to a print shop.
+     * The lockup and the race stay where they are; a header picture and a member's card are not stretched.
+     */
+    bandBleed: z.boolean().catch(false),
     /** A picture across the top instead of the coloured band, or null for the band (§249). */
     headerImageSrc: storedPicture,
     /** A strip of sponsors, or null; where it sits is `sponsorPlace`. */
@@ -491,6 +525,9 @@ export const bibDesignSchema = z
     /** A second number (§759), checked as the first is, with its own label; empty prints one number. */
     emergencyPhone2: z.string().transform(bibEmergencyPhone).catch(""),
     emergencyPhone2Label: emergencyName,
+    /** A third number (§947), checked as the others are, with its own label — «Urgență 112» beside the organizers' and the mountain rescue's. */
+    emergencyPhone3: z.string().transform(bibEmergencyPhone).catch(""),
+    emergencyPhone3Label: emergencyName,
     /** «Tipărit invers» (§750): the phone printed upside down, to be read looking down at the chest; on by default, the trail practice. */
     emergencyUpsideDown: z.boolean().catch(true),
     /** «Distanța pe număr» (§750): the event's distance as a badge in the header's right corner («21K»). */
@@ -526,6 +563,8 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   numberScale: "medium",
   numberFormat: "plain",
   namePosition: "below",
+  nameScale: "normal",
+  bandBleed: false,
   headerImageSrc: null,
   sponsorImageSrc: null,
   sponsorPlace: "bottom",
@@ -552,6 +591,8 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   emergencyPhoneLabel: "",
   emergencyPhone2: "",
   emergencyPhone2Label: "",
+  emergencyPhone3: "",
+  emergencyPhone3Label: "",
   emergencyUpsideDown: true,
   showDistance: false,
   numberStubs: false,

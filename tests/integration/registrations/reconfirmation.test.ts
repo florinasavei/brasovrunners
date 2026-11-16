@@ -338,7 +338,7 @@ describe("the send: «Cere reconfirmarea» asks, and only with the tick", () => 
     expect(asking.html).toContain("/ro/EXAMPLE#reconfirm");
     expect(asking.html).toContain("/ro/EXAMPLE#cancel");
     expect(asking.html).toContain(">Vin</a>");
-    expect(asking.html).toContain("Ne spui că vii. Nu e obligatoriu.");
+    expect(asking.html).toContain("Ne spui că vii: așa știm pe cine așteptăm la start.");
     // «Vin» above «Nu mai pot ajunge».
     expect(asking.html.indexOf('data-email-part="reconfirm"')).toBeLessThan(asking.html.indexOf('data-email-part="cannot-come"'));
     const english = await previewParticipantMessage(db, organizer, { eventId, locale: "en", ...WORDS, askReconfirm: true });
@@ -360,7 +360,7 @@ describe("the email: «Vin» on the cancel's own token, never on a club copy", (
     const vin = vinTokenOf(email.text);
     expect(vin).not.toBeNull();
     expect(cancelTokenOf(email.text)).toBe(vin);
-    expect(email.text).toContain("Ne spui că vii. Nu e obligatoriu.");
+    expect(email.text).toContain("Ne spui că vii: așa știm pe cine așteptăm la start.");
     expect(email.html).toContain("/brand/email-reconfirm.png");
     // English first for an English registrant, with its own words.
     const english = await emailTo(bogdan.id);
@@ -440,7 +440,7 @@ describe("the manage page: the GET asks and writes nothing, the POST records onc
     expect(html).toContain('id="reconfirm"');
     expect(html).toContain("Vii la Crosul Tâmpei?");
     expect(html).toContain("Da, vin la cursă");
-    expect(html).toContain(ro.Registrations.reconfirm.optional.replace("{button}", "Da, vin la cursă"));
+    expect(html).toContain(ro.Registrations.reconfirm.why);
     expect(html).toContain(ro.Registrations.reconfirm.cannot.replace(/„/g, "„"));
     expect((await asks()).every((row) => row.reconfirmedAt === null)).toBe(true);
     expect((await db.select().from(auditLogs)).length).toBe(auditsBefore);
@@ -575,7 +575,7 @@ describe("one press counts: the page presses «Da, vin la cursă» by itself onl
     const html = await managePage(vinTokenOf((await emailTo(ana.id)).text)!);
     expect(html).toContain("Da, vin la eveniment");
     expect(html).not.toContain("Da, vin la cursă");
-    expect(html).toContain(ro.Registrations.reconfirm.optional.replace("{button}", "Da, vin la eveniment"));
+    expect(html).toContain(ro.Registrations.reconfirm.why);
   });
 });
 

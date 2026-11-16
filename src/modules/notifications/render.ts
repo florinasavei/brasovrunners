@@ -45,7 +45,14 @@ import { type HoldLapsedNext, holdLapsedNext } from "./domain/hold-lapsed";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { declarationAsksMinorToSign } from "@/modules/legal-documents/repository";
 import { missingAnswers } from "@/modules/registrations/missing-answers";
-import { organizerQrApplies, readOrganizerAskReconfirm, readOrganizerMessagePayload, readOrganizerSendQr } from "./domain/organizer-message";
+import {
+  organizerQrApplies,
+  organizerSignLinkApplies,
+  readOrganizerAskReconfirm,
+  readOrganizerMessagePayload,
+  readOrganizerSendQr,
+  readOrganizerSignLink,
+} from "./domain/organizer-message";
 import { registrationStatusWords } from "./domain/registration-status-words";
 import { readEmailCopyForSending } from "./email-copy";
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
@@ -1720,6 +1727,41 @@ async function renderRow(
         data.cannotComeUrl = cannotComeUrlOf(base);
         // The organizer's message lands here (it mints no token of its own): «Vin» on the same one.
         if (reconfirm && cannotComeFor.id === row.registrationId) data.reconfirmUrl = reconfirmUrlOf(base);
+      }
+      /*
+        «Semnează declarația» (§947; the owner, 2026-11-16: «vreau ca cei care nu au semnat declaratia sa o poata semna»):
+        on an organizer's message whose own row carries the send's flag — set only on the rows of registrations that owed
+        the declaration when it was queued — and only for a registration that owes it still, as the email leaves, where
+        «Nu mai pot ajunge» goes too (`organizerSignLinkApplies`). The declaration request's own link, minted the same
+        way: `COMPLETE_DECLARATION`, single use, hashed at rest, alive until the start (§160) — the page it opens asks
+        whatever the request's page asks, and nothing here signs, confirms or moves anything. It replaces the
+        registration's earlier declaration link, as every newer link does (BR-REQ-036-02 criterion 5), and any offer link
+        left from before the hold (§643): the newest email about the declaration is the one whose button works.
+      */
+      if (
+        eventState &&
+        cannotComeFor.id === row.registrationId &&
+        organizerSignLinkApplies({
+          signLink: row.messageType === "ORGANIZER_MESSAGE" && readOrganizerSignLink(row.payloadJson),
+          messageType: row.messageType,
+          clubCopy,
+          recipientParticipantId: row.participantId,
+          registration: cannotComeFor,
+          event: eventState,
+          now,
+        })
+      ) {
+        const issued = await issueActionToken(db, {
+          participantId: row.participantId,
+          registrationId: cannotComeFor.id,
+          purpose: "COMPLETE_DECLARATION",
+          // The start is ahead: `organizerSignLinkApplies` asked it.
+          expiresAt: eventState.startsAt,
+          now,
+          alsoReplaces: ["WAITLIST_OFFER"],
+        });
+        const path = getPathname({ locale, href: { pathname: ROUTE_BY_PURPOSE.COMPLETE_DECLARATION, params: { token: issued.secret } } });
+        data.signDeclarationUrl = `${env.APP_BASE_URL}${path}`;
       }
     }
   }
