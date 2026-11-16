@@ -107,7 +107,8 @@ test.describe("«Note interne» for volunteers", () => {
       expect(page.url()).not.toContain("mașină");
       await expect(mark).toContainText("1 notă");
       expect((await mark.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
-      await expect(page.locator("#main")).not.toContainText("dimineața");
+      // The words stand in the row itself, in the «Note interne» column (§950): a phone has no pointer to hold over the marker.
+      await expect(page.locator('#main [data-testid="volunteer-notes"]:visible')).toContainText(words);
       // …and under a mouse's pointer the marker says the note's own words (§945), as the registrations list's does; away from it, gone.
       if (test.info().project.name === "desktop") {
         await mark.hover();
@@ -143,6 +144,8 @@ test.describe("«Note interne» for volunteers", () => {
       await page.goto(listUrl(seeded));
       await hydrated(page);
       await expect(page.locator('#main [data-testid="notes-mark"]')).toHaveCount(0);
+      // …and the column's cell went with the note.
+      await expect(page.locator('#main [data-testid="volunteer-notes"]')).toHaveCount(0);
       expect(hydrationWarnings).toEqual([]);
     } finally {
       await cleanup(seeded);

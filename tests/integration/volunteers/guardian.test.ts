@@ -890,7 +890,8 @@ describe("§768 volunteers under eighteen and their guardian", () => {
       const id = await minorByHand(event.id, role.id, { birthDate: "15.11.2010" });
       expect(await row(id)).toMatchObject({ dateOfBirth: "2010-11-15", age: 15, guardianName: "Maria Popescu" });
       const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "volunteer.added"));
-      expect(JSON.stringify(audit.metadataJson)).not.toMatch(/2010|birthDate/);
+      // The date in either shape, never the bare year: the trail holds ids, and a random UUID can spell «2010» (it did, in CI, 2026-11-16).
+      expect(JSON.stringify(audit.metadataJson)).not.toMatch(/2010-11-15|15\.11\.2010|birthDate/);
       // A correction of the date: the age follows it, the trail names the box.
       await changeVolunteer(
         db,
@@ -901,7 +902,7 @@ describe("§768 volunteers under eighteen and their guardian", () => {
       expect(await row(id)).toMatchObject({ dateOfBirth: "2009-11-15", age: 16 });
       const edited = (await db.select().from(auditLogs).where(eq(auditLogs.action, "volunteer.edited")))[0];
       expect((edited.metadataJson as { fields: string[] }).fields).toEqual(["birthDate"]);
-      expect(JSON.stringify(edited.metadataJson)).not.toMatch(/2009/);
+      expect(JSON.stringify(edited.metadataJson)).not.toMatch(/2009-11-15|15\.11\.2009/);
     });
 
     it("keeps the age of a row from before the date when its box is left empty — the guardian is not lost over a corrected telephone number — and a date typed replaces it", async () => {

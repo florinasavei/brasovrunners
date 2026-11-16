@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.47` | «Note interne» as a column of the «Voluntari» list (§950) |
 | `BR-V4.46` | «Ambasador» beside «Elită»; «Șterge» on an ended invitation and on a list of the sponsors' register; the registrations above the page's folds; the shut door's sentence, friendlier or the event's own; the volunteers' own numbers; a runner turned volunteer and back; the list for a raffle; the first name alone on an elite registration's bib (§948) · «Planul voluntarilor»: who stands at which point of the route; «Avem tombolă», «Participă la tombolă» and «Prezent» on the raffle's list (§949) |
 | `BR-V4.45` | the volunteers' age, city and message on the list; a link to sign the declaration in the organizers' message; that message as a panel of its own, with bold; «Am notat că vii» apart from the cancel; «Vin» no longer called optional; three named emergency numbers on the bib; «Mărimea numelui» and «Banda dintr-un capăt în altul» on the bib (§947) |
 | `BR-V4.44` | the list for sponsors as one closed fold; an example QR in the email previews; «Mărește» on the composer's preview (§946) |

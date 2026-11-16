@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.46-2026-11-16 -->
+<!-- PROJECT_BASELINE: BR-V4.47-2026-11-16 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.46-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.47-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -29966,3 +29966,19 @@ Baseline `BR-V4.46-2026-11-16`.
 **Not done.** A line of the race's elite list (a name on a bib, nobody registered, §895) is still not in the file and is given no number by itself: a registration marked «Elită» has its race number like any other and is in. The tick on the registration's own page and in the registrations' Excel and CSV. `CLAUDE.md`'s row of staff verbs names the tick in four words — «changes only the raffle tick», of the Organizer: the file is at the size it may be, and the rule is `AGENTS.md` §15.11's.
 
 Baseline `BR-V4.46-2026-11-16`.
+
+## 950. «Note interne» as a column of the «Voluntari» list: the notes' words in the row itself, for a phone (amending §945 and §947)
+
+**The owner, 2026-11-16, of the «Voluntari» list, an hour after its «Mesaj» column went live:** «la voluntari pe lângă mesajul nostru vreau să văd și notele interne ale noastre».
+
+**What was there.** The organizers' own notes about a volunteer («Note interne» for volunteers) show on the list as a marker beside the name — «2 note» — which opens the person's card; since §945 the marker's tooltip says the notes' words. A tooltip needs a pointer held over the marker. The owner works the list from a phone, where there is none: the words were a page away again, on the one device the list is read on this week. The person's own message got its column that morning (§947) for the same reason.
+
+**Decision.** A column «Note interne» right after «Mesaj». It says exactly what the marker's tooltip says, from the same function (`notesTip`) and the list's one grouped read of the notes: the three newest live notes, newest first, each with its day and hour, a note's own line breaks kept, one over 280 characters cut, and the older ones counted («… și încă 2 note»). No author's name — who wrote a note is the card's to say, as §945 decided. A row with no note has an empty cell in the table and no line at all on a phone's card. The heading has its «?», does not sort, and «Coloane» hides the column like any other.
+
+**What does not change.** The marker beside the name stays, and stays the way to the person's card, where every note is whole, with its author and its «Șterge». The notes are read by the roles that manage volunteers and by nobody else (`canManageVolunteers`, asserted by the notes' service on the same read as before); no query was added, and no new file reads the notes — the readers' guard lists the files it listed. A volunteer's notes still reach no public page, email, badge, desk screen or person's own data.
+
+**Refused.** Every note whole in the row: a note holds up to the limit of a registration's note, and a person with a thread of them would make a row a screen high — the list is where the organizers find a person, the card where they read about one. The author's name in the cell: §945's reason stands. A second read for the column: the list had the notes already.
+
+**Tests.** `tests/integration/volunteers/volunteer-notes-screens.test.ts`: the column right after «Mesaj» with its heading and its «?»; its words equal to the marker's tooltip for the same row — the three newest with their day and hour, a line break kept, the fourth counted; a deleted note and the author's name in no cell; `null` for a row without notes; and still one read of the notes' table for the whole page.
+
+Baseline `BR-V4.47-2026-11-16`.
