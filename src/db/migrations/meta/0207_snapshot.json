@@ -1,6 +1,6 @@
 {
   "id": "ae1ea14c-255e-4491-93e1-10b609080024",
-  "prevId": "386d9fd8-f88d-4873-b01b-181d104c41a6",
+  "prevId": "e67eb3c2-8c51-49b7-aa9f-d683b1ec071e",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -4923,6 +4923,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "volunteer_choices_max": {
+          "name": "volunteer_choices_max",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "volunteers_show_counts": {
           "name": "volunteers_show_counts",
           "type": "boolean",
@@ -5542,6 +5548,10 @@
         "events_volunteer_bib_start_range": {
           "name": "events_volunteer_bib_start_range",
           "value": "\"events\".\"volunteer_bib_start\" IS NULL OR (\"events\".\"volunteer_bib_start\" >= 1 AND \"events\".\"volunteer_bib_start\" <= 99000)"
+        },
+        "events_volunteer_choices_max_range": {
+          "name": "events_volunteer_choices_max_range",
+          "value": "\"events\".\"volunteer_choices_max\" IS NULL OR (\"events\".\"volunteer_choices_max\" >= 1 AND \"events\".\"volunteer_choices_max\" <= 20)"
         },
         "events_bib_colour_is_hex": {
           "name": "events_bib_colour_is_hex",
