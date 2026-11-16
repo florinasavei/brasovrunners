@@ -350,7 +350,7 @@ describe("the «Voluntari» list — the marker and «Adaugă o notă»", () => 
     expect(elements(nameCell(dan)).filter((element) => element.type === TipSpan || element.type === NotesMark)).toHaveLength(0);
   });
 
-  it("says the same words in a column of the row — «Note interne», after «Mesaj» — for a phone, which has no pointer; nothing for a row without notes (§NNN)", async () => {
+  it("says the same words in a column of the row — «Note interne», after «Mesaj» — for a phone, which has no pointer; nothing for a row without notes (§950)", async () => {
     const organizer = state.actor as StaffUser;
     const ana = await volunteer("Ana Pop");
     const dan = await volunteer("Dan Ionescu");

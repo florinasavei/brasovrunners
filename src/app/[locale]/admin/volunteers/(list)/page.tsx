@@ -368,7 +368,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     },
     {
       /*
-        «Note interne» (§NNN; the owner, 2026-11-16, of this list: «pe lângă mesajul nostru vreau să văd și notele interne ale
+        «Note interne» (§950; the owner, 2026-11-16, of this list: «pe lângă mesajul nostru vreau să văd și notele interne ale
         noastre»): the organizers' own notes on the person, in the row itself — the words the marker's tooltip says (§945: the three
         newest, each with its day and hour, a long one cut, the older ones counted, no author), because a phone has no pointer to
         hold over a marker. From the list's one grouped read, so no query is added; nothing for a row with no note — an empty cell

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.46-2026-11-16 -->
+<!-- PROJECT_BASELINE: BR-V4.47-2026-11-16 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V4.46-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.47-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -2493,6 +2493,7 @@ way through every step, and none of them is a way around the allocator.
 228. Given the event editor, then «Mesaj cât înscrierile pe site sunt oprite (opțional)» is one line per language under the tick «Înscrieri publice deschise», at most 200 characters, saved trimmed by the editor's one save and cleared when both are emptied; written in one language alone the save is refused on the empty language's box, whatever the tick says, and nothing is written; a save that posts no such box leaves the note as stored; a series edit carries it to the dates it reaches and a copy keeps it, with the door's switch; and the event file carries a language's note only when the club wrote one, a file made before it importing with none (2026-11-16, `DECISIONS.md` §948).
 229. Given an event with points on its route, then a staff member who works the volunteers may put a volunteer of that event who is not cancelled at one of the event's own points, or take them off it; the press is refused for another event's point, a point no longer on the route and a cancelled person, and for any other role (FORBIDDEN, BR-REQ-060-01), with nothing written; a change is audited as `volunteer.edited` with `fields: ["checkpoint"]` and the point's id, a press that changes nothing writes nothing, and no state, role, number or email moves; a point deleted frees its people. `/admin/events/[id]/plan-voluntari` lists the points in the route's order, each with its people by name — the name, the number, the telephone number and the roles given — and under them everybody at no point, never a cancelled person; the «Voluntari» list names each person's point under «Punct» while one event with points is chosen; and «Toate datele unei persoane» names it (2026-11-16, `DECISIONS.md` §949).
 230. Given an event with «Avem tombolă» ticked, then the «Voluntari» list with that event chosen has the same tick on each row (`event_volunteers.in_raffle`, on by default), pressed by a staff member who works the volunteers and refused to any other role with nothing written, audited as `volunteer.edited` with `fields: ["inRaffle"]`; nothing else of the person moves, and «Toate datele unei persoane» holds the value (2026-11-16, `DECISIONS.md` §949).
+231. Given a volunteer with internal notes, then the «Voluntari» list shows, in a column «Note interne» right after «Mesaj», the words that row's notes marker says in its tooltip — the three newest live notes, newest first, each with its day and hour, a note's line breaks kept, a long one cut, the older ones counted, no author — from the list's one grouped read of the notes and to the roles that manage volunteers only (BR-REQ-060-01); a row with no note has an empty cell and no line on a phone's card, and a deleted note is in no cell (2026-11-16, `DECISIONS.md` §950).
 - only the lines with a date whose title, page address or place contains every typed word in either language (accents and case ignored) and whose state matches are listed;
 - the state is an editorial state, «Anulat» (the event's own status), «Viitoare» or «Trecute»;
 - a series is narrowed to its matching dates before it is grouped;
