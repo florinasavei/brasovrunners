@@ -2563,7 +2563,9 @@
           "volunteerAddresses": "each address on the list without an open invitation already",
           "memberAddresses": "each address on the list",
           "firstWaiting": "the first on the waiting list",
-          "held": "each person with a place held for the declaration"
+          "held": "each person with a place held for the declaration",
+          "volunteersNotTold": "each volunteer who has not been told their point yet",
+          "volunteersAtPoints": "each volunteer placed at a point"
         },
         "none": "No email goes to {name}.",
         "toOrNothing": "1 email goes to {name}: “{type}” — or none, if they join the waiting list.",
@@ -2739,6 +2741,8 @@
       "VOLUNTEER_GUARDIAN_NO_EMAIL": "The parent or guardian has no email address entered, so there is nowhere to send the link. Take the consent on paper, or add the address under “Edit”.",
       "VOLUNTEER_NO_EMAIL": "The volunteer has no email address, so the link has nowhere to go. The agreement and the parent's consent are signed on paper, or add the address under “Edit”.",
       "VOLUNTEER_MINORS_CLOSED": "The club does not take volunteers under 18 yet: the privacy notice and the agreement in force do not describe minors. Approve them first; “Tasks” says how.",
+      "VOLUNTEER_POINTS_NOBODY": "Nothing was sent: no volunteer with an email address stands at a point of the route yet. Place people at points, then send.",
+      "VOLUNTEER_POINTS_ALL_TOLD": "Nothing was sent: everybody at a point already knows it. To write to them again, choose \"Send to everybody again\".",
       "VOLUNTEER_CATEGORY_HAS_ROLES": "The category was not deleted: it has roles under it. Move or delete the roles first.",
       "VOLUNTEER_NAME_TAKEN": "That name is already used in this category (or among the event's categories). Choose another: the same name can stand in two categories, but not twice in one.",
       "VOLUNTEER_ROLE_INVALID": "“{role}” in “{category}”: {problem}. Nothing was saved.",
@@ -6387,7 +6391,7 @@
         "title": "The volunteers' plan",
         "open": "The volunteers' plan",
         "event": "{event} — {date}",
-        "help": "Who stands at which point of the route on the day. The points are the ones kept in the editor, under \"The route\". For the organizers only: no email leaves from here.",
+        "help": "Who stands at which point of the route on the day. The points are the ones kept in the editor, under \"The route\". Nobody is told until you press \"Send each their point\".",
         "back": "Back to the volunteers",
         "editPoints": "The points on the route, in the event's editor",
         "print": "Print the plan",
@@ -6421,11 +6425,32 @@
           "uploading": "Uploading…",
           "saving": "Saving…",
           "failed": "The picture did not upload. Try again or choose another file (JPEG, PNG or WebP).",
-          "help": "A JPEG, PNG or WebP image — for instance the map of the route with the points numbered. It is on no page of the site and is sent to nobody from here.",
+          "help": "A JPEG, PNG or WebP image — for instance the map of the route with the points numbered. It is on no page of the site; the volunteers get it only with \"Send each their point\".",
           "remove": "Delete the picture",
           "removeTitle": "Delete the plan's picture?",
           "removeBody": "The picture goes from the plan and from the printed sheet. The points and the people stay as they are. You can upload it again at any time.",
           "noStorage": "Picture storage is not configured here, so the plan cannot have a picture."
+        },
+        "mail": {
+          "title": "Send each their point",
+          "help": "One email to each volunteer placed at a point who has an email address: their point, what they do there and the plan's picture. It leaves only when you press here.",
+          "send": "Send each their point",
+          "again": "Send to everybody again",
+          "allTold": "Everybody at a point already knows it. Send again only if something changed: the picture, a point's name, a role.",
+          "nobody": "Nobody to tell: no volunteer with an email address stands at a point of the route yet.",
+          "confirmTitle": "Send each their point?",
+          "confirmBody": "Each gets their point by email, and what they do there.",
+          "confirmBodyPicture": "Each gets their point by email, what they do there and the plan's picture.",
+          "confirm": "Send",
+          "againTick": "Send to everybody again, those who already know their point too",
+          "againTitle": "Write to everybody again?",
+          "lines": {
+            "toWrite": "Written to: {count}",
+            "told": "Already know their point: {count}",
+            "toldAmong": "Of them, already know their point: {count}",
+            "noAddress": "At a point, but with no email address: {count}",
+            "unplaced": "At no point yet: {count}"
+          }
         }
       },
       "chips": {
@@ -7614,6 +7639,7 @@
         "VOLUNTEER_AGREEMENT_REQUEST": "The volunteer agreement",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "You accepted the volunteer agreement",
         "VOLUNTEER_ROLE_ASSIGNED": "Your volunteer role",
+        "VOLUNTEER_POINT": "Your volunteer point",
         "VOLUNTEER_GUARDIAN_REQUEST": "Your consent for a young volunteer",
         "VOLUNTEER_INVITATION": "Invitation to volunteer",
         "PLACES_ALERT": "Few places left",
@@ -7692,6 +7718,7 @@
         "VOLUNTEER_AGREEMENT_REQUEST": "When an organizer presses “Send the agreement link” for a volunteer who has not accepted it yet: the agreement and the link to accept it.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "When a volunteer accepts the agreement from the link, or an organizer presses “Signed on paper”: their copy, with the agreement attached as a PDF.",
         "VOLUNTEER_ROLE_ASSIGNED": "When the organizers give a volunteer a role or change their roles, from the event's «Volunteers» card: a short message naming their roles, the date and the place. Nothing to press.",
+        "VOLUNTEER_POINT": "When an organizer presses «Send each their point» on «The volunteers' plan»: to each volunteer placed at a point, with their point, what they do there and the plan's picture. Nothing to press.",
         "VOLUNTEER_GUARDIAN_REQUEST": "When a volunteer under 18 offers, or an organizer presses “Send the parent's link”: the agreement and the link where the parent accepts it in their own name.",
         "VOLUNTEER_INVITATION": "When an organizer or an administrator sends invitations from the «Volunteers» card of an event whose volunteers are by invitation only, and on “Send again”. A personal link to the volunteers' page.",
         "PLACES_ALERT": "When the free places drop to the threshold in «Email me when N places are left», and once more when none are left: to every Administrator. The button opens the registrations.",
@@ -7743,6 +7770,7 @@
         "VOLUNTEER_AGREEMENT_REQUEST": "on “Send the agreement link”",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "after the link or “Signed on paper”",
         "VOLUNTEER_ROLE_ASSIGNED": "when the organizers give or change the roles",
+        "VOLUNTEER_POINT": "when an organizer sends the volunteers' plan",
         "VOLUNTEER_GUARDIAN_REQUEST": "when a volunteer under 18 offers",
         "VOLUNTEER_INVITATION": "when the club invites someone to volunteer",
         "PLACES_ALERT": "when the places drop to the threshold, to the administrators",
@@ -8000,6 +8028,7 @@
           "guardianPaper": "The parent's agreement, signed on paper",
           "invite": "Send the volunteer invitations",
           "invitationResend": "Resend the volunteer invitation",
+          "sendPoints": "Send each their point",
           "toRunner": "Turn into a runner"
         },
         "club": {
@@ -8685,6 +8714,7 @@
         "VOLUNTEER_AGREEMENT_REQUEST": "The role and the event are added by themselves. The link is for this person only, works once, and a new one replaces the old.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "The role and the event are added by themselves. The PDF shows the accepted text, with the name, the role, the moment and its fingerprint.",
         "VOLUNTEER_ROLE_ASSIGNED": "The roles given and the event's date and place are added by themselves, however you write the text. The message has no link that does anything.",
+        "VOLUNTEER_POINT": "The point, the roles given, the category's contact and the plan's picture are added by themselves, whatever the text says. It does not leave if the person was moved, taken off or cancelled meanwhile.",
         "VOLUNTEER_GUARDIAN_REQUEST": "The volunteer and the event are added by themselves. The link is for the parent or guardian only, works once, and a new one replaces the old.",
         "VOLUNTEER_INVITATION": "The event, the roles wanted and the club's message are added by themselves. The link is for the invited person only, works once, and a new one replaces the old.",
         "PLACES_ALERT": "The free places, the capacity and the threshold are added by themselves, however you write the text. One email per threshold; another comes only after the places climb back above it.",
@@ -14491,7 +14521,17 @@
       "partnerUnchanged": "It already was; nothing to change.",
       "planPictureSet": "The plan's picture is on: it shows above the points and prints with the plan.",
       "planPictureReplaced": "The plan's picture was changed.",
-      "planPictureRemoved": "The plan's picture was deleted."
+      "planPictureRemoved": "The plan's picture was deleted.",
+      "planPointsSent": {
+        "one": "{count} volunteer told their point.",
+        "few": "{count} volunteers told their point.",
+        "other": "{count} volunteers told their point."
+      },
+      "planPointsSentSomeWithout": {
+        "one": "{count} volunteer told their point. With no email address: {noAddress}.",
+        "few": "{count} volunteers told their point. With no email address: {noAddress}.",
+        "other": "{count} volunteers told their point. With no email address: {noAddress}."
+      }
     },
     "mail": {
       "now": "Leaving now{road}: {what}.",

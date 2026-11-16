@@ -670,6 +670,10 @@ export type AuditAction =
   // file's name, an address or anything of a person.
   | "event.volunteer_plan_picture_set"
   | "event.volunteer_plan_picture_removed"
+  // «Trimite fiecăruia punctul lui» on «Planul voluntarilor» (§NNN, `volunteers/point-mail.ts`), entity `event`: one row a
+  // press — how many messages it queued, how many people had already been told, stand at a point with no address or stand
+  // at none, and whether it was «din nou tuturor» (`again`). Counts only: never a volunteer's id, a name, an address or a point.
+  | "event.volunteer_points_sent"
   /** «Arată public câți voluntari mai sunt necesari» (§773), entity `event`: the metadata holds `on` and nothing of a person. */
   | "event.volunteers_counts_switched"
   | "event.volunteers_list_switched"

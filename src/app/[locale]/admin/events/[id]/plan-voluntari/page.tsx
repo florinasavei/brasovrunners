@@ -19,8 +19,12 @@ import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { roleLabel } from "@/modules/volunteers/domain/volunteer";
 import { readVolunteerPlan, type VolunteerPlanPerson } from "@/modules/volunteers/plan";
+import { previewVolunteerPoints } from "@/modules/volunteers/point-mail";
 import PlanPictureUpload from "@/modules/volunteers/ui/PlanPictureUpload";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { confirmWords } from "@/shared/feedback/confirm-words";
+import type { ConfirmSpec } from "@/shared/feedback/notice";
+import ActionForm from "@/shared/forms/ActionForm";
 import { isUuid } from "@/shared/ids";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
@@ -28,7 +32,7 @@ import { HEADING_SX } from "@/shared/ui/heading-scale";
 import PrintButton from "@/shared/ui/PrintButton";
 import { ROW_SX } from "@/shared/ui/row-fold";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
-import { placeVolunteerAction, removePlanPictureAction, setPlanPictureAction } from "./actions";
+import { placeVolunteerAction, removePlanPictureAction, sendVolunteerPointsAction, setPlanPictureAction } from "./actions";
 
 type Props = { params: Promise<{ locale: string; id: string }>; searchParams: Promise<Record<string, string | undefined>> };
 
@@ -62,7 +66,13 @@ const PICTURE_ON_PAPER_MAX_HEIGHT = "17cm";
  * The points are the event's own «Puncte pe traseu» (§757), kept in the editor; the people are the event's volunteers who are
  * not cancelled (`modules/volunteers/plan.ts`). For whoever works the volunteers (`canManageVolunteers`: the Organizer and the
  * Administrators) — anybody else gets the 404 of an address that does not exist (BR-REQ-060-01), and the service refuses them
- * again. Nothing on it is public, and nobody is emailed from it: it is the organizers' own plan.
+ * again. Nothing on it is public, and placing, moving or taking off a person emails nobody: it is the organizers' own plan.
+ *
+ * One press tells the volunteers (§NNN; the owner, the same day: «…si sa ii pot distribui din aplicatie, sa stie exact unde si
+ * cum» — «Email din site, la apăsarea ta»): «Trimite fiecăruia punctul lui» emails each person placed at a point their point,
+ * what they do there and the plan's picture (`modules/volunteers/point-mail.ts`). It asks first, with the four numbers the
+ * service counted — who is written to, who already knows their point, who stands at a point with no address, who stands at
+ * none — and «Trimite din nou tuturor», a tick in that question, writes to everybody again.
  *
  * Above the points, the plan as the organizers drew it (the decision after the plan's own; the owner, the same day, with a
  * picture of the route and its points numbered on it: «trebui sa pot incarca si planul voluntarilor pe traseu in genul
@@ -82,8 +92,11 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
 
   const db = getDb();
   let plan;
+  // The four numbers of «Trimite fiecăruia punctul lui» (§NNN), counted by the service exactly as the press counts them.
+  let mail;
   try {
     plan = await readVolunteerPlan(db, actor, id);
+    mail = await previewVolunteerPoints(db, actor, id);
   } catch (error) {
     if (isDomainError(error) && (error.code === "NOT_FOUND" || error.code === "FORBIDDEN")) notFound();
     throw error;
@@ -115,6 +128,52 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
       <input type="hidden" name="eventId" value={id} />
     </>
   );
+
+  /*
+    «Trimite fiecăruia punctul lui» (§NNN): from the four numbers of its question (`previewVolunteerPoints`, read above with
+    the plan), what the press can be:
+
+    - somebody still to tell, nobody told yet → the plain question;
+    - somebody still to tell, others who already know their point → the same question with «Trimite din nou tuturor» to tick in it;
+    - everybody at a point already told → the press can only write to everybody again: the button and the question say so;
+    - nobody with an address at a point → no press at all, and the sentence that says why (the service refuses it likewise).
+
+    Each question states the four numbers, one a line, and — worded by the one builder — the email that leaves and to how many.
+  */
+  const everybody = mail.toWrite + mail.told;
+  const words = await confirmWords();
+  const countLine = (key: "toWrite" | "told" | "toldAmong" | "noAddress" | "unplaced", count: number) => t(`volunteers.plan.mail.lines.${key}`, { count });
+  const mailLines = [countLine("toWrite", mail.toWrite), countLine("told", mail.told), countLine("noAddress", mail.noAddress), countLine("unplaced", mail.unplaced)];
+  // «Din nou tuturor»: everybody at a point with an address is written to, those who already know their point among them.
+  const againLines = [countLine("toWrite", everybody), countLine("toldAmong", mail.told), countLine("noAddress", mail.noAddress), countLine("unplaced", mail.unplaced)];
+  const mailBody = t(picture ? "volunteers.plan.mail.confirmBodyPicture" : "volunteers.plan.mail.confirmBody");
+  const againMail = words.mail({ to: { count: everybody, audience: "volunteersAtPoints" }, type: "VOLUNTEER_POINT" });
+  const mailConfirm: ConfirmSpec | null =
+    everybody === 0
+      ? null
+      : mail.toWrite === 0
+        ? {
+            title: t("volunteers.plan.mail.againTitle"),
+            body: mailBody,
+            lines: againLines,
+            ...againMail,
+            confirmLabel: t("volunteers.plan.mail.again"),
+            cancelLabel: words.cancel,
+          }
+        : {
+            title: t("volunteers.plan.mail.confirmTitle"),
+            body: mailBody,
+            lines: mailLines,
+            ...words.mail({ to: { count: mail.toWrite, audience: "volunteersNotTold" }, type: "VOLUNTEER_POINT" }),
+            confirmLabel: t("volunteers.plan.mail.confirm"),
+            cancelLabel: words.cancel,
+            // The tick in the question: only while somebody already knows their point — otherwise «everybody» is who the press writes to anyway.
+            ...(mail.told > 0
+              ? { option: { field: "again", label: t("volunteers.plan.mail.againTick"), ticked: { lines: againLines, email: againMail.email, also: againMail.also } } }
+              : {}),
+          };
+  // With everybody already told, the form itself asks for «din nou tuturor»; otherwise the question's tick decides, and the box is posted empty.
+  const againOnly = everybody > 0 && mail.toWrite === 0;
 
   /** One person's line: who, their number, how to reach them, what they do — the same words at a point and under «Fără punct». */
   const personWords = (person: VolunteerPlanPerson) => {
@@ -286,6 +345,41 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
               {t("volunteers.plan.picture.noStorage")}
             </Typography>
           ))}
+      </Box>
+
+      {/* «Trimite fiecăruia punctul lui» (§NNN): the one press that tells the volunteers — never on the paper. The numbers are the
+          question's own, said here too so the page answers «cine mai e de anunțat» before anything is pressed. */}
+      <Box id="plan-mail" sx={{ scrollMarginTop: 16, ...NOT_ON_PAPER }} data-testid="plan-mail-section">
+        <Typography variant="h3" sx={HEADING_SX[3]}>
+          {t("volunteers.plan.mail.title")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          {t("volunteers.plan.mail.help")}
+        </Typography>
+        <Typography variant="body2" sx={{ mt: 1, overflowWrap: "break-word" }} data-testid="plan-mail-counts">
+          {mailLines.join(" · ")}
+        </Typography>
+        {mailConfirm ? (
+          <Box sx={{ mt: 1.5 }}>
+            <ActionForm action={sendVolunteerPointsAction} confirm={mailConfirm} data-testid="plan-mail-form">
+              {hidden}
+              {/* «Trimite din nou tuturor»: `on` when it is all the press can do; else empty as drawn, and the question's tick fills it. */}
+              <input key={againOnly ? "again" : "choice"} type="hidden" name="again" value={againOnly ? "on" : ""} />
+              <GlyphButton icon={againOnly ? "resend" : "send"} type="submit" variant="contained" size="medium" sx={TAP_TARGET} data-testid="plan-mail-send">
+                {t(againOnly ? "volunteers.plan.mail.again" : "volunteers.plan.mail.send")}
+              </GlyphButton>
+            </ActionForm>
+            {againOnly && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="plan-mail-all-told">
+                {t("volunteers.plan.mail.allTold")}
+              </Typography>
+            )}
+          </Box>
+        ) : (
+          <Typography variant="body2" sx={{ mt: 1, fontStyle: "italic" }} data-testid="plan-mail-nobody">
+            {t("volunteers.plan.mail.nobody")}
+          </Typography>
+        )}
       </Box>
 
       {plan.points.length === 0 ? (

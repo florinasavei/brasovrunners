@@ -78,6 +78,7 @@ import { mintRsvpLinks } from "@/modules/rsvp/rsvp";
 import { invitationStandingOf } from "@/modules/volunteers/domain/access";
 import { isVolunteerMinor, roleLabel, roleTakesPeople, rolesWithCategoryWords, volunteerContactsOf, volunteerEventAhead } from "@/modules/volunteers/domain/volunteer";
 import { mintVolunteerInvitationLink } from "@/modules/volunteers/invitation-link";
+import { volunteerPointAtSend } from "@/modules/volunteers/point-mail";
 import { readPublicVolunteerRoles } from "@/modules/volunteers/volunteers";
 import { mintVolunteerGuardianLink } from "@/modules/volunteers/guardian";
 import { shopOrders } from "@/db/schema/shop";
@@ -395,6 +396,8 @@ async function renderRow(
     row.messageType === "VOLUNTEER_ROLE_ASSIGNED" ||
     row.messageType === "VOLUNTEER_GUARDIAN_REQUEST" ||
     row.messageType === "VOLUNTEER_INVITATION" ||
+    // «Punctul tău» (§NNN): about a volunteer's point of the event's route, nobody's registration.
+    row.messageType === "VOLUNTEER_POINT" ||
     // The Administrators' places alert (§906): about an event's places, nobody's registration.
     row.messageType === "PLACES_ALERT" ||
     // …and the deadline release's summary (§914), the same.
@@ -1045,7 +1048,9 @@ async function renderRow(
     row.messageType === "VOLUNTEER_AGREEMENT_REQUEST" ||
     row.messageType === "VOLUNTEER_AGREEMENT_ACCEPTED" ||
     row.messageType === "VOLUNTEER_ROLE_ASSIGNED" ||
-    row.messageType === "VOLUNTEER_GUARDIAN_REQUEST"
+    row.messageType === "VOLUNTEER_GUARDIAN_REQUEST" ||
+    // «Punctul tău» (§NNN): the same person, roles and contact as the role's message, read the same way.
+    row.messageType === "VOLUNTEER_POINT"
   ) {
     const payload = row.payloadJson as { volunteerId?: unknown; roleIds?: unknown } | null;
     const volunteerId = payload?.volunteerId;
@@ -1150,6 +1155,18 @@ async function renderRow(
     // The role given goes to the address the row holds, or nowhere: an address corrected since was the wrong one.
     if (row.messageType === "VOLUNTEER_ROLE_ASSIGNED" && !addressCurrent) {
       throw new OutboxMessageWithdrawn("the volunteer's address changed since the role was given");
+    }
+    /*
+      «Punctul tău» (§NNN, «Trimite fiecăruia punctul lui» on «Planul voluntarilor»): the state at the send, not at the press.
+      A person cancelled or deleted, or left with no address, was withdrawn above; an address corrected since is withdrawn
+      here, as the role's message is — the next press writes to the right one. The point itself is read by the module that
+      queued the message (`volunteers/point-mail.ts`), which withdraws it when the person stands at no point or at another
+      one than the message was queued for, when the point left the route, or when a newer message was queued for them.
+      The roles and the category's contact are the ones read above, so the two messages say a role in the same words.
+    */
+    if (row.messageType === "VOLUNTEER_POINT") {
+      if (!addressCurrent) throw new OutboxMessageWithdrawn("the volunteer's address changed since the point's message was queued");
+      data.volunteerPoint = await volunteerPointAtSend(db, row);
     }
     if (row.messageType === "VOLUNTEER_AGREEMENT_REQUEST") {
       if (volunteer.agreementAcceptedAt) throw new OutboxMessageWithdrawn("the volunteer has accepted the agreement since");
