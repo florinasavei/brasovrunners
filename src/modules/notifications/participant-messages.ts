@@ -29,6 +29,7 @@ import {
   chosenRegistrationIds,
   isMessageReach,
   isOrganizerQrStatus,
+  isOrganizerSignStatus,
   type MessageReach,
   type OrganizerMessage,
   PARTICIPANT_MESSAGE_AUDIENCES,
@@ -156,6 +157,14 @@ export type SendParticipantMessageInput = {
    * Nothing in a state, a place, a deadline, the allocator or the capacity formula reads it.
    */
   sendQr?: boolean;
+  /**
+   * «Trimite și linkul pentru semnarea declarației» (§947; the owner, 2026-11-16: «vreau ca cei care nu au semnat
+   * declaratia sa o poata semna»): each registration of this send that owes its declaration gets, under the organizers'
+   * words, «Semnează declarația» — its own link to the declaration. Only those rows carry the flag — never a link, which
+   * the renderer mints when the email leaves, and only if the declaration is owed still; everybody else gets the message
+   * as it was. Nothing in a state, a place, a deadline, the allocator or the capacity formula reads it.
+   */
+  signLink?: boolean;
 };
 
 export type SendParticipantMessageResult =
@@ -297,6 +306,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
     }
     const askReconfirm = input.askReconfirm === true;
     const sendQr = input.sendQr === true;
+    const signLink = input.signLink === true;
     const words = { subject: { ro: message.subject.ro, en: message.subject.en }, body: { ro: message.body.ro, en: message.body.en } };
 
     let real = 0;
@@ -308,6 +318,9 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
     // The confirmed registrations whose email carries the number and the QR (§943), test ones apart likewise.
     let withQr = 0;
     let withQrTest = 0;
+    // The registrations owing their declaration whose email carries the link to sign it (§947), test ones apart likewise.
+    let withSignLink = 0;
+    let withSignLinkTest = 0;
     for (const [index, row] of rows.entries()) {
       const leavesNow = delivery === "now" && index < split.now;
       /*
@@ -318,11 +331,19 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         «Trimite și numărul de concurs și codul QR» (§943) rides the same way: `sendQr` only on the rows whose registration
         is confirmed as the send queues them (`isOrganizerQrStatus`) — a flag, never the code, which the renderer reads off
         the registration when the email leaves, and only if it is confirmed still.
+
+        «Trimite și linkul pentru semnarea declarației» (§947) the same way again: `signLink` only on the rows whose
+        registration owes its declaration as the send queues them (`isOrganizerSignStatus`) — a flag, never the link,
+        which the renderer mints when the email leaves, and only if the declaration is owed still.
       */
       const asks = askReconfirm && isReconfirmStatus(row.status);
       const carriesQr = sendQr && isOrganizerQrStatus(row.status);
-      // The words, and each flag only on its own rows: a row neither concerns carries the words alone, as it always did.
-      const own = asks || carriesQr ? { ...words, ...(asks ? { askReconfirm: true } : {}), ...(carriesQr ? { sendQr: true } : {}) } : words;
+      const carriesSignLink = signLink && isOrganizerSignStatus(row.status);
+      // The words, and each flag only on its own rows: a row none concerns carries the words alone, as it always did.
+      const own =
+        asks || carriesQr || carriesSignLink
+          ? { ...words, ...(asks ? { askReconfirm: true } : {}), ...(carriesQr ? { sendQr: true } : {}), ...(carriesSignLink ? { signLink: true } : {}) }
+          : words;
       // Marked for the queue panel's «Pleacă acum» (§540) — only a row this press sends now.
       const payload = leavesNow ? markedForNow(own, delivery) : own;
       const inserted = await enqueueEmail(tx, {
@@ -352,6 +373,10 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         if (row.kind === "TEST") withQrTest += 1;
         else withQr += 1;
       }
+      if (carriesSignLink) {
+        if (row.kind === "TEST") withSignLinkTest += 1;
+        else withSignLink += 1;
+      }
     }
     if (real + test === 0) return { kind: "duplicate" } as const;
     /*
@@ -366,7 +391,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         .onConflictDoNothing();
     }
     // The club's one copy of this send (§419): the words and how many real participants it reached — never a row's
-    // flag: it asks nobody, and it carries nobody's number, QR or desk code (§320, §943). Marked like a row when it leaves now.
+    // flag: it asks nobody, and it carries nobody's number, QR, desk code or link to a declaration (§320, §943, §947). Marked like a row when it leaves now.
     await enqueueBulkClubCopies(tx, {
       messageType: "ORGANIZER_MESSAGE",
       eventId: input.eventId,
@@ -398,6 +423,9 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         // «Trimite și numărul de concurs și codul QR» (§943): the tick, and in how many confirmed registrations' emails —
         // real and test apart; «Mesaje trimise» reads both. Never who, and never a code.
         ...(sendQr ? { sendQr: true, withQr, withQrTest } : {}),
+        // «Trimite și linkul pentru semnarea declarației» (§947): the tick, and in how many emails of registrations owing
+        // the declaration — real and test apart; «Mesaje trimise» reads both. Never who, and never a link.
+        ...(signLink ? { signLink: true, withSignLink, withSignLinkTest } : {}),
       },
       now,
     });
@@ -450,6 +478,13 @@ export type SentParticipantMessage = {
    * then — test registrations left out; 0 for a send that did not tick.
    */
   withQr: number;
+  /** «Trimite și linkul pentru semnarea declarației» was ticked on this send (§947). */
+  signLink: boolean;
+  /**
+   * In how many emails of registrations owing their declaration the send queued the link to sign it, as its audit row
+   * counted them then — test registrations left out; 0 for a send that did not tick.
+   */
+  withSignLink: number;
   progress: SendProgress;
 };
 
@@ -490,6 +525,8 @@ export async function listParticipantMessages<T extends Record<string, unknown>>
       askReconfirm?: unknown;
       sendQr?: unknown;
       withQr?: unknown;
+      signLink?: unknown;
+      withSignLink?: unknown;
     };
     const words = (value: unknown) => (typeof value === "string" ? value : "");
     return {
@@ -504,6 +541,9 @@ export async function listParticipantMessages<T extends Record<string, unknown>>
       // «Trimite și numărul de concurs și codul QR» (§943): the tick and its count, as the send's own audit row wrote them.
       sendQr: metadata.sendQr === true,
       withQr: metadata.sendQr === true && typeof metadata.withQr === "number" ? metadata.withQr : 0,
+      // «Trimite și linkul pentru semnarea declarației» (§947): the same two, from the same row.
+      signLink: metadata.signLink === true,
+      withSignLink: metadata.signLink === true && typeof metadata.withSignLink === "number" ? metadata.withSignLink : 0,
     };
   });
   const sendIds = read.flatMap((entry) => (entry.sendId ? [entry.sendId] : []));
@@ -518,14 +558,14 @@ export async function listParticipantMessages<T extends Record<string, unknown>>
 
 /**
  * What the composer's boxes hold again after a send to the people ticked (§945): the words in both languages and the
- * two ticks, as that send carried them.
+ * three ticks, as that send carried them.
  */
-export type KeptMessage = OrganizerMessage & { askReconfirm: boolean; sendQr: boolean };
+export type KeptMessage = OrganizerMessage & { askReconfirm: boolean; sendQr: boolean; signLink: boolean };
 
 /**
  * The words of a send to the people ticked, read back for the composer (§945): such a send is a trial as often as not,
  * and the same message to everybody must not have to be typed a second time — four boxes, in two languages. Read from
- * what the send itself wrote, and from nothing new: the two ticks from its audit row, the words from the payload of one
+ * what the send itself wrote, and from nothing new: the three ticks from its audit row, the words from the payload of one
  * of its own outbox rows — the one text an outbox row keeps (§364) — for as long as those rows are kept.
  *
  * `null` — and the boxes empty, as after any other send — for an id that names no send of this event, for a send to a
@@ -545,7 +585,7 @@ export async function readKeptMessage<T extends Record<string, unknown>>(db: Dat
       ),
     )
     .limit(1);
-  const metadata = (sent?.metadata ?? null) as { audience?: unknown; askReconfirm?: unknown; sendQr?: unknown } | null;
+  const metadata = (sent?.metadata ?? null) as { audience?: unknown; askReconfirm?: unknown; sendQr?: unknown; signLink?: unknown } | null;
   if (metadata?.audience !== CHOSEN_AUDIENCE) return null;
   const [row] = await db
     .select({ payload: emailOutbox.payloadJson })
@@ -553,7 +593,7 @@ export async function readKeptMessage<T extends Record<string, unknown>>(db: Dat
     .where(and(eq(emailOutbox.messageType, "ORGANIZER_MESSAGE"), sql`${emailOutbox.idempotencyKey} like ${`organizer-message:${sendId}:registration:%`}`))
     .limit(1);
   const words = readOrganizerMessagePayload(row?.payload);
-  return words ? { ...words, askReconfirm: metadata.askReconfirm === true, sendQr: metadata.sendQr === true } : null;
+  return words ? { ...words, askReconfirm: metadata.askReconfirm === true, sendQr: metadata.sendQr === true, signLink: metadata.signLink === true } : null;
 }
 
 /** The three numbers of each asking send, one grouped read (the decision «Cere reconfirmarea»). Real registrations only. */
@@ -652,6 +692,8 @@ export async function previewParticipantMessage<T extends Record<string, unknown
     askReconfirm?: boolean;
     /** «Trimite și numărul de concurs și codul QR» as the box stands: the preview draws the example runner's block under the words (§943). */
     sendQr?: boolean;
+    /** «Trimite și linkul pentru semnarea declarației» as the box stands: the preview draws «Semnează declarația» under the words (§947). */
+    signLink?: boolean;
   },
 ): Promise<ParticipantMessagePreview> {
   if (!canMessageParticipants(actor.role)) {
@@ -720,6 +762,12 @@ export async function previewParticipantMessage<T extends Record<string, unknown
     ...(input.sendQr === true
       ? { organizerQr: { checkinCode: EMAIL_SAMPLE[locale].checkinCode, qrUrl: `${env.APP_BASE_URL}/api/registrations/qr/${EMAIL_SAMPLE[locale].checkinCode}.png` } }
       : {}),
+    /*
+      The button somebody who owes the declaration gets when the box is ticked (§947), on an inert example link like the
+      two above: no token is minted, so nothing in the preview can be signed. The example runner is confirmed and would
+      not get it — the tick's help line says who does; the preview shows what the button looks like.
+    */
+    ...(input.signLink === true ? { signDeclarationUrl: `${env.APP_BASE_URL}/${locale}/EXAMPLE#declaration` } : {}),
     ...(words.subject[locale] ? { organizerSubject: words.subject[locale] } : {}),
     ...(words.subject[other] ? { organizerSubjectOther: words.subject[other] } : {}),
     ...(words.body[locale] ? { organizerBody: words.body[locale] } : {}),

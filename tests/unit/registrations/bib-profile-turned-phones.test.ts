@@ -335,22 +335,23 @@ describe("§759 the profile turned for the runner, and with the phone as one blo
 });
 
 describe("§759 «Eticheta telefonului» and two numbers on one line", () => {
-  it("prints the club's label, each number with its own name, one line, «/» between", () => {
+  it("prints the club's label, each number after its own name and a colon, one line, a bar between (§947)", () => {
     const line = bibEmergencyLine(
       design({ showEmergency: true, emergencyLabel: "Număr de urgență", emergencyPhoneLabel: "Coordonator", emergencyPhone: PHONE_A, emergencyPhone2Label: "Medic", emergencyPhone2: PHONE_B }),
       "Urgențe",
     );
-    expect(line).toBe(`Număr de urgență: Coordonator ${PHONE_A} / Medic ${PHONE_B}`);
+    expect(line).toBe(`Număr de urgență: Coordonator: ${PHONE_A} | Medic: ${PHONE_B}`);
     // A number without a name prints alone; the second alone prints alone; none prints no line.
-    expect(bibEmergencyLine(design({ showEmergency: true, emergencyPhone: PHONE_A, emergencyPhone2: PHONE_B }), "Urgențe")).toBe(`Urgențe: ${PHONE_A} / ${PHONE_B}`);
-    expect(bibEmergencyLine(design({ showEmergency: true, emergencyPhone2: PHONE_B, emergencyPhone2Label: "Medic" }), "Emergency")).toBe(`Emergency: Medic ${PHONE_B}`);
+    expect(bibEmergencyLine(design({ showEmergency: true, emergencyPhone: PHONE_A, emergencyPhone2: PHONE_B }), "Urgențe")).toBe(`Urgențe: ${PHONE_A} | ${PHONE_B}`);
+    // A number that says whose it is needs no word before it: the sheet's own word prints only beside a number with no name (§947).
+    expect(bibEmergencyLine(design({ showEmergency: true, emergencyPhone2: PHONE_B, emergencyPhone2Label: "Medic" }), "Emergency")).toBe(`Medic: ${PHONE_B}`);
     expect(bibEmergencyLine(design({ showEmergency: true, emergencyPhoneLabel: "Coordonator" }), "Urgențe")).toBeNull();
     expect(bibEmergencyLine(design({ showEmergency: false, emergencyPhone: PHONE_A }), "Urgențe")).toBeNull();
   });
 
   it("prints that line on the sheet and in the picture, the same words", async () => {
     const chosen = design({ showEmergency: true, emergencyLabel: "Urgențe traseu", emergencyPhoneLabel: "Coordonator", emergencyPhone: PHONE_A, emergencyPhone2Label: "Medic", emergencyPhone2: PHONE_B });
-    const expected = `Urgențe traseu: Coordonator ${PHONE_A} / Medic ${PHONE_B}`;
+    const expected = `Urgențe traseu: Coordonator: ${PHONE_A} | Medic: ${PHONE_B}`;
     const runs = await drawnRuns(() => renderBibSheet({ rows: [{ bibNumber: 7, registeredName: "Alergător Unu" }], ...SHEET, emergencyLabel: "Urgențe", design: chosen }));
     expect(runs.filter((run) => run.text === expected)).toHaveLength(1);
     const element = bibExtrasBlock({ row: null, picture: null, emergency: bibEmergencyFit(expected, bibFooterWidth), turn: bibExtrasTurn({ profile: false, profileTurned: false, phone: true, phoneTurned: true }), ink: "#000001" }) as ReactElement<{

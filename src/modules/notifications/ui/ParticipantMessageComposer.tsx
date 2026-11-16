@@ -82,7 +82,7 @@ export type ComposerConfirm = { field: string; title: string; count: string; cou
 
 /**
  * What the boxes hold when the page is drawn right after a send to the people ticked (§945): that send's words and its
- * two ticks, so a trial is followed by the same message to everybody. Absent after any other send: the boxes are empty.
+ * three ticks, so a trial is followed by the same message to everybody. Absent after any other send: the boxes are empty.
  */
 export type ComposerKept = {
   subjectRo: string;
@@ -91,6 +91,7 @@ export type ComposerKept = {
   bodyEn: string;
   askReconfirm: boolean;
   sendQr: boolean;
+  signLink: boolean;
 };
 
 export type ComposerLabels = {
@@ -111,6 +112,8 @@ export type ComposerLabels = {
    * only, never advertising, a sponsor's offer or another event. Under the body box, no tick.
    */
   bodyScope: string;
+  /** How a word is made bold in the body (§947): between two asterisks on each side. One line, under the body's help. */
+  bodyFormat: string;
   identical: string;
   preview: string;
   previewHelp: string;
@@ -131,6 +134,9 @@ export type ComposerLabels = {
   /** «Trimite și numărul de concurs și codul QR» (§943) and its help line: only the confirmed get them, each their own. */
   sendQr: string;
   sendQrHelp: string;
+  /** «Trimite și linkul pentru semnarea declarației» (§947) and its help line: only those who owe the declaration get it, each their own. */
+  signLink: string;
+  signLinkHelp: string;
   /**
    * «Completează cu textul de reminder»: the button, its question before it replaces typed words, and the ready text in
    * both languages — read on the server from both catalogues with its `{placeholders}` literal, whatever the UI language.
@@ -159,6 +165,8 @@ export type PreviewInput = {
   askReconfirm: boolean;
   /** The tick «Trimite și numărul de concurs și codul QR» as it stands: the preview draws the example runner's block (§943). */
   sendQr: boolean;
+  /** The tick «Trimite și linkul pentru semnarea declarației» as it stands: the preview draws «Semnează declarația» (§947). */
+  signLink: boolean;
 };
 export type PreviewResult = { subject: string; html: string; unknown: string[] } | null;
 
@@ -250,9 +258,11 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
   // «Trimite și numărul de concurs și codul QR» (§943): off unless ticked; controlled too, so a refused send keeps it (§315).
   // Either tick starts as the send to the people ticked left it, when the page comes back from one (§945).
   const [sendQr, setSendQr] = useState(() => (recall.has ? recall.value("sendQr") === "1" : kept?.sendQr === true));
-  // Either tick as the form holds it now — what a press would post.
+  // «Trimite și linkul pentru semnarea declarației» (§947): off unless ticked, controlled and kept the same way.
+  const [signLink, setSignLink] = useState(() => (recall.has ? recall.value("signLink") === "1" : kept?.signLink === true));
+  // Any of the three ticks as the form holds it now — what a press would post.
   const readTick = useCallback(
-    (name: "askReconfirm" | "sendQr"): boolean => root.current?.querySelector<HTMLInputElement>(`input[name="${name}"]`)?.checked === true,
+    (name: "askReconfirm" | "sendQr" | "signLink"): boolean => root.current?.querySelector<HTMLInputElement>(`input[name="${name}"]`)?.checked === true,
     [],
   );
 
@@ -267,7 +277,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
     (nextLanguage: PreviewLanguage) => {
       const ticket = ++asked.current;
       const words = readWords();
-      preview({ eventId, language: nextLanguage, ...words, askReconfirm: readTick("askReconfirm"), sendQr: readTick("sendQr") })
+      preview({ eventId, language: nextLanguage, ...words, askReconfirm: readTick("askReconfirm"), sendQr: readTick("sendQr"), signLink: readTick("signLink") })
         .then((result) => {
           if (ticket !== asked.current) return;
           setShown(result ? { state: "ready", result } : { state: "unavailable", result: null });
@@ -473,6 +483,11 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
             {help}
           </Typography>
           {part === "body" && (
+            <Typography variant="caption" color="text.secondary" data-testid="participant-message-format">
+              {labels.bodyFormat}
+            </Typography>
+          )}
+          {part === "body" && (
             <Typography variant="caption" color="text.secondary" data-testid="participant-message-scope">
               {labels.bodyScope}
             </Typography>
@@ -539,6 +554,34 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
         />
         <Typography id="participant-message-qr-help" variant="caption" color="text.secondary" component="p">
           {labels.sendQrHelp}
+        </Typography>
+      </Box>
+
+      {/*
+        «Trimite și linkul pentru semnarea declarației» (§947): the email of each registration that owes its declaration
+        gets «Semnează declarația», its own link, under these words. The help line says who gets it and who does not.
+      */}
+      <Box data-testid="participant-message-sign-link">
+        <FormControlLabel
+          control={
+            <Checkbox
+              name="signLink"
+              value="1"
+              checked={signLink}
+              onChange={(event) => {
+                setSignLink(event.target.checked);
+                // The preview at once, as the two ticks above: the box decides a button, not words being typed.
+                pause.cancel();
+                refresh(language);
+              }}
+              slotProps={{ input: { "aria-describedby": "participant-message-sign-link-help" } }}
+              sx={CHECKBOX_TAP_TARGET}
+            />
+          }
+          label={labels.signLink}
+        />
+        <Typography id="participant-message-sign-link-help" variant="caption" color="text.secondary" component="p">
+          {labels.signLinkHelp}
         </Typography>
       </Box>
 

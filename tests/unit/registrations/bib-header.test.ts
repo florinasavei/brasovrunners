@@ -473,7 +473,8 @@ describe("§755 the pictures' addresses change with the drawing", () => {
   it("stamps every bibs page picture with the drawing's version", () => {
     const parts = [DEFAULT_BIB_DESIGN, "#112233", LONG, DATE];
     // 3 since §759: the member mark a star by default, the emergency line fitted to the card. 4 since §804: the strip drawn by the elevation core.
-    expect(BIB_DRAWING_VERSION).toBe(5);
+    // 6 since §947: the emergency line reads «Name: number», a bar between its numbers.
+    expect(BIB_DRAWING_VERSION).toBe(6);
     expect(bibPictureStamp(parts)).toBe(fnv1a(JSON.stringify([BIB_DRAWING_VERSION, parts])));
     // The same design under the drawing before this one: another address.
     expect(bibPictureStamp(parts)).not.toBe(fnv1a(JSON.stringify([BIB_DRAWING_VERSION - 1, parts])));

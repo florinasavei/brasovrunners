@@ -20,6 +20,7 @@ import {
   BIB_MEMBER_LABEL_MAX,
   BIB_MEMBER_STYLES,
   BIB_NAME_POSITIONS,
+  BIB_NAME_SCALES,
   BIB_NUMBER_SCALES,
   BIB_PROFILE_FIGURES_PLACES,
   BIB_PROFILE_ORIENTATIONS,
@@ -381,6 +382,10 @@ export default async function BibDesignPanel({
               {designTick("showEventTitle", t("editor.bibDesign.showEventTitle"))}
               {designTick("showDate", t("editor.bibDesign.showDate"))}
             </Stack>
+            {/* «Banda dintr-un capăt în altul» (§947): the band through the white margin to the paper's edges; its help says what a printer does with it. */}
+            <CheckboxField name="event.bibDesign.bandBleed" defaultChecked={design.bandBleed} help={t("editor.bibDesign.bandBleedHelp")}>
+              {t("editor.bibDesign.bandBleed")}
+            </CheckboxField>
             <CheckboxField name="event.bibDesign.showDistance" defaultChecked={design.showDistance} help={t("editor.bibDesign.showDistanceHelp")}>
               {t("editor.bibDesign.showDistance")}
             </CheckboxField>
@@ -444,6 +449,22 @@ export default async function BibDesignPanel({
               {BIB_NAME_POSITIONS.map((position) => (
                 <option key={position} value={position}>
                   {t(`editor.bibDesign.positions.${position}`)}
+                </option>
+              ))}
+            </RecallField>
+            {/* «Mărimea numelui» (§947): today's, or one of two larger — each takes its room from the number. */}
+            <RecallField
+              select
+              name="event.bibDesign.nameScale"
+              label={t("editor.bibDesign.nameScale")}
+              helperText={t("editor.bibDesign.nameScaleHelp")}
+              defaultValue={design.nameScale}
+              slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+              sx={{ width: { sm: 260 } }}
+            >
+              {BIB_NAME_SCALES.map((scale) => (
+                <option key={scale} value={scale}>
+                  {t(`editor.bibDesign.nameScales.${scale}`)}
                 </option>
               ))}
             </RecallField>
@@ -560,7 +581,7 @@ export default async function BibDesignPanel({
               </Stack>
             </OnlyWhenTicked>
 
-            {/* «Telefon pentru urgențe» (§750, amended §759): its label and up to two numbers, each with its own name, on one line. */}
+            {/* «Telefon pentru urgențe» (§750, amended §759 and §947): its label and up to three numbers, each with its own name, on one line. */}
             <Box sx={{ borderTop: 1, borderColor: "divider", pt: 1.5 }}>
               <CheckboxField name="event.bibDesign.showEmergency" defaultChecked={design.showEmergency} help={t("editor.bibDesign.showEmergencyHelp")}>
                 {t("editor.bibDesign.showEmergency")}
@@ -617,6 +638,29 @@ export default async function BibDesignPanel({
                     helperText={t("editor.bibDesign.emergencyPhone2Help")}
                     placeholder={t("editor.bibDesign.emergencyPhonePlaceholder")}
                     defaultValue={design.emergencyPhone2}
+                    autoComplete="off"
+                    slotProps={{ htmlInput: { maxLength: BIB_EMERGENCY_PHONE_MAX, inputMode: "tel" }, inputLabel: { shrink: true } }}
+                    sx={{ width: { sm: 280 } }}
+                  />
+                </Stack>
+                {/* The third (§947): a trail race's three — the organizers', the mountain rescue's and «112», which is a number here too. */}
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+                  <RecallField
+                    name="event.bibDesign.emergencyPhone3Label"
+                    label={t("editor.bibDesign.emergencyPhone3Label")}
+                    helperText={t("editor.bibDesign.emergencyPhoneLabelHelp", { max: BIB_EMERGENCY_NAME_MAX })}
+                    defaultValue={design.emergencyPhone3Label}
+                    autoComplete="off"
+                    slotProps={{ htmlInput: { maxLength: BIB_EMERGENCY_NAME_MAX }, inputLabel: { shrink: true } }}
+                    sx={{ width: { sm: 240 } }}
+                  />
+                  <RecallField
+                    name="event.bibDesign.emergencyPhone3"
+                    type="tel"
+                    label={t("editor.bibDesign.emergencyPhone3")}
+                    helperText={t("editor.bibDesign.emergencyPhone3Help")}
+                    placeholder={t("editor.bibDesign.emergencyPhone3Placeholder")}
+                    defaultValue={design.emergencyPhone3}
                     autoComplete="off"
                     slotProps={{ htmlInput: { maxLength: BIB_EMERGENCY_PHONE_MAX, inputMode: "tel" }, inputLabel: { shrink: true } }}
                     sx={{ width: { sm: 280 } }}
