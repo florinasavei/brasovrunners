@@ -9,7 +9,7 @@ import TranslateProvider, { type TranslateAction } from "@/modules/translate/ui/
 import type { PublicVolunteerRole } from "@/modules/volunteers/volunteers";
 
 /**
- * §NNN — «Cel mult câte roluri poate bifa o persoană» as the server draws it (BR-REQ-031-01, BR-REQ-050-02), in both languages:
+ * §951 — «Cel mult câte roluri poate bifa o persoană» as the server draws it (BR-REQ-031-01, BR-REQ-050-02), in both languages:
  *
  * - **the volunteers' own page**, from its real `page.tsx` down to the real form: the limit the public read carries reaches the
  *   roles' help line («Alege un singur rol.», «Poți bifa cel mult 2 roluri.», «…20 de roluri.»), and a refused post — the address
@@ -208,7 +208,7 @@ const EN = {
   none: "Tick at least one role under “What you are willing to do”.",
 };
 
-describe("§NNN BR-REQ-031-01 the roles' help line says the event's limit", () => {
+describe("§951 BR-REQ-031-01 the roles' help line says the event's limit", () => {
   it("says «Bifează tot ce ai face» while the event has no limit — and for a page's copy made before the setting existed", async () => {
     for (const choicesMax of [null, undefined] as const) {
       state.choicesMax = choicesMax;
@@ -277,7 +277,7 @@ describe("§NNN BR-REQ-031-01 the roles' help line says the event's limit", () =
   });
 });
 
-describe("§NNN BR-REQ-031-01 a refusal over the limit says the limit, not «Bifează cel puțin un rol»", () => {
+describe("§951 BR-REQ-031-01 a refusal over the limit says the limit, not «Bifează cel puțin un rol»", () => {
   it("draws the limit's sentence at the roles and in the summary, with every tick and every typed box back — in Romanian", async () => {
     state.choicesMax = 2;
     const page = decode(await refusedVisit(`${WATER},${GUIDE},${KITS}`));
@@ -368,7 +368,7 @@ describe("§NNN BR-REQ-031-01 a refusal over the limit says the limit, not «Bif
   });
 });
 
-describe("§NNN BR-REQ-050-02 the «Voluntari» card's box", () => {
+describe("§951 BR-REQ-050-02 the «Voluntari» card's box", () => {
   const translate: TranslateAction = async () => ({ ok: false, reason: "notConfigured" });
 
   async function drawCard(over: Partial<ComponentProps<typeof VolunteersCard>> = {}, language: "ro" | "en" = "ro") {

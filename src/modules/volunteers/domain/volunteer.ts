@@ -41,7 +41,7 @@ export const VOLUNTEER_MESSAGE_MAX = 300;
 /** How many roles one event may define: a list a person can read, and a bound on a forged form. */
 export const VOLUNTEER_ROLES_MAX = 30;
 /**
- * «Cel mult câte roluri poate bifa o persoană» (§NNN, amending §761): the bounds of an event's limit on the public form's
+ * «Cel mult câte roluri poate bifa o persoană» (§951, amending §761): the bounds of an event's limit on the public form's
  * ticks — the database's too (`events_volunteer_choices_max_range`). One is «alege un singur rol»; twenty is past any
  * list a person ticks their way through, and under what an event may define.
  */
@@ -579,7 +579,7 @@ export function choicesWithAssigned(input: Pick<VolunteerStaffInput, "roleIds" |
 const tickedRoles = z.array(z.string()).min(1);
 
 /**
- * …and, while the event sets «Cel mult câte roluri poate bifa o persoană» (§NNN), no more of them than that
+ * …and, while the event sets «Cel mult câte roluri poate bifa o persoană» (§951), no more of them than that
  * (`choicesOverMax`): a rule of the box itself, so a refusal names `roleIds` together with every other box that failed —
  * a person who ticked five roles and forgot the consent is told both in one pass, not on a second try. `null` is no
  * limit, the schema §761 always had. Only the public form's: the organizers' entry (`volunteerStaffInputBase`) reads
@@ -612,7 +612,7 @@ const publicBase = (choicesMax: number | null) => ({
   renderedAt: z.iso.datetime().optional(),
 });
 
-/** §758's form for an event's limit on the ticks (§NNN), or for none. */
+/** §758's form for an event's limit on the ticks (§951), or for none. */
 const volunteerPublicInputSchemaFor = (choicesMax: number | null) =>
   z.object({
     ...publicBase(choicesMax),
@@ -624,7 +624,7 @@ const volunteerPublicInputSchemaFor = (choicesMax: number | null) =>
  * The public form while the privacy notice in force does **not** name what a volunteer says about themselves
  * (§758's shape, unchanged): the consent, the agreement and «Am cel puțin 18 ani», each a tick that is the person's
  * own act, required; a minor's volunteering is a later question for the lawyer. This one is the form of an event with no
- * limit on the ticks (§NNN): `volunteerPublicSchemaFor` builds the limited one.
+ * limit on the ticks (§951): `volunteerPublicSchemaFor` builds the limited one.
  */
 export const volunteerPublicInputSchema = volunteerPublicInputSchemaFor(null);
 
@@ -662,7 +662,7 @@ const volunteerPublicProfileBase = (eventDay: string, choicesMax: number | null)
  * volunteer agreement `{{volunteerGuardian}}`, in every language (the §562 / §613 pattern). While it does not, a date that
  * gives an age under eighteen is refused on `birthDate` — the page then says the club cannot take minors yet. The age is the
  * date's on `eventDay` (`volunteerEventDay`): the §768 rules are judged on the event's day, not today's, and the result carries
- * it as `age` beside the date. `choicesMax` is the event's limit on the roles ticked (§NNN), or null for none.
+ * it as `age` beside the date. `choicesMax` is the event's limit on the roles ticked (§951), or null for none.
  */
 export function volunteerPublicProfileSchemaFor(minors: boolean, eventDay: string, choicesMax: number | null = null) {
   const always = () => true;
@@ -694,7 +694,7 @@ export type VolunteerPublicProfileInput = z.infer<ReturnType<typeof volunteerPub
 /**
  * The schema a public post is read with: the profile's (with the minors' path while `minors`) while the notice names
  * the profile, §758's otherwise — which takes adults only, by its own tick. `eventDay` is the day the date of birth is
- * counted on (`volunteerEventDay`). `choicesMax` is the event's «Cel mult câte roluri poate bifa o persoană» (§NNN): a post
+ * counted on (`volunteerEventDay`). `choicesMax` is the event's «Cel mult câte roluri poate bifa o persoană» (§951): a post
  * ticking more roles than it is refused on `roleIds` by either form; absent or null, any number passes, as it always did.
  */
 export function volunteerPublicSchemaFor(mode: { profile: boolean; minors: boolean; eventDay: string; choicesMax?: number | null }) {
@@ -767,7 +767,7 @@ export function openChoices(ticked: readonly string[], standings: ReadonlyMap<st
 }
 
 /**
- * Whether a value may be an event's «Cel mult câte roluri poate bifa o persoană» (§NNN): none (`null` — any number, as §761
+ * Whether a value may be an event's «Cel mult câte roluri poate bifa o persoană» (§951): none (`null` — any number, as §761
  * had it), or a whole number within the bounds. `1.5`, `NaN`, nought and twenty-one are no limit at all.
  */
 export function isVolunteerChoicesMax(value: number | null): boolean {
@@ -775,7 +775,7 @@ export function isVolunteerChoicesMax(value: number | null): boolean {
 }
 
 /**
- * Whether a public post ticks more roles than its event allows (§NNN; the owner, 2026-11-16: «voluntarii primesc prea multe
+ * Whether a public post ticks more roles than its event allows (§951; the owner, 2026-11-16: «voluntarii primesc prea multe
  * roluri» — «Bifează prea multe pe formular»): the roles **as posted**, each counted once however many times its id came, an
  * empty value none — so it depends on the event's setting and the post alone, never on who is already listed or which role
  * has filled. No limit (`null`, and `undefined` for a page's copy made before the setting existed) is never over.

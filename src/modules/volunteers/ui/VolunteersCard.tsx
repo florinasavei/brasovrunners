@@ -109,7 +109,7 @@ type Props = {
   volunteersShowCounts: boolean;
   /** «Numerele voluntarilor încep de la», as saved (§948): the first number of the volunteers' own series, or null while the event gives them none. */
   volunteerBibStart?: number | null;
-  /** «Cel mult câte roluri poate bifa o persoană», as saved (§NNN): the public form's limit on the roles ticked, or null while a person may tick any number. */
+  /** «Cel mult câte roluri poate bifa o persoană», as saved (§951): the public form's limit on the roles ticked, or null while a person may tick any number. */
   volunteerChoicesMax?: number | null;
   /**
    * «Lista voluntarilor e publică pe pagina evenimentului», as saved (§821): the event's page draws a card «Voluntarii» with the name and the role given of
@@ -846,7 +846,7 @@ export default async function VolunteersCard({
               {t("volunteers.shirts.help")}
             </Typography>
           </Box>
-          {/* «Cel mult câte roluri poate bifa o persoană» (§NNN, amending §761; the owner, 2026-11-16: «voluntarii primesc prea multe roluri» — «Bifează prea
+          {/* «Cel mult câte roluri poate bifa o persoană» (§951, amending §761; the owner, 2026-11-16: «voluntarii primesc prea multe roluri» — «Bifează prea
               multe pe formular», asked for «cel mult 2 roluri, sau unul»): the public form's limit on the roles one person ticks, a box with its own «Salvează»
               like the numbers' below — never the editor's save. Empty is any number, which the box says itself (the label kept above it, so the placeholder
               shows); the organizers' own entry is not limited, and nobody already listed changes. */}

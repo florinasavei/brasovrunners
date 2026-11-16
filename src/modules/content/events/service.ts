@@ -3270,7 +3270,7 @@ function blankEventRow(now: Date): EditableEvent {
     // «Oferim tricouri voluntarilor» (§765): off the same way.
     volunteersShirts: false,
     volunteerBibStart: null,
-    // «Cel mult câte roluri poate bifa o persoană» (§NNN): no limit until the «Voluntari» card sets one; a copy, a repeat and a series edit never carry it.
+    // «Cel mult câte roluri poate bifa o persoană» (§951): no limit until the «Voluntari» card sets one; a copy, a repeat and a series edit never carry it.
     volunteerChoicesMax: null,
     // «Arată public câți voluntari mai sunt necesari» (§773): off the same way — a public number is the club's choice, event by event.
     volunteersShowCounts: false,

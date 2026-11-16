@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.47-2026-11-16 -->
+<!-- PROJECT_BASELINE: BR-V4.48-2026-11-16 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.47-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.48-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1893,7 +1893,7 @@ events
 - waitlist_count_public boolean NOT NULL DEFAULT true  -- §10.10; «Arată public câți așteaptă», the line's count on public surfaces; under participant_count_public (§669)
 - participant_count_public boolean NOT NULL DEFAULT true  -- §10.10; «Arată public numărătoarea», every public number of the event (§668)
 - public_list_club members_only|as_typed|hidden NOT NULL DEFAULT members_only  -- §10.10; «Clubul pe lista publică», what the list's «Club» column says
-- volunteer_choices_max integer null  -- §NNN, amending §761; «Cel mult câte roluri poate bifa o persoană» on the public volunteers' form; null is any number; never copied by a duplicate, a series, a repeat or the event's file
+- volunteer_choices_max integer null  -- §951, amending §761; «Cel mult câte roluri poate bifa o persoană» on the public volunteers' form; null is any number; never copied by a duplicate, a series, a repeat or the event's file
 - cover_media_asset_id uuid null
 - created_by_staff_user_id uuid
 - updated_by_staff_user_id uuid
@@ -1932,7 +1932,7 @@ Checks:
 - external HTTPS/provider fields external only;
 - `participant_list_visibility = NAMES` only on an INTERNAL event;
 - `volunteer_choices_max` is null or a whole number from 1 to 20 (`events_volunteer_choices_max_range`;
-  `DECISIONS.md` §NNN, amending §761). §761 lets a person tick every role they would do under «Ce ești
+  `DECISIONS.md` §951, amending §761). §761 lets a person tick every role they would do under «Ce ești
   dispus(ă) să faci»; this is the most they may tick, per event, and null — the default — is any number.
   It limits the **public** volunteers' form alone, whichever door the post came through (the page, an
   invitation's link, a member's session): the roles' help line says it, and `submitVolunteer` refuses a

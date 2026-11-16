@@ -30,7 +30,7 @@ vi.mock("@/modules/public-cache/cache", async (importOriginal) => ({
 }));
 
 /**
- * §NNN — «Cel mult câte roluri poate bifa o persoană» (amending §761; the owner, 2026-11-16, five days before the race:
+ * §951 — «Cel mult câte roluri poate bifa o persoană» (amending §761; the owner, 2026-11-16, five days before the race:
  * «voluntarii primesc prea multe roluri» — asked where it goes wrong, «Bifează prea multe pe formular», and asked for «cel
  * mult 2 roluri, sau unul»). BR-REQ-031-01 for the public form, BR-REQ-050-02 for the card's setting, BR-REQ-060-01 for who.
  *
@@ -156,7 +156,7 @@ beforeEach(async () => {
   organizer = await staff("MODERATOR");
 });
 
-describe("§NNN BR-REQ-050-02 «Cel mult câte roluri poate bifa o persoană»: the event's setting", () => {
+describe("§951 BR-REQ-050-02 «Cel mult câte roluri poate bifa o persoană»: the event's setting", () => {
   it("is none on every event until the club sets one, however the event was made", async () => {
     const event = await seedEvent();
     expect(await limitOf(event.id)).toBeNull();
@@ -250,7 +250,7 @@ describe("§NNN BR-REQ-050-02 «Cel mult câte roluri poate bifa o persoană»: 
   });
 });
 
-describe("§NNN BR-REQ-031-01 the public sign-up under the event's limit", () => {
+describe("§951 BR-REQ-031-01 the public sign-up under the event's limit", () => {
   it("refuses a post over the limit as the person's own fix — VALIDATION_ERROR naming `roleIds` — with nothing written, nothing queued and no allowance spent", async () => {
     const event = await seedEvent({ volunteerChoicesMax: 2 });
     const roles = await seedRoles(event.id);
@@ -414,7 +414,7 @@ describe("§NNN BR-REQ-031-01 the public sign-up under the event's limit", () =>
   });
 });
 
-describe("§NNN the limit is the public form's alone", () => {
+describe("§951 the limit is the public form's alone", () => {
   /** The organizers' own entry, as «Adaugă un voluntar de mână» posts it. */
   const entry = (roleIds: readonly string[], assignedRoleIds: readonly string[] = []) => ({
     roleIds: [...roleIds],
@@ -467,7 +467,7 @@ describe("§NNN the limit is the public form's alone", () => {
   });
 });
 
-describe("§NNN where the limit is read, and where it never travels", () => {
+describe("§951 where the limit is read, and where it never travels", () => {
   it("the public read carries it to the form beside «Oferim tricouri voluntarilor», and an event that takes no volunteers reads none", async () => {
     const event = await seedEvent();
     await seedRoles(event.id);

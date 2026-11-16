@@ -15,7 +15,7 @@ import {
 import { bornAgedOn } from "../../helpers/volunteer-birth";
 
 /**
- * §NNN — «Cel mult câte roluri poate bifa o persoană» (amending §761; the owner, 2026-11-16: «voluntarii primesc prea multe
+ * §951 — «Cel mult câte roluri poate bifa o persoană» (amending §761; the owner, 2026-11-16: «voluntarii primesc prea multe
  * roluri» — «Bifează prea multe pe formular»), the pure part (BR-REQ-031-01, BR-REQ-050-02): what may be a limit, how a post's
  * roles are counted against it, and the two shapes of the public form refusing a post over it on the roles' own box — while
  * the organizers' form never asks. No database.
@@ -27,7 +27,7 @@ const [A, B, C] = ids(3);
 const legacy = { name: "Ana Test", email: "ana@example.test", phone: "+40712345678", message: "", locale: "ro", consent: true, agreement: true, adult: true };
 const profile = { ...legacy, adult: undefined, birthDate: bornAgedOn(34, EVENT_DAY), sex: "FEMALE", city: "Brașov" };
 
-describe("§NNN what may be an event's limit", () => {
+describe("§951 what may be an event's limit", () => {
   it("is none, or a whole number from one to twenty", () => {
     expect([VOLUNTEER_CHOICES_MAX_LOWEST, VOLUNTEER_CHOICES_MAX_HIGHEST]).toEqual([1, 20]);
     for (const value of [null, 1, 2, 10, 19, 20]) expect(isVolunteerChoicesMax(value), String(value)).toBe(true);
@@ -43,7 +43,7 @@ describe("§NNN what may be an event's limit", () => {
   });
 });
 
-describe("§NNN how a post's roles are counted against the limit", () => {
+describe("§951 how a post's roles are counted against the limit", () => {
   it("is never over while the event has no limit", () => {
     for (const max of [null, undefined]) {
       expect(choicesOverMax([], max)).toBe(false);
@@ -73,7 +73,7 @@ describe("§NNN how a post's roles are counted against the limit", () => {
   });
 });
 
-describe("§NNN the public form's schema under a limit", () => {
+describe("§951 the public form's schema under a limit", () => {
   it("is the form it always was while the event has no limit — the very same schema", () => {
     expect(volunteerPublicSchemaFor({ profile: false, minors: false, eventDay: EVENT_DAY })).toBe(volunteerPublicInputSchema);
     expect(volunteerPublicSchemaFor({ profile: false, minors: false, eventDay: EVENT_DAY, choicesMax: null })).toBe(volunteerPublicInputSchema);

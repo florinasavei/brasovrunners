@@ -306,12 +306,12 @@ describe("§754 submitVolunteerAction's redirects", () => {
 });
 
 /*
-  §NNN — «Cel mult câte roluri poate bifa o persoană» (BR-REQ-031-01), through the action: a post over the event's limit goes back to
+  §951 — «Cel mult câte roluri poate bifa o persoană» (BR-REQ-031-01), through the action: a post over the event's limit goes back to
   the form as the roles' box to fix — the same address a post with no role ticked gets, `?volunteer=invalid&vfields=roleIds`, and no
   word more — with every role ticked and everything typed in the sealed draft, which is what the page tells the two refusals apart
   by (`choicesOverMax`; the page as drawn is `tests/unit/volunteers/choices-max-render.test.ts`). Nothing is written or queued.
 */
-describe("§NNN submitVolunteerAction under the event's limit on the roles ticked", () => {
+describe("§951 submitVolunteerAction under the event's limit on the roles ticked", () => {
   async function seedLimited(max: number) {
     await seedEvent(true);
     await db.update(events).set({ volunteerChoicesMax: max }).where(eq(events.id, eventId));

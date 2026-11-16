@@ -9,7 +9,7 @@ import { VOLUNTEER_CHOICES_MAX_HIGHEST, VOLUNTEER_CHOICES_MAX_LOWEST } from "@/m
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0206_volunteer_choices_max` (§NNN, amending §761; the owner, 2026-11-16: «voluntarii primesc prea multe roluri» —
+ * Migration `0206_volunteer_choices_max` (§951, amending §761; the owner, 2026-11-16: «voluntarii primesc prea multe roluri» —
  * «Bifează prea multe pe formular»), proven on real PostgreSQL (PGlite): one column on the events, `volunteer_choices_max` —
  * nullable, no default — so every event from before has no limit and an event written without it has none either; the table
  * itself holds the bounds the service says in words; and the file only expands.

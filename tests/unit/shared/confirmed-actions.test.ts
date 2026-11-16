@@ -358,7 +358,7 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Pune aici» / «Scoate» on «Planul voluntarilor» (§949): where a volunteer stands on the route, one press either way.
   placeVolunteerAction:
     "a line of the organizers' own plan for one volunteer, undone by «Scoate» or by another point; it tells nobody and changes no state, role, number or count",
-  // «Cel mult câte roluri poate bifa o persoană» on the event's «Voluntari» card (§NNN): the public form's limit on the roles ticked, a box with its own «Salvează».
+  // «Cel mult câte roluri poate bifa o persoană» on the event's «Voluntari» card (§951): the public form's limit on the roles ticked, a box with its own «Salvează».
   setVolunteerChoicesMaxAction:
     "a setting of the event's public volunteers' form, undone by saving the old number or an empty box; it tells nobody, deletes nothing and changes nobody already listed — as the card's ticks beside it, which ask nothing either",
   addTestRegistrationsAction: "test rows, counted nowhere and absent from production, removed by a verb that asks",
@@ -491,7 +491,7 @@ describe("§384 every irreversible or outward-facing staff action asks first", (
     expect(stale, "listed in NOT_CONFIRMED but no longer exported").toEqual([]);
   });
 
-  it("holds the «Voluntari» card's limit on the roles ticked (§NNN) to its classification: listed with its reason, and posted from a bare form of its own", () => {
+  it("holds the «Voluntari» card's limit on the roles ticked (§951) to its classification: listed with its reason, and posted from a bare form of its own", () => {
     expect(NOT_CONFIRMED.setVolunteerChoicesMaxAction).toMatch(/undone by saving the old number or an empty box/);
     expect("setVolunteerChoicesMaxAction" in CONFIRMED_ACTIONS).toBe(false);
     const card = readFileSync(path.join(ROOT, "src/modules/volunteers/ui/VolunteersCard.tsx"), "utf8");

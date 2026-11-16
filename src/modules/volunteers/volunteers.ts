@@ -472,7 +472,7 @@ export async function readPublicVolunteerRoles<T extends Record<string, unknown>
    */
   buttonShown: boolean;
   /**
-   * «Cel mult câte roluri poate bifa o persoană» (§NNN): the most roles one person may tick on the public form, or null for any number. Read with the
+   * «Cel mult câte roluri poate bifa o persoană» (§951): the most roles one person may tick on the public form, or null for any number. Read with the
    * roles, like `shirts`, so the form's help line says it from the same cache entry; the sign-up reads the event's row itself (`submitVolunteer`).
    */
   choicesMax: number | null;
@@ -504,7 +504,7 @@ export async function readPublicVolunteerRoles<T extends Record<string, unknown>
     showCounts: event.showCounts,
     // «Arată butonul „Vreau să fiu voluntar"» (§835): the event page's box and button only while it is on.
     buttonShown: event.buttonShown,
-    // «Cel mult câte roluri poate bifa o persoană» (§NNN): the form says the limit while the event has one.
+    // «Cel mult câte roluri poate bifa o persoană» (§951): the form says the limit while the event has one.
     choicesMax: event.choicesMax,
     roles: roles.map((role) => {
       const standing = standingOf(role, people);
@@ -1473,7 +1473,7 @@ export async function setVolunteerNumbersStart<T extends Record<string, unknown>
 }
 
 /**
- * «Cel mult câte roluri poate bifa o persoană» (§NNN, amending §761; the owner, 2026-11-16: «voluntarii primesc prea multe
+ * «Cel mult câte roluri poate bifa o persoană» (§951, amending §761; the owner, 2026-11-16: «voluntarii primesc prea multe
  * roluri» — asked where it goes wrong, «Bifează prea multe pe formular», and asked for «cel mult 2 roluri, sau unul»): the
  * most roles one person may tick on the event's public volunteers' form, saved by the «Voluntari» card's own form like the
  * numbers' start above — never by the editor's save.
@@ -2466,7 +2466,7 @@ class InvitationSpent extends Error {}
  * none left is «full», for everybody, before the repeat is looked for (no oracle). The offer holds no place: the row
  * has no role until the organizers give one (`assign`), and only a role given counts against its need.
  *
- * «Cel mult câte roluri poate bifa o persoană» (§NNN, amending §761): while the event sets it, a post that ticks more
+ * «Cel mult câte roluri poate bifa o persoană» (§951, amending §761): while the event sets it, a post that ticks more
  * distinct roles than that is the person's own fix too — `VALIDATION_ERROR` naming `roleIds`, nothing written, nothing
  * emailed — counted on what was posted, before the «full» pass and the repeat (so it is no oracle either). No limit
  * (`null`) is any number. The organizers' own entry and «Modifică» (`changeVolunteer`) never ask it.
@@ -2550,7 +2550,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     formInput = { ...posted, email: member.email, clubMember: true };
   }
   /*
-    «Cel mult câte roluri poate bifa o persoană» (§NNN) is a rule of the form itself: the schema refuses a post that ticks more
+    «Cel mult câte roluri poate bifa o persoană» (§951) is a rule of the form itself: the schema refuses a post that ticks more
     distinct roles than the event's limit, on `roleIds`, with every other box that failed. Read from the event's own row above,
     never the page's cache; judged here — on the post and the setting alone — before the spam check, the throttles, the «full
     roles» pass and the repeat's lookup, so nothing is written or queued and a listed address hears what a stranger hears.

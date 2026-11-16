@@ -40,7 +40,7 @@ export type VolunteerOffer = {
   /** «Oferim tricouri voluntarilor» (§765): the form asks the size. */
   shirts: boolean;
   /**
-   * «Cel mult câte roluri poate bifa o persoană» (§NNN): the most roles one person may tick on the form, or null for any number — the
+   * «Cel mult câte roluri poate bifa o persoană» (§951): the most roles one person may tick on the form, or null for any number — the
    * roles' help line says it, and a refusal over it reads as the limit's sentence. The page's words only: the sign-up asks the event's row.
    */
   choicesMax: number | null;
@@ -93,6 +93,6 @@ export async function readVolunteerOffer(
   // A cache entry written before the categories existed has none: the roles are then simply listed (§774).
   // «Vreau să apar pe lista publică a voluntarilor» (§821): asked only where the club made the list public and the notice says what it shows. A last good copy of the event made before the column has none.
   const listTick = event.volunteersListPublic === true && (await cachedVolunteersListDescribed(now));
-  // A cache entry written before the tick existed has none: the button is shown, as it always was (§835). One written before the limit existed has none either: any number of roles (§NNN).
+  // A cache entry written before the tick existed has none: the button is shown, as it always was (§835). One written before the limit existed has none either: any number of roles (§951).
   return { access: access ?? "ANYONE", roles: boxRoles, categories: categories ?? [], shirts, choicesMax: choicesMax ?? null, showCounts, profile, minors, listTick, buttonShown: buttonShown ?? true };
 }

@@ -175,7 +175,7 @@ export async function setVolunteerNumbersStartAction(form: FormData): Promise<vo
 }
 
 /**
- * «Cel mult câte roluri poate bifa o persoană» (§NNN, amending §761): the card's box, the event's `volunteer_choices_max` — the most
+ * «Cel mult câte roluri poate bifa o persoană» (§951, amending §761): the card's box, the event's `volunteer_choices_max` — the most
  * roles one person may tick on the public volunteers' form. Digits alone, or empty for «any number»; anything else is refused on the
  * box by the service's own rule. The action asks its door for the capability by name (`canManageVolunteers`: the Organizer and the
  * Administrators) before the service is called at all, and the service asserts it again (BR-REQ-060-01) — the card that draws the

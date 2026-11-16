@@ -13,7 +13,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Cel mult câte roluri poate bifa o persoană» on the event editor's «Voluntari» card, through its real Server Action
+ * §951 — «Cel mult câte roluri poate bifa o persoană» on the event editor's «Voluntari» card, through its real Server Action
  * (`setVolunteerChoicesMaxAction`; BR-REQ-050-02, BR-REQ-060-01): the box saves digits, an empty box takes the limit off,
  * anything else is refused back to the card with nothing saved; the action asks for the capability by name at its own door,
  * so a role that may not manage volunteers is refused before the service is reached; and each outcome has its sentence in
@@ -123,7 +123,7 @@ async function press(typed: string | null, event = eventId): Promise<{ to: strin
   return { to: state.redirected[0] ?? "", toast: notice?.key ?? null, ...(notice?.values?.count === undefined ? {} : { count: notice.values.count }) };
 }
 
-describe("§NNN BR-REQ-050-02 the card's box «Cel mult câte roluri poate bifa o persoană»", () => {
+describe("§951 BR-REQ-050-02 the card's box «Cel mult câte roluri poate bifa o persoană»", () => {
   it("saves the digits typed and comes back to the card with the toast that says the number saved", async () => {
     const card = `/ro/admin/events/${eventId}#box-volunteers`;
     expect(await press("2")).toEqual({ to: card, toast: "volunteerChoicesMaxOn", count: "2" });
@@ -208,7 +208,7 @@ describe("§NNN BR-REQ-050-02 the card's box «Cel mult câte roluri poate bifa 
   });
 });
 
-describe("§NNN BR-REQ-060-01 the action asserts the capability itself", () => {
+describe("§951 BR-REQ-060-01 the action asserts the capability itself", () => {
   it("asks its door for `canManageVolunteers` by name, on every press", async () => {
     await press("2");
     expect(state.asked).toEqual(["canManageVolunteers"]);
@@ -234,7 +234,7 @@ describe("§NNN BR-REQ-060-01 the action asserts the capability itself", () => {
   });
 });
 
-describe("§NNN the words of the card's setting", () => {
+describe("§951 the words of the card's setting", () => {
   it("has each toast, the box's words and the refusal's sentence in both languages", () => {
     for (const catalogue of [ro, en]) {
       for (const key of ["volunteerChoicesMaxOff", "volunteerUnchanged"] as const) expect(catalogue.Feedback.toast[key].length, key).toBeGreaterThan(0);

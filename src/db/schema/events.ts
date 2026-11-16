@@ -572,7 +572,7 @@ export const events = pgTable(
      */
     volunteerBibStart: integer("volunteer_bib_start"),
     /**
-     * «Cel mult câte roluri poate bifa o persoană» (migration `0206`, §NNN, amending §761; the owner, 2026-11-16: «voluntarii
+     * «Cel mult câte roluri poate bifa o persoană» (migration `0206`, §951, amending §761; the owner, 2026-11-16: «voluntarii
      * primesc prea multe roluri» — and, asked where it goes wrong, «Bifează prea multe pe formular»; asked for: «cel mult 2
      * roluri, sau unul»): the most roles one person may tick under «Ce ești dispus(ă) să faci» on the event's **public**
      * volunteers' form — from the page, from an invitation's link or as a member alike. Null — the default, so no event
@@ -1082,7 +1082,7 @@ export const events = pgTable(
      */
     check("events_bib_start_number_positive", sql`${t.bibStartNumber} >= 1 AND ${t.bibStartNumber} <= 99000`),
     check("events_volunteer_bib_start_range", sql`${t.volunteerBibStart} IS NULL OR (${t.volunteerBibStart} >= 1 AND ${t.volunteerBibStart} <= 99000)`),
-    // «Cel mult câte roluri poate bifa o persoană» (§NNN): no limit, or one to twenty — `VOLUNTEER_CHOICES_MAX_LOWEST` / `_HIGHEST` say the same in words.
+    // «Cel mult câte roluri poate bifa o persoană» (§951): no limit, or one to twenty — `VOLUNTEER_CHOICES_MAX_LOWEST` / `_HIGHEST` say the same in words.
     check("events_volunteer_choices_max_range", sql`${t.volunteerChoicesMax} IS NULL OR (${t.volunteerChoicesMax} >= 1 AND ${t.volunteerChoicesMax} <= 20)`),
     check("events_bib_colour_is_hex", sql`${t.bibColour} IS NULL OR ${t.bibColour} ~ '^#[0-9a-fA-F]{6}$'`),
     // The desk's spares (§444): a start and a count or neither, within a five-digit bib, and at

@@ -177,7 +177,7 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
         roles={offer.roles}
         categories={offer.categories}
         shirts={offer.shirts}
-        // «Cel mult câte roluri poate bifa o persoană» (§NNN): the help line says it, and a refusal over it reads as the limit's sentence.
+        // «Cel mult câte roluri poate bifa o persoană» (§951): the help line says it, and a refusal over it reads as the limit's sentence.
         choicesMax={offer.choicesMax}
         showCounts={offer.showCounts}
         // The day the date of birth is counted on (§773): the gun's, else the event's, in the event's own zone.

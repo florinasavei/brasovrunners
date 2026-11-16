@@ -994,7 +994,7 @@ describe("import over an existing event", () => {
  */
 describe("an event's volunteers are not the file's — only their categories and roles are", () => {
   async function withVolunteers(eventId: string) {
-    // …and «Cel mult câte roluri poate bifa o persoană» (§NNN), one edition's own like the ticks beside it.
+    // …and «Cel mult câte roluri poate bifa o persoană» (§951), one edition's own like the ticks beside it.
     await db.update(events).set({ acceptsVolunteers: true, volunteersShirts: true, volunteersShowCounts: true, volunteerChoicesMax: 2 }).where(eq(events.id, eventId));
     const [role] = await db
       .insert(eventVolunteerRoles)
@@ -1085,7 +1085,7 @@ describe("an event's volunteers are not the file's — only their categories and
     expect((await reload(target.id)).volunteersShowCounts).toBe(false);
   });
 
-  it("carries «Cel mult câte roluri poate bifa o persoană» in no direction either (§NNN): the file has no limit, an import as new starts with none and an import over leaves the target's own", async () => {
+  it("carries «Cel mult câte roluri poate bifa o persoană» in no direction either (§951): the file has no limit, an import as new starts with none and an import over leaves the target's own", async () => {
     const { event } = await seedRace();
     await withVolunteers(event.id);
     expect((await reload(event.id)).volunteerChoicesMax).toBe(2);
