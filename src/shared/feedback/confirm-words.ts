@@ -22,7 +22,10 @@ export type MailAudience =
   | "volunteerAddresses"
   | "memberAddresses"
   | "firstWaiting"
-  | "held";
+  | "held"
+  // «Trimite fiecăruia punctul lui» (§956): who has not been told the point they stand at, and — «din nou tuturor» — everybody at a point.
+  | "volunteersNotTold"
+  | "volunteersAtPoints";
 
 /**
  * Whom the email goes to (`mail`): a person by name — or `{firstName} {lastName}`, which the dialog fills from the

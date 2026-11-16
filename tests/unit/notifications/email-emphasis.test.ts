@@ -155,6 +155,8 @@ const HIGHLIGHTED: ReadonlyArray<{ type: EmailMessageType; ro: readonly string[]
   { type: "REGISTER_ANOTHER_PERSON", ro: ["pentru o altă persoană"], en: ["for another person"], button: true },
   { type: "NEWSLETTER_CONFIRM", ro: ["Confirmă abonarea cu butonul de mai jos."], en: ["Confirm your subscription with the button below."], button: true },
   { type: "NEW_EVENT_ALERT", ro: ["Duminică, 4 oct. 2026, la 09:00"], en: ["Sunday, 4 Oct 2026, at 09:00"] },
+  // «Punctul tău» (§956): the point the person stands at — its number in the route's order, its kilometre and its name.
+  { type: "VOLUNTEER_POINT", ro: ["Punctul tău la Crosul de toamnă: 3. 5,5 km — Apă la cabană"], en: ["Your point at The autumn cross: 3. 5.5 km — Water at the hut"] },
 ];
 
 /** The club's copies, the staff's and the club's own words: no band (out of scope, §580). */

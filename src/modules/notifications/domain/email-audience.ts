@@ -75,6 +75,8 @@ export const EMAIL_AUDIENCE = {
   VOLUNTEER_AGREEMENT_ACCEPTED: "public",
   // The role the organizers gave a volunteer (§761): to the volunteer, the public's road like their «am primit».
   VOLUNTEER_ROLE_ASSIGNED: "public",
+  // The point the organizers put a volunteer at (§956): to the volunteer, no registration behind it — the public's, as the role's.
+  VOLUNTEER_POINT: "public",
   // The link to a minor volunteer's parent or guardian (§768): to an address nobody confirmed, no registration behind it — the public's road.
   VOLUNTEER_GUARDIAN_REQUEST: "public",
   // The club's invitation to volunteer (§820): to an address the club typed, no registration behind it — the public's road, like an event invitation's.
