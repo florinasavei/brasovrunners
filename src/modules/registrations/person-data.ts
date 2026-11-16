@@ -228,6 +228,12 @@ export type PersonData = {
      * they stand at none — what the row's `checkpoint_id` says, a column of the row like any other (art. 15 GDPR).
      */
     checkpointName: string | null;
+    /**
+     * «Decizie pentru ziua cursei» (§954): what the organizers decided for the person on race day, in their own words; null while
+     * there is none. Not something the person said, but a fact the club holds about them — a column of the row like any other
+     * (art. 15 GDPR), as the notes above and the point are.
+     */
+    raceDayDecision: string | null;
     shirtSize: (typeof eventVolunteers.$inferSelect)["shirtSize"];
     privacyNoticeVersion: number | null;
     createdAt: Date;
@@ -529,6 +535,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
       hasKit: eventVolunteers.hasKit,
       inRaffle: eventVolunteers.inRaffle,
       checkpointName: eventCheckpoints.nameRo,
+      raceDayDecision: eventVolunteers.raceDayDecision,
       shirtSize: eventVolunteers.shirtSize,
       privacyNoticeVersion: eventVolunteers.privacyNoticeVersion,
       createdAt: eventVolunteers.createdAt,

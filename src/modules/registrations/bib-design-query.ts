@@ -73,6 +73,8 @@ export type BibDesignFormValues = {
   headerImageCrop: BibCropValue;
   sponsorImageCrop: BibCropValue;
   cutMarks: boolean;
+  /** «Fără linia punctată pe tăietură» (§955): off by default; the sheet's alone — the picture of one number draws no cut. */
+  hideCutLine: boolean;
   /** The footer's switches and the club's own line (§317; `bib-footer.ts`). */
   showEmail: boolean;
   showPartners: boolean;
@@ -148,6 +150,7 @@ const SWITCHES = [
   "showLogo",
   "bandBleed",
   "cutMarks",
+  "hideCutLine",
   "showEmail",
   "showPartners",
   "showEventInFooter",
@@ -211,6 +214,7 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     headerImageCrop: field("headerImageCrop")?.trim() || null,
     sponsorImageCrop: field("sponsorImageCrop")?.trim() || null,
     cutMarks: field("cutMarks") === "on",
+    hideCutLine: field("hideCutLine") === "on",
     showEmail: field("showEmail") === "on",
     showPartners: field("showPartners") === "on",
     showEventInFooter: field("showEventInFooter") === "on",

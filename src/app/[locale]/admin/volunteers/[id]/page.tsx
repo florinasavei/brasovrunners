@@ -18,6 +18,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { findVolunteerForAdmin } from "@/modules/volunteers/admin-list";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
 import TurnIntoRunnerPanel from "@/modules/volunteers/ui/TurnIntoRunnerPanel";
+import VolunteerDecisionCard from "@/modules/volunteers/ui/VolunteerDecisionCard";
 import VolunteerPerson, { STATE_CHIP } from "@/modules/volunteers/ui/VolunteerPerson";
 import { listVolunteerNotes } from "@/modules/volunteers/volunteer-notes";
 import { isUuid } from "@/shared/ids";
@@ -25,6 +26,7 @@ import GlyphButton from "@/shared/ui/GlyphButton";
 import StatusChip from "@/shared/ui/StatusChip";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { turnVolunteerIntoRunnerAction } from "../../registrations/actions";
+import { setVolunteerDecisionAction } from "../actions";
 import { addVolunteerNoteAction, deleteVolunteerNoteAction } from "./note-actions";
 
 type Props = {
@@ -44,6 +46,9 @@ export const dynamic = "force-dynamic";
  * «Note interne» stands first, right under the heading block («Note interne» for volunteers, the registration's page's shape):
  * what the organizers tell each other about the person, newest first, open by itself when there is one, after its own save or
  * delete (`saved`) and for `#note-interne`; closed on «nicio notă» otherwise. Its two presses are `note-actions.ts`.
+ *
+ * «Decizie pentru ziua cursei» (§954) stands right after it, still before the person's block: the organizers' one line about
+ * what they decided for the person on race day, with the form that writes it (`VolunteerDecisionCard`, `../actions.ts`).
  *
  * Under the person's block, for the Administrator alone: «Transformă în alergător» (§948, `TurnIntoRunnerPanel`).
  */
@@ -113,6 +118,13 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
         deleteAction={deleteVolunteerNoteAction}
         opened={saved === "noteAdded" || saved === "noteDeleted"}
       />
+
+      {/*
+        «Decizie pentru ziua cursei» (§954): the organizers' part of the page, beside their notes and before the person's own
+        block — what THEY decided for the person on race day, and the form that writes it. The «Voluntari» list's dialog posts
+        to the same action; this one comes back here (`path`), and the list's press lands on this card when no script runs.
+      */}
+      <VolunteerDecisionCard locale={locale} person={person} returnTo={path} action={setVolunteerDecisionAction} />
 
       <VolunteerPerson person={person} context={context} as="section" />
 

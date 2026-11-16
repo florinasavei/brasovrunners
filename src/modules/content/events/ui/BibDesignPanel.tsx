@@ -85,7 +85,7 @@ function Legend({ children }: { children: string }) {
  * **In named sections, top to bottom as the number prints** (§759, amending §750; the owner,
  * 2026-10-13: «Aici am nevoie de separatoare și iconițe, că nu mai înțeleg nimic...»): «Antet» (the
  * band's colour, its picture, the lockup, the race and its date, the distance badge), «Numărul»
- * (its size, how it is written, the sheet's cut marks), «Numele» (whether and where), «Profilul și
+ * (its size, how it is written, the sheet's cut marks and its dashed line), «Numele» (whether and where), «Profilul și
  * urgențele» (the route's profile — from the GPX or a picture, its figures, its orientation, the
  * checkpoints — and the emergency phones: one block above the bottom band, wherever the sponsors
  * go), «Subsol și sponsori» (the sponsors' band and its place, the stubs, the small print), and
@@ -395,7 +395,7 @@ export default async function BibDesignPanel({
           </Stack>
         </Panel>
 
-        {/* «Numărul» (§759): its size, how it is written (§735), and the sheet's cut marks. */}
+        {/* «Numărul» (§759): its size, how it is written (§735), and the sheet's cut — its marks, and its dashed line or none (§955). */}
         <Panel glyph="bibNumber" collapsible level={5} title={t("editor.bibDesign.sections.number")} aside={numberAside} data-testid="bib-section-number">
           <Stack spacing={1.5}>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
@@ -431,6 +431,10 @@ export default async function BibDesignPanel({
               </RecallField>
             </Stack>
             {designTick("cutMarks", t("editor.bibDesign.cutMarks"))}
+            {/* «Fără linia punctată pe tăietură» (§955): the sheet of two without its dashed line; the help says what stays at the cut, and why. */}
+            <CheckboxField name="event.bibDesign.hideCutLine" defaultChecked={design.hideCutLine} help={t("editor.bibDesign.hideCutLineHelp")}>
+              {t("editor.bibDesign.hideCutLine")}
+            </CheckboxField>
           </Stack>
         </Panel>
 
