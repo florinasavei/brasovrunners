@@ -20,6 +20,7 @@ import {
   BIB_MEMBER_LABEL_MAX,
   BIB_MEMBER_STYLES,
   BIB_NAME_POSITIONS,
+  BIB_NAME_SCALES,
   BIB_NUMBER_SCALES,
   BIB_PROFILE_FIGURES_PLACES,
   BIB_PROFILE_ORIENTATIONS,
@@ -381,6 +382,10 @@ export default async function BibDesignPanel({
               {designTick("showEventTitle", t("editor.bibDesign.showEventTitle"))}
               {designTick("showDate", t("editor.bibDesign.showDate"))}
             </Stack>
+            {/* «Banda dintr-un capăt în altul» (§NNN): the band through the white margin to the paper's edges; its help says what a printer does with it. */}
+            <CheckboxField name="event.bibDesign.bandBleed" defaultChecked={design.bandBleed} help={t("editor.bibDesign.bandBleedHelp")}>
+              {t("editor.bibDesign.bandBleed")}
+            </CheckboxField>
             <CheckboxField name="event.bibDesign.showDistance" defaultChecked={design.showDistance} help={t("editor.bibDesign.showDistanceHelp")}>
               {t("editor.bibDesign.showDistance")}
             </CheckboxField>
@@ -444,6 +449,22 @@ export default async function BibDesignPanel({
               {BIB_NAME_POSITIONS.map((position) => (
                 <option key={position} value={position}>
                   {t(`editor.bibDesign.positions.${position}`)}
+                </option>
+              ))}
+            </RecallField>
+            {/* «Mărimea numelui» (§NNN): today's, or one of two larger — each takes its room from the number. */}
+            <RecallField
+              select
+              name="event.bibDesign.nameScale"
+              label={t("editor.bibDesign.nameScale")}
+              helperText={t("editor.bibDesign.nameScaleHelp")}
+              defaultValue={design.nameScale}
+              slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+              sx={{ width: { sm: 260 } }}
+            >
+              {BIB_NAME_SCALES.map((scale) => (
+                <option key={scale} value={scale}>
+                  {t(`editor.bibDesign.nameScales.${scale}`)}
                 </option>
               ))}
             </RecallField>

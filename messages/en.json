@@ -3166,6 +3166,15 @@
           "pad4": "0001, 0002, 0003 — four digits"
         },
         "namePosition": "Where the name sits",
+        "nameScale": "Name size",
+        "nameScaleHelp": "A larger name takes its room from the number's height. A long name is set smaller, so it fits whole.",
+        "nameScales": {
+          "normal": "Normal",
+          "large": "Larger",
+          "larger": "Largest"
+        },
+        "bandBleed": "The band from edge to edge",
+        "bandBleedHelp": "Ticked: the coloured band reaches the paper's edges, at the top and on both sides. An office printer leaves a few white millimetres; it is for a print shop.",
         "scales": {
           "small": "Small",
           "medium": "Normal",
@@ -10154,6 +10163,8 @@
             "numberScale": "Bib: number size",
             "numberFormat": "Bib: number format",
             "namePosition": "Bib: name position",
+            "nameScale": "Bib: name size",
+            "bandBleed": "Bib: the band from edge to edge",
             "headerImageSrc": "Bib: header picture",
             "sponsorImageSrc": "Bib: sponsors' strip",
             "headerImageCrop": "Bib: header picture crop",

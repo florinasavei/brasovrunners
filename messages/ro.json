@@ -3166,6 +3166,15 @@
           "pad4": "0001, 0002, 0003 — patru cifre"
         },
         "namePosition": "Unde stă numele",
+        "nameScale": "Mărimea numelui",
+        "nameScaleHelp": "Un nume mai mare ia loc din înălțimea numărului. Un nume lung se scrie mai mic, ca să încapă întreg.",
+        "nameScales": {
+          "normal": "Normală",
+          "large": "Mai mare",
+          "larger": "Cea mai mare"
+        },
+        "bandBleed": "Banda dintr-un capăt în altul",
+        "bandBleedHelp": "Bifat: banda colorată ajunge până în marginile hârtiei, sus și în lateral. O imprimantă de birou lasă câțiva milimetri albi; e pentru tipografie.",
         "scales": {
           "small": "Mic",
           "medium": "Normal",
@@ -10154,6 +10163,8 @@
             "numberScale": "Număr: mărimea cifrelor",
             "numberFormat": "Număr: felul cifrelor",
             "namePosition": "Număr: locul numelui",
+            "nameScale": "Număr: mărimea numelui",
+            "bandBleed": "Număr: banda dintr-un capăt în altul",
             "headerImageSrc": "Număr: imaginea de sus",
             "sponsorImageSrc": "Număr: banda sponsorilor",
             "headerImageCrop": "Număr: decupajul imaginii de sus",

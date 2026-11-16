@@ -35,6 +35,8 @@ export const BIB_PAPER = { width: A4_PAGE.width, height: A4_PAGE.height / 2 } as
  * half it was printed on and however the printer treats the edge of the paper. The band does not
  * bleed to the edge for the same reason: a home printer cannot print there, and a band that
  * reached the cut on one bib and stopped short of the edge on the other would be two designs.
+ * Unless the club ticks «Banda dintr-un capăt în altul» (§NNN), its own choice for a sheet taken to
+ * a print shop: then the band alone crosses this margin, to the paper's left, right and top edges.
  */
 export const BIB_MARGIN = 18;
 
@@ -251,6 +253,44 @@ export const BIB_LAYOUT = {
   eliteNumberSize: 40,
   eliteNumberGap: 4,
 } as const;
+
+/**
+ * The name's strip at each of the club's sizes (§NNN; the owner, 2026-11-16: «vreau ca numele alergatorului sa fie un
+ * pic mai mare»): its type, the strip it takes above or below the number, and its offset in the strip. «Normală» is what
+ * every number printed until now — 24 points in a 44-point strip; «Mai mare» is a quarter larger and «Cea mai mare»
+ * half as large again, each strip taller by what its line is, the difference taken from the number's area. Each line
+ * ends the same six to eight points above its strip's foot.
+ */
+export const BIB_NAME_STRIPS = {
+  normal: { size: BIB_LAYOUT.nameSize, block: BIB_LAYOUT.nameBlock, top: BIB_LAYOUT.nameTop },
+  large: { size: 30, block: 52, top: 10 },
+  larger: { size: 36, block: 60, top: 10 },
+} as const;
+export type BibNameStripKey = keyof typeof BIB_NAME_STRIPS;
+
+/**
+ * The strip of one size, and how far a desk spare's empty line and its mark (§444) move down in it: the strip grows
+ * downwards, so the rule stays where a name of that size would have its baseline. Anything unknown is «Normală».
+ */
+export function bibNameStrip(scale: string | null | undefined): { size: number; block: number; top: number; blankShift: number } {
+  const strip = BIB_NAME_STRIPS[(scale ?? "normal") as BibNameStripKey] ?? BIB_NAME_STRIPS.normal;
+  return { ...strip, blankShift: strip.block - BIB_LAYOUT.nameBlock };
+}
+
+/**
+ * The size one name is set at in its strip, and its top in it (§NNN). A larger strip never cuts a name «Normală»
+ * printed whole: the strip's own size while the name fits `width` — the card less its inset and the member mark's
+ * reserve on each side — else the largest, to half a point, at which it fits, never under «Normală», where a name
+ * too long for the card is cut with «…» as it always was. A name set smaller is centred on the line its strip's size
+ * would take. `measure` is the bold type's width in ems (`bib-header.ts#bibTitleWidth`), never narrower than either
+ * renderer sets it, so a name that fits here fits on the paper and in the picture.
+ */
+export function bibNameFit(name: string, strip: { size: number; top: number }, width: number, measure: (text: string) => number): { size: number; top: number } {
+  const ems = measure(name);
+  const fits = ems > 0 ? Math.floor((width / ems) * 2) / 2 : strip.size;
+  const size = Math.max(Math.min(strip.size, BIB_LAYOUT.nameSize), Math.min(strip.size, fits));
+  return { size, top: strip.top + ((strip.size - size) * BIB_TEXT_LINE) / 2 };
+}
 
 /**
  * What the profile's row and the emergency line take from the number's area (§750): their heights

@@ -32,6 +32,9 @@ const EVERYTHING_OFF: BibDesign = {
   // «Trei cifre» (§735): a choice the round trip must carry like the size.
   numberFormat: "pad3",
   namePosition: "above",
+  // «Mărimea numelui» and «Banda dintr-un capăt în altul» (§NNN): each away from its default.
+  nameScale: "larger",
+  bandBleed: true,
   headerImageSrc: OURS,
   sponsorImageSrc: LOCAL,
   // «Deasupra subsolului» (§750): the choice away from the default «Jos de tot».
@@ -303,6 +306,9 @@ describe("§249 the form, read the same way for the save and for the preview", (
       // Nothing posted for «Cum arată numărul» (§735): today's numbers.
       numberFormat: "plain",
       namePosition: "above",
+      // Nothing posted for the name's size, and the band's box unticked (§NNN): the name and the band every bib had.
+      nameScale: "normal",
+      bandBleed: false,
       // Nothing posted for the sponsors' place (§750): «Jos de tot», the default; and no profile, no phone.
       sponsorPlace: "bottom",
       showProfile: false,

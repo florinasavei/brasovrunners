@@ -121,9 +121,9 @@ describe("§759 the bib designer in named sections", () => {
   it("puts every field in the section it prints in", async () => {
     const html = await render();
     const within: Record<(typeof SECTIONS)[number], string[]> = {
-      header: ["event.bibColour", "event.bibDesign.showLogo", "event.bibDesign.showEventTitle", "event.bibDesign.showDate", "event.bibDesign.showDistance", "event.bibDesign.headerImageSrc"],
+      header: ["event.bibColour", "event.bibDesign.showLogo", "event.bibDesign.showEventTitle", "event.bibDesign.showDate", "event.bibDesign.bandBleed", "event.bibDesign.showDistance", "event.bibDesign.headerImageSrc"],
       number: ["event.bibDesign.numberScale", "event.bibDesign.numberFormat", "event.bibDesign.cutMarks"],
-      name: ["event.bibDesign.showName", "event.bibDesign.namePosition"],
+      name: ["event.bibDesign.showName", "event.bibDesign.namePosition", "event.bibDesign.nameScale"],
       footer: ["event.bibDesign.sponsorImageSrc", "event.bibDesign.sponsorPlace", "event.bibDesign.numberStubs", "event.bibDesign.footerText", "event.bibDesign.showEmail"],
       profile: [
         "event.bibDesign.showProfile",

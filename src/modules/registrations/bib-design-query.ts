@@ -61,6 +61,10 @@ export type BibDesignFormValues = {
   /** «Cum arată numărul» (§735): `plain`, `pad3` or `pad4`; anything else is the schema's to refuse. */
   numberFormat: string;
   namePosition: string;
+  /** «Mărimea numelui» (§NNN): `normal`, `large` or `larger`; anything else is the schema's to refuse. */
+  nameScale: string;
+  /** «Banda dintr-un capăt în altul» (§NNN): off by default. */
+  bandBleed: boolean;
   /** «Locul benzii cu sponsori» (§750): `bottom` or `above`; anything else is the schema's to refuse. */
   sponsorPlace: string;
   headerImageSrc: string | null;
@@ -142,6 +146,7 @@ const SWITCHES = [
   "showEventTitle",
   "showDate",
   "showLogo",
+  "bandBleed",
   "cutMarks",
   "showEmail",
   "showPartners",
@@ -159,7 +164,7 @@ const SWITCHES = [
   "eliteNumber",
   "eliteSponsors",
 ] as const;
-const CHOICES = ["numberScale", "numberFormat", "namePosition", "sponsorPlace", "profileSource", "profileFiguresPlace", "profileOrientation"] as const;
+const CHOICES = ["numberScale", "numberFormat", "namePosition", "nameScale", "sponsorPlace", "profileSource", "profileFiguresPlace", "profileOrientation"] as const;
 /** The pictures' addresses; the profile's is never cropped, so it has no crop beside it (§759). */
 const PICTURES = ["headerImageSrc", "sponsorImageSrc", "profileImageSrc"] as const;
 /** Each picture's crop, beside the picture it belongs to: absent with no picture or no crop (§560). */
@@ -197,6 +202,8 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     numberScale: field("numberScale")?.trim() || "medium",
     numberFormat: field("numberFormat")?.trim() || "plain",
     namePosition: field("namePosition")?.trim() || "below",
+    nameScale: field("nameScale")?.trim() || "normal",
+    bandBleed: field("bandBleed") === "on",
     sponsorPlace: field("sponsorPlace")?.trim() || "bottom",
     headerImageSrc: field("headerImageSrc")?.trim() || null,
     sponsorImageSrc: field("sponsorImageSrc")?.trim() || null,

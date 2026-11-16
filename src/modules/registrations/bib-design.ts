@@ -77,6 +77,14 @@ export const BIB_NAME_POSITIONS = ["below", "above"] as const;
 export type BibNamePosition = (typeof BIB_NAME_POSITIONS)[number];
 
 /**
+ * «Mărimea numelui» (§NNN; the owner, 2026-11-16: «vreau ca numele alergatorului sa fie un pic mai mare»): `normal`,
+ * the 24 points every number printed, or one of two larger steps — each takes a taller strip from the number's area
+ * (`bib-geometry.ts#BIB_NAME_STRIPS`). A design saved before this key existed reads `normal` and prints as it did.
+ */
+export const BIB_NAME_SCALES = ["normal", "large", "larger"] as const;
+export type BibNameScale = (typeof BIB_NAME_SCALES)[number];
+
+/**
  * A picture this site stored, and nothing else.
  *
  * The same rule the editorial body's images follow: one of this application's own WebP
@@ -417,6 +425,16 @@ export const bibDesignSchema = z
      */
     numberFormat: z.enum(RACE_NUMBER_FORMATS).catch("plain"),
     namePosition: z.enum(BIB_NAME_POSITIONS).catch("below"),
+    /** «Mărimea numelui» (§NNN): today's size, or one of two larger; absent reads today's. */
+    nameScale: z.enum(BIB_NAME_SCALES).catch("normal"),
+    /**
+     * «Banda dintr-un capăt în altul» (§NNN; the owner, 2026-11-16: «banda cu Brasov runners vreau sa fie dintr-un capat
+     * in altul, ca si fundal»): the coloured band reaches the paper's left, right and top edges instead of stopping at the
+     * white margin (§338). Off by default — an office printer cannot print the last millimetres of a page, and the upper
+     * number of a sheet would then show a white edge the lower one does not: the tick is for a sheet taken to a print shop.
+     * The lockup and the race stay where they are; a header picture and a member's card are not stretched.
+     */
+    bandBleed: z.boolean().catch(false),
     /** A picture across the top instead of the coloured band, or null for the band (§249). */
     headerImageSrc: storedPicture,
     /** A strip of sponsors, or null; where it sits is `sponsorPlace`. */
@@ -545,6 +563,8 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   numberScale: "medium",
   numberFormat: "plain",
   namePosition: "below",
+  nameScale: "normal",
+  bandBleed: false,
   headerImageSrc: null,
   sponsorImageSrc: null,
   sponsorPlace: "bottom",

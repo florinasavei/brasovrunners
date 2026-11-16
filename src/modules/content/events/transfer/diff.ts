@@ -188,6 +188,8 @@ export const FIELD_LABELS = [
   "bib.design.numberScale",
   "bib.design.numberFormat",
   "bib.design.namePosition",
+  "bib.design.nameScale",
+  "bib.design.bandBleed",
   "bib.design.headerImageSrc",
   "bib.design.sponsorImageSrc",
   "bib.design.headerImageCrop",
