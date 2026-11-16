@@ -1,6 +1,6 @@
 {
   "id": "d2ea5db1-aa69-48fd-8411-c7703043859a",
-  "prevId": "ae1ea14c-255e-4491-93e1-10b609080024",
+  "prevId": "5f3ef4ce-3ea5-4438-803a-75998d5dfbc5",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -3843,6 +3843,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "race_day_decision": {
+          "name": "race_day_decision",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -4295,6 +4301,10 @@
         "event_volunteers_note_length": {
           "name": "event_volunteers_note_length",
           "value": "\"event_volunteers\".\"note\" IS NULL OR char_length(\"event_volunteers\".\"note\") BETWEEN 1 AND 500"
+        },
+        "event_volunteers_race_day_decision_length": {
+          "name": "event_volunteers_race_day_decision_length",
+          "value": "\"event_volunteers\".\"race_day_decision\" IS NULL OR char_length(\"event_volunteers\".\"race_day_decision\") BETWEEN 1 AND 300"
         },
         "event_volunteers_age_range": {
           "name": "event_volunteers_age_range",
@@ -4923,6 +4933,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "volunteer_choices_max": {
+          "name": "volunteer_choices_max",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "volunteers_show_counts": {
           "name": "volunteers_show_counts",
           "type": "boolean",
@@ -5542,6 +5558,10 @@
         "events_volunteer_bib_start_range": {
           "name": "events_volunteer_bib_start_range",
           "value": "\"events\".\"volunteer_bib_start\" IS NULL OR (\"events\".\"volunteer_bib_start\" >= 1 AND \"events\".\"volunteer_bib_start\" <= 99000)"
+        },
+        "events_volunteer_choices_max_range": {
+          "name": "events_volunteer_choices_max_range",
+          "value": "\"events\".\"volunteer_choices_max\" IS NULL OR (\"events\".\"volunteer_choices_max\" >= 1 AND \"events\".\"volunteer_choices_max\" <= 20)"
         },
         "events_bib_colour_is_hex": {
           "name": "events_bib_colour_is_hex",
