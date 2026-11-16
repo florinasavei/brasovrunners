@@ -16,6 +16,7 @@ import {
   switchVolunteersButtonAction,
   switchVolunteersCountsAction,
   switchVolunteersListAction,
+  setVolunteerChoicesMaxAction,
   setVolunteerNumbersStartAction,
   switchVolunteersShirtsAction,
 } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
@@ -46,6 +47,8 @@ import StatusChip from "@/shared/ui/StatusChip";
 import TickButton from "@/shared/ui/TickButton";
 import {
   VOLUNTEER_CATEGORIES_MAX,
+  VOLUNTEER_CHOICES_MAX_HIGHEST,
+  VOLUNTEER_CHOICES_MAX_LOWEST,
   VOLUNTEER_CONTACT_EMAIL_MAX,
   VOLUNTEER_CONTACT_PHONE_MAX,
   VOLUNTEER_NAME_MAX,
@@ -106,6 +109,8 @@ type Props = {
   volunteersShowCounts: boolean;
   /** «Numerele voluntarilor încep de la», as saved (§948): the first number of the volunteers' own series, or null while the event gives them none. */
   volunteerBibStart?: number | null;
+  /** «Cel mult câte roluri poate bifa o persoană», as saved (§NNN): the public form's limit on the roles ticked, or null while a person may tick any number. */
+  volunteerChoicesMax?: number | null;
   /**
    * «Lista voluntarilor e publică pe pagina evenimentului», as saved (§821): the event's page draws a card «Voluntarii» with the name and the role given of
    * the confirmed volunteers who ticked «Vreau să apar pe lista publică a voluntarilor»; the card here always shows everybody.
@@ -173,6 +178,7 @@ export default async function VolunteersCard({
   volunteersShirts,
   volunteersShowCounts,
   volunteerBibStart = null,
+  volunteerChoicesMax = null,
   volunteersListPublic = false,
   volunteersButtonShown = true,
   pageLinks = {},
@@ -838,6 +844,31 @@ export default async function VolunteersCard({
             </GlyphButton>
             <Typography variant="caption" color="text.secondary" sx={{ display: "block", pl: 0.5 }}>
               {t("volunteers.shirts.help")}
+            </Typography>
+          </Box>
+          {/* «Cel mult câte roluri poate bifa o persoană» (§NNN, amending §761; the owner, 2026-11-16: «voluntarii primesc prea multe roluri» — «Bifează prea
+              multe pe formular», asked for «cel mult 2 roluri, sau unul»): the public form's limit on the roles one person ticks, a box with its own «Salvează»
+              like the numbers' below — never the editor's save. Empty is any number, which the box says itself (the label kept above it, so the placeholder
+              shows); the organizers' own entry is not limited, and nobody already listed changes. */}
+          <Box component="form" action={setVolunteerChoicesMaxAction} data-testid="volunteer-choices-max-form">
+            {hidden}
+            <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1, alignItems: "flex-start" }}>
+              <RecallField
+                name="max"
+                label={t("volunteers.choicesMax.label")}
+                placeholder={t("volunteers.choicesMax.placeholder")}
+                defaultValue={volunteerChoicesMax === null ? "" : String(volunteerChoicesMax)}
+                size="small"
+                slotProps={{
+                  htmlInput: { inputMode: "numeric", pattern: "[0-9]*", maxLength: 2, autoComplete: "off", "data-testid": "volunteer-choices-max" },
+                  inputLabel: { shrink: true },
+                }}
+                sx={{ width: { xs: "100%", sm: 320 } }}
+              />
+              <GlyphSubmitButton icon="save" variant="outlined" size="small" label={t("volunteers.choicesMax.save")} pendingLabel={t("volunteers.choicesMax.saving")} />
+            </Stack>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", pl: 0.5 }}>
+              {t("volunteers.choicesMax.help", { min: String(VOLUNTEER_CHOICES_MAX_LOWEST), max: String(VOLUNTEER_CHOICES_MAX_HIGHEST) })}
             </Typography>
           </Box>
           {/* «Numerele voluntarilor încep de la» (§948; the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr de concurs"» — «Serie proprie»): the first

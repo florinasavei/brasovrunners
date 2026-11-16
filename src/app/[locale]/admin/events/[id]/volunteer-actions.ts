@@ -2,7 +2,8 @@
 
 import { getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
-import { requireStaff } from "@/modules/staff-identity/session";
+import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
+import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { type EmailPressHandle, inEmailPress } from "@/modules/notifications/press";
 import { typedPhone } from "@/modules/registrations/answers";
 import {
@@ -13,6 +14,7 @@ import {
   setAcceptsVolunteers,
   setVolunteersAccess,
   setVolunteersButtonShown,
+  setVolunteerChoicesMax,
   setVolunteerNumbersStart,
   setVolunteersShirts,
   setVolunteersShowCounts,
@@ -166,6 +168,29 @@ export async function setVolunteerNumbersStartAction(form: FormData): Promise<vo
     const result = await setVolunteerNumbersStart(getDb(), actor, { eventId: eventIdOf(form), start }, new Date());
     if (!result.changed) return backToCard(form, { saved: "volunteerUnchanged" });
     return backToCard(form, { saved: start === null ? "volunteerNumbersOff" : "volunteerNumbersOn" });
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+}
+
+/**
+ * «Cel mult câte roluri poate bifa o persoană» (§NNN, amending §761): the card's box, the event's `volunteer_choices_max` — the most
+ * roles one person may tick on the public volunteers' form. Digits alone, or empty for «any number»; anything else is refused on the
+ * box by the service's own rule. The action asks its door for the capability by name (`canManageVolunteers`: the Organizer and the
+ * Administrators) before the service is called at all, and the service asserts it again (BR-REQ-060-01) — the card that draws the
+ * form is a courtesy.
+ */
+export async function setVolunteerChoicesMaxAction(form: FormData): Promise<void> {
+  const typed = field(form, "max").trim();
+  // «1.5», «1e1» and «0x2» are no count of roles: NaN, which the service refuses naming the box.
+  const max = typed === "" ? null : /^[0-9]{1,2}$/.test(typed) ? Number(typed) : Number.NaN;
+  try {
+    const actor = await requireStaffCapability(canManageVolunteers);
+    const result = await setVolunteerChoicesMax(getDb(), actor, { eventId: eventIdOf(form), max }, new Date());
+    if (!result.changed) return backToCard(form, { saved: "volunteerUnchanged" });
+    // The toast says the number saved, in its own form («cel mult 1 rol», «2 roluri», «20 de roluri»): what the public form now allows.
+    return backToCard(form, max === null ? { saved: "volunteerChoicesMaxOff" } : { saved: "volunteerChoicesMaxOn", count: String(max) });
   } catch (error) {
     if (!isDomainError(error)) throw error;
     return backToCard(form, { error: error.code });

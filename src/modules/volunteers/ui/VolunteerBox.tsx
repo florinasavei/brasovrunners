@@ -30,6 +30,7 @@ import BirthDateField from "@/modules/registrations/ui/BirthDateField";
 import Hint from "@/shared/ui/Hint";
 import { readTypedDate } from "@/shared/forms/pickers/wall-values";
 import {
+  choicesOverMax,
   earliestVolunteerBirthDate,
   groupRolesByCategory,
   groupsNeedHeadings,
@@ -88,6 +89,13 @@ import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, 
  * «Părintele sau tutorele meu știe și e de acord»: the block is `GuardianFields`, always drawn without scripts and shown
  * by the age typed with them. While it is not (`minors` false), a typed age under eighteen is refused with the sentence
  * that says the club cannot take minors yet.
+ *
+ * **«Cel mult câte roluri poate bifa o persoană» (§NNN, amending §761; the owner, 2026-11-16: «voluntarii primesc prea multe roluri» —
+ * «Bifează prea multe pe formular»).** While the event sets a limit (`choicesMax`), the roles' help line says it — «Alege un singur rol.»,
+ * «Poți bifa cel mult 2 roluri.» — instead of «Bifează tot ce ai face», and a post refused for ticking more comes back with what was
+ * ticked and the limit's own sentence, never «Bifează cel puțin un rol»: the page tells the two refusals of `roleIds` apart by counting
+ * the roles the sealed draft kept (`choicesOverMax`, the sign-up's own rule), with no word more in the address. Still native checkboxes
+ * and no island: the server is the gate, the words here are a courtesy.
  */
 export default async function VolunteerBox({
   locale,
@@ -98,6 +106,7 @@ export default async function VolunteerBox({
   roles,
   categories = [],
   shirts,
+  choicesMax = null,
   showCounts,
   eventDay,
   profile,
@@ -126,6 +135,11 @@ export default async function VolunteerBox({
   categories?: readonly PublicVolunteerCategory[];
   /** «Oferim tricouri voluntarilor» is on for this event (§765): the form asks «Mărimea tricoului». */
   shirts: boolean;
+  /**
+   * «Cel mult câte roluri poate bifa o persoană» (§NNN, `VolunteerOffer.choicesMax`): the most roles one person may tick, or null for any
+   * number — the help line says it, and a refusal over it says the limit's sentence. The sign-up asks the event's row, never this.
+   */
+  choicesMax?: number | null;
   /**
    * «Arată public câți voluntari mai sunt necesari» is on for this event (§773): each role's chip says how many people it still needs. Off, it says
    * nothing of the kind (a role shown has places by construction, §761; §780 amended) — the one flag every public number about volunteers asks (`VolunteerOffer.showCounts`).
@@ -187,7 +201,18 @@ export default async function VolunteerBox({
   const age = yearsPhrase(VOLUNTEER_MINIMUM_AGE, locale);
   const adultAge = yearsPhrase(VOLUNTEER_ADULT_AGE, locale);
   // The roles ticked before a refusal (§142), still offered: a role that filled meanwhile is simply not drawn.
-  const ticked = new Set((typed.roleIds ?? "").split(",").filter((id) => roles.some((role) => role.id === id)));
+  const postedRoleIds = (typed.roleIds ?? "").split(",");
+  const ticked = new Set(postedRoleIds.filter((id) => roles.some((role) => role.id === id)));
+  /*
+    «Cel mult câte roluri poate bifa o persoană» (§NNN): the help line of an event with a limit, in the count's own form («un singur rol»,
+    «cel mult 2 roluri», «cel mult 20 de roluri» — `countForm`, never an ICU plural) — and which of the two sentences a refusal of `roleIds`
+    says. The post ticked more roles than the limit exactly when the roles the draft kept are more than it (`choicesOverMax`, the rule the
+    sign-up refused by: every id posted, each once); anything else — none ticked, a role that is no longer this event's — is «Bifează cel
+    puțin un rol», as it always was.
+  */
+  const choicesHelp = choicesMax === null ? t("volunteers.choicesHelp") : t(`volunteers.choicesHelpMax.${countForm(choicesMax, locale)}`, { count: choicesMax });
+  const overChoices = choicesMax !== null && choicesOverMax(postedRoleIds, choicesMax);
+  const rolesRefusal = choicesMax !== null && overChoices ? t(`volunteers.errors.roleIdsMax.${countForm(choicesMax, locale)}`, { count: choicesMax }) : t("volunteers.errors.roleIds");
   /*
     «Data nașterii» says one of three sentences after a refusal (§773, the age's three of §768): a date that gives under eighteen on the
     event's day, while the club cannot take minors yet, says so; one that gives under the minimum (fourteen), or a day after the event,
@@ -205,6 +230,8 @@ export default async function VolunteerBox({
           : "birthDate";
   /** A refusal's sentence for one box, in the form's own words (`{age}` is the minimum's phrase, §758's tick says eighteen). */
   const refusal = (name: BoxName) => {
+    // The roles' box says one of two sentences (§NNN): over the event's limit, or none ticked.
+    if (name === "roleIds") return rolesRefusal;
     // «Scrie data ca zi, lună, an» is the registration form's own sentence, the box's live one too (`tForm`): one set of words for one rule.
     if (name === "birthDate" && birthSentence === "birthDate") return tForm("birthDateUnreadable");
     return t(`volunteers.errors.${name === "birthDate" ? birthSentence : name}`, { age: name === "adult" ? adultAge : age });
@@ -292,12 +319,13 @@ export default async function VolunteerBox({
                 {t("volunteers.choices")}
                 <span aria-hidden="true">{" *"}</span>
               </Typography>
-              <Typography id={`${fieldId("roleIds")}-help`} variant="body2" color="text.secondary">
-                {t("volunteers.choicesHelp")}
+              {/* The instruction, or — while the event limits the ticks (§NNN) — the limit, in its place: «Bifează tot ce ai face» would say the opposite. */}
+              <Typography id={`${fieldId("roleIds")}-help`} variant="body2" color="text.secondary" data-testid="volunteer-roles-help" data-choices-max={choicesMax ?? undefined}>
+                {choicesHelp}
               </Typography>
               {invalid.has("roleIds") && (
-                <FormHelperText id={`${fieldId("roleIds")}-error`} error data-testid="volunteer-roles-error" sx={{ mx: 0 }}>
-                  {t("volunteers.errors.roleIds")}
+                <FormHelperText id={`${fieldId("roleIds")}-error`} error data-testid="volunteer-roles-error" data-reason={overChoices ? "tooMany" : "atLeastOne"} sx={{ mx: 0 }}>
+                  {rolesRefusal}
                 </FormHelperText>
               )}
               {/*

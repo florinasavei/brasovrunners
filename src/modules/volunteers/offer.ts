@@ -40,6 +40,11 @@ export type VolunteerOffer = {
   /** «Oferim tricouri voluntarilor» (§765): the form asks the size. */
   shirts: boolean;
   /**
+   * «Cel mult câte roluri poate bifa o persoană» (§NNN): the most roles one person may tick on the form, or null for any number — the
+   * roles' help line says it, and a refusal over it reads as the limit's sentence. The page's words only: the sign-up asks the event's row.
+   */
+  choicesMax: number | null;
+  /**
    * «Arată public câți voluntari mai sunt necesari» (§773): the page says how many people a role still needs only while it is on —
    * off, a role draws no count, never how many. Every public number about volunteers asks this one flag.
    */
@@ -67,7 +72,7 @@ export async function readVolunteerOffer(
   now: Date,
   answer: "done" | "full" | "invalid" | "captcha" | "limited" | null = null,
 ): Promise<VolunteerOffer | null> {
-  const { acceptsVolunteers, access, shirts, showCounts, buttonShown, roles, categories } = await cachedVolunteerRoles(event.id);
+  const { acceptsVolunteers, access, shirts, showCounts, buttonShown, choicesMax, roles, categories } = await cachedVolunteerRoles(event.id);
   if (!acceptsVolunteers) return null;
   const closed = volunteerOfferClosedFor({
     acceptsVolunteers,
@@ -88,6 +93,6 @@ export async function readVolunteerOffer(
   // A cache entry written before the categories existed has none: the roles are then simply listed (§774).
   // «Vreau să apar pe lista publică a voluntarilor» (§821): asked only where the club made the list public and the notice says what it shows. A last good copy of the event made before the column has none.
   const listTick = event.volunteersListPublic === true && (await cachedVolunteersListDescribed(now));
-  // A cache entry written before the tick existed has none: the button is shown, as it always was (§835).
-  return { access: access ?? "ANYONE", roles: boxRoles, categories: categories ?? [], shirts, showCounts, profile, minors, listTick, buttonShown: buttonShown ?? true };
+  // A cache entry written before the tick existed has none: the button is shown, as it always was (§835). One written before the limit existed has none either: any number of roles (§NNN).
+  return { access: access ?? "ANYONE", roles: boxRoles, categories: categories ?? [], shirts, choicesMax: choicesMax ?? null, showCounts, profile, minors, listTick, buttonShown: buttonShown ?? true };
 }

@@ -306,6 +306,82 @@ describe("§754 submitVolunteerAction's redirects", () => {
 });
 
 /*
+  §NNN — «Cel mult câte roluri poate bifa o persoană» (BR-REQ-031-01), through the action: a post over the event's limit goes back to
+  the form as the roles' box to fix — the same address a post with no role ticked gets, `?volunteer=invalid&vfields=roleIds`, and no
+  word more — with every role ticked and everything typed in the sealed draft, which is what the page tells the two refusals apart
+  by (`choicesOverMax`; the page as drawn is `tests/unit/volunteers/choices-max-render.test.ts`). Nothing is written or queued.
+*/
+describe("§NNN submitVolunteerAction under the event's limit on the roles ticked", () => {
+  async function seedLimited(max: number) {
+    await seedEvent(true);
+    await db.update(events).set({ volunteerChoicesMax: max }).where(eq(events.id, eventId));
+    const [finish, kits] = await db
+      .insert(eventVolunteerRoles)
+      .values([
+        { eventId, nameRo: "Sosire", nameEn: "Finish", needed: 1, position: 1 },
+        { eventId, nameRo: "Kituri", nameEn: "Kits", needed: 1, position: 2 },
+      ])
+      .returning();
+    return { finish: finish.id, kits: kits.id };
+  }
+
+  it("sends a post over the limit back to the form naming the roles' box, with the ticks and the typed boxes kept in the draft and nothing in the address", async () => {
+    const { finish, kits } = await seedLimited(2);
+    const renderedAt = new Date(Date.now() - 60_000).toISOString();
+    const url = await pressed(post({ roleIds: [roleId, finish, kits], renderedAt }));
+    expect(url.pathname.endsWith(`/${slug}/voluntari`)).toBe(true);
+    expect(url.searchParams.get("volunteer")).toBe("invalid");
+    expect(url.searchParams.get("vfields")).toBe("roleIds");
+    // The address says which box and nothing else: no reason, no count, no id (§14.5) — only the rendering time the corrected form is timed from.
+    expect([...url.searchParams.keys()].sort()).toEqual(["since", "vfields", "volunteer"]);
+    expect(url.searchParams.get("since")).toBe(renderedAt);
+    expect(url.hash).toBe("#volunteers");
+    for (const id of [roleId, finish, kits]) expect(url.toString()).not.toContain(id);
+    // Everything typed comes back: the three ticks as one string of ids, the name, the address, the telephone, the message.
+    const draft = lastDraft();
+    expect(draft?.options.path).toBe(url.pathname);
+    expect(openFormDraft(draft?.value ?? "")).toMatchObject({
+      roleIds: `${roleId},${finish},${kits}`,
+      name: "Maria Test",
+      email: "maria@example.test",
+      phoneCountry: "RO",
+      phone: "0712 345 678",
+      message: "Pot toată ziua",
+    });
+    expect(await people()).toHaveLength(0);
+    expect(await outbox()).toHaveLength(0);
+    // No thank-you facts for a refused send.
+    expect(sets.find((set) => set.name === "br_submitted_to")).toBeUndefined();
+  });
+
+  it("names the roles' box beside another refused box in the one answer, and keeps the corrected post", async () => {
+    const { finish, kits } = await seedLimited(1);
+    const both = await pressed(post({ roleIds: [roleId, finish], email: "maria-at-example" }));
+    expect(both.searchParams.get("volunteer")).toBe("invalid");
+    expect((both.searchParams.get("vfields") ?? "").split(",").sort()).toEqual(["email", "roleIds"]);
+    expect(await people()).toHaveLength(0);
+    // One role, as the limit says: kept, the draft cleared.
+    const url = await pressed(post({ roleIds: [kits] }));
+    expect(url.searchParams.get("volunteer")).toBe("1");
+    const [row] = await people();
+    expect(row).toMatchObject({ name: "Maria Test", source: "PUBLIC", roleId: null });
+    const chosen = await db.select().from(eventVolunteerRoleChoices).where(eq(eventVolunteerRoleChoices.volunteerId, row.id));
+    expect(chosen.map((choice) => choice.roleId)).toEqual([kits]);
+    expect(lastDraft()?.options.maxAge).toBe(0);
+  });
+
+  it("with no limit the same three ticks are kept, as they always were", async () => {
+    const { finish, kits } = await seedLimited(1);
+    await db.update(events).set({ volunteerChoicesMax: null }).where(eq(events.id, eventId));
+    const url = await pressed(post({ roleIds: [roleId, finish, kits] }));
+    expect(url.searchParams.get("volunteer")).toBe("1");
+    const [row] = await people();
+    const chosen = await db.select().from(eventVolunteerRoleChoices).where(eq(eventVolunteerRoleChoices.volunteerId, row.id));
+    expect(chosen.map((choice) => choice.roleId).sort()).toEqual([roleId, finish, kits].sort());
+  });
+});
+
+/*
   §820 — who may offer (BR-REQ-060-01), through the action that reads the session and the form's hidden `invite`: the server asks the
   door again, so a hidden form is not a permission. A wrong condition at the action (reading the session when a link came, or the
   other way round) would refuse every member or let every stranger in while the service's own suite stays green.
