@@ -281,7 +281,7 @@ describe("the list's repository (§839)", () => {
     expect(names(byEvent)[0]).toBe("Bogdan Vasile");
   });
 
-  it("orders by age and by city, whoever gave none last either way (§NNN)", async () => {
+  it("orders by age and by city, whoever gave none last either way (§947)", async () => {
     await db.update(eventVolunteers).set({ age: 34, city: "Codlea" }).where(eq(eventVolunteers.id, people.ana));
     await db.update(eventVolunteers).set({ age: 19, city: "Săcele" }).where(eq(eventVolunteers.id, people.stefan));
     // Typed without its capital: it still stands among the B's.
@@ -378,7 +378,7 @@ describe("the list page (§839)", () => {
     expect(page).toContain("Confirmat: 1");
   });
 
-  it("shows what each person wrote for the organizers in a column of its own, whole, and nothing for whoever wrote none (§NNN)", async () => {
+  it("shows what each person wrote for the organizers in a column of its own, whole, and nothing for whoever wrote none (§947)", async () => {
     const words = "Pot ajuta doar până la 12.\nVin cu mașina, pot duce apă la punctul de pe traseu.";
     await db.update(eventVolunteers).set({ message: words }).where(eq(eventVolunteers.id, people.ana));
     const page = await listPage();
@@ -396,7 +396,7 @@ describe("the list page (§839)", () => {
     expect(await listPage()).not.toContain('data-testid="volunteer-message"');
   });
 
-  it("names each person's age and city in columns of their own, sortable, «—» for whoever gave none (§NNN)", async () => {
+  it("names each person's age and city in columns of their own, sortable, «—» for whoever gave none (§947)", async () => {
     await db.update(eventVolunteers).set({ age: 34, dateOfBirth: "1992-05-02", city: "Săcele" }).where(eq(eventVolunteers.id, people.ana));
     const page = await listPage();
     // Each of the four rows, in the table and in the phone cards.

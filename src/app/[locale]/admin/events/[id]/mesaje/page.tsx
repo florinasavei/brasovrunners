@@ -528,7 +528,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
                     {t("participantMessages.historyQr", { count: String(entry.withQr) })}
                   </Typography>
                 )}
-                {/* «Trimite și linkul pentru semnarea declarației» (§NNN): that the send was ticked, and for how many who owed it — never who. */}
+                {/* «Trimite și linkul pentru semnarea declarației» (§947): that the send was ticked, and for how many who owed it — never who. */}
                 {entry.signLink && (
                   <Typography variant="body2" data-testid="participant-message-history-sign-link">
                     {t("participantMessages.historySignLink", { count: String(entry.withSignLink) })}

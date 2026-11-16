@@ -95,7 +95,7 @@ export type TemplateContent = {
    */
   reconfirm?: { label: string; url: string; note: string };
   /**
-   * «Semnează declarația» / "Sign the declaration" (§NNN): on an organizer's message whose send ticked «Trimite și linkul
+   * «Semnează declarația» / "Sign the declaration" (§947): on an organizer's message whose send ticked «Trimite și linkul
    * pentru semnarea declarației», for a registration that owes its declaration — a full-width filled button in the club's
    * blue above «Vin» and «Nu mai pot ajunge», to the person's own declaration page, and one plain sentence under it
    * saying why it is there. Never on a club copy (§320).
@@ -569,7 +569,7 @@ export function renderContent(
       : []),
     ...(actionEarly ? [] : actionHtml),
     /*
-      «Semnează declarația» (§NNN): what the person still owes, so the first of the three — filled in the club's blue, the
+      «Semnează declarația» (§947): what the person still owes, so the first of the three — filled in the club's blue, the
       card's width and at least 48 pixels tall like the two under it, and its one sentence saying why it is there.
     */
     ...(content.signDeclaration
@@ -1052,7 +1052,7 @@ export type TemplateData = {
    */
   reconfirmUrl?: string;
   /**
-   * «Semnează declarația» (§NNN): the person's own declaration page (`/registrations/declare/<token>`), on a
+   * «Semnează declarația» (§947): the person's own declaration page (`/registrations/declare/<token>`), on a
    * declaration link minted for this send. Set by the renderer only on an organizer's message whose send ticked
    * «Trimite și linkul pentru semnarea declarației», for a registration that owes its declaration as the email leaves;
    * drawn only there, and never on a club copy (§320).
@@ -1493,9 +1493,9 @@ function bulkParticipantWord(locale: EmailLocale): string {
 /**
  * The organizer's own message (§364), after the platform's one framing sentence: the body they
  * typed, its placeholders filled with this half's facts, a blank line starting a paragraph and a
- * single line break kept. Escaped as plain text; `**like this**` is bold since §NNN (until then no
+ * single line break kept. Escaped as plain text; `**like this**` is bold since §947 (until then no
  * emphasis was read in it, as in the note on an update, §331), and `__` stays what was typed. Drawn
- * as one panel of its own (§NNN), apart from the platform's sentences around it.
+ * as one panel of its own (§947), apart from the platform's sentences around it.
  *
  * On the one bulk club copy (`bulkCopy`), `{participantName}` and `{bibNumber}` — facts this
  * copy has none of — read as a neutral word and nothing, rather than the blank a per-registration
@@ -1507,7 +1507,7 @@ function organizerMessageParts(messageType: EmailMessageType, data: TemplateData
   const paragraphs = organizerParagraphs(fillPlaceholders(data.organizerBody, fields as unknown as Record<string, unknown>));
   if (paragraphs.length === 0) return [];
   /*
-    `**like this**` is bold in the organizers' words too (§NNN, amending §364's «no emphasis is read in it»; the owner
+    `**like this**` is bold in the organizers' words too (§947, amending §364's «no emphasis is read in it»; the owner
     typed it into the box and asked to format the message): applied **after** escaping, as for the platform's own
     sentences (§189), so the marker can only ever wrap text already made safe. The plain-text half drops the markers.
   */
@@ -1520,7 +1520,7 @@ function organizerMessageParts(messageType: EmailMessageType, data: TemplateData
     .map((lines, index) => `<p style="margin:0 0 ${index < last ? "12px" : "0"};font-size:17px;line-height:1.6">${lines.map((line) => bold(escapeHtml(line))).join("<br>")}</p>`)
     .join("");
   /*
-    One panel for the whole message (§NNN; the owner, 2026-11-16: «as vrea sa aiba alt font si alt backround acest mesaj,
+    One panel for the whole message (§947; the owner, 2026-11-16: «as vrea sa aiba alt font si alt backround acest mesaj,
     sa fie mai vizibil»): what the organizers wrote stands apart from what every message says — a tinted ground, an edge
     in the club's secondary colour and a serif face (`EMAIL_ORGANIZER_WORDS`), a size above the body's. Inline styles
     and a background colour, as the band's: what Gmail, Outlook and Apple Mail all keep.
@@ -2767,14 +2767,14 @@ const T = {
     },
     /**
      * «Vin» (the decision «Cere reconfirmarea»), on a send that asked, and its one sentence: what the answer is for. It said
-     * «Nu e obligatoriu» until §NNN (the owner, 2026-11-16: «nu scrie nicaieri ca "nu e obligatoriu", vreau sa incurajez
+     * «Nu e obligatoriu» until §947 (the owner, 2026-11-16: «nu scrie nicaieri ca "nu e obligatoriu", vreau sa incurajez
      * oamenii sa reconfirme»). Still true and still unsaid: nothing happens to whoever does not press it.
      */
     reconfirm: {
       label: "Vin",
       note: "Ne spui că vii: așa știm pe cine așteptăm la start.",
     },
-    /** «Semnează declarația» (§NNN), on a send that ticked it, for whoever owes the declaration — and its one sentence. */
+    /** «Semnează declarația» (§947), on a send that ticked it, for whoever owes the declaration — and its one sentence. */
     signDeclaration: {
       label: "Semnează declarația",
       note: "Încă nu ai semnat declarația pe proprie răspundere: înscrierea ta este completă doar după ce o semnezi.",
@@ -4115,7 +4115,7 @@ export function buildTemplateContent(
       checkinQrUrl: undefined,
       // …nor the same two as an organizers' message carries them for one runner (§943).
       organizerQr: undefined,
-      // …nor the link to anybody's declaration (§NNN): it signs for one person, and is that person's alone.
+      // …nor the link to anybody's declaration (§947): it signs for one person, and is that person's alone.
       signDeclarationUrl: undefined,
       thanksUrl: undefined,
       // «Spune-ne cum a fost» (§676) goes with the button it may be, as the results link does.
@@ -4588,7 +4588,7 @@ export function buildTemplateContent(
         ? { label: copy.reconfirm.label, url: data.reconfirmUrl, note: copy.reconfirm.note }
         : undefined,
     /*
-      «Semnează declarația» (§NNN): only on an organizer's message, and only with the link the renderer minted for a send
+      «Semnează declarația» (§947): only on an organizer's message, and only with the link the renderer minted for a send
       that ticked it and a registration that owes the declaration — never on a club copy, whose data lost it above (§320).
     */
     signDeclaration:

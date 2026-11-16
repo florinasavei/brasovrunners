@@ -1729,7 +1729,7 @@ async function renderRow(
         if (reconfirm && cannotComeFor.id === row.registrationId) data.reconfirmUrl = reconfirmUrlOf(base);
       }
       /*
-        «Semnează declarația» (§NNN; the owner, 2026-11-16: «vreau ca cei care nu au semnat declaratia sa o poata semna»):
+        «Semnează declarația» (§947; the owner, 2026-11-16: «vreau ca cei care nu au semnat declaratia sa o poata semna»):
         on an organizer's message whose own row carries the send's flag — set only on the rows of registrations that owed
         the declaration when it was queued — and only for a registration that owes it still, as the email leaves, where
         «Nu mai pot ajunge» goes too (`organizerSignLinkApplies`). The declaration request's own link, minted the same

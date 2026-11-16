@@ -213,7 +213,7 @@ describe("«Vin» beside «Nu mai pot ajunge» (the decision «Cere reconfirmare
     expect(asked.html.indexOf('data-email-part="reconfirm"')).toBeLessThan(asked.html.indexOf('data-email-part="cannot-come"'));
     expect(asked.text).toContain(`Vin: ${VIN}`);
     expect(asked.text).toContain("Ne spui că vii: așa știm pe cine așteptăm la start.");
-    // §NNN: the button's sentence says what the answer is for, never that it is optional.
+    // §947: the button's sentence says what the answer is for, never that it is optional.
     expect(asked.text).not.toMatch(/obligatoriu|opțional|optional/i);
     // Without the flag's link, nothing.
     expect(rendered("ORGANIZER_MESSAGE").html).not.toContain('data-email-part="reconfirm"');

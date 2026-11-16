@@ -77,7 +77,7 @@ export const BIB_NAME_POSITIONS = ["below", "above"] as const;
 export type BibNamePosition = (typeof BIB_NAME_POSITIONS)[number];
 
 /**
- * «Mărimea numelui» (§NNN; the owner, 2026-11-16: «vreau ca numele alergatorului sa fie un pic mai mare»): `normal`,
+ * «Mărimea numelui» (§947; the owner, 2026-11-16: «vreau ca numele alergatorului sa fie un pic mai mare»): `normal`,
  * the 24 points every number printed, or one of two larger steps — each takes a taller strip from the number's area
  * (`bib-geometry.ts#BIB_NAME_STRIPS`). A design saved before this key existed reads `normal` and prints as it did.
  */
@@ -302,7 +302,7 @@ export type BibSponsorPlace = (typeof BIB_SPONSOR_PLACES)[number];
 export const BIB_EMERGENCY_PHONE_MAX = 30;
 
 /**
- * The fewest digits a number on the bib may have (§NNN; the owner, 2026-11-16, of the three numbers a trail race prints:
+ * The fewest digits a number on the bib may have (§947; the owner, 2026-11-16, of the three numbers a trail race prints:
  * «Organizator…, Salvamont…, Urgenta: 112»): three, so the emergency number itself can be one of them. It was six, the
  * public phone's floor, and «112» read as no number at all.
  */
@@ -333,14 +333,14 @@ export const BIB_EMERGENCY_NAME_MAX = 24;
 type BibEmergencyDesign = Pick<BibDesign, "showEmergency" | "emergencyPhone"> &
   Partial<Pick<BibDesign, "emergencyLabel" | "emergencyPhoneLabel" | "emergencyPhone2" | "emergencyPhone2Label" | "emergencyPhone3" | "emergencyPhone3Label">>;
 
-/** Between two numbers of the line (§NNN): a bar, as the race number the owner showed prints it — a name may hold a «/» itself («Ajutor start/finish»). */
+/** Between two numbers of the line (§947): a bar, as the race number the owner showed prints it — a name may hold a «/» itself («Ajutor start/finish»). */
 export const BIB_EMERGENCY_SEPARATOR = " | ";
 
 /**
- * The line printed on every number (§750, amending it §759 and §NNN): up to three numbers on one line, each after
+ * The line printed on every number (§750, amending it §759 and §947): up to three numbers on one line, each after
  * its own name and a colon, a bar between them — «Ajutor start/finish: 07xx xxx xxx | Ajutor traseu: 07yy yyy yyy |
  * Salvamont: 07zz zzz zzz» (the owner, 2026-11-16: «de fapt vreau asa: ajutor start/finish: , ajutor traseu: ,
- * salvamont, cu label customizabil»). Until §NNN a name stood before its number with a space and the numbers were
+ * salvamont, cu label customizabil»). Until §947 a name stood before its number with a space and the numbers were
  * parted by « / ».
  *
  * The word before them all is the club's label when it typed one. With none, the sheet's language's own word
@@ -425,10 +425,10 @@ export const bibDesignSchema = z
      */
     numberFormat: z.enum(RACE_NUMBER_FORMATS).catch("plain"),
     namePosition: z.enum(BIB_NAME_POSITIONS).catch("below"),
-    /** «Mărimea numelui» (§NNN): today's size, or one of two larger; absent reads today's. */
+    /** «Mărimea numelui» (§947): today's size, or one of two larger; absent reads today's. */
     nameScale: z.enum(BIB_NAME_SCALES).catch("normal"),
     /**
-     * «Banda dintr-un capăt în altul» (§NNN; the owner, 2026-11-16: «banda cu Brasov runners vreau sa fie dintr-un capat
+     * «Banda dintr-un capăt în altul» (§947; the owner, 2026-11-16: «banda cu Brasov runners vreau sa fie dintr-un capat
      * in altul, ca si fundal»): the coloured band reaches the paper's left, right and top edges instead of stopping at the
      * white margin (§338). Off by default — an office printer cannot print the last millimetres of a page, and the upper
      * number of a sheet would then show a white edge the lower one does not: the tick is for a sheet taken to a print shop.
@@ -525,7 +525,7 @@ export const bibDesignSchema = z
     /** A second number (§759), checked as the first is, with its own label; empty prints one number. */
     emergencyPhone2: z.string().transform(bibEmergencyPhone).catch(""),
     emergencyPhone2Label: emergencyName,
-    /** A third number (§NNN), checked as the others are, with its own label — «Urgență 112» beside the organizers' and the mountain rescue's. */
+    /** A third number (§947), checked as the others are, with its own label — «Urgență 112» beside the organizers' and the mountain rescue's. */
     emergencyPhone3: z.string().transform(bibEmergencyPhone).catch(""),
     emergencyPhone3Label: emergencyName,
     /** «Tipărit invers» (§750): the phone printed upside down, to be read looking down at the chest; on by default, the trail practice. */

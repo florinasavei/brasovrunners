@@ -382,7 +382,7 @@ export default async function BibDesignPanel({
               {designTick("showEventTitle", t("editor.bibDesign.showEventTitle"))}
               {designTick("showDate", t("editor.bibDesign.showDate"))}
             </Stack>
-            {/* «Banda dintr-un capăt în altul» (§NNN): the band through the white margin to the paper's edges; its help says what a printer does with it. */}
+            {/* «Banda dintr-un capăt în altul» (§947): the band through the white margin to the paper's edges; its help says what a printer does with it. */}
             <CheckboxField name="event.bibDesign.bandBleed" defaultChecked={design.bandBleed} help={t("editor.bibDesign.bandBleedHelp")}>
               {t("editor.bibDesign.bandBleed")}
             </CheckboxField>
@@ -452,7 +452,7 @@ export default async function BibDesignPanel({
                 </option>
               ))}
             </RecallField>
-            {/* «Mărimea numelui» (§NNN): today's, or one of two larger — each takes its room from the number. */}
+            {/* «Mărimea numelui» (§947): today's, or one of two larger — each takes its room from the number. */}
             <RecallField
               select
               name="event.bibDesign.nameScale"
@@ -581,7 +581,7 @@ export default async function BibDesignPanel({
               </Stack>
             </OnlyWhenTicked>
 
-            {/* «Telefon pentru urgențe» (§750, amended §759 and §NNN): its label and up to three numbers, each with its own name, on one line. */}
+            {/* «Telefon pentru urgențe» (§750, amended §759 and §947): its label and up to three numbers, each with its own name, on one line. */}
             <Box sx={{ borderTop: 1, borderColor: "divider", pt: 1.5 }}>
               <CheckboxField name="event.bibDesign.showEmergency" defaultChecked={design.showEmergency} help={t("editor.bibDesign.showEmergencyHelp")}>
                 {t("editor.bibDesign.showEmergency")}
@@ -643,7 +643,7 @@ export default async function BibDesignPanel({
                     sx={{ width: { sm: 280 } }}
                   />
                 </Stack>
-                {/* The third (§NNN): a trail race's three — the organizers', the mountain rescue's and «112», which is a number here too. */}
+                {/* The third (§947): a trail race's three — the organizers', the mountain rescue's and «112», which is a number here too. */}
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
                   <RecallField
                     name="event.bibDesign.emergencyPhone3Label"

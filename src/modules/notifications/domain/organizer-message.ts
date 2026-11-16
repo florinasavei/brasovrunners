@@ -276,7 +276,7 @@ export function organizerQrApplies(params: {
 }
 
 /**
- * Whether this row carries «Trimite și linkul pentru semnarea declarației» (§NNN; the owner, 2026-11-16: «vreau ca cei
+ * Whether this row carries «Trimite și linkul pentru semnarea declarației» (§947; the owner, 2026-11-16: «vreau ca cei
  * care nu au semnat declaratia sa o poata semna»): the payload's `signLink`, beside the words — set by the send only on
  * the rows whose registration owed its declaration when it was queued, never send-wide; anything but `true` — a row of
  * somebody who signed or waits, an older one, a hand-made one, the club's copy — is no. A flag, never a link: the link's
@@ -287,7 +287,7 @@ export function readOrganizerSignLink(payload: unknown): boolean {
 }
 
 /**
- * The one state whose email gets «Semnează declarația» (§NNN): a registration that holds a place and owes its
+ * The one state whose email gets «Semnează declarația» (§947): a registration that holds a place and owes its
  * declaration — the composer's own group «Declarație nesemnată». Not an open waiting-list offer, whose own email
  * carries its link and its deadline; not the confirmed, who signed. The send asks it when it queues a row, the
  * renderer again when the row leaves.
@@ -297,7 +297,7 @@ export function isOrganizerSignStatus(status: RegistrationStatus): boolean {
 }
 
 /**
- * Whether the organizers' message carries the person's own link to their declaration (§NNN): the row carries the flag,
+ * Whether the organizers' message carries the person's own link to their declaration (§947): the row carries the flag,
  * and «Nu mai pot ajunge» goes on it too (`cannotComeApplies`: the registration's own address, active, the event still
  * ahead and running — after the start nobody signs online), and the registration still owes the declaration **when it
  * renders** — a send drains over hours, and whoever signed or cancelled since reads the message without it. Never on a

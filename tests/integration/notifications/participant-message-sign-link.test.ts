@@ -17,7 +17,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { confirmed } from "../../helpers/typed-count";
 
 /**
- * §NNN — «Trimite și linkul pentru semnarea declarației» on «Trimite un mesaj participanților» (the owner, 2026-11-16:
+ * §947 — «Trimite și linkul pentru semnarea declarației» on «Trimite un mesaj participanților» (the owner, 2026-11-16:
  * «vreau ca cei care nu au semnat declaratia sa o poata semna»; BR-REQ-080-01, BR-REQ-080-02, BR-REQ-036-02,
  * BR-REQ-060-01).
  *
@@ -181,7 +181,7 @@ const secretOf = (text: string) => SIGN_LINK.exec(text)?.[1];
 const BUTTON = 'data-email-part="sign-declaration"';
 const tokensOf = (registrationId: string) => db.select().from(emailActionTokens).where(eq(emailActionTokens.registrationId, registrationId));
 
-describe("§NNN the send: the flag rides on the rows of registrations that owe the declaration alone", () => {
+describe("§947 the send: the flag rides on the rows of registrations that owe the declaration alone", () => {
   it("flags exactly those rows — a test row too — and the audit row counts them, real and test apart", async () => {
     const ana = await person("Ana", "PENDING_DECLARATION");
     const bogdan = await person("Bogdan", "CONFIRMED");
@@ -254,7 +254,7 @@ describe("§NNN the send: the flag rides on the rows of registrations that owe t
   });
 });
 
-describe("§NNN the email of somebody who owes the declaration: their own link to it, under the organizers' words", () => {
+describe("§947 the email of somebody who owes the declaration: their own link to it, under the organizers' words", () => {
   it("draws «Semnează declarația» on a declaration link minted for that email — single use, hashed at rest, alive until the start", async () => {
     const ana = await person("Ana", "PENDING_DECLARATION");
     const bogdan = await person("Bogdan", "PENDING_DECLARATION", { locale: "en" });
@@ -356,7 +356,7 @@ describe("§NNN the email of somebody who owes the declaration: their own link t
   });
 });
 
-describe("§NNN the screens: the preview, «Mesaje trimise» and the words kept after a trial", () => {
+describe("§947 the screens: the preview, «Mesaje trimise» and the words kept after a trial", () => {
   it("previews the button on an inert example link when the box is ticked, and never mints a token", async () => {
     const ticked = await previewParticipantMessage(db, organizer, { eventId, locale: "ro", ...WORDS, signLink: true });
     expect(ticked.html).toContain(BUTTON);

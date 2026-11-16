@@ -35,7 +35,7 @@ export const BIB_PAPER = { width: A4_PAGE.width, height: A4_PAGE.height / 2 } as
  * half it was printed on and however the printer treats the edge of the paper. The band does not
  * bleed to the edge for the same reason: a home printer cannot print there, and a band that
  * reached the cut on one bib and stopped short of the edge on the other would be two designs.
- * Unless the club ticks «Banda dintr-un capăt în altul» (§NNN), its own choice for a sheet taken to
+ * Unless the club ticks «Banda dintr-un capăt în altul» (§947), its own choice for a sheet taken to
  * a print shop: then the band alone crosses this margin, to the paper's left, right and top edges.
  */
 export const BIB_MARGIN = 18;
@@ -255,7 +255,7 @@ export const BIB_LAYOUT = {
 } as const;
 
 /**
- * The name's strip at each of the club's sizes (§NNN; the owner, 2026-11-16: «vreau ca numele alergatorului sa fie un
+ * The name's strip at each of the club's sizes (§947; the owner, 2026-11-16: «vreau ca numele alergatorului sa fie un
  * pic mai mare»): its type, the strip it takes above or below the number, and its offset in the strip. «Normală» is what
  * every number printed until now — 24 points in a 44-point strip; «Mai mare» is a quarter larger and «Cea mai mare»
  * half as large again, each strip taller by what its line is, the difference taken from the number's area. Each line
@@ -278,7 +278,7 @@ export function bibNameStrip(scale: string | null | undefined): { size: number; 
 }
 
 /**
- * The size one name is set at in its strip, and its top in it (§NNN). A larger strip never cuts a name «Normală»
+ * The size one name is set at in its strip, and its top in it (§947). A larger strip never cuts a name «Normală»
  * printed whole: the strip's own size while the name fits `width` — the card less its inset and the member mark's
  * reserve on each side — else the largest, to half a point, at which it fits, never under «Normală», where a name
  * too long for the card is cut with «…» as it always was. A name set smaller is centred on the line its strip's size

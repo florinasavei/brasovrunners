@@ -195,7 +195,7 @@ test.describe("«Cere reconfirmarea»: the ready reminder, «Vin» and the answe
     expect(first).not.toBeNull();
     // The link was read, never spent: the cancel is still on the page.
     await expect(fromEmail.getByTestId("manage-person-cancel")).toBeVisible();
-    // …and well apart from the answer (§NNN; the owner: «ca sa nu se confuzeze cumva ca anuleaza»): somebody who has just
+    // …and well apart from the answer (§947; the owner: «ca sa nu se confuzeze cumva ca anuleaza»): somebody who has just
     // said they are coming must not read «Anulează înscrierea» as part of it. It stood 68 pixels under the answer.
     const noted = (await fromEmail.getByTestId("manage-reconfirm-done").boundingBox())!;
     const cancelBlock = (await fromEmail.getByTestId("manage-person-cancel").boundingBox())!;

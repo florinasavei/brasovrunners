@@ -3,7 +3,7 @@ import { contrastRatio, MIN_TEXT_CONTRAST } from "@/modules/appearance/domain/ti
 import { COLOR, EMAIL_EMPHASIS, EMAIL_ORGANIZER_WORDS } from "@/theme/brand";
 
 /**
- * §NNN (BR-REQ-080-01; the owner, 2026-11-16: «as vrea sa aiba alt font si alt backround acest mesaj, sa fie mai
+ * §947 (BR-REQ-080-01; the owner, 2026-11-16: «as vrea sa aiba alt font si alt backround acest mesaj, sa fie mai
  * vizibil») — the organizers' own words in «Trimite un mesaj participanților» stand on a panel of their own. Its colours
  * read on a light card and on one a mail client darkens by inverting it, as the band's do (§580); how the panel is drawn
  * is `organizer-message.test.ts`.
@@ -15,7 +15,7 @@ const inverted = (hex: string) =>
     .map((at) => (255 - Number.parseInt(hex.slice(at, at + 2), 16)).toString(16).padStart(2, "0"))
     .join("")}`;
 
-describe("§NNN the organizers' panel reads on a light card and on one a client darkens", () => {
+describe("§947 the organizers' panel reads on a light card and on one a client darkens", () => {
   it("keeps the words readable on the panel, as sent and inverted", () => {
     expect(contrastRatio(EMAIL_ORGANIZER_WORDS.ink, EMAIL_ORGANIZER_WORDS.panel)).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
     expect(contrastRatio(inverted(EMAIL_ORGANIZER_WORDS.ink), inverted(EMAIL_ORGANIZER_WORDS.panel))).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);

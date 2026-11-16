@@ -158,7 +158,7 @@ export type SendParticipantMessageInput = {
    */
   sendQr?: boolean;
   /**
-   * «Trimite și linkul pentru semnarea declarației» (§NNN; the owner, 2026-11-16: «vreau ca cei care nu au semnat
+   * «Trimite și linkul pentru semnarea declarației» (§947; the owner, 2026-11-16: «vreau ca cei care nu au semnat
    * declaratia sa o poata semna»): each registration of this send that owes its declaration gets, under the organizers'
    * words, «Semnează declarația» — its own link to the declaration. Only those rows carry the flag — never a link, which
    * the renderer mints when the email leaves, and only if the declaration is owed still; everybody else gets the message
@@ -318,7 +318,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
     // The confirmed registrations whose email carries the number and the QR (§943), test ones apart likewise.
     let withQr = 0;
     let withQrTest = 0;
-    // The registrations owing their declaration whose email carries the link to sign it (§NNN), test ones apart likewise.
+    // The registrations owing their declaration whose email carries the link to sign it (§947), test ones apart likewise.
     let withSignLink = 0;
     let withSignLinkTest = 0;
     for (const [index, row] of rows.entries()) {
@@ -332,7 +332,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         is confirmed as the send queues them (`isOrganizerQrStatus`) — a flag, never the code, which the renderer reads off
         the registration when the email leaves, and only if it is confirmed still.
 
-        «Trimite și linkul pentru semnarea declarației» (§NNN) the same way again: `signLink` only on the rows whose
+        «Trimite și linkul pentru semnarea declarației» (§947) the same way again: `signLink` only on the rows whose
         registration owes its declaration as the send queues them (`isOrganizerSignStatus`) — a flag, never the link,
         which the renderer mints when the email leaves, and only if the declaration is owed still.
       */
@@ -391,7 +391,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         .onConflictDoNothing();
     }
     // The club's one copy of this send (§419): the words and how many real participants it reached — never a row's
-    // flag: it asks nobody, and it carries nobody's number, QR, desk code or link to a declaration (§320, §943, §NNN). Marked like a row when it leaves now.
+    // flag: it asks nobody, and it carries nobody's number, QR, desk code or link to a declaration (§320, §943, §947). Marked like a row when it leaves now.
     await enqueueBulkClubCopies(tx, {
       messageType: "ORGANIZER_MESSAGE",
       eventId: input.eventId,
@@ -423,7 +423,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         // «Trimite și numărul de concurs și codul QR» (§943): the tick, and in how many confirmed registrations' emails —
         // real and test apart; «Mesaje trimise» reads both. Never who, and never a code.
         ...(sendQr ? { sendQr: true, withQr, withQrTest } : {}),
-        // «Trimite și linkul pentru semnarea declarației» (§NNN): the tick, and in how many emails of registrations owing
+        // «Trimite și linkul pentru semnarea declarației» (§947): the tick, and in how many emails of registrations owing
         // the declaration — real and test apart; «Mesaje trimise» reads both. Never who, and never a link.
         ...(signLink ? { signLink: true, withSignLink, withSignLinkTest } : {}),
       },
@@ -478,7 +478,7 @@ export type SentParticipantMessage = {
    * then — test registrations left out; 0 for a send that did not tick.
    */
   withQr: number;
-  /** «Trimite și linkul pentru semnarea declarației» was ticked on this send (§NNN). */
+  /** «Trimite și linkul pentru semnarea declarației» was ticked on this send (§947). */
   signLink: boolean;
   /**
    * In how many emails of registrations owing their declaration the send queued the link to sign it, as its audit row
@@ -541,7 +541,7 @@ export async function listParticipantMessages<T extends Record<string, unknown>>
       // «Trimite și numărul de concurs și codul QR» (§943): the tick and its count, as the send's own audit row wrote them.
       sendQr: metadata.sendQr === true,
       withQr: metadata.sendQr === true && typeof metadata.withQr === "number" ? metadata.withQr : 0,
-      // «Trimite și linkul pentru semnarea declarației» (§NNN): the same two, from the same row.
+      // «Trimite și linkul pentru semnarea declarației» (§947): the same two, from the same row.
       signLink: metadata.signLink === true,
       withSignLink: metadata.signLink === true && typeof metadata.withSignLink === "number" ? metadata.withSignLink : 0,
     };
@@ -692,7 +692,7 @@ export async function previewParticipantMessage<T extends Record<string, unknown
     askReconfirm?: boolean;
     /** «Trimite și numărul de concurs și codul QR» as the box stands: the preview draws the example runner's block under the words (§943). */
     sendQr?: boolean;
-    /** «Trimite și linkul pentru semnarea declarației» as the box stands: the preview draws «Semnează declarația» under the words (§NNN). */
+    /** «Trimite și linkul pentru semnarea declarației» as the box stands: the preview draws «Semnează declarația» under the words (§947). */
     signLink?: boolean;
   },
 ): Promise<ParticipantMessagePreview> {
@@ -763,7 +763,7 @@ export async function previewParticipantMessage<T extends Record<string, unknown
       ? { organizerQr: { checkinCode: EMAIL_SAMPLE[locale].checkinCode, qrUrl: `${env.APP_BASE_URL}/api/registrations/qr/${EMAIL_SAMPLE[locale].checkinCode}.png` } }
       : {}),
     /*
-      The button somebody who owes the declaration gets when the box is ticked (§NNN), on an inert example link like the
+      The button somebody who owes the declaration gets when the box is ticked (§947), on an inert example link like the
       two above: no token is minted, so nothing in the preview can be signed. The example runner is confirmed and would
       not get it — the tick's help line says who does; the preview shows what the button looks like.
     */
