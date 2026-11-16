@@ -48,7 +48,7 @@ import { inEmailPress } from "@/modules/notifications/press";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
-import { canKeepRegistrationNotes, canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canKeepRegistrationNotes, canManageRegistrations, canSetRaffleMark } from "@/modules/staff-identity/domain/roles";
 import { moveReserveEntryToWaitlist, settleReserveEntry } from "@/modules/registrations/reserve-list";
 import { type RunnerToVolunteerResult, turnRunnerIntoVolunteer, turnVolunteerIntoRunner, type VolunteerToRunnerResult } from "@/modules/volunteers/transform";
 import { addRegistrationNote, parseNoteBody } from "@/modules/registrations/notes";
@@ -682,7 +682,8 @@ export async function setRegistrationEliteAction(_previous: FormOutcome | null, 
  * «Participă la tombolă» on a row of the registrations list (§949): one press takes a registration off the raffle's list of its
  * event, or puts it back (`raffle-mark.ts`). The form posts the state it wants (`inRaffle=1|0`), never a toggle, so a second press
  * before the page answers saves the same. Whoever reads the registrations may press it — the Organizer and the Administrators,
- * the one thing the Organizer changes on a registration: the coarse gate here, the service asserts it again (BR-REQ-060-01).
+ * the one thing the Organizer changes on a registration — by the tick's own predicate (`canSetRaffleMark`, §NNN), never the
+ * reading one: the coarse gate here, the service asserts it again (BR-REQ-060-01).
  * It asks nothing (§384): it tells nobody, moves nothing of the registration, and the same tick undoes it.
  * Back to the row it was pressed on.
  */
@@ -693,7 +694,7 @@ export async function setRegistrationRaffleAction(form: FormData): Promise<void>
 
   let outcome: Record<string, string>;
   try {
-    const actor = await requireStaffCapability(canReadRegistrations);
+    const actor = await requireStaffCapability(canSetRaffleMark);
     await setRegistrationInRaffle(getDb(), actor, registrationId, inRaffle, new Date());
     outcome = inRaffle ? { saved: "raffleIncluded" } : { saved: "raffleExcluded" };
   } catch (error) {

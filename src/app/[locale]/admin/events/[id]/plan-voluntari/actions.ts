@@ -17,8 +17,11 @@ import { eventIdOf, field, localeOf } from "@/app/[locale]/admin/events/[id]/vol
  * voluntari si fiecare in ce punct ramane»): one press puts a volunteer at a point of the event's route, or takes them off the
  * one they stand at. The form posts the point it wants (`checkpointId`, empty to take the person off), never a toggle, so a second
  * press before the page answers saves the same. The service asks for the role again (`canManageVolunteers`: the Organizer and the
- * Administrators, BR-REQ-060-01), holds the point to the event and audits the change; the press comes back to the plan, at the
- * point it was made on (`at`), a refusal's code in the address.
+ * Administrators, BR-REQ-060-01), holds the point to the event and audits the change. A press that went through comes back to
+ * the plan at the point it was made on (`at`), its outcome in the toast. A refusal — the person cancelled meanwhile, the point
+ * taken off the route meanwhile, a role that may not — comes back to the page's alert (`#admin-alert`) with its code in the
+ * address (§NNN, the registrations list's rule, §943): the alert is where the refusal's sentence is, at the top of a page that
+ * may be several screens long, and a point deleted meanwhile has no anchor left to land on.
  */
 export async function placeVolunteerAction(form: FormData): Promise<void> {
   const locale = localeOf(form);
@@ -40,5 +43,5 @@ export async function placeVolunteerAction(form: FormData): Promise<void> {
     refusal = error.code;
   }
   revalidatePath(path);
-  redirect(refusal ? `${path}?planError=${encodeURIComponent(refusal)}${anchor}` : `${path}${anchor}`);
+  redirect(refusal ? `${path}?planError=${encodeURIComponent(refusal)}#admin-alert` : `${path}${anchor}`);
 }
