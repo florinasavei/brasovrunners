@@ -491,6 +491,8 @@ describe("«Trimite un mesaj participanților»", () => {
       bodyEn: words.body.en,
       askReconfirm: false,
       sendQr: true,
+      // «Trimite și linkul pentru semnarea declarației» (§NNN): the third tick, as the trial left it — off.
+      signLink: false,
     });
     expect(textOf(alertOf(back))).toBe(`${ro.Admin.participantMessages.sent.one.replace("{count}", "1")} ${ro.Admin.participantMessages.chosen.kept}`);
     // The newest row is the trial's: the choice by its short name, and how many — never who.

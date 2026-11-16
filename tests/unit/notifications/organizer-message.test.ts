@@ -12,6 +12,7 @@ import {
   CONFIRM_COUNT_FIELD,
   isMessageReach,
   isOrganizerQrStatus,
+  isOrganizerSignStatus,
   isParticipantMessageAudience,
   ORGANIZER_BODY_MAX,
   ORGANIZER_MESSAGE_PLACEHOLDERS,
@@ -21,9 +22,11 @@ import {
   organizerMessageDeferral,
   organizerParagraphs,
   organizerQrApplies,
+  organizerSignLinkApplies,
   PARTICIPANT_MESSAGE_AUDIENCES,
   readOrganizerMessagePayload,
   readOrganizerSendQr,
+  readOrganizerSignLink,
   typedCountMatches,
   unknownOrganizerPlaceholders,
 } from "@/modules/notifications/domain/organizer-message";
@@ -31,7 +34,7 @@ import { emailSampleData, emailSampleFor } from "@/modules/notifications/email-c
 import { EVENT_NOTICE_STATUSES } from "@/modules/notifications/event-notices";
 import { buildOutgoingEmail, buildTemplateContent, HIGHLIGHT_TEXT_MARK, type TemplateData } from "@/modules/notifications/templates";
 import { canMessageParticipants, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
-import { CLUB_NAME } from "@/theme/brand";
+import { CLUB_NAME, EMAIL_ORGANIZER_WORDS } from "@/theme/brand";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
@@ -272,11 +275,46 @@ describe("§364 §96 §354 the message as it arrives", () => {
     expect(email.text.indexOf("Hi, Ana Pop!")).toBeLessThan(email.text.indexOf("Salut, Ana Pop!"));
   });
 
-  it("escapes what the organizer typed and reads no emphasis in it", () => {
-    const email = render("ro", { ...DATA, organizerBody: "Aduceți <b>**frontala**</b> & apă.", organizerBodyOther: "Bring a __head torch__." });
-    expect(email.html).toContain("Aduceți &lt;b&gt;**frontala**&lt;/b&gt; &amp; apă.");
-    expect(email.html).not.toContain("<strong>frontala</strong>");
-    expect(email.html).toContain("Bring a __head torch__.");
+  it("escapes what the organizer typed, and reads **bold** in it and nothing else (§NNN, amending §364)", () => {
+    const email = render("ro", { ...DATA, organizerBody: "Aduceți <b>**frontala**</b> & apă.", organizerBodyOther: "Bring a __head torch__, **please**." });
+    // Escaped first, then the marker: a tag somebody typed stays text, and the bold wraps text already made safe.
+    expect(email.html).toContain("Aduceți &lt;b&gt;<strong>frontala</strong>&lt;/b&gt; &amp; apă.");
+    expect(email.html).not.toContain("<b>");
+    // Underline is the platform's own marker (§309): in the organizers' words it stays what was typed.
+    expect(email.html).toContain("Bring a __head torch__, <strong>please</strong>.");
+    // The plain-text half drops the markers rather than printing them.
+    expect(email.text).toContain("Aduceți <b>frontala</b> & apă.");
+    expect(email.text).toContain("Bring a __head torch__, please.");
+    expect(email.text).not.toContain("**");
+    // A lone pair of asterisks, or a marker left open, is what was typed.
+    const loose = render("ro", { ...DATA, organizerBody: "2 ** 3 și **deschis", organizerBodyOther: "x" });
+    expect(loose.html).toContain("2 ** 3 și **deschis");
+  });
+
+  it("draws the organizers' words as one panel of their own: a tinted ground, an edge and a serif face (§NNN)", () => {
+    const email = render("ro");
+    const panels = [...email.html.matchAll(/<div data-email-part="organizer-words" style="([^"]*)">([^]*?)<\/div>/g)];
+    // One per half, each holding that half's whole message — the paragraphs and the line breaks as typed.
+    expect(panels).toHaveLength(2);
+    const [romanian, english] = panels;
+    expect(romanian[1]).toContain(`background-color:${EMAIL_ORGANIZER_WORDS.panel}`);
+    expect(romanian[1]).toContain(`border-left:4px solid ${EMAIL_ORGANIZER_WORDS.edge}`);
+    expect(romanian[1]).toContain(`color:${EMAIL_ORGANIZER_WORDS.ink}`);
+    expect(romanian[1]).toContain(`font-family:${EMAIL_ORGANIZER_WORDS.font}`);
+    expect(romanian[2].match(/<p /g)).toHaveLength(3);
+    expect(romanian[2]).toContain("Salut, Ana Pop!");
+    expect(romanian[2]).toContain("Startul se mută la 10:00.<br>Masa se deschide la 9:15.");
+    expect(romanian[2]).toContain("Numărul tău: 42.");
+    expect(english[2]).toContain("The start moves to 10:00.<br>The desk opens at 9:15.");
+    // The platform's framing sentence stays outside it, above; the event's button under it.
+    expect(email.html.indexOf("Un mesaj de la organizatorii evenimentului")).toBeLessThan(email.html.indexOf('data-email-part="organizer-words"'));
+    expect(email.html.indexOf(">Vezi pagina evenimentului</a>")).toBeGreaterThan(email.html.indexOf('data-email-part="organizer-words"'));
+    // The face is written into a style="…" attribute: no double quote in it.
+    expect(EMAIL_ORGANIZER_WORDS.font).not.toContain('"');
+    // No panel for a row whose words could not be read: the platform's sentence alone.
+    expect(render("ro", { participantName: "Ana Pop", eventTitle: "Crosul" }).html).not.toContain('data-email-part="organizer-words"');
+    // The club's copy keeps the panel: they are the organizers' words there too.
+    expect(render("ro", { ...DATA, clubCopy: true }).html).toContain('data-email-part="organizer-words"');
   });
 
   it("leaves an empty placeholder out and closes the gap, for whoever has no number yet", () => {
@@ -552,6 +590,216 @@ describe("§943 the flag decides a block of an email, and nothing else", () => {
     "src/app/[locale]/admin/events/[id]/mesaje/page.tsx",
     "src/modules/notifications/ui/ParticipantMessageComposer.tsx",
     // The rule, the send that sets the flag row by row, and the renderer that asks the state again.
+    "src/modules/notifications/domain/organizer-message.ts",
+    "src/modules/notifications/participant-messages.ts",
+    "src/modules/notifications/render.ts",
+  ];
+
+  function sourceFiles(dir: string, acc: string[] = []): string[] {
+    for (const entry of readdirSync(dir)) {
+      const full = path.join(dir, entry);
+      if (statSync(full).isDirectory()) sourceFiles(full, acc);
+      else if (/\.tsx?$/.test(entry)) acc.push(full);
+    }
+    return acc;
+  }
+
+  it("is named by no file but the reviewed ones — never the allocator, the capacity formula, a state or a deadline", () => {
+    const naming = sourceFiles(path.join(ROOT, "src"))
+      .filter((file) => NAMES_THE_FLAG.test(readFileSync(file, "utf8")))
+      .map((file) => path.relative(ROOT, file).replaceAll("\\", "/"))
+      .sort();
+    expect(naming, "a new reader of the flag must be a reviewed edit of this list").toEqual([...READERS].sort());
+    for (const file of naming) {
+      expect(file.startsWith("src/modules/registrations/"), file).toBe(false);
+      expect(file.startsWith("src/modules/deadlines/"), file).toBe(false);
+      expect(file.startsWith("src/db/"), file).toBe(false);
+    }
+  });
+});
+
+/**
+ * §NNN — «Trimite și linkul pentru semnarea declarației» (the owner, 2026-11-16: «vreau ca cei care nu au semnat declaratia
+ * sa o poata semna»; BR-REQ-080-01, BR-REQ-036-02). The pure half: the row's flag, who it draws for, and the button itself
+ * — «Semnează declarația» with its one sentence, above «Vin» and «Nu mai pot ajunge». The send, the link the renderer
+ * mints and the screens are `tests/integration/notifications/participant-message-sign-link.test.ts`.
+ */
+describe("§NNN «Trimite și linkul pentru semnarea declarației»: the row's flag, and who it draws for", () => {
+  const NOW = new Date("2026-11-16T09:00:00.000Z");
+  const AHEAD = new Date("2026-11-21T08:00:00.000Z");
+
+  it("reads the flag from the row's payload, and nothing else as a yes", () => {
+    expect(readOrganizerSignLink({ subject: {}, body: {}, signLink: true })).toBe(true);
+    for (const payload of [null, undefined, {}, { signLink: "true" }, { signLink: 1 }, { sendQr: true }, { askReconfirm: true }, "signLink"]) {
+      expect(readOrganizerSignLink(payload)).toBe(false);
+    }
+  });
+
+  it("is for a registration that owes its declaration alone — never an open offer, the confirmed or whoever waits", () => {
+    for (const status of registrationStatus.enumValues) expect(isOrganizerSignStatus(status), status).toBe(status === "PENDING_DECLARATION");
+  });
+
+  const applies = (overrides: Partial<Parameters<typeof organizerSignLinkApplies>[0]> = {}) =>
+    organizerSignLinkApplies({
+      signLink: true,
+      messageType: "ORGANIZER_MESSAGE",
+      clubCopy: false,
+      recipientParticipantId: "p1",
+      registration: { participantId: "p1", status: "PENDING_DECLARATION" },
+      event: { startsAt: AHEAD, eventStatus: "SCHEDULED" },
+      now: NOW,
+      ...overrides,
+    });
+
+  it("draws with the flag, at the registration's own address, for a declaration owed as the email leaves", () => {
+    expect(applies()).toBe(true);
+    // Whatever it was when the send queued the row: signed, cancelled, lapsed or anything else by now, the words alone.
+    for (const status of registrationStatus.enumValues.filter((one) => one !== "PENDING_DECLARATION")) {
+      expect(applies({ registration: { participantId: "p1", status } }), status).toBe(false);
+    }
+  });
+
+  it("never without the flag, on a club copy (§320), at another address, on another message, or with no registration", () => {
+    expect(applies({ signLink: false })).toBe(false);
+    expect(applies({ clubCopy: true })).toBe(false);
+    expect(applies({ recipientParticipantId: "p2" })).toBe(false);
+    expect(applies({ recipientParticipantId: null })).toBe(false);
+    expect(applies({ registration: null })).toBe(false);
+    expect(applies({ registration: undefined })).toBe(false);
+    expect(applies({ messageType: "EVENT_UPDATE_NOTICE" })).toBe(false);
+  });
+
+  it("never once the event has started, or for an event that does not run: nobody signs online then", () => {
+    expect(applies({ event: { startsAt: NOW, eventStatus: "SCHEDULED" } })).toBe(false);
+    expect(applies({ event: { startsAt: new Date(NOW.getTime() - 1), eventStatus: "SCHEDULED" } })).toBe(false);
+    expect(applies({ event: { startsAt: AHEAD, eventStatus: "CANCELLED" } })).toBe(false);
+    expect(applies({ event: null })).toBe(false);
+  });
+});
+
+describe("§NNN the button in the message: «Semnează declarația», under the organizers' words", () => {
+  const SIGN = "https://example.test/ro/inregistrari/declaratie/SECRET";
+  const CANCEL = "https://example.test/ro/inregistrari/gestionare/OTHER#cancel";
+  const DATA: TemplateData = {
+    participantName: "Ana Pop",
+    eventTitle: "Crosul de toamnă",
+    eventTitleOther: "The autumn cross",
+    eventUrl: "https://example.test/ro/evenimente/crosul-de-toamna",
+    eventsUrl: "https://example.test/ro/evenimente",
+    contactUrl: "https://example.test/ro/contact",
+    cannotComeUrl: CANCEL,
+    organizerSubject: WORDS.subject.ro,
+    organizerSubjectOther: WORDS.subject.en,
+    organizerBody: WORDS.body.ro,
+    organizerBodyOther: WORDS.body.en,
+  };
+  const WITH_LINK: TemplateData = { ...DATA, signDeclarationUrl: SIGN };
+  const render = (locale: "ro" | "en", data: TemplateData) =>
+    buildOutgoingEmail({ to: "ana@example.ro", locale, idempotencyKey: `test:organizer-sign:${locale}`, messageType: "ORGANIZER_MESSAGE", data, actionUrl: DATA.eventUrl });
+  const buttons = (html: string) => html.split('data-email-part="sign-declaration"').length - 1;
+
+  it("draws the button once per half with its sentence — after the words, above «Vin» and «Nu mai pot ajunge»", () => {
+    const email = render("ro", { ...WITH_LINK, reconfirmUrl: "https://example.test/ro/inregistrari/gestionare/OTHER#reconfirm" });
+    expect(buttons(email.html)).toBe(2);
+    expect(email.html).toContain(`<a href="${SIGN}"`);
+    expect(email.html).toContain(">Semnează declarația</a>");
+    expect(email.html).toContain(">Sign the declaration</a>");
+    expect(email.html).toContain("Încă nu ai semnat declarația pe proprie răspundere: înscrierea ta este completă doar după ce o semnezi.");
+    expect(email.html).toContain("You have not signed the declaration of own responsibility yet: your registration is complete only once you sign it.");
+    const words = email.html.indexOf('data-email-part="organizer-words"');
+    const sign = email.html.indexOf('data-email-part="sign-declaration"');
+    const coming = email.html.indexOf('data-email-part="reconfirm"');
+    const cancel = email.html.indexOf('data-email-part="cannot-come"');
+    expect(words).toBeGreaterThan(-1);
+    expect(sign).toBeGreaterThan(words);
+    expect(coming).toBeGreaterThan(sign);
+    expect(cancel).toBeGreaterThan(coming);
+    // The plain-text half says the same, in each language, with the address.
+    const [romanian, english] = email.text.split("\n— — —\n");
+    expect(romanian).toContain(`Semnează declarația: ${SIGN}`);
+    expect(english).toContain(`Sign the declaration: ${SIGN}`);
+    expect(romanian.indexOf("Semnează declarația:")).toBeLessThan(romanian.indexOf("Nu mai pot ajunge:"));
+  });
+
+  it("draws nothing without the link: the message exactly as it is without the tick", () => {
+    const plain = render("ro", DATA);
+    expect(buttons(plain.html)).toBe(0);
+    expect(plain.text).not.toContain("Semnează declarația");
+    expect(plain.text).not.toContain("Sign the declaration");
+    expect(buildTemplateContent("ORGANIZER_MESSAGE", "ro", DATA, DATA.eventUrl).signDeclaration).toBeUndefined();
+    // No sample sets the link: the previews on «Setări» → «Emailuri» show the message without the button.
+    for (const locale of ["ro", "en"] as const) {
+      for (const data of [emailSampleFor("ORGANIZER_MESSAGE", locale), emailSampleData(locale)]) {
+        expect(data.signDeclarationUrl).toBeUndefined();
+        const sample = buildOutgoingEmail({ to: "a@example.ro", locale, idempotencyKey: "test:sample", messageType: "ORGANIZER_MESSAGE", data, actionUrl: DATA.eventUrl });
+        expect(buttons(sample.html)).toBe(0);
+      }
+    }
+  });
+
+  it("never in the club's copy, whatever it is handed (§320): nobody's link to a declaration in a club mailbox", () => {
+    for (const copy of [{ clubCopy: true }, { clubCopy: true, clubCopyRecipients: 12, participantName: "" }]) {
+      const email = render("ro", { ...WITH_LINK, ...copy });
+      for (const body of [email.html, email.text]) {
+        expect(body).not.toContain(SIGN);
+        expect(body).not.toContain("Semnează declarația");
+        expect(body).not.toContain("Sign the declaration");
+      }
+    }
+  });
+
+  it("is drawn by no other message, whatever it is handed: the link's field is the organizers' message's alone", () => {
+    for (const messageType of ["EVENT_UPDATE_NOTICE", "WAITLIST_JOINED", "REGISTRATION_CANCELLED", "EVENT_THANKS", "EVENT_REMINDER"] as const) {
+      const email = buildOutgoingEmail({ to: "ana@example.ro", locale: "ro", idempotencyKey: `test:other-sign:${messageType}`, messageType, data: WITH_LINK, actionUrl: DATA.eventUrl });
+      expect(email.html, messageType).not.toContain(SIGN);
+      expect(email.text, messageType).not.toContain(SIGN);
+    }
+  });
+});
+
+describe("§NNN the tick's words, in both catalogues", () => {
+  const wordsOf = (catalogue: typeof ro) => catalogue.Admin.participantMessages;
+
+  it("names the tick, says who gets the link and that it replaces the earlier one, and how «Mesaje trimise» says it", () => {
+    expect(wordsOf(ro).signLink).toBe("Trimite și linkul pentru semnarea declarației");
+    expect(wordsOf(en).signLink).toBe("Also send the link to sign the declaration");
+    expect(wordsOf(ro).signLinkHelp).toBe(
+      "Îl primesc doar cei înscriși care nu au semnat încă declarația, fiecare pe al lui, sub mesajul tău. Linkul nou îl înlocuiește pe cel din emailul lor de dinainte.",
+    );
+    expect(wordsOf(en).signLinkHelp).toBe(
+      "Only those registered who have not signed the declaration yet get it, each their own, under your message. The new link replaces the one in their earlier email.",
+    );
+    expect(wordsOf(ro).historySignLink).toBe("Cu linkul pentru semnarea declarației, pentru cei care nu au semnat-o: {count}");
+    expect(wordsOf(en).historySignLink).toBe("With the link to sign the declaration, for those who have not signed it: {count}");
+    // One plain sentence or two of help (§511).
+    for (const catalogue of [ro, en]) expect(wordsOf(catalogue).signLinkHelp.length).toBeLessThanOrEqual(200);
+  });
+
+  it("says how a word is made bold, by the marker the email reads", () => {
+    expect(wordsOf(ro).bodyFormat).toBe("Pentru text îngroșat, pune-l între câte două steluțe: **așa**.");
+    expect(wordsOf(en).bodyFormat).toBe("For bold text, put it between two asterisks on each side: **like this**.");
+  });
+
+  it("is a step of the guide's task, by the tick's own label", () => {
+    for (const catalogue of [ro, en]) {
+      const steps = catalogue.Admin.guide.sections.flatMap((section) => section.tasks.flatMap((task) => task.steps));
+      expect(steps.filter((step) => step.includes(`«${wordsOf(catalogue).signLink}»`))).toHaveLength(1);
+    }
+  });
+});
+
+/**
+ * The structural half of «nothing reads the flag but the send and the renderer» (§NNN), as §943's above: the files that
+ * name the flag or its rules are a reviewed list — none of the allocator's, the capacity formula's, a state's or a
+ * deadline's is on it. The link itself signs nothing: the declaration's own page and service do, as for any other link.
+ */
+describe("§NNN the flag decides a button of an email, and nothing else", () => {
+  const ROOT = process.cwd();
+  const NAMES_THE_FLAG = /\bsignLink\b|readOrganizerSignLink|organizerSignLinkApplies|isOrganizerSignStatus/;
+  const READERS = [
+    "src/app/[locale]/admin/events/[id]/mesaje/actions.ts",
+    "src/app/[locale]/admin/events/[id]/mesaje/page.tsx",
+    "src/modules/notifications/ui/ParticipantMessageComposer.tsx",
     "src/modules/notifications/domain/organizer-message.ts",
     "src/modules/notifications/participant-messages.ts",
     "src/modules/notifications/render.ts",

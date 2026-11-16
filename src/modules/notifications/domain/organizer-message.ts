@@ -1,6 +1,7 @@
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { type BilingualText, isWrittenText, type TextLanguage } from "@/shared/forms/both-languages";
 import { isUuid } from "@/shared/ids";
+import { cannotComeApplies } from "./cannot-come";
 import { type EmailCopyPlaceholder, placeholdersIn } from "./email-copy";
 
 /**
@@ -272,6 +273,40 @@ export function organizerQrApplies(params: {
   if (!sendQr || clubCopy) return false;
   if (!registration || !recipientParticipantId || registration.participantId !== recipientParticipantId) return false;
   return isOrganizerQrStatus(registration.status);
+}
+
+/**
+ * Whether this row carries «Trimite și linkul pentru semnarea declarației» (§NNN; the owner, 2026-11-16: «vreau ca cei
+ * care nu au semnat declaratia sa o poata semna»): the payload's `signLink`, beside the words — set by the send only on
+ * the rows whose registration owed its declaration when it was queued, never send-wide; anything but `true` — a row of
+ * somebody who signed or waits, an older one, a hand-made one, the club's copy — is no. A flag, never a link: the link's
+ * secret exists in the email alone, minted when it leaves (§12.8, §14.5).
+ */
+export function readOrganizerSignLink(payload: unknown): boolean {
+  return Boolean(payload && typeof payload === "object" && (payload as { signLink?: unknown }).signLink === true);
+}
+
+/**
+ * The one state whose email gets «Semnează declarația» (§NNN): a registration that holds a place and owes its
+ * declaration — the composer's own group «Declarație nesemnată». Not an open waiting-list offer, whose own email
+ * carries its link and its deadline; not the confirmed, who signed. The send asks it when it queues a row, the
+ * renderer again when the row leaves.
+ */
+export function isOrganizerSignStatus(status: RegistrationStatus): boolean {
+  return status === "PENDING_DECLARATION";
+}
+
+/**
+ * Whether the organizers' message carries the person's own link to their declaration (§NNN): the row carries the flag,
+ * and «Nu mai pot ajunge» goes on it too (`cannotComeApplies`: the registration's own address, active, the event still
+ * ahead and running — after the start nobody signs online), and the registration still owes the declaration **when it
+ * renders** — a send drains over hours, and whoever signed or cancelled since reads the message without it. Never on a
+ * club copy (§320): a club mailbox holds nobody's link.
+ */
+export function organizerSignLinkApplies(params: Parameters<typeof cannotComeApplies>[0] & { signLink: boolean }): boolean {
+  if (!params.signLink || params.messageType !== "ORGANIZER_MESSAGE") return false;
+  if (!cannotComeApplies(params)) return false;
+  return params.registration ? isOrganizerSignStatus(params.registration.status) : false;
 }
 
 /**

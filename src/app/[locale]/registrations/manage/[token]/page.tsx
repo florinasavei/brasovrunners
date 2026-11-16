@@ -638,7 +638,10 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                 */}
                 {((live.eventAhead && one.reconfirmAsked && (isReconfirmStatus(one.status) || one.status === "WAITLIST_OFFERED")) ||
                   (answered && reconfirm === "0")) && (
-                  <Box id={one.own ? "reconfirm" : undefined} sx={{ mb: 2 }} data-testid="manage-reconfirm">
+                  // Well apart from the cancel under it (§NNN; the owner, 2026-11-16, of «Am notat că vii» standing right above «Anulează
+                  // înscrierea»: «Aici trebuie ceva spatiu, ca sa nu se confuzeze cumva ca anuleaza»): somebody who has just said they
+                  // are coming must not read the next block as part of the answer.
+                  <Box id={one.own ? "reconfirm" : undefined} sx={{ mb: family ? 4 : 6 }} data-testid="manage-reconfirm">
                     {answered && reconfirm === "0" && (
                       <Alert severity="warning" sx={{ mb: 2 }} data-testid="manage-reconfirm-failed">
                         {t("reconfirm.failed")}
@@ -673,7 +676,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                               reconfirmForm
                             )}
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                              {t("reconfirm.optional", { button: reconfirmYes })}
+                              {t("reconfirm.why")}
                             </Typography>
                           </>
                         )}
@@ -684,7 +687,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                         )}
                       </>
                     )}
-                    {!family && <Divider sx={{ mt: 3 }} />}
+                    {!family && <Divider sx={{ mt: 6 }} />}
                   </Box>
                 )}
 

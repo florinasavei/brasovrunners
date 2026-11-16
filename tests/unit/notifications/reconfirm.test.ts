@@ -186,13 +186,13 @@ describe("the ready reminder text, in both catalogues", () => {
     }
   });
 
-  it("says that «Vin» is optional and changes nothing, points a declaration or an offer at its own email, and never says silence costs the place", () => {
+  it("says what the answer is for — never that it is optional (§NNN) —, points a declaration or an offer at its own email, and never says silence costs the place", () => {
     expect(textOf(ro).p2).toContain("{eventTitle} e aproape:");
     expect(textOf(en).p2).toContain("{eventTitle} is coming up:");
     expect(textOf(ro).p4).toBe("Dacă nu mai poți ajunge, apasă „Nu mai pot ajunge”, ca să poată veni altcineva în locul tău.");
     expect(textOf(en).p4).toBe("If you can no longer make it, press “I can't make it any more”, so someone else can come in your place.");
-    expect(textOf(ro).p5).toBe("„Vin” e opțional: dacă nu-l apeși, nu se schimbă nimic la înscrierea ta.");
-    expect(textOf(en).p5).toBe("“I'm coming” is optional: if you don't press it, nothing about your registration changes.");
+    expect(textOf(ro).p5).toBe("Durează o secundă, iar răspunsul tău ne ajută să pregătim startul.");
+    expect(textOf(en).p5).toBe("It takes a second, and your answer helps us get the start ready.");
     // No deadline promised: an offer or a declaration may have none in its email.
     expect(textOf(ro).p6).toBe("Dacă mai ai de semnat declarația sau ai primit un loc oferit, urmează pașii din emailul primit.");
     expect(textOf(en).p6).toBe("If you still have to sign the declaration or were offered a place, follow the steps in the email you received.");
@@ -201,6 +201,9 @@ describe("the ready reminder text, in both catalogues", () => {
       // The old sentences: a waiting person's «place» promised to the waiting list, and «exactly as it is» for somebody who still owes a signature.
       expect(all).not.toMatch(/lista de așteptare|waiting list|exact cum e|exactly as it is/i);
       expect(all).not.toMatch(/pierzi|se anulează automat|vei fi anulat|lose your place|cancelled automatically|will be cancelled/i);
+      // §NNN (the owner: «nu scrie nicaieri ca "nu e obligatoriu", vreau sa incurajez oamenii sa reconfirme»): the ready text
+      // encourages the answer and calls it neither optional nor required — nothing happens to whoever does not press.
+      expect(all).not.toMatch(/opțional|obligatoriu|optional|mandatory|required/i);
     }
     // Seven paragraphs, as the composer joins them and the send reads them back.
     expect(organizerParagraphs(PARTS.slice(1).map((part) => textOf(ro)[part]).join("\n\n"))).toHaveLength(7);
@@ -216,7 +219,9 @@ describe("the ready reminder text, in both catalogues", () => {
     // The page's button is not the RSVP feature's «Da, vin».
     expect(ro.Registrations.reconfirm.yes).toBe("Da, vin la cursă");
     expect(ro.Registrations.reconfirm.yesOther).toBe("Da, vin la eveniment");
-    expect(ro.Registrations.reconfirm.optional).toBe("Răspunsul e opțional: dacă nu apeși „{button}”, nu se schimbă nimic la înscrierea ta.");
-    expect(en.Registrations.reconfirm.optional).toBe("Answering is optional: if you don't press “{button}”, nothing about your registration changes.");
+    // The line under it says what the answer is for, and — since §NNN — never that it is optional, nor that it is required.
+    expect(ro.Registrations.reconfirm.why).toBe("Răspunsul tău ne ajută să știm pe cine așteptăm la start.");
+    expect(en.Registrations.reconfirm.why).toBe("Your answer tells us who to expect at the start.");
+    for (const catalogue of [ro, en]) expect(JSON.stringify(catalogue.Registrations.reconfirm)).not.toMatch(/opțional|obligatoriu|optional|mandatory|required/i);
   });
 });

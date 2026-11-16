@@ -432,17 +432,17 @@ describe("§945 who can be ticked", () => {
 });
 
 describe("§945 the words stay after a send to the people ticked", () => {
-  it("reads back that send's words and its two ticks — for this event only", async () => {
+  it("reads back that send's words and its three ticks — for this event only", async () => {
     const ana = await person("Ana", "CONFIRMED");
     const bogdan = await person("Bogdan", "WAITLIST_OFFERED");
     const sendId = randomUUID();
     await sendTo([ana.id, bogdan.id], { sendId, sendQr: true });
     // The ticks are the send's, whatever each row carries: Bogdan's row has no flag of its own.
-    expect(await readKeptMessage(db, eventId, sendId)).toEqual({ ...WORDS, askReconfirm: false, sendQr: true });
+    expect(await readKeptMessage(db, eventId, sendId)).toEqual({ ...WORDS, askReconfirm: false, sendQr: true, signLink: false });
 
     const both = randomUUID();
     await sendTo([bogdan.id], { sendId: both, askReconfirm: true, sendQr: true });
-    expect(await readKeptMessage(db, eventId, both)).toEqual({ ...WORDS, askReconfirm: true, sendQr: true });
+    expect(await readKeptMessage(db, eventId, both)).toEqual({ ...WORDS, askReconfirm: true, sendQr: true, signLink: false });
 
     expect(await readKeptMessage(db, await race("Altă cursă"), sendId)).toBeNull();
     expect(await readKeptMessage(db, eventId, randomUUID())).toBeNull();
@@ -502,7 +502,7 @@ describe("§945 the form's ticks reach the send", () => {
     const landed = await press(posted);
     expect(landed).toMatchObject({ redirect: expect.stringMatching(new RegExp(`sent=2&test=0&kept=${sendId}#admin-alert$`)) });
     expect(await writtenTo()).toEqual([ana.id, bogdan.id].sort());
-    expect(await readKeptMessage(db, eventId, sendId)).toEqual({ ...WORDS, askReconfirm: false, sendQr: true });
+    expect(await readKeptMessage(db, eventId, sendId)).toEqual({ ...WORDS, askReconfirm: false, sendQr: true, signLink: false });
   });
 
   it("lands without `kept` after a send to a group: the boxes are empty, as they always were", async () => {
