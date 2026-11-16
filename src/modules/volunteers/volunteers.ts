@@ -1,6 +1,7 @@
-import { and, asc, count, eq, gt, inArray, notInArray, or, sql } from "drizzle-orm";
+import { and, asc, count, eq, gt, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { z } from "zod";
+import { eventCheckpoints } from "@/db/schema/event-checkpoints";
 import { eventVolunteerCategories, eventVolunteerRoleAssignments, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
 import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
 import { events } from "@/db/schema/events";
@@ -29,6 +30,8 @@ import { type CanonicalEmail, canonicalizeEmail } from "@/modules/participants/d
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
+import { pickVolunteerNumber, runnersLastNumber } from "@/modules/registrations/bibs";
+import { lockEventForCapacity } from "@/modules/registrations/repository";
 import { looksLikeSpam } from "@/modules/registrations/service";
 import { canManageVolunteers, isBackofficeRole } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -178,6 +181,12 @@ export type VolunteerItem = {
   listOptIn: boolean;
   /** «Are kit» (§904): the organizers' own mark that the person gets the volunteers' kit — what the screen's «Cu kit: N» counts. */
   hasKit: boolean;
+  /** «Participă la tombolă» (§949): on the raffle's list of an event that holds one, unless the organizers unticked it. */
+  inRaffle: boolean;
+  /** The volunteer's number (§948): drawn from the event's volunteers' series when confirmed, or the number they wore as a runner; null before, and on an event without the series. */
+  bibNumber: number | null;
+  /** «Planul voluntarilor» (§949): the point of the event's route the person stands at, or null — not placed yet, or not on the route. */
+  checkpointId: string | null;
   shirtSize: Exclude<RegistrationTshirtSize, "NONE"> | null;
   createdAt: Date;
   updatedAt: Date;
@@ -326,6 +335,9 @@ function volunteerItemOf(joined: VolunteerRowJoined, choiceIds: string[], roleId
     clubMember: row.clubMember,
     listOptIn: row.listOptIn,
     hasKit: row.hasKit,
+    inRaffle: row.inRaffle,
+    bibNumber: row.bibNumber,
+    checkpointId: row.checkpointId,
     shirtSize: row.shirtSize === null || row.shirtSize === "NONE" ? null : row.shirtSize,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -1373,6 +1385,83 @@ export async function setVolunteersShirts<T extends Record<string, unknown>>(
 }
 
 /**
+ * One volunteer's draw (§948), for a caller inside a transaction: the event row locked first — the serialization point of
+ * every number given at an event (`AGENTS.md` §10.6), so a runner confirmed at the same instant cannot be handed the same
+ * one — then the next free number of the volunteers' series. Null on an event that gives its volunteers no number.
+ */
+async function drawVolunteerNumber<T extends Record<string, unknown>>(tx: Database<T>, eventId: string, taken?: Set<number>): Promise<number | null> {
+  const event = await lockEventForCapacity(tx, eventId);
+  if (!event || event.volunteerBibStart === null) return null;
+  return pickVolunteerNumber(tx, eventId, event.volunteerBibStart, taken);
+}
+
+/**
+ * «Numerele voluntarilor încep de la» (§948; the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr de concurs"» — and,
+ * asked which numbers, «Serie proprie»): the first number of the volunteers' own series at this event, saved by the «Voluntari»
+ * card's own form like the ticks above — never by the editor's save.
+ *
+ * A whole number above every number a runner of the event wears or may come to wear (`bibs.ts#runnersLastNumber`: a capped
+ * race's last number, the desk's spares, what is already worn or retired), so the two series never run into each other; a
+ * lower one is refused (`VOLUNTEER_NUMBERS_IN_RACE_SERIES`, naming the box). An empty box (`null`) switches the series off:
+ * nobody new draws a number, and the numbers already given stay — a number is never taken back.
+ *
+ * The same press gives every **confirmed** volunteer who has none their number, in the order they were added, under the
+ * event row's lock: the organizers who set the series a week before the race are not left pressing each person. A cancelled
+ * person gets none; one confirmed later draws theirs at the confirmation (`changeVolunteer`). Audited with the old and the
+ * new start and how many numbers the press gave — never a person.
+ */
+export async function setVolunteerNumbersStart<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  request: { eventId: string; start: number | null },
+  now: Date,
+): Promise<{ changed: boolean; assigned: number }> {
+  assertMayManage(actor);
+  assertIds(request.eventId);
+  const start = request.start;
+  if (start !== null && (!Number.isInteger(start) || start < 1 || start > 99_000)) {
+    throw new DomainError("VALIDATION_ERROR", "the volunteers' first number is a whole number from 1 to 99000", ["volunteerBibStart"]);
+  }
+  return db.transaction(async (tx) => {
+    const event = await lockEventForCapacity(tx, request.eventId);
+    if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
+    if (start !== null) {
+      const last = await runnersLastNumber(tx, request.eventId);
+      if (start <= last) {
+        throw new DomainError("VOLUNTEER_NUMBERS_IN_RACE_SERIES", `the volunteers' numbers start above the runners': the runners' reach ${last}`, ["volunteerBibStart"]);
+      }
+    }
+    const moved = event.volunteerBibStart !== start;
+    // Not `events.version`, like the card's ticks: it is no edit of the page's text and must not make an open editor's save stale.
+    if (moved) await tx.update(events).set({ volunteerBibStart: start }).where(eq(events.id, request.eventId));
+    let assigned = 0;
+    if (start !== null) {
+      const waiting = await tx
+        .select({ id: eventVolunteers.id })
+        .from(eventVolunteers)
+        .where(and(eq(eventVolunteers.eventId, request.eventId), eq(eventVolunteers.state, "CONFIRMED"), isNull(eventVolunteers.bibNumber)))
+        .orderBy(asc(eventVolunteers.createdAt), asc(eventVolunteers.id));
+      const taken = new Set<number>();
+      for (const person of waiting) {
+        const number = await pickVolunteerNumber(tx, request.eventId, start, taken);
+        await tx.update(eventVolunteers).set({ bibNumber: number, updatedAt: now }).where(eq(eventVolunteers.id, person.id));
+        assigned += 1;
+      }
+    }
+    if (!moved && assigned === 0) return { changed: false, assigned: 0 };
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event.volunteer_numbers_start_set",
+      entityType: "event",
+      entityId: request.eventId,
+      metadata: { from: event.volunteerBibStart, to: start, assigned },
+      now,
+    });
+    return { changed: true, assigned };
+  });
+}
+
+/**
  * «Arată public câți voluntari mai sunt necesari» on or off (§773; the owner, 2026-10-14: «vreau să bifez dacă să afișez sau
  * nu numărătoarea voluntarilor — știi că am mai avut probleme din astea»; the waiting list's «Arată public câți așteaptă» is
  * the model, §634): the event's own tick, saved by the «Voluntari» card's own form like the two above — never by the editor's
@@ -1500,8 +1589,12 @@ async function eventDayOf<T extends Record<string, unknown>>(db: Database<T>, ev
 }
 
 export type VolunteerRequest =
-  /** `firstNote`: «Nota ta (doar organizatorii)» on «Adaugă un voluntar de mână», the person's optional first internal note. */
-  | { kind: "add"; eventId: string; fields: Record<string, unknown>; firstNote?: unknown }
+  /**
+   * `firstNote`: «Nota ta (doar organizatorii)» on «Adaugă un voluntar de mână», the person's optional first internal note.
+   * `locale`: the language the person's emails leave in — given only by «Transformă în voluntar» (§948, `transform.ts`), the
+   * registration's own; a hand entry keeps the column's default.
+   */
+  | { kind: "add"; eventId: string; fields: Record<string, unknown>; firstNote?: unknown; locale?: Locale }
   | { kind: "edit"; eventId: string; id: string; fields: Record<string, unknown> }
   | { kind: "setState"; eventId: string; id: string; state: unknown }
   /** «Dă-i rolul …» / «Dă-i și rolul …» (§761, §837): the organizers give the person one more role of the event, ticked by them or not. */
@@ -1510,6 +1603,13 @@ export type VolunteerRequest =
   | { kind: "unassign"; eventId: string; id: string; roleId: unknown }
   /** «Are kit» ticked or cleared on the «Voluntari» list's row (§904): the form posts the state it wants, never a toggle. */
   | { kind: "setKit"; eventId: string; id: string; hasKit: boolean }
+  /** «Participă la tombolă» ticked or cleared on the «Voluntari» list's row (§949): the form posts the state it wants, never a toggle. */
+  | { kind: "setRaffle"; eventId: string; id: string; inRaffle: boolean }
+  /**
+   * «Planul voluntarilor» (§949): the point of the route the person stands at — one of the event's own «Puncte pe traseu» — or
+   * none: an empty value takes the person off their point. The form posts the point it wants, never a toggle.
+   */
+  | { kind: "setCheckpoint"; eventId: string; id: string; checkpointId: unknown }
   | { kind: "delete"; eventId: string; id: string };
 
 /**
@@ -1768,6 +1868,15 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     const audit = (action: AuditAction, metadata: Record<string, unknown>) =>
       recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: request.eventId, metadata, now });
 
+    // «Confirmă» may draw the person's number (§948), which is drawn under the event row's lock — the lock every race number
+    // is drawn under. Taken here, before the person's own row: the order «Transformă în alergător» takes them in
+    // (`transform.ts`: the event, then the volunteer), so the two presses on one person wait in a line, never in a circle (40P01).
+    if (state === "CONFIRMED") await lockEventForCapacity(tx, request.eventId);
+    // «Planul voluntarilor» (§949) writes a reference to one of the event's points, which the editor's save and an import change
+    // under the event row's lock (`event-checkpoints/checkpoints.ts`). Taken here too, before the person's row: a point being
+    // deleted — which frees its people, row by row — and a person being placed on it wait in a line, never in a circle.
+    if (request.kind === "setCheckpoint") await tx.select({ id: events.id }).from(events).where(eq(events.id, request.eventId)).for("no key update").limit(1);
+
     // A verb that writes a reference to a role — the role given, the roles ticked — locks the event's roles first, in
     // the order of their ids: the order a sign-up locks the roles it ticked and a role change locks them all (§761).
     // Without it the insert's foreign keys take KEY SHARE on each role in the order posted, and a hand entry naming
@@ -1852,6 +1961,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           phone: input.phone,
           state: "REGISTERED",
           source: "STAFF",
+          // The language of the person's emails: a runner turned volunteer keeps the registration's (§948); a hand entry, the column's default.
+          ...(request.locale ? { locale: request.locale } : {}),
           // The date of birth and its age on the event's day (§773): `age` is what every rule reads, the date is what the club asked for.
           age: input.age,
           dateOfBirth: input.birthDate,
@@ -1925,7 +2036,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         );
       // The person's choices go with them (CASCADE).
       await tx.delete(eventVolunteers).where(eq(eventVolunteers.id, current.id));
-      await audit("volunteer.deleted", { volunteerId: current.id, assignedRoleIds: heldRoleIds, state: current.state });
+      // The number, when the person had one (§948): the row is gone, and the trail is what keeps it from being drawn again (`bibs.ts#retiredBibNumbers`).
+      await audit("volunteer.deleted", { volunteerId: current.id, assignedRoleIds: heldRoleIds, state: current.state, ...(current.bibNumber !== null ? { bibNumber: current.bibNumber } : {}) });
       return { changed: true, volunteer: summary };
     }
 
@@ -1935,13 +2047,20 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       if (state === "CONFIRMED" && !guardianAllowsConfirm(current)) {
         throw new DomainError("VOLUNTEER_GUARDIAN_MISSING", "the parent's or guardian's agreement is missing", ["guardian"]);
       }
-      await tx.update(eventVolunteers).set({ state, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
+      // The volunteer's number (§948): drawn the moment the organizers confirm the person, from the event's own series — never a
+      // second one for somebody who has theirs (a person cancelled and reopened), none on an event without the series.
+      const drawn = state === "CONFIRMED" && current.bibNumber === null ? await drawVolunteerNumber(tx, current.eventId) : null;
+      await tx
+        .update(eventVolunteers)
+        .set({ state, updatedAt: now, ...(drawn !== null ? { bibNumber: drawn } : {}) })
+        .where(eq(eventVolunteers.id, current.id));
       const reopened = current.state === "CANCELLED";
       await audit("volunteer.state_changed", {
         volunteerId: current.id,
         assignedRoleIds: heldRoleIds,
         from: current.state,
         to: state,
+        ...(drawn !== null ? { bibNumber: drawn } : {}),
         ...(reopened ? skippedFor({ ...current, state }, heldRoleIds) : {}),
       });
       // A cancelled person reopened with roles given is told them: the email queued when they were given was withdrawn at
@@ -1971,6 +2090,39 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       if (current.hasKit === wanted) return { changed: false, volunteer: summary };
       await tx.update(eventVolunteers).set({ hasKit: wanted, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
       await audit("volunteer.edited", { volunteerId: current.id, fields: ["hasKit"], hasKit: wanted, assignedRoleIds: heldRoleIds });
+      return { changed: true, volunteer: summary };
+    }
+
+    if (request.kind === "setRaffle") {
+      // «Participă la tombolă» (§949): whether the person's number is written on the raffle's list of an event that holds one — the
+      // organizers' own mark, one press on the list's row, as «Are kit» is. Only a real `false` takes the person out: anything else
+      // a forged request carries keeps them in, the column's default. Nobody is told, and no state, role or number moves.
+      const wanted = request.inRaffle !== false;
+      if (current.inRaffle === wanted) return { changed: false, volunteer: summary };
+      await tx.update(eventVolunteers).set({ inRaffle: wanted, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
+      await audit("volunteer.edited", { volunteerId: current.id, fields: ["inRaffle"], inRaffle: wanted, assignedRoleIds: heldRoleIds });
+      return { changed: true, volunteer: summary };
+    }
+
+    if (request.kind === "setCheckpoint") {
+      // «Planul voluntarilor» (§949): where the person stands on the day — one of this event's points, or none. A cancelled person
+      // is placed nowhere, though taking anybody off a point is always allowed. Audited as every other change of a person's boxes:
+      // the box and the point's id, never a name. Nobody is told — it is the organizers' own plan — and no role, state or number moves.
+      const wanted = typeof request.checkpointId === "string" && request.checkpointId.trim() !== "" ? request.checkpointId.trim() : null;
+      if (wanted !== null) {
+        if (!isUuid(wanted)) throw new DomainError("VALIDATION_ERROR", "that is not a point of the route", ["checkpointId"]);
+        if (current.state === "CANCELLED") throw new DomainError("VALIDATION_ERROR", "a cancelled volunteer stands at no point", ["checkpointId"]);
+        const [point] = await tx
+          .select({ id: eventCheckpoints.id })
+          .from(eventCheckpoints)
+          .where(and(eq(eventCheckpoints.id, wanted), eq(eventCheckpoints.eventId, current.eventId)))
+          .limit(1);
+        // Another event's point, or one taken off the route since the page was drawn: not there.
+        if (!point) throw new DomainError("NOT_FOUND", "the point is not on this event's route");
+      }
+      if (current.checkpointId === wanted) return { changed: false, volunteer: summary };
+      await tx.update(eventVolunteers).set({ checkpointId: wanted, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
+      await audit("volunteer.edited", { volunteerId: current.id, fields: ["checkpoint"], checkpointId: wanted, assignedRoleIds: heldRoleIds });
       return { changed: true, volunteer: summary };
     }
 

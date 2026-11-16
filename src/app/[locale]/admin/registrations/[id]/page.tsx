@@ -84,6 +84,7 @@ import {
   setBibNumberAction,
   setOutsideCapacityAction,
   setRegistrationEliteTickAction,
+  turnRunnerIntoVolunteerAction,
   withdrawConsentAction,
   declarationHoldAction,
 } from "../actions";
@@ -92,6 +93,9 @@ import { resendRegistrationEmailAction } from "./actions";
 import { addRegistrationNoteAction, deleteRegistrationNoteAction } from "./note-actions";
 import { setRegistrationPartnerAction } from "./partner-actions";
 import DeclarationHoldForm from "@/modules/registrations/ui/DeclarationHoldForm";
+import { roleLabel, rolesWithCategoryWords } from "@/modules/volunteers/domain/volunteer";
+import TurnIntoVolunteerPanel from "@/modules/volunteers/ui/TurnIntoVolunteerPanel";
+import { listVolunteerCategories, listVolunteerRoles } from "@/modules/volunteers/volunteers";
 import { listPartnerSuggestions } from "@/modules/registrations/partner-mark";
 import PartnerMarkFields, { PartnerSuggestionList } from "@/modules/registrations/ui/PartnerMarkFields";
 import MemberChip from "@/modules/registrations/ui/MemberChip";
@@ -444,6 +448,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // §10.5 has no edge from PENDING_EMAIL_CONFIRMATION to CANCELLED: an unconfirmed address
   // lapses on its own and holds no place, so there is nothing to release and no form to show.
   const canCancel = canTransition(registration.status, "CANCELLED");
+  // «Transformă în voluntar» (§948): for the Administrator, on a real registration that can still be cancelled — and the
+  // event's roles, read only then, each by its own name with its category's.
+  const canTurnIntoVolunteer = mayManage && canCancel && registration.kind !== "TEST";
+  const volunteerRoles = canTurnIntoVolunteer
+    ? rolesWithCategoryWords(await listVolunteerCategories(db, registration.eventId), await listVolunteerRoles(db, registration.eventId)).map((role) => ({ id: role.id, label: roleLabel(role, locale) }))
+    : [];
   /*
     A settled number that is on paper (§264), and the same number on a registration that is over
     (§311): the first is what the cancel confirmation warns about before the press, the second is
@@ -530,6 +540,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {registration.outsideCapacity && <HiddenListChip label={tr("registrations.outside.chip")} hint={tr("registrations.outside.hint")} testId="outside-chip" />}
         {/* «Elită» (§897): the bib prints with the name where the number goes; marked and unmarked from the list's «⋮». */}
         {registration.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={tr("registrations.elite.chip")} testId="elite-chip" />}
+        {/* «Ambasador» (§948): the club's label, the bib as any other; marked and unmarked from the list's «⋮». */}
+        {registration.ambassador && <StatusChip glyph="ambassador" color="secondary" variant="outlined" label={tr("registrations.ambassador.chip")} testId="ambassador-chip" />}
         {/* «Partener: {name}» (the decision «De la parteneri»): the organizers' own label, for every role that reads this page. */}
         {registration.partnerName && <StatusChip glyph="fromPartner" variant="outlined" label={tr("partner.chip", { name: registration.partnerName })} testId="partner-chip" wrap />}
         {/* «Date lipsă» (§905): the list's chip; which answers, and how they are completed, is the line under the address. */}
@@ -1058,9 +1070,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         registration is marked «Elită» (§897), for every role that reads the page; the two ticks are the Administrator's — the house's
         `TickButton`, each in a form posting the state it wants — and read-only, the same boxes disabled, for the others. They ask
         nothing (§384): they tell nobody, only ever hide, and the same tick undoes them. The help says what each hides.
+
+        A registration marked «Ambasador» has the same card and the same pair of ticks (§948): they are the registration's,
+        whichever of the two marks it wears, and the card is named after the elite's when it wears both.
       */}
-      {registration.elite && (
-        <Panel glyph="bibElite" level={3} title={tr("registrations.elite.title")} data-testid="elite-ticks">
+      {(registration.elite || registration.ambassador) && (
+        <Panel glyph={registration.elite ? "bibElite" : "ambassador"} level={3} title={tr(registration.elite ? "registrations.elite.title" : "registrations.ambassador.title")} data-testid="elite-ticks">
           <Stack spacing={0.5} sx={{ minWidth: 0, maxWidth: "100%" }}>
             {(
               [
@@ -1806,6 +1821,23 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             </Typography>
           )}
         </Panel>
+      )}
+
+      {/*
+        «Transformă în voluntar» (§948): the cancellation below and the volunteers' hand entry in one press, for a runner
+        who will help instead of running. Above the cancel fold it shares its condition with; the service asserts again.
+      */}
+      {canTurnIntoVolunteer && (
+        <TurnIntoVolunteerPanel
+          locale={locale}
+          registrationId={registration.id}
+          name={registration.registeredName}
+          roles={volunteerRoles}
+          eventCardHref={`${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: registration.eventId } } })}#box-volunteers`}
+          toVolunteerAction={turnRunnerIntoVolunteerAction}
+          printedBib={printedBib !== null ? written(printedBib) : null}
+          freesAPlace={holdsAPlace(registration.status) && !registration.outsideCapacity}
+        />
       )}
 
       {/*

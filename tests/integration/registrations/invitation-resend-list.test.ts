@@ -209,7 +209,7 @@ type RowView = {
 
 async function panel(event: EventInput, now: Date, mayManage = true): Promise<Map<string, RowView>> {
   const never = (async () => null) as never;
-  const tree = await InvitationsPanel({ db, actor: { role: mayManage ? "ADMIN" : "MODERATOR" }, locale: state.locale, eventId: event.id, mayManage, sendAction: never, resendAction: never, withdrawAction: never, now });
+  const tree = await InvitationsPanel({ db, actor: { role: mayManage ? "ADMIN" : "MODERATOR" }, locale: state.locale, eventId: event.id, mayManage, sendAction: never, resendAction: never, withdrawAction: never, deleteAction: never, now });
   const rows = elementsOf(tree).filter((element) => element.props["data-testid"] === "invitation-row");
   const view = new Map<string, RowView>();
   for (const row of rows) {

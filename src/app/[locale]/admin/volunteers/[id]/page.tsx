@@ -17,12 +17,14 @@ import { canManageRegistrations, canManageVolunteers } from "@/modules/staff-ide
 import { requireStaff } from "@/modules/staff-identity/session";
 import { findVolunteerForAdmin } from "@/modules/volunteers/admin-list";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
+import TurnIntoRunnerPanel from "@/modules/volunteers/ui/TurnIntoRunnerPanel";
 import VolunteerPerson, { STATE_CHIP } from "@/modules/volunteers/ui/VolunteerPerson";
 import { listVolunteerNotes } from "@/modules/volunteers/volunteer-notes";
 import { isUuid } from "@/shared/ids";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import StatusChip from "@/shared/ui/StatusChip";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { turnVolunteerIntoRunnerAction } from "../../registrations/actions";
 import { addVolunteerNoteAction, deleteVolunteerNoteAction } from "./note-actions";
 
 type Props = {
@@ -42,6 +44,8 @@ export const dynamic = "force-dynamic";
  * «Note interne» stands first, right under the heading block («Note interne» for volunteers, the registration's page's shape):
  * what the organizers tell each other about the person, newest first, open by itself when there is one, after its own save or
  * delete (`saved`) and for `#note-interne`; closed on «nicio notă» otherwise. Its two presses are `note-actions.ts`.
+ *
+ * Under the person's block, for the Administrator alone: «Transformă în alergător» (§948, `TurnIntoRunnerPanel`).
  */
 export default async function AdminVolunteerPage({ params, searchParams }: Props) {
   const { locale, id } = await params;
@@ -111,6 +115,15 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
       />
 
       <VolunteerPerson person={person} context={context} as="section" />
+
+      {/*
+        «Transformă în alergător» (§948): the person entered on the race's official waiting list and cancelled here, in one
+        press. The Administrator's alone — the Organizer, who opens this page for the roles, gets no fold, and the service
+        refuses — on an event that takes registrations on the site and has not started, for a person who is not cancelled.
+      */}
+      {canManageRegistrations(actor.role) && person.state !== "CANCELLED" && person.event.registrationMode === "INTERNAL" && person.event.startsAt.getTime() > now.getTime() && (
+        <TurnIntoRunnerPanel locale={locale} eventId={person.eventId} volunteerId={person.id} name={person.name} email={person.email} toRunnerAction={turnVolunteerIntoRunnerAction} />
+      )}
 
       {/*
         «Emailuri» (§915): every email the outbox holds for this volunteer — their own and their parent's link, by the

@@ -63,6 +63,8 @@ const TRANSLATION_FIELDS = [
   "discountNote",
   // The club's own weather text (§666), one short line like the discount note.
   "weatherNote",
+  // The club's sentence for a shut door (§948), one short line too.
+  "pausedNote",
   "description",
 ] as const;
 

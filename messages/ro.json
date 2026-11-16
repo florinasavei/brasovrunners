@@ -515,7 +515,7 @@
       "fullOfferByHand": "Locurile le dau organizatorii, pe rând: când îți pot da unul, primești un email și ai {hours} să confirmi.",
       "waitlistFull": "Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.",
       "fullNoWaitlist": "Locurile s-au ocupat, iar acest eveniment nu are listă de așteptare.",
-      "paused": "Înscrierile pe site sunt oprite de organizatori.",
+      "paused": "Înscrierile pe site sunt închise momentan.",
       "pausedOffersOnly": "Locurile rămase le dau organizatorii: nu te poți înscrie direct pe site.",
       "waitlistRoom": {
         "one": "Mai este {count} loc pe lista de așteptare",
@@ -1300,6 +1300,59 @@
         "entryHelp": "Intern: persoana nu vede marcajul; schimbă doar cum se tipărește BIB-ul.",
         "entryConfirm": "Marcat «Elită» — intern, persoana nu e anunțată."
       },
+      "ambassador": {
+        "chip": "Ambasador",
+        "mark": "Marchează ca ambasador",
+        "unmark": "Nu mai e ambasador",
+        "unmarkNamed": "Nu mai e ambasador: {name}",
+        "title": "Ambasador: clasament și site",
+        "panelTitle": "Ambasadori",
+        "panelIntro": "Înscrierile marcate «Ambasador». Eticheta e internă și nu schimbă BIB-ul. Bifa «Apare în clasament», din «⋮» pe rândul înscrierii, decide dacă intră în clasament și la «Premii».",
+        "count": {
+          "one": "{count} ambasador",
+          "few": "{count} ambasadori",
+          "other": "{count} de ambasadori"
+        },
+        "empty": "Niciun ambasador la acest eveniment. Marchezi o înscriere din «⋮», pe rândul ei.",
+        "alsoElite": "și elită",
+        "outOfResults": "în afara clasamentului",
+        "offSite": "nu apare pe site"
+      },
+      "toVolunteer": {
+        "title": "Transformă în voluntar",
+        "intro": "Înscrierea se anulează și locul se eliberează, ca la orice anulare. Persoana trece pe lista voluntarilor acestui eveniment, confirmată, cu rolul pe care îl alegi.",
+        "numberNote": "Numărul de concurs al înscrierii rămâne retras. Ca voluntar primește un număr numai dacă evenimentul are seria de numere a voluntarilor.",
+        "role": "Rolul de voluntar",
+        "action": "Transformă în voluntar",
+        "noRoles": "Evenimentul nu are încă niciun rol de voluntar. Adaugă unul în cardul «Voluntari» al evenimentului, apoi revino aici.",
+        "noRolesLink": "Deschide cardul «Voluntari»",
+        "confirmTitle": "Transformi alergătorul în voluntar?",
+        "confirmBody": "Înscrierea se anulează și locul se eliberează. Persoana trece pe lista voluntarilor, confirmată, cu rolul ales. Dacă se răzgândește, o transformi la loc de pe pagina ei de voluntar.",
+        "reason": "A devenit voluntar la acest eveniment."
+      },
+      "raffle": {
+        "column": "Tombolă",
+        "columnHint": "Bifat: numărul persoanei apare pe „Lista pentru tombolă”, dacă înscrierea e confirmată și are număr. Debifează ca s-o scoți. Intern: persoana nu e anunțată.",
+        "tick": "Participă",
+        "takeOutFor": "Scoate de la tombolă: {name}",
+        "putInFor": "Pune la tombolă: {name}",
+        "button": "Lista pentru tombolă (CSV)",
+        "buttonLabel": "Descarcă lista pentru tombolă: alergătorii și voluntarii confirmați care au număr și participă, cu numărul, numele, categoria și dacă alergătorul e prezent",
+        "columns": {
+          "number": "Număr",
+          "name": "Nume",
+          "kind": "Categorie",
+          "present": "Prezent"
+        },
+        "present": {
+          "yes": "Da",
+          "no": "Nu"
+        },
+        "kinds": {
+          "RUNNER": "Alergător",
+          "VOLUNTEER": "Voluntar"
+        }
+      },
       "export": "Descarcă CSV",
       "personLink": "Toate datele unei persoane",
       "personThis": "Toate datele acestei persoane",
@@ -1662,12 +1715,17 @@
           "address_vouched_on_entry": "Adresă garantată de echipă la înscriere; loc sau lista de așteptare pe loc («Direct pe lista de așteptare»)",
           "address_changed_by_staff": "Adresa de email schimbată de echipă («Schimbă adresa»): linkurile vechi nu mai merg, ambele adrese anunțate",
           "outside_capacity_changed": "Pus pe lista de invitați speciali sau scos de pe ea",
-          "elite_marked": "Marcat ca elită: BIB-ul se tipărește cu numele în locul numărului",
+          "elite_marked": "Marcat ca elită: BIB-ul se tipărește cu prenumele în locul numărului",
           "elite_unmarked": "Nu mai e elită: BIB-ul se tipărește din nou cu numărul",
-          "elite_in_results": "Elită: «Apare în clasament» bifat — rezultatul intră din nou în clasament",
-          "elite_out_of_results": "Elită: «Apare în clasament» debifat — în afara clasamentului",
-          "elite_on_site": "Elită: «Apare pe site» bifat — pe site după bifele persoanei",
-          "elite_off_site": "Elită: «Apare pe site» debifat — numele nu mai apare pe site",
+          "raffle_included": "Pus înapoi pe lista pentru tombolă",
+          "raffle_excluded": "Scos de pe lista pentru tombolă",
+          "ambassador_marked": "Marcat ca ambasador",
+          "ambassador_unmarked": "Nu mai e ambasador",
+          "became_volunteer": "Transformat în voluntar: persoana a trecut pe lista voluntarilor evenimentului («Transformă în voluntar»)",
+          "elite_in_results": "Elită sau ambasador: «Apare în clasament» bifat — rezultatul intră din nou în clasament",
+          "elite_out_of_results": "Elită sau ambasador: «Apare în clasament» debifat — în afara clasamentului",
+          "elite_on_site": "Elită sau ambasador: «Apare pe site» bifat — pe site după bifele persoanei",
+          "elite_off_site": "Elită sau ambasador: «Apare pe site» debifat — numele nu mai apare pe site",
           "deadline_moved_for_outage": "Termen mutat: site-ul nu a putut fi accesat, ceasul a stat pe loc",
           "hold_moved_by_window": "Termenul semnării mutat după fereastra de confirmare schimbată",
           "not_revived_for_outage": "Nereluat după întreruperea site-ului: termenul trecuse cât nu putea fi accesat, iar locul fusese dat între timp sau cererea expirase deja",
@@ -2633,6 +2691,7 @@
       "SEND_NOW_MAILGUN_STOPPED_GMAIL_FULL": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail și-a atins limita pe zi. Ridic-o în «Emailuri» (cel mult 500), sau alege «Pune la coadă»: pleacă singur când Mailgun reia.",
       "SEND_NOW_MAILGUN_STOPPED_NOTICE": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail preia abia după ce aprobi nota de confidențialitate din șablonul nou. Până atunci alege «Pune la coadă».",
       "INVITATION_NOT_OPEN": "Invitația nu mai e în așteptare: a fost acceptată, retrasă sau a expirat.",
+      "INVITATION_NOT_ENDED": "Nu s-a șters nimic: invitația e încă în așteptare sau a devenit înscriere. Una în așteptare se retrage întâi.",
       "INVITATION_EVENT_CLOSED": "Evenimentul nu mai primește invitații: e anulat, a început sau nu e publicat.",
       "INVITATION_BAD_DAYS": "Zilele până expiră: un număr întreg de la 1 la 60.",
       "ANSWERS_UNCHANGED": "Nu s-a schimbat nimic: datele sunt deja acestea. Reîncarcă pagina dacă un coleg le-a corectat între timp.",
@@ -2663,6 +2722,9 @@
       "BADGE_COLOUR_UNREADABLE": "Nu s-a salvat: textul nu se citește bine pe culoarea aleasă. Alege o culoare mai închisă sau mai deschisă.",
       "BADGE_SIZE_TOO_SMALL": "Nu s-a salvat: un ecuson de {width} × {height} mm nu are loc pentru tot ce ai bifat: {what}. Fă-l de cel puțin {minHeight} mm înălțime sau debifează unul.",
       "VOLUNTEER_GUARDIAN_MISSING": "Acordul părintelui lipsește: un voluntar sub 18 ani se confirmă doar după ce părintele sau tutorele a acceptat contractul, din link sau pe hârtie.",
+      "VOLUNTEER_NUMBERS_IN_RACE_SERIES": "Numerele voluntarilor trebuie să înceapă peste cele ale alergătorilor: locurile cursei, rezervele de la masă și numerele date deja. Alege un număr mai mare. Nu s-a salvat nimic.",
+      "RUNNER_TO_VOLUNTEER_MINOR": "Persoana are sub 18 ani în ziua evenimentului. Adaug-o de mână la «Voluntari», cu datele părintelui sau ale tutorelui. Nu s-a schimbat nimic.",
+      "VOLUNTEER_TO_RUNNER_NEEDS_ADDRESS": "Voluntarul nu are adresă de email, iar o înscriere are nevoie de una. Completeaz-o cu «Modifică», apoi încearcă din nou. Nu s-a schimbat nimic.",
       "VOLUNTEER_GUARDIAN_ACCEPTED": "Părintele sau tutorele a acceptat deja contractul: nu mai e nimic de trimis sau de înregistrat.",
       "VOLUNTEER_GUARDIAN_NO_EMAIL": "Părintele sau tutorele nu are un email trecut, deci nu are cui să-i plece linkul. Acordul se ia pe hârtie, sau adaugă emailul în „Modifică”.",
       "VOLUNTEER_NO_EMAIL": "Voluntarul nu are adresă de email, deci linkul nu are unde pleca. Contractul și acordul părintelui se semnează pe hârtie, sau adaugă adresa în „Modifică”.",
@@ -2693,7 +2755,7 @@
       "RESULT_FINISH_NOT_STARTED": "Cursa nu a început încă: o sosire nu poate fi înainte de start.",
       "RESULT_FINISH_CLOSED": "Startul a fost cu mai mult de o zi în urmă: timpii se scriu la «Clasament».",
       "REFUSAL_NEEDS_EMAIL": "Nu s-a anulat nimic: refuzul clubului pleacă întotdeauna cu emailul care îi spune persoanei motivul.",
-      "ELITE_NOT_MARKED": "Înscrierea nu mai e marcată ca elită, așa că bifele de elită nu se mai schimbă. Nu s-a scris nimic.",
+      "ELITE_NOT_MARKED": "Înscrierea nu mai e marcată ca elită sau ambasador, așa că bifele ei nu se mai schimbă. Nu s-a scris nimic.",
       "ADDRESS_FAMILY_FORM_PENDING": "Nu s-a schimbat nimic: un formular de familie așteaptă confirmarea pe adresa veche. Schimbă adresa după ce e confirmat sau expiră.",
       "ADDRESS_INVITED": "Nu s-a schimbat nimic: adresa nouă are o invitație deschisă la acest eveniment. Retrage întâi invitația din «Invitații».",
       "ADDRESS_UNCHANGED": "Nu s-a schimbat nimic: e aceeași căsuță de email ca adresa de acum a înscrierii — un punct sau un „+” în plus duc tot acolo.",
@@ -2901,9 +2963,13 @@
       "publicRegistrationOpen": "Înscrieri publice deschise",
       "publicRegistrationOpenHelp": "Debifat, butonul de pe site dispare imediat, oricare ar fi datele, iar formularul public refuză pe oricine. Ce face echipa merge mai departe.",
       "publicRegistrationOpenHelpMore": "Merg mai departe: înscrierea de către un organizator, masa din ziua cursei, «Trimite-i oferta», «Dă-i un loc», «Oferă-i un loc acum», «Mută pe lista oficială» și invitațiile.",
+      "pausedNote": "Mesaj cât înscrierile pe site sunt oprite (opțional)",
+      "pausedNoteHelp": "Apare pe card și pe pagina evenimentului cât bifa de mai sus e scoasă. Gol: „Înscrierile pe site sunt închise momentan.”",
       "registrationOpensSoonHelp": "Bifat, pagina spune „Înscrierile se deschid în curând” și formularul rămâne închis. Debifează când deschizi: cei de la „Anunță-mă” primesc emailul.",
       "kitShirt": "Tricou",
       "kitShirtHelp": "Dacă e bifat, formularul cere mărimea tricoului.",
+      "hasRaffle": "Avem tombolă",
+      "hasRaffleHelp": "Doar pentru organizatori: pe site nu apare nimic. Bifat, listele de înscrieri și de voluntari arată coloana „Tombolă”, din care scoți pe cine nu participă.",
       "askHealthNote": "Informații medicale",
       "askHealthNoteHelp": "Dacă e bifat, formularul cere informații medicale (afecțiuni, alergii, medicație); se șterg la {days} după eveniment.",
       "registrationClosesAt": "Înscrierile se închid",
@@ -3216,7 +3282,7 @@
         "showDistanceHelp": "Bifat: o insignă în colțul din dreapta al antetului cu distanța evenimentului în kilometri întregi, ca 21K. Debifat: fără insignă. Nu se desenează peste o imagine din antet.",
         "numberStubs": "Numărul și pe capetele subsolului",
         "numberStubsHelp": "Bifat: numărul din nou, mic, la cele două capete ale rândului cu sponsori, pentru talonul care se rupe; imaginea sponsorilor îi face loc. Debifat: rândul ca până acum.",
-        "eliteIntro": "Pe BIB-urile de elită se tipărește numele alergătorului în locul numărului. Lista e în «Alocare și tipărire» → «Elită — doar numele pe BIB».",
+        "eliteIntro": "Pe BIB-urile de elită se tipărește numele în locul numărului: prenumele unui alergător marcat «Elită», sau ce ai scris pe listă. Lista e în «Alocare și tipărire» → «Elită — doar numele pe BIB».",
         "eliteNumber": "Număr pe BIB-urile de elită",
         "eliteNumberHelp": "Bifat: sub nume se tipărește și numărul alergătorului, mai mic, dacă i-ai dat unul pe listă. Debifat: doar numele.",
         "eliteSponsors": "Banda de sponsori pe BIB-urile de elită",
@@ -6127,7 +6193,8 @@
         "guardianName": "Părinte sau tutore",
         "guardianEmail": "Email părinte sau tutore",
         "guardianConsent": "Acordul părintelui",
-        "hasKit": "Are kit"
+        "hasKit": "Are kit",
+        "bibNumber": "Număr"
       },
       "sheet": {
         "people": "Voluntari",
@@ -6195,6 +6262,24 @@
         "withdrawTitle": "Retragi invitația?",
         "withdrawBody": "Linkul nu mai merge. Dacă persoana îl deschide, află că invitația a fost retrasă."
       },
+      "numbers": {
+        "label": "Numerele voluntarilor încep de la",
+        "help": "Fiecare voluntar confirmat primește un număr din seria lui, de aici în sus — niciodată unul purtat de un alergător. Alege un număr peste cele ale alergătorilor. Gol: fără numere.",
+        "save": "Salvează numerele",
+        "saving": "Se salvează…"
+      },
+      "toRunner": {
+        "title": "Transformă în alergător",
+        "intro": "Persoana intră în cursă ca la «Adaugă pe lista de așteptare»: primește un loc dacă e unul liber, altfel stă la coada listei de așteptare. Ca voluntar e anulată.",
+        "declaration": "Persoana semnează singură declarația, din emailul pe care îl primește. Numărul de voluntar rămâne retras; pe cel de concurs îl primește la confirmare.",
+        "firstName": "Prenume",
+        "lastName": "Nume",
+        "namesHelp": "Lista voluntarilor ține numele într-un singur rând; o înscriere are prenume și nume. Verifică-le înainte să apeși.",
+        "action": "Transformă în alergător",
+        "noAddress": "Voluntarul nu are adresă de email, iar o înscriere are nevoie de una. Completeaz-o cu «Modifică», apoi îl poți transforma în alergător.",
+        "confirmTitle": "Transformi voluntarul în alergător?",
+        "confirmBody": "Persoana e înscrisă la cursă pe adresa {email}: un loc liber sau coada listei de așteptare. Ca voluntar e anulată; rolurile îi rămân pe rând, dacă o reactivezi."
+      },
       "shirts": {
         "label": "Oferim tricouri voluntarilor",
         "help": "Bifat, formularul public cere mărimea tricoului și o vezi pe fiecare rând. Debifat, formularul nu cere nicio mărime."
@@ -6250,6 +6335,10 @@
         "kitNo": "Nu are kit",
         "columnKit": "Kit",
         "ageHint": "Vârsta împlinită în ziua evenimentului, cea după care se socotește acordul părintelui pentru minori. «—»: nu a spus-o.",
+        "raffleOut": "Scos de la tombolă",
+        "columnRaffle": "Tombolă",
+        "raffleTick": "Participă",
+        "raffleHint": "Bifat: numărul voluntarului apare pe „Lista pentru tombolă”, dacă e confirmat și are număr. Debifează ca să-l scoți. Intern: persoana nu e anunțată.",
         "columnMessage": "Mesaj",
         "messageHint": "Ce a scris persoana pentru organizatori când s-a oferit ca voluntar. Gol: n-a scris nimic.",
         "filter": "Filtrează",
@@ -6262,11 +6351,40 @@
         "eventLine": "Voluntar la {event} · {when}",
         "excelAll": "Descarcă Excel: toate evenimentele"
       },
+      "plan": {
+        "title": "Planul voluntarilor",
+        "open": "Planul voluntarilor",
+        "event": "{event} — {date}",
+        "help": "Cine stă la ce punct de pe traseu în ziua evenimentului. Punctele sunt cele din editor, de la „Traseul”. Doar pentru organizatori: de aici nu pleacă niciun email.",
+        "back": "Înapoi la voluntari",
+        "editPoints": "Punctele de pe traseu, în editorul evenimentului",
+        "print": "Tipărește planul",
+        "summary": "La puncte: {placed} · Fără punct: {unplaced} · Puncte fără nimeni: {empty}",
+        "noPoints": "Evenimentul nu are încă puncte pe traseu. Adaugă-le în editorul evenimentului, la „Traseul”, apoi revino aici.",
+        "pointTitle": "{number}. {title}",
+        "nobodyHere": "Nimeni aici încă.",
+        "choose": "Pune pe cineva aici",
+        "chooseEmpty": "Alege un voluntar",
+        "place": "Pune aici",
+        "takeOff": "Scoate",
+        "takeOffFor": "Scoate de la acest punct: {name}",
+        "unplacedTitle": "Fără punct pe traseu",
+        "unplacedHelp": "De pus la un punct, sau cu o treabă care nu ține de traseu (start, kituri): o spun rolurile date.",
+        "unplacedNone": "Toți voluntarii sunt puși la un punct.",
+        "noVolunteers": "Evenimentul nu are încă voluntari.",
+        "noRole": "fără rol dat",
+        "notConfirmed": "neconfirmat încă",
+        "column": "Punct",
+        "columnHint": "Punctul de pe traseu la care stă voluntarul, ales în „Planul voluntarilor”. Gol: încă nepus, sau cu o treabă care nu ține de traseu.",
+        "columnPoint": "{number}. {name}",
+        "pointValue": "Punct pe traseu: {name}"
+      },
       "chips": {
         "before": "A mai fost voluntar",
         "club": "Din grupul {club}",
         "wantsList": "Vrea pe lista publică",
-        "kit": "Are kit"
+        "kit": "Are kit",
+        "number": "Nr. {number}"
       },
       "yes": "Da",
       "no": "Nu",
@@ -7807,8 +7925,10 @@
           "invite": "Trimite invitații",
           "invitationResend": "Retrimite invitația",
           "invitationWithdraw": "Retrage invitația",
+          "invitationDelete": "Șterge invitația",
           "invitationsErase": "Șterge invitațiile persoanei",
-          "changeAddress": "Schimbă adresa"
+          "changeAddress": "Schimbă adresa",
+          "toVolunteer": "Transformă în voluntar"
         },
         "events": {
           "save": "Salvează evenimentul",
@@ -7829,7 +7949,8 @@
           "guardianLink": "Trimite linkul părintelui",
           "guardianPaper": "Acordul părintelui, semnat pe hârtie",
           "invite": "Trimite invitațiile de voluntar",
-          "invitationResend": "Retrimite invitația de voluntar"
+          "invitationResend": "Retrimite invitația de voluntar",
+          "toRunner": "Transformă în alergător"
         },
         "club": {
           "newsletter": "Trimite newsletterul",
@@ -9181,7 +9302,7 @@
                 "«Newsletter» → deschide cardul «Abonați». Linia lui spune câți sunt confirmați și câți în așteptare.",
                 "Caută la «Caută adresa» sau alege «Tema» și «Starea», apoi apasă «Filtrează». «Descarcă CSV» ia lista așa cum e filtrată.",
                 "Cardul «Participanți care au bifat oferte și beneficii»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul.",
-                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Scrie la «Cui dai lista» cui dai fișierul: fără nume nu se descarcă. «Liste date sponsorilor», sub butoane, arată fiecare listă dată. Șterge fișierul în 30 de zile.",
+                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Scrie la «Cui dai lista» cui dai fișierul: fără nume nu se descarcă. «Liste date sponsorilor», sub butoane, arată fiecare listă dată. Șterge fișierul în 30 de zile. O listă făcută din greșeală o șterge din registru un Administrator.",
                 "Scoaterea unei adrese e a Administratorului: scrie-i cine a cerut-o."
               ]
             },
@@ -9549,7 +9670,7 @@
                 "«Descarcă CSV» ia lista așa cum e filtrată, cu aceleași coloane. Păstrează fișierul doar cât îți trebuie, apoi șterge-l.",
                 "Ca să scoți pe cineva, la cererea lui: «Dezabonează» pe rândul lui, apoi confirmă. Adresa se șterge cu temele ei, ca atunci când se dezabonează singură.",
                 "Cardul «Participanți care au bifat oferte și beneficii»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul.",
-                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Scrie la «Cui dai lista» cui dai fișierul: fără nume nu se descarcă. «Liste date sponsorilor», sub butoane, arată fiecare listă dată. Șterge fișierul în 30 de zile."
+                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Scrie la «Cui dai lista» cui dai fișierul: fără nume nu se descarcă. «Liste date sponsorilor», sub butoane, arată fiecare listă dată. Șterge fișierul în 30 de zile. O listă făcută din greșeală o ștergi din registru cu «Șterge», de pe rândul ei."
               ]
             },
             {
@@ -10227,7 +10348,8 @@
           "seoTitle": "Titlul pentru căutare",
           "seoDescription": "Descrierea pentru căutare",
           "discountNote": "Reducerea clubului",
-          "weatherNote": "Textul despre vreme"
+          "weatherNote": "Textul despre vreme",
+          "pausedNote": "Mesajul cât înscrierile pe site sunt oprite"
         },
         "badges": {
           "design": {
@@ -11284,7 +11406,16 @@
           "count": "Persoane",
           "file": "Fișier",
           "actor": "Descărcată de",
-          "deleteBy": "Șterge fișierul tău până pe"
+          "deleteBy": "Șterge fișierul tău până pe",
+          "remove": "Șterge din registru"
+        },
+        "remove": {
+          "title": "Ștergi lista din registru?",
+          "body": "Lista dată către „{recipient}” ({date}) dispare din registru și de la «Dată partenerilor» de pe înscrierile din ea. Nu se poate reveni.",
+          "onlyMistake": "Șterge doar o listă făcută din greșeală, care n-a ajuns la nimeni. Pentru una dată cuiva, registrul e răspunsul la „cui mi-ați dat datele?”.",
+          "button": "Șterge",
+          "pending": "Se șterge…",
+          "named": "Șterge din registru lista pentru {recipient} ({date})"
         }
       },
       "columns": {
@@ -11433,6 +11564,10 @@
       "withdrawBody": "Linkul primit de {name} nu mai înscrie pe nimeni, iar locul păstrat se eliberează.",
       "withdraw": "Retrage",
       "withdrawing": "Se retrage…",
+      "deleteTitle": "Ștergi invitația?",
+      "deleteBody": "Invitația pentru {name} dispare din listă, cu linkul ei. Nu se poate reveni.",
+      "delete": "Șterge",
+      "deleting": "Se șterge…",
       "errors": {
         "INVITATION_ALREADY_REGISTERED": "{name} e deja înscris la acest eveniment: nu s-a trimis nicio invitație.",
         "INVITATION_ALREADY_INVITED": "{name} are deja o invitație în așteptare: nu s-a trimis nicio invitație.",
@@ -11444,6 +11579,7 @@
         "INVITATION_TOO_MANY": "Cel mult 50 de persoane la o apăsare: împarte lista.",
         "INVITATION_EVENT_CLOSED": "Evenimentul nu mai primește invitații: e anulat, a început sau nu e publicat.",
         "INVITATION_NOT_OPEN": "Invitația nu mai e în așteptare: a fost acceptată, retrasă sau a expirat.",
+        "INVITATION_NOT_ENDED": "Nu s-a șters nimic: invitația e încă în așteptare sau a devenit înscriere. Una în așteptare se retrage întâi.",
         "INVITATION_BAD_DAYS": "Zilele până expiră: un număr întreg de la 1 la 60.",
         "INVITATION_UNREAD_LINE": "Rândurile {lines} nu au un nume și o adresă: nu s-a trimis nicio invitație.",
         "INVITATION_UNREAD_ROW": "Persoanele de pe rândurile {lines} nu au și un nume, și o adresă de email bună: nu s-a trimis nicio invitație.",
@@ -11764,7 +11900,8 @@
       "publicLine": {
         "named": "Pe site: cu numele",
         "anonymous": "Pe site: {label}",
-        "outOfRanking": "Pe site: nu apare — elită în afara clasamentului"
+        "outOfRanking": "Pe site: nu apare — elită în afara clasamentului",
+        "outOfRankingAmbassador": "Pe site: nu apare — ambasador în afara clasamentului"
       },
       "outOfRanking": "în afara clasamentului",
       "nameless": "Fără nume: înscrierea a fost ștearsă. Rezultatul rămâne, fără nume.",
@@ -14027,6 +14164,10 @@
       "volunteerUnchanged": "Era deja așa; nimic de schimbat.",
       "volunteerKitOn": "Bifat: are kit. Se numără la „Cu kit”.",
       "volunteerKitOff": "Debifat: nu mai are kit.",
+      "volunteerRaffleOn": "Participă la tombolă: e din nou pe lista pentru tombolă.",
+      "volunteerRaffleOff": "Nu mai participă la tombolă: nu apare pe lista pentru tombolă.",
+      "volunteerPlaced": "Pus la punct: apare în planul voluntarilor.",
+      "volunteerUnplaced": "Scos de la punct: e din nou la „Fără punct pe traseu”.",
       "eventTodoDone": "Bifat. Rândul e la „Gata”.",
       "eventTodoReopened": "Debifat: rândul e din nou de făcut.",
       "eventTodoDeleted": "Rând șters de pe lista evenimentului.",
@@ -14159,6 +14300,8 @@
       "invitationResentKept": "Invitație retrimisă, cu un link nou. Termenul ales nu s-a aplicat: cineva așteaptă pe lista de așteptare. Termenul valabil, cel din email, e pe rândul invitației.",
       "invitationResentAlreadyLater": "Invitație retrimisă, cu un link nou. Termenul ales nu s-a aplicat: între timp, termenul a fost mutat mai târziu de altcineva sau din altă filă. Termenul valabil, cel din email, e pe rândul invitației.",
       "invitationWithdrawn": "Invitație retrasă; locul s-a eliberat.",
+      "invitationDeleted": "Invitație ștearsă.",
+      "sponsorListDeleted": "Lista a fost ștearsă din registru.",
       "memberTickCleared": "Bifa de membru a fost scoasă.",
       "memberTickSet": "Bifa de membru a fost pusă.",
       "publicRegistrationOpened": "Înscrierile pe site sunt deschise din nou.",
@@ -14205,6 +14348,11 @@
       "badgeColoursSaved": "Culorile rolurilor au fost salvate.",
       "badgeColoursUnchanged": "Nimic de schimbat la culori.",
       "volunteersShirtsOn": "Formularul public cere acum mărimea tricoului.",
+      "volunteerNumbersOn": "Seria de numere a voluntarilor e salvată. Voluntarii confirmați care nu aveau număr l-au primit.",
+      "volunteerNumbersOff": "Voluntarii nu mai primesc numere. Cele date deja rămân.",
+      "runnerBecameVolunteer": "Înscrierea a fost anulată, iar persoana e acum voluntar confirmat.",
+      "volunteerBecameRunnerPlaced": "Era un loc liber: persoana l-a primit și are de semnat declarația. Ca voluntar a fost anulată.",
+      "volunteerBecameRunnerWaiting": "Persoana e pe lista de așteptare a cursei. Ca voluntar a fost anulată.",
       "volunteersAccessSaved": "Am salvat cine se poate oferi.",
       "volunteerInvitationsSent": {
         "one": "{count} persoană invitată.",
@@ -14264,8 +14412,12 @@
       "reserveOwnAddressGuest": "E pe adresa ta, ca invitat special. Trimite-i emailul cu declarația, s-o semneze din link, sau o semnează pe hârtie la start.",
       "eliteAdded": "Numele e pe lista de elită. Nu e o înscriere și nu s-a trimis nimic.",
       "eliteDeleted": "Numele a fost șters de pe lista de elită.",
-      "eliteMarked": "Marcat ca elită: BIB-ul lui se tipărește cu numele în locul numărului. Înscrierea rămâne neschimbată.",
+      "eliteMarked": "Marcat ca elită: BIB-ul lui se tipărește cu prenumele în locul numărului. Înscrierea rămâne neschimbată.",
       "eliteUnmarked": "Nu mai e elită: BIB-ul lui se tipărește din nou cu numărul.",
+      "raffleIncluded": "Participă la tombolă: e din nou pe lista pentru tombolă.",
+      "raffleExcluded": "Nu mai participă la tombolă: nu apare pe lista pentru tombolă.",
+      "ambassadorMarked": "Marcat ca ambasador. Înscrierea și BIB-ul rămân neschimbate.",
+      "ambassadorUnmarked": "Nu mai e ambasador.",
       "waitlistAdded": "Persoana e pe lista de așteptare.",
       "waitlistPlaced": "Era un loc liber: persoana l-a primit.",
       "invitedProviderFailed": "Contul Zitadel nu e gata: vezi mesajul de sus.",
@@ -14273,7 +14425,7 @@
       "membersInvitedProviderFailed": "Unele conturi Zitadel nu sunt gata: vezi raportul de sus.",
       "eventInvitationsErased": "Invitații retrase și șterse.",
       "eventImportedOver": "Importat peste eveniment.",
-      "eliteTicked": "Bifa de elită a fost salvată. Nu s-a trimis nimic nimănui.",
+      "eliteTicked": "Bifa a fost salvată. Nu s-a trimis nimic nimănui.",
       "addressChanged": "Adresa a fost schimbată; ambele adrese primesc un email.",
       "partnerSaved": "Partenerul a fost salvat. Nu s-a trimis nimic nimănui.",
       "partnerCleared": "Nu mai e de la parteneri. Nu s-a trimis nimic nimănui.",

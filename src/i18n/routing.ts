@@ -247,6 +247,11 @@ export const routing = defineRouting({
      */
     "/admin/events/[id]/locuri": "/admin/events/[id]/locuri",
     /**
+     * «Planul voluntarilor» (§949): one event's points on the route, each with the volunteers who stand at it, built and printed
+     * on one page. One spelling in both locales, like `locuri` and `urgente`: a backoffice address, read by the club.
+     */
+    "/admin/events/[id]/plan-voluntari": "/admin/events/[id]/plan-voluntari",
+    /**
      * «Clasament» (§808): a race's results entered or imported by race number, ranked, and made public by an Administrator. One
      * spelling in both locales, like `mesaje` and `urgente`: a backoffice address, read by the club.
      */

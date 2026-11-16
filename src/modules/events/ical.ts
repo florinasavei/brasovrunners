@@ -6,7 +6,7 @@ import { distanceWords } from "./domain/distance";
 import { HOME_COUNTRY } from "./domain/place";
 import { elevationWords } from "./domain/elevation";
 import { type EventSurface, type EventType } from "./domain/event-type";
-import { publicDoorOpen } from "@/modules/registrations/domain/public-door";
+import { pausedNoteOf, publicDoorOpen } from "@/modules/registrations/domain/public-door";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
 import { whenTimes } from "./domain/when-times";
@@ -63,8 +63,11 @@ export type CalendarRegistration =
   /** `opensAt` is null for an opening announced "soon" with no date (§451). */
   | { kind: "NOT_YET_OPEN"; opensAt: Date | null; url: string }
   | { kind: "CLOSED" }
-  /** The window is open by its dates and «Înscrieri publice deschise» is unticked (§906): the page's sentence, no link to the form. */
-  | { kind: "PAUSED" }
+  /**
+   * The window is open by its dates and «Înscrieri publice deschise» is unticked (§906): the page's sentence, no link to
+   * the form — in the club's own words for this event when it wrote them (`note`, §948).
+   */
+  | { kind: "PAUSED"; note?: string }
   | { kind: "EXTERNAL"; url: string | null };
 
 export type CalendarEvent = {
@@ -302,17 +305,22 @@ function calendarPlace(
  * passed in like everywhere the window is read (AGENTS.md §1.5).
  *
  * The public door is the page's too (§906, `publicDoorOpen`, which `registrationCta` asks): an open window
- * behind «Înscrieri publice deschise» unticked is `PAUSED` — the page's «oprite de organizatori», and no
- * link to a form the server refuses. The row carries the tick, so nothing more is read.
+ * behind «Înscrieri publice deschise» unticked is `PAUSED` — the page's sentence for a shut door, in the club's own
+ * words for the event when it wrote them (§948), and no link to a form the server refuses. The row carries the tick
+ * and the note, so nothing more is read.
  */
 export function calendarRegistration(
-  event: RegistrationWindowInput & { externalRegistrationUrl: string | null; publicRegistrationOpen?: boolean | null },
+  event: RegistrationWindowInput & { externalRegistrationUrl: string | null; publicRegistrationOpen?: boolean | null; pausedNote?: string | null },
   registerUrl: string,
   now: Date,
 ): CalendarRegistration | null {
   switch (registrationState(event, now)) {
-    case "OPEN":
-      return publicDoorOpen(event) ? { kind: "OPEN", url: registerUrl } : { kind: "PAUSED" };
+    case "OPEN": {
+      if (publicDoorOpen(event)) return { kind: "OPEN", url: registerUrl };
+      // The club's own sentence for the shut door (§948), when the reader's language has one.
+      const note = pausedNoteOf(event);
+      return note ? { kind: "PAUSED", note } : { kind: "PAUSED" };
+    }
     case "NOT_YET_OPEN": {
       // «Se deschid în curând» (§451): the fact without a date.
       if (event.registrationOpensSoon) return { kind: "NOT_YET_OPEN", opensAt: null, url: registerUrl };
@@ -505,7 +513,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     }
     if (r.kind === "CLOSED") return { text: t("registrationState.CLOSED") };
     // The organizers shut the site's door (§906): the page's own sentence, and no link to the form.
-    if (r.kind === "PAUSED") return { text: t("cta.paused") };
+    if (r.kind === "PAUSED") return { text: r.note ?? t("cta.paused") };
     return { text: t("registrationState.EXTERNAL"), url: r.url ?? undefined, separator: " — " };
   })();
 

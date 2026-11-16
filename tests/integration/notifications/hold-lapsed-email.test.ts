@@ -218,11 +218,11 @@ describe("§638 the person whose held place lapses is told by email", () => {
     await db.update(events).set({ capacity: 3 }).where(eq(events.id, event.id));
     expect((await renderOutboxMessage(row, db, at)).text).toContain("Dacă mai vrei să vii, te poți înscrie din nou: mai sunt locuri libere.");
 
-    // «Înscrieri publice deschise» unticked: the card's «oprite de organizatori», «scrie-ne», and no button.
+    // «Înscrieri publice deschise» unticked: the card's «închise momentan» (§948), «scrie-ne», and no button.
     await db.update(events).set({ publicRegistrationOpen: false }).where(eq(events.id, event.id));
     const paused = await renderOutboxMessage(row, db, at);
-    expect(paused.text).toContain("Înscrierile pe site sunt oprite acum de organizatori. Dacă mai vrei să vii, scrie-ne din pagina de contact.");
-    expect(paused.text).toContain("Registration on the site has been stopped by the organizers for now. If you still want to come, write to us from the contact page.");
+    expect(paused.text).toContain("Înscrierile pe site sunt închise momentan. Dacă mai vrei să vii, scrie-ne din pagina de contact.");
+    expect(paused.text).toContain("Registration on the site is closed for now. If you still want to come, write to us from the contact page.");
     expect(paused.text).not.toMatch(/Înscrie-te din nou:|Intră pe lista de așteptare:|te poți înscrie din nou/);
 
     // The door open again, «Locurile libere le dau doar eu» ticked: a public entry joins the line beside the free places.

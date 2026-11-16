@@ -9,6 +9,7 @@ import { routing } from "@/i18n/routing";
 import { shownContactAddresses } from "@/modules/contact/shown-address";
 import { type BibDesign, bibDesignFromQuery } from "@/modules/registrations/bib-design";
 import { bibNumberFromQuery } from "@/modules/registrations/bib-design-query";
+import { eliteBibName } from "@/modules/registrations/bib-elite";
 import { loadBibExtras, withBibCheckpoints } from "@/modules/registrations/bib-extras";
 import { renderBibImage } from "@/modules/registrations/bib-image";
 import { BIB_PICTURE_WIDTH, bibPictureForImage, loadBibPictures } from "@/modules/registrations/bib-pictures";
@@ -152,6 +153,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     .select({
       bibNumber: registrations.bibNumber,
       registeredName: registrations.registeredName,
+      firstName: registrations.firstName,
       kind: registrations.kind,
       status: registrations.status,
       memberBibWanted: registrations.memberBibWanted,
@@ -174,15 +176,15 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     member set is read only when the first two hold.
   */
   /*
-    A registration marked «Elită» (§897) draws as the sheet prints it: an elite bib (§895) — its name where the number
-    goes, its own number under it only as the design ticks — and never the members' design.
+    A registration marked «Elită» (§897) draws as the sheet prints it: an elite bib (§895) — its first name alone where
+    the number goes (§948, `eliteBibName`), its own number under it only as the design ticks — and never the members' design.
   */
   const member =
     !row.elite && event.design.member.enabled && row.memberBibWanted && (await memberCanonicalEmails(db)).has(row.canonicalEmail);
   const image = await renderBibImage({
     bibNumber: row.bibNumber,
     registeredName: row.registeredName,
-    ...(row.elite ? { elite: { name: row.registeredName, bibNumber: row.bibNumber } } : {}),
+    ...(row.elite ? { elite: { name: eliteBibName(row), bibNumber: row.bibNumber } } : {}),
     member,
     ...(member ? { memberLabelDefault: await memberLabelDefault() } : {}),
     eventTitle: event.title,
