@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type BibDesign, bibDesignFromQuery, DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
+import { type BibDesign, bibDesignFromQuery, DEFAULT_BIB_DESIGN, readBibDesign } from "@/modules/registrations/bib-design";
 import {
   BIB_DESIGN_FORM_PREFIX,
   bibDesignSearchParams,
@@ -43,6 +43,8 @@ const EVERYTHING_OFF: BibDesign = {
   headerImageCrop: { x: 0, y: 0.3125, w: 1, h: 0.1478 },
   sponsorImageCrop: { x: 0.1, y: 0.4, w: 0.8, h: 0.05 },
   cutMarks: true,
+  // «Fără linia punctată pe tăietură» (§955): on, the other way from its default (off).
+  hideCutLine: true,
   // The footer (§317): every switch the other way, and a line with the characters a URL must
   // escape — the separator's dot, a colon, an ampersand, a plus, diacritics.
   showEmail: false,
@@ -345,6 +347,8 @@ describe("§249 the form, read the same way for the save and for the preview", (
       headerImageCrop: null,
       sponsorImageCrop: null,
       cutMarks: true,
+      // The cut line's box was unticked (§955): the dashed line every sheet printed.
+      hideCutLine: false,
       // The email box was unticked: the footer prints no address (§317).
       showEmail: false,
       showPartners: true,
@@ -360,6 +364,23 @@ describe("§249 the form, read the same way for the save and for the preview", (
   it("follows the footer's boxes too", () => {
     expect(isBibDesignInput("event.bibDesign.showEmail")).toBe(true);
     expect(isBibDesignInput("event.bibDesign.footerText")).toBe(true);
+  });
+
+  it("§955 reads «Fără linia punctată pe tăietură» as the cut marks' box is read, and carries it in the address like any switch", () => {
+    // Ticked, the box posts «on»; unticked it posts nothing — each apart from the cut marks' own box.
+    expect(readBibDesignForm(posted({ [`${BIB_DESIGN_FORM_PREFIX}hideCutLine`]: "on" }))).toMatchObject({ hideCutLine: true, cutMarks: false });
+    expect(readBibDesignForm(posted({ [`${BIB_DESIGN_FORM_PREFIX}cutMarks`]: "on" }))).toMatchObject({ hideCutLine: false, cutMarks: true });
+    expect(readBibDesignForm(posted({})).hideCutLine).toBe(false);
+    expect(isBibDesignInput("event.bibDesign.hideCutLine")).toBe(true);
+    // The address says it as `1` or `0`, and the route reads it back with the schema the save uses.
+    const on = bibDesignSearchParams({ ...DEFAULT_BIB_DESIGN, hideCutLine: true });
+    expect(on.get("hideCutLine")).toBe("1");
+    expect(bibDesignFromQuery(on)).toEqual({ ...DEFAULT_BIB_DESIGN, hideCutLine: true });
+    expect(bibDesignSearchParams(DEFAULT_BIB_DESIGN).get("hideCutLine")).toBe("0");
+    // Anything else in its place is no tick, and costs nothing beside it.
+    expect(bibDesignFromQuery(new URLSearchParams({ hideCutLine: "yes", cutMarks: "1" }))).toEqual({ ...DEFAULT_BIB_DESIGN, cutMarks: true });
+    // What the form posts is what the save keeps: the form's reading, through the schema, is the design.
+    expect(readBibDesign(readBibDesignForm(posted({ [`${BIB_DESIGN_FORM_PREFIX}hideCutLine`]: "on" }))).hideCutLine).toBe(true);
   });
 
   it("follows the panel's boxes, the band's colour and the start number, and nothing else", () => {

@@ -1,6 +1,7 @@
 "use client";
 
 import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
 import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -10,6 +11,9 @@ import { type MouseEvent, useId, useState } from "react";
 import ActionFormIsland, { type ActionFormAction, type RefusalMessages } from "@/shared/forms/ActionFormIsland";
 import RecallField from "@/shared/forms/recall";
 import GlyphButton from "./GlyphButton";
+
+/** The press's glyph, by name: a string is all that crosses from the server (§370). */
+const PRESS_GLYPHS = { add: AddIcon, edit: EditIcon } as const;
 
 /**
  * «Adaugă o notă» on a row of a list, without leaving the list: «Note interne» first on the registration's page,
@@ -26,6 +30,12 @@ import GlyphButton from "./GlyphButton";
  * with the words still in it, and a save redirects the list to itself (its own validated return), whereupon
  * `settledKey` changes — the count the row's marker shows — and the dialog closes. Nothing typed goes in the
  * address. The dialog lists no note: the marker beside the control is the link to the card that reads them.
+ *
+ * It also serves a row's one line that is written and then changed — «Decizie ziua cursei» on the «Voluntari» list
+ * (§954) — with other words and three things said by the caller, each a string or a flag: `defaultValue`, what the
+ * line holds now, so the box opens on it; `optional`, a box that may be saved empty (which clears the line);
+ * `icon: "edit"`, the pencil on a press that changes what is there. A caller that passes none of them gets the
+ * notes' control as it was.
  *
  * `useId` keeps every id unique: a list draws each row twice (the table and the phone cards).
  */
@@ -46,7 +56,11 @@ export default function RowNoteDialog({
   saveLabel,
   cancelLabel,
   settledKey,
+  defaultValue = "",
+  optional = false,
+  icon = "add",
   testId = "note-add-open",
+  dialogTestId = "note-add-dialog",
 }: {
   action: ActionFormAction;
   /** The Server Action's key (`actionKeyOf`), for a blocked save to find this form in the page's HTML. */
@@ -72,7 +86,15 @@ export default function RowNoteDialog({
   cancelLabel: string;
   /** Changes when a save has landed (the row's count, and the return's own flag): the dialog closes by itself then. The simple way (no JavaScript) is the link, never this form: it exists only in the browser. */
   settledKey: string;
+  /** What the box opens on: the row's line as it stands, for a line that is changed in place. Empty for a note, which is always a new one. */
+  defaultValue?: string;
+  /** The box may be saved empty — for a line the empty box clears. A note needs words: off by default. */
+  optional?: boolean;
+  /** The press's glyph, by name: the plus of a new note, or the pencil of a line that is changed. */
+  icon?: keyof typeof PRESS_GLYPHS;
   testId?: string;
+  /** The dialog's own mark; its form and its help line are `<this>-form` and `<this>-help`. */
+  dialogTestId?: string;
 }) {
   const [open, setOpen] = useState(false);
   // A save landed (the row's count moved): the dialog closes, derived while rendering, not from an effect.
@@ -83,6 +105,7 @@ export default function RowNoteDialog({
   }
   const unique = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const titleId = `note-dialog-title-${unique}`;
+  const PressIcon = PRESS_GLYPHS[icon];
 
   const press = (event: MouseEvent<HTMLAnchorElement>) => {
     // A new tab or window (a modifier, the middle button) keeps the link's own way.
@@ -122,18 +145,18 @@ export default function RowNoteDialog({
             lineHeight: 1.4,
           }}
         >
-          <AddIcon aria-hidden="true" sx={{ fontSize: "1rem" }} />
+          <PressIcon aria-hidden="true" sx={{ fontSize: "1rem" }} />
           {label}
         </Box>
       </Box>
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm" aria-labelledby={titleId} data-testid="note-add-dialog">
+      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm" aria-labelledby={titleId} data-testid={dialogTestId}>
         <DialogTitle id={titleId}>{title}</DialogTitle>
-        <ActionFormIsland action={action} actionKey={actionKey} messages={messages} scope={`note-${unique}`} data-testid="note-add-dialog-form">
+        <ActionFormIsland action={action} actionKey={actionKey} messages={messages} scope={`note-${unique}`} data-testid={`${dialogTestId}-form`}>
           <DialogContent>
             {Object.entries(fields).map(([name, value]) => (
               <input key={name} type="hidden" name={name} value={value} />
             ))}
-            <Box sx={{ color: "text.secondary", fontSize: "0.875rem", mb: 2 }} data-testid="note-add-dialog-help">
+            <Box sx={{ color: "text.secondary", fontSize: "0.875rem", mb: 2 }} data-testid={`${dialogTestId}-help`}>
               {help}
             </Box>
             <RecallField
@@ -142,8 +165,9 @@ export default function RowNoteDialog({
               multiline
               minRows={3}
               fullWidth
-              required
+              required={!optional}
               autoFocus
+              defaultValue={defaultValue}
               helperText={limitText}
               slotProps={{ htmlInput: { maxLength: max } }}
             />

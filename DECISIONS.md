@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.49-2026-11-16 -->
+<!-- PROJECT_BASELINE: BR-V4.50-2026-11-16 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.49-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.50-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -30100,3 +30100,81 @@ Everything else the import does to the points is what it did: the list reads by 
 **Not done.** An audit row naming each person freed when a point is deleted, in the editor or by an import: it needs its own decision. A line in the import's diff that says how many volunteers a changed point would free. The import's audit row still counts a whole list replaced, as it always did, though rows are now kept. The SPECS criteria that landed with §949 are not renumbered; the ones below amend them.
 
 Baseline `BR-V4.49-2026-11-16`.
+
+## 954. «Decizie pentru ziua cursei»: the organizers' one line about a volunteer on race day, a column of the «Voluntari» list
+
+**The owner, 2026-11-16, working the «Voluntari» list on a phone five days before Saturday's race**, minutes after asking for the organizers' notes as a column (§950): «si la voluntar trebuie sa am si decizie pt ziua cursei». Asked what that is, the owner chose «Decizia noastră»: a box at each volunteer in which the organizers write what THEY decided for that person on race day — «vine la 8:00 la start», «rezervă» — seen as a column of the volunteers' list.
+
+**What it is, and what it is not.** One short line the organizers keep current, replaced when they change their mind. It is not a note: «Note interne» (§945, §950) is a dated thread, each note with its author, and the list shows the newest three — a decision under two later notes is not one anybody reads on race morning. It is not a state: «Înscris», «Confirmat» and «Anulat» stay what they are, and a confirmed person may well be the reserve. And it is not the person's answer: «Mesaj» is what they wrote; this is what the club decided.
+
+**Decision.**
+
+- *The column.* `event_volunteers.race_day_decision`: nullable text, one paragraph, at most 300 characters — the length of a person's own message — held by a CHECK of 1–300 in the database; NULL while there is none. Migration `0209`, expand only: every row from before has no decision.
+- *The verb.* A new kind of `volunteers.ts#changeVolunteer`, `setDecision`, for whoever works the volunteers (`canManageVolunteers`: the Organizer and the Administrators; the Tehnic role, the Redactor, the desk Volunteer and a member are refused with nothing written). The words are read as one paragraph (`domain/volunteer.ts#raceDayDecisionFrom`): every line break, tab and control character is a space, a run of them one space, the ends trimmed. An empty box clears the decision; more than 300 characters — counted as the database counts them, so a letter with a diacritic is one — or no text at all is `VALIDATION_ERROR` naming the box (`decision`). A person who is not there, or is another event's, is NOT_FOUND. It is allowed in every state, a cancelled person's included: «nu mai vine» is a decision. The same words again write nothing and audit nothing.
+- *The trail.* `volunteer.edited` with `fields: ["raceDayDecision"]`, whether a decision stands after the change and the roles the person holds, as every edit of a person's boxes — never the words: they are about a person, and the trail outlives the row.
+- *Nothing else moves.* No state, role, point, number or raffle tick; no email is queued; and no public cache is expired, because no public page reads the column. `setDecision` leaves `changeVolunteer` through a transaction of its own (`setRaceDayDecision`), entered before the function opens its — the one that ends by expiring the pages' «places» — so the line that decides that expiry is as it was.
+- *The list.* A column «Decizie ziua cursei» right after «Note interne», with its «?»: the words in the «Mesaj» cell's own style and, under them — or alone while there are none — a press, «Scrie decizia» or «Modifică decizia», that opens a dialog with one box: the row's name in its title, the limit said, «Salvează». It is the row's own «Adaugă o notă» control (`shared/ui/RowNoteDialog.tsx`) with other words and three small things said by the caller — the line as it stands, a box that may be saved empty, the pencil by its name — so only strings cross to the island. The save, `setVolunteerDecisionAction`, comes back to the same list address — filters, sort, page — with a toast: saved, cleared, or nothing to change; the dialog closes on every page drawn after a save. With scripts off the press is a link to the person's page. On a phone the column is a line of the person's card, drawn for a row with no decision too, because the press lives there.
+- *The person's page.* «Decizie pentru ziua cursei», an open card in the organizers' part — after «Note interne», before the person's own block — with the same form and the same action; a card and never a fold, so the list's link lands on a form that is standing. The event card's row of the person reads the line.
+- *The person's own data.* The decision is a fact the club holds about the person: «Toate datele unei persoane» lists it with the offer (`volunteerOffers[].raceDayDecision`, art. 15 GDPR), on the page and in the file, as it lists the notes and the point.
+
+**Never.** A public page, an email, a badge, the desk, the public volunteers' list, the raffle's file. `tests/unit/volunteers/decision-never-leaves.test.ts` holds the list of the files that may name the column, its reading, its press, its card or its words, and catches an import of the card or of the screen's actions by the `@/` alias or by a relative path; a new reader is a reviewed edit of that list.
+
+**Not in this change.**
+
+- *The volunteers' Excel and CSV.* Their columns are pinned by tests and by a browser spec, and a file that leaves the application is a copy nobody can take back: a column there is a change of its own.
+- *«Planul voluntarilor».* The plan's page is being changed by two other pieces of work today; the decision beside each name on the plan waits for them.
+- *Sorting or filtering the list by it.* Free text sorts into nothing useful, and a filter «has a decision» was not asked for.
+
+**Refused.**
+
+- *One more note, pinned.* It would carry an author and a date nobody asked about, and «the pinned one» is a second kind of note to explain.
+- *A select of fixed decisions* («vine», «rezervă», «nu vine»). The owner's own examples carry an hour and a place; the organizers' words are the point.
+- *Several lines, kept as typed.* A column read on a phone is a line; a line break is saved as a space, and the box says so.
+- *A question before the save.* The press emails nobody, moves nothing else and is undone by writing the old words back (§384).
+- *The words in the trail.* The trail says who changed the line and when; what it said is on the row, and goes with the row thirty days after the event (§754).
+- *A sibling of the notes' dialog.* The same island serves both with three optional words of its own; a second 160-line island would be the same code twice.
+
+**Three things to know.** The privacy notice's template already tells a volunteer that «organizatorii mai pot adăuga o notă a lor despre ofertă»; the decision is such a line — read by the organizers alone, listed in the person's data, deleted with the row — so no legal text changes here. Whether the notice should name it is the club's to say. The last save wins: two organizers who write the same person's line at once leave the later one's words, as with every box of a person — the row is locked for the write, and nothing compares what each had read. And a browser cannot type more than 300 characters into the box, so the too-long refusal is what a forged request meets; it is tested all the same.
+
+**A press after the session ended.** The dialog on the list answers a press made with an ended session in words — the sentence every backoffice form uses for it — never as a bare code, and the press writes nothing. The verb stands first in its file (`admin/volunteers/actions.ts`) for one reason only: the file's tail is rearranged by the change that answered the review of §949, and a function appended there would not have merged.
+
+Baseline `BR-V4.50-2026-11-16`.
+
+## 955. «Fără linia punctată pe tăietură»: the race numbers' sheet of two without its dashed line, the two end marks kept (amending §338 and §249)
+
+**The owner, 2026-11-16:** «cand decupez vreau sa arate mai frumos» — and, asked what, chose «BIB-urile tăiate din A4».
+
+**What was there.** The race numbers print two to an A4 page, one above the other, and the page is cut exactly in half (§338). Across the middle of every page of two the sheet draws a dashed grey line — the one cut there is — and, with «Repere de tăiere pe foaie» ticked (§249), a short solid mark at each end of it. No cut falls exactly on a line half a point thick, so afterwards pieces of the dashes stay on the numbers' edges; and since «Banda dintr-un capăt în altul», decided the same day, the lower number's coloured band starts exactly at that line, so the dashes are left sitting on the colour.
+
+**Decision.** One more tick in the number's design, in «Numărul», right under «Repere de tăiere pe foaie»: **«Fără linia punctată pe tăietură»** / "No dashed line on the cut" (`hideCutLine`). Off until the club ticks it — the sheet exactly as it prints today, and a design saved before the key existed reads off. No migration: one more key of the design's one JSON column (§249).
+
+Ticked, a page of two draws **no dashed line**. It draws the two short solid marks at the ends of the cut — exactly the ones «Repere de tăiere pe foaie» draws there (`trimMarksAt(BIB_SHEET_CUT)`: 36 points in from each edge of the paper, across the white margin and the card's inset) — **whether or not that tick is on**, because a sheet with nothing at the cut cannot be cut straight. A page whose lower half is blank is marked the same: the upper number's foot is the cut all the same. The line under the tick says both things, what stays and why: «Bifat: la mijlocul foii A4 rămân doar două repere scurte, la capetele tăieturii, ca după tăiere să nu rămână nimic pe numere.»
+
+The marks are drawn before the numbers, as the line always was, so a band that starts at the cut is drawn over the half of each mark that falls on the lower number: nothing is left on the colour.
+
+**What does not change.**
+
+- With the tick off, the page is drawn call for call as before: the dashed line, and the end marks only with «Repere de tăiere pe foaie».
+- «Câte unul pe pagină» (§79) has no cut. However the two ticks stand it draws what it drew: the trim guide at the number's top and foot with «Repere de tăiere pe foaie», no line at all without.
+- The picture of one number — on the bibs page, at the desk, in the designer's preview — draws no cut and is the same picture, byte for byte. The designer previews one number, never the sheet, so there is nothing there for the tick to change.
+- The size of a number, its margins and the place of the one cut. The volunteers' badges have their own designer and their own cut marks, and are no part of this.
+
+**The drawing's version stays 7.** `BIB_DRAWING_VERSION` (§755) is raised when the renderers draw *the same design* differently, so that every stamped picture gets a new address. They do not: a design saved before the tick draws its page as before, and the pictures those stamps address draw no cut at all. The tick is the club's own change of its design, which the stamps hash whole (§748).
+
+**The event's file.** The tick travels with the rest of the design (`bib.design.hideCutLine`, said in both languages in the diff of an import over an event); a file made before it reads off.
+
+**The guide.** «Descarcă și tipărește numerele de concurs» told the reader to cut on the line; that step now adds that with the tick the cut goes between the two marks at the ends.
+
+**Refused.**
+
+- *Dropping the dashed line on every sheet.* A club that cuts with scissors follows it, and a release does not change a sheet somebody already approved: a tick, off by default.
+- *Nothing at all at the cut when ticked.* Then the only guide is the eye. The two marks cost a hairline at the page's sides, in the white margin, and keep the cut straight.
+- *Asking for «Repere de tăiere pe foaie» first* — the tick offered only while that one is on. One tick that does the whole thing is what was asked; the marks are simply drawn whenever the line is not.
+- *A fainter or sparser line.* Whatever is drawn across the page is what stays on the numbers.
+- *Marks drawn over the band.* They would sit on the colour — the very thing asked away.
+
+**Two things to know, both true of every key of the number's design and neither new with this one.** An exported event file carries the tick whether it is on or off, and the editor's save refuses a design holding a key it does not know: until production runs this release, it refuses a file made on QA wherever the import would write the number's design — over an event always, since the file's design differs by that key, and as a new event when its number is not the platform's own — while a file from production reads on QA as before. And a file made before the tick, imported over an event, lists the tick among its changes — off on one side, nothing on the other — though nothing changes: the file simply does not say. Writing the key only when it is on, as the event's own newer ticks are written, would close the first; it is a change to the file's format for every design key, and the owner's to ask for.
+
+**Not done.** The file is still exactly A4, with no bleed beyond the trim and no crop marks outside it. And the sheet was checked through what the PDF is asked to draw and a rendering of it on screen, not on paper.
+
+Baseline `BR-V4.50-2026-11-16`.

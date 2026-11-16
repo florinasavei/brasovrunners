@@ -52,7 +52,8 @@ import { formatRaceNumber } from "./domain/race-number";
  * A5 sheet lying on its side, two to an A4 portrait page**, one above the other, and the page is
  * cut exactly in half — the owner, 2026-09-23: "they will be printed on an A4 page so we gonna
  * have 2 per page, basically their format is A5". The paper's edge is the bib's edge; a dashed
- * line at the middle of the page is the one cut there is.
+ * line at the middle of the page is the one cut there is — or, once the club ticks «Fără linia
+ * punctată pe tăietură» (§955), only the two short marks at that cut's ends (`drawCut`).
  *
  * Each bib is laid out as a race number actually is, rather than as a certificate with a logo in
  * the corner, inside an 18-point white margin (`bib-geometry.ts`): a coloured band across the top,
@@ -910,18 +911,26 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
    * paper's edge across the margin — what a guillotine is lined up on, and still there when a
    * printer drops the dashes. Never a frame round the card: the paper's edge is the bib's edge,
    * and a line round the card would be cut along and leave a bib smaller than A5.
+   *
+   * «Fără linia punctată pe tăietură» (§955; the owner, 2026-11-16: «cand decupez vreau sa arate mai
+   * frumos»): no dashed line at all — after the cut, pieces of it stayed on the numbers' edges, and on
+   * the colour of a band that starts at the cut (`bandBleed`). The two end marks are then drawn
+   * whether or not the club ticked them, because a sheet with nothing at the cut cannot be cut
+   * straight. Like the line they are drawn before the bibs, so a band that reaches the cut covers
+   * the half of each mark that falls on the lower number.
    */
   const drawCut = () => {
-    doc
-      .moveTo(0, BIB_SHEET_CUT)
-      .lineTo(A4_PAGE.width, BIB_SHEET_CUT)
-      .lineWidth(0.5)
-      .strokeColor(COLOR.inkMuted)
-      .dash(4, { space: 4 })
-      .stroke()
-      .undash();
-    if (!design.cutMarks) return;
-    trimMarksAt(BIB_SHEET_CUT);
+    if (!design.hideCutLine) {
+      doc
+        .moveTo(0, BIB_SHEET_CUT)
+        .lineTo(A4_PAGE.width, BIB_SHEET_CUT)
+        .lineWidth(0.5)
+        .strokeColor(COLOR.inkMuted)
+        .dash(4, { space: 4 })
+        .stroke()
+        .undash();
+    }
+    if (design.cutMarks || design.hideCutLine) trimMarksAt(BIB_SHEET_CUT);
   };
 
   /** A short solid rule at each end of a horizontal cut, from the paper's edge across the margin. */
