@@ -661,6 +661,11 @@ export type AuditAction =
   // «Lista pentru tombolă» downloaded (§NNN, `volunteers/raffle-list.ts`), entity `event`: how many runners and how many
   // volunteers the file held — never a name or a number.
   | "event.raffle_list_exported"
+  // The picture of «Planul voluntarilor» (§NNN, `volunteers/plan.ts`), entity `event`: uploaded or changed (`set`: the stored
+  // picture's id and the one it replaced, null for the first) or taken off (`removed`: the id it was). Ids only — never a
+  // file's name, an address or anything of a person.
+  | "event.volunteer_plan_picture_set"
+  | "event.volunteer_plan_picture_removed"
   /** «Arată public câți voluntari mai sunt necesari» (§773), entity `event`: the metadata holds `on` and nothing of a person. */
   | "event.volunteers_counts_switched"
   | "event.volunteers_list_switched"

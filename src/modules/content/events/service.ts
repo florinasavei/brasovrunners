@@ -3278,6 +3278,10 @@ function blankEventRow(now: Date): EditableEvent {
     volunteersButtonShown: true,
     // «Cine se poate oferi» (§820): anyone, until the club narrows it in the «Voluntari» card.
     volunteersAccess: "ANYONE",
+    // The picture of «Planul voluntarilor» (§NNN): none — an event that does not exist yet has no plan. Named here because this
+    // row is every column; nothing else in this file reads or writes it: the plan's own press does (`volunteers/plan.ts`), so no
+    // save, no series scope (`SERIES_COLUMNS`), no repeat and no duplicate (`copiedEventValues`) carries one date's plan to another.
+    volunteerPlanMediaAssetId: null,
     difficulty: null,
     difficultyLevel: null,
     costType: COST_TYPE_ON_CREATE,

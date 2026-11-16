@@ -26,7 +26,8 @@ import { bodyImageSrc, deleteAssetObjects, getStorage, objectKey } from "./stora
  * `body_json`, an event translation's `body_json`, `excerpt_json`, `rules_json`, `schedule_json` or
  * `route_description` (§387: the map is a picture in that text) — where the image node
  * carries the variant's address and that address contains the asset's opaque `key_prefix` — and,
- * the same way, by an event's bib design (§560) — and, by id, by an event's cover (§709). Drafts count: a picture in a draft is
+ * the same way, by an event's bib design (§560) — and, by id, by an event's cover (§709) and by the picture of its
+ * «Planul voluntarilor» (§NNN). Drafts count: a picture in a draft is
  * a picture somebody is about to publish, and the sweep must never take it. The check is one
  * SQL predicate, used by the sweep, the media list and the delete, so the three cannot
  * disagree about what "in use" means.
@@ -139,6 +140,10 @@ const referencedSomewhere = sql`(
   -- An event's cover (the facelift's phase 2, §709), by id, drafts, series dates and past events
   -- included: the column has no foreign key (events.ts says why), so this is what keeps the picture.
   OR EXISTS (SELECT 1 FROM ${events} WHERE ${events.coverMediaAssetId} = ${mediaAssets.id})
+  -- The picture of an event's «Planul voluntarilor» (§NNN), by id, like the cover and for its reason:
+  -- the column has no foreign key, so this is what keeps the organizers' map from the sweep and from
+  -- a delete on the pictures page. Drafts and past events included: a plan is reprinted.
+  OR EXISTS (SELECT 1 FROM ${events} WHERE ${events.volunteerPlanMediaAssetId} = ${mediaAssets.id})
   -- No events.video_poster_url any more (§485): a film is a figure in the description, whose
   -- poster the event translation's own body names above (migration 0092 carried every stored
   -- poster there). The column is unread and leaves the database in BR-V2.11 (§491).
@@ -259,8 +264,17 @@ export async function countMediaAssets<T extends Record<string, unknown>>(
   return row ?? { total: 0, unreferenced: 0, sweepable: 0 };
 }
 
-/** `teamBox` (§691): a box under the team page's chart, by its id, titled in the reader's language. */
-export type MediaReference = { kind: "album" | "page" | "event" | "team" | "teamIntro" | "teamBox" | "faq" | "membersPage" | "homePage" | "newsletter"; id: string; title: string | null };
+/**
+ * `teamBox` (§691): a box under the team page's chart, by its id, titled in the reader's language.
+ * `volunteerPlan` (§NNN): the picture of an event's «Planul voluntarilor», by the event's id and titled as the event — a kind
+ * of its own and not `event`, because the picture is on the plan's page and nowhere in the event's editor: the pictures page
+ * sends the reader to the plan, and no «Din galerie» counts it among an event's pictures.
+ */
+export type MediaReference = {
+  kind: "album" | "page" | "event" | "team" | "teamIntro" | "teamBox" | "faq" | "membersPage" | "homePage" | "newsletter" | "volunteerPlan";
+  id: string;
+  title: string | null;
+};
 
 export type MediaAssetRow = {
   id: string;
@@ -365,6 +379,13 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .innerJoin(events, eq(events.coverMediaAssetId, mediaAssets.id))
     .leftJoin(eventTranslations, eq(eventTranslations.eventId, events.id));
 
+  // The picture of an event's «Planul voluntarilor» (§NNN): the event, named in the reader's language.
+  const inVolunteerPlans = await db
+    .select({ assetId: mediaAssets.id, id: events.id, title: eventTranslations.title, locale: eventTranslations.locale })
+    .from(mediaAssets)
+    .innerJoin(events, eq(events.volunteerPlanMediaAssetId, mediaAssets.id))
+    .leftJoin(eventTranslations, eq(eventTranslations.eventId, events.id));
+
   const inTeam = await db
     .select({ assetId: teamMembers.photoMediaAssetId, id: teamMembers.id, title: teamMembers.name })
     .from(teamMembers)
@@ -443,6 +464,9 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   }
   for (const row of [...inEvents, ...inBibDesigns, ...inCovers].sort((a) => (a.locale === locale ? -1 : 1))) {
     add(row.assetId, { kind: "event", id: row.id, title: row.title });
+  }
+  for (const row of [...inVolunteerPlans].sort((a) => (a.locale === locale ? -1 : 1))) {
+    add(row.assetId, { kind: "volunteerPlan", id: row.id, title: row.title });
   }
   for (const row of inTeam) if (row.assetId) add(row.assetId, { kind: "team", id: row.id, title: row.title });
   for (const row of inTeamBios) add(row.assetId, { kind: "team", id: row.id, title: row.title });
