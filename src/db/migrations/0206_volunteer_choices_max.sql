@@ -1,0 +1,2 @@
+ALTER TABLE "events" ADD COLUMN "volunteer_choices_max" integer;--> statement-breakpoint
+ALTER TABLE "events" ADD CONSTRAINT "events_volunteer_choices_max_range" CHECK ("events"."volunteer_choices_max" IS NULL OR ("events"."volunteer_choices_max" >= 1 AND "events"."volunteer_choices_max" <= 20));

@@ -37,6 +37,19 @@ function actionFiles(directory: string): string[] {
   });
 }
 
+/**
+ * A card's own verbs live beside its page in `<card>-actions.ts` (the «Voluntari» card's `volunteer-actions.ts`), which the
+ * sweep of `actions.ts` files does not read. A verb of such a file may be classified below all the same — the ones that ask
+ * always were (`requestVolunteerAgreementAction`) — and one listed in `NOT_CONFIRMED` is held to still being exported there.
+ */
+function cardActionFiles(directory: string): string[] {
+  return readdirSync(directory).flatMap((entry) => {
+    const full = path.join(directory, entry);
+    if (statSync(full).isDirectory()) return cardActionFiles(full);
+    return /-actions\.ts$/.test(entry) ? [full] : [];
+  });
+}
+
 function sourceFiles(directory: string): string[] {
   return readdirSync(directory).flatMap((entry) => {
     const full = path.join(directory, entry);
@@ -345,6 +358,9 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Pune aici» / «Scoate» on «Planul voluntarilor» (§949): where a volunteer stands on the route, one press either way.
   placeVolunteerAction:
     "a line of the organizers' own plan for one volunteer, undone by «Scoate» or by another point; it tells nobody and changes no state, role, number or count",
+  // «Cel mult câte roluri poate bifa o persoană» on the event's «Voluntari» card (§951): the public form's limit on the roles ticked, a box with its own «Salvează».
+  setVolunteerChoicesMaxAction:
+    "a setting of the event's public volunteers' form, undone by saving the old number or an empty box; it tells nobody, deletes nothing and changes nobody already listed — as the card's ticks beside it, which ask nothing either",
   addTestRegistrationsAction: "test rows, counted nowhere and absent from production, removed by a verb that asks",
   hardDeleteEventAction: "guarded by the event's title, typed: the typing is the question",
   eraseRegistrationFromListAction: "guarded by the registered name, typed: the typing is the question",
@@ -467,8 +483,20 @@ describe("§384 every irreversible or outward-facing staff action asks first", (
     expect(unclassified, "a new action: add it to CONFIRMED_ACTIONS, or to NOT_CONFIRMED with its reason").toEqual([]);
     const both = Object.keys(NOT_CONFIRMED).filter((name) => name in CONFIRMED_ACTIONS);
     expect(both).toEqual([]);
-    const stale = Object.keys(NOT_CONFIRMED).filter((name) => !exported.includes(name));
+    // A verb of a card's own file (`<card>-actions.ts`) may be listed too: it is stale once that file stops exporting it.
+    const besideAPage = cardActionFiles(path.join(ROOT, "src/app/[locale]/admin")).flatMap((file) =>
+      [...readFileSync(file, "utf8").matchAll(/export async function (\w+Action)\b/g)].map((match) => match[1]),
+    );
+    const stale =Object.keys(NOT_CONFIRMED).filter((name) => !exported.includes(name) && !besideAPage.includes(name));
     expect(stale, "listed in NOT_CONFIRMED but no longer exported").toEqual([]);
+  });
+
+  it("holds the «Voluntari» card's limit on the roles ticked (§951) to its classification: listed with its reason, and posted from a bare form of its own", () => {
+    expect(NOT_CONFIRMED.setVolunteerChoicesMaxAction).toMatch(/undone by saving the old number or an empty box/);
+    expect("setVolunteerChoicesMaxAction" in CONFIRMED_ACTIONS).toBe(false);
+    const card = readFileSync(path.join(ROOT, "src/modules/volunteers/ui/VolunteersCard.tsx"), "utf8");
+    expect(card.match(/action=\{setVolunteerChoicesMaxAction\}/g) ?? []).toHaveLength(1);
+    expect(card).toMatch(/<Box component="form" action=\{setVolunteerChoicesMaxAction\}/);
   });
 
   it("never asks twice: a ConfirmSubmitButton sits in no ActionForm that has its own confirm", () => {
