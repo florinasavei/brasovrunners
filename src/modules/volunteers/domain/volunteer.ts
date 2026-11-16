@@ -40,6 +40,13 @@ export const VOLUNTEER_NAME_MAX = 120;
 export const VOLUNTEER_MESSAGE_MAX = 300;
 /** How many roles one event may define: a list a person can read, and a bound on a forged form. */
 export const VOLUNTEER_ROLES_MAX = 30;
+/**
+ * «Cel mult câte roluri poate bifa o persoană» (§951, amending §761): the bounds of an event's limit on the public form's
+ * ticks — the database's too (`events_volunteer_choices_max_range`). One is «alege un singur rol»; twenty is past any
+ * list a person ticks their way through, and under what an event may define.
+ */
+export const VOLUNTEER_CHOICES_MAX_LOWEST = 1;
+export const VOLUNTEER_CHOICES_MAX_HIGHEST = 20;
 /** How many categories one event may define (§774): headings a person can read on a phone, and a bound on a forged form. */
 export const VOLUNTEER_CATEGORIES_MAX = 12;
 /** The category's contact person (§774): the name's own bound is the volunteer's, the telephone's and the address's are the database's. */
@@ -568,9 +575,24 @@ export function choicesWithAssigned(input: Pick<VolunteerStaffInput, "roleIds" |
   return input.roleIds.length > 0 ? input.roleIds : input.assignedRoleIds;
 }
 
-/** What every public sign-up posts, whatever the notice in force says (§761, §758). */
-const publicBase = {
-  roleIds: roleIdsField.pipe(z.array(z.string()).min(1)),
+/** The roles a public sign-up ticks (§761): at least one of them, once `roleIdsField` has kept each id once. */
+const tickedRoles = z.array(z.string()).min(1);
+
+/**
+ * …and, while the event sets «Cel mult câte roluri poate bifa o persoană» (§951), no more of them than that
+ * (`choicesOverMax`): a rule of the box itself, so a refusal names `roleIds` together with every other box that failed —
+ * a person who ticked five roles and forgot the consent is told both in one pass, not on a second try. `null` is no
+ * limit, the schema §761 always had. Only the public form's: the organizers' entry (`volunteerStaffInputBase`) reads
+ * `roleIdsField` bare.
+ */
+const publicRoleIds = (choicesMax: number | null) =>
+  roleIdsField.pipe(
+    choicesMax === null ? tickedRoles : tickedRoles.refine((ids) => !choicesOverMax(ids, choicesMax), { message: "more roles ticked than the event's form allows" }),
+  );
+
+/** What every public sign-up posts, whatever the notice in force says (§761, §758) — `choicesMax` is the event's limit on the ticks, or null. */
+const publicBase = (choicesMax: number | null) => ({
+  roleIds: publicRoleIds(choicesMax),
   name: line(VOLUNTEER_NAME_MAX),
   email: z
     .string()
@@ -588,18 +610,23 @@ const publicBase = {
   listOptIn: tick,
   honeypot: z.string().max(2000).optional(),
   renderedAt: z.iso.datetime().optional(),
-};
+});
+
+/** §758's form for an event's limit on the ticks (§951), or for none. */
+const volunteerPublicInputSchemaFor = (choicesMax: number | null) =>
+  z.object({
+    ...publicBase(choicesMax),
+    /** «Am cel puțin 18 ani» (§758, `VOLUNTEER_MINIMUM_AGE`): required. */
+    adult: z.literal(true),
+  });
 
 /**
  * The public form while the privacy notice in force does **not** name what a volunteer says about themselves
  * (§758's shape, unchanged): the consent, the agreement and «Am cel puțin 18 ani», each a tick that is the person's
- * own act, required; a minor's volunteering is a later question for the lawyer.
+ * own act, required; a minor's volunteering is a later question for the lawyer. This one is the form of an event with no
+ * limit on the ticks (§951): `volunteerPublicSchemaFor` builds the limited one.
  */
-export const volunteerPublicInputSchema = z.object({
-  ...publicBase,
-  /** «Am cel puțin 18 ani» (§758, `VOLUNTEER_MINIMUM_AGE`): required. */
-  adult: z.literal(true),
-});
+export const volunteerPublicInputSchema = volunteerPublicInputSchemaFor(null);
 
 export type VolunteerPublicInput = z.infer<typeof volunteerPublicInputSchema>;
 
@@ -610,9 +637,9 @@ export type VolunteerPublicInput = z.infer<typeof volunteerPublicInputSchema>;
  * «Am mai fost voluntar în trecut la alte curse» and «Fac parte din grupul {club}», and «Mărimea tricoului» — which the
  * service keeps only while the event gives a shirt.
  */
-const volunteerPublicProfileBase = (eventDay: string) =>
+const volunteerPublicProfileBase = (eventDay: string, choicesMax: number | null) =>
   z.object({
-    ...publicBase,
+    ...publicBase(choicesMax),
     birthDate: requiredBirthDate(eventDay),
     sex: requiredSex,
     city: requiredCity,
@@ -635,9 +662,9 @@ const volunteerPublicProfileBase = (eventDay: string) =>
  * volunteer agreement `{{volunteerGuardian}}`, in every language (the §562 / §613 pattern). While it does not, a date that
  * gives an age under eighteen is refused on `birthDate` — the page then says the club cannot take minors yet. The age is the
  * date's on `eventDay` (`volunteerEventDay`): the §768 rules are judged on the event's day, not today's, and the result carries
- * it as `age` beside the date.
+ * it as `age` beside the date. `choicesMax` is the event's limit on the roles ticked (§951), or null for none.
  */
-export function volunteerPublicProfileSchemaFor(minors: boolean, eventDay: string) {
+export function volunteerPublicProfileSchemaFor(minors: boolean, eventDay: string, choicesMax: number | null = null) {
   const always = () => true;
   const basis: AgeBasis = { eventDay, kept: null };
   // A minor the form asks a guardian for: from the floor to seventeen on the event's day (a date under it is refused on its own box already).
@@ -648,12 +675,12 @@ export function volunteerPublicProfileSchemaFor(minors: boolean, eventDay: strin
   // While the club cannot take a minor the guardian's boxes are not asked at all: the date alone is refused. Every refused box is
   // named in one pass, even when another (the sex, the city) was refused too.
   const refused = minors
-    ? refuseGuardianBoxes(volunteerPublicProfileBase(eventDay), "required", basis).refine((value) => !minor(value) || value.guardianAware === true, {
+    ? refuseGuardianBoxes(volunteerPublicProfileBase(eventDay, choicesMax), "required", basis).refine((value) => !minor(value) || value.guardianAware === true, {
         path: ["guardianAware"],
         message: "the volunteer says the parent knows and agrees",
         when: always,
       })
-    : volunteerPublicProfileBase(eventDay).refine((value) => !minor(value), { path: ["birthDate"], message: "the club cannot take volunteers under eighteen yet", when: always });
+    : volunteerPublicProfileBase(eventDay, choicesMax).refine((value) => !minor(value), { path: ["birthDate"], message: "the club cannot take volunteers under eighteen yet", when: always });
   return refused.transform((value) => {
     const { guardianName, guardianEmail, guardianAware, ...rest } = value;
     // The tick was read by the refinement above; it leaves the result with the two boxes.
@@ -667,10 +694,13 @@ export type VolunteerPublicProfileInput = z.infer<ReturnType<typeof volunteerPub
 /**
  * The schema a public post is read with: the profile's (with the minors' path while `minors`) while the notice names
  * the profile, §758's otherwise — which takes adults only, by its own tick. `eventDay` is the day the date of birth is
- * counted on (`volunteerEventDay`).
+ * counted on (`volunteerEventDay`). `choicesMax` is the event's «Cel mult câte roluri poate bifa o persoană» (§951): a post
+ * ticking more roles than it is refused on `roleIds` by either form; absent or null, any number passes, as it always did.
  */
-export function volunteerPublicSchemaFor(mode: { profile: boolean; minors: boolean; eventDay: string }) {
-  return mode.profile ? volunteerPublicProfileSchemaFor(mode.minors, mode.eventDay) : volunteerPublicInputSchema;
+export function volunteerPublicSchemaFor(mode: { profile: boolean; minors: boolean; eventDay: string; choicesMax?: number | null }) {
+  const choicesMax = mode.choicesMax ?? null;
+  if (mode.profile) return volunteerPublicProfileSchemaFor(mode.minors, mode.eventDay, choicesMax);
+  return choicesMax === null ? volunteerPublicInputSchema : volunteerPublicInputSchemaFor(choicesMax);
 }
 
 /** The field names a Zod refusal is about, in the form's own words (names only, never values). */
@@ -734,6 +764,28 @@ export function someRoleNeedsPeople(standings: readonly Pick<RoleStanding, "free
  */
 export function openChoices(ticked: readonly string[], standings: ReadonlyMap<string, Pick<RoleStanding, "free">>): string[] {
   return ticked.filter((roleId) => roleTakesPeople(standings.get(roleId)));
+}
+
+/**
+ * Whether a value may be an event's «Cel mult câte roluri poate bifa o persoană» (§951): none (`null` — any number, as §761
+ * had it), or a whole number within the bounds. `1.5`, `NaN`, nought and twenty-one are no limit at all.
+ */
+export function isVolunteerChoicesMax(value: number | null): boolean {
+  return value === null || (Number.isInteger(value) && value >= VOLUNTEER_CHOICES_MAX_LOWEST && value <= VOLUNTEER_CHOICES_MAX_HIGHEST);
+}
+
+/**
+ * Whether a public post ticks more roles than its event allows (§951; the owner, 2026-11-16: «voluntarii primesc prea multe
+ * roluri» — «Bifează prea multe pe formular»): the roles **as posted**, each counted once however many times its id came, an
+ * empty value none — so it depends on the event's setting and the post alone, never on who is already listed or which role
+ * has filled. No limit (`null`, and `undefined` for a page's copy made before the setting existed) is never over.
+ *
+ * The one rule two readers ask: the sign-up's schema, which refuses the post naming `roleIds`, and the form drawn again
+ * after it, which says the limit's sentence rather than «bifează cel puțin un rol» by counting what the draft kept.
+ */
+export function choicesOverMax(roleIds: readonly string[], max: number | null | undefined): boolean {
+  if (max === null || max === undefined) return false;
+  return new Set(roleIds.map((id) => id.trim()).filter((id) => id !== "")).size > max;
 }
 
 /**

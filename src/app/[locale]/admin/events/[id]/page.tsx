@@ -1775,6 +1775,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   volunteersShirts={event.volunteersShirts}
                   volunteersShowCounts={event.volunteersShowCounts}
                   volunteerBibStart={event.volunteerBibStart}
+                  volunteerChoicesMax={event.volunteerChoicesMax}
                   volunteersListPublic={event.volunteersListPublic}
                   volunteersButtonShown={event.volunteersButtonShown}
                   pageLinks={volunteersCard.pageLinks}

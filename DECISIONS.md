@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.47-2026-11-16 -->
+<!-- PROJECT_BASELINE: BR-V4.48-2026-11-16 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.47-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.48-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -29982,3 +29982,38 @@ Baseline `BR-V4.46-2026-11-16`.
 **Tests.** `tests/integration/volunteers/volunteer-notes-screens.test.ts`: the column right after «Mesaj» with its heading and its «?»; its words equal to the marker's tooltip for the same row — the three newest with their day and hour, a line break kept, the fourth counted; a deleted note and the author's name in no cell; `null` for a row without notes; and still one read of the notes' table for the whole page.
 
 Baseline `BR-V4.47-2026-11-16`.
+
+## 951. «Cel mult câte roluri poate bifa o persoană»: an event's limit on the roles ticked on the public volunteers' form (amending §761)
+
+**The owner, 2026-11-16, five days before Saturday's race:** «voluntarii primesc prea multe roluri». Asked where it goes wrong, the owner chose «Bifează prea multe pe formular»; asked what to do about it, a limit, per event, on how many roles one person may tick on the public form — «cel mult 2 roluri, sau unul».
+
+**What was there.** Since §761 the public volunteers' form asks «Ce ești dispus(ă) să faci» and a person ticks every role they would do; the organizers then give one, or several (§837). Nothing bounded the ticks but the number of roles the event defines, so people ticked most of them — and an offer that names nine roles of ten says nothing about what the person wants.
+
+**Decision.** One more setting of the event, in the editor's «Voluntari» card: «Cel mult câte roluri poate bifa o persoană» — a whole number from 1 to 20, or empty for any number (`events.volunteer_choices_max`, a nullable integer, migration `0206`, expand only, with a CHECK of the same bounds). Empty is the default, so no event changes by itself: a form is §761's until its club sets a limit.
+
+**The public form, while the event has a limit.**
+
+- The roles' help line says it, in place of «Bifează tot ce ai face, cel puțin un rol.»: «Alege un singur rol.» for one, «Poți bifa cel mult 2 roluri.» for more — «20 de roluri», the count's own form through `countForm`, never an ICU plural — in both languages.
+- A post that ticks more distinct roles than the limit is refused as the person's own fix: `VALIDATION_ERROR` naming `roleIds`, together with every other box that failed, nothing written, nothing emailed, no allowance spent. The same id posted twice is one role. The rule is the form's own (`volunteerPublicSchemaFor`, `choicesOverMax`): the count is of what was posted, judged on the post and the event's own row alone — before the honeypot and the timing check, the throttles, the «full» pass and the repeat's lookup — so a listed address and a stranger hear the same, and it is no oracle. (Turnstile, where the club switched it on, stays the action's first question, as for every post.)
+- The form comes back with every tick and every typed box (the sealed draft, §142) and a sentence of its own, at the roles and in the summary — «Ai bifat prea multe: poți bifa cel mult 2 roluri la „Ce ești dispus(ă) să faci”.» — never «Bifează cel puțin un rol». The address is the one a post with no role ticked gets, `?volunteer=invalid&vfields=roleIds`: the page tells the two apart by counting the roles the draft kept against the limit it reads with the roles — the very rule the sign-up refused by.
+
+The server is the gate; the page's words are a courtesy. The form stays native checkboxes and keeps working with scripts off: no client island.
+
+**Only the public form.** It is one form whichever door the post came through (§820) — the event's page, an invitation's link, a member's session — and all three are limited. The organizers' own entry and «Modifică» («Rolurile dorite») are not, nor the roles they give (§837): the limit is about what a person's offer says, not about what the club decides. Setting it changes nobody already listed: a person who ticked five roles before keeps the five.
+
+**Who, and how it is kept.** The box has a small form of its own in the card, like «Numerele voluntarilor încep de la»; an empty box takes the limit off. `setVolunteerChoicesMax` asserts `canManageVolunteers` — the Organizer and the Administrators; the Tehnic role, the Redactor, the desk Volunteer and a member are refused with nothing written — and the Server Action asks the same capability at its own door (BR-REQ-060-01). The event row is read under a lock; `events.version` does not move, since it is no edit of the page's text; one audit row says the old and the new value (`event.volunteer_choices_max_set`) and only when the value moved; and the event's public page is told once per change, as for «Oferim tricouri voluntarilor». The toast names the number saved — «Limita e salvată: pe formularul public se pot bifa cel mult 2 roluri.» — since the card comes back with the press done and the toast is what the owner reads. The press asks nothing first: like the card's ticks it emails nobody, deletes nothing and is undone in the same box.
+
+**What travels.** Nothing. The limit is one edition's own, like «Oferim tricouri voluntarilor»: a copy of an event, every date of a repeat and a series edit leave it where it was, and the event's file does not carry it.
+
+**Refused.**
+
+- *One limit for the whole club, in «Setări».* The owner asked per event, and events differ: a race with thirty roles and a group run with three do not want one number.
+- *Counting only the roles that still need people.* A post would pass or fail by what filled while the form was open, and the count would say something about the list. The count is of the post.
+- *Keeping the first N ticks and dropping the rest.* The platform would be choosing which roles a person wants — the very thing the limit asks the person to say.
+- *Switching the boxes off in the browser once the limit is reached.* It needs a client island on a form that works without scripts (§754); the help line says the rule and the server holds it.
+- *A word more in the address to say why the roles were refused.* The page can tell from what it already has, and a typed address has one thing fewer to pretend.
+- *Limiting the organizers' entry or the roles given.* The owner's complaint is the form; the club's own hand stays free.
+
+**Two things to know.** A browser that keeps no cookies gets the form back empty after any refusal (§142), and then reads «Bifează cel puțin un rol» under a help line that says the limit — both true of an empty form. And `tests/unit/shared/confirmed-actions.test.ts` sweeps only files named `actions.ts`, while the card's verbs live in `volunteer-actions.ts`: the new verb is listed in `NOT_CONFIRMED` with its reason all the same, and the test's staleness check now reads the cards' own action files too, so a listed verb that stops being exported fails. The other verbs of those files are still classified nowhere — the owner's to ask for, not part of this change.
+
+Baseline `BR-V4.48-2026-11-16`.

@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.48-2026-11-16
+
+- **A limit on how many roles a volunteer may tick** — in an event's «Voluntari» card, the new box «Cel mult câte roluri poate bifa o persoană» takes a number from 1 to 20; empty means any number, as until now. With a limit set, the public volunteers' form says it («Alege un singur rol.», «Poți bifa cel mult 2 roluri.») and sends back a form with more roles ticked, keeping everything the person typed and saying why. People you add by hand, «Modifică» and the roles you give are not limited, and nobody already on the list changes. §951.
 ## BR-V4.47-2026-11-16
 
 - **«Note interne» on the «Voluntari» list** — a new column after «Mesaj» shows the organizers' own notes about each volunteer right in the row: the three newest, each with its day and time, and how many older ones there are. Until now those words were only under the pointer on the «2 note» marker, which a phone cannot hover; the marker still opens the person's page, where every note is whole, with its author. «Coloane» hides the column. §950.

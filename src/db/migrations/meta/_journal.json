@@ -1380,6 +1380,13 @@
       "when": 1794836171767,
       "tag": "0205_raffle",
       "breakpoints": true
+    },
+    {
+      "idx": 197,
+      "version": "7",
+      "when": 1794840859755,
+      "tag": "0206_volunteer_choices_max",
+      "breakpoints": true
     }
   ]
 }

@@ -994,7 +994,8 @@ describe("import over an existing event", () => {
  */
 describe("an event's volunteers are not the file's — only their categories and roles are", () => {
   async function withVolunteers(eventId: string) {
-    await db.update(events).set({ acceptsVolunteers: true, volunteersShirts: true, volunteersShowCounts: true }).where(eq(events.id, eventId));
+    // …and «Cel mult câte roluri poate bifa o persoană» (§951), one edition's own like the ticks beside it.
+    await db.update(events).set({ acceptsVolunteers: true, volunteersShirts: true, volunteersShowCounts: true, volunteerChoicesMax: 2 }).where(eq(events.id, eventId));
     const [role] = await db
       .insert(eventVolunteerRoles)
       .values({ eventId, nameRo: "Punct de apă Zmeură", nameEn: "Water point Raspberry", needed: 3, descriptionRo: "Pahare la km 5", descriptionEn: "Cups at km 5" })
@@ -1019,7 +1020,7 @@ describe("an event's volunteers are not the file's — only their categories and
     const role = await withVolunteers(event.id);
     const file = await fileOf(event.id);
     const text = JSON.stringify(file);
-    for (const needle of ["Voluntarescu", "vlad.voluntarescu", "+40712345678", "Am mai ajutat", role.id, "acceptsVolunteers", "showCounts", "show_counts", "volunteersShirts"]) {
+    for (const needle of ["Voluntarescu", "vlad.voluntarescu", "+40712345678", "Am mai ajutat", role.id, "acceptsVolunteers", "showCounts", "show_counts", "volunteersShirts", "choicesMax", "ChoicesMax", "choices_max"]) {
       expect(text, needle).not.toContain(needle);
     }
     // The role's words are there — both names, how many it needs — and nothing else of it.
@@ -1082,6 +1083,29 @@ describe("an event's volunteers are not the file's — only their categories and
     await db.update(events).set({ volunteersShowCounts: false }).where(eq(events.id, target.id));
     await importEventOver(db, await overInput(file, target.id));
     expect((await reload(target.id)).volunteersShowCounts).toBe(false);
+  });
+
+  it("carries «Cel mult câte roluri poate bifa o persoană» in no direction either (§951): the file has no limit, an import as new starts with none and an import over leaves the target's own", async () => {
+    const { event } = await seedRace();
+    await withVolunteers(event.id);
+    expect((await reload(event.id)).volunteerChoicesMax).toBe(2);
+    const file = await fileOf(event.id);
+    expect(JSON.stringify(file)).not.toMatch(/choicesMax|choices_max/i);
+    expect(serializeEventFile(file)).not.toMatch(/choicesMax|choices_max/i);
+
+    const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
+    expect((await reload(created.eventId)).volunteerChoicesMax).toBeNull();
+
+    // Over a target whose club set its own limit, and over one with none: each keeps what it had.
+    const { target } = await seedTarget();
+    await db.update(events).set({ volunteerChoicesMax: 5 }).where(eq(events.id, target.id));
+    await importEventOver(db, await overInput(file, target.id));
+    expect((await reload(target.id)).volunteerChoicesMax).toBe(5);
+    await db.update(events).set({ volunteerChoicesMax: null }).where(eq(events.id, target.id));
+    await importEventOver(db, await overInput(file, target.id));
+    expect((await reload(target.id)).volunteerChoicesMax).toBeNull();
+    // The source keeps its own through all of it.
+    expect((await reload(event.id)).volunteerChoicesMax).toBe(2);
   });
 });
 
