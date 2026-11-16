@@ -4,6 +4,7 @@ import { createTranslator, NextIntlClientProvider } from "next-intl";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventCheckpoints } from "@/db/schema/event-checkpoints";
 import { eventVolunteerRoleAssignments, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
@@ -29,6 +30,11 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *   cancelled person;
  * - the page draws it, with «Pune aici» offering only who stands at no point and «Scoate» on everybody placed, and the
  *   «Voluntari» list says each person's point and links to the plan.
+ *
+ * And what the review of 2026-11-16 asked of it (§NNN, amending §949): no press of the plan queues an email, for people who
+ * have an address; a refused press lands on the page's alert, where its sentence is, and a press that went through on its
+ * point; the telephone number is read grouped, in a `tel:` link of digits a thumb can press, and prints as text; the link to
+ * the points opens the editor at their card; and the list's column is said in English too.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en", redirected: [] as string[] }));
 
@@ -56,15 +62,15 @@ vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, s
 vi.mock("next/cache", () => ({ revalidatePath: () => {}, revalidateTag: () => {}, unstable_cache: (fn: unknown) => fn }));
 vi.mock("@/auth", () => ({ auth: async () => null, signIn: async () => {}, signOut: async () => {} }));
 vi.mock("@/db/client", () => ({ getDb: () => state.db }));
-// The house's typed routing, reduced to what the screens ask of it: the locale's prefix, the params filled in, a query appended.
+// The house's typed routing, reduced to what the screens ask of it: the locale's prefix, the params filled in, a query and a fragment appended.
 vi.mock("@/i18n/navigation", () => {
-  type Href = string | { pathname: string; params?: Record<string, string>; query?: Record<string, string> };
+  type Href = string | { pathname: string; params?: Record<string, string>; query?: Record<string, string>; hash?: string };
   const hrefOf = (locale: string, href: Href) => {
     if (typeof href === "string") return `/${locale}${href}`;
     let path = href.pathname;
     for (const [key, value] of Object.entries(href.params ?? {})) path = path.replace(`[${key}]`, value);
     const query = href.query ? `?${new URLSearchParams(href.query).toString()}` : "";
-    return `/${locale}${path}${query}`;
+    return `/${locale}${path}${query}${href.hash ? `#${href.hash}` : ""}`;
   };
   return {
     getPathname: ({ locale, href }: { locale: string; href: Href }) => hrefOf(locale, href),
@@ -186,15 +192,28 @@ const place = (actor: StaffUser, id: string, checkpointId: unknown, eventId = ra
 const rowOf = async (id: string) => (await db.select().from(eventVolunteers).where(eq(eventVolunteers.id, id)))[0];
 const trail = async () => (await db.select().from(auditLogs)).filter((row) => row.action === "volunteer.edited");
 
-/** A page as the server streams it, Suspense settled; Emotion's styles and React's separators out of the way. */
-async function html(page: ReactElement): Promise<string> {
+/** A page as the server streams it, Suspense settled, Emotion's rules still in it. */
+async function streamed(page: ReactElement): Promise<string> {
   const intl = { locale: state.locale, timeZone: "Europe/Bucharest", messages: state.locale === "ro" ? ro : en } as unknown as ComponentProps<typeof NextIntlClientProvider>;
   const stream = await renderToReadableStream(createElement(NextIntlClientProvider, intl, page), { onError: () => {} });
   await stream.allReady;
-  return (await new Response(stream).text()).replace(/<style[\s\S]*?<\/style>/g, "").replace(/<!-- -->/g, "");
+  return new Response(stream).text();
 }
-const planPage = async (query: Record<string, string> = {}, id = raceId) => html(await VolunteerPlanPage({ params: Promise.resolve({ locale: state.locale, id }), searchParams: Promise.resolve(query) }));
-const listPage = async (query: Record<string, string> = {}) => html(await AdminVolunteersPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve(query) }));
+/** …with Emotion's styles and React's separators out of the way. */
+const html = async (page: ReactElement) => (await streamed(page)).replace(/<style[\s\S]*?<\/style>/g, "").replace(/<!-- -->/g, "");
+const planElement = async (query: Record<string, string> = {}, id = raceId) => VolunteerPlanPage({ params: Promise.resolve({ locale: state.locale, id }), searchParams: Promise.resolve(query) });
+const planPage = async (query: Record<string, string> = {}, id = raceId) => html(await planElement(query, id));
+/** The «Voluntari» list in the language `state.locale` says. */
+const listPage = async (query: Record<string, string> = {}) => html(await AdminVolunteersPage({ params: Promise.resolve({ locale: state.locale }), searchParams: Promise.resolve(query) }));
+/** Every Emotion rule a streamed page carries, joined: what a class of its markup means. */
+const rulesOf = (page: string) => [...page.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((match) => match[1]).join("");
+/** The Emotion class of the first element that carries `attribute` (`id="…"`, `data-testid="…"`), whichever side of it `class` was written. */
+function classOf(page: string, attribute: string): string {
+  const tag = new RegExp(`<[a-z0-9]+[^>]*${attribute}[^>]*>`).exec(page)?.[0] ?? "";
+  const name = (/class="([^"]*)"/.exec(tag)?.[1] ?? "").split(" ").find((part) => part.startsWith("css-"));
+  expect(name, `an Emotion class on the element with ${attribute}`).toBeTruthy();
+  return name!;
+}
 /** The plan's points as the page draws them: each `<li data-testid="plan-point">` whole. */
 const pointsOf = (page: string) => [...page.matchAll(/<li[^>]*data-testid="plan-point"[\s\S]*?(?=<li[^>]*data-testid="plan-point"|<\/ol>)/g)].map((match) => match[0]);
 const textOf = (part: string, testid: string) => [...part.matchAll(new RegExp(`data-testid="${testid}"[^>]*>(?:<a[^>]*>)?([^<]*)<`, "g"))].map((match) => match[1]);
@@ -246,6 +265,18 @@ describe("§949 placing a volunteer at a point of the route", () => {
     expect((await trail()).at(-1)!.metadataJson).toMatchObject({ fields: ["checkpoint"], checkpointId: null });
     // Off already: nothing to do, whatever "no point" was posted as.
     for (const none of ["", "   ", null, undefined]) expect(await place(staff.MODERATOR!, people.ana, none)).toMatchObject({ changed: false });
+  });
+
+  it("tells nobody: placing a person who has an address and a role, moving them and taking them off queues no email (§NNN)", async () => {
+    // Everything an email to her would need: an address, a language, a role given, confirmed.
+    expect(await rowOf(people.ana)).toMatchObject({ email: "ana.pop@example.test", state: "CONFIRMED" });
+    expect(await place(staff.MODERATOR!, people.ana, points.junction)).toMatchObject({ changed: true, volunteer: { hasAddress: true } });
+    expect(await place(staff.MODERATOR!, people.ana, points.water)).toMatchObject({ changed: true });
+    expect(await place(staff.MODERATOR!, people.ana, "")).toMatchObject({ changed: true });
+    // Dan too, by an Administrator: no role decides it.
+    expect(await place(staff.ADMIN!, people.dan, points.bridge)).toMatchObject({ changed: true, volunteer: { hasAddress: true } });
+    expect(await trail()).toHaveLength(4);
+    expect(await db.select().from(emailOutbox)).toEqual([]);
   });
 
   it("refuses another event's point, a point that is not there and a value that is no point, with nothing written", async () => {
@@ -346,6 +377,8 @@ describe("§949 the plan's page", () => {
     expect(drawn[0]).toContain(`href="/ro/admin/volunteers/${people.ana}"`);
     expect(drawn[0]).toContain("Nr. 501");
     expect(drawn[0]).toContain('href="tel:+40700000001"');
+    // Read grouped, as her own page reads it (§NNN): never the bare run of digits.
+    expect(textOf(drawn[0], "plan-person-phone")).toEqual(["+40 700 000 001"]);
     expect(drawn[0]).toContain("Direcționare");
     expect(textOf(drawn[1], "plan-person-name")).toEqual(["Dan Ene"]);
     expect(drawn[1]).toContain("Punct de hidratare");
@@ -368,9 +401,44 @@ describe("§949 the plan's page", () => {
     // Under the points: who stands at none — Ion not confirmed yet and with no role, Zoe with no telephone.
     const unplaced = page.slice(page.indexOf(ro.Admin.volunteers.plan.unplacedTitle));
     expect(textOf(unplaced, "plan-person-name")).toEqual(["Ion Lupu", "Zoe Manea"]);
-    expect(unplaced).toContain("fără rol dat · neconfirmat încă");
+    // Said of the person without a participle that would be a man's (§NNN): «încă de confirmat», never «neconfirmat».
+    expect(unplaced).toContain("fără rol dat · încă de confirmat");
+    // Ion has a telephone and its link; Zoe, with none, has no link to nothing.
+    expect(textOf(unplaced, "plan-person-phone")).toEqual(["+40 700 000 001"]);
     expect(page).not.toContain("Eva Stan");
     expect(page).not.toContain("Mara Dinu");
+  });
+
+  it("draws the telephone as a link a thumb can press — the digits and the plus alone — that prints as text (§NNN, BR-REQ-041-01)", async () => {
+    // A number kept with what a person types around the digits: the link dials the digits.
+    await db.update(eventVolunteers).set({ phone: "+40 (700) 000-002" }).where(eq(eventVolunteers.id, people.dan));
+    await place(staff.ADMIN!, people.ana, points.junction);
+    await place(staff.ADMIN!, people.dan, points.water);
+    const page = await streamed(await planElement());
+
+    const links = [...page.matchAll(/<a[^>]*data-testid="plan-person-phone"[^>]*>|<a[^>]*href="tel:[^"]*"[^>]*>/g)].map((match) => match[0]);
+    // Ana and Dan at their points, Ion under them; Zoe has no number.
+    expect(links.map((link) => /href="([^"]*)"/.exec(link)?.[1])).toEqual(["tel:+40700000001", "tel:+40700000002", "tel:+40700000001"]);
+    for (const link of links) expect(/href="tel:([^"]*)"/.exec(link)?.[1]).toMatch(/^\+\d+$/);
+    // The bare number is nowhere a link's text: it is read grouped.
+    expect(page).not.toMatch(/>\+40700000001</);
+    expect(page).toContain(">+40 700 000 001<");
+
+    // 44 pixels tall on a screen; on paper no height, no link's colour, no underline: the number as text.
+    const name = classOf(page, 'data-testid="plan-person-phone"');
+    const rules = rulesOf(page);
+    expect(rules).toMatch(new RegExp(`\\.${name}\\{[^}]*min-height:44px`));
+    expect(rules).toMatch(new RegExp(`@media print\\{\\.${name}\\{[^}]*min-height:0;[^}]*color:inherit;[^}]*text-decoration:none;`));
+  });
+
+  it("links to the points' own card in the editor, and makes the alert region focusable, with a margin above it (§NNN)", async () => {
+    const page = await streamed(await planElement());
+    // «Punctele de pe traseu, în editorul evenimentului»: the card «Puncte pe traseu», which the address opens — not the editor's top.
+    expect(page).toMatch(new RegExp(`<a[^>]*href="/ro/admin/events/${raceId}#box-checkpoints"[^>]*>${ro.Admin.volunteers.plan.editPoints}</a>`));
+    // Where a refused press lands: focusable, and clear of the page's top edge, as the other backoffice pages' regions are.
+    const region = /<div[^>]*id="admin-alert"[^>]*>/.exec(page)?.[0] ?? "";
+    expect(region).toContain('tabindex="-1"');
+    expect(rulesOf(page)).toMatch(new RegExp(`\\.${classOf(page, 'id="admin-alert"')}\\{[^}]*scroll-margin-top:16px`));
   });
 
   it("says so when everybody stands at a point, and when the event has no points yet", async () => {
@@ -407,20 +475,46 @@ describe("§949 the plan's page", () => {
     expect((await rowOf(people.ion)).checkpointId).toBe(points.water);
     expect(await press({ volunteerId: people.ion, checkpointId: "", at: points.water })).toBe(`/ro/admin/events/${raceId}/plan-voluntari#point-${points.water}`);
     expect((await rowOf(people.ion)).checkpointId).toBeNull();
+    // A press that finds the person already there went through too: back on its point, nothing in the address.
+    await press({ volunteerId: people.ion, checkpointId: points.water, at: points.water });
+    expect(await press({ volunteerId: people.ion, checkpointId: points.water, at: points.water })).toBe(`/ro/admin/events/${raceId}/plan-voluntari#point-${points.water}`);
+    // Ion has an address: neither press of the page told him anything (§NNN).
+    expect((await rowOf(people.ion)).email).toBe("ion.lupu@example.test");
+    expect(await db.select().from(emailOutbox)).toEqual([]);
+  });
 
-    // A refusal comes back with its code, and the page says it in words.
-    const refused = await press({ volunteerId: people.ion, checkpointId: points.elsewhere, at: points.water });
-    expect(refused).toBe(`/ro/admin/events/${raceId}/plan-voluntari?planError=NOT_FOUND#point-${points.water}`);
-    expect(await planPage({ planError: "NOT_FOUND" })).toContain(ro.Admin.errors.NOT_FOUND);
+  it("brings a refused press back to the page's alert, where its sentence is — never to a point's anchor (§NNN)", async () => {
+    const alert = (code: string) => `/ro/admin/events/${raceId}/plan-voluntari?planError=${code}#admin-alert`;
+
+    // Another event's point: not there. The code is in the address, and the page says it in words, in the alert region.
+    expect(await press({ volunteerId: people.ion, checkpointId: points.elsewhere, at: points.water })).toBe(alert("NOT_FOUND"));
+    const said = await planPage({ planError: "NOT_FOUND" });
+    expect(said).toMatch(new RegExp(`id="admin-alert"[^>]*>[\\s\\S]*?${ro.Admin.errors.NOT_FOUND}`));
     // A code that is no code says nothing.
     const forged = await planPage({ planError: "<script>" });
     expect(forged).not.toContain("&lt;script&gt;");
     expect(forged).not.toMatch(/MuiAlert-[a-z]*Error/);
 
+    // The point taken off the route while the page was open: its anchor matches nothing any more, so the alert it is.
+    await db.delete(eventCheckpoints).where(eq(eventCheckpoints.id, points.bridge));
+    expect(await press({ volunteerId: people.ion, checkpointId: points.bridge, at: points.bridge })).toBe(alert("NOT_FOUND"));
+
+    // The person cancelled while the page was open.
+    await db.update(eventVolunteers).set({ state: "CANCELLED" }).where(eq(eventVolunteers.id, people.ion));
+    expect(await press({ volunteerId: people.ion, checkpointId: points.water, at: points.water })).toBe(alert("VALIDATION_ERROR"));
+    expect((await rowOf(people.ion)).checkpointId).toBeNull();
+
     // The Tehnic role's press writes nothing.
     state.actor = staff.DEV;
-    expect(await press({ volunteerId: people.ion, checkpointId: points.water, at: points.water })).toContain("planError=FORBIDDEN");
-    expect((await rowOf(people.ion)).checkpointId).toBeNull();
+    expect(await press({ volunteerId: people.zoe, checkpointId: points.water, at: points.water })).toBe(alert("FORBIDDEN"));
+    expect((await rowOf(people.zoe)).checkpointId).toBeNull();
+    expect(await trail()).toHaveLength(0);
+
+    // Every code the action can come back with is a sentence in both languages: the alert never stays empty.
+    for (const code of ["NOT_FOUND", "VALIDATION_ERROR", "FORBIDDEN"] as const) {
+      expect(ro.Admin.errors[code], code).toBeTruthy();
+      expect(en.Admin.errors[code], code).toBeTruthy();
+    }
   });
 });
 
@@ -436,6 +530,20 @@ describe("§949 the «Voluntari» list says each person's point", () => {
     // A cancelled person keeps the point on the row and shows none.
     await db.update(eventVolunteers).set({ state: "CANCELLED" }).where(eq(eventVolunteers.id, people.ana));
     expect(await listPage()).not.toContain('data-testid="volunteer-point"');
+  });
+
+  it("says the column and the point in English to an English reader (§NNN)", async () => {
+    await place(staff.ADMIN!, people.ana, points.water);
+    state.locale = "en";
+    const page = await listPage();
+    // The column «Punct» is "Point", with its hint; the Romanian words are nowhere on the English list.
+    expect(page).toMatch(new RegExp(`<th[^>]*>(?:(?!</th>)[\\s\\S])*>${en.Admin.volunteers.plan.column}<`));
+    expect(page).toContain(en.Admin.volunteers.plan.columnHint.replace(/'/g, "&#x27;").replace(/"/g, "&quot;"));
+    expect(page).not.toContain(ro.Admin.volunteers.plan.columnHint);
+    // Ana's point by its English name, in the table and in her phone card; the button to the plan in English, on the English address.
+    expect(textOf(page, "volunteer-point")).toEqual(["2. Apă la cabană (en)", "2. Apă la cabană (en)"]);
+    expect(page).toContain(`href="/en/admin/events/${raceId}/plan-voluntari"`);
+    expect(page).toContain(en.Admin.volunteers.plan.open.replace(/'/g, "&#x27;"));
   });
 
   it("has no «Punct» column for an event with no points on its route", async () => {

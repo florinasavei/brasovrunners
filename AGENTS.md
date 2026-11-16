@@ -1112,7 +1112,7 @@ sees them as Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadmini
 ```text
 CONTRIBUTOR  the volunteer: the race-day desk and the guide, nothing else
 COPYWRITER   the words of any event and any page, at any status; submit a draft for review
-MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs; the messages; enter, import and rank a race's results (`canEnterResults`, §808)
+MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs — and tick the raffle on a registration, the one thing it changes there (`canSetRaffleMark`, §949); the messages; enter, import and rank a race's results (`canEnterResults`, §808)
 DEV          + the configuration report (/devs). No participant data — and, by §289, not the list either
 ADMIN        + every event (create, configure, publish, cancel, a series: `canEditEventFields`, §542), changing a registration, legal texts, emails, tasks, delete an event, make a race's results public (`canPublishResults`, §808)
 SUPERADMIN   + staff administration: the list itself, and every role on it
@@ -3262,10 +3262,13 @@ Beside those two, and like them a mark that changes nothing else: **«Participă
 §949; the owner: «o bifă importantă, și coloană peste tot de „participă la tombolă" și o setare per eveniment cum ar fi
 „avem tombolă" dar doar în backoffice vizibil»). An event that holds a raffle says so in its editor («Avem tombolă»,
 `events.has_raffle`, off by default, one edition's own: no series edit, copy or event file carries it, and no public
-column reads it). On such an event the registrations list — one event chosen — has a column «Tombolă»: one boolean
+column reads it) — ticked by an Administrator, whose save the event's is (§10.2, `canEditEventFields`); the Organizer
+reads it. On such an event the registrations list — one event chosen — has a column «Tombolă»: one boolean
 `in_raffle` on a registration, **on by default**, unticked or ticked again by whoever reads the registrations — the
-Organizer and the Administrators (`canReadRegistrations`, asserted by `setRegistrationRaffleAction` and
-`raffle-mark.ts#setRegistrationInRaffle`; the owner: «doar adminul și organizatorul pot bifa și vedea asta») — at any
+Organizer and the Administrators, by the tick's own predicate (`roles.ts#canSetRaffleMark`, `DECISIONS.md` §NNN: the
+readers' set, written as `canReadRegistrations` so the two move together, and named apart so the reading predicate
+authorizes no write; asserted by `setRegistrationRaffleAction` and `raffle-mark.ts#setRegistrationInRaffle`; the owner:
+«doar adminul și organizatorul pot bifa și vedea asta») — at any
 time and in any state, audited (`registration.raffle_included` / `registration.raffle_excluded`, the new value only).
 **It is the one thing the Organizer changes on a registration** (§289 gave the Organizer the list to read and nothing on
 it to change): the raffle is the organizers' own to run, and the tick moves nothing a registration owns. The «Voluntari» list has the same tick on a volunteer
@@ -3305,6 +3308,16 @@ never on both lists or on neither —
 A number never moves with the person: the runner's stays retired with the cancelled registration and the volunteer's
 with the cancelled row; each list draws its own. One audit row ties the two (`registration.became_volunteer`,
 `volunteer.became_runner`), ids only, beside each verb's own.
+
+**«Participă la tombolă» does move with the person** (2026-11-16, `DECISIONS.md` §NNN, amending §948 and §949):
+somebody an organizer took out of the event's raffle is out of it on the other list too — the
+new row would otherwise start in, the column's default, and a press that was about something else would put the person
+back on «Lista pentru tombolă». Each way through the tick's own writer, in the transform's transaction and with that
+writer's audit row: the volunteers' `setRaffle` for a runner who was out; `raffle-mark.ts#setRegistrationInRaffle` for
+the registration the entry wrote, which takes the volunteer's tick whichever it is — the entry may restart a
+registration of that person cancelled earlier, and that row keeps what it once held. Neither the allocator nor the staff
+entry reads the column (`raffle-never-leaves.test.ts`), which is why the transform says it and not the entry. Nobody is
+told, and nothing else of either row moves.
 
 ---
 

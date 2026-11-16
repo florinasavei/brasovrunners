@@ -11,6 +11,7 @@ import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { bibEventDate, findEventForBibs } from "@/modules/registrations/bibs";
+import { formatPhone } from "@/modules/registrations/phone";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { roleLabel } from "@/modules/volunteers/domain/volunteer";
@@ -32,6 +33,13 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /** What the paper leaves out: the links, the buttons and the boxes that build the plan. */
 const NOT_ON_PAPER = { "@media print": { display: "none" } } as const;
+
+/**
+ * A person's telephone number as the person's own page draws it (§NNN, amending §949): a `tel:` link 44 pixels tall, because
+ * an organizer rings from the plan with a thumb on the day (BR-REQ-041-01 criterion 6). On paper it is the number as text:
+ * no link's colour or underline, and no height that would space the sheet's lines.
+ */
+const PHONE_LINK_SX = { display: "inline-flex", alignItems: "center", ...TAP_TARGET, "@media print": { minHeight: 0, color: "inherit", textDecoration: "none" } } as const;
 
 /**
  * «Planul voluntarilor» (§949; the owner, 2026-11-16, with a map of the route and its seven points: «e foarte important sa
@@ -100,7 +108,10 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
         )}
         {person.phone && (
           <Typography component="span" variant="body2" sx={{ ml: 1, whiteSpace: "nowrap" }}>
-            <a href={`tel:${person.phone}`}>{person.phone}</a>
+            {/* Read grouped («+40 712 345 678», `formatPhone`); the link keeps the digits and the plus alone, which is what a telephone dials. */}
+            <Box component="a" href={`tel:${person.phone.replace(/[^\d+]/g, "")}`} sx={PHONE_LINK_SX} data-testid="plan-person-phone">
+              {formatPhone(person.phone)}
+            </Box>
           </Typography>
         )}
         <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "break-word" }}>
@@ -117,12 +128,14 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
           <Link href={{ pathname: "/admin/volunteers", query: { eventId: id } }}>{t("volunteers.plan.back")}</Link>
         </Typography>
         <Typography variant="body2">
-          <Link href={{ pathname: "/admin/events/[id]", params: { id } }}>{t("volunteers.plan.editPoints")}</Link>
+          {/* To the points' own card in the editor («Puncte pe traseu», `CheckpointsCard`'s `box-checkpoints`), which the address opens — not the editor's top. */}
+          <Link href={{ pathname: "/admin/events/[id]", params: { id }, hash: "box-checkpoints" }}>{t("volunteers.plan.editPoints")}</Link>
         </Typography>
       </Stack>
 
-      {/* Every backoffice page gives this id to its alert region; the Server Action redirects with the refusal's code. */}
-      <Box id="admin-alert" aria-live="polite" sx={NOT_ON_PAPER}>
+      {/* Every backoffice page gives this id to its alert region; the Server Action redirects a refusal here with its code (§NNN),
+          so the region can take the focus and stands clear of the page's top edge, as the other pages' regions do. */}
+      <Box id="admin-alert" tabIndex={-1} aria-live="polite" sx={{ scrollMarginTop: 16, ...NOT_ON_PAPER }}>
         {errorCode && <Alert severity="error">{t(`errors.${errorCode}`)}</Alert>}
       </Box>
 

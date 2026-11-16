@@ -2389,10 +2389,15 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     }
     return { changed: true, volunteer: { id: current.id, hasAddress: next.email !== null } };
   });
-  // «Are kit» is shown on no public page (§904): its press leaves the public cache as it was.
-  if (result.changed && request.kind !== "setKit") revalidatePublicContent("places");
+  // The organizers' own marks are shown on no public page — «Are kit» (§904), the point a person stands at on «Planul
+  // voluntarilor» and «Participă la tombolă» (§949) — so their presses leave the public cache as it was (§NNN): an expiry is
+  // a read that may wake the database, and no visitor would be shown anything new.
+  if (result.changed && !KINDS_NO_PUBLIC_PAGE_SHOWS.has(request.kind)) revalidatePublicContent("places");
   return result;
 }
+
+/** The presses that change nothing a public page reads: `changeVolunteer` expires no public cache for them. */
+const KINDS_NO_PUBLIC_PAGE_SHOWS: ReadonlySet<VolunteerRequest["kind"]> = new Set(["setKit", "setCheckpoint", "setRaffle"]);
 
 /**
  * The volunteers' export (§754), «Descarcă CSV»: the same rows the card lists, recorded as

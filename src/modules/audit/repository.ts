@@ -101,9 +101,10 @@ export type AuditAction =
   | "registration.elite_marked"
   | "registration.elite_unmarked"
   /**
-   * «Participă la tombolă» (§949): an Administrator took a registration off the raffle's list of its event, or put it back
-   * (`raffle-mark.ts`). The metadata is the new value alone (`{ inRaffle }`): the mark changes that list and nothing of the
-   * registration.
+   * «Participă la tombolă» (§949): the Organizer or an Administrator took a registration off the raffle's list of its event,
+   * or put it back (`raffle-mark.ts`; the row's actor says which of them) — or the tick travelled with a volunteer turned
+   * runner (§NNN, `volunteers/transform.ts`). The metadata is the new value alone (`{ inRaffle }`): the mark changes that
+   * list and nothing of the registration.
    */
   | "registration.raffle_included"
   | "registration.raffle_excluded"

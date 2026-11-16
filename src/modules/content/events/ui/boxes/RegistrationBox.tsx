@@ -807,9 +807,10 @@ export default async function RegistrationBox({
                         sx={{ width: { sm: 220 } }}
                       />
                       {event && <BoxNote>{t("editor.boxes.bibs.startChange")}</BoxNote>}
-                      {/* «Avem tombolă» (§949): the organizers' own switch, here because a raffle is drawn on the race numbers. It shows the
-                          «Tombolă» tick on the registrations' and the volunteers' lists; no public page reads it. The marker says the form
-                          carried the box, so an unticked one reads as "no raffle", not as "not edited". */}
+                      {/* «Avem tombolă» (§949): the club's internal switch, here because a raffle is drawn on the race numbers. Ticked by an
+                          Administrator — it is saved with the event, whose save is theirs (§542); the Organizer reads it. It shows the
+                          «Tombolă» tick on the registrations' and the volunteers' lists, which the Organizer presses too; no public page reads
+                          it. The marker says the form carried the box, so an unticked one reads as "no raffle", not as "not edited". */}
                       <input type="hidden" name="event.hasRaffle.present" value="1" />
                       <CheckboxField name="event.hasRaffle" defaultChecked={event?.hasRaffle ?? false} help={t("editor.hasRaffleHelp")}>
                         {t("editor.hasRaffle")}

@@ -4,7 +4,7 @@ import { registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canSetRaffleMark } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
@@ -18,12 +18,16 @@ import { isUuid } from "@/shared/ids";
   capacity formula reads it (`tests/unit/registrations/raffle-never-leaves.test.ts`). It is set at any time and in any state —
   only a confirmed registration with a number is written on the list, whatever the mark says.
 
-  Who may: whoever reads the registrations — the Organizer and the Administrators (`canReadRegistrations`), asserted here. The
+  Who may: whoever reads the registrations — the Organizer and the Administrators — asserted here by the tick's own predicate
+  (`canSetRaffleMark`, §NNN: the readers' set, named for this one write so the reading predicate authorizes none). The
   owner, the same day: «toată lumea poate participa la tombolă dar doar adminul și organizatorul pot bifa și vedea asta». It is
   the one thing the Organizer changes on a registration (§289 gave the Organizer the list to read and nothing on it to change):
   the club's own raffle is the organizers' to run, and the tick moves nothing a registration owns. Audited —
   `registration.raffle_included` / `registration.raffle_excluded`, the new value alone — and never public: the person is not
   told, and no page of the site says that a raffle is held.
+
+  The event's own switch, «Avem tombolă», is not pressed here and is not the Organizer's: it is a box of the event editor,
+  whose save is the Administrator's (`canEditEventFields`, §542). The Organizer reads it and works the column it shows.
 */
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -40,7 +44,7 @@ export async function eventHoldsRaffle<T extends Record<string, unknown>>(db: Da
  * second press is a no-op and writes no row.
  */
 export async function setRegistrationInRaffle<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, registrationId: string, inRaffle: boolean, now: Date): Promise<{ changed: boolean }> {
-  if (!canReadRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not change who is in the raffle`);
+  if (!canSetRaffleMark(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not change who is in the raffle`);
   if (!isUuid(registrationId)) throw new DomainError("NOT_FOUND", "no such registration");
 
   return db.transaction(async (tx) => {

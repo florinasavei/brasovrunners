@@ -1617,6 +1617,249 @@ describe("§757 the route's checkpoints travel in the file", () => {
   });
 });
 
+// --- «Planul voluntarilor» through an import (§NNN, amending §949) ----------------------------------
+
+type FilePoint = EventFile["event"]["route"]["checkpoints"][number];
+
+/** A point as an event's file writes one: no limit, on the chart, with the note given or none. */
+const filePoint = (km: number, ro: string, en: string, note: { ro: string; en: string } | null = null): FilePoint => ({
+  km,
+  name: { ro, en },
+  kinds: ["WATER"],
+  cutoffMinutes: null,
+  note: note ?? { ro: null, en: null },
+  onProfile: true,
+});
+
+/** A file made from `eventId`, its points replaced by `points`. */
+async function fileWithPoints(eventId: string, points: FilePoint[]): Promise<EventFile> {
+  const copy = JSON.parse(JSON.stringify(await fileOf(eventId))) as EventFile;
+  copy.event.route.checkpoints = points;
+  return copy;
+}
+
+/** A confirmed volunteer of the event standing at one of its points, as the plan's page leaves the row. */
+async function standing(eventId: string, name: string, pointId: string): Promise<string> {
+  const [row] = await db.insert(eventVolunteers).values({ eventId, name, state: "CONFIRMED", source: "STAFF", checkpointId: pointId }).returning({ id: eventVolunteers.id });
+  return row.id;
+}
+
+/** Where everybody of the event stands: the person's name → the row id of their point, or null for no point. */
+async function standingAt(eventId: string): Promise<Record<string, string | null>> {
+  const people = await db.select().from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId));
+  return Object.fromEntries(people.map((person) => [person.name, person.checkpointId]));
+}
+
+/** The event's points as their rows are, in the order the page reads them: the id, the place in the list and every value. */
+async function pointRows(eventId: string) {
+  const rows = await db.select().from(eventCheckpoints).where(eq(eventCheckpoints.eventId, eventId));
+  const order = (await listCheckpoints(db, eventId)).map((row) => row.id);
+  return order.map((id) => rows.find((row) => row.id === id)!).map((row) => ({
+    id: row.id,
+    position: row.position,
+    km: Number(row.km),
+    nameRo: row.nameRo,
+    nameEn: row.nameEn,
+    kinds: row.kinds,
+    cutoffMinutes: row.cutoffMinutes,
+    noteRo: row.noteRo,
+    noteEn: row.noteEn,
+    onProfile: row.onProfile,
+  }));
+}
+
+/** What an import wrote in the trail about the event's points: its rows' metadata, in order, the seed's own left out. */
+async function importTrail(eventId: string) {
+  const rows = await db.select().from(auditLogs).where(and(eq(auditLogs.action, "event_checkpoints.changed"), eq(auditLogs.entityId, eventId))).orderBy(asc(auditLogs.createdAt), asc(auditLogs.id));
+  return rows.map((row) => row.metadataJson as Record<string, unknown>).filter((metadata) => metadata.source === "import");
+}
+
+describe("§NNN an import over an event keeps «Planul voluntarilor» at every point the file still has", () => {
+  /** The source and the target, each with the seeded two points, and Ana at the hut, Dan at the timing mat of the target. */
+  async function plannedTarget() {
+    const { event } = await seedRace({}, {}, false);
+    await seedCheckpoints(event.id);
+    const { target } = await seedTarget();
+    await seedCheckpoints(target.id);
+    const [hut, timing] = await pointRows(target.id);
+    expect([hut.nameRo, timing.nameRo]).toEqual(["Apă la cabană", "Cronometrare"]);
+    await standing(target.id, "Ana Pop", hut.id);
+    await standing(target.id, "Dan Ene", timing.id);
+    return { sourceId: event.id, targetId: target.id, hut, timing };
+  }
+
+  it("keeps every placement when the file's points are the event's own, whatever else the file changes", async () => {
+    const { sourceId, targetId, hut, timing } = await plannedTarget();
+    const file = await fileOf(sourceId);
+    const diff = await diffEventImport(db, { actor: admin, file, eventId: targetId });
+    // The file changes the event — its places, its place — and not its points.
+    expect(diff.changes.length).toBeGreaterThan(0);
+    expect(diff.changes.map((change) => change.key)).not.toContain("route.checkpoints");
+
+    await importEventOver(db, await overInput(file, targetId));
+
+    expect((await reload(targetId)).capacity).toBe(100);
+    expect((await pointRows(targetId)).map((row) => row.id)).toEqual([hut.id, timing.id]);
+    expect(await standingAt(targetId)).toEqual({ "Ana Pop": hut.id, "Dan Ene": timing.id });
+    // The list was not written at all: nothing in the trail but the card's own save that seeded it.
+    expect(await importTrail(targetId)).toEqual([]);
+  });
+
+  it("keeps a point's people when the file changes what the point says — its English name, what it offers, its limit, its note, its tick — and writes the file's values", async () => {
+    const { sourceId, targetId, hut, timing } = await plannedTarget();
+    const file = JSON.parse(JSON.stringify(await fileOf(sourceId))) as EventFile;
+    Object.assign(file.event.route.checkpoints[0], { name: { ro: "Apă la cabană", en: "Water at the cabin" }, kinds: ["WATER", "FIRST_AID"], cutoffMinutes: 75, note: { ro: "Și ceai", en: "Tea too" }, onProfile: false });
+    const diff = await diffEventImport(db, { actor: admin, file, eventId: targetId });
+    expect(diff.changes.map((change) => change.key)).toContain("route.checkpoints");
+
+    await importEventOver(db, await overInput(file, targetId));
+
+    // The same two rows, by their ids: the hut's took every value the file has, the timing mat's is as it was.
+    expect(await pointRows(targetId)).toEqual([
+      { id: hut.id, position: 0, km: 7.5, nameRo: "Apă la cabană", nameEn: "Water at the cabin", kinds: ["WATER", "FIRST_AID"], cutoffMinutes: 75, noteRo: "Și ceai", noteEn: "Tea too", onProfile: false },
+      { id: timing.id, position: 1, km: 15, nameRo: "Cronometrare", nameEn: "Timing", kinds: ["TIMING", "REGROUP"], cutoffMinutes: 120, noteRo: "Așteptăm 5 minute", noteEn: "We wait 5 minutes", onProfile: true },
+    ]);
+    expect(await standingAt(targetId)).toEqual({ "Ana Pop": hut.id, "Dan Ene": timing.id });
+    // Nothing left to change: the list is not in the diff any more.
+    expect((await diffEventImport(db, { actor: admin, file, eventId: targetId })).changes.map((change) => change.key)).not.toContain("route.checkpoints");
+  });
+
+  it("frees only the people of a point the file renamed and moved: everybody else stays where they stood", async () => {
+    const { sourceId, targetId, hut, timing } = await plannedTarget();
+    const eva = await standing(targetId, "Eva Stan", hut.id);
+    const file = JSON.parse(JSON.stringify(await fileOf(sourceId))) as EventFile;
+    Object.assign(file.event.route.checkpoints[0], { km: 8, name: { ro: "Apă la refugiu", en: "Water at the refuge" } });
+
+    await importEventOver(db, await overInput(file, targetId));
+
+    const [refuge, mat] = await pointRows(targetId);
+    // The hut left, with both of its people; the refuge is a new point with nobody; the timing mat is the row it was.
+    expect([refuge.nameRo, refuge.km, mat.nameRo, mat.id]).toEqual(["Apă la refugiu", 8, "Cronometrare", timing.id]);
+    expect(refuge.id).not.toBe(hut.id);
+    expect(await db.select().from(eventCheckpoints).where(eq(eventCheckpoints.id, hut.id))).toEqual([]);
+    expect(await standingAt(targetId)).toEqual({ "Ana Pop": null, "Eva Stan": null, "Dan Ene": timing.id });
+    // Freed, not removed: the people are the event's volunteers as before, confirmed, to be placed again.
+    expect((await db.select().from(eventVolunteers).where(eq(eventVolunteers.id, eva)))[0]).toMatchObject({ name: "Eva Stan", state: "CONFIRMED", checkpointId: null });
+  });
+
+  it("takes a point only renamed, or only moved, for another point too: a file carries no id to say it is the same one", async () => {
+    const { sourceId, targetId, hut, timing } = await plannedTarget();
+    // Only renamed: the same kilometre under another Romanian name.
+    const renamed = JSON.parse(JSON.stringify(await fileOf(sourceId))) as EventFile;
+    renamed.event.route.checkpoints[0].name.ro = "Apă la refugiu";
+    await importEventOver(db, await overInput(renamed, targetId));
+    expect(await standingAt(targetId)).toEqual({ "Ana Pop": null, "Dan Ene": timing.id });
+    expect((await pointRows(targetId)).map((row) => [row.nameRo, row.id === hut.id, row.id === timing.id])).toEqual([
+      ["Apă la refugiu", false, false],
+      ["Cronometrare", false, true],
+    ]);
+
+    // Only moved: the same Romanian name at another kilometre.
+    const [, mat] = await pointRows(targetId);
+    const moved = JSON.parse(JSON.stringify(renamed)) as EventFile;
+    moved.event.route.checkpoints[1].km = 16;
+    await importEventOver(db, await overInput(moved, targetId));
+    expect(await standingAt(targetId)).toEqual({ "Ana Pop": null, "Dan Ene": null });
+    expect((await pointRows(targetId)).map((row) => [row.nameRo, row.km, row.id === mat.id])).toEqual([
+      ["Apă la refugiu", 7.5, false],
+      ["Cronometrare", 16, false],
+    ]);
+  });
+
+  it("matches two points of one name at one kilometre in the file's order, each to a row of its own and never both to one", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const { target } = await seedTarget();
+    // Two water tables at kilometre 5, one each side of the road, as the club typed them.
+    await importEventOver(db, await overInput(await fileWithPoints(event.id, [filePoint(5, "Apă", "Water", { ro: "Stânga", en: "Left" }), filePoint(5, "Apă", "Water", { ro: "Dreapta", en: "Right" })]), target.id));
+    const [left, right] = await pointRows(target.id);
+    expect([left.noteRo, right.noteRo]).toEqual(["Stânga", "Dreapta"]);
+    await standing(target.id, "Ana Pop", left.id);
+    await standing(target.id, "Dan Ene", right.id);
+
+    // The file says something else of each: the first is the first, the second the second.
+    await importEventOver(db, await overInput(await fileWithPoints(event.id, [filePoint(5, "Apă", "Water", { ro: "Unu", en: "One" }), filePoint(5, "Apă", "Water", { ro: "Doi", en: "Two" })]), target.id));
+    expect((await pointRows(target.id)).map((row) => [row.id, row.position, row.noteRo])).toEqual([
+      [left.id, 0, "Unu"],
+      [right.id, 1, "Doi"],
+    ]);
+    expect(await standingAt(target.id)).toEqual({ "Ana Pop": left.id, "Dan Ene": right.id });
+
+    // A third of the same name: a new point with nobody — never a second claim on a row somebody stands at.
+    await importEventOver(db, await overInput(await fileWithPoints(event.id, [filePoint(5, "Apă", "Water", { ro: "Unu", en: "One" }), filePoint(5, "Apă", "Water", { ro: "Doi", en: "Two" }), filePoint(5, "Apă", "Water", { ro: "Trei", en: "Three" })]), target.id));
+    const three = await pointRows(target.id);
+    expect(three.map((row) => [row.id === left.id, row.id === right.id, row.noteRo])).toEqual([
+      [true, false, "Unu"],
+      [false, true, "Doi"],
+      [false, false, "Trei"],
+    ]);
+    expect(new Set(three.map((row) => row.id)).size).toBe(3);
+    expect(await standingAt(target.id)).toEqual({ "Ana Pop": left.id, "Dan Ene": right.id });
+
+    // One left in the file: the first row stays with its person, the others leave and free theirs.
+    await importEventOver(db, await overInput(await fileWithPoints(event.id, [filePoint(5, "Apă", "Water", { ro: "Singurul", en: "The only one" })]), target.id));
+    expect((await pointRows(target.id)).map((row) => [row.id, row.noteRo])).toEqual([[left.id, "Singurul"]]);
+    expect(await standingAt(target.id)).toEqual({ "Ana Pop": left.id, "Dan Ene": null });
+  });
+
+  it("reads afterwards as a replaced list did: the file's order and values, the places renumbered, and the trail's one row naming the whole list before and after", async () => {
+    const { sourceId, targetId, hut, timing } = await plannedTarget();
+    expect(timing.position).toBe(1);
+    // The file keeps the timing mat, drops the hut and has three new points: two before the mat, one sharing its kilometre after it.
+    const file = await fileWithPoints(sourceId, [
+      filePoint(2, "Intersecție", "Junction"),
+      filePoint(9, "Apă la izvor", "Water at the spring", { ro: "Pahare", en: "Cups" }),
+      { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING"], cutoffMinutes: 110, note: { ro: null, en: null }, onProfile: true },
+      filePoint(15, "Apă la sosire", "Water at the finish"),
+    ]);
+    await importEventOver(db, await overInput(file, targetId));
+
+    const rows = await pointRows(targetId);
+    // By distance, a tie in the file's order; the places 0 to 3, the kept row's among them — exactly what deleting the list and inserting the file's wrote.
+    expect(rows.map(({ id, ...row }) => ({ ...row, kept: id === timing.id }))).toEqual([
+      { position: 0, km: 2, nameRo: "Intersecție", nameEn: "Junction", kinds: ["WATER"], cutoffMinutes: null, noteRo: null, noteEn: null, onProfile: true, kept: false },
+      { position: 1, km: 9, nameRo: "Apă la izvor", nameEn: "Water at the spring", kinds: ["WATER"], cutoffMinutes: null, noteRo: "Pahare", noteEn: "Cups", onProfile: true, kept: false },
+      { position: 2, km: 15, nameRo: "Cronometrare", nameEn: "Timing", kinds: ["TIMING"], cutoffMinutes: 110, noteRo: null, noteEn: null, onProfile: true, kept: true },
+      { position: 3, km: 15, nameRo: "Apă la sosire", nameEn: "Water at the finish", kinds: ["WATER"], cutoffMinutes: null, noteRo: null, noteEn: null, onProfile: true, kept: false },
+    ]);
+    expect(rows.map((row) => row.id)).not.toContain(hut.id);
+    expect(await standingAt(targetId)).toEqual({ "Ana Pop": null, "Dan Ene": timing.id });
+    // The export gives the file's list back, point for point, and the diff has nothing left to say of it.
+    expect((await fileOf(targetId)).event.route.checkpoints).toEqual(file.event.route.checkpoints);
+    expect((await diffEventImport(db, { actor: admin, file, eventId: targetId })).changes.map((change) => change.key)).not.toContain("route.checkpoints");
+
+    // The trail: one row, the import's, the event's list before and the file's after — counted as a whole list replaced, as it always was.
+    expect(await importTrail(targetId)).toEqual([
+      {
+        source: "import",
+        added: 4,
+        edited: 0,
+        removed: 2,
+        from: [
+          { km: 7.5, name: "Apă la cabană", cutoffMinutes: 60, onProfile: true },
+          { km: 15, name: "Cronometrare", cutoffMinutes: 120, onProfile: true },
+        ],
+        to: [
+          { km: 2, name: "Intersecție", cutoffMinutes: null, onProfile: true },
+          { km: 9, name: "Apă la izvor", cutoffMinutes: null, onProfile: true },
+          { km: 15, name: "Cronometrare", cutoffMinutes: 110, onProfile: true },
+          { km: 15, name: "Apă la sosire", cutoffMinutes: null, onProfile: true },
+        ],
+      },
+    ]);
+  });
+
+  it("frees everybody for a file with no points at all, as the diff says, and removes nobody", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const { target } = await seedTarget();
+    await seedCheckpoints(target.id);
+    const [hut] = await pointRows(target.id);
+    await standing(target.id, "Ana Pop", hut.id);
+    await importEventOver(db, await overInput(await fileOf(event.id), target.id));
+    expect(await listCheckpoints(db, target.id)).toEqual([]);
+    expect(await standingAt(target.id)).toEqual({ "Ana Pop": null });
+  });
+});
+
 // --- «Arată profilul traseului pe pagină» (§802, §805) ---------------------------------------------
 
 describe("§802 the event's tick «Arată profilul traseului pe pagină» travels in the file", () => {

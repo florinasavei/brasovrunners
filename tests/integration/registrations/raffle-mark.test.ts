@@ -12,7 +12,7 @@ import { setRegistrationInRaffle } from "@/modules/registrations/raffle-mark";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import { countOccupied } from "@/modules/registrations/repository";
-import { STAFF_ROLES, canManageVolunteers, canReadRegistrations, type StaffRole } from "@/modules/staff-identity/domain/roles";
+import { STAFF_ROLES, canManageVolunteers, canReadRegistrations, canSetRaffleMark, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -193,15 +193,17 @@ describe("§949 «Participă la tombolă» on a registration", () => {
     const ana = await runner("Ana Pop", "CONFIRMED", 12);
     for (const role of STAFF_ROLES) {
       const actor = await staff(role);
-      if (canReadRegistrations(role)) continue;
+      // The tick's own predicate (§NNN) — the readers of the list, role for role.
+      expect(canSetRaffleMark(role), role).toBe(canReadRegistrations(role));
+      if (canSetRaffleMark(role)) continue;
       expect((await failureOf(setRegistrationInRaffle(db, actor, ana, false, NOW))).code, role).toBe("FORBIDDEN");
     }
     expect(await inRaffleOf(ana)).toBe(true);
     expect(await trail()).toHaveLength(0);
 
     // The Organizer — who reads the list and changes nothing else on it (§289) — takes a person out and puts them back.
-    expect(canReadRegistrations("MODERATOR")).toBe(true);
-    expect(canReadRegistrations("DEV")).toBe(false);
+    expect(canSetRaffleMark("MODERATOR")).toBe(true);
+    expect(canSetRaffleMark("DEV")).toBe(false);
     const organizer = await staff("MODERATOR");
     expect(await setRegistrationInRaffle(db, organizer, ana, false, NOW)).toEqual({ changed: true });
     expect(await inRaffleOf(ana)).toBe(false);

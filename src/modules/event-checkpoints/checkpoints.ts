@@ -14,6 +14,7 @@ import {
   type CheckpointInput,
   checkpointContext,
   CheckpointRefusal,
+  matchCheckpointsToFile,
   type PostedCheckpoint,
   prepareCheckpoints,
   sortedByKm,
@@ -229,6 +230,19 @@ export async function copyCheckpoints<T extends Record<string, unknown>>(db: Dat
  * import over an event writes it where the diff showed the list as changed. The role is asserted here
  * too; one audit row names the list before and after, `source: "import"`. Nothing written, nothing
  * recorded, when the list is already the same.
+ *
+ * **A point the file still has keeps its row (§NNN, amending §949).** «Planul voluntarilor» places a volunteer
+ * at a point by the row's id — a reference a deleted point sets to null — and this used to delete every row
+ * and insert the file's: one imported file silently took every volunteer of the event off the plan, though the
+ * club moves events between its environments with these files. A file has no ids, so a point is known by what
+ * it says (`domain/checkpoint.ts#matchCheckpointsToFile`): the saved row of the same Romanian name at the same
+ * kilometre is updated in place — every other column the file's, its place in the list renumbered — as the
+ * editor's save keeps a row (`changeCheckpoints`); only a point the file no longer has is deleted, which frees
+ * its people, and only a point it adds is inserted. A point renamed or moved in the file is, to a file,
+ * another point: the old one leaves and its people stand at no point again. What the list reads as afterwards
+ * — the order, every value, the audit row — is what a delete and an insert left; a kept row keeps its own
+ * `created_at`, which orders nothing once every row is renumbered, and the retired `cutoff_time` nothing
+ * reads (§770).
  */
 export async function replaceCheckpoints<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -246,10 +260,11 @@ export async function replaceCheckpoints<T extends Record<string, unknown>>(
     const current = await listCheckpoints(tx, event.id);
     const wanted = sortedByKm(rows);
     if (current.length === wanted.length && wanted.every((row, at) => sameWords(row, current[at]))) return { changed: false };
-    await tx.delete(eventCheckpoints).where(eq(eventCheckpoints.eventId, event.id));
+    const { kept, left } = matchCheckpointsToFile(current, wanted);
+    // Only the points the file no longer has: the foreign key frees the people who stood at them, and at no other.
+    for (const row of left) await tx.delete(eventCheckpoints).where(and(eq(eventCheckpoints.id, row.id), eq(eventCheckpoints.eventId, event.id)));
     for (const [position, row] of wanted.entries()) {
-      await tx.insert(eventCheckpoints).values({
-        eventId: event.id,
+      const values = {
         position,
         nameRo: row.nameRo,
         nameEn: row.nameEn,
@@ -259,9 +274,12 @@ export async function replaceCheckpoints<T extends Record<string, unknown>>(
         noteRo: row.noteRo,
         noteEn: row.noteEn,
         onProfile: row.onProfile,
-        createdAt: now,
-      });
+      };
+      const existing = kept[position];
+      if (existing) await tx.update(eventCheckpoints).set(values).where(and(eq(eventCheckpoints.id, existing.id), eq(eventCheckpoints.eventId, event.id)));
+      else await tx.insert(eventCheckpoints).values({ ...values, eventId: event.id, createdAt: now });
     }
+    // The trail's row is the import's as it always was: the file's whole list in place of the event's, before and after.
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
       action: "event_checkpoints.changed" satisfies AuditAction,

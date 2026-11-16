@@ -3,6 +3,8 @@ import { renderToReadableStream } from "react-dom/server";
 import { createTranslator, NextIntlClientProvider } from "next-intl";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { auditLogs } from "@/db/schema/audit-logs";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventCheckpoints } from "@/db/schema/event-checkpoints";
 import { eventVolunteerRoleAssignments, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
@@ -19,6 +21,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * the house's one-press tick — a plain form posting the state it wants — which takes the volunteer off the raffle's list or puts
  * them back; an event that holds none draws no such column; and a person's data says when they were taken out (art. 15 GDPR).
  * The service's roles and trail are `tests/integration/registrations/raffle-mark.test.ts`. The harness is `plan.test.ts`'s.
+ *
+ * And what the review of 2026-11-16 asked of it (§NNN, amending §949): the press queues no email for a person who has an
+ * address, and the column is said in English too.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en", redirected: [] as string[] }));
 
@@ -180,7 +185,8 @@ async function html(page: ReactElement): Promise<string> {
   await stream.allReady;
   return (await new Response(stream).text()).replace(/<style[\s\S]*?<\/style>/g, "").replace(/<!-- -->/g, "");
 }
-const listPage = async (query: Record<string, string> = {}) => html(await AdminVolunteersPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve(query) }));
+/** The «Voluntari» list in the language `state.locale` says. */
+const listPage = async (query: Record<string, string> = {}) => html(await AdminVolunteersPage({ params: Promise.resolve({ locale: state.locale }), searchParams: Promise.resolve(query) }));
 /** The row forms of «Tombolă» on a page — `AdminTable` draws each row twice, the table and the phone cards — for one person. */
 const raffleFormsOf = (page: string, id: string) => [...page.matchAll(/<form[^>]*data-testid="volunteer-raffle-form"[\s\S]*?<\/form>/g)].map((match) => match[0]).filter((one) => one.includes(`value="${id}"`));
 
@@ -236,6 +242,42 @@ describe("§949 «Tombolă» on the «Voluntari» list", () => {
     state.actor = staff.DEV;
     expect(await press({ volunteerId: people.ana, inRaffle: "0" })).toBe("/ro/admin/volunteers?volunteerError=FORBIDDEN");
     expect((await rowOf(people.ana)).inRaffle).toBe(true);
+  });
+
+  it("tells nobody: taking out and putting back a person who has an address and a role queues no email (§NNN)", async () => {
+    await db.update(events).set({ hasRaffle: true }).where(eq(events.id, raceId));
+    // Everything an email to her would need: an address, a role given, confirmed.
+    expect(await rowOf(people.ana)).toMatchObject({ email: "ana.pop@example.test", state: "CONFIRMED" });
+    await press({ volunteerId: people.ana, inRaffle: "0" });
+    await press({ volunteerId: people.ana, inRaffle: "1" });
+    // Dan too, by an Administrator.
+    state.actor = staff.ADMIN;
+    await press({ volunteerId: people.dan, inRaffle: "0" });
+    // Three presses that changed something, each in the trail as an edit of the person's boxes…
+    const edits = (await db.select().from(auditLogs)).filter((row) => row.action === "volunteer.edited");
+    expect(edits.map((row) => (row.metadataJson as { fields: string[] }).fields)).toEqual([["inRaffle"], ["inRaffle"], ["inRaffle"]]);
+    // …and nothing in the outbox.
+    expect(await db.select().from(emailOutbox)).toEqual([]);
+  });
+
+  it("says the column and its tick in English to an English reader (§NNN)", async () => {
+    await db.update(events).set({ hasRaffle: true }).where(eq(events.id, raceId));
+    await db.update(eventVolunteers).set({ inRaffle: false }).where(eq(eventVolunteers.id, people.dan));
+    state.locale = "en";
+    const page = await listPage();
+    // The column «Tombolă» is "Raffle", with its hint; the Romanian words are nowhere on the English list.
+    expect(page).toMatch(new RegExp(`<th[^>]*>(?:(?!</th>)[\\s\\S])*>${en.Admin.volunteers.screen.columnRaffle}<`));
+    expect(page).toContain(en.Admin.volunteers.screen.raffleHint.replace(/'/g, "&#x27;").replace(/"/g, "&quot;"));
+    expect(page).not.toContain(ro.Admin.volunteers.screen.raffleHint);
+    expect(page).not.toContain(`${ro.Admin.volunteers.screen.raffleTick}: Ana Pop`);
+    // Ana's tick, ticked, named in English; Dan's, taken out, empty.
+    const ana = raffleFormsOf(page, people.ana);
+    expect(ana).toHaveLength(2);
+    for (const one of ana) {
+      expect(one).toContain(`${en.Admin.volunteers.screen.raffleTick}: Ana Pop`);
+      expect(one).toMatch(/aria-checked="true"/);
+    }
+    for (const one of raffleFormsOf(page, people.dan)) expect(one).toMatch(/aria-checked="false"/);
   });
 
   it("is among what is kept about the person when they ask for their data (art. 15 GDPR)", async () => {

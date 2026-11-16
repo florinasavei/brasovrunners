@@ -11,6 +11,7 @@ import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import { sexShown } from "@/modules/registrations/domain/sex";
 import { canTransition } from "@/modules/registrations/domain/state-machine";
 import { E164_PHONE } from "@/modules/registrations/phone";
+import { setRegistrationInRaffle } from "@/modules/registrations/raffle-mark";
 import { findRegistrationById, lockEventForCapacity } from "@/modules/registrations/repository";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -40,6 +41,12 @@ import { changeVolunteer } from "./volunteers";
   **The numbers** (§948): a number is never reissued and never moves. The runner's stays retired with the cancelled
   registration; as a volunteer the person draws one from the volunteers' own series, like every volunteer confirmed. The
   volunteer's stays retired with the cancelled row; as a runner the person draws theirs when they are confirmed.
+
+  **«Participă la tombolă» travels with the person** (§NNN, amending §948 and §949): somebody an organizer took out of the
+  event's raffle is out of it on the other list too — the new row would otherwise start in, the column's default, and the
+  person would be back on «Lista pentru tombolă» by a press that was about something else. Each way through the tick's own
+  writer (`changeVolunteer`'s `setRaffle`, `raffle-mark.ts`'s `setRegistrationInRaffle`), in the same transaction, so the
+  trail says it as it says every tick; nobody is told, and nothing else of either row moves.
 */
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -101,7 +108,8 @@ export type RunnerToVolunteerResult = {
  *    the person gave for the same event. Never their place on a public list, which is the person's own tick (§821). An
  *    address already on the event's volunteers is that entry's refusal (`VOLUNTEER_ALREADY_LISTED`): cancel the
  *    registration alone;
- * 3. the person is confirmed, which draws their number from the volunteers' series (§948);
+ * 3. the person is confirmed, which draws their number from the volunteers' series (§948) — and a runner an organizer had
+ *    taken out of the raffle is taken out as a volunteer too (§NNN), by the volunteers' own tick;
  * 4. the registration is cancelled by the staff verb (`cancelRegistrationByStaff`): through the allocator, with its own
  *    trail row — a printed bib named in it (§311);
  * 5. one row ties the two: `registration.became_volunteer`, ids only.
@@ -177,6 +185,11 @@ export async function turnRunnerIntoVolunteer<T extends Record<string, unknown>>
     const volunteerId = added.volunteer.id;
     // Confirmed in the same press: the Administrator who gives the role is the organizers' yes, and the number is drawn here.
     await changeVolunteer(tx, actor, { kind: "setState", eventId: registration.eventId, id: volunteerId, state: "CONFIRMED" }, now, { sendEmail: false });
+    // A runner taken out of the raffle is out of it as a volunteer too (§NNN): the row entered a moment ago holds the column's
+    // default — in — so only a runner who was out is written, by the volunteers' own tick and with its trail row.
+    if (!registration.inRaffle) {
+      await changeVolunteer(tx, actor, { kind: "setRaffle", eventId: registration.eventId, id: volunteerId, inRaffle: false }, now);
+    }
     await cancelRegistrationByStaff(tx, actor, registration.id, input.reason, now, { sendEmail });
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
@@ -216,13 +229,15 @@ export type VolunteerToRunnerResult = WaitlistEntryByStaffResult & { eventId: st
  * 2. the person is entered by the official waiting list's own entry (`enterOnWaitlistByStaff`, §872): the address vouched
  *    for, the row through the one allocator under this same lock — a counted free place with the declaration to sign, or
  *    the back of the line — in the language the club already writes to them in, with that state's ordinary email. Every
- *    refusal of that entry stands: after the start, a full line, this person already on the address;
+ *    refusal of that entry stands: after the start, a full line, this person already on the address. The registration
+ *    takes the volunteer's raffle tick (§NNN), by the registrations' own tick;
  * 3. the volunteer is cancelled by the volunteers' own verb — the row, its roles and its number stay, retired; the role
  *    email a press queued a moment ago is withdrawn at the send, as for any cancelled person;
  * 4. one row ties the two: `volunteer.became_runner`, ids only.
  *
  * Nothing of what the person told the organizers as a volunteer is copied onto the registration: its answers and its
- * declaration are the person's own, given from their link. Any refusal writes nothing.
+ * declaration are the person's own, given from their link — the raffle tick is the organizers' mark, no answer of the
+ * person's. Any refusal writes nothing.
  */
 export async function turnVolunteerIntoRunner<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -237,7 +252,7 @@ export async function turnVolunteerIntoRunner<T extends Record<string, unknown>>
     const event = await lockEventForCapacity(tx, input.eventId);
     if (!event) throw new DomainError("NOT_FOUND", "no such event");
     const [volunteer] = await tx
-      .select({ id: eventVolunteers.id, state: eventVolunteers.state, email: eventVolunteers.email, locale: eventVolunteers.locale })
+      .select({ id: eventVolunteers.id, state: eventVolunteers.state, email: eventVolunteers.email, locale: eventVolunteers.locale, inRaffle: eventVolunteers.inRaffle })
       .from(eventVolunteers)
       .where(and(eq(eventVolunteers.id, input.volunteerId), eq(eventVolunteers.eventId, input.eventId)))
       .for("update")
@@ -260,6 +275,11 @@ export async function turnVolunteerIntoRunner<T extends Record<string, unknown>>
       },
       now,
     );
+    // The volunteer's raffle tick is the registration's now (§NNN): out as a volunteer, out as a runner — and in again where
+    // the entry restarted a registration of this person that an organizer had once taken out. The entry itself names no
+    // raffle (neither the allocator nor the staff entry reads the column), so the registrations' own writer says it here:
+    // a row that already holds the value is left alone and no trail row is written.
+    await setRegistrationInRaffle(tx, actor, placed.registrationId, volunteer.inRaffle, now);
     await changeVolunteer(tx, actor, { kind: "setState", eventId: input.eventId, id: volunteer.id, state: "CANCELLED" }, now, { sendEmail: false });
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,

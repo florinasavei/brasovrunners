@@ -63,7 +63,7 @@ export async function exportRaffleList<T extends Record<string, unknown>>(db: Da
         eq(registrations.status, "CONFIRMED"),
         eq(registrations.kind, "REAL"),
         isNotNull(registrations.bibNumber),
-        // «Participă la tombolă» (§949): nobody an Administrator took out.
+        // «Participă la tombolă» (§949): nobody the Organizer or an Administrator took out.
         eq(registrations.inRaffle, true),
       ),
     );
