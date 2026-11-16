@@ -1,9 +1,11 @@
 import PDFDocument from "pdfkit";
 import sharp from "sharp";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { type BibDesign, bibEmergencyLine, DEFAULT_BIB_DESIGN, readBibDesign } from "@/modules/registrations/bib-design";
+import { isPhoneNumberShaped } from "@/modules/contact/domain/public-phone";
+import { BIB_EMERGENCY_NAME_MAX, type BibDesign, bibEmergencyLine, DEFAULT_BIB_DESIGN, readBibDesign } from "@/modules/registrations/bib-design";
 import { bibDesignSearchParams, type BibDesignFormValues, bibDesignValuesFromQuery } from "@/modules/registrations/bib-design-query";
-import { BIB_LAYOUT, bibExtrasHeight } from "@/modules/registrations/bib-geometry";
+import { bibFooterWidth } from "@/modules/registrations/bib-footer";
+import { BIB_LAYOUT, bibEmergencyFit, bibExtrasHeight } from "@/modules/registrations/bib-geometry";
 import { renderBibImage } from "@/modules/registrations/bib-image";
 import { type BibProfileDrawing, bibProfileDrawing, bibProfileFigures } from "@/modules/registrations/bib-profile";
 import { ELEVATION_MAX_POINTS, parseGpxElevation } from "@/modules/routes/elevation/parse";
@@ -63,8 +65,35 @@ describe("§750 the design's new keys", () => {
     expect(readBibDesign({ emergencyPhone: "  0722   000 000 " }).emergencyPhone).toBe("0722 000 000");
     expect(readBibDesign({ emergencyPhone: "+40 722 000 000" }).emergencyPhone).toBe("+40 722 000 000");
     expect(readBibDesign({ emergencyPhone: "call the organizers" }).emergencyPhone).toBe("");
-    expect(readBibDesign({ emergencyPhone: "123" }).emergencyPhone).toBe("");
     expect(readBibDesign({ emergencyPhone: "0".repeat(40) }).emergencyPhone).toBe("");
+  });
+
+  it("takes a short emergency number too — «112» is a number here (§NNN) — and nothing shorter", () => {
+    // Until §NNN the floor was the public phone's six digits, and «112» read as no number at all.
+    for (const key of ["emergencyPhone", "emergencyPhone2", "emergencyPhone3"] as const) {
+      expect(readBibDesign({ [key]: "112" })[key], key).toBe("112");
+      expect(readBibDesign({ [key]: " 0-SALVAMONT " })[key], key).toBe("");
+      expect(readBibDesign({ [key]: "12" })[key], key).toBe("");
+      expect(readBibDesign({ [key]: "1 1" })[key], key).toBe("");
+    }
+    // The club's public phone keeps its own floor: three digits are no telephone number of a club.
+    expect(isPhoneNumberShaped("112")).toBe(false);
+    expect(isPhoneNumberShaped("112", 3)).toBe(true);
+  });
+
+  it("prints up to three numbers on the line, each with its name, in their order (§NNN)", () => {
+    const three = { showEmergency: true, emergencyLabel: "Telefoane", emergencyPhoneLabel: "Organizator", emergencyPhone: "0700 000 001", emergencyPhone2Label: "Salvamont", emergencyPhone2: "0700 000 002", emergencyPhone3Label: "Urgență", emergencyPhone3: "112" };
+    expect(bibEmergencyLine(three, "Urgențe")).toBe("Telefoane: Organizator 0700 000 001 / Salvamont 0700 000 002 / Urgență 112");
+    // The third alone prints alone, and a design saved before it prints as it did.
+    expect(bibEmergencyLine({ showEmergency: true, emergencyPhone: "", emergencyPhone3: "112" }, "Urgențe")).toBe("Urgențe: 112");
+    expect(bibEmergencyLine({ showEmergency: true, emergencyPhone: "0700 000 001", emergencyPhone2: "0700 000 002" }, "Urgențe")).toBe("Urgențe: 0700 000 001 / 0700 000 002");
+    expect(readBibDesign({ showEmergency: true, emergencyPhone: "0700 000 001" })).toMatchObject({ emergencyPhone3: "", emergencyPhone3Label: "" });
+    // Its name is cut like the two others', and what is no number reads as none.
+    expect(readBibDesign({ emergencyPhone3Label: "x".repeat(60) }).emergencyPhone3Label).toHaveLength(BIB_EMERGENCY_NAME_MAX);
+    expect(readBibDesign({ emergencyPhone3: "call 112" }).emergencyPhone3).toBe("");
+    // The three fit the number's width at the line's own size: nothing is shrunk past reading or cut.
+    const line = bibEmergencyLine(three, "Urgențe")!;
+    expect(bibEmergencyFit(line, bibFooterWidth)).toEqual({ text: line, size: BIB_LAYOUT.emergencySize });
   });
 
   it("says the line only while ticked and typed", () => {

@@ -101,6 +101,8 @@ export type BibDesignFormValues = {
   emergencyPhoneLabel: string;
   emergencyPhone2: string;
   emergencyPhone2Label: string;
+  emergencyPhone3: string;
+  emergencyPhone3Label: string;
   /** «Tipărit invers», «Distanța pe număr» and «Numărul și pe capete» (§750). */
   emergencyUpsideDown: boolean;
   showDistance: boolean;
@@ -166,7 +168,16 @@ const CROPS = [
   ["sponsorImageCrop", "sponsorImageSrc"],
 ] as const;
 /** Free text: absent from the address when empty, so the platform's design has no such key. */
-const TEXTS = ["footerText", "emergencyPhone", "emergencyLabel", "emergencyPhoneLabel", "emergencyPhone2", "emergencyPhone2Label"] as const;
+const TEXTS = [
+  "footerText",
+  "emergencyPhone",
+  "emergencyLabel",
+  "emergencyPhoneLabel",
+  "emergencyPhone2",
+  "emergencyPhone2Label",
+  "emergencyPhone3",
+  "emergencyPhone3Label",
+] as const;
 
 /**
  * The panel's boxes as the browser would post them, read through one `get`.
@@ -215,6 +226,8 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     emergencyPhoneLabel: field("emergencyPhoneLabel") ?? "",
     emergencyPhone2: field("emergencyPhone2") ?? "",
     emergencyPhone2Label: field("emergencyPhone2Label") ?? "",
+    emergencyPhone3: field("emergencyPhone3") ?? "",
+    emergencyPhone3Label: field("emergencyPhone3Label") ?? "",
     emergencyUpsideDown: field("emergencyUpsideDown") === "on",
     showDistance: field("showDistance") === "on",
     numberStubs: field("numberStubs") === "on",

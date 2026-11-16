@@ -178,7 +178,7 @@ describe("§249 the bib's design, saved and read back", () => {
     // Nor the elite bibs' two ticks (§895): off, the name alone.
     const footerKeys = [
       "showEmail", "showPartners", "showEventInFooter", "showWebsite", "footerText", "headerImageCrop", "sponsorImageCrop", "member", "numberFormat", "sponsorPlace", "showProfile", "showEmergency", "emergencyPhone", "emergencyUpsideDown", "showDistance", "numberStubs", "showCheckpoints", "showCheckpointTimes", "showProfileScale",
-      "profileSource", "profileImageSrc", "showProfileFigures", "profileFiguresPlace", "profileOrientation", "emergencyLabel", "emergencyPhoneLabel", "emergencyPhone2", "emergencyPhone2Label",
+      "profileSource", "profileImageSrc", "showProfileFigures", "profileFiguresPlace", "profileOrientation", "emergencyLabel", "emergencyPhoneLabel", "emergencyPhone2", "emergencyPhone2Label", "emergencyPhone3", "emergencyPhone3Label",
       "eliteNumber", "eliteSponsors",
     ];
     const before = Object.fromEntries(

@@ -3197,10 +3197,10 @@
         "showCheckpointTimesHelp": "Ticked: beside each point, the time it closes too, “km 12 · 11:30”. If not every time fits, none is printed; then the kilometres that do not fit go. The marks always stay.",
         "showCheckpointsNone": "The event has no points on the route: add them in “The course” › “Points on the route”.",
         "showEmergency": "Emergency phone",
-        "showEmergencyHelp": "Ticked: every number carries a small line with the label and one or two phones. Type the organizers' numbers, never a participant's.",
+        "showEmergencyHelp": "Ticked: every number carries a small line with the label and up to three phones. Type the organizers' numbers, never a participant's.",
         "emergencyPhone": "The organizers' phone",
         "emergencyPhonePlaceholder": "07xx xxx xxx",
-        "emergencyPhoneHelp": "Printed on every number, worn in public. Digits, spaces, brackets, dots, dashes and a leading +, six to fifteen digits; anything else prints nothing.",
+        "emergencyPhoneHelp": "Printed on every number, worn in public. Digits, spaces, brackets, dots, dashes and a leading +, three to fifteen digits; anything else prints nothing.",
         "emergencyUpsideDown": "Printed upside down",
         "emergencyUpsideDownHelp": "Ticked: the phone is turned half a circle, so the runner reads it looking down at the chest. Unticked: it reads the right way up for everyone else.",
         "showDistance": "The distance on the number",
@@ -3350,7 +3350,11 @@
         "emergencyPhoneLabelHelp": "Optional, at most {max} characters: a name or a role, “Coordinator” for example.",
         "emergencyPhone2": "A second phone (optional)",
         "emergencyPhone2Help": "On the same line, after the first, with a “/” between. Checked like the first.",
-        "emergencyPhone2Label": "Name beside the second phone"
+        "emergencyPhone2Label": "Name beside the second phone",
+        "emergencyPhone3": "A third phone (optional)",
+        "emergencyPhone3Help": "On the same line, after the second. It may be a short number too, 112 for example.",
+        "emergencyPhone3Placeholder": "112",
+        "emergencyPhone3Label": "Name beside the third phone"
       },
       "bibColour": "Colour of the race numbers (BIB)",
       "bibColourHelp": "The band across the top of the printed number, the one carrying the club's logo and the race. “The club's colour” unless you want a specific one.",
@@ -10192,7 +10196,9 @@
             "emergencyLabel": "Bib: phone label",
             "emergencyPhoneLabel": "Bib: first phone's name",
             "emergencyPhone2": "Bib: second phone",
-            "emergencyPhone2Label": "Bib: second phone's name"
+            "emergencyPhone2Label": "Bib: second phone's name",
+            "emergencyPhone3": "Bib: third phone",
+            "emergencyPhone3Label": "Bib: third phone's name"
           }
         },
         "translations": {

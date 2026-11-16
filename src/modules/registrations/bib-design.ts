@@ -294,13 +294,20 @@ export type BibSponsorPlace = (typeof BIB_SPONSOR_PLACES)[number];
 export const BIB_EMERGENCY_PHONE_MAX = 30;
 
 /**
+ * The fewest digits a number on the bib may have (§NNN; the owner, 2026-11-16, of the three numbers a trail race prints:
+ * «Organizator…, Salvamont…, Urgenta: 112»): three, so the emergency number itself can be one of them. It was six, the
+ * public phone's floor, and «112» read as no number at all.
+ */
+export const BIB_EMERGENCY_MIN_DIGITS = 3;
+
+/**
  * The emergency phone as the bib keeps it (§750): trimmed, runs of spaces made one, and only a value
  * written like a telephone number (`isPhoneNumberShaped`, the check «Telefon public» applies) — anything
  * else reads as none, never a bib that fails to print, like every field here.
  */
 export function bibEmergencyPhone(value: string): string {
   const typed = value.trim().replace(/\s+/g, " ");
-  return typed.length <= BIB_EMERGENCY_PHONE_MAX && isPhoneNumberShaped(typed) ? typed : "";
+  return typed.length <= BIB_EMERGENCY_PHONE_MAX && isPhoneNumberShaped(typed, BIB_EMERGENCY_MIN_DIGITS) ? typed : "";
 }
 
 /**
@@ -316,14 +323,14 @@ export const BIB_EMERGENCY_NAME_MAX = 24;
 
 /** The emergency line's words as the design keeps them (§759). Absent keys read as none: a design saved before them prints as it did. */
 type BibEmergencyDesign = Pick<BibDesign, "showEmergency" | "emergencyPhone"> &
-  Partial<Pick<BibDesign, "emergencyLabel" | "emergencyPhoneLabel" | "emergencyPhone2" | "emergencyPhone2Label">>;
+  Partial<Pick<BibDesign, "emergencyLabel" | "emergencyPhoneLabel" | "emergencyPhone2" | "emergencyPhone2Label" | "emergencyPhone3" | "emergencyPhone3Label">>;
 
 /**
  * The line printed on every number (§750, amending it §759): «Urgențe: 07xx xxx xxx», or with the club's
- * label and two numbers, each with its own name, «Urgențe: Coordonator 07xx xxx xxx / Medic 07yy yyy yyy» — on
- * one line, as the owner's trail example prints it. `fallback` is the sheet's language's word, used when
- * the club typed no label. Null while the tick is off or no valid number was typed; a second number alone
- * prints alone. The club's organizers' numbers, typed here: never a participant's own emergency contact,
+ * label and up to three numbers (the third since §NNN), each with its own name, «Urgențe: Coordonator 07xx xxx xxx /
+ * Salvamont 07yy yyy yyy / Urgență 112» — on one line, as the owner's trail example prints it. `fallback` is the
+ * sheet's language's word, used when the club typed no label. Null while the tick is off or no valid number was
+ * typed; the numbers typed print in their order, whichever boxes hold them. The club's organizers' numbers, typed here: never a participant's own emergency contact,
  * which is personal data on a visible bib that the privacy notice does not describe.
  */
 export function bibEmergencyLine(design: BibEmergencyDesign, fallback: string): string | null {
@@ -332,6 +339,7 @@ export function bibEmergencyLine(design: BibEmergencyDesign, fallback: string): 
     [
       [design.emergencyPhoneLabel ?? "", design.emergencyPhone],
       [design.emergencyPhone2Label ?? "", design.emergencyPhone2 ?? ""],
+      [design.emergencyPhone3Label ?? "", design.emergencyPhone3 ?? ""],
     ] as const
   )
     .filter(([, phone]) => phone !== "")
@@ -491,6 +499,9 @@ export const bibDesignSchema = z
     /** A second number (§759), checked as the first is, with its own label; empty prints one number. */
     emergencyPhone2: z.string().transform(bibEmergencyPhone).catch(""),
     emergencyPhone2Label: emergencyName,
+    /** A third number (§NNN), checked as the others are, with its own label — «Urgență 112» beside the organizers' and the mountain rescue's. */
+    emergencyPhone3: z.string().transform(bibEmergencyPhone).catch(""),
+    emergencyPhone3Label: emergencyName,
     /** «Tipărit invers» (§750): the phone printed upside down, to be read looking down at the chest; on by default, the trail practice. */
     emergencyUpsideDown: z.boolean().catch(true),
     /** «Distanța pe număr» (§750): the event's distance as a badge in the header's right corner («21K»). */
@@ -552,6 +563,8 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   emergencyPhoneLabel: "",
   emergencyPhone2: "",
   emergencyPhone2Label: "",
+  emergencyPhone3: "",
+  emergencyPhone3Label: "",
   emergencyUpsideDown: true,
   showDistance: false,
   numberStubs: false,

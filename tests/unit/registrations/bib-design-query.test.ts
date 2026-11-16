@@ -69,6 +69,9 @@ const EVERYTHING_OFF: BibDesign = {
   emergencyPhoneLabel: "Coordonator",
   emergencyPhone2: "0700 000 002",
   emergencyPhone2Label: "Medic + cort",
+  // A third number, a short one, with its name (§NNN).
+  emergencyPhone3: "112",
+  emergencyPhone3Label: "Urgență",
   // The trail practice off, the badge and the stubs on: each the other way from its default (§750).
   emergencyUpsideDown: false,
   showDistance: true,
@@ -321,6 +324,8 @@ describe("§249 the form, read the same way for the save and for the preview", (
       emergencyPhoneLabel: "",
       emergencyPhone2: "",
       emergencyPhone2Label: "",
+      emergencyPhone3: "",
+      emergencyPhone3Label: "",
       // An unposted box is an unticked one: no upside-down phone, no badge, no stubs (§750).
       emergencyUpsideDown: false,
       showDistance: false,

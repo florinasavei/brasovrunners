@@ -140,6 +140,8 @@ describe("§759 the bib designer in named sections", () => {
         "event.bibDesign.emergencyPhone",
         "event.bibDesign.emergencyPhone2Label",
         "event.bibDesign.emergencyPhone2",
+        "event.bibDesign.emergencyPhone3Label",
+        "event.bibDesign.emergencyPhone3",
         "event.bibDesign.emergencyUpsideDown",
       ],
       members: ["event.bibDesign.member.enabled", "event.bibDesign.member.style", "event.bibDesign.member.label", "event.bibDesign.member.mark", "event.bibDesign.member.markShape"],

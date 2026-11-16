@@ -214,6 +214,8 @@ export const FIELD_LABELS = [
   "bib.design.emergencyPhoneLabel",
   "bib.design.emergencyPhone2",
   "bib.design.emergencyPhone2Label",
+  "bib.design.emergencyPhone3",
+  "bib.design.emergencyPhone3Label",
   "bib.design.emergencyUpsideDown",
   "bib.design.numberStubs",
   "bib.design.sponsorPlace",
