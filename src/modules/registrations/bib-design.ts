@@ -453,6 +453,16 @@ export const bibDesignSchema = z
     sponsorImageCrop: storedCrop,
     /** Solid guide rules at each end of the cut line, for a club that takes the sheet to a printer. */
     cutMarks: z.boolean().catch(false),
+    /**
+     * «Fără linia punctată pe tăietură» (§NNN; the owner, 2026-11-16: «cand decupez vreau sa arate mai frumos» — asked
+     * what, «BIB-urile tăiate din A4»): the two-up sheet draws no dashed line across the page's middle, so no piece of it
+     * stays on a number's edge after the cut — least of all on a band that starts at the cut (`bandBleed`). The short solid
+     * marks at the two ends of the cut are drawn instead, `cutMarks`' own, whether or not that tick is on: a sheet with
+     * nothing at the cut cannot be cut straight. Off by default — a design saved before this key existed prints the dashed
+     * line it always printed. Only the sheet reads it (`bibs-pdf.ts#drawCut`): the picture of one number draws no cut, and
+     * the one-per-page sheet (§79) has none.
+     */
+    hideCutLine: z.boolean().catch(false),
     /*
       The footer, the club's to compose (§317; `bib-footer.ts` lays it out). Every default is
       the footer every bib printed before this — the partners, then the club's mailbox — so a
@@ -571,6 +581,7 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   headerImageCrop: null,
   sponsorImageCrop: null,
   cutMarks: false,
+  hideCutLine: false,
   showEmail: true,
   showPartners: true,
   showEventInFooter: false,

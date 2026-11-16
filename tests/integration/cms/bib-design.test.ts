@@ -177,11 +177,13 @@ describe("§249 the bib's design, saved and read back", () => {
     // Nor where the figures stand (§804, amended): the strip's right.
     // Nor the elite bibs' two ticks (§895): off, the name alone.
     // Nor the name's size and the band to the paper's edge (§947): the name at its size, the band inside the margin.
+    // Nor «Fără linia punctată pe tăietură» (§NNN): the dashed line every sheet of two printed.
     const footerKeys = [
       "showEmail", "showPartners", "showEventInFooter", "showWebsite", "footerText", "headerImageCrop", "sponsorImageCrop", "member", "numberFormat", "sponsorPlace", "showProfile", "showEmergency", "emergencyPhone", "emergencyUpsideDown", "showDistance", "numberStubs", "showCheckpoints", "showCheckpointTimes", "showProfileScale",
       "profileSource", "profileImageSrc", "showProfileFigures", "profileFiguresPlace", "profileOrientation", "emergencyLabel", "emergencyPhoneLabel", "emergencyPhone2", "emergencyPhone2Label", "emergencyPhone3", "emergencyPhone3Label",
       "eliteNumber", "eliteSponsors",
       "nameScale", "bandBleed",
+      "hideCutLine",
     ];
     const before = Object.fromEntries(
       Object.entries({ ...DEFAULT_BIB_DESIGN, numberScale: "large" }).filter(([key]) => !footerKeys.includes(key)),
@@ -189,6 +191,27 @@ describe("§249 the bib's design, saved and read back", () => {
     expect(Object.keys(before)).toHaveLength(9);
     await db.update(events).set({ bibDesign: before }).where(eq(events.id, event.id));
     expect((await findEventForBibs(db, event.id, "ro"))?.design).toEqual({ ...DEFAULT_BIB_DESIGN, numberScale: "large" });
+  });
+
+  /**
+   * §NNN — «Fără linia punctată pe tăietură» rides in the same column, saved by the same form: the tick the sheet's
+   * route reads is the one the panel posted, with the cut marks' tick or without it, and unticking it is kept too.
+   */
+  it("§NNN stores «Fără linia punctată pe tăietură», apart from the cut marks' tick, and the sheet's route reads it", async () => {
+    const event = await existingEvent();
+    const ticked = { ...DEFAULT_BIB_DESIGN, hideCutLine: true };
+    const saved = await saveEventFields(db, { actor: admin, eventId: event.id, expectedVersion: event.version, fields: { ...EVENT_FIELDS, bibDesign: ticked } });
+    const read = (await findEventForBibs(db, event.id, "ro"))?.design;
+    expect(read).toEqual(ticked);
+    expect(read).toMatchObject({ hideCutLine: true, cutMarks: false });
+    // The stored row says it in the column's own JSON, beside the cut marks.
+    const [row] = await db.select().from(events).where(eq(events.id, event.id));
+    expect(row.bibDesign).toMatchObject({ hideCutLine: true, cutMarks: false });
+
+    // Unticked again, with the cut marks ticked: each tick is its own.
+    const unticked = { ...DEFAULT_BIB_DESIGN, hideCutLine: false, cutMarks: true };
+    await saveEventFields(db, { actor: admin, eventId: event.id, expectedVersion: saved.version, fields: { ...EVENT_FIELDS, bibDesign: unticked } });
+    expect((await findEventForBibs(db, event.id, "ro"))?.design).toMatchObject({ hideCutLine: false, cutMarks: true });
   });
 
   /**
