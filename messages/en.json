@@ -6353,6 +6353,17 @@
         "eventLine": "Volunteer at {event} · {when}",
         "excelAll": "Download Excel: every event"
       },
+      "decision": {
+        "column": "Race-day decision",
+        "label": "Decision for race day",
+        "hint": "What the organizers decided for this person on race day: “comes at 8:00 to the start”, “reserve”. Only the organizers see it; the person is not told.",
+        "write": "Write the decision",
+        "change": "Change the decision",
+        "dialog": "Decision for race day: {name}",
+        "help": "Write in short what was decided for this person on race day. Internal: the person is not told. Leave it empty to clear the decision.",
+        "limit": "At most {max} characters. A new line is saved as a space.",
+        "value": "Decision for race day: {decision}"
+      },
       "plan": {
         "title": "The volunteers' plan",
         "open": "The volunteers' plan",
@@ -14166,6 +14177,8 @@
       "volunteerUnchanged": "It was already so; nothing to change.",
       "volunteerKitOn": "Ticked: has a kit. Counted under “With a kit”.",
       "volunteerKitOff": "Cleared: no kit any more.",
+      "volunteerDecisionSaved": "The decision for race day was saved. Nothing was sent to anybody.",
+      "volunteerDecisionCleared": "The decision for race day was cleared. Nothing was sent to anybody.",
       "volunteerRaffleOn": "In the raffle: back on the raffle's list.",
       "volunteerRaffleOff": "No longer in the raffle: not on the raffle's list.",
       "volunteerPlaced": "Placed at the point: on the volunteers' plan.",
