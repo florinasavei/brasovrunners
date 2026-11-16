@@ -15,7 +15,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN, BR-REQ-080-02 — «Trimite fiecăruia punctul lui» writes to nobody twice, and its memory is the outbox's own rows:
+ * §956, BR-REQ-080-02 — «Trimite fiecăruia punctul lui» writes to nobody twice, and its memory is the outbox's own rows:
  * `alreadyTold` is the whole rule, pure, over one person's `VOLUNTEER_POINT` rows. Told is a message that reached them, or
  * the newest one still waiting to leave, naming the point they stand at now at the address their row holds now. Not told is
  * everything else — and above all a message that failed, was refused by the receiving server, or was withdrawn at the send
@@ -32,7 +32,7 @@ const ADDRESS = "ana.pop@example.test";
 const person = { checkpointId: A, canonicalEmail: ADDRESS };
 const row = (over: Partial<PointMailRow> = {}): PointMailRow => ({ checkpointId: A, round: 1, status: "SENT", recipientEmail: ADDRESS, ...over });
 
-describe("§NNN whether a volunteer was already told the point they stand at", () => {
+describe("§956 whether a volunteer was already told the point they stand at", () => {
   it("is not told with no message at all — never queued, or the one queued was withdrawn at the send and deleted", () => {
     expect(alreadyTold(person, [])).toBe(false);
   });
@@ -101,7 +101,7 @@ describe("§NNN whether a volunteer was already told the point they stand at", (
   });
 });
 
-describe("§NNN `VOLUNTEER_POINT`: a message type classed like the role's own", () => {
+describe("§956 `VOLUNTEER_POINT`: a message type classed like the role's own", () => {
   it("is a value of the enum, takes the role message's road and audience, and is waited for by nobody on a page", () => {
     expect(emailMessageType.enumValues).toContain("VOLUNTEER_POINT");
     expect(isRelayMessage("VOLUNTEER_POINT")).toBe(false);
@@ -197,7 +197,7 @@ describe("§NNN `VOLUNTEER_POINT`: a message type classed like the role's own", 
   });
 });
 
-describe("§NNN the outbox key of one telling", () => {
+describe("§956 the outbox key of one telling", () => {
   it("is one key a person, a point and a telling: the unique key keeps it one row", () => {
     expect(volunteerPointKey("v1", "p1", 1)).toBe("volunteer-point:v1:p1:1");
     const keys = [volunteerPointKey("v1", "p1", 1), volunteerPointKey("v1", "p1", 2), volunteerPointKey("v1", "p2", 1), volunteerPointKey("v2", "p1", 1)];

@@ -24,7 +24,7 @@ import { listVolunteers, type VolunteerItem } from "./volunteers";
   Who is on it: every volunteer of the event who is not cancelled — a cancelled person keeps the point they had, in case they
   come back, and is simply not on the plan. Nothing here is the person's own answer: the plan is the organizers', and no public
   page or badge reads it. One email says a person their own point, and only at an organizer's press: «Trimite fiecăruia punctul
-  lui» (§NNN, `point-mail.ts`). Placing, moving or taking somebody off writes to nobody.
+  lui» (§956, `point-mail.ts`). Placing, moving or taking somebody off writes to nobody.
 
   Read by whoever works the volunteers (`canManageVolunteers`: the Organizer and the Administrators), asserted here
   (BR-REQ-060-01) as on the «Voluntari» list, whose names and telephone numbers these are; placing somebody is
@@ -38,7 +38,7 @@ import { listVolunteers, type VolunteerItem } from "./volunteers";
   points drawn on it — and it lives with the plan: one stored picture an event (`events.volunteer_plan_media_asset_id`),
   uploaded on the plan's page, drawn above the points and printed with them. This file reads it (`readVolunteerPlan`) and is
   the one writer of the column (`setVolunteerPlanPicture`); `media/references.ts` counts it, so the sweep never takes it.
-  «Trimite fiecăruia punctul lui» (§NNN, `point-mail.ts`) sends it to the volunteers placed at a point: the message reads the
+  «Trimite fiecăruia punctul lui» (§956, `point-mail.ts`) sends it to the volunteers placed at a point: the message reads the
   picture from here as it leaves (`readVolunteerPlanPicture`), so nobody but this file names the column.
 */
 
@@ -118,7 +118,7 @@ function planPictureOfEvent(event: NonNullable<Awaited<ReturnType<typeof eventWi
 }
 
 /**
- * The plan's picture alone, for the one message that carries it (§NNN, `point-mail.ts#volunteerPointAtSend`): read as the
+ * The plan's picture alone, for the one message that carries it (§956, `point-mail.ts#volunteerPointAtSend`): read as the
  * email leaves, so a picture changed or taken off since the press is the one sent — or none. No role is asked here: the
  * caller is the outbox's renderer, with nobody signed in; who may queue that message is asked where it is queued
  * (`sendVolunteerPoints`). Null for an event that is not there, has no picture, or where no store is configured.

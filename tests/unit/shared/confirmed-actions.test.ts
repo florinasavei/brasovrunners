@@ -163,7 +163,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   setVolunteerStateAction: [],
   // «Șterge poza» on «Planul voluntarilor» (§952): the plan's picture taken off, asked first — only uploading it again brings it back.
   removePlanPictureAction: [],
-  // «Trimite fiecăruia punctul lui» on «Planul voluntarilor» (§NNN): one email to every placed volunteer, asked first —
+  // «Trimite fiecăruia punctul lui» on «Planul voluntarilor» (§956): one email to every placed volunteer, asked first —
   // the question counts who is written to, who already knows their point, who has no address and who has no point.
   sendVolunteerPointsAction: [],
   // Legal.

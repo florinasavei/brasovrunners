@@ -698,7 +698,7 @@ describe("§952 the plan's page draws the picture", () => {
   it("is in English for an English reader", async () => {
     const stored = await storedPicture();
     state.locale = "en";
-    // As the markup carries an apostrophe and a quotation mark — the help names the button that sends the picture (§NNN).
+    // As the markup carries an apostrophe and a quotation mark — the help names the button that sends the picture (§956).
     const escaped = (text: string) => text.replace(/'/g, "&#x27;").replace(/"/g, "&quot;");
 
     const bare = await planPage();

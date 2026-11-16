@@ -326,7 +326,7 @@ export default function ActionFormIsland({
   const [asking, setAsking] = useState<{ spec: ConfirmSpec; submitter: HTMLElement | null } | null>(null);
   // «Trimite emailul»'s fields (slice 4): drawn below as hidden `on`, so a press posts the field whichever question it met.
   const optOutFields = useMemo(() => emailOptOutFields(confirm), [confirm]);
-  // The questions' optional boxes (§NNN, `ConfirmSpec.option`): each a hidden input the page drew empty, answered `on` or empty.
+  // The questions' optional boxes (§956, `ConfirmSpec.option`): each a hidden input the page drew empty, answered `on` or empty.
   const optionalFields = useMemo(() => optionFields(confirm), [confirm]);
   // The one submit that follows a "yes": let it through, then ask again next time.
   const confirmed = useRef(false);
@@ -342,7 +342,7 @@ export default function ActionFormIsland({
     const element = event.currentTarget;
     const submitter = ((event.nativeEvent as SubmitEvent).submitter ?? null) as HTMLElement | null;
     // A press let through unasked sends the person's email (slice 4): no earlier question's untick rides along —
-    // and it is the narrower press (§NNN): no earlier question's optional tick rides along either.
+    // and it is the narrower press (§956): no earlier question's optional tick rides along either.
     const unasked = () => {
       for (const field of optOutFields) {
         const input = element.elements.namedItem(field);
@@ -416,7 +416,7 @@ export default function ActionFormIsland({
     for (const field of optOutFields) write(field, "on");
     const optedOut = emailOptOutAnswer(pending.spec, given.emailOff);
     if (optedOut) write(optedOut.field, optedOut.value);
-    // The question's optional box (§NNN): every such field of this form back to empty, then this question's answer —
+    // The question's optional box (§956): every such field of this form back to empty, then this question's answer —
     // `on` only when the reader ticked it and confirmed, so an earlier press's tick never widens this one.
     for (const field of optionalFields) write(field, "");
     const optional = optionAnswer(pending.spec, which === "confirm" && given.optionOn);

@@ -173,7 +173,7 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     // The question's day in words, each half in its own language (§823); the page sets the club's days over it (`emailSampleDeadlines`).
     rsvpAskDay: sample.rsvpAskDay,
     rsvpAskDayOther: other.rsvpAskDay,
-    // «Punctul tău de voluntar» (§NNN): a made-up point of the made-up race with its note, both languages — read only by
+    // «Punctul tău de voluntar» (§956): a made-up point of the made-up race with its note, both languages — read only by
     // that message's template, which is its point and no field of the closed set. No picture: none of the club's own here.
     volunteerPoint: {
       number: EMAIL_SAMPLE_PLAN_POINT.number,
@@ -404,7 +404,7 @@ const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
   "VOLUNTEER_AGREEMENT_ACCEPTED",
   // The role given to a volunteer (§761): the same.
   "VOLUNTEER_ROLE_ASSIGNED",
-  // The point a volunteer stands at (§NNN): the same.
+  // The point a volunteer stands at (§956): the same.
   "VOLUNTEER_POINT",
   // The guardian's link (§768): the same.
   "VOLUNTEER_GUARDIAN_REQUEST",

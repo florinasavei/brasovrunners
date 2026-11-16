@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0210_volunteer_point_email` (§NNN; the owner, 2026-11-16: «…si sa ii pot distribui din aplicatie, sa stie exact
+ * Migration `0210_volunteer_point_email` (§956; the owner, 2026-11-16: «…si sa ii pot distribui din aplicatie, sa stie exact
  * unde si cum» — «Email din site, la apăsarea ta»), proven on real PostgreSQL (PGlite): `VOLUNTEER_POINT` becomes a message
  * type — the last value of the enum, every earlier one where it was — so the outbox takes the message «Trimite fiecăruia
  * punctul lui» queues, and a row queued by the release before reads as it did. Nothing else: no table and no column — which

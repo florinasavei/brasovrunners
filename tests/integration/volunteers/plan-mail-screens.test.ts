@@ -21,7 +21,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { type PlanRace, seedPlanRace } from "../../helpers/volunteer-plan";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-060-01 — «Trimite fiecăruia punctul lui» on the page of «Planul voluntarilor», and its Server
+ * §956, BR-REQ-050-02, BR-REQ-060-01 — «Trimite fiecăruia punctul lui» on the page of «Planul voluntarilor», and its Server
  * Action, from a real database:
  *
  * - the page states the four numbers the service counted — who is written to, who already knows their point, who stands at a
@@ -203,7 +203,7 @@ async function press(fields: Record<string, string> = {}): Promise<string> {
 const toasted = () => state.flashed.map((value) => decodeFlash(value));
 const back = () => `/ro/admin/events/${race.raceId}/plan-voluntari#plan-mail`;
 
-describe("§NNN the plan's page: «Trimite fiecăruia punctul lui» and its four numbers", () => {
+describe("§956 the plan's page: «Trimite fiecăruia punctul lui» and its four numbers", () => {
   it("states the numbers beside the button and in the question, with the email that leaves and to how many", async () => {
     const page = await planPage();
     const section = sectionOf(page);
@@ -361,7 +361,7 @@ describe("§NNN the plan's page: «Trimite fiecăruia punctul lui» and its four
   });
 });
 
-describe("§NNN the press: `sendVolunteerPointsAction`", () => {
+describe("§956 the press: `sendVolunteerPointsAction`", () => {
   it("queues the messages, comes back to the plan at its section, and says how many were queued and how many people have no address", async () => {
     expect(await press()).toBe(back());
     // Asked at the action's own door, by name; the service reached once, with the box as posted.

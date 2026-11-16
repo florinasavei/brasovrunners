@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
  * The picture of «Planul voluntarilor» (§952, BR-REQ-060-01) — the organizers' own drawing of the plan stays with the plan: the
  * column that holds it (`events.volunteer_plan_media_asset_id`) is read by the plan and counted by the pictures' reference check,
  * and by nothing else. Never a public query or the public cache, never a series' scope, a copy or the event's file. It leaves
- * by one road, at an organizer's press: «Trimite fiecăruia punctul lui» (§NNN) shows it in the email each placed volunteer
+ * by one road, at an organizer's press: «Trimite fiecăruia punctul lui» (§956) shows it in the email each placed volunteer
  * gets about their own point — read through the plan's own function (`readVolunteerPlanPicture`), so even that message's
  * files never name the column. The structural half of that promise, as `plan-never-leaves.test.ts` beside it holds the
  * point's: no file outside the list below so much as names the column, so a later join or a helpful new column cannot quietly
@@ -100,7 +100,7 @@ describe("§952 the plan's picture stays with the plan", () => {
   });
 
   it("leaves by one road: the plan's own read of the picture alone is called by the point's email, and by nothing else", () => {
-    // «Trimite fiecăruia punctul lui» (§NNN): the message reads the picture as it leaves, through the plan — the one
+    // «Trimite fiecăruia punctul lui» (§956): the message reads the picture as it leaves, through the plan — the one
     // function that hands the picture to anything but the plan's page, with one caller.
     const callers = all.filter((file) => /\breadVolunteerPlanPicture\b/.test(readFileSync(file, "utf8"))).map(relative);
     expect(callers.sort()).toEqual(["src/modules/volunteers/plan.ts", "src/modules/volunteers/point-mail.ts"]);

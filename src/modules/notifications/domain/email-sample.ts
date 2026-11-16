@@ -300,7 +300,7 @@ export const EMAIL_SAMPLE_FAMILY_CONFIRMED = [
 ] as const;
 
 /**
- * «Punctul tău de voluntar» (§NNN), as `/admin/emails` previews it: the made-up race's third point with its note — so the
+ * «Punctul tău de voluntar» (§956), as `/admin/emails` previews it: the made-up race's third point with its note — so the
  * preview shows the band that names the point and the line the message adds under it, around the club's words. Machinery
  * lines of the message, never fields of the closed set: no club text can hold them, and the save has nothing of them to
  * refuse. No role, as no volunteer's preview has one (the message says nothing about roles then), and no picture: a

@@ -102,7 +102,7 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   VOLUNTEER_AGREEMENT_REQUEST: ["eventTitle"],
   VOLUNTEER_AGREEMENT_ACCEPTED: ["eventTitle"],
   VOLUNTEER_ROLE_ASSIGNED: ["eventTitle"],
-  // «Trimite fiecăruia punctul lui» (§NNN): the event; the point, the roles and the plan's picture are the platform's own lines.
+  // «Trimite fiecăruia punctul lui» (§956): the event; the point, the roles and the plan's picture are the platform's own lines.
   VOLUNTEER_POINT: ["eventTitle"],
   VOLUNTEER_GUARDIAN_REQUEST: ["eventTitle"],
   // The club's invitation to volunteer (§820): the event; the roles and the club's line are the platform's own lines.

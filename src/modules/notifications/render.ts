@@ -396,7 +396,7 @@ async function renderRow(
     row.messageType === "VOLUNTEER_ROLE_ASSIGNED" ||
     row.messageType === "VOLUNTEER_GUARDIAN_REQUEST" ||
     row.messageType === "VOLUNTEER_INVITATION" ||
-    // «Punctul tău» (§NNN): about a volunteer's point of the event's route, nobody's registration.
+    // «Punctul tău» (§956): about a volunteer's point of the event's route, nobody's registration.
     row.messageType === "VOLUNTEER_POINT" ||
     // The Administrators' places alert (§906): about an event's places, nobody's registration.
     row.messageType === "PLACES_ALERT" ||
@@ -1049,7 +1049,7 @@ async function renderRow(
     row.messageType === "VOLUNTEER_AGREEMENT_ACCEPTED" ||
     row.messageType === "VOLUNTEER_ROLE_ASSIGNED" ||
     row.messageType === "VOLUNTEER_GUARDIAN_REQUEST" ||
-    // «Punctul tău» (§NNN): the same person, roles and contact as the role's message, read the same way.
+    // «Punctul tău» (§956): the same person, roles and contact as the role's message, read the same way.
     row.messageType === "VOLUNTEER_POINT"
   ) {
     const payload = row.payloadJson as { volunteerId?: unknown; roleIds?: unknown } | null;
@@ -1157,7 +1157,7 @@ async function renderRow(
       throw new OutboxMessageWithdrawn("the volunteer's address changed since the role was given");
     }
     /*
-      «Punctul tău» (§NNN, «Trimite fiecăruia punctul lui» on «Planul voluntarilor»): the state at the send, not at the press.
+      «Punctul tău» (§956, «Trimite fiecăruia punctul lui» on «Planul voluntarilor»): the state at the send, not at the press.
       A person cancelled or deleted, or left with no address, was withdrawn above; an address corrected since is withdrawn
       here, as the role's message is — the next press writes to the right one. The point itself is read by the module that
       queued the message (`volunteers/point-mail.ts`), which withdraws it when the person stands at no point or at another

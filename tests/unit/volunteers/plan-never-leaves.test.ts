@@ -6,7 +6,7 @@ import { importsModule } from "../../helpers/module-imports";
 /**
  * «Planul voluntarilor» (§949, BR-REQ-060-01) — the point of the route a volunteer stands at is the organizers' own planning: it
  * reaches the plan's page, the «Voluntari» list's column and «Toate datele unei persoane» (art. 15) — and, since «Trimite
- * fiecăruia punctul lui» (§NNN), the one email an organizer's press sends each placed volunteer about their own point
+ * fiecăruia punctul lui» (§956), the one email an organizer's press sends each placed volunteer about their own point
  * (`VOLUNTEER_POINT`). Nothing else: never the public volunteers' list, never another email, never a badge, never the
  * volunteers' files. The structural half of that promise, as `volunteer-notes-never-leave.test.ts` holds the notes': no file
  * outside the list below so much as names the column, the plan's module or its words — nor the two names the point's email
@@ -53,7 +53,7 @@ const READERS = new Set(
     // «Toate datele unei persoane» (art. 15): the point's name, and the line that draws it.
     "src/modules/registrations/person-data.ts",
     "src/modules/volunteers/ui/VolunteerAnswers.tsx",
-    // «Trimite fiecăruia punctul lui» (§NNN): who stands where and who was already told it, counted and queued at the press;
+    // «Trimite fiecăruia punctul lui» (§956): who stands where and who was already told it, counted and queued at the press;
     // and the point as it stands when the message leaves, or the message withdrawn.
     "src/modules/volunteers/point-mail.ts",
     // The renderer: hands that point to the template for the one message type, and withdraws the message on a corrected address.
@@ -76,7 +76,7 @@ function sourceFiles(dir: string, acc: string[] = []): string[] {
 
 const read = (file: string) => readFileSync(path.join(ROOT, file), "utf8");
 
-describe("§949 a volunteer's point stays with the organizers — and leaves by one email alone (§NNN)", () => {
+describe("§949 a volunteer's point stays with the organizers — and leaves by one email alone (§956)", () => {
   const naming = sourceFiles(SRC).filter((file) => namesThePoint(file, readFileSync(file, "utf8")));
 
   it("is named only by the files reviewed to read it", () => {

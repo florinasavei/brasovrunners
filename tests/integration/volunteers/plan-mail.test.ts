@@ -22,7 +22,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { PLAN_CONTACT_WORDS, PLAN_JUNCTION_NOTE, type PlanRace, planAddressOf, planVolunteer, seedPlanRace } from "../../helpers/volunteer-plan";
 
 /**
- * §NNN, BR-REQ-080-02, BR-REQ-060-01, BR-REQ-050-02 — «Trimite fiecăruia punctul lui» (the owner, 2026-11-16, with a picture
+ * §956, BR-REQ-080-02, BR-REQ-060-01, BR-REQ-050-02 — «Trimite fiecăruia punctul lui» (the owner, 2026-11-16, with a picture
  * of Saturday's route and its volunteers' points on it: «…si sa ii pot distribui din aplicatie, sa stie exact unde si cum» —
  * and, asked how, «Email din site, la apăsarea ta»), from a real database:
  *
@@ -126,7 +126,7 @@ async function storedPicture(width = 2400, height = 1600) {
 
 const ADDRESS = { ana: planAddressOf("Ana Pop"), dan: planAddressOf("Dan Ene"), ion: planAddressOf("Ion Lupu"), radu: planAddressOf("Radu Liber"), eva: planAddressOf("Eva Stan"), mara: planAddressOf("Mara Dinu") };
 
-describe("§NNN «Trimite fiecăruia punctul lui»: who is written to", () => {
+describe("§956 «Trimite fiecăruia punctul lui»: who is written to", () => {
   it("queues one message for each person at a point who has an address, in the language of their own row — and for nobody else", async () => {
     const sent = await press(staff.MODERATOR!);
     expect(sent).toEqual({ toWrite: 3, told: 0, noAddress: 1, unplaced: 1, queued: 3, again: false });
@@ -221,7 +221,7 @@ describe("§NNN «Trimite fiecăruia punctul lui»: who is written to", () => {
   });
 });
 
-describe("§NNN the four numbers of the question are the press's own count", () => {
+describe("§956 the four numbers of the question are the press's own count", () => {
   it("counts who is written to, who was already told, who has no address and who stands at no point — before and after a press", async () => {
     const before = await preview();
     expect(before).toEqual({ toWrite: 3, told: 0, noAddress: 1, unplaced: 1 });
@@ -235,7 +235,7 @@ describe("§NNN the four numbers of the question are the press's own count", () 
   });
 });
 
-describe("§NNN not twice: the memory is the outbox's own rows", () => {
+describe("§956 not twice: the memory is the outbox's own rows", () => {
   it("queues nothing on a second press, and says why: everybody at a point was already told", async () => {
     await press(staff.MODERATOR!);
     await expect(press(staff.ADMIN!, { now: at(1) })).rejects.toMatchObject({ code: "VOLUNTEER_POINTS_ALL_TOLD" });
@@ -370,7 +370,7 @@ describe("§NNN not twice: the memory is the outbox's own rows", () => {
   });
 });
 
-describe("§NNN the trail of a press", () => {
+describe("§956 the trail of a press", () => {
   it("is one row a press: the event, the counts and whether «din nou tuturor» — never a person", async () => {
     await press(staff.MODERATOR!);
     await press(staff.ADMIN!, { again: true, now: at(1) });
@@ -386,7 +386,7 @@ describe("§NNN the trail of a press", () => {
   });
 });
 
-describe("§NNN the message «Punctul tău de voluntar»", () => {
+describe("§956 the message «Punctul tău de voluntar»", () => {
   const eventUrl = (locale: "ro" | "en") => `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: race.slug[locale] } } })}`;
   const halves = (text: string) => text.split("\n— — —\n");
 
@@ -566,7 +566,7 @@ describe("§NNN the message «Punctul tău de voluntar»", () => {
   });
 });
 
-describe("§NNN the state at the send, not at the press: the message is withdrawn", () => {
+describe("§956 the state at the send, not at the press: the message is withdrawn", () => {
   const withdrawn = async (row: OutboxRow, reason: RegExp) => {
     const failure = await render(row).then(
       () => null,
@@ -656,7 +656,7 @@ describe("§NNN the state at the send, not at the press: the message is withdraw
   });
 });
 
-describe("§NNN nobody is told by being placed, moved or taken off", () => {
+describe("§956 nobody is told by being placed, moved or taken off", () => {
   it("queues no email for «Pune aici», for a move or for «Scoate» — before a press and after one", async () => {
     const extra = await planVolunteer(db, { eventId: race.raceId, name: "Paul Nou", phone: "+40700000077" }, NOW);
     await place(extra, race.points.bridge);

@@ -86,7 +86,7 @@ const NOT_WAITED_FOR: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>(
   "VOLUNTEER_AGREEMENT_ACCEPTED",
   // The role given (§761): it leaves at an organizer's press, to somebody on no page.
   "VOLUNTEER_ROLE_ASSIGNED",
-  // The point given (§NNN): the same — «Trimite fiecăruia punctul lui» is an organizer's press, and its readers are on no page.
+  // The point given (§956): the same — «Trimite fiecăruia punctul lui» is an organizer's press, and its readers are on no page.
   "VOLUNTEER_POINT",
   // The guardian's link (§768): the sign-up's page says the parent is emailed, but the volunteer's own offer is already kept — nobody on a page waits to act.
   "VOLUNTEER_GUARDIAN_REQUEST",

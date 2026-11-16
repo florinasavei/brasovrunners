@@ -5,7 +5,7 @@ import { cancelDialog, confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01 — «Trimite fiecăruia punctul lui» on «Planul voluntarilor» (the owner,
+ * §956, BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01 — «Trimite fiecăruia punctul lui» on «Planul voluntarilor» (the owner,
  * 2026-11-16: «…si sa ii pot distribui din aplicatie, sa stie exact unde si cum» — «Email din site, la apăsarea ta»).
  *
  * What only a browser can see, and the unit and PGlite tests cannot: the press is a form behind the one confirmation dialog,
@@ -237,7 +237,7 @@ async function openPlanAndTellTheTwo(page: Page, seeded: Awaited<ReturnType<type
 /** The rows a later press queued: everything on the event that the first press did not. */
 const queuedSince = async (eventId: string, firstPress: string | null) => (await pointMails(eventId)).filter((row) => row.pressId !== firstPress);
 
-test.describe("§NNN «Trimite fiecăruia punctul lui» on «Planul voluntarilor»", () => {
+test.describe("§956 «Trimite fiecăruia punctul lui» on «Planul voluntarilor»", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("the Organizer tells the two placed volunteers their points, places a third and — ticking «Trimite din nou tuturor» in the question — writes to all three", async ({

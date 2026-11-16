@@ -67,7 +67,7 @@ export type DomainErrorCode =
   | "VOLUNTEER_NO_EMAIL"
   // The guardian's link or paper record while the privacy notice and the agreement in force do not both describe minors (§768).
   | "VOLUNTEER_MINORS_CLOSED"
-  // «Trimite fiecăruia punctul lui» with nobody to write to (§NNN): no volunteer with an address stands at a point of the route…
+  // «Trimite fiecăruia punctul lui» with nobody to write to (§956): no volunteer with an address stands at a point of the route…
   | "VOLUNTEER_POINTS_NOBODY"
   // …or every one who does was already told the point they stand at, and the press did not ask to write to everybody again.
   | "VOLUNTEER_POINTS_ALL_TOLD"

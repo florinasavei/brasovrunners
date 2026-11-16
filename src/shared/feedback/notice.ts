@@ -107,7 +107,7 @@ const SENTENCES: Readonly<Record<string, { count?: string; values?: Readonly<Rec
   sparesReserved: { count: "count", values: { from: "from", to: "to" } },
   // A send of invitations that added supplementary places (§647): how many invited, and the capacity now.
   invitationsSentRaised: { count: "count", values: { capacity: "capacity" } },
-  // «Trimite fiecăruia punctul lui» with people at a point who have no address (§NNN): how many messages, and how many such people.
+  // «Trimite fiecăruia punctul lui» with people at a point who have no address (§956): how many messages, and how many such people.
   planPointsSentSomeWithout: { count: "queued", values: { noAddress: "noAddress" } },
 };
 
@@ -423,7 +423,7 @@ export type ConfirmSpec = {
    */
   emailOptOut?: ConfirmEmailOptOut;
   /**
-   * A box the reader may tick in the dialog (§NNN): «Trimite din nou tuturor» in the question of «Trimite fiecăruia
+   * A box the reader may tick in the dialog (§956): «Trimite din nou tuturor» in the question of «Trimite fiecăruia
    * punctul lui» — a wider press than the one the question opened with. Unticked whenever a question opens. Ticked, the
    * dialog reads as `ticked` words it (`withOption`: its body, its lines, its bold email line, its quieter lines) and the confirm
    * writes `on` into the form's hidden `field`; unticked it writes the field empty, so a tick from an earlier press never
@@ -437,7 +437,7 @@ export type ConfirmSpec = {
 export type ConfirmOption = { field: string; label: string; ticked: Partial<Pick<ConfirmSpec, "body" | "lines" | "email" | "also">> };
 
 /**
- * The dialog as it reads with its optional box ticked (§NNN): the body, the lines under it, the email line and the quieter
+ * The dialog as it reads with its optional box ticked (§956): the body, the lines under it, the email line and the quieter
  * lines `ticked` names take the place of the question's own; what it does not name stays. The spec unchanged while
  * unticked, or without the box. Pure, like `withEmailOff`.
  */

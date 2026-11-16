@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.50-2026-11-16 -->
+<!-- PROJECT_BASELINE: BR-V4.51-2026-11-16 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.50-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.51-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -3500,7 +3500,7 @@ REGISTRATION_ADDRESS_ADDED
 VOLUNTEER_POINT
 ```
 
-`VOLUNTEER_POINT` (§NNN; «Trimite fiecăruia punctul lui» on «Planul voluntarilor», §17) is queued by
+`VOLUNTEER_POINT` (§956; «Trimite fiecăruia punctul lui» on «Planul voluntarilor», §17) is queued by
 `volunteers/point-mail.ts#sendVolunteerPoints` alone — at an organizer's press (`canManageVolunteers`, asked by
 the action and again by the service), in that press's transaction, under the event row's lock: one message for
 each volunteer of the event who stands at one of its points, is not cancelled and has an address, in the
@@ -3887,7 +3887,7 @@ the map with the points on it — and lives with the plan:
   names the column, and `tests/unit/volunteers/plan-picture-never-leaves.test.ts` still holds the same list of files
   that may; a new reader is a reviewed edit of that list. As for every stored picture, the object itself is public
   behind an unguessable key (§66), and the pictures page shows it to the roles that read that page.
-- **«Trimite fiecăruia punctul lui»** (`DECISIONS.md` §NNN; the second half of the owner's sentence — and, asked how,
+- **«Trimite fiecăruia punctul lui»** (`DECISIONS.md` §956; the second half of the owner's sentence — and, asked how,
   «Email din site, la apăsarea ta»). One press on the plan's page emails each placed volunteer their own point, what
   they do there and the plan's picture: `VOLUNTEER_POINT`, whose rule — who is written to, how the outbox's own rows
   remember who was told, what is withdrawn at the send — is §16.3 (`modules/volunteers/point-mail.ts`). The page states

@@ -23,7 +23,7 @@ export type MailAudience =
   | "memberAddresses"
   | "firstWaiting"
   | "held"
-  // «Trimite fiecăruia punctul lui» (§NNN): who has not been told the point they stand at, and — «din nou tuturor» — everybody at a point.
+  // «Trimite fiecăruia punctul lui» (§956): who has not been told the point they stand at, and — «din nou tuturor» — everybody at a point.
   | "volunteersNotTold"
   | "volunteersAtPoints";
 

@@ -104,7 +104,7 @@ export const EMAIL_GROUP_OF: Readonly<Record<Exclude<EmailMessageType, RelayMess
   VOLUNTEER_AGREEMENT_ACCEPTED: "confirmations",
   // The role given (§761): the organizers' answer to the person's offer, as a confirmation answers a runner's step.
   VOLUNTEER_ROLE_ASSIGNED: "confirmations",
-  // The point given (§NNN, «Trimite fiecăruia punctul lui»): where the role is, by the same road — the organizers' answer to
+  // The point given (§956, «Trimite fiecăruia punctul lui»): where the role is, by the same road — the organizers' answer to
   // the person's offer. One message a placed volunteer at one press: an event's few dozen, never a list's hundreds.
   VOLUNTEER_POINT: "confirmations",
   // The guardian's link (§768) is an action link, on the links' road like the volunteer's own agreement link.

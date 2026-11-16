@@ -17,7 +17,7 @@ import { canonicalOrNull } from "./agreement";
 import { readVolunteerPlanPicture } from "./plan";
 
 /*
-  «Trimite fiecăruia punctul lui» (§NNN; the owner, 2026-11-16, with a picture of Saturday's route and its volunteers' points on
+  «Trimite fiecăruia punctul lui» (§956; the owner, 2026-11-16, with a picture of Saturday's route and its volunteers' points on
   it: «…si sa ii pot distribui din aplicatie, sa stie exact unde si cum» — and, asked how, «Email din site, la apăsarea ta»):
   one press on «Planul voluntarilor» emails each placed volunteer the point they stand at — its number in the route's order,
   its name, its kilometre and its note — what they do there, and the plan's picture (`VOLUNTEER_POINT`).
@@ -182,7 +182,7 @@ function assertMayManage(actor: Pick<StaffUser, "role">): void {
 }
 
 /**
- * The numbers of the question before the press (§NNN): how many people «Trimite fiecăruia punctul lui» would write to now,
+ * The numbers of the question before the press (§956): how many people «Trimite fiecăruia punctul lui» would write to now,
  * how many were already told the point they stand at, how many stand at a point with no address and how many stand at no
  * point yet — counted exactly as the press counts them. For whoever works the volunteers; anybody else is refused.
  */
@@ -195,7 +195,7 @@ export async function previewVolunteerPoints<T extends Record<string, unknown>>(
 }
 
 /**
- * The press (§NNN): one `VOLUNTEER_POINT` for each volunteer of the event who stands at one of its points, is not cancelled,
+ * The press (§956): one `VOLUNTEER_POINT` for each volunteer of the event who stands at one of its points, is not cancelled,
  * has an address and was not yet told that point — or, with `again` («Trimite din nou tuturor»), for every one of them
  * whether told or not.
  *
@@ -285,7 +285,7 @@ export type VolunteerPointFacts = {
 };
 
 /**
- * The point a queued `VOLUNTEER_POINT` names, as it stands when the message leaves (§NNN, §331's rule at the send) — or the
+ * The point a queued `VOLUNTEER_POINT` names, as it stands when the message leaves (§956, §331's rule at the send) — or the
  * message withdrawn (`OutboxMessageWithdrawn`: the outbox deletes the row, so the next press finds the person not told):
  *
  * - the person is gone, stands at no point, or stands at another point than the one the message was queued for (moved or

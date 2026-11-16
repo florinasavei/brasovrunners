@@ -74,7 +74,7 @@ export type ConfirmAnswer = { emailOff: boolean; optionOn: boolean };
  * (`withEmailOff`); what the press sends anybody else stays said. Either answer hands the box's state to the caller
  * (`ConfirmAnswer`), which writes it into the form (`emailOptOutAnswer`) before it is sent.
  *
- * **A wider press, offered in the question** (`spec.option`, §NNN: «Trimite din nou tuturor» under «Trimite fiecăruia
+ * **A wider press, offered in the question** (`spec.option`, §956: «Trimite din nou tuturor» under «Trimite fiecăruia
  * punctul lui»): a box after the quieter lines, unticked whenever a question opens, that the confirm button never waits
  * for. Ticked, the question reads as the wider press words it — its body, its bold email line (`withOption`) — and the
  * answer carries the tick to the caller, which writes it into the form's hidden field (`optionAnswer`).
@@ -107,7 +107,7 @@ export default function ConfirmDialog({
   // «Trimite emailul», ticked again for each new question: a press never inherits the last one's untick.
   const [mailOff, setMailOff] = useState<{ spec: ConfirmSpec | null; off: boolean }>({ spec: asked, off: false });
   const emailOff = mailOff.spec === asked && mailOff.off;
-  // The question's optional box (§NNN), unticked again for each new question: a press never inherits the last one's tick.
+  // The question's optional box (§956), unticked again for each new question: a press never inherits the last one's tick.
   const [option, setOption] = useState<{ spec: ConfirmSpec | null; on: boolean }>({ spec: asked, on: false });
   const optionOn = option.spec === asked && option.on;
   if (!asked) return null;
@@ -218,7 +218,7 @@ export default function ConfirmDialog({
           />
         )}
         {asked.option && (
-          // A wider press the reader may choose here (§NNN): unticked as the question opens, and the confirm never waits for it.
+          // A wider press the reader may choose here (§956): unticked as the question opens, and the confirm never waits for it.
           <FormControlLabel
             control={<Checkbox checked={optionOn} onChange={(_event, on) => setOption({ spec: asked, on })} sx={CHECKBOX_TAP_TARGET} />}
             label={<Typography variant="body2">{asked.option.label}</Typography>}

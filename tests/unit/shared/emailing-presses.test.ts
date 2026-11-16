@@ -91,7 +91,7 @@ export const EMAILING_PRESSES: Readonly<Record<string, Press>> = {
   recordPaperVolunteerGuardianAction: { file: VOLUNTEERS, causes: ["volunteers.guardianPaper"], actor: "named" },
   sendVolunteerInvitationsAction: { file: VOLUNTEERS, causes: ["volunteers.invite"], actor: "named" },
   resendVolunteerInvitationAction: { file: VOLUNTEERS, causes: ["volunteers.invitationResend"], actor: "named" },
-  // «Trimite fiecăruia punctul lui» (§NNN), on «Planul voluntarilor»: the plan's one press that emails anybody.
+  // «Trimite fiecăruia punctul lui» (§956), on «Planul voluntarilor»: the plan's one press that emails anybody.
   sendVolunteerPointsAction: { file: VOLUNTEER_PLAN, causes: ["volunteers.sendPoints"], actor: "named" },
   // The club.
   sendNewsletterAction: { file: NEWSLETTER, causes: ["club.newsletter"], actor: "named" },

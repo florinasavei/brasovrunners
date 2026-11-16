@@ -18,7 +18,7 @@ import { succeeded } from "@/shared/forms/outcome";
  * provider from an effect, after the answer painted — never inside the press (§371). The
  * browser side — the dialog opening, cancel leaving the row untouched, the toast after a save —
  * is `tests/e2e/toasts-and-confirms.spec.ts`; a question's optional box travelling from its tick to
- * the Server Action (§NNN) is `tests/e2e/volunteer-plan-mail.spec.ts`.
+ * the Server Action (§956) is `tests/e2e/volunteer-plan-mail.spec.ts`.
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const source = readFileSync(path.join(ROOT, "src/shared/forms/ActionFormIsland.tsx"), "utf8").replace(/\r\n/g, "\n");
@@ -91,7 +91,7 @@ describe("§384 ActionForm asks first", () => {
     expect(source).toMatch(/for \(const field of optOutFields\) write\(field, "on"\);\s*const optedOut = emailOptOutAnswer\(pending\.spec, given\.emailOff\);\s*if \(optedOut\) write\(optedOut\.field, optedOut\.value\);/);
   });
 
-  it("offers a wider press as a box in the question, and posts it `on` only when ticked there and confirmed (§NNN)", () => {
+  it("offers a wider press as a box in the question, and posts it `on` only when ticked there and confirmed (§956)", () => {
     // «Trimite din nou tuturor» in the question of «Trimite fiecăruia punctul lui»: the fields the form's questions may
     // answer, each a hidden input the page drew empty.
     expect(source).toMatch(/const optionalFields = useMemo\(\(\) => optionFields\(confirm\), \[confirm\]\);/);

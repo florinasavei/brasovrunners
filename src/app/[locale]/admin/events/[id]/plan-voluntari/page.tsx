@@ -68,7 +68,7 @@ const PICTURE_ON_PAPER_MAX_HEIGHT = "17cm";
  * Administrators) — anybody else gets the 404 of an address that does not exist (BR-REQ-060-01), and the service refuses them
  * again. Nothing on it is public, and placing, moving or taking off a person emails nobody: it is the organizers' own plan.
  *
- * One press tells the volunteers (§NNN; the owner, the same day: «…si sa ii pot distribui din aplicatie, sa stie exact unde si
+ * One press tells the volunteers (§956; the owner, the same day: «…si sa ii pot distribui din aplicatie, sa stie exact unde si
  * cum» — «Email din site, la apăsarea ta»): «Trimite fiecăruia punctul lui» emails each person placed at a point their point,
  * what they do there and the plan's picture (`modules/volunteers/point-mail.ts`). It asks first, with the four numbers the
  * service counted — who is written to, who already knows their point, who stands at a point with no address, who stands at
@@ -92,7 +92,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
 
   const db = getDb();
   let plan;
-  // The four numbers of «Trimite fiecăruia punctul lui» (§NNN), counted by the service exactly as the press counts them.
+  // The four numbers of «Trimite fiecăruia punctul lui» (§956), counted by the service exactly as the press counts them.
   let mail;
   try {
     plan = await readVolunteerPlan(db, actor, id);
@@ -130,7 +130,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   );
 
   /*
-    «Trimite fiecăruia punctul lui» (§NNN): from the four numbers of its question (`previewVolunteerPoints`, read above with
+    «Trimite fiecăruia punctul lui» (§956): from the four numbers of its question (`previewVolunteerPoints`, read above with
     the plan), what the press can be:
 
     - somebody still to tell, nobody told yet → the plain question;
@@ -347,7 +347,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
           ))}
       </Box>
 
-      {/* «Trimite fiecăruia punctul lui» (§NNN): the one press that tells the volunteers — never on the paper. The numbers are the
+      {/* «Trimite fiecăruia punctul lui» (§956): the one press that tells the volunteers — never on the paper. The numbers are the
           question's own, said here too so the page answers «cine mai e de anunțat» before anything is pressed. */}
       <Box id="plan-mail" sx={{ scrollMarginTop: 16, ...NOT_ON_PAPER }} data-testid="plan-mail-section">
         <Typography variant="h3" sx={HEADING_SX[3]}>

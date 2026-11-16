@@ -121,7 +121,7 @@ const MAIL_ANCHOR = "#plan-mail";
 const AGAIN_FIELD = "again";
 
 /**
- * «Trimite fiecăruia punctul lui» on «Planul voluntarilor» (§NNN; the owner, 2026-11-16: «…si sa ii pot distribui din
+ * «Trimite fiecăruia punctul lui» on «Planul voluntarilor» (§956; the owner, 2026-11-16: «…si sa ii pot distribui din
  * aplicatie, sa stie exact unde si cum» — «Email din site, la apăsarea ta»): one press emails each volunteer placed at a point
  * of the event's route their point — its number, its name, its kilometre —, what they do there and the plan's picture
  * (`VOLUNTEER_POINT`). Asked first on the page, with how many people are written to, how many already know their point, how

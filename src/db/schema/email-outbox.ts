@@ -181,7 +181,7 @@ export const emailMessageType = pgEnum("email_message_type", [
   // The same change, to the new address: from now on it receives this registration's messages, the next step
   // follows in its own email, and the contact page if the registration is not theirs. No token.
   "REGISTRATION_ADDRESS_ADDED",
-  // «Punctul tău de voluntar la …» (§NNN): an organizer pressed «Trimite fiecăruia punctul lui» on «Planul voluntarilor» —
+  // «Punctul tău de voluntar la …» (§956): an organizer pressed «Trimite fiecăruia punctul lui» on «Planul voluntarilor» —
   // to each volunteer who stands at a point of the event's route, is not cancelled and has an address, in the language of
   // their row: the point's number, name and kilometre, what they do there, the plan's picture. The event's, the
   // volunteer's and the point's ids in the payload; everything said is read at the send, and the message is withdrawn

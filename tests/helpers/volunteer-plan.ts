@@ -5,7 +5,7 @@ import type { TestDatabase } from "./db";
 import { roleDescription } from "./role-description";
 
 /*
-  A race with its volunteers' plan half built, for the tests of «Trimite fiecăruia punctul lui» (§NNN,
+  A race with its volunteers' plan half built, for the tests of «Trimite fiecăruia punctul lui» (§956,
   `tests/integration/volunteers/plan-mail.test.ts` and `plan-mail-screens.test.ts`): three points on the route, typed out of
   the route's order on purpose; two roles, one under a category with a contact person; and one person of every kind the
   press tells apart —
