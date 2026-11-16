@@ -18,6 +18,7 @@ import {
   canManageRegistrations,
   canManageStaff,
   canReadRegistrations,
+  canSetRaffleMark,
   canWriteLegalTexts,
   canTransition,
   EDITORIAL_STATUSES,
@@ -285,7 +286,7 @@ describe("BR-REQ-060-01 what each role may reach", () => {
     had defended since §10.2: reading is no longer what ADMIN is for, and DEV must not have
     followed MODERATOR through the door.
   */
-  it("gives the Organizer the whole list to read, and no verb on it (§289)", () => {
+  it("gives the Organizer the whole list to read, and no verb on it but the raffle tick (§289, §949)", () => {
     expect(canReadRegistrations("MODERATOR")).toBe(true);
     expect(canManageRegistrations("MODERATOR")).toBe(false);
 
@@ -294,6 +295,52 @@ describe("BR-REQ-060-01 what each role may reach", () => {
     expect(canManageRegistrations("ADMIN")).toBe(true);
     expect(canReadRegistrations("COPYWRITER")).toBe(false);
     expect(canReadRegistrations("CONTRIBUTOR")).toBe(false);
+  });
+
+  /*
+    «Participă la tombolă» (§949, amending §289): the one thing the Organizer changes on a registration. It has a predicate
+    of its own (§953) — the tick was first authorized by `canReadRegistrations`, a write behind the predicate that grants
+    none — and that predicate is the readers' set by construction, so nobody ticks a registration they may not read and
+    moving who reads moves who ticks.
+  */
+  it.each(STAFF_ROLES.map((role) => [role] as const))("lets %s tick the raffle exactly when it reads the registrations, both ways (§949)", (role) => {
+    expect(canSetRaffleMark(role)).toBe(canReadRegistrations(role));
+    // An actor with grants is asked by role, as the readers are: no grant gives the tick, none takes it away.
+    expect(canSetRaffleMark({ role, permissions: new Set(["shop.manage"] as const) })).toBe(canReadRegistrations(role));
+    expect(canSetRaffleMark({ role })).toBe(canReadRegistrations(role));
+  });
+
+  it("gives the raffle tick to the Organizer and the Administrators, and to nobody else — Tehnic least of all (§949)", () => {
+    expect(STAFF_ROLES.filter((role) => canSetRaffleMark(role))).toEqual(["MODERATOR", "ADMIN", "SUPERADMIN"]);
+    expect(STAFF_ROLES.filter((role) => !canSetRaffleMark(role))).toEqual(["MEMBER", "CONTRIBUTOR", "COPYWRITER", "DEV"]);
+    // It is the one write of the Organizer's on a registration: every other is still the Administrator's.
+    expect(canSetRaffleMark("MODERATOR")).toBe(true);
+    expect(canManageRegistrations("MODERATOR")).toBe(false);
+  });
+
+  it("is what the raffle's press and its service ask — and what nothing else asks (§953)", () => {
+    const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
+    const actions = read("src/app/[locale]/admin/registrations/actions.ts");
+    const action = actions.slice(actions.indexOf("export async function setRegistrationRaffleAction"));
+    // The coarse gate at the door and the service's own assertion (BR-REQ-060-01): the tick's predicate, never the reading one.
+    expect(action.slice(0, action.indexOf("\nexport ", 1))).toContain("requireStaffCapability(canSetRaffleMark)");
+    expect(actions).not.toContain("requireStaffCapability(canReadRegistrations)");
+    const service = read("src/modules/registrations/raffle-mark.ts");
+    expect(service).toContain("if (!canSetRaffleMark(actor.role)) throw new DomainError(\"FORBIDDEN\"");
+    expect(service).not.toContain("canReadRegistrations(");
+
+    // No other caller: a second door for the tick, or a write borrowing the tick's predicate, is a reviewed edit of this list.
+    const files: string[] = [];
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir)) {
+        const full = path.join(dir, entry);
+        if (statSync(full).isDirectory()) walk(full);
+        else if (/\.(ts|tsx)$/.test(entry)) files.push(full);
+      }
+    };
+    walk(path.join(process.cwd(), "src"));
+    const naming = files.filter((file) => /\bcanSetRaffleMark\b/.test(readFileSync(file, "utf8"))).map((file) => path.relative(process.cwd(), file).split(path.sep).join("/"));
+    expect(naming.sort()).toEqual(["src/app/[locale]/admin/registrations/actions.ts", "src/modules/registrations/raffle-mark.ts", "src/modules/staff-identity/domain/roles.ts"]);
   });
 
   it("keeps DEV away from the participant list although it outranks the Organizer (§289)", () => {
@@ -530,6 +577,8 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canPublishResults: /*     */ [false, false, false, false, false, true, true],
     // §777: internal notes on a registration — read and written by the Organizer and the Administrators; never Tehnic, the volunteer or a member.
     canKeepRegistrationNotes: [false, false, false, true, false, true, true],
+    // §949: «Participă la tombolă» on a registration — the Organizer and the Administrators, the readers of the list; never Tehnic, the volunteer or a member.
+    canSetRaffleMark: /*      */ [false, false, false, true, false, true, true],
     canTranslateTexts: /*     */ [false, false, true, true, false, true, true],
     canManageRegistrations: /**/ [false, false, false, false, false, true, true],
     canWorkTheDesk: /*        */ [false, true, true, true, true, true, true],

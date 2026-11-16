@@ -18,7 +18,7 @@ import {
 } from "@/modules/media/references";
 import { isLadderKeyPrefix, topRungWidth } from "@/modules/media/ladder";
 import { isStorageConfigured } from "@/modules/media/storage";
-import { isEditorial } from "@/modules/staff-identity/domain/roles";
+import { canManageVolunteers, isEditorial } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
@@ -64,6 +64,7 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
   const query = parseListQuery(current, { sortable: [], defaultSort: "createdAt", defaultPerPage: 50 });
   const page = rows.slice((query.page - 1) * query.perPage, query.page * query.perPage);
   const mayDelete = isEditorial(actor.role);
+  const mayOpenPlans = canManageVolunteers(actor.role);
 
   const referenceLink = (reference: MediaReference) => {
     const title = reference.title ?? t("pictures.untitled");
@@ -107,6 +108,14 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
       case "newsletter":
         // A newsletter sent (§550): its letter keeps the picture for the inboxes that hold it.
         return <Link href={{ pathname: "/admin/newsletter", hash: "newsletter" }}>{t("pictures.usedInNewsletter")}</Link>;
+      case "volunteerPlan":
+        // The picture of an event's «Planul voluntarilor» (§952): the plan's page, where the picture is changed or taken off. A
+        // link only for whoever may open the plan — the page is a 404 for anybody else (BR-REQ-060-01), so they read the words.
+        return mayOpenPlans ? (
+          <Link href={{ pathname: "/admin/events/[id]/plan-voluntari", params: { id: reference.id } }}>{t("pictures.usedInVolunteerPlan", { title })}</Link>
+        ) : (
+          t("pictures.usedInVolunteerPlan", { title })
+        );
     }
   };
 

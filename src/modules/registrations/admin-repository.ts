@@ -73,7 +73,7 @@ export type RegistrationListRow = {
   elite: boolean;
   /** «Ambasador» (§948): the club's label — the row's chip and the «⋮»'s mark or unmark; it brings the two ticks below, as «Elită» does. */
   ambassador: boolean;
-  /** «Participă la tombolă» (§949): on the raffle's list unless an Administrator unticked it — the list's «Tombolă» column, drawn for an event that holds one. */
+  /** «Participă la tombolă» (§949): on the raffle's list unless the Organizer or an Administrator unticked it — the list's «Tombolă» column, drawn for an event that holds one. */
   inRaffle: boolean;
   /**
    * «De la parteneri» (the decision «De la parteneri»): the partner's or sponsor's name, or null — the row's chip «Partener: {name}»

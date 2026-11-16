@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.48-2026-11-16 -->
+<!-- PROJECT_BASELINE: BR-V4.49-2026-11-16 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.48-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.49-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1112,7 +1112,7 @@ sees them as Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadmini
 ```text
 CONTRIBUTOR  the volunteer: the race-day desk and the guide, nothing else
 COPYWRITER   the words of any event and any page, at any status; submit a draft for review
-MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs; the messages; enter, import and rank a race's results (`canEnterResults`, §808)
+MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs — and tick the raffle on a registration, the one thing it changes there (`canSetRaffleMark`, §949); the messages; enter, import and rank a race's results (`canEnterResults`, §808)
 DEV          + the configuration report (/devs). No participant data — and, by §289, not the list either
 ADMIN        + every event (create, configure, publish, cancel, a series: `canEditEventFields`, §542), changing a registration, legal texts, emails, tasks, delete an event, make a race's results public (`canPublishResults`, §808)
 SUPERADMIN   + staff administration: the list itself, and every role on it
@@ -1895,6 +1895,7 @@ events
 - public_list_club members_only|as_typed|hidden NOT NULL DEFAULT members_only  -- §10.10; «Clubul pe lista publică», what the list's «Club» column says
 - volunteer_choices_max integer null  -- §951, amending §761; «Cel mult câte roluri poate bifa o persoană» on the public volunteers' form; null is any number; never copied by a duplicate, a series, a repeat or the event's file
 - cover_media_asset_id uuid null
+- volunteer_plan_media_asset_id uuid null  -- §17, §952; the picture of «Planul voluntarilor»: no FK, as the cover has none; counted by media/references.ts; never public, never copied by a series, a repeat or a duplicate, never in the event's file
 - created_by_staff_user_id uuid
 - updated_by_staff_user_id uuid
 - created_at timestamptz
@@ -3262,10 +3263,13 @@ Beside those two, and like them a mark that changes nothing else: **«Participă
 §949; the owner: «o bifă importantă, și coloană peste tot de „participă la tombolă" și o setare per eveniment cum ar fi
 „avem tombolă" dar doar în backoffice vizibil»). An event that holds a raffle says so in its editor («Avem tombolă»,
 `events.has_raffle`, off by default, one edition's own: no series edit, copy or event file carries it, and no public
-column reads it). On such an event the registrations list — one event chosen — has a column «Tombolă»: one boolean
+column reads it) — ticked by an Administrator, whose save the event's is (§10.2, `canEditEventFields`); the Organizer
+reads it. On such an event the registrations list — one event chosen — has a column «Tombolă»: one boolean
 `in_raffle` on a registration, **on by default**, unticked or ticked again by whoever reads the registrations — the
-Organizer and the Administrators (`canReadRegistrations`, asserted by `setRegistrationRaffleAction` and
-`raffle-mark.ts#setRegistrationInRaffle`; the owner: «doar adminul și organizatorul pot bifa și vedea asta») — at any
+Organizer and the Administrators, by the tick's own predicate (`roles.ts#canSetRaffleMark`, `DECISIONS.md` §953: the
+readers' set, written as `canReadRegistrations` so the two move together, and named apart so the reading predicate
+authorizes no write; asserted by `setRegistrationRaffleAction` and `raffle-mark.ts#setRegistrationInRaffle`; the owner:
+«doar adminul și organizatorul pot bifa și vedea asta») — at any
 time and in any state, audited (`registration.raffle_included` / `registration.raffle_excluded`, the new value only).
 **It is the one thing the Organizer changes on a registration** (§289 gave the Organizer the list to read and nothing on
 it to change): the raffle is the organizers' own to run, and the tick moves nothing a registration owns. The «Voluntari» list has the same tick on a volunteer
@@ -3305,6 +3309,16 @@ never on both lists or on neither —
 A number never moves with the person: the runner's stays retired with the cancelled registration and the volunteer's
 with the cancelled row; each list draws its own. One audit row ties the two (`registration.became_volunteer`,
 `volunteer.became_runner`), ids only, beside each verb's own.
+
+**«Participă la tombolă» does move with the person** (2026-11-16, `DECISIONS.md` §953, amending §948 and §949):
+somebody an organizer took out of the event's raffle is out of it on the other list too — the
+new row would otherwise start in, the column's default, and a press that was about something else would put the person
+back on «Lista pentru tombolă». Each way through the tick's own writer, in the transform's transaction and with that
+writer's audit row: the volunteers' `setRaffle` for a runner who was out; `raffle-mark.ts#setRegistrationInRaffle` for
+the registration the entry wrote, which takes the volunteer's tick whichever it is — the entry may restart a
+registration of that person cancelled earlier, and that row keeps what it once held. Neither the allocator nor the staff
+entry reads the column (`raffle-never-leaves.test.ts`), which is why the transform says it and not the entry. Nobody is
+told, and nothing else of either row moves.
 
 ---
 
@@ -3784,6 +3798,45 @@ One file that is not a picture (§718): the GPX of an event's «Traseul», uploa
 `contentDisposition`, which R2 stores so the file downloads under its name; `/api/media` gives the
 same header in the local and fake modes. It is no `media_assets` row, so the sweep never sees it;
 the event's save deletes it once no event row names its key.
+
+**«Planul voluntarilor» and its picture** (2026-11-16, `DECISIONS.md` §952; the owner, with a picture of Saturday's
+route and its volunteers' points numbered on it: «trebui sa pot incarca si planul voluntarilor pe traseu in genul
+[pozei] si sa ii pot distribui din aplicatie, sa stie exact unde si cum»). The plan
+(`/admin/events/[id]/plan-voluntari`, `modules/volunteers/plan.ts`; the decision of the same day that added it) is one
+event's points on the route, in the route's order, each with the volunteers who stand at it
+(`event_volunteers.checkpoint_id`) — the organizers' own, for whoever works the volunteers (`canManageVolunteers`: the
+Organizer and the Administrators), built and printed on its page. Its picture is the plan as the organizers drew it —
+the map with the points on it — and lives with the plan:
+
+- **One stored picture an event**, `events.volunteer_plan_media_asset_id`: a `media_assets` row by id, nullable, with
+  **no foreign key, for the cover's reason** (`gallery.ts` imports `events.ts`; `db/schema/events.ts` says it at both
+  columns). The guards are the cover's: `media/references.ts` counts the column, so the sweep never takes the picture
+  and the pictures page's delete is refused; the plan's read joins the store, so an id that names nothing is no picture
+  rather than a broken one; and the write refuses an id that names no stored picture, or a film's poster (§485).
+- **The pictures page names the plan, not the event** (reference kind `volunteerPlan`): the picture is on the plan's
+  page and nowhere in the event's editor, so the line links to the plan — in words alone for a role the plan is a 404
+  for — and no «Din galerie» counts it among an event's pictures (`media/picker.ts`).
+- **Uploaded where the plan is**, through the backoffice's one upload (`/api/admin/media`, `media/ui/upload-picture.ts`,
+  the quality beside it as beside every upload) by an island that is handed strings and names only
+  (`volunteers/ui/PlanPictureUpload.tsx`) and then sends the page's own form. `setPlanPictureAction` and
+  `removePlanPictureAction` ask the capability at their door (`requireStaffCapability(canManageVolunteers)`), and
+  `plan.ts#setVolunteerPlanPicture` asks it again before anything is read, holds the event's row, and audits one row a
+  change — `event.volunteer_plan_picture_set` (the picture's id and the one it replaced) or
+  `event.volunteer_plan_picture_removed` (the id it was): the event and the pictures' ids, never a file's name. A press
+  that changes nothing writes nothing; the event's `version` does not move. «Șterge poza» asks first. A picture changed
+  or taken off is not deleted by the press: used nowhere, it is the sweep's after its week, as everywhere.
+- **Drawn above the points**, as wide as the column, a press opening the whole of it in a new tab; printed with the
+  plan, first after the sheet's title, in one piece (`break-inside: avoid`, and never taller than a sheet), its controls
+  left off the paper. `readVolunteerPlan` returns it beside the points — the whole picture and a display size
+  (`fullUrl`, `displayUrl`, the ladder's `srcSet`), at the store's public addresses — and whoever sends the plan on
+  reads it from there.
+- **One edition's, and the organizers'.** No public query, no public cache and no email reads the column, and neither a
+  series' scope, a repeat, a duplicate nor the event's file carries it: it is this date's plan, and a file read on
+  another environment would name another bucket's object. `tests/unit/volunteers/plan-picture-never-leaves.test.ts`
+  holds the list of files that may name the column; a new reader — telling each volunteer their point is the next
+  change — is a reviewed edit of that list, and reads the picture through the plan. As for every stored picture, the
+  object itself is public behind an unguessable key (§66), and the pictures page shows it to the roles that read that
+  page.
 
 ---
 
