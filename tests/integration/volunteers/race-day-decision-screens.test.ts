@@ -91,6 +91,7 @@ vi.mock("@/modules/staff-identity/session", () => ({
   requireStaff: async () => state.actor,
   requireStaffCapability: async (capability: (subject: unknown) => boolean) => {
     state.asked.push(capability);
+    if (!state.actor) throw new DomainError("UNAUTHENTICATED", "no staff session");
     if (!capability(state.actor)) throw new DomainError("FORBIDDEN", "no");
     return state.actor;
   },
@@ -335,8 +336,9 @@ describe("§NNN «Decizie ziua cursei» on the «Voluntari» list — the column
         for (const inner of Object.values(name === "messages" ? { ...(value as DialogProps["messages"]).errors, ...(value as DialogProps["messages"]).fields } : value)) expect(typeof inner, name).toBe("string");
       }
     }
-    // The refusals it can meet, and the box's own name for the summary's link.
-    expect(Object.keys(props.messages.errors).sort()).toEqual(["FORBIDDEN", "NOT_FOUND", "VALIDATION_ERROR"]);
+    // The refusals it can meet — each a sentence, an ended session's included — and the box's own name for the summary's link.
+    expect(Object.keys(props.messages.errors).sort()).toEqual(["FORBIDDEN", "NOT_FOUND", "UNAUTHENTICATED", "VALIDATION_ERROR"]);
+    expect(props.messages.errors).toEqual(Object.fromEntries(["VALIDATION_ERROR", "NOT_FOUND", "FORBIDDEN", "UNAUTHENTICATED"].map((code) => [code, (ro.Admin.errors as Record<string, string>)[code]])));
     expect(props.messages.fields).toEqual({ decision: "Decizie pentru ziua cursei" });
 
     // A row with none: the other words, the plus, an empty box.
@@ -440,7 +442,7 @@ describe("§NNN setVolunteerDecisionAction — the press", () => {
       const toasts = catalogue.Feedback.toast as Record<string, unknown>;
       for (const code of ["volunteerDecisionSaved", "volunteerDecisionCleared", "volunteerUnchanged"]) expect(typeof toasts[code], code).toBe("string");
       const errors = catalogue.Admin.errors as Record<string, unknown>;
-      for (const code of ["VALIDATION_ERROR", "NOT_FOUND", "FORBIDDEN"]) expect(typeof errors[code], code).toBe("string");
+      for (const code of ["VALIDATION_ERROR", "NOT_FOUND", "FORBIDDEN", "UNAUTHENTICATED"]) expect(typeof errors[code], code).toBe("string");
     }
     expect(ro.Feedback.toast.volunteerDecisionSaved).toContain("salvată");
     expect(ro.Feedback.toast.volunteerDecisionCleared).toContain("ștearsă");
@@ -490,6 +492,11 @@ describe("§NNN setVolunteerDecisionAction — the press", () => {
       state.actor = staff[role];
       expect((await saved({ volunteerId: people.ana, decision: `decis de ${role}` })).toast, role).toMatchObject({ key: "volunteerDecisionSaved" });
     }
+
+    // A session that ended while the dialog was open: its own answer, the words still in the box, nothing written.
+    state.actor = undefined;
+    expect(await refusal({ volunteerId: people.ana, decision: "după expirare" })).toMatchObject({ error: "UNAUTHENTICATED", values: { decision: ["după expirare"] } });
+    expect(await decisionOf(people.ana)).toBe("decis de SUPERADMIN");
   });
 
   it("follows a forged `returnTo` nowhere but the event's own «Voluntari» card, and the person's page when that is where the form was", async () => {

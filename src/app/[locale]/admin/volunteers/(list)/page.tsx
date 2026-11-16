@@ -164,10 +164,11 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     ...all,
     errors: Object.fromEntries(["NOTE_EMPTY", "NOTE_TOO_LONG", "NOT_FOUND", "FORBIDDEN"].map((code) => [code, all.errors[code]])),
   }));
-  // «Decizie ziua cursei» (§NNN): its dialog's refusals, cut the same way — a line too long, a person deleted meanwhile, another role.
+  // «Decizie ziua cursei» (§NNN): its dialog's refusals, cut the same way — a line too long, a person deleted meanwhile, another
+  // role, and a session that ended while the phone lay on the table: every answer the press can give, as a sentence.
   const decisionRefusal = await refusalMessages({ decision: t("volunteers.decision.label") }).then((all) => ({
     ...all,
-    errors: Object.fromEntries(["VALIDATION_ERROR", "NOT_FOUND", "FORBIDDEN"].map((code) => [code, all.errors[code]])),
+    errors: Object.fromEntries(["VALIDATION_ERROR", "NOT_FOUND", "FORBIDDEN", "UNAUTHENTICATED"].map((code) => [code, all.errors[code]])),
   }));
   const roleName = (id: string) => {
     const words = roleNames.get(id);
