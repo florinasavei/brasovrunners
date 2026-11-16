@@ -688,6 +688,11 @@
       },
       "choices": "Ce ești dispus(ă) să faci",
       "choicesHelp": "Bifează tot ce ai face, cel puțin un rol.",
+      "choicesHelpMax": {
+        "one": "Alege un singur rol.",
+        "few": "Poți bifa cel mult {count} roluri.",
+        "other": "Poți bifa cel mult {count} de roluri."
+      },
       "choicesNote": "În funcție de numărul de doritori, există posibilitatea să fie nevoie să acoperi o altă responsabilitate. Mulțumim pentru dorința de a ajuta. Te vom contacta curând.",
       "needs": {
         "one": "mai e nevoie de 1 persoană",
@@ -717,6 +722,11 @@
         "email": "Adresa de email nu pare validă.",
         "phone": "Numărul de telefon nu este valid.",
         "roleIds": "Bifează cel puțin un rol la „Ce ești dispus(ă) să faci”.",
+        "roleIdsMax": {
+          "one": "Ai bifat prea multe: alege un singur rol la „Ce ești dispus(ă) să faci”.",
+          "few": "Ai bifat prea multe: poți bifa cel mult {count} roluri la „Ce ești dispus(ă) să faci”.",
+          "other": "Ai bifat prea multe: poți bifa cel mult {count} de roluri la „Ce ești dispus(ă) să faci”."
+        },
         "message": "Mesajul are prea multe caractere: scurtează-l.",
         "consent": "Bifează căsuța de acord, altfel nu putem păstra formularul tău.",
         "agreement": "Bifează că accepți contractul de voluntariat, altfel nu putem păstra formularul tău.",
@@ -6266,6 +6276,13 @@
         "label": "Numerele voluntarilor încep de la",
         "help": "Fiecare voluntar confirmat primește un număr din seria lui, de aici în sus — niciodată unul purtat de un alergător. Alege un număr peste cele ale alergătorilor. Gol: fără numere.",
         "save": "Salvează numerele",
+        "saving": "Se salvează…"
+      },
+      "choicesMax": {
+        "label": "Cel mult câte roluri poate bifa o persoană",
+        "placeholder": "oricâte",
+        "help": "Pe formularul public, o persoană bifează cel mult atâtea roluri, de la {min} la {max}. Gol: oricâte. Ce adaugi tu de mână și ce a bifat cineva până acum rămân neschimbate.",
+        "save": "Salvează limita",
         "saving": "Se salvează…"
       },
       "toRunner": {
@@ -14350,6 +14367,8 @@
       "volunteersShirtsOn": "Formularul public cere acum mărimea tricoului.",
       "volunteerNumbersOn": "Seria de numere a voluntarilor e salvată. Voluntarii confirmați care nu aveau număr l-au primit.",
       "volunteerNumbersOff": "Voluntarii nu mai primesc numere. Cele date deja rămân.",
+      "volunteerChoicesMaxOn": "Limita de roluri e salvată. Formularul public o spune și nu mai primește formulare cu mai multe roluri bifate.",
+      "volunteerChoicesMaxOff": "Limita de roluri a fost scoasă. Pe formularul public se pot bifa oricâte roluri.",
       "runnerBecameVolunteer": "Înscrierea a fost anulată, iar persoana e acum voluntar confirmat.",
       "volunteerBecameRunnerPlaced": "Era un loc liber: persoana l-a primit și are de semnat declarația. Ca voluntar a fost anulată.",
       "volunteerBecameRunnerWaiting": "Persoana e pe lista de așteptare a cursei. Ca voluntar a fost anulată.",

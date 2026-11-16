@@ -2253,6 +2253,12 @@ only ones who see the names, addresses and telephone numbers.
    the same conditions as the line above — never a form that cannot work, and after a send it says «Am primit oferta ta» on that page, with a toast;
    it is never in the sitemap or a search index, like the registration page. **«Oferim tricouri voluntarilor»** (a tick on the card, off by
    default, one press like «Primește voluntari pe pagină») adds «Mărimea tricoului» to the form and to every row; the club gives no T-shirts today.
+   **«Cel mult câte roluri poate bifa o persoană»** (`DECISIONS.md` §NNN, amending §761; the owner, 2026-11-16: «voluntarii primesc prea multe roluri») is a box on the
+   card with its own «Salvează limita», empty by default: type a number from 1 to 20 and the page says it under «Ce ești dispus(ă) să faci» — «Alege un singur rol.»,
+   «Poți bifa cel mult 2 roluri.» — and sends back a form with more roles ticked, with everything the person typed kept and a sentence saying why. An empty box
+   takes the limit off: any number of roles, as before. It limits the public form alone — also from an invitation's link and for a signed-in member: the people
+   you add by hand, «Modifică» and the roles you give (step 5) are not limited, and nobody already on the list changes. It belongs to this one event: a copy, a
+   repeat and the event's file start without it.
 5. **Answer the offers.** Each sign-up is «Înscris», with **no role yet**: it waits under **«De repartizat»**
    at the top of the card, with the roles the person ticked as chips. The person gets one email, «Ți-am primit
    oferta de voluntar», with nothing to press and the agreement they accepted attached as a PDF, and each

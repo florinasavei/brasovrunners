@@ -45,6 +45,7 @@ import {
   compareCategories,
   compareRoles,
   guardianAllowsConfirm,
+  isVolunteerChoicesMax,
   isVolunteerMinor,
   openChoices,
   refusedFields,
@@ -63,6 +64,8 @@ import {
   volunteerRoleInputSchema,
   volunteerStaffInputSchemaFor,
   VOLUNTEER_CATEGORIES_MAX,
+  VOLUNTEER_CHOICES_MAX_HIGHEST,
+  VOLUNTEER_CHOICES_MAX_LOWEST,
   VOLUNTEER_ROLES_MAX,
   VOLUNTEER_STATES,
   type VolunteerState,
@@ -468,6 +471,11 @@ export async function readPublicVolunteerRoles<T extends Record<string, unknown>
    * roles so one cache entry answers every surface; the page itself ignores it (a link that is not advertised still works).
    */
   buttonShown: boolean;
+  /**
+   * «Cel mult câte roluri poate bifa o persoană» (§NNN): the most roles one person may tick on the public form, or null for any number. Read with the
+   * roles, like `shirts`, so the form's help line says it from the same cache entry; the sign-up reads the event's row itself (`submitVolunteer`).
+   */
+  choicesMax: number | null;
   roles: PublicVolunteerRole[];
   categories: PublicVolunteerCategory[];
 }> {
@@ -478,11 +486,12 @@ export async function readPublicVolunteerRoles<T extends Record<string, unknown>
       shirts: events.volunteersShirts,
       showCounts: events.volunteersShowCounts,
       buttonShown: events.volunteersButtonShown,
+      choicesMax: events.volunteerChoicesMax,
     })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
-  if (!event?.accepts) return { acceptsVolunteers: false, access: "ANYONE", shirts: false, showCounts: false, buttonShown: true, roles: [], categories: [] };
+  if (!event?.accepts) return { acceptsVolunteers: false, access: "ANYONE", shirts: false, showCounts: false, buttonShown: true, choicesMax: null, roles: [], categories: [] };
   const roles = await listVolunteerRoles(db, eventId);
   const categories = await listVolunteerCategories(db, eventId);
   const people = await peopleOnRoles(db, { eventId });
@@ -495,6 +504,8 @@ export async function readPublicVolunteerRoles<T extends Record<string, unknown>
     showCounts: event.showCounts,
     // «Arată butonul „Vreau să fiu voluntar"» (§835): the event page's box and button only while it is on.
     buttonShown: event.buttonShown,
+    // «Cel mult câte roluri poate bifa o persoană» (§NNN): the form says the limit while the event has one.
+    choicesMax: event.choicesMax,
     roles: roles.map((role) => {
       const standing = standingOf(role, people);
       return {
@@ -1462,6 +1473,59 @@ export async function setVolunteerNumbersStart<T extends Record<string, unknown>
 }
 
 /**
+ * «Cel mult câte roluri poate bifa o persoană» (§NNN, amending §761; the owner, 2026-11-16: «voluntarii primesc prea multe
+ * roluri» — asked where it goes wrong, «Bifează prea multe pe formular», and asked for «cel mult 2 roluri, sau unul»): the
+ * most roles one person may tick on the event's public volunteers' form, saved by the «Voluntari» card's own form like the
+ * numbers' start above — never by the editor's save.
+ *
+ * A whole number from `VOLUNTEER_CHOICES_MAX_LOWEST` to `VOLUNTEER_CHOICES_MAX_HIGHEST`; anything else is refused naming
+ * the box, nothing written. An empty box (`null`) takes the limit off: any number of roles, as §761 had it and as every
+ * event starts.
+ *
+ * It limits the **public** form alone, from the next post (`submitVolunteer` reads the row itself, the page's help line
+ * the public cache, told below): the organizers' own entry and «Modifică» are not limited, nor the roles they give, and
+ * setting it changes nobody already listed — a person who ticked more before keeps what they ticked. Nobody is emailed.
+ * Audited with the old and the new value, never a person.
+ */
+export async function setVolunteerChoicesMax<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  request: { eventId: string; max: number | null },
+  now: Date,
+): Promise<{ changed: boolean }> {
+  assertMayManage(actor);
+  assertIds(request.eventId);
+  const max = request.max;
+  if (!isVolunteerChoicesMax(max)) {
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      `the most roles a person may tick is a whole number from ${VOLUNTEER_CHOICES_MAX_LOWEST} to ${VOLUNTEER_CHOICES_MAX_HIGHEST}`,
+      ["volunteerChoicesMax"],
+    );
+  }
+  const result = await db.transaction(async (tx) => {
+    // The event row under the lock the numbers' start reads it under: two presses settle one after the other, and the trail's «from» is what the row held.
+    const event = await lockEventForCapacity(tx, request.eventId);
+    if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
+    if (event.volunteerChoicesMax === max) return { changed: false };
+    // Not `events.version`, like the card's ticks: it is no edit of the page's text and must not make an open editor's save stale.
+    await tx.update(events).set({ volunteerChoicesMax: max }).where(eq(events.id, request.eventId));
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event.volunteer_choices_max_set",
+      entityType: "event",
+      entityId: request.eventId,
+      metadata: { from: event.volunteerChoicesMax, to: max },
+      now,
+    });
+    return { changed: true };
+  });
+  // The public form's help line says the limit, read through the public cache: the page is told once the write has committed.
+  if (result.changed) revalidatePublicContent("events", "places");
+  return result;
+}
+
+/**
  * «Arată public câți voluntari mai sunt necesari» on or off (§773; the owner, 2026-10-14: «vreau să bifez dacă să afișez sau
  * nu numărătoarea voluntarilor — știi că am mai avut probleme din astea»; the waiting list's «Arată public câți așteaptă» is
  * the model, §634): the event's own tick, saved by the «Voluntari» card's own form like the two above — never by the editor's
@@ -2402,6 +2466,11 @@ class InvitationSpent extends Error {}
  * none left is «full», for everybody, before the repeat is looked for (no oracle). The offer holds no place: the row
  * has no role until the organizers give one (`assign`), and only a role given counts against its need.
  *
+ * «Cel mult câte roluri poate bifa o persoană» (§NNN, amending §761): while the event sets it, a post that ticks more
+ * distinct roles than that is the person's own fix too — `VALIDATION_ERROR` naming `roleIds`, nothing written, nothing
+ * emailed — counted on what was posted, before the «full» pass and the repeat (so it is no oracle either). No limit
+ * (`null`) is any number. The organizers' own entry and «Modifică» (`changeVolunteer`) never ask it.
+ *
  * On a new person: one row «Înscris» (`source` PUBLIC, the notice's version recorded as the consent's
  * proof, and the agreement accepted with its version, moment and fingerprint, §758 — naming the roles chosen),
  * their choices, one `VOLUNTEER_RECEIVED` to them in the language of the page — the agreement's PDF attached at the
@@ -2435,6 +2504,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       volunteersAccess: events.volunteersAccess,
       volunteersShirts: events.volunteersShirts,
       volunteersListPublic: events.volunteersListPublic,
+      volunteerChoicesMax: events.volunteerChoicesMax,
       startsAt: events.startsAt,
       endsAt: events.endsAt,
       raceStartsAt: events.raceStartsAt,
@@ -2479,7 +2549,14 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     }
     formInput = { ...posted, email: member.email, clubMember: true };
   }
-  const parsed = volunteerPublicSchemaFor({ profile: profileMode, minors: minorsMode, eventDay: volunteerEventDay(event, now) }).safeParse(formInput);
+  /*
+    «Cel mult câte roluri poate bifa o persoană» (§NNN) is a rule of the form itself: the schema refuses a post that ticks more
+    distinct roles than the event's limit, on `roleIds`, with every other box that failed. Read from the event's own row above,
+    never the page's cache; judged here — on the post and the setting alone — before the spam check, the throttles, the «full
+    roles» pass and the repeat's lookup, so nothing is written or queued and a listed address hears what a stranger hears.
+    Whichever door the post came through (the page, an invitation's link, a member's session), it is this one form.
+  */
+  const parsed = volunteerPublicSchemaFor({ profile: profileMode, minors: minorsMode, eventDay: volunteerEventDay(event, now), choicesMax: event.volunteerChoicesMax }).safeParse(formInput);
   if (!parsed.success) {
     const fields = refusedFields(parsed.error);
     throw new DomainError("VALIDATION_ERROR", "the volunteer form is malformed", fields.length > 0 ? fields : ["name"]);

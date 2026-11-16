@@ -658,6 +658,9 @@ export type AuditAction =
   // «Numerele voluntarilor încep de la» (§NNN): the series' first number set, moved or switched off — from, to and how many
   // confirmed volunteers the press gave a number; never a person.
   | "event.volunteer_numbers_start_set"
+  // «Cel mult câte roluri poate bifa o persoană» (§NNN): the public form's limit on the roles ticked set, moved or taken off —
+  // from and to (a number, or null for no limit); never a person.
+  | "event.volunteer_choices_max_set"
   // «Lista pentru tombolă» downloaded (§NNN, `volunteers/raffle-list.ts`), entity `event`: how many runners and how many
   // volunteers the file held — never a name or a number.
   | "event.raffle_list_exported"

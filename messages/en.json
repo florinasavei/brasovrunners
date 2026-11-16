@@ -688,6 +688,11 @@
       },
       "choices": "What you are willing to do",
       "choicesHelp": "Tick everything you would do, at least one role.",
+      "choicesHelpMax": {
+        "one": "Choose one role only.",
+        "few": "You can tick at most {count} roles.",
+        "other": "You can tick at most {count} roles."
+      },
       "choicesNote": "Depending on how many people sign up, you may be asked to cover a different responsibility. Thank you for wanting to help. We will contact you soon.",
       "needs": {
         "one": "1 more person needed",
@@ -717,6 +722,11 @@
         "email": "That email address does not look valid.",
         "phone": "That telephone number is not valid.",
         "roleIds": "Tick at least one role under “What you are willing to do”.",
+        "roleIdsMax": {
+          "one": "You ticked too many: choose one role only under “What you are willing to do”.",
+          "few": "You ticked too many: you can tick at most {count} roles under “What you are willing to do”.",
+          "other": "You ticked too many: you can tick at most {count} roles under “What you are willing to do”."
+        },
         "message": "The message is too long: shorten it.",
         "consent": "Tick the box to agree, or we cannot keep your form.",
         "agreement": "Tick the box to accept the volunteer agreement, or we cannot keep your form.",
@@ -6266,6 +6276,13 @@
         "label": "Volunteers' numbers start at",
         "help": "Every confirmed volunteer gets a number of their own series, from here up — never one a runner wears. Choose a number above the runners' numbers. Empty: no numbers.",
         "save": "Save the numbers",
+        "saving": "Saving…"
+      },
+      "choicesMax": {
+        "label": "The most roles one person may tick",
+        "placeholder": "any number",
+        "help": "On the public form a person ticks at most this many roles, from {min} to {max}. Empty: any number. What you add by hand and what somebody has already ticked stay as they are.",
+        "save": "Save the limit",
         "saving": "Saving…"
       },
       "toRunner": {
@@ -14350,6 +14367,8 @@
       "volunteersShirtsOn": "The public form now asks for the T-shirt size.",
       "volunteerNumbersOn": "The volunteers' number series is saved. Confirmed volunteers without a number got theirs.",
       "volunteerNumbersOff": "Volunteers get no more numbers. The ones already given stay.",
+      "volunteerChoicesMaxOn": "The limit on roles is saved. The public form says it and no longer takes a form with more roles ticked.",
+      "volunteerChoicesMaxOff": "The limit on roles is off. Any number of roles can be ticked on the public form.",
       "runnerBecameVolunteer": "The registration was cancelled and the person is now a confirmed volunteer.",
       "volunteerBecameRunnerPlaced": "A place was free: the person got it and has the declaration to sign. As a volunteer they were cancelled.",
       "volunteerBecameRunnerWaiting": "The person is on the race's waiting list. As a volunteer they were cancelled.",
