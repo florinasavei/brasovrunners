@@ -6250,6 +6250,8 @@
         "kitNo": "Nu are kit",
         "columnKit": "Kit",
         "ageHint": "Vârsta împlinită în ziua evenimentului, cea după care se socotește acordul părintelui pentru minori. «—»: nu a spus-o.",
+        "columnMessage": "Mesaj",
+        "messageHint": "Ce a scris persoana pentru organizatori când s-a oferit ca voluntar. Gol: n-a scris nimic.",
         "filter": "Filtrează",
         "searchEverywhere": "Caut în toate evenimentele — alege unul ca să restrângi.",
         "tableCaption": "Voluntari, cu vârstă, oraș, stare, rolurile date, rolurile oferite, kit, eveniment și data ofertei",

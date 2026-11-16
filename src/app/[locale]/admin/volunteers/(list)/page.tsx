@@ -73,6 +73,14 @@ function isVolunteerState(value: string | undefined): value is VolunteerState {
 }
 
 /**
+ * A person's message in the list's «Mesaj» column (§NNN): the words as typed, their line breaks kept, a few lines of a
+ * sentence's width — the floor keeps a full table from squeezing it to a word a line (the registrations list's lesson,
+ * §943), on the wide table only; a phone's card keeps its own width. `overflow-wrap`, not `word-break`: a word too long
+ * for the cell still breaks, and the column is never counted as one character wide.
+ */
+const MESSAGE_CELL_SX = { display: "inline-block", minWidth: { xs: 0, md: "12rem" }, maxWidth: "26rem", whiteSpace: "pre-line", overflowWrap: "break-word" } as const;
+
+/**
  * «Voluntari» (§839; the owner, 2026-10-21: «a nicer volunteers screen, similar to the participants area»): the
  * events' volunteers as one sorted, searched, server-paginated list (`AdminTable`, the registrations list's shape,
  * §312) — until now they were read only on each event's card, under the editor's seventeen boxes, one event at a
@@ -307,10 +315,30 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       sortable: true,
       initialDir: "asc",
       render: (row) => (
-        <Box component="span" data-testid="volunteer-city" sx={row.city === null ? { color: "text.disabled" } : { wordBreak: "break-word" }}>
+        // `overflow-wrap`, not `word-break` (§943's lesson): a full table would count the column as one character wide and
+        // print «Sfântu Gheorghe» three letters to a line; a city breaks at its spaces, and only an unbroken word too long breaks inside.
+        <Box component="span" data-testid="volunteer-city" sx={row.city === null ? { color: "text.disabled" } : { overflowWrap: "break-word" }}>
           {row.city ?? "—"}
         </Box>
       ),
+    },
+    {
+      /*
+        «Mesaj» (§NNN; the owner, 2026-11-16: «trebuie sa vad coloana de comentarii a voluntarilor in grid, sa stiu direct»): what
+        the person wrote for the organizers on the form — at most `VOLUNTEER_MESSAGE_MAX` characters, so the whole of it, as typed,
+        line breaks kept. Until now it was read only on the person's page and in the files. Nothing for whoever wrote none: an empty
+        cell in the table, no line at all on a phone's card.
+      */
+      key: "message",
+      label: t("volunteers.screen.columnMessage"),
+      hint: t("volunteers.screen.messageHint"),
+      omitEmptyOnPhone: true,
+      render: (row) =>
+        row.message ? (
+          <Box component="span" data-testid="volunteer-message" sx={MESSAGE_CELL_SX}>
+            {row.message}
+          </Box>
+        ) : null,
     },
     {
       key: "state",

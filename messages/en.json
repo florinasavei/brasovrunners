@@ -6250,6 +6250,8 @@
         "kitNo": "No kit",
         "columnKit": "Kit",
         "ageHint": "The age on the event's day, the one the parent's agreement for minors goes by. «—»: not given.",
+        "columnMessage": "Message",
+        "messageHint": "What the person wrote for the organizers when they offered to volunteer. Empty: they wrote nothing.",
         "filter": "Filter",
         "searchEverywhere": "Searching every event — choose one to narrow it down.",
         "tableCaption": "Volunteers, with age, city, state, roles given, roles offered, kit, event and date offered",

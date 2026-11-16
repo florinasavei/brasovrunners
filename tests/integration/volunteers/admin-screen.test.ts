@@ -378,6 +378,24 @@ describe("the list page (§839)", () => {
     expect(page).toContain("Confirmat: 1");
   });
 
+  it("shows what each person wrote for the organizers in a column of its own, whole, and nothing for whoever wrote none (§NNN)", async () => {
+    const words = "Pot ajuta doar până la 12.\nVin cu mașina, pot duce apă la punctul de pe traseu.";
+    await db.update(eventVolunteers).set({ message: words }).where(eq(eventVolunteers.id, people.ana));
+    const page = await listPage();
+    // Ana's words, whole and with their line break, once in the table and once in her phone card; the three others have no cell.
+    const cells = [...page.matchAll(/data-testid="volunteer-message"[^>]*>([^<]*)</g)].map((match) => match[1]);
+    expect(cells).toEqual([words, words]);
+    // The heading and what it means, behind its «?».
+    expect(page).toContain(ro.Admin.volunteers.screen.columnMessage);
+    expect(page).toContain(ro.Admin.volunteers.screen.messageHint);
+    // Free text is no sort key: the heading is words, not a link.
+    expect(page).not.toContain("sort=message");
+
+    // With nobody's words, the column stands empty: no cell is drawn for anybody.
+    await db.update(eventVolunteers).set({ message: null }).where(eq(eventVolunteers.id, people.ana));
+    expect(await listPage()).not.toContain('data-testid="volunteer-message"');
+  });
+
   it("names each person's age and city in columns of their own, sortable, «—» for whoever gave none (§NNN)", async () => {
     await db.update(eventVolunteers).set({ age: 34, dateOfBirth: "1992-05-02", city: "Săcele" }).where(eq(eventVolunteers.id, people.ana));
     const page = await listPage();
