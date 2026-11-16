@@ -6396,7 +6396,24 @@
         "column": "Point",
         "columnHint": "The point of the route the volunteer stands at, chosen in \"The volunteers' plan\". Empty: not placed yet, or with work that is not on the route.",
         "columnPoint": "{number}. {name}",
-        "pointValue": "Point on the route: {name}"
+        "pointValue": "Point on the route: {name}",
+        "picture": {
+          "title": "The plan's picture",
+          "alt": "The volunteers' plan drawn on the route",
+          "open": "Open the whole picture of the plan, in a new tab",
+          "openHint": "Press the picture to open the whole of it, in a new tab.",
+          "none": "The plan has no picture yet. Upload the map of the route with the points drawn on it: it shows here, above the points, and prints with the plan.",
+          "upload": "Upload the plan's picture",
+          "replace": "Change the picture",
+          "uploading": "Uploading…",
+          "saving": "Saving…",
+          "failed": "The picture did not upload. Try again or choose another file (JPEG, PNG or WebP).",
+          "help": "A JPEG, PNG or WebP image — for instance the map of the route with the points numbered. It is on no page of the site and is sent to nobody from here.",
+          "remove": "Delete the picture",
+          "removeTitle": "Delete the plan's picture?",
+          "removeBody": "The picture goes from the plan and from the printed sheet. The points and the people stay as they are. You can upload it again at any time.",
+          "noStorage": "Picture storage is not configured here, so the plan cannot have a picture."
+        }
       },
       "chips": {
         "before": "Volunteered before",
@@ -7152,7 +7169,8 @@
       "usedInMembersPage": "On the members' pages",
       "usedInHomePage": "On the home page",
       "usedInNewsletter": "In a newsletter sent",
-      "usedInTeamBox": "On the team page: the box {title}"
+      "usedInTeamBox": "On the team page: the box {title}",
+      "usedInVolunteerPlan": "The volunteers' plan: {title}"
     },
     "gallery": {
       "title": "Photo gallery",
@@ -14454,7 +14472,10 @@
       "addressChanged": "The address was changed; both addresses get an email.",
       "partnerSaved": "The partner was saved. Nothing was sent to anybody.",
       "partnerCleared": "No longer from a partner. Nothing was sent to anybody.",
-      "partnerUnchanged": "It already was; nothing to change."
+      "partnerUnchanged": "It already was; nothing to change.",
+      "planPictureSet": "The plan's picture is on: it shows above the points and prints with the plan.",
+      "planPictureReplaced": "The plan's picture was changed.",
+      "planPictureRemoved": "The plan's picture was deleted."
     },
     "mail": {
       "now": "Leaving now{road}: {what}.",

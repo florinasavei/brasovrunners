@@ -626,6 +626,26 @@ export const events = pgTable(
     volunteersButtonShown: boolean("volunteers_button_shown").notNull().default(true),
 
     /**
+     * The picture of «Planul voluntarilor» (migration `0207`, §NNN; the owner, 2026-11-16, with a picture of Saturday's route and
+     * its volunteers' points numbered on it: «trebui sa pot incarca si planul voluntarilor pe traseu in genul [pozei]»): the plan
+     * as the organizers drew it — the map with the points on it — a stored picture (`media_assets`, §66), or null for none. One
+     * picture an event. Uploaded, changed and taken off on the plan's page by whoever works the volunteers
+     * (`volunteers/plan.ts#setVolunteerPlanPicture`, its own audited press: the event's save never writes it), and read by the
+     * plan (`readVolunteerPlan`) and by nothing else.
+     *
+     * **No foreign key, for the cover's reason** (`cover_media_asset_id` below): `gallery.ts` imports this file, so a
+     * `references(() => mediaAssets.id)` here would make the two schema files import each other. The guard is the cover's too:
+     * `media/references.ts` counts the column, so neither the sweep nor a delete from the pictures page takes a picture a plan
+     * uses; the plan's read joins the store, so an id that names nothing is no picture rather than a broken one; and the write
+     * refuses an id that is no stored picture.
+     *
+     * The organizers' own, and one edition's: no public column reads it, and neither a series' later dates, a copy of the event
+     * nor the event's file carries it — it is this date's plan, and a file read on another environment would name another
+     * bucket's object.
+     */
+    volunteerPlanMediaAssetId: uuid("volunteer_plan_media_asset_id"),
+
+    /**
      * The two facts that stopped being free text in migration `0018`.
      *
      * Null means the club has not said, and the page then omits the row rather than guessing —

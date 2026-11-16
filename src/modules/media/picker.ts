@@ -51,11 +51,16 @@ export function usedHere(references: readonly { kind: string; id: string }[], sc
   return references.some((reference) => reference.kind === scope.kind && reference.id === scope.id);
 }
 
+/** The kinds of place the pictures page names (`MediaReference.kind`, `references.ts`), spelled here so this file stays free of the database. */
+type PictureReferenceKind = "album" | "page" | "event" | "team" | "teamIntro" | "teamBox" | "faq" | "membersPage" | "homePage" | "newsletter" | "volunteerPlan";
+
 /** A reference kind from the pictures page (`MediaReference`) as the picker's chip: the team page's introduction is «Echipa». */
 // «Întrebări frecvente» (§525) and the members' pages (§524) are pages the club writes: «Pagini».
 // A newsletter sent (§550) is no place a picker chooses from: it keeps its pictures, and has no chip.
-export function pictureUseOf(kind: "album" | "page" | "event" | "team" | "teamIntro" | "teamBox" | "faq" | "membersPage" | "homePage" | "newsletter"): PictureUse | null {
-  if (kind === "newsletter") return null;
+// Nor is the picture of an event's «Planul voluntarilor» (§NNN): the organizers' own map is on the plan's page, never among
+// an event's pictures — so it wears no chip, and «Acest eveniment» does not offer it (`usedHere` compares the kind).
+export function pictureUseOf(kind: PictureReferenceKind): PictureUse | null {
+  if (kind === "newsletter" || kind === "volunteerPlan") return null;
   // The page's introduction and a box under its chart (§691) are both «Echipa».
   if (kind === "teamIntro" || kind === "teamBox") return "team";
   // The home page's hero (§714) is a page the club sets up too.
@@ -64,7 +69,7 @@ export function pictureUseOf(kind: "album" | "page" | "event" | "team" | "teamIn
 }
 
 /** Each use once, in the chips' order. */
-export function pictureUses(kinds: readonly ("album" | "page" | "event" | "team" | "teamIntro" | "teamBox" | "faq" | "membersPage" | "homePage" | "newsletter")[]): PictureUse[] {
+export function pictureUses(kinds: readonly PictureReferenceKind[]): PictureUse[] {
   const present = new Set(kinds.map(pictureUseOf));
   return PICTURE_SOURCES.filter((source): source is PictureUse => source !== "all" && present.has(source));
 }

@@ -1895,6 +1895,7 @@ events
 - public_list_club members_only|as_typed|hidden NOT NULL DEFAULT members_only  -- §10.10; «Clubul pe lista publică», what the list's «Club» column says
 - volunteer_choices_max integer null  -- §951, amending §761; «Cel mult câte roluri poate bifa o persoană» on the public volunteers' form; null is any number; never copied by a duplicate, a series, a repeat or the event's file
 - cover_media_asset_id uuid null
+- volunteer_plan_media_asset_id uuid null  -- §17, §NNN; the picture of «Planul voluntarilor»: no FK, as the cover has none; counted by media/references.ts; never public, never copied by a series, a repeat or a duplicate, never in the event's file
 - created_by_staff_user_id uuid
 - updated_by_staff_user_id uuid
 - created_at timestamptz
@@ -3797,6 +3798,45 @@ One file that is not a picture (§718): the GPX of an event's «Traseul», uploa
 `contentDisposition`, which R2 stores so the file downloads under its name; `/api/media` gives the
 same header in the local and fake modes. It is no `media_assets` row, so the sweep never sees it;
 the event's save deletes it once no event row names its key.
+
+**«Planul voluntarilor» and its picture** (2026-11-16, `DECISIONS.md` §NNN; the owner, with a picture of Saturday's
+route and its volunteers' points numbered on it: «trebui sa pot incarca si planul voluntarilor pe traseu in genul
+[pozei] si sa ii pot distribui din aplicatie, sa stie exact unde si cum»). The plan
+(`/admin/events/[id]/plan-voluntari`, `modules/volunteers/plan.ts`; the decision of the same day that added it) is one
+event's points on the route, in the route's order, each with the volunteers who stand at it
+(`event_volunteers.checkpoint_id`) — the organizers' own, for whoever works the volunteers (`canManageVolunteers`: the
+Organizer and the Administrators), built and printed on its page. Its picture is the plan as the organizers drew it —
+the map with the points on it — and lives with the plan:
+
+- **One stored picture an event**, `events.volunteer_plan_media_asset_id`: a `media_assets` row by id, nullable, with
+  **no foreign key, for the cover's reason** (`gallery.ts` imports `events.ts`; `db/schema/events.ts` says it at both
+  columns). The guards are the cover's: `media/references.ts` counts the column, so the sweep never takes the picture
+  and the pictures page's delete is refused; the plan's read joins the store, so an id that names nothing is no picture
+  rather than a broken one; and the write refuses an id that names no stored picture, or a film's poster (§485).
+- **The pictures page names the plan, not the event** (reference kind `volunteerPlan`): the picture is on the plan's
+  page and nowhere in the event's editor, so the line links to the plan — in words alone for a role the plan is a 404
+  for — and no «Din galerie» counts it among an event's pictures (`media/picker.ts`).
+- **Uploaded where the plan is**, through the backoffice's one upload (`/api/admin/media`, `media/ui/upload-picture.ts`,
+  the quality beside it as beside every upload) by an island that is handed strings and names only
+  (`volunteers/ui/PlanPictureUpload.tsx`) and then sends the page's own form. `setPlanPictureAction` and
+  `removePlanPictureAction` ask the capability at their door (`requireStaffCapability(canManageVolunteers)`), and
+  `plan.ts#setVolunteerPlanPicture` asks it again before anything is read, holds the event's row, and audits one row a
+  change — `event.volunteer_plan_picture_set` (the picture's id and the one it replaced) or
+  `event.volunteer_plan_picture_removed` (the id it was): the event and the pictures' ids, never a file's name. A press
+  that changes nothing writes nothing; the event's `version` does not move. «Șterge poza» asks first. A picture changed
+  or taken off is not deleted by the press: used nowhere, it is the sweep's after its week, as everywhere.
+- **Drawn above the points**, as wide as the column, a press opening the whole of it in a new tab; printed with the
+  plan, first after the sheet's title, in one piece (`break-inside: avoid`, and never taller than a sheet), its controls
+  left off the paper. `readVolunteerPlan` returns it beside the points — the whole picture and a display size
+  (`fullUrl`, `displayUrl`, the ladder's `srcSet`), at the store's public addresses — and whoever sends the plan on
+  reads it from there.
+- **One edition's, and the organizers'.** No public query, no public cache and no email reads the column, and neither a
+  series' scope, a repeat, a duplicate nor the event's file carries it: it is this date's plan, and a file read on
+  another environment would name another bucket's object. `tests/unit/volunteers/plan-picture-never-leaves.test.ts`
+  holds the list of files that may name the column; a new reader — telling each volunteer their point is the next
+  change — is a reviewed edit of that list, and reads the picture through the plan. As for every stored picture, the
+  object itself is public behind an unguessable key (§66), and the pictures page shows it to the roles that read that
+  page.
 
 ---
 

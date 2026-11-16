@@ -10,20 +10,25 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { pictureSizes } from "@/modules/media/ladder";
+import { HIGH_WEB_MAX, LOW_WEB_MAX, ORIGINAL_WEB_MAX, WEB_MAX } from "@/modules/media/limits";
+import { isStorageConfigured } from "@/modules/media/storage";
 import { bibEventDate, findEventForBibs } from "@/modules/registrations/bibs";
 import { formatPhone } from "@/modules/registrations/phone";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { roleLabel } from "@/modules/volunteers/domain/volunteer";
 import { readVolunteerPlan, type VolunteerPlanPerson } from "@/modules/volunteers/plan";
+import PlanPictureUpload from "@/modules/volunteers/ui/PlanPictureUpload";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
+import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { HEADING_SX } from "@/shared/ui/heading-scale";
 import PrintButton from "@/shared/ui/PrintButton";
 import { ROW_SX } from "@/shared/ui/row-fold";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
-import { placeVolunteerAction } from "./actions";
+import { placeVolunteerAction, removePlanPictureAction, setPlanPictureAction } from "./actions";
 
 type Props = { params: Promise<{ locale: string; id: string }>; searchParams: Promise<Record<string, string | undefined>> };
 
@@ -42,6 +47,13 @@ const NOT_ON_PAPER = { "@media print": { display: "none" } } as const;
 const PHONE_LINK_SX = { display: "inline-flex", alignItems: "center", ...TAP_TARGET, "@media print": { minHeight: 0, color: "inherit", textDecoration: "none" } } as const;
 
 /**
+ * The tallest the plan's picture is printed (§NNN): under the height of a sheet whichever way it is turned — an A4 or a Letter
+ * page on its side leaves some 18 centimetres between the margins — so the picture is one piece on one sheet and never cut
+ * between two. In centimetres, not in the viewport's units: a printed page's `vh` is not the same length in every browser.
+ */
+const PICTURE_ON_PAPER_MAX_HEIGHT = "17cm";
+
+/**
  * «Planul voluntarilor» (§949; the owner, 2026-11-16, with a map of the route and its seven points: «e foarte important sa
  * avem planul de voluntari si fiecare in ce punct ramane»): one event's points on the route, in the route's order, each with
  * the volunteers who stand at it — their name, their number, how to reach them, what they were given to do — and under them
@@ -51,6 +63,12 @@ const PHONE_LINK_SX = { display: "inline-flex", alignItems: "center", ...TAP_TAR
  * not cancelled (`modules/volunteers/plan.ts`). For whoever works the volunteers (`canManageVolunteers`: the Organizer and the
  * Administrators) — anybody else gets the 404 of an address that does not exist (BR-REQ-060-01), and the service refuses them
  * again. Nothing on it is public, and nobody is emailed from it: it is the organizers' own plan.
+ *
+ * Above the points, the plan as the organizers drew it (the decision after the plan's own; the owner, the same day, with a
+ * picture of the route and its points numbered on it: «trebui sa pot incarca si planul voluntarilor pe traseu in genul
+ * [pozei]»): one picture, as wide as the column, a press opening the whole of it in a new tab — and on paper the first thing
+ * after the sheet's title, in one piece. Uploaded, changed and taken off here by the same people («Încarcă poza planului»,
+ * «Schimbă poza», «Șterge poza», which asks first); with no picture the page reads as it did, plus the upload.
  */
 export default async function VolunteerPlanPage({ params, searchParams }: Props) {
   const { locale, id } = await params;
@@ -86,6 +104,11 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
     });
   const placed = plan.points.reduce((sum, { people }) => sum + people.length, 0);
   const empty = plan.points.filter(({ people }) => people.length === 0).length;
+  // The plan's picture (§NNN), and who is offered its controls: whoever works the volunteers — the action and the service ask again.
+  const picture = plan.picture;
+  const mayChangePicture = canManageVolunteers(actor.role);
+  // Whether this environment can take a picture at all (`STORAGE_MODE`): without a store the page says so and offers no upload.
+  const storeHere = isStorageConfigured();
   const hidden = (
     <>
       <input type="hidden" name="uiLocale" value={locale} />
@@ -152,6 +175,117 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
       </Typography>
       <Box>
         <PrintButton label={t("volunteers.plan.print")} />
+      </Box>
+
+      {/* The plan as the organizers drew it (§NNN): above the points on the page, and the first thing after the title on paper —
+          the section's own heading, its hint and every control stay off the sheet, so a plan with no picture prints as it did. */}
+      <Box id="plan-picture" sx={{ scrollMarginTop: 16 }} data-testid="plan-picture-section">
+        <Typography variant="h3" sx={{ ...HEADING_SX[3], ...NOT_ON_PAPER }}>
+          {t("volunteers.plan.picture.title")}
+        </Typography>
+        {picture ? (
+          // One piece on one sheet: never cut between two pages, and never taller than a sheet (`PICTURE_ON_PAPER_MAX_HEIGHT`).
+          <Box component="figure" sx={{ m: 0, mt: 1, breakInside: "avoid", "@media print": { mt: 0 } }} data-testid="plan-picture">
+            <Box
+              component="a"
+              href={picture.fullUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t("volunteers.plan.picture.open")}
+              sx={{ display: "block", lineHeight: 0 }}
+              data-testid="plan-picture-link"
+            >
+              <Box
+                component="img"
+                src={picture.displayUrl}
+                srcSet={picture.srcSet}
+                sizes={picture.srcSet ? pictureSizes("page") : undefined}
+                alt={t("volunteers.plan.picture.alt")}
+                width={picture.width}
+                height={picture.height}
+                decoding="async"
+                // As wide as the column and never wider than its own pixels; on paper as large as fits one sheet, in its own shape.
+                sx={{
+                  display: "block",
+                  width: "100%",
+                  maxWidth: `${picture.width}px`,
+                  height: "auto",
+                  "@media print": { width: "auto", maxWidth: "100%", maxHeight: PICTURE_ON_PAPER_MAX_HEIGHT },
+                }}
+                data-testid="plan-picture-image"
+              />
+            </Box>
+            <Typography component="figcaption" variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5, ...NOT_ON_PAPER }}>
+              {t("volunteers.plan.picture.openHint")}
+            </Typography>
+          </Box>
+        ) : (
+          // What to do about it, said only to somebody who can: where there is no store, the line under says that instead.
+          mayChangePicture &&
+          storeHere && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, ...NOT_ON_PAPER }} data-testid="plan-picture-none">
+              {t("volunteers.plan.picture.none")}
+            </Typography>
+          )
+        )}
+        {/* Whoever works the volunteers — on this page, everybody it answers to; said here so the controls never outlive the gate. */}
+        {mayChangePicture &&
+          (storeHere ? (
+            <Stack spacing={1} sx={{ mt: 1.5, ...NOT_ON_PAPER }} data-testid="plan-picture-controls">
+              {/* The island uploads the file, writes the stored picture's id into this form and sends it (`setPlanPictureAction`). */}
+              <Box component="form" action={setPlanPictureAction} data-testid="plan-picture-form">
+                {hidden}
+                <PlanPictureUpload
+                  replaces={picture !== null}
+                  inputId="plan-picture-file"
+                  lang={locale}
+                  labels={{
+                    upload: t("volunteers.plan.picture.upload"),
+                    replace: t("volunteers.plan.picture.replace"),
+                    uploading: t("volunteers.plan.picture.uploading"),
+                    saving: t("volunteers.plan.picture.saving"),
+                    failed: t("volunteers.plan.picture.failed"),
+                    help: t("volunteers.plan.picture.help"),
+                    // The house's one quality choice and the chosen file's facts (§414, §437), in their own words.
+                    quality: {
+                      legend: t("gallery.qualityLegend"),
+                      low: t("gallery.qualityLow"),
+                      normal: t("gallery.qualityNormal"),
+                      high: t("gallery.qualityHigh"),
+                      original: t("gallery.qualityOriginal"),
+                      help: t("gallery.qualityHelp", { lowMax: String(LOW_WEB_MAX), normalMax: String(WEB_MAX), highMax: String(HIGH_WEB_MAX), originalMax: String(ORIGINAL_WEB_MAX) }),
+                    },
+                    chosen: {
+                      chosen: t.raw("richText.imageChosen") as string,
+                      sent: t.raw("richText.imageSent") as string,
+                      lighter: t.raw("richText.imageLighter") as string,
+                    },
+                  }}
+                />
+              </Box>
+              {/* «Șterge poza» asks first: only uploading the picture again brings it back. */}
+              {picture && (
+                <Box component="form" action={removePlanPictureAction} data-testid="plan-picture-remove-form">
+                  {hidden}
+                  <ConfirmSubmitButton
+                    label={t("volunteers.plan.picture.remove")}
+                    icon="delete"
+                    color="error"
+                    variant="text"
+                    size="medium"
+                    title={t("volunteers.plan.picture.removeTitle")}
+                    body={t("volunteers.plan.picture.removeBody")}
+                    confirmLabel={t("volunteers.plan.picture.remove")}
+                    cancelLabel={t("confirm.cancel")}
+                  />
+                </Box>
+              )}
+            </Stack>
+          ) : (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, ...NOT_ON_PAPER }} data-testid="plan-picture-no-storage">
+              {t("volunteers.plan.picture.noStorage")}
+            </Typography>
+          ))}
       </Box>
 
       {plan.points.length === 0 ? (
