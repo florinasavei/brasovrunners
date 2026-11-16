@@ -53,14 +53,15 @@ export async function placeVolunteerAction(form: FormData): Promise<void> {
   redirect(refusal ? `${path}?planError=${encodeURIComponent(refusal)}#admin-alert` : `${path}${anchor}`);
 }
 
-/** Where a press on the plan's picture comes back to: the picture's own place on the page (`page.tsx`). */
+/** Where a press on the plan's picture that went through comes back to: the picture's own place on the page (`page.tsx`). */
 const PICTURE_ANCHOR = "#plan-picture";
 
 /**
  * A press on the plan's picture, start to finish (§952): the staff session and the capability, asked here by name at the door
  * of the action — whoever works the volunteers (`canManageVolunteers`: the Organizer and the Administrators, BR-REQ-060-01) —
- * before the service asks it again; then `press`, whose outcome becomes the toast; the way back is the plan, at the picture, a
- * refusal's code in the address. A plain function of this file, never a verb a browser may call: only the two actions under
+ * before the service asks it again; then `press`, whose outcome becomes the toast; the way back is the plan, at the picture —
+ * or, refused, at the page's alert (`#admin-alert`) with the refusal's code in the address, where its sentence is (§953's rule
+ * for every press of this page). A plain function of this file, never a verb a browser may call: only the two actions under
  * it are exported.
  */
 async function pressOnPlanPicture(form: FormData, press: (actor: Pick<StaffUser, "id" | "role">, eventId: string) => Promise<void>): Promise<never> {
@@ -79,7 +80,7 @@ async function pressOnPlanPicture(form: FormData, press: (actor: Pick<StaffUser,
     refusal = error.code;
   }
   revalidatePath(path);
-  redirect(refusal ? `${path}?planError=${encodeURIComponent(refusal)}${PICTURE_ANCHOR}` : `${path}${PICTURE_ANCHOR}`);
+  redirect(refusal ? `${path}?planError=${encodeURIComponent(refusal)}#admin-alert` : `${path}${PICTURE_ANCHOR}`);
 }
 
 /**
@@ -113,7 +114,7 @@ export async function removePlanPictureAction(form: FormData): Promise<void> {
   });
 }
 
-/** Where a press on «Trimite fiecăruia punctul lui» comes back to: its own place on the page (`page.tsx`). */
+/** Where a press on «Trimite fiecăruia punctul lui» that went through comes back to: its own place on the page (`page.tsx`); a refused one lands at the page's alert, like every press here (§953). */
 const MAIL_ANCHOR = "#plan-mail";
 
 /** The box the question's «Trimite din nou tuturor» fills (`ConfirmSpec.option`): `on` when ticked, empty otherwise. */
@@ -155,6 +156,6 @@ export async function sendVolunteerPointsAction(_previous: FormOutcome | null, f
       refusal = error.code;
     }
     revalidatePath(path);
-    redirect(refusal ? `${path}?planError=${encodeURIComponent(refusal)}${MAIL_ANCHOR}` : `${path}${MAIL_ANCHOR}`);
+    redirect(refusal ? `${path}?planError=${encodeURIComponent(refusal)}#admin-alert` : `${path}${MAIL_ANCHOR}`);
   });
 }

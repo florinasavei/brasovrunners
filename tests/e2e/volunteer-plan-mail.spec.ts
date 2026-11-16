@@ -254,7 +254,7 @@ test.describe("§NNN «Trimite fiecăruia punctul lui» on «Planul voluntarilor
     await water.getByTestId("plan-place-select").selectOption({ label: radu.name });
     await water.getByTestId("plan-place").click();
     await expect(page).toHaveURL(new RegExp(`/ro/admin/events/${eventId}/plan-voluntari#point-${points.water}$`), { timeout: 30_000 });
-    await toastSays(page, "Pus la punct: apare în planul voluntarilor.");
+    await toastSays(page, "Stă la punctul ales: apare în planul voluntarilor.");
     await hydrated(page);
     await expect(page.getByTestId("plan-summary")).toHaveText("La puncte: 3 · Fără punct: 0 · Puncte fără nimeni: 0");
     expect(await queuedSince(eventId, firstPress)).toEqual([]);

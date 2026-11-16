@@ -42,7 +42,7 @@ beforeAll(async () => {
   const journal = JSON.parse(readFileSync(`${MIGRATIONS}/meta/_journal.json`, "utf8")) as Journal;
   const position = journal.entries.findIndex((entry) => entry.tag === TAG);
   expect(position, "the journal lists the migration").toBeGreaterThan(0);
-  // Sorts after every migration before it (drizzle applies by `when`), numbered right after the newest one shipped before it: the race-day decision (0208 on its own branch; 0209 shipped first, so it was renumbered at the merge).
+  // Sorts after every migration before it (drizzle applies by `when`), numbered right after the newest one shipped before it, the race-day decision (0209); this one was 0208 on its own branch and was renumbered at the merge, because production had already run 0209.
   expect(journal.entries[position].when).toBeGreaterThan(journal.entries[position - 1].when);
   expect(journal.entries[position].idx).toBe(journal.entries[position - 1].idx + 1);
   expect(journal.entries[position - 1].tag).toBe("0209_volunteer_race_day_decision");

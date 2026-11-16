@@ -6436,7 +6436,7 @@
           "help": "Un email fiecărui voluntar pus la un punct, dacă are adresă de email: punctul lui, ce are de făcut acolo și poza planului. Pleacă doar când apeși aici.",
           "send": "Trimite fiecăruia punctul lui",
           "again": "Trimite din nou tuturor",
-          "allTold": "Toți cei de la puncte își știu deja punctul. Trimite din nou doar dacă s-a schimbat ceva: poza, numele unui punct, un rol.",
+          "allTold": "Toți cei de la puncte își știu deja punctul. Trimite din nou doar dacă s-a schimbat ceva: poza, numele sau nota unui punct, ordinea punctelor, un rol.",
           "nobody": "Nimeni de anunțat: niciun voluntar cu adresă de email nu stă încă la un punct de pe traseu.",
           "confirmTitle": "Trimiți fiecăruia punctul lui?",
           "confirmBody": "Fiecare primește pe email punctul lui și ce are de făcut acolo.",

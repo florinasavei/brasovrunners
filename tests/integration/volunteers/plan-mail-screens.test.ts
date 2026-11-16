@@ -401,7 +401,7 @@ describe("§NNN the press: `sendVolunteerPointsAction`", () => {
   it("comes back with the refusal's code when everybody was already told, and writes to everybody with the box ticked", async () => {
     await press();
     // The same press again, the box empty: nothing queued, the code in the address, no toast.
-    expect(await press()).toBe(`/ro/admin/events/${race.raceId}/plan-voluntari?planError=VOLUNTEER_POINTS_ALL_TOLD#plan-mail`);
+    expect(await press()).toBe(`/ro/admin/events/${race.raceId}/plan-voluntari?planError=VOLUNTEER_POINTS_ALL_TOLD#admin-alert`);
     expect(toasted()).toEqual([]);
     expect(await pointMails()).toHaveLength(3);
     // The page says the refusal in words, in both languages.
@@ -425,8 +425,8 @@ describe("§NNN the press: `sendVolunteerPointsAction`", () => {
 
   it("comes back with the reason when nobody with an address stands at a point, and the page says it", async () => {
     for (const id of [race.people.ana, race.people.dan, race.people.ion]) await place(id, "");
-    expect(await press()).toBe(`/ro/admin/events/${race.raceId}/plan-voluntari?planError=VOLUNTEER_POINTS_NOBODY#plan-mail`);
-    expect(await press({ again: "on" })).toContain("planError=VOLUNTEER_POINTS_NOBODY#plan-mail");
+    expect(await press()).toBe(`/ro/admin/events/${race.raceId}/plan-voluntari?planError=VOLUNTEER_POINTS_NOBODY#admin-alert`);
+    expect(await press({ again: "on" })).toContain("planError=VOLUNTEER_POINTS_NOBODY#admin-alert");
     expect(await pointMails()).toEqual([]);
     expect(toasted()).toEqual([]);
     expect(await trail()).toEqual([]);
@@ -438,8 +438,8 @@ describe("§NNN the press: `sendVolunteerPointsAction`", () => {
   it("refuses the Tehnic role, the Redactor, a desk Volunteer and a member at its own door: the service is never reached", async () => {
     for (const role of ["DEV", "COPYWRITER", "CONTRIBUTOR", "MEMBER"] as const) {
       state.actor = staff[role];
-      expect(await press(), role).toBe(`/ro/admin/events/${race.raceId}/plan-voluntari?planError=FORBIDDEN#plan-mail`);
-      expect(await press({ again: "on" }), role).toBe(`/ro/admin/events/${race.raceId}/plan-voluntari?planError=FORBIDDEN#plan-mail`);
+      expect(await press(), role).toBe(`/ro/admin/events/${race.raceId}/plan-voluntari?planError=FORBIDDEN#admin-alert`);
+      expect(await press({ again: "on" }), role).toBe(`/ro/admin/events/${race.raceId}/plan-voluntari?planError=FORBIDDEN#admin-alert`);
     }
     expect(state.asked).toEqual(Array.from({ length: 8 }, () => "canManageVolunteers"));
     expect(state.pressed).toEqual([]);
@@ -452,7 +452,7 @@ describe("§NNN the press: `sendVolunteerPointsAction`", () => {
     expect(await press({ eventId: "" })).toBe("/ro/admin/volunteers");
     expect(await press({ eventId: "not-an-id" })).toBe("/ro/admin/volunteers");
     const missing = "11111111-1111-4111-8111-111111111111";
-    expect(await press({ eventId: missing })).toBe(`/ro/admin/events/${missing}/plan-voluntari?planError=NOT_FOUND#plan-mail`);
+    expect(await press({ eventId: missing })).toBe(`/ro/admin/events/${missing}/plan-voluntari?planError=NOT_FOUND#admin-alert`);
     expect(await pointMails()).toEqual([]);
   });
 

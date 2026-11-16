@@ -6436,7 +6436,7 @@
           "help": "One email to each volunteer placed at a point who has an email address: their point, what they do there and the plan's picture. It leaves only when you press here.",
           "send": "Send each their point",
           "again": "Send to everybody again",
-          "allTold": "Everybody at a point already knows it. Send again only if something changed: the picture, a point's name, a role.",
+          "allTold": "Everybody at a point already knows it. Send again only if something changed: the picture, a point's name or note, the order of the points, a role.",
           "nobody": "Nobody to tell: no volunteer with an email address stands at a point of the route yet.",
           "confirmTitle": "Send each their point?",
           "confirmBody": "Each gets their point by email, and what they do there.",
