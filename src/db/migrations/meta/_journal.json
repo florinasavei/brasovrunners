@@ -1373,6 +1373,13 @@
       "when": 1794830347301,
       "tag": "0204_volunteer_checkpoint",
       "breakpoints": true
+    },
+    {
+      "idx": 196,
+      "version": "7",
+      "when": 1794836171767,
+      "tag": "0205_raffle",
+      "breakpoints": true
     }
   ]
 }

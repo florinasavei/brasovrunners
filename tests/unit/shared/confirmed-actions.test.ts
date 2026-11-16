@@ -336,6 +336,12 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Are kit» on a row of the «Voluntari» list (§904): the organizers' own mark of who gets the volunteers' kit, a one-press tick.
   setVolunteerKitAction:
     "a mark on the club's packing for one volunteer, undone by the same tick; it tells nobody and changes no state, role or count but «Cu kit»",
+  // The same tick on a row of the «Voluntari» list (§NNN).
+  setVolunteerRaffleAction:
+    "a mark on the club's own raffle list for one volunteer, undone by the same tick; it tells nobody and changes no state, role, number or count",
+  // «Participă la tombolă» on a row of the registrations list (§NNN): on the raffle's list or off it, a one-press tick.
+  setRegistrationRaffleAction:
+    "a mark on the club's own raffle list for one registration, undone by the same tick; it tells nobody and changes no state, place, number or count",
   // «Pune aici» / «Scoate» on «Planul voluntarilor» (§NNN): where a volunteer stands on the route, one press either way.
   placeVolunteerAction:
     "a line of the organizers' own plan for one volunteer, undone by «Scoate» or by another point; it tells nobody and changes no state, role, number or count",

@@ -1008,6 +1008,11 @@ export const eventFieldsSchema = z
      */
     kitShirt: z.boolean().optional(),
     /**
+     * «Avem tombolă» (§NNN): the organizers' switch for an event that draws a raffle. Optional on the wire, as `kitShirt` is:
+     * absent means "this caller is not editing it", so no save switches a raffle off by not mentioning it.
+     */
+    hasRaffle: z.boolean().optional(),
+    /**
      * «Locurile din lista de așteptare se alocă automat» (§615): «Da» offers a freed or added place to
      * the head of the line at once, «Nu» leaves it to the organizer. Absent means this caller is not
      * editing it, by the kit's discipline (§554), so no save switches the offers by not mentioning them.

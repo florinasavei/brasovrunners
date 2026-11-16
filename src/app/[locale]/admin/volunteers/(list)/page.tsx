@@ -8,7 +8,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { addVolunteerAction } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
-import { setVolunteerKitAction } from "@/app/[locale]/admin/volunteers/actions";
+import { setVolunteerKitAction, setVolunteerRaffleAction } from "@/app/[locale]/admin/volunteers/actions";
 import { addVolunteerNoteFromListAction } from "@/app/[locale]/admin/volunteers/[id]/note-actions";
 import { getDb } from "@/db/client";
 import { VOLUNTEER_NOTE_MAX } from "@/db/schema/event-volunteer-notes";
@@ -284,6 +284,21 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     </Box>
   );
 
+  /**
+   * «Participă la tombolă» on a row (§NNN): the kit tick's own shape — a plain form posting the state it wants (`inRaffle=1|0`). Drawn
+   * for an event that holds a raffle («Avem tombolă» in its editor); the service asks for the role.
+   */
+  const raffleTick = (row: VolunteerAdminRow) => (
+    <Box component="form" action={setVolunteerRaffleAction} data-testid="volunteer-raffle-form">
+      {hidden(row)}
+      <input type="hidden" name="volunteerId" value={row.id} />
+      <input type="hidden" name="inRaffle" value={row.inRaffle ? "0" : "1"} />
+      <TickButton checked={row.inRaffle} aria-label={`${t("volunteers.screen.raffleTick")}: ${shortText(row.name)}`} data-testid="volunteer-raffle-tick">
+        {t("volunteers.screen.raffleTick")}
+      </TickButton>
+    </Box>
+  );
+
   const columns: readonly AdminColumn<VolunteerAdminRow>[] = [
     {
       key: "name",
@@ -408,6 +423,17 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       label: t("volunteers.screen.columnKit"),
       render: kitTick,
     },
+    // «Tombolă» (§NNN): with one event chosen that holds a raffle, whether each volunteer's number is on the raffle's list.
+    ...(scopeEventRow?.hasRaffle
+      ? [
+          {
+            key: "raffle",
+            label: t("volunteers.screen.columnRaffle"),
+            hint: t("volunteers.screen.raffleHint"),
+            render: raffleTick,
+          } satisfies AdminColumn<VolunteerAdminRow>,
+        ]
+      : []),
     {
       key: "event",
       label: t("nav.events"),

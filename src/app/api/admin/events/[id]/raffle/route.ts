@@ -46,7 +46,12 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
   const t = await getTranslations({ locale, namespace: "Admin" });
   const csv = buildRaffleCsv(
-    { number: t("registrations.raffle.columns.number"), name: t("registrations.raffle.columns.name"), kind: t("registrations.raffle.columns.kind"), kinds: { RUNNER: t("registrations.raffle.kinds.RUNNER"), VOLUNTEER: t("registrations.raffle.kinds.VOLUNTEER") } },
+    { number: t("registrations.raffle.columns.number"), name: t("registrations.raffle.columns.name"), kind: t("registrations.raffle.columns.kind"), kinds: { RUNNER: t("registrations.raffle.kinds.RUNNER"), VOLUNTEER: t("registrations.raffle.kinds.VOLUNTEER") },
+      // «Prezent» (§NNN): whether the desk checked the runner in — the club filters by it; a volunteer's cell is empty.
+      present: t("registrations.raffle.columns.present"),
+      presentYes: t("registrations.raffle.present.yes"),
+      presentNo: t("registrations.raffle.present.no"),
+    },
     list.rows,
   );
   const day = new Intl.DateTimeFormat("en-CA", { timeZone: CLUB_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);

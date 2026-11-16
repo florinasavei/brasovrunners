@@ -500,6 +500,14 @@ export const registrations = pgTable(
      */
     ambassador: boolean("ambassador").notNull().default(false),
     /**
+     * «Participă la tombolă» (migration `0205`, §NNN; the owner, 2026-11-16: «o bifă importantă, și coloană peste tot de
+     * „participă la tombolă"»): whether this registration's number is written on «Lista pentru tombolă» of an event that holds a
+     * raffle (`events.has_raffle`). True by default — everybody who runs is in — and unticked by the Organizer or an Administrator
+     * to take one person out (`raffle-mark.ts`), audited. The organizers' own mark and nothing else: never read by the allocator, the
+     * capacity formula, a count, an email or a public page (`tests/unit/registrations/raffle-never-leaves.test.ts`).
+     */
+    inRaffle: boolean("in_raffle").notNull().default(true),
+    /**
      * The Administrator's two ticks on a registration marked «Elită» (§910) or «Ambasador» (§NNN), stored as what they
      * hide — a staff tick may hide such a runner, never show one: «Apare în clasament» unticked
      * (`elite_hidden_from_results`) leaves the runner's result out of the public results and of everybody's positions

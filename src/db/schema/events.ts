@@ -907,6 +907,15 @@ export const events = pgTable(
     kitShirt: boolean("kit_shirt").notNull().default(false),
 
     /**
+     * «Avem tombolă» (migration `0205`, §NNN; the owner, 2026-11-16: «o setare per eveniment cum ar fi „avem tombolă" dar doar
+     * în backoffice vizibil»): the club draws a raffle at this event. The organizers' own switch — it shows the «Tombolă» tick on
+     * the registrations' and the volunteers' lists and nothing else: no public page, email or count reads it (it is not among
+     * `PUBLIC_COLUMNS`), and the draw itself is made outside the site, from «Lista pentru tombolă». False by default; one
+     * edition's own, so neither a series edit, a copy nor the event's file carries it.
+     */
+    hasRaffle: boolean("has_raffle").notNull().default(false),
+
+    /**
      * «Condiții de participare» → «Informații medicale» (§557; the owner, 2026-09-29: «trebuie să am
      * o bifă și pentru acele informații medicale, pentru că nu știu ce să fac cu ele»): the event asks
      * the optional health note (BR-REQ-031-05), GDPR art. 9 data the club collects only when it

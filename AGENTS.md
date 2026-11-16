@@ -2907,8 +2907,11 @@ share the purpose. Steps 3–8 remain M4.
 
 «Lista pentru tombolă» (§NNN, `volunteers/raffle-list.ts`, `/api/admin/events/[id]/raffle`) is one more such file, for
 one event: everybody who wears a number there — a confirmed registration with a race number, a confirmed volunteer
-with one of the volunteers' series — by the number, as three columns: the number, the name, «Alergător» or «Voluntar».
-Never a test registration, anybody without a number, a cancelled person or a line of the elite list, and nothing else
+with one of the volunteers' series — by the number, as four columns: the number, the name, «Alergător» or «Voluntar»,
+and «Prezent» — whether the desk checked the runner in, empty for a volunteer, whom the desk checks nobody in as (§NNN:
+the raffle is among who is there, and the club filters by it; a column rather than a condition, so a desk that did not
+check everybody in never empties the file). Never a test registration, anybody without a number, a cancelled person, a
+line of the elite list, or anybody an organizer took out («Participă la tombolă» unticked, §15.11), and nothing else
 of a person. Taken by whoever reads the registrations and works the volunteers (the Organizer and the Administrators),
 asserted in the route and the service; recorded as `event.raffle_list_exported` with the two counts, never a name.
 
@@ -3242,6 +3245,24 @@ registration's page, the internal list, «Invitații», the registrations' Excel
 «Toate datele unei persoane»; never by a public page, an email, the desk, the file
 given to sponsors, the allocator or the capacity formula (`tests/unit/registrations/partner-never-leaves.test.ts`). No
 state, place, count, email or declaration moves.
+
+Beside those two, and like them a mark that changes nothing else: **«Participă la tombolă»** (2026-11-16, `DECISIONS.md`
+§NNN; the owner: «o bifă importantă, și coloană peste tot de „participă la tombolă" și o setare per eveniment cum ar fi
+„avem tombolă" dar doar în backoffice vizibil»). An event that holds a raffle says so in its editor («Avem tombolă»,
+`events.has_raffle`, off by default, one edition's own: no series edit, copy or event file carries it, and no public
+column reads it). On such an event the registrations list — one event chosen — has a column «Tombolă»: one boolean
+`in_raffle` on a registration, **on by default**, unticked or ticked again by whoever reads the registrations — the
+Organizer and the Administrators (`canReadRegistrations`, asserted by `setRegistrationRaffleAction` and
+`raffle-mark.ts#setRegistrationInRaffle`; the owner: «doar adminul și organizatorul pot bifa și vedea asta») — at any
+time and in any state, audited (`registration.raffle_included` / `registration.raffle_excluded`, the new value only).
+**It is the one thing the Organizer changes on a registration** (§289 gave the Organizer the list to read and nothing on
+it to change): the raffle is the organizers' own to run, and the tick moves nothing a registration owns. The «Voluntari» list has the same tick on a volunteer
+(`event_volunteers.in_raffle`), pressed by whoever works the volunteers (`canManageVolunteers`) and audited as every
+edit of a person's boxes. A tick decides one thing: whether the person's number is written on «Lista pentru tombolă»
+(§15.10), which also says, beside each runner, whether the desk checked them in. Read by those two lists, that file and
+«Toate datele unei persoane»; never by a public page, an email, the desk, a count, another export, the allocator or the
+capacity formula (`tests/unit/registrations/raffle-never-leaves.test.ts`). No state, place, number, email or
+declaration moves, and the person is not told.
 
 Beside the eight too, and made of them rather than a ninth: **«Transformă în voluntar»** on a registration's page and
 **«Transformă în alergător»** on a volunteer's (2026-11-15, `DECISIONS.md` §NNN; the owner: «aș vrea să pot să „transform"

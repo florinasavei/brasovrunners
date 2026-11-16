@@ -166,13 +166,31 @@ describe("§NNN BR-REQ-071-01 «Lista pentru tombolă»: everybody who wears a n
     await everybody();
     const list = await exportRaffleList(db, admin, eventId, NOW);
     expect(list.rows).toEqual([
-      { number: 1, name: "Ana Pop", kind: "RUNNER" },
-      { number: 2, name: "Radu Munteanu", kind: "RUNNER" },
-      { number: 500, name: "Ion Voluntar", kind: "VOLUNTEER" },
-      { number: 501, name: "Oana Voluntar", kind: "VOLUNTEER" },
+      // «Prezent» (§NNN): nobody was checked in at the desk yet; the desk checks no volunteer in.
+      { number: 1, name: "Ana Pop", kind: "RUNNER", present: false },
+      { number: 2, name: "Radu Munteanu", kind: "RUNNER", present: false },
+      { number: 500, name: "Ion Voluntar", kind: "VOLUNTEER", present: null },
+      { number: 501, name: "Oana Voluntar", kind: "VOLUNTEER", present: null },
     ]);
     expect(list).toMatchObject({ runners: 2, volunteers: 2 });
     expect(new Set(list.rows.map((row) => row.number)).size).toBe(list.rows.length);
+  });
+
+  it("§NNN leaves out whoever an organizer took out of the raffle, and says which runners the desk checked in", async () => {
+    await everybody();
+    // Radu is unticked on the registrations' list, Oana on the volunteers'; Ana was checked in at the desk.
+    await db.update(registrations).set({ inRaffle: false }).where(eq(registrations.registeredName, "Radu Munteanu"));
+    await db.update(eventVolunteers).set({ inRaffle: false }).where(eq(eventVolunteers.name, "Oana Voluntar"));
+    await db.update(registrations).set({ checkedInAt: NOW }).where(eq(registrations.registeredName, "Ana Pop"));
+    const list = await exportRaffleList(db, admin, eventId, NOW);
+    expect(list.rows).toEqual([
+      { number: 1, name: "Ana Pop", kind: "RUNNER", present: true },
+      { number: 500, name: "Ion Voluntar", kind: "VOLUNTEER", present: null },
+    ]);
+    expect(list).toMatchObject({ runners: 1, volunteers: 1 });
+    // Ticked again, they are back: the mark is the only thing that took them out.
+    await db.update(registrations).set({ inRaffle: true }).where(eq(registrations.registeredName, "Radu Munteanu"));
+    expect((await exportRaffleList(db, admin, eventId, NOW)).rows.map((row) => row.name)).toEqual(["Ana Pop", "Radu Munteanu", "Ion Voluntar"]);
   });
 
   it("is empty, not an error, on an event where nobody has a number yet", async () => {
@@ -210,17 +228,23 @@ describe("§NNN BR-REQ-071-01 «Lista pentru tombolă»: everybody who wears a n
 });
 
 describe("§NNN BR-REQ-071-01 the file", () => {
-  const words = (catalogue: typeof ro) => ({ ...catalogue.Admin.registrations.raffle.columns, kinds: catalogue.Admin.registrations.raffle.kinds });
+  const words = (catalogue: typeof ro) => ({
+    ...catalogue.Admin.registrations.raffle.columns,
+    kinds: catalogue.Admin.registrations.raffle.kinds,
+    presentYes: catalogue.Admin.registrations.raffle.present.yes,
+    presentNo: catalogue.Admin.registrations.raffle.present.no,
+  });
 
-  it("is three columns — the number, the name, which of the two — with a BOM, CRLF lines and every cell made safe for a spreadsheet", () => {
+  it("is four columns — the number, the name, which of the two, whether the runner is present (§NNN) — with a BOM, CRLF lines and every cell made safe for a spreadsheet", () => {
     const csv = buildRaffleCsv(words(ro), [
-      { number: 1, name: "Ana Pop", kind: "RUNNER" },
-      { number: 2, name: '=HYPERLINK("x")', kind: "RUNNER" },
-      { number: 500, name: "Pop, Ion", kind: "VOLUNTEER" },
+      { number: 1, name: "Ana Pop", kind: "RUNNER", present: true },
+      { number: 2, name: '=HYPERLINK("x")', kind: "RUNNER", present: false },
+      { number: 500, name: "Pop, Ion", kind: "VOLUNTEER", present: null },
     ]);
     expect(csv.charCodeAt(0)).toBe(0xfeff);
-    expect(csv.slice(1)).toBe(['Număr,Nume,Categorie', "1,Ana Pop,Alergător", `2,"'=HYPERLINK(""x"")",Alergător`, '500,"Pop, Ion",Voluntar', ""].join("\r\n"));
-    expect(buildRaffleCsv(words(en), []).slice(1)).toBe("Number,Name,Category\r\n");
+    // A volunteer's «Prezent» is empty: the desk checks no volunteer in.
+    expect(csv.slice(1)).toBe(['Număr,Nume,Categorie,Prezent', "1,Ana Pop,Alergător,Da", `2,"'=HYPERLINK(""x"")",Alergător,Nu`, '500,"Pop, Ion",Voluntar,', ""].join("\r\n"));
+    expect(buildRaffleCsv(words(en), []).slice(1)).toBe("Number,Name,Category,Present\r\n");
     expect(raffleCsvFileName("2026-11-21")).toBe("tombola-2026-11-21.csv");
   });
 
@@ -233,9 +257,9 @@ describe("§NNN BR-REQ-071-01 the file", () => {
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
     expect(response.headers.get("X-Robots-Tag")).toBe("noindex");
     const body = await response.text();
-    expect(body.replace(/^﻿/, "").split("\r\n")).toEqual(["Number,Name,Category", "1,Ana Pop,Runner", "2,Radu Munteanu,Runner", "500,Ion Voluntar,Volunteer", "501,Oana Voluntar,Volunteer", ""]);
+    expect(body.replace(/^﻿/, "").split("\r\n")).toEqual(["Number,Name,Category,Present", "1,Ana Pop,Runner,No", "2,Radu Munteanu,Runner,No", "500,Ion Voluntar,Volunteer,", "501,Oana Voluntar,Volunteer,", ""]);
     // Romanian by default, and for a language the site does not speak.
-    expect((await (await file(eventId, "?lang=xx")).text()).replace(/^﻿/, "").split("\r\n")[0]).toBe("Număr,Nume,Categorie");
+    expect((await (await file(eventId, "?lang=xx")).text()).replace(/^﻿/, "").split("\r\n")[0]).toBe("Număr,Nume,Categorie,Prezent");
     // Nothing else of anybody: no address, no telephone.
     expect(body).not.toContain("@");
     expect(body).not.toContain("+407");

@@ -181,6 +181,8 @@ export type VolunteerItem = {
   listOptIn: boolean;
   /** «Are kit» (§904): the organizers' own mark that the person gets the volunteers' kit — what the screen's «Cu kit: N» counts. */
   hasKit: boolean;
+  /** «Participă la tombolă» (§NNN): on the raffle's list of an event that holds one, unless the organizers unticked it. */
+  inRaffle: boolean;
   /** The volunteer's number (§NNN): drawn from the event's volunteers' series when confirmed, or the number they wore as a runner; null before, and on an event without the series. */
   bibNumber: number | null;
   /** «Planul voluntarilor» (§NNN): the point of the event's route the person stands at, or null — not placed yet, or not on the route. */
@@ -333,6 +335,7 @@ function volunteerItemOf(joined: VolunteerRowJoined, choiceIds: string[], roleId
     clubMember: row.clubMember,
     listOptIn: row.listOptIn,
     hasKit: row.hasKit,
+    inRaffle: row.inRaffle,
     bibNumber: row.bibNumber,
     checkpointId: row.checkpointId,
     shirtSize: row.shirtSize === null || row.shirtSize === "NONE" ? null : row.shirtSize,
@@ -1600,6 +1603,8 @@ export type VolunteerRequest =
   | { kind: "unassign"; eventId: string; id: string; roleId: unknown }
   /** «Are kit» ticked or cleared on the «Voluntari» list's row (§904): the form posts the state it wants, never a toggle. */
   | { kind: "setKit"; eventId: string; id: string; hasKit: boolean }
+  /** «Participă la tombolă» ticked or cleared on the «Voluntari» list's row (§NNN): the form posts the state it wants, never a toggle. */
+  | { kind: "setRaffle"; eventId: string; id: string; inRaffle: boolean }
   /**
    * «Planul voluntarilor» (§NNN): the point of the route the person stands at — one of the event's own «Puncte pe traseu» — or
    * none: an empty value takes the person off their point. The form posts the point it wants, never a toggle.
@@ -2085,6 +2090,17 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       if (current.hasKit === wanted) return { changed: false, volunteer: summary };
       await tx.update(eventVolunteers).set({ hasKit: wanted, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
       await audit("volunteer.edited", { volunteerId: current.id, fields: ["hasKit"], hasKit: wanted, assignedRoleIds: heldRoleIds });
+      return { changed: true, volunteer: summary };
+    }
+
+    if (request.kind === "setRaffle") {
+      // «Participă la tombolă» (§NNN): whether the person's number is written on the raffle's list of an event that holds one — the
+      // organizers' own mark, one press on the list's row, as «Are kit» is. Only a real `false` takes the person out: anything else
+      // a forged request carries keeps them in, the column's default. Nobody is told, and no state, role or number moves.
+      const wanted = request.inRaffle !== false;
+      if (current.inRaffle === wanted) return { changed: false, volunteer: summary };
+      await tx.update(eventVolunteers).set({ inRaffle: wanted, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
+      await audit("volunteer.edited", { volunteerId: current.id, fields: ["inRaffle"], inRaffle: wanted, assignedRoleIds: heldRoleIds });
       return { changed: true, volunteer: summary };
     }
 

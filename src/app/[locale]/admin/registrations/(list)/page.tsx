@@ -52,6 +52,7 @@ import { readVolunteerKitFigures, volunteerKitHrefs } from "@/modules/volunteers
 import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 import { listEliteEntries } from "@/modules/registrations/elite-list";
 import { listEliteMarkedRegistrations } from "@/modules/registrations/elite-mark";
+import { eventHoldsRaffle } from "@/modules/registrations/raffle-mark";
 import { listAmbassadorMarkedRegistrations } from "@/modules/registrations/ambassador-mark";
 import AmbassadorPanel from "@/modules/registrations/ui/AmbassadorPanel";
 import ElitePanel from "@/modules/registrations/ui/ElitePanel";
@@ -139,6 +140,7 @@ import {
   setOutsideCapacityAction,
   setRegistrationAmbassadorAction,
   setRegistrationEliteAction,
+  setRegistrationRaffleAction,
   setRegistrationEliteTickAction,
 } from "../actions";
 import { previewMemberTickSweep, readRowPhones } from "@/modules/registrations/admin-service";
@@ -155,6 +157,7 @@ import HiddenListChip from "@/modules/registrations/ui/HiddenListChip";
 import MemberChip from "@/modules/registrations/ui/MemberChip";
 import RegistrationStatusChip from "@/modules/registrations/ui/RegistrationStatusChip";
 import StatusChip from "@/shared/ui/StatusChip";
+import TickButton from "@/shared/ui/TickButton";
 import { membershipOf } from "@/modules/registrations/domain/membership";
 import { memberCanonicalEmails } from "@/modules/registrations/member-ticks";
 import EmailStateLine from "@/modules/registrations/ui/EmailStateLine";
@@ -521,6 +524,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const waitlistAddOpen = mayManage && filters.eventId ? await waitlistAddDoorOpen(filters.eventId) : false;
   // «Pe adresa mea, invitat special» on a line of the internal list: the press while the event's switch is on, else the sentence that says where it is.
   const specialGuestsOn = waitlistAddOpen && filters.eventId ? await specialGuestsListOn(filters.eventId) : false;
+  // «Tombolă» (§NNN): the column of an event that holds a raffle («Avem tombolă» in its editor), with that one event chosen.
+  const raffleOn = filters.eventId ? await eventHoldsRaffle(db, filters.eventId) : false;
   // The editor's elite card (§895): the kits' elites, the «Elite» fold and the way back from «Mută pe lista de elită» link there.
   const eliteCardHref = filters.eventId ? `${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: filters.eventId } } })}#bib-elite` : null;
   /*
@@ -831,6 +836,34 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         );
       },
     },
+    // «Tombolă» (§NNN; the owner, 2026-11-16: «coloană peste tot de „participă la tombolă"» and «doar adminul și organizatorul pot bifa
+    // și vedea asta»): with one event chosen that holds a raffle, whether each registration's number is on the raffle's list — a
+    // one-press tick, the form posting the state it wants, for everybody who reads this list: the Organizer and the Administrators,
+    // the roles this page is for. Internal: nothing public, no email, and nothing else of the registration moves.
+    ...(raffleOn
+      ? [
+          {
+            key: "raffle",
+            label: t("registrations.raffle.column"),
+            hint: t("registrations.raffle.columnHint"),
+            render: (row) => (
+              <Box component="form" action={setRegistrationRaffleAction} data-testid="registration-raffle-form">
+                <input type="hidden" name="uiLocale" value={locale} />
+                <input type="hidden" name="registrationId" value={row.id} />
+                <input type="hidden" name="listQuery" value={rowReturnQueryString} />
+                <input type="hidden" name="inRaffle" value={row.inRaffle ? "0" : "1"} />
+                <TickButton
+                  checked={row.inRaffle}
+                  aria-label={t(row.inRaffle ? "registrations.raffle.takeOutFor" : "registrations.raffle.putInFor", { name: row.registeredName })}
+                  data-testid="registration-raffle-tick"
+                >
+                  {t("registrations.raffle.tick")}
+                </TickButton>
+              </Box>
+            ),
+          } satisfies AdminColumn<RegistrationListRow>,
+        ]
+      : []),
     {
       /*
         «Oraș» (§660): where the person lives, the city as typed and the country's code only when it is not

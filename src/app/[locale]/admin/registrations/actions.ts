@@ -34,6 +34,7 @@ import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
 import { setRegistrationAmbassador } from "@/modules/registrations/ambassador-mark";
 import { deleteSponsorListRecord, SPONSOR_REGISTER_ANCHOR } from "@/modules/registrations/sponsor-register";
 import { isRegistrationEliteTick, setRegistrationElite, setRegistrationEliteTick } from "@/modules/registrations/elite-mark";
+import { setRegistrationInRaffle } from "@/modules/registrations/raffle-mark";
 import { holdDeclarationAcceptance, releaseDeclarationAcceptance } from "@/modules/registrations/declaration-hold";
 import { findEventForRegistrationById } from "@/modules/events/repository";
 import { effectiveMinimumAge, yearsPhrase } from "@/modules/registrations/domain/age";
@@ -47,7 +48,7 @@ import { inEmailPress } from "@/modules/notifications/press";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
-import { canKeepRegistrationNotes, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canKeepRegistrationNotes, canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { moveReserveEntryToWaitlist, settleReserveEntry } from "@/modules/registrations/reserve-list";
 import { type RunnerToVolunteerResult, turnRunnerIntoVolunteer, turnVolunteerIntoRunner, type VolunteerToRunnerResult } from "@/modules/volunteers/transform";
 import { addRegistrationNote, parseNoteBody } from "@/modules/registrations/notes";
@@ -675,6 +676,30 @@ export async function setRegistrationEliteAction(_previous: FormOutcome | null, 
   }
   if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome, registrationId);
   return backTo(detailPath(locale, registrationId), outcome);
+}
+
+/**
+ * «Participă la tombolă» on a row of the registrations list (§NNN): one press takes a registration off the raffle's list of its
+ * event, or puts it back (`raffle-mark.ts`). The form posts the state it wants (`inRaffle=1|0`), never a toggle, so a second press
+ * before the page answers saves the same. Whoever reads the registrations may press it — the Organizer and the Administrators,
+ * the one thing the Organizer changes on a registration: the coarse gate here, the service asserts it again (BR-REQ-060-01).
+ * It asks nothing (§384): it tells nobody, moves nothing of the registration, and the same tick undoes it.
+ * Back to the row it was pressed on.
+ */
+export async function setRegistrationRaffleAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+  const inRaffle = text(form, "inRaffle") === "1";
+
+  let outcome: Record<string, string>;
+  try {
+    const actor = await requireStaffCapability(canReadRegistrations);
+    await setRegistrationInRaffle(getDb(), actor, registrationId, inRaffle, new Date());
+    outcome = inRaffle ? { saved: "raffleIncluded" } : { saved: "raffleExcluded" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  await backToList(locale, text(form, "listQuery"), outcome, registrationId);
 }
 
 /**

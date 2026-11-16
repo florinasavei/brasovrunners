@@ -281,6 +281,13 @@ export const eventVolunteers = pgTable(
      */
     hasKit: boolean("has_kit").notNull().default(false),
     /**
+     * «Participă la tombolă» (migration `0205`, §NNN): whether this volunteer's number is written on «Lista pentru tombolă» of an
+     * event that holds a raffle — the registrations' own tick (`registrations.in_raffle`), for the people who help. True by
+     * default; unticked on the «Voluntari» list's row by whoever works the volunteers, audited as every edit of a person's boxes.
+     * Never on a public page, in an email or on a badge.
+     */
+    inRaffle: boolean("in_raffle").notNull().default(true),
+    /**
      * The volunteer's number (migration `0203`, §NNN; the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr de
      * concurs"»): drawn from the event's volunteers' series (`events.volunteer_bib_start`) the moment the organizers
      * confirm the person, under the event row's lock, and never drawn twice — a cancelled volunteer keeps theirs, as a

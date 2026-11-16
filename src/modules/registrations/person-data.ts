@@ -221,6 +221,8 @@ export type PersonData = {
     listOptInNoticeVersion: number | null;
     /** «Are kit» (§904): the organizers' mark that the person gets the volunteers' kit — a column of the row like any other (art. 15 GDPR). */
     hasKit: boolean;
+    /** «Participă la tombolă» (§NNN): whether the organizers left the person on the raffle's list — a column of the row like any other (art. 15 GDPR). */
+    inRaffle: boolean;
     /**
      * «Planul voluntarilor» (§NNN): the point of the route the organizers put the person at, by the name the club gave it; null while
      * they stand at none — what the row's `checkpoint_id` says, a column of the row like any other (art. 15 GDPR).
@@ -525,6 +527,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
       listOptIn: eventVolunteers.listOptIn,
       listOptInNoticeVersion: eventVolunteers.listOptInNoticeVersion,
       hasKit: eventVolunteers.hasKit,
+      inRaffle: eventVolunteers.inRaffle,
       checkpointName: eventCheckpoints.nameRo,
       shirtSize: eventVolunteers.shirtSize,
       privacyNoticeVersion: eventVolunteers.privacyNoticeVersion,

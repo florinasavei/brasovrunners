@@ -73,6 +73,8 @@ export type RegistrationListRow = {
   elite: boolean;
   /** «Ambasador» (§NNN): the club's label — the row's chip and the «⋮»'s mark or unmark; it brings the two ticks below, as «Elită» does. */
   ambassador: boolean;
+  /** «Participă la tombolă» (§NNN): on the raffle's list unless an Administrator unticked it — the list's «Tombolă» column, drawn for an event that holds one. */
+  inRaffle: boolean;
   /**
    * «De la parteneri» (the decision «De la parteneri»): the partner's or sponsor's name, or null — the row's chip «Partener: {name}»
    * and the export's «Partener». Read by no surface outside the backoffice (`partner-never-leaves.test.ts`).
@@ -573,6 +575,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       outsideCapacity: registrations.outsideCapacity,
       elite: registrations.elite,
       ambassador: registrations.ambassador,
+      inRaffle: registrations.inRaffle,
       partnerName: registrations.partnerName,
       reconfirmedAt: latestReconfirmedAt,
       eliteHiddenFromResults: registrations.eliteHiddenFromResults,

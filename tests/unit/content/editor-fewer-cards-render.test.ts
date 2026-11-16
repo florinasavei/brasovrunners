@@ -52,6 +52,7 @@ const RACE = {
   declarationDocumentId: null,
   reminderHoursBefore: null,
   kitShirt: false,
+  hasRaffle: false,
   participantListVisibility: "HIDDEN",
   scheduleItems: null,
   costType: "FREE",
@@ -305,6 +306,8 @@ describe("§799 «Condiții de participare» inside «Regulamentul»", () => {
       "event.releaseUnsignedAtDeadline", "event.releaseUnsignedAtDeadline.present",
       // «Mesaj cât înscrierile pe site sunt oprite» (§NNN): one line per language, under the public door's tick.
       "translations.ro.pausedNote", "translations.en.pausedNote",
+      // «Avem tombolă» (§NNN): a tick with its marker, in «Numere de concurs».
+      "event.hasRaffle", "event.hasRaffle.present",
     ];
     const markup = await registration({ ...RACE, declarationDocumentId: declarations[0].id } as EditableEvent);
     expect([...postedNames(markup)].sort()).toEqual([...before, ...added].sort());

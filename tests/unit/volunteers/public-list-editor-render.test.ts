@@ -96,6 +96,7 @@ const person = (over: Partial<VolunteerItem>): VolunteerItem => ({
   hasKit: false,
   bibNumber: null,
   checkpointId: null,
+  inRaffle: true,
   shirtSize: null,
   createdAt: new Date("2026-10-14T09:00:00Z"),
   updatedAt: new Date("2026-10-14T09:00:00Z"),

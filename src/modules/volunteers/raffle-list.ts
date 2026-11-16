@@ -22,6 +22,13 @@ import { isUuid } from "@/shared/ids";
   the race's elite list (a name printed on a bib, nobody registered, §895). One number is one person at an event
   (`bibs.ts`), so the file never holds a number twice.
 
+  Since §NNN (the owner, 2026-11-16: «o bifă importantă, și coloană peste tot de „participă la tombolă"»): nobody an organizer
+  took out — «Participă la tombolă» unticked on the registrations' or the volunteers' list (`registrations.in_raffle`,
+  `event_volunteers.in_raffle`) — and, beside each runner, whether the desk checked them in («Prezent»): the owner chose a
+  raffle among who is there, and the draw is made outside the site, so the file says who was there and the club filters by
+  it. A column rather than a condition: a desk that did not check everybody in must not empty the list. The desk checks no
+  volunteer in, so a volunteer's cell is empty.
+
   A name and a number, for the club's own table: nothing else of the person — no address, telephone, age or state. It is
   still a file of names that leaves the site, so it is taken only by a role that reads the registrations and works the
   volunteers (the Organizer and the Administrators), asserted here (BR-REQ-060-01), and recorded as the other exports
@@ -30,7 +37,8 @@ import { isUuid } from "@/shared/ids";
 
 export type RaffleKind = "RUNNER" | "VOLUNTEER";
 
-export type RaffleRow = { number: number; name: string; kind: RaffleKind };
+/** `present`: whether the desk checked the runner in; null for a volunteer, whom the desk checks nobody in as. */
+export type RaffleRow = { number: number; name: string; kind: RaffleKind; present: boolean | null };
 
 export type RaffleList = { rows: RaffleRow[]; runners: number; volunteers: number };
 
@@ -47,17 +55,26 @@ export async function exportRaffleList<T extends Record<string, unknown>>(db: Da
   if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
 
   const runners = await db
-    .select({ number: registrations.bibNumber, name: registrations.registeredName })
+    .select({ number: registrations.bibNumber, name: registrations.registeredName, checkedInAt: registrations.checkedInAt })
     .from(registrations)
-    .where(and(eq(registrations.eventId, eventId), eq(registrations.status, "CONFIRMED"), eq(registrations.kind, "REAL"), isNotNull(registrations.bibNumber)));
+    .where(
+      and(
+        eq(registrations.eventId, eventId),
+        eq(registrations.status, "CONFIRMED"),
+        eq(registrations.kind, "REAL"),
+        isNotNull(registrations.bibNumber),
+        // «Participă la tombolă» (§NNN): nobody an Administrator took out.
+        eq(registrations.inRaffle, true),
+      ),
+    );
   const volunteers = await db
     .select({ number: eventVolunteers.bibNumber, name: eventVolunteers.name })
     .from(eventVolunteers)
-    .where(and(eq(eventVolunteers.eventId, eventId), eq(eventVolunteers.state, "CONFIRMED"), isNotNull(eventVolunteers.bibNumber)));
+    .where(and(eq(eventVolunteers.eventId, eventId), eq(eventVolunteers.state, "CONFIRMED"), isNotNull(eventVolunteers.bibNumber), eq(eventVolunteers.inRaffle, true)));
 
   const rows: RaffleRow[] = [
-    ...runners.flatMap((row) => (row.number === null ? [] : [{ number: row.number, name: row.name, kind: "RUNNER" as const }])),
-    ...volunteers.flatMap((row) => (row.number === null ? [] : [{ number: row.number, name: row.name, kind: "VOLUNTEER" as const }])),
+    ...runners.flatMap((row) => (row.number === null ? [] : [{ number: row.number, name: row.name, kind: "RUNNER" as const, present: row.checkedInAt !== null }])),
+    ...volunteers.flatMap((row) => (row.number === null ? [] : [{ number: row.number, name: row.name, kind: "VOLUNTEER" as const, present: null }])),
   ].sort((a, b) => a.number - b.number || a.kind.localeCompare(b.kind) || a.name.localeCompare(b.name));
 
   await recordAuditEvent(db, {
@@ -71,15 +88,16 @@ export async function exportRaffleList<T extends Record<string, unknown>>(db: Da
   return { rows, runners: runners.length, volunteers: volunteers.length };
 }
 
-export type RaffleCsvWords = { number: string; name: string; kind: string; kinds: Record<RaffleKind, string> };
+export type RaffleCsvWords = { number: string; name: string; kind: string; kinds: Record<RaffleKind, string>; present: string; presentYes: string; presentNo: string };
 
 /**
- * The file: three columns, one row per number. The registrations export's rules (`registrations/csv.ts`): every cell
+ * The file: four columns — the number, the name, which of the two, and whether the desk checked the runner in — one row per number. The registrations export's rules (`registrations/csv.ts`): every cell
  * through the one `csvCell`, so a name starting with `=`, `+`, `-` or `@` opens as text and never as a formula; CRLF
  * between lines and a BOM first, because the club opens the file in Excel on Windows.
  */
 export function buildRaffleCsv(words: RaffleCsvWords, rows: readonly RaffleRow[]): string {
-  const lines = [[words.number, words.name, words.kind], ...rows.map((row) => [String(row.number), row.name, words.kinds[row.kind]])];
+  const present = (row: RaffleRow) => (row.present === null ? "" : row.present ? words.presentYes : words.presentNo);
+  const lines = [[words.number, words.name, words.kind, words.present], ...rows.map((row) => [String(row.number), row.name, words.kinds[row.kind], present(row)])];
   return `${CSV_BOM}${lines.map((line) => line.map(csvCell).join(",")).join("\r\n")}\r\n`;
 }
 

@@ -1331,12 +1331,22 @@
         "reason": "A devenit voluntar la acest eveniment."
       },
       "raffle": {
+        "column": "Tombolă",
+        "columnHint": "Bifat: numărul persoanei apare pe „Lista pentru tombolă”, dacă înscrierea e confirmată și are număr. Debifează ca s-o scoți. Intern: persoana nu e anunțată.",
+        "tick": "Participă",
+        "takeOutFor": "Scoate de la tombolă: {name}",
+        "putInFor": "Pune la tombolă: {name}",
         "button": "Lista pentru tombolă (CSV)",
-        "buttonLabel": "Descarcă lista pentru tombolă: alergătorii și voluntarii confirmați care au număr, cu numărul, numele și categoria",
+        "buttonLabel": "Descarcă lista pentru tombolă: alergătorii și voluntarii confirmați care au număr și participă, cu numărul, numele, categoria și dacă alergătorul e prezent",
         "columns": {
           "number": "Număr",
           "name": "Nume",
-          "kind": "Categorie"
+          "kind": "Categorie",
+          "present": "Prezent"
+        },
+        "present": {
+          "yes": "Da",
+          "no": "Nu"
         },
         "kinds": {
           "RUNNER": "Alergător",
@@ -1707,6 +1717,8 @@
           "outside_capacity_changed": "Pus pe lista de invitați speciali sau scos de pe ea",
           "elite_marked": "Marcat ca elită: BIB-ul se tipărește cu prenumele în locul numărului",
           "elite_unmarked": "Nu mai e elită: BIB-ul se tipărește din nou cu numărul",
+          "raffle_included": "Pus înapoi pe lista pentru tombolă",
+          "raffle_excluded": "Scos de pe lista pentru tombolă",
           "ambassador_marked": "Marcat ca ambasador",
           "ambassador_unmarked": "Nu mai e ambasador",
           "became_volunteer": "Transformat în voluntar: persoana a trecut pe lista voluntarilor evenimentului («Transformă în voluntar»)",
@@ -2956,6 +2968,8 @@
       "registrationOpensSoonHelp": "Bifat, pagina spune „Înscrierile se deschid în curând” și formularul rămâne închis. Debifează când deschizi: cei de la „Anunță-mă” primesc emailul.",
       "kitShirt": "Tricou",
       "kitShirtHelp": "Dacă e bifat, formularul cere mărimea tricoului.",
+      "hasRaffle": "Avem tombolă",
+      "hasRaffleHelp": "Doar pentru organizatori: pe site nu apare nimic. Bifat, listele de înscrieri și de voluntari arată coloana „Tombolă”, din care scoți pe cine nu participă.",
       "askHealthNote": "Informații medicale",
       "askHealthNoteHelp": "Dacă e bifat, formularul cere informații medicale (afecțiuni, alergii, medicație); se șterg la {days} după eveniment.",
       "registrationClosesAt": "Înscrierile se închid",
@@ -6321,6 +6335,10 @@
         "kitNo": "Nu are kit",
         "columnKit": "Kit",
         "ageHint": "Vârsta împlinită în ziua evenimentului, cea după care se socotește acordul părintelui pentru minori. «—»: nu a spus-o.",
+        "raffleOut": "Scos de la tombolă",
+        "columnRaffle": "Tombolă",
+        "raffleTick": "Participă",
+        "raffleHint": "Bifat: numărul voluntarului apare pe „Lista pentru tombolă”, dacă e confirmat și are număr. Debifează ca să-l scoți. Intern: persoana nu e anunțată.",
         "columnMessage": "Mesaj",
         "messageHint": "Ce a scris persoana pentru organizatori când s-a oferit ca voluntar. Gol: n-a scris nimic.",
         "filter": "Filtrează",
@@ -14146,6 +14164,8 @@
       "volunteerUnchanged": "Era deja așa; nimic de schimbat.",
       "volunteerKitOn": "Bifat: are kit. Se numără la „Cu kit”.",
       "volunteerKitOff": "Debifat: nu mai are kit.",
+      "volunteerRaffleOn": "Participă la tombolă: e din nou pe lista pentru tombolă.",
+      "volunteerRaffleOff": "Nu mai participă la tombolă: nu apare pe lista pentru tombolă.",
       "volunteerPlaced": "Pus la punct: apare în planul voluntarilor.",
       "volunteerUnplaced": "Scos de la punct: e din nou la „Fără punct pe traseu”.",
       "eventTodoDone": "Bifat. Rândul e la „Gata”.",
@@ -14394,6 +14414,8 @@
       "eliteDeleted": "Numele a fost șters de pe lista de elită.",
       "eliteMarked": "Marcat ca elită: BIB-ul lui se tipărește cu prenumele în locul numărului. Înscrierea rămâne neschimbată.",
       "eliteUnmarked": "Nu mai e elită: BIB-ul lui se tipărește din nou cu numărul.",
+      "raffleIncluded": "Participă la tombolă: e din nou pe lista pentru tombolă.",
+      "raffleExcluded": "Nu mai participă la tombolă: nu apare pe lista pentru tombolă.",
       "ambassadorMarked": "Marcat ca ambasador. Înscrierea și BIB-ul rămân neschimbate.",
       "ambassadorUnmarked": "Nu mai e ambasador.",
       "waitlistAdded": "Persoana e pe lista de așteptare.",

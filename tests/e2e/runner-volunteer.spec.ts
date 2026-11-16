@@ -173,7 +173,8 @@ test.describe("§NNN «Transformă în voluntar» and «Transformă în alergăt
     expect(response.status()).toBe(200);
     expect(response.headers()["content-disposition"]).toMatch(/^attachment; filename="tombola-\d{4}-\d{2}-\d{2}\.csv"/);
     const lines = (await response.text()).replace(/^\uFEFF/, "").split("\r\n");
-    expect(lines).toEqual(["Număr,Nume,Categorie", `1,${runner},Alergător`, `510,Oana Voluntar ${tag},Voluntar`, ""]);
+    // «Prezent» (§NNN): the runner was not checked in at the desk; the desk checks no volunteer in.
+    expect(lines).toEqual(["Număr,Nume,Categorie,Prezent", `1,${runner},Alergător,Nu`, `510,Oana Voluntar ${tag},Voluntar,`, ""]);
     await fits(page);
   });
 

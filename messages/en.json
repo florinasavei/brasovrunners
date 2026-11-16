@@ -1331,12 +1331,22 @@
         "reason": "Became a volunteer at this event."
       },
       "raffle": {
+        "column": "Raffle",
+        "columnHint": "Ticked: the person's number is on \"The raffle list\", when the registration is confirmed and has a number. Untick to take them out. Internal: the person is not told.",
+        "tick": "In the raffle",
+        "takeOutFor": "Take out of the raffle: {name}",
+        "putInFor": "Put in the raffle: {name}",
         "button": "Raffle list (CSV)",
-        "buttonLabel": "Download the raffle list: the confirmed runners and volunteers who have a number, with the number, the name and the category",
+        "buttonLabel": "Download the raffle list: the confirmed runners and volunteers who have a number and are in the raffle, with the number, the name, the category and whether the runner is present",
         "columns": {
           "number": "Number",
           "name": "Name",
-          "kind": "Category"
+          "kind": "Category",
+          "present": "Present"
+        },
+        "present": {
+          "yes": "Yes",
+          "no": "No"
         },
         "kinds": {
           "RUNNER": "Runner",
@@ -1707,6 +1717,8 @@
           "outside_capacity_changed": "Put on the special guests list, or taken off it",
           "elite_marked": "Marked as elite: the bib prints the first name where the number goes",
           "elite_unmarked": "No longer elite: the bib prints the number again",
+          "raffle_included": "Put back on the raffle's list",
+          "raffle_excluded": "Taken off the raffle's list",
           "ambassador_marked": "Marked as ambassador",
           "ambassador_unmarked": "No longer an ambassador",
           "became_volunteer": "Turned into a volunteer: the person went onto the event's volunteers («Turn into a volunteer»)",
@@ -2956,6 +2968,8 @@
       "registrationOpensSoonHelp": "Ticked, the page says “Registration opens soon” and the form stays closed. Untick it to open: the people who asked to be told get the email.",
       "kitShirt": "T-shirt",
       "kitShirtHelp": "When ticked, the form asks for the T-shirt size.",
+      "hasRaffle": "We hold a raffle",
+      "hasRaffleHelp": "For the organizers only: nothing shows on the site. Ticked, the registrations' and the volunteers' lists show the \"Raffle\" column, where you take out whoever is not in it.",
       "askHealthNote": "Medical information",
       "askHealthNoteHelp": "When ticked, the form asks for medical information (conditions, allergies, medication); it is deleted {days} after the event.",
       "registrationClosesAt": "Registration closes",
@@ -6321,6 +6335,10 @@
         "kitNo": "No kit",
         "columnKit": "Kit",
         "ageHint": "The age on the event's day, the one the parent's agreement for minors goes by. «—»: not given.",
+        "raffleOut": "Taken out of the raffle",
+        "columnRaffle": "Raffle",
+        "raffleTick": "In the raffle",
+        "raffleHint": "Ticked: the volunteer's number is on \"The raffle list\", when they are confirmed and have a number. Untick to take them out. Internal: the person is not told.",
         "columnMessage": "Message",
         "messageHint": "What the person wrote for the organizers when they offered to volunteer. Empty: they wrote nothing.",
         "filter": "Filter",
@@ -14146,6 +14164,8 @@
       "volunteerUnchanged": "It was already so; nothing to change.",
       "volunteerKitOn": "Ticked: has a kit. Counted under “With a kit”.",
       "volunteerKitOff": "Cleared: no kit any more.",
+      "volunteerRaffleOn": "In the raffle: back on the raffle's list.",
+      "volunteerRaffleOff": "No longer in the raffle: not on the raffle's list.",
       "volunteerPlaced": "Placed at the point: on the volunteers' plan.",
       "volunteerUnplaced": "Taken off the point: back under \"At no point of the route\".",
       "eventTodoDone": "Ticked. The row is under “Done”.",
@@ -14394,6 +14414,8 @@
       "eliteDeleted": "The name was deleted from the elite list.",
       "eliteMarked": "Marked as elite: their bib prints the first name where the number goes. The registration stays as it is.",
       "eliteUnmarked": "No longer elite: their bib prints the number again.",
+      "raffleIncluded": "In the raffle: back on the raffle's list.",
+      "raffleExcluded": "No longer in the raffle: not on the raffle's list.",
       "ambassadorMarked": "Marked as ambassador. The registration and the bib stay as they are.",
       "ambassadorUnmarked": "No longer an ambassador.",
       "waitlistAdded": "The person is on the waiting list.",

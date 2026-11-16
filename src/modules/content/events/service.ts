@@ -644,6 +644,8 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // «Kit de participare» → «Tricou» (§554), by the same discipline: a caller that did not post the
     // card writes nothing, so no save takes the shirt off an event by not mentioning it.
     ...(fields.kitShirt === undefined ? {} : { kitShirt: fields.kitShirt }),
+    // «Avem tombolă» (§NNN), by the same discipline: a caller that did not post the box writes nothing.
+    ...(fields.hasRaffle === undefined ? {} : { hasRaffle: fields.hasRaffle }),
     // «Locurile din lista de așteptare se alocă automat» (§615), by the same discipline: a caller that
     // did not post the select writes nothing, so no save changes who hands out the places by omission.
     ...(fields.waitlistAutoOffer === undefined ? {} : { waitlistAutoOffer: fields.waitlistAutoOffer }),
@@ -3311,6 +3313,7 @@ function blankEventRow(now: Date): EditableEvent {
     registrationClosesAt: null,
     publicRegistrationOpen: true,
     kitShirt: false,
+    hasRaffle: false,
     askHealthNote: false,
     declarationDocumentId: null,
     externalProvider: null,

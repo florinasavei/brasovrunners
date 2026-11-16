@@ -101,6 +101,13 @@ export type AuditAction =
   | "registration.elite_marked"
   | "registration.elite_unmarked"
   /**
+   * «Participă la tombolă» (§NNN): an Administrator took a registration off the raffle's list of its event, or put it back
+   * (`raffle-mark.ts`). The metadata is the new value alone (`{ inRaffle }`): the mark changes that list and nothing of the
+   * registration.
+   */
+  | "registration.raffle_included"
+  | "registration.raffle_excluded"
+  /**
    * «Marchează ca ambasador» / «Nu mai e ambasador» (§NNN): the club's label on a registration, and what gives it the two
    * ticks below as the elite mark does — nothing of the bib, the state or the place. The metadata is the new value alone.
    */

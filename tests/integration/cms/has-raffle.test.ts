@@ -1,0 +1,158 @@
+import { eq } from "drizzle-orm";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { events } from "@/db/schema/events";
+import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { readFileSync } from "node:fs";
+import { createEvent, duplicateEvent, repeatEvent } from "@/modules/content/events/service";
+import { eventHoldsRaffle } from "@/modules/registrations/raffle-mark";
+import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+
+/**
+ * §NNN — «Avem tombolă» (`events.has_raffle`; the owner, 2026-11-16: «o setare per eveniment cum ar fi „avem tombolă" dar doar în
+ * backoffice vizibil»): off on every event until an organizer ticks it; saved through the editor's real action by its marker (a
+ * form without the box never switches it off); one edition's own, so neither a series' later dates nor a copy carry it; and never
+ * among the columns a public page reads. The session and navigation stand-ins are `kit-shirt.test.ts`'s.
+ */
+const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, redirected: [] as string[] }));
+
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
+  redirect: (url: string) => {
+    state.redirected.push(url);
+    throw new Error("NEXT_REDIRECT");
+  },
+}));
+vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, set: () => {}, delete: () => {} }) }));
+vi.mock("@/auth", () => ({ signOut: async () => {} }));
+vi.mock("@/db/client", () => ({ getDb: () => state.db }));
+vi.mock("@/modules/staff-identity/session", () => ({
+  DEV_STAFF_COOKIE: "dev-staff",
+  requireStaff: async () => state.actor,
+  requireStaffCapability: async () => state.actor,
+}));
+
+const { saveEventAndTranslationsAction } = await import("@/app/[locale]/admin/actions");
+
+const NOW = new Date("2026-09-25T10:00:00.000Z");
+
+const FIELDS = {
+  type: "RACE",
+  eventStatus: "SCHEDULED",
+  timezone: "Europe/Bucharest",
+  startsAtWallTime: "2026-10-07T19:00",
+  endsAtWallTime: "",
+  raceStartsAtWallTime: "",
+  locationName: "Piața Sfatului",
+  locationNameEn: "Council Square",
+  locationAddress: "",
+  surface: "ASPHALT",
+  difficulty: "MEDIUM",
+  costType: "FREE",
+  costAmount: "",
+  mapUrl: "",
+  routeUrl: "",
+  distanceMeters: "10000",
+  elevationGainMeters: "",
+  featured: false,
+  registrationMode: "EXTERNAL",
+  externalProvider: "Alt club",
+  externalRegistrationUrl: "https://alt-club.ro/inscriere",
+  participantListVisibility: "HIDDEN" as const,
+  capacity: "",
+  registrationOpensAtWallTime: "",
+  registrationClosesAtWallTime: "",
+  declarationDocumentId: "",
+};
+
+const TRANSLATIONS = {
+  ro: { slug: "crosul-cu-tombola", title: "Crosul cu tombolă", excerpt: "Cu tombolă." },
+  en: { slug: "raffle-race", title: "The raffle race", excerpt: "With a raffle." },
+};
+
+let db: TestDatabase;
+let close: () => Promise<void>;
+let admin: StaffUser;
+
+beforeAll(async () => {
+  ({ db, close } = await createTestDatabase());
+  state.db = db;
+});
+afterAll(async () => close());
+
+beforeEach(async () => {
+  await resetTables(db);
+  [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" }).returning();
+  state.actor = admin;
+  state.redirected.length = 0;
+});
+
+const reloadEvent = async (id: string) => (await db.select().from(events).where(eq(events.id, id)))[0];
+
+/** The editor's settings panel as it posts (`discount-note-series.test.ts`'s `settingsOnlyForm`), plus the raffle's box. */
+function settingsForm(eventId: string, expectedVersion: number, raffle: "on" | "off" | "absent"): FormData {
+  const form = new FormData();
+  form.set("uiLocale", "ro");
+  form.set("eventId", eventId);
+  form.set("event.expectedVersion", String(expectedVersion));
+  for (const [name, value] of Object.entries(FIELDS)) {
+    if (typeof value === "string") form.set(`event.${name}`, value);
+  }
+  if (raffle !== "absent") form.set("event.hasRaffle.present", "1");
+  if (raffle === "on") form.set("event.hasRaffle", "on");
+  return form;
+}
+
+async function postSave(form: FormData) {
+  const outcome = await saveEventAndTranslationsAction(null, form).catch((error: unknown) => {
+    if (error instanceof Error && error.message === "NEXT_REDIRECT") return "redirected" as const;
+    throw error;
+  });
+  expect(outcome, JSON.stringify(outcome)).toBe("redirected");
+}
+
+describe("§NNN «Avem tombolă» on the event", () => {
+  it("starts off, and is written on create when ticked", async () => {
+    const plain = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
+    expect((await reloadEvent(plain.id)).hasRaffle).toBe(false);
+    expect(await eventHoldsRaffle(db, plain.id)).toBe(false);
+    const other = { ro: { ...TRANSLATIONS.ro, slug: "crosul-cu-tombola-2" }, en: { ...TRANSLATIONS.en, slug: "raffle-race-2" } };
+    const ticked = await createEvent(db, { actor: admin, fields: { ...FIELDS, hasRaffle: true, translations: other }, now: NOW });
+    expect((await reloadEvent(ticked.id)).hasRaffle).toBe(true);
+    expect(await eventHoldsRaffle(db, ticked.id)).toBe(true);
+    // An event that is not there holds none, and neither does an address that is no id.
+    expect(await eventHoldsRaffle(db, "11111111-1111-4111-8111-111111111111")).toBe(false);
+    expect(await eventHoldsRaffle(db, "not-an-id")).toBe(false);
+  });
+
+  it("is saved through the editor's action by its marker, and a form without the box leaves it alone", async () => {
+    const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
+    await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, "on"));
+    expect((await reloadEvent(source.id)).hasRaffle).toBe(true);
+
+    await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, "absent"));
+    expect((await reloadEvent(source.id)).hasRaffle).toBe(true);
+
+    await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, "off"));
+    expect((await reloadEvent(source.id)).hasRaffle).toBe(false);
+  });
+
+  it("is one edition's own: a series' later dates and a copy start without it", async () => {
+    const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, hasRaffle: true, translations: TRANSLATIONS }, now: NOW });
+    await repeatEvent(db, { actor: admin, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-10-21", publish: false }, now: NOW });
+    const dates = await db.select().from(events).where(eq(events.repeatOf, source.id));
+    expect(dates.length).toBeGreaterThan(0);
+    for (const date of dates) expect(date.hasRaffle).toBe(false);
+
+    const copy = await duplicateEvent(db, { actor: admin, eventId: source.id });
+    expect((await reloadEvent(copy.id)).hasRaffle).toBe(false);
+    expect((await reloadEvent(source.id)).hasRaffle).toBe(true);
+  });
+
+  it("is in no column a public page reads, nor in the event's file", () => {
+    const repository = readFileSync("src/modules/events/repository.ts", "utf8");
+    expect(repository).not.toMatch(/hasRaffle|has_raffle/);
+    for (const file of ["file-format.ts", "export.ts", "fields-from-config.ts", "diff.ts"]) {
+      expect(readFileSync(`src/modules/content/events/transfer/${file}`, "utf8"), file).not.toMatch(/hasRaffle/);
+    }
+  });
+});

@@ -55,6 +55,7 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   setOutsideCapacityAction: vi.fn(),
   setRegistrationEliteAction: vi.fn(),
   setRegistrationAmbassadorAction: vi.fn(),
+  setRegistrationRaffleAction: vi.fn(),
   deleteSponsorListRecordAction: vi.fn(),
   turnRunnerIntoVolunteerAction: vi.fn(),
   turnVolunteerIntoRunnerAction: vi.fn(),
