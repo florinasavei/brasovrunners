@@ -14,6 +14,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 import type { SponsorListSummary } from "@/modules/registrations/sponsor-list";
 import type { SponsorRegister } from "@/modules/registrations/sponsor-register";
 import SponsorListButton from "@/modules/registrations/ui/SponsorListButton";
+import type { SponsorListRemoval } from "@/modules/registrations/ui/SponsorListRegister";
 import { PROMO_TABLE_LIMIT, type PromoConsenterList, type PromoConsenterRow } from "../promo-consenters";
 
 type Props = {
@@ -29,6 +30,10 @@ type Props = {
   sponsorRegister?: SponsorRegister | null;
   /** The page's clock, for the register's «termen trecut». */
   now: Date;
+  /** «Șterge» on the register's rows (§NNN), for a role that may delete. */
+  sponsorRemoval?: SponsorListRemoval;
+  /** The page came back from a delete of the register: this fold and the register inside it open on what is left. */
+  sponsorSaved?: boolean;
 };
 
 /** The fold's own anchor, beside «Abonați»'s. */
@@ -47,7 +52,7 @@ export const PROMO_ANCHOR = "newsletter-promo";
  * with every list already given under it («Liste date sponsorilor», §929).
  * The rows are the backoffice's table since §847 (`AdminTable`), paged through the address.
  */
-export default async function PromoConsenters({ locale, list, listQuery, paged, sponsors = null, sponsorRegister = null, now }: Props) {
+export default async function PromoConsenters({ locale, list, listQuery, paged, sponsors = null, sponsorRegister = null, now, sponsorRemoval, sponsorSaved = false }: Props) {
   const t = await getTranslations("Admin");
   const csvHref = `/api/admin/newsletter/promo?${new URLSearchParams({ lang: locale }).toString()}`;
   const dayTime = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
@@ -72,7 +77,7 @@ export default async function PromoConsenters({ locale, list, listQuery, paged, 
     <Panel
       glyph="partners"
       collapsible
-      openWhen={{ inUse: paged }}
+      openWhen={{ inUse: paged, saved: sponsorSaved }}
       title={t("newsletter.promo.title")}
       intro={t("newsletter.promo.intro")}
       aside={counts}
@@ -88,7 +93,9 @@ export default async function PromoConsenters({ locale, list, listQuery, paged, 
             {t("newsletter.promo.csv")}
           </GlyphButton>
         </Stack>
-        {sponsors && sponsorRegister && <SponsorListButton locale={locale} eventId={null} list={sponsors} register={sponsorRegister} now={now} registerLevel={3} />}
+        {sponsors && sponsorRegister && (
+          <SponsorListButton locale={locale} eventId={null} list={sponsors} register={sponsorRegister} now={now} registerLevel={3} registerRemoval={sponsorRemoval} registerSaved={sponsorSaved} />
+        )}
         {list.truncated && (
           <Typography variant="body2" color="text.secondary">
             {t("newsletter.promo.truncated", { count: String(PROMO_TABLE_LIMIT) })}

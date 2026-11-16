@@ -28,6 +28,7 @@ import { refuseOneLanguage } from "@/shared/forms/both-languages";
 import { WAITLIST_CHOICES } from "./waitlist-choice";
 import { EVENT_COST_TYPES, type EventCostType, MAX_DISCOUNT_NOTE, MAX_EVENT_COST_AMOUNT } from "@/modules/events/domain/cost";
 import { MAX_WEATHER_NOTE, WEATHER_MODES } from "@/modules/weather/domain/mode";
+import { MAX_PAUSED_NOTE } from "@/modules/registrations/domain/public-door";
 import {
   DEFAULT_EVENT_LINK_KIND,
   isEventLinkKind,
@@ -187,6 +188,13 @@ export const translationFieldsSchema = z
      * like `checklist`: absent leaves the column alone. Both languages or neither (§352).
      */
     weatherNote: optionalText(MAX_WEATHER_NOTE).optional(),
+    /**
+     * «Mesaj cât înscrierile pe site sunt oprite» (§NNN): the club's own sentence, said in place of the platform's
+     * while «Înscrieri publice deschise» is unticked. Plain text, at most 200 characters, normalised like
+     * `discountNote`; "" clears it. Kept whatever the tick says — the next closing finds it. Optional in the input
+     * like `checklist`: absent leaves the column alone. Both languages or neither (§352).
+     */
+    pausedNote: optionalText(MAX_PAUSED_NOTE).optional(),
   })
   .strict();
 

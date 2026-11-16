@@ -31,6 +31,8 @@ import {
 } from "@/modules/registrations/admin-service";
 import { listReturnHref } from "@/modules/registrations/domain/list-row";
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
+import { setRegistrationAmbassador } from "@/modules/registrations/ambassador-mark";
+import { deleteSponsorListRecord, SPONSOR_REGISTER_ANCHOR } from "@/modules/registrations/sponsor-register";
 import { isRegistrationEliteTick, setRegistrationElite, setRegistrationEliteTick } from "@/modules/registrations/elite-mark";
 import { holdDeclarationAcceptance, releaseDeclarationAcceptance } from "@/modules/registrations/declaration-hold";
 import { findEventForRegistrationById } from "@/modules/events/repository";
@@ -47,9 +49,11 @@ import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { canKeepRegistrationNotes, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { moveReserveEntryToWaitlist, settleReserveEntry } from "@/modules/registrations/reserve-list";
+import { type RunnerToVolunteerResult, turnRunnerIntoVolunteer, turnVolunteerIntoRunner, type VolunteerToRunnerResult } from "@/modules/volunteers/transform";
 import { addRegistrationNote, parseNoteBody } from "@/modules/registrations/notes";
 import type { StaffPlaceOptions } from "@/modules/registrations/service";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
+import { isUuid } from "@/shared/ids";
 import { HIDDEN_LIST_OFF } from "@/modules/registrations/domain/hidden-list";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { mailSkippedOf, sendEmailOf } from "@/shared/forms/send-email";
@@ -674,7 +678,59 @@ export async function setRegistrationEliteAction(_previous: FormOutcome | null, 
 }
 
 /**
- * «Apare în clasament» / «Apare pe site» on a registration marked «Elită» (§910), from the list's «⋮» or the registration's own page:
+ * «Marchează ca ambasador» / «Nu mai e ambasador» (§NNN) from the list's «⋮», from the «Ambasadori» panel or from the
+ * registration's own page: the club's label beside «Elită», at any time and in any state, nothing else of the registration
+ * touched — the bib prints as any other (`ambassador-mark.ts`). The Administrator's: the coarse gate here, the service
+ * asserts it again (BR-REQ-060-01). It asks nothing (§384): it tells nobody and the same menu undoes it. Back to the list
+ * as it stands; from a form without `listQuery`, to the registration's own page.
+ */
+export async function setRegistrationAmbassadorAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+  const ambassador = text(form, "ambassador") === "1";
+
+  let outcome: Record<string, string>;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    await setRegistrationAmbassador(getDb(), actor, registrationId, ambassador, new Date());
+    outcome = ambassador ? { saved: "ambassadorMarked" } : { saved: "ambassadorUnmarked" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome, registrationId);
+  return backTo(detailPath(locale, registrationId), outcome);
+}
+
+/**
+ * «Șterge» on a row of «Liste date sponsorilor» (§NNN; the owner, of a list downloaded by mistake: «vreau să pot șterge
+ * (hard delete) și faza asta»): the list's record leaves the register for real, with «Dată partenerilor» on the
+ * registrations it held (`sponsor-register.ts#deleteSponsorListRecord`). The Administrator's: the coarse gate here, the
+ * service asserts it again (BR-REQ-060-01). It asks first (§384) and emails nobody. Back to the register it was pressed
+ * in — an event's registrations list or «Newsletter» — rebuilt from the door's name and the event's id, never from a
+ * path the form carries.
+ */
+export async function deleteSponsorListRecordAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  let outcome: Record<string, string>;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    await deleteSponsorListRecord(getDb(), actor, text(form, "listId"), new Date());
+    outcome = { saved: "sponsorListDeleted" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  await flashOutcome(outcome);
+  const query = new URLSearchParams(outcome);
+  if (text(form, "door") === "newsletter") {
+    redirect(`${getPathname({ locale, href: "/admin/newsletter" })}?${query.toString()}#${SPONSOR_REGISTER_ANCHOR}`);
+  }
+  const eventId = text(form, "eventId");
+  if (isUuid(eventId)) query.set("eventId", eventId);
+  redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${query.toString()}#${SPONSOR_REGISTER_ANCHOR}`);
+}
+
+/**
+ * «Apare în clasament» / «Apare pe site» on a registration marked «Elită» (§910) or «Ambasador» (§NNN), from the list's «⋮» or the registration's own page:
  * `tick` names which, `on` the state it should now stand in — a submit posting the state it wants. A staff tick only ever hides
  * (`elite-mark.ts#setRegistrationEliteTick`): ticked, the person's own ticks decide. The Administrator's: the coarse gate here, the
  * service asserts it again (BR-REQ-060-01). It asks nothing (§384): it tells nobody and the same tick undoes it. Back to the list as it
@@ -1296,5 +1352,69 @@ export async function moveReserveEntryAction(_previous: FormOutcome | null, form
     // `from=reserve`: the internal list opens on the way back, not the official list's add form.
     const query = new URLSearchParams({ eventId, ...outcome, from: "reserve" });
     redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${query.toString()}#registrations-reserve`);
+  });
+}
+
+/**
+ * «Transformă în voluntar» on a registration's page (§NNN; the owner, 2026-11-15: «aș vrea să pot să „transform" un
+ * alergător în voluntar și invers»): the registration cancelled as «Anulează înscrierea» cancels it — through the
+ * allocator, the place offered to the first in line — and its person entered on the event's volunteers with the role
+ * chosen, confirmed, in one transaction (`volunteers/transform.ts`). The Administrator's alone: the coarse gate here,
+ * the service's own assertion again (BR-REQ-060-01). The question names both of the person's emails and offers
+ * «Trimite emailul» for the two together. A refusal keeps the role chosen and writes nothing; a success lands on the
+ * volunteer's own page, where the roles, the agreement and «Modifică» are.
+ */
+export async function turnRunnerIntoVolunteerAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  // An email press (`notifications/press.ts`): the cancellation, the role's email and the next in line's offer carry this cause, its id and who pressed.
+  return inEmailPress("registrations.toVolunteer", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    // «Trimite emailul» in the question (slice 4): the person's two emails together — never the offer to the next in line.
+    const sendEmail = sendEmailOf(form);
+    let moved: RunnerToVolunteerResult;
+    try {
+      const actor = await requireStaffCapability(canManageRegistrations);
+      press.by(actor.id);
+      // The cancellation's reason, for the registration's own trail: the page's sentence, in the language of who pressed.
+      const reason = (await getTranslations({ locale, namespace: "Admin" }))("registrations.toVolunteer.reason");
+      moved = await turnRunnerIntoVolunteer(getDb(), actor, { registrationId: text(form, "registrationId"), roleId: text(form, "roleId"), reason, sendEmail }, new Date());
+    } catch (error) {
+      return refused(error, form);
+    }
+    return backTo(getPathname({ locale, href: { pathname: "/admin/volunteers/[id]", params: { id: moved.volunteerId } } }), { saved: "runnerBecameVolunteer", ...mailSkippedOf(sendEmail) });
+  });
+}
+
+/**
+ * «Transformă în alergător» on a volunteer's page (§NNN): the person entered as «Adaugă pe lista de așteptare» enters one
+ * (§872: the address vouched for, the one allocator, the declaration theirs to sign) and the volunteer cancelled, in one
+ * transaction (`volunteers/transform.ts`). The Administrator's alone: the coarse gate here, the service's own assertion
+ * again (BR-REQ-060-01); the Organizer, who works the volunteers, is offered no such press. The relay tick is asked in
+ * the form. A refusal keeps what was typed and writes nothing, in the entry's own sentences; a success lands on the new
+ * registration's page, the toast saying where the allocator put it.
+ */
+export async function turnVolunteerIntoRunnerAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  // An email press (`notifications/press.ts`): the state's own email — the declaration to sign, or the waiting list's — carries this cause.
+  return inEmailPress("volunteers.toRunner", async (press) => {
+    const locale = toLocale(form.get("uiLocale"));
+    let moved: VolunteerToRunnerResult;
+    try {
+      const actor = await requireStaffCapability(canManageRegistrations);
+      press.by(actor.id);
+      moved = await turnVolunteerIntoRunner(
+        getDb(),
+        actor,
+        {
+          eventId: text(form, "eventId"),
+          volunteerId: text(form, "volunteerId"),
+          firstName: text(form, "firstName"),
+          lastName: text(form, "lastName"),
+          relayedByParticipantRequest: form.get("relayedByParticipantRequest") === "on",
+        },
+        new Date(),
+      );
+    } catch (error) {
+      return waitlistEntryRefused(error, form, getPathname({ locale, href: { pathname: "/admin/volunteers/[id]", params: { id: text(form, "volunteerId") } } }));
+    }
+    return backTo(detailPath(locale, moved.registrationId), { saved: moved.status === "WAITLISTED" ? "volunteerBecameRunnerWaiting" : "volunteerBecameRunnerPlaced" });
   });
 }

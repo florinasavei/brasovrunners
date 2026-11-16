@@ -56,6 +56,8 @@ export type VolunteerCsvRow = {
   guardianConsent: string;
   /** «Are kit» (§904): «Da» / «Nu» in the reader's words. */
   hasKit: string;
+  /** The volunteer's number (§NNN), or null before they have one. */
+  bibNumber: number | null;
 };
 
 export type VolunteerCsvHeader = {
@@ -80,11 +82,12 @@ export type VolunteerCsvHeader = {
   guardianEmail: string;
   guardianConsent: string;
   hasKit: string;
+  bibNumber: string;
 };
 
 export function buildVolunteersCsv(header: VolunteerCsvHeader, rows: readonly VolunteerCsvRow[]): string {
   const lines = [
-    [header.role, header.choices, header.name, header.email, header.phone, header.state, header.source, header.message, header.note, header.signedUpAt, header.age, header.dateOfBirth, header.sex, header.city, header.volunteeredBefore, header.clubMember, header.shirtSize, header.guardianName, header.guardianEmail, header.guardianConsent, header.hasKit]
+    [header.role, header.choices, header.name, header.email, header.phone, header.state, header.source, header.message, header.note, header.signedUpAt, header.age, header.dateOfBirth, header.sex, header.city, header.volunteeredBefore, header.clubMember, header.shirtSize, header.guardianName, header.guardianEmail, header.guardianConsent, header.hasKit, header.bibNumber]
       .map(csvCell)
       .join(","),
     ...rows.map((row) =>
@@ -110,6 +113,7 @@ export function buildVolunteersCsv(header: VolunteerCsvHeader, rows: readonly Vo
         row.guardianEmail ?? "",
         row.guardianConsent,
         row.hasKit,
+        row.bibNumber === null ? "" : String(row.bibNumber),
       ]
         .map(csvCell)
         .join(","),

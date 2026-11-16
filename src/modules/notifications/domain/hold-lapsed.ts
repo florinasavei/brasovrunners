@@ -11,7 +11,7 @@ import { newcomerJoinsLine, publicEntryQueues, waitlistHasRoom } from "@/modules
  * - `waitlist` — registration is open, a newcomer would join the line, and the line takes them:
  *   «poți intra pe lista de așteptare»;
  * - `paused` — the dates say open, but «Înscrieri publice deschise» is unticked (§906): the site takes
- *   nobody, so no button — the card's own «oprite de organizatori», and «scrie-ne»;
+ *   nobody, so no button — the card's own «închise momentan» (§NNN), and «scrie-ne»;
  * - `offersOnly` — «Locurile libere le dau doar eu» (§906) with places free and a line that takes nobody:
  *   the places left are the organizers' to give, so no button either — the card's own words, and «scrie-ne»;
  * - `desk` — registration is closed, or the line is full or the event has none: nothing more online,

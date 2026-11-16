@@ -27,6 +27,8 @@ export const INVITATION_REFUSALS = [
   "INVITATION_TOO_MANY",
   "INVITATION_EVENT_CLOSED",
   "INVITATION_NOT_OPEN",
+  // «Șterge» pressed on an invitation still open, or one that became a registration (§NNN): only an ended one is deleted.
+  "INVITATION_NOT_ENDED",
   "INVITATION_BAD_DAYS",
   "INVITATION_UNREAD_LINE",
   "INVITATION_UNREAD_ROW",

@@ -114,8 +114,8 @@ describe("§638 the DECLARATION_HOLD_EXPIRED email's words", () => {
 
   it("§906 with the site's door shut by the organizers: the card's own words and «scrie-ne», in both languages, and no button", () => {
     const paused = render("ro", { holdLapsedNext: "paused" }, null);
-    expect(paused.text).toContain("Înscrierile pe site sunt oprite acum de organizatori. Dacă mai vrei să vii, scrie-ne din pagina de contact.");
-    expect(paused.text).toContain("Registration on the site has been stopped by the organizers for now. If you still want to come, write to us from the contact page.");
+    expect(paused.text).toContain("Înscrierile pe site sunt închise momentan. Dacă mai vrei să vii, scrie-ne din pagina de contact.");
+    expect(paused.text).toContain("Registration on the site is closed for now. If you still want to come, write to us from the contact page.");
     const offersOnly = render("en", { holdLapsedNext: "offersOnly" }, null);
     expect(offersOnly.text).toContain("The organizers hand out the remaining places themselves: you cannot register directly on the site. If you still want to come, write to us from the contact page.");
     expect(offersOnly.text).toContain("Locurile rămase le dau organizatorii: nu te poți înscrie direct pe site. Dacă mai vrei să vii, scrie-ne din pagina de contact.");

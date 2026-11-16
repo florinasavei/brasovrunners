@@ -31,11 +31,13 @@ import {
 } from "@/modules/registrations/domain/hold-deadlines";
 import { WINDOW_SEND_EMAIL_FIELD } from "@/shared/forms/send-email";
 import { REGISTRATION_MODE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
+import { identicalInBothLanguages } from "@/shared/forms/both-languages";
 import { htmlConstraints, textFieldConstraints } from "@/shared/forms/constraints";
 import MailLine from "@/shared/feedback/MailLine";
 import RecallField from "@/shared/forms/recall";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import InfoTip from "@/shared/ui/InfoTip";
+import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import Panel from "@/shared/ui/Panel";
 import { type EventFieldName, eventInputConstraints } from "../../constraints";
 import { placesChangeReasonSchema, waitlistLimitSchema } from "../../fields";
@@ -62,6 +64,7 @@ import OnlyForTurnUp from "../OnlyForTurnUp";
 import OnlyForType from "../OnlyForType";
 import OnlyWhenTicked from "../OnlyWhenTicked";
 import WaitlistLimitOnly from "../WaitlistLimitOnly";
+import { PausedNoteFields } from "../TranslationFields";
 import WallTimeField from "../WallTimeField";
 import { BoxNote, type BoxProps, type LanguageEntry, RiskLine, SettingsReadOnly, summaryWords } from "./box-kit";
 import { asksHealthNoteOnForm } from "./ConditionsGroup";
@@ -572,6 +575,26 @@ export default async function RegistrationBox({
                         {t("editor.publicRegistrationOpen")}
                       </CheckboxField>
                       <BoxNote more={t("editor.publicRegistrationOpenHelpMore")}>{t("editor.publicRegistrationOpenHelp")}</BoxNote>
+                      {/* «Mesaj cât înscrierile pe site sunt oprite» (§NNN): the club's own sentence for the shut door, a
+                          line per language right under the tick it speaks for — empty, the platform's sentence is said. */}
+                      <LocaleTabPanels
+                        idPrefix="paused-note"
+                        translateCard
+                        panels={languages.map((entry) => ({
+                          locale: entry.translation.locale,
+                          label: entry.label,
+                          content: <PausedNoteFields translation={entry.translation} mayEdit={entry.mayEdit} />,
+                        }))}
+                        identical={{
+                          names: ["pausedNote"],
+                          warning: t("editor.identical.warning"),
+                          mark: t("editor.identical.tab"),
+                          initial: (() => {
+                            const [first, ...rest] = languages;
+                            return first ? rest.some((entry) => identicalInBothLanguages(first.translation.pausedNote, entry.translation.pausedNote)) : false;
+                          })(),
+                        }}
+                      />
                       {/* «Se deschid în curând» (§451): announced, with no date. The marker says the
                           form carried the box, so an unticked one reads as "off", not "not edited". */}
                       <input type="hidden" name="event.registrationOpensSoon.present" value="1" />

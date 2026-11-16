@@ -60,7 +60,11 @@ export const PRESS_CAUSES = {
   "registrations.invite": ["EVENT_INVITATION"],
   "registrations.invitationResend": ["EVENT_INVITATION"],
   "registrations.invitationWithdraw": [],
+  // «Șterge» on an ended invitation (§NNN): the invitee is sent nothing; an offer to the next in line, when the sweep makes one, is an other.
+  "registrations.invitationDelete": [],
   "registrations.invitationsErase": [],
+  // «Transformă în voluntar» (§NNN): the registration's cancellation and the role given, both to the person; the offer to the next in line is an other.
+  "registrations.toVolunteer": ["REGISTRATION_CANCELLED", "VOLUNTEER_ROLE_ASSIGNED"],
 
   // The editor's save: the update or cancel notice to everybody registered; offers and re-sent declarations are others.
   "events.save": ["EVENT_UPDATE_NOTICE", "EVENT_CANCELLED"],
@@ -83,6 +87,8 @@ export const PRESS_CAUSES = {
   "volunteers.guardianPaper": ["VOLUNTEER_AGREEMENT_ACCEPTED"],
   "volunteers.invite": ["VOLUNTEER_INVITATION"],
   "volunteers.invitationResend": ["VOLUNTEER_INVITATION"],
+  // «Transformă în alergător» (§NNN): the entry's own email — the declaration to sign on a free place, or the waiting list's.
+  "volunteers.toRunner": ["WAITLIST_JOINED", "COMPLETE_DECLARATION"],
 
   "club.newsletter": ["NEWSLETTER"],
   "club.staffInvite": ["STAFF_INVITATION", "MEMBER_INVITATION"],

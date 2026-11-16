@@ -40,8 +40,8 @@ const INVITATION_STATES = ["sent", "accepted", "expired", "withdrawn"] as const;
  * «Invitații» (§647) on an event's registrations list: who the club invited, where each invitation
  * stands — sent and waiting, accepted (a link to the registration it became), expired, withdrawn — its
  * deadline and who sent it; and, for the Administrator, the send («Trimite invitații») and each open
- * invitation's «Retrimite» and «Retrage». The Organizer reads the list and is offered no verb (§289);
- * every verb asserts the role on the server whatever this draws.
+ * invitation's «Retrimite» and «Retrage», and «Șterge» on one that ended unaccepted (§NNN). The Organizer
+ * reads the list and is offered no verb (§289); every verb asserts the role on the server whatever this draws.
  *
  * The send's forecast — how many places are free for invitations — is the allocator's count
  * (`countOccupied` → `computeOccupied`) against the capacity, less everyone eligible who waits, as the
@@ -57,6 +57,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
   sendAction,
   resendAction,
   withdrawAction,
+  deleteAction,
   now,
 }: {
   db: Database<T>;
@@ -68,6 +69,8 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
   sendAction: (state: InviteFormState, form: FormData) => Promise<InviteFormState>;
   resendAction: RowAction;
   withdrawAction: RowAction;
+  /** «Șterge» on an invitation that ended unaccepted (§NNN): withdrawn or expired, never one open or accepted. */
+  deleteAction: RowAction;
   now: Date;
 }) {
   const t = await getTranslations("Admin");
@@ -392,6 +395,26 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                             <GlyphSubmitButton icon="revoke" label={t("invitations.withdraw")} pendingLabel={t("invitations.withdrawing")} variant="text" color="error" size="small" />
                           </ActionForm>
                         </Stack>
+                      )}
+                      {/* «Șterge» (§NNN): only an invitation that holds nothing — withdrawn or expired. The row goes, with its link. */}
+                      {mayManage && (state === "withdrawn" || state === "expired") && (
+                        <ActionForm
+                          action={deleteAction}
+                          confirm={{
+                            title: t("invitations.deleteTitle"),
+                            body: t("invitations.deleteBody", { name: who }),
+                            ...dialog.noMail(who),
+                            destructive: true,
+                            confirmLabel: t("invitations.delete"),
+                            cancelLabel: dialog.cancel,
+                          }}
+                          data-testid="invitation-delete-form"
+                        >
+                          <input type="hidden" name="uiLocale" value={locale} />
+                          <input type="hidden" name="eventId" value={eventId} />
+                          <input type="hidden" name="invitationId" value={row.id} />
+                          <GlyphSubmitButton icon="delete" label={t("invitations.delete")} pendingLabel={t("invitations.deleting")} variant="text" color="error" size="small" />
+                        </ActionForm>
                       )}
                     </td>
                   )}

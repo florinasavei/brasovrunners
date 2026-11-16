@@ -182,5 +182,6 @@ export function translationFieldsFromConfig(row: TranslationConfig, slug: string
     seoDescription: asText(row.seoDescription),
     discountNote: asText(row.discountNote),
     weatherNote: asText(row.weatherNote),
+    pausedNote: asText(row.pausedNote),
   };
 }

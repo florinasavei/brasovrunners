@@ -1,0 +1,499 @@
+import { and, asc, eq, inArray } from "drizzle-orm";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { auditLogs } from "@/db/schema/audit-logs";
+import { emailOutbox } from "@/db/schema/email-outbox";
+import { eventVolunteerRoleAssignments, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
+import { events, eventTranslations } from "@/db/schema/events";
+import { participants } from "@/db/schema/participants";
+import { registrations } from "@/db/schema/registrations";
+import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
+import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
+import { ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
+import { STAFF_ROLES, canManageRegistrations, type StaffRole } from "@/modules/staff-identity/domain/roles";
+import { isDomainError } from "@/shared/errors/domain-error";
+import { signingInput } from "../../helpers/declaration-signing";
+import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+
+/**
+ * §NNN — «Transformă în voluntar» and «Transformă în alergător» (the owner, 2026-11-15: «aș vrea să pot să „transform" un
+ * alergător în voluntar și invers»). BR-REQ-037-03, BR-REQ-034-01, BR-REQ-038-01, BR-REQ-060-01.
+ *
+ * What is protected, on real PostgreSQL (PGlite), through the real registration flow:
+ * - a runner turned volunteer is cancelled by the staff verb — the one allocator: the place offered to the first in line,
+ *   never kept and never handed to the volunteer — and stands on the event's volunteers, confirmed, with the role given;
+ * - the person's two emails go, or with «Trimite emailul» unticked neither; the next in line's offer always goes;
+ * - the runner's number stays retired with the registration; the volunteer draws one from the volunteers' own series;
+ * - the answers the person gave travel only under a privacy notice that names the volunteers' answers; the public
+ *   list's tick never;
+ * - a volunteer turned runner goes through the official waiting list's own entry — a counted free place with the
+ *   declaration still theirs to sign, or the back of the line, never ahead of anyone — and the volunteer is cancelled,
+ *   keeping roles and number;
+ * - every refusal writes nothing; both are the Administrator's and nobody else's.
+ */
+const NOW = new Date("2026-11-15T10:00:00.000Z");
+const STARTS = new Date("2026-12-13T08:00:00.000Z");
+
+let db: TestDatabase;
+let close: () => Promise<void>;
+let admin: StaffUser;
+let serial = 0;
+
+vi.mock("@/db/client", () => ({ getDb: () => db }));
+vi.mock("@/modules/notifications/drain", () => ({ drainOutboxAfterResponse: () => undefined, drainOutboxRowsAfterResponse: () => undefined }));
+
+const { submitRegistration, confirmEmail, signDeclaration } = await import("@/modules/registrations/service");
+const { pickBibNumber } = await import("@/modules/registrations/bibs");
+const { changeVolunteer, setVolunteerNumbersStart } = await import("@/modules/volunteers/volunteers");
+const { RUNNER_TO_VOLUNTEER_MINOR, turnRunnerIntoVolunteer, turnVolunteerIntoRunner, VOLUNTEER_TO_RUNNER_NEEDS_ADDRESS } = await import("@/modules/volunteers/transform");
+const { forgetCachedDeadlines } = await import("@/modules/deadlines/memo");
+
+type EventInput = Parameters<typeof submitRegistration>[1];
+
+beforeAll(async () => {
+  ({ db, close } = await createTestDatabase());
+});
+afterAll(async () => close());
+beforeEach(async () => {
+  await resetTables(db);
+  forgetCachedDeadlines();
+  await approve(false);
+  admin = await staff("ADMIN");
+});
+
+/** The texts in force; `profile` makes the privacy notice name the volunteers' answers (`{{volunteerProfile}}`, §765). */
+async function approve(profile: boolean, version = 1) {
+  const pair = (text: string): LegalDocumentTranslationInput[] => [
+    { locale: "ro", title: "Document", body: { sections: [{ paragraphs: [text] }] } },
+    { locale: "en", title: "Document", body: { sections: [{ paragraphs: [text] }] } },
+  ];
+  const notice = pair(profile ? "Voluntari ({{volunteers}}, {{volunteerAgreement}}, {{volunteerProfile}})" : "p");
+  await insertLegalDocumentVersion(db, { key: "PRIVACY_NOTICE", version, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(notice), translations: notice, now: NOW });
+  if (version > 1) return;
+  for (const key of ["TERMS", "EVENT_DECLARATION"] as const) {
+    await insertLegalDocumentVersion(db, { key, version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(pair("p")), translations: pair("p"), now: NOW });
+  }
+}
+
+async function staff(role: StaffRole): Promise<StaffUser> {
+  serial += 1;
+  const [user] = await db.insert(staffUsers).values({ email: `${role.toLowerCase()}-${serial}@dev.test`, displayName: `Colleague ${role}`, role }).returning();
+  return user;
+}
+
+const at = (minutes: number) => new Date(NOW.getTime() + minutes * 60_000);
+const PUBLIC = { source: "PUBLIC" as const, createdByStaffUserId: null };
+
+/** A race with its runners' numbers from 1, and one volunteers' role. */
+async function createRace(capacity: number, options: { startsAt?: Date; shirts?: boolean } = {}): Promise<{ event: EventInput; roleId: string }> {
+  const [event] = await db
+    .insert(events)
+    .values({
+      type: "RACE",
+      startsAt: options.startsAt ?? STARTS,
+      registrationMode: "INTERNAL",
+      capacity,
+      bibStartNumber: 1,
+      locationName: "Parcul Tractorul",
+      editorialStatus: "PUBLISHED",
+      publishedAt: NOW,
+      volunteersShirts: options.shirts === true,
+    })
+    .returning();
+  await db.insert(eventTranslations).values([
+    { eventId: event.id, locale: "ro", title: "Crosul", slug: `crosul-${event.id.slice(0, 8)}` },
+    { eventId: event.id, locale: "en", title: "The cross", slug: `cross-${event.id.slice(0, 8)}` },
+  ]);
+  const [role] = await db.insert(eventVolunteerRoles).values({ eventId: event.id, nameRo: "Punct de apă", nameEn: "Water point", needed: 5, position: 0 }).returning({ id: eventVolunteerRoles.id });
+  return {
+    event: { id: event.id, raceId: null, capacity: event.capacity, registrationMode: "INTERNAL", registrationOpensAt: null, registrationClosesAt: null, startsAt: event.startsAt, eventStatus: event.eventStatus, publishedAt: NOW },
+    roleId: role.id,
+  };
+}
+
+const submission = (firstName: string, sentAt: Date, more: Record<string, unknown> = {}) => ({
+  firstName,
+  lastName: "Munteanu",
+  birthDate: "1985-03-02",
+  sex: "FEMALE",
+  nationality: "RO",
+  country: "RO",
+  city: "Brașov",
+  phone: "+40711111111",
+  emergencyContactName: "Ion Vecinul",
+  emergencyContactPhone: "+40722222222",
+  email: `${firstName.toLowerCase()}@example.ro`,
+  locale: "ro",
+  privacyAcknowledged: true,
+  fitnessDeclared: true,
+  termsAccepted: true,
+  rulesAcknowledged: true,
+  resultsNameConsent: false,
+  listOptOut: false,
+  honeypot: "",
+  renderedAt: new Date(sentAt.getTime() - 30_000).toISOString(),
+  ...more,
+});
+
+async function rowOf(name: string) {
+  const [row] = await db.select().from(registrations).where(eq(registrations.registeredName, `${name} Munteanu`));
+  return row;
+}
+
+/** One person through the address's confirmation, then — `signs` — the declaration. */
+async function registered(event: EventInput, name: string, minute: number, signs: boolean, more: Record<string, unknown> = {}) {
+  await submitRegistration(db, event, submission(name, at(minute), more), at(minute), "REAL", PUBLIC);
+  const confirmed = await confirmEmail(db, event, (await rowOf(name)).id, at(minute));
+  if (!signs) return confirmed;
+  return signDeclaration(db, event, confirmed.id, await signingInput(db, at(minute + 1), `${name} Munteanu`), at(minute + 1));
+}
+
+/** The places taken, as the capacity formula counts them here: confirmed, held for a declaration, or offered. */
+const placesHeld = async (eventId: string) =>
+  (await db.select({ status: registrations.status }).from(registrations).where(eq(registrations.eventId, eventId))).filter((row) => ["CONFIRMED", "PENDING_DECLARATION", "WAITLIST_OFFERED"].includes(row.status)).length;
+const volunteersOf = (eventId: string) => db.select().from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId)).orderBy(asc(eventVolunteers.createdAt));
+const mailOf = async (type: (typeof emailOutbox.$inferSelect)["messageType"]) => db.select().from(emailOutbox).where(eq(emailOutbox.messageType, type));
+const trail = async (action: string) => (await db.select().from(auditLogs).where(eq(auditLogs.action, action)).orderBy(asc(auditLogs.createdAt))).map((row) => ({ entityId: row.entityId, metadata: row.metadataJson as Record<string, unknown>, actor: row.actorStaffUserId }));
+
+async function failureOf(operation: Promise<unknown>) {
+  try {
+    await operation;
+  } catch (error) {
+    if (isDomainError(error)) return error;
+    throw error;
+  }
+  throw new Error("expected a DomainError");
+}
+
+/** Everything a refused press must leave as it found it. */
+async function snapshot() {
+  return {
+    registrations: (await db.select({ id: registrations.id, status: registrations.status, bib: registrations.bibNumber }).from(registrations).orderBy(asc(registrations.id))).map((row) => JSON.stringify(row)),
+    volunteers: (await db.select({ id: eventVolunteers.id, state: eventVolunteers.state, bib: eventVolunteers.bibNumber }).from(eventVolunteers).orderBy(asc(eventVolunteers.id))).map((row) => JSON.stringify(row)),
+    outbox: (await db.select({ id: emailOutbox.id }).from(emailOutbox)).length,
+    trail: (await db.select({ id: auditLogs.id }).from(auditLogs)).length,
+  };
+}
+
+const toVolunteer = (registrationId: string, roleId: string, actor: StaffUser = admin, more: { sendEmail?: boolean } = {}) =>
+  turnRunnerIntoVolunteer(db, actor, { registrationId, roleId, reason: "a devenit voluntar", ...more }, at(30));
+
+describe("§NNN BR-REQ-037-03 «Transformă în voluntar»: a runner becomes a volunteer", () => {
+  it("cancels the registration through the allocator — the place offered to the first in line — and enters the person on the volunteers, confirmed, with the role given", async () => {
+    const { event, roleId } = await createRace(1);
+    const radu = await registered(event, "Radu", 0, true);
+    expect(radu.status).toBe("CONFIRMED");
+    expect((await registered(event, "Elena", 3, false)).status).toBe("WAITLISTED");
+    expect(await placesHeld(event.id)).toBe(1);
+
+    const result = await toVolunteer(radu.id, roleId);
+
+    // The registration: cancelled by the club, its place offered — never kept, never the volunteer's.
+    expect(await rowOf("Radu")).toMatchObject({ status: "CANCELLED", cancellationSource: "ADMIN" });
+    expect((await rowOf("Elena")).status).toBe("WAITLIST_OFFERED");
+    expect(await placesHeld(event.id)).toBe(1);
+    // The volunteer: the person's own name, address, telephone and language, entered by the Administrator, confirmed.
+    const [volunteer, ...more] = await volunteersOf(event.id);
+    expect(more).toEqual([]);
+    expect(volunteer).toMatchObject({
+      id: result.volunteerId,
+      name: "Radu Munteanu",
+      email: "radu@example.ro",
+      phone: "+40711111111",
+      locale: "ro",
+      state: "CONFIRMED",
+      source: "STAFF",
+      roleId,
+      createdByStaffUserId: admin.id,
+      listOptIn: false,
+      hasKit: false,
+    });
+    expect((await db.select().from(eventVolunteerRoleAssignments).where(eq(eventVolunteerRoleAssignments.volunteerId, volunteer.id))).map((row) => row.roleId)).toEqual([roleId]);
+    expect((await db.select().from(eventVolunteerRoleChoices).where(eq(eventVolunteerRoleChoices.volunteerId, volunteer.id))).map((row) => row.roleId)).toEqual([roleId]);
+    expect(result).toEqual({ eventId: event.id, volunteerId: volunteer.id, bibNumber: null });
+
+    // The emails: the person's two, and the next in line's offer.
+    expect((await mailOf("REGISTRATION_CANCELLED")).map((row) => row.registrationId)).toEqual([radu.id]);
+    const roles = await mailOf("VOLUNTEER_ROLE_ASSIGNED");
+    expect(roles.map((row) => row.recipientEmail)).toEqual(["radu@example.ro"]);
+    expect((await mailOf("WAITLIST_SPOT_OFFER")).map((row) => row.registrationId)).toEqual([(await rowOf("Elena")).id]);
+
+    // The trail: each verb's own row, and one that ties the two — ids, never a name.
+    expect(await trail("registration.cancelled_by_staff")).toEqual([{ entityId: radu.id, actor: admin.id, metadata: { from: "CONFIRMED", reason: "a devenit voluntar" } }]);
+    expect(await trail("registration.became_volunteer")).toEqual([{ entityId: radu.id, actor: admin.id, metadata: { volunteerId: volunteer.id, roleId, from: "CONFIRMED" } }]);
+    expect((await trail("volunteer.added")).map((row) => row.metadata.volunteerId)).toEqual([volunteer.id]);
+    expect((await trail("volunteer.state_changed")).map((row) => [row.metadata.from, row.metadata.to])).toEqual([["REGISTERED", "CONFIRMED"]]);
+    const written = JSON.stringify(await db.select({ metadata: auditLogs.metadataJson }).from(auditLogs).where(inArray(auditLogs.action, ["registration.became_volunteer", "volunteer.added", "volunteer.state_changed"])));
+    expect(written).not.toContain("Radu");
+    expect(written).not.toContain("radu@");
+  });
+
+  it("with «Trimite emailul» unticked sends the person neither email, says so in the trail, and still offers the freed place", async () => {
+    const { event, roleId } = await createRace(1);
+    const radu = await registered(event, "Radu", 0, true);
+    await registered(event, "Elena", 3, false);
+
+    await toVolunteer(radu.id, roleId, admin, { sendEmail: false });
+
+    expect(await mailOf("REGISTRATION_CANCELLED")).toEqual([]);
+    expect(await mailOf("VOLUNTEER_ROLE_ASSIGNED")).toEqual([]);
+    expect(await mailOf("WAITLIST_SPOT_OFFER")).toHaveLength(1);
+    expect((await rowOf("Radu")).status).toBe("CANCELLED");
+    expect((await volunteersOf(event.id))[0].state).toBe("CONFIRMED");
+    expect((await trail("registration.cancelled_by_staff"))[0].metadata).toMatchObject({ emailSkipped: true });
+    expect((await trail("volunteer.added"))[0].metadata).toMatchObject({ emailSkipped: true });
+  });
+
+  it("moves a runner who was only waiting: nobody is offered anything, because no place was freed", async () => {
+    const { event, roleId } = await createRace(1);
+    await registered(event, "Radu", 0, true);
+    const elena = await registered(event, "Elena", 3, false);
+    expect(elena.status).toBe("WAITLISTED");
+
+    await toVolunteer(elena.id, roleId);
+
+    expect((await rowOf("Elena")).status).toBe("CANCELLED");
+    expect((await rowOf("Radu")).status).toBe("CONFIRMED");
+    expect(await mailOf("WAITLIST_SPOT_OFFER")).toEqual([]);
+    expect((await volunteersOf(event.id)).map((row) => [row.name, row.state])).toEqual([["Elena Munteanu", "CONFIRMED"]]);
+    expect((await trail("registration.became_volunteer"))[0].metadata).toMatchObject({ from: "WAITLISTED" });
+  });
+
+  it("BR-REQ-038-01: the runner's number stays retired with the registration, and the volunteer draws one from the volunteers' own series", async () => {
+    const { event, roleId } = await createRace(150);
+    const radu = await registered(event, "Radu", 0, true);
+    expect(radu.bibNumber).toBe(1);
+    await setVolunteerNumbersStart(db, admin, { eventId: event.id, start: 500 }, at(5));
+
+    const result = await toVolunteer(radu.id, roleId);
+
+    expect(result.bibNumber).toBe(500);
+    expect((await volunteersOf(event.id))[0].bibNumber).toBe(500);
+    // The registration keeps its number, cancelled: nobody else is ever handed it.
+    expect((await rowOf("Radu")).bibNumber).toBe(1);
+    const next = await db.transaction((tx) => pickBibNumber(tx, event.id, new Set(), undefined, "race"));
+    expect(next).toBe(2);
+    expect((await trail("volunteer.state_changed"))[0].metadata).toMatchObject({ bibNumber: 500 });
+  });
+
+  it("carries the answers the person gave only under a privacy notice that names the volunteers' answers — and never a place on the public list", async () => {
+    const { event, roleId } = await createRace(10, { shirts: true });
+    const radu = await registered(event, "Radu", 0, true, { clubMember: true });
+    await toVolunteer(radu.id, roleId);
+    // The notice in force names none of them: the row holds the contact alone.
+    expect((await volunteersOf(event.id))[0]).toMatchObject({ dateOfBirth: null, age: null, sex: null, city: null, clubMember: false, shirtSize: null, volunteeredBefore: false, listOptIn: false });
+
+    await approve(true, 2);
+    const elena = await registered(event, "Elena", 40, true, { email: "elena@example.ro" });
+    await turnRunnerIntoVolunteer(db, admin, { registrationId: elena.id, roleId, reason: "a devenit voluntar" }, at(50));
+    const [, second] = await volunteersOf(event.id);
+    expect(second).toMatchObject({ name: "Elena Munteanu", dateOfBirth: "1985-03-02", age: 41, sex: "FEMALE", city: "Brașov", volunteeredBefore: false, listOptIn: false, listOptInNoticeVersion: null });
+    expect(second.clubMember).toBe((await rowOf("Elena")).clubMemberDeclared);
+  });
+
+  it("keeps the registration's language for the volunteer's emails", async () => {
+    const { event, roleId } = await createRace(10);
+    const radu = await registered(event, "Radu", 0, true, { locale: "en" });
+    await toVolunteer(radu.id, roleId);
+    expect((await volunteersOf(event.id))[0].locale).toBe("en");
+    expect((await mailOf("VOLUNTEER_ROLE_ASSIGNED")).map((row) => row.locale)).toEqual(["en"]);
+  });
+
+  it("BR-REQ-060-01: is the Administrator's — the Organizer, who manages volunteers, and every other role are refused, and nothing is written", async () => {
+    const { event, roleId } = await createRace(10);
+    const radu = await registered(event, "Radu", 0, true);
+    const before = await snapshot();
+    for (const role of STAFF_ROLES) {
+      if (canManageRegistrations(role)) continue;
+      const refusal = await failureOf(toVolunteer(radu.id, roleId, await staff(role)));
+      expect(refusal.code, role).toBe("FORBIDDEN");
+    }
+    expect(await snapshot()).toEqual(before);
+    expect(await volunteersOf(event.id)).toEqual([]);
+  });
+
+  it("refuses, writing nothing: no role or another event's, a registration that is gone, cancelled, never confirmed or a test one, a person under eighteen, an address already volunteering", async () => {
+    const { event, roleId } = await createRace(10);
+    const other = await createRace(10);
+    const radu = await registered(event, "Radu", 0, true);
+
+    let before = await snapshot();
+    expect(await failureOf(toVolunteer(radu.id, ""))).toMatchObject({ code: "VALIDATION_ERROR", fields: ["roleId"] });
+    expect(await failureOf(toVolunteer(radu.id, other.roleId))).toMatchObject({ code: "VALIDATION_ERROR", fields: ["roleId"] });
+    expect((await failureOf(toVolunteer("not-an-id", roleId))).code).toBe("NOT_FOUND");
+    expect((await failureOf(toVolunteer("00000000-0000-4000-8000-000000000000", roleId))).code).toBe("NOT_FOUND");
+    expect(await snapshot()).toEqual(before);
+
+    // Never confirmed: no place, no state to leave.
+    await submitRegistration(db, event, submission("Mara", at(5)), at(5), "REAL", PUBLIC);
+    before = await snapshot();
+    expect((await failureOf(toVolunteer((await rowOf("Mara")).id, roleId))).code).toBe("CONFLICT");
+    // A test registration is nobody.
+    await submitRegistration(db, event, submission("Test", at(6)), at(6), "TEST", PUBLIC);
+    before = await snapshot();
+    const test = await rowOf("Test");
+    await db.update(registrations).set({ status: "CONFIRMED" }).where(eq(registrations.id, test.id));
+    before = await snapshot();
+    expect((await failureOf(toVolunteer(test.id, roleId))).code).toBe("VALIDATION_ERROR");
+    expect(await snapshot()).toEqual(before);
+
+    // Under eighteen on the event's day: a minor volunteers only with a parent's agreement.
+    await db.update(registrations).set({ birthDate: "2008-12-14" }).where(eq(registrations.id, radu.id));
+    before = await snapshot();
+    expect((await failureOf(toVolunteer(radu.id, roleId))).code).toBe(RUNNER_TO_VOLUNTEER_MINOR);
+    expect(await snapshot()).toEqual(before);
+    // Eighteen on the day itself is an adult.
+    await db.update(registrations).set({ birthDate: "2008-12-13" }).where(eq(registrations.id, radu.id));
+
+    // The address already on the event's volunteers: the entry's own refusal, and the registration stands.
+    await changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { assignedRoleIds: [roleId], name: "Radu M.", email: "radu@example.ro" } }, at(10), { sendEmail: false });
+    before = await snapshot();
+    expect((await failureOf(toVolunteer(radu.id, roleId))).code).toBe("VOLUNTEER_ALREADY_LISTED");
+    expect(await snapshot()).toEqual(before);
+    expect((await rowOf("Radu")).status).toBe("CONFIRMED");
+
+    // Already cancelled: nobody to move.
+    const elena = await registered(event, "Elena", 20, true);
+    await toVolunteer(elena.id, roleId);
+    before = await snapshot();
+    expect((await failureOf(toVolunteer(elena.id, roleId))).code).toBe("CONFLICT");
+    expect(await snapshot()).toEqual(before);
+  });
+});
+
+/** A volunteer as the card's hand entry writes one, with the role given. */
+async function volunteer(eventId: string, roleId: string, name: string, email: string | null, minute: number, confirmed = true): Promise<string> {
+  const added = await changeVolunteer(db, admin, { kind: "add", eventId, fields: { assignedRoleIds: [roleId], name, email: email ?? "", phone: "+40712345678" } }, at(minute), { sendEmail: false });
+  if (confirmed) await changeVolunteer(db, admin, { kind: "setState", eventId, id: added.volunteer.id, state: "CONFIRMED" }, at(minute + 1), { sendEmail: false });
+  return added.volunteer.id;
+}
+
+const toRunner = (eventId: string, volunteerId: string, actor: StaffUser = admin, more: Partial<{ firstName: string; lastName: string; relayedByParticipantRequest: boolean }> = {}) =>
+  turnVolunteerIntoRunner(db, actor, { eventId, volunteerId, firstName: "Ana", lastName: "Pop", relayedByParticipantRequest: true, ...more }, at(30));
+
+describe("§NNN BR-REQ-037-03 «Transformă în alergător»: a volunteer becomes a runner", () => {
+  it("enters the person by the official list's own entry — a counted free place, the declaration theirs to sign — and cancels the volunteer, who keeps roles and number", async () => {
+    const { event, roleId } = await createRace(150);
+    await setVolunteerNumbersStart(db, admin, { eventId: event.id, start: 500 }, at(0));
+    const ana = await volunteer(event.id, roleId, "Ana Pop", "ana@example.ro", 1);
+    expect((await volunteersOf(event.id))[0].bibNumber).toBe(500);
+
+    const result = await toRunner(event.id, ana);
+
+    const [registration, ...more] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    expect(more).toEqual([]);
+    // A place held for the declaration the person signs themselves: never confirmed by this press, no number yet.
+    expect(registration).toMatchObject({ id: result.registrationId, status: "PENDING_DECLARATION", registeredName: "Ana Pop", firstName: "Ana", lastName: "Pop", locale: "ro", kind: "REAL", bibNumber: null, confirmedAt: null });
+    expect(result).toMatchObject({ eventId: event.id, volunteerId: ana, status: "PENDING_DECLARATION", capacityRaisedTo: null });
+    const [person] = await db.select().from(participants).where(eq(participants.id, registration.participantId));
+    expect(person.deliveryEmail).toBe("ana@example.ro");
+    expect(await placesHeld(event.id)).toBe(1);
+    expect((await mailOf("COMPLETE_DECLARATION")).map((row) => row.registrationId)).toEqual([registration.id]);
+    expect(await mailOf("VERIFY_REGISTRATION_EMAIL")).toEqual([]);
+
+    // The volunteer: cancelled, the row, its role and its number kept — and the number never drawn again.
+    const [row] = await volunteersOf(event.id);
+    expect(row).toMatchObject({ id: ana, state: "CANCELLED", bibNumber: 500, roleId });
+    const dan = await volunteer(event.id, roleId, "Dan Ionescu", "dan@example.ro", 40);
+    expect((await db.select().from(eventVolunteers).where(eq(eventVolunteers.id, dan)))[0].bibNumber).toBe(501);
+
+    // The trail: the entry's own rows, the volunteers' own, and one that ties the two — ids alone.
+    expect(await trail("volunteer.became_runner")).toEqual([{ entityId: event.id, actor: admin.id, metadata: { volunteerId: ana, registrationId: registration.id, to: "PENDING_DECLARATION" } }]);
+    expect((await trail("registration.address_vouched_on_entry")).map((entry) => entry.entityId)).toEqual([registration.id]);
+    expect((await trail("volunteer.state_changed")).map((entry) => [entry.metadata.volunteerId, entry.metadata.to])).toContainEqual([ana, "CANCELLED"]);
+  });
+
+  it("BR-REQ-034-01: on a full race joins the back of the line — never ahead of the one already waiting, never a place by itself", async () => {
+    const { event, roleId } = await createRace(1);
+    await registered(event, "Radu", 0, true);
+    await registered(event, "Elena", 3, false);
+    const ana = await volunteer(event.id, roleId, "Ana Pop", "ana@example.ro", 5);
+
+    const result = await toRunner(event.id, ana);
+
+    expect(result.status).toBe("WAITLISTED");
+    expect(await placesHeld(event.id)).toBe(1);
+    const waiting = await db
+      .select({ name: registrations.registeredName, queuedAt: registrations.waitlistedAt })
+      .from(registrations)
+      .where(and(eq(registrations.eventId, event.id), eq(registrations.status, "WAITLISTED")))
+      .orderBy(asc(registrations.waitlistedAt));
+    expect(waiting.map((row) => row.name)).toEqual(["Elena Munteanu", "Ana Pop"]);
+    expect((await mailOf("WAITLIST_JOINED")).map((row) => row.registrationId)).toContain(result.registrationId);
+    // No place, so no declaration to sign yet: the person is told they wait, and nothing else.
+    expect((await mailOf("COMPLETE_DECLARATION")).filter((row) => row.registrationId === result.registrationId)).toEqual([]);
+    expect((await volunteersOf(event.id))[0].state).toBe("CANCELLED");
+  });
+
+  it("writes to the person in the language their volunteer row holds", async () => {
+    const { event, roleId } = await createRace(10);
+    const ana = await volunteer(event.id, roleId, "Ana Pop", "ana@example.ro", 1);
+    await db.update(eventVolunteers).set({ locale: "en" }).where(eq(eventVolunteers.id, ana));
+    const result = await toRunner(event.id, ana);
+    expect((await db.select().from(registrations).where(eq(registrations.id, result.registrationId)))[0].locale).toBe("en");
+    expect((await mailOf("COMPLETE_DECLARATION")).map((row) => row.locale)).toEqual(["en"]);
+  });
+
+  it("BR-REQ-060-01: is the Administrator's — the Organizer and every other role are refused, and nothing is written", async () => {
+    const { event, roleId } = await createRace(10);
+    const ana = await volunteer(event.id, roleId, "Ana Pop", "ana@example.ro", 1);
+    const before = await snapshot();
+    for (const role of STAFF_ROLES) {
+      if (canManageRegistrations(role)) continue;
+      expect((await failureOf(toRunner(event.id, ana, await staff(role)))).code, role).toBe("FORBIDDEN");
+    }
+    expect(await snapshot()).toEqual(before);
+  });
+
+  it("refuses, writing nothing: without the relay tick or a name, a volunteer with no address, a cancelled one, another event's, after the start, the person already registered on the address", async () => {
+    const { event, roleId } = await createRace(10);
+    const other = await createRace(10);
+    const ana = await volunteer(event.id, roleId, "Ana Pop", "ana@example.ro", 1);
+
+    let before = await snapshot();
+    expect((await failureOf(toRunner(event.id, ana, admin, { relayedByParticipantRequest: false }))).fields).toContain("relayedByParticipantRequest");
+    expect((await failureOf(toRunner(event.id, ana, admin, { lastName: " " }))).fields).toContain("lastName");
+    expect((await failureOf(toRunner(other.event.id, ana))).code).toBe("NOT_FOUND");
+    expect((await failureOf(toRunner(event.id, "not-an-id"))).code).toBe("NOT_FOUND");
+    expect(await snapshot()).toEqual(before);
+
+    // No address: a registration is its address.
+    const noAddress = await volunteer(event.id, roleId, "Ion Fără Adresă", null, 5);
+    before = await snapshot();
+    expect((await failureOf(toRunner(event.id, noAddress))).code).toBe(VOLUNTEER_TO_RUNNER_NEEDS_ADDRESS);
+    // Cancelled: reopen first.
+    await changeVolunteer(db, admin, { kind: "setState", eventId: event.id, id: noAddress, state: "CANCELLED" }, at(8), { sendEmail: false });
+    before = await snapshot();
+    expect((await failureOf(toRunner(event.id, noAddress))).code).toBe("CONFLICT");
+    expect(await snapshot()).toEqual(before);
+
+    // The person already runs on that address: the entry's own refusal, and the volunteer stands.
+    await registered(event, "Radu", 10, true);
+    const radu = await volunteer(event.id, roleId, "Radu Munteanu", "radu@example.ro", 15);
+    before = await snapshot();
+    expect((await failureOf(toRunner(event.id, radu, admin, { firstName: "Radu", lastName: "Munteanu" }))).fields).toContain(ALREADY_ON_ADDRESS);
+    expect(await snapshot()).toEqual(before);
+    expect((await db.select().from(eventVolunteers).where(eq(eventVolunteers.id, radu)))[0].state).toBe("CONFIRMED");
+
+    // After the start the person registers at the desk.
+    const started = await createRace(10, { startsAt: at(-60) });
+    const late = await volunteer(started.event.id, started.roleId, "Ana Pop", "ana@example.ro", 20);
+    before = await snapshot();
+    expect((await failureOf(toRunner(started.event.id, late))).code).toBe("VOUCHED_ENTRY_AFTER_START");
+    expect(await snapshot()).toEqual(before);
+  });
+
+  it("there and back: a runner turned volunteer and turned runner again is one person on each list, once", async () => {
+    const { event, roleId } = await createRace(150);
+    await setVolunteerNumbersStart(db, admin, { eventId: event.id, start: 500 }, at(0));
+    const radu = await registered(event, "Radu", 1, true);
+    const { volunteerId } = await toVolunteer(radu.id, roleId);
+
+    const back = await turnVolunteerIntoRunner(db, admin, { eventId: event.id, volunteerId, firstName: "Radu", lastName: "Munteanu", relayedByParticipantRequest: true }, at(60));
+
+    const rows = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    expect(rows.filter((row) => row.status !== "CANCELLED").map((row) => [row.id, row.status])).toEqual([[back.registrationId, "PENDING_DECLARATION"]]);
+    expect((await volunteersOf(event.id)).map((row) => [row.state, row.bibNumber])).toEqual([["CANCELLED", 500]]);
+    expect(await placesHeld(event.id)).toBe(1);
+  });
+});

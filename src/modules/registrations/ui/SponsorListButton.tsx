@@ -9,7 +9,7 @@ import GlyphButton from "@/shared/ui/GlyphButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { SPONSOR_RECIPIENT_MAX, type SponsorListSummary } from "../sponsor-list";
 import type { SponsorRegister } from "../sponsor-register";
-import SponsorListRegister from "./SponsorListRegister";
+import SponsorListRegister, { type SponsorListRemoval } from "./SponsorListRegister";
 
 /** The box's suggestions: one list of names per page, so one id. */
 const RECIPIENTS_ID = "sponsor-list-recipients";
@@ -24,6 +24,10 @@ type Props = {
   now: Date;
   /** The register's heading level: 2 on a page, 3 inside a card — which both screens are, since §946. */
   registerLevel: 2 | 3;
+  /** «Șterge» on the register's rows (§NNN), for a role that may delete; absent, the register is read-only. */
+  registerRemoval?: SponsorListRemoval;
+  /** The page came back from a delete of the register: its fold opens on what is left. */
+  registerSaved?: boolean;
 };
 
 /**
@@ -47,7 +51,7 @@ type Props = {
  * Two submits, one form (§581): «Descarcă lista pentru sponsori (Excel)» posts `format=xlsx`, the
  * same rows with every tick the person gave; «Descarcă CSV» the five columns, the file for a partner.
  */
-export default async function SponsorListButton({ locale, eventId, list, register, now, registerLevel }: Props) {
+export default async function SponsorListButton({ locale, eventId, list, register, now, registerLevel, registerRemoval, registerSaved }: Props) {
   const t = await getTranslations("Admin");
   const count = list.count;
   return (
@@ -114,7 +118,7 @@ export default async function SponsorListButton({ locale, eventId, list, registe
       )}
       {register.lists.length > 0 && (
         <Box sx={{ pt: 1 }}>
-          <SponsorListRegister locale={locale} lists={register.lists} now={now} level={registerLevel} />
+          <SponsorListRegister locale={locale} lists={register.lists} now={now} level={registerLevel} removal={registerRemoval} saved={registerSaved} />
         </Box>
       )}
     </Stack>

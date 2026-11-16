@@ -1,8 +1,10 @@
+import { and, eq } from "drizzle-orm";
 import { createTranslator } from "next-intl";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
+import { registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { withClientWords } from "../../helpers/client-words";
@@ -538,5 +540,81 @@ describe("§850 «Premii» follows the race's rules", () => {
     const groups = [...strip(html).matchAll(/<dt[^>]*>([^<]*)<\/dt>/g)].map((match) => match[1]);
     expect(groups).toEqual(["General feminin", "General masculin"]);
     expect(text(html)).toContain("primele 5 locuri la feminin și la masculin");
+  });
+});
+
+describe("§NNN «Clasament» and «Premii» say whose result it is: «Elită», «Ambasador»", () => {
+  /** One runner's mark, set as the Administrator's press stores it. */
+  const mark = (bibNumber: number, values: { elite?: boolean; ambassador?: boolean; eliteHiddenFromResults?: boolean }) =>
+    db.update(registrations).set(values).where(and(eq(registrations.eventId, raceId), eq(registrations.bibNumber, bibNumber)));
+  /** Each registered line's markup, by race number. */
+  const linesOf = (html: string) =>
+    Object.fromEntries([...strip(html).matchAll(/data-testid="result-line" data-bib="(\d+)"([\s\S]*?)(?=data-testid="result-line"|<\/ul>)/g)].map((match) => [match[1], match[2]]));
+  /** Each podium row's words. */
+  const podiumOf = (html: string) => [...strip(html).matchAll(/data-testid="results-award-row"[^>]*>([\s\S]*?)<\/dd>/g)].map((match) => text(match[1]).trim());
+
+  it("draws the registration's marks on its line and on its podium row, and none on anybody else's", async () => {
+    await runners();
+    await mark(101, { ambassador: true });
+    await mark(102, { elite: true });
+    const html = await render();
+
+    const lines = linesOf(html);
+    expect(lines["101"]).toContain('data-testid="result-mark-ambassador"');
+    expect(lines["101"]).not.toContain('data-testid="result-mark-elite"');
+    expect(text(lines["101"])).toContain("Ambasador");
+    expect(lines["102"]).toContain('data-testid="result-mark-elite"');
+    expect(lines["102"]).not.toContain('data-testid="result-mark-ambassador"');
+    expect(text(lines["102"])).toContain("Elită");
+    // Dan wears neither: no mark on his line.
+    expect(lines["103"]).not.toMatch(/data-testid="result-mark-/);
+
+    const podium = podiumOf(html);
+    const rowOf = (runner: string) => podium.filter((row) => row.includes(runner));
+    // Ana is on two podiums — the women's and her category's — and is named an ambassador on both.
+    expect(rowOf("#101 Ana Popescu").length).toBeGreaterThan(0);
+    for (const row of rowOf("#101 Ana Popescu")) expect(row).toMatch(/0:50:00 Ambasador$/);
+    for (const row of rowOf("#102 Bia Marin")) expect(row).toMatch(/0:45:00 Elită$/);
+    // Ion was typed by hand: no registration, no mark.
+    for (const row of rowOf("#900 Ion Vasile")) expect(row).toMatch(/0:42:00$/);
+    expect(strip(html).match(/data-testid="results-award-mark-ambassador"/g)?.length).toBe(rowOf("#101 Ana Popescu").length);
+  });
+
+  it("draws both marks on a runner that wears both, the elite's first, and says them in English", async () => {
+    await runners();
+    await mark(101, { ambassador: true, elite: true });
+    const html = await render(raceId, "en");
+    const line = linesOf(html)["101"];
+    expect(line.indexOf('data-testid="result-mark-elite"')).toBeGreaterThan(-1);
+    expect(line.indexOf('data-testid="result-mark-elite"')).toBeLessThan(line.indexOf('data-testid="result-mark-ambassador"'));
+    expect(text(line)).toContain("Elite");
+    expect(text(line)).toContain("Ambassador");
+    expect(podiumOf(html).filter((row) => row.includes("#101 Ana Popescu")).every((row) => /Elite Ambassador$/.test(row))).toBe(true);
+  });
+
+  it("says a runner left out of the ranking by the mark that brought the tick: an ambassador as such, an elite — or both marks — as an elite", async () => {
+    await runners();
+    await mark(101, { ambassador: true, eliteHiddenFromResults: true });
+    await mark(102, { elite: true, eliteHiddenFromResults: true });
+    let lines = linesOf(await render());
+    expect(text(lines["101"])).toContain("Pe site: nu apare — ambasador în afara clasamentului");
+    expect(text(lines["101"])).not.toContain("elită în afara clasamentului");
+    expect(text(lines["102"])).toContain("Pe site: nu apare — elită în afara clasamentului");
+    expect(text(lines["102"])).not.toContain("ambasador în afara clasamentului");
+    // Dan wears neither mark: his line says how he appears, as before.
+    expect(text(lines["103"])).not.toContain("în afara clasamentului");
+
+    await mark(101, { elite: true });
+    lines = linesOf(await render());
+    expect(text(lines["101"])).toContain("Pe site: nu apare — elită în afara clasamentului");
+    expect(text(linesOf(await render(raceId, "en"))["102"])).toContain("On the site: not shown — an elite out of the results");
+    await mark(101, { elite: false });
+    expect(text(linesOf(await render(raceId, "en"))["101"])).toContain("On the site: not shown — an ambassador out of the results");
+  });
+
+  it("draws no mark anywhere on a race where nobody wears one", async () => {
+    await runners();
+    const html = strip(await render());
+    expect(html).not.toMatch(/data-testid="result-mark-|data-testid="results-award-mark-/);
   });
 });

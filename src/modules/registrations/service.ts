@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, count, eq, gt, inArray, isNull, like, lt, lte, ne, sql } from "drizzle-orm";
+import { and, count, eq, gt, inArray, isNotNull, isNull, like, lt, lte, ne, or, sql } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { eventInvitations } from "@/db/schema/event-invitations";
@@ -4992,6 +4992,66 @@ export async function withdrawInvitationByStaff<T extends Record<string, unknown
   });
   revalidatePublicContent("places");
   wakeMaintenance(result.event, now, settings, result.offersMade > 0 ? offerDeadline(result.event, now, settings) : null);
+}
+
+/**
+ * «Șterge» on an invitation that ended unaccepted (§NNN; the owner, 2026-11-14: «am o invitație retrasă, vreau să o pot
+ * șterge!»): the row goes now, with its link (`email_action_tokens.invitation_id … on delete cascade`), where the
+ * retention job would have taken it thirty days after it ended (`jobs/retention.ts`, step `invitations`).
+ *
+ * **Only an invitation that holds nothing**: withdrawn, or past its deadline. One still open holds a place (AGENTS.md
+ * §10.6) and is never deleted raw — it is withdrawn first, by «Retrage», whose own transaction hands the place back
+ * through the allocator; pressed on one, this refuses (`INVITATION_NOT_ENDED`). An accepted one is its registration's
+ * record and goes with that registration's own erase (BR-REQ-037-06); refused alike.
+ *
+ * One past its deadline that the job has not stamped yet goes through the event's own sweep first
+ * (`sweepLapsedInvitationsOfEvent`): its stamp, its `event.invitation_expired` row and the offer of its place, as the
+ * job would have made them — what the person's erase does before it deletes (`person-data.ts#eraseEventInvitationsOfPerson`).
+ *
+ * The trail keeps that an invitation was deleted, which one and how it had ended — `event.invitation_deleted` on the
+ * event, `{ invitationId, ended }` — and never the name or the address, which go with the row (§12.12). No place,
+ * count, state or email moves, and the invitee is told nothing. The Administrator's alone.
+ */
+export async function deleteEndedInvitationByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  invitationId: string,
+  actor: { id: string; role: StaffRole },
+  now: Date,
+): Promise<{ ended: "withdrawn" | "expired" }> {
+  if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not delete an invitation`);
+  if (!isUuid(invitationId)) throw new DomainError("NOT_FOUND", "no such invitation");
+  const found = await findInvitationById(db, invitationId);
+  if (!found) throw new DomainError("NOT_FOUND", "no such invitation");
+  const state = invitationState(found, now);
+  if (state === "sent" || state === "accepted") throw new InvitationRefusal("INVITATION_NOT_ENDED", found.name);
+  // Past its deadline and not stamped yet: the sweep's stamp, its audit row and the offer of the place come first.
+  if (state === "expired" && !found.expiredAt) await sweepLapsedInvitationsOfEvent(db, found.eventId, now);
+  return db.transaction(async (tx) => {
+    // Only a row that holds nothing: unaccepted, and withdrawn, stamped expired or past its deadline — asked again in the statement.
+    const [deleted] = await tx
+      .delete(eventInvitations)
+      .where(
+        and(
+          eq(eventInvitations.id, found.id),
+          isNull(eventInvitations.acceptedAt),
+          or(isNotNull(eventInvitations.withdrawnAt), isNotNull(eventInvitations.expiredAt), lte(eventInvitations.expiresAt, now)),
+        ),
+      )
+      .returning({ id: eventInvitations.id, eventId: eventInvitations.eventId, withdrawnAt: eventInvitations.withdrawnAt });
+    // Gone between the read and the statement — a second press, a colleague's: nothing left to delete.
+    if (!deleted) throw new DomainError("NOT_FOUND", "no such invitation");
+    const ended = deleted.withdrawnAt ? ("withdrawn" as const) : ("expired" as const);
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      participantId: null,
+      action: "event.invitation_deleted",
+      entityType: "event",
+      entityId: deleted.eventId,
+      metadata: { invitationId: deleted.id, ended },
+      now,
+    });
+    return { ended };
+  });
 }
 
 /**

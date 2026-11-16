@@ -513,6 +513,9 @@ function translationInputFrom(form: FormData, locale: Locale) {
     // The club's own weather text (§666), from the place's card under «Vremea» — read only when the
     // box was posted, like the discount note: an absent box leaves the column alone, "" clears it.
     weatherNote: form.has(`translations.${locale}.weatherNote`) ? value("weatherNote") : undefined,
+    // «Mesaj cât înscrierile pe site sunt oprite» (§NNN), from the strip beside «Înscrieri publice deschise» — read only
+    // when the box was posted, like the two notes above: an absent box leaves the column alone, "" clears it.
+    pausedNote: form.has(`translations.${locale}.pausedNote`) ? value("pausedNote") : undefined,
   };
 }
 

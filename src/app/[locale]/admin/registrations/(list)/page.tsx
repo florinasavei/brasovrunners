@@ -49,8 +49,11 @@ import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
 import KitCount from "@/modules/registrations/ui/KitCount";
 import { readVolunteerKitFigures, volunteerKitHrefs } from "@/modules/volunteers/admin-list";
+import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 import { listEliteEntries } from "@/modules/registrations/elite-list";
 import { listEliteMarkedRegistrations } from "@/modules/registrations/elite-mark";
+import { listAmbassadorMarkedRegistrations } from "@/modules/registrations/ambassador-mark";
+import AmbassadorPanel from "@/modules/registrations/ui/AmbassadorPanel";
 import ElitePanel from "@/modules/registrations/ui/ElitePanel";
 import PlaceOutlook from "@/modules/registrations/ui/PlaceOutlook";
 import PublicNowLine from "@/modules/registrations/ui/PublicNowLine";
@@ -104,7 +107,7 @@ import {
   saveReserveNoteAction,
   saveReservePartnerAction,
 } from "../reserve-actions";
-import { inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
+import { deleteInvitationAction, inviteAction, resendInvitationAction, withdrawInvitationAction } from "../invitation-actions";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
@@ -127,12 +130,14 @@ import {
   checkInAction,
   clearMemberTicksAction,
   confirmRegistrationNowAction,
+  deleteSponsorListRecordAction,
   eraseRegistrationFromListAction,
   offerPlaceAction,
   promoteRegistrationAction,
   setBibPrintedAction,
   setClubMemberDeclaredAction,
   setOutsideCapacityAction,
+  setRegistrationAmbassadorAction,
   setRegistrationEliteAction,
   setRegistrationEliteTickAction,
 } from "../actions";
@@ -524,6 +529,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     start with a kit.
   */
   const eliteLists = filters.eventId ? await Promise.all([listEliteEntries(db, actor, filters.eventId), listEliteMarkedRegistrations(db, actor, filters.eventId)]) : null;
+  // «Ambasadori» (§NNN): the registrations marked «Ambasador», one event only; the reader asks the role again.
+  const ambassadors = filters.eventId ? await listAmbassadorMarkedRegistrations(db, actor, filters.eventId) : null;
   // The separate list's names: among the kits' runners, the people at the start in «Locuri» and the bibs beside the registrations'.
   const eliteNames = eliteLists?.[0].length ?? 0;
   /*
@@ -601,6 +608,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="outside-chip" />}
           {/* «Elită» (§897): the bib prints with the name where the number goes — for every role that reads the list. */}
           {row.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={t("registrations.elite.chip")} testId="elite-chip" />}
+          {/* «Ambasador» (§NNN): the club's label, the bib as any other — for every role that reads the list. */}
+          {row.ambassador && <StatusChip glyph="ambassador" color="secondary" variant="outlined" label={t("registrations.ambassador.chip")} testId="ambassador-chip" />}
           {/* «A reconfirmat» (the decision «Cere reconfirmarea»): the person said «Vin» and is still registered — information, never a state. */}
           {row.reconfirmedAt && isActiveStatus(row.status) && <StatusChip glyph="reconfirmed" color="success" variant="outlined" label={t("reconfirm.chip")} testId="reconfirm-chip" />}
           {/* «Date lipsă» (§905): a registration still standing lacks answers the form requires — the person completes them
@@ -1019,11 +1028,34 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         ),
         submitted: leadWhen(row.sentAt),
       },
-      // To the invitation itself, where «Retrimite» and «Retrage» are.
+      // To the invitation itself, where «Retrimite» and «Retrage» are — and, on one that ended unaccepted, «Șterge» right
+      // here (§NNN; the owner, of a withdrawn invitation's row on this list: «vreau să o pot șterge!»): the Administrator's,
+      // asked first, the panel's own press.
       actions: (
-        <GlyphButton icon="send" href="#registrations-invitations" variant="text" size="small" sx={TAP_TARGET}>
-          {t("registrations.invitationRow.open")}
-        </GlyphButton>
+        <Stack direction="row" useFlexGap sx={{ flexWrap: "wrap", gap: 0.5, alignItems: "center", justifyContent: "flex-end" }}>
+          <GlyphButton icon="send" href="#registrations-invitations" variant="text" size="small" sx={TAP_TARGET}>
+            {t("registrations.invitationRow.open")}
+          </GlyphButton>
+          {mayManage && (state === "withdrawn" || state === "expired") && (
+            <ActionForm
+              action={deleteInvitationAction}
+              confirm={{
+                title: t("invitations.deleteTitle"),
+                body: t("invitations.deleteBody", { name: row.name || t("invitations.anotherPerson") }),
+                ...words.noMail(row.name || t("invitations.anotherPerson")),
+                destructive: true,
+                confirmLabel: t("invitations.delete"),
+                cancelLabel: words.cancel,
+              }}
+              data-testid="registrations-invitation-delete-form"
+            >
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="eventId" value={row.eventId} />
+              <input type="hidden" name="invitationId" value={row.id} />
+              <GlyphSubmitButton icon="delete" label={t("invitations.delete")} pendingLabel={t("invitations.deleting")} variant="text" color="error" size="small" />
+            </ActionForm>
+          )}
+        </Stack>
       ),
     };
   });
@@ -1339,6 +1371,21 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           >
             {t("registrations.export")}
           </GlyphButton>
+          {/* «Lista pentru tombolă» (§NNN): with one event chosen, everybody who wears a number there — the confirmed
+              runners and the confirmed volunteers — by the number. The route asserts the role again. */}
+          {filters.eventId && canTakeRaffleList(actor.role) && (
+            <GlyphButton
+              icon="download"
+              href={`/api/admin/events/${filters.eventId}/raffle?lang=${locale}`}
+              variant="text"
+              size="small"
+              sx={TAP_TARGET}
+              aria-label={t("registrations.raffle.buttonLabel")}
+              data-testid="registrations-raffle-list"
+            >
+              {t("registrations.raffle.button")}
+            </GlyphButton>
+          )}
           {/* With one event chosen, the organizer's own message to its registrants (§364) —
               the page lives under the event; this is the other door to it. */}
           {filters.eventId && canMessageParticipants(actor.role) && (
@@ -1380,35 +1427,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           )}
         </Stack>
       </Stack>
-
-      {/*
-        The list for sponsors (§570; the owner: "export the participants list but filter out just
-        the ones who agreed to receive marketing emails so we can share it with our sponsors"): its
-        own minimal file, never columns of the export beside it. For one chosen event; every event's
-        list is on «Newsletter». The role is asserted in the read and in the route. Under it, since
-        §929, «Liste date sponsorilor»: this event's lists and those made for every event.
-
-        The whole block is one fold, «Lista pentru sponsori», closed on arrival (§946; the owner,
-        2026-11-14: «vreau sa fie colapsata intr-o sectiune»): a file given a few times a year stood
-        open above the bibs on the screen the club works from every day. Its closed line says what
-        the block said at a glance — how many people the list holds now, or that it is off, and how
-        many lists were given — and the register is a fold inside it, a level down, as on «Newsletter».
-      */}
-      {sponsors && sponsorRegister && filters.eventId && (
-        <Panel
-          glyph="partners"
-          title={t("panels.sponsors")}
-          aside={[
-            sponsors.offered ? t(`sponsors.count.${countForm(sponsors.count, locale)}`, { count: sponsors.count }) : t("sponsors.fold.off"),
-            ...(sponsorRegister.lists.length > 0 ? [t("sponsors.fold.given", { count: sponsorRegister.lists.length })] : []),
-          ].join(" · ")}
-          collapsible
-          id="registrations-sponsors"
-          data-testid="registrations-sponsors"
-        >
-          <SponsorListButton locale={locale} eventId={filters.eventId} list={sponsors} register={sponsorRegister} now={deadlinesNow} registerLevel={3} />
-        </Panel>
-      )}
 
       {/*
         The bibs of this event, as a batch (§264; the owner: "ar trebui să pot descărca BID-urile
@@ -1698,173 +1716,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           <Box component="a" href={buildListHref(basePath, { ...listParams, eventId: ALL_EVENTS }, {})} sx={{ color: "primary.main" }}>
             {t("registrations.summaryScopeAllLink")}
           </Box>
-        </Typography>
-      )}
-      </Panel>
-
-      {/*
-        «Invitații» (§647): who the club invited to this event and where each stands; the send and each
-        invitation's verbs for the Administrator. Only on a list about one event: an invitation is to one.
-      */}
-      {filters.eventId && (
-        <InvitationsPanel
-          db={db}
-          actor={actor}
-          locale={locale}
-          eventId={filters.eventId}
-          mayManage={mayManage}
-          sendAction={inviteAction}
-          resendAction={resendInvitationAction}
-          withdrawAction={withdrawInvitationAction}
-          now={new Date()}
-        />
-      )}
-
-      {/*
-        «Lista internă (doar notițe)» (§854, §888): people who asked to be kept in mind for this event, told nothing,
-        for the roles that keep internal notes. Only on a list about one event: a line is about one. Moving a line onto
-        the official list — one press, or the full form — is the Administrator's; the press only while the event takes
-        a vouched entry (the door of «Adaugă pe lista de așteptare»). «Mută pe lista de elită» (§903) is the
-        Administrator's too, on every line and at any time — the elite list is no queue — and comes back to this list
-        as it is, the panel open on the link to the editor's elite card.
-      */}
-      {filters.eventId && canKeepRegistrationNotes(actor.role) && (
-        <ReserveListPanel
-          locale={locale}
-          eventId={filters.eventId}
-          entries={await listReserveEntries(db, actor, filters.eventId)}
-          // «E de la parteneri» (the decision «De la parteneri»): the line's fold for the Organizer and above, as the rename; the boxes' suggestions.
-          partnerAction={saveReservePartnerAction}
-          partnerSuggestions={partnerSuggestions}
-          fullFormHref={
-            mayManage ? (entryId) => `${getPathname({ locale, href: "/admin/registrations/new" })}?${new URLSearchParams({ eventId: filters.eventId ?? "", reserve: entryId }).toString()}` : undefined
-          }
-          addAction={addReserveEntryAction}
-          saveNoteAction={saveReserveNoteAction}
-          renameAction={renameReserveEntryAction}
-          deleteAction={deleteReserveEntryAction}
-          moveAction={mayManage && waitlistAddOpen ? moveReserveEntryAction : undefined}
-          eliteMoveAction={mayManage ? moveReserveEntryToEliteAction : undefined}
-          ownAddressAction={mayManage && waitlistAddOpen && specialGuestsOn ? moveReserveEntryToOwnAddressAction : undefined}
-          ownAddressEmail={mayManage ? actor.email : undefined}
-          ownAddressSwitchOff={mayManage && waitlistAddOpen && !specialGuestsOn}
-          listQuery={listQueryString}
-          eliteCardHref={mayManage && saved === "reserveMovedToElite" ? (eliteCardHref ?? undefined) : undefined}
-          opened={
-            saved === "reserveAdded" ||
-            saved === "reserveNoteSaved" ||
-            saved === "reserveRenamed" ||
-            saved === "reserveRenameUnchanged" ||
-            saved === "reserveDeleted" ||
-            saved === "reserveMovedToElite" ||
-            saved === "reserveOwnAddressGuest" ||
-            // A row's own partner editor (the list's column «Partener») comes back with `from=row`: the panel stays as it was.
-            ((saved === "partnerSaved" || saved === "partnerUnchanged") && current.from !== "row") ||
-            current.from === "reserve"
-          }
-        />
-      )}
-
-      {/*
-        «Elite» (the owner, 2026-11-04, who looked here for an elite and did not find her): the race's separate elite list
-        (§895) and the registrations marked «Elită» (§897), for every role that reads this list — each reader asserts the
-        role again — with the link to the editor's elite card, where the separate list changes, and, for the Administrator,
-        the one-press «Nu mai e elită» beside each registered line (the owner, 2026-11-11), the row menu's own action.
-      */}
-      {eliteLists && eliteCardHref && (
-        <ElitePanel
-          locale={locale}
-          entries={eliteLists[0]}
-          marked={eliteLists[1]}
-          cardHref={eliteCardHref}
-          registrationHref={(registrationId) => getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: registrationId } } })}
-          mayManage={mayManage}
-          unmark={mayManage ? { action: setRegistrationEliteAction, listQuery: rowReturnQueryString } : undefined}
-        />
-      )}
-
-      {/*
-        «Lista oficială de așteptare» (§872, renamed by §888): the one-press entry onto the official waiting list — the
-        address vouched for by the Administrator, the row through the allocator at once, or given a place in the same
-        press («Oferă-i un loc acum»). Administrator only, on a list about one event; the new row shows in the list
-        above in the state it landed in.
-      */}
-      {filters.eventId && mayManage && waitlistAddOpen && (
-        <Panel
-          glyph="queue"
-          collapsible
-          title={t("waitlistAdd.panelTitle")}
-          intro={t("waitlistAdd.intro")}
-          openWhen={{ saved: WAITLIST_ENTRY_SAVED.has(saved ?? "") && current.from !== "reserve" }}
-          id="registrations-waitlist-add"
-          data-testid="registrations-waitlist-add"
-        >
-          <WaitlistAddForm locale={locale} eventId={filters.eventId} waitlistAddAction={addToWaitlistAction} scope="registrations-waitlist-add" heading={false} />
-        </Panel>
-      )}
-
-      {/*
-        The outbox, and the day's Mailgun counter (`DECISIONS.md` §80): what is waiting, what
-        went out today against the free day's hundred, and "send now" for whoever does not want
-        to wait for the monitor. The counter is the ceiling the button respects, and the number
-        a newsletter would have to fit under.
-      */}
-      <Panel glyph="outbox"
-        title={t("panels.outbox")}
-        aside={t("outbox.waitingShort", { count: volume.waitingMessages })}
-        collapsible
-        openWhen={{ attention: volume.waitingMessages > 0, saved: saved === "outboxSent" }}
-        id="registrations-outbox"
-        data-testid="outbox-panel"
-      >
-      <Stack
-        direction={{ xs: "column", sm: "row" }}
-        spacing={1.5}
-        sx={{ alignItems: { sm: "center" } }}
-      >
-        <Typography variant="body2" sx={{ flex: 1 }}>
-          {t(`outbox.status.${volume.period}`, {
-            waiting: volume.waitingMessages,
-            sent: volume.period === "month" ? volume.sentThisMonth : volume.sentMessages,
-            allowance: volume.allowance ?? "",
-            remaining: volume.remaining ?? "",
-            plan: volume.planName,
-          })}
-        </Typography>
-        {/* The button only when there is something to send and room to send it: a disabled
-            button cannot say why (`SubmitButton`'s own rule), a sentence can. */}
-        {/* Only for the role that could press it (§289). Without this the else-branch below would
-            tell an Organizer the allowance was spent, which is an answer to a question they were
-            never offered — the count and the plan above are the read, and that is the whole
-            panel for them. */}
-        {!mayManage ? null : volume.waitingMessages > 0 && (volume.remaining === null || volume.remaining > 0) ? (
-          <ActionForm
-            action={sendOutboxNowAction}
-            confirm={{ title: t("confirm.sendNowTitle"), body: t("confirm.sendNowBody"), email: words.queue(volume.waitingMessages), confirmLabel: t("outbox.sendNow"), cancelLabel: words.cancel }}
-            data-testid="send-now-form"
-          >
-            <input type="hidden" name="uiLocale" value={locale} />
-            <input type="hidden" name="listQuery" value={listQueryString} />
-            <GlyphSubmitButton
-              label={t("outbox.sendNow")}
-              pendingLabel={t("outbox.sending")}
-              ariaLabel={t("outbox.sendNowLong")}
-              icon="send"
-              variant="contained"
-            />
-          </ActionForm>
-        ) : (
-          <Typography variant="body2" color="text.secondary">
-            {volume.waitingMessages === 0 ? t("outbox.nothingWaiting") : t("outbox.allowanceSpent")}
-          </Typography>
-        )}
-      </Stack>
-      {/* «Emailuri azi»: what left today and what waits, with the names — the Administrator's, like this panel's button. */}
-      {mayManage && (
-        <Typography variant="body2" sx={{ mt: 1.5 }}>
-          <MuiLink href={getPathname({ locale, href: "/admin/settings/emails/today" })} sx={{ ...TAP_TARGET, display: "inline-flex", alignItems: "center" }} data-testid="outbox-journal-link">
-            {t("emails.today.queueLink")}
-          </MuiLink>
         </Typography>
       )}
       </Panel>
@@ -2347,6 +2198,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 outside: { onList: row.outsideCapacity, enabled: row.eventHiddenListEnabled },
                 // The elite mark (§897): the row's own mark decides which of the two words.
                 elite: row.elite,
+                // The ambassador mark (§NNN): the same, for the club's other label.
+                ambassador: row.ambassador,
               });
               // Every press of the row comes back to this list, on the row, its page and filters kept (§747, §943):
               // the forms carry the list's query, never a path.
@@ -2426,13 +2279,24 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               }
               if (verbs.includes("eliteUnmark")) {
                 items.push({ kind: "submit", icon: "elite", label: t("registrations.elite.unmark"), formId: `elite-${row.id}` });
+              }
+              // «Marchează ca ambasador» / «Nu mai e ambasador» (§NNN): the club's label beside «Elită»; the bib prints as any other.
+              if (verbs.includes("ambassadorMark")) {
+                items.push({ kind: "submit", icon: "ambassador", label: t("registrations.ambassador.mark"), formId: `ambassador-${row.id}` });
+              }
+              if (verbs.includes("ambassadorUnmark")) {
+                items.push({ kind: "submit", icon: "ambassador", label: t("registrations.ambassador.unmark"), formId: `ambassador-${row.id}` });
+              }
+              if (verbs.includes("eliteUnmark") || verbs.includes("ambassadorUnmark")) {
                 /*
-                  The marked elite's two ticks (§910), where the mark is the Administrator's to take off: «Apare în clasament» and «Apare pe
-                  site», each a tick in the menu posting the other state. They only ever hide — ticked, the person's own ticks decide.
+                  The two ticks of a registration marked «Elită» or «Ambasador» (§910, §NNN), where the mark is the Administrator's to take
+                  off: «Apare în clasament» and «Apare pe site», each a tick in the menu posting the other state — one pair, whichever mark
+                  the row wears. They only ever hide — ticked, the person's own ticks decide.
                 */
+                const tickIcon = row.elite ? ("elite" as const) : ("ambassador" as const);
                 items.push(
-                  { kind: "submit", icon: "elite", label: t("registrations.elite.inResults"), formId: `elite-results-${row.id}`, checked: !row.eliteHiddenFromResults, hint: t("registrations.elite.inResultsHelp") },
-                  { kind: "submit", icon: "elite", label: t("registrations.elite.onSite"), formId: `elite-site-${row.id}`, checked: !row.eliteHiddenFromSite, hint: t("registrations.elite.onSiteHint") },
+                  { kind: "submit", icon: tickIcon, label: t("registrations.elite.inResults"), formId: `elite-results-${row.id}`, checked: !row.eliteHiddenFromResults, hint: t("registrations.elite.inResultsHelp") },
+                  { kind: "submit", icon: tickIcon, label: t("registrations.elite.onSite"), formId: `elite-site-${row.id}`, checked: !row.eliteHiddenFromSite, hint: t("registrations.elite.onSiteHint") },
                 );
               }
               if (verbs.includes("cancel")) {
@@ -2601,8 +2465,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       {/* Back to this list and its page, as it stands (§180, §747): only the query travels. */}
                     </ActionForm>
                   )}
-                  {/* The two ticks of a marked elite (§910): ask nothing (§384) — they tell nobody, only hide, and the same tick undoes them. */}
-                  {verbs.includes("eliteUnmark") &&
+                  {(verbs.includes("ambassadorMark") || verbs.includes("ambassadorUnmark")) && (
+                    <ActionForm
+                      id={`ambassador-${row.id}`}
+                      action={setRegistrationAmbassadorAction}
+                      hidden
+                      // Asks nothing (§384): it tells nobody, changes no place, number or bib, and the same menu undoes it.
+                    >
+                      {hidden}
+                      <input type="hidden" name="ambassador" value={row.ambassador ? "0" : "1"} />
+                    </ActionForm>
+                  )}
+                  {/* The two ticks of a marked elite or ambassador (§910, §NNN): ask nothing (§384) — they tell nobody, only hide, and the same tick undoes them. */}
+                  {(verbs.includes("eliteUnmark") || verbs.includes("ambassadorUnmark")) &&
                     ([
                       ["inResults", `elite-results-${row.id}`, !row.eliteHiddenFromResults],
                       ["onSite", `elite-site-${row.id}`, !row.eliteHiddenFromSite],
@@ -2764,6 +2639,237 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           </Box>
         </Box>
       )}
+
+      {/*
+        Below the table since §NNN (the owner, 2026-11-15, of the list for sponsors and of the folds «Invitații», «Lista
+        internă», «Elite», «Lista oficială de așteptare» and «Emailuri de trimis»: «vreau să fie sub „căutare și
+        filtrare"» — and, asked where against the table, «Sub tabel»): «Cine s-a înscris», «Caută și filtrează» and the
+        registrations themselves come first, the filter next to the rows it narrows; everything the club opens a few
+        times a week follows the table and its batch verbs, each fold closed until something inside asks for it. Their
+        ids are unchanged, so every link to one — «Invită pe email», a press that comes back to its fold — still lands.
+      */}
+
+      {/*
+        The list for sponsors (§570; the owner: "export the participants list but filter out just
+        the ones who agreed to receive marketing emails so we can share it with our sponsors"): its
+        own minimal file, never columns of the export beside it. For one chosen event; every event's
+        list is on «Newsletter». The role is asserted in the read and in the route. Under it, since
+        §929, «Liste date sponsorilor»: this event's lists and those made for every event.
+
+        The whole block is one fold, «Lista pentru sponsori», closed on arrival (§946; the owner,
+        2026-11-14: «vreau sa fie colapsata intr-o sectiune»): a file given a few times a year stood
+        open above the bibs on the screen the club works from every day. Its closed line says what
+        the block said at a glance — how many people the list holds now, or that it is off, and how
+        many lists were given — and the register is a fold inside it, a level down, as on «Newsletter».
+      */}
+      {sponsors && sponsorRegister && filters.eventId && (
+        <Panel
+          glyph="partners"
+          title={t("panels.sponsors")}
+          aside={[
+            sponsors.offered ? t(`sponsors.count.${countForm(sponsors.count, locale)}`, { count: sponsors.count }) : t("sponsors.fold.off"),
+            ...(sponsorRegister.lists.length > 0 ? [t("sponsors.fold.given", { count: sponsorRegister.lists.length })] : []),
+          ].join(" · ")}
+          collapsible
+          // Back from «Șterge» on a list of the register (§NNN): open on what is left.
+          openWhen={{ saved: saved === "sponsorListDeleted" }}
+          id="registrations-sponsors"
+          data-testid="registrations-sponsors"
+        >
+          <SponsorListButton
+            locale={locale}
+            eventId={filters.eventId}
+            list={sponsors}
+            register={sponsorRegister}
+            now={deadlinesNow}
+            registerLevel={3}
+            registerRemoval={mayManage ? { action: deleteSponsorListRecordAction, door: "registrations", eventId: filters.eventId } : undefined}
+            registerSaved={saved === "sponsorListDeleted"}
+          />
+        </Panel>
+      )}
+
+      {/*
+        «Invitații» (§647): who the club invited to this event and where each stands; the send and each
+        invitation's verbs for the Administrator. Only on a list about one event: an invitation is to one.
+      */}
+      {filters.eventId && (
+        <InvitationsPanel
+          db={db}
+          actor={actor}
+          locale={locale}
+          eventId={filters.eventId}
+          mayManage={mayManage}
+          sendAction={inviteAction}
+          resendAction={resendInvitationAction}
+          withdrawAction={withdrawInvitationAction}
+          deleteAction={deleteInvitationAction}
+          now={new Date()}
+        />
+      )}
+
+      {/*
+        «Lista internă (doar notițe)» (§854, §888): people who asked to be kept in mind for this event, told nothing,
+        for the roles that keep internal notes. Only on a list about one event: a line is about one. Moving a line onto
+        the official list — one press, or the full form — is the Administrator's; the press only while the event takes
+        a vouched entry (the door of «Adaugă pe lista de așteptare»). «Mută pe lista de elită» (§903) is the
+        Administrator's too, on every line and at any time — the elite list is no queue — and comes back to this list
+        as it is, the panel open on the link to the editor's elite card.
+      */}
+      {filters.eventId && canKeepRegistrationNotes(actor.role) && (
+        <ReserveListPanel
+          locale={locale}
+          eventId={filters.eventId}
+          entries={await listReserveEntries(db, actor, filters.eventId)}
+          // «E de la parteneri» (the decision «De la parteneri»): the line's fold for the Organizer and above, as the rename; the boxes' suggestions.
+          partnerAction={saveReservePartnerAction}
+          partnerSuggestions={partnerSuggestions}
+          fullFormHref={
+            mayManage ? (entryId) => `${getPathname({ locale, href: "/admin/registrations/new" })}?${new URLSearchParams({ eventId: filters.eventId ?? "", reserve: entryId }).toString()}` : undefined
+          }
+          addAction={addReserveEntryAction}
+          saveNoteAction={saveReserveNoteAction}
+          renameAction={renameReserveEntryAction}
+          deleteAction={deleteReserveEntryAction}
+          moveAction={mayManage && waitlistAddOpen ? moveReserveEntryAction : undefined}
+          eliteMoveAction={mayManage ? moveReserveEntryToEliteAction : undefined}
+          ownAddressAction={mayManage && waitlistAddOpen && specialGuestsOn ? moveReserveEntryToOwnAddressAction : undefined}
+          ownAddressEmail={mayManage ? actor.email : undefined}
+          ownAddressSwitchOff={mayManage && waitlistAddOpen && !specialGuestsOn}
+          listQuery={listQueryString}
+          eliteCardHref={mayManage && saved === "reserveMovedToElite" ? (eliteCardHref ?? undefined) : undefined}
+          opened={
+            saved === "reserveAdded" ||
+            saved === "reserveNoteSaved" ||
+            saved === "reserveRenamed" ||
+            saved === "reserveRenameUnchanged" ||
+            saved === "reserveDeleted" ||
+            saved === "reserveMovedToElite" ||
+            saved === "reserveOwnAddressGuest" ||
+            // A row's own partner editor (the list's column «Partener») comes back with `from=row`: the panel stays as it was.
+            ((saved === "partnerSaved" || saved === "partnerUnchanged") && current.from !== "row") ||
+            current.from === "reserve"
+          }
+        />
+      )}
+
+      {/*
+        «Elite» (the owner, 2026-11-04, who looked here for an elite and did not find her): the race's separate elite list
+        (§895) and the registrations marked «Elită» (§897), for every role that reads this list — each reader asserts the
+        role again — with the link to the editor's elite card, where the separate list changes, and, for the Administrator,
+        the one-press «Nu mai e elită» beside each registered line (the owner, 2026-11-11), the row menu's own action.
+      */}
+      {eliteLists && eliteCardHref && (
+        <ElitePanel
+          locale={locale}
+          entries={eliteLists[0]}
+          marked={eliteLists[1]}
+          cardHref={eliteCardHref}
+          registrationHref={(registrationId) => getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: registrationId } } })}
+          mayManage={mayManage}
+          unmark={mayManage ? { action: setRegistrationEliteAction, listQuery: rowReturnQueryString } : undefined}
+        />
+      )}
+
+      {/*
+        «Ambasadori» (§NNN; the owner: «pe lângă Elite, adaugă și categoria de „Ambasadori"»): the registrations marked
+        «Ambasador», for every role that reads this list — the reader asserts the role again — with what the club's two
+        ticks hide of each and, for the Administrator, the one-press «Nu mai e ambasador», the row menu's own action.
+      */}
+      {ambassadors && (
+        <AmbassadorPanel
+          locale={locale}
+          marked={ambassadors}
+          registrationHref={(registrationId) => getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: registrationId } } })}
+          unmark={mayManage ? { action: setRegistrationAmbassadorAction, listQuery: rowReturnQueryString } : undefined}
+        />
+      )}
+
+      {/*
+        «Lista oficială de așteptare» (§872, renamed by §888): the one-press entry onto the official waiting list — the
+        address vouched for by the Administrator, the row through the allocator at once, or given a place in the same
+        press («Oferă-i un loc acum»). Administrator only, on a list about one event; the new row shows in the list
+        above in the state it landed in.
+      */}
+      {filters.eventId && mayManage && waitlistAddOpen && (
+        <Panel
+          glyph="queue"
+          collapsible
+          title={t("waitlistAdd.panelTitle")}
+          intro={t("waitlistAdd.intro")}
+          openWhen={{ saved: WAITLIST_ENTRY_SAVED.has(saved ?? "") && current.from !== "reserve" }}
+          id="registrations-waitlist-add"
+          data-testid="registrations-waitlist-add"
+        >
+          <WaitlistAddForm locale={locale} eventId={filters.eventId} waitlistAddAction={addToWaitlistAction} scope="registrations-waitlist-add" heading={false} />
+        </Panel>
+      )}
+
+      {/*
+        The outbox, and the day's Mailgun counter (`DECISIONS.md` §80): what is waiting, what
+        went out today against the free day's hundred, and "send now" for whoever does not want
+        to wait for the monitor. The counter is the ceiling the button respects, and the number
+        a newsletter would have to fit under.
+      */}
+      <Panel glyph="outbox"
+        title={t("panels.outbox")}
+        aside={t("outbox.waitingShort", { count: volume.waitingMessages })}
+        collapsible
+        openWhen={{ attention: volume.waitingMessages > 0, saved: saved === "outboxSent" }}
+        id="registrations-outbox"
+        data-testid="outbox-panel"
+      >
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={1.5}
+        sx={{ alignItems: { sm: "center" } }}
+      >
+        <Typography variant="body2" sx={{ flex: 1 }}>
+          {t(`outbox.status.${volume.period}`, {
+            waiting: volume.waitingMessages,
+            sent: volume.period === "month" ? volume.sentThisMonth : volume.sentMessages,
+            allowance: volume.allowance ?? "",
+            remaining: volume.remaining ?? "",
+            plan: volume.planName,
+          })}
+        </Typography>
+        {/* The button only when there is something to send and room to send it: a disabled
+            button cannot say why (`SubmitButton`'s own rule), a sentence can. */}
+        {/* Only for the role that could press it (§289). Without this the else-branch below would
+            tell an Organizer the allowance was spent, which is an answer to a question they were
+            never offered — the count and the plan above are the read, and that is the whole
+            panel for them. */}
+        {!mayManage ? null : volume.waitingMessages > 0 && (volume.remaining === null || volume.remaining > 0) ? (
+          <ActionForm
+            action={sendOutboxNowAction}
+            confirm={{ title: t("confirm.sendNowTitle"), body: t("confirm.sendNowBody"), email: words.queue(volume.waitingMessages), confirmLabel: t("outbox.sendNow"), cancelLabel: words.cancel }}
+            data-testid="send-now-form"
+          >
+            <input type="hidden" name="uiLocale" value={locale} />
+            <input type="hidden" name="listQuery" value={listQueryString} />
+            <GlyphSubmitButton
+              label={t("outbox.sendNow")}
+              pendingLabel={t("outbox.sending")}
+              ariaLabel={t("outbox.sendNowLong")}
+              icon="send"
+              variant="contained"
+            />
+          </ActionForm>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            {volume.waitingMessages === 0 ? t("outbox.nothingWaiting") : t("outbox.allowanceSpent")}
+          </Typography>
+        )}
+      </Stack>
+      {/* «Emailuri azi»: what left today and what waits, with the names — the Administrator's, like this panel's button. */}
+      {mayManage && (
+        <Typography variant="body2" sx={{ mt: 1.5 }}>
+          <MuiLink href={getPathname({ locale, href: "/admin/settings/emails/today" })} sx={{ ...TAP_TARGET, display: "inline-flex", alignItems: "center" }} data-testid="outbox-journal-link">
+            {t("emails.today.queueLink")}
+          </MuiLink>
+        </Typography>
+      )}
+      </Panel>
     </Stack>
   );
 }

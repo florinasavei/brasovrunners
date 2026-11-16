@@ -69,6 +69,13 @@ export type RowVerb =
   | "eliteMark"
   | "eliteUnmark"
   /**
+   * «Marchează ca ambasador» / «Nu mai e ambasador» (§NNN): the club's label beside «Elită» — the bib prints as any other.
+   * The Administrator's, in every state — it changes no state, place, number or count. Offered only where the row's mark is
+   * known (`options.ambassador`); which of the two is the row's own mark.
+   */
+  | "ambassadorMark"
+  | "ambassadorUnmark"
+  /**
    * Erase the registration, and the person behind it when it was their last (BR-REQ-037-06, §180).
    *
    * Last, always, and the only verb here that offers itself in *every* state. That is the point
@@ -113,7 +120,7 @@ export function mayEndWaitlisted(status: RegistrationStatus, eventStartsAt: Date
 export function rowVerbsFor(
   status: RegistrationStatus,
   role: StaffRole,
-  options: { checkedIn: boolean; bib?: { settled: boolean; printed: boolean }; outside?: { onList: boolean; enabled: boolean }; elite?: boolean },
+  options: { checkedIn: boolean; bib?: { settled: boolean; printed: boolean }; outside?: { onList: boolean; enabled: boolean }; elite?: boolean; ambassador?: boolean },
 ): RowVerb[] {
   /*
     The desk's own verbs are every staff session's (§103). `canManageRegistrations` is what
@@ -170,6 +177,9 @@ export function rowVerbsFor(
 
   // The elite mark (§897): how the bib prints, nothing else — so every state offers it, like the member tick.
   if (mayManage && options.elite !== undefined) verbs.push(options.elite ? "eliteUnmark" : "eliteMark");
+
+  // The ambassador mark (§NNN): a label, nothing else — every state offers it, right after the elite's.
+  if (mayManage && options.ambassador !== undefined) verbs.push(options.ambassador ? "ambassadorUnmark" : "ambassadorMark");
 
   // Cancelling releases the place through the allocator and leaves an audit row (§67, §88).
   if (mayManage && canTransition(status, "CANCELLED")) verbs.push("cancel");

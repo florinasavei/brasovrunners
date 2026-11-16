@@ -25,6 +25,7 @@ import {
   type PlaceView,
   type RegisteredLine,
   RegisteredResultLines,
+  type ResultMark,
   ResultsHeader,
   type ResultWords,
   type TypedLine,
@@ -173,8 +174,13 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     return { overall: String(result.positionOverall), detail: parts.join(" · ") };
   };
   // What the published results say of a line (§808): by name, «Participant #bib», or — an elite hors concours (§910) — nothing at all.
+  // Out of the ranking by the club's tick (§910): said by the mark that brought the tick — an ambassador who is not an elite as such (§NNN).
   const publicLineOf = (runner: ResultRunner, anonymousLabel: string) =>
-    runner.outOfRanking ? t("results.publicLine.outOfRanking") : runner.named ? t("results.publicLine.named") : t("results.publicLine.anonymous", { label: anonymousLabel });
+    runner.outOfRanking
+      ? t(runner.ambassador && !runner.elite ? "results.publicLine.outOfRankingAmbassador" : "results.publicLine.outOfRanking")
+      : runner.named
+        ? t("results.publicLine.named")
+        : t("results.publicLine.anonymous", { label: anonymousLabel });
   const valuesOf = (runner: ResultRunner) => ({
     time: formatResultTime(runner.result?.gunTimeMs),
     // A runner with no result yet shows the blank status; one with a result shows it — the line is saved exactly as drawn.
@@ -182,6 +188,13 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     chip: formatResultTime(runner.result?.chipTimeMs),
     note: runner.result?.note ?? "",
   });
+
+  // The registration's marks (§NNN): «Elită» and «Ambasador» beside the runner, here and at «Premii» — the backoffice's alone.
+  const marksOf = (runner: ResultRunner): ResultMark[] => [
+    ...(runner.elite ? [{ glyph: "elite" as const, label: t("registrations.elite.chip") }] : []),
+    ...(runner.ambassador ? [{ glyph: "ambassador" as const, label: t("registrations.ambassador.chip") }] : []),
+  ];
+  const marksByBib = new Map(view.registered.map((runner) => [runner.bibNumber, marksOf(runner)]));
 
   const registered: RegisteredLine[] = view.registered.map((runner) => ({
     bibNumber: runner.bibNumber,
@@ -194,6 +207,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     place: placeOf(runner),
     hasResult: runner.result !== null,
     outOfRanking: runner.outOfRanking,
+    marks: marksOf(runner),
   }));
   const typed: TypedLine[] = view.typed.map((runner) => ({
     values: {
@@ -420,6 +434,12 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
                     <Typography component="dd" variant="body2" key={row.bibNumber} sx={{ m: 0 }} data-testid="results-award-row">
                       {t("results.awards.place", { position: String(row.position) })} · #{row.bibNumber}
                       {row.name ? ` ${row.name}` : ""} · {formatResultTime(row.gunTimeMs)}
+                      {/* Whose result it is (§NNN): an elite's or an ambassador's is said right on the podium's row, so the club decides the award knowing it. */}
+                      {(marksByBib.get(row.bibNumber) ?? []).map((mark) => (
+                        <Box component="span" key={mark.glyph} sx={{ ml: 0.75, display: "inline-flex", verticalAlign: "middle" }}>
+                          <StatusChip glyph={mark.glyph} label={mark.label} color="secondary" variant="outlined" testId={`results-award-mark-${mark.glyph}`} />
+                        </Box>
+                      ))}
                     </Typography>
                   ))}
                 </Box>

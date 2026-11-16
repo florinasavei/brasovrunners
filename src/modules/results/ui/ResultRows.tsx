@@ -79,7 +79,15 @@ export type RegisteredLine = {
   hasResult: boolean;
   /** An elite left out of the ranking (§910): no position, «în afara clasamentului» in its place, and off the public results. */
   outOfRanking?: boolean;
+  /**
+   * The registration's marks (§NNN), each with its chip's words — «Elită», «Ambasador» — so whoever hands out the awards sees whose
+   * result this is. Staff-only: this page is the backoffice's, and the published results carry neither.
+   */
+  marks?: readonly ResultMark[];
 };
+
+/** One of the club's two marks on a registration, as a line of «Clasament» and a row of «Premii» draw it. */
+export type ResultMark = { glyph: "elite" | "ambassador"; label: string };
 
 export type TypedLine = {
   values: LineValues & { bib: string; name: string; sex: string; birthDate: string };
@@ -305,6 +313,9 @@ export function RegisteredResultLines({ lines, words }: { lines: readonly Regist
               </Typography>
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center", mt: 0.5 }}>
                 {line.present && <StatusChip glyph="done" label={words.present} color="success" variant="outlined" />}
+                {line.marks?.map((mark) => (
+                  <StatusChip key={mark.glyph} glyph={mark.glyph} label={mark.label} color="secondary" variant="outlined" testId={`result-mark-${mark.glyph}`} />
+                ))}
                 <Typography variant="caption" color="text.secondary">
                   {line.publicLine}
                 </Typography>

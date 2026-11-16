@@ -1,6 +1,7 @@
 import { and, asc, eq, gt, inArray, isNotNull, isNull, notInArray, type SQL, sql } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { eventEliteEntries } from "@/db/schema/event-elite-entries";
+import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
@@ -115,6 +116,13 @@ async function wornNumbers<T extends Record<string, unknown>>(
     .from(eventEliteEntries)
     .where(and(eq(eventEliteEntries.eventId, eventId), isNotNull(eventEliteEntries.bibNumber)));
   for (const row of elite) if (row.number !== null) taken.add(row.number);
+  // And the numbers the event's volunteers wear (§NNN), whatever each one's state: one number is one person at the
+  // event, so a runner's draw, the desk's box, a suggestion and a print of spares never hand out a volunteer's.
+  const volunteers = await db
+    .select({ number: eventVolunteers.bibNumber })
+    .from(eventVolunteers)
+    .where(and(eq(eventVolunteers.eventId, eventId), isNotNull(eventVolunteers.bibNumber)));
+  for (const row of volunteers) if (row.number !== null) taken.add(row.number);
   return taken;
 }
 
@@ -248,9 +256,82 @@ async function replacedBibNumbers<T extends Record<string, unknown>>(db: Databas
   return rows.map((row) => row.number);
 }
 
-/** Every number retired at this event without a row wearing it: erased (§311) or replaced by hand (§548). */
+/**
+ * The numbers of volunteers deleted from this event's list (§NNN): the row is gone and its number with it, so the
+ * delete writes the number into its own trail row (`volunteer.deleted`, about the event) and every draw reads it back —
+ * a badge already handed out is never some other person's number. The number and never the person, as an erasure's.
+ */
+async function deletedVolunteerNumbers<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number[]> {
+  const rows = await db
+    .select({ number: sql<number>`(${auditLogs.metadataJson} ->> 'bibNumber')::integer`.mapWith(Number) })
+    .from(auditLogs)
+    .where(
+      and(
+        eq(auditLogs.action, "volunteer.deleted"),
+        eq(auditLogs.entityType, "event"),
+        eq(auditLogs.entityId, eventId),
+        sql`${auditLogs.metadataJson} ->> 'bibNumber' ~ '^[0-9]{1,5}$'`,
+      ),
+    );
+  return rows.map((row) => row.number);
+}
+
+/** Every number retired at this event without a row wearing it: erased (§311), replaced by hand (§548), or a deleted volunteer's (§NNN). */
 export async function retiredBibNumbers<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number[]> {
-  return [...(await erasedBibNumbers(db, eventId)), ...(await replacedBibNumbers(db, eventId))];
+  return [...(await erasedBibNumbers(db, eventId)), ...(await replacedBibNumbers(db, eventId)), ...(await deletedVolunteerNumbers(db, eventId))];
+}
+
+/**
+ * The next free number of the volunteers' own series (§NNN; the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr
+ * de concurs"» — «Serie proprie»): the lowest number at or above the event's «Numerele voluntarilor încep de la» that
+ * nobody at the event wears or wore — no runner (a cancelled one's included), no line of the elite list, no other
+ * volunteer, none retired, none of the desk's spares. In order of confirmation, like a runner's (§173), and never
+ * reissued. The caller holds the event row's lock — the one serialization point of every draw (`AGENTS.md` §10.6) — so a
+ * runner confirmed and a volunteer confirmed at the same instant cannot both be handed one number.
+ */
+export async function pickVolunteerNumber<T extends Record<string, unknown>>(tx: Database<T>, eventId: string, start: number, taken: Set<number> = new Set()): Promise<number> {
+  for (const number of await wornNumbers(tx, eventId)) taken.add(number);
+  // The retired numbers after the rows, as every draw reads them (`erasedBibNumbers` says why).
+  for (const number of await retiredBibNumbers(tx, eventId)) taken.add(number);
+  const band = await bandOf(tx, eventId);
+  const ceiling = ceilingFor(start);
+  for (let candidate = start; candidate <= ceiling; candidate += 1) {
+    if (!taken.has(candidate) && !isSpareNumber(band.spare, candidate)) {
+      taken.add(candidate);
+      return candidate;
+    }
+  }
+  throw new DomainError("VALIDATION_ERROR", `every number from ${start} to ${ceiling} is taken at this event`);
+}
+
+/**
+ * The highest number a runner of this event wears or may come to wear (§NNN) — what «Numerele voluntarilor încep de
+ * la» must sit above, so the two series do not run into each other: the last number of a capped race's own series
+ * (its first number and its places), and every number already on a registration, on a line of the elite list or
+ * retired. The desk's spares are theirs too. Volunteers' own numbers are not counted: the start may be lowered back
+ * onto them.
+ */
+export async function runnersLastNumber<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
+  const [event] = await db
+    .select({ start: events.bibStartNumber, capacity: events.capacity, walkInBibStart: events.walkInBibStart, walkInBibCount: events.walkInBibCount })
+    .from(events)
+    .where(eq(events.id, eventId))
+    .limit(1);
+  if (!event) return 0;
+  let last = event.capacity !== null ? event.start + event.capacity - 1 : event.start - 1;
+  if (event.walkInBibStart !== null && event.walkInBibCount !== null && event.walkInBibCount > 0) last = Math.max(last, event.walkInBibStart + event.walkInBibCount - 1);
+  const worn = await db
+    .select({ number: registrations.bibNumber })
+    .from(registrations)
+    .where(and(eq(registrations.eventId, eventId), isNotNull(registrations.bibNumber)));
+  for (const row of worn) if (row.number !== null) last = Math.max(last, row.number);
+  const elite = await db
+    .select({ number: eventEliteEntries.bibNumber })
+    .from(eventEliteEntries)
+    .where(and(eq(eventEliteEntries.eventId, eventId), isNotNull(eventEliteEntries.bibNumber)));
+  for (const row of elite) if (row.number !== null) last = Math.max(last, row.number);
+  for (const number of [...(await erasedBibNumbers(db, eventId)), ...(await replacedBibNumbers(db, eventId))]) last = Math.max(last, number);
+  return last;
 }
 
 /**
@@ -703,9 +784,11 @@ export async function isEventSpareNumber<T extends Record<string, unknown>>(
  * all three, never the tick alone. The number is the same number either way.
  *
  * `elite` (§897): an Administrator marked the registration «Elită», so its bib prints as an elite bib — the name where
- * the number goes (§895's drawing) — and never the members' design: an elite row's `member` is false.
+ * the number goes (§895's drawing) — and never the members' design: an elite row's `member` is false. That name is
+ * the person's first name alone (§NNN, `bib-elite.ts#eliteBibName`), which is why the row carries `firstName`: read
+ * by the elite drawing and by nothing else — the ordinary bib's strip keeps the registered name.
  */
-export type BibRow = { id: string; bibNumber: number; registeredName: string; member: boolean; elite: boolean };
+export type BibRow = { id: string; bibNumber: number; registeredName: string; firstName: string | null; member: boolean; elite: boolean };
 
 /**
  * Whether a row prints the members' bib, as one SQL condition over a registration joined to its
@@ -766,6 +849,7 @@ export async function listBibs<T extends Record<string, unknown>>(
       id: registrations.id,
       bibNumber: registrations.bibNumber,
       registeredName: registrations.registeredName,
+      firstName: registrations.firstName,
       member: memberBibPrinted(members),
       elite: registrations.elite,
     })
@@ -775,7 +859,7 @@ export async function listBibs<T extends Record<string, unknown>>(
     .where(bibScopeWhere(eventId, scope))
     .orderBy(asc(registrations.bibNumber));
   // An elite bib is never the members' design (§895, §897): the mark wins over the members' pile.
-  return rows.map((row) => ({ id: row.id, bibNumber: row.bibNumber as number, registeredName: row.registeredName, member: row.member === true && !row.elite, elite: row.elite }));
+  return rows.map((row) => ({ id: row.id, bibNumber: row.bibNumber as number, registeredName: row.registeredName, firstName: row.firstName, member: row.member === true && !row.elite, elite: row.elite }));
 }
 
 /**

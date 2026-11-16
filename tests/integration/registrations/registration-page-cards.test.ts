@@ -57,6 +57,10 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   addRegistrationNoteFromListAction: vi.fn(),
   setOutsideCapacityAction: vi.fn(),
   setRegistrationEliteAction: vi.fn(),
+  setRegistrationAmbassadorAction: vi.fn(),
+  deleteSponsorListRecordAction: vi.fn(),
+  turnRunnerIntoVolunteerAction: vi.fn(),
+  turnVolunteerIntoRunnerAction: vi.fn(),
   resendRegistrationEmailAction: vi.fn(),
   givePlaceNowAction: vi.fn(),
   bulkCancelRegistrationsAction: vi.fn(),
@@ -425,6 +429,8 @@ describe("§847 the page as it is drawn", () => {
       `h3 ${words.emergency.title}`,
       `h3 ${words.timeline}`,
       `h3 ${words.withdraw.title}`,
+      // «Transformă în voluntar» (§NNN): above the cancel fold it shares its condition with.
+      `h3 ${words.toVolunteer.title}`,
       `h3 ${words.cancelTitle}`,
       `h3 ${words.deleteTitle}`,
     ]);

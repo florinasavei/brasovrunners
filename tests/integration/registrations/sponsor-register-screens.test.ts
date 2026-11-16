@@ -70,6 +70,10 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   promoteRegistrationAction: vi.fn(),
   setOutsideCapacityAction: vi.fn(),
   setRegistrationEliteAction: vi.fn(),
+  setRegistrationAmbassadorAction: vi.fn(),
+  deleteSponsorListRecordAction: vi.fn(),
+  turnRunnerIntoVolunteerAction: vi.fn(),
+  turnVolunteerIntoRunnerAction: vi.fn(),
   setClubMemberDeclaredAction: vi.fn(),
   clearMemberTicksAction: vi.fn(),
 }));
@@ -84,6 +88,11 @@ const { default: NewsletterPage } = await import("@/app/[locale]/admin/newslette
 const { default: SponsorListButton } = await import("@/modules/registrations/ui/SponsorListButton");
 const { default: PromoConsenters } = await import("@/modules/newsletter/ui/PromoConsenters");
 const { default: Panel } = await import("@/shared/ui/Panel");
+const { default: AdminTable } = await import("@/modules/staff-identity/ui/AdminTable");
+const { default: InvitationsPanel } = await import("@/modules/registrations/ui/InvitationsPanel");
+const { default: ReserveListPanel } = await import("@/modules/registrations/ui/ReserveListPanel");
+const { default: ElitePanel } = await import("@/modules/registrations/ui/ElitePanel");
+const { default: AmbassadorPanel } = await import("@/modules/registrations/ui/AmbassadorPanel");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
 
@@ -244,7 +253,8 @@ describe("BR-REQ-071-01 §946 on an event's registrations page the block is one 
     expect(fold!.props.title).toBe("Lista pentru sponsori");
     // A fold with no reason to open by itself: closed on every arrival (`shared/ui/fold.ts`).
     expect(fold!.props.collapsible).toBe(true);
-    expect(fold!.props.openWhen).toBeUndefined();
+    // …but for one: back from «Șterge» on a list of its register (§NNN), which this arrival is not.
+    expect(fold!.props.openWhen).toEqual({ saved: false });
     expect(fold!.props.static).toBeUndefined();
     expect(fold!.props.aside).toBe("oprită · liste date: 2");
     // The block is drawn once, and inside the fold: nothing of it stands open on the page.
@@ -272,6 +282,61 @@ describe("BR-REQ-071-01 §946 on an event's registrations page the block is one 
 
     await db.insert(auditLogs).values(list("2026-09-10T09:00:00.000Z", event.id, "Sport Shop"));
     expect(foldOf(await page({ eventId: event.id }))!.props.aside).toBe("2 persoane · liste date: 1");
+  });
+});
+
+describe("BR-REQ-041-01 §NNN an event's registrations page: the registrations first, everything else below the table", () => {
+  /**
+   * The owner, 2026-11-15, of the list for sponsors and of «Invitații», «Lista internă», «Elite», «Lista oficială de
+   * așteptare» and «Emailuri de trimis»: «vreau să fie sub „căutare și filtrare"» — and, asked where against the table,
+   * «Sub tabel». The page's tree, walked in the order it is drawn.
+   */
+  async function order(role: StaffUser["role"]) {
+    const { autumn } = await threeLists();
+    state.actor = await staff(role);
+    const drawn = elements(await AdminRegistrationsPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({ eventId: autumn.id }) } as never));
+    const at = (found: (element: ReactElement<Props>) => boolean) => drawn.findIndex(found);
+    const byTestId = (id: string) => at((element) => element.props["data-testid"] === id);
+    return {
+      summary: byTestId("registrations-summary"),
+      filters: byTestId("registrations-filters"),
+      table: at((element) => element.type === AdminTable),
+      below: {
+        sponsors: byTestId("registrations-sponsors"),
+        invitations: at((element) => element.type === InvitationsPanel),
+        internal: at((element) => element.type === ReserveListPanel),
+        elite: at((element) => element.type === ElitePanel),
+        ambassadors: at((element) => element.type === AmbassadorPanel),
+        waitlist: byTestId("registrations-waitlist-add"),
+        outbox: byTestId("outbox-panel"),
+      },
+    };
+  }
+
+  it("draws «Cine s-a înscris», then «Caută și filtrează», then the table — nothing of the moved folds between them", async () => {
+    const { summary, filters, table, below } = await order("ADMIN");
+    expect(summary).toBeGreaterThan(-1);
+    expect(filters).toBeGreaterThan(summary);
+    expect(table).toBeGreaterThan(filters);
+    // Every fold the owner named is on the page, and after the table.
+    for (const [name, index] of Object.entries(below)) expect(index, name).toBeGreaterThan(table);
+  });
+
+  it("keeps the folds in one order below the table: the list for sponsors first, «Emailuri de trimis» last", async () => {
+    const { below } = await order("ADMIN");
+    const drawnOrder = Object.entries(below)
+      .sort(([, a], [, b]) => a - b)
+      .map(([name]) => name);
+    expect(drawnOrder).toEqual(["sponsors", "invitations", "internal", "elite", "ambassadors", "waitlist", "outbox"]);
+  });
+
+  it("is the same order for the Organizer, with the folds that role is given", async () => {
+    const { summary, filters, table, below } = await order("MODERATOR");
+    expect(filters).toBeGreaterThan(summary);
+    expect(table).toBeGreaterThan(filters);
+    // The one-press entry onto the official waiting list is the Administrator's: no fold of it here.
+    expect(below.waitlist).toBe(-1);
+    for (const [name, index] of Object.entries(below)) if (name !== "waitlist") expect(index, name).toBeGreaterThan(table);
   });
 });
 

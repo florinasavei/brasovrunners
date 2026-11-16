@@ -404,7 +404,7 @@ describe("the calendar file", () => {
     expect(calendarRegistration({ ...base, eventStatus: "COMPLETED" }, register, new Date("2026-10-12T00:00:00.000Z"))).toBeNull();
   });
 
-  it("§906 says what the page says while «Înscrieri publice deschise» is unticked: stopped by the organizers, and no link to the form", () => {
+  it("§906 says what the page says while «Înscrieri publice deschise» is unticked: closed for now, and no link to the form", () => {
     const register = "https://example.test/ro/evenimente/x/inscriere";
     const base = {
       registrationMode: "INTERNAL" as const,
@@ -425,11 +425,39 @@ describe("the calendar file", () => {
     expect(calendarRegistration({ ...base, publicRegistrationOpen: true }, register, new Date("2026-10-02T00:00:00.000Z"))).toEqual({ kind: "OPEN", url: register });
     // The page's own sentence, in each language, with no address after it.
     const said = calendarDescription({ ...event, timezone: "Europe/Bucharest", registration: { kind: "PAUSED" } }, labelsRo);
-    expect(said).toContain("\n\nÎnscrierile pe site sunt oprite de organizatori.\n\n");
+    expect(said).toContain("\n\nÎnscrierile pe site sunt închise momentan.\n\n");
     expect(said).not.toContain("/inscriere");
     expect(calendarDescription({ ...event, timezone: "Europe/Bucharest", registration: { kind: "PAUSED" } }, labelsEn)).toContain(
-      "\n\nRegistration on the site has been stopped by the organizers.\n\n",
+      "\n\nRegistration on the site is closed for now.\n\n",
     );
+  });
+
+  it("§NNN says the club's own sentence for the shut door when the reader's language has one, and the page's otherwise", () => {
+    const register = "https://example.test/ro/evenimente/x/inscriere";
+    const shut = {
+      registrationMode: "INTERNAL" as const,
+      eventStatus: "SCHEDULED" as const,
+      startsAt: new Date("2026-10-11T06:00:00.000Z"),
+      registrationOpensAt: new Date("2026-10-01T15:00:00.000Z"),
+      registrationOpensSoon: false,
+      registrationClosesAt: null,
+      publishedAt: new Date("2026-09-01T00:00:00.000Z"),
+      externalRegistrationUrl: null,
+      publicRegistrationOpen: false,
+    };
+    const inside = new Date("2026-10-02T00:00:00.000Z");
+    const own = "Înscrierile s-au încheiat. Ne vedem la start!";
+    // The row's note in the reader's language travels with the state; spaces alone and none are no note.
+    expect(calendarRegistration({ ...shut, pausedNote: `  ${own} ` }, register, inside)).toEqual({ kind: "PAUSED", note: own });
+    expect(calendarRegistration({ ...shut, pausedNote: "   " }, register, inside)).toEqual({ kind: "PAUSED" });
+    expect(calendarRegistration({ ...shut, pausedNote: null }, register, inside)).toEqual({ kind: "PAUSED" });
+    // The door open: the note is kept unread, and the form's address is said.
+    expect(calendarRegistration({ ...shut, publicRegistrationOpen: true, pausedNote: own }, register, inside)).toEqual({ kind: "OPEN", url: register });
+    // The description says the note in place of the page's sentence, with no address after it.
+    const said = calendarDescription({ ...event, timezone: "Europe/Bucharest", registration: { kind: "PAUSED", note: own } }, labelsRo);
+    expect(said).toContain(`\n\n${own}\n\n`);
+    expect(said).not.toContain("închise momentan");
+    expect(said).not.toContain("/inscriere");
   });
 
   it("moves the stamp when the registration line does — the window's last boundary passed, or the row's own change (§159)", () => {

@@ -5,6 +5,10 @@ import { staffUsers, type StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { calendarDayIn } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
+import { recordAuditEvent } from "@/modules/audit/repository";
+import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { DomainError } from "@/shared/errors/domain-error";
+import { isUuid } from "@/shared/ids";
 import { assertMayExport, sponsorListFormat, type SponsorListFormat } from "./sponsor-list";
 
 /**
@@ -38,6 +42,9 @@ export const SPONSOR_REGISTER_LIMIT = 500;
 
 /** How many earlier recipients the box suggests. */
 export const SPONSOR_RECIPIENT_SUGGESTIONS = 50;
+
+/** The register fold's own anchor on both doors: a delete comes back to it, and the address opens it and the fold it sits in (§NNN). */
+export const SPONSOR_REGISTER_ANCHOR = "sponsor-register";
 
 const DAY_MS = 86_400_000;
 
@@ -158,4 +165,56 @@ export async function readSponsorRegister<T extends Record<string, unknown>>(
     };
   });
   return { lists: listsOfDoor(all, input.eventId), recipients: recipientSuggestions(all) };
+}
+
+/**
+ * «Șterge» on a row of «Liste date sponsorilor» (§NNN; the owner, 2026-11-15, of a list he had downloaded by mistake:
+ * «vreau să pot șterge (hard delete) și faza asta, pentru că am generat din greșeală!»).
+ *
+ * The register is the trail's own rows (§929), so deleting a row of it deletes that audit row — for real, nothing kept
+ * of what it said: not the recipient, not the registrations it named. With it goes «Dată partenerilor» on the page of
+ * every registration the file held (`audit/repository.ts#listPartnerShares` reads the same row): a file that reached
+ * nobody was given to nobody, and the record said otherwise.
+ *
+ * **Only this kind of row.** The statement deletes by id *and* by the export's action and entity type, so the id of any
+ * other row of the trail — posted by hand — finds nothing: the trail gets no other door for a deletion.
+ *
+ * **What stays:** one new row, `registrations.sponsor_list_record_deleted`, about the same event (none, for a list of
+ * every event): who deleted and when, and of the list only its moment, its count and its file — never whom it named or
+ * whom it held, as an erasure's row names nobody (§67).
+ *
+ * **Who:** the Administrator (`canManageRegistrations`), asserted here as at the action's door (BR-REQ-060-01). The
+ * Organizer, who may take the list and read the register, does not take the record of a list out of it.
+ */
+export async function deleteSponsorListRecord<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  listId: string,
+  now: Date,
+): Promise<{ eventId: string | null }> {
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not delete a list from the sponsors' register`);
+  }
+  if (!isUuid(listId)) throw new DomainError("NOT_FOUND", "no such list");
+  return db.transaction(async (tx) => {
+    const [deleted] = await tx
+      .delete(auditLogs)
+      .where(and(eq(auditLogs.id, listId), eq(auditLogs.entityType, "event"), eq(auditLogs.action, "registrations.sponsor_list_exported")))
+      .returning({ eventId: auditLogs.entityId, at: auditLogs.createdAt, metadataJson: auditLogs.metadataJson });
+    if (!deleted) throw new DomainError("NOT_FOUND", "no such list");
+    const said = (deleted.metadataJson ?? {}) as { count?: unknown; format?: unknown };
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "registrations.sponsor_list_record_deleted",
+      entityType: "event",
+      entityId: deleted.eventId,
+      metadata: {
+        listedAt: deleted.at.toISOString(),
+        count: typeof said.count === "number" ? said.count : 0,
+        format: sponsorListFormat(typeof said.format === "string" ? said.format : null),
+      },
+      now,
+    });
+    return { eventId: deleted.eventId };
+  });
 }

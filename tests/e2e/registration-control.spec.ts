@@ -78,7 +78,7 @@ async function publicPagesSay(page: Page, slug: string, shut: boolean) {
   expect((await page.goto(`/ro/evenimente/${slug}`))?.status()).toBe(200);
   const paused = page.locator("#main").getByTestId("registration-paused");
   if (shut) {
-    await expect(paused.first()).toContainText("Înscrierile pe site sunt oprite de organizatori.");
+    await expect(paused.first()).toContainText("Înscrierile pe site sunt închise momentan.");
     await expect(page.locator("#main").getByRole("link", { name: /Înscrie-te la eveniment/ })).toHaveCount(0);
   } else {
     await expect(paused).toHaveCount(0);
@@ -86,7 +86,7 @@ async function publicPagesSay(page: Page, slug: string, shut: boolean) {
   await fitsTheScreen(page);
   expect((await page.goto(`/ro/evenimente/${slug}/inscriere`))?.status()).toBe(200);
   if (shut) {
-    await expect(page.locator("#main").getByTestId("registration-paused")).toContainText("Înscrierile pe site sunt oprite de organizatori.");
+    await expect(page.locator("#main").getByTestId("registration-paused")).toContainText("Înscrierile pe site sunt închise momentan.");
   } else {
     await expect(page.locator("#main").getByTestId("registration-paused")).toHaveCount(0);
   }
