@@ -40,7 +40,7 @@ import { PLAN_CONTACT_WORDS, PLAN_JUNCTION_NOTE, type PlanRace, planAddressOf, p
  *   person, the plan's picture shown and linked when there is one, the event's page from `APP_BASE_URL` — and no other
  *   volunteer's name or telephone number;
  * - **the state at the send:** withdrawn for a person cancelled or deleted, with no address or another one, at no point or
- *   at another point, for a point gone from the route, and for an older telling once a newer one was queued;
+ *   at another point, for a point gone from the route, and for an older telling that still waited when a newer one was queued;
  * - and nothing is queued by placing, moving or taking a person off.
  *
  * The page's question and the Server Action are `plan-mail-screens.test.ts`; the pure rule is `tests/unit/volunteers/point-mail.test.ts`.
@@ -344,7 +344,9 @@ describe("§NNN not twice: the memory is the outbox's own rows", () => {
     ]);
   });
 
-  it("lets only the newest telling of a person leave: pressing again while a message waits makes one message, not two", async () => {
+  // The promise is for a row that still waits: one the outbox was already sending when the newer one was queued is not
+  // called back (`point-mail.ts`, «The one edge»).
+  it("withdraws an older telling still waiting once a newer one is queued: pressing again while a message waits makes one message, not two", async () => {
     await press(staff.MODERATOR!);
     await press(staff.MODERATOR!, { again: true, now: at(1) });
     // Two rows wait for each person; the batch sends the newer and withdraws the older.

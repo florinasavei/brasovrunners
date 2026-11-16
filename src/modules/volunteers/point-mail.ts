@@ -43,8 +43,14 @@ import { readVolunteerPlanPicture } from "./plan";
     another point (the person was moved since) or went to an address corrected since.
 
   A press writes only to those not told. «Trimite din nou tuturor» writes to everybody again (the map was replaced, a point
-  renamed), each with their next telling. Only the newest telling of a person ever leaves: an older row still waiting is
-  withdrawn at the send (`volunteerPointAtSend`), so pressing again while a message waits never makes two.
+  renamed), each with their next telling. An older row still waiting when the newer one is queued is withdrawn at the send
+  (`volunteerPointAtSend`), so pressing again while a message waits makes one message, not two.
+
+  **The one edge, known and left as it is.** That check reads the person's rows without a lock, so it holds for a row that
+  has not started to render. A row the outbox was already sending when «din nou tuturor» committed the newer one — claimed,
+  and past the check — is not called back: it leaves, and the newer one after it. Both were asked for by a press, and the
+  second says what is true when it leaves. An ordinary press does not meet this: a row being sent that names the point the
+  person stands at counts as told, so nothing is queued beside it.
 
   What this memory does not hold: the outbox keeps a message that left for ninety days and one about nobody's registration
   for ninety from its queueing (`jobs/retention.ts`) — a point told earlier than that is told again by the next press.
@@ -52,7 +58,8 @@ import { readVolunteerPlanPicture } from "./plan";
   **The state at the send, not at the press.** Everything the message says is read as it leaves (`notifications/render.ts`
   and `volunteerPointAtSend` below), and it is withdrawn when the person was cancelled or deleted, has no address or another
   one, stands at no point or at another point than the one queued, when the point is gone from the route, or when a newer
-  message was queued for them since. Nobody is told by being placed, moved or taken off: no email leaves without the press.
+  message was queued for them while it still waited. Nobody is told by being placed, moved or taken off: no email leaves
+  without the press.
 */
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -94,7 +101,7 @@ export function alreadyTold(person: { checkpointId: string; canonicalEmail: stri
   const newestFirst = [...rows].sort((a, b) => b.round - a.round);
   const saysIt = (row: PointMailRow) => row.checkpointId === person.checkpointId && canonicalOrNull(row.recipientEmail) === person.canonicalEmail;
   const newest = newestFirst[0];
-  // On its way: only the newest row of a person can still leave (an older one is withdrawn at the send).
+  // On its way: the newest row is the one that says where they stand — an older one still waiting is withdrawn at the send.
   if (newest && WAITING.has(newest.status) && saysIt(newest)) return true;
   const reached = newestFirst.find((row) => REACHED.has(row.status));
   return reached !== undefined && saysIt(reached);
@@ -284,7 +291,10 @@ export type VolunteerPointFacts = {
  * - the person is gone, stands at no point, or stands at another point than the one the message was queued for (moved or
  *   taken off since, or the point deleted — which frees its people);
  * - the point is no longer on the event's route;
- * - a newer message about their point was queued for them since: only the newest telling leaves.
+ * - a newer message about their point was queued for them while this one still waited: the newer one is the one that leaves.
+ *
+ * The person's rows are read here without a lock: a message already past this check when a newer one is committed is not
+ * called back, and both leave (the edge the head of this file names).
  *
  * The renderer has already withdrawn a cancelled person, a row with no address and an address corrected since
  * (`render.ts`); this reads only what is the point's. The number is the point's place among the event's points by distance

@@ -3474,9 +3474,12 @@ point at the address their row holds now, or else when the newest of their rows 
 COMPLAINED) does. Anything else is not told: no row; a row **withdrawn** at the send, which the outbox deletes; a
 row that **failed** or **bounced**; a message that named another point or went to an address corrected since. A
 press writes only to those not told; «Trimite din nou tuturor» writes to everybody at a point with an address,
-each with their next round. Only a person's newest round ever leaves — an older row still waiting, or a failed
-one put back in the queue, is withdrawn at the send. The limit of this memory is the outbox's retention (ninety
-days): a point told earlier than that is told again by the next press.
+each with their next round. An older round still waiting when a newer one is queued — or a failed one put back
+in the queue — is withdrawn at the send, so pressing again while a message waits makes one message, not two.
+The send reads the person's rows without a lock, so this holds for a row that has not started to render: one
+the outbox was already sending when «din nou tuturor» committed the newer round is not called back, and both
+leave — a known edge, left as it is, since each was asked for by a press. The limit of this memory is the
+outbox's retention (ninety days): a point told earlier than that is told again by the next press.
 
 Everything the message says is read at the send: the event and its day, the point's number in the route's
 order, its name, its kilometre and its note, the roles given and what they ask in the sentence the role's own
@@ -3484,9 +3487,10 @@ message uses (nothing about roles when none is given), the contact person of the
 plan's picture — shown once and linked to the whole of it in both halves — when the event has one, and the
 event's page. It names no other volunteer and no telephone number but that contact's. The renderer withdraws
 it for a person cancelled or deleted, with no address or another address, at no point or at another point than
-the one queued (moved, taken off, the point deleted), and for an older round. Classed as `VOLUNTEER_ROLE_ASSIGNED`
-is: the confirmations' road, a person of the public, no club copy, no token and no button; the club may rewrite
-its words (`{eventTitle}`), and the point, the roles and the picture stay the platform's own lines around them.
+the one queued (moved, taken off, the point deleted), and for an older round that still waited when a newer one
+was queued. Classed as `VOLUNTEER_ROLE_ASSIGNED` is: the confirmations' road, a person of the public, no club
+copy, no token and no button; the club may rewrite its words (`{eventTitle}`), and the point, the roles and the
+picture stay the platform's own lines around them.
 
 `REGISTRATION_ADDRESS_REMOVED` and `REGISTRATION_ADDRESS_ADDED` («Schimbă adresa», §15.11 verb 8) are queued
 by `service.ts#changeRegistrationAddressByStaff`, in the move's own transaction, once each

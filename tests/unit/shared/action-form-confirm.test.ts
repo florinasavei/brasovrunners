@@ -17,7 +17,8 @@ import { succeeded } from "@/shared/forms/outcome";
  * "yes" replays `requestSubmit()` with the same submitter. A returned `notice` reaches the
  * provider from an effect, after the answer painted — never inside the press (§371). The
  * browser side — the dialog opening, cancel leaving the row untouched, the toast after a save —
- * is `tests/e2e/toasts-and-confirms.spec.ts`.
+ * is `tests/e2e/toasts-and-confirms.spec.ts`; a question's optional box travelling from its tick to
+ * the Server Action (§NNN) is `tests/e2e/volunteer-plan-mail.spec.ts`.
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const source = readFileSync(path.join(ROOT, "src/shared/forms/ActionFormIsland.tsx"), "utf8").replace(/\r\n/g, "\n");
