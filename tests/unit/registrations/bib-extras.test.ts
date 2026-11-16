@@ -83,10 +83,18 @@ describe("§750 the design's new keys", () => {
 
   it("prints up to three numbers on the line, each with its name, in their order (§NNN)", () => {
     const three = { showEmergency: true, emergencyLabel: "Telefoane", emergencyPhoneLabel: "Organizator", emergencyPhone: "0700 000 001", emergencyPhone2Label: "Salvamont", emergencyPhone2: "0700 000 002", emergencyPhone3Label: "Urgență", emergencyPhone3: "112" };
-    expect(bibEmergencyLine(three, "Urgențe")).toBe("Telefoane: Organizator 0700 000 001 / Salvamont 0700 000 002 / Urgență 112");
+    expect(bibEmergencyLine(three, "Urgențe")).toBe("Telefoane: Organizator: 0700 000 001 | Salvamont: 0700 000 002 | Urgență: 112");
+    // The owner's own line (2026-11-16: «ajutor start/finish: , ajutor traseu: , salvamont, cu label customizabil»): three names
+    // the club types, no label of the club's — and then no word before them, since each number says whose it is.
+    const named = { showEmergency: true, emergencyPhoneLabel: "Ajutor start/finish", emergencyPhone: "0700 000 001", emergencyPhone2Label: "Ajutor traseu", emergencyPhone2: "0700 000 002", emergencyPhone3Label: "Salvamont", emergencyPhone3: "0700 000 003" };
+    expect(bibEmergencyLine(named, "Urgențe")).toBe("Ajutor start/finish: 0700 000 001 | Ajutor traseu: 0700 000 002 | Salvamont: 0700 000 003");
+    expect(readBibDesign(named)).toMatchObject({ emergencyPhoneLabel: "Ajutor start/finish", emergencyPhone2Label: "Ajutor traseu", emergencyPhone3Label: "Salvamont" });
+    expect(bibEmergencyFit(bibEmergencyLine(named, "Urgențe")!, bibFooterWidth).size).toBe(BIB_LAYOUT.emergencySize);
+    // One number left without a name brings the sheet's own word back, in the sheet's language.
+    expect(bibEmergencyLine({ ...named, emergencyPhone2Label: "" }, "Emergency")).toBe("Emergency: Ajutor start/finish: 0700 000 001 | 0700 000 002 | Salvamont: 0700 000 003");
     // The third alone prints alone, and a design saved before it prints as it did.
     expect(bibEmergencyLine({ showEmergency: true, emergencyPhone: "", emergencyPhone3: "112" }, "Urgențe")).toBe("Urgențe: 112");
-    expect(bibEmergencyLine({ showEmergency: true, emergencyPhone: "0700 000 001", emergencyPhone2: "0700 000 002" }, "Urgențe")).toBe("Urgențe: 0700 000 001 / 0700 000 002");
+    expect(bibEmergencyLine({ showEmergency: true, emergencyPhone: "0700 000 001", emergencyPhone2: "0700 000 002" }, "Urgențe")).toBe("Urgențe: 0700 000 001 | 0700 000 002");
     expect(readBibDesign({ showEmergency: true, emergencyPhone: "0700 000 001" })).toMatchObject({ emergencyPhone3: "", emergencyPhone3Label: "" });
     // Its name is cut like the two others', and what is no number reads as none.
     expect(readBibDesign({ emergencyPhone3Label: "x".repeat(60) }).emergencyPhone3Label).toHaveLength(BIB_EMERGENCY_NAME_MAX);

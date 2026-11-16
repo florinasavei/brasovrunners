@@ -325,13 +325,23 @@ export const BIB_EMERGENCY_NAME_MAX = 24;
 type BibEmergencyDesign = Pick<BibDesign, "showEmergency" | "emergencyPhone"> &
   Partial<Pick<BibDesign, "emergencyLabel" | "emergencyPhoneLabel" | "emergencyPhone2" | "emergencyPhone2Label" | "emergencyPhone3" | "emergencyPhone3Label">>;
 
+/** Between two numbers of the line (§NNN): a bar, as the race number the owner showed prints it — a name may hold a «/» itself («Ajutor start/finish»). */
+export const BIB_EMERGENCY_SEPARATOR = " | ";
+
 /**
- * The line printed on every number (§750, amending it §759): «Urgențe: 07xx xxx xxx», or with the club's
- * label and up to three numbers (the third since §NNN), each with its own name, «Urgențe: Coordonator 07xx xxx xxx /
- * Salvamont 07yy yyy yyy / Urgență 112» — on one line, as the owner's trail example prints it. `fallback` is the
- * sheet's language's word, used when the club typed no label. Null while the tick is off or no valid number was
- * typed; the numbers typed print in their order, whichever boxes hold them. The club's organizers' numbers, typed here: never a participant's own emergency contact,
- * which is personal data on a visible bib that the privacy notice does not describe.
+ * The line printed on every number (§750, amending it §759 and §NNN): up to three numbers on one line, each after
+ * its own name and a colon, a bar between them — «Ajutor start/finish: 07xx xxx xxx | Ajutor traseu: 07yy yyy yyy |
+ * Salvamont: 07zz zzz zzz» (the owner, 2026-11-16: «de fapt vreau asa: ajutor start/finish: , ajutor traseu: ,
+ * salvamont, cu label customizabil»). Until §NNN a name stood before its number with a space and the numbers were
+ * parted by « / ».
+ *
+ * The word before them all is the club's label when it typed one. With none, the sheet's language's own word
+ * (`fallback`, «Urgențe» / "Emergency") prints only while some number stands without a name — «Urgențe: 07xx xxx
+ * xxx» — and nothing is printed before numbers that each say whose they are.
+ *
+ * Null while the tick is off or no valid number was typed; the numbers typed print in their order, whichever
+ * boxes hold them. The club's organizers' numbers, typed here: never a participant's own emergency contact, which
+ * is personal data on a visible bib that the privacy notice does not describe.
  */
 export function bibEmergencyLine(design: BibEmergencyDesign, fallback: string): string | null {
   if (!design.showEmergency) return null;
@@ -341,12 +351,10 @@ export function bibEmergencyLine(design: BibEmergencyDesign, fallback: string): 
       [design.emergencyPhone2Label ?? "", design.emergencyPhone2 ?? ""],
       [design.emergencyPhone3Label ?? "", design.emergencyPhone3 ?? ""],
     ] as const
-  )
-    .filter(([, phone]) => phone !== "")
-    .map(([name, phone]) => (name ? `${name} ${phone}` : phone));
+  ).filter(([, phone]) => phone !== "");
   if (numbers.length === 0) return null;
-  const label = design.emergencyLabel || fallback;
-  const joined = numbers.join(" / ");
+  const joined = numbers.map(([name, phone]) => (name ? `${name}: ${phone}` : phone)).join(BIB_EMERGENCY_SEPARATOR);
+  const label = design.emergencyLabel || (numbers.every(([name]) => name !== "") ? "" : fallback);
   return label ? `${label}: ${joined}` : joined;
 }
 
