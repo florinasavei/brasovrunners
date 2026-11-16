@@ -23,6 +23,10 @@ export default async function VolunteerAnswers({
     listOptIn?: boolean;
     /** «Are kit» (§904): the organizers' mark, shown when the row holds it — absent in a caller that predates it. */
     hasKit?: boolean;
+    /** «Participă la tombolă» (§949): said only when the organizers took the person out — everybody else is in. */
+    inRaffle?: boolean;
+    /** «Planul voluntarilor» (§949): the point of the route the organizers put the person at, shown when the row holds one. */
+    checkpointName?: string | null;
   };
 }) {
   const t = await getTranslations("Admin");
@@ -37,6 +41,8 @@ export default async function VolunteerAnswers({
       {offer.clubMember ? ` · ${t("volunteers.chips.club", { club: CLUB_NAME })}` : ""}
       {offer.listOptIn ? ` · ${t("volunteers.chips.wantsList")}` : ""}
       {offer.hasKit ? ` · ${t("volunteers.chips.kit")}` : ""}
+      {offer.inRaffle === false ? ` · ${t("volunteers.screen.raffleOut")}` : ""}
+      {offer.checkpointName ? ` · ${t("volunteers.plan.pointValue", { name: offer.checkpointName })}` : ""}
       {offer.shirtSize && offer.shirtSize !== "NONE" ? ` · ${t("volunteers.person.shirtValue", { size: offer.shirtSize })}` : ""}
       {offer.guardianName ? ` · ${t("volunteers.person.guardianValue", { name: offer.guardianName })}` : ""}
       {offer.guardianName && offer.guardianEmail ? ` · ${offer.guardianEmail}` : ""}

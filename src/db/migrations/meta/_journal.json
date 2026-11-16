@@ -1345,6 +1345,41 @@
       "when": 1794414281989,
       "tag": "0200_registration_reconfirmations",
       "breakpoints": true
+    },
+    {
+      "idx": 192,
+      "version": "7",
+      "when": 1794691248860,
+      "tag": "0201_registration_ambassador",
+      "breakpoints": true
+    },
+    {
+      "idx": 193,
+      "version": "7",
+      "when": 1794725320402,
+      "tag": "0202_event_paused_note",
+      "breakpoints": true
+    },
+    {
+      "idx": 194,
+      "version": "7",
+      "when": 1794737901414,
+      "tag": "0203_volunteer_numbers",
+      "breakpoints": true
+    },
+    {
+      "idx": 195,
+      "version": "7",
+      "when": 1794830347301,
+      "tag": "0204_volunteer_checkpoint",
+      "breakpoints": true
+    },
+    {
+      "idx": 196,
+      "version": "7",
+      "when": 1794836171767,
+      "tag": "0205_raffle",
+      "breakpoints": true
     }
   ]
 }

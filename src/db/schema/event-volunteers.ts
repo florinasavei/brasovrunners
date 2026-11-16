@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { boolean, check, date, index, integer, jsonb, pgEnum, pgTable, primaryKey, smallint, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { eventCheckpoints } from "./event-checkpoints";
 import { events } from "./events";
 import { legalDocuments } from "./legal-documents";
 import { locale } from "./locale";
@@ -279,6 +280,34 @@ export const eventVolunteers = pgTable(
      * header («Cu kit: N», the cancelled left out) and beside the registrations' «Kituri de pregătit». Off by default.
      */
     hasKit: boolean("has_kit").notNull().default(false),
+    /**
+     * «Participă la tombolă» (migration `0205`, §949): whether this volunteer's number is written on «Lista pentru tombolă» of an
+     * event that holds a raffle — the registrations' own tick (`registrations.in_raffle`), for the people who help. True by
+     * default; unticked on the «Voluntari» list's row by whoever works the volunteers, audited as every edit of a person's boxes.
+     * Never on a public page, in an email or on a badge.
+     */
+    inRaffle: boolean("in_raffle").notNull().default(true),
+    /**
+     * The volunteer's number (migration `0203`, §948; the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr de
+     * concurs"»): drawn from the event's volunteers' series (`events.volunteer_bib_start`) the moment the organizers
+     * confirm the person, under the event row's lock, and never drawn twice — a cancelled volunteer keeps theirs, as a
+     * cancelled runner does (§173). A runner turned into a volunteer («Transformă în voluntar») draws one here like
+     * anybody confirmed: the number they ran under stays retired with the cancelled registration, never carried over.
+     * One number is one person at the event: every runner's draw reads these as worn
+     * (`registrations/bibs.ts#wornNumbers`), and this table's own index refuses the same number on two volunteers.
+     * Null until confirmed, and on an event that gives its volunteers no number.
+     */
+    bibNumber: integer("bib_number"),
+    /**
+     * «Planul voluntarilor» (migration `0204`, §949; the owner, 2026-11-16: «e foarte important sa avem planul de voluntari
+     * si fiecare in ce punct ramane»): the point of the event's route this person stands at on the day — one of the event's
+     * own «Puncte pe traseu» (`event_checkpoints`), chosen on the plan's page by whoever works the volunteers — or null:
+     * nobody placed them yet, or their work is not on the route (the start, the kits). The organizers' own planning: never
+     * on a public page, in an email or on a badge. `ON DELETE SET NULL`: a point taken off the route frees its people, who
+     * stand under «Fără punct» again. A point of another event is refused by the service (`volunteers.ts#changeVolunteer`,
+     * `setCheckpoint`); the editor's save keeps a point's id (`changeCheckpoints`), so a point moved or renamed keeps its people.
+     */
+    checkpointId: uuid("checkpoint_id").references(() => eventCheckpoints.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     /** The staff member who entered the row; null for the public form, and after that account is removed. */
@@ -357,6 +386,11 @@ export const eventVolunteers = pgTable(
   },
   (t) => [
     unique("event_volunteers_event_canonical_email_unique").on(t.eventId, t.canonicalEmail),
+    // One number once among an event's volunteers (§948); against the runners' it is the draw, under the event lock, that decides.
+    uniqueIndex("event_volunteers_event_bib_number_unique")
+      .on(t.eventId, t.bibNumber)
+      .where(sql`${t.bibNumber} IS NOT NULL`),
+    check("event_volunteers_bib_number_positive", sql`${t.bibNumber} IS NULL OR ${t.bibNumber} > 0`),
     // An address is the one typed, its identity and the canonicalizer's version together, or none of the three (§865).
     check(
       "event_volunteers_address_whole",
@@ -366,6 +400,8 @@ export const eventVolunteers = pgTable(
     check("event_volunteers_public_contact", sql`${t.source} = 'STAFF' OR (${t.email} IS NOT NULL AND ${t.phone} IS NOT NULL)`),
     // «N din M»: the people counted against a role.
     index("event_volunteers_role_idx").on(t.roleId),
+    // «Planul voluntarilor» (§949): the people standing at one point, and the foreign key's own lookup when a point is deleted.
+    index("event_volunteers_checkpoint_idx").on(t.checkpointId).where(sql`${t.checkpointId} IS NOT NULL`),
     // The retention sweep and the person lookup.
     index("event_volunteers_canonical_email_idx").on(t.canonicalEmail),
     // `/admin/legal`'s count of the people who accepted a version, and the RESTRICT's check on a delete.

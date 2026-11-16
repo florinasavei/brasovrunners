@@ -400,14 +400,15 @@ describe("«Cu kit: N» on the «Voluntari» strip, and the filter (§904)", () 
 });
 
 describe("«Are kit» in the event's files (§904)", () => {
-  it("is the CSV's last column and a column of the spreadsheet beside the T-shirt, «Da» / «Nu» in the reader's words", async () => {
+  it("is a column of the CSV — the last before the number's (§948) — and of the spreadsheet beside the T-shirt, «Da» / «Nu» in the reader's words", async () => {
     const csv = await (await eventFile(new Request(`http://localhost/api/admin/events/${raceId}/volunteers?lang=ro`), { params: Promise.resolve({ id: raceId }) })).text();
     const lines = csv.split("\r\n");
-    expect(lines[0].endsWith(",Are kit")).toBe(true);
-    expect(lines.find((line) => line.includes("Dan Ene"))?.endsWith(",Da")).toBe(true);
-    expect(lines.find((line) => line.includes("Ion Lupu"))?.endsWith(",Nu")).toBe(true);
+    expect(lines[0].endsWith(",Are kit,Număr")).toBe(true);
+    // Nobody has a number here: the last cell is empty.
+    expect(lines.find((line) => line.includes("Dan Ene"))?.endsWith(",Da,")).toBe(true);
+    expect(lines.find((line) => line.includes("Ion Lupu"))?.endsWith(",Nu,")).toBe(true);
     const english = await (await eventFile(new Request(`http://localhost/api/admin/events/${raceId}/volunteers?lang=en`), { params: Promise.resolve({ id: raceId }) })).text();
-    expect(english.split("\r\n")[0].endsWith(",Has a kit")).toBe(true);
+    expect(english.split("\r\n")[0].endsWith(",Has a kit,Number")).toBe(true);
 
     const buffer = Buffer.from(await (await eventFile(new Request(`http://localhost/api/admin/events/${raceId}/volunteers?format=xlsx&lang=ro`), { params: Promise.resolve({ id: raceId }) })).arrayBuffer());
     const { rows } = readSheet(buffer);

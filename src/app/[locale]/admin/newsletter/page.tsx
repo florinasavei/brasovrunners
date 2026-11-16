@@ -20,6 +20,7 @@ import { canExportSponsorList, canManageRegistrations, canSendNewsletter } from 
 import { sponsorListSummary } from "@/modules/registrations/sponsor-list";
 import { readSponsorRegister } from "@/modules/registrations/sponsor-register";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { deleteSponsorListRecordAction } from "../registrations/actions";
 import { parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 
 type Props = {
@@ -120,7 +121,18 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
               saved={saved === "newsletterUnsubscribed" || saved === "newsletterUnsubscribedGone"}
             />
             {/* The second fold (§562): a consent on a registration, not a subscription — its own list and its own CSV. */}
-            <PromoConsenters locale={locale} list={promo} listQuery={listQuery} paged={paged} sponsors={sponsors} sponsorRegister={sponsorRegister} now={now} />
+            <PromoConsenters
+              locale={locale}
+              list={promo}
+              listQuery={listQuery}
+              paged={paged}
+              sponsors={sponsors}
+              sponsorRegister={sponsorRegister}
+              now={now}
+              // «Șterge» on a list of the register (§948): the Administrator's; the server asserts it again.
+              sponsorRemoval={mayManage ? { action: deleteSponsorListRecordAction, door: "newsletter" } : undefined}
+              sponsorSaved={saved === "sponsorListDeleted"}
+            />
           </>
         }
       />

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { createFormatter, createTranslator } from "next-intl";
 import { createElement, type ReactNode } from "react";
 import { renderToReadableStream } from "react-dom/server";
@@ -16,8 +16,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * §906 — the organizers' door on the event page and the listing card (the owner, 2026-11-03: «cumva trebuie să pot
  * controla mai bine»), rendered from a real database (PGlite) through the public cache's read-through:
  *
- * - «Înscrieri publice deschise» unticked: «Înscrierile pe site sunt oprite de organizatori.», bold on the card, and
- *   no button on either — in both languages;
+ * - «Înscrieri publice deschise» unticked: «Înscrierile pe site sunt închise momentan.» (§948), bold on the card, and
+ *   no button on either — in both languages; or, when the club wrote one for the event, its own sentence in the reader's
+ *   language (§948), never the other language's;
  * - «Locurile libere le dau doar eu» with places free and a waiting list that takes nobody: its own words, never
  *   «s-au ocupat», no button;
  * - the same tick with room in the line: the waiting list's door and «Locurile se dau din lista de așteptare», never
@@ -161,6 +162,90 @@ describe("§906 «Înscrieri publice deschise» unticked", () => {
     const html = await page();
     expect(html).not.toContain('data-testid="registration-paused"');
     expect(text(html)).toContain(ro.Event.cta.register);
+  });
+});
+
+describe("BR-REQ-011-01 §948 «Mesaj cât înscrierile pe site sunt oprite»: the club's own sentence for the shut door", () => {
+  /** The event's two languages, each given its own note — or none. */
+  const notes = (eventId: string, values: { ro?: string | null; en?: string | null }) =>
+    Promise.all(
+      (["ro", "en"] as const)
+        .filter((language) => language in values)
+        .map((language) => db.update(eventTranslations).set({ pausedNote: values[language] }).where(and(eq(eventTranslations.eventId, eventId), eq(eventTranslations.locale, language)))),
+    );
+  const RO_NOTE = "Înscrierile s-au încheiat. Ne vedem la start!";
+  const EN_NOTE = "Registration has ended. See you at the start!";
+
+  it("the platform's sentence is the friendlier one, and the editor's help quotes it word for word", () => {
+    expect(ro.Event.cta.paused).toBe("Înscrierile pe site sunt închise momentan.");
+    expect(en.Event.cta.paused).toBe("Registration on the site is closed for now.");
+    expect(ro.Admin.editor.pausedNoteHelp).toContain(`„${ro.Event.cta.paused}”`);
+    expect(en.Admin.editor.pausedNoteHelp).toContain(`“${en.Event.cta.paused}”`);
+  });
+
+  it("is said in place of the platform's on the event page and on the card, each language its own, with no button", async () => {
+    const event = await publish({ publicRegistrationOpen: false });
+    await take(event.id, 5);
+    await notes(event.id, { ro: RO_NOTE, en: EN_NOTE });
+
+    const html = await page();
+    expect(html).toContain('data-testid="registration-paused"');
+    expect(text(html)).toContain(RO_NOTE);
+    expect(text(html)).not.toContain(ro.Event.cta.paused);
+    expect(text(html)).not.toContain(ro.Event.cta.register);
+    const card = await cardLine();
+    expect(card).toContain(RO_NOTE);
+    expect(card).not.toContain(ro.Event.cta.paused);
+    expect(card).not.toContain(ro.Event.cta.register);
+
+    locale = "en";
+    const enHtml = await page();
+    expect(text(enHtml)).toContain(EN_NOTE);
+    expect(text(enHtml)).not.toContain(RO_NOTE);
+    expect(text(enHtml)).not.toContain(en.Event.cta.paused);
+    expect(await cardLine()).toContain(EN_NOTE);
+  });
+
+  it("is never borrowed from the other language: a language without one says the platform's sentence", async () => {
+    const event = await publish({ publicRegistrationOpen: false });
+    // Only the Romanian row holds words — a row written outside the editor, which asks for both.
+    await notes(event.id, { ro: RO_NOTE });
+    expect(text(await page())).toContain(RO_NOTE);
+
+    locale = "en";
+    const enHtml = text(await page());
+    expect(enHtml).toContain(en.Event.cta.paused);
+    expect(enHtml).not.toContain(RO_NOTE);
+    const card = await cardLine();
+    expect(card).toContain(en.Event.cta.paused);
+    expect(card).not.toContain(RO_NOTE);
+  });
+
+  it("a note of spaces alone is no note", async () => {
+    const event = await publish({ publicRegistrationOpen: false });
+    await notes(event.id, { ro: "   ", en: "" });
+    expect(text(await page())).toContain(ro.Event.cta.paused);
+    expect(await cardLine()).toContain(ro.Event.cta.paused);
+  });
+
+  it("is kept, unread, while the door is open: the button is back and the note is nowhere", async () => {
+    const event = await publish({ publicRegistrationOpen: true });
+    await notes(event.id, { ro: RO_NOTE, en: EN_NOTE });
+    const html = await page();
+    expect(html).not.toContain('data-testid="registration-paused"');
+    expect(text(html)).toContain(ro.Event.cta.register);
+    expect(text(html)).not.toContain(RO_NOTE);
+    expect(await cardLine()).not.toContain(RO_NOTE);
+  });
+
+  it("speaks for the switch alone: «Locurile libere le dau doar eu» keeps its own words", async () => {
+    const event = await publish({ freePlacesByOfferOnly: true, waitlistCapacity: 0 });
+    await take(event.id, 5);
+    await notes(event.id, { ro: RO_NOTE, en: EN_NOTE });
+    const html = text(await page());
+    expect(html).toContain(ro.Event.cta.pausedOffersOnly);
+    expect(html).not.toContain(RO_NOTE);
+    expect(await cardLine()).not.toContain(RO_NOTE);
   });
 });
 

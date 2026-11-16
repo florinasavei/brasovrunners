@@ -379,4 +379,33 @@ describe("§897 a marked registration's bib", () => {
     expect((await ask()).status).toBe(200);
     expect(state.drawn.at(-1)).toMatchObject({ elite: { name: "Ana Pop", bibNumber: 12 }, member: false, bibNumber: 12 });
   });
+
+  it("§948 prints the first name alone on a marked registration's bib — in the picture and on both sheets — and the registered name only where none is kept", async () => {
+    const admin = await as("ADMIN");
+    // As the form keeps a runner: the two halves beside the registered name.
+    const silviu = await runner("Silviu Popescu", "CONFIRMED", 12);
+    await db.update(registrations).set({ firstName: "Silviu", lastName: "Popescu" }).where(eq(registrations.id, silviu));
+    // A row that keeps no first name — from before the two halves — and an unmarked runner with one.
+    const ana = await runner("Ana Pop", "CONFIRMED", 13);
+    const ion = await runner("Ion Ionescu", "CONFIRMED", 14);
+    await db.update(registrations).set({ firstName: "Ion", lastName: "Ionescu" }).where(eq(registrations.id, ion));
+    await setRegistrationElite(db, admin, silviu, true, NOW);
+    await setRegistrationElite(db, admin, ana, true, later(1));
+
+    expect((await listBibs(db, eventId, { elite: true })).map((row) => [row.registeredName, row.firstName])).toEqual([
+      ["Silviu Popescu", "Silviu"],
+      ["Ana Pop", null],
+    ]);
+
+    const picture = (registrationId: string) =>
+      preview(new Request(`http://localhost/api/admin/events/${eventId}/bibs/preview?registration=${registrationId}&locale=ro`), { params: Promise.resolve({ id: eventId }) });
+    expect((await picture(silviu)).status).toBe(200);
+    expect(state.drawn.at(-1)).toMatchObject({ elite: { name: "Silviu", bibNumber: 12 }, registeredName: "Silviu Popescu" });
+    expect((await picture(ana)).status).toBe(200);
+    expect(state.drawn.at(-1)).toMatchObject({ elite: { name: "Ana Pop", bibNumber: 13 } });
+    // Not marked: the ordinary bib, its strip the registered name.
+    expect((await picture(ion)).status).toBe(200);
+    expect(state.drawn.at(-1)).not.toHaveProperty("elite");
+    expect(state.drawn.at(-1)).toMatchObject({ registeredName: "Ion Ionescu" });
+  });
 });

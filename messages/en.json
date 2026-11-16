@@ -515,7 +515,7 @@
       "fullOfferByHand": "The organizers give out the places one at a time: when they can give you one, you get an email and {hours} to confirm.",
       "waitlistFull": "All places are taken and the waiting list is full — sorry.",
       "fullNoWaitlist": "All places are taken, and this event has no waiting list.",
-      "paused": "Registration on the site has been stopped by the organizers.",
+      "paused": "Registration on the site is closed for now.",
       "pausedOffersOnly": "The organizers hand out the remaining places themselves: you cannot register directly on the site.",
       "waitlistRoom": {
         "one": "{count} place left on the waiting list",
@@ -1300,6 +1300,59 @@
         "entryHelp": "Internal: the person does not see the mark; it only changes how the bib prints.",
         "entryConfirm": "Marked «Elite» — internal, the person is not told."
       },
+      "ambassador": {
+        "chip": "Ambassador",
+        "mark": "Mark as ambassador",
+        "unmark": "No longer an ambassador",
+        "unmarkNamed": "No longer an ambassador: {name}",
+        "title": "Ambassador: results and site",
+        "panelTitle": "Ambassadors",
+        "panelIntro": "The registrations marked «Ambassador». The label is internal and does not change the bib. Their «In the results» tick, in the row's «⋮», decides whether they are ranked and awarded.",
+        "count": {
+          "one": "{count} ambassador",
+          "few": "{count} ambassadors",
+          "other": "{count} ambassadors"
+        },
+        "empty": "No ambassador at this event. Mark a registration from the «⋮» on its row.",
+        "alsoElite": "also elite",
+        "outOfResults": "out of the results",
+        "offSite": "not shown on the site"
+      },
+      "toVolunteer": {
+        "title": "Turn into a volunteer",
+        "intro": "The registration is cancelled and its place freed, as with any cancellation. The person goes onto this event's volunteers, confirmed, with the role you choose.",
+        "numberNote": "The registration's race number stays retired. As a volunteer the person gets a number only if the event has the volunteers' number series.",
+        "role": "Volunteer role",
+        "action": "Turn into a volunteer",
+        "noRoles": "The event has no volunteer role yet. Add one in the event's «Volunteers» card, then come back here.",
+        "noRolesLink": "Open the «Volunteers» card",
+        "confirmTitle": "Turn the runner into a volunteer?",
+        "confirmBody": "The registration is cancelled and its place freed. The person goes onto the volunteers, confirmed, with the role chosen. If they change their mind, you turn them back from their volunteer page.",
+        "reason": "Became a volunteer at this event."
+      },
+      "raffle": {
+        "column": "Raffle",
+        "columnHint": "Ticked: the person's number is on \"The raffle list\", when the registration is confirmed and has a number. Untick to take them out. Internal: the person is not told.",
+        "tick": "In the raffle",
+        "takeOutFor": "Take out of the raffle: {name}",
+        "putInFor": "Put in the raffle: {name}",
+        "button": "Raffle list (CSV)",
+        "buttonLabel": "Download the raffle list: the confirmed runners and volunteers who have a number and are in the raffle, with the number, the name, the category and whether the runner is present",
+        "columns": {
+          "number": "Number",
+          "name": "Name",
+          "kind": "Category",
+          "present": "Present"
+        },
+        "present": {
+          "yes": "Yes",
+          "no": "No"
+        },
+        "kinds": {
+          "RUNNER": "Runner",
+          "VOLUNTEER": "Volunteer"
+        }
+      },
       "export": "Download CSV",
       "personLink": "Everything held about a person",
       "personThis": "Everything held about this person",
@@ -1662,12 +1715,17 @@
           "address_vouched_on_entry": "Address vouched for by the team at the entry; a place or the waiting list at once (“Straight onto the waiting list”)",
           "address_changed_by_staff": "Email address changed by the team (“Change the address”): the old links stop working, both addresses told",
           "outside_capacity_changed": "Put on the special guests list, or taken off it",
-          "elite_marked": "Marked as elite: the bib prints the name where the number goes",
+          "elite_marked": "Marked as elite: the bib prints the first name where the number goes",
           "elite_unmarked": "No longer elite: the bib prints the number again",
-          "elite_in_results": "Elite: «In the results» ticked — the result is ranked again",
-          "elite_out_of_results": "Elite: «In the results» unticked — out of the results",
-          "elite_on_site": "Elite: «On the site» ticked — on the site as the person's own ticks allow",
-          "elite_off_site": "Elite: «On the site» unticked — the name no longer shows on the site",
+          "raffle_included": "Put back on the raffle's list",
+          "raffle_excluded": "Taken off the raffle's list",
+          "ambassador_marked": "Marked as ambassador",
+          "ambassador_unmarked": "No longer an ambassador",
+          "became_volunteer": "Turned into a volunteer: the person went onto the event's volunteers («Turn into a volunteer»)",
+          "elite_in_results": "Elite or ambassador: «In the results» ticked — the result is ranked again",
+          "elite_out_of_results": "Elite or ambassador: «In the results» unticked — out of the results",
+          "elite_on_site": "Elite or ambassador: «On the site» ticked — on the site as the person's own ticks allow",
+          "elite_off_site": "Elite or ambassador: «On the site» unticked — the name no longer shows on the site",
           "deadline_moved_for_outage": "Deadline moved: the site could not be reached, the clock stood still",
           "hold_moved_by_window": "Signing deadline moved with the changed confirmation window",
           "not_revived_for_outage": "Not revived after the outage: the deadline had passed while the site could not be reached, and the place had been given meanwhile or the claim had already lapsed",
@@ -2633,6 +2691,7 @@
       "SEND_NOW_MAILGUN_STOPPED_GMAIL_FULL": "Nothing was sent: Mailgun is stopped and Gmail has reached its daily limit. Raise it under «Emails» (500 at most), or choose «Queue it»: it leaves when Mailgun resumes.",
       "SEND_NOW_MAILGUN_STOPPED_NOTICE": "Nothing was sent: Mailgun is stopped, and Gmail takes over only once you approve the privacy notice from the new template. Until then choose «Queue it».",
       "INVITATION_NOT_OPEN": "The invitation is no longer waiting: it was accepted, withdrawn or has expired.",
+      "INVITATION_NOT_ENDED": "Nothing was deleted: the invitation is still waiting, or it became a registration. Withdraw a waiting one first.",
       "INVITATION_EVENT_CLOSED": "The event takes no more invitations: it is cancelled, has started, or is not published.",
       "INVITATION_BAD_DAYS": "Days until it expires: a whole number from 1 to 60.",
       "ANSWERS_UNCHANGED": "Nothing changed: the answers already say this. Reload the page if a colleague corrected them meanwhile.",
@@ -2663,6 +2722,9 @@
       "BADGE_COLOUR_UNREADABLE": "Not saved: the text does not read well on the chosen colour. Choose a darker or a lighter colour.",
       "BADGE_SIZE_TOO_SMALL": "Not saved: a {width} × {height} mm badge has no room for everything you ticked: {what}. Make it at least {minHeight} mm tall, or untick one.",
       "VOLUNTEER_GUARDIAN_MISSING": "The parent's consent is missing: a volunteer under 18 is confirmed only once their parent or guardian has accepted the agreement, from the link or on paper.",
+      "VOLUNTEER_NUMBERS_IN_RACE_SERIES": "The volunteers' numbers must start above the runners': the race's places, the desk's spares and the numbers already given. Choose a higher number. Nothing was saved.",
+      "RUNNER_TO_VOLUNTEER_MINOR": "The person is under 18 on the event's day. Add them by hand under «Volunteers», with the parent's or guardian's details. Nothing was changed.",
+      "VOLUNTEER_TO_RUNNER_NEEDS_ADDRESS": "The volunteer has no email address, and a registration needs one. Add it with «Edit», then try again. Nothing was changed.",
       "VOLUNTEER_GUARDIAN_ACCEPTED": "The parent or guardian has already accepted the agreement: there is nothing left to send or record.",
       "VOLUNTEER_GUARDIAN_NO_EMAIL": "The parent or guardian has no email address entered, so there is nowhere to send the link. Take the consent on paper, or add the address under “Edit”.",
       "VOLUNTEER_NO_EMAIL": "The volunteer has no email address, so the link has nowhere to go. The agreement and the parent's consent are signed on paper, or add the address under “Edit”.",
@@ -2693,7 +2755,7 @@
       "RESULT_FINISH_NOT_STARTED": "The race has not started yet: a finish cannot be before the start.",
       "RESULT_FINISH_CLOSED": "The start was more than a day ago: the times are entered under «Results».",
       "REFUSAL_NEEDS_EMAIL": "Nothing was cancelled: the club's refusal always goes with the email that tells the person its ground.",
-      "ELITE_NOT_MARKED": "The registration is no longer marked elite, so its elite ticks no longer change. Nothing was written.",
+      "ELITE_NOT_MARKED": "The registration is no longer marked elite or ambassador, so its ticks no longer change. Nothing was written.",
       "ADDRESS_FAMILY_FORM_PENDING": "Nothing changed: a family form waits to be confirmed on the old address. Change the address once it is confirmed or lapses.",
       "ADDRESS_INVITED": "Nothing changed: the new address has an open invitation to this event. Withdraw the invitation in “Invitations” first.",
       "ADDRESS_UNCHANGED": "Nothing changed: it is the same inbox as the registration’s address now — an extra dot or “+” still leads there.",
@@ -2901,9 +2963,13 @@
       "publicRegistrationOpen": "Registration open on the site",
       "publicRegistrationOpenHelp": "Unticked, the button on the site disappears at once, whatever the dates say, and the public form refuses everyone. What the team does keeps working.",
       "publicRegistrationOpenHelpMore": "Still working: an entry by an organizer, the race-day desk, «Send them the offer», «Give a place», «Offer them a place now», «Move to the official list» and the invitations.",
+      "pausedNote": "Message while registration on the site is stopped (optional)",
+      "pausedNoteHelp": "Shown on the card and on the event's page while the tick above is off. Empty: “Registration on the site is closed for now.”",
       "registrationOpensSoonHelp": "Ticked, the page says “Registration opens soon” and the form stays closed. Untick it to open: the people who asked to be told get the email.",
       "kitShirt": "T-shirt",
       "kitShirtHelp": "When ticked, the form asks for the T-shirt size.",
+      "hasRaffle": "We hold a raffle",
+      "hasRaffleHelp": "For the organizers only: nothing shows on the site. Ticked, the registrations' and the volunteers' lists show the \"Raffle\" column, where you take out whoever is not in it.",
       "askHealthNote": "Medical information",
       "askHealthNoteHelp": "When ticked, the form asks for medical information (conditions, allergies, medication); it is deleted {days} after the event.",
       "registrationClosesAt": "Registration closes",
@@ -3216,7 +3282,7 @@
         "showDistanceHelp": "Ticked: a badge in the header's right corner with the event's distance in whole kilometres, like 21K. Unticked: no badge. Not drawn over a header picture.",
         "numberStubs": "The number on the foot's two ends",
         "numberStubsHelp": "Ticked: the number again, small, at both ends of the sponsors' row, for a tear-off stub; the sponsors' picture makes room. Unticked: the row as it is.",
-        "eliteIntro": "The elite bibs carry the runner's name where the number goes. The list is in «Allocate and print» → «Elite — the name only on the bib».",
+        "eliteIntro": "The elite bibs carry a name where the number goes: the first name of a runner marked «Elite», or what you typed on the list. The list is in «Allocate and print» → «Elite — the name only on the bib».",
         "eliteNumber": "Number on the elite bibs",
         "eliteNumberHelp": "Ticked: the runner's number is printed under the name too, smaller, when you gave them one on the list. Unticked: the name alone.",
         "eliteSponsors": "Sponsors' band on the elite bibs",
@@ -6127,7 +6193,8 @@
         "guardianName": "Parent or guardian",
         "guardianEmail": "Parent or guardian email",
         "guardianConsent": "Parent's consent",
-        "hasKit": "Has a kit"
+        "hasKit": "Has a kit",
+        "bibNumber": "Number"
       },
       "sheet": {
         "people": "Volunteers",
@@ -6195,6 +6262,24 @@
         "withdrawTitle": "Withdraw the invitation?",
         "withdrawBody": "The link stops working. If the person opens it, they read that the invitation was withdrawn."
       },
+      "numbers": {
+        "label": "Volunteers' numbers start at",
+        "help": "Every confirmed volunteer gets a number of their own series, from here up — never one a runner wears. Choose a number above the runners' numbers. Empty: no numbers.",
+        "save": "Save the numbers",
+        "saving": "Saving…"
+      },
+      "toRunner": {
+        "title": "Turn into a runner",
+        "intro": "The person enters the race as with «Add to the waiting list»: they get a place if one is free, otherwise they join the back of the waiting list. As a volunteer they are cancelled.",
+        "declaration": "The person signs the declaration themselves, from the email they receive. The volunteer number stays retired; they get a race number when they are confirmed.",
+        "firstName": "First name",
+        "lastName": "Last name",
+        "namesHelp": "The volunteers' list keeps the name on one line; a registration has a first and a last name. Check them before you press.",
+        "action": "Turn into a runner",
+        "noAddress": "The volunteer has no email address, and a registration needs one. Add it with «Edit», then you can turn them into a runner.",
+        "confirmTitle": "Turn the volunteer into a runner?",
+        "confirmBody": "The person is registered for the race on the address {email}: a free place or the back of the waiting list. As a volunteer they are cancelled; their roles stay on the row, if you reopen them."
+      },
       "shirts": {
         "label": "We give volunteers T-shirts",
         "help": "Ticked, the public form asks for the T-shirt size and you see it on each row. Unticked, the form asks for no size."
@@ -6250,6 +6335,10 @@
         "kitNo": "No kit",
         "columnKit": "Kit",
         "ageHint": "The age on the event's day, the one the parent's agreement for minors goes by. «—»: not given.",
+        "raffleOut": "Taken out of the raffle",
+        "columnRaffle": "Raffle",
+        "raffleTick": "In the raffle",
+        "raffleHint": "Ticked: the volunteer's number is on \"The raffle list\", when they are confirmed and have a number. Untick to take them out. Internal: the person is not told.",
         "columnMessage": "Message",
         "messageHint": "What the person wrote for the organizers when they offered to volunteer. Empty: they wrote nothing.",
         "filter": "Filter",
@@ -6262,11 +6351,40 @@
         "eventLine": "Volunteer at {event} · {when}",
         "excelAll": "Download Excel: every event"
       },
+      "plan": {
+        "title": "The volunteers' plan",
+        "open": "The volunteers' plan",
+        "event": "{event} — {date}",
+        "help": "Who stands at which point of the route on the day. The points are the ones kept in the editor, under \"The route\". For the organizers only: no email leaves from here.",
+        "back": "Back to the volunteers",
+        "editPoints": "The points on the route, in the event's editor",
+        "print": "Print the plan",
+        "summary": "At points: {placed} · At no point: {unplaced} · Points with nobody: {empty}",
+        "noPoints": "The event has no points on its route yet. Add them in the event's editor, under \"The route\", then come back here.",
+        "pointTitle": "{number}. {title}",
+        "nobodyHere": "Nobody here yet.",
+        "choose": "Put somebody here",
+        "chooseEmpty": "Choose a volunteer",
+        "place": "Put here",
+        "takeOff": "Take off",
+        "takeOffFor": "Take off this point: {name}",
+        "unplacedTitle": "At no point of the route",
+        "unplacedHelp": "Still to place, or with work that is not on the route (the start, the kits): the roles given say which.",
+        "unplacedNone": "Every volunteer stands at a point.",
+        "noVolunteers": "The event has no volunteers yet.",
+        "noRole": "no role given",
+        "notConfirmed": "not confirmed yet",
+        "column": "Point",
+        "columnHint": "The point of the route the volunteer stands at, chosen in \"The volunteers' plan\". Empty: not placed yet, or with work that is not on the route.",
+        "columnPoint": "{number}. {name}",
+        "pointValue": "Point on the route: {name}"
+      },
       "chips": {
         "before": "Volunteered before",
         "club": "From the {club} group",
         "wantsList": "Wants to be on the public list",
-        "kit": "Has a kit"
+        "kit": "Has a kit",
+        "number": "No. {number}"
       },
       "yes": "Yes",
       "no": "No",
@@ -7807,8 +7925,10 @@
           "invite": "Send invitations",
           "invitationResend": "Resend the invitation",
           "invitationWithdraw": "Withdraw the invitation",
+          "invitationDelete": "Delete the invitation",
           "invitationsErase": "Erase the person's invitations",
-          "changeAddress": "Change the address"
+          "changeAddress": "Change the address",
+          "toVolunteer": "Turn into a volunteer"
         },
         "events": {
           "save": "Save the event",
@@ -7829,7 +7949,8 @@
           "guardianLink": "Send the parent's link",
           "guardianPaper": "The parent's agreement, signed on paper",
           "invite": "Send the volunteer invitations",
-          "invitationResend": "Resend the volunteer invitation"
+          "invitationResend": "Resend the volunteer invitation",
+          "toRunner": "Turn into a runner"
         },
         "club": {
           "newsletter": "Send the newsletter",
@@ -9181,7 +9302,7 @@
                 "«Newsletter» → open the «Subscribers» card. Its line says how many are confirmed and how many pending.",
                 "Search under «Search the address» or choose «Topic» and «State», then press «Filter». «Download CSV» takes the list as filtered.",
                 "The «Participants who ticked offers and benefits» card: who ticked it when registering, with the address, the event and the date. «Download CSV» takes all of it. It is not the newsletter.",
-                "«Download the list for sponsors (Excel)»: the same people as the CSV, with every tick of each (offers, the public list, socials, terms, declaration, state) — for the club. Give the partner «Download CSV»: first name, last name, address, event and date. Only consents given under a notice that allows it. Write whom the file goes to in «Who receives the list»: without a name it does not download. «Lists given to sponsors», under the buttons, shows every list given. Delete the file within 30 days.",
+                "«Download the list for sponsors (Excel)»: the same people as the CSV, with every tick of each (offers, the public list, socials, terms, declaration, state) — for the club. Give the partner «Download CSV»: first name, last name, address, event and date. Only consents given under a notice that allows it. Write whom the file goes to in «Who receives the list»: without a name it does not download. «Lists given to sponsors», under the buttons, shows every list given. Delete the file within 30 days. A list made by mistake is deleted from the register by an Administrator.",
                 "Removing an address is the Administrator's: tell them who asked."
               ]
             },
@@ -9549,7 +9670,7 @@
                 "«Download CSV» takes the list as filtered, with the same columns. Keep the file only as long as you need it, then delete it.",
                 "To remove someone, at their request: «Unsubscribe» on their row, then confirm. The address is deleted with its topics, as when the person unsubscribes.",
                 "The «Participants who ticked offers and benefits» card: who ticked it when registering, with the address, the event and the date. «Download CSV» takes all of it. It is not the newsletter.",
-                "«Download the list for sponsors (Excel)»: the same people as the CSV, with every tick of each (offers, the public list, socials, terms, declaration, state) — for the club. Give the partner «Download CSV»: first name, last name, address, event and date. Only consents given under a notice that allows it. Write whom the file goes to in «Who receives the list»: without a name it does not download. «Lists given to sponsors», under the buttons, shows every list given. Delete the file within 30 days."
+                "«Download the list for sponsors (Excel)»: the same people as the CSV, with every tick of each (offers, the public list, socials, terms, declaration, state) — for the club. Give the partner «Download CSV»: first name, last name, address, event and date. Only consents given under a notice that allows it. Write whom the file goes to in «Who receives the list»: without a name it does not download. «Lists given to sponsors», under the buttons, shows every list given. Delete the file within 30 days. A list made by mistake is deleted from the register with «Delete», on its row."
               ]
             },
             {
@@ -10227,7 +10348,8 @@
           "seoTitle": "Search title",
           "seoDescription": "Search description",
           "discountNote": "The club's discount",
-          "weatherNote": "Weather text"
+          "weatherNote": "Weather text",
+          "pausedNote": "The message while registration on the site is stopped"
         },
         "badges": {
           "design": {
@@ -11284,7 +11406,16 @@
           "count": "People",
           "file": "File",
           "actor": "Downloaded by",
-          "deleteBy": "Delete your file by"
+          "deleteBy": "Delete your file by",
+          "remove": "Delete from the register"
+        },
+        "remove": {
+          "title": "Delete the list from the register?",
+          "body": "The list given to “{recipient}” ({date}) leaves the register and «Given to partners» on the registrations in it. This cannot be undone.",
+          "onlyMistake": "Delete only a list made by mistake, which reached nobody. For one that was given, the register is the answer to “who did you give my data to?”.",
+          "button": "Delete",
+          "pending": "Deleting…",
+          "named": "Delete from the register the list for {recipient} ({date})"
         }
       },
       "columns": {
@@ -11433,6 +11564,10 @@
       "withdrawBody": "The link {name} received registers nobody any more, and the kept place is released.",
       "withdraw": "Withdraw",
       "withdrawing": "Withdrawing…",
+      "deleteTitle": "Delete the invitation?",
+      "deleteBody": "The invitation for {name} leaves the list, with its link. This cannot be undone.",
+      "delete": "Delete",
+      "deleting": "Deleting…",
       "errors": {
         "INVITATION_ALREADY_REGISTERED": "{name} is already registered for this event: no invitation was sent.",
         "INVITATION_ALREADY_INVITED": "{name} already has an invitation waiting: no invitation was sent.",
@@ -11444,6 +11579,7 @@
         "INVITATION_TOO_MANY": "At most 50 people per press: split the list.",
         "INVITATION_EVENT_CLOSED": "The event takes no more invitations: it is cancelled, has started, or is not published.",
         "INVITATION_NOT_OPEN": "The invitation is no longer waiting: it was accepted, withdrawn or has expired.",
+        "INVITATION_NOT_ENDED": "Nothing was deleted: the invitation is still waiting, or it became a registration. Withdraw a waiting one first.",
         "INVITATION_BAD_DAYS": "Days until it expires: a whole number from 1 to 60.",
         "INVITATION_UNREAD_LINE": "Lines {lines} are not a name and an address: no invitation was sent.",
         "INVITATION_UNREAD_ROW": "The people on rows {lines} lack a name or a valid email address: no invitation was sent.",
@@ -11764,7 +11900,8 @@
       "publicLine": {
         "named": "On the site: with the name",
         "anonymous": "On the site: {label}",
-        "outOfRanking": "On the site: not shown — an elite out of the results"
+        "outOfRanking": "On the site: not shown — an elite out of the results",
+        "outOfRankingAmbassador": "On the site: not shown — an ambassador out of the results"
       },
       "outOfRanking": "out of the results",
       "nameless": "No name: the registration was erased. The result stays, nameless.",
@@ -14027,6 +14164,10 @@
       "volunteerUnchanged": "It was already so; nothing to change.",
       "volunteerKitOn": "Ticked: has a kit. Counted under “With a kit”.",
       "volunteerKitOff": "Cleared: no kit any more.",
+      "volunteerRaffleOn": "In the raffle: back on the raffle's list.",
+      "volunteerRaffleOff": "No longer in the raffle: not on the raffle's list.",
+      "volunteerPlaced": "Placed at the point: on the volunteers' plan.",
+      "volunteerUnplaced": "Taken off the point: back under \"At no point of the route\".",
       "eventTodoDone": "Ticked. The row is under “Done”.",
       "eventTodoReopened": "Unticked: the row is to do again.",
       "eventTodoDeleted": "Row deleted from the event's list.",
@@ -14159,6 +14300,8 @@
       "invitationResentKept": "Invitation resent, with a new link. The deadline you chose was not applied: someone is on the waiting list. The one in force, as in the email, is on its row.",
       "invitationResentAlreadyLater": "Invitation resent, with a new link. The deadline you chose was not applied: meanwhile someone else, or another tab, moved the deadline later. The one in force, as in the email, is on its row.",
       "invitationWithdrawn": "Invitation withdrawn; the place was released.",
+      "invitationDeleted": "Invitation deleted.",
+      "sponsorListDeleted": "The list was deleted from the register.",
       "memberTickCleared": "Member tick cleared.",
       "memberTickSet": "Member tick set.",
       "publicRegistrationOpened": "Registration on the site is open again.",
@@ -14205,6 +14348,11 @@
       "badgeColoursSaved": "The roles' colours were saved.",
       "badgeColoursUnchanged": "Nothing to change in the colours.",
       "volunteersShirtsOn": "The public form now asks for the T-shirt size.",
+      "volunteerNumbersOn": "The volunteers' number series is saved. Confirmed volunteers without a number got theirs.",
+      "volunteerNumbersOff": "Volunteers get no more numbers. The ones already given stay.",
+      "runnerBecameVolunteer": "The registration was cancelled and the person is now a confirmed volunteer.",
+      "volunteerBecameRunnerPlaced": "A place was free: the person got it and has the declaration to sign. As a volunteer they were cancelled.",
+      "volunteerBecameRunnerWaiting": "The person is on the race's waiting list. As a volunteer they were cancelled.",
       "volunteersAccessSaved": "Saved who can offer.",
       "volunteerInvitationsSent": {
         "one": "{count} person invited.",
@@ -14264,8 +14412,12 @@
       "reserveOwnAddressGuest": "Registered on your address, as a special guest. Forward them the email with the declaration to sign from its link, or they sign on paper at the start.",
       "eliteAdded": "The name is on the elite list. It is not a registration, and nothing was sent.",
       "eliteDeleted": "The name was deleted from the elite list.",
-      "eliteMarked": "Marked as elite: their bib prints the name where the number goes. The registration stays as it is.",
+      "eliteMarked": "Marked as elite: their bib prints the first name where the number goes. The registration stays as it is.",
       "eliteUnmarked": "No longer elite: their bib prints the number again.",
+      "raffleIncluded": "In the raffle: back on the raffle's list.",
+      "raffleExcluded": "No longer in the raffle: not on the raffle's list.",
+      "ambassadorMarked": "Marked as ambassador. The registration and the bib stay as they are.",
+      "ambassadorUnmarked": "No longer an ambassador.",
       "waitlistAdded": "The person is on the waiting list.",
       "waitlistPlaced": "A place was free: the person got it.",
       "invitedProviderFailed": "The Zitadel account is not ready: see the message above.",
@@ -14273,7 +14425,7 @@
       "membersInvitedProviderFailed": "Some Zitadel accounts are not ready: see the report above.",
       "eventInvitationsErased": "Invitations withdrawn and erased.",
       "eventImportedOver": "Imported over the event.",
-      "eliteTicked": "The elite tick was saved. Nothing was sent to anyone.",
+      "eliteTicked": "The tick was saved. Nothing was sent to anyone.",
       "addressChanged": "The address was changed; both addresses get an email.",
       "partnerSaved": "The partner was saved. Nothing was sent to anybody.",
       "partnerCleared": "No longer from a partner. Nothing was sent to anybody.",

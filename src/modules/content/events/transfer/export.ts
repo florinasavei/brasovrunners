@@ -85,6 +85,7 @@ function translationConfig(row: EditableTranslation | undefined): TranslationCon
     seoDescription: textOrNull(row?.seoDescription),
     discountNote: textOrNull(row?.discountNote),
     weatherNote: textOrNull(row?.weatherNote),
+    pausedNote: textOrNull(row?.pausedNote),
   };
 }
 

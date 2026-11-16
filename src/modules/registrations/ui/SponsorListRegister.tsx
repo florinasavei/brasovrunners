@@ -11,9 +11,12 @@ import type { ReactNode } from "react";
 import { countForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
+import { confirmWords } from "@/shared/feedback/confirm-words";
+import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import { ROW_SX } from "@/shared/ui/row-fold";
-import { copyOverdue, type GivenSponsorList } from "../sponsor-register";
+import { copyOverdue, type GivenSponsorList, SPONSOR_REGISTER_ANCHOR } from "../sponsor-register";
 
 type Props = {
   locale: Locale;
@@ -23,7 +26,18 @@ type Props = {
   now: Date;
   /** The heading's level: 2 on a page, 3 inside a card. */
   level: 2 | 3;
+  /** «Șterge» beside each list (§948); absent for a role that may not delete, and the register is then read-only. */
+  removal?: SponsorListRemoval;
+  /** The page came back from a delete of this register: the fold shows what is left. */
+  saved?: boolean;
 };
+
+/**
+ * «Șterge» on a row of the register (§948): the action, and the page the press comes back to — an event's
+ * registrations list, by its event, or «Newsletter». Handed only to a role that may delete; the server asserts it
+ * again (`sponsor-register.ts#deleteSponsorListRecord`).
+ */
+export type SponsorListRemoval = { action: ActionFormAction; door: "registrations" | "newsletter"; eventId?: string };
 
 type Column = { key: string; label: string; align?: "right"; render: (list: GivenSponsorList) => ReactNode };
 
@@ -34,15 +48,19 @@ type Column = { key: string; label: string; align?: "right"; render: (list: Give
  * fold «Lista pentru sponsori» since §946 — and in the «Newsletter» fold; a fold, closed, its line
  * saying how many lists and the latest one. Nothing is drawn before the first list.
  *
- * A Server Component with nothing to press: the lists are audit rows, read by the caller. Never a
- * participant's name — a row is a list, not its people. One definition of the columns, two layouts,
+ * A Server Component: the lists are audit rows, read by the caller. Never a participant's name — a row is a
+ * list, not its people. Its one press is «Șterge» (§948; the owner, of a list downloaded by mistake: «vreau să
+ * pot șterge (hard delete) și faza asta»), beside each list for the Administrator alone: asked first, by the
+ * recipient and the day, with what goes besides the row — «Dată partenerilor» on each registration of the file —
+ * and when it is right: for a list that reached nobody. One definition of the columns, two layouts,
  * as the backoffice's table does it: a table from `md` up, and below it a line per fact under the
  * recipient, since seven columns at 320 pixels is a sideways scroll. Not `AdminTable`: this is a
  * second table on a page whose address already pages and sorts the first.
  */
-export default async function SponsorListRegister({ locale, lists, now, level }: Props) {
+export default async function SponsorListRegister({ locale, lists, now, level, removal, saved = false }: Props) {
   if (lists.length === 0) return null;
   const t = await getTranslations("Admin");
+  const dialog = removal ? await confirmWords() : null;
   const day = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" });
   const dayTime = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
   const title = t("sponsors.given.title");
@@ -93,6 +111,41 @@ export default async function SponsorListRegister({ locale, lists, now, level }:
   ];
   const [headline, ...facts] = columns;
 
+  /** «Șterge» for one list: its own form, asked first. The same form in the table's last cell and under the phone's lines. */
+  const removeForm = (list: GivenSponsorList, layout: "table" | "lines") => {
+    if (!removal || !dialog) return null;
+    const recipient = list.recipient ?? unnamed;
+    return (
+      <ActionForm
+        action={removal.action}
+        confirm={{
+          title: t("sponsors.given.remove.title"),
+          body: t("sponsors.given.remove.body", { recipient, date: day(list.at) }),
+          // Nobody is written to — not the people of the file, not whoever it named; and the line that says when to press.
+          ...dialog.noMail(recipient, [{ text: t("sponsors.given.remove.onlyMistake") }]),
+          destructive: true,
+          confirmLabel: t("sponsors.given.remove.button"),
+          cancelLabel: dialog.cancel,
+        }}
+        data-testid={`sponsor-register-remove-form-${layout}`}
+      >
+        <input type="hidden" name="uiLocale" value={locale} />
+        <input type="hidden" name="listId" value={list.id} />
+        <input type="hidden" name="door" value={removal.door} />
+        {removal.eventId && <input type="hidden" name="eventId" value={removal.eventId} />}
+        <GlyphSubmitButton
+          icon="delete"
+          label={t("sponsors.given.remove.button")}
+          pendingLabel={t("sponsors.given.remove.pending")}
+          ariaLabel={t("sponsors.given.remove.named", { recipient, date: day(list.at) })}
+          variant="text"
+          color="error"
+          size="small"
+        />
+      </ActionForm>
+    );
+  };
+
   return (
     <Panel
       glyph="partners"
@@ -106,6 +159,8 @@ export default async function SponsorListRegister({ locale, lists, now, level }:
           {t("sponsors.given.aside", { lists: counted, recipient: latest.recipient ?? unnamed, date: day(latest.at) })}
         </Box>
       }
+      id={SPONSOR_REGISTER_ANCHOR}
+      openWhen={{ saved }}
       data-testid="sponsor-register"
     >
       <Box sx={{ display: { xs: "none", md: "block" }, border: 1, borderColor: "divider", borderRadius: 1, overflowX: "auto" }}>
@@ -117,6 +172,8 @@ export default async function SponsorListRegister({ locale, lists, now, level }:
                   {column.label}
                 </TableCell>
               ))}
+              {/* The press's column: no words to read above one button, a name for whoever cannot see it. */}
+              {removal && <TableCell aria-label={t("sponsors.given.columns.remove")} />}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -127,6 +184,11 @@ export default async function SponsorListRegister({ locale, lists, now, level }:
                     {column.render(list)}
                   </TableCell>
                 ))}
+                {removal && (
+                  <TableCell align="right" data-column="remove">
+                    {removeForm(list, "table")}
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>
@@ -147,6 +209,7 @@ export default async function SponsorListRegister({ locale, lists, now, level }:
                 </Typography>
               </Stack>
             ))}
+            {removal && <Box sx={{ display: "flex", justifyContent: "flex-end", pt: 0.5 }}>{removeForm(list, "lines")}</Box>}
           </Box>
         ))}
       </Stack>

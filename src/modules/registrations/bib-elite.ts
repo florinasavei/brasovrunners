@@ -30,6 +30,20 @@ export function bibEliteParts(design: Pick<BibDesign, "eliteNumber" | "eliteSpon
   return { number, sponsors, stubs: sponsors && design.numberStubs && number !== null };
 }
 
+/**
+ * The name a registration marked «Elită» prints where the number goes (§948, amending §897; the owner, 2026-11-15: «cele 6
+ * elite … vor avea BIB-uri doar cu numele mic: Silviu, Ingrid, Paul, Delia»): the person's **first name alone**, as the
+ * registration holds it — one word prints large and is read from the roadside, a full name prints small. A row that
+ * keeps no first name (a registration from before the two halves were stored) prints the registered name, as it did.
+ *
+ * Only a registration's bib: a line of the race's elite list (`elite-list.ts`) prints what the club typed, which is
+ * where any other words go — a full name, a nickname. Decided here once, for the sheet and the picture alike.
+ */
+export function eliteBibName(row: { firstName?: string | null; registeredName: string }): string {
+  const first = (row.firstName ?? "").trim().replace(/\s+/g, " ");
+  return first === "" ? row.registeredName : first;
+}
+
 /** The elite bib's name and number in the number's area, measured in the bold type both renderers embed. */
 export function bibElite(name: string, options: { area: number; scale: number; number: boolean }): BibEliteLayout {
   return bibEliteLayout(name, options, bibTitleWidth);

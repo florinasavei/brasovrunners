@@ -186,7 +186,8 @@ export function cardRegistrationLine(
       return { ...quiet, lead: say("cta.fullNoWaitlist"), bold: true, button: null };
     case "PAUSED":
       // The organizers shut the site's door (§906): the page's own sentence, bold — something to wait for — and no button.
-      return { ...quiet, lead: say(cta.reason === "SWITCH" ? "cta.paused" : "cta.pausedOffersOnly"), bold: true, button: null };
+      // …in the club's own words for this event when it wrote them (§948, `cta.note`), the platform's otherwise.
+      return { ...quiet, lead: cta.reason === "SWITCH" ? (cta.note ?? say("cta.paused")) : say("cta.pausedOffersOnly"), bold: true, button: null };
     case "NOT_YET_OPEN": {
       // The opening date rather than "not yet" (§146) — or "soon" when there is none yet (§451).
       const opensText = cta.opensAt === null ? null : shortDate(cta.opensAt);

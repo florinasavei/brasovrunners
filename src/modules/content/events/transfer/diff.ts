@@ -273,6 +273,7 @@ export const FIELD_LABELS = [
   "translations.seoDescription",
   "translations.discountNote",
   "translations.weatherNote",
+  "translations.pausedNote",
 ] as const;
 
 /** The message key and the language of a leaf's label: `translations.ro.title` is `translations.title` in `ro`. */

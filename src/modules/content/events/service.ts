@@ -644,6 +644,8 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // «Kit de participare» → «Tricou» (§554), by the same discipline: a caller that did not post the
     // card writes nothing, so no save takes the shirt off an event by not mentioning it.
     ...(fields.kitShirt === undefined ? {} : { kitShirt: fields.kitShirt }),
+    // «Avem tombolă» (§949), by the same discipline: a caller that did not post the box writes nothing.
+    ...(fields.hasRaffle === undefined ? {} : { hasRaffle: fields.hasRaffle }),
     // «Locurile din lista de așteptare se alocă automat» (§615), by the same discipline: a caller that
     // did not post the select writes nothing, so no save changes who hands out the places by omission.
     ...(fields.waitlistAutoOffer === undefined ? {} : { waitlistAutoOffer: fields.waitlistAutoOffer }),
@@ -1213,6 +1215,7 @@ type OptionalTextColumns = {
   seoDescription?: string | null;
   discountNote?: string | null;
   weatherNote?: string | null;
+  pausedNote?: string | null;
 };
 
 /**
@@ -1238,6 +1241,9 @@ function writtenOptionalTexts(row: OptionalTextColumns, weatherMode: WeatherMode
     // is hidden and the text shows nowhere, and a hidden box never blocks the save (§350). The save
     // that switches back to the club's text is the one that asks for both languages.
     weatherNote: weatherMode === "custom" && isWrittenText(row.weatherNote),
+    // «Mesaj cât înscrierile pe site sunt oprite» (§948): its strip stands beside the tick whatever the tick says,
+    // so it is asked in both languages whenever one is written — a visitor never reads the other language's (§28).
+    pausedNote: isWrittenText(row.pausedNote),
   };
 }
 
@@ -2116,6 +2122,8 @@ const SERIES_TRANSLATION_COLUMNS = [
   "discountNote",
   // The club's weather text travels with «Vremea» above (§666): the icy trail is icy on every date.
   "weatherNote",
+  // The club's sentence for a shut door travels with «Înscrieri publice deschise» above (§948, §906).
+  "pausedNote",
 ] as const;
 
 /** Equal as stored: dates by their instant, JSON by its text, null by null. */
@@ -3261,6 +3269,7 @@ function blankEventRow(now: Date): EditableEvent {
     acceptsVolunteers: false,
     // «Oferim tricouri voluntarilor» (§765): off the same way.
     volunteersShirts: false,
+    volunteerBibStart: null,
     // «Arată public câți voluntari mai sunt necesari» (§773): off the same way — a public number is the club's choice, event by event.
     volunteersShowCounts: false,
     // «Lista voluntarilor e publică pe pagina evenimentului» (§821): off the same way — a name on a public page is never the default. A copy and a repeat carry the source's tick (`copiedEventValues`).
@@ -3304,6 +3313,7 @@ function blankEventRow(now: Date): EditableEvent {
     registrationClosesAt: null,
     publicRegistrationOpen: true,
     kitShirt: false,
+    hasRaffle: false,
     askHealthNote: false,
     declarationDocumentId: null,
     externalProvider: null,
@@ -3346,6 +3356,7 @@ function blankTranslationRow(eventId: string, locale: Locale, now: Date): Editab
     seoDescription: null,
     discountNote: null,
     weatherNote: null,
+    pausedNote: null,
     authorStaffUserId: null,
     reviewedByStaffUserId: null,
     version: 1,
@@ -4047,6 +4058,8 @@ function copiedTranslationValues(
     discountNote: translation.discountNote,
     // The club's weather text (§666) travels with «Vremea», which `copiedEventValues` carries.
     weatherNote: translation.weatherNote,
+    // The club's sentence for a shut door (§948) travels with the door's switch, which `copiedEventValues` carries.
+    pausedNote: translation.pausedNote,
     authorStaffUserId: actor.id,
     createdAt: now,
     updatedAt: now,

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { newcomerWouldQueue, offersByItself, offersOnlyShut, registrationCta, type RegistrationCtaInput } from "@/modules/events/domain/registration-cta";
 import { emailSampleFor, placeholdersFilledBy } from "@/modules/notifications/email-copy-fields";
 import { placesAlertSentOf, placesAlertStep } from "@/modules/registrations/domain/places-alert";
-import { publicDoorOpen } from "@/modules/registrations/domain/public-door";
+import { MAX_PAUSED_NOTE, pausedNoteOf, publicDoorOpen } from "@/modules/registrations/domain/public-door";
 import { publicNow, publicNowSetting } from "@/modules/registrations/domain/public-now";
 import { newcomerJoinsLine, offersOnItsOwn, publicEntryQueues } from "@/modules/registrations/domain/waitlist";
 
@@ -74,6 +74,23 @@ describe("the public card's door (§906)", () => {
     expect(registrationCta(open({ publicRegistrationOpen: false }), NOW)).toEqual({ kind: "PAUSED", reason: "SWITCH" });
     // Before the window or after it, the dates speak.
     expect(registrationCta(open({ publicRegistrationOpen: false, registrationClosesAt: new Date("2026-11-01T00:00:00Z") }), NOW).kind).toBe("CLOSED");
+  });
+
+  it("§948 the shut door carries the club's own sentence when the row has one — trimmed, never blank — and only for the switch", () => {
+    const own = "Înscrierile s-au încheiat. Ne vedem la start!";
+    expect(registrationCta(open({ publicRegistrationOpen: false, pausedNote: `  ${own}  ` }), NOW)).toEqual({ kind: "PAUSED", reason: "SWITCH", note: own });
+    // No note, an empty one, spaces alone: the state as it always was, and the surface says the platform's sentence.
+    for (const pausedNote of [null, undefined, "", "   "]) {
+      expect(registrationCta(open({ publicRegistrationOpen: false, pausedNote }), NOW)).toEqual({ kind: "PAUSED", reason: "SWITCH" });
+    }
+    // The door open: the note is kept and never read.
+    expect(registrationCta(open({ publicRegistrationOpen: true, pausedNote: own }), NOW)).not.toHaveProperty("note");
+    // The other shut door has its own words: the free places are the organizers' to give.
+    expect(registrationCta(open({ freePlacesByOfferOnly: true, waitlistCapacity: 0, pausedNote: own }), NOW)).toEqual({ kind: "PAUSED", reason: "OFFERS_ONLY" });
+    expect(pausedNoteOf({ pausedNote: ` ${own} ` })).toBe(own);
+    expect(pausedNoteOf({ pausedNote: " " })).toBeNull();
+    expect(pausedNoteOf(null)).toBeNull();
+    expect(MAX_PAUSED_NOTE).toBe(200);
   });
 
   it("«Locurile libere le dau doar eu» draws the waiting list's door beside free places, never «Înscrie-te»", () => {

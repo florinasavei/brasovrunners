@@ -8,7 +8,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { addVolunteerAction } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
-import { setVolunteerKitAction } from "@/app/[locale]/admin/volunteers/actions";
+import { setVolunteerKitAction, setVolunteerRaffleAction } from "@/app/[locale]/admin/volunteers/actions";
 import { addVolunteerNoteFromListAction } from "@/app/[locale]/admin/volunteers/[id]/note-actions";
 import { getDb } from "@/db/client";
 import { VOLUNTEER_NOTE_MAX } from "@/db/schema/event-volunteer-notes";
@@ -22,6 +22,7 @@ import { findCurrentApprovedDocument, volunteerMinorsOpen } from "@/modules/lega
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import NotesMark from "@/modules/registrations/ui/NotesMark";
 import { buildListHref, pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
+import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
@@ -189,6 +190,16 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const scopeEvent = events.find((event) => event.id === filters.eventId) ?? null;
   // «Adaugă un voluntar de mână» for the event in scope (§862): the context a person's page reads, coming back to this page of the list.
   const scopeEventRow = scopeEvent ? await findEventForRegistrationById(db, scopeEvent.id) : undefined;
+  // «Punct» (§949): with one event chosen that has points on its route, each row says where its person stands — the point's place
+  // in the route's order and its name, as «Planul voluntarilor» says them. One read for the page, never one per row.
+  const pointNames = scopeEvent
+    ? new Map(
+        (await listCheckpoints(db, scopeEvent.id)).map((point, index) => [
+          point.id,
+          t("volunteers.plan.columnPoint", { number: index + 1, name: locale === "ro" ? point.nameRo : point.nameEn }),
+        ]),
+      )
+    : new Map<string, string>();
   const [addContext, personBoxes] = scopeEventRow ? await Promise.all([volunteerPersonContextOf(db, scopeEventRow, locale, new Date(), returnTo), volunteerPersonBoxes(t)]) : [null, null];
   // The action's language-neutral code (AGENTS.md §14.3) becomes a sentence here; an unknown code says nothing.
   const errorCode = volunteerError && /^[A-Z_]{1,48}$/.test(volunteerError) && t.has(`errors.${volunteerError}`) ? volunteerError : null;
@@ -269,6 +280,21 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       <input type="hidden" name="hasKit" value={row.hasKit ? "0" : "1"} />
       <TickButton checked={row.hasKit} aria-label={`${t("volunteers.person.hasKit")}: ${shortText(row.name)}`} data-testid="volunteer-kit-tick">
         {t("volunteers.person.hasKit")}
+      </TickButton>
+    </Box>
+  );
+
+  /**
+   * «Participă la tombolă» on a row (§949): the kit tick's own shape — a plain form posting the state it wants (`inRaffle=1|0`). Drawn
+   * for an event that holds a raffle («Avem tombolă» in its editor); the service asks for the role.
+   */
+  const raffleTick = (row: VolunteerAdminRow) => (
+    <Box component="form" action={setVolunteerRaffleAction} data-testid="volunteer-raffle-form">
+      {hidden(row)}
+      <input type="hidden" name="volunteerId" value={row.id} />
+      <input type="hidden" name="inRaffle" value={row.inRaffle ? "0" : "1"} />
+      <TickButton checked={row.inRaffle} aria-label={`${t("volunteers.screen.raffleTick")}: ${shortText(row.name)}`} data-testid="volunteer-raffle-tick">
+        {t("volunteers.screen.raffleTick")}
       </TickButton>
     </Box>
   );
@@ -372,6 +398,19 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           <StatusChip glyph="open" color="warning" variant="outlined" label={t("volunteers.unassigned.title")} testId="volunteer-unassigned" />
         ),
     },
+    // Read here, set on «Planul voluntarilor»: a cancelled person keeps their point in case they come back, and shows none.
+    ...(pointNames.size > 0
+      ? [
+          {
+            key: "point",
+            label: t("volunteers.plan.column"),
+            hint: t("volunteers.plan.columnHint"),
+            omitEmptyOnPhone: true,
+            render: (row) =>
+              row.checkpointId && row.state !== "CANCELLED" && pointNames.has(row.checkpointId) ? <span data-testid="volunteer-point">{pointNames.get(row.checkpointId)}</span> : null,
+          } satisfies AdminColumn<VolunteerAdminRow>,
+        ]
+      : []),
     {
       key: "offered",
       label: t("volunteers.person.offeredFor"),
@@ -384,6 +423,17 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       label: t("volunteers.screen.columnKit"),
       render: kitTick,
     },
+    // «Tombolă» (§949): with one event chosen that holds a raffle, whether each volunteer's number is on the raffle's list.
+    ...(scopeEventRow?.hasRaffle
+      ? [
+          {
+            key: "raffle",
+            label: t("volunteers.screen.columnRaffle"),
+            hint: t("volunteers.screen.raffleHint"),
+            render: raffleTick,
+          } satisfies AdminColumn<VolunteerAdminRow>,
+        ]
+      : []),
     {
       key: "event",
       label: t("nav.events"),
@@ -451,6 +501,17 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
             {/* The roles, the switches and the invitations stay on the event's card (§754, §761): one link to it. */}
             <GlyphButton icon="role" href={eventCardHref(scopeEvent.id)} variant="outlined" size="small" sx={TAP_TARGET} data-testid="volunteers-event-card">
               {t("volunteers.screen.eventCard")}
+            </GlyphButton>
+            {/* «Planul voluntarilor» (§949): who stands at which point of the route — the event's own page, built and printed there. */}
+            <GlyphButton
+              icon="route"
+              href={getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id: scopeEvent.id } } })}
+              variant="outlined"
+              size="small"
+              sx={TAP_TARGET}
+              data-testid="volunteers-plan"
+            >
+              {t("volunteers.plan.open")}
             </GlyphButton>
             {/* The event's file (§761): one row per volunteer, addresses included — the card's own links, here too; Excel first, the CSV for whoever feeds it to something else. */}
             <GlyphButton icon="spreadsheet" href={`/api/admin/events/${scopeEvent.id}/volunteers?format=xlsx&lang=${locale}`} variant="outlined" size="small" sx={TAP_TARGET} data-testid="volunteers-xlsx">

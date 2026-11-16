@@ -193,6 +193,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/events/[id]/locuri",
       // The organizer's own message to the event's participants (§364): written by hand, per send.
       "/admin/events/[id]/mesaje",
+      // «Planul voluntarilor» (§949): who stands at which point of the route, by hand like the pages beside it.
+      "/admin/events/[id]/plan-voluntari",
       // A race's results (§808), entered or imported by race number and ranked: by hand, like the pages beside it.
       "/admin/events/[id]/results",
       // The finish line (§850): a number typed, a time stamped — by hand, like the results page it belongs to.
