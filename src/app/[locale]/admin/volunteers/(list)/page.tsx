@@ -74,7 +74,7 @@ function isVolunteerState(value: string | undefined): value is VolunteerState {
 }
 
 /**
- * A person's message in the list's «Mesaj» column (§NNN): the words as typed, their line breaks kept, a few lines of a
+ * A person's message in the list's «Mesaj» column (§947): the words as typed, their line breaks kept, a few lines of a
  * sentence's width — the floor keeps a full table from squeezing it to a word a line (the registrations list's lesson,
  * §943), on the wide table only; a phone's card keeps its own width. `overflow-wrap`, not `word-break`: a word too long
  * for the cell still breaks, and the column is never counted as one character wide.
@@ -319,7 +319,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     },
     {
       /*
-        «Vârstă» (§NNN; the owner, 2026-11-16: «In lista de voluntari trebuie sa vad varsta si orasul»): the age on the event's day
+        «Vârstă» (§947; the owner, 2026-11-16: «In lista de voluntari trebuie sa vad varsta si orasul»): the age on the event's day
         (§773) — the one the parent's agreement goes by —, a bare number as the registrations list says it (§660). «—» for a person who
         gave none. Until now both answers were read only on the person's page and in the files.
       */
@@ -335,7 +335,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       ),
     },
     {
-      // «Oraș» (§NNN): the city as the person typed it; «—» for a person who gave none.
+      // «Oraș» (§947): the city as the person typed it; «—» for a person who gave none.
       key: "city",
       label: t("registrations.columnCity"),
       sortable: true,
@@ -350,7 +350,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     },
     {
       /*
-        «Mesaj» (§NNN; the owner, 2026-11-16: «trebuie sa vad coloana de comentarii a voluntarilor in grid, sa stiu direct»): what
+        «Mesaj» (§947; the owner, 2026-11-16: «trebuie sa vad coloana de comentarii a voluntarilor in grid, sa stiu direct»): what
         the person wrote for the organizers on the form — at most `VOLUNTEER_MESSAGE_MAX` characters, so the whole of it, as typed,
         line breaks kept. Until now it was read only on the person's page and in the files. Nothing for whoever wrote none: an empty
         cell in the table, no line at all on a phone's card.

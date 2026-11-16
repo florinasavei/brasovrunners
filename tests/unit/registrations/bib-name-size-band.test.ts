@@ -21,7 +21,7 @@ import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { drawnRuns } from "../../helpers/pdf-drawn";
 
 /**
- * §NNN, BR-REQ-038-01 — two choices of the bib's designer, each off until the club makes it (the owner, 2026-11-16:
+ * §947, BR-REQ-038-01 — two choices of the bib's designer, each off until the club makes it (the owner, 2026-11-16:
  * «vreau ca numele alergatorului sa fie un pic mai mare», «si banda cu Brasov runners vreau sa fie dintr-un capat in
  * altul, ca si fundal»): «Mărimea numelui» and «Banda dintr-un capăt în altul». The sheet is checked through what
  * pdfkit is asked to draw, the picture through its pixels; a design saved before draws what it drew.
@@ -71,7 +71,7 @@ const near = (a: number[], b: number[]) => a.every((part, index) => Math.abs(par
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("§NNN the two choices in the design", () => {
+describe("§947 the two choices in the design", () => {
   it("reads a design saved before as the name and the band every bib had", () => {
     const before = readBibDesign({ showName: true, namePosition: "below" });
     expect(before.nameScale).toBe("normal");
@@ -100,7 +100,7 @@ describe("§NNN the two choices in the design", () => {
   });
 });
 
-describe("§NNN «Mărimea numelui»: the strip of each size", () => {
+describe("§947 «Mărimea numelui»: the strip of each size", () => {
   it("is the layout's own strip at «Normală», and for anything unknown", () => {
     const normal = { size: L.nameSize, block: L.nameBlock, top: L.nameTop, blankShift: 0 };
     expect(bibNameStrip("normal")).toEqual(normal);
@@ -130,7 +130,7 @@ describe("§NNN «Mărimea numelui»: the strip of each size", () => {
   });
 });
 
-describe("§NNN a long name under a larger size is set smaller, never cut sooner", () => {
+describe("§947 a long name under a larger size is set smaller, never cut sooner", () => {
   it("sets a name that fits at the strip's own size and top", () => {
     for (const scale of BIB_NAME_SCALES) {
       const strip = bibNameStrip(scale);
@@ -164,7 +164,7 @@ describe("§NNN a long name under a larger size is set smaller, never cut sooner
   });
 });
 
-describe("§NNN «Mărimea numelui» on the sheet", () => {
+describe("§947 «Mărimea numelui» on the sheet", () => {
   it("prints the name at the size chosen, the strip growing upwards from the same foot", async () => {
     const normal = await sheet({});
     const large = await sheet({ design: design({ nameScale: "large" }) });
@@ -215,7 +215,7 @@ describe("§NNN «Mărimea numelui» on the sheet", () => {
   });
 });
 
-describe("§NNN «Banda dintr-un capăt în altul» on the sheet", () => {
+describe("§947 «Banda dintr-un capăt în altul» on the sheet", () => {
   const band: Rect = [BIB_MARGIN, BIB_MARGIN, BIB_CARD.width, L.bandHeight];
   const bleed: Rect = [0, 0, BIB_PAPER.width, BIB_MARGIN + L.bandHeight];
   const has = (rects: Rect[], want: Rect) => rects.some((rect) => rect.every((part, index) => Math.abs(part - want[index]) < 1e-9));
@@ -251,7 +251,7 @@ describe("§NNN «Banda dintr-un capăt în altul» on the sheet", () => {
   });
 });
 
-describe("§NNN the picture draws both as the sheet does", () => {
+describe("§947 the picture draws both as the sheet does", () => {
   /** A point well inside the white margin, clear of the paper's drawn edge (§338). */
   const MARGIN = 7;
   const bandFoot = Math.round(px(BIB_MARGIN + L.bandHeight));

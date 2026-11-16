@@ -112,7 +112,7 @@ export type ComposerLabels = {
    * only, never advertising, a sponsor's offer or another event. Under the body box, no tick.
    */
   bodyScope: string;
-  /** How a word is made bold in the body (§NNN): between two asterisks on each side. One line, under the body's help. */
+  /** How a word is made bold in the body (§947): between two asterisks on each side. One line, under the body's help. */
   bodyFormat: string;
   identical: string;
   preview: string;
@@ -134,7 +134,7 @@ export type ComposerLabels = {
   /** «Trimite și numărul de concurs și codul QR» (§943) and its help line: only the confirmed get them, each their own. */
   sendQr: string;
   sendQrHelp: string;
-  /** «Trimite și linkul pentru semnarea declarației» (§NNN) and its help line: only those who owe the declaration get it, each their own. */
+  /** «Trimite și linkul pentru semnarea declarației» (§947) and its help line: only those who owe the declaration get it, each their own. */
   signLink: string;
   signLinkHelp: string;
   /**
@@ -165,7 +165,7 @@ export type PreviewInput = {
   askReconfirm: boolean;
   /** The tick «Trimite și numărul de concurs și codul QR» as it stands: the preview draws the example runner's block (§943). */
   sendQr: boolean;
-  /** The tick «Trimite și linkul pentru semnarea declarației» as it stands: the preview draws «Semnează declarația» (§NNN). */
+  /** The tick «Trimite și linkul pentru semnarea declarației» as it stands: the preview draws «Semnează declarația» (§947). */
   signLink: boolean;
 };
 export type PreviewResult = { subject: string; html: string; unknown: string[] } | null;
@@ -258,7 +258,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
   // «Trimite și numărul de concurs și codul QR» (§943): off unless ticked; controlled too, so a refused send keeps it (§315).
   // Either tick starts as the send to the people ticked left it, when the page comes back from one (§945).
   const [sendQr, setSendQr] = useState(() => (recall.has ? recall.value("sendQr") === "1" : kept?.sendQr === true));
-  // «Trimite și linkul pentru semnarea declarației» (§NNN): off unless ticked, controlled and kept the same way.
+  // «Trimite și linkul pentru semnarea declarației» (§947): off unless ticked, controlled and kept the same way.
   const [signLink, setSignLink] = useState(() => (recall.has ? recall.value("signLink") === "1" : kept?.signLink === true));
   // Any of the three ticks as the form holds it now — what a press would post.
   const readTick = useCallback(
@@ -558,7 +558,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
       </Box>
 
       {/*
-        «Trimite și linkul pentru semnarea declarației» (§NNN): the email of each registration that owes its declaration
+        «Trimite și linkul pentru semnarea declarației» (§947): the email of each registration that owes its declaration
         gets «Semnează declarația», its own link, under these words. The help line says who gets it and who does not.
       */}
       <Box data-testid="participant-message-sign-link">

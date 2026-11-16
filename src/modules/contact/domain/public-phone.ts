@@ -29,7 +29,7 @@ function digitCount(value: string): number {
 
 /**
  * Whether a typed value is written like a telephone number — the check «Telefon public» and the bib's emergency phone share (§750).
- * `minDigits` is the bib's door (§NNN): an emergency number is as short as «112», which a club's own public number never is.
+ * `minDigits` is the bib's door (§947): an emergency number is as short as «112», which a club's own public number never is.
  */
 export function isPhoneNumberShaped(value: string, minDigits: number = MIN_DIGITS): boolean {
   return PHONE_SHAPE.test(value) && digitCount(value) >= minDigits && digitCount(value) <= MAX_DIGITS;

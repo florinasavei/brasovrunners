@@ -176,7 +176,7 @@ describe("§249 the bib's design, saved and read back", () => {
     // Nor the profile's source, picture, figures and orientation, the phone's label and second number (§759).
     // Nor where the figures stand (§804, amended): the strip's right.
     // Nor the elite bibs' two ticks (§895): off, the name alone.
-    // Nor the name's size and the band to the paper's edge (§NNN): the name at its size, the band inside the margin.
+    // Nor the name's size and the band to the paper's edge (§947): the name at its size, the band inside the margin.
     const footerKeys = [
       "showEmail", "showPartners", "showEventInFooter", "showWebsite", "footerText", "headerImageCrop", "sponsorImageCrop", "member", "numberFormat", "sponsorPlace", "showProfile", "showEmergency", "emergencyPhone", "emergencyUpsideDown", "showDistance", "numberStubs", "showCheckpoints", "showCheckpointTimes", "showProfileScale",
       "profileSource", "profileImageSrc", "showProfileFigures", "profileFiguresPlace", "profileOrientation", "emergencyLabel", "emergencyPhoneLabel", "emergencyPhone2", "emergencyPhone2Label", "emergencyPhone3", "emergencyPhone3Label",

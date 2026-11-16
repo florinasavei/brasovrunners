@@ -284,7 +284,7 @@ describe("§364 the organizer's message to an event's participants", () => {
     // "Mesaje trimise" is read from these rows: date, subject, group, count, sender.
     // Since «Cere reconfirmarea»: the send's id, its tick (no ask here, so no answers) and its progress, the test row left out.
     // Since §943: whether «Trimite și numărul de concurs și codul QR» was ticked (not here), and for how many confirmed.
-    // Since §NNN: the same two for «Trimite și linkul pentru semnarea declarației» (not ticked here either).
+    // Since §947: the same two for «Trimite și linkul pentru semnarea declarației» (not ticked here either).
     expect(await listParticipantMessages(db, event.id)).toEqual([
       {
         at: NOW,

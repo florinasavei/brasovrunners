@@ -312,7 +312,7 @@ export const EMAIL_EMPHASIS = {
 } as const;
 
 /**
- * The organizers' own words in «Trimite un mesaj participanților» (§NNN; the owner, 2026-11-16: «as vrea sa aiba alt
+ * The organizers' own words in «Trimite un mesaj participanților» (§947; the owner, 2026-11-16: «as vrea sa aiba alt
  * font si alt backround acest mesaj, sa fie mai vizibil»): a panel of their own, so the eye tells what the organizers
  * wrote from what every message says — the club's secondary colour walked pale behind the words, its ink step as the
  * left edge, the body's ink for the words, and a serif face that no other part of an email wears. No new colour: both

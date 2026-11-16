@@ -520,7 +520,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const asMember = elite === null && input.member === true && design.member.enabled;
   // An elite bib has no name strip: its name is in the number's place.
   const showName = elite === null && design.showName;
-  // «Mărimea numelui» (§NNN): the strip of the size the club chose, as the sheet reads it.
+  // «Mărimea numelui» (§947): the strip of the size the club chose, as the sheet reads it.
   const nameStrip = bibNameStrip(design.nameScale);
   const band = asMember ? bibMemberBandColour(design.member, input.bandColour) : bibBandColour(input.bandColour);
   const bandText = bandTextColour(band);
@@ -621,7 +621,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   /**
    * The name, above the number or below it — and nowhere when the club switched it off — in the
    * strip the sheet gives it, at the sheet's size, cut with "…" where the sheet cuts it. Under a larger
-   * size a long name is set smaller, never cut sooner than the normal size cuts it (§NNN): the sheet's fit.
+   * size a long name is set smaller, never cut sooner than the normal size cuts it (§947): the sheet's fit.
    */
   const nameFit = bibNameFit(input.registeredName ?? "", nameStrip, BIB_CARD.width - 2 * (L.inset + nameReserve), bibTitleWidth);
   const name = showName ? (
@@ -789,7 +789,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
             ) : null}
           </div>
         ) : null}
-        {/* «Banda dintr-un capăt în altul» (§NNN): the band's colour through the white margin to the paper's left, right
+        {/* «Banda dintr-un capăt în altul» (§947): the band's colour through the white margin to the paper's left, right
             and top edges, behind the band itself — which keeps its place, its lockup and its race. Never under a header
             picture or a member's card: only the coloured band reaches the edge, as on the sheet. */}
         {design.bandBleed && !header && !asCard ? (

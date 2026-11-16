@@ -186,7 +186,7 @@ describe("the ready reminder text, in both catalogues", () => {
     }
   });
 
-  it("says what the answer is for — never that it is optional (§NNN) —, points a declaration or an offer at its own email, and never says silence costs the place", () => {
+  it("says what the answer is for — never that it is optional (§947) —, points a declaration or an offer at its own email, and never says silence costs the place", () => {
     expect(textOf(ro).p2).toContain("{eventTitle} e aproape:");
     expect(textOf(en).p2).toContain("{eventTitle} is coming up:");
     expect(textOf(ro).p4).toBe("Dacă nu mai poți ajunge, apasă „Nu mai pot ajunge”, ca să poată veni altcineva în locul tău.");
@@ -201,7 +201,7 @@ describe("the ready reminder text, in both catalogues", () => {
       // The old sentences: a waiting person's «place» promised to the waiting list, and «exactly as it is» for somebody who still owes a signature.
       expect(all).not.toMatch(/lista de așteptare|waiting list|exact cum e|exactly as it is/i);
       expect(all).not.toMatch(/pierzi|se anulează automat|vei fi anulat|lose your place|cancelled automatically|will be cancelled/i);
-      // §NNN (the owner: «nu scrie nicaieri ca "nu e obligatoriu", vreau sa incurajez oamenii sa reconfirme»): the ready text
+      // §947 (the owner: «nu scrie nicaieri ca "nu e obligatoriu", vreau sa incurajez oamenii sa reconfirme»): the ready text
       // encourages the answer and calls it neither optional nor required — nothing happens to whoever does not press.
       expect(all).not.toMatch(/opțional|obligatoriu|optional|mandatory|required/i);
     }
@@ -219,7 +219,7 @@ describe("the ready reminder text, in both catalogues", () => {
     // The page's button is not the RSVP feature's «Da, vin».
     expect(ro.Registrations.reconfirm.yes).toBe("Da, vin la cursă");
     expect(ro.Registrations.reconfirm.yesOther).toBe("Da, vin la eveniment");
-    // The line under it says what the answer is for, and — since §NNN — never that it is optional, nor that it is required.
+    // The line under it says what the answer is for, and — since §947 — never that it is optional, nor that it is required.
     expect(ro.Registrations.reconfirm.why).toBe("Răspunsul tău ne ajută să știm pe cine așteptăm la start.");
     expect(en.Registrations.reconfirm.why).toBe("Your answer tells us who to expect at the start.");
     for (const catalogue of [ro, en]) expect(JSON.stringify(catalogue.Registrations.reconfirm)).not.toMatch(/opțional|obligatoriu|optional|mandatory|required/i);

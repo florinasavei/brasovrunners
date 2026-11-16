@@ -275,7 +275,7 @@ describe("§364 §96 §354 the message as it arrives", () => {
     expect(email.text.indexOf("Hi, Ana Pop!")).toBeLessThan(email.text.indexOf("Salut, Ana Pop!"));
   });
 
-  it("escapes what the organizer typed, and reads **bold** in it and nothing else (§NNN, amending §364)", () => {
+  it("escapes what the organizer typed, and reads **bold** in it and nothing else (§947, amending §364)", () => {
     const email = render("ro", { ...DATA, organizerBody: "Aduceți <b>**frontala**</b> & apă.", organizerBodyOther: "Bring a __head torch__, **please**." });
     // Escaped first, then the marker: a tag somebody typed stays text, and the bold wraps text already made safe.
     expect(email.html).toContain("Aduceți &lt;b&gt;<strong>frontala</strong>&lt;/b&gt; &amp; apă.");
@@ -291,7 +291,7 @@ describe("§364 §96 §354 the message as it arrives", () => {
     expect(loose.html).toContain("2 ** 3 și **deschis");
   });
 
-  it("draws the organizers' words as one panel of their own: a tinted ground, an edge and a serif face (§NNN)", () => {
+  it("draws the organizers' words as one panel of their own: a tinted ground, an edge and a serif face (§947)", () => {
     const email = render("ro");
     const panels = [...email.html.matchAll(/<div data-email-part="organizer-words" style="([^"]*)">([^]*?)<\/div>/g)];
     // One per half, each holding that half's whole message — the paragraphs and the line breaks as typed.
@@ -619,12 +619,12 @@ describe("§943 the flag decides a block of an email, and nothing else", () => {
 });
 
 /**
- * §NNN — «Trimite și linkul pentru semnarea declarației» (the owner, 2026-11-16: «vreau ca cei care nu au semnat declaratia
+ * §947 — «Trimite și linkul pentru semnarea declarației» (the owner, 2026-11-16: «vreau ca cei care nu au semnat declaratia
  * sa o poata semna»; BR-REQ-080-01, BR-REQ-036-02). The pure half: the row's flag, who it draws for, and the button itself
  * — «Semnează declarația» with its one sentence, above «Vin» and «Nu mai pot ajunge». The send, the link the renderer
  * mints and the screens are `tests/integration/notifications/participant-message-sign-link.test.ts`.
  */
-describe("§NNN «Trimite și linkul pentru semnarea declarației»: the row's flag, and who it draws for", () => {
+describe("§947 «Trimite și linkul pentru semnarea declarației»: the row's flag, and who it draws for", () => {
   const NOW = new Date("2026-11-16T09:00:00.000Z");
   const AHEAD = new Date("2026-11-21T08:00:00.000Z");
 
@@ -677,7 +677,7 @@ describe("§NNN «Trimite și linkul pentru semnarea declarației»: the row's f
   });
 });
 
-describe("§NNN the button in the message: «Semnează declarația», under the organizers' words", () => {
+describe("§947 the button in the message: «Semnează declarația», under the organizers' words", () => {
   const SIGN = "https://example.test/ro/inregistrari/declaratie/SECRET";
   const CANCEL = "https://example.test/ro/inregistrari/gestionare/OTHER#cancel";
   const DATA: TemplateData = {
@@ -757,7 +757,7 @@ describe("§NNN the button in the message: «Semnează declarația», under the 
   });
 });
 
-describe("§NNN the tick's words, in both catalogues", () => {
+describe("§947 the tick's words, in both catalogues", () => {
   const wordsOf = (catalogue: typeof ro) => catalogue.Admin.participantMessages;
 
   it("names the tick, says who gets the link and that it replaces the earlier one, and how «Mesaje trimise» says it", () => {
@@ -789,11 +789,11 @@ describe("§NNN the tick's words, in both catalogues", () => {
 });
 
 /**
- * The structural half of «nothing reads the flag but the send and the renderer» (§NNN), as §943's above: the files that
+ * The structural half of «nothing reads the flag but the send and the renderer» (§947), as §943's above: the files that
  * name the flag or its rules are a reviewed list — none of the allocator's, the capacity formula's, a state's or a
  * deadline's is on it. The link itself signs nothing: the declaration's own page and service do, as for any other link.
  */
-describe("§NNN the flag decides a button of an email, and nothing else", () => {
+describe("§947 the flag decides a button of an email, and nothing else", () => {
   const ROOT = process.cwd();
   const NAMES_THE_FLAG = /\bsignLink\b|readOrganizerSignLink|organizerSignLinkApplies|isOrganizerSignStatus/;
   const READERS = [

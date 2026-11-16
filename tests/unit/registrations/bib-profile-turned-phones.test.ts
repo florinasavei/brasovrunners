@@ -335,7 +335,7 @@ describe("§759 the profile turned for the runner, and with the phone as one blo
 });
 
 describe("§759 «Eticheta telefonului» and two numbers on one line", () => {
-  it("prints the club's label, each number after its own name and a colon, one line, a bar between (§NNN)", () => {
+  it("prints the club's label, each number after its own name and a colon, one line, a bar between (§947)", () => {
     const line = bibEmergencyLine(
       design({ showEmergency: true, emergencyLabel: "Număr de urgență", emergencyPhoneLabel: "Coordonator", emergencyPhone: PHONE_A, emergencyPhone2Label: "Medic", emergencyPhone2: PHONE_B }),
       "Urgențe",
@@ -343,7 +343,7 @@ describe("§759 «Eticheta telefonului» and two numbers on one line", () => {
     expect(line).toBe(`Număr de urgență: Coordonator: ${PHONE_A} | Medic: ${PHONE_B}`);
     // A number without a name prints alone; the second alone prints alone; none prints no line.
     expect(bibEmergencyLine(design({ showEmergency: true, emergencyPhone: PHONE_A, emergencyPhone2: PHONE_B }), "Urgențe")).toBe(`Urgențe: ${PHONE_A} | ${PHONE_B}`);
-    // A number that says whose it is needs no word before it: the sheet's own word prints only beside a number with no name (§NNN).
+    // A number that says whose it is needs no word before it: the sheet's own word prints only beside a number with no name (§947).
     expect(bibEmergencyLine(design({ showEmergency: true, emergencyPhone2: PHONE_B, emergencyPhone2Label: "Medic" }), "Emergency")).toBe(`Medic: ${PHONE_B}`);
     expect(bibEmergencyLine(design({ showEmergency: true, emergencyPhoneLabel: "Coordonator" }), "Urgențe")).toBeNull();
     expect(bibEmergencyLine(design({ showEmergency: false, emergencyPhone: PHONE_A }), "Urgențe")).toBeNull();

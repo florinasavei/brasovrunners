@@ -61,9 +61,9 @@ export type BibDesignFormValues = {
   /** «Cum arată numărul» (§735): `plain`, `pad3` or `pad4`; anything else is the schema's to refuse. */
   numberFormat: string;
   namePosition: string;
-  /** «Mărimea numelui» (§NNN): `normal`, `large` or `larger`; anything else is the schema's to refuse. */
+  /** «Mărimea numelui» (§947): `normal`, `large` or `larger`; anything else is the schema's to refuse. */
   nameScale: string;
-  /** «Banda dintr-un capăt în altul» (§NNN): off by default. */
+  /** «Banda dintr-un capăt în altul» (§947): off by default. */
   bandBleed: boolean;
   /** «Locul benzii cu sponsori» (§750): `bottom` or `above`; anything else is the schema's to refuse. */
   sponsorPlace: string;

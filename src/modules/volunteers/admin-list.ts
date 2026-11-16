@@ -95,17 +95,17 @@ function noRoleGiven(): SQL {
  */
 function orderOf(sort: VolunteerSortKey, dir: "asc" | "desc"): SQL[] {
   const direction = (column: SQL) => (dir === "asc" ? asc(column) : desc(column));
-  // An answer a person may not have given (§NNN): the rows without it come last either way, as on the registrations list (§660).
+  // An answer a person may not have given (§947): the rows without it come last either way, as on the registrations list (§660).
   const answered = (column: SQL) => (dir === "asc" ? sql`${column} asc nulls last` : sql`${column} desc nulls last`);
   const tie = asc(eventVolunteers.createdAt);
   switch (sort) {
     case "name":
       return [direction(sql`lower(${eventVolunteers.name})`), tie];
     case "age":
-      // «Vârstă» (§NNN): the age on the event's day (§773), the youngest first.
+      // «Vârstă» (§947): the age on the event's day (§773), the youngest first.
       return [answered(sql`${eventVolunteers.age}`), tie];
     case "city":
-      // «Oraș» (§NNN): as typed, without regard to case — «brașov» stands beside «Brașov».
+      // «Oraș» (§947): as typed, without regard to case — «brașov» stands beside «Brașov».
       return [answered(sql`lower(${eventVolunteers.city})`), tie];
     case "state":
       // «Înscris» first, then «Confirmat», then «Anulat»: the order the card lists the states in, not the alphabet's.

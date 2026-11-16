@@ -83,7 +83,7 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
           askReconfirm: posted(form, "askReconfirm") === "1",
           // «Trimite și numărul de concurs și codul QR» (§943): the same; which registrations get them is the service's.
           sendQr: posted(form, "sendQr") === "1",
-          // «Trimite și linkul pentru semnarea declarației» (§NNN): the same; which registrations get it is the service's.
+          // «Trimite și linkul pentru semnarea declarației» (§947): the same; which registrations get it is the service's.
           signLink: posted(form, "signLink") === "1",
           ...words,
         },
@@ -154,7 +154,7 @@ export async function previewParticipantMessageAction(input: {
   askReconfirm?: unknown;
   /** «Trimite și numărul de concurs și codul QR» as the box stands (§943): only `true` draws the example runner's block. */
   sendQr?: unknown;
-  /** «Trimite și linkul pentru semnarea declarației» as the box stands (§NNN): only `true` draws «Semnează declarația». */
+  /** «Trimite și linkul pentru semnarea declarației» as the box stands (§947): only `true` draws «Semnează declarația». */
   signLink?: unknown;
 }): Promise<ParticipantMessagePreview | null> {
   // From the network: every field is read as a string, whatever was sent.

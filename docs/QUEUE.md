@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.45` | the volunteers' age, city and message on the list; a link to sign the declaration in the organizers' message; that message as a panel of its own, with bold; «Am notat că vii» apart from the cancel; «Vin» no longer called optional; three named emergency numbers on the bib; «Mărimea numelui» and «Banda dintr-un capăt în altul» on the bib (§947) |
 | `BR-V4.44` | the list for sponsors as one closed fold; an example QR in the email previews; «Mărește» on the composer's preview (§946) |
 | `BR-V4.43` | the organizers' message to people ticked by name, for a trial before everybody, and every send confirmed by the number of recipients, typed; a volunteer's notes under the pointer (§945) |
 | `BR-V4.42` | the queue panel's zone test holds at every minute of the day (§944) |
