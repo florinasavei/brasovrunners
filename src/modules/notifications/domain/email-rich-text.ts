@@ -235,9 +235,10 @@ export function unsupportedNewsletterBlocks(doc: RichTextDoc): string[] {
 
 /**
  * The width a picture is drawn at inside the message's card: 600 pixels less the card's padding
- * and border (`templates.ts#card`), times the share of the column the editor gave it.
+ * and border (`templates.ts#card`), times the share of the column the editor gave it. Exported for
+ * the one other picture a message draws across the column, the volunteers' plan (`templates.ts`).
  */
-const CARD_COLUMN_PX = 550;
+export const CARD_COLUMN_PX = 550;
 
 /** A rung at least twice as wide as the card, for a phone's sharp screen; the master when there is none. */
 const EMAIL_PICTURE_TARGET_PX = CARD_COLUMN_PX * 2;

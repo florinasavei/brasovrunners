@@ -2553,7 +2553,9 @@
           "volunteerAddresses": "fiecare adresă din listă care nu are deja o invitație deschisă",
           "memberAddresses": "fiecare adresă din listă",
           "firstWaiting": "primii de pe lista de așteptare",
-          "held": "fiecare persoană cu un loc ținut pentru declarație"
+          "held": "fiecare persoană cu un loc ținut pentru declarație",
+          "volunteersNotTold": "fiecare voluntar care nu-și știe încă punctul",
+          "volunteersAtPoints": "fiecare voluntar pus la un punct"
         },
         "none": "Nu pleacă niciun email către {name}.",
         "toOrNothing": "Pleacă 1 email către {name}: „{type}” — sau niciunul, dacă intră pe lista de așteptare.",
@@ -2729,6 +2731,8 @@
       "VOLUNTEER_GUARDIAN_NO_EMAIL": "Părintele sau tutorele nu are un email trecut, deci nu are cui să-i plece linkul. Acordul se ia pe hârtie, sau adaugă emailul în „Modifică”.",
       "VOLUNTEER_NO_EMAIL": "Voluntarul nu are adresă de email, deci linkul nu are unde pleca. Contractul și acordul părintelui se semnează pe hârtie, sau adaugă adresa în „Modifică”.",
       "VOLUNTEER_MINORS_CLOSED": "Clubul nu primește încă voluntari sub 18 ani: nota de confidențialitate și contractul în vigoare nu descriu încă minorii. Aprobă-le întâi; «Sarcini» spune cum.",
+      "VOLUNTEER_POINTS_NOBODY": "Nu am trimis nimic: niciun voluntar cu adresă de email nu stă încă la un punct de pe traseu. Pune oamenii la puncte, apoi trimite.",
+      "VOLUNTEER_POINTS_ALL_TOLD": "Nu am trimis nimic: toți cei de la puncte își știu deja punctul. Ca să le scrii din nou, alege „Trimite din nou tuturor”.",
       "VOLUNTEER_CATEGORY_HAS_ROLES": "Categoria nu s-a șters: are roluri în ea. Mută sau șterge întâi rolurile.",
       "VOLUNTEER_NAME_TAKEN": "Numele există deja în această categorie (sau printre categoriile evenimentului). Alege alt nume: același nume poate sta în două categorii, dar nu de două ori într-una.",
       "VOLUNTEER_ROLE_INVALID": "„{role}” din „{category}”: {problem}. Nimic nu s-a salvat.",
@@ -6355,7 +6359,7 @@
         "title": "Planul voluntarilor",
         "open": "Planul voluntarilor",
         "event": "{event} — {date}",
-        "help": "Cine stă la ce punct de pe traseu în ziua evenimentului. Punctele sunt cele din editor, de la „Traseul”. Doar pentru organizatori: de aici nu pleacă niciun email.",
+        "help": "Cine stă la ce punct de pe traseu în ziua evenimentului. Punctele sunt cele din editor, de la „Traseul”. Nimeni nu e anunțat până nu apeși „Trimite fiecăruia punctul lui”.",
         "back": "Înapoi la voluntari",
         "editPoints": "Punctele de pe traseu, în editorul evenimentului",
         "print": "Tipărește planul",
@@ -6389,11 +6393,32 @@
           "uploading": "Se încarcă…",
           "saving": "Se salvează…",
           "failed": "Poza nu s-a încărcat. Încearcă din nou sau alege alt fișier (JPEG, PNG sau WebP).",
-          "help": "O imagine JPEG, PNG sau WebP — de pildă harta traseului cu punctele numerotate. Nu apare pe site și nu se trimite nimănui de aici.",
+          "help": "O imagine JPEG, PNG sau WebP — de pildă harta traseului cu punctele numerotate. Nu apare pe site; voluntarii o primesc doar cu „Trimite fiecăruia punctul lui”.",
           "remove": "Șterge poza",
           "removeTitle": "Ștergi poza planului?",
           "removeBody": "Poza dispare de pe plan și de pe foaia tipărită. Punctele și oamenii rămân cum sunt. O poți încărca din nou oricând.",
           "noStorage": "Stocarea imaginilor nu este configurată aici, așa că planul nu poate avea o poză."
+        },
+        "mail": {
+          "title": "Trimite fiecăruia punctul lui",
+          "help": "Un email fiecărui voluntar pus la un punct, dacă are adresă de email: punctul lui, ce are de făcut acolo și poza planului. Pleacă doar când apeși aici.",
+          "send": "Trimite fiecăruia punctul lui",
+          "again": "Trimite din nou tuturor",
+          "allTold": "Toți cei de la puncte își știu deja punctul. Trimite din nou doar dacă s-a schimbat ceva: poza, numele unui punct, un rol.",
+          "nobody": "Nimeni de anunțat: niciun voluntar cu adresă de email nu stă încă la un punct de pe traseu.",
+          "confirmTitle": "Trimiți fiecăruia punctul lui?",
+          "confirmBody": "Fiecare primește pe email punctul lui și ce are de făcut acolo.",
+          "confirmBodyPicture": "Fiecare primește pe email punctul lui, ce are de făcut acolo și poza planului.",
+          "confirm": "Trimite",
+          "againTick": "Trimite din nou tuturor, și celor care își știu deja punctul",
+          "againTitle": "Le scrii din nou tuturor?",
+          "lines": {
+            "toWrite": "Scriem la: {count}",
+            "told": "Își știu deja punctul: {count}",
+            "toldAmong": "Dintre ei, își știu deja punctul: {count}",
+            "noAddress": "La un punct, dar fără adresă de email: {count}",
+            "unplaced": "Încă fără punct: {count}"
+          }
         }
       },
       "chips": {
@@ -7582,6 +7607,7 @@
         "VOLUNTEER_AGREEMENT_REQUEST": "Contractul de voluntariat",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Ai acceptat contractul de voluntariat",
         "VOLUNTEER_ROLE_ASSIGNED": "Rolul tău de voluntar",
+        "VOLUNTEER_POINT": "Punctul tău de voluntar",
         "VOLUNTEER_GUARDIAN_REQUEST": "Acordul tău pentru un voluntar minor",
         "VOLUNTEER_INVITATION": "Invitația de a fi voluntar",
         "PLACES_ALERT": "Mai sunt puține locuri",
@@ -7660,6 +7686,7 @@
         "VOLUNTEER_AGREEMENT_REQUEST": "Când un organizator apasă „Trimite linkul contractului” la un voluntar care nu l-a acceptat încă: contractul și linkul de acceptare.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Când un voluntar acceptă contractul din link sau un organizator apasă „Semnat pe hârtie”: copia lui, cu contractul atașat ca PDF.",
         "VOLUNTEER_ROLE_ASSIGNED": "Când organizatorii îi dau unui voluntar un rol sau îi schimbă rolurile, din cardul «Voluntari» al evenimentului: un mesaj scurt care numește rolurile lui, data și locul. Nimic de apăsat.",
+        "VOLUNTEER_POINT": "Când un organizator apasă «Trimite fiecăruia punctul lui» pe «Planul voluntarilor»: fiecărui voluntar pus la un punct, cu punctul lui, ce are de făcut acolo și poza planului. Nimic de apăsat.",
         "VOLUNTEER_GUARDIAN_REQUEST": "Când un voluntar sub 18 ani se oferă, sau un organizator apasă „Trimite linkul părintelui”: contractul și linkul prin care părintele îl acceptă în nume propriu.",
         "VOLUNTEER_INVITATION": "Când un organizator sau un administrator trimite invitații din cardul «Voluntari» al unui eveniment cu voluntari doar pe invitație, și la „Retrimite”. Un link personal spre pagina voluntarilor.",
         "PLACES_ALERT": "Când locurile libere scad la pragul din «Anunță-mă când rămân N locuri», și încă o dată când nu mai rămâne niciunul: fiecărui Administrator. Butonul deschide înscrierile.",
@@ -7711,6 +7738,7 @@
         "VOLUNTEER_AGREEMENT_REQUEST": "la „Trimite linkul contractului”",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "după link sau „Semnat pe hârtie”",
         "VOLUNTEER_ROLE_ASSIGNED": "când organizatorii dau sau schimbă rolurile",
+        "VOLUNTEER_POINT": "când un organizator trimite planul voluntarilor",
         "VOLUNTEER_GUARDIAN_REQUEST": "când se oferă un voluntar sub 18 ani",
         "VOLUNTEER_INVITATION": "când clubul invită pe cineva să fie voluntar",
         "PLACES_ALERT": "când locurile scad la prag, administratorilor",
@@ -7968,6 +7996,7 @@
           "guardianPaper": "Acordul părintelui, semnat pe hârtie",
           "invite": "Trimite invitațiile de voluntar",
           "invitationResend": "Retrimite invitația de voluntar",
+          "sendPoints": "Trimite fiecăruia punctul lui",
           "toRunner": "Transformă în alergător"
         },
         "club": {
@@ -8653,6 +8682,7 @@
         "VOLUNTEER_AGREEMENT_REQUEST": "Rolul și evenimentul se adaugă singure. Linkul e doar pentru persoana aceasta, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Rolul și evenimentul se adaugă singure. PDF-ul arată textul acceptat, cu numele, rolul, momentul și amprenta lui.",
         "VOLUNTEER_ROLE_ASSIGNED": "Rolurile date, data și locul evenimentului se adaugă singure, oricum ai scrie textul. Mesajul nu are niciun link care să facă ceva.",
+        "VOLUNTEER_POINT": "Punctul, rolurile date, contactul categoriei și poza planului se adaugă singure, oricum ai scrie textul. Nu pleacă dacă între timp persoana a fost mutată, scoasă de la punct sau anulată.",
         "VOLUNTEER_GUARDIAN_REQUEST": "Voluntarul și evenimentul se adaugă singure. Linkul e doar pentru părinte sau tutore, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
         "VOLUNTEER_INVITATION": "Evenimentul, rolurile căutate și mesajul clubului se adaugă singure. Linkul e doar al persoanei invitate, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
         "PLACES_ALERT": "Locurile libere, capacitatea și pragul se adaugă singure, oricum ai scrie textul. Un email pe prag; altul vine doar după ce locurile urcă din nou peste prag.",
@@ -14189,6 +14219,16 @@
       "planPictureSet": "Poza planului e pusă: apare deasupra punctelor și se tipărește cu planul.",
       "planPictureReplaced": "Poza planului a fost schimbată.",
       "planPictureRemoved": "Poza planului a fost ștearsă.",
+      "planPointsSent": {
+        "one": "{count} voluntar anunțat.",
+        "few": "{count} voluntari anunțați.",
+        "other": "{count} de voluntari anunțați."
+      },
+      "planPointsSentSomeWithout": {
+        "one": "{count} voluntar anunțat. Fără adresă de email: {noAddress}.",
+        "few": "{count} voluntari anunțați. Fără adresă de email: {noAddress}.",
+        "other": "{count} de voluntari anunțați. Fără adresă de email: {noAddress}."
+      },
       "eventTodoDone": "Bifat. Rândul e la „Gata”.",
       "eventTodoReopened": "Debifat: rândul e din nou de făcut.",
       "eventTodoDeleted": "Rând șters de pe lista evenimentului.",

@@ -1894,7 +1894,7 @@ events
 - participant_count_public boolean NOT NULL DEFAULT true  -- §10.10; «Arată public numărătoarea», every public number of the event (§668)
 - public_list_club members_only|as_typed|hidden NOT NULL DEFAULT members_only  -- §10.10; «Clubul pe lista publică», what the list's «Club» column says
 - cover_media_asset_id uuid null
-- volunteer_plan_media_asset_id uuid null  -- §17, §NNN; the picture of «Planul voluntarilor»: no FK, as the cover has none; counted by media/references.ts; never public, never copied by a series, a repeat or a duplicate, never in the event's file
+- volunteer_plan_media_asset_id uuid null  -- §17, §NNN; the picture of «Planul voluntarilor»: no FK, as the cover has none; counted by media/references.ts; never public, never copied by a series, a repeat or a duplicate, never in the event's file; sent only in VOLUNTEER_POINT (§16.3), read through the plan
 - created_by_staff_user_id uuid
 - updated_by_staff_user_id uuid
 - created_at timestamptz
@@ -3456,7 +3456,37 @@ PLACES_ALERT
 UNSIGNED_RELEASED
 REGISTRATION_ADDRESS_REMOVED
 REGISTRATION_ADDRESS_ADDED
+VOLUNTEER_POINT
 ```
+
+`VOLUNTEER_POINT` (§NNN; «Trimite fiecăruia punctul lui» on «Planul voluntarilor», §17) is queued by
+`volunteers/point-mail.ts#sendVolunteerPoints` alone — at an organizer's press (`canManageVolunteers`, asked by
+the action and again by the service), in that press's transaction, under the event row's lock: one message for
+each volunteer of the event who stands at one of its points, is not cancelled and has an address, in the
+language of their own row. Never by placing, moving or taking a person off; never by a job; never to another
+event's people. The payload holds ids and the telling (`eventId`, `volunteerId`, `checkpointId`, `round`: 1 for
+the person's first message, one more for each later one) and the key is exactly that,
+`volunteer-point:<volunteer>:<point>:<round>`.
+
+**The outbox's own rows are the memory of who was told** — no column, no table. A person «already knows the
+point they stand at» when the newest of their rows still waits to leave (PENDING, PROCESSING) and names that
+point at the address their row holds now, or else when the newest of their rows that reached them (SENT,
+COMPLAINED) does. Anything else is not told: no row; a row **withdrawn** at the send, which the outbox deletes; a
+row that **failed** or **bounced**; a message that named another point or went to an address corrected since. A
+press writes only to those not told; «Trimite din nou tuturor» writes to everybody at a point with an address,
+each with their next round. Only a person's newest round ever leaves — an older row still waiting, or a failed
+one put back in the queue, is withdrawn at the send. The limit of this memory is the outbox's retention (ninety
+days): a point told earlier than that is told again by the next press.
+
+Everything the message says is read at the send: the event and its day, the point's number in the route's
+order, its name, its kilometre and its note, the roles given and what they ask in the sentence the role's own
+message uses (nothing about roles when none is given), the contact person of the roles' category (§774), the
+plan's picture — shown once and linked to the whole of it in both halves — when the event has one, and the
+event's page. It names no other volunteer and no telephone number but that contact's. The renderer withdraws
+it for a person cancelled or deleted, with no address or another address, at no point or at another point than
+the one queued (moved, taken off, the point deleted), and for an older round. Classed as `VOLUNTEER_ROLE_ASSIGNED`
+is: the confirmations' road, a person of the public, no club copy, no token and no button; the club may rewrite
+its words (`{eventTitle}`), and the point, the roles and the picture stay the platform's own lines around them.
 
 `REGISTRATION_ADDRESS_REMOVED` and `REGISTRATION_ADDRESS_ADDED` («Schimbă adresa», §15.11 verb 8) are queued
 by `service.ts#changeRegistrationAddressByStaff`, in the move's own transaction, once each
@@ -3803,15 +3833,31 @@ the map with the points on it — and lives with the plan:
 - **Drawn above the points**, as wide as the column, a press opening the whole of it in a new tab; printed with the
   plan, first after the sheet's title, in one piece (`break-inside: avoid`, and never taller than a sheet), its controls
   left off the paper. `readVolunteerPlan` returns it beside the points — the whole picture and a display size
-  (`fullUrl`, `displayUrl`, the ladder's `srcSet`), at the store's public addresses — and whoever sends the plan on
-  reads it from there.
-- **One edition's, and the organizers'.** No public query, no public cache and no email reads the column, and neither a
-  series' scope, a repeat, a duplicate nor the event's file carries it: it is this date's plan, and a file read on
-  another environment would name another bucket's object. `tests/unit/volunteers/plan-picture-never-leaves.test.ts`
-  holds the list of files that may name the column; a new reader — telling each volunteer their point is the next
-  change — is a reviewed edit of that list, and reads the picture through the plan. As for every stored picture, the
-  object itself is public behind an unguessable key (§66), and the pictures page shows it to the roles that read that
-  page.
+  (`fullUrl`, `displayUrl`, the ladder's `srcSet`), at the store's public addresses — and the email that sends it on
+  reads the same picture, alone, from the same file (`readVolunteerPlanPicture`).
+- **One edition's, and the organizers'.** No public query and no public cache reads the column, and neither a series'
+  scope, a repeat, a duplicate nor the event's file carries it: it is this date's plan, and a file read on another
+  environment would name another bucket's object. It leaves by one road, the email below, which reads the picture
+  through the plan (`plan.ts#readVolunteerPlanPicture`, called by `point-mail.ts` alone) — so no file of the emails
+  names the column, and `tests/unit/volunteers/plan-picture-never-leaves.test.ts` still holds the same list of files
+  that may; a new reader is a reviewed edit of that list. As for every stored picture, the object itself is public
+  behind an unguessable key (§66), and the pictures page shows it to the roles that read that page.
+- **«Trimite fiecăruia punctul lui»** (`DECISIONS.md` §NNN; the second half of the owner's sentence — and, asked how,
+  «Email din site, la apăsarea ta»). One press on the plan's page emails each placed volunteer their own point, what
+  they do there and the plan's picture: `VOLUNTEER_POINT`, whose rule — who is written to, how the outbox's own rows
+  remember who was told, what is withdrawn at the send — is §16.3 (`modules/volunteers/point-mail.ts`). The page states
+  the four numbers the service counts (`previewVolunteerPoints`: who is written to, who already knows their point, who
+  stands at a point with no address, who stands at none) beside the button and again in the question the button asks,
+  with the email line the one builder words. «Trimite din nou tuturor» is a box in that question while somebody
+  already knows their point (`ConfirmSpec.option`: the dialog's one optional box — unticked whenever a question opens,
+  never waited for, written `on` into the form's hidden field only when ticked and confirmed) and the button itself
+  once everybody does; with nobody to write to there is no button, and the service refuses with the reason
+  (`VOLUNTEER_POINTS_NOBODY`, `VOLUNTEER_POINTS_ALL_TOLD`). `sendVolunteerPointsAction` is an email press
+  (`volunteers.sendPoints`, §12.11) that asks the capability at its door; the service asks again before anything is
+  read and audits one row a press, `event.volunteer_points_sent` — the counts and whether «din nou tuturor», never a
+  person. **Placing, moving or taking a person off emails nobody**, and the point reaches no other email, no public
+  page, no badge and no file of the volunteers: `tests/unit/volunteers/plan-never-leaves.test.ts` lists the files
+  that may name it — the email's four among them — and holds the renderer and the template to that one message type.
 
 ---
 

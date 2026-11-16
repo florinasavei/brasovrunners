@@ -3,7 +3,7 @@ import { RSVP_CONFIRM_HOURS } from "@/modules/rsvp/domain/link-life";
 import { rsvpMemberClause } from "@/modules/rsvp/notice-words";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import type { RegistrationCancelReasonKind } from "@/db/schema/registrations";
-import { emailBodyParts, newsletterBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
+import { CARD_COLUMN_PX, emailBodyParts, newsletterBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
 import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import { copyFor, onlyMissingFacts, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
 import { organizerParagraphs } from "./domain/organizer-message";
@@ -765,6 +765,8 @@ export function renderBilingual(
     ...(data.cancellationReasonOther ? { cancellationReason: data.cancellationReasonOther } : {}),
     // The club's line of an invitation to volunteer, in the second half's own language (§354): never the first half's words.
     ...(data.volunteerInvitation ? { volunteerInvitation: { ...data.volunteerInvitation, message: data.volunteerInvitation.messageOther } } : {}),
+    // The plan's picture once a message (§NNN), as one QR is enough: the second half keeps its words and the link to the whole of it.
+    ...(data.volunteerPoint ? { volunteerPoint: { ...data.volunteerPoint, pictureLinkOnly: true } } : {}),
     // A family's blocks in the second half: the words and the numbers, not the QR pictures again (§519).
     ...(data.familyConfirmed ? { familyConfirmed: data.familyConfirmed.map((person) => ({ ...person, qrUrl: undefined })) } : {}),
     // The organizer's message (§364): its own subject and body in the second half's language.
@@ -1171,6 +1173,24 @@ export type TemplateData = {
    */
   volunteerInvitation?: { message: string | null; messageOther: string | null; rolesRo: string[]; rolesEn: string[] };
   /**
+   * «Punctul tău de voluntar» (§NNN, `VOLUNTEER_POINT`): the point of the route the person stands at, read at the send
+   * (`volunteers/point-mail.ts#volunteerPointAtSend`) — its place in the route's order (the number the plan's page gives it),
+   * its name and its note in each language (the club typed both), its kilometre, and the plan's picture when the event has
+   * one: at a size for a message and whole, both at the store's public addresses. What the person does there is `volunteer`
+   * above — the roles given and what they ask, as the role's own message says them. It names no other volunteer.
+   * `pictureLinkOnly` is the second half's (`renderBilingual`): the words and the link again, not the picture.
+   */
+  volunteerPoint?: {
+    number: number;
+    nameRo: string;
+    nameEn: string;
+    km: number;
+    noteRo: string | null;
+    noteEn: string | null;
+    picture: { displayUrl: string; fullUrl: string; width: number; height: number } | null;
+    pictureLinkOnly?: boolean;
+  };
+  /**
    * "Detalii actualizate" (§331): which facts the save changed — the place, the start, the
    * programme, the event on again. The values are the event's as it stands at send time, in the
    * fields above; this says which of them to name as new.
@@ -1571,6 +1591,83 @@ function volunteerFacts(locale: EmailLocale, d: TemplateData, labels: { map: str
       : undefined;
   const line = [roleLine, event?.line].filter(Boolean).join(" · ");
   return line ? { line, links: event?.links ?? [] } : undefined;
+}
+
+/**
+ * What the roles given ask, as one sentence (§761; several roles since §837): «Ce presupune rolul: …» for one,
+ * «Ce presupune fiecare rol: … — …; … — ….» for several — or nothing while the club wrote no description. The one
+ * sentence the role's own message and the point's (§NNN) both say, so the two never word a role differently.
+ */
+function roleTasksLines(locale: EmailLocale, volunteer: TemplateData["volunteer"]): string[] {
+  const tasks = locale === "ro" ? volunteer?.roleDescriptionRo : volunteer?.roleDescriptionEn;
+  if (!tasks) return [];
+  const several = (volunteer?.roleCount ?? 1) > 1;
+  return [locale === "ro" ? `${several ? "Ce presupune fiecare rol" : "Ce presupune rolul"}: ${tasks}` : `${several ? "What each role involves" : "What the role involves"}: ${tasks}`];
+}
+
+/**
+ * A point of the route as «Planul voluntarilor» titles it (§NNN): its number in the route's order, its kilometre — up to
+ * two decimals, a comma in Romanian and a point in English, as the plan's page writes it — and its name in this half's
+ * language: «3. 5,5 km — Apă la cabană», "3. 5.5 km — Water at the hut".
+ */
+function volunteerPointTitle(locale: EmailLocale, point: NonNullable<TemplateData["volunteerPoint"]>): string {
+  const km = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(point.km);
+  return `${point.number}. ${km} km — ${locale === "ro" ? point.nameRo : point.nameEn}`;
+}
+
+/**
+ * The one fact «Punctul tău» is about (§NNN), on the band under the greeting: the event and the point —
+ * «Punctul tău la Crosul: 3. 5,5 km — Apă la cabană». The platform's, whoever wrote the words under it, so a text the club
+ * rewrote still says where the person stands. Nothing without the point (the editor's starting text, a preview without one).
+ */
+function volunteerPointLine(locale: EmailLocale, d: TemplateData): string | undefined {
+  if (!d.volunteerPoint) return undefined;
+  const event = d.eventTitle ?? (locale === "ro" ? "eveniment" : "the event");
+  return T[locale].volunteerPointWords.line(event, volunteerPointTitle(locale, d.volunteerPoint));
+}
+
+/**
+ * What the platform says of the point before the words of «Punctul tău» (§NNN), under the band that names it — each only
+ * when there is something to say: the point's own note as the club typed it (its label bold, no emphasis read inside it,
+ * as an organizer's note is drawn, §331); then the roles the organizers gave the person and what they ask, in the role
+ * message's own sentence — nothing about roles while none was given. Facts of this send, so a text the club rewrote keeps them.
+ */
+function volunteerPointLines(locale: EmailLocale, d: TemplateData): (string | EmailBodyPart)[] {
+  const point = d.volunteerPoint;
+  if (!point) return [];
+  const words = T[locale].volunteerPointWords;
+  const note = (locale === "ro" ? point.noteRo : point.noteEn)?.trim();
+  const roles = locale === "ro" ? d.volunteer?.roleRo : d.volunteer?.roleEn;
+  return [
+    ...(note ? [organizerTextPart(words.noteLabel, note)] : []),
+    ...(roles ? [words.roles(roles, (d.volunteer?.roleCount ?? 1) > 1), ...roleTasksLines(locale, d.volunteer)] : []),
+  ];
+}
+
+/**
+ * The plan's picture, after the words of «Punctul tău» (§NNN) and only when the event has one: as wide as the card's
+ * column and never wider than its own pixels, the whole picture one press away, and the same link in words under it — for
+ * a client that blocks pictures or cannot draw the store's WebP, and for the second half of the message, which carries the
+ * link alone (`pictureLinkOnly`). A hosted picture at the store's public address, as the QR and a newsletter's pictures
+ * are: never a data URI, which mail clients strip. The plain-text half names it with its address.
+ */
+function volunteerPointPicture(locale: EmailLocale, d: TemplateData): EmailBodyPart[] {
+  const picture = d.volunteerPoint?.picture;
+  if (!picture) return [];
+  const words = T[locale].volunteerPointWords;
+  const linkOnly = d.volunteerPoint?.pictureLinkOnly === true;
+  const full = escapeHtml(picture.fullUrl);
+  const width = Math.max(1, Math.min(CARD_COLUMN_PX, Math.round(picture.width)));
+  const image = linkOnly
+    ? ""
+    : `<a href="${full}" style="display:block;line-height:0"><img src="${escapeHtml(picture.displayUrl)}" alt="${escapeHtml(words.pictureAlt)}" width="${width}" style="display:block;width:100%;max-width:${width}px;height:auto;border:0;margin:0 auto"></a>`;
+  const link = `<p style="margin:${linkOnly ? "0" : "8px 0 0"};font-size:15px;line-height:1.5"><a href="${full}" style="color:${COLOR.blueInk}">${escapeHtml(words.pictureOpen)}</a></p>`;
+  return [
+    {
+      html: `<div data-email-part="volunteer-plan-picture" style="margin:0 0 16px">${image}${link}</div>`,
+      text: [`${words.pictureText}: ${picture.fullUrl}`],
+    },
+  ];
 }
 
 /** The organizers' line about a volunteer (§754): the name and the roles the person offered for (§761). */
@@ -2317,9 +2414,27 @@ const T = {
         (d.volunteer?.roleCount ?? 1) > 1
           ? `Mulțumim că ne ajuți! Organizatorii ți-au dat mai multe roluri la ${d.eventTitle ?? "eveniment"}: ${d.volunteer?.roleRo ?? "cele scrise mai sus"}. Data și locul sunt scrise mai sus.`
           : `Mulțumim că ne ajuți! Organizatorii ți-au dat un rol la ${d.eventTitle ?? "eveniment"}: ${d.volunteer?.roleRo ?? "cel scris mai sus"}. Data și locul sunt scrise mai sus.`,
-        ...(d.volunteer?.roleDescriptionRo ? [`${(d.volunteer.roleCount ?? 1) > 1 ? "Ce presupune fiecare rol" : "Ce presupune rolul"}: ${d.volunteer.roleDescriptionRo}`] : []),
+        ...roleTasksLines("ro", d.volunteer),
         "Ora de întâlnire și ce mai e de știut le afli de la organizatori, înainte de eveniment. Dacă nu mai poți veni, scrie-ne din pagina de contact.",
       ],
+    },
+    /*
+      «Punctul tău de voluntar la …» (§NNN): an organizer pressed «Trimite fiecăruia punctul lui» on «Planul voluntarilor».
+      Nothing to press. The point is the band's line and the event's start and place the bold one under it; the point's
+      note and the roles given with what they ask stand before these words, the plan's picture after them
+      (`volunteerPointLines`, `volunteerPointPicture`) — facts of this send, whoever wrote the words.
+    */
+    volunteerPoint: {
+      subject: (d: TemplateData) => `Punctul tău de voluntar la ${d.eventTitle ?? "eveniment"}`,
+      facts: (d: TemplateData) => eventFacts(d, { map: "Locul de întâlnire al evenimentului, pe hartă", strava: "Evenimentul pe Strava" }),
+      body: (d: TemplateData) => [
+        `Mulțumim că ne ajuți la ${d.eventTitle ?? "eveniment"}! Organizatorii te-au pus la un punct de pe traseu: e cel scris mai sus.`,
+        "Ora de întâlnire și ce mai e de știut le afli de la organizatori, înainte de eveniment. Dacă nu mai poți veni sau nu găsești punctul, scrie-ne din pagina de contact.",
+      ],
+      emphasis: (d: TemplateData): Emphasis => {
+        const line = volunteerPointLine("ro", d);
+        return line ? { highlightLine: line } : {};
+      },
     },
     registrationOpened: {
       // To an address, not a participant (§146): the greeting names nobody.
@@ -2834,6 +2949,15 @@ const T = {
     footer: "Răspunde la acest email pentru întrebări.",
     /** The volunteer category's contact person (§774), the words of «Persoana de contact» already joined: «Ana · 0712 345 678 · ana@club.test». */
     volunteerContact: (contacts: string) => `Întrebări despre voluntariat? ${contacts}`,
+    /** «Punctul tău» (§NNN), the words around its own: the band's line, the note's label, the roles given, and the plan's picture. */
+    volunteerPointWords: {
+      line: (event: string, point: string) => `Punctul tău la ${event}: ${point}`,
+      noteLabel: "De știut la acest punct",
+      roles: (roles: string, several: boolean) => `${several ? "Rolurile tale" : "Rolul tău"}: ${roles}.`,
+      pictureAlt: "Planul voluntarilor desenat pe traseu",
+      pictureOpen: "Deschide planul voluntarilor (poza întreagă)",
+      pictureText: "Planul voluntarilor pe traseu, ca poză",
+    },
     /** The club's copy of a participant's message (§320): in front of the subject, and the first line. */
     clubCopy: {
       subject: "[Copie club] ",
@@ -3254,9 +3378,21 @@ const T = {
         (d.volunteer?.roleCount ?? 1) > 1
           ? `Thank you for helping! The organizers have given you several roles at ${d.eventTitle ?? "the event"}: ${d.volunteer?.roleEn ?? "the ones written above"}. The date and place are written above.`
           : `Thank you for helping! The organizers have given you a role at ${d.eventTitle ?? "the event"}: ${d.volunteer?.roleEn ?? "the one written above"}. The date and place are written above.`,
-        ...(d.volunteer?.roleDescriptionEn ? [`${(d.volunteer.roleCount ?? 1) > 1 ? "What each role involves" : "What the role involves"}: ${d.volunteer.roleDescriptionEn}`] : []),
+        ...roleTasksLines("en", d.volunteer),
         "The meeting time and anything else you need to know come from the organizers, before the event. If you can no longer come, write to us from the contact page.",
       ],
+    },
+    volunteerPoint: {
+      subject: (d: TemplateData) => `Your volunteer point at ${d.eventTitle ?? "the event"}`,
+      facts: (d: TemplateData) => eventFacts(d, { map: "The event's meeting point, on the map", strava: "The event on Strava" }),
+      body: (d: TemplateData) => [
+        `Thank you for helping at ${d.eventTitle ?? "the event"}! The organizers have put you at a point of the route: the one written above.`,
+        "The meeting time and anything else you need to know come from the organizers, before the event. If you can no longer come or cannot find the point, write to us from the contact page.",
+      ],
+      emphasis: (d: TemplateData): Emphasis => {
+        const line = volunteerPointLine("en", d);
+        return line ? { highlightLine: line } : {};
+      },
     },
     registrationOpened: {
       subject: (d: TemplateData) => `Registration for ${d.eventTitle ?? "the event"} is open`,
@@ -3695,6 +3831,14 @@ const T = {
     termsLink: "Terms and conditions",
     footer: "Reply to this email with questions.",
     volunteerContact: (contacts: string) => `Questions about volunteering? ${contacts}`,
+    volunteerPointWords: {
+      line: (event: string, point: string) => `Your point at ${event}: ${point}`,
+      noteLabel: "Good to know at this point",
+      roles: (roles: string, several: boolean) => `${several ? "Your roles" : "Your role"}: ${roles}.`,
+      pictureAlt: "The volunteers' plan drawn on the route",
+      pictureOpen: "Open the volunteers' plan (the whole picture)",
+      pictureText: "The volunteers' plan on the route, as a picture",
+    },
     clubCopy: {
       subject: "[Club copy] ",
       note: "Club copy of the message sent to the participant. The personal links, the QR code and the attachments have been removed.",
@@ -3796,6 +3940,7 @@ const KEY_BY_MESSAGE_TYPE: Record<Exclude<EmailMessageType, RelayMessageType>, k
   UNSIGNED_RELEASED: "unsignedReleased",
   REGISTRATION_ADDRESS_REMOVED: "registrationAddressRemoved",
   REGISTRATION_ADDRESS_ADDED: "registrationAddressAdded",
+  VOLUNTEER_POINT: "volunteerPoint",
 };
 
 /**
@@ -4400,6 +4545,8 @@ export function buildTemplateContent(
         : []),
       // The organizers' notice of a volunteer (§754): what the person ticked and wrote, boxed under the name line (2026-10-21).
       ...(messageType === "VOLUNTEER_CLUB_NOTICE" && data.volunteer ? [volunteerChecklistPart(data.volunteer, locale)] : []),
+      // «Punctul tău» (§NNN): under the band that names the point, its note and the roles given with what they ask — before the words, whoever wrote them.
+      ...(messageType === "VOLUNTEER_POINT" ? volunteerPointLines(locale, data) : []),
       ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familySittingShape && data.familyPersonName
         ? [
             familyFactsPart(
@@ -4433,6 +4580,8 @@ export function buildTemplateContent(
             : familyConfirmedShape
               ? [...copy.familyConfirmed.body(data), familyConfirmedPart(familyConfirmedPeople, copy.familyConfirmed.words, clubCopy)]
               : entry.body(data)),
+      // «Punctul tău» (§NNN): the plan's picture, linked to the whole of it, after the words whoever wrote them — only when the event has one.
+      ...(messageType === "VOLUNTEER_POINT" ? volunteerPointPicture(locale, data) : []),
       /*
         Who signs a minor's declaration (§419, §330), after the body whoever wrote it — a fact about
         this registration and the text in force: on the request
@@ -4643,9 +4792,11 @@ export function buildTemplateContent(
     closing: copy.closing,
     // The reply address's line, and — on the three messages that reach a volunteer or their guardian — the contact person of the
     // category of the role concerned (§774), when the club has set one. Not on the club's copy: it is the volunteer's message.
+    // «Punctul tău» (§NNN) is the fourth: whom to ask about the point is the same person, as the role's message has it.
     footer: (() => {
       const concerned =
-        !clubCopy && (messageType === "VOLUNTEER_RECEIVED" || messageType === "VOLUNTEER_ROLE_ASSIGNED" || messageType === "VOLUNTEER_GUARDIAN_REQUEST")
+        !clubCopy &&
+        (messageType === "VOLUNTEER_RECEIVED" || messageType === "VOLUNTEER_ROLE_ASSIGNED" || messageType === "VOLUNTEER_GUARDIAN_REQUEST" || messageType === "VOLUNTEER_POINT")
           ? (data.volunteer?.contacts ?? [])
           : [];
       // The telephone as a person reads it («+40 712 345 678»); with two persons or more each is said with its category, so no one
@@ -4683,7 +4834,11 @@ export function buildTemplateContent(
                 ? copy.privacyFooterVolunteerInvitation
               : messageType === "VOLUNTEER_GUARDIAN_REQUEST"
                 ? copy.privacyFooterGuardian
-              : messageType === "VOLUNTEER_AGREEMENT_REQUEST" || messageType === "VOLUNTEER_AGREEMENT_ACCEPTED" || messageType === "VOLUNTEER_ROLE_ASSIGNED"
+              : messageType === "VOLUNTEER_AGREEMENT_REQUEST" ||
+                  messageType === "VOLUNTEER_AGREEMENT_ACCEPTED" ||
+                  messageType === "VOLUNTEER_ROLE_ASSIGNED" ||
+                  // «Punctul tău» (§NNN): to a person on the event's volunteers' list, as the role's message is.
+                  messageType === "VOLUNTEER_POINT"
                 ? copy.privacyFooterVolunteerAgreement
               : NEWSLETTER_MESSAGES.has(messageType)
                 ? copy.privacyFooterNewsletter

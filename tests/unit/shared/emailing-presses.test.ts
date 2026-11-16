@@ -29,7 +29,8 @@ const INVITATIONS = "src/app/[locale]/admin/registrations/invitation-actions.ts"
 const PERSON = "src/app/[locale]/admin/registrations/person/actions.ts";
 const ADMIN = "src/app/[locale]/admin/actions.ts";
 const VOLUNTEERS = "src/app/[locale]/admin/events/[id]/volunteer-actions.ts";
-const MESSAGES = "src/app/[locale]/admin/events/[id]/mesaje/actions.ts";
+const VOLUNTEER_PLAN = "src/app/[locale]/admin/events/[id]/plan-voluntari/actions.ts";
+const MESSAGES ="src/app/[locale]/admin/events/[id]/mesaje/actions.ts";
 const IMPORT = "src/app/[locale]/admin/events/import/actions.ts";
 const NEWSLETTER = "src/app/[locale]/admin/newsletter/actions.ts";
 const SHOP = "src/app/[locale]/admin/shop/actions.ts";
@@ -90,6 +91,8 @@ export const EMAILING_PRESSES: Readonly<Record<string, Press>> = {
   recordPaperVolunteerGuardianAction: { file: VOLUNTEERS, causes: ["volunteers.guardianPaper"], actor: "named" },
   sendVolunteerInvitationsAction: { file: VOLUNTEERS, causes: ["volunteers.invite"], actor: "named" },
   resendVolunteerInvitationAction: { file: VOLUNTEERS, causes: ["volunteers.invitationResend"], actor: "named" },
+  // «Trimite fiecăruia punctul lui» (§NNN), on «Planul voluntarilor»: the plan's one press that emails anybody.
+  sendVolunteerPointsAction: { file: VOLUNTEER_PLAN, causes: ["volunteers.sendPoints"], actor: "named" },
   // The club.
   sendNewsletterAction: { file: NEWSLETTER, causes: ["club.newsletter"], actor: "named" },
   inviteStaffAction: { file: ADMIN, causes: ["club.staffInvite"], actor: "named" },

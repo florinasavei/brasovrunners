@@ -152,6 +152,8 @@ describe("§623 judgeEmailDelay", () => {
       "SHOP_ORDER_CLUB_NOTICE",
       "VOLUNTEER_RECEIVED",
       "VOLUNTEER_CLUB_NOTICE",
+      // «Trimite fiecăruia punctul lui» (§NNN): an organizer's press, to people on no page.
+      "VOLUNTEER_POINT",
     ] as const) {
       expect(isWaitedFor(type, false), type).toBe(false);
     }

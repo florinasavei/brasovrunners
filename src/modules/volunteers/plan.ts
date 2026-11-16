@@ -23,7 +23,8 @@ import { listVolunteers, type VolunteerItem } from "./volunteers";
 
   Who is on it: every volunteer of the event who is not cancelled — a cancelled person keeps the point they had, in case they
   come back, and is simply not on the plan. Nothing here is the person's own answer: the plan is the organizers', and no public
-  page, email or badge reads it.
+  page or badge reads it. One email says a person their own point, and only at an organizer's press: «Trimite fiecăruia punctul
+  lui» (§NNN, `point-mail.ts`). Placing, moving or taking somebody off writes to nobody.
 
   Read by whoever works the volunteers (`canManageVolunteers`: the Organizer and the Administrators), asserted here
   (BR-REQ-060-01) as on the «Voluntari» list, whose names and telephone numbers these are; placing somebody is
@@ -37,7 +38,8 @@ import { listVolunteers, type VolunteerItem } from "./volunteers";
   points drawn on it — and it lives with the plan: one stored picture an event (`events.volunteer_plan_media_asset_id`),
   uploaded on the plan's page, drawn above the points and printed with them. This file reads it (`readVolunteerPlan`) and is
   the one writer of the column (`setVolunteerPlanPicture`); `media/references.ts` counts it, so the sweep never takes it.
-  Sending it to the volunteers is the next change, which reads the picture from the plan as the page does.
+  «Trimite fiecăruia punctul lui» (§NNN, `point-mail.ts`) sends it to the volunteers placed at a point: the message reads the
+  picture from here as it leaves (`readVolunteerPlanPicture`), so nobody but this file names the column.
 */
 
 /** One person as the plan says them: the name, how to reach them, what they were given to do, and the point they stand at. */
@@ -94,17 +96,44 @@ function planPictureOf(asset: { id: string; keyPrefix: string; width: number; he
   };
 }
 
-/** One event's plan: its points with their people, the people at none, and the plan's picture. */
-export async function readVolunteerPlan<T extends Record<string, unknown>>(db: Database<T>, actor: Pick<StaffUser, "role">, eventId: string): Promise<VolunteerPlan> {
-  if (!canManageVolunteers(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not read the volunteers' plan`);
-  if (!isUuid(eventId)) throw new DomainError("NOT_FOUND", "the event is not there");
-  // The picture joined to the store (§NNN): the column has no foreign key, so an id that names nothing reads as no picture.
+/**
+ * The event's row with its plan's picture joined to the store (§NNN): the column has no foreign key, so an id that names
+ * nothing reads as no picture. Nothing for an event that is not there.
+ */
+async function eventWithPlanPicture<T extends Record<string, unknown>>(db: Database<T>, eventId: string) {
   const [event] = await db
     .select({ id: events.id, pictureId: mediaAssets.id, keyPrefix: mediaAssets.keyPrefix, width: mediaAssets.width, height: mediaAssets.height })
     .from(events)
     .leftJoin(mediaAssets, eq(mediaAssets.id, events.volunteerPlanMediaAssetId))
     .where(eq(events.id, eventId))
     .limit(1);
+  return event;
+}
+
+/** The joined row's picture as the plan's, or null: none set, the picture gone from the store, or no store here. */
+function planPictureOfEvent(event: NonNullable<Awaited<ReturnType<typeof eventWithPlanPicture>>>): VolunteerPlanPicture | null {
+  return event.pictureId !== null && event.keyPrefix !== null && event.width !== null && event.height !== null
+    ? planPictureOf({ id: event.pictureId, keyPrefix: event.keyPrefix, width: event.width, height: event.height })
+    : null;
+}
+
+/**
+ * The plan's picture alone, for the one message that carries it (§NNN, `point-mail.ts#volunteerPointAtSend`): read as the
+ * email leaves, so a picture changed or taken off since the press is the one sent — or none. No role is asked here: the
+ * caller is the outbox's renderer, with nobody signed in; who may queue that message is asked where it is queued
+ * (`sendVolunteerPoints`). Null for an event that is not there, has no picture, or where no store is configured.
+ */
+export async function readVolunteerPlanPicture<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<VolunteerPlanPicture | null> {
+  if (!isUuid(eventId)) return null;
+  const event = await eventWithPlanPicture(db, eventId);
+  return event ? planPictureOfEvent(event) : null;
+}
+
+/** One event's plan: its points with their people, the people at none, and the plan's picture. */
+export async function readVolunteerPlan<T extends Record<string, unknown>>(db: Database<T>, actor: Pick<StaffUser, "role">, eventId: string): Promise<VolunteerPlan> {
+  if (!canManageVolunteers(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not read the volunteers' plan`);
+  if (!isUuid(eventId)) throw new DomainError("NOT_FOUND", "the event is not there");
+  const event = await eventWithPlanPicture(db, eventId);
   if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
 
   const [points, everybody] = await Promise.all([listCheckpoints(db, eventId), listVolunteers(db, eventId)]);
@@ -117,10 +146,7 @@ export async function readVolunteerPlan<T extends Record<string, unknown>>(db: D
     points: points.map((point, index) => ({ point, number: index + 1, people: people.filter((person) => person.checkpointId === point.id) })),
     unplaced: people.filter((person) => person.checkpointId === null || !onRoute.has(person.checkpointId)),
     roles: await listRoleNames(db, [...new Set(people.flatMap((person) => person.roleIds))]),
-    picture:
-      event.pictureId !== null && event.keyPrefix !== null && event.width !== null && event.height !== null
-        ? planPictureOf({ id: event.pictureId, keyPrefix: event.keyPrefix, width: event.width, height: event.height })
-        : null,
+    picture: planPictureOfEvent(event),
   };
 }
 

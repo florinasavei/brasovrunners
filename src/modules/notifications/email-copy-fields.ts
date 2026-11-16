@@ -24,6 +24,7 @@ import {
   EMAIL_SAMPLE,
   EMAIL_SAMPLE_EVENT,
   EMAIL_SAMPLE_FAMILY_CONFIRMED,
+  EMAIL_SAMPLE_PLAN_POINT,
   type EmailSampleHit,
   emailSampleDeadlines,
   emailSampleFormerValuesOf,
@@ -172,6 +173,17 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     // The question's day in words, each half in its own language (§823); the page sets the club's days over it (`emailSampleDeadlines`).
     rsvpAskDay: sample.rsvpAskDay,
     rsvpAskDayOther: other.rsvpAskDay,
+    // «Punctul tău de voluntar» (§NNN): a made-up point of the made-up race with its note, both languages — read only by
+    // that message's template, which is its point and no field of the closed set. No picture: none of the club's own here.
+    volunteerPoint: {
+      number: EMAIL_SAMPLE_PLAN_POINT.number,
+      nameRo: EMAIL_SAMPLE_PLAN_POINT.name.ro,
+      nameEn: EMAIL_SAMPLE_PLAN_POINT.name.en,
+      km: EMAIL_SAMPLE_PLAN_POINT.km,
+      noteRo: EMAIL_SAMPLE_PLAN_POINT.note.ro,
+      noteEn: EMAIL_SAMPLE_PLAN_POINT.note.en,
+      picture: null,
+    },
   };
 }
 
@@ -392,6 +404,8 @@ const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
   "VOLUNTEER_AGREEMENT_ACCEPTED",
   // The role given to a volunteer (§761): the same.
   "VOLUNTEER_ROLE_ASSIGNED",
+  // The point a volunteer stands at (§NNN): the same.
+  "VOLUNTEER_POINT",
   // The guardian's link (§768): the same.
   "VOLUNTEER_GUARDIAN_REQUEST",
   // The club's invitation to volunteer (§820): to an address, before any sign-up.

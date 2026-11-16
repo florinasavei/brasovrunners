@@ -24,10 +24,13 @@ import Typography from "@mui/material/Typography";
 import { useId, useState } from "react";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { emailRoadCookieLine } from "./email-road";
-import { type ConfirmSpec, confirmOnKey, withEmailOff } from "./notice";
+import { type ConfirmSpec, confirmOnKey, withEmailOff, withOption } from "./notice";
 
-/** What the reader answered besides yes: whether «Trimite emailul» was unticked (`ConfirmSpec.emailOptOut`). */
-export type ConfirmAnswer = { emailOff: boolean };
+/**
+ * What the reader answered besides yes: whether «Trimite emailul» was unticked (`ConfirmSpec.emailOptOut`), and whether
+ * the question's optional box was ticked (`ConfirmSpec.option`).
+ */
+export type ConfirmAnswer = { emailOff: boolean; optionOn: boolean };
 
 /**
  * The one confirmation dialog of the backoffice (`DECISIONS.md` §384): "are you sure", worded
@@ -70,6 +73,11 @@ export type ConfirmAnswer = { emailOff: boolean };
  * leaves to the person, the road is not offered and the lines that belong to that email — its club copies — go
  * (`withEmailOff`); what the press sends anybody else stays said. Either answer hands the box's state to the caller
  * (`ConfirmAnswer`), which writes it into the form (`emailOptOutAnswer`) before it is sent.
+ *
+ * **A wider press, offered in the question** (`spec.option`, §NNN: «Trimite din nou tuturor» under «Trimite fiecăruia
+ * punctul lui»): a box after the quieter lines, unticked whenever a question opens, that the confirm button never waits
+ * for. Ticked, the question reads as the wider press words it — its body, its bold email line (`withOption`) — and the
+ * answer carries the tick to the caller, which writes it into the form's hidden field (`optionAnswer`).
  */
 export default function ConfirmDialog({
   spec: asked,
@@ -99,9 +107,13 @@ export default function ConfirmDialog({
   // «Trimite emailul», ticked again for each new question: a press never inherits the last one's untick.
   const [mailOff, setMailOff] = useState<{ spec: ConfirmSpec | null; off: boolean }>({ spec: asked, off: false });
   const emailOff = mailOff.spec === asked && mailOff.off;
+  // The question's optional box (§NNN), unticked again for each new question: a press never inherits the last one's tick.
+  const [option, setOption] = useState<{ spec: ConfirmSpec | null; on: boolean }>({ spec: asked, on: false });
+  const optionOn = option.spec === asked && option.on;
   if (!asked) return null;
-  // The question as it reads now: unticked, no email line to the person, no road, none of its copies.
-  const spec = withEmailOff(asked, emailOff);
+  // The question as it reads now: with its optional box ticked, the wider press's words; with «Trimite emailul» unticked,
+  // no email line to the person, no road, none of its copies.
+  const spec = withEmailOff(withOption(asked, optionOn), emailOff);
   // A dialog that asks for a tick answers only once it is ticked — Enter included.
   const mayConfirm = !spec.tick || ticked;
 
@@ -115,7 +127,7 @@ export default function ConfirmDialog({
         // A browser that refuses the write: the message takes its group's road, and the toast names none.
       }
     }
-    answer({ emailOff });
+    answer({ emailOff, optionOn });
   };
   const confirm = withRoad(onConfirm);
 
@@ -203,6 +215,15 @@ export default function ConfirmDialog({
             label={<Typography variant="body2">{asked.emailOptOut.label}</Typography>}
             sx={{ mt: 1.5, mx: 0, alignItems: "flex-start", "& .MuiFormControlLabel-label": { pt: 1.25 } }}
             data-testid="confirm-send-email"
+          />
+        )}
+        {asked.option && (
+          // A wider press the reader may choose here (§NNN): unticked as the question opens, and the confirm never waits for it.
+          <FormControlLabel
+            control={<Checkbox checked={optionOn} onChange={(_event, on) => setOption({ spec: asked, on })} sx={CHECKBOX_TAP_TARGET} />}
+            label={<Typography variant="body2">{asked.option.label}</Typography>}
+            sx={{ mt: 1.5, mx: 0, alignItems: "flex-start", "& .MuiFormControlLabel-label": { pt: 1.25 } }}
+            data-testid="confirm-option"
           />
         )}
         {spec.tick && (

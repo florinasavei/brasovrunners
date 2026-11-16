@@ -3,7 +3,7 @@ import path from "node:path";
 import { type ComponentProps, createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { tickAnswer } from "@/shared/feedback/notice";
+import { type ConfirmSpec, optionAnswer, optionFields, tickAnswer, withOption } from "@/shared/feedback/notice";
 import ActionForm from "@/shared/forms/ActionForm";
 import { succeeded } from "@/shared/forms/outcome";
 
@@ -88,6 +88,43 @@ describe("§384 ActionForm asks first", () => {
     expect(source).toMatch(/\{optOutFields\.map\(\(field\) => \(\s*<input key=\{field\} type="hidden" name=\{field\} defaultValue="on" \/>/);
     // Every answer resets them all to `on` first, then writes this question's box: a dialog without the box never sends an earlier untick.
     expect(source).toMatch(/for \(const field of optOutFields\) write\(field, "on"\);\s*const optedOut = emailOptOutAnswer\(pending\.spec, given\.emailOff\);\s*if \(optedOut\) write\(optedOut\.field, optedOut\.value\);/);
+  });
+
+  it("offers a wider press as a box in the question, and posts it `on` only when ticked there and confirmed (§NNN)", () => {
+    // «Trimite din nou tuturor» in the question of «Trimite fiecăruia punctul lui»: the fields the form's questions may
+    // answer, each a hidden input the page drew empty.
+    expect(source).toMatch(/const optionalFields = useMemo\(\(\) => optionFields\(confirm\), \[confirm\]\);/);
+    // A press let through unasked is the narrower one: every such field back to empty, as «Trimite emailul» goes back to `on`.
+    expect(source).toMatch(/for \(const field of optionalFields\) \{\s*const input = element\.elements\.namedItem\(field\);\s*if \(input instanceof HTMLInputElement\) input\.value = "";\s*\}/);
+    // Every answer resets them all first, then writes this question's — `on` only on «yes» with the box ticked.
+    expect(source).toMatch(
+      /for \(const field of optionalFields\) write\(field, ""\);\s*const optional = optionAnswer\(pending\.spec, which === "confirm" && given\.optionOn\);\s*if \(optional\) write\(optional\.field, optional\.value\);/,
+    );
+
+    const spec: ConfirmSpec = { title: "t", body: "b", lines: ["Scriem la: 1"], email: "Pleacă 1 email.", confirmLabel: "c", cancelLabel: "x" };
+    const asked: ConfirmSpec = { ...spec, option: { field: "again", label: "Trimite din nou tuturor", ticked: { lines: ["Scriem la: 3"], email: "Pleacă 3 emailuri." } } };
+    expect(optionAnswer(asked, true)).toEqual({ field: "again", value: "on" });
+    expect(optionAnswer(asked, false)).toEqual({ field: "again", value: "" });
+    // A dialog without the box writes nothing: a field the page drew `on` itself is left as drawn.
+    expect(optionAnswer(spec, true)).toBeNull();
+    expect(optionFields(asked)).toEqual(["again"]);
+    expect(optionFields([spec, asked, asked])).toEqual(["again"]);
+    expect(optionFields(spec)).toEqual([]);
+    expect(optionFields(undefined)).toEqual([]);
+    // Ticked, the question reads as the wider press words it; what `ticked` does not name stays; unticked, the spec itself.
+    expect(withOption(asked, true)).toMatchObject({ title: "t", body: "b", lines: ["Scriem la: 3"], email: "Pleacă 3 emailuri.", confirmLabel: "c" });
+    expect(withOption(asked, false)).toBe(asked);
+    expect(withOption(spec, true)).toBe(spec);
+
+    // The dialog: unticked whenever a question opens, read into the words on screen, carried by the answer — and never
+    // waited for, unlike a tick the press must not assume.
+    const dialog = readFileSync(path.join(ROOT, "src/shared/feedback/ConfirmDialog.tsx"), "utf8").replace(/\r\n/g, "\n");
+    expect(dialog).toMatch(/const \[option, setOption\] = useState<\{ spec: ConfirmSpec \| null; on: boolean \}>\(\{ spec: asked, on: false \}\);/);
+    expect(dialog).toMatch(/const optionOn = option\.spec === asked && option\.on;/);
+    expect(dialog).toMatch(/const spec = withEmailOff\(withOption\(asked, optionOn\), emailOff\);/);
+    expect(dialog).toMatch(/answer\(\{ emailOff, optionOn \}\);/);
+    expect(dialog).toMatch(/const mayConfirm = !spec\.tick \|\| ticked;/);
+    expect(dialog).toMatch(/\{asked\.option && \([\s\S]*?checked=\{optionOn\}[\s\S]*?data-testid="confirm-option"/);
   });
 
   it("hands a returned notice to the toast provider from an effect, and never a refusal", () => {
