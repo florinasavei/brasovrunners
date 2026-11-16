@@ -122,7 +122,7 @@ describe("§759 the bib designer in named sections", () => {
     const html = await render();
     const within: Record<(typeof SECTIONS)[number], string[]> = {
       header: ["event.bibColour", "event.bibDesign.showLogo", "event.bibDesign.showEventTitle", "event.bibDesign.showDate", "event.bibDesign.bandBleed", "event.bibDesign.showDistance", "event.bibDesign.headerImageSrc"],
-      number: ["event.bibDesign.numberScale", "event.bibDesign.numberFormat", "event.bibDesign.cutMarks"],
+      number: ["event.bibDesign.numberScale", "event.bibDesign.numberFormat", "event.bibDesign.cutMarks", "event.bibDesign.hideCutLine"],
       name: ["event.bibDesign.showName", "event.bibDesign.namePosition", "event.bibDesign.nameScale"],
       footer: ["event.bibDesign.sponsorImageSrc", "event.bibDesign.sponsorPlace", "event.bibDesign.numberStubs", "event.bibDesign.footerText", "event.bibDesign.showEmail"],
       profile: [
@@ -153,6 +153,39 @@ describe("§759 the bib designer in named sections", () => {
     }
     // The band's colour is the header's now, never twice on the form.
     expect(html.split('name="event.bibColour"').length - 1).toBe(1);
+  });
+
+  it("§NNN offers «Fără linia punctată pe tăietură» right under «Repere de tăiere pe foaie», unticked until the club ticks it, with one line of help", async () => {
+    const part = section(await render(), "number");
+    const marks = part.indexOf('name="event.bibDesign.cutMarks"');
+    const line = part.indexOf('name="event.bibDesign.hideCutLine"');
+    // Beside the cut marks, after them: the two ticks of the sheet's one cut.
+    expect(marks).toBeGreaterThan(-1);
+    expect(line).toBeGreaterThan(marks);
+    expect(part).toContain("Repere de tăiere pe foaie");
+    expect(part).toContain("Fără linia punctată pe tăietură");
+    // Off by default: the sheet as it prints today.
+    const box = (html: string) => /<input[^>]*name="event\.bibDesign\.hideCutLine"[^>]*>/.exec(html)?.[0] ?? "";
+    expect(box(part)).toContain('type="checkbox"');
+    expect(box(part)).not.toMatch(/\bchecked\b/);
+    // The help says what stays at the cut and why, and is the box's description for a screen reader.
+    const help = ro.Admin.editor.bibDesign.hideCutLineHelp;
+    expect(help).toBe("Bifat: la mijlocul foii A4 rămân doar două repere scurte, la capetele tăieturii, ca după tăiere să nu rămână nimic pe numere.");
+    expect(part).toContain(help);
+    const described = /aria-describedby="([^"]+)"/.exec(box(part))?.[1];
+    expect(described).toBeTruthy();
+    expect(part).toMatch(new RegExp(`id="${described}"[^>]*>${help}<`));
+    // The stored tick is the one drawn, and the cut marks' own box is not moved by it.
+    const ticked = section(await render({ ...DEFAULT_BIB_DESIGN, hideCutLine: true }), "number");
+    expect(box(ticked)).toMatch(/\bchecked\b/);
+    expect(/<input[^>]*name="event\.bibDesign\.cutMarks"[^>]*>/.exec(ticked)?.[0]).not.toMatch(/\bchecked\b/);
+    // The same in English.
+    const english = section(await render({ ...DEFAULT_BIB_DESIGN, hideCutLine: true }, "en"), "number");
+    expect(english).toContain("No dashed line on the cut");
+    expect(english).toContain(en.Admin.editor.bibDesign.hideCutLineHelp);
+    expect(en.Admin.editor.bibDesign.hideCutLineHelp).toBe(
+      "Ticked: across the middle of the A4 sheet only two short marks stay, at the ends of the cut, so nothing is left on the numbers after cutting.",
+    );
   });
 
   it("draws each picture place as a named sub-card, its glyph before its title and its «Calitate» row inside it", async () => {

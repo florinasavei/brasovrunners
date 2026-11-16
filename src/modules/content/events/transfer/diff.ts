@@ -195,6 +195,7 @@ export const FIELD_LABELS = [
   "bib.design.headerImageCrop",
   "bib.design.sponsorImageCrop",
   "bib.design.cutMarks",
+  "bib.design.hideCutLine",
   "bib.design.showEmail",
   "bib.design.showPartners",
   "bib.design.showEventInFooter",

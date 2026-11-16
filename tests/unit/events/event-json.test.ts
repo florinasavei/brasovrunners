@@ -661,6 +661,28 @@ describe("the diff", () => {
     expect(readBibDesign(old).profileFiguresPlace).toBe("right");
   });
 
+  it("§NNN carries «Fără linia punctată pe tăietură» of the bib's sheet: a file that ticks it shows the change under its own label, in both languages, and one made before the tick reads off", () => {
+    const incoming = sampleConfig();
+    incoming.bib.design = { ...incoming.bib.design, hideCutLine: true };
+    const changes = diffConfigs(same(incoming), same(sampleConfig()));
+    expect(changes.map((change) => change.key)).toEqual(["bib.design.hideCutLine"]);
+    expect(changes[0]).toMatchObject({ label: "bib.design.hideCutLine", locale: null, from: { type: "boolean", value: false }, to: { type: "boolean", value: true } });
+    expect(FIELD_LABELS).toContain("bib.design.hideCutLine");
+    expect(ro.Admin.eventJson.fields.bib.design.hideCutLine).toBe("Număr: fără linia punctată pe tăietură");
+    expect(en.Admin.eventJson.fields.bib.design.hideCutLine).toBe("Bib: no dashed line on the cut");
+    // The file's own text carries the tick there and back.
+    const file = sampleFile();
+    file.event.bib.design = { ...file.event.bib.design, hideCutLine: true };
+    const read = readEventFile(serializeEventFile(file));
+    if (!read.ok) throw new Error("the file did not read back");
+    expect(readBibDesign(read.file.event.bib.design)).toMatchObject({ hideCutLine: true, cutMarks: false });
+    // A file made before the tick has no such key: read through the design's schema, the dashed line every sheet printed.
+    const old: Record<string, unknown> = { ...sampleConfig().bib.design };
+    delete old.hideCutLine;
+    expect(readBibDesign(old).hideCutLine).toBe(false);
+    expect(readBibDesign(old)).toEqual(readBibDesign(sampleConfig().bib.design));
+  });
+
   it("treats a picture as its bytes: the same hash under another address is no change, another hash is", () => {
     const movedAddress = sampleConfig();
     movedAddress.cover = { url: OTHER_PICTURE, crop: { x: 0, y: 0, w: 0.5, h: 0.5 } };

@@ -23,7 +23,7 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { changeCheckpoints, listCheckpoints, SavedCheckpointsRefusal } from "@/modules/event-checkpoints/checkpoints";
 import type { PostedCheckpoint } from "@/modules/event-checkpoints/domain/checkpoint";
-import { DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
+import { DEFAULT_BIB_DESIGN, readBibDesign } from "@/modules/registrations/bib-design";
 import { badgeColourReadable, DEFAULT_BADGE_DESIGN, readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
 import { uploadBodyImage } from "@/modules/media/service";
 import { getStorage } from "@/modules/media/storage";
@@ -652,6 +652,45 @@ describe("import as a new event", () => {
     expect((await reload(event.id)).bibDesign).toBeNull();
     const plain = await importEventAsNew(db, { actor: admin, file: await fileOf(event.id), fetchImpl: serving(), now: NOW });
     expect((await reload(plain.eventId)).bibDesign).toBeNull();
+  });
+
+  it("§NNN carries «Fără linia punctată pe tăietură» of the bib's design: as a new event, over one, and off from a file made before the tick", async () => {
+    const { event } = await seedRace({ bibDesign: { ...DEFAULT_BIB_DESIGN, showLogo: false, hideCutLine: true } }, {}, false);
+    const file = await fileOf(event.id);
+    expect(file.event.bib.design).toMatchObject({ hideCutLine: true, cutMarks: false });
+
+    // As a new event: the tick is the file's, and the copy's own export is the same configuration but for the two slugs.
+    const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
+    expect(readBibDesign((await reload(created.eventId)).bibDesign)).toMatchObject({ hideCutLine: true, cutMarks: false, showLogo: false });
+    const copy = await exportEvent(db, { actor: admin, eventId: created.eventId, now: NOW });
+    expect(diffConfigs(copy.file.event, file.event).map((change) => change.key).sort()).toEqual(["translations.en.slug", "translations.ro.slug"]);
+
+    // Over another event, whose sheet still has its dashed line: the diff names the tick with both sides, and the import writes it.
+    const { target } = await seedTarget();
+    expect(readBibDesign(target.bibDesign).hideCutLine).toBe(false);
+    const diff = await diffEventImport(db, { actor: admin, file, eventId: target.id });
+    expect(diff.changes.find((change) => change.key === "bib.design.hideCutLine")).toMatchObject({
+      label: "bib.design.hideCutLine",
+      from: { type: "boolean", value: false },
+      to: { type: "boolean", value: true },
+    });
+    const over = await importEventOver(db, await overInput(file, target.id));
+    expect(over.changed).toContain("bib.design.hideCutLine");
+    expect(readBibDesign((await reload(target.id)).bibDesign)).toMatchObject({ hideCutLine: true, cutMarks: false });
+    // The same file a second time changes nothing about it.
+    const again = await diffEventImport(db, { actor: admin, file, eventId: target.id });
+    expect(again.changes.map((change) => change.key)).not.toContain("bib.design.hideCutLine");
+
+    // A file made before the tick has no such key: the event made from it prints the dashed line every sheet printed.
+    const old = JSON.parse(JSON.stringify(file)) as EventFile;
+    delete old.event.bib.design.hideCutLine;
+    const read = readEventFile(JSON.stringify(old));
+    if (!read.ok) throw new Error(`an older file did not read: ${read.refusal} ${read.detail ?? ""}`);
+    const older = await importEventAsNew(db, { actor: admin, file: read.file, fetchImpl: serving(), now: NOW });
+    const stored = (await reload(older.eventId)).bibDesign;
+    // Its other choice is kept, so a design is stored, and the tick reads off in it.
+    expect(stored).not.toBeNull();
+    expect(readBibDesign(stored)).toMatchObject({ hideCutLine: false, showLogo: false });
   });
 
   it("copies the GPX byte for byte under a key of its own, with its name", async () => {
