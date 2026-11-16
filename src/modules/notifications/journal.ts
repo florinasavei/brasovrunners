@@ -181,6 +181,8 @@ const VOLUNTEER_PERSON_TYPES: ReadonlySet<EmailMessageType> = new Set([
   "VOLUNTEER_AGREEMENT_REQUEST",
   "VOLUNTEER_AGREEMENT_ACCEPTED",
   "VOLUNTEER_ROLE_ASSIGNED",
+  // «Punctul tău de voluntar» (§956): to the volunteer the plan places, whose id its payload carries like the others'.
+  "VOLUNTEER_POINT",
 ]);
 
 /** A row to the club's own mailboxes (§670): never a person's line, never counted for a person. */

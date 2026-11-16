@@ -300,6 +300,20 @@ export const EMAIL_SAMPLE_FAMILY_CONFIRMED = [
 ] as const;
 
 /**
+ * «Punctul tău de voluntar» (§956), as `/admin/emails` previews it: the made-up race's third point with its note — so the
+ * preview shows the band that names the point and the line the message adds under it, around the club's words. Machinery
+ * lines of the message, never fields of the closed set: no club text can hold them, and the save has nothing of them to
+ * refuse. No role, as no volunteer's preview has one (the message says nothing about roles then), and no picture: a
+ * preview draws none of the club's own.
+ */
+export const EMAIL_SAMPLE_PLAN_POINT = {
+  number: 3,
+  km: 5.5,
+  name: { ro: "Apă la cabană", en: "Water at the hut" },
+  note: { ro: "Mașinile se lasă în parcarea de jos; sus se urcă pe jos, 10 minute.", en: "Cars stay in the lower car park; the way up is on foot, 10 minutes." },
+} as const;
+
+/**
  * The sample's value for a field of the closed set, in one language — every field has one since
  * §373 (email follow-up), so the preview and the legend under the editor show each of them.
  */

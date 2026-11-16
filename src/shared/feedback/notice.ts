@@ -107,6 +107,8 @@ const SENTENCES: Readonly<Record<string, { count?: string; values?: Readonly<Rec
   sparesReserved: { count: "count", values: { from: "from", to: "to" } },
   // A send of invitations that added supplementary places (§647): how many invited, and the capacity now.
   invitationsSentRaised: { count: "count", values: { capacity: "capacity" } },
+  // «Trimite fiecăruia punctul lui» with people at a point who have no address (§956): how many messages, and how many such people.
+  planPointsSentSomeWithout: { count: "queued", values: { noAddress: "noAddress" } },
 };
 
 /**
@@ -420,7 +422,50 @@ export type ConfirmSpec = {
    * document the person signed.
    */
   emailOptOut?: ConfirmEmailOptOut;
+  /**
+   * A box the reader may tick in the dialog (§956): «Trimite din nou tuturor» in the question of «Trimite fiecăruia
+   * punctul lui» — a wider press than the one the question opened with. Unticked whenever a question opens. Ticked, the
+   * dialog reads as `ticked` words it (`withOption`: its body, its lines, its bold email line, its quieter lines) and the confirm
+   * writes `on` into the form's hidden `field`; unticked it writes the field empty, so a tick from an earlier press never
+   * rides along (`optionAnswer`). Unlike `tick`, the confirm button never waits for it. Without JavaScript there is no
+   * dialog and the field posts as the page drew it: empty — the narrower press.
+   */
+  option?: ConfirmOption;
 };
+
+/** `ConfirmSpec.option`: the hidden input the answer fills, the box's words, and how the dialog reads once it is ticked. */
+export type ConfirmOption = { field: string; label: string; ticked: Partial<Pick<ConfirmSpec, "body" | "lines" | "email" | "also">> };
+
+/**
+ * The dialog as it reads with its optional box ticked (§956): the body, the lines under it, the email line and the quieter
+ * lines `ticked` names take the place of the question's own; what it does not name stays. The spec unchanged while
+ * unticked, or without the box. Pure, like `withEmailOff`.
+ */
+export function withOption(spec: ConfirmSpec, on: boolean): ConfirmSpec {
+  if (!spec.option || !on) return spec;
+  const { body, lines, email, also } = spec.option.ticked;
+  return {
+    ...spec,
+    ...(body !== undefined ? { body } : {}),
+    ...(lines !== undefined ? { lines } : {}),
+    ...(email !== undefined ? { email } : {}),
+    ...(also !== undefined ? { also } : {}),
+  };
+}
+
+/**
+ * What an answered dialog with an optional box writes into its form: `on` when the box was ticked, empty when it was not;
+ * null for a dialog without the box. Pure, like `tickAnswer`.
+ */
+export function optionAnswer(spec: ConfirmSpec, on: boolean): { field: string; value: "on" | "" } | null {
+  return spec.option ? { field: spec.option.field, value: on ? "on" : "" } : null;
+}
+
+/** Every optional box's field the dialogs of one form may answer: a press let through unasked posts each of them empty. */
+export function optionFields(specs: ConfirmSpec | readonly ConfirmSpec[] | undefined): string[] {
+  const list = !specs ? [] : Array.isArray(specs) ? (specs as readonly ConfirmSpec[]) : [specs as ConfirmSpec];
+  return [...new Set(list.flatMap((spec) => (spec.option ? [spec.option.field] : [])))];
+}
 
 /** `ConfirmSpec.placeChanges`: the loaded settings, the page's numbers, the words, and whether the dialog is only for them. */
 export type PlaceChangeSpec = {

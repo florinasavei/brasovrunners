@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.51-2026-11-16
+
+- **«Trimite fiecăruia punctul lui» on «Planul voluntarilor»** — one press now emails each volunteer placed at a point their own point: its number, name and kilometre, its note, the roles you gave them and what they ask, the contact person of the role's category, and the plan's picture when you uploaded one. It asks first and says how many people it writes to, how many already know their point, how many stand at a point with no email address and how many stand at none. Pressing again writes only to people placed or moved since; tick «Trimite din nou tuturor» in the question to write to everybody. A message still waiting is not sent if the person was meanwhile moved, taken off, cancelled or given another address. Placing or moving somebody still emails nobody. Only the Organizer and the Administrators can press; the message's words are yours to rewrite under «Setări» → «Emailuri» («Punctul tău de voluntar»). §956.
 ## BR-V4.50-2026-11-16
 
 - **«Decizie ziua cursei» on the «Voluntari» list** — a column right after «Note interne» in which the organizers write what they decided for each volunteer on race day («vine la 8:00 la start», «rezervă»): one short line, written or changed from the row («Scrie decizia» / «Modifică decizia») and on the person's page, cleared by saving the box empty, for a person in any state. Seen by the organizers only: nobody is emailed, and it is on no public page, badge, desk or file. Listed in «Toate datele unei persoane». §954.

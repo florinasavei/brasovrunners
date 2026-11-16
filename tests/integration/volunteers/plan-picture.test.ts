@@ -581,7 +581,7 @@ describe("§952 the page's presses: «Încarcă poza planului», «Schimbă poza
     const picture = await storedPicture();
     await setPicture(staff.ADMIN!, picture.id);
     for (const assetId of ["", "   "]) {
-      expect(await press(setPlanPictureAction, { assetId })).toBe(`/ro/admin/events/${raceId}/plan-voluntari?planError=VALIDATION_ERROR#plan-picture`);
+      expect(await press(setPlanPictureAction, { assetId })).toBe(`/ro/admin/events/${raceId}/plan-voluntari?planError=VALIDATION_ERROR#admin-alert`);
     }
     expect((await rowOf()).volunteerPlanMediaAssetId).toBe(picture.id);
     expect(toasted()).toEqual([]);
@@ -590,8 +590,8 @@ describe("§952 the page's presses: «Încarcă poza planului», «Schimbă poza
   });
 
   it("comes back with the refusal's code for a picture that is not one, and to the volunteers' screen for a form with no event", async () => {
-    expect(await press(setPlanPictureAction, { assetId: "11111111-1111-4111-8111-111111111111" })).toContain("planError=VALIDATION_ERROR#plan-picture");
-    expect(await press(setPlanPictureAction, { assetId: "the map" })).toContain("planError=VALIDATION_ERROR#plan-picture");
+    expect(await press(setPlanPictureAction, { assetId: "11111111-1111-4111-8111-111111111111" })).toContain("planError=VALIDATION_ERROR#admin-alert");
+    expect(await press(setPlanPictureAction, { assetId: "the map" })).toContain("planError=VALIDATION_ERROR#admin-alert");
     expect((await rowOf()).volunteerPlanMediaAssetId).toBeNull();
 
     const picture = await storedPicture();
@@ -609,8 +609,8 @@ describe("§952 the page's presses: «Încarcă poza planului», «Schimbă poza
 
     for (const role of ["DEV", "COPYWRITER", "CONTRIBUTOR", "MEMBER"] as const) {
       state.actor = staff[role];
-      expect(await press(setPlanPictureAction, { assetId: wanted.id }), role).toBe(`/ro/admin/events/${raceId}/plan-voluntari?planError=FORBIDDEN#plan-picture`);
-      expect(await press(removePlanPictureAction), role).toBe(`/ro/admin/events/${raceId}/plan-voluntari?planError=FORBIDDEN#plan-picture`);
+      expect(await press(setPlanPictureAction, { assetId: wanted.id }), role).toBe(`/ro/admin/events/${raceId}/plan-voluntari?planError=FORBIDDEN#admin-alert`);
+      expect(await press(removePlanPictureAction), role).toBe(`/ro/admin/events/${raceId}/plan-voluntari?planError=FORBIDDEN#admin-alert`);
     }
     expect(state.asked).toEqual(Array.from({ length: 8 }, () => "canManageVolunteers"));
     expect(state.serviceCalls).toBe(0);
@@ -698,7 +698,8 @@ describe("§952 the plan's page draws the picture", () => {
   it("is in English for an English reader", async () => {
     const stored = await storedPicture();
     state.locale = "en";
-    const escaped = (text: string) => text.replace(/'/g, "&#x27;");
+    // As the markup carries an apostrophe and a quotation mark — the help names the button that sends the picture (§956).
+    const escaped = (text: string) => text.replace(/'/g, "&#x27;").replace(/"/g, "&quot;");
 
     const bare = await planPage();
     expect(bare).toContain(escaped(en.Admin.volunteers.plan.picture.title));

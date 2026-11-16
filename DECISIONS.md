@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.50-2026-11-16 -->
+<!-- PROJECT_BASELINE: BR-V4.51-2026-11-16 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.50-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.51-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -30178,3 +30178,59 @@ The marks are drawn before the numbers, as the line always was, so a band that s
 **Not done.** The file is still exactly A4, with no bleed beyond the trim and no crop marks outside it. And the sheet was checked through what the PDF is asked to draw and a rendering of it on screen, not on paper.
 
 Baseline `BR-V4.50-2026-11-16`.
+
+## 956. «Trimite fiecăruia punctul lui»: one press on «Planul voluntarilor» emails each placed volunteer their own point, what they do there and the plan's picture
+
+**The owner, 2026-11-16, with a picture of Saturday's route and its volunteers' points numbered on it:** «trebui sa pot incarca si planul voluntarilor pe traseu in genul [pozei] si sa ii pot distribui din aplicatie, sa stie exact unde si cum». Asked how the plan should reach the volunteers, the owner chose «Email din site, la apăsarea ta». The race is Saturday, 2026-11-21.
+
+**What was there.** «Planul voluntarilor» and its picture (the two decisions of the same day): who stands at which point of the route, built and printed on one page, the organizers' map above the points. It was the organizers' alone — the plan emailed nobody, and each volunteer still had to be told by hand.
+
+**Decision.** A button on the plan's page, «Trimite fiecăruia punctul lui» / "Send each their point", emails each placed volunteer **their own** point — never the plan: a new message type, `VOLUNTEER_POINT` (migration `0210`, expand only: the enum's value and nothing else).
+
+**Who presses.** Whoever works the volunteers (`canManageVolunteers`: the Organizer and the Administrators), asked by the Server Action at its own door and again by the service before anything is read. The Tehnic role, the Redactor, a desk Volunteer and a member are refused with nothing queued.
+
+**Who is written to.** Every volunteer of the event who stands at one of its points, is not cancelled and has an address: one message each, in the language of their own row, queued through the outbox in the press's own transaction (BR-REQ-080-02) and under the event row's lock — the lock «Pune aici» and «Scoate» take, so a person being moved and a press wait in a line. Nobody else: not a person at no point, not a cancelled one, not a row with no address (§865), and never another event's people — a row that names another event's point stands at none of this route's.
+
+**It asks first, with four numbers.** The question — and the section on the page, before anything is pressed — states what the service counted (`previewVolunteerPoints`, the press's own count): how many people are written to, how many already know the point they stand at, how many stand at a point with no address (the organizers tell those themselves), and how many stand at no point yet; then, worded by the dialogs' one builder, the email that leaves and to how many. With nobody to write to there is no button, and the service refuses with the reason: nobody with an address stands at a point (`VOLUNTEER_POINTS_NOBODY`), or everybody at a point was already told (`VOLUNTEER_POINTS_ALL_TOLD`, whose sentence says how to write again).
+
+**Not twice — the memory is the outbox's own rows.** No table and no column. `email_outbox.idempotency_key` is unique, and each message is one row keyed by the person, the point and the telling — `volunteer-point:<volunteer>:<point>:<round>`, with the same three and the event in its payload; `round` is 1 for the person's first message and one more for each later one. Whether a person «already knows the point they stand at» is read from their rows (`point-mail.ts#alreadyTold`, pure):
+
+- their newest row still waits to leave (PENDING, PROCESSING) and names the point they stand at, at the address their row holds now → told: it is on its way, and it says what is true when it leaves;
+- else the newest of their rows that reached them (SENT — or COMPLAINED, which reached the inbox) names that point at that address → told;
+- anything else → not told. A message **withdrawn** at the send is deleted by the outbox, so it is no row at all. A message that **failed** for good or that the receiving server **refused** (FAILED, BOUNCED) reached nobody. A message that named another point told them another point — moved away and back counts too: what they heard last is what counts — and one that went to an address corrected since told nobody at the new one.
+
+A press writes only to those not told: after three more people are placed, pressing again writes to those three. The key alone could not carry the rule, which is why the telling is in it and the statuses are read: a key of the person and the point would refuse the second message of somebody moved away and back, hold a failed row's place for ninety days, and make «din nou tuturor» impossible.
+
+**What the memory does not hold.** The outbox keeps a message that left for ninety days, and one about nobody's registration for ninety from its queueing: a point told earlier than that is told again by the next press. A race's plan lives for days. And a refusal is no reason for it to stop: an address the receiving server refuses is written to again by each press, until the organizers correct it or tell the person themselves.
+
+**«Trimite din nou tuturor».** A box in the question — the confirmation dialog's first optional box (`ConfirmSpec.option`): unticked whenever a question opens, never waited for, and written `on` into the form's hidden field only when ticked and confirmed, so an earlier press's tick never rides along — writes to everybody at a point with an address, told or not: the map was replaced, a point renamed, a role changed. Ticked, the question's numbers and its email line read as the wider press. Once everybody already knows their point the box is all the press can be, so the button itself becomes «Trimite din nou tuturor» and its question says so. The tick's whole road — the dialog's box, the form's hidden field, the submit, the Server Action reading `again=on` — is walked in a browser, on a 320-pixel phone and on a desktop (`tests/e2e/volunteer-plan-mail.spec.ts`): a test of the source cannot see it. An older telling still waiting when a newer one is queued — or a failed one put back in the queue by «Reîncearcă emailurile eșuate» — is withdrawn at the send, so pressing again while a message waits makes one message, not two.
+
+**One edge, known and left as it is.** The send asks «is there a newer telling» by reading the person's rows without a lock, so that promise holds for a row that has not started to render. A row the outbox was already sending when «Trimite din nou tuturor» committed the newer one — claimed, and past that check — is not called back: it leaves, and the newer one after it. Each was asked for by a press, and the second says what is true when it leaves. An ordinary press does not meet this: a row being sent that names the point the person stands at counts as told, so nothing is queued beside it. Closing the edge would mean holding a lock on the person's rows across the provider's call, and the outbox calls the provider outside every transaction (BR-REQ-080-02 criterion 1); two messages a few seconds apart, once, to somebody the organizer asked to write to twice, do not earn that.
+
+**What it says**, in the person's language first and the other after the rule, as every message: the event's title, its day and its place; on the message's highlighted band, the point as the plan's page titles it — its number in the route's order, its kilometre, its name: «Punctul tău la Crosul: 3. 5,5 km — Apă la cabană»; the point's own note when it has one; the roles the organizers gave and what they ask, in the very sentence the role's message uses (one function now words both), and nothing about roles when none was given; the contact person of the roles' category in the footer (§774); the plan's picture when the event has one; the event's page, from `APP_BASE_URL`. It names no other volunteer — not even who else stands at the same point — and no telephone number but the contact person's. The club may rewrite its words under «Setări» → «Emailuri» (`{eventTitle}` is its one field); the point, the note, the roles and the picture are the platform's own lines around those words, whoever wrote them.
+
+**The picture** is drawn once, as wide as the message's column (550 pixels) and never wider than its own, inside a link to the whole picture; the same link stands in words under it and in the second half, and the plain-text half names it with its address. It is a hosted picture at the store's public address — the adapter's own configuration, no hostname in the code — as the QR and a newsletter's pictures are, at the display size the plan's page uses, and it is read through the plan (`plan.ts#readVolunteerPlanPicture`), so no file of the emails names the column. The store keeps pictures as WebP; a mail program that does not draw WebP shows the link alone.
+
+**The state at the send, not at the press** (§331's rule). Everything said is read when the message leaves, and the message is withdrawn — deleted: nothing sent, nothing failed — when the person was cancelled or deleted, has no address or another address than the one it was queued to, stands at no point or at another point than the one it was queued for (moved, taken off, the point deleted from the route), or when a newer telling was queued for them while it still waited. The next press finds them not told and queues the new one.
+
+**After the press.** Back on the plan, at the section, with a toast saying how many volunteers were told and — when there are any — how many stand at a point with no email address; its mail line says what left and when, as after every emailing press. One audit row a press, `event.volunteer_points_sent`: the event, the counts (queued, already told, with no address, at no point) and whether it was «din nou tuturor» — never a person.
+
+**Classed as the role's message is**: the confirmations' road (§443), a person of the public for its audience, not waited for on any page, no club copy, no token and no button. An email press of its own (`volunteers.sendPoints`), so «Emailuri azi» lists it by its press and every row carries who pressed.
+
+**Nobody is told by being placed.** Placing, moving or taking a person off still emails nobody. The guard that lists the files allowed to name a volunteer's point (`tests/unit/volunteers/plan-never-leaves.test.ts`) now lists the email's four — the press's service, the renderer, the template and the preview's made-up point — and holds the renderer and the template to that one message type; the picture's guard keeps its list, the email reading the picture through the plan.
+
+**Refused.**
+
+- *A column on the volunteer («told at», «told which point»).* The outbox already knows, and knows more: whether the message left, failed or was withdrawn. A column would be a second memory to keep in step with the first.
+- *A key without the telling* (`…:<volunteer>:<point>`). It would refuse a person moved away and back, and «din nou tuturor» with them.
+- *Telling a person the moment they are placed or moved.* A plan is built in many small presses; each would be an email, some of them wrong ten seconds later. The organizer presses once, when the plan is right.
+- *Withdrawing queued messages at «Scoate» or at a move.* The send already reads the state; a second place deciding it is a second place to get it wrong.
+- *The whole plan, or who else stands at the same point, in the message.* Other volunteers' names and telephone numbers; the person asked for their own point.
+- *The picture as an attachment.* The master can be several megabytes, once a volunteer; the hosted picture is one address.
+- *Refusing the press for an event that has started or was cancelled.* The organizers decide; the page asks first and states the numbers.
+
+**Not done.** A public page of the plan. Telling anybody automatically when they are placed or moved. The other people at the same point. Ordering these messages after the registrations' own, as the sends to many are ordered, or a warning when the press does not fit the day's email allowance: the press queues as many messages as people it writes to, on the road the roles' messages take.
+
+**A refused press lands on its sentence.** A press that went through comes back to its own section of the plan (`#plan-mail`); a refused one — nobody to write to, everybody already told, a role that may not — comes back to the page's alert (`#admin-alert`), where the refusal's words are, as every press of this page does since §953. The picture's two presses (§952) were brought to the same rule here: they landed at the picture, under the alert.
+
+Baseline `BR-V4.51-2026-11-16`.

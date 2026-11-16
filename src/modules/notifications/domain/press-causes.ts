@@ -87,6 +87,8 @@ export const PRESS_CAUSES = {
   "volunteers.guardianPaper": ["VOLUNTEER_AGREEMENT_ACCEPTED"],
   "volunteers.invite": ["VOLUNTEER_INVITATION"],
   "volunteers.invitationResend": ["VOLUNTEER_INVITATION"],
+  // «Trimite fiecăruia punctul lui» on «Planul voluntarilor» (§956): one message to each volunteer placed at a point.
+  "volunteers.sendPoints": ["VOLUNTEER_POINT"],
   // «Transformă în alergător» (§948): the entry's own email — the declaration to sign on a free place, or the waiting list's.
   "volunteers.toRunner": ["WAITLIST_JOINED", "COMPLETE_DECLARATION"],
 

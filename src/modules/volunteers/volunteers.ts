@@ -2240,7 +2240,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     if (request.kind === "setCheckpoint") {
       // «Planul voluntarilor» (§949): where the person stands on the day — one of this event's points, or none. A cancelled person
       // is placed nowhere, though taking anybody off a point is always allowed. Audited as every other change of a person's boxes:
-      // the box and the point's id, never a name. Nobody is told — it is the organizers' own plan — and no role, state or number moves.
+      // the box and the point's id, never a name. Nobody is told by this press — it is the organizers' own plan, and only the plan's
+      // «Trimite fiecăruia punctul lui» writes to anybody, when an organizer presses it (§956) — and no role, state or number moves.
       const wanted = typeof request.checkpointId === "string" && request.checkpointId.trim() !== "" ? request.checkpointId.trim() : null;
       if (wanted !== null) {
         if (!isUuid(wanted)) throw new DomainError("VALIDATION_ERROR", "that is not a point of the route", ["checkpointId"]);
