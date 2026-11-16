@@ -8,7 +8,7 @@ import { eventHoldsRaffle } from "@/modules/registrations/raffle-mark";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Avem tombolă» (`events.has_raffle`; the owner, 2026-11-16: «o setare per eveniment cum ar fi „avem tombolă" dar doar în
+ * §949 — «Avem tombolă» (`events.has_raffle`; the owner, 2026-11-16: «o setare per eveniment cum ar fi „avem tombolă" dar doar în
  * backoffice vizibil»): off on every event until an organizer ticks it; saved through the editor's real action by its marker (a
  * form without the box never switches it off); one edition's own, so neither a series' later dates nor a copy carry it; and never
  * among the columns a public page reads. The session and navigation stand-ins are `kit-shirt.test.ts`'s.
@@ -110,7 +110,7 @@ async function postSave(form: FormData) {
   expect(outcome, JSON.stringify(outcome)).toBe("redirected");
 }
 
-describe("§NNN «Avem tombolă» on the event", () => {
+describe("§949 «Avem tombolă» on the event", () => {
   it("starts off, and is written on create when ticked", async () => {
     const plain = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     expect((await reloadEvent(plain.id)).hasRaffle).toBe(false);

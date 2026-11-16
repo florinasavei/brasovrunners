@@ -16,7 +16,7 @@ import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Transformă în voluntar» and «Transformă în alergător» (the owner, 2026-11-15: «aș vrea să pot să „transform" un
+ * §948 — «Transformă în voluntar» and «Transformă în alergător» (the owner, 2026-11-15: «aș vrea să pot să „transform" un
  * alergător în voluntar și invers»). BR-REQ-037-03, BR-REQ-034-01, BR-REQ-038-01, BR-REQ-060-01.
  *
  * What is protected, on real PostgreSQL (PGlite), through the real registration flow:
@@ -178,7 +178,7 @@ async function snapshot() {
 const toVolunteer = (registrationId: string, roleId: string, actor: StaffUser = admin, more: { sendEmail?: boolean } = {}) =>
   turnRunnerIntoVolunteer(db, actor, { registrationId, roleId, reason: "a devenit voluntar", ...more }, at(30));
 
-describe("§NNN BR-REQ-037-03 «Transformă în voluntar»: a runner becomes a volunteer", () => {
+describe("§948 BR-REQ-037-03 «Transformă în voluntar»: a runner becomes a volunteer", () => {
   it("cancels the registration through the allocator — the place offered to the first in line — and enters the person on the volunteers, confirmed, with the role given", async () => {
     const { event, roleId } = await createRace(1);
     const radu = await registered(event, "Radu", 0, true);
@@ -371,7 +371,7 @@ async function volunteer(eventId: string, roleId: string, name: string, email: s
 const toRunner = (eventId: string, volunteerId: string, actor: StaffUser = admin, more: Partial<{ firstName: string; lastName: string; relayedByParticipantRequest: boolean }> = {}) =>
   turnVolunteerIntoRunner(db, actor, { eventId, volunteerId, firstName: "Ana", lastName: "Pop", relayedByParticipantRequest: true, ...more }, at(30));
 
-describe("§NNN BR-REQ-037-03 «Transformă în alergător»: a volunteer becomes a runner", () => {
+describe("§948 BR-REQ-037-03 «Transformă în alergător»: a volunteer becomes a runner", () => {
   it("enters the person by the official list's own entry — a counted free place, the declaration theirs to sign — and cancels the volunteer, who keeps roles and number", async () => {
     const { event, roleId } = await createRace(150);
     await setVolunteerNumbersStart(db, admin, { eventId: event.id, start: 500 }, at(0));

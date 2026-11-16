@@ -412,7 +412,7 @@ function eventFieldsFrom(form: FormData) {
     // «Kit de participare» → «Tricou» (§554): a checkbox, read only when the form carried its marker,
     // so a form without the card is "not editing it" rather than "no shirt".
     kitShirt: form.get("event.kitShirt.present") === "1" ? form.get("event.kitShirt") === "on" : undefined,
-    // «Avem tombolă» (§NNN): a checkbox in «Numere de concurs», read only when the form carried its marker.
+    // «Avem tombolă» (§949): a checkbox in «Numere de concurs», read only when the form carried its marker.
     hasRaffle: form.get("event.hasRaffle.present") === "1" ? form.get("event.hasRaffle") === "on" : undefined,
     // «Locurile din lista de așteptare se alocă automat» (§615): a «Da»/«Nu» select, read only when the
     // form carried it — anything but its two values is "not editing it", never a switch.
@@ -515,7 +515,7 @@ function translationInputFrom(form: FormData, locale: Locale) {
     // The club's own weather text (§666), from the place's card under «Vremea» — read only when the
     // box was posted, like the discount note: an absent box leaves the column alone, "" clears it.
     weatherNote: form.has(`translations.${locale}.weatherNote`) ? value("weatherNote") : undefined,
-    // «Mesaj cât înscrierile pe site sunt oprite» (§NNN), from the strip beside «Înscrieri publice deschise» — read only
+    // «Mesaj cât înscrierile pe site sunt oprite» (§948), from the strip beside «Înscrieri publice deschise» — read only
     // when the box was posted, like the two notes above: an absent box leaves the column alone, "" clears it.
     pausedNote: form.has(`translations.${locale}.pausedNote`) ? value("pausedNote") : undefined,
   };

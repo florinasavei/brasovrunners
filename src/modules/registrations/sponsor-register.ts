@@ -43,7 +43,7 @@ export const SPONSOR_REGISTER_LIMIT = 500;
 /** How many earlier recipients the box suggests. */
 export const SPONSOR_RECIPIENT_SUGGESTIONS = 50;
 
-/** The register fold's own anchor on both doors: a delete comes back to it, and the address opens it and the fold it sits in (§NNN). */
+/** The register fold's own anchor on both doors: a delete comes back to it, and the address opens it and the fold it sits in (§948). */
 export const SPONSOR_REGISTER_ANCHOR = "sponsor-register";
 
 const DAY_MS = 86_400_000;
@@ -168,7 +168,7 @@ export async function readSponsorRegister<T extends Record<string, unknown>>(
 }
 
 /**
- * «Șterge» on a row of «Liste date sponsorilor» (§NNN; the owner, 2026-11-15, of a list he had downloaded by mistake:
+ * «Șterge» on a row of «Liste date sponsorilor» (§948; the owner, 2026-11-15, of a list he had downloaded by mistake:
  * «vreau să pot șterge (hard delete) și faza asta, pentru că am generat din greșeală!»).
  *
  * The register is the trail's own rows (§929), so deleting a row of it deletes that audit row — for real, nothing kept

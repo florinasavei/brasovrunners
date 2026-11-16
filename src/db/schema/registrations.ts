@@ -491,7 +491,7 @@ export const registrations = pgTable(
      */
     elite: boolean("elite").notNull().default(false),
     /**
-     * «Ambasador» (§NNN; the owner, 2026-11-14: «pe lângă Elite, adaugă și categoria de „Ambasadori" ca să putem decide
+     * «Ambasador» (§948; the owner, 2026-11-14: «pe lângă Elite, adaugă și categoria de „Ambasadori" ca să putem decide
      * pe cine premiem și pe cine nu», choosing «Ca Elită, fără BIB special»): the club's second category of invited
      * runner. Set and cleared by an Administrator at any time and in any state (`ambassador-mark.ts`), audited. It
      * changes nothing by itself — not the bib, which prints as any other, nor a state, a place, a number, a count or an
@@ -500,7 +500,7 @@ export const registrations = pgTable(
      */
     ambassador: boolean("ambassador").notNull().default(false),
     /**
-     * «Participă la tombolă» (migration `0205`, §NNN; the owner, 2026-11-16: «o bifă importantă, și coloană peste tot de
+     * «Participă la tombolă» (migration `0205`, §949; the owner, 2026-11-16: «o bifă importantă, și coloană peste tot de
      * „participă la tombolă"»): whether this registration's number is written on «Lista pentru tombolă» of an event that holds a
      * raffle (`events.has_raffle`). True by default — everybody who runs is in — and unticked by the Organizer or an Administrator
      * to take one person out (`raffle-mark.ts`), audited. The organizers' own mark and nothing else: never read by the allocator, the
@@ -508,7 +508,7 @@ export const registrations = pgTable(
      */
     inRaffle: boolean("in_raffle").notNull().default(true),
     /**
-     * The Administrator's two ticks on a registration marked «Elită» (§910) or «Ambasador» (§NNN), stored as what they
+     * The Administrator's two ticks on a registration marked «Elită» (§910) or «Ambasador» (§948), stored as what they
      * hide — a staff tick may hide such a runner, never show one: «Apare în clasament» unticked
      * (`elite_hidden_from_results`) leaves the runner's result out of the public results and of everybody's positions
      * (hors concours, `results/domain/hors-concours.ts`); «Apare pe site» unticked (`elite_hidden_from_site`) reads

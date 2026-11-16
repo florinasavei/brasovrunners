@@ -87,7 +87,7 @@ describe("§897 the elite sheet", () => {
   });
 });
 
-describe("§NNN a marked registration's elite bib prints the first name alone", () => {
+describe("§948 a marked registration's elite bib prints the first name alone", () => {
   it("draws the first name where the number goes — never the family name — on the ordinary sheet and on the elite sheet", async () => {
     const silviu = { bibNumber: 7, registeredName: "Silviu Popescu", firstName: "Silviu", elite: true };
     const ion = { bibNumber: 8, registeredName: "Ion Ionescu", firstName: "Ion" };

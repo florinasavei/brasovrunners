@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0204_volunteer_checkpoint` (§NNN; the owner, 2026-11-16: «e foarte important sa avem planul de voluntari si fiecare in
+ * Migration `0204_volunteer_checkpoint` (§949; the owner, 2026-11-16: «e foarte important sa avem planul de voluntari si fiecare in
  * ce punct ramane»), proven on real PostgreSQL (PGlite): one column on the event's volunteers, `checkpoint_id` — nullable, a
  * reference to one of the route's points — so every row from before stands at no point and a row written without it too; a point
  * deleted frees its people; and the file only expands.

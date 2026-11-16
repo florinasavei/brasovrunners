@@ -80,7 +80,7 @@ export type RegisteredLine = {
   /** An elite left out of the ranking (§910): no position, «în afara clasamentului» in its place, and off the public results. */
   outOfRanking?: boolean;
   /**
-   * The registration's marks (§NNN), each with its chip's words — «Elită», «Ambasador» — so whoever hands out the awards sees whose
+   * The registration's marks (§948), each with its chip's words — «Elită», «Ambasador» — so whoever hands out the awards sees whose
    * result this is. Staff-only: this page is the backoffice's, and the published results carry neither.
    */
   marks?: readonly ResultMark[];

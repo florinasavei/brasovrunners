@@ -13,7 +13,7 @@ import { isUuid } from "@/shared/ids";
 import { eventIdOf, field, localeOf } from "@/app/[locale]/admin/events/[id]/volunteer-return";
 
 /**
- * «Pune aici» and «Scoate» on «Planul voluntarilor» (§NNN; the owner, 2026-11-16: «e foarte important sa avem planul de
+ * «Pune aici» and «Scoate» on «Planul voluntarilor» (§949; the owner, 2026-11-16: «e foarte important sa avem planul de
  * voluntari si fiecare in ce punct ramane»): one press puts a volunteer at a point of the event's route, or takes them off the
  * one they stand at. The form posts the point it wants (`checkpointId`, empty to take the person off), never a toggle, so a second
  * press before the page answers saves the same. The service asks for the role again (`canManageVolunteers`: the Organizer and the

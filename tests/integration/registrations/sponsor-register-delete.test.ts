@@ -13,7 +13,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Șterge» on a row of «Liste date sponsorilor» (the owner, 2026-11-15, of a list downloaded by mistake: «vreau
+ * §948 — «Șterge» on a row of «Liste date sponsorilor» (the owner, 2026-11-15, of a list downloaded by mistake: «vreau
  * să pot șterge (hard delete) și faza asta, pentru că am generat din greșeală!»). BR-REQ-071-01, and BR-REQ-060-01 for who.
  *
  * What is protected, on real PostgreSQL (PGlite), through the service, the register as the server draws it, the two
@@ -203,7 +203,7 @@ async function press(hidden: Record<string, string>): Promise<string> {
   throw new Error("expected a redirect");
 }
 
-describe("§NNN BR-REQ-071-01 «Șterge» deletes a list's own record from the sponsors' register, for real", () => {
+describe("§948 BR-REQ-071-01 «Șterge» deletes a list's own record from the sponsors' register, for real", () => {
   it("the row goes from the register on both doors and from «Dată partenerilor» of each registration it held; the other lists stay", async () => {
     const { race, ovidiu } = await threeLists();
     expect(await recipientsOf(race)).toEqual(["Ovidiu", "Diana", "nistor"]);
@@ -304,7 +304,7 @@ describe("§NNN BR-REQ-071-01 «Șterge» deletes a list's own record from the s
   });
 });
 
-describe("§NNN the register offers «Șterge» beside each list, to the Administrator alone, and asks first", () => {
+describe("§948 the register offers «Șterge» beside each list, to the Administrator alone, and asks first", () => {
   async function drawn(removal?: Parameters<typeof SponsorListRegister>[0]["removal"], saved = false) {
     const { race } = await threeLists();
     const { lists } = await readSponsorRegister(db, admin, { eventId: race, locale: state.locale });
@@ -387,7 +387,7 @@ describe("§NNN the register offers «Șterge» beside each list, to the Adminis
   });
 });
 
-describe("§NNN BR-REQ-060-01 the two pages hand the register its «Șterge» only for a role that may delete", () => {
+describe("§948 BR-REQ-060-01 the two pages hand the register its «Șterge» only for a role that may delete", () => {
   const blockOf = (tree: unknown) => elements(tree).find((element) => element.type === SponsorListButton)?.props as unknown as Parameters<typeof SponsorListButton>[0] | undefined;
 
   it.each([["ADMIN"], ["SUPERADMIN"]] as const)("an event's registrations page hands the %s the press, on that event's door", async (role) => {
@@ -437,7 +437,7 @@ describe("§NNN BR-REQ-060-01 the two pages hand the register its «Șterge» on
   });
 });
 
-describe("§NNN the press itself: «Șterge» posted from the register", () => {
+describe("§948 the press itself: «Șterge» posted from the register", () => {
   it("deletes the list and comes back to the register on the event's registrations page, saying so", async () => {
     const { race, ovidiu } = await threeLists();
     const to = await press({ uiLocale: "ro", listId: ovidiu, door: "registrations", eventId: race });

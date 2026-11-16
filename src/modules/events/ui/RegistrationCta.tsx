@@ -229,7 +229,7 @@ export default async function RegistrationCta({
   if (cta.kind === "PAUSED") {
     return (
       <Typography variant="body1" data-testid="registration-paused" sx={{ mt: { xs: DENSITY.gapSm, sm: 3 }, fontWeight: 500 }}>
-        {/* The club's own sentence for this event when it wrote one (§NNN), the platform's otherwise. */}
+        {/* The club's own sentence for this event when it wrote one (§948), the platform's otherwise. */}
         {cta.reason === "SWITCH" ? (cta.note ?? t("cta.paused")) : t("cta.pausedOffersOnly")}
       </Typography>
     );

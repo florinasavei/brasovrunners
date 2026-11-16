@@ -14,7 +14,7 @@ import { changeVolunteer, setVolunteerNumbersStart } from "@/modules/volunteers/
 import { approveNotices, removeApprovedNotices } from "./legal-fixture";
 
 /**
- * §NNN — the volunteers' numbers and the two transforms under real connections racing (BR-REQ-038-01, BR-REQ-034-01).
+ * §948 — the volunteers' numbers and the two transforms under real connections racing (BR-REQ-038-01, BR-REQ-034-01).
  *
  * Three things only a second connection can show, which PGlite — one connection, everything in a line whether or not a
  * row is locked (`tests/helpers/db.ts`) — cannot:
@@ -31,7 +31,7 @@ import { approveNotices, removeApprovedNotices } from "./legal-fixture";
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
 
-describe("§NNN BR-REQ-038-01 the volunteers' numbers and the transforms, pressed at once", () => {
+describe("§948 BR-REQ-038-01 the volunteers' numbers and the transforms, pressed at once", () => {
   const pool = new pg.Pool({ connectionString: DATABASE_URL, max: 20 });
   const db = drizzle(pool);
   // The real clock: the events start a month from now, and the notices inserted here are the ones in force.

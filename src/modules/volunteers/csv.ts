@@ -56,7 +56,7 @@ export type VolunteerCsvRow = {
   guardianConsent: string;
   /** «Are kit» (§904): «Da» / «Nu» in the reader's words. */
   hasKit: string;
-  /** The volunteer's number (§NNN), or null before they have one. */
+  /** The volunteer's number (§948), or null before they have one. */
   bibNumber: number | null;
 };
 

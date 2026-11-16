@@ -177,7 +177,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   */
   /*
     A registration marked «Elită» (§897) draws as the sheet prints it: an elite bib (§895) — its first name alone where
-    the number goes (§NNN, `eliteBibName`), its own number under it only as the design ticks — and never the members' design.
+    the number goes (§948, `eliteBibName`), its own number under it only as the design ticks — and never the members' design.
   */
   const member =
     !row.elite && event.design.member.enabled && row.memberBibWanted && (await memberCanonicalEmails(db)).has(row.canonicalEmail);

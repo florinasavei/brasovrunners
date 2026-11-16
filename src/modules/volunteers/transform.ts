@@ -19,7 +19,7 @@ import { isVolunteerMinor, VOLUNTEER_AGE_MAX, VOLUNTEER_CITY_MAX, VOLUNTEER_MINI
 import { changeVolunteer } from "./volunteers";
 
 /*
-  «Transformă în voluntar» and «Transformă în alergător» (§NNN; the owner, 2026-11-15: «aș vrea să pot să „transform" un
+  «Transformă în voluntar» and «Transformă în alergător» (§948; the owner, 2026-11-15: «aș vrea să pot să „transform" un
   alergător în voluntar și invers»).
 
   A volunteer is not a registration (`volunteers.ts`), and neither press makes one into the other: each is the two presses
@@ -37,7 +37,7 @@ import { changeVolunteer } from "./volunteers";
   no declaration is signed for anybody, and every existing refusal of those verbs stands. Each is the Administrator's
   (`canManageRegistrations`), asserted here before anything is read and again by every verb underneath (BR-REQ-060-01).
 
-  **The numbers** (§NNN): a number is never reissued and never moves. The runner's stays retired with the cancelled
+  **The numbers** (§948): a number is never reissued and never moves. The runner's stays retired with the cancelled
   registration; as a volunteer the person draws one from the volunteers' own series, like every volunteer confirmed. The
   volunteer's stays retired with the cancelled row; as a runner the person draws theirs when they are confirmed.
 */
@@ -101,7 +101,7 @@ export type RunnerToVolunteerResult = {
  *    the person gave for the same event. Never their place on a public list, which is the person's own tick (§821). An
  *    address already on the event's volunteers is that entry's refusal (`VOLUNTEER_ALREADY_LISTED`): cancel the
  *    registration alone;
- * 3. the person is confirmed, which draws their number from the volunteers' series (§NNN);
+ * 3. the person is confirmed, which draws their number from the volunteers' series (§948);
  * 4. the registration is cancelled by the staff verb (`cancelRegistrationByStaff`): through the allocator, with its own
  *    trail row — a printed bib named in it (§311);
  * 5. one row ties the two: `registration.became_volunteer`, ids only.

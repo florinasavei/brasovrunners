@@ -500,7 +500,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           the server refuses it anyway. Also what a press refused for it lands on (`PUBLIC_REGISTRATION_PAUSED`).
         */
         <Alert severity="info" sx={{ mb: 2 }} data-testid="registration-paused" id={ERROR_SUMMARY_ID} tabIndex={-1}>
-          {/* The switch's sentence in the club's own words for this event, when it wrote them (§NNN). */}
+          {/* The switch's sentence in the club's own words for this event, when it wrote them (§948). */}
           {pausedReason === "SWITCH" ? (pausedNoteOf(event) ?? tEvent("cta.paused")) : tEvent("cta.pausedOffersOnly")}{" "}
           <MuiLink
             href={getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } })}

@@ -148,7 +148,7 @@ export function volunteerExport(
     guardianConsent: isVolunteerMinor(person.age) ? yesNo(person.guardianAcceptedAt !== null) : "",
     // «Are kit» (§904): the organizers' own mark, for whoever packs the kits from the file.
     hasKit: yesNo(person.hasKit),
-    // The volunteer's number (§NNN): for the raffle and for whoever hands out the badges.
+    // The volunteer's number (§948): for the raffle and for whoever hands out the badges.
     bibNumber: person.bibNumber,
   }));
 

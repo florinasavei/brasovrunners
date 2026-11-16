@@ -18,7 +18,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the volunteers' numbers (the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr de concurs"» — and, asked
+ * §948 — the volunteers' numbers (the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr de concurs"» — and, asked
  * which numbers, «Serie proprie»). BR-REQ-038-01, and BR-REQ-060-01 for who.
  *
  * What is protected, on real PostgreSQL (PGlite):
@@ -158,7 +158,7 @@ const trailOf = (action: string) => db.select().from(auditLogs).where(and(eq(aud
 const confirm = (id: string, minute = 60) => changeVolunteer(db, admin, { kind: "setState", eventId, id, state: "CONFIRMED" }, at(minute), { sendEmail: false });
 const setState = (id: string, next: "REGISTERED" | "CANCELLED", minute = 70) => changeVolunteer(db, admin, { kind: "setState", eventId, id, state: next }, at(minute), { sendEmail: false });
 
-describe("§NNN BR-REQ-038-01 «Numerele voluntarilor încep de la»: the series' first number", () => {
+describe("§948 BR-REQ-038-01 «Numerele voluntarilor încep de la»: the series' first number", () => {
   it("an event gives its volunteers no number until the start is set: a confirmation draws none", async () => {
     const ana = await volunteer("Ana Pop", "REGISTERED", 1);
     await confirm(ana);
@@ -255,7 +255,7 @@ describe("§NNN BR-REQ-038-01 «Numerele voluntarilor încep de la»: the series
   });
 });
 
-describe("§NNN BR-REQ-038-01 a volunteer's number: drawn at the confirmation, once, and never taken back", () => {
+describe("§948 BR-REQ-038-01 a volunteer's number: drawn at the confirmation, once, and never taken back", () => {
   beforeEach(async () => {
     await setVolunteerNumbersStart(db, admin, { eventId, start: 500 }, NOW);
   });
@@ -316,7 +316,7 @@ describe("§NNN BR-REQ-038-01 a volunteer's number: drawn at the confirmation, o
   });
 });
 
-describe("§NNN BR-REQ-038-01 one number is one person at the event", () => {
+describe("§948 BR-REQ-038-01 one number is one person at the event", () => {
   it("a volunteer's draw steps over every number a runner wears — a cancelled one's too — an elite line's, a retired one and the desk's spares", async () => {
     // The series was set at 500 while nothing stood there; then numbers came to stand in its way.
     await setVolunteerNumbersStart(db, admin, { eventId, start: 500 }, NOW);
@@ -354,7 +354,7 @@ describe("§NNN BR-REQ-038-01 one number is one person at the event", () => {
   });
 });
 
-describe("§NNN the number in the volunteers' file and on the card's own form", () => {
+describe("§948 the number in the volunteers' file and on the card's own form", () => {
   it("is the file's last column, empty for a person without one — in both languages", async () => {
     await setVolunteerNumbersStart(db, admin, { eventId, start: 500 }, NOW);
     const ana = await volunteer("Ana Pop", "REGISTERED", 1);

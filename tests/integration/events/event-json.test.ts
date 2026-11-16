@@ -464,7 +464,7 @@ describe("import as a new event", () => {
     ["a race registered elsewhere", { registrationMode: "EXTERNAL", capacity: "", waitlistMode: "UNLIMITED", waitlistCapacity: "", declarationDocumentId: "", participantListVisibility: "HIDDEN", hiddenListEnabled: false, hiddenListBibStart: "", registrationOpensAtWallTime: "", registrationClosesAtWallTime: "", externalProvider: "Altă platformă", externalRegistrationUrl: "https://reg.example.test/x", costType: "PAID", costAmount: "50 lei" }, { ro: { discountNote: "10% pentru membri" }, en: { discountNote: "10% for members" } }],
     ["a group run that offers its declaration", { type: "GROUP_RUN", surface: "ASPHALT", offersGroupRunDeclaration: true, registrationMode: "NONE", capacity: "", declarationDocumentId: "", participantListVisibility: "HIDDEN", hiddenListEnabled: false, hiddenListBibStart: "", nightOverride: true, membersOnly: true, isSpecial: false }, {}],
     ["an event with the club's own weather text and no difficulty", { weatherMode: "custom", difficulty: "", costType: "FREE", costAmount: "", costUrl: "", coHosts: [], links: [], routeStrava: "", routeGarmin: "", coordinates: "" }, { ro: { weatherNote: "Ploaie" }, en: { weatherNote: "Rain" } }],
-    // §NNN: the door shut by the switch, with the club's own sentence for it in both languages.
+    // §948: the door shut by the switch, with the club's own sentence for it in both languages.
     ["an event whose door is shut, with the club's own sentence for it", { publicRegistrationOpen: false }, { ro: { pausedNote: "Înscrierile s-au încheiat. Ne vedem la start!" }, en: { pausedNote: "Registration has ended. See you at the start!" } }],
   ];
 
@@ -481,7 +481,7 @@ describe("import as a new event", () => {
     expect(created.dateToBeAnnounced).toBe((await reload(event.id)).dateToBeAnnounced);
   });
 
-  it("§NNN carries «Mesaj cât înscrierile pe site sunt oprite» in the file, each language its own; a file made before it existed imports with none", async () => {
+  it("§948 carries «Mesaj cât înscrierile pe site sunt oprite» in the file, each language its own; a file made before it existed imports with none", async () => {
     const own = { ro: "Înscrierile s-au încheiat. Ne vedem la start!", en: "Registration has ended. See you at the start!" };
     const { event } = await seedRace({ publicRegistrationOpen: false }, { ro: { pausedNote: own.ro }, en: { pausedNote: own.en } }, false);
     const noteOf = async (id: string) => Object.fromEntries((await texts(id)).map((row) => [row.locale, row.pausedNote]));

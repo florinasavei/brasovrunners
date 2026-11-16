@@ -62,7 +62,7 @@ export const EMAILING_PRESSES: Readonly<Record<string, Press>> = {
   createRegistrationAction: { file: REGISTRATIONS, causes: ["registrations.create"], actor: "named" },
   addToWaitlistAction: { file: REGISTRATIONS, causes: ["registrations.waitlistAdd", "registrations.offerNow"], actor: "named" },
   moveReserveEntryAction: { file: REGISTRATIONS, causes: ["registrations.reserveMove"], actor: "named" },
-  // «Transformă în voluntar» / «Transformă în alergător» (§NNN): both in the registrations' file, beside the verbs they compose.
+  // «Transformă în voluntar» / «Transformă în alergător» (§948): both in the registrations' file, beside the verbs they compose.
   turnRunnerIntoVolunteerAction: { file: REGISTRATIONS, causes: ["registrations.toVolunteer"], actor: "named" },
   turnVolunteerIntoRunnerAction: { file: REGISTRATIONS, causes: ["volunteers.toRunner"], actor: "named" },
   moveReserveEntryToOwnAddressAction: { file: RESERVE, causes: ["registrations.reserveOwnAddress"], actor: "named" },
@@ -470,7 +470,7 @@ describe("every emailing press says its email before it is pressed (slice 3)", (
 const OPT_OUT_PRESSES: Readonly<Record<string, { file: string; passes: RegExp }>> = {
   setBibNumberAction: { file: REGISTRATIONS, passes: /setBibNumberByStaff\([^;]*\{ sendEmail \}\)/ },
   cancelRegistrationAction: { file: REGISTRATIONS, passes: /cancelRegistrationByStaff\([^;]*\bsendEmail,/ },
-  // «Transformă în voluntar» (§NNN): one box for the person's two emails — the cancellation's and the role's.
+  // «Transformă în voluntar» (§948): one box for the person's two emails — the cancellation's and the role's.
   turnRunnerIntoVolunteerAction: { file: REGISTRATIONS, passes: /turnRunnerIntoVolunteer\([^;]*\bsendEmail \}/ },
   bulkCancelRegistrationsAction: { file: REGISTRATIONS, passes: /bulkCancelRegistrationsByStaff\([^;]*\{ sendEmail \}\)/ },
   // The editor's window: its own field, apart from the save's other emails.

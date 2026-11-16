@@ -218,7 +218,7 @@ describe("§638 the person whose held place lapses is told by email", () => {
     await db.update(events).set({ capacity: 3 }).where(eq(events.id, event.id));
     expect((await renderOutboxMessage(row, db, at)).text).toContain("Dacă mai vrei să vii, te poți înscrie din nou: mai sunt locuri libere.");
 
-    // «Înscrieri publice deschise» unticked: the card's «închise momentan» (§NNN), «scrie-ne», and no button.
+    // «Înscrieri publice deschise» unticked: the card's «închise momentan» (§948), «scrie-ne», and no button.
     await db.update(events).set({ publicRegistrationOpen: false }).where(eq(events.id, event.id));
     const paused = await renderOutboxMessage(row, db, at);
     expect(paused.text).toContain("Înscrierile pe site sunt închise momentan. Dacă mai vrei să vii, scrie-ne din pagina de contact.");

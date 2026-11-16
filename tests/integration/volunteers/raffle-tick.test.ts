@@ -14,7 +14,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-050-02 — «Tombolă» on the «Voluntari» list (the owner, 2026-11-16: «o bifă importantă, și coloană peste tot de
+ * §949, BR-REQ-050-02 — «Tombolă» on the «Voluntari» list (the owner, 2026-11-16: «o bifă importantă, și coloană peste tot de
  * „participă la tombolă"»), from a real database: with one event chosen that holds a raffle («Avem tombolă»), each row carries
  * the house's one-press tick — a plain form posting the state it wants — which takes the volunteer off the raffle's list or puts
  * them back; an event that holds none draws no such column; and a person's data says when they were taken out (art. 15 GDPR).
@@ -195,7 +195,7 @@ async function press(fields: Record<string, string>): Promise<string> {
   return state.redirected[0];
 }
 
-describe("§NNN «Tombolă» on the «Voluntari» list", () => {
+describe("§949 «Tombolă» on the «Voluntari» list", () => {
   it("draws no such column for an event that holds no raffle", async () => {
     const page = await listPage();
     expect(page).not.toContain('data-testid="volunteer-raffle-form"');

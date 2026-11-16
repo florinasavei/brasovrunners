@@ -16,9 +16,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * §906 — the organizers' door on the event page and the listing card (the owner, 2026-11-03: «cumva trebuie să pot
  * controla mai bine»), rendered from a real database (PGlite) through the public cache's read-through:
  *
- * - «Înscrieri publice deschise» unticked: «Înscrierile pe site sunt închise momentan.» (§NNN), bold on the card, and
+ * - «Înscrieri publice deschise» unticked: «Înscrierile pe site sunt închise momentan.» (§948), bold on the card, and
  *   no button on either — in both languages; or, when the club wrote one for the event, its own sentence in the reader's
- *   language (§NNN), never the other language's;
+ *   language (§948), never the other language's;
  * - «Locurile libere le dau doar eu» with places free and a waiting list that takes nobody: its own words, never
  *   «s-au ocupat», no button;
  * - the same tick with room in the line: the waiting list's door and «Locurile se dau din lista de așteptare», never
@@ -165,7 +165,7 @@ describe("§906 «Înscrieri publice deschise» unticked", () => {
   });
 });
 
-describe("BR-REQ-011-01 §NNN «Mesaj cât înscrierile pe site sunt oprite»: the club's own sentence for the shut door", () => {
+describe("BR-REQ-011-01 §948 «Mesaj cât înscrierile pe site sunt oprite»: the club's own sentence for the shut door", () => {
   /** The event's two languages, each given its own note — or none. */
   const notes = (eventId: string, values: { ro?: string | null; en?: string | null }) =>
     Promise.all(

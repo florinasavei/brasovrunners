@@ -247,7 +247,7 @@ export const routing = defineRouting({
      */
     "/admin/events/[id]/locuri": "/admin/events/[id]/locuri",
     /**
-     * «Planul voluntarilor» (§NNN): one event's points on the route, each with the volunteers who stand at it, built and printed
+     * «Planul voluntarilor» (§949): one event's points on the route, each with the volunteers who stand at it, built and printed
      * on one page. One spelling in both locales, like `locuri` and `urgente`: a backoffice address, read by the club.
      */
     "/admin/events/[id]/plan-voluntari": "/admin/events/[id]/plan-voluntari",

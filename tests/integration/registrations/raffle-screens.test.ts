@@ -12,7 +12,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (the owner, 2026-11-16: «o bifă importantă, și coloană peste tot de „participă la tombolă" și o setare per eveniment
+ * §949 (the owner, 2026-11-16: «o bifă importantă, și coloană peste tot de „participă la tombolă" și o setare per eveniment
  * cum ar fi „avem tombolă" dar doar în backoffice vizibil») — «Tombolă» on the registrations list. With one event chosen that
  * holds a raffle, each row says whether its registration is on the raffle's list: the Administrator's cell is the house's
  * one-press tick, a plain form posting the state it wants and coming back to the row — for the Organizer too. An event that
@@ -192,7 +192,7 @@ beforeEach(async () => {
   state.locale = "ro";
 });
 
-describe("§NNN «Tombolă» on the registrations list", () => {
+describe("§949 «Tombolă» on the registrations list", () => {
   it("draws the column only for one chosen event that holds a raffle", async () => {
     const race = await createRace();
     await register(race.id);

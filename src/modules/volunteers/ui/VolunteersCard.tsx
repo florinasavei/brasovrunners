@@ -104,7 +104,7 @@ type Props = {
   volunteersShirts: boolean;
   /** «Arată public câți voluntari mai sunt necesari», as saved (§773): the volunteers' page says how many a role needs only while it is on; the card always does. */
   volunteersShowCounts: boolean;
-  /** «Numerele voluntarilor încep de la», as saved (§NNN): the first number of the volunteers' own series, or null while the event gives them none. */
+  /** «Numerele voluntarilor încep de la», as saved (§948): the first number of the volunteers' own series, or null while the event gives them none. */
   volunteerBibStart?: number | null;
   /**
    * «Lista voluntarilor e publică pe pagina evenimentului», as saved (§821): the event's page draws a card «Voluntarii» with the name and the role given of
@@ -840,7 +840,7 @@ export default async function VolunteersCard({
               {t("volunteers.shirts.help")}
             </Typography>
           </Box>
-          {/* «Numerele voluntarilor încep de la» (§NNN; the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr de concurs"» — «Serie proprie»): the first
+          {/* «Numerele voluntarilor încep de la» (§948; the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr de concurs"» — «Serie proprie»): the first
               number of the volunteers' own series, a box with its own «Salvează» like the card's ticks — never the editor's save. Saved, every confirmed
               volunteer without a number gets theirs at once; emptied, nobody new draws one and the numbers given stay. */}
           <Box component="form" action={setVolunteerNumbersStartAction} data-testid="volunteer-numbers-form">

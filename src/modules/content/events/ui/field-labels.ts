@@ -230,7 +230,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     discountNote: ["cost", t("editor.discountNote")],
     // The club's own weather text (§666), in the place's card under «Vremea».
     weatherNote: ["whenWhere", `${t("editor.weather.label")} › ${t("editor.weather.note")}`],
-    // The club's sentence for a shut door (§NNN), beside «Înscrieri publice deschise» in the registration window's card.
+    // The club's sentence for a shut door (§948), beside «Înscrieri publice deschise» in the registration window's card.
     pausedNote: ["registrationWindow", t("editor.pausedNote")],
   };
   for (const locale of routing.locales) {

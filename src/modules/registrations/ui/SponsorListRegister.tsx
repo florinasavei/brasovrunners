@@ -26,14 +26,14 @@ type Props = {
   now: Date;
   /** The heading's level: 2 on a page, 3 inside a card. */
   level: 2 | 3;
-  /** «Șterge» beside each list (§NNN); absent for a role that may not delete, and the register is then read-only. */
+  /** «Șterge» beside each list (§948); absent for a role that may not delete, and the register is then read-only. */
   removal?: SponsorListRemoval;
   /** The page came back from a delete of this register: the fold shows what is left. */
   saved?: boolean;
 };
 
 /**
- * «Șterge» on a row of the register (§NNN): the action, and the page the press comes back to — an event's
+ * «Șterge» on a row of the register (§948): the action, and the page the press comes back to — an event's
  * registrations list, by its event, or «Newsletter». Handed only to a role that may delete; the server asserts it
  * again (`sponsor-register.ts#deleteSponsorListRecord`).
  */
@@ -49,7 +49,7 @@ type Column = { key: string; label: string; align?: "right"; render: (list: Give
  * saying how many lists and the latest one. Nothing is drawn before the first list.
  *
  * A Server Component: the lists are audit rows, read by the caller. Never a participant's name — a row is a
- * list, not its people. Its one press is «Șterge» (§NNN; the owner, of a list downloaded by mistake: «vreau să
+ * list, not its people. Its one press is «Șterge» (§948; the owner, of a list downloaded by mistake: «vreau să
  * pot șterge (hard delete) și faza asta»), beside each list for the Administrator alone: asked first, by the
  * recipient and the day, with what goes besides the row — «Dată partenerilor» on each registration of the file —
  * and when it is right: for a list that reached nobody. One definition of the columns, two layouts,

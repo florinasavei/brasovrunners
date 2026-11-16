@@ -116,7 +116,7 @@ async function wornNumbers<T extends Record<string, unknown>>(
     .from(eventEliteEntries)
     .where(and(eq(eventEliteEntries.eventId, eventId), isNotNull(eventEliteEntries.bibNumber)));
   for (const row of elite) if (row.number !== null) taken.add(row.number);
-  // And the numbers the event's volunteers wear (§NNN), whatever each one's state: one number is one person at the
+  // And the numbers the event's volunteers wear (§948), whatever each one's state: one number is one person at the
   // event, so a runner's draw, the desk's box, a suggestion and a print of spares never hand out a volunteer's.
   const volunteers = await db
     .select({ number: eventVolunteers.bibNumber })
@@ -257,7 +257,7 @@ async function replacedBibNumbers<T extends Record<string, unknown>>(db: Databas
 }
 
 /**
- * The numbers of volunteers deleted from this event's list (§NNN): the row is gone and its number with it, so the
+ * The numbers of volunteers deleted from this event's list (§948): the row is gone and its number with it, so the
  * delete writes the number into its own trail row (`volunteer.deleted`, about the event) and every draw reads it back —
  * a badge already handed out is never some other person's number. The number and never the person, as an erasure's.
  */
@@ -276,13 +276,13 @@ async function deletedVolunteerNumbers<T extends Record<string, unknown>>(db: Da
   return rows.map((row) => row.number);
 }
 
-/** Every number retired at this event without a row wearing it: erased (§311), replaced by hand (§548), or a deleted volunteer's (§NNN). */
+/** Every number retired at this event without a row wearing it: erased (§311), replaced by hand (§548), or a deleted volunteer's (§948). */
 export async function retiredBibNumbers<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number[]> {
   return [...(await erasedBibNumbers(db, eventId)), ...(await replacedBibNumbers(db, eventId)), ...(await deletedVolunteerNumbers(db, eventId))];
 }
 
 /**
- * The next free number of the volunteers' own series (§NNN; the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr
+ * The next free number of the volunteers' own series (§948; the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr
  * de concurs"» — «Serie proprie»): the lowest number at or above the event's «Numerele voluntarilor încep de la» that
  * nobody at the event wears or wore — no runner (a cancelled one's included), no line of the elite list, no other
  * volunteer, none retired, none of the desk's spares. In order of confirmation, like a runner's (§173), and never
@@ -305,7 +305,7 @@ export async function pickVolunteerNumber<T extends Record<string, unknown>>(tx:
 }
 
 /**
- * The highest number a runner of this event wears or may come to wear (§NNN) — what «Numerele voluntarilor încep de
+ * The highest number a runner of this event wears or may come to wear (§948) — what «Numerele voluntarilor încep de
  * la» must sit above, so the two series do not run into each other: the last number of a capped race's own series
  * (its first number and its places), and every number already on a registration, on a line of the elite list or
  * retired. The desk's spares are theirs too. Volunteers' own numbers are not counted: the start may be lowered back
@@ -785,7 +785,7 @@ export async function isEventSpareNumber<T extends Record<string, unknown>>(
  *
  * `elite` (§897): an Administrator marked the registration «Elită», so its bib prints as an elite bib — the name where
  * the number goes (§895's drawing) — and never the members' design: an elite row's `member` is false. That name is
- * the person's first name alone (§NNN, `bib-elite.ts#eliteBibName`), which is why the row carries `firstName`: read
+ * the person's first name alone (§948, `bib-elite.ts#eliteBibName`), which is why the row carries `firstName`: read
  * by the elite drawing and by nothing else — the ordinary bib's strip keeps the registered name.
  */
 export type BibRow = { id: string; bibNumber: number; registeredName: string; firstName: string | null; member: boolean; elite: boolean };

@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * «Avem tombolă» and «Participă la tombolă» (§NNN, BR-REQ-060-01) — the event's switch and the two ticks are the organizers' own:
+ * «Avem tombolă» and «Participă la tombolă» (§949, BR-REQ-060-01) — the event's switch and the two ticks are the organizers' own:
  * they reach the editor's box, the registrations' and the volunteers' lists, the raffle's file and «Toate datele unei persoane»
  * (art. 15), and nothing else. Never a public page, an email, the desk, a count — and never the allocator or the capacity
  * formula: a tick takes a number off one file and moves nothing of a registration. The structural half of that promise, as
@@ -65,7 +65,7 @@ function functionSource(file: string, name: string): string {
   return next === -1 ? rest : rest.slice(0, next);
 }
 
-describe("§NNN the raffle's switch and ticks stay with the organizers", () => {
+describe("§949 the raffle's switch and ticks stay with the organizers", () => {
   const naming = sourceFiles(SRC).filter((file) => NAMES_THE_RAFFLE_MARKS.test(readFileSync(file, "utf8")));
 
   it("are named only by the files reviewed to read them", () => {

@@ -19,7 +19,7 @@ import { wholeDigits } from "@/shared/forms/whole-digits";
 
 /**
  * Invitations by email (§647): the presses of the «Invitații» section on an event's registrations
- * list — the send, «Retrimite», «Retrage» and, on one that ended, «Șterge» (§NNN). Each is the
+ * list — the send, «Retrimite», «Retrage» and, on one that ended, «Șterge» (§948). Each is the
  * Administrator's (`canManageRegistrations`), asserted here, in the admin service and in the service;
  * the Organizer reads the section and is offered no verb (§289).
  */
@@ -193,7 +193,7 @@ export async function withdrawInvitationAction(_previous: unknown, form: FormDat
 }
 
 /**
- * «Șterge» (§NNN; the owner: «am o invitație retrasă, vreau să o pot șterge!»): an invitation that ended
+ * «Șterge» (§948; the owner: «am o invitație retrasă, vreau să o pot șterge!»): an invitation that ended
  * unaccepted — withdrawn or past its deadline — leaves the list, with its link. A press on one still open, or
  * on one that became a registration, deletes nothing (`INVITATION_NOT_ENDED`).
  */

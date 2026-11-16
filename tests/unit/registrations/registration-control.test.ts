@@ -76,7 +76,7 @@ describe("the public card's door (§906)", () => {
     expect(registrationCta(open({ publicRegistrationOpen: false, registrationClosesAt: new Date("2026-11-01T00:00:00Z") }), NOW).kind).toBe("CLOSED");
   });
 
-  it("§NNN the shut door carries the club's own sentence when the row has one — trimmed, never blank — and only for the switch", () => {
+  it("§948 the shut door carries the club's own sentence when the row has one — trimmed, never blank — and only for the switch", () => {
     const own = "Înscrierile s-au încheiat. Ne vedem la start!";
     expect(registrationCta(open({ publicRegistrationOpen: false, pausedNote: `  ${own}  ` }), NOW)).toEqual({ kind: "PAUSED", reason: "SWITCH", note: own });
     // No note, an empty one, spaces alone: the state as it always was, and the surface says the platform's sentence.

@@ -10,7 +10,7 @@ import type { AmbassadorMarkedRow } from "../ambassador-mark";
 import RegistrationStatusChip from "./RegistrationStatusChip";
 
 /**
- * «Ambasadori» on one event's registrations list (§NNN; the owner, 2026-11-14: «pe lângă Elite, adaugă și categoria de
+ * «Ambasadori» on one event's registrations list (§948; the owner, 2026-11-14: «pe lângă Elite, adaugă și categoria de
  * „Ambasadori" ca să putem decide pe cine premiem și pe cine nu»): a closed fold beside «Elite», its line «N ambasadori»,
  * holding every registration marked «Ambasador» in one numbered list — the name a link to the registration's page, its
  * state chip, its number when it has one, «și elită» when it wears both marks, and what the club's two ticks hide of it:

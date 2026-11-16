@@ -57,7 +57,7 @@ const NOT_A_BOX = new Set([
   "membersOnly",
   // «Kit de participare» → «Tricou» (§554): a tick in «Participanți și înscrieri».
   "kitShirt",
-  // «Avem tombolă» (§NNN): a tick in «Numere de concurs».
+  // «Avem tombolă» (§949): a tick in «Numere de concurs».
   "hasRaffle",
   // «Locurile din lista de așteptare se alocă automat» (§615): a «Da»/«Nu» select of two answers, both valid, under the capacity.
   "waitlistAutoOffer",

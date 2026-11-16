@@ -9,7 +9,7 @@
  * **Which row is an elite's** — the results module's own link, nothing guessed beyond it:
  *
  * 1. A row filed under a registration (`registration_id`) is that registration's: out when the registration is marked «Elită» or
- *    «Ambasador» (§NNN: the club's second mark has the same pair of ticks) with «Apare în clasament» unticked
+ *    «Ambasador» (§948: the club's second mark has the same pair of ticks) with «Apare în clasament» unticked
  *    (`(registrations.elite OR registrations.ambassador) AND registrations.elite_hidden_from_results`).
  * 2. A row the club typed (no registration) whose number a **confirmed** registration holds is that runner's, as «Clasament» draws it
  *    (`claimOf`): out exactly as in 1, never by an elite line.

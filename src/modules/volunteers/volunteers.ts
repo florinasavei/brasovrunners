@@ -181,11 +181,11 @@ export type VolunteerItem = {
   listOptIn: boolean;
   /** «Are kit» (§904): the organizers' own mark that the person gets the volunteers' kit — what the screen's «Cu kit: N» counts. */
   hasKit: boolean;
-  /** «Participă la tombolă» (§NNN): on the raffle's list of an event that holds one, unless the organizers unticked it. */
+  /** «Participă la tombolă» (§949): on the raffle's list of an event that holds one, unless the organizers unticked it. */
   inRaffle: boolean;
-  /** The volunteer's number (§NNN): drawn from the event's volunteers' series when confirmed, or the number they wore as a runner; null before, and on an event without the series. */
+  /** The volunteer's number (§948): drawn from the event's volunteers' series when confirmed, or the number they wore as a runner; null before, and on an event without the series. */
   bibNumber: number | null;
-  /** «Planul voluntarilor» (§NNN): the point of the event's route the person stands at, or null — not placed yet, or not on the route. */
+  /** «Planul voluntarilor» (§949): the point of the event's route the person stands at, or null — not placed yet, or not on the route. */
   checkpointId: string | null;
   shirtSize: Exclude<RegistrationTshirtSize, "NONE"> | null;
   createdAt: Date;
@@ -1385,7 +1385,7 @@ export async function setVolunteersShirts<T extends Record<string, unknown>>(
 }
 
 /**
- * One volunteer's draw (§NNN), for a caller inside a transaction: the event row locked first — the serialization point of
+ * One volunteer's draw (§948), for a caller inside a transaction: the event row locked first — the serialization point of
  * every number given at an event (`AGENTS.md` §10.6), so a runner confirmed at the same instant cannot be handed the same
  * one — then the next free number of the volunteers' series. Null on an event that gives its volunteers no number.
  */
@@ -1396,7 +1396,7 @@ async function drawVolunteerNumber<T extends Record<string, unknown>>(tx: Databa
 }
 
 /**
- * «Numerele voluntarilor încep de la» (§NNN; the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr de concurs"» — and,
+ * «Numerele voluntarilor încep de la» (§948; the owner, 2026-11-15: «și voluntarii trebuie să aibă un „Nr de concurs"» — and,
  * asked which numbers, «Serie proprie»): the first number of the volunteers' own series at this event, saved by the «Voluntari»
  * card's own form like the ticks above — never by the editor's save.
  *
@@ -1591,7 +1591,7 @@ async function eventDayOf<T extends Record<string, unknown>>(db: Database<T>, ev
 export type VolunteerRequest =
   /**
    * `firstNote`: «Nota ta (doar organizatorii)» on «Adaugă un voluntar de mână», the person's optional first internal note.
-   * `locale`: the language the person's emails leave in — given only by «Transformă în voluntar» (§NNN, `transform.ts`), the
+   * `locale`: the language the person's emails leave in — given only by «Transformă în voluntar» (§948, `transform.ts`), the
    * registration's own; a hand entry keeps the column's default.
    */
   | { kind: "add"; eventId: string; fields: Record<string, unknown>; firstNote?: unknown; locale?: Locale }
@@ -1603,10 +1603,10 @@ export type VolunteerRequest =
   | { kind: "unassign"; eventId: string; id: string; roleId: unknown }
   /** «Are kit» ticked or cleared on the «Voluntari» list's row (§904): the form posts the state it wants, never a toggle. */
   | { kind: "setKit"; eventId: string; id: string; hasKit: boolean }
-  /** «Participă la tombolă» ticked or cleared on the «Voluntari» list's row (§NNN): the form posts the state it wants, never a toggle. */
+  /** «Participă la tombolă» ticked or cleared on the «Voluntari» list's row (§949): the form posts the state it wants, never a toggle. */
   | { kind: "setRaffle"; eventId: string; id: string; inRaffle: boolean }
   /**
-   * «Planul voluntarilor» (§NNN): the point of the route the person stands at — one of the event's own «Puncte pe traseu» — or
+   * «Planul voluntarilor» (§949): the point of the route the person stands at — one of the event's own «Puncte pe traseu» — or
    * none: an empty value takes the person off their point. The form posts the point it wants, never a toggle.
    */
   | { kind: "setCheckpoint"; eventId: string; id: string; checkpointId: unknown }
@@ -1868,11 +1868,11 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     const audit = (action: AuditAction, metadata: Record<string, unknown>) =>
       recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: request.eventId, metadata, now });
 
-    // «Confirmă» may draw the person's number (§NNN), which is drawn under the event row's lock — the lock every race number
+    // «Confirmă» may draw the person's number (§948), which is drawn under the event row's lock — the lock every race number
     // is drawn under. Taken here, before the person's own row: the order «Transformă în alergător» takes them in
     // (`transform.ts`: the event, then the volunteer), so the two presses on one person wait in a line, never in a circle (40P01).
     if (state === "CONFIRMED") await lockEventForCapacity(tx, request.eventId);
-    // «Planul voluntarilor» (§NNN) writes a reference to one of the event's points, which the editor's save and an import change
+    // «Planul voluntarilor» (§949) writes a reference to one of the event's points, which the editor's save and an import change
     // under the event row's lock (`event-checkpoints/checkpoints.ts`). Taken here too, before the person's row: a point being
     // deleted — which frees its people, row by row — and a person being placed on it wait in a line, never in a circle.
     if (request.kind === "setCheckpoint") await tx.select({ id: events.id }).from(events).where(eq(events.id, request.eventId)).for("no key update").limit(1);
@@ -1961,7 +1961,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           phone: input.phone,
           state: "REGISTERED",
           source: "STAFF",
-          // The language of the person's emails: a runner turned volunteer keeps the registration's (§NNN); a hand entry, the column's default.
+          // The language of the person's emails: a runner turned volunteer keeps the registration's (§948); a hand entry, the column's default.
           ...(request.locale ? { locale: request.locale } : {}),
           // The date of birth and its age on the event's day (§773): `age` is what every rule reads, the date is what the club asked for.
           age: input.age,
@@ -2036,7 +2036,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         );
       // The person's choices go with them (CASCADE).
       await tx.delete(eventVolunteers).where(eq(eventVolunteers.id, current.id));
-      // The number, when the person had one (§NNN): the row is gone, and the trail is what keeps it from being drawn again (`bibs.ts#retiredBibNumbers`).
+      // The number, when the person had one (§948): the row is gone, and the trail is what keeps it from being drawn again (`bibs.ts#retiredBibNumbers`).
       await audit("volunteer.deleted", { volunteerId: current.id, assignedRoleIds: heldRoleIds, state: current.state, ...(current.bibNumber !== null ? { bibNumber: current.bibNumber } : {}) });
       return { changed: true, volunteer: summary };
     }
@@ -2047,7 +2047,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       if (state === "CONFIRMED" && !guardianAllowsConfirm(current)) {
         throw new DomainError("VOLUNTEER_GUARDIAN_MISSING", "the parent's or guardian's agreement is missing", ["guardian"]);
       }
-      // The volunteer's number (§NNN): drawn the moment the organizers confirm the person, from the event's own series — never a
+      // The volunteer's number (§948): drawn the moment the organizers confirm the person, from the event's own series — never a
       // second one for somebody who has theirs (a person cancelled and reopened), none on an event without the series.
       const drawn = state === "CONFIRMED" && current.bibNumber === null ? await drawVolunteerNumber(tx, current.eventId) : null;
       await tx
@@ -2094,7 +2094,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     }
 
     if (request.kind === "setRaffle") {
-      // «Participă la tombolă» (§NNN): whether the person's number is written on the raffle's list of an event that holds one — the
+      // «Participă la tombolă» (§949): whether the person's number is written on the raffle's list of an event that holds one — the
       // organizers' own mark, one press on the list's row, as «Are kit» is. Only a real `false` takes the person out: anything else
       // a forged request carries keeps them in, the column's default. Nobody is told, and no state, role or number moves.
       const wanted = request.inRaffle !== false;
@@ -2105,7 +2105,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     }
 
     if (request.kind === "setCheckpoint") {
-      // «Planul voluntarilor» (§NNN): where the person stands on the day — one of this event's points, or none. A cancelled person
+      // «Planul voluntarilor» (§949): where the person stands on the day — one of this event's points, or none. A cancelled person
       // is placed nowhere, though taking anybody off a point is always allowed. Audited as every other change of a person's boxes:
       // the box and the point's id, never a name. Nobody is told — it is the organizers' own plan — and no role, state or number moves.
       const wanted = typeof request.checkpointId === "string" && request.checkpointId.trim() !== "" ? request.checkpointId.trim() : null;

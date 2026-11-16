@@ -524,7 +524,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const waitlistAddOpen = mayManage && filters.eventId ? await waitlistAddDoorOpen(filters.eventId) : false;
   // «Pe adresa mea, invitat special» on a line of the internal list: the press while the event's switch is on, else the sentence that says where it is.
   const specialGuestsOn = waitlistAddOpen && filters.eventId ? await specialGuestsListOn(filters.eventId) : false;
-  // «Tombolă» (§NNN): the column of an event that holds a raffle («Avem tombolă» in its editor), with that one event chosen.
+  // «Tombolă» (§949): the column of an event that holds a raffle («Avem tombolă» in its editor), with that one event chosen.
   const raffleOn = filters.eventId ? await eventHoldsRaffle(db, filters.eventId) : false;
   // The editor's elite card (§895): the kits' elites, the «Elite» fold and the way back from «Mută pe lista de elită» link there.
   const eliteCardHref = filters.eventId ? `${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: filters.eventId } } })}#bib-elite` : null;
@@ -534,7 +534,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     start with a kit.
   */
   const eliteLists = filters.eventId ? await Promise.all([listEliteEntries(db, actor, filters.eventId), listEliteMarkedRegistrations(db, actor, filters.eventId)]) : null;
-  // «Ambasadori» (§NNN): the registrations marked «Ambasador», one event only; the reader asks the role again.
+  // «Ambasadori» (§948): the registrations marked «Ambasador», one event only; the reader asks the role again.
   const ambassadors = filters.eventId ? await listAmbassadorMarkedRegistrations(db, actor, filters.eventId) : null;
   // The separate list's names: among the kits' runners, the people at the start in «Locuri» and the bibs beside the registrations'.
   const eliteNames = eliteLists?.[0].length ?? 0;
@@ -613,7 +613,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           {row.outsideCapacity && <HiddenListChip label={t("registrations.outside.chip")} hint={t("registrations.outside.hint")} testId="outside-chip" />}
           {/* «Elită» (§897): the bib prints with the name where the number goes — for every role that reads the list. */}
           {row.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={t("registrations.elite.chip")} testId="elite-chip" />}
-          {/* «Ambasador» (§NNN): the club's label, the bib as any other — for every role that reads the list. */}
+          {/* «Ambasador» (§948): the club's label, the bib as any other — for every role that reads the list. */}
           {row.ambassador && <StatusChip glyph="ambassador" color="secondary" variant="outlined" label={t("registrations.ambassador.chip")} testId="ambassador-chip" />}
           {/* «A reconfirmat» (the decision «Cere reconfirmarea»): the person said «Vin» and is still registered — information, never a state. */}
           {row.reconfirmedAt && isActiveStatus(row.status) && <StatusChip glyph="reconfirmed" color="success" variant="outlined" label={t("reconfirm.chip")} testId="reconfirm-chip" />}
@@ -836,7 +836,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         );
       },
     },
-    // «Tombolă» (§NNN; the owner, 2026-11-16: «coloană peste tot de „participă la tombolă"» and «doar adminul și organizatorul pot bifa
+    // «Tombolă» (§949; the owner, 2026-11-16: «coloană peste tot de „participă la tombolă"» and «doar adminul și organizatorul pot bifa
     // și vedea asta»): with one event chosen that holds a raffle, whether each registration's number is on the raffle's list — a
     // one-press tick, the form posting the state it wants, for everybody who reads this list: the Organizer and the Administrators,
     // the roles this page is for. Internal: nothing public, no email, and nothing else of the registration moves.
@@ -1062,7 +1062,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         submitted: leadWhen(row.sentAt),
       },
       // To the invitation itself, where «Retrimite» and «Retrage» are — and, on one that ended unaccepted, «Șterge» right
-      // here (§NNN; the owner, of a withdrawn invitation's row on this list: «vreau să o pot șterge!»): the Administrator's,
+      // here (§948; the owner, of a withdrawn invitation's row on this list: «vreau să o pot șterge!»): the Administrator's,
       // asked first, the panel's own press.
       actions: (
         <Stack direction="row" useFlexGap sx={{ flexWrap: "wrap", gap: 0.5, alignItems: "center", justifyContent: "flex-end" }}>
@@ -1404,7 +1404,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           >
             {t("registrations.export")}
           </GlyphButton>
-          {/* «Lista pentru tombolă» (§NNN): with one event chosen, everybody who wears a number there — the confirmed
+          {/* «Lista pentru tombolă» (§948): with one event chosen, everybody who wears a number there — the confirmed
               runners and the confirmed volunteers — by the number. The route asserts the role again. */}
           {filters.eventId && canTakeRaffleList(actor.role) && (
             <GlyphButton
@@ -2231,7 +2231,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 outside: { onList: row.outsideCapacity, enabled: row.eventHiddenListEnabled },
                 // The elite mark (§897): the row's own mark decides which of the two words.
                 elite: row.elite,
-                // The ambassador mark (§NNN): the same, for the club's other label.
+                // The ambassador mark (§948): the same, for the club's other label.
                 ambassador: row.ambassador,
               });
               // Every press of the row comes back to this list, on the row, its page and filters kept (§747, §943):
@@ -2313,7 +2313,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               if (verbs.includes("eliteUnmark")) {
                 items.push({ kind: "submit", icon: "elite", label: t("registrations.elite.unmark"), formId: `elite-${row.id}` });
               }
-              // «Marchează ca ambasador» / «Nu mai e ambasador» (§NNN): the club's label beside «Elită»; the bib prints as any other.
+              // «Marchează ca ambasador» / «Nu mai e ambasador» (§948): the club's label beside «Elită»; the bib prints as any other.
               if (verbs.includes("ambassadorMark")) {
                 items.push({ kind: "submit", icon: "ambassador", label: t("registrations.ambassador.mark"), formId: `ambassador-${row.id}` });
               }
@@ -2322,7 +2322,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               }
               if (verbs.includes("eliteUnmark") || verbs.includes("ambassadorUnmark")) {
                 /*
-                  The two ticks of a registration marked «Elită» or «Ambasador» (§910, §NNN), where the mark is the Administrator's to take
+                  The two ticks of a registration marked «Elită» or «Ambasador» (§910, §948), where the mark is the Administrator's to take
                   off: «Apare în clasament» and «Apare pe site», each a tick in the menu posting the other state — one pair, whichever mark
                   the row wears. They only ever hide — ticked, the person's own ticks decide.
                 */
@@ -2509,7 +2509,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       <input type="hidden" name="ambassador" value={row.ambassador ? "0" : "1"} />
                     </ActionForm>
                   )}
-                  {/* The two ticks of a marked elite or ambassador (§910, §NNN): ask nothing (§384) — they tell nobody, only hide, and the same tick undoes them. */}
+                  {/* The two ticks of a marked elite or ambassador (§910, §948): ask nothing (§384) — they tell nobody, only hide, and the same tick undoes them. */}
                   {(verbs.includes("eliteUnmark") || verbs.includes("ambassadorUnmark")) &&
                     ([
                       ["inResults", `elite-results-${row.id}`, !row.eliteHiddenFromResults],
@@ -2674,7 +2674,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       )}
 
       {/*
-        Below the table since §NNN (the owner, 2026-11-15, of the list for sponsors and of the folds «Invitații», «Lista
+        Below the table since §948 (the owner, 2026-11-15, of the list for sponsors and of the folds «Invitații», «Lista
         internă», «Elite», «Lista oficială de așteptare» and «Emailuri de trimis»: «vreau să fie sub „căutare și
         filtrare"» — and, asked where against the table, «Sub tabel»): «Cine s-a înscris», «Caută și filtrează» and the
         registrations themselves come first, the filter next to the rows it narrows; everything the club opens a few
@@ -2704,7 +2704,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             ...(sponsorRegister.lists.length > 0 ? [t("sponsors.fold.given", { count: sponsorRegister.lists.length })] : []),
           ].join(" · ")}
           collapsible
-          // Back from «Șterge» on a list of the register (§NNN): open on what is left.
+          // Back from «Șterge» on a list of the register (§948): open on what is left.
           openWhen={{ saved: saved === "sponsorListDeleted" }}
           id="registrations-sponsors"
           data-testid="registrations-sponsors"
@@ -2805,7 +2805,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       )}
 
       {/*
-        «Ambasadori» (§NNN; the owner: «pe lângă Elite, adaugă și categoria de „Ambasadori"»): the registrations marked
+        «Ambasadori» (§948; the owner: «pe lângă Elite, adaugă și categoria de „Ambasadori"»): the registrations marked
         «Ambasador», for every role that reads this list — the reader asserts the role again — with what the club's two
         ticks hide of each and, for the Administrator, the one-press «Nu mai e ambasador», the row menu's own action.
       */}

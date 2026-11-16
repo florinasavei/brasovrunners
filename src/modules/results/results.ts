@@ -92,7 +92,7 @@ type RegisteredRunner = {
    */
   ticked: boolean;
   /**
-   * The club's two marks on the registration, «Elită» (§897) and «Ambasador» (§NNN): the backoffice's «Clasament» and «Premii»
+   * The club's two marks on the registration, «Elită» (§897) and «Ambasador» (§948): the backoffice's «Clasament» and «Premii»
    * say them beside the runner, so the club sees whose result it awards. Staff-only — the public read copies neither.
    */
   elite: boolean;
@@ -116,7 +116,7 @@ type Runners = { byBib: Map<number, RegisteredRunner>; byRegistration: Map<strin
 
 /**
  * Whether the published results may read the person's own list tick as given (§910): their «Vreau să apar» — and no Administrator
- * unticked «Apare pe site» on the registration while it is marked «Elită» or «Ambasador» (§NNN). That tick only ever hides: unticked, the runner is
+ * unticked «Apare pe site» on the registration while it is marked «Elită» or «Ambasador» (§948). That tick only ever hides: unticked, the runner is
  * «Participant #bib» wherever the ranking still counts them, as one who did not tick; ticked, the person's own answer decides, as before.
  * The public start list reads the same two columns (`registrations/repository.ts#namedOnPublicList`).
  */
@@ -181,7 +181,7 @@ async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eve
 }
 
 /**
- * What «Apare în clasament» leaves out at this event (§910): the registrations marked «Elită» or «Ambasador» (§NNN) whose tick is off — wherever their number
+ * What «Apare în clasament» leaves out at this event (§910): the registrations marked «Elită» or «Ambasador» (§948) whose tick is off — wherever their number
  * is, never a test row — and the elite list's lines (§895): the unticked ones by number, or by folded name when they have none, and every
  * line's number, so a row its own line holds is never another line's by name.
  */
@@ -358,7 +358,7 @@ export type ResultRunner = {
    */
   outOfRanking: boolean;
   /**
-   * The registration's marks, «Elită» and «Ambasador» (§NNN): said beside the runner on this page and at «Premii», so the club sees
+   * The registration's marks, «Elită» and «Ambasador» (§948): said beside the runner on this page and at «Premii», so the club sees
    * whom it awards. False for a typed runner, who has no registration. Never on the published results.
    */
   elite: boolean;

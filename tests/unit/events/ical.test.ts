@@ -432,7 +432,7 @@ describe("the calendar file", () => {
     );
   });
 
-  it("§NNN says the club's own sentence for the shut door when the reader's language has one, and the page's otherwise", () => {
+  it("§948 says the club's own sentence for the shut door when the reader's language has one, and the page's otherwise", () => {
     const register = "https://example.test/ro/evenimente/x/inscriere";
     const shut = {
       registrationMode: "INTERNAL" as const,

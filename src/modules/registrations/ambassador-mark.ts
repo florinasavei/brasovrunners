@@ -10,7 +10,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
 /**
- * «Marchează ca ambasador» / «Nu mai e ambasador» (§NNN; the owner, 2026-11-14: «pe lângă Elite, adaugă și categoria de
+ * «Marchează ca ambasador» / «Nu mai e ambasador» (§948; the owner, 2026-11-14: «pe lângă Elite, adaugă și categoria de
  * „Ambasadori" ca să putem decide pe cine premiem și pe cine nu», and asked what the mark should do, «Ca Elită, fără BIB
  * special»): the club's second category of invited runner, beside «Elită» (§897).
  *

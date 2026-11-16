@@ -11,7 +11,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (the owner, 2026-11-14: «pe lângă Elite, adaugă și categoria de „Ambasadori" ca să putem decide pe cine premiem și
+ * §948 (the owner, 2026-11-14: «pe lângă Elite, adaugă și categoria de „Ambasadori" ca să putem decide pe cine premiem și
  * pe cine nu», choosing «Ca Elită, fără BIB special») — «Ambasador» on the backoffice's screens. The registrations list's
  * «⋮» offers «Marchează ca ambasador» or «Nu mai e ambasador» by the row's own mark to the Administrator in every state,
  * from a hidden form that asks nothing and comes back to the list, and — on a row that wears either mark — the one pair of
@@ -210,7 +210,7 @@ const tickItems = (tree: ReactNode, id: string) => menuItems(tree, id).filter((i
 const field = (form: ReactElement<Props> | undefined, name: string) => elements(form).find((element) => element.props.name === name)?.props.value;
 const detailPage = (id: string) => RegistrationDetailPage({ params: Promise.resolve({ locale: state.locale, id }), searchParams: Promise.resolve({}) } as never);
 
-describe("§NNN the ambassador mark on the registrations list", () => {
+describe("§948 the ambassador mark on the registrations list", () => {
   it("offers «Marchează ca ambasador» or «Nu mai e ambasador» by the row's own mark, with its own glyph, in every state", async () => {
     const race = await createRace();
     state.actor = await staff("ADMIN");
@@ -278,7 +278,7 @@ describe("§NNN the ambassador mark on the registrations list", () => {
   });
 });
 
-describe("§NNN the one pair of ticks, on a row that wears either mark", () => {
+describe("§948 the one pair of ticks, on a row that wears either mark", () => {
   it("offers an ambassador's row «Apare în clasament» and «Apare pe site» as ticks, each posting the other state — and a row with neither mark none", async () => {
     const race = await createRace();
     state.actor = await staff("ADMIN");
@@ -314,7 +314,7 @@ describe("§NNN the one pair of ticks, on a row that wears either mark", () => {
   });
 });
 
-describe("§NNN «Ambasador» on the registration's own page", () => {
+describe("§948 «Ambasador» on the registration's own page", () => {
   const ticksOf = (nodes: ReactElement<Props>[]) => nodes.filter((element) => typeof element.props["data-testid"] === "string" && /^elite-tick-(inResults|onSite)$/.test(element.props["data-testid"] as string));
   const card = (nodes: ReactElement<Props>[]) => nodes.find((element) => element.props["data-testid"] === "elite-ticks");
 
@@ -369,7 +369,7 @@ describe("§NNN «Ambasador» on the registration's own page", () => {
   });
 });
 
-describe("§NNN the «Ambasadori» panel on an event's registrations list", () => {
+describe("§948 the «Ambasadori» panel on an event's registrations list", () => {
   const panelOf = (tree: ReactNode) => elements(tree).find((element) => element.type === AmbassadorPanel);
   /** The panel as the server draws it, walked: its own tree. */
   const drawn = async (tree: ReactNode) => elements(await AmbassadorPanel(panelOf(tree)!.props as unknown as Parameters<typeof AmbassadorPanel>[0]));

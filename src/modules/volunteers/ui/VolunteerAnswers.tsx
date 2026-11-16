@@ -23,9 +23,9 @@ export default async function VolunteerAnswers({
     listOptIn?: boolean;
     /** «Are kit» (§904): the organizers' mark, shown when the row holds it — absent in a caller that predates it. */
     hasKit?: boolean;
-    /** «Participă la tombolă» (§NNN): said only when the organizers took the person out — everybody else is in. */
+    /** «Participă la tombolă» (§949): said only when the organizers took the person out — everybody else is in. */
     inRaffle?: boolean;
-    /** «Planul voluntarilor» (§NNN): the point of the route the organizers put the person at, shown when the row holds one. */
+    /** «Planul voluntarilor» (§949): the point of the route the organizers put the person at, shown when the row holds one. */
     checkpointName?: string | null;
   };
 }) {

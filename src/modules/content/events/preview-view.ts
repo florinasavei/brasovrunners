@@ -124,7 +124,7 @@ export function previewPageOf(event: EditableEvent, translation: EditableTransla
     // «Vremea» (§666): the draft's choice and this language's text, read as the page reads the saved ones.
     weatherMode: event.weatherMode,
     weatherNote: translation.weatherNote,
-    // The club's sentence for a shut door (§NNN): the draft's own, so the preview's door says what the page will.
+    // The club's sentence for a shut door (§948): the draft's own, so the preview's door says what the page will.
     pausedNote: translation.pausedNote,
     // No programme while the start is held back (§533): its rows are instants, as on the page.
     scheduleItems: dateLater ? null : placeLater ? withoutPlaces(event.scheduleItems) : event.scheduleItems,

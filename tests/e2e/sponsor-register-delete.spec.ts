@@ -6,7 +6,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
- * §NNN, BR-REQ-071-01, BR-REQ-041-01, BR-REQ-060-01 — «Șterge» on a list of «Liste date sponsorilor», and where the
+ * §948, BR-REQ-071-01, BR-REQ-041-01, BR-REQ-060-01 — «Șterge» on a list of «Liste date sponsorilor», and where the
  * folds of an event's registrations page stand (the owner, 2026-11-15: «vreau să pot șterge (hard delete) și faza asta,
  * pentru că am generat din greșeală!», and of the folds: «vreau să fie sub „căutare și filtrare"» — «Sub tabel»).
  *
@@ -89,7 +89,7 @@ const top = async (page: Page, selector: string) => (await page.locator(selector
 /** The register's rows as a person sees them: the table on a desk, the lines on a phone — whichever is shown. */
 const visibleRows = (page: Page) => page.getByTestId("sponsor-register").locator('[data-testid="sponsor-register-row"]:visible, [data-testid="sponsor-register-lines"] > li:visible');
 
-test.describe("§NNN «Șterge» on a list of the sponsors' register, below the table", () => {
+test.describe("§948 «Șterge» on a list of the sponsors' register, below the table", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("the Administrator finds the register below the registrations, deletes the list made by mistake — asked first — and the others stay", async ({ page }) => {

@@ -9,7 +9,7 @@ import { fnv1a } from "@/shared/hash";
  * (§759). 4: the profile's strip drawn by the shared elevation core — the kilometre scale, the altitudes, the pins
  * with the core's glyphs, the aid stations' words (§804). 5: a checkpoint offering food and water draws the fork on the strip, as the event page does (§881). 6: the emergency line
  * reads «Name: number» with a bar between its numbers, and no word before numbers that each have a name (§947). 7: a registration
- * marked «Elită» prints its first name alone where the number goes, where it printed the registered name (§NNN). The bibs
+ * marked «Elită» prints its first name alone where the number goes, where it printed the registered name (§948). The bibs
  * page's stamp (`bibPictureStamp`) and the desk's (`events/repository.ts#BIB_STAMP`) both carry it.
  */
 export const BIB_DRAWING_VERSION = 7;

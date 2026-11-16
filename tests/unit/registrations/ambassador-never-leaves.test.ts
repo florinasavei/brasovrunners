@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * «Ambasador» (§NNN; BR-REQ-060-01, BR-REQ-039-01, BR-REQ-034-01) — the club's own label on a registration, staff only. It
+ * «Ambasador» (§948; BR-REQ-060-01, BR-REQ-039-01, BR-REQ-034-01) — the club's own label on a registration, staff only. It
  * is drawn by the backoffice — the registrations list, the registration's page, the «Ambasadori» panel, «Clasament» and
  * «Premii» — and read, for the two ticks it brings, by the public list's one condition and by the ranking. Nothing else
  * names it: never a public page or its data, never an email, never the race-day desk, never a bib, the registrations'

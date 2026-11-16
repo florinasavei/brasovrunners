@@ -17,7 +17,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Participă la tombolă» (§NNN; the owner, 2026-11-16: «o bifă importantă, și coloană peste tot de „participă la tombolă"»;
+ * «Participă la tombolă» (§949; the owner, 2026-11-16: «o bifă importantă, și coloană peste tot de „participă la tombolă"»;
  * BR-REQ-060-01) — every registration and every volunteer is on the raffle's list of an event that holds one until an organizer
  * takes them out: whoever reads the registrations — the Organizer and the Administrators — a registration, whoever works the
  * volunteers a volunteer. Nothing else of the person moves —
@@ -162,7 +162,7 @@ async function volunteer(name: string, volunteerState: "REGISTERED" | "CONFIRMED
 }
 const volunteerOf = async (id: string) => (await db.select().from(eventVolunteers).where(eq(eventVolunteers.id, id)))[0];
 
-describe("§NNN «Participă la tombolă» on a registration", () => {
+describe("§949 «Participă la tombolă» on a registration", () => {
   it("is on for every registration until an organizer takes it out, and goes back as freely", async () => {
     const admin = await staff("ADMIN");
     const ana = await runner("Ana Pop", "CONFIRMED", 12);
@@ -233,7 +233,7 @@ describe("§NNN «Participă la tombolă» on a registration", () => {
   });
 });
 
-describe("§NNN the tick on the list's row", () => {
+describe("§949 the tick on the list's row", () => {
   it("takes out and puts back for the Administrator and comes back to the row as the list stood", async () => {
     await as("ADMIN");
     const ana = await runner("Ana Pop", "CONFIRMED", 12);
@@ -264,7 +264,7 @@ describe("§NNN the tick on the list's row", () => {
   });
 });
 
-describe("§NNN «Participă la tombolă» on a volunteer", () => {
+describe("§949 «Participă la tombolă» on a volunteer", () => {
   it("is on until whoever works the volunteers takes the person out, audited as an edit of their boxes", async () => {
     const organizer = await staff("MODERATOR");
     const ion = await volunteer("Ion Voluntar");

@@ -190,7 +190,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const scopeEvent = events.find((event) => event.id === filters.eventId) ?? null;
   // «Adaugă un voluntar de mână» for the event in scope (§862): the context a person's page reads, coming back to this page of the list.
   const scopeEventRow = scopeEvent ? await findEventForRegistrationById(db, scopeEvent.id) : undefined;
-  // «Punct» (§NNN): with one event chosen that has points on its route, each row says where its person stands — the point's place
+  // «Punct» (§949): with one event chosen that has points on its route, each row says where its person stands — the point's place
   // in the route's order and its name, as «Planul voluntarilor» says them. One read for the page, never one per row.
   const pointNames = scopeEvent
     ? new Map(
@@ -285,7 +285,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   );
 
   /**
-   * «Participă la tombolă» on a row (§NNN): the kit tick's own shape — a plain form posting the state it wants (`inRaffle=1|0`). Drawn
+   * «Participă la tombolă» on a row (§949): the kit tick's own shape — a plain form posting the state it wants (`inRaffle=1|0`). Drawn
    * for an event that holds a raffle («Avem tombolă» in its editor); the service asks for the role.
    */
   const raffleTick = (row: VolunteerAdminRow) => (
@@ -423,7 +423,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       label: t("volunteers.screen.columnKit"),
       render: kitTick,
     },
-    // «Tombolă» (§NNN): with one event chosen that holds a raffle, whether each volunteer's number is on the raffle's list.
+    // «Tombolă» (§949): with one event chosen that holds a raffle, whether each volunteer's number is on the raffle's list.
     ...(scopeEventRow?.hasRaffle
       ? [
           {
@@ -502,7 +502,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
             <GlyphButton icon="role" href={eventCardHref(scopeEvent.id)} variant="outlined" size="small" sx={TAP_TARGET} data-testid="volunteers-event-card">
               {t("volunteers.screen.eventCard")}
             </GlyphButton>
-            {/* «Planul voluntarilor» (§NNN): who stands at which point of the route — the event's own page, built and printed there. */}
+            {/* «Planul voluntarilor» (§949): who stands at which point of the route — the event's own page, built and printed there. */}
             <GlyphButton
               icon="route"
               href={getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id: scopeEvent.id } } })}

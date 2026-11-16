@@ -448,7 +448,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // §10.5 has no edge from PENDING_EMAIL_CONFIRMATION to CANCELLED: an unconfirmed address
   // lapses on its own and holds no place, so there is nothing to release and no form to show.
   const canCancel = canTransition(registration.status, "CANCELLED");
-  // «Transformă în voluntar» (§NNN): for the Administrator, on a real registration that can still be cancelled — and the
+  // «Transformă în voluntar» (§948): for the Administrator, on a real registration that can still be cancelled — and the
   // event's roles, read only then, each by its own name with its category's.
   const canTurnIntoVolunteer = mayManage && canCancel && registration.kind !== "TEST";
   const volunteerRoles = canTurnIntoVolunteer
@@ -540,7 +540,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {registration.outsideCapacity && <HiddenListChip label={tr("registrations.outside.chip")} hint={tr("registrations.outside.hint")} testId="outside-chip" />}
         {/* «Elită» (§897): the bib prints with the name where the number goes; marked and unmarked from the list's «⋮». */}
         {registration.elite && <StatusChip glyph="elite" color="secondary" variant="outlined" label={tr("registrations.elite.chip")} testId="elite-chip" />}
-        {/* «Ambasador» (§NNN): the club's label, the bib as any other; marked and unmarked from the list's «⋮». */}
+        {/* «Ambasador» (§948): the club's label, the bib as any other; marked and unmarked from the list's «⋮». */}
         {registration.ambassador && <StatusChip glyph="ambassador" color="secondary" variant="outlined" label={tr("registrations.ambassador.chip")} testId="ambassador-chip" />}
         {/* «Partener: {name}» (the decision «De la parteneri»): the organizers' own label, for every role that reads this page. */}
         {registration.partnerName && <StatusChip glyph="fromPartner" variant="outlined" label={tr("partner.chip", { name: registration.partnerName })} testId="partner-chip" wrap />}
@@ -1071,7 +1071,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         `TickButton`, each in a form posting the state it wants — and read-only, the same boxes disabled, for the others. They ask
         nothing (§384): they tell nobody, only ever hide, and the same tick undoes them. The help says what each hides.
 
-        A registration marked «Ambasador» has the same card and the same pair of ticks (§NNN): they are the registration's,
+        A registration marked «Ambasador» has the same card and the same pair of ticks (§948): they are the registration's,
         whichever of the two marks it wears, and the card is named after the elite's when it wears both.
       */}
       {(registration.elite || registration.ambassador) && (
@@ -1824,7 +1824,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       )}
 
       {/*
-        «Transformă în voluntar» (§NNN): the cancellation below and the volunteers' hand entry in one press, for a runner
+        «Transformă în voluntar» (§948): the cancellation below and the volunteers' hand entry in one press, for a runner
         who will help instead of running. Above the cancel fold it shares its condition with; the service asserts again.
       */}
       {canTurnIntoVolunteer && (

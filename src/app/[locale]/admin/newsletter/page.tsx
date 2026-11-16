@@ -129,7 +129,7 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
               sponsors={sponsors}
               sponsorRegister={sponsorRegister}
               now={now}
-              // «Șterge» on a list of the register (§NNN): the Administrator's; the server asserts it again.
+              // «Șterge» on a list of the register (§948): the Administrator's; the server asserts it again.
               sponsorRemoval={mayManage ? { action: deleteSponsorListRecordAction, door: "newsletter" } : undefined}
               sponsorSaved={saved === "sponsorListDeleted"}
             />

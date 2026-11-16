@@ -430,7 +430,7 @@ describe("§847 the page as it is drawn", () => {
       `h3 ${words.emergency.title}`,
       `h3 ${words.timeline}`,
       `h3 ${words.withdraw.title}`,
-      // «Transformă în voluntar» (§NNN): above the cancel fold it shares its condition with.
+      // «Transformă în voluntar» (§948): above the cancel fold it shares its condition with.
       `h3 ${words.toVolunteer.title}`,
       `h3 ${words.cancelTitle}`,
       `h3 ${words.deleteTitle}`,

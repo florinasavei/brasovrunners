@@ -35,7 +35,7 @@ import { isUuid } from "@/shared/ids";
  * taken off leaves them inert, the mark put back finds them as they were — which is why a mark put on or taken off
  * ranks the results again and tells the public pages when either is set.
  *
- * **«Ambasador» has the same two ticks (§NNN).** They are the registration's, one pair whichever of the two marks it
+ * **«Ambasador» has the same two ticks (§948).** They are the registration's, one pair whichever of the two marks it
  * wears (`ambassador-mark.ts`), and count while it is marked «Elită» or «Ambasador»: every reader asks for either mark
  * (`repository.ts#namedOnPublicList`, `results/results.ts#loadOutOfRanking`), so on a registration that is both, taking
  * one mark off changes nothing the ticks do — the ranking pass below is then a no-op.
@@ -125,7 +125,7 @@ function tickAction(tick: RegistrationEliteTick, shown: boolean): AuditAction {
 }
 
 /**
- * «Apare în clasament» / «Apare pe site» on a registration marked «Elită» (§910) or «Ambasador» (§NNN): `shown` is the tick as it should now stand —
+ * «Apare în clasament» / «Apare pe site» on a registration marked «Elită» (§910) or «Ambasador» (§948): `shown` is the tick as it should now stand —
  * false hides (out of the ranking; off the public «Cine vine» by name), true takes the club's hide away and leaves the person's own
  * ticks to decide, exactly as before the mark. Nothing here can show a runner their own ticks do not show.
  *

@@ -134,7 +134,7 @@ function sampleFile(): EventFile {
     format: EVENT_FILE_FORMAT,
     version: EVENT_FILE_VERSION,
     exportedAt: "2026-10-13T10:00:00.000Z",
-    exportedFrom: { environment: "production", baseline: "BR-V4.45-2026-11-16" },
+    exportedFrom: { environment: "production", baseline: "BR-V4.46-2026-11-16" },
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
     // The volunteers' categories and roles (§774): none in the sample; the round trip with some is in the integration test.
@@ -285,7 +285,7 @@ describe("the event file's reader", () => {
     expect(FIELD_LABELS).toContain("registration.placesKeptForClub");
   });
 
-  it("§NNN writes a language's «Mesaj cât înscrierile pe site sunt oprite» only when the club wrote one, and reads it back as it was", () => {
+  it("§948 writes a language's «Mesaj cât înscrierile pe site sunt oprite» only when the club wrote one, and reads it back as it was", () => {
     const file = sampleFile();
     // No note, as every event before it: not written, so the release before it still reads the file; read back as none.
     const plain = serializeEventFile(file);

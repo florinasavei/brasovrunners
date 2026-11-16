@@ -189,7 +189,7 @@ export const translationFieldsSchema = z
      */
     weatherNote: optionalText(MAX_WEATHER_NOTE).optional(),
     /**
-     * «Mesaj cât înscrierile pe site sunt oprite» (§NNN): the club's own sentence, said in place of the platform's
+     * «Mesaj cât înscrierile pe site sunt oprite» (§948): the club's own sentence, said in place of the platform's
      * while «Înscrieri publice deschise» is unticked. Plain text, at most 200 characters, normalised like
      * `discountNote`; "" clears it. Kept whatever the tick says — the next closing finds it. Optional in the input
      * like `checklist`: absent leaves the column alone. Both languages or neither (§352).
@@ -1008,7 +1008,7 @@ export const eventFieldsSchema = z
      */
     kitShirt: z.boolean().optional(),
     /**
-     * «Avem tombolă» (§NNN): the organizers' switch for an event that draws a raffle. Optional on the wire, as `kitShirt` is:
+     * «Avem tombolă» (§949): the organizers' switch for an event that draws a raffle. Optional on the wire, as `kitShirt` is:
      * absent means "this caller is not editing it", so no save switches a raffle off by not mentioning it.
      */
     hasRaffle: z.boolean().optional(),

@@ -694,7 +694,7 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
 
 /**
  * Whether a registration's name may stand on a public list (§143; §910): the person ticked «Vreau să apar» (`list_opt_out` false)
- * **and** no Administrator unticked «Apare pe site» on it while it is marked «Elită» or «Ambasador» (`elite_hidden_from_site`, §NNN). The club's tick only
+ * **and** no Administrator unticked «Apare pe site» on it while it is marked «Elită» or «Ambasador» (`elite_hidden_from_site`, §948). The club's tick only
  * ever hides: there is no condition here under which a staff mark shows a name its owner did not tick. Every public list query
  * takes this one condition, so the list, its counts and its pages cannot disagree about who is named.
  */

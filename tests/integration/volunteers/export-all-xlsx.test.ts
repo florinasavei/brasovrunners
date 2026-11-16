@@ -140,7 +140,7 @@ describe("the volunteers' spreadsheet, «formatat frumos» (§846)", () => {
     const { rows } = readSheet(buffer);
     expect(rows[0][0]).toBe(words.csvColumns.name);
     expect(rows).toHaveLength(5);
-    // One column more since §NNN: the volunteer's number.
+    // One column more since §948: the volunteer's number.
     expect(sheet).toMatch(/<\/sheetData><autoFilter ref="A1:V5"\/>/);
     expect(parts.get("xl/workbook.xml")).toContain(`<definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">'Voluntari'!$A$1:$V$5</definedName>`);
     // Printed, the header repeats on every page.

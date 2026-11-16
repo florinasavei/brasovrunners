@@ -65,7 +65,7 @@ export type CalendarRegistration =
   | { kind: "CLOSED" }
   /**
    * The window is open by its dates and «Înscrieri publice deschise» is unticked (§906): the page's sentence, no link to
-   * the form — in the club's own words for this event when it wrote them (`note`, §NNN).
+   * the form — in the club's own words for this event when it wrote them (`note`, §948).
    */
   | { kind: "PAUSED"; note?: string }
   | { kind: "EXTERNAL"; url: string | null };
@@ -306,7 +306,7 @@ function calendarPlace(
  *
  * The public door is the page's too (§906, `publicDoorOpen`, which `registrationCta` asks): an open window
  * behind «Înscrieri publice deschise» unticked is `PAUSED` — the page's sentence for a shut door, in the club's own
- * words for the event when it wrote them (§NNN), and no link to a form the server refuses. The row carries the tick
+ * words for the event when it wrote them (§948), and no link to a form the server refuses. The row carries the tick
  * and the note, so nothing more is read.
  */
 export function calendarRegistration(
@@ -317,7 +317,7 @@ export function calendarRegistration(
   switch (registrationState(event, now)) {
     case "OPEN": {
       if (publicDoorOpen(event)) return { kind: "OPEN", url: registerUrl };
-      // The club's own sentence for the shut door (§NNN), when the reader's language has one.
+      // The club's own sentence for the shut door (§948), when the reader's language has one.
       const note = pausedNoteOf(event);
       return note ? { kind: "PAUSED", note } : { kind: "PAUSED" };
     }

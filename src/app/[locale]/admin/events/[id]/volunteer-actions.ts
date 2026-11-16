@@ -153,7 +153,7 @@ export async function switchVolunteersShirtsAction(form: FormData): Promise<void
 }
 
 /**
- * «Numerele voluntarilor încep de la» (§NNN): the card's box, the event's `volunteer_bib_start` — the first number of the
+ * «Numerele voluntarilor încep de la» (§948): the card's box, the event's `volunteer_bib_start` — the first number of the
  * volunteers' own series. Digits alone, or empty for «no numbers»; anything else is refused on the box by the service's own
  * rule. The toast says the confirmed volunteers without a number got theirs.
  */

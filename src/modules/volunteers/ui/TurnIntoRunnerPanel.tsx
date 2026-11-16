@@ -19,7 +19,7 @@ export function splitVolunteerName(name: string): { firstName: string; lastName:
 }
 
 /**
- * «Transformă în alergător» on a volunteer's page (§NNN; the owner, 2026-11-15: «… și invers»): a closed fold under the
+ * «Transformă în alergător» on a volunteer's page (§948; the owner, 2026-11-15: «… și invers»): a closed fold under the
  * person's block, for the Administrator alone — the Organizer, who works the volunteers, is offered none. One form: the
  * runner's two names, filled from the volunteer's one line for the Administrator to check, the relay tick the official
  * list's entry asks (§33), and the button. The press asks first, naming the address the person is registered on and the

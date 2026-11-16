@@ -167,7 +167,7 @@ export const PANEL_GLYPHS = {
   bibElite: MilitaryTechIcon,
   // «Elite» on the registrations list: the same medal, the separate list and the marked registrations read together.
   elite: MilitaryTechIcon,
-  // «Ambasadori» on the registrations list (§NNN): the registrations marked «Ambasador», beside «Elite».
+  // «Ambasadori» on the registrations list (§948): the registrations marked «Ambasador», beside «Elite».
   ambassador: EmojiPeopleIcon,
   print: PrintIcon,
   startList: GroupsIcon,

@@ -13,11 +13,11 @@ import { DomainError } from "@/shared/errors/domain-error";
  */
 export const PUBLIC_REGISTRATION_PAUSED = "publicRegistrationPaused";
 
-/** The longest «Mesaj cât înscrierile pe site sunt oprite» (§NNN): one sentence for a card, as the discount note's. */
+/** The longest «Mesaj cât înscrierile pe site sunt oprite» (§948): one sentence for a card, as the discount note's. */
 export const MAX_PAUSED_NOTE = 200;
 
 /**
- * The club's own sentence for an event whose door the switch shut (§NNN; the owner, of the card's «Înscrierile pe
+ * The club's own sentence for an event whose door the switch shut (§948; the owner, of the card's «Înscrierile pe
  * site sunt oprite de organizatori.»: «vreau să scrie mai frumos sau să pot customiza mesajul»), in the reader's
  * language: the row's `paused_note` when it says something, null otherwise — the surface then says the platform's
  * sentence. Never the other language's words (§28): the row read is the reader's own translation.

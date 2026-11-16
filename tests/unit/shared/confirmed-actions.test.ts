@@ -108,9 +108,9 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   addToWaitlistAction: ["waitlistAddAction"],
   // «Mută pe lista oficială» / «Oferă-i un loc acum» (§888): an entry that emails the person, asked first on each internal-list line, the relay tick in the dialog.
   moveReserveEntryAction: ["moveAction"],
-  // «Transformă în voluntar» (§NNN): cancels the registration and emails the person twice — asked first on the registration's page, handed to the panel as `toVolunteerAction`.
+  // «Transformă în voluntar» (§948): cancels the registration and emails the person twice — asked first on the registration's page, handed to the panel as `toVolunteerAction`.
   turnRunnerIntoVolunteerAction: ["toVolunteerAction"],
-  // «Transformă în alergător» (§NNN): an entry that emails the person and cancels the volunteer — asked first on the volunteer's page, handed to the panel as `toRunnerAction`.
+  // «Transformă în alergător» (§948): an entry that emails the person and cancels the volunteer — asked first on the volunteer's page, handed to the panel as `toRunnerAction`.
   turnVolunteerIntoRunnerAction: ["toRunnerAction"],
   // «Mută pe lista de elită» (§903): the line gone and its note with it, asked first on each internal-list line, naming the person; handed to the panel as `eliteMoveAction`.
   moveReserveEntryToEliteAction: ["eliteMoveAction"],
@@ -129,7 +129,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   deleteRegistrationAction: [],
   bulkCancelRegistrationsAction: [],
   bulkDeleteRegistrationsAction: [],
-  // «Șterge» on a row of «Liste date sponsorilor» (§NNN): the register hands it down as `removal.action`.
+  // «Șterge» on a row of «Liste date sponsorilor» (§948): the register hands it down as `removal.action`.
   deleteSponsorListRecordAction: ["removal.action"],
   resendRegistrationEmailAction: [],
   resendFamilyEmailAction: [],
@@ -320,7 +320,7 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Marchează ca elită» / «Nu mai e elită» (§897): how one registration's bib prints, nothing else of it.
   setRegistrationEliteAction:
     "a mark on how one registration's bib prints, undone from the same menu; it tells nobody and changes no state, place, number or count",
-  // «Marchează ca ambasador» / «Nu mai e ambasador» (§NNN): the club's own label on one registration, nothing else of it.
+  // «Marchează ca ambasador» / «Nu mai e ambasador» (§948): the club's own label on one registration, nothing else of it.
   setRegistrationAmbassadorAction:
     "the club's own label on one registration, undone from the same menu and from the «Ambasadori» panel; it tells nobody and changes no state, place, number, count or bib",
   // «Salvează nota» from a row of the list («Note interne» first on the registration's page, and a note from a row of the list).
@@ -336,13 +336,13 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Are kit» on a row of the «Voluntari» list (§904): the organizers' own mark of who gets the volunteers' kit, a one-press tick.
   setVolunteerKitAction:
     "a mark on the club's packing for one volunteer, undone by the same tick; it tells nobody and changes no state, role or count but «Cu kit»",
-  // The same tick on a row of the «Voluntari» list (§NNN).
+  // The same tick on a row of the «Voluntari» list (§949).
   setVolunteerRaffleAction:
     "a mark on the club's own raffle list for one volunteer, undone by the same tick; it tells nobody and changes no state, role, number or count",
-  // «Participă la tombolă» on a row of the registrations list (§NNN): on the raffle's list or off it, a one-press tick.
+  // «Participă la tombolă» on a row of the registrations list (§949): on the raffle's list or off it, a one-press tick.
   setRegistrationRaffleAction:
     "a mark on the club's own raffle list for one registration, undone by the same tick; it tells nobody and changes no state, place, number or count",
-  // «Pune aici» / «Scoate» on «Planul voluntarilor» (§NNN): where a volunteer stands on the route, one press either way.
+  // «Pune aici» / «Scoate» on «Planul voluntarilor» (§949): where a volunteer stands on the route, one press either way.
   placeVolunteerAction:
     "a line of the organizers' own plan for one volunteer, undone by «Scoate» or by another point; it tells nobody and changes no state, role, number or count",
   addTestRegistrationsAction: "test rows, counted nowhere and absent from production, removed by a verb that asks",

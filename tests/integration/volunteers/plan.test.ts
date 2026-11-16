@@ -17,7 +17,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-050-02 — «Planul voluntarilor» (the owner, 2026-11-16, with a map of the route and its seven points: «e foarte
+ * §949, BR-REQ-050-02 — «Planul voluntarilor» (the owner, 2026-11-16, with a map of the route and its seven points: «e foarte
  * important sa avem planul de voluntari si fiecare in ce punct ramane»), from a real database:
  *
  * - whoever works the volunteers puts a person at one of the event's own points and takes them off it; each change is audited as
@@ -210,7 +210,7 @@ async function press(fields: Record<string, string>): Promise<string> {
   return state.redirected[0];
 }
 
-describe("§NNN placing a volunteer at a point of the route", () => {
+describe("§949 placing a volunteer at a point of the route", () => {
   it("lets the Organizer put a person at one of the event's points, audited, and moves nothing else of the person", async () => {
     const before = await rowOf(people.ana);
     expect(before.checkpointId).toBeNull();
@@ -286,7 +286,7 @@ describe("§NNN placing a volunteer at a point of the route", () => {
   });
 });
 
-describe("§NNN the point among what is kept about a person", () => {
+describe("§949 the point among what is kept about a person", () => {
   it("names the point when the person asks for their data, and none while they stand at none (art. 15 GDPR)", async () => {
     const before = await viewPersonData(db, staff.ADMIN!, "ana.pop@example.test", NOW);
     expect(before.volunteerOffers.map((offer) => offer.checkpointName)).toEqual([null]);
@@ -296,7 +296,7 @@ describe("§NNN the point among what is kept about a person", () => {
   });
 });
 
-describe("§NNN the plan as it is read", () => {
+describe("§949 the plan as it is read", () => {
   it("lists the points in the route's order with their people by name, and everybody else under them — never a cancelled person", async () => {
     await place(staff.ADMIN!, people.zoe, points.junction);
     await place(staff.ADMIN!, people.ana, points.junction);
@@ -326,7 +326,7 @@ describe("§NNN the plan as it is read", () => {
   });
 });
 
-describe("§NNN the plan's page", () => {
+describe("§949 the plan's page", () => {
   it("draws each point with its people, their number, telephone and roles, and offers only who stands at no point", async () => {
     await place(staff.ADMIN!, people.ana, points.junction);
     await place(staff.ADMIN!, people.dan, points.water);
@@ -424,7 +424,7 @@ describe("§NNN the plan's page", () => {
   });
 });
 
-describe("§NNN the «Voluntari» list says each person's point", () => {
+describe("§949 the «Voluntari» list says each person's point", () => {
   it("links to the event's plan and names the point of whoever stands at one", async () => {
     await place(staff.ADMIN!, people.ana, points.water);
     const page = await listPage();

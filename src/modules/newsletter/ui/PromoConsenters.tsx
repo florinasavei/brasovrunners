@@ -30,7 +30,7 @@ type Props = {
   sponsorRegister?: SponsorRegister | null;
   /** The page's clock, for the register's «termen trecut». */
   now: Date;
-  /** «Șterge» on the register's rows (§NNN), for a role that may delete. */
+  /** «Șterge» on the register's rows (§948), for a role that may delete. */
   sponsorRemoval?: SponsorListRemoval;
   /** The page came back from a delete of the register: this fold and the register inside it open on what is left. */
   sponsorSaved?: boolean;

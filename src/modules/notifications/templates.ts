@@ -2807,7 +2807,7 @@ const T = {
     /**
      * …and what the person can do now, by the event as it stands at the send (`holdLapsedNext`). A site the
      * organizers keep shut (§906) is said in the card's own words — the platform's sentence, «închise momentan» since
-     * §NNN, never the event's own note, which the email is not handed — with «scrie-ne», the footer's «Scrie-ne» link.
+     * §948, never the event's own note, which the email is not handed — with «scrie-ne», the footer's «Scrie-ne» link.
      */
     holdLapsedNext: (next: HoldLapsedNext) =>
       next === "register"

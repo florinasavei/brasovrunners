@@ -24,7 +24,7 @@ type Props = {
   now: Date;
   /** The register's heading level: 2 on a page, 3 inside a card — which both screens are, since §946. */
   registerLevel: 2 | 3;
-  /** «Șterge» on the register's rows (§NNN), for a role that may delete; absent, the register is read-only. */
+  /** «Șterge» on the register's rows (§948), for a role that may delete; absent, the register is read-only. */
   registerRemoval?: SponsorListRemoval;
   /** The page came back from a delete of the register: its fold opens on what is left. */
   registerSaved?: boolean;

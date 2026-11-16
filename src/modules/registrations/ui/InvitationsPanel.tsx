@@ -40,7 +40,7 @@ const INVITATION_STATES = ["sent", "accepted", "expired", "withdrawn"] as const;
  * «Invitații» (§647) on an event's registrations list: who the club invited, where each invitation
  * stands — sent and waiting, accepted (a link to the registration it became), expired, withdrawn — its
  * deadline and who sent it; and, for the Administrator, the send («Trimite invitații») and each open
- * invitation's «Retrimite» and «Retrage», and «Șterge» on one that ended unaccepted (§NNN). The Organizer
+ * invitation's «Retrimite» and «Retrage», and «Șterge» on one that ended unaccepted (§948). The Organizer
  * reads the list and is offered no verb (§289); every verb asserts the role on the server whatever this draws.
  *
  * The send's forecast — how many places are free for invitations — is the allocator's count
@@ -69,7 +69,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
   sendAction: (state: InviteFormState, form: FormData) => Promise<InviteFormState>;
   resendAction: RowAction;
   withdrawAction: RowAction;
-  /** «Șterge» on an invitation that ended unaccepted (§NNN): withdrawn or expired, never one open or accepted. */
+  /** «Șterge» on an invitation that ended unaccepted (§948): withdrawn or expired, never one open or accepted. */
   deleteAction: RowAction;
   now: Date;
 }) {
@@ -396,7 +396,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                           </ActionForm>
                         </Stack>
                       )}
-                      {/* «Șterge» (§NNN): only an invitation that holds nothing — withdrawn or expired. The row goes, with its link. */}
+                      {/* «Șterge» (§948): only an invitation that holds nothing — withdrawn or expired. The row goes, with its link. */}
                       {mayManage && (state === "withdrawn" || state === "expired") && (
                         <ActionForm
                           action={deleteAction}

@@ -9,7 +9,7 @@ import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
 
 /**
- * «Transformă în voluntar» on a registration's page (§NNN; the owner, 2026-11-15: «aș vrea să pot să „transform" un
+ * «Transformă în voluntar» on a registration's page (§948; the owner, 2026-11-15: «aș vrea să pot să „transform" un
  * alergător în voluntar și invers»): a closed fold beside «Anulează înscrierea», for the Administrator alone, holding
  * one form — the role the person takes, chosen from the event's own, and the button. The press asks first, naming both
  * emails the person gets («Înscriere anulată», then «Rolul tău de voluntar»), the freed place's offer to the first in

@@ -254,7 +254,7 @@ describe("BR-REQ-071-01 §946 on an event's registrations page the block is one 
     expect(fold!.props.title).toBe("Lista pentru sponsori");
     // A fold with no reason to open by itself: closed on every arrival (`shared/ui/fold.ts`).
     expect(fold!.props.collapsible).toBe(true);
-    // …but for one: back from «Șterge» on a list of its register (§NNN), which this arrival is not.
+    // …but for one: back from «Șterge» on a list of its register (§948), which this arrival is not.
     expect(fold!.props.openWhen).toEqual({ saved: false });
     expect(fold!.props.static).toBeUndefined();
     expect(fold!.props.aside).toBe("oprită · liste date: 2");
@@ -286,7 +286,7 @@ describe("BR-REQ-071-01 §946 on an event's registrations page the block is one 
   });
 });
 
-describe("BR-REQ-041-01 §NNN an event's registrations page: the registrations first, everything else below the table", () => {
+describe("BR-REQ-041-01 §948 an event's registrations page: the registrations first, everything else below the table", () => {
   /**
    * The owner, 2026-11-15, of the list for sponsors and of «Invitații», «Lista internă», «Elite», «Lista oficială de
    * așteptare» and «Emailuri de trimis»: «vreau să fie sub „căutare și filtrare"» — and, asked where against the table,

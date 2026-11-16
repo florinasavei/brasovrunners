@@ -5,7 +5,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { cardOnListing, languageTab, openEditorBox } from "./support/fold";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-041-01 — «Mesaj cât înscrierile pe site sunt oprite» (the owner, 2026-11-15, of the card's
+ * §948, BR-REQ-050-02, BR-REQ-041-01 — «Mesaj cât înscrierile pe site sunt oprite» (the owner, 2026-11-15, of the card's
  * «Înscrierile pe site sunt oprite de organizatori.»: «vreau să scrie mai frumos sau să pot customiza mesajul»).
  *
  * What only a browser can see, and the unit and PGlite tests cannot: the note's two boxes are a language strip inside
@@ -79,7 +79,7 @@ async function publicPagesSay(page: Page, path: string, registerPath: string, sa
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
 }
 
-test.describe("§NNN «Mesaj cât înscrierile pe site sunt oprite»", () => {
+test.describe("§948 «Mesaj cât înscrierile pe site sunt oprite»", () => {
   test.describe.configure({ timeout: 240_000 });
 
   test("the Administrator writes the club's own sentence under the tick, in both languages; the public pages say it, each in its language", async ({ page }) => {

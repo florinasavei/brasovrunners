@@ -45,7 +45,7 @@ export const dynamic = "force-dynamic";
  * what the organizers tell each other about the person, newest first, open by itself when there is one, after its own save or
  * delete (`saved`) and for `#note-interne`; closed on «nicio notă» otherwise. Its two presses are `note-actions.ts`.
  *
- * Under the person's block, for the Administrator alone: «Transformă în alergător» (§NNN, `TurnIntoRunnerPanel`).
+ * Under the person's block, for the Administrator alone: «Transformă în alergător» (§948, `TurnIntoRunnerPanel`).
  */
 export default async function AdminVolunteerPage({ params, searchParams }: Props) {
   const { locale, id } = await params;
@@ -117,7 +117,7 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
       <VolunteerPerson person={person} context={context} as="section" />
 
       {/*
-        «Transformă în alergător» (§NNN): the person entered on the race's official waiting list and cancelled here, in one
+        «Transformă în alergător» (§948): the person entered on the race's official waiting list and cancelled here, in one
         press. The Administrator's alone — the Organizer, who opens this page for the roles, gets no fold, and the service
         refuses — on an event that takes registrations on the site and has not started, for a person who is not cancelled.
       */}

@@ -20,7 +20,7 @@ import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Șterge» on an invitation that ended unaccepted (the owner, 2026-11-14, with a withdrawn invitation's row on
+ * §948 — «Șterge» on an invitation that ended unaccepted (the owner, 2026-11-14, with a withdrawn invitation's row on
  * the registrations list: «am o invitație retrasă, vreau să o pot șterge!»). BR-REQ-037-07, and BR-REQ-060-01 for who.
  *
  * What is protected, on real PostgreSQL (PGlite), through the service, the panel as the server draws it and the real action:
@@ -194,7 +194,7 @@ async function linkOf(email: string, when: Date): Promise<string> {
   return match[1];
 }
 
-describe("§NNN BR-REQ-037-07 «Șterge» deletes only an invitation that ended unaccepted", () => {
+describe("§948 BR-REQ-037-07 «Șterge» deletes only an invitation that ended unaccepted", () => {
   it("a withdrawn one: the row and its link go, the trail keeps the id and how it ended — never the name or the address — and nothing else moves", async () => {
     const event = await createEvent(3);
     await invite(event, "Paul Pepene", 7);
@@ -405,7 +405,7 @@ async function press(hidden: Record<string, string>, pressedAt: Date): Promise<s
   throw new Error("expected a redirect");
 }
 
-describe("§NNN the panel offers «Șterge» on an ended invitation, and the press deletes it", () => {
+describe("§948 the panel offers «Șterge» on an ended invitation, and the press deletes it", () => {
   /** Four invitations of one event: open, withdrawn, expired and accepted. */
   async function four() {
     const event = await createEvent(10);

@@ -327,7 +327,7 @@ const PUBLIC_COLUMNS = {
   // the other language's: a language without one shows no weather (§28).
   weatherMode: events.weatherMode,
   weatherNote: eventTranslations.weatherNote,
-  // «Mesaj cât înscrierile pe site sunt oprite» (§NNN): the club's own sentence in this language, said in place of the
+  // «Mesaj cât înscrierile pe site sunt oprite» (§948): the club's own sentence in this language, said in place of the
   // platform's while «Înscrieri publice deschise» is unticked — this row's, never the other language's (§28).
   pausedNote: eventTranslations.pausedNote,
   // The programme's rows (§117), the event's own; read through `readScheduleItems`. Without

@@ -679,7 +679,7 @@ export async function setRegistrationEliteAction(_previous: FormOutcome | null, 
 }
 
 /**
- * «Participă la tombolă» on a row of the registrations list (§NNN): one press takes a registration off the raffle's list of its
+ * «Participă la tombolă» on a row of the registrations list (§949): one press takes a registration off the raffle's list of its
  * event, or puts it back (`raffle-mark.ts`). The form posts the state it wants (`inRaffle=1|0`), never a toggle, so a second press
  * before the page answers saves the same. Whoever reads the registrations may press it — the Organizer and the Administrators,
  * the one thing the Organizer changes on a registration: the coarse gate here, the service asserts it again (BR-REQ-060-01).
@@ -703,7 +703,7 @@ export async function setRegistrationRaffleAction(form: FormData): Promise<void>
 }
 
 /**
- * «Marchează ca ambasador» / «Nu mai e ambasador» (§NNN) from the list's «⋮», from the «Ambasadori» panel or from the
+ * «Marchează ca ambasador» / «Nu mai e ambasador» (§948) from the list's «⋮», from the «Ambasadori» panel or from the
  * registration's own page: the club's label beside «Elită», at any time and in any state, nothing else of the registration
  * touched — the bib prints as any other (`ambassador-mark.ts`). The Administrator's: the coarse gate here, the service
  * asserts it again (BR-REQ-060-01). It asks nothing (§384): it tells nobody and the same menu undoes it. Back to the list
@@ -727,7 +727,7 @@ export async function setRegistrationAmbassadorAction(_previous: FormOutcome | n
 }
 
 /**
- * «Șterge» on a row of «Liste date sponsorilor» (§NNN; the owner, of a list downloaded by mistake: «vreau să pot șterge
+ * «Șterge» on a row of «Liste date sponsorilor» (§948; the owner, of a list downloaded by mistake: «vreau să pot șterge
  * (hard delete) și faza asta»): the list's record leaves the register for real, with «Dată partenerilor» on the
  * registrations it held (`sponsor-register.ts#deleteSponsorListRecord`). The Administrator's: the coarse gate here, the
  * service asserts it again (BR-REQ-060-01). It asks first (§384) and emails nobody. Back to the register it was pressed
@@ -755,7 +755,7 @@ export async function deleteSponsorListRecordAction(_previous: FormOutcome | nul
 }
 
 /**
- * «Apare în clasament» / «Apare pe site» on a registration marked «Elită» (§910) or «Ambasador» (§NNN), from the list's «⋮» or the registration's own page:
+ * «Apare în clasament» / «Apare pe site» on a registration marked «Elită» (§910) or «Ambasador» (§948), from the list's «⋮» or the registration's own page:
  * `tick` names which, `on` the state it should now stand in — a submit posting the state it wants. A staff tick only ever hides
  * (`elite-mark.ts#setRegistrationEliteTick`): ticked, the person's own ticks decide. The Administrator's: the coarse gate here, the
  * service asserts it again (BR-REQ-060-01). It asks nothing (§384): it tells nobody and the same tick undoes it. Back to the list as it
@@ -1381,7 +1381,7 @@ export async function moveReserveEntryAction(_previous: FormOutcome | null, form
 }
 
 /**
- * «Transformă în voluntar» on a registration's page (§NNN; the owner, 2026-11-15: «aș vrea să pot să „transform" un
+ * «Transformă în voluntar» on a registration's page (§948; the owner, 2026-11-15: «aș vrea să pot să „transform" un
  * alergător în voluntar și invers»): the registration cancelled as «Anulează înscrierea» cancels it — through the
  * allocator, the place offered to the first in line — and its person entered on the event's volunteers with the role
  * chosen, confirmed, in one transaction (`volunteers/transform.ts`). The Administrator's alone: the coarse gate here,
@@ -1410,7 +1410,7 @@ export async function turnRunnerIntoVolunteerAction(_previous: FormOutcome | nul
 }
 
 /**
- * «Transformă în alergător» on a volunteer's page (§NNN): the person entered as «Adaugă pe lista de așteptare» enters one
+ * «Transformă în alergător» on a volunteer's page (§948): the person entered as «Adaugă pe lista de așteptare» enters one
  * (§872: the address vouched for, the one allocator, the declaration theirs to sign) and the volunteer cancelled, in one
  * transaction (`volunteers/transform.ts`). The Administrator's alone: the coarse gate here, the service's own assertion
  * again (BR-REQ-060-01); the Organizer, who works the volunteers, is offered no such press. The relay tick is asked in

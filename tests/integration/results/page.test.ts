@@ -543,7 +543,7 @@ describe("§850 «Premii» follows the race's rules", () => {
   });
 });
 
-describe("§NNN «Clasament» and «Premii» say whose result it is: «Elită», «Ambasador»", () => {
+describe("§948 «Clasament» and «Premii» say whose result it is: «Elită», «Ambasador»", () => {
   /** One runner's mark, set as the Administrator's press stores it. */
   const mark = (bibNumber: number, values: { elite?: boolean; ambassador?: boolean; eliteHiddenFromResults?: boolean }) =>
     db.update(registrations).set(values).where(and(eq(registrations.eventId, raceId), eq(registrations.bibNumber, bibNumber)));

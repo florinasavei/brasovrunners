@@ -10,7 +10,7 @@ import { contentDisposition } from "@/shared/http/content-disposition";
 import { isUuid } from "@/shared/ids";
 
 /**
- * «Lista pentru tombolă» on an event's registrations list (§NNN; the owner, 2026-11-15: «vreau să fac o tombolă și
+ * «Lista pentru tombolă» on an event's registrations list (§948; the owner, 2026-11-15: «vreau să fac o tombolă și
  * trebuie să pot exporta toți voluntarii și toți participanții»): everybody who wears a number at one event — the
  * confirmed runners and the confirmed volunteers — by the number, as a UTF-8 file with a BOM in the reader's language
  * (`lang`): the number, the name, «Alergător» or «Voluntar» (`modules/volunteers/raffle-list.ts`).
@@ -47,7 +47,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const t = await getTranslations({ locale, namespace: "Admin" });
   const csv = buildRaffleCsv(
     { number: t("registrations.raffle.columns.number"), name: t("registrations.raffle.columns.name"), kind: t("registrations.raffle.columns.kind"), kinds: { RUNNER: t("registrations.raffle.kinds.RUNNER"), VOLUNTEER: t("registrations.raffle.kinds.VOLUNTEER") },
-      // «Prezent» (§NNN): whether the desk checked the runner in — the club filters by it; a volunteer's cell is empty.
+      // «Prezent» (§949): whether the desk checked the runner in — the club filters by it; a volunteer's cell is empty.
       present: t("registrations.raffle.columns.present"),
       presentYes: t("registrations.raffle.present.yes"),
       presentNo: t("registrations.raffle.present.no"),

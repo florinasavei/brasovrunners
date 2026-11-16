@@ -101,20 +101,20 @@ export type AuditAction =
   | "registration.elite_marked"
   | "registration.elite_unmarked"
   /**
-   * «Participă la tombolă» (§NNN): an Administrator took a registration off the raffle's list of its event, or put it back
+   * «Participă la tombolă» (§949): an Administrator took a registration off the raffle's list of its event, or put it back
    * (`raffle-mark.ts`). The metadata is the new value alone (`{ inRaffle }`): the mark changes that list and nothing of the
    * registration.
    */
   | "registration.raffle_included"
   | "registration.raffle_excluded"
   /**
-   * «Marchează ca ambasador» / «Nu mai e ambasador» (§NNN): the club's label on a registration, and what gives it the two
+   * «Marchează ca ambasador» / «Nu mai e ambasador» (§948): the club's label on a registration, and what gives it the two
    * ticks below as the elite mark does — nothing of the bib, the state or the place. The metadata is the new value alone.
    */
   | "registration.ambassador_marked"
   | "registration.ambassador_unmarked"
   /**
-   * «Transformă în voluntar» (§NNN, `volunteers/transform.ts`): the registration was cancelled by the staff verb and its person
+   * «Transformă în voluntar» (§948, `volunteers/transform.ts`): the registration was cancelled by the staff verb and its person
    * entered on the event's volunteers, in one transaction. Beside the cancellation's own row; the metadata is the volunteer's
    * id, the role given and the state the registration left — never a name.
    */
@@ -372,7 +372,7 @@ export type AuditAction =
    * (`registrations/sponsor-register.ts`).
    */
   | "registrations.sponsor_list_exported"
-  // «Șterge» on a row of «Liste date sponsorilor» (§NNN): the export's own row deleted for real — a list made by mistake —
+  // «Șterge» on a row of «Liste date sponsorilor» (§948): the export's own row deleted for real — a list made by mistake —
   // and this one written about the same event: the list's moment, count and file, never whom it named or held.
   | "registrations.sponsor_list_record_deleted"
   /**
@@ -451,7 +451,7 @@ export type AuditAction =
   | "event.invitation_expired"
   | "event.invitation_accepted"
   /**
-   * «Șterge» on an invitation that ended unaccepted (§NNN): the invitation's id and how it had ended
+   * «Șterge» on an invitation that ended unaccepted (§948): the invitation's id and how it had ended
    * (`ended`: withdrawn or expired) — the row, its name and its address are gone, and this is what is left.
    */
   | "event.invitation_deleted"
@@ -655,10 +655,10 @@ export type AuditAction =
   | "event.volunteers_switched"
   /** «Oferim tricouri voluntarilor» (§765), entity `event`: metadata `{ on }`. */
   | "event.volunteers_shirts_switched"
-  // «Numerele voluntarilor încep de la» (§NNN): the series' first number set, moved or switched off — from, to and how many
+  // «Numerele voluntarilor încep de la» (§948): the series' first number set, moved or switched off — from, to and how many
   // confirmed volunteers the press gave a number; never a person.
   | "event.volunteer_numbers_start_set"
-  // «Lista pentru tombolă» downloaded (§NNN, `volunteers/raffle-list.ts`), entity `event`: how many runners and how many
+  // «Lista pentru tombolă» downloaded (§948, `volunteers/raffle-list.ts`), entity `event`: how many runners and how many
   // volunteers the file held — never a name or a number.
   | "event.raffle_list_exported"
   /** «Arată public câți voluntari mai sunt necesari» (§773), entity `event`: the metadata holds `on` and nothing of a person. */
@@ -695,7 +695,7 @@ export type AuditAction =
   | "volunteer.state_changed"
   | "volunteer.deleted"
   /**
-   * «Transformă în alergător» (§NNN, `volunteers/transform.ts`), entity `event`: the volunteer was cancelled and entered on the
+   * «Transformă în alergător» (§948, `volunteers/transform.ts`), entity `event`: the volunteer was cancelled and entered on the
    * official waiting list's own entry, in one transaction. The metadata is the volunteer's id, the registration's and the
    * state it landed in — never a name or an address.
    */

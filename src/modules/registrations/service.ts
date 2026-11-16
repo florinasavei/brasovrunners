@@ -4995,7 +4995,7 @@ export async function withdrawInvitationByStaff<T extends Record<string, unknown
 }
 
 /**
- * «Șterge» on an invitation that ended unaccepted (§NNN; the owner, 2026-11-14: «am o invitație retrasă, vreau să o pot
+ * «Șterge» on an invitation that ended unaccepted (§948; the owner, 2026-11-14: «am o invitație retrasă, vreau să o pot
  * șterge!»): the row goes now, with its link (`email_action_tokens.invitation_id … on delete cascade`), where the
  * retention job would have taken it thirty days after it ended (`jobs/retention.ts`, step `invitations`).
  *

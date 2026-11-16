@@ -6,7 +6,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
- * §NNN, BR-REQ-038-01, BR-REQ-050-02, BR-REQ-037-07 — «Ambasador» beside «Elită», and «Șterge» on an invitation that
+ * §948, BR-REQ-038-01, BR-REQ-050-02, BR-REQ-037-07 — «Ambasador» beside «Elită», and «Șterge» on an invitation that
  * ended unaccepted (the owner, 2026-11-14: «pe lângă Elite, adaugă și categoria de „Ambasadori" ca să putem decide pe cine
  * premiem și pe cine nu», and «am o invitație retrasă, vreau să o pot șterge!»).
  *
@@ -127,7 +127,7 @@ async function openRowMenu(page: Page, name: string) {
   await page.locator("#main").getByRole("button", { name: `Acțiuni pentru ${name}` }).first().click();
 }
 
-test.describe("§NNN «Ambasador» beside «Elită»", () => {
+test.describe("§948 «Ambasador» beside «Elită»", () => {
   test.describe.configure({ timeout: 240_000 });
 
   test("the Administrator marks a runner, takes them out of the ranking by the tick, reads it on «Clasament» and «Premii», and unmarks", async ({ page }) => {

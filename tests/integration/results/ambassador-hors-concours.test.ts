@@ -12,7 +12,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { AFTER_THE_RACE, approveResultsTexts, createRace, person, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * «Apare în clasament» under the ambassador mark (§NNN; the owner, 2026-11-14: «pe lângă Elite, adaugă și categoria de
+ * «Apare în clasament» under the ambassador mark (§948; the owner, 2026-11-14: «pe lângă Elite, adaugă și categoria de
  * „Ambasadori" ca să putem decide pe cine premiem și pe cine nu»; BR-REQ-050-02, BR-REQ-039-01, BR-REQ-060-01) — on real
  * PostgreSQL. A registration marked «Ambasador» has the elite's pair of ticks (§910): unticked, its result runs hors
  * concours — it stays on the backoffice's «Clasament», marked, and is left out of the public results, of everybody's
@@ -74,7 +74,7 @@ async function field() {
 }
 const RESULTS = [line(101, { time: "44:00" }), line(102, { time: "42:00" }), line(103, { time: "38:00" }), line(104, { time: "46:00" })];
 
-describe("§NNN an ambassador out of the ranking, by the registration's own tick", () => {
+describe("§948 an ambassador out of the ranking, by the registration's own tick", () => {
   it("the mark alone moves nothing: the ambassador is ranked, named and on the podium as before", async () => {
     const { dan } = await field();
     await save(RESULTS);
@@ -181,7 +181,7 @@ describe("§NNN an ambassador out of the ranking, by the registration's own tick
   });
 });
 
-describe("§NNN whose result it is: said on the backoffice's page, never on the published results", () => {
+describe("§948 whose result it is: said on the backoffice's page, never on the published results", () => {
   it("names the registration's marks on every registered line, and none on a line typed by hand", async () => {
     const { ana, ben, dan } = await field();
     await setRegistrationAmbassador(db, admin, dan.id, true, NOW);

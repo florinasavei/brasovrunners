@@ -562,7 +562,7 @@ export const events = pgTable(
      */
     volunteersShirts: boolean("volunteers_shirts").notNull().default(false),
     /**
-     * «Numerele voluntarilor încep de la» (migration `0203`, §NNN; the owner, 2026-11-15: «și voluntarii trebuie să aibă
+     * «Numerele voluntarilor încep de la» (migration `0203`, §948; the owner, 2026-11-15: «și voluntarii trebuie să aibă
      * un „Nr de concurs"» — and, asked which numbers, «Serie proprie»): the first number of the volunteers' own series at
      * this event. A volunteer draws the next free number of it when the organizers confirm them
      * (`event_volunteers.bib_number`, `registrations/bibs.ts#pickVolunteerNumber`), under the event row's lock like every
@@ -907,7 +907,7 @@ export const events = pgTable(
     kitShirt: boolean("kit_shirt").notNull().default(false),
 
     /**
-     * «Avem tombolă» (migration `0205`, §NNN; the owner, 2026-11-16: «o setare per eveniment cum ar fi „avem tombolă" dar doar
+     * «Avem tombolă» (migration `0205`, §949; the owner, 2026-11-16: «o setare per eveniment cum ar fi „avem tombolă" dar doar
      * în backoffice vizibil»): the club draws a raffle at this event. The organizers' own switch — it shows the «Tombolă» tick on
      * the registrations' and the volunteers' lists and nothing else: no public page, email or count reads it (it is not among
      * `PUBLIC_COLUMNS`), and the draw itself is made outside the site, from «Lista pentru tombolă». False by default; one
@@ -1376,7 +1376,7 @@ export const eventTranslations = pgTable(
     weatherNote: text("weather_note"),
 
     /**
-     * «Mesaj cât înscrierile pe site sunt oprite», per language (migration `0202`, §NNN; the owner, 2026-11-15, of the
+     * «Mesaj cât înscrierile pe site sunt oprite», per language (migration `0202`, §948; the owner, 2026-11-15, of the
      * card's «Înscrierile pe site sunt oprite de organizatori.»: «vreau să scrie mai frumos sau să pot customiza
      * mesajul»): the club's own sentence, shown in place of the platform's while «Înscrieri publice deschise» is
      * unticked (`events.public_registration_open`, §906) — on the event's card, on its page and in its calendar entry.

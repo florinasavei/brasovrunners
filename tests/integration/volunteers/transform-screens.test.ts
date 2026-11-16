@@ -18,7 +18,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Transformă în voluntar» and «Transformă în alergător» on the screens (the owner, 2026-11-15: «aș vrea să pot
+ * §948 — «Transformă în voluntar» and «Transformă în alergător» on the screens (the owner, 2026-11-15: «aș vrea să pot
  * să „transform" un alergător în voluntar și invers»). BR-REQ-037-03, BR-REQ-060-01, BR-REQ-041-01.
  *
  * What is protected, on real PostgreSQL (PGlite), through the two panels as the server draws them, the two pages that
@@ -233,7 +233,7 @@ async function press(action: (previous: FormOutcome | null, form: FormData) => P
 
 const trail = async (action: string) => (await db.select().from(auditLogs).where(eq(auditLogs.action, action)).orderBy(asc(auditLogs.createdAt))).map((row) => row.metadataJson as Record<string, unknown>);
 
-describe("§NNN BR-REQ-037-03 «Transformă în voluntar»: the fold on the registration's page", () => {
+describe("§948 BR-REQ-037-03 «Transformă în voluntar»: the fold on the registration's page", () => {
   const panel = (more: Partial<Parameters<typeof TurnIntoVolunteerPanel>[0]> = {}) =>
     TurnIntoVolunteerPanel({
       locale: "ro",
@@ -331,7 +331,7 @@ describe("§NNN BR-REQ-037-03 «Transformă în voluntar»: the fold on the regi
   });
 });
 
-describe("§NNN BR-REQ-037-03 «Transformă în voluntar»: the press", () => {
+describe("§948 BR-REQ-037-03 «Transformă în voluntar»: the press", () => {
   it("posts the role chosen, cancels with the page's own reason in the language of who pressed, and lands on the volunteer's page", async () => {
     const { eventId, roleId } = await createRace();
     const radu = await runner(eventId, "Radu Munteanu");
@@ -392,7 +392,7 @@ describe("§NNN BR-REQ-037-03 «Transformă în voluntar»: the press", () => {
   });
 });
 
-describe("§NNN BR-REQ-037-03 «Transformă în alergător»: the fold on the volunteer's page", () => {
+describe("§948 BR-REQ-037-03 «Transformă în alergător»: the fold on the volunteer's page", () => {
   const panel = (more: Partial<Parameters<typeof TurnIntoRunnerPanel>[0]> = {}) =>
     TurnIntoRunnerPanel({
       locale: "ro",
@@ -468,7 +468,7 @@ describe("§NNN BR-REQ-037-03 «Transformă în alergător»: the fold on the vo
   });
 });
 
-describe("§NNN BR-REQ-037-03 «Transformă în alergător»: the press", () => {
+describe("§948 BR-REQ-037-03 «Transformă în alergător»: the press", () => {
   const fields = (eventId: string, volunteerId: string, more: Record<string, string> = {}) => ({ uiLocale: "ro", eventId, volunteerId, firstName: "Ana", lastName: "Pop", relayedByParticipantRequest: "on", ...more });
 
   it("on a free place registers the person with the declaration to sign and lands on the registration's page; on a full race, on the waiting list", async () => {

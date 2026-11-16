@@ -95,7 +95,7 @@ export type BibSheetRow = {
    */
   elite?: boolean;
   /**
-   * The person's first name, read only for a row drawn as an elite bib (§NNN): that bib prints it alone where the
+   * The person's first name, read only for a row drawn as an elite bib (§948): that bib prints it alone where the
    * number goes (`bib-elite.ts#eliteBibName`); absent or empty, the registered name. Never drawn on an ordinary bib.
    */
   firstName?: string | null;
@@ -952,7 +952,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const slots = bibSheetSlots(perPage, input.layout);
   /*
     A registration marked «Elită» (§897) is an elite item like a line of the list: its name where the number goes — the
-    first name alone (§NNN) — its own number under it only as the design ticks — the same drawing, never a second one —
+    first name alone (§948) — its own number under it only as the design ticks — the same drawing, never a second one —
     and never a member's bib. A row with no name (a desk spare) is never one.
   */
   const eliteOf = (row: BibSheetRow): SheetItem | null =>

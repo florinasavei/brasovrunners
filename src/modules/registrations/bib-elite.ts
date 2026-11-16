@@ -31,7 +31,7 @@ export function bibEliteParts(design: Pick<BibDesign, "eliteNumber" | "eliteSpon
 }
 
 /**
- * The name a registration marked «Elită» prints where the number goes (§NNN, amending §897; the owner, 2026-11-15: «cele 6
+ * The name a registration marked «Elită» prints where the number goes (§948, amending §897; the owner, 2026-11-15: «cele 6
  * elite … vor avea BIB-uri doar cu numele mic: Silviu, Ingrid, Paul, Delia»): the person's **first name alone**, as the
  * registration holds it — one word prints large and is read from the roadside, a full name prints small. A row that
  * keeps no first name (a registration from before the two halves were stored) prints the registered name, as it did.

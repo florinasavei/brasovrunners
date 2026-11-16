@@ -34,7 +34,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
 const NOT_ON_PAPER = { "@media print": { display: "none" } } as const;
 
 /**
- * «Planul voluntarilor» (§NNN; the owner, 2026-11-16, with a map of the route and its seven points: «e foarte important sa
+ * «Planul voluntarilor» (§949; the owner, 2026-11-16, with a map of the route and its seven points: «e foarte important sa
  * avem planul de voluntari si fiecare in ce punct ramane»): one event's points on the route, in the route's order, each with
  * the volunteers who stand at it — their name, their number, how to reach them, what they were given to do — and under them
  * everybody at no point. Built here, one press a person («Pune aici», «Scoate»), and printed from here: the page is the paper.

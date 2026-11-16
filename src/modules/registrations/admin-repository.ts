@@ -71,9 +71,9 @@ export type RegistrationListRow = {
   outsideCapacity: boolean;
   /** «Elită» (§897): the bib prints as an elite bib — the row's chip and the «⋮»'s mark or unmark. */
   elite: boolean;
-  /** «Ambasador» (§NNN): the club's label — the row's chip and the «⋮»'s mark or unmark; it brings the two ticks below, as «Elită» does. */
+  /** «Ambasador» (§948): the club's label — the row's chip and the «⋮»'s mark or unmark; it brings the two ticks below, as «Elită» does. */
   ambassador: boolean;
-  /** «Participă la tombolă» (§NNN): on the raffle's list unless an Administrator unticked it — the list's «Tombolă» column, drawn for an event that holds one. */
+  /** «Participă la tombolă» (§949): on the raffle's list unless an Administrator unticked it — the list's «Tombolă» column, drawn for an event that holds one. */
   inRaffle: boolean;
   /**
    * «De la parteneri» (the decision «De la parteneri»): the partner's or sponsor's name, or null — the row's chip «Partener: {name}»
@@ -85,7 +85,7 @@ export type RegistrationListRow = {
    * «A reconfirmat» and the export's «Reconfirmat». Read by no public page (`reconfirmation-never-leaves.test.ts`).
    */
   reconfirmedAt: Date | null;
-  /** The two ticks of a registration marked «Elită» or «Ambasador» (§910, §NNN), stored as what the club hid: the «⋮»'s «Apare în clasament» and «Apare pe site». */
+  /** The two ticks of a registration marked «Elită» or «Ambasador» (§910, §948), stored as what the club hid: the «⋮»'s «Apare în clasament» and «Apare pe site». */
   eliteHiddenFromResults: boolean;
   eliteHiddenFromSite: boolean;
   /** «Folosește lista de invitați speciali» of the row's event (§647): the «⋮» offers «Pune pe listă» only while it is on (§747). */
@@ -894,13 +894,13 @@ export type RegistrationDetail = {
   outsideCapacity: boolean;
   /** «Elită» (§897): the bib prints as an elite bib — the page's chip, for every role that reads it. */
   elite: boolean;
-  /** «Ambasador» (§NNN): the club's label — the page's chip, for every role that reads it. */
+  /** «Ambasador» (§948): the club's label — the page's chip, for every role that reads it. */
   ambassador: boolean;
   /** «De la parteneri» (the decision «De la parteneri»): the partner's name — the page's chip for every role, its form the Administrator's. */
   partnerName: string | null;
   /** «Cere reconfirmarea» (the decision «Cere reconfirmarea»): when the person last said «Vin», or null — one line on the page. */
   reconfirmedAt: Date | null;
-  /** The two ticks of a registration marked «Elită» or «Ambasador» (§910, §NNN), stored as what the club hid: the page's card, read by every role, changed by the Administrator. */
+  /** The two ticks of a registration marked «Elită» or «Ambasador» (§910, §948), stored as what the club hid: the page's card, read by every role, changed by the Administrator. */
   eliteHiddenFromResults: boolean;
   eliteHiddenFromSite: boolean;
   /** PUBLIC when the participant submitted it, STAFF when an organizer entered it for them. */

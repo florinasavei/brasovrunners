@@ -5,7 +5,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-050-02 (§NNN) — «Mesaj cât înscrierile pe site sunt oprite» in the editor (the owner, 2026-11-15, of the card's
+ * BR-REQ-050-02 (§948) — «Mesaj cât înscrierile pe site sunt oprite» in the editor (the owner, 2026-11-15, of the card's
  * «Înscrierile pe site sunt oprite de organizatori.»: «vreau să scrie mai frumos sau să pot customiza mesajul»), end to
  * end through the service and the editor's own Server Action.
  *
@@ -162,7 +162,7 @@ async function fullForm(eventId: string, notes?: { ro: string; en: string }): Pr
   return form;
 }
 
-describe("BR-REQ-050-02 «Mesaj cât înscrierile pe site sunt oprite»: the club's own sentence, per language (§NNN)", () => {
+describe("BR-REQ-050-02 «Mesaj cât înscrierile pe site sunt oprite»: the club's own sentence, per language (§948)", () => {
   it("a new event has no note in either language", async () => {
     const created = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     expect(await noteIn(created.id, "ro")).toBeNull();

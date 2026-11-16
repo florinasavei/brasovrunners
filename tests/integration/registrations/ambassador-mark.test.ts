@@ -18,7 +18,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Marchează ca ambasador» / «Nu mai e ambasador» (§NNN; the owner, 2026-11-14: «pe lângă Elite, adaugă și categoria de
+ * «Marchează ca ambasador» / «Nu mai e ambasador» (§948; the owner, 2026-11-14: «pe lângă Elite, adaugă și categoria de
  * „Ambasadori" ca să putem decide pe cine premiem și pe cine nu», choosing «Ca Elită, fără BIB special»; BR-REQ-037-07,
  * BR-REQ-060-01, BR-REQ-039-01) — on real PostgreSQL (PGlite).
  *
@@ -174,7 +174,7 @@ async function redirectOf(run: Promise<unknown>): Promise<string> {
 const markOf = async (id: string) => (await db.select({ ambassador: registrations.ambassador }).from(registrations).where(eq(registrations.id, id)))[0].ambassador;
 const namesOnTheList = async () => (await listPublicStartList(db, eventId)).map((row) => row.displayName);
 
-describe("§NNN the ambassador mark on a registration", () => {
+describe("§948 the ambassador mark on a registration", () => {
   it("is off on every registration until an Administrator marks it, and comes off as freely", async () => {
     const admin = await staff("ADMIN");
     const ana = await runner("Ana Pop", "CONFIRMED", 12);
@@ -280,7 +280,7 @@ describe("§NNN the ambassador mark on a registration", () => {
   });
 });
 
-describe("§NNN «Marchează ca ambasador» from the list's «⋮», the panel and the registration's page", () => {
+describe("§948 «Marchează ca ambasador» from the list's «⋮», the panel and the registration's page", () => {
   it("marks and unmarks for the Administrator and comes back to the list as it stood, or to the registration's page", async () => {
     await as("ADMIN");
     const ana = await runner("Ana Pop", "CONFIRMED", 12);
@@ -311,7 +311,7 @@ describe("§NNN «Marchează ca ambasador» from the list's «⋮», the panel a
   });
 });
 
-describe("§NNN BR-REQ-039-01 «Apare pe site» under the ambassador mark: the club's tick only hides", () => {
+describe("§948 BR-REQ-039-01 «Apare pe site» under the ambassador mark: the club's tick only hides", () => {
   it("unticked, a ticked ambassador is a «Participant (nume ascuns)» row while confirmed, and counted as one", async () => {
     const admin = await staff("ADMIN");
     await runner("Ana Popescu", "CONFIRMED", 1);
@@ -374,7 +374,7 @@ describe("§NNN BR-REQ-039-01 «Apare pe site» under the ambassador mark: the c
   });
 });
 
-describe("§NNN the event's ambassadors, as the «Ambasadori» panel reads them", () => {
+describe("§948 the event's ambassadors, as the «Ambasadori» panel reads them", () => {
   it("lists the marked registrations by name, in every state, with their ticks — never a test row, another event's or an unmarked one", async () => {
     const admin = await staff("ADMIN");
     const zoe = await runner("Zoe Zamfir", "CONFIRMED", 12, { ambassador: true });

@@ -1103,7 +1103,7 @@ export async function withdrawInvitation<T extends Record<string, unknown>>(
   await withdrawInvitationByStaff(db, invitationId, actor, now);
 }
 
-/** «Șterge» on an invitation that ended unaccepted (§NNN): the Administrator's alone, asserted here and in the service. */
+/** «Șterge» on an invitation that ended unaccepted (§948): the Administrator's alone, asserted here and in the service. */
 export async function deleteEndedInvitation<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,

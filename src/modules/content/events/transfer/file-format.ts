@@ -107,7 +107,7 @@ const translationSchema = z
     seoDescription: nullableText(320),
     discountNote: nullableText(200),
     weatherNote: nullableText(200),
-    /** «Mesaj cât înscrierile pe site sunt oprite» (§NNN): absent in a file from before it, which reads as none. */
+    /** «Mesaj cât înscrierile pe site sunt oprite» (§948): absent in a file from before it, which reads as none. */
     pausedNote: nullableText(200).default(null),
   })
   .strict();
@@ -470,7 +470,7 @@ export function upgradeCheckpoints(file: EventFile): { file: EventFile; notes: F
  * `placesAlertAt` only when **set** — an event that never touched them makes a file the release before them still reads.
  * `placesKeptForClub` (§914) too: written only when places are kept, so an event that keeps none makes the same file as before;
  * and `releaseUnsignedAtDeadline` (§914) only when **on**.
- * A language's `pausedNote` (§NNN) likewise: written only when the club wrote one, so an event without its own sentence makes
+ * A language's `pausedNote` (§948) likewise: written only when the club wrote one, so an event without its own sentence makes
  * the same file as before and the release before the note still reads it.
  */
 const WRITTEN_ONLY_WHEN_NOT: ReadonlyMap<string, unknown> = new Map<string, unknown>([

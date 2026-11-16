@@ -249,7 +249,7 @@ describe("BR-REQ-071-01 §929 the register of the lists given", () => {
     expect(en.Admin.sponsors.help).toContain("Write whom it goes to, or “club” if it stays with the club.");
     expect(ro.Admin.sponsors.given.title).toBe("Liste date sponsorilor");
     expect(en.Admin.sponsors.given.title).toBe("Lists given to sponsors");
-    // …and, since §NNN, the press's own column: no words above one button, a name for whoever cannot see it.
+    // …and, since §948, the press's own column: no words above one button, a name for whoever cannot see it.
     expect(ro.Admin.sponsors.given.columns).toEqual({ recipient: "Cui", at: "Când", event: "Eveniment", count: "Persoane", file: "Fișier", actor: "Descărcată de", deleteBy: "Șterge fișierul tău până pe", remove: "Șterge din registru" });
     expect(Object.keys(en.Admin.sponsors.given.columns)).toEqual(Object.keys(ro.Admin.sponsors.given.columns));
     expect(Object.keys(en.Admin.sponsors.given.formats)).toEqual(["csv", "xlsx"]);
@@ -263,7 +263,7 @@ describe("BR-REQ-071-01 §929 the register of the lists given", () => {
       overdue: "past due: delete your file",
       formats: { csv: "CSV", xlsx: "Excel" },
       columns: { recipient: "To whom", at: "When", event: "Event", count: "People", file: "File", actor: "Downloaded by", deleteBy: "Delete your file by", remove: "Delete from the register" },
-      // «Șterge» on a list (§NNN): the question, what goes with the row, and when the press is right.
+      // «Șterge» on a list (§948): the question, what goes with the row, and when the press is right.
       remove: {
         title: "Delete the list from the register?",
         body: "The list given to “{recipient}” ({date}) leaves the register and «Given to partners» on the registrations in it. This cannot be undone.",

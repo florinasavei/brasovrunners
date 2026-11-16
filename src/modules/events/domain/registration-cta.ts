@@ -19,7 +19,7 @@ export type RegistrationCtaInput = RegistrationWindowInput & {
   externalRegistrationUrl: string | null;
   externalProvider: string | null;
   /**
-   * «Mesaj cât înscrierile pe site sunt oprite» (§NNN): the club's own sentence in the reader's language, said in place
+   * «Mesaj cât înscrierile pe site sunt oprite» (§948): the club's own sentence in the reader's language, said in place
    * of the platform's while the switch shuts the door. Absent or blank, the platform's sentence.
    */
   pausedNote?: string | null;
@@ -196,7 +196,7 @@ export type RegistrationCta =
   /**
    * The window is open and the site's door is shut by the organizers (§906): a sentence, no button.
    * `SWITCH` — «Înscrieri publice deschise» unticked: «Înscrierile pe site sunt închise momentan.», or the club's own
-   * sentence for this event (`note`, §NNN) — present only when the club wrote one in the reader's language.
+   * sentence for this event (`note`, §948) — present only when the club wrote one in the reader's language.
    * `OFFERS_ONLY` — «Locurile libere le dau doar eu» with places free and a waiting list that takes nobody (a
    * limit of 0, or full): the places are given by the organizers alone, so there is nothing to join and no
    * «s-au ocupat» to say either.
@@ -252,7 +252,7 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
       // «Înscrieri publice deschise» unticked (§906): the dates say open, the organizers say not on the site.
       // The one predicate the server and the calendar feed ask too (`publicDoorOpen`).
       if (!publicDoorOpen(event)) {
-        // The club's own sentence, when it wrote one (§NNN): carried here, once, so every surface says the same.
+        // The club's own sentence, when it wrote one (§948): carried here, once, so every surface says the same.
         const note = pausedNoteOf(event);
         return note ? { kind: "PAUSED", reason: "SWITCH", note } : { kind: "PAUSED", reason: "SWITCH" };
       }

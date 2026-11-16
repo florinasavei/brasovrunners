@@ -575,7 +575,7 @@ export default async function RegistrationBox({
                         {t("editor.publicRegistrationOpen")}
                       </CheckboxField>
                       <BoxNote more={t("editor.publicRegistrationOpenHelpMore")}>{t("editor.publicRegistrationOpenHelp")}</BoxNote>
-                      {/* «Mesaj cât înscrierile pe site sunt oprite» (§NNN): the club's own sentence for the shut door, a
+                      {/* «Mesaj cât înscrierile pe site sunt oprite» (§948): the club's own sentence for the shut door, a
                           line per language right under the tick it speaks for — empty, the platform's sentence is said. */}
                       <LocaleTabPanels
                         idPrefix="paused-note"
@@ -807,7 +807,7 @@ export default async function RegistrationBox({
                         sx={{ width: { sm: 220 } }}
                       />
                       {event && <BoxNote>{t("editor.boxes.bibs.startChange")}</BoxNote>}
-                      {/* «Avem tombolă» (§NNN): the organizers' own switch, here because a raffle is drawn on the race numbers. It shows the
+                      {/* «Avem tombolă» (§949): the organizers' own switch, here because a raffle is drawn on the race numbers. It shows the
                           «Tombolă» tick on the registrations' and the volunteers' lists; no public page reads it. The marker says the form
                           carried the box, so an unticked one reads as "no raffle", not as "not edited". */}
                       <input type="hidden" name="event.hasRaffle.present" value="1" />

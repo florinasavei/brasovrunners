@@ -11,7 +11,7 @@ import { listRoleNames, type RoleNameWords } from "./admin-list";
 import { listVolunteers, type VolunteerItem } from "./volunteers";
 
 /*
-  «Planul voluntarilor» (§NNN; the owner, 2026-11-16, with a map of the route and its seven points: «e foarte important sa avem
+  «Planul voluntarilor» (§949; the owner, 2026-11-16, with a map of the route and its seven points: «e foarte important sa avem
   planul de voluntari si fiecare in ce punct ramane»): who stands where on the day. One event's points on the route — the same
   «Puncte pe traseu» the editor keeps, the page lists and the bib draws (§757) — in the route's order, each with the people the
   organizers placed at it (`event_volunteers.checkpoint_id`), and under them everybody not placed: still to place, or working

@@ -549,7 +549,7 @@ describe("§754 the CSV", () => {
     expect(csv.split("\r\n")[0].includes("Data,Vârsta,Data nașterii,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou")).toBe(true);
     // §768: the parent or guardian of a volunteer under eighteen, appended after the T-shirt: name, address, and the consent as «Da» / «Nu».
     // §904: «Are kit», the organizers' own mark, appended after them as «Da» / «Nu» — no earlier column moves.
-    // §NNN: the volunteer's number, appended last — no earlier column moves.
+    // §948: the volunteer's number, appended last — no earlier column moves.
     expect(csv.split("\r\n")[0].endsWith("Mărime tricou,Părinte sau tutore,Email părinte sau tutore,Acordul părintelui,Are kit,Număr")).toBe(true);
     expect(lines[1].endsWith('2026-10-13T10:00:00.000Z,34,1992-03-12,Female,"Brașov, centru",Da,Nu,M,Maria Popescu,maria@example.test,Nu,Da,501')).toBe(true);
   });
@@ -582,7 +582,7 @@ describe("§754 the CSV", () => {
       },
     ]);
     // An adult: the three guardian columns are empty — never «null»; «Are kit» says «Nu» for a person nobody ticked; and a
-    // person with no number yet has an empty last cell (§NNN), never «null» or 0.
+    // person with no number yet has an empty last cell (§948), never «null» or 0.
     expect(csv.split("\r\n")[1].endsWith("2026-10-13T10:00:00.000Z,,,,,Nu,Nu,,,,,Nu,")).toBe(true);
   });
 

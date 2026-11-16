@@ -304,9 +304,9 @@ describe("§799 «Condiții de participare» inside «Regulamentul»", () => {
       "event.placesKeptForClub", "event.placesChangeReason",
       // «Eliberează singur locurile nesemnate la termen» (§914): a tick with its marker, in the participation window's card.
       "event.releaseUnsignedAtDeadline", "event.releaseUnsignedAtDeadline.present",
-      // «Mesaj cât înscrierile pe site sunt oprite» (§NNN): one line per language, under the public door's tick.
+      // «Mesaj cât înscrierile pe site sunt oprite» (§948): one line per language, under the public door's tick.
       "translations.ro.pausedNote", "translations.en.pausedNote",
-      // «Avem tombolă» (§NNN): a tick with its marker, in «Numere de concurs».
+      // «Avem tombolă» (§949): a tick with its marker, in «Numere de concurs».
       "event.hasRaffle", "event.hasRaffle.present",
     ];
     const markup = await registration({ ...RACE, declarationDocumentId: declarations[0].id } as EditableEvent);

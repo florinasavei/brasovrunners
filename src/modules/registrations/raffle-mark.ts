@@ -9,7 +9,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
 /*
-  «Participă la tombolă» on a registration (§NNN; the owner, 2026-11-16: «o bifă importantă, și coloană peste tot de „participă
+  «Participă la tombolă» on a registration (§949; the owner, 2026-11-16: «o bifă importantă, și coloană peste tot de „participă
   la tombolă" și o setare per eveniment cum ar fi „avem tombolă" dar doar în backoffice vizibil»). An event that holds a raffle
   (`events.has_raffle`, «Avem tombolă» in the editor) draws it among the numbers on «Lista pentru tombolă»
   (`modules/volunteers/raffle-list.ts`); every registration is on that list unless an organizer takes it out here.

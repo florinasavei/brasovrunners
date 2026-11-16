@@ -6,7 +6,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
- * §NNN, BR-REQ-037-03, BR-REQ-038-01, BR-REQ-060-01 — «Transformă în voluntar» and «Transformă în alergător», and the
+ * §948, BR-REQ-037-03, BR-REQ-038-01, BR-REQ-060-01 — «Transformă în voluntar» and «Transformă în alergător», and the
  * volunteers' own numbers (the owner, 2026-11-15: «aș vrea să pot să „transform" un alergător în voluntar și invers» and
  * «și voluntarii trebuie să aibă un „Nr de concurs"» — asked which numbers, «Serie proprie»).
  *
@@ -86,7 +86,7 @@ const registrationsOf = (eventId: string, name: string) =>
 
 const fits = async (page: Page) => expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
 
-test.describe("§NNN «Transformă în voluntar» and «Transformă în alergător»", () => {
+test.describe("§948 «Transformă în voluntar» and «Transformă în alergător»", () => {
   test.describe.configure({ timeout: 240_000 });
 
   test("the Administrator turns a runner into a volunteer — asked first, both emails named — and, from the volunteer's page, back into a runner", async ({ page }) => {
@@ -173,7 +173,7 @@ test.describe("§NNN «Transformă în voluntar» and «Transformă în alergăt
     expect(response.status()).toBe(200);
     expect(response.headers()["content-disposition"]).toMatch(/^attachment; filename="tombola-\d{4}-\d{2}-\d{2}\.csv"/);
     const lines = (await response.text()).replace(/^\uFEFF/, "").split("\r\n");
-    // «Prezent» (§NNN): the runner was not checked in at the desk; the desk checks no volunteer in.
+    // «Prezent» (§949): the runner was not checked in at the desk; the desk checks no volunteer in.
     expect(lines).toEqual(["Număr,Nume,Categorie,Prezent", `1,${runner},Alergător,Nu`, `510,Oana Voluntar ${tag},Voluntar,`, ""]);
     await fits(page);
   });

@@ -16,7 +16,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Lista pentru tombolă» (the owner, 2026-11-15: «vreau să fac o tombolă și trebuie să pot exporta toți voluntarii
+ * §948 — «Lista pentru tombolă» (the owner, 2026-11-15: «vreau să fac o tombolă și trebuie să pot exporta toți voluntarii
  * și toți participanții»). BR-REQ-071-01, and BR-REQ-060-01 for who.
  *
  * What is protected, on real PostgreSQL (PGlite), through the service and the real route:
@@ -161,12 +161,12 @@ async function everybody() {
   await volunteer("Other Event Volunteer", 600, "CONFIRMED", other);
 }
 
-describe("§NNN BR-REQ-071-01 «Lista pentru tombolă»: everybody who wears a number, by the number", () => {
+describe("§948 BR-REQ-071-01 «Lista pentru tombolă»: everybody who wears a number, by the number", () => {
   it("holds the confirmed runners and the confirmed volunteers who have a number — each once, in the order of the numbers — and nobody else", async () => {
     await everybody();
     const list = await exportRaffleList(db, admin, eventId, NOW);
     expect(list.rows).toEqual([
-      // «Prezent» (§NNN): nobody was checked in at the desk yet; the desk checks no volunteer in.
+      // «Prezent» (§949): nobody was checked in at the desk yet; the desk checks no volunteer in.
       { number: 1, name: "Ana Pop", kind: "RUNNER", present: false },
       { number: 2, name: "Radu Munteanu", kind: "RUNNER", present: false },
       { number: 500, name: "Ion Voluntar", kind: "VOLUNTEER", present: null },
@@ -176,7 +176,7 @@ describe("§NNN BR-REQ-071-01 «Lista pentru tombolă»: everybody who wears a n
     expect(new Set(list.rows.map((row) => row.number)).size).toBe(list.rows.length);
   });
 
-  it("§NNN leaves out whoever an organizer took out of the raffle, and says which runners the desk checked in", async () => {
+  it("§949 leaves out whoever an organizer took out of the raffle, and says which runners the desk checked in", async () => {
     await everybody();
     // Radu is unticked on the registrations' list, Oana on the volunteers'; Ana was checked in at the desk.
     await db.update(registrations).set({ inRaffle: false }).where(eq(registrations.registeredName, "Radu Munteanu"));
@@ -227,7 +227,7 @@ describe("§NNN BR-REQ-071-01 «Lista pentru tombolă»: everybody who wears a n
   });
 });
 
-describe("§NNN BR-REQ-071-01 the file", () => {
+describe("§948 BR-REQ-071-01 the file", () => {
   const words = (catalogue: typeof ro) => ({
     ...catalogue.Admin.registrations.raffle.columns,
     kinds: catalogue.Admin.registrations.raffle.kinds,
@@ -235,7 +235,7 @@ describe("§NNN BR-REQ-071-01 the file", () => {
     presentNo: catalogue.Admin.registrations.raffle.present.no,
   });
 
-  it("is four columns — the number, the name, which of the two, whether the runner is present (§NNN) — with a BOM, CRLF lines and every cell made safe for a spreadsheet", () => {
+  it("is four columns — the number, the name, which of the two, whether the runner is present (§949) — with a BOM, CRLF lines and every cell made safe for a spreadsheet", () => {
     const csv = buildRaffleCsv(words(ro), [
       { number: 1, name: "Ana Pop", kind: "RUNNER", present: true },
       { number: 2, name: '=HYPERLINK("x")', kind: "RUNNER", present: false },

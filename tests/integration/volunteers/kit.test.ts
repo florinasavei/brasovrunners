@@ -400,7 +400,7 @@ describe("«Cu kit: N» on the «Voluntari» strip, and the filter (§904)", () 
 });
 
 describe("«Are kit» in the event's files (§904)", () => {
-  it("is a column of the CSV — the last before the number's (§NNN) — and of the spreadsheet beside the T-shirt, «Da» / «Nu» in the reader's words", async () => {
+  it("is a column of the CSV — the last before the number's (§948) — and of the spreadsheet beside the T-shirt, «Da» / «Nu» in the reader's words", async () => {
     const csv = await (await eventFile(new Request(`http://localhost/api/admin/events/${raceId}/volunteers?lang=ro`), { params: Promise.resolve({ id: raceId }) })).text();
     const lines = csv.split("\r\n");
     expect(lines[0].endsWith(",Are kit,Număr")).toBe(true);

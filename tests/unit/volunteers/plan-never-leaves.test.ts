@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * «Planul voluntarilor» (§NNN, BR-REQ-060-01) — the point of the route a volunteer stands at is the organizers' own planning: it
+ * «Planul voluntarilor» (§949, BR-REQ-060-01) — the point of the route a volunteer stands at is the organizers' own planning: it
  * reaches the plan's page, the «Voluntari» list's column and «Toate datele unei persoane» (art. 15), and nothing else. Never the
  * public volunteers' list, never an email, never a badge, never the volunteers' files. The structural half of that promise, as
  * `volunteer-notes-never-leave.test.ts` holds the notes': no file outside the list below so much as names the column, the plan's
@@ -44,7 +44,7 @@ function sourceFiles(dir: string, acc: string[] = []): string[] {
   return acc;
 }
 
-describe("§NNN a volunteer's point stays with the organizers", () => {
+describe("§949 a volunteer's point stays with the organizers", () => {
   const naming = sourceFiles(SRC).filter((file) => NAMES_THE_POINT.test(readFileSync(file, "utf8")));
 
   it("is named only by the files reviewed to read it", () => {

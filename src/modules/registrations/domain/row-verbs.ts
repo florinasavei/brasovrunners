@@ -69,7 +69,7 @@ export type RowVerb =
   | "eliteMark"
   | "eliteUnmark"
   /**
-   * «Marchează ca ambasador» / «Nu mai e ambasador» (§NNN): the club's label beside «Elită» — the bib prints as any other.
+   * «Marchează ca ambasador» / «Nu mai e ambasador» (§948): the club's label beside «Elită» — the bib prints as any other.
    * The Administrator's, in every state — it changes no state, place, number or count. Offered only where the row's mark is
    * known (`options.ambassador`); which of the two is the row's own mark.
    */
@@ -178,7 +178,7 @@ export function rowVerbsFor(
   // The elite mark (§897): how the bib prints, nothing else — so every state offers it, like the member tick.
   if (mayManage && options.elite !== undefined) verbs.push(options.elite ? "eliteUnmark" : "eliteMark");
 
-  // The ambassador mark (§NNN): a label, nothing else — every state offers it, right after the elite's.
+  // The ambassador mark (§948): a label, nothing else — every state offers it, right after the elite's.
   if (mayManage && options.ambassador !== undefined) verbs.push(options.ambassador ? "ambassadorUnmark" : "ambassadorMark");
 
   // Cancelling releases the place through the allocator and leaves an audit row (§67, §88).

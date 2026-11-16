@@ -380,7 +380,7 @@ describe("§897 a marked registration's bib", () => {
     expect(state.drawn.at(-1)).toMatchObject({ elite: { name: "Ana Pop", bibNumber: 12 }, member: false, bibNumber: 12 });
   });
 
-  it("§NNN prints the first name alone on a marked registration's bib — in the picture and on both sheets — and the registered name only where none is kept", async () => {
+  it("§948 prints the first name alone on a marked registration's bib — in the picture and on both sheets — and the registered name only where none is kept", async () => {
     const admin = await as("ADMIN");
     // As the form keeps a runner: the two halves beside the registered name.
     const silviu = await runner("Silviu Popescu", "CONFIRMED", 12);

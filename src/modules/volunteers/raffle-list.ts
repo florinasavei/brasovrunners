@@ -12,7 +12,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
 /*
-  «Lista pentru tombolă» (§NNN; the owner, 2026-11-15: «vreau să fac o tombolă și trebuie să pot exporta toți voluntarii
+  «Lista pentru tombolă» (§948; the owner, 2026-11-15: «vreau să fac o tombolă și trebuie să pot exporta toți voluntarii
   și toți participanții»): one file for one event — everybody who wears a number there, runner or volunteer, by the
   number: the number, the name, which of the two they are.
 
@@ -22,7 +22,7 @@ import { isUuid } from "@/shared/ids";
   the race's elite list (a name printed on a bib, nobody registered, §895). One number is one person at an event
   (`bibs.ts`), so the file never holds a number twice.
 
-  Since §NNN (the owner, 2026-11-16: «o bifă importantă, și coloană peste tot de „participă la tombolă"»): nobody an organizer
+  Since §949 (the owner, 2026-11-16: «o bifă importantă, și coloană peste tot de „participă la tombolă"»): nobody an organizer
   took out — «Participă la tombolă» unticked on the registrations' or the volunteers' list (`registrations.in_raffle`,
   `event_volunteers.in_raffle`) — and, beside each runner, whether the desk checked them in («Prezent»): the owner chose a
   raffle among who is there, and the draw is made outside the site, so the file says who was there and the club filters by
@@ -63,7 +63,7 @@ export async function exportRaffleList<T extends Record<string, unknown>>(db: Da
         eq(registrations.status, "CONFIRMED"),
         eq(registrations.kind, "REAL"),
         isNotNull(registrations.bibNumber),
-        // «Participă la tombolă» (§NNN): nobody an Administrator took out.
+        // «Participă la tombolă» (§949): nobody an Administrator took out.
         eq(registrations.inRaffle, true),
       ),
     );

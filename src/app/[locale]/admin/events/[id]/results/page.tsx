@@ -174,7 +174,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     return { overall: String(result.positionOverall), detail: parts.join(" · ") };
   };
   // What the published results say of a line (§808): by name, «Participant #bib», or — an elite hors concours (§910) — nothing at all.
-  // Out of the ranking by the club's tick (§910): said by the mark that brought the tick — an ambassador who is not an elite as such (§NNN).
+  // Out of the ranking by the club's tick (§910): said by the mark that brought the tick — an ambassador who is not an elite as such (§948).
   const publicLineOf = (runner: ResultRunner, anonymousLabel: string) =>
     runner.outOfRanking
       ? t(runner.ambassador && !runner.elite ? "results.publicLine.outOfRankingAmbassador" : "results.publicLine.outOfRanking")
@@ -189,7 +189,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     note: runner.result?.note ?? "",
   });
 
-  // The registration's marks (§NNN): «Elită» and «Ambasador» beside the runner, here and at «Premii» — the backoffice's alone.
+  // The registration's marks (§948): «Elită» and «Ambasador» beside the runner, here and at «Premii» — the backoffice's alone.
   const marksOf = (runner: ResultRunner): ResultMark[] => [
     ...(runner.elite ? [{ glyph: "elite" as const, label: t("registrations.elite.chip") }] : []),
     ...(runner.ambassador ? [{ glyph: "ambassador" as const, label: t("registrations.ambassador.chip") }] : []),
@@ -434,7 +434,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
                     <Typography component="dd" variant="body2" key={row.bibNumber} sx={{ m: 0 }} data-testid="results-award-row">
                       {t("results.awards.place", { position: String(row.position) })} · #{row.bibNumber}
                       {row.name ? ` ${row.name}` : ""} · {formatResultTime(row.gunTimeMs)}
-                      {/* Whose result it is (§NNN): an elite's or an ambassador's is said right on the podium's row, so the club decides the award knowing it. */}
+                      {/* Whose result it is (§948): an elite's or an ambassador's is said right on the podium's row, so the club decides the award knowing it. */}
                       {(marksByBib.get(row.bibNumber) ?? []).map((mark) => (
                         <Box component="span" key={mark.glyph} sx={{ ml: 0.75, display: "inline-flex", verticalAlign: "middle" }}>
                           <StatusChip glyph={mark.glyph} label={mark.label} color="secondary" variant="outlined" testId={`results-award-mark-${mark.glyph}`} />
