@@ -1,6 +1,7 @@
 import { and, asc, count, eq, gt, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { z } from "zod";
+import { eventCheckpoints } from "@/db/schema/event-checkpoints";
 import { eventVolunteerCategories, eventVolunteerRoleAssignments, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
 import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
 import { events } from "@/db/schema/events";
@@ -182,6 +183,8 @@ export type VolunteerItem = {
   hasKit: boolean;
   /** The volunteer's number (§NNN): drawn from the event's volunteers' series when confirmed, or the number they wore as a runner; null before, and on an event without the series. */
   bibNumber: number | null;
+  /** «Planul voluntarilor» (§NNN): the point of the event's route the person stands at, or null — not placed yet, or not on the route. */
+  checkpointId: string | null;
   shirtSize: Exclude<RegistrationTshirtSize, "NONE"> | null;
   createdAt: Date;
   updatedAt: Date;
@@ -331,6 +334,7 @@ function volunteerItemOf(joined: VolunteerRowJoined, choiceIds: string[], roleId
     listOptIn: row.listOptIn,
     hasKit: row.hasKit,
     bibNumber: row.bibNumber,
+    checkpointId: row.checkpointId,
     shirtSize: row.shirtSize === null || row.shirtSize === "NONE" ? null : row.shirtSize,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -1596,6 +1600,11 @@ export type VolunteerRequest =
   | { kind: "unassign"; eventId: string; id: string; roleId: unknown }
   /** «Are kit» ticked or cleared on the «Voluntari» list's row (§904): the form posts the state it wants, never a toggle. */
   | { kind: "setKit"; eventId: string; id: string; hasKit: boolean }
+  /**
+   * «Planul voluntarilor» (§NNN): the point of the route the person stands at — one of the event's own «Puncte pe traseu» — or
+   * none: an empty value takes the person off their point. The form posts the point it wants, never a toggle.
+   */
+  | { kind: "setCheckpoint"; eventId: string; id: string; checkpointId: unknown }
   | { kind: "delete"; eventId: string; id: string };
 
 /**
@@ -1858,6 +1867,10 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     // is drawn under. Taken here, before the person's own row: the order «Transformă în alergător» takes them in
     // (`transform.ts`: the event, then the volunteer), so the two presses on one person wait in a line, never in a circle (40P01).
     if (state === "CONFIRMED") await lockEventForCapacity(tx, request.eventId);
+    // «Planul voluntarilor» (§NNN) writes a reference to one of the event's points, which the editor's save and an import change
+    // under the event row's lock (`event-checkpoints/checkpoints.ts`). Taken here too, before the person's row: a point being
+    // deleted — which frees its people, row by row — and a person being placed on it wait in a line, never in a circle.
+    if (request.kind === "setCheckpoint") await tx.select({ id: events.id }).from(events).where(eq(events.id, request.eventId)).for("no key update").limit(1);
 
     // A verb that writes a reference to a role — the role given, the roles ticked — locks the event's roles first, in
     // the order of their ids: the order a sign-up locks the roles it ticked and a role change locks them all (§761).
@@ -2072,6 +2085,28 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       if (current.hasKit === wanted) return { changed: false, volunteer: summary };
       await tx.update(eventVolunteers).set({ hasKit: wanted, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
       await audit("volunteer.edited", { volunteerId: current.id, fields: ["hasKit"], hasKit: wanted, assignedRoleIds: heldRoleIds });
+      return { changed: true, volunteer: summary };
+    }
+
+    if (request.kind === "setCheckpoint") {
+      // «Planul voluntarilor» (§NNN): where the person stands on the day — one of this event's points, or none. A cancelled person
+      // is placed nowhere, though taking anybody off a point is always allowed. Audited as every other change of a person's boxes:
+      // the box and the point's id, never a name. Nobody is told — it is the organizers' own plan — and no role, state or number moves.
+      const wanted = typeof request.checkpointId === "string" && request.checkpointId.trim() !== "" ? request.checkpointId.trim() : null;
+      if (wanted !== null) {
+        if (!isUuid(wanted)) throw new DomainError("VALIDATION_ERROR", "that is not a point of the route", ["checkpointId"]);
+        if (current.state === "CANCELLED") throw new DomainError("VALIDATION_ERROR", "a cancelled volunteer stands at no point", ["checkpointId"]);
+        const [point] = await tx
+          .select({ id: eventCheckpoints.id })
+          .from(eventCheckpoints)
+          .where(and(eq(eventCheckpoints.id, wanted), eq(eventCheckpoints.eventId, current.eventId)))
+          .limit(1);
+        // Another event's point, or one taken off the route since the page was drawn: not there.
+        if (!point) throw new DomainError("NOT_FOUND", "the point is not on this event's route");
+      }
+      if (current.checkpointId === wanted) return { changed: false, volunteer: summary };
+      await tx.update(eventVolunteers).set({ checkpointId: wanted, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
+      await audit("volunteer.edited", { volunteerId: current.id, fields: ["checkpoint"], checkpointId: wanted, assignedRoleIds: heldRoleIds });
       return { changed: true, volunteer: summary };
     }
 

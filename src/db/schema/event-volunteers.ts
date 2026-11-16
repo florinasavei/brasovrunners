@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { boolean, check, date, index, integer, jsonb, pgEnum, pgTable, primaryKey, smallint, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { eventCheckpoints } from "./event-checkpoints";
 import { events } from "./events";
 import { legalDocuments } from "./legal-documents";
 import { locale } from "./locale";
@@ -290,6 +291,16 @@ export const eventVolunteers = pgTable(
      * Null until confirmed, and on an event that gives its volunteers no number.
      */
     bibNumber: integer("bib_number"),
+    /**
+     * «Planul voluntarilor» (migration `0204`, §NNN; the owner, 2026-11-16: «e foarte important sa avem planul de voluntari
+     * si fiecare in ce punct ramane»): the point of the event's route this person stands at on the day — one of the event's
+     * own «Puncte pe traseu» (`event_checkpoints`), chosen on the plan's page by whoever works the volunteers — or null:
+     * nobody placed them yet, or their work is not on the route (the start, the kits). The organizers' own planning: never
+     * on a public page, in an email or on a badge. `ON DELETE SET NULL`: a point taken off the route frees its people, who
+     * stand under «Fără punct» again. A point of another event is refused by the service (`volunteers.ts#changeVolunteer`,
+     * `setCheckpoint`); the editor's save keeps a point's id (`changeCheckpoints`), so a point moved or renamed keeps its people.
+     */
+    checkpointId: uuid("checkpoint_id").references(() => eventCheckpoints.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     /** The staff member who entered the row; null for the public form, and after that account is removed. */
@@ -382,6 +393,8 @@ export const eventVolunteers = pgTable(
     check("event_volunteers_public_contact", sql`${t.source} = 'STAFF' OR (${t.email} IS NOT NULL AND ${t.phone} IS NOT NULL)`),
     // «N din M»: the people counted against a role.
     index("event_volunteers_role_idx").on(t.roleId),
+    // «Planul voluntarilor» (§NNN): the people standing at one point, and the foreign key's own lookup when a point is deleted.
+    index("event_volunteers_checkpoint_idx").on(t.checkpointId).where(sql`${t.checkpointId} IS NOT NULL`),
     // The retention sweep and the person lookup.
     index("event_volunteers_canonical_email_idx").on(t.canonicalEmail),
     // `/admin/legal`'s count of the people who accepted a version, and the RESTRICT's check on a delete.

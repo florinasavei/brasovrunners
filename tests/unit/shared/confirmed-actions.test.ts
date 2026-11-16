@@ -336,6 +336,9 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Are kit» on a row of the «Voluntari» list (§904): the organizers' own mark of who gets the volunteers' kit, a one-press tick.
   setVolunteerKitAction:
     "a mark on the club's packing for one volunteer, undone by the same tick; it tells nobody and changes no state, role or count but «Cu kit»",
+  // «Pune aici» / «Scoate» on «Planul voluntarilor» (§NNN): where a volunteer stands on the route, one press either way.
+  placeVolunteerAction:
+    "a line of the organizers' own plan for one volunteer, undone by «Scoate» or by another point; it tells nobody and changes no state, role, number or count",
   addTestRegistrationsAction: "test rows, counted nowhere and absent from production, removed by a verb that asks",
   hardDeleteEventAction: "guarded by the event's title, typed: the typing is the question",
   eraseRegistrationFromListAction: "guarded by the registered name, typed: the typing is the question",

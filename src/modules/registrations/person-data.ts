@@ -2,6 +2,7 @@ import { and, asc, desc, eq, inArray, isNotNull, isNull, lte, or, sql } from "dr
 import { auditLogs } from "@/db/schema/audit-logs";
 import { type DeclarationAcceptance, declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { eventCheckpoints } from "@/db/schema/event-checkpoints";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventReserveEntries } from "@/db/schema/event-reserve-entries";
 import { eventResults } from "@/db/schema/event-results";
@@ -220,6 +221,11 @@ export type PersonData = {
     listOptInNoticeVersion: number | null;
     /** «Are kit» (§904): the organizers' mark that the person gets the volunteers' kit — a column of the row like any other (art. 15 GDPR). */
     hasKit: boolean;
+    /**
+     * «Planul voluntarilor» (§NNN): the point of the route the organizers put the person at, by the name the club gave it; null while
+     * they stand at none — what the row's `checkpoint_id` says, a column of the row like any other (art. 15 GDPR).
+     */
+    checkpointName: string | null;
     shirtSize: (typeof eventVolunteers.$inferSelect)["shirtSize"];
     privacyNoticeVersion: number | null;
     createdAt: Date;
@@ -519,6 +525,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
       listOptIn: eventVolunteers.listOptIn,
       listOptInNoticeVersion: eventVolunteers.listOptInNoticeVersion,
       hasKit: eventVolunteers.hasKit,
+      checkpointName: eventCheckpoints.nameRo,
       shirtSize: eventVolunteers.shirtSize,
       privacyNoticeVersion: eventVolunteers.privacyNoticeVersion,
       createdAt: eventVolunteers.createdAt,
@@ -539,6 +546,8 @@ async function collectPersonData<T extends Record<string, unknown>>(
     .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, eventVolunteers.eventId), eq(eventTranslations.locale, "ro")))
     // The agreement's version number (§758), through the row's own reference.
     .leftJoin(legalDocuments, eq(legalDocuments.id, eventVolunteers.agreementDocumentId))
+    // The point of the route the organizers put the person at (§NNN), by its name.
+    .leftJoin(eventCheckpoints, eq(eventCheckpoints.id, eventVolunteers.checkpointId))
     .where(eq(eventVolunteers.canonicalEmail, canonicalEmail))
     .orderBy(asc(eventVolunteers.createdAt));
   // The roles each offer chose (§761) and the roles given (§837), every one of them: an access request is complete (art. 15 GDPR).
