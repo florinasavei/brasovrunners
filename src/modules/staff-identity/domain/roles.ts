@@ -38,7 +38,9 @@
  * verb that *changes* a registration — cancel, erase, resend, correct a name, assign or mark the
  * numbers — and publication (§201). Reading against changing is the boundary now, and it is worth
  * defending in the same way the old one was: each of those verbs asserts itself in its own
- * service, never in the interface that hides its button.
+ * service, never in the interface that hides its button. One mark crossed it since, on the owner's
+ * word: the raffle tick (§949), which the Organizer presses too and which moves nothing a
+ * registration owns — a predicate of its own, `canSetRaffleMark`, never the reading one.
  */
 
 /**
@@ -632,7 +634,7 @@ export function canHardDeleteEvent(subject: StaffSubject): boolean {
 }
 
 /**
- * **Reading who signed up, without a verb that changes one (§289).**
+ * **Reading who signed up (§289).**
  *
  * The owner, of his Organizer: "ca si organizator ar trebui sa vad cine s-a inscris!", and then
  * "organizer should also be able to see BIDs and export them". Asked how far it should go, he
@@ -645,6 +647,12 @@ export function canHardDeleteEvent(subject: StaffSubject): boolean {
  * the boundary between the two roles now means is **reading against changing**, not the data
  * itself — the Administrator is still the only one who cancels a place, erases a row, resends a
  * message or corrects a name, and each of those is asserted in its own service (BR-REQ-060-01).
+ *
+ * **This predicate answers reading, and a write never asks it (§953).** It said for a while that
+ * the Organizer has no verb on a registration, and §949 then gave the Organizer one: the raffle
+ * tick. That one write has a predicate of its own, `canSetRaffleMark` below — the same people, by
+ * this function — as the notes have `canKeepRegistrationNotes`: a service that changes something
+ * names the predicate for that change, so «may read the list» is never what authorizes a write.
  *
  * ## The second deliberate gap in the ladder, and it is `DEV`
  *
@@ -677,8 +685,8 @@ export function canReadRegistrations(subject: StaffSubject): boolean {
  * read the notes of a registration and write them; the Tehnic role (`DEV`), the volunteer and the member
  * get nothing — not the card, not the count on the list, not an action that answers.
  *
- * **An explicit exception to §289's «reading against changing», and the reason it is one:** the Organizer
- * still changes nothing *on the registration* — no state, no place, no number, no answer — and a note is not
+ * **An explicit exception to §289's «reading against changing», and the reason it is one:** a note changes
+ * nothing *on the registration* — no state, no place, no number, no answer — because a note is not
  * the registration, it is what the organizers say to each other about it. It is the same set as reading the
  * registrations (`MAY_READ_REGISTRATIONS`) because nobody who may not read a person may read what is said
  * about them; it is a predicate of its own so that «may read the list» and «may keep notes» can move apart
@@ -690,6 +698,30 @@ export function canReadRegistrations(subject: StaffSubject): boolean {
 export function canKeepRegistrationNotes(subject: StaffSubject): boolean {
   const role = roleOf(subject);
   return MAY_READ_REGISTRATIONS.has(role);
+}
+
+/**
+ * **«Participă la tombolă» on a registration (§949, amending §289): the one thing the Organizer changes on a
+ * registration.**
+ *
+ * The owner, 2026-11-16: «toată lumea poate participa la tombolă dar doar adminul și organizatorul pot bifa și
+ * vedea asta». Whoever reads the registrations takes a registration off the raffle's list of its event, or puts
+ * it back: the Organizer, the Administrator and the Superadministrator. The Tehnic role, the Redactor, the desk
+ * Volunteer and a member are out, as they are out of the list. §289 gave the Organizer the list to read and
+ * nothing on it to change; §949 amends it for this one tick, because the raffle is the organizers' own to run
+ * and the tick moves nothing a registration owns — no state, no place, no number, no answer, no count, no email
+ * (the tick's own service asserts this predicate again). Every other change to a registration is still
+ * `canManageRegistrations`.
+ *
+ * **Why a predicate of its own, and why written as the readers' (§953).** §949 authorized the tick with
+ * `canReadRegistrations`, so a write hid behind the predicate this file said grants none. Named, «may read the
+ * list» and «may tick the raffle» are two questions a page, an action and a service ask apart (BR-REQ-060-01),
+ * as `canKeepRegistrationNotes` keeps the notes apart. Written as `canReadRegistrations` rather than as a list
+ * of roles, so moving who reads the list moves who ticks with it, and nobody ever ticks a registration they may
+ * not read. The volunteers' own tick is `canManageVolunteers`: the same people, by the same function.
+ */
+export function canSetRaffleMark(subject: StaffSubject): boolean {
+  return canReadRegistrations(subject);
 }
 
 /**
@@ -816,7 +848,8 @@ export function canTranslateTexts(subject: StaffSubject): boolean {
 /**
  * Changing a registration: cancel, erase, resend, correct a name, assign or mark the race
  * numbers, fill a queue with test rows, send the thank-you. The Administrator's, and it is where
- * the line between the two roles now sits (§289) — reading is `canReadRegistrations`.
+ * the line between the two roles now sits (§289) — reading is `canReadRegistrations`. The one
+ * change to a registration that is not here is the raffle tick (§949, `canSetRaffleMark`).
  *
  * Split out from `canManageStaff`, which every one of these screens used to call. They are two
  * different powers, and they are kept apart although both are the Administrator's since §450:
@@ -1078,7 +1111,8 @@ export type AdminSection = (typeof ADMIN_SECTIONS)[number];
  * **The participant list is no longer on this side of the line (§289).** It was, on the reasoning
  * that "vede cam tot" is not an instruction to hand somebody four hundred addresses — and the
  * owner answered that question directly afterwards: the Organizer reads the whole list, the
- * export and the race numbers, and changes nothing. So the boundary this hierarchy draws is
+ * export and the race numbers, and changes nothing — but, since §949, the raffle tick
+ * (`canSetRaffleMark`). So the boundary this hierarchy draws is
  * reading against changing, and `canReadRegistrations` is where it is written. What a *volunteer*
  * sees of a participant is still only the desk: a name, a state and a number, never an address
  * (`AGENTS.md` §15.11).

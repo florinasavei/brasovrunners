@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.49` | a picture on «Planul voluntarilor»: uploaded on the plan's page, shown above the points, printed with the plan (§952) · the review of «Planul voluntarilor» and the raffle, answered: an import keeps the plan, the raffle tick travels with a person, a refusal lands on its sentence (§953) |
 | `BR-V4.48` | «Cel mult câte roluri poate bifa o persoană»: a per-event limit on the roles ticked on the public volunteers' form (§951) |
 | `BR-V4.47` | «Note interne» as a column of the «Voluntari» list (§950) |
 | `BR-V4.46` | «Ambasador» beside «Elită»; «Șterge» on an ended invitation and on a list of the sponsors' register; the registrations above the page's folds; the shut door's sentence, friendlier or the event's own; the volunteers' own numbers; a runner turned volunteer and back; the list for a raffle; the first name alone on an elite registration's bib (§948) · «Planul voluntarilor»: who stands at which point of the route; «Avem tombolă», «Participă la tombolă» and «Prezent» on the raffle's list (§949) |

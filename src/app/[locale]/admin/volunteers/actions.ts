@@ -14,11 +14,24 @@ import { backToCard, eventIdOf, field } from "@/app/[locale]/admin/events/[id]/v
  * for the role again (`canManageVolunteers`: the Organizer and the Administrators, BR-REQ-060-01) and audits the change as every other
  * edit of a person's boxes; the press comes back to the page of the list it was made on, its refusal's code in the address.
  */
+export async function setVolunteerKitAction(form: FormData): Promise<void> {
+  const hasKit = field(form, "hasKit") === "1";
+  try {
+    const actor = await requireStaff();
+    const result = await changeVolunteer(getDb(), actor, { kind: "setKit", eventId: eventIdOf(form), id: field(form, "volunteerId"), hasKit }, new Date());
+    return backToCard(form, { saved: result.changed ? (hasKit ? "volunteerKitOn" : "volunteerKitOff") : "volunteerUnchanged" });
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+}
+
 /**
  * «Participă la tombolă» on a row of the «Voluntari» list (§949; the owner, 2026-11-16: «coloană peste tot de „participă la
  * tombolă"»): one press takes a volunteer off the raffle's list of their event, or puts them back. The form posts the state it
- * wants (`inRaffle=1|0`), never a toggle. The service asks for the role again (`canManageVolunteers`, BR-REQ-060-01) and audits
- * the change as every other edit of a person's boxes; the press comes back to the page of the list it was made on.
+ * wants (`inRaffle=1|0`), never a toggle, so a second press before the page answers saves the same. The service asks for the role
+ * again (`canManageVolunteers`: the Organizer and the Administrators, BR-REQ-060-01) and audits the change as every other edit of a
+ * person's boxes; nobody is told. The press comes back to the page of the list it was made on, its refusal's code in the address.
  */
 export async function setVolunteerRaffleAction(form: FormData): Promise<void> {
   const inRaffle = field(form, "inRaffle") === "1";
@@ -26,18 +39,6 @@ export async function setVolunteerRaffleAction(form: FormData): Promise<void> {
     const actor = await requireStaff();
     const result = await changeVolunteer(getDb(), actor, { kind: "setRaffle", eventId: eventIdOf(form), id: field(form, "volunteerId"), inRaffle }, new Date());
     return backToCard(form, { saved: result.changed ? (inRaffle ? "volunteerRaffleOn" : "volunteerRaffleOff") : "volunteerUnchanged" });
-  } catch (error) {
-    if (!isDomainError(error)) throw error;
-    return backToCard(form, { error: error.code });
-  }
-}
-
-export async function setVolunteerKitAction(form: FormData): Promise<void> {
-  const hasKit = field(form, "hasKit") === "1";
-  try {
-    const actor = await requireStaff();
-    const result = await changeVolunteer(getDb(), actor, { kind: "setKit", eventId: eventIdOf(form), id: field(form, "volunteerId"), hasKit }, new Date());
-    return backToCard(form, { saved: result.changed ? (hasKit ? "volunteerKitOn" : "volunteerKitOff") : "volunteerUnchanged" });
   } catch (error) {
     if (!isDomainError(error)) throw error;
     return backToCard(form, { error: error.code });

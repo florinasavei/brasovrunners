@@ -291,6 +291,30 @@ export function sortedByKm<T extends { km: number }>(rows: readonly T[]): T[] {
   return rows.map((row, at) => ({ row, at })).sort((a, b) => a.row.km - b.row.km || a.at - b.at).map(({ row }) => row);
 }
 
+/** A point as an event's file names it — a file carries no id (§751): the Romanian name at the kilometre, each as the row stores it. */
+const fileKeyOf = (row: Pick<Checkpoint, "nameRo" | "km">): string => `${row.km.toFixed(2)}\u0000${row.nameRo}`;
+
+/**
+ * Which saved row each point of an imported file keeps (§953, amending §949): for each point of `wanted`, in the
+ * file's order, the first saved point of the same Romanian name at the same kilometre that no earlier point of the file
+ * took — or null, a new point. So two points a file names alike are matched in the route's order, each to a row of
+ * its own and never both to one, and a file with one more of them than the event adds one. `kept[at]` answers
+ * `wanted[at]`; `left` is every saved point the file no longer has, in the saved order. Pure: the import's writer
+ * (`checkpoints.ts#replaceCheckpoints`) updates the kept rows in place, deletes `left` and inserts the rest — which is
+ * what keeps «Planul voluntarilor»'s people at every point that is still there.
+ */
+export function matchCheckpointsToFile<S extends Pick<Checkpoint, "nameRo" | "km">>(
+  saved: readonly S[],
+  wanted: readonly Pick<Checkpoint, "nameRo" | "km">[],
+): { kept: (S | null)[]; left: S[] } {
+  const free = [...saved];
+  const kept = wanted.map((row) => {
+    const at = free.findIndex((candidate) => fileKeyOf(candidate) === fileKeyOf(row));
+    return at === -1 ? null : free.splice(at, 1)[0];
+  });
+  return { kept, left: free };
+}
+
 // ---------------------------------------------------------------------------------------------
 // The rules
 // ---------------------------------------------------------------------------------------------

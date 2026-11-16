@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { importsModule } from "../../helpers/module-imports";
 
 /**
  * «Planul voluntarilor» (§949, BR-REQ-060-01) — the point of the route a volunteer stands at is the organizers' own planning: it
@@ -9,12 +10,20 @@ import { describe, expect, it } from "vitest";
  * `volunteer-notes-never-leave.test.ts` holds the notes': no file outside the list below so much as names the column, the plan's
  * module or its words, so a later join or a helpful new column cannot quietly start carrying it. (What the plan reads and who may
  * read it is `tests/integration/volunteers/plan.test.ts`.) A new reader is a reviewed edit of this list.
+ *
+ * A reader is found by what it names — the column, the plan's words — or by what it imports (§953): the plan's module by any
+ * spelling, the `@/` alias or a relative path. The words alone missed `./plan`, the import a file beside the module would write.
  */
 const ROOT = process.cwd();
 const SRC = path.join(ROOT, "src");
 
-/** The column, the person's-data field, the plan's module and the plan's catalogue words. */
+/** The column, the person's-data field, the plan's module as the alias writes it and the plan's catalogue words. */
 const NAMES_THE_POINT = /checkpointId|checkpoint_id|checkpointName|modules\/volunteers\/plan|volunteers\.plan\./;
+/** The plan's module, wherever it is imported from and however the import spells it. */
+const PLAN_MODULE = path.join(SRC, "modules", "volunteers", "plan");
+
+/** Whether the file at `file`, whose text is `source`, reads the plan: it names the point, or imports the plan's module. */
+const namesThePoint = (file: string, source: string): boolean => NAMES_THE_POINT.test(source) || importsModule(file, source, PLAN_MODULE, SRC);
 
 const READERS = new Set(
   [
@@ -45,7 +54,7 @@ function sourceFiles(dir: string, acc: string[] = []): string[] {
 }
 
 describe("§949 a volunteer's point stays with the organizers", () => {
-  const naming = sourceFiles(SRC).filter((file) => NAMES_THE_POINT.test(readFileSync(file, "utf8")));
+  const naming = sourceFiles(SRC).filter((file) => namesThePoint(file, readFileSync(file, "utf8")));
 
   it("is named only by the files reviewed to read it", () => {
     const strangers = naming.filter((file) => !READERS.has(file)).map((file) => path.relative(ROOT, file));
@@ -68,7 +77,27 @@ describe("§949 a volunteer's point stays with the organizers", () => {
       "src/modules/notifications/render.ts",
       "src/modules/notifications/templates.ts",
     ]) {
-      expect(NAMES_THE_POINT.test(readFileSync(path.join(ROOT, file), "utf8")), file).toBe(false);
+      const full = path.join(ROOT, file);
+      expect(namesThePoint(full, readFileSync(full, "utf8")), file).toBe(false);
     }
+  });
+
+  it("catches a reader that imports the plan's module by a relative path, which the words alone would miss (§953)", () => {
+    const at = (...parts: string[]) => path.join(SRC, ...parts);
+    // A file beside the plan — say the volunteers' CSV — that starts reading it: no column, no alias path, none of the plan's words.
+    const beside = `import { readVolunteerPlan } from "./plan";\n\nexport const everybodyOnTheRoute = readVolunteerPlan;\n`;
+    expect(NAMES_THE_POINT.test(beside)).toBe(false);
+    expect(namesThePoint(at("modules", "volunteers", "csv.ts"), beside)).toBe(true);
+    // One folder down, from another module, loaded lazily, re-exported, and with the extension or single quotes written.
+    expect(namesThePoint(at("modules", "volunteers", "ui", "VolunteerPerson.tsx"), `import type { VolunteerPlan } from "../plan";`)).toBe(true);
+    expect(namesThePoint(at("modules", "notifications", "render.ts"), `const { readVolunteerPlan } = await import("../volunteers/plan");`)).toBe(true);
+    expect(namesThePoint(at("modules", "volunteers", "export.ts"), `export * from './plan.ts';`)).toBe(true);
+    expect(namesThePoint(at("app", "[locale]", "volunteers", "page.tsx"), `import {\n  readVolunteerPlan,\n} from "../../../modules/volunteers/plan";`)).toBe(true);
+    // The alias, as before.
+    expect(namesThePoint(at("modules", "events", "repository.ts"), `import { readVolunteerPlan } from "@/modules/volunteers/plan";`)).toBe(true);
+    // The same spelling from a folder where it is another file is not the plan, nor is a neighbour with a longer name: no false alarm.
+    expect(namesThePoint(at("modules", "deadlines", "wake.ts"), beside)).toBe(false);
+    expect(namesThePoint(at("modules", "volunteers", "csv.ts"), `import { plansOf } from "./plans";`)).toBe(false);
+    expect(namesThePoint(at("modules", "volunteers", "csv.ts"), `import { plan } from "plan";`)).toBe(false);
   });
 });

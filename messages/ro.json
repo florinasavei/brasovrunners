@@ -6352,10 +6352,10 @@
         "kitNo": "Nu are kit",
         "columnKit": "Kit",
         "ageHint": "Vârsta împlinită în ziua evenimentului, cea după care se socotește acordul părintelui pentru minori. «—»: nu a spus-o.",
-        "raffleOut": "Scos de la tombolă",
+        "raffleOut": "Nu participă la tombolă",
         "columnRaffle": "Tombolă",
         "raffleTick": "Participă",
-        "raffleHint": "Bifat: numărul voluntarului apare pe „Lista pentru tombolă”, dacă e confirmat și are număr. Debifează ca să-l scoți. Intern: persoana nu e anunțată.",
+        "raffleHint": "Bifat: numărul persoanei apare pe „Lista pentru tombolă”, dacă e confirmată și are număr. Debifează ca s-o scoți. Intern: persoana nu e anunțată.",
         "columnMessage": "Mesaj",
         "messageHint": "Ce a scris persoana pentru organizatori când s-a oferit ca voluntar. Gol: n-a scris nimic.",
         "columnNotes": "Note interne",
@@ -6388,15 +6388,32 @@
         "takeOff": "Scoate",
         "takeOffFor": "Scoate de la acest punct: {name}",
         "unplacedTitle": "Fără punct pe traseu",
-        "unplacedHelp": "De pus la un punct, sau cu o treabă care nu ține de traseu (start, kituri): o spun rolurile date.",
-        "unplacedNone": "Toți voluntarii sunt puși la un punct.",
+        "unplacedHelp": "Încă nu stau la niciun punct, sau au o treabă care nu ține de traseu (start, kituri): o spun rolurile date.",
+        "unplacedNone": "Toată lumea stă la câte un punct.",
         "noVolunteers": "Evenimentul nu are încă voluntari.",
         "noRole": "fără rol dat",
-        "notConfirmed": "neconfirmat încă",
+        "notConfirmed": "încă de confirmat",
         "column": "Punct",
-        "columnHint": "Punctul de pe traseu la care stă voluntarul, ales în „Planul voluntarilor”. Gol: încă nepus, sau cu o treabă care nu ține de traseu.",
+        "columnHint": "Punctul de pe traseu la care stă voluntarul, ales în „Planul voluntarilor”. Gol: încă fără punct, sau cu o treabă care nu ține de traseu.",
         "columnPoint": "{number}. {name}",
-        "pointValue": "Punct pe traseu: {name}"
+        "pointValue": "Punct pe traseu: {name}",
+        "picture": {
+          "title": "Poza planului",
+          "alt": "Planul voluntarilor desenat pe traseu",
+          "open": "Deschide poza planului întreagă, într-o filă nouă",
+          "openHint": "Apasă pe poză ca să o deschizi întreagă, într-o filă nouă.",
+          "none": "Planul nu are încă o poză. Încarcă harta traseului cu punctele desenate pe ea: apare aici, deasupra punctelor, și se tipărește odată cu planul.",
+          "upload": "Încarcă poza planului",
+          "replace": "Schimbă poza",
+          "uploading": "Se încarcă…",
+          "saving": "Se salvează…",
+          "failed": "Poza nu s-a încărcat. Încearcă din nou sau alege alt fișier (JPEG, PNG sau WebP).",
+          "help": "O imagine JPEG, PNG sau WebP — de pildă harta traseului cu punctele numerotate. Nu apare pe site și nu se trimite nimănui de aici.",
+          "remove": "Șterge poza",
+          "removeTitle": "Ștergi poza planului?",
+          "removeBody": "Poza dispare de pe plan și de pe foaia tipărită. Punctele și oamenii rămân cum sunt. O poți încărca din nou oricând.",
+          "noStorage": "Stocarea imaginilor nu este configurată aici, așa că planul nu poate avea o poză."
+        }
       },
       "chips": {
         "before": "A mai fost voluntar",
@@ -7152,7 +7169,8 @@
       "usedInMembersPage": "Pe paginile membrilor",
       "usedInHomePage": "Pe pagina principală",
       "usedInNewsletter": "Într-un newsletter trimis",
-      "usedInTeamBox": "Pe pagina Echipa: caseta {title}"
+      "usedInTeamBox": "Pe pagina Echipa: caseta {title}",
+      "usedInVolunteerPlan": "Planul voluntarilor: {title}"
     },
     "gallery": {
       "title": "Galerie foto",
@@ -14185,8 +14203,8 @@
       "volunteerKitOff": "Debifat: nu mai are kit.",
       "volunteerRaffleOn": "Participă la tombolă: e din nou pe lista pentru tombolă.",
       "volunteerRaffleOff": "Nu mai participă la tombolă: nu apare pe lista pentru tombolă.",
-      "volunteerPlaced": "Pus la punct: apare în planul voluntarilor.",
-      "volunteerUnplaced": "Scos de la punct: e din nou la „Fără punct pe traseu”.",
+      "volunteerPlaced": "Stă la punctul ales: apare în planul voluntarilor.",
+      "volunteerUnplaced": "Nu mai stă la niciun punct: e din nou la „Fără punct pe traseu”.",
       "eventTodoDone": "Bifat. Rândul e la „Gata”.",
       "eventTodoReopened": "Debifat: rândul e din nou de făcut.",
       "eventTodoDeleted": "Rând șters de pe lista evenimentului.",
@@ -14454,7 +14472,10 @@
       "addressChanged": "Adresa a fost schimbată; ambele adrese primesc un email.",
       "partnerSaved": "Partenerul a fost salvat. Nu s-a trimis nimic nimănui.",
       "partnerCleared": "Nu mai e de la parteneri. Nu s-a trimis nimic nimănui.",
-      "partnerUnchanged": "Era deja așa; nimic de schimbat."
+      "partnerUnchanged": "Era deja așa; nimic de schimbat.",
+      "planPictureSet": "Poza planului e pusă: apare deasupra punctelor și se tipărește cu planul.",
+      "planPictureReplaced": "Poza planului a fost schimbată.",
+      "planPictureRemoved": "Poza planului a fost ștearsă."
     },
     "mail": {
       "now": "Pleacă acum{road}: {what}.",

@@ -12,6 +12,7 @@ import {
   canEditCheckpoints,
   canReadCheckpoints,
   isBlankPosted,
+  matchCheckpointsToFile,
   type PostedCheckpoint,
   prepareCheckpoints,
   readClockTime,
@@ -502,5 +503,74 @@ describe("§757 who may read and who may write", () => {
     expect(canReadCheckpoints("CONTRIBUTOR")).toBe(false);
     expect(canEditCheckpoints("DEV")).toBe(false);
     expect(canEditCheckpoints("COPYWRITER")).toBe(false);
+  });
+});
+
+/*
+  §953 (amending §949) — an event's file carries no ids, so the import knows a point by what the file says of it: the
+  Romanian name at the kilometre. The row of a point the file still has is kept — which is what keeps «Planul
+  voluntarilor»'s people at it — and only a point the file no longer has leaves. What the import then writes, and that
+  the people stay, is `tests/integration/events/event-json.test.ts`.
+*/
+describe("§953 which saved row a point of an imported file keeps", () => {
+  /** A saved point: its id, its Romanian name and its kilometre — all the matcher reads. */
+  const saved = (id: string, nameRo: string, km: number) => ({ id, nameRo, km });
+  const named = (nameRo: string, km: number) => ({ nameRo, km });
+  const ids = (rows: readonly ({ id: string } | null)[]) => rows.map((row) => row?.id ?? null);
+
+  it("keeps the row of every point the file still has — the same Romanian name at the same kilometre — whatever order the file has them in", () => {
+    const current = [saved("a", "Intersecția Stejeriș", 1.2), saved("b", "Apă la cabană", 5.5), saved("c", "Podul de lemn", 7.25)];
+    const { kept, left } = matchCheckpointsToFile(current, [named("Podul de lemn", 7.25), named("Intersecția Stejeriș", 1.2), named("Apă la cabană", 5.5)]);
+    expect(ids(kept)).toEqual(["c", "a", "b"]);
+    expect(left).toEqual([]);
+  });
+
+  it("takes a point renamed, moved, or both for another point: the old one leaves and the file's is new", () => {
+    const current = [saved("a", "Intersecția Stejeriș", 1.2), saved("b", "Apă la cabană", 5.5), saved("c", "Podul de lemn", 7.25)];
+    const renamed = matchCheckpointsToFile(current, [named("Intersecția Stejeriș", 1.2), named("Apă la refugiu", 5.5), named("Podul de lemn", 7.25)]);
+    expect(ids(renamed.kept)).toEqual(["a", null, "c"]);
+    expect(ids(renamed.left)).toEqual(["b"]);
+    const moved = matchCheckpointsToFile(current, [named("Intersecția Stejeriș", 1.2), named("Apă la cabană", 6), named("Podul de lemn", 7.25)]);
+    expect(ids(moved.kept)).toEqual(["a", null, "c"]);
+    expect(ids(moved.left)).toEqual(["b"]);
+    const both = matchCheckpointsToFile(current, [named("Intersecția Stejeriș", 1.2), named("Apă la refugiu", 6), named("Podul de lemn", 7.25)]);
+    expect(ids(both.kept)).toEqual(["a", null, "c"]);
+    expect(ids(both.left)).toEqual(["b"]);
+  });
+
+  it("reads the kilometre as the row stores it, two decimals, and the name to the letter", () => {
+    const current = [saved("a", "Apă", 7.5)];
+    // 7.5 and 7.50 are one kilometre; a name is the one typed, capitals and diacritics included.
+    expect(ids(matchCheckpointsToFile(current, [named("Apă", 7.5)]).kept)).toEqual(["a"]);
+    expect(ids(matchCheckpointsToFile(current, [named("Apă", Number("7.50"))]).kept)).toEqual(["a"]);
+    expect(ids(matchCheckpointsToFile(current, [named("Apă", 7.51)]).kept)).toEqual([null]);
+    expect(ids(matchCheckpointsToFile(current, [named("apă", 7.5)]).kept)).toEqual([null]);
+    expect(ids(matchCheckpointsToFile(current, [named("Apa", 7.5)]).kept)).toEqual([null]);
+  });
+
+  it("matches two points a file names alike in order, each to a row of its own and never both to one", () => {
+    const current = [saved("first", "Apă", 5), saved("second", "Apă", 5), saved("c", "Sosire", 10)];
+    // Two in the file, two saved: the first to the first, the second to the second.
+    const two = matchCheckpointsToFile(current, [named("Apă", 5), named("Apă", 5), named("Sosire", 10)]);
+    expect(ids(two.kept)).toEqual(["first", "second", "c"]);
+    expect(two.left).toEqual([]);
+    // Three in the file: the third is a new point, never a second claim on a row.
+    const three = matchCheckpointsToFile(current, [named("Apă", 5), named("Apă", 5), named("Apă", 5), named("Sosire", 10)]);
+    expect(ids(three.kept)).toEqual(["first", "second", null, "c"]);
+    expect(new Set(ids(three.kept).filter((id) => id !== null)).size).toBe(3);
+    // One in the file: the first row stays, the second leaves.
+    const one = matchCheckpointsToFile(current, [named("Apă", 5), named("Sosire", 10)]);
+    expect(ids(one.kept)).toEqual(["first", "c"]);
+    expect(ids(one.left)).toEqual(["second"]);
+  });
+
+  it("leaves every saved point for a file with none, keeps none for an event with none, and changes neither list it was given", () => {
+    const current = [saved("a", "Apă", 5), saved("b", "Sosire", 10)];
+    const wanted = [named("Apă", 5)];
+    expect(matchCheckpointsToFile(current, [])).toEqual({ kept: [], left: current });
+    expect(matchCheckpointsToFile([], wanted)).toEqual({ kept: [null], left: [] });
+    matchCheckpointsToFile(current, wanted);
+    expect(current.map((row) => row.id)).toEqual(["a", "b"]);
+    expect(wanted).toEqual([named("Apă", 5)]);
   });
 });

@@ -1008,8 +1008,9 @@ export const eventFieldsSchema = z
      */
     kitShirt: z.boolean().optional(),
     /**
-     * «Avem tombolă» (§949): the organizers' switch for an event that draws a raffle. Optional on the wire, as `kitShirt` is:
-     * absent means "this caller is not editing it", so no save switches a raffle off by not mentioning it.
+     * «Avem tombolă» (§949): the club's internal switch for an event that draws a raffle, ticked by whoever saves the event —
+     * an Administrator (§542). Optional on the wire, as `kitShirt` is: absent means "this caller is not editing it", so no save
+     * switches a raffle off by not mentioning it.
      */
     hasRaffle: z.boolean().optional(),
     /**
