@@ -367,6 +367,28 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
         ) : null,
     },
     {
+      /*
+        «Note interne» (§950; the owner, 2026-11-16, of this list: «pe lângă mesajul nostru vreau să văd și notele interne ale
+        noastre»): the organizers' own notes on the person, in the row itself — the words the marker's tooltip says (§945: the three
+        newest, each with its day and hour, a long one cut, the older ones counted, no author), because a phone has no pointer to
+        hold over a marker. From the list's one grouped read, so no query is added; nothing for a row with no note — an empty cell
+        in the table, no line on a phone's card. The marker beside the name stays the way to the person's card, where every note
+        is whole and says who wrote it.
+      */
+      key: "notes",
+      label: t("volunteers.screen.columnNotes"),
+      hint: t("volunteers.screen.notesHint"),
+      omitEmptyOnPhone: true,
+      render: (row) => {
+        const said = notesTipOf(row.id);
+        return said ? (
+          <Box component="span" data-testid="volunteer-notes" sx={MESSAGE_CELL_SX}>
+            {said}
+          </Box>
+        ) : null;
+      },
+    },
+    {
       key: "state",
       label: t("volunteers.screen.columnState"),
       sortable: true,

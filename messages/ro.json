@@ -6341,6 +6341,8 @@
         "raffleHint": "Bifat: numărul voluntarului apare pe „Lista pentru tombolă”, dacă e confirmat și are număr. Debifează ca să-l scoți. Intern: persoana nu e anunțată.",
         "columnMessage": "Mesaj",
         "messageHint": "Ce a scris persoana pentru organizatori când s-a oferit ca voluntar. Gol: n-a scris nimic.",
+        "columnNotes": "Note interne",
+        "notesHint": "Notele organizatorilor despre persoană: cele mai noi trei, cu ziua și ora. Toate, cu autorul lor, sunt pe pagina persoanei. Voluntarul nu le vede.",
         "filter": "Filtrează",
         "searchEverywhere": "Caut în toate evenimentele — alege unul ca să restrângi.",
         "tableCaption": "Voluntari, cu vârstă, oraș, stare, rolurile date, rolurile oferite, kit, eveniment și data ofertei",

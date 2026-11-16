@@ -350,6 +350,61 @@ describe("the «Voluntari» list — the marker and «Adaugă o notă»", () => 
     expect(elements(nameCell(dan)).filter((element) => element.type === TipSpan || element.type === NotesMark)).toHaveLength(0);
   });
 
+  it("says the same words in a column of the row — «Note interne», after «Mesaj» — for a phone, which has no pointer; nothing for a row without notes (§950)", async () => {
+    const organizer = state.actor as StaffUser;
+    const ana = await volunteer("Ana Pop");
+    const dan = await volunteer("Dan Ionescu");
+    for (const [minute, words] of [["00", "prima"], ["01", "a doua"], ["02", "a treia"], ["03", "vine doar dimineața\nare mașină"]] as const) {
+      await addVolunteerNote(db, organizer, ana, words, new Date(`2026-11-11T10:${minute}:00.000Z`));
+    }
+    const gone = await addVolunteerNote(db, organizer, ana, "ștearsă", new Date("2026-11-11T10:04:00.000Z"));
+    await deleteVolunteerNote(db, organizer, gone.id, new Date("2026-11-11T10:05:00.000Z"));
+
+    let reads = 0;
+    const real = db.select.bind(db);
+    const spy = vi.spyOn(db, "select").mockImplementation(((...args: unknown[]) => {
+      const query = (real as (...a: unknown[]) => { from: (table: unknown) => unknown })(...args);
+      const from = query.from.bind(query);
+      query.from = ((table: unknown) => {
+        if (table === eventVolunteerNotes) reads += 1;
+        return from(table);
+      }) as never;
+      return query as never;
+    }) as never);
+    let tree: ReactNode;
+    try {
+      tree = await listPage({ eventId: raceId });
+    } finally {
+      spy.mockRestore();
+    }
+    // The column reads nothing of its own: the list's one grouped read serves the marker, its tooltip and the column.
+    expect(reads).toBe(1);
+
+    const { table, nameCell } = tableOf(tree);
+    const columns = table.props.columns as Array<{ key: string; label: string; hint?: string; omitEmptyOnPhone?: boolean; sortable?: boolean; render: (row: unknown) => ReactNode }>;
+    const rows = table.props.rows as Array<{ id: string }>;
+    // Right after the person's own message, under the catalogue's heading, with its «?»; it does not sort, and a phone's card has no line for a row without notes.
+    const keys = columns.map((column) => column.key);
+    expect(keys.indexOf("notes")).toBe(keys.indexOf("message") + 1);
+    const column = columns.find((candidate) => candidate.key === "notes")!;
+    expect(column).toMatchObject({ label: ro.Admin.volunteers.screen.columnNotes, hint: ro.Admin.volunteers.screen.notesHint, omitEmptyOnPhone: true });
+    expect(column.sortable).toBeFalsy();
+
+    const cell = byTestId(column.render(rows.find((row) => row.id === ana)), "volunteer-notes");
+    expect(cell).toHaveLength(1);
+    const said = String(cell[0].props.children);
+    // Exactly what the marker's tooltip says: the three newest with their day and hour, the older ones counted, a note's own line break kept.
+    const [tip] = elements(nameCell(ana)).filter((element) => element.type === TipSpan);
+    expect(said).toBe(tip.props.title);
+    expect(said.split("\n\n")).toEqual(["Mie., 11 nov. 2026, 12:03: vine doar dimineața\nare mașină", expect.stringMatching(/12:02: a treia$/), expect.stringMatching(/12:01: a doua$/), "… și încă 1 notă"]);
+    // The cell keeps the line breaks it is given, and a deleted note and the author's name are in no cell.
+    expect(cell[0].props.sx).toMatchObject({ whiteSpace: "pre-line" });
+    expect(said).not.toContain("ștearsă");
+    expect(said).not.toContain(organizer.displayName);
+    // A row without notes: an empty cell.
+    expect(column.render(rows.find((row) => row.id === dan))).toBeNull();
+  });
+
   it("carries «Adaugă o notă» on every row — the words, the action, the hidden fields with the list's own return, the fallback link — strings only", async () => {
     const ana = await volunteer("Ana Pop");
     const tree = await listPage({ eventId: raceId, sort: "name", dir: "asc" });
