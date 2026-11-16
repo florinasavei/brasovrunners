@@ -57,7 +57,7 @@ type PictureReferenceKind = "album" | "page" | "event" | "team" | "teamIntro" | 
 /** A reference kind from the pictures page (`MediaReference`) as the picker's chip: the team page's introduction is «Echipa». */
 // «Întrebări frecvente» (§525) and the members' pages (§524) are pages the club writes: «Pagini».
 // A newsletter sent (§550) is no place a picker chooses from: it keeps its pictures, and has no chip.
-// Nor is the picture of an event's «Planul voluntarilor» (§NNN): the organizers' own map is on the plan's page, never among
+// Nor is the picture of an event's «Planul voluntarilor» (§952): the organizers' own map is on the plan's page, never among
 // an event's pictures — so it wears no chip, and «Acest eveniment» does not offer it (`usedHere` compares the kind).
 export function pictureUseOf(kind: PictureReferenceKind): PictureUse | null {
   if (kind === "newsletter" || kind === "volunteerPlan") return null;

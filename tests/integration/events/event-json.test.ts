@@ -1617,7 +1617,7 @@ describe("§757 the route's checkpoints travel in the file", () => {
   });
 });
 
-// --- «Planul voluntarilor» through an import (§NNN, amending §949) ----------------------------------
+// --- «Planul voluntarilor» through an import (§953, amending §949) ----------------------------------
 
 type FilePoint = EventFile["event"]["route"]["checkpoints"][number];
 
@@ -1674,7 +1674,7 @@ async function importTrail(eventId: string) {
   return rows.map((row) => row.metadataJson as Record<string, unknown>).filter((metadata) => metadata.source === "import");
 }
 
-describe("§NNN an import over an event keeps «Planul voluntarilor» at every point the file still has", () => {
+describe("§953 an import over an event keeps «Planul voluntarilor» at every point the file still has", () => {
   /** The source and the target, each with the seeded two points, and Ana at the hut, Dan at the timing mat of the target. */
   async function plannedTarget() {
     const { event } = await seedRace({}, {}, false);

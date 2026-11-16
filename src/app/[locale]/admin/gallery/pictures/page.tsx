@@ -109,7 +109,7 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
         // A newsletter sent (§550): its letter keeps the picture for the inboxes that hold it.
         return <Link href={{ pathname: "/admin/newsletter", hash: "newsletter" }}>{t("pictures.usedInNewsletter")}</Link>;
       case "volunteerPlan":
-        // The picture of an event's «Planul voluntarilor» (§NNN): the plan's page, where the picture is changed or taken off. A
+        // The picture of an event's «Planul voluntarilor» (§952): the plan's page, where the picture is changed or taken off. A
         // link only for whoever may open the plan — the page is a 404 for anybody else (BR-REQ-060-01), so they read the words.
         return mayOpenPlans ? (
           <Link href={{ pathname: "/admin/events/[id]/plan-voluntari", params: { id: reference.id } }}>{t("pictures.usedInVolunteerPlan", { title })}</Link>

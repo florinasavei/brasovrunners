@@ -231,7 +231,7 @@ export async function copyCheckpoints<T extends Record<string, unknown>>(db: Dat
  * too; one audit row names the list before and after, `source: "import"`. Nothing written, nothing
  * recorded, when the list is already the same.
  *
- * **A point the file still has keeps its row (§NNN, amending §949).** «Planul voluntarilor» places a volunteer
+ * **A point the file still has keeps its row (§953, amending §949).** «Planul voluntarilor» places a volunteer
  * at a point by the row's id — a reference a deleted point sets to null — and this used to delete every row
  * and insert the file's: one imported file silently took every volunteer of the event off the plan, though the
  * club moves events between its environments with these files. A file has no ids, so a point is known by what

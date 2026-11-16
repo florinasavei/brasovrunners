@@ -11,7 +11,7 @@ import { importsModule } from "../../helpers/module-imports";
  * module or its words, so a later join or a helpful new column cannot quietly start carrying it. (What the plan reads and who may
  * read it is `tests/integration/volunteers/plan.test.ts`.) A new reader is a reviewed edit of this list.
  *
- * A reader is found by what it names — the column, the plan's words — or by what it imports (§NNN): the plan's module by any
+ * A reader is found by what it names — the column, the plan's words — or by what it imports (§953): the plan's module by any
  * spelling, the `@/` alias or a relative path. The words alone missed `./plan`, the import a file beside the module would write.
  */
 const ROOT = process.cwd();
@@ -82,7 +82,7 @@ describe("§949 a volunteer's point stays with the organizers", () => {
     }
   });
 
-  it("catches a reader that imports the plan's module by a relative path, which the words alone would miss (§NNN)", () => {
+  it("catches a reader that imports the plan's module by a relative path, which the words alone would miss (§953)", () => {
     const at = (...parts: string[]) => path.join(SRC, ...parts);
     // A file beside the plan — say the volunteers' CSV — that starts reading it: no column, no alias path, none of the plan's words.
     const beside = `import { readVolunteerPlan } from "./plan";\n\nexport const everybodyOnTheRoute = readVolunteerPlan;\n`;

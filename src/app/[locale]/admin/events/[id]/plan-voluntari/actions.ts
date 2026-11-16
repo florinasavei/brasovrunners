@@ -23,7 +23,7 @@ import { eventIdOf, field, localeOf } from "@/app/[locale]/admin/events/[id]/vol
  * Administrators, BR-REQ-060-01), holds the point to the event and audits the change. A press that went through comes back to
  * the plan at the point it was made on (`at`), its outcome in the toast. A refusal — the person cancelled meanwhile, the point
  * taken off the route meanwhile, a role that may not — comes back to the page's alert (`#admin-alert`) with its code in the
- * address (§NNN, the registrations list's rule, §943): the alert is where the refusal's sentence is, at the top of a page that
+ * address (§953, the registrations list's rule, §943): the alert is where the refusal's sentence is, at the top of a page that
  * may be several screens long, and a point deleted meanwhile has no anchor left to land on.
  */
 export async function placeVolunteerAction(form: FormData): Promise<void> {
@@ -53,7 +53,7 @@ export async function placeVolunteerAction(form: FormData): Promise<void> {
 const PICTURE_ANCHOR = "#plan-picture";
 
 /**
- * A press on the plan's picture, start to finish (§NNN): the staff session and the capability, asked here by name at the door
+ * A press on the plan's picture, start to finish (§952): the staff session and the capability, asked here by name at the door
  * of the action — whoever works the volunteers (`canManageVolunteers`: the Organizer and the Administrators, BR-REQ-060-01) —
  * before the service asks it again; then `press`, whose outcome becomes the toast; the way back is the plan, at the picture, a
  * refusal's code in the address. A plain function of this file, never a verb a browser may call: only the two actions under
@@ -79,7 +79,7 @@ async function pressOnPlanPicture(form: FormData, press: (actor: Pick<StaffUser,
 }
 
 /**
- * «Încarcă poza planului» and «Schimbă poza» on «Planul voluntarilor» (§NNN; the owner, 2026-11-16, with a picture of the route
+ * «Încarcă poza planului» and «Schimbă poza» on «Planul voluntarilor» (§952; the owner, 2026-11-16, with a picture of the route
  * and its volunteers' points numbered on it: «trebui sa pot incarca si planul voluntarilor pe traseu in genul [pozei]»): the
  * picture the browser has just stored through the backoffice's one upload (`/api/admin/media`, which answers its id) becomes
  * the event's plan picture — the first, or another in the place of the one before. The island on the page posts this form the
@@ -98,7 +98,7 @@ export async function setPlanPictureAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Șterge poza» on «Planul voluntarilor» (§NNN): the plan's picture taken off the event — asked first on the page, since only
+ * «Șterge poza» on «Planul voluntarilor» (§952): the plan's picture taken off the event — asked first on the page, since only
  * uploading it again brings it back. The points and the people are untouched; the stored picture, used nowhere else, is the
  * sweep's after its week (§73). The service audits it; a plan that has no picture answers «nimic de schimbat».
  */

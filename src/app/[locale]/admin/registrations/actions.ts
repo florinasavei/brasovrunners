@@ -682,7 +682,7 @@ export async function setRegistrationEliteAction(_previous: FormOutcome | null, 
  * «Participă la tombolă» on a row of the registrations list (§949): one press takes a registration off the raffle's list of its
  * event, or puts it back (`raffle-mark.ts`). The form posts the state it wants (`inRaffle=1|0`), never a toggle, so a second press
  * before the page answers saves the same. Whoever reads the registrations may press it — the Organizer and the Administrators,
- * the one thing the Organizer changes on a registration — by the tick's own predicate (`canSetRaffleMark`, §NNN), never the
+ * the one thing the Organizer changes on a registration — by the tick's own predicate (`canSetRaffleMark`, §953), never the
  * reading one: the coarse gate here, the service asserts it again (BR-REQ-060-01).
  * It asks nothing (§384): it tells nobody, moves nothing of the registration, and the same tick undoes it.
  * Back to the row it was pressed on.

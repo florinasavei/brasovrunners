@@ -12,7 +12,7 @@ import { importsModule } from "../../helpers/module-imports";
  * mark's module. (What the ticks do and who may press them is `tests/integration/registrations/raffle-mark.test.ts`.) A new
  * reader is a reviewed edit of this list.
  *
- * A reader is found by what it names — the columns — or by what it imports (§NNN): the mark's module by any spelling, the
+ * A reader is found by what it names — the columns — or by what it imports (§953): the mark's module by any spelling, the
  * `@/` alias or a relative path. The words alone missed `./raffle-mark`, the import a file beside the module would write —
  * the allocator's own file among them.
  */
@@ -50,7 +50,7 @@ const READERS = new Set(
     "src/app/[locale]/admin/volunteers/actions.ts",
     // «Lista pentru tombolă»: nobody an organizer took out.
     "src/modules/volunteers/raffle-list.ts",
-    // «Transformă în voluntar» / «Transformă în alergător» (§NNN): the tick travels with the person, through the two writers above.
+    // «Transformă în voluntar» / «Transformă în alergător» (§953): the tick travels with the person, through the two writers above.
     "src/modules/volunteers/transform.ts",
     // «Toate datele unei persoane» (art. 15): the volunteer's tick, and the line that says it.
     "src/modules/registrations/person-data.ts",
@@ -119,7 +119,7 @@ describe("§949 the raffle's switch and ticks stay with the organizers", () => {
     }
   });
 
-  it("catches a reader that imports the mark's module by a relative path, which the words alone would miss (§NNN)", () => {
+  it("catches a reader that imports the mark's module by a relative path, which the words alone would miss (§953)", () => {
     const at = (...parts: string[]) => path.join(SRC, ...parts);
     // The allocator's own file, beside the mark, starting to ask whether an event holds a raffle: no column named, no alias path.
     const beside = `import { eventHoldsRaffle } from "./raffle-mark";\n\nexport const drawsARaffle = eventHoldsRaffle;\n`;

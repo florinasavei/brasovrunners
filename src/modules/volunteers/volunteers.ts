@@ -2390,7 +2390,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     return { changed: true, volunteer: { id: current.id, hasAddress: next.email !== null } };
   });
   // The organizers' own marks are shown on no public page — «Are kit» (§904), the point a person stands at on «Planul
-  // voluntarilor» and «Participă la tombolă» (§949) — so their presses leave the public cache as it was (§NNN): an expiry is
+  // voluntarilor» and «Participă la tombolă» (§949) — so their presses leave the public cache as it was (§953): an expiry is
   // a read that may wake the database, and no visitor would be shown anything new.
   if (result.changed && !KINDS_NO_PUBLIC_PAGE_SHOWS.has(request.kind)) revalidatePublicContent("places");
   return result;

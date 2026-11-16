@@ -27,7 +27,7 @@ import { bodyImageSrc, deleteAssetObjects, getStorage, objectKey } from "./stora
  * `route_description` (§387: the map is a picture in that text) — where the image node
  * carries the variant's address and that address contains the asset's opaque `key_prefix` — and,
  * the same way, by an event's bib design (§560) — and, by id, by an event's cover (§709) and by the picture of its
- * «Planul voluntarilor» (§NNN). Drafts count: a picture in a draft is
+ * «Planul voluntarilor» (§952). Drafts count: a picture in a draft is
  * a picture somebody is about to publish, and the sweep must never take it. The check is one
  * SQL predicate, used by the sweep, the media list and the delete, so the three cannot
  * disagree about what "in use" means.
@@ -140,7 +140,7 @@ const referencedSomewhere = sql`(
   -- An event's cover (the facelift's phase 2, §709), by id, drafts, series dates and past events
   -- included: the column has no foreign key (events.ts says why), so this is what keeps the picture.
   OR EXISTS (SELECT 1 FROM ${events} WHERE ${events.coverMediaAssetId} = ${mediaAssets.id})
-  -- The picture of an event's «Planul voluntarilor» (§NNN), by id, like the cover and for its reason:
+  -- The picture of an event's «Planul voluntarilor» (§952), by id, like the cover and for its reason:
   -- the column has no foreign key, so this is what keeps the organizers' map from the sweep and from
   -- a delete on the pictures page. Drafts and past events included: a plan is reprinted.
   OR EXISTS (SELECT 1 FROM ${events} WHERE ${events.volunteerPlanMediaAssetId} = ${mediaAssets.id})
@@ -266,7 +266,7 @@ export async function countMediaAssets<T extends Record<string, unknown>>(
 
 /**
  * `teamBox` (§691): a box under the team page's chart, by its id, titled in the reader's language.
- * `volunteerPlan` (§NNN): the picture of an event's «Planul voluntarilor», by the event's id and titled as the event — a kind
+ * `volunteerPlan` (§952): the picture of an event's «Planul voluntarilor», by the event's id and titled as the event — a kind
  * of its own and not `event`, because the picture is on the plan's page and nowhere in the event's editor: the pictures page
  * sends the reader to the plan, and no «Din galerie» counts it among an event's pictures.
  */
@@ -379,7 +379,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .innerJoin(events, eq(events.coverMediaAssetId, mediaAssets.id))
     .leftJoin(eventTranslations, eq(eventTranslations.eventId, events.id));
 
-  // The picture of an event's «Planul voluntarilor» (§NNN): the event, named in the reader's language.
+  // The picture of an event's «Planul voluntarilor» (§952): the event, named in the reader's language.
   const inVolunteerPlans = await db
     .select({ assetId: mediaAssets.id, id: events.id, title: eventTranslations.title, locale: eventTranslations.locale })
     .from(mediaAssets)

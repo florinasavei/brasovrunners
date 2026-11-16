@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.48-2026-11-16 -->
+<!-- PROJECT_BASELINE: BR-V4.49-2026-11-16 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.48-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.49-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1895,7 +1895,7 @@ events
 - public_list_club members_only|as_typed|hidden NOT NULL DEFAULT members_only  -- §10.10; «Clubul pe lista publică», what the list's «Club» column says
 - volunteer_choices_max integer null  -- §951, amending §761; «Cel mult câte roluri poate bifa o persoană» on the public volunteers' form; null is any number; never copied by a duplicate, a series, a repeat or the event's file
 - cover_media_asset_id uuid null
-- volunteer_plan_media_asset_id uuid null  -- §17, §NNN; the picture of «Planul voluntarilor»: no FK, as the cover has none; counted by media/references.ts; never public, never copied by a series, a repeat or a duplicate, never in the event's file
+- volunteer_plan_media_asset_id uuid null  -- §17, §952; the picture of «Planul voluntarilor»: no FK, as the cover has none; counted by media/references.ts; never public, never copied by a series, a repeat or a duplicate, never in the event's file
 - created_by_staff_user_id uuid
 - updated_by_staff_user_id uuid
 - created_at timestamptz
@@ -3266,7 +3266,7 @@ Beside those two, and like them a mark that changes nothing else: **«Participă
 column reads it) — ticked by an Administrator, whose save the event's is (§10.2, `canEditEventFields`); the Organizer
 reads it. On such an event the registrations list — one event chosen — has a column «Tombolă»: one boolean
 `in_raffle` on a registration, **on by default**, unticked or ticked again by whoever reads the registrations — the
-Organizer and the Administrators, by the tick's own predicate (`roles.ts#canSetRaffleMark`, `DECISIONS.md` §NNN: the
+Organizer and the Administrators, by the tick's own predicate (`roles.ts#canSetRaffleMark`, `DECISIONS.md` §953: the
 readers' set, written as `canReadRegistrations` so the two move together, and named apart so the reading predicate
 authorizes no write; asserted by `setRegistrationRaffleAction` and `raffle-mark.ts#setRegistrationInRaffle`; the owner:
 «doar adminul și organizatorul pot bifa și vedea asta») — at any
@@ -3310,7 +3310,7 @@ A number never moves with the person: the runner's stays retired with the cancel
 with the cancelled row; each list draws its own. One audit row ties the two (`registration.became_volunteer`,
 `volunteer.became_runner`), ids only, beside each verb's own.
 
-**«Participă la tombolă» does move with the person** (2026-11-16, `DECISIONS.md` §NNN, amending §948 and §949):
+**«Participă la tombolă» does move with the person** (2026-11-16, `DECISIONS.md` §953, amending §948 and §949):
 somebody an organizer took out of the event's raffle is out of it on the other list too — the
 new row would otherwise start in, the column's default, and a press that was about something else would put the person
 back on «Lista pentru tombolă». Each way through the tick's own writer, in the transform's transaction and with that
@@ -3799,7 +3799,7 @@ One file that is not a picture (§718): the GPX of an event's «Traseul», uploa
 same header in the local and fake modes. It is no `media_assets` row, so the sweep never sees it;
 the event's save deletes it once no event row names its key.
 
-**«Planul voluntarilor» and its picture** (2026-11-16, `DECISIONS.md` §NNN; the owner, with a picture of Saturday's
+**«Planul voluntarilor» and its picture** (2026-11-16, `DECISIONS.md` §952; the owner, with a picture of Saturday's
 route and its volunteers' points numbered on it: «trebui sa pot incarca si planul voluntarilor pe traseu in genul
 [pozei] si sa ii pot distribui din aplicatie, sa stie exact unde si cum»). The plan
 (`/admin/events/[id]/plan-voluntari`, `modules/volunteers/plan.ts`; the decision of the same day that added it) is one

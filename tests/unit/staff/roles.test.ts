@@ -299,7 +299,7 @@ describe("BR-REQ-060-01 what each role may reach", () => {
 
   /*
     «Participă la tombolă» (§949, amending §289): the one thing the Organizer changes on a registration. It has a predicate
-    of its own (§NNN) — the tick was first authorized by `canReadRegistrations`, a write behind the predicate that grants
+    of its own (§953) — the tick was first authorized by `canReadRegistrations`, a write behind the predicate that grants
     none — and that predicate is the readers' set by construction, so nobody ticks a registration they may not read and
     moving who reads moves who ticks.
   */
@@ -318,7 +318,7 @@ describe("BR-REQ-060-01 what each role may reach", () => {
     expect(canManageRegistrations("MODERATOR")).toBe(false);
   });
 
-  it("is what the raffle's press and its service ask — and what nothing else asks (§NNN)", () => {
+  it("is what the raffle's press and its service ask — and what nothing else asks (§953)", () => {
     const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
     const actions = read("src/app/[locale]/admin/registrations/actions.ts");
     const action = actions.slice(actions.indexOf("export async function setRegistrationRaffleAction"));

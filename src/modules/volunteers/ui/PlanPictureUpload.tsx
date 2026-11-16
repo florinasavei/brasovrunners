@@ -42,7 +42,7 @@ type Props = {
 };
 
 /**
- * «Încarcă poza planului» / «Schimbă poza» on «Planul voluntarilor» (§NNN; the owner, 2026-11-16: «trebui sa pot incarca si
+ * «Încarcă poza planului» / «Schimbă poza» on «Planul voluntarilor» (§952; the owner, 2026-11-16: «trebui sa pot incarca si
  * planul voluntarilor pe traseu in genul [pozei]»): the plan as the organizers drew it, uploaded where the plan is.
  *
  * An island for the one thing the server cannot do — send a file chosen on this device through the backoffice's one upload

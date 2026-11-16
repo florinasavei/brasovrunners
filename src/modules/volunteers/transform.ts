@@ -42,7 +42,7 @@ import { changeVolunteer } from "./volunteers";
   registration; as a volunteer the person draws one from the volunteers' own series, like every volunteer confirmed. The
   volunteer's stays retired with the cancelled row; as a runner the person draws theirs when they are confirmed.
 
-  **«Participă la tombolă» travels with the person** (§NNN, amending §948 and §949): somebody an organizer took out of the
+  **«Participă la tombolă» travels with the person** (§953, amending §948 and §949): somebody an organizer took out of the
   event's raffle is out of it on the other list too — the new row would otherwise start in, the column's default, and the
   person would be back on «Lista pentru tombolă» by a press that was about something else. Each way through the tick's own
   writer (`changeVolunteer`'s `setRaffle`, `raffle-mark.ts`'s `setRegistrationInRaffle`), in the same transaction, so the
@@ -109,7 +109,7 @@ export type RunnerToVolunteerResult = {
  *    address already on the event's volunteers is that entry's refusal (`VOLUNTEER_ALREADY_LISTED`): cancel the
  *    registration alone;
  * 3. the person is confirmed, which draws their number from the volunteers' series (§948) — and a runner an organizer had
- *    taken out of the raffle is taken out as a volunteer too (§NNN), by the volunteers' own tick;
+ *    taken out of the raffle is taken out as a volunteer too (§953), by the volunteers' own tick;
  * 4. the registration is cancelled by the staff verb (`cancelRegistrationByStaff`): through the allocator, with its own
  *    trail row — a printed bib named in it (§311);
  * 5. one row ties the two: `registration.became_volunteer`, ids only.
@@ -185,7 +185,7 @@ export async function turnRunnerIntoVolunteer<T extends Record<string, unknown>>
     const volunteerId = added.volunteer.id;
     // Confirmed in the same press: the Administrator who gives the role is the organizers' yes, and the number is drawn here.
     await changeVolunteer(tx, actor, { kind: "setState", eventId: registration.eventId, id: volunteerId, state: "CONFIRMED" }, now, { sendEmail: false });
-    // A runner taken out of the raffle is out of it as a volunteer too (§NNN): the row entered a moment ago holds the column's
+    // A runner taken out of the raffle is out of it as a volunteer too (§953): the row entered a moment ago holds the column's
     // default — in — so only a runner who was out is written, by the volunteers' own tick and with its trail row.
     if (!registration.inRaffle) {
       await changeVolunteer(tx, actor, { kind: "setRaffle", eventId: registration.eventId, id: volunteerId, inRaffle: false }, now);
@@ -230,7 +230,7 @@ export type VolunteerToRunnerResult = WaitlistEntryByStaffResult & { eventId: st
  *    for, the row through the one allocator under this same lock — a counted free place with the declaration to sign, or
  *    the back of the line — in the language the club already writes to them in, with that state's ordinary email. Every
  *    refusal of that entry stands: after the start, a full line, this person already on the address. The registration
- *    takes the volunteer's raffle tick (§NNN), by the registrations' own tick;
+ *    takes the volunteer's raffle tick (§953), by the registrations' own tick;
  * 3. the volunteer is cancelled by the volunteers' own verb — the row, its roles and its number stay, retired; the role
  *    email a press queued a moment ago is withdrawn at the send, as for any cancelled person;
  * 4. one row ties the two: `volunteer.became_runner`, ids only.
@@ -275,7 +275,7 @@ export async function turnVolunteerIntoRunner<T extends Record<string, unknown>>
       },
       now,
     );
-    // The volunteer's raffle tick is the registration's now (§NNN): out as a volunteer, out as a runner — and in again where
+    // The volunteer's raffle tick is the registration's now (§953): out as a volunteer, out as a runner — and in again where
     // the entry restarted a registration of this person that an organizer had once taken out. The entry itself names no
     // raffle (neither the allocator nor the staff entry reads the column), so the registrations' own writer says it here:
     // a row that already holds the value is left alone and no trail row is written.

@@ -13,7 +13,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * backoffice vizibil»): off on every event until an Administrator ticks it in the editor — the event's save is theirs (§542), so
  * the Organizer, who works the column it shows, does not switch it; saved through the editor's real action by its marker (a
  * form without the box never switches it off); one edition's own, so neither a series' later dates, a series edit «from this
- * date» (§NNN) nor a copy carry it; and never among the columns a public page reads. The session and navigation stand-ins are
+ * date» (§953) nor a copy carry it; and never among the columns a public page reads. The session and navigation stand-ins are
  * `kit-shirt.test.ts`'s.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, redirected: [] as string[] }));
@@ -174,7 +174,7 @@ describe("§949 «Avem tombolă» on the event", () => {
     });
   }
 
-  it("a series edit with the 'following' scope does not carry the tick to the later dates (§NNN) — the mirror of the kit's, which does", async () => {
+  it("a series edit with the 'following' scope does not carry the tick to the later dates (§953) — the mirror of the kit's, which does", async () => {
     const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     await repeatEvent(db, { actor: admin, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-10-21", publish: false }, now: NOW });
     const dates = await db.select().from(events).where(eq(events.repeatOf, source.id));

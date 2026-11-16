@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0207_volunteer_plan_picture` (§NNN; the owner, 2026-11-16, with a picture of the route and its volunteers' points
+ * Migration `0207_volunteer_plan_picture` (§952; the owner, 2026-11-16, with a picture of the route and its volunteers' points
  * numbered on it: «trebui sa pot incarca si planul voluntarilor pe traseu in genul [pozei]»), proven on real PostgreSQL (PGlite):
  * one column on the events, `volunteer_plan_media_asset_id` — a nullable uuid — so every event from before has no picture and
  * an event written without it has none; it holds a stored picture's id; it carries no foreign key, like the cover's column

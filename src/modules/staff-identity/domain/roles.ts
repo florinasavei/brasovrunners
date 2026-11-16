@@ -648,7 +648,7 @@ export function canHardDeleteEvent(subject: StaffSubject): boolean {
  * itself — the Administrator is still the only one who cancels a place, erases a row, resends a
  * message or corrects a name, and each of those is asserted in its own service (BR-REQ-060-01).
  *
- * **This predicate answers reading, and a write never asks it (§NNN).** It said for a while that
+ * **This predicate answers reading, and a write never asks it (§953).** It said for a while that
  * the Organizer has no verb on a registration, and §949 then gave the Organizer one: the raffle
  * tick. That one write has a predicate of its own, `canSetRaffleMark` below — the same people, by
  * this function — as the notes have `canKeepRegistrationNotes`: a service that changes something
@@ -713,7 +713,7 @@ export function canKeepRegistrationNotes(subject: StaffSubject): boolean {
  * (the tick's own service asserts this predicate again). Every other change to a registration is still
  * `canManageRegistrations`.
  *
- * **Why a predicate of its own, and why written as the readers' (§NNN).** §949 authorized the tick with
+ * **Why a predicate of its own, and why written as the readers' (§953).** §949 authorized the tick with
  * `canReadRegistrations`, so a write hid behind the predicate this file said grants none. Named, «may read the
  * list» and «may tick the raffle» are two questions a page, an action and a service ask apart (BR-REQ-060-01),
  * as `canKeepRegistrationNotes` keeps the notes apart. Written as `canReadRegistrations` rather than as a list

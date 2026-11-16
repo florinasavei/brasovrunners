@@ -626,7 +626,7 @@ export const events = pgTable(
     volunteersButtonShown: boolean("volunteers_button_shown").notNull().default(true),
 
     /**
-     * The picture of «Planul voluntarilor» (migration `0207`, §NNN; the owner, 2026-11-16, with a picture of Saturday's route and
+     * The picture of «Planul voluntarilor» (migration `0207`, §952; the owner, 2026-11-16, with a picture of Saturday's route and
      * its volunteers' points numbered on it: «trebui sa pot incarca si planul voluntarilor pe traseu in genul [pozei]»): the plan
      * as the organizers drew it — the map with the points on it — a stored picture (`media_assets`, §66), or null for none. One
      * picture an event. Uploaded, changed and taken off on the plan's page by whoever works the volunteers

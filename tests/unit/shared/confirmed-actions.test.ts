@@ -161,7 +161,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // Asks only for the reopening that emails — a cancelled person who holds roles and has an address; the other state
   // presses email nobody and post as before, a `ConfirmSubmitButton` drawn only for that case.
   setVolunteerStateAction: [],
-  // «Șterge poza» on «Planul voluntarilor» (§NNN): the plan's picture taken off, asked first — only uploading it again brings it back.
+  // «Șterge poza» on «Planul voluntarilor» (§952): the plan's picture taken off, asked first — only uploading it again brings it back.
   removePlanPictureAction: [],
   // Legal.
   approvePlatformTemplatesAction: [],
@@ -363,7 +363,7 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Cel mult câte roluri poate bifa o persoană» on the event's «Voluntari» card (§951): the public form's limit on the roles ticked, a box with its own «Salvează».
   setVolunteerChoicesMaxAction:
     "a setting of the event's public volunteers' form, undone by saving the old number or an empty box; it tells nobody, deletes nothing and changes nobody already listed — as the card's ticks beside it, which ask nothing either",
-  // «Încarcă poza planului» / «Schimbă poza» on «Planul voluntarilor» (§NNN): sent by the upload's island once the chosen file is stored.
+  // «Încarcă poza planului» / «Schimbă poza» on «Planul voluntarilor» (§952): sent by the upload's island once the chosen file is stored.
   setPlanPictureAction:
     "records the picture just chosen and uploaded as the organizers' own plan's, undone by another upload or by «Șterge poza», which asks; it tells nobody, is on no public page and changes no point or person",
   addTestRegistrationsAction: "test rows, counted nowhere and absent from production, removed by a verb that asks",

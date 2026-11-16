@@ -47,7 +47,7 @@ export type VolunteerPlanPerson = Pick<VolunteerItem, "id" | "name" | "phone" | 
 export type VolunteerPlanPoint = { point: Checkpoint; number: number; people: VolunteerPlanPerson[] };
 
 /**
- * The plan's picture, as whoever draws it needs it (§NNN): the stored picture's id and its own size, and two addresses — the
+ * The plan's picture, as whoever draws it needs it (§952): the stored picture's id and its own size, and two addresses — the
  * whole picture (`fullUrl`, the master: what a press on the picture opens) and the same picture at a display size
  * (`displayUrl`: the widest stored file not above `PLAN_PICTURE_DISPLAY_WIDTH`, or the master when it is narrower than every
  * rung). Both are the store's public addresses, absolute, so a page and a message can carry them alike; `srcSet` is the
@@ -62,12 +62,12 @@ export type VolunteerPlan = {
   unplaced: VolunteerPlanPerson[];
   /** The words of every role these people hold, for whoever draws them. */
   roles: Map<string, RoleNameWords>;
-  /** The plan as the organizers drew it (§NNN), or null: none uploaded, the picture gone from the store, or no store here. */
+  /** The plan as the organizers drew it (§952), or null: none uploaded, the picture gone from the store, or no store here. */
   picture: VolunteerPlanPicture | null;
 };
 
 /**
- * The display size (§NNN): a laptop's half column at 2× and a phone's full column at 3× (`media/ladder.ts`), and what a
+ * The display size (§952): a laptop's half column at 2× and a phone's full column at 3× (`media/ladder.ts`), and what a
  * message's column needs at 2× — wide enough to read the numbers on a map, a fraction of the master's weight.
  */
 export const PLAN_PICTURE_DISPLAY_WIDTH = 1280;
@@ -75,7 +75,7 @@ export const PLAN_PICTURE_DISPLAY_WIDTH = 1280;
 const byName = (a: VolunteerPlanPerson, b: VolunteerPlanPerson) => a.name.localeCompare(b.name, "ro") || a.id.localeCompare(b.id);
 
 /**
- * A stored picture as the plan's (§NNN), or null for a row that is no picture to draw: a film's automatic poster (`yt-…`,
+ * A stored picture as the plan's (§952), or null for a row that is no picture to draw: a film's automatic poster (`yt-…`,
  * §485), or an environment with no store to build an address from.
  */
 function planPictureOf(asset: { id: string; keyPrefix: string; width: number; height: number }): VolunteerPlanPicture | null {
@@ -98,7 +98,7 @@ function planPictureOf(asset: { id: string; keyPrefix: string; width: number; he
 export async function readVolunteerPlan<T extends Record<string, unknown>>(db: Database<T>, actor: Pick<StaffUser, "role">, eventId: string): Promise<VolunteerPlan> {
   if (!canManageVolunteers(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not read the volunteers' plan`);
   if (!isUuid(eventId)) throw new DomainError("NOT_FOUND", "the event is not there");
-  // The picture joined to the store (§NNN): the column has no foreign key, so an id that names nothing reads as no picture.
+  // The picture joined to the store (§952): the column has no foreign key, so an id that names nothing reads as no picture.
   const [event] = await db
     .select({ id: events.id, pictureId: mediaAssets.id, keyPrefix: mediaAssets.keyPrefix, width: mediaAssets.width, height: mediaAssets.height })
     .from(events)
@@ -140,7 +140,7 @@ function postedPictureId(value: unknown): string | null {
 }
 
 /**
- * The plan's picture set, changed or taken off (§NNN): «Încarcă poza planului», «Schimbă poza» and «Șterge poza» on the plan's
+ * The plan's picture set, changed or taken off (§952): «Încarcă poza planului», «Schimbă poza» and «Șterge poza» on the plan's
  * page. `assetId` is the stored picture the browser has just uploaded through the backoffice's one upload
  * (`/api/admin/media`), or nothing — an empty value, as «Șterge poza» posts it — to take the picture off.
  *

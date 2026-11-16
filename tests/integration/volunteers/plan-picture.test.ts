@@ -27,7 +27,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-060-01 — the picture of «Planul voluntarilor» (the owner, 2026-11-16, with a picture of the route
+ * §952, BR-REQ-050-02, BR-REQ-060-01 — the picture of «Planul voluntarilor» (the owner, 2026-11-16, with a picture of the route
  * and its volunteers' points numbered on it: «trebui sa pot incarca si planul voluntarilor pe traseu in genul [pozei]»), from a
  * real database:
  *
@@ -273,7 +273,7 @@ async function press(action: (form: FormData) => Promise<void>, fields: Record<s
 }
 const toasted = () => state.flashed.map((value) => decodeFlash(value)?.key);
 
-describe("§NNN the plan's picture: set, changed and taken off", () => {
+describe("§952 the plan's picture: set, changed and taken off", () => {
   it("lets the Organizer put a stored picture on the plan, audited with the ids alone, and moves nothing else of the event", async () => {
     const picture = await storedPicture();
     const before = await rowOf();
@@ -380,7 +380,7 @@ describe("§NNN the plan's picture: set, changed and taken off", () => {
   });
 });
 
-describe("§NNN the plan reads its picture", () => {
+describe("§952 the plan reads its picture", () => {
   it("returns none without one, and everything the plan returned before", async () => {
     const plan = await readVolunteerPlan(db, staff.MODERATOR!, raceId);
     expect(plan.picture).toBeNull();
@@ -457,7 +457,7 @@ describe("§NNN the plan reads its picture", () => {
   });
 });
 
-describe("§NNN a picture used as a plan's is the plan's (the reference check, §73)", () => {
+describe("§952 a picture used as a plan's is the plan's (the reference check, §73)", () => {
   it("is kept by the sweep, refused by the pictures page's delete, and listed as used by the event's plan", async () => {
     const picture = await storedPicture();
     await getStorage().put(objectKey(picture.keyPrefix, "web"), Buffer.from("web"), "image/webp");
@@ -535,7 +535,7 @@ describe("§NNN a picture used as a plan's is the plan's (the reference check, �
   });
 });
 
-describe("§NNN the page's presses: «Încarcă poza planului», «Schimbă poza», «Șterge poza»", () => {
+describe("§952 the page's presses: «Încarcă poza planului», «Schimbă poza», «Șterge poza»", () => {
   const back = () => `/ro/admin/events/${raceId}/plan-voluntari#plan-picture`;
 
   it("records the uploaded picture, changes it and takes it off, coming back to the picture and saying what happened", async () => {
@@ -620,7 +620,7 @@ describe("§NNN the page's presses: «Încarcă poza planului», «Schimbă poza
   });
 });
 
-describe("§NNN the plan's page draws the picture", () => {
+describe("§952 the plan's page draws the picture", () => {
   it("reads as before with no picture, plus the upload", async () => {
     const page = await planPage();
     // The plan as it was.
@@ -806,7 +806,7 @@ describe("§NNN the plan's page draws the picture", () => {
   });
 });
 
-describe("§NNN the picture is one edition's: not carried by a series, a copy or the event's file", () => {
+describe("§952 the picture is one edition's: not carried by a series, a copy or the event's file", () => {
   const AT = new Date("2026-09-25T10:00:00.000Z");
   const FIELDS = {
     type: "RACE",

@@ -40,14 +40,14 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
 const NOT_ON_PAPER = { "@media print": { display: "none" } } as const;
 
 /**
- * A person's telephone number as the person's own page draws it (§NNN, amending §949): a `tel:` link 44 pixels tall, because
+ * A person's telephone number as the person's own page draws it (§953, amending §949): a `tel:` link 44 pixels tall, because
  * an organizer rings from the plan with a thumb on the day (BR-REQ-041-01 criterion 6). On paper it is the number as text:
  * no link's colour or underline, and no height that would space the sheet's lines.
  */
 const PHONE_LINK_SX = { display: "inline-flex", alignItems: "center", ...TAP_TARGET, "@media print": { minHeight: 0, color: "inherit", textDecoration: "none" } } as const;
 
 /**
- * The tallest the plan's picture is printed (§NNN): under the height of a sheet whichever way it is turned — an A4 or a Letter
+ * The tallest the plan's picture is printed (§952): under the height of a sheet whichever way it is turned — an A4 or a Letter
  * page on its side leaves some 18 centimetres between the margins — so the picture is one piece on one sheet and never cut
  * between two. In centimetres, not in the viewport's units: a printed page's `vh` is not the same length in every browser.
  */
@@ -104,7 +104,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
     });
   const placed = plan.points.reduce((sum, { people }) => sum + people.length, 0);
   const empty = plan.points.filter(({ people }) => people.length === 0).length;
-  // The plan's picture (§NNN), and who is offered its controls: whoever works the volunteers — the action and the service ask again.
+  // The plan's picture (§952), and who is offered its controls: whoever works the volunteers — the action and the service ask again.
   const picture = plan.picture;
   const mayChangePicture = canManageVolunteers(actor.role);
   // Whether this environment can take a picture at all (`STORAGE_MODE`): without a store the page says so and offers no upload.
@@ -156,7 +156,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
         </Typography>
       </Stack>
 
-      {/* Every backoffice page gives this id to its alert region; the Server Action redirects a refusal here with its code (§NNN),
+      {/* Every backoffice page gives this id to its alert region; the Server Action redirects a refusal here with its code (§953),
           so the region can take the focus and stands clear of the page's top edge, as the other pages' regions do. */}
       <Box id="admin-alert" tabIndex={-1} aria-live="polite" sx={{ scrollMarginTop: 16, ...NOT_ON_PAPER }}>
         {errorCode && <Alert severity="error">{t(`errors.${errorCode}`)}</Alert>}
@@ -177,7 +177,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
         <PrintButton label={t("volunteers.plan.print")} />
       </Box>
 
-      {/* The plan as the organizers drew it (§NNN): above the points on the page, and the first thing after the title on paper —
+      {/* The plan as the organizers drew it (§952): above the points on the page, and the first thing after the title on paper —
           the section's own heading, its hint and every control stay off the sheet, so a plan with no picture prints as it did. */}
       <Box id="plan-picture" sx={{ scrollMarginTop: 16 }} data-testid="plan-picture-section">
         <Typography variant="h3" sx={{ ...HEADING_SX[3], ...NOT_ON_PAPER }}>

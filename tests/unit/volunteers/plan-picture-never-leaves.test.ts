@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * The picture of «Planul voluntarilor» (§NNN, BR-REQ-060-01) — the organizers' own drawing of the plan stays with the plan: the
+ * The picture of «Planul voluntarilor» (§952, BR-REQ-060-01) — the organizers' own drawing of the plan stays with the plan: the
  * column that holds it (`events.volunteer_plan_media_asset_id`) is read by the plan and counted by the pictures' reference check,
  * and by nothing else. Never a public query or the public cache, never an email, never a series' scope, a copy or the event's
  * file. The structural half of that promise, as `plan-never-leaves.test.ts` beside it holds the point's: no file outside the list
@@ -46,7 +46,7 @@ function sourceFiles(dir: string, acc: string[] = []): string[] {
 const read = (file: string) => readFileSync(path.join(ROOT, file), "utf8");
 const relative = (file: string) => path.relative(ROOT, file).split(path.sep).join("/");
 
-describe("§NNN the plan's picture stays with the plan", () => {
+describe("§952 the plan's picture stays with the plan", () => {
   const all = sourceFiles(SRC);
   const naming = all.filter((file) => NAMES_THE_PICTURE.test(readFileSync(file, "utf8")));
 

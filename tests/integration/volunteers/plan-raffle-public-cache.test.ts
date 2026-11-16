@@ -7,7 +7,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (amending §949), BR-REQ-050-02 — what a press on a volunteer tells the public cache (§333).
+ * §953 (amending §949), BR-REQ-050-02 — what a press on a volunteer tells the public cache (§333).
  *
  * `changeVolunteer` expires the public «places» rows after a change, because a volunteer added, confirmed, cancelled or given
  * a role moves what the volunteers' page counts and lists. The organizers' own marks move nothing a visitor reads — «Are kit»
@@ -117,7 +117,7 @@ async function pressed(action: Promise<void>): Promise<string> {
   throw new Error("expected a redirect");
 }
 
-describe("§NNN the organizers' own marks leave the public cache as it was", () => {
+describe("§953 the organizers' own marks leave the public cache as it was", () => {
   it("«Pune aici» and «Scoate» change the plan and expire no public tag", async () => {
     expect(await changeVolunteer(db, organizer, { kind: "setCheckpoint", eventId, id: anaId, checkpointId: pointId }, NOW)).toMatchObject({ changed: true });
     expect((await rowOf()).checkpointId).toBe(pointId);
@@ -153,7 +153,7 @@ describe("§NNN the organizers' own marks leave the public cache as it was", () 
   });
 });
 
-describe("§NNN every other change to a volunteer still expires «places»", () => {
+describe("§953 every other change to a volunteer still expires «places»", () => {
   /** One change, and what the cache was told for it alone. */
   async function expiredBy(request: Parameters<typeof changeVolunteer>[2]): Promise<unknown[][]> {
     vi.mocked(revalidateTag).mockClear();

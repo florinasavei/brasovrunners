@@ -193,7 +193,7 @@ describe("§949 «Participă la tombolă» on a registration", () => {
     const ana = await runner("Ana Pop", "CONFIRMED", 12);
     for (const role of STAFF_ROLES) {
       const actor = await staff(role);
-      // The tick's own predicate (§NNN) — the readers of the list, role for role.
+      // The tick's own predicate (§953) — the readers of the list, role for role.
       expect(canSetRaffleMark(role), role).toBe(canReadRegistrations(role));
       if (canSetRaffleMark(role)) continue;
       expect((await failureOf(setRegistrationInRaffle(db, actor, ana, false, NOW))).code, role).toBe("FORBIDDEN");

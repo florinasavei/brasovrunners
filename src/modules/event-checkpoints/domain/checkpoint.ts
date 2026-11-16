@@ -295,7 +295,7 @@ export function sortedByKm<T extends { km: number }>(rows: readonly T[]): T[] {
 const fileKeyOf = (row: Pick<Checkpoint, "nameRo" | "km">): string => `${row.km.toFixed(2)}\u0000${row.nameRo}`;
 
 /**
- * Which saved row each point of an imported file keeps (§NNN, amending §949): for each point of `wanted`, in the
+ * Which saved row each point of an imported file keeps (§953, amending §949): for each point of `wanted`, in the
  * file's order, the first saved point of the same Romanian name at the same kilometre that no earlier point of the file
  * took — or null, a new point. So two points a file names alike are matched in the route's order, each to a row of
  * its own and never both to one, and a file with one more of them than the event adds one. `kept[at]` answers

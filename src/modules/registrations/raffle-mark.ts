@@ -19,7 +19,7 @@ import { isUuid } from "@/shared/ids";
   only a confirmed registration with a number is written on the list, whatever the mark says.
 
   Who may: whoever reads the registrations — the Organizer and the Administrators — asserted here by the tick's own predicate
-  (`canSetRaffleMark`, §NNN: the readers' set, named for this one write so the reading predicate authorizes none). The
+  (`canSetRaffleMark`, §953: the readers' set, named for this one write so the reading predicate authorizes none). The
   owner, the same day: «toată lumea poate participa la tombolă dar doar adminul și organizatorul pot bifa și vedea asta». It is
   the one thing the Organizer changes on a registration (§289 gave the Organizer the list to read and nothing on it to change):
   the club's own raffle is the organizers' to run, and the tick moves nothing a registration owns. Audited —

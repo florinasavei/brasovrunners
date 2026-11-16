@@ -22,7 +22,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * them back; an event that holds none draws no such column; and a person's data says when they were taken out (art. 15 GDPR).
  * The service's roles and trail are `tests/integration/registrations/raffle-mark.test.ts`. The harness is `plan.test.ts`'s.
  *
- * And what the review of 2026-11-16 asked of it (§NNN, amending §949): the press queues no email for a person who has an
+ * And what the review of 2026-11-16 asked of it (§953, amending §949): the press queues no email for a person who has an
  * address, and the column is said in English too.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en", redirected: [] as string[] }));
@@ -244,7 +244,7 @@ describe("§949 «Tombolă» on the «Voluntari» list", () => {
     expect((await rowOf(people.ana)).inRaffle).toBe(true);
   });
 
-  it("tells nobody: taking out and putting back a person who has an address and a role queues no email (§NNN)", async () => {
+  it("tells nobody: taking out and putting back a person who has an address and a role queues no email (§953)", async () => {
     await db.update(events).set({ hasRaffle: true }).where(eq(events.id, raceId));
     // Everything an email to her would need: an address, a role given, confirmed.
     expect(await rowOf(people.ana)).toMatchObject({ email: "ana.pop@example.test", state: "CONFIRMED" });
@@ -260,7 +260,7 @@ describe("§949 «Tombolă» on the «Voluntari» list", () => {
     expect(await db.select().from(emailOutbox)).toEqual([]);
   });
 
-  it("says the column and its tick in English to an English reader (§NNN)", async () => {
+  it("says the column and its tick in English to an English reader (§953)", async () => {
     await db.update(events).set({ hasRaffle: true }).where(eq(events.id, raceId));
     await db.update(eventVolunteers).set({ inRaffle: false }).where(eq(eventVolunteers.id, people.dan));
     state.locale = "en";

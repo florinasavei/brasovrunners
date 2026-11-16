@@ -507,12 +507,12 @@ describe("§757 who may read and who may write", () => {
 });
 
 /*
-  §NNN (amending §949) — an event's file carries no ids, so the import knows a point by what the file says of it: the
+  §953 (amending §949) — an event's file carries no ids, so the import knows a point by what the file says of it: the
   Romanian name at the kilometre. The row of a point the file still has is kept — which is what keeps «Planul
   voluntarilor»'s people at it — and only a point the file no longer has leaves. What the import then writes, and that
   the people stay, is `tests/integration/events/event-json.test.ts`.
 */
-describe("§NNN which saved row a point of an imported file keeps", () => {
+describe("§953 which saved row a point of an imported file keeps", () => {
   /** A saved point: its id, its Romanian name and its kilometre — all the matcher reads. */
   const saved = (id: string, nameRo: string, km: number) => ({ id, nameRo, km });
   const named = (nameRo: string, km: number) => ({ nameRo, km });

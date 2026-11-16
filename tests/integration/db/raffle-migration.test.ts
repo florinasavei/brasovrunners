@@ -10,7 +10,7 @@ import { auditMigration } from "../../../scripts/migration-check.mjs";
 /**
  * Migration `0205_raffle` (§949; the owner, 2026-11-16: «o bifă importantă, și coloană peste tot de „participă la tombolă" și o
  * setare per eveniment cum ar fi „avem tombolă" dar doar în backoffice vizibil»), proven on real PostgreSQL (PGlite) from a
- * database migrated by the release before it (§NNN — the review of 2026-11-16 found the migration with no such test): three
+ * database migrated by the release before it (§953 — the review of 2026-11-16 found the migration with no such test): three
  * booleans, each NOT NULL with its default, so every event from before holds no raffle and every registration and volunteer
  * from before is in one — nobody is taken out of a raffle by the release itself — and a row written without the columns too;
  * and the file only expands. `volunteer-checkpoint-migration.test.ts` is the model.

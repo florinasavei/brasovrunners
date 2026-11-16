@@ -8,7 +8,7 @@ import path from "node:path";
  * Those guards found a reader by the words it uses: a column's name, or the module's path as the `@/` alias writes it
  * (`modules/volunteers/plan`). But a file beside the module imports it as `./plan`, one folder down as `../plan`, from
  * another module as `../volunteers/plan` — none of which carries the alias's path — so a new reader in the module's own
- * folder, the likeliest place for one, was invisible to the guard that exists to see it (the review of 2026-11-16, §NNN).
+ * folder, the likeliest place for one, was invisible to the guard that exists to see it (the review of 2026-11-16, §953).
  * Here every specifier a file names is resolved against that file's own folder and compared with the module's place on
  * disk, so the spelling no longer matters.
  */

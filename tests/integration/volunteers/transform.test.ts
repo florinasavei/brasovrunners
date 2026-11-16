@@ -30,7 +30,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *   declaration still theirs to sign, or the back of the line, never ahead of anyone — and the volunteer is cancelled,
  *   keeping roles and number;
  * - every refusal writes nothing; both are the Administrator's and nobody else's;
- * - «Participă la tombolă» travels with the person, both ways (§NNN, amending §948 and §949): somebody an organizer took
+ * - «Participă la tombolă» travels with the person, both ways (§953, amending §948 and §949): somebody an organizer took
  *   out of the raffle is not put back in it by a press that was about something else.
  */
 const NOW = new Date("2026-11-15T10:00:00.000Z");
@@ -303,7 +303,7 @@ describe("§948 BR-REQ-037-03 «Transformă în voluntar»: a runner becomes a v
     expect((await mailOf("VOLUNTEER_ROLE_ASSIGNED")).map((row) => row.locale)).toEqual(["en"]);
   });
 
-  it("carries «Participă la tombolă»: a runner an organizer took out of the raffle is out of it as a volunteer too, and one who was in stays in (§NNN)", async () => {
+  it("carries «Participă la tombolă»: a runner an organizer took out of the raffle is out of it as a volunteer too, and one who was in stays in (§953)", async () => {
     const { event, roleId } = await createRace(150);
     await setVolunteerNumbersStart(db, admin, { eventId: event.id, start: 500 }, at(0));
     const radu = await registered(event, "Radu", 1, true);
@@ -463,7 +463,7 @@ describe("§948 BR-REQ-037-03 «Transformă în alergător»: a volunteer become
     expect((await mailOf("COMPLETE_DECLARATION")).map((row) => row.locale)).toEqual(["en"]);
   });
 
-  it("carries «Participă la tombolă»: a volunteer the organizers took out of the raffle is out of it as a runner too, and one who was in stays in (§NNN)", async () => {
+  it("carries «Participă la tombolă»: a volunteer the organizers took out of the raffle is out of it as a runner too, and one who was in stays in (§953)", async () => {
     const { event, roleId } = await createRace(150);
     const ana = await volunteer(event.id, roleId, "Ana Pop", "ana@example.ro", 1);
     const dan = await volunteer(event.id, roleId, "Dan Ionescu", "dan@example.ro", 3);
@@ -551,7 +551,7 @@ describe("§948 BR-REQ-037-03 «Transformă în alergător»: a volunteer become
     expect(await placesHeld(event.id)).toBe(1);
   });
 
-  it("there and back keeps the tick the person holds now, over what the restarted registration held (§NNN)", async () => {
+  it("there and back keeps the tick the person holds now, over what the restarted registration held (§953)", async () => {
     const { event, roleId } = await createRace(150);
     const radu = await registered(event, "Radu", 1, true);
     // Out of the raffle as a runner, and so as a volunteer…

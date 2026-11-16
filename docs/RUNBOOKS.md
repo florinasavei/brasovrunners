@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V4.48-2026-11-16`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V4.49-2026-11-16`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -1453,7 +1453,7 @@ does not know, so nothing of the kind can be added by hand either.
 | The configuration the diff shows, through the editor's own save: the same validation, the same version guards (a colleague's save since the diff is a CONFLICT), the capacity under the event's lock — never below the places taken, the offers a raised capacity makes — and the editor's own audit rows | The registrations, the invitations, the race numbers already given |
 | The pictures and the GPX that differ, by the hash of their bytes (the same photograph is not copied again) | The publication state (a published event stays published), the status (a cancellation is its own act), the featured mark |
 | The cover, the bib design and the texts of both languages | A published event's page addresses, and a series' rule |
-| «Puncte pe traseu», where the file's list differs from the event's: a point the file still has — the same Romanian name at the same kilometre — takes the file's values where it is; a point the file no longer has is removed, and one it adds is added | The volunteers, their roles and their numbers — and, on «Planul voluntarilor», who stands at every point the file still has (`DECISIONS.md` §NNN) |
+| «Puncte pe traseu», where the file's list differs from the event's: a point the file still has — the same Romanian name at the same kilometre — takes the file's values where it is; a point the file no longer has is removed, and one it adds is added | The volunteers, their roles and their numbers — and, on «Planul voluntarilor», who stands at every point the file still has (`DECISIONS.md` §953) |
 
 **After an import that renamed, moved or dropped a point, open «Planul voluntarilor».** A file carries no ids, so a
 point whose Romanian name or kilometre changed is another point to it: the old one is removed and the people who stood

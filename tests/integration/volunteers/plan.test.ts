@@ -31,7 +31,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * - the page draws it, with «Pune aici» offering only who stands at no point and «Scoate» on everybody placed, and the
  *   «Voluntari» list says each person's point and links to the plan.
  *
- * And what the review of 2026-11-16 asked of it (§NNN, amending §949): no press of the plan queues an email, for people who
+ * And what the review of 2026-11-16 asked of it (§953, amending §949): no press of the plan queues an email, for people who
  * have an address; a refused press lands on the page's alert, where its sentence is, and a press that went through on its
  * point; the telephone number is read grouped, in a `tel:` link of digits a thumb can press, and prints as text; the link to
  * the points opens the editor at their card; and the list's column is said in English too.
@@ -267,7 +267,7 @@ describe("§949 placing a volunteer at a point of the route", () => {
     for (const none of ["", "   ", null, undefined]) expect(await place(staff.MODERATOR!, people.ana, none)).toMatchObject({ changed: false });
   });
 
-  it("tells nobody: placing a person who has an address and a role, moving them and taking them off queues no email (§NNN)", async () => {
+  it("tells nobody: placing a person who has an address and a role, moving them and taking them off queues no email (§953)", async () => {
     // Everything an email to her would need: an address, a language, a role given, confirmed.
     expect(await rowOf(people.ana)).toMatchObject({ email: "ana.pop@example.test", state: "CONFIRMED" });
     expect(await place(staff.MODERATOR!, people.ana, points.junction)).toMatchObject({ changed: true, volunteer: { hasAddress: true } });
@@ -377,7 +377,7 @@ describe("§949 the plan's page", () => {
     expect(drawn[0]).toContain(`href="/ro/admin/volunteers/${people.ana}"`);
     expect(drawn[0]).toContain("Nr. 501");
     expect(drawn[0]).toContain('href="tel:+40700000001"');
-    // Read grouped, as her own page reads it (§NNN): never the bare run of digits.
+    // Read grouped, as her own page reads it (§953): never the bare run of digits.
     expect(textOf(drawn[0], "plan-person-phone")).toEqual(["+40 700 000 001"]);
     expect(drawn[0]).toContain("Direcționare");
     expect(textOf(drawn[1], "plan-person-name")).toEqual(["Dan Ene"]);
@@ -401,7 +401,7 @@ describe("§949 the plan's page", () => {
     // Under the points: who stands at none — Ion not confirmed yet and with no role, Zoe with no telephone.
     const unplaced = page.slice(page.indexOf(ro.Admin.volunteers.plan.unplacedTitle));
     expect(textOf(unplaced, "plan-person-name")).toEqual(["Ion Lupu", "Zoe Manea"]);
-    // Said of the person without a participle that would be a man's (§NNN): «încă de confirmat», never «neconfirmat».
+    // Said of the person without a participle that would be a man's (§953): «încă de confirmat», never «neconfirmat».
     expect(unplaced).toContain("fără rol dat · încă de confirmat");
     // Ion has a telephone and its link; Zoe, with none, has no link to nothing.
     expect(textOf(unplaced, "plan-person-phone")).toEqual(["+40 700 000 001"]);
@@ -409,7 +409,7 @@ describe("§949 the plan's page", () => {
     expect(page).not.toContain("Mara Dinu");
   });
 
-  it("draws the telephone as a link a thumb can press — the digits and the plus alone — that prints as text (§NNN, BR-REQ-041-01)", async () => {
+  it("draws the telephone as a link a thumb can press — the digits and the plus alone — that prints as text (§953, BR-REQ-041-01)", async () => {
     // A number kept with what a person types around the digits: the link dials the digits.
     await db.update(eventVolunteers).set({ phone: "+40 (700) 000-002" }).where(eq(eventVolunteers.id, people.dan));
     await place(staff.ADMIN!, people.ana, points.junction);
@@ -431,7 +431,7 @@ describe("§949 the plan's page", () => {
     expect(rules).toMatch(new RegExp(`@media print\\{\\.${name}\\{[^}]*min-height:0;[^}]*color:inherit;[^}]*text-decoration:none;`));
   });
 
-  it("links to the points' own card in the editor, and makes the alert region focusable, with a margin above it (§NNN)", async () => {
+  it("links to the points' own card in the editor, and makes the alert region focusable, with a margin above it (§953)", async () => {
     const page = await streamed(await planElement());
     // «Punctele de pe traseu, în editorul evenimentului»: the card «Puncte pe traseu», which the address opens — not the editor's top.
     expect(page).toMatch(new RegExp(`<a[^>]*href="/ro/admin/events/${raceId}#box-checkpoints"[^>]*>${ro.Admin.volunteers.plan.editPoints}</a>`));
@@ -478,12 +478,12 @@ describe("§949 the plan's page", () => {
     // A press that finds the person already there went through too: back on its point, nothing in the address.
     await press({ volunteerId: people.ion, checkpointId: points.water, at: points.water });
     expect(await press({ volunteerId: people.ion, checkpointId: points.water, at: points.water })).toBe(`/ro/admin/events/${raceId}/plan-voluntari#point-${points.water}`);
-    // Ion has an address: neither press of the page told him anything (§NNN).
+    // Ion has an address: neither press of the page told him anything (§953).
     expect((await rowOf(people.ion)).email).toBe("ion.lupu@example.test");
     expect(await db.select().from(emailOutbox)).toEqual([]);
   });
 
-  it("brings a refused press back to the page's alert, where its sentence is — never to a point's anchor (§NNN)", async () => {
+  it("brings a refused press back to the page's alert, where its sentence is — never to a point's anchor (§953)", async () => {
     const alert = (code: string) => `/ro/admin/events/${raceId}/plan-voluntari?planError=${code}#admin-alert`;
 
     // Another event's point: not there. The code is in the address, and the page says it in words, in the alert region.
@@ -532,7 +532,7 @@ describe("§949 the «Voluntari» list says each person's point", () => {
     expect(await listPage()).not.toContain('data-testid="volunteer-point"');
   });
 
-  it("says the column and the point in English to an English reader (§NNN)", async () => {
+  it("says the column and the point in English to an English reader (§953)", async () => {
     await place(staff.ADMIN!, people.ana, points.water);
     state.locale = "en";
     const page = await listPage();
