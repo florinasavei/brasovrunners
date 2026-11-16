@@ -3280,6 +3280,22 @@ edit of a person's boxes. A tick decides one thing: whether the person's number 
 capacity formula (`tests/unit/registrations/raffle-never-leaves.test.ts`). No state, place, number, email or
 declaration moves, and the person is not told.
 
+The «Voluntari» list keeps one more thing of the organizers' own on a volunteer, and it is words rather than a tick:
+**«Decizie pentru ziua cursei»** (2026-11-16, `DECISIONS.md` §NNN; the owner, of that list: «si la voluntar trebuie sa am
+si decizie pt ziua cursei»). One nullable line on the person's row (`event_volunteers.race_day_decision`, one paragraph,
+at most 300 characters, held by a CHECK): what the organizers decided for that person on race day — «vine la 8:00 la
+start», «rezervă» — replaced when they change their mind. It is not a note (`event_volunteer_notes`, a dated thread with
+its authors), not the state and not the person's answer. Written, changed or — by an empty box — cleared by whoever
+works the volunteers (`canManageVolunteers`, asserted by `setVolunteerDecisionAction` and again by
+`volunteers.ts#changeVolunteer`, kind `setDecision`), for a person in any state, a cancelled one included («nu mai vine»
+is a decision), and audited as every edit of a person's boxes (`volunteer.edited`: the box's name and whether a decision
+stands after it, never the words). Read by that list (the column «Decizie ziua cursei», with the row's dialog), the
+person's page (an open card in the organizers' part, with the same form), the event card's row of the person and «Toate
+datele unei persoane»; never by a public page, an email, a badge, the desk, the public volunteers' list or the raffle's
+file — and not by the volunteers' Excel and CSV or «Planul voluntarilor» until a change of their own
+(`tests/unit/volunteers/decision-never-leaves.test.ts`). No state, role, point, number, tick or email moves, no public
+cache is expired, and the person is not told.
+
 Beside the eight too, and made of them rather than a ninth: **«Transformă în voluntar»** on a registration's page and
 **«Transformă în alergător»** on a volunteer's (2026-11-15, `DECISIONS.md` §948; the owner: «aș vrea să pot să „transform"
 un alergător în voluntar și invers»; `volunteers/transform.ts`). The Administrator's (`canManageRegistrations`, asserted

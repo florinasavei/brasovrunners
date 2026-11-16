@@ -6370,6 +6370,17 @@
         "eventLine": "Voluntar la {event} · {when}",
         "excelAll": "Descarcă Excel: toate evenimentele"
       },
+      "decision": {
+        "column": "Decizie ziua cursei",
+        "label": "Decizie pentru ziua cursei",
+        "hint": "Ce au hotărât organizatorii pentru persoană în ziua cursei: „vine la 8:00 la start”, „rezervă”. Decizia o văd doar organizatorii; persoana nu e anunțată.",
+        "write": "Scrie decizia",
+        "change": "Modifică decizia",
+        "dialog": "Decizie pentru ziua cursei: {name}",
+        "help": "Scrie pe scurt ce s-a hotărât pentru persoană în ziua cursei. Intern: persoana nu e anunțată. Lasă gol ca să ștergi decizia.",
+        "limit": "Cel mult {max} de caractere. Un rând nou se salvează ca spațiu.",
+        "value": "Decizie pentru ziua cursei: {decision}"
+      },
       "plan": {
         "title": "Planul voluntarilor",
         "open": "Planul voluntarilor",
@@ -14201,6 +14212,8 @@
       "volunteerUnchanged": "Era deja așa; nimic de schimbat.",
       "volunteerKitOn": "Bifat: are kit. Se numără la „Cu kit”.",
       "volunteerKitOff": "Debifat: nu mai are kit.",
+      "volunteerDecisionSaved": "Decizia pentru ziua cursei a fost salvată. Nu s-a trimis nimic nimănui.",
+      "volunteerDecisionCleared": "Decizia pentru ziua cursei a fost ștearsă. Nu s-a trimis nimic nimănui.",
       "volunteerRaffleOn": "Participă la tombolă: e din nou pe lista pentru tombolă.",
       "volunteerRaffleOff": "Nu mai participă la tombolă: nu apare pe lista pentru tombolă.",
       "volunteerPlaced": "Stă la punctul ales: apare în planul voluntarilor.",

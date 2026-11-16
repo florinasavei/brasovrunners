@@ -52,6 +52,11 @@ export const VOLUNTEER_CATEGORIES_MAX = 12;
 /** The category's contact person (§774): the name's own bound is the volunteer's, the telephone's and the address's are the database's. */
 export const VOLUNTEER_CONTACT_PHONE_MAX = 40;
 export const VOLUNTEER_CONTACT_EMAIL_MAX = 320;
+/**
+ * «Decizie pentru ziua cursei» (§NNN): the organizers' one line about a volunteer on race day — as long as a person's own message,
+ * and the database's bound too (`event_volunteers_race_day_decision_length`).
+ */
+export const VOLUNTEER_DECISION_MAX = 300;
 
 /**
  * How old a volunteer must be (§768; the owner, 2026-10-14: «voluntarii trebuie să aibă cel puțin 14 ani, nu 18»,
@@ -183,6 +188,19 @@ const optionalLine = (max: number) =>
 
 /** A plain box of several lines (the description's plain twin, for a caller without the editor): trimmed, at most one empty line in a row. */
 const plainBox = (max: number) => z.string().optional().default("").transform(normalizeTeamText).pipe(z.string().max(max));
+
+/**
+ * «Decizie pentru ziua cursei» as the organizers typed it (§NNN), read as one paragraph: every line break, tab and control
+ * character is a space, a run of them one space, the ends trimmed. Nothing left is no decision (`null`). `undefined` is the box's
+ * refusal: something that is not text, or more than `VOLUNTEER_DECISION_MAX` characters — counted as the database counts them
+ * (`char_length`), so a letter with a diacritic or an emoji is one. Pure.
+ */
+export function raceDayDecisionFrom(typed: unknown): string | null | undefined {
+  if (typeof typed !== "string") return undefined;
+  const words = typed.replace(/[\s\p{Cc}]+/gu, " ").trim();
+  if (words === "") return null;
+  return [...words].length > VOLUNTEER_DECISION_MAX ? undefined : words;
+}
 
 /** A role's number as typed: a whole number from 1 to `VOLUNTEER_NEEDED_MAX`, else `undefined` (the box's refusal). */
 export function roleNeededFrom(typed: string): number | undefined {

@@ -48,11 +48,13 @@ import {
   isVolunteerChoicesMax,
   isVolunteerMinor,
   openChoices,
+  raceDayDecisionFrom,
   refusedFields,
   type RoleStanding,
   sameDescription,
   standingOf,
   type VolunteerRoleInput,
+  VOLUNTEER_DECISION_MAX,
   VOLUNTEER_MINIMUM_AGE,
   volunteerAgeOn,
   volunteerEventAhead,
@@ -190,6 +192,8 @@ export type VolunteerItem = {
   bibNumber: number | null;
   /** «Planul voluntarilor» (§949): the point of the event's route the person stands at, or null — not placed yet, or not on the route. */
   checkpointId: string | null;
+  /** «Decizie pentru ziua cursei» (§NNN): what the organizers decided for the person on race day, one short line they keep current; null while there is none. */
+  raceDayDecision: string | null;
   shirtSize: Exclude<RegistrationTshirtSize, "NONE"> | null;
   createdAt: Date;
   updatedAt: Date;
@@ -341,6 +345,7 @@ function volunteerItemOf(joined: VolunteerRowJoined, choiceIds: string[], roleId
     inRaffle: row.inRaffle,
     bibNumber: row.bibNumber,
     checkpointId: row.checkpointId,
+    raceDayDecision: row.raceDayDecision,
     shirtSize: row.shirtSize === null || row.shirtSize === "NONE" ? null : row.shirtSize,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -1674,6 +1679,11 @@ export type VolunteerRequest =
    * none: an empty value takes the person off their point. The form posts the point it wants, never a toggle.
    */
   | { kind: "setCheckpoint"; eventId: string; id: string; checkpointId: unknown }
+  /**
+   * «Decizie pentru ziua cursei» (§NNN): what the organizers decided for the person on race day — one short line, written,
+   * changed or, by an empty box, cleared. For a person in any state, a cancelled one included.
+   */
+  | { kind: "setDecision"; eventId: string; id: string; decision: unknown }
   | { kind: "delete"; eventId: string; id: string };
 
 /**
@@ -1847,6 +1857,62 @@ function announcesRoles(volunteer: { email: string | null; state: VolunteerState
 }
 
 /**
+ * «Decizie pentru ziua cursei» (§NNN; the owner, 2026-11-16, of the «Voluntari» list: «si la voluntar trebuie sa am si decizie
+ * pt ziua cursei»): `changeVolunteer`'s kind `setDecision` — the one short line in which the organizers write what THEY decided
+ * for the person on race day («vine la 8:00 la start», «rezervă»), replaced when they change their mind. Not a note (a dated
+ * thread with its authors, `volunteer-notes.ts`), not the state and not the person's answer.
+ *
+ * The words are read as one paragraph (`raceDayDecisionFrom`): an empty box clears the decision; more than
+ * `VOLUNTEER_DECISION_MAX` characters, or no text at all, is the refusal of the box itself (`decision`). A person who is not
+ * there, or is another event's, is NOT_FOUND. Allowed in every state, a cancelled person's too: «nu mai vine» is a decision.
+ * The same words again write nothing and leave no trail.
+ *
+ * It moves nothing else of the person — no state, role, point, number or tick — queues no email and tells nobody. The trail
+ * says who and when and names the box, with whether a decision stands after it — never the words, which are about a person
+ * and would outlive the row there.
+ *
+ * A transaction of its own, entered before `changeVolunteer` opens its: that one ends by expiring the public pages' «places»
+ * tag, and no public page reads this column — an expiry is a read that may wake the database for nothing a visitor would see.
+ * The caller has asserted the role and the ids' shape.
+ */
+async function setRaceDayDecision<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  request: Extract<VolunteerRequest, { kind: "setDecision" }>,
+  now: Date,
+): Promise<VolunteerResult> {
+  const wanted = raceDayDecisionFrom(request.decision);
+  if (wanted === undefined) {
+    throw new DomainError("VALIDATION_ERROR", `the decision is one line of at most ${VOLUNTEER_DECISION_MAX} characters`, ["decision"]);
+  }
+  return db.transaction(async (tx) => {
+    const [current] = await tx
+      .select({ id: eventVolunteers.id, email: eventVolunteers.email, raceDayDecision: eventVolunteers.raceDayDecision })
+      .from(eventVolunteers)
+      .where(and(eq(eventVolunteers.id, request.id), eq(eventVolunteers.eventId, request.eventId)))
+      .for("update")
+      .limit(1);
+    if (!current) throw new DomainError("NOT_FOUND", "the volunteer is not there");
+    const volunteer = { id: current.id, hasAddress: current.email !== null };
+    if (current.raceDayDecision === wanted) return { changed: false, volunteer };
+    await tx.update(eventVolunteers).set({ raceDayDecision: wanted, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
+    // The roles the person holds, as every `volunteer.edited` row carries them: the trail's own context, nothing of the decision.
+    const heldRoleIds = (await tx.select({ roleId: eventVolunteerRoleAssignments.roleId }).from(eventVolunteerRoleAssignments).where(eq(eventVolunteerRoleAssignments.volunteerId, current.id)))
+      .map((row) => row.roleId)
+      .sort();
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "volunteer.edited",
+      entityType: "event",
+      entityId: request.eventId,
+      metadata: { volunteerId: current.id, fields: ["raceDayDecision"], hasDecision: wanted !== null, assignedRoleIds: heldRoleIds },
+      now,
+    });
+    return { changed: true, volunteer };
+  });
+}
+
+/**
  * One change to one event's volunteers, by one staff member: enter one by hand, change what was typed
  * (the name, the address, the telephone number, the roles they would do, the roles given — the organizers' notes are
  * `volunteer-notes.ts`'s, the add's optional first one written here, in the add's own transaction),
@@ -1881,6 +1947,9 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
   const skippedFor = (volunteer: { email: string | null; state: VolunteerState }, roleIds: readonly string[]) =>
     !sendEmail && announcesRoles(volunteer, roleIds) ? { emailSkipped: true } : {};
   assertIds(request.eventId, ...(request.kind === "add" ? [] : [request.id]));
+  // «Decizie pentru ziua cursei» (§NNN) leaves here, through a transaction of its own (`setRaceDayDecision`): nothing below is
+  // its business — no role, no state, no email — and neither is the expiry of the public pages that ends this function.
+  if (request.kind === "setDecision") return setRaceDayDecision(db, actor, request, now);
   let input: ReturnType<typeof staffInputOf> | null = null;
   // What an empty date box means on a row from before the date existed (§773): the age it holds, kept — see `volunteerStaffInputSchemaFor`.
   let keptAge: number | null = null;

@@ -8,7 +8,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { addVolunteerAction } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
-import { setVolunteerKitAction, setVolunteerRaffleAction } from "@/app/[locale]/admin/volunteers/actions";
+import { setVolunteerDecisionAction, setVolunteerKitAction, setVolunteerRaffleAction } from "@/app/[locale]/admin/volunteers/actions";
 import { addVolunteerNoteFromListAction } from "@/app/[locale]/admin/volunteers/[id]/note-actions";
 import { getDb } from "@/db/client";
 import { VOLUNTEER_NOTE_MAX } from "@/db/schema/event-volunteer-notes";
@@ -40,8 +40,9 @@ import {
   type VolunteerAdminRow,
   type VolunteerSortKey,
 } from "@/modules/volunteers/admin-list";
-import { guardianAllowsConfirm, guardianAskOf, roleLabel, VOLUNTEER_STATES, type VolunteerState } from "@/modules/volunteers/domain/volunteer";
+import { guardianAllowsConfirm, guardianAskOf, roleLabel, VOLUNTEER_DECISION_MAX, VOLUNTEER_STATES, type VolunteerState } from "@/modules/volunteers/domain/volunteer";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
+import { DECISION_ANCHOR } from "@/modules/volunteers/ui/VolunteerDecisionCard";
 import { GuardianVerbs, guardianChips, shortText, STATE_CHIP, VolunteerPersonFields, VolunteerStateForm, volunteerHiddenFields, volunteerPersonBoxes } from "@/modules/volunteers/ui/VolunteerPerson";
 import { listVolunteerNotesForExport } from "@/modules/volunteers/volunteer-notes";
 import { ROLE_EMAIL_SETTLE_MINUTES } from "@/modules/volunteers/volunteers";
@@ -163,6 +164,12 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     ...all,
     errors: Object.fromEntries(["NOTE_EMPTY", "NOTE_TOO_LONG", "NOT_FOUND", "FORBIDDEN"].map((code) => [code, all.errors[code]])),
   }));
+  // «Decizie ziua cursei» (§NNN): its dialog's refusals, cut the same way — a line too long, a person deleted meanwhile, another
+  // role, and a session that ended while the phone lay on the table: every answer the press can give, as a sentence.
+  const decisionRefusal = await refusalMessages({ decision: t("volunteers.decision.label") }).then((all) => ({
+    ...all,
+    errors: Object.fromEntries(["VALIDATION_ERROR", "NOT_FOUND", "FORBIDDEN", "UNAUTHENTICATED"].map((code) => [code, all.errors[code]])),
+  }));
   const roleName = (id: string) => {
     const words = roleNames.get(id);
     return words ? roleLabel(words, locale) : null;
@@ -260,6 +267,56 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           settledKey={String(noteCount)}
         />
       </>
+    );
+  };
+
+  /**
+   * «Decizie ziua cursei» in its cell (§NNN; the owner, 2026-11-16, minutes after the notes' column: «si la voluntar trebuie sa am
+   * si decizie pt ziua cursei»): the organizers' one line as typed, in the «Mesaj» cell's own style, and under it — or alone
+   * while there is none — the press that opens a dialog to write or change it: the row's own «Adaugă o notă» control with other
+   * words (`RowNoteDialog`; strings only cross to it, the glyph by its name). The box opens on the line as it stands and may be
+   * saved empty, which clears it. The save is `setVolunteerDecisionAction`, which comes back to this very page of the list
+   * (`returnTo`); the page's own render instant in `settledKey` closes the dialog on every page drawn after a save, an
+   * «unchanged» one too. Without JavaScript the press is a link to the person's page, where the same form stands. The accessible
+   * name begins with the words the press shows (WCAG 2.5.3) and ends with the person's name.
+   */
+  const decisionOf = (row: VolunteerAdminRow) => {
+    const label = t(row.raceDayDecision ? "volunteers.decision.change" : "volunteers.decision.write");
+    return (
+      // The words take the cell's width, so on a phone's card a long one wraps — and a word too long for the line breaks — inside
+      // it; the press keeps to the side the card's values stand on (the right on a phone, the left in the table).
+      <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+        {row.raceDayDecision && (
+          <Box component="span" data-testid="volunteer-decision" sx={MESSAGE_CELL_SX}>
+            {row.raceDayDecision}
+          </Box>
+        )}
+        <Box sx={{ alignSelf: { xs: "flex-end", md: "flex-start" }, maxWidth: "100%" }}>
+          <RowNoteDialog
+            action={setVolunteerDecisionAction}
+            actionKey={actionKeyOf(setVolunteerDecisionAction)}
+            messages={decisionRefusal}
+            fields={{ uiLocale: locale, eventId: row.eventId, volunteerId: row.id, returnTo }}
+            fallbackHref={`${personHref(row)}#${DECISION_ANCHOR}`}
+            label={label}
+            ariaLabel={`${label}: ${shortText(row.name)}`}
+            title={t("volunteers.decision.dialog", { name: row.name })}
+            help={t("volunteers.decision.help")}
+            boxName="decision"
+            boxLabel={t("volunteers.decision.label")}
+            limitText={t("volunteers.decision.limit", { max: VOLUNTEER_DECISION_MAX })}
+            max={VOLUNTEER_DECISION_MAX}
+            saveLabel={t("volunteers.save")}
+            cancelLabel={words.cancel}
+            settledKey={`${row.raceDayDecision ?? ""}:${now.getTime()}`}
+            defaultValue={row.raceDayDecision ?? ""}
+            optional
+            icon={row.raceDayDecision ? "edit" : "add"}
+            testId="decision-open"
+            dialogTestId="decision-dialog"
+          />
+        </Box>
+      </Stack>
     );
   };
 
@@ -387,6 +444,18 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           </Box>
         ) : null;
       },
+    },
+    {
+      /*
+        «Decizie ziua cursei» (§NNN), right after the organizers' notes: what THEY decided for the person on race day — «vine la
+        8:00 la start», «rezervă» — one short line they keep current; not a note (a dated thread), not the state, not the person's
+        answer. The cell is `decisionOf` above: the words and the press that writes or changes them. No `omitEmptyOnPhone`: the
+        press lives in the cell, so a phone's card keeps the line for a row with no decision too. It neither sorts nor filters.
+      */
+      key: "decision",
+      label: t("volunteers.decision.column"),
+      hint: t("volunteers.decision.hint"),
+      render: decisionOf,
     },
     {
       key: "state",

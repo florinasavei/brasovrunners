@@ -308,6 +308,17 @@ export const eventVolunteers = pgTable(
      * `setCheckpoint`); the editor's save keeps a point's id (`changeCheckpoints`), so a point moved or renamed keeps its people.
      */
     checkpointId: uuid("checkpoint_id").references(() => eventCheckpoints.id, { onDelete: "set null" }),
+    /**
+     * «Decizie pentru ziua cursei» (migration `0209`, §NNN; the owner, 2026-11-16, of the «Voluntari» list: «si la voluntar
+     * trebuie sa am si decizie pt ziua cursei»): what the organizers decided for this person on race day — «vine la 8:00 la
+     * start», «rezervă» — one short line they keep current, replaced when they change their mind. Not a note (`event_volunteer_notes`:
+     * a dated thread with its authors), not the state and not the person's own answer. Plain text, one paragraph, at most
+     * `VOLUNTEER_DECISION_MAX` characters (the CHECK below); null while there is none. Written by `volunteers.ts#changeVolunteer`,
+     * kind `setDecision`, for whoever works the volunteers, in every state. The organizers' own: never on a public page, in an
+     * email, on a badge, at the desk or in the raffle's file (`tests/unit/volunteers/decision-never-leaves.test.ts`). Kept and
+     * deleted with the row.
+     */
+    raceDayDecision: text("race_day_decision"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     /** The staff member who entered the row; null for the public form, and after that account is removed. */
@@ -409,6 +420,8 @@ export const eventVolunteers = pgTable(
     check("event_volunteers_name_length", sql`char_length(${t.name}) BETWEEN 1 AND 120`),
     check("event_volunteers_message_length", sql`${t.message} IS NULL OR char_length(${t.message}) BETWEEN 1 AND 300`),
     check("event_volunteers_note_length", sql`${t.note} IS NULL OR char_length(${t.note}) BETWEEN 1 AND 500`),
+    // «Decizie pentru ziua cursei» (§NNN): one short line or none — never an empty string, never past a person's message's length.
+    check("event_volunteers_race_day_decision_length", sql`${t.raceDayDecision} IS NULL OR char_length(${t.raceDayDecision}) BETWEEN 1 AND 300`),
     check("event_volunteers_age_range", sql`${t.age} IS NULL OR ${t.age} BETWEEN 1 AND 120`),
     check("event_volunteers_city_length", sql`${t.city} IS NULL OR char_length(${t.city}) BETWEEN 1 AND 80`),
     // «Fără tricou» is no size: it is null (the registration enum's `NONE` is a registration's own answer).
