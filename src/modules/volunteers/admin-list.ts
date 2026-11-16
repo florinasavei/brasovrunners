@@ -21,7 +21,7 @@ import { type VolunteerItem, volunteerItemsOf } from "./volunteers";
  */
 
 /** The columns a `?sort=` may name; each one's SQL is `orderOf`. */
-export const VOLUNTEER_SORT_KEYS = ["name", "state", "since", "event"] as const;
+export const VOLUNTEER_SORT_KEYS = ["name", "age", "city", "state", "since", "event"] as const;
 export type VolunteerSortKey = (typeof VOLUNTEER_SORT_KEYS)[number];
 
 /** `?role=none` is the people nobody has given a role yet («De repartizat», §761). */
@@ -89,13 +89,24 @@ function noRoleGiven(): SQL {
   return notExists(sql`(SELECT 1 FROM ${eventVolunteerRoleAssignments} WHERE ${eventVolunteerRoleAssignments.volunteerId} = ${eventVolunteers.id})`);
 }
 
-/** The order of one sort key: a name A to Z folded like the search, the states in the card's order, the moment, the event's start. */
+/**
+ * The order of one sort key: a name A to Z folded like the search, the age and the city with whoever gave none last, the states in the
+ * card's order, the moment, the event's start.
+ */
 function orderOf(sort: VolunteerSortKey, dir: "asc" | "desc"): SQL[] {
   const direction = (column: SQL) => (dir === "asc" ? asc(column) : desc(column));
+  // An answer a person may not have given (§NNN): the rows without it come last either way, as on the registrations list (§660).
+  const answered = (column: SQL) => (dir === "asc" ? sql`${column} asc nulls last` : sql`${column} desc nulls last`);
   const tie = asc(eventVolunteers.createdAt);
   switch (sort) {
     case "name":
       return [direction(sql`lower(${eventVolunteers.name})`), tie];
+    case "age":
+      // «Vârstă» (§NNN): the age on the event's day (§773), the youngest first.
+      return [answered(sql`${eventVolunteers.age}`), tie];
+    case "city":
+      // «Oraș» (§NNN): as typed, without regard to case — «brașov» stands beside «Brașov».
+      return [answered(sql`lower(${eventVolunteers.city})`), tie];
     case "state":
       // «Înscris» first, then «Confirmat», then «Anulat»: the order the card lists the states in, not the alphabet's.
       return [direction(sql`CASE ${eventVolunteers.state} WHEN 'REGISTERED' THEN 0 WHEN 'CONFIRMED' THEN 1 ELSE 2 END`), tie];

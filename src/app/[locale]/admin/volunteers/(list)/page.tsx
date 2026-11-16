@@ -284,6 +284,35 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       ),
     },
     {
+      /*
+        «Vârstă» (§NNN; the owner, 2026-11-16: «In lista de voluntari trebuie sa vad varsta si orasul»): the age on the event's day
+        (§773) — the one the parent's agreement goes by —, a bare number as the registrations list says it (§660). «—» for a person who
+        gave none. Until now both answers were read only on the person's page and in the files.
+      */
+      key: "age",
+      label: t("registrations.columnAge"),
+      hint: t("volunteers.screen.ageHint"),
+      sortable: true,
+      initialDir: "asc",
+      render: (row) => (
+        <Box component="span" data-testid="volunteer-age" sx={{ fontVariantNumeric: "tabular-nums", color: row.age === null ? "text.disabled" : "text.primary" }}>
+          {row.age ?? "—"}
+        </Box>
+      ),
+    },
+    {
+      // «Oraș» (§NNN): the city as the person typed it; «—» for a person who gave none.
+      key: "city",
+      label: t("registrations.columnCity"),
+      sortable: true,
+      initialDir: "asc",
+      render: (row) => (
+        <Box component="span" data-testid="volunteer-city" sx={row.city === null ? { color: "text.disabled" } : { wordBreak: "break-word" }}>
+          {row.city ?? "—"}
+        </Box>
+      ),
+    },
+    {
       key: "state",
       label: t("volunteers.screen.columnState"),
       sortable: true,
