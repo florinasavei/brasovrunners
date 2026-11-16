@@ -14367,7 +14367,11 @@
       "volunteersShirtsOn": "The public form now asks for the T-shirt size.",
       "volunteerNumbersOn": "The volunteers' number series is saved. Confirmed volunteers without a number got theirs.",
       "volunteerNumbersOff": "Volunteers get no more numbers. The ones already given stay.",
-      "volunteerChoicesMaxOn": "The limit on roles is saved. The public form says it and no longer takes a form with more roles ticked.",
+      "volunteerChoicesMaxOn": {
+        "one": "The limit is saved: at most {count} role can be ticked on the public form.",
+        "few": "The limit is saved: at most {count} roles can be ticked on the public form.",
+        "other": "The limit is saved: at most {count} roles can be ticked on the public form."
+      },
       "volunteerChoicesMaxOff": "The limit on roles is off. Any number of roles can be ticked on the public form.",
       "runnerBecameVolunteer": "The registration was cancelled and the person is now a confirmed volunteer.",
       "volunteerBecameRunnerPlaced": "A place was free: the person got it and has the declaration to sign. As a volunteer they were cancelled.",

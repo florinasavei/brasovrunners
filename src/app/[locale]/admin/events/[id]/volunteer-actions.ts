@@ -189,7 +189,8 @@ export async function setVolunteerChoicesMaxAction(form: FormData): Promise<void
     const actor = await requireStaffCapability(canManageVolunteers);
     const result = await setVolunteerChoicesMax(getDb(), actor, { eventId: eventIdOf(form), max }, new Date());
     if (!result.changed) return backToCard(form, { saved: "volunteerUnchanged" });
-    return backToCard(form, { saved: max === null ? "volunteerChoicesMaxOff" : "volunteerChoicesMaxOn" });
+    // The toast says the number saved, in its own form («cel mult 1 rol», «2 roluri», «20 de roluri»): what the public form now allows.
+    return backToCard(form, max === null ? { saved: "volunteerChoicesMaxOff" } : { saved: "volunteerChoicesMaxOn", count: String(max) });
   } catch (error) {
     if (!isDomainError(error)) throw error;
     return backToCard(form, { error: error.code });

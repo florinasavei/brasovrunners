@@ -14367,7 +14367,11 @@
       "volunteersShirtsOn": "Formularul public cere acum mărimea tricoului.",
       "volunteerNumbersOn": "Seria de numere a voluntarilor e salvată. Voluntarii confirmați care nu aveau număr l-au primit.",
       "volunteerNumbersOff": "Voluntarii nu mai primesc numere. Cele date deja rămân.",
-      "volunteerChoicesMaxOn": "Limita de roluri e salvată. Formularul public o spune și nu mai primește formulare cu mai multe roluri bifate.",
+      "volunteerChoicesMaxOn": {
+        "one": "Limita e salvată: pe formularul public se poate bifa cel mult {count} rol.",
+        "few": "Limita e salvată: pe formularul public se pot bifa cel mult {count} roluri.",
+        "other": "Limita e salvată: pe formularul public se pot bifa cel mult {count} de roluri."
+      },
       "volunteerChoicesMaxOff": "Limita de roluri a fost scoasă. Pe formularul public se pot bifa oricâte roluri.",
       "runnerBecameVolunteer": "Înscrierea a fost anulată, iar persoana e acum voluntar confirmat.",
       "volunteerBecameRunnerPlaced": "Era un loc liber: persoana l-a primit și are de semnat declarația. Ca voluntar a fost anulată.",

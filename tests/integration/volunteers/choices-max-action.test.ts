@@ -1,9 +1,11 @@
 import { and, asc, eq } from "drizzle-orm";
+import { createTranslator } from "next-intl";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { STAFF_ROLES, canManageVolunteers, type StaffRole } from "@/modules/staff-identity/domain/roles";
+import { toastSentence } from "@/shared/feedback/mail-line";
 import { decodeFlash, FLASH_COOKIE } from "@/shared/feedback/notice";
 import { DomainError } from "@/shared/errors/domain-error";
 import en from "../../../messages/en.json";
@@ -116,24 +118,56 @@ async function press(typed: string | null, event = eventId): Promise<{ to: strin
   await setVolunteerChoicesMaxAction(form).catch((error: unknown) => {
     if (!(error instanceof Error) || error.message !== "NEXT_REDIRECT") throw error;
   });
-  return { to: state.redirected[0] ?? "", toast: decodeFlash(state.cookies.get(FLASH_COOKIE))?.key ?? null };
+  const notice = decodeFlash(state.cookies.get(FLASH_COOKIE));
+  // The toast's sentence and the number it counts («cel mult 2 roluri»), when it counts one.
+  return { to: state.redirected[0] ?? "", toast: notice?.key ?? null, ...(notice?.values?.count === undefined ? {} : { count: notice.values.count }) };
 }
 
 describe("§NNN BR-REQ-050-02 the card's box «Cel mult câte roluri poate bifa o persoană»", () => {
-  it("saves the digits typed and comes back to the card with the toast that says so", async () => {
+  it("saves the digits typed and comes back to the card with the toast that says the number saved", async () => {
     const card = `/ro/admin/events/${eventId}#box-volunteers`;
-    expect(await press("2")).toEqual({ to: card, toast: "volunteerChoicesMaxOn" });
+    expect(await press("2")).toEqual({ to: card, toast: "volunteerChoicesMaxOn", count: "2" });
     expect(await limitOf()).toBe(2);
     // Spaces around the digits are a person's typing, not another number.
-    expect(await press(" 1 ")).toEqual({ to: card, toast: "volunteerChoicesMaxOn" });
+    expect(await press(" 1 ")).toEqual({ to: card, toast: "volunteerChoicesMaxOn", count: "1" });
     expect(await limitOf()).toBe(1);
-    expect(await press("20")).toEqual({ to: card, toast: "volunteerChoicesMaxOn" });
+    expect(await press("20")).toEqual({ to: card, toast: "volunteerChoicesMaxOn", count: "20" });
     expect(await limitOf()).toBe(20);
+    // A leading nought is the same number: «07» is seven.
+    expect(await press("07")).toEqual({ to: card, toast: "volunteerChoicesMaxOn", count: "7" });
+    expect(await limitOf()).toBe(7);
+    await press("20");
     expect((await trail()).map((row) => row.metadataJson)).toEqual([
       { from: null, to: 2 },
       { from: 2, to: 1 },
       { from: 1, to: 20 },
+      { from: 20, to: 7 },
+      { from: 7, to: 20 },
     ]);
+  });
+
+  it("the toast names the limit saved in the count's own form, in both languages — what the public form now allows", async () => {
+    const said = async (typed: string, locale: "ro" | "en") => {
+      await press("");
+      await press(typed);
+      const notice = decodeFlash(state.cookies.get(FLASH_COOKIE));
+      expect(notice).toMatchObject({ kind: "success", key: "volunteerChoicesMaxOn" });
+      const words = createTranslator({ locale, messages: locale === "ro" ? ro : en, namespace: "Feedback" });
+      return toastSentence(notice as NonNullable<typeof notice>, words as never, () => null, locale);
+    };
+    expect(await said("1", "ro")).toBe("Limita e salvată: pe formularul public se poate bifa cel mult 1 rol.");
+    expect(await said("2", "ro")).toBe("Limita e salvată: pe formularul public se pot bifa cel mult 2 roluri.");
+    expect(await said("20", "ro")).toBe("Limita e salvată: pe formularul public se pot bifa cel mult 20 de roluri.");
+    expect(await said("1", "en")).toBe("The limit is saved: at most 1 role can be ticked on the public form.");
+    expect(await said("2", "en")).toBe("The limit is saved: at most 2 roles can be ticked on the public form.");
+    // Taking it off is its own sentence, and counts nothing.
+    await press("3");
+    await press("");
+    const off = decodeFlash(state.cookies.get(FLASH_COOKIE));
+    expect(off).toEqual({ kind: "success", key: "volunteerChoicesMaxOff" });
+    expect(toastSentence(off as NonNullable<typeof off>, createTranslator({ locale: "ro", messages: ro, namespace: "Feedback" }) as never, () => null, "ro")).toBe(
+      "Limita de roluri a fost scoasă. Pe formularul public se pot bifa oricâte roluri.",
+    );
   });
 
   it("an empty box takes the limit off, with its own toast — and a box that is not posted at all is an empty one", async () => {
@@ -203,7 +237,13 @@ describe("§NNN BR-REQ-060-01 the action asserts the capability itself", () => {
 describe("§NNN the words of the card's setting", () => {
   it("has each toast, the box's words and the refusal's sentence in both languages", () => {
     for (const catalogue of [ro, en]) {
-      for (const key of ["volunteerChoicesMaxOn", "volunteerChoicesMaxOff", "volunteerUnchanged"] as const) expect(catalogue.Feedback.toast[key].length, key).toBeGreaterThan(0);
+      for (const key of ["volunteerChoicesMaxOff", "volunteerUnchanged"] as const) expect(catalogue.Feedback.toast[key].length, key).toBeGreaterThan(0);
+      // The saved limit's toast counts the roles in the three forms (`countForm`), each naming the number — never an ICU plural.
+      expect(Object.keys(catalogue.Feedback.toast.volunteerChoicesMaxOn).sort()).toEqual(["few", "one", "other"]);
+      for (const sentence of Object.values(catalogue.Feedback.toast.volunteerChoicesMaxOn)) {
+        expect(sentence).toContain("{count}");
+        expect(sentence).not.toMatch(/\{\w+,\s*plural/);
+      }
       for (const key of ["label", "placeholder", "help", "save", "saving"] as const) expect(catalogue.Admin.volunteers.choicesMax[key].length, key).toBeGreaterThan(0);
       // The help says the range through its two numbers, so the words never drift from the rule.
       expect(catalogue.Admin.volunteers.choicesMax.help).toContain("{min}");
@@ -212,6 +252,7 @@ describe("§NNN the words of the card's setting", () => {
       expect(catalogue.Admin.errors.FORBIDDEN.length).toBeGreaterThan(0);
     }
     expect(ro.Admin.volunteers.choicesMax.label).toBe("Cel mult câte roluri poate bifa o persoană");
-    expect(ro.Feedback.toast.volunteerChoicesMaxOn).not.toBe(ro.Feedback.toast.volunteerChoicesMaxOff);
+    expect(ro.Feedback.toast.volunteerChoicesMaxOn.few).toBe("Limita e salvată: pe formularul public se pot bifa cel mult {count} roluri.");
+    expect(ro.Feedback.toast.volunteerChoicesMaxOn.other).toContain("{count} de roluri");
   });
 });
