@@ -34,6 +34,7 @@ import {
   type BadgeSizeChoice,
   type BadgeTextLine,
   badgeBandsScale,
+  badgeFooterLogoOf,
   badgeImageSize,
   badgeLayout,
   badgeLineHeight,
@@ -414,6 +415,26 @@ describe("§NNN the badge at 43, 60 and 80 %, at every size the bounds allow", (
     }
     expect(problems.slice(0, 20)).toEqual([]);
     expect(checked).toBe(SIZES.length * TICKS.length * FACES.length);
+  });
+
+  it("names in the designer the watermark's box the sheet draws, at every space for the name", () => {
+    // «Logo-ul clubului (filigran)»'s closed line says the size from `badgeFooterLogoOf`, which lays the rows out as the sheet does —
+    // with the space for the name — so the size named is the size printed at 60 and 80 % too.
+    const problems: string[] = [];
+    let named = 0;
+    for (const size of SIZES) {
+      for (const tick of TICKS) {
+        for (const share of SHARES) {
+          const design = designOf(size, tick, share);
+          const drawn = gridLayout(size, tick, 0, share).footerLogo ?? null;
+          const box = badgeFooterLogoOf(design, { phone: badgePhoneRow(design), free: tick.free }) ?? null;
+          if (JSON.stringify(box) !== JSON.stringify(drawn)) problems.push(`${size.customWidthMm}×${size.customHeightMm} ${JSON.stringify(tick)} at ${share} %`);
+          if (box) named += 1;
+        }
+      }
+    }
+    expect(problems.slice(0, 20)).toEqual([]);
+    expect(named).toBeGreaterThan(SIZES.length);
   });
 
   it("cuts no line at 60 or 80 % that the default does not cut, and prints the category whole", () => {

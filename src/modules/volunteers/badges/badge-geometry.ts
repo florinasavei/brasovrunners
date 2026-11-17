@@ -554,14 +554,15 @@ function badgeNameMarks(rows: { content: { height: number }; header: BadgeRow; w
 /**
  * The watermark's box on a design's badges, without their words (§969): the box `badgeLayout` draws on every badge of the design, which
  * reads the rows, the pad and «Nume:»'s line, never a role's words — for the designer's closed line to say the size the logo is drawn at.
- * `shown` says which rows take height, as `badgeRows` reads them. Null while off, or when no logo fits.
+ * `shown` says which rows take height, as `badgeRows` reads them; the rows are laid out at the design's space for the name, as the sheet
+ * lays them out. Null while off, or when no logo fits.
  */
 export function badgeFooterLogoOf(
-  choice: BadgeSizeChoice & { footerLogo?: BadgeFooterLogo } & BadgeFooterLogoPlacement,
+  choice: BadgeSizeChoice & { footerLogo?: BadgeFooterLogo; nameSpacePct?: number } & BadgeFooterLogoPlacement,
   shown: { phone: boolean; free: boolean },
 ): BadgeFooterLogoBox | null {
   const paper = badgePaper(choice);
-  const rows = badgeRows(paper, shown.phone, shown.free);
+  const rows = badgeRows(paper, shown.phone, shown.free, choice.nameSpacePct);
   const { pad, nameTop, nameSize } = badgeNameMarks(rows);
   return badgeFooterLogoBox(choice.footerLogo, { paper, writing: rows.writing, pad, name: { top: nameTop, size: nameSize } }, choice);
 }

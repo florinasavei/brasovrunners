@@ -540,10 +540,10 @@ describe("§NNN «Spațiul pentru nume (% din înălțime)» in the designer", (
     expect(numberBox(page)).toContain('value="60"');
     expect(page).toContain("Spațiu pentru nume 60% · O linie subțire pentru nume");
     expect(page).toMatch(/badges\/preview\?[^"]*nameSpacePct=60/);
-    // With the watermark the closed line says all three, the share first, as the fold lists them.
-    expect(await draw({ ...DEFAULT_BADGE_DESIGN, nameSpacePct: 80, writingLine: false, footerLogo: "faint" })).toContain(
-      "Spațiu pentru nume 80% · Doar „Nume:” · Logo ca filigran, puțin vizibil",
-    );
+    // The watermark has its own fold and its own closed line (the logo's controls): this one says the share and the line, the share first.
+    const withLogo = await draw({ ...DEFAULT_BADGE_DESIGN, nameSpacePct: 80, writingLine: false, footerLogo: "faint" });
+    expect(withLogo).toContain("Spațiu pentru nume 80% · Doar „Nume:”");
+    expect(withLogo).not.toContain("Spațiu pentru nume 80% · Doar „Nume:” · ");
   });
 
   it("says beside its fold that a stored share could not be read, and names the box when a save refuses it", async () => {
