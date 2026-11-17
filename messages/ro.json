@@ -1629,6 +1629,7 @@
         "empty": "Nicio notă încă.",
         "by": "{name} · {date}",
         "delete": "Șterge",
+        "edit": "Modifică",
         "add": "Adaugă o notă",
         "label": "Nota",
         "limit": "Cel mult {max} de caractere.",
@@ -5984,7 +5985,9 @@
     "volunteers": {
       "notes": {
         "authorUnknown": "autor necunoscut",
-        "exportMore": "… (mai multe note pe pagina voluntarului)"
+        "exportMore": "… (mai multe note pe pagina voluntarului)",
+        "edit": "Modifică nota",
+        "editDialog": "Modifică nota despre {name}"
       },
       "title": "Voluntari",
       "intro": "Oamenii care ajută la eveniment: fiecare bifează ce ar face, tu îi dai un rol. Rolurile se definesc aici, în ambele limbi. Adresele și telefoanele nu apar pe nicio pagină publică.",
@@ -6375,7 +6378,7 @@
         "columnMessage": "Mesaj",
         "messageHint": "Ce a scris persoana pentru organizatori când s-a oferit ca voluntar. Gol: n-a scris nimic.",
         "columnNotes": "Note interne",
-        "notesHint": "Notele organizatorilor despre persoană: cele mai noi trei, cu ziua și ora. Toate, cu autorul lor, sunt pe pagina persoanei. Voluntarul nu le vede.",
+        "notesHint": "Notele organizatorilor despre persoană: cele mai noi trei, fără zi și oră. Toate, cu autorul și data lor, sunt pe pagina persoanei. Voluntarul nu le vede.",
         "columnType": "Tip",
         "typeHint": "Unde lucrează persoana, după categoria rolurilor date: de exemplu start/sosire sau traseu. Gol: niciun rol dat ori fără categorie. Categoriile se scriu în cardul „Voluntari” al evenimentului.",
         "filter": "Filtrează",
@@ -14629,7 +14632,8 @@
         "one": "{count} voluntar anunțat. Fără adresă de email: {noAddress}.",
         "few": "{count} voluntari anunțați. Fără adresă de email: {noAddress}.",
         "other": "{count} de voluntari anunțați. Fără adresă de email: {noAddress}."
-      }
+      },
+      "noteEdited": "Nota a fost modificată."
     },
     "mail": {
       "now": "Pleacă acum{road}: {what}.",

@@ -3301,6 +3301,18 @@ file — and not by the volunteers' Excel and CSV or «Planul voluntarilor» unt
 (`tests/unit/volunteers/decision-never-leaves.test.ts`). No state, role, point, number, tick or email moves, no public
 cache is expired, and the person is not told.
 
+The organizers' **«Note interne»** on a volunteer (`event_volunteer_notes`, amending §754's single line;
+`volunteers/volunteer-notes.ts`) are that dated thread: read, added and — since 2026-11-17 (`DECISIONS.md` §NNN; the
+owner: «lasă-mă să editez și nota internă») — changed by whoever works the volunteers (`canManageVolunteers`), a note
+being changed or deleted only by its author or by an Administrator (`canManageRegistrations`; one rule for both verbs,
+`mayChangeNote`). A change reads the words as the add does (the same limit, `NOTE_EMPTY`, `NOTE_TOO_LONG`), writes them
+and `updated_at` and never the note's moment or author, and the same words write nothing; each verb is audited
+(`volunteer.note_added` / `volunteer.note_edited` / `volunteer.note_deleted`) with the volunteer's id and never the
+words, and no earlier words are kept anywhere. The «Voluntari» list says the newest notes' words alone, with no day or
+hour — the person's page keeps both, and the author — and «Modifică nota» changes the newest one from its row; the
+person's page has «Modifică» beside «Șterge» on each note the reader may change. No email, no public cache tag, nothing
+else of the person moves. A registration's notes (§777) keep their add and delete: they are not changed.
+
 Beside the eight too, and made of them rather than a ninth: **«Transformă în voluntar»** on a registration's page and
 **«Transformă în alergător»** on a volunteer's (2026-11-15, `DECISIONS.md` §948; the owner: «aș vrea să pot să „transform"
 un alergător în voluntar și invers»; `volunteers/transform.ts`). The Administrator's (`canManageRegistrations`, asserted
