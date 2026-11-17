@@ -8,7 +8,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { type BadgeDesign, type BadgeLocale, badgeDesignFromQuery, badgeWords } from "@/modules/volunteers/badges/badge-design";
 import { renderBadgeImage } from "@/modules/volunteers/badges/badge-image";
 import { badgeDefaultWords } from "@/modules/volunteers/badges/badge-words";
-import { badgeRoleName, findEventForBadges, listBadgeRoles } from "@/modules/volunteers/badges/badges";
+import { badgeRoleFace, findEventForBadges, listBadgeRoles } from "@/modules/volunteers/badges/badges";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
@@ -18,7 +18,8 @@ import { isUuid } from "@/shared/ids";
  * A GET that reads and writes nothing.
  *
  * - **A role's badge as saved** (`role=<id>`, or `none` for «fără rol»): the stored design, the role's
- *   name in the badge's language and its colour. The page stamps the address with what it is drawn from
+ *   name and its category's in the badge's language and its colour — the sheet's own hand-over
+ *   (`badgeRoleFace`, §NNN). The page stamps the address with what it is drawn from
  *   (`v=`, `badgePictureStamp`), so the browser may keep the answer an hour.
  * - **The sample** (`sample=1`): the design read from the query — the designer's unsaved boxes, through
  *   the save's own schema — for a role of the event or `none`. Never kept: the role's saved name and
@@ -61,8 +62,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     locale: badgeLocale,
     words: badgeWords(design, badgeLocale, event.title, await badgeDefaultWords(badgeLocale)),
     // The one badge for everyone (§783) has no role, whichever role the address names: the designer's sample keeps asking for the event's first
-    // role while the choice is flipped, and the picture follows the design it is drawn from.
-    role: role && design.mode === "perRole" ? { name: badgeRoleName(role, badgeLocale), colour: role.colour, phone: role.categoryPhone } : null,
+    // role while the choice is flipped, and the picture follows the design it is drawn from. A role's badge is handed over as the sheet's is.
+    role: role && design.mode === "perRole" ? badgeRoleFace(role, badgeLocale) : null,
     headerPicture: bibPictureForImage(loaded.header),
   });
   image.headers.set("Cache-Control", sample ? "private, no-store" : "private, max-age=3600");

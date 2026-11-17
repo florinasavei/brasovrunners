@@ -14,6 +14,7 @@ import { compareCategories, compareRoles, countsAgainstRole, groupRolesByCategor
 import {
   type BadgeDesign,
   type BadgeDroppedKey,
+  type BadgeFaceRole,
   type BadgeLocale,
   badgeColourReadable,
   badgeDesignDropped,
@@ -109,9 +110,31 @@ export async function listBadgeRoles<T extends Record<string, unknown>>(db: Data
   );
 }
 
-/** A role's name in the badge's language — what the band prints: the role only, never its category. */
+/**
+ * A role's name in the badge's language — what the band's large line prints: the role only. Its category is printed too since §NNN
+ * (amending §774, which kept the band to the role): on the small line beside «VOLUNTAR», or under the name — `badgeRoleCategory`, never
+ * in brackets after the name as the page says it (`badgeRoleLabel`).
+ */
 export function badgeRoleName(role: Pick<BadgeRole, "nameRo" | "nameEn">, locale: BadgeLocale): string {
   return locale === "en" ? role.nameEn : role.nameRo;
+}
+
+/**
+ * The name of a role's category in the badge's language — the volunteer's type, «Pe Traseu» (§NNN; the owner, 2026-11-17: «Practic
+ * voluntarii sunt de 2 tipuri: start-finish și pe traseu»), the club's own words from the event's «Categorii» — or null for a role under
+ * none, whose default heading «Alte activități» is no type and is never printed.
+ */
+export function badgeRoleCategory(role: Pick<BadgeRole, "categoryRo" | "categoryEn">, locale: BadgeLocale): string | null {
+  return (locale === "en" ? role.categoryEn : role.categoryRo) || null;
+}
+
+/**
+ * One role as its badge draws it (§NNN): its name and its category's in the badge's language, its band's colour (`badgeRoleColour`: a stored
+ * colour no word reads on is the club's orange) and its category's telephone (§774). The one hand-over to the renderers, which both the
+ * sheet's piles (`badgePrintEntries`) and the picture's route take, so the PDF and the PNG cannot disagree about a role.
+ */
+export function badgeRoleFace(role: Pick<BadgeRole, "nameRo" | "nameEn" | "colour" | "categoryRo" | "categoryEn" | "categoryPhone">, locale: BadgeLocale): BadgeFaceRole {
+  return { name: badgeRoleName(role, locale), colour: badgeRoleColour(role.colour), phone: role.categoryPhone, category: badgeRoleCategory(role, locale) };
 }
 
 /** A role named alone on the page, not on the badge: «Direcționare (Traseu)» (§774). */
@@ -563,19 +586,15 @@ export function readPrintCounts(
   return total > BADGE_TOTAL_MAX ? { refused: "total" } : { roles: counts, none };
 }
 
-/** The sheet's piles in the club's order: each role's badges with its spares, then the badges «fără rol». */
-export function badgePrintEntries(
-  roles: readonly BadgeRole[],
-  counts: BadgePrintCounts,
-  locale: BadgeLocale,
-): Array<{ role: { name: string; colour: string | null; phone: string | null } | null; count: number }> {
+/** The sheet's piles in the club's order: each role's badges with its spares — its category's name with it (§NNN) — then the badges «fără rol». */
+export function badgePrintEntries(roles: readonly BadgeRole[], counts: BadgePrintCounts, locale: BadgeLocale): Array<{ role: BadgeFaceRole | null; count: number }> {
   // One badge for everyone (§783): a single pile with no role — «VOLUNTAR» alone, on the design's own colour — however many roles the event has.
   if (counts.single) return counts.single.count + counts.single.spares > 0 ? [{ role: null, count: counts.single.count + counts.single.spares }] : [];
   return [
     ...roles
       .map((role) => {
         const wanted = counts.roles.get(role.id) ?? { count: badgePrintDefault(role), spares: 0 };
-        return { role: { name: badgeRoleName(role, locale), colour: badgeRoleColour(role.colour), phone: role.categoryPhone }, count: wanted.count + wanted.spares };
+        return { role: badgeRoleFace(role, locale), count: wanted.count + wanted.spares };
       })
       .filter((entry) => entry.count > 0),
     ...(counts.none > 0 ? [{ role: null, count: counts.none }] : []),

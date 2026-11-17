@@ -8,15 +8,14 @@ import { COLOR } from "@/theme/brand";
 import { brandFonts } from "@/theme/pdf/fonts";
 import {
   type BadgeDesign,
+  type BadgeFaceRole,
   type BadgeLocale,
   type BadgeWords,
   badgeBandColour,
-  badgeLabelText,
+  badgeLayoutWords,
   badgeNoRoleColour,
-  badgePhoneLine,
   badgePhoneRow,
   badgeRoleColour,
-  badgeRoleText,
   badgeTextOn,
 } from "./badge-design";
 import { BADGE_LAYOUT, type BadgeLayout, type BadgeTextLine, badgeImageSize, badgeLayout, badgeLineHeight } from "./badge-geometry";
@@ -41,8 +40,11 @@ export type BadgeImageInput = {
   design: BadgeDesign;
   locale: BadgeLocale;
   words: BadgeWords;
-  /** The role's name in the badge's language and its colour — and the telephone of its category's contact person (§774, `badgePhoneLine`); null draws a badge «fără rol». */
-  role: { name: string; colour: string | null; phone?: string | null } | null;
+  /**
+   * The role's name in the badge's language and its colour — the telephone of its category's contact person (§774, `badgePhoneLine`) and
+   * its category's name, the volunteer's type (§NNN); null draws a badge «fără rol».
+   */
+  role: BadgeFaceRole | null;
   /** The header's picture as the route read it; null draws the band. */
   headerPicture?: BadgeImagePicture | null;
 };
@@ -54,20 +56,11 @@ function logo(): Promise<string> {
   return logoDataUrl;
 }
 
-/** The badge's layout for this picture: the sheet's, with the same words and measure. */
+/** The badge's layout for this picture: the sheet's, with the same words (`badgeLayoutWords`) and measure. */
 export function badgeImageLayout(input: BadgeImageInput): BadgeLayout {
-  const label = badgeLabelText(input.words.label, input.locale);
   return badgeLayout(
     { ...input.design, showPhone: badgePhoneRow(input.design), headerPicture: Boolean(input.headerPicture) },
-    {
-      title: input.words.title,
-      label,
-      role: input.role ? badgeRoleText(input.role.name, input.locale) : null,
-      name: input.words.name,
-      phone: badgePhoneLine(input.design, input.words, input.role?.phone),
-      free: input.words.free,
-      markerLabel: input.words.markerLabel,
-    },
+    badgeLayoutWords(input.design, input.words, input.locale, input.role),
     { bold: bibTitleWidth, regular: bibFooterWidth },
   );
 }
@@ -186,10 +179,12 @@ export function badgeMarkup(input: BadgeImageInput, logoSrc: string) {
         />
       ) : null}
       {layout.title ? lineBox(layout.title, bandText, 700, { right: layout.title.right }, "badge-title") : null}
-      {/* The role's band, «VOLUNTAR» small above the role's name — or alone and large on a badge «fără rol». */}
+      {/* The role's band, «VOLUNTAR» small above the role's name — or alone and large on a badge «fără rol». The role's category, the
+          volunteer's type (§NNN), is on the small line («VOLUNTAR · PE TRASEU») or, too long for it, on a small line under the name. */}
       <div data-testid="badge-role-band" style={{ display: "flex", ...at(content.left, layout.role.top), width: px(content.width), height: px(layout.role.height), background: roleColour }} />
       {layout.label ? lineBox(layout.label, roleText, 700, { centre: true }, "badge-label") : null}
       {lineBox(layout.roleLine, roleText, 700, { centre: true }, "badge-role")}
+      {layout.categoryLine ? lineBox(layout.categoryLine, roleText, 700, { centre: true }, "badge-category") : null}
       {/* The free-text line (§776): the club's own words, small and centred under the role's band. */}
       {layout.freeLine ? lineBox(layout.freeLine, COLOR.ink, 400, { centre: true }, "badge-free") : null}
       {/* The writing area: «Nume:», and the faint line the name is written on in marker. */}
