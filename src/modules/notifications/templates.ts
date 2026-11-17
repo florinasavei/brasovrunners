@@ -1778,7 +1778,7 @@ function standardLinks(
 }
 
 /**
- * The club's Facebook and Instagram pages, last under the organizers' message to an event's participants (§NNN; the owner,
+ * The club's Facebook and Instagram pages, last under the organizers' message to an event's participants (§957; the owner,
  * 2026-11-17: «în mailul către toți participanții pune și link-urile către social media pages: facebook și instagram»).
  * The same two addresses the site's footer links (`CLUB_FACEBOOK_URL`, `CLUB_INSTAGRAM_URL`; `shared/ui/club-socials.ts`),
  * read from the environment as the footer reads them: one that is not set is left out, and with neither the message is as
@@ -1938,7 +1938,7 @@ const T = {
       manage: "Înscrierile mele",
       events: "Toate evenimentele",
       contact: "Scrie-ne",
-      // The club's own pages elsewhere, under the organizers' message (§NNN): the header's words for them (`Site.followOn`).
+      // The club's own pages elsewhere, under the organizers' message (§957): the header's words for them (`Site.followOn`).
       facebook: `${CLUB_NAME} pe Facebook`,
       instagram: `${CLUB_NAME} pe Instagram`,
     },
@@ -4809,7 +4809,7 @@ export function buildTemplateContent(
       return [
         ...own,
         ...standardLinks(linkData, copy.moreLinks).filter((link) => !seen.has(link.url)),
-        // The club's Facebook and Instagram, last, and on the organizers' own message alone (§NNN).
+        // The club's Facebook and Instagram, last, and on the organizers' own message alone (§957).
         ...(messageType === "ORGANIZER_MESSAGE" ? organizerSocialLinks(copy.moreLinks) : []),
       ];
     })(),

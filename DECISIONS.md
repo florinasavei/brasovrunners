@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.51-2026-11-16 -->
+<!-- PROJECT_BASELINE: BR-V4.52-2026-11-17 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.51-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.52-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -30234,3 +30234,21 @@ A press writes only to those not told: after three more people are placed, press
 **A refused press lands on its sentence.** A press that went through comes back to its own section of the plan (`#plan-mail`); a refused one — nobody to write to, everybody already told, a role that may not — comes back to the page's alert (`#admin-alert`), where the refusal's words are, as every press of this page does since §953. The picture's two presses (§952) were brought to the same rule here: they landed at the picture, under the alert.
 
 Baseline `BR-V4.51-2026-11-16`.
+
+## 957. The organizers' message to an event's participants ends with the club's Facebook and Instagram pages
+
+**The owner, 2026-11-17, four days before Saturday's race, marking it the first thing to do:** «si in mailul catre toti participanti (top prio) pune si link-urile catre social media pages: facebook si instagram».
+
+**What was there.** «Trimite un mesaj participanților» (§364) sends the organizers' own words to an event's registrants, and under them the platform's own links: the event's page, its rules and programme where it has them, «Înscrierile mele», every event, «Scrie-ne». The club's pages elsewhere were on the site alone — the footer and the header (§565), from `CLUB_FACEBOOK_URL`, `CLUB_INSTAGRAM_URL`, `CLUB_STRAVA_URL` and `CLUB_YOUTUBE_URL`. To put them in a message, the organizers typed the addresses into the body, twice — once a language — and had to remember to.
+
+**Decision.** The organizers' message lists the club's Facebook page and then its Instagram page as the last two of its links, in each half's own language — «<club> pe Facebook», «<club> pe Instagram»; "<club> on Facebook", "<club> on Instagram" — the words the site's header says them with, the club's name from `CLUB_NAME`. The addresses are the footer's own two settings, read from the environment as the footer reads them (`templates.ts#organizerSocialLinks`): one that is not set is left out, and with neither the message is exactly what it was. They are built as the message is rendered, not kept in its payload — so the composer's preview shows them, a message already waiting in the outbox leaves with them, and the club's copy, which shows what the participants got, carries them too.
+
+**Why two more links of the list, and no tick.** The owner asked for the links to be there, not for a choice at every send; the list under a message is where the platform puts the addresses a participant may want next, and two entries there change no other part of the message — not the organizers' panel (§947), not the buttons («Nu mai pot ajunge», «Vin», «Semnează declarația»), not the facts. A tick would be one more thing to forget in the week of a race, and a participant loses nothing by two links at the foot of a message about the club's own event.
+
+**Why this message alone.** The owner named «mailul către toți participanții». Every other message is the platform's answer to something one person did — a confirmation, an offer, a reminder with its own deadline — and its links are that person's next steps. No other message type carries the pages, and a test goes over every type to hold it.
+
+**Not done.** Strava and YouTube (the owner named Facebook and Instagram); the networks' marks as pictures (an email needs each hosted and drawn for every client: words are enough for a link); a tick or a setting to leave them out; the pages in the volunteers' messages, the newsletter or the reminder.
+
+**Held by** `tests/unit/notifications/organizer-message-socials.test.ts`: both pages last among the links, Facebook first, in each language; in the HTML and in the plain text of both halves; on the club's copy; one alone when the other is not set; nothing with neither; and no other message type, sample by sample.
+
+Baseline `BR-V4.52-2026-11-17`.

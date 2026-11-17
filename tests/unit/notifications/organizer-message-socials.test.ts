@@ -6,7 +6,7 @@ import { buildOutgoingEmail, buildTemplateContent, type TemplateData } from "@/m
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
- * `DECISIONS.md` §NNN — the club's Facebook and Instagram pages under the organizers' message to an event's participants
+ * `DECISIONS.md` §957 — the club's Facebook and Instagram pages under the organizers' message to an event's participants
  * (the owner, 2026-11-17: «în mailul către toți participanții pune și link-urile către social media pages: facebook și
  * instagram»). The two addresses are the ones the site's footer links (`CLUB_FACEBOOK_URL`, `CLUB_INSTAGRAM_URL`): set
  * here to made-up pages, one at a time, so the test says what a message carries with both, with one and with neither —
@@ -57,7 +57,7 @@ beforeEach(() => {
   socials.instagram = INSTAGRAM;
 });
 
-describe("§NNN the club's Facebook and Instagram under the organizers' message", () => {
+describe("§957 the club's Facebook and Instagram under the organizers' message", () => {
   it("lists both pages last among the message's links, Facebook first, each half in its own language", () => {
     const content = buildTemplateContent("ORGANIZER_MESSAGE", "ro", DATA, DATA.eventUrl);
     expect(content.links?.slice(-2)).toEqual([

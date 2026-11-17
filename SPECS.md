@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.51-2026-11-16 -->
+<!-- PROJECT_BASELINE: BR-V4.52-2026-11-17 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V4.51-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.52-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -3061,6 +3061,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 91. Amends the wording of «Vin» (the decision «Cere reconfirmarea»). Given an organizers' message that asks for reconfirmation, the registration's own page and the ready reminder text, then the sentence under «Vin» / "I'm coming", the sentence under «Da, vin la cursă» (`Registrations.reconfirm.why`) and the ready text say what the answer is for and never that it is optional, required or owed, in both languages, and no sentence says that silence costs the place; nothing reads the answer but the backoffice, as before (2026-11-16, `DECISIONS.md` §947).
 92. Given the registration's own page after «Vin» was answered, then the answer «Am notat că vii…» and the cancel block under it stand at least 100 pixels apart on a phone and on a desktop, the cancel still on the page and asking first (2026-11-16, `DECISIONS.md` §947).
 93. Given a `VOLUNTEER_POINT`, then the message is bilingual, the volunteer's language first, and each half says in its own language: the event's title, day and place; on the highlighted band the point as the plan's page titles it — «Punctul tău la Crosul: 3. 5,5 km — Apă la cabană» / "Your point at The cross: 3. 5.5 km — Water at the hut"; the point's note under «De știut la acest punct» / "Good to know at this point" when it has one; the roles given and what they ask in the sentence `VOLUNTEER_ROLE_ASSIGNED` uses (several roles each by name), and nothing about roles when none was given; the contact person of the roles' category in the footer when one is set; the plan's picture — drawn once, at most 550 pixels wide and never wider than its own, inside a link to the whole picture, with that link in words in both halves and its address in the text half — only when the event has one and a store is configured; and the event's page from `APP_BASE_URL`. It names no other volunteer and no telephone number but that contact's, carries no token and no button, and no other message type says the point. It is classed as `VOLUNTEER_ROLE_ASSIGNED` is — the confirmations' road, the public's audience, not waited for, no club copy, no «Nu mai pot ajunge» — has its name and its «când» lines on `/admin/emails` in both languages, and a text the club saved for it replaces the words alone: the band, the note, the roles and the picture stay (2026-11-16, `DECISIONS.md` §956).
+94. Amends criterion 27 (what the platform adds under the organizers' words): an ORGANIZER_MESSAGE also lists, last among its links and in each half's own language, the club's Facebook page and then its Instagram page — the footer's own addresses (`CLUB_FACEBOOK_URL`, `CLUB_INSTAGRAM_URL`), each left out when it is not set, the message unchanged with neither — in the HTML and the plain text, on the club's copy too, and no other message type carries them. Verification: unit `notifications/organizer-message-socials.test.ts` (2026-11-17, `DECISIONS.md` §957).
 
 **Verification:** unit `notifications/templates.test.ts`, `notifications/mailgun-adapter.test.ts`; integration `notifications/event-mail.test.ts`, `registrations/signed-declaration.test.ts`, `registrations/interest.test.ts`
 

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.51-2026-11-16 -->
+<!-- PROJECT_BASELINE: BR-V4.52-2026-11-17 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.51-2026-11-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.52-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -879,7 +879,7 @@ Rules:
 - `CLUB_FACEBOOK_URL`, `CLUB_INSTAGRAM_URL`, `CLUB_STRAVA_URL` and `CLUB_YOUTUBE_URL` are the club's own profiles,
   shown in the footer and emitted as the `sameAs` of the `SportsOrganization` structured data
   (BR-REQ-052-02); Facebook and Instagram are also the last two links of the organizers' message to
-  an event's participants (`DECISIONS.md` §NNN). All optional, and **omitted entirely when unset** rather than emitted empty:
+  an event's participants (`DECISIONS.md` §957). All optional, and **omitted entirely when unset** rather than emitted empty:
   an empty `sameAs` is a claim that the club has no profiles, and a guessed one misinforms a
   search engine. The map link on an event is not configuration at all any more: it is a link
   the organizer pastes into `events.map_url` (`DECISIONS.md` §61), stored and never assembled;
