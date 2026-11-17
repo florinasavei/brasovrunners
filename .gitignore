@@ -1,5 +1,5 @@
 # Dependencies
-node_modules/
+node_modules
 
 # Yarn 4: keep releases/plugins/patches, ignore the rest of the cache and state.
 .yarn/*
