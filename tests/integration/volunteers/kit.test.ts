@@ -301,13 +301,17 @@ describe("«Are kit» on the list's row (§904)", () => {
 
 describe("«Are kit» in «Modifică», in «Adaugă un voluntar de mână» and in a person's data (§904)", () => {
   it("is a box of the person's «Modifică», ticked as saved, beside the chip «Are kit»", async () => {
+    // The box is the checkbox named `hasKit`: since the one-press tick beside the name (§971), a hidden `hasKit` comes first.
+    const checkbox = /<input\b(?=[^>]*\btype="checkbox")[^>]*\bname="hasKit"[^>]*>/;
     const page = await personPage(people.dan);
-    const box = /<input\b[^>]*\bname="hasKit"[^>]*>/.exec(page)?.[0] ?? "";
+    const box = checkbox.exec(page)?.[0] ?? "";
     expect(box).toContain('type="checkbox"');
     expect(box).toContain("checked");
     expect(page).toContain('data-testid="volunteer-kit"');
     const ana = await personPage(people.ana);
-    expect(/<input\b[^>]*\bname="hasKit"[^>]*>/.exec(ana)?.[0] ?? "").not.toContain("checked");
+    const anaBox = checkbox.exec(ana)?.[0] ?? "";
+    expect(anaBox).toContain('type="checkbox"');
+    expect(anaBox).not.toContain("checked");
     expect(ana).not.toContain('data-testid="volunteer-kit"');
   });
 
