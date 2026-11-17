@@ -19,22 +19,23 @@ import type { FormOutcome } from "@/shared/forms/outcome";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
-import { type PlanRace, planSummaryOf, seedPlanRace } from "../../helpers/volunteer-plan";
+import { drawnOpen, elementWith, type PlanRace, planPointBar, planPointsOf, planSummaryOf, seedPlanRace } from "../../helpers/volunteer-plan";
 
 /**
  * §961, BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01 — «Punctele planului» on the page of «Planul voluntarilor», its three
  * Server Actions and the «Voluntari» list's «Punct» column, from a real database:
  *
- * - **the page**, in Romanian and in English: the section «Punctele planului» under the picture with «Adaugă un punct»; the
- *   list in two groups under their headings — «Start–finish», its points with no number and no kilometre, and «Pe traseu»,
- *   the numbered points —, each group's own empty line, the one empty state of a plan with no point, and the summary's four
- *   numbers; a point's coordinates with «Deschide pe hartă»; «doar pe plan» on a route point of the plan's own; the fold
+ * - **the page**, in Romanian and in English: the fold «Adaugă un punct» under the picture's; on «Pe puncte» (§974) the
+ *   points in two group folds — «Pe traseu», the numbered points, and «La start–finish», its points with no number and no
+ *   kilometre —, each group's own empty line, the one empty state of a plan with no point, and the summary's four numbers;
+ *   a point's coordinates with «Deschide pe hartă»; «doar pe plan» on a route point of the plan's own; the pencil of
  *   «Modifică punctul» — every box for a point added here, the coordinates alone for an editor's — and «Șterge punctul»,
  *   which asks first with the point's name and how many people stand there; nothing of the builder on the paper, and every
  *   press a thumb can hit;
  * - **the actions**: each asks the capability at its own door; «Adaugă punctul» answers a refusal as the form's own state —
- *   the box named, what was typed kept — and a press that went through comes back to the section; «Salvează punctul» comes
- *   back to its point and «Șterge punctul» to the list, a refused one to the page's alert with its sentence;
+ *   the box named, what was typed kept — and a press that went through comes back to its fold, open; «Salvează punctul»
+ *   comes back to its point, open, and «Șterge punctul» to the list, a refused one to the page's alert with its sentence —
+ *   each in the view it was pressed in;
  * - **the «Voluntari» list**: a start–finish point by its name and the quiet word «start–finish», never a number or a
  *   kilometre, a route point as before — and the plan, the list and the email's facts say one point's number one way.
  *
@@ -210,12 +211,12 @@ const listPage = async (query: Record<string, string> = {}) => html(await AdminV
 const escaped = (text: string) => text.replace(/&/g, "&amp;").replace(/'/g, "&#x27;").replace(/"/g, "&quot;");
 /** A part of the page without its tags: the words a person reads. */
 const wordsOf = (part: string) => part.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-/** One group of the plan — its heading, its points or its empty line — whole. */
-const groupOf = (page: string, group: "startFinish" | "route") => new RegExp(`<section[^>]*data-group="${group}"[\\s\\S]*?</section>`).exec(page)?.[0] ?? "";
-/** The points a part of the page draws: each `<li data-testid="plan-point">` whole. */
-const pointsOf = (part: string) => [...part.matchAll(/<li[^>]*data-testid="plan-point"[\s\S]*?(?=<li[^>]*data-testid="plan-point"|<\/section>)/g)].map((match) => match[0]);
-/** The one point of the page that carries this id. */
-const pointOf = (page: string, id: string) => pointsOf(page).find((part) => part.startsWith("<li") && new RegExp(`^<li[^>]*id="point-${id}"`).test(part)) ?? "";
+/** One group fold of «Pe puncte» — its bar, its points or its empty line — whole. */
+const groupOf = (page: string, group: "startFinish" | "route") => elementWith(page, `data-group="${group}"`);
+/** The one point fold of the page that carries this id, whole. */
+const pointOf = (page: string, id: string) => elementWith(page, `id="point-${id}"`);
+/** A group's title in its bar: the words after its glyph, before the closed line. */
+const groupTitleOf = (group: string) => /<h3[^>]*>[\s\S]*?<\/svg>([^<]*)</.exec(group)?.[1] ?? "";
 const textOf = (part: string, testid: string) => [...part.matchAll(new RegExp(`data-testid="${testid}"[^>]*>(?:<a[^>]*>)?([^<]*)<`, "g"))].map((match) => match[1]);
 /** The opening tag of the first element that carries `attribute`, whichever side of it its other attributes were written. */
 const tagOf = (part: string, attribute: string) => new RegExp(`<[a-z0-9]+[^>]*${attribute}[^>]*>`).exec(part)?.[0] ?? "";
@@ -223,8 +224,8 @@ const tagOf = (part: string, attribute: string) => new RegExp(`<[a-z0-9]+[^>]*${
 const valueOf = (part: string, testid: string) => / value="([^"]*)"/.exec(tagOf(part, `data-testid="${testid}"`))?.[1] ?? "";
 /** The two radios of «Unde e punctul?» in a form: which is chosen. */
 const radiosOf = (part: string) => Object.fromEntries([...part.matchAll(/<input type="radio" name="place"( checked="")? value="(route|startFinish)"\/>/g)].map((match) => [match[2], match[1] !== undefined]));
-/** The fold «Modifică punctul» of a point, whole. */
-const foldOf = (pointPart: string) => /<details[^>]*data-testid="plan-point-edit"[\s\S]*?<\/details>/.exec(pointPart)?.[0] ?? "";
+/** The pencil of «Modifică punctul» of a point, whole: its glyph and, inside, the form it opens. */
+const foldOf = (pointPart: string) => elementWith(pointPart, 'data-testid="plan-point-edit"');
 /** The section «Punctele planului», whole: from its opening tag to the section the page draws after it. */
 const builderOf = (page: string) => page.slice(page.indexOf('data-testid="plan-points-section"'), page.indexOf('data-testid="plan-mail-section"'));
 /** Every Emotion rule a streamed page carries, joined: what a class of its markup means. */
@@ -253,14 +254,17 @@ async function pressed(press: () => Promise<unknown>): Promise<string> {
 }
 const toasted = () => state.flashed.map((value) => decodeFlash(value));
 const planPath = () => `/ro/admin/events/${race.raceId}/plan-voluntari`;
-const alertOf = (code: string) => `${planPath()}?planError=${code}#admin-alert`;
+/** A refused press of a point — the forms here post no view, and a point's press comes back to «Pe puncte» (§974). */
+const alertOf = (code: string, point?: string) => `${planPath()}?view=points${point ? `&open=${point}` : ""}&planError=${code}#admin-alert`;
+/** «Pe puncte», where the points are drawn (§974). */
+const POINTS = { view: "points" } as const;
 
 describe("§961 the plan's page: two groups, the summary, and the plan's own points", () => {
   it("draws an event that has only the editor's points as the route, with the start–finish group saying how to add a point to it", async () => {
     for (const locale of ["ro", "en"] as const) {
       state.locale = locale;
       const words = (locale === "ro" ? ro : en).Admin.volunteers.plan;
-      const page = await planPage();
+      const page = await planPage(POINTS);
 
       // The summary's four numbers: nobody at the start–finish, Ana, Dan and Ion on the route (Zoe too: four), Radu at no point.
       expect(planSummaryOf(page), locale).toBe(
@@ -269,20 +273,21 @@ describe("§961 the plan's page: two groups, the summary, and the plan's own poi
           : "0 volunteers at the start–finish · 4 volunteers on the route · 1 volunteer at no point · 0 points with nobody",
       );
 
-      // «Start–finish»: its heading, and the one quiet line that says how to add a point to it.
+      // «La start–finish»: its heading, and the one quiet line that says how to add a point to it.
       const startFinish = groupOf(page, "startFinish");
-      expect(startFinish).toContain(`>${words.groups.startFinish}</h3>`);
+      expect(groupTitleOf(startFinish)).toBe(words.groups.startFinish);
       expect(textOf(startFinish, "plan-group-none")).toEqual([escaped(words.groups.startFinishNone)]);
-      expect(pointsOf(startFinish)).toEqual([]);
+      expect(planPointsOf(startFinish)).toEqual([]);
 
       // «Pe traseu»: the three points, numbered in the route's order as they always were.
       const route = groupOf(page, "route");
-      expect(route).toContain(`>${words.groups.route}</h3>`);
+      expect(groupTitleOf(route)).toBe(words.groups.route);
       expect(route).not.toContain('data-testid="plan-group-none"');
-      expect(pointsOf(route).map((part) => textOf(part, "plan-point-title")[0])).toEqual(
-        locale === "ro"
-          ? ["1. 1,2 km — Intersecția Stejeriș", "2. 5,5 km — Apă la cabană", "3. 7,25 km — Podul de lemn"]
-          : ["1. 1.2 km — Stejeriș junction", "2. 5.5 km — Water at the hut", "3. 7.25 km — The wooden bridge"],
+      expect(planPointsOf(route).map((part) => planPointBar(part).name)).toEqual(
+        locale === "ro" ? ["1. Intersecția Stejeriș", "2. Apă la cabană", "3. Podul de lemn"] : ["1. Stejeriș junction", "2. Water at the hut", "3. The wooden bridge"],
+      );
+      expect(planPointsOf(route).map((part) => planPointBar(part).line)).toEqual(
+        locale === "ro" ? ["1,2 km · 2 voluntari", "5,5 km · 1 voluntar", "7,25 km · 1 voluntar"] : ["1.2 km · 2 volunteers", "5.5 km · 1 volunteer", "7.25 km · 1 volunteer"],
       );
 
       // An editor's point: public on the event's page, so not «doar pe plan»; no coordinates, so no line and no link.
@@ -312,21 +317,25 @@ describe("§961 the plan's page: two groups, the summary, and the plan's own poi
     }
   });
 
-  it("says the one empty state of a plan with no point — add them right here, above, or in the event's editor — and still draws the builder", async () => {
+  it("says the one empty state of a plan with no point — add them right here, at «Adaugă un punct», or in the event's editor — and draws the builder open", async () => {
     await db.delete(eventCheckpoints).where(eq(eventCheckpoints.eventId, race.otherId));
     for (const locale of ["ro", "en"] as const) {
       state.locale = locale;
       const words = (locale === "ro" ? ro : en).Admin.volunteers.plan;
-      const page = await planPage({}, race.otherId);
-      expect(wordsOf(/<div[^>]*data-testid="plan-no-points"[\s\S]*?<\/div>\s*<\/div>/.exec(page)![0])).toBe(wordsOf(escaped(words.noPoints)));
-      // No summary and no group: a heading with nothing under it is no plan.
-      expect(page).not.toContain('data-testid="plan-summary"');
-      expect(page).not.toContain('data-testid="plan-group"');
-      // The builder is there, with its form — the place to start.
-      expect(builderOf(page)).toContain(`>${escaped(words.points.title)}</h3>`);
-      expect(builderOf(page)).toContain('data-testid="plan-point-add-form"');
-      // Mara, whose point is gone, stands at none.
-      expect(textOf(page.slice(page.indexOf('data-testid="plan-unplaced"')), "plan-person-name")).toEqual(["Mara Dinu"]);
+      for (const view of ["table", "points"]) {
+        const page = await planPage({ view }, race.otherId);
+        expect(wordsOf(/<div[^>]*data-testid="plan-no-points"[\s\S]*?<\/div>\s*<\/div>/.exec(page)![0])).toBe(wordsOf(escaped(words.noPoints)));
+        // No table, no summary and no group: a heading with nothing under it is no plan.
+        expect(page).not.toContain('data-testid="plan-table-section"');
+        expect(page).not.toContain('data-testid="plan-summary"');
+        expect(page).not.toContain('data-testid="plan-group"');
+        // The builder is there, open, with its form — the place to start.
+        expect(builderOf(page)).toContain(`</svg>${escaped(words.points.addTitle)}</h3>`);
+        expect(drawnOpen(elementWith(page, 'data-testid="plan-points-section"'))).toBe(true);
+        expect(builderOf(page)).toContain('data-testid="plan-point-add-form"');
+        // Mara, whose point is gone, stands at none.
+        expect(textOf(page.slice(page.indexOf('data-testid="plan-unplaced"')), "plan-person-name")).toEqual(["Mara Dinu"]);
+      }
     }
   });
 
@@ -336,12 +345,22 @@ describe("§961 the plan's page: two groups, the summary, and the plan's own poi
     for (const locale of ["ro", "en"] as const) {
       state.locale = locale;
       const words = (locale === "ro" ? ro : en).Admin.volunteers.plan;
-      const page = await planPage();
+      const page = await planPage(POINTS);
       // The route's second point: the editor's water is now the third.
-      expect(pointsOf(groupOf(page, "route")).map((part) => textOf(part, "plan-point-title")[0])).toEqual(
+      expect(planPointsOf(groupOf(page, "route")).map(planPointBar)).toEqual(
         locale === "ro"
-          ? ["1. 1,2 km — Intersecția Stejeriș", "2. 3,4 km — Izvor", "3. 5,5 km — Apă la cabană", "4. 7,25 km — Podul de lemn"]
-          : ["1. 1.2 km — Stejeriș junction", "2. 3.4 km — Izvor", "3. 5.5 km — Water at the hut", "4. 7.25 km — The wooden bridge"],
+          ? [
+              { name: "1. Intersecția Stejeriș", line: "1,2 km · 2 voluntari" },
+              { name: "2. Izvor", line: "3,4 km · 1 voluntar" },
+              { name: "3. Apă la cabană", line: "5,5 km · 1 voluntar" },
+              { name: "4. Podul de lemn", line: "7,25 km · 1 voluntar" },
+            ]
+          : [
+              { name: "1. Stejeriș junction", line: "1.2 km · 2 volunteers" },
+              { name: "2. Izvor", line: "3.4 km · 1 volunteer" },
+              { name: "3. Water at the hut", line: "5.5 km · 1 volunteer" },
+              { name: "4. The wooden bridge", line: "7.25 km · 1 volunteer" },
+            ],
       );
       const point = pointOf(page, spring);
       // The small quiet label: this point is on no public page.
@@ -377,7 +396,7 @@ describe("§961 the plan's page: two groups, the summary, and the plan's own poi
     for (const locale of ["ro", "en"] as const) {
       state.locale = locale;
       const words = (locale === "ro" ? ro : en).Admin.volunteers.plan;
-      const point = pointOf(await planPage(), spring);
+      const point = pointOf(await planPage(POINTS), spring);
       // Points as decimal marks in both languages: it is what a maps application takes back.
       expect(textOf(point, "plan-point-coordinates")).toEqual(["45.64271, 25.58871"]);
       const link = tagOf(point, 'data-testid="plan-point-map"');
@@ -400,26 +419,26 @@ describe("§961 the plan's page: two groups, the summary, and the plan's own poi
     for (const locale of ["ro", "en"] as const) {
       state.locale = locale;
       const words = (locale === "ro" ? ro : en).Admin.volunteers.plan;
-      const page = await planPage();
+      const page = await planPage(POINTS);
       expect(planSummaryOf(page), locale).toBe(
         locale === "ro"
           ? "2 voluntari la start–finish · 3 voluntari pe traseu · 0 voluntari fără punct · 1 punct fără nimeni"
           : "2 volunteers at the start–finish · 3 volunteers on the route · 0 volunteers at no point · 1 point with nobody",
       );
       const group = groupOf(page, "startFinish");
-      expect(group).toContain(`>${words.groups.startFinish}</h3>`);
+      expect(groupTitleOf(group)).toBe(words.groups.startFinish);
       expect(group).not.toContain('data-testid="plan-group-none"');
       // In the order they were added, by their names alone: the organizers' own words, the same in both languages.
-      expect(pointsOf(group).map((part) => textOf(part, "plan-point-title")[0])).toEqual(["Kituri și numere", "Linia de start"]);
+      expect(planPointsOf(group).map((part) => planPointBar(part).name)).toEqual(["Kituri și numere", "Linia de start"]);
       // A list, not a numbered one: the route's order is the route's.
       expect(group).toMatch(/<ul[^>]*aria-labelledby="plan-group-start-finish"/);
       expect(groupOf(page, "route")).toMatch(/<ol[^>]*aria-labelledby="plan-group-route"/);
 
       const point = pointOf(page, kits);
       expect(tagOf(point, 'data-testid="plan-point"')).toContain('data-place="startFinish"');
-      // Never a number or a kilometre — and no label: the group says what the point is.
-      expect(wordsOf(/<h4[\s\S]*?<\/h4>/.exec(point)![0])).toBe("Kituri și numere");
-      expect(wordsOf(point.slice(0, point.indexOf("<details")))).not.toMatch(/\bkm\b/);
+      // Never a number or a kilometre — and no label: the group says what the point is; the line says «start–finish».
+      expect(planPointBar(point)).toEqual({ name: "Kituri și numere", line: locale === "ro" ? "start–finish · 2 voluntari" : "start–finish · 2 volunteers" });
+      expect(wordsOf(/<h4[\s\S]*?<\/h4>/.exec(point)![0])).not.toMatch(/\bkm\b|\d\./);
       expect(point).not.toContain('data-testid="plan-point-own"');
       // Where it is.
       expect(textOf(point, "plan-point-coordinates")).toEqual(["45.64271, 25.58871"]);
@@ -443,7 +462,7 @@ describe("§961 the plan's page: two groups, the summary, and the plan's own poi
     // Somebody at no point: every point of both groups offers «Pune aici», posting itself.
     state.locale = "ro";
     await place(race.people.radu, "");
-    const page = await planPage();
+    const page = await planPage(POINTS);
     for (const id of [kits, start, race.points.junction, race.points.water, race.points.bridge]) {
       const select = pointOf(page, id).match(/<select[\s\S]*?<\/select>/)![0];
       expect([...select.matchAll(/<option value="([0-9a-f-]{36})"/g)].map((match) => match[1]), id).toEqual([race.people.radu]);
@@ -485,14 +504,14 @@ describe("§961 the plan's page: two groups, the summary, and the plan's own poi
       state.locale = locale;
       const words = (locale === "ro" ? ro : en).Admin.volunteers.plan.points;
       const page = await planPage();
-      // The section's place on the page, and its anchor.
+      // The fold's place on the page, and its anchor.
       expect(page.indexOf('data-testid="plan-picture-section"')).toBeLessThan(page.indexOf('data-testid="plan-points-section"'));
       expect(page.indexOf('data-testid="plan-points-section"')).toBeLessThan(page.indexOf('data-testid="plan-mail-section"'));
       expect(tagOf(page, 'data-testid="plan-points-section"')).toContain('id="plan-points"');
 
+      // A fold (§974), its bar the words «Adaugă un punct» at a level-3 heading.
       const builder = builderOf(page);
-      expect(builder).toContain(`>${escaped(words.title)}</h3>`);
-      expect(builder).toContain(`>${words.addTitle}</h4>`);
+      expect(builder).toContain(`</svg>${escaped(words.addTitle)}</h3>`);
       const addForm = /<form[^>]*data-testid="plan-point-add-form"[\s\S]*?<\/form>/.exec(builder)![0];
       expect(addForm).toContain(`name="eventId" value="${race.raceId}"`);
       expect(addForm).toContain(`name="uiLocale" value="${locale}"`);
@@ -524,11 +543,11 @@ describe("§961 the plan's page: two groups, the summary, and the plan's own poi
     }
   });
 
-  it("keeps the builder and the folds off the paper, prints the groups' headings and the coordinates as text, and makes every press a thumb's", async () => {
+  it("keeps the builder and the pencils off the paper, prints the groups' headings and the coordinates as text, and makes every press a thumb's", async () => {
     const kits = await ownPoint("startFinish", "Kituri", "", PIATA);
     const spring = await ownPoint("route", "Izvor", "3,4", PIATA);
     await place(race.people.radu, kits);
-    const page = await planPage({}, race.raceId, true);
+    const page = await planPage(POINTS, race.raceId, true);
 
     // Never on the paper: the builder, each fold, the link's words, the label.
     expect(offPaper(page, 'data-testid="plan-points-section"')).toBe(true);
@@ -548,15 +567,17 @@ describe("§961 the plan's page: two groups, the summary, and the plan's own poi
     expect(tall(page, 'data-testid="plan-point-map"')).toBe(true);
     expect(tall(page, 'data-testid="plan-point-add"')).toBe(true);
     expect(tall(page, 'data-testid="plan-point-save"')).toBe(true);
-    // The fold's own bar and the two radios' rows.
-    const fold = classesOf(page, 'data-testid="plan-point-edit"');
-    expect(fold.some((name) => new RegExp(`\\.${name}>summary\\{[^}]*min-height:44px`).test(rulesOf(page)))).toBe(true);
+    // The point's own bar, the pencil's square (§974) and the two radios' rows.
+    const bar = classesOf(page, `id="point-${spring}"`);
+    expect(bar.some((name) => new RegExp(`\\.${name}>summary\\{[^}]*min-height:44px`).test(rulesOf(page)))).toBe(true);
+    const pencil = classesOf(page, 'data-testid="plan-point-edit"');
+    expect(pencil.some((name) => new RegExp(`\\.${name}>summary\\{[^}]*width:44px;height:44px`).test(rulesOf(page)))).toBe(true);
     const radio = /<label class="([^"]*)"><input type="radio" name="place"/.exec(page)![1].split(" ").filter((part) => part.startsWith("css-"));
     expect(radio.some((name) => new RegExp(`\\.${name}\\{[^}]*min-height:44px`).test(rulesOf(page)))).toBe(true);
 
     // A group with no point stays off the paper whole — a heading with nothing under it is no plan.
     await db.delete(eventCheckpoints).where(eq(eventCheckpoints.id, kits));
-    const bare = await planPage({}, race.raceId, true);
+    const bare = await planPage(POINTS, race.raceId, true);
     expect(offPaper(bare, 'data-group="startFinish"')).toBe(true);
     expect(offPaper(bare, 'data-group="route"')).toBe(false);
   });
@@ -564,7 +585,7 @@ describe("§961 the plan's page: two groups, the summary, and the plan's own poi
   it("asks before «Șterge punctul», with the point's name and how many people stand there — or that nobody does", async () => {
     const kits = await ownPoint("startFinish", "Kituri și numere");
     const question = async () => {
-      const tree = await pageTree();
+      const tree = await pageTree(POINTS);
       const formOf = elements(tree).find((element) => element.props["data-testid"] === "plan-point-remove-form")!;
       return elements(formOf).find((element) => typeof element.props.title === "string" && typeof element.props.body === "string")!.props as Record<string, string>;
     };
@@ -596,11 +617,13 @@ describe("§961 the plan's page: two groups, the summary, and the plan's own poi
 });
 
 describe("§961 «Adaugă punctul»: the action", () => {
-  it("adds a point of each kind, asked at the door, and comes back to the section with its toast — the form empty for the next", async () => {
-    expect(await pressed(() => addPlanPointAction(null, form({ place: "startFinish", name: "Kituri și numere", km: "", coordinates: PIATA })))).toBe(`${planPath()}#plan-points`);
+  it("adds a point of each kind, asked at the door, and comes back to its fold, open, with its toast — the form empty for the next", async () => {
+    // A form that names no view is «Tabel»'s, the page's default (§974): back to the fold, which the address opens.
+    const back = `${planPath()}?view=table&saved=planPointAdded#plan-points`;
+    expect(await pressed(() => addPlanPointAction(null, form({ place: "startFinish", name: "Kituri și numere", km: "", coordinates: PIATA })))).toBe(back);
     expect(toasted()).toEqual([{ kind: "success", key: "planPointAdded" }]);
     state.flashed.length = 0;
-    expect(await pressed(() => addPlanPointAction(null, form({ place: "route", name: "Izvor", km: "3,4", coordinates: "" })))).toBe(`${planPath()}#plan-points`);
+    expect(await pressed(() => addPlanPointAction(null, form({ place: "route", name: "Izvor", km: "3,4", coordinates: "" })))).toBe(back);
     expect(toasted()).toEqual([{ kind: "success", key: "planPointAdded" }]);
     expect(state.asked).toEqual(["canManageVolunteers", "canManageVolunteers"]);
 
@@ -613,9 +636,9 @@ describe("§961 «Adaugă punctul»: the action", () => {
       ["volunteer_plan.point_added", staff.MODERATOR!.id],
     ]);
     // The page then draws each in its group, and the builder's boxes empty: the form is drawn anew when the points change.
-    const page = await planPage();
-    expect(pointsOf(groupOf(page, "startFinish")).map((part) => textOf(part, "plan-point-title")[0])).toEqual(["Kituri și numere"]);
-    expect(pointsOf(groupOf(page, "route")).map((part) => textOf(part, "plan-point-title")[0])).toContain("2. 3,4 km — Izvor");
+    const page = await planPage(POINTS);
+    expect(planPointsOf(groupOf(page, "startFinish")).map((part) => planPointBar(part).name)).toEqual(["Kituri și numere"]);
+    expect(planPointsOf(groupOf(page, "route")).map(planPointBar)).toContainEqual({ name: "2. Izvor", line: "3,4 km · niciun voluntar" });
     for (const box of ["name", "km", "coordinates"]) expect(valueOf(builderOf(page), `plan-point-add-${box}`), box).toBe("");
     // Nobody was emailed and no public cache tag was expired: no public page reads these rows.
     expect(await db.select().from(emailOutbox)).toEqual([]);
@@ -696,22 +719,24 @@ describe("§961 «Adaugă punctul»: the action", () => {
 });
 
 describe("§961 «Salvează punctul» and «Șterge punctul»: the actions", () => {
-  it("saves a point of the plan's own and comes back to that point; a press that changes nothing says so", async () => {
+  it("saves a point of the plan's own and comes back to that point, open; a press that changes nothing says so", async () => {
     const spring = await ownPoint("route", "Izvor", "3,4");
     await place(race.people.radu, spring);
-    expect(await pressed(() => editPlanPointAction(form({ pointId: spring, place: "route", name: "Izvorul rece", km: "4,25", coordinates: PIATA })))).toBe(`${planPath()}#point-${spring}`);
+    // A point's press comes back to «Pe puncte», the point drawn open (§974).
+    const atSpring = `${planPath()}?view=points&open=${spring}#point-${spring}`;
+    expect(await pressed(() => editPlanPointAction(form({ pointId: spring, place: "route", name: "Izvorul rece", km: "4,25", coordinates: PIATA })))).toBe(atSpring);
     expect(toasted()).toEqual([{ kind: "success", key: "planPointSaved" }]);
     expect(await rowOf(spring)).toMatchObject({ nameRo: "Izvorul rece", nameEn: "Izvorul rece", km: "4.25", latitude: "45.642710", longitude: "25.588710", planOnly: true, startFinish: false });
     // Radu stays where he stands: a point changed under a person moves nobody.
     expect((await db.select().from(eventVolunteers).where(eq(eventVolunteers.id, race.people.radu)))[0].checkpointId).toBe(spring);
 
     state.flashed.length = 0;
-    expect(await pressed(() => editPlanPointAction(form({ pointId: spring, place: "route", name: "Izvorul rece", km: "4.25", coordinates: PIATA })))).toBe(`${planPath()}#point-${spring}`);
+    expect(await pressed(() => editPlanPointAction(form({ pointId: spring, place: "route", name: "Izvorul rece", km: "4.25", coordinates: PIATA })))).toBe(atSpring);
     expect(toasted()).toEqual([{ kind: "info", key: "volunteerUnchanged" }]);
     // To the start–finish: no kilometre, no number — and the page draws it in the other group.
     await pressed(() => editPlanPointAction(form({ pointId: spring, place: "startFinish", name: "Izvorul rece", km: "4,25", coordinates: "" })));
     expect(await rowOf(spring)).toMatchObject({ startFinish: true, km: "0.00", latitude: null });
-    expect(pointsOf(groupOf(await planPage(), "startFinish")).map((part) => textOf(part, "plan-point-title")[0])).toEqual(["Izvorul rece"]);
+    expect(planPointsOf(groupOf(await planPage(POINTS), "startFinish")).map((part) => planPointBar(part).name)).toEqual(["Izvorul rece"]);
     expect(state.asked).toEqual(["canManageVolunteers", "canManageVolunteers", "canManageVolunteers"]);
     expect(await db.select().from(emailOutbox)).toEqual([]);
     expect(revalidateTag).not.toHaveBeenCalled();
@@ -719,12 +744,14 @@ describe("§961 «Salvează punctul» and «Șterge punctul»: the actions", () 
 
   it("saves the coordinates alone of an editor's point, whatever else the form posts", async () => {
     const before = await rowOf(race.points.junction);
-    expect(await pressed(() => editPlanPointAction(form({ pointId: race.points.junction, place: "startFinish", name: "Alt nume", km: "99", coordinates: PIATA })))).toBe(`${planPath()}#point-${race.points.junction}`);
+    expect(await pressed(() => editPlanPointAction(form({ pointId: race.points.junction, place: "startFinish", name: "Alt nume", km: "99", coordinates: PIATA })))).toBe(
+      `${planPath()}?view=points&open=${race.points.junction}#point-${race.points.junction}`,
+    );
     expect(toasted()).toEqual([{ kind: "success", key: "planPointSaved" }]);
     expect(await rowOf(race.points.junction)).toEqual({ ...before, latitude: "45.642710", longitude: "25.588710" });
     // The page says where it is, on the event's own point — numbered where it always was, and still not «doar pe plan».
-    const point = pointOf(await planPage(), race.points.junction);
-    expect(textOf(point, "plan-point-title")).toEqual(["1. 1,2 km — Intersecția Stejeriș"]);
+    const point = pointOf(await planPage(POINTS), race.points.junction);
+    expect(planPointBar(point)).toEqual({ name: "1. Intersecția Stejeriș", line: "1,2 km · 2 voluntari" });
     expect(textOf(point, "plan-point-coordinates")).toEqual(["45.64271, 25.58871"]);
     expect(point).not.toContain('data-testid="plan-point-own"');
   });
@@ -733,13 +760,13 @@ describe("§961 «Salvează punctul» and «Șterge punctul»: the actions", () 
     const spring = await ownPoint("route", "Izvor", "3,4");
     const before = await rowOf(spring);
     const boxes = { pointId: spring, place: "route", name: "Izvor", km: "3,4", coordinates: "" };
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, name: "" })))).toBe(alertOf("PLAN_POINT_NAME_MISSING"));
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, km: "departe" })))).toBe(alertOf("PLAN_POINT_KM_INVALID"));
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, coordinates: "nicăieri" })))).toBe(alertOf("COORDINATES_INVALID"));
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, place: "undeva" })))).toBe(alertOf("PLAN_POINT_PLACE_UNKNOWN"));
+    expect(await pressed(() => editPlanPointAction(form({ ...boxes, name: "" })))).toBe(alertOf("PLAN_POINT_NAME_MISSING", spring));
+    expect(await pressed(() => editPlanPointAction(form({ ...boxes, km: "departe" })))).toBe(alertOf("PLAN_POINT_KM_INVALID", spring));
+    expect(await pressed(() => editPlanPointAction(form({ ...boxes, coordinates: "nicăieri" })))).toBe(alertOf("COORDINATES_INVALID", spring));
+    expect(await pressed(() => editPlanPointAction(form({ ...boxes, place: "undeva" })))).toBe(alertOf("PLAN_POINT_PLACE_UNKNOWN", spring));
     // A point that is not on this plan — another event's, or no id at all — is said as a point no longer on the plan, never as
     // the backoffice's «Înregistrarea nu mai există», which names a registration.
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, pointId: race.points.elsewhere })))).toBe(alertOf("PLAN_POINT_GONE"));
+    expect(await pressed(() => editPlanPointAction(form({ ...boxes, pointId: race.points.elsewhere })))).toBe(alertOf("PLAN_POINT_GONE", race.points.elsewhere));
     expect(await pressed(() => editPlanPointAction(form({ ...boxes, pointId: "not-an-id" })))).toBe(alertOf("PLAN_POINT_GONE"));
     expect(await rowOf(spring)).toEqual(before);
     expect(toasted()).toEqual([]);
@@ -761,8 +788,8 @@ describe("§961 «Salvează punctul» and «Șterge punctul»: the actions", () 
     // The Tehnic role's press writes nothing: refused at the door, the service never reached.
     state.changed = 0;
     state.actor = staff.DEV;
-    expect(await pressed(() => editPlanPointAction(form(boxes)))).toBe(alertOf("FORBIDDEN"));
-    expect(await pressed(() => removePlanPointAction(form({ pointId: spring })))).toBe(alertOf("FORBIDDEN"));
+    expect(await pressed(() => editPlanPointAction(form(boxes)))).toBe(alertOf("FORBIDDEN", spring));
+    expect(await pressed(() => removePlanPointAction(form({ pointId: spring })))).toBe(alertOf("FORBIDDEN", spring));
     expect(state.changed).toBe(0);
     expect(await rowOf(spring)).toEqual(before);
   });
@@ -770,25 +797,25 @@ describe("§961 «Salvează punctul» and «Șterge punctul»: the actions", () 
   it("deletes a point of the plan's own and comes back to the plan's list, its people under «Fără punct» — and refuses an editor's point", async () => {
     const kits = await ownPoint("startFinish", "Kituri");
     await place(race.people.radu, kits);
-    expect(await pressed(() => removePlanPointAction(form({ pointId: kits })))).toBe(`${planPath()}#plan-list`);
+    expect(await pressed(() => removePlanPointAction(form({ pointId: kits })))).toBe(`${planPath()}?view=points#plan-list`);
     expect(toasted()).toEqual([{ kind: "success", key: "planPointRemoved" }]);
     expect(await rowOf(kits)).toBeUndefined();
     const removal = (await trail()).find((row) => row.action === "volunteer_plan.point_removed")!;
     expect(removal).toMatchObject({ actorStaffUserId: staff.MODERATOR!.id, entityType: "event", entityId: race.raceId });
     expect(removal.metadataJson).toMatchObject({ pointId: kits, freed: 1 });
 
-    const page = await planPage();
+    const page = await planPage(POINTS);
     expect(tagOf(page, 'id="plan-list"')).not.toBe("");
     expect(page).not.toContain(`id="point-${kits}"`);
     expect(textOf(page.slice(page.indexOf('data-testid="plan-unplaced"')), "plan-person-name")).toEqual(["Radu Liber"]);
 
     // An editor's point is not deleted here: its sentence says where it is.
     state.flashed.length = 0;
-    expect(await pressed(() => removePlanPointAction(form({ pointId: race.points.bridge })))).toBe(alertOf("PLAN_POINT_IN_EDITOR"));
+    expect(await pressed(() => removePlanPointAction(form({ pointId: race.points.bridge })))).toBe(alertOf("PLAN_POINT_IN_EDITOR", race.points.bridge));
     expect(await rowOf(race.points.bridge)).toBeDefined();
     // «Șterge punctul» pressed again — a second tap on a slow connection, or a colleague's delete first: the point is no
     // longer on the plan, and the alert says that.
-    expect(await pressed(() => removePlanPointAction(form({ pointId: kits })))).toBe(alertOf("PLAN_POINT_GONE"));
+    expect(await pressed(() => removePlanPointAction(form({ pointId: kits })))).toBe(alertOf("PLAN_POINT_GONE", kits));
     expect(wordsOf(/<div[^>]*id="admin-alert"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/.exec(await planPage({ planError: "PLAN_POINT_GONE" }))![0])).toBe(
       "Punctul nu mai e pe plan: a fost șters între timp.",
     );
@@ -861,11 +888,11 @@ describe("§961 the «Voluntari» list's «Punct», and one number everywhere", 
     // Ana before it and Dan after it, at the editor's points: the first and the third.
     expect([onPlan.get(race.points.junction), await inMail(race.people.ana), inList("Ana Pop")]).toEqual([1, 1, "1. Intersecția Stejeriș"]);
     expect([onPlan.get(race.points.water), await inMail(race.people.dan), inList("Dan Ene")]).toEqual([3, 3, "3. Apă la cabană"]);
-    // …and the plan's page titles them with the same numbers.
-    const drawn = await planPage();
-    expect(textOf(pointOf(drawn, spring), "plan-point-title")).toEqual(["2. 3,4 km — Izvor"]);
-    expect(textOf(pointOf(drawn, race.points.water), "plan-point-title")).toEqual(["3. 5,5 km — Apă la cabană"]);
-    expect(textOf(pointOf(drawn, kits), "plan-point-title")).toEqual(["Kituri și numere"]);
+    // …and the plan's page names them with the same numbers.
+    const drawn = await planPage(POINTS);
+    expect(planPointBar(pointOf(drawn, spring)).name).toBe("2. Izvor");
+    expect(planPointBar(pointOf(drawn, race.points.water)).name).toBe("3. Apă la cabană");
+    expect(planPointBar(pointOf(drawn, kits)).name).toBe("Kituri și numere");
   });
 
   it("has the «Punct» column for an event whose only points are the plan's own", async () => {

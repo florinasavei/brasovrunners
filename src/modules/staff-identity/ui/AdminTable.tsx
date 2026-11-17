@@ -101,6 +101,16 @@ import ColumnWidthsScript from "./ColumnWidthsScript";
  * in one and be forgotten in the other. The phone layout is emitted alongside the table and
  * hidden by CSS rather than chosen in JavaScript: the server cannot know the viewport, and
  * guessing it is how a desktop table gets shipped to a phone for one frame.
+ *
+ * ## A table on one page, and on paper (§974)
+ *
+ * Two things a list never asks and «Planul voluntarilor»'s «Punctele, pe scurt» does — a handful
+ * of rows on a page that is printed. `paged={false}` draws no rows-per-page links and no pager:
+ * every row is on the one page, and those links would only reload it. `printable` keeps the table
+ * a table on paper: a sheet is narrower than `md`, where the screen draws a block per row, so the
+ * print draws the wide table whatever the sheet's width, never the blocks, and nothing to press —
+ * the column edges, «Coloane», the widths' reset, the page sizes and the pager. Both are off unless
+ * asked for, so every list reads and prints as it did.
  */
 
 export type AdminColumn<Row> = {
@@ -191,6 +201,16 @@ type Props<Row> = {
    * block is the same row drawn twice — below `md` the address lands on the page's alert instead.
    */
   rowId?: (row: Row) => string;
+  /**
+   * Whether the list pages through its address (§974): on by default. Off for a table whose every row is on its one page —
+   * no rows-per-page links and no pager under it; `query` and `total` then say that one page.
+   */
+  paged?: boolean;
+  /**
+   * The table on paper too (§974): printed, the wide table whatever the sheet's width and never the phone's blocks, and
+   * nothing to press. For a page printed as a sheet; off by default, where a list prints as the browser lays it out.
+   */
+  printable?: boolean;
 };
 
 /** One row of `leadRows`: its cells by column key, its verbs, its test id. */
@@ -319,6 +339,20 @@ const HEADINGS = {
 const TABLE_SX = { ...RESIZED, ...PINNED, ...HEADINGS } as const;
 
 /**
+ * A `printable` table on paper (§974). The wide frame is drawn — after its own `display`, whose breakpoints the sx writes
+ * first, so on a sheet narrower than `md` this rule is the later one — and the phone's blocks and their hints are not.
+ * Nothing to press is printed: a column's edge, «Coloane» and the widths' reset (the islands' own marks), the page sizes and
+ * the pager.
+ */
+const WIDE_ON_PAPER = { "@media print": { display: "block" } } as const;
+const OFF_PAPER = { "@media print": { display: "none" } } as const;
+const CONTROLS_OFF_PAPER = {
+  "@media print": {
+    "& [data-column-resize], & [data-testid='admin-table-columns'], & [data-testid='admin-table-reset-widths']": { display: "none" },
+  },
+} as const;
+
+/**
  * Every link here is a `next/link` element wrapping a styled `<span>`, never
  * `<Box component={Link}>`.
  *
@@ -367,6 +401,8 @@ export default function AdminTable<Row>({
   empty,
   leadRows = [],
   rowId,
+  paged = true,
+  printable = false,
 }: Props<Row>) {
   // It becomes part of a storage key and a CSS selector, so its shape is checked, not trusted.
   if (!TABLE_ID_PATTERN.test(tableId)) throw new Error(`AdminTable: tableId "${tableId}" is not lowercase-hyphenated`);
@@ -385,7 +421,7 @@ export default function AdminTable<Row>({
   const columnMenu = <ColumnVisibility tableId={tableId} columns={menuColumns} />;
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} sx={printable ? CONTROLS_OFF_PAPER : undefined}>
       <Box
         sx={{
           display: { xs: "none", md: "block" },
@@ -395,6 +431,7 @@ export default function AdminTable<Row>({
           // A resized table wider than the frame scrolls inside it (§650), never the page.
           overflowX: "auto",
           overflowY: "hidden",
+          ...(printable ? WIDE_ON_PAPER : {}),
         }}
       >
         <Table size="small" data-table-id={tableId} sx={TABLE_SX}>
@@ -538,7 +575,7 @@ export default function AdminTable<Row>({
       {hinted.length > 0 && (
         <Stack
           direction="row"
-          sx={{ display: { xs: "flex", md: "none" }, flexWrap: "wrap", alignItems: "center", columnGap: 2 }}
+          sx={{ display: { xs: "flex", md: "none" }, flexWrap: "wrap", alignItems: "center", columnGap: 2, ...(printable ? OFF_PAPER : {}) }}
           data-testid="admin-table-hints"
         >
           {hinted.map((column) => (
@@ -553,7 +590,7 @@ export default function AdminTable<Row>({
       <Stack
         component="ul"
         spacing={1.5}
-        sx={{ display: { xs: "flex", md: "none" }, listStyle: "none", p: 0, m: 0 }}
+        sx={{ display: { xs: "flex", md: "none" }, listStyle: "none", p: 0, m: 0, ...(printable ? OFF_PAPER : {}) }}
       >
         {leadRows.map((lead) => (
           <Box key={`lead-${lead.key}`} component="li" data-row-kind="lead" data-testid={lead.testId} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2, bgcolor: "action.hover" }}>
@@ -623,42 +660,45 @@ export default function AdminTable<Row>({
           {!rowActions && columnMenu}
         </Stack>
 
-        <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
-            {labels.perPage}
-          </Typography>
-          {PER_PAGE_OPTIONS.map((size) => (
-            <Link
-              key={size}
-              href={buildListHref(basePath, currentParams, { perPage: size })}
-              aria-current={query.perPage === size ? "true" : undefined}
-              style={LINK_RESET}
-            >
-              <Box
-                component="span"
-                sx={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minWidth: 44,
-                  minHeight: 44,
-                  borderRadius: 1,
-                  color: query.perPage === size ? "primary.contrastText" : "text.secondary",
-                  bgcolor: query.perPage === size ? "primary.main" : "transparent",
-                }}
+        {/* The page sizes: none on a table whose every row is on its one page (`paged`, §974). */}
+        {paged && (
+          <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1, ...(printable ? OFF_PAPER : {}) }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
+              {labels.perPage}
+            </Typography>
+            {PER_PAGE_OPTIONS.map((size) => (
+              <Link
+                key={size}
+                href={buildListHref(basePath, currentParams, { perPage: size })}
+                aria-current={query.perPage === size ? "true" : undefined}
+                style={LINK_RESET}
               >
-                {size}
-              </Box>
-            </Link>
-          ))}
-        </Stack>
+                <Box
+                  component="span"
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    minWidth: 44,
+                    minHeight: 44,
+                    borderRadius: 1,
+                    color: query.perPage === size ? "primary.contrastText" : "text.secondary",
+                    bgcolor: query.perPage === size ? "primary.main" : "transparent",
+                  }}
+                >
+                  {size}
+                </Box>
+              </Link>
+            ))}
+          </Stack>
+        )}
       </Stack>
 
-      {pages > 1 && (
+      {paged && pages > 1 && (
         <Stack
           direction="row"
           spacing={1}
-          sx={{ justifyContent: "center", alignItems: "center", flexWrap: "wrap", gap: 1 }}
+          sx={{ justifyContent: "center", alignItems: "center", flexWrap: "wrap", gap: 1, ...(printable ? OFF_PAPER : {}) }}
         >
           <PageStep
             href={buildListHref(basePath, currentParams, { page: query.page - 1 })}

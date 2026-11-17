@@ -125,11 +125,15 @@ const GLYPH_SX = { display: "inline-flex", mr: 0.75, "& svg": { fontSize: 18 } }
  * The href is a string rather than a typed route because a panel is a query parameter, and
  * because one of these rows deliberately points at the neighbouring page: the anti-bot switch
  * belongs to the club's own to-do screen (§254) and is still one press from here.
+ *
+ * `fits` (§974) is for a row that is never wider than the narrowest screen — the two views of
+ * «Planul voluntarilor», «Tabel» and «Pe puncte»: it has no entry past the edge to bring into
+ * view, so it carries no `SubNavCurrent` and no client code at all.
  */
-export default function SubNav({ items, label }: { items: readonly SubNavItem[]; label: string }) {
+export default function SubNav({ items, label, fits = false }: { items: readonly SubNavItem[]; label: string; fits?: boolean }) {
   return (
     <Box component="nav" aria-label={label} sx={ROW_SX}>
-      <SubNavCurrent />
+      {fits ? null : <SubNavCurrent />}
       <Box component="ul" sx={LIST_SX}>
         {items.map((item, index) => {
           const opensGroup = item.group !== undefined && item.group !== items[index - 1]?.group;
