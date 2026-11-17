@@ -51,7 +51,9 @@ const suiteServer = {
   command: DEV ? `yarn next dev --port ${PORT}` : `yarn build && yarn start --port ${PORT}`,
   url: `${baseURL}/ro`,
   reuseExistingServer: !process.env.CI,
-  timeout: 180_000,
+  // The build runs inside this wait. On 2026-11-17 two releases in a row stopped because one shard's build
+  // passed three minutes (`Timed out waiting 180000ms from config.webServer`), the tests never ran: five.
+  timeout: 300_000,
   env: {
     PORT: String(PORT),
     APP_BASE_URL: baseURL,
