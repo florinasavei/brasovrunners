@@ -1629,6 +1629,7 @@
         "empty": "No notes yet.",
         "by": "{name} · {date}",
         "delete": "Delete",
+        "edit": "Edit",
         "add": "Add a note",
         "label": "Note",
         "limit": "At most {max} characters.",
@@ -2741,8 +2742,15 @@
       "VOLUNTEER_GUARDIAN_NO_EMAIL": "The parent or guardian has no email address entered, so there is nowhere to send the link. Take the consent on paper, or add the address under “Edit”.",
       "VOLUNTEER_NO_EMAIL": "The volunteer has no email address, so the link has nowhere to go. The agreement and the parent's consent are signed on paper, or add the address under “Edit”.",
       "VOLUNTEER_MINORS_CLOSED": "The club does not take volunteers under 18 yet: the privacy notice and the agreement in force do not describe minors. Approve them first; “Tasks” says how.",
-      "VOLUNTEER_POINTS_NOBODY": "Nothing was sent: no volunteer with an email address stands at a point of the route yet. Place people at points, then send.",
+      "VOLUNTEER_POINTS_NOBODY": "Nothing was sent: no volunteer with an email address stands at a point yet. Place people at points, then send.",
       "VOLUNTEER_POINTS_ALL_TOLD": "Nothing was sent: everybody at a point already knows it. To write to them again, choose \"Send to everybody again\".",
+      "PLAN_POINT_PLACE_UNKNOWN": "Choose where the point is: on the route or at the start–finish.",
+      "PLAN_POINT_NAME_MISSING": "Write the point's name, at most {max} characters.",
+      "PLAN_POINT_KM_INVALID": "Write which kilometre the point on the route is at: a number from 0, with at most two decimals, for example 5.5.",
+      "COORDINATES_INVALID": "We could not read the coordinates. Write them as Google Maps does, for example 45.64271, 25.58871.",
+      "PLAN_POINT_TOO_MANY": "Too many points added here: at most {max} an event. Delete one to add another.",
+      "PLAN_POINT_IN_EDITOR": "This point is one of the \"Points on the route\": it is deleted in the event's editor, not here.",
+      "PLAN_POINT_GONE": "The point is no longer on the plan: it was deleted meanwhile.",
       "VOLUNTEER_CATEGORY_HAS_ROLES": "The category was not deleted: it has roles under it. Move or delete the roles first.",
       "VOLUNTEER_NAME_TAKEN": "That name is already used in this category (or among the event's categories). Choose another: the same name can stand in two categories, but not twice in one.",
       "VOLUNTEER_ROLE_INVALID": "“{role}” in “{category}”: {problem}. Nothing was saved.",
@@ -5977,7 +5985,9 @@
     "volunteers": {
       "notes": {
         "authorUnknown": "unknown author",
-        "exportMore": "… (more notes on the volunteer's page)"
+        "exportMore": "… (more notes on the volunteer's page)",
+        "edit": "Edit the note",
+        "editDialog": "Edit the note about {name}"
       },
       "title": "Volunteers",
       "intro": "The people who help at this event: each ticks what they would do, you give them a role. Roles are set here, in both languages. Addresses and telephone numbers never appear on a public page.",
@@ -6368,7 +6378,9 @@
         "columnMessage": "Message",
         "messageHint": "What the person wrote for the organizers when they offered to volunteer. Empty: they wrote nothing.",
         "columnNotes": "Internal notes",
-        "notesHint": "The organizers' notes about the person: the three newest, each with its day and time. All of them, with their author, are on the person's page. The volunteer never sees them.",
+        "notesHint": "The organizers' notes about the person: the three newest, without their day and time. All of them, with their author and date, are on the person's page. The volunteer never sees them.",
+        "columnType": "Type",
+        "typeHint": "Where the person works, from the category of the roles given: for example start/finish or the route. Empty: no role given, or none in a category. Categories are set in the event's “Volunteers” card.",
         "filter": "Filter",
         "searchEverywhere": "Searching every event — choose one to narrow it down.",
         "tableCaption": "Volunteers, with age, city, state, roles given, roles offered, kit, event and date offered",
@@ -6394,12 +6406,40 @@
         "title": "The volunteers' plan",
         "open": "The volunteers' plan",
         "event": "{event} — {date}",
-        "help": "Who stands at which point of the route on the day. The points are the ones kept in the editor, under \"The route\". Nobody is told until you press \"Send each their point\".",
+        "help": "Who stands where on the day: at the start–finish or at a point on the route. Nobody is told until you press \"Send each their point\".",
+        "helpPoints": "The points kept in the editor, under \"Points on the route\", are also on the event's page and on the race numbers.",
         "back": "Back to the volunteers",
         "editPoints": "The points on the route, in the event's editor",
         "print": "Print the plan",
-        "summary": "At points: {placed} · At no point: {unplaced} · Points with nobody: {empty}",
-        "noPoints": "The event has no points on its route yet. Add them in the event's editor, under \"The route\", then come back here.",
+        "summary": {
+          "startFinish": {
+            "one": "{count} volunteer at the start–finish",
+            "few": "{count} volunteers at the start–finish",
+            "other": "{count} volunteers at the start–finish"
+          },
+          "route": {
+            "one": "{count} volunteer on the route",
+            "few": "{count} volunteers on the route",
+            "other": "{count} volunteers on the route"
+          },
+          "unplaced": {
+            "one": "{count} volunteer at no point",
+            "few": "{count} volunteers at no point",
+            "other": "{count} volunteers at no point"
+          },
+          "empty": {
+            "one": "{count} point with nobody",
+            "few": "{count} points with nobody",
+            "other": "{count} points with nobody"
+          }
+        },
+        "noPoints": "The plan has no point yet. Add the points right here, above, under \"The plan's points\", or in the event's editor, under \"Points on the route\".",
+        "groups": {
+          "startFinish": "Start–finish",
+          "route": "On the route",
+          "startFinishNone": "No point at the start–finish. Add one above, choosing \"At the start–finish\".",
+          "routeNone": "No point on the route. Add one above, or in the event's editor, under \"Points on the route\"."
+        },
         "pointTitle": "{number}. {title}",
         "nobodyHere": "Nobody here yet.",
         "choose": "Put somebody here",
@@ -6407,16 +6447,49 @@
         "place": "Put here",
         "takeOff": "Take off",
         "takeOffFor": "Take off this point: {name}",
-        "unplacedTitle": "At no point of the route",
-        "unplacedHelp": "Still to place, or with work that is not on the route (the start, the kits): the roles given say which.",
+        "unplacedTitle": "At no point",
+        "unplacedHelp": "Not placed yet. Put them at the start–finish or at a point on the route, with \"Put here\".",
         "unplacedNone": "Everybody stands at a point.",
         "noVolunteers": "The event has no volunteers yet.",
         "noRole": "no role given",
         "notConfirmed": "not confirmed yet",
         "column": "Point",
-        "columnHint": "The point of the route the volunteer stands at, chosen in \"The volunteers' plan\". Empty: not placed yet, or with work that is not on the route.",
+        "columnHint": "The point the volunteer stands at, at the start–finish or on the route, chosen in \"The volunteers' plan\". Empty: not placed yet.",
         "columnPoint": "{number}. {name}",
-        "pointValue": "Point on the route: {name}",
+        "columnStartFinish": "start–finish",
+        "pointValue": "Point on the volunteers' plan: {name}",
+        "points": {
+          "title": "The plan's points",
+          "help": "Add here the points where the volunteers stand, as on the picture above. A point is either at the start–finish or on the route: for one on the route you also say which kilometre it is at.",
+          "helpCoordinates": "If you know the coordinates, the volunteers also get the link to the map.",
+          "helpPrivate": "The points added here are seen only on the plan and in the email sent to the volunteers — they are not on the event's page, nor on the race numbers.",
+          "addTitle": "Add a point",
+          "place": "Where is the point?",
+          "placeRoute": "On the route",
+          "placeStartFinish": "At the start–finish",
+          "name": "Point's name",
+          "km": "Which km it is at",
+          "kmHelper": "Only for a point on the route.",
+          "coordinates": "Coordinates (optional)",
+          "coordinatesHelper": "As in Google Maps: press and hold on the map and copy the numbers, for example 45.64271, 25.58871.",
+          "add": "Add the point",
+          "openMap": "Open on the map",
+          "openMapFor": "Open on the map: {name}",
+          "planOnly": "on the plan only",
+          "edit": "Change the point",
+          "editFor": "Change the point: {name}",
+          "editorsOnly": "This point's name and kilometre are changed in the event's editor:",
+          "save": "Save the point",
+          "remove": "Delete the point",
+          "removeFor": "Delete the point: {name}",
+          "removeTitle": "Delete the point “{name}”?",
+          "removeBody": {
+            "one": "{count} volunteer stands at this point: they stay on the plan, at no point.",
+            "few": "{count} volunteers stand at this point: they stay on the plan, at no point.",
+            "other": "{count} volunteers stand at this point: they stay on the plan, at no point."
+          },
+          "removeBodyNobody": "Nobody stands at this point."
+        },
         "picture": {
           "title": "The plan's picture",
           "alt": "The volunteers' plan drawn on the route",
@@ -6439,8 +6512,8 @@
           "help": "One email to each volunteer placed at a point who has an email address: their point, what they do there and the plan's picture. It leaves only when you press here.",
           "send": "Send each their point",
           "again": "Send to everybody again",
-          "allTold": "Everybody at a point already knows it. Send again only if something changed: the picture, a point's name or note, the order of the points, a role.",
-          "nobody": "Nobody to tell: no volunteer with an email address stands at a point of the route yet.",
+          "allTold": "Everybody at a point already knows it. Send again only if something changed: the picture, a point's name, coordinates or note, the order of the points, a role.",
+          "nobody": "Nobody to tell: no volunteer with an email address stands at a point yet.",
           "confirmTitle": "Send each their point?",
           "confirmBody": "Each gets their point by email, and what they do there.",
           "confirmBodyPicture": "Each gets their point by email, what they do there and the plan's picture.",
@@ -8117,6 +8190,8 @@
         "last": {
           "sentToday": "left at {at}",
           "sentOn": "left {at}",
+          "sent": "left",
+          "delivered": "delivered",
           "waiting": "waiting",
           "failed": "failed",
           "refused": "refused",
@@ -8131,6 +8206,15 @@
         },
         "triesNone": "not tried yet",
         "nextTry": "next try: {at}"
+      },
+      "summary": {
+        "column": "Emails",
+        "hint": "The person's three newest emails: which email, when it left or, if it is still waiting, when it was queued, and what became of it. All of them, with details, are on the person's page.",
+        "more": {
+          "one": "and {count} more email",
+          "few": "and {count} more emails",
+          "other": "and {count} more emails"
+        }
       },
       "copy": {
         "title": "The message's words ({lang}) — the default ones",
@@ -8721,7 +8805,7 @@
         "VOLUNTEER_AGREEMENT_REQUEST": "The role and the event are added by themselves. The link is for this person only, works once, and a new one replaces the old.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "The role and the event are added by themselves. The PDF shows the accepted text, with the name, the role, the moment and its fingerprint.",
         "VOLUNTEER_ROLE_ASSIGNED": "The roles given and the event's date and place are added by themselves, however you write the text. The message has no link that does anything.",
-        "VOLUNTEER_POINT": "The point, the roles given, the category's contact and the plan's picture are added by themselves, whatever the text says. It does not leave if the person was moved, taken off or cancelled meanwhile.",
+        "VOLUNTEER_POINT": "The text is the same at the start–finish and on the route; the point, roles, contact and picture are added by themselves. It does not leave if the person was moved, taken off or cancelled meanwhile.",
         "VOLUNTEER_GUARDIAN_REQUEST": "The volunteer and the event are added by themselves. The link is for the parent or guardian only, works once, and a new one replaces the old.",
         "VOLUNTEER_INVITATION": "The event, the roles wanted and the club's message are added by themselves. The link is for the invited person only, works once, and a new one replaces the old.",
         "PLACES_ALERT": "The free places, the capacity and the threshold are added by themselves, however you write the text. One email per threshold; another comes only after the places climb back above it.",
@@ -11831,7 +11915,7 @@
         "headerPictureCropHelp": "Drag the rectangle over the part you want on the top band, across the whole badge.",
         "headerPictureShape": "The band's shape: {ratio} to 1, at the saved size.",
         "headerHidesTitle": "The picture covers the event's title: the badge shows only the picture.",
-        "roleHelp": "“VOLUNTEER” prints alone and large on the band of the badge for everyone, and small, above the role's name, on a badge per role.",
+        "roleHelp": "“VOLUNTEER” prints alone and large on the badge for everyone. Per role it is small, above the role's name, together with the role's category, if the role has one.",
         "labelRo": "The word on the band (Romanian)",
         "labelEn": "The word on the band (English)",
         "labelHelp": "Empty in both languages: VOLUNTAR and VOLUNTEER. At most {max} characters.",
@@ -14264,7 +14348,7 @@
       "volunteerRaffleOn": "In the raffle: back on the raffle's list.",
       "volunteerRaffleOff": "No longer in the raffle: not on the raffle's list.",
       "volunteerPlaced": "Stands at the chosen point: on the volunteers' plan.",
-      "volunteerUnplaced": "No longer at any point: back under \"At no point of the route\".",
+      "volunteerUnplaced": "No longer at any point: back under \"At no point\".",
       "eventTodoDone": "Ticked. The row is under “Done”.",
       "eventTodoReopened": "Unticked: the row is to do again.",
       "eventTodoDeleted": "Row deleted from the event's list.",
@@ -14536,6 +14620,9 @@
       "planPictureSet": "The plan's picture is on: it shows above the points and prints with the plan.",
       "planPictureReplaced": "The plan's picture was changed.",
       "planPictureRemoved": "The plan's picture was deleted.",
+      "planPointAdded": "Point added.",
+      "planPointSaved": "Point saved.",
+      "planPointRemoved": "Point deleted.",
       "planPointsSent": {
         "one": "{count} volunteer told their point.",
         "few": "{count} volunteers told their point.",
@@ -14545,7 +14632,8 @@
         "one": "{count} volunteer told their point. With no email address: {noAddress}.",
         "few": "{count} volunteers told their point. With no email address: {noAddress}.",
         "other": "{count} volunteers told their point. With no email address: {noAddress}."
-      }
+      },
+      "noteEdited": "The note was changed."
     },
     "mail": {
       "now": "Leaving now{road}: {what}.",

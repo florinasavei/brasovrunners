@@ -62,12 +62,13 @@ export default async function BadgePrintPanel({
   const startsAt = roles.reduce((sum, role) => sum + badgePrintDefault(role), 0);
   // «VOLUNTAR» as the page's language prints it: the club's own word when it typed one.
   const label = await badgeLabelIn(design, locale);
+  // Stamped with everything the role's badge prints — its category's names too (§962): a category renamed is a new picture.
   const pictureOf = (role: BadgeRole | null) =>
     badgePictureSrc({
       eventId,
       locale,
       role: role ? role.id : "none",
-      stamp: badgePictureStamp([design, eventTitle, role ? [role.nameRo, role.nameEn, role.colour, role.categoryPhone] : null]),
+      stamp: badgePictureStamp([design, eventTitle, role ? [role.nameRo, role.nameEn, role.colour, role.categoryPhone, role.categoryRo, role.categoryEn] : null]),
     });
   const numberBox = (name: string, label: string, value: number, testId: string, max = BADGE_COUNT_MAX) => (
     <RecallField

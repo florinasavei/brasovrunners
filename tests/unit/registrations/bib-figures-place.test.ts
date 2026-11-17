@@ -164,7 +164,7 @@ describe("§804 the profile's row decides the place once", () => {
     expect(bibProfileRowHeight(true)).toBe(BIB_LAYOUT.profileHeight + BIB_LAYOUT.profileFiguresRoom);
     expect(bibExtrasHeight(true, false)).toBe(BIB_LAYOUT.profileHeight);
     expect(bibExtrasHeight(true, false, true)).toBe(BIB_LAYOUT.profileHeight + BIB_LAYOUT.profileFiguresRoom);
-    // With the phone line too, the room between the two (§NNN).
+    // With the phone line too, the room between the two (§959).
     expect(bibExtrasHeight(true, true, true)).toBe(BIB_LAYOUT.profileHeight + BIB_LAYOUT.profileFiguresRoom + BIB_LAYOUT.emergencyGap + BIB_LAYOUT.emergencyHeight);
     // No profile drawn: the figures' room is not asked for.
     expect(bibExtrasHeight(false, true, true)).toBe(BIB_LAYOUT.emergencyHeight);
@@ -394,7 +394,7 @@ describe("§804 the drawing version, and the numbers printed so far", () => {
   it("keeps the drawing's version: every number already printed is drawn as it was, and the stamp reads the whole design", () => {
     // The default place draws what the drawing always drew (below, byte for byte), so this choice raised nothing; 6 is the
     // emergency line's new form (§947), 7 the name an elite registration's bib prints and 8 the room between the profile's row
-    // and the phone line (§NNN).
+    // and the phone line (§959).
     expect(BIB_DRAWING_VERSION).toBe(9);
     const stamp = (place: (typeof BIB_PROFILE_FIGURES_PLACES)[number]) => bibPictureStamp([withPlace(place)]);
     expect(new Set(BIB_PROFILE_FIGURES_PLACES.map(stamp)).size).toBe(3);
@@ -421,7 +421,7 @@ describe("§804 the drawing version, and the numbers printed so far", () => {
 
   it("draws a design that does not say where the figures stand exactly as it was drawn before the choice existed", async () => {
     // Captured from the release before the choice (BR-V3.53) with the same call: a change here is a change in every printed number.
-    // Captured again for §NNN, whose room between the profile's row and the phone line is the one change: with that room at zero
+    // Captured again for §959, whose room between the profile's row and the phone line is the one change: with that room at zero
     // (and no `marginTop` on the picture's phone row) the call gives the hash of BR-V3.53 again, «9c92ff5a…02b6b7».
     expect(await fingerprint()).toBe(GOLDEN_RIGHT);
   });

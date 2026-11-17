@@ -205,7 +205,7 @@ async function seed() {
     { eventId: other.id, name: "Alt Eveniment" },
   ]);
   const silviu = await register(race.id, "Silviu Stoica", { elite: true, bibNumber: 12 });
-    // One runner not marked: the ordinary sheet counts only them (§NNN), the marked one is the elite sheet's alone.
+    // One runner not marked: the ordinary sheet counts only them (§963), the marked one is the elite sheet's alone.
     await register(race.id, "Ana Obisnuita", { bibNumber: 13 });
   const mara = await register(race.id, "Mara Anulata", { elite: true, status: "CANCELLED" });
   await register(race.id, "Test Elita", { elite: true, kind: "TEST" });
@@ -281,7 +281,7 @@ describe("«Elite» on the registrations list (2026-11-04)", () => {
   it("says no elite bib and no elite at the start while the separate list is empty", async () => {
     const race = await createRace("Fara-elite");
     await register(race.id, "Silviu Stoica", { elite: true, bibNumber: 12 });
-    // One runner not marked: the ordinary sheet counts only them (§NNN), the marked one is the elite sheet's alone.
+    // One runner not marked: the ordinary sheet counts only them (§963), the marked one is the elite sheet's alone.
     await register(race.id, "Ana Obisnuita", { bibNumber: 13 });
     state.actor = await staff("ADMIN");
     const tree = await listPage({ eventId: race.id });

@@ -455,6 +455,6 @@ describe("a role standing in two categories is named with its category, each onc
     const all = await listPage({ eventId: "all" });
     expect(textOf(all, "volunteer-given")).toContain("Marcaj");
     const [run] = await db.select({ id: eventVolunteerRoles.id }).from(eventVolunteerRoles).where(and(eq(eventVolunteerRoles.eventId, runId), eq(eventVolunteerRoles.nameRo, "Marcaj")));
-    expect((await listRoleNames(db, [run.id])).get(run.id)).toEqual({ nameRo: "Marcaj", nameEn: "Marking", categoryRo: null, categoryEn: null });
+    expect((await listRoleNames(db, [run.id])).get(run.id)).toEqual({ nameRo: "Marcaj", nameEn: "Marking", categoryRo: null, categoryEn: null, categoryOrder: null });
   });
 });

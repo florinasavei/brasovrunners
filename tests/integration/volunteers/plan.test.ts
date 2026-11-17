@@ -16,6 +16,7 @@ import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { planSummaryOf } from "../../helpers/volunteer-plan";
 
 /**
  * §949, BR-REQ-050-02 — «Planul voluntarilor» (the owner, 2026-11-16, with a map of the route and its seven points: «e foarte
@@ -365,7 +366,8 @@ describe("§949 the plan's page", () => {
 
     expect(page).toContain(ro.Admin.volunteers.plan.title);
     expect(page).toContain("Crosul");
-    expect(page).toContain("La puncte: 2 · Fără punct: 2 · Puncte fără nimeni: 1");
+    // How many people stand where, since the plan has two kinds of points (§961): none at the start–finish here, two on the route.
+    expect(planSummaryOf(page)).toBe("0 voluntari la start–finish · 2 voluntari pe traseu · 2 voluntari fără punct · 1 punct fără nimeni");
     const drawn = pointsOf(page);
     expect(drawn.map((part) => textOf(part, "plan-point-title")[0])).toEqual(["1. 1,2 km — Intersecția Stejeriș", "2. 5,5 km — Apă la cabană", "3. 7,25 km — Podul de lemn"]);
     // What the point is, in the backoffice's words.
@@ -451,7 +453,10 @@ describe("§949 the plan's page", () => {
     // The other event, once its one point is taken off the route.
     await db.delete(eventCheckpoints).where(eq(eventCheckpoints.id, points.elsewhere));
     const bare = await planPage({}, runId);
-    expect(bare).toContain("Evenimentul nu are încă puncte pe traseu.");
+    // The one empty state: the points can be added right here, above, or in the event's editor (§961).
+    expect(bare).toContain("Planul nu are încă niciun punct. Adaugă punctele chiar aici, mai sus");
+    expect(bare).toContain(ro.Admin.volunteers.plan.noPoints);
+    expect(planSummaryOf(bare)).toBe("");
   });
 
   it("is in English for an English reader, and a 404 for the Tehnic role and for an event that is not there", async () => {
@@ -461,7 +466,7 @@ describe("§949 the plan's page", () => {
     // As the markup carries an apostrophe.
     expect(page).toContain(en.Admin.volunteers.plan.title.replace(/'/g, "&#x27;"));
     expect(page).toContain("1. 1.2 km — Intersecția Stejeriș (en)");
-    expect(page).toContain("At points: 1 · At no point: 3 · Points with nobody: 2");
+    expect(planSummaryOf(page)).toBe("0 volunteers at the start–finish · 1 volunteer on the route · 3 volunteers at no point · 2 points with nobody");
     state.locale = "ro";
 
     await expect(planPage({}, "11111111-1111-4111-8111-111111111111")).rejects.toThrow("NOT_FOUND");

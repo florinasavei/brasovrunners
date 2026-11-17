@@ -318,7 +318,7 @@ describe("the «Voluntari» list — the marker and «Adaugă o notă»", () => 
     expect(elements(nameCell(dan)).filter((element) => element.type === NotesMark)).toHaveLength(0);
   });
 
-  it("says the notes' own words in the marker's tooltip — newest first, each with its day and hour, the older ones counted, no author (§945)", async () => {
+  it("says the notes' own words in the marker's tooltip — newest first, the words alone (§964: no day or hour), the older ones counted, no author (§945)", async () => {
     const organizer = state.actor as StaffUser;
     const ana = await volunteer("Ana Pop");
     const dan = await volunteer("Dan Ionescu");
@@ -337,12 +337,9 @@ describe("the «Voluntari» list — the marker and «Adaugă o notă»", () => 
     expect(marker).toHaveLength(1);
     expect(marker[0].props).toMatchObject({ label: "4 note", href: `/ro/admin/volunteers/${ana}#note-interne` });
     const said = (tips[0].props.title as string).split("\n\n");
-    // The three newest, then how many are older — in the count's own words.
-    expect(said).toHaveLength(4);
-    expect(said[0]).toBe("Mie., 11 nov. 2026, 12:03: vine doar dimineața\nare mașină");
-    expect(said[1]).toMatch(/12:02: a treia$/);
-    expect(said[2]).toMatch(/12:01: a doua$/);
-    expect(said[3]).toBe("… și încă 1 notă");
+    // The three newest, their words alone (§964: the day and the hour are the person's page's), then how many are older — in the count's own words.
+    expect(said).toEqual(["vine doar dimineața\nare mașină", "a treia", "a doua", "… și încă 1 notă"]);
+    expect(tips[0].props.title).not.toMatch(/\d{1,2}:\d{2}|nov\.|2026/);
     expect(tips[0].props.title).not.toContain("ștearsă");
     // Nobody's name: who wrote a note is the card's to say.
     expect(tips[0].props.title).not.toContain(organizer.displayName);
@@ -393,10 +390,10 @@ describe("the «Voluntari» list — the marker and «Adaugă o notă»", () => 
     const cell = byTestId(column.render(rows.find((row) => row.id === ana)), "volunteer-notes");
     expect(cell).toHaveLength(1);
     const said = String(cell[0].props.children);
-    // Exactly what the marker's tooltip says: the three newest with their day and hour, the older ones counted, a note's own line break kept.
+    // Exactly what the marker's tooltip says: the three newest, their words alone (§964), the older ones counted, a note's own line break kept.
     const [tip] = elements(nameCell(ana)).filter((element) => element.type === TipSpan);
     expect(said).toBe(tip.props.title);
-    expect(said.split("\n\n")).toEqual(["Mie., 11 nov. 2026, 12:03: vine doar dimineața\nare mașină", expect.stringMatching(/12:02: a treia$/), expect.stringMatching(/12:01: a doua$/), "… și încă 1 notă"]);
+    expect(said.split("\n\n")).toEqual(["vine doar dimineața\nare mașină", "a treia", "a doua", "… și încă 1 notă"]);
     // The cell keeps the line breaks it is given, and a deleted note and the author's name are in no cell.
     expect(cell[0].props.sx).toMatchObject({ whiteSpace: "pre-line" });
     expect(said).not.toContain("ștearsă");

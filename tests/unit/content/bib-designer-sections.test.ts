@@ -142,15 +142,19 @@ describe("§759 the bib designer in named sections", () => {
         "event.bibDesign.emergencyPhone2",
         "event.bibDesign.emergencyPhone3Label",
         "event.bibDesign.emergencyPhone3",
+        "event.bibDesign.emergencyPhone4Label",
+        "event.bibDesign.emergencyPhone4",
         "event.bibDesign.emergencyUpsideDown",
       ],
       members: ["event.bibDesign.member.enabled", "event.bibDesign.member.style", "event.bibDesign.member.label", "event.bibDesign.member.mark", "event.bibDesign.member.markShape"],
-      elite: ["event.bibDesign.eliteNumber", "event.bibDesign.eliteSponsors"],
+      elite: ["event.bibDesign.eliteSponsors"],
     };
     for (const name of SECTIONS) {
       const part = section(html, name);
       for (const field of within[name]) expect(part, `${field} in ${name}`).toContain(`name="${field}"`);
     }
+    // An elite bib never prints a number (§963): the tick that asked for one is not on the form.
+    expect(html).not.toContain('name="event.bibDesign.eliteNumber"');
     // The band's colour is the header's now, never twice on the form.
     expect(html.split('name="event.bibColour"').length - 1).toBe(1);
   });

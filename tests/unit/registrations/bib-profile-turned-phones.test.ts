@@ -278,7 +278,7 @@ describe("§759 the profile turned for the runner, and with the phone as one blo
     expect(profileOnly[0].origin[1]).toBeCloseTo(blockTop(extras) + BIB_LAYOUT.profileHeight / 2, 5);
     const phoneOnly = await rotations({ rows, ...SHEET, profile: DRAWING, emergencyLabel: "Urgențe", design: design({ showProfile: true, profileOrientation: "normal", ...phone, emergencyUpsideDown: true }) });
     expect(phoneOnly).toHaveLength(1);
-    // The phone line stands the room of §NNN under the profile's row.
+    // The phone line stands the room of §959 under the profile's row.
     expect(phoneOnly[0].origin[1]).toBeCloseTo(blockTop(extras) + BIB_LAYOUT.profileHeight + BIB_LAYOUT.emergencyGap + BIB_LAYOUT.emergencyHeight / 2, 5);
     const neither = await rotations({ rows, ...SHEET, profile: DRAWING, emergencyLabel: "Urgențe", design: design({ showProfile: true, ...phone, emergencyUpsideDown: false }) });
     expect(neither).toHaveLength(0);
@@ -302,7 +302,7 @@ describe("§759 the profile turned for the runner, and with the phone as one blo
     expect(markup).toContain("Diferență de nivel");
   });
 
-  it("§NNN leaves an empty room between the profile's row and the phone line — on the sheet and in the picture, turned or not", async () => {
+  it("§959 leaves an empty room between the profile's row and the phone line — on the sheet and in the picture, turned or not", async () => {
     // The owner, 2026-11-17, of a turned strip that set the phones right against the kilometres: «vreau un pic de spațiere aici pe BIB».
     expect(BIB_LAYOUT.emergencyGap).toBeGreaterThan(0);
     // The block's height counts the room only when both rows are drawn: a number with one of the two prints as it did.

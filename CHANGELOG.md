@@ -8,6 +8,16 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.55-2026-11-17
+
+- **«Emailuri» on the «Voluntari» and registrations lists** — for an Administrator a column says each person's three newest emails: which email, when it left and what became of it («așteaptă», «a plecat», «livrat», «refuzat», «eșuat»), then «și încă N emailuri» to the person's own «Emailuri», open, and «niciun email» for somebody never emailed; the Organizer's lists are as before. With the column drawn, the registrations table is wider than a 1858-px screen and scrolls under its pinned verbs; unticking «Emailuri» under «Coloane» fits it again. §960.
+- **«Punctele planului»: the volunteers' points typed by hand on «Planul voluntarilor»** — a point on the route (its name, its kilometre, a number in the route's order) or at the start–finish (its name alone), each with optional coordinates and «Deschide pe hartă»; the plan lists them in two groups, the «Voluntari» list and «Punctul tău» say a start–finish point with no number and no kilometre, and the email adds where a point is. A point added here is never on the event's page, the route's chart, a race number, the event's file or a copy. §961.
+- **A volunteer's type, on the list and on the badge** — the «Voluntari» list has a column «Tip» naming the categories of the roles given to each person, and a role's badge prints its category beside «VOLUNTAR» («VOLUNTAR · PE TRASEU»), or on a small line under the role's name when it is too long for that line; badges with no category print as before. §962.
+- **Race-week bibs** — a fourth emergency phone on the bib (112 beside the organizers' and the mountain rescue's numbers); «BIB-uri goale»: download as many bibs as you need with no number and no name, to write by hand; and the elite bibs print the first name alone, never a number, on the elite sheet only — never a second time on the ordinary one. §963.
+- **«Note interne» on the «Voluntari» list: the words without the day, and a note can be changed** — the column and the marker's tooltip say the newest notes' words alone, with no day or hour (the person's page keeps both, and the author); «Modifică nota» under the words changes the newest note from its row, and on the person's page «Modifică» stands beside «Șterge» on each note the reader may change — its author's, or any for an Administrator. A change keeps the note's place in the thread, emails nobody and is audited without the words. §964.
+## BR-V4.54-2026-11-17
+
+- **Room between the route's profile and the emergency phones on the bib** — the phones line no longer touches the kilometres of the profile: about 2 mm of space between them, on the printed sheet and in the preview, turned or not. §959.
 ## BR-V4.53-2026-11-17
 
 - **«Include programul evenimentului» in «Trimite un mesaj participanților»** — one more tick in the composer: every email of the send then shows the event's programme, hour by hour, under your words, in both languages; the preview shows it, the question before «Trimite» says it, and for an event without a timed programme the tick is greyed and says where to add one. §958.

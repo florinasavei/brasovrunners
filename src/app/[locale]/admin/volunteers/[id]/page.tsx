@@ -27,7 +27,7 @@ import StatusChip from "@/shared/ui/StatusChip";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { turnVolunteerIntoRunnerAction } from "../../registrations/actions";
 import { setVolunteerDecisionAction } from "../actions";
-import { addVolunteerNoteAction, deleteVolunteerNoteAction } from "./note-actions";
+import { addVolunteerNoteAction, deleteVolunteerNoteAction, editVolunteerNoteAction } from "./note-actions";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -44,8 +44,10 @@ export const dynamic = "force-dynamic";
  * back here (`returnTo`), the refused ones with their code in the address.
  *
  * «Note interne» stands first, right under the heading block («Note interne» for volunteers, the registration's page's shape):
- * what the organizers tell each other about the person, newest first, open by itself when there is one, after its own save or
- * delete (`saved`) and for `#note-interne`; closed on «nicio notă» otherwise. Its two presses are `note-actions.ts`.
+ * what the organizers tell each other about the person, newest first, each with its author and its day and hour, open by itself
+ * when there is one, after its own save, change or delete (`saved`) and for `#note-interne`; closed on «nicio notă» otherwise.
+ * Each note the reader may change has «Modifică» beside «Șterge» (§964), a fold with the note's words. Its presses are
+ * `note-actions.ts`.
  *
  * «Decizie pentru ziua cursei» (§954) stands right after it, still before the person's block: the organizers' one line about
  * what they decided for the person on race day, with the form that writes it (`VolunteerDecisionCard`, `../actions.ts`).
@@ -116,7 +118,8 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
         notes={notes}
         addAction={addVolunteerNoteAction}
         deleteAction={deleteVolunteerNoteAction}
-        opened={saved === "noteAdded" || saved === "noteDeleted"}
+        editAction={editVolunteerNoteAction}
+        opened={saved === "noteAdded" || saved === "noteDeleted" || saved === "noteEdited"}
       />
 
       {/*

@@ -7,7 +7,7 @@ import { legalDocuments } from "@/db/schema/legal-documents";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { buildListHref } from "@/modules/staff-identity/domain/admin-list-query";
-import { VOLUNTEER_STATES, type VolunteerState } from "./domain/volunteer";
+import { type RoleTypeWords, VOLUNTEER_STATES, type VolunteerState } from "./domain/volunteer";
 import { type VolunteerItem, volunteerItemsOf } from "./volunteers";
 
 /**
@@ -370,21 +370,36 @@ export async function listRolesWithCounts<T extends Record<string, unknown>>(
 }
 
 /**
- * The words of some roles, whatever their events: the list's «Roluri date» and «S-a oferit pentru» cells, one read per page — each role
- * with its category's words (§904), so «Direcționare» under «Start / Sosire» and under «Traseu» read as two roles, as on the card.
+ * The words of some roles, whatever their events: the list's «Roluri date», «Tip» and «S-a oferit pentru» cells, one read per page — each
+ * role with its category's words (§904), so «Direcționare» under «Start / Sosire» and under «Traseu» read as two roles, as on the card, and
+ * with its category's place in the club's order (`categoryOrder`, §962), so «Tip» lists a person's categories once each, in that order.
  */
-export async function listRoleNames<T extends Record<string, unknown>>(db: Database<T>, roleIds: readonly string[]): Promise<Map<string, RoleNameWords>> {
+export async function listRoleNames<T extends Record<string, unknown>>(db: Database<T>, roleIds: readonly string[]): Promise<Map<string, RoleNameWords & RoleTypeWords>> {
   if (roleIds.length === 0) return new Map();
   const rows = await db
     .select({
       id: eventVolunteerRoles.id,
       nameRo: eventVolunteerRoles.nameRo,
       nameEn: eventVolunteerRoles.nameEn,
+      categoryId: eventVolunteerCategories.id,
       categoryRo: eventVolunteerCategories.nameRo,
       categoryEn: eventVolunteerCategories.nameEn,
+      categorySort: eventVolunteerCategories.sort,
+      categoryCreatedAt: eventVolunteerCategories.createdAt,
     })
     .from(eventVolunteerRoles)
     .leftJoin(eventVolunteerCategories, eq(eventVolunteerCategories.id, eventVolunteerRoles.categoryId))
     .where(inArray(eventVolunteerRoles.id, [...roleIds]));
-  return new Map(rows.map((row) => [row.id, { nameRo: row.nameRo, nameEn: row.nameEn, categoryRo: row.categoryRo, categoryEn: row.categoryEn }]));
+  return new Map(
+    rows.map((row) => [
+      row.id,
+      {
+        nameRo: row.nameRo,
+        nameEn: row.nameEn,
+        categoryRo: row.categoryRo,
+        categoryEn: row.categoryEn,
+        categoryOrder: row.categoryId !== null && row.categorySort !== null && row.categoryCreatedAt !== null ? { id: row.categoryId, sort: row.categorySort, createdAt: row.categoryCreatedAt } : null,
+      },
+    ]),
+  );
 }

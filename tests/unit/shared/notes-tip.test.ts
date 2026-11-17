@@ -40,3 +40,32 @@ describe("§943 the notes marker's tooltip", () => {
     expect(notesTip(notes.slice(0, TIP_NOTES), when, more).split("\n\n")).toHaveLength(TIP_NOTES);
   });
 });
+
+/**
+ * §964 — the owner, 2026-11-17, of the «Voluntari» list's «Note interne»: «la nota internă nu mai afișa și data». With no clock
+ * (`when` null) each shown note is its words alone; everything else is the tooltip above, unchanged.
+ */
+describe("§964 the same words without the day", () => {
+  it("is nothing without notes", () => {
+    expect(notesTip(undefined, null, more)).toBe("");
+    expect(notesTip([], null, more)).toBe("");
+  });
+
+  it("says each note's words alone, newest first as given, a blank line between two — no day, no colon before them", () => {
+    expect(notesTip([note(12, "cere tricou S"), note(3, "vine cu soția")], null, more)).toBe("cere tricou S\n\nvine cu soția");
+    expect(notesTip([note(12, "Fotograf")], null, more)).toBe("Fotograf");
+  });
+
+  it("keeps a note's own lines, trims its ends and cuts a long one as the dated tooltip does", () => {
+    expect(notesTip([note(5, "  primul rând\r\nal doilea rând  ")], null, more)).toBe("primul rând\nal doilea rând");
+    expect(notesTip([note(1, `${"ă".repeat(TIP_NOTE_CHARS)}🏃 și restul`)], null, more)).toBe(`${"ă".repeat(TIP_NOTE_CHARS)}…`);
+    expect(notesTip([note(1, "x".repeat(TIP_NOTE_CHARS))], null, more)).toBe("x".repeat(TIP_NOTE_CHARS));
+  });
+
+  it("shows the newest few and counts the older ones in its last line, as today", () => {
+    const notes = Array.from({ length: TIP_NOTES + 2 }, (_, index) => note(20 - index, `nota ${index + 1}`));
+    expect(notesTip(notes, null, more).split("\n\n")).toEqual(["nota 1", "nota 2", "nota 3", "… și încă 2"]);
+    // The dated tooltip of the same notes is the same lines with their days: only the day is left out.
+    expect(notesTip(notes, when, more).split("\n\n")).toEqual(["ziua 20: nota 1", "ziua 19: nota 2", "ziua 18: nota 3", "… și încă 2"]);
+  });
+});

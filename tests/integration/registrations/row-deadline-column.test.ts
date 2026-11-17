@@ -227,8 +227,10 @@ describe("§650 «Până când» on the registrations list", () => {
       expect(column?.sortable).toBe(true);
       // In the phone layout too: no breakpoint drops it from the wide table either.
       expect(column?.hideBelow).toBeUndefined();
-      // Right after the step it is the deadline of.
-      expect(columns.findIndex((candidate) => candidate.key === "untilWhen")).toBe(columns.findIndex((candidate) => candidate.key === "journey") + 1);
+      // Right after the step it is the deadline of — for the Administrator with the step's own emails between the two
+      // («Emailuri», §960, the Administrator's alone), for the Organizer side by side as before.
+      const keys = columns.map((candidate) => candidate.key);
+      expect(keys.slice(keys.indexOf("journey"), keys.indexOf("untilWhen") + 1)).toEqual(role === "ADMIN" ? ["journey", "emails", "untilWhen"] : ["journey", "untilWhen"]);
 
       const said = new Map<string, string>();
       for (const row of table!.props.rows as { registeredName: string }[]) {

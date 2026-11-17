@@ -4,22 +4,27 @@ import { mediaAssets } from "@/db/schema/gallery";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
-import type { Checkpoint } from "@/modules/event-checkpoints/domain/checkpoint";
 import { isLadderKeyPrefix, ladderWidths, pictureSrcSet } from "@/modules/media/ladder";
 import { getStorage, isStorageConfigured, objectKey } from "@/modules/media/storage";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { listRoleNames, type RoleNameWords } from "./admin-list";
+import { listPlanPoints, type PlanPoint } from "./plan-points";
 import { listVolunteers, type VolunteerItem } from "./volunteers";
 
 /*
   «Planul voluntarilor» (§949; the owner, 2026-11-16, with a map of the route and its seven points: «e foarte important sa avem
-  planul de voluntari si fiecare in ce punct ramane»): who stands where on the day. One event's points on the route — the same
-  «Puncte pe traseu» the editor keeps, the page lists and the bib draws (§757) — in the route's order, each with the people the
-  organizers placed at it (`event_volunteers.checkpoint_id`), and under them everybody not placed: still to place, or working
-  somewhere that is not a point of the route (the start, the kits), which their roles say.
+  planul de voluntari si fiecare in ce punct ramane»): who stands where on the day. One event's points, each with the people
+  the organizers placed at it (`event_volunteers.checkpoint_id`), and under them everybody still to place.
+
+  The points are of two kinds since §961 (the owner, 2026-11-17: «Practic voluntarii sunt de 2 tipuri: start-finish și pe
+  traseu»): the points **at the start–finish** — the desk, the kits, the start and the finish line, with no kilometre and no
+  number — and the points **on the route**, in the route's order and numbered as the route meets them. The points on the route
+  are the event's «Puncte pe traseu» (§757), which the editor keeps, the page lists and the bib draws, and the ones the
+  organizers typed by hand on the plan's page, which are the plan's alone; the points at the start–finish are always the
+  plan's own. Which is which, in what order and with what number is `plan-points.ts#listPlanPoints`'s to say: this file reads
+  the points from there and nowhere else, so the page, the «Voluntari» list and the email never number a point differently.
 
   Who is on it: every volunteer of the event who is not cancelled — a cancelled person keeps the point they had, in case they
   come back, and is simply not on the plan. Nothing here is the person's own answer: the plan is the organizers', and no public
@@ -45,8 +50,11 @@ import { listVolunteers, type VolunteerItem } from "./volunteers";
 /** One person as the plan says them: the name, how to reach them, what they were given to do, and the point they stand at. */
 export type VolunteerPlanPerson = Pick<VolunteerItem, "id" | "name" | "phone" | "state" | "bibNumber" | "roleIds" | "checkpointId">;
 
-/** One point of the route, its place in the route's order (1 for the first), and the people standing at it, by name. */
-export type VolunteerPlanPoint = { point: Checkpoint; number: number; people: VolunteerPlanPerson[] };
+/**
+ * One point of the plan and the people standing at it, by name. `number` is the point's place in the route's order (1 for
+ * the first) — the point's own (`PlanPoint.number`), said here too for whoever draws a row — or null at the start–finish.
+ */
+export type VolunteerPlanPoint = { point: PlanPoint; number: number | null; people: VolunteerPlanPerson[] };
 
 /**
  * The plan's picture, as whoever draws it needs it (§952): the stored picture's id and its own size, and two addresses — the
@@ -58,7 +66,7 @@ export type VolunteerPlanPoint = { point: Checkpoint; number: number; people: Vo
 export type VolunteerPlanPicture = { assetId: string; width: number; height: number; fullUrl: string; displayUrl: string; srcSet: string | undefined };
 
 export type VolunteerPlan = {
-  /** The event's points by distance — the order the page, the editor and the bib have them in. */
+  /** The event's points in the plan's one order (`listPlanPoints`, §961): the start–finish points, then the route by distance. */
   points: VolunteerPlanPoint[];
   /** Everybody not cancelled who stands at no point, by name. */
   unplaced: VolunteerPlanPerson[];
@@ -136,15 +144,15 @@ export async function readVolunteerPlan<T extends Record<string, unknown>>(db: D
   const event = await eventWithPlanPicture(db, eventId);
   if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
 
-  const [points, everybody] = await Promise.all([listCheckpoints(db, eventId), listVolunteers(db, eventId)]);
+  const [points, everybody] = await Promise.all([listPlanPoints(db, eventId), listVolunteers(db, eventId)]);
   const people: VolunteerPlanPerson[] = everybody
     .filter((person) => person.state !== "CANCELLED")
     .map(({ id, name, phone, state, bibNumber, roleIds, checkpointId }) => ({ id, name, phone, state, bibNumber, roleIds, checkpointId }))
     .sort(byName);
-  const onRoute = new Set(points.map((point) => point.id));
+  const onPlan = new Set(points.map((point) => point.id));
   return {
-    points: points.map((point, index) => ({ point, number: index + 1, people: people.filter((person) => person.checkpointId === point.id) })),
-    unplaced: people.filter((person) => person.checkpointId === null || !onRoute.has(person.checkpointId)),
+    points: points.map((point) => ({ point, number: point.number, people: people.filter((person) => person.checkpointId === point.id) })),
+    unplaced: people.filter((person) => person.checkpointId === null || !onPlan.has(person.checkpointId)),
     roles: await listRoleNames(db, [...new Set(people.flatMap((person) => person.roleIds))]),
     picture: planPictureOfEvent(event),
   };

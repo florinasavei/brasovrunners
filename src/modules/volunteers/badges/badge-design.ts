@@ -5,7 +5,7 @@ import { formatPhone } from "@/modules/registrations/phone";
 import { bibFooterText } from "@/modules/registrations/bib-footer";
 import { fnv1a } from "@/shared/hash";
 import { COLOR } from "@/theme/brand";
-import { BADGE_CUSTOM_BOUNDS, BADGE_SIZE_PRESETS, BADGE_SIZES } from "./badge-geometry";
+import { BADGE_CUSTOM_BOUNDS, BADGE_SIZE_PRESETS, BADGE_SIZES, type BadgeLayoutWords } from "./badge-geometry";
 import { badgeDesignValuesFromQuery } from "./badge-query";
 
 /**
@@ -315,7 +315,10 @@ export function badgePhoneLine(design: Pick<BadgeDesign, "showPhone" | "phone">,
   return words.phoneLabel ? `${words.phoneLabel}: ${number}` : number;
 }
 
-/** A role's name as the band prints it: one line the font can draw, in capitals in the badge's language (ș stays ș). */
+/**
+ * A role's name as the band prints it — and its category's (§962), both the club's words of at most 80 characters: one line the font can
+ * draw, in capitals in the badge's language (ș stays ș).
+ */
 export function badgeRoleText(name: string, locale: BadgeLocale): string {
   return bibFooterText(name, 80).toLocaleUpperCase(locale);
 }
@@ -325,13 +328,41 @@ export function badgeLabelText(label: string, locale: BadgeLocale): string {
   return bibFooterText(label, BADGE_LABEL_MAX).toLocaleUpperCase(locale);
 }
 
+/**
+ * The role one badge draws (§764), in the badge's language: its name, its band's colour, the telephone of its category's contact person
+ * (§774, `badgePhoneLine`) and the name of its category — the volunteer's type (§962), null for a role under none. Null for a role is a
+ * badge «fără rol».
+ */
+export type BadgeFaceRole = { name: string; colour: string | null; phone?: string | null; category?: string | null };
+
+/**
+ * The words one badge lays out (`badge-geometry.ts#badgeLayout`), from the design's words in the badge's language and the role it draws:
+ * the one place the sheet (`badges-pdf.ts`) and the picture (`badge-image.tsx`, the preview route, the print panel's pictures) take them
+ * from, so the two cannot disagree. The category's name rides only on a role's badge, in the role's capitals (§962); a role under none, a
+ * badge «fără rol» and the one badge for everyone (§783, whose callers hand no role) carry none, and their words are what they were.
+ */
+export function badgeLayoutWords(design: Pick<BadgeDesign, "showPhone" | "phone">, words: BadgeWords, locale: BadgeLocale, role: BadgeFaceRole | null): BadgeLayoutWords {
+  const category = role?.category ? badgeRoleText(role.category, locale) : "";
+  return {
+    title: words.title,
+    label: badgeLabelText(words.label, locale),
+    role: role ? badgeRoleText(role.name, locale) : null,
+    name: words.name,
+    phone: badgePhoneLine(design, words, role?.phone),
+    free: words.free,
+    markerLabel: words.markerLabel,
+    ...(role && category !== "" ? { category } : {}),
+  };
+}
+
 // --- The stamp -------------------------------------------------------------------------------
 
 /**
  * The version of the badge's drawing: raised whenever the renderers draw the same design differently,
- * so every stamped address changes with it — the bib's `BIB_DRAWING_VERSION`, for the badge.
+ * so every stamped address changes with it — the bib's `BIB_DRAWING_VERSION`, for the badge. 2 since a
+ * role's badge prints its category (§962).
  */
-export const BADGE_DRAWING_VERSION = 1;
+export const BADGE_DRAWING_VERSION = 2;
 
 /**
  * A short, stable stamp of what a badge's picture is drawn from (the bib's §748): the design, the role's

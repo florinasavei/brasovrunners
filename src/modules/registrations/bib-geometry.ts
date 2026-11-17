@@ -222,7 +222,7 @@ export const BIB_LAYOUT = {
   emergencyMinSize: 6.5,
   emergencySizeStep: 0.5,
   /**
-   * The room between the profile's row and the phone line when both are drawn (§NNN; the owner, 2026-11-17, of a number
+   * The room between the profile's row and the phone line when both are drawn (§959; the owner, 2026-11-17, of a number
    * whose turned strip set the phones right against the kilometres: «top prio, vreau un pic de spațiere aici pe BIB»):
    * `emergencyGap` points, empty, so the line never reads as one more label of the strip. It is the block's own — counted
    * by `bibExtrasHeight` and taken from the number's area —, so the block turned for the runner keeps it where it is, and
@@ -308,7 +308,7 @@ export function bibExtrasHeight(profileDrawn: boolean, emergencyDrawn: boolean, 
   return (
     (profileDrawn ? bibProfileRowHeight(figuresBelow) : 0) +
     (emergencyDrawn ? BIB_LAYOUT.emergencyHeight : 0) +
-    // The room between the two rows (§NNN): only when both are drawn.
+    // The room between the two rows (§959): only when both are drawn.
     (profileDrawn && emergencyDrawn ? BIB_LAYOUT.emergencyGap : 0)
   );
 }

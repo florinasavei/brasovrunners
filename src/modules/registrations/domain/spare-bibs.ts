@@ -86,7 +86,7 @@ export function spareStateOf(band: SpareBand | null, free: readonly number[]): S
   return next === undefined ? { kind: "out" } : { kind: "free", next };
 }
 
-/** «BIB-uri goale» (§NNN): at most this many in one file — fifty A4 pages of two. */
+/** «BIB-uri goale» (§963): at most this many in one file — fifty A4 pages of two. */
 export const BIB_BLANK_MAX = 100;
 
 /**

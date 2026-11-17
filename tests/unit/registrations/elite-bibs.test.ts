@@ -80,7 +80,7 @@ describe("§895 the two design ticks", () => {
     expect([values.eliteNumber, values.eliteSponsors]).toEqual([true, false]);
   });
 
-  it("§NNN never print a number on an elite bib, whatever the design held — the sponsors' row is the one choice left", () => {
+  it("§963 never print a number on an elite bib, whatever the design held — the sponsors' row is the one choice left", () => {
     // The name alone (the owner, 2026-11-17: «Doar numele, fără număr»): the old tick is read no more, so no number and no stubs.
     expect(bibEliteParts({ eliteSponsors: false })).toEqual({ number: null, sponsors: false, stubs: false });
     expect(bibEliteParts({ eliteSponsors: true })).toEqual({ number: null, sponsors: true, stubs: false });
@@ -138,7 +138,7 @@ describe("§895 the elite sheet", () => {
     expect(pages(await sheet({ elite: [] }))).toBe(1);
   });
 
-  it("draws the name in the number's place, no name line and no blank mark, and the number only when ticked and set", async () => {
+  it("draws each line's first word in the number's place (§963), no name line and no blank mark, and never a number", async () => {
     const moveTo = vi.spyOn(PDFDocument.prototype, "moveTo");
     let plain: string[];
     try {
@@ -149,14 +149,14 @@ describe("§895 the elite sheet", () => {
     } finally {
       moveTo.mockRestore();
     }
-    for (const name of ["Eliud Kipchoge", "Faith Kipyegon", "Jakob Ingebrigtsen"]) expect(plain).toContain(name);
+    for (const name of ["Eliud", "Faith", "Jakob"]) expect(plain).toContain(name);
+    for (const name of ["Eliud Kipchoge", "Faith Kipyegon", "Jakob Ingebrigtsen"]) expect(plain).not.toContain(name);
     expect(plain).not.toContain("înscris la fața locului");
-    // Off by default: no number at all.
     expect(plain.filter((string) => /^\d+$/.test(string))).toEqual([]);
 
+    // A design saved with the old tick on: the two lines that keep a number still print none — it stays theirs, unprinted.
     const numbered = await drawnStrings(() => sheet({ design: { ...DEFAULT_BIB_DESIGN, eliteNumber: true, numberFormat: "pad3" } }));
-    // Ticked: the two lines that have a number print it, in the event's way of writing it; the third prints none.
-    expect(numbered.filter((string) => /^\d+$/.test(string))).toEqual(["007", "003"]);
+    expect(numbered.filter((string) => /^\d+$/.test(string))).toEqual([]);
   });
 
   it("prints the sponsors' band only when ticked", async () => {

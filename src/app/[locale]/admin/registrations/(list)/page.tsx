@@ -68,6 +68,8 @@ import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { familiesTogether, familyOf } from "@/modules/registrations/family-marker";
 import { canEnterResults, canExportSponsorList, canKeepRegistrationNotes, canManageRegistrations, canMessageParticipants, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { type ExportNote, listRegistrationNotesForExport } from "@/modules/registrations/notes";
+import { readEmailSummaries } from "@/modules/notifications/email-summaries";
+import EmailSummaryCell from "@/modules/notifications/ui/EmailSummary";
 import { resultsDoorOpen } from "@/modules/results/domain/event-type";
 import KeepRowPlace from "@/modules/registrations/ui/KeepRowPlace";
 import NotesMark from "@/modules/registrations/ui/NotesMark";
@@ -384,11 +386,15 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     audit trail keyed on the ids just fetched, so a page of twenty-five costs one query, not
     twenty-five. Beside the translations, which it does not depend on.
   */
-  const [resubmissions, rowNotes, family, t, minorSigns] = await Promise.all([
+  const [resubmissions, rowNotes, emailSummaries, family, t, minorSigns] = await Promise.all([
     listResubmissionMarks(db, rows.map((row) => row.id)),
     // «Note interne» (§777, §943): each row's live notes, newest first — one grouped read over the page's ids, only for a
     // role that may keep notes. The marker says how many and, in its tooltip, the words; never on the desk.
     canKeepRegistrationNotes(actor.role) ? listRegistrationNotesForExport(db, actor, rows.map((row) => row.id)) : Promise.resolve(new Map<string, ExportNote[]>()),
+    // «Emailuri» (§960): each row's three newest emails and how many it has in all — one read over the page's ids (the index
+    // of the registration's own «Emailuri»), and only for the Administrator and the Superadministrator, whose that fold is
+    // (§915). For the Organizer the reader is not called and the column is not drawn; the reader asks for the role again.
+    canManageRegistrations(actor) ? readEmailSummaries(db, actor, { registrationIds: rows.map((row) => row.id) }) : Promise.resolve(null),
     // The family marker (§543): the other people on each row's address at its event, one query per page.
     familyOf(db, rows),
     getTranslations("Admin"),
@@ -771,6 +777,33 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       // The number once the registration is confirmed (§548): the chip says "nr. 42".
       render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={raceNumberTextOf(row)} variant="compact" />,
     },
+    /*
+      «Emailuri» (§960; the owner, 2026-11-17: «Vreau sa vad mai clar ce mailuri a primit fiecare om»), right after the step the
+      person reached — each step of the way is an email they got: the three newest, each «which email · when it left · what
+      became of it», and «și încă N emailuri», the link to the registration's own «Emailuri» (`#emailuri`, §671, §915), where
+      every email stands with its tries. For the Administrator and the Superadministrator alone, as that fold is: for the
+      Organizer no column is drawn and nothing is read (`emailSummaries` is null), so «Până când» stands right after the step as
+      before (§651). No `omitEmptyOnPhone`: «niciun email» is an answer, on a phone's card too. An invitation's lead row has no
+      cell for it: an invitation is no registration. It neither sorts nor filters.
+    */
+    ...(emailSummaries
+      ? [
+          {
+            key: "emails",
+            label: t("emails.summary.column"),
+            hint: t("emails.summary.hint"),
+            render: (row) => (
+              <EmailSummaryCell
+                summary={emailSummaries.get(row.id)}
+                href={`${getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: row.id } } })}#emailuri`}
+                personName={row.registeredName}
+                locale={locale}
+                t={t}
+              />
+            ),
+          } satisfies AdminColumn<RegistrationListRow>,
+        ]
+      : []),
     {
       /*
         «Până când» (§650): until when each person can sign the declaration, accept the offer or confirm

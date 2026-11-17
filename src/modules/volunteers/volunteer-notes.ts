@@ -15,20 +15,22 @@ import { type ExportNote, noteBodyOf } from "@/shared/notes/note-text";
  *
  * **Who** — whoever manages the volunteers (`canManageVolunteers`: the Organizer, the Administrator, the Superadministrator),
  * asserted in every function below, so the page's card, the list's marker and the actions' gates are courtesies and this is the
- * rule (BR-REQ-060-01). **Delete** is narrower, as on a registration: the note's author, or whoever changes registrations
- * (`canManageRegistrations`, the Administrator and above).
+ * rule (BR-REQ-060-01). **Delete and edit** are narrower, as a registration's delete: the note's author, or whoever changes
+ * registrations (`canManageRegistrations`, the Administrator and above) — one rule for both, `mayChangeNote` (§964).
  *
  * **What a note is** — plain text, line breaks kept, at most `VOLUNTEER_NOTE_MAX` characters (a registration note's own limit).
  * It is personal data about the volunteer: the privacy notice already says the organizers may add a note of their own about the
  * offer; «Toate datele unei persoane» lists them; «Șterge voluntarul», the thirty-day sweep and an event's hard delete take them
- * by the table's `ON DELETE CASCADE`.
+ * by the table's `ON DELETE CASCADE`. An edit changes the words and `updated_at`, never `created_at` or the author: the note
+ * keeps its place in the thread, and no earlier words are kept anywhere (§964).
  *
- * **The trail** names who and when and never the words: `volunteer.note_added` / `volunteer.note_deleted`, recorded as every
- * `volunteer.*` row is — entity `event`, the event's id — with `{ volunteerId }` and nothing else. A delete empties `body`.
+ * **The trail** names who and when and never the words: `volunteer.note_added` / `volunteer.note_edited` /
+ * `volunteer.note_deleted`, recorded as every `volunteer.*` row is — entity `event`, the event's id — with `{ volunteerId }` and
+ * nothing else. A delete empties `body`.
  *
  * **The old single line.** Migration `0196` carried every `event_volunteers.note` into a note here; nothing new writes or shows
- * that column. One exception keeps «Șterge» true: deleting a note whose words equal the column also clears the column, in the
- * same transaction, so the words are really gone until the column's contract release drops it.
+ * that column. One exception keeps «Șterge» and «Modifică» true: deleting or changing a note whose words equal the column also
+ * clears the column, in the same transaction, so the old words are really gone until the column's contract release drops it.
  *
  * Never imported by the registrations' notes (`modules/registrations/notes.ts`) or its table: the two kinds of note share only
  * the pure words (`shared/notes/note-text.ts`). A file that reads this one is a reviewed edit of
@@ -44,7 +46,15 @@ export type VolunteerNoteRow = {
   authorName: string | null;
   /** Whether the reader may delete it: their own, or any when they change registrations. */
   deletable: boolean;
+  /** Whether the reader may change its words (§964) — the same rule as the delete's, so the same answer. */
+  editable: boolean;
 };
+
+/**
+ * One live note as the «Voluntari» list's row reads it (§964): its words and moment for the column and the marker's tooltip, and
+ * for the row's «Modifică nota» its id and whether the reader may change it. No author: the list names nobody.
+ */
+export type VolunteerListNote = { id: string; createdAt: Date; body: string; editable: boolean };
 
 type Actor = Pick<StaffUser, "id" | "role">;
 
@@ -52,6 +62,15 @@ function assertMayKeepNotes(actor: Pick<StaffUser, "role">): void {
   if (!canManageVolunteers(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not read or write a volunteer's internal notes`);
   }
+}
+
+/**
+ * Whether the actor may change or delete a note written by `authorId` (§964): their own, or any when they change registrations
+ * (the Administrator and above). A note nobody can be named for (a carried line, an author's account gone) is the Administrator's.
+ * The one rule behind «Șterge», «Modifică», «Modifică nota» and the flags the screens draw them by.
+ */
+function mayChangeNote(actor: Actor, authorId: string | null): boolean {
+  return canManageRegistrations(actor.role) || (authorId !== null && authorId === actor.id);
 }
 
 /** The words of a volunteer's note, ready to store (`noteBodyOf` at the volunteers' limit), refused naming `box`. */
@@ -132,14 +151,17 @@ export async function listVolunteerNotes<T extends Record<string, unknown>>(db: 
     .leftJoin(staffUsers, eq(staffUsers.id, eventVolunteerNotes.authorStaffUserId))
     .where(and(eq(eventVolunteerNotes.volunteerId, volunteerId), isNull(eventVolunteerNotes.deletedAt)))
     .orderBy(desc(eventVolunteerNotes.createdAt), desc(eventVolunteerNotes.id));
-  const mayDeleteAny = canManageRegistrations(actor.role);
-  return rows.map((row) => ({
-    id: row.id,
-    body: row.body,
-    createdAt: row.createdAt,
-    authorName: row.authorId === null ? null : row.authorName,
-    deletable: mayDeleteAny || (row.authorId !== null && row.authorId === actor.id),
-  }));
+  return rows.map((row) => {
+    const mayChange = mayChangeNote(actor, row.authorId);
+    return {
+      id: row.id,
+      body: row.body,
+      createdAt: row.createdAt,
+      authorName: row.authorId === null ? null : row.authorName,
+      deletable: mayChange,
+      editable: mayChange,
+    };
+  });
 }
 
 /**
@@ -198,6 +220,70 @@ export async function listVolunteerNotesForExport<T extends Record<string, unkno
 }
 
 /**
+ * The live notes of the «Voluntari» list's rows (§964), in **one grouped query** over the page's ids, each volunteer's list newest
+ * first: the words for the column «Note interne» and the marker's tooltip, how many for the marker, and each note's id and
+ * whether the reader may change it — the row's «Modifică nota» is drawn on the newest one alone, and only when it may. Neither
+ * the author's name nor role is read: the list names nobody. A volunteer with none is absent from the map; a deleted note is
+ * never read.
+ */
+export async function listVolunteerNotesForList<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  volunteerIds: readonly string[],
+): Promise<Map<string, VolunteerListNote[]>> {
+  assertMayKeepNotes(actor);
+  const notes = new Map<string, VolunteerListNote[]>();
+  const ids = [...new Set(volunteerIds.filter(isUuid))];
+  if (ids.length === 0) return notes;
+  const rows = await db
+    .select({
+      id: eventVolunteerNotes.id,
+      volunteerId: eventVolunteerNotes.volunteerId,
+      body: eventVolunteerNotes.body,
+      createdAt: eventVolunteerNotes.createdAt,
+      authorId: eventVolunteerNotes.authorStaffUserId,
+    })
+    .from(eventVolunteerNotes)
+    .where(and(inArray(eventVolunteerNotes.volunteerId, ids), isNull(eventVolunteerNotes.deletedAt)))
+    .orderBy(desc(eventVolunteerNotes.createdAt), desc(eventVolunteerNotes.id));
+  for (const row of rows) {
+    const list = notes.get(row.volunteerId) ?? [];
+    list.push({ id: row.id, createdAt: row.createdAt, body: row.body, editable: mayChangeNote(actor, row.authorId) });
+    notes.set(row.volunteerId, list);
+  }
+  return notes;
+}
+
+/** A live note with what changing or deleting it needs — its volunteer, author and words, the event, the old single line — or none. */
+async function liveNoteOf<T extends Record<string, unknown>>(tx: Database<T>, noteId: string) {
+  const [note] = await tx
+    .select({
+      volunteerId: eventVolunteerNotes.volunteerId,
+      authorId: eventVolunteerNotes.authorStaffUserId,
+      body: eventVolunteerNotes.body,
+      eventId: eventVolunteers.eventId,
+      oldNote: eventVolunteers.note,
+    })
+    .from(eventVolunteerNotes)
+    .innerJoin(eventVolunteers, eq(eventVolunteers.id, eventVolunteerNotes.volunteerId))
+    .where(and(eq(eventVolunteerNotes.id, noteId), isNull(eventVolunteerNotes.deletedAt)))
+    .limit(1);
+  return note;
+}
+
+/**
+ * The old single line goes with the words it holds: when the note just deleted or changed carried it word for word (`0196`), the
+ * column is cleared in the same transaction — only while it still holds those words.
+ */
+async function clearCarriedLine<T extends Record<string, unknown>>(tx: Database<T>, note: { volunteerId: string; body: string; oldNote: string | null }): Promise<void> {
+  if (note.oldNote === null || note.oldNote !== note.body) return;
+  await tx
+    .update(eventVolunteers)
+    .set({ note: null })
+    .where(and(eq(eventVolunteers.id, note.volunteerId), eq(eventVolunteers.note, note.body)));
+}
+
+/**
  * «Șterge» on one note: its author's, or any when the actor changes registrations (the Administrator). The words are emptied and
  * `deleted_at` stamped in one write — and, when they are the volunteer's old single line word for word (the note carried from it),
  * that column is cleared in the same transaction. The trail records who and when, never the words. A note already deleted, or one
@@ -207,20 +293,9 @@ export async function deleteVolunteerNote<T extends Record<string, unknown>>(db:
   assertMayKeepNotes(actor);
   if (!isUuid(noteId)) throw new DomainError("NOT_FOUND", "no such note");
   return db.transaction(async (tx) => {
-    const [note] = await tx
-      .select({
-        volunteerId: eventVolunteerNotes.volunteerId,
-        authorId: eventVolunteerNotes.authorStaffUserId,
-        body: eventVolunteerNotes.body,
-        eventId: eventVolunteers.eventId,
-        oldNote: eventVolunteers.note,
-      })
-      .from(eventVolunteerNotes)
-      .innerJoin(eventVolunteers, eq(eventVolunteers.id, eventVolunteerNotes.volunteerId))
-      .where(and(eq(eventVolunteerNotes.id, noteId), isNull(eventVolunteerNotes.deletedAt)))
-      .limit(1);
+    const note = await liveNoteOf(tx, noteId);
     if (!note) throw new DomainError("NOT_FOUND", "no such note");
-    if (!canManageRegistrations(actor.role) && (note.authorId === null || note.authorId !== actor.id)) {
+    if (!mayChangeNote(actor, note.authorId)) {
       throw new DomainError("FORBIDDEN", "a note is deleted by its author or by an Administrator");
     }
     // Only a live row is emptied: a second press that raced the first matches nothing and is a NOT_FOUND.
@@ -231,12 +306,7 @@ export async function deleteVolunteerNote<T extends Record<string, unknown>>(db:
       .returning({ id: eventVolunteerNotes.id });
     if (emptied.length === 0) throw new DomainError("NOT_FOUND", "no such note");
     // The question says the words are gone: the old line that holds the same words goes too (only while it still does).
-    if (note.oldNote !== null && note.oldNote === note.body) {
-      await tx
-        .update(eventVolunteers)
-        .set({ note: null })
-        .where(and(eq(eventVolunteers.id, note.volunteerId), eq(eventVolunteers.note, note.body)));
-    }
+    await clearCarriedLine(tx, note);
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
       action: "volunteer.note_deleted",
@@ -246,5 +316,55 @@ export async function deleteVolunteerNote<T extends Record<string, unknown>>(db:
       now,
     });
     return { volunteerId: note.volunteerId };
+  });
+}
+
+/**
+ * «Modifică» on one note (§964; the owner, 2026-11-17, of the «Voluntari» list: «lasă-mă să editez și nota internă»): new words
+ * for a note, by the hands that may delete it — its author, or any note when the actor changes registrations (the Administrator);
+ * a colleague's note to an Organizer is `FORBIDDEN`, as for «Șterge». The words go through the add's own reading
+ * (`parseVolunteerNoteBody`: `NOTE_EMPTY`, `NOTE_TOO_LONG`, naming the box `body`). A note deleted, one that is not there, or a
+ * malformed id is `NOT_FOUND`. The same words after that reading are `{ changed: false }`: nothing written, nothing in the trail.
+ *
+ * Otherwise one transaction: `body` and `updated_at` change — never `created_at` or the author, so the note keeps its place in
+ * the thread and its byline — one `volunteer.note_edited` row says who and when with `{ volunteerId }` and never the words, before
+ * or after; and, as for «Șterge», the old single line goes when it held the note's old words, so they do not outlive their change.
+ * Nothing else of the person moves: no email, no public cache tag, no state, role or tick.
+ */
+export async function editVolunteerNote<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  noteId: string,
+  rawBody: unknown,
+  now: Date,
+): Promise<{ volunteerId: string; changed: boolean }> {
+  assertMayKeepNotes(actor);
+  const body = parseVolunteerNoteBody(rawBody);
+  if (!isUuid(noteId)) throw new DomainError("NOT_FOUND", "no such note");
+  return db.transaction(async (tx) => {
+    const note = await liveNoteOf(tx, noteId);
+    if (!note) throw new DomainError("NOT_FOUND", "no such note");
+    if (!mayChangeNote(actor, note.authorId)) {
+      throw new DomainError("FORBIDDEN", "a note is changed by its author or by an Administrator");
+    }
+    if (note.body === body) return { volunteerId: note.volunteerId, changed: false };
+    // Only a live row takes the words: a delete that raced this press leaves nothing to change, a NOT_FOUND.
+    const changed = await tx
+      .update(eventVolunteerNotes)
+      .set({ body, updatedAt: now })
+      .where(and(eq(eventVolunteerNotes.id, noteId), isNull(eventVolunteerNotes.deletedAt)))
+      .returning({ id: eventVolunteerNotes.id });
+    if (changed.length === 0) throw new DomainError("NOT_FOUND", "no such note");
+    // The old words are gone: the old line that holds them goes too (only while it still does).
+    await clearCarriedLine(tx, note);
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "volunteer.note_edited",
+      entityType: "event",
+      entityId: note.eventId,
+      metadata: { volunteerId: note.volunteerId },
+      now,
+    });
+    return { volunteerId: note.volunteerId, changed: true };
   });
 }

@@ -7,9 +7,10 @@ import { FEATURED, hydrated, signIn } from "./support/featured-event";
 /**
  * «Note interne» for volunteers, walked as an Organizer at 320 pixels and on a desktop: on the «Voluntari» list the row carries
  * «Adaugă o notă» (44 pixels high, its name naming the person) and no marker; the dialog saves the note and comes back to the same
- * list address with the marker counting it; the person's page has «Note interne» as its first fold, open, the note in it; «Șterge»
- * asks first and the note and the marker go. No hydration warning, no horizontal scroll. The volunteer is written straight into the
- * database, on the sample featured event, and removed after (its notes go with it).
+ * list address with the marker counting it; under the note's words in its column, «Modifică nota» (§964) changes them in the row's
+ * dialog and the column says the new words, with no day or hour; the person's page has «Note interne» as its first fold, open, the
+ * note in it; «Șterge» asks first and the note and the marker go. No hydration warning, no horizontal scroll. The volunteer is
+ * written straight into the database, on the sample featured event, and removed after (its notes go with it).
  */
 
 function databaseUrl(): string {
@@ -118,16 +119,44 @@ test.describe("«Note interne» for volunteers", () => {
       }
       await fitsTheScreen(page);
 
-      // The marker opens the person's page: «Note interne» is its first fold, open, the note in it.
+      // «Modifică nota» (§964), under the words in the column: the note's author changes them in the row's dialog, opened on them;
+      // back at the same list address, the column says the new words alone — no day, no hour.
+      const edit = page.locator('#main [data-testid="note-edit-open"]:visible');
+      await expect(edit).toHaveCount(1);
+      await expect(edit).toHaveAttribute("aria-label", `Modifică nota despre ${seeded.name}`);
+      expect((await edit.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      await edit.click();
+      const editDialog = page.getByRole("dialog");
+      await expect(editDialog).toContainText(`Modifică nota despre ${seeded.name}`);
+      const box = editDialog.getByRole("textbox", { name: /^Nota/ });
+      await expect(box).toHaveValue(words);
+      const changed = "Vine doar după-amiaza, cu mașina";
+      await box.fill(changed);
+      await editDialog.getByRole("button", { name: "Salvează nota" }).click();
+      const column = page.locator('#main [data-testid="volunteer-notes"]:visible');
+      await expect(column).toHaveText(changed);
+      await hydrated(page);
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+      // One toast at a time (§384): this one may wait its turn behind «Nota a fost salvată.», which stays its 5.5 seconds.
+      await expect(page.getByText("Nota a fost modificată.").first()).toBeVisible({ timeout: 15_000 });
+      expect([new URL(page.url()).searchParams.get("eventId"), new URL(page.url()).searchParams.get("q")]).toEqual([seeded.eventId, seeded.name]);
+      expect(page.url()).not.toContain("după-amiaza");
+      expect(await column.textContent()).not.toMatch(/\d{1,2}:\d{2}/);
+      await expect(mark).toContainText("1 notă");
+      await fitsTheScreen(page);
+
+      // The marker opens the person's page: «Note interne» is its first fold, open, the note in it — changed, with its author and day.
       await mark.click();
       await expect(page).toHaveURL(new RegExp(`${seeded.volunteerId}#note-interne$`));
       await hydrated(page);
       const first = page.locator("#main details").first();
       await expect(first).toHaveAttribute("id", "note-interne");
       await expect(first).toHaveAttribute("open", "");
-      await expect(first.getByTestId("note-body")).toHaveText(words);
+      await expect(first.getByTestId("note-body")).toHaveText(changed);
       await expect(first.getByTestId("note-by")).toContainText("Dev Moderator");
-      await expect(first.locator("summary")).toContainText("1 notă");
+      // The card's own line: the note's «Modifică» fold (§964) is a `<details>` inside it, with a summary of its own.
+      await expect(first.locator(":scope > summary")).toContainText("1 notă");
+      await expect(first.getByTestId("note-edit-toggle")).toHaveText("Modifică");
       await fitsTheScreen(page);
 
       // «Șterge» asks first; the note goes, the card stays open on «nicio notă», and the list's marker goes too.
@@ -137,7 +166,7 @@ test.describe("«Note interne» for volunteers", () => {
       await hydrated(page);
       await expect(page.locator("details#note-interne")).toHaveAttribute("open", "");
       await expect(page.getByTestId("note")).toHaveCount(0);
-      await expect(page.locator("details#note-interne summary")).toContainText("nicio notă");
+      await expect(page.locator("details#note-interne > summary")).toContainText("nicio notă");
       await page.goto(personUrl(seeded));
       await hydrated(page);
       await expect(page.locator("details#note-interne")).not.toHaveAttribute("open", "");
