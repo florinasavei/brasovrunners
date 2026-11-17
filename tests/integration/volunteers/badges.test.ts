@@ -947,7 +947,7 @@ describe("§965 «Logo-ul clubului jos, ca filigran»", () => {
   }, 120_000);
 });
 
-describe("§NNN the logo's size, space and place", () => {
+describe("§969 the logo's size, space and place", () => {
   const picture = (query: string) => previewRoute.GET(new Request(`http://localhost/api/admin/events/${eventId}/badges/preview?${query}`), { params: Promise.resolve({ id: eventId }) });
   const bytes = async (response: Response) => Buffer.from(await response.arrayBuffer());
   const valuesOf = (fields: Record<string, string>) => readBadgeDesignForm((name) => (designForm(fields).get(name) as string | null) ?? null);

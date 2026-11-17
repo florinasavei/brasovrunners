@@ -199,7 +199,7 @@ describe("§962 the badges with no type draw what they drew before it", () => {
 });
 
 /**
- * §NNN — the watermark's size, room and place, at their defaults, draw what §965 drew (BR-REQ-050-02): «Mărimea logo-ului» 67 %, no space
+ * §969 — the watermark's size, room and place, at their defaults, draw what §965 drew (BR-REQ-050-02): «Mărimea logo-ului» 67 %, no space
  * around it, no move. `__snapshots__/badge-drawing-before-logo-controls.json` was written by this very file from the code as it stood before
  * the four settings existed (baseline `BR-V4.56-2026-11-17`, with the taller badges): every case above with the watermark at each level, a
  * role under a category and the tall sizes beside them — the layout, the picture's markup and the sheet's calls, each as the SHA-256 of its
@@ -208,7 +208,7 @@ describe("§962 the badges with no type draw what they drew before it", () => {
  * back by `readBadgeDesign`), and held to it whole. Only APIs that existed before are called, so the file writes the same snapshot on the
  * old code (`vitest run -u` there).
  */
-describe("§NNN the watermark's size, room and place at their defaults draw what it drew before them", () => {
+describe("§969 the watermark's size, room and place at their defaults draw what it drew before them", () => {
   /** The four settings at their defaults, spelled out as a design saved with them holds them. */
   const LOGO_DEFAULTS = { footerLogoSizePct: 67, footerLogoPaddingMm: 0, footerLogoOffsetXMm: 0, footerLogoOffsetYMm: 0 } as const;
   const LEVELS = ["faint", "medium", "strong"] as const;

@@ -208,7 +208,7 @@ export default async function BadgeDesignPanel({
   const bandWord = await badgeLabelIn(design, locale);
   const roleAside = design.labelRo ? `${design.labelRo} / ${design.labelEn}` : t("badges.design.labelDefaultAside");
   const writingAside = design.writingLine ? t("badges.design.writingLine") : t("badges.design.writingPlain");
-  // The club's logo as a watermark (§965), in its own fold (§NNN): the level, and while it is drawn the share of the badge's width it is
+  // The club's logo as a watermark (§965), in its own fold (§969): the level, and while it is drawn the share of the badge's width it is
   // drawn at — the very box the sheet and the picture draw, never the number typed: «Mediu · 30%», «Mediu · 24% (cât încape)» when its room
   // keeps it under the size asked, «Mediu · nu încape» when no logo fits.
   const footerLogoAside = (() => {
@@ -222,7 +222,7 @@ export default async function BadgeDesignPanel({
     return words(level, t(stopped ? "badges.design.footerLogoSizeFits" : "badges.design.footerLogoSizeAside", { size }));
   })();
   /**
-   * One of the logo's four numbers (§NNN): a native number box within its bounds, a whole step, its help line under it. The phone's digits
+   * One of the logo's four numbers (§969): a native number box within its bounds, a whole step, its help line under it. The phone's digits
    * keyboard (`inputMode` numeric) only where no number is negative: the iPhone's has no minus key, so the two moves keep the keyboard
    * `type="number"` gives, which has one.
    */
@@ -523,7 +523,7 @@ export default async function BadgeDesignPanel({
             </Stack>
           </Panel>
 
-          {/* «Logo-ul clubului (filigran)» (§965, a fold of its own since §NNN — the owner could not find it in «Locul pentru nume»): how
+          {/* «Logo-ul clubului (filigran)» (§965, a fold of its own since §969 — the owner could not find it in «Locul pentru nume»): how
               visible the club's logo is, large and pale in the writing area, then its size, the space kept round it and its two moves. Every
               box is always there and always posted, «Fără» or not; the preview follows each as it is typed. */}
           <Panel glyph="pictures" collapsible level={5} title={t("badges.design.sections.footerLogo")} aside={footerLogoAside} data-testid="badge-section-footer-logo">

@@ -43,7 +43,7 @@ export type BadgeDesignFormValues = {
   /** «Logo-ul clubului jos, ca filigran» (§965): `off`, `faint`, `medium` or `strong` as posted — empty reads `off`, any other word is refused by the save. */
   footerLogo: string;
   /**
-   * The watermark's size, room and place (§NNN) as typed: «Mărimea logo-ului» in percent, «Spațiu în jurul logo-ului» and the two moves in
+   * The watermark's size, room and place (§969) as typed: «Mărimea logo-ului» in percent, «Spațiu în jurul logo-ului» and the two moves in
    * millimetres; NaN when the box holds no number — a form from before the boxes posts none — which the save reads as the default. A number
    * that is not whole, or outside its bounds, is refused by the save, naming its box.
    */

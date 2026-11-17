@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.60-2026-11-17
+
+- **The badges' logo, sized and placed by the club** — on the volunteers' badges page, «Logo-ul clubului (filigran)» is a section of its own, after «Locul pentru nume», with the logo's size (% of the badge's width), the space kept around it and two moves, left–right and up–down, in millimetres; the logo always stays in the white area of the name, the preview follows as you type, and a badge left at the defaults prints exactly as before. §969.
 ## BR-V4.59-2026-11-17
 
 - **The bib's altitudes in the bib's own colour** — on the route's profile the highest and the lowest altitude («815 m», «622 m») now print in the colour of the bib's band — the club's blue unless the race chose another, the members' colour on a member's bib — so they no longer read like one more kilometre; a colour too light for small type on white prints them in the ink at 60 % instead. Nothing else on the strip changes. §968.

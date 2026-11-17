@@ -314,10 +314,10 @@ describe("§965 «Logo-ul clubului jos, ca filigran» in the designer", () => {
     html(() => BadgeDesignPanel({ eventId: EVENT, locale: language, design, dropped, sampleRole: ROLES[0].id, version: "abc" }), language);
   const select = (page: string) => /<select[^>]*name="badge\.design\.footerLogo"[^>]*>[\s\S]*?<\/select>/.exec(page)?.[0] ?? "";
   const options = (page: string) => [...select(page).matchAll(/<option value="([^"]*)"( selected="")?>([^<]*)<\/option>/g)].map(([, value, selected, words]) => ({ value, selected: Boolean(selected), words }));
-  /** The logo's own fold (§NNN), from its heading to the next fold's. */
+  /** The logo's own fold (§969), from its heading to the next fold's. */
   const logoFold = (page: string) => page.slice(page.indexOf('data-testid="badge-section-footer-logo"'), page.indexOf('data-testid="badge-section-marker"'));
 
-  it("is a native select of four choices in the logo's own fold (§NNN), with its help line, the platform's «Fără» chosen for a design that never chose", async () => {
+  it("is a native select of four choices in the logo's own fold (§969), with its help line, the platform's «Fără» chosen for a design that never chose", async () => {
     const page = await draw();
     expect(options(page)).toEqual([
       { value: "off", selected: true, words: "Fără" },
@@ -327,7 +327,7 @@ describe("§965 «Logo-ul clubului jos, ca filigran» in the designer", () => {
     ]);
     expect(page).toContain("Logo-ul clubului jos, ca filigran");
     expect(page).toContain("Logo-ul clubului mare și palid în partea de jos a ecusonului. Numele scris cu markerul se citește peste el.");
-    // In the fold of its own, right after «Locul pentru nume», which no longer holds it (§NNN: the owner could not find it there).
+    // In the fold of its own, right after «Locul pentru nume», which no longer holds it (§969: the owner could not find it there).
     expect(logoFold(page)).toContain('name="badge.design.footerLogo"');
     const writing = page.slice(page.indexOf('data-testid="badge-section-writing"'), page.indexOf('data-testid="badge-section-footer-logo"'));
     expect(writing).toContain('name="badge.design.writingLine"');
@@ -340,7 +340,7 @@ describe("§965 «Logo-ul clubului jos, ca filigran» in the designer", () => {
   it("keeps the chosen level selected, says it in its fold's closed line — never in the writing area's — and draws the preview with it", async () => {
     const page = await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "medium" });
     expect(options(page).filter((option) => option.selected).map((option) => option.value)).toEqual(["medium"]);
-    // The share of the badge's width it is drawn at (§NNN): on the default strip §965's box is a quarter of it.
+    // The share of the badge's width it is drawn at (§969): on the default strip §965's box is a quarter of it.
     expect(logoFold(page)).toContain("Mediu · 24% (cât încape)");
     expect(page).toMatch(/badges\/preview\?[^"]*footerLogo=medium/);
     // «Locul pentru nume» says its own look alone.
@@ -372,7 +372,7 @@ describe("§965 «Logo-ul clubului jos, ca filigran» in the designer", () => {
   });
 });
 
-describe("§NNN «Logo-ul clubului (filigran)», a fold of its own, with the logo's size, space and place", () => {
+describe("§969 «Logo-ul clubului (filigran)», a fold of its own, with the logo's size, space and place", () => {
   const draw = (design = DEFAULT_BADGE_DESIGN, language: "ro" | "en" = "ro", dropped: BadgeDroppedKey[] = []) =>
     html(() => BadgeDesignPanel({ eventId: EVENT, locale: language, design, dropped, sampleRole: ROLES[0].id, version: "abc" }), language);
   const logoFold = (page: string) => page.slice(page.indexOf('data-testid="badge-section-footer-logo"'), page.indexOf('data-testid="badge-section-marker"'));

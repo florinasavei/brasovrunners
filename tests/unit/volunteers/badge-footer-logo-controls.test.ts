@@ -55,7 +55,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { LOGO_RATIO } from "@/theme/brand";
 
 /**
- * §NNN — the watermark's size, room and place (BR-REQ-050-02; the owner, 2026-11-17, designing the volunteers' badges with §965's
+ * §969 — the watermark's size, room and place (BR-REQ-050-02; the owner, 2026-11-17, designing the volunteers' badges with §965's
  * watermark: «și practic trebuie să pot seta dimensiunea logo-ului, padding și offset»). Four whole numbers of the design —
  * «Mărimea logo-ului» (10–100 % of the badge's width, 67), «Spațiu în jurul logo-ului» (0–20 mm, 0) and the two moves (−100…100 mm, 0;
  * right and down positive) — read forgivingly, refused at the save naming their box, carried by the preview's address and the event's
@@ -93,7 +93,7 @@ function box965(level: Exclude<BadgeFooterLogo, "off">, at: { paper: { width: nu
   return { left: (at.paper.width - width) / 2, top: foot - height, width, height, opacity: BADGE_FOOTER_LOGO_OPACITY[level] };
 }
 
-describe("§NNN the design's four settings of the logo", () => {
+describe("§969 the design's four settings of the logo", () => {
   it("are four whole numbers with the bounds and defaults decided, the defaults in the platform's design", () => {
     expect(BADGE_FOOTER_LOGO_SETTINGS).toEqual({
       footerLogoSizePct: { min: 10, max: 100, default: 67 },
@@ -159,7 +159,7 @@ describe("§NNN the design's four settings of the logo", () => {
   });
 });
 
-describe("§NNN the form, the preview's address and the save", () => {
+describe("§969 the form, the preview's address and the save", () => {
   const posted = (fields: Record<string, string>) => readBadgeDesignForm((name) => fields[name] ?? null);
   const base = { "badge.design.mode": "single", "badge.design.size": "strip90", "badge.design.writingLine": "on" };
   const boxOf = (key: BadgeFooterLogoSetting) => `badge.design.${key}`;
@@ -250,7 +250,7 @@ describe("§NNN the form, the preview's address and the save", () => {
   });
 });
 
-describe("§NNN the logo's one box", () => {
+describe("§969 the logo's one box", () => {
   /** Every width step of 10 mm, every height step of 10 mm and the tallest, and the two presets. */
   const sizes: BadgeSizeChoice[] = [
     { size: "strip90", customWidthMm: 90, customHeightMm: 35 },
@@ -619,7 +619,7 @@ function elements(markup: ReactNode): Node[] {
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("§NNN the sheet and the picture draw the moved logo at one box", () => {
+describe("§969 the sheet and the picture draw the moved logo at one box", () => {
   const cases: Array<[string, BadgeDesign, BadgeFaceRole | null]> = [
     ["the tallest badge, the logo at its widest with a space, moved left and down", { ...DEFAULT_BADGE_DESIGN, size: "custom", customWidthMm: 90, customHeightMm: 287, footerLogo: "strong", footerLogoSizePct: 100, footerLogoPaddingMm: 3, footerLogoOffsetXMm: -20, footerLogoOffsetYMm: 5 }, null],
     ["the default strip per role, at 30 % — over «Nume:» — and pushed to the right edge", { ...DEFAULT_BADGE_DESIGN, mode: "perRole", footerLogo: "medium", footerLogoSizePct: 30, footerLogoOffsetXMm: 100 }, { name: "Direcționare", colour: null, category: "Pe Traseu" }],
@@ -669,7 +669,7 @@ describe("§NNN the sheet and the picture draw the moved logo at one box", () =>
   }, 60_000);
 });
 
-describe("§NNN the drawing's version and the picture's stamp", () => {
+describe("§969 the drawing's version and the picture's stamp", () => {
   it("raises the drawing's version to 4, so every picture's address changes with it", () => {
     expect(BADGE_DRAWING_VERSION).toBe(4);
   });

@@ -32,7 +32,7 @@
  *
  * With «Logo-ul clubului jos, ca filigran» (§965) the club's lockup is drawn large and pale at the foot of the
  * writing area, under everything written there (`badgeFooterLogoBox`); it takes no height, so no row moves. Its
- * size, the space round it and where it stands are the club's to set (§NNN), always inside the writing area — a
+ * size, the space round it and where it stands are the club's to set (§969), always inside the writing area — a
  * size the club types may rise over «Nume:», which is written over it.
  *
  * Every height is a share of the badge's content (`BADGE_LAYOUT`), so a larger badge is the same badge,
@@ -125,7 +125,7 @@ export const DEFAULT_BADGE_FOOTER_LOGO: BadgeFooterLogo = "off";
 export const BADGE_FOOTER_LOGO_OPACITY: Readonly<Record<Exclude<BadgeFooterLogo, "off">, number>> = { faint: 0.12, medium: 0.22, strong: 0.35 };
 
 /**
- * The watermark's size, room and place (§NNN; the owner, 2026-11-17: «și practic trebuie să pot seta dimensiunea logo-ului, padding și
+ * The watermark's size, room and place (§969; the owner, 2026-11-17: «și practic trebuie să pot seta dimensiunea logo-ului, padding și
  * offset»): four whole numbers of the design, each with its bounds and its default — the defaults draw §965's box exactly.
  *
  * - `footerLogoSizePct`, «Mărimea logo-ului»: the logo's widest width, as a share of the badge's paper width, 10–100 %. The default, 67,
@@ -158,7 +158,7 @@ export function badgeFooterLogoSetting(key: BadgeFooterLogoSetting, value: numbe
 }
 
 /**
- * The logo's widest width as a share of the badge's paper width, from «Mărimea logo-ului» (§NNN): the percent typed — and for the default
+ * The logo's widest width as a share of the badge's paper width, from «Mărimea logo-ului» (§969): the percent typed — and for the default
  * 67, §965's two thirds, which no whole percent says exactly: so a design that never moved the box draws every badge as it drew.
  */
 export function badgeFooterLogoWidthShare(sizePct: number | undefined): number {
@@ -167,7 +167,7 @@ export function badgeFooterLogoWidthShare(sizePct: number | undefined): number {
 }
 
 /**
- * The least width the watermark is drawn at (§NNN): 5 mm. A space, or a room, that leaves the logo narrower draws none — a speck reads as a
+ * The least width the watermark is drawn at (§969): 5 mm. A space, or a room, that leaves the logo narrower draws none — a speck reads as a
  * stain on the paper, not as the club — and the designer's closed line says it does not fit. Under every box §965 draws, so the defaults
  * never meet it; and under «Mărimea logo-ului»'s least, 10 % of the narrowest badge, 6 mm.
  */
@@ -218,7 +218,7 @@ export const BADGE_LAYOUT = {
   dividerInsetShare: 0.5,
   /**
    * The club's logo as a watermark (§965): at most this share of the badge's width, and its room from the writing area's foot, of
-   * the pad. Its top is never above the foot of «Nume:»'s line — until the club moves it, or types a size of its own (§NNN). The share
+   * the pad. Its top is never above the foot of «Nume:»'s line — until the club moves it, or types a size of its own (§969). The share
    * is the default «Mărimea logo-ului», 67 % (`badgeFooterLogoWidthShare`).
    */
   footerLogoWidthShare: 2 / 3,
@@ -436,7 +436,7 @@ export type BadgeLayout = {
   phoneLine: BadgeTextLine | null;
   /**
    * «Logo-ul clubului jos, ca filigran» (§965): the club's lockup, centred across the badge at the foot of the writing area — or where the
-   * club moved it inside that area, at the size it chose (§NNN) — at its level's opacity, drawn first in that area, so «Nume:», the lines
+   * club moved it inside that area, at the size it chose (§969) — at its level's opacity, drawn first in that area, so «Nume:», the lines
    * and the marker's area go over it. Absent while the design says `off`, so a badge without it lays out exactly as it did.
    */
   footerLogo?: BadgeFooterLogoBox;
@@ -453,7 +453,7 @@ export type BadgeLayout = {
  * the badge, standing on the room's foot. The same box on every badge of a design: it reads the rows and the name's line, never a role's
  * words (`badgeFooterLogoOf` draws it with none).
  *
- * **The club's size, room and place (§NNN)**, `placement` — the design's four settings, each its default when absent. «Spațiu în jurul
+ * **The club's size, room and place (§969)**, `placement` — the design's four settings, each its default when absent. «Spațiu în jurul
  * logo-ului» is taken from every side of the room before the logo is fitted in it, so the space makes it smaller and moves nothing. The
  * widest it may be is «Mărimea logo-ului» of the badge's width (`badgeFooterLogoWidthShare`), and the room it is fitted in is the size's
  * to say: at the default, 67, §965's room under «Nume:», so a badge left at the defaults is §965's; at any other number the whole writing
@@ -483,7 +483,7 @@ export function badgeFooterLogoBox(
   // §965's room, less the space: the writing area's lower part, under «Nume:»'s line. The logo stands on its foot.
   const top = at.name.top + badgeLineHeight(at.name.size) + space;
   const foot = at.writing.top + at.writing.height - at.pad * L.footerLogoFootShare - space;
-  // How tall it may be: §965's room at the default size; the whole writing area less the space at a size the club typed (§NNN).
+  // How tall it may be: §965's room at the default size; the whole writing area less the space at a size the club typed (§969).
   const typed = badgeFooterLogoSetting("footerLogoSizePct", placement.footerLogoSizePct) !== BADGE_FOOTER_LOGO_SETTINGS.footerLogoSizePct.default;
   const room = typed ? area.foot - area.top : foot - top;
   const across = area.right - area.left;
@@ -502,7 +502,7 @@ export function badgeFooterLogoBox(
 /**
  * The pad, «Nume:»'s top and the largest size «Nume:» and the marker's label are set at, on a badge's rows: what `badgeLayout` writes
  * «Nume:» by and what the watermark stands under — one computation for both, so the designer's word for the logo's size
- * (`badgeFooterLogoOf`, §NNN) is the size drawn.
+ * (`badgeFooterLogoOf`, §969) is the size drawn.
  */
 function badgeNameMarks(rows: { content: { height: number }; header: BadgeRow; writing: BadgeRow }): { pad: number; nameTop: number; nameSize: number } {
   const L = BADGE_LAYOUT;
@@ -511,7 +511,7 @@ function badgeNameMarks(rows: { content: { height: number }; header: BadgeRow; w
 }
 
 /**
- * The watermark's box on a design's badges, without their words (§NNN): the box `badgeLayout` draws on every badge of the design, which
+ * The watermark's box on a design's badges, without their words (§969): the box `badgeLayout` draws on every badge of the design, which
  * reads the rows, the pad and «Nume:»'s line, never a role's words — for the designer's closed line to say the size the logo is drawn at.
  * `shown` says which rows take height, as `badgeRows` reads them. Null while off, or when no logo fits.
  */
@@ -633,7 +633,7 @@ export function badgeLayout(choice: BadgeLayoutChoice, words: BadgeLayoutWords, 
       : null;
 
   // The club's logo as a watermark (§965), in the writing area's lower part under «Nume:»'s line — at the club's size, space and place
-  // inside the writing area (§NNN): it moves no row. The designer names its size from the same box (`badgeFooterLogoOf`).
+  // inside the writing area (§969): it moves no row. The designer names its size from the same box (`badgeFooterLogoOf`).
   const footerLogo = badgeFooterLogoBox(choice.footerLogo, { paper, writing, pad, name: { top: nameTop, size: nameSize } }, choice);
 
   // The category's own line is a key only when there is one: a badge without it is the very object it was (§962).
