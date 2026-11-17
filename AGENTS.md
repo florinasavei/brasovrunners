@@ -3509,10 +3509,10 @@ one of the event's «Puncte pe traseu», one the organizers typed by hand, or on
 told and «already told» alike. A person at the start–finish is told the place with no number and no kilometre
 («Ești la start–finish: …»); a point that has coordinates is said with them and «Deschide pe hartă», in the
 HTML and in the text; who «already knows their point» does not change when a point's name, kilometre or
-coordinates do, so «Trimite din nou tuturor» is how a place typed later is sent. Never by placing, moving or taking a person off; never by a job; never to another
-event's people. The payload holds ids and the telling (`eventId`, `volunteerId`, `checkpointId`, `round`: 1 for
-the person's first message, one more for each later one) and the key is exactly that,
-`volunteer-point:<volunteer>:<point>:<round>`.
+coordinates do, so «Trimite din nou tuturor» is how a place typed later is sent. Never by placing, moving or
+taking a person off; never by a job; never to another event's people. The payload holds ids and the telling
+(`eventId`, `volunteerId`, `checkpointId`, `round`: 1 for the person's first message, one more for each later
+one) and the key is exactly that, `volunteer-point:<volunteer>:<point>:<round>`.
 
 **The outbox's own rows are the memory of who was told** — no column, no table. A person «already knows the
 point they stand at» when the newest of their rows still waits to leave (PENDING, PROCESSING) and names that

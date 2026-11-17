@@ -536,6 +536,8 @@ test.describe("§NNN «Punctele planului» on «Planul voluntarilor»", () => {
     await expect(waterFold.getByTestId("plan-point-edit-name")).toHaveCount(0);
     await expect(waterFold.getByTestId("plan-point-remove-form")).toHaveCount(0);
     await expect(waterFold.getByTestId("plan-point-editors")).toContainText("Numele și kilometrul acestui punct se schimbă în editorul evenimentului:");
+    // The link names the editor's card by its own title: the sentence has already said where.
+    await expect(waterFold.getByTestId("plan-point-editors").getByRole("link")).toHaveText("Puncte pe traseu");
 
     // ---- «Șterge punctul»: it asks first, with the point's name and who stands there — and Radu is under «Fără punct» -
     const kitsFold = kits.getByTestId("plan-point-edit");

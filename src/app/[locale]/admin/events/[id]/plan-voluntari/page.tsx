@@ -414,7 +414,8 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
               </>
             ) : (
               <Typography variant="body2" color="text.secondary" data-testid="plan-point-editors">
-                {t("volunteers.plan.points.editorsOnly")} <Link href={{ pathname: "/admin/events/[id]", params: { id }, hash: "box-checkpoints" }}>{t("volunteers.plan.editPoints")}</Link>
+                {/* The link says the editor's card by its own name: the sentence has already said «în editorul evenimentului». */}
+                {t("volunteers.plan.points.editorsOnly")} <Link href={{ pathname: "/admin/events/[id]", params: { id }, hash: "box-checkpoints" }}>{t("checkpoints.title")}</Link>
               </Typography>
             )}
             <TextField
@@ -486,7 +487,8 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
         <Typography variant="body2" color="text.secondary">
           {t("volunteers.plan.help")}
         </Typography>
-        {/* The two kinds of points and who sees which (§NNN): the editor's are public, the ones added here are the plan's alone. */}
+        {/* Who sees which points (§NNN): the editor's are public too. That the ones added here are the plan's alone is said once,
+            where they are added («Punctele planului», `points.helpPrivate`). */}
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="plan-help-points">
           {t("volunteers.plan.helpPoints")}
         </Typography>

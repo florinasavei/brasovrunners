@@ -10,7 +10,16 @@ import { CoordinatesRefusal } from "@/modules/event-checkpoints/domain/coordinat
 import { viewPersonData } from "@/modules/registrations/person-data";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { readVolunteerPlan } from "@/modules/volunteers/plan";
-import { changePlanPoint, listPlanPoints, PLAN_POINT_REASONS, PLAN_POINTS_MAX, type PlanPointPlace, PlanPointRefusal, planPointRefusalValues } from "@/modules/volunteers/plan-points";
+import {
+  changePlanPoint,
+  listPlanPoints,
+  PLAN_POINT_REASONS,
+  PLAN_POINTS_MAX,
+  PlanPointGone,
+  type PlanPointPlace,
+  PlanPointRefusal,
+  planPointRefusalValues,
+} from "@/modules/volunteers/plan-points";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -100,7 +109,7 @@ async function refusal(press: Promise<unknown>): Promise<{ code: string; reason:
     await press;
   } catch (error) {
     const known = error as { code: string; fields: readonly string[]; reason?: string };
-    return { code: known.code, reason: error instanceof PlanPointRefusal || error instanceof CoordinatesRefusal ? error.reason : null, fields: known.fields };
+    return { code: known.code, reason: error instanceof PlanPointRefusal || error instanceof CoordinatesRefusal || error instanceof PlanPointGone ? error.reason : null, fields: known.fields };
   }
   throw new Error("expected a refusal");
 }
@@ -453,14 +462,17 @@ describe("§NNN «Salvează punctul»", () => {
     const id = await added({ name: "Izvor" });
     const before = await rowsOf();
     const elsewhere = await rowOf(race.points.elsewhere);
-    // Another event's point, under this event; and this event's point, under the other.
-    expect(await refusal(edit(race.points.elsewhere, { coordinates: PIATA }))).toMatchObject({ code: "NOT_FOUND" });
-    expect(await refusal(edit(id, { name: "Furat" }, staff.ADMIN!, race.otherId))).toMatchObject({ code: "NOT_FOUND" });
+    // Another event's point, under this event; and this event's point, under the other. NOT_FOUND, said on the page as a
+    // point no longer on the plan (`PLAN_POINT_GONE`) — never as a registration that is gone.
+    const gone = { code: "NOT_FOUND", reason: "PLAN_POINT_GONE" };
+    expect(await refusal(edit(race.points.elsewhere, { coordinates: PIATA }))).toMatchObject(gone);
+    expect(await refusal(edit(id, { name: "Furat" }, staff.ADMIN!, race.otherId))).toMatchObject(gone);
     for (const missing of ["11111111-1111-4111-8111-111111111111", "not-an-id", "", undefined, null, 7]) {
-      expect(await refusal(edit(missing, { coordinates: PIATA })), JSON.stringify(missing)).toMatchObject({ code: "NOT_FOUND" });
-      expect(await refusal(remove(missing)), JSON.stringify(missing)).toMatchObject({ code: "NOT_FOUND" });
+      expect(await refusal(edit(missing, { coordinates: PIATA })), JSON.stringify(missing)).toMatchObject(gone);
+      expect(await refusal(remove(missing)), JSON.stringify(missing)).toMatchObject(gone);
     }
-    expect(await refusal(edit(id, {}, staff.ADMIN!, "11111111-1111-4111-8111-111111111111"))).toMatchObject({ code: "NOT_FOUND" });
+    // An event that is not there is the domain's own NOT_FOUND: no page of it to say anything on.
+    expect(await refusal(edit(id, {}, staff.ADMIN!, "11111111-1111-4111-8111-111111111111"))).toMatchObject({ code: "NOT_FOUND", reason: null });
     expect(await rowsOf()).toEqual(before);
     expect(await rowOf(race.points.elsewhere)).toEqual(elsewhere);
     expect(await trail()).toHaveLength(1);
@@ -611,7 +623,7 @@ describe("§NNN a person at a point of the plan's own", () => {
 
 describe("§NNN the words a refusal is said with", () => {
   it("has a sentence in both catalogues for every reason, and fills what the sentence counts", () => {
-    for (const reason of [...PLAN_POINT_REASONS, "COORDINATES_INVALID"]) {
+    for (const reason of [...PLAN_POINT_REASONS, "COORDINATES_INVALID", new PlanPointGone().reason]) {
       for (const [locale, catalogue] of [
         ["ro", ro],
         ["en", en],

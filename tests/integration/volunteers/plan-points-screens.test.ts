@@ -290,7 +290,8 @@ describe("§NNN the plan's page: two groups, the summary, and the plan's own poi
       expect(tagOf(water, 'data-testid="plan-point"')).toContain('data-place="route"');
       expect(water).not.toContain('data-testid="plan-point-own"');
       expect(water).not.toContain('data-testid="plan-point-where"');
-      // Its fold: the coordinates alone, and the sentence that its name and kilometre are the editor's, with the page's link there.
+      // Its fold: the coordinates alone, and the sentence that its name and kilometre are the editor's, with a link to the
+      // editor's card named by the card's own title — the sentence has said «în editorul evenimentului» once already.
       const fold = foldOf(water);
       expect(fold).toContain(words.points.edit);
       expect(fold).toContain(`name="pointId" value="${race.points.water}"`);
@@ -299,8 +300,11 @@ describe("§NNN the plan's page: two groups, the summary, and the plan's own poi
       expect(fold).not.toContain('name="name"');
       expect(fold).not.toContain('name="km"');
       expect(fold).not.toContain('name="place"');
-      expect(wordsOf(/<p[^>]*data-testid="plan-point-editors"[\s\S]*?<\/p>/.exec(fold)![0])).toBe(`${wordsOf(escaped(words.points.editorsOnly))} ${wordsOf(escaped(words.editPoints))}`);
-      expect(fold).toMatch(new RegExp(`<a[^>]*href="/${locale}/admin/events/${race.raceId}#box-checkpoints"`));
+      const editors = /<p[^>]*data-testid="plan-point-editors"[\s\S]*?<\/p>/.exec(fold)![0];
+      const card = (locale === "ro" ? ro : en).Admin.checkpoints.title;
+      expect(wordsOf(editors)).toBe(`${wordsOf(escaped(words.points.editorsOnly))} ${wordsOf(escaped(card))}`);
+      expect(editors).toMatch(new RegExp(`<a[^>]*href="/${locale}/admin/events/${race.raceId}#box-checkpoints"[^>]*>${card}</a>`));
+      expect(wordsOf(editors).split(escaped(locale === "ro" ? "editorul evenimentului" : "the event's editor"))).toHaveLength(2);
       expect(fold).toContain(words.points.save);
       // «Șterge punctul» is not offered on it: an editor's point is deleted in the editor.
       expect(fold).not.toContain('data-testid="plan-point-remove-form"');
@@ -456,7 +460,7 @@ describe("§NNN the plan's page: two groups, the summary, and the plan's own poi
     expect(en.Admin.volunteers.plan.unplacedHelp).not.toMatch(/kits|the start,/i);
   });
 
-  it("says under the title the two kinds of points, and that the plan's own are seen by the organizers and in the volunteers' email only", async () => {
+  it("says under the title the two kinds of points and that the editor's are public too — and, once, where they are added, that the plan's own are seen by the organizers and in the volunteers' email only", async () => {
     for (const locale of ["ro", "en"] as const) {
       state.locale = locale;
       const words = (locale === "ro" ? ro : en).Admin.volunteers.plan;
@@ -468,8 +472,10 @@ describe("§NNN the plan's page: two groups, the summary, and the plan's own poi
     }
     expect(ro.Admin.volunteers.plan.help).toMatch(/la start–finish sau la un punct de pe traseu/);
     expect(ro.Admin.volunteers.plan.helpPoints).toMatch(/pagina evenimentului și pe numerele de concurs/);
-    expect(ro.Admin.volunteers.plan.helpPoints).toMatch(/doar în plan și în emailul trimis voluntarilor/);
+    expect(ro.Admin.volunteers.plan.points.helpPrivate).toMatch(/doar pe plan și în emailul trimis voluntarilor/);
     expect(ro.Admin.volunteers.plan.points.helpPrivate).toMatch(/nu apar pe pagina evenimentului și nici pe numerele de concurs/);
+    // Said once on the page: the paragraph under the title no longer repeats what «Punctele planului» says.
+    for (const catalogue of [ro, en]) expect(catalogue.Admin.volunteers.plan.helpPoints).not.toMatch(/doar|only/);
     // «start–finish» with an en dash everywhere a person reads it.
     for (const catalogue of [ro, en]) expect(JSON.stringify(catalogue.Admin.volunteers.plan)).not.toMatch(/start-finish/i);
   });
@@ -731,8 +737,10 @@ describe("§NNN «Salvează punctul» and «Șterge punctul»: the actions", () 
     expect(await pressed(() => editPlanPointAction(form({ ...boxes, km: "departe" })))).toBe(alertOf("PLAN_POINT_KM_INVALID"));
     expect(await pressed(() => editPlanPointAction(form({ ...boxes, coordinates: "nicăieri" })))).toBe(alertOf("COORDINATES_INVALID"));
     expect(await pressed(() => editPlanPointAction(form({ ...boxes, place: "undeva" })))).toBe(alertOf("PLAN_POINT_PLACE_UNKNOWN"));
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, pointId: race.points.elsewhere })))).toBe(alertOf("NOT_FOUND"));
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, pointId: "not-an-id" })))).toBe(alertOf("NOT_FOUND"));
+    // A point that is not on this plan — another event's, or no id at all — is said as a point no longer on the plan, never as
+    // the backoffice's «Înregistrarea nu mai există», which names a registration.
+    expect(await pressed(() => editPlanPointAction(form({ ...boxes, pointId: race.points.elsewhere })))).toBe(alertOf("PLAN_POINT_GONE"));
+    expect(await pressed(() => editPlanPointAction(form({ ...boxes, pointId: "not-an-id" })))).toBe(alertOf("PLAN_POINT_GONE"));
     expect(await rowOf(spring)).toEqual(before);
     expect(toasted()).toEqual([]);
 
@@ -740,7 +748,7 @@ describe("§NNN «Salvează punctul» and «Șterge punctul»: the actions", () 
     for (const locale of ["ro", "en"] as const) {
       state.locale = locale;
       const errors = (locale === "ro" ? ro : en).Admin.errors as Record<string, string>;
-      for (const code of ["PLAN_POINT_NAME_MISSING", "PLAN_POINT_KM_INVALID", "COORDINATES_INVALID", "PLAN_POINT_PLACE_UNKNOWN", "PLAN_POINT_IN_EDITOR", "PLAN_POINT_TOO_MANY", "NOT_FOUND", "FORBIDDEN"]) {
+      for (const code of ["PLAN_POINT_NAME_MISSING", "PLAN_POINT_KM_INVALID", "COORDINATES_INVALID", "PLAN_POINT_PLACE_UNKNOWN", "PLAN_POINT_IN_EDITOR", "PLAN_POINT_TOO_MANY", "PLAN_POINT_GONE", "NOT_FOUND", "FORBIDDEN"]) {
         const page = await planPage({ planError: code });
         const said = wordsOf(/<div[^>]*id="admin-alert"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/.exec(page)![0]);
         const sentence = errors[code].replace("{max}", code === "PLAN_POINT_TOO_MANY" ? "40" : "60");
@@ -778,7 +786,12 @@ describe("§NNN «Salvează punctul» and «Șterge punctul»: the actions", () 
     state.flashed.length = 0;
     expect(await pressed(() => removePlanPointAction(form({ pointId: race.points.bridge })))).toBe(alertOf("PLAN_POINT_IN_EDITOR"));
     expect(await rowOf(race.points.bridge)).toBeDefined();
-    expect(await pressed(() => removePlanPointAction(form({ pointId: kits })))).toBe(alertOf("NOT_FOUND"));
+    // «Șterge punctul» pressed again — a second tap on a slow connection, or a colleague's delete first: the point is no
+    // longer on the plan, and the alert says that.
+    expect(await pressed(() => removePlanPointAction(form({ pointId: kits })))).toBe(alertOf("PLAN_POINT_GONE"));
+    expect(wordsOf(/<div[^>]*id="admin-alert"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/.exec(await planPage({ planError: "PLAN_POINT_GONE" }))![0])).toBe(
+      "Punctul nu mai e pe plan: a fost șters între timp.",
+    );
     expect(toasted()).toEqual([]);
     expect(await pressed(() => removePlanPointAction(form({ eventId: "", pointId: kits })))).toBe("/ro/admin/volunteers");
     expect(await db.select().from(emailOutbox)).toEqual([]);

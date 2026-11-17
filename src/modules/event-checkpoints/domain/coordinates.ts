@@ -151,7 +151,7 @@ function pointPair(text: string): Coordinates | null {
  * that is no pair, commas: «45,64271; 25,58871», «45,64271 25,58871», «45,64271, 25,58871». A comma is read as a decimal
  * mark where it stands between two digits; the one shape that leaves in doubt, four runs of digits joined by commas alone
  * («45,64271,25,58871»), has one reading that is a pair — the middle comma parts them. Three runs («45,5,25») have two
- * readings, and are refused rather than guessed.
+ * readings, and are refused rather than guessed; so are two («45,64»), by `oneNumberWithComma` before this is asked.
  */
 function asTyped(text: string): Coordinates | null {
   const pointed = pointPair(text);
@@ -160,6 +160,18 @@ function asTyped(text: string): Coordinates | null {
   if (four) return pointPair(`${four[1]}.${four[2]}, ${four[3]}.${four[4]}`);
   const commas = text.replace(/(?<=\d),(?=\d)/g, ".");
   return commas === text ? null : pointPair(commas);
+}
+
+/**
+ * Whether the text, its commas between two digits read as decimal marks, is one number alone — «45,64», «-45,6»,
+ * «45,64° N», «N 45,64»: one coordinate written with a decimal comma, or two whole degrees with nothing but a comma between
+ * them. Two readings, as three runs have (`asTyped`): refused rather than guessed, since the guess would be a pair a whole
+ * continent away and the volunteer's email would carry its link. Asked of what a person typed into the box, never of a
+ * link's value: in an address a comma is never a decimal mark, and «query=0%2C0» is the pair it says.
+ */
+function oneNumberWithComma(text: string): boolean {
+  const commas = text.replace(/(?<=\d),(?=\d)/g, ".");
+  return commas !== text && halvesAt(commas, 0).some((half) => half.end === commas.length);
 }
 
 /** What a person typed, tidied: one line, plain spaces, a plain minus, and no brackets around the whole of it. */
@@ -254,7 +266,8 @@ const linkIn = (text: string): string | null => /(?:[a-z][a-z0-9+.-]*:\/\/|www\.
  * («none») — or a `CoordinatesRefusal` naming the box. Read:
  *
  * - «45.64271, 25.58871», the shape Google Maps copies, and the same with a space or a semicolon between the two;
- * - decimal commas where the two numbers can still be told apart: «45,64271; 25,58871», «45,64271 25,58871»;
+ * - decimal commas where the two numbers can still be told apart: «45,64271; 25,58871», «45,64271 25,58871» — never one
+ *   number alone with a decimal comma, «45,64», which is no pair or a wrong one (`oneNumberWithComma`);
  * - a degree sign and the letters N, S, E, W — and V, the Romanian vest: «45.64271° N, 25.58871° E»; with letters the two
  *   may stand in either order;
  * - degrees, minutes and seconds as Google Maps shows them on a computer: «45°38'33.8"N 25°35'19.4"E»;
@@ -269,7 +282,9 @@ export function parseCoordinates(text: string, box: string = COORDINATES_BOX): C
   if (typed === "") return null;
   if (typed.length > COORDINATES_TEXT_MAX) throw new CoordinatesRefusal(box);
   const link = /^geo:/i.test(typed) ? null : linkIn(typed);
-  const pair = /^geo:/i.test(typed) ? fromGeo(typed) : (asTyped(typed) ?? (link ? fromLink(link) : null));
+  // A lone number with a decimal comma is refused here, where a person typed it, before it can be read as two.
+  const typedPair = oneNumberWithComma(typed) ? null : asTyped(typed);
+  const pair = /^geo:/i.test(typed) ? fromGeo(typed) : (typedPair ?? (link ? fromLink(link) : null));
   if (!pair) throw new CoordinatesRefusal(box);
   return pair;
 }

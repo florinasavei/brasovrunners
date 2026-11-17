@@ -177,6 +177,20 @@ export class PlanPointRefusal extends DomainError {
   }
 }
 
+/**
+ * The point a press names is not on this event's plan: another event's, a value that is no id, or one deleted since the page
+ * was drawn — by a colleague, or by the first tap of a «Șterge punctul» pressed twice on a slow connection. NOT_FOUND, as
+ * the domain says it; `reason` is the page's own sentence for it (`Admin.errors.PLAN_POINT_GONE`: the point is no longer
+ * on the plan), never the backoffice's «Înregistrarea nu mai există», which names a registration.
+ */
+export class PlanPointGone extends DomainError {
+  readonly reason = "PLAN_POINT_GONE" as const;
+  constructor() {
+    super("NOT_FOUND", "the point is not there");
+    this.name = "PlanPointGone";
+  }
+}
+
 /** What a form posts, before it is a change: this service validates, the action only reads boxes. */
 export type PlanPointRequest =
   /** «Adaugă punctul»: a new point of the plan's own. */
@@ -242,7 +256,7 @@ const sameWords = (a: PointWords, b: PointWords): boolean => a.place === b.place
  * - **`edit`:** of a plan's own point, all of it, the kind included: moved to the start–finish it loses its kilometre, moved
  *   to the route it needs one. Of an editor's point, ONLY the coordinates: a posted name, kilometre or place for it is never
  *   read and never written — those are changed in the event's editor, where they are public. A point of another event, or
- *   one that is not there, is NOT_FOUND.
+ *   one that is not there, is NOT_FOUND (`PlanPointGone`, said on the page as a point no longer on the plan).
  * - **`remove`:** a plan's own point only; an editor's is refused (it is deleted in the editor). The people who stood there
  *   stand at no point again — the reference's own `ON DELETE SET NULL` — and the result says how many.
  * - **How:** in one transaction under the event row's lock (`FOR NO KEY UPDATE`, as `setVolunteerPlanPicture` and «Pune
@@ -259,7 +273,7 @@ export async function changePlanPoint<T extends Record<string, unknown>>(db: Dat
   // A forged form's malformed id is the refusal an unknown one gets, not a database error (§376).
   if (!isUuid(request.eventId)) throw new DomainError("NOT_FOUND", "the event is not there");
   const pointId = request.kind === "add" ? null : text(request.id).trim().toLowerCase();
-  if (pointId !== null && !isUuid(pointId)) throw new DomainError("NOT_FOUND", "the point is not there");
+  if (pointId !== null && !isUuid(pointId)) throw new PlanPointGone();
   // What an «Adaugă punctul» typed is held to the rules before anything is locked: it needs no row to be read.
   const added = request.kind === "add" ? wordsOf(request) : null;
 
@@ -313,7 +327,7 @@ export async function changePlanPoint<T extends Record<string, unknown>>(db: Dat
       .where(and(eq(eventCheckpoints.id, id), eq(eventCheckpoints.eventId, event.id)))
       .limit(1);
     // Another event's point, or one deleted since the page was drawn: not there.
-    if (!current) throw new DomainError("NOT_FOUND", "the point is not there");
+    if (!current) throw new PlanPointGone();
     const before: PointWords = {
       place: current.startFinish ? "startFinish" : "route",
       name: current.nameRo,

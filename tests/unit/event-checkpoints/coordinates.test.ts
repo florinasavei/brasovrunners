@@ -133,6 +133,9 @@ describe("§NNN parseCoordinates: what a person pastes from a maps application",
     ["a named place's address with no pin: the centre the map looked at", "https://www.google.com/maps/place/Pia%C8%9Ba+Sfatului/@45.64271,25.58871,17z", PIATA],
     ["words before the link, as a shared text has them", "Punctul 3 https://www.google.com/maps/@45.64271,25.58871,17z", PIATA],
     ["a link in the southern and western halves", "https://www.google.com/maps/@-33.86882,-70.66927,15z", { latitude: -33.86882, longitude: -70.66927 }],
+    // In an address a comma is never a decimal mark: two whole degrees a link carries are the pair they say.
+    ["whole degrees a link carries, a comma between them", "https://maps.google.com/?q=45,25", { latitude: 45, longitude: 25 }],
+    ["the equator at Greenwich as «open this place» builds it", "https://www.google.com/maps/search/?api=1&query=0%2C0", { latitude: 0, longitude: 0 }],
   ])("reads %s", (_what, text, expected) => {
     expect(read(text)).toEqual(expected);
   });
@@ -154,7 +157,16 @@ describe("§NNN parseCoordinates: what a person pastes from a maps application",
     ["a latitude past 90 by its letter", "95° N, 25° E"],
     ["a longitude past 180 in a link", "https://www.google.com/maps/@45.64271,181,17z"],
     ["one number", "45.64271"],
-    ["one number with a decimal comma, which reads as a pair that is no place", "45,64271"],
+    ["one number with a decimal comma", "45,64271"],
+    // One number with a short decimal tail reads as two whole degrees just as well — 45° N, 64° E is a place, a continent
+    // away: two readings, refused rather than guessed, as three runs are.
+    ["one number with a short decimal comma: «45,64» is not 45, 64", "45,64"],
+    ["one number with one decimal after a comma", "45,6"],
+    ["one negative number with a decimal comma", "-45,64"],
+    ["one number with a decimal comma and its letter", "45,64 N"],
+    ["one number with its letter before it and a decimal comma", "N 45,64"],
+    ["one number with a decimal comma and a degree sign", "45,64°"],
+    ["two whole numbers with a comma and no space: one number with a decimal comma as well", "45,25"],
     ["three numbers", "45.64271, 25.58871, 560"],
     ["three runs of digits joined by commas: two readings", "45,5,25"],
     ["three runs, whichever is longer", "45,64271,25"],
@@ -257,7 +269,7 @@ describe("§NNN mapUrlOf: Google Maps' own «open this place»", () => {
   });
 
   it("is an address the parser reads back as the same pair", () => {
-    for (const pair of [PIATA, { latitude: -33.86882, longitude: -70.66927 }, { latitude: 0, longitude: 0 }]) {
+    for (const pair of [PIATA, { latitude: -33.86882, longitude: -70.66927 }, { latitude: 0, longitude: 0 }, { latitude: 45, longitude: 25 }]) {
       expect(parseCoordinates(mapUrlOf(pair))).toEqual(pair);
     }
   });

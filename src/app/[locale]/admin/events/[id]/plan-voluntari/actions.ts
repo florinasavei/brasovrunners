@@ -10,7 +10,7 @@ import { inEmailPress } from "@/modules/notifications/press";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { setVolunteerPlanPicture } from "@/modules/volunteers/plan";
-import { changePlanPoint, PlanPointRefusal } from "@/modules/volunteers/plan-points";
+import { changePlanPoint, PlanPointGone, PlanPointRefusal } from "@/modules/volunteers/plan-points";
 import { sendVolunteerPoints } from "@/modules/volunteers/point-mail";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -170,11 +170,11 @@ const LIST_ANCHOR = "#plan-list";
 
 /**
  * The code a refused press of the plan's points is said with (§NNN): the rule's own sentence — a name, a kilometre, the
- * coordinates, the forty-first point, an editor's point somebody tried to delete here (`Admin.errors.<reason>`) — or the
- * domain's code for everything else (a role that may not, a point or an event that is not there).
+ * coordinates, the forty-first point, an editor's point somebody tried to delete here, a point no longer on the plan
+ * (`Admin.errors.<reason>`) — or the domain's code for everything else (a role that may not, an event that is not there).
  */
 function planPointRefusalCode(error: DomainError): string {
-  return error instanceof PlanPointRefusal || error instanceof CoordinatesRefusal ? error.reason : error.code;
+  return error instanceof PlanPointRefusal || error instanceof CoordinatesRefusal || error instanceof PlanPointGone ? error.reason : error.code;
 }
 
 /** The form's boxes of one point, as the service takes them: it reads them, this only hands them over. */

@@ -14,6 +14,8 @@ import { readVolunteerPlan, setVolunteerPlanPicture } from "@/modules/volunteers
 import { changePlanPoint } from "@/modules/volunteers/plan-points";
 import { previewVolunteerPoints, sendVolunteerPoints, volunteerPointAtSend } from "@/modules/volunteers/point-mail";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
+import en from "../../../messages/en.json";
+import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { PLAN_CONTACT_WORDS, PLAN_JUNCTION_NOTE, type PlanRace, planAddressOf, seedPlanRace } from "../../helpers/volunteer-plan";
 
@@ -336,5 +338,14 @@ describe("§NNN who already knows their point is not changed by its coordinates"
     const again = await render(await mailOf(race.people.radu, 2), at(5));
     expect(again.text).toContain(`Unde e punctul\n45.64271, 25.58871 — Deschide pe hartă: ${PIATA_MAP}`);
     expect((await render(await mailOf(race.people.ana, 2), at(5))).text).toContain(`Unde e punctul\n45.64271, 25.58871 — Deschide pe hartă: ${PIATA_MAP}`);
+  });
+
+  it("is said where the organizers read it: the page's line when everybody is told names the coordinates, and the message's «?» that one text goes to both kinds", () => {
+    // «Trimite» shipped before the coordinates did: an organizer who types them after a first send reads that it is worth sending again.
+    expect(ro.Admin.volunteers.plan.mail.allTold).toContain("coordonatele");
+    expect(en.Admin.volunteers.plan.mail.allTold).toContain("coordinates");
+    // A text the club writes for «Punctul tău» under «Emailuri» goes to the start–finish and to the route alike: its «?» says so.
+    expect(ro.Admin.emails.whenMore.VOLUNTEER_POINT).toContain("Textul e același la start–finish și pe traseu");
+    expect(en.Admin.emails.whenMore.VOLUNTEER_POINT).toContain("The text is the same at the start–finish and on the route");
   });
 });
