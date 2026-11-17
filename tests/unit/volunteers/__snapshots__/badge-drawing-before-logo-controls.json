@@ -1,0 +1,502 @@
+{
+  "cases": {
+    "per role, 90 × 35, a role under no category — faint": {
+      "lines": [
+        "Brașov Trail Race @ 9.49",
+        "VOLUNTAR @ 6.33",
+        "PUNCT DE APĂ @ 12.13",
+        "Nume: @ 6.59"
+      ],
+      "layout": "eb100a3710fccacb01568b3056850cbcbb898381ed3385cb01abeddfe8e2d14a",
+      "picture": "4501f2d9aa2a05ffd83c863fca284bc838bedd8accd472284036248d18e27060",
+      "sheet": "f6cbaea953781ad33f909539ec97e322bed8c3b8b4929a01882bea4662b2982c",
+      "logo": "21.69 × 8.95 mm at 34.15, 23.30 mm, opacity 0.12"
+    },
+    "per role, 90 × 35, a role under no category — medium": {
+      "lines": [
+        "Brașov Trail Race @ 9.49",
+        "VOLUNTAR @ 6.33",
+        "PUNCT DE APĂ @ 12.13",
+        "Nume: @ 6.59"
+      ],
+      "layout": "f3bf1f74fcad74300549f0531dbf510732f63611050afe35a888ca52d432b727",
+      "picture": "1cd89914f42af4abd17860a7d2aff4785b46e6504fa014702fc5a5c36c23f6bb",
+      "sheet": "f6cbaea953781ad33f909539ec97e322bed8c3b8b4929a01882bea4662b2982c",
+      "logo": "21.69 × 8.95 mm at 34.15, 23.30 mm, opacity 0.22"
+    },
+    "per role, 90 × 35, a role under no category — strong": {
+      "lines": [
+        "Brașov Trail Race @ 9.49",
+        "VOLUNTAR @ 6.33",
+        "PUNCT DE APĂ @ 12.13",
+        "Nume: @ 6.59"
+      ],
+      "layout": "180f9ac31c344a0833631078753a3f93f393e760da351ee5845b838b19234e28",
+      "picture": "39395064d85ddf173d433be9769e2a525ead3bba2c3f3f5e647762b73bbc5e71",
+      "sheet": "f6cbaea953781ad33f909539ec97e322bed8c3b8b4929a01882bea4662b2982c",
+      "logo": "21.69 × 8.95 mm at 34.15, 23.30 mm, opacity 0.35"
+    },
+    "per role, 90 × 35, every row ticked, a role under no category, in English — faint": {
+      "lines": [
+        "Brașov Trail Race @ 7.95",
+        "VOLUNTEER @ 5.30",
+        "WATER POINT @ 10.16",
+        "Drink at every point @ 5.45",
+        "Name: @ 6.59",
+        "Shift: @ 6.59",
+        "Coordinator: 0712 345 678 @ 5.45"
+      ],
+      "layout": "76019e6ebd412d136a8101c0e3b45930c435dd13ee79200f6b5b18305c95eca8",
+      "picture": "c13c8fce4a95abd50ea6f9d85432048da5de355fea199abc36312eb88026e1f2",
+      "sheet": "2e161862c2701e4a8eb04a551f0e299457d8e6d1e6e3cf1985f2c414cbef8c7c",
+      "logo": "14.27 × 5.89 mm at 37.86, 23.38 mm, opacity 0.12"
+    },
+    "per role, 90 × 35, every row ticked, a role under no category, in English — medium": {
+      "lines": [
+        "Brașov Trail Race @ 7.95",
+        "VOLUNTEER @ 5.30",
+        "WATER POINT @ 10.16",
+        "Drink at every point @ 5.45",
+        "Name: @ 6.59",
+        "Shift: @ 6.59",
+        "Coordinator: 0712 345 678 @ 5.45"
+      ],
+      "layout": "e42ae6a23679d207d260c4d876d2f6c70cf9004b92b5734a1b8eae1b3e43d7d3",
+      "picture": "a6427fe457b5bdd1b3f2c51c7d174704e8c4cf086a626d13a5d6bc9cb3ee0120",
+      "sheet": "2e161862c2701e4a8eb04a551f0e299457d8e6d1e6e3cf1985f2c414cbef8c7c",
+      "logo": "14.27 × 5.89 mm at 37.86, 23.38 mm, opacity 0.22"
+    },
+    "per role, 90 × 35, every row ticked, a role under no category, in English — strong": {
+      "lines": [
+        "Brașov Trail Race @ 7.95",
+        "VOLUNTEER @ 5.30",
+        "WATER POINT @ 10.16",
+        "Drink at every point @ 5.45",
+        "Name: @ 6.59",
+        "Shift: @ 6.59",
+        "Coordinator: 0712 345 678 @ 5.45"
+      ],
+      "layout": "b3d4f539cca342240d9e8c76b23d826468a56fd3d9388eaa0ee457f109253bd4",
+      "picture": "a23b98e00567442c0c0a49a4adac437c2b22ae7bbdd880f443a770f03cd27441",
+      "sheet": "2e161862c2701e4a8eb04a551f0e299457d8e6d1e6e3cf1985f2c414cbef8c7c",
+      "logo": "14.27 × 5.89 mm at 37.86, 23.38 mm, opacity 0.35"
+    },
+    "per role, 60 × 30, a role under no category — faint": {
+      "lines": [
+        "Brașov Trail Race @ 7.96",
+        "VOLUNTAR @ 5.31",
+        "MARSHAL PE TRASEU @ 10.17",
+        "Nume: @ 5.53"
+      ],
+      "layout": "41c3250ed25e43a5316dd947c76262b1bfe4e1ca93a4b86bf1cb0c57d5d5be70",
+      "picture": "5466e76cf82c2af751e6dff879dc8326e577a4b5a9a9e9291039832f520f9fd6",
+      "sheet": "5c8d7078ff8cf30ebeb63f7ce0841104da64c10a724cc7fdc5e7fed12d730907",
+      "logo": "18.19 × 7.50 mm at 20.90, 19.86 mm, opacity 0.12"
+    },
+    "per role, 60 × 30, a role under no category — medium": {
+      "lines": [
+        "Brașov Trail Race @ 7.96",
+        "VOLUNTAR @ 5.31",
+        "MARSHAL PE TRASEU @ 10.17",
+        "Nume: @ 5.53"
+      ],
+      "layout": "7c99b0038cfb58ef0c6015b633fb65f858808f8deb11673b1fc47d72b691b61f",
+      "picture": "6e1c10c739d0d0bfb0fdf42ce4a068b5d9be92a4114a319a485204d8a75bf7b0",
+      "sheet": "5c8d7078ff8cf30ebeb63f7ce0841104da64c10a724cc7fdc5e7fed12d730907",
+      "logo": "18.19 × 7.50 mm at 20.90, 19.86 mm, opacity 0.22"
+    },
+    "per role, 60 × 30, a role under no category — strong": {
+      "lines": [
+        "Brașov Trail Race @ 7.96",
+        "VOLUNTAR @ 5.31",
+        "MARSHAL PE TRASEU @ 10.17",
+        "Nume: @ 5.53"
+      ],
+      "layout": "4e9a135b4e5744ffb8e34fabb663378b54d097393d4468e66400124a0fd4c0d5",
+      "picture": "142930950eede5a4b366fbbca55860605c467dbdbc38b4fac1e864ecf607ef5f",
+      "sheet": "5c8d7078ff8cf30ebeb63f7ce0841104da64c10a724cc7fdc5e7fed12d730907",
+      "logo": "18.19 × 7.50 mm at 20.90, 19.86 mm, opacity 0.35"
+    },
+    "per role, 90 × 35, a long role under no category, cut — faint": {
+      "lines": [
+        "Brașov Trail Race @ 9.49",
+        "VOLUNTAR @ 6.33",
+        "COORDONATORUL GENERAL AL PUNCTELOR DE CONTROL, APĂ ȘI AL TUTUROR VO… @ 6.00",
+        "Nume: @ 6.59"
+      ],
+      "layout": "d2c576ed174511dfd5058b98bf4c5ff58f9ad23e2051e1cff9eb24722896b1f9",
+      "picture": "c8790121d0067d1e8b30a7675eb51f3bf06967d8f3183946ac1987abfdd7f625",
+      "sheet": "9d796019b287701be3e0b451da4a894933adb013944dcb8c116ef78a92c1c5ef",
+      "logo": "21.69 × 8.95 mm at 34.15, 23.30 mm, opacity 0.12"
+    },
+    "per role, 90 × 35, a long role under no category, cut — medium": {
+      "lines": [
+        "Brașov Trail Race @ 9.49",
+        "VOLUNTAR @ 6.33",
+        "COORDONATORUL GENERAL AL PUNCTELOR DE CONTROL, APĂ ȘI AL TUTUROR VO… @ 6.00",
+        "Nume: @ 6.59"
+      ],
+      "layout": "1ac87710dba8f74805dc272b08fd2c4fba98fcf0e058aad1934d9ed5be6394b8",
+      "picture": "4036add9e8c1c7fe719af713a7aa9260ac6ce23efa18666da49ac25711f792a5",
+      "sheet": "9d796019b287701be3e0b451da4a894933adb013944dcb8c116ef78a92c1c5ef",
+      "logo": "21.69 × 8.95 mm at 34.15, 23.30 mm, opacity 0.22"
+    },
+    "per role, 90 × 35, a long role under no category, cut — strong": {
+      "lines": [
+        "Brașov Trail Race @ 9.49",
+        "VOLUNTAR @ 6.33",
+        "COORDONATORUL GENERAL AL PUNCTELOR DE CONTROL, APĂ ȘI AL TUTUROR VO… @ 6.00",
+        "Nume: @ 6.59"
+      ],
+      "layout": "24e42c0657ccea0c4b21389071951855498aaad12079dc3655f81a6321735db0",
+      "picture": "64aee239cef665e349502c7013c87b4bbbc6e6f58c1567ab733dd913d2a6324d",
+      "sheet": "9d796019b287701be3e0b451da4a894933adb013944dcb8c116ef78a92c1c5ef",
+      "logo": "21.69 × 8.95 mm at 34.15, 23.30 mm, opacity 0.35"
+    },
+    "per role, 200 × 100, the telephone's blank row, a long role under no category, shrunk — faint": {
+      "lines": [
+        "Brașov Trail Race @ 29.39",
+        "VOLUNTAR @ 19.59",
+        "COORDONATORUL GENERAL AL PUNCTELOR DE CONTROL, APĂ ȘI AL TUTUROR VOLUNTARILOR @ 11.55",
+        "Nume: @ 20.41"
+      ],
+      "layout": "0fc5ee391f5e99b39b2f03be15806b553f89d6f95d70f16f6fbfa53ce7a2e7ed",
+      "picture": "87ef0d137ceab8f3aa59d701c066c4e7e573601e2176abc51db29675884de1eb",
+      "sheet": "e149226e56aea49da6ac23fa134dffc9049a7c10904b536380d14f92679fa962",
+      "logo": "43.90 × 18.11 mm at 78.05, 67.96 mm, opacity 0.12"
+    },
+    "per role, 200 × 100, the telephone's blank row, a long role under no category, shrunk — medium": {
+      "lines": [
+        "Brașov Trail Race @ 29.39",
+        "VOLUNTAR @ 19.59",
+        "COORDONATORUL GENERAL AL PUNCTELOR DE CONTROL, APĂ ȘI AL TUTUROR VOLUNTARILOR @ 11.55",
+        "Nume: @ 20.41"
+      ],
+      "layout": "d1acc4c9a3db31a8ca9f4787e7266c4fd828d74ab32eef38cb40b8b1fb4d0f4e",
+      "picture": "532e7d0a25f0aa06344579329498df8aa84a5ef453fddcb552b79618a7b5ac40",
+      "sheet": "e149226e56aea49da6ac23fa134dffc9049a7c10904b536380d14f92679fa962",
+      "logo": "43.90 × 18.11 mm at 78.05, 67.96 mm, opacity 0.22"
+    },
+    "per role, 200 × 100, the telephone's blank row, a long role under no category, shrunk — strong": {
+      "lines": [
+        "Brașov Trail Race @ 29.39",
+        "VOLUNTAR @ 19.59",
+        "COORDONATORUL GENERAL AL PUNCTELOR DE CONTROL, APĂ ȘI AL TUTUROR VOLUNTARILOR @ 11.55",
+        "Nume: @ 20.41"
+      ],
+      "layout": "6ecfe03dfe288805fc945ab2330675f151eac9d0bf5450a2aa44526f9f158c03",
+      "picture": "f4bb2a09f27e330a54dcd94169913b1142875e0b59549868953f8d76cb11641e",
+      "sheet": "e149226e56aea49da6ac23fa134dffc9049a7c10904b536380d14f92679fa962",
+      "logo": "43.90 × 18.11 mm at 78.05, 67.96 mm, opacity 0.35"
+    },
+    "per role, 100 × 40, a badge «fără rol» — faint": {
+      "lines": [
+        "Brașov Trail Race @ 10.10",
+        "VOLUNTAR @ 14.02",
+        "Hidratează-te la fiecare punct @ 6.33",
+        "Nume: @ 7.65",
+        "Tură: @ 7.65",
+        "Coordonator: 0712 345 678 @ 6.33"
+      ],
+      "layout": "9ebb2142d783cf45aea2d69e2a8ba2b2157a6c16fc11bb18f54e2fd320a6ef32",
+      "picture": "3d4d4a166c8b774db0ee7c797a9340b2b141e1be3dbf77ba2a66da026c7f432d",
+      "sheet": "eda38d6c7d961a96e835b5b3c78a16cb3045f10b4e9fcad1040f21261f92db3d",
+      "logo": "12.30 × 5.07 mm at 43.85, 28.53 mm, opacity 0.12"
+    },
+    "per role, 100 × 40, a badge «fără rol» — medium": {
+      "lines": [
+        "Brașov Trail Race @ 10.10",
+        "VOLUNTAR @ 14.02",
+        "Hidratează-te la fiecare punct @ 6.33",
+        "Nume: @ 7.65",
+        "Tură: @ 7.65",
+        "Coordonator: 0712 345 678 @ 6.33"
+      ],
+      "layout": "f43116adfb0884ede4d9fe3612df6db3fe6e11bd8635beaa64d040d2f783f7a6",
+      "picture": "b781ac53fd31ef4a64e131f1239aacaac00887b70bbce61a1e0d5a7efc5e31ad",
+      "sheet": "eda38d6c7d961a96e835b5b3c78a16cb3045f10b4e9fcad1040f21261f92db3d",
+      "logo": "12.30 × 5.07 mm at 43.85, 28.53 mm, opacity 0.22"
+    },
+    "per role, 100 × 40, a badge «fără rol» — strong": {
+      "lines": [
+        "Brașov Trail Race @ 10.10",
+        "VOLUNTAR @ 14.02",
+        "Hidratează-te la fiecare punct @ 6.33",
+        "Nume: @ 7.65",
+        "Tură: @ 7.65",
+        "Coordonator: 0712 345 678 @ 6.33"
+      ],
+      "layout": "080668a6d0a31a4cdf6ddb2130eae4f711d6fb0a54f816cce2beea5ac07dd020",
+      "picture": "0f70c3822af6ce01e125651515c60039a5c1113c825ad23e43df354774360ef5",
+      "sheet": "eda38d6c7d961a96e835b5b3c78a16cb3045f10b4e9fcad1040f21261f92db3d",
+      "logo": "12.30 × 5.07 mm at 43.85, 28.53 mm, opacity 0.35"
+    },
+    "one badge for everyone, its own colour and a telephone, in English — faint": {
+      "lines": [
+        "Brașov Trail Race @ 9.49",
+        "VOLUNTEER @ 13.18",
+        "Name: @ 6.59",
+        "Coordinator: 0712 345 678 @ 5.45"
+      ],
+      "layout": "168c545029e6167cc3b634ebb55a525a4708292d092f01b352446cff0985470f",
+      "picture": "7aeef8f2ccd11547b7147ada10f295409c4525865b64a0f7d691d26c561afcd4",
+      "sheet": "338134f818148e2e7cfd5cad8d6a2df5a68a9736f667172254afefce61ba51d0",
+      "logo": "14.18 × 5.85 mm at 37.91, 23.30 mm, opacity 0.12"
+    },
+    "one badge for everyone, its own colour and a telephone, in English — medium": {
+      "lines": [
+        "Brașov Trail Race @ 9.49",
+        "VOLUNTEER @ 13.18",
+        "Name: @ 6.59",
+        "Coordinator: 0712 345 678 @ 5.45"
+      ],
+      "layout": "b1dddac948d1ea8f7e5059e0899fcdbbe9dc7be750a1e307890f98548879c9c7",
+      "picture": "100aa254d78dc12b22994cce11a45e8d0cd12ddbc1c8c4061ed8aac930b4d0c9",
+      "sheet": "338134f818148e2e7cfd5cad8d6a2df5a68a9736f667172254afefce61ba51d0",
+      "logo": "14.18 × 5.85 mm at 37.91, 23.30 mm, opacity 0.22"
+    },
+    "one badge for everyone, its own colour and a telephone, in English — strong": {
+      "lines": [
+        "Brașov Trail Race @ 9.49",
+        "VOLUNTEER @ 13.18",
+        "Name: @ 6.59",
+        "Coordinator: 0712 345 678 @ 5.45"
+      ],
+      "layout": "0bdee26043c4943b01474a8f22c3e993164e5c66fd5d4a322b40fe1cecb5f113",
+      "picture": "d705fee752c79053b258d798e6380ffd61230d4c9521e7781b36c42b0d069b1f",
+      "sheet": "338134f818148e2e7cfd5cad8d6a2df5a68a9736f667172254afefce61ba51d0",
+      "logo": "14.18 × 5.85 mm at 37.91, 23.30 mm, opacity 0.35"
+    },
+    "one badge for everyone, the platform's design — faint": {
+      "lines": [
+        "Brașov Trail Race @ 9.49",
+        "VOLUNTAR @ 13.18",
+        "Nume: @ 6.59"
+      ],
+      "layout": "32bab373f4004b91782cec058b33a75dfa54fde6b858b2ae2fa4999b71b2b8ce",
+      "picture": "b3d6504df1599005813784507e60783c86459035d11f7586be79779858237653",
+      "sheet": "f40efe2d9fdb29d184c033ca0352902ca5652ee6c77b4c5868e9567aa2a08793",
+      "logo": "21.69 × 8.95 mm at 34.15, 23.30 mm, opacity 0.12"
+    },
+    "one badge for everyone, the platform's design — medium": {
+      "lines": [
+        "Brașov Trail Race @ 9.49",
+        "VOLUNTAR @ 13.18",
+        "Nume: @ 6.59"
+      ],
+      "layout": "40e3590793fc25dfd300f484ff55dd30a0516d1fb18d10e7975de7091b77870c",
+      "picture": "29e3df30ec2f05f58aa4ced2a3dd13106b73e39e336e2718c55b38aa99cfef96",
+      "sheet": "f40efe2d9fdb29d184c033ca0352902ca5652ee6c77b4c5868e9567aa2a08793",
+      "logo": "21.69 × 8.95 mm at 34.15, 23.30 mm, opacity 0.22"
+    },
+    "one badge for everyone, the platform's design — strong": {
+      "lines": [
+        "Brașov Trail Race @ 9.49",
+        "VOLUNTAR @ 13.18",
+        "Nume: @ 6.59"
+      ],
+      "layout": "a7d61d5760799c7b49c7af94b79ea7ab30af78d9f23eafeddbe2f2da62119959",
+      "picture": "a371ab908bfb6a32f9e0170d2514718f14e0776db35ef68ef14448ce4b5017f9",
+      "sheet": "f40efe2d9fdb29d184c033ca0352902ca5652ee6c77b4c5868e9567aa2a08793",
+      "logo": "21.69 × 8.95 mm at 34.15, 23.30 mm, opacity 0.35"
+    },
+    "per role, 90 × 35, a role under a category beside «VOLUNTAR» — faint": {
+      "lines": [
+        "Brașov Trail Race @ 9.49",
+        "VOLUNTAR · PE TRASEU @ 6.33",
+        "DIRECȚIONARE @ 12.13",
+        "Nume: @ 6.59"
+      ],
+      "layout": "b54954707f6ca6b89265442f47c2e0eba170f7ac471b83cefbc242d071396d00",
+      "picture": "708544f512cf91ef7c6ea31fe9b4d46f99c837efd15a2591a0104824322f98bc",
+      "sheet": "7400fc78eee2223e3efba2106008a1464a5f7a337aab4511aceb924c15ccda0e",
+      "logo": "21.69 × 8.95 mm at 34.15, 23.30 mm, opacity 0.12"
+    },
+    "per role, 90 × 35, a role under a category beside «VOLUNTAR» — medium": {
+      "lines": [
+        "Brașov Trail Race @ 9.49",
+        "VOLUNTAR · PE TRASEU @ 6.33",
+        "DIRECȚIONARE @ 12.13",
+        "Nume: @ 6.59"
+      ],
+      "layout": "766679f006d9f9e308c238b892dad7bf394f4e8d2da84fd64a3d86dcd2ebbcf5",
+      "picture": "1e1723c7dee7e982a31a7da3d2032e9b3a7278c11aad445a5a0d53d576dc96a8",
+      "sheet": "7400fc78eee2223e3efba2106008a1464a5f7a337aab4511aceb924c15ccda0e",
+      "logo": "21.69 × 8.95 mm at 34.15, 23.30 mm, opacity 0.22"
+    },
+    "per role, 90 × 35, a role under a category beside «VOLUNTAR» — strong": {
+      "lines": [
+        "Brașov Trail Race @ 9.49",
+        "VOLUNTAR · PE TRASEU @ 6.33",
+        "DIRECȚIONARE @ 12.13",
+        "Nume: @ 6.59"
+      ],
+      "layout": "1e0021a00ed6595938dd10dafaabd25c0fb25a0aa7a318fe52ce0ec08832c750",
+      "picture": "4fb937b7981331265010024fd05654e04f39388eaaccd156dfea0341a5f7e2fa",
+      "sheet": "7400fc78eee2223e3efba2106008a1464a5f7a337aab4511aceb924c15ccda0e",
+      "logo": "21.69 × 8.95 mm at 34.15, 23.30 mm, opacity 0.35"
+    },
+    "per role, 90 × 35, every row ticked, a role under a long category on its own line — faint": {
+      "lines": [
+        "Brașov Trail Race @ 7.95",
+        "VOLUNTAR · COORDONAREA PUNCTELOR DE ALIMENTARE DE PE TRASEU @ 5.30",
+        "PUNCT DE APĂ @ 10.16",
+        "Hidratează-te la fiecare punct @ 5.45",
+        "Nume: @ 6.59",
+        "Tură: @ 6.59",
+        "Coordonator: 0712 345 678 @ 5.45"
+      ],
+      "layout": "90cb5ce3e22429b1dfd512d3308cff5d140cbc108c3fbc467828650b20f71d99",
+      "picture": "e3838aaab184a50ce0c1e3883e8a158abaec21f78efcbcc982c3fc7fdb1b9749",
+      "sheet": "410168a7afc0f80be1863a477a5ddc4018b342fc178cf938d24979a5522ed031",
+      "logo": "14.27 × 5.89 mm at 37.86, 23.38 mm, opacity 0.12"
+    },
+    "per role, 90 × 35, every row ticked, a role under a long category on its own line — medium": {
+      "lines": [
+        "Brașov Trail Race @ 7.95",
+        "VOLUNTAR · COORDONAREA PUNCTELOR DE ALIMENTARE DE PE TRASEU @ 5.30",
+        "PUNCT DE APĂ @ 10.16",
+        "Hidratează-te la fiecare punct @ 5.45",
+        "Nume: @ 6.59",
+        "Tură: @ 6.59",
+        "Coordonator: 0712 345 678 @ 5.45"
+      ],
+      "layout": "066c00cfe5ace248ffea6786cc490886a4874bc5de73d6cf432518f4995c0660",
+      "picture": "05e4cc4acc85bba7eeb097478480c12e11c4faca3fd3ee0f0c362e82e76a56f1",
+      "sheet": "410168a7afc0f80be1863a477a5ddc4018b342fc178cf938d24979a5522ed031",
+      "logo": "14.27 × 5.89 mm at 37.86, 23.38 mm, opacity 0.22"
+    },
+    "per role, 90 × 35, every row ticked, a role under a long category on its own line — strong": {
+      "lines": [
+        "Brașov Trail Race @ 7.95",
+        "VOLUNTAR · COORDONAREA PUNCTELOR DE ALIMENTARE DE PE TRASEU @ 5.30",
+        "PUNCT DE APĂ @ 10.16",
+        "Hidratează-te la fiecare punct @ 5.45",
+        "Nume: @ 6.59",
+        "Tură: @ 6.59",
+        "Coordonator: 0712 345 678 @ 5.45"
+      ],
+      "layout": "6be365ccafcf92234c75c87b0d4674d994977a82ba096a287c36ccf61831dac4",
+      "picture": "c932b61992a23056191d9c68fa47bd38ef879ad3340fd9d9fa0d463a4d15ad60",
+      "sheet": "410168a7afc0f80be1863a477a5ddc4018b342fc178cf938d24979a5522ed031",
+      "logo": "14.27 × 5.89 mm at 37.86, 23.38 mm, opacity 0.35"
+    },
+    "per role, 90 × 287, the tallest, every row ticked — faint": {
+      "lines": [
+        "… @ 6.00",
+        "VOLUNTAR @ 41.76",
+        "SOSIRE @ 63.20",
+        "Hidratează-te la fiecare punct @ 16.24",
+        "Nume: @ 44.17",
+        "Tură: @ 36.17",
+        "Coordonator: 0712 345 678 @ 17.74"
+      ],
+      "layout": "4f7c061a5ef78f302821a25f673d9d98d5d030832d89f60eb132216842bbaff4",
+      "picture": "f9c3f96b28a54a836667548e400cadef0f1da7067b1c9a0986a6d98e50d5db6b",
+      "sheet": "92f83d13884a447d277c07b315cd091d6d8e95f702e1eb7a37cdf4a614a916f7",
+      "logo": "60.00 × 24.75 mm at 15.00, 229.61 mm, opacity 0.12"
+    },
+    "per role, 90 × 287, the tallest, every row ticked — medium": {
+      "lines": [
+        "… @ 6.00",
+        "VOLUNTAR @ 41.76",
+        "SOSIRE @ 63.20",
+        "Hidratează-te la fiecare punct @ 16.24",
+        "Nume: @ 44.17",
+        "Tură: @ 36.17",
+        "Coordonator: 0712 345 678 @ 17.74"
+      ],
+      "layout": "32cfe74544d13e19d129986a749202f10a4c47658c40e1c5ae6cdc48b2c0f7ed",
+      "picture": "d12d12b62bc4a0412d48489d7585d5ce2695e6e72bc9171c78ae8a3cc7447bca",
+      "sheet": "92f83d13884a447d277c07b315cd091d6d8e95f702e1eb7a37cdf4a614a916f7",
+      "logo": "60.00 × 24.75 mm at 15.00, 229.61 mm, opacity 0.22"
+    },
+    "per role, 90 × 287, the tallest, every row ticked — strong": {
+      "lines": [
+        "… @ 6.00",
+        "VOLUNTAR @ 41.76",
+        "SOSIRE @ 63.20",
+        "Hidratează-te la fiecare punct @ 16.24",
+        "Nume: @ 44.17",
+        "Tură: @ 36.17",
+        "Coordonator: 0712 345 678 @ 17.74"
+      ],
+      "layout": "b6e46404c4d99d177674552445eda6ad48e603adc54f9e052accb0e4ec383cd0",
+      "picture": "8d023cb26841719581531321b9a3d9a34fc21144c8063c5862815c141491db76",
+      "sheet": "92f83d13884a447d277c07b315cd091d6d8e95f702e1eb7a37cdf4a614a916f7",
+      "logo": "60.00 × 24.75 mm at 15.00, 229.61 mm, opacity 0.35"
+    },
+    "one badge for everyone, 60 × 100 — faint": {
+      "lines": [
+        "… @ 6.00",
+        "VOLUNTAR @ 25.32",
+        "Nume: @ 20.41"
+      ],
+      "layout": "e6a164ef3dc896fed99d2e9e7bbe37b5b82d726d964b4a3b5376a55c50665222",
+      "picture": "b56aa7820ca2e24a46cab4c83d571e2203cb97982e6fadef3bf1497741a1c0db",
+      "sheet": "27e1d00114520813ce1fcc9fbf4ae9d1d90da34514c5307573164ecc3788b718",
+      "logo": "40.00 × 16.50 mm at 10.00, 79.17 mm, opacity 0.12"
+    },
+    "one badge for everyone, 60 × 100 — medium": {
+      "lines": [
+        "… @ 6.00",
+        "VOLUNTAR @ 25.32",
+        "Nume: @ 20.41"
+      ],
+      "layout": "61341651e19a388f7af2a230e2bd4f1b6680912b59c11530d44ece5063e07c51",
+      "picture": "825a8053249df8bf5368b24de479125d5b1d0f2008667c212647c8487baea59d",
+      "sheet": "27e1d00114520813ce1fcc9fbf4ae9d1d90da34514c5307573164ecc3788b718",
+      "logo": "40.00 × 16.50 mm at 10.00, 79.17 mm, opacity 0.22"
+    },
+    "one badge for everyone, 60 × 100 — strong": {
+      "lines": [
+        "… @ 6.00",
+        "VOLUNTAR @ 25.32",
+        "Nume: @ 20.41"
+      ],
+      "layout": "725e8f531b9db73f46c8505120cc8b82e80127d23f36e06e7987830d24b793d6",
+      "picture": "8b11bf581979c24563818b8913eee81d0fbc179b0bfeaef6801f0b6838efa3a3",
+      "sheet": "27e1d00114520813ce1fcc9fbf4ae9d1d90da34514c5307573164ecc3788b718",
+      "logo": "40.00 × 16.50 mm at 10.00, 79.17 mm, opacity 0.35"
+    },
+    "one badge for everyone, 200 × 30, the widest and shortest — faint": {
+      "lines": [
+        "Brașov Trail Race @ 7.96",
+        "VOLUNTAR @ 11.06",
+        "Nume: @ 5.53"
+      ],
+      "layout": "6ac68de918f9574f139f0019cc179b16c41529adfd31c67d9e9bb35de56f38d2",
+      "picture": "bc3af756385bebb7d8967ac0fc329c6202f46ab55bad134935d4741a58df23e6",
+      "sheet": "4322287830b3d44999a42ef50f60cbb06a2ceb7a0da035945a52ca4cf9c3a371",
+      "logo": "18.19 × 7.50 mm at 90.90, 19.86 mm, opacity 0.12"
+    },
+    "one badge for everyone, 200 × 30, the widest and shortest — medium": {
+      "lines": [
+        "Brașov Trail Race @ 7.96",
+        "VOLUNTAR @ 11.06",
+        "Nume: @ 5.53"
+      ],
+      "layout": "439ca27aac98d27b2e0d0b8581b5de3983098f663250924fd8465fd374de4d66",
+      "picture": "bb026ef3ae29ccc6e94ede98187c4b415cc91592be382a4bd3765c78219a84c8",
+      "sheet": "4322287830b3d44999a42ef50f60cbb06a2ceb7a0da035945a52ca4cf9c3a371",
+      "logo": "18.19 × 7.50 mm at 90.90, 19.86 mm, opacity 0.22"
+    },
+    "one badge for everyone, 200 × 30, the widest and shortest — strong": {
+      "lines": [
+        "Brașov Trail Race @ 7.96",
+        "VOLUNTAR @ 11.06",
+        "Nume: @ 5.53"
+      ],
+      "layout": "e535cf692e5837e049fd7d6303c234e8a4eb0ddb07e6c57ab8e34ae27baa57ea",
+      "picture": "86d5151165bcae2e4dbdc8ed62a7c209d4f470e2ca2e8c360c1bc280c4470dcc",
+      "sheet": "4322287830b3d44999a42ef50f60cbb06a2ceb7a0da035945a52ca4cf9c3a371",
+      "logo": "18.19 × 7.50 mm at 90.90, 19.86 mm, opacity 0.35"
+    }
+  },
+  "grid": {
+    "boxesPerLevel": 1620,
+    "faint": "cb447ba376cbed9e16245afbf969ae694b51e2a6e49676c93b216a9dbe54587d",
+    "medium": "48c9665a795506c7298074f3def9f8726e2656eaf695d0cb256e4efc9928d0ae",
+    "strong": "ab8f3f1916a307fa101077fc641b90743affbd39f59cafaec43632f16ed398b1"
+  }
+}

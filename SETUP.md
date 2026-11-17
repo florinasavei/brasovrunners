@@ -2322,10 +2322,18 @@ only ones who see the names, addresses and telephone numbers.
      type. A badge that is too short for everything you ticked is refused when you save, with a sentence
      saying what does not fit and how tall it must be: the free-text line and the coordinator's telephone
      together need a custom size at least 34 mm tall; both ready-made sizes (90 × 35 and 100 × 40 mm) take everything.
-     Under «Locul pentru nume», **«Logo-ul clubului jos, ca filigran»** (§965) puts the club's logo, large and pale, at
-     the bottom of every badge, under «Nume:», where the name is written in marker over it: «Fără» (the default),
-     «Puțin vizibil», «Mediu» or «Bine vizibil». It takes no room of its own, so any size that fits without it fits
-     with it; the preview shows the level as you choose it.
+     In its own section, **«Logo-ul clubului (filigran)»**, right after «Locul pentru nume» (§965, §NNN), the choice
+     **«Logo-ul clubului jos, ca filigran»** puts the club's logo, large and pale, at the bottom of every badge, under
+     «Nume:», where the name is written in marker over it: «Fără» (the default), «Puțin vizibil», «Mediu» or «Bine
+     vizibil». Four numbers under it set the logo as you want it: **«Mărimea logo-ului»** — how wide it is, in % of the
+     badge's width (10–100; at 67, the default, it stays under «Nume:», which on a short strip is about a quarter of
+     the width; any other number is drawn as typed, rising over «Nume:» if it must, and shrinks by itself only when the
+     white area cannot hold it) — **«Spațiu în jurul logo-ului»** — the room kept clear around it (0–20 mm; more room,
+     a smaller logo, and none once less than 5 mm of logo is left) — and **«Deplasare stânga–dreapta»** and **«Deplasare
+     sus–jos»** — how far to move it (−100 to 100 mm; positive is right and down; a move never changes its size). It
+     always stays in the white area of the name and takes no room of its own, so any size that fits without it fits
+     with it; the section's line says the share of the width the saved logo is drawn at («Mediu · 24% (cât încape)»),
+     and the preview shows each number as you type it.
    - **A role's colour** is part of the role: «Mai multe» on its line in the card (saved with «Salvează toate rolurile»), or
      all the roles at once under «Culorile rolurilor» on the badges' page. «Portocaliul clubului», one of
      the palette, or «Altă culoare» typed as `#rrggbb`; it is kept only when white or black text reads on

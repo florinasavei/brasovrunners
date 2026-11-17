@@ -5,7 +5,15 @@ import { formatPhone } from "@/modules/registrations/phone";
 import { bibFooterText } from "@/modules/registrations/bib-footer";
 import { fnv1a } from "@/shared/hash";
 import { COLOR } from "@/theme/brand";
-import { BADGE_CUSTOM_BOUNDS, BADGE_FOOTER_LOGOS, BADGE_SIZE_PRESETS, BADGE_SIZES, type BadgeLayoutWords, DEFAULT_BADGE_FOOTER_LOGO } from "./badge-geometry";
+import {
+  BADGE_CUSTOM_BOUNDS,
+  BADGE_FOOTER_LOGO_SETTINGS,
+  BADGE_FOOTER_LOGOS,
+  BADGE_SIZE_PRESETS,
+  BADGE_SIZES,
+  type BadgeLayoutWords,
+  DEFAULT_BADGE_FOOTER_LOGO,
+} from "./badge-geometry";
 import { badgeDesignValuesFromQuery } from "./badge-query";
 
 /**
@@ -68,14 +76,17 @@ const line = (max: number) =>
     .transform((value) => bibFooterText(value, max))
     .catch("");
 
-const millimetres = (bounds: { min: number; max: number }, fallback: number) => z.number().int().min(bounds.min).max(bounds.max).catch(fallback);
+/** A whole number within its bounds, else the fallback: millimetres, or the logo's percent of the badge's width (§NNN). */
+const wholeWithin = (bounds: { min: number; max: number }, fallback: number) => z.number().int().min(bounds.min).max(bounds.max).catch(fallback);
+/** One of the watermark's size, room and place (§NNN), by its own bounds and default. */
+const logoSetting = (setting: { min: number; max: number; default: number }) => wholeWithin(setting, setting.default);
 
 export const badgeDesignSchema = z
   .object({
     /** «Dimensiunea»: a preset strip, or `custom` with the two numbers below. */
     size: z.enum(BADGE_SIZES).catch("strip90"),
-    customWidthMm: millimetres(BADGE_CUSTOM_BOUNDS.width, BADGE_SIZE_PRESETS.strip90.widthMm),
-    customHeightMm: millimetres(BADGE_CUSTOM_BOUNDS.height, BADGE_SIZE_PRESETS.strip90.heightMm),
+    customWidthMm: wholeWithin(BADGE_CUSTOM_BOUNDS.width, BADGE_SIZE_PRESETS.strip90.widthMm),
+    customHeightMm: wholeWithin(BADGE_CUSTOM_BOUNDS.height, BADGE_SIZE_PRESETS.strip90.heightMm),
     /** «Un singur ecuson» or «Câte un ecuson pe rol» (§783): `single` unless the design chose otherwise — a value no one knows reads as `single` too. */
     mode: z.enum(BADGE_MODES).catch(DEFAULT_BADGE_MODE),
     /** The colour of the band of the one badge «fără rol» (`single`), as the header's colour is kept: a hex that carries its words at AA, or null for the club's orange. */
@@ -101,6 +112,15 @@ export const badgeDesignSchema = z
      * of visibility — `off` unless the design chose one, so every design saved before the choice, and a level no one knows, reads `off`.
      */
     footerLogo: z.enum(BADGE_FOOTER_LOGOS).catch(DEFAULT_BADGE_FOOTER_LOGO),
+    /**
+     * The watermark's size, room and place (§NNN): «Mărimea logo-ului» (whole percent of the badge's width), «Spațiu în jurul logo-ului» and
+     * the two moves (whole millimetres, right and down positive) — each a whole number within its bounds (`BADGE_FOOTER_LOGO_SETTINGS`), else
+     * its default, so a design saved before them, a value of the wrong type and one out of bounds all draw §965's box. Never refused here.
+     */
+    footerLogoSizePct: logoSetting(BADGE_FOOTER_LOGO_SETTINGS.footerLogoSizePct),
+    footerLogoPaddingMm: logoSetting(BADGE_FOOTER_LOGO_SETTINGS.footerLogoPaddingMm),
+    footerLogoOffsetXMm: logoSetting(BADGE_FOOTER_LOGO_SETTINGS.footerLogoOffsetXMm),
+    footerLogoOffsetYMm: logoSetting(BADGE_FOOTER_LOGO_SETTINGS.footerLogoOffsetYMm),
     /** «Text liber» (§776): one line of the club's own words under the role's band, in both languages or neither. */
     showFreeText: z.boolean().catch(false),
     freeTextRo: line(BADGE_FREE_TEXT_MAX),
@@ -140,6 +160,10 @@ export const DEFAULT_BADGE_DESIGN: BadgeDesign = {
   labelEn: "",
   writingLine: true,
   footerLogo: DEFAULT_BADGE_FOOTER_LOGO,
+  footerLogoSizePct: BADGE_FOOTER_LOGO_SETTINGS.footerLogoSizePct.default,
+  footerLogoPaddingMm: BADGE_FOOTER_LOGO_SETTINGS.footerLogoPaddingMm.default,
+  footerLogoOffsetXMm: BADGE_FOOTER_LOGO_SETTINGS.footerLogoOffsetXMm.default,
+  footerLogoOffsetYMm: BADGE_FOOTER_LOGO_SETTINGS.footerLogoOffsetYMm.default,
   showFreeText: false,
   freeTextRo: "",
   freeTextEn: "",
@@ -182,11 +206,18 @@ export const BADGE_DROPPABLE = {
   singleColour: "string",
   // §965: how visible the club's logo is at the badge's foot.
   footerLogo: "string",
+  // §NNN: the watermark's size, the space round it and its two moves.
+  footerLogoSizePct: "number",
+  footerLogoPaddingMm: "number",
+  footerLogoOffsetXMm: "number",
+  footerLogoOffsetYMm: "number",
 } as const;
 export type BadgeDroppedKey = keyof typeof BADGE_DROPPABLE;
 
 /** The settings that are one of a list: a word that is none of it is as unreadable as a value of the wrong type. */
 const BADGE_CHOICES: Partial<Record<BadgeDroppedKey, readonly string[]>> = { mode: BADGE_MODES, footerLogo: BADGE_FOOTER_LOGOS };
+/** The settings that are a whole number within bounds (§NNN): a fraction, or a number outside them, is as unreadable as a word. */
+const BADGE_WHOLE_NUMBERS: Partial<Record<BadgeDroppedKey, { min: number; max: number }>> = BADGE_FOOTER_LOGO_SETTINGS;
 
 export function badgeDesignDropped(value: unknown): BadgeDroppedKey[] {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return [];
@@ -196,6 +227,10 @@ export function badgeDesignDropped(value: unknown): BadgeDroppedKey[] {
     // A mode (§783) or a logo's level (§965) no one knows is as unreadable as one of the wrong type: it reads as the default and the designer says so.
     const choices = BADGE_CHOICES[key];
     if (choices && typeof stored[key] === "string") return !choices.includes(stored[key]);
+    // So is a size, space or move of the logo (§NNN) that is not a whole number within its bounds.
+    const bounds = BADGE_WHOLE_NUMBERS[key];
+    const number = stored[key];
+    if (bounds && typeof number === "number") return !(Number.isInteger(number) && number >= bounds.min && number <= bounds.max);
     return typeof stored[key] !== BADGE_DROPPABLE[key];
   });
 }
@@ -374,8 +409,9 @@ export function badgeLayoutWords(design: Pick<BadgeDesign, "showPhone" | "phone"
  * so every stamped address changes with it — the bib's `BIB_DRAWING_VERSION`, for the badge. 2 since a
  * role's badge prints its category (§962).
  * 3 since the club's logo may stand large and pale at every badge's foot, as a watermark (§965).
+ * 4 since the club sets that logo's size, the space round it and where it stands (§NNN).
  */
-export const BADGE_DRAWING_VERSION = 3;
+export const BADGE_DRAWING_VERSION = 4;
 
 /**
  * A short, stable stamp of what a badge's picture is drawn from (the bib's §748): the design, the role's

@@ -42,6 +42,15 @@ export type BadgeDesignFormValues = {
   writingLine: boolean;
   /** «Logo-ul clubului jos, ca filigran» (§965): `off`, `faint`, `medium` or `strong` as posted — empty reads `off`, any other word is refused by the save. */
   footerLogo: string;
+  /**
+   * The watermark's size, room and place (§NNN) as typed: «Mărimea logo-ului» in percent, «Spațiu în jurul logo-ului» and the two moves in
+   * millimetres; NaN when the box holds no number — a form from before the boxes posts none — which the save reads as the default. A number
+   * that is not whole, or outside its bounds, is refused by the save, naming its box.
+   */
+  footerLogoSizePct: number;
+  footerLogoPaddingMm: number;
+  footerLogoOffsetXMm: number;
+  footerLogoOffsetYMm: number;
   showFreeText: boolean;
   freeTextRo: string;
   freeTextEn: string;
@@ -93,7 +102,7 @@ const TEXTS = [
   "phoneLabelRo",
   "phoneLabelEn",
 ] as const;
-const NUMBERS = ["customWidthMm", "customHeightMm"] as const;
+const NUMBERS = ["customWidthMm", "customHeightMm", "footerLogoSizePct", "footerLogoPaddingMm", "footerLogoOffsetXMm", "footerLogoOffsetYMm"] as const;
 
 /** Whether a form control is one of the designer's: the island listens to these and nothing else. */
 export function isBadgeDesignInput(name: string): boolean {
@@ -138,6 +147,10 @@ export function readBadgeDesignForm(get: (name: string) => string | null): Badge
     labelEn: text("labelEn"),
     writingLine: at("writingLine") !== null,
     footerLogo: text("footerLogo"),
+    footerLogoSizePct: numberOf(at("footerLogoSizePct")),
+    footerLogoPaddingMm: numberOf(at("footerLogoPaddingMm")),
+    footerLogoOffsetXMm: numberOf(at("footerLogoOffsetXMm")),
+    footerLogoOffsetYMm: numberOf(at("footerLogoOffsetYMm")),
     showFreeText: at("showFreeText") !== null,
     freeTextRo: text("freeTextRo"),
     freeTextEn: text("freeTextEn"),
