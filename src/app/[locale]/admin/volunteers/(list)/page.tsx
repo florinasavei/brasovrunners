@@ -22,7 +22,6 @@ import { findCurrentApprovedDocument, volunteerMinorsOpen } from "@/modules/lega
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import NotesMark from "@/modules/registrations/ui/NotesMark";
 import { buildListHref, pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
-import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
@@ -42,6 +41,7 @@ import {
 } from "@/modules/volunteers/admin-list";
 import { guardianAllowsConfirm, guardianAskOf, roleLabel, VOLUNTEER_DECISION_MAX, VOLUNTEER_STATES, type VolunteerState } from "@/modules/volunteers/domain/volunteer";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
+import { listPlanPoints } from "@/modules/volunteers/plan-points";
 import { DECISION_ANCHOR } from "@/modules/volunteers/ui/VolunteerDecisionCard";
 import { GuardianVerbs, guardianChips, shortText, STATE_CHIP, VolunteerPersonFields, VolunteerStateForm, volunteerHiddenFields, volunteerPersonBoxes } from "@/modules/volunteers/ui/VolunteerPerson";
 import { listVolunteerNotesForExport } from "@/modules/volunteers/volunteer-notes";
@@ -197,16 +197,19 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const scopeEvent = events.find((event) => event.id === filters.eventId) ?? null;
   // «Adaugă un voluntar de mână» for the event in scope (§862): the context a person's page reads, coming back to this page of the list.
   const scopeEventRow = scopeEvent ? await findEventForRegistrationById(db, scopeEvent.id) : undefined;
-  // «Punct» (§949): with one event chosen that has points on its route, each row says where its person stands — the point's place
+  // «Punct» (§949): with one event chosen that has points on its plan, each row says where its person stands — the point's place
   // in the route's order and its name, as «Planul voluntarilor» says them. One read for the page, never one per row.
+  // The points and their numbers are the plan's own list (§NNN, `plan-points.ts#listPlanPoints`), so this column, the plan's
+  // page and the email never number a point differently. A point at the start–finish has no number: it is said by its name
+  // and the quiet word «start–finish» — never a number or a kilometre.
   const pointNames = scopeEvent
     ? new Map(
-        (await listCheckpoints(db, scopeEvent.id)).map((point, index) => [
-          point.id,
-          t("volunteers.plan.columnPoint", { number: index + 1, name: locale === "ro" ? point.nameRo : point.nameEn }),
-        ]),
+        (await listPlanPoints(db, scopeEvent.id)).map((point) => {
+          const name = locale === "ro" ? point.nameRo : point.nameEn;
+          return [point.id, point.number === null ? { words: name, startFinish: true } : { words: t("volunteers.plan.columnPoint", { number: point.number, name }), startFinish: false }] as const;
+        }),
       )
-    : new Map<string, string>();
+    : new Map<string, { words: string; startFinish: boolean }>();
   const [addContext, personBoxes] = scopeEventRow ? await Promise.all([volunteerPersonContextOf(db, scopeEventRow, locale, new Date(), returnTo), volunteerPersonBoxes(t)]) : [null, null];
   // The action's language-neutral code (AGENTS.md §14.3) becomes a sentence here; an unknown code says nothing.
   const errorCode = volunteerError && /^[A-Z_]{1,48}$/.test(volunteerError) && t.has(`errors.${volunteerError}`) ? volunteerError : null;
@@ -497,8 +500,21 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
             label: t("volunteers.plan.column"),
             hint: t("volunteers.plan.columnHint"),
             omitEmptyOnPhone: true,
-            render: (row) =>
-              row.checkpointId && row.state !== "CANCELLED" && pointNames.has(row.checkpointId) ? <span data-testid="volunteer-point">{pointNames.get(row.checkpointId)}</span> : null,
+            render: (row) => {
+              const point = row.checkpointId && row.state !== "CANCELLED" ? pointNames.get(row.checkpointId) : undefined;
+              if (!point) return null;
+              return (
+                <span data-testid="volunteer-point">
+                  {point.words}
+                  {point.startFinish && (
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ whiteSpace: "nowrap" }} data-testid="volunteer-point-kind">
+                      {" · "}
+                      {t("volunteers.plan.columnStartFinish")}
+                    </Typography>
+                  )}
+                </span>
+              );
+            },
           } satisfies AdminColumn<VolunteerAdminRow>,
         ]
       : []),

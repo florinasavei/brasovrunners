@@ -3504,7 +3504,12 @@ VOLUNTEER_POINT
 `volunteers/point-mail.ts#sendVolunteerPoints` alone — at an organizer's press (`canManageVolunteers`, asked by
 the action and again by the service), in that press's transaction, under the event row's lock: one message for
 each volunteer of the event who stands at one of its points, is not cancelled and has an address, in the
-language of their own row. Never by placing, moving or taking a person off; never by a job; never to another
+language of their own row. A point is any point of the plan (§NNN, `volunteers/plan-points.ts#listPlanPoints`):
+one of the event's «Puncte pe traseu», one the organizers typed by hand, or one at the start–finish — counted,
+told and «already told» alike. A person at the start–finish is told the place with no number and no kilometre
+(«Ești la start–finish: …»); a point that has coordinates is said with them and «Deschide pe hartă», in the
+HTML and in the text; who «already knows their point» does not change when a point's name, kilometre or
+coordinates do, so «Trimite din nou tuturor» is how a place typed later is sent. Never by placing, moving or taking a person off; never by a job; never to another
 event's people. The payload holds ids and the telling (`eventId`, `volunteerId`, `checkpointId`, `round`: 1 for
 the person's first message, one more for each later one) and the key is exactly that,
 `volunteer-point:<volunteer>:<point>:<round>`.
@@ -3853,10 +3858,43 @@ the event's save deletes it once no event row names its key.
 route and its volunteers' points numbered on it: «trebui sa pot incarca si planul voluntarilor pe traseu in genul
 [pozei] si sa ii pot distribui din aplicatie, sa stie exact unde si cum»). The plan
 (`/admin/events/[id]/plan-voluntari`, `modules/volunteers/plan.ts`; the decision of the same day that added it) is one
-event's points on the route, in the route's order, each with the volunteers who stand at it
-(`event_volunteers.checkpoint_id`) — the organizers' own, for whoever works the volunteers (`canManageVolunteers`: the
-Organizer and the Administrators), built and printed on its page. Its picture is the plan as the organizers drew it —
-the map with the points on it — and lives with the plan:
+event's points, each with the volunteers who stand at it (`event_volunteers.checkpoint_id`) — the organizers' own, for
+whoever works the volunteers (`canManageVolunteers`: the Organizer and the Administrators), built and printed on its
+page. Its picture is the plan as the organizers drew it — the map with the points on it — and lives with the plan:
+
+- **The points are of two kinds, and the plan has points of its own** (`DECISIONS.md` §NNN; the owner, 2026-11-17:
+  «După ce încarc acea poză cu harta de voluntari vreau să pot defini punctele de mână, să pun nume punct și la ce km e
+  și coordonate punct» — «Practic voluntarii sunt de 2 tipuri: start-finish și pe traseu»). A point of the plan is **on
+  the route** — a kilometre and a number in the route's order — or **at the start–finish** — neither. The route's
+  points are the event's public «Puncte pe traseu» (§757, kept in the editor) and the ones the organizers type by hand
+  on the plan's page; a start–finish point is always the plan's own. They share the editor's table
+  (`event_checkpoints.plan_only`, `start_finish`; migration `0211`), so a person's kind is where they stand and no
+  second reference has to be kept in step. Any point, the editor's too, may say where it is (`latitude`, `longitude`,
+  typed on the plan's page as a maps application copies them, `event-checkpoints/domain/coordinates.ts`).
+  - **Nothing public changes, by construction.** `event-checkpoints/checkpoints.ts` — which the event's page, the
+    chart, the preview, the race number, the editor's card, the event's file and a copy all read through — reads,
+    updates and deletes only the rows that are not the plan's own, and its `Checkpoint` has no field for the kind or
+    the coordinates; the race number's stamp in SQL leaves the same rows out. So a save, an import and a copy never
+    touch, delete, renumber or carry a point of the plan or a coordinate, and the editor's thirty counts the editor's
+    points alone. A new reader of the table goes through that file or is a reviewed edit of
+    `tests/unit/volunteers/plan-points-never-leave.test.ts`; `tests/integration/events/plan-points-stay-private.test.ts`
+    holds what each public reader returns.
+  - **One reader, one order, one number.** `volunteers/plan-points.ts#listPlanPoints` lists every point of the event —
+    the start–finish points first, as they were added, with no number; then the route by kilometre, at one kilometre
+    the editor's first, numbered from 1. The plan's page, the «Voluntari» list's «Punct» and the email read it and
+    nothing else, so a point is «3» everywhere or nowhere. `changePlanPoint` in the same file is the three verbs —
+    `add`, `edit` (all of a plan's own point, its kind included; of an editor's point the coordinates alone), `remove`
+    (a plan's own point only; its people stand at no point again) — asked of `canManageVolunteers` before anything is
+    read, under the event row's lock, forty of the plan's own at most, each change one audit row
+    (`volunteer_plan.point_added`, `point_changed`, `point_removed`: the point before and after and a count, never a
+    person), a press that changes nothing writing nothing. None of it emails anybody or expires a public cache tag.
+  - **The page** groups the points under «Start–finish» and «Pe traseu», on the screen and on the paper, adds them in
+    «Punctele planului» right under the picture (a kept form: a refusal names its box and keeps what was typed), and
+    folds each point open onto «Modifică punctul» and «Șterge punctul», which asks first; a refused edit or delete
+    lands at the page's alert with its code. A point with coordinates says them, with «Deschide pe hartă» — Google
+    Maps' own address, a link only (`mapUrlOf`; the host is listed in `scripts/docs-check.mjs`).
+  - **The email** tells a person at the start–finish their place with no number and no kilometre, and adds the numbers
+    and the map's link for a point that has coordinates; for a route point without them not a word changed (§16.3).
 
 - **One stored picture an event**, `events.volunteer_plan_media_asset_id`: a `media_assets` row by id, nullable, with
   **no foreign key, for the cover's reason** (`gallery.ts` imports `events.ts`; `db/schema/events.ts` says it at both

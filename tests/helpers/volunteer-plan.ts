@@ -21,6 +21,16 @@ import { roleDescription } from "./role-description";
   So a first press writes to Ana, Dan and Ion; Zoe stands at a point with no address; Radu stands at none.
 */
 
+/**
+ * The plan's summary line as words — «0 voluntari la start–finish · 2 voluntari pe traseu · …» (§NNN): the page draws each
+ * of its four counted phrases in a span of its own, so the line wraps between them and never inside one; a test reads the
+ * words. Empty for a page that draws no summary (an event with no point).
+ */
+export function planSummaryOf(page: string): string {
+  const line = /<p[^>]*data-testid="plan-summary"[^>]*>([\s\S]*?)<\/p>/.exec(page)?.[1] ?? "";
+  return line.replace(/<!-- -->/g, "").replace(/<[^>]+>/g, "");
+}
+
 /** The contact person of the category «Traseu», as the club set them on the category. */
 export const PLAN_CONTACT = { name: "Călin Coordonator", phone: "+40712345678", email: "traseu@club.test" } as const;
 /** The same person as a message's footer says them: the telephone number as a person reads it. */

@@ -100,9 +100,11 @@ export const RACE_NUMBER_FORMAT = sql<RaceNumberFormat>`coalesce(${events.bibDes
  * bibs page — so a point added, moved or retimed is a new picture address, and so is a race whose gun time is not set (its limits then have no clock, §757,
  * `start.ts#cutoffClockStart`, where the pictures made before that printed one counted from the meeting time: «no-gun» after the limit), and so is one the club unticked
  * «Arată pe profilul traseului» (§802; a «!» after it, §804: the strip draws only the ticked ones). Null with none,
- * which `concat_ws` leaves out, so an event without checkpoints keeps the stamp it had.
+ * which `concat_ws` leaves out, so an event without checkpoints keeps the stamp it had. The editor's points only
+ * (`NOT c.plan_only`, §NNN): a point of the volunteers' plan alone is on no race number, so adding, moving or deleting one
+ * is no new picture address — the rows `event-checkpoints/checkpoints.ts#listCheckpoints` leaves out are left out here.
  */
-const CHECKPOINTS_STAMP = sql`(SELECT string_agg(concat(concat_ws(':', c.km::text, array_to_string(c.kinds, '+'), CASE WHEN c.cutoff_minutes IS NOT NULL THEN concat_ws('@', c.cutoff_minutes::text, ${events.raceStartsAt}::text, ${events.timezone}, CASE WHEN ${events.type} = 'RACE' AND ${events.raceStartsAt} IS NULL THEN 'no-gun' END) END), CASE WHEN NOT c.on_profile THEN '!' END), '|' ORDER BY c.km, c.position, c.id) FROM event_checkpoints c WHERE c.event_id = ${events.id})`;
+const CHECKPOINTS_STAMP = sql`(SELECT string_agg(concat(concat_ws(':', c.km::text, array_to_string(c.kinds, '+'), CASE WHEN c.cutoff_minutes IS NOT NULL THEN concat_ws('@', c.cutoff_minutes::text, ${events.raceStartsAt}::text, ${events.timezone}, CASE WHEN ${events.type} = 'RACE' AND ${events.raceStartsAt} IS NULL THEN 'no-gun' END) END), CASE WHEN NOT c.on_profile THEN '!' END), '|' ORDER BY c.km, c.position, c.id) FROM event_checkpoints c WHERE c.event_id = ${events.id} AND NOT c.plan_only)`;
 
 /**
  * A stamp of what a bib's picture is drawn from (§748, §750), for the desk's picture address: a hash of
