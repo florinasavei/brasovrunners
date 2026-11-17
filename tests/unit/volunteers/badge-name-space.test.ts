@@ -597,7 +597,7 @@ describe("§NNN the sheet and the picture draw the same badge at a space for the
 });
 
 describe("§NNN the picture's address", () => {
-  it("raises the drawing's version to 4, and makes a space for the name another picture's address", () => {
+  it("raises the drawing's version to 5, and makes a space for the name another picture's address", () => {
     expect(BADGE_DRAWING_VERSION).toBe(5);
     const at = (nameSpacePct: number) => badgePictureStamp([{ ...DEFAULT_BADGE_DESIGN, nameSpacePct }, "Crosul", "single"]);
     expect(at(60)).not.toBe(at(43));
