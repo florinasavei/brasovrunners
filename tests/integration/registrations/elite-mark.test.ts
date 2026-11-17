@@ -337,10 +337,11 @@ describe("§897 a marked registration's bib", () => {
     });
     expect(response?.status).toBe(200);
     expect(response?.headers.get("content-disposition")).toMatch(/-elite\.pdf/);
-    // The list first, in the order typed, then the marked registrations by number — each as an elite bib.
-    const names = drawn.filter((run) => ["Eliud Kipchoge", "Ana Pop", "Mara Dima", "Ion Ionescu", "Radu Stan"].includes(run.text));
+    // The list first, in the order typed — a line prints its first word (§NNN) — then the marked registrations by
+    // number, each as an elite bib.
+    const names = drawn.filter((run) => ["Eliud", "Eliud Kipchoge", "Ana Pop", "Mara Dima", "Ion Ionescu", "Radu Stan"].includes(run.text));
     expect(names).toEqual([
-      { text: "Eliud Kipchoge", width: undefined },
+      { text: "Eliud", width: undefined },
       { text: "Ana Pop", width: undefined },
       { text: "Mara Dima", width: undefined },
     ]);
