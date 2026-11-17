@@ -125,7 +125,7 @@ describe("§757 which checkpoints the strip pins, and what each says", () => {
 
   it("draws the five earlier kinds with the very paths and order they had (§824)", () => {
     // 6 for the emergency line's new form (§947), 7 for the elite bib's name alone, 8 for the room between the profile and the
-    // phone line (§959), 9 for the elite bib's one word (§963), 10 for the strip's altitudes in the band's colour (§NNN): the
+    // phone line (§959), 9 for the elite bib's one word (§963), 10 for the strip's altitudes in the band's colour (§968): the
     // strip's glyphs are drawn as they were.
     expect(BIB_DRAWING_VERSION).toBe(10);
     const paths = (["water", "food", "firstAid", "timing", "direction", "none"] as const).map((glyph) => ELEVATION_GLYPH_PATHS[glyph]);
@@ -427,7 +427,7 @@ describe("§804 the unticked checkpoint is not on the strip", () => {
 
 const SHEET = { eventTitle: "Crosul de toamnă", eventDate: "21 noiembrie 2026", generatedAt: new Date("2026-10-10T12:00:00Z"), replyTo: "club@example.test" };
 const SOURCES = [at(2.4, "10:20", ["WATER"]), at(5.1, "10:55", ["FOOD"]), at(7.2, "11:30", ["WATER"])];
-/** The picture's altitudes in the club's band colour, as the sheet's are on a bib with no colour of its own (§NNN). */
+/** The picture's altitudes in the club's band colour, as the sheet's are on a bib with no colour of its own (§968). */
 const ALTITUDES = bibAltitudeInk({ band: bibBandColour(null), ink: "#000001", card: null });
 
 type Call = { name: string; args: unknown[] };

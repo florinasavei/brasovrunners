@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.58-2026-11-17 -->
+<!-- PROJECT_BASELINE: BR-V4.59-2026-11-17 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V4.58-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.59-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -2165,6 +2165,7 @@ way through every step, and none of them is a way around the allocator.
 128. Given the print card, when «BIB-uri goale» is downloaded with a count between 1 and 100, then the sheet holds that many of the race's bibs with no number, no stubs, no name and no line for one — nothing reserved, nobody named — and any other count is refused (2026-11-17, `DECISIONS.md` §963).
 129. Given a registration marked «Elită», then its bib prints on the elite sheet alone: the ordinary sheet, a range reprint, the unprinted batch and their count leave it out, and its number and state are unchanged (2026-11-17, `DECISIONS.md` §963).
 130. Given an elite bib — a line of the race's elite list or a registration marked «Elită» — then it prints one word where the number goes: the registration's first name, or the first word of the line as typed; never a number under it nor its stubs, whatever the design held (2026-11-17, `DECISIONS.md` §963).
+131. Given a bib design that draws the route's profile from the GPX with «Kilometrii și altitudinile pe profil», when a number is printed or previewed, then the strip's highest and lowest altitude are drawn in the colour of that bib's own header band — the event's, the club's when the event names none, the members' on a member's bib with their band — or, where that colour reads under 3 : 1 against white as WCAG computes it, in the strip's ink at 60 %; on a member's card, in the card's white at 60 %, or at the first strength above it, 5 % at a time, that reads at 3 : 1 on the card's own ground (its colour, both stops of its gradient, the veil over a white photograph); on the sheet and in the picture alike, from one function; every other word of the strip, its curve, its pins and its scale keep the ink, the altitudes keep their size, weight and place, and the pictures' addresses change with the drawing's version (2026-11-17, `DECISIONS.md` §968).
 
 **Verification:** integration `registrations/bibs.test.ts`, `registrations/race-day.test.ts`, `cms/bib-design.test.ts`; unit `registrations/bibs-pdf.test.ts`, `registrations/bib-design.test.ts`; integration `registrations/void-bibs.test.ts` (16, 17); unit `registrations/race-number.test.ts` (16); unit `registrations/bib-footer.test.ts` (19); e2e `bib-design.spec.ts` (19)
 

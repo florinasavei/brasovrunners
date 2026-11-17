@@ -138,6 +138,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.59` | the bib's altitudes in the band's colour (§968) |
 | `BR-V4.58` | taller volunteer badges (up to 287 mm) (§967) |
 | `BR-V4.57` | every volunteer agreement of an event in one PDF, for the desk (§966) |
 | `BR-V4.56` | the club's logo as a pale watermark at the foot of the volunteers' badges («Logo-ul clubului jos, ca filigran») (§965) |

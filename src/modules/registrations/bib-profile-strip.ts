@@ -67,7 +67,7 @@ export const bibPinGlyphScale = (pinRadius: number): number => (pinRadius * 0.78
 export type BibAltitudeInk = { colour: string; opacity: number };
 
 /**
- * The ink of the strip's highest and lowest altitude, decided once for the sheet and the picture so they cannot disagree (§NNN;
+ * The ink of the strip's highest and lowest altitude, decided once for the sheet and the picture so they cannot disagree (§968;
  * the owner, 2026-11-17, of «815 m» under the curve reading like one more distance: «aș vrea ca numerele de la elevație să fie un
  * pic colorate diferit, să nu se confunde cu markerii de distanță»).
  *

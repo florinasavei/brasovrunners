@@ -13,7 +13,7 @@ import { fnv1a } from "@/shared/hash";
  * gap between the profile's row and the phone line when both are drawn (§959). 9: an elite bib never prints a number, and a
  * line of the elite list prints its first word (§963). 10: the profile's highest and lowest altitude in the bib's band colour, or
  * the ink at 60% where that colour reads too light on white — on a member's card its white, at 60% or as much more as the card's
- * ground needs (§NNN). The bibs page's stamp (`bibPictureStamp`) and the desk's (`events/repository.ts#BIB_STAMP`) both carry it.
+ * ground needs (§968). The bibs page's stamp (`bibPictureStamp`) and the desk's (`events/repository.ts#BIB_STAMP`) both carry it.
  */
 export const BIB_DRAWING_VERSION = 10;
 

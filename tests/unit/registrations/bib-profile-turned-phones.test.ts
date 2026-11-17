@@ -88,7 +88,7 @@ const SHEET = { eventTitle: "Crosul de toamnă", eventDate: "21 noiembrie 2026",
 const PHONE_A = "0700 000 001";
 const PHONE_B = "+40 700 000 002";
 
-/** The picture's strip in these tests is inked "#000001"; its altitudes in the club's band colour (§NNN). */
+/** The picture's strip in these tests is inked "#000001"; its altitudes in the club's band colour (§968). */
 const ALTITUDES = bibAltitudeInk({ band: bibBandColour(null), ink: "#000001", card: null });
 
 let profilePng: Buffer;

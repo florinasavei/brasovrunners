@@ -190,7 +190,7 @@ export const BIB_LAYOUT = {
   profileKmTickWeight: 0.4,
   profileScaleOpacity: 0.6,
   /**
-   * The highest and the lowest altitude's own ink (§NNN; the owner, 2026-11-17: «aș vrea ca numerele de la elevație să fie un
+   * The highest and the lowest altitude's own ink (§968; the owner, 2026-11-17: «aș vrea ca numerele de la elevație să fie un
    * pic colorate diferit, să nu se confunde cu markerii de distanță»): the bib's band colour where it reads on the white paper at
    * `profileAltitudeContrast` : 1 or more, as WCAG computes it; else — and on a member's card, whose strip stands on the card's
    * own ground — the strip's ink at `profileAltitudeOpacity`, or stronger by `profileAltitudeOpacityStep` at a time until it reads

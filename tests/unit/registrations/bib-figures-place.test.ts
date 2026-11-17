@@ -71,7 +71,7 @@ const DRAWING: BibProfileDrawing = {
 const SHEET = { eventTitle: "Crosul de toamnă", eventDate: "21 noiembrie 2026", generatedAt: new Date("2026-10-10T12:00:00Z") };
 const ROWS = [{ bibNumber: 7, registeredName: "Alergător Unu" }];
 const PHONE = "0700 000 001";
-/** The picture's strip in these tests is inked "#000001"; its altitudes in an event's band colour, the editor's green (§NNN). */
+/** The picture's strip in these tests is inked "#000001"; its altitudes in an event's band colour, the editor's green (§968). */
 const ALTITUDES: BibAltitudeInk = bibAltitudeInk({ band: "#1b8a3a", ink: "#000001", card: null });
 
 afterEach(() => vi.restoreAllMocks());
@@ -398,7 +398,7 @@ describe("§804 the drawing version, and the numbers printed so far", () => {
     // The default place draws what the drawing always drew (below, byte for byte), so this choice raised nothing; 6 is the
     // emergency line's new form (§947), 7 the name an elite registration's bib prints, 8 the room between the profile's row
     // and the phone line (§959), 9 the elite bib's one word and no number (§963) and 10 the strip's altitudes in the band's
-    // colour (§NNN).
+    // colour (§968).
     expect(BIB_DRAWING_VERSION).toBe(10);
     const stamp = (place: (typeof BIB_PROFILE_FIGURES_PLACES)[number]) => bibPictureStamp([withPlace(place)]);
     expect(new Set(BIB_PROFILE_FIGURES_PLACES.map(stamp)).size).toBe(3);
@@ -430,11 +430,11 @@ describe("§804 the drawing version, and the numbers printed so far", () => {
     // Captured from the release before the choice (BR-V3.53) with the same call: a change here is a change in every printed number.
     // Captured again for §959, whose room between the profile's row and the phone line is the one change: with that room at zero
     // (and no `marginTop` on the picture's phone row) the call gives the hash of BR-V3.53 again, «9c92ff5a…02b6b7».
-    // Captured again for §NNN, whose altitudes in the band's colour are the one change (the next test).
+    // Captured again for §968, whose altitudes in the band's colour are the one change (the next test).
     expect(await fingerprint(ALTITUDES)).toBe(GOLDEN_RIGHT);
   });
 
-  it("§NNN changes the drawing by the altitudes' colour alone: forced back to the strip's ink, the call gives §959's hash", async () => {
+  it("§968 changes the drawing by the altitudes' colour alone: forced back to the strip's ink, the call gives §959's hash", async () => {
     // The sheet's runs carry no colour, so its half is the same either way; the picture's strip differs by the two altitudes'
     // `color` alone. A later change to the drawing replaces this pair with its own.
     expect(ALTITUDES).toEqual({ colour: "#1b8a3a", opacity: 1 });
@@ -443,5 +443,5 @@ describe("§804 the drawing version, and the numbers printed so far", () => {
 });
 
 const GOLDEN_RIGHT = "ac0b7553188469dff309aa3acb7c1f989c1352c9ce77b159ff9eb8f1e722fa2b";
-/** §959's fingerprint, the drawing before the altitudes took the band's colour (§NNN). */
+/** §959's fingerprint, the drawing before the altitudes took the band's colour (§968). */
 const GOLDEN_BEFORE_ALTITUDES = "48afc92f49d50802f13fa2ac6767b0df93bdb5a10169f0a90521b5876dfef79d";

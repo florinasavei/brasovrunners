@@ -34,7 +34,7 @@ import { parseGpxElevation } from "@/modules/routes/elevation/parse";
 import { BIB_COLOURS, COLOR, contrastRatio, mix } from "@/theme/brand";
 
 /**
- * §NNN, BR-REQ-038-01 — the owner, 2026-11-17, looking at the race's bib, its strip with «Start», «1», «2», «3», «km 4,5 · apă +
+ * §968, BR-REQ-038-01 — the owner, 2026-11-17, looking at the race's bib, its strip with «Start», «1», «2», «3», «km 4,5 · apă +
  * hrană», «6», «7 km», «Sosire» and the altitudes «622 m» and «815 m»: «pe viitor: aș vrea ca numerele de la elevație să fie un
  * pic colorate diferit, să nu se confunde cu markerii de distanță». The strip's highest and lowest altitude are drawn in the bib's
  * band colour — the ink at 60% where that colour reads too light on white; on a member's card the card's white, at 60% or stronger
@@ -126,7 +126,7 @@ const readsOn = (ground: string, ink: string, opacity: number) => contrastRatio(
 /** The altitudes of a member's card on its ground; the band is whatever the bib's band would be, and is not read. */
 const onCard = (card: BibMemberCardBackground, band: string = PURPLE) => bibAltitudeInk({ band, ink: WHITE, card });
 
-describe("§NNN one function: the band's colour where it reads on white, else the ink at 60%", () => {
+describe("§968 one function: the band's colour where it reads on white, else the ink at 60%", () => {
   it("takes the band's colour at 3 : 1 or more against white — the club's own blue and every colour the editor offers", () => {
     for (const band of [BIB_BAND_FALLBACK, ...BIB_COLOURS.map((choice) => choice.hex)]) {
       expect(contrastRatio(band, COLOR.surface), band).toBeGreaterThanOrEqual(BIB_LAYOUT.profileAltitudeContrast);
@@ -196,7 +196,7 @@ describe("§NNN one function: the band's colour where it reads on white, else th
   });
 });
 
-describe("§NNN the sheet fills the two altitudes, and only them, in that ink", () => {
+describe("§968 the sheet fills the two altitudes, and only them, in that ink", () => {
   for (const orientation of ["normal", "turned"] as const) {
     it(`draws the altitudes in the event's colour and every other word of the strip in the ink — profile ${orientation}`, async () => {
       const chosen = design({ profileOrientation: orientation });
@@ -292,7 +292,7 @@ function pictureWords(altitudeInk: BibAltitudeInk, ink: string = COLOR.ink) {
   return boxes;
 }
 
-describe("§NNN the picture carries the same ink in its markup", () => {
+describe("§968 the picture carries the same ink in its markup", () => {
   it("sets the band's colour on the two altitudes' boxes, the ink on every other word's, and no opacity", () => {
     const words = stripWords(design());
     const boxes = pictureWords(bibAltitudeInk({ band: GREEN, ink: COLOR.ink, card: null }));
@@ -335,7 +335,7 @@ describe("§NNN the picture carries the same ink in its markup", () => {
   });
 });
 
-describe("§NNN the picture's pixels", () => {
+describe("§968 the picture's pixels", () => {
   const px = (points: number) => points * BIB_IMAGE_SCALE;
   const channels = (hex: string) => [1, 3, 5].map((at) => Number.parseInt(hex.slice(at, at + 2), 16));
   /** The first row of pixels under the header band, clear of its edge. */

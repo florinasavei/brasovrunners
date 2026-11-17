@@ -301,7 +301,7 @@ export function bibMemberMarkElement(shape: BibMemberMark, ink: string, logoSrc:
  * The profile's row (§750) at the sheet's points: the line drawn from the GPX with its words and the
  * checkpoints' marks, or the club's picture fitted whole (§759) — either in the chart's width the row
  * decided (`bib-profile-row.ts`), with the figures beside it when the club shows them. The highest and the
- * lowest altitude in `altitudeInk` (§NNN), everything else in `ink`.
+ * lowest altitude in `altitudeInk` (§968), everything else in `ink`.
  */
 function profileRowElement(row: BibProfileRow, ink: string, altitudeInk: BibAltitudeInk, picture: BibImagePicture | null) {
   const L = BIB_LAYOUT;
@@ -397,7 +397,7 @@ function profileRowElement(row: BibProfileRow, ink: string, altitudeInk: BibAlti
       </svg>
       {/* Every word of the strip at the baseline the core gave it: «Start» and «Sosire», the points' words, the kilometres and their
           unit, the altitudes — a box of its own, aligned by the text's anchor, its line's top where the baseline needs it. The
-          altitudes in their own ink (§NNN, `bibAltitudeInk`): the band's colour, or the ink at the opacity the sheet lays it at. */}
+          altitudes in their own ink (§968, `bibAltitudeInk`): the band's colour, or the ink at the opacity the sheet lays it at. */}
       {strip.texts.map((text, at) => (
         <div
           key={at}
@@ -469,7 +469,7 @@ const TURNED = { transform: "rotate(180deg)" } as const;
  * label and numbers set at the size that fits (`bibEmergencyFit`) — turned as `bibExtrasTurn` decides:
  * both turned is **one** block turned about its own centre (the phone comes out above the profile, and
  * reads right under it for the runner), else each row alone. Null when neither is drawn. Exported so
- * the test reads the markup. `altitudeInk` is what `bibAltitudeInk` decided for this bib (§NNN).
+ * the test reads the markup. `altitudeInk` is what `bibAltitudeInk` decided for this bib (§968).
  */
 export function bibExtrasBlock(input: {
   row: BibProfileRow | null;
@@ -611,7 +611,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const backgroundHeight = px(cardHeight - (stripe ? L.memberStripeHeight / 2 : 0));
   // The number and the name: white on a member's card, the body ink on the white paper.
   const ink = asCard ? BIB_MEMBER_CARD.text : COLOR.ink;
-  // The profile's highest and lowest altitude (§NNN): this bib's band colour — the event's, or the members' — else the ink at
+  // The profile's highest and lowest altitude (§968): this bib's band colour — the event's, or the members' — else the ink at
   // 60%, stronger on a member's card whose ground would carry it under 3 : 1; decided by the function the sheet asks.
   const altitudeInk = bibAltitudeInk({ band, ink, card: cardBackground });
   const headerText = asCard ? BIB_MEMBER_CARD.text : bandText;

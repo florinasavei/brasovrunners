@@ -488,7 +488,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     const cardHeight = BIB_CARD.height - footerHeight - sponsorHeight;
     // The number and the name: white on a member's card, the body ink on the white paper.
     const ink = card ? BIB_MEMBER_CARD.text : COLOR.ink;
-    // The profile's highest and lowest altitude (§NNN): this bib's band colour — the event's, or the members' — else the ink at 60%,
+    // The profile's highest and lowest altitude (§968): this bib's band colour — the event's, or the members' — else the ink at 60%,
     // stronger on a member's card whose ground would carry it under 3 : 1 (the card's background, as drawn below).
     const altitudeInk = bibAltitudeInk({ band: header.band, ink, card: card?.background ?? null });
     const stripeHeight = card?.stripe ? L.memberStripeHeight : 0;
@@ -838,7 +838,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       };
       doc.font("body").fontSize(L.profileLabelSize).fillColor(ink);
       drawTexts(strip.texts.filter((text) => !text.altitude));
-      // The altitudes, last as ever, in their own ink (§NNN, `bibAltitudeInk`): the band's colour, or the ink faded (60%, more on a
+      // The altitudes, last as ever, in their own ink (§968, `bibAltitudeInk`): the band's colour, or the ink faded (60%, more on a
       // member's card where that would not read) — that opacity inside a saved state, so nothing drawn after them is faint.
       const altitudes = strip.texts.filter((text) => text.altitude);
       if (altitudes.length > 0) {
