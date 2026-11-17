@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.52-2026-11-17
+
+- **Facebook and Instagram in «Trimite un mesaj participanților»** — the organizers' message to an event's participants now ends its links with the club's Facebook page and its Instagram page, the same two addresses the site's footer has; nothing to tick, and the composer's preview shows them. §957.
 ## BR-V4.51-2026-11-16
 
 - **«Trimite fiecăruia punctul lui» on «Planul voluntarilor»** — one press now emails each volunteer placed at a point their own point: its number, name and kilometre, its note, the roles you gave them and what they ask, the contact person of the role's category, and the plan's picture when you uploaded one. It asks first and says how many people it writes to, how many already know their point, how many stand at a point with no email address and how many stand at none. Pressing again writes only to people placed or moved since; tick «Trimite din nou tuturor» in the question to write to everybody. A message still waiting is not sent if the person was meanwhile moved, taken off, cancelled or given another address. Placing or moving somebody still emails nobody. Only the Organizer and the Administrators can press; the message's words are yours to rewrite under «Setări» → «Emailuri» («Punctul tău de voluntar»). §956.
