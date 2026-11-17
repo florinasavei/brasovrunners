@@ -108,6 +108,19 @@ describe("§360 SubNav as the server renders it", () => {
   });
 });
 
+describe("§974 a row that fits carries no script", () => {
+  it("leaves the scroller's island out of a row that is never wider than a phone (`fits`), and keeps it in every other", () => {
+    const fitting = renderToStaticMarkup(createElement(SubNav, { label: "Cum vezi planul", items: ITEMS.slice(0, 2), fits: true }));
+    // `SubNavCurrent` draws one hidden span inside the row; a row that fits draws none, and is the same row otherwise.
+    expect(html).toMatch(/<span hidden=""><\/span>/);
+    expect(fitting).not.toMatch(/<span hidden/);
+    expect(fitting.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "")).toMatch(/^<nav [^>]*aria-label="Cum vezi planul"[^>]*><ul/);
+    expect(fitting).toMatch(/<a\b[^>]*aria-current="page"[^>]*>Stare<\/a>/);
+    // The plan's views are the one row that says so: two short words.
+    expect(read("src/app/[locale]/admin/events/[id]/plan-voluntari/page.tsx")).toMatch(/<SubNav\s+fits\s/);
+  });
+});
+
 describe("§360 one look for every backoffice sub-navigation", () => {
   it("is a Server Component that imports no MUI button", () => {
     const source = read("src/shared/ui/SubNav.tsx");
@@ -152,6 +165,8 @@ describe("§360 one look for every backoffice sub-navigation", () => {
     walk("src");
     expect(rows.sort()).toEqual(
       [
+        // «Tabel» and «Pe puncte», the two views of «Planul voluntarilor» (§974): a row that fits, with no scroller.
+        "src/app/[locale]/admin/events/[id]/plan-voluntari/page.tsx",
         "src/app/[locale]/members-area/zone.tsx",
         "src/modules/content/gallery/ui/GallerySubNav.tsx",
         "src/modules/content/pages/ui/PagesSubNav.tsx",

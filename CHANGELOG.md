@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.63-2026-11-17
+
+- **«Planul voluntarilor» in two views and in folds** — two links under the intro: «Tabel», every point in one table (the route by kilometre, then the start–finish; its number, its name in bold — a link to that point —, its kilometre, its coordinates and map link, its volunteers with their telephones, how many, and a total), a block a point on a phone and printed as a table; and «Pe puncte», the points in two folds, «Pe traseu» and «La start–finish», each point a fold whose bar says its name in bold, its kilometre and how many stand there, with a pencil for «Modifică punctul»; the picture, «Adaugă un punct» and the email are folds that say what they hold, every press comes back to its view with what it changed open, and each view prints whole. §974.
 ## BR-V4.62-2026-11-17
 
 - **More room for the name on the volunteers' badges** — «Spațiul pentru nume (% din înălțime)», first in «Locul pentru nume», takes 43 to 80: the higher the number, the lower the two bands at the top and the larger the white space where the name is written; 43 is the badge as before. §972.
