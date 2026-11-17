@@ -715,6 +715,27 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
             <GlyphButton icon="download" href={`/api/admin/events/${scopeEvent.id}/volunteers?lang=${locale}`} variant="text" size="small" sx={TAP_TARGET} data-testid="volunteers-csv">
               {t("volunteers.csv")}
             </GlyphButton>
+            {/*
+              Every agreement in one PDF (§966; the owner, 2026-11-17: «și vreau să pot printa și contractul de voluntariat, să am la
+              fața locului»), for the desk, in place of one download per person: the accepted copies and the sheets to sign — or, on
+              the second, the sheets alone. Plain links: the route asks for the role again (BR-REQ-060-01) and audits the download.
+            */}
+            <GlyphButton icon="pdf" href={`/api/admin/events/${scopeEvent.id}/volunteers/agreements?lang=${locale}`} variant="outlined" size="small" sx={TAP_TARGET} data-testid="volunteers-agreements">
+              {t("volunteers.screen.agreements")}
+            </GlyphButton>
+            <GlyphButton
+              icon="print"
+              href={`/api/admin/events/${scopeEvent.id}/volunteers/agreements?only=unsigned&lang=${locale}`}
+              variant="text"
+              size="small"
+              sx={TAP_TARGET}
+              data-testid="volunteers-agreements-unsigned"
+            >
+              {t("volunteers.screen.agreementsToSign")}
+            </GlyphButton>
+            <Typography variant="body2" color="text.secondary" sx={{ flexBasis: "100%" }} data-testid="volunteers-agreements-help">
+              {t("volunteers.screen.agreementsHelp")}
+            </Typography>
           </Stack>
         )}
       </Stack>

@@ -463,6 +463,41 @@ describe("the list page (§839)", () => {
   });
 });
 
+describe("«Contractele (PDF)» and «De semnat pe hârtie (PDF)» on the list (§966)", () => {
+  it("offers the chosen event's agreements in one PDF and its sheets to sign, after its Excel and CSV, with one help line — in Romanian and in English", async () => {
+    for (const [locale, words] of [
+      ["ro", ro],
+      ["en", en],
+    ] as const) {
+      const page = await listPage({ eventId: raceId }, locale);
+      // Plain links (GET): the route asks for the role again and audits the download.
+      expect(page).toContain(`href="/api/admin/events/${raceId}/volunteers/agreements?lang=${locale}"`);
+      expect(page).toContain(`href="/api/admin/events/${raceId}/volunteers/agreements?only=unsigned&amp;lang=${locale}"`);
+      expect(page).toContain(words.Admin.volunteers.screen.agreements);
+      expect(page).toContain(words.Admin.volunteers.screen.agreementsToSign);
+      expect(page).toContain(words.Admin.volunteers.screen.agreementsHelp);
+      // Beside the event's own files, after them.
+      expect(page.indexOf('data-testid="volunteers-csv"')).toBeLessThan(page.indexOf('data-testid="volunteers-agreements"'));
+      expect(page.indexOf('data-testid="volunteers-agreements"')).toBeLessThan(page.indexOf('data-testid="volunteers-agreements-unsigned"'));
+    }
+    // The featured event the list opens on is a chosen one too; and the Organizer, who may take them, sees them.
+    expect(await listPage()).toContain('data-testid="volunteers-agreements"');
+    state.actor = staff.MODERATOR;
+    expect(await listPage()).toContain(`href="/api/admin/events/${raceId}/volunteers/agreements?lang=ro"`);
+  });
+
+  it("offers none across every event, and none to a role that may not take them: the page is not theirs", async () => {
+    const all = await listPage({ eventId: "all" });
+    expect(all).not.toContain("/volunteers/agreements");
+    expect(all).not.toContain(ro.Admin.volunteers.screen.agreementsHelp);
+    const allEnglish = await listPage({ eventId: "all" }, "en");
+    expect(allEnglish).not.toContain("/volunteers/agreements");
+    expect(allEnglish).not.toContain(en.Admin.volunteers.screen.agreements);
+    state.actor = staff.DEV;
+    await expect(listPage({ eventId: raceId })).rejects.toThrow("NOT_FOUND");
+  });
+});
+
 describe("«Adaugă un voluntar de mână» on the list (§862)", () => {
   it("draws the card's form for the event in scope, coming back to this page, and none across every event", async () => {
     const page = await listPage();

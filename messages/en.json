@@ -6389,7 +6389,10 @@
         "eventCard": "The event's roles and settings",
         "backToList": "Back to volunteers",
         "eventLine": "Volunteer at {event} · {when}",
-        "excelAll": "Download Excel: every event"
+        "excelAll": "Download Excel: every event",
+        "agreements": "Agreements (PDF)",
+        "agreementsToSign": "To sign on paper (PDF)",
+        "agreementsHelp": "Every volunteer not cancelled, each from a new page: those who accepted, with the accepted agreement; the others, with the sheet to sign on paper. Anyone with no agreement in force is left out."
       },
       "decision": {
         "column": "Race-day decision",

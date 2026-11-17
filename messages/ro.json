@@ -6389,7 +6389,10 @@
         "eventCard": "Rolurile și setările evenimentului",
         "backToList": "Înapoi la voluntari",
         "eventLine": "Voluntar la {event} · {when}",
-        "excelAll": "Descarcă Excel: toate evenimentele"
+        "excelAll": "Descarcă Excel: toate evenimentele",
+        "agreements": "Contractele (PDF)",
+        "agreementsToSign": "De semnat pe hârtie (PDF)",
+        "agreementsHelp": "Toți voluntarii care nu sunt anulați, fiecare de la o pagină nouă: cine a acceptat, cu contractul acceptat; ceilalți, cu foaia de semnat pe hârtie. Cine nu are un contract în vigoare nu apare."
       },
       "decision": {
         "column": "Decizie ziua cursei",
