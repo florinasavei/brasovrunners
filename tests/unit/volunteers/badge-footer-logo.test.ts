@@ -238,7 +238,8 @@ describe("§965 the watermark's one box", () => {
   });
 
   it("raises the drawing's version to 3, so every picture's address changes with it", () => {
-    expect(BADGE_DRAWING_VERSION).toBe(3);
+    // 4 since the club sets the logo's size, the space round it and its place (§969, `badge-footer-logo-controls.test.ts`).
+    expect(BADGE_DRAWING_VERSION).toBeGreaterThanOrEqual(3);
   });
 
   it("is the same box at every level, at the level's own opacity, and none while off", () => {
