@@ -742,7 +742,8 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     // The block under the name: the profile's row, then the phone's line (§750); turned as `turn` says (§759).
     const blockTop = regionFoot - stripeHeight - extrasHeight;
     const profileTop = blockTop;
-    const emergencyTop = blockTop + (profileRow !== null ? profileRowHeight : 0);
+    // The phone line under the profile's row, the gap between them when both are drawn (§959, `bibExtrasHeight` counts it).
+    const emergencyTop = blockTop + (profileRow !== null ? profileRowHeight + (emergency ? L.emergencyGap : 0) : 0);
     const centreX = left + BIB_CARD.width / 2;
     /** Half a circle about a box's own centre: what the runner reads looking down at the chest. */
     const turned = (boxTop: number, boxHeight: number, draw: () => void) => {

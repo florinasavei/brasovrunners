@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.53-2026-11-17 -->
+<!-- PROJECT_BASELINE: BR-V4.54-2026-11-17 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.53-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.54-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -30278,3 +30278,15 @@ Baseline `BR-V4.52-2026-11-17`.
 **Held by** `tests/unit/notifications/organizer-message-programme.test.ts` (the flag's reader; the one builder — the facts block's row and the block alone say the same; the block in the message, each half in its own language, after the words and after §943's lines; the ticked message with its blocks taken out is the unticked one, byte for byte; no rows, no block; the club's copy; every other message type the same with the flag and without; the words in both catalogues; the files that may name the flag), `tests/integration/notifications/participant-message-programme.test.ts` (the send flags every row of every audience and state and names the tick in its audit row, and nothing when unticked; the email as it leaves; a row changed between the press and the render is the one that leaves; no timed row left, the unticked message; a row's place withheld with the event's; the club's copy; a forged flag on another type; the preview; the action, the people ticked and the tick handed back after a trial) and `participant-message-programme-page.test.ts` (the composer's page rendered in Romanian and in English: the tick enabled with rows, disabled with its sentence without, a free-text programme alone not enabling it; the question's line only for a press that posts the tick); in a browser, `tests/e2e/participant-message.spec.ts`.
 
 Baseline `BR-V4.53-2026-11-17`.
+
+## 959. Room between the route's profile and the emergency phones on the bib
+
+**The owner, 2026-11-17, four days before Saturday's race, with a picture of a number whose strip was turned for the runner and set the phones line right against the kilometres of the profile:** «top prio, vreau un pic de spațiere aici pe BIB».
+
+**What was there.** Under the name, the bib's block (§750, §759): the profile's row — `profileHeight` points with its foot row of «Start», the kilometres, the points' words and «Sosire» — and right under it the emergency line, `emergencyHeight` points with its text centred. Nothing stood between the two: with the block turned for the runner, the phones read immediately above the kilometres, as one more line of labels.
+
+**Decision.** An empty room of `emergencyGap` = 6 points (about 2 mm) between the profile's row and the phone line, whenever both are drawn — on the sheet (`bibs-pdf.ts`) and in the picture (`bib-image.tsx`, a top margin on the phone's row), from the one constant in `bib-geometry.ts`. It belongs to the block: `bibExtrasHeight` counts it and the number's area gives it up (6 points off a number area well over 200), so the block turned as one keeps the room where it is, and a phone line or a profile drawn alone stand where they stood. The drawing's version is 8 (`BIB_DRAWING_VERSION`): every stamped picture address changes, so no browser keeps the old preview.
+
+**Held by** `tests/unit/registrations/bib-profile-turned-phones.test.ts` (the room in the block's height only when both are drawn, the phone's centre on the sheet, the picture's margin turned and not, none without a profile) and the drawing's fingerprint in `bib-figures-place.test.ts`, captured again — with the room at zero (and no margin key) it gives the hash of BR-V3.53 again, so the room is the one change.
+
+Baseline `BR-V4.54-2026-11-17`.

@@ -292,7 +292,8 @@ describe("§750 «Telefon pentru urgențe» on the sheet", () => {
     expect(bibExtrasHeight(false, false)).toBe(0);
     expect(bibExtrasHeight(true, false)).toBe(BIB_LAYOUT.profileHeight);
     expect(bibExtrasHeight(false, true)).toBe(BIB_LAYOUT.emergencyHeight);
-    expect(bibExtrasHeight(true, true)).toBe(BIB_LAYOUT.profileHeight + BIB_LAYOUT.emergencyHeight);
+    // Both drawn: the room between them too (§959), and only then.
+    expect(bibExtrasHeight(true, true)).toBe(BIB_LAYOUT.profileHeight + BIB_LAYOUT.emergencyGap + BIB_LAYOUT.emergencyHeight);
   });
 });
 
