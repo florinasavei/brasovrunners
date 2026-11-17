@@ -424,9 +424,9 @@ export function badgeLayoutWords(design: Pick<BadgeDesign, "showPhone" | "phone"
  * role's badge prints its category (§962).
  * 3 since the club's logo may stand large and pale at every badge's foot, as a watermark (§965).
  * 4 since the club sets that logo's size, the space round it and where it stands (§969).
- * 4 since the space for the name may take more of the badge's height, the bands sharing what it leaves (§NNN).
+ * 5 since the space for the name may take more of the badge's height, the bands sharing what it leaves (§NNN).
  */
-export const BADGE_DRAWING_VERSION = 4;
+export const BADGE_DRAWING_VERSION = 5;
 
 /**
  * A short, stable stamp of what a badge's picture is drawn from (the bib's §748): the design, the role's
