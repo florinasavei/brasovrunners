@@ -463,7 +463,7 @@ describe("the list page (§839)", () => {
   });
 });
 
-describe("«Contractele (PDF)» and «De semnat pe hârtie (PDF)» on the list (§NNN)", () => {
+describe("«Contractele (PDF)» and «De semnat pe hârtie (PDF)» on the list (§966)", () => {
   it("offers the chosen event's agreements in one PDF and its sheets to sign, after its Excel and CSV, with one help line — in Romanian and in English", async () => {
     for (const [locale, words] of [
       ["ro", ro],

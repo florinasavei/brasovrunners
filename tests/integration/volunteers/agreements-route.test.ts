@@ -20,7 +20,7 @@ import { pdfContentDigest } from "../../helpers/pdf-content";
 import { roleDescription } from "../../helpers/role-description";
 
 /**
- * §NNN — every volunteer agreement of an event in one PDF, for the desk (the owner, 2026-11-17, four days before the race:
+ * §966 — every volunteer agreement of an event in one PDF, for the desk (the owner, 2026-11-17, four days before the race:
  * «și vreau să pot printa și contractul de voluntariat, să am la fața locului»): «Contractele (PDF)» and «De semnat pe hârtie
  * (PDF)» on the «Voluntari» list, `GET /api/admin/events/[id]/volunteers/agreements`.
  *
@@ -317,10 +317,10 @@ async function onePerson(person: string, query = "") {
   );
 }
 
-describe("§NNN the one-person agreement's file is what it was before every agreement could be printed at once", () => {
+describe("§966 the one-person agreement's file is what it was before every agreement could be printed at once", () => {
   /*
     The digests of the files the one-person route answered with, captured from the code as it stood before the drawing of one
-    person's agreement learned to draw into a document it is handed (§NNN): an accepted adult, an adult who has not accepted
+    person's agreement learned to draw into a document it is handed (§966): an accepted adult, an adult who has not accepted
     (his sheet, in English), and the minors — not accepted (the sheet with the parent's line), accepted with the parent's
     consent to come (the copy that says so, and `?for=guardian`'s sheet for the parent) and accepted by both (two entries).
     `pdfContentDigest` is the file with its streams inflated, so the same digest is the same file byte for byte on any one
@@ -396,7 +396,7 @@ const downloads = () => db.select().from(auditLogs).where(eq(auditLogs.action, "
 /** Everyone the fixture names, the cancelled and another event's person included: none of it may reach an audit row. */
 const EVERY_NAME = ["Ana Pop", "Bogdan Anulat", "cezar Dobre", "Dan Tânărul", "Maria Popescu", "Ioana Mică", "Elena Mică", "John Smith", "Radu Tânăr", "Mihai Tânăr", "Zara Altundeva"];
 
-describe("§NNN every agreement of an event in one PDF (BR-REQ-060-01)", () => {
+describe("§966 every agreement of an event in one PDF (BR-REQ-060-01)", () => {
   it("refuses the Tehnic role, a Redactor, a volunteer at the desk and a member with a 403 and a stranger with a 401, auditing nothing", async () => {
     for (const key of ["DEV", "COPYWRITER", "CONTRIBUTOR", "MEMBER"] as const) {
       expect((await eventFile(staff[key]!)).status, key).toBe(403);

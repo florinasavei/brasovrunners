@@ -774,7 +774,7 @@ export type AuditAction =
   /** The agreement's PDF downloaded from the card (§758): a file with a name in it leaves the site; who and when. */
   | "volunteer.agreement_downloaded"
   /**
-   * Every agreement of an event in one PDF, from the «Voluntari» list (§NNN), entity `event`: «Contractele (PDF)», or — `only`
+   * Every agreement of an event in one PDF, from the «Voluntari» list (§966), entity `event`: «Contractele (PDF)», or — `only`
    * «unsigned» — «De semnat pe hârtie (PDF)». The metadata counts what the file holds (the agreements, the accepted copies and the
    * sheets to sign), never a name.
    */
