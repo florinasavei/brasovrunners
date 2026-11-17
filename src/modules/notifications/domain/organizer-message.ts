@@ -310,7 +310,7 @@ export function organizerSignLinkApplies(params: Parameters<typeof cannotComeApp
 }
 
 /**
- * Whether this row carries «Include programul evenimentului» (§NNN; the owner, 2026-11-17: «Vreau încă o bifă in acel
+ * Whether this row carries «Include programul evenimentului» (§958; the owner, 2026-11-17: «Vreau încă o bifă in acel
  * eveniment de "include program"»): the payload's `includeProgramme`, beside the words. Unlike the three flags above it
  * is about nobody in particular, so the send sets it on **every** row it queues — whatever the registration's state —
  * and on the club's copy too, which shows what the participants got; anything but `true` — a send that did not tick it,

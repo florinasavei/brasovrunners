@@ -138,6 +138,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.53` | «Include programul evenimentului»: the organizers' message to an event's participants can carry the event's programme (§958) |
 | `BR-V4.52` | the organizers' message to an event's participants ends with the club's Facebook and Instagram pages (§957) |
 | `BR-V4.51` | «Trimite fiecăruia punctul lui»: one press on «Planul voluntarilor» emails each placed volunteer their point and the plan's picture (§956) |
 | `BR-V4.50` | «Decizie ziua cursei»: the organizers' line about each volunteer on race day, a column of the «Voluntari» list (§954) · «Fără linia punctată pe tăietură»: the race numbers' sheet of two without its dashed line, the two end marks kept (§955) |

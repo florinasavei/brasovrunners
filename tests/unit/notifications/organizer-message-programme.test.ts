@@ -11,7 +11,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * `DECISIONS.md` §NNN — «Include programul evenimentului» on «Trimite un mesaj participanților» (the owner, 2026-11-17,
+ * `DECISIONS.md` §958 — «Include programul evenimentului» on «Trimite un mesaj participanților» (the owner, 2026-11-17,
  * four days before the race, writing the race week's message: «Vreau încă o bifă in acel eveniment de "include
  * program"»; BR-REQ-080-01). The pure half: the row's flag, the one builder of the «Program» row that the facts block
  * and this message both call, and the block in the message — one row, under the organizers' words, each half in its own
@@ -71,7 +71,7 @@ const blocks = (html: string) => [...html.matchAll(/<div data-email-part="event-
 const htmlWithoutBlocks = (html: string) => html.replace(/<div data-email-part="event-facts"[^]*?<\/div>\n/g, "");
 const textWithoutBlocks = (text: string) => text.replace(/\n\nProgram(?:me)?: [^\n]*(?:\n {2}[^\n]*)*/g, "");
 
-describe("§NNN the row's flag", () => {
+describe("§958 the row's flag", () => {
   it("reads the flag from the row's payload, and nothing else as a yes", () => {
     expect(readOrganizerIncludeProgramme({ subject: {}, body: {}, includeProgramme: true })).toBe(true);
     expect(readOrganizerIncludeProgramme({ includeProgramme: true, clubCopy: true })).toBe(true);
@@ -81,7 +81,7 @@ describe("§NNN the row's flag", () => {
   });
 });
 
-describe("§NNN one builder for the «Program» row: the facts block and the programme alone say it the same", () => {
+describe("§958 one builder for the «Program» row: the facts block and the programme alone say it the same", () => {
   it("draws the timed rows as one block of one row, each language its own labels", () => {
     const romanian = eventProgrammeBlock(facts("ro"), "ro");
     expect(romanian?.text).toBe(`Program: ${RO_LINES[0]}\n  ${RO_LINES[1]}`);
@@ -130,7 +130,7 @@ describe("§NNN one builder for the «Program» row: the facts block and the pro
   });
 });
 
-describe("§NNN the programme in the organizers' message: one block, under the organizers' words", () => {
+describe("§958 the programme in the organizers' message: one block, under the organizers' words", () => {
   it("draws one block per half with the row «Program» alone, each half in its own language, in the HTML and in the text", () => {
     const email = render("ro", TICKED);
     const found = blocks(email.html);
@@ -212,7 +212,7 @@ describe("§NNN the programme in the organizers' message: one block, under the o
   });
 });
 
-describe("§NNN nothing else of the organizers' message changes with the tick", () => {
+describe("§958 nothing else of the organizers' message changes with the tick", () => {
   it("builds the very same message outside the block: the facts line, every link, the buttons, the closing", () => {
     for (const locale of ["ro", "en"] as const) {
       const ticked = buildTemplateContent("ORGANIZER_MESSAGE", locale, TICKED, DATA.eventUrl);
@@ -281,7 +281,7 @@ describe("§NNN nothing else of the organizers' message changes with the tick", 
   });
 });
 
-describe("§NNN the club's copy, and every other message", () => {
+describe("§958 the club's copy, and every other message", () => {
   it("the club's copy carries the block — the copy of one message or the send's one copy: the programme is nobody's", () => {
     for (const copy of [{ clubCopy: true }, { clubCopy: true, clubCopyRecipients: 12, participantName: "" }]) {
       const email = render("ro", { ...TICKED, ...copy });
@@ -319,7 +319,7 @@ describe("§NNN the club's copy, and every other message", () => {
   });
 });
 
-describe("§NNN the tick's words, in both catalogues", () => {
+describe("§958 the tick's words, in both catalogues", () => {
   const wordsOf = (catalogue: typeof ro) => catalogue.Admin.participantMessages;
 
   it("names the tick, says what it adds, why it cannot be ticked and where the programme is written, and the question's line", () => {
@@ -355,11 +355,11 @@ describe("§NNN the tick's words, in both catalogues", () => {
 });
 
 /**
- * The structural half of «the flag decides a block of an email, and nothing else» (§NNN), in the style of the two ticks
+ * The structural half of «the flag decides a block of an email, and nothing else» (§958), in the style of the two ticks
  * before it: the files that name the flag, its reader, the template's field or the block's builder are a reviewed list —
  * none of the allocator's, the capacity formula's, a state's or a deadline's is on it.
  */
-describe("§NNN the flag decides a block of an email, and nothing else", () => {
+describe("§958 the flag decides a block of an email, and nothing else", () => {
   const ROOT = process.cwd();
   const NAMES_THE_FLAG = /\bincludeProgramme\b|readOrganizerIncludeProgramme|\borganizerProgramme\b|\beventProgrammeBlock\b/;
   const READERS = [

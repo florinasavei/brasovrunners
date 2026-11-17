@@ -25,7 +25,7 @@ import { openEditorBox } from "./support/fold";
  * picture that loads, and «Mărește» makes the frame as tall as the email — nothing left to scroll inside it — until
  * «Micșorează» returns the 620-pixel window, the press sending nothing.
  *
- * And §NNN — «Include programul evenimentului»: on an event with a timed programme the tick is offered, a thumb's
+ * And §958 — «Include programul evenimentului»: on an event with a timed programme the tick is offered, a thumb's
  * target, and ticked it puts the programme under the words of the preview, one block a half in that half's language.
  *
  * Each project writes its own event straight into the database — the setup, not the subject, as
@@ -341,7 +341,7 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     expect(await queuedFor(eventId)).toEqual([]);
   });
 
-  test("§NNN «Include programul evenimentului»: ticked on an event with a timed programme, the preview draws the programme under the words", async ({ page }) => {
+  test("§958 «Include programul evenimentului»: ticked on an event with a timed programme, the preview draws the programme under the words", async ({ page }) => {
     test.setTimeout(150_000);
     const tag = `${test.info().project.name}-${Date.now().toString(36)}-program`;
     const eventId = await seedEvent(tag);

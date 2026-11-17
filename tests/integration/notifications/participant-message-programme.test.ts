@@ -18,7 +18,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { confirmed } from "../../helpers/typed-count";
 
 /**
- * §NNN — «Include programul evenimentului» on «Trimite un mesaj participanților» (the owner, 2026-11-17, four days before
+ * §958 — «Include programul evenimentului» on «Trimite un mesaj participanților» (the owner, 2026-11-17, four days before
  * the race, writing the race week's message: «Vreau încă o bifă in acel eveniment de "include program"»; BR-REQ-080-01,
  * BR-REQ-080-02, BR-REQ-060-01).
  *
@@ -214,7 +214,7 @@ const textWithoutBlocks = (text: string) => text.replace(/\n\nProgram(?:me)?: [^
 const settled = (text: string) => text.replace(/(\/(?:inregistrari\/gestionare|registrations\/manage)\/)[A-Za-z0-9_-]+/g, "$1TOKEN");
 const QR_ROUTE = `${env.APP_BASE_URL}/api/registrations/qr/`;
 
-describe("§NNN the send: the flag rides on every row, whatever the registration's state", () => {
+describe("§958 the send: the flag rides on every row, whatever the registration's state", () => {
   it("flags every row of «Toți cei înscriși» — confirmed, waiting, offered, owing the declaration, a test row — and the audit row names the tick", async () => {
     const people = await everybody();
     const byId = (list: Registration[]) => [...list].sort((a, b) => a.id.localeCompare(b.id));
@@ -311,7 +311,7 @@ describe("§NNN the send: the flag rides on every row, whatever the registration
   });
 });
 
-describe("§NNN the email as it leaves: the event's programme, under the organizers' words", () => {
+describe("§958 the email as it leaves: the event's programme, under the organizers' words", () => {
   it("draws one block a half with the row «Program», each half in its own language, in the HTML and in the text — for every state of registration", async () => {
     const people = await everybody();
     await send();
@@ -466,7 +466,7 @@ describe("§NNN the email as it leaves: the event's programme, under the organiz
   });
 });
 
-describe("§NNN the club's copy, and every other message", () => {
+describe("§958 the club's copy, and every other message", () => {
   it("the club's one copy of the send carries the flag and draws the block; without the tick it carries neither", async () => {
     const admin = await staff("ADMIN");
     await updateClubNotices(db, admin, { participants: { bcc: ["arhiva@club.test"] } }, new Date());
@@ -542,7 +542,7 @@ describe("§NNN the club's copy, and every other message", () => {
   });
 });
 
-describe("§NNN the preview on the form", () => {
+describe("§958 the preview on the form", () => {
   it("draws the block with the tick, in the tab's language first, from the rows as they are now — and nothing of it without; nothing is queued or minted", async () => {
     await person("Ana", "CONFIRMED", { bib: 7 });
     const off = await previewParticipantMessage(db, organizer, { eventId, locale: "ro", ...WORDS });
@@ -614,7 +614,7 @@ describe("§NNN the preview on the form", () => {
   });
 });
 
-describe("§NNN the form's tick reaches the send", () => {
+describe("§958 the form's tick reaches the send", () => {
   function form(fields: Record<string, string>, ticked: readonly string[] = []): FormData {
     const posted = new FormData();
     posted.set("uiLocale", "ro");

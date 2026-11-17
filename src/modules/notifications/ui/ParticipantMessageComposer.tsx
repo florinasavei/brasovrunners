@@ -83,7 +83,7 @@ export type ComposerConfirm = { field: string; title: string; count: string; cou
 /**
  * What the boxes hold when the page is drawn right after a send to the people ticked (§945): that send's words and its
  * three ticks, so a trial is followed by the same message to everybody. Absent after any other send: the boxes are empty.
- * `includeProgramme` (§NNN) is there only when that send ticked «Include programul evenimentului».
+ * `includeProgramme` (§958) is there only when that send ticked «Include programul evenimentului».
  */
 export type ComposerKept = {
   subjectRo: string;
@@ -140,7 +140,7 @@ export type ComposerLabels = {
   signLink: string;
   signLinkHelp: string;
   /**
-   * «Include programul evenimentului» (§NNN), its help line — the programme, hour by hour, under the words — and the
+   * «Include programul evenimentului» (§958), its help line — the programme, hour by hour, under the words — and the
    * sentence said in the help's place while the event has no timed row: why the tick cannot be ticked, and where the
    * programme is written.
    */
@@ -177,7 +177,7 @@ export type PreviewInput = {
   sendQr: boolean;
   /** The tick «Trimite și linkul pentru semnarea declarației» as it stands: the preview draws «Semnează declarația» (§947). */
   signLink: boolean;
-  /** The tick «Include programul evenimentului» as it stands: the preview draws the event's programme under the words (§NNN). */
+  /** The tick «Include programul evenimentului» as it stands: the preview draws the event's programme under the words (§958). */
   includeProgramme: boolean;
 };
 export type PreviewResult = { subject: string; html: string; unknown: string[] } | null;
@@ -190,7 +190,7 @@ type Props = {
   /** The words of the send to the people ticked that the page was just returned from (§945), when it was one. */
   kept?: ComposerKept;
   /**
-   * Whether the event has a programme to include (§NNN): at least one timed row, as the page read it. Without one
+   * Whether the event has a programme to include (§958): at least one timed row, as the page read it. Without one
    * «Include programul evenimentului» is drawn disabled, with the sentence that says why and where one is written.
    */
   hasProgramme: boolean;
@@ -277,7 +277,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
   const [sendQr, setSendQr] = useState(() => (recall.has ? recall.value("sendQr") === "1" : kept?.sendQr === true));
   // «Trimite și linkul pentru semnarea declarației» (§947): off unless ticked, controlled and kept the same way.
   const [signLink, setSignLink] = useState(() => (recall.has ? recall.value("signLink") === "1" : kept?.signLink === true));
-  // «Include programul evenimentului» (§NNN): off unless ticked, controlled and kept the same way — and never on for an
+  // «Include programul evenimentului» (§958): off unless ticked, controlled and kept the same way — and never on for an
   // event with no timed row, whose box is disabled: there is nothing to include, and a disabled box posts nothing.
   const [includeProgramme, setIncludeProgramme] = useState(
     () => hasProgramme && (recall.has ? recall.value("includeProgramme") === "1" : kept?.includeProgramme === true),
@@ -617,7 +617,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
       </Box>
 
       {/*
-        «Include programul evenimentului» (§NNN): every email of the send gets, under these words, the event's programme —
+        «Include programul evenimentului» (§958): every email of the send gets, under these words, the event's programme —
         its timed rows, as the confirmation's facts block says them. Offered only when the event has such a row: without
         one the box is disabled (it posts nothing) and the line under it says why, and where the programme is written.
       */}

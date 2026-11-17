@@ -15,7 +15,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { confirmed } from "../../helpers/typed-count";
 
 /**
- * §NNN — «Include programul evenimentului» on the page of «Trimite un mesaj participanților» (BR-REQ-080-01): the tick
+ * §958 — «Include programul evenimentului» on the page of «Trimite un mesaj participanților» (BR-REQ-080-01): the tick
  * beside the composer's other ticks, off by default; offered when the event has at least one timed programme row, and
  * drawn disabled — with the sentence that says why, and where the programme is written — when it has none, a free-text
  * programme alone included; the one line the question before «Trimite» says only for a press that posts the tick; and,
@@ -183,7 +183,7 @@ beforeEach(async () => {
   state.actor = await organizer();
 });
 
-describe("§NNN «Include programul evenimentului» on the composer's page", () => {
+describe("§958 «Include programul evenimentului» on the composer's page", () => {
   it("an event with a timed programme: the tick is offered beside the other ticks, off by default, with its help line — in Romanian and in English", async () => {
     const race = await createRace(ROWS);
     await register(race.id);

@@ -299,7 +299,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
   */
   const testPeople = people.filter((person) => person.test).map((person) => person.id);
   /*
-    «Include programul evenimentului» (§NNN): the question says so, in one quiet line under the email's — only for a
+    «Include programul evenimentului» (§958): the question says so, in one quiet line under the email's — only for a
     press whose form posts the tick (a ticked box posts `1`, an unticked or a disabled one posts nothing).
   */
   const programmeLine: ConfirmAlso = { text: t("participantMessages.confirmProgramme"), when: [{ field: "includeProgramme", equals: "1" }] };
@@ -350,7 +350,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
 
   const inSeries = event.repeatOf !== null || readRepeatRule(event.repeatRule) !== null;
   /*
-    «Include programul evenimentului» (§NNN) is offered only when the event has a programme the message can draw: at
+    «Include programul evenimentului» (§958) is offered only when the event has a programme the message can draw: at
     least one timed row (`events.schedule_items`, §117). The programme's free text alone (`schedule_json`) does not
     count — the message draws timed rows only, as the facts block does.
   */
@@ -431,7 +431,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
                     askReconfirm: keptMessage.askReconfirm,
                     sendQr: keptMessage.sendQr,
                     signLink: keptMessage.signLink,
-                    // «Include programul evenimentului» (§NNN): named only when that send ticked it.
+                    // «Include programul evenimentului» (§958): named only when that send ticked it.
                     ...(keptMessage.includeProgramme ? { includeProgramme: true } : {}),
                   },
                 }

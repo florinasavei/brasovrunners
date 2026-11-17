@@ -167,7 +167,7 @@ export type SendParticipantMessageInput = {
    */
   signLink?: boolean;
   /**
-   * «Include programul evenimentului» (§NNN; the owner, 2026-11-17: «Vreau încă o bifă in acel eveniment de "include
+   * «Include programul evenimentului» (§958; the owner, 2026-11-17: «Vreau încă o bifă in acel eveniment de "include
    * program"»): under the organizers' words, the event's programme — its timed rows, the «Program» row of the facts block
    * the confirmation carries. About nobody in particular, so **every** row of the send carries the flag, whatever the
    * registration's state, and the club's copy with them — never the rows themselves, which the renderer reads off the
@@ -319,7 +319,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
     const includeProgramme = input.includeProgramme === true;
     const typed = { subject: { ro: message.subject.ro, en: message.subject.en }, body: { ro: message.body.ro, en: message.body.en } };
     /*
-      «Include programul evenimentului» (§NNN): the one flag that is the send's and not a row's — the programme is about
+      «Include programul evenimentului» (§958): the one flag that is the send's and not a row's — the programme is about
       nobody in particular, so it rides beside the words on every row this send queues, whatever the registration's
       state, and on the club's copy, which shows what the participants got. A flag, never the rows: the renderer reads
       the programme off the event when each email leaves. Unticked, the words alone, as they always were.
@@ -356,7 +356,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       const asks = askReconfirm && isReconfirmStatus(row.status);
       const carriesQr = sendQr && isOrganizerQrStatus(row.status);
       const carriesSignLink = signLink && isOrganizerSignStatus(row.status);
-      // The words (and, when ticked, the send's own flag for the programme, §NNN), and each of the three flags only on
+      // The words (and, when ticked, the send's own flag for the programme, §958), and each of the three flags only on
       // its own rows: a row none concerns carries the words alone, as it always did.
       const own =
         asks || carriesQr || carriesSignLink
@@ -410,7 +410,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
     }
     // The club's one copy of this send (§419): the words and how many real participants it reached — never a row's
     // flag: it asks nobody, and it carries nobody's number, QR, desk code or link to a declaration (§320, §943, §947). Marked like a row when it leaves now.
-    // The send's own flag is in `words` (§NNN): the copy draws the event's programme as the participants' emails do — it is on the public page, and nobody's.
+    // The send's own flag is in `words` (§958): the copy draws the event's programme as the participants' emails do — it is on the public page, and nobody's.
     await enqueueBulkClubCopies(tx, {
       messageType: "ORGANIZER_MESSAGE",
       eventId: input.eventId,
@@ -445,7 +445,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         // «Trimite și linkul pentru semnarea declarației» (§947): the tick, and in how many emails of registrations owing
         // the declaration — real and test apart; «Mesaje trimise» reads both. Never who, and never a link.
         ...(signLink ? { signLink: true, withSignLink, withSignLinkTest } : {}),
-        // «Include programul evenimentului» (§NNN): the tick alone — every email of the send carries it, so there is no
+        // «Include programul evenimentului» (§958): the tick alone — every email of the send carries it, so there is no
         // number of its own to count, and never the programme's rows, which are the event's.
         ...(includeProgramme ? { includeProgramme: true } : {}),
       },
@@ -580,7 +580,7 @@ export async function listParticipantMessages<T extends Record<string, unknown>>
 
 /**
  * What the composer's boxes hold again after a send to the people ticked (§945): the words in both languages and the
- * three ticks, as that send carried them — and `includeProgramme` (§NNN), present only when that send ticked «Include
+ * three ticks, as that send carried them — and `includeProgramme` (§958), present only when that send ticked «Include
  * programul evenimentului»: a trial with the programme under its words is followed by the same message to everybody,
  * not by one that has silently lost it.
  */
@@ -590,7 +590,7 @@ export type KeptMessage = OrganizerMessage & { askReconfirm: boolean; sendQr: bo
  * The words of a send to the people ticked, read back for the composer (§945): such a send is a trial as often as not,
  * and the same message to everybody must not have to be typed a second time — four boxes, in two languages. Read from
  * what the send itself wrote, and from nothing new: the three ticks from its audit row — and «Include programul
- * evenimentului» when it was ticked (§NNN) — the words from the payload of one of its own outbox rows — the one text an
+ * evenimentului» when it was ticked (§958) — the words from the payload of one of its own outbox rows — the one text an
  * outbox row keeps (§364) — for as long as those rows are kept.
  *
  * `null` — and the boxes empty, as after any other send — for an id that names no send of this event, for a send to a
@@ -624,7 +624,7 @@ export async function readKeptMessage<T extends Record<string, unknown>>(db: Dat
     askReconfirm: metadata.askReconfirm === true,
     sendQr: metadata.sendQr === true,
     signLink: metadata.signLink === true,
-    // «Include programul evenimentului» (§NNN): named only by a send that ticked it, from the same audit row.
+    // «Include programul evenimentului» (§958): named only by a send that ticked it, from the same audit row.
     ...(metadata.includeProgramme === true ? { includeProgramme: true as const } : {}),
   };
 }
@@ -727,7 +727,7 @@ export async function previewParticipantMessage<T extends Record<string, unknown
     sendQr?: boolean;
     /** «Trimite și linkul pentru semnarea declarației» as the box stands: the preview draws «Semnează declarația» under the words (§947). */
     signLink?: boolean;
-    /** «Include programul evenimentului» as the box stands: the preview draws the event's programme under the words, from its rows as they are now (§NNN). */
+    /** «Include programul evenimentului» as the box stands: the preview draws the event's programme under the words, from its rows as they are now (§958). */
     includeProgramme?: boolean;
   },
 ): Promise<ParticipantMessagePreview> {
@@ -808,7 +808,7 @@ export async function previewParticipantMessage<T extends Record<string, unknown
     */
     ...(input.signLink === true ? { signDeclarationUrl: `${env.APP_BASE_URL}/${locale}/EXAMPLE#declaration` } : {}),
     /*
-      The programme under the words when the box is ticked (§NNN): the flag the send would write, and the event's facts
+      The programme under the words when the box is ticked (§958): the flag the send would write, and the event's facts
       for each half, read through the renderer's own `emailEventFacts` from the rows as they are now — what a message
       sent this minute would draw, in the tab's language first. The template draws the «Program» row alone, and nothing
       when the event has no timed row. Unticked, neither is set and the preview is what it was.

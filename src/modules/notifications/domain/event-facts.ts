@@ -111,7 +111,7 @@ export type EmailWeatherRow = { label: string; line: string; credit?: string };
  * before the hour when they span several days — each half's own labels; nothing when the event has no timed row. The
  * free text stays on the page, behind `#schedule`.
  *
- * Its own function since §NNN, because two things draw it: the facts block below, and the organizers' message whose
+ * Its own function since §958, because two things draw it: the facts block below, and the organizers' message whose
  * send ticked «Include programul evenimentului» (`eventProgrammeBlock`) — one builder, so the confirmation and that
  * message cannot say the programme differently.
  */
@@ -121,7 +121,7 @@ function programmeRow(details: Pick<EmailEventFacts, "scheduleItems" | "timezone
 }
 
 /**
- * The programme alone, as a block of one row (§NNN; the owner, 2026-11-17: «Vreau încă o bifă in acel eveniment de
+ * The programme alone, as a block of one row (§958; the owner, 2026-11-17: «Vreau încă o bifă in acel eveniment de
  * "include program"»): what the organizers' message draws under its words when its send ticked «Include programul
  * evenimentului» — the facts block's own «Program» row, in the same box, and nothing else of the block. `undefined` when
  * the event has no timed row as the message leaves: that message is then exactly the one without the tick.

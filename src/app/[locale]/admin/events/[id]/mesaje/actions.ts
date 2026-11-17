@@ -85,7 +85,7 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
           sendQr: posted(form, "sendQr") === "1",
           // «Trimite și linkul pentru semnarea declarației» (§947): the same; which registrations get it is the service's.
           signLink: posted(form, "signLink") === "1",
-          // «Include programul evenimentului» (§NNN): the same; every email of the send then carries the event's programme.
+          // «Include programul evenimentului» (§958): the same; every email of the send then carries the event's programme.
           includeProgramme: posted(form, "includeProgramme") === "1",
           ...words,
         },
@@ -158,7 +158,7 @@ export async function previewParticipantMessageAction(input: {
   sendQr?: unknown;
   /** «Trimite și linkul pentru semnarea declarației» as the box stands (§947): only `true` draws «Semnează declarația». */
   signLink?: unknown;
-  /** «Include programul evenimentului» as the box stands (§NNN): only `true` draws the event's programme under the words. */
+  /** «Include programul evenimentului» as the box stands (§958): only `true` draws the event's programme under the words. */
   includeProgramme?: unknown;
 }): Promise<ParticipantMessagePreview | null> {
   // From the network: every field is read as a string, whatever was sent.

@@ -110,7 +110,7 @@ export type TemplateContent = {
    * route, the cost and the page's sections — under the words and the QR, above the button. On the
    * confirmation, the reminder and the declaration request; the platform's, like the QR, so the
    * club's words never carry it. On an organizers' message whose send ticked «Include programul
-   * evenimentului» (§NNN) the same box holds the «Program» row alone (`eventProgrammeBlock`).
+   * evenimentului» (§958) the same box holds the «Program» row alone (`eventProgrammeBlock`).
    */
   eventFacts?: EventFactsBlock;
   closing: string;
@@ -984,7 +984,7 @@ export type TemplateData = {
    * What the facts block says about the event (§392, `domain/event-facts.ts`), in this half's
    * language, and in the other's for the bilingual message's second half. Read by the confirmation,
    * the reminder and the declaration request only — and, for its programme's rows alone, by an
-   * organizers' message with `organizerProgramme` (§NNN); absent when the message is about no event.
+   * organizers' message with `organizerProgramme` (§958); absent when the message is about no event.
    */
   eventFacts?: EmailEventFacts;
   eventFactsOther?: EmailEventFacts;
@@ -1222,7 +1222,7 @@ export type TemplateData = {
   organizerSubjectOther?: string;
   organizerBodyOther?: string;
   /**
-   * «Include programul evenimentului» (§NNN): the send ticked it, so the organizers' message draws the event's programme
+   * «Include programul evenimentului» (§958): the send ticked it, so the organizers' message draws the event's programme
    * under its words — the «Program» row of the facts block, alone, from `eventFacts` (each half from its own). Set by
    * the renderer from the row's flag and by the composer's preview from the box, never by a sample; read by the
    * organizers' message alone, the club's copy of it included: the programme is the event's, and nobody's.
@@ -4421,7 +4421,7 @@ export function buildTemplateContent(
     ? { ...data, eventUrl: undefined, eventScheduleUrl: undefined, eventRulesUrl: undefined, eventLinksUrl: undefined }
     : data;
   /*
-    «Include programul evenimentului» (§NNN; the owner, 2026-11-17: «Vreau încă o bifă in acel eveniment de "include
+    «Include programul evenimentului» (§958; the owner, 2026-11-17: «Vreau încă o bifă in acel eveniment de "include
     program"»): an organizers' message whose send ticked it draws the event's programme under the organizers' words —
     and under the number and the desk code of §943 — as the facts block's «Program» row alone, in the block's own box
     and from the block's own builder, in this half's language. Not the block: this message is not one of
@@ -4785,7 +4785,7 @@ export function buildTemplateContent(
         ? { label: copy.signDeclaration.label, url: data.signDeclarationUrl, note: copy.signDeclaration.note }
         : undefined,
     image: entry.image?.(data),
-    // The facts block on the messages that carry it; on a ticked organizers' message, its «Program» row alone (§NNN).
+    // The facts block on the messages that carry it; on a ticked organizers' message, its «Program» row alone (§958).
     eventFacts: factsBlock ?? programmeBlock,
     links: (() => {
       const own = [

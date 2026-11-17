@@ -720,7 +720,7 @@ async function renderRow(
     // A confirmed registration's number only (`ORGANIZER_MESSAGE_PLACEHOLDERS`, §548).
     if (registration?.status === "CONFIRMED" && registration.bibNumber !== null) data.bibNumber = writtenNumber(registration.bibNumber);
     /*
-      «Include programul evenimentului» (§NNN): the send's flag, and nothing of the programme — its rows are the
+      «Include programul evenimentului» (§958): the send's flag, and nothing of the programme — its rows are the
       event's, read with the facts below as this message leaves, so a row changed since the press leaves as it now
       stands, and an event left with no timed row sends the message without the block. Every recipient's row and the
       club's copy carry the flag; no other message type is asked, whatever its payload holds.
@@ -749,7 +749,7 @@ async function renderRow(
     name, its page and that page's sections — with the event's own facts (the start, the address,
     the route, the cost, the programme's rows) shared. The template draws it on the three messages
     that carry it — and, on an organizers' message whose send ticked «Include programul evenimentului»
-    (§NNN), its «Program» row alone; the rows here are read once per event per batch already.
+    (§958), its «Program» row alone; the rows here are read once per event per batch already.
   */
   if (eventDetails) {
     data.eventFacts = emailEventFacts(eventDetails, data.eventUrl ?? null);
