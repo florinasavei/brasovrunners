@@ -716,7 +716,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
               {t("volunteers.csv")}
             </GlyphButton>
             {/*
-              Every agreement in one PDF (§NNN; the owner, 2026-11-17: «și vreau să pot printa și contractul de voluntariat, să am la
+              Every agreement in one PDF (§966; the owner, 2026-11-17: «și vreau să pot printa și contractul de voluntariat, să am la
               fața locului»), for the desk, in place of one download per person: the accepted copies and the sheets to sign — or, on
               the second, the sheets alone. Plain links: the route asks for the role again (BR-REQ-060-01) and audits the download.
             */}

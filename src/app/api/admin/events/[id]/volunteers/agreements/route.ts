@@ -16,7 +16,7 @@ import { isUuid } from "@/shared/ids";
 export const maxDuration = 60;
 
 /**
- * «Contractele (PDF)» and «De semnat pe hârtie (PDF)» on the «Voluntari» list (§NNN; the owner, 2026-11-17: «și vreau să pot
+ * «Contractele (PDF)» and «De semnat pe hârtie (PDF)» on the «Voluntari» list (§966; the owner, 2026-11-17: «și vreau să pot
  * printa și contractul de voluntariat, să am la fața locului»): every agreement of one event in one PDF, for the desk, in place
  * of a download per person (`renderEventVolunteerAgreementsPdf`) — each volunteer who is not cancelled, by name, with exactly
  * the pages their own file has; `?only=unsigned` the sheets to sign on paper alone. `?lang=` is the reader's language: the

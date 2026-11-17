@@ -120,7 +120,7 @@ function orderOf(sort: VolunteerSortKey, dir: "asc" | "desc"): SQL[] {
 
 /**
  * One event's people who are not «Anulat», in the list's own order by «Nume» (`orderOf`, A to Z): the file of every agreement
- * (§NNN) prints them in the order the organizers read them on this screen. Ids only — the file reads each person's own row.
+ * (§966) prints them in the order the organizers read them on this screen. Ids only — the file reads each person's own row.
  */
 export async function listVolunteerIdsByName<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<string[]> {
   const rows = await db

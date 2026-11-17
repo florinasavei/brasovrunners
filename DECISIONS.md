@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.56-2026-11-17 -->
+<!-- PROJECT_BASELINE: BR-V4.57-2026-11-17 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.56-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.57-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -30460,3 +30460,29 @@ Baseline `BR-V4.55-2026-11-17`.
 **Refused.** A band of its own at the badge's foot: it would take height from the writing area, the part a badge is for, and turn sizes accepted today into refusals. Rising beside «Nume:» to be larger: the label stays clean and the logo stands where the name is written — the room under «Nume:» is what decides its size. A new raster with transparency: the header's own file on the white writing area shows only the logo, and an alpha picture in a PDF composites badly on some viewers and printers (§174's reason for flattening the rasters).
 
 Baseline `BR-V4.56-2026-11-17`.
+
+## 966. «Contractele (PDF)» and «De semnat pe hârtie (PDF)»: every volunteer agreement of an event in one PDF, for the desk
+
+**The owner, 2026-11-17, four days before Saturday's race (2026-11-21), preparing what the organizers carry to the start:** «și vreau să pot printa și contractul de voluntariat, să am la fața locului». Until now each volunteer's agreement (§758) was one PDF a person, downloaded from that person's page — the accepted copy, or, for somebody who has not accepted, the sheet to sign on paper, with the parent's or guardian's line for a volunteer under eighteen (§768). With dozens of volunteers that is dozens of downloads.
+
+**Decision.**
+
+- *One PDF, every agreement.* `GET /api/admin/events/[id]/volunteers/agreements` answers one PDF holding, for each volunteer of the event who is not «Anulat» — in the «Voluntari» list's order by name (`admin-list.ts#listVolunteerIdsByName`, the list's own `orderOf("name")`: A to Z without regard to case) — exactly the pages that person's own file has: each person from a new page, in their own language, counting their own pages («Pagina 1 din 2»), so the printed stack reads as the separate documents it is. That is the accepted copy once the agreement is accepted, with the parent's or guardian's entry once there is one; else the sheet to sign on paper. For a volunteer under eighteen whose parent's consent is still to come it is the parent's sheet, as the person's page gives it with «Acordul părintelui pe hârtie» (`?for=guardian`): what the desk needs signed. Should no agreement be in force to print that sheet on, the minor's own accepted copy stands in its place in this file, never in the sheets'. A person whose own file is a NOT_FOUND — nothing accepted, and no agreement in force in their language — is not in the file; the buttons' help line says so. With nobody to print, the file is the one page that says so («—»), as the declarations' bundle is (§95).
+- *The sheets alone.* `?only=unsigned` holds the sheets to sign on paper and nothing else — the people who have not accepted, and the parents' sheets still to sign: what the desk prints for those who sign there.
+- *How it is drawn.* pdfkit cannot append one finished PDF to another, and no dependency is added. The drawing of one person's agreement is split from its file: `agreement-pdf.ts#volunteerAgreementPages` resolves what the person's agreement draws — its entries, its words, its language; the one-person file's logic moved, not changed — and `registrations/declaration-pdf.ts#renderDeclarationParts` draws several such parts into one document, each part with its own footers and its own page count; `renderDeclarationPdf` is one part. The one-person file is byte for byte what it was — the same calls, in the same order, on the same document: `tests/integration/volunteers/agreements-route.test.ts` holds it against digests captured from the code before this change, for an accepted adult, an adult who has not accepted, and a minor not accepted, accepted with the parent's consent to come (the copy, and the parent's sheet) and accepted by both. A digest is of the file with its streams inflated (`tests/helpers/pdf-content.ts`), so it holds on a machine whose zlib compresses differently, and on any one machine the same digest is the same bytes. The race declarations, the group runs' declarations and the emails' attachments go through the same renderer, unchanged.
+- *Who, and the trail.* The one-person file's gate, `canManageVolunteers` — the Organizer and the Administrators — asserted in the route (BR-REQ-060-01): the Tehnic role, a Redactor, a volunteer at the desk and a member are refused (403; with no session, 401) and nothing is audited; a malformed or unknown event is NOT_FOUND. A file with people's names leaves the site, so each download is audited once: `volunteer.agreements_downloaded`, entity `event`, with how many agreements the file holds, how many accepted copies, how many sheets to sign, and `only` — never a name. A GET that writes nothing else. The file is named after the event's slug in the reader's language and the club's day (`contracte-voluntariat-<slug>-<zi>.pdf`, `contracte-de-semnat-<slug>-<zi>.pdf`), sent as an attachment and never kept by a shared cache. The route may run sixty seconds (`maxDuration`): eighty-six people drew in about four seconds on a test machine, and a big race's file should not meet the platform's ten.
+- *The buttons.* On the «Voluntari» list, beside the event's Excel and CSV and on the same condition — one event chosen, for whoever may read the list — «Contractele (PDF)» / "Agreements (PDF)" with the PDF's glyph and «De semnat pe hârtie (PDF)» / "To sign on paper (PDF)" with the printer's (§264: a PDF to keep, a batch for the printer now), 44-pixel targets, plain links — no island, no Server Action — and one help line: every volunteer not cancelled, each from a new page, those who accepted with the accepted agreement and the others with the sheet to sign on paper; anyone with no agreement in force is left out.
+
+**Not in this change.**
+
+- *A cover page or an index.* Each person's pages say whose they are and count themselves; the help line says who is left out.
+- *Signing at the desk on a screen.* A sheet is signed by hand and recorded with «Semnat pe hârtie», as before (§758).
+- *The agreements of cancelled people.* Their files stay on their own pages.
+- *Zipping separate files.* One file prints in one go; a zip is unpacked, and each file opened, before anything prints.
+
+**Refused.**
+
+- *One page count over the whole file.* «Pagina 37 din 120» on a person's contract says nothing its signer can check; each person's own count shows a missing page.
+- *A Server Action or a form.* A download changes nothing; it is a link.
+
+Baseline `BR-V4.57-2026-11-17`.

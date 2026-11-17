@@ -265,14 +265,14 @@ export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<
 }
 
 /**
- * One document of a file that holds several (§NNN): its entries, the words they are drawn with — each part in its own
+ * One document of a file that holds several (§966): its entries, the words they are drawn with — each part in its own
  * language — and the footer's second line. A part counts its own pages, «Pagina 1 din 2» from its first page, so a
  * printed stack of them reads as the separate documents they are.
  */
 export type DeclarationPart = Pick<DeclarationPdfInput, "entries" | "labels" | "idDocumentsNotice">;
 
 /**
- * Several documents drawn into one file, one after the other (§NNN; the owner, 2026-11-17, of the volunteer agreements: «și
+ * Several documents drawn into one file, one after the other (§966; the owner, 2026-11-17, of the volunteer agreements: «și
  * vreau să pot printa și contractul de voluntariat, să am la fața locului»), each exactly as `renderDeclarationPdf` draws it
  * on its own — its pages, its footers, its own page count — so the desk prints one file in place of dozens. pdfkit cannot
  * append one finished PDF to another; every part is drawn into the one document instead. The file's language and its

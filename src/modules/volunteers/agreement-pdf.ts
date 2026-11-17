@@ -41,7 +41,7 @@ import { isVolunteerMinor } from "./domain/volunteer";
  * the volunteer's own acceptance (their version, blanks and fingerprint) and the guardian's (theirs, which may be a
  * newer version) — so neither person's fingerprint is replaced by the other's.
  *
- * **Every agreement of an event in one file (§NNN)** — for the desk, printed at once in place of dozens of downloads:
+ * **Every agreement of an event in one file (§966)** — for the desk, printed at once in place of dozens of downloads:
  * each person's pages exactly as their own file has them, one person after another in one document
  * (`renderEventVolunteerAgreementsPdf`).
  */
@@ -226,7 +226,7 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
 }
 
 /**
- * What one volunteer's agreement draws (§NNN): its entries and the words they are drawn with, the language of its pages, and
+ * What one volunteer's agreement draws (§966): its entries and the words they are drawn with, the language of its pages, and
  * whether it is the accepted copy or a sheet to sign. The one-person file is this, alone in a document
  * (`renderVolunteerAgreementPdf`); the event's file of every agreement is each person's, one after the other in one document
  * (`renderEventVolunteerAgreementsPdf`). Undefined when there is nothing to draw — the same answers as the one-person file.
@@ -387,11 +387,11 @@ async function volunteerAgreementPages<T extends Record<string, unknown>>(
   return { part: { entries: [entry], labels: volunteerAgreementLabels(row.locale, now, guardianName !== null) }, locale: row.locale, accepted: false };
 }
 
-/** Which of an event's agreements its file holds (§NNN): every one, or `unsigned` — the sheets to sign on paper alone. */
+/** Which of an event's agreements its file holds (§966): every one, or `unsigned` — the sheets to sign on paper alone. */
 export type EventAgreementsScope = "all" | "unsigned";
 
 /**
- * Every agreement of one event in one PDF (§NNN; the owner, 2026-11-17, four days before the race: «și vreau să pot printa
+ * Every agreement of one event in one PDF (§966; the owner, 2026-11-17, four days before the race: «și vreau să pot printa
  * și contractul de voluntariat, să am la fața locului»), for the desk. Each volunteer who is not «Anulat», in the «Voluntari»
  * list's order by name (`listVolunteerIdsByName`), starts on a new page and has exactly the pages of their own file
  * (`renderVolunteerAgreementPdf`), in their own language: the accepted copy once the agreement is accepted — the guardian's
@@ -428,7 +428,7 @@ export async function renderEventVolunteerAgreementsPdf<T extends Record<string,
 }
 
 /**
- * The event's file's name (§NNN), with the club's date like the event's other files, and the event's slug like the sponsors'
+ * The event's file's name (§966), with the club's date like the event's other files, and the event's slug like the sponsors'
  * list's (§581): `contracte-voluntariat-crosul-toamnei-2026-11-17.pdf` for every agreement, `contracte-de-semnat-…` for the
  * sheets alone. Only `a-z`, digits and hyphens reach the header, whatever a slug holds.
  */
