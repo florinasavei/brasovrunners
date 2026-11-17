@@ -132,6 +132,7 @@ way into the backoffice, not even to a colleague (§684).
 - [ ] «Ce îi spui» — a short line in the backoffice on what to tell a person who asks about their state (the public words per state), so volunteers answer the same way. The owner's wish from 2026-10-02's conversation; words only.
 - [ ] A last-call email the club sends by hand before a deadline («mai ai N ore să semnezi»), distinct from the automatic reminders (§81); and «Confirmă pe hârtie» usable before race day for a signed paper brought to the club — both asked for in passing on 2026-10-02, neither designed.
 - [ ] Words: the public refusal page says «48 h de la formular» where the deadline is from the email's departure (§513); the hold-lapsed email's subject could name the person; the templates email's button label; a manual waiting-list resend still opens with «te-am adăugat pe lista de așteptare» (§641, the resend decision's nit). One words-only branch.
+- [ ] A sideways scrollbar above a wide table as well as under it — the owner, 2026-11-17, for later: «vreau ca in tabele sa am scroll orizontal si sus si jos, sa nu trebuiasca sa ma duc in partea de jos a paginii ca sa scrolez orizontal». On every backoffice list drawn as a table wider than the screen (the registrations list, «Voluntari» and the rest), the table scrolls sideways from a bar above its header too, the two bars in step, so nobody goes to the foot of a long list to reach the columns on the right. Not designed yet: one change in the lists' shared table, no dependency.
 
 ## Released
 
