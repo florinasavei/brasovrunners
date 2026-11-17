@@ -10,7 +10,6 @@ import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { type AnswerPlan, EDITABLE_ANSWERS, type EditableAnswer, EMERGENCY_SAME, GUARDIAN_SIGNED, planAnswerEdit } from "./answers";
 import { UNDER_MINIMUM_AGE } from "./fields";
-import { readBibDesign } from "./bib-design";
 import { dayIn, isMinorOn } from "./domain/age";
 import { registrationNameKey } from "./domain/name-key";
 import { isActiveStatus } from "./domain/state-machine";
@@ -108,8 +107,8 @@ function filled(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() !== "" ? value : undefined;
 }
 
-/** The event's facts a completion is judged by: the day and minimum age, the T-shirt, the members' bib (§664). */
-export type CompletionEvent = Pick<typeof events.$inferSelect, "kitShirt" | "startsAt" | "timezone" | "minAge" | "bibDesign">;
+/** The event's facts a completion is judged by: the day and minimum age, the T-shirt. */
+export type CompletionEvent = Pick<typeof events.$inferSelect, "kitShirt" | "startsAt" | "timezone" | "minAge">;
 
 /**
  * `planAnswerCompletion`'s context from the event's row — one reading for the page that previews and the write. The
@@ -122,7 +121,6 @@ export function completionContext(event: CompletionEvent, now: Date, declaration
     minAge: event.minAge,
     now,
     declarationSigned,
-    memberBibOffered: readBibDesign(event.bibDesign).member.enabled,
     checksName: door === "DECLARATION",
   };
 }
@@ -145,7 +143,7 @@ function heldName(current: Registration, field: string): string {
 export function planAnswerCompletion(
   current: Registration,
   posted: PostedAnswers,
-  context: { kitShirt: boolean; eventDay: string; minAge: number | null; now: Date; declarationSigned: boolean; memberBibOffered?: boolean; checksName?: boolean },
+  context: { kitShirt: boolean; eventDay: string; minAge: number | null; now: Date; declarationSigned: boolean; checksName?: boolean },
 ): AnswerPlan | null {
   const missing = missingAnswers({ kitShirt: context.kitShirt }, current);
   const nameCheck = context.checksName === true && asksNameCheck(current, context.declarationSigned);
@@ -185,7 +183,6 @@ export function planAnswerCompletion(
         now: context.now,
         answersWrittenAt: current.answersWrittenAt,
         declarationSigned: context.declarationSigned,
-        memberBibOffered: context.memberBibOffered,
       });
     } catch (error) {
       // Every box at once: the invalid ones and the ones left empty, so one refusal names them all.

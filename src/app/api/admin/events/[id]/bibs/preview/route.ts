@@ -3,7 +3,6 @@ import { hasLocale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
-import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { routing } from "@/i18n/routing";
 import { shownContactAddresses } from "@/modules/contact/shown-address";
@@ -14,8 +13,8 @@ import { loadBibExtras, withBibCheckpoints } from "@/modules/registrations/bib-e
 import { renderBibImage } from "@/modules/registrations/bib-image";
 import { BIB_PICTURE_WIDTH, bibPictureForImage, loadBibPictures } from "@/modules/registrations/bib-pictures";
 import { bibEventDate, findEventForBibs } from "@/modules/registrations/bibs";
+import { printsMemberBib } from "@/modules/registrations/domain/member-bib";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
-import { memberCanonicalEmails } from "@/modules/registrations/member-ticks";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
@@ -156,12 +155,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       firstName: registrations.firstName,
       kind: registrations.kind,
       status: registrations.status,
-      memberBibWanted: registrations.memberBibWanted,
+      clubMemberDeclared: registrations.clubMemberDeclared,
       elite: registrations.elite,
-      canonicalEmail: participants.canonicalEmail,
     })
     .from(registrations)
-    .innerJoin(participants, eq(participants.id, registrations.participantId))
     .where(and(eq(registrations.id, registrationId), eq(registrations.eventId, id)))
     .limit(1);
   // The sheet's own rule (`bibs.ts#bibScopeWhere`): a bib is drawn for a confirmed real
@@ -171,16 +168,13 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   }
 
   /*
-    The bib this row prints (§664): the members' when the event offers it, the row asked, and its
-    canonical address is a member account's (§662) — `bibs.ts#listBibs`'s rule, asked of one row. The
-    member set is read only when the first two hold.
+    The bib this row prints, by the one rule `bibs.ts#listBibs` prints by (§664, §972; `printsMemberBib`, the SQL
+    `PRINTS_MEMBER_BIB`'s twin): the members' when the event's design offers it and the person ticked «Sunt membru al
+    grupului» — no account on «Echipa», no second tick. A registration marked «Elită» (§897) draws as the sheet prints
+    it: an elite bib (§895) — its first name alone where the number goes (§948, `eliteBibName`), its own number under it
+    only as the design ticks — and never the members' design, which the rule says too.
   */
-  /*
-    A registration marked «Elită» (§897) draws as the sheet prints it: an elite bib (§895) — its first name alone where
-    the number goes (§948, `eliteBibName`), its own number under it only as the design ticks — and never the members' design.
-  */
-  const member =
-    !row.elite && event.design.member.enabled && row.memberBibWanted && (await memberCanonicalEmails(db)).has(row.canonicalEmail);
+  const member = printsMemberBib({ offered: event.design.member.enabled, declared: row.clubMemberDeclared, elite: row.elite });
   const image = await renderBibImage({
     bibNumber: row.bibNumber,
     registeredName: row.registeredName,
@@ -200,8 +194,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   });
   /*
     A number and a name change rarely; the browser may keep the picture for an hour. Whether it is a
-    member's bib changes when «Echipa» does, so the bibs page's grid puts the row's `member` flag in
-    the address it asks (`m=1`, read by nobody here): a change in verification is a new address (§664).
+    member's bib changes with the tick (a «Modifică datele» correction, §972) or the design's switch, so
+    both addresses that ask for a registration's picture — the bibs page's grid (`listBibs`' `member`) and
+    the desk's row (`DeskRegistration.memberBib`) — carry the rule's flag (`bibPictureSrc`'s `m=1`, read by
+    nobody here): a corrected tick is a new address, never the hour-old picture (§664).
   */
   image.headers.set("Cache-Control", "private, max-age=3600");
   return image;

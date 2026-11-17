@@ -5,14 +5,14 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
-import { getPathname, Link } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing } from "@/modules/content/events/repository";
 import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
 import { checkpointsStampPart } from "@/modules/event-checkpoints/domain/checkpoint";
 import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
-import { bibEventDate, countUnverifiedMemberBibs, findEventForBibs, listBibs } from "@/modules/registrations/bibs";
+import { bibEventDate, findEventForBibs, listBibs } from "@/modules/registrations/bibs";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isUuid } from "@/shared/ids";
@@ -48,13 +48,12 @@ export default async function EventBibsPage({ params }: Props) {
   const bibs = await listBibs(db, id);
   const t = await getTranslations("Admin");
   /*
-    The members' race number (§664), while the event's switch is on: a sample of the members' bib
-    beside the grid's (whose own pictures draw each member's bib as it prints), and one line for the
-    rows that asked and will print the ordinary bib — their address is no member account's — with the
-    list of them, so an Administrator adds the members on «Echipa» before printing.
+    The members' race number (§664), while the event's switch is on: a sample of the members' bib beside the grid's
+    (whose own pictures draw each member's bib as it prints). Who wears it is the one rule of `listBibs` (§972): every
+    registration whose person ticked «Sunt membru al grupului», not marked «Elită» — so there is no «asked but not
+    verified» line any more; a wrong tick is corrected on the registration's «Modifică datele».
   */
   const memberBibOn = event?.design.member.enabled === true;
-  const unverifiedMemberBibs = memberBibOn ? await countUnverifiedMemberBibs(db, id) : 0;
   const memberSample =
     memberBibOn && event
       ? bibPreviewUrl({ eventId: id, locale, number: String(event.bibStartNumber), colour: event.bibColour, design: event.design, member: true })
@@ -69,7 +68,6 @@ export default async function EventBibsPage({ params }: Props) {
   const checkpointsPart = event ? checkpointsStampPart(await listCheckpoints(db, id)) : "";
   const pictureStamp = event ? bibPictureStamp([event.design, event.bibColour, event.title, bibEventDate(event, locale), event.coHosts, event.routeGpx?.key ?? null, event.distanceMeters, event.elevationGainMeters, ...(checkpointsPart ? [checkpointsPart] : [])]) : "";
   const shown = memberBibs > 0 ? [...bibs.filter((bib) => bib.member), ...bibs.filter((bib) => !bib.member)] : bibs;
-  const unverifiedHref = `${getPathname({ locale, href: "/admin/registrations" })}?${new URLSearchParams({ eventId: id, status: "CONFIRMED", memberBib: "asked" }).toString()}`;
 
   return (
     <Stack spacing={2}>
@@ -146,14 +144,6 @@ export default async function EventBibsPage({ params }: Props) {
           </Typography>
         </Box>
       )}
-      {unverifiedMemberBibs > 0 && (
-        <Typography variant="body2" data-testid="bibs-member-unverified">
-          {t("bibs.memberUnverified", { count: unverifiedMemberBibs })}{" "}
-          <Box component="a" href={unverifiedHref} sx={{ color: "primary.main", display: "inline-flex", alignItems: "center", minHeight: 44 }}>
-            {t("bibs.memberUnverifiedLink")}
-          </Box>
-        </Typography>
-      )}
       {bibs.length === 0 ? (
         <Typography color="text.secondary">
           {t("bibs.helpNone")}
@@ -176,8 +166,8 @@ export default async function EventBibsPage({ params }: Props) {
               {/* No rounded corner: the picture draws the paper's edge itself (A5 bibs, §338), and
                   a radius here clipped that edge's corners — as the editor preview and the desk row
                   no longer do either. `m=1` is read by nobody: the route answers a row's picture
-                  with an hour's cache, and a member added on «Echipa» must change the address the
-                  grid asks, or it shows the ordinary bib the sheet no longer prints (§664). `e=1` the same for the
+                  with an hour's cache, and a member tick corrected on «Modifică datele» must change the
+                  address the grid asks, or it shows the bib the sheet no longer prints (§664, §972). `e=1` the same for the
                   elite mark (§897): marked or unmarked, the picture is the sheet's. */}
               <Box
                 component="img"

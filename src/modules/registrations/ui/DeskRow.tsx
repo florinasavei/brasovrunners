@@ -256,7 +256,7 @@ export default async function DeskRow({
               {/* The picture draws the paper's edge itself (A5 bibs, §338): no second frame round it. */}
               {/* eslint-disable-next-line @next/next/no-img-element -- our own PNG, drawn at a fixed size */}
               <img
-                src={bibPictureSrc({ eventId: row.eventId, registrationId: row.id, locale, stamp: row.bibStamp, elite: row.elite })}
+                src={bibPictureSrc({ eventId: row.eventId, registrationId: row.id, locale, stamp: row.bibStamp, member: row.memberBib, elite: row.elite })}
                 alt={t("desk.bibAlt", { number: written(number) })}
                 width={BIB_IMAGE.width}
                 height={BIB_IMAGE.height}

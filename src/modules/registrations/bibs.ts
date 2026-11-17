@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, inArray, isNotNull, isNull, notInArray, type SQL, sql } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
@@ -8,8 +8,7 @@ import { registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { type BibDesign, readBibDesign } from "./bib-design";
-import { memberCanonicalEmails } from "./member-ticks";
-import { OFFERS_MEMBER_BIB } from "@/modules/events/repository";
+import { PRINTS_MEMBER_BIB } from "./member-bib";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { type CoHost, readCoHosts } from "@/modules/events/domain/co-hosts";
@@ -779,9 +778,10 @@ export async function isEventSpareNumber<T extends Record<string, unknown>>(
 }
 
 /**
- * One bib of the sheet. `member` is whether it prints the members' design (§664): the event offers
- * it, the person asked («Vreau numărul de membru»), and the address is a member account's (§662) —
- * all three, never the tick alone. The number is the same number either way.
+ * One bib of the sheet. `member` is whether it prints the members' design (§664), by the one rule (§972,
+ * `member-bib.ts#PRINTS_MEMBER_BIB`): the event offers it, the person ticked «Sunt membru al grupului {club}», and the
+ * registration is not marked «Elită» — no account on «Echipa», no «Vreau numărul de membru». The number is the same
+ * number either way.
  *
  * `elite` (§897): an Administrator marked the registration «Elită», so its bib prints as an elite bib — the name where
  * the number goes (§895's drawing) — and never the members' design: an elite row's `member` is false. That name is
@@ -789,17 +789,6 @@ export async function isEventSpareNumber<T extends Record<string, unknown>>(
  * by the elite drawing and by nothing else — the ordinary bib's strip keeps the registered name.
  */
 export type BibRow = { id: string; bibNumber: number; registeredName: string; firstName: string | null; member: boolean; elite: boolean };
-
-/**
- * Whether a row prints the members' bib, as one SQL condition over a registration joined to its
- * event and participant (§664): asked, offered, and the canonical address among the member
- * accounts' (`memberCanonicalEmails`, read once per sheet by the caller) — a plain `false` with no
- * member account, never an `IN ()`.
- */
-function memberBibPrinted(members: readonly string[]): SQL<boolean> {
-  if (members.length === 0) return sql<boolean>`false`.mapWith(Boolean);
-  return sql<boolean>`(${registrations.memberBibWanted} and ${OFFERS_MEMBER_BIB} and ${inArray(participants.canonicalEmail, [...members])})`.mapWith(Boolean);
-}
 
 /**
  * Which bibs a sheet is being asked for (`DECISIONS.md` §264).
@@ -844,51 +833,23 @@ export async function listBibs<T extends Record<string, unknown>>(
   eventId: string,
   scope: BibScope = {},
 ): Promise<BibRow[]> {
-  // The member accounts, once per sheet (§662): the same set the list's «Membru (verificat)» reads.
-  const members = [...(await memberCanonicalEmails(db))];
   const rows = await db
     .select({
       id: registrations.id,
       bibNumber: registrations.bibNumber,
       registeredName: registrations.registeredName,
       firstName: registrations.firstName,
-      member: memberBibPrinted(members),
+      /*
+        The members' design, by the one rule (§972): offered, ticked, not «Elită» — the mark wins over the members' pile
+        (§895, §897), inside the rule itself. Read off the row and its event alone: no member account is read for a sheet.
+      */
+      member: PRINTS_MEMBER_BIB,
       elite: registrations.elite,
     })
     .from(registrations)
-    .innerJoin(events, eq(events.id, registrations.eventId))
-    .innerJoin(participants, eq(participants.id, registrations.participantId))
     .where(bibScopeWhere(eventId, scope))
     .orderBy(asc(registrations.bibNumber));
-  // An elite bib is never the members' design (§895, §897): the mark wins over the members' pile.
-  return rows.map((row) => ({ id: row.id, bibNumber: row.bibNumber as number, registeredName: row.registeredName, firstName: row.firstName, member: row.member === true && !row.elite, elite: row.elite }));
-}
-
-/**
- * The bibs that asked for the members' design and will print the ordinary one (§664): confirmed
- * real rows with a number whose address is no member account's, not marked «Elită» (whose bib is the elite one,
- * §897) — the bibs page's one line before
- * printing, so an Administrator adds them on «Echipa» first if they are members. Zero while the
- * event does not offer the members' bib.
- */
-export async function countUnverifiedMemberBibs<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
-  const members = [...(await memberCanonicalEmails(db))];
-  const [row] = await db
-    .select({ count: sql<number>`count(*)`.mapWith(Number) })
-    .from(registrations)
-    .innerJoin(events, eq(events.id, registrations.eventId))
-    .innerJoin(participants, eq(participants.id, registrations.participantId))
-    .where(
-      and(
-        bibScopeWhere(eventId, {}),
-        eq(registrations.memberBibWanted, true),
-        // A registration marked «Elită» prints the elite bib, never the ordinary one (§897): not this line's to warn of.
-        eq(registrations.elite, false),
-        OFFERS_MEMBER_BIB,
-        members.length > 0 ? notInArray(participants.canonicalEmail, members) : undefined,
-      ),
-    );
-  return row?.count ?? 0;
+  return rows.map((row) => ({ id: row.id, bibNumber: row.bibNumber as number, registeredName: row.registeredName, firstName: row.firstName, member: row.member === true, elite: row.elite }));
 }
 
 /**

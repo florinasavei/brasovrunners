@@ -488,10 +488,11 @@ export type CreateRegistrationByStaffInput = {
      * seventeen-year-old with the date (§324). Kept only for a minor.
      */
     guardianName?: string;
-    /** BR-REQ-031-06. What the person told the organizer; a claim like every other one. */
+    /**
+     * BR-REQ-031-06. What the person told the organizer; a claim like every other one — and, at an event whose bib design
+     * offers it, what prints the members' race number (§972). «Vreau numărul de membru» is asked no more.
+     */
     clubMemberDeclared?: boolean;
-    /** «Vreau numărul de membru» (§664), as the person told the organizer; kept only where the event offers it. */
-    memberBibWanted?: boolean;
     tshirtSize?: "NONE" | "XS" | "S" | "M" | "L" | "XL" | "XXL";
   };
   email: string;

@@ -39,6 +39,11 @@ export type BadgeDesignFormValues = {
   titleEn: string;
   labelRo: string;
   labelEn: string;
+  /**
+   * «Spațiul pentru nume (% din înălțime)» (§972), as typed: NaN when the box holds no number, and null when the form has no such box — a
+   * form from before it, which the save reads as the default. Anything but a whole number from 43 to 80 is refused by the save.
+   */
+  nameSpacePct: number | null;
   writingLine: boolean;
   /** «Logo-ul clubului jos, ca filigran» (§965): `off`, `faint`, `medium` or `strong` as posted — empty reads `off`, any other word is refused by the save. */
   footerLogo: string;
@@ -102,7 +107,7 @@ const TEXTS = [
   "phoneLabelRo",
   "phoneLabelEn",
 ] as const;
-const NUMBERS = ["customWidthMm", "customHeightMm", "footerLogoSizePct", "footerLogoPaddingMm", "footerLogoOffsetXMm", "footerLogoOffsetYMm"] as const;
+const NUMBERS = ["customWidthMm", "customHeightMm", "nameSpacePct", "footerLogoSizePct", "footerLogoPaddingMm", "footerLogoOffsetXMm", "footerLogoOffsetYMm"] as const;
 
 /** Whether a form control is one of the designer's: the island listens to these and nothing else. */
 export function isBadgeDesignInput(name: string): boolean {
@@ -145,6 +150,8 @@ export function readBadgeDesignForm(get: (name: string) => string | null): Badge
     titleEn: text("titleEn"),
     labelRo: text("labelRo"),
     labelEn: text("labelEn"),
+    // §972: a form without the box is a form from before it — the default, never a refusal; a box left empty is no number.
+    nameSpacePct: at("nameSpacePct") === null ? null : numberOf(at("nameSpacePct")),
     writingLine: at("writingLine") !== null,
     footerLogo: text("footerLogo"),
     footerLogoSizePct: numberOf(at("footerLogoSizePct")),

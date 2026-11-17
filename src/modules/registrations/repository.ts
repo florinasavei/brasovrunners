@@ -486,7 +486,7 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       // NOT NULL with a default of false: "did not say" and "said no" are the same answer to
       // a question that grants nothing, unlike the two consents above it, where they are not.
       clubMemberDeclared: input.details?.clubMemberDeclared ?? false,
-      // The members' bib (§664): decided by the service off the locked event, false unless said.
+      // «Vreau numărul de membru» (§664), asked no more (§972): the service says false, and so does a caller that says nothing.
       memberBibWanted: input.details?.memberBibWanted ?? false,
       tshirtSize: input.details?.tshirtSize ?? null,
       healthNotes: input.details?.healthNotes ?? null,

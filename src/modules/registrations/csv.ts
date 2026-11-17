@@ -18,12 +18,12 @@ import { memberBibCell } from "./domain/member-bib";
 import { MEMBERSHIP_EXPORT_WORDS, membershipOf } from "./domain/membership";
 
 /**
- * The «Member bib» cell of both exports (§664): "yes" when the row will print the members' bib (it
- * asked, the event offers it, and its address is a member account's), "asked" when it asked and the
- * club does not know the address as a member's, empty otherwise.
+ * The «Member bib» cell of both exports (§664): "yes" when the row prints the members' bib by the one rule (§972,
+ * `member-bib.ts#PRINTS_MEMBER_BIB`, read by the list's query into `memberBib`) — the event offers it, the person
+ * ticked «Sunt membru», not «Elită» — and empty otherwise. No "asked" any more: nobody is asked.
  */
-export function memberBibExportCell(row: { memberBibOffered?: boolean; memberBibWanted?: boolean; memberVerified: boolean }): string {
-  return memberBibCell({ memberBibOffered: row.memberBibOffered === true, memberBibWanted: row.memberBibWanted === true, memberVerified: row.memberVerified });
+export function memberBibExportCell(row: { memberBib?: boolean }): string {
+  return memberBibCell(row.memberBib === true);
 }
 
 /** The «Club member» cell of both exports (§662): "verified", "declared" or empty, as the list's chip. */
@@ -158,11 +158,10 @@ export type RegistrationCsvRow = {
   country?: string | null;
   city?: string | null;
   /**
-   * The members' race number (§664): whether the event offers it and whether the person asked
-   * («Vreau numărul de membru»); with `memberVerified`, the «Member bib» cell (`memberBibExportCell`).
+   * The members' race number (§664): whether the row prints it, by the one rule (§972) — the «Member bib» cell
+   * (`memberBibExportCell`), "yes" or empty.
    */
-  memberBibOffered?: boolean;
-  memberBibWanted?: boolean;
+  memberBib?: boolean;
   /**
    * «Note interne» (§785): the registration's live notes as the cell's words (`exportNotesCell` — one a line,
    * newest first, the author's role), written only when the file is built with `notesHeader`, last. Words, never
@@ -238,7 +237,7 @@ const HEADER = [
   "Age on race day",
   "Country",
   "City",
-  // Last (§664), for the same reason: the members' race number — "yes", "asked" or empty.
+  // Last (§664), for the same reason: the members' race number — "yes" or empty (§972: no "asked" any more).
   "Member bib",
   /*
     Last (§787, amended; the owner's «color codes … dacă sunt membri BVR»), for the same reason — the precedent is
