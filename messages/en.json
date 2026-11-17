@@ -3445,7 +3445,10 @@
         "emergencyPhone3": "A third phone (optional)",
         "emergencyPhone3Help": "On the same line, after the second. It may be a short number too, 112 for example.",
         "emergencyPhone3Placeholder": "112",
-        "emergencyPhone3Label": "Name beside the third phone"
+        "emergencyPhone3Label": "Name beside the third phone",
+        "emergencyPhone4": "A fourth phone (optional)",
+        "emergencyPhone4Help": "On the same line, after the third. 112, for example.",
+        "emergencyPhone4Label": "Name beside the fourth phone"
       },
       "bibColour": "Colour of the race numbers (BIB)",
       "bibColourHelp": "The band across the top of the printed number, the one carrying the club's logo and the race. “The club's colour” unless you want a specific one.",
@@ -7339,6 +7342,10 @@
       "downloadSpares": "Reprint the free spares (PDF)",
       "sparesFree": "Reserved for the desk: {from}–{to}, {free} of {total} still free. The reprint carries only the free ones.",
       "sparesNone": "Reserved for the desk: {from}–{to}, all given. Print more if you need them.",
+      "blankTitle": "Blank bibs (no number, no name)",
+      "blankHelp": "The race's bib with no number and no name, to write on by hand. No number is reserved. Between 1 and {max} at a time.",
+      "blankCount": "How many",
+      "blankDownload": "Download the blank bibs",
       "sparesTitle": "Spare bibs for on-the-spot entries",
       "sparesLine": "{from}–{to}, free: {free}",
       "sparesLineNone": "None reserved",
@@ -7374,7 +7381,7 @@
       "eliteSampleCaption": "How an elite bib prints, with the saved design and a sample name.",
       "eliteRegistered": "registered",
       "eliteRegisteredHelp": "A registered runner is marked from the registrations list: «⋮» → «Mark as elite». They stay registered and appear here with their state; their elite bib prints once they are confirmed.",
-      "eliteRegisteredOnce": "The ordinary sheet prints them too, as elite bibs: print them from one sheet, not both.",
+      "eliteRegisteredOnce": "The ordinary sheet no longer prints them: their bibs are on the elite sheet alone, so you never have them twice.",
       "eliteInResults": "In the results",
       "eliteOnSite": "On the site",
       "eliteTicksHelp": "Tick «On the site» only with the person's agreement.",
@@ -10414,7 +10421,9 @@
             "emergencyPhone2": "Bib: second phone",
             "emergencyPhone2Label": "Bib: second phone's name",
             "emergencyPhone3": "Bib: third phone",
-            "emergencyPhone3Label": "Bib: third phone's name"
+            "emergencyPhone3Label": "Bib: third phone's name",
+            "emergencyPhone4": "Bib: fourth phone",
+            "emergencyPhone4Label": "Bib: fourth phone's name"
           }
         },
         "translations": {

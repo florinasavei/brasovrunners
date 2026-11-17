@@ -222,6 +222,14 @@ export const BIB_LAYOUT = {
   emergencyMinSize: 6.5,
   emergencySizeStep: 0.5,
   /**
+   * The room between the profile's row and the phone line when both are drawn (§NNN; the owner, 2026-11-17, of a number
+   * whose turned strip set the phones right against the kilometres: «top prio, vreau un pic de spațiere aici pe BIB»):
+   * `emergencyGap` points, empty, so the line never reads as one more label of the strip. It is the block's own — counted
+   * by `bibExtrasHeight` and taken from the number's area —, so the block turned for the runner keeps it where it is, and
+   * a number with only one of the two rows prints as it did.
+   */
+  emergencyGap: 6,
+  /**
    * The distance badge (§750), in the header's right corner like the owner's marathon example: a
    * rounded tag `badgeWidth` × `badgeHeight` at the card's right inset, centred on the band — or, while
    * the members' label sits under it, on the band above the label's tag (`bibHeaderLayout`, §755) — in
@@ -297,7 +305,12 @@ export function bibNameFit(name: string, strip: { size: number; top: number }, w
  * when drawn, nothing when not — so a design with neither keeps every number as it was.
  */
 export function bibExtrasHeight(profileDrawn: boolean, emergencyDrawn: boolean, figuresBelow = false): number {
-  return (profileDrawn ? bibProfileRowHeight(figuresBelow) : 0) + (emergencyDrawn ? BIB_LAYOUT.emergencyHeight : 0);
+  return (
+    (profileDrawn ? bibProfileRowHeight(figuresBelow) : 0) +
+    (emergencyDrawn ? BIB_LAYOUT.emergencyHeight : 0) +
+    // The room between the two rows (§NNN): only when both are drawn.
+    (profileDrawn && emergencyDrawn ? BIB_LAYOUT.emergencyGap : 0)
+  );
 }
 
 /**

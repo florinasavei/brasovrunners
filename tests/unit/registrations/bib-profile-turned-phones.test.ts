@@ -39,6 +39,7 @@ import { bibFooterWidth } from "@/modules/registrations/bib-footer";
 import {
   BIB_CARD,
   BIB_EMERGENCY_WIDTH,
+  BIB_IMAGE_SCALE,
   BIB_LAYOUT,
   BIB_MARGIN,
   bibEmergencyFit,
@@ -277,7 +278,8 @@ describe("§759 the profile turned for the runner, and with the phone as one blo
     expect(profileOnly[0].origin[1]).toBeCloseTo(blockTop(extras) + BIB_LAYOUT.profileHeight / 2, 5);
     const phoneOnly = await rotations({ rows, ...SHEET, profile: DRAWING, emergencyLabel: "Urgențe", design: design({ showProfile: true, profileOrientation: "normal", ...phone, emergencyUpsideDown: true }) });
     expect(phoneOnly).toHaveLength(1);
-    expect(phoneOnly[0].origin[1]).toBeCloseTo(blockTop(extras) + BIB_LAYOUT.profileHeight + BIB_LAYOUT.emergencyHeight / 2, 5);
+    // The phone line stands the room of §NNN under the profile's row.
+    expect(phoneOnly[0].origin[1]).toBeCloseTo(blockTop(extras) + BIB_LAYOUT.profileHeight + BIB_LAYOUT.emergencyGap + BIB_LAYOUT.emergencyHeight / 2, 5);
     const neither = await rotations({ rows, ...SHEET, profile: DRAWING, emergencyLabel: "Urgențe", design: design({ showProfile: true, ...phone, emergencyUpsideDown: false }) });
     expect(neither).toHaveLength(0);
   });
@@ -298,6 +300,34 @@ describe("§759 the profile turned for the runner, and with the phone as one blo
     expect(phoneRow.props.style?.transform).toBeUndefined();
     const markup = JSON.stringify(profileRow, (key, value) => (key === "_owner" || key === "_store" ? undefined : value));
     expect(markup).toContain("Diferență de nivel");
+  });
+
+  it("§NNN leaves an empty room between the profile's row and the phone line — on the sheet and in the picture, turned or not", async () => {
+    // The owner, 2026-11-17, of a turned strip that set the phones right against the kilometres: «vreau un pic de spațiere aici pe BIB».
+    expect(BIB_LAYOUT.emergencyGap).toBeGreaterThan(0);
+    // The block's height counts the room only when both rows are drawn: a number with one of the two prints as it did.
+    expect(bibExtrasHeight(true, true) - bibExtrasHeight(true, false) - bibExtrasHeight(false, true)).toBe(BIB_LAYOUT.emergencyGap);
+    expect(bibExtrasHeight(false, true)).toBe(BIB_LAYOUT.emergencyHeight);
+    expect(bibExtrasHeight(true, false)).toBe(BIB_LAYOUT.profileHeight);
+    // The sheet: the phone line, turned alone, turns about a centre that stands the room under the profile's row.
+    const extras = bibExtrasHeight(true, true);
+    const phoneOnly = await rotations({ rows, ...SHEET, profile: DRAWING, emergencyLabel: "Urgențe", design: design({ showProfile: true, profileOrientation: "normal", ...phone, emergencyUpsideDown: true }) });
+    expect(phoneOnly[0].origin[1] - (blockTop(extras) + BIB_LAYOUT.profileHeight)).toBeCloseTo(BIB_LAYOUT.emergencyGap + BIB_LAYOUT.emergencyHeight / 2, 5);
+    // The picture: the phone's row keeps the room above it, inside the block — so the block turned as one keeps it too.
+    const row = bibProfileRow(design({ showProfile: true }), { profile: DRAWING, profileFigures: null }, false);
+    for (const both of [true, false]) {
+      const block = bibExtrasBlock({ row, picture: null, emergency: { text: `Urgențe: ${PHONE_A}`, size: 9 }, turn: bibExtrasTurn({ profile: true, profileTurned: both, phone: true, phoneTurned: both }), ink: "#000001" }) as ReactElement<{
+        children: Array<ReactElement<{ style?: Record<string, unknown>; "data-testid"?: string }>>;
+      }>;
+      const phoneRow = block.props.children[1];
+      expect(phoneRow.props["data-testid"]).toBe("bib-emergency");
+      expect(phoneRow.props.style?.marginTop).toBeCloseTo(BIB_LAYOUT.emergencyGap * BIB_IMAGE_SCALE, 5);
+    }
+    // No profile: no room — the phone line stands where it always stood.
+    const alone = bibExtrasBlock({ row: null, picture: null, emergency: { text: `Urgențe: ${PHONE_A}`, size: 9 }, turn: bibExtrasTurn({ profile: false, profileTurned: false, phone: true, phoneTurned: false }), ink: "#000001" }) as ReactElement<{
+      children: Array<ReactElement<{ style?: Record<string, unknown> }> | null>;
+    }>;
+    expect(alone.props.children[1]!.props.style?.marginTop).toBeUndefined();
   });
 
   it("turns only the profile's row in the picture when the phone reads the right way up", () => {
@@ -380,7 +410,7 @@ describe("§759 «Eticheta telefonului» and two numbers on one line", () => {
   });
 
   it("takes its height from the number's area once, whatever it says", () => {
-    expect(bibNumberArea({ footer: 22, name: 44, sponsors: 0, stripe: 0, extras: bibExtrasHeight(true, true) })).toBe(BIB_CARD.height - BIB_LAYOUT.bandHeight - 22 - 44 - BIB_LAYOUT.profileHeight - BIB_LAYOUT.emergencyHeight);
+    expect(bibNumberArea({ footer: 22, name: 44, sponsors: 0, stripe: 0, extras: bibExtrasHeight(true, true) })).toBe(BIB_CARD.height - BIB_LAYOUT.bandHeight - 22 - 44 - BIB_LAYOUT.profileHeight - BIB_LAYOUT.emergencyGap - BIB_LAYOUT.emergencyHeight);
   });
 });
 

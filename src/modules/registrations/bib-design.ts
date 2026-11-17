@@ -331,13 +331,13 @@ export const BIB_EMERGENCY_NAME_MAX = 24;
 
 /** The emergency line's words as the design keeps them (§759). Absent keys read as none: a design saved before them prints as it did. */
 type BibEmergencyDesign = Pick<BibDesign, "showEmergency" | "emergencyPhone"> &
-  Partial<Pick<BibDesign, "emergencyLabel" | "emergencyPhoneLabel" | "emergencyPhone2" | "emergencyPhone2Label" | "emergencyPhone3" | "emergencyPhone3Label">>;
+  Partial<Pick<BibDesign, "emergencyLabel" | "emergencyPhoneLabel" | "emergencyPhone2" | "emergencyPhone2Label" | "emergencyPhone3" | "emergencyPhone3Label" | "emergencyPhone4" | "emergencyPhone4Label">>;
 
 /** Between two numbers of the line (§947): a bar, as the race number the owner showed prints it — a name may hold a «/» itself («Ajutor start/finish»). */
 export const BIB_EMERGENCY_SEPARATOR = " | ";
 
 /**
- * The line printed on every number (§750, amending it §759 and §947): up to three numbers on one line, each after
+ * The line printed on every number (§750, amending it §759 and §947): up to four numbers (§NNN) on one line, each after
  * its own name and a colon, a bar between them — «Ajutor start/finish: 07xx xxx xxx | Ajutor traseu: 07yy yyy yyy |
  * Salvamont: 07zz zzz zzz» (the owner, 2026-11-16: «de fapt vreau asa: ajutor start/finish: , ajutor traseu: ,
  * salvamont, cu label customizabil»). Until §947 a name stood before its number with a space and the numbers were
@@ -358,6 +358,8 @@ export function bibEmergencyLine(design: BibEmergencyDesign, fallback: string): 
       [design.emergencyPhoneLabel ?? "", design.emergencyPhone],
       [design.emergencyPhone2Label ?? "", design.emergencyPhone2 ?? ""],
       [design.emergencyPhone3Label ?? "", design.emergencyPhone3 ?? ""],
+      // The fourth (§NNN): «Urgențe: 112» beside the organizers' two and the mountain rescue's.
+      [design.emergencyPhone4Label ?? "", design.emergencyPhone4 ?? ""],
     ] as const
   ).filter(([, phone]) => phone !== "");
   if (numbers.length === 0) return null;
@@ -538,6 +540,12 @@ export const bibDesignSchema = z
     /** A third number (§947), checked as the others are, with its own label — «Urgență 112» beside the organizers' and the mountain rescue's. */
     emergencyPhone3: z.string().transform(bibEmergencyPhone).catch(""),
     emergencyPhone3Label: emergencyName,
+    /**
+     * A fourth number (§NNN; the owner, 2026-11-17: «la numere de urgență trebuie să suport încă 1 număr, deci 4 în total, să
+     * fie și 112»), checked as the others are, with its own label. Absent from a design saved before it: none.
+     */
+    emergencyPhone4: z.string().transform(bibEmergencyPhone).catch(""),
+    emergencyPhone4Label: emergencyName,
     /** «Tipărit invers» (§750): the phone printed upside down, to be read looking down at the chest; on by default, the trail practice. */
     emergencyUpsideDown: z.boolean().catch(true),
     /** «Distanța pe număr» (§750): the event's distance as a badge in the header's right corner («21K»). */
@@ -604,6 +612,8 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   emergencyPhone2Label: "",
   emergencyPhone3: "",
   emergencyPhone3Label: "",
+  emergencyPhone4: "",
+  emergencyPhone4Label: "",
   emergencyUpsideDown: true,
   showDistance: false,
   numberStubs: false,
