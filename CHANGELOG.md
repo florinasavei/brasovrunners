@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.59-2026-11-17
+
+- **The bib's altitudes in the bib's own colour** — on the route's profile the highest and the lowest altitude («815 m», «622 m») now print in the colour of the bib's band — the club's blue unless the race chose another, the members' colour on a member's bib — so they no longer read like one more kilometre; a colour too light for small type on white prints them in the ink at 60 % instead. Nothing else on the strip changes. §968.
 ## BR-V4.58-2026-11-17
 
 - **Taller volunteer badges** — «Altă dimensiune» on the badges' page now goes up to 287 mm tall (one badge to an A4 page), the badge growing as a whole; every size up to 100 mm prints as before. §967.

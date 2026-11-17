@@ -18,7 +18,7 @@ import {
 import { ELEVATION_GLYPH_PATHS, GLYPH_EVEN_ODD } from "@/modules/routes/elevation/glyphs";
 import type { BibProfileDrawing, BibProfileFigureLines } from "./bib-profile";
 import { bibFiguresBelow, bibHeaderFiguresLine, bibProfileFiguresLine, bibProfileRow } from "./bib-profile-row";
-import { bibPinGlyphScale } from "./bib-profile-strip";
+import { bibAltitudeInk, bibPinGlyphScale, type BibStripText } from "./bib-profile-strip";
 import { bibFooterLines, bibFooterParts, bibFooterWidth } from "./bib-footer";
 import { BIB_MEMBER_MARK_PATHS, BIB_MEMBER_MARK_VIEWBOX, bibMemberMarkBox, isVectorMark } from "./bib-member-mark";
 import { BIB_PICTURE_BOX, type BibPictureSlot, bibPictureDrawing } from "./bib-picture-frame";
@@ -488,6 +488,9 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     const cardHeight = BIB_CARD.height - footerHeight - sponsorHeight;
     // The number and the name: white on a member's card, the body ink on the white paper.
     const ink = card ? BIB_MEMBER_CARD.text : COLOR.ink;
+    // The profile's highest and lowest altitude (§968): this bib's band colour — the event's, or the members' — else the ink at 60%,
+    // stronger on a member's card whose ground would carry it under 3 : 1 (the card's background, as drawn below).
+    const altitudeInk = bibAltitudeInk({ band: header.band, ink, card: card?.background ?? null });
     const stripeHeight = card?.stripe ? L.memberStripeHeight : 0;
 
     /*
@@ -826,11 +829,23 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       doc.restore();
       // Every word of the strip at the baseline the core gave it: «Start» and «Sosire», the points' words, the kilometres and their unit,
       // the altitudes — aligned by the text's anchor, its line's top where the baseline needs it (`BIB_TEXT_ASCENT`).
+      const drawTexts = (texts: readonly BibStripText[]) => {
+        for (const text of texts) {
+          const width = doc.widthOfString(text.text);
+          const x = text.anchor === "start" ? text.x : text.anchor === "end" ? text.x - width : text.x - width / 2;
+          doc.text(text.text, chartLeft + x, rowTop + text.baseline - BIB_TEXT_ASCENT * L.profileLabelSize, { lineBreak: false });
+        }
+      };
       doc.font("body").fontSize(L.profileLabelSize).fillColor(ink);
-      for (const text of strip.texts) {
-        const width = doc.widthOfString(text.text);
-        const x = text.anchor === "start" ? text.x : text.anchor === "end" ? text.x - width : text.x - width / 2;
-        doc.text(text.text, chartLeft + x, rowTop + text.baseline - BIB_TEXT_ASCENT * L.profileLabelSize, { lineBreak: false });
+      drawTexts(strip.texts.filter((text) => !text.altitude));
+      // The altitudes, last as ever, in their own ink (§968, `bibAltitudeInk`): the band's colour, or the ink faded (60%, more on a
+      // member's card where that would not read) — that opacity inside a saved state, so nothing drawn after them is faint.
+      const altitudes = strip.texts.filter((text) => text.altitude);
+      if (altitudes.length > 0) {
+        doc.save();
+        doc.fillColor(altitudeInk.colour, altitudeInk.opacity);
+        drawTexts(altitudes);
+        doc.restore();
       }
       drawFigures();
     };
