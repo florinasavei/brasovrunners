@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.61-2026-11-17 -->
+<!-- PROJECT_BASELINE: BR-V4.62-2026-11-17 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V4.61-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.62-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1623,7 +1623,7 @@ else's: they are marked **YOURS**. Everything else below is a value, not a place
 | Înscrieri | …și cu câte zile înainte expiră | **YOURS** — the default **2**: an unconfirmed place goes to the waiting list two days before (when somebody waits). Changing either number later moves the places already reserved by the window to the new deadline in the same save — the card says how many before you press, the banner after; inside an open window each of those people is emailed the new deadline. The last call to sign goes «Setări» → «Termene» → «Ultima chemare la semnat…» hours before the deadline (48 by default) |
 | Înscrieri | Numerele de concurs (BIB) încep de la | **1**, or **100** if the club wants three-digit numbers |
 | Înscrieri → «Numere de concurs (BIB)» → «Cum arată numărul de concurs» → «Antet» | Culoarea numerelor de concurs (BIB) | the band colour on the printed bib; any of the palette's |
-| Înscrieri → «Numere de concurs (BIB)» → «Cum arată numărul de concurs» → «Membrii» | Membrii primesc un număr cu design propriu | tick it for the members' own design: every registration that ticked «Sunt membru al grupului» prints it, never an elite one, with no other step — no account on «Echipa» and no second question (`DECISIONS.md` §NNN). A wrong tick is corrected on the registration, «Datele înscrierii» → «Modifică datele»; the number and its order are the same for everyone |
+| Înscrieri → «Numere de concurs (BIB)» → «Cum arată numărul de concurs» → «Membrii» | Membrii primesc un număr cu design propriu | tick it for the members' own design: every registration that ticked «Sunt membru al grupului» prints it, never an elite one, with no other step — no account on «Echipa» and no second question (`DECISIONS.md` §972). A wrong tick is corrected on the registration, «Datele înscrierii» → «Modifică datele»; the number and its order are the same for everyone |
 | Înscrieri | Declarația pe care o semnează participantul | the approved **EVENT_DECLARATION** — the only entry in the list on production |
 | Înscrieri | Publică lista participanților | leave **off**. It goes on only once the privacy notice describes it |
 | Înscrieri | Clubul pe lista publică | **«Doar» the club's name** (the default, §753, §756): the «Club» column shows the club's own name for everyone who typed the club (BVR, the full name, any usual spelling, «.ro» after it, one typo in a word forgiven, a digit never), with or without an account on «Echipa»; every other cell is blank, and the column is not drawn when none has a value. «Cum l-au scris» shows what people typed, silly text included; «Nu arăta clubul» draws no column. Display only: the backoffice, the exports, the desk and the bibs keep the typed club |
@@ -2335,7 +2335,7 @@ only ones who see the names, addresses and telephone numbers.
      always stays in the white area of the name and takes no room of its own, so any size that fits without it fits
      with it; the section's line says the share of the width the saved logo is drawn at («Mediu · 24% (cât încape)»),
      and the preview shows each number as you type it.
-     First under «Locul pentru nume», **«Spațiul pentru nume (% din înălțime)»** (§NNN) says how much of the badge's
+     First under «Locul pentru nume», **«Spațiul pentru nume (% din înălțime)»** (§972) says how much of the badge's
      height stays white for the name, a whole number from 43 to 80. 43, the default, is the badge as it always was;
      more makes the two bands at the top lower — the header and the role's band share what is left in the same
      proportion, their words smaller with them — and gives the name the rest, so a tall badge (90 × 130 mm at 60, say)

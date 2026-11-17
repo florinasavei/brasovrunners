@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.61-2026-11-17 -->
+<!-- PROJECT_BASELINE: BR-V4.62-2026-11-17 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.61-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.62-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2168,7 +2168,7 @@ three rules (`DECISIONS.md` §30):
   that decided a price, a place or a queue position would decide it for anybody who ticked it.
   A member price, if the club ever wants one, needs a membership list and a decision recorded
   before it needs this column.
-- **It decides one look, and only that** (`DECISIONS.md` §NNN): at an event whose bib design
+- **It decides one look, and only that** (`DECISIONS.md` §972): at an event whose bib design
   offers the members' race number, a registration with the tick, not marked «Elită», prints in
   the members' design — the same number, in the same order — by one rule,
   `registrations/member-bib.ts#PRINTS_MEMBER_BIB` (its TypeScript twin

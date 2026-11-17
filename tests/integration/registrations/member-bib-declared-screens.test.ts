@@ -13,7 +13,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (the owner, 2026-11-17: «că momentan nu se deosebesc cu nimic»), BR-REQ-038-01, BR-REQ-031-06, BR-REQ-037-03
+ * §972 (the owner, 2026-11-17: «că momentan nu se deosebesc cu nimic»), BR-REQ-038-01, BR-REQ-031-06, BR-REQ-037-03
  * («Modifică datele») and BR-REQ-037-05 (the staff entry) — the screens of the members' race number by the one rule
  * (offered, the member tick, not «Elită»):
  *
@@ -208,7 +208,7 @@ const detailPage = async (id: string, searchParams: Record<string, string> = {})
   elements(await RegistrationDetailPage({ params: Promise.resolve({ locale: state.locale, id }), searchParams: Promise.resolve(searchParams) } as never));
 const entryPage = async () => elements(await NewRegistrationPage({ params: Promise.resolve({ locale: state.locale }), searchParams: Promise.resolve({}) } as never));
 
-describe("§NNN the bibs page's print card counts the members' bibs by the tick", () => {
+describe("§972 the bibs page's print card counts the members' bibs by the tick", () => {
   it("counts the ticked, confirmed, unmarked runners — no account anywhere — offers the two parts, and draws them first", async () => {
     state.actor = await admin();
     const eventId = await race(true);
@@ -225,7 +225,7 @@ describe("§NNN the bibs page's print card counts the members' bibs by the tick"
     expect(textOf(sample)).toContain(ro.Admin.bibs.memberSampleCaption.replace("{count}", "2"));
     expect(byTestId(all, "bibs-download-members")).toHaveLength(1);
     expect(byTestId(all, "bibs-download-others")).toHaveLength(1);
-    // The «asked but not verified» line is gone with the state (§NNN).
+    // The «asked but not verified» line is gone with the state (§972).
     expect(byTestId(all, "bibs-member-unverified")).toHaveLength(0);
     // The grid: the members' pile first, as the paper prints it (§681).
     const grid = all.filter((element) => typeof element.props.src === "string" && String(element.props.src).includes("registration="));
@@ -246,7 +246,7 @@ describe("§NNN the bibs page's print card counts the members' bibs by the tick"
   });
 });
 
-describe("§NNN the registration's page: «Număr de membru» by the rule, and «Modifică datele» without the wish", () => {
+describe("§972 the registration's page: «Număr de membru» by the rule, and «Modifică datele» without the wish", () => {
   it("says «Număr de membru» beside the number for the tick at an event that offers it — never without the tick, the design or for «Elită»", async () => {
     state.actor = await admin();
     const on = await race(true);
@@ -286,8 +286,8 @@ describe("§NNN the registration's page: «Număr de membru» by the rule, and �
   });
 });
 
-describe("§NNN the desk asks the bib's picture by the rule: a corrected tick is a new address", () => {
-  // The review of §NNN: the preview keeps an answer an hour, and the desk's address carried `e=1` but never `m=1`.
+describe("§972 the desk asks the bib's picture by the rule: a corrected tick is a new address", () => {
+  // The review of §972: the preview keeps an answer an hour, and the desk's address carried `e=1` but never `m=1`.
   it("puts `m=1` in the desk's picture address for the tick at an event that offers it, and drops it once «Modifică datele» clears the tick", async () => {
     const actor = await admin();
     state.actor = actor;
@@ -324,7 +324,7 @@ describe("§NNN the desk asks the bib's picture by the rule: a corrected tick is
   });
 });
 
-describe("§NNN the staff entry asks the member tick alone", () => {
+describe("§972 the staff entry asks the member tick alone", () => {
   it("draws «Sunt membru» and no «Vreau numărul de membru» at an event that offers the members' bib, in Română and in English", async () => {
     state.actor = await admin();
     await race(true);

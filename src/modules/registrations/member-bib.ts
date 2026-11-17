@@ -5,7 +5,7 @@ import { registrations } from "@/db/schema/registrations";
 /**
  * Whether the event offers the members' race number (§664): its bib design's `member.enabled`, read as
  * `bib-design.ts#readBibDesign` reads it — on only for a JSON true, off for anything else or nothing. One third of the
- * rule below, and read nowhere else in SQL (§NNN: no form asks anything from it any more). Over `events` as the query
+ * rule below, and read nowhere else in SQL (§972: no form asks anything from it any more). Over `events` as the query
  * names it: inside `PRINTS_MEMBER_BIB` that is the `EXISTS`'s own row.
  */
 export const OFFERS_MEMBER_BIB = sql<boolean>`coalesce((${events.bibDesign} #> '{member,enabled}') = 'true'::jsonb, false)`.mapWith(Boolean);
@@ -23,7 +23,7 @@ const DECLARED_AND_NOT_ELITE = sql`(${registrations.clubMemberDeclared} and not 
 const EVENT_OFFERS_IT = sql`exists (select 1 from ${events} where ${events.id} = ${registrations.eventId} and ${OFFERS_MEMBER_BIB})`;
 
 /**
- * Whether a registration prints with the members' race number (§664, §NNN) — the one rule, as SQL over a registration
+ * Whether a registration prints with the members' race number (§664, §972) — the one rule, as SQL over a registration
  * row: the event's bib design offers it, the person ticked «Sunt membru al grupului {club}», and the registration is
  * not marked «Elită» (§897). No account on «Echipa», no «Vreau numărul de membru», no `kind`, no state.
  *

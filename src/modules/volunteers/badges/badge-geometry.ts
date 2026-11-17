@@ -38,7 +38,7 @@
  * Every height is a share of the badge's content (`BADGE_LAYOUT`), so a larger badge is the same badge,
  * larger. Pure: imports the bib's pure measure and A4 only.
  *
- * **The space for the name** (§NNN; the owner, 2026-11-17, at 90 × 100 mm: «vreau un spațiu mai mare pt nume aici»): the share of the
+ * **The space for the name** (§972; the owner, 2026-11-17, at 90 × 100 mm: «vreau un spațiu mai mare pt nume aici»): the share of the
  * content the writing area takes before the free-text line and the telephone take theirs — 43 % by default, the badge as it always was,
  * up to 80 % (`BADGE_NAME_SPACE`). The header and the role's band share what it leaves in their own 27 : 30 (`badgeRows`), and their words
  * shrink with them (`badgeLayout`), so a taller badge can give its height to the name instead of to the bands.
@@ -97,7 +97,7 @@ export const BADGE_INSET = 2 * MM;
 export const BADGE_WRITING_MIN = 10 * MM;
 
 /**
- * The least of its natural height — at the design's space for the name (§NNN) — the header and the role's band keep when the rows
+ * The least of its natural height — at the design's space for the name (§972) — the header and the role's band keep when the rows
  * under them take theirs (§776): four fifths. A design whose ticked rows (the free-text line, the telephone) would
  * squeeze the bands further is refused at the save (`badgeSizeRefusal`). That is a save-time rule: an imported event file or a copy of the event is read forgivingly and
  * may draw with the bands under four fifths of their height, which the drawing survives (`badgeRows` clamps).
@@ -183,7 +183,7 @@ export const BADGE_FOOTER_LOGO_MIN_WIDTH = 5 * MM;
  * least size any line is set at. Both renderers read them through `badgeLayout`, never directly.
  */
 export const BADGE_LAYOUT = {
-  /** The header band, the role's band and the telephone's row — the two bands' at the default space for the name (§NNN, `badgeRows`). */
+  /** The header band, the role's band and the telephone's row — the two bands' at the default space for the name (§972, `badgeRows`). */
   headerShare: 0.27,
   roleShare: 0.3,
   phoneShare: 0.1,
@@ -241,7 +241,7 @@ export const BADGE_LAYOUT = {
 export const BADGE_PAD_MAX = (100 * MM - 2 * BADGE_INSET) * BADGE_LAYOUT.headerShare * BADGE_LAYOUT.padShare;
 
 /**
- * «Spațiul pentru nume (% din înălțime)» (§NNN): the share of the content's height, in whole percents, the writing area — «Nume:», its
+ * «Spațiul pentru nume (% din înălțime)» (§972): the share of the content's height, in whole percents, the writing area — «Nume:», its
  * line, the marker's space, the watermark — takes before the free-text line and the telephone's row take theirs. 43 is the badge as it
  * always was, the header's 27 and the role band's 30 being the rest, and the default of every design that never chose; up to 80, the two
  * bands sharing what is left in their own 27 : 30 (`badgeRows`). Out of these bounds a value is refused at the save and read as the default.
@@ -249,13 +249,13 @@ export const BADGE_PAD_MAX = (100 * MM - 2 * BADGE_INSET) * BADGE_LAYOUT.headerS
 export const BADGE_NAME_SPACE = { min: 43, max: 80 } as const;
 export const DEFAULT_BADGE_NAME_SPACE = 43;
 
-/** Whether a value is a space for the name a badge is drawn with (§NNN): a whole number within `BADGE_NAME_SPACE`. */
+/** Whether a value is a space for the name a badge is drawn with (§972): a whole number within `BADGE_NAME_SPACE`. */
 export function isBadgeNameSpace(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= BADGE_NAME_SPACE.min && value <= BADGE_NAME_SPACE.max;
 }
 
 /**
- * What the header's and the role band's shares are multiplied by at a space for the name (§NNN), so that together they take
+ * What the header's and the role band's shares are multiplied by at a space for the name (§972), so that together they take
  * (100 − share) % of the content in their own 27 : 30 — or null at the default, where they keep `BADGE_LAYOUT`'s shares as they are:
  * the badge as it always was, to the last bit, never multiplied by a factor that is one only in theory. A share that is not a space for
  * the name (`isBadgeNameSpace`; a caller's — the reader keeps a stored one within the bounds) is the default too.
@@ -276,7 +276,7 @@ export type BadgeRow = { top: number; height: number };
  * `squeeze` says how much of their natural height they kept (1 when none was lost); the free-text and
  * telephone rows keep their own. With no free text or telephone the area takes that row too.
  *
- * The bands' natural height is what the space for the name leaves (§NNN, `nameSpacePct`): their shares as they are at the default,
+ * The bands' natural height is what the space for the name leaves (§972, `nameSpacePct`): their shares as they are at the default,
  * 43, else (100 − share) % of the content in their 27 : 30 (`badgeBandsScale`). The free-text and telephone rows keep their shares
  * whatever it is, and the squeeze — so the save's refusal (`badgeSizeRefusal`) — reads the bands' height at that share.
  */
@@ -293,7 +293,7 @@ export function badgeRows(paper: { width: number; height: number }, phoneShown: 
   const content = { left: BADGE_INSET, top: BADGE_INSET, width: paper.width - 2 * BADGE_INSET, height: paper.height - 2 * BADGE_INSET };
   const phoneHeight = phoneShown ? content.height * L.phoneShare : 0;
   const freeHeight = freeShown ? content.height * L.freeShare : 0;
-  // §NNN: at the default the bands take their shares as they are — the badge as it always was; past it, what the name's space leaves.
+  // §972: at the default the bands take their shares as they are — the badge as it always was; past it, what the name's space leaves.
   const scale = badgeBandsScale(nameSpacePct);
   let headerHeight = scale === null ? content.height * L.headerShare : content.height * L.headerShare * scale;
   let roleHeight = scale === null ? content.height * L.roleShare : content.height * L.roleShare * scale;
@@ -323,7 +323,7 @@ export type BadgeExtra = "freeText" | "phone";
  * (whole millimetres, at the same width) at which they all do — what the save's refusal says in words. Null
  * when everything fits. «Spațiu pentru marker» takes width, not height, and is never refused here: the
  * custom bounds keep both areas their minimum width (`BADGE_MARKER_MIN_WIDTH`, `BADGE_NAME_MIN_WIDTH`).
- * The bands' height is read at the design's space for the name (§NNN): the more of it the name takes, the less the bands have to give.
+ * The bands' height is read at the design's space for the name (§972): the more of it the name takes, the less the bands have to give.
  */
 export function badgeSizeRefusal(
   choice: BadgeSizeChoice & { nameSpacePct?: number },
@@ -422,7 +422,7 @@ export type BadgeLayoutChoice = BadgeSizeChoice & {
   showPhone?: boolean;
   /** «Logo-ul clubului jos, ca filigran» (§965): absent or `off` draws none. */
   footerLogo?: BadgeFooterLogo;
-  /** «Spațiul pentru nume (% din înălțime)» (§NNN): absent, or the default, draws the bands as they always were. */
+  /** «Spațiul pentru nume (% din înălțime)» (§972): absent, or the default, draws the bands as they always were. */
   nameSpacePct?: number;
 } & BadgeFooterLogoPlacement;
 
@@ -581,7 +581,7 @@ export function badgeFooterLogoOf(
  * three lines need of the band's height, never below its own least size. Either way inside the band: the rows, and so the save's fit
  * check (`badgeSizeRefusal`), are what they were.
  *
- * At a space for the name past the default (§NNN) the bands are lower, and their words shrink with them: their largest sizes are shares
+ * At a space for the name past the default (§972) the bands are lower, and their words shrink with them: their largest sizes are shares
  * of the band's height as they always were, and their least sizes — the title's, «VOLUNTAR»'s, the role's name's — are multiplied by the
  * bands' own factor (`badgeBandsScale`), so no line is ever taller than its band, and none is cut that the default would not cut. At the
  * default they are the constants themselves.
@@ -594,7 +594,7 @@ export function badgeLayout(choice: BadgeLayoutChoice, words: BadgeLayoutWords, 
   // The pad grows with the header up to the 100 mm badge's, no further (`BADGE_PAD_MAX`, §967).
   const { pad, nameTop, nameSize } = badgeNameMarks(rows);
   const centred = (row: BadgeRow, size: number) => row.top + (row.height - badgeLineHeight(size)) / 2;
-  // §NNN: the bands' least sizes, as they are at the default space for the name, and shrunk with the bands past it.
+  // §972: the bands' least sizes, as they are at the default space for the name, and shrunk with the bands past it.
   const scale = badgeBandsScale(choice.nameSpacePct);
   const least = (size: number) => (scale === null ? size : size * scale);
   const roleMin = least(L.roleMinSize);

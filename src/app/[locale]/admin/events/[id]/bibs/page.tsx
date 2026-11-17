@@ -49,7 +49,7 @@ export default async function EventBibsPage({ params }: Props) {
   const t = await getTranslations("Admin");
   /*
     The members' race number (§664), while the event's switch is on: a sample of the members' bib beside the grid's
-    (whose own pictures draw each member's bib as it prints). Who wears it is the one rule of `listBibs` (§NNN): every
+    (whose own pictures draw each member's bib as it prints). Who wears it is the one rule of `listBibs` (§972): every
     registration whose person ticked «Sunt membru al grupului», not marked «Elită» — so there is no «asked but not
     verified» line any more; a wrong tick is corrected on the registration's «Modifică datele».
   */
@@ -167,7 +167,7 @@ export default async function EventBibsPage({ params }: Props) {
                   a radius here clipped that edge's corners — as the editor preview and the desk row
                   no longer do either. `m=1` is read by nobody: the route answers a row's picture
                   with an hour's cache, and a member tick corrected on «Modifică datele» must change the
-                  address the grid asks, or it shows the bib the sheet no longer prints (§664, §NNN). `e=1` the same for the
+                  address the grid asks, or it shows the bib the sheet no longer prints (§664, §972). `e=1` the same for the
                   elite mark (§897): marked or unmarked, the picture is the sheet's. */}
               <Box
                 component="img"

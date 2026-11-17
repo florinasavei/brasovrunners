@@ -400,7 +400,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
             // A minor's parent (§108), asked by the form once the birth date says under eighteen
             // (§324); the schema requires it then, and ignores it for an adult.
             guardianName: optional(form, "guardianName"),
-            // The member tick, which also prints the members' race number (§NNN); «Vreau numărul de membru» is never read.
+            // The member tick, which also prints the members' race number (§972); «Vreau numărul de membru» is never read.
             clubMemberDeclared: form.get("clubMemberDeclared") === "on",
             tshirtSize: optional(form, "tshirtSize") as
               | "NONE"
@@ -501,7 +501,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
  * travels with its `was.<name>` twin, and only the ones whose value moved become the correction — so a
  * page opened before a colleague's save corrects what this Administrator changed and nothing else. The
  * member tick is a box: ticked posts `on`, and its twin says `on` or nothing. Only the allowlist is read: a posted
- * «Vreau numărul de membru», no answer since §NNN, is never looked at.
+ * «Vreau numărul de membru», no answer since §972, is never looked at.
  */
 function changedAnswersOf(form: FormData): Record<string, string | boolean> {
   const changes: Record<string, string | boolean> = {};

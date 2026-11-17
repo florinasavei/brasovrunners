@@ -8,7 +8,7 @@ import { RETIRED_ANSWERS } from "@/modules/registrations/answers";
 import { OFFERS_MEMBER_BIB, PRINTS_MEMBER_BIB } from "@/modules/registrations/member-bib";
 
 /**
- * §NNN (the owner, 2026-11-17: «că momentan nu se deosebesc cu nimic») — the members' race number is decided by ONE
+ * §972 (the owner, 2026-11-17: «că momentan nu se deosebesc cu nimic») — the members' race number is decided by ONE
  * rule: the event's bib design offers it, the registration's `club_member_declared`, not «Elită». It lives in two
  * twins beside each other — the SQL `registrations/member-bib.ts#PRINTS_MEMBER_BIB` and the TypeScript
  * `registrations/domain/member-bib.ts#printsMemberBib` (`member-bib-declared.test.ts` proves they agree) — and every
@@ -18,7 +18,7 @@ import { OFFERS_MEMBER_BIB, PRINTS_MEMBER_BIB } from "@/modules/registrations/me
 const ROOT = path.resolve(__dirname, "../../..");
 const source = (file: string) => readFileSync(path.join(ROOT, file), "utf8");
 
-/** Each place that decides the members' bib, and what of the rule it must read (§NNN's list, the brief's six). */
+/** Each place that decides the members' bib, and what of the rule it must read (§972's list, the brief's six). */
 const CALLERS: Array<{ file: string; what: string; reads: RegExp }> = [
   // The sheet's rows and its members' part (§681): `listBibs` selects the rule into `BibRow.member`.
   { file: "src/modules/registrations/bibs.ts", what: "the sheet's rows", reads: /member:\s*PRINTS_MEMBER_BIB/ },
@@ -30,7 +30,7 @@ const CALLERS: Array<{ file: string; what: string; reads: RegExp }> = [
   { file: "src/app/api/admin/events/[id]/bibs/preview/route.ts", what: "the preview route", reads: /printsMemberBib\(\{ offered: event\.design\.member\.enabled, declared: row\.clubMemberDeclared, elite: row\.elite \}\)/ },
   // The list's rows (the export reads them), the registration's page and the desk's row: the rule in each query.
   { file: "src/modules/registrations/admin-repository.ts", what: "the admin repository's queries", reads: /memberBib:\s*PRINTS_MEMBER_BIB/g },
-  // The desk's picture address (the review of §NNN): the desk row's `memberBib`, so a corrected tick is a fresh picture.
+  // The desk's picture address (the review of §972): the desk row's `memberBib`, so a corrected tick is a fresh picture.
   { file: "src/modules/registrations/ui/DeskRow.tsx", what: "the desk's picture address", reads: /member: row\.memberBib\b/ },
   // The registration's «Număr de membru» line: the detail's `memberBib`.
   { file: "src/app/[locale]/admin/registrations/[id]/page.tsx", what: "the registration's page", reads: /registration\.memberBib\b/ },
@@ -49,7 +49,7 @@ function sourceFiles(dir = "src"): string[] {
   });
 }
 
-describe("§NNN one rule for the members' race number, read by every caller", () => {
+describe("§972 one rule for the members' race number, read by every caller", () => {
   it("prints the three facts and nothing else: the design's switch, the member tick, not «Elită»", () => {
     const { sql } = new PgDialect().sqlToQuery(PRINTS_MEMBER_BIB);
     expect(sql).toContain('"registrations"."club_member_declared"');

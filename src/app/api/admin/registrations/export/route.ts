@@ -248,7 +248,7 @@ export async function GET(request: Request): Promise<Response> {
         clubName: row.clubName ?? "",
         clubMemberDeclared: row.clubMemberDeclared,
         memberVerified: row.memberVerified,
-        // «Member bib» (§664): yes or empty, by the one rule the sheet prints by (§NNN).
+        // «Member bib» (§664): yes or empty, by the one rule the sheet prints by (§972).
         memberBib: row.memberBib,
         fitnessDeclaredAt: row.fitnessDeclaredAt,
         stravaUrl: row.stravaUrl ?? "",
@@ -314,7 +314,7 @@ export async function GET(request: Request): Promise<Response> {
       memberVerified: row.memberVerified,
       // «Club runner» (§787): the same answer as the spreadsheet's, "Yes" or empty, so the file names the club's runners (the lavender on those without the tick).
       clubRunner: isClubRunner(row),
-      // «Member bib» (§664): yes or empty, by the one rule the sheet prints by (§NNN).
+      // «Member bib» (§664): yes or empty, by the one rule the sheet prints by (§972).
       memberBib: row.memberBib,
       fitnessDeclaredAt: row.fitnessDeclaredAt?.toISOString() ?? null,
       stravaUrl: row.stravaUrl ?? "",

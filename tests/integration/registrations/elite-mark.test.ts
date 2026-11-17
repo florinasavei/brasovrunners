@@ -353,7 +353,7 @@ describe("§897 a marked registration's bib", () => {
   });
 
   /*
-    §NNN replaced the bibs page's «unverified members» line (and the list it linked to) with the one rule: offered, the
+    §972 replaced the bibs page's «unverified members» line (and the list it linked to) with the one rule: offered, the
     member tick, not «Elită». What this case kept — an elite bib is never a members' bib — is asked of the rule itself:
     a marked runner who ticked «Sunt membru» leaves the members' pile and wears the elite bib, and comes back unmarked.
   */

@@ -267,7 +267,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
           <RecallField name="clubName" label={rt("clubName")} {...textFieldConstraints(staffRegistrationConstraints("clubName"))} />
           {/* BR-REQ-031-06, asked here too: an organizer taking a registration over the
               telephone is usually taking it from somebody in the club. At an event whose bib design
-              offers it, the tick is also what prints the members' race number (§NNN) — no second box. */}
+              offers it, the tick is also what prints the members' race number (§972) — no second box. */}
           <CheckboxField name="clubMemberDeclared">{rt("clubMemberDeclared", { club: CLUB_NAME })}</CheckboxField>
             <RecallField
               name="email"

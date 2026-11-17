@@ -73,7 +73,7 @@ describe("§681 the members' race numbers print first, on their own pages", () =
     return row.id;
   }
 
-  // `wanted` is the member tick since §NNN (it set the retired wish beside it too, which nothing reads any more).
+  // `wanted` is the member tick since §972 (it set the retired wish beside it too, which nothing reads any more).
   async function confirmed(email: string, bibNumber: number, wanted: boolean) {
     const [participant] = await db
       .insert(participants)
@@ -106,7 +106,7 @@ describe("§681 the members' race numbers print first, on their own pages", () =
     state.actor = admin;
     eventId = await event(true);
     /*
-      Numbers 1–7, members on 2, 4 and 7: their people ticked «Sunt membru». §NNN: no member account is needed any
+      Numbers 1–7, members on 2, 4 and 7: their people ticked «Sunt membru». §972: no member account is needed any
       more — these three had one under §664's rule, and the same pages print without any.
     */
     for (const number of [1, 2, 3, 4, 5, 6, 7]) {

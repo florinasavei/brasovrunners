@@ -1,6 +1,6 @@
 /**
  * The members' race number (§664; the owner, 2026-10-04: «I want BVR members to have an optional special BiBs, with
- * a special design»): who wears it — the one rule, as a TypeScript predicate (§NNN).
+ * a special design»): who wears it — the one rule, as a TypeScript predicate (§972).
  *
  * The owner, 2026-11-17, printing the race's bibs: «că momentan nu se deosebesc cu nimic». Until then the bib needed
  * the person to have asked («Vreau numărul de membru») AND their address to be a member account's on «Echipa» (§662),

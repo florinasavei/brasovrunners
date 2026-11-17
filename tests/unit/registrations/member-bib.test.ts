@@ -13,7 +13,7 @@ import { MEMBER_BIB_EXPORT_YES, printsMemberBib } from "@/modules/registrations/
 /**
  * §664, BR-REQ-038-01 — the members' race number: the members' header and label on a member's bib,
  * the number and the name where they always are, both renderers reading `bib-geometry.ts`; and the
- * three facts that decide who wears it — since §NNN the event's switch, the member tick and «Elită»,
+ * three facts that decide who wears it — since §972 the event's switch, the member tick and «Elită»,
  * no longer «Vreau numărul de membru» and a member account.
  */
 
@@ -60,11 +60,11 @@ afterEach(() => vi.restoreAllMocks());
 
 describe("§664 who wears the members' bib", () => {
   /*
-    §NNN changed the rule (the owner, 2026-11-17: «că momentan nu se deosebesc cu nimic»): the three facts are now the
+    §972 changed the rule (the owner, 2026-11-17: «că momentan nu se deosebesc cu nimic»): the three facts are now the
     event's switch, the member tick and not «Elită». The wish («memberBibKept») and the account («memberBibOf»'s
     `verified`) are gone, and with them the «asked» state; the whole truth table of the one rule replaces their cases.
   */
-  it("prints exactly when offered, ticked and not elite — every other combination prints the ordinary bib (§NNN)", () => {
+  it("prints exactly when offered, ticked and not elite — every other combination prints the ordinary bib (§972)", () => {
     for (const offered of [true, false]) {
       for (const declared of [true, false]) {
         for (const elite of [true, false]) {
@@ -74,7 +74,7 @@ describe("§664 who wears the members' bib", () => {
     }
   });
 
-  it("reads «Member bib» = yes / empty in the export — no «asked» any more, since nobody is asked (§NNN)", () => {
+  it("reads «Member bib» = yes / empty in the export — no «asked» any more, since nobody is asked (§972)", () => {
     expect(memberBibExportCell({ memberBib: true })).toBe(MEMBER_BIB_EXPORT_YES);
     expect(MEMBER_BIB_EXPORT_YES).toBe("yes");
     expect(memberBibExportCell({ memberBib: false })).toBe("");
@@ -84,7 +84,7 @@ describe("§664 who wears the members' bib", () => {
 
 describe("§664 the invitation form's boxes for an invited member", () => {
   /*
-    §NNN: «Vreau numărul de membru» is asked no more, so an invited member's form arrives with «Sunt membru» ticked and the
+    §972: «Vreau numărul de membru» is asked no more, so an invited member's form arrives with «Sunt membru» ticked and the
     club's name only — the tick is what prints the members' bib. The non-member's draft is unchanged.
   */
   it("ticks «Sunt membru» with the club's name, and nothing about the members' bib", () => {

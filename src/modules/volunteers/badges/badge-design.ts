@@ -109,7 +109,7 @@ export const badgeDesignSchema = z
     labelRo: line(BADGE_LABEL_MAX),
     labelEn: line(BADGE_LABEL_MAX),
     /**
-     * «Spațiul pentru nume (% din înălțime)» (§NNN): the share of the badge's height the white writing area takes, a whole number from 43
+     * «Spațiul pentru nume (% din înălțime)» (§972): the share of the badge's height the white writing area takes, a whole number from 43
      * to 80 — 43, the badge as it always was, unless the design chose; a design saved before the key, and a value of the wrong type or
      * out of the bounds, reads 43, never refused on read.
      */
@@ -221,7 +221,7 @@ export const BADGE_DROPPABLE = {
   footerLogoPaddingMm: "number",
   footerLogoOffsetXMm: "number",
   footerLogoOffsetYMm: "number",
-  // §NNN: the space for the name, a whole number of percents.
+  // §972: the space for the name, a whole number of percents.
   nameSpacePct: "number",
 } as const;
 export type BadgeDroppedKey = keyof typeof BADGE_DROPPABLE;
@@ -236,7 +236,7 @@ export function badgeDesignDropped(value: unknown): BadgeDroppedKey[] {
   const stored = value as Record<string, unknown>;
   return (Object.keys(BADGE_DROPPABLE) as BadgeDroppedKey[]).filter((key) => {
     if (!(key in stored) || stored[key] === undefined || stored[key] === null) return false;
-    // A space for the name that is no whole number from 43 to 80 (§NNN) reads as the default, and the designer says so too.
+    // A space for the name that is no whole number from 43 to 80 (§972) reads as the default, and the designer says so too.
     if (key === "nameSpacePct") return !isBadgeNameSpace(stored[key]);
     // A mode (§783) or a logo's level (§965) no one knows is as unreadable as one of the wrong type: it reads as the default and the designer says so.
     const choices = BADGE_CHOICES[key];
@@ -424,7 +424,7 @@ export function badgeLayoutWords(design: Pick<BadgeDesign, "showPhone" | "phone"
  * role's badge prints its category (§962).
  * 3 since the club's logo may stand large and pale at every badge's foot, as a watermark (§965).
  * 4 since the club sets that logo's size, the space round it and where it stands (§969).
- * 5 since the space for the name may take more of the badge's height, the bands sharing what it leaves (§NNN).
+ * 5 since the space for the name may take more of the badge's height, the bands sharing what it leaves (§972).
  */
 export const BADGE_DRAWING_VERSION = 5;
 

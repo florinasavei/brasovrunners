@@ -137,7 +137,7 @@ export default async function BadgeDesignPanel({
     [box("phoneLabelEn")]: t("badges.design.phoneLabelEn"),
   });
 
-  // The header's shape at the saved size and space for the name (§NNN), for the crop box (§560's rule; a crop drawn at another size is trimmed, never squashed).
+  // The header's shape at the saved size and space for the name (§972), for the crop box (§560's rule; a crop drawn at another size is trimmed, never squashed).
   const freeShown = design.showFreeText && (design.freeTextRo !== "" || design.freeTextEn !== "");
   const rows = badgeRows(badgePaper(design), badgePhoneRow(design), freeShown, design.nameSpacePct);
   const headerRatio = (badgePaper(design).width - 2 * rows.content.left) / rows.header.height;
@@ -145,7 +145,7 @@ export default async function BadgeDesignPanel({
   const initialSrc = badgePreviewUrl({ eventId, locale, role: sampleRole, design, version });
   const { widthMm, heightMm } = badgeSizeMm(design);
   // The limit in words (§776): the free-text line and the telephone together need this height, whatever the width — said beside the size, always,
-  // at the saved space for the name (§NNN), which leaves the bands less to give up.
+  // at the saved space for the name (§972), which leaves the bands less to give up.
   const extrasNeed =
     badgeSizeRefusal({ size: "custom", customWidthMm: widthMm, customHeightMm: BADGE_CUSTOM_BOUNDS.height.min, nameSpacePct: design.nameSpacePct }, { freeText: true, phone: true })
       ?.minHeightMm ?? null;
@@ -530,7 +530,7 @@ export default async function BadgeDesignPanel({
                 {t("badges.design.writingHelp")}
               </Typography>
               {droppedNote("nameSpacePct")}
-              {/* «Spațiul pentru nume» (§NNN): the fold's first box — the bands at the top share what it leaves; the preview follows it unsaved. */}
+              {/* «Spațiul pentru nume» (§972): the fold's first box — the bands at the top share what it leaves; the preview follows it unsaved. */}
               <RecallField
                 name={box("nameSpacePct")}
                 type="number"

@@ -22,7 +22,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { readSheet } from "../../helpers/xlsx";
 
 /**
- * §664, BR-REQ-038-01, BR-REQ-037-03 — the members' race number from a real database, as §NNN left it (the owner,
+ * §664, BR-REQ-038-01, BR-REQ-037-03 — the members' race number from a real database, as §972 left it (the owner,
  * 2026-11-17: «că momentan nu se deosebesc cu nimic»):
  *
  * - «Vreau numărul de membru» is asked no more: every row the form or a staff entry writes stores false, whatever is
@@ -31,7 +31,7 @@ import { readSheet } from "../../helpers/xlsx";
  *   with a member account on «Echipa» or without one, the account alone never; a test row stays off the sheet as before;
  * - the export's «Member bib» reads yes / empty, and the «asked but not verified» filter is gone with the state.
  *
- * Every case §NNN changed says so beside it; the rest are as §664 wrote them. The rule's own file is
+ * Every case §972 changed says so beside it; the rest are as §664 wrote them. The rule's own file is
  * `member-bib-declared.test.ts`.
  */
 const NOW = new Date("2026-09-04T10:00:00.000Z");
@@ -134,8 +134,8 @@ function submission(overrides: Record<string, unknown> = {}) {
 
 const rowOf = async (eventId: string) => (await db.select().from(registrations).where(eq(registrations.eventId, eventId)))[0];
 
-describe("§664 «Vreau numărul de membru» is asked no more (§NNN): every write stores false", () => {
-  // §NNN: the public form stored the wish under the tick at an event offering the bib; a posted one is now ignored.
+describe("§664 «Vreau numărul de membru» is asked no more (§972): every write stores false", () => {
+  // §972: the public form stored the wish under the tick at an event offering the bib; a posted one is now ignored.
   it("stores false under the member tick at an event offering the members' bib, whatever the form posts", async () => {
     const event = await createEvent(true);
     await submitRegistration(db, event, submission({ clubMemberDeclared: true, memberBibWanted: true }), NOW);
@@ -153,7 +153,7 @@ describe("§664 «Vreau numărul de membru» is asked no more (§NNN): every wri
     expect((await rowOf(on.id)).memberBibWanted).toBe(false);
   });
 
-  // §NNN: the staff entry asked it too and kept it where offered; it asks nothing now, and a stale caller's wish is dropped.
+  // §972: the staff entry asked it too and kept it where offered; it asks nothing now, and a stale caller's wish is dropped.
   it("asks it of the staff entry no more: a posted wish is dropped, the tick kept", async () => {
     // What a caller built for the old entry would post: the retired key beside the tick, not in the type any more.
     const staleDetails = { clubMemberDeclared: true, memberBibWanted: true } as unknown as { clubMemberDeclared: boolean };
@@ -185,7 +185,7 @@ describe("§664 «Vreau numărul de membru» is asked no more (§NNN): every wri
     expect((await rowOf(other.id)).memberBibWanted).toBe(false);
   });
 
-  // §NNN: the staff form asked the wish where an event offered the bib; with nothing to ask, the list carries no flag.
+  // §972: the staff form asked the wish where an event offered the bib; with nothing to ask, the list carries no flag.
   it("no longer tells the staff form which events offer it — the form asks nothing of it", async () => {
     const on = await createEvent(true);
     const listed = await listEventsAcceptingRegistrations(db, "ro");
@@ -194,13 +194,13 @@ describe("§664 «Vreau numărul de membru» is asked no more (§NNN): every wri
   });
 });
 
-describe("§664 «Modifică datele» and the members' bib (§NNN: the tick, not a wish)", () => {
-  // §NNN: «Modifică datele» corrected the wish and clearing the tick cleared it; the wish is no answer now and the tick alone decides.
+describe("§664 «Modifică datele» and the members' bib (§972: the tick, not a wish)", () => {
+  // §972: «Modifică datele» corrected the wish and clearing the tick cleared it; the wish is no answer now and the tick alone decides.
   it("refuses the retired wish by name, and a cleared tick writes no row for it — the next sheet follows the tick", async () => {
     const event = await createEvent(true);
     await submitRegistration(db, event, submission({ clubMemberDeclared: true }), NOW);
     const row = await rowOf(event.id);
-    // A row from before §NNN that still says yes: nothing reads it, and nothing rewrites it.
+    // A row from before §972 that still says yes: nothing reads it, and nothing rewrites it.
     await db.update(registrations).set({ memberBibWanted: true }).where(eq(registrations.id, row.id));
 
     await expect(editRegistrationAnswers(db, admin, row.id, { memberBibWanted: false }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["memberBibWanted"] });
@@ -228,7 +228,7 @@ describe("§664 «Modifică datele» and the members' bib (§NNN: the tick, not 
   });
 });
 
-describe("§664 the sheet prints the members' bib for the member tick (§NNN), with or without an account", () => {
+describe("§664 the sheet prints the members' bib for the member tick (§972), with or without an account", () => {
   let counter = 0;
   async function confirmed(eventId: string, email: string, options: { wanted: boolean; declared?: boolean; kind?: RegistrationKind }) {
     counter += 1;
@@ -261,10 +261,10 @@ describe("§664 the sheet prints the members' bib for the member tick (§NNN), w
     return row;
   }
 
-  // §NNN: the declared-only row printed the ordinary bib and the unasked one too; the tick alone prints it now.
+  // §972: the declared-only row printed the ordinary bib and the unasked one too; the tick alone prints it now.
   it("flags every row that ticked «Sunt membru» — a member account's address or not, asked or not; the TEST row stays off", async () => {
     const event = await createEvent(true);
-    // A member account on «Echipa»: it verifies the chip (§662), and decides nothing of the bib any more (§NNN).
+    // A member account on «Echipa»: it verifies the chip (§662), and decides nothing of the bib any more (§972).
     await db.insert(staffUsers).values({ email: "membru@example.ro", displayName: "Membru", role: "MEMBER" });
     const verified = await confirmed(event.id, "membru@example.ro", { wanted: true });
     const declaredOnly = await confirmed(event.id, "declarat@example.ro", { wanted: true });
@@ -285,7 +285,7 @@ describe("§664 the sheet prints the members' bib for the member tick (§NNN), w
     expect(sheet).toHaveLength(4);
   });
 
-  // §NNN: the «counts nobody unverified» half is gone with the unverified line; the switch half stands.
+  // §972: the «counts nobody unverified» half is gone with the unverified line; the switch half stands.
   it("prints nobody a member's bib while the event's switch is off", async () => {
     const event = await createEvent(false);
     await db.insert(staffUsers).values({ email: "membru@example.ro", displayName: "Membru", role: "MEMBER" });
@@ -294,7 +294,7 @@ describe("§664 the sheet prints the members' bib for the member tick (§NNN), w
     expect((await listBibs(db, event.id)).every((bib) => !bib.member)).toBe(true);
   });
 
-  // §NNN: with no member account a ticked row printed the ordinary bib; no account is read for the bib now.
+  // §972: with no member account a ticked row printed the ordinary bib; no account is read for the bib now.
   it("with no member account at all, still flags the row that ticked «Sunt membru»", async () => {
     await db.delete(staffUsers);
     const event = await createEvent(true);
@@ -303,7 +303,7 @@ describe("§664 the sheet prints the members' bib for the member tick (§NNN), w
     expect((await listBibs(db, event.id)).map((bib) => bib.member)).toEqual([true, false]);
   });
 
-  // §NNN: «asked» left the export with the state, and the bibs page's filter (`memberBibAsked`) with its line.
+  // §972: «asked» left the export with the state, and the bibs page's filter (`memberBibAsked`) with its line.
   it("reads «Member bib» in the export and tells the registration's page", async () => {
     const event = await createEvent(true);
     await db.insert(staffUsers).values({ email: "membru@example.ro", displayName: "Membru", role: "MEMBER" });
@@ -357,7 +357,7 @@ describe("§664 the sheet prints the members' bib for the member tick (§NNN), w
     expect(await findRegistrationDetailForAdmin(db, nothing.id)).toMatchObject({ memberBib: false });
   });
 
-  // §NNN: the declared row without an account read «asked»; it reads «yes» now, the export's words otherwise unchanged.
+  // §972: the declared row without an account read «asked»; it reads «yes» now, the export's words otherwise unchanged.
   it("the export route writes «Member bib» as yes or empty, in the CSV and in the workbook", async () => {
     const event = await createEvent(true);
     await db.insert(staffUsers).values({ email: "membru@example.ro", displayName: "Membru", role: "MEMBER" });

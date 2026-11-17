@@ -134,7 +134,7 @@ const submissionFields = z.object({
    */
   clubMemberDeclared: z.boolean().default(false),
 
-  // «Vreau numărul de membru» (§664) is asked no more (§NNN): the tick above decides the members' race number, and a
+  // «Vreau numărul de membru» (§664) is asked no more (§972): the tick above decides the members' race number, and a
   // posted wish is neither read (`form-mapping.ts`) nor kept — Zod drops a key the schema does not name.
 
   tshirtSize: z.enum(["NONE", "XS", "S", "M", "L", "XL", "XXL"]).default("NONE"),

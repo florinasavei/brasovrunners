@@ -9,7 +9,7 @@ import { readRegistrationForm } from "@/modules/registrations/form-mapping";
 import { registrationSubmissionSchema, staffRegistrationSubmissionSchema } from "@/modules/registrations/fields";
 
 /**
- * §NNN (the owner, 2026-11-17: «că momentan nu se deosebesc cu nimic»; his choice: everyone who ticked at registration
+ * §972 (the owner, 2026-11-17: «că momentan nu se deosebesc cu nimic»; his choice: everyone who ticked at registration
  * that they are a member of the club, no second tick) — the public registration form asks «Sunt membru al grupului
  * {club}» and nothing under it: «Vreau numărul de membru» is gone, in Română and in English, even at an event whose
  * bib design offers the members' race number. A posted box is never read: the form's reading drops it and so do the
@@ -125,7 +125,7 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
-describe("§NNN the public form asks the member tick alone", () => {
+describe("§972 the public form asks the member tick alone", () => {
   it("draws «Sunt membru al grupului» and no «Vreau numărul de membru» under it, at an event that offers the members' bib (ro)", async () => {
     const html = await render();
     expect(html).toContain('name="clubMemberDeclared"');

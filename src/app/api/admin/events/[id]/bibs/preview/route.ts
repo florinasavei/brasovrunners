@@ -168,7 +168,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   }
 
   /*
-    The bib this row prints, by the one rule `bibs.ts#listBibs` prints by (§664, §NNN; `printsMemberBib`, the SQL
+    The bib this row prints, by the one rule `bibs.ts#listBibs` prints by (§664, §972; `printsMemberBib`, the SQL
     `PRINTS_MEMBER_BIB`'s twin): the members' when the event's design offers it and the person ticked «Sunt membru al
     grupului» — no account on «Echipa», no second tick. A registration marked «Elită» (§897) draws as the sheet prints
     it: an elite bib (§895) — its first name alone where the number goes (§948, `eliteBibName`), its own number under it
@@ -194,7 +194,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   });
   /*
     A number and a name change rarely; the browser may keep the picture for an hour. Whether it is a
-    member's bib changes with the tick (a «Modifică datele» correction, §NNN) or the design's switch, so
+    member's bib changes with the tick (a «Modifică datele» correction, §972) or the design's switch, so
     both addresses that ask for a registration's picture — the bibs page's grid (`listBibs`' `member`) and
     the desk's row (`DeskRegistration.memberBib`) — carry the rule's flag (`bibPictureSrc`'s `m=1`, read by
     nobody here): a corrected tick is a new address, never the hour-old picture (§664).

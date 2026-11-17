@@ -17,7 +17,7 @@ import { HOME_COUNTRY } from "@/modules/events/domain/place";
  * **The allowlist is every answer the person typed on the form** (`fields.ts`), each met by the
  * form's own rule (`answerRules`): the two names (the name of record follows them, with §389's rule
  * and §67's audit), the start-list name, the birth date, the sex, the citizenship, the country and the
- * city, the telephone, the emergency contact, the guardian, the club and the member tick — which, since §NNN, is
+ * city, the telephone, the emergency contact, the guardian, the club and the member tick — which, since §972, is
  * also what prints the members' race number, so a wrong tick is corrected here —, the socials and the T-shirt. A key
  * outside it is refused by name — never ignored, so a caller learns it asked for something this verb does not do.
  *
@@ -60,7 +60,7 @@ export type EditableAnswer = (typeof EDITABLE_ANSWERS)[number];
 /**
  * Answers a correction once wrote and the form asks no more: never corrected, never posted, but the trail still holds
  * their `registration.answer_corrected` rows, and the registration's page names them in words. «Vreau numărul de membru»
- * (§664) left with §NNN: the member tick alone decides the members' race number now, and the column stays, read by nothing.
+ * (§664) left with §972: the member tick alone decides the members' race number now, and the column stays, read by nothing.
  */
 export const RETIRED_ANSWERS = ["memberBibWanted"] as const;
 
@@ -252,7 +252,7 @@ const same = (a: unknown, b: unknown) => (a ?? null) === (b ?? null);
  *   still holds that name; a club typed while the tick stays on is refused, since the tick is the club;
  * - the **socials-on-the-list** tick goes when both socials are cleared — a tick about nothing;
  * - the **T-shirt** is kept only where the event gives one (`shirtSizeKept`);
- * - the **member tick** is the members' race number too (§NNN): ticked or cleared here, the next sheet prints the bib by
+ * - the **member tick** is the members' race number too (§972): ticked or cleared here, the next sheet prints the bib by
  *   it — nothing else is written for it (`member_bib_wanted` is no answer any more, `RETIRED_ANSWERS`);
  * - the **guardian** goes when a corrected birth date makes the row an adult's on the day it was
  *   written, as the form never keeps one for an adult (§645) — audited like any other column; under a

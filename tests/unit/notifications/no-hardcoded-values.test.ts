@@ -184,7 +184,7 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Identity.line",
           "Identity.lineNoCif",
           // The members' race number (§664): the designer's switch and label help, the label's default
-          // (the sheet's and the picture's, in their language). The form's wish's help left with §NNN: no wish is asked.
+          // (the sheet's and the picture's, in their language). The form's wish's help left with §972: no wish is asked.
           "Admin.editor.bibDesign.member.enabledHelp",
           "Admin.editor.bibDesign.member.labelHelp",
           "Admin.bibs.memberLabelDefault",
@@ -223,7 +223,7 @@ describe("§369 the club's name leaves the platform only through the constant", 
       "safetyRules.introMountain": 1,
       // The register form's box (§562); the declaration page reads it as `formCopy`, the notice through `promo-consent-words.ts`.
       "promo.label": 1,
-      // The members' race number (§664): the designer's switch (the form's wish left with §NNN).
+      // The members' race number (§664): the designer's switch (the form's wish left with §972).
       "editor.bibDesign.member.enabledHelp": 1,
       // The home page's title (§714), in the root's metadata.
       "meta.title": 1,

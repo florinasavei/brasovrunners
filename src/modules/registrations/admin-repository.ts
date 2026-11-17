@@ -119,7 +119,7 @@ export type RegistrationListRow = {
   /** «Membru (verificat)» (§662): the participant's canonical address is a member account's; `membershipOf` reads the two. */
   memberVerified: boolean;
   /**
-   * The registration prints with the members' race number (§664), by the one rule (§NNN, `member-bib.ts#PRINTS_MEMBER_BIB`):
+   * The registration prints with the members' race number (§664), by the one rule (§972, `member-bib.ts#PRINTS_MEMBER_BIB`):
    * the event offers it, the person ticked «Sunt membru», not «Elită». The export's «Member bib».
    */
   memberBib: boolean;
@@ -582,7 +582,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       eventStartsAt: events.startsAt,
       eventTimezone: events.timezone,
       memberVerified: memberVerifiedOf(members),
-      // The members' race number (§664): the export's «Member bib», by the one rule (§NNN) — no member account read for it.
+      // The members' race number (§664): the export's «Member bib», by the one rule (§972) — no member account read for it.
       memberBib: PRINTS_MEMBER_BIB,
       fitnessDeclaredAt: registrations.fitnessDeclaredAt,
       termsVersion: registrations.termsVersion,
@@ -924,7 +924,7 @@ export type RegistrationDetail = {
   clubMemberDeclared: boolean;
   /** «Membru (verificat)» (§662), as on the list row. */
   memberVerified: boolean;
-  /** Prints with the members' race number (§664), by the one rule (§NNN): the page's «Număr de membru» beside the number. */
+  /** Prints with the members' race number (§664), by the one rule (§972): the page's «Număr de membru» beside the number. */
   memberBib: boolean;
   submittedAt: Date;
   emailConfirmedAt: Date | null;
@@ -1062,7 +1062,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
       memberVerified: memberVerifiedOf(members),
-      // The members' race number (§664), by the one rule the sheet prints by (§NNN).
+      // The members' race number (§664), by the one rule the sheet prints by (§972).
       memberBib: PRINTS_MEMBER_BIB,
       fitnessDeclaredAt: registrations.fitnessDeclaredAt,
       stravaUrl: registrations.stravaUrl,
@@ -1385,7 +1385,7 @@ export type DeskRegistration = {
   /** «Elită» (§897): the bib prints as an elite bib — part of the picture's address, so a mark is a fresh picture. */
   elite: boolean;
   /**
-   * The bib prints in the members' design (§664), by the one rule (§NNN, `member-bib.ts#PRINTS_MEMBER_BIB`) — part of the
+   * The bib prints in the members' design (§664), by the one rule (§972, `member-bib.ts#PRINTS_MEMBER_BIB`) — part of the
    * picture's address (`m=1`), so a tick corrected in «Modifică datele» or the design's switch moved is a fresh picture,
    * never the one the browser kept for the cache hour. The picture already shows it to every desk role; no address.
    */
@@ -1433,7 +1433,7 @@ const DESK_COLUMNS = {
   raceNumberFormat: RACE_NUMBER_FORMAT,
   bibStamp: BIB_STAMP,
   elite: registrations.elite,
-  // The members' race number (§664), by the one rule (§NNN): the picture's address carries it, as the bibs page's grid's does.
+  // The members' race number (§664), by the one rule (§972): the picture's address carries it, as the bibs page's grid's does.
   memberBib: PRINTS_MEMBER_BIB,
   bibPrintedAt: registrations.bibPrintedAt,
   cancelledAt: registrations.cancelledAt,

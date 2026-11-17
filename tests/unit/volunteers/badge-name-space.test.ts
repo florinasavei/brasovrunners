@@ -51,7 +51,7 @@ import { renderBadgeSheet } from "@/modules/volunteers/badges/badges-pdf";
 import { DomainError } from "@/shared/errors/domain-error";
 
 /**
- * §NNN — «Spațiul pentru nume (% din înălțime)» (BR-REQ-050-02; the owner, 2026-11-17, at 90 × 100 mm, then trying 90 × 130: «vreau un
+ * §972 — «Spațiul pentru nume (% din înălțime)» (BR-REQ-050-02; the owner, 2026-11-17, at 90 × 100 mm, then trying 90 × 130: «vreau un
  * spațiu mai mare pt nume aici»). The design's one new key, a whole number from 43 to 80, 43 by default — the badge as it always was: the
  * share of the content's height the writing area takes before the free-text line and the telephone take theirs, the header and the role's
  * band sharing what it leaves in their own 27 : 30. Its reading, the form, the preview's address, the save, the event file; the rows at
@@ -186,7 +186,7 @@ const holds = (layout: BadgeLayout, where: string) => expect(problemsOf(layout, 
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("§NNN the design's key «Spațiul pentru nume (% din înălțime)»", () => {
+describe("§972 the design's key «Spațiul pentru nume (% din înălțime)»", () => {
   it("is a whole number from 43 to 80, 43 by default — the writing area's share as it always was, the bands' 27 and 30 the rest", () => {
     expect(BADGE_NAME_SPACE).toEqual({ min: 43, max: 80 });
     expect(DEFAULT_BADGE_NAME_SPACE).toBe(43);
@@ -236,7 +236,7 @@ describe("§NNN the design's key «Spațiul pentru nume (% din înălțime)»", 
   });
 });
 
-describe("§NNN the form, the preview's address and the save", () => {
+describe("§972 the form, the preview's address and the save", () => {
   const BASE = { "badge.design.mode": "single", "badge.design.size": "strip90", "badge.design.writingLine": "on" };
   const posted = (fields: Record<string, string>) => readBadgeDesignForm((name) => fields[name] ?? null);
 
@@ -300,7 +300,7 @@ describe("§NNN the form, the preview's address and the save", () => {
   });
 });
 
-describe("§NNN the rows at a space for the name", () => {
+describe("§972 the rows at a space for the name", () => {
   it("are today's rows at 43, to the last bit — with the key and without it — and only a space for the name is shared anew", () => {
     for (const size of SIZES) {
       const paper = badgePaper(size);
@@ -389,7 +389,7 @@ describe("§NNN the rows at a space for the name", () => {
   });
 });
 
-describe("§NNN the badge at 43, 60 and 80 %, at every size the bounds allow", () => {
+describe("§972 the badge at 43, 60 and 80 %, at every size the bounds allow", () => {
   /** The grid's badges, each laid out once for the tests below. */
   const laidOut = new Map<string, BadgeLayout>();
   const gridLayout = (size: BadgeSizeChoice, tick: Tick, face: number, share: number) => {
@@ -558,7 +558,7 @@ const layoutRuns = (layout: BadgeLayout): Array<[string, number]> =>
     .filter((line): line is BadgeTextLine => Boolean(line))
     .map((line) => [line.text, line.size]);
 
-describe("§NNN the sheet and the picture draw the same badge at a space for the name", () => {
+describe("§972 the sheet and the picture draw the same badge at a space for the name", () => {
   const cases: Array<[string, BadgeDesign, "ro" | "en", BadgeFaceRole | null]> = [
     ["90 × 100 mm at 60 %, every row ticked, a role under a category", designOf(custom(90, 100), TICKS[3], 60), "ro", FACES[2][1]],
     ["90 × 130 mm at 80 %, the one badge for everyone, in English", { ...designOf(custom(90, 130), TICKS[1], 80), mode: "single" }, "en", null],
@@ -596,7 +596,7 @@ describe("§NNN the sheet and the picture draw the same badge at a space for the
   }, 60_000);
 });
 
-describe("§NNN the picture's address", () => {
+describe("§972 the picture's address", () => {
   it("raises the drawing's version to 5, and makes a space for the name another picture's address", () => {
     expect(BADGE_DRAWING_VERSION).toBe(5);
     const at = (nameSpacePct: number) => badgePictureStamp([{ ...DEFAULT_BADGE_DESIGN, nameSpacePct }, "Crosul", "single"]);

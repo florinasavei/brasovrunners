@@ -8,7 +8,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §664, BR-REQ-038-01 — the preview route draws a member's bib where the sheet would print one: since §NNN, a row
+ * §664, BR-REQ-038-01 — the preview route draws a member's bib where the sheet would print one: since §972, a row
  * whose person ticked «Sunt membru» at an event whose design offers it — a member account or not; a row that did not
  * tick draws the ordinary bib, an account or not. `member=1` on the sample draws the members' design, the switch on
  * or not yet, with the platform's label in the picture's language.
@@ -37,7 +37,7 @@ vi.mock("@/modules/registrations/bib-image", () => ({
 
 const { GET } = await import("@/app/api/admin/events/[id]/bibs/preview/route");
 
-describe("§664 the preview draws the members' bib for the member tick (§NNN)", () => {
+describe("§664 the preview draws the members' bib for the member tick (§972)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let eventId: string;
@@ -109,14 +109,14 @@ describe("§664 the preview draws the members' bib for the member tick (§NNN)",
     expect(state.drawn[0]).toMatchObject({ member: true, memberLabelDefault: "Membru Brașov Runners" });
   });
 
-  // §NNN: a member who only declared drew the ordinary bib; the tick alone draws the members' bib now, no account needed.
+  // §972: a member who only declared drew the ordinary bib; the tick alone draws the members' bib now, no account needed.
   it("draws the members' bib for a member who only declared — no account on «Echipa»", async () => {
     const row = await confirmed("declarat@example.test", 8);
     expect((await ask(`registration=${row.id}&locale=ro`)).status).toBe(200);
     expect(state.drawn[0]).toMatchObject({ member: true, memberLabelDefault: "Membru Brașov Runners" });
   });
 
-  // §NNN: and the account alone never draws it — the row that did not tick draws the ordinary bib.
+  // §972: and the account alone never draws it — the row that did not tick draws the ordinary bib.
   it("draws the ordinary bib for a member account's address that did not tick «Sunt membru»", async () => {
     const row = await confirmed("membru@example.test", 9, false);
     expect((await ask(`registration=${row.id}&locale=ro`)).status).toBe(200);

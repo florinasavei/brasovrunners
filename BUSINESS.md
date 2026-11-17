@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.61-2026-11-17 -->
+<!-- PROJECT_BASELINE: BR-V4.62-2026-11-17 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V4.61-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.62-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -256,7 +256,7 @@ What is asked, and why each one is there:
   asked to find. It is therefore for the club's own information — it changes no price, no
   place, and no position in a queue — and every screen that shows it says "declared". The one
   thing it does change is a look: at a race whose number has a members' design, whoever ticked
-  it wears that design, with the same number in the same order (`DECISIONS.md` §NNN). An
+  it wears that design, with the same number in the same order (`DECISIONS.md` §972). An
   organizer corrects one that is wrong.
 
 An organizer entering a registration for somebody who telephoned may leave unknown details

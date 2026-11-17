@@ -44,7 +44,7 @@ const complete: AnswersOnRow = {
   clubName: null,
   stravaUrl: null,
   instagramHandle: null,
-  // §NNN: «Vreau numărul de membru» is no answer any more (`RETIRED_ANSWERS`), so the row's answers no longer carry it.
+  // §972: «Vreau numărul de membru» is no answer any more (`RETIRED_ANSWERS`), so the row's answers no longer carry it.
   clubMemberDeclared: false,
 };
 
@@ -64,7 +64,7 @@ const nameOnly: AnswersOnRow = {
   emergencyContactPhone: null,
   guardianName: null,
   tshirtSize: "NONE",
-  // §NNN: no «Vreau numărul de membru» among the answers any more, as above.
+  // §972: no «Vreau numărul de membru» among the answers any more, as above.
   clubMemberDeclared: false,
 };
 
@@ -251,7 +251,7 @@ describe("BR-REQ-037-05 criterion 23: who signs follows the answers typed above 
     expect(registrationAfterCompletion(row, draftAnswers({ ...kept, city: "" }, "ro"), context)).toBeNull();
   });
 
-  // §NNN: the members' bib left the context with «Vreau numărul de membru» — a completion never wrote the wish, the tick decides the bib.
+  // §972: the members' bib left the context with «Vreau numărul de membru» — a completion never wrote the wish, the tick decides the bib.
   it("judges by the event's own row, as the write does: its day in its zone, its minimum age, the T-shirt", () => {
     const event = { kitShirt: true, startsAt: new Date("2026-11-20T23:30:00.000Z"), timezone: "Europe/Bucharest", minAge: 16, bibDesign: null };
     expect(completionContext(event, context.now, true, "MANAGE_LINK")).toEqual({

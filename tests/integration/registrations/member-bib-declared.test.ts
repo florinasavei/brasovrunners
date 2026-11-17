@@ -16,7 +16,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { readSheet } from "../../helpers/xlsx";
 
 /**
- * §NNN (the owner, 2026-11-17, printing the race's bibs: «că momentan nu se deosebesc cu nimic»; his choice: everyone
+ * §972 (the owner, 2026-11-17, printing the race's bibs: «că momentan nu se deosebesc cu nimic»; his choice: everyone
  * who ticked at registration that they are a member of the club, no account, no second tick), BR-REQ-038-01,
  * BR-REQ-031-06, BR-REQ-037-04 (a test registration in no condition, and off every count and file the club is given)
  * — the members' race number by one rule, read from a real database (PGlite): the event's bib design
@@ -155,7 +155,7 @@ const picture = (eventId: string, registrationId: string) =>
 const pagesOf = (input: BibSheetInput) =>
   sheetPages(input.rows, { part: input.part, layout: input.layout, membersOn: input.design?.member.enabled }).map((page) => page.map((row) => row?.bibNumber ?? null));
 
-describe("§NNN the one rule: the SQL and its TypeScript twin agree", () => {
+describe("§972 the one rule: the SQL and its TypeScript twin agree", () => {
   it("answers offered ∧ ticked ∧ ¬elite over every combination, in a one-table select, a joined one and a WHERE", async () => {
     const cases: Array<{ id: string; offered: boolean; declared: boolean; elite: boolean }> = [];
     for (const offered of [true, false]) {
@@ -191,7 +191,7 @@ describe("§NNN the one rule: the SQL and its TypeScript twin agree", () => {
   });
 });
 
-describe("§NNN the sheet prints the members' bib for the member tick, members first (§681)", () => {
+describe("§972 the sheet prints the members' bib for the member tick, members first (§681)", () => {
   it("flags every confirmed runner who ticked «Sunt membru», with no account on «Echipa» at all, and prints their pages first", async () => {
     const eventId = await race(true);
     const ids = [];
@@ -272,7 +272,7 @@ describe("§NNN the sheet prints the members' bib for the member tick, members f
   });
 });
 
-describe("§NNN the bib's picture draws what the sheet prints", () => {
+describe("§972 the bib's picture draws what the sheet prints", () => {
   it("draws the members' design for the tick, account or not, and the ordinary bib otherwise — the design off, no tick, or elite", async () => {
     const on = await race(true);
     const off = await race(false);
@@ -296,7 +296,7 @@ describe("§NNN the bib's picture draws what the sheet prints", () => {
   });
 });
 
-describe("§NNN the list, the registration's page and the export read the same rule", () => {
+describe("§972 the list, the registration's page and the export read the same rule", () => {
   it("says «Member bib» = yes for the tick (no account needed) and empty otherwise, in the CSV and the workbook; a test row stays out", async () => {
     const eventId = await race(true);
     await db.insert(staffUsers).values({ email: "cont@example.org", displayName: "Cont", role: "MEMBER" });
@@ -356,7 +356,7 @@ describe("§NNN the list, the registration's page and the export read the same r
       expect(rows.get(id), `list ${id}`).toBe(memberBib);
       expect((await findRegistrationDetailForAdmin(db, id, NOW))?.memberBib, `page ${id}`).toBe(memberBib);
     }
-    // The desk's row (the review of §NNN): its picture's address carries the flag (`m=1`), so a corrected tick is a fresh picture.
+    // The desk's row (the review of §972): its picture's address carries the flag (`m=1`), so a corrected tick is a fresh picture.
     const desk = new Map(
       [...(await listDeskRegistrations(db, { eventId: on, query: "", locale: "ro" })), ...(await listDeskRegistrations(db, { eventId: off, query: "", locale: "ro" }))].map((row) => [row.id, row.memberBib]),
     );
@@ -364,7 +364,7 @@ describe("§NNN the list, the registration's page and the export read the same r
   });
 });
 
-describe("§NNN «Vreau numărul de membru» is written false by every door, a restart's included", () => {
+describe("§972 «Vreau numărul de membru» is written false by every door, a restart's included", () => {
   async function approveLegalDocuments() {
     const text: LegalDocumentTranslationInput[] = [
       { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["p"] }] } },
@@ -417,7 +417,7 @@ describe("§NNN «Vreau numărul de membru» is written false by every door, a r
     await submitRegistration(db, forRegistration, form, NOW);
     const [first] = await db.select().from(registrations).where(eq(registrations.eventId, eventId));
     expect(first).toMatchObject({ memberBibWanted: false, clubMemberDeclared: true });
-    // A row from before §NNN that still says yes, cancelled since.
+    // A row from before §972 that still says yes, cancelled since.
     await db
       .update(registrations)
       .set({ memberBibWanted: true, status: "CANCELLED", cancelledAt: NOW, cancellationSource: "PARTICIPANT" })

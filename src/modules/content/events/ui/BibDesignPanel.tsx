@@ -757,7 +757,7 @@ export default async function BibDesignPanel({
         </Panel>
 
         {/* «Membrii» (§664): the members' own header and label, and their mark; the rest is the design
-            above. With the switch on, every registration whose person ticked «Sunt membru» prints it (§NNN). */}
+            above. With the switch on, every registration whose person ticked «Sunt membru» prints it (§972). */}
         <Panel glyph="bibMembers" collapsible level={5} title={t("editor.bibDesign.sections.members")} aside={membersAside} data-testid="bib-section-members">
           <Box component="fieldset" sx={{ border: 0, p: 0, m: 0, minWidth: 0 }} data-testid="bib-design-member">
             <Typography component="legend" variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>

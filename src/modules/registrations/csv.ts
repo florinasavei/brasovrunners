@@ -18,7 +18,7 @@ import { memberBibCell } from "./domain/member-bib";
 import { MEMBERSHIP_EXPORT_WORDS, membershipOf } from "./domain/membership";
 
 /**
- * The «Member bib» cell of both exports (§664): "yes" when the row prints the members' bib by the one rule (§NNN,
+ * The «Member bib» cell of both exports (§664): "yes" when the row prints the members' bib by the one rule (§972,
  * `member-bib.ts#PRINTS_MEMBER_BIB`, read by the list's query into `memberBib`) — the event offers it, the person
  * ticked «Sunt membru», not «Elită» — and empty otherwise. No "asked" any more: nobody is asked.
  */
@@ -158,7 +158,7 @@ export type RegistrationCsvRow = {
   country?: string | null;
   city?: string | null;
   /**
-   * The members' race number (§664): whether the row prints it, by the one rule (§NNN) — the «Member bib» cell
+   * The members' race number (§664): whether the row prints it, by the one rule (§972) — the «Member bib» cell
    * (`memberBibExportCell`), "yes" or empty.
    */
   memberBib?: boolean;
@@ -237,7 +237,7 @@ const HEADER = [
   "Age on race day",
   "Country",
   "City",
-  // Last (§664), for the same reason: the members' race number — "yes" or empty (§NNN: no "asked" any more).
+  // Last (§664), for the same reason: the members' race number — "yes" or empty (§972: no "asked" any more).
   "Member bib",
   /*
     Last (§787, amended; the owner's «color codes … dacă sunt membri BVR»), for the same reason — the precedent is

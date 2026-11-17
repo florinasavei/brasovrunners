@@ -2227,7 +2227,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     promoConsentAt: promoConsent ? now : null,
     clubMemberDeclared: input.clubMemberDeclared,
     /*
-      «Vreau numărul de membru» is asked no more (§NNN): the member tick above is what prints the members' race number,
+      «Vreau numărul de membru» is asked no more (§972): the member tick above is what prints the members' race number,
       by the one rule (`member-bib.ts#PRINTS_MEMBER_BIB`), and nothing reads this column. Every row the form writes says
       false — a restart's too, which spreads these details over the old row — and a posted wish is never read
       (`form-mapping.ts`). The column stays, expand/contract: a later change may drop it.

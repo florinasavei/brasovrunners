@@ -273,7 +273,7 @@ export function readInviteeRows(
 /**
  * The invitation form's boxes before any press (§647): the invited name split into first and last,
  * and for a member «Sunt membru» ticked with the club's name — the tick that, at an event offering
- * it, prints the members' race number (§664, §NNN); there is no second box to tick any more.
+ * it, prints the members' race number (§664, §972); there is no second box to tick any more.
  */
 export function invitationDraft(link: { name: string; member: boolean }, clubName: string): Record<string, string> {
   const words = link.name.split(" ");

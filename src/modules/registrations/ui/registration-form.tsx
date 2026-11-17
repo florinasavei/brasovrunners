@@ -883,7 +883,7 @@ export async function registrationForm({
                 <Hint text={memberDefinition ?? t("clubMemberDefinition")} />
               </CheckboxField>
 
-              {/* No second box under it (§NNN): at an event whose bib design offers the members' race number, this
+              {/* No second box under it (§972): at an event whose bib design offers the members' race number, this
                   tick is what prints it — «Vreau numărul de membru» is asked no more, and a posted one is never read. */}
 
               {/* The T-shirt's size, only for an event that gives one (§554, «Kit de participare»):

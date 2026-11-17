@@ -490,7 +490,7 @@ export type CreateRegistrationByStaffInput = {
     guardianName?: string;
     /**
      * BR-REQ-031-06. What the person told the organizer; a claim like every other one — and, at an event whose bib design
-     * offers it, what prints the members' race number (§NNN). «Vreau numărul de membru» is asked no more.
+     * offers it, what prints the members' race number (§972). «Vreau numărul de membru» is asked no more.
      */
     clubMemberDeclared?: boolean;
     tshirtSize?: "NONE" | "XS" | "S" | "M" | "L" | "XL" | "XXL";

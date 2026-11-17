@@ -251,7 +251,7 @@ export const FIELD_LABELS = [
   "badges.design.titleEn",
   "badges.design.labelRo",
   "badges.design.labelEn",
-  // «Spațiul pentru nume (% din înălțime)» (§NNN): how much of the badge's height the name's white area takes.
+  // «Spațiul pentru nume (% din înălțime)» (§972): how much of the badge's height the name's white area takes.
   "badges.design.nameSpacePct",
   "badges.design.writingLine",
   // «Logo-ul clubului jos, ca filigran» (§965): how visible the club's logo is at the badge's foot.

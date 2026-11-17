@@ -778,7 +778,7 @@ export async function isEventSpareNumber<T extends Record<string, unknown>>(
 }
 
 /**
- * One bib of the sheet. `member` is whether it prints the members' design (§664), by the one rule (§NNN,
+ * One bib of the sheet. `member` is whether it prints the members' design (§664), by the one rule (§972,
  * `member-bib.ts#PRINTS_MEMBER_BIB`): the event offers it, the person ticked «Sunt membru al grupului {club}», and the
  * registration is not marked «Elită» — no account on «Echipa», no «Vreau numărul de membru». The number is the same
  * number either way.
@@ -840,7 +840,7 @@ export async function listBibs<T extends Record<string, unknown>>(
       registeredName: registrations.registeredName,
       firstName: registrations.firstName,
       /*
-        The members' design, by the one rule (§NNN): offered, ticked, not «Elită» — the mark wins over the members' pile
+        The members' design, by the one rule (§972): offered, ticked, not «Elită» — the mark wins over the members' pile
         (§895, §897), inside the rule itself. Read off the row and its event alone: no member account is read for a sheet.
       */
       member: PRINTS_MEMBER_BIB,

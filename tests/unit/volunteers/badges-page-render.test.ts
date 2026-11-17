@@ -505,7 +505,7 @@ describe("§969 «Logo-ul clubului (filigran)», a fold of its own, with the log
   });
 });
 
-describe("§NNN «Spațiul pentru nume (% din înălțime)» in the designer", () => {
+describe("§972 «Spațiul pentru nume (% din înălțime)» in the designer", () => {
   const draw = (design = DEFAULT_BADGE_DESIGN, language: "ro" | "en" = "ro", dropped: Array<"nameSpacePct"> = []) =>
     html(() => BadgeDesignPanel({ eventId: EVENT, locale: language, design, dropped, sampleRole: ROLES[0].id, version: "abc" }), language);
   const numberBox = (page: string) => /<input[^>]*name="badge\.design\.nameSpacePct"[^>]*>/.exec(page)?.[0] ?? "";

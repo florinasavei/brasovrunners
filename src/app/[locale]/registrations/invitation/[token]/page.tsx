@@ -150,7 +150,7 @@ export default async function InvitationPage({ params, searchParams }: Props) {
   const invalid = new Set<string>(rejected);
   const tooYoung = markers.includes(UNDER_MINIMUM_AGE);
   // What was typed before a refusal (§142); else the invitation's name, and for a member «Sunt membru» ticked —
-  // the tick that prints the members' race number where the event offers it (§664, §NNN).
+  // the tick that prints the members' race number where the event offers it (§664, §972).
   const draft = error !== undefined ? await readFormDraft() : invitationDraft(link, CLUB_NAME);
   const deadline = formatDay(link.expiresAt, { locale, timeZone: event.timezone, style: "long", month: "long", withTime: true, position: "inline" });
 

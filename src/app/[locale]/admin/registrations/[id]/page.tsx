@@ -169,7 +169,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // «Date lipsă» (§905): the answers the form requires and this registration does not hold — only while it still stands.
   const owedAnswers = isActiveStatus(registration.status) ? missingAnswersHeld(registration) : [];
   // The members' race number (§664): «Număr de membru» when the row prints one — by the one rule the sheet prints by
-  // (§NNN, `PRINTS_MEMBER_BIB`): the event offers it, the person ticked «Sunt membru», not «Elită». No account is read for it.
+  // (§972, `PRINTS_MEMBER_BIB`): the event offers it, the person ticked «Sunt membru», not «Elită». No account is read for it.
   const memberBib = registration.memberBib;
 
   const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns, family, partnerShares, invitedBy, notes, emailTries] = await Promise.all([
@@ -298,7 +298,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     value as the form renders it, and the same string in its `was.` twin.
   */
   const answers = query.answers === "1" ? await readRegistrationAnswers(db, actor, registration.id, new Date()) : null;
-  // The T-shirt only where the event gives one (§554). «Vreau numărul de membru» is no answer any more (§NNN): the tick decides the members' bib.
+  // The T-shirt only where the event gives one (§554). «Vreau numărul de membru» is no answer any more (§972): the tick decides the members' bib.
   const answerFields = EDITABLE_ANSWERS.filter((field) => field !== "tshirtSize" || registration.eventKitShirt);
   const answerLabels = Object.fromEntries(answerFields.map((field) => [field, tr(`registrations.answers.fields.${field}`, { club: CLUB_NAME })])) as Record<string, string>;
   const answerValues: Record<string, string> = answers
@@ -394,7 +394,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     recorded reads (§322) — so the trail is not a way round the record.
   */
   const emergencyOpen = emergency !== null || answers !== null;
-  // A correction the trail kept of an answer no longer asked (§NNN: «Vreau numărul de membru») is still named in words.
+  // A correction the trail kept of an answer no longer asked (§972: «Vreau numărul de membru») is still named in words.
   const answerWords = (field: string) =>
     (EDITABLE_ANSWERS as readonly string[]).includes(field) || (RETIRED_ANSWERS as readonly string[]).includes(field) || field === "listSocials"
       ? tr(`registrations.answers.fields.${field}`, { club: CLUB_NAME })
@@ -850,7 +850,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                         ? tr("registrations.bibSettledPrinted", { number: written(registration.bibNumber) })
                         : tr("registrations.bibSettled", { number: written(registration.bibNumber) })}
                   </Typography>
-                  {/* The members' race number (§664, §NNN), beside the number: the sheet prints this row's bib in the members' design. */}
+                  {/* The members' race number (§664, §972), beside the number: the sheet prints this row's bib in the members' design. */}
                   {memberBib && (
                     <Typography variant="body2" color="text.primary" data-testid="member-bib">
                       {tr("registrations.memberBib.printed")}
@@ -1368,7 +1368,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                         </RecallField>
                       )}
                     </Box>
-                    {/* The member tick (BR-REQ-031-06): a claim the person made, corrected here like any answer — and, since §NNN,
+                    {/* The member tick (BR-REQ-031-06): a claim the person made, corrected here like any answer — and, since §972,
                         what decides the members' race number: a wrong tick is corrected here. */}
                     <CheckboxField name="clubMemberDeclared" defaultChecked={answers.clubMemberDeclared} help={tr("registrations.answers.memberHelp", { club: CLUB_NAME })}>
                       {answerLabels.clubMemberDeclared}

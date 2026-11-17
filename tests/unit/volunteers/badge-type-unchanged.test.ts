@@ -199,9 +199,9 @@ describe("§962 the badges with no type draw what they drew before it", () => {
 
   /**
    * «Spațiul pentru nume (% din înălțime)» at its default — 43, the choice of every design that never made it — draws every case as before,
-   * byte for byte in the layout, the picture and the sheet's calls: chosen 43, and absent from a design stored before the key (§NNN).
+   * byte for byte in the layout, the picture and the sheet's calls: chosen 43, and absent from a design stored before the key (§972).
    */
-  it("draws the same with the space for the name at its default: chosen 43, or absent from a design saved before the key (§NNN)", async () => {
+  it("draws the same with the space for the name at its default: chosen 43, or absent from a design saved before the key (§972)", async () => {
     const drawings: Record<string, ReturnType<typeof kept>> = {};
     for (const [name, { design, locale, role }] of Object.entries(CASES)) {
       const chosen = await drawingOf({ ...design, nameSpacePct: 43 }, locale, role);
@@ -212,7 +212,7 @@ describe("§962 the badges with no type draw what they drew before it", () => {
   }, 60_000);
 });
 
-/** A design as stored before «Spațiul pentru nume» existed: the key absent (§NNN). */
+/** A design as stored before «Spațiul pentru nume» existed: the key absent (§972). */
 function withoutNameSpace(design: BadgeDesign): Record<string, unknown> {
   const stored: Record<string, unknown> = { ...design };
   delete stored.nameSpacePct;
@@ -318,7 +318,7 @@ async function gridFingerprints(designOf: (design: BadgeDesign) => BadgeDesign):
   return { drawings: drawings.digest("hex"), sheets: sheets.digest("hex") };
 }
 
-describe("§NNN the space for the name at its default is the badge of before, at every size", () => {
+describe("§972 the space for the name at its default is the badge of before, at every size", () => {
   it("draws every size the bounds allow, in 10 mm steps, as the base drew it: the key at 43, and absent from a design saved before it", async () => {
     expect(await gridFingerprints((design) => ({ ...design, nameSpacePct: 43 }))).toEqual(GRID_BEFORE);
     expect(await gridFingerprints((design) => readBadgeDesign(withoutNameSpace(design)))).toEqual(GRID_BEFORE);
