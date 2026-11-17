@@ -198,7 +198,7 @@ export default async function BadgeDesignPanel({
   // «VOLUNTAR» as the page's language prints it: the sample of the one badge's band shows the club's own word.
   const bandWord = await badgeLabelIn(design, locale);
   const roleAside = design.labelRo ? `${design.labelRo} / ${design.labelEn}` : t("badges.design.labelDefaultAside");
-  // The club's logo as a watermark (§NNN) is said in the closed line only when it is drawn.
+  // The club's logo as a watermark (§965) is said in the closed line only when it is drawn.
   const writingAside = words(
     design.writingLine ? t("badges.design.writingLine") : t("badges.design.writingPlain"),
     design.footerLogo !== "off" && t(`badges.design.footerLogoAside.${design.footerLogo}`),
@@ -475,7 +475,7 @@ export default async function BadgeDesignPanel({
           </Panel>
 
           {/* «Locul pentru nume»: no name is printed; «Nume:» and, if wanted, one faint line for the marker — and, if wanted, the club's
-              logo large and pale under them (§NNN), with how visible it is. */}
+              logo large and pale under them (§965), with how visible it is. */}
           <Panel glyph="badgeWriting" collapsible level={5} title={t("badges.design.sections.writing")} aside={writingAside} data-testid="badge-section-writing">
             <Stack spacing={1.5}>
               <Typography variant="caption" color="text.secondary">

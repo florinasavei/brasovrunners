@@ -39,7 +39,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { LOGO_RATIO } from "@/theme/brand";
 
 /**
- * §NNN — «Logo-ul clubului jos, ca filigran» (BR-REQ-050-02; the owner, 2026-11-17: «vreau ca la voluntari să pot pune logo-ul clubului
+ * §965 — «Logo-ul clubului jos, ca filigran» (BR-REQ-050-02; the owner, 2026-11-17: «vreau ca la voluntari să pot pune logo-ul clubului
  * în footer, dar transparent», then his choice: a large, pale watermark of the club's logo at the bottom of the badge, the name written in
  * marker reading over it, a little, medium or well visible). The design's key and its reading, the preview's address, the save's reading,
  * the one box both renderers draw — inside the writing area's lower part at every size the bounds allow, over no band and no row, moving
@@ -60,7 +60,7 @@ function layoutOf(design: BadgeDesign, role: { name: string; colour: string | nu
 /** Whether two rows overlap by more than a hair. */
 const overlaps = (a: { top: number; height: number }, b: BadgeRow | null) => b !== null && a.top < b.top + b.height - 1e-9 && b.top < a.top + a.height - 1e-9;
 
-describe("§NNN the design's key «Logo-ul clubului jos, ca filigran»", () => {
+describe("§965 the design's key «Logo-ul clubului jos, ca filigran»", () => {
   it("is off by default and for every design saved before it, never refused and never named as unreadable", () => {
     expect(DEFAULT_BADGE_FOOTER_LOGO).toBe("off");
     expect(DEFAULT_BADGE_DESIGN.footerLogo).toBe("off");
@@ -106,7 +106,7 @@ describe("§NNN the design's key «Logo-ul clubului jos, ca filigran»", () => {
   });
 });
 
-describe("§NNN the form and the preview's address", () => {
+describe("§965 the form and the preview's address", () => {
   const posted = (fields: Record<string, string>) => readBadgeDesignForm((name) => fields[name] ?? null);
 
   it("goes from the form to the preview's address and back at every level, so the preview follows the unsaved choice", () => {
@@ -168,7 +168,7 @@ describe("§NNN the form and the preview's address", () => {
   });
 });
 
-describe("§NNN the watermark's one box", () => {
+describe("§965 the watermark's one box", () => {
   /** Every size the bounds allow: each width step of 10 mm, each whole height, and the two presets. */
   const sizes: BadgeSizeChoice[] = [{ size: "strip90", customWidthMm: 90, customHeightMm: 35 }, { size: "strip100", customWidthMm: 90, customHeightMm: 35 }];
   for (let width = BADGE_CUSTOM_BOUNDS.width.min; width <= BADGE_CUSTOM_BOUNDS.width.max; width += 10) {

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.55-2026-11-17 -->
+<!-- PROJECT_BASELINE: BR-V4.56-2026-11-17 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V4.55-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.56-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2321,7 +2321,7 @@ only ones who see the names, addresses and telephone numbers.
      type. A badge that is too short for everything you ticked is refused when you save, with a sentence
      saying what does not fit and how tall it must be: the free-text line and the coordinator's telephone
      together need a custom size at least 34 mm tall; both ready-made sizes (90 × 35 and 100 × 40 mm) take everything.
-     Under «Locul pentru nume», **«Logo-ul clubului jos, ca filigran»** (§NNN) puts the club's logo, large and pale, at
+     Under «Locul pentru nume», **«Logo-ul clubului jos, ca filigran»** (§965) puts the club's logo, large and pale, at
      the bottom of every badge, under «Nume:», where the name is written in marker over it: «Fără» (the default),
      «Puțin vizibil», «Mediu» or «Bine vizibil». It takes no room of its own, so any size that fits without it fits
      with it; the preview shows the level as you choose it.

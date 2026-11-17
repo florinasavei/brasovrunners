@@ -40,7 +40,7 @@ export type BadgeDesignFormValues = {
   labelRo: string;
   labelEn: string;
   writingLine: boolean;
-  /** «Logo-ul clubului jos, ca filigran» (§NNN): `off`, `faint`, `medium` or `strong` as posted — empty reads `off`, any other word is refused by the save. */
+  /** «Logo-ul clubului jos, ca filigran» (§965): `off`, `faint`, `medium` or `strong` as posted — empty reads `off`, any other word is refused by the save. */
   footerLogo: string;
   showFreeText: boolean;
   freeTextRo: string;

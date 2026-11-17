@@ -97,7 +97,7 @@ export const badgeDesignSchema = z
     /** One faint line across the writing area, for the marker. */
     writingLine: z.boolean().catch(true),
     /**
-     * «Logo-ul clubului jos, ca filigran» (§NNN): the club's lockup, large and pale at the foot of the writing area, at one of three levels
+     * «Logo-ul clubului jos, ca filigran» (§965): the club's lockup, large and pale at the foot of the writing area, at one of three levels
      * of visibility — `off` unless the design chose one, so every design saved before the choice, and a level no one knows, reads `off`.
      */
     footerLogo: z.enum(BADGE_FOOTER_LOGOS).catch(DEFAULT_BADGE_FOOTER_LOGO),
@@ -180,7 +180,7 @@ export const BADGE_DROPPABLE = {
   // §783: the choice of one badge or one per role, and the colour of the one badge's band.
   mode: "string",
   singleColour: "string",
-  // §NNN: how visible the club's logo is at the badge's foot.
+  // §965: how visible the club's logo is at the badge's foot.
   footerLogo: "string",
 } as const;
 export type BadgeDroppedKey = keyof typeof BADGE_DROPPABLE;
@@ -193,7 +193,7 @@ export function badgeDesignDropped(value: unknown): BadgeDroppedKey[] {
   const stored = value as Record<string, unknown>;
   return (Object.keys(BADGE_DROPPABLE) as BadgeDroppedKey[]).filter((key) => {
     if (!(key in stored) || stored[key] === undefined || stored[key] === null) return false;
-    // A mode (§783) or a logo's level (§NNN) no one knows is as unreadable as one of the wrong type: it reads as the default and the designer says so.
+    // A mode (§783) or a logo's level (§965) no one knows is as unreadable as one of the wrong type: it reads as the default and the designer says so.
     const choices = BADGE_CHOICES[key];
     if (choices && typeof stored[key] === "string") return !choices.includes(stored[key]);
     return typeof stored[key] !== BADGE_DROPPABLE[key];
@@ -373,7 +373,7 @@ export function badgeLayoutWords(design: Pick<BadgeDesign, "showPhone" | "phone"
  * The version of the badge's drawing: raised whenever the renderers draw the same design differently,
  * so every stamped address changes with it — the bib's `BIB_DRAWING_VERSION`, for the badge. 2 since a
  * role's badge prints its category (§962).
- * 3 since the club's logo may stand large and pale at every badge's foot, as a watermark (§NNN).
+ * 3 since the club's logo may stand large and pale at every badge's foot, as a watermark (§965).
  */
 export const BADGE_DRAWING_VERSION = 3;
 

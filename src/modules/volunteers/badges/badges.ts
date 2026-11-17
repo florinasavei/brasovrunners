@@ -185,7 +185,7 @@ export class BadgeSizeRefusal extends DomainError {
  * club typed something that cannot print as typed:
  *
  * - «Altă dimensiune» needs a whole width and height in millimetres within `BADGE_CUSTOM_BOUNDS`;
- * - «Logo-ul clubului jos, ca filigran» is one of its four levels (§NNN) — it takes no height, so it never makes a size too small;
+ * - «Logo-ul clubului jos, ca filigran» is one of its four levels (§965) — it takes no height, so it never makes a size too small;
  * - every text the club types is Romanian **and** English, or neither (§352): the short title, «VOLUNTAR»,
  *   the free-text line, the marker area's label and the telephone's label, the empty side named;
  * - «Text liber» ticked needs something written in it (§776);
@@ -201,7 +201,7 @@ export function parseBadgeDesignPost(values: BadgeDesignFormValues): BadgeDesign
   const invalid = (message: string, fields: string[]) => new DomainError("VALIDATION_ERROR", message, fields);
   if (!(BADGE_MODES as readonly string[]).includes(values.mode)) throw invalid("mode: not one of the two choices", [box("mode")]);
   if (!(BADGE_SIZES as readonly string[]).includes(values.size)) throw invalid("size: not one of the sizes", [box("size")]);
-  // «Logo-ul clubului jos, ca filigran» (§NNN): one of its four choices; a form from before the choice posts none, which is `off`.
+  // «Logo-ul clubului jos, ca filigran» (§965): one of its four choices; a form from before the choice posts none, which is `off`.
   if (values.footerLogo !== "" && !(BADGE_FOOTER_LOGOS as readonly string[]).includes(values.footerLogo)) {
     throw invalid("footerLogo: not one of the levels", [box("footerLogo")]);
   }

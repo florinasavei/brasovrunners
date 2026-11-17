@@ -182,9 +182,9 @@ describe("§962 the badges with no type draw what they drew before it", () => {
 
   /**
    * «Logo-ul clubului jos, ca filigran» off — the choice of every design that never made it — draws every case as before, byte for byte
-   * in the layout, the picture and the sheet's calls: chosen off, and absent from a design stored before the choice (§NNN).
+   * in the layout, the picture and the sheet's calls: chosen off, and absent from a design stored before the choice (§965).
    */
-  it("draws the same with the club's logo as a watermark off: chosen off, or absent from a design saved before the choice (§NNN)", async () => {
+  it("draws the same with the club's logo as a watermark off: chosen off, or absent from a design saved before the choice (§965)", async () => {
     const drawings: Record<string, ReturnType<typeof kept>> = {};
     for (const [name, { design, locale, role }] of Object.entries(CASES)) {
       const chosenOff = await drawingOf({ ...design, footerLogo: "off" }, locale, role);

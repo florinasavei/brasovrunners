@@ -309,7 +309,7 @@ describe("§783 «Un singur ecuson» in the designer", () => {
   });
 });
 
-describe("§NNN «Logo-ul clubului jos, ca filigran» in the designer", () => {
+describe("§965 «Logo-ul clubului jos, ca filigran» in the designer", () => {
   const draw = (design = DEFAULT_BADGE_DESIGN, language: "ro" | "en" = "ro", dropped: Array<"footerLogo"> = []) =>
     html(() => BadgeDesignPanel({ eventId: EVENT, locale: language, design, dropped, sampleRole: ROLES[0].id, version: "abc" }), language);
   const select = (page: string) => /<select[^>]*name="badge\.design\.footerLogo"[^>]*>[\s\S]*?<\/select>/.exec(page)?.[0] ?? "";
