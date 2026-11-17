@@ -28,7 +28,7 @@ import { BADGE_LAYOUT, type BadgeLayout, type BadgeTextLine, badgeImageSize, bad
  * club's file as it is (`src/theme/pdf/logo.png`, blue on its own white ground, never recoloured); the
  * club's picture is handed in as an inline PNG by the route (`bib-pictures.ts`), because Satori reads no
  * WebP. Flexbox and absolute boxes only, the bundled Roboto. The same file is the pale watermark at the
- * writing area's foot when the design asks for it (§NNN), at the layout's box and opacity.
+ * writing area's foot when the design asks for it (§965), at the layout's box and opacity.
  */
 
 /** The paper's edge, drawn on the screen only: the printed badge has a dashed cut round it instead. */
@@ -188,7 +188,7 @@ export function badgeMarkup(input: BadgeImageInput, logoSrc: string) {
       {layout.categoryLine ? lineBox(layout.categoryLine, roleText, 700, { centre: true }, "badge-category") : null}
       {/* The free-text line (§776): the club's own words, small and centred under the role's band. */}
       {layout.freeLine ? lineBox(layout.freeLine, COLOR.ink, 400, { centre: true }, "badge-free") : null}
-      {/* «Logo-ul clubului jos, ca filigran» (§NNN): the header's lockup, pale, first in the writing area — the sheet's box and opacity. */}
+      {/* «Logo-ul clubului jos, ca filigran» (§965): the header's lockup, pale, first in the writing area — the sheet's box and opacity. */}
       {layout.footerLogo ? (
         // eslint-disable-next-line @next/next/no-img-element -- Satori draws the data URI
         <img

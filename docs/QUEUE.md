@@ -138,6 +138,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.56` | the club's logo as a pale watermark at the foot of the volunteers' badges («Logo-ul clubului jos, ca filigran») (§965) |
 | `BR-V4.55` | «Emailuri» as a column of the «Voluntari» and registrations lists: each person's three newest emails, for the Administrator (§960) · «Punctele planului»: the volunteers' points typed by hand on the plan — on the route or at the start–finish — with coordinates and a link to the map (§961) · a volunteer's type: «Tip» on the «Voluntari» list and the role's category on its badge (§962) · race-week bibs: a fourth emergency phone, blank bibs, elite bibs with the first name alone, once (§963) · «Note interne» on the «Voluntari» list say the words without the day, and a volunteer's note can be changed («Modifică nota», «Modifică») (§964) |
 | `BR-V4.54` | room between the route's profile and the emergency phones on the bib (§959) |
 | `BR-V4.53` | «Include programul evenimentului»: the organizers' message to an event's participants can carry the event's programme (§958) |

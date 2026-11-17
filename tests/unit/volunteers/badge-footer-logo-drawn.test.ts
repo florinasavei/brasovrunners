@@ -9,7 +9,7 @@ import { badgeImageLayout, badgeMarkup, renderBadgeImage } from "@/modules/volun
 import { badgeSheetOrder, renderBadgeSheet } from "@/modules/volunteers/badges/badges-pdf";
 
 /**
- * §NNN — «Logo-ul clubului jos, ca filigran» drawn (BR-REQ-050-02): with a level chosen, the sheet draws the club's lockup once on every
+ * §965 — «Logo-ul clubului jos, ca filigran» drawn (BR-REQ-050-02): with a level chosen, the sheet draws the club's lockup once on every
  * badge — a role's, a role under a category, «fără rol», the one badge for everyone — at the layout's box and the level's opacity, first in
  * the writing area, so «Nume:», the lines and the marker's area go over it; the picture's markup has the same lockup at the same box and
  * opacity, so the PDF and the PNG agree; off, neither draws it (the drawing of before is held whole in `badge-type-unchanged.test.ts`).
@@ -95,7 +95,7 @@ const byTestId = (nodes: Node[], id: string) => nodes.filter((node) => node.prop
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("§NNN the sheet draws the club's logo as a watermark", () => {
+describe("§965 the sheet draws the club's logo as a watermark", () => {
   const entries = [
     { role: ROLES[0], count: 2 },
     { role: ROLES[1], count: 1 },
@@ -154,7 +154,7 @@ describe("§NNN the sheet draws the club's logo as a watermark", () => {
   });
 });
 
-describe("§NNN the picture draws the same watermark", () => {
+describe("§965 the picture draws the same watermark", () => {
   it.each(LEVELS)("has the lockup at the layout's box and the %s level's opacity, before «Nume:», and the PDF puts it at the same place", async (level) => {
     for (const design of [{ ...DEFAULT_BADGE_DESIGN, footerLogo: level }, { ...DEFAULT_BADGE_DESIGN, mode: "perRole" as const, ...EXTRAS, size: "custom" as const, customWidthMm: 60, customHeightMm: 34, footerLogo: level }]) {
       for (const role of design.mode === "single" ? [null] : [...ROLES, null]) {

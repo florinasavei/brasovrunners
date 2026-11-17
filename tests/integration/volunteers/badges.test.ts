@@ -887,7 +887,7 @@ describe("§783 one badge for everyone, no role — the default", () => {
   });
 });
 
-describe("§NNN «Logo-ul clubului jos, ca filigran»", () => {
+describe("§965 «Logo-ul clubului jos, ca filigran»", () => {
   const sheet = (query: string) => sheetRoute.GET(new Request(`http://localhost/api/admin/events/${eventId}/badges?${query}`), { params: Promise.resolve({ id: eventId }) });
   const picture = (query: string) => previewRoute.GET(new Request(`http://localhost/api/admin/events/${eventId}/badges/preview?${query}`), { params: Promise.resolve({ id: eventId }) });
   const bytes = async (response: Response) => Buffer.from(await response.arrayBuffer());

@@ -30,7 +30,7 @@
  *    refused at the save (`badgeSizeRefusal`);
  * 5. **the coordinator's telephone**, one small line, when the club ticks it.
  *
- * With «Logo-ul clubului jos, ca filigran» (§NNN) the club's lockup is drawn large and pale at the foot of the
+ * With «Logo-ul clubului jos, ca filigran» (§965) the club's lockup is drawn large and pale at the foot of the
  * writing area, under everything written there (`badgeFooterLogoBox`); it takes no height, so no row moves.
  *
  * Every height is a share of the badge's content (`BADGE_LAYOUT`), so a larger badge is the same badge,
@@ -103,7 +103,7 @@ export const BADGE_NAME_MIN_WIDTH = 24 * MM;
 export const BADGE_MARKER_GAP = 2 * MM;
 
 /**
- * «Logo-ul clubului jos, ca filigran» (§NNN; the owner, 2026-11-17: «vreau ca la voluntari să pot pune logo-ul clubului în footer, dar
+ * «Logo-ul clubului jos, ca filigran» (§965; the owner, 2026-11-17: «vreau ca la voluntari să pot pune logo-ul clubului în footer, dar
  * transparent»): how visible the club's lockup is at the foot of every badge — «Fără», «Puțin vizibil», «Mediu», «Bine vizibil». `off`
  * draws nothing, and is what a design that never chose reads as.
  */
@@ -161,7 +161,7 @@ export const BADGE_LAYOUT = {
   /** The divider between the two areas: its inset from the writing area's top and foot, of the pad. */
   dividerInsetShare: 0.5,
   /**
-   * The club's logo as a watermark (§NNN): at most this share of the badge's width, and its room from the writing area's foot, of
+   * The club's logo as a watermark (§965): at most this share of the badge's width, and its room from the writing area's foot, of
    * the pad. Its top is never above the foot of «Nume:»'s line.
    */
   footerLogoWidthShare: 2 / 3,
@@ -316,11 +316,11 @@ export type BadgeLayoutChoice = BadgeSizeChoice & {
    * number, so every badge of a sheet is cut the same and the designer's crop box (`badgeRows(paper, design.showPhone)`) is true.
    */
   showPhone?: boolean;
-  /** «Logo-ul clubului jos, ca filigran» (§NNN): absent or `off` draws none. */
+  /** «Logo-ul clubului jos, ca filigran» (§965): absent or `off` draws none. */
   footerLogo?: BadgeFooterLogo;
 };
 
-/** The club's lockup as a watermark (§NNN): its box, in points from the paper's top left corner, and its opacity. */
+/** The club's lockup as a watermark (§965): its box, in points from the paper's top left corner, and its opacity. */
 export type BadgeFooterLogoBox = { left: number; top: number; width: number; height: number; opacity: number };
 
 /** Everything both renderers draw, in points from the paper's top left corner. */
@@ -370,7 +370,7 @@ export type BadgeLayout = {
   /** The telephone, centred in its row. */
   phoneLine: BadgeTextLine | null;
   /**
-   * «Logo-ul clubului jos, ca filigran» (§NNN): the club's lockup, centred across the badge at the foot of the writing area, at its level's
+   * «Logo-ul clubului jos, ca filigran» (§965): the club's lockup, centred across the badge at the foot of the writing area, at its level's
    * opacity — drawn first in that area, so «Nume:», the lines and the marker's area go over it. Absent while the design says `off`, so a
    * badge without it lays out exactly as it did.
    */
@@ -378,7 +378,7 @@ export type BadgeLayout = {
 };
 
 /**
- * Where the club's lockup is drawn as a watermark (§NNN), and how opaque: the one answer the sheet, the picture and so the print panel's
+ * Where the club's lockup is drawn as a watermark (§965), and how opaque: the one answer the sheet, the picture and so the print panel's
  * pictures draw, through `badgeLayout`. Null while the level is `off` (or absent).
  *
  * **It takes no height.** It is drawn inside the writing area's lower part — from the foot of «Nume:»'s line (its top, plus one line at
@@ -511,11 +511,11 @@ export function badgeLayout(choice: BadgeLayoutChoice, words: BadgeLayoutWords, 
         })()
       : null;
 
-  // The club's logo as a watermark (§NNN), in the writing area's lower part under «Nume:»'s line: it moves no row.
+  // The club's logo as a watermark (§965), in the writing area's lower part under «Nume:»'s line: it moves no row.
   const footerLogo = badgeFooterLogoBox(choice.footerLogo, { paper, writing, pad, name: { top: nameTop, size: nameSize } });
 
   // The category's own line is a key only when there is one: a badge without it is the very object it was (§962).
-  // So is the watermark, which is absent while the design says `off` (§NNN).
+  // So is the watermark, which is absent while the design says `off` (§965).
   return { paper, content, header, role, free, writing, phone, pad, logo, title, label, roleLine, ...(categoryLine ? { categoryLine } : {}), freeLine, name, line, marker, phoneLine, ...(footerLogo ? { footerLogo } : {}) };
 }
 

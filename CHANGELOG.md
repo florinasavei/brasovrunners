@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.56-2026-11-17
+
+- **The club's logo as a watermark on the volunteers' badges** — «Logo-ul clubului jos, ca filigran» in the badge designer puts the club's logo, large and pale, at the bottom of every badge under «Nume:», «Puțin vizibil», «Mediu» or «Bine vizibil»; the name written in marker reads over it, the preview shows it before the save, and nothing else on the badge moves. §965.
 ## BR-V4.55-2026-11-17
 
 - **«Emailuri» on the «Voluntari» and registrations lists** — for an Administrator a column says each person's three newest emails: which email, when it left and what became of it («așteaptă», «a plecat», «livrat», «refuzat», «eșuat»), then «și încă N emailuri» to the person's own «Emailuri», open, and «niciun email» for somebody never emailed; the Organizer's lists are as before. With the column drawn, the registrations table is wider than a 1858-px screen and scrolls under its pinned verbs; unticking «Emailuri» under «Coloane» fits it again. §960.
