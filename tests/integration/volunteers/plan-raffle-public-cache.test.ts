@@ -141,7 +141,7 @@ describe("§953 the organizers' own marks leave the public cache as it was", () 
 
   it("the presses themselves — the plan's form, the two ticks of the list — tell only their own backoffice page", async () => {
     const plan = `/ro/admin/events/${eventId}/plan-voluntari`;
-    // Back to the point, open, on «Pe puncte» (§NNN) — the address carries the view; the page it refreshes is the plan's path.
+    // Back to the point, open, on «Pe puncte» (§974) — the address carries the view; the page it refreshes is the plan's path.
     const atPoint = `${plan}?view=points&open=${pointId}#point-${pointId}`;
     expect(await pressed(placeVolunteerAction(form({ checkpointId: pointId, at: pointId })))).toBe(atPoint);
     expect(await pressed(placeVolunteerAction(form({ checkpointId: "", at: pointId })))).toBe(atPoint);

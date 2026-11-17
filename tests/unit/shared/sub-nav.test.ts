@@ -108,7 +108,7 @@ describe("§360 SubNav as the server renders it", () => {
   });
 });
 
-describe("§NNN a row that fits carries no script", () => {
+describe("§974 a row that fits carries no script", () => {
   it("leaves the scroller's island out of a row that is never wider than a phone (`fits`), and keeps it in every other", () => {
     const fitting = renderToStaticMarkup(createElement(SubNav, { label: "Cum vezi planul", items: ITEMS.slice(0, 2), fits: true }));
     // `SubNavCurrent` draws one hidden span inside the row; a row that fits draws none, and is the same row otherwise.
@@ -165,7 +165,7 @@ describe("§360 one look for every backoffice sub-navigation", () => {
     walk("src");
     expect(rows.sort()).toEqual(
       [
-        // «Tabel» and «Pe puncte», the two views of «Planul voluntarilor» (§NNN): a row that fits, with no scroller.
+        // «Tabel» and «Pe puncte», the two views of «Planul voluntarilor» (§974): a row that fits, with no scroller.
         "src/app/[locale]/admin/events/[id]/plan-voluntari/page.tsx",
         "src/app/[locale]/members-area/zone.tsx",
         "src/modules/content/gallery/ui/GallerySubNav.tsx",

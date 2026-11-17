@@ -102,7 +102,7 @@ import ColumnWidthsScript from "./ColumnWidthsScript";
  * hidden by CSS rather than chosen in JavaScript: the server cannot know the viewport, and
  * guessing it is how a desktop table gets shipped to a phone for one frame.
  *
- * ## A table on one page, and on paper (§NNN)
+ * ## A table on one page, and on paper (§974)
  *
  * Two things a list never asks and «Planul voluntarilor»'s «Punctele, pe scurt» does — a handful
  * of rows on a page that is printed. `paged={false}` draws no rows-per-page links and no pager:
@@ -202,12 +202,12 @@ type Props<Row> = {
    */
   rowId?: (row: Row) => string;
   /**
-   * Whether the list pages through its address (§NNN): on by default. Off for a table whose every row is on its one page —
+   * Whether the list pages through its address (§974): on by default. Off for a table whose every row is on its one page —
    * no rows-per-page links and no pager under it; `query` and `total` then say that one page.
    */
   paged?: boolean;
   /**
-   * The table on paper too (§NNN): printed, the wide table whatever the sheet's width and never the phone's blocks, and
+   * The table on paper too (§974): printed, the wide table whatever the sheet's width and never the phone's blocks, and
    * nothing to press. For a page printed as a sheet; off by default, where a list prints as the browser lays it out.
    */
   printable?: boolean;
@@ -339,7 +339,7 @@ const HEADINGS = {
 const TABLE_SX = { ...RESIZED, ...PINNED, ...HEADINGS } as const;
 
 /**
- * A `printable` table on paper (§NNN). The wide frame is drawn — after its own `display`, whose breakpoints the sx writes
+ * A `printable` table on paper (§974). The wide frame is drawn — after its own `display`, whose breakpoints the sx writes
  * first, so on a sheet narrower than `md` this rule is the later one — and the phone's blocks and their hints are not.
  * Nothing to press is printed: a column's edge, «Coloane» and the widths' reset (the islands' own marks), the page sizes and
  * the pager.
@@ -660,7 +660,7 @@ export default function AdminTable<Row>({
           {!rowActions && columnMenu}
         </Stack>
 
-        {/* The page sizes: none on a table whose every row is on its one page (`paged`, §NNN). */}
+        {/* The page sizes: none on a table whose every row is on its one page (`paged`, §974). */}
         {paged && (
           <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1, ...(printable ? OFF_PAPER : {}) }}>
             <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>

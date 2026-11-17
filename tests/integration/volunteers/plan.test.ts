@@ -29,7 +29,7 @@ import { planPointBar, planPointsOf, planSummaryOf } from "../../helpers/volunte
  * - a point taken off the route frees its people;
  * - the plan reads the points in the route's order with their people by name, everybody at no point under them, and never a
  *   cancelled person;
- * - the page draws it — on «Pe puncte», a fold a point (§NNN) — with «Pune aici» offering only who stands at no point and
+ * - the page draws it — on «Pe puncte», a fold a point (§974) — with «Pune aici» offering only who stands at no point and
  *   «Scoate» on everybody placed, and the «Voluntari» list says each person's point and links to the plan.
  *
  * And what the review of 2026-11-16 asked of it (§953, amending §949): no press of the plan queues an email, for people who
@@ -360,7 +360,7 @@ describe("§949 the plan's page", () => {
   it("draws each point with its people, their number, telephone and roles, and offers only who stands at no point", async () => {
     await place(staff.ADMIN!, people.ana, points.junction);
     await place(staff.ADMIN!, people.dan, points.water);
-    // «Pe puncte» (§NNN): the points, each a fold of its own.
+    // «Pe puncte» (§974): the points, each a fold of its own.
     const page = await planPage({ view: "points" });
 
     expect(page).toContain(ro.Admin.volunteers.plan.title);
@@ -420,7 +420,7 @@ describe("§949 the plan's page", () => {
     await db.update(eventVolunteers).set({ phone: "+40 (700) 000-002" }).where(eq(eventVolunteers.id, people.dan));
     await place(staff.ADMIN!, people.ana, points.junction);
     await place(staff.ADMIN!, people.dan, points.water);
-    // «Pe puncte» (§NNN): the points' folds and «Fără punct» under them, everything from the plan's list on.
+    // «Pe puncte» (§974): the points' folds and «Fără punct» under them, everything from the plan's list on.
     const page = await streamed(await planElement({ view: "points" }));
     const telLinks = (part: string) => [...part.matchAll(/<a[^>]*data-testid="plan-person-phone"[^>]*>|<a[^>]*href="tel:[^"]*"[^>]*>/g)].map((match) => match[0]);
     const cards = page.slice(page.indexOf('id="plan-list"'));
@@ -430,7 +430,7 @@ describe("§949 the plan's page", () => {
     // Ana and Dan at their points, Ion under them; Zoe has no number.
     expect(links.map((link) => /href="([^"]*)"/.exec(link)?.[1])).toEqual(["tel:+40700000001", "tel:+40700000002", "tel:+40700000001"]);
     expect(telLinks(page)).toHaveLength(links.length);
-    // «Tabel» (§NNN) dials the people placed at a point too: Ana and Dan, the same digits, in its wide rows and again in each
+    // «Tabel» (§974) dials the people placed at a point too: Ana and Dan, the same digits, in its wide rows and again in each
     // one's phone block — and Ion under it, at no point.
     const tableView = await streamed(await planElement());
     const table = tableView.slice(tableView.indexOf('data-testid="plan-table-section"'), tableView.indexOf('data-testid="plan-picture-section"'));
@@ -496,7 +496,7 @@ describe("§949 the plan's page", () => {
   });
 
   it("puts a person at a point and takes them off from the page's forms, coming back to that point, open, on «Pe puncte»", async () => {
-    // The page's forms carry the view they were drawn in (§NNN), «Pe puncte» for a point's; the point comes back open.
+    // The page's forms carry the view they were drawn in (§974), «Pe puncte» for a point's; the point comes back open.
     const atWater = `/ro/admin/events/${raceId}/plan-voluntari?view=points&open=${points.water}#point-${points.water}`;
     expect(await press({ view: "points", volunteerId: people.ion, checkpointId: points.water, at: points.water })).toBe(atWater);
     expect((await rowOf(people.ion)).checkpointId).toBe(points.water);
@@ -513,7 +513,7 @@ describe("§949 the plan's page", () => {
   });
 
   it("brings a refused press back to the page's alert, where its sentence is — never to a point's anchor (§953)", async () => {
-    // In the view the press came from: a point's press, with no view in its form, is «Pe puncte»'s (§NNN).
+    // In the view the press came from: a point's press, with no view in its form, is «Pe puncte»'s (§974).
     // The point the press was made on stays open under the alert (`open=`); the page opens nothing for a point no longer there.
     const alert = (code: string, at: string) => `/ro/admin/events/${raceId}/plan-voluntari?view=points&open=${at}&planError=${code}#admin-alert`;
 

@@ -36,7 +36,7 @@ import { openFold } from "./support/fold";
  * «Fără punct». The rules of each press are `tests/integration/volunteers/plan-points.test.ts` and
  * `plan-points-screens.test.ts`.
  *
- * And the two views (§NNN; the owner, 2026-11-17: «aș vrea să văd punctele ca și tabel, mai ales pe traseu», then of the
+ * And the two views (§974; the owner, 2026-11-17: «aș vrea să văd punctele ca și tabel, mai ales pe traseu», then of the
  * page's long run of cards: «vreau secțiuni colapsabile aici la plan voluntari că nu mai înțeleg nimic: de fapt tabel sau mai
  * multe views»): «Tabel», the default, is «Punctele, pe scurt» — every point in one table, a row a point on a desktop, a block
  * a point on a 320-pixel phone, the route by kilometre and then the start–finish, the people with their telephones,
@@ -188,15 +188,15 @@ const mailSection = (page: Page) => ({
   again: page.getByTestId("plan-mail-form").locator('input[name="again"]'),
 });
 
-/** The address of the plan's page, and of one of its views (§NNN). */
+/** The address of the plan's page, and of one of its views (§974). */
 const planPath = (eventId: string) => `/ro/admin/events/${eventId}/plan-voluntari`;
 /** An address of the plan that a press came back to, as a pattern: the view, what it opened, where it landed. */
 const backTo = (eventId: string, query: string, hash: string) => new RegExp(`${planPath(eventId)}\\?${query}#${hash}$`);
 
-/** «Trimite fiecăruia punctul lui» is a fold (§NNN): opened the way a person does before anything in it is read or pressed. */
+/** «Trimite fiecăruia punctul lui» is a fold (§974): opened the way a person does before anything in it is read or pressed. */
 const openMail = (page: Page) => openFold(page.getByTestId("plan-mail-section"));
 
-/** One of the two views' links (§NNN), «Tabel» or «Pe puncte». */
+/** One of the two views' links (§974), «Tabel» or «Pe puncte». */
 const viewLink = (page: Page, name: "Tabel" | "Pe puncte") => page.getByTestId("plan-views").getByRole("link", { name, exact: true });
 
 /** «Pe puncte», by its link: a plain address, the whole page drawn again. */
@@ -206,7 +206,7 @@ async function toPoints(page: Page, eventId: string) {
   await hydrated(page);
 }
 
-/** One group fold of «Pe puncte» (§NNN) — «Pe traseu» or «La start–finish» — and the points drawn in it. */
+/** One group fold of «Pe puncte» (§974) — «Pe traseu» or «La start–finish» — and the points drawn in it. */
 const planGroup = (page: Page, group: "startFinish" | "route") => page.locator(`details[data-testid="plan-group"][data-group="${group}"]`);
 
 /** A point of «Pe puncte» by the name on its bar — its own fold, inside its group's. */
@@ -236,7 +236,7 @@ async function openPlanAndTellTheTwo(page: Page, seeded: Awaited<ReturnType<type
   await hydrated(page);
   const { section, counts, send, again } = mailSection(page);
 
-  // ---- The section: a fold, closed, its bar saying how many it would tell (§NNN); open, the four numbers and one button a
+  // ---- The section: a fold, closed, its bar saying how many it would tell (§974); open, the four numbers and one button a
   // thumb can press — inside the screen --------------------------------------------------------------------------------
   await expect(section.getByRole("heading", { level: 3, name: "Trimite fiecăruia punctul lui" })).toBeVisible();
   await expect(section).not.toHaveAttribute("open", "");
@@ -323,7 +323,7 @@ test.describe("§956 «Trimite fiecăruia punctul lui» on «Planul voluntarilor
     await expect(water.getByTestId("plan-point-line")).toHaveText("5,5 km · 1 voluntar");
     await water.getByTestId("plan-place-select").selectOption({ label: radu.name });
     await water.getByTestId("plan-place").click();
-    // Back to the point, open, in its open group (§NNN).
+    // Back to the point, open, in its open group (§974).
     await expect(page).toHaveURL(backTo(eventId, `view=points&open=${points.water}`, `point-${points.water}`), { timeout: 30_000 });
     await toastSays(page, "Stă la punctul ales: apare în planul voluntarilor.");
     await hydrated(page);
@@ -464,7 +464,7 @@ test.describe("§961 «Punctele planului» on «Planul voluntarilor»", () => {
     await hydrated(page);
 
     // ---- The plan as seeded, on «Pe puncte»: two points on the route, none at the start–finish, Radu at no point — each
-    // group a closed fold saying how many points and people it holds (§NNN) --------------------------------------------
+    // group a closed fold saying how many points and people it holds (§974) --------------------------------------------
     const summary = page.getByTestId("plan-summary");
     const startFinish = planGroup(page, "startFinish");
     const route = planGroup(page, "route");
@@ -514,7 +514,7 @@ test.describe("§961 «Punctele planului» on «Planul voluntarilor»", () => {
     await expect(atStartFinish).toBeChecked();
     await expect(startFinish.getByTestId("plan-point")).toHaveCount(0);
     // Written as Google Maps copies them, the point is added: back to the fold, open, the form empty for the next one — and
-    // the new point drawn open, in its open group (§NNN).
+    // the new point drawn open, in its open group (§974).
     await coordinates.fill("45.64271, 25.58871");
     await add.click();
     await expect(page).toHaveURL(new RegExp(`${plan}\\?view=points&open=[0-9a-f-]{36}&saved=planPointAdded#plan-points$`), { timeout: 30_000 });
@@ -592,7 +592,7 @@ test.describe("§961 «Punctele planului» on «Planul voluntarilor»", () => {
     await expect(spring.getByTestId("plan-person-name")).toHaveText([ana.name]);
     await expect(summary).toHaveText("1 voluntar la start–finish · 2 voluntari pe traseu · 0 voluntari fără punct · 1 punct fără nimeni");
 
-    // ---- «Modifică punctul»: the pencil (§NNN) — the route point renamed and moved along the route; its person stays ---
+    // ---- «Modifică punctul»: the pencil (§974) — the route point renamed and moved along the route; its person stays ---
     const springFold = spring.getByTestId("plan-point-edit");
     const pencil = springFold.locator(":scope > summary");
     // A thumb's square, the glyph alone, named and with its tooltip in the same words.
@@ -677,7 +677,7 @@ test.describe("§961 «Punctele planului» on «Planul voluntarilor»", () => {
   });
 });
 
-test.describe("§NNN «Tabel» and «Pe puncte» on «Planul voluntarilor»", () => {
+test.describe("§974 «Tabel» and «Pe puncte» on «Planul voluntarilor»", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("the Organizer reads every point in one table — a row a point on a desktop, a block a point on a phone —, prints it as the table, follows a name to that point on «Pe puncte», open, and prints that view with every fold open", async ({
@@ -729,7 +729,7 @@ test.describe("§NNN «Tabel» and «Pe puncte» on «Planul voluntarilor»", ()
     // then the start–finish; each point's people with the telephone to ring, «niciunul» where nobody stands; the total ----
     const shown = (testid: string) => section.getByTestId(testid).filter({ visible: true });
     await expect(shown("plan-table-point")).toHaveText(["Intersecția Stejeriș", "Izvorul rece", "Apă la cabană", "Kituri și numere"]);
-    // Every name in bold (§NNN).
+    // Every name in bold (§974).
     for (let index = 0; index < 4; index++) await expect(shown("plan-table-point").nth(index)).toHaveCSS("font-weight", "700");
     await expect(shown("plan-table-number")).toHaveText(["1", "2", "3"]);
     await expect(shown("plan-table-km")).toHaveText(["1,2", "3,4", "5,5", "start–finish"]);

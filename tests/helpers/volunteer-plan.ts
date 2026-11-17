@@ -32,7 +32,7 @@ export function planSummaryOf(page: string): string {
 }
 
 /*
-  The plan's page drawn as folds (§NNN): «Pe puncte» is two group folds of point folds, each point's pencil a fold inside it,
+  The plan's page drawn as folds (§974): «Pe puncte» is two group folds of point folds, each point's pencil a fold inside it,
   and the picture, «Adaugă un punct» and the email are folds too — a fold inside a fold, which a lazy `[\s\S]*?</details>`
   cuts at the inner one's end. These read an element whole, its nested twins counted.
 */

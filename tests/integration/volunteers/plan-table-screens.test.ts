@@ -14,7 +14,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { elementWith, type PlanRace, planPointsOf, planSummaryOf, seedPlanRace } from "../../helpers/volunteer-plan";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-041-01, BR-REQ-060-01 — «Punctele, pe scurt», the view «Tabel» of «Planul voluntarilor» (the
+ * §974, BR-REQ-050-02, BR-REQ-041-01, BR-REQ-060-01 — «Punctele, pe scurt», the view «Tabel» of «Planul voluntarilor» (the
  * owner, 2026-11-17, four days before the race: «aș vrea să văd punctele ca și tabel, mai ales pe traseu»), rendered from a
  * real database, in Romanian and in English:
  *
@@ -166,7 +166,7 @@ const printOf = (page: string, names: readonly string[]) =>
 /** Whether a class sets a 44-pixel height on screen. */
 const tallClass = (page: string, names: readonly string[]) => names.some((name) => new RegExp(`\\.${name}\\{[^}]*min-height:44px`).test(rulesOf(page)));
 
-describe("§NNN «Punctele, pe scurt»: the plan's points as one table, the view «Tabel» of «Planul voluntarilor»", () => {
+describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view «Tabel» of «Planul voluntarilor»", () => {
   it("stands under the title, the intro and the views, before the picture, the builder and the email, under its heading and the house's list glyph, with six columns", async () => {
     await fullPlan();
     for (const locale of ["ro", "en"] as const) {

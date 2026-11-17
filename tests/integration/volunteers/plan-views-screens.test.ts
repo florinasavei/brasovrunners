@@ -17,7 +17,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { drawnOpen, elementWith, type PlanRace, planPointBar, planPointsOf, seedPlanRace, wholeElementAt } from "../../helpers/volunteer-plan";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-041-01, BR-REQ-060-01 — «Planul voluntarilor» in two views and in folds (the owner, 2026-11-17, of
+ * §974, BR-REQ-050-02, BR-REQ-041-01, BR-REQ-060-01 — «Planul voluntarilor» in two views and in folds (the owner, 2026-11-17, of
  * the page's long run of cards: «vreau secțiuni colapsabile aici la plan voluntari că nu mai înțeleg nimic: de fapt tabel sau mai
  * multe views»; «și în loc de „modifică punctul” pune doar buton de edit»; «și vreau ca denumirea punctului să fie cu bold și mai
  * vizibilă»), rendered from a real database, in Romanian and in English:
@@ -172,7 +172,7 @@ const screenOf = (page: string, names: readonly string[]) => names.flatMap((name
 /** Every form of a page, each whole. */
 const formsOf = (page: string) => [...page.matchAll(/<form\b/g)].map((match) => wholeElementAt(page, match.index));
 
-describe("§NNN «Tabel» and «Pe puncte»: two views by a link each", () => {
+describe("§974 «Tabel» and «Pe puncte»: two views by a link each", () => {
   it("draws the two links under the intro — plain links, «Tabel» by default and marked, no script — in both languages", async () => {
     for (const locale of ["ro", "en"] as const) {
       state.locale = locale;
@@ -260,7 +260,7 @@ describe("§NNN «Tabel» and «Pe puncte»: two views by a link each", () => {
   });
 });
 
-describe("§NNN «Pe puncte»: the groups and the points as folds", () => {
+describe("§974 «Pe puncte»: the groups and the points as folds", () => {
   it("folds the route first, then the start–finish, each closed and saying how many points and how many people", async () => {
     await withStartFinish();
     for (const locale of ["ro", "en"] as const) {
@@ -367,7 +367,7 @@ describe("§NNN «Pe puncte»: the groups and the points as folds", () => {
   });
 });
 
-describe("§NNN «Modifică punctul»: the pencil", () => {
+describe("§974 «Modifică punctul»: the pencil", () => {
   it("is a 44-pixel glyph alone, named «Modifică punctul: …» and with that tooltip, opening the same form — the removal still inside it", async () => {
     const { kits } = await withStartFinish();
     for (const locale of ["ro", "en"] as const) {
@@ -405,7 +405,7 @@ describe("§NNN «Modifică punctul»: the pencil", () => {
   });
 });
 
-describe("§NNN the folds under the plan: the picture, «Adaugă un punct», the email", () => {
+describe("§974 the folds under the plan: the picture, «Adaugă un punct», the email", () => {
   it("draws each as a closed fold saying what it holds, in both views and both languages", async () => {
     await withStartFinish();
     for (const locale of ["ro", "en"] as const) {
@@ -460,7 +460,7 @@ describe("§NNN the folds under the plan: the picture, «Adaugă un punct», the
   });
 });
 
-describe("§NNN the way back: every form carries its view, every press comes back to it", () => {
+describe("§974 the way back: every form carries its view, every press comes back to it", () => {
   it("puts the view each form was drawn in into every form of the page", async () => {
     await withStartFinish();
     await place(race.people.radu, "");
@@ -537,7 +537,7 @@ describe("§NNN the way back: every form carries its view, every press comes bac
   });
 });
 
-describe("§NNN on paper", () => {
+describe("§974 on paper", () => {
   it("prints the groups and the points open with no arrow, the views and the builders never, and a plan without a picture without its fold", async () => {
     await withStartFinish();
     const page = await planPage({ view: "points" }, race.raceId, true);

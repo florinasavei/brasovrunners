@@ -5,7 +5,7 @@ import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminT
 import { withClientWords } from "../../helpers/client-words";
 
 /**
- * BR-REQ-041-01, `DECISIONS.md` §NNN — a table on one page, and on paper: the two things «Planul voluntarilor»'s
+ * BR-REQ-041-01, `DECISIONS.md` §974 — a table on one page, and on paper: the two things «Planul voluntarilor»'s
  * «Punctele, pe scurt» asks of the house's table (the owner, 2026-11-17: «aș vrea să văd punctele ca și tabel»).
  *
  * - `paged={false}`: every row is on the one page, so no rows-per-page links and no pager — they would only reload it;
@@ -64,7 +64,7 @@ function partsOf(html: string) {
   };
 }
 
-describe("§NNN a table on one page", () => {
+describe("§974 a table on one page", () => {
   it("pages through its address by default: the page sizes, and a pager past one page", () => {
     const html = render();
     expect(html).toContain("Rânduri pe pagină");
@@ -85,7 +85,7 @@ describe("§NNN a table on one page", () => {
   });
 });
 
-describe("§NNN a table on paper", () => {
+describe("§974 a table on paper", () => {
   it("prints a printable table as a table: the wide frame whatever the sheet's width, never the blocks or their hints, nothing to press", () => {
     const html = render({ printable: true, paged: false });
     const css = cssOf(html);

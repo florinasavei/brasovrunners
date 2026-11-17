@@ -201,7 +201,7 @@ export const PANEL_GLYPHS = {
   badgeCut: ContentCutIcon,
   // «Puncte pe traseu» (§757): the points of the route, a pin on the ground.
   checkpoints: PinDropIcon,
-  // «La start–finish» on «Planul voluntarilor» (§961, §NNN): the points at the start and the finish line — the line's flag.
+  // «La start–finish» on «Planul voluntarilor» (§961, §974): the points at the start and the finish line — the line's flag.
   finishLine: FlagIcon,
   // The route's elevation profile (§802): the card's preview «Așa apare pe pagină» and the tick on each point — the ground's own outline.
   routeProfile: TerrainIcon,

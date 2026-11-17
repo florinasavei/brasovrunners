@@ -29,7 +29,7 @@ import { drawnOpen, elementWith, type PlanRace, seedPlanRace } from "../../helpe
  *   that leaves and to how many, in both languages;
  * - «Trimite din nou tuturor» is a box in that question while somebody already knows their point, and the button itself once
  *   everybody does; with nobody to write to there is no button, and the sentence that says why;
- * - the section is a fold (§NNN) in both views, closed, saying on its closed line how many its press would tell;
+ * - the section is a fold (§974) in both views, closed, saying on its closed line how many its press would tell;
  * - the action asks the capability at its own door, hands the box to the service, comes back to the plan — in the view it was
  *   pressed in — at its fold, open, with a toast that states how many messages were queued (and how many people have no
  *   address), or with the refusal's code, which the page says in words; every row it queues carries the press's cause and
@@ -203,7 +203,7 @@ async function press(fields: Record<string, string> = {}): Promise<string> {
   return state.redirected[0];
 }
 const toasted = () => state.flashed.map((value) => decodeFlash(value));
-/** Back to the fold, open, in the view the press came from — «Tabel» for a form that names none (§NNN). */
+/** Back to the fold, open, in the view the press came from — «Tabel» for a form that names none (§974). */
 const back = (view = "table") => `/ro/admin/events/${race.raceId}/plan-voluntari?view=${view}&saved=planPointsSent#plan-mail`;
 /** A refusal's way back: the page's alert, in that view. */
 const refusedAt = (code: string, eventId = race.raceId, view = "table") => `/ro/admin/events/${eventId}/plan-voluntari?view=${view}&planError=${code}#admin-alert`;
@@ -352,7 +352,7 @@ describe("§956 the plan's page: «Trimite fiecăruia punctul lui» and its four
       };
     };
     expect(rulesOf("plan-mail-section").print).toMatch(/display:none/);
-    // The section has its own place to come back to: a fold (§NNN), closed until a press of it comes back.
+    // The section has its own place to come back to: a fold (§974), closed until a press of it comes back.
     expect(tagOf("plan-mail-section")).toMatch(/^<details[^>]*id="plan-mail"/);
     expect(tagOf("plan-mail-section")).not.toContain(' open=""');
     // The press is for a thumb: 44 pixels at least (AGENTS.md §18.5).

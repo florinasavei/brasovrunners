@@ -76,7 +76,7 @@ const PHONE_LINK_SX = { display: "inline-flex", alignItems: "center", ...TAP_TAR
 const dialOf = (phone: string) => `tel:${phone.replace(/[^\d+]/g, "")}`;
 
 /**
- * A point's name in «Punctele, pe scurt» (§NNN): in bold, as everywhere on the page (the owner: «vreau ca denumirea punctului să
+ * A point's name in «Punctele, pe scurt» (§974): in bold, as everywhere on the page (the owner: «vreau ca denumirea punctului să
  * fie cu bold și mai vizibilă»), the link to its point on «Pe puncte», a thumb's 44 pixels like the telephone beside it, and
  * on paper the name as text. A long name breaks inside the cell rather than widening the table.
  */
@@ -130,7 +130,7 @@ const NESTED_FOLD_SX = {
 } as const;
 
 /**
- * On paper a group and a point print open, their arrows left off (§NNN): the sheet is the whole plan whatever the screen had
+ * On paper a group and a point print open, their arrows left off (§974): the sheet is the whole plan whatever the screen had
  * folded — the body the browser hides in a closed fold (`::details-content`) is shown. A browser that has no such part prints
  * the folds as they stand on the screen.
  */
@@ -156,7 +156,7 @@ const PICTURE_ON_PAPER = {
 } as const;
 
 /**
- * «Modifică punctul» (§NNN; the owner: «și în loc de „modifică punctul” pune doar buton de edit»): the house's pencil, a
+ * «Modifică punctul» (§974; the owner: «și în loc de „modifică punctul” pune doar buton de edit»): the house's pencil, a
  * 44-pixel square at the right of the point's people — a native fold whose bar is the glyph alone, so it opens without a
  * script —, and open, the point's form under it across the whole row, the pencil still at its right. Never on paper.
  */
@@ -196,10 +196,10 @@ const PENCIL_FOLD_SX = {
  * of an address that does not exist (BR-REQ-060-01), and the service refuses them again. Nothing on it is public, and
  * placing, moving or taking off a person emails nobody: it is the organizers' own plan.
  *
- * **Two views, and folds (§NNN; the owner, 2026-11-17, of the page's long run of cards: «vreau secțiuni colapsabile aici la
+ * **Two views, and folds (§974; the owner, 2026-11-17, of the page's long run of cards: «vreau secțiuni colapsabile aici la
  * plan voluntari că nu mai înțeleg nimic: de fapt tabel sau mai multe views»).** Under the intro, two links — «Tabel», the
  * default, and «Pe puncte» (`?view=table|points`, `plan-address.ts`), the current one marked —, plain addresses drawn on the
- * server. «Tabel» is «Punctele, pe scurt» (§NNN; the owner: «aș vrea să văd punctele ca și tabel, mai ales pe traseu»): one
+ * server. «Tabel» is «Punctele, pe scurt» (§974; the owner: «aș vrea să văd punctele ca și tabel, mai ales pe traseu»): one
  * table of every point — the route's by kilometre, then the start–finish's —, its number, its name linking to that point
  * on «Pe puncte», its kilometre, where it is, its people with their telephones and how many, and under it the people placed
  * and the points with nobody; the house's table (`AdminTable`: a block a point on a phone), printed as a table. «Pe puncte»
@@ -260,7 +260,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   const query = await searchParams;
   // The action's language-neutral code (AGENTS.md §14.3) becomes a sentence here; an unknown code says nothing.
   const errorCode = query.planError && /^[A-Z_]{1,48}$/.test(query.planError) && t.has(`errors.${query.planError}`) ? query.planError : null;
-  // The view the address names (§NNN), «Tabel» when it names none; the point the last press changed, which «Pe puncte» draws
+  // The view the address names (§974), «Tabel» when it names none; the point the last press changed, which «Pe puncte» draws
   // open in its open group — only a point of this plan; and the fold the last press saved in.
   const view = planViewOf(query.view);
   const opened = query.open ?? "";
@@ -292,7 +292,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   const planPath = getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id } } });
 
   /*
-    «Punctele, pe scurt» (§NNN; the owner, 2026-11-17: «aș vrea să văd punctele ca și tabel, mai ales pe traseu»), the view
+    «Punctele, pe scurt» (§974; the owner, 2026-11-17: «aș vrea să văd punctele ca și tabel, mai ales pe traseu»), the view
     «Tabel»: every point of the plan as one table — the route's first, the start–finish's after — read from the plan «Pe
     puncte» draws, so a row says exactly what its point says. The route's points come in the plan's one order
     (`listPlanPoints`): by kilometre, and numbered in that order, so by number too; the start–finish points as the page lists
@@ -398,7 +398,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   const mayChangePicture = canManageVolunteers(actor.role);
   // Whether this environment can take a picture at all (`STORAGE_MODE`): without a store the page says so and offers no upload.
   const storeHere = isStorageConfigured();
-  // Every form of the page carries the page's language, the event and the view it is pressed in (§NNN): its way back.
+  // Every form of the page carries the page's language, the event and the view it is pressed in (§974): its way back.
   const hidden = (
     <>
       <input type="hidden" name="uiLocale" value={locale} />
@@ -467,7 +467,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   const mailState = mailConfirm === null ? t("volunteers.plan.mail.toTellNone") : againOnly ? t("volunteers.plan.mail.toTellAllTold") : t(`volunteers.plan.mail.toTell.${countForm(mail.toWrite, locale)}`, { count: mail.toWrite });
 
   /**
-   * A fold's bar on this page (§NNN): the house's boxed fold (`BOXED_DISCLOSURE_SX`), its glyph and its words as a level-3
+   * A fold's bar on this page (§974): the house's boxed fold (`BOXED_DISCLOSURE_SX`), its glyph and its words as a level-3
    * heading — the summary keeps the native fold, so it opens without a script —, and on the same line, quieter, what the fold
    * holds, readable while it is shut (`Panel`'s `aside`).
    */
@@ -517,7 +517,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   };
 
   /**
-   * One point of the plan on «Pe puncte», in either group (§NNN): a fold of its own, closed unless the last press changed it.
+   * One point of the plan on «Pe puncte», in either group (§974): a fold of its own, closed unless the last press changed it.
    * Its bar is the point's name in bold at a level-3 heading's size — numbered on the route —, then its kilometre or
    * «start–finish» and how many stand there; open, what it is, where it is, its people with «Scoate», the pencil of
    * «Modifică punctul» at their right, and «Pune aici». The id (`point-<id>`) is the fold's, so an address that names the
@@ -603,7 +603,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
                 )}
               </Box>
 
-              {/* «Modifică punctul» (§961, §NNN): the pencil alone, named for a reader who does not see it and in its tooltip. A
+              {/* «Modifică punctul» (§961, §974): the pencil alone, named for a reader who does not see it and in its tooltip. A
                   point added here is changed whole, its kind included; of an editor's point only where it is: its name and
                   kilometre are public, and are the editor's. A refused save lands at the page's alert with its code, as every
                   press of this page (§953). */}
@@ -732,7 +732,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   };
 
   /**
-   * One group of «Pe puncte» (§NNN): «Pe traseu», the route's points by kilometre, or «La start–finish». A fold, closed unless
+   * One group of «Pe puncte» (§974): «Pe traseu», the route's points by kilometre, or «La start–finish». A fold, closed unless
    * it holds the point the last press changed; its closed line says how many points and how many people. A group with no
    * point says so in one quiet line inside, and stays off the paper whole: a heading with nothing under it is no plan.
    */
@@ -771,7 +771,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   );
 
   /*
-    «Tabel» (§NNN): «Punctele, pe scurt», the whole plan at a glance — the house's table, a block a point on a phone, every row
+    «Tabel» (§974): «Punctele, pe scurt», the whole plan at a glance — the house's table, a block a point on a phone, every row
     on the one page. On paper it is the plan's summary sheet, printed whole as a table, the first thing after the title; the
     map's links stay off it, the names and the telephones print as text. A plan with no point has no table: the empty state
     says how to add one.
@@ -814,7 +814,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
     );
 
   /*
-    «Pe puncte» (§NNN): the plan itself in two folds — the route's points by kilometre, numbered, then the start–finish's —,
+    «Pe puncte» (§974): the plan itself in two folds — the route's points by kilometre, numbered, then the start–finish's —,
     each point a fold of its own, under the four numbers of who stands where. On paper every group and every point prints
     open, the summary first. A press that deleted a point comes back here.
   */
@@ -881,7 +881,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
         </Typography>
       </Box>
 
-      {/* The two views (§NNN): plain links, the current one marked (`aria-current`), drawn on the server — the house's row of
+      {/* The two views (§974): plain links, the current one marked (`aria-current`), drawn on the server — the house's row of
           sub-tabs, which two short words never make wider than a phone (`fits`: no script to scroll it). Never on paper. */}
       <Box sx={NOT_ON_PAPER} data-testid="plan-views">
         <SubNav
@@ -899,7 +899,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
 
       {view === "table" ? tableView : pointsView}
 
-      {/* The plan as the organizers drew it (§952), a fold in both views (§NNN) whose closed line says whether there is one; on
+      {/* The plan as the organizers drew it (§952), a fold in both views (§974) whose closed line says whether there is one; on
           paper after the view's plan, the picture alone, open whatever the screen had folded — the fold's bar, its hint and
           every control stay off the sheet, so a plan with no picture prints as it did. A press on it comes back with it open. */}
       <Box
@@ -1015,7 +1015,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
           ))}
       </Box>
 
-      {/* «Adaugă un punct» (§961), a fold in both views (§NNN): where the organizers add the plan's own points by hand, one after
+      {/* «Adaugă un punct» (§961), a fold in both views (§974): where the organizers add the plan's own points by hand, one after
           another — open by itself on a plan with no point yet, the page's first work, and after a point it added. Never on the
           paper. A plain form and a Server Action: it works with scripts off, where the kilometre's box is simply there and not
           read for a point at the start–finish. A refusal comes back as the form's own state (§315): the box is named, what was
@@ -1078,7 +1078,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
         </Box>
       </Box>
 
-      {/* «Trimite fiecăruia punctul lui» (§956), a fold in both views (§NNN) whose closed line says how many its press would tell —
+      {/* «Trimite fiecăruia punctul lui» (§956), a fold in both views (§974) whose closed line says how many its press would tell —
           never on the paper. The numbers are the question's own, said inside too so the page answers «cine mai e de anunțat»
           before anything is pressed. A press that went through comes back with it open. */}
       <Box

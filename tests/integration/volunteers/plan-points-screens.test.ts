@@ -25,7 +25,7 @@ import { drawnOpen, elementWith, type PlanRace, planPointBar, planPointsOf, plan
  * §961, BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01 — «Punctele planului» on the page of «Planul voluntarilor», its three
  * Server Actions and the «Voluntari» list's «Punct» column, from a real database:
  *
- * - **the page**, in Romanian and in English: the fold «Adaugă un punct» under the picture's; on «Pe puncte» (§NNN) the
+ * - **the page**, in Romanian and in English: the fold «Adaugă un punct» under the picture's; on «Pe puncte» (§974) the
  *   points in two group folds — «Pe traseu», the numbered points, and «La start–finish», its points with no number and no
  *   kilometre —, each group's own empty line, the one empty state of a plan with no point, and the summary's four numbers;
  *   a point's coordinates with «Deschide pe hartă»; «doar pe plan» on a route point of the plan's own; the pencil of
@@ -254,9 +254,9 @@ async function pressed(press: () => Promise<unknown>): Promise<string> {
 }
 const toasted = () => state.flashed.map((value) => decodeFlash(value));
 const planPath = () => `/ro/admin/events/${race.raceId}/plan-voluntari`;
-/** A refused press of a point — the forms here post no view, and a point's press comes back to «Pe puncte» (§NNN). */
+/** A refused press of a point — the forms here post no view, and a point's press comes back to «Pe puncte» (§974). */
 const alertOf = (code: string, point?: string) => `${planPath()}?view=points${point ? `&open=${point}` : ""}&planError=${code}#admin-alert`;
-/** «Pe puncte», where the points are drawn (§NNN). */
+/** «Pe puncte», where the points are drawn (§974). */
 const POINTS = { view: "points" } as const;
 
 describe("§961 the plan's page: two groups, the summary, and the plan's own points", () => {
@@ -509,7 +509,7 @@ describe("§961 the plan's page: two groups, the summary, and the plan's own poi
       expect(page.indexOf('data-testid="plan-points-section"')).toBeLessThan(page.indexOf('data-testid="plan-mail-section"'));
       expect(tagOf(page, 'data-testid="plan-points-section"')).toContain('id="plan-points"');
 
-      // A fold (§NNN), its bar the words «Adaugă un punct» at a level-3 heading.
+      // A fold (§974), its bar the words «Adaugă un punct» at a level-3 heading.
       const builder = builderOf(page);
       expect(builder).toContain(`</svg>${escaped(words.addTitle)}</h3>`);
       const addForm = /<form[^>]*data-testid="plan-point-add-form"[\s\S]*?<\/form>/.exec(builder)![0];
@@ -567,7 +567,7 @@ describe("§961 the plan's page: two groups, the summary, and the plan's own poi
     expect(tall(page, 'data-testid="plan-point-map"')).toBe(true);
     expect(tall(page, 'data-testid="plan-point-add"')).toBe(true);
     expect(tall(page, 'data-testid="plan-point-save"')).toBe(true);
-    // The point's own bar, the pencil's square (§NNN) and the two radios' rows.
+    // The point's own bar, the pencil's square (§974) and the two radios' rows.
     const bar = classesOf(page, `id="point-${spring}"`);
     expect(bar.some((name) => new RegExp(`\\.${name}>summary\\{[^}]*min-height:44px`).test(rulesOf(page)))).toBe(true);
     const pencil = classesOf(page, 'data-testid="plan-point-edit"');
@@ -618,7 +618,7 @@ describe("§961 the plan's page: two groups, the summary, and the plan's own poi
 
 describe("§961 «Adaugă punctul»: the action", () => {
   it("adds a point of each kind, asked at the door, and comes back to its fold, open, with its toast — the form empty for the next", async () => {
-    // A form that names no view is «Tabel»'s, the page's default (§NNN): back to the fold, which the address opens.
+    // A form that names no view is «Tabel»'s, the page's default (§974): back to the fold, which the address opens.
     const back = `${planPath()}?view=table&saved=planPointAdded#plan-points`;
     expect(await pressed(() => addPlanPointAction(null, form({ place: "startFinish", name: "Kituri și numere", km: "", coordinates: PIATA })))).toBe(back);
     expect(toasted()).toEqual([{ kind: "success", key: "planPointAdded" }]);
@@ -722,7 +722,7 @@ describe("§961 «Salvează punctul» and «Șterge punctul»: the actions", () 
   it("saves a point of the plan's own and comes back to that point, open; a press that changes nothing says so", async () => {
     const spring = await ownPoint("route", "Izvor", "3,4");
     await place(race.people.radu, spring);
-    // A point's press comes back to «Pe puncte», the point drawn open (§NNN).
+    // A point's press comes back to «Pe puncte», the point drawn open (§974).
     const atSpring = `${planPath()}?view=points&open=${spring}#point-${spring}`;
     expect(await pressed(() => editPlanPointAction(form({ pointId: spring, place: "route", name: "Izvorul rece", km: "4,25", coordinates: PIATA })))).toBe(atSpring);
     expect(toasted()).toEqual([{ kind: "success", key: "planPointSaved" }]);

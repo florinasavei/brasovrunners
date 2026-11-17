@@ -22,7 +22,7 @@ import { eventIdOf, field, localeOf } from "@/app/[locale]/admin/events/[id]/vol
 import { PLAN_SAVED, planAddress, type PlanView, planViewOf } from "./plan-address";
 
 /**
- * The view a form of the page was posted from (§NNN): every form carries it (`view`), so every press — the ones that went
+ * The view a form of the page was posted from (§974): every form carries it (`view`), so every press — the ones that went
  * through and the refused — comes back to the view it was pressed in. A form that names none — a page opened before the
  * views — comes back to `fallback`: «Pe puncte» for a press on a point, the one view that draws points, «Tabel» otherwise.
  */
@@ -43,7 +43,7 @@ const refusedAt = (path: string, view: PlanView, code: string, point?: string) =
  * press before the page answers saves the same. The service asks for the role again (`canManageVolunteers`: the Organizer and the
  * Administrators, BR-REQ-060-01), holds the point to the event and audits the change. A press that went through comes back to
  * the plan at the point it was made on (`at`) — in the view it was pressed in, that point and its group drawn open (`open=`,
- * §NNN) —, its outcome in the toast. A refusal — the person cancelled meanwhile, the point taken off the route meanwhile, a
+ * §974) —, its outcome in the toast. A refusal — the person cancelled meanwhile, the point taken off the route meanwhile, a
  * role that may not — comes back to the page's alert (`#admin-alert`) with its code in the address (§953, the registrations
  * list's rule, §943): the alert is where the refusal's sentence is, at the top of a page that may be several screens long,
  * and a point deleted meanwhile has no anchor left to land on.
@@ -76,7 +76,7 @@ export async function placeVolunteerAction(form: FormData): Promise<void> {
  * A press on the plan's picture, start to finish (§952): the staff session and the capability, asked here by name at the door
  * of the action — whoever works the volunteers (`canManageVolunteers`: the Organizer and the Administrators, BR-REQ-060-01) —
  * before the service asks it again; then `press`, whose outcome becomes the toast; the way back is the plan, in the view the
- * press came from, at the picture's own fold, drawn open (`saved=`, §NNN) — or, refused, at the page's alert
+ * press came from, at the picture's own fold, drawn open (`saved=`, §974) — or, refused, at the page's alert
  * (`#admin-alert`) with the refusal's code in the address, where its sentence is (§953's rule for every press of this page).
  * A plain function of this file, never a verb a browser may call: only the two actions under it are exported.
  */
@@ -146,7 +146,7 @@ const AGAIN_FIELD = "again";
  * BR-REQ-060-01), before the service asks it again; the service queues the messages in one transaction and audits the press
  * with its counts, never a person. An email press (`notifications/press.ts`): every row it queues carries this cause, its
  * id and who pressed, and the toast after it says what left, to how many and when. The press comes back to the plan, in the
- * view it was pressed in, at its own fold, drawn open (`saved=`, §NNN) — the sentence saying how many messages were queued
+ * view it was pressed in, at its own fold, drawn open (`saved=`, §974) — the sentence saying how many messages were queued
  * (and how many people have no address) in the toast — or, refused, to the page's alert with the code in the address.
  */
 export async function sendVolunteerPointsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
@@ -201,7 +201,7 @@ function planPointBoxes(form: FormData) {
  * The capability is asked here by name, at the door (`canManageVolunteers`: the Organizer and the Administrators,
  * BR-REQ-060-01), before the service asks it again and holds what was typed to the rules. A refusal does not redirect: it
  * comes back as the form's own state (§315), so a wrong kilometre names its box and costs none of the others. A press that
- * went through comes back to its fold «Adaugă un punct», in the view it was pressed in, drawn open (`saved=`, §NNN), its
+ * went through comes back to its fold «Adaugă un punct», in the view it was pressed in, drawn open (`saved=`, §974), its
  * outcome in the toast and the form empty — the organizers add their points one after another; on «Pe puncte» the new point
  * is drawn open too, in its group (`open=`). It emails nobody and no public page reads the point.
  */
@@ -234,7 +234,7 @@ export async function addPlanPointAction(_previous: FormOutcome | null, form: Fo
  * are public, and are the editor's). The capability is asked here by name, at the door, and the service asks it again.
  *
  * A press that went through comes back to its point, in the view it was pressed in, the point and its group drawn open
- * (`open=`, §NNN), its outcome in the toast; a refused one — a name left empty, a kilometre that is no number, coordinates in
+ * (`open=`, §974), its outcome in the toast; a refused one — a name left empty, a kilometre that is no number, coordinates in
  * no shape read, the point deleted meanwhile, a role that may not — comes back to the page's alert (`#admin-alert`) with its
  * code in the address, as every press of this page does (§953). It emails nobody, and the people who stand at the point stay
  * there.

@@ -39,7 +39,7 @@ import { drawnOpen, elementWith, planPointBar, planPointsOf, planSummaryOf } fro
  * - the reference check counts it: the sweep keeps it, the pictures page's delete is refused and the list names the plan, and
  *   once it is taken off and old enough the sweep takes it;
  * - the Server Actions ask the capability at their own door, and say what happened;
- * - the page draws it in a fold of its own (§NNN) in both views, after the view's plan, saying on its closed line whether
+ * - the page draws it in a fold of its own (§974) in both views, after the view's plan, saying on its closed line whether
  *   there is one, a link to the whole picture around it, with «Schimbă poza» and «Șterge poza», in both languages; a press
  *   comes back with the fold open; on paper the picture is one piece, printed whatever the screen had folded, and the fold's
  *   bar and the controls are not there; with no picture the page reads as before, plus the upload;
@@ -538,7 +538,7 @@ describe("§952 a picture used as a plan's is the plan's (the reference check, �
 });
 
 describe("§952 the page's presses: «Încarcă poza planului», «Schimbă poza», «Șterge poza»", () => {
-  // Back to the picture's fold, open, in the view the press came from — «Tabel» for a form that names none (§NNN).
+  // Back to the picture's fold, open, in the view the press came from — «Tabel» for a form that names none (§974).
   const back = (view = "table") => `/ro/admin/events/${raceId}/plan-voluntari?view=${view}&saved=planPicture#plan-picture`;
   const refusedAt = (code: string) => `/ro/admin/events/${raceId}/plan-voluntari?view=table&planError=${code}#admin-alert`;
 
@@ -635,7 +635,7 @@ describe("§952 the page's presses: «Încarcă poza planului», «Schimbă poza
 describe("§952 the plan's page draws the picture", () => {
   it("reads as before with no picture, plus the upload", async () => {
     const page = await planPage();
-    // The plan as it was: its table, and on «Pe puncte» its points (§NNN).
+    // The plan as it was: its table, and on «Pe puncte» its points (§974).
     expect(page).toContain(ro.Admin.volunteers.plan.title);
     expect(page).toContain('data-testid="plan-table-section"');
     const points = await planPage({ view: "points" });
@@ -676,7 +676,7 @@ describe("§952 the plan's page draws the picture", () => {
     const { picture } = await readVolunteerPlan(db, staff.ADMIN!, raceId);
     const page = await planPage();
 
-    // After the view's plan — the table on «Tabel», the points on «Pe puncte» (§NNN) —, in its fold, which says it has one.
+    // After the view's plan — the table on «Tabel», the points on «Pe puncte» (§974) —, in its fold, which says it has one.
     const at = (needle: string) => page.indexOf(needle);
     expect(at('data-testid="plan-picture"')).toBeGreaterThan(at('data-testid="plan-table-section"'));
     const points = await planPage({ view: "points" });
@@ -761,7 +761,7 @@ describe("§952 the plan's page draws the picture", () => {
     const controls = elementWith(page, 'data-testid="plan-picture-controls"');
     for (const inside of ['data-testid="plan-picture-upload"', 'data-testid="image-quality"', 'data-testid="plan-picture-remove-form"']) expect(controls, inside).toContain(inside);
 
-    // The fold (§NNN) on paper: the picture alone, shown whether the fold is open or shut — its body the browser would hide
+    // The fold (§974) on paper: the picture alone, shown whether the fold is open or shut — its body the browser would hide
     // shown, its bar (the heading «Poza planului» and its closed line) and its frame left off.
     // What the fold's own class says on paper, every rule of it — its own, its bar's, its body's.
     const onPaper = (markup: string) =>
@@ -773,7 +773,7 @@ describe("§952 the plan's page draws the picture", () => {
     expect(onPaper(page)).toMatch(/>summary\{display:none/);
     expect(onPaper(page)).toMatch(/::details-content\{display:block;content-visibility:visible/);
 
-    // After the view's plan on the sheet (§NNN, amending §952's «first after the title»): on «Tabel» the table is the one
+    // After the view's plan on the sheet (§974, amending §952's «first after the title»): on «Tabel» the table is the one
     // thing printed between the title and the picture; on «Pe puncte», the points.
     const plain = page.replace(/<style[\s\S]*?<\/style>/g, "");
     const before = plain.slice(plain.indexOf(ro.Admin.volunteers.plan.help), plain.indexOf('data-testid="plan-picture"'));

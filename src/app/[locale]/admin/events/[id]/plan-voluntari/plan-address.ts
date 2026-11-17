@@ -1,5 +1,5 @@
 /*
-  The addresses of «Planul voluntarilor» (§NNN; the owner, 2026-11-17, of the page's long run of cards: «vreau secțiuni
+  The addresses of «Planul voluntarilor» (§974; the owner, 2026-11-17, of the page's long run of cards: «vreau secțiuni
   colapsabile aici la plan voluntari că nu mai înțeleg nimic: de fapt tabel sau mai multe views»): which of its two views the
   page draws, which point and which fold it comes back with open, and the refusal it says — one builder for the page's own
   links and for every press's way back, so the two never disagree. A plain module, never a "use server" file: nothing here
