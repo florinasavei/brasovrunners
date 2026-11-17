@@ -741,11 +741,14 @@ describe("§952 the plan's page draws the picture", () => {
     const controls = page.slice(page.indexOf('data-testid="plan-picture-controls"'), page.indexOf('data-testid="plan-summary"'));
     for (const inside of ['data-testid="plan-picture-upload"', 'data-testid="image-quality"', 'data-testid="plan-picture-remove-form"']) expect(controls, inside).toContain(inside);
 
-    // First on the sheet after its title: everything between the title and the picture is left off the paper, and the
-    // points come after it.
+    // First on the sheet after the points' table, «Punctele, pe scurt» (§NNN, amending §952's «first after the title»): the
+    // table is the one thing between the title and the picture that is printed — the picture's own heading and every control
+    // are left off the paper — and the points come after it.
     const plain = page.replace(/<style[\s\S]*?<\/style>/g, "");
     const before = plain.slice(plain.indexOf(ro.Admin.volunteers.plan.help), plain.indexOf('data-testid="plan-picture"'));
     expect(before).toContain(ro.Admin.volunteers.plan.picture.title);
+    expect(before).toContain('data-testid="plan-table-section"');
+    expect(hiddenOnPaper("plan-table-section")).toBe(false);
     expect(before).not.toContain('data-testid="plan-point"');
     expect(before).not.toContain('data-testid="plan-summary"');
     const sectionHeading = page.match(new RegExp(`<h3[^>]*class="([^"]*)"[^>]*>${ro.Admin.volunteers.plan.picture.title}`))?.[1] ?? "";

@@ -6436,6 +6436,24 @@
             "other": "{count} points with nobody"
           }
         },
+        "table": {
+          "title": "The points at a glance",
+          "columns": {
+            "number": "No.",
+            "point": "Point",
+            "km": "Km",
+            "coordinates": "Coordinates",
+            "people": "Volunteers",
+            "count": "How many"
+          },
+          "nobody": "nobody",
+          "placed": {
+            "one": "{count} volunteer placed",
+            "few": "{count} volunteers placed",
+            "other": "{count} volunteers placed"
+          },
+          "total": "{placed}, {empty}"
+        },
         "noPoints": "The plan has no point yet. Add the points right here, above, under \"The plan's points\", or in the event's editor, under \"Points on the route\".",
         "groups": {
           "startFinish": "Start–finish",

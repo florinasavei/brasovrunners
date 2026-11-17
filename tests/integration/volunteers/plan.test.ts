@@ -417,11 +417,21 @@ describe("§949 the plan's page", () => {
     await place(staff.ADMIN!, people.ana, points.junction);
     await place(staff.ADMIN!, people.dan, points.water);
     const page = await streamed(await planElement());
+    const telLinks = (part: string) => [...part.matchAll(/<a[^>]*data-testid="plan-person-phone"[^>]*>|<a[^>]*href="tel:[^"]*"[^>]*>/g)].map((match) => match[0]);
+    // The points' cards and «Fără punct» under them: everything from the plan's list on. «Punctele, pe scurt» (§NNN), above
+    // the picture, dials the people placed at a point too — its own count below.
+    const cards = page.slice(page.indexOf('id="plan-list"'));
+    expect(cards.length).toBeLessThan(page.length);
 
-    const links = [...page.matchAll(/<a[^>]*data-testid="plan-person-phone"[^>]*>|<a[^>]*href="tel:[^"]*"[^>]*>/g)].map((match) => match[0]);
+    const links = telLinks(cards);
     // Ana and Dan at their points, Ion under them; Zoe has no number.
     expect(links.map((link) => /href="([^"]*)"/.exec(link)?.[1])).toEqual(["tel:+40700000001", "tel:+40700000002", "tel:+40700000001"]);
-    for (const link of links) expect(/href="tel:([^"]*)"/.exec(link)?.[1]).toMatch(/^\+\d+$/);
+    // The table: Ana and Dan, the same digits, in its wide rows and again in each one's phone block — and nobody else.
+    const table = page.slice(page.indexOf('data-testid="plan-table-section"'), page.indexOf('id="plan-list"'));
+    expect(telLinks(table).map((link) => /href="([^"]*)"/.exec(link)?.[1])).toEqual(["tel:+40700000001", "tel:+40700000002", "tel:+40700000001", "tel:+40700000002"]);
+    // Every telephone link of the page, wherever it is, dials the digits and the plus alone.
+    expect(telLinks(page)).toHaveLength(links.length + 4);
+    for (const link of telLinks(page)) expect(/href="tel:([^"]*)"/.exec(link)?.[1]).toMatch(/^\+\d+$/);
     // The bare number is nowhere a link's text: it is read grouped.
     expect(page).not.toMatch(/>\+40700000001</);
     expect(page).toContain(">+40 700 000 001<");

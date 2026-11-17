@@ -10,7 +10,7 @@ import { notFound } from "next/navigation";
 import { Fragment } from "react";
 import { getDb } from "@/db/client";
 import { countForm } from "@/i18n/count-form";
-import { Link } from "@/i18n/navigation";
+import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { CHECKPOINT_NAME_MAX } from "@/modules/event-checkpoints/domain/checkpoint";
 import { formatCoordinates, mapUrlOf } from "@/modules/event-checkpoints/domain/coordinates";
@@ -21,9 +21,10 @@ import { bibEventDate, findEventForBibs } from "@/modules/registrations/bibs";
 import { formatPhone } from "@/modules/registrations/phone";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import { roleLabel } from "@/modules/volunteers/domain/volunteer";
 import { readVolunteerPlan, type VolunteerPlanPerson, type VolunteerPlanPoint } from "@/modules/volunteers/plan";
-import { coordinatesOf, PLAN_POINT_BOXES, planPointRefusalValues } from "@/modules/volunteers/plan-points";
+import { coordinatesOf, PLAN_POINT_BOXES, type PlanPoint, planPointRefusalValues } from "@/modules/volunteers/plan-points";
 import { previewVolunteerPoints } from "@/modules/volunteers/point-mail";
 import PlanPictureUpload from "@/modules/volunteers/ui/PlanPictureUpload";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -36,9 +37,10 @@ import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { isUuid } from "@/shared/ids";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
-import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_INLINE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { HEADING_SX } from "@/shared/ui/heading-scale";
+import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
 import PrintButton from "@/shared/ui/PrintButton";
 import RadioField from "@/shared/ui/RadioField";
 import { ROW_SX } from "@/shared/ui/row-fold";
@@ -68,6 +70,21 @@ const NOT_ON_PAPER = { "@media print": { display: "none" } } as const;
  * no link's colour or underline, and no height that would space the sheet's lines.
  */
 const PHONE_LINK_SX = { display: "inline-flex", alignItems: "center", ...TAP_TARGET, "@media print": { minHeight: 0, color: "inherit", textDecoration: "none" } } as const;
+
+/** The digits and the plus of a telephone number, which is what a `tel:` link dials (§953): one rule for a card and the table. */
+const dialOf = (phone: string) => `tel:${phone.replace(/[^\d+]/g, "")}`;
+
+/**
+ * A point's name in «Punctele, pe scurt» (§NNN): the link to its card below, a thumb's 44 pixels like the telephone beside it,
+ * and on paper the name as text. A long name breaks inside the cell rather than widening the table.
+ */
+const POINT_LINK_SX = { ...PHONE_LINK_SX, overflowWrap: "anywhere" } as const;
+
+/** The telephone in the table: the card's link, its number kept on one line. */
+const TABLE_PHONE_SX = { ...PHONE_LINK_SX, whiteSpace: "nowrap" } as const;
+
+/** The glyph of «Punctele, pe scurt»: the house's list (the one «Înscrieri» wears), by its name in the subjects' table. */
+const ListGlyph = PANEL_GLYPHS.registrations;
 
 /**
  * «Deschide pe hartă» beside a point's coordinates (§961): a link a thumb can press, 44 pixels tall (BR-REQ-041-01
@@ -116,8 +133,14 @@ const EditIcon = ACTION_ICONS.edit;
  *
  * Above the points, the plan as the organizers drew it (§952; the owner, with a picture of the route and its points numbered
  * on it: «trebui sa pot incarca si planul voluntarilor pe traseu in genul [pozei]»): one picture, as wide as the column, a
- * press opening the whole of it in a new tab — and on paper the first thing after the sheet's title, in one piece. Uploaded,
+ * press opening the whole of it in a new tab — and on paper the first thing after the points' table, in one piece. Uploaded,
  * changed and taken off here by the same people; with no picture the page reads as it did, plus the upload.
+ *
+ * And above everything, the plan at a glance (§NNN; the owner, 2026-11-17: «aș vrea să văd punctele ca și tabel, mai ales pe
+ * traseu»): «Punctele, pe scurt», one table of every point — the route's by kilometre, then the start–finish's —, its number,
+ * its name linking to its card, its kilometre, where it is, its people with their telephones and how many; under it the
+ * people placed and the points with nobody. The house's table (`AdminTable`: a block a point on a phone), read from the same
+ * plan as the cards, and printed first, as a table: the plan's summary sheet.
  */
 export default async function VolunteerPlanPage({ params, searchParams }: Props) {
   const { locale, id } = await params;
@@ -167,6 +190,110 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   // The summary's four numbers, each a counted phrase (`countForm`, never an ICU plural).
   const counted = (key: "startFinish" | "route" | "unplaced" | "empty", count: number) => t(`volunteers.plan.summary.${key}.${countForm(count, locale)}`, { count });
   const summary = [counted("startFinish", atStartFinish), counted("route", onRoute), counted("unplaced", plan.unplaced.length), counted("empty", empty)];
+
+  /*
+    «Punctele, pe scurt» (§NNN; the owner, 2026-11-17: «aș vrea să văd punctele ca și tabel, mai ales pe traseu»): every point
+    of the plan as one table at the top — the route's first, the start–finish's after — read from the plan the cards below
+    read, so a row says exactly what its card says. The route's points come in the plan's one order (`listPlanPoints`): by
+    kilometre, and numbered in that order, so by number too; the start–finish points as the page lists them. One row a point:
+    its number, its name (a link to its card), its kilometre, where it is, who stands there with their telephones, how many.
+  */
+  const tableRows = [...routePoints, ...startFinishPoints];
+  const nameOf = (point: PlanPoint) => (locale === "ro" ? point.nameRo : point.nameEn);
+  const tableColumns: readonly AdminColumn<VolunteerPlanPoint>[] = [
+    {
+      key: "number",
+      label: t("volunteers.plan.table.columns.number"),
+      align: "right",
+      // A start–finish point has no number: an empty cell, and on a phone no line.
+      omitEmptyOnPhone: true,
+      render: ({ number }) => (number === null ? null : <span data-testid="plan-table-number">{number}</span>),
+    },
+    {
+      key: "point",
+      label: t("volunteers.plan.table.columns.point"),
+      // The phone's block is headed by the point's name.
+      primary: true,
+      render: ({ point }) => (
+        <Box component="a" href={`#point-${point.id}`} sx={POINT_LINK_SX} data-testid="plan-table-point">
+          {nameOf(point)}
+        </Box>
+      ),
+    },
+    {
+      key: "km",
+      label: t("volunteers.plan.table.columns.km"),
+      align: "right",
+      // As the card's title writes it («4,5»), or the plan's word for a point that has no kilometre.
+      render: ({ point }) => <span data-testid="plan-table-km">{point.startFinish ? t("volunteers.plan.columnStartFinish") : km(point.km)}</span>,
+    },
+    {
+      key: "coordinates",
+      label: t("volunteers.plan.table.columns.coordinates"),
+      // The numbers, on paper too, and the card's own link to a map beside them, which the paper leaves out.
+      render: ({ point }) => {
+        const where = coordinatesOf(point);
+        if (!where) return <span data-testid="plan-table-coordinates">—</span>;
+        return (
+          <>
+            <span data-testid="plan-table-coordinates">{formatCoordinates(where)}</span>{" "}
+            <Box
+              component="a"
+              href={mapUrlOf(where)}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t("volunteers.plan.points.openMapFor", { name: nameOf(point) })}
+              sx={MAP_LINK_SX}
+              data-testid="plan-table-map"
+            >
+              {t("volunteers.plan.points.openMap")}
+            </Box>
+          </>
+        );
+      },
+    },
+    {
+      key: "people",
+      label: t("volunteers.plan.table.columns.people"),
+      // The card's people in the card's order, a line each: the name and the telephone to ring.
+      render: ({ people }) =>
+        people.length === 0 ? (
+          <Box component="span" sx={{ color: "text.secondary", fontStyle: "italic" }} data-testid="plan-table-nobody">
+            {t("volunteers.plan.table.nobody")}
+          </Box>
+        ) : (
+          <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+            {people.map((person) => (
+              <li key={person.id} data-testid="plan-table-person">
+                <Box component="span" sx={{ overflowWrap: "anywhere" }} data-testid="plan-table-person-name">
+                  {person.name}
+                </Box>
+                {person.phone && (
+                  <>
+                    {" "}
+                    <Box component="a" href={dialOf(person.phone)} sx={TABLE_PHONE_SX} data-testid="plan-table-phone">
+                      {formatPhone(person.phone)}
+                    </Box>
+                  </>
+                )}
+              </li>
+            ))}
+          </Box>
+        ),
+    },
+    {
+      key: "count",
+      label: t("volunteers.plan.table.columns.count"),
+      align: "right",
+      render: ({ people }) => <span data-testid="plan-table-count">{people.length}</span>,
+    },
+  ];
+  // The table's last line: the people placed at a point and the points with nobody, each a counted phrase.
+  const tableTotal = t("volunteers.plan.table.total", {
+    placed: t(`volunteers.plan.table.placed.${countForm(placed, locale)}`, { count: placed }),
+    empty: counted("empty", empty),
+  });
+  const planPath = getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id } } });
   // The plan's picture (§952), and who is offered its controls: whoever works the volunteers — the action and the service ask again.
   const picture = plan.picture;
   const mayChangePicture = canManageVolunteers(actor.role);
@@ -252,7 +379,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
         {person.phone && (
           <Typography component="span" variant="body2" sx={{ ml: 1, whiteSpace: "nowrap" }}>
             {/* Read grouped («+40 712 345 678», `formatPhone`); the link keeps the digits and the plus alone, which is what a telephone dials. */}
-            <Box component="a" href={`tel:${person.phone.replace(/[^\d+]/g, "")}`} sx={PHONE_LINK_SX} data-testid="plan-person-phone">
+            <Box component="a" href={dialOf(person.phone)} sx={PHONE_LINK_SX} data-testid="plan-person-phone">
               {formatPhone(person.phone)}
             </Box>
           </Typography>
@@ -497,8 +624,47 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
         <PrintButton label={t("volunteers.plan.print")} />
       </Box>
 
-      {/* The plan as the organizers drew it (§952): above the points on the page, and the first thing after the title on paper —
-          the section's own heading, its hint and every control stay off the sheet, so a plan with no picture prints as it did. */}
+      {/* «Punctele, pe scurt» (§NNN): the whole plan at a glance, before the picture and the cards — the house's table, a block a
+          point on a phone, every row on the one page. On paper it is the plan's summary sheet, printed whole as a table, the
+          first thing after the title; the map's links stay off it, the names and the telephones print as text. A plan with no
+          point has no table: the list below says how to add one. */}
+      {tableRows.length > 0 && (
+        <Box component="section" id="plan-table" aria-labelledby="plan-table-heading" sx={{ scrollMarginTop: 16 }} data-testid="plan-table-section">
+          <Typography id="plan-table-heading" variant="h3" sx={HEADING_SX[3]}>
+            <ListGlyph aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+            {t("volunteers.plan.table.title")}
+          </Typography>
+          <Box sx={{ mt: 1 }}>
+            <AdminTable
+              caption={t("volunteers.plan.table.title")}
+              tableId="volunteer-plan"
+              columns={tableColumns}
+              rows={tableRows}
+              rowKey={({ point }) => point.id}
+              basePath={planPath}
+              currentParams={{}}
+              query={{ page: 1, perPage: tableRows.length, sort: "number", dir: "asc", offset: 0, limit: tableRows.length }}
+              total={tableRows.length}
+              labels={{
+                results: tableTotal,
+                page: t("list.page", { page: 1, pages: 1 }),
+                previous: t("list.previous"),
+                next: t("list.next"),
+                perPage: t("list.perPage"),
+                actions: t("list.actions"),
+                sortBy: (column) => t("list.sortBy", { column }),
+              }}
+              paged={false}
+              printable
+              empty={null}
+            />
+          </Box>
+        </Box>
+      )}
+
+      {/* The plan as the organizers drew it (§952): above the points on the page, and on paper the first thing after the points'
+          table (§NNN) — the section's own heading, its hint and every control stay off the sheet, so a plan with no picture
+          prints as it did. */}
       <Box id="plan-picture" sx={{ scrollMarginTop: 16 }} data-testid="plan-picture-section">
         <Typography variant="h3" sx={{ ...HEADING_SX[3], ...NOT_ON_PAPER }}>
           {t("volunteers.plan.picture.title")}

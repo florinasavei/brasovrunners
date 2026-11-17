@@ -6436,6 +6436,24 @@
             "other": "{count} de puncte fără nimeni"
           }
         },
+        "table": {
+          "title": "Punctele, pe scurt",
+          "columns": {
+            "number": "Nr.",
+            "point": "Punct",
+            "km": "Km",
+            "coordinates": "Coordonate",
+            "people": "Voluntari",
+            "count": "Câți"
+          },
+          "nobody": "niciunul",
+          "placed": {
+            "one": "{count} voluntar pus",
+            "few": "{count} voluntari puși",
+            "other": "{count} de voluntari puși"
+          },
+          "total": "{placed}, {empty}"
+        },
         "noPoints": "Planul nu are încă niciun punct. Adaugă punctele chiar aici, mai sus, la „Punctele planului”, sau în editorul evenimentului, la „Puncte pe traseu”.",
         "groups": {
           "startFinish": "Start–finish",

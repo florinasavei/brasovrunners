@@ -35,6 +35,12 @@ import { openFold } from "./support/fold";
  * «Deschide pe hartă», places a person at each, changes one point and deletes the other, whose person is then under
  * «Fără punct». The rules of each press are `tests/integration/volunteers/plan-points.test.ts` and
  * `plan-points-screens.test.ts`.
+ *
+ * And «Punctele, pe scurt» (§NNN; the owner, 2026-11-17: «aș vrea să văd punctele ca și tabel, mai ales pe traseu»): the
+ * Organizer reads every point in one table at the top of the plan — a row a point on a desktop, a block a point on a
+ * 320-pixel phone — the route by kilometre and then the start–finish, the people with their telephones, «niciunul» and the
+ * total; follows a point's name to its card; and prints it, on either screen, as the table. What each cell says in both
+ * languages is `tests/integration/volunteers/plan-table-screens.test.ts`.
  */
 function databaseUrl(): string {
   if (!process.env.DATABASE_URL && existsSync(".env.local")) process.loadEnvFile(".env.local");
@@ -572,5 +578,111 @@ test.describe("§961 «Punctele planului» on «Planul voluntarilor»", () => {
         (await client.query<{ name: string; km: string; start_finish: boolean; latitude: string | null }>(`SELECT name_ro AS name, km::text AS km, start_finish, latitude::text AS latitude FROM event_checkpoints WHERE event_id = $1 AND plan_only ORDER BY position`, [eventId])).rows,
     );
     expect(own).toEqual([{ name: "Izvorul cald", km: "6.10", start_finish: false, latitude: "45.642710" }]);
+  });
+});
+
+test.describe("§NNN «Punctele, pe scurt» on «Planul voluntarilor»", () => {
+  test.describe.configure({ timeout: 180_000 });
+
+  test("the Organizer reads every point in one table at the top — a row a point on a desktop, a block a point on a phone —, follows a name to its card and prints it as the table", async ({
+    page,
+  }) => {
+    const seeded = await seed(`${test.info().project.name}-${Date.now().toString(36)}-d`);
+    const { eventId, points, ana, dan, radu } = seeded;
+    // Two points of the plan's own, as «Adaugă punctul» writes them — the setup here; adding them is the test above: a route
+    // point at 3.4 km with its coordinates, between the editor's two, and the kits at the start–finish, with Radu at them.
+    await withDatabase(async (client) => {
+      const add = async (position: number, name: string, km: string, startFinish: boolean, latitude: string | null, longitude: string | null) =>
+        (
+          await client.query<{ id: string }>(
+            `INSERT INTO event_checkpoints (event_id, position, name_ro, name_en, km, plan_only, start_finish, on_profile, latitude, longitude)
+             VALUES ($1, $2, $3, $3, $4, true, $5, false, $6, $7) RETURNING id`,
+            [eventId, position, name, km, startFinish, latitude, longitude],
+          )
+        ).rows[0].id;
+      await add(0, "Izvorul rece", "3.40", false, "45.642710", "25.588710");
+      const kits = await add(1, "Kituri și numere", "0.00", true, null, null);
+      await client.query(`UPDATE event_volunteers SET checkpoint_id = $2 WHERE id = $1`, [radu.id, kits]);
+    });
+    const MAP = "https://www.google.com/maps/search/?api=1&query=45.64271%2C25.58871";
+    await signIn(page, "Dev Moderator");
+    await page.goto(`/ro/admin/events/${eventId}/plan-voluntari`);
+    await hydrated(page);
+
+    // ---- At the top: under its heading, above the picture, the builder, the email and the points' cards ----------------
+    const section = page.getByTestId("plan-table-section");
+    await expect(section.getByRole("heading", { level: 3, name: "Punctele, pe scurt" })).toBeVisible();
+    const topOf = async (locator: Locator) => (await locator.boundingBox())?.y ?? Number.NaN;
+    for (const below of [page.getByTestId("plan-picture-section"), page.getByTestId("plan-points-section"), page.getByTestId("plan-mail-section"), page.getByTestId("plan-point").first()]) {
+      expect(await topOf(section)).toBeLessThan(await topOf(below));
+    }
+
+    // ---- What a person reads, on either screen: the route by kilometre — the plan's own spring between the editor's two —
+    // then the start–finish; each point's people with the telephone to ring, «niciunul» where nobody stands; the total ----
+    const shown = (testid: string) => section.getByTestId(testid).filter({ visible: true });
+    await expect(shown("plan-table-point")).toHaveText(["Intersecția Stejeriș", "Izvorul rece", "Apă la cabană", "Kituri și numere"]);
+    await expect(shown("plan-table-number")).toHaveText(["1", "2", "3"]);
+    await expect(shown("plan-table-km")).toHaveText(["1,2", "3,4", "5,5", "start–finish"]);
+    await expect(shown("plan-table-coordinates")).toHaveText(["—", "45.64271, 25.58871", "—", "—"]);
+    await expect(shown("plan-table-person-name")).toHaveText([ana.name, dan.name, radu.name]);
+    await expect(shown("plan-table-nobody")).toHaveText(["niciunul"]);
+    await expect(shown("plan-table-count")).toHaveText(["1", "0", "1", "1"]);
+    await expect(section.getByText("3 voluntari puși, 1 punct fără nimeni")).toBeVisible();
+    // Every link a thumb's: a name, a telephone — the digits the card dials — and the map, in a new tab.
+    const phones = shown("plan-table-phone");
+    await expect(phones).toHaveText(["+40 712 345 678", "+40 712 345 678", "+40 712 345 678"]);
+    for (let index = 0; index < 3; index++) {
+      await expect(phones.nth(index)).toHaveAttribute("href", "tel:+40712345678");
+      await thumbSized(phones.nth(index));
+    }
+    const map = shown("plan-table-map");
+    await expect(map).toHaveCount(1);
+    await expect(map).toHaveAttribute("href", MAP);
+    await expect(map).toHaveAttribute("target", "_blank");
+    await thumbSized(map);
+    for (let index = 0; index < 4; index++) await thumbSized(shown("plan-table-point").nth(index));
+
+    const blocks = section.locator("li").filter({ has: page.getByTestId("plan-table-point") }).filter({ visible: true });
+    if ((page.viewportSize()?.width ?? 0) >= 900) {
+      // ---- A desktop: the house's table, its six columns, a row a point -------------------------------------------------
+      const table = section.locator('table[data-table-id="volunteer-plan"]');
+      await expect(table).toBeVisible();
+      await expect(blocks).toHaveCount(0);
+      await expect(table.locator("thead th")).toHaveText(["Nr.", "Punct", "Km", "Coordonate", "Voluntari", "Câți"]);
+      const rows = table.locator("tbody tr");
+      await expect(rows).toHaveCount(4);
+      await expect(rows.nth(0).locator("td")).toHaveText(["1", "Intersecția Stejeriș", "1,2", "—", `${ana.name} +40 712 345 678`, "1"]);
+      await expect(rows.nth(1).locator("td")).toHaveText(["2", "Izvorul rece", "3,4", "45.64271, 25.58871 Deschide pe hartă", "niciunul", "0"]);
+      await expect(rows.nth(2).locator("td")).toHaveText(["3", "Apă la cabană", "5,5", "—", `${dan.name} +40 712 345 678`, "1"]);
+      await expect(rows.nth(3).locator("td")).toHaveText(["", "Kituri și numere", "start–finish", "—", `${radu.name} +40 712 345 678`, "1"]);
+    } else {
+      // ---- A phone: no table, a block a point headed by its name — and no «Nr.» line at the start–finish ----------------
+      await expect(section.locator("table")).toBeHidden();
+      await expect(blocks).toHaveCount(4);
+      await expect(blocks.nth(0).getByTestId("plan-table-number")).toHaveText("1");
+      await expect(blocks.nth(3).getByTestId("plan-table-number")).toHaveCount(0);
+      await expect(blocks.nth(3)).toContainText("Câți");
+      await expect(blocks.nth(3).getByTestId("plan-table-person-name")).toHaveText(radu.name);
+    }
+    await fits(page);
+
+    // ---- A name leads to its card below: the address names the point, and the card is on the screen --------------------
+    await shown("plan-table-point").filter({ hasText: "Apă la cabană" }).click();
+    await expect(page).toHaveURL(new RegExp(`/ro/admin/events/${eventId}/plan-voluntari#point-${points.water}$`));
+    await expect(page.locator(`#point-${points.water}`)).toBeInViewport();
+    await expect(page.locator(`#point-${points.water}`).getByTestId("plan-point-title")).toHaveText("3. 5,5 km — Apă la cabană");
+
+    // ---- On paper, on either screen: the table itself, whole — never the blocks, never the map's link or a control -----
+    await page.emulateMedia({ media: "print" });
+    await expect(section.getByRole("heading", { level: 3, name: "Punctele, pe scurt" })).toBeVisible();
+    await expect(section.locator('table[data-table-id="volunteer-plan"]')).toBeVisible();
+    await expect(section.locator('table[data-table-id="volunteer-plan"] tbody tr')).toHaveCount(4);
+    await expect(blocks).toHaveCount(0);
+    await expect(shown("plan-table-map")).toHaveCount(0);
+    await expect(shown("plan-table-coordinates")).toHaveText(["—", "45.64271, 25.58871", "—", "—"]);
+    await expect(section.getByText("3 voluntari puși, 1 punct fără nimeni")).toBeVisible();
+    await expect(section.getByTestId("admin-table-columns")).toBeHidden();
+    await expect(section.locator("[data-column-resize]").filter({ visible: true })).toHaveCount(0);
+    await page.emulateMedia({ media: "screen" });
   });
 });
