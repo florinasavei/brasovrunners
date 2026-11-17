@@ -14,7 +14,7 @@ import { type AdminSection, canManageVolunteers, canReadRegistrations, type Staf
 import { volunteersBadgeCount } from "@/modules/volunteers/nav-count";
 import { STAFF_ROLE_LABEL } from "../domain/staff-labels";
 import AdminTabs, { type AdminTab, type CountPill } from "./AdminTabs";
-import { PAGE_WIDTH } from "@/theme/brand";
+import { BACKOFFICE_WIDTH } from "@/theme/brand";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import OpenFoldFromHash from "@/shared/ui/OpenFoldFromHash";
 
@@ -158,7 +158,7 @@ export default async function BackofficeShell({
   return (
     // `data-backoffice`: the public pages' background tint (§488) stops at this marker, so staff
     // always work on the platform's own paper whatever the club chose for the site.
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }} data-backoffice="">
+    <Container id="main" component="main" maxWidth={BACKOFFICE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }} data-backoffice="">
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={2}

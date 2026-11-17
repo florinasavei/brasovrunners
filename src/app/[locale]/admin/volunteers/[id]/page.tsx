@@ -19,14 +19,15 @@ import { findVolunteerForAdmin } from "@/modules/volunteers/admin-list";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
 import TurnIntoRunnerPanel from "@/modules/volunteers/ui/TurnIntoRunnerPanel";
 import VolunteerDecisionCard from "@/modules/volunteers/ui/VolunteerDecisionCard";
-import VolunteerPerson, { STATE_CHIP } from "@/modules/volunteers/ui/VolunteerPerson";
+import VolunteerPerson, { STATE_CHIP, volunteerHiddenFields } from "@/modules/volunteers/ui/VolunteerPerson";
 import { listVolunteerNotes } from "@/modules/volunteers/volunteer-notes";
 import { isUuid } from "@/shared/ids";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import StatusChip from "@/shared/ui/StatusChip";
+import TickButton from "@/shared/ui/TickButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { turnVolunteerIntoRunnerAction } from "../../registrations/actions";
-import { setVolunteerDecisionAction } from "../actions";
+import { setVolunteerDecisionAction, setVolunteerKitAction } from "../actions";
 import { addVolunteerNoteAction, deleteVolunteerNoteAction, editVolunteerNoteAction } from "./note-actions";
 
 type Props = {
@@ -97,6 +98,20 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
           {person.name}
         </Typography>
         <StatusChip glyph={STATE_CHIP[person.state].glyph} color={STATE_CHIP[person.state].color} label={t(`volunteers.states.${person.state}`)} testId="volunteer-state" />
+        {/*
+          «Are kit» (§971; the owner, 2026-11-17, on this page: «nu pot bifa aici că are kit»): the list's one-press tick (§904) beside
+          the name — before, it sat only inside «Modifică» at the page's foot. The same plain form and action as the list's row: it
+          posts the state it wants (`hasKit=1|0`), never a toggle, works with scripts off, and comes back here (`returnTo`). The
+          service asks for the role again (`canManageVolunteers`).
+        */}
+        <Box component="form" action={setVolunteerKitAction} data-testid="volunteer-page-kit-form">
+          {volunteerHiddenFields({ locale, eventId: person.eventId, returnTo: path })}
+          <input type="hidden" name="volunteerId" value={person.id} />
+          <input type="hidden" name="hasKit" value={person.hasKit ? "0" : "1"} />
+          <TickButton checked={person.hasKit} data-testid="volunteer-page-kit-tick">
+            {t("volunteers.person.hasKit")}
+          </TickButton>
+        </Box>
       </Stack>
 
       {/* Which event, and the way to its card: the roles, the switches and the add-by-hand form live there (§754, §761). */}
