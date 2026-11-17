@@ -309,6 +309,62 @@ describe("§783 «Un singur ecuson» in the designer", () => {
   });
 });
 
+describe("§NNN «Logo-ul clubului jos, ca filigran» in the designer", () => {
+  const draw = (design = DEFAULT_BADGE_DESIGN, language: "ro" | "en" = "ro", dropped: Array<"footerLogo"> = []) =>
+    html(() => BadgeDesignPanel({ eventId: EVENT, locale: language, design, dropped, sampleRole: ROLES[0].id, version: "abc" }), language);
+  const select = (page: string) => /<select[^>]*name="badge\.design\.footerLogo"[^>]*>[\s\S]*?<\/select>/.exec(page)?.[0] ?? "";
+  const options = (page: string) => [...select(page).matchAll(/<option value="([^"]*)"( selected="")?>([^<]*)<\/option>/g)].map(([, value, selected, words]) => ({ value, selected: Boolean(selected), words }));
+
+  it("is a native select of four choices in «Locul pentru nume», with its help line, the platform's «Fără» chosen for a design that never chose", async () => {
+    const page = await draw();
+    expect(options(page)).toEqual([
+      { value: "off", selected: true, words: "Fără" },
+      { value: "faint", selected: false, words: "Puțin vizibil" },
+      { value: "medium", selected: false, words: "Mediu" },
+      { value: "strong", selected: false, words: "Bine vizibil" },
+    ]);
+    expect(page).toContain("Logo-ul clubului jos, ca filigran");
+    expect(page).toContain("Logo-ul clubului mare și palid în partea de jos a ecusonului. Numele scris cu markerul se citește peste el.");
+    // Beside the writing area's other look choice, in the section of the place it is drawn in.
+    const at = page.indexOf('name="badge.design.footerLogo"');
+    expect(at).toBeGreaterThan(page.indexOf('data-testid="badge-section-writing"'));
+    expect(at).toBeLessThan(page.indexOf('data-testid="badge-section-marker"'));
+    expect(at).toBeGreaterThan(page.indexOf('name="badge.design.writingLine"'));
+    // Off says nothing in the section's closed line; the preview's first address says off.
+    expect(page).not.toContain("Logo ca filigran");
+    expect(page).toMatch(/badges\/preview\?[^"]*footerLogo=off/);
+  });
+
+  it("keeps the chosen level selected, says it in the closed line, and draws the preview with it", async () => {
+    const page = await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "medium" });
+    expect(options(page).filter((option) => option.selected).map((option) => option.value)).toEqual(["medium"]);
+    expect(page).toContain("O linie subțire pentru nume · Logo ca filigran, mediu");
+    expect(page).toMatch(/badges\/preview\?[^"]*footerLogo=medium/);
+    expect(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "faint", writingLine: false })).toContain("Doar „Nume:” · Logo ca filigran, puțin vizibil");
+    expect(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "strong" })).toContain("Logo ca filigran, bine vizibil");
+  });
+
+  it("says beside its section that a stored level could not be read", async () => {
+    const told = await draw(DEFAULT_BADGE_DESIGN, "ro", ["footerLogo"]);
+    const writing = told.slice(told.indexOf('data-testid="badge-section-writing"'), told.indexOf('data-testid="badge-section-marker"'));
+    expect(writing).toContain('data-testid="badge-dropped"');
+    expect(await draw()).not.toContain('data-testid="badge-dropped"');
+  });
+
+  it("speaks English", async () => {
+    const page = await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "strong" }, "en");
+    expect(options(page)).toEqual([
+      { value: "off", selected: false, words: "None" },
+      { value: "faint", selected: false, words: "Faint" },
+      { value: "medium", selected: false, words: "Medium" },
+      { value: "strong", selected: true, words: "Strong" },
+    ]);
+    expect(page).toContain("The club&#x27;s logo at the bottom, as a watermark");
+    expect(page).toContain("The club&#x27;s logo, large and pale, at the bottom of the badge. The name written in marker reads over it.");
+    expect(page).toContain("A thin line for the name · Logo as a watermark, strong");
+  });
+});
+
 describe("§783 «Culorile rolurilor» serve the badges per role only", () => {
   it("says so in the closed line when the one badge is chosen, and keeps the colours", async () => {
     const single = await html(() => BadgeRoleColours({ eventId: EVENT, locale: "ro", roles: ROLES, design: DEFAULT_BADGE_DESIGN }));

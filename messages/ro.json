@@ -10543,6 +10543,7 @@
             "labelRo": "Ecuson: cuvântul de pe bandă (română)",
             "labelEn": "Ecuson: cuvântul de pe bandă (engleză)",
             "writingLine": "Ecuson: linia pentru nume",
+            "footerLogo": "Ecuson: logo-ul clubului jos, ca filigran",
             "showFreeText": "Ecuson: linia de text liber",
             "freeTextRo": "Ecuson: textul liber (română)",
             "freeTextEn": "Ecuson: textul liber (engleză)",
@@ -11929,6 +11930,19 @@
         "writingHelp": "Nu se tipărește niciun nume. Rămâne o zonă albă cu „Nume:”, unde numele se scrie de mână.",
         "writingLine": "O linie subțire pentru nume",
         "writingPlain": "Doar „Nume:”",
+        "footerLogo": "Logo-ul clubului jos, ca filigran",
+        "footerLogoHelp": "Logo-ul clubului mare și palid în partea de jos a ecusonului. Numele scris cu markerul se citește peste el.",
+        "footerLogos": {
+          "off": "Fără",
+          "faint": "Puțin vizibil",
+          "medium": "Mediu",
+          "strong": "Bine vizibil"
+        },
+        "footerLogoAside": {
+          "faint": "Logo ca filigran, puțin vizibil",
+          "medium": "Logo ca filigran, mediu",
+          "strong": "Logo ca filigran, bine vizibil"
+        },
         "markerHelp": "A doua zonă albă, lângă „Nume:”, rămâne goală pe hârtie: acolo scrii cu markerul, la masa de primire, ceva în plus, de pildă tura sau zona.",
         "showMarker": "Un spațiu pentru marker, lângă nume",
         "markerLabelRo": "Eticheta spațiului (română)",

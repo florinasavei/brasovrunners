@@ -34,7 +34,8 @@ import { BADGE_LAYOUT, BADGE_PAGE_MARGIN, type BadgeLayout, badgeLayout, badgePa
  * the logo as its file is — blue on its own white ground, never recoloured — the role's band with its
  * words in white or ink, whichever reads on it (the role's category among them, §962), the free-text line
  * (§776), the writing area — with the marker's area beside «Nume:» when the club ticks it — and the
- * telephone. Every line was fitted by the layout, from the words the picture takes too
+ * telephone. With «Logo-ul clubului jos, ca filigran» (§NNN) the same lockup, pale, at the writing area's foot, under its words.
+ * Every line was fitted by the layout, from the words the picture takes too
  * (`badgeLayoutWords`); each is handed to pdfkit with **no width**, so it cannot wrap (the bib's §317 lesson).
  */
 
@@ -169,6 +170,16 @@ export async function renderBadgeSheet(input: BadgeSheetInput): Promise<Buffer> 
     if (layout.categoryLine) text("bold", layout.categoryLine, centredX("bold", layout.categoryLine, x + content.left + pad, bandWidth), y, roleText);
     // The free-text line (§776): the club's own words, small and centred under the role's band.
     if (layout.freeLine) text("body", layout.freeLine, centredX("body", layout.freeLine, x + content.left + pad, bandWidth), y, COLOR.ink);
+    // «Logo-ul clubului jos, ca filigran» (§NNN): the lockup the header draws, pale, first in the writing area — «Nume:», the lines and the
+    // marker's area go over it. Its opacity in a graphics state of its own, so nothing else is drawn pale. No ground of its own: the
+    // raster's white falls on the white writing area, so only the logo shows.
+    if (layout.footerLogo) {
+      const mark = layout.footerLogo;
+      doc.save();
+      doc.opacity(mark.opacity);
+      doc.image(lockup, x + mark.left, y + mark.top, { fit: [mark.width, mark.height], align: "center", valign: "center" });
+      doc.restore();
+    }
     // The writing area: «Nume:», and the faint line the name is written on.
     text("body", layout.name, x + layout.name.left, y, COLOR.inkMuted);
     /** A faint hairline, as the writing line is: the name's, the marker's and the divider between them. */
