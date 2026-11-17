@@ -266,16 +266,9 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
           />
           <RecallField name="clubName" label={rt("clubName")} {...textFieldConstraints(staffRegistrationConstraints("clubName"))} />
           {/* BR-REQ-031-06, asked here too: an organizer taking a registration over the
-              telephone is usually taking it from somebody in the club. */}
+              telephone is usually taking it from somebody in the club. At an event whose bib design
+              offers it, the tick is also what prints the members' race number (§972) — no second box. */}
           <CheckboxField name="clubMemberDeclared">{rt("clubMemberDeclared", { club: CLUB_NAME })}</CheckboxField>
-          {/* «Vreau numărul de membru» (§664), asked as the public form asks it, when an event on the
-              list offers the members' bib; the service keeps it only for that event and under the
-              member tick, so a choice of another event stores false. */}
-          {events.some((event) => event.offersMemberBib) && (
-            <CheckboxField name="memberBibWanted" defaultChecked help={t("registrations.memberBibWantedStaffHelp")}>
-              {rt("memberBibWanted")}
-            </CheckboxField>
-          )}
             <RecallField
               name="email"
               label={t("registrations.participantEmail")}

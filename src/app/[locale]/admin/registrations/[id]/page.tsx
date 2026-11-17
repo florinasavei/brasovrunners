@@ -30,7 +30,7 @@ import {
   termsLineKindFor,
 } from "@/modules/registrations/admin-repository";
 import { readEmergencyDetails, readRegistrationAnswers } from "@/modules/registrations/admin-service";
-import { EDITABLE_ANSWERS, EMERGENCY_ANSWERS } from "@/modules/registrations/answers";
+import { EDITABLE_ANSWERS, EMERGENCY_ANSWERS, RETIRED_ANSWERS } from "@/modules/registrations/answers";
 import { countryOptions } from "@/modules/registrations/countries";
 import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import { SEX_CHOICES, sexShown } from "@/modules/registrations/domain/sex";
@@ -45,7 +45,6 @@ import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import { isMinorOn } from "@/modules/registrations/domain/age";
 import { fieldId } from "@/shared/forms/outcome";
 import { formatRaceNumber, raceNumberTextOf } from "@/modules/registrations/domain/race-number";
-import { memberBibOf } from "@/modules/registrations/domain/member-bib";
 import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition, holdsAPlace, isActiveStatus, isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import { missingAnswersHeld } from "@/modules/registrations/missing-answers";
@@ -169,9 +168,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const membership = membershipOf({ declared: registration.clubMemberDeclared, verified: registration.memberVerified });
   // «Date lipsă» (§905): the answers the form requires and this registration does not hold — only while it still stands.
   const owedAnswers = isActiveStatus(registration.status) ? missingAnswersHeld(registration) : [];
-  // The members' race number (§664): «Număr de membru» when the row will print one, «cerut, neverificat» when it asked
-  // and its address is no member account's — the sheet then prints the ordinary bib.
-  const memberBib = memberBibOf({ offered: registration.eventOffersMemberBib, wanted: registration.memberBibWanted, verified: registration.memberVerified });
+  // The members' race number (§664): «Număr de membru» when the row prints one — by the one rule the sheet prints by
+  // (§972, `PRINTS_MEMBER_BIB`): the event offers it, the person ticked «Sunt membru», not «Elită». No account is read for it.
+  const memberBib = registration.memberBib;
 
   const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns, family, partnerShares, invitedBy, notes, emailTries] = await Promise.all([
     listDeclarationAcceptances(db, id),
@@ -299,16 +298,13 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     value as the form renders it, and the same string in its `was.` twin.
   */
   const answers = query.answers === "1" ? await readRegistrationAnswers(db, actor, registration.id, new Date()) : null;
-  // «Vreau numărul de membru» (§664) only where the event offers it, or the row still says yes.
-  const answerFields = EDITABLE_ANSWERS.filter(
-    (field) => (field !== "tshirtSize" || registration.eventKitShirt) && (field !== "memberBibWanted" || registration.eventOffersMemberBib || registration.memberBibWanted),
-  );
+  // The T-shirt only where the event gives one (§554). «Vreau numărul de membru» is no answer any more (§972): the tick decides the members' bib.
+  const answerFields = EDITABLE_ANSWERS.filter((field) => field !== "tshirtSize" || registration.eventKitShirt);
   const answerLabels = Object.fromEntries(answerFields.map((field) => [field, tr(`registrations.answers.fields.${field}`, { club: CLUB_NAME })])) as Record<string, string>;
   const answerValues: Record<string, string> = answers
     ? Object.fromEntries(
         answerFields.map((field) => {
           if (field === "clubMemberDeclared") return [field, answers.clubMemberDeclared ? "on" : ""];
-          if (field === "memberBibWanted") return [field, answers.memberBibWanted ? "on" : ""];
           if (field === "sex") return [field, sexShown(answers.sex) ?? ""];
           if (field === "tshirtSize") return [field, answers.tshirtSize ?? "NONE"];
           return [field, (answers[field] as string | null) ?? ""];
@@ -335,7 +331,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // The Organizer's read-only list (§289): each answer in words, «—» for none.
   const answerShown = (field: string): string => {
     const value = answerValues[field] ?? "";
-    if (field === "clubMemberDeclared" || field === "memberBibWanted") return value === "on" ? tr("registrations.answers.yes") : tr("registrations.answers.no");
+    if (field === "clubMemberDeclared") return value === "on" ? tr("registrations.answers.yes") : tr("registrations.answers.no");
     if (field === "sex") return value ? tr(`registrations.answers.sex.${value}`) : "";
     if (field === "tshirtSize") return value === "NONE" ? "" : value;
     if ((field === "nationality" || field === "country") && value) return countryName(value, locale);
@@ -398,8 +394,11 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     recorded reads (§322) — so the trail is not a way round the record.
   */
   const emergencyOpen = emergency !== null || answers !== null;
+  // A correction the trail kept of an answer no longer asked (§972: «Vreau numărul de membru») is still named in words.
   const answerWords = (field: string) =>
-    (EDITABLE_ANSWERS as readonly string[]).includes(field) || field === "listSocials" ? tr(`registrations.answers.fields.${field}`, { club: CLUB_NAME }) : field;
+    (EDITABLE_ANSWERS as readonly string[]).includes(field) || (RETIRED_ANSWERS as readonly string[]).includes(field) || field === "listSocials"
+      ? tr(`registrations.answers.fields.${field}`, { club: CLUB_NAME })
+      : field;
   const trailLabel = (action: string, metadata: unknown): string => {
     // «Completează-ți datele» (§905): the person's own completion names its fields in words, never a value.
     if (action === "registration.answers_completed") {
@@ -851,10 +850,10 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                         ? tr("registrations.bibSettledPrinted", { number: written(registration.bibNumber) })
                         : tr("registrations.bibSettled", { number: written(registration.bibNumber) })}
                   </Typography>
-                  {/* The members' race number (§664), beside the number: which bib the sheet prints for this row. */}
+                  {/* The members' race number (§664, §972), beside the number: the sheet prints this row's bib in the members' design. */}
                   {memberBib && (
-                    <Typography variant="body2" color={memberBib === "printed" ? "text.primary" : "text.secondary"} data-testid="member-bib">
-                      {tr(`registrations.memberBib.${memberBib}`)}
+                    <Typography variant="body2" color="text.primary" data-testid="member-bib">
+                      {tr("registrations.memberBib.printed")}
                     </Typography>
                   )}
                   {/* Replacing a number already emailed is the Administrator's (§548); filling a gap is any desk role's. */}
@@ -1369,16 +1368,11 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                         </RecallField>
                       )}
                     </Box>
-                    {/* The member tick (BR-REQ-031-06): a claim the person made, corrected here like any answer. */}
+                    {/* The member tick (BR-REQ-031-06): a claim the person made, corrected here like any answer — and, since §972,
+                        what decides the members' race number: a wrong tick is corrected here. */}
                     <CheckboxField name="clubMemberDeclared" defaultChecked={answers.clubMemberDeclared} help={tr("registrations.answers.memberHelp", { club: CLUB_NAME })}>
                       {answerLabels.clubMemberDeclared}
                     </CheckboxField>
-                    {/* «Vreau numărul de membru» (§664): the person's wish, corrected like the tick; kept only under it. */}
-                    {answerLabels.memberBibWanted && (
-                      <CheckboxField name="memberBibWanted" defaultChecked={answers.memberBibWanted} help={tr("registrations.answers.memberBibHelp")}>
-                        {answerLabels.memberBibWanted}
-                      </CheckboxField>
-                    )}
                     <Box>
                       <GlyphSubmitButton label={tr("registrations.answers.save")} pendingLabel={tr("registrations.answers.pending")} icon="save" variant="contained" />
                     </Box>

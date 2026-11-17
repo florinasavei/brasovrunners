@@ -73,6 +73,7 @@ describe("§681 the members' race numbers print first, on their own pages", () =
     return row.id;
   }
 
+  // `wanted` is the member tick since §972 (it set the retired wish beside it too, which nothing reads any more).
   async function confirmed(email: string, bibNumber: number, wanted: boolean) {
     const [participant] = await db
       .insert(participants)
@@ -104,10 +105,10 @@ describe("§681 the members' race numbers print first, on their own pages", () =
     [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" }).returning();
     state.actor = admin;
     eventId = await event(true);
-    // Three member accounts (§662): their addresses verify. Numbers 1–7, members on 2, 4 and 7.
-    for (const email of ["m2@example.test", "m4@example.test", "m7@example.test"]) {
-      await db.insert(staffUsers).values({ email, displayName: email, role: "MEMBER" });
-    }
+    /*
+      Numbers 1–7, members on 2, 4 and 7: their people ticked «Sunt membru». §972: no member account is needed any
+      more — these three had one under §664's rule, and the same pages print without any.
+    */
     for (const number of [1, 2, 3, 4, 5, 6, 7]) {
       const isMember = [2, 4, 7].includes(number);
       await confirmed(isMember ? `m${number}@example.test` : `o${number}@example.test`, number, isMember);

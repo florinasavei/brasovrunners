@@ -697,11 +697,19 @@ export const HEADER_MARK_HEIGHT = "clamp(30px, 8vw, 40px)";
 export const HEADER_CLEARANCE_PX = { xs: 72, sm: 76 } as const;
 /**
  * How wide the page is. One value, used by the header, the footer, the environment notice and
- * every public and backoffice page, so "allow a wider screen" (the owner, twice on 2026-09-17:
+ * every public page (the backoffice's main column is `BACKOFFICE_WIDTH`, below), so "allow a wider screen" (the owner, twice on 2026-09-17:
  * `md` → `lg` → `xl`) is this line. MUI's `xl` is 1536px; `false` would make the page fluid
  * with only the gutters. Prose keeps `PROSE_MEASURE` inside it whatever this says.
  */
 export const PAGE_WIDTH = "xl" as const;
+
+/**
+ * How wide the backoffice is (§970; the owner, 2026-11-17, on a wide screen where the staff pages stood in the middle
+ * third: «ce mă disperă în backoffice în general e că avem un max-width...»): the whole window, with only the gutters —
+ * its lists are tables that use every column of room they get. The public pages keep `PAGE_WIDTH`; prose keeps
+ * `PROSE_MEASURE` here as everywhere.
+ */
+export const BACKOFFICE_WIDTH = false as const;
 
 /**
  * How wide a column of running text may be. About 75 characters at body size: the range

@@ -281,7 +281,9 @@ describe("§962 the longest category at every size", () => {
       }
     }
     expect(accepted).toBeGreaterThan(1000);
-  });
+    // Every millimetre from 30 to 287 since the badges grew taller (§967): three and a half times the sizes it walked, past
+    // the default 30 s on a busy CI runner (2026-11-17).
+  }, 180_000);
 
   it("keeps a race's own short categories beside «VOLUNTAR» at every size and tick the designer accepts", () => {
     for (const width of widths) {
@@ -297,7 +299,7 @@ describe("§962 the longest category at every size", () => {
         }
       }
     }
-  });
+  }, 180_000);
 
   it("asks the save's fit check for nothing new: the same sizes are refused, with or without categories", () => {
     // The fit check reads the size and the ticked rows; the category's line takes no row (the test above), so the answer cannot move.

@@ -2018,7 +2018,7 @@
         "guardianHelp": "Only for someone who was a minor when they registered, and then required. A birth date corrected to an adult's clears it.",
         "guardianSignedHelp": "The declaration is signed and names them: it does not change here.",
         "clubNameHelp": "While the member tick is on, the club is {club}.",
-        "memberHelp": "Unticked, the club {club} also goes from the list.",
+        "memberHelp": "Unticked, the club {club} also goes from the list. The tick also decides the members' number, where the event offers one.",
         "lockedTitle": "What does not change here",
         "lockedAddress": "The email address is changed in the “Email address” card, not here.",
         "lockedConsents": "Only the person gives the consents — you can only withdraw them, with their own button.",
@@ -2043,8 +2043,7 @@
           "tshirtSize": "T-shirt size",
           "listSocials": "Strava and Instagram on the list",
           "memberBibWanted": "I want the members' number"
-        },
-        "memberBibHelp": "Kept only with the member tick, and while the event offers the members' number."
+        }
       },
       "address": {
         "title": "Email address",
@@ -2097,9 +2096,9 @@
         "ticked": "The ticked registrations",
         "rowHelp": "Ticked = cleared · unticked = Leave the tick",
         "cleared": {
-          "one": "Cleared the member tick on {count} registration. Nothing else changed.",
-          "few": "Cleared the member tick on {count} registrations. Nothing else changed.",
-          "other": "Cleared the member tick on {count} registrations. Nothing else changed."
+          "one": "Cleared the member tick on {count} registration. The place and the race number stayed; where the event offers the members' number, the ordinary one prints.",
+          "few": "Cleared the member tick on {count} registrations. Places and race numbers stayed; where the event offers the members' number, the ordinary one prints.",
+          "other": "Cleared the member tick on {count} registrations. Places and race numbers stayed; where the event offers the members' number, the ordinary one prints."
         }
       },
       "tell": {
@@ -2152,12 +2151,8 @@
           "placeKept": "Your place is confirmed; at the desk we find you by name."
         }
       },
-      "memberBibWantedStaffHelp": "Only for a member, at an event that offers the members' number; otherwise it is not kept.",
-      "memberBibAskedFilter": "Only those who asked for the members' number, whose address is no member account's.",
-      "memberBibAskedClear": "Show everyone",
       "memberBib": {
-        "printed": "Members' number",
-        "asked": "Members' number: asked, not verified — the ordinary number prints"
+        "printed": "Members' number"
       },
       "auditDetail": {
         "change": "“{from}” → “{to}”",
@@ -2508,16 +2503,16 @@
       "offerPlaceAfterClose": "Registration has closed: the offer holds until the start at the latest.",
       "memberSweepTitle": "Clear the member ticks?",
       "memberSweepBody": {
-        "one": "You clear the member tick on {count} registration; nothing else changes, no email.",
-        "few": "You clear the member tick on {count} registrations; nothing else changes, no email.",
-        "other": "You clear the member tick on {count} registrations; nothing else changes, no email."
+        "one": "You clear the member tick on {count} registration; where the event offers the members' number, the ordinary one prints. The place and the race number stay, no email.",
+        "few": "You clear the member tick on {count} registrations; where the event offers the members' number, the ordinary one prints. Places and race numbers stay, no email.",
+        "other": "You clear the member tick on {count} registrations; where the event offers the members' number, the ordinary one prints. Places and race numbers stay, no email."
       },
       "answersTitle": "Correct the answers?",
       "answersBody": "You correct, for {name}: {fields}. Nothing else changes, no email; the old values stay in the log.",
       "memberClearTitle": "Clear the member tick?",
-      "memberClearBody": "You clear the member tick from {name}; nothing else changes, no email.",
+      "memberClearBody": "You clear the member tick from {name}; where the event offers the members' number, the ordinary one prints. The place and the race number stay, no email.",
       "memberSetTitle": "Set the member tick?",
-      "memberSetBody": "You set the member tick on {name}; their club on the list becomes {club}. Nothing else changes, no email.",
+      "memberSetBody": "You set the member tick on {name}; their club on the list becomes {club}, and where the event offers the members' number, that one prints. The place and the race number stay, no email.",
       "noteDeleteTitle": "Delete the note?",
       "noteDeleteBody": "The note is deleted for good, along with its text. The trail keeps only who deleted it and when.",
       "rsvpAskAudienceTitle": "Change who we ask “Coming?”",
@@ -3359,7 +3354,7 @@
           "title": "The members' number",
           "summary": "members' number",
           "enabled": "Members get a race number with their own design",
-          "enabledHelp": "The form asks “I want the members' number” under the {club} member tick. It prints only for an address of an account on «Staff». The number keeps its order.",
+          "enabledHelp": "Every registration that ticked “I am a member of the {club} group” gets the members' number, except elites. Correct a wrong tick with «Change the answers». The number keeps its order.",
           "previewAlt": "A member's race number, in the members' design, for a runner named “Nume Prenume”",
           "previewCaption": "Preview — a member's number",
           "mark": "Member mark on the number",
@@ -7525,8 +7520,6 @@
       "emergencyLabel": "Emergency",
       "memberSampleAlt": "A member's race number, in the members' design",
       "memberSampleCaption": "The members' number, as it prints. On the sheet now: {count}.",
-      "memberUnverified": "Asked for the members' number, but their address is no member account's: {count}. They print the ordinary number; if they are members, add them on «Staff» before printing.",
-      "memberUnverifiedLink": "See them in the list",
       "assignHelp": "Gives a number to every real, confirmed registration without one, in order of confirmation, from the race's first free number; special guests, from their own series. Nobody gets a second.",
       "assignHelpMore": "Numbers come by themselves at confirmation. The button catches up on registrations left without one: confirmed before numbers existed or after the first number changed. Test registrations get none.",
       "rangeTitle": "Print the numbers (PDF)",
@@ -9473,7 +9466,7 @@
                 "Print at actual size (100%) and cut on the line. With «No dashed line on the cut» ticked in «What the race number looks like», cut between the two marks at the ends.",
                 "Numbers go in order of confirmation, from «Race numbers (BIB) start at». «Assign numbers» is the Administrator's.",
                 "The desk's spares: «Reprint the free spares (PDF)» prints again the ones not yet given. Only the Administrator reserves new spare numbers.",
-                "The members' number: whoever asked «I want the members' number» and has the address of an account on «Staff» gets the members' band and label; the number is the same. «See the bibs» names the rest.",
+                "The members' number: every registration that ticked «I am a member of the…» gets the members' band and label (an elite one, never); the number is the same. Correct a wrong tick on the registration, with «Change the answers».",
                 "Members' numbers print first, on their own pages. On the numbers' page, «Members' numbers only (PDF)» and «Without members' numbers (PDF)» split them, so you can print them on different card.",
                 "On the site, the «Who's coming» list shows the «BIB» column once the club approves the new privacy notice. Before that, the Administrator writes to those already registered with «Send a message to participants»; anyone who does not want to appear presses «I do not want to appear on the participants & results list» in «My registrations», and the number leaves with the name. From the approval on, the column shows the number of every confirmed runner who has one, whichever notice they registered under; a confirmed runner without one shows “—”."
               ]
@@ -10588,8 +10581,13 @@
             "titleEn": "Badge: the short title (English)",
             "labelRo": "Badge: the word on the band (Romanian)",
             "labelEn": "Badge: the word on the band (English)",
+            "nameSpacePct": "Badge: the space for the name (% of the height)",
             "writingLine": "Badge: the line for the name",
             "footerLogo": "Badge: the club's logo at the bottom, as a watermark",
+            "footerLogoSizePct": "Badge: the logo's size (% of the badge's width)",
+            "footerLogoPaddingMm": "Badge: the space around the logo (mm)",
+            "footerLogoOffsetXMm": "Badge: moving the logo left–right (mm)",
+            "footerLogoOffsetYMm": "Badge: moving the logo up–down (mm)",
             "showFreeText": "Badge: the free-text line",
             "freeTextRo": "Badge: the free text (Romanian)",
             "freeTextEn": "Badge: the free text (English)",
@@ -11921,6 +11919,7 @@
           "role": "The word on the band",
           "freeText": "Free text",
           "writing": "Space for the name",
+          "footerLogo": "The club's logo (watermark)",
           "marker": "Space for the marker",
           "phone": "Coordinator's phone",
           "cut": "Cutting"
@@ -11974,6 +11973,9 @@
         "freeTextBoxHelp": "A single line, at most {max} characters. If it does not fit, it is made smaller, then cut.",
         "freeTextOff": "No free text",
         "writingHelp": "No name is printed. A white area with “Name:” is left, where the name is written by hand.",
+        "nameSpace": "Space for the name (% of the height)",
+        "nameSpaceHelp": "How much of the badge's height stays white for the name. More = smaller bands at the top. 43 = as today.",
+        "nameSpaceAside": "Space for the name {pct}%",
         "writingLine": "A thin line for the name",
         "writingPlain": "Only “Name:”",
         "footerLogo": "The club's logo at the bottom, as a watermark",
@@ -11984,11 +11986,17 @@
           "medium": "Medium",
           "strong": "Strong"
         },
-        "footerLogoAside": {
-          "faint": "Logo as a watermark, faint",
-          "medium": "Logo as a watermark, medium",
-          "strong": "Logo as a watermark, strong"
-        },
+        "footerLogoSizeAside": "{size}%",
+        "footerLogoSizeFits": "{size}% (as much as fits)",
+        "footerLogoNoRoom": "does not fit",
+        "footerLogoSizePct": "Logo size (% of the badge's width)",
+        "footerLogoSizeHelp": "How wide the logo is, of the badge's width: it rises over “Name:” if it must, and shrinks by itself when the white area cannot hold it. At 67, the default, it stays under “Name:”.",
+        "footerLogoPaddingMm": "Space around the logo (mm)",
+        "footerLogoPaddingHelp": "Room kept clear around the logo. More room = a smaller logo.",
+        "footerLogoOffsetXMm": "Move left–right (mm)",
+        "footerLogoOffsetXHelp": "Positive = further right, negative = further left. The logo stays in the white area.",
+        "footerLogoOffsetYMm": "Move up–down (mm)",
+        "footerLogoOffsetYHelp": "Positive = lower, negative = higher. The logo stays in the white area.",
         "markerHelp": "A second white area beside “Name:”, left blank on paper: there you write something extra with the marker at the desk, such as the shift or the zone.",
         "showMarker": "A space for the marker, beside the name",
         "markerLabelRo": "The space's label (Romanian)",
@@ -12989,8 +12997,6 @@
       "addressAtCap": "This address already has the most registrations allowed for the event: nothing was registered.",
       "notYou": "Not expecting this invitation? Ignore it or write to us:"
     },
-    "memberBibWanted": "I want the members' number",
-    "memberBibWantedHelp": "The same number, in the same order; only the look differs. The club prints it only if your address is a {club} member's.",
     "pausedBack": "Back to the event"
   },
   "Registrations": {

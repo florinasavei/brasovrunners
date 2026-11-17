@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.59-2026-11-17 -->
+<!-- PROJECT_BASELINE: BR-V4.62-2026-11-17 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V4.59-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.62-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1623,6 +1623,7 @@ else's: they are marked **YOURS**. Everything else below is a value, not a place
 | Înscrieri | …și cu câte zile înainte expiră | **YOURS** — the default **2**: an unconfirmed place goes to the waiting list two days before (when somebody waits). Changing either number later moves the places already reserved by the window to the new deadline in the same save — the card says how many before you press, the banner after; inside an open window each of those people is emailed the new deadline. The last call to sign goes «Setări» → «Termene» → «Ultima chemare la semnat…» hours before the deadline (48 by default) |
 | Înscrieri | Numerele de concurs (BIB) încep de la | **1**, or **100** if the club wants three-digit numbers |
 | Înscrieri → «Numere de concurs (BIB)» → «Cum arată numărul de concurs» → «Antet» | Culoarea numerelor de concurs (BIB) | the band colour on the printed bib; any of the palette's |
+| Înscrieri → «Numere de concurs (BIB)» → «Cum arată numărul de concurs» → «Membrii» | Membrii primesc un număr cu design propriu | tick it for the members' own design: every registration that ticked «Sunt membru al grupului» prints it, never an elite one, with no other step — no account on «Echipa» and no second question (`DECISIONS.md` §972). A wrong tick is corrected on the registration, «Datele înscrierii» → «Modifică datele»; the number and its order are the same for everyone |
 | Înscrieri | Declarația pe care o semnează participantul | the approved **EVENT_DECLARATION** — the only entry in the list on production |
 | Înscrieri | Publică lista participanților | leave **off**. It goes on only once the privacy notice describes it |
 | Înscrieri | Clubul pe lista publică | **«Doar» the club's name** (the default, §753, §756): the «Club» column shows the club's own name for everyone who typed the club (BVR, the full name, any usual spelling, «.ro» after it, one typo in a word forgiven, a digit never), with or without an account on «Echipa»; every other cell is blank, and the column is not drawn when none has a value. «Cum l-au scris» shows what people typed, silly text included; «Nu arăta clubul» draws no column. Display only: the backoffice, the exports, the desk and the bibs keep the typed club |
@@ -2322,10 +2323,25 @@ only ones who see the names, addresses and telephone numbers.
      type. A badge that is too short for everything you ticked is refused when you save, with a sentence
      saying what does not fit and how tall it must be: the free-text line and the coordinator's telephone
      together need a custom size at least 34 mm tall; both ready-made sizes (90 × 35 and 100 × 40 mm) take everything.
-     Under «Locul pentru nume», **«Logo-ul clubului jos, ca filigran»** (§965) puts the club's logo, large and pale, at
-     the bottom of every badge, under «Nume:», where the name is written in marker over it: «Fără» (the default),
-     «Puțin vizibil», «Mediu» or «Bine vizibil». It takes no room of its own, so any size that fits without it fits
-     with it; the preview shows the level as you choose it.
+     In its own section, **«Logo-ul clubului (filigran)»**, right after «Locul pentru nume» (§965, §969), the choice
+     **«Logo-ul clubului jos, ca filigran»** puts the club's logo, large and pale, at the bottom of every badge, under
+     «Nume:», where the name is written in marker over it: «Fără» (the default), «Puțin vizibil», «Mediu» or «Bine
+     vizibil». Four numbers under it set the logo as you want it: **«Mărimea logo-ului»** — how wide it is, in % of the
+     badge's width (10–100; at 67, the default, it stays under «Nume:», which on a short strip is about a quarter of
+     the width; any other number is drawn as typed, rising over «Nume:» if it must, and shrinks by itself only when the
+     white area cannot hold it) — **«Spațiu în jurul logo-ului»** — the room kept clear around it (0–20 mm; more room,
+     a smaller logo, and none once less than 5 mm of logo is left) — and **«Deplasare stânga–dreapta»** and **«Deplasare
+     sus–jos»** — how far to move it (−100 to 100 mm; positive is right and down; a move never changes its size). It
+     always stays in the white area of the name and takes no room of its own, so any size that fits without it fits
+     with it; the section's line says the share of the width the saved logo is drawn at («Mediu · 24% (cât încape)»),
+     and the preview shows each number as you type it.
+     First under «Locul pentru nume», **«Spațiul pentru nume (% din înălțime)»** (§972) says how much of the badge's
+     height stays white for the name, a whole number from 43 to 80. 43, the default, is the badge as it always was;
+     more makes the two bands at the top lower — the header and the role's band share what is left in the same
+     proportion, their words smaller with them — and gives the name the rest, so a tall badge (90 × 130 mm at 60, say)
+     spends its height on the name rather than on the bands. The free-text line and the telephone keep their own rows,
+     and with more space for the name a short badge that ticks both needs less height than 34 mm. The preview follows
+     the number as you type it; a number outside 43–80 is refused when you save, naming the box.
    - **A role's colour** is part of the role: «Mai multe» on its line in the card (saved with «Salvează toate rolurile»), or
      all the roles at once under «Culorile rolurilor» on the badges' page. «Portocaliul clubului», one of
      the palette, or «Altă culoare» typed as `#rrggbb`; it is kept only when white or black text reads on

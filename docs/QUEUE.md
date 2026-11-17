@@ -138,6 +138,9 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.62` | more room for the name on the volunteers' badges («Spațiul pentru nume», 43–80 %) (§972) · the members' race number for everyone who ticked «Sunt membru», no account and no second question (§973) |
+| `BR-V4.61` | the backoffice uses the whole screen (§970) · «Are kit» in one press on a volunteer's page (§971) |
+| `BR-V4.60` | the badges' watermark sized and placed by the club, in a fold of its own (§969) |
 | `BR-V4.59` | the bib's altitudes in the band's colour (§968) |
 | `BR-V4.58` | taller volunteer badges (up to 287 mm) (§967) |
 | `BR-V4.57` | every volunteer agreement of an event in one PDF, for the desk (§966) |

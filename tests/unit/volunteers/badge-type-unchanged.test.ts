@@ -4,8 +4,8 @@ import path from "node:path";
 import PDFDocument from "pdfkit";
 import { isValidElement, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { type BadgeDesign, badgeWords, DEFAULT_BADGE_DESIGN, readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
-import { badgeImageLayout, badgeMarkup } from "@/modules/volunteers/badges/badge-image";
+import { type BadgeDesign, type BadgeFaceRole, badgeWords, DEFAULT_BADGE_DESIGN, readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
+import { type BadgeImagePicture, badgeImageLayout, badgeMarkup } from "@/modules/volunteers/badges/badge-image";
 import { type BadgeRole, badgePrintEntries } from "@/modules/volunteers/badges/badges";
 import { renderBadgeSheet } from "@/modules/volunteers/badges/badges-pdf";
 
@@ -196,4 +196,227 @@ describe("§962 the badges with no type draw what they drew before it", () => {
     }
     await expect(`${JSON.stringify(drawings, null, 2)}\n`).toMatchFileSnapshot("./__snapshots__/badge-drawing-before-type.json");
   }, 60_000);
+
+  /**
+   * «Spațiul pentru nume (% din înălțime)» at its default — 43, the choice of every design that never made it — draws every case as before,
+   * byte for byte in the layout, the picture and the sheet's calls: chosen 43, and absent from a design stored before the key (§972).
+   */
+  it("draws the same with the space for the name at its default: chosen 43, or absent from a design saved before the key (§972)", async () => {
+    const drawings: Record<string, ReturnType<typeof kept>> = {};
+    for (const [name, { design, locale, role }] of Object.entries(CASES)) {
+      const chosen = await drawingOf({ ...design, nameSpacePct: 43 }, locale, role);
+      expect(await drawingOf(readBadgeDesign(withoutNameSpace(design)), locale, role), `${name}, saved before the key`).toEqual(chosen);
+      drawings[name] = kept(chosen);
+    }
+    await expect(`${JSON.stringify(drawings, null, 2)}\n`).toMatchFileSnapshot("./__snapshots__/badge-drawing-before-type.json");
+  }, 60_000);
+});
+
+/** A design as stored before «Spațiul pentru nume» existed: the key absent (§972). */
+function withoutNameSpace(design: BadgeDesign): Record<string, unknown> {
+  const stored: Record<string, unknown> = { ...design };
+  delete stored.nameSpacePct;
+  return stored;
+}
+
+/** One badge of the grid below: a design, the badge's language, its role, and the club's picture across the header when it has one. */
+type GridCase = { design: BadgeDesign; locale: "ro" | "en"; role: BadgeFaceRole | null; headerPicture?: BadgeImagePicture };
+
+/** The longest category the event's editor keeps (80 characters, §962): under the role's name where «VOLUNTAR · …» does not fit. */
+const LONGEST_CATEGORY = "Activități de start și sosire, punctele de hidratare și de control de pe traseul";
+
+/** The badges of the grid: both modes, a role under none, beside and under a category, cut, «fără rol», every row ticked, the watermark, a picture. */
+const GRID_CASES: Record<string, GridCase> = {
+  "the one badge, the platform's design": { design: DEFAULT_BADGE_DESIGN, locale: "ro", role: null },
+  "the one badge, its own colour, every row ticked, the club's logo strong at its foot, no line, in English": {
+    design: { ...EXTRAS, mode: "single", singleColour: "#6a1b9a", footerLogo: "strong", writingLine: false },
+    locale: "en",
+    role: null,
+  },
+  "per role, a role under no category": { design: PER_ROLE, locale: "ro", role: { name: "Punct de apă", colour: "#c62828", phone: null } },
+  "per role, a category beside «VOLUNTAR»": { design: PER_ROLE, locale: "ro", role: { name: "Foto/Video", colour: null, phone: null, category: "Pe Traseu" } },
+  "per role, the longest category, under the role's name where it must": {
+    design: PER_ROLE,
+    locale: "ro",
+    role: { name: "Direcționare", colour: "#6a1b9a", phone: null, category: LONGEST_CATEGORY },
+  },
+  "per role, a long role cut, in English": {
+    design: PER_ROLE,
+    locale: "en",
+    role: { name: "Coordonatorul general al punctelor de control, apă și al tuturor voluntarilor", colour: null, phone: null },
+  },
+  "per role, a badge «fără rol», every row ticked": { design: EXTRAS, locale: "ro", role: null },
+  "per role, every row ticked, the telephone of the role's category": {
+    design: { ...EXTRAS, phone: "" },
+    locale: "ro",
+    role: { name: "Marshal", colour: null, phone: "0722 111 222", category: "Pe Traseu" },
+  },
+  "per role, the telephone's blank row, the club's logo faint": {
+    design: { ...PER_ROLE, showPhone: true, footerLogo: "faint" },
+    locale: "ro",
+    role: { name: "Masă", colour: "#c62828", phone: null },
+  },
+  "per role, the club's picture across the header, in English": {
+    design: { ...PER_ROLE, headerImageSrc: "/api/media/00000000-0000-4000-8000-000000000abc/web.webp", headerImageCrop: { x: 0.1, y: 0.2, w: 0.6, h: 0.3 } },
+    locale: "en",
+    role: { name: "Guidance", colour: null, phone: null, category: "On the route" },
+    headerPicture: { src: "picture", width: 1600, height: 900 },
+  },
+  "per role, no logo, no title, the club's own word, a category": {
+    design: { ...PER_ROLE, showLogo: false, showTitle: false, labelRo: "Staff", labelEn: "Staff", footerLogo: "medium" },
+    locale: "en",
+    role: { name: "Photo/Video", colour: "#c62828", phone: null, category: "On the route" },
+  },
+};
+
+/** Every size «Altă dimensiune» allows in 10 mm steps, the tallest (287 mm) among them, and the two strips. */
+const GRID_WIDTHS = Array.from({ length: 15 }, (_, index) => 60 + 10 * index);
+const GRID_HEIGHTS = [...Array.from({ length: 26 }, (_, index) => 30 + 10 * index), 287];
+const GRID_SIZES: Array<Pick<BadgeDesign, "size" | "customWidthMm" | "customHeightMm">> = [
+  { size: "strip90", customWidthMm: 90, customHeightMm: 35 },
+  { size: "strip100", customWidthMm: 90, customHeightMm: 35 },
+  ...GRID_WIDTHS.flatMap((width) => GRID_HEIGHTS.map((height) => ({ size: "custom" as const, customWidthMm: width, customHeightMm: height }))),
+];
+/** The sheet is drawn for fewer of them: pdfkit is slow, and the sheet draws the layout the picture draws. */
+const SHEET_SIZES: Array<Pick<BadgeDesign, "size" | "customWidthMm" | "customHeightMm">> = [
+  GRID_SIZES[0],
+  GRID_SIZES[1],
+  { size: "custom", customWidthMm: 60, customHeightMm: 30 },
+  { size: "custom", customWidthMm: 90, customHeightMm: 100 },
+  { size: "custom", customWidthMm: 90, customHeightMm: 130 },
+  { size: "custom", customWidthMm: 200, customHeightMm: 287 },
+];
+const SHEET_CASES = ["the one badge, the platform's design", "per role, every row ticked, the telephone of the role's category", "per role, the telephone's blank row, the club's logo faint"];
+
+/**
+ * The fingerprints of the grid as the base drew it, before the space for the name existed (baseline `BR-V4.56-2026-11-17` with taller
+ * badges): written by this very test on that code, which ignores the key, so it reads the same there whichever design it is handed.
+ */
+const GRID_BEFORE = {
+  drawings: "452ba1ccf9205640fd2f6c0ec88ae4795e69e0a5db05a8a08a562c56ea05fc99",
+  sheets: "b104bc06be74f999db3fff7b6fade177166ef6a0dfc4d4d906babad9c57ec5b9",
+};
+
+/** The grid's layouts and pictures, and its sheets, each as one SHA-256, every badge drawn from the design `designOf` hands. */
+async function gridFingerprints(designOf: (design: BadgeDesign) => BadgeDesign): Promise<{ drawings: string; sheets: string }> {
+  const drawings = createHash("sha256");
+  for (const [name, gridCase] of Object.entries(GRID_CASES)) {
+    for (const size of GRID_SIZES) {
+      const design = designOf({ ...gridCase.design, ...size });
+      const input = { design, locale: gridCase.locale, words: wordsOf(design, gridCase.locale), role: gridCase.role, headerPicture: gridCase.headerPicture ?? null };
+      drawings.update(JSON.stringify([name, size, plain(badgeImageLayout(input)), tree(badgeMarkup(input, "logo"))]));
+    }
+  }
+  const sheets = createHash("sha256");
+  for (const name of SHEET_CASES) {
+    const gridCase = GRID_CASES[name];
+    for (const size of SHEET_SIZES) {
+      const design = designOf({ ...gridCase.design, ...size });
+      sheets.update(JSON.stringify([name, size, await sheetOf(design, gridCase.locale, [{ role: gridCase.role, count: 2 }])]));
+    }
+  }
+  return { drawings: drawings.digest("hex"), sheets: sheets.digest("hex") };
+}
+
+describe("§972 the space for the name at its default is the badge of before, at every size", () => {
+  it("draws every size the bounds allow, in 10 mm steps, as the base drew it: the key at 43, and absent from a design saved before it", async () => {
+    expect(await gridFingerprints((design) => ({ ...design, nameSpacePct: 43 }))).toEqual(GRID_BEFORE);
+    expect(await gridFingerprints((design) => readBadgeDesign(withoutNameSpace(design)))).toEqual(GRID_BEFORE);
+  }, 240_000);
+});
+
+/**
+ * §969 — the watermark's size, room and place, at their defaults, draw what §965 drew (BR-REQ-050-02): «Mărimea logo-ului» 67 %, no space
+ * around it, no move. `__snapshots__/badge-drawing-before-logo-controls.json` was written by this very file from the code as it stood before
+ * the four settings existed (baseline `BR-V4.56-2026-11-17`, with the taller badges): every case above with the watermark at each level, a
+ * role under a category and the tall sizes beside them — the layout, the picture's markup and the sheet's calls, each as the SHA-256 of its
+ * data beside the watermark's box in words — and the box alone on every size the bounds allow, in steps of 10 mm, with each set of rows a
+ * club may tick. Each is drawn again with the four settings spelled out at their defaults and as stored before them (the keys absent, read
+ * back by `readBadgeDesign`), and held to it whole. Only APIs that existed before are called, so the file writes the same snapshot on the
+ * old code (`vitest run -u` there).
+ */
+describe("§969 the watermark's size, room and place at their defaults draw what it drew before them", () => {
+  /** The four settings at their defaults, spelled out as a design saved with them holds them. */
+  const LOGO_DEFAULTS = { footerLogoSizePct: 67, footerLogoPaddingMm: 0, footerLogoOffsetXMm: 0, footerLogoOffsetYMm: 0 } as const;
+  const LEVELS = ["faint", "medium", "strong"] as const;
+  type WatermarkCase = { design: BadgeDesign; locale: "ro" | "en"; role: BadgeFaceRole | null };
+
+  /** A design as stored before the four settings existed: the keys absent, read back by the one forgiving reader. */
+  const storedWithout = (design: BadgeDesign): BadgeDesign => {
+    const stored: Record<string, unknown> = { ...design };
+    for (const key of Object.keys(LOGO_DEFAULTS)) delete stored[key];
+    return readBadgeDesign(stored);
+  };
+  /** The design with the four settings spelled out at their defaults. */
+  const spelledOut = (design: BadgeDesign): BadgeDesign => ({ ...design, ...LOGO_DEFAULTS });
+
+  /** The watermark's box in words, in millimetres from the paper's top left corner, and its opacity — what a person would measure. */
+  const logoInWords = (layout: unknown): string | null => {
+    const box = (layout as { footerLogo?: { left: number; top: number; width: number; height: number; opacity: number } }).footerLogo;
+    if (!box) return null;
+    const mm = (points: number) => (points / (72 / 25.4)).toFixed(2);
+    return `${mm(box.width)} × ${mm(box.height)} mm at ${mm(box.left)}, ${mm(box.top)} mm, opacity ${box.opacity}`;
+  };
+
+  /** Every case above, and a role under a category — beside «VOLUNTAR» and on a line of its own — and the tall sizes. */
+  const cases: Record<string, WatermarkCase> = {
+    ...CASES,
+    "per role, 90 × 35, a role under a category beside «VOLUNTAR»": { design: PER_ROLE, locale: "ro", role: { name: "Direcționare", colour: null, phone: null, category: "Pe Traseu" } },
+    "per role, 90 × 35, every row ticked, a role under a long category on its own line": {
+      design: EXTRAS,
+      locale: "ro",
+      role: { name: "Punct de apă", colour: "#c62828", phone: null, category: "Coordonarea punctelor de alimentare de pe traseu" },
+    },
+    "per role, 90 × 287, the tallest, every row ticked": { design: { ...EXTRAS, size: "custom", customWidthMm: 90, customHeightMm: 287 }, locale: "ro", role: { name: "Sosire", colour: null, phone: null } },
+    "one badge for everyone, 60 × 100": { design: { ...DEFAULT_BADGE_DESIGN, size: "custom", customWidthMm: 60, customHeightMm: 100 }, locale: "ro", role: null },
+    "one badge for everyone, 200 × 30, the widest and shortest": { design: { ...DEFAULT_BADGE_DESIGN, size: "custom", customWidthMm: 200, customHeightMm: 30 }, locale: "ro", role: null },
+  };
+
+  it("holds every case at each level to the drawing written before the four settings, spelled out at their defaults or absent", async () => {
+    const drawings: Record<string, ReturnType<typeof kept> & { logo: string | null }> = {};
+    for (const [name, { design, locale, role }] of Object.entries(cases)) {
+      for (const level of LEVELS) {
+        const withLevel: BadgeDesign = { ...design, footerLogo: level };
+        const drawn = await drawingOf(withLevel, locale, role);
+        expect(await drawingOf(spelledOut(withLevel), locale, role), `${name}, ${level}, the four settings at their defaults`).toEqual(drawn);
+        expect(await drawingOf(storedWithout(withLevel), locale, role), `${name}, ${level}, stored before the four settings`).toEqual(drawn);
+        drawings[`${name} — ${level}`] = { ...kept(drawn), logo: logoInWords(drawn.layout) };
+      }
+    }
+    const grid = (() => {
+      /** The rows a design can take height for, and the marker's area, which takes width. */
+      const ticks = [
+        { showPhone: false, showFreeText: false, showMarker: false },
+        { showPhone: true, showFreeText: false, showMarker: false },
+        { showPhone: false, showFreeText: true, showMarker: true },
+        { showPhone: true, showFreeText: true, showMarker: true },
+      ];
+      const heights = [...Array.from({ length: 26 }, (_, step) => 30 + 10 * step), 287];
+      const boxes: Record<string, unknown[]> = { faint: [], medium: [], strong: [] };
+      for (let width = 60; width <= 200; width += 10) {
+        for (const height of heights) {
+          for (const tick of ticks) {
+            for (const level of LEVELS) {
+              const design: BadgeDesign = {
+                ...EXTRAS,
+                ...tick,
+                size: "custom",
+                customWidthMm: width,
+                customHeightMm: height,
+                footerLogo: level,
+              };
+              const boxOf = (drawn: BadgeDesign) => plain(badgeImageLayout({ design: drawn, locale: "ro", words: wordsOf(drawn, "ro"), role: { name: "Punct de apă", colour: null, phone: null } }).footerLogo ?? null);
+              const box = boxOf(design);
+              expect(boxOf(spelledOut(design)), `${width} × ${height} ${JSON.stringify(tick)} ${level}`).toEqual(box);
+              expect(boxOf(storedWithout(design)), `${width} × ${height} ${JSON.stringify(tick)} ${level}, stored before`).toEqual(box);
+              boxes[level].push([width, height, tick, box]);
+            }
+          }
+        }
+      }
+      // How many boxes each level's fingerprint holds: 15 widths × 27 heights × 4 sets of rows.
+      return { boxesPerLevel: boxes.medium.length, faint: sha256(boxes.faint), medium: sha256(boxes.medium), strong: sha256(boxes.strong) };
+    })();
+    await expect(`${JSON.stringify({ cases: drawings, grid }, null, 2)}\n`).toMatchFileSnapshot("./__snapshots__/badge-drawing-before-logo-controls.json");
+  }, 120_000);
 });

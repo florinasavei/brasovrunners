@@ -386,7 +386,10 @@ describe("BR-REQ-037-03 criterion 13: the registrations list", () => {
     state.actor = await staff("ADMIN");
     const tree = await listPage({ clubMember: "1", saved: "memberTicksCleared", count: "3" });
     const [banner] = byTestId(tree, "member-ticks-cleared");
-    expect(banner.props.children).toBe("Am scos bifa de membru la 3 înscrieri. Nimic altceva nu s-a schimbat.");
+    // §972: the tick now decides the members' race number, so the banner says what stayed and that, rather than «nothing else changed».
+    expect(banner.props.children).toBe(
+      "Am scos bifa de membru la 3 înscrieri. Locurile și numerele de concurs au rămas; unde evenimentul oferă numărul membrilor, li se tipărește cel obișnuit.",
+    );
   });
 });
 
