@@ -10,9 +10,10 @@ import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
 import { traceColumns } from "@/modules/legal-documents/domain/signature-trace";
 import { findCurrentApprovedDocument, findVersionWithTranslations } from "@/modules/legal-documents/repository";
 import { declarationWords } from "@/modules/registrations/declaration-labels";
-import { type DeclarationEntry, renderDeclarationPdf } from "@/modules/registrations/declaration-pdf";
+import { type DeclarationEntry, type DeclarationPart, renderDeclarationParts, renderDeclarationPdf } from "@/modules/registrations/declaration-pdf";
 import type { DeclarationLabels } from "@/modules/registrations/signed-declaration";
 import { isUuid } from "@/shared/ids";
+import { listVolunteerIdsByName } from "./admin-list";
 import { agreementBlanks, agreementBody, agreementMergeValues, readAgreementFacts, volunteerRoles } from "./agreement";
 import { isVolunteerMinor } from "./domain/volunteer";
 
@@ -39,6 +40,10 @@ import { isVolunteerMinor } from "./domain/volunteer";
  * place of the organizer's. The PDF for adults is unchanged. Once the guardian accepted, the PDF draws **two entries** —
  * the volunteer's own acceptance (their version, blanks and fingerprint) and the guardian's (theirs, which may be a
  * newer version) — so neither person's fingerprint is replaced by the other's.
+ *
+ * **Every agreement of an event in one file (§NNN)** — for the desk, printed at once in place of dozens of downloads:
+ * each person's pages exactly as their own file has them, one person after another in one document
+ * (`renderEventVolunteerAgreementsPdf`).
  */
 
 /** The PDF's own words, plain copy like the declaration's: the outbox renders it outside any request. */
@@ -214,6 +219,26 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
    */
   options: { sheet?: boolean } = {},
 ): Promise<{ pdf: Buffer; accepted: boolean } | undefined> {
+  const pages = await volunteerAgreementPages(db, volunteerId, now, options);
+  if (!pages) return undefined;
+  const pdf = await renderDeclarationPdf({ entries: pages.part.entries, locale: pages.locale, generatedAt: now, labels: pages.part.labels });
+  return { pdf, accepted: pages.accepted };
+}
+
+/**
+ * What one volunteer's agreement draws (§NNN): its entries and the words they are drawn with, the language of its pages, and
+ * whether it is the accepted copy or a sheet to sign. The one-person file is this, alone in a document
+ * (`renderVolunteerAgreementPdf`); the event's file of every agreement is each person's, one after the other in one document
+ * (`renderEventVolunteerAgreementsPdf`). Undefined when there is nothing to draw — the same answers as the one-person file.
+ */
+type VolunteerAgreementPages = { part: DeclarationPart; locale: Locale; accepted: boolean };
+
+async function volunteerAgreementPages<T extends Record<string, unknown>>(
+  db: Database<T>,
+  volunteerId: string,
+  now: Date,
+  options: { sheet?: boolean },
+): Promise<VolunteerAgreementPages | undefined> {
   if (!isUuid(volunteerId)) return undefined;
   const guardianStaff = alias(staffUsers, "guardian_staff");
   const [row] = await db
@@ -314,13 +339,7 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
       },
     };
     const pdfLocale = ownRow ? ownRow.agreementLocale : locale;
-    const pdf = await renderDeclarationPdf({
-      entries: own ? [own, entry] : [entry],
-      locale: pdfLocale,
-      generatedAt: now,
-      labels: volunteerAgreementLabels(pdfLocale, now, false),
-    });
-    return { pdf, accepted: true };
+    return { part: { entries: own ? [own, entry] : [entry], labels: volunteerAgreementLabels(pdfLocale, now, false) }, locale: pdfLocale, accepted: true };
   }
 
   if (!sheet && row.acceptedAt && row.documentId && row.method && row.agreementLocale) {
@@ -343,13 +362,7 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
       guardianName !== null ? guardianPendingWords(row.agreementLocale, guardianName) : null,
     );
     if (!entry) return undefined;
-    const pdf = await renderDeclarationPdf({
-      entries: [entry],
-      locale: row.agreementLocale,
-      generatedAt: now,
-      labels: volunteerAgreementLabels(row.agreementLocale, now),
-    });
-    return { pdf, accepted: true };
+    return { part: { entries: [entry], labels: volunteerAgreementLabels(row.agreementLocale, now) }, locale: row.agreementLocale, accepted: true };
   }
 
   // Not accepted — or, for a volunteer under eighteen, the guardian's sheet: the copy to sign at the desk, in the person's
@@ -371,11 +384,59 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
     forMinor: true,
     noIdDocument: true,
   };
-  const pdf = await renderDeclarationPdf({
-    entries: [entry],
-    locale: row.locale,
-    generatedAt: now,
-    labels: volunteerAgreementLabels(row.locale, now, guardianName !== null),
-  });
-  return { pdf, accepted: false };
+  return { part: { entries: [entry], labels: volunteerAgreementLabels(row.locale, now, guardianName !== null) }, locale: row.locale, accepted: false };
+}
+
+/** Which of an event's agreements its file holds (§NNN): every one, or `unsigned` — the sheets to sign on paper alone. */
+export type EventAgreementsScope = "all" | "unsigned";
+
+/**
+ * Every agreement of one event in one PDF (§NNN; the owner, 2026-11-17, four days before the race: «și vreau să pot printa
+ * și contractul de voluntariat, să am la fața locului»), for the desk. Each volunteer who is not «Anulat», in the «Voluntari»
+ * list's order by name (`listVolunteerIdsByName`), starts on a new page and has exactly the pages of their own file
+ * (`renderVolunteerAgreementPdf`), in their own language: the accepted copy once the agreement is accepted — the guardian's
+ * entry with it once there is one — else the sheet to sign on paper. For a volunteer under eighteen whose parent's consent
+ * is still to come that is the parent's sheet, as their page's «Acordul părintelui pe hârtie» gives it (`sheet`, `?for=guardian`):
+ * what the desk needs signed. Should no agreement be in force to print that sheet on, their own accepted copy stands in its
+ * place in the file of every agreement, never in the sheets'. Somebody with no agreement in force and nothing accepted is
+ * not in the file — their own file is a NOT_FOUND too: there is no text to print.
+ *
+ * `unsigned` holds the sheets to sign alone: the people who have not accepted, and the parents' sheets still to sign.
+ *
+ * The counts are for the route's audit row, never a name. The file's language is the first person's; with nobody in it, its
+ * one page says so in `locale`'s words, the reader's.
+ */
+export async function renderEventVolunteerAgreementsPdf<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  now: Date,
+  options: { scope: EventAgreementsScope; locale: Locale },
+): Promise<{ pdf: Buffer; accepted: number; toSign: number }> {
+  const people: VolunteerAgreementPages[] = [];
+  for (const volunteerId of await listVolunteerIdsByName(db, eventId)) {
+    // `sheet` is honoured only for a minor whose parent's consent is to come; for anybody else it is their own file.
+    const pages = (await volunteerAgreementPages(db, volunteerId, now, { sheet: true })) ?? (options.scope === "all" ? await volunteerAgreementPages(db, volunteerId, now, {}) : undefined);
+    if (pages && (options.scope === "all" || !pages.accepted)) people.push(pages);
+  }
+  const accepted = people.filter((person) => person.accepted).length;
+  const [first, ...rest] = people;
+  const pdf = await renderDeclarationParts(
+    first ? [first.part, ...rest.map((person) => person.part)] : [{ entries: [], labels: volunteerAgreementLabels(options.locale, now) }],
+    { locale: first?.locale ?? options.locale, generatedAt: now },
+  );
+  return { pdf, accepted, toSign: people.length - accepted };
+}
+
+/**
+ * The event's file's name (§NNN), with the club's date like the event's other files, and the event's slug like the sponsors'
+ * list's (§581): `contracte-voluntariat-crosul-toamnei-2026-11-17.pdf` for every agreement, `contracte-de-semnat-…` for the
+ * sheets alone. Only `a-z`, digits and hyphens reach the header, whatever a slug holds.
+ */
+export function eventAgreementsFileName(eventSlug: string | null, day: string, scope: EventAgreementsScope): string {
+  const event =
+    (eventSlug ?? "")
+      .toLowerCase()
+      .replace(/[^a-z0-9-]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "eveniment";
+  return `${scope === "unsigned" ? "contracte-de-semnat" : "contracte-voluntariat"}-${event}-${day}.pdf`;
 }

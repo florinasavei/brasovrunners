@@ -774,6 +774,12 @@ export type AuditAction =
   /** The agreement's PDF downloaded from the card (§758): a file with a name in it leaves the site; who and when. */
   | "volunteer.agreement_downloaded"
   /**
+   * Every agreement of an event in one PDF, from the «Voluntari» list (§NNN), entity `event`: «Contractele (PDF)», or — `only`
+   * «unsigned» — «De semnat pe hârtie (PDF)». The metadata counts what the file holds (the agreements, the accepted copies and the
+   * sheets to sign), never a name.
+   */
+  | "volunteer.agreements_downloaded"
+  /**
    * The parent's or guardian's agreement for a volunteer under eighteen (§768), entity `event`: an organizer's «Trimite
    * linkul părintelui» (requested, or the sign-up's own email, no actor), the guardian's acceptance from the link
    * (accepted, no actor) and a paper one recorded at the desk (recorded). The metadata holds the volunteer's id, the

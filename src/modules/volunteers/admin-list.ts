@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, exists, gt, inArray, isNull, notExists, or, type SQL, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, exists, gt, inArray, isNull, ne, notExists, or, type SQL, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { nameMatches } from "@/db/name-search";
 import { eventVolunteerCategories, eventVolunteerRoleAssignments, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
@@ -116,6 +116,19 @@ function orderOf(sort: VolunteerSortKey, dir: "asc" | "desc"): SQL[] {
     default:
       return [direction(sql`${eventVolunteers.createdAt}`), asc(eventVolunteers.id)];
   }
+}
+
+/**
+ * One event's people who are not «Anulat», in the list's own order by «Nume» (`orderOf`, A to Z): the file of every agreement
+ * (§NNN) prints them in the order the organizers read them on this screen. Ids only — the file reads each person's own row.
+ */
+export async function listVolunteerIdsByName<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<string[]> {
+  const rows = await db
+    .select({ id: eventVolunteers.id })
+    .from(eventVolunteers)
+    .where(and(eq(eventVolunteers.eventId, eventId), ne(eventVolunteers.state, "CANCELLED")))
+    .orderBy(...orderOf("name", "asc"), asc(eventVolunteers.id));
+  return rows.map((row) => row.id);
 }
 
 /**
