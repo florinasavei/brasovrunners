@@ -9,6 +9,7 @@ import { countForm } from "@/i18n/count-form";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { type DepartureContext, departureOf } from "@/modules/notifications/domain/departure";
+import { emailOutcomeOf } from "@/modules/notifications/domain/email-outcome";
 import { emailLeavesWords } from "@/modules/notifications/domain/email-wait";
 import { isJobCause } from "@/modules/notifications/domain/press-causes";
 import { isRelayMessage } from "@/modules/notifications/domain/relay";
@@ -229,7 +230,7 @@ type LineProps = { line: JournalLine; t: T; typeName: (type: EmailMessageType) =
 
 /** «Ana Pop · ana@…» — „Înscriere anulată” — its state, and the copies the club got of it. */
 function Line({ line, t, typeName, locale, now, departure }: LineProps) {
-  const waiting = line.status === "PENDING" || line.status === "PROCESSING";
+  const waiting = emailOutcomeOf(line) === "waiting";
   const leaves = waiting ? departureWords(departureOf(line.departure, departure), { now, locale, mayEdit: true, t: (key, values) => t(key, values) }) : null;
   return (
     <Box data-testid="email-journal-line" data-type={line.messageType} data-status={line.status} {...(line.test ? { "data-test-row": "true" } : {})}>
@@ -282,13 +283,15 @@ function Line({ line, t, typeName, locale, now, departure }: LineProps) {
 
 /**
  * What became of a row that is no longer waiting: left at an hour, reached nobody (QA), failed, refused. A person's
- * «Emailuri» draws the same chip (`EmailHistory.tsx`, §915).
+ * «Emailuri» draws the same chip (`EmailHistory.tsx`, §915), and the lists' «Emailuri» column says the same judgement
+ * in a word (`domain/email-outcome.ts`, §NNN): one function decides, here only its chip is chosen.
  */
 export function DepartedChip({ line, t, locale, now }: { line: Pick<JournalLine, "status" | "recipientCount" | "sentAt" | "createdAt">; t: T; locale: Locale; now: Date }) {
-  if (line.status === "FAILED") return <StatusChip glyph="failed" color="error" label={t("emails.today.status.failed")} testId="email-journal-status" />;
-  if (line.status === "BOUNCED" || line.status === "COMPLAINED") return <StatusChip glyph="failed" color="warning" label={t("emails.today.status.refused")} testId="email-journal-status" />;
-  if (line.recipientCount === 0) return <StatusChip glyph="hidden" label={t("emails.today.status.captured")} testId="email-journal-status" />;
-  // A SENT row always has its `sent_at` (the table's CHECK); the creation stands in only for the type's sake.
+  const outcome = emailOutcomeOf(line);
+  if (outcome === "failed") return <StatusChip glyph="failed" color="error" label={t("emails.today.status.failed")} testId="email-journal-status" />;
+  if (outcome === "rejected") return <StatusChip glyph="failed" color="warning" label={t("emails.today.status.refused")} testId="email-journal-status" />;
+  if (outcome === "captured") return <StatusChip glyph="hidden" label={t("emails.today.status.captured")} testId="email-journal-status" />;
+  // It left: the chip says when. A SENT row always has its `sent_at` (the table's CHECK); the creation stands in only for the type's sake.
   return <StatusChip glyph="done" color="success" label={sentWords(line.sentAt ?? line.createdAt, t, locale, now)} testId="email-journal-status" />;
 }
 

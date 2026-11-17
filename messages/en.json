@@ -8185,6 +8185,8 @@
         "last": {
           "sentToday": "left at {at}",
           "sentOn": "left {at}",
+          "sent": "left",
+          "delivered": "delivered",
           "waiting": "waiting",
           "failed": "failed",
           "refused": "refused",
@@ -8199,6 +8201,15 @@
         },
         "triesNone": "not tried yet",
         "nextTry": "next try: {at}"
+      },
+      "summary": {
+        "column": "Emails",
+        "hint": "The person's three newest emails: which email, when it left or, if it is still waiting, when it was queued, and what became of it. All of them, with details, are on the person's page.",
+        "more": {
+          "one": "and {count} more email",
+          "few": "and {count} more emails",
+          "other": "and {count} more emails"
+        }
       },
       "copy": {
         "title": "The message's words ({lang}) — the default ones",

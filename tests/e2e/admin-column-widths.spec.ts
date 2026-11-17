@@ -16,14 +16,17 @@ import { FEATURED, hydrated, signIn } from "./support/featured-event";
  *
  * §943 — and the row verbs' column stays in view: on a frame narrower than the table it is pinned to the
  * frame's right edge, opaque, fading into the columns under it; a press the keyboard reaches beside it is
- * not left under it; and on the owner's 1858-px screen the whole table fits.
+ * not left under it; and on the owner's 1858-px screen the whole table fits — since §NNN, once the Administrator's
+ * «Emailuri» is unticked under «Coloane»: drawn, with somebody on the page emailed, the table scrolls under the pinned verbs.
  *
  * Everything here is the browser's own layout — `col` alignment under `table-layout: fixed` with
  * collapsed borders, pointer capture, the restore after a reload, `position: sticky` in a scrolling
  * frame — which no unit test can reach.
  *
  * One registration is written straight into the database so the list is not empty (the setup, not
- * the subject, as `promo-filter.spec.ts` argues), and removed afterwards.
+ * the subject, as `promo-filter.spec.ts` argues), and removed afterwards — with the emails a confirmed
+ * participant has had, so the Administrator's «Emailuri» column (§NNN) draws the cell of somebody
+ * emailed, three lines and «și încă 2 emailuri» on its floor, as on the owner's own lists.
  */
 
 function databaseUrl(): string {
@@ -34,6 +37,15 @@ function databaseUrl(): string {
 }
 
 type Seeded = { eventId: string; registrationId: string; participantId: string; tag: string };
+
+/** What the seeded registration was emailed, oldest first: each left a minute after it was queued; the newest's delivery not reported. */
+const EMAILS: readonly { type: string; ago: string; delivered: boolean }[] = [
+  { type: "VERIFY_REGISTRATION_EMAIL", ago: "6 days", delivered: true },
+  { type: "COMPLETE_DECLARATION", ago: "5 days 23 hours", delivered: true },
+  { type: "DECLARATION_SIGNED", ago: "5 days", delivered: true },
+  { type: "REGISTRATION_CONFIRMED", ago: "4 days 23 hours", delivered: true },
+  { type: "EVENT_UPDATE_NOTICE", ago: "1 day", delivered: false },
+];
 
 async function seed(tag: string): Promise<Seeded> {
   const client = new pg.Client({ connectionString: databaseUrl() });
@@ -59,6 +71,16 @@ async function seed(tag: string): Promise<Seeded> {
        RETURNING id`,
       [eventId, participantRows[0].id, name],
     );
+    // Left and settled, never waiting: nothing here is the outbox's to send. Removed with the registration (on delete cascade).
+    for (const [index, mail] of EMAILS.entries()) {
+      await client.query(
+        `INSERT INTO email_outbox (participant_id, registration_id, message_type, locale, recipient_email, payload_json, idempotency_key,
+           status, attempt_count, transport, recipient_count, created_at, sent_at, delivered_at)
+         VALUES ($1, $2, $3, 'ro', $4, '{}'::jsonb, $5, 'SENT', 1, 'mailgun', 1, now() - $6::interval,
+           now() - $6::interval + interval '1 minute', CASE WHEN $7::boolean THEN now() - $6::interval + interval '2 minutes' END)`,
+        [participantRows[0].id, rows[0].id, mail.type, email, `e2e-column-widths-${tag}-${index}`, mail.ago, mail.delivered],
+      );
+    }
     return { eventId, registrationId: rows[0].id, participantId: participantRows[0].id, tag };
   } finally {
     await client.end();
@@ -270,7 +292,7 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
     test.setTimeout(90_000);
     const seeded = await seed(`${testInfo.project.name}-${Date.now().toString(36)}`);
     try {
-      // A small laptop: eleven columns ask for more than this frame has.
+      // A small laptop: the list's columns ask for more than this frame has.
       await page.setViewportSize({ width: 1000, height: 800 });
       await signIn(page, "Dev Administrator");
       await page.goto(`/ro/admin/registrations?eventId=${seeded.eventId}&q=${encodeURIComponent(seeded.tag)}`);
@@ -326,9 +348,31 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
       expect(await place(partner)).toEqual({ inFrame: true, clearOfVerbs: true });
       expect((await place(verbs)).inFrame).toBe(true);
 
-      // The owner's screen, 1858 px (2026-11-12: «Aici mi se face crop!»): the whole table fits its frame, nothing scrolls
-      // sideways, no edge fades. A column added to this list has to fit here, or leave below a breakpoint.
+      // The owner's screen, 1858 px (2026-11-12: «Aici mi se face crop!»). «Emailuri» (§NNN) is the Administrator's one column
+      // that asks for more than this screen has left once somebody on the page was emailed: the row's three newest emails, a
+      // line each, then the link to the rest, on a floor of sixteen rem — never squeezed to its heading, a word to a line. Drawn,
+      // it leaves the table wider than this frame — by 63 px on this page of one confirmed registration when §NNN measured it,
+      // by 194 on a page of a race's usual states, where no floor fits: the table scrolls under the pinned verbs, which stay
+      // whole in the frame, and the page itself never scrolls.
       await page.setViewportSize({ width: 1858, height: 900 });
+      const emails = table.locator('th[data-column="emails"]');
+      await expect(emails).toBeVisible();
+      const cell = table.getByTestId("email-summary");
+      await expect(cell.getByTestId("email-summary-line")).toHaveCount(3);
+      await expect(cell.getByTestId("email-summary-more")).toHaveText("și încă 2 emailuri");
+      expect(await cell.evaluate((box) => box.getBoundingClientRect().width)).toBeGreaterThanOrEqual(16 * 16 - 0.5);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      expect((await place(verbs)).inFrame).toBe(true);
+      // «Coloane» gives the width back (§661), and remembers it: with «Emailuri» unticked the whole table fits its frame,
+      // nothing scrolls sideways, no edge fades — as before the column. Any other column added to this list has to fit
+      // here, or leave below a breakpoint.
+      await main.getByTestId("admin-table-columns").click();
+      const emailsToggle = page.getByRole("menuitemcheckbox", { name: "Emailuri", exact: true });
+      await expect(emailsToggle).toHaveAttribute("aria-checked", "true");
+      await emailsToggle.click();
+      await expect(emailsToggle).toHaveAttribute("aria-checked", "false");
+      await page.keyboard.press("Escape");
+      await expect(emails).toBeHidden();
       await expect.poll(async () => (await scrolls()).wider).toBe(false);
       await expect(frame).not.toHaveAttribute("data-more-end");
       expect((await place(verbs)).inFrame).toBe(true);
@@ -354,10 +398,24 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
       await hydrated(page);
       const main = page.locator("#main");
       await expect(main.getByRole("link", { name: `Deschide înscrierea lui Coloane ${seeded.tag}`, exact: true })).toBeVisible();
+      // «Emailuri» (§NNN) is a line of the card, as every column is: the three newest and the link to the rest, read at 320 px
+      // without the page scrolling sideways.
+      const emails = main.getByTestId("email-summary").filter({ visible: true });
+      await expect(emails.getByTestId("email-summary-line")).toHaveCount(3);
+      await expect(emails.getByTestId("email-summary-more")).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       await expect(main.locator("[data-column-resize]").filter({ visible: true })).toHaveCount(0);
       await expect(main.getByTestId("admin-table-reset-widths").filter({ visible: true })).toHaveCount(0);
       // Nor a «Coloane» menu (§661): the phone's blocks show every field.
       await expect(main.getByTestId("admin-table-columns").filter({ visible: true })).toHaveCount(0);
+
+      // «și încă 2 emailuri» lands on the registration's own «Emailuri», open: the card is a closed fold on that page (nothing
+      // here asks for attention), and the backoffice opens the fold its address names on arrival (`OpenFoldFromHash`, §336) —
+      // one tap, not two.
+      await emails.getByTestId("email-summary-more").click();
+      await expect(page).toHaveURL(new RegExp(`/ro/admin/registrations/${seeded.registrationId}#emailuri$`));
+      await hydrated(page);
+      await expect(page.locator("details#emailuri")).toHaveAttribute("open", "");
     } finally {
       await cleanup(seeded);
     }

@@ -2343,7 +2343,11 @@ the outbox job's work after a response; `enqueueEmail`, the club's copies and th
 scope's `cause`, its `press_id` and its actor as `requested_by_staff_user_id` (a requester the service names wins).
 A public flow opens no scope: its rows carry none. The scope labels rows and never decides whether or when one
 leaves. «Setări» → «Emailuri» → «Emailuri azi» (`notifications/journal.ts`) lists the day's rows by press, with
-the names, for the Administrator and the Superadministrator alone; `tests/unit/shared/emailing-presses.test.ts`
+the names, for the Administrator and the Superadministrator alone — as are one person's emails: the «Emailuri» fold
+on a registration's and a volunteer's page (`notifications/email-history.ts`) and the «Emailuri» column of the
+registrations and «Voluntari» lists (`notifications/email-summaries.ts`: each person's three newest and their count,
+one query a page, the type, the state and its times and never the payload's words or an address), each reader
+refusing every other role; `tests/unit/shared/emailing-presses.test.ts`
 holds every emailing press to its scope, and `tests/e2e/email-journal.spec.ts` runs one through Next itself.
 
 **What a press's toast says it sent.** `shared/feedback/flash.ts#flashOutcome` (and `withPressMail`, for a press that

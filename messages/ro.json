@@ -8185,6 +8185,8 @@
         "last": {
           "sentToday": "a plecat la {at}",
           "sentOn": "a plecat {at}",
+          "sent": "a plecat",
+          "delivered": "livrat",
           "waiting": "așteaptă",
           "failed": "eșuat",
           "refused": "refuzat",
@@ -8199,6 +8201,15 @@
         },
         "triesNone": "încă nu s-a încercat",
         "nextTry": "următoarea încercare: {at}"
+      },
+      "summary": {
+        "column": "Emailuri",
+        "hint": "Ultimele trei emailuri ale persoanei: ce email, când a plecat sau de când așteaptă și ce s-a întâmplat cu el. Toate, cu detalii, sunt pe pagina persoanei.",
+        "more": {
+          "one": "și încă {count} email",
+          "few": "și încă {count} emailuri",
+          "other": "și încă {count} de emailuri"
+        }
       },
       "copy": {
         "title": "Textul mesajului ({lang}) — cel implicit",

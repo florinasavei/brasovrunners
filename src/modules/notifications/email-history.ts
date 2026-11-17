@@ -11,6 +11,7 @@ import { isUuid } from "@/shared/ids";
 import { CLUB_COPY_FLAG } from "./domain/club-notices";
 import { type Departure, departureOf } from "./domain/departure";
 import { isClubSide } from "./domain/email-audience";
+import { isWaitingStatus } from "./domain/email-outcome";
 import { isPressCause, type PressCause } from "./domain/press-causes";
 import { isRejectionCause, type RejectionCause } from "./domain/rejection-cause";
 import { SENT_NOW_FLAG } from "./domain/send-at-once";
@@ -131,15 +132,20 @@ export type EmailHistoryRowRead = {
   idempotencyKey: string;
 };
 
-/** The club's side as SQL: a copy by its flag, or a type the audience map gives the club (`isClubSide`). */
+/**
+ * The club's side as SQL: a copy by its flag, or a type the audience map gives the club (`isClubSide`). The one
+ * predicate the fold counts a person's own emails by and the lists' «Emailuri» column leaves the club's rows out by
+ * (`email-summaries.ts`, §NNN).
+ */
 const CLUB_SIDE_TYPES = emailMessageType.enumValues.filter((type) => isClubSide(type, false));
 const clubCopySql = sql`coalesce((${emailOutbox.payloadJson} ->> ${CLUB_COPY_FLAG}::text) = 'true', false)`;
-const clubSideSql = or(clubCopySql, inArray(emailOutbox.messageType, CLUB_SIDE_TYPES)) as SQL;
+export const CLUB_SIDE_OF_ROW = or(clubCopySql, inArray(emailOutbox.messageType, CLUB_SIDE_TYPES)) as SQL;
 
-const isWaiting = (status: EmailOutboxStatus) => status === "PENDING" || status === "PROCESSING";
-
-/** The Administrator's and the Superadministrator's (BR-REQ-060-01): anybody else is refused, never told «none». */
-function assertMayReadEmailHistory(actor: StaffSubject): void {
+/**
+ * The Administrator's and the Superadministrator's (BR-REQ-060-01): anybody else is refused, never told «none». The
+ * one assertion of a person's emails — the fold's reader below and the lists' column (`email-summaries.ts`, §NNN).
+ */
+export function assertMayReadEmailHistory(actor: StaffSubject): void {
   if (!canManageRegistrations(actor)) {
     const role = typeof actor === "string" ? actor : actor.role;
     throw new DomainError("FORBIDDEN", `role ${role} may not read a person's email history`);
@@ -182,7 +188,7 @@ export function foldEmailHistory(
       by: row.by,
       manualResend: row.manualResend,
       fromSite: !row.pressId && !row.by && pressesSince !== null && row.createdAt >= pressesSince,
-      departure: isWaiting(row.status) ? (input.departures?.get(row.id) ?? null) : null,
+      departure: isWaitingStatus(row.status) ? (input.departures?.get(row.id) ?? null) : null,
       copies: [],
     };
     rows.push(line);
@@ -240,7 +246,7 @@ export async function readEmailHistory<T extends Record<string, unknown>>(
       idempotencyKey: emailOutbox.idempotencyKey,
       // Every row of the person, and their own (not the club's), past the cap included: one query, no second count.
       total: sql<number>`count(*) over ()`.mapWith(Number),
-      ownTotal: sql<number>`count(*) filter (where not (${clubSideSql})) over ()`.mapWith(Number),
+      ownTotal: sql<number>`count(*) filter (where not (${CLUB_SIDE_OF_ROW})) over ()`.mapWith(Number),
       // The outbox's first recorded press, computed once for the query (an uncorrelated subquery): only from then on
       // is a row with neither press nor colleague the person's own (§915).
       pressesSince: sql<Date | null>`(select min(${emailOutbox.createdAt}) from ${emailOutbox} where ${emailOutbox.pressId} is not null)`.mapWith(
@@ -290,7 +296,7 @@ export async function readEmailHistory<T extends Record<string, unknown>>(
 
   // When each waiting row leaves, judged as the queue panel and «Emailuri azi» judge it — read only when one waits.
   const departures = new Map<string, Departure>();
-  const waiting = rows.filter((row) => isWaiting(row.status) && !isClubSide(row.messageType, row.clubCopy));
+  const waiting = rows.filter((row) => isWaitingStatus(row.status) && !isClubSide(row.messageType, row.clubCopy));
   if (waiting.length > 0) {
     const [roads, volume, delivery] = await Promise.all([
       readOutboxRoads(db, now),
