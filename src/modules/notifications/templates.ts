@@ -10,7 +10,7 @@ import { organizerParagraphs } from "./domain/organizer-message";
 import { audienceOf } from "./domain/email-audience";
 import { tagsOfMessageType, tagSubject } from "./domain/subject-tags";
 import { isRelayMessage, type RelayMessageType } from "./domain/relay";
-import { type EmailEventFacts, type EventFactsBlock, eventFactsBlock } from "./domain/event-facts";
+import { type EmailEventFacts, type EventFactsBlock, eventFactsBlock, eventProgrammeBlock } from "./domain/event-facts";
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
 import type { EventChangeKind } from "@/modules/events/domain/event-changes";
 import { CLUB_NAME, COLOR, EMAIL_EMPHASIS, EMAIL_ORGANIZER_WORDS } from "@/theme/brand";
@@ -109,7 +109,8 @@ export type TemplateContent = {
    * The event's facts as one block (§392, `domain/event-facts.ts`): when, where, the programme, the
    * route, the cost and the page's sections — under the words and the QR, above the button. On the
    * confirmation, the reminder and the declaration request; the platform's, like the QR, so the
-   * club's words never carry it.
+   * club's words never carry it. On an organizers' message whose send ticked «Include programul
+   * evenimentului» (§958) the same box holds the «Program» row alone (`eventProgrammeBlock`).
    */
   eventFacts?: EventFactsBlock;
   closing: string;
@@ -982,7 +983,8 @@ export type TemplateData = {
   /**
    * What the facts block says about the event (§392, `domain/event-facts.ts`), in this half's
    * language, and in the other's for the bilingual message's second half. Read by the confirmation,
-   * the reminder and the declaration request only; absent when the message is about no event.
+   * the reminder and the declaration request only — and, for its programme's rows alone, by an
+   * organizers' message with `organizerProgramme` (§958); absent when the message is about no event.
    */
   eventFacts?: EmailEventFacts;
   eventFactsOther?: EmailEventFacts;
@@ -1219,6 +1221,13 @@ export type TemplateData = {
   /** The same two in the other language, for the second half — never the same text twice (§354). */
   organizerSubjectOther?: string;
   organizerBodyOther?: string;
+  /**
+   * «Include programul evenimentului» (§958): the send ticked it, so the organizers' message draws the event's programme
+   * under its words — the «Program» row of the facts block, alone, from `eventFacts` (each half from its own). Set by
+   * the renderer from the row's flag and by the composer's preview from the box, never by a sample; read by the
+   * organizers' message alone, the club's copy of it included: the programme is the event's, and nobody's.
+   */
+  organizerProgramme?: boolean;
   /**
    * "Înscrierile mele" without a token (§77): the page that asks for an address and mails the link.
    * On the organizer's message, which mints nothing, so its reader can still find their registration.
@@ -4411,6 +4420,17 @@ export function buildTemplateContent(
   const linkData: TemplateData = factsBlock
     ? { ...data, eventUrl: undefined, eventScheduleUrl: undefined, eventRulesUrl: undefined, eventLinksUrl: undefined }
     : data;
+  /*
+    «Include programul evenimentului» (§958; the owner, 2026-11-17: «Vreau încă o bifă in acel eveniment de "include
+    program"»): an organizers' message whose send ticked it draws the event's programme under the organizers' words —
+    and under the number and the desk code of §943 — as the facts block's «Program» row alone, in the block's own box
+    and from the block's own builder, in this half's language. Not the block: this message is not one of
+    `EVENT_FACTS_MESSAGES`, so its facts line stays and its links list stays whole (`linkData` is `data`). With no timed
+    row as the message leaves there is no block, and the message is the one without the tick. On the club's copy too
+    (§320 takes only what is the participant's own; the programme is on the public page).
+  */
+  const programmeBlock =
+    messageType === "ORGANIZER_MESSAGE" && data.organizerProgramme === true && data.eventFacts ? eventProgrammeBlock(data.eventFacts, locale) : undefined;
 
   // A bulk send's one club copy (§419): it greets the club and names nobody.
   const bulkCopy = clubCopy && data.clubCopyRecipients !== undefined;
@@ -4765,7 +4785,8 @@ export function buildTemplateContent(
         ? { label: copy.signDeclaration.label, url: data.signDeclarationUrl, note: copy.signDeclaration.note }
         : undefined,
     image: entry.image?.(data),
-    eventFacts: factsBlock,
+    // The facts block on the messages that carry it; on a ticked organizers' message, its «Program» row alone (§958).
+    eventFacts: factsBlock ?? programmeBlock,
     links: (() => {
       const own = [
         // «Toate înscrierile mele» first under a family's button (§519): each person's state, before and after the press.
