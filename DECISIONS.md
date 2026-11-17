@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.57-2026-11-17 -->
+<!-- PROJECT_BASELINE: BR-V4.58-2026-11-17 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.57-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.58-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -30486,3 +30486,17 @@ Baseline `BR-V4.56-2026-11-17`.
 - *A Server Action or a form.* A download changes nothing; it is a link.
 
 Baseline `BR-V4.57-2026-11-17`.
+
+## 967. Taller volunteer badges: «Altă dimensiune» up to an A4 page's height (amending §764)
+
+**The owner, 2026-11-17, four days before Saturday's race, designing the volunteers' badges:** «și lasă-mă să fac ecusoanele mai mari pt voluntari, adică mai înalte!»; told «Altă dimensiune» went to 100 mm and choosing 90 × 100 mm: «tot văd limitări aici», «aș vrea să le pot face un pic mai înalte».
+
+**Decision.** «Altă dimensiune» takes a height from 30 up to 287 whole millimetres — an A4 page's height less the sheet's two 5 mm margins, one badge to a page at the tallest (`BADGE_CUSTOM_BOUNDS`); the width stays 60–200. The sheet packs as many as fit, as it always did: 90 × 140 mm is four to a page. The help under the box says the new bounds by itself (it reads the constant), a design saved before reads as it did, and a height over 287 is refused at the save naming the box and read as the default by the forgiving reader, as one over 100 was.
+
+**A taller badge is the same badge, larger.** The rows keep their shares of the height (§764: the header band, the role's band, the writing area, the telephone's row), so the bands, «VOLUNTAR», the role's name and the space for the name all grow with it — the role's name still fitted to the band's width before it is cut. One thing stops growing: the pad, the room inside the bands and the writing area's edges, grew with the header and would have narrowed a tall, narrow badge's writing area under the marker's and the name's least widths (§776). It now stops at the 100 mm badge's (`BADGE_PAD_MAX`, computed as the layout computes a pad), so every badge up to 100 mm keeps its pad to the last bit and draws exactly as it drew — no badge printed today changes, and the drawing's version stays 3.
+
+**Held by** `tests/unit/volunteers/badge-taller.test.ts` (the bound and the page, a taller design read back, the pad unchanged at every height to 100 mm and capped past it, every row a club may tick fitting at the tallest) and the badge suite, whose checks run every height up to the bound: the writing area's least height, the marker's and the name's least widths, the watermark inside its area.
+
+**Not in this change:** a taller header or role band than its share; a badge across two pages; the bibs.
+
+Baseline `BR-V4.58-2026-11-17`.

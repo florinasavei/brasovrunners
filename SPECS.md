@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.57-2026-11-17 -->
+<!-- PROJECT_BASELINE: BR-V4.58-2026-11-17 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V4.57-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.58-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -2540,6 +2540,7 @@ way through every step, and none of them is a way around the allocator.
 258. Given a badge design with `footerLogo` off — chosen, or absent from a design stored before the choice — then every badge prints exactly what it printed before: the same layout, the same picture and the same calls to the PDF (2026-11-17, `DECISIONS.md` §965).
 259. Given the «Voluntari» list with one event chosen, then beside the event's Excel and CSV stand «Contractele (PDF)» / "Agreements (PDF)" and «De semnat pe hârtie (PDF)» / "To sign on paper (PDF)" — plain links at least 44 pixels tall, with one help line saying who is in the file — and neither while every event is in scope, nor for a role that may not read the list (2026-11-17, `DECISIONS.md` §966).
 260. Given an event's volunteers, when «Contractele (PDF)» is downloaded, then one PDF holds, for each volunteer who is not cancelled, in the list's order by name, each from a new page, exactly the pages of that person's own agreement file, in their language and counting their own pages: the accepted copy — with the parent's or guardian's entry once there is one — else the sheet to sign on paper, the parent's sheet for a volunteer under 18 whose parent's consent is still to come; a person with nothing accepted while no agreement is in force in their language is not in it; «De semnat pe hârtie (PDF)» (`?only=unsigned`) holds the sheets alone; and the one-person file stays byte for byte what it was (2026-11-17, `DECISIONS.md` §966).
+261. Given the volunteer badges' «Altă dimensiune», then a height of 30 to 287 whole millimetres is kept (amending criterion 142's 30–100), the badge's rows keep their shares of the height so a taller badge is the same badge larger, the pad grows no further than the 100 mm badge's so a tall, narrow badge keeps the marker's and the name's least widths, and every badge up to 100 mm draws as it drew (2026-11-17, `DECISIONS.md` §967). Verification: unit `volunteers/badge-taller.test.ts`.
 - only the lines with a date whose title, page address or place contains every typed word in either language (accents and case ignored) and whose state matches are listed;
 - the state is an editorial state, «Anulat» (the event's own status), «Viitoare» or «Trecute»;
 - a series is narrowed to its matching dates before it is grouped;

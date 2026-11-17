@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.58-2026-11-17
+
+- **Taller volunteer badges** — «Altă dimensiune» on the badges' page now goes up to 287 mm tall (one badge to an A4 page), the badge growing as a whole; every size up to 100 mm prints as before. §967.
 ## BR-V4.57-2026-11-17
 
 - **Every volunteer agreement in one PDF** — «Contractele (PDF)» and «De semnat pe hârtie (PDF)» on the «Voluntari» list print the chosen event's agreements at once — the accepted copies and the sheets to sign, or the sheets alone — each person from a new page, in their own language. §966.
