@@ -1,0 +1,14 @@
+{
+  "branch": "feat/wide-backoffice",
+  "decisionsTitle": "The backoffice uses the whole window",
+  "decisionsSection": "**The owner, 2026-11-17, four days before Saturday's race, on a wide screen where the «Voluntari» list stood in the middle third of the window, its columns squeezed and its last ones cut:** «ce mă disperă în backoffice în general e că avem un max-width...».\n\n**What was there.** One width for every page, public and backoffice alike: `PAGE_WIDTH`, MUI's `xl` — 1536 px — chosen on 2026-09-17 when the owner asked twice for a wider page (`md` → `lg` → `xl`). Its own note already said that `false` would make a page fluid with only the gutters.\n\n**Decision.** The backoffice's main column — `BackofficeShell`'s `<Container id=\"main\">`, which holds every staff page — takes the whole window, with only the container's gutters: `BACKOFFICE_WIDTH = false` beside `PAGE_WIDTH` in `src/theme/brand.ts`. Its lists are tables, and a table uses every column of room it is given: on a wide screen the columns stop being squeezed and the last ones are no longer cut. The public pages keep `PAGE_WIDTH` (`xl`): the header, the footer, the environment notice and every page a visitor reads; prose keeps `PROSE_MEASURE` inside a page, on the backoffice too. The resting notice (`AdminRestingNotice`) keeps its own narrow column — it is one paragraph.\n\n**Not done:** a width chosen per staff member or per page; the public header's width on staff pages (it is the site's own header).",
+  "changelogLine": "- **The backoffice uses the whole screen** — staff pages and their tables are no longer held to 1536 px in the middle of a wide screen. §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-041-01",
+      "text": "Given any backoffice page, then its main column takes the whole width of the window with only the gutters, while every public page keeps the site's width `PAGE_WIDTH` (2026-11-17, `DECISIONS.md` §NNN). Verification: unit `staff/backoffice-width.test.ts`; e2e `admin-column-widths.spec.ts`."
+    }
+  ],
+  "docsNotes": "",
+  "batchLine": "the backoffice uses the whole screen"
+}
