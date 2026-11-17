@@ -23,7 +23,7 @@ import { pathOf } from "@/modules/routes/elevation/geometry";
 import { ELEVATION_GLYPH_PATHS, GLYPH_EVEN_ODD } from "@/modules/routes/elevation/glyphs";
 import type { BibProfileDrawing, BibProfileFigureLines } from "./bib-profile";
 import { type BibProfileRow, bibFiguresBelow, bibHeaderFiguresLine, bibProfileFiguresLine, bibProfileRow } from "./bib-profile-row";
-import { bibPinGlyphScale } from "./bib-profile-strip";
+import { type BibAltitudeInk, bibAltitudeInk, bibPinGlyphScale } from "./bib-profile-strip";
 import { BIB_MEMBER_MARK_PATHS, BIB_MEMBER_MARK_VIEWBOX, type BibMemberMark, bibMemberMarkBox, isVectorMark } from "./bib-member-mark";
 import { BIB_PICTURE_BOX, type BibPictureSlot, bibPictureDrawing } from "./bib-picture-frame";
 import {
@@ -300,9 +300,10 @@ export function bibMemberMarkElement(shape: BibMemberMark, ink: string, logoSrc:
 /**
  * The profile's row (§750) at the sheet's points: the line drawn from the GPX with its words and the
  * checkpoints' marks, or the club's picture fitted whole (§759) — either in the chart's width the row
- * decided (`bib-profile-row.ts`), with the figures beside it when the club shows them.
+ * decided (`bib-profile-row.ts`), with the figures beside it when the club shows them. The highest and the
+ * lowest altitude in `altitudeInk` (§NNN), everything else in `ink`.
  */
-function profileRowElement(row: BibProfileRow, ink: string, picture: BibImagePicture | null) {
+function profileRowElement(row: BibProfileRow, ink: string, altitudeInk: BibAltitudeInk, picture: BibImagePicture | null) {
   const L = BIB_LAYOUT;
   const chartWidth = row.chartWidth;
   const rowHeight = px(bibProfileRowHeight(bibFiguresBelow(row)));
@@ -395,7 +396,8 @@ function profileRowElement(row: BibProfileRow, ink: string, picture: BibImagePic
         ))}
       </svg>
       {/* Every word of the strip at the baseline the core gave it: «Start» and «Sosire», the points' words, the kilometres and their
-          unit, the altitudes — a box of its own, aligned by the text's anchor, its line's top where the baseline needs it. */}
+          unit, the altitudes — a box of its own, aligned by the text's anchor, its line's top where the baseline needs it. The
+          altitudes in their own ink (§NNN, `bibAltitudeInk`): the band's colour, or the ink at the opacity the sheet lays it at. */}
       {strip.texts.map((text, at) => (
         <div
           key={at}
@@ -409,7 +411,8 @@ function profileRowElement(row: BibProfileRow, ink: string, picture: BibImagePic
             justifyContent: text.anchor === "start" ? "flex-start" : text.anchor === "end" ? "flex-end" : "center",
             fontSize: px(size),
             lineHeight: `${px(BIB_TEXT_LINE * size)}px`,
-            color: ink,
+            color: text.altitude ? altitudeInk.colour : ink,
+            ...(text.altitude && altitudeInk.opacity < 1 ? { opacity: altitudeInk.opacity } : {}),
           }}
         >
           {text.text}
@@ -466,7 +469,7 @@ const TURNED = { transform: "rotate(180deg)" } as const;
  * label and numbers set at the size that fits (`bibEmergencyFit`) — turned as `bibExtrasTurn` decides:
  * both turned is **one** block turned about its own centre (the phone comes out above the profile, and
  * reads right under it for the runner), else each row alone. Null when neither is drawn. Exported so
- * the test reads the markup.
+ * the test reads the markup. `altitudeInk` is what `bibAltitudeInk` decided for this bib (§NNN).
  */
 export function bibExtrasBlock(input: {
   row: BibProfileRow | null;
@@ -474,10 +477,11 @@ export function bibExtrasBlock(input: {
   emergency: { text: string; size: number } | null;
   turn: { block: boolean; profile: boolean; phone: boolean };
   ink: string;
+  altitudeInk: BibAltitudeInk;
 }) {
   const L = BIB_LAYOUT;
   if (!input.row && !input.emergency) return null;
-  const profileRow = input.row ? profileRowElement(input.row, input.ink, input.picture) : null;
+  const profileRow = input.row ? profileRowElement(input.row, input.ink, input.altitudeInk, input.picture) : null;
   const emergencyRow = input.emergency ? (
     <div
       data-testid="bib-emergency"
@@ -607,6 +611,9 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const backgroundHeight = px(cardHeight - (stripe ? L.memberStripeHeight / 2 : 0));
   // The number and the name: white on a member's card, the body ink on the white paper.
   const ink = asCard ? BIB_MEMBER_CARD.text : COLOR.ink;
+  // The profile's highest and lowest altitude (§NNN): this bib's band colour — the event's, or the members' — else the ink at
+  // 60%, decided by the function the sheet asks.
+  const altitudeInk = bibAltitudeInk({ band, ink, card: asCard });
   const headerText = asCard ? BIB_MEMBER_CARD.text : bandText;
   // The race and its date at the right of the band, laid out as the sheet lays them out (§755): the
   // members' label on the band under them stops the column above it.
@@ -911,7 +918,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
           </div>
         )}
         {design.namePosition === "below" ? name : null}
-        {bibExtrasBlock({ row: profileRow, picture: profilePicture, emergency, turn, ink })}
+        {bibExtrasBlock({ row: profileRow, picture: profilePicture, emergency, turn, ink, altitudeInk })}
         {/* A member's card's stripe (§695): its foot on the background's foot, the label in capitals. */}
         {stripe ? (
           <div

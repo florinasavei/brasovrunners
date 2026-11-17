@@ -32,6 +32,7 @@ import { bibHeader } from "@/modules/registrations/bib-header";
 import { bibExtrasBlock, bibHeaderLines, renderBibImage } from "@/modules/registrations/bib-image";
 import { type BibProfileDrawing, bibProfileDrawing } from "@/modules/registrations/bib-profile";
 import { bibFiguresBeside, bibHeaderCarriesWords, bibHeaderFiguresLine, bibProfileFiguresLine, bibProfileRow } from "@/modules/registrations/bib-profile-row";
+import { type BibAltitudeInk, bibAltitudeInk } from "@/modules/registrations/bib-profile-strip";
 import { parseGpxElevation } from "@/modules/routes/elevation/parse";
 import { BIB_DRAWING_VERSION, bibPictureStamp } from "@/modules/registrations/domain/bib-stamp";
 import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
@@ -70,6 +71,8 @@ const DRAWING: BibProfileDrawing = {
 const SHEET = { eventTitle: "Crosul de toamnă", eventDate: "21 noiembrie 2026", generatedAt: new Date("2026-10-10T12:00:00Z") };
 const ROWS = [{ bibNumber: 7, registeredName: "Alergător Unu" }];
 const PHONE = "0700 000 001";
+/** The picture's strip in these tests is inked "#000001"; its altitudes in an event's band colour, the editor's green (§NNN). */
+const ALTITUDES: BibAltitudeInk = bibAltitudeInk({ band: "#1b8a3a", ink: "#000001", card: false });
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -336,7 +339,7 @@ describe("§804 the picture draws the figures where the row says", () => {
   const block = (place: (typeof BIB_PROFILE_FIGURES_PLACES)[number]) => {
     const d = withPlace(place);
     const row = bibProfileRow(d, { profile: DRAWING, profileFigures: null }, false);
-    return bibExtrasBlock({ row, picture: null, emergency: { text: `Urgențe: ${PHONE}`, size: 9 }, turn: { block: false, profile: false, phone: false }, ink: "#000001" }) as ReactElement<{
+    return bibExtrasBlock({ row, picture: null, emergency: { text: `Urgențe: ${PHONE}`, size: 9 }, turn: { block: false, profile: false, phone: false }, ink: "#000001", altitudeInk: ALTITUDES }) as ReactElement<{
       children: Array<ReactElement<{ style: Record<string, unknown> }>>;
     }>;
   };
@@ -393,15 +396,19 @@ describe("§804 the picture draws the figures where the row says", () => {
 describe("§804 the drawing version, and the numbers printed so far", () => {
   it("keeps the drawing's version: every number already printed is drawn as it was, and the stamp reads the whole design", () => {
     // The default place draws what the drawing always drew (below, byte for byte), so this choice raised nothing; 6 is the
-    // emergency line's new form (§947), 7 the name an elite registration's bib prints and 8 the room between the profile's row
-    // and the phone line (§959).
-    expect(BIB_DRAWING_VERSION).toBe(9);
+    // emergency line's new form (§947), 7 the name an elite registration's bib prints, 8 the room between the profile's row
+    // and the phone line (§959), 9 the elite bib's one word and no number (§963) and 10 the strip's altitudes in the band's
+    // colour (§NNN).
+    expect(BIB_DRAWING_VERSION).toBe(10);
     const stamp = (place: (typeof BIB_PROFILE_FIGURES_PLACES)[number]) => bibPictureStamp([withPlace(place)]);
     expect(new Set(BIB_PROFILE_FIGURES_PLACES.map(stamp)).size).toBe(3);
   });
 
-  /** What the trail example's two renderers are asked to draw, as one hash: the sheet's runs, rotations and images, the picture's extras block and header lines. */
-  async function fingerprint(): Promise<string> {
+  /**
+   * What the trail example's two renderers are asked to draw, as one hash: the sheet's runs, rotations and images, the picture's
+   * extras block — its strip's altitudes in `altitudeInk` — and header lines.
+   */
+  async function fingerprint(altitudeInk: BibAltitudeInk): Promise<string> {
     const rotations: number[] = [];
     const rotate = PDFDocument.prototype.rotate;
     vi.spyOn(PDFDocument.prototype, "rotate").mockImplementation(function (this: PDFKit.PDFDocument, ...args: unknown[]) {
@@ -413,7 +420,7 @@ describe("§804 the drawing version, and the numbers printed so far", () => {
     const noDate = await drawnRuns(() => renderBibSheet({ rows: ROWS, ...SHEET, profile: DRAWING, design: design({ showProfile: true, showDate: false }) }));
     vi.restoreAllMocks();
     const row = bibProfileRow(trail, { profile: DRAWING, profileFigures: null }, false);
-    const extras = bibExtrasBlock({ row, picture: null, emergency: { text: `Urgențe: ${PHONE}`, size: 9 }, turn: { block: false, profile: false, phone: false }, ink: "#000001" });
+    const extras = bibExtrasBlock({ row, picture: null, emergency: { text: `Urgențe: ${PHONE}`, size: 9 }, turn: { block: false, profile: false, phone: false }, ink: "#000001", altitudeInk });
     const header = bibHeaderLines(bibHeader({ title: SHEET.eventTitle, date: SHEET.eventDate, logo: true, badge: true, label: false }), "white");
     const replacer = (key: string, value: unknown) => (key === "_owner" || key === "_store" ? undefined : value);
     return createHash("sha256").update(JSON.stringify({ runs, noDate, rotations, extras, header }, replacer)).digest("hex");
@@ -423,8 +430,18 @@ describe("§804 the drawing version, and the numbers printed so far", () => {
     // Captured from the release before the choice (BR-V3.53) with the same call: a change here is a change in every printed number.
     // Captured again for §959, whose room between the profile's row and the phone line is the one change: with that room at zero
     // (and no `marginTop` on the picture's phone row) the call gives the hash of BR-V3.53 again, «9c92ff5a…02b6b7».
-    expect(await fingerprint()).toBe(GOLDEN_RIGHT);
+    // Captured again for §NNN, whose altitudes in the band's colour are the one change (the next test).
+    expect(await fingerprint(ALTITUDES)).toBe(GOLDEN_RIGHT);
+  });
+
+  it("§NNN changes the drawing by the altitudes' colour alone: forced back to the strip's ink, the call gives §959's hash", async () => {
+    // The sheet's runs carry no colour, so its half is the same either way; the picture's strip differs by the two altitudes'
+    // `color` alone. A later change to the drawing replaces this pair with its own.
+    expect(ALTITUDES).toEqual({ colour: "#1b8a3a", opacity: 1 });
+    expect(await fingerprint({ colour: "#000001", opacity: 1 })).toBe(GOLDEN_BEFORE_ALTITUDES);
   });
 });
 
-const GOLDEN_RIGHT = "48afc92f49d50802f13fa2ac6767b0df93bdb5a10169f0a90521b5876dfef79d";
+const GOLDEN_RIGHT = "ac0b7553188469dff309aa3acb7c1f989c1352c9ce77b159ff9eb8f1e722fa2b";
+/** §959's fingerprint, the drawing before the altitudes took the band's colour (§NNN). */
+const GOLDEN_BEFORE_ALTITUDES = "48afc92f49d50802f13fa2ac6767b0df93bdb5a10169f0a90521b5876dfef79d";

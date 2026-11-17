@@ -190,6 +190,15 @@ export const BIB_LAYOUT = {
   profileKmTickWeight: 0.4,
   profileScaleOpacity: 0.6,
   /**
+   * The highest and the lowest altitude's own ink (§NNN; the owner, 2026-11-17: «aș vrea ca numerele de la elevație să fie un
+   * pic colorate diferit, să nu se confunde cu markerii de distanță»): the bib's band colour where it reads on the white paper at
+   * `profileAltitudeContrast` : 1 or more, as WCAG computes it; else — and on a member's card, whose strip stands on the card's
+   * own ground — the strip's ink at `profileAltitudeOpacity`. One function decides it for both renderers
+   * (`bib-profile-strip.ts#bibAltitudeInk`); their size, weight and place are the other labels'.
+   */
+  profileAltitudeContrast: 3,
+  profileAltitudeOpacity: 0.6,
+  /**
    * «O poză încărcată» (§759): the club's own picture of the profile, fitted whole (never cropped) in a
    * box `profilePictureHeight` points tall, `profilePictureTop` into the row, as wide as the chart would
    * be (`bibProfileChartWidth`) — so the figures beside it stand where they stand beside a drawn chart.
