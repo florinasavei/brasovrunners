@@ -380,8 +380,9 @@ describe("§NNN «Emailuri» on the registrations list, for the Administrator", 
 
     // It reads at 320 pixels: the floor is the wide table's alone — a phone's card keeps its own width — every line may wrap
     // (nothing is held on one line, a word too long breaks), and a line is plain text of the body's small size, never a chip.
+    // An email that wraps reads as one block: six pixels between two emails, not the two that ran a card's lines together.
     const [cell, ...inside] = drawn(5, 3);
-    expect(cell.props.sx).toMatchObject({ minWidth: { xs: 0, md: "16rem" }, maxWidth: { md: "28rem" }, overflowWrap: "break-word" });
+    expect(cell.props.sx).toMatchObject({ gap: 0.75, minWidth: { xs: 0, md: "16rem" }, maxWidth: { md: "28rem" }, overflowWrap: "break-word" });
     for (const element of [cell, ...inside]) expect((element.props.sx as { whiteSpace?: string } | undefined)?.whiteSpace, String(element.props["data-testid"])).toBeUndefined();
     const lines = inside.filter((element) => element.props["data-testid"] === "email-summary-line");
     for (const one of lines) expect(one.props.variant).toBe("body2");

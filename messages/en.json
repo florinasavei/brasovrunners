@@ -8129,7 +8129,7 @@
       },
       "summary": {
         "column": "Emails",
-        "hint": "The person's last three emails: which email, when it left or since when it has waited, and what became of it. All of them, with details, are on the person's page.",
+        "hint": "The person's three newest emails: which email, when it left or, if it is still waiting, when it was queued, and what became of it. All of them, with details, are on the person's page.",
         "more": {
           "one": "and {count} more email",
           "few": "and {count} more emails",

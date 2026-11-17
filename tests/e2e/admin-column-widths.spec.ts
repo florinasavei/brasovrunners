@@ -351,8 +351,9 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
       // The owner's screen, 1858 px (2026-11-12: «Aici mi se face crop!»). «Emailuri» (§NNN) is the Administrator's one column
       // that asks for more than this screen has left once somebody on the page was emailed: the row's three newest emails, a
       // line each, then the link to the rest, on a floor of sixteen rem — never squeezed to its heading, a word to a line. Drawn,
-      // it leaves the table wider than this frame (by 63 px on this page when §NNN measured it): the table scrolls under the
-      // pinned verbs, which stay whole in the frame, and the page itself never scrolls.
+      // it leaves the table wider than this frame — by 63 px on this page of one confirmed registration when §NNN measured it,
+      // by 194 on a page of a race's usual states, where no floor fits: the table scrolls under the pinned verbs, which stay
+      // whole in the frame, and the page itself never scrolls.
       await page.setViewportSize({ width: 1858, height: 900 });
       const emails = table.locator('th[data-column="emails"]');
       await expect(emails).toBeVisible();
@@ -407,6 +408,14 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
       await expect(main.getByTestId("admin-table-reset-widths").filter({ visible: true })).toHaveCount(0);
       // Nor a «Coloane» menu (§661): the phone's blocks show every field.
       await expect(main.getByTestId("admin-table-columns").filter({ visible: true })).toHaveCount(0);
+
+      // «și încă 2 emailuri» lands on the registration's own «Emailuri», open: the card is a closed fold on that page (nothing
+      // here asks for attention), and the backoffice opens the fold its address names on arrival (`OpenFoldFromHash`, §336) —
+      // one tap, not two.
+      await emails.getByTestId("email-summary-more").click();
+      await expect(page).toHaveURL(new RegExp(`/ro/admin/registrations/${seeded.registrationId}#emailuri$`));
+      await hydrated(page);
+      await expect(page.locator("details#emailuri")).toHaveAttribute("open", "");
     } finally {
       await cleanup(seeded);
     }

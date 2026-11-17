@@ -22,15 +22,20 @@ type Props = {
 };
 
 /**
- * A cell of a few lines, on the wide table and on a phone's card. On the wide table it stands on a floor of its own
- * (§943's lesson: a full table squeezes a column of wrapping words to its heading, a word to a line) — sixteen rem
- * holds an email in about two lines — and never past the width where every email is one line; a phone's card keeps its
- * own width. `overflow-wrap`, not `word-break`: only a word too long for the line breaks inside.
+ * A cell of a few lines, on the wide table and on a phone's card. On the wide table it stands on a floor of sixteen rem
+ * (§943's lesson: a full table squeezes a column of wrapping words to its heading, a word to a line), where an email
+ * takes about two lines. A lower floor was measured and buys nothing on a real list (§NNN): with a race's usual states
+ * the list's other columns leave less room on the owner's 1858-px screen than this one's heading needs, so it would
+ * only make each email three lines and the row taller. The cap, twenty-eight rem, is never reached: on the backoffice's
+ * widest frame (1990 px) the column measured 307 px, an email still two lines. A phone's card keeps its own width. An
+ * email wraps to two lines or more on both, so six pixels stand between two of them — two pixels left a phone's
+ * right-aligned lines reading as one block. `overflow-wrap`, not `word-break`: only a word too long for the line breaks
+ * inside.
  */
 const CELL_SX = {
   display: "flex",
   flexDirection: "column",
-  gap: 0.25,
+  gap: 0.75,
   minWidth: { xs: 0, md: "16rem" },
   maxWidth: { md: "28rem" },
   overflowWrap: "break-word",
