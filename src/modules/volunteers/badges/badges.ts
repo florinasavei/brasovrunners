@@ -38,6 +38,8 @@ import {
   type BadgeExtra,
   badgeSizeMm,
   badgeSizeRefusal,
+  DEFAULT_BADGE_NAME_SPACE,
+  isBadgeNameSpace,
 } from "./badge-geometry";
 import { BADGE_DESIGN_FORM_PREFIX, type BadgeDesignFormValues, TYPED_COLOUR, postedSingleColour, typedColour } from "./badge-query";
 
@@ -194,6 +196,7 @@ export class BadgeSizeRefusal extends DomainError {
  * club typed something that cannot print as typed:
  *
  * - «Altă dimensiune» needs a whole width and height in millimetres within `BADGE_CUSTOM_BOUNDS`;
+ * - «Spațiul pentru nume (% din înălțime)» is a whole number from 43 to 80 (§972) — a form from before the box posts none, the default;
  * - «Logo-ul clubului jos, ca filigran» is one of its four levels (§965) — it takes no height, so it never makes a size too small;
  * - the logo's size, the space round it and its two moves (§969) are each a whole number within its bounds (`BADGE_FOOTER_LOGO_SETTINGS`),
  *   every box that is not named at once; an empty box is the default, as a form from before the boxes posts none;
@@ -230,6 +233,10 @@ export function parseBadgeDesignPost(values: BadgeDesignFormValues): BadgeDesign
       ...(within(values.customHeightMm, BADGE_CUSTOM_BOUNDS.height) ? [] : [box("customHeightMm")]),
     ];
     if (wrong.length > 0) throw invalid("the custom size is not whole millimetres within the bounds", wrong);
+  }
+  // «Spațiul pentru nume» (§972): refused, naming its box, when it is not a whole number from 43 to 80 — never quietly read as 43.
+  if (values.nameSpacePct !== null && !isBadgeNameSpace(values.nameSpacePct)) {
+    throw invalid("nameSpacePct: not a whole number within the bounds", [box("nameSpacePct")]);
   }
   const pairs = [
     ["titleRo", "titleEn", BADGE_TITLE_MAX],
@@ -277,6 +284,7 @@ export function parseBadgeDesignPost(values: BadgeDesignFormValues): BadgeDesign
   delete fields.singleColourTyped;
   const parsed = badgeDesignSchema.safeParse({
     ...fields,
+    nameSpacePct: values.nameSpacePct ?? DEFAULT_BADGE_NAME_SPACE,
     singleColour,
     customWidthMm: values.size === "custom" ? values.customWidthMm : Number.isFinite(values.customWidthMm) ? values.customWidthMm : undefined,
     customHeightMm: values.size === "custom" ? values.customHeightMm : Number.isFinite(values.customHeightMm) ? values.customHeightMm : undefined,

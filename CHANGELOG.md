@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.62-2026-11-17
+
+- **More room for the name on the volunteers' badges** — «Spațiul pentru nume (% din înălțime)», first in «Locul pentru nume», takes 43 to 80: the higher the number, the lower the two bands at the top and the larger the white space where the name is written; 43 is the badge as before. §972.
+- **The members' race number goes to everyone who ticked «Sunt membru»** — no account on «Echipa» and no second question: at a race whose bib design offers it, every registration with the member tick prints in the members' design (never an elite one), the members' pages first; «Vreau numărul de membru» is gone from every form, and a wrong tick is corrected with «Modifică datele». §973.
 ## BR-V4.61-2026-11-17
 
 - **The backoffice uses the whole screen** — staff pages and their tables are no longer held to 1536 px in the middle of a wide screen. §970.

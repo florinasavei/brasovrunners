@@ -57,8 +57,9 @@ export type RegistrationEntryDetails = {
    */
   clubMemberDeclared?: boolean;
   /**
-   * «Vreau numărul de membru» (§664), as kept: `service.ts` writes true only when the event's
-   * members' bib is on and the member tick is too. NOT NULL with a default of false, like the tick.
+   * «Vreau numărul de membru» (§664), asked no more (§972): `service.ts` writes false on every row the form writes, a
+   * restart's included, and nothing reads it — the member tick decides the members' race number. The column stays
+   * (expand/contract) until a later change drops it.
    */
   memberBibWanted?: boolean;
   tshirtSize?: RegistrationTshirtSize | null;

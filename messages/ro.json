@@ -2018,7 +2018,7 @@
         "guardianHelp": "Doar pentru cine era minor la înscriere, și atunci obligatoriu. O dată a nașterii corectată la a unui major îl șterge.",
         "guardianSignedHelp": "Declarația e semnată și îl numește: nu se schimbă de aici.",
         "clubNameHelp": "Cât timp bifa de membru e pusă, clubul e {club}.",
-        "memberHelp": "Debifată, clubul {club} dispare și de pe listă.",
+        "memberHelp": "Debifată, clubul {club} dispare și de pe listă. Bifa decide și numărul membrilor, unde evenimentul îl oferă.",
         "lockedTitle": "Ce nu se schimbă de aici",
         "lockedAddress": "Adresa de email se schimbă din cardul „Adresa de email”, nu de aici.",
         "lockedConsents": "Consimțămintele le dă doar persoana — tu le poți doar retrage, cu butonul lor.",
@@ -2043,8 +2043,7 @@
           "tshirtSize": "Mărimea tricoului",
           "listSocials": "Strava și Instagram pe listă",
           "memberBibWanted": "Vreau numărul de membru"
-        },
-        "memberBibHelp": "Se păstrează doar cu bifa de membru și cât timp evenimentul oferă numărul membrilor."
+        }
       },
       "address": {
         "title": "Adresa de email",
@@ -2097,9 +2096,9 @@
         "ticked": "Înscrierile bifate",
         "rowHelp": "Bifat = se scoate bifa · debifat = Lasă bifa",
         "cleared": {
-          "one": "Am scos bifa de membru la {count} înscriere. Nimic altceva nu s-a schimbat.",
-          "few": "Am scos bifa de membru la {count} înscrieri. Nimic altceva nu s-a schimbat.",
-          "other": "Am scos bifa de membru la {count} de înscrieri. Nimic altceva nu s-a schimbat."
+          "one": "Am scos bifa de membru la {count} înscriere. Locul și numărul de concurs au rămas; unde evenimentul oferă numărul membrilor, i se tipărește cel obișnuit.",
+          "few": "Am scos bifa de membru la {count} înscrieri. Locurile și numerele de concurs au rămas; unde evenimentul oferă numărul membrilor, li se tipărește cel obișnuit.",
+          "other": "Am scos bifa de membru la {count} de înscrieri. Locurile și numerele de concurs au rămas; unde evenimentul oferă numărul membrilor, li se tipărește cel obișnuit."
         }
       },
       "tell": {
@@ -2152,12 +2151,8 @@
           "placeKept": "Locul tău e confirmat; la masă te găsim după nume."
         }
       },
-      "memberBibWantedStaffHelp": "Doar pentru un membru, la un eveniment care oferă numărul membrilor; altfel nu se păstrează.",
-      "memberBibAskedFilter": "Doar cei care au cerut numărul de membru, dar adresa lor nu e a unui cont de membru.",
-      "memberBibAskedClear": "Arată-i pe toți",
       "memberBib": {
-        "printed": "Număr de membru",
-        "asked": "Număr de membru: cerut, neverificat — se tipărește numărul obișnuit"
+        "printed": "Număr de membru"
       },
       "auditDetail": {
         "change": "„{from}” → „{to}”",
@@ -2508,16 +2503,16 @@
       "offerPlaceAfterClose": "Înscrierile s-au închis: oferta e valabilă cel mult până la start.",
       "memberSweepTitle": "Scoți bifele de membru?",
       "memberSweepBody": {
-        "one": "Scoți bifa de membru la {count} înscriere; nimic altceva nu se schimbă, niciun email.",
-        "few": "Scoți bifa de membru la {count} înscrieri; nimic altceva nu se schimbă, niciun email.",
-        "other": "Scoți bifa de membru la {count} de înscrieri; nimic altceva nu se schimbă, niciun email."
+        "one": "Scoți bifa de membru la {count} înscriere; unde evenimentul oferă numărul membrilor, i se tipărește cel obișnuit. Locul și numărul de concurs rămân, niciun email.",
+        "few": "Scoți bifa de membru la {count} înscrieri; unde evenimentul oferă numărul membrilor, li se tipărește cel obișnuit. Locurile și numerele de concurs rămân, niciun email.",
+        "other": "Scoți bifa de membru la {count} de înscrieri; unde evenimentul oferă numărul membrilor, li se tipărește cel obișnuit. Locurile și numerele de concurs rămân, niciun email."
       },
       "answersTitle": "Corectezi datele?",
       "answersBody": "Corectezi la {name}: {fields}. Nimic altceva nu se schimbă, niciun email; valorile vechi rămân în jurnal.",
       "memberClearTitle": "Scoți bifa de membru?",
-      "memberClearBody": "Scoți bifa de membru de la {name}; nimic altceva nu se schimbă, niciun email.",
+      "memberClearBody": "Scoți bifa de membru de la {name}; unde evenimentul oferă numărul membrilor, i se tipărește cel obișnuit. Locul și numărul de concurs rămân, niciun email.",
       "memberSetTitle": "Pui bifa de membru?",
-      "memberSetBody": "Pui bifa de membru la {name}; pe listă clubul devine {club}. Nimic altceva nu se schimbă, niciun email.",
+      "memberSetBody": "Pui bifa de membru la {name}; pe listă clubul devine {club}, iar unde evenimentul oferă numărul membrilor, i se tipărește acela. Locul și numărul de concurs rămân, niciun email.",
       "noteDeleteTitle": "Ștergi nota?",
       "noteDeleteBody": "Nota se șterge definitiv, împreună cu textul ei. În jurnal rămân doar cine a șters-o și când.",
       "rsvpAskAudienceTitle": "Schimbi cui îi trimitem „Vii?”",
@@ -3359,7 +3354,7 @@
           "title": "Numărul membrilor",
           "summary": "număr de membru",
           "enabled": "Membrii primesc un număr cu design propriu",
-          "enabledHelp": "Formularul întreabă „Vreau numărul de membru” sub bifa de membru {club}. Se tipărește doar pentru o adresă a unui cont din «Echipa». Numărul rămâne în aceeași ordine.",
+          "enabledHelp": "Numărul membrilor îl primește fiecare înscriere care a bifat „Sunt membru al grupului {club}”, în afară de elite. O bifă greșită se corectează cu «Modifică datele». Numărul rămâne în aceeași ordine.",
           "previewAlt": "Numărul de concurs al unui membru, cu designul membrilor, pentru un alergător cu numele „Nume Prenume”",
           "previewCaption": "Previzualizare — numărul unui membru",
           "mark": "Semn de membru pe număr",
@@ -7482,8 +7477,6 @@
       "emergencyLabel": "Urgențe",
       "memberSampleAlt": "Numărul de concurs al unui membru, cu designul membrilor",
       "memberSampleCaption": "Numărul membrilor, cum se tipărește. Pe foaia de acum: {count}.",
-      "memberUnverified": "Au cerut numărul de membru, dar adresa lor nu e a unui cont de membru: {count}. Li se tipărește numărul obișnuit; dacă sunt membri, adaugă-i în «Echipa» înainte de tipărire.",
-      "memberUnverifiedLink": "Vezi-i în listă",
       "assignHelp": "Dă un număr fiecărei înscrieri reale și confirmate fără număr, în ordinea confirmării, de la primul număr liber al cursei; invitații speciali, din seria lor. Cine are un număr nu primește altul.",
       "assignHelpMore": "Numerele se dau singure la confirmare. Butonul recuperează înscrierile rămase fără număr: confirmate înainte să existe numere sau după schimbarea primului număr. Înscrierile de test nu primesc număr.",
       "rangeTitle": "Tipărește numerele (PDF)",
@@ -9430,7 +9423,7 @@
                 "Tipărește la mărimea reală (100%) și taie pe linie. Cu «Fără linia punctată pe tăietură» bifat în «Cum arată numărul de concurs», taie între cele două repere de la capete.",
                 "Numerele se dau în ordinea confirmării, de la «Numerele de concurs (BIB) încep de la». «Alocă numerele» e al Administratorului.",
                 "Rezervele pentru masă: «Retipărește rezervele libere (PDF)» le tipărește din nou pe cele încă nedate. Numere de rezervă noi pune doar Administratorul.",
-                "Numărul membrilor: cine a cerut «Vreau numărul de membru» și are adresa unui cont din «Echipa» primește banda și eticheta membrilor; numărul e același. «Vezi numerele» îi arată pe ceilalți.",
+                "Numărul membrilor: fiecare înscriere care a bifat «Sunt membru al grupului» primește banda și eticheta membrilor (o elită, niciodată); numărul e același. O bifă greșită o corectezi în înscriere, cu «Modifică datele».",
                 "Numerele membrilor se tipăresc primele, pe foi separate. Pe pagina numerelor, «Doar numerele membrilor (PDF)» și «Fără numerele membrilor (PDF)» le despart, ca să le tipărești pe alt carton.",
                 "Pe site, lista «Cine vine» arată coloana «BIB» după ce clubul aprobă nota de confidențialitate nouă. Înainte, Administratorul le scrie celor deja înscriși cu «Trimite un mesaj participanților»; cine nu vrea să apară apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele», iar numărul dispare odată cu numele. De la aprobare, coloana arată numărul fiecărui confirmat care are număr, oricare ar fi nota sub care s-a înscris; un confirmat fără număr are „—”."
               ]
@@ -10545,6 +10538,7 @@
             "titleEn": "Ecuson: titlul scurt (engleză)",
             "labelRo": "Ecuson: cuvântul de pe bandă (română)",
             "labelEn": "Ecuson: cuvântul de pe bandă (engleză)",
+            "nameSpacePct": "Ecuson: spațiul pentru nume (% din înălțime)",
             "writingLine": "Ecuson: linia pentru nume",
             "footerLogo": "Ecuson: logo-ul clubului jos, ca filigran",
             "footerLogoSizePct": "Ecuson: mărimea logo-ului (% din lățimea ecusonului)",
@@ -11936,6 +11930,9 @@
         "freeTextBoxHelp": "O singură linie, cel mult {max} de caractere. Dacă nu încape, se micșorează, apoi se taie.",
         "freeTextOff": "Fără text liber",
         "writingHelp": "Nu se tipărește niciun nume. Rămâne o zonă albă cu „Nume:”, unde numele se scrie de mână.",
+        "nameSpace": "Spațiul pentru nume (% din înălțime)",
+        "nameSpaceHelp": "Cât din înălțimea ecusonului rămâne albă pentru nume. Mai mult = benzile de sus mai mici. 43 = ca acum.",
+        "nameSpaceAside": "Spațiu pentru nume {pct}%",
         "writingLine": "O linie subțire pentru nume",
         "writingPlain": "Doar „Nume:”",
         "footerLogo": "Logo-ul clubului jos, ca filigran",
@@ -12957,8 +12954,6 @@
       "addressAtCap": "Adresa aceasta are deja numărul maxim de înscrieri la eveniment: nu s-a înregistrat nimic.",
       "notYou": "Nu te așteptai la această invitație? Ignor-o sau scrie-ne:"
     },
-    "memberBibWanted": "Vreau numărul de membru",
-    "memberBibWantedHelp": "Același număr, în aceeași ordine; doar arată altfel. Clubul îl tipărește doar dacă adresa ta e a unui membru {club}.",
     "pausedBack": "Înapoi la eveniment"
   },
   "Registrations": {

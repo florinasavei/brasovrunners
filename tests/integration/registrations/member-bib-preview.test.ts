@@ -8,10 +8,10 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §664, BR-REQ-038-01 — the preview route draws a member's bib where the sheet would print one:
- * a row that asked AND whose canonical address is a member account's; a declared-only row draws the
- * ordinary bib. `member=1` on the sample draws the members' design, the switch on or not yet, with
- * the platform's label in the picture's language.
+ * §664, BR-REQ-038-01 — the preview route draws a member's bib where the sheet would print one: since §972, a row
+ * whose person ticked «Sunt membru» at an event whose design offers it — a member account or not; a row that did not
+ * tick draws the ordinary bib, an account or not. `member=1` on the sample draws the members' design, the switch on
+ * or not yet, with the platform's label in the picture's language.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, drawn: [] as Array<Record<string, unknown>> }));
 
@@ -37,7 +37,7 @@ vi.mock("@/modules/registrations/bib-image", () => ({
 
 const { GET } = await import("@/app/api/admin/events/[id]/bibs/preview/route");
 
-describe("§664 the preview draws the members' bib for wanted AND verified", () => {
+describe("§664 the preview draws the members' bib for the member tick (§972)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let eventId: string;
@@ -72,7 +72,7 @@ describe("§664 the preview draws the members' bib for wanted AND verified", () 
     eventId = event.id;
   });
 
-  async function confirmed(email: string, bibNumber: number) {
+  async function confirmed(email: string, bibNumber: number, declared = true) {
     const [participant] = await db
       .insert(participants)
       .values({ deliveryEmail: email, normalizedEmail: email, canonicalEmail: email, canonicalizationVersion: 1, defaultName: email })
@@ -87,7 +87,7 @@ describe("§664 the preview draws the members' bib for wanted AND verified", () 
         locale: "ro",
         registeredName: email,
         displayName: email,
-        clubMemberDeclared: true,
+        clubMemberDeclared: declared,
         memberBibWanted: true,
         bibNumber,
         privacyNoticeVersion: 1,
@@ -109,10 +109,19 @@ describe("§664 the preview draws the members' bib for wanted AND verified", () 
     expect(state.drawn[0]).toMatchObject({ member: true, memberLabelDefault: "Membru Brașov Runners" });
   });
 
-  it("draws the ordinary bib for a member who only declared", async () => {
+  // §972: a member who only declared drew the ordinary bib; the tick alone draws the members' bib now, no account needed.
+  it("draws the members' bib for a member who only declared — no account on «Echipa»", async () => {
     const row = await confirmed("declarat@example.test", 8);
     expect((await ask(`registration=${row.id}&locale=ro`)).status).toBe(200);
+    expect(state.drawn[0]).toMatchObject({ member: true, memberLabelDefault: "Membru Brașov Runners" });
+  });
+
+  // §972: and the account alone never draws it — the row that did not tick draws the ordinary bib.
+  it("draws the ordinary bib for a member account's address that did not tick «Sunt membru»", async () => {
+    const row = await confirmed("membru@example.test", 9, false);
+    expect((await ask(`registration=${row.id}&locale=ro`)).status).toBe(200);
     expect(state.drawn[0]).toMatchObject({ member: false });
+    expect(state.drawn[0]).not.toHaveProperty("memberLabelDefault");
   });
 
   it("draws the members' sample with `member=1`, the switch read from the address or not", async () => {

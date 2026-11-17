@@ -400,9 +400,8 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
             // A minor's parent (§108), asked by the form once the birth date says under eighteen
             // (§324); the schema requires it then, and ignores it for an adult.
             guardianName: optional(form, "guardianName"),
+            // The member tick, which also prints the members' race number (§972); «Vreau numărul de membru» is never read.
             clubMemberDeclared: form.get("clubMemberDeclared") === "on",
-            // The members' bib (§664): kept by the service only where the event offers it.
-            memberBibWanted: form.get("memberBibWanted") === "on",
             tshirtSize: optional(form, "tshirtSize") as
               | "NONE"
               | "XS"
@@ -501,14 +500,15 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
  * The answers a form posted that differ from what the page rendered (§645): each allowlisted answer
  * travels with its `was.<name>` twin, and only the ones whose value moved become the correction — so a
  * page opened before a colleague's save corrects what this Administrator changed and nothing else. The
- * member tick is a box: ticked posts `on`, and its twin says `on` or nothing.
+ * member tick is a box: ticked posts `on`, and its twin says `on` or nothing. Only the allowlist is read: a posted
+ * «Vreau numărul de membru», no answer since §972, is never looked at.
  */
 function changedAnswersOf(form: FormData): Record<string, string | boolean> {
   const changes: Record<string, string | boolean> = {};
   for (const field of EDITABLE_ANSWERS) {
     const was = form.get(`was.${field}`);
     if (typeof was !== "string") continue;
-    if (field === "clubMemberDeclared" || field === "memberBibWanted") {
+    if (field === "clubMemberDeclared") {
       const ticked = form.get(field) === "on";
       if (ticked !== (was === "on")) changes[field] = ticked;
       continue;

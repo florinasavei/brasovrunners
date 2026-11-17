@@ -272,15 +272,15 @@ export function readInviteeRows(
 
 /**
  * The invitation form's boxes before any press (§647): the invited name split into first and last,
- * and for a member «Sunt membru» with the club's name and «Vreau numărul de membru» ticked (§664) —
- * the members' bib's first readers are the members the club invited.
+ * and for a member «Sunt membru» ticked with the club's name — the tick that, at an event offering
+ * it, prints the members' race number (§664, §972); there is no second box to tick any more.
  */
 export function invitationDraft(link: { name: string; member: boolean }, clubName: string): Record<string, string> {
   const words = link.name.split(" ");
   return {
     firstName: words.length > 1 ? words.slice(0, -1).join(" ") : link.name,
     lastName: words.length > 1 ? words[words.length - 1] : "",
-    ...(link.member ? { clubMemberDeclared: "on", clubName, memberBibWanted: "on" } : {}),
+    ...(link.member ? { clubMemberDeclared: "on", clubName } : {}),
   };
 }
 
