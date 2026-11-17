@@ -1778,6 +1778,20 @@ function standardLinks(
 }
 
 /**
+ * The club's Facebook and Instagram pages, last under the organizers' message to an event's participants (§NNN; the owner,
+ * 2026-11-17: «în mailul către toți participanții pune și link-urile către social media pages: facebook și instagram»).
+ * The same two addresses the site's footer links (`CLUB_FACEBOOK_URL`, `CLUB_INSTAGRAM_URL`; `shared/ui/club-socials.ts`),
+ * read from the environment as the footer reads them: one that is not set is left out, and with neither the message is as
+ * it was. Facebook first, as the footer has them.
+ */
+function clubSocialLinks(labels: { facebook: string; instagram: string }) {
+  return [
+    ...(env.CLUB_FACEBOOK_URL ? [{ label: labels.facebook, url: env.CLUB_FACEBOOK_URL }] : []),
+    ...(env.CLUB_INSTAGRAM_URL ? [{ label: labels.instagram, url: env.CLUB_INSTAGRAM_URL }] : []),
+  ];
+}
+
+/**
  * What one message emphasises (§580): the paragraphs on the band, the line of its own on it, the
  * quieter sentences and the paragraph the button goes under — each by its words, as the message's
  * body writes them for this data (`TemplateContent`).
@@ -1924,6 +1938,9 @@ const T = {
       manage: "Înscrierile mele",
       events: "Toate evenimentele",
       contact: "Scrie-ne",
+      // The club's own pages elsewhere, under the organizers' message (§NNN): the header's words for them (`Site.followOn`).
+      facebook: `${CLUB_NAME} pe Facebook`,
+      instagram: `${CLUB_NAME} pe Instagram`,
     },
     verify: {
       // The event in the subject (§536): a parent with two races open sees which one this is.
@@ -3038,6 +3055,8 @@ const T = {
       manage: "My registrations",
       events: "All our events",
       contact: "Write to us",
+      facebook: `${CLUB_NAME} on Facebook`,
+      instagram: `${CLUB_NAME} on Instagram`,
     },
     verify: {
       subject: (d: TemplateData) => `Confirm your address — ${d.eventTitle ?? "the event"}`,
@@ -4787,7 +4806,12 @@ export function buildTemplateContent(
         return own.length > 0 ? own : undefined;
       }
       const seen = new Set(own.map((link) => link.url));
-      return [...own, ...standardLinks(linkData, copy.moreLinks).filter((link) => !seen.has(link.url))];
+      return [
+        ...own,
+        ...standardLinks(linkData, copy.moreLinks).filter((link) => !seen.has(link.url)),
+        // The club's Facebook and Instagram, last, and on the organizers' own message alone (§NNN).
+        ...(messageType === "ORGANIZER_MESSAGE" ? clubSocialLinks(copy.moreLinks) : []),
+      ];
     })(),
     closing: copy.closing,
     // The reply address's line, and — on the three messages that reach a volunteer or their guardian — the contact person of the
