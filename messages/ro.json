@@ -1629,6 +1629,7 @@
         "empty": "Nicio notă încă.",
         "by": "{name} · {date}",
         "delete": "Șterge",
+        "edit": "Modifică",
         "add": "Adaugă o notă",
         "label": "Nota",
         "limit": "Cel mult {max} de caractere.",
@@ -5974,7 +5975,9 @@
     "volunteers": {
       "notes": {
         "authorUnknown": "autor necunoscut",
-        "exportMore": "… (mai multe note pe pagina voluntarului)"
+        "exportMore": "… (mai multe note pe pagina voluntarului)",
+        "edit": "Modifică nota",
+        "editDialog": "Modifică nota despre {name}"
       },
       "title": "Voluntari",
       "intro": "Oamenii care ajută la eveniment: fiecare bifează ce ar face, tu îi dai un rol. Rolurile se definesc aici, în ambele limbi. Adresele și telefoanele nu apar pe nicio pagină publică.",
@@ -6365,7 +6368,7 @@
         "columnMessage": "Mesaj",
         "messageHint": "Ce a scris persoana pentru organizatori când s-a oferit ca voluntar. Gol: n-a scris nimic.",
         "columnNotes": "Note interne",
-        "notesHint": "Notele organizatorilor despre persoană: cele mai noi trei, cu ziua și ora. Toate, cu autorul lor, sunt pe pagina persoanei. Voluntarul nu le vede.",
+        "notesHint": "Notele organizatorilor despre persoană: cele mai noi trei, fără zi și oră. Toate, cu autorul și data lor, sunt pe pagina persoanei. Voluntarul nu le vede.",
         "filter": "Filtrează",
         "searchEverywhere": "Caut în toate evenimentele — alege unul ca să restrângi.",
         "tableCaption": "Voluntari, cu vârstă, oraș, stare, rolurile date, rolurile oferite, kit, eveniment și data ofertei",
@@ -14398,6 +14401,7 @@
       "answersCorrected": "Date corectate: {fields}.",
       "noteAdded": "Nota a fost salvată.",
       "noteDeleted": "Nota a fost ștearsă.",
+      "noteEdited": "Nota a fost modificată.",
       "shopProductCreated": "Produsul a fost adăugat.",
       "shopProductSaved": "Produsul a fost salvat.",
       "shopProductMoved": "Ordinea produselor a fost schimbată.",

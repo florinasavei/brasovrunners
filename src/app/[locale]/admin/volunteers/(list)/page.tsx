@@ -8,7 +8,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { addVolunteerAction } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
-import { setVolunteerDecisionAction, setVolunteerKitAction, setVolunteerRaffleAction } from "@/app/[locale]/admin/volunteers/actions";
+import { editVolunteerNoteFromListAction, setVolunteerDecisionAction, setVolunteerKitAction, setVolunteerRaffleAction } from "@/app/[locale]/admin/volunteers/actions";
 import { addVolunteerNoteFromListAction } from "@/app/[locale]/admin/volunteers/[id]/note-actions";
 import { getDb } from "@/db/client";
 import { VOLUNTEER_NOTE_MAX } from "@/db/schema/event-volunteer-notes";
@@ -44,7 +44,7 @@ import { guardianAllowsConfirm, guardianAskOf, roleLabel, VOLUNTEER_DECISION_MAX
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
 import { DECISION_ANCHOR } from "@/modules/volunteers/ui/VolunteerDecisionCard";
 import { GuardianVerbs, guardianChips, shortText, STATE_CHIP, VolunteerPersonFields, VolunteerStateForm, volunteerHiddenFields, volunteerPersonBoxes } from "@/modules/volunteers/ui/VolunteerPerson";
-import { listVolunteerNotesForExport } from "@/modules/volunteers/volunteer-notes";
+import { listVolunteerNotesForList } from "@/modules/volunteers/volunteer-notes";
 import { ROLE_EMAIL_SETTLE_MINUTES } from "@/modules/volunteers/volunteers";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import MailLine from "@/shared/feedback/MailLine";
@@ -149,21 +149,22 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const [roleNames, rowNotes] = await Promise.all([
     listRoleNames(db, [...new Set(rows.flatMap((row) => [...row.roleIds, ...row.choiceIds]))]),
     // «Note interne»: each row's live notes, newest first — ONE grouped read over the page's ids, never a query per row. The marker
-    // says how many and, in its tooltip, the words (§945, as the registrations list's, §943). The service asks for the role again.
-    listVolunteerNotesForExport(db, actor, rows.map((row) => row.id)),
+    // says how many and, in its tooltip, the words (§945, as the registrations list's, §943); each note's id and whether the reader
+    // may change it serve the row's «Modifică nota» (§NNN). The service asks for the role again.
+    listVolunteerNotesForList(db, actor, rows.map((row) => row.id)),
   ]);
-  // The marker's tooltip (§945): the newest notes' words, each with its day and hour, the older ones counted — no author's name.
+  // The marker's tooltip and the column (§945, §950): the newest notes' words, the older ones counted — no author's name, and since
+  // §NNN no day or hour either (the owner, 2026-11-17: «la nota internă nu mai afișa și data»). The person's page keeps both.
   const notesTipOf = (volunteerId: string) =>
-    notesTip(
-      rowNotes.get(volunteerId),
-      (at) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }),
-      (left) => t("registrations.notes.tipMore", { counted: t(`registrations.notes.count.${countForm(left, locale)}`, { count: left }) }),
+    notesTip(rowNotes.get(volunteerId), null, (left) =>
+      t("registrations.notes.tipMore", { counted: t(`registrations.notes.count.${countForm(left, locale)}`, { count: left }) }),
     );
-  // The dialog's refusals, cut to the sentences it can meet: the whole catalogue would travel with every row.
-  const noteRefusal = await refusalMessages({ body: t("registrations.notes.label") }).then((all) => ({
-    ...all,
-    errors: Object.fromEntries(["NOTE_EMPTY", "NOTE_TOO_LONG", "NOT_FOUND", "FORBIDDEN"].map((code) => [code, all.errors[code]])),
-  }));
+  // The dialogs' refusals, cut to the sentences each can meet: the whole catalogue would travel with every row. «Modifică nota» (§NNN)
+  // can also meet a session that ended while the phone lay on the table, as «Decizie ziua cursei» can.
+  const noteMessages = await refusalMessages({ body: t("registrations.notes.label") });
+  const cutTo = (codes: readonly string[]) => ({ ...noteMessages, errors: Object.fromEntries(codes.map((code) => [code, noteMessages.errors[code]])) });
+  const noteRefusal = cutTo(["NOTE_EMPTY", "NOTE_TOO_LONG", "NOT_FOUND", "FORBIDDEN"]);
+  const noteEditRefusal = cutTo(["NOTE_EMPTY", "NOTE_TOO_LONG", "NOT_FOUND", "FORBIDDEN", "UNAUTHENTICATED"]);
   // «Decizie ziua cursei» (§954): its dialog's refusals, cut the same way — a line too long, a person deleted meanwhile, another
   // role, and a session that ended while the phone lay on the table: every answer the press can give, as a sentence.
   const decisionRefusal = await refusalMessages({ decision: t("volunteers.decision.label") }).then((all) => ({
@@ -267,6 +268,57 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           settledKey={String(noteCount)}
         />
       </>
+    );
+  };
+
+  /**
+   * «Note interne» in its cell (§950): the words of the row's newest notes, the older ones counted, and under them — on a row whose
+   * newest note the reader may change (its author's, or any for an Administrator) — «Modifică nota» (§NNN; the owner, 2026-11-17, of
+   * this list: «lasă-mă să editez și nota internă»): the row's dialog (`RowNoteDialog`) opened on that note's words, the pencil of
+   * «Modifică decizia» in the next column; older notes are changed on the person's page. Its save is
+   * `editVolunteerNoteFromListAction`, which comes back to this very page of the list (`returnTo`); the page's own render instant
+   * in `settledKey` closes the dialog on every page drawn after a save, an «unchanged» one too. Without JavaScript the press is a
+   * link to the person's notes, where every note the reader may change has its own «Modifică». Strings only cross to the island.
+   * Nothing for a row without notes: an empty cell in the table, no line on a phone's card.
+   */
+  const notesCellOf = (row: VolunteerAdminRow) => {
+    const said = notesTipOf(row.id);
+    if (!said) return null;
+    const newest = rowNotes.get(row.id)?.[0];
+    const label = t("volunteers.notes.edit");
+    return (
+      // The decision's cell's shape (below): the words take the cell's width, the press keeps to the side the card's values stand on.
+      <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+        <Box component="span" data-testid="volunteer-notes" sx={MESSAGE_CELL_SX}>
+          {said}
+        </Box>
+        {newest?.editable && (
+          <Box sx={{ alignSelf: { xs: "flex-end", md: "flex-start" }, maxWidth: "100%" }}>
+            <RowNoteDialog
+              action={editVolunteerNoteFromListAction}
+              actionKey={actionKeyOf(editVolunteerNoteFromListAction)}
+              messages={noteEditRefusal}
+              fields={{ uiLocale: locale, eventId: row.eventId, noteId: newest.id, returnTo }}
+              fallbackHref={`${personHref(row)}#note-interne`}
+              label={label}
+              ariaLabel={t("volunteers.notes.editDialog", { name: shortText(row.name) })}
+              title={t("volunteers.notes.editDialog", { name: row.name })}
+              help={t("registrations.notes.help")}
+              boxName="body"
+              boxLabel={t("registrations.notes.label")}
+              limitText={t("registrations.notes.limit", { max: VOLUNTEER_NOTE_MAX })}
+              max={VOLUNTEER_NOTE_MAX}
+              saveLabel={t("registrations.notes.save")}
+              cancelLabel={words.cancel}
+              settledKey={`${newest.id}:${now.getTime()}`}
+              defaultValue={newest.body}
+              icon="edit"
+              testId="note-edit-open"
+              dialogTestId="note-edit-dialog"
+            />
+          </Box>
+        )}
+      </Stack>
     );
   };
 
@@ -427,23 +479,16 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       /*
         «Note interne» (§950; the owner, 2026-11-16, of this list: «pe lângă mesajul nostru vreau să văd și notele interne ale
         noastre»): the organizers' own notes on the person, in the row itself — the words the marker's tooltip says (§945: the three
-        newest, each with its day and hour, a long one cut, the older ones counted, no author), because a phone has no pointer to
-        hold over a marker. From the list's one grouped read, so no query is added; nothing for a row with no note — an empty cell
-        in the table, no line on a phone's card. The marker beside the name stays the way to the person's card, where every note
-        is whole and says who wrote it.
+        newest, a long one cut, the older ones counted, no author; since §NNN no day or hour either), because a phone has no pointer
+        to hold over a marker — and under them «Modifică nota» for the newest (`notesCellOf` above). From the list's one grouped
+        read, so no query is added; nothing for a row with no note — an empty cell in the table, no line on a phone's card. The
+        marker beside the name stays the way to the person's card, where every note is whole and says who wrote it and when.
       */
       key: "notes",
       label: t("volunteers.screen.columnNotes"),
       hint: t("volunteers.screen.notesHint"),
       omitEmptyOnPhone: true,
-      render: (row) => {
-        const said = notesTipOf(row.id);
-        return said ? (
-          <Box component="span" data-testid="volunteer-notes" sx={MESSAGE_CELL_SX}>
-            {said}
-          </Box>
-        ) : null;
-      },
+      render: notesCellOf,
     },
     {
       /*

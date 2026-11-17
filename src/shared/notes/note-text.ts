@@ -76,12 +76,21 @@ export const TIP_NOTE_CHARS = 280;
  * between two — a note's own line breaks kept (the tooltip is `pre-line`), a long one cut at `TIP_NOTE_CHARS` with «…» — and
  * `more(left)` as the last line when there are older ones. Empty for no notes. The caller says the clock and the words; nothing
  * here knows whose notes they are, and no author is named: who wrote it is the card's to say.
+ *
+ * `when` null leaves the day out: each shown note is its words alone, the rest the same (§NNN; the owner, 2026-11-17, of the
+ * «Voluntari» list's «Note interne»: «la nota internă nu mai afișa și data»). Only that list asks for it; every other caller
+ * passes its clock and reads what it always did.
  */
-export function notesTip(notes: readonly { createdAt: Date; body: string }[] | undefined, when: (at: Date) => string, more: (left: number) => string): string {
+export function notesTip(
+  notes: readonly { createdAt: Date; body: string }[] | undefined,
+  when: ((at: Date) => string) | null,
+  more: (left: number) => string,
+): string {
   if (!notes || notes.length === 0) return "";
   const shown = notes.slice(0, TIP_NOTES).map((note) => {
-    const words = [...note.body.replace(/\r\n?/g, "\n").trim()];
-    return `${when(note.createdAt)}: ${words.length > TIP_NOTE_CHARS ? `${words.slice(0, TIP_NOTE_CHARS).join("").trimEnd()}…` : words.join("")}`;
+    const chars = [...note.body.replace(/\r\n?/g, "\n").trim()];
+    const words = chars.length > TIP_NOTE_CHARS ? `${chars.slice(0, TIP_NOTE_CHARS).join("").trimEnd()}…` : chars.join("");
+    return when ? `${when(note.createdAt)}: ${words}` : words;
   });
   const left = notes.length - shown.length;
   return [...shown, ...(left > 0 ? [more(left)] : [])].join("\n\n");

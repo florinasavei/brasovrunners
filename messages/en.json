@@ -1629,6 +1629,7 @@
         "empty": "No notes yet.",
         "by": "{name} · {date}",
         "delete": "Delete",
+        "edit": "Edit",
         "add": "Add a note",
         "label": "Note",
         "limit": "At most {max} characters.",
@@ -5974,7 +5975,9 @@
     "volunteers": {
       "notes": {
         "authorUnknown": "unknown author",
-        "exportMore": "… (more notes on the volunteer's page)"
+        "exportMore": "… (more notes on the volunteer's page)",
+        "edit": "Edit the note",
+        "editDialog": "Edit the note about {name}"
       },
       "title": "Volunteers",
       "intro": "The people who help at this event: each ticks what they would do, you give them a role. Roles are set here, in both languages. Addresses and telephone numbers never appear on a public page.",
@@ -6365,7 +6368,7 @@
         "columnMessage": "Message",
         "messageHint": "What the person wrote for the organizers when they offered to volunteer. Empty: they wrote nothing.",
         "columnNotes": "Internal notes",
-        "notesHint": "The organizers' notes about the person: the three newest, each with its day and time. All of them, with their author, are on the person's page. The volunteer never sees them.",
+        "notesHint": "The organizers' notes about the person: the three newest, without their day and time. All of them, with their author and date, are on the person's page. The volunteer never sees them.",
         "filter": "Filter",
         "searchEverywhere": "Searching every event — choose one to narrow it down.",
         "tableCaption": "Volunteers, with age, city, state, roles given, roles offered, kit, event and date offered",
@@ -14398,6 +14401,7 @@
       "answersCorrected": "Answers corrected: {fields}.",
       "noteAdded": "The note was saved.",
       "noteDeleted": "The note was deleted.",
+      "noteEdited": "The note was changed.",
       "shopProductCreated": "The item has been added.",
       "shopProductSaved": "The item has been saved.",
       "shopProductMoved": "The items' order has been changed.",

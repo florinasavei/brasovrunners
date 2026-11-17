@@ -360,6 +360,12 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Decizie pentru ziua cursei» on a row of the «Voluntari» list and on the person's page (§954): the organizers' one line about a volunteer on race day.
   setVolunteerDecisionAction:
     "one line of the organizers' own about one volunteer, replaced by writing another or cleared by saving the box empty; it emails nobody and moves no state, role, point, number or tick",
+  // «Modifică nota» on a row of the «Voluntari» list (§NNN): the row's newest internal note, its new words typed in the row's dialog.
+  editVolunteerNoteFromListAction:
+    "changes the words of one of the organizers' own notes about a volunteer, undone by writing the old words again; it emails nobody, keeps no earlier words, and moves no state, role, point, number or tick — «Șterge», which takes the note, asks",
+  // «Modifică» beside «Șterge» on the volunteer's page (§NNN), in the card's own `note-actions.ts`: the same change from the note's fold.
+  editVolunteerNoteAction:
+    "the same change of one organizers' note from its fold on the volunteer's page, undone by writing the old words again; it emails nobody and moves nothing else of the person",
   // «Participă la tombolă» on a row of the registrations list (§949): on the raffle's list or off it, a one-press tick.
   setRegistrationRaffleAction:
     "a mark on the club's own raffle list for one registration, undone by the same tick; it tells nobody and changes no state, place, number or count",
