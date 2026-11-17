@@ -18,7 +18,7 @@ import {
 } from "@/modules/volunteers/badges/badge-geometry";
 
 /**
- * §NNN — taller volunteer badges (BR-REQ-050-02; the owner, 2026-11-17: «lasă-mă să fac ecusoanele mai mari pt voluntari, adică
+ * §967 — taller volunteer badges (BR-REQ-050-02; the owner, 2026-11-17: «lasă-mă să fac ecusoanele mai mari pt voluntari, adică
  * mai înalte!», then, at 100 mm: «tot văd limitări aici»). «Altă dimensiune» reaches an A4 page's height less its margins, one badge
  * to a page; every badge up to 100 mm draws with the pad it had; past 100 mm the bands keep growing and the pad does not.
  */
@@ -29,7 +29,7 @@ const custom = (width: number, height: number): BadgeSizeChoice => ({ size: "cus
 const layoutOf = (size: BadgeSizeChoice) => badgeLayout({ ...size, headerPicture: false, showLogo: true, writingLine: true, showMarker: false }, WORDS, MEASURE);
 const PRINTABLE_HEIGHT = A4_PAGE.height - 2 * BADGE_PAGE_MARGIN;
 
-describe("§NNN taller volunteer badges", () => {
+describe("§967 taller volunteer badges", () => {
   it("reach an A4 page's height less its margins, one badge to a page — and no further", () => {
     expect(BADGE_CUSTOM_BOUNDS.height.max).toBe(287);
     const tallest = badgePaper(custom(BADGE_CUSTOM_BOUNDS.width.max, BADGE_CUSTOM_BOUNDS.height.max));

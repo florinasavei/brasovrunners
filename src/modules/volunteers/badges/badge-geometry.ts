@@ -58,7 +58,7 @@ export const BADGE_SIZE_PRESETS = {
  * «Altă dimensiune»'s bounds, in whole millimetres: no narrower than a role's name reads on, no wider
  * than an A4 page less its margins (one column), and tall enough that the writing area keeps the height
  * a name in marker needs — at the smallest height the bands above already give up a little of theirs.
- * No taller than an A4 page less its margins either, one badge to a page (§NNN; the owner, 2026-11-17:
+ * No taller than an A4 page less its margins either, one badge to a page (§967; the owner, 2026-11-17:
  * «lasă-mă să fac ecusoanele mai mari pt voluntari, adică mai înalte!», then, at 100 mm: «tot văd
  * limitări aici»). The rows keep their shares at every height, so a taller badge is the same badge,
  * larger; only the pad stops growing at the 100 mm badge's (`BADGE_PAD_MAX`).
@@ -100,7 +100,7 @@ export const BADGE_BANDS_MIN_SHARE = 0.8;
 /**
  * The widths the two writing areas keep when «Spațiu pentru marker» is ticked (§776): 16 mm for a word in
  * marker, 24 mm for a name, and 2 mm between them for the divider. `BADGE_CUSTOM_BOUNDS` leaves room for
- * both at every height — the pad grows with the badge up to 100 mm and no further (`BADGE_PAD_MAX`, §NNN) —
+ * both at every height — the pad grows with the badge up to 100 mm and no further (`BADGE_PAD_MAX`, §967) —
  * which a test keeps true.
  */
 export const BADGE_MARKER_MIN_WIDTH = 16 * MM;
@@ -176,7 +176,7 @@ export const BADGE_LAYOUT = {
 } as const;
 
 /**
- * The widest the pad grows (§NNN): the 100 mm badge's, the tallest there was before badges could be taller —
+ * The widest the pad grows (§967): the 100 mm badge's, the tallest there was before badges could be taller —
  * computed as `badgeLayout` computes a pad, so every badge up to 100 mm keeps its pad to the last bit and
  * draws as it drew. Past it the bands keep growing with the badge and the pad does not, so a tall, narrow
  * badge keeps the marker's and the name's least widths (`BADGE_MARKER_MIN_WIDTH`, `BADGE_NAME_MIN_WIDTH`).
@@ -435,7 +435,7 @@ export function badgeLayout(choice: BadgeLayoutChoice, words: BadgeLayoutWords, 
   const paper = badgePaper(choice);
   const rows = badgeRows(paper, words.phone !== null || choice.showPhone === true, words.free !== null);
   const { content, header, role, free, writing, phone } = rows;
-  // The pad grows with the header up to the 100 mm badge's, no further (`BADGE_PAD_MAX`, §NNN).
+  // The pad grows with the header up to the 100 mm badge's, no further (`BADGE_PAD_MAX`, §967).
   const pad = Math.min(header.height * L.padShare, BADGE_PAD_MAX);
   const centred = (row: BadgeRow, size: number) => row.top + (row.height - badgeLineHeight(size)) / 2;
 
