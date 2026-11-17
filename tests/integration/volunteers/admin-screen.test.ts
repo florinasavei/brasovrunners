@@ -547,6 +547,26 @@ describe("the person's page (§839)", () => {
     expect(page).toContain(">Șterge voluntarul<");
   });
 
+  it("ticks «Are kit» in one press beside the name, posting the state it wants and coming back here (§NNN)", async () => {
+    const page = await personPage(people.stefan);
+    const kitForm = page.match(/<form[^>]*data-testid="volunteer-page-kit-form"[\s\S]*?<\/form>/)?.[0] ?? "";
+    expect(kitForm).not.toBe("");
+    expect(kitForm).toContain(`name="returnTo" value="/ro/admin/volunteers/${people.stefan}"`);
+    expect(kitForm).toContain(`name="volunteerId" value="${people.stefan}"`);
+    expect(kitForm).toContain(`name="eventId" value="${raceId}"`);
+    expect(kitForm).toMatch(/name="hasKit" value="[01]"/);
+    expect(kitForm).toContain('data-testid="volunteer-page-kit-tick"');
+    expect(kitForm).toContain(ro.Admin.volunteers.person.hasKit);
+    // The press saves the state it names and lands back on this page.
+    const { setVolunteerKitAction } = await import("@/app/[locale]/admin/volunteers/actions");
+    const own = `/ro/admin/volunteers/${people.stefan}`;
+    expect(await press(setVolunteerKitAction, form({ volunteerId: people.stefan, hasKit: "1", returnTo: own }))).toBe(own);
+    const [stefan] = await db.select({ hasKit: eventVolunteers.hasKit }).from(eventVolunteers).where(eq(eventVolunteers.id, people.stefan));
+    expect(stefan.hasKit).toBe(true);
+    expect(await personPage(people.stefan)).toMatch(/data-testid="volunteer-page-kit-form"[\s\S]*?name="hasKit" value="0"/);
+    expect(await press(setVolunteerKitAction, form({ volunteerId: people.stefan, hasKit: "0", returnTo: own }))).toBe(own);
+  });
+
   it("folds the volunteer's «Emailuri» for the Administrator, newest first with its tries, and none for the Organizer (§915)", async () => {
     await db.insert(emailOutbox).values([
       {
