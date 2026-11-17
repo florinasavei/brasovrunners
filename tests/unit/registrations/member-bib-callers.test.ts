@@ -28,8 +28,10 @@ const CALLERS: Array<{ file: string; what: string; reads: RegExp }> = [
   { file: "src/app/[locale]/admin/events/[id]/bibs/page.tsx", what: "the print card's counts", reads: /bibs\.filter\(\(bib\) => bib\.member\)/ },
   // The bib's picture (the desk's, the bibs page's grid, the registration's): the TypeScript twin over its one row.
   { file: "src/app/api/admin/events/[id]/bibs/preview/route.ts", what: "the preview route", reads: /printsMemberBib\(\{ offered: event\.design\.member\.enabled, declared: row\.clubMemberDeclared, elite: row\.elite \}\)/ },
-  // The list's rows (the export reads them) and the registration's page: the rule in each query.
+  // The list's rows (the export reads them), the registration's page and the desk's row: the rule in each query.
   { file: "src/modules/registrations/admin-repository.ts", what: "the admin repository's queries", reads: /memberBib:\s*PRINTS_MEMBER_BIB/g },
+  // The desk's picture address (the review of §NNN): the desk row's `memberBib`, so a corrected tick is a fresh picture.
+  { file: "src/modules/registrations/ui/DeskRow.tsx", what: "the desk's picture address", reads: /member: row\.memberBib\b/ },
   // The registration's «Număr de membru» line: the detail's `memberBib`.
   { file: "src/app/[locale]/admin/registrations/[id]/page.tsx", what: "the registration's page", reads: /registration\.memberBib\b/ },
   // The export's «Member bib»: the list row's `memberBib`, in the CSV and the workbook through one cell.
@@ -68,9 +70,20 @@ describe("§NNN one rule for the members' race number, read by every caller", ()
 
   it("is read by every place that decides which bib a registration prints", () => {
     for (const { file, what, reads } of CALLERS) expect(source(file), `${what} (${file})`).toMatch(reads);
-    // Both queries of the admin repository — the list's rows and the registration's page — and both files of the export.
-    expect(source("src/modules/registrations/admin-repository.ts").match(/memberBib:\s*PRINTS_MEMBER_BIB/g)).toHaveLength(2);
+    // The three queries of the admin repository — the list's rows, the registration's page, the desk's row — and both files of the export.
+    expect(source("src/modules/registrations/admin-repository.ts").match(/memberBib:\s*PRINTS_MEMBER_BIB/g)).toHaveLength(3);
     expect(source("src/app/api/admin/registrations/export/route.ts").match(/memberBib:\s*row\.memberBib/g)).toHaveLength(2);
+  });
+
+  it("puts the rule's flag in every address that asks for a registration's picture, so a corrected tick is a fresh picture", () => {
+    // The preview keeps an answer an hour (`bibs/preview/route.ts`): an address without the flag would show the old design.
+    const asking = sourceFiles().filter((file) => file !== "src/modules/registrations/domain/bib-stamp.ts" && source(file).includes("bibPictureSrc("));
+    expect(asking.sort()).toEqual(["src/app/[locale]/admin/events/[id]/bibs/page.tsx", "src/modules/registrations/ui/DeskRow.tsx"]);
+    for (const file of asking) {
+      const calls = [...source(file).matchAll(/bibPictureSrc\(\{[^}]*\}\)/g)].map((match) => match[0]);
+      expect(calls.length, file).toBeGreaterThan(0);
+      for (const call of calls) expect(call, file).toMatch(/\bmember: (bib\.member|row\.memberBib)\b/);
+    }
   });
 
   it("reads no member account for a bib any more: the sheet, its route, the picture and the bibs page import nothing of «Echipa»", () => {

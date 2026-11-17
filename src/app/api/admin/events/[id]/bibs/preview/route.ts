@@ -194,9 +194,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   });
   /*
     A number and a name change rarely; the browser may keep the picture for an hour. Whether it is a
-    member's bib changes with the tick (a «Modifică datele» correction, §NNN) or the design's switch, so the
-    bibs page's grid puts the row's `member` flag in the address it asks (`m=1`, read by nobody here): a
-    corrected tick is a new address (§664).
+    member's bib changes with the tick (a «Modifică datele» correction, §NNN) or the design's switch, so
+    both addresses that ask for a registration's picture — the bibs page's grid (`listBibs`' `member`) and
+    the desk's row (`DeskRegistration.memberBib`) — carry the rule's flag (`bibPictureSrc`'s `m=1`, read by
+    nobody here): a corrected tick is a new address, never the hour-old picture (§664).
   */
   image.headers.set("Cache-Control", "private, max-age=3600");
   return image;

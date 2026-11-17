@@ -5,6 +5,8 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { listDeskRegistrations } from "@/modules/registrations/admin-repository";
+import { editRegistrationAnswers } from "@/modules/registrations/admin-service";
 import { CLUB_NAME } from "@/theme/brand";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -19,7 +21,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *   draws the members' pile first — with no member account anywhere — and no «asked but not verified» line any more;
  * - the registration's page says «Număr de membru» beside the number exactly when the rule holds, and its «Modifică
  *   datele» corrects the member tick with no «Vreau numărul de membru» box beside it;
- * - the staff entry asks the member tick alone, at an event that offers the members' bib, in Română and in English.
+ * - the staff entry asks the member tick alone, at an event that offers the members' bib, in Română and in English;
+ * - the desk's «Arată numărul» asks the bib's picture by the same rule (`m=1`), so a tick corrected in «Modifică datele»
+ *   is a new address and never the picture the browser kept for the preview's cache hour.
  *
  * The pages are Server Components: they are called and their element trees walked, as the other screen tests do.
  * The public form without the question is `tests/unit/registrations/member-bib-form.test.ts`.
@@ -98,6 +102,7 @@ vi.mock("@/modules/notifications/send-now-choice", () => ({ sendNowChoiceFor: as
 const { default: RegistrationDetailPage } = await import("@/app/[locale]/admin/registrations/[id]/page");
 const { default: NewRegistrationPage } = await import("@/app/[locale]/admin/registrations/new/page");
 const { default: EventBibsPage } = await import("@/app/[locale]/admin/events/[id]/bibs/page");
+const { default: DeskRow } = await import("@/modules/registrations/ui/DeskRow");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
 
@@ -278,6 +283,44 @@ describe("§NNN the registration's page: «Număr de membru» by the rule, and �
       expect(named(all, "memberBibWanted"), locale).toHaveLength(0);
       expect(named(all, "was.memberBibWanted"), locale).toHaveLength(0);
     }
+  });
+});
+
+describe("§NNN the desk asks the bib's picture by the rule: a corrected tick is a new address", () => {
+  // The review of §NNN: the preview keeps an answer an hour, and the desk's address carried `e=1` but never `m=1`.
+  it("puts `m=1` in the desk's picture address for the tick at an event that offers it, and drops it once «Modifică datele» clears the tick", async () => {
+    const actor = await admin();
+    state.actor = actor;
+    const on = await race(true);
+    const off = await race(false);
+    const member = await runner(on, { declared: true, bib: 1 });
+    const plain = await runner(on, { declared: false, bib: 2 });
+    const elite = await runner(on, { declared: true, bib: 3, elite: true });
+    const designOff = await runner(off, { declared: true, bib: 1 });
+    /** The address the desk's «Arată numărul» fold asks, for one runner of an event. */
+    const pictureOf = async (eventId: string, id: string) => {
+      const row = (await listDeskRegistrations(db, { eventId, query: "", locale: "ro" })).find((candidate) => candidate.id === id);
+      expect(row, id).toBeDefined();
+      const all = elements(await DeskRow({ row: row!, locale: "ro", back: "desk", eventId, minorSigns: { ro: false, en: false } }));
+      const pictures = all.filter((element) => element.type === "img");
+      expect(pictures, id).toHaveLength(1);
+      return String(pictures[0].props.src);
+    };
+
+    const before = await pictureOf(on, member);
+    expect(before).toContain("&m=1");
+    expect(await pictureOf(on, plain)).not.toContain("&m=1");
+    // An elite bib never wears the members' design (§897): `e=1`, never `m=1`.
+    const elitePicture = await pictureOf(on, elite);
+    expect(elitePicture).toContain("&e=1");
+    expect(elitePicture).not.toContain("&m=1");
+    expect(await pictureOf(off, designOff)).not.toContain("&m=1");
+
+    // The tick corrected: the same runner, the same number and design — a new address, never the hour-old picture.
+    await editRegistrationAnswers(db, actor, member, { clubMemberDeclared: false }, new Date("2026-11-17T10:00:00.000Z"));
+    const after = await pictureOf(on, member);
+    expect(after).not.toContain("&m=1");
+    expect(after).not.toBe(before);
   });
 });
 

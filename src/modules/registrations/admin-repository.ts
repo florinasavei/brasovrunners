@@ -1385,6 +1385,12 @@ export type DeskRegistration = {
   /** «Elită» (§897): the bib prints as an elite bib — part of the picture's address, so a mark is a fresh picture. */
   elite: boolean;
   /**
+   * The bib prints in the members' design (§664), by the one rule (§NNN, `member-bib.ts#PRINTS_MEMBER_BIB`) — part of the
+   * picture's address (`m=1`), so a tick corrected in «Modifică datele» or the design's switch moved is a fresh picture,
+   * never the one the browser kept for the cache hour. The picture already shows it to every desk role; no address.
+   */
+  memberBib: boolean;
+  /**
    * Whether the settled number is on paper (§264), and when the row left the live states
    * (§311). Together they are what the desk says in red about a cancelled or expired runner
    * who turns up anyway: the state, the date, and — when it exists — that a printed bib with
@@ -1427,6 +1433,8 @@ const DESK_COLUMNS = {
   raceNumberFormat: RACE_NUMBER_FORMAT,
   bibStamp: BIB_STAMP,
   elite: registrations.elite,
+  // The members' race number (§664), by the one rule (§NNN): the picture's address carries it, as the bibs page's grid's does.
+  memberBib: PRINTS_MEMBER_BIB,
   bibPrintedAt: registrations.bibPrintedAt,
   cancelledAt: registrations.cancelledAt,
   expiredAt: registrations.expiredAt,

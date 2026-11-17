@@ -4,7 +4,7 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { type RegistrationKind, type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { findRegistrationDetailForAdmin, listRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
+import { findRegistrationDetailForAdmin, listDeskRegistrations, listRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
 import { listBibs } from "@/modules/registrations/bibs";
 import type { BibSheetInput } from "@/modules/registrations/bibs-pdf";
 import { printsMemberBib } from "@/modules/registrations/domain/member-bib";
@@ -27,7 +27,8 @@ import { readSheet } from "../../helpers/xlsx";
  * the members' bib for the tick with or without an account, the members' pages first (§681); the design's switch off
  * prints nobody's; an elite bib is never the members' design; a cancelled registration and a test one never reach the
  * paper (a test one answers the rule like a real one: `kind` is in no condition); the bib's picture draws what the sheet
- * prints; the export's «Member bib» says it; and a restart writes the retired wish false. The pages that show it — the
+ * prints; the export's «Member bib» says it, and the list's, the registration's and the desk's rows carry it; and a
+ * restart writes the retired wish false. The pages that show it — the
  * print card's counts, the registration's line, the forms without the question — are
  * `member-bib-declared-screens.test.ts`.
  */
@@ -335,18 +336,31 @@ describe("§NNN the list, the registration's page and the export read the same r
     expect(rows.some((cells) => cells.includes("test@example.org"))).toBe(false);
   });
 
-  it("carries `memberBib` on the list's rows and the registration's page by the same rule — a test row like a real one", async () => {
+  it("carries `memberBib` on the list's rows, the registration's page and the desk's row by the same rule — a test row like a real one", async () => {
     const on = await race(true);
     const off = await race(false);
     const ticked = await runner(on, { declared: true, bib: 1 });
     const test = await runner(on, { declared: true, kind: "TEST", bib: 2 });
     const plain = await runner(on, { declared: false, bib: 3 });
+    const elite = await runner(on, { declared: true, elite: true, bib: 4 });
     const designOff = await runner(off, { declared: true, bib: 1 });
+    const cases = [
+      [ticked, true],
+      [test, true],
+      [plain, false],
+      [elite, false],
+      [designOff, false],
+    ] as const;
     const rows = new Map((await listRegistrationsForAdmin(db, {}, undefined, NOW)).map((row) => [row.id, row.memberBib]));
-    expect([rows.get(ticked), rows.get(test), rows.get(plain), rows.get(designOff)]).toEqual([true, true, false, false]);
-    for (const [id, memberBib] of [[ticked, true], [test, true], [plain, false], [designOff, false]] as const) {
-      expect((await findRegistrationDetailForAdmin(db, id, NOW))?.memberBib, id).toBe(memberBib);
+    for (const [id, memberBib] of cases) {
+      expect(rows.get(id), `list ${id}`).toBe(memberBib);
+      expect((await findRegistrationDetailForAdmin(db, id, NOW))?.memberBib, `page ${id}`).toBe(memberBib);
     }
+    // The desk's row (the review of §NNN): its picture's address carries the flag (`m=1`), so a corrected tick is a fresh picture.
+    const desk = new Map(
+      [...(await listDeskRegistrations(db, { eventId: on, query: "", locale: "ro" })), ...(await listDeskRegistrations(db, { eventId: off, query: "", locale: "ro" }))].map((row) => [row.id, row.memberBib]),
+    );
+    for (const [id, memberBib] of cases) expect(desk.get(id), `desk ${id}`).toBe(memberBib);
   });
 });
 
