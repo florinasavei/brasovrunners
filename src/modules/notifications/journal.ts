@@ -169,11 +169,17 @@ export type JournalRowRead = {
 };
 
 /**
- * The volunteer a row is about: the payload's `volunteerId`, matched as text (§754's rows carry it, the parent's link
- * too). The one predicate «Emailuri azi» joins the volunteers by and a volunteer's own «Emailuri» reads their rows by
- * (`email-history.ts`, §915).
+ * The id of the volunteer a row's payload names, as text (§754's rows carry it, the parent's link too) — an id, never
+ * the payload's words. The «Voluntari» list's «Emailuri» column reads a page of volunteers' rows by it
+ * (`email-summaries.ts`, §960).
  */
-export const VOLUNTEER_OF_ROW: SQL = sql`${eventVolunteers.id}::text = ${emailOutbox.payloadJson} ->> 'volunteerId'`;
+export const VOLUNTEER_ID_OF_ROW: SQL = sql`${emailOutbox.payloadJson} ->> 'volunteerId'`;
+
+/**
+ * The volunteer a row is about: the payload's `volunteerId`, matched as text. The one predicate «Emailuri azi» joins
+ * the volunteers by and a volunteer's own «Emailuri» reads their rows by (`email-history.ts`, §915).
+ */
+export const VOLUNTEER_OF_ROW: SQL = sql`${eventVolunteers.id}::text = ${VOLUNTEER_ID_OF_ROW}`;
 
 /** The volunteer's own messages (§754–§820): the name is the volunteer row's. The parent's link names the parent. */
 const VOLUNTEER_PERSON_TYPES: ReadonlySet<EmailMessageType> = new Set([

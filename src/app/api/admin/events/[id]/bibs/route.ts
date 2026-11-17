@@ -8,6 +8,7 @@ import { routing } from "@/i18n/routing";
 import { shownContactAddresses } from "@/modules/contact/shown-address";
 import { type BibSheetPart, type BibSheetRow, renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { bibEventDate, findEventForBibs, freeSpareBibNumbers, listBibs } from "@/modules/registrations/bibs";
+import { BIB_BLANK_MAX } from "@/modules/registrations/domain/spare-bibs";
 import { listEliteEntries } from "@/modules/registrations/elite-list";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -98,6 +99,17 @@ export async function GET(
   */
   const elite = url.searchParams.get("elite") === "1";
   /*
+    «BIB-uri goale» (§963; the owner, 2026-11-17: «vreau și număr GOL, fără bib, fără nimic»): `blank=N` prints N of the
+    race's bibs with no number, no name and no line — the header, the strip, the phones, the sponsors and the small print
+    only, written on by hand. Nothing is reserved and nobody is named: no number is taken from any runner. Between 1 and
+    `BIB_BLANK_MAX`; anything else is refused.
+  */
+  const blankRaw = url.searchParams.get("blank");
+  const blank = blankRaw === null || blankRaw === "" ? 0 : Number(blankRaw);
+  if (!Number.isInteger(blank) || blank < 0 || blank > BIB_BLANK_MAX) {
+    return NextResponse.json({ error: "VALIDATION_ERROR" }, { status: 400 });
+  }
+  /*
     Which bibs go into the file (§681): the members' pile alone, to print on other card, or every
     bib but theirs; anything else is the whole sheet with the members' pages first. A download
     marks nothing printed, whole or part: the mark is the club's own press on the registrations
@@ -110,8 +122,10 @@ export async function GET(
   if (!event) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
 
   const now = new Date();
-  const eliteEntries = elite ? (await listEliteEntries(db, actor, id)).map(({ name, bibNumber }) => ({ name, bibNumber })) : null;
-  const rows: BibSheetRow[] = elite
+  const eliteEntries = elite && blank === 0 ? (await listEliteEntries(db, actor, id)).map(({ name, bibNumber }) => ({ name, bibNumber })) : null;
+  const rows: BibSheetRow[] = blank > 0
+    ? Array.from({ length: blank }, (): BibSheetRow => ({ bibNumber: 0, registeredName: null, blank: true }))
+    : elite
     ? await listBibs(db, id, { elite: true })
     : spares
       ? (await freeSpareBibNumbers(db, id)).free
@@ -166,7 +180,9 @@ export async function GET(
   });
 
   // The elite sheet is the list and the marked registrations (§895, §897): no range, no part, no «unprinted» in its name.
-  const suffix = elite
+  const suffix = blank > 0
+    ? `-blank-${blank}${layout === "one" ? "-one-per-page" : ""}`
+    : elite
     ? `-elite${layout === "one" ? "-one-per-page" : ""}`
     : `${spares ? "-spares" : ""}${from !== undefined || to !== undefined ? `-${from ?? 1}-${to ?? "end"}` : ""}${only && !spares ? "-unprinted" : ""}${PART_SUFFIX[part]}${layout === "one" ? "-one-per-page" : ""}`;
   return new Response(new Uint8Array(pdf), {

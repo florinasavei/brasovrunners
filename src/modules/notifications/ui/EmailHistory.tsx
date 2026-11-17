@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { countForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
+import { emailOutcomeOf } from "@/modules/notifications/domain/email-outcome";
 import { emailLeavesWords } from "@/modules/notifications/domain/email-wait";
 import { isJobCause } from "@/modules/notifications/domain/press-causes";
 import type { EmailHistory, EmailHistoryRow } from "@/modules/notifications/email-history";
@@ -29,7 +30,8 @@ type Props = {
   "data-testid"?: string;
 };
 
-const isWaiting = (row: Pick<EmailHistoryRow, "status">) => row.status === "PENDING" || row.status === "PROCESSING";
+/** Whether a row has not left yet — the one judgement's word for it (`domain/email-outcome.ts`). */
+const isWaiting = (row: Pick<EmailHistoryRow, "status" | "recipientCount">) => emailOutcomeOf(row) === "waiting";
 
 /**
  * A person's «Emailuri» (§915), read by `email-history.ts#readEmailHistory` — the Administrator's and the
@@ -88,12 +90,18 @@ export function emailHistorySummary(history: EmailHistory, t: T, locale: Locale,
   });
 }
 
-/** The latest email's state in the summary's lower case: left at, waits, failed, refused, reached nobody. */
+/**
+ * The latest email's state in the summary's lower case: left at, waits, failed, refused, reached nobody — the chips'
+ * own judgement (`domain/email-outcome.ts`). The lists' «Emailuri» column says the same words, with the email's
+ * moment beside them rather than inside (`EmailSummary.tsx`, §960).
+ */
 function latestState(row: EmailHistoryRow, t: T, locale: Locale, now: Date): string {
-  if (isWaiting(row)) return t("emails.history.last.waiting");
-  if (row.status === "FAILED") return t("emails.history.last.failed");
-  if (row.status === "BOUNCED" || row.status === "COMPLAINED") return t("emails.history.last.refused");
-  if (row.recipientCount === 0) return t("emails.history.last.captured");
+  const outcome = emailOutcomeOf(row);
+  if (outcome === "waiting") return t("emails.history.last.waiting");
+  if (outcome === "failed") return t("emails.history.last.failed");
+  if (outcome === "rejected") return t("emails.history.last.refused");
+  if (outcome === "captured") return t("emails.history.last.captured");
+  // It left — delivered or not, the closed line says when; what the provider said after is the row's own line inside.
   const words = emailLeavesWords(row.sentAt ?? row.createdAt, now, locale);
   return t(words.key === "leavesToday" ? "emails.history.last.sentToday" : "emails.history.last.sentOn", { at: words.at });
 }
@@ -124,7 +132,7 @@ function triesWords(row: EmailHistoryRow, t: T, locale: Locale, now: Date): stri
 /** What the provider said after it left, in the registration's «Emailuri» words (§671): delivered, refused and why, spam. */
 function providerFacts(row: EmailHistoryRow, t: T, locale: Locale): string | null {
   const date = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", year: false, withTime: true, position: "continues" });
-  if (row.status === "SENT" && row.deliveredAt) return t("registrations.emails.state.delivered", { date: date(row.deliveredAt) });
+  if (row.deliveredAt && emailOutcomeOf(row) === "delivered") return t("registrations.emails.state.delivered", { date: date(row.deliveredAt) });
   const at = row.rejectedAt ?? row.sentAt ?? row.createdAt;
   if (row.status === "COMPLAINED") return t("registrations.emails.state.spam", { date: date(at) });
   if (row.status === "BOUNCED") return t("registrations.emails.state.refused", { date: date(at), label: t(`registrations.rejected.label.${row.rejectionCause ?? "other"}`) });

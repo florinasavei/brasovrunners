@@ -222,8 +222,8 @@ test.describe("§895 «Elită — doar numele pe BIB»", () => {
     await expect(card.getByTestId("bib-elite-registered")).toContainText("cu înscriere");
     await expect(card.getByTestId("bib-elite-registered")).toContainText("nr. 21");
     await expect(card.getByTestId("bib-elite-registered").getByRole("button")).toHaveCount(0);
-    // The ordinary sheet prints them too, elite-style: the card says so, so nobody prints that bib twice.
-    await expect(card.getByTestId("bib-elite-registered-once")).toContainText("tipărește-i dintr-o singură foaie");
+    // The ordinary sheet no longer prints them (§963): the card says so, so nobody looks for that bib on it.
+    await expect(card.getByTestId("bib-elite-registered-once")).toContainText("Foaia obișnuită nu-i mai tipărește");
     const download = card.getByTestId("bib-elite-download");
     await expect(download).toContainText("Descarcă BIB-urile de elită (1)");
     const sheet = await page.request.get((await download.getAttribute("href")) as string);

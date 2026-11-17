@@ -476,7 +476,7 @@ describe("§755 the pictures' addresses change with the drawing", () => {
     // 6 since §947: the emergency line reads «Name: number», a bar between its numbers.
     // 7: a registration marked «Elită» prints its first name alone where the number goes.
     // 8: an empty room between the profile's row and the phone line when both are drawn (§959).
-    expect(BIB_DRAWING_VERSION).toBe(8);
+    expect(BIB_DRAWING_VERSION).toBe(9);
     expect(bibPictureStamp(parts)).toBe(fnv1a(JSON.stringify([BIB_DRAWING_VERSION, parts])));
     // The same design under the drawing before this one: another address.
     expect(bibPictureStamp(parts)).not.toBe(fnv1a(JSON.stringify([BIB_DRAWING_VERSION - 1, parts])));

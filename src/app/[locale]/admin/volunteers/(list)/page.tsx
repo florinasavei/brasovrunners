@@ -8,7 +8,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { addVolunteerAction } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
-import { setVolunteerDecisionAction, setVolunteerKitAction, setVolunteerRaffleAction } from "@/app/[locale]/admin/volunteers/actions";
+import { editVolunteerNoteFromListAction, setVolunteerDecisionAction, setVolunteerKitAction, setVolunteerRaffleAction } from "@/app/[locale]/admin/volunteers/actions";
 import { addVolunteerNoteFromListAction } from "@/app/[locale]/admin/volunteers/[id]/note-actions";
 import { getDb } from "@/db/client";
 import { VOLUNTEER_NOTE_MAX } from "@/db/schema/event-volunteer-notes";
@@ -19,11 +19,12 @@ import { type Locale, routing } from "@/i18n/routing";
 import { findEventForRegistrationById } from "@/modules/events/repository";
 import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
 import { findCurrentApprovedDocument, volunteerMinorsOpen } from "@/modules/legal-documents/repository";
+import { readEmailSummaries } from "@/modules/notifications/email-summaries";
+import EmailSummaryCell from "@/modules/notifications/ui/EmailSummary";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import NotesMark from "@/modules/registrations/ui/NotesMark";
 import { buildListHref, pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
-import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
-import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations, canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import {
@@ -40,11 +41,12 @@ import {
   type VolunteerAdminRow,
   type VolunteerSortKey,
 } from "@/modules/volunteers/admin-list";
-import { guardianAllowsConfirm, guardianAskOf, roleLabel, VOLUNTEER_DECISION_MAX, VOLUNTEER_STATES, type VolunteerState } from "@/modules/volunteers/domain/volunteer";
+import { guardianAllowsConfirm, guardianAskOf, roleLabel, VOLUNTEER_DECISION_MAX, VOLUNTEER_STATES, type VolunteerState, volunteerTypes } from "@/modules/volunteers/domain/volunteer";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
+import { listPlanPoints } from "@/modules/volunteers/plan-points";
 import { DECISION_ANCHOR } from "@/modules/volunteers/ui/VolunteerDecisionCard";
 import { GuardianVerbs, guardianChips, shortText, STATE_CHIP, VolunteerPersonFields, VolunteerStateForm, volunteerHiddenFields, volunteerPersonBoxes } from "@/modules/volunteers/ui/VolunteerPerson";
-import { listVolunteerNotesForExport } from "@/modules/volunteers/volunteer-notes";
+import { listVolunteerNotesForList } from "@/modules/volunteers/volunteer-notes";
 import { ROLE_EMAIL_SETTLE_MINUTES } from "@/modules/volunteers/volunteers";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import MailLine from "@/shared/feedback/MailLine";
@@ -146,24 +148,30 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const words = await confirmWords();
   // The words of every role the page's rows name, given or offered — one read, whatever their events — each with its category's (§904):
   // «Direcționare (Traseu)», as the card and the person's page say it, so a name standing in two categories is never printed twice alike.
-  const [roleNames, rowNotes] = await Promise.all([
+  // The same read carries each category's place in the club's order, which «Tip» lists the categories in (§962).
+  const [roleNames, rowNotes, emailSummaries] = await Promise.all([
     listRoleNames(db, [...new Set(rows.flatMap((row) => [...row.roleIds, ...row.choiceIds]))]),
     // «Note interne»: each row's live notes, newest first — ONE grouped read over the page's ids, never a query per row. The marker
-    // says how many and, in its tooltip, the words (§945, as the registrations list's, §943). The service asks for the role again.
-    listVolunteerNotesForExport(db, actor, rows.map((row) => row.id)),
+    // says how many and, in its tooltip, the words (§945, as the registrations list's, §943); each note's id and whether the reader
+    // may change it serve the row's «Modifică nota» (§964). The service asks for the role again.
+    listVolunteerNotesForList(db, actor, rows.map((row) => row.id)),
+    // «Emailuri» (§960): each row's three newest emails and how many it has in all — ONE read over the page's ids, and only for the
+    // Administrator and the Superadministrator, whose the person's own «Emailuri» is (§915). For the Organizer the reader is not
+    // called and the column is not drawn; the reader asks for the role again (BR-REQ-060-01).
+    canManageRegistrations(actor) ? readEmailSummaries(db, actor, { volunteerIds: rows.map((row) => row.id) }) : Promise.resolve(null),
   ]);
-  // The marker's tooltip (§945): the newest notes' words, each with its day and hour, the older ones counted — no author's name.
+  // The marker's tooltip and the column (§945, §950): the newest notes' words, the older ones counted — no author's name, and since
+  // §964 no day or hour either (the owner, 2026-11-17: «la nota internă nu mai afișa și data»). The person's page keeps both.
   const notesTipOf = (volunteerId: string) =>
-    notesTip(
-      rowNotes.get(volunteerId),
-      (at) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }),
-      (left) => t("registrations.notes.tipMore", { counted: t(`registrations.notes.count.${countForm(left, locale)}`, { count: left }) }),
+    notesTip(rowNotes.get(volunteerId), null, (left) =>
+      t("registrations.notes.tipMore", { counted: t(`registrations.notes.count.${countForm(left, locale)}`, { count: left }) }),
     );
-  // The dialog's refusals, cut to the sentences it can meet: the whole catalogue would travel with every row.
-  const noteRefusal = await refusalMessages({ body: t("registrations.notes.label") }).then((all) => ({
-    ...all,
-    errors: Object.fromEntries(["NOTE_EMPTY", "NOTE_TOO_LONG", "NOT_FOUND", "FORBIDDEN"].map((code) => [code, all.errors[code]])),
-  }));
+  // The dialogs' refusals, cut to the sentences each can meet: the whole catalogue would travel with every row. «Modifică nota» (§964)
+  // can also meet a session that ended while the phone lay on the table, as «Decizie ziua cursei» can.
+  const noteMessages = await refusalMessages({ body: t("registrations.notes.label") });
+  const cutTo = (codes: readonly string[]) => ({ ...noteMessages, errors: Object.fromEntries(codes.map((code) => [code, noteMessages.errors[code]])) });
+  const noteRefusal = cutTo(["NOTE_EMPTY", "NOTE_TOO_LONG", "NOT_FOUND", "FORBIDDEN"]);
+  const noteEditRefusal = cutTo(["NOTE_EMPTY", "NOTE_TOO_LONG", "NOT_FOUND", "FORBIDDEN", "UNAUTHENTICATED"]);
   // «Decizie ziua cursei» (§954): its dialog's refusals, cut the same way — a line too long, a person deleted meanwhile, another
   // role, and a session that ended while the phone lay on the table: every answer the press can give, as a sentence.
   const decisionRefusal = await refusalMessages({ decision: t("volunteers.decision.label") }).then((all) => ({
@@ -175,6 +183,8 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     return words ? roleLabel(words, locale) : null;
   };
   const namesOf = (ids: readonly string[]) => ids.map(roleName).filter((name): name is string => name !== null);
+  // «Tip» (§962): the categories of the roles given, once each, in the club's order — from the same read, never one per row.
+  const typesOf = (ids: readonly string[]) => volunteerTypes(ids.map((id) => roleNames.get(id)), locale);
 
   const basePath = getPathname({ locale, href: "/admin/volunteers" });
   /** Only the list-shaping keys travel with a sort link, a page link or a pill. */
@@ -197,16 +207,19 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const scopeEvent = events.find((event) => event.id === filters.eventId) ?? null;
   // «Adaugă un voluntar de mână» for the event in scope (§862): the context a person's page reads, coming back to this page of the list.
   const scopeEventRow = scopeEvent ? await findEventForRegistrationById(db, scopeEvent.id) : undefined;
-  // «Punct» (§949): with one event chosen that has points on its route, each row says where its person stands — the point's place
+  // «Punct» (§949): with one event chosen that has points on its plan, each row says where its person stands — the point's place
   // in the route's order and its name, as «Planul voluntarilor» says them. One read for the page, never one per row.
+  // The points and their numbers are the plan's own list (§961, `plan-points.ts#listPlanPoints`), so this column, the plan's
+  // page and the email never number a point differently. A point at the start–finish has no number: it is said by its name
+  // and the quiet word «start–finish» — never a number or a kilometre.
   const pointNames = scopeEvent
     ? new Map(
-        (await listCheckpoints(db, scopeEvent.id)).map((point, index) => [
-          point.id,
-          t("volunteers.plan.columnPoint", { number: index + 1, name: locale === "ro" ? point.nameRo : point.nameEn }),
-        ]),
+        (await listPlanPoints(db, scopeEvent.id)).map((point) => {
+          const name = locale === "ro" ? point.nameRo : point.nameEn;
+          return [point.id, point.number === null ? { words: name, startFinish: true } : { words: t("volunteers.plan.columnPoint", { number: point.number, name }), startFinish: false }] as const;
+        }),
       )
-    : new Map<string, string>();
+    : new Map<string, { words: string; startFinish: boolean }>();
   const [addContext, personBoxes] = scopeEventRow ? await Promise.all([volunteerPersonContextOf(db, scopeEventRow, locale, new Date(), returnTo), volunteerPersonBoxes(t)]) : [null, null];
   // The action's language-neutral code (AGENTS.md §14.3) becomes a sentence here; an unknown code says nothing.
   const errorCode = volunteerError && /^[A-Z_]{1,48}$/.test(volunteerError) && t.has(`errors.${volunteerError}`) ? volunteerError : null;
@@ -267,6 +280,57 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           settledKey={String(noteCount)}
         />
       </>
+    );
+  };
+
+  /**
+   * «Note interne» in its cell (§950): the words of the row's newest notes, the older ones counted, and under them — on a row whose
+   * newest note the reader may change (its author's, or any for an Administrator) — «Modifică nota» (§964; the owner, 2026-11-17, of
+   * this list: «lasă-mă să editez și nota internă»): the row's dialog (`RowNoteDialog`) opened on that note's words, the pencil of
+   * «Modifică decizia» in the next column; older notes are changed on the person's page. Its save is
+   * `editVolunteerNoteFromListAction`, which comes back to this very page of the list (`returnTo`); the page's own render instant
+   * in `settledKey` closes the dialog on every page drawn after a save, an «unchanged» one too. Without JavaScript the press is a
+   * link to the person's notes, where every note the reader may change has its own «Modifică». Strings only cross to the island.
+   * Nothing for a row without notes: an empty cell in the table, no line on a phone's card.
+   */
+  const notesCellOf = (row: VolunteerAdminRow) => {
+    const said = notesTipOf(row.id);
+    if (!said) return null;
+    const newest = rowNotes.get(row.id)?.[0];
+    const label = t("volunteers.notes.edit");
+    return (
+      // The decision's cell's shape (below): the words take the cell's width, the press keeps to the side the card's values stand on.
+      <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+        <Box component="span" data-testid="volunteer-notes" sx={MESSAGE_CELL_SX}>
+          {said}
+        </Box>
+        {newest?.editable && (
+          <Box sx={{ alignSelf: { xs: "flex-end", md: "flex-start" }, maxWidth: "100%" }}>
+            <RowNoteDialog
+              action={editVolunteerNoteFromListAction}
+              actionKey={actionKeyOf(editVolunteerNoteFromListAction)}
+              messages={noteEditRefusal}
+              fields={{ uiLocale: locale, eventId: row.eventId, noteId: newest.id, returnTo }}
+              fallbackHref={`${personHref(row)}#note-interne`}
+              label={label}
+              ariaLabel={t("volunteers.notes.editDialog", { name: shortText(row.name) })}
+              title={t("volunteers.notes.editDialog", { name: row.name })}
+              help={t("registrations.notes.help")}
+              boxName="body"
+              boxLabel={t("registrations.notes.label")}
+              limitText={t("registrations.notes.limit", { max: VOLUNTEER_NOTE_MAX })}
+              max={VOLUNTEER_NOTE_MAX}
+              saveLabel={t("registrations.notes.save")}
+              cancelLabel={words.cancel}
+              settledKey={`${newest.id}:${now.getTime()}`}
+              defaultValue={newest.body}
+              icon="edit"
+              testId="note-edit-open"
+              dialogTestId="note-edit-dialog"
+            />
+          </Box>
+        )}
+      </Stack>
     );
   };
 
@@ -427,23 +491,16 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       /*
         «Note interne» (§950; the owner, 2026-11-16, of this list: «pe lângă mesajul nostru vreau să văd și notele interne ale
         noastre»): the organizers' own notes on the person, in the row itself — the words the marker's tooltip says (§945: the three
-        newest, each with its day and hour, a long one cut, the older ones counted, no author), because a phone has no pointer to
-        hold over a marker. From the list's one grouped read, so no query is added; nothing for a row with no note — an empty cell
-        in the table, no line on a phone's card. The marker beside the name stays the way to the person's card, where every note
-        is whole and says who wrote it.
+        newest, a long one cut, the older ones counted, no author; since §964 no day or hour either), because a phone has no pointer
+        to hold over a marker — and under them «Modifică nota» for the newest (`notesCellOf` above). From the list's one grouped
+        read, so no query is added; nothing for a row with no note — an empty cell in the table, no line on a phone's card. The
+        marker beside the name stays the way to the person's card, where every note is whole and says who wrote it and when.
       */
       key: "notes",
       label: t("volunteers.screen.columnNotes"),
       hint: t("volunteers.screen.notesHint"),
       omitEmptyOnPhone: true,
-      render: (row) => {
-        const said = notesTipOf(row.id);
-        return said ? (
-          <Box component="span" data-testid="volunteer-notes" sx={MESSAGE_CELL_SX}>
-            {said}
-          </Box>
-        ) : null;
-      },
+      render: notesCellOf,
     },
     {
       /*
@@ -475,6 +532,24 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
         </Stack>
       ),
     },
+    /*
+      «Emailuri» (§960; the owner, 2026-11-17, the morning after the volunteers were emailed their points: «Vreau sa vad mai clar ce
+      mailuri a primit fiecare om»), right after the state: each person's three newest emails — which email, when it left, what
+      became of it — and «și încă N emailuri», the link to the person's own «Emailuri» (§915), where every email stands with its
+      tries. For the Administrator and the Superadministrator alone, as that fold is: for the Organizer no column is drawn and
+      nothing is read (`emailSummaries` is null). No `omitEmptyOnPhone`: «niciun email» is an answer, on a phone's card too. It
+      neither sorts nor filters.
+    */
+    ...(emailSummaries
+      ? [
+          {
+            key: "emails",
+            label: t("emails.summary.column"),
+            hint: t("emails.summary.hint"),
+            render: (row) => <EmailSummaryCell summary={emailSummaries.get(row.id)} href={`${personHref(row)}#emailuri`} personName={shortText(row.name)} locale={locale} t={t} />,
+          } satisfies AdminColumn<VolunteerAdminRow>,
+        ]
+      : []),
     {
       key: "given",
       label: t("volunteers.person.givenLine"),
@@ -489,6 +564,22 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           <StatusChip glyph="open" color="warning" variant="outlined" label={t("volunteers.unassigned.title")} testId="volunteer-unassigned" />
         ),
     },
+    {
+      /*
+        «Tip» (§962; the owner, 2026-11-17: «Practic voluntarii sunt de 2 tipuri: start-finish și pe traseu», then, of this list: «și în
+        tabelul ăsta»): where the person works — the categories of the roles GIVEN, in the club's own words and the page's language, each
+        once, in the categories' order, joined by «, ». A role under no category adds nothing («Alte activități» is no type); nobody given a
+        role, or only such roles, is an empty cell and no line on a phone's card. It neither sorts nor filters.
+      */
+      key: "type",
+      label: t("volunteers.screen.columnType"),
+      hint: t("volunteers.screen.typeHint"),
+      omitEmptyOnPhone: true,
+      render: (row) => {
+        const types = typesOf(row.roleIds);
+        return types.length > 0 ? <span data-testid="volunteer-type">{types.join(", ")}</span> : null;
+      },
+    },
     // Read here, set on «Planul voluntarilor»: a cancelled person keeps their point in case they come back, and shows none.
     ...(pointNames.size > 0
       ? [
@@ -497,8 +588,21 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
             label: t("volunteers.plan.column"),
             hint: t("volunteers.plan.columnHint"),
             omitEmptyOnPhone: true,
-            render: (row) =>
-              row.checkpointId && row.state !== "CANCELLED" && pointNames.has(row.checkpointId) ? <span data-testid="volunteer-point">{pointNames.get(row.checkpointId)}</span> : null,
+            render: (row) => {
+              const point = row.checkpointId && row.state !== "CANCELLED" ? pointNames.get(row.checkpointId) : undefined;
+              if (!point) return null;
+              return (
+                <span data-testid="volunteer-point">
+                  {point.words}
+                  {point.startFinish && (
+                    <Typography component="span" variant="body2" color="text.secondary" sx={{ whiteSpace: "nowrap" }} data-testid="volunteer-point-kind">
+                      {" · "}
+                      {t("volunteers.plan.columnStartFinish")}
+                    </Typography>
+                  )}
+                </span>
+              );
+            },
           } satisfies AdminColumn<VolunteerAdminRow>,
         ]
       : []),

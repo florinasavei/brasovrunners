@@ -5,15 +5,17 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { getPathname } from "@/i18n/navigation";
+import { CoordinatesRefusal } from "@/modules/event-checkpoints/domain/coordinates";
 import { inEmailPress } from "@/modules/notifications/press";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { setVolunteerPlanPicture } from "@/modules/volunteers/plan";
+import { changePlanPoint, PlanPointGone, PlanPointRefusal } from "@/modules/volunteers/plan-points";
 import { sendVolunteerPoints } from "@/modules/volunteers/point-mail";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
-import type { FormOutcome } from "@/shared/forms/outcome";
+import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { isUuid } from "@/shared/ids";
 // The form's boxes and its event, as every volunteers' verb reads them (§754).
 import { eventIdOf, field, localeOf } from "@/app/[locale]/admin/events/[id]/volunteer-return";
@@ -158,4 +160,118 @@ export async function sendVolunteerPointsAction(_previous: FormOutcome | null, f
     revalidatePath(path);
     redirect(refusal ? `${path}?planError=${encodeURIComponent(refusal)}#admin-alert` : `${path}${MAIL_ANCHOR}`);
   });
+}
+
+/** Where «Adaugă punctul» that went through comes back to: the section it was pressed in (`page.tsx`), its form empty for the next point. */
+const POINTS_ANCHOR = "#plan-points";
+
+/** Where «Șterge punctul» that went through comes back to: the plan's list, where the point no longer is and its people stand under «Fără punct». */
+const LIST_ANCHOR = "#plan-list";
+
+/**
+ * The code a refused press of the plan's points is said with (§961): the rule's own sentence — a name, a kilometre, the
+ * coordinates, the forty-first point, an editor's point somebody tried to delete here, a point no longer on the plan
+ * (`Admin.errors.<reason>`) — or the domain's code for everything else (a role that may not, an event that is not there).
+ */
+function planPointRefusalCode(error: DomainError): string {
+  return error instanceof PlanPointRefusal || error instanceof CoordinatesRefusal || error instanceof PlanPointGone ? error.reason : error.code;
+}
+
+/** The form's boxes of one point, as the service takes them: it reads them, this only hands them over. */
+function planPointBoxes(form: FormData) {
+  return { place: field(form, "place"), name: field(form, "name"), km: field(form, "km"), coordinates: field(form, "coordinates") };
+}
+
+/**
+ * «Adaugă punctul» in «Punctele planului» on «Planul voluntarilor» (§961; the owner, 2026-11-17: «vreau să pot defini
+ * punctele de mână, să pun nume punct și la ce km e și coordonate punct» — «Practic voluntarii sunt de 2 tipuri: start-finish
+ * și pe traseu»): a point of the plan's own, on the route — with its kilometre — or at the start–finish, with its name and,
+ * when the organizers know them, its coordinates.
+ *
+ * The capability is asked here by name, at the door (`canManageVolunteers`: the Organizer and the Administrators,
+ * BR-REQ-060-01), before the service asks it again and holds what was typed to the rules. A refusal does not redirect: it
+ * comes back as the form's own state (§315), so a wrong kilometre names its box and costs none of the others. A press that
+ * went through comes back to the section, its outcome in the toast and the form empty — the organizers add their points
+ * one after another. It emails nobody and no public page reads the point.
+ */
+export async function addPlanPointAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const eventId = eventIdOf(form);
+  // A form with no event names no plan to come back to: the volunteers' own screen.
+  if (!eventId) redirect(getPathname({ locale, href: "/admin/volunteers" }));
+  const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id: eventId } } });
+
+  try {
+    const actor = await requireStaffCapability(canManageVolunteers);
+    await changePlanPoint(getDb(), actor, { kind: "add", eventId, ...planPointBoxes(form) }, new Date());
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    const outcome = refused(error, form);
+    return error instanceof PlanPointRefusal ? { ...outcome, error: error.reason, errorValues: error.values } : { ...outcome, error: planPointRefusalCode(error) };
+  }
+  await flashOutcome({ saved: "planPointAdded" });
+  revalidatePath(path);
+  redirect(`${path}${POINTS_ANCHOR}`);
+}
+
+/**
+ * «Salvează punctul» in a point's «Modifică punctul» on «Planul voluntarilor» (§961): a point of the plan's own changed —
+ * its name, its kilometre, its coordinates, and whether it is on the route or at the start–finish — or, for one of the
+ * event's «Puncte pe traseu», its coordinates alone: whatever else such a form posts is never read (its name and kilometre
+ * are public, and are the editor's). The capability is asked here by name, at the door, and the service asks it again.
+ *
+ * A press that went through comes back to its point, its outcome in the toast; a refused one — a name left empty, a
+ * kilometre that is no number, coordinates in no shape read, the point deleted meanwhile, a role that may not — comes back
+ * to the page's alert (`#admin-alert`) with its code in the address, as every press of this page does (§953). It emails
+ * nobody, and the people who stand at the point stay there.
+ */
+export async function editPlanPointAction(form: FormData): Promise<void> {
+  const locale = localeOf(form);
+  const eventId = eventIdOf(form);
+  // A form with no event names no plan to come back to: the volunteers' own screen.
+  if (!eventId) redirect(getPathname({ locale, href: "/admin/volunteers" }));
+  const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id: eventId } } });
+  const pointId = field(form, "pointId");
+
+  let refusal: string | null = null;
+  try {
+    const actor = await requireStaffCapability(canManageVolunteers);
+    const result = await changePlanPoint(getDb(), actor, { kind: "edit", eventId, id: pointId, ...planPointBoxes(form) }, new Date());
+    await flashOutcome({ saved: result.changed ? "planPointSaved" : "volunteerUnchanged" });
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    refusal = planPointRefusalCode(error);
+  }
+  revalidatePath(path);
+  redirect(refusal ? `${path}?planError=${encodeURIComponent(refusal)}#admin-alert` : `${path}${isUuid(pointId) ? `#point-${pointId}` : LIST_ANCHOR}`);
+}
+
+/**
+ * «Șterge punctul» on a point of the plan's own (§961) — asked first on the page, with the point's name and how many people
+ * stand there: they stay on the plan, at no point. One of the event's «Puncte pe traseu» is not deleted here (the service
+ * refuses it: it is deleted in the editor, where the event's page and the race number follow). The capability is asked here
+ * by name, at the door, and the service asks it again and audits the removal with how many people it freed — never who.
+ *
+ * A press that went through comes back to the plan's list, where the point no longer is; a refused one to the page's alert
+ * with its code (§953). It emails nobody: a person told that point by an earlier «Trimite fiecăruia punctul lui» is told
+ * their new one by the next press, once they stand at one.
+ */
+export async function removePlanPointAction(form: FormData): Promise<void> {
+  const locale = localeOf(form);
+  const eventId = eventIdOf(form);
+  // A form with no event names no plan to come back to: the volunteers' own screen.
+  if (!eventId) redirect(getPathname({ locale, href: "/admin/volunteers" }));
+  const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id: eventId } } });
+
+  let refusal: string | null = null;
+  try {
+    const actor = await requireStaffCapability(canManageVolunteers);
+    await changePlanPoint(getDb(), actor, { kind: "remove", eventId, id: field(form, "pointId") }, new Date());
+    await flashOutcome({ saved: "planPointRemoved" });
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    refusal = planPointRefusalCode(error);
+  }
+  revalidatePath(path);
+  redirect(refusal ? `${path}?planError=${encodeURIComponent(refusal)}#admin-alert` : `${path}${LIST_ANCHOR}`);
 }

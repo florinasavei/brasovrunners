@@ -284,6 +284,9 @@ const PROVIDER_HOSTS = [
   "www.instagram.com",
   // Google Calendar's "add this event" address, one tap from the event page (§107).
   "calendar.google.com",
+  // Google Maps' "open this place" address (§961), for a point of the volunteers' plan that has coordinates: a link only,
+  // built from the point's stored numbers; nothing is loaded from it and nothing about a person is sent to it.
+  "www.google.com",
   // Outlook's "add a calendar from the web" address, a row of the calendar's subscribe box (the facelift's phase 4): Microsoft's, fixed.
   "outlook.live.com",
   // The same window for a work or school account (Microsoft 365), the box's second Outlook row (§720 amended): Microsoft's, fixed, nothing loaded from it.

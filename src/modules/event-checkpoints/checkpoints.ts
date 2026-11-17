@@ -40,7 +40,31 @@ import { loadGpxWaypoints } from "./gpx-file";
  * **Nothing is fetched under the event's lock** (§403): the GPX is read from the store before the
  * transaction opens, and the transaction refuses (CONFLICT) when the route's file or typed distance
  * moved in between — every registration for the event waits on that same row lock.
+ *
+ * **This file sees only the editor's points — never a point of the volunteers' plan alone, never a
+ * coordinate (§961).** The table also holds the points the organizers add by hand on «Planul
+ * voluntarilor» (`plan_only`: on the route or at the start–finish) and where any point is (`latitude`,
+ * `longitude`). None of that is public, and it is kept out here by construction rather than by each
+ * reader remembering: `listCheckpoints` — the one read of «the event's list» in this file, which the
+ * editor's save, the GPX's add, an import's replace, a copy and `assertSavedCheckpointsHold` all start
+ * from — leaves the plan-only rows out, and `Checkpoint` has no field for the kind or the coordinates
+ * (`toCheckpoint` names every field it hands on). So the event's page, its chart, the preview, the
+ * race number, the editor's card, the event's file and a copy are what they were; a save, an import
+ * and a copy never touch, delete, renumber or carry a plan-only point; an update of a kept row sets
+ * only the columns it always set, so a point's coordinates stay through a save and through an import;
+ * and the editor's thirty counts the editor's points alone. The volunteers' side reads the whole table
+ * through its own reader, `volunteers/plan-points.ts#listPlanPoints`.
  */
+
+/** The editor's points alone: a point of the volunteers' plan (§961) is no row of «Puncte pe traseu». */
+const NOT_PLAN_ONLY = eq(eventCheckpoints.planOnly, false);
+
+/**
+ * One row this file may update or delete: by its id, of this event, and the editor's own. Every id written with is taken
+ * from `listCheckpoints`, so the last condition changes no row a save or an import reaches — it is there so that no id,
+ * however it got here, lets this file write to a point of the volunteers' plan (§961).
+ */
+const editorsRow = (eventId: string, id: string) => and(eq(eventCheckpoints.id, id), eq(eventCheckpoints.eventId, eventId), NOT_PLAN_ONLY);
 
 const toCheckpoint = (row: EventCheckpointRow, clockOf: (minutes: number | null) => string | null): Checkpoint => ({
   id: row.id,
@@ -59,13 +83,15 @@ const toCheckpoint = (row: EventCheckpointRow, clockOf: (minutes: number | null)
  * An event's checkpoints by distance, ties in the order the club saw — each with the clock its time
  * limit closes at, derived from the start the event has now (§770): one more column of the one query,
  * so the bib, the export and the card say the same clock the page does, and a moved start moves it.
+ * The editor's points only (`NOT_PLAN_ONLY`, §961): a point added by hand on «Planul voluntarilor» is
+ * never among them, and neither is anything a `Checkpoint` has no field for.
  */
 export async function listCheckpoints<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<Checkpoint[]> {
   const rows = await db
     .select({ row: eventCheckpoints, type: events.type, startsAt: events.startsAt, raceStartsAt: events.raceStartsAt, timezone: events.timezone })
     .from(eventCheckpoints)
     .innerJoin(events, eq(events.id, eventCheckpoints.eventId))
-    .where(eq(eventCheckpoints.eventId, eventId))
+    .where(and(eq(eventCheckpoints.eventId, eventId), NOT_PLAN_ONLY))
     .orderBy(asc(eventCheckpoints.km), asc(eventCheckpoints.position), asc(eventCheckpoints.createdAt), asc(eventCheckpoints.id));
   return rows.map(({ row, type, startsAt, raceStartsAt, timezone }) => toCheckpoint(row, checkpointClock({ type, startsAt, raceStartsAt, timezone })));
 }
@@ -262,7 +288,7 @@ export async function replaceCheckpoints<T extends Record<string, unknown>>(
     if (current.length === wanted.length && wanted.every((row, at) => sameWords(row, current[at]))) return { changed: false };
     const { kept, left } = matchCheckpointsToFile(current, wanted);
     // Only the points the file no longer has: the foreign key frees the people who stood at them, and at no other.
-    for (const row of left) await tx.delete(eventCheckpoints).where(and(eq(eventCheckpoints.id, row.id), eq(eventCheckpoints.eventId, event.id)));
+    for (const row of left) await tx.delete(eventCheckpoints).where(editorsRow(event.id, row.id));
     for (const [position, row] of wanted.entries()) {
       const values = {
         position,
@@ -276,7 +302,7 @@ export async function replaceCheckpoints<T extends Record<string, unknown>>(
         onProfile: row.onProfile,
       };
       const existing = kept[position];
-      if (existing) await tx.update(eventCheckpoints).set(values).where(and(eq(eventCheckpoints.id, existing.id), eq(eventCheckpoints.eventId, event.id)));
+      if (existing) await tx.update(eventCheckpoints).set(values).where(editorsRow(event.id, existing.id));
       else await tx.insert(eventCheckpoints).values({ ...values, eventId: event.id, createdAt: now });
     }
     // The trail's row is the import's as it always was: the file's whole list in place of the event's, before and after.
@@ -417,10 +443,10 @@ export async function changeCheckpoints<T extends Record<string, unknown>>(
       }
       const words = !sameWords(row, existing);
       // The place in the list is renumbered silently: a point moved only by its neighbours' distances is no change of its own.
-      await tx.update(eventCheckpoints).set(values).where(and(eq(eventCheckpoints.id, existing.id), eq(eventCheckpoints.eventId, event.id)));
+      await tx.update(eventCheckpoints).set(values).where(editorsRow(event.id, existing.id));
       if (words) edited += 1;
     }
-    for (const row of toDelete) await tx.delete(eventCheckpoints).where(and(eq(eventCheckpoints.id, row.id), eq(eventCheckpoints.eventId, event.id)));
+    for (const row of toDelete) await tx.delete(eventCheckpoints).where(editorsRow(event.id, row.id));
 
     const removed = toDelete.length;
     const changed = added + edited + removed > 0;

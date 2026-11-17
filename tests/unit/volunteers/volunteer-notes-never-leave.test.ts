@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 /**
  * «Note interne» for volunteers (BR-REQ-060-01) — a volunteer's internal note reaches only the screens and files that carry it: the
- * volunteer's own page (the card), the «Voluntari» list and the event card's rows (the marker: a count and, in its tooltip, the words), the volunteers' files (the
+ * volunteer's own page (the card), the «Voluntari» list (the marker, its tooltip, the column and «Modifică nota») and the event card's rows (the marker: a count and, in its tooltip, the words), the volunteers' files (the
  * «Notă» column, handed as words) and «Toate datele unei persoane» (art. 15). Never the public volunteers' list, never an email,
  * never a badge. The twin of `tests/unit/registrations/notes-never-leave.test.ts`: the structural half of that promise — no file
  * outside the list below so much as imports the table or the service, so a later join or a helpful new column cannot quietly start
@@ -24,12 +24,14 @@ const READERS = new Set(
     "src/modules/volunteers/ui/VolunteerPerson.tsx",
     // «Toate datele unei persoane» (art. 15): each offer's live notes, the author as a role.
     "src/modules/registrations/person-data.ts",
-    // The volunteer's page and its presses; the «Voluntari» list (one grouped read for the marker and its tooltip, the row's «Adaugă o notă»); the
-    // event card's one grouped read for the same marker.
+    // The volunteer's page and its presses; the «Voluntari» list (one grouped read for the marker, its tooltip and the column, the row's
+    // «Adaugă o notă» and «Modifică nota»); the event card's one grouped read for the same marker.
     "src/app/[locale]/admin/volunteers/[id]/page.tsx",
     "src/app/[locale]/admin/volunteers/[id]/note-actions.ts",
     "src/app/[locale]/admin/volunteers/(list)/page.tsx",
     "src/app/[locale]/admin/events/[id]/page.tsx",
+    // The «Voluntari» screen's own presses: «Modifică nota» from a row (§964) — a writer, handed the words typed in the row's dialog.
+    "src/app/[locale]/admin/volunteers/actions.ts",
     // The volunteers' files: one event's CSV and spreadsheet, and every event's spreadsheet — one grouped read each.
     "src/app/api/admin/events/[id]/volunteers/route.ts",
     "src/app/api/admin/volunteers/export/route.ts",
@@ -50,8 +52,8 @@ const relative = (file: string) => path.relative(ROOT, file).replaceAll("\\", "/
 /** What names the table or the service: the schema file's path, the module's, or a relative `./volunteer-notes`. */
 const NAMES_NOTES = /["'](?:@\/db\/schema\/event-volunteer-notes|@\/modules\/volunteers\/volunteer-notes|\.{1,2}\/volunteer-notes)["']/;
 const SCHEMA_FILE = path.join(SRC, "db", "schema", "event-volunteer-notes.ts");
-/** The table's names and the service's readers, wherever they would be spelled. */
-const NAMES_TABLE = /event[_-]volunteer[_-]notes|eventVolunteerNotes|\b(?:list|count|add|delete|insert)VolunteerNotes?(?:ForExport)?\b|VolunteerNoteRow/;
+/** The table's names and the service's readers and writers, wherever they would be spelled. */
+const NAMES_TABLE = /event[_-]volunteer[_-]notes|eventVolunteerNotes|\b(?:list|count|add|delete|insert|edit)VolunteerNotes?(?:ForExport|ForList)?\b|VolunteerNoteRow|VolunteerListNote/;
 
 describe("«Note interne» for volunteers — who reads the notes", () => {
   const files = sourceFiles(SRC);

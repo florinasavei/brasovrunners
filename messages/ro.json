@@ -1629,6 +1629,7 @@
         "empty": "Nicio notă încă.",
         "by": "{name} · {date}",
         "delete": "Șterge",
+        "edit": "Modifică",
         "add": "Adaugă o notă",
         "label": "Nota",
         "limit": "Cel mult {max} de caractere.",
@@ -2741,8 +2742,15 @@
       "VOLUNTEER_GUARDIAN_NO_EMAIL": "Părintele sau tutorele nu are un email trecut, deci nu are cui să-i plece linkul. Acordul se ia pe hârtie, sau adaugă emailul în „Modifică”.",
       "VOLUNTEER_NO_EMAIL": "Voluntarul nu are adresă de email, deci linkul nu are unde pleca. Contractul și acordul părintelui se semnează pe hârtie, sau adaugă adresa în „Modifică”.",
       "VOLUNTEER_MINORS_CLOSED": "Clubul nu primește încă voluntari sub 18 ani: nota de confidențialitate și contractul în vigoare nu descriu încă minorii. Aprobă-le întâi; «Sarcini» spune cum.",
-      "VOLUNTEER_POINTS_NOBODY": "Nu am trimis nimic: niciun voluntar cu adresă de email nu stă încă la un punct de pe traseu. Pune oamenii la puncte, apoi trimite.",
+      "VOLUNTEER_POINTS_NOBODY": "Nu am trimis nimic: niciun voluntar cu adresă de email nu stă încă la un punct. Pune oamenii la puncte, apoi trimite.",
       "VOLUNTEER_POINTS_ALL_TOLD": "Nu am trimis nimic: toți cei de la puncte își știu deja punctul. Ca să le scrii din nou, alege „Trimite din nou tuturor”.",
+      "PLAN_POINT_PLACE_UNKNOWN": "Alege unde e punctul: pe traseu sau la start–finish.",
+      "PLAN_POINT_NAME_MISSING": "Scrie numele punctului, în cel mult {max} de caractere.",
+      "PLAN_POINT_KM_INVALID": "Scrie la ce kilometru e punctul de pe traseu: un număr de la 0, cu cel mult două zecimale, de exemplu 5,5.",
+      "COORDINATES_INVALID": "Nu am înțeles coordonatele. Scrie-le ca în Google Maps, de exemplu 45.64271, 25.58871.",
+      "PLAN_POINT_TOO_MANY": "Sunt prea multe puncte adăugate aici: cel mult {max} la un eveniment. Șterge unul ca să adaugi altul.",
+      "PLAN_POINT_IN_EDITOR": "Acest punct e din „Puncte pe traseu”: se șterge din editorul evenimentului, nu de aici.",
+      "PLAN_POINT_GONE": "Punctul nu mai e pe plan: a fost șters între timp.",
       "VOLUNTEER_CATEGORY_HAS_ROLES": "Categoria nu s-a șters: are roluri în ea. Mută sau șterge întâi rolurile.",
       "VOLUNTEER_NAME_TAKEN": "Numele există deja în această categorie (sau printre categoriile evenimentului). Alege alt nume: același nume poate sta în două categorii, dar nu de două ori într-una.",
       "VOLUNTEER_ROLE_INVALID": "„{role}” din „{category}”: {problem}. Nimic nu s-a salvat.",
@@ -3445,7 +3453,10 @@
         "emergencyPhone3": "Al treilea telefon (opțional)",
         "emergencyPhone3Help": "Pe același rând, după al doilea. Poate fi și un număr scurt, de exemplu 112.",
         "emergencyPhone3Placeholder": "112",
-        "emergencyPhone3Label": "Numele de lângă al treilea telefon"
+        "emergencyPhone3Label": "Numele de lângă al treilea telefon",
+        "emergencyPhone4": "Al patrulea telefon (opțional)",
+        "emergencyPhone4Help": "Pe același rând, după al treilea. De exemplu 112.",
+        "emergencyPhone4Label": "Numele de lângă al patrulea telefon"
       },
       "bibColour": "Culoarea numerelor de concurs (BIB)",
       "bibColourHelp": "Banda de sus a numărului tipărit, cea cu logo-ul clubului și cursa pe ea. „Culoarea clubului” dacă nu vrei una anume.",
@@ -5974,7 +5985,9 @@
     "volunteers": {
       "notes": {
         "authorUnknown": "autor necunoscut",
-        "exportMore": "… (mai multe note pe pagina voluntarului)"
+        "exportMore": "… (mai multe note pe pagina voluntarului)",
+        "edit": "Modifică nota",
+        "editDialog": "Modifică nota despre {name}"
       },
       "title": "Voluntari",
       "intro": "Oamenii care ajută la eveniment: fiecare bifează ce ar face, tu îi dai un rol. Rolurile se definesc aici, în ambele limbi. Adresele și telefoanele nu apar pe nicio pagină publică.",
@@ -6365,7 +6378,9 @@
         "columnMessage": "Mesaj",
         "messageHint": "Ce a scris persoana pentru organizatori când s-a oferit ca voluntar. Gol: n-a scris nimic.",
         "columnNotes": "Note interne",
-        "notesHint": "Notele organizatorilor despre persoană: cele mai noi trei, cu ziua și ora. Toate, cu autorul lor, sunt pe pagina persoanei. Voluntarul nu le vede.",
+        "notesHint": "Notele organizatorilor despre persoană: cele mai noi trei, fără zi și oră. Toate, cu autorul și data lor, sunt pe pagina persoanei. Voluntarul nu le vede.",
+        "columnType": "Tip",
+        "typeHint": "Unde lucrează persoana, după categoria rolurilor date: de exemplu start/sosire sau traseu. Gol: niciun rol dat ori fără categorie. Categoriile se scriu în cardul „Voluntari” al evenimentului.",
         "filter": "Filtrează",
         "searchEverywhere": "Caut în toate evenimentele — alege unul ca să restrângi.",
         "tableCaption": "Voluntari, cu vârstă, oraș, stare, rolurile date, rolurile oferite, kit, eveniment și data ofertei",
@@ -6391,12 +6406,40 @@
         "title": "Planul voluntarilor",
         "open": "Planul voluntarilor",
         "event": "{event} — {date}",
-        "help": "Cine stă la ce punct de pe traseu în ziua evenimentului. Punctele sunt cele din editor, de la „Traseul”. Nimeni nu e anunțat până nu apeși „Trimite fiecăruia punctul lui”.",
+        "help": "Cine stă unde în ziua evenimentului: la start–finish sau la un punct de pe traseu. Nimeni nu e anunțat până nu apeși „Trimite fiecăruia punctul lui”.",
+        "helpPoints": "Punctele din editor, de la „Puncte pe traseu”, apar și pe pagina evenimentului și pe numerele de concurs.",
         "back": "Înapoi la voluntari",
         "editPoints": "Punctele de pe traseu, în editorul evenimentului",
         "print": "Tipărește planul",
-        "summary": "La puncte: {placed} · Fără punct: {unplaced} · Puncte fără nimeni: {empty}",
-        "noPoints": "Evenimentul nu are încă puncte pe traseu. Adaugă-le în editorul evenimentului, la „Traseul”, apoi revino aici.",
+        "summary": {
+          "startFinish": {
+            "one": "{count} voluntar la start–finish",
+            "few": "{count} voluntari la start–finish",
+            "other": "{count} de voluntari la start–finish"
+          },
+          "route": {
+            "one": "{count} voluntar pe traseu",
+            "few": "{count} voluntari pe traseu",
+            "other": "{count} de voluntari pe traseu"
+          },
+          "unplaced": {
+            "one": "{count} voluntar fără punct",
+            "few": "{count} voluntari fără punct",
+            "other": "{count} de voluntari fără punct"
+          },
+          "empty": {
+            "one": "{count} punct fără nimeni",
+            "few": "{count} puncte fără nimeni",
+            "other": "{count} de puncte fără nimeni"
+          }
+        },
+        "noPoints": "Planul nu are încă niciun punct. Adaugă punctele chiar aici, mai sus, la „Punctele planului”, sau în editorul evenimentului, la „Puncte pe traseu”.",
+        "groups": {
+          "startFinish": "Start–finish",
+          "route": "Pe traseu",
+          "startFinishNone": "Niciun punct la start–finish. Adaugă unul mai sus, alegând „La start–finish”.",
+          "routeNone": "Niciun punct pe traseu. Adaugă unul mai sus, sau în editorul evenimentului, la „Puncte pe traseu”."
+        },
         "pointTitle": "{number}. {title}",
         "nobodyHere": "Nimeni aici încă.",
         "choose": "Pune pe cineva aici",
@@ -6404,16 +6447,49 @@
         "place": "Pune aici",
         "takeOff": "Scoate",
         "takeOffFor": "Scoate de la acest punct: {name}",
-        "unplacedTitle": "Fără punct pe traseu",
-        "unplacedHelp": "Încă nu stau la niciun punct, sau au o treabă care nu ține de traseu (start, kituri): o spun rolurile date.",
+        "unplacedTitle": "Fără punct",
+        "unplacedHelp": "Încă nu stau la niciun punct. Pune-i la start–finish sau la un punct de pe traseu, cu „Pune aici”.",
         "unplacedNone": "Toată lumea stă la câte un punct.",
         "noVolunteers": "Evenimentul nu are încă voluntari.",
         "noRole": "fără rol dat",
         "notConfirmed": "încă de confirmat",
         "column": "Punct",
-        "columnHint": "Punctul de pe traseu la care stă voluntarul, ales în „Planul voluntarilor”. Gol: încă fără punct, sau cu o treabă care nu ține de traseu.",
+        "columnHint": "Punctul la care stă voluntarul, la start–finish sau pe traseu, ales în „Planul voluntarilor”. Gol: încă fără punct.",
         "columnPoint": "{number}. {name}",
-        "pointValue": "Punct pe traseu: {name}",
+        "columnStartFinish": "start–finish",
+        "pointValue": "Punct în planul voluntarilor: {name}",
+        "points": {
+          "title": "Punctele planului",
+          "help": "Adaugă aici punctele unde stau voluntarii, ca pe poza de mai sus. Un punct e fie la start–finish, fie pe traseu: celui de pe traseu îi spui și la ce kilometru e.",
+          "helpCoordinates": "Dacă știi coordonatele, voluntarii primesc și linkul către hartă.",
+          "helpPrivate": "Punctele adăugate aici se văd doar pe plan și în emailul trimis voluntarilor — nu apar pe pagina evenimentului și nici pe numerele de concurs.",
+          "addTitle": "Adaugă un punct",
+          "place": "Unde e punctul?",
+          "placeRoute": "Pe traseu",
+          "placeStartFinish": "La start–finish",
+          "name": "Nume punct",
+          "km": "La ce km e",
+          "kmHelper": "Doar pentru un punct de pe traseu.",
+          "coordinates": "Coordonate (opțional)",
+          "coordinatesHelper": "Ca în Google Maps: ține apăsat pe hartă și copiază numerele, de exemplu 45.64271, 25.58871.",
+          "add": "Adaugă punctul",
+          "openMap": "Deschide pe hartă",
+          "openMapFor": "Deschide pe hartă: {name}",
+          "planOnly": "doar pe plan",
+          "edit": "Modifică punctul",
+          "editFor": "Modifică punctul: {name}",
+          "editorsOnly": "Numele și kilometrul acestui punct se schimbă în editorul evenimentului:",
+          "save": "Salvează punctul",
+          "remove": "Șterge punctul",
+          "removeFor": "Șterge punctul: {name}",
+          "removeTitle": "Ștergi punctul „{name}”?",
+          "removeBody": {
+            "one": "La acest punct stă {count} voluntar: rămâne în plan, fără punct.",
+            "few": "La acest punct stau {count} voluntari: rămân în plan, fără punct.",
+            "other": "La acest punct stau {count} de voluntari: rămân în plan, fără punct."
+          },
+          "removeBodyNobody": "Nimeni nu stă la acest punct."
+        },
         "picture": {
           "title": "Poza planului",
           "alt": "Planul voluntarilor desenat pe traseu",
@@ -6436,8 +6512,8 @@
           "help": "Un email fiecărui voluntar pus la un punct, dacă are adresă de email: punctul lui, ce are de făcut acolo și poza planului. Pleacă doar când apeși aici.",
           "send": "Trimite fiecăruia punctul lui",
           "again": "Trimite din nou tuturor",
-          "allTold": "Toți cei de la puncte își știu deja punctul. Trimite din nou doar dacă s-a schimbat ceva: poza, numele sau nota unui punct, ordinea punctelor, un rol.",
-          "nobody": "Nimeni de anunțat: niciun voluntar cu adresă de email nu stă încă la un punct de pe traseu.",
+          "allTold": "Toți cei de la puncte își știu deja punctul. Trimite din nou doar dacă s-a schimbat ceva: poza, numele, coordonatele sau nota unui punct, ordinea punctelor, un rol.",
+          "nobody": "Nimeni de anunțat: niciun voluntar cu adresă de email nu stă încă la un punct.",
           "confirmTitle": "Trimiți fiecăruia punctul lui?",
           "confirmBody": "Fiecare primește pe email punctul lui și ce are de făcut acolo.",
           "confirmBodyPicture": "Fiecare primește pe email punctul lui, ce are de făcut acolo și poza planului.",
@@ -7339,6 +7415,10 @@
       "downloadSpares": "Retipărește rezervele libere (PDF)",
       "sparesFree": "Rezervate pentru masă: {from}–{to}, libere încă {free} din {total}. Retipărirea le pune doar pe cele libere.",
       "sparesNone": "Rezervate pentru masă: {from}–{to}, date toate. Tipărește altele dacă mai e nevoie.",
+      "blankTitle": "BIB-uri goale (fără număr și fără nume)",
+      "blankHelp": "BIB-ul cursei fără număr și fără nume, ca să le scrii de mână. Nu se rezervă niciun număr. Între 1 și {max} odată.",
+      "blankCount": "Câte",
+      "blankDownload": "Descarcă BIB-urile goale",
       "sparesTitle": "Numere de rezervă pentru înscrierile de la fața locului",
       "sparesLine": "{from}–{to}, libere: {free}",
       "sparesLineNone": "Niciunul rezervat",
@@ -7359,9 +7439,9 @@
       "eliteHelp": "Numele lor se tipărește mare, în locul numărului. Nu sunt înscrieri: nu ocupă loc, nu primesc emailuri; se numără la kituri, la start și la BIB-uri; pe site apar doar cu «Apare pe site».",
       "eliteEmpty": "Niciun nume pe listă.",
       "eliteName": "Numele de pe BIB",
-      "eliteNameHelp": "Cum se tipărește, cel mult {max} de caractere. Se micșorează cât să încapă, pe un rând sau două.",
+      "eliteNameHelp": "Pe BIB se tipărește doar primul cuvânt (prenumele), mare, ca la cei înscriși. Cel mult {max} de caractere.",
       "eliteNumber": "Număr (opțional)",
-      "eliteNumberHelp": "Se tipărește sub nume doar cu «Număr pe BIB-urile de elită» bifat. Doar un număr liber, care apoi nu se mai dă nimănui.",
+      "eliteNumberHelp": "Nu se tipărește pe BIB: BIB-ul de elită are doar numele. Numărul rămâne rezervat și nu se mai dă nimănui.",
       "eliteNumberShown": "nr. {number}",
       "eliteAdd": "Adaugă pe lista de elită",
       "eliteAdding": "Se adaugă…",
@@ -7374,7 +7454,7 @@
       "eliteSampleCaption": "Așa se tipărește un BIB de elită, cu designul salvat și un nume de probă.",
       "eliteRegistered": "cu înscriere",
       "eliteRegisteredHelp": "Un alergător înscris se marchează din lista de înscrieri: «⋮» → «Marchează ca elită». Rămâne înscris și apare aici cu starea lui; BIB-ul de elită i se tipărește când e confirmat.",
-      "eliteRegisteredOnce": "Foaia obișnuită îi tipărește și ea, tot ca BIB-uri de elită: tipărește-i dintr-o singură foaie, nu din amândouă.",
+      "eliteRegisteredOnce": "Foaia obișnuită nu-i mai tipărește: BIB-urile lor sunt doar în foaia de elită, ca să nu le ai de două ori.",
       "eliteInResults": "Apare în clasament",
       "eliteOnSite": "Apare pe site",
       "eliteTicksHelp": "Bifează «Apare pe site» doar cu acordul persoanei.",
@@ -8110,6 +8190,8 @@
         "last": {
           "sentToday": "a plecat la {at}",
           "sentOn": "a plecat {at}",
+          "sent": "a plecat",
+          "delivered": "livrat",
           "waiting": "așteaptă",
           "failed": "eșuat",
           "refused": "refuzat",
@@ -8124,6 +8206,15 @@
         },
         "triesNone": "încă nu s-a încercat",
         "nextTry": "următoarea încercare: {at}"
+      },
+      "summary": {
+        "column": "Emailuri",
+        "hint": "Ultimele trei emailuri ale persoanei: ce email, când a plecat sau de când așteaptă și ce s-a întâmplat cu el. Toate, cu detalii, sunt pe pagina persoanei.",
+        "more": {
+          "one": "și încă {count} email",
+          "few": "și încă {count} emailuri",
+          "other": "și încă {count} de emailuri"
+        }
       },
       "copy": {
         "title": "Textul mesajului ({lang}) — cel implicit",
@@ -8714,7 +8805,7 @@
         "VOLUNTEER_AGREEMENT_REQUEST": "Rolul și evenimentul se adaugă singure. Linkul e doar pentru persoana aceasta, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Rolul și evenimentul se adaugă singure. PDF-ul arată textul acceptat, cu numele, rolul, momentul și amprenta lui.",
         "VOLUNTEER_ROLE_ASSIGNED": "Rolurile date, data și locul evenimentului se adaugă singure, oricum ai scrie textul. Mesajul nu are niciun link care să facă ceva.",
-        "VOLUNTEER_POINT": "Punctul, rolurile date, contactul categoriei și poza planului se adaugă singure, oricum ai scrie textul. Nu pleacă dacă între timp persoana a fost mutată, scoasă de la punct sau anulată.",
+        "VOLUNTEER_POINT": "Textul e același la start–finish și pe traseu; punctul, rolurile, contactul și poza se adaugă singure. Nu pleacă dacă între timp persoana a fost mutată, scoasă de la punct sau anulată.",
         "VOLUNTEER_GUARDIAN_REQUEST": "Voluntarul și evenimentul se adaugă singure. Linkul e doar pentru părinte sau tutore, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
         "VOLUNTEER_INVITATION": "Evenimentul, rolurile căutate și mesajul clubului se adaugă singure. Linkul e doar al persoanei invitate, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
         "PLACES_ALERT": "Locurile libere, capacitatea și pragul se adaugă singure, oricum ai scrie textul. Un email pe prag; altul vine doar după ce locurile urcă din nou peste prag.",
@@ -10414,7 +10505,9 @@
             "emergencyPhone2": "Număr: al doilea telefon",
             "emergencyPhone2Label": "Număr: numele celui de-al doilea telefon",
             "emergencyPhone3": "Număr: al treilea telefon",
-            "emergencyPhone3Label": "Număr: numele celui de-al treilea telefon"
+            "emergencyPhone3Label": "Număr: numele celui de-al treilea telefon",
+            "emergencyPhone4": "Număr: al patrulea telefon",
+            "emergencyPhone4Label": "Număr: numele celui de-al patrulea telefon"
           }
         },
         "translations": {
@@ -11822,7 +11915,7 @@
         "headerPictureCropHelp": "Trage dreptunghiul peste partea care vrei să apară pe banda de sus, pe toată lățimea ecusonului.",
         "headerPictureShape": "Forma benzii: {ratio} la 1, la dimensiunea salvată.",
         "headerHidesTitle": "Imaginea acoperă titlul evenimentului: pe ecuson se vede doar imaginea.",
-        "roleHelp": "„VOLUNTAR” se tipărește singur și mare pe banda ecusonului pentru toți, și mic, deasupra numelui rolului, pe ecusoanele pe roluri.",
+        "roleHelp": "„VOLUNTAR” se tipărește singur și mare pe ecusonul pentru toți. Pe roluri e mic, deasupra numelui rolului, împreună cu categoria rolului, dacă rolul are una.",
         "labelRo": "Cuvântul de pe bandă (română)",
         "labelEn": "Cuvântul de pe bandă (engleză)",
         "labelHelp": "Gol în ambele limbi: VOLUNTAR și VOLUNTEER. Cel mult {max} caractere.",
@@ -14255,7 +14348,7 @@
       "volunteerRaffleOn": "Participă la tombolă: e din nou pe lista pentru tombolă.",
       "volunteerRaffleOff": "Nu mai participă la tombolă: nu apare pe lista pentru tombolă.",
       "volunteerPlaced": "Stă la punctul ales: apare în planul voluntarilor.",
-      "volunteerUnplaced": "Nu mai stă la niciun punct: e din nou la „Fără punct pe traseu”.",
+      "volunteerUnplaced": "Nu mai stă la niciun punct: e din nou la „Fără punct”.",
       "eventTodoDone": "Bifat. Rândul e la „Gata”.",
       "eventTodoReopened": "Debifat: rândul e din nou de făcut.",
       "eventTodoDeleted": "Rând șters de pe lista evenimentului.",
@@ -14527,6 +14620,9 @@
       "planPictureSet": "Poza planului e pusă: apare deasupra punctelor și se tipărește cu planul.",
       "planPictureReplaced": "Poza planului a fost schimbată.",
       "planPictureRemoved": "Poza planului a fost ștearsă.",
+      "planPointAdded": "Punct adăugat.",
+      "planPointSaved": "Punct salvat.",
+      "planPointRemoved": "Punct șters.",
       "planPointsSent": {
         "one": "{count} voluntar anunțat.",
         "few": "{count} voluntari anunțați.",
@@ -14536,7 +14632,8 @@
         "one": "{count} voluntar anunțat. Fără adresă de email: {noAddress}.",
         "few": "{count} voluntari anunțați. Fără adresă de email: {noAddress}.",
         "other": "{count} de voluntari anunțați. Fără adresă de email: {noAddress}."
-      }
+      },
+      "noteEdited": "Nota a fost modificată."
     },
     "mail": {
       "now": "Pleacă acum{road}: {what}.",

@@ -8,6 +8,7 @@ import { ELITE_NAME_MAX } from "@/db/schema/event-elite-entries";
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { countForm } from "@/i18n/count-form";
 import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
+import { BIB_BLANK_MAX } from "@/modules/registrations/domain/spare-bibs";
 import RegistrationStatusChip from "@/modules/registrations/ui/RegistrationStatusChip";
 import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import DetachedActionForm, { DetachedFields, DetachedForm } from "@/shared/forms/DetachedActionForm";
@@ -24,6 +25,12 @@ import TipSpan from "@/shared/ui/TipSpan";
 /** The two small forms the card's controls belong to, by id (`form="…"`). */
 export const BIB_ASSIGN_FORM = "bib-assign";
 export const BIB_DOWNLOAD_FORM = "bib-download";
+/**
+ * «BIB-uri goale» (§963): the sheet's own GET with `blank=N`, a form of its own beside the save form — never inside it,
+ * where the parser drops a nested `<form>` and the page's hydration fails — and never the range's form, whose
+ * «Descarcă» would carry the count too.
+ */
+export const BIB_BLANK_FORM = "bib-blank";
 /** The print of the desk's spares (§444): a POST that reserves them, then the sheet. */
 export const BIB_SPARES_FORM = "bib-spares";
 /** «Adaugă pe lista de elită» (§895): a detached form beside the save form (`EliteBibForms`). */
@@ -493,6 +500,29 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
             </Stack>
           </Panel>
         )}
+        {/*
+          «BIB-uri goale» (§963; the owner, 2026-11-17: «vreau și număr GOL, fără bib, fără nimic»): the race's bib with no
+          number and no name, as many as typed — written on by hand. A GET of the sheet's own route (`blank=N`): nothing is
+          reserved, nobody is named, so every role that downloads the sheet may download these. The card sits inside the
+          event's save form, so the box and the button name their own form (`BIB_BLANK_FORM`, in `BibPrintForms`).
+        */}
+        <Panel variant="section" glyph="print" level={5} title={t("bibs.blankTitle")} intro={t("bibs.blankHelp", { max: BIB_BLANK_MAX })} data-testid="bib-blank">
+          <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+            <TextField
+              name="blank"
+              type="number"
+              label={t("bibs.blankCount")}
+              size="small"
+              defaultValue={10}
+              required
+              slotProps={{ htmlInput: { min: 1, max: BIB_BLANK_MAX, step: 1, inputMode: "numeric", form: BIB_BLANK_FORM } }}
+              sx={{ width: 110 }}
+            />
+            <GlyphButton icon="pdf" type="submit" form={BIB_BLANK_FORM} variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="bib-blank-download">
+              {t("bibs.blankDownload")}
+            </GlyphButton>
+          </Stack>
+        </Panel>
         {spares && <SpareBibsSection spares={spares} mayReserve={mayAssign} />}
         {/* «Elită» (§895) beside the spares: names printed as bibs, never registrations. */}
         {elite && <EliteBibsSection elite={elite} mayEdit={mayAssign} saved={eliteSaved} />}
@@ -655,6 +685,9 @@ export async function BibPrintForms({
           )),
         )}
       <form id={BIB_DOWNLOAD_FORM} action={`/api/admin/events/${eventId}/bibs`} method="get" hidden>
+        <input type="hidden" name="locale" value={locale} />
+      </form>
+      <form id={BIB_BLANK_FORM} action={`/api/admin/events/${eventId}/bibs`} method="get" hidden>
         <input type="hidden" name="locale" value={locale} />
       </form>
     </>

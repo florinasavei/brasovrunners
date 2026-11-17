@@ -324,7 +324,8 @@ export default async function BibDesignPanel({
     : t("editor.bibDesign.sectionSummary.membersOff");
   // «Elită» (§895): what the elite bibs carry besides the name; neither ticked is the name alone.
   const eliteAside =
-    words(design.eliteNumber && t("editor.bibDesign.sectionSummary.eliteNumber"), design.eliteSponsors && t("editor.bibDesign.sectionSummary.eliteSponsors")) ||
+    // The name alone, never a number (§963): «Număr pe BIB-urile de elită» is gone; the sponsors' row is the one choice left.
+    words(design.eliteSponsors && t("editor.bibDesign.sectionSummary.eliteSponsors")) ||
     t("editor.bibDesign.sectionSummary.eliteNameOnly");
 
   return (
@@ -670,6 +671,29 @@ export default async function BibDesignPanel({
                     sx={{ width: { sm: 280 } }}
                   />
                 </Stack>
+                {/* The fourth (§963): four numbers in all, «112» among them. */}
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+                  <RecallField
+                    name="event.bibDesign.emergencyPhone4Label"
+                    label={t("editor.bibDesign.emergencyPhone4Label")}
+                    helperText={t("editor.bibDesign.emergencyPhoneLabelHelp", { max: BIB_EMERGENCY_NAME_MAX })}
+                    defaultValue={design.emergencyPhone4Label}
+                    autoComplete="off"
+                    slotProps={{ htmlInput: { maxLength: BIB_EMERGENCY_NAME_MAX }, inputLabel: { shrink: true } }}
+                    sx={{ width: { sm: 240 } }}
+                  />
+                  <RecallField
+                    name="event.bibDesign.emergencyPhone4"
+                    type="tel"
+                    label={t("editor.bibDesign.emergencyPhone4")}
+                    helperText={t("editor.bibDesign.emergencyPhone4Help")}
+                    placeholder={t("editor.bibDesign.emergencyPhone3Placeholder")}
+                    defaultValue={design.emergencyPhone4}
+                    autoComplete="off"
+                    slotProps={{ htmlInput: { maxLength: BIB_EMERGENCY_PHONE_MAX, inputMode: "tel" }, inputLabel: { shrink: true } }}
+                    sx={{ width: { sm: 280 } }}
+                  />
+                </Stack>
                 <CheckboxField name="event.bibDesign.emergencyUpsideDown" defaultChecked={design.emergencyUpsideDown} help={t("editor.bibDesign.emergencyUpsideDownHelp")}>
                   {t("editor.bibDesign.emergencyUpsideDown")}
                 </CheckboxField>
@@ -867,9 +891,6 @@ export default async function BibDesignPanel({
             <Typography variant="caption" color="text.secondary">
               {t("editor.bibDesign.eliteIntro")}
             </Typography>
-            <CheckboxField name="event.bibDesign.eliteNumber" defaultChecked={design.eliteNumber} help={t("editor.bibDesign.eliteNumberHelp")}>
-              {t("editor.bibDesign.eliteNumber")}
-            </CheckboxField>
             <CheckboxField name="event.bibDesign.eliteSponsors" defaultChecked={design.eliteSponsors} help={t("editor.bibDesign.eliteSponsorsHelp")}>
               {t("editor.bibDesign.eliteSponsors")}
             </CheckboxField>

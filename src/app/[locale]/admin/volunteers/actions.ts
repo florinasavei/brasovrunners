@@ -4,6 +4,7 @@ import { getDb } from "@/db/client";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { raceDayDecisionFrom } from "@/modules/volunteers/domain/volunteer";
+import { editVolunteerNote } from "@/modules/volunteers/volunteer-notes";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
@@ -74,4 +75,27 @@ export async function setVolunteerRaffleAction(form: FormData): Promise<void> {
     if (!isDomainError(error)) throw error;
     return backToCard(form, { error: error.code });
   }
+}
+
+/**
+ * «Modifică nota» on a row of the «Voluntari» list (§964; the owner, 2026-11-17, of that list: «lasă-mă să editez și nota
+ * internă»): new words for the row's newest internal note, from the dialog over the list (`RowNoteDialog`, opened on the note's
+ * words). The coarse gate here (`canManageVolunteers`: the Organizer and the Administrators), and the service asks again — and
+ * whose note it is: its author's, or any for an Administrator (BR-REQ-060-01: the press drawn only for those is a courtesy). A
+ * refusal — empty, too long, a note deleted meanwhile, another role, a session that ended — comes back as the form's own state, the
+ * words still in the box (§315). A save comes back to the address the form was on (`returnTo`: this page of the list, its filters,
+ * sort and page) through the volunteers' one validated return, which takes only a path of the «Voluntari» screen — a forged one
+ * lands on the event's own «Voluntari» card, as the row's other two dialogs do — with the toast saying changed or nothing to
+ * change. The words go in neither the address nor the flash. It asks nothing first (§384): it changes one of the organizers' own
+ * notes, emails nobody and moves nothing else of the person.
+ */
+export async function editVolunteerNoteFromListAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  let changed: boolean;
+  try {
+    const actor = await requireStaffCapability(canManageVolunteers);
+    ({ changed } = await editVolunteerNote(getDb(), actor, field(form, "noteId"), form.get("body"), new Date()));
+  } catch (error) {
+    return refused(error, form);
+  }
+  return backToCard(form, { saved: changed ? "noteEdited" : "volunteerUnchanged" });
 }

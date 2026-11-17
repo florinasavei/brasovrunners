@@ -25,6 +25,7 @@ import { decodeFlash } from "@/shared/feedback/notice";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { planSummaryOf } from "../../helpers/volunteer-plan";
 
 /**
  * §952, BR-REQ-050-02, BR-REQ-060-01 — the picture of «Planul voluntarilor» (the owner, 2026-11-16, with a picture of the route
@@ -625,7 +626,8 @@ describe("§952 the plan's page draws the picture", () => {
     const page = await planPage();
     // The plan as it was.
     expect(page).toContain(ro.Admin.volunteers.plan.title);
-    expect(page).toContain("La puncte: 1 · Fără punct: 0 · Puncte fără nimeni: 1");
+    // Four numbers since the plan has two kinds of points (§961): nobody at the start–finish, one person on the route.
+    expect(planSummaryOf(page)).toBe("0 voluntari la start–finish · 1 voluntar pe traseu · 0 voluntari fără punct · 1 punct fără nimeni");
     expect(page).toContain("1. 1,2 km — Intersecția Stejeriș");
 
     // No picture, no link to one, no «Șterge poza».
@@ -715,7 +717,7 @@ describe("§952 the plan's page draws the picture", () => {
     expect(page).toContain(en.Admin.volunteers.plan.picture.openHint);
     expect(page).toContain(en.Admin.volunteers.plan.picture.replace);
     expect(page).toContain(en.Admin.volunteers.plan.picture.remove);
-    expect(page).toContain("At points: 1 · At no point: 0 · Points with nobody: 1");
+    expect(planSummaryOf(page)).toBe("0 volunteers at the start–finish · 1 volunteer on the route · 0 volunteers at no point · 1 point with nobody");
   });
 
   it("prints the picture first and in one piece, and none of its controls", async () => {
