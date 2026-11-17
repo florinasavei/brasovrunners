@@ -324,7 +324,8 @@ export default async function BibDesignPanel({
     : t("editor.bibDesign.sectionSummary.membersOff");
   // «Elită» (§895): what the elite bibs carry besides the name; neither ticked is the name alone.
   const eliteAside =
-    words(design.eliteNumber && t("editor.bibDesign.sectionSummary.eliteNumber"), design.eliteSponsors && t("editor.bibDesign.sectionSummary.eliteSponsors")) ||
+    // The name alone, never a number (§NNN): «Număr pe BIB-urile de elită» is gone; the sponsors' row is the one choice left.
+    words(design.eliteSponsors && t("editor.bibDesign.sectionSummary.eliteSponsors")) ||
     t("editor.bibDesign.sectionSummary.eliteNameOnly");
 
   return (
@@ -890,9 +891,6 @@ export default async function BibDesignPanel({
             <Typography variant="caption" color="text.secondary">
               {t("editor.bibDesign.eliteIntro")}
             </Typography>
-            <CheckboxField name="event.bibDesign.eliteNumber" defaultChecked={design.eliteNumber} help={t("editor.bibDesign.eliteNumberHelp")}>
-              {t("editor.bibDesign.eliteNumber")}
-            </CheckboxField>
             <CheckboxField name="event.bibDesign.eliteSponsors" defaultChecked={design.eliteSponsors} help={t("editor.bibDesign.eliteSponsorsHelp")}>
               {t("editor.bibDesign.eliteSponsors")}
             </CheckboxField>

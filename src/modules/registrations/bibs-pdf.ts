@@ -42,7 +42,7 @@ import {
   bibProfileRowHeight,
   bibStubScale,
 } from "./bib-geometry";
-import { type BibEliteEntry, bibElite, bibEliteParts, eliteBibName } from "./bib-elite";
+import { type BibEliteEntry, bibElite, bibEliteParts, eliteBibName, eliteLineBibName } from "./bib-elite";
 import { bibHeader, bibTitleWidth } from "./bib-header";
 import type { BibRow } from "./bibs";
 import { formatRaceNumber } from "./domain/race-number";
@@ -470,7 +470,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     // «BIB-uri goale» (§NNN): no number, no stubs, no name and no line for one.
     const blankBib = row?.blank === true;
     // An elite bib (§895): the name where the number goes; the number and the sponsors' row only as the design ticks them.
-    const elite = item.kind === "elite" ? { entry: item.entry, ...bibEliteParts(design, item.entry) } : null;
+    const elite = item.kind === "elite" ? { entry: item.entry, ...bibEliteParts(design) } : null;
     const asMember = row?.member === true;
     // The members' design only while the switch is on (§664): their header, or their whole card (§695).
     const card = asMember ? memberCard : null;
@@ -984,7 +984,8 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const pages: BibSheetPage<SheetItem>[] = input.elite
     ? sheetPages(
         [
-          ...input.elite.map((entry): SheetItem => ({ kind: "elite", entry, member: false })),
+          // A line of the list prints its first word, as a registration its first name (§NNN).
+          ...input.elite.map((entry): SheetItem => ({ kind: "elite", entry: { ...entry, name: eliteLineBibName(entry.name) }, member: false })),
           ...input.rows.map(eliteOf).filter((item): item is SheetItem => item !== null),
         ],
         { layout: input.layout, membersOn: false },

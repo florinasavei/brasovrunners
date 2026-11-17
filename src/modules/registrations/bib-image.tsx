@@ -515,7 +515,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const L = BIB_LAYOUT;
   const design = input.design ?? DEFAULT_BIB_DESIGN;
   // An elite bib (§895): the name where the number goes; the number and the sponsors' row only as the design ticks them.
-  const elite = input.elite ? { entry: input.elite, ...bibEliteParts(design, input.elite) } : null;
+  const elite = input.elite ? { entry: input.elite, ...bibEliteParts(design) } : null;
   // As the event writes it (§735): «007» under «Trei cifre»; its length sizes it, as ever. An elite bib's own number, or none.
   const digits = elite ? (elite.number !== null ? formatRaceNumber(elite.number, design.numberFormat) : "") : formatRaceNumber(input.bibNumber, design.numberFormat);
   // The members' header (§664) only while the switch is on; everything under it is the one design. Never on an elite bib.
