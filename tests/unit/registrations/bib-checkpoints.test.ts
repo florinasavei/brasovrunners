@@ -26,14 +26,14 @@ vi.mock("@/modules/routes/elevation/geometry", async (importOriginal) => {
   return { ...actual, elevationGeometry: spy.geometry };
 });
 
-import { type BibDesign, bibDesignSchema, DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
+import { type BibDesign, bibBandColour, bibDesignSchema, DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
 import { type BibCheckpointSource, type BibCheckpointWords, bibStripCheckpoints } from "@/modules/registrations/bib-checkpoints";
 import { bibNeedsCheckpoints, loadBibExtras } from "@/modules/registrations/bib-extras";
 import { BIB_IMAGE_SCALE, BIB_LAYOUT, BIB_MARGIN, BIB_TEXT_ASCENT } from "@/modules/registrations/bib-geometry";
 import { bibExtrasBlock, renderBibImage } from "@/modules/registrations/bib-image";
 import { type BibProfileDrawing, bibProfileDrawing } from "@/modules/registrations/bib-profile";
 import { bibProfileRow } from "@/modules/registrations/bib-profile-row";
-import { bibProfileStrip, thinBibCheckpoints } from "@/modules/registrations/bib-profile-strip";
+import { bibAltitudeInk, bibProfileStrip, thinBibCheckpoints } from "@/modules/registrations/bib-profile-strip";
 import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { BIB_DRAWING_VERSION } from "@/modules/registrations/domain/bib-stamp";
 import { elevationGeometry, glyphForKinds, pathOf } from "@/modules/routes/elevation/geometry";
@@ -125,8 +125,9 @@ describe("§757 which checkpoints the strip pins, and what each says", () => {
 
   it("draws the five earlier kinds with the very paths and order they had (§824)", () => {
     // 6 for the emergency line's new form (§947), 7 for the elite bib's name alone, 8 for the room between the profile and the
-    // phone line (§959): the strip's glyphs are drawn as they were.
-    expect(BIB_DRAWING_VERSION).toBe(9);
+    // phone line (§959), 9 for the elite bib's one word (§963), 10 for the strip's altitudes in the band's colour (§968): the
+    // strip's glyphs are drawn as they were.
+    expect(BIB_DRAWING_VERSION).toBe(10);
     const paths = (["water", "food", "firstAid", "timing", "direction", "none"] as const).map((glyph) => ELEVATION_GLYPH_PATHS[glyph]);
     expect(paths).toEqual([
       "M0 -7.5C3.6 -3.4 5.8 -0.6 5.8 2.4A5.8 5.8 0 0 1 -5.8 2.4C-5.8 -0.6 -3.6 -3.4 0 -7.5Z",
@@ -426,6 +427,8 @@ describe("§804 the unticked checkpoint is not on the strip", () => {
 
 const SHEET = { eventTitle: "Crosul de toamnă", eventDate: "21 noiembrie 2026", generatedAt: new Date("2026-10-10T12:00:00Z"), replyTo: "club@example.test" };
 const SOURCES = [at(2.4, "10:20", ["WATER"]), at(5.1, "10:55", ["FOOD"]), at(7.2, "11:30", ["WATER"])];
+/** The picture's altitudes in the club's band colour, as the sheet's are on a bib with no colour of its own (§968). */
+const ALTITUDES = bibAltitudeInk({ band: bibBandColour(null), ink: "#000001", card: null });
 
 type Call = { name: string; args: unknown[] };
 /** What the sheet asks pdfkit to draw: its paths, circles and texts, in the order drawn. */
@@ -446,7 +449,7 @@ async function sheetCalls(drawing: BibProfileDrawing, overrides: Partial<BibDesi
 /** The markup the picture is drawn from, as plain data: every element with its props. */
 function imageNodes(drawing: BibProfileDrawing, overrides: Partial<BibDesign> = {}) {
   const row = bibProfileRow(design(overrides), { profile: drawing, profileFigures: null }, false)!;
-  const element = bibExtrasBlock({ row, picture: null, emergency: null, turn: { block: false, profile: false, phone: false }, ink: "#000001" }) as ReactElement;
+  const element = bibExtrasBlock({ row, picture: null, emergency: null, turn: { block: false, profile: false, phone: false }, ink: "#000001", altitudeInk: ALTITUDES }) as ReactElement;
   const tree = JSON.parse(JSON.stringify(element, (key, value) => (key === "_owner" || key === "_store" ? undefined : value)));
   const nodes: Array<{ type: string; props: Record<string, any> }> = []; // eslint-disable-line @typescript-eslint/no-explicit-any
   const walk = (node: unknown): void => {
