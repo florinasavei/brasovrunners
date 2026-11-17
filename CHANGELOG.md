@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.54-2026-11-17
+
+- **Room between the route's profile and the emergency phones on the bib** — the phones line no longer touches the kilometres of the profile: about 2 mm of space between them, on the printed sheet and in the preview, turned or not. §959.
 ## BR-V4.53-2026-11-17
 
 - **«Include programul evenimentului» in «Trimite un mesaj participanților»** — one more tick in the composer: every email of the send then shows the event's programme, hour by hour, under your words, in both languages; the preview shows it, the question before «Trimite» says it, and for an event without a timed programme the tick is greyed and says where to add one. §958.

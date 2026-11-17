@@ -125,7 +125,7 @@ describe("§757 which checkpoints the strip pins, and what each says", () => {
 
   it("draws the five earlier kinds with the very paths and order they had (§824)", () => {
     // 6 for the emergency line's new form (§947), 7 for the elite bib's name alone, 8 for the room between the profile and the
-    // phone line (§NNN): the strip's glyphs are drawn as they were.
+    // phone line (§959): the strip's glyphs are drawn as they were.
     expect(BIB_DRAWING_VERSION).toBe(8);
     const paths = (["water", "food", "firstAid", "timing", "direction", "none"] as const).map((glyph) => ELEVATION_GLYPH_PATHS[glyph]);
     expect(paths).toEqual([

@@ -10,7 +10,7 @@ import { fnv1a } from "@/shared/hash";
  * with the core's glyphs, the aid stations' words (§804). 5: a checkpoint offering food and water draws the fork on the strip, as the event page does (§881). 6: the emergency line
  * reads «Name: number» with a bar between its numbers, and no word before numbers that each have a name (§947). 7: a registration
  * marked «Elită» prints its first name alone where the number goes, where it printed the registered name (§948). 8: an empty
- * gap between the profile's row and the phone line when both are drawn (§NNN). The bibs page's stamp (`bibPictureStamp`) and the desk's (`events/repository.ts#BIB_STAMP`) both carry it.
+ * gap between the profile's row and the phone line when both are drawn (§959). The bibs page's stamp (`bibPictureStamp`) and the desk's (`events/repository.ts#BIB_STAMP`) both carry it.
  */
 export const BIB_DRAWING_VERSION = 8;
 

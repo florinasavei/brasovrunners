@@ -485,7 +485,7 @@ export function bibExtrasBlock(input: {
         display: "flex",
         flexShrink: 0,
         height: px(L.emergencyHeight),
-        // The room between the profile's row and the phone line when both are drawn (§NNN, `bibExtrasHeight` counts it).
+        // The room between the profile's row and the phone line when both are drawn (§959, `bibExtrasHeight` counts it).
         ...(input.row ? { marginTop: px(L.emergencyGap) } : {}),
         alignItems: "center",
         justifyContent: "center",
