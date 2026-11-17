@@ -92,8 +92,7 @@ describe("BR-REQ-031-04 every rejected field can be named and reached", () => {
       // §500: a tick like `listOptOut`, and the service decides what is kept — nothing to refuse.
       "listSocials",
       "locale",
-      // §664: the members' bib, a tick the service decides (`memberBibKept`) — nothing to refuse.
-      "memberBibWanted",
+      // §664's «memberBibWanted» left with §NNN: the form posts no such box any more, and a posted one is never read.
       // §562: the offers and benefits, a tick the service decides — never required, nothing to refuse.
       "promoConsent",
       "renderedAt",

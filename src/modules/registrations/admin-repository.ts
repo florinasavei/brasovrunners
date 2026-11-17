@@ -38,7 +38,8 @@ import { eventReserveEntries } from "@/db/schema/event-reserve-entries";
 import { promoListed } from "./sponsor-list";
 import { healthNoteShown } from "./domain/health-note";
 import { memberCanonicalEmails } from "./member-ticks";
-import { BIB_STAMP, OFFERS_MEMBER_BIB, RACE_NUMBER_FORMAT } from "@/modules/events/repository";
+import { PRINTS_MEMBER_BIB } from "./member-bib";
+import { BIB_STAMP, RACE_NUMBER_FORMAT } from "@/modules/events/repository";
 import type { QueueOrder } from "./domain/waitlist";
 import { isRejectionCause, rejectionCause, type RejectionCause } from "@/modules/notifications/domain/rejection-cause";
 import { recipientRoleOf, type RecipientRole } from "@/modules/notifications/domain/email-audience";
@@ -117,9 +118,11 @@ export type RegistrationListRow = {
   eventTimezone: string;
   /** «Membru (verificat)» (§662): the participant's canonical address is a member account's; `membershipOf` reads the two. */
   memberVerified: boolean;
-  /** «Vreau numărul de membru» (§664) and whether the event offers the members' bib: the export's «Member bib». */
-  memberBibWanted: boolean;
-  memberBibOffered: boolean;
+  /**
+   * The registration prints with the members' race number (§664), by the one rule (§NNN, `member-bib.ts#PRINTS_MEMBER_BIB`):
+   * the event offers it, the person ticked «Sunt membru», not «Elită». The export's «Member bib».
+   */
+  memberBib: boolean;
   /** When the entrant ticked "I am medically fit" (§171); null on a desk or phone entry. */
   fitnessDeclaredAt: Date | null;
   /**
@@ -266,12 +269,6 @@ export type RegistrationListFilters = {
    * «none» those still registered who did not answer. Information, never a state. Narrows only.
    */
   reconfirm?: ReconfirmFilter;
-  /**
-   * The members' race number asked for and not verified (§664): the real rows with a number that want it,
-   * at an event that offers it, whose address is no member account's — the bibs page's link, the same set
-   * its line counts. Narrows only.
-   */
-  memberBibAsked?: boolean;
 };
 
 /** The three answers of «Reconfirmare», as the list's URL carries them. */
@@ -377,18 +374,6 @@ function memberVerifiedOf(members: readonly string[]): SQL<boolean> {
   return (members.length > 0 ? sql<boolean>`(${inArray(participants.canonicalEmail, [...members])})` : sql<boolean>`false`).mapWith(Boolean);
 }
 
-/**
- * The members' race number asked for and not verified (§664), in the bibs sheet's own scope: a real row
- * with a number (`bibs.ts#bibScopeWhere`), that wants it, at an event that offers it, whose address is no
- * member account's and not marked «Elită» (an elite bib is never the ordinary one, §897) — so the list the bibs
- * page links to counts what its line counts. The event's switch
- * is read through its own `EXISTS`, never through the caller's joins: the summary and the count select
- * no `events`, and a condition naming it there failed the whole page.
- */
-function memberBibAskedUnverified(members: readonly string[]): SQL {
-  return sql`(${registrations.memberBibWanted} and ${registrations.kind} = 'REAL' and ${registrations.bibNumber} is not null and exists (select 1 from ${events} where ${events.id} = ${registrations.eventId} and ${OFFERS_MEMBER_BIB}) and not ${registrations.elite} and not ${memberVerifiedOf(members)})`;
-}
-
 /** The member accounts' canonical addresses for one query: the caller's, or read now. */
 async function membersFor<T extends Record<string, unknown>>(db: Database<T>, filters: RegistrationListFilters): Promise<readonly string[]> {
   return filters.members ?? [...(await memberCanonicalEmails(db))];
@@ -415,7 +400,6 @@ function registrationConditions(filters: RegistrationListFilters, members: reado
     filters.fromPartner ? isNotNull(registrations.partnerName) : undefined,
     filters.partner ? sql`lower(${registrations.partnerName}) = lower(${filters.partner})` : undefined,
     filters.reconfirm ? reconfirmCondition(filters.reconfirm) : undefined,
-    filters.memberBibAsked ? memberBibAskedUnverified(members) : undefined,
     /*
       Name only, and deliberately not the email address. An organizer at a desk is holding a
       person who just said their name out loud; matching addresses as well would turn this box
@@ -598,9 +582,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       eventStartsAt: events.startsAt,
       eventTimezone: events.timezone,
       memberVerified: memberVerifiedOf(members),
-      // The members' race number (§664): the export's «Member bib».
-      memberBibWanted: registrations.memberBibWanted,
-      memberBibOffered: OFFERS_MEMBER_BIB,
+      // The members' race number (§664): the export's «Member bib», by the one rule (§NNN) — no member account read for it.
+      memberBib: PRINTS_MEMBER_BIB,
       fitnessDeclaredAt: registrations.fitnessDeclaredAt,
       termsVersion: registrations.termsVersion,
       termsAcceptedAt: registrations.termsAcceptedAt,
@@ -702,7 +685,7 @@ export async function summariseRegistrationsForAdmin<T extends Record<string, un
   db: Database<T>,
   filters: RegistrationListFilters = {},
 ): Promise<RegistrationSummary> {
-  const conditions = registrationConditions(filters, filters.clubMember || filters.memberBibAsked ? await membersFor(db, filters) : []);
+  const conditions = registrationConditions(filters, filters.clubMember ? await membersFor(db, filters) : []);
 
   const rows = await db
     .select({ status: registrations.status, kind: registrations.kind, outside: registrations.outsideCapacity, total: count() })
@@ -857,7 +840,7 @@ export async function countRegistrationsForAdmin<T extends Record<string, unknow
   db: Database<T>,
   filters: RegistrationListFilters = {},
 ): Promise<number> {
-  const conditions = registrationConditions(filters, filters.clubMember || filters.memberBibAsked ? await membersFor(db, filters) : []);
+  const conditions = registrationConditions(filters, filters.clubMember ? await membersFor(db, filters) : []);
 
   const [row] = await db
     .select({ total: count() })
@@ -941,9 +924,8 @@ export type RegistrationDetail = {
   clubMemberDeclared: boolean;
   /** «Membru (verificat)» (§662), as on the list row. */
   memberVerified: boolean;
-  /** «Vreau numărul de membru» (§664) as stored, and whether the event offers the members' bib now. */
-  memberBibWanted: boolean;
-  eventOffersMemberBib: boolean;
+  /** Prints with the members' race number (§664), by the one rule (§NNN): the page's «Număr de membru» beside the number. */
+  memberBib: boolean;
   submittedAt: Date;
   emailConfirmedAt: Date | null;
   waitlistedAt: Date | null;
@@ -1080,8 +1062,8 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
       memberVerified: memberVerifiedOf(members),
-      memberBibWanted: registrations.memberBibWanted,
-      eventOffersMemberBib: OFFERS_MEMBER_BIB,
+      // The members' race number (§664), by the one rule the sheet prints by (§NNN).
+      memberBib: PRINTS_MEMBER_BIB,
       fitnessDeclaredAt: registrations.fitnessDeclaredAt,
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,
@@ -1733,7 +1715,7 @@ export async function listEventsWithRegistrations<T extends Record<string, unkno
 export async function listEventsAcceptingRegistrations<T extends Record<string, unknown>>(
   db: Database<T>,
   locale: "ro" | "en",
-): Promise<Array<{ id: string; title: string | null; startsAt: Date; timezone: string; minAge: number; offersMemberBib: boolean }>> {
+): Promise<Array<{ id: string; title: string | null; startsAt: Date; timezone: string; minAge: number }>> {
   return db
     .select({
       id: events.id,
@@ -1743,8 +1725,6 @@ export async function listEventsAcceptingRegistrations<T extends Record<string, 
       // Beside each name on the staff form ("14+"), so the volunteer knows which minimum the
       // birth date is counted against before pressing (§329).
       minAge: events.minAge,
-      // Whether the staff form asks «Vreau numărul de membru» (§664), read as `readBibDesign` reads it.
-      offersMemberBib: OFFERS_MEMBER_BIB,
     })
     .from(events)
     .leftJoin(

@@ -311,7 +311,7 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
     and the footer's `COUNTIF` read it from the sheet itself, which the typed-club match (§753) could never be as a formula.
   */
   { header: "Club runner", width: 11, cell: (row) => ({ value: clubRunnerCell(row.clubRunner), type: String }) },
-  // Beside it (§664): the members' race number — "yes" when it prints, "asked" when the address is no member's, blank.
+  // Beside it (§664): the members' race number — "yes" when it prints by the one rule (§NNN), blank otherwise.
   { header: "Member bib", width: 11, cell: (row) => ({ value: memberBibExportCell(row), type: String }) },
   { header: "Medically fit (declared)", width: 18, cell: (row) => ({ value: onClubClock(row.fitnessDeclaredAt), type: Date, format: STAMP_FORMAT }) },
   { header: "Guardian", width: 24, cell: (row) => ({ value: row.guardianName, type: String }) },

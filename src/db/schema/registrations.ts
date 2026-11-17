@@ -300,23 +300,22 @@ export const registrations = pgTable(
      * members of this club have no backoffice account and never will — so a verified flag
      * would be wrong for exactly the people it is meant to find.
      *
-     * It is therefore informational only. It MUST NOT decide a price, a place, or a position
-     * in the queue: `AGENTS.md` §12.6 keeps conditions like this one out of the allocator and
-     * the capacity formula, and a self-ticked box that granted anything would be granted to
-     * anybody who ticked it. An organizer corrects a wrong one in the backoffice.
+     * It MUST NOT decide a price, a place, or a position in the queue: `AGENTS.md` §12.6 keeps
+     * conditions like this one out of the allocator and the capacity formula, and a self-ticked
+     * box that granted anything would be granted to anybody who ticked it. It decides one look,
+     * and only that (§NNN, the owner's choice of 2026-11-17): at an event whose bib design offers
+     * the members' race number, a registration with this tick, not marked «Elită», prints in the
+     * members' design (`registrations/member-bib.ts#PRINTS_MEMBER_BIB`) — the same number, in the
+     * same order (§173). An Administrator corrects a wrong one with «Modifică datele».
      */
     clubMemberDeclared: boolean("club_member_declared").notNull().default(false),
 
     /**
-     * «Vreau numărul de membru» (§664): the person asked to wear the members' race number, which
-     * the event offers when its bib design's members' switch is on. Stored true only when that
-     * switch and `club_member_declared` are both on at the moment of writing; the service writes
-     * false otherwise, whatever the form posted.
-     *
-     * A wish, never a fact, exactly like the tick above: the sheet prints the members' bib only
-     * for a registration that wants it AND whose canonical address is a member account's (§662) —
-     * never for the tick alone. It changes nothing else: not the number, not its band, not the
-     * order of confirmation (§173), not a place.
+     * «Vreau numărul de membru» (§664): once the person's wish to wear the members' race number,
+     * asked under the member tick while the event offered it. **Asked no more and read by nothing
+     * since §NNN**: the tick above alone decides the members' bib. Every row the form writes (a
+     * restart's too) stores false and a posted value is ignored; older rows keep what they said.
+     * The column stays — expand/contract, no migration — until a later change drops it.
      */
     memberBibWanted: boolean("member_bib_wanted").notNull().default(false),
 

@@ -76,8 +76,6 @@ export function previewPageOf(event: EditableEvent, translation: EditableTransla
     waitlistAutoOffer: event.waitlistAutoOffer,
     kitShirt: event.kitShirt,
     askHealthNote: event.askHealthNote,
-    // The members' race number (§664): the draft's own switch, read as the page reads the saved one.
-    offersMemberBib: readBibDesign(event.bibDesign).member.enabled,
     // How a race number is written (§735), as the page reads the saved design.
     raceNumberFormat: readBibDesign(event.bibDesign).numberFormat,
     confirmationOpensDaysBefore: event.confirmationOpensDaysBefore,

@@ -15,21 +15,24 @@ import {
   summariseRegistrationsForAdmin,
 } from "@/modules/registrations/admin-repository";
 import { createRegistrationByStaff, editRegistrationAnswers } from "@/modules/registrations/admin-service";
-import { countUnverifiedMemberBibs, listBibs } from "@/modules/registrations/bibs";
+import { listBibs } from "@/modules/registrations/bibs";
 import { buildRegistrationsCsv } from "@/modules/registrations/csv";
 import { type EventForRegistration, submitRegistration } from "@/modules/registrations/service";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { readSheet } from "../../helpers/xlsx";
 
 /**
- * §664, BR-REQ-038-01, BR-REQ-037-03 — the members' race number from a real database:
+ * §664, BR-REQ-038-01, BR-REQ-037-03 — the members' race number from a real database, as §NNN left it (the owner,
+ * 2026-11-17: «că momentan nu se deosebesc cu nimic»):
  *
- * - «Vreau numărul de membru» is stored only while the event's bib design offers it and under the
- *   member tick, whatever the form posts — on the public form and on a staff entry alike;
- * - the sheet prints the members' bib only for a row that asked AND whose canonical address is a
- *   member account's (§662): never the tick alone; a test row stays off the sheet as before;
- * - «Modifică datele» changes the wish, audited; clearing the member tick clears it;
- * - the export's «Member bib» reads yes / asked / empty, and the list's filter keeps the asked.
+ * - «Vreau numărul de membru» is asked no more: every row the form or a staff entry writes stores false, whatever is
+ *   posted, and «Modifică datele» refuses it by name — the column stays, read by nothing;
+ * - the sheet prints the members' bib for a row whose person ticked «Sunt membru» while the event's design offers it —
+ *   with a member account on «Echipa» or without one, the account alone never; a test row stays off the sheet as before;
+ * - the export's «Member bib» reads yes / empty, and the «asked but not verified» filter is gone with the state.
+ *
+ * Every case §NNN changed says so beside it; the rest are as §664 wrote them. The rule's own file is
+ * `member-bib-declared.test.ts`.
  */
 const NOW = new Date("2026-09-04T10:00:00.000Z");
 
@@ -131,11 +134,13 @@ function submission(overrides: Record<string, unknown> = {}) {
 
 const rowOf = async (eventId: string) => (await db.select().from(registrations).where(eq(registrations.eventId, eventId)))[0];
 
-describe("§664 «Vreau numărul de membru» is kept only where it means something", () => {
-  it("stores the wish under the member tick while the event offers the members' bib", async () => {
+describe("§664 «Vreau numărul de membru» is asked no more (§NNN): every write stores false", () => {
+  // §NNN: the public form stored the wish under the tick at an event offering the bib; a posted one is now ignored.
+  it("stores false under the member tick at an event offering the members' bib, whatever the form posts", async () => {
     const event = await createEvent(true);
     await submitRegistration(db, event, submission({ clubMemberDeclared: true, memberBibWanted: true }), NOW);
-    expect((await rowOf(event.id)).memberBibWanted).toBe(true);
+    expect((await rowOf(event.id)).memberBibWanted).toBe(false);
+    expect((await rowOf(event.id)).clubMemberDeclared).toBe(true);
   });
 
   it("stores false whatever a stale form posts: the design off, or the member tick off", async () => {
@@ -148,7 +153,10 @@ describe("§664 «Vreau numărul de membru» is kept only where it means somethi
     expect((await rowOf(on.id)).memberBibWanted).toBe(false);
   });
 
-  it("asks it of the staff entry too, by the same rule", async () => {
+  // §NNN: the staff entry asked it too and kept it where offered; it asks nothing now, and a stale caller's wish is dropped.
+  it("asks it of the staff entry no more: a posted wish is dropped, the tick kept", async () => {
+    // What a caller built for the old entry would post: the retired key beside the tick, not in the type any more.
+    const staleDetails = { clubMemberDeclared: true, memberBibWanted: true } as unknown as { clubMemberDeclared: boolean };
     const event = await createEvent(true);
     await createRegistrationByStaff(
       db,
@@ -161,52 +169,54 @@ describe("§664 «Vreau numărul de membru» is kept only where it means somethi
         locale: "ro",
         listOptOut: false,
         relayedByParticipantRequest: true,
-        details: { clubMemberDeclared: true, memberBibWanted: true },
+        details: staleDetails,
       },
       NOW,
     );
-    expect((await rowOf(event.id)).memberBibWanted).toBe(true);
+    expect(await rowOf(event.id)).toMatchObject({ memberBibWanted: false, clubMemberDeclared: true });
 
     const other = await createEvent(false);
     await createRegistrationByStaff(
       db,
       admin,
-      { eventId: other.id, firstName: "Desk", lastName: "Altul", email: "desk2@example.ro", locale: "ro", listOptOut: false, relayedByParticipantRequest: true, details: { clubMemberDeclared: true, memberBibWanted: true } },
+      { eventId: other.id, firstName: "Desk", lastName: "Altul", email: "desk2@example.ro", locale: "ro", listOptOut: false, relayedByParticipantRequest: true, details: staleDetails },
       NOW,
     );
     expect((await rowOf(other.id)).memberBibWanted).toBe(false);
   });
 
-  it("tells the staff form which events offer it", async () => {
+  // §NNN: the staff form asked the wish where an event offered the bib; with nothing to ask, the list carries no flag.
+  it("no longer tells the staff form which events offer it — the form asks nothing of it", async () => {
     const on = await createEvent(true);
-    const off = await createEvent(false);
     const listed = await listEventsAcceptingRegistrations(db, "ro");
-    expect(listed.find((event) => event.id === on.id)?.offersMemberBib).toBe(true);
-    expect(listed.find((event) => event.id === off.id)?.offersMemberBib).toBe(false);
+    expect(listed.find((event) => event.id === on.id)).toBeDefined();
+    expect(listed.find((event) => event.id === on.id)).not.toHaveProperty("offersMemberBib");
   });
 });
 
-describe("§664 «Modifică datele» corrects the wish, audited", () => {
-  it("changes it under the member tick, and clearing the tick clears it with its own row", async () => {
+describe("§664 «Modifică datele» and the members' bib (§NNN: the tick, not a wish)", () => {
+  // §NNN: «Modifică datele» corrected the wish and clearing the tick cleared it; the wish is no answer now and the tick alone decides.
+  it("refuses the retired wish by name, and a cleared tick writes no row for it — the next sheet follows the tick", async () => {
     const event = await createEvent(true);
-    await submitRegistration(db, event, submission({ clubMemberDeclared: true, memberBibWanted: false }), NOW);
+    await submitRegistration(db, event, submission({ clubMemberDeclared: true }), NOW);
     const row = await rowOf(event.id);
+    // A row from before §NNN that still says yes: nothing reads it, and nothing rewrites it.
+    await db.update(registrations).set({ memberBibWanted: true }).where(eq(registrations.id, row.id));
 
-    await editRegistrationAnswers(db, admin, row.id, { memberBibWanted: true }, NOW);
-    expect((await rowOf(event.id)).memberBibWanted).toBe(true);
+    await expect(editRegistrationAnswers(db, admin, row.id, { memberBibWanted: false }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["memberBibWanted"] });
 
     await editRegistrationAnswers(db, admin, row.id, { clubMemberDeclared: false }, NOW);
     const after = await rowOf(event.id);
     expect(after.clubMemberDeclared).toBe(false);
-    expect(after.memberBibWanted).toBe(false);
+    expect(after.memberBibWanted).toBe(true);
 
     const trail = await db
       .select({ metadata: auditLogs.metadataJson })
       .from(auditLogs)
       .where(and(eq(auditLogs.action, "registration.answer_corrected"), eq(auditLogs.entityId, row.id)));
-    const fields = trail.map((entry) => entry.metadata as { field: string; from: unknown; to: unknown });
-    expect(fields).toContainEqual({ field: "memberBibWanted", from: false, to: true });
-    expect(fields).toContainEqual({ field: "memberBibWanted", from: true, to: false });
+    const fields = trail.map((entry) => (entry.metadata as { field: string }).field);
+    expect(fields).toContain("clubMemberDeclared");
+    expect(fields).not.toContain("memberBibWanted");
   });
 
   it("keeps it false on an event that does not offer the members' bib: nothing changes, and says so", async () => {
@@ -218,7 +228,7 @@ describe("§664 «Modifică datele» corrects the wish, audited", () => {
   });
 });
 
-describe("§664 the sheet prints the members' bib for wanted AND verified only", () => {
+describe("§664 the sheet prints the members' bib for the member tick (§NNN), with or without an account", () => {
   let counter = 0;
   async function confirmed(eventId: string, email: string, options: { wanted: boolean; declared?: boolean; kind?: RegistrationKind }) {
     counter += 1;
@@ -251,51 +261,57 @@ describe("§664 the sheet prints the members' bib for wanted AND verified only",
     return row;
   }
 
-  it("flags the verified member who asked; the declared-only and the unasked print the ordinary bib", async () => {
+  // §NNN: the declared-only row printed the ordinary bib and the unasked one too; the tick alone prints it now.
+  it("flags every row that ticked «Sunt membru» — a member account's address or not, asked or not; the TEST row stays off", async () => {
     const event = await createEvent(true);
-    // A member account on «Echipa»: the address verifies (§662).
+    // A member account on «Echipa»: it verifies the chip (§662), and decides nothing of the bib any more (§NNN).
     await db.insert(staffUsers).values({ email: "membru@example.ro", displayName: "Membru", role: "MEMBER" });
     const verified = await confirmed(event.id, "membru@example.ro", { wanted: true });
     const declaredOnly = await confirmed(event.id, "declarat@example.ro", { wanted: true });
     const unasked = await confirmed(event.id, "admin@dev.test", { wanted: false });
+    // An account and no tick: the account alone never prints it.
+    await db.insert(staffUsers).values({ email: "cont@example.ro", displayName: "Cont", role: "MEMBER" });
+    const accountOnly = await confirmed(event.id, "cont@example.ro", { wanted: false, declared: false });
     await confirmed(event.id, "test@example.ro", { wanted: true, kind: "TEST" });
 
     const sheet = await listBibs(db, event.id);
     expect(sheet.map((bib) => [bib.id, bib.member])).toEqual([
       [verified.id, true],
-      [declaredOnly.id, false],
-      [unasked.id, false],
+      [declaredOnly.id, true],
+      [unasked.id, true],
+      [accountOnly.id, false],
     ]);
     // The test row stays off the sheet, as every count the club is given (§30).
-    expect(sheet).toHaveLength(3);
-    // The bibs page's line: one asked and is no member account's.
-    expect(await countUnverifiedMemberBibs(db, event.id)).toBe(1);
+    expect(sheet).toHaveLength(4);
   });
 
-  it("prints nobody a member's bib while the event's switch is off, and counts nobody unverified", async () => {
+  // §NNN: the «counts nobody unverified» half is gone with the unverified line; the switch half stands.
+  it("prints nobody a member's bib while the event's switch is off", async () => {
     const event = await createEvent(false);
     await db.insert(staffUsers).values({ email: "membru@example.ro", displayName: "Membru", role: "MEMBER" });
     await confirmed(event.id, "membru@example.ro", { wanted: true });
+    await confirmed(event.id, "declarat@example.ro", { wanted: false });
     expect((await listBibs(db, event.id)).every((bib) => !bib.member)).toBe(true);
-    expect(await countUnverifiedMemberBibs(db, event.id)).toBe(0);
   });
 
-  it("with no member account at all, asks no `IN ()` and flags nobody", async () => {
+  // §NNN: with no member account a ticked row printed the ordinary bib; no account is read for the bib now.
+  it("with no member account at all, still flags the row that ticked «Sunt membru»", async () => {
     await db.delete(staffUsers);
     const event = await createEvent(true);
     await confirmed(event.id, "a@example.ro", { wanted: true });
-    expect((await listBibs(db, event.id)).map((bib) => bib.member)).toEqual([false]);
-    expect(await countUnverifiedMemberBibs(db, event.id)).toBe(1);
+    await confirmed(event.id, "b@example.ro", { wanted: false, declared: false });
+    expect((await listBibs(db, event.id)).map((bib) => bib.member)).toEqual([true, false]);
   });
 
-  it("reads «Member bib» in the export, keeps the asked in the list's filter, and tells the registration's page", async () => {
+  // §NNN: «asked» left the export with the state, and the bibs page's filter (`memberBibAsked`) with its line.
+  it("reads «Member bib» in the export and tells the registration's page", async () => {
     const event = await createEvent(true);
     await db.insert(staffUsers).values({ email: "membru@example.ro", displayName: "Membru", role: "MEMBER" });
     const verified = await confirmed(event.id, "membru@example.ro", { wanted: true });
-    const asked = await confirmed(event.id, "declarat@example.ro", { wanted: true });
-    await confirmed(event.id, "nimic@example.ro", { wanted: false, declared: false });
-    // A test row that asked: off the sheet, so off the line and off the list it links to.
-    await confirmed(event.id, "proba@example.ro", { wanted: true, kind: "TEST" });
+    const declared = await confirmed(event.id, "declarat@example.ro", { wanted: true });
+    const nothing = await confirmed(event.id, "nimic@example.ro", { wanted: false, declared: false });
+    // A test row that ticked: off the sheet and off the export (§30); in the list, read by the same rule as a real one.
+    const probe = await confirmed(event.id, "proba@example.ro", { wanted: true, kind: "TEST" });
 
     const rows = await listRegistrationsForAdmin(db, { eventId: event.id });
     const csv = buildRegistrationsCsv(
@@ -310,8 +326,7 @@ describe("§664 the sheet prints the members' bib for wanted AND verified only",
         clubMemberDeclared: row.clubMemberDeclared,
         memberVerified: row.memberVerified,
         clubRunner: false,
-        memberBibOffered: row.memberBibOffered,
-        memberBibWanted: row.memberBibWanted,
+        memberBib: row.memberBib,
         fitnessDeclaredAt: null,
         stravaUrl: "",
         guardianName: "",
@@ -327,26 +342,23 @@ describe("§664 the sheet prints the members' bib for wanted AND verified only",
     expect(lines[0].split(",").at(-4)).toBe("Member bib");
     const cellOf = (email: string) => lines.find((line) => line.includes(email))?.split(",").at(-4);
     expect(cellOf("membru@example.ro")).toBe("yes");
-    expect(cellOf("declarat@example.ro")).toBe("asked");
+    expect(cellOf("declarat@example.ro")).toBe("yes");
     expect(cellOf("nimic@example.ro")).toBe("");
 
-    const filtered = await listRegistrationsForAdmin(db, { eventId: event.id, memberBibAsked: true });
-    expect(filtered.map((row) => row.id)).toEqual([asked.id]);
-    /*
-      The list page reads the count and the summary under the same filter, and neither joins
-      `events`: the event's switch is the condition's own subquery, never the caller's join.
-    */
-    const askedFilter = { eventId: event.id, status: "CONFIRMED" as const, memberBibAsked: true };
-    expect(await countRegistrationsForAdmin(db, askedFilter)).toBe(1);
-    expect(await summariseRegistrationsForAdmin(db, askedFilter)).toMatchObject({ real: 1, test: 0 });
-    // The bibs page's line and the list it links to count the same set.
-    expect(await countUnverifiedMemberBibs(db, event.id)).toBe(1);
+    // The list's rows read the rule in its one query, its count and its summary unchanged by it (no filter narrows by it any more).
+    const byId = new Map(rows.map((row) => [row.id, row.memberBib]));
+    expect([byId.get(verified.id), byId.get(declared.id), byId.get(nothing.id), byId.get(probe.id)]).toEqual([true, true, false, true]);
+    expect(await countRegistrationsForAdmin(db, { eventId: event.id, status: "CONFIRMED" })).toBe(4);
+    expect(await summariseRegistrationsForAdmin(db, { eventId: event.id })).toMatchObject({ real: 3, test: 1 });
 
     const page = await findRegistrationDetailForAdmin(db, verified.id);
-    expect(page).toMatchObject({ memberBibWanted: true, eventOffersMemberBib: true, memberVerified: true });
+    expect(page).toMatchObject({ memberBib: true, memberVerified: true });
+    expect(await findRegistrationDetailForAdmin(db, declared.id)).toMatchObject({ memberBib: true, memberVerified: false });
+    expect(await findRegistrationDetailForAdmin(db, nothing.id)).toMatchObject({ memberBib: false });
   });
 
-  it("the export route writes «Member bib» as yes, asked or empty, in the CSV and in the workbook", async () => {
+  // §NNN: the declared row without an account read «asked»; it reads «yes» now, the export's words otherwise unchanged.
+  it("the export route writes «Member bib» as yes or empty, in the CSV and in the workbook", async () => {
     const event = await createEvent(true);
     await db.insert(staffUsers).values({ email: "membru@example.ro", displayName: "Membru", role: "MEMBER" });
     await confirmed(event.id, "membru@example.ro", { wanted: true });
@@ -354,7 +366,7 @@ describe("§664 the sheet prints the members' bib for wanted AND verified only",
     await confirmed(event.id, "nimic@example.ro", { wanted: false, declared: false });
     const expected = new Map([
       ["membru@example.ro", "yes"],
-      ["declarat@example.ro", "asked"],
+      ["declarat@example.ro", "yes"],
       ["nimic@example.ro", ""],
     ]);
 
