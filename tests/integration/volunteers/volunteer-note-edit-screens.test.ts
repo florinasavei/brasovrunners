@@ -494,6 +494,10 @@ describe("§NNN «Modifică» on the person's page", () => {
     const page = await html((await cardOf(await personTree(people.ana))).drawn);
     expect([...page.matchAll(/<details\b/g)].length).toBeGreaterThanOrEqual(4);
     expect(page).toMatch(/<summary\b[^>]*data-testid="note-edit-toggle"[^>]*>[\s\S]*?Modifică<\/summary>/);
+    // Its header wears the pencil before the word, hidden from a screen reader (§521: a glyph on every fold's header).
+    const toggle = /<summary\b[^>]*data-testid="note-edit-toggle"[^>]*>([\s\S]*?)<\/summary>/.exec(page)?.[1] ?? "";
+    expect(toggle).toMatch(/^<svg\b[^>]*aria-hidden="true"[^>]*data-testid="EditIcon"/);
+    expect(toggle).toMatch(/<\/svg>Modifică$/);
     expect(page).toMatch(/<textarea\b[^>]*name="body"[^>]*>Fotograf<\/textarea>/);
 
     const english = await html((await cardOf(await personTree(people.ana, {}, "en"))).drawn);

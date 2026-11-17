@@ -26,8 +26,8 @@ export type NotesCardRow = {
   editable?: boolean;
 };
 
-/** «Modifică»'s pencil, by its name in the backoffice's registry. */
-const EditGlyph = ACTION_ICONS.edit;
+/** «Modifică»'s pencil, by its name in the backoffice's registry; named `…Icon`, as §521's guard reads a fold's glyph by its tag. */
+const EditIcon = ACTION_ICONS.edit;
 
 /**
  * «Modifică» beside «Șterge» (§NNN): a native fold — it opens without a script, and by itself after a refusal (`RecallDetails`) —
@@ -146,7 +146,7 @@ export default async function NotesCard({
                         <input type="hidden" name="noteId" value={note.id} />
                         <RecallDetails sx={EDIT_FOLD_SX}>
                           <Box component="summary" data-testid="note-edit-toggle">
-                            <EditGlyph aria-hidden sx={{ fontSize: "1rem" }} />
+                            <EditIcon aria-hidden sx={{ fontSize: "1rem" }} />
                             {t("registrations.notes.edit")}
                           </Box>
                           <Stack spacing={1.5} sx={{ alignItems: "flex-start", mt: 1, mb: 1 }}>
