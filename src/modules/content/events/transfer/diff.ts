@@ -250,6 +250,8 @@ export const FIELD_LABELS = [
   "badges.design.labelRo",
   "badges.design.labelEn",
   "badges.design.writingLine",
+  // «Logo-ul clubului jos, ca filigran» (§NNN): how visible the club's logo is at the badge's foot.
+  "badges.design.footerLogo",
   "badges.design.showFreeText",
   "badges.design.freeTextRo",
   "badges.design.freeTextEn",

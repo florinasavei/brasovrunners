@@ -10451,6 +10451,7 @@
             "labelRo": "Badge: the word on the band (Romanian)",
             "labelEn": "Badge: the word on the band (English)",
             "writingLine": "Badge: the line for the name",
+            "footerLogo": "Badge: the club's logo at the bottom, as a watermark",
             "showFreeText": "Badge: the free-text line",
             "freeTextRo": "Badge: the free text (Romanian)",
             "freeTextEn": "Badge: the free text (English)",
@@ -11833,6 +11834,19 @@
         "writingHelp": "No name is printed. A white area with “Name:” is left, where the name is written by hand.",
         "writingLine": "A thin line for the name",
         "writingPlain": "Only “Name:”",
+        "footerLogo": "The club's logo at the bottom, as a watermark",
+        "footerLogoHelp": "The club's logo, large and pale, at the bottom of the badge. The name written in marker reads over it.",
+        "footerLogos": {
+          "off": "None",
+          "faint": "Faint",
+          "medium": "Medium",
+          "strong": "Strong"
+        },
+        "footerLogoAside": {
+          "faint": "Logo as a watermark, faint",
+          "medium": "Logo as a watermark, medium",
+          "strong": "Logo as a watermark, strong"
+        },
         "markerHelp": "A second white area beside “Name:”, left blank on paper: there you write something extra with the marker at the desk, such as the shift or the zone.",
         "showMarker": "A space for the marker, beside the name",
         "markerLabelRo": "The space's label (Romanian)",
