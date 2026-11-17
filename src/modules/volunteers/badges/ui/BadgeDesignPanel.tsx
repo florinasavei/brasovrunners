@@ -41,6 +41,8 @@ import {
   type BadgeFooterLogoSetting,
   BADGE_SIZE_PRESETS,
   BADGE_SIZES,
+  badgeFooterLogoOf,
+  badgeFooterLogoWidthShare,
   badgeImageSize,
   badgePaper,
   badgeRows,
@@ -133,7 +135,8 @@ export default async function BadgeDesignPanel({
   });
 
   // The header's shape at the saved size, for the crop box (§560's rule; a crop drawn at another size is trimmed, never squashed).
-  const rows = badgeRows(badgePaper(design), badgePhoneRow(design), design.showFreeText && (design.freeTextRo !== "" || design.freeTextEn !== ""));
+  const freeShown = design.showFreeText && (design.freeTextRo !== "" || design.freeTextEn !== "");
+  const rows = badgeRows(badgePaper(design), badgePhoneRow(design), freeShown);
   const headerRatio = (badgePaper(design).width - 2 * rows.content.left) / rows.header.height;
   const ratioWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
   const initialSrc = badgePreviewUrl({ eventId, locale, role: sampleRole, design, version });
@@ -205,23 +208,38 @@ export default async function BadgeDesignPanel({
   const bandWord = await badgeLabelIn(design, locale);
   const roleAside = design.labelRo ? `${design.labelRo} / ${design.labelEn}` : t("badges.design.labelDefaultAside");
   const writingAside = design.writingLine ? t("badges.design.writingLine") : t("badges.design.writingPlain");
-  // The club's logo as a watermark (§965), in its own fold (§NNN): the level, and while it is drawn, its size — «Mediu · 67%».
-  const footerLogoAside = words(
-    t(`badges.design.footerLogos.${design.footerLogo}`),
-    design.footerLogo !== "off" && t("badges.design.footerLogoSizeAside", { size: String(design.footerLogoSizePct) }),
-  );
-  /** One of the logo's four numbers (§NNN): a native number box within its bounds, a whole step, its help line under it. */
-  const logoNumber = (key: BadgeFooterLogoSetting, label: string, help: string) => (
-    <RecallField
-      name={box(key)}
-      type="number"
-      label={label}
-      helperText={help}
-      defaultValue={String(design[key])}
-      fullWidth
-      slotProps={{ htmlInput: { min: BADGE_FOOTER_LOGO_SETTINGS[key].min, max: BADGE_FOOTER_LOGO_SETTINGS[key].max, step: 1, inputMode: "numeric" }, inputLabel: { shrink: true } }}
-    />
-  );
+  // The club's logo as a watermark (§965), in its own fold (§NNN): the level, and while it is drawn the share of the badge's width it is
+  // drawn at — the very box the sheet and the picture draw, never the number typed: «Mediu · 30%», «Mediu · 24% (cât încape)» when its room
+  // keeps it under the size asked, «Mediu · nu încape» when no logo fits.
+  const footerLogoAside = (() => {
+    const level = t(`badges.design.footerLogos.${design.footerLogo}`);
+    if (design.footerLogo === "off") return level;
+    const drawn = badgeFooterLogoOf(design, { phone: badgePhoneRow(design), free: freeShown });
+    if (!drawn) return words(level, t("badges.design.footerLogoNoRoom"));
+    const paperWidth = badgePaper(design).width;
+    const size = String(Math.round((drawn.width / paperWidth) * 100));
+    const stopped = drawn.width < paperWidth * badgeFooterLogoWidthShare(design.footerLogoSizePct) * (1 - 1e-9);
+    return words(level, t(stopped ? "badges.design.footerLogoSizeFits" : "badges.design.footerLogoSizeAside", { size }));
+  })();
+  /**
+   * One of the logo's four numbers (§NNN): a native number box within its bounds, a whole step, its help line under it. The phone's digits
+   * keyboard (`inputMode` numeric) only where no number is negative: the iPhone's has no minus key, so the two moves keep the keyboard
+   * `type="number"` gives, which has one.
+   */
+  const logoNumber = (key: BadgeFooterLogoSetting, label: string, help: string) => {
+    const { min, max } = BADGE_FOOTER_LOGO_SETTINGS[key];
+    return (
+      <RecallField
+        name={box(key)}
+        type="number"
+        label={label}
+        helperText={help}
+        defaultValue={String(design[key])}
+        fullWidth
+        slotProps={{ htmlInput: { min, max, step: 1, ...(min < 0 ? {} : { inputMode: "numeric" as const }) }, inputLabel: { shrink: true } }}
+      />
+    );
+  };
   // The Romanian line only, cut short: the closed line sits in the section's heading, and a typed text may be 60 characters.
   const freeLetters = Array.from(design.freeTextRo);
   const freeAside = design.showFreeText && freeLetters.length > 0 ? `${freeLetters.slice(0, FREE_ASIDE_MAX).join("")}${freeLetters.length > FREE_ASIDE_MAX ? "…" : ""}` : t("badges.design.freeTextOff");

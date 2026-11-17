@@ -11947,8 +11947,10 @@
           "strong": "Strong"
         },
         "footerLogoSizeAside": "{size}%",
+        "footerLogoSizeFits": "{size}% (as much as fits)",
+        "footerLogoNoRoom": "does not fit",
         "footerLogoSizePct": "Logo size (% of the badge's width)",
-        "footerLogoSizeHelp": "How wide the logo is, of the badge's width. It shrinks by itself when it does not fit.",
+        "footerLogoSizeHelp": "How wide the logo is, of the badge's width: it rises over “Name:” if it must, and shrinks by itself when the white area cannot hold it. At 67, the default, it stays under “Name:”.",
         "footerLogoPaddingMm": "Space around the logo (mm)",
         "footerLogoPaddingHelp": "Room kept clear around the logo. More room = a smaller logo.",
         "footerLogoOffsetXMm": "Move left–right (mm)",

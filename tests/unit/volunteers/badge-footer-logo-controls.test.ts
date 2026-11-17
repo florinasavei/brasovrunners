@@ -21,6 +21,7 @@ import {
 } from "@/modules/volunteers/badges/badge-design";
 import {
   BADGE_CUSTOM_BOUNDS,
+  BADGE_FOOTER_LOGO_MIN_WIDTH,
   BADGE_FOOTER_LOGO_OPACITY,
   BADGE_FOOTER_LOGO_SETTING_KEYS,
   BADGE_FOOTER_LOGO_SETTINGS,
@@ -35,6 +36,7 @@ import {
   type BadgeRow,
   type BadgeSizeChoice,
   badgeFooterLogoBox,
+  badgeFooterLogoOf,
   badgeFooterLogoSetting,
   badgeFooterLogoWidthShare,
   badgeImageSize,
@@ -57,8 +59,9 @@ import { LOGO_RATIO } from "@/theme/brand";
  * watermark: «și practic trebuie să pot seta dimensiunea logo-ului, padding și offset»). Four whole numbers of the design —
  * «Mărimea logo-ului» (10–100 % of the badge's width, 67), «Spațiu în jurul logo-ului» (0–20 mm, 0) and the two moves (−100…100 mm, 0;
  * right and down positive) — read forgivingly, refused at the save naming their box, carried by the preview's address and the event's
- * file; one box both renderers draw, sized in §965's room less the space, moved, and kept inside the writing area less the space, over no
- * band and no row, moving none. At the defaults every badge draws as before, byte for byte: `badge-type-unchanged.test.ts` and its
+ * file; one box both renderers draw and the designer names, sized at the default in §965's room under «Nume:» and at a size typed in the
+ * whole writing area — each less the space, never narrower than a readable logo — moved, and kept inside the writing area less the space,
+ * over no band and no row, moving none. At the defaults every badge draws as before, byte for byte: `badge-type-unchanged.test.ts` and its
  * snapshot `badge-drawing-before-logo-controls.json`, written from the code before the four settings.
  */
 
@@ -311,7 +314,7 @@ describe("§NNN the logo's one box", () => {
     for (let pct = 11; pct <= 100; pct++) expect(badgeFooterLogoWidthShare(pct)).toBeGreaterThan(badgeFooterLogoWidthShare(pct - 1));
   });
 
-  it("stays inside the writing area less the space at every size, tick, level and extreme — over no band and no row — and moves nothing", () => {
+  it("stays inside the writing area less the space at every size, tick, level and extreme — over no band and no row, as large as its size and room allow — and moves nothing", () => {
     let drawn = 0;
     let none = 0;
     /**
@@ -341,39 +344,51 @@ describe("§NNN the logo's one box", () => {
           const box = badgeFooterLogoBox("strong", at, placement) ?? undefined;
           const fail = (rule: string) => broken.push(`${size.size} ${size.customWidthMm}×${size.customHeightMm} ${JSON.stringify(tick)} ${JSON.stringify(placement)}: ${rule}`);
           if (isWhole(placement)) {
-            const { footerLogo, ...rest } = layoutOf(designOf(size, tick, "strong", placement));
+            const design = designOf(size, tick, "strong", placement);
+            const { footerLogo, ...rest } = layoutOf(design);
             // The layout's box is the one function's, and nothing else moves, whatever the logo's size, space or place: every row and
             // every line is the badge without it.
             if (JSON.stringify(footerLogo) !== JSON.stringify(box)) fail("the layout's box is not the function's");
             if (JSON.stringify(rest) !== JSON.stringify(off)) fail("something else in the layout moved");
+            // The designer names the size from the very box, drawn without a badge's words (`badgeFooterLogoOf`).
+            const named = badgeFooterLogoOf(design, { phone: badgePhoneRow(design), free: tick.showFreeText });
+            if (JSON.stringify(named ?? undefined) !== JSON.stringify(footerLogo)) fail("the designer's box is not the layout's");
           }
           const space = placement.footerLogoPaddingMm! * MM;
-          const room = foot - space - (nameFoot + space);
+          // The room it is fitted in: at the default size §965's, under «Nume:», less the space; at a size typed the whole writing area
+          // less the space — over «Nume:» if it must.
+          const typed = placement.footerLogoSizePct !== BADGE_FOOTER_LOGO_SETTINGS.footerLogoSizePct.default;
+          const room = typed ? rows.writing.height - 2 * space : foot - space - (nameFoot + space);
+          const across = content.width - 2 * space;
+          const share = off.paper.width * badgeFooterLogoWidthShare(placement.footerLogoSizePct);
+          // As large as its share, the width between the sides and the room's height allow, at the lockup's proportion.
+          const fits = room > 0 && across > 0 ? Math.min(share, across, room * LOGO_RATIO) : 0;
           if (!box) {
-            // No box only when the space leaves §965's room no height: never a logo over «Nume:» or out of the white.
-            if (room > HAIR) fail("no box, with room for one");
+            // No box only when that leaves less than a readable logo: never a speck, never a logo out of the white.
+            if (fits >= BADGE_FOOTER_LOGO_MIN_WIDTH) fail("no box, with room for one");
             none += 1;
             continue;
           }
           drawn += 1;
           if (box.opacity !== BADGE_FOOTER_LOGO_OPACITY.strong) fail("the level's opacity");
+          if (box.width < BADGE_FOOTER_LOGO_MIN_WIDTH) fail("a speck");
           // Inside the whole writing area less the space, between the content's sides less the space.
           if (box.left < content.left + space - HAIR) fail("over the left side");
           if (box.left + box.width > content.left + content.width - space + HAIR) fail("over the right side");
           if (box.top < rows.writing.top + space - HAIR) fail("over the writing area's top");
           if (box.top + box.height > rows.writing.top + rows.writing.height - space + HAIR) fail("over the writing area's foot");
           for (const row of [rows.header, rows.role, rows.free, rows.phone]) if (overlaps(box, row)) fail("over a band or a row");
-          // At the lockup's own proportion, no wider than its share of the badge, fitted in §965's room less the space.
-          const share = off.paper.width * badgeFooterLogoWidthShare(placement.footerLogoSizePct);
+          // At the lockup's own proportion, no wider than its share of the badge, no taller than its room — and exactly as large as they allow.
           if (Math.abs(box.width / box.height - LOGO_RATIO) > 1e-9) fail("not the lockup's proportion");
           if (box.width > share + HAIR) fail("wider than its share of the badge");
           if (box.height > room + HAIR) fail("taller than its room");
-          // As large as that allows: it fills the room's height, its share of the width, or the width between the sides less the space.
-          if (Math.min(Math.abs(box.height - room), Math.abs(box.width - share), Math.abs(box.width - (content.width - 2 * space))) > 1e-6) fail("smaller than its room allows");
-          // Not moved: centred across the badge, standing on the room's foot.
+          if (Math.abs(box.width - fits) > 1e-6) fail("not as large as its size and room allow");
+          // At the default size it rises over «Nume:»'s line only when moved up: §965's place, which the size typed may leave.
+          if (!typed && placement.footerLogoOffsetYMm! >= 0 && box.top < nameFoot + space - HAIR) fail("the default size over «Nume:»");
+          // Not moved: centred across the badge, standing on the room's foot — or, taller than the white above that foot, at the white's top.
           if (placement.footerLogoOffsetXMm === 0 && placement.footerLogoOffsetYMm === 0) {
             if (Math.abs(box.left + box.width / 2 - off.paper.width / 2) > 1e-9) fail("not centred");
-            if (Math.abs(box.top + box.height - (foot - space)) > 1e-9) fail("not standing on its room's foot");
+            if (Math.abs(box.top - Math.max(foot - space - box.height, rows.writing.top + space)) > 1e-9) fail("not standing on its room's foot");
           }
         }
       }
@@ -393,7 +408,7 @@ describe("§NNN the logo's one box", () => {
     }
   });
 
-  it("grows with «Mărimea logo-ului» until the room stops it: on a tall badge the share of the width, on the default strip the room under «Nume:»", () => {
+  it("grows with «Mărimea logo-ului» on a tall badge until the width between the sides stops it, 67 % being two thirds", () => {
     const tall = (pct: number, padding = 0) => layoutOf(designOf(custom(90, 287), ticks[0], "medium", { footerLogoSizePct: pct, footerLogoPaddingMm: padding })).footerLogo!;
     expect(tall(10).width).toBeCloseTo(9 * MM, 9);
     expect(tall(50).width).toBeCloseTo(45 * MM, 9);
@@ -402,12 +417,47 @@ describe("§NNN the logo's one box", () => {
     expect(tall(100).width).toBeCloseTo(90 * MM - 2 * BADGE_INSET, 9);
     expect(tall(100, 20).width).toBeCloseTo(90 * MM - 2 * BADGE_INSET - 40 * MM, 9);
     for (let pct = 11; pct <= 100; pct++) expect(tall(pct).width).toBeGreaterThanOrEqual(tall(pct - 1).width);
-    // The default strip's room under «Nume:» decides there (21.7 mm wide, §965): a larger size draws the same box, a smaller one less.
-    const strip = (pct: number) => layoutOf(designOf(sizes[0], ticks[0], "medium", { footerLogoSizePct: pct })).footerLogo!;
-    expect(strip(100)).toEqual(strip(67));
-    expect(strip(67).width / MM).toBeCloseTo(21.69, 2);
-    expect(strip(10).width).toBeCloseTo(9 * MM, 9);
-    expect(strip(10).top + strip(10).height).toBeCloseTo(strip(67).top + strip(67).height, 9);
+  });
+
+  it("on the default 90 × 35 strip, draws the size typed — over «Nume:» if it must, up to the writing area's height — and §965's box at 67", () => {
+    const strip = (pct: number) => layoutOf(designOf(sizes[0], ticks[0], "medium", { footerLogoSizePct: pct }));
+    const logo = (pct: number) => strip(pct).footerLogo!;
+    const plain = strip(67);
+    const nameFoot = plain.name.top + badgeLineHeight(plain.content.height * BADGE_LAYOUT.nameShare);
+    const foot = plain.writing.top + plain.writing.height - plain.pad * BADGE_LAYOUT.footerLogoFootShare;
+    // 67, the default: §965's box, as large as the room under «Nume:» allows — 21.7 × 8.9 mm, a quarter of the strip's width.
+    expect(logo(67).width / MM).toBeCloseTo(21.69, 2);
+    expect(logo(67).height / MM).toBeCloseTo(8.95, 2);
+    expect(logo(67).top).toBeCloseTo(nameFoot, 9);
+    // Any other number is that share of the width, standing on the same foot: 10 % is 9 mm and 20 % 18 mm, under «Nume:»; 25, 30 and
+    // 35 % are larger than the default's box and rise over «Nume:», which is written over them.
+    for (const pct of [10, 20, 24, 25, 30, 35]) expect(logo(pct).width, `${pct} %`).toBeCloseTo((90 * MM * pct) / 100, 9);
+    for (const pct of [10, 20, 24]) expect(logo(pct).top + logo(pct).height, `${pct} %`).toBeCloseTo(foot, 9);
+    for (const pct of [25, 30]) {
+      expect(logo(pct).top + logo(pct).height, `${pct} %`).toBeCloseTo(foot, 9);
+      expect(logo(pct).top, `${pct} %`).toBeLessThan(nameFoot);
+    }
+    // From 36 % the writing area's height stops it — 13.3 mm, the white between the role's band and the badge's foot — so it is 32.3 mm
+    // wide, its top at the band's foot and never over it.
+    for (const pct of [36, 40, 50, 66, 68, 80, 100]) {
+      const box = logo(pct);
+      expect(box.width / MM, `${pct} %`).toBeCloseTo(32.31, 2);
+      expect(box.height, `${pct} %`).toBeCloseTo(plain.writing.height, 9);
+      expect(box.top, `${pct} %`).toBeCloseTo(plain.role.top + plain.role.height, 9);
+    }
+    // So the box is never inert: every whole percent up to the writing area's height draws a larger logo than the one before — but 67,
+    // which keeps §965's room.
+    for (let pct = 11; pct <= 35; pct++) expect(logo(pct).width, `${pct} %`).toBeGreaterThan(logo(pct - 1).width);
+    for (let pct = 37; pct <= 100; pct++) if (pct !== 67 && pct !== 68) expect(logo(pct).width, `${pct} %`).toBeGreaterThanOrEqual(logo(pct - 1).width);
+    // A move never changes the size: the default's box moved up is §965's box, at the writing area's top.
+    const raised = layoutOf(designOf(sizes[0], ticks[0], "medium", { footerLogoOffsetYMm: -100 })).footerLogo!;
+    expect([raised.width, raised.height]).toEqual([logo(67).width, logo(67).height]);
+    expect(raised.top).toBeCloseTo(plain.writing.top, 9);
+    // 100 × 40: §965's 25.2 mm at 67, and up to the writing area's 15.5 mm of height at a size typed, 37.5 mm wide.
+    const strip100 = (pct: number) => layoutOf(designOf(sizes[1], ticks[0], "medium", { footerLogoSizePct: pct })).footerLogo!;
+    expect(strip100(67).width / MM).toBeCloseTo(25.19, 2);
+    expect(strip100(30).width).toBeCloseTo(30 * MM, 9);
+    expect(strip100(100).width / MM).toBeCloseTo(37.52, 2);
   });
 
   it("makes it smaller with each millimetre of space where the room holds it, and keeps that space from the room's every edge", () => {
@@ -418,16 +468,47 @@ describe("§NNN the logo's one box", () => {
       if (!box) break;
       widths.push(box.width);
     }
-    // 21.7 × 8.9 mm with no space; each millimetre takes two from the room's height, until there is none.
+    // 21.7 × 8.9 mm with no space; each millimetre takes two from the room's height, until what is left is less than a readable logo.
     expect(widths.length).toBeGreaterThan(2);
     expect(widths.length).toBeLessThan(21);
     for (let index = 1; index < widths.length; index++) expect(widths[index]).toBeLessThan(widths[index - 1]);
     expect(strip(20)).toBeUndefined();
+    // At a size typed the room is the whole writing area less the space: 100 % keeps a logo up to 5 mm of space on the default strip.
+    const typed = (padding: number) => layoutOf(designOf(sizes[0], ticks[0], "medium", { footerLogoSizePct: 100, footerLogoPaddingMm: padding })).footerLogo;
+    expect(typed(5)!.width / MM).toBeCloseTo(8.07, 2);
+    expect(typed(6)).toBeUndefined();
     // On a tall badge the logo's share decides, and the space keeps it from the sides only once it reaches them.
     const tall = (padding: number) => layoutOf(designOf(custom(90, 287), ticks[0], "medium", { footerLogoPaddingMm: padding })).footerLogo!;
     expect(tall(5).width).toBeCloseTo(60 * MM, 9);
     expect(tall(5).top + tall(5).height).toBeCloseTo(tall(0).top + tall(0).height - 5 * MM, 9);
     expect(tall(20).width).toBeCloseTo(90 * MM - 2 * BADGE_INSET - 40 * MM, 9);
+  });
+
+  it("draws no logo narrower than 5 mm — a speck — and never meets a box §965 draws, nor the least size typed", () => {
+    expect(BADGE_FOOTER_LOGO_MIN_WIDTH).toBe(5 * MM);
+    // 100 × 40 at the default size: 4 mm of space leave a 5.8 mm logo; 5 mm left a speck of 0.9 × 0.4 mm, which is now none.
+    const strip100 = (padding: number) => layoutOf(designOf(sizes[1], ticks[0], "medium", { footerLogoPaddingMm: padding })).footerLogo;
+    expect(strip100(4)!.width / MM).toBeCloseTo(5.8, 1);
+    expect(strip100(5)).toBeUndefined();
+    // The default strip: 3 mm leave 7.1 mm, 4 mm would leave 2.3 mm — none.
+    const strip = (padding: number) => layoutOf(designOf(sizes[0], ticks[0], "medium", { footerLogoPaddingMm: padding })).footerLogo;
+    expect(strip(3)!.width / MM).toBeCloseTo(7.15, 1);
+    expect(strip(4)).toBeUndefined();
+    // «Mărimea logo-ului»'s least, 10 %, on the narrowest badge the designer accepts, 60 mm wide: 6 mm, drawn.
+    expect(layoutOf(designOf(custom(60, 30), ticks[0], "medium", { footerLogoSizePct: 10 })).footerLogo!.width).toBeCloseTo(6 * MM, 9);
+    // §965's box at the defaults, on every whole size the bounds allow and with each set of rows that takes height: never under it —
+    // the narrowest is 9.45 mm, on 60 × 48 mm with the free-text line and the telephone — so the defaults draw as they drew.
+    let least = Number.POSITIVE_INFINITY;
+    for (let width = BADGE_CUSTOM_BOUNDS.width.min; width <= BADGE_CUSTOM_BOUNDS.width.max; width++) {
+      for (let height = BADGE_CUSTOM_BOUNDS.height.min; height <= BADGE_CUSTOM_BOUNDS.height.max; height++) {
+        for (const [phone, free] of [[false, false], [true, false], [false, true], [true, true]]) {
+          const box = badgeFooterLogoOf({ ...custom(width, height), footerLogo: "medium" }, { phone, free });
+          least = Math.min(least, box?.width ?? 0);
+        }
+      }
+    }
+    expect(least / MM).toBeCloseTo(9.45, 2);
+    expect(least).toBeGreaterThan(BADGE_FOOTER_LOGO_MIN_WIDTH);
   });
 
   it("moves it right and down by the millimetres typed, left and up by negative ones, and stops it at the writing area's edges", () => {
@@ -541,7 +622,7 @@ afterEach(() => vi.restoreAllMocks());
 describe("§NNN the sheet and the picture draw the moved logo at one box", () => {
   const cases: Array<[string, BadgeDesign, BadgeFaceRole | null]> = [
     ["the tallest badge, the logo at its widest with a space, moved left and down", { ...DEFAULT_BADGE_DESIGN, size: "custom", customWidthMm: 90, customHeightMm: 287, footerLogo: "strong", footerLogoSizePct: 100, footerLogoPaddingMm: 3, footerLogoOffsetXMm: -20, footerLogoOffsetYMm: 5 }, null],
-    ["the default strip per role, small and pushed to the right edge", { ...DEFAULT_BADGE_DESIGN, mode: "perRole", footerLogo: "medium", footerLogoSizePct: 30, footerLogoOffsetXMm: 100 }, { name: "Direcționare", colour: null, category: "Pe Traseu" }],
+    ["the default strip per role, at 30 % — over «Nume:» — and pushed to the right edge", { ...DEFAULT_BADGE_DESIGN, mode: "perRole", footerLogo: "medium", footerLogoSizePct: 30, footerLogoOffsetXMm: 100 }, { name: "Direcționare", colour: null, category: "Pe Traseu" }],
     [
       "100 × 40 with every row ticked, moved up over «Nume:»",
       { ...DEFAULT_BADGE_DESIGN, mode: "perRole", size: "strip100", showPhone: true, phone: "0712 345 678", showFreeText: true, freeTextRo: "Bea apă", freeTextEn: "Drink water", showMarker: true, footerLogo: "faint", footerLogoOffsetYMm: -100 },

@@ -340,7 +340,8 @@ describe("§965 «Logo-ul clubului jos, ca filigran» in the designer", () => {
   it("keeps the chosen level selected, says it in its fold's closed line — never in the writing area's — and draws the preview with it", async () => {
     const page = await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "medium" });
     expect(options(page).filter((option) => option.selected).map((option) => option.value)).toEqual(["medium"]);
-    expect(logoFold(page)).toContain("Mediu · 67%");
+    // The share of the badge's width it is drawn at (§NNN): on the default strip §965's box is a quarter of it.
+    expect(logoFold(page)).toContain("Mediu · 24% (cât încape)");
     expect(page).toMatch(/badges\/preview\?[^"]*footerLogo=medium/);
     // «Locul pentru nume» says its own look alone.
     expect(page).toContain("O linie subțire pentru nume");
@@ -366,7 +367,7 @@ describe("§965 «Logo-ul clubului jos, ca filigran» in the designer", () => {
     ]);
     expect(page).toContain("The club&#x27;s logo at the bottom, as a watermark");
     expect(page).toContain("The club&#x27;s logo, large and pale, at the bottom of the badge. The name written in marker reads over it.");
-    expect(logoFold(page)).toContain("Strong · 67%");
+    expect(logoFold(page)).toContain("Strong · 24% (as much as fits)");
     expect(page).not.toContain("A thin line for the name · ");
   });
 });
@@ -403,19 +404,28 @@ describe("§NNN «Logo-ul clubului (filigran)», a fold of its own, with the log
     expect([...fold.matchAll(/name="badge\.design\.(\w+)"/g)].map((match) => match[1])).toEqual(["footerLogo", ...BOXES.map((box) => box.key)]);
   });
 
-  it("draws each number as a native number box — whole steps within its bounds, the phone's numeric keyboard — at the design's value, always enabled", async () => {
+  it("draws each number as a native number box — whole steps within its bounds, the phone's digits keyboard where no number is negative — at the design's value, always enabled", async () => {
     const page = await draw();
     for (const { key, min, max, value } of BOXES) {
       const tag = input(page, key);
       expect(tag, key).not.toBe("");
       expect(attribute(tag, "type"), key).toBe("number");
-      expect(attribute(tag, "inputMode") ?? attribute(tag, "inputmode"), key).toBe("numeric");
+      // The size and the space take the digits keyboard; the two moves none, so an iPhone gives them the keyboard with a minus key
+      // (its digits pad has none, and a move left or up is negative).
+      const keyboard = attribute(tag, "inputMode") ?? attribute(tag, "inputmode");
+      if (Number(min) < 0) expect(keyboard, key).toBeUndefined();
+      else expect(keyboard, key).toBe("numeric");
       expect(attribute(tag, "min"), key).toBe(min);
       expect(attribute(tag, "max"), key).toBe(max);
       expect(attribute(tag, "step"), key).toBe("1");
       expect(attribute(tag, "value"), key).toBe(value);
       // Posted whatever the level, «Fără» included: no box is disabled.
       expect(tag, key).not.toMatch(/\sdisabled=/);
+    }
+    // Said once more by name: the two moves are the boxes that take a minus sign, and neither asks for the digits pad.
+    for (const key of ["footerLogoOffsetXMm", "footerLogoOffsetYMm"]) {
+      expect(attribute(input(page, key), "min"), key).toBe("-100");
+      expect(input(page, key), key).not.toMatch(/inputmode="numeric"/i);
     }
     const moved = await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "strong", footerLogoSizePct: 90, footerLogoPaddingMm: 3, footerLogoOffsetXMm: -12, footerLogoOffsetYMm: 5 });
     expect(BOXES.map(({ key }) => attribute(input(moved, key), "value"))).toEqual(["90", "3", "-12", "5"]);
@@ -425,7 +435,7 @@ describe("§NNN «Logo-ul clubului (filigran)», a fold of its own, with the log
     const fold = logoFold(await draw());
     for (const words of [
       "Mărimea logo-ului (% din lățimea ecusonului)",
-      "Cât de lat e logo-ul, din lățimea ecusonului. Se micșorează singur dacă nu încape.",
+      "Cât de lat e logo-ul, din lățimea ecusonului: urcă peste „Nume:” dacă e nevoie și se micșorează singur dacă nu încape în zona albă. La 67, cel implicit, rămâne sub „Nume:”.",
       "Spațiu în jurul logo-ului (mm)",
       "Spațiul păstrat liber în jurul logo-ului. Mai mult spațiu = logo mai mic.",
       "Deplasare stânga–dreapta (mm)",
@@ -437,14 +447,23 @@ describe("§NNN «Logo-ul clubului (filigran)», a fold of its own, with the log
     }
   });
 
-  it("says the level in its closed line, and the size while the logo is drawn: «Fără», «Mediu · 67%», «Bine vizibil · 90%»", async () => {
+  it("says the level in its closed line and, while the logo is drawn, the share of the badge's width it is drawn at — never a size it is not", async () => {
     expect(heading(await draw())).toContain("Fără");
     expect(heading(await draw())).not.toContain("%");
-    expect(heading(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "medium" }))).toContain("Mediu · 67%");
-    expect(heading(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "strong", footerLogoSizePct: 90 }))).toContain("Bine vizibil · 90%");
+    // The default 90 mm strip at 67: §965's box under «Nume:», a quarter of the width — the room keeps it under the size asked.
+    expect(heading(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "medium" }))).toContain("Mediu · 24% (cât încape)");
+    // A size typed is drawn as typed while the white holds it, and past the writing area's height as much as it holds.
     expect(heading(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "faint", footerLogoSizePct: 10 }))).toContain("Puțin vizibil · 10%");
+    const typed = heading(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "medium", footerLogoSizePct: 30 }));
+    expect(typed).toContain("Mediu · 30%");
+    expect(typed).not.toContain("cât încape");
+    expect(heading(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "strong", footerLogoSizePct: 90 }))).toContain("Bine vizibil · 36% (cât încape)");
+    // A tall badge holds §965's two thirds at 67.
+    expect(heading(await draw({ ...DEFAULT_BADGE_DESIGN, size: "custom", customWidthMm: 90, customHeightMm: 287, footerLogo: "medium" }))).toContain("Mediu · 67%");
+    // A space that leaves less than a readable logo draws none, and the line says so.
+    expect(heading(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "medium", footerLogoPaddingMm: 5 }))).toContain("Mediu · nu încape");
     // A size kept while the logo is off is not said: off draws nothing.
-    expect(heading(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogoSizePct: 40 }))).not.toContain("40%");
+    expect(heading(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogoSizePct: 40 }))).not.toContain("%");
   });
 
   it("draws the preview's first address with the four numbers, as the island redraws it", async () => {
@@ -466,11 +485,13 @@ describe("§NNN «Logo-ul clubului (filigran)», a fold of its own, with the log
   it("speaks English", async () => {
     const page = await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "medium", footerLogoSizePct: 50 }, "en");
     expect(heading(page)).toContain("The club&#x27;s logo (watermark)");
-    expect(heading(page)).toContain("Medium · 50%");
+    // 50 % of the default strip is more than its writing area's height holds: 36 %, as much as fits.
+    expect(heading(page)).toContain("Medium · 36% (as much as fits)");
+    expect(heading(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "medium", footerLogoPaddingMm: 5 }, "en"))).toContain("Medium · does not fit");
     const fold = logoFold(page);
     for (const words of [
       "Logo size (% of the badge&#x27;s width)",
-      "How wide the logo is, of the badge&#x27;s width. It shrinks by itself when it does not fit.",
+      "How wide the logo is, of the badge&#x27;s width: it rises over “Name:” if it must, and shrinks by itself when the white area cannot hold it. At 67, the default, it stays under “Name:”.",
       "Space around the logo (mm)",
       "Room kept clear around the logo. More room = a smaller logo.",
       "Move left–right (mm)",

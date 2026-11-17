@@ -11947,8 +11947,10 @@
           "strong": "Bine vizibil"
         },
         "footerLogoSizeAside": "{size}%",
+        "footerLogoSizeFits": "{size}% (cât încape)",
+        "footerLogoNoRoom": "nu încape",
         "footerLogoSizePct": "Mărimea logo-ului (% din lățimea ecusonului)",
-        "footerLogoSizeHelp": "Cât de lat e logo-ul, din lățimea ecusonului. Se micșorează singur dacă nu încape.",
+        "footerLogoSizeHelp": "Cât de lat e logo-ul, din lățimea ecusonului: urcă peste „Nume:” dacă e nevoie și se micșorează singur dacă nu încape în zona albă. La 67, cel implicit, rămâne sub „Nume:”.",
         "footerLogoPaddingMm": "Spațiu în jurul logo-ului (mm)",
         "footerLogoPaddingHelp": "Spațiul păstrat liber în jurul logo-ului. Mai mult spațiu = logo mai mic.",
         "footerLogoOffsetXMm": "Deplasare stânga–dreapta (mm)",
