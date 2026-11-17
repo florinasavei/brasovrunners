@@ -42,6 +42,7 @@ import {
 import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 import { LEGAL_TEMPLATES_DIGEST_CLOCK } from "@/modules/legal-documents/domain/templates-notice";
 import { contactParts } from "@/modules/volunteers/domain/volunteer";
+import { formatCoordinates, mapUrlOf } from "@/modules/event-checkpoints/domain/coordinates";
 
 /**
  * The twelve message types of AGENTS.md §16.3 (BR-REQ-080-01), in Romanian and English.
@@ -1181,14 +1182,21 @@ export type TemplateData = {
    * one: at a size for a message and whole, both at the store's public addresses. What the person does there is `volunteer`
    * above — the roles given and what they ask, as the role's own message says them. It names no other volunteer.
    * `pictureLinkOnly` is the second half's (`renderBilingual`): the words and the link again, not the picture.
+   *
+   * Since §NNN a point is of one of two kinds. `startFinish` true is a point at the start–finish: the message says the
+   * place with no number and no kilometre (`number` is null, `km` is not read). `coordinates` is where the point is,
+   * when the organizers typed it: the numbers and a link to a map stand under the band; absent or null, the message is
+   * what it was. Both are absent on the preview's made-up point, which is a point on the route with no coordinates.
    */
   volunteerPoint?: {
-    number: number;
+    number: number | null;
     nameRo: string;
     nameEn: string;
     km: number;
     noteRo: string | null;
     noteEn: string | null;
+    startFinish?: boolean;
+    coordinates?: { latitude: number; longitude: number } | null;
     picture: { displayUrl: string; fullUrl: string; width: number; height: number } | null;
     pictureLinkOnly?: boolean;
   };
@@ -1624,22 +1632,49 @@ function volunteerPointTitle(locale: EmailLocale, point: NonNullable<TemplateDat
   return `${point.number}. ${km} km — ${locale === "ro" ? point.nameRo : point.nameEn}`;
 }
 
+/** Whether the point is at the start–finish (§NNN): said with no number and no kilometre. A point with no number is said so too. */
+function volunteerPointAtStartFinish(point: NonNullable<TemplateData["volunteerPoint"]>): boolean {
+  return point.startFinish === true || point.number === null;
+}
+
 /**
  * The one fact «Punctul tău» is about (§956), on the band under the greeting: the event and the point —
  * «Punctul tău la Crosul: 3. 5,5 km — Apă la cabană». The platform's, whoever wrote the words under it, so a text the club
  * rewrote still says where the person stands. Nothing without the point (the editor's starting text, a preview without one).
+ *
+ * A person at the start–finish (§NNN) is told the place by its name alone — «Ești la start–finish: Kituri» — never a
+ * number or a kilometre: such a point has neither. The event is in the subject and in the words under the band.
  */
 function volunteerPointLine(locale: EmailLocale, d: TemplateData): string | undefined {
   if (!d.volunteerPoint) return undefined;
+  const words = T[locale].volunteerPointWords;
+  if (volunteerPointAtStartFinish(d.volunteerPoint)) return words.startFinishLine(locale === "ro" ? d.volunteerPoint.nameRo : d.volunteerPoint.nameEn);
   const event = d.eventTitle ?? (locale === "ro" ? "eveniment" : "the event");
-  return T[locale].volunteerPointWords.line(event, volunteerPointTitle(locale, d.volunteerPoint));
+  return words.line(event, volunteerPointTitle(locale, d.volunteerPoint));
+}
+
+/**
+ * Where the point is (§NNN), under the band that names it and only when the organizers typed its coordinates: the two
+ * numbers as a maps application takes them back, and «Deschide pe hartă» — Google Maps' own «open this place», built from
+ * the numbers alone (`event-checkpoints/domain/coordinates.ts#mapUrlOf`). The plain-text half writes the address out. A
+ * fact of this send, as the note and the roles are, so a text the club rewrote still says it.
+ */
+function volunteerPointWhere(locale: EmailLocale, coordinates: { latitude: number; longitude: number }): EmailBodyPart {
+  const words = T[locale].volunteerPointWords;
+  const numbers = formatCoordinates(coordinates);
+  const url = mapUrlOf(coordinates);
+  return {
+    html: `<p data-email-part="volunteer-point-where" style="margin:0 0 14px;font-size:16px;line-height:1.5"><strong>${escapeHtml(words.whereLabel)}</strong><br>${escapeHtml(numbers)} · <a href="${escapeHtml(url)}" style="color:${COLOR.blueInk}">${escapeHtml(words.mapOpen)}</a></p>`,
+    text: [words.whereLabel, `${numbers} — ${words.mapOpen}: ${url}`],
+  };
 }
 
 /**
  * What the platform says of the point before the words of «Punctul tău» (§956), under the band that names it — each only
- * when there is something to say: the point's own note as the club typed it (its label bold, no emphasis read inside it,
- * as an organizer's note is drawn, §331); then the roles the organizers gave the person and what they ask, in the role
- * message's own sentence — nothing about roles while none was given. Facts of this send, so a text the club rewrote keeps them.
+ * when there is something to say: where the point is, when it has coordinates (§NNN, `volunteerPointWhere`); the point's
+ * own note as the club typed it (its label bold, no emphasis read inside it, as an organizer's note is drawn, §331); then
+ * the roles the organizers gave the person and what they ask, in the role message's own sentence — nothing about roles
+ * while none was given. Facts of this send, so a text the club rewrote keeps them.
  */
 function volunteerPointLines(locale: EmailLocale, d: TemplateData): (string | EmailBodyPart)[] {
   const point = d.volunteerPoint;
@@ -1648,6 +1683,7 @@ function volunteerPointLines(locale: EmailLocale, d: TemplateData): (string | Em
   const note = (locale === "ro" ? point.noteRo : point.noteEn)?.trim();
   const roles = locale === "ro" ? d.volunteer?.roleRo : d.volunteer?.roleEn;
   return [
+    ...(point.coordinates ? [volunteerPointWhere(locale, point.coordinates)] : []),
     ...(note ? [organizerTextPart(words.noteLabel, note)] : []),
     ...(roles ? [words.roles(roles, (d.volunteer?.roleCount ?? 1) > 1), ...roleTasksLines(locale, d.volunteer)] : []),
   ];
@@ -2449,12 +2485,16 @@ const T = {
       Nothing to press. The point is the band's line and the event's start and place the bold one under it; the point's
       note and the roles given with what they ask stand before these words, the plan's picture after them
       (`volunteerPointLines`, `volunteerPointPicture`) — facts of this send, whoever wrote the words.
+      A person at the start–finish (§NNN) is not «at a point of the route»: the first sentence says the start–finish for
+      them, and for a point of the route not a word of it changed.
     */
     volunteerPoint: {
       subject: (d: TemplateData) => `Punctul tău de voluntar la ${d.eventTitle ?? "eveniment"}`,
       facts: (d: TemplateData) => eventFacts(d, { map: "Locul de întâlnire al evenimentului, pe hartă", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
-        `Mulțumim că ne ajuți la ${d.eventTitle ?? "eveniment"}! Organizatorii te-au pus la un punct de pe traseu: e cel scris mai sus.`,
+        d.volunteerPoint && volunteerPointAtStartFinish(d.volunteerPoint)
+          ? `Mulțumim că ne ajuți la ${d.eventTitle ?? "eveniment"}! Organizatorii te-au pus la start–finish: locul tău e cel scris mai sus.`
+          : `Mulțumim că ne ajuți la ${d.eventTitle ?? "eveniment"}! Organizatorii te-au pus la un punct de pe traseu: e cel scris mai sus.`,
         "Ora de întâlnire și ce mai e de știut le afli de la organizatori, înainte de eveniment. Dacă nu mai poți veni sau nu găsești punctul, scrie-ne din pagina de contact.",
       ],
       emphasis: (d: TemplateData): Emphasis => {
@@ -2975,9 +3015,15 @@ const T = {
     footer: "Răspunde la acest email pentru întrebări.",
     /** The volunteer category's contact person (§774), the words of «Persoana de contact» already joined: «Ana · 0712 345 678 · ana@club.test». */
     volunteerContact: (contacts: string) => `Întrebări despre voluntariat? ${contacts}`,
-    /** «Punctul tău» (§956), the words around its own: the band's line, the note's label, the roles given, and the plan's picture. */
+    /**
+     * «Punctul tău» (§956), the words around its own: the band's line, the note's label, the roles given, and the plan's picture —
+     * and, since §NNN, the band of a person at the start–finish and where a point with coordinates is.
+     */
     volunteerPointWords: {
       line: (event: string, point: string) => `Punctul tău la ${event}: ${point}`,
+      startFinishLine: (name: string) => `Ești la start–finish: ${name}`,
+      whereLabel: "Unde e punctul",
+      mapOpen: "Deschide pe hartă",
       noteLabel: "De știut la acest punct",
       roles: (roles: string, several: boolean) => `${several ? "Rolurile tale" : "Rolul tău"}: ${roles}.`,
       pictureAlt: "Planul voluntarilor desenat pe traseu",
@@ -3414,7 +3460,9 @@ const T = {
       subject: (d: TemplateData) => `Your volunteer point at ${d.eventTitle ?? "the event"}`,
       facts: (d: TemplateData) => eventFacts(d, { map: "The event's meeting point, on the map", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
-        `Thank you for helping at ${d.eventTitle ?? "the event"}! The organizers have put you at a point of the route: the one written above.`,
+        d.volunteerPoint && volunteerPointAtStartFinish(d.volunteerPoint)
+          ? `Thank you for helping at ${d.eventTitle ?? "the event"}! The organizers have put you at the start–finish: your place is the one written above.`
+          : `Thank you for helping at ${d.eventTitle ?? "the event"}! The organizers have put you at a point of the route: the one written above.`,
         "The meeting time and anything else you need to know come from the organizers, before the event. If you can no longer come or cannot find the point, write to us from the contact page.",
       ],
       emphasis: (d: TemplateData): Emphasis => {
@@ -3861,6 +3909,9 @@ const T = {
     volunteerContact: (contacts: string) => `Questions about volunteering? ${contacts}`,
     volunteerPointWords: {
       line: (event: string, point: string) => `Your point at ${event}: ${point}`,
+      startFinishLine: (name: string) => `You are at the start–finish: ${name}`,
+      whereLabel: "Where the point is",
+      mapOpen: "Open on the map",
       noteLabel: "Good to know at this point",
       roles: (roles: string, several: boolean) => `${several ? "Your roles" : "Your role"}: ${roles}.`,
       pictureAlt: "The volunteers' plan drawn on the route",

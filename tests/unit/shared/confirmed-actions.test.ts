@@ -166,6 +166,9 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // «Trimite fiecăruia punctul lui» on «Planul voluntarilor» (§956): one email to every placed volunteer, asked first —
   // the question counts who is written to, who already knows their point, who has no address and who has no point.
   sendVolunteerPointsAction: [],
+  // «Șterge punctul» on a point of the plan's own (§NNN): the point goes and its people stand at no point again — asked
+  // first, with the point's name and how many people stand there.
+  removePlanPointAction: [],
   // Legal.
   approvePlatformTemplatesAction: [],
   // Every text at once (§532): drafts from the templates, and the drafts approved, each naming its texts.
@@ -372,6 +375,12 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Încarcă poza planului» / «Schimbă poza» on «Planul voluntarilor» (§952): sent by the upload's island once the chosen file is stored.
   setPlanPictureAction:
     "records the picture just chosen and uploaded as the organizers' own plan's, undone by another upload or by «Șterge poza», which asks; it tells nobody, is on no public page and changes no point or person",
+  // «Adaugă punctul» in «Punctele planului» on «Planul voluntarilor» (§NNN): a point of the plan's own, on the route or at the start–finish.
+  addPlanPointAction:
+    "adds a point to the organizers' own plan, undone by «Șterge punctul», which asks; it tells nobody, is on no public page, and no person stands anywhere they did not",
+  // «Salvează punctul» in a point's «Modifică punctul» (§NNN): a plan's own point changed, or the coordinates of one of the event's points.
+  editPlanPointAction:
+    "the organizers' own words for a place of their plan — its name, its kilometre, its kind, where it is — replaced by saving them again; it tells nobody, is on no public page, and everybody stays at the point they stand at",
   addTestRegistrationsAction: "test rows, counted nowhere and absent from production, removed by a verb that asks",
   hardDeleteEventAction: "guarded by the event's title, typed: the typing is the question",
   eraseRegistrationFromListAction: "guarded by the registered name, typed: the typing is the question",

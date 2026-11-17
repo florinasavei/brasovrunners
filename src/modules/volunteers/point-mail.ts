@@ -1,13 +1,12 @@
 import { and, eq, ne, sql } from "drizzle-orm";
 import { emailOutbox, type EmailOutboxStatus } from "@/db/schema/email-outbox";
-import { eventCheckpoints } from "@/db/schema/event-checkpoints";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
+import type { Coordinates } from "@/modules/event-checkpoints/domain/coordinates";
 import { drainOutboxAfterResponse } from "@/modules/notifications/drain";
 import { enqueueEmail, OutboxMessageWithdrawn, type OutboxRow } from "@/modules/notifications/outbox";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
@@ -15,12 +14,21 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { canonicalOrNull } from "./agreement";
 import { readVolunteerPlanPicture } from "./plan";
+import { coordinatesOf, listPlanPoints } from "./plan-points";
 
 /*
   «Trimite fiecăruia punctul lui» (§956; the owner, 2026-11-16, with a picture of Saturday's route and its volunteers' points on
   it: «…si sa ii pot distribui din aplicatie, sa stie exact unde si cum» — and, asked how, «Email din site, la apăsarea ta»):
   one press on «Planul voluntarilor» emails each placed volunteer the point they stand at — its number in the route's order,
   its name, its kilometre and its note — what they do there, and the plan's picture (`VOLUNTEER_POINT`).
+
+  **A point is any point of the plan (§NNN):** one of the event's «Puncte pe traseu», a point the organizers typed by hand on
+  the plan's page, or a point at the start–finish — `plan-points.ts#listPlanPoints` is the one list of them, read here for
+  who stands at a point and for what the message says of it. A person at the start–finish is counted, told and «already
+  told» exactly as a person on the route is; their message says the place with no number and no kilometre. A point that has
+  coordinates is said with them and a link to a map. Who «already knows their point» does not change when a point's name,
+  kilometre or coordinates do: a person told before the coordinates were typed stays told, and «Trimite din nou tuturor» is
+  how the organizers send the place.
 
   **Who is written to.** Every volunteer of the event who stands at one of its points, is not cancelled and has an address:
   one message each, in the language of their own row, queued through the outbox in the press's own transaction
@@ -154,7 +162,8 @@ async function pointRows<T extends Record<string, unknown>>(db: Database<T>, sco
  * event their payload names.
  */
 async function standingsOf<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<{ people: PlacedPerson[]; counts: VolunteerPointCounts }> {
-  const onRoute = new Set((await db.select({ id: eventCheckpoints.id }).from(eventCheckpoints).where(eq(eventCheckpoints.eventId, eventId))).map((point) => point.id));
+  // Every point of the event's plan, whichever kind (§NNN): the one list the page and the message read too.
+  const onPlan = new Set((await listPlanPoints(db, eventId)).map((point) => point.id));
   const volunteers = await db
     .select({ id: eventVolunteers.id, email: eventVolunteers.email, canonicalEmail: eventVolunteers.canonicalEmail, locale: eventVolunteers.locale, checkpointId: eventVolunteers.checkpointId })
     .from(eventVolunteers)
@@ -164,7 +173,7 @@ async function standingsOf<T extends Record<string, unknown>>(db: Database<T>, e
   const people = volunteers.map((volunteer): PlacedPerson => {
     const own = rows.get(volunteer.id) ?? [];
     const standing: Standing =
-      volunteer.checkpointId === null || !onRoute.has(volunteer.checkpointId)
+      volunteer.checkpointId === null || !onPlan.has(volunteer.checkpointId)
         ? "unplaced"
         : volunteer.email === null || volunteer.canonicalEmail === null
           ? "noAddress"
@@ -273,13 +282,18 @@ export async function sendVolunteerPoints<T extends Record<string, unknown>>(
 
 /** What the message says about the point, as the template takes it (`notifications/templates.ts`, `TemplateData.volunteerPoint`). */
 export type VolunteerPointFacts = {
-  /** The point's place in the route's order, 1 for the first: the number the plan's page gives it. */
-  number: number;
+  /** The point's place in the route's order, 1 for the first: the number the plan's page gives it. Null at the start–finish (§NNN). */
+  number: number | null;
   nameRo: string;
   nameEn: string;
+  /** Kilometres from the start; not said for a point at the start–finish. */
   km: number;
   noteRo: string | null;
   noteEn: string | null;
+  /** A point at the start–finish, not on the route (§NNN): the message says the place with no number and no kilometre. */
+  startFinish: boolean;
+  /** Where the point is, when the organizers typed it (§NNN): the message says the numbers and links to a map. Null for none. */
+  coordinates: Coordinates | null;
   /** The plan's picture at a size for a message and whole, at the store's public addresses; null when the event has none. */
   picture: { displayUrl: string; fullUrl: string; width: number; height: number } | null;
 };
@@ -290,15 +304,17 @@ export type VolunteerPointFacts = {
  *
  * - the person is gone, stands at no point, or stands at another point than the one the message was queued for (moved or
  *   taken off since, or the point deleted — which frees its people);
- * - the point is no longer on the event's route;
+ * - the point is no longer on the event's plan;
  * - a newer message about their point was queued for them while this one still waited: the newer one is the one that leaves.
  *
  * The person's rows are read here without a lock: a message already past this check when a newer one is committed is not
  * called back, and both leave (the edge the head of this file names).
  *
  * The renderer has already withdrawn a cancelled person, a row with no address and an address corrected since
- * (`render.ts`); this reads only what is the point's. The number is the point's place among the event's points by distance
- * (`listCheckpoints`, the plan's own order); the picture is the plan's as it is now (`plan.ts#readVolunteerPlanPicture`).
+ * (`render.ts`); this reads only what is the point's — its number in the route's order, or none at the start–finish, its
+ * name, its kilometre and where it is, from the plan's one list (`plan-points.ts#listPlanPoints`, §NNN), which is what
+ * the plan's page reads, so the message and the page say one point one way; the picture is the plan's as it is now
+ * (`plan.ts#readVolunteerPlanPicture`).
  */
 export async function volunteerPointAtSend<T extends Record<string, unknown>>(db: Database<T>, row: Pick<OutboxRow, "payloadJson">): Promise<VolunteerPointFacts> {
   const payload = (row.payloadJson ?? {}) as { volunteerId?: unknown; checkpointId?: unknown; round?: unknown };
@@ -315,18 +331,18 @@ export async function volunteerPointAtSend<T extends Record<string, unknown>>(db
   const own = (await pointRows(db, { volunteerId })).get(volunteerId) ?? [];
   if (own.some((other) => other.round > round)) throw new OutboxMessageWithdrawn("a newer message about the volunteer's point was queued since");
 
-  const points = await listCheckpoints(db, volunteer.eventId);
-  const at = points.findIndex((point) => point.id === queuedFor);
-  if (at < 0) throw new OutboxMessageWithdrawn("the point is no longer on the event's route");
-  const point = points[at];
+  const point = (await listPlanPoints(db, volunteer.eventId)).find((one) => one.id === queuedFor);
+  if (!point) throw new OutboxMessageWithdrawn("the point is no longer on the event's plan");
   const picture = await readVolunteerPlanPicture(db, volunteer.eventId);
   return {
-    number: at + 1,
+    number: point.number,
     nameRo: point.nameRo,
     nameEn: point.nameEn,
     km: point.km,
     noteRo: point.noteRo,
     noteEn: point.noteEn,
+    startFinish: point.startFinish,
+    coordinates: coordinatesOf(point),
     picture: picture ? { displayUrl: picture.displayUrl, fullUrl: picture.fullUrl, width: picture.width, height: picture.height } : null,
   };
 }

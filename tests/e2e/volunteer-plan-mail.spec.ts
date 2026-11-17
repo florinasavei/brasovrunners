@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import pg from "pg";
 import { cancelDialog, confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
+import { openFold } from "./support/fold";
 
 /**
  * §956, BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01 — «Trimite fiecăruia punctul lui» on «Planul voluntarilor» (the owner,
@@ -26,6 +27,14 @@ import { hydrated, signIn } from "./support/featured-event";
  * The race, its two points and its three volunteers are written straight into the database — the setup, not the subject —
  * one set per project and test, so two runs never share a row. Never a real person: every name and address is made up. What
  * the message says and what is withdrawn at the send are `tests/integration/volunteers/plan-mail.test.ts`.
+ *
+ * And, on the same page and the same seeded race, «Punctele planului» (§NNN; the owner, 2026-11-17: «vreau să pot defini
+ * punctele de mână, să pun nume punct și la ce km e și coordonate punct» — «Practic voluntarii sunt de 2 tipuri:
+ * start-finish și pe traseu»): the Organizer adds a point at the start–finish and a point on the route by hand — a
+ * refused press keeping what was typed —, sees each in its group, the route point numbered in the route's order with
+ * «Deschide pe hartă», places a person at each, changes one point and deletes the other, whose person is then under
+ * «Fără punct». The rules of each press are `tests/integration/volunteers/plan-points.test.ts` and
+ * `plan-points-screens.test.ts`.
  */
 function databaseUrl(): string {
   if (!process.env.DATABASE_URL && existsSync(".env.local")) process.loadEnvFile(".env.local");
@@ -256,7 +265,8 @@ test.describe("§956 «Trimite fiecăruia punctul lui» on «Planul voluntarilor
     await expect(page).toHaveURL(new RegExp(`/ro/admin/events/${eventId}/plan-voluntari#point-${points.water}$`), { timeout: 30_000 });
     await toastSays(page, "Stă la punctul ales: apare în planul voluntarilor.");
     await hydrated(page);
-    await expect(page.getByTestId("plan-summary")).toHaveText("La puncte: 3 · Fără punct: 0 · Puncte fără nimeni: 0");
+    // The summary's four numbers (§NNN): nobody at the start–finish — the race has no such point —, all three on the route.
+    await expect(page.getByTestId("plan-summary")).toHaveText("0 voluntari la start–finish · 3 voluntari pe traseu · 0 voluntari fără punct · 0 puncte fără nimeni");
     expect(await queuedSince(eventId, firstPress)).toEqual([]);
 
     // ---- One person still to tell, two who know: the plain button again, its hidden box empty ----------------------
@@ -369,5 +379,198 @@ test.describe("§956 «Trimite fiecăruia punctul lui» on «Planul voluntarilor
     ]);
     expect((await trail(eventId))[2]).toEqual({ queued: 3, told: 3, noAddress: 0, unplaced: 0, again: true });
     await fits(page);
+  });
+});
+
+/** One group of the plan — «Start–finish» or «Pe traseu» — and the points drawn in it. */
+const planGroup = (page: Page, group: "startFinish" | "route") => page.locator(`[data-testid="plan-group"][data-group="${group}"]`);
+
+/** A control a thumb can press: at least 44 pixels tall (BR-REQ-041-01 criterion 6). */
+async function thumbSized(control: Locator) {
+  const box = await control.boundingBox();
+  expect(box).not.toBeNull();
+  if (box) expect(box.height).toBeGreaterThanOrEqual(44);
+}
+
+test.describe("§NNN «Punctele planului» on «Planul voluntarilor»", () => {
+  test.describe.configure({ timeout: 180_000 });
+
+  test("the Organizer adds a start–finish point and a point on the route by hand, places a person at each, changes one and deletes the other", async ({ page }) => {
+    const seeded = await seed(`${test.info().project.name}-${Date.now().toString(36)}-c`);
+    const { eventId, points, ana, radu } = seeded;
+    const plan = `/ro/admin/events/${eventId}/plan-voluntari`;
+    const MAP = "https://www.google.com/maps/search/?api=1&query=45.64271%2C25.58871";
+    await signIn(page, "Dev Moderator");
+    await page.goto(plan);
+    await hydrated(page);
+
+    // ---- The plan as seeded: two points on the route, none at the start–finish, Radu at no point --------------------
+    const summary = page.getByTestId("plan-summary");
+    const startFinish = planGroup(page, "startFinish");
+    const route = planGroup(page, "route");
+    await expect(summary).toHaveText("0 voluntari la start–finish · 2 voluntari pe traseu · 1 voluntar fără punct · 0 puncte fără nimeni");
+    await expect(startFinish.getByRole("heading", { level: 3, name: "Start–finish" })).toBeVisible();
+    await expect(startFinish.getByTestId("plan-group-none")).toHaveText("Niciun punct la start–finish. Adaugă unul mai sus, alegând „La start–finish”.");
+    await expect(route.getByRole("heading", { level: 3, name: "Pe traseu" })).toBeVisible();
+    await expect(route.getByTestId("plan-point-title")).toHaveText(["1. 1,2 km — Intersecția Stejeriș", "2. 5,5 km — Apă la cabană"]);
+
+    // ---- «Punctele planului»: the builder, under the picture and above «Trimite fiecăruia punctul lui» --------------
+    const builder = page.getByTestId("plan-points-section");
+    await expect(builder.getByRole("heading", { level: 3, name: "Punctele planului" })).toBeVisible();
+    const addForm = page.getByTestId("plan-point-add-form");
+    const name = addForm.getByTestId("plan-point-add-name");
+    const km = addForm.getByTestId("plan-point-add-km");
+    const coordinates = addForm.getByTestId("plan-point-add-coordinates");
+    const onRoute = addForm.getByRole("radio", { name: "Pe traseu" });
+    const atStartFinish = addForm.getByRole("radio", { name: "La start–finish" });
+    const add = addForm.getByTestId("plan-point-add");
+    // «Pe traseu» is chosen as drawn; the button and both choices are a thumb's size, and nothing is wider than the screen.
+    await expect(onRoute).toBeChecked();
+    await expect(add).toHaveText("Adaugă punctul");
+    await thumbSized(add);
+    await thumbSized(addForm.locator("label").filter({ hasText: "Pe traseu" }));
+    await thumbSized(addForm.locator("label").filter({ hasText: "La start–finish" }));
+    await fits(page);
+
+    // ---- A point at the start–finish. Coordinates in no shape the page knows are refused — and nothing typed is lost -
+    await atStartFinish.check();
+    await name.fill("Kituri și numere");
+    await coordinates.fill("pe la intrarea în parc");
+    await add.click();
+    await expect(addForm.getByTestId("form-refusal")).toContainText("Nu am înțeles coordonatele. Scrie-le ca în Google Maps, de exemplu 45.64271, 25.58871.");
+    await expect(name).toHaveValue("Kituri și numere");
+    await expect(coordinates).toHaveValue("pe la intrarea în parc");
+    await expect(atStartFinish).toBeChecked();
+    await expect(startFinish.getByTestId("plan-point")).toHaveCount(0);
+    // Written as Google Maps copies them, the point is added: back at the section, the form empty for the next one.
+    await coordinates.fill("45.64271, 25.58871");
+    await add.click();
+    await expect(page).toHaveURL(new RegExp(`${plan}#plan-points$`), { timeout: 30_000 });
+    await toastSays(page, "Punct adăugat.");
+    await hydrated(page);
+    await expect(name).toHaveValue("");
+    await expect(coordinates).toHaveValue("");
+    await expect(onRoute).toBeChecked();
+
+    // In its group: by its name alone — no number, no kilometre — with where it is and the link to the map.
+    const kits = startFinish.getByTestId("plan-point").filter({ hasText: "Kituri și numere" });
+    await expect(startFinish.getByTestId("plan-point-title")).toHaveText(["Kituri și numere"]);
+    await expect(startFinish.getByTestId("plan-group-none")).toHaveCount(0);
+    await expect(kits.getByTestId("plan-point-coordinates")).toHaveText("45.64271, 25.58871");
+    await expect(kits.getByTestId("plan-point-map")).toHaveAttribute("href", MAP);
+
+    // ---- A point on the route: a name, its kilometre, its coordinates — numbered where the route meets it -----------
+    await name.fill("Izvorul rece");
+    await km.fill("3,4");
+    await coordinates.fill("45.64271, 25.58871");
+    await add.click();
+    await expect(page).toHaveURL(new RegExp(`${plan}#plan-points$`), { timeout: 30_000 });
+    await toastSays(page, "Punct adăugat.");
+    await hydrated(page);
+    await expect(route.getByTestId("plan-point-title")).toHaveText(["1. 1,2 km — Intersecția Stejeriș", "2. 3,4 km — Izvorul rece", "3. 5,5 km — Apă la cabană"]);
+    const spring = route.getByTestId("plan-point").filter({ hasText: "Izvorul rece" });
+    // Only the plan has it: said so, quietly; the editor's points beside it are not.
+    await expect(spring.getByTestId("plan-point-own")).toHaveText("doar pe plan");
+    await expect(route.getByTestId("plan-point-own")).toHaveCount(1);
+    // «Deschide pe hartă»: Google Maps' own address for the two numbers, in a new tab, a thumb's size.
+    const map = spring.getByTestId("plan-point-map");
+    await expect(spring.getByTestId("plan-point-coordinates")).toHaveText("45.64271, 25.58871");
+    await expect(map).toHaveText("Deschide pe hartă");
+    await expect(map).toHaveAttribute("href", MAP);
+    await expect(map).toHaveAttribute("target", "_blank");
+    await expect(map).toHaveAttribute("rel", "noopener noreferrer");
+    await thumbSized(map);
+    await expect(summary).toHaveText("0 voluntari la start–finish · 2 voluntari pe traseu · 1 voluntar fără punct · 2 puncte fără nimeni");
+    await fits(page);
+
+    // ---- A person at each: Radu at the start–finish, Ana taken off the junction and put at the new point -----------
+    const kitsId = (await kits.getAttribute("id")) ?? "";
+    const springId = (await spring.getAttribute("id")) ?? "";
+    expect(kitsId).toMatch(/^point-[0-9a-f-]{36}$/);
+    expect(springId).toMatch(/^point-[0-9a-f-]{36}$/);
+    await kits.getByTestId("plan-place-select").selectOption({ label: radu.name });
+    await kits.getByTestId("plan-place").click();
+    await expect(page).toHaveURL(new RegExp(`${plan}#${kitsId}$`), { timeout: 30_000 });
+    await toastSays(page, "Stă la punctul ales: apare în planul voluntarilor.");
+    await hydrated(page);
+    await expect(kits.getByTestId("plan-person-name")).toHaveText([radu.name]);
+
+    const junction = route.getByTestId("plan-point").filter({ hasText: "Intersecția Stejeriș" });
+    await junction.getByTestId("plan-take-off").click();
+    await expect(page).toHaveURL(new RegExp(`${plan}#point-${points.junction}$`), { timeout: 30_000 });
+    await toastSays(page, "Nu mai stă la niciun punct: e din nou la „Fără punct”.");
+    await hydrated(page);
+    await spring.getByTestId("plan-place-select").selectOption({ label: ana.name });
+    await spring.getByTestId("plan-place").click();
+    await expect(page).toHaveURL(new RegExp(`${plan}#${springId}$`), { timeout: 30_000 });
+    await toastSays(page, "Stă la punctul ales: apare în planul voluntarilor.");
+    await hydrated(page);
+    await expect(spring.getByTestId("plan-person-name")).toHaveText([ana.name]);
+    await expect(summary).toHaveText("1 voluntar la start–finish · 2 voluntari pe traseu · 0 voluntari fără punct · 1 punct fără nimeni");
+
+    // ---- «Modifică punctul»: the route point renamed and moved along the route — its person stays ------------------
+    const springFold = spring.getByTestId("plan-point-edit");
+    // The fold's bar is a thumb's size too.
+    await thumbSized(springFold.locator(":scope > summary"));
+    await openFold(springFold);
+    await expect(springFold.getByRole("radio", { name: "Pe traseu" })).toBeChecked();
+    await expect(springFold.getByTestId("plan-point-edit-name")).toHaveValue("Izvorul rece");
+    await expect(springFold.getByTestId("plan-point-edit-km")).toHaveValue("3,4");
+    await expect(springFold.getByTestId("plan-point-edit-coordinates")).toHaveValue("45.64271, 25.58871");
+    await thumbSized(springFold.getByTestId("plan-point-save"));
+    await springFold.getByTestId("plan-point-edit-name").fill("Izvorul cald");
+    await springFold.getByTestId("plan-point-edit-km").fill("6,1");
+    await springFold.getByTestId("plan-point-save").click();
+    await expect(page).toHaveURL(new RegExp(`${plan}#${springId}$`), { timeout: 30_000 });
+    await toastSays(page, "Punct salvat.");
+    await hydrated(page);
+    // Past the water now: the route's third point, under the same id, with Ana still at it.
+    await expect(route.getByTestId("plan-point-title")).toHaveText(["1. 1,2 km — Intersecția Stejeriș", "2. 5,5 km — Apă la cabană", "3. 6,1 km — Izvorul cald"]);
+    const moved = route.getByTestId("plan-point").filter({ hasText: "Izvorul cald" });
+    await expect(moved).toHaveAttribute("id", springId);
+    await expect(moved.getByTestId("plan-person-name")).toHaveText([ana.name]);
+    // An editor's point folds open onto its coordinates alone: its name and kilometre are the editor's.
+    const waterFold = route.getByTestId("plan-point").filter({ hasText: "Apă la cabană" }).getByTestId("plan-point-edit");
+    await openFold(waterFold);
+    await expect(waterFold.getByTestId("plan-point-edit-coordinates")).toBeVisible();
+    await expect(waterFold.getByTestId("plan-point-edit-name")).toHaveCount(0);
+    await expect(waterFold.getByTestId("plan-point-remove-form")).toHaveCount(0);
+    await expect(waterFold.getByTestId("plan-point-editors")).toContainText("Numele și kilometrul acestui punct se schimbă în editorul evenimentului:");
+    // The link names the editor's card by its own title: the sentence has already said where.
+    await expect(waterFold.getByTestId("plan-point-editors").getByRole("link")).toHaveText("Puncte pe traseu");
+
+    // ---- «Șterge punctul»: it asks first, with the point's name and who stands there — and Radu is under «Fără punct» -
+    const kitsFold = kits.getByTestId("plan-point-edit");
+    await openFold(kitsFold);
+    const remove = kitsFold.getByRole("button", { name: "Șterge punctul: Kituri și numere" });
+    await thumbSized(remove);
+    // Two folds open at once — an editor's point and one of the plan's own — and still nothing wider than the screen.
+    await fits(page);
+    await remove.click();
+    const question = page.getByRole("dialog", { name: "Ștergi punctul „Kituri și numere”?" });
+    await expect(question).toBeVisible();
+    await expect(question).toContainText("La acest punct stă 1 voluntar: rămâne în plan, fără punct.");
+    await expect(question.getByTestId("confirm-dialog-confirm")).toHaveText("Șterge punctul");
+    await questionFits(page, question, [question.getByTestId("confirm-dialog-cancel"), question.getByTestId("confirm-dialog-confirm")]);
+    await confirmDialog(page, "Ștergi punctul „Kituri și numere”?");
+    await expect(page).toHaveURL(new RegExp(`${plan}#plan-list$`), { timeout: 30_000 });
+    await toastSays(page, "Punct șters.");
+    await hydrated(page);
+    await expect(startFinish.getByTestId("plan-point")).toHaveCount(0);
+    await expect(startFinish.getByTestId("plan-group-none")).toBeVisible();
+    const unplaced = page.getByTestId("plan-unplaced");
+    await expect(unplaced.getByRole("heading", { level: 3, name: "Fără punct" })).toBeVisible();
+    await expect(unplaced.getByTestId("plan-person-name")).toHaveText([radu.name]);
+    await expect(summary).toHaveText("0 voluntari la start–finish · 2 voluntari pe traseu · 1 voluntar fără punct · 1 punct fără nimeni");
+    await fits(page);
+
+    // ---- Nothing of it told anybody: no message was queued by adding, placing, changing or deleting ----------------
+    expect(await pointMails(eventId)).toEqual([]);
+    // …and the database holds what the page says: one point of the plan's own left, on the route, with its people's rows as they stand.
+    const own = await withDatabase(
+      async (client) =>
+        (await client.query<{ name: string; km: string; start_finish: boolean; latitude: string | null }>(`SELECT name_ro AS name, km::text AS km, start_finish, latitude::text AS latitude FROM event_checkpoints WHERE event_id = $1 AND plan_only ORDER BY position`, [eventId])).rows,
+    );
+    expect(own).toEqual([{ name: "Izvorul cald", km: "6.10", start_finish: false, latitude: "45.642710" }]);
   });
 });

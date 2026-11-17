@@ -674,6 +674,14 @@ export type AuditAction =
   // press — how many messages it queued, how many people had already been told, stand at a point with no address or stand
   // at none, and whether it was «din nou tuturor» (`again`). Counts only: never a volunteer's id, a name, an address or a point.
   | "event.volunteer_points_sent"
+  // «Punctele planului» on «Planul voluntarilor» (§NNN, `volunteers/plan-points.ts`), entity `event`: a point of the plan
+  // added by hand, changed — or an editor's point given, moved or cleared of its coordinates — or deleted. The metadata is
+  // the point's id, whether it is the plan's own, and what it said before and after (`from`, `to`: where it stands — on the
+  // route or at the start–finish —, its name, its kilometre, its coordinates; null for the side that does not exist); a
+  // removal also says how many people it freed (`freed`). The organizers' own words for places — never a person.
+  | "volunteer_plan.point_added"
+  | "volunteer_plan.point_changed"
+  | "volunteer_plan.point_removed"
   /** «Arată public câți voluntari mai sunt necesari» (§773), entity `event`: the metadata holds `on` and nothing of a person. */
   | "event.volunteers_counts_switched"
   | "event.volunteers_list_switched"
