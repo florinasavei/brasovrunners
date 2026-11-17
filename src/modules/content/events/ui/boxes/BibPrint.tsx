@@ -419,7 +419,7 @@ export async function EliteBibForms({
  */
 export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyTest, attention, spares = null, elite = null, eliteSaved = false }: Props) {
   const t = await getTranslations("Admin");
-  // The blank bibs' download names the sheet's language, as the sheet's own GET does (§NNN).
+  // The blank bibs' download names the sheet's language, as the sheet's own GET does (§963).
   const blankLocale = await getLocale();
   // What «Alocă numerele» does, then when it is needed — two lines, one tooltip (`TOOLTIP_TEXT_SX` keeps the break).
   const assignWords = `${t("bibs.assignHelp")}\n${t("bibs.assignHelpMore")}`;
@@ -497,7 +497,7 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
           </Panel>
         )}
         {/*
-          «BIB-uri goale» (§NNN; the owner, 2026-11-17: «vreau și număr GOL, fără bib, fără nimic»): the race's bib with no
+          «BIB-uri goale» (§963; the owner, 2026-11-17: «vreau și număr GOL, fără bib, fără nimic»): the race's bib with no
           number and no name, as many as typed — written on by hand. A GET of the sheet's own route (`blank=N`): nothing is
           reserved, nobody is named, so every role that downloads the sheet may download these.
         */}

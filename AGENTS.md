@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.54-2026-11-17 -->
+<!-- PROJECT_BASELINE: BR-V4.55-2026-11-17 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.54-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.55-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -3302,7 +3302,7 @@ file — and not by the volunteers' Excel and CSV or «Planul voluntarilor» unt
 cache is expired, and the person is not told.
 
 The organizers' **«Note interne»** on a volunteer (`event_volunteer_notes`, amending §754's single line;
-`volunteers/volunteer-notes.ts`) are that dated thread: read, added and — since 2026-11-17 (`DECISIONS.md` §NNN; the
+`volunteers/volunteer-notes.ts`) are that dated thread: read, added and — since 2026-11-17 (`DECISIONS.md` §964; the
 owner: «lasă-mă să editez și nota internă») — changed by whoever works the volunteers (`canManageVolunteers`), a note
 being changed or deleted only by its author or by an Administrator (`canManageRegistrations`; one rule for both verbs,
 `mayChangeNote`). A change reads the words as the add does (the same limit, `NOTE_EMPTY`, `NOTE_TOO_LONG`), writes them
@@ -3521,7 +3521,7 @@ VOLUNTEER_POINT
 `volunteers/point-mail.ts#sendVolunteerPoints` alone — at an organizer's press (`canManageVolunteers`, asked by
 the action and again by the service), in that press's transaction, under the event row's lock: one message for
 each volunteer of the event who stands at one of its points, is not cancelled and has an address, in the
-language of their own row. A point is any point of the plan (§NNN, `volunteers/plan-points.ts#listPlanPoints`):
+language of their own row. A point is any point of the plan (§961, `volunteers/plan-points.ts#listPlanPoints`):
 one of the event's «Puncte pe traseu», one the organizers typed by hand, or one at the start–finish — counted,
 told and «already told» alike. A person at the start–finish is told the place with no number and no kilometre
 («Ești la start–finish: …»); a point that has coordinates is said with them and «Deschide pe hartă», in the
@@ -3879,7 +3879,7 @@ event's points, each with the volunteers who stand at it (`event_volunteers.chec
 whoever works the volunteers (`canManageVolunteers`: the Organizer and the Administrators), built and printed on its
 page. Its picture is the plan as the organizers drew it — the map with the points on it — and lives with the plan:
 
-- **The points are of two kinds, and the plan has points of its own** (`DECISIONS.md` §NNN; the owner, 2026-11-17:
+- **The points are of two kinds, and the plan has points of its own** (`DECISIONS.md` §961; the owner, 2026-11-17:
   «După ce încarc acea poză cu harta de voluntari vreau să pot defini punctele de mână, să pun nume punct și la ce km e
   și coordonate punct» — «Practic voluntarii sunt de 2 tipuri: start-finish și pe traseu»). A point of the plan is **on
   the route** — a kilometre and a number in the route's order — or **at the start–finish** — neither. The route's

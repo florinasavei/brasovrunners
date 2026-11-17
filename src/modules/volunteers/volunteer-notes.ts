@@ -16,13 +16,13 @@ import { type ExportNote, noteBodyOf } from "@/shared/notes/note-text";
  * **Who** — whoever manages the volunteers (`canManageVolunteers`: the Organizer, the Administrator, the Superadministrator),
  * asserted in every function below, so the page's card, the list's marker and the actions' gates are courtesies and this is the
  * rule (BR-REQ-060-01). **Delete and edit** are narrower, as a registration's delete: the note's author, or whoever changes
- * registrations (`canManageRegistrations`, the Administrator and above) — one rule for both, `mayChangeNote` (§NNN).
+ * registrations (`canManageRegistrations`, the Administrator and above) — one rule for both, `mayChangeNote` (§964).
  *
  * **What a note is** — plain text, line breaks kept, at most `VOLUNTEER_NOTE_MAX` characters (a registration note's own limit).
  * It is personal data about the volunteer: the privacy notice already says the organizers may add a note of their own about the
  * offer; «Toate datele unei persoane» lists them; «Șterge voluntarul», the thirty-day sweep and an event's hard delete take them
  * by the table's `ON DELETE CASCADE`. An edit changes the words and `updated_at`, never `created_at` or the author: the note
- * keeps its place in the thread, and no earlier words are kept anywhere (§NNN).
+ * keeps its place in the thread, and no earlier words are kept anywhere (§964).
  *
  * **The trail** names who and when and never the words: `volunteer.note_added` / `volunteer.note_edited` /
  * `volunteer.note_deleted`, recorded as every `volunteer.*` row is — entity `event`, the event's id — with `{ volunteerId }` and
@@ -46,12 +46,12 @@ export type VolunteerNoteRow = {
   authorName: string | null;
   /** Whether the reader may delete it: their own, or any when they change registrations. */
   deletable: boolean;
-  /** Whether the reader may change its words (§NNN) — the same rule as the delete's, so the same answer. */
+  /** Whether the reader may change its words (§964) — the same rule as the delete's, so the same answer. */
   editable: boolean;
 };
 
 /**
- * One live note as the «Voluntari» list's row reads it (§NNN): its words and moment for the column and the marker's tooltip, and
+ * One live note as the «Voluntari» list's row reads it (§964): its words and moment for the column and the marker's tooltip, and
  * for the row's «Modifică nota» its id and whether the reader may change it. No author: the list names nobody.
  */
 export type VolunteerListNote = { id: string; createdAt: Date; body: string; editable: boolean };
@@ -65,7 +65,7 @@ function assertMayKeepNotes(actor: Pick<StaffUser, "role">): void {
 }
 
 /**
- * Whether the actor may change or delete a note written by `authorId` (§NNN): their own, or any when they change registrations
+ * Whether the actor may change or delete a note written by `authorId` (§964): their own, or any when they change registrations
  * (the Administrator and above). A note nobody can be named for (a carried line, an author's account gone) is the Administrator's.
  * The one rule behind «Șterge», «Modifică», «Modifică nota» and the flags the screens draw them by.
  */
@@ -220,7 +220,7 @@ export async function listVolunteerNotesForExport<T extends Record<string, unkno
 }
 
 /**
- * The live notes of the «Voluntari» list's rows (§NNN), in **one grouped query** over the page's ids, each volunteer's list newest
+ * The live notes of the «Voluntari» list's rows (§964), in **one grouped query** over the page's ids, each volunteer's list newest
  * first: the words for the column «Note interne» and the marker's tooltip, how many for the marker, and each note's id and
  * whether the reader may change it — the row's «Modifică nota» is drawn on the newest one alone, and only when it may. Neither
  * the author's name nor role is read: the list names nobody. A volunteer with none is absent from the map; a deleted note is
@@ -320,7 +320,7 @@ export async function deleteVolunteerNote<T extends Record<string, unknown>>(db:
 }
 
 /**
- * «Modifică» on one note (§NNN; the owner, 2026-11-17, of the «Voluntari» list: «lasă-mă să editez și nota internă»): new words
+ * «Modifică» on one note (§964; the owner, 2026-11-17, of the «Voluntari» list: «lasă-mă să editez și nota internă»): new words
  * for a note, by the hands that may delete it — its author, or any note when the actor changes registrations (the Administrator);
  * a colleague's note to an Organizer is `FORBIDDEN`, as for «Șterge». The words go through the add's own reading
  * (`parseVolunteerNoteBody`: `NOTE_EMPTY`, `NOTE_TOO_LONG`, naming the box `body`). A note deleted, one that is not there, or a

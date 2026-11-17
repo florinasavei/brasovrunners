@@ -111,7 +111,7 @@ export async function listBadgeRoles<T extends Record<string, unknown>>(db: Data
 }
 
 /**
- * A role's name in the badge's language — what the band's large line prints: the role only. Its category is printed too since §NNN
+ * A role's name in the badge's language — what the band's large line prints: the role only. Its category is printed too since §962
  * (amending §774, which kept the band to the role): on the small line beside «VOLUNTAR», or under the name — `badgeRoleCategory`, never
  * in brackets after the name as the page says it (`badgeRoleLabel`).
  */
@@ -120,7 +120,7 @@ export function badgeRoleName(role: Pick<BadgeRole, "nameRo" | "nameEn">, locale
 }
 
 /**
- * The name of a role's category in the badge's language — the volunteer's type, «Pe Traseu» (§NNN; the owner, 2026-11-17: «Practic
+ * The name of a role's category in the badge's language — the volunteer's type, «Pe Traseu» (§962; the owner, 2026-11-17: «Practic
  * voluntarii sunt de 2 tipuri: start-finish și pe traseu»), the club's own words from the event's «Categorii» — or null for a role under
  * none, whose default heading «Alte activități» is no type and is never printed.
  */
@@ -129,7 +129,7 @@ export function badgeRoleCategory(role: Pick<BadgeRole, "categoryRo" | "category
 }
 
 /**
- * One role as its badge draws it (§NNN): its name and its category's in the badge's language, its band's colour (`badgeRoleColour`: a stored
+ * One role as its badge draws it (§962): its name and its category's in the badge's language, its band's colour (`badgeRoleColour`: a stored
  * colour no word reads on is the club's orange) and its category's telephone (§774). The one hand-over to the renderers, which both the
  * sheet's piles (`badgePrintEntries`) and the picture's route take, so the PDF and the PNG cannot disagree about a role.
  */
@@ -586,7 +586,7 @@ export function readPrintCounts(
   return total > BADGE_TOTAL_MAX ? { refused: "total" } : { roles: counts, none };
 }
 
-/** The sheet's piles in the club's order: each role's badges with its spares — its category's name with it (§NNN) — then the badges «fără rol». */
+/** The sheet's piles in the club's order: each role's badges with its spares — its category's name with it (§962) — then the badges «fără rol». */
 export function badgePrintEntries(roles: readonly BadgeRole[], counts: BadgePrintCounts, locale: BadgeLocale): Array<{ role: BadgeFaceRole | null; count: number }> {
   // One badge for everyone (§783): a single pile with no role — «VOLUNTAR» alone, on the design's own colour — however many roles the event has.
   if (counts.single) return counts.single.count + counts.single.spares > 0 ? [{ role: null, count: counts.single.count + counts.single.spares }] : [];

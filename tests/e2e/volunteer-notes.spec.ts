@@ -7,7 +7,7 @@ import { FEATURED, hydrated, signIn } from "./support/featured-event";
 /**
  * «Note interne» for volunteers, walked as an Organizer at 320 pixels and on a desktop: on the «Voluntari» list the row carries
  * «Adaugă o notă» (44 pixels high, its name naming the person) and no marker; the dialog saves the note and comes back to the same
- * list address with the marker counting it; under the note's words in its column, «Modifică nota» (§NNN) changes them in the row's
+ * list address with the marker counting it; under the note's words in its column, «Modifică nota» (§964) changes them in the row's
  * dialog and the column says the new words, with no day or hour; the person's page has «Note interne» as its first fold, open, the
  * note in it; «Șterge» asks first and the note and the marker go. No hydration warning, no horizontal scroll. The volunteer is
  * written straight into the database, on the sample featured event, and removed after (its notes go with it).
@@ -119,7 +119,7 @@ test.describe("«Note interne» for volunteers", () => {
       }
       await fitsTheScreen(page);
 
-      // «Modifică nota» (§NNN), under the words in the column: the note's author changes them in the row's dialog, opened on them;
+      // «Modifică nota» (§964), under the words in the column: the note's author changes them in the row's dialog, opened on them;
       // back at the same list address, the column says the new words alone — no day, no hour.
       const edit = page.locator('#main [data-testid="note-edit-open"]:visible');
       await expect(edit).toHaveCount(1);
@@ -154,7 +154,7 @@ test.describe("«Note interne» for volunteers", () => {
       await expect(first).toHaveAttribute("open", "");
       await expect(first.getByTestId("note-body")).toHaveText(changed);
       await expect(first.getByTestId("note-by")).toContainText("Dev Moderator");
-      // The card's own line: the note's «Modifică» fold (§NNN) is a `<details>` inside it, with a summary of its own.
+      // The card's own line: the note's «Modifică» fold (§964) is a `<details>` inside it, with a summary of its own.
       await expect(first.locator(":scope > summary")).toContainText("1 notă");
       await expect(first.getByTestId("note-edit-toggle")).toHaveText("Modifică");
       await fitsTheScreen(page);

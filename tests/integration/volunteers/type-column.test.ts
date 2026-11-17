@@ -13,7 +13,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-050-02 — «Tip» on the «Voluntari» list (the owner, 2026-11-17: «Practic voluntarii sunt de 2 tipuri: start-finish și pe
+ * §962, BR-REQ-050-02 — «Tip» on the «Voluntari» list (the owner, 2026-11-17: «Practic voluntarii sunt de 2 tipuri: start-finish și pe
  * traseu», then, with a picture of this list: «și pe ecuson vreau, și în tabelul ăsta»), from a real database and the page as the server
  * draws it, in Romanian and in English:
  *
@@ -213,7 +213,7 @@ const escaped = (text: string) => text.replace(/&/g, "&amp;").replace(/'/g, "&#x
 /** The wide table's row of one person: the `<tr>` holding the link to their own page. */
 const tableRowOf = (page: string, id: string) => [...page.matchAll(/<tr\b[\s\S]*?<\/tr>/g)].map((match) => match[0]).find((row) => row.includes(`/admin/volunteers/${id}"`)) ?? "";
 
-describe("§NNN «Tip» on the «Voluntari» list — the column", () => {
+describe("§962 «Tip» on the «Voluntari» list — the column", () => {
   it("stands right after «Roluri date» and before «Punct», under the catalogue's heading with its «?», sorting nothing, its empty cell no line on a phone", async () => {
     for (const [locale, catalogue] of [["ro", ro], ["en", en]] as const) {
       const { columns } = tableOf(await listTree({}, locale));
@@ -295,7 +295,7 @@ describe("§NNN «Tip» on the «Voluntari» list — the column", () => {
   });
 });
 
-describe("§NNN a person's type, as the list reads it", () => {
+describe("§962 a person's type, as the list reads it", () => {
   it("is each category once, in the club's order, and nothing for a role under none or a role the page could not read", async () => {
     const words = await listRoleNames(db, [roles.guideRoute, roles.guideStart, roles.water, roles.desk]);
     expect(words.get(roles.desk)).toMatchObject({ categoryRo: null, categoryEn: null, categoryOrder: null });

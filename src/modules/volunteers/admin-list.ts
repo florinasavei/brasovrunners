@@ -372,7 +372,7 @@ export async function listRolesWithCounts<T extends Record<string, unknown>>(
 /**
  * The words of some roles, whatever their events: the list's «Roluri date», «Tip» and «S-a oferit pentru» cells, one read per page — each
  * role with its category's words (§904), so «Direcționare» under «Start / Sosire» and under «Traseu» read as two roles, as on the card, and
- * with its category's place in the club's order (`categoryOrder`, §NNN), so «Tip» lists a person's categories once each, in that order.
+ * with its category's place in the club's order (`categoryOrder`, §962), so «Tip» lists a person's categories once each, in that order.
  */
 export async function listRoleNames<T extends Record<string, unknown>>(db: Database<T>, roleIds: readonly string[]): Promise<Map<string, RoleNameWords & RoleTypeWords>> {
   if (roleIds.length === 0) return new Map();

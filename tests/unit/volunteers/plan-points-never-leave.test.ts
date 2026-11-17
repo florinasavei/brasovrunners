@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { importsModule } from "../../helpers/module-imports";
 
 /**
- * «Punctele planului» (§NNN, BR-REQ-011-01, BR-REQ-050-02) — a point the organizers added by hand to the volunteers' plan,
+ * «Punctele planului» (§961, BR-REQ-011-01, BR-REQ-050-02) — a point the organizers added by hand to the volunteers' plan,
  * and where any point is, are the organizers' own: they reach the plan's page, the «Voluntari» list's «Punct» column and the
  * one email that tells a volunteer their own point. Never the event's page, the route's chart, a race number, the event's
  * file or a copy of the event — though they live in the very table those read (`event_checkpoints`).
@@ -103,7 +103,7 @@ const relative = (file: string) => path.relative(ROOT, file).split(path.sep).joi
 const importsTheReader = (file: string, source: string) => importsModule(file, source, READER_MODULE, SRC);
 const readsTheTable = (source: string) => /\beventCheckpoints\b/.test(source) || /\b(?:FROM|JOIN|UPDATE|INTO)\s+"?event_checkpoints\b/i.test(source);
 
-describe("§NNN the plan's own points and every coordinate stay with the organizers", () => {
+describe("§961 the plan's own points and every coordinate stay with the organizers", () => {
   it("lets only the plan's files import the plan's reader", () => {
     const importing = SOURCES.filter(({ file, text }) => importsTheReader(file, text)).map(({ file }) => relative(file));
     expect(importing.sort()).toEqual([...IMPORTERS].sort());

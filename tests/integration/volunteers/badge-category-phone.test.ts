@@ -10,7 +10,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 
 /**
  * §774 — the badges and the categories (the owner, 2026-10-14: «trebuie să fie o persoană de contact pentru voluntari»): «Câte ecusoane» lists
- * the roles under their categories; a badge's large line shows the role only, and since §NNN (amending §774) the category's name rides with it
+ * the roles under their categories; a badge's large line shows the role only, and since §962 (amending §774) the category's name rides with it
  * to the small line, the volunteer's type; the coordinator's telephone, ticked with no number typed in the design, is the telephone of the
  * contact person of the role's category — and the design's own number, when typed, wins on every role.
  */
@@ -66,7 +66,7 @@ describe("§774 «Câte ecusoane»: the roles under their categories", () => {
       ["Traseu", "Route", "+40712345678"],
       [null, null, null],
     ]);
-    // The page names a role with its category; the band's large line prints the role only (the category has its small line, §NNN).
+    // The page names a role with its category; the band's large line prints the role only (the category has its small line, §962).
     expect(roles.map((role) => badgeRoleLabel(role, "ro"))).toEqual(["Direcționare (Start / Sosire)", "Direcționare (Traseu)", "Foto/Video"]);
     expect(roles.map((role) => badgeRoleName(role, "ro"))).toEqual(["Direcționare", "Direcționare", "Foto/Video"]);
     expect(roles.map((role) => badgeRoleLabel(role, "en"))).toEqual(["Guidance (Start / Finish)", "Guidance (Route)", "Photo/Video"]);
@@ -81,7 +81,7 @@ describe("§774 «Câte ecusoane»: the roles under their categories", () => {
     expect(await listBadgeRoles(db, "00000000-0000-4000-8000-000000000000")).toEqual([]);
   });
 
-  it("hands the sheet each role's name, its category's name — the type, §NNN — and its category's telephone, in the badge's language", async () => {
+  it("hands the sheet each role's name, its category's name — the type, §962 — and its category's telephone, in the badge's language", async () => {
     await withCategories();
     const roles = await listBadgeRoles(db, eventId);
     const counts = readPrintCounts(new URLSearchParams(), roles);

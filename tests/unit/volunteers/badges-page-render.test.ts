@@ -212,7 +212,7 @@ describe("§764 «Tipărire»", () => {
     expect(page).toContain("Doar „STAFF”, pentru cine vine fără rol.");
   });
 
-  it("stamps a role's picture with its category's names too, so a category renamed is a new picture (§NNN)", async () => {
+  it("stamps a role's picture with its category's names too, so a category renamed is a new picture (§962)", async () => {
     const design = { ...DEFAULT_BADGE_DESIGN, mode: "perRole" as const };
     const onRoute: BadgeRole = { ...ROLES[0], categoryId: "55555555-5555-4555-8555-555555555555", categoryRo: "Traseu", categoryEn: "Route" };
     const pictureOf = async (one: BadgeRole) => {

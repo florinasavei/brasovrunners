@@ -22,7 +22,7 @@ import { roleDescription } from "./role-description";
 */
 
 /**
- * The plan's summary line as words — «0 voluntari la start–finish · 2 voluntari pe traseu · …» (§NNN): the page draws each
+ * The plan's summary line as words — «0 voluntari la start–finish · 2 voluntari pe traseu · …» (§961): the page draws each
  * of its four counted phrases in a span of its own, so the line wraps between them and never inside one; a test reads the
  * words. Empty for a page that draws no summary (an event with no point).
  */

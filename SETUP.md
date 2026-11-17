@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.54-2026-11-17 -->
+<!-- PROJECT_BASELINE: BR-V4.55-2026-11-17 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V4.54-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.55-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2307,7 +2307,7 @@ only ones who see the names, addresses and telephone numbers.
    band and a white space with «Nume:» and one faint line: **no name is printed**, the volunteer writes it
    with a marker, so the file holds no personal data. On a badge per role, a role under a category also
    prints the category's name — the volunteer's type — after «VOLUNTAR» («VOLUNTAR · PE TRASEU»), or, when
-   that small line cannot hold it, on a small line under the role's name (§NNN); a role under none prints as before.
+   that small line cannot hold it, on a small line under the role's name (§962); a role under none prints as before.
    - **«Cum arată ecusonul»** — the designer, with its preview: the size, the header (the club's blue, a
      colour or a picture), «VOLUNTAR» and the short title in Română **and** English, the writing area, the
      coordinator's telephone (the club's number, with its label in both languages) and the cut marks.
@@ -2381,7 +2381,7 @@ only ones who see the names, addresses and telephone numbers.
      role from before the categories is there). **The same role name may stand in two categories** («Direcționare» under «Start / Sosire» and under «Traseu»),
      never twice in one. A role is then told apart as **«Direcționare (Traseu)»** wherever it is named alone — the «Dă-i rolul …» buttons and select, the
      chips, the email «Rolul tău de voluntar», the CSV's role columns and the agreement's sentences; the badge's large line shows the role only, and its
-     category stands on the small line, «VOLUNTAR · TRASEU» (§NNN). The «Voluntari» list's column «Tip» names the categories of the roles given. The card lists
+     category stands on the small line, «VOLUNTAR · TRASEU» (§962). The «Voluntari» list's column «Tip» names the categories of the roles given. The card lists
      the roles in a card per category (with its contact person under the title), in the category's order, «Alte roluri» last; «Poziția» orders a role inside its
      category; a role moved to another category goes to the end of it. **Filing a role that people already signed for under a category** (or moving it to another) changes the words it is named
      with, so the card adds a note on their rows — «the accepted text named other roles» — as renaming a role always did; **the signatures stay valid**.

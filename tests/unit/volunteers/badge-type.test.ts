@@ -23,7 +23,7 @@ import { type BadgeRole, badgePrintEntries, badgeRoleCategory, badgeRoleFace } f
 import { renderBadgeSheet } from "@/modules/volunteers/badges/badges-pdf";
 
 /**
- * §NNN — the volunteer's type on a role's badge (BR-REQ-050-02; the owner, 2026-11-17: «Practic voluntarii sunt de 2 tipuri: start-finish
+ * §962 — the volunteer's type on a role's badge (BR-REQ-050-02; the owner, 2026-11-17: «Practic voluntarii sunt de 2 tipuri: start-finish
  * și pe traseu», then «și pe ecuson vreau»): the name of the role's category, in the badge's language and in the small line's capitals,
  * after «VOLUNTAR» on the small line above the role's name («VOLUNTAR · PE TRASEU») when that line holds both at its least size, else on a
  * small line of its own under the role's name — never cut, never over another line, inside the role's band at every size the designer
@@ -78,7 +78,7 @@ const bandWidthOf = (layout: BadgeLayout) => layout.content.width - 2 * layout.p
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("§NNN the category on a role's badge, in the badge's language", () => {
+describe("§962 the category on a role's badge, in the badge's language", () => {
   it("prints «VOLUNTAR · PE TRASEU» on the small line above the role's name in Romanian, «VOLUNTEER · ON THE ROUTE» in English", () => {
     const ro = layoutOf(PER_ROLE, "ro", badgeRoleFace(PHOTO_ON_ROUTE, "ro"));
     expect(ro.label!.text).toBe("VOLUNTAR · PE TRASEU");
@@ -176,7 +176,7 @@ const layoutRuns = (layout: BadgeLayout): Array<[string, number]> =>
     .filter((line): line is BadgeTextLine => Boolean(line))
     .map((line) => [line.text, line.size]);
 
-describe("§NNN the sheet and the picture draw the same badge", () => {
+describe("§962 the sheet and the picture draw the same badge", () => {
   const cases: Array<[string, BadgeDesign, "ro" | "en", BadgeFaceRole]> = [
     ["the category beside «VOLUNTAR», in Romanian", PER_ROLE, "ro", badgeRoleFace(PHOTO_ON_ROUTE, "ro")],
     ["the category beside «VOLUNTEER», in English, every row ticked", { ...PER_ROLE, showPhone: true, phone: "0712 345 678", showFreeText: true, freeTextRo: "Bea apă", freeTextEn: "Drink water", showMarker: true, markerLabelRo: "Tură", markerLabelEn: "Shift" }, "en", badgeRoleFace(GUIDE_AT_START, "en")],
@@ -199,7 +199,7 @@ describe("§NNN the sheet and the picture draw the same badge", () => {
   }, 60_000);
 });
 
-describe("§NNN the longest category at every size", () => {
+describe("§962 the longest category at every size", () => {
   /** Every width the custom size's bounds allow at a few steps, the two presets' among them; every height the bounds allow. */
   const widths = [BADGE_CUSTOM_BOUNDS.width.min, 61, 75, 90, 100, 133, 160, BADGE_CUSTOM_BOUNDS.width.max];
   const heights = Array.from({ length: BADGE_CUSTOM_BOUNDS.height.max - BADGE_CUSTOM_BOUNDS.height.min + 1 }, (_, index) => BADGE_CUSTOM_BOUNDS.height.min + index);
@@ -306,7 +306,7 @@ describe("§NNN the longest category at every size", () => {
   });
 });
 
-describe("§NNN what does not print a category", () => {
+describe("§962 what does not print a category", () => {
   it("is a role under no category: the words carry none, the small line is «VOLUNTAR» alone, no line is added", () => {
     const words = badgeLayoutWords(PER_ROLE, wordsOf(PER_ROLE, "ro"), "ro", { name: "Masă", colour: null, phone: null, category: null });
     expect("category" in words).toBe(false);
@@ -326,7 +326,7 @@ describe("§NNN what does not print a category", () => {
   });
 });
 
-describe("§NNN a line printed whole (`badgeFitWhole`)", () => {
+describe("§962 a line printed whole (`badgeFitWhole`)", () => {
   it("keeps its largest size when it fits, steps down by half a point before that, and below the steps fills the width exactly — never cut", () => {
     expect(badgeFitWhole("PE TRASEU", MEASURE.bold, 500, 7)).toEqual({ text: "PE TRASEU", size: 7, cut: false });
     const ems = MEASURE.bold("PE TRASEU");

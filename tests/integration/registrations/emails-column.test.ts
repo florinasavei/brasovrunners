@@ -17,7 +17,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Emailuri» on the registrations list (the owner, 2026-11-17: «Vreau sa vad mai clar ce mailuri a primit
+ * §960 — «Emailuri» on the registrations list (the owner, 2026-11-17: «Vreau sa vad mai clar ce mailuri a primit
  * fiecare om»), from a real database; the page is a Server Component, so it is called and the table it hands
  * `AdminTable` is read — its columns, and the cells the column draws for the page's own rows:
  *
@@ -249,7 +249,7 @@ const linesOf = (markup: string) => [...markup.matchAll(/data-testid="email-summ
 /** The page's short form of a moment, in the middle of a line. */
 const when = (iso: string, locale: "ro" | "en" = "ro") => formatDay(new Date(iso), { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "continues" });
 
-describe("§NNN «Emailuri» on the registrations list, for the Administrator", () => {
+describe("§960 «Emailuri» on the registrations list, for the Administrator", () => {
   it("stands right after «Unde a ajuns», under the catalogue's heading with its «?», in the table and on a phone's card — it neither sorts nor leaves at a width", async () => {
     const { columns } = await listOf();
     const keys = columns.map((column) => column.key);
@@ -413,7 +413,7 @@ describe("§NNN «Emailuri» on the registrations list, for the Administrator", 
   });
 });
 
-describe("BR-REQ-060-01 «Emailuri» on the registrations list is not the Organizer's (§NNN)", () => {
+describe("BR-REQ-060-01 «Emailuri» on the registrations list is not the Organizer's (§960)", () => {
   it("draws the list exactly as before for an Organizer — no column, «Până când» right after the step — and never calls the reader", async () => {
     const asAdministrator = (await listOf()).columns.map((column) => column.key);
     state.actor = staff.MODERATOR;

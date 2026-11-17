@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0211_plan_points` (§NNN; the owner, 2026-11-17: «vreau să pot defini punctele de mână, să pun nume punct și la ce
+ * Migration `0211_plan_points` (§961; the owner, 2026-11-17: «vreau să pot defini punctele de mână, să pun nume punct și la ce
  * km e și coordonate punct» — «Practic voluntarii sunt de 2 tipuri: start-finish și pe traseu»), proven on real PostgreSQL
  * (PGlite), on a database migrated by the release before: four columns on a route's points — `plan_only` and `start_finish`,
  * false for every row from before and for a row written without them, and `latitude` and `longitude`, absent until somebody

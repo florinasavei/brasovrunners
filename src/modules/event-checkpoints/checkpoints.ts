@@ -42,7 +42,7 @@ import { loadGpxWaypoints } from "./gpx-file";
  * moved in between — every registration for the event waits on that same row lock.
  *
  * **This file sees only the editor's points — never a point of the volunteers' plan alone, never a
- * coordinate (§NNN).** The table also holds the points the organizers add by hand on «Planul
+ * coordinate (§961).** The table also holds the points the organizers add by hand on «Planul
  * voluntarilor» (`plan_only`: on the route or at the start–finish) and where any point is (`latitude`,
  * `longitude`). None of that is public, and it is kept out here by construction rather than by each
  * reader remembering: `listCheckpoints` — the one read of «the event's list» in this file, which the
@@ -56,13 +56,13 @@ import { loadGpxWaypoints } from "./gpx-file";
  * through its own reader, `volunteers/plan-points.ts#listPlanPoints`.
  */
 
-/** The editor's points alone: a point of the volunteers' plan (§NNN) is no row of «Puncte pe traseu». */
+/** The editor's points alone: a point of the volunteers' plan (§961) is no row of «Puncte pe traseu». */
 const NOT_PLAN_ONLY = eq(eventCheckpoints.planOnly, false);
 
 /**
  * One row this file may update or delete: by its id, of this event, and the editor's own. Every id written with is taken
  * from `listCheckpoints`, so the last condition changes no row a save or an import reaches — it is there so that no id,
- * however it got here, lets this file write to a point of the volunteers' plan (§NNN).
+ * however it got here, lets this file write to a point of the volunteers' plan (§961).
  */
 const editorsRow = (eventId: string, id: string) => and(eq(eventCheckpoints.id, id), eq(eventCheckpoints.eventId, eventId), NOT_PLAN_ONLY);
 
@@ -83,7 +83,7 @@ const toCheckpoint = (row: EventCheckpointRow, clockOf: (minutes: number | null)
  * An event's checkpoints by distance, ties in the order the club saw — each with the clock its time
  * limit closes at, derived from the start the event has now (§770): one more column of the one query,
  * so the bib, the export and the card say the same clock the page does, and a moved start moves it.
- * The editor's points only (`NOT_PLAN_ONLY`, §NNN): a point added by hand on «Planul voluntarilor» is
+ * The editor's points only (`NOT_PLAN_ONLY`, §961): a point added by hand on «Planul voluntarilor» is
  * never among them, and neither is anything a `Checkpoint` has no field for.
  */
 export async function listCheckpoints<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<Checkpoint[]> {

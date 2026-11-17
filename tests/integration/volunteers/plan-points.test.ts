@@ -27,7 +27,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { type PlanRace, planAddressOf, seedPlanRace } from "../../helpers/volunteer-plan";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-060-01 — «Punctele planului» (the owner, 2026-11-17: «După ce încarc acea poză cu harta de
+ * §961, BR-REQ-050-02, BR-REQ-060-01 — «Punctele planului» (the owner, 2026-11-17: «După ce încarc acea poză cu harta de
  * voluntari vreau să pot defini punctele de mână, să pun nume punct și la ce km e și coordonate punct» — «Practic voluntarii
  * sunt de 2 tipuri: start-finish și pe traseu»), from a real database:
  *
@@ -114,7 +114,7 @@ async function refusal(press: Promise<unknown>): Promise<{ code: string; reason:
   throw new Error("expected a refusal");
 }
 
-describe("§NNN the plan's one list: every point, one order, one number", () => {
+describe("§961 the plan's one list: every point, one order, one number", () => {
   it("reads the editor's points as the route, numbered by distance — exactly what the plan numbered before", async () => {
     const points = await listPlanPoints(db, race.raceId);
     expect(points.map((point) => [point.number, point.nameRo, point.nameEn, point.km])).toEqual([
@@ -209,7 +209,7 @@ describe("§NNN the plan's one list: every point, one order, one number", () => 
   });
 });
 
-describe("§NNN «Adaugă punctul»", () => {
+describe("§961 «Adaugă punctul»", () => {
   it("adds a point on the route: the plan's own, the one name in both columns, nothing of the public table — and audits it", async () => {
     const before = await rowsOf();
     const result = await add({ place: "route", name: "Intersecția de la izvor", km: "3,4", coordinates: "" });
@@ -361,7 +361,7 @@ describe("§NNN «Adaugă punctul»", () => {
   });
 });
 
-describe("§NNN «Salvează punctul»", () => {
+describe("§961 «Salvează punctul»", () => {
   it("changes a point of the plan's own whole — its name, its kilometre, its coordinates — and audits what it said before and after", async () => {
     const id = await added({ name: "Izvor", km: "3,4" });
     expect(await edit(id, { name: "  Izvorul   rece ", km: "4.25", coordinates: PIATA })).toEqual({ changed: true, outcome: "edited", id });
@@ -479,7 +479,7 @@ describe("§NNN «Salvează punctul»", () => {
   });
 });
 
-describe("§NNN «Șterge punctul»", () => {
+describe("§961 «Șterge punctul»", () => {
   it("deletes a point of the plan's own: its people stand at no point again, and the result and the trail say how many — never who", async () => {
     const kits = await added({ place: "startFinish", name: "Kituri", coordinates: PIATA });
     await place(race.people.radu, kits);
@@ -528,7 +528,7 @@ describe("§NNN «Șterge punctul»", () => {
   });
 });
 
-describe("§NNN who may change the plan's points (BR-REQ-060-01)", () => {
+describe("§961 who may change the plan's points (BR-REQ-060-01)", () => {
   it("refuses the Tehnic role, the Redactor, a desk Volunteer and a member before anything is read — nothing written, nothing audited", async () => {
     const id = await added({ name: "Izvor" });
     const before = await rowsOf();
@@ -557,7 +557,7 @@ describe("§NNN who may change the plan's points (BR-REQ-060-01)", () => {
   });
 });
 
-describe("§NNN nothing else moves: nobody is emailed and no public cache tag is expired", () => {
+describe("§961 nothing else moves: nobody is emailed and no public cache tag is expired", () => {
   it("queues no email and expires no tag — adding, changing, moving between the kinds and deleting a point people with an address stand at", async () => {
     const kits = await added({ place: "startFinish", name: "Kituri" });
     // Ana and Radu have an address and a role given: everything a message to them would need.
@@ -586,7 +586,7 @@ describe("§NNN nothing else moves: nobody is emailed and no public cache tag is
   });
 });
 
-describe("§NNN a person at a point of the plan's own", () => {
+describe("§961 a person at a point of the plan's own", () => {
   it("is placed there, moved and taken off exactly as at an editor's point — audited the same way, telling nobody", async () => {
     const izvor = await added({ place: "route", name: "Izvor", km: "3,4" });
     const kits = await added({ place: "startFinish", name: "Kituri" });
@@ -621,7 +621,7 @@ describe("§NNN a person at a point of the plan's own", () => {
   });
 });
 
-describe("§NNN the words a refusal is said with", () => {
+describe("§961 the words a refusal is said with", () => {
   it("has a sentence in both catalogues for every reason, and fills what the sentence counts", () => {
     for (const reason of [...PLAN_POINT_REASONS, "COORDINATES_INVALID", new PlanPointGone().reason]) {
       for (const [locale, catalogue] of [

@@ -20,7 +20,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { PLAN_CONTACT_WORDS, PLAN_JUNCTION_NOTE, type PlanRace, planAddressOf, seedPlanRace } from "../../helpers/volunteer-plan";
 
 /**
- * §NNN (amending §956), BR-REQ-080-02, BR-REQ-050-02 — «Punctul tău de voluntar» once the plan has points of its own (the
+ * §961 (amending §956), BR-REQ-080-02, BR-REQ-050-02 — «Punctul tău de voluntar» once the plan has points of its own (the
  * owner, 2026-11-17: «vreau să pot defini punctele de mână, să pun nume punct și la ce km e și coordonate punct» — «Practic
  * voluntarii sunt de 2 tipuri: start-finish și pe traseu»), from a real database:
  *
@@ -91,7 +91,7 @@ const bandsOf = (html: string) => [...html.matchAll(/<div data-email-part="highl
 const whereOf = (html: string) => [...html.matchAll(/<p data-email-part="volunteer-point-where"[^>]*>([^]*?)<\/p>/g)].map((match) => match[1]);
 const markSent = (id: string) => db.update(emailOutbox).set({ status: "SENT", sentAt: at(1), attemptCount: 1 }).where(eq(emailOutbox.id, id));
 
-describe("§NNN a person at the start–finish, and at a route point of the plan's own, is counted and told like anybody at a point", () => {
+describe("§961 a person at the start–finish, and at a route point of the plan's own, is counted and told like anybody at a point", () => {
   it("counts them among the people at a point, writes to them once, and to everybody again only when asked", async () => {
     // Before anybody stands at the plan's own points: the three at the editor's points, Zoe with no address, Radu at none.
     expect(await preview()).toEqual({ toWrite: 3, told: 0, noAddress: 1, unplaced: 1 });
@@ -123,7 +123,7 @@ describe("§NNN a person at the start–finish, and at a route point of the plan
   });
 });
 
-describe("§NNN the message of a person at the start–finish", () => {
+describe("§961 the message of a person at the start–finish", () => {
   it("says the place by its name, with no number and no kilometre — on the band, under it, in the text and in the HTML, in both languages", async () => {
     await place(race.people.radu, own.kits);
     await press();
@@ -187,7 +187,7 @@ describe("§NNN the message of a person at the start–finish", () => {
   });
 });
 
-describe("§NNN a point that has coordinates says where it is", () => {
+describe("§961 a point that has coordinates says where it is", () => {
   it("adds the numbers and «Deschide pe hartă» for a start–finish point — in the HTML and in the text, each half in its language", async () => {
     await point({ kind: "edit", id: own.kits, place: "startFinish", name: "Kituri și numere", km: "", coordinates: PIATA_TYPED });
     await place(race.people.radu, own.kits);
@@ -269,7 +269,7 @@ describe("§NNN a point that has coordinates says where it is", () => {
   });
 });
 
-describe("§NNN the point as it stands when the message leaves", () => {
+describe("§961 the point as it stands when the message leaves", () => {
   it("hands the template the plan's own number — or none —, the kind and the coordinates, read from the plan's one list", async () => {
     await point({ kind: "edit", id: own.kits, place: "startFinish", name: "Kituri și numere", km: "", coordinates: PIATA_TYPED });
     await place(race.people.radu, own.kits);
@@ -319,7 +319,7 @@ describe("§NNN the point as it stands when the message leaves", () => {
   });
 });
 
-describe("§NNN who already knows their point is not changed by its coordinates", () => {
+describe("§961 who already knows their point is not changed by its coordinates", () => {
   it("keeps a person told before the coordinates were typed as told; «Trimite din nou tuturor» is how the place is sent", async () => {
     await place(race.people.radu, own.kits);
     await press();

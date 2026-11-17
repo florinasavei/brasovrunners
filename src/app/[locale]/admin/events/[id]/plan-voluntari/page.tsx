@@ -70,7 +70,7 @@ const NOT_ON_PAPER = { "@media print": { display: "none" } } as const;
 const PHONE_LINK_SX = { display: "inline-flex", alignItems: "center", ...TAP_TARGET, "@media print": { minHeight: 0, color: "inherit", textDecoration: "none" } } as const;
 
 /**
- * «Deschide pe hartă» beside a point's coordinates (§NNN): a link a thumb can press, 44 pixels tall (BR-REQ-041-01
+ * «Deschide pe hartă» beside a point's coordinates (§961): a link a thumb can press, 44 pixels tall (BR-REQ-041-01
  * criterion 6). Never on the paper, where the numbers stand as text and a link's words say nothing.
  */
 const MAP_LINK_SX = { display: "inline-flex", alignItems: "center", ...TAP_TARGET, ...NOT_ON_PAPER } as const;
@@ -98,7 +98,7 @@ const EditIcon = ACTION_ICONS.edit;
  * of an address that does not exist (BR-REQ-060-01), and the service refuses them again. Nothing on it is public, and
  * placing, moving or taking off a person emails nobody: it is the organizers' own plan.
  *
- * **The points are of two kinds, in two groups (§NNN; the owner, 2026-11-17: «vreau să pot defini punctele de mână, să pun
+ * **The points are of two kinds, in two groups (§961; the owner, 2026-11-17: «vreau să pot defini punctele de mână, să pun
  * nume punct și la ce km e și coordonate punct» — «Practic voluntarii sunt de 2 tipuri: start-finish și pe traseu»).**
  * «Start–finish» — the desk, the kits, the start and the finish line: no number and no kilometre — and «Pe traseu», the
  * numbered points in the route's order: the event's own «Puncte pe traseu» (§757), kept in the editor, and the ones the
@@ -156,7 +156,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
       const words = plan.roles.get(roleId);
       return words ? [roleLabel(words, locale)] : [];
     });
-  // The two groups (§NNN), as the plan's one list has them: the start–finish points first, then the route in its order.
+  // The two groups (§961), as the plan's one list has them: the start–finish points first, then the route in its order.
   const startFinishPoints = plan.points.filter(({ point }) => point.startFinish);
   const routePoints = plan.points.filter(({ point }) => !point.startFinish);
   const peopleAt = (points: readonly VolunteerPlanPoint[]) => points.reduce((sum, { people }) => sum + people.length, 0);
@@ -178,7 +178,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
       <input type="hidden" name="eventId" value={id} />
     </>
   );
-  // «Adaugă un punct» (§NNN): the words its refusal's summary says, and the label of each box it can name.
+  // «Adaugă un punct» (§961): the words its refusal's summary says, and the label of each box it can name.
   const pointBoxes = {
     [PLAN_POINT_BOXES.place]: t("volunteers.plan.points.place"),
     [PLAN_POINT_BOXES.name]: t("volunteers.plan.points.name"),
@@ -367,7 +367,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
           </Stack>
         )}
 
-        {/* «Modifică punctul» (§NNN): the row's own fold, closed — a native one, so it opens without scripts. A point added here
+        {/* «Modifică punctul» (§961): the row's own fold, closed — a native one, so it opens without scripts. A point added here
             is changed whole, its kind included; of an editor's point only where it is: its name and kilometre are public, and
             are the editor's. A refused save lands at the page's alert with its code, as every press of this page (§953). */}
         <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, boxSizing: "border-box", width: "100%", maxWidth: 560, mt: 2, ...NOT_ON_PAPER }} data-testid="plan-point-edit">
@@ -487,7 +487,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
         <Typography variant="body2" color="text.secondary">
           {t("volunteers.plan.help")}
         </Typography>
-        {/* Who sees which points (§NNN): the editor's are public too. That the ones added here are the plan's alone is said once,
+        {/* Who sees which points (§961): the editor's are public too. That the ones added here are the plan's alone is said once,
             where they are added («Punctele planului», `points.helpPrivate`). */}
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="plan-help-points">
           {t("volunteers.plan.helpPoints")}
@@ -608,7 +608,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
           ))}
       </Box>
 
-      {/* «Punctele planului» (§NNN): right under the picture the points are drawn on — where the organizers add the plan's own
+      {/* «Punctele planului» (§961): right under the picture the points are drawn on — where the organizers add the plan's own
           points by hand, one after another. Never on the paper. A plain form and a Server Action: it works with scripts off,
           where the kilometre's box is simply there and not read for a point at the start–finish. A refusal comes back as the
           form's own state (§315): the box is named and what was typed stays. */}
@@ -704,7 +704,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
         )}
       </Box>
 
-      {/* The plan itself (§NNN): two groups, each under its own heading on the page and on the paper — the points at the
+      {/* The plan itself (§961): two groups, each under its own heading on the page and on the paper — the points at the
           start–finish, with no number and no kilometre, then the points on the route, numbered in the route's order. A press
           that deleted a point comes back here. */}
       <Stack id="plan-list" spacing={2} sx={{ scrollMarginTop: 16 }}>

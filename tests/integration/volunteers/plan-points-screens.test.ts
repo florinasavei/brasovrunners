@@ -22,7 +22,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { type PlanRace, planSummaryOf, seedPlanRace } from "../../helpers/volunteer-plan";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01 — «Punctele planului» on the page of «Planul voluntarilor», its three
+ * §961, BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01 — «Punctele planului» on the page of «Planul voluntarilor», its three
  * Server Actions and the «Voluntari» list's «Punct» column, from a real database:
  *
  * - **the page**, in Romanian and in English: the section «Punctele planului» under the picture with «Adaugă un punct»; the
@@ -255,7 +255,7 @@ const toasted = () => state.flashed.map((value) => decodeFlash(value));
 const planPath = () => `/ro/admin/events/${race.raceId}/plan-voluntari`;
 const alertOf = (code: string) => `${planPath()}?planError=${code}#admin-alert`;
 
-describe("§NNN the plan's page: two groups, the summary, and the plan's own points", () => {
+describe("§961 the plan's page: two groups, the summary, and the plan's own points", () => {
   it("draws an event that has only the editor's points as the route, with the start–finish group saying how to add a point to it", async () => {
     for (const locale of ["ro", "en"] as const) {
       state.locale = locale;
@@ -595,7 +595,7 @@ describe("§NNN the plan's page: two groups, the summary, and the plan's own poi
   });
 });
 
-describe("§NNN «Adaugă punctul»: the action", () => {
+describe("§961 «Adaugă punctul»: the action", () => {
   it("adds a point of each kind, asked at the door, and comes back to the section with its toast — the form empty for the next", async () => {
     expect(await pressed(() => addPlanPointAction(null, form({ place: "startFinish", name: "Kituri și numere", km: "", coordinates: PIATA })))).toBe(`${planPath()}#plan-points`);
     expect(toasted()).toEqual([{ kind: "success", key: "planPointAdded" }]);
@@ -695,7 +695,7 @@ describe("§NNN «Adaugă punctul»: the action", () => {
   });
 });
 
-describe("§NNN «Salvează punctul» and «Șterge punctul»: the actions", () => {
+describe("§961 «Salvează punctul» and «Șterge punctul»: the actions", () => {
   it("saves a point of the plan's own and comes back to that point; a press that changes nothing says so", async () => {
     const spring = await ownPoint("route", "Izvor", "3,4");
     await place(race.people.radu, spring);
@@ -804,7 +804,7 @@ describe("§NNN «Salvează punctul» and «Șterge punctul»: the actions", () 
   });
 });
 
-describe("§NNN the «Voluntari» list's «Punct», and one number everywhere", () => {
+describe("§961 the «Voluntari» list's «Punct», and one number everywhere", () => {
   it("says a start–finish point by its name and the quiet word «start–finish» — never a number or a kilometre — and a route point as before", async () => {
     const kits = await ownPoint("startFinish", "Kituri și numere", "", PIATA);
     await place(race.people.radu, kits);

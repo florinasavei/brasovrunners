@@ -11,7 +11,7 @@ import { DepartedChip, type T } from "@/modules/notifications/ui/EmailJournal";
 import EmailSummaryCell from "@/modules/notifications/ui/EmailSummary";
 
 /**
- * §NNN — the fold and the column say one thing of every row. For every state an outbox row can be in, the chip of the
+ * §960 — the fold and the column say one thing of every row. For every state an outbox row can be in, the chip of the
  * person's «Emailuri» fold (§915), the fold's closed line and the «Emailuri» column's word are drawn and read: each
  * says the outcome the one judgement gives (`domain/email-outcome.ts`), in the fold's own words — the column's two
  * bare ones, «a plecat» and «livrat», being the fold's words without the hour the column says beside them.
@@ -58,7 +58,7 @@ const WORDS: Record<"ro" | "en", Record<EmailOutcome, { line: string; column: st
 
 const said = (element: ReactElement | null) => (element ? renderToStaticMarkup(element).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "").replace(/<[^>]+>/g, "") : "");
 
-describe("§NNN the fold and the column say one thing of every row", () => {
+describe("§960 the fold and the column say one thing of every row", () => {
   it("the fold's chip is the outcome's chip, for every row that is no longer waiting", () => {
     const t = translatorOf("ro");
     for (const row of ROWS) {

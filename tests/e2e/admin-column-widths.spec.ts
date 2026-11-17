@@ -16,7 +16,7 @@ import { FEATURED, hydrated, signIn } from "./support/featured-event";
  *
  * §943 — and the row verbs' column stays in view: on a frame narrower than the table it is pinned to the
  * frame's right edge, opaque, fading into the columns under it; a press the keyboard reaches beside it is
- * not left under it; and on the owner's 1858-px screen the whole table fits — since §NNN, once the Administrator's
+ * not left under it; and on the owner's 1858-px screen the whole table fits — since §960, once the Administrator's
  * «Emailuri» is unticked under «Coloane»: drawn, with somebody on the page emailed, the table scrolls under the pinned verbs.
  *
  * Everything here is the browser's own layout — `col` alignment under `table-layout: fixed` with
@@ -25,7 +25,7 @@ import { FEATURED, hydrated, signIn } from "./support/featured-event";
  *
  * One registration is written straight into the database so the list is not empty (the setup, not
  * the subject, as `promo-filter.spec.ts` argues), and removed afterwards — with the emails a confirmed
- * participant has had, so the Administrator's «Emailuri» column (§NNN) draws the cell of somebody
+ * participant has had, so the Administrator's «Emailuri» column (§960) draws the cell of somebody
  * emailed, three lines and «și încă 2 emailuri» on its floor, as on the owner's own lists.
  */
 
@@ -348,10 +348,10 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
       expect(await place(partner)).toEqual({ inFrame: true, clearOfVerbs: true });
       expect((await place(verbs)).inFrame).toBe(true);
 
-      // The owner's screen, 1858 px (2026-11-12: «Aici mi se face crop!»). «Emailuri» (§NNN) is the Administrator's one column
+      // The owner's screen, 1858 px (2026-11-12: «Aici mi se face crop!»). «Emailuri» (§960) is the Administrator's one column
       // that asks for more than this screen has left once somebody on the page was emailed: the row's three newest emails, a
       // line each, then the link to the rest, on a floor of sixteen rem — never squeezed to its heading, a word to a line. Drawn,
-      // it leaves the table wider than this frame — by 63 px on this page of one confirmed registration when §NNN measured it,
+      // it leaves the table wider than this frame — by 63 px on this page of one confirmed registration when §960 measured it,
       // by 194 on a page of a race's usual states, where no floor fits: the table scrolls under the pinned verbs, which stay
       // whole in the frame, and the page itself never scrolls.
       await page.setViewportSize({ width: 1858, height: 900 });
@@ -398,7 +398,7 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
       await hydrated(page);
       const main = page.locator("#main");
       await expect(main.getByRole("link", { name: `Deschide înscrierea lui Coloane ${seeded.tag}`, exact: true })).toBeVisible();
-      // «Emailuri» (§NNN) is a line of the card, as every column is: the three newest and the link to the rest, read at 320 px
+      // «Emailuri» (§960) is a line of the card, as every column is: the three newest and the link to the rest, read at 320 px
       // without the page scrolling sideways.
       const emails = main.getByTestId("email-summary").filter({ visible: true });
       await expect(emails.getByTestId("email-summary-line")).toHaveCount(3);

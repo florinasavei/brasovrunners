@@ -391,7 +391,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     // «Note interne» (§777, §943): each row's live notes, newest first — one grouped read over the page's ids, only for a
     // role that may keep notes. The marker says how many and, in its tooltip, the words; never on the desk.
     canKeepRegistrationNotes(actor.role) ? listRegistrationNotesForExport(db, actor, rows.map((row) => row.id)) : Promise.resolve(new Map<string, ExportNote[]>()),
-    // «Emailuri» (§NNN): each row's three newest emails and how many it has in all — one read over the page's ids (the index
+    // «Emailuri» (§960): each row's three newest emails and how many it has in all — one read over the page's ids (the index
     // of the registration's own «Emailuri»), and only for the Administrator and the Superadministrator, whose that fold is
     // (§915). For the Organizer the reader is not called and the column is not drawn; the reader asks for the role again.
     canManageRegistrations(actor) ? readEmailSummaries(db, actor, { registrationIds: rows.map((row) => row.id) }) : Promise.resolve(null),
@@ -778,7 +778,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={raceNumberTextOf(row)} variant="compact" />,
     },
     /*
-      «Emailuri» (§NNN; the owner, 2026-11-17: «Vreau sa vad mai clar ce mailuri a primit fiecare om»), right after the step the
+      «Emailuri» (§960; the owner, 2026-11-17: «Vreau sa vad mai clar ce mailuri a primit fiecare om»), right after the step the
       person reached — each step of the way is an email they got: the three newest, each «which email · when it left · what
       became of it», and «și încă N emailuri», the link to the registration's own «Emailuri» (`#emailuri`, §671, §915), where
       every email stands with its tries. For the Administrator and the Superadministrator alone, as that fold is: for the

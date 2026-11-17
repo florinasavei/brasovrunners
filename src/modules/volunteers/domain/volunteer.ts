@@ -822,7 +822,7 @@ export type RoleWords = {
 /**
  * A role named alone (§774): «Direcționare (Traseu)» in the language asked — the category in brackets when the role has one, the name
  * alone when it sits under none. What the assignment chips, the email's «Dă-i rolul …», the CSV's role columns and the agreement's
- * sentences say. The badge never says it so: its large line is the role's name only, and since §NNN (amending §774) the category is
+ * sentences say. The badge never says it so: its large line is the role's name only, and since §962 (amending §774) the category is
  * printed on its own, on the small line — «VOLUNTAR · TRASEU» — or under the name (`badges/badges.ts#badgeRoleCategory`).
  */
 export function roleLabel(role: Pick<RoleWords, "nameRo" | "nameEn" | "categoryRo" | "categoryEn">, locale: "ro" | "en"): string {
@@ -832,7 +832,7 @@ export function roleLabel(role: Pick<RoleWords, "nameRo" | "nameEn" | "categoryR
 }
 
 /**
- * A role's category as «Tip» reads it (§NNN): its words in both languages and its place in the club's order of the event's categories
+ * A role's category as «Tip» reads it (§962): its words in both languages and its place in the club's order of the event's categories
  * (`compareCategories`: `sort`, then age, then id) — `categoryOrder` null, and the words null, for a role under none.
  */
 export type RoleTypeWords = {
@@ -842,7 +842,7 @@ export type RoleTypeWords = {
 };
 
 /**
- * «Tip» on the «Voluntari» list (§NNN; the owner, 2026-11-17: «Practic voluntarii sunt de 2 tipuri: start-finish și pe traseu»): where a
+ * «Tip» on the «Voluntari» list (§962; the owner, 2026-11-17: «Practic voluntarii sunt de 2 tipuri: start-finish și pe traseu»): where a
  * person works — the categories of the roles the organizers GAVE them, in the club's own words and the language asked, each once, in the
  * order the club set the categories. A role under no category adds nothing: its default heading «Alte activități» is no type. Nobody given a
  * role, or only such roles: none. A role whose words the page could not read (`undefined`, deleted meanwhile) adds nothing either.

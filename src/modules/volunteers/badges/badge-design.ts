@@ -316,7 +316,7 @@ export function badgePhoneLine(design: Pick<BadgeDesign, "showPhone" | "phone">,
 }
 
 /**
- * A role's name as the band prints it — and its category's (§NNN), both the club's words of at most 80 characters: one line the font can
+ * A role's name as the band prints it — and its category's (§962), both the club's words of at most 80 characters: one line the font can
  * draw, in capitals in the badge's language (ș stays ș).
  */
 export function badgeRoleText(name: string, locale: BadgeLocale): string {
@@ -330,7 +330,7 @@ export function badgeLabelText(label: string, locale: BadgeLocale): string {
 
 /**
  * The role one badge draws (§764), in the badge's language: its name, its band's colour, the telephone of its category's contact person
- * (§774, `badgePhoneLine`) and the name of its category — the volunteer's type (§NNN), null for a role under none. Null for a role is a
+ * (§774, `badgePhoneLine`) and the name of its category — the volunteer's type (§962), null for a role under none. Null for a role is a
  * badge «fără rol».
  */
 export type BadgeFaceRole = { name: string; colour: string | null; phone?: string | null; category?: string | null };
@@ -338,7 +338,7 @@ export type BadgeFaceRole = { name: string; colour: string | null; phone?: strin
 /**
  * The words one badge lays out (`badge-geometry.ts#badgeLayout`), from the design's words in the badge's language and the role it draws:
  * the one place the sheet (`badges-pdf.ts`) and the picture (`badge-image.tsx`, the preview route, the print panel's pictures) take them
- * from, so the two cannot disagree. The category's name rides only on a role's badge, in the role's capitals (§NNN); a role under none, a
+ * from, so the two cannot disagree. The category's name rides only on a role's badge, in the role's capitals (§962); a role under none, a
  * badge «fără rol» and the one badge for everyone (§783, whose callers hand no role) carry none, and their words are what they were.
  */
 export function badgeLayoutWords(design: Pick<BadgeDesign, "showPhone" | "phone">, words: BadgeWords, locale: BadgeLocale, role: BadgeFaceRole | null): BadgeLayoutWords {
@@ -360,7 +360,7 @@ export function badgeLayoutWords(design: Pick<BadgeDesign, "showPhone" | "phone"
 /**
  * The version of the badge's drawing: raised whenever the renderers draw the same design differently,
  * so every stamped address changes with it — the bib's `BIB_DRAWING_VERSION`, for the badge. 2 since a
- * role's badge prints its category (§NNN).
+ * role's badge prints its category (§962).
  */
 export const BADGE_DRAWING_VERSION = 2;
 

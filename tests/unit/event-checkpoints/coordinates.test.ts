@@ -13,7 +13,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN, BR-REQ-050-02 — where a point of the volunteers' plan is (the owner, 2026-11-17: «să pun nume punct și la ce km e și
+ * §961, BR-REQ-050-02 — where a point of the volunteers' plan is (the owner, 2026-11-17: «să pun nume punct și la ce km e și
  * coordonate punct»): what a person pastes from a maps application is read into a latitude and a longitude of six decimals,
  * or refused with the sentence that says how to write them; the pair is written back one way; and the address that opens
  * it on a map is Google Maps' own. Pure: no database, no network — a link is read for the numbers it carries and never
@@ -32,7 +32,7 @@ function read(text: string): Coordinates | null | { refused: string; fields: rea
 }
 const REFUSED = { refused: "COORDINATES_INVALID", fields: [COORDINATES_BOX] };
 
-describe("§NNN parseCoordinates: what a person pastes from a maps application", () => {
+describe("§961 parseCoordinates: what a person pastes from a maps application", () => {
   it.each<[string, string, Coordinates]>([
     ["the shape Google Maps copies", "45.64271, 25.58871", PIATA],
     ["no space after the comma", "45.64271,25.58871", PIATA],
@@ -231,7 +231,7 @@ describe("§NNN parseCoordinates: what a person pastes from a maps application",
   });
 });
 
-describe("§NNN formatCoordinates: one fixed shape", () => {
+describe("§961 formatCoordinates: one fixed shape", () => {
   it.each<[Coordinates, string]>([
     [PIATA, "45.64271, 25.58871"],
     // Up to six decimals, the zeros at the end left out: what was typed reads as it was typed.
@@ -261,7 +261,7 @@ describe("§NNN formatCoordinates: one fixed shape", () => {
   });
 });
 
-describe("§NNN mapUrlOf: Google Maps' own «open this place»", () => {
+describe("§961 mapUrlOf: Google Maps' own «open this place»", () => {
   it("builds the address from the pair, the comma between them encoded", () => {
     expect(mapUrlOf(PIATA)).toBe("https://www.google.com/maps/search/?api=1&query=45.64271%2C25.58871");
     expect(mapUrlOf({ latitude: -33.86882, longitude: -70.66927 })).toBe("https://www.google.com/maps/search/?api=1&query=-33.86882%2C-70.66927");

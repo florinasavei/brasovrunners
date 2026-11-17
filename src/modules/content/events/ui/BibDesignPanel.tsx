@@ -324,7 +324,7 @@ export default async function BibDesignPanel({
     : t("editor.bibDesign.sectionSummary.membersOff");
   // «Elită» (§895): what the elite bibs carry besides the name; neither ticked is the name alone.
   const eliteAside =
-    // The name alone, never a number (§NNN): «Număr pe BIB-urile de elită» is gone; the sponsors' row is the one choice left.
+    // The name alone, never a number (§963): «Număr pe BIB-urile de elită» is gone; the sponsors' row is the one choice left.
     words(design.eliteSponsors && t("editor.bibDesign.sectionSummary.eliteSponsors")) ||
     t("editor.bibDesign.sectionSummary.eliteNameOnly");
 
@@ -671,7 +671,7 @@ export default async function BibDesignPanel({
                     sx={{ width: { sm: 280 } }}
                   />
                 </Stack>
-                {/* The fourth (§NNN): four numbers in all, «112» among them. */}
+                {/* The fourth (§963): four numbers in all, «112» among them. */}
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
                   <RecallField
                     name="event.bibDesign.emergencyPhone4Label"

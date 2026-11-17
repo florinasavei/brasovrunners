@@ -366,7 +366,7 @@ describe("§949 the plan's page", () => {
 
     expect(page).toContain(ro.Admin.volunteers.plan.title);
     expect(page).toContain("Crosul");
-    // How many people stand where, since the plan has two kinds of points (§NNN): none at the start–finish here, two on the route.
+    // How many people stand where, since the plan has two kinds of points (§961): none at the start–finish here, two on the route.
     expect(planSummaryOf(page)).toBe("0 voluntari la start–finish · 2 voluntari pe traseu · 2 voluntari fără punct · 1 punct fără nimeni");
     const drawn = pointsOf(page);
     expect(drawn.map((part) => textOf(part, "plan-point-title")[0])).toEqual(["1. 1,2 km — Intersecția Stejeriș", "2. 5,5 km — Apă la cabană", "3. 7,25 km — Podul de lemn"]);
@@ -453,7 +453,7 @@ describe("§949 the plan's page", () => {
     // The other event, once its one point is taken off the route.
     await db.delete(eventCheckpoints).where(eq(eventCheckpoints.id, points.elsewhere));
     const bare = await planPage({}, runId);
-    // The one empty state: the points can be added right here, above, or in the event's editor (§NNN).
+    // The one empty state: the points can be added right here, above, or in the event's editor (§961).
     expect(bare).toContain("Planul nu are încă niciun punct. Adaugă punctele chiar aici, mai sus");
     expect(bare).toContain(ro.Admin.volunteers.plan.noPoints);
     expect(planSummaryOf(bare)).toBe("");

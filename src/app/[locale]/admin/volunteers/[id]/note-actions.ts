@@ -13,7 +13,7 @@ import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { backToCard } from "@/app/[locale]/admin/events/[id]/volunteer-return";
 
 /**
- * The presses of a volunteer's «Note interne» card: «Salvează nota», «Șterge» and, in a note's «Modifică» fold (§NNN), its own
+ * The presses of a volunteer's «Note interne» card: «Salvează nota», «Șterge» and, in a note's «Modifică» fold (§964), its own
  * «Salvează nota».
  *
  * Each starts with `requireStaffCapability(canManageVolunteers)` — the coarse gate, so the Tehnic role, the Redactor, the volunteer
@@ -84,7 +84,7 @@ export async function deleteVolunteerNoteAction(_previous: FormOutcome | null, f
 }
 
 /**
- * «Salvează nota» in a note's «Modifică» fold (§NNN): new words for one note — its author's, or any when the Administrator presses
+ * «Salvează nota» in a note's «Modifică» fold (§964): new words for one note — its author's, or any when the Administrator presses
  * it (the service decides, the same rule as «Șterge»). Back to the card, open, whatever it changed: «Nota a fost modificată.», or
  * the house's «nothing to change» for the same words, which writes nothing.
  */

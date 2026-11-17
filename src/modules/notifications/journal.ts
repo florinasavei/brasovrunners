@@ -171,7 +171,7 @@ export type JournalRowRead = {
 /**
  * The id of the volunteer a row's payload names, as text (§754's rows carry it, the parent's link too) — an id, never
  * the payload's words. The «Voluntari» list's «Emailuri» column reads a page of volunteers' rows by it
- * (`email-summaries.ts`, §NNN).
+ * (`email-summaries.ts`, §960).
  */
 export const VOLUNTEER_ID_OF_ROW: SQL = sql`${emailOutbox.payloadJson} ->> 'volunteerId'`;
 

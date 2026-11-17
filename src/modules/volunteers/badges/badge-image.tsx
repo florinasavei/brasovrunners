@@ -42,7 +42,7 @@ export type BadgeImageInput = {
   words: BadgeWords;
   /**
    * The role's name in the badge's language and its colour — the telephone of its category's contact person (§774, `badgePhoneLine`) and
-   * its category's name, the volunteer's type (§NNN); null draws a badge «fără rol».
+   * its category's name, the volunteer's type (§962); null draws a badge «fără rol».
    */
   role: BadgeFaceRole | null;
   /** The header's picture as the route read it; null draws the band. */
@@ -180,7 +180,7 @@ export function badgeMarkup(input: BadgeImageInput, logoSrc: string) {
       ) : null}
       {layout.title ? lineBox(layout.title, bandText, 700, { right: layout.title.right }, "badge-title") : null}
       {/* The role's band, «VOLUNTAR» small above the role's name — or alone and large on a badge «fără rol». The role's category, the
-          volunteer's type (§NNN), is on the small line («VOLUNTAR · PE TRASEU») or, too long for it, on a small line under the name. */}
+          volunteer's type (§962), is on the small line («VOLUNTAR · PE TRASEU») or, too long for it, on a small line under the name. */}
       <div data-testid="badge-role-band" style={{ display: "flex", ...at(content.left, layout.role.top), width: px(content.width), height: px(layout.role.height), background: roleColour }} />
       {layout.label ? lineBox(layout.label, roleText, 700, { centre: true }, "badge-label") : null}
       {lineBox(layout.roleLine, roleText, 700, { centre: true }, "badge-role")}

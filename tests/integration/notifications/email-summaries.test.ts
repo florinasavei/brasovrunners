@@ -19,7 +19,7 @@ import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the lists' «Emailuri» column reads a page of people at once (`email-summaries.ts#readEmailSummaries`): for
+ * §960 — the lists' «Emailuri» column reads a page of people at once (`email-summaries.ts#readEmailSummaries`): for
  * each registration, or each volunteer by the id their payload names, the person's own emails counted and the three
  * newest as «which · when · what became of it» — over PGlite, a real PostgreSQL:
  *
@@ -208,7 +208,7 @@ async function sent<R>(work: () => Promise<R>): Promise<{ answer: R; statements:
   return { answer, statements: made };
 }
 
-describe("BR-REQ-060-01 the lists' «Emailuri» is the Administrator's and the Superadministrator's alone (§NNN)", () => {
+describe("BR-REQ-060-01 the lists' «Emailuri» is the Administrator's and the Superadministrator's alone (§960)", () => {
   it("refuses the desk's Volunteer, the Redactor, the Organizer, the Tehnic role and a member with FORBIDDEN — for registrations and for volunteers — and reads nothing", async () => {
     for (const role of ["MEMBER", "CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV"] as const) {
       for (const actor of [staff.get(role) as StaffUser, role]) {
@@ -233,7 +233,7 @@ describe("BR-REQ-060-01 the lists' «Emailuri» is the Administrator's and the S
   });
 });
 
-describe("§NNN a page of registrations", () => {
+describe("§960 a page of registrations", () => {
   it("gives each registration its own three newest emails and its own count — another person's never, the club's copy and archive neither counted nor drawn", async () => {
     const summaries = await readEmailSummaries(db, admin(), { registrationIds: [maria, ion, nimeni] });
     expect([...summaries.keys()].sort()).toEqual([maria, ion, nimeni].sort());
@@ -310,7 +310,7 @@ describe("§NNN a page of registrations", () => {
   });
 });
 
-describe("§NNN a page of volunteers", () => {
+describe("§960 a page of volunteers", () => {
   it("gives each volunteer the rows whose payload names them — their own and their parent's link — never another volunteer's, the colleagues' notice and the club's copy neither counted nor drawn", async () => {
     const summaries = await readEmailSummaries(db, admin(), { volunteerIds: [vlad, vera, vio] });
     expect([...summaries.keys()].sort()).toEqual([vlad, vera, vio].sort());
@@ -344,7 +344,7 @@ describe("§NNN a page of volunteers", () => {
   });
 });
 
-describe("§NNN each outcome, the fold's own judgement", () => {
+describe("§960 each outcome, the fold's own judgement", () => {
   it("says waiting, sent, delivered, rejected, failed and captured from the row's state and the provider's facts", async () => {
     const cases: Array<{ outcome: EmailOutcome; fields: Partial<Row>; at: string }> = [
       // Queued, and held by a worker now: neither has left.
@@ -383,7 +383,7 @@ describe("§NNN each outcome, the fold's own judgement", () => {
   });
 });
 
-describe("§NNN the cost: one statement a page, none for nobody", () => {
+describe("§960 the cost: one statement a page, none for nobody", () => {
   it("sends one statement for a page of registrations and one for a page of volunteers", async () => {
     expect((await sent(() => readEmailSummaries(db, admin(), { registrationIds: [maria, ion, nimeni] }))).statements).toHaveLength(1);
     expect((await sent(() => readEmailSummaries(db, admin(), { volunteerIds: [vlad, vera, vio] }))).statements).toHaveLength(1);
@@ -445,7 +445,7 @@ describe("§NNN the cost: one statement a page, none for nobody", () => {
   });
 });
 
-describe("§NNN what the column never reads", () => {
+describe("§960 what the column never reads", () => {
   /**
    * Every name the statement PostgreSQL is sent carries — each double-quoted identifier, once: the table, its columns
    * wherever they stand (the selection, the condition, the order), and the statement's own aliases. A column read

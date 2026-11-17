@@ -233,7 +233,7 @@ describe("§897 the elite mark on a registration", () => {
       kits: await countKits(db, eventId, NOW),
       summary: await summariseRegistrationsForAdmin(db, { eventId }),
       places: await readPlaceOutlook(db, eventId, NOW),
-      // The ordinary sheet's count and list leave a marked registration out (§NNN): its bib is the elite sheet's alone.
+      // The ordinary sheet's count and list leave a marked registration out (§963): its bib is the elite sheet's alone.
       numbers: (await listBibs(db, eventId, { elite: true })).length + (await listBibs(db, eventId)).length,
       rows: (await db.select({ id: registrations.id, status: registrations.status, bibNumber: registrations.bibNumber, outside: registrations.outsideCapacity, printed: registrations.bibPrintedAt }).from(registrations)).sort((a, b) => a.id.localeCompare(b.id)),
     });
@@ -290,7 +290,7 @@ const pages = (pdf: Buffer) => pdf.toString("latin1").match(/\/Type \/Page\b/g)?
 describe("§897 a marked registration's bib", () => {
   const get = (query: string) => sheet(new Request(`http://localhost/api/admin/events/${eventId}/bibs?${query}`), { params: Promise.resolve({ id: eventId }) });
 
-  it("§NNN is never on the ordinary sheet — its bib is the elite sheet's alone, so nobody prints it twice", async () => {
+  it("§963 is never on the ordinary sheet — its bib is the elite sheet's alone, so nobody prints it twice", async () => {
     const admin = await as("ADMIN");
     const ana = await runner("Ana Pop", "CONFIRMED", 12);
     await runner("Ion Ionescu", "CONFIRMED", 13);
@@ -305,7 +305,7 @@ describe("§897 a marked registration's bib", () => {
     // Ion's bib as ever: his number, his name in its strip (a width to centre in).
     expect(drawn.map((run) => run.text)).toContain("13");
     expect(drawn.find((run) => run.text === "Ion Ionescu")?.width).toBeGreaterThan(0);
-    // Ana's is not on it at all: neither her name nor her number (§NNN).
+    // Ana's is not on it at all: neither her name nor her number (§963).
     expect(drawn.filter((run) => run.text === "Ana Pop")).toEqual([]);
     expect(drawn.map((run) => run.text)).not.toContain("12");
     // …whatever the design ticks.
@@ -337,7 +337,7 @@ describe("§897 a marked registration's bib", () => {
     });
     expect(response?.status).toBe(200);
     expect(response?.headers.get("content-disposition")).toMatch(/-elite\.pdf/);
-    // The list first, in the order typed — a line prints its first word (§NNN) — then the marked registrations by
+    // The list first, in the order typed — a line prints its first word (§963) — then the marked registrations by
     // number, each as an elite bib.
     const names = drawn.filter((run) => ["Eliud", "Eliud Kipchoge", "Ana Pop", "Mara Dima", "Ion Ionescu", "Radu Stan"].includes(run.text));
     expect(names).toEqual([
@@ -348,7 +348,7 @@ describe("§897 a marked registration's bib", () => {
     // Three elite bibs, two to a page; one per page when asked.
     expect(pages(Buffer.from(await (await get("locale=ro&elite=1")).arrayBuffer()))).toBe(2);
     expect(pages(Buffer.from(await (await get("locale=ro&elite=1&layout=one")).arrayBuffer()))).toBe(3);
-    // The ordinary sheet prints the one runner not marked (§NNN): one page — the marked two are the elite sheet's alone.
+    // The ordinary sheet prints the one runner not marked (§963): one page — the marked two are the elite sheet's alone.
     expect(pages(Buffer.from(await (await get("locale=ro")).arrayBuffer()))).toBe(1);
   });
 

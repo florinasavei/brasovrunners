@@ -11,7 +11,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-060-01 — «Modifică» on a volunteer's internal note (the owner, 2026-11-17, on the «Voluntari» list:
+ * §964, BR-REQ-050-02, BR-REQ-060-01 — «Modifică» on a volunteer's internal note (the owner, 2026-11-17, on the «Voluntari» list:
  * «lasă-mă să editez și nota internă»), the service read from a real database (PGlite, the same migrations as Neon).
  *
  * `editVolunteerNote` has delete's gate: whoever manages the volunteers keeps notes, and a note is changed by its author or by an

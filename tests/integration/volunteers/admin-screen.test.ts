@@ -337,7 +337,7 @@ describe("the list's repository (§839)", () => {
     expect(await findVolunteerForAdmin(db, "00000000-0000-4000-8000-000000000000", "ro")).toBeNull();
 
     const roleNames = await listRoleNames(db, [waterId, marshalId]);
-    // With its category's words (§904) and its place in the club's order («Tip», §NNN): none here, so the name alone.
+    // With its category's words (§904) and its place in the club's order («Tip», §962): none here, so the name alone.
     expect(roleNames.get(waterId)).toEqual({ nameRo: "Punct de apă", nameEn: "Water point", categoryRo: null, categoryEn: null, categoryOrder: null });
     expect(roleNames.get(marshalId)?.nameEn).toBe("Marshal");
     expect((await listRoleNames(db, [])).size).toBe(0);

@@ -169,7 +169,7 @@ const POINTS_ANCHOR = "#plan-points";
 const LIST_ANCHOR = "#plan-list";
 
 /**
- * The code a refused press of the plan's points is said with (§NNN): the rule's own sentence — a name, a kilometre, the
+ * The code a refused press of the plan's points is said with (§961): the rule's own sentence — a name, a kilometre, the
  * coordinates, the forty-first point, an editor's point somebody tried to delete here, a point no longer on the plan
  * (`Admin.errors.<reason>`) — or the domain's code for everything else (a role that may not, an event that is not there).
  */
@@ -183,7 +183,7 @@ function planPointBoxes(form: FormData) {
 }
 
 /**
- * «Adaugă punctul» in «Punctele planului» on «Planul voluntarilor» (§NNN; the owner, 2026-11-17: «vreau să pot defini
+ * «Adaugă punctul» in «Punctele planului» on «Planul voluntarilor» (§961; the owner, 2026-11-17: «vreau să pot defini
  * punctele de mână, să pun nume punct și la ce km e și coordonate punct» — «Practic voluntarii sunt de 2 tipuri: start-finish
  * și pe traseu»): a point of the plan's own, on the route — with its kilometre — or at the start–finish, with its name and,
  * when the organizers know them, its coordinates.
@@ -215,7 +215,7 @@ export async function addPlanPointAction(_previous: FormOutcome | null, form: Fo
 }
 
 /**
- * «Salvează punctul» in a point's «Modifică punctul» on «Planul voluntarilor» (§NNN): a point of the plan's own changed —
+ * «Salvează punctul» in a point's «Modifică punctul» on «Planul voluntarilor» (§961): a point of the plan's own changed —
  * its name, its kilometre, its coordinates, and whether it is on the route or at the start–finish — or, for one of the
  * event's «Puncte pe traseu», its coordinates alone: whatever else such a form posts is never read (its name and kilometre
  * are public, and are the editor's). The capability is asked here by name, at the door, and the service asks it again.
@@ -247,7 +247,7 @@ export async function editPlanPointAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Șterge punctul» on a point of the plan's own (§NNN) — asked first on the page, with the point's name and how many people
+ * «Șterge punctul» on a point of the plan's own (§961) — asked first on the page, with the point's name and how many people
  * stand there: they stay on the plan, at no point. One of the event's «Puncte pe traseu» is not deleted here (the service
  * refuses it: it is deleted in the editor, where the event's page and the race number follow). The capability is asked here
  * by name, at the door, and the service asks it again and audits the removal with how many people it freed — never who.

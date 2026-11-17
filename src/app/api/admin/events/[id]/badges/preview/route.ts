@@ -19,7 +19,7 @@ import { isUuid } from "@/shared/ids";
  *
  * - **A role's badge as saved** (`role=<id>`, or `none` for «fără rol»): the stored design, the role's
  *   name and its category's in the badge's language and its colour — the sheet's own hand-over
- *   (`badgeRoleFace`, §NNN). The page stamps the address with what it is drawn from
+ *   (`badgeRoleFace`, §962). The page stamps the address with what it is drawn from
  *   (`v=`, `badgePictureStamp`), so the browser may keep the answer an hour.
  * - **The sample** (`sample=1`): the design read from the query — the designer's unsaved boxes, through
  *   the save's own schema — for a role of the event or `none`. Never kept: the role's saved name and

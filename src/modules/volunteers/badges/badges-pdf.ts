@@ -32,7 +32,7 @@ import { BADGE_LAYOUT, BADGE_PAGE_MARGIN, type BadgeLayout, badgeLayout, badgePa
  * Drawn at `badge-geometry.ts`'s points, as the picture (`badge-image.tsx`) draws them: the header band
  * in its colour or the club's picture across it (the crop drawn by the bib's rule, `pictureDrawingIn`),
  * the logo as its file is — blue on its own white ground, never recoloured — the role's band with its
- * words in white or ink, whichever reads on it (the role's category among them, §NNN), the free-text line
+ * words in white or ink, whichever reads on it (the role's category among them, §962), the free-text line
  * (§776), the writing area — with the marker's area beside «Nume:» when the club ticks it — and the
  * telephone. Every line was fitted by the layout, from the words the picture takes too
  * (`badgeLayoutWords`); each is handed to pdfkit with **no width**, so it cannot wrap (the bib's §317 lesson).
@@ -43,7 +43,7 @@ export type BadgeSheetEntry = {
   /**
    * The role's name in the badge's language and its band's colour; null prints «VOLUNTAR» alone. `phone` is the telephone of its category's
    * contact person (§774): the coordinator's number of this role's badges while the design leaves its own empty (`badgePhoneLine`).
-   * `category` is its category's name, the volunteer's type (§NNN): beside «VOLUNTAR», or under the role's name.
+   * `category` is its category's name, the volunteer's type (§962): beside «VOLUNTAR», or under the role's name.
    */
   role: BadgeFaceRole | null;
   /** How many badges of it, spares included. */
@@ -109,7 +109,7 @@ export async function renderBadgeSheet(input: BadgeSheetInput): Promise<Buffer> 
 
   const measure = { bold: bibTitleWidth, regular: bibFooterWidth };
   // Laid out once per role: every badge of a pile is the same badge. Keyed by everything the words hold, the category's name among them
-  // (§NNN): «Direcționare» under two categories is two badges, never the first one's twice.
+  // (§962): «Direcționare» under two categories is two badges, never the first one's twice.
   const layouts = new Map<string, BadgeLayout>();
   const layoutFor = (role: BadgeSheetEntry["role"]) => {
     const laid = badgeLayoutWords(design, words, locale, role);
@@ -165,7 +165,7 @@ export async function renderBadgeSheet(input: BadgeSheetInput): Promise<Buffer> 
     const bandWidth = content.width - 2 * pad;
     if (layout.label) text("bold", layout.label, centredX("bold", layout.label, x + content.left + pad, bandWidth), y, roleText);
     text("bold", layout.roleLine, centredX("bold", layout.roleLine, x + content.left + pad, bandWidth), y, roleText);
-    // The role's category (§NNN), when the small line above could not hold it beside «VOLUNTAR»: its own small line under the name.
+    // The role's category (§962), when the small line above could not hold it beside «VOLUNTAR»: its own small line under the name.
     if (layout.categoryLine) text("bold", layout.categoryLine, centredX("bold", layout.categoryLine, x + content.left + pad, bandWidth), y, roleText);
     // The free-text line (§776): the club's own words, small and centred under the role's band.
     if (layout.freeLine) text("body", layout.freeLine, centredX("body", layout.freeLine, x + content.left + pad, bandWidth), y, COLOR.ink);

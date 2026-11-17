@@ -5,7 +5,7 @@ import { type EmailOutboxStatus, emailOutboxStatus } from "@/db/schema/email-out
 import { EMAIL_OUTCOMES, emailOutcomeOf, isWaitingStatus } from "@/modules/notifications/domain/email-outcome";
 
 /**
- * §NNN — what became of an email is ONE judgement (`domain/email-outcome.ts#emailOutcomeOf`): the person's «Emailuri»
+ * §960 — what became of an email is ONE judgement (`domain/email-outcome.ts#emailOutcomeOf`): the person's «Emailuri»
  * fold draws its chips and its closed line from it (§915), and the «Emailuri» column of the «Voluntari» and
  * registrations lists says it in a word. Held here two ways: the function over every state a row can be in, and the
  * sources — the column's reader and its cell name no state of their own, and the fold's chip, waiting mark and closed
@@ -20,7 +20,7 @@ const ROWS: Array<{ status: EmailOutboxStatus; recipientCount: number | null; de
   [null, 0, 1, 3].flatMap((recipientCount) => [null, SENT_AT].map((deliveredAt) => ({ status, recipientCount, deliveredAt }))),
 );
 
-describe("§NNN what became of an email: one judgement", () => {
+describe("§960 what became of an email: one judgement", () => {
   it("is a closed set of six, and says each from the state and the provider's facts", () => {
     expect([...EMAIL_OUTCOMES]).toEqual(["waiting", "sent", "delivered", "rejected", "failed", "captured"]);
     const of = (status: EmailOutboxStatus, recipientCount: number | null = 1, deliveredAt: Date | null = null) => emailOutcomeOf({ status, recipientCount, deliveredAt });
@@ -56,7 +56,7 @@ describe("§NNN what became of an email: one judgement", () => {
   });
 });
 
-describe("§NNN no second judgement beside the first", () => {
+describe("§960 no second judgement beside the first", () => {
   const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
   /** Code alone: a comment may tell the story of a state, the code may not decide by one. */
   const codeOf = (file: string) => read(file).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");

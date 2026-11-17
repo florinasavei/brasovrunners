@@ -22,7 +22,7 @@ import { coordinatesOf, listPlanPoints } from "./plan-points";
   one press on «Planul voluntarilor» emails each placed volunteer the point they stand at — its number in the route's order,
   its name, its kilometre and its note — what they do there, and the plan's picture (`VOLUNTEER_POINT`).
 
-  **A point is any point of the plan (§NNN):** one of the event's «Puncte pe traseu», a point the organizers typed by hand on
+  **A point is any point of the plan (§961):** one of the event's «Puncte pe traseu», a point the organizers typed by hand on
   the plan's page, or a point at the start–finish — `plan-points.ts#listPlanPoints` is the one list of them, read here for
   who stands at a point and for what the message says of it. A person at the start–finish is counted, told and «already
   told» exactly as a person on the route is; their message says the place with no number and no kilometre. A point that has
@@ -162,7 +162,7 @@ async function pointRows<T extends Record<string, unknown>>(db: Database<T>, sco
  * event their payload names.
  */
 async function standingsOf<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<{ people: PlacedPerson[]; counts: VolunteerPointCounts }> {
-  // Every point of the event's plan, whichever kind (§NNN): the one list the page and the message read too.
+  // Every point of the event's plan, whichever kind (§961): the one list the page and the message read too.
   const onPlan = new Set((await listPlanPoints(db, eventId)).map((point) => point.id));
   const volunteers = await db
     .select({ id: eventVolunteers.id, email: eventVolunteers.email, canonicalEmail: eventVolunteers.canonicalEmail, locale: eventVolunteers.locale, checkpointId: eventVolunteers.checkpointId })
@@ -282,7 +282,7 @@ export async function sendVolunteerPoints<T extends Record<string, unknown>>(
 
 /** What the message says about the point, as the template takes it (`notifications/templates.ts`, `TemplateData.volunteerPoint`). */
 export type VolunteerPointFacts = {
-  /** The point's place in the route's order, 1 for the first: the number the plan's page gives it. Null at the start–finish (§NNN). */
+  /** The point's place in the route's order, 1 for the first: the number the plan's page gives it. Null at the start–finish (§961). */
   number: number | null;
   nameRo: string;
   nameEn: string;
@@ -290,9 +290,9 @@ export type VolunteerPointFacts = {
   km: number;
   noteRo: string | null;
   noteEn: string | null;
-  /** A point at the start–finish, not on the route (§NNN): the message says the place with no number and no kilometre. */
+  /** A point at the start–finish, not on the route (§961): the message says the place with no number and no kilometre. */
   startFinish: boolean;
-  /** Where the point is, when the organizers typed it (§NNN): the message says the numbers and links to a map. Null for none. */
+  /** Where the point is, when the organizers typed it (§961): the message says the numbers and links to a map. Null for none. */
   coordinates: Coordinates | null;
   /** The plan's picture at a size for a message and whole, at the store's public addresses; null when the event has none. */
   picture: { displayUrl: string; fullUrl: string; width: number; height: number } | null;
@@ -312,7 +312,7 @@ export type VolunteerPointFacts = {
  *
  * The renderer has already withdrawn a cancelled person, a row with no address and an address corrected since
  * (`render.ts`); this reads only what is the point's — its number in the route's order, or none at the start–finish, its
- * name, its kilometre and where it is, from the plan's one list (`plan-points.ts#listPlanPoints`, §NNN), which is what
+ * name, its kilometre and where it is, from the plan's one list (`plan-points.ts#listPlanPoints`, §961), which is what
  * the plan's page reads, so the message and the page say one point one way; the picture is the plan's as it is now
  * (`plan.ts#readVolunteerPlanPicture`).
  */

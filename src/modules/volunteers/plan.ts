@@ -18,7 +18,7 @@ import { listVolunteers, type VolunteerItem } from "./volunteers";
   planul de voluntari si fiecare in ce punct ramane»): who stands where on the day. One event's points, each with the people
   the organizers placed at it (`event_volunteers.checkpoint_id`), and under them everybody still to place.
 
-  The points are of two kinds since §NNN (the owner, 2026-11-17: «Practic voluntarii sunt de 2 tipuri: start-finish și pe
+  The points are of two kinds since §961 (the owner, 2026-11-17: «Practic voluntarii sunt de 2 tipuri: start-finish și pe
   traseu»): the points **at the start–finish** — the desk, the kits, the start and the finish line, with no kilometre and no
   number — and the points **on the route**, in the route's order and numbered as the route meets them. The points on the route
   are the event's «Puncte pe traseu» (§757), which the editor keeps, the page lists and the bib draws, and the ones the
@@ -66,7 +66,7 @@ export type VolunteerPlanPoint = { point: PlanPoint; number: number | null; peop
 export type VolunteerPlanPicture = { assetId: string; width: number; height: number; fullUrl: string; displayUrl: string; srcSet: string | undefined };
 
 export type VolunteerPlan = {
-  /** The event's points in the plan's one order (`listPlanPoints`, §NNN): the start–finish points, then the route by distance. */
+  /** The event's points in the plan's one order (`listPlanPoints`, §961): the start–finish points, then the route by distance. */
   points: VolunteerPlanPoint[];
   /** Everybody not cancelled who stands at no point, by name. */
   unplaced: VolunteerPlanPerson[];

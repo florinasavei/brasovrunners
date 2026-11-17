@@ -28,7 +28,7 @@ import { openFold } from "./support/fold";
  * one set per project and test, so two runs never share a row. Never a real person: every name and address is made up. What
  * the message says and what is withdrawn at the send are `tests/integration/volunteers/plan-mail.test.ts`.
  *
- * And, on the same page and the same seeded race, «Punctele planului» (§NNN; the owner, 2026-11-17: «vreau să pot defini
+ * And, on the same page and the same seeded race, «Punctele planului» (§961; the owner, 2026-11-17: «vreau să pot defini
  * punctele de mână, să pun nume punct și la ce km e și coordonate punct» — «Practic voluntarii sunt de 2 tipuri:
  * start-finish și pe traseu»): the Organizer adds a point at the start–finish and a point on the route by hand — a
  * refused press keeping what was typed —, sees each in its group, the route point numbered in the route's order with
@@ -265,7 +265,7 @@ test.describe("§956 «Trimite fiecăruia punctul lui» on «Planul voluntarilor
     await expect(page).toHaveURL(new RegExp(`/ro/admin/events/${eventId}/plan-voluntari#point-${points.water}$`), { timeout: 30_000 });
     await toastSays(page, "Stă la punctul ales: apare în planul voluntarilor.");
     await hydrated(page);
-    // The summary's four numbers (§NNN): nobody at the start–finish — the race has no such point —, all three on the route.
+    // The summary's four numbers (§961): nobody at the start–finish — the race has no such point —, all three on the route.
     await expect(page.getByTestId("plan-summary")).toHaveText("0 voluntari la start–finish · 3 voluntari pe traseu · 0 voluntari fără punct · 0 puncte fără nimeni");
     expect(await queuedSince(eventId, firstPress)).toEqual([]);
 
@@ -392,7 +392,7 @@ async function thumbSized(control: Locator) {
   if (box) expect(box.height).toBeGreaterThanOrEqual(44);
 }
 
-test.describe("§NNN «Punctele planului» on «Planul voluntarilor»", () => {
+test.describe("§961 «Punctele planului» on «Planul voluntarilor»", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("the Organizer adds a start–finish point and a point on the route by hand, places a person at each, changes one and deletes the other", async ({ page }) => {

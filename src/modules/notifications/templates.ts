@@ -1183,7 +1183,7 @@ export type TemplateData = {
    * above — the roles given and what they ask, as the role's own message says them. It names no other volunteer.
    * `pictureLinkOnly` is the second half's (`renderBilingual`): the words and the link again, not the picture.
    *
-   * Since §NNN a point is of one of two kinds. `startFinish` true is a point at the start–finish: the message says the
+   * Since §961 a point is of one of two kinds. `startFinish` true is a point at the start–finish: the message says the
    * place with no number and no kilometre (`number` is null, `km` is not read). `coordinates` is where the point is,
    * when the organizers typed it: the numbers and a link to a map stand under the band; absent or null, the message is
    * what it was. Both are absent on the preview's made-up point, which is a point on the route with no coordinates.
@@ -1632,7 +1632,7 @@ function volunteerPointTitle(locale: EmailLocale, point: NonNullable<TemplateDat
   return `${point.number}. ${km} km — ${locale === "ro" ? point.nameRo : point.nameEn}`;
 }
 
-/** Whether the point is at the start–finish (§NNN): said with no number and no kilometre. A point with no number is said so too. */
+/** Whether the point is at the start–finish (§961): said with no number and no kilometre. A point with no number is said so too. */
 function volunteerPointAtStartFinish(point: NonNullable<TemplateData["volunteerPoint"]>): boolean {
   return point.startFinish === true || point.number === null;
 }
@@ -1642,7 +1642,7 @@ function volunteerPointAtStartFinish(point: NonNullable<TemplateData["volunteerP
  * «Punctul tău la Crosul: 3. 5,5 km — Apă la cabană». The platform's, whoever wrote the words under it, so a text the club
  * rewrote still says where the person stands. Nothing without the point (the editor's starting text, a preview without one).
  *
- * A person at the start–finish (§NNN) is told the place by its name alone — «Ești la start–finish: Kituri» — never a
+ * A person at the start–finish (§961) is told the place by its name alone — «Ești la start–finish: Kituri» — never a
  * number or a kilometre: such a point has neither. The event is in the subject and in the words under the band.
  */
 function volunteerPointLine(locale: EmailLocale, d: TemplateData): string | undefined {
@@ -1654,7 +1654,7 @@ function volunteerPointLine(locale: EmailLocale, d: TemplateData): string | unde
 }
 
 /**
- * Where the point is (§NNN), under the band that names it and only when the organizers typed its coordinates: the two
+ * Where the point is (§961), under the band that names it and only when the organizers typed its coordinates: the two
  * numbers as a maps application takes them back, and «Deschide pe hartă» — Google Maps' own «open this place», built from
  * the numbers alone (`event-checkpoints/domain/coordinates.ts#mapUrlOf`). The plain-text half writes the address out. A
  * fact of this send, as the note and the roles are, so a text the club rewrote still says it.
@@ -1671,7 +1671,7 @@ function volunteerPointWhere(locale: EmailLocale, coordinates: { latitude: numbe
 
 /**
  * What the platform says of the point before the words of «Punctul tău» (§956), under the band that names it — each only
- * when there is something to say: where the point is, when it has coordinates (§NNN, `volunteerPointWhere`); the point's
+ * when there is something to say: where the point is, when it has coordinates (§961, `volunteerPointWhere`); the point's
  * own note as the club typed it (its label bold, no emphasis read inside it, as an organizer's note is drawn, §331); then
  * the roles the organizers gave the person and what they ask, in the role message's own sentence — nothing about roles
  * while none was given. Facts of this send, so a text the club rewrote keeps them.
@@ -2485,7 +2485,7 @@ const T = {
       Nothing to press. The point is the band's line and the event's start and place the bold one under it; the point's
       note and the roles given with what they ask stand before these words, the plan's picture after them
       (`volunteerPointLines`, `volunteerPointPicture`) — facts of this send, whoever wrote the words.
-      A person at the start–finish (§NNN) is not «at a point of the route»: the first sentence says the start–finish for
+      A person at the start–finish (§961) is not «at a point of the route»: the first sentence says the start–finish for
       them, and for a point of the route not a word of it changed.
     */
     volunteerPoint: {
@@ -3017,7 +3017,7 @@ const T = {
     volunteerContact: (contacts: string) => `Întrebări despre voluntariat? ${contacts}`,
     /**
      * «Punctul tău» (§956), the words around its own: the band's line, the note's label, the roles given, and the plan's picture —
-     * and, since §NNN, the band of a person at the start–finish and where a point with coordinates is.
+     * and, since §961, the band of a person at the start–finish and where a point with coordinates is.
      */
     volunteerPointWords: {
       line: (event: string, point: string) => `Punctul tău la ${event}: ${point}`,

@@ -77,7 +77,7 @@ export const TIP_NOTE_CHARS = 280;
  * `more(left)` as the last line when there are older ones. Empty for no notes. The caller says the clock and the words; nothing
  * here knows whose notes they are, and no author is named: who wrote it is the card's to say.
  *
- * `when` null leaves the day out: each shown note is its words alone, the rest the same (§NNN; the owner, 2026-11-17, of the
+ * `when` null leaves the day out: each shown note is its words alone, the rest the same (§964; the owner, 2026-11-17, of the
  * «Voluntari» list's «Note interne»: «la nota internă nu mai afișa și data»). Only that list asks for it; every other caller
  * passes its clock and reads what it always did.
  */

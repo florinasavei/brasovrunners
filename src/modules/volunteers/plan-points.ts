@@ -12,7 +12,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
 /*
-  «Punctele planului» (§NNN; the owner, 2026-11-17, a day after «Planul voluntarilor» got its picture and four days before
+  «Punctele planului» (§961; the owner, 2026-11-17, a day after «Planul voluntarilor» got its picture and four days before
   the race: «După ce încarc acea poză cu harta de voluntari vreau să pot defini punctele de mână, să pun nume punct și la ce
   km e și coordonate punct» — and, minutes later: «Practic voluntarii sunt de 2 tipuri: start-finish și pe traseu»).
 
@@ -243,7 +243,7 @@ function columnsOf(words: PointWords) {
 const sameWords = (a: PointWords, b: PointWords): boolean => a.place === b.place && a.name === b.name && a.km === b.km && a.latitude === b.latitude && a.longitude === b.longitude;
 
 /**
- * One change to the points of one event's volunteers' plan, by one staff member (§NNN).
+ * One change to the points of one event's volunteers' plan, by one staff member (§961).
  *
  * - **Who:** whoever works the volunteers (`canManageVolunteers`: the Organizer and the Administrators), asked here whatever
  *   the action asked (BR-REQ-060-01) and before anything is read; the Tehnic role, the Redactor, a desk Volunteer and a

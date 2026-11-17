@@ -15,7 +15,7 @@ import { importsModule } from "../../helpers/module-imports";
  * written to and what it says, `tests/integration/volunteers/plan-mail.test.ts`.) A new reader is a reviewed edit of this list.
  *
  * A reader is found by what it names — the column, the plan's words — or by what it imports (§953): the plan's module, the
- * module that reads the point for its email, or — since the plan has points of its own (§NNN) — the module that lists the
+ * module that reads the point for its email, or — since the plan has points of its own (§961) — the module that lists the
  * plan's points, by any spelling, the `@/` alias or a relative path. The words alone missed `./plan`, the import a file
  * beside the module would write. Who may read the plan's own points, and that none of them is public, is
  * `plan-points-never-leave.test.ts`.
@@ -31,7 +31,7 @@ const NAMES_THE_POINT = /checkpointId|checkpoint_id|checkpointName|modules\/volu
 /** The plan's module and the point's email's, wherever they are imported from and however the import spells them. */
 const PLAN_MODULE = path.join(SRC, "modules", "volunteers", "plan");
 const POINT_MAIL_MODULE = path.join(SRC, "modules", "volunteers", "point-mail");
-/** The plan's points (§NNN): the one list of them, which the plan, the list's column and the email all read. */
+/** The plan's points (§961): the one list of them, which the plan, the list's column and the email all read. */
 const PLAN_POINTS_MODULE = path.join(SRC, "modules", "volunteers", "plan-points");
 
 const RENDERER = "src/modules/notifications/render.ts";
@@ -52,7 +52,7 @@ const READERS = new Set(
     "src/modules/volunteers/volunteers.ts",
     // The plan as read: the points with their people.
     "src/modules/volunteers/plan.ts",
-    // The plan's points (§NNN): the one list of them — the editor's and the plan's own, in the plan's order, each with its
+    // The plan's points (§961): the one list of them — the editor's and the plan's own, in the plan's order, each with its
     // number — and «Șterge punctul», which counts the people it frees by the point they stand at.
     "src/modules/volunteers/plan-points.ts",
     // The plan's page and its presses: placing, the picture, and «Trimite fiecăruia punctul lui» with the numbers of its question.
@@ -159,7 +159,7 @@ describe("§949 a volunteer's point stays with the organizers — and leaves by 
     expect(namesThePoint(at("app", "[locale]", "volunteers", "page.tsx"), `import {\n  readVolunteerPlan,\n} from "../../../modules/volunteers/plan";`)).toBe(true);
     // The alias, as before.
     expect(namesThePoint(at("modules", "events", "repository.ts"), `import { readVolunteerPlan } from "@/modules/volunteers/plan";`)).toBe(true);
-    // The plan's points (§NNN), read from beside their module: no column, no alias path, none of the plan's words.
+    // The plan's points (§961), read from beside their module: no column, no alias path, none of the plan's words.
     const points = `import { listPlanPoints } from "./plan-points";\n\nexport const everyPoint = listPlanPoints;\n`;
     expect(NAMES_THE_POINT.test(points)).toBe(false);
     expect(namesThePoint(at("modules", "volunteers", "export.ts"), points)).toBe(true);

@@ -16,7 +16,7 @@ import { changePlanPoint, listPlanPoints } from "@/modules/volunteers/plan-point
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-011-01, BR-REQ-050-02 — a point of the volunteers' plan alone, and where any point is, are never public.
+ * §961, BR-REQ-011-01, BR-REQ-050-02 — a point of the volunteers' plan alone, and where any point is, are never public.
  *
  * «Punctele planului» (the owner, 2026-11-17: «vreau să pot defini punctele de mână, să pun nume punct și la ce km e și
  * coordonate punct») keeps its points in the table of the event's «Puncte pe traseu». This file holds the public side of
@@ -159,7 +159,7 @@ const rowsOf = (id = eventId) => db.select().from(eventCheckpoints).where(eq(eve
 const standsAt = async (id: string) => (await db.select({ at: eventVolunteers.checkpointId }).from(eventVolunteers).where(eq(eventVolunteers.id, id)))[0].at;
 const CHECKPOINT_KEYS: (keyof Checkpoint)[] = ["id", "nameRo", "nameEn", "km", "kinds", "cutoffMinutes", "cutoffClock", "noteRo", "noteEn", "onProfile"];
 
-describe("§NNN every reader that existed returns what it returned", () => {
+describe("§961 every reader that existed returns what it returned", () => {
   it("reads the same list, page, race number, stamp and file with a plan-only route point, a start–finish point and a point with coordinates in the table", async () => {
     const before = await publicSide();
     expect(before.list.map((row) => row.nameRo)).toEqual(["Intersecția Stejeriș", "Apă la cabană", "Podul de lemn"]);
@@ -233,7 +233,7 @@ describe("§NNN every reader that existed returns what it returned", () => {
   });
 });
 
-describe("§NNN every writer that existed leaves the plan's own points and every coordinate alone", () => {
+describe("§961 every writer that existed leaves the plan's own points and every coordinate alone", () => {
   it("keeps them through an editor's save that renames, moves, adds and removes points — and a kept row keeps its coordinates", async () => {
     await addThePlansOwn();
     const own = { spring: await rowOf(points.spring), kits: await rowOf(points.kits) };

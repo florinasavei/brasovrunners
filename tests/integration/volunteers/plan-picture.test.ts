@@ -626,7 +626,7 @@ describe("§952 the plan's page draws the picture", () => {
     const page = await planPage();
     // The plan as it was.
     expect(page).toContain(ro.Admin.volunteers.plan.title);
-    // Four numbers since the plan has two kinds of points (§NNN): nobody at the start–finish, one person on the route.
+    // Four numbers since the plan has two kinds of points (§961): nobody at the start–finish, one person on the route.
     expect(planSummaryOf(page)).toBe("0 voluntari la start–finish · 1 voluntar pe traseu · 0 voluntari fără punct · 1 punct fără nimeni");
     expect(page).toContain("1. 1,2 km — Intersecția Stejeriș");
 

@@ -42,10 +42,10 @@ describe("§943 the notes marker's tooltip", () => {
 });
 
 /**
- * §NNN — the owner, 2026-11-17, of the «Voluntari» list's «Note interne»: «la nota internă nu mai afișa și data». With no clock
+ * §964 — the owner, 2026-11-17, of the «Voluntari» list's «Note interne»: «la nota internă nu mai afișa și data». With no clock
  * (`when` null) each shown note is its words alone; everything else is the tooltip above, unchanged.
  */
-describe("§NNN the same words without the day", () => {
+describe("§964 the same words without the day", () => {
   it("is nothing without notes", () => {
     expect(notesTip(undefined, null, more)).toBe("");
     expect(notesTip([], null, more)).toBe("");

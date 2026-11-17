@@ -10,7 +10,7 @@ import { bibPictureSrc } from "@/modules/registrations/domain/bib-stamp";
 /**
  * §897 (the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită oricând», «Rămâne înscris») — a registration
  * marked «Elită» prints with §895's elite drawing, not a second one: the name where the number goes, never a number
- * under it (§NNN: the tick «Număr pe BIB-urile de elită» is gone, an old design's ignored), the sponsors' row only with
+ * under it (§963: the tick «Număr pe BIB-urile de elită» is gone, an old design's ignored), the sponsors' row only with
  * «Banda de sponsori pe BIB-urile de elită», never the members' design — on the ordinary sheet and on the elite sheet
  * after the list.
  */
@@ -35,7 +35,7 @@ const rows = [
 const pages = (pdf: Buffer) => pdf.toString("latin1").match(/\/Type \/Page\b/g)?.length ?? 0;
 
 describe("§897 a marked registration on the ordinary sheet", () => {
-  it("draws the name in the number's place with no name strip, and never a number, whatever an old design ticked (§NNN)", async () => {
+  it("draws the name in the number's place with no name strip, and never a number, whatever an old design ticked (§963)", async () => {
     const plain = await drawn(() => renderBibSheet({ ...base, rows, design: { ...DEFAULT_BIB_DESIGN, numberFormat: "pad3" } }));
     expect(plain.filter((run) => run.text === "Ana Pop")).toEqual([{ text: "Ana Pop", width: undefined }]);
     expect(plain.map((run) => run.text)).not.toContain("007");
@@ -76,7 +76,7 @@ describe("§897 a marked registration on the ordinary sheet", () => {
 });
 
 describe("§897 the elite sheet", () => {
-  it("prints the list's lines first — each its first word (§NNN) — then the marked registrations, each an elite bib", async () => {
+  it("prints the list's lines first — each its first word (§963) — then the marked registrations, each an elite bib", async () => {
     const elite = [{ name: "Eliud Kipchoge", bibNumber: null }];
     const marked = [{ bibNumber: 7, registeredName: "Ana Pop", elite: true }];
     const runs = await drawn(() => renderBibSheet({ ...base, rows: marked, elite }));
@@ -101,7 +101,7 @@ describe("§948 a marked registration's elite bib prints the first name alone", 
     expect(ordinary.find((run) => run.text === "Ion Ionescu")?.width).toBeGreaterThan(0);
     expect(ordinary.map((run) => run.text)).not.toContain("Ion");
 
-    // The elite sheet: the first word of the list's line as the club typed it (§NNN), then the registration's first name.
+    // The elite sheet: the first word of the list's line as the club typed it (§963), then the registration's first name.
     const elite = [{ name: "Ingrid", bibNumber: null }, { name: "Eliud Kipchoge", bibNumber: null }];
     const sheet = await drawn(() => renderBibSheet({ ...base, rows: [silviu], elite }));
     expect(sheet.filter((run) => ["Ingrid", "Eliud", "Eliud Kipchoge", "Silviu", "Silviu Popescu"].includes(run.text))).toEqual([
@@ -111,7 +111,7 @@ describe("§948 a marked registration's elite bib prints the first name alone", 
     ]);
   });
 
-  it("prints no number under the first name, even from a design saved with «Număr pe BIB-urile de elită» ticked (§NNN)", async () => {
+  it("prints no number under the first name, even from a design saved with «Număr pe BIB-urile de elită» ticked (§963)", async () => {
     const rows = [{ bibNumber: 7, registeredName: "Delia Marin", firstName: "Delia", elite: true }];
     const numbered = await drawn(() => renderBibSheet({ ...base, rows, design: { ...DEFAULT_BIB_DESIGN, numberFormat: "pad3", eliteNumber: true } }));
     expect(numbered.filter((run) => run.text === "Delia" || /^\d+$/.test(run.text)).map((run) => run.text)).toEqual(["Delia"]);

@@ -10,7 +10,7 @@ import { type BadgeRole, badgePrintEntries } from "@/modules/volunteers/badges/b
 import { renderBadgeSheet } from "@/modules/volunteers/badges/badges-pdf";
 
 /**
- * §NNN — the badges the volunteer's type does not touch print what they printed before it (BR-REQ-050-02): a role under no category, a
+ * §962 — the badges the volunteer's type does not touch print what they printed before it (BR-REQ-050-02): a role under no category, a
  * badge «fără rol» and the one badge for everyone (§783). `__snapshots__/badge-drawing-before-type.json` was written by this very file from
  * the code as it stood before a role's category reached its badge (baseline `BR-V4.52-2026-11-17`); every case is drawn again here and held
  * to it whole — the layout's numbers, the picture's markup (what Satori draws, `badge-image.tsx`) and every call the sheet makes to pdfkit
@@ -158,7 +158,7 @@ const roleUnderNone = (role: Role): BadgeRole => ({
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("§NNN the badges with no type draw what they drew before it", () => {
+describe("§962 the badges with no type draw what they drew before it", () => {
   it("holds every case to the drawing written before the change, a role under none in each shape callers hand it", async () => {
     const drawings: Record<string, ReturnType<typeof kept>> = {};
     const whole: Record<string, unknown> = {};

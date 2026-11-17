@@ -8,7 +8,7 @@ import { assertMayReadEmailHistory, CLUB_SIDE_OF_ROW } from "./email-history";
 import { VOLUNTEER_ID_OF_ROW } from "./journal";
 
 /**
- * The lists' «Emailuri» column (§NNN; the owner, 2026-11-17, the morning after the volunteers were emailed their
+ * The lists' «Emailuri» column (§960; the owner, 2026-11-17, the morning after the volunteers were emailed their
  * points: «Vreau sa vad mai clar ce mailuri a primit fiecare om»): for a page of registrations or of volunteers, each
  * person's newest emails in three facts — which email, when it left, what became of it — and how many they have in
  * all. The person's own «Emailuri» fold (`email-history.ts`, §915) stays the whole story, with the tries and who

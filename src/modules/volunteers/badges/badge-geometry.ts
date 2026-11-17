@@ -16,7 +16,7 @@
  *    left on its own white ground, the event's short title at its right;
  * 2. **the role's band**, in the role's colour: «VOLUNTAR» small above the role's name, large — or, on a
  *    badge «fără rol», «VOLUNTAR» alone, large. A role under a category also prints the category's name, the
- *    volunteer's type (§NNN): after «VOLUNTAR» on the small line, «VOLUNTAR · PE TRASEU», when that line holds
+ *    volunteer's type (§962): after «VOLUNTAR» on the small line, «VOLUNTAR · PE TRASEU», when that line holds
  *    both at its least size, else on a small line of its own under the role's name — inside the band either
  *    way, so it takes no height and is never cut (`badgeFitWhole`);
  * 3. **the free-text line** (§776), small and centred on the white under the role's band, when the club
@@ -238,7 +238,7 @@ export function badgeFit(text: string, measure: (text: string) => number, width:
 }
 
 /**
- * One line that is **never cut** (§NNN, the role's category): at `maxSize` when it fits, else the first size down by
+ * One line that is **never cut** (§962, the role's category): at `maxSize` when it fits, else the first size down by
  * `BADGE_LAYOUT.sizeStep` at which it fits, and below the last of those steps the size at which it fills `width` exactly —
  * however long the club's words, they print whole and inside the width. `measure` answers ems.
  */
@@ -257,7 +257,7 @@ export type BadgeTextLine = BadgeFittedLine & { top: number };
 /** The height of a line of Roboto at `size`: what pdfkit gives a line and Satori sets (§755). */
 export const badgeLineHeight = (size: number) => BIB_TEXT_LINE * size;
 
-/** Between «VOLUNTAR» and the role's category on the small line (§NNN): a middle dot, a space each side — typography, not a word. */
+/** Between «VOLUNTAR» and the role's category on the small line (§962): a middle dot, a space each side — typography, not a word. */
 export const BADGE_CATEGORY_SEPARATOR = " · ";
 
 /** The words one badge prints, already in its language — the role's name, its category and «VOLUNTAR» in capitals. */
@@ -267,7 +267,7 @@ export type BadgeLayoutWords = {
   /** The role's name, or null on a badge «fără rol». */
   role: string | null;
   /**
-   * The name of the role's category — the volunteer's type, «PE TRASEU» (§NNN) — or absent: a role under none, a badge «fără rol» and
+   * The name of the role's category — the volunteer's type, «PE TRASEU» (§962) — or absent: a role under none, a badge «fără rol» and
    * the one badge for everyone (§783) print none, and a badge with no role never prints one whatever it is handed.
    */
   category?: string | null;
@@ -309,14 +309,14 @@ export type BadgeLayout = {
   /** The title, right-aligned on `right`. */
   title: (BadgeTextLine & { right: number }) | null;
   /**
-   * «VOLUNTAR» small above the role's name, centred — «VOLUNTAR · PE TRASEU» when the role's category stands beside it (§NNN); null on a
+   * «VOLUNTAR» small above the role's name, centred — «VOLUNTAR · PE TRASEU» when the role's category stands beside it (§962); null on a
    * badge «fără rol».
    */
   label: BadgeTextLine | null;
   /** The band's large line, centred: the role's name, or «VOLUNTAR» alone. */
   roleLine: BadgeTextLine;
   /**
-   * The role's category on a small line of its own under the role's name, centred (§NNN): only when the small line above cannot hold it
+   * The role's category on a small line of its own under the role's name, centred (§962): only when the small line above cannot hold it
    * beside «VOLUNTAR» at that line's least size. Absent otherwise — the category on the line above, or none — so a badge without it lays
    * out exactly as it did.
    */
@@ -349,7 +349,7 @@ export type BadgeLayout = {
  * each side at up to `roleNameShare` of the band, down to `roleMinSize`, then cut; «VOLUNTAR» above it is
  * fitted the same way. Every line is centred on its row's height.
  *
- * The role's category (§NNN), measured, never guessed: when «VOLUNTAR · <CATEGORIE>» fits the band's width at the small line's least
+ * The role's category (§962), measured, never guessed: when «VOLUNTAR · <CATEGORIE>» fits the band's width at the small line's least
  * size, it is that line, shrunk as «VOLUNTAR» alone would be. When it does not — no 80-character name does on the smallest badge the
  * designer accepts, nor on the default strip — the small line says «VOLUNTAR» alone and the category takes a line of its own under the
  * role's name, at most the small line's size, shrunk until it fits and never cut (`badgeFitWhole`); the role's name gives up what the
@@ -384,7 +384,7 @@ export function badgeLayout(choice: BadgeLayoutChoice, words: BadgeLayoutWords, 
   if (words.role) {
     const labelMax = role.height * L.labelShare;
     const labelMin = Math.min(L.roleMinSize, labelMax);
-    // §NNN: the category beside «VOLUNTAR» when the small line holds both at its least size, else on a line of its own below.
+    // §962: the category beside «VOLUNTAR» when the small line holds both at its least size, else on a line of its own below.
     const category = words.category || null;
     const beside = category === null ? null : `${words.label}${BADGE_CATEGORY_SEPARATOR}${category}`;
     const smallLine = beside !== null && measure.bold(beside) * labelMin <= bandWidth ? beside : words.label;
@@ -450,7 +450,7 @@ export function badgeLayout(choice: BadgeLayoutChoice, words: BadgeLayoutWords, 
         })()
       : null;
 
-  // The category's own line is a key only when there is one: a badge without it is the very object it was (§NNN).
+  // The category's own line is a key only when there is one: a badge without it is the very object it was (§962).
   return { paper, content, header, role, free, writing, phone, pad, logo, title, label, roleLine, ...(categoryLine ? { categoryLine } : {}), freeLine, name, line, marker, phoneLine };
 }
 

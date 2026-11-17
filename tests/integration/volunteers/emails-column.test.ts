@@ -13,7 +13,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Emailuri» on the «Voluntari» list (the owner, 2026-11-17, the morning after the volunteers were emailed
+ * §960 — «Emailuri» on the «Voluntari» list (the owner, 2026-11-17, the morning after the volunteers were emailed
  * their points: «Vreau sa vad mai clar ce mailuri a primit fiecare om»), from a real database, the page drawn as the
  * server streams it:
  *
@@ -223,7 +223,7 @@ const linesOf = (page: string) => [...page.matchAll(/data-testid="email-summary-
 /** The page's short form of a moment, in the middle of a line. */
 const when = (iso: string, locale: "ro" | "en" = "ro") => formatDay(new Date(iso), { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "continues" });
 
-describe("§NNN «Emailuri» on the «Voluntari» list, for the Administrator", () => {
+describe("§960 «Emailuri» on the «Voluntari» list, for the Administrator", () => {
   it("stands right after «Stare», under the catalogue's heading with its «?», in the table and on a phone's card — it neither sorts nor leaves at a width", async () => {
     const columns = columnsOf(await listTree());
     const keys = columns.map((column) => column.key);
@@ -347,7 +347,7 @@ describe("§NNN «Emailuri» on the «Voluntari» list, for the Administrator", 
   });
 });
 
-describe("BR-REQ-060-01 «Emailuri» on the «Voluntari» list is not the Organizer's (§NNN)", () => {
+describe("BR-REQ-060-01 «Emailuri» on the «Voluntari» list is not the Organizer's (§960)", () => {
   it("draws the list exactly as before for an Organizer — no column, no line, no «niciun email» — and never calls the reader", async () => {
     const asAdministrator = columnsOf(await listTree()).map((column) => column.key);
     state.actor = staff.MODERATOR;

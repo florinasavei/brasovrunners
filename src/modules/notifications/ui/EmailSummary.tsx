@@ -24,7 +24,7 @@ type Props = {
 /**
  * A cell of a few lines, on the wide table and on a phone's card. On the wide table it stands on a floor of sixteen rem
  * (§943's lesson: a full table squeezes a column of wrapping words to its heading, a word to a line), where an email
- * takes about two lines. A lower floor was measured and buys nothing on a real list (§NNN): with a race's usual states
+ * takes about two lines. A lower floor was measured and buys nothing on a real list (§960): with a race's usual states
  * the list's other columns leave less room on the owner's 1858-px screen than this one's heading needs, so it would
  * only make each email three lines and the row taller. The cap, twenty-eight rem, is never reached: on the backoffice's
  * widest frame (1990 px) the column measured 307 px, an email still two lines. A phone's card keeps its own width. An
@@ -74,7 +74,7 @@ function outcomeWords(outcome: EmailOutcome, t: T): string {
 }
 
 /**
- * A row's «Emailuri» cell on the «Voluntari» and registrations lists (§NNN; the owner, 2026-11-17: «Vreau sa vad mai
+ * A row's «Emailuri» cell on the «Voluntari» and registrations lists (§960; the owner, 2026-11-17: «Vreau sa vad mai
  * clar ce mailuri a primit fiecare om»): the person's three newest emails, one to a line — «{the email's name} ·
  * {when} · {what became of it}» — and under them, when there are more, «și încă N emailuri», the link to the person's
  * own «Emailuri», where every email stands with its tries and who caused it (§915). A person with no email says

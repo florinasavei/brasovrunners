@@ -674,7 +674,7 @@ export type AuditAction =
   // press — how many messages it queued, how many people had already been told, stand at a point with no address or stand
   // at none, and whether it was «din nou tuturor» (`again`). Counts only: never a volunteer's id, a name, an address or a point.
   | "event.volunteer_points_sent"
-  // «Punctele planului» on «Planul voluntarilor» (§NNN, `volunteers/plan-points.ts`), entity `event`: a point of the plan
+  // «Punctele planului» on «Planul voluntarilor» (§961, `volunteers/plan-points.ts`), entity `event`: a point of the plan
   // added by hand, changed — or an editor's point given, moved or cleared of its coordinates — or deleted. The metadata is
   // the point's id, whether it is the plan's own, and what it said before and after (`from`, `to`: where it stands — on the
   // route or at the start–finish —, its name, its kilometre, its coordinates; null for the side that does not exist); a
@@ -728,7 +728,7 @@ export type AuditAction =
   /** «Ia-i rolul …» (§837): one role given was taken back — the same ids. */
   | "volunteer.unassigned"
   /**
-   * An internal note added to a volunteer, changed (§NNN) or deleted («Note interne» for volunteers): entity `event`, the event's
+   * An internal note added to a volunteer, changed (§964) or deleted («Note interne» for volunteers): entity `event`, the event's
    * id, and `{ volunteerId }` — the staff member (the actor) and the moment, and nothing of the words, ever: neither a change's
    * old words nor its new ones. The text lives in `event_volunteer_notes` and nowhere else; a trail row that carried it would
    * outlive the volunteer it is about.

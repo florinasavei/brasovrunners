@@ -284,7 +284,7 @@ function Line({ line, t, typeName, locale, now, departure }: LineProps) {
 /**
  * What became of a row that is no longer waiting: left at an hour, reached nobody (QA), failed, refused. A person's
  * «Emailuri» draws the same chip (`EmailHistory.tsx`, §915), and the lists' «Emailuri» column says the same judgement
- * in a word (`domain/email-outcome.ts`, §NNN): one function decides, here only its chip is chosen.
+ * in a word (`domain/email-outcome.ts`, §960): one function decides, here only its chip is chosen.
  */
 export function DepartedChip({ line, t, locale, now }: { line: Pick<JournalLine, "status" | "recipientCount" | "sentAt" | "createdAt">; t: T; locale: Locale; now: Date }) {
   const outcome = emailOutcomeOf(line);

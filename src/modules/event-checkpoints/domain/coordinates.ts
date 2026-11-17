@@ -1,7 +1,7 @@
 import { DomainError } from "@/shared/errors/domain-error";
 
 /**
- * Where a point is (§NNN; the owner, 2026-11-17, of the volunteers' points: «să pun nume punct și la ce km e și coordonate
+ * Where a point is (§961; the owner, 2026-11-17, of the volunteers' points: «să pun nume punct și la ce km e și coordonate
  * punct») — the pure part: what a person pastes from a maps application read into a latitude and a longitude, the one way
  * the pair is written back, and the address that opens it on a map.
  *

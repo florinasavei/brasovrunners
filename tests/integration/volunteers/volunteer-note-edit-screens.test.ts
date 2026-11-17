@@ -18,7 +18,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-060-01 — the volunteers' internal notes on the organizers' screens after the owner's two asks of
+ * §964, BR-REQ-050-02, BR-REQ-060-01 — the volunteers' internal notes on the organizers' screens after the owner's two asks of
  * 2026-11-17, on the «Voluntari» list, four days before the race: «la nota internă nu mai afișa și data, și lasă-mă să editez și
  * nota internă». Read from a real database:
  *
@@ -236,7 +236,7 @@ const fromPage = (data: FormData) => noteActions.editVolunteerNoteAction(null, d
 const bodyOf = async (noteId: string) => (await db.select({ body: eventVolunteerNotes.body }).from(eventVolunteerNotes).where(eq(eventVolunteerNotes.id, noteId)))[0].body;
 const edits = async () => db.select().from(auditLogs).where(eq(auditLogs.action, "volunteer.note_edited"));
 
-describe("§NNN the «Voluntari» list says the notes' words without their day", () => {
+describe("§964 the «Voluntari» list says the notes' words without their day", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`${locale}: the column and the marker's tooltip are the newest notes' words alone — no day, no hour, no author — the older ones counted`, async () => {
       const tree = await listTree({}, locale);
@@ -268,7 +268,7 @@ describe("§NNN the «Voluntari» list says the notes' words without their day",
   }
 });
 
-describe("§NNN «Modifică nota» in the row's «Note interne» cell", () => {
+describe("§964 «Modifică nota» in the row's «Note interne» cell", () => {
   it("is drawn under the words for the newest note's author, opened on that note's words — strings only, a link to the person's notes without a script", async () => {
     const tree = await listTree({ sort: "name", dir: "asc" });
     const { cell } = tableOf(tree);
@@ -364,7 +364,7 @@ describe("§NNN «Modifică nota» in the row's «Note interne» cell", () => {
   });
 });
 
-describe("§NNN editVolunteerNoteFromListAction — the press", () => {
+describe("§964 editVolunteerNoteFromListAction — the press", () => {
   it("changes the note and comes back to the SAME list address — filters, sort and page — with the toast, the words in neither", async () => {
     const back = `/ro/admin/volunteers?eventId=${raceId}&state=CONFIRMED&sort=name&dir=asc&page=2`;
     const press = await saved(fromList, { noteId: notes.anaNewest, body: "  Fotograf,\r\nvine cu aparatul lui ", returnTo: back });
@@ -459,7 +459,7 @@ describe("§NNN editVolunteerNoteFromListAction — the press", () => {
   });
 });
 
-describe("§NNN «Modifică» on the person's page", () => {
+describe("§964 «Modifică» on the person's page", () => {
   it("is beside «Șterge» on each note the reader may change — a fold holding the note's words, the box and «Salvează nota» — and nowhere else", async () => {
     const { props, drawn } = await cardOf(await personTree(people.dan));
     expect(props.editAction).toBe(noteActions.editVolunteerNoteAction);

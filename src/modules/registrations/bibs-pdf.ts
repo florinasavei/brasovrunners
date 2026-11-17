@@ -85,7 +85,7 @@ export type BibSheetRow = {
   bibNumber: BibRow["bibNumber"];
   registeredName: string | null;
   /**
-   * «BIB-uri goale» (§NNN; the owner, 2026-11-17: «vreau și număr GOL, fără bib, fără nimic»): the race's bib with no
+   * «BIB-uri goale» (§963; the owner, 2026-11-17: «vreau și număr GOL, fără bib, fără nimic»): the race's bib with no
    * number, no name and no line to write one on — the header, the strip, the phones, the sponsors and the small print
    * only; the club writes on it by hand. `bibNumber` is not drawn (nor its stubs) and `registeredName` is not read.
    */
@@ -467,7 +467,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     const top = slot.y + BIB_MARGIN;
     const bottom = top + BIB_CARD.height;
     const row = item.kind === "bib" ? item.row : null;
-    // «BIB-uri goale» (§NNN): no number, no stubs, no name and no line for one.
+    // «BIB-uri goale» (§963): no number, no stubs, no name and no line for one.
     const blankBib = row?.blank === true;
     // An elite bib (§895): the name where the number goes; the number and the sponsors' row only as the design ticks them.
     const elite = item.kind === "elite" ? { entry: item.entry, ...bibEliteParts(design) } : null;
@@ -984,7 +984,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const pages: BibSheetPage<SheetItem>[] = input.elite
     ? sheetPages(
         [
-          // A line of the list prints its first word, as a registration its first name (§NNN).
+          // A line of the list prints its first word, as a registration its first name (§963).
           ...input.elite.map((entry): SheetItem => ({ kind: "elite", entry: { ...entry, name: eliteLineBibName(entry.name) }, member: false })),
           ...input.rows.map(eliteOf).filter((item): item is SheetItem => item !== null),
         ],

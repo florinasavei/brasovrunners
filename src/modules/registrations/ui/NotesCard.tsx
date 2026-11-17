@@ -22,7 +22,7 @@ export type NotesCardRow = {
   authorName: string | null;
   /** Whether the reader may delete it (the service decides; the card draws «Șterge» only where it would succeed). */
   deletable: boolean;
-  /** Whether the reader may change its words (§NNN; a volunteer's note): «Modifică» is drawn only with it and an `editAction`. */
+  /** Whether the reader may change its words (§964; a volunteer's note): «Modifică» is drawn only with it and an `editAction`. */
   editable?: boolean;
 };
 
@@ -30,7 +30,7 @@ export type NotesCardRow = {
 const EditIcon = ACTION_ICONS.edit;
 
 /**
- * «Modifică» beside «Șterge» (§NNN): a native fold — it opens without a script, and by itself after a refusal (`RecallDetails`) —
+ * «Modifică» beside «Șterge» (§964): a native fold — it opens without a script, and by itself after a refusal (`RecallDetails`) —
  * whose line is drawn as the row's other press, a small press with its glyph, 44 pixels tall, the marker gone (the pencil is the
  * picture, §521). Open, it takes the whole width under the note's line (`EDIT_ITEM_SX`), «Șterge» after it.
  */
@@ -77,7 +77,7 @@ const EDIT_ITEM_SX = { minWidth: 0, "&:has(details[open])": { flexBasis: "100%" 
  * a registration, «autor necunoscut» on a volunteer, whose carried notes may never have had an author). It imports neither
  * kind of note: the pages that hand it the rows are the readers `notes-never-leave.test.ts` and its volunteers' twin list.
  *
- * «Modifică» (§NNN; a volunteer's notes alone: the owner, 2026-11-17, «lasă-mă să editez și nota internă»): with an `editAction`,
+ * «Modifică» (§964; a volunteer's notes alone: the owner, 2026-11-17, «lasă-mă să editez și nota internă»): with an `editAction`,
  * each note the reader may change (`editable`, the service's answer) has, beside «Șterge», a fold holding its words in a box and
  * «Salvează nota». A fold rather than a dialog: the «Voluntari» list's «Modifică nota» lands here when no script runs, so the form
  * must work without one. The registration's page hands no `editAction`, and its card is as it was.
@@ -103,7 +103,7 @@ export default async function NotesCard({
   notes: readonly NotesCardRow[];
   addAction: ActionFormAction;
   deleteAction: ActionFormAction;
-  /** «Modifică» on the notes the reader may change (§NNN); absent, no note is changed here. */
+  /** «Modifică» on the notes the reader may change (§964); absent, no note is changed here. */
   editAction?: ActionFormAction;
   /** A note was just saved, changed or deleted: the card opens to show the result. */
   opened: boolean;

@@ -36,7 +36,7 @@ export const eventCheckpointKind = pgEnum("event_checkpoint_kind", ["WATER", "FO
  * CASCADE`). The order is by distance (`km`); `position` only breaks a tie and keeps the order the
  * club saw when two points stand at the same kilometre.
  *
- * **Two kinds of rows live here since §NNN** (the owner, 2026-11-17, the day after «Planul
+ * **Two kinds of rows live here since §961** (the owner, 2026-11-17, the day after «Planul
  * voluntarilor» got its picture: «După ce încarc acea poză cu harta de voluntari vreau să pot defini
  * punctele de mână, să pun nume punct și la ce km e și coordonate punct» — and «Practic voluntarii
  * sunt de 2 tipuri: start-finish și pe traseu»). Everything above is the first kind: the event's
@@ -62,7 +62,7 @@ export const eventCheckpoints = pgTable(
     /** The order the club saw: renumbered by distance at every save, so ties keep how they were typed. */
     position: integer("position").notNull().default(0),
     /**
-     * The point's name in each language, as the club typed it in the editor. **A plan-only point (§NNN) holds the one name
+     * The point's name in each language, as the club typed it in the editor. **A plan-only point (§961) holds the one name
      * the organizers typed in both columns:** it is their own word for a place («Kituri», «Intersecția de la izvor»),
      * published nowhere — the plan's page and the volunteer's own email say it as typed — so the rule «both languages for
      * what the club publishes» has nothing to translate, and the table's own «a name in each» still holds.
@@ -71,7 +71,7 @@ export const eventCheckpoints = pgTable(
     nameEn: text("name_en").notNull(),
     /**
      * Kilometres from the start, two decimals; never beyond the route's distance (checked at the save, which knows it).
-     * A plan-only point on the route (§NNN) has the kilometre the organizers typed, held to no route's length; a
+     * A plan-only point on the route (§961) has the kilometre the organizers typed, held to no route's length; a
      * start–finish point holds 0 here and nobody reads it.
      */
     km: numeric("km", { precision: 6, scale: 2 }).notNull(),
@@ -90,7 +90,7 @@ export const eventCheckpoints = pgTable(
      */
     onProfile: boolean("on_profile").notNull().default(true),
     /**
-     * A point of the volunteers' plan alone (§NNN), added by hand on «Planul voluntarilor»: never on the event's page, the
+     * A point of the volunteers' plan alone (§961), added by hand on «Planul voluntarilor»: never on the event's page, the
      * route's chart, a race number, the event's file, a copy of the event or the editor's card — the readers of all of
      * those see only the rows where this is false (`event-checkpoints/checkpoints.ts`). Such a row has no kinds, no time
      * limit and no note, and `on_profile` false; its one name stands in both name columns. False for every point the
@@ -98,7 +98,7 @@ export const eventCheckpoints = pgTable(
      */
     planOnly: boolean("plan_only").notNull().default(false),
     /**
-     * A point at the start–finish, not on the route (§NNN; the owner: «Practic voluntarii sunt de 2 tipuri: start-finish
+     * A point at the start–finish, not on the route (§961; the owner: «Practic voluntarii sunt de 2 tipuri: start-finish
      * și pe traseu»): the desk, the kits, the start line, the finish. It has no kilometre said anywhere and no number in
      * the route's order — `km` holds 0 and nobody reads it. Only a plan-only point may be one (a check below): the
      * public «Puncte pe traseu» are points of the route by what they are.
@@ -126,7 +126,7 @@ export const eventCheckpoints = pgTable(
       "event_checkpoints_note_both_languages",
       sql`(${t.noteRo} IS NULL) = (${t.noteEn} IS NULL) AND (${t.noteRo} IS NULL OR (char_length(${t.noteRo}) BETWEEN 1 AND 120 AND char_length(${t.noteEn}) BETWEEN 1 AND 120))`,
     ),
-    // A start–finish point is a point of the volunteers' plan alone (§NNN): the public «Puncte pe traseu» are on the route.
+    // A start–finish point is a point of the volunteers' plan alone (§961): the public «Puncte pe traseu» are on the route.
     check("event_checkpoints_start_finish_plan_only", sql`NOT ${t.startFinish} OR ${t.planOnly}`),
     // The two coordinates are there together or not at all, each within what a latitude and a longitude can be.
     check("event_checkpoints_coordinates_pair", sql`(${t.latitude} IS NULL) = (${t.longitude} IS NULL)`),

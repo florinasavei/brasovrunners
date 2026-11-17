@@ -30,7 +30,7 @@ const READERS = new Set(
     "src/app/[locale]/admin/volunteers/[id]/note-actions.ts",
     "src/app/[locale]/admin/volunteers/(list)/page.tsx",
     "src/app/[locale]/admin/events/[id]/page.tsx",
-    // The «Voluntari» screen's own presses: «Modifică nota» from a row (§NNN) — a writer, handed the words typed in the row's dialog.
+    // The «Voluntari» screen's own presses: «Modifică nota» from a row (§964) — a writer, handed the words typed in the row's dialog.
     "src/app/[locale]/admin/volunteers/actions.ts",
     // The volunteers' files: one event's CSV and spreadsheet, and every event's spreadsheet — one grouped read each.
     "src/app/api/admin/events/[id]/volunteers/route.ts",

@@ -46,7 +46,7 @@ export const dynamic = "force-dynamic";
  * «Note interne» stands first, right under the heading block («Note interne» for volunteers, the registration's page's shape):
  * what the organizers tell each other about the person, newest first, each with its author and its day and hour, open by itself
  * when there is one, after its own save, change or delete (`saved`) and for `#note-interne`; closed on «nicio notă» otherwise.
- * Each note the reader may change has «Modifică» beside «Șterge» (§NNN), a fold with the note's words. Its presses are
+ * Each note the reader may change has «Modifică» beside «Șterge» (§964), a fold with the note's words. Its presses are
  * `note-actions.ts`.
  *
  * «Decizie pentru ziua cursei» (§954) stands right after it, still before the person's block: the organizers' one line about

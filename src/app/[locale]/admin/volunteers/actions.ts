@@ -78,7 +78,7 @@ export async function setVolunteerRaffleAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Modifică nota» on a row of the «Voluntari» list (§NNN; the owner, 2026-11-17, of that list: «lasă-mă să editez și nota
+ * «Modifică nota» on a row of the «Voluntari» list (§964; the owner, 2026-11-17, of that list: «lasă-mă să editez și nota
  * internă»): new words for the row's newest internal note, from the dialog over the list (`RowNoteDialog`, opened on the note's
  * words). The coarse gate here (`canManageVolunteers`: the Organizer and the Administrators), and the service asks again — and
  * whose note it is: its author's, or any for an Administrator (BR-REQ-060-01: the press drawn only for those is a courtesy). A

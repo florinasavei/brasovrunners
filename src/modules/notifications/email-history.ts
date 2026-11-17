@@ -135,7 +135,7 @@ export type EmailHistoryRowRead = {
 /**
  * The club's side as SQL: a copy by its flag, or a type the audience map gives the club (`isClubSide`). The one
  * predicate the fold counts a person's own emails by and the lists' «Emailuri» column leaves the club's rows out by
- * (`email-summaries.ts`, §NNN).
+ * (`email-summaries.ts`, §960).
  */
 const CLUB_SIDE_TYPES = emailMessageType.enumValues.filter((type) => isClubSide(type, false));
 const clubCopySql = sql`coalesce((${emailOutbox.payloadJson} ->> ${CLUB_COPY_FLAG}::text) = 'true', false)`;
@@ -143,7 +143,7 @@ export const CLUB_SIDE_OF_ROW = or(clubCopySql, inArray(emailOutbox.messageType,
 
 /**
  * The Administrator's and the Superadministrator's (BR-REQ-060-01): anybody else is refused, never told «none». The
- * one assertion of a person's emails — the fold's reader below and the lists' column (`email-summaries.ts`, §NNN).
+ * one assertion of a person's emails — the fold's reader below and the lists' column (`email-summaries.ts`, §960).
  */
 export function assertMayReadEmailHistory(actor: StaffSubject): void {
   if (!canManageRegistrations(actor)) {

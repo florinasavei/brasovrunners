@@ -148,25 +148,25 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const words = await confirmWords();
   // The words of every role the page's rows name, given or offered — one read, whatever their events — each with its category's (§904):
   // «Direcționare (Traseu)», as the card and the person's page say it, so a name standing in two categories is never printed twice alike.
-  // The same read carries each category's place in the club's order, which «Tip» lists the categories in (§NNN).
+  // The same read carries each category's place in the club's order, which «Tip» lists the categories in (§962).
   const [roleNames, rowNotes, emailSummaries] = await Promise.all([
     listRoleNames(db, [...new Set(rows.flatMap((row) => [...row.roleIds, ...row.choiceIds]))]),
     // «Note interne»: each row's live notes, newest first — ONE grouped read over the page's ids, never a query per row. The marker
     // says how many and, in its tooltip, the words (§945, as the registrations list's, §943); each note's id and whether the reader
-    // may change it serve the row's «Modifică nota» (§NNN). The service asks for the role again.
+    // may change it serve the row's «Modifică nota» (§964). The service asks for the role again.
     listVolunteerNotesForList(db, actor, rows.map((row) => row.id)),
-    // «Emailuri» (§NNN): each row's three newest emails and how many it has in all — ONE read over the page's ids, and only for the
+    // «Emailuri» (§960): each row's three newest emails and how many it has in all — ONE read over the page's ids, and only for the
     // Administrator and the Superadministrator, whose the person's own «Emailuri» is (§915). For the Organizer the reader is not
     // called and the column is not drawn; the reader asks for the role again (BR-REQ-060-01).
     canManageRegistrations(actor) ? readEmailSummaries(db, actor, { volunteerIds: rows.map((row) => row.id) }) : Promise.resolve(null),
   ]);
   // The marker's tooltip and the column (§945, §950): the newest notes' words, the older ones counted — no author's name, and since
-  // §NNN no day or hour either (the owner, 2026-11-17: «la nota internă nu mai afișa și data»). The person's page keeps both.
+  // §964 no day or hour either (the owner, 2026-11-17: «la nota internă nu mai afișa și data»). The person's page keeps both.
   const notesTipOf = (volunteerId: string) =>
     notesTip(rowNotes.get(volunteerId), null, (left) =>
       t("registrations.notes.tipMore", { counted: t(`registrations.notes.count.${countForm(left, locale)}`, { count: left }) }),
     );
-  // The dialogs' refusals, cut to the sentences each can meet: the whole catalogue would travel with every row. «Modifică nota» (§NNN)
+  // The dialogs' refusals, cut to the sentences each can meet: the whole catalogue would travel with every row. «Modifică nota» (§964)
   // can also meet a session that ended while the phone lay on the table, as «Decizie ziua cursei» can.
   const noteMessages = await refusalMessages({ body: t("registrations.notes.label") });
   const cutTo = (codes: readonly string[]) => ({ ...noteMessages, errors: Object.fromEntries(codes.map((code) => [code, noteMessages.errors[code]])) });
@@ -183,7 +183,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     return words ? roleLabel(words, locale) : null;
   };
   const namesOf = (ids: readonly string[]) => ids.map(roleName).filter((name): name is string => name !== null);
-  // «Tip» (§NNN): the categories of the roles given, once each, in the club's order — from the same read, never one per row.
+  // «Tip» (§962): the categories of the roles given, once each, in the club's order — from the same read, never one per row.
   const typesOf = (ids: readonly string[]) => volunteerTypes(ids.map((id) => roleNames.get(id)), locale);
 
   const basePath = getPathname({ locale, href: "/admin/volunteers" });
@@ -209,7 +209,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const scopeEventRow = scopeEvent ? await findEventForRegistrationById(db, scopeEvent.id) : undefined;
   // «Punct» (§949): with one event chosen that has points on its plan, each row says where its person stands — the point's place
   // in the route's order and its name, as «Planul voluntarilor» says them. One read for the page, never one per row.
-  // The points and their numbers are the plan's own list (§NNN, `plan-points.ts#listPlanPoints`), so this column, the plan's
+  // The points and their numbers are the plan's own list (§961, `plan-points.ts#listPlanPoints`), so this column, the plan's
   // page and the email never number a point differently. A point at the start–finish has no number: it is said by its name
   // and the quiet word «start–finish» — never a number or a kilometre.
   const pointNames = scopeEvent
@@ -285,7 +285,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
 
   /**
    * «Note interne» in its cell (§950): the words of the row's newest notes, the older ones counted, and under them — on a row whose
-   * newest note the reader may change (its author's, or any for an Administrator) — «Modifică nota» (§NNN; the owner, 2026-11-17, of
+   * newest note the reader may change (its author's, or any for an Administrator) — «Modifică nota» (§964; the owner, 2026-11-17, of
    * this list: «lasă-mă să editez și nota internă»): the row's dialog (`RowNoteDialog`) opened on that note's words, the pencil of
    * «Modifică decizia» in the next column; older notes are changed on the person's page. Its save is
    * `editVolunteerNoteFromListAction`, which comes back to this very page of the list (`returnTo`); the page's own render instant
@@ -491,7 +491,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       /*
         «Note interne» (§950; the owner, 2026-11-16, of this list: «pe lângă mesajul nostru vreau să văd și notele interne ale
         noastre»): the organizers' own notes on the person, in the row itself — the words the marker's tooltip says (§945: the three
-        newest, a long one cut, the older ones counted, no author; since §NNN no day or hour either), because a phone has no pointer
+        newest, a long one cut, the older ones counted, no author; since §964 no day or hour either), because a phone has no pointer
         to hold over a marker — and under them «Modifică nota» for the newest (`notesCellOf` above). From the list's one grouped
         read, so no query is added; nothing for a row with no note — an empty cell in the table, no line on a phone's card. The
         marker beside the name stays the way to the person's card, where every note is whole and says who wrote it and when.
@@ -533,7 +533,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       ),
     },
     /*
-      «Emailuri» (§NNN; the owner, 2026-11-17, the morning after the volunteers were emailed their points: «Vreau sa vad mai clar ce
+      «Emailuri» (§960; the owner, 2026-11-17, the morning after the volunteers were emailed their points: «Vreau sa vad mai clar ce
       mailuri a primit fiecare om»), right after the state: each person's three newest emails — which email, when it left, what
       became of it — and «și încă N emailuri», the link to the person's own «Emailuri» (§915), where every email stands with its
       tries. For the Administrator and the Superadministrator alone, as that fold is: for the Organizer no column is drawn and
@@ -566,7 +566,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     },
     {
       /*
-        «Tip» (§NNN; the owner, 2026-11-17: «Practic voluntarii sunt de 2 tipuri: start-finish și pe traseu», then, of this list: «și în
+        «Tip» (§962; the owner, 2026-11-17: «Practic voluntarii sunt de 2 tipuri: start-finish și pe traseu», then, of this list: «și în
         tabelul ăsta»): where the person works — the categories of the roles GIVEN, in the club's own words and the page's language, each
         once, in the categories' order, joined by «, ». A role under no category adds nothing («Alte activități» is no type); nobody given a
         role, or only such roles, is an empty cell and no line on a phone's card. It neither sorts nor filters.

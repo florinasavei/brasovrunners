@@ -77,7 +77,7 @@ const EVERYTHING_OFF: BibDesign = {
   // A third number, a short one, with its name (§947).
   emergencyPhone3: "112",
   emergencyPhone3Label: "Urgență",
-  // A fourth (§NNN), with its name.
+  // A fourth (§963), with its name.
   emergencyPhone4: "0700 000 004",
   emergencyPhone4Label: "Salvamont",
   // The trail practice off, the badge and the stubs on: each the other way from its default (§750).

@@ -93,7 +93,7 @@ export function emailHistorySummary(history: EmailHistory, t: T, locale: Locale,
 /**
  * The latest email's state in the summary's lower case: left at, waits, failed, refused, reached nobody — the chips'
  * own judgement (`domain/email-outcome.ts`). The lists' «Emailuri» column says the same words, with the email's
- * moment beside them rather than inside (`EmailSummary.tsx`, §NNN).
+ * moment beside them rather than inside (`EmailSummary.tsx`, §960).
  */
 function latestState(row: EmailHistoryRow, t: T, locale: Locale, now: Date): string {
   const outcome = emailOutcomeOf(row);

@@ -829,7 +829,7 @@ const bibScopeWhere = (eventId: string, scope: BibScope) =>
     scope.from !== undefined ? sql`${registrations.bibNumber} >= ${scope.from}` : undefined,
     scope.to !== undefined ? sql`${registrations.bibNumber} <= ${scope.to}` : undefined,
     scope.only === "unprinted" ? isNull(registrations.bibPrintedAt) : undefined,
-    // The elite sheet's own rows, and on every other sheet never one of them (§NNN; the owner, 2026-11-17: «ar trebui
+    // The elite sheet's own rows, and on every other sheet never one of them (§963; the owner, 2026-11-17: «ar trebui
     // excluse elitele de pe numerele normale, că le văd de 2 ori»): a registration marked «Elită» prints on the elite sheet alone.
     scope.elite ? eq(registrations.elite, true) : eq(registrations.elite, false),
   );
