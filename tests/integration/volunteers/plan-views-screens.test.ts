@@ -492,12 +492,17 @@ describe("§NNN the way back: every form carries its view, every press comes bac
     // A form drawn before the views names none: a point's press comes back to «Pe puncte», the one view that draws points.
     expect(await pressed(() => placeVolunteerAction(form({ volunteerId: race.people.radu, checkpointId: water, at: water })))).toBe(back(`view=points&open=${water}`, `point-${water}`));
     // Refused — another event's point — to the alert, the view kept.
-    expect(await pressed(() => placeVolunteerAction(form({ view: "points", volunteerId: race.people.ion, checkpointId: race.points.elsewhere, at: water })))).toBe(back("view=points&planError=NOT_FOUND", "admin-alert"));
+    expect(await pressed(() => placeVolunteerAction(form({ view: "points", volunteerId: race.people.ion, checkpointId: race.points.elsewhere, at: water })))).toBe(back(`view=points&open=${water}&planError=NOT_FOUND`, "admin-alert"));
 
     // «Salvează punctul»: to the point, open; refused, to the alert.
     const spring = await ownPoint("route", "Izvor", "3,4");
     expect(await pressed(() => editPlanPointAction(form({ view: "points", pointId: spring, place: "route", name: "Izvorul rece", km: "3,4", coordinates: "" })))).toBe(back(`view=points&open=${spring}`, `point-${spring}`));
-    expect(await pressed(() => editPlanPointAction(form({ view: "points", pointId: spring, place: "route", name: "", km: "3,4", coordinates: "" })))).toBe(back("view=points&planError=PLAN_POINT_NAME_MISSING", "admin-alert"));
+    expect(await pressed(() => editPlanPointAction(form({ view: "points", pointId: spring, place: "route", name: "", km: "3,4", coordinates: "" })))).toBe(back(`view=points&open=${spring}&planError=PLAN_POINT_NAME_MISSING`, "admin-alert"));
+    // The refused point is drawn open under the alert, its group too: the pencil is one press away.
+    const refused = await planPage({ view: "points", open: spring, planError: "PLAN_POINT_NAME_MISSING" });
+    expect(refused).toContain('id="admin-alert"');
+    expect(drawnOpen(elementWith(refused, `id="point-${spring}"`))).toBe(true);
+    expect(drawnOpen(elementWith(refused, 'data-group="route"'))).toBe(true);
     // «Șterge punctul»: to the plan's list, where the point no longer is.
     expect(await pressed(() => removePlanPointAction(form({ view: "points", pointId: spring })))).toBe(back("view=points", "plan-list"));
 
@@ -525,6 +530,7 @@ describe("§NNN the way back: every form carries its view, every press comes bac
     // «Tabel» opens no point: it draws none.
     expect(planAddress(path, { view: "table", open: "p", savedIn: "planPointAdded", hash: "plan-points" })).toBe(`${path}?view=table&saved=planPointAdded#plan-points`);
     expect(planAddress(path, { view: "points", planError: "NOT_FOUND", hash: "admin-alert" })).toBe(`${path}?view=points&planError=NOT_FOUND#admin-alert`);
+    expect(planAddress(path, { view: "points", open: "p", planError: "NOT_FOUND", hash: "admin-alert" })).toBe(`${path}?view=points&open=p&planError=NOT_FOUND#admin-alert`);
     // The helper names no word of the plan and no person: it is no reader of the plan (`plan-never-leaves.test.ts`).
     const source = readFileSync("src/app/[locale]/admin/events/[id]/plan-voluntari/plan-address.ts", "utf8");
     expect(source).not.toMatch(/checkpointId|volunteers\.plan\.|modules\/volunteers/);

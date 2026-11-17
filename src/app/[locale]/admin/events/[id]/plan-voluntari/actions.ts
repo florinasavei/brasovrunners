@@ -28,8 +28,13 @@ import { PLAN_SAVED, planAddress, type PlanView, planViewOf } from "./plan-addre
  */
 const viewOf = (form: FormData, fallback: PlanView = "table"): PlanView => (field(form, "view") === "" ? fallback : planViewOf(field(form, "view")));
 
-/** The way back of a refused press (§953): the page's alert, where the refusal's sentence is, in the view the press came from. */
-const refusedAt = (path: string, view: PlanView, code: string) => planAddress(path, { view, planError: code, hash: "admin-alert" });
+/**
+ * The way back of a refused press (§953): the page's alert, where the refusal's sentence is, in the view the press came from —
+ * and a press made on a point (`point`) keeps that point and its group drawn open under the alert, one press from trying again;
+ * an id that is no point of this plan any more opens nothing (the page reads only its own points).
+ */
+const refusedAt = (path: string, view: PlanView, code: string, point?: string) =>
+  planAddress(path, { view, planError: code, open: point && isUuid(point) ? point : undefined, hash: "admin-alert" });
 
 /**
  * «Pune aici» and «Scoate» on «Planul voluntarilor» (§949; the owner, 2026-11-16: «e foarte important sa avem planul de
@@ -64,7 +69,7 @@ export async function placeVolunteerAction(form: FormData): Promise<void> {
     refusal = error.code;
   }
   revalidatePath(path);
-  redirect(refusal ? refusedAt(path, view, refusal) : planAddress(path, isUuid(at) ? { view, open: at, hash: `point-${at}` } : { view }));
+  redirect(refusal ? refusedAt(path, view, refusal, at) : planAddress(path, isUuid(at) ? { view, open: at, hash: `point-${at}` } : { view }));
 }
 
 /**
@@ -253,7 +258,7 @@ export async function editPlanPointAction(form: FormData): Promise<void> {
     refusal = planPointRefusalCode(error);
   }
   revalidatePath(path);
-  redirect(refusal ? refusedAt(path, view, refusal) : planAddress(path, isUuid(pointId) ? { view, open: pointId, hash: `point-${pointId}` } : { view, hash: LIST_ANCHOR }));
+  redirect(refusal ? refusedAt(path, view, refusal, pointId) : planAddress(path, isUuid(pointId) ? { view, open: pointId, hash: `point-${pointId}` } : { view, hash: LIST_ANCHOR }));
 }
 
 /**
@@ -272,17 +277,18 @@ export async function removePlanPointAction(form: FormData): Promise<void> {
   // A form with no event names no plan to come back to: the volunteers' own screen.
   if (!eventId) redirect(getPathname({ locale, href: "/admin/volunteers" }));
   const view = viewOf(form, "points");
+  const pointId = field(form, "pointId");
   const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id: eventId } } });
 
   let refusal: string | null = null;
   try {
     const actor = await requireStaffCapability(canManageVolunteers);
-    await changePlanPoint(getDb(), actor, { kind: "remove", eventId, id: field(form, "pointId") }, new Date());
+    await changePlanPoint(getDb(), actor, { kind: "remove", eventId, id: pointId }, new Date());
     await flashOutcome({ saved: "planPointRemoved" });
   } catch (error) {
     if (!isDomainError(error)) throw error;
     refusal = planPointRefusalCode(error);
   }
   revalidatePath(path);
-  redirect(refusal ? refusedAt(path, view, refusal) : planAddress(path, { view, hash: LIST_ANCHOR }));
+  redirect(refusal ? refusedAt(path, view, refusal, pointId) : planAddress(path, { view, hash: LIST_ANCHOR }));
 }

@@ -514,10 +514,11 @@ describe("§949 the plan's page", () => {
 
   it("brings a refused press back to the page's alert, where its sentence is — never to a point's anchor (§953)", async () => {
     // In the view the press came from: a point's press, with no view in its form, is «Pe puncte»'s (§NNN).
-    const alert = (code: string) => `/ro/admin/events/${raceId}/plan-voluntari?view=points&planError=${code}#admin-alert`;
+    // The point the press was made on stays open under the alert (`open=`); the page opens nothing for a point no longer there.
+    const alert = (code: string, at: string) => `/ro/admin/events/${raceId}/plan-voluntari?view=points&open=${at}&planError=${code}#admin-alert`;
 
     // Another event's point: not there. The code is in the address, and the page says it in words, in the alert region.
-    expect(await press({ volunteerId: people.ion, checkpointId: points.elsewhere, at: points.water })).toBe(alert("NOT_FOUND"));
+    expect(await press({ volunteerId: people.ion, checkpointId: points.elsewhere, at: points.water })).toBe(alert("NOT_FOUND", points.water));
     const said = await planPage({ planError: "NOT_FOUND" });
     expect(said).toMatch(new RegExp(`id="admin-alert"[^>]*>[\\s\\S]*?${ro.Admin.errors.NOT_FOUND}`));
     // A code that is no code says nothing.
@@ -527,16 +528,16 @@ describe("§949 the plan's page", () => {
 
     // The point taken off the route while the page was open: its anchor matches nothing any more, so the alert it is.
     await db.delete(eventCheckpoints).where(eq(eventCheckpoints.id, points.bridge));
-    expect(await press({ volunteerId: people.ion, checkpointId: points.bridge, at: points.bridge })).toBe(alert("NOT_FOUND"));
+    expect(await press({ volunteerId: people.ion, checkpointId: points.bridge, at: points.bridge })).toBe(alert("NOT_FOUND", points.bridge));
 
     // The person cancelled while the page was open.
     await db.update(eventVolunteers).set({ state: "CANCELLED" }).where(eq(eventVolunteers.id, people.ion));
-    expect(await press({ volunteerId: people.ion, checkpointId: points.water, at: points.water })).toBe(alert("VALIDATION_ERROR"));
+    expect(await press({ volunteerId: people.ion, checkpointId: points.water, at: points.water })).toBe(alert("VALIDATION_ERROR", points.water));
     expect((await rowOf(people.ion)).checkpointId).toBeNull();
 
     // The Tehnic role's press writes nothing.
     state.actor = staff.DEV;
-    expect(await press({ volunteerId: people.zoe, checkpointId: points.water, at: points.water })).toBe(alert("FORBIDDEN"));
+    expect(await press({ volunteerId: people.zoe, checkpointId: points.water, at: points.water })).toBe(alert("FORBIDDEN", points.water));
     expect((await rowOf(people.zoe)).checkpointId).toBeNull();
     expect(await trail()).toHaveLength(0);
 

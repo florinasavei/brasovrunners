@@ -255,7 +255,7 @@ async function pressed(press: () => Promise<unknown>): Promise<string> {
 const toasted = () => state.flashed.map((value) => decodeFlash(value));
 const planPath = () => `/ro/admin/events/${race.raceId}/plan-voluntari`;
 /** A refused press of a point — the forms here post no view, and a point's press comes back to «Pe puncte» (§NNN). */
-const alertOf = (code: string) => `${planPath()}?view=points&planError=${code}#admin-alert`;
+const alertOf = (code: string, point?: string) => `${planPath()}?view=points${point ? `&open=${point}` : ""}&planError=${code}#admin-alert`;
 /** «Pe puncte», where the points are drawn (§NNN). */
 const POINTS = { view: "points" } as const;
 
@@ -760,13 +760,13 @@ describe("§961 «Salvează punctul» and «Șterge punctul»: the actions", () 
     const spring = await ownPoint("route", "Izvor", "3,4");
     const before = await rowOf(spring);
     const boxes = { pointId: spring, place: "route", name: "Izvor", km: "3,4", coordinates: "" };
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, name: "" })))).toBe(alertOf("PLAN_POINT_NAME_MISSING"));
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, km: "departe" })))).toBe(alertOf("PLAN_POINT_KM_INVALID"));
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, coordinates: "nicăieri" })))).toBe(alertOf("COORDINATES_INVALID"));
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, place: "undeva" })))).toBe(alertOf("PLAN_POINT_PLACE_UNKNOWN"));
+    expect(await pressed(() => editPlanPointAction(form({ ...boxes, name: "" })))).toBe(alertOf("PLAN_POINT_NAME_MISSING", spring));
+    expect(await pressed(() => editPlanPointAction(form({ ...boxes, km: "departe" })))).toBe(alertOf("PLAN_POINT_KM_INVALID", spring));
+    expect(await pressed(() => editPlanPointAction(form({ ...boxes, coordinates: "nicăieri" })))).toBe(alertOf("COORDINATES_INVALID", spring));
+    expect(await pressed(() => editPlanPointAction(form({ ...boxes, place: "undeva" })))).toBe(alertOf("PLAN_POINT_PLACE_UNKNOWN", spring));
     // A point that is not on this plan — another event's, or no id at all — is said as a point no longer on the plan, never as
     // the backoffice's «Înregistrarea nu mai există», which names a registration.
-    expect(await pressed(() => editPlanPointAction(form({ ...boxes, pointId: race.points.elsewhere })))).toBe(alertOf("PLAN_POINT_GONE"));
+    expect(await pressed(() => editPlanPointAction(form({ ...boxes, pointId: race.points.elsewhere })))).toBe(alertOf("PLAN_POINT_GONE", race.points.elsewhere));
     expect(await pressed(() => editPlanPointAction(form({ ...boxes, pointId: "not-an-id" })))).toBe(alertOf("PLAN_POINT_GONE"));
     expect(await rowOf(spring)).toEqual(before);
     expect(toasted()).toEqual([]);
@@ -788,8 +788,8 @@ describe("§961 «Salvează punctul» and «Șterge punctul»: the actions", () 
     // The Tehnic role's press writes nothing: refused at the door, the service never reached.
     state.changed = 0;
     state.actor = staff.DEV;
-    expect(await pressed(() => editPlanPointAction(form(boxes)))).toBe(alertOf("FORBIDDEN"));
-    expect(await pressed(() => removePlanPointAction(form({ pointId: spring })))).toBe(alertOf("FORBIDDEN"));
+    expect(await pressed(() => editPlanPointAction(form(boxes)))).toBe(alertOf("FORBIDDEN", spring));
+    expect(await pressed(() => removePlanPointAction(form({ pointId: spring })))).toBe(alertOf("FORBIDDEN", spring));
     expect(state.changed).toBe(0);
     expect(await rowOf(spring)).toEqual(before);
   });
@@ -811,11 +811,11 @@ describe("§961 «Salvează punctul» and «Șterge punctul»: the actions", () 
 
     // An editor's point is not deleted here: its sentence says where it is.
     state.flashed.length = 0;
-    expect(await pressed(() => removePlanPointAction(form({ pointId: race.points.bridge })))).toBe(alertOf("PLAN_POINT_IN_EDITOR"));
+    expect(await pressed(() => removePlanPointAction(form({ pointId: race.points.bridge })))).toBe(alertOf("PLAN_POINT_IN_EDITOR", race.points.bridge));
     expect(await rowOf(race.points.bridge)).toBeDefined();
     // «Șterge punctul» pressed again — a second tap on a slow connection, or a colleague's delete first: the point is no
     // longer on the plan, and the alert says that.
-    expect(await pressed(() => removePlanPointAction(form({ pointId: kits })))).toBe(alertOf("PLAN_POINT_GONE"));
+    expect(await pressed(() => removePlanPointAction(form({ pointId: kits })))).toBe(alertOf("PLAN_POINT_GONE", kits));
     expect(wordsOf(/<div[^>]*id="admin-alert"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/.exec(await planPage({ planError: "PLAN_POINT_GONE" }))![0])).toBe(
       "Punctul nu mai e pe plan: a fost șters între timp.",
     );
