@@ -25,6 +25,9 @@ import { openEditorBox } from "./support/fold";
  * picture that loads, and «Mărește» makes the frame as tall as the email — nothing left to scroll inside it — until
  * «Micșorează» returns the 620-pixel window, the press sending nothing.
  *
+ * And §958 — «Include programul evenimentului»: on an event with a timed programme the tick is offered, a thumb's
+ * target, and ticked it puts the programme under the words of the preview, one block a half in that half's language.
+ *
  * Each project writes its own event straight into the database — the setup, not the subject, as
  * `support/action-link.ts` argues — so the two never count each other's rows: a confirmed
  * Romanian runner, an English one on the waiting list, and two who must never hear it (a
@@ -97,6 +100,11 @@ async function seedEvent(tag: string, people: readonly Person[] = FOUR): Promise
     }
     return eventId;
   });
+}
+
+/** The event's timed programme (§117), written straight into its row — the setup, not the subject. */
+async function setProgramme(eventId: string, rows: readonly unknown[]): Promise<void> {
+  await withDatabase((client) => client.query("UPDATE events SET schedule_items = $1::jsonb WHERE id = $2", [JSON.stringify(rows), eventId]));
 }
 
 /** The participants' own organizer-message rows for the event — never the club's copies. */
@@ -331,6 +339,57 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     expect(await frameHeight()).toBe(620);
     await expect(page).toHaveURL(new RegExp(`/admin/events/${eventId}/mesaje$`));
     expect(await queuedFor(eventId)).toEqual([]);
+  });
+
+  test("§958 «Include programul evenimentului»: ticked on an event with a timed programme, the preview draws the programme under the words", async ({ page }) => {
+    test.setTimeout(150_000);
+    const tag = `${test.info().project.name}-${Date.now().toString(36)}-program`;
+    const eventId = await seedEvent(tag);
+    created.push(eventId);
+    // The race day's timed rows, around the start the seed gave the event (twenty days from now).
+    const hoursAhead = (hours: number) => new Date(Date.now() + hours * 3_600_000).toISOString();
+    await setProgramme(eventId, [
+      { startsAt: hoursAhead(20 * 24 - 2), endsAt: hoursAhead(20 * 24 - 1), label: { ro: "Ridicarea kiturilor", en: "Kit pickup" }, place: "Sala Sporturilor" },
+      { startsAt: hoursAhead(20 * 24), endsAt: null, label: { ro: "Startul", en: "The start" }, place: null },
+    ]);
+    /** The preview's email, as the sandboxed frame holds it. */
+    const previewHtml = async () => (await page.getByTestId("participant-message-preview").locator("iframe").getAttribute("srcdoc")) ?? "";
+    const blocks = async () => (await previewHtml()).split('data-email-part="event-facts"').length - 1;
+
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/events/${eventId}/mesaje`);
+    await hydrated(page);
+
+    // Offered — the event has timed rows — off by default, with its help line, and a thumb's target (BR-REQ-041-01 criterion 6).
+    const box = page.getByTestId("participant-message-programme");
+    const tick = box.getByRole("checkbox", { name: "Include programul evenimentului" });
+    await expect(tick).toBeEnabled();
+    await expect(tick).not.toBeChecked();
+    await expect(box).toContainText("Sub cuvintele tale apare programul evenimentului, oră cu oră");
+    const target = await box.locator(".MuiCheckbox-root").boundingBox();
+    expect(target?.width ?? 0).toBeGreaterThanOrEqual(44);
+    expect(target?.height ?? 0).toBeGreaterThanOrEqual(44);
+
+    // The preview is the real email, rendered by the server: no programme in it until the box is ticked…
+    await expect.poll(async () => (await previewHtml()).includes("Vezi pagina evenimentului"), { timeout: 30_000 }).toBe(true);
+    expect(await blocks()).toBe(0);
+    // …then one block a half, the Romanian registrant's half first, each in its own language.
+    await tick.check();
+    await expect.poll(blocks, { timeout: 30_000 }).toBe(2);
+    const html = await previewHtml();
+    expect(html).toContain("— Ridicarea kiturilor (Sala Sporturilor)");
+    expect(html).toContain("— Kit pickup (Sala Sporturilor)");
+    expect(html.indexOf("<strong>Program</strong>")).toBeGreaterThan(-1);
+    expect(html.indexOf("<strong>Program</strong>")).toBeLessThan(html.indexOf("<strong>Programme</strong>"));
+
+    // Unticked again, it is gone: the box decides a block of the email. Neither press sent anything.
+    await tick.uncheck();
+    await expect.poll(blocks, { timeout: 30_000 }).toBe(0);
+    expect(await queuedFor(eventId)).toEqual([]);
+
+    // Nothing wider than the phone.
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
   });
 
   test("§945 a trial to one person ticked on the list, then the same words to everybody", async ({ page }) => {

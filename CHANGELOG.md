@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.53-2026-11-17
+
+- **«Include programul evenimentului» in «Trimite un mesaj participanților»** — one more tick in the composer: every email of the send then shows the event's programme, hour by hour, under your words, in both languages; the preview shows it, the question before «Trimite» says it, and for an event without a timed programme the tick is greyed and says where to add one. §958.
 ## BR-V4.52-2026-11-17
 
 - **Facebook and Instagram in «Trimite un mesaj participanților»** — the organizers' message to an event's participants now ends its links with the club's Facebook page and its Instagram page, the same two addresses the site's footer has; nothing to tick, and the composer's preview shows them. §957.

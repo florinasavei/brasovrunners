@@ -83,6 +83,7 @@ export type ComposerConfirm = { field: string; title: string; count: string; cou
 /**
  * What the boxes hold when the page is drawn right after a send to the people ticked (§945): that send's words and its
  * three ticks, so a trial is followed by the same message to everybody. Absent after any other send: the boxes are empty.
+ * `includeProgramme` (§958) is there only when that send ticked «Include programul evenimentului».
  */
 export type ComposerKept = {
   subjectRo: string;
@@ -92,6 +93,7 @@ export type ComposerKept = {
   askReconfirm: boolean;
   sendQr: boolean;
   signLink: boolean;
+  includeProgramme?: boolean;
 };
 
 export type ComposerLabels = {
@@ -138,6 +140,14 @@ export type ComposerLabels = {
   signLink: string;
   signLinkHelp: string;
   /**
+   * «Include programul evenimentului» (§958), its help line — the programme, hour by hour, under the words — and the
+   * sentence said in the help's place while the event has no timed row: why the tick cannot be ticked, and where the
+   * programme is written.
+   */
+  includeProgramme: string;
+  includeProgrammeHelp: string;
+  includeProgrammeNone: string;
+  /**
    * «Completează cu textul de reminder»: the button, its question before it replaces typed words, and the ready text in
    * both languages — read on the server from both catalogues with its `{placeholders}` literal, whatever the UI language.
    */
@@ -167,6 +177,8 @@ export type PreviewInput = {
   sendQr: boolean;
   /** The tick «Trimite și linkul pentru semnarea declarației» as it stands: the preview draws «Semnează declarația» (§947). */
   signLink: boolean;
+  /** The tick «Include programul evenimentului» as it stands: the preview draws the event's programme under the words (§958). */
+  includeProgramme: boolean;
 };
 export type PreviewResult = { subject: string; html: string; unknown: string[] } | null;
 
@@ -177,6 +189,11 @@ type Props = {
   chosen: ComposerChosen;
   /** The words of the send to the people ticked that the page was just returned from (§945), when it was one. */
   kept?: ComposerKept;
+  /**
+   * Whether the event has a programme to include (§958): at least one timed row, as the page read it. Without one
+   * «Include programul evenimentului» is drawn disabled, with the sentence that says why and where one is written.
+   */
+  hasProgramme: boolean;
   defaultAudience: string;
   maxSubject: number;
   maxBody: number;
@@ -228,7 +245,7 @@ const PREVIEW_PAUSE_MS = 500;
  * compares the number with the rows it is about to write and queues nothing on any other. The
  * box is never handed back after a refusal — it is typed again — and the question still follows.
  */
-export default function ParticipantMessageComposer({ eventId, audiences, chosen, kept, defaultAudience, maxSubject, maxBody, labels, preview }: Props) {
+export default function ParticipantMessageComposer({ eventId, audiences, chosen, kept, hasProgramme, defaultAudience, maxSubject, maxBody, labels, preview }: Props) {
   const recall = useRecall();
   const recalledAudience = recall.value("audience");
   const [audience, setAudience] = useState(
@@ -260,9 +277,15 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
   const [sendQr, setSendQr] = useState(() => (recall.has ? recall.value("sendQr") === "1" : kept?.sendQr === true));
   // «Trimite și linkul pentru semnarea declarației» (§947): off unless ticked, controlled and kept the same way.
   const [signLink, setSignLink] = useState(() => (recall.has ? recall.value("signLink") === "1" : kept?.signLink === true));
-  // Any of the three ticks as the form holds it now — what a press would post.
+  // «Include programul evenimentului» (§958): off unless ticked, controlled and kept the same way — and never on for an
+  // event with no timed row, whose box is disabled: there is nothing to include, and a disabled box posts nothing.
+  const [includeProgramme, setIncludeProgramme] = useState(
+    () => hasProgramme && (recall.has ? recall.value("includeProgramme") === "1" : kept?.includeProgramme === true),
+  );
+  // Any of the four ticks as the form holds it now — what a press would post.
   const readTick = useCallback(
-    (name: "askReconfirm" | "sendQr" | "signLink"): boolean => root.current?.querySelector<HTMLInputElement>(`input[name="${name}"]`)?.checked === true,
+    (name: "askReconfirm" | "sendQr" | "signLink" | "includeProgramme"): boolean =>
+      root.current?.querySelector<HTMLInputElement>(`input[name="${name}"]`)?.checked === true,
     [],
   );
 
@@ -277,7 +300,15 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
     (nextLanguage: PreviewLanguage) => {
       const ticket = ++asked.current;
       const words = readWords();
-      preview({ eventId, language: nextLanguage, ...words, askReconfirm: readTick("askReconfirm"), sendQr: readTick("sendQr"), signLink: readTick("signLink") })
+      preview({
+        eventId,
+        language: nextLanguage,
+        ...words,
+        askReconfirm: readTick("askReconfirm"),
+        sendQr: readTick("sendQr"),
+        signLink: readTick("signLink"),
+        includeProgramme: readTick("includeProgramme"),
+      })
         .then((result) => {
           if (ticket !== asked.current) return;
           setShown(result ? { state: "ready", result } : { state: "unavailable", result: null });
@@ -582,6 +613,36 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
         />
         <Typography id="participant-message-sign-link-help" variant="caption" color="text.secondary" component="p">
           {labels.signLinkHelp}
+        </Typography>
+      </Box>
+
+      {/*
+        «Include programul evenimentului» (§958): every email of the send gets, under these words, the event's programme —
+        its timed rows, as the confirmation's facts block says them. Offered only when the event has such a row: without
+        one the box is disabled (it posts nothing) and the line under it says why, and where the programme is written.
+      */}
+      <Box data-testid="participant-message-programme">
+        <FormControlLabel
+          disabled={!hasProgramme}
+          control={
+            <Checkbox
+              name="includeProgramme"
+              value="1"
+              checked={includeProgramme}
+              onChange={(event) => {
+                setIncludeProgramme(event.target.checked);
+                // The preview at once, as the three ticks above: the box decides a block, not words being typed.
+                pause.cancel();
+                refresh(language);
+              }}
+              slotProps={{ input: { "aria-describedby": "participant-message-programme-help" } }}
+              sx={CHECKBOX_TAP_TARGET}
+            />
+          }
+          label={labels.includeProgramme}
+        />
+        <Typography id="participant-message-programme-help" variant="caption" color="text.secondary" component="p">
+          {hasProgramme ? labels.includeProgrammeHelp : labels.includeProgrammeNone}
         </Typography>
       </Box>
 

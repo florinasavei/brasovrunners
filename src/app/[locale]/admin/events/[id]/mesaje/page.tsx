@@ -16,6 +16,7 @@ import { routing } from "@/i18n/routing";
 import { findEventForEditing } from "@/modules/content/events/repository";
 import { typedStartShape } from "@/modules/events/domain/provisional-start";
 import { readRepeatRule } from "@/modules/events/domain/repeat";
+import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { EMAIL_SAMPLE } from "@/modules/notifications/domain/email-sample";
 import {
   CHOSEN_AUDIENCE,
@@ -50,6 +51,7 @@ import { canMessageParticipants } from "@/modules/staff-identity/domain/roles";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { confirmWords } from "@/shared/feedback/confirm-words";
+import type { ConfirmAlso } from "@/shared/feedback/notice";
 import ActionForm from "@/shared/forms/ActionForm";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { isUuid } from "@/shared/ids";
@@ -296,12 +298,17 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
     and the outbox defers what a spent allowance cannot carry, as for any send (§40).
   */
   const testPeople = people.filter((person) => person.test).map((person) => person.id);
+  /*
+    «Include programul evenimentului» (§958): the question says so, in one quiet line under the email's — only for a
+    press whose form posts the tick (a ticked box posts `1`, an unticked or a disabled one posts nothing).
+  */
+  const programmeLine: ConfirmAlso = { text: t("participantMessages.confirmProgramme"), when: [{ field: "includeProgramme", equals: "1" }] };
   const chosenConfirm = withSendNowChoice(
     {
       when: [{ field: "audience", equals: CHOSEN_AUDIENCE }],
       title: t("participantMessages.chosen.confirmTitle"),
       body: [t("participantMessages.confirmBody"), testPeople.length > 0 ? t("participantMessages.chosen.testNote") : ""].filter(Boolean).join(" "),
-      ...words.mail({ to: { ticksOf: CHOSEN_FIELD, audience: "participants", uncounted: testPeople }, type: "ORGANIZER_MESSAGE" }),
+      ...words.mail({ to: { ticksOf: CHOSEN_FIELD, audience: "participants", uncounted: testPeople }, type: "ORGANIZER_MESSAGE", also: [programmeLine] }),
       confirmLabel: t("participantMessages.confirmSend"),
       cancelLabel: words.cancel,
     },
@@ -318,7 +325,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
         ...(choice.warningLine ? { warning: choice.warningLine } : {}),
         // No "0 participants" for a group of test rows alone: the test line says who is written to. The message named, and
         // the club's one copy of the send (§419) — the design «telling the owner about every email a staff press sends», slice 3.
-        ...words.mail({ to: { count: choice.real, audience: "participants" }, type: "ORGANIZER_MESSAGE" }),
+        ...words.mail({ to: { count: choice.real, audience: "participants" }, type: "ORGANIZER_MESSAGE", also: [programmeLine] }),
         confirmLabel: t("participantMessages.confirmSend"),
         cancelLabel: words.cancel,
       },
@@ -342,6 +349,12 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
   }, { confirmation: true });
 
   const inSeries = event.repeatOf !== null || readRepeatRule(event.repeatRule) !== null;
+  /*
+    «Include programul evenimentului» (§958) is offered only when the event has a programme the message can draw: at
+    least one timed row (`events.schedule_items`, §117). The programme's free text alone (`schedule_json`) does not
+    count — the message draws timed rows only, as the facts block does.
+  */
+  const hasProgramme = readScheduleItems(event.scheduleItems).length > 0;
   const nobodyAnywhere = counts.ALL_ACTIVE.real + counts.ALL_ACTIVE.test === 0;
   const sentCount = /^\d+$/.test(sent ?? "") ? Number(sent) : null;
   const sentTest = /^\d+$/.test(test ?? "") ? Number(test) : 0;
@@ -418,9 +431,12 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
                     askReconfirm: keptMessage.askReconfirm,
                     sendQr: keptMessage.sendQr,
                     signLink: keptMessage.signLink,
+                    // «Include programul evenimentului» (§958): named only when that send ticked it.
+                    ...(keptMessage.includeProgramme ? { includeProgramme: true } : {}),
                   },
                 }
               : {})}
+            hasProgramme={hasProgramme}
             defaultAudience="ALL_ACTIVE"
             maxSubject={ORGANIZER_SUBJECT_MAX}
             maxBody={ORGANIZER_BODY_MAX}
@@ -478,6 +494,10 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
               sendQrHelp: t("participantMessages.sendQrHelp"),
               signLink: t("participantMessages.signLink"),
               signLinkHelp: t("participantMessages.signLinkHelp"),
+              includeProgramme: t("participantMessages.includeProgramme"),
+              includeProgrammeHelp: t("participantMessages.includeProgrammeHelp"),
+              // Where the programme is written, by the editor card's own title — never a second name for it.
+              includeProgrammeNone: t("participantMessages.includeProgrammeNone", { card: t("editor.boxes.programme.title") }),
               reminderFill: {
                 button: t("participantMessages.reminderFill.button"),
                 confirmTitle: t("participantMessages.reminderFill.confirmTitle"),
