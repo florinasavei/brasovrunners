@@ -106,6 +106,34 @@ function eventWords(locale: Locale): Translate {
  */
 export type EmailWeatherRow = { label: string; line: string; credit?: string };
 
+/**
+ * The «Program» row (§117): the programme's timed rows as lines — «08:30–09:30 — Ridicarea kiturilor (loc)», the day
+ * before the hour when they span several days — each half's own labels; nothing when the event has no timed row. The
+ * free text stays on the page, behind `#schedule`.
+ *
+ * Its own function since §NNN, because two things draw it: the facts block below, and the organizers' message whose
+ * send ticked «Include programul evenimentului» (`eventProgrammeBlock`) — one builder, so the confirmation and that
+ * message cannot say the programme differently.
+ */
+function programmeRow(details: Pick<EmailEventFacts, "scheduleItems" | "timezone">, locale: Locale, t: Translate): Row | null {
+  const programme = programmeLines(localizedSchedule(readScheduleItems(details.scheduleItems), locale), details.timezone, locale);
+  return programme.length > 0 ? { label: t("calendar.programme"), lines: programme.map((text) => [{ text }]) } : null;
+}
+
+/**
+ * The programme alone, as a block of one row (§NNN; the owner, 2026-11-17: «Vreau încă o bifă in acel eveniment de
+ * "include program"»): what the organizers' message draws under its words when its send ticked «Include programul
+ * evenimentului» — the facts block's own «Program» row, in the same box, and nothing else of the block. `undefined` when
+ * the event has no timed row as the message leaves: that message is then exactly the one without the tick.
+ *
+ * It reads what the facts block reads, so a row's place is absent while the event's place is to be announced (§328):
+ * the query has emptied it already.
+ */
+export function eventProgrammeBlock(details: Pick<EmailEventFacts, "scheduleItems" | "timezone">, locale: Locale): EventFactsBlock | undefined {
+  const row = programmeRow(details, locale, eventWords(locale));
+  return row ? { html: blockHtml([row]), text: blockText([row]) } : undefined;
+}
+
 export function eventFactsBlock(details: EmailEventFacts, locale: Locale, weather?: EmailWeatherRow): EventFactsBlock {
   const t = eventWords(locale);
   const zone = details.timezone;
@@ -146,8 +174,8 @@ export function eventFactsBlock(details: EmailEventFacts, locale: Locale, weathe
   }
 
   // Program: the timed rows, each half's own labels (§117); the free text stays on the page, behind `#schedule`.
-  const programme = programmeLines(localizedSchedule(readScheduleItems(details.scheduleItems), locale), zone, locale);
-  if (programme.length > 0) rows.push({ label: t("calendar.programme"), lines: programme.map((text) => [{ text }]) });
+  const programme = programmeRow(details, locale, t);
+  if (programme) rows.push(programme);
 
   // Traseu: the page's pills as words, in the page's order; under them the route's own links.
   const format = { number: (value: number, options?: { maximumFractionDigits?: number }) => new Intl.NumberFormat(intlLocale(locale), options).format(value) };

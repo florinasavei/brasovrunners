@@ -310,6 +310,18 @@ export function organizerSignLinkApplies(params: Parameters<typeof cannotComeApp
 }
 
 /**
+ * Whether this row carries «Include programul evenimentului» (§NNN; the owner, 2026-11-17: «Vreau încă o bifă in acel
+ * eveniment de "include program"»): the payload's `includeProgramme`, beside the words. Unlike the three flags above it
+ * is about nobody in particular, so the send sets it on **every** row it queues — whatever the registration's state —
+ * and on the club's copy too, which shows what the participants got; anything but `true` — a send that did not tick it,
+ * an older row, a hand-made one — is no. A flag, never the rows: the programme is read off the event when the email
+ * leaves, as every fact of the event in a message is, and with no timed row then the message is the one without the tick.
+ */
+export function readOrganizerIncludeProgramme(payload: unknown): boolean {
+  return Boolean(payload && typeof payload === "object" && (payload as { includeProgramme?: unknown }).includeProgramme === true);
+}
+
+/**
  * What the line before «Trimite» says about a send (the decision «Cere reconfirmarea», part two), worked out on the
  * server for the road the send's messages take, with no reserve: the outbox claims a send to many after every
  * registration's own message on its road (`domain/bulk.ts#SEND_TO_MANY_MESSAGE_TYPES`) and holds none of it back.
