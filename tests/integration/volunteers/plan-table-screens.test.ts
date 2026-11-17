@@ -11,28 +11,30 @@ import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
-import { type PlanRace, planSummaryOf, seedPlanRace } from "../../helpers/volunteer-plan";
+import { elementWith, type PlanRace, planPointsOf, planSummaryOf, seedPlanRace } from "../../helpers/volunteer-plan";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-041-01, BR-REQ-060-01 — «Punctele, pe scurt» on «Planul voluntarilor» (the owner, 2026-11-17,
- * four days before the race: «aș vrea să văd punctele ca și tabel, mai ales pe traseu»), rendered from a real database, in
- * Romanian and in English:
+ * §NNN, BR-REQ-050-02, BR-REQ-041-01, BR-REQ-060-01 — «Punctele, pe scurt», the view «Tabel» of «Planul voluntarilor» (the
+ * owner, 2026-11-17, four days before the race: «aș vrea să văd punctele ca și tabel, mai ales pe traseu»), rendered from a
+ * real database, in Romanian and in English:
  *
- * - the section stands right under the page's title and intro — after «Tipărește planul», before the picture, the builder,
- *   the email and the cards — under a level-3 heading with the house's list glyph, and holds the house's table
- *   (`AdminTable`) with six columns: «Nr.», «Punct», «Km», «Coordonate», «Voluntari», «Câți»;
+ * - the section is the page's default view: right under the title, the intro and the two views' links — after «Tipărește
+ *   planul», before the picture, «Adaugă un punct», the email and «Fără punct», and with none of the points' folds — under a
+ *   level-3 heading with the house's list glyph, and holds the house's table (`AdminTable`) with six columns: «Nr.»,
+ *   «Punct», «Km», «Coordonate», «Voluntari», «Câți»;
  * - the route's points first, by kilometre and so by number — a point of the plan's own between the editor's —, then the
- *   start–finish points as the page lists them; a point's name links to its card (`#point-<id>`), which is on the page; the
- *   kilometre as the card writes it, or «start–finish»; the coordinates with «Deschide pe hartă», or «—»; the people the
- *   card has, in its order, each with a `tel:` link of digits, «niciunul» where nobody stands; how many;
+ *   start–finish points as the page lists them; a point's name, in bold, links to that point on «Pe puncte», open
+ *   (`?view=points&open=<id>#point-<id>`); the kilometre as the point's line writes it, or «start–finish»; the coordinates
+ *   with «Deschide pe hartă», or «—»; the people the point has, in its order, each with a `tel:` link of digits, «niciunul»
+ *   where nobody stands; how many;
  * - under it, the people placed and the points with nobody, each a counted phrase (`countForm`);
  * - one page, no page sizes; on a phone a block a point, headed by its name, with no «Nr.» at the start–finish;
  * - on paper the table is printed whole as a table, its map links left off, its names and telephones as text; every link
  *   is a thumb's 44 pixels (BR-REQ-041-01 criterion 6);
  * - a plan with no point has no table, and the page is the 404 it was for whoever may not work the volunteers.
  *
- * The cards themselves are `plan.test.ts` and `plan-points-screens.test.ts`; the table on a phone and on a desktop in a
- * browser is `tests/e2e/volunteer-plan-mail.spec.ts`.
+ * The points themselves are `plan.test.ts` and `plan-points-screens.test.ts`, the two views and their folds
+ * `plan-views-screens.test.ts`; the table on a phone and on a desktop in a browser is `tests/e2e/volunteer-plan-mail.spec.ts`.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en" }));
 
@@ -136,8 +138,8 @@ async function html(page: ReactElement, keepStyles = false): Promise<string> {
   const markup = (await new Response(stream).text()).replace(/<!-- -->/g, "");
   return keepStyles ? markup : markup.replace(/<style[\s\S]*?<\/style>/g, "");
 }
-const planPage = async (id = race.raceId, keepStyles = false) =>
-  html(await VolunteerPlanPage({ params: Promise.resolve({ locale: state.locale, id }), searchParams: Promise.resolve({}) }), keepStyles);
+const planPage = async (id = race.raceId, keepStyles = false, query: Record<string, string> = {}) =>
+  html(await VolunteerPlanPage({ params: Promise.resolve({ locale: state.locale, id }), searchParams: Promise.resolve(query) }), keepStyles);
 
 /** As the markup carries an apostrophe and a quotation mark. */
 const escaped = (text: string) => text.replace(/&/g, "&amp;").replace(/'/g, "&#x27;").replace(/"/g, "&quot;");
@@ -164,8 +166,8 @@ const printOf = (page: string, names: readonly string[]) =>
 /** Whether a class sets a 44-pixel height on screen. */
 const tallClass = (page: string, names: readonly string[]) => names.some((name) => new RegExp(`\\.${name}\\{[^}]*min-height:44px`).test(rulesOf(page)));
 
-describe("§NNN «Punctele, pe scurt»: the plan's points as one table at the top of «Planul voluntarilor»", () => {
-  it("stands under the title and the intro, before the picture and the cards, under its heading and the house's list glyph, with six columns", async () => {
+describe("§NNN «Punctele, pe scurt»: the plan's points as one table, the view «Tabel» of «Planul voluntarilor»", () => {
+  it("stands under the title, the intro and the views, before the picture, the builder and the email, under its heading and the house's list glyph, with six columns", async () => {
     await fullPlan();
     for (const locale of ["ro", "en"] as const) {
       state.locale = locale;
@@ -173,13 +175,17 @@ describe("§NNN «Punctele, pe scurt»: the plan's points as one table at the to
       const page = await planPage();
       const at = (needle: string) => page.indexOf(needle);
 
-      // Its place: after the intro and «Tipărește planul», before the picture, the builder, the email and the cards.
+      // Its place: after the intro, the views and «Tipărește planul», before the picture, the builder, the email and «Fără punct».
       expect(at('data-testid="plan-table-section"'), locale).toBeGreaterThan(at(escaped(words.help)));
+      expect(at('data-testid="plan-table-section"')).toBeGreaterThan(at('data-testid="plan-views"'));
       expect(at('data-testid="plan-table-section"')).toBeGreaterThan(at(escaped(words.print)));
       expect(at('data-testid="plan-table-section"')).toBeLessThan(at('data-testid="plan-picture-section"'));
       expect(at('data-testid="plan-picture-section"')).toBeLessThan(at('data-testid="plan-points-section"'));
       expect(at('data-testid="plan-points-section"')).toBeLessThan(at('data-testid="plan-mail-section"'));
-      expect(at('data-testid="plan-mail-section"')).toBeLessThan(at('id="plan-list"'));
+      expect(at('data-testid="plan-mail-section"')).toBeLessThan(at('data-testid="plan-unplaced"'));
+      // The default view: the table, and none of the points' folds, which are «Pe puncte».
+      expect(page).not.toContain('id="plan-list"');
+      expect(page).not.toContain('data-testid="plan-point"');
 
       const section = sectionOf(page);
       // A section with its own address, named by its heading: a level 3, as the page's other sections, with the list's glyph.
@@ -236,11 +242,12 @@ describe("§NNN «Punctele, pe scurt»: the plan's points as one table at the to
       expect(textsOf(wideOf(section), "plan-table-nobody")).toEqual([words.table.nobody, words.table.nobody]);
       expect(textsOf(wideOf(section), "plan-table-km").slice(4)).toEqual([words.columnStartFinish, words.columnStartFinish]);
 
-      // Each name is a link to its point's card below — the card that carries that id is on the page.
+      // Each name is a link to that point on «Pe puncte», open — the fold that carries that id is on that view.
       const order = [race.points.junction, spring, race.points.water, race.points.bridge, kits, start];
       const links = tagsOf(wideOf(section), "plan-table-point");
-      expect(links.map((tag) => /href="([^"]*)"/.exec(tag)?.[1])).toEqual(order.map((id) => `#point-${id}`));
-      for (const id of order) expect(page).toMatch(new RegExp(`<li[^>]*id="point-${id}"[^>]*data-testid="plan-point"`));
+      expect(links.map((tag) => /href="([^"]*)"/.exec(tag)?.[1])).toEqual(order.map((id) => `/${locale}/admin/events/${race.raceId}/plan-voluntari?view=points&amp;open=${id}#point-${id}`));
+      const points = await planPage(race.raceId, false, { view: "points" });
+      for (const id of order) expect(points).toMatch(new RegExp(`<details[^>]*id="point-${id}"[^>]*data-testid="plan-point"`));
 
       // Where a point is: the numbers, and the card's own link to the map — Google Maps' address, a new tab, named by the point.
       const maps = tagsOf(wideOf(section), "plan-table-map");
@@ -267,15 +274,16 @@ describe("§NNN «Punctele, pe scurt»: the plan's points as one table at the to
       expect(section).not.toContain("Eva Stan");
       expect(section).not.toContain("Mara Dinu");
       for (const id of order) {
-        const card = new RegExp(`<li[^>]*id="point-${id}"[\\s\\S]*?(?=<li[^>]*data-testid="plan-point"|</section>)`).exec(page)?.[0] ?? "";
+        const point = elementWith(points, `id="point-${id}"`);
         const row = rows[order.indexOf(id)];
-        expect(textsOf(row[4], "plan-table-person-name"), id).toEqual([...card.matchAll(/data-testid="plan-person-name"[^>]*><a[^>]*>([^<]*)</g)].map((match) => match[1]));
+        expect(textsOf(row[4], "plan-table-person-name"), id).toEqual([...point.matchAll(/data-testid="plan-person-name"[^>]*><a[^>]*>([^<]*)</g)].map((match) => match[1]));
       }
+      expect(planPointsOf(points)).toHaveLength(order.length);
 
       // Under the table, its total: five people placed — Ana, Zoe, Dan, Ion, Radu — and two points with nobody.
       expect(afterTableOf(section)).toContain(locale === "ro" ? ">5 voluntari puși, 2 puncte fără nimeni<" : ">5 volunteers placed, 2 points with nobody<");
-      // The summary above the cards says the same people, split by where they stand.
-      expect(planSummaryOf(page)).toBe(
+      // The summary over the points on «Pe puncte» says the same people, split by where they stand.
+      expect(planSummaryOf(points)).toBe(
         locale === "ro"
           ? "1 voluntar la start–finish · 4 voluntari pe traseu · 0 voluntari fără punct · 2 puncte fără nimeni"
           : "1 volunteer at the start–finish · 4 volunteers on the route · 0 volunteers at no point · 2 points with nobody",

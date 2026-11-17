@@ -25,7 +25,7 @@ import { decodeFlash } from "@/shared/feedback/notice";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
-import { planSummaryOf } from "../../helpers/volunteer-plan";
+import { drawnOpen, elementWith, planPointBar, planPointsOf, planSummaryOf } from "../../helpers/volunteer-plan";
 
 /**
  * §952, BR-REQ-050-02, BR-REQ-060-01 — the picture of «Planul voluntarilor» (the owner, 2026-11-16, with a picture of the route
@@ -39,9 +39,10 @@ import { planSummaryOf } from "../../helpers/volunteer-plan";
  * - the reference check counts it: the sweep keeps it, the pictures page's delete is refused and the list names the plan, and
  *   once it is taken off and old enough the sweep takes it;
  * - the Server Actions ask the capability at their own door, and say what happened;
- * - the page draws it above the points, a link to the whole picture around it, with «Schimbă poza» and «Șterge poza», in both
- *   languages; on paper the picture is one piece and the controls are not there; with no picture the page reads as before,
- *   plus the upload;
+ * - the page draws it in a fold of its own (§NNN) in both views, after the view's plan, saying on its closed line whether
+ *   there is one, a link to the whole picture around it, with «Schimbă poza» and «Șterge poza», in both languages; a press
+ *   comes back with the fold open; on paper the picture is one piece, printed whatever the screen had folded, and the fold's
+ *   bar and the controls are not there; with no picture the page reads as before, plus the upload;
  * - a series' dates, a copy and the event's file do not carry it.
  */
 const state = vi.hoisted(() => ({
@@ -537,7 +538,9 @@ describe("§952 a picture used as a plan's is the plan's (the reference check, �
 });
 
 describe("§952 the page's presses: «Încarcă poza planului», «Schimbă poza», «Șterge poza»", () => {
-  const back = () => `/ro/admin/events/${raceId}/plan-voluntari#plan-picture`;
+  // Back to the picture's fold, open, in the view the press came from — «Tabel» for a form that names none (§NNN).
+  const back = (view = "table") => `/ro/admin/events/${raceId}/plan-voluntari?view=${view}&saved=planPicture#plan-picture`;
+  const refusedAt = (code: string) => `/ro/admin/events/${raceId}/plan-voluntari?view=table&planError=${code}#admin-alert`;
 
   it("records the uploaded picture, changes it and takes it off, coming back to the picture and saying what happened", async () => {
     const first = await storedPicture();
@@ -560,11 +563,19 @@ describe("§952 the page's presses: «Încarcă poza planului», «Schimbă poza
     expect(toasted()).toEqual(["planPictureRemoved"]);
     expect(await press(removePlanPictureAction)).toBe(back());
     expect(toasted()).toEqual(["volunteerUnchanged"]);
+    // Pressed on «Pe puncte», back to it; and the address opens the fold, in either view.
+    expect(await press(setPlanPictureAction, { assetId: first.id, view: "points" })).toBe(back("points"));
+    for (const view of ["table", "points"]) expect(drawnOpen(elementWith(await planPage({ view, saved: "planPicture" }), 'data-testid="plan-picture-section"'))).toBe(true);
 
     // Every press asked the capability at the action's own door, by name.
-    expect(state.asked).toEqual(Array.from({ length: 5 }, () => "canManageVolunteers"));
+    expect(state.asked).toEqual(Array.from({ length: 6 }, () => "canManageVolunteers"));
     // One row a change, none for the two presses that changed nothing (the presses' own clock is the real one: counted, not ordered).
-    expect((await trail()).map((row) => row.action).sort()).toEqual(["event.volunteer_plan_picture_removed", "event.volunteer_plan_picture_set", "event.volunteer_plan_picture_set"]);
+    expect((await trail()).map((row) => row.action).sort()).toEqual([
+      "event.volunteer_plan_picture_removed",
+      "event.volunteer_plan_picture_set",
+      "event.volunteer_plan_picture_set",
+      "event.volunteer_plan_picture_set",
+    ]);
   });
 
   it("every toast it writes has its sentence in both languages", () => {
@@ -582,7 +593,7 @@ describe("§952 the page's presses: «Încarcă poza planului», «Schimbă poza
     const picture = await storedPicture();
     await setPicture(staff.ADMIN!, picture.id);
     for (const assetId of ["", "   "]) {
-      expect(await press(setPlanPictureAction, { assetId })).toBe(`/ro/admin/events/${raceId}/plan-voluntari?planError=VALIDATION_ERROR#admin-alert`);
+      expect(await press(setPlanPictureAction, { assetId })).toBe(refusedAt("VALIDATION_ERROR"));
     }
     expect((await rowOf()).volunteerPlanMediaAssetId).toBe(picture.id);
     expect(toasted()).toEqual([]);
@@ -610,8 +621,8 @@ describe("§952 the page's presses: «Încarcă poza planului», «Schimbă poza
 
     for (const role of ["DEV", "COPYWRITER", "CONTRIBUTOR", "MEMBER"] as const) {
       state.actor = staff[role];
-      expect(await press(setPlanPictureAction, { assetId: wanted.id }), role).toBe(`/ro/admin/events/${raceId}/plan-voluntari?planError=FORBIDDEN#admin-alert`);
-      expect(await press(removePlanPictureAction), role).toBe(`/ro/admin/events/${raceId}/plan-voluntari?planError=FORBIDDEN#admin-alert`);
+      expect(await press(setPlanPictureAction, { assetId: wanted.id }), role).toBe(refusedAt("FORBIDDEN"));
+      expect(await press(removePlanPictureAction), role).toBe(refusedAt("FORBIDDEN"));
     }
     expect(state.asked).toEqual(Array.from({ length: 8 }, () => "canManageVolunteers"));
     expect(state.serviceCalls).toBe(0);
@@ -624,11 +635,13 @@ describe("§952 the page's presses: «Încarcă poza planului», «Schimbă poza
 describe("§952 the plan's page draws the picture", () => {
   it("reads as before with no picture, plus the upload", async () => {
     const page = await planPage();
-    // The plan as it was.
+    // The plan as it was: its table, and on «Pe puncte» its points (§NNN).
     expect(page).toContain(ro.Admin.volunteers.plan.title);
+    expect(page).toContain('data-testid="plan-table-section"');
+    const points = await planPage({ view: "points" });
     // Four numbers since the plan has two kinds of points (§961): nobody at the start–finish, one person on the route.
-    expect(planSummaryOf(page)).toBe("0 voluntari la start–finish · 1 voluntar pe traseu · 0 voluntari fără punct · 1 punct fără nimeni");
-    expect(page).toContain("1. 1,2 km — Intersecția Stejeriș");
+    expect(planSummaryOf(points)).toBe("0 voluntari la start–finish · 1 voluntar pe traseu · 0 voluntari fără punct · 1 punct fără nimeni");
+    expect(planPointBar(planPointsOf(points)[0])).toEqual({ name: "1. Intersecția Stejeriș", line: "1,2 km · 1 voluntar" });
 
     // No picture, no link to one, no «Șterge poza».
     expect(page).not.toContain('data-testid="plan-picture"');
@@ -637,10 +650,15 @@ describe("§952 the plan's page draws the picture", () => {
     expect(page).not.toContain(ro.Admin.volunteers.plan.picture.remove);
     expect(page).not.toContain(ro.Admin.volunteers.plan.picture.replace);
 
-    // The section, what to do, and the upload: the form the island sends, with the event in it and the picture's box empty.
-    expect(page).toContain(ro.Admin.volunteers.plan.picture.title);
-    expect(page).toContain(ro.Admin.volunteers.plan.picture.none);
-    const upload = page.slice(page.indexOf('data-testid="plan-picture-form"'), page.indexOf('data-testid="plan-summary"'));
+    // The fold, closed, saying there is no picture yet; what to do, and the upload: the form the island sends, with the event
+    // in it and the picture's box empty.
+    const fold = elementWith(page, 'data-testid="plan-picture-section"');
+    expect(fold).toMatch(/^<details[^>]*id="plan-picture"/);
+    expect(drawnOpen(fold)).toBe(false);
+    expect(fold).toContain(`</svg>${ro.Admin.volunteers.plan.picture.title}<`);
+    expect(fold).toContain(`data-testid="plan-picture-state">${ro.Admin.volunteers.plan.picture.hasNone}<`);
+    expect(fold).toContain(ro.Admin.volunteers.plan.picture.none);
+    const upload = elementWith(fold, 'data-testid="plan-picture-form"');
     expect(upload).toContain(`name="eventId" value="${raceId}"`);
     expect(upload).toContain('name="uiLocale" value="ro"');
     expect(upload).toMatch(/<input[^>]*type="hidden"[^>]*name="assetId"[^>]*value=""/);
@@ -652,17 +670,18 @@ describe("§952 the plan's page draws the picture", () => {
     expect(upload).toContain(ro.Admin.volunteers.plan.picture.help);
   });
 
-  it("draws the picture above the points, as wide as the column, a press opening the whole of it in a new tab", async () => {
+  it("draws the picture in its fold, after the view's plan, as wide as the column, a press opening the whole of it in a new tab", async () => {
     const stored = await storedPicture({ width: 2400, height: 1600 });
     await setPicture(staff.ADMIN!, stored.id);
     const { picture } = await readVolunteerPlan(db, staff.ADMIN!, raceId);
     const page = await planPage();
 
-    // Above the summary and the first point.
+    // After the view's plan — the table on «Tabel», the points on «Pe puncte» (§NNN) —, in its fold, which says it has one.
     const at = (needle: string) => page.indexOf(needle);
-    expect(at('data-testid="plan-picture"')).toBeGreaterThan(at(ro.Admin.volunteers.plan.title));
-    expect(at('data-testid="plan-picture"')).toBeLessThan(at('data-testid="plan-summary"'));
-    expect(at('data-testid="plan-summary"')).toBeLessThan(at('data-testid="plan-point"'));
+    expect(at('data-testid="plan-picture"')).toBeGreaterThan(at('data-testid="plan-table-section"'));
+    const points = await planPage({ view: "points" });
+    expect(points.indexOf('data-testid="plan-picture"')).toBeGreaterThan(points.indexOf('data-testid="plan-point"'));
+    expect(page).toContain(`data-testid="plan-picture-state">${ro.Admin.volunteers.plan.picture.has}<`);
 
     // The link is the whole picture, in a new tab, named for a reader who does not see it.
     const link = tagOf(page, "plan-picture-link");
@@ -685,7 +704,7 @@ describe("§952 the plan's page draws the picture", () => {
     expect(page).not.toContain(ro.Admin.volunteers.plan.picture.none);
 
     // «Schimbă poza» in the upload's form, «Șterge poza» in its own, each with the event.
-    const controls = page.slice(at('data-testid="plan-picture-controls"'), at('data-testid="plan-summary"'));
+    const controls = elementWith(page, 'data-testid="plan-picture-controls"');
     expect(tagOf(page, "plan-picture-upload")).toMatch(/^<label[^>]*for="plan-picture-file"/);
     expect(controls).toContain(ro.Admin.volunteers.plan.picture.replace);
     expect(controls).not.toContain(ro.Admin.volunteers.plan.picture.upload);
@@ -711,16 +730,17 @@ describe("§952 the plan's page draws the picture", () => {
     expect(bare).toContain('name="uiLocale" value="en"');
 
     await setPicture(staff.ADMIN!, stored.id);
-    const page = await planPage();
+    const page = await planPage({ view: "points" });
     expect(tagOf(page, "plan-picture-link")).toContain(`aria-label="${en.Admin.volunteers.plan.picture.open}"`);
     expect(tagOf(page, "plan-picture-image")).toContain(`alt="${escaped(en.Admin.volunteers.plan.picture.alt)}"`);
     expect(page).toContain(en.Admin.volunteers.plan.picture.openHint);
     expect(page).toContain(en.Admin.volunteers.plan.picture.replace);
     expect(page).toContain(en.Admin.volunteers.plan.picture.remove);
+    expect(page).toContain(`data-testid="plan-picture-state">${en.Admin.volunteers.plan.picture.has}<`);
     expect(planSummaryOf(page)).toBe("0 volunteers at the start–finish · 1 volunteer on the route · 0 volunteers at no point · 1 point with nobody");
   });
 
-  it("prints the picture first and in one piece, and none of its controls", async () => {
+  it("prints the picture after the view's plan, in one piece and whatever the screen had folded, and none of its controls", async () => {
     const stored = await storedPicture();
     await setPicture(staff.ADMIN!, stored.id);
     const page = await planPage({}, raceId, true);
@@ -738,22 +758,34 @@ describe("§952 the plan's page draws the picture", () => {
 
     // Off the sheet: the island's button and its quality choice, «Șterge poza», and the links above the title.
     expect(hiddenOnPaper("plan-picture-controls")).toBe(true);
-    const controls = page.slice(page.indexOf('data-testid="plan-picture-controls"'), page.indexOf('data-testid="plan-summary"'));
+    const controls = elementWith(page, 'data-testid="plan-picture-controls"');
     for (const inside of ['data-testid="plan-picture-upload"', 'data-testid="image-quality"', 'data-testid="plan-picture-remove-form"']) expect(controls, inside).toContain(inside);
 
-    // First on the sheet after the points' table, «Punctele, pe scurt» (§NNN, amending §952's «first after the title»): the
-    // table is the one thing between the title and the picture that is printed — the picture's own heading and every control
-    // are left off the paper — and the points come after it.
+    // The fold (§NNN) on paper: the picture alone, shown whether the fold is open or shut — its body the browser would hide
+    // shown, its bar (the heading «Poza planului» and its closed line) and its frame left off.
+    // What the fold's own class says on paper, every rule of it — its own, its bar's, its body's.
+    const onPaper = (markup: string) =>
+      classesOf(markup, "plan-picture-section")
+        .flatMap((name) => [...cssOf(markup).matchAll(/@media print\{((?:[^{}]*\{[^}]*\})+)\}/g)].flatMap((block) => [...block[1].matchAll(new RegExp(`\\.${name}([^{]*)\\{([^}]*)\\}`, "g"))].map((rule) => `${rule[1]}{${rule[2]}}`)))
+        .join(";");
+    expect(onPaper(page)).not.toMatch(/(^|;)\{display:none/);
+    expect(onPaper(page)).toMatch(/(^|;)\{border:0px solid;padding-left:0px;padding-right:0px;background-color:transparent;/);
+    expect(onPaper(page)).toMatch(/>summary\{display:none/);
+    expect(onPaper(page)).toMatch(/::details-content\{display:block;content-visibility:visible/);
+
+    // After the view's plan on the sheet (§NNN, amending §952's «first after the title»): on «Tabel» the table is the one
+    // thing printed between the title and the picture; on «Pe puncte», the points.
     const plain = page.replace(/<style[\s\S]*?<\/style>/g, "");
     const before = plain.slice(plain.indexOf(ro.Admin.volunteers.plan.help), plain.indexOf('data-testid="plan-picture"'));
-    expect(before).toContain(ro.Admin.volunteers.plan.picture.title);
     expect(before).toContain('data-testid="plan-table-section"');
     expect(hiddenOnPaper("plan-table-section")).toBe(false);
     expect(before).not.toContain('data-testid="plan-point"');
-    expect(before).not.toContain('data-testid="plan-summary"');
-    const sectionHeading = page.match(new RegExp(`<h3[^>]*class="([^"]*)"[^>]*>${ro.Admin.volunteers.plan.picture.title}`))?.[1] ?? "";
-    const headingClass = sectionHeading.split(/\s+/).find((name) => name.startsWith("css-")) ?? "";
-    expect(cssOf(page)).toMatch(new RegExp(`@media print\\{\\.${headingClass}\\{[^}]*display:none`));
+    const points = (await planPage({ view: "points" })).replace(/<style[\s\S]*?<\/style>/g, "");
+    expect(points.indexOf('data-testid="plan-point"')).toBeLessThan(points.indexOf('data-testid="plan-picture"'));
+    // With no picture, the fold is off the sheet whole: a plan with no picture prints as it did.
+    await setPicture(staff.ADMIN!, null);
+    const bare = await planPage({}, raceId, true);
+    expect(onPaper(bare)).toMatch(/(^|;)\{display:none/);
   });
 
   it("gives a thumb 44 pixels on both buttons", async () => {
@@ -794,7 +826,7 @@ describe("§952 the plan's page draws the picture", () => {
     expect(page).not.toContain('data-testid="plan-picture-remove-form"');
     expect(page).not.toContain("<img");
     // The plan itself is as it was.
-    expect(page).toContain("1. 1,2 km — Intersecția Stejeriș");
+    expect(page).toContain(">Intersecția Stejeriș<");
   });
 
   it("is a 404 for the Tehnic role, the Redactor, a desk Volunteer and a member, picture or not", async () => {

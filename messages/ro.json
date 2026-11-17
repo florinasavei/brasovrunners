@@ -6414,6 +6414,11 @@
         "back": "Înapoi la voluntari",
         "editPoints": "Punctele de pe traseu, în editorul evenimentului",
         "print": "Tipărește planul",
+        "views": {
+          "label": "Cum vezi planul",
+          "table": "Tabel",
+          "points": "Pe puncte"
+        },
         "summary": {
           "startFinish": {
             "one": "{count} voluntar la start–finish",
@@ -6454,14 +6459,26 @@
           },
           "total": "{placed}, {empty}"
         },
-        "noPoints": "Planul nu are încă niciun punct. Adaugă punctele chiar aici, mai sus, la „Punctele planului”, sau în editorul evenimentului, la „Puncte pe traseu”.",
+        "noPoints": "Planul nu are încă niciun punct. Adaugă punctele chiar aici, la „Adaugă un punct”, sau în editorul evenimentului, la „Puncte pe traseu”.",
         "groups": {
-          "startFinish": "Start–finish",
+          "startFinish": "La start–finish",
           "route": "Pe traseu",
-          "startFinishNone": "Niciun punct la start–finish. Adaugă unul mai sus, alegând „La start–finish”.",
-          "routeNone": "Niciun punct pe traseu. Adaugă unul mai sus, sau în editorul evenimentului, la „Puncte pe traseu”."
+          "points": {
+            "one": "{count} punct",
+            "few": "{count} puncte",
+            "other": "{count} de puncte"
+          },
+          "startFinishNone": "Niciun punct la start–finish. Adaugă unul la „Adaugă un punct”, alegând „La start–finish”.",
+          "routeNone": "Niciun punct pe traseu. Adaugă unul la „Adaugă un punct”, sau în editorul evenimentului, la „Puncte pe traseu”."
         },
         "pointTitle": "{number}. {title}",
+        "pointKm": "{km} km",
+        "people": {
+          "one": "{count} voluntar",
+          "few": "{count} voluntari",
+          "other": "{count} de voluntari"
+        },
+        "peopleNone": "niciun voluntar",
         "nobodyHere": "Nimeni aici încă.",
         "choose": "Pune pe cineva aici",
         "chooseEmpty": "Alege un voluntar",
@@ -6480,7 +6497,6 @@
         "columnStartFinish": "start–finish",
         "pointValue": "Punct în planul voluntarilor: {name}",
         "points": {
-          "title": "Punctele planului",
           "help": "Adaugă aici punctele unde stau voluntarii, ca pe poza de mai sus. Un punct e fie la start–finish, fie pe traseu: celui de pe traseu îi spui și la ce kilometru e.",
           "helpCoordinates": "Dacă știi coordonatele, voluntarii primesc și linkul către hartă.",
           "helpPrivate": "Punctele adăugate aici se văd doar pe plan și în emailul trimis voluntarilor — nu apar pe pagina evenimentului și nici pe numerele de concurs.",
@@ -6516,7 +6532,9 @@
           "alt": "Planul voluntarilor desenat pe traseu",
           "open": "Deschide poza planului întreagă, într-o filă nouă",
           "openHint": "Apasă pe poză ca să o deschizi întreagă, într-o filă nouă.",
-          "none": "Planul nu are încă o poză. Încarcă harta traseului cu punctele desenate pe ea: apare aici, deasupra punctelor, și se tipărește odată cu planul.",
+          "none": "Planul nu are încă o poză. Încarcă harta traseului cu punctele desenate pe ea: apare aici și se tipărește odată cu planul.",
+          "has": "încărcată",
+          "hasNone": "nicio poză încă",
           "upload": "Încarcă poza planului",
           "replace": "Schimbă poza",
           "uploading": "Se încarcă…",
@@ -6535,6 +6553,13 @@
           "again": "Trimite din nou tuturor",
           "allTold": "Toți cei de la puncte își știu deja punctul. Trimite din nou doar dacă s-a schimbat ceva: poza, numele, coordonatele sau nota unui punct, ordinea punctelor, un rol.",
           "nobody": "Nimeni de anunțat: niciun voluntar cu adresă de email nu stă încă la un punct.",
+          "toTell": {
+            "one": "{count} voluntar de anunțat",
+            "few": "{count} voluntari de anunțat",
+            "other": "{count} de voluntari de anunțat"
+          },
+          "toTellAllTold": "toți își știu deja punctul",
+          "toTellNone": "nimeni de anunțat",
           "confirmTitle": "Trimiți fiecăruia punctul lui?",
           "confirmBody": "Fiecare primește pe email punctul lui și ce are de făcut acolo.",
           "confirmBodyPicture": "Fiecare primește pe email punctul lui, ce are de făcut acolo și poza planului.",

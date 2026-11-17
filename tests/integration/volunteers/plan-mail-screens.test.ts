@@ -18,7 +18,7 @@ import type { FormOutcome } from "@/shared/forms/outcome";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
-import { type PlanRace, seedPlanRace } from "../../helpers/volunteer-plan";
+import { drawnOpen, elementWith, type PlanRace, seedPlanRace } from "../../helpers/volunteer-plan";
 
 /**
  * §956, BR-REQ-050-02, BR-REQ-060-01 — «Trimite fiecăruia punctul lui» on the page of «Planul voluntarilor», and its Server
@@ -29,9 +29,11 @@ import { type PlanRace, seedPlanRace } from "../../helpers/volunteer-plan";
  *   that leaves and to how many, in both languages;
  * - «Trimite din nou tuturor» is a box in that question while somebody already knows their point, and the button itself once
  *   everybody does; with nobody to write to there is no button, and the sentence that says why;
- * - the action asks the capability at its own door, hands the box to the service, comes back to the plan at its section with a
- *   toast that states how many messages were queued (and how many people have no address), or with the refusal's code, which
- *   the page says in words; every row it queues carries the press's cause and who pressed.
+ * - the section is a fold (§NNN) in both views, closed, saying on its closed line how many its press would tell;
+ * - the action asks the capability at its own door, hands the box to the service, comes back to the plan — in the view it was
+ *   pressed in — at its fold, open, with a toast that states how many messages were queued (and how many people have no
+ *   address), or with the refusal's code, which the page says in words; every row it queues carries the press's cause and
+ *   who pressed.
  *
  * Who is written to, the message and the state at the send are `plan-mail.test.ts`.
  */
@@ -175,8 +177,8 @@ async function html(page: ReactElement, keepStyles = false): Promise<string> {
   return keepStyles ? markup : markup.replace(/<style[\s\S]*?<\/style>/g, "");
 }
 const planPage = async (query: Record<string, string> = {}, keepStyles = false) => html(await pageTree(query), keepStyles);
-/** The section «Trimite fiecăruia punctul lui» of a rendered page, up to the plan's own summary. */
-const sectionOf = (page: string) => page.slice(page.indexOf('data-testid="plan-mail-section"'), page.indexOf('data-testid="plan-summary"'));
+/** The fold «Trimite fiecăruia punctul lui» of a rendered page, whole. */
+const sectionOf = (page: string) => elementWith(page, 'data-testid="plan-mail-section"');
 const textOf = (page: string, testid: string) => page.match(new RegExp(`data-testid="${testid}"[^>]*>([^<]*)<`))?.[1] ?? null;
 /** As the markup carries an apostrophe and a quotation mark. */
 const escaped = (text: string) => text.replace(/'/g, "&#x27;").replace(/"/g, "&quot;");
@@ -201,7 +203,10 @@ async function press(fields: Record<string, string> = {}): Promise<string> {
   return state.redirected[0];
 }
 const toasted = () => state.flashed.map((value) => decodeFlash(value));
-const back = () => `/ro/admin/events/${race.raceId}/plan-voluntari#plan-mail`;
+/** Back to the fold, open, in the view the press came from — «Tabel» for a form that names none (§NNN). */
+const back = (view = "table") => `/ro/admin/events/${race.raceId}/plan-voluntari?view=${view}&saved=planPointsSent#plan-mail`;
+/** A refusal's way back: the page's alert, in that view. */
+const refusedAt = (code: string, eventId = race.raceId, view = "table") => `/ro/admin/events/${eventId}/plan-voluntari?view=${view}&planError=${code}#admin-alert`;
 
 describe("§956 the plan's page: «Trimite fiecăruia punctul lui» and its four numbers", () => {
   it("states the numbers beside the button and in the question, with the email that leaves and to how many", async () => {
@@ -347,8 +352,9 @@ describe("§956 the plan's page: «Trimite fiecăruia punctul lui» and its four
       };
     };
     expect(rulesOf("plan-mail-section").print).toMatch(/display:none/);
-    // The section has its own place to come back to.
-    expect(tagOf("plan-mail-section")).toContain('id="plan-mail"');
+    // The section has its own place to come back to: a fold (§NNN), closed until a press of it comes back.
+    expect(tagOf("plan-mail-section")).toMatch(/^<details[^>]*id="plan-mail"/);
+    expect(tagOf("plan-mail-section")).not.toContain(' open=""');
     // The press is for a thumb: 44 pixels at least (AGENTS.md §18.5).
     expect(rulesOf("plan-mail-send").screen).toMatch(/min-height:44px/);
   });
@@ -362,8 +368,11 @@ describe("§956 the plan's page: «Trimite fiecăruia punctul lui» and its four
 });
 
 describe("§956 the press: `sendVolunteerPointsAction`", () => {
-  it("queues the messages, comes back to the plan at its section, and says how many were queued and how many people have no address", async () => {
+  it("queues the messages, comes back to the plan at its fold, open, and says how many were queued and how many people have no address", async () => {
     expect(await press()).toBe(back());
+    // The fold the address names opens, in either view; and the view a form names is the one it comes back to.
+    expect(drawnOpen(sectionOf(await planPage({ view: "table", saved: "planPointsSent" })))).toBe(true);
+    expect(drawnOpen(sectionOf(await planPage({ view: "points", saved: "planPointsSent" })))).toBe(true);
     // Asked at the action's own door, by name; the service reached once, with the box as posted.
     expect(state.asked).toEqual(["canManageVolunteers"]);
     expect(state.pressed).toEqual([false]);
@@ -401,7 +410,8 @@ describe("§956 the press: `sendVolunteerPointsAction`", () => {
   it("comes back with the refusal's code when everybody was already told, and writes to everybody with the box ticked", async () => {
     await press();
     // The same press again, the box empty: nothing queued, the code in the address, no toast.
-    expect(await press()).toBe(`/ro/admin/events/${race.raceId}/plan-voluntari?planError=VOLUNTEER_POINTS_ALL_TOLD#admin-alert`);
+    expect(await press()).toBe(refusedAt("VOLUNTEER_POINTS_ALL_TOLD"));
+    expect(await press({ view: "points" })).toBe(refusedAt("VOLUNTEER_POINTS_ALL_TOLD", race.raceId, "points"));
     expect(toasted()).toEqual([]);
     expect(await pointMails()).toHaveLength(3);
     // The page says the refusal in words, in both languages.
@@ -410,9 +420,9 @@ describe("§956 the press: `sendVolunteerPointsAction`", () => {
     expect(await planPage({ planError: "VOLUNTEER_POINTS_ALL_TOLD" })).toContain(escaped(en.Admin.errors.VOLUNTEER_POINTS_ALL_TOLD));
     state.locale = "ro";
 
-    // «Trimite din nou tuturor», ticked in the question: `on` in the form.
-    expect(await press({ again: "on" })).toBe(back());
-    expect(state.pressed).toEqual([false, false, true]);
+    // «Trimite din nou tuturor», ticked in the question: `on` in the form — pressed on «Pe puncte», back to it.
+    expect(await press({ again: "on", view: "points" })).toBe(back("points"));
+    expect(state.pressed).toEqual([false, false, false, true]);
     expect(await pointMails()).toHaveLength(6);
     expect(toasted()[0]).toMatchObject({ key: "planPointsSentSomeWithout", values: { count: "3", noAddress: "1" } });
     expect((await trail()).map((row) => (row.metadataJson as { again: boolean }).again)).toEqual([false, true]);
@@ -425,7 +435,7 @@ describe("§956 the press: `sendVolunteerPointsAction`", () => {
 
   it("comes back with the reason when nobody with an address stands at a point, and the page says it", async () => {
     for (const id of [race.people.ana, race.people.dan, race.people.ion]) await place(id, "");
-    expect(await press()).toBe(`/ro/admin/events/${race.raceId}/plan-voluntari?planError=VOLUNTEER_POINTS_NOBODY#admin-alert`);
+    expect(await press()).toBe(refusedAt("VOLUNTEER_POINTS_NOBODY"));
     expect(await press({ again: "on" })).toContain("planError=VOLUNTEER_POINTS_NOBODY#admin-alert");
     expect(await pointMails()).toEqual([]);
     expect(toasted()).toEqual([]);
@@ -438,8 +448,8 @@ describe("§956 the press: `sendVolunteerPointsAction`", () => {
   it("refuses the Tehnic role, the Redactor, a desk Volunteer and a member at its own door: the service is never reached", async () => {
     for (const role of ["DEV", "COPYWRITER", "CONTRIBUTOR", "MEMBER"] as const) {
       state.actor = staff[role];
-      expect(await press(), role).toBe(`/ro/admin/events/${race.raceId}/plan-voluntari?planError=FORBIDDEN#admin-alert`);
-      expect(await press({ again: "on" }), role).toBe(`/ro/admin/events/${race.raceId}/plan-voluntari?planError=FORBIDDEN#admin-alert`);
+      expect(await press(), role).toBe(refusedAt("FORBIDDEN"));
+      expect(await press({ again: "on" }), role).toBe(refusedAt("FORBIDDEN"));
     }
     expect(state.asked).toEqual(Array.from({ length: 8 }, () => "canManageVolunteers"));
     expect(state.pressed).toEqual([]);
@@ -452,7 +462,7 @@ describe("§956 the press: `sendVolunteerPointsAction`", () => {
     expect(await press({ eventId: "" })).toBe("/ro/admin/volunteers");
     expect(await press({ eventId: "not-an-id" })).toBe("/ro/admin/volunteers");
     const missing = "11111111-1111-4111-8111-111111111111";
-    expect(await press({ eventId: missing })).toBe(`/ro/admin/events/${missing}/plan-voluntari?planError=NOT_FOUND#admin-alert`);
+    expect(await press({ eventId: missing })).toBe(refusedAt("NOT_FOUND", missing));
     expect(await pointMails()).toEqual([]);
   });
 

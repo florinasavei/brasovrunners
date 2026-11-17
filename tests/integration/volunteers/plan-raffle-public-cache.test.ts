@@ -141,8 +141,10 @@ describe("§953 the organizers' own marks leave the public cache as it was", () 
 
   it("the presses themselves — the plan's form, the two ticks of the list — tell only their own backoffice page", async () => {
     const plan = `/ro/admin/events/${eventId}/plan-voluntari`;
-    expect(await pressed(placeVolunteerAction(form({ checkpointId: pointId, at: pointId })))).toBe(`${plan}#point-${pointId}`);
-    expect(await pressed(placeVolunteerAction(form({ checkpointId: "", at: pointId })))).toBe(`${plan}#point-${pointId}`);
+    // Back to the point, open, on «Pe puncte» (§NNN) — the address carries the view; the page it refreshes is the plan's path.
+    const atPoint = `${plan}?view=points&open=${pointId}#point-${pointId}`;
+    expect(await pressed(placeVolunteerAction(form({ checkpointId: pointId, at: pointId })))).toBe(atPoint);
+    expect(await pressed(placeVolunteerAction(form({ checkpointId: "", at: pointId })))).toBe(atPoint);
     expect(await pressed(setVolunteerRaffleAction(form({ inRaffle: "0", returnTo: "/ro/admin/volunteers" })))).toBe("/ro/admin/volunteers");
     expect(await pressed(setVolunteerKitAction(form({ hasKit: "1", returnTo: "/ro/admin/volunteers" })))).toBe("/ro/admin/volunteers");
     // Each press changed its mark…

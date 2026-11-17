@@ -19,6 +19,17 @@ import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { isUuid } from "@/shared/ids";
 // The form's boxes and its event, as every volunteers' verb reads them (§754).
 import { eventIdOf, field, localeOf } from "@/app/[locale]/admin/events/[id]/volunteer-return";
+import { PLAN_SAVED, planAddress, type PlanView, planViewOf } from "./plan-address";
+
+/**
+ * The view a form of the page was posted from (§NNN): every form carries it (`view`), so every press — the ones that went
+ * through and the refused — comes back to the view it was pressed in. A form that names none — a page opened before the
+ * views — comes back to `fallback`: «Pe puncte» for a press on a point, the one view that draws points, «Tabel» otherwise.
+ */
+const viewOf = (form: FormData, fallback: PlanView = "table"): PlanView => (field(form, "view") === "" ? fallback : planViewOf(field(form, "view")));
+
+/** The way back of a refused press (§953): the page's alert, where the refusal's sentence is, in the view the press came from. */
+const refusedAt = (path: string, view: PlanView, code: string) => planAddress(path, { view, planError: code, hash: "admin-alert" });
 
 /**
  * «Pune aici» and «Scoate» on «Planul voluntarilor» (§949; the owner, 2026-11-16: «e foarte important sa avem planul de
@@ -26,10 +37,11 @@ import { eventIdOf, field, localeOf } from "@/app/[locale]/admin/events/[id]/vol
  * one they stand at. The form posts the point it wants (`checkpointId`, empty to take the person off), never a toggle, so a second
  * press before the page answers saves the same. The service asks for the role again (`canManageVolunteers`: the Organizer and the
  * Administrators, BR-REQ-060-01), holds the point to the event and audits the change. A press that went through comes back to
- * the plan at the point it was made on (`at`), its outcome in the toast. A refusal — the person cancelled meanwhile, the point
- * taken off the route meanwhile, a role that may not — comes back to the page's alert (`#admin-alert`) with its code in the
- * address (§953, the registrations list's rule, §943): the alert is where the refusal's sentence is, at the top of a page that
- * may be several screens long, and a point deleted meanwhile has no anchor left to land on.
+ * the plan at the point it was made on (`at`) — in the view it was pressed in, that point and its group drawn open (`open=`,
+ * §NNN) —, its outcome in the toast. A refusal — the person cancelled meanwhile, the point taken off the route meanwhile, a
+ * role that may not — comes back to the page's alert (`#admin-alert`) with its code in the address (§953, the registrations
+ * list's rule, §943): the alert is where the refusal's sentence is, at the top of a page that may be several screens long,
+ * and a point deleted meanwhile has no anchor left to land on.
  * It emails nobody: only «Trimite fiecăruia punctul lui» below does.
  */
 export async function placeVolunteerAction(form: FormData): Promise<void> {
@@ -39,8 +51,8 @@ export async function placeVolunteerAction(form: FormData): Promise<void> {
   if (!eventId) redirect(getPathname({ locale, href: "/admin/volunteers" }));
   const checkpointId = field(form, "checkpointId");
   const at = field(form, "at");
+  const view = viewOf(form, "points");
   const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id: eventId } } });
-  const anchor = isUuid(at) ? `#point-${at}` : "";
 
   let refusal: string | null = null;
   try {
@@ -52,25 +64,23 @@ export async function placeVolunteerAction(form: FormData): Promise<void> {
     refusal = error.code;
   }
   revalidatePath(path);
-  redirect(refusal ? `${path}?planError=${encodeURIComponent(refusal)}#admin-alert` : `${path}${anchor}`);
+  redirect(refusal ? refusedAt(path, view, refusal) : planAddress(path, isUuid(at) ? { view, open: at, hash: `point-${at}` } : { view }));
 }
-
-/** Where a press on the plan's picture that went through comes back to: the picture's own place on the page (`page.tsx`). */
-const PICTURE_ANCHOR = "#plan-picture";
 
 /**
  * A press on the plan's picture, start to finish (§952): the staff session and the capability, asked here by name at the door
  * of the action — whoever works the volunteers (`canManageVolunteers`: the Organizer and the Administrators, BR-REQ-060-01) —
- * before the service asks it again; then `press`, whose outcome becomes the toast; the way back is the plan, at the picture —
- * or, refused, at the page's alert (`#admin-alert`) with the refusal's code in the address, where its sentence is (§953's rule
- * for every press of this page). A plain function of this file, never a verb a browser may call: only the two actions under
- * it are exported.
+ * before the service asks it again; then `press`, whose outcome becomes the toast; the way back is the plan, in the view the
+ * press came from, at the picture's own fold, drawn open (`saved=`, §NNN) — or, refused, at the page's alert
+ * (`#admin-alert`) with the refusal's code in the address, where its sentence is (§953's rule for every press of this page).
+ * A plain function of this file, never a verb a browser may call: only the two actions under it are exported.
  */
 async function pressOnPlanPicture(form: FormData, press: (actor: Pick<StaffUser, "id" | "role">, eventId: string) => Promise<void>): Promise<never> {
   const locale = localeOf(form);
   const eventId = eventIdOf(form);
   // A form with no event names no plan to come back to: the volunteers' own screen.
   if (!eventId) redirect(getPathname({ locale, href: "/admin/volunteers" }));
+  const view = viewOf(form);
   const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id: eventId } } });
 
   let refusal: string | null = null;
@@ -82,7 +92,7 @@ async function pressOnPlanPicture(form: FormData, press: (actor: Pick<StaffUser,
     refusal = error.code;
   }
   revalidatePath(path);
-  redirect(refusal ? `${path}?planError=${encodeURIComponent(refusal)}#admin-alert` : `${path}${PICTURE_ANCHOR}`);
+  redirect(refusal ? refusedAt(path, view, refusal) : planAddress(path, { view, savedIn: PLAN_SAVED.picture, hash: "plan-picture" }));
 }
 
 /**
@@ -116,9 +126,6 @@ export async function removePlanPictureAction(form: FormData): Promise<void> {
   });
 }
 
-/** Where a press on «Trimite fiecăruia punctul lui» that went through comes back to: its own place on the page (`page.tsx`); a refused one lands at the page's alert, like every press here (§953). */
-const MAIL_ANCHOR = "#plan-mail";
-
 /** The box the question's «Trimite din nou tuturor» fills (`ConfirmSpec.option`): `on` when ticked, empty otherwise. */
 const AGAIN_FIELD = "again";
 
@@ -133,9 +140,9 @@ const AGAIN_FIELD = "again";
  * The capability is asked here by name, at the door (`canManageVolunteers`: the Organizer and the Administrators,
  * BR-REQ-060-01), before the service asks it again; the service queues the messages in one transaction and audits the press
  * with its counts, never a person. An email press (`notifications/press.ts`): every row it queues carries this cause, its
- * id and who pressed, and the toast after it says what left, to how many and when. The press comes back to the plan, at its
- * own section — the sentence saying how many messages were queued (and how many people have no address) in the toast, a
- * refusal's code in the address.
+ * id and who pressed, and the toast after it says what left, to how many and when. The press comes back to the plan, in the
+ * view it was pressed in, at its own fold, drawn open (`saved=`, §NNN) — the sentence saying how many messages were queued
+ * (and how many people have no address) in the toast — or, refused, to the page's alert with the code in the address.
  */
 export async function sendVolunteerPointsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   return inEmailPress("volunteers.sendPoints", async (press) => {
@@ -143,6 +150,7 @@ export async function sendVolunteerPointsAction(_previous: FormOutcome | null, f
     const eventId = eventIdOf(form);
     // A form with no event names no plan to come back to: the volunteers' own screen.
     if (!eventId) redirect(getPathname({ locale, href: "/admin/volunteers" }));
+    const view = viewOf(form);
     const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id: eventId } } });
 
     let refusal: string | null = null;
@@ -158,15 +166,12 @@ export async function sendVolunteerPointsAction(_previous: FormOutcome | null, f
       refusal = error.code;
     }
     revalidatePath(path);
-    redirect(refusal ? `${path}?planError=${encodeURIComponent(refusal)}#admin-alert` : `${path}${MAIL_ANCHOR}`);
+    redirect(refusal ? refusedAt(path, view, refusal) : planAddress(path, { view, savedIn: PLAN_SAVED.sent, hash: "plan-mail" }));
   });
 }
 
-/** Where «Adaugă punctul» that went through comes back to: the section it was pressed in (`page.tsx`), its form empty for the next point. */
-const POINTS_ANCHOR = "#plan-points";
-
 /** Where «Șterge punctul» that went through comes back to: the plan's list, where the point no longer is and its people stand under «Fără punct». */
-const LIST_ANCHOR = "#plan-list";
+const LIST_ANCHOR = "plan-list";
 
 /**
  * The code a refused press of the plan's points is said with (§961): the rule's own sentence — a name, a kilometre, the
@@ -191,19 +196,22 @@ function planPointBoxes(form: FormData) {
  * The capability is asked here by name, at the door (`canManageVolunteers`: the Organizer and the Administrators,
  * BR-REQ-060-01), before the service asks it again and holds what was typed to the rules. A refusal does not redirect: it
  * comes back as the form's own state (§315), so a wrong kilometre names its box and costs none of the others. A press that
- * went through comes back to the section, its outcome in the toast and the form empty — the organizers add their points
- * one after another. It emails nobody and no public page reads the point.
+ * went through comes back to its fold «Adaugă un punct», in the view it was pressed in, drawn open (`saved=`, §NNN), its
+ * outcome in the toast and the form empty — the organizers add their points one after another; on «Pe puncte» the new point
+ * is drawn open too, in its group (`open=`). It emails nobody and no public page reads the point.
  */
 export async function addPlanPointAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
   const eventId = eventIdOf(form);
   // A form with no event names no plan to come back to: the volunteers' own screen.
   if (!eventId) redirect(getPathname({ locale, href: "/admin/volunteers" }));
+  const view = viewOf(form);
   const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id: eventId } } });
 
+  let added: string;
   try {
     const actor = await requireStaffCapability(canManageVolunteers);
-    await changePlanPoint(getDb(), actor, { kind: "add", eventId, ...planPointBoxes(form) }, new Date());
+    added = (await changePlanPoint(getDb(), actor, { kind: "add", eventId, ...planPointBoxes(form) }, new Date())).id;
   } catch (error) {
     if (!isDomainError(error)) throw error;
     const outcome = refused(error, form);
@@ -211,7 +219,7 @@ export async function addPlanPointAction(_previous: FormOutcome | null, form: Fo
   }
   await flashOutcome({ saved: "planPointAdded" });
   revalidatePath(path);
-  redirect(`${path}${POINTS_ANCHOR}`);
+  redirect(planAddress(path, { view, open: added, savedIn: PLAN_SAVED.added, hash: "plan-points" }));
 }
 
 /**
@@ -220,16 +228,18 @@ export async function addPlanPointAction(_previous: FormOutcome | null, form: Fo
  * event's «Puncte pe traseu», its coordinates alone: whatever else such a form posts is never read (its name and kilometre
  * are public, and are the editor's). The capability is asked here by name, at the door, and the service asks it again.
  *
- * A press that went through comes back to its point, its outcome in the toast; a refused one — a name left empty, a
- * kilometre that is no number, coordinates in no shape read, the point deleted meanwhile, a role that may not — comes back
- * to the page's alert (`#admin-alert`) with its code in the address, as every press of this page does (§953). It emails
- * nobody, and the people who stand at the point stay there.
+ * A press that went through comes back to its point, in the view it was pressed in, the point and its group drawn open
+ * (`open=`, §NNN), its outcome in the toast; a refused one — a name left empty, a kilometre that is no number, coordinates in
+ * no shape read, the point deleted meanwhile, a role that may not — comes back to the page's alert (`#admin-alert`) with its
+ * code in the address, as every press of this page does (§953). It emails nobody, and the people who stand at the point stay
+ * there.
  */
 export async function editPlanPointAction(form: FormData): Promise<void> {
   const locale = localeOf(form);
   const eventId = eventIdOf(form);
   // A form with no event names no plan to come back to: the volunteers' own screen.
   if (!eventId) redirect(getPathname({ locale, href: "/admin/volunteers" }));
+  const view = viewOf(form, "points");
   const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id: eventId } } });
   const pointId = field(form, "pointId");
 
@@ -243,7 +253,7 @@ export async function editPlanPointAction(form: FormData): Promise<void> {
     refusal = planPointRefusalCode(error);
   }
   revalidatePath(path);
-  redirect(refusal ? `${path}?planError=${encodeURIComponent(refusal)}#admin-alert` : `${path}${isUuid(pointId) ? `#point-${pointId}` : LIST_ANCHOR}`);
+  redirect(refusal ? refusedAt(path, view, refusal) : planAddress(path, isUuid(pointId) ? { view, open: pointId, hash: `point-${pointId}` } : { view, hash: LIST_ANCHOR }));
 }
 
 /**
@@ -252,15 +262,16 @@ export async function editPlanPointAction(form: FormData): Promise<void> {
  * refuses it: it is deleted in the editor, where the event's page and the race number follow). The capability is asked here
  * by name, at the door, and the service asks it again and audits the removal with how many people it freed — never who.
  *
- * A press that went through comes back to the plan's list, where the point no longer is; a refused one to the page's alert
- * with its code (§953). It emails nobody: a person told that point by an earlier «Trimite fiecăruia punctul lui» is told
- * their new one by the next press, once they stand at one.
+ * A press that went through comes back to the plan's list, in the view it was pressed in, where the point no longer is; a
+ * refused one to the page's alert with its code (§953). It emails nobody: a person told that point by an earlier «Trimite
+ * fiecăruia punctul lui» is told their new one by the next press, once they stand at one.
  */
 export async function removePlanPointAction(form: FormData): Promise<void> {
   const locale = localeOf(form);
   const eventId = eventIdOf(form);
   // A form with no event names no plan to come back to: the volunteers' own screen.
   if (!eventId) redirect(getPathname({ locale, href: "/admin/volunteers" }));
+  const view = viewOf(form, "points");
   const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id: eventId } } });
 
   let refusal: string | null = null;
@@ -273,5 +284,5 @@ export async function removePlanPointAction(form: FormData): Promise<void> {
     refusal = planPointRefusalCode(error);
   }
   revalidatePath(path);
-  redirect(refusal ? `${path}?planError=${encodeURIComponent(refusal)}#admin-alert` : `${path}${LIST_ANCHOR}`);
+  redirect(refusal ? refusedAt(path, view, refusal) : planAddress(path, { view, hash: LIST_ANCHOR }));
 }

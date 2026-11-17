@@ -6414,6 +6414,11 @@
         "back": "Back to the volunteers",
         "editPoints": "The points on the route, in the event's editor",
         "print": "Print the plan",
+        "views": {
+          "label": "How you see the plan",
+          "table": "Table",
+          "points": "By point"
+        },
         "summary": {
           "startFinish": {
             "one": "{count} volunteer at the start–finish",
@@ -6454,14 +6459,26 @@
           },
           "total": "{placed}, {empty}"
         },
-        "noPoints": "The plan has no point yet. Add the points right here, above, under \"The plan's points\", or in the event's editor, under \"Points on the route\".",
+        "noPoints": "The plan has no point yet. Add the points right here, under \"Add a point\", or in the event's editor, under \"Points on the route\".",
         "groups": {
-          "startFinish": "Start–finish",
+          "startFinish": "At the start–finish",
           "route": "On the route",
-          "startFinishNone": "No point at the start–finish. Add one above, choosing \"At the start–finish\".",
-          "routeNone": "No point on the route. Add one above, or in the event's editor, under \"Points on the route\"."
+          "points": {
+            "one": "{count} point",
+            "few": "{count} points",
+            "other": "{count} points"
+          },
+          "startFinishNone": "No point at the start–finish. Add one under \"Add a point\", choosing \"At the start–finish\".",
+          "routeNone": "No point on the route. Add one under \"Add a point\", or in the event's editor, under \"Points on the route\"."
         },
         "pointTitle": "{number}. {title}",
+        "pointKm": "{km} km",
+        "people": {
+          "one": "{count} volunteer",
+          "few": "{count} volunteers",
+          "other": "{count} volunteers"
+        },
+        "peopleNone": "no volunteers",
         "nobodyHere": "Nobody here yet.",
         "choose": "Put somebody here",
         "chooseEmpty": "Choose a volunteer",
@@ -6480,7 +6497,6 @@
         "columnStartFinish": "start–finish",
         "pointValue": "Point on the volunteers' plan: {name}",
         "points": {
-          "title": "The plan's points",
           "help": "Add here the points where the volunteers stand, as on the picture above. A point is either at the start–finish or on the route: for one on the route you also say which kilometre it is at.",
           "helpCoordinates": "If you know the coordinates, the volunteers also get the link to the map.",
           "helpPrivate": "The points added here are seen only on the plan and in the email sent to the volunteers — they are not on the event's page, nor on the race numbers.",
@@ -6516,7 +6532,9 @@
           "alt": "The volunteers' plan drawn on the route",
           "open": "Open the whole picture of the plan, in a new tab",
           "openHint": "Press the picture to open the whole of it, in a new tab.",
-          "none": "The plan has no picture yet. Upload the map of the route with the points drawn on it: it shows here, above the points, and prints with the plan.",
+          "none": "The plan has no picture yet. Upload the map of the route with the points drawn on it: it shows here and prints with the plan.",
+          "has": "uploaded",
+          "hasNone": "none yet",
           "upload": "Upload the plan's picture",
           "replace": "Change the picture",
           "uploading": "Uploading…",
@@ -6535,6 +6553,13 @@
           "again": "Send to everybody again",
           "allTold": "Everybody at a point already knows it. Send again only if something changed: the picture, a point's name, coordinates or note, the order of the points, a role.",
           "nobody": "Nobody to tell: no volunteer with an email address stands at a point yet.",
+          "toTell": {
+            "one": "{count} volunteer to tell",
+            "few": "{count} volunteers to tell",
+            "other": "{count} volunteers to tell"
+          },
+          "toTellAllTold": "everybody already knows their point",
+          "toTellNone": "nobody to tell",
           "confirmTitle": "Send each their point?",
           "confirmBody": "Each gets their point by email, and what they do there.",
           "confirmBodyPicture": "Each gets their point by email, what they do there and the plan's picture.",

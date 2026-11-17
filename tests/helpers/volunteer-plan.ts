@@ -31,6 +31,46 @@ export function planSummaryOf(page: string): string {
   return line.replace(/<!-- -->/g, "").replace(/<[^>]+>/g, "");
 }
 
+/*
+  The plan's page drawn as folds (§NNN): «Pe puncte» is two group folds of point folds, each point's pencil a fold inside it,
+  and the picture, «Adaugă un punct» and the email are folds too — a fold inside a fold, which a lazy `[\s\S]*?</details>`
+  cuts at the inner one's end. These read an element whole, its nested twins counted.
+*/
+
+/** The whole element that opens at `start` in a page's markup, an element of its own kind nested inside it counted. */
+export function wholeElementAt(page: string, start: number): string {
+  const tag = /^<([a-z0-9]+)/.exec(page.slice(start))?.[1];
+  if (!tag) return "";
+  const pattern = new RegExp(`<${tag}[\\s>]|</${tag}>`, "g");
+  pattern.lastIndex = start;
+  let depth = 0;
+  for (let match = pattern.exec(page); match; match = pattern.exec(page)) {
+    depth += match[0].startsWith("</") ? -1 : 1;
+    if (depth === 0) return page.slice(start, match.index + match[0].length);
+  }
+  return page.slice(start);
+}
+
+/** The element that carries `attribute` (`data-testid="plan-mail-section"`, `id="point-…"`), whole; empty when none does. */
+export function elementWith(page: string, attribute: string): string {
+  const at = page.indexOf(attribute);
+  return at < 0 ? "" : wholeElementAt(page, page.lastIndexOf("<", at));
+}
+
+/** Every point fold a part of «Pe puncte» draws (`<details data-testid="plan-point">`), in the order drawn, each whole. */
+export function planPointsOf(part: string): string[] {
+  return [...part.matchAll(/data-testid="plan-point"/g)].map((match) => wholeElementAt(part, part.lastIndexOf("<details", match.index)));
+}
+
+/** The words of a point fold's bar: its name — numbered on the route — and its line («1,2 km · 2 voluntari»). */
+export function planPointBar(point: string): { name: string; line: string } {
+  const text = (testid: string) => new RegExp(`data-testid="${testid}"[^>]*>([^<]*)<`).exec(point)?.[1] ?? "";
+  return { name: text("plan-point-name"), line: text("plan-point-line") };
+}
+
+/** Whether a fold is drawn open: `open` on its own opening tag. */
+export const drawnOpen = (fold: string) => /^<details\b[^>]*\sopen=""/.test(fold);
+
 /** The contact person of the category «Traseu», as the club set them on the category. */
 export const PLAN_CONTACT = { name: "Călin Coordonator", phone: "+40712345678", email: "traseu@club.test" } as const;
 /** The same person as a message's footer says them: the telephone number as a person reads it. */

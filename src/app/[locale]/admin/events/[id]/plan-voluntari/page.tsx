@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 import { getDb } from "@/db/client";
 import { countForm } from "@/i18n/count-form";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -37,13 +37,13 @@ import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { isUuid } from "@/shared/ids";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
-import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_INLINE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { HEADING_SX } from "@/shared/ui/heading-scale";
-import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
+import { PANEL_GLYPHS, type PanelGlyphName } from "@/shared/ui/panel-glyphs";
 import PrintButton from "@/shared/ui/PrintButton";
 import RadioField from "@/shared/ui/RadioField";
-import { ROW_SX } from "@/shared/ui/row-fold";
+import SubNav from "@/shared/ui/SubNav";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import {
   addPlanPointAction,
@@ -54,6 +54,7 @@ import {
   sendVolunteerPointsAction,
   setPlanPictureAction,
 } from "./actions";
+import { PLAN_SAVED, planAddress, planViewOf } from "./plan-address";
 
 type Props = { params: Promise<{ locale: string; id: string }>; searchParams: Promise<Record<string, string | undefined>> };
 
@@ -71,20 +72,18 @@ const NOT_ON_PAPER = { "@media print": { display: "none" } } as const;
  */
 const PHONE_LINK_SX = { display: "inline-flex", alignItems: "center", ...TAP_TARGET, "@media print": { minHeight: 0, color: "inherit", textDecoration: "none" } } as const;
 
-/** The digits and the plus of a telephone number, which is what a `tel:` link dials (§953): one rule for a card and the table. */
+/** The digits and the plus of a telephone number, which is what a `tel:` link dials (§953): one rule for a point and the table. */
 const dialOf = (phone: string) => `tel:${phone.replace(/[^\d+]/g, "")}`;
 
 /**
- * A point's name in «Punctele, pe scurt» (§NNN): the link to its card below, a thumb's 44 pixels like the telephone beside it,
- * and on paper the name as text. A long name breaks inside the cell rather than widening the table.
+ * A point's name in «Punctele, pe scurt» (§NNN): in bold, as everywhere on the page (the owner: «vreau ca denumirea punctului să
+ * fie cu bold și mai vizibilă»), the link to its point on «Pe puncte», a thumb's 44 pixels like the telephone beside it, and
+ * on paper the name as text. A long name breaks inside the cell rather than widening the table.
  */
-const POINT_LINK_SX = { ...PHONE_LINK_SX, overflowWrap: "anywhere" } as const;
+const POINT_LINK_SX = { ...PHONE_LINK_SX, fontWeight: 700, overflowWrap: "anywhere" } as const;
 
-/** The telephone in the table: the card's link, its number kept on one line. */
+/** The telephone in the table: the point's own link, its number kept on one line. */
 const TABLE_PHONE_SX = { ...PHONE_LINK_SX, whiteSpace: "nowrap" } as const;
-
-/** The glyph of «Punctele, pe scurt»: the house's list (the one «Înscrieri» wears), by its name in the subjects' table. */
-const ListGlyph = PANEL_GLYPHS.registrations;
 
 /**
  * «Deschide pe hartă» beside a point's coordinates (§961): a link a thumb can press, 44 pixels tall (BR-REQ-041-01
@@ -106,6 +105,88 @@ const ADD_SCOPE = "plan-point-add";
 const EditIcon = ACTION_ICONS.edit;
 
 /**
+ * The picture each part of the page wears (§521), by its name in the subjects' table (`panel-glyphs.ts`): the two views — the
+ * house's list (the one «Înscrieri» wears) and the pin of a point —, the two groups — the route, and the start and finish
+ * line's flag —, each point's pin, and the three folds under the plan — the picture, the add, the email.
+ */
+const PART_GLYPH = {
+  table: { glyph: "registrations" },
+  points: { glyph: "checkpoints" },
+  route: { glyph: "course" },
+  startFinish: { glyph: "finishLine" },
+  point: { glyph: "checkpoints" },
+  picture: { glyph: "pictures" },
+  add: { glyph: "add" },
+  mail: { glyph: "email" },
+} as const satisfies Record<string, { glyph: PanelGlyphName }>;
+
+const ListGlyph = PANEL_GLYPHS[PART_GLYPH.table.glyph];
+const PointIcon = PANEL_GLYPHS[PART_GLYPH.point.glyph];
+
+/** A fold inside a fold — each point inside its group — pads a step narrower on a phone, as `Panel`'s card of cards does (§350). */
+const NESTED_FOLD_SX = {
+  px: { xs: 1.5, sm: 2 },
+  "& > summary": { ...BOXED_DISCLOSURE_SX["& > summary"], mx: { xs: -1.5, sm: -2 }, px: { xs: 1.5, sm: 2 } },
+} as const;
+
+/**
+ * On paper a group and a point print open, their arrows left off (§NNN): the sheet is the whole plan whatever the screen had
+ * folded — the body the browser hides in a closed fold (`::details-content`) is shown. A browser that has no such part prints
+ * the folds as they stand on the screen.
+ */
+const OPEN_ON_PAPER = {
+  "@media print": {
+    "& > summary::before": { display: "none" },
+    "&::details-content": { display: "block", contentVisibility: "visible" },
+  },
+} as const;
+
+/**
+ * The plan's picture on paper (§952): the picture alone, open whatever the screen had folded — the fold's frame, its bar and
+ * its closed line are left off, so the sheet carries the map and nothing that builds it.
+ */
+const PICTURE_ON_PAPER = {
+  "@media print": {
+    border: 0,
+    px: 0,
+    bgcolor: "transparent",
+    "& > summary": { display: "none" },
+    "&::details-content": { display: "block", contentVisibility: "visible" },
+  },
+} as const;
+
+/**
+ * «Modifică punctul» (§NNN; the owner: «și în loc de „modifică punctul” pune doar buton de edit»): the house's pencil, a
+ * 44-pixel square at the right of the point's people — a native fold whose bar is the glyph alone, so it opens without a
+ * script —, and open, the point's form under it across the whole row, the pencil still at its right. Never on paper.
+ */
+const PENCIL_FOLD_SX = {
+  flex: "none",
+  "&[open]": { flexBasis: "100%" },
+  "& > summary": {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    boxSizing: "border-box",
+    width: 44,
+    height: 44,
+    ml: "auto",
+    border: 1,
+    borderColor: "divider",
+    borderRadius: 1,
+    color: "text.secondary",
+    cursor: "pointer",
+    listStyle: "none",
+    "&::-webkit-details-marker": { display: "none" },
+    "&::marker": { content: '""' },
+    "&:hover": { bgcolor: "action.hover", color: "text.primary" },
+    "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: 2 },
+  },
+  "&[open] > summary": { color: "primary.main", borderColor: "primary.main" },
+  ...NOT_ON_PAPER,
+} as const;
+
+/**
  * «Planul voluntarilor» (§949; the owner, 2026-11-16, with a map of the route and its seven points: «e foarte important sa
  * avem planul de voluntari si fiecare in ce punct ramane»): one event's points, each with the volunteers who stand at it —
  * their name, their number, how to reach them, what they were given to do — and under them everybody at no point. Built
@@ -115,15 +196,30 @@ const EditIcon = ACTION_ICONS.edit;
  * of an address that does not exist (BR-REQ-060-01), and the service refuses them again. Nothing on it is public, and
  * placing, moving or taking off a person emails nobody: it is the organizers' own plan.
  *
+ * **Two views, and folds (§NNN; the owner, 2026-11-17, of the page's long run of cards: «vreau secțiuni colapsabile aici la
+ * plan voluntari că nu mai înțeleg nimic: de fapt tabel sau mai multe views»).** Under the intro, two links — «Tabel», the
+ * default, and «Pe puncte» (`?view=table|points`, `plan-address.ts`), the current one marked —, plain addresses drawn on the
+ * server. «Tabel» is «Punctele, pe scurt» (§NNN; the owner: «aș vrea să văd punctele ca și tabel, mai ales pe traseu»): one
+ * table of every point — the route's by kilometre, then the start–finish's —, its number, its name linking to that point
+ * on «Pe puncte», its kilometre, where it is, its people with their telephones and how many, and under it the people placed
+ * and the points with nobody; the house's table (`AdminTable`: a block a point on a phone), printed as a table. «Pe puncte»
+ * is the points themselves in two folds, «Pe traseu» and «La start–finish», each point a fold of its own whose bar says its
+ * name in bold, its kilometre and how many stand there, and whose body holds where it is, its people with «Scoate», «Pune
+ * aici» and the pencil of «Modifică punctul». Both views keep the three folds under the plan — the picture, «Adaugă un
+ * punct», «Trimite fiecăruia punctul lui» —, each saying on its closed line what it holds, and «Fără punct». Every fold
+ * starts closed and opens by itself for what the last press changed — a point and its group (`open=`), the fold a press
+ * saved in (`saved=`) — or, «Adaugă un punct», on a plan with no point yet; and every press comes back to the view it was
+ * pressed in.
+ *
  * **The points are of two kinds, in two groups (§961; the owner, 2026-11-17: «vreau să pot defini punctele de mână, să pun
  * nume punct și la ce km e și coordonate punct» — «Practic voluntarii sunt de 2 tipuri: start-finish și pe traseu»).**
- * «Start–finish» — the desk, the kits, the start and the finish line: no number and no kilometre — and «Pe traseu», the
+ * «La start–finish» — the desk, the kits, the start and the finish line: no number and no kilometre — and «Pe traseu», the
  * numbered points in the route's order: the event's own «Puncte pe traseu» (§757), kept in the editor, and the ones the
- * organizers add here by hand, which only this page and the volunteer's own email see. They are added in «Punctele
- * planului», right under the picture they are drawn on — where the point is, its name, its kilometre, its coordinates — and
- * each point folds open onto «Modifică punctul»: everything of a point added here, the coordinates alone of an editor's
- * point. A point that has coordinates says them, with «Deschide pe hartă». The order and every number are
- * `plan-points.ts#listPlanPoints`'s, the one list the «Voluntari» list and the email read too.
+ * organizers add here by hand, which only this page and the volunteer's own email see. They are added in «Adaugă un punct» —
+ * where the point is, its name, its kilometre, its coordinates — and each point's pencil opens «Modifică punctul»:
+ * everything of a point added here, the coordinates alone of an editor's point. A point that has coordinates says them,
+ * with «Deschide pe hartă». The order and every number are `plan-points.ts#listPlanPoints`'s, the one list the «Voluntari»
+ * list and the email read too.
  *
  * One press tells the volunteers (§956; the owner: «…si sa ii pot distribui din aplicatie, sa stie exact unde si cum» —
  * «Email din site, la apăsarea ta»): «Trimite fiecăruia punctul lui» emails each person placed at a point their point,
@@ -131,16 +227,10 @@ const EditIcon = ACTION_ICONS.edit;
  * service counted — who is written to, who already knows their point, who stands at a point with no address, who stands at
  * none — and «Trimite din nou tuturor», a tick in that question, writes to everybody again.
  *
- * Above the points, the plan as the organizers drew it (§952; the owner, with a picture of the route and its points numbered
- * on it: «trebui sa pot incarca si planul voluntarilor pe traseu in genul [pozei]»): one picture, as wide as the column, a
- * press opening the whole of it in a new tab — and on paper the first thing after the points' table, in one piece. Uploaded,
- * changed and taken off here by the same people; with no picture the page reads as it did, plus the upload.
- *
- * And above everything, the plan at a glance (§NNN; the owner, 2026-11-17: «aș vrea să văd punctele ca și tabel, mai ales pe
- * traseu»): «Punctele, pe scurt», one table of every point — the route's by kilometre, then the start–finish's —, its number,
- * its name linking to its card, its kilometre, where it is, its people with their telephones and how many; under it the
- * people placed and the points with nobody. The house's table (`AdminTable`: a block a point on a phone), read from the same
- * plan as the cards, and printed first, as a table: the plan's summary sheet.
+ * The plan as the organizers drew it (§952; the owner, with a picture of the route and its points numbered on it: «trebui sa
+ * pot incarca si planul voluntarilor pe traseu in genul [pozei]»): one picture, as wide as the column, a press opening the
+ * whole of it in a new tab — and on paper after the view's plan, in one piece. Uploaded, changed and taken off here by the
+ * same people.
  */
 export default async function VolunteerPlanPage({ params, searchParams }: Props) {
   const { locale, id } = await params;
@@ -167,9 +257,15 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   const t = await getTranslations("Admin");
   // The day in words, or «Data se anunță mai târziu» while it is left blank (§545).
   const when = event ? bibEventDate(event, locale) || t("editor.dateToBeAnnounced") : "";
+  const query = await searchParams;
   // The action's language-neutral code (AGENTS.md §14.3) becomes a sentence here; an unknown code says nothing.
-  const { planError } = await searchParams;
-  const errorCode = planError && /^[A-Z_]{1,48}$/.test(planError) && t.has(`errors.${planError}`) ? planError : null;
+  const errorCode = query.planError && /^[A-Z_]{1,48}$/.test(query.planError) && t.has(`errors.${query.planError}`) ? query.planError : null;
+  // The view the address names (§NNN), «Tabel» when it names none; the point the last press changed, which «Pe puncte» draws
+  // open in its open group — only a point of this plan; and the fold the last press saved in.
+  const view = planViewOf(query.view);
+  const opened = query.open ?? "";
+  const openPoint = view === "points" && isUuid(opened) && plan.points.some(({ point }) => point.id === opened) ? opened : null;
+  const saved = query.saved;
 
   const km = (value: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(value);
   // A kilometre as a box holds it: the page's decimal mark and no grouping — what `readKm` reads back.
@@ -179,7 +275,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
       const words = plan.roles.get(roleId);
       return words ? [roleLabel(words, locale)] : [];
     });
-  // The two groups (§961), as the plan's one list has them: the start–finish points first, then the route in its order.
+  // The two groups (§961), as the plan's one list has them: the start–finish points, and the route in its order.
   const startFinishPoints = plan.points.filter(({ point }) => point.startFinish);
   const routePoints = plan.points.filter(({ point }) => !point.startFinish);
   const peopleAt = (points: readonly VolunteerPlanPoint[]) => points.reduce((sum, { people }) => sum + people.length, 0);
@@ -190,16 +286,20 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   // The summary's four numbers, each a counted phrase (`countForm`, never an ICU plural).
   const counted = (key: "startFinish" | "route" | "unplaced" | "empty", count: number) => t(`volunteers.plan.summary.${key}.${countForm(count, locale)}`, { count });
   const summary = [counted("startFinish", atStartFinish), counted("route", onRoute), counted("unplaced", plan.unplaced.length), counted("empty", empty)];
+  // How many stand at a point, or a group, said on its closed line: «2 voluntari», «niciun voluntar».
+  const peopleWords = (count: number) => (count === 0 ? t("volunteers.plan.peopleNone") : t(`volunteers.plan.people.${countForm(count, locale)}`, { count }));
+  const nameOf = (point: PlanPoint) => (locale === "ro" ? point.nameRo : point.nameEn);
+  const planPath = getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id } } });
 
   /*
-    «Punctele, pe scurt» (§NNN; the owner, 2026-11-17: «aș vrea să văd punctele ca și tabel, mai ales pe traseu»): every point
-    of the plan as one table at the top — the route's first, the start–finish's after — read from the plan the cards below
-    read, so a row says exactly what its card says. The route's points come in the plan's one order (`listPlanPoints`): by
-    kilometre, and numbered in that order, so by number too; the start–finish points as the page lists them. One row a point:
-    its number, its name (a link to its card), its kilometre, where it is, who stands there with their telephones, how many.
+    «Punctele, pe scurt» (§NNN; the owner, 2026-11-17: «aș vrea să văd punctele ca și tabel, mai ales pe traseu»), the view
+    «Tabel»: every point of the plan as one table — the route's first, the start–finish's after — read from the plan «Pe
+    puncte» draws, so a row says exactly what its point says. The route's points come in the plan's one order
+    (`listPlanPoints`): by kilometre, and numbered in that order, so by number too; the start–finish points as the page lists
+    them. One row a point: its number, its name (a link to that point on «Pe puncte», open), its kilometre, where it is, who
+    stands there with their telephones, how many.
   */
   const tableRows = [...routePoints, ...startFinishPoints];
-  const nameOf = (point: PlanPoint) => (locale === "ro" ? point.nameRo : point.nameEn);
   const tableColumns: readonly AdminColumn<VolunteerPlanPoint>[] = [
     {
       key: "number",
@@ -215,7 +315,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
       // The phone's block is headed by the point's name.
       primary: true,
       render: ({ point }) => (
-        <Box component="a" href={`#point-${point.id}`} sx={POINT_LINK_SX} data-testid="plan-table-point">
+        <Box component="a" href={planAddress(planPath, { view: "points", open: point.id, hash: `point-${point.id}` })} sx={POINT_LINK_SX} data-testid="plan-table-point">
           {nameOf(point)}
         </Box>
       ),
@@ -224,13 +324,13 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
       key: "km",
       label: t("volunteers.plan.table.columns.km"),
       align: "right",
-      // As the card's title writes it («4,5»), or the plan's word for a point that has no kilometre.
+      // As the point's own line writes it («4,5»), or the plan's word for a point that has no kilometre.
       render: ({ point }) => <span data-testid="plan-table-km">{point.startFinish ? t("volunteers.plan.columnStartFinish") : km(point.km)}</span>,
     },
     {
       key: "coordinates",
       label: t("volunteers.plan.table.columns.coordinates"),
-      // The numbers, on paper too, and the card's own link to a map beside them, which the paper leaves out.
+      // The numbers, on paper too, and the point's own link to a map beside them, which the paper leaves out.
       render: ({ point }) => {
         const where = coordinatesOf(point);
         if (!where) return <span data-testid="plan-table-coordinates">—</span>;
@@ -255,7 +355,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
     {
       key: "people",
       label: t("volunteers.plan.table.columns.people"),
-      // The card's people in the card's order, a line each: the name and the telephone to ring.
+      // The point's people in the point's order, a line each: the name and the telephone to ring.
       render: ({ people }) =>
         people.length === 0 ? (
           <Box component="span" sx={{ color: "text.secondary", fontStyle: "italic" }} data-testid="plan-table-nobody">
@@ -293,16 +393,17 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
     placed: t(`volunteers.plan.table.placed.${countForm(placed, locale)}`, { count: placed }),
     empty: counted("empty", empty),
   });
-  const planPath = getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id } } });
   // The plan's picture (§952), and who is offered its controls: whoever works the volunteers — the action and the service ask again.
   const picture = plan.picture;
   const mayChangePicture = canManageVolunteers(actor.role);
   // Whether this environment can take a picture at all (`STORAGE_MODE`): without a store the page says so and offers no upload.
   const storeHere = isStorageConfigured();
+  // Every form of the page carries the page's language, the event and the view it is pressed in (§NNN): its way back.
   const hidden = (
     <>
       <input type="hidden" name="uiLocale" value={locale} />
       <input type="hidden" name="eventId" value={id} />
+      <input type="hidden" name="view" value={view} />
     </>
   );
   // «Adaugă un punct» (§961): the words its refusal's summary says, and the label of each box it can name.
@@ -362,6 +463,30 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
           };
   // With everybody already told, the form itself asks for «din nou tuturor»; otherwise the question's tick decides, and the box is posted empty.
   const againOnly = everybody > 0 && mail.toWrite === 0;
+  // The email's fold says on its closed line how many its press would tell: nobody, everybody already told, or how many are left.
+  const mailState = mailConfirm === null ? t("volunteers.plan.mail.toTellNone") : againOnly ? t("volunteers.plan.mail.toTellAllTold") : t(`volunteers.plan.mail.toTell.${countForm(mail.toWrite, locale)}`, { count: mail.toWrite });
+
+  /**
+   * A fold's bar on this page (§NNN): the house's boxed fold (`BOXED_DISCLOSURE_SX`), its glyph and its words as a level-3
+   * heading — the summary keeps the native fold, so it opens without a script —, and on the same line, quieter, what the fold
+   * holds, readable while it is shut (`Panel`'s `aside`).
+   */
+  const foldBar = (glyph: PanelGlyphName, title: string, line?: { words: string; testId: string }, headingId?: string) => {
+    const Glyph = PANEL_GLYPHS[glyph];
+    return (
+      <Box component="summary">
+        <Typography id={headingId} component="h3" variant="h2" sx={{ ...HEADING_SX[3], display: "inline" }}>
+          <Glyph aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+          {title}
+          {line && (
+            <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1, fontWeight: 400 }} data-testid={line.testId}>
+              {line.words}
+            </Typography>
+          )}
+        </Typography>
+      </Box>
+    );
+  };
 
   /** One person's line: who, their number, how to reach them, what they do — the same words at a point and under «Fără punct». */
   const personWords = (person: VolunteerPlanPerson) => {
@@ -392,196 +517,331 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   };
 
   /**
-   * One point of the plan, in either group: its title — numbered with its kilometre on the route, the name alone at the
-   * start–finish —, what it is, where it is, its people, «Pune aici», and the fold that changes it. Everything that builds
-   * the plan stays off the paper; a point is never split across two sheets.
+   * One point of the plan on «Pe puncte», in either group (§NNN): a fold of its own, closed unless the last press changed it.
+   * Its bar is the point's name in bold at a level-3 heading's size — numbered on the route —, then its kilometre or
+   * «start–finish» and how many stand there; open, what it is, where it is, its people with «Scoate», the pencil of
+   * «Modifică punctul» at their right, and «Pune aici». The id (`point-<id>`) is the fold's, so an address that names the
+   * point opens it. Everything that builds the plan stays off the paper, where a point prints open and is never split across
+   * two sheets.
    */
-  const pointRow = ({ point, number, people }: VolunteerPlanPoint) => {
-    const name = locale === "ro" ? point.nameRo : point.nameEn;
+  const pointFold = ({ point, number, people }: VolunteerPlanPoint) => {
+    const name = nameOf(point);
     const where = coordinatesOf(point);
     // What an editor's point offers and its note, in the backoffice's words; a point added here has neither.
     const facts = [point.kinds.map((kind) => t(`checkpoints.kinds.${kind}`)).join(", "), (locale === "ro" ? point.noteRo : point.noteEn) ?? ""].filter((part) => part !== "");
+    const kmWords = point.startFinish ? t("volunteers.plan.columnStartFinish") : t("volunteers.plan.pointKm", { km: km(point.km) });
+    const editFor = t("volunteers.plan.points.editFor", { name });
     return (
-      <Box
-        component="li"
-        key={point.id}
-        id={`point-${point.id}`}
-        data-testid="plan-point"
-        data-place={point.startFinish ? "startFinish" : "route"}
-        // The house's row (§842): a hairline between points, never a card of its own; a point is not split across two sheets.
-        sx={{ ...ROW_SX, py: 2, breakInside: "avoid", scrollMarginTop: 16 }}
-      >
-        <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "baseline", columnGap: 1 }}>
-          <Typography component="h4" variant="h3" sx={{ ...HEADING_SX[4], minWidth: 0, overflowWrap: "break-word" }} data-testid="plan-point-title">
-            {number === null ? name : t("volunteers.plan.pointTitle", { number, title: t("checkpoints.rowTitle", { km: km(point.km), name }) })}
-          </Typography>
-          {/* A point of the route that only the plan has: said so, quietly. At the start–finish the group says what the point is. */}
-          {point.planOnly && !point.startFinish && (
-            <Typography component="span" variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap", ...NOT_ON_PAPER }} data-testid="plan-point-own">
-              {t("volunteers.plan.points.planOnly")}
-            </Typography>
-          )}
-        </Stack>
-        {facts.length > 0 && (
-          <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "break-word" }}>
-            {facts.join(" · ")}
-          </Typography>
-        )}
-        {/* Where the point is, when it has coordinates: the numbers — on the paper too — and the link to a map, which the paper leaves out. */}
-        {where && (
-          <Typography variant="body2" component="p" sx={{ m: 0, display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 1.5 }} data-testid="plan-point-where">
-            <span data-testid="plan-point-coordinates">{formatCoordinates(where)}</span>
-            <Box component="a" href={mapUrlOf(where)} target="_blank" rel="noopener noreferrer" aria-label={t("volunteers.plan.points.openMapFor", { name })} sx={MAP_LINK_SX} data-testid="plan-point-map">
-              {t("volunteers.plan.points.openMap")}
-            </Box>
-          </Typography>
-        )}
-
-        {people.length === 0 ? (
-          <Typography variant="body2" sx={{ mt: 1, fontStyle: "italic" }} data-testid="plan-point-empty">
-            {t("volunteers.plan.nobodyHere")}
-          </Typography>
-        ) : (
-          <Stack spacing={1} component="ul" sx={{ listStyle: "none", m: 0, mt: 1, p: 0 }}>
-            {people.map((person) => (
-              <Stack component="li" key={person.id} direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1, flexWrap: "wrap" }} data-testid="plan-person">
-                {personWords(person)}
-                {/* «Scoate»: the same form with no point — the person stands under «Fără punct» again. */}
-                <Box component="form" action={placeVolunteerAction} sx={NOT_ON_PAPER}>
-                  {hidden}
-                  <input type="hidden" name="volunteerId" value={person.id} />
-                  <input type="hidden" name="checkpointId" value="" />
-                  <input type="hidden" name="at" value={point.id} />
-                  <GlyphButton icon="undo" type="submit" variant="text" size="small" sx={TAP_TARGET} aria-label={t("volunteers.plan.takeOffFor", { name: person.name })} data-testid="plan-take-off">
-                    {t("volunteers.plan.takeOff")}
-                  </GlyphButton>
-                </Box>
-              </Stack>
-            ))}
-          </Stack>
-        )}
-
-        {/* «Pune aici»: anybody of the event who stands at no point yet. A native select — it works without scripts, asks for a
-            choice before it posts, and opens as the phone's own list. */}
-        {plan.unplaced.length > 0 && (
-          <Stack component="form" action={placeVolunteerAction} direction="row" sx={{ mt: 2, gap: 1, alignItems: "center", flexWrap: "wrap", ...NOT_ON_PAPER }} data-testid="plan-place-form">
-            {hidden}
-            <input type="hidden" name="checkpointId" value={point.id} />
-            <input type="hidden" name="at" value={point.id} />
-            <TextField
-              select
-              required
-              size="small"
-              name="volunteerId"
-              label={t("volunteers.plan.choose")}
-              defaultValue=""
-              sx={{ minWidth: 240, flex: "1 1 240px", maxWidth: 420 }}
-              slotProps={{ select: { native: true }, inputLabel: { shrink: true }, htmlInput: { "data-testid": "plan-place-select" } }}
-            >
-              <option value="">{t("volunteers.plan.chooseEmpty")}</option>
-              {plan.unplaced.map((person) => {
-                const roles = rolesOf(person);
-                return (
-                  <option key={person.id} value={person.id}>
-                    {roles.length > 0 ? `${person.name} — ${roles.join(", ")}` : person.name}
-                  </option>
-                );
-              })}
-            </TextField>
-            <GlyphButton icon="addPerson" type="submit" variant="outlined" size="small" sx={TAP_TARGET} data-testid="plan-place">
-              {t("volunteers.plan.place")}
-            </GlyphButton>
-          </Stack>
-        )}
-
-        {/* «Modifică punctul» (§961): the row's own fold, closed — a native one, so it opens without scripts. A point added here
-            is changed whole, its kind included; of an editor's point only where it is: its name and kilometre are public, and
-            are the editor's. A refused save lands at the page's alert with its code, as every press of this page (§953). */}
-        <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, boxSizing: "border-box", width: "100%", maxWidth: 560, mt: 2, ...NOT_ON_PAPER }} data-testid="plan-point-edit">
-          <Box component="summary" aria-label={t("volunteers.plan.points.editFor", { name })}>
-            <EditIcon fontSize="small" aria-hidden sx={FOLD_GLYPH_SX} />
-            <Typography component="span" variant="body2">
-              {t("volunteers.plan.points.edit")}
+      <Box component="li" key={point.id} sx={{ breakInside: "avoid" }}>
+        <Box
+          component="details"
+          id={`point-${point.id}`}
+          open={openPoint === point.id || undefined}
+          data-testid="plan-point"
+          data-place={point.startFinish ? "startFinish" : "route"}
+          sx={{ ...BOXED_DISCLOSURE_SX, ...NESTED_FOLD_SX, ...OPEN_ON_PAPER, breakInside: "avoid", scrollMarginTop: 16 }}
+        >
+          <Box component="summary">
+            <Typography component="h4" variant="h2" sx={{ ...HEADING_SX[3], display: "inline", minWidth: 0 }} data-testid="plan-point-title">
+              <PointIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+              {/* The name in bold — the owner: «vreau ca denumirea punctului să fie cu bold și mai vizibilă». */}
+              <Box component="span" sx={{ fontWeight: 700, overflowWrap: "anywhere" }} data-testid="plan-point-name">
+                {number === null ? name : t("volunteers.plan.pointTitle", { number, title: name })}
+              </Box>
+              <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1, fontWeight: 400 }} data-testid="plan-point-line">
+                {kmWords} · {peopleWords(people.length)}
+              </Typography>
             </Typography>
           </Box>
-          <Stack component="form" action={editPlanPointAction} spacing={2} sx={{ alignItems: "flex-start", mt: 1 }} data-testid="plan-point-edit-form">
-            {hidden}
-            <input type="hidden" name="pointId" value={point.id} />
-            {point.planOnly ? (
-              <>
-                <Box component="fieldset" sx={{ border: 0, m: 0, p: 0, minWidth: 0, width: "100%" }}>
-                  <Typography component="legend" variant="body2" sx={{ p: 0, fontWeight: 600 }}>
-                    {t("volunteers.plan.points.place")}
-                  </Typography>
-                  <RadioField name={PLAN_POINT_BOXES.place} value="route" defaultChecked={!point.startFinish}>
-                    {t("volunteers.plan.points.placeRoute")}
-                  </RadioField>
-                  <RadioField name={PLAN_POINT_BOXES.place} value="startFinish" defaultChecked={point.startFinish}>
-                    {t("volunteers.plan.points.placeStartFinish")}
-                  </RadioField>
-                </Box>
-                <TextField
-                  name={PLAN_POINT_BOXES.name}
-                  label={t("volunteers.plan.points.name")}
-                  defaultValue={point.nameRo}
-                  required
-                  fullWidth
-                  size="small"
-                  slotProps={{ htmlInput: { maxLength: CHECKPOINT_NAME_MAX, "data-testid": "plan-point-edit-name" } }}
-                />
-                <TextField
-                  name={PLAN_POINT_BOXES.km}
-                  label={t("volunteers.plan.points.km")}
-                  helperText={t("volunteers.plan.points.kmHelper")}
-                  defaultValue={point.startFinish ? "" : kmBox(point.km)}
-                  fullWidth
-                  size="small"
-                  slotProps={{ htmlInput: { inputMode: "decimal", maxLength: 12, "data-testid": "plan-point-edit-km" } }}
-                />
-              </>
-            ) : (
-              <Typography variant="body2" color="text.secondary" data-testid="plan-point-editors">
-                {/* The link says the editor's card by its own name: the sentence has already said «în editorul evenimentului». */}
-                {t("volunteers.plan.points.editorsOnly")} <Link href={{ pathname: "/admin/events/[id]", params: { id }, hash: "box-checkpoints" }}>{t("checkpoints.title")}</Link>
+          <Stack spacing={1.5}>
+            {/* A point of the route that only the plan has: said so, quietly; then what an editor's point offers, and its note. */}
+            {((point.planOnly && !point.startFinish) || facts.length > 0) && (
+              <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "break-word" }}>
+                {point.planOnly && !point.startFinish && (
+                  <Box component="span" sx={{ whiteSpace: "nowrap", mr: 1, ...NOT_ON_PAPER }} data-testid="plan-point-own">
+                    {t("volunteers.plan.points.planOnly")}
+                  </Box>
+                )}
+                {facts.join(" · ")}
               </Typography>
             )}
-            <TextField
-              name={PLAN_POINT_BOXES.coordinates}
-              label={t("volunteers.plan.points.coordinates")}
-              helperText={t("volunteers.plan.points.coordinatesHelper")}
-              defaultValue={where ? formatCoordinates(where) : ""}
-              fullWidth
-              size="small"
-              slotProps={{ htmlInput: { "data-testid": "plan-point-edit-coordinates" } }}
-            />
-            <GlyphButton icon="save" type="submit" variant="outlined" size="small" sx={TAP_TARGET} data-testid="plan-point-save">
-              {t("volunteers.plan.points.save")}
-            </GlyphButton>
-          </Stack>
-          {/* «Șterge punctul», last and only on a point added here: it asks first, with the point's name and how many people
-              stand there — they stay on the plan, at no point. An editor's point is deleted in the editor. */}
-          {point.planOnly && (
-            <Box component="form" action={removePlanPointAction} sx={{ mt: 1.5 }} data-testid="plan-point-remove-form">
-              {hidden}
-              <input type="hidden" name="pointId" value={point.id} />
-              <ConfirmSubmitButton
-                label={t("volunteers.plan.points.remove")}
-                ariaLabel={t("volunteers.plan.points.removeFor", { name })}
-                icon="delete"
-                color="error"
-                variant="text"
-                size="medium"
-                title={t("volunteers.plan.points.removeTitle", { name })}
-                body={people.length === 0 ? t("volunteers.plan.points.removeBodyNobody") : t(`volunteers.plan.points.removeBody.${countForm(people.length, locale)}`, { count: people.length })}
-                confirmLabel={t("volunteers.plan.points.remove")}
-                cancelLabel={t("confirm.cancel")}
-              />
+            {/* Where the point is, when it has coordinates: the numbers — on the paper too — and the link to a map, which the paper leaves out. */}
+            {where && (
+              <Typography variant="body2" component="p" sx={{ m: 0, display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 1.5 }} data-testid="plan-point-where">
+                <span data-testid="plan-point-coordinates">{formatCoordinates(where)}</span>
+                <Box component="a" href={mapUrlOf(where)} target="_blank" rel="noopener noreferrer" aria-label={t("volunteers.plan.points.openMapFor", { name })} sx={MAP_LINK_SX} data-testid="plan-point-map">
+                  {t("volunteers.plan.points.openMap")}
+                </Box>
+              </Typography>
+            )}
+
+            {/* The people, and the pencil at their right. */}
+            <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 1 }}>
+              <Box sx={{ flex: "1 1 200px", minWidth: 0 }}>
+                {people.length === 0 ? (
+                  <Typography variant="body2" sx={{ fontStyle: "italic", py: 1.25 }} data-testid="plan-point-empty">
+                    {t("volunteers.plan.nobodyHere")}
+                  </Typography>
+                ) : (
+                  <Stack spacing={1} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+                    {people.map((person) => (
+                      <Stack component="li" key={person.id} direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1, flexWrap: "wrap" }} data-testid="plan-person">
+                        {personWords(person)}
+                        {/* «Scoate»: the same form with no point — the person stands under «Fără punct» again. */}
+                        <Box component="form" action={placeVolunteerAction} sx={NOT_ON_PAPER}>
+                          {hidden}
+                          <input type="hidden" name="volunteerId" value={person.id} />
+                          <input type="hidden" name="checkpointId" value="" />
+                          <input type="hidden" name="at" value={point.id} />
+                          <GlyphButton icon="undo" type="submit" variant="text" size="small" sx={TAP_TARGET} aria-label={t("volunteers.plan.takeOffFor", { name: person.name })} data-testid="plan-take-off">
+                            {t("volunteers.plan.takeOff")}
+                          </GlyphButton>
+                        </Box>
+                      </Stack>
+                    ))}
+                  </Stack>
+                )}
+              </Box>
+
+              {/* «Modifică punctul» (§961, §NNN): the pencil alone, named for a reader who does not see it and in its tooltip. A
+                  point added here is changed whole, its kind included; of an editor's point only where it is: its name and
+                  kilometre are public, and are the editor's. A refused save lands at the page's alert with its code, as every
+                  press of this page (§953). */}
+              <Box component="details" sx={PENCIL_FOLD_SX} data-testid="plan-point-edit">
+                <Box component="summary" aria-label={editFor} title={editFor} data-testid="plan-point-edit-toggle">
+                  <EditIcon fontSize="small" aria-hidden />
+                </Box>
+                <Box sx={{ maxWidth: 560, pt: 1.5 }}>
+                  <Typography component="p" variant="subtitle2" sx={{ mb: 1.5 }}>
+                    {t("volunteers.plan.points.edit")}
+                  </Typography>
+                  <Stack component="form" action={editPlanPointAction} spacing={2} sx={{ alignItems: "flex-start" }} data-testid="plan-point-edit-form">
+                    {hidden}
+                    <input type="hidden" name="pointId" value={point.id} />
+                    {point.planOnly ? (
+                      <>
+                        <Box component="fieldset" sx={{ border: 0, m: 0, p: 0, minWidth: 0, width: "100%" }}>
+                          <Typography component="legend" variant="body2" sx={{ p: 0, fontWeight: 600 }}>
+                            {t("volunteers.plan.points.place")}
+                          </Typography>
+                          <RadioField name={PLAN_POINT_BOXES.place} value="route" defaultChecked={!point.startFinish}>
+                            {t("volunteers.plan.points.placeRoute")}
+                          </RadioField>
+                          <RadioField name={PLAN_POINT_BOXES.place} value="startFinish" defaultChecked={point.startFinish}>
+                            {t("volunteers.plan.points.placeStartFinish")}
+                          </RadioField>
+                        </Box>
+                        <TextField
+                          name={PLAN_POINT_BOXES.name}
+                          label={t("volunteers.plan.points.name")}
+                          defaultValue={point.nameRo}
+                          required
+                          fullWidth
+                          size="small"
+                          slotProps={{ htmlInput: { maxLength: CHECKPOINT_NAME_MAX, "data-testid": "plan-point-edit-name" } }}
+                        />
+                        <TextField
+                          name={PLAN_POINT_BOXES.km}
+                          label={t("volunteers.plan.points.km")}
+                          helperText={t("volunteers.plan.points.kmHelper")}
+                          defaultValue={point.startFinish ? "" : kmBox(point.km)}
+                          fullWidth
+                          size="small"
+                          slotProps={{ htmlInput: { inputMode: "decimal", maxLength: 12, "data-testid": "plan-point-edit-km" } }}
+                        />
+                      </>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary" data-testid="plan-point-editors">
+                        {/* The link says the editor's card by its own name: the sentence has already said «în editorul evenimentului». */}
+                        {t("volunteers.plan.points.editorsOnly")} <Link href={{ pathname: "/admin/events/[id]", params: { id }, hash: "box-checkpoints" }}>{t("checkpoints.title")}</Link>
+                      </Typography>
+                    )}
+                    <TextField
+                      name={PLAN_POINT_BOXES.coordinates}
+                      label={t("volunteers.plan.points.coordinates")}
+                      helperText={t("volunteers.plan.points.coordinatesHelper")}
+                      defaultValue={where ? formatCoordinates(where) : ""}
+                      fullWidth
+                      size="small"
+                      slotProps={{ htmlInput: { "data-testid": "plan-point-edit-coordinates" } }}
+                    />
+                    <GlyphButton icon="save" type="submit" variant="outlined" size="small" sx={TAP_TARGET} data-testid="plan-point-save">
+                      {t("volunteers.plan.points.save")}
+                    </GlyphButton>
+                  </Stack>
+                  {/* «Șterge punctul», last and only on a point added here: it asks first, with the point's name and how many people
+                      stand there — they stay on the plan, at no point. An editor's point is deleted in the editor. */}
+                  {point.planOnly && (
+                    <Box component="form" action={removePlanPointAction} sx={{ mt: 1.5 }} data-testid="plan-point-remove-form">
+                      {hidden}
+                      <input type="hidden" name="pointId" value={point.id} />
+                      <ConfirmSubmitButton
+                        label={t("volunteers.plan.points.remove")}
+                        ariaLabel={t("volunteers.plan.points.removeFor", { name })}
+                        icon="delete"
+                        color="error"
+                        variant="text"
+                        size="medium"
+                        title={t("volunteers.plan.points.removeTitle", { name })}
+                        body={people.length === 0 ? t("volunteers.plan.points.removeBodyNobody") : t(`volunteers.plan.points.removeBody.${countForm(people.length, locale)}`, { count: people.length })}
+                        confirmLabel={t("volunteers.plan.points.remove")}
+                        cancelLabel={t("confirm.cancel")}
+                      />
+                    </Box>
+                  )}
+                </Box>
+              </Box>
             </Box>
-          )}
+
+            {/* «Pune aici»: anybody of the event who stands at no point yet. A native select — it works without scripts, asks for a
+                choice before it posts, and opens as the phone's own list. */}
+            {plan.unplaced.length > 0 && (
+              <Stack component="form" action={placeVolunteerAction} direction="row" sx={{ gap: 1, alignItems: "center", flexWrap: "wrap", ...NOT_ON_PAPER }} data-testid="plan-place-form">
+                {hidden}
+                <input type="hidden" name="checkpointId" value={point.id} />
+                <input type="hidden" name="at" value={point.id} />
+                <TextField
+                  select
+                  required
+                  size="small"
+                  name="volunteerId"
+                  label={t("volunteers.plan.choose")}
+                  defaultValue=""
+                  sx={{ minWidth: 0, flex: "1 1 200px", maxWidth: 420 }}
+                  slotProps={{ select: { native: true }, inputLabel: { shrink: true }, htmlInput: { "data-testid": "plan-place-select" } }}
+                >
+                  <option value="">{t("volunteers.plan.chooseEmpty")}</option>
+                  {plan.unplaced.map((person) => {
+                    const roles = rolesOf(person);
+                    return (
+                      <option key={person.id} value={person.id}>
+                        {roles.length > 0 ? `${person.name} — ${roles.join(", ")}` : person.name}
+                      </option>
+                    );
+                  })}
+                </TextField>
+                <GlyphButton icon="addPerson" type="submit" variant="outlined" size="small" sx={TAP_TARGET} data-testid="plan-place">
+                  {t("volunteers.plan.place")}
+                </GlyphButton>
+              </Stack>
+            )}
+          </Stack>
         </Box>
       </Box>
     );
   };
+
+  /**
+   * One group of «Pe puncte» (§NNN): «Pe traseu», the route's points by kilometre, or «La start–finish». A fold, closed unless
+   * it holds the point the last press changed; its closed line says how many points and how many people. A group with no
+   * point says so in one quiet line inside, and stays off the paper whole: a heading with nothing under it is no plan.
+   */
+  const groupFold = (group: "route" | "startFinish", points: readonly VolunteerPlanPoint[]) => {
+    const headingId = group === "route" ? "plan-group-route" : "plan-group-start-finish";
+    const counts = [t(`volunteers.plan.groups.points.${countForm(points.length, locale)}`, { count: points.length }), peopleWords(peopleAt(points))].join(" · ");
+    const pointsHere = points.map(pointFold);
+    return (
+      <Box
+        component="details"
+        open={points.some(({ point }) => point.id === openPoint) || undefined}
+        data-testid="plan-group"
+        data-group={group}
+        sx={{ ...BOXED_DISCLOSURE_SX, ...(points.length === 0 ? NOT_ON_PAPER : OPEN_ON_PAPER), scrollMarginTop: 16 }}
+      >
+        {foldBar(PART_GLYPH[group].glyph, t(group === "route" ? "volunteers.plan.groups.route" : "volunteers.plan.groups.startFinish"), { words: counts, testId: "plan-group-count" }, headingId)}
+        {points.length === 0 ? (
+          <Typography variant="body2" color="text.secondary" data-testid="plan-group-none">
+            {t(group === "route" ? "volunteers.plan.groups.routeNone" : "volunteers.plan.groups.startFinishNone")}
+          </Typography>
+        ) : (
+          // The route's order is the route's: numbered. The start–finish's is a list.
+          <Stack spacing={1} component={group === "route" ? "ol" : "ul"} aria-labelledby={headingId} sx={{ listStyle: "none", m: 0, p: 0 }}>
+            {pointsHere}
+          </Stack>
+        )}
+      </Box>
+    );
+  };
+
+  // The one empty state of a plan with no point (§961), in either view: where to add one.
+  const noPoints = (
+    <Alert severity="info" sx={NOT_ON_PAPER} data-testid="plan-no-points">
+      {t("volunteers.plan.noPoints")}
+    </Alert>
+  );
+
+  /*
+    «Tabel» (§NNN): «Punctele, pe scurt», the whole plan at a glance — the house's table, a block a point on a phone, every row
+    on the one page. On paper it is the plan's summary sheet, printed whole as a table, the first thing after the title; the
+    map's links stay off it, the names and the telephones print as text. A plan with no point has no table: the empty state
+    says how to add one.
+  */
+  const tableView: ReactNode =
+    tableRows.length === 0 ? (
+      noPoints
+    ) : (
+      <Box component="section" id="plan-table" aria-labelledby="plan-table-heading" sx={{ scrollMarginTop: 16 }} data-testid="plan-table-section">
+        <Typography id="plan-table-heading" variant="h3" sx={HEADING_SX[3]}>
+          <ListGlyph aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+          {t("volunteers.plan.table.title")}
+        </Typography>
+        <Box sx={{ mt: 1 }}>
+          <AdminTable
+            caption={t("volunteers.plan.table.title")}
+            tableId="volunteer-plan"
+            columns={tableColumns}
+            rows={tableRows}
+            rowKey={({ point }) => point.id}
+            basePath={planPath}
+            currentParams={{}}
+            query={{ page: 1, perPage: tableRows.length, sort: "number", dir: "asc", offset: 0, limit: tableRows.length }}
+            total={tableRows.length}
+            labels={{
+              results: tableTotal,
+              page: t("list.page", { page: 1, pages: 1 }),
+              previous: t("list.previous"),
+              next: t("list.next"),
+              perPage: t("list.perPage"),
+              actions: t("list.actions"),
+              sortBy: (column) => t("list.sortBy", { column }),
+            }}
+            paged={false}
+            printable
+            empty={null}
+          />
+        </Box>
+      </Box>
+    );
+
+  /*
+    «Pe puncte» (§NNN): the plan itself in two folds — the route's points by kilometre, numbered, then the start–finish's —,
+    each point a fold of its own, under the four numbers of who stands where. On paper every group and every point prints
+    open, the summary first. A press that deleted a point comes back here.
+  */
+  const pointsView: ReactNode = (
+    <Stack id="plan-list" spacing={2} sx={{ scrollMarginTop: 16 }} data-testid="plan-list">
+      {plan.points.length === 0 ? (
+        noPoints
+      ) : (
+        <>
+          {/* How many people stand where, and how many points have nobody: each number a phrase that never breaks in two, so
+              the line wraps between them on a phone. */}
+          <Typography variant="body2" data-testid="plan-summary">
+            {summary.map((part, at) => (
+              <Fragment key={part}>
+                {at > 0 && " · "}
+                <Box component="span" sx={{ whiteSpace: "nowrap" }}>
+                  {part}
+                </Box>
+              </Fragment>
+            ))}
+          </Typography>
+          {groupFold("route", routePoints)}
+          {groupFold("startFinish", startFinishPoints)}
+        </>
+      )}
+    </Stack>
+  );
 
   return (
     <Stack spacing={2}>
@@ -615,63 +875,44 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
           {t("volunteers.plan.help")}
         </Typography>
         {/* Who sees which points (§961): the editor's are public too. That the ones added here are the plan's alone is said once,
-            where they are added («Punctele planului», `points.helpPrivate`). */}
+            where they are added («Adaugă un punct», `points.helpPrivate`). */}
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="plan-help-points">
           {t("volunteers.plan.helpPoints")}
         </Typography>
+      </Box>
+
+      {/* The two views (§NNN): plain links, the current one marked (`aria-current`), drawn on the server — the house's row of
+          sub-tabs, which two short words never make wider than a phone (`fits`: no script to scroll it). Never on paper. */}
+      <Box sx={NOT_ON_PAPER} data-testid="plan-views">
+        <SubNav
+          fits
+          label={t("volunteers.plan.views.label")}
+          items={[
+            { href: planAddress(planPath, { view: "table" }), label: t("volunteers.plan.views.table"), active: view === "table", glyph: <ListGlyph /> },
+            { href: planAddress(planPath, { view: "points" }), label: t("volunteers.plan.views.points"), active: view === "points", glyph: <PointIcon /> },
+          ]}
+        />
       </Box>
       <Box>
         <PrintButton label={t("volunteers.plan.print")} />
       </Box>
 
-      {/* «Punctele, pe scurt» (§NNN): the whole plan at a glance, before the picture and the cards — the house's table, a block a
-          point on a phone, every row on the one page. On paper it is the plan's summary sheet, printed whole as a table, the
-          first thing after the title; the map's links stay off it, the names and the telephones print as text. A plan with no
-          point has no table: the list below says how to add one. */}
-      {tableRows.length > 0 && (
-        <Box component="section" id="plan-table" aria-labelledby="plan-table-heading" sx={{ scrollMarginTop: 16 }} data-testid="plan-table-section">
-          <Typography id="plan-table-heading" variant="h3" sx={HEADING_SX[3]}>
-            <ListGlyph aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
-            {t("volunteers.plan.table.title")}
-          </Typography>
-          <Box sx={{ mt: 1 }}>
-            <AdminTable
-              caption={t("volunteers.plan.table.title")}
-              tableId="volunteer-plan"
-              columns={tableColumns}
-              rows={tableRows}
-              rowKey={({ point }) => point.id}
-              basePath={planPath}
-              currentParams={{}}
-              query={{ page: 1, perPage: tableRows.length, sort: "number", dir: "asc", offset: 0, limit: tableRows.length }}
-              total={tableRows.length}
-              labels={{
-                results: tableTotal,
-                page: t("list.page", { page: 1, pages: 1 }),
-                previous: t("list.previous"),
-                next: t("list.next"),
-                perPage: t("list.perPage"),
-                actions: t("list.actions"),
-                sortBy: (column) => t("list.sortBy", { column }),
-              }}
-              paged={false}
-              printable
-              empty={null}
-            />
-          </Box>
-        </Box>
-      )}
+      {view === "table" ? tableView : pointsView}
 
-      {/* The plan as the organizers drew it (§952): above the points on the page, and on paper the first thing after the points'
-          table (§NNN) — the section's own heading, its hint and every control stay off the sheet, so a plan with no picture
-          prints as it did. */}
-      <Box id="plan-picture" sx={{ scrollMarginTop: 16 }} data-testid="plan-picture-section">
-        <Typography variant="h3" sx={{ ...HEADING_SX[3], ...NOT_ON_PAPER }}>
-          {t("volunteers.plan.picture.title")}
-        </Typography>
+      {/* The plan as the organizers drew it (§952), a fold in both views (§NNN) whose closed line says whether there is one; on
+          paper after the view's plan, the picture alone, open whatever the screen had folded — the fold's bar, its hint and
+          every control stay off the sheet, so a plan with no picture prints as it did. A press on it comes back with it open. */}
+      <Box
+        component="details"
+        id="plan-picture"
+        open={saved === PLAN_SAVED.picture || undefined}
+        data-testid="plan-picture-section"
+        sx={{ ...BOXED_DISCLOSURE_SX, ...(picture ? PICTURE_ON_PAPER : NOT_ON_PAPER), scrollMarginTop: 16 }}
+      >
+        {foldBar(PART_GLYPH.picture.glyph, t("volunteers.plan.picture.title"), { words: t(picture ? "volunteers.plan.picture.has" : "volunteers.plan.picture.hasNone"), testId: "plan-picture-state" })}
         {picture ? (
           // One piece on one sheet: never cut between two pages, and never taller than a sheet (`PICTURE_ON_PAPER_MAX_HEIGHT`).
-          <Box component="figure" sx={{ m: 0, mt: 1, breakInside: "avoid", "@media print": { mt: 0 } }} data-testid="plan-picture">
+          <Box component="figure" sx={{ m: 0, breakInside: "avoid", "@media print": { mt: 0 } }} data-testid="plan-picture">
             <Box
               component="a"
               href={picture.fullUrl}
@@ -709,7 +950,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
           // What to do about it, said only to somebody who can: where there is no store, the line under says that instead.
           mayChangePicture &&
           storeHere && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, ...NOT_ON_PAPER }} data-testid="plan-picture-none">
+            <Typography variant="body2" color="text.secondary" sx={NOT_ON_PAPER} data-testid="plan-picture-none">
               {t("volunteers.plan.picture.none")}
             </Typography>
           )
@@ -774,21 +1015,23 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
           ))}
       </Box>
 
-      {/* «Punctele planului» (§961): right under the picture the points are drawn on — where the organizers add the plan's own
-          points by hand, one after another. Never on the paper. A plain form and a Server Action: it works with scripts off,
-          where the kilometre's box is simply there and not read for a point at the start–finish. A refusal comes back as the
-          form's own state (§315): the box is named and what was typed stays. */}
-      <Box id="plan-points" sx={{ scrollMarginTop: 16, ...NOT_ON_PAPER }} data-testid="plan-points-section">
-        <Typography variant="h3" sx={HEADING_SX[3]}>
-          {t("volunteers.plan.points.title")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="plan-points-help">
+      {/* «Adaugă un punct» (§961), a fold in both views (§NNN): where the organizers add the plan's own points by hand, one after
+          another — open by itself on a plan with no point yet, the page's first work, and after a point it added. Never on the
+          paper. A plain form and a Server Action: it works with scripts off, where the kilometre's box is simply there and not
+          read for a point at the start–finish. A refusal comes back as the form's own state (§315): the box is named, what was
+          typed stays, and the fold shows it even shut (`BOXED_DISCLOSURE_SX`). */}
+      <Box
+        component="details"
+        id="plan-points"
+        open={saved === PLAN_SAVED.added || plan.points.length === 0 || undefined}
+        data-testid="plan-points-section"
+        sx={{ ...BOXED_DISCLOSURE_SX, ...NOT_ON_PAPER, scrollMarginTop: 16 }}
+      >
+        {foldBar(PART_GLYPH.add.glyph, t("volunteers.plan.points.addTitle"))}
+        <Typography variant="body2" color="text.secondary" data-testid="plan-points-help">
           {t("volunteers.plan.points.help")} {t("volunteers.plan.points.helpCoordinates")} {t("volunteers.plan.points.helpPrivate")}
         </Typography>
-        <Typography component="h4" variant="h3" sx={{ ...HEADING_SX[4], mt: 2 }}>
-          {t("volunteers.plan.points.addTitle")}
-        </Typography>
-        <Box sx={{ mt: 1, maxWidth: 560 }}>
+        <Box sx={{ mt: 1.5, maxWidth: 560 }}>
           <ActionForm key={addFormKey} action={addPlanPointAction} messages={addRefusal} scope={ADD_SCOPE} data-testid="plan-point-add-form">
             {hidden}
             <Stack spacing={2} sx={{ alignItems: "flex-start" }}>
@@ -835,13 +1078,18 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
         </Box>
       </Box>
 
-      {/* «Trimite fiecăruia punctul lui» (§956): the one press that tells the volunteers — never on the paper. The numbers are the
-          question's own, said here too so the page answers «cine mai e de anunțat» before anything is pressed. */}
-      <Box id="plan-mail" sx={{ scrollMarginTop: 16, ...NOT_ON_PAPER }} data-testid="plan-mail-section">
-        <Typography variant="h3" sx={HEADING_SX[3]}>
-          {t("volunteers.plan.mail.title")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+      {/* «Trimite fiecăruia punctul lui» (§956), a fold in both views (§NNN) whose closed line says how many its press would tell —
+          never on the paper. The numbers are the question's own, said inside too so the page answers «cine mai e de anunțat»
+          before anything is pressed. A press that went through comes back with it open. */}
+      <Box
+        component="details"
+        id="plan-mail"
+        open={saved === PLAN_SAVED.sent || undefined}
+        data-testid="plan-mail-section"
+        sx={{ ...BOXED_DISCLOSURE_SX, ...NOT_ON_PAPER, scrollMarginTop: 16 }}
+      >
+        {foldBar(PART_GLYPH.mail.glyph, t("volunteers.plan.mail.title"), { words: mailState, testId: "plan-mail-state" })}
+        <Typography variant="body2" color="text.secondary">
           {t("volunteers.plan.mail.help")}
         </Typography>
         <Typography variant="body2" sx={{ mt: 1, overflowWrap: "break-word" }} data-testid="plan-mail-counts">
@@ -869,63 +1117,6 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
           </Typography>
         )}
       </Box>
-
-      {/* The plan itself (§961): two groups, each under its own heading on the page and on the paper — the points at the
-          start–finish, with no number and no kilometre, then the points on the route, numbered in the route's order. A press
-          that deleted a point comes back here. */}
-      <Stack id="plan-list" spacing={2} sx={{ scrollMarginTop: 16 }}>
-        {plan.points.length === 0 ? (
-          <Alert severity="info" sx={NOT_ON_PAPER} data-testid="plan-no-points">
-            {t("volunteers.plan.noPoints")}
-          </Alert>
-        ) : (
-          <>
-            {/* How many people stand where, and how many points have nobody: each number a phrase that never breaks in two, so
-                the line wraps between them on a phone. */}
-            <Typography variant="body2" data-testid="plan-summary">
-              {summary.map((part, at) => (
-                <Fragment key={part}>
-                  {at > 0 && " · "}
-                  <Box component="span" sx={{ whiteSpace: "nowrap" }}>
-                    {part}
-                  </Box>
-                </Fragment>
-              ))}
-            </Typography>
-
-            {/* A group with no point says so in one quiet line, and stays off the paper whole: a heading with nothing under it is no plan. */}
-            <Box component="section" aria-labelledby="plan-group-start-finish" sx={startFinishPoints.length === 0 ? NOT_ON_PAPER : undefined} data-testid="plan-group" data-group="startFinish">
-              <Typography id="plan-group-start-finish" variant="h3" sx={HEADING_SX[3]}>
-                {t("volunteers.plan.groups.startFinish")}
-              </Typography>
-              {startFinishPoints.length === 0 ? (
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="plan-group-none">
-                  {t("volunteers.plan.groups.startFinishNone")}
-                </Typography>
-              ) : (
-                <Stack spacing={0} component="ul" aria-labelledby="plan-group-start-finish" sx={{ listStyle: "none", m: 0, p: 0 }}>
-                  {startFinishPoints.map(pointRow)}
-                </Stack>
-              )}
-            </Box>
-
-            <Box component="section" aria-labelledby="plan-group-route" sx={routePoints.length === 0 ? NOT_ON_PAPER : undefined} data-testid="plan-group" data-group="route">
-              <Typography id="plan-group-route" variant="h3" sx={HEADING_SX[3]}>
-                {t("volunteers.plan.groups.route")}
-              </Typography>
-              {routePoints.length === 0 ? (
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="plan-group-none">
-                  {t("volunteers.plan.groups.routeNone")}
-                </Typography>
-              ) : (
-                <Stack spacing={0} component="ol" aria-labelledby="plan-group-route" sx={{ listStyle: "none", m: 0, p: 0 }}>
-                  {routePoints.map(pointRow)}
-                </Stack>
-              )}
-            </Box>
-          </>
-        )}
-      </Stack>
 
       <Box sx={{ breakInside: "avoid" }} data-testid="plan-unplaced">
         <Typography variant="h3" sx={HEADING_SX[3]}>

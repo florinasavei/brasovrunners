@@ -16,7 +16,7 @@ import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
-import { planSummaryOf } from "../../helpers/volunteer-plan";
+import { planPointBar, planPointsOf, planSummaryOf } from "../../helpers/volunteer-plan";
 
 /**
  * §949, BR-REQ-050-02 — «Planul voluntarilor» (the owner, 2026-11-16, with a map of the route and its seven points: «e foarte
@@ -29,8 +29,8 @@ import { planSummaryOf } from "../../helpers/volunteer-plan";
  * - a point taken off the route frees its people;
  * - the plan reads the points in the route's order with their people by name, everybody at no point under them, and never a
  *   cancelled person;
- * - the page draws it, with «Pune aici» offering only who stands at no point and «Scoate» on everybody placed, and the
- *   «Voluntari» list says each person's point and links to the plan.
+ * - the page draws it — on «Pe puncte», a fold a point (§NNN) — with «Pune aici» offering only who stands at no point and
+ *   «Scoate» on everybody placed, and the «Voluntari» list says each person's point and links to the plan.
  *
  * And what the review of 2026-11-16 asked of it (§953, amending §949): no press of the plan queues an email, for people who
  * have an address; a refused press lands on the page's alert, where its sentence is, and a press that went through on its
@@ -215,8 +215,6 @@ function classOf(page: string, attribute: string): string {
   expect(name, `an Emotion class on the element with ${attribute}`).toBeTruthy();
   return name!;
 }
-/** The plan's points as the page draws them: each `<li data-testid="plan-point">` whole. */
-const pointsOf = (page: string) => [...page.matchAll(/<li[^>]*data-testid="plan-point"[\s\S]*?(?=<li[^>]*data-testid="plan-point"|<\/ol>)/g)].map((match) => match[0]);
 const textOf = (part: string, testid: string) => [...part.matchAll(new RegExp(`data-testid="${testid}"[^>]*>(?:<a[^>]*>)?([^<]*)<`, "g"))].map((match) => match[1]);
 
 function form(fields: Record<string, string>): FormData {
@@ -362,14 +360,20 @@ describe("§949 the plan's page", () => {
   it("draws each point with its people, their number, telephone and roles, and offers only who stands at no point", async () => {
     await place(staff.ADMIN!, people.ana, points.junction);
     await place(staff.ADMIN!, people.dan, points.water);
-    const page = await planPage();
+    // «Pe puncte» (§NNN): the points, each a fold of its own.
+    const page = await planPage({ view: "points" });
 
     expect(page).toContain(ro.Admin.volunteers.plan.title);
     expect(page).toContain("Crosul");
     // How many people stand where, since the plan has two kinds of points (§961): none at the start–finish here, two on the route.
     expect(planSummaryOf(page)).toBe("0 voluntari la start–finish · 2 voluntari pe traseu · 2 voluntari fără punct · 1 punct fără nimeni");
-    const drawn = pointsOf(page);
-    expect(drawn.map((part) => textOf(part, "plan-point-title")[0])).toEqual(["1. 1,2 km — Intersecția Stejeriș", "2. 5,5 km — Apă la cabană", "3. 7,25 km — Podul de lemn"]);
+    const drawn = planPointsOf(page);
+    // Each point's bar: its name, numbered on the route, then its kilometre and how many stand there.
+    expect(drawn.map(planPointBar)).toEqual([
+      { name: "1. Intersecția Stejeriș", line: "1,2 km · 1 voluntar" },
+      { name: "2. Apă la cabană", line: "5,5 km · 1 voluntar" },
+      { name: "3. Podul de lemn", line: "7,25 km · niciun voluntar" },
+    ]);
     // What the point is, in the backoffice's words.
     expect(drawn[0]).toContain("Direcționare");
     expect(drawn[1]).toContain("Apă");
@@ -416,22 +420,24 @@ describe("§949 the plan's page", () => {
     await db.update(eventVolunteers).set({ phone: "+40 (700) 000-002" }).where(eq(eventVolunteers.id, people.dan));
     await place(staff.ADMIN!, people.ana, points.junction);
     await place(staff.ADMIN!, people.dan, points.water);
-    const page = await streamed(await planElement());
+    // «Pe puncte» (§NNN): the points' folds and «Fără punct» under them, everything from the plan's list on.
+    const page = await streamed(await planElement({ view: "points" }));
     const telLinks = (part: string) => [...part.matchAll(/<a[^>]*data-testid="plan-person-phone"[^>]*>|<a[^>]*href="tel:[^"]*"[^>]*>/g)].map((match) => match[0]);
-    // The points' cards and «Fără punct» under them: everything from the plan's list on. «Punctele, pe scurt» (§NNN), above
-    // the picture, dials the people placed at a point too — its own count below.
     const cards = page.slice(page.indexOf('id="plan-list"'));
     expect(cards.length).toBeLessThan(page.length);
 
     const links = telLinks(cards);
     // Ana and Dan at their points, Ion under them; Zoe has no number.
     expect(links.map((link) => /href="([^"]*)"/.exec(link)?.[1])).toEqual(["tel:+40700000001", "tel:+40700000002", "tel:+40700000001"]);
-    // The table: Ana and Dan, the same digits, in its wide rows and again in each one's phone block — and nobody else.
-    const table = page.slice(page.indexOf('data-testid="plan-table-section"'), page.indexOf('id="plan-list"'));
+    expect(telLinks(page)).toHaveLength(links.length);
+    // «Tabel» (§NNN) dials the people placed at a point too: Ana and Dan, the same digits, in its wide rows and again in each
+    // one's phone block — and Ion under it, at no point.
+    const tableView = await streamed(await planElement());
+    const table = tableView.slice(tableView.indexOf('data-testid="plan-table-section"'), tableView.indexOf('data-testid="plan-picture-section"'));
     expect(telLinks(table).map((link) => /href="([^"]*)"/.exec(link)?.[1])).toEqual(["tel:+40700000001", "tel:+40700000002", "tel:+40700000001", "tel:+40700000002"]);
-    // Every telephone link of the page, wherever it is, dials the digits and the plus alone.
-    expect(telLinks(page)).toHaveLength(links.length + 4);
-    for (const link of telLinks(page)) expect(/href="tel:([^"]*)"/.exec(link)?.[1]).toMatch(/^\+\d+$/);
+    expect(telLinks(tableView)).toHaveLength(4 + 1);
+    // Every telephone link of either view, wherever it is, dials the digits and the plus alone.
+    for (const link of [...telLinks(page), ...telLinks(tableView)]) expect(/href="tel:([^"]*)"/.exec(link)?.[1]).toMatch(/^\+\d+$/);
     // The bare number is nowhere a link's text: it is read grouped.
     expect(page).not.toMatch(/>\+40700000001</);
     expect(page).toContain(">+40 700 000 001<");
@@ -455,27 +461,31 @@ describe("§949 the plan's page", () => {
 
   it("says so when everybody stands at a point, and when the event has no points yet", async () => {
     for (const id of [people.ana, people.dan, people.ion, people.zoe]) await place(staff.ADMIN!, id, points.bridge);
-    const full = await planPage();
-    expect(full).toContain(ro.Admin.volunteers.plan.unplacedNone);
-    // Nobody left to offer: no «Pune aici» anywhere.
-    expect(full).not.toContain('data-testid="plan-place-form"');
+    for (const view of ["table", "points"]) {
+      const full = await planPage({ view });
+      expect(full).toContain(ro.Admin.volunteers.plan.unplacedNone);
+      // Nobody left to offer: no «Pune aici» anywhere.
+      expect(full).not.toContain('data-testid="plan-place-form"');
+    }
 
     // The other event, once its one point is taken off the route.
     await db.delete(eventCheckpoints).where(eq(eventCheckpoints.id, points.elsewhere));
-    const bare = await planPage({}, runId);
-    // The one empty state: the points can be added right here, above, or in the event's editor (§961).
-    expect(bare).toContain("Planul nu are încă niciun punct. Adaugă punctele chiar aici, mai sus");
-    expect(bare).toContain(ro.Admin.volunteers.plan.noPoints);
-    expect(planSummaryOf(bare)).toBe("");
+    for (const view of ["table", "points"]) {
+      const bare = await planPage({ view }, runId);
+      // The one empty state, in either view: the points can be added right here, at «Adaugă un punct», or in the event's editor (§961).
+      expect(bare).toContain("Planul nu are încă niciun punct. Adaugă punctele chiar aici, la „Adaugă un punct”");
+      expect(bare).toContain(ro.Admin.volunteers.plan.noPoints);
+      expect(planSummaryOf(bare)).toBe("");
+    }
   });
 
   it("is in English for an English reader, and a 404 for the Tehnic role and for an event that is not there", async () => {
     await place(staff.ADMIN!, people.ana, points.junction);
     state.locale = "en";
-    const page = await planPage();
+    const page = await planPage({ view: "points" });
     // As the markup carries an apostrophe.
     expect(page).toContain(en.Admin.volunteers.plan.title.replace(/'/g, "&#x27;"));
-    expect(page).toContain("1. 1.2 km — Intersecția Stejeriș (en)");
+    expect(planPointBar(planPointsOf(page)[0])).toEqual({ name: "1. Intersecția Stejeriș (en)", line: "1.2 km · 1 volunteer" });
     expect(planSummaryOf(page)).toBe("0 volunteers at the start–finish · 1 volunteer on the route · 3 volunteers at no point · 2 points with nobody");
     state.locale = "ro";
 
@@ -485,21 +495,26 @@ describe("§949 the plan's page", () => {
     await expect(planPage()).rejects.toThrow("NOT_FOUND");
   });
 
-  it("puts a person at a point and takes them off from the page's forms, coming back to that point", async () => {
-    expect(await press({ volunteerId: people.ion, checkpointId: points.water, at: points.water })).toBe(`/ro/admin/events/${raceId}/plan-voluntari#point-${points.water}`);
+  it("puts a person at a point and takes them off from the page's forms, coming back to that point, open, on «Pe puncte»", async () => {
+    // The page's forms carry the view they were drawn in (§NNN), «Pe puncte» for a point's; the point comes back open.
+    const atWater = `/ro/admin/events/${raceId}/plan-voluntari?view=points&open=${points.water}#point-${points.water}`;
+    expect(await press({ view: "points", volunteerId: people.ion, checkpointId: points.water, at: points.water })).toBe(atWater);
     expect((await rowOf(people.ion)).checkpointId).toBe(points.water);
-    expect(await press({ volunteerId: people.ion, checkpointId: "", at: points.water })).toBe(`/ro/admin/events/${raceId}/plan-voluntari#point-${points.water}`);
+    expect(await press({ view: "points", volunteerId: people.ion, checkpointId: "", at: points.water })).toBe(atWater);
     expect((await rowOf(people.ion)).checkpointId).toBeNull();
-    // A press that finds the person already there went through too: back on its point, nothing in the address.
-    await press({ volunteerId: people.ion, checkpointId: points.water, at: points.water });
-    expect(await press({ volunteerId: people.ion, checkpointId: points.water, at: points.water })).toBe(`/ro/admin/events/${raceId}/plan-voluntari#point-${points.water}`);
+    // A press that finds the person already there went through too: back on its point, no refusal in the address.
+    await press({ view: "points", volunteerId: people.ion, checkpointId: points.water, at: points.water });
+    expect(await press({ view: "points", volunteerId: people.ion, checkpointId: points.water, at: points.water })).toBe(atWater);
+    // A form drawn before the views names none: a point's press comes back to «Pe puncte» all the same.
+    expect(await press({ volunteerId: people.ion, checkpointId: points.water, at: points.water })).toBe(atWater);
     // Ion has an address: neither press of the page told him anything (§953).
     expect((await rowOf(people.ion)).email).toBe("ion.lupu@example.test");
     expect(await db.select().from(emailOutbox)).toEqual([]);
   });
 
   it("brings a refused press back to the page's alert, where its sentence is — never to a point's anchor (§953)", async () => {
-    const alert = (code: string) => `/ro/admin/events/${raceId}/plan-voluntari?planError=${code}#admin-alert`;
+    // In the view the press came from: a point's press, with no view in its form, is «Pe puncte»'s (§NNN).
+    const alert = (code: string) => `/ro/admin/events/${raceId}/plan-voluntari?view=points&planError=${code}#admin-alert`;
 
     // Another event's point: not there. The code is in the address, and the page says it in words, in the alert region.
     expect(await press({ volunteerId: people.ion, checkpointId: points.elsewhere, at: points.water })).toBe(alert("NOT_FOUND"));
