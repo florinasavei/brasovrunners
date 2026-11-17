@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.54-2026-11-17 -->
+<!-- PROJECT_BASELINE: BR-V4.55-2026-11-17 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V4.54-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.55-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -2155,6 +2155,10 @@ way through every step, and none of them is a way around the allocator.
 124. Amends criteria 5, 20 and 21 (`DECISIONS.md` §338, §249). Given a bib design with «Fără linia punctată pe tăietură» / "No dashed line on the cut" ticked (`hideCutLine`; off in the platform's design and in every design saved before the key), when the sheet of two bibs a page is requested, then every page — one whose lower half is blank included — draws no dashed line across its middle and draws the two short solid marks at the ends of the cut, the very ones «Repere de tăiere pe foaie» draws there, whether or not that tick is on, and before the bibs, so a band that starts at the cut is drawn over them; with the tick off the page is drawn as before — the dashed line, and the end marks only with «Repere de tăiere pe foaie»; with `layout=one` the page draws what it drew however the two ticks stand — the trim guide at the bib's top and foot with «Repere de tăiere pe foaie», no line at all without it; and the picture of one bib is the same, byte for byte, so the drawing's version is not raised. Verification: unit `registrations/bib-cut-line.test.ts` (2026-11-16, `DECISIONS.md` §955).
 125. Amends criterion 13. Given the bib designer, then «Numărul» offers «Fără linia punctată pe tăietură» right under «Repere de tăiere pe foaie», unticked by default, with one line of help saying that two short marks stay at the ends of the cut and that nothing is left on the numbers after cutting, in both languages; the save keeps the tick apart from the cut marks' own, the preview's address carries it as it carries every switch, and an event's file carries it as `bib.design.hideCutLine` — named in both languages in the diff of an import over an event, kept by an import as a new event, and read as off from a file made before it (2026-11-16, `DECISIONS.md` §955).
 126. Given a bib design that draws both the route's profile and the emergency line, when a number is printed or previewed, then an empty room of `BIB_LAYOUT.emergencyGap` points stands between the profile's row and the phone line — counted in the block's height and taken from the number's area, kept when the block is turned for the runner — and a design that draws only one of the two prints it where it stood (2026-11-17, `DECISIONS.md` §959).
+127. Given a bib design, then its emergency line holds up to four numbers, each with its own name — the fourth read and checked as the third, a short number such as 112 included — in order, a bar between them; a design saved before the fourth prints what it printed (2026-11-17, `DECISIONS.md` §960).
+128. Given the print card, when «BIB-uri goale» is downloaded with a count between 1 and 100, then the sheet holds that many of the race's bibs with no number, no stubs, no name and no line for one — nothing reserved, nobody named — and any other count is refused (2026-11-17, `DECISIONS.md` §960).
+129. Given a registration marked «Elită», then its bib prints on the elite sheet alone: the ordinary sheet, a range reprint, the unprinted batch and their count leave it out, and its number and state are unchanged (2026-11-17, `DECISIONS.md` §960).
+130. Given an elite bib — a line of the race's elite list or a registration marked «Elită» — then it prints one word where the number goes: the registration's first name, or the first word of the line as typed; never a number under it nor its stubs, whatever the design held (2026-11-17, `DECISIONS.md` §960).
 
 **Verification:** integration `registrations/bibs.test.ts`, `registrations/race-day.test.ts`, `cms/bib-design.test.ts`; unit `registrations/bibs-pdf.test.ts`, `registrations/bib-design.test.ts`; integration `registrations/void-bibs.test.ts` (16, 17); unit `registrations/race-number.test.ts` (16); unit `registrations/bib-footer.test.ts` (19); e2e `bib-design.spec.ts` (19)
 

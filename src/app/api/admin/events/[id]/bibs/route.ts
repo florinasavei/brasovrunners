@@ -99,7 +99,7 @@ export async function GET(
   */
   const elite = url.searchParams.get("elite") === "1";
   /*
-    «BIB-uri goale» (§NNN; the owner, 2026-11-17: «vreau și număr GOL, fără bib, fără nimic»): `blank=N` prints N of the
+    «BIB-uri goale» (§960; the owner, 2026-11-17: «vreau și număr GOL, fără bib, fără nimic»): `blank=N` prints N of the
     race's bibs with no number, no name and no line — the header, the strip, the phones, the sponsors and the small print
     only, written on by hand. Nothing is reserved and nobody is named: no number is taken from any runner. Between 1 and
     `BIB_BLANK_MAX`; anything else is refused.

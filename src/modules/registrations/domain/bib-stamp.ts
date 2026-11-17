@@ -11,7 +11,7 @@ import { fnv1a } from "@/shared/hash";
  * reads «Name: number» with a bar between its numbers, and no word before numbers that each have a name (§947). 7: a registration
  * marked «Elită» prints its first name alone where the number goes, where it printed the registered name (§948). 8: an empty
  * gap between the profile's row and the phone line when both are drawn (§959). 9: an elite bib never prints a number, and a
- * line of the elite list prints its first word (§NNN). The bibs page's stamp (`bibPictureStamp`) and the desk's (`events/repository.ts#BIB_STAMP`) both carry it.
+ * line of the elite list prints its first word (§960). The bibs page's stamp (`bibPictureStamp`) and the desk's (`events/repository.ts#BIB_STAMP`) both carry it.
  */
 export const BIB_DRAWING_VERSION = 9;
 

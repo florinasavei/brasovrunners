@@ -138,6 +138,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.55` | race-week bibs: a fourth emergency phone, blank bibs, elite bibs with the first name alone, once (§960) |
 | `BR-V4.54` | room between the route's profile and the emergency phones on the bib (§959) |
 | `BR-V4.53` | «Include programul evenimentului»: the organizers' message to an event's participants can carry the event's programme (§958) |
 | `BR-V4.52` | the organizers' message to an event's participants ends with the club's Facebook and Instagram pages (§957) |

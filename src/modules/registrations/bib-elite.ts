@@ -26,7 +26,7 @@ export type BibEliteEntry = {
  */
 export function bibEliteParts(design: Pick<BibDesign, "eliteSponsors">): { number: number | null; sponsors: boolean; stubs: boolean } {
   /*
-    The name alone, never a number (§NNN; the owner, 2026-11-17: «la elite ți-am zis să nu printezi BIB! doar nume», and
+    The name alone, never a number (§960; the owner, 2026-11-17: «la elite ți-am zis să nu printezi BIB! doar nume», and
     asked, «Doar numele, fără număr»): the design's old tick «Număr pe BIB-urile de elită» is read no more, and with no
     number there are no stubs to repeat it.
   */
@@ -34,7 +34,7 @@ export function bibEliteParts(design: Pick<BibDesign, "eliteSponsors">): { numbe
 }
 
 /**
- * The name a line of the race's elite list prints (§NNN, amending §948; the owner, 2026-11-17, of a line typed «Ingird
+ * The name a line of the race's elite list prints (§960, amending §948; the owner, 2026-11-17, of a line typed «Ingird
  * Mutter» beside registrations that print «Silviu», «Paul»: «la Ingrid de ce scrie și prenumele???»): the first word of what
  * the club typed, as a registration prints its first name alone — one word, large, read from the roadside.
  */

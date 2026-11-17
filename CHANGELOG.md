@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.55-2026-11-17
+
+- **Race-week bibs** — a fourth emergency phone on the bib (112 beside the organizers' and the mountain rescue's numbers); «BIB-uri goale»: download as many bibs as you need with no number and no name, to write by hand; and the elite bibs print the first name alone, never a number, on the elite sheet only — never a second time on the ordinary one. §960.
 ## BR-V4.54-2026-11-17
 
 - **Room between the route's profile and the emergency phones on the bib** — the phones line no longer touches the kilometres of the profile: about 2 mm of space between them, on the printed sheet and in the preview, turned or not. §959.

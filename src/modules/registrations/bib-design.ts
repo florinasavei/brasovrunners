@@ -337,7 +337,7 @@ type BibEmergencyDesign = Pick<BibDesign, "showEmergency" | "emergencyPhone"> &
 export const BIB_EMERGENCY_SEPARATOR = " | ";
 
 /**
- * The line printed on every number (§750, amending it §759 and §947): up to four numbers (§NNN) on one line, each after
+ * The line printed on every number (§750, amending it §759 and §947): up to four numbers (§960) on one line, each after
  * its own name and a colon, a bar between them — «Ajutor start/finish: 07xx xxx xxx | Ajutor traseu: 07yy yyy yyy |
  * Salvamont: 07zz zzz zzz» (the owner, 2026-11-16: «de fapt vreau asa: ajutor start/finish: , ajutor traseu: ,
  * salvamont, cu label customizabil»). Until §947 a name stood before its number with a space and the numbers were
@@ -358,7 +358,7 @@ export function bibEmergencyLine(design: BibEmergencyDesign, fallback: string): 
       [design.emergencyPhoneLabel ?? "", design.emergencyPhone],
       [design.emergencyPhone2Label ?? "", design.emergencyPhone2 ?? ""],
       [design.emergencyPhone3Label ?? "", design.emergencyPhone3 ?? ""],
-      // The fourth (§NNN): «Urgențe: 112» beside the organizers' two and the mountain rescue's.
+      // The fourth (§960): «Urgențe: 112» beside the organizers' two and the mountain rescue's.
       [design.emergencyPhone4Label ?? "", design.emergencyPhone4 ?? ""],
     ] as const
   ).filter(([, phone]) => phone !== "");
@@ -541,7 +541,7 @@ export const bibDesignSchema = z
     emergencyPhone3: z.string().transform(bibEmergencyPhone).catch(""),
     emergencyPhone3Label: emergencyName,
     /**
-     * A fourth number (§NNN; the owner, 2026-11-17: «la numere de urgență trebuie să suport încă 1 număr, deci 4 în total, să
+     * A fourth number (§960; the owner, 2026-11-17: «la numere de urgență trebuie să suport încă 1 număr, deci 4 în total, să
      * fie și 112»), checked as the others are, with its own label. Absent from a design saved before it: none.
      */
     emergencyPhone4: z.string().transform(bibEmergencyPhone).catch(""),

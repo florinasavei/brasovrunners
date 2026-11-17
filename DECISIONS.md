@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.54-2026-11-17 -->
+<!-- PROJECT_BASELINE: BR-V4.55-2026-11-17 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.54-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.55-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -30290,3 +30290,19 @@ Baseline `BR-V4.53-2026-11-17`.
 **Held by** `tests/unit/registrations/bib-profile-turned-phones.test.ts` (the room in the block's height only when both are drawn, the phone's centre on the sheet, the picture's margin turned and not, none without a profile) and the drawing's fingerprint in `bib-figures-place.test.ts`, captured again — with the room at zero (and no margin key) it gives the hash of BR-V3.53 again, so the room is the one change.
 
 Baseline `BR-V4.54-2026-11-17`.
+
+## 960. Race-week bibs: a fourth emergency phone, blank bibs, and elite bibs that print the first name alone, once
+
+**The owner, 2026-11-17, four days before Saturday's race, printing the bibs:** «la numere de urgență trebuie să suport încă 1 număr, deci 4 în total, să fie și 112»; «vreau și număr GOL, fără bib, fără nimic!! URGENȚĂ MAXIMĂ»; «ar trebui excluse elitele de pe numerele normale, că le văd de 2 ori!!!».
+
+**A fourth emergency phone.** The bib's emergency line held three numbers, each with its own name (§947). It now holds four: `emergencyPhone4` and `emergencyPhone4Label` in the design, read and checked as the third is (a short number such as «112» is a number, §947), with two boxes under the third in «Numere de concurs (BIB)» → the design, carried by the preview's query and named in the event file's diff. The line reads them in order, a bar between them, and shrinks to fit the card as it always did (`bibEmergencyFit`). A design saved before reads the fourth as none and prints what it printed.
+
+**Blank bibs.** «BIB-uri goale (fără număr și fără nume)» in the print card: as many as typed (1 to `BIB_BLANK_MAX` = 100), downloaded as the sheet's own GET with `blank=N` — the race's bib with its header, profile, phones, sponsors and small print, and **no number, no stubs, no name and no line to write one on**, to be written on by hand. Nothing is reserved and nobody is named, so no runner's number moves and every role that downloads the sheet may download these. They are not the desk's spares (§444), which reserve numbers and print them with an empty name line.
+
+**Elite runners on the elite sheet alone.** A registration an Administrator marked «Elită» printed twice: as an elite bib on the elite sheet (§897) and again on the ordinary one. The sheet's one scope (`bibs.ts#bibScopeWhere`) now leaves a marked registration out of every sheet but the elite one — the ordinary sheet, a range reprint, the unprinted batch and their count — so the elite sheet is the one place its bib prints. Its number, its state and its place are untouched; only where its bib prints changed. The print card's sentence says it: the ordinary sheet no longer prints them.
+
+**The elite bib prints the first name alone, never a number** (amending §895 and §948; the owner, 2026-11-17: «la elite ți-am zis să nu printezi BIB! doar nume», asked, «Doar numele, fără număr»; and of a line of the list typed «Ingird Mutter» beside registrations that print «Silviu», «Paul»: «la Ingrid de ce scrie și prenumele???»). `bib-elite.ts#bibEliteParts` draws no number under the name whatever the design's old tick «Număr pe BIB-urile de elită» says — the tick is gone from the designer — and so no stubs. A line of the race's elite list prints the first word of what the club typed (`eliteLineBibName`), as a registration prints its first name alone (§948): one word, large. The line's own number stays as it was — kept, reserved, given to nobody else — and is printed nowhere. The drawing's version is 9.
+
+**Held by** `tests/unit/registrations/bib-design-query.test.ts` and `tests/integration/cms/bib-design.test.ts` (the fourth phone on the wire and read from a design saved before it), `tests/integration/registrations/elite-mark.test.ts` and `elite-panel.test.ts` (a marked registration never on the ordinary sheet, its number and state unchanged, a line of the list printed as its first word), `tests/unit/registrations/elite-bibs.test.ts` and `elite-mark-bibs.test.ts` (one word where the number goes and never a number, a design saved with the old tick included), `tests/unit/content/bib-designer-sections.test.ts` (the tick gone from the form, the fourth phone in «Profilul și urgențele»), and the bib suite as a whole.
+
+Baseline `BR-V4.55-2026-11-17`.

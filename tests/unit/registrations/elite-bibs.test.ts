@@ -80,7 +80,7 @@ describe("§895 the two design ticks", () => {
     expect([values.eliteNumber, values.eliteSponsors]).toEqual([true, false]);
   });
 
-  it("§NNN never print a number on an elite bib, whatever the design held — the sponsors' row is the one choice left", () => {
+  it("§960 never print a number on an elite bib, whatever the design held — the sponsors' row is the one choice left", () => {
     // The name alone (the owner, 2026-11-17: «Doar numele, fără număr»): the old tick is read no more, so no number and no stubs.
     expect(bibEliteParts({ eliteSponsors: false })).toEqual({ number: null, sponsors: false, stubs: false });
     expect(bibEliteParts({ eliteSponsors: true })).toEqual({ number: null, sponsors: true, stubs: false });
@@ -138,7 +138,7 @@ describe("§895 the elite sheet", () => {
     expect(pages(await sheet({ elite: [] }))).toBe(1);
   });
 
-  it("draws each line's first word in the number's place (§NNN), no name line and no blank mark, and never a number", async () => {
+  it("draws each line's first word in the number's place (§960), no name line and no blank mark, and never a number", async () => {
     const moveTo = vi.spyOn(PDFDocument.prototype, "moveTo");
     let plain: string[];
     try {
