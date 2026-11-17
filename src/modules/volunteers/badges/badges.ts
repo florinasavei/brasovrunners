@@ -29,7 +29,16 @@ import {
   BADGE_TITLE_MAX,
   readBadgeDesign,
 } from "./badge-design";
-import { BADGE_CUSTOM_BOUNDS, BADGE_FOOTER_LOGOS, BADGE_SIZES, type BadgeExtra, badgeSizeMm, badgeSizeRefusal } from "./badge-geometry";
+import {
+  BADGE_CUSTOM_BOUNDS,
+  BADGE_FOOTER_LOGO_SETTING_KEYS,
+  BADGE_FOOTER_LOGO_SETTINGS,
+  BADGE_FOOTER_LOGOS,
+  BADGE_SIZES,
+  type BadgeExtra,
+  badgeSizeMm,
+  badgeSizeRefusal,
+} from "./badge-geometry";
 import { BADGE_DESIGN_FORM_PREFIX, type BadgeDesignFormValues, TYPED_COLOUR, postedSingleColour, typedColour } from "./badge-query";
 
 /**
@@ -186,6 +195,8 @@ export class BadgeSizeRefusal extends DomainError {
  *
  * - «Altă dimensiune» needs a whole width and height in millimetres within `BADGE_CUSTOM_BOUNDS`;
  * - «Logo-ul clubului jos, ca filigran» is one of its four levels (§965) — it takes no height, so it never makes a size too small;
+ * - the logo's size, the space round it and its two moves (§969) are each a whole number within its bounds (`BADGE_FOOTER_LOGO_SETTINGS`),
+ *   every box that is not named at once; an empty box is the default, as a form from before the boxes posts none;
  * - every text the club types is Romanian **and** English, or neither (§352): the short title, «VOLUNTAR»,
  *   the free-text line, the marker area's label and the telephone's label, the empty side named;
  * - «Text liber» ticked needs something written in it (§776);
@@ -205,6 +216,13 @@ export function parseBadgeDesignPost(values: BadgeDesignFormValues): BadgeDesign
   if (values.footerLogo !== "" && !(BADGE_FOOTER_LOGOS as readonly string[]).includes(values.footerLogo)) {
     throw invalid("footerLogo: not one of the levels", [box("footerLogo")]);
   }
+  // The logo's size, space and moves (§969): a number the box holds is kept only whole and within its bounds; no number is the default.
+  const wrongLogo = BADGE_FOOTER_LOGO_SETTING_KEYS.filter((key) => {
+    const value = values[key];
+    const { min, max } = BADGE_FOOTER_LOGO_SETTINGS[key];
+    return !Number.isNaN(value) && !(Number.isInteger(value) && value >= min && value <= max);
+  });
+  if (wrongLogo.length > 0) throw invalid("the club's logo: a size, space or move that is not whole or not within its bounds", wrongLogo.map(box));
   if (values.size === "custom") {
     const within = (value: number, bounds: { min: number; max: number }) => Number.isInteger(value) && value >= bounds.min && value <= bounds.max;
     const wrong = [
