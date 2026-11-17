@@ -16,7 +16,8 @@ import { FEATURED, hydrated, signIn } from "./support/featured-event";
  *
  * §943 — and the row verbs' column stays in view: on a frame narrower than the table it is pinned to the
  * frame's right edge, opaque, fading into the columns under it; a press the keyboard reaches beside it is
- * not left under it; and on the owner's 1858-px screen the whole table fits.
+ * not left under it; and on the owner's 1858-px screen the whole table fits — since §NNN, once the Administrator's
+ * «Emailuri» is unticked under «Coloane»: with it drawn the table scrolls under the pinned verbs.
  *
  * Everything here is the browser's own layout — `col` alignment under `table-layout: fixed` with
  * collapsed borders, pointer capture, the restore after a reload, `position: sticky` in a scrolling
@@ -270,7 +271,7 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
     test.setTimeout(90_000);
     const seeded = await seed(`${testInfo.project.name}-${Date.now().toString(36)}`);
     try {
-      // A small laptop: eleven columns ask for more than this frame has.
+      // A small laptop: the list's columns ask for more than this frame has.
       await page.setViewportSize({ width: 1000, height: 800 });
       await signIn(page, "Dev Administrator");
       await page.goto(`/ro/admin/registrations?eventId=${seeded.eventId}&q=${encodeURIComponent(seeded.tag)}`);
@@ -326,9 +327,26 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
       expect(await place(partner)).toEqual({ inFrame: true, clearOfVerbs: true });
       expect((await place(verbs)).inFrame).toBe(true);
 
-      // The owner's screen, 1858 px (2026-11-12: «Aici mi se face crop!»): the whole table fits its frame, nothing scrolls
-      // sideways, no edge fades. A column added to this list has to fit here, or leave below a breakpoint.
+      // The owner's screen, 1858 px (2026-11-12: «Aici mi se face crop!»). «Emailuri» (§NNN) is the Administrator's one column
+      // that asks for more than this screen has left: each person's three newest emails, on a floor of sixteen rem once a row
+      // of the page has one. With it drawn a table wider than its frame scrolls under the pinned verbs — they stay whole in
+      // the frame — and the page itself never scrolls. (How wide this page's table is with the column drawn is not asked:
+      // its one row was never emailed.)
       await page.setViewportSize({ width: 1858, height: 900 });
+      const emails = table.locator('th[data-column="emails"]');
+      await expect(emails).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      expect((await place(verbs)).inFrame).toBe(true);
+      // «Coloane» gives the width back (§661), and remembers it: with «Emailuri» unticked the whole table fits its frame,
+      // nothing scrolls sideways, no edge fades — as before the column. Any other column added to this list has to fit
+      // here, or leave below a breakpoint.
+      await main.getByTestId("admin-table-columns").click();
+      const emailsToggle = page.getByRole("menuitemcheckbox", { name: "Emailuri", exact: true });
+      await expect(emailsToggle).toHaveAttribute("aria-checked", "true");
+      await emailsToggle.click();
+      await expect(emailsToggle).toHaveAttribute("aria-checked", "false");
+      await page.keyboard.press("Escape");
+      await expect(emails).toBeHidden();
       await expect.poll(async () => (await scrolls()).wider).toBe(false);
       await expect(frame).not.toHaveAttribute("data-more-end");
       expect((await place(verbs)).inFrame).toBe(true);

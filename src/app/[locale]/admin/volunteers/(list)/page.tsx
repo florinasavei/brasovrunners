@@ -19,11 +19,13 @@ import { type Locale, routing } from "@/i18n/routing";
 import { findEventForRegistrationById } from "@/modules/events/repository";
 import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
 import { findCurrentApprovedDocument, volunteerMinorsOpen } from "@/modules/legal-documents/repository";
+import { readEmailSummaries } from "@/modules/notifications/email-summaries";
+import EmailSummaryCell from "@/modules/notifications/ui/EmailSummary";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import NotesMark from "@/modules/registrations/ui/NotesMark";
 import { buildListHref, pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
-import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations, canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import {
@@ -146,11 +148,15 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const words = await confirmWords();
   // The words of every role the page's rows name, given or offered — one read, whatever their events — each with its category's (§904):
   // «Direcționare (Traseu)», as the card and the person's page say it, so a name standing in two categories is never printed twice alike.
-  const [roleNames, rowNotes] = await Promise.all([
+  const [roleNames, rowNotes, emailSummaries] = await Promise.all([
     listRoleNames(db, [...new Set(rows.flatMap((row) => [...row.roleIds, ...row.choiceIds]))]),
     // «Note interne»: each row's live notes, newest first — ONE grouped read over the page's ids, never a query per row. The marker
     // says how many and, in its tooltip, the words (§945, as the registrations list's, §943). The service asks for the role again.
     listVolunteerNotesForExport(db, actor, rows.map((row) => row.id)),
+    // «Emailuri» (§NNN): each row's three newest emails and how many it has in all — ONE read over the page's ids, and only for the
+    // Administrator and the Superadministrator, whose the person's own «Emailuri» is (§915). For the Organizer the reader is not
+    // called and the column is not drawn; the reader asks for the role again (BR-REQ-060-01).
+    canManageRegistrations(actor) ? readEmailSummaries(db, actor, { volunteerIds: rows.map((row) => row.id) }) : Promise.resolve(null),
   ]);
   // The marker's tooltip (§945): the newest notes' words, each with its day and hour, the older ones counted — no author's name.
   const notesTipOf = (volunteerId: string) =>
@@ -475,6 +481,24 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
         </Stack>
       ),
     },
+    /*
+      «Emailuri» (§NNN; the owner, 2026-11-17, the morning after the volunteers were emailed their points: «Vreau sa vad mai clar ce
+      mailuri a primit fiecare om»), right after the state: each person's three newest emails — which email, when it left, what
+      became of it — and «și încă N emailuri», the link to the person's own «Emailuri» (§915), where every email stands with its
+      tries. For the Administrator and the Superadministrator alone, as that fold is: for the Organizer no column is drawn and
+      nothing is read (`emailSummaries` is null). No `omitEmptyOnPhone`: «niciun email» is an answer, on a phone's card too. It
+      neither sorts nor filters.
+    */
+    ...(emailSummaries
+      ? [
+          {
+            key: "emails",
+            label: t("emails.summary.column"),
+            hint: t("emails.summary.hint"),
+            render: (row) => <EmailSummaryCell summary={emailSummaries.get(row.id)} href={`${personHref(row)}#emailuri`} personName={shortText(row.name)} locale={locale} t={t} />,
+          } satisfies AdminColumn<VolunteerAdminRow>,
+        ]
+      : []),
     {
       key: "given",
       label: t("volunteers.person.givenLine"),
