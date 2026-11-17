@@ -365,6 +365,65 @@ describe("§965 «Logo-ul clubului jos, ca filigran» in the designer", () => {
   });
 });
 
+describe("§NNN «Spațiul pentru nume (% din înălțime)» in the designer", () => {
+  const draw = (design = DEFAULT_BADGE_DESIGN, language: "ro" | "en" = "ro", dropped: Array<"nameSpacePct"> = []) =>
+    html(() => BadgeDesignPanel({ eventId: EVENT, locale: language, design, dropped, sampleRole: ROLES[0].id, version: "abc" }), language);
+  const numberBox = (page: string) => /<input[^>]*name="badge\.design\.nameSpacePct"[^>]*>/.exec(page)?.[0] ?? "";
+  /** The fold «Locul pentru nume», from its start to the next fold's. */
+  const writingFold = (page: string) => page.slice(page.indexOf('data-testid="badge-section-writing"'), page.indexOf('data-testid="badge-section-marker"'));
+
+  it("is a native number box from 43 to 80, first among the fold's controls, with its help line, 43 for a design that never chose", async () => {
+    const page = await draw();
+    const input = numberBox(page);
+    expect(input).toContain('type="number"');
+    expect(input).toContain('min="43"');
+    expect(input).toContain('max="80"');
+    expect(input).toContain('step="1"');
+    expect(input).toContain('inputMode="numeric"');
+    expect(input).toContain('value="43"');
+    const fold = writingFold(page);
+    expect(fold).toContain("Spațiul pentru nume (% din înălțime)");
+    expect(fold).toContain("Cât din înălțimea ecusonului rămâne albă pentru nume. Mai mult = benzile de sus mai mici. 43 = ca acum.");
+    // First in the fold, before the line's tick and the watermark's select: the size of the place before what is drawn in it.
+    const at = fold.indexOf('name="badge.design.nameSpacePct"');
+    expect(at).toBeGreaterThan(-1);
+    expect(at).toBeLessThan(fold.indexOf('name="badge.design.writingLine"'));
+    expect(at).toBeLessThan(fold.indexOf('name="badge.design.footerLogo"'));
+    expect(/<(input|select|textarea)\b[^>]*>/.exec(fold)?.[0]).toContain('name="badge.design.nameSpacePct"');
+    // At 43 the closed line says nothing of it; the preview's first address says 43.
+    expect(page).not.toContain("Spațiu pentru nume 43%");
+    expect(page).toMatch(/badges\/preview\?[^"]*nameSpacePct=43/);
+  });
+
+  it("keeps the saved share in the box, says it in the closed line, and draws the preview with it", async () => {
+    const page = await draw({ ...DEFAULT_BADGE_DESIGN, nameSpacePct: 60 });
+    expect(numberBox(page)).toContain('value="60"');
+    expect(page).toContain("Spațiu pentru nume 60% · O linie subțire pentru nume");
+    expect(page).toMatch(/badges\/preview\?[^"]*nameSpacePct=60/);
+    // With the watermark the closed line says all three, the share first, as the fold lists them.
+    expect(await draw({ ...DEFAULT_BADGE_DESIGN, nameSpacePct: 80, writingLine: false, footerLogo: "faint" })).toContain(
+      "Spațiu pentru nume 80% · Doar „Nume:” · Logo ca filigran, puțin vizibil",
+    );
+  });
+
+  it("says beside its fold that a stored share could not be read, and names the box when a save refuses it", async () => {
+    const told = await draw(DEFAULT_BADGE_DESIGN, "ro", ["nameSpacePct"]);
+    expect(writingFold(told)).toContain('data-testid="badge-dropped"');
+    expect(await draw()).not.toContain('data-testid="badge-dropped"');
+    // The refusal's summary links the box under its label: the page hands the form the box's words.
+    const source = readFileSync("src/modules/volunteers/badges/ui/BadgeDesignPanel.tsx", "utf8");
+    expect(source).toContain('[box("nameSpacePct")]: t("badges.design.nameSpace")');
+  });
+
+  it("speaks English", async () => {
+    const page = await draw({ ...DEFAULT_BADGE_DESIGN, nameSpacePct: 60 }, "en");
+    expect(writingFold(page)).toContain("Space for the name (% of the height)");
+    expect(page).toContain("How much of the badge&#x27;s height stays white for the name. More = smaller bands at the top. 43 = as today.");
+    expect(page).toContain("Space for the name 60% · A thin line for the name");
+    expect(numberBox(page)).toContain('value="60"');
+  });
+});
+
 describe("§783 «Culorile rolurilor» serve the badges per role only", () => {
   it("says so in the closed line when the one badge is chosen, and keeps the colours", async () => {
     const single = await html(() => BadgeRoleColours({ eventId: EVENT, locale: "ro", roles: ROLES, design: DEFAULT_BADGE_DESIGN }));

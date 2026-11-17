@@ -2326,6 +2326,13 @@ only ones who see the names, addresses and telephone numbers.
      the bottom of every badge, under «Nume:», where the name is written in marker over it: «Fără» (the default),
      «Puțin vizibil», «Mediu» or «Bine vizibil». It takes no room of its own, so any size that fits without it fits
      with it; the preview shows the level as you choose it.
+     First under «Locul pentru nume», **«Spațiul pentru nume (% din înălțime)»** (§NNN) says how much of the badge's
+     height stays white for the name, a whole number from 43 to 80. 43, the default, is the badge as it always was;
+     more makes the two bands at the top lower — the header and the role's band share what is left in the same
+     proportion, their words smaller with them — and gives the name the rest, so a tall badge (90 × 130 mm at 60, say)
+     spends its height on the name rather than on the bands. The free-text line and the telephone keep their own rows,
+     and with more space for the name a short badge that ticks both needs less height than 34 mm. The preview follows
+     the number as you type it; a number outside 43–80 is refused when you save, naming the box.
    - **A role's colour** is part of the role: «Mai multe» on its line in the card (saved with «Salvează toate rolurile»), or
      all the roles at once under «Culorile rolurilor» on the badges' page. «Portocaliul clubului», one of
      the palette, or «Altă culoare» typed as `#rrggbb`; it is kept only when white or black text reads on

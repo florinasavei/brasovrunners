@@ -946,3 +946,57 @@ describe("§965 «Logo-ul clubului jos, ca filigran»", () => {
     expect(sample.equals(without)).toBe(false);
   }, 120_000);
 });
+
+describe("§NNN «Spațiul pentru nume (% din înălțime)»", () => {
+  const picture = (query: string) => previewRoute.GET(new Request(`http://localhost/api/admin/events/${eventId}/badges/preview?${query}`), { params: Promise.resolve({ id: eventId }) });
+  const bytes = async (response: Response) => Buffer.from(await response.arrayBuffer());
+  const valuesOf = (fields: Record<string, string>) => readBadgeDesignForm((name) => (designForm(fields).get(name) as string | null) ?? null);
+  const tall = { "badge.design.size": "custom", "badge.design.customWidthMm": "90", "badge.design.customHeightMm": "100" };
+
+  it("keeps the share typed in the form on the event, audited by name, and carries it in the event's file and a copy", async () => {
+    expect(await post(actions.saveBadgeDesignAction, designForm({ ...tall, "badge.design.nameSpacePct": "60" }))).toBe("redirected");
+    expect(readBadgeDesign(await stored())).toMatchObject({ size: "custom", customHeightMm: 100, nameSpacePct: 60 });
+    expect(await post(actions.saveBadgeDesignAction, designForm({ ...tall, "badge.design.nameSpacePct": "70" }))).toBe("redirected");
+    const rows = await trail("event.badge_design_changed");
+    expect(rows).toHaveLength(2);
+    expect((rows[1].metadataJson as { changed: string[] }).changed).toEqual(["nameSpacePct"]);
+    // The same share again changes nothing and records nothing.
+    expect(await saveBadgeDesign(db, staff.ADMIN!, eventId, valuesOf({ ...tall, "badge.design.nameSpacePct": "70" }), NOW)).toEqual({ changed: false });
+    expect(await trail("event.badge_design_changed")).toHaveLength(2);
+    expect((await readEventConfig(db, eventId))!.config.badges.design).toMatchObject({ nameSpacePct: 70 });
+    const copy = await duplicateEvent(db, { actor: staff.ADMIN!, eventId, now: NOW });
+    expect(readBadgeDesign(await stored(copy.id)).nameSpacePct).toBe(70);
+  });
+
+  it.each(["42", "81", "", "60.5"])("refuses %j, naming the box, keeping every box as typed and storing nothing", async (typed) => {
+    const result = (await post(actions.saveBadgeDesignAction, designForm({ ...tall, "badge.design.nameSpacePct": typed, "badge.design.titleRo": "Crosul", "badge.design.titleEn": "The cross" }))) as FormOutcome;
+    expect(result).toMatchObject({ error: "VALIDATION_ERROR", fields: ["badge.design.nameSpacePct"] });
+    expect(result.values["badge.design.nameSpacePct"]).toEqual([typed]);
+    expect(result.values["badge.design.titleRo"]).toEqual(["Crosul"]);
+    expect(result.values["badge.design.customHeightMm"]).toEqual(["100"]);
+    expect(await stored()).toBeNull();
+  });
+
+  it("reads a design saved before the key as 43, said nowhere as unreadable, and the form saved over it as it stands changes nothing", async () => {
+    const old: Record<string, unknown> = { ...DEFAULT_BADGE_DESIGN, size: "strip100" };
+    delete old.nameSpacePct;
+    await db.update(events).set({ badgeDesign: old }).where(eq(events.id, eventId));
+    const read = await findEventForBadges(db, eventId, "ro");
+    expect(read!.design).toMatchObject({ nameSpacePct: 43, size: "strip100" });
+    expect(read!.dropped).toEqual([]);
+    // The box posts 43 for it; a form from before the box posts nothing. Neither is a change.
+    expect(await saveBadgeDesign(db, staff.ADMIN!, eventId, valuesOf({ "badge.design.size": "strip100", "badge.design.nameSpacePct": "43" }), NOW)).toEqual({ changed: false });
+    expect(await saveBadgeDesign(db, staff.ADMIN!, eventId, valuesOf({ "badge.design.size": "strip100" }), NOW)).toEqual({ changed: false });
+    expect(await trail("event.badge_design_changed")).toHaveLength(0);
+  });
+
+  it("draws the saved share on the badge's picture — the designer's unsaved sample of the same — and not the badge of 43", async () => {
+    expect(await post(actions.saveBadgeDesignAction, designForm({ ...tall, "badge.design.nameSpacePct": "60" }))).toBe("redirected");
+    const size = "size=custom&customWidthMm=90&customHeightMm=100";
+    const saved = await bytes(await picture("locale=ro&role=none&v=x"));
+    const sample = await bytes(await picture(`locale=ro&role=none&sample=1&${size}&nameSpacePct=60`));
+    const today = await bytes(await picture(`locale=ro&role=none&sample=1&${size}&nameSpacePct=43`));
+    expect(saved.equals(sample)).toBe(true);
+    expect(sample.equals(today)).toBe(false);
+  }, 120_000);
+});

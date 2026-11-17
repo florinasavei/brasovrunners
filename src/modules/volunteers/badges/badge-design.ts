@@ -5,7 +5,17 @@ import { formatPhone } from "@/modules/registrations/phone";
 import { bibFooterText } from "@/modules/registrations/bib-footer";
 import { fnv1a } from "@/shared/hash";
 import { COLOR } from "@/theme/brand";
-import { BADGE_CUSTOM_BOUNDS, BADGE_FOOTER_LOGOS, BADGE_SIZE_PRESETS, BADGE_SIZES, type BadgeLayoutWords, DEFAULT_BADGE_FOOTER_LOGO } from "./badge-geometry";
+import {
+  BADGE_CUSTOM_BOUNDS,
+  BADGE_FOOTER_LOGOS,
+  BADGE_NAME_SPACE,
+  BADGE_SIZE_PRESETS,
+  BADGE_SIZES,
+  type BadgeLayoutWords,
+  DEFAULT_BADGE_FOOTER_LOGO,
+  DEFAULT_BADGE_NAME_SPACE,
+  isBadgeNameSpace,
+} from "./badge-geometry";
 import { badgeDesignValuesFromQuery } from "./badge-query";
 
 /**
@@ -94,6 +104,12 @@ export const badgeDesignSchema = z
     /** «VOLUNTAR» / «VOLUNTEER», as the club types it; empty in both is the platform's words. */
     labelRo: line(BADGE_LABEL_MAX),
     labelEn: line(BADGE_LABEL_MAX),
+    /**
+     * «Spațiul pentru nume (% din înălțime)» (§NNN): the share of the badge's height the white writing area takes, a whole number from 43
+     * to 80 — 43, the badge as it always was, unless the design chose; a design saved before the key, and a value of the wrong type or
+     * out of the bounds, reads 43, never refused on read.
+     */
+    nameSpacePct: z.number().int().min(BADGE_NAME_SPACE.min).max(BADGE_NAME_SPACE.max).catch(DEFAULT_BADGE_NAME_SPACE),
     /** One faint line across the writing area, for the marker. */
     writingLine: z.boolean().catch(true),
     /**
@@ -138,6 +154,7 @@ export const DEFAULT_BADGE_DESIGN: BadgeDesign = {
   titleEn: "",
   labelRo: "",
   labelEn: "",
+  nameSpacePct: DEFAULT_BADGE_NAME_SPACE,
   writingLine: true,
   footerLogo: DEFAULT_BADGE_FOOTER_LOGO,
   showFreeText: false,
@@ -182,6 +199,8 @@ export const BADGE_DROPPABLE = {
   singleColour: "string",
   // §965: how visible the club's logo is at the badge's foot.
   footerLogo: "string",
+  // §NNN: the space for the name, a whole number of percents.
+  nameSpacePct: "number",
 } as const;
 export type BadgeDroppedKey = keyof typeof BADGE_DROPPABLE;
 
@@ -193,6 +212,8 @@ export function badgeDesignDropped(value: unknown): BadgeDroppedKey[] {
   const stored = value as Record<string, unknown>;
   return (Object.keys(BADGE_DROPPABLE) as BadgeDroppedKey[]).filter((key) => {
     if (!(key in stored) || stored[key] === undefined || stored[key] === null) return false;
+    // A space for the name that is no whole number from 43 to 80 (§NNN) reads as the default, and the designer says so too.
+    if (key === "nameSpacePct") return !isBadgeNameSpace(stored[key]);
     // A mode (§783) or a logo's level (§965) no one knows is as unreadable as one of the wrong type: it reads as the default and the designer says so.
     const choices = BADGE_CHOICES[key];
     if (choices && typeof stored[key] === "string") return !choices.includes(stored[key]);
@@ -374,8 +395,9 @@ export function badgeLayoutWords(design: Pick<BadgeDesign, "showPhone" | "phone"
  * so every stamped address changes with it — the bib's `BIB_DRAWING_VERSION`, for the badge. 2 since a
  * role's badge prints its category (§962).
  * 3 since the club's logo may stand large and pale at every badge's foot, as a watermark (§965).
+ * 4 since the space for the name may take more of the badge's height, the bands sharing what it leaves (§NNN).
  */
-export const BADGE_DRAWING_VERSION = 3;
+export const BADGE_DRAWING_VERSION = 4;
 
 /**
  * A short, stable stamp of what a badge's picture is drawn from (the bib's §748): the design, the role's

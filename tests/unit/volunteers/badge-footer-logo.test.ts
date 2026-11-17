@@ -237,8 +237,8 @@ describe("§965 the watermark's one box", () => {
     expect(checked).toBe(sizes.length * ticks.length);
   });
 
-  it("raises the drawing's version to 3, so every picture's address changes with it", () => {
-    expect(BADGE_DRAWING_VERSION).toBe(3);
+  it("raised the drawing's version to 3, so every picture's address changed with it (a later drawing raises it further, §NNN)", () => {
+    expect(BADGE_DRAWING_VERSION).toBeGreaterThanOrEqual(3);
   });
 
   it("is the same box at every level, at the level's own opacity, and none while off", () => {
