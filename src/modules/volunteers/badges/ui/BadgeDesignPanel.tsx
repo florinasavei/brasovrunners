@@ -36,6 +36,7 @@ import {
 } from "../badge-design";
 import {
   BADGE_CUSTOM_BOUNDS,
+  BADGE_FOOTER_LOGOS,
   BADGE_SIZE_PRESETS,
   BADGE_SIZES,
   badgeImageSize,
@@ -115,6 +116,7 @@ export default async function BadgeDesignPanel({
     [box("titleEn")]: t("badges.design.titleEn"),
     [box("labelRo")]: t("badges.design.labelRo"),
     [box("labelEn")]: t("badges.design.labelEn"),
+    [box("footerLogo")]: t("badges.design.footerLogo"),
     [box("freeTextRo")]: t("badges.design.freeTextRo"),
     [box("freeTextEn")]: t("badges.design.freeTextEn"),
     [box("markerLabelRo")]: t("badges.design.markerLabelRo"),
@@ -196,7 +198,11 @@ export default async function BadgeDesignPanel({
   // «VOLUNTAR» as the page's language prints it: the sample of the one badge's band shows the club's own word.
   const bandWord = await badgeLabelIn(design, locale);
   const roleAside = design.labelRo ? `${design.labelRo} / ${design.labelEn}` : t("badges.design.labelDefaultAside");
-  const writingAside = design.writingLine ? t("badges.design.writingLine") : t("badges.design.writingPlain");
+  // The club's logo as a watermark (§965) is said in the closed line only when it is drawn.
+  const writingAside = words(
+    design.writingLine ? t("badges.design.writingLine") : t("badges.design.writingPlain"),
+    design.footerLogo !== "off" && t(`badges.design.footerLogoAside.${design.footerLogo}`),
+  );
   // The Romanian line only, cut short: the closed line sits in the section's heading, and a typed text may be 60 characters.
   const freeLetters = Array.from(design.freeTextRo);
   const freeAside = design.showFreeText && freeLetters.length > 0 ? `${freeLetters.slice(0, FREE_ASIDE_MAX).join("")}${freeLetters.length > FREE_ASIDE_MAX ? "…" : ""}` : t("badges.design.freeTextOff");
@@ -468,7 +474,8 @@ export default async function BadgeDesignPanel({
             </Stack>
           </Panel>
 
-          {/* «Locul pentru nume»: no name is printed; «Nume:» and, if wanted, one faint line for the marker. */}
+          {/* «Locul pentru nume»: no name is printed; «Nume:» and, if wanted, one faint line for the marker — and, if wanted, the club's
+              logo large and pale under them (§965), with how visible it is. */}
           <Panel glyph="badgeWriting" collapsible level={5} title={t("badges.design.sections.writing")} aside={writingAside} data-testid="badge-section-writing">
             <Stack spacing={1.5}>
               <Typography variant="caption" color="text.secondary">
@@ -477,6 +484,22 @@ export default async function BadgeDesignPanel({
               <CheckboxField name={box("writingLine")} defaultChecked={design.writingLine}>
                 {t("badges.design.writingLine")}
               </CheckboxField>
+              {droppedNote("footerLogo")}
+              <RecallField
+                select
+                name={box("footerLogo")}
+                label={t("badges.design.footerLogo")}
+                helperText={t("badges.design.footerLogoHelp")}
+                defaultValue={design.footerLogo}
+                slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+                sx={{ width: { sm: 320 } }}
+              >
+                {BADGE_FOOTER_LOGOS.map((level) => (
+                  <option key={level} value={level}>
+                    {t(`badges.design.footerLogos.${level}`)}
+                  </option>
+                ))}
+              </RecallField>
             </Stack>
           </Panel>
 

@@ -4,7 +4,7 @@ import path from "node:path";
 import PDFDocument from "pdfkit";
 import { isValidElement, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { type BadgeDesign, badgeWords, DEFAULT_BADGE_DESIGN } from "@/modules/volunteers/badges/badge-design";
+import { type BadgeDesign, badgeWords, DEFAULT_BADGE_DESIGN, readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
 import { badgeImageLayout, badgeMarkup } from "@/modules/volunteers/badges/badge-image";
 import { type BadgeRole, badgePrintEntries } from "@/modules/volunteers/badges/badges";
 import { renderBadgeSheet } from "@/modules/volunteers/badges/badges-pdf";
@@ -176,6 +176,23 @@ describe("§962 the badges with no type draw what they drew before it", () => {
     if (folder) {
       mkdirSync(folder, { recursive: true });
       writeFileSync(path.join(folder, "badge-drawing-whole.json"), `${JSON.stringify(whole, null, 2)}\n`);
+    }
+    await expect(`${JSON.stringify(drawings, null, 2)}\n`).toMatchFileSnapshot("./__snapshots__/badge-drawing-before-type.json");
+  }, 60_000);
+
+  /**
+   * «Logo-ul clubului jos, ca filigran» off — the choice of every design that never made it — draws every case as before, byte for byte
+   * in the layout, the picture and the sheet's calls: chosen off, and absent from a design stored before the choice (§965).
+   */
+  it("draws the same with the club's logo as a watermark off: chosen off, or absent from a design saved before the choice (§965)", async () => {
+    const drawings: Record<string, ReturnType<typeof kept>> = {};
+    for (const [name, { design, locale, role }] of Object.entries(CASES)) {
+      const chosenOff = await drawingOf({ ...design, footerLogo: "off" }, locale, role);
+      // As stored before the choice existed: the key absent, read back by the one forgiving reader.
+      const stored: Record<string, unknown> = { ...design };
+      delete stored.footerLogo;
+      expect(await drawingOf(readBadgeDesign(stored), locale, role), `${name}, saved before the choice`).toEqual(chosenOff);
+      drawings[name] = kept(chosenOff);
     }
     await expect(`${JSON.stringify(drawings, null, 2)}\n`).toMatchFileSnapshot("./__snapshots__/badge-drawing-before-type.json");
   }, 60_000);

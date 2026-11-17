@@ -886,3 +886,63 @@ describe("§783 one badge for everyone, no role — the default", () => {
     expect(await held(await sheet(`locale=ro&all=50&n.${waterId}=1&n.${marshalId}=1`))).toBe("2");
   });
 });
+
+describe("§965 «Logo-ul clubului jos, ca filigran»", () => {
+  const sheet = (query: string) => sheetRoute.GET(new Request(`http://localhost/api/admin/events/${eventId}/badges?${query}`), { params: Promise.resolve({ id: eventId }) });
+  const picture = (query: string) => previewRoute.GET(new Request(`http://localhost/api/admin/events/${eventId}/badges/preview?${query}`), { params: Promise.resolve({ id: eventId }) });
+  const bytes = async (response: Response) => Buffer.from(await response.arrayBuffer());
+  const valuesOf = (fields: Record<string, string>) => readBadgeDesignForm((name) => (designForm(fields).get(name) as string | null) ?? null);
+
+  it("keeps the level chosen in the form on the event, audited by name, and carries it in the event's file and a copy", async () => {
+    expect(await post(actions.saveBadgeDesignAction, designForm({ "badge.design.footerLogo": "medium" }))).toBe("redirected");
+    expect(readBadgeDesign(await stored()).footerLogo).toBe("medium");
+    const rows = await trail("event.badge_design_changed");
+    expect(rows).toHaveLength(1);
+    expect((rows[0].metadataJson as { changed: string[] }).changed).toEqual(["footerLogo"]);
+    // The same level again changes nothing and records nothing.
+    expect(await saveBadgeDesign(db, staff.ADMIN!, eventId, valuesOf({ "badge.design.footerLogo": "medium" }), NOW)).toEqual({ changed: false });
+    expect(await trail("event.badge_design_changed")).toHaveLength(1);
+    expect((await readEventConfig(db, eventId))!.config.badges.design).toMatchObject({ footerLogo: "medium" });
+    const copy = await duplicateEvent(db, { actor: staff.ADMIN!, eventId, now: NOW });
+    expect(readBadgeDesign(await stored(copy.id)).footerLogo).toBe("medium");
+    // And back to «Fără».
+    expect(await post(actions.saveBadgeDesignAction, designForm({ "badge.design.footerLogo": "off" }))).toBe("redirected");
+    expect(readBadgeDesign(await stored()).footerLogo).toBe("off");
+  });
+
+  it("reads a design saved before the choice as off, said nowhere as unreadable, and the form saved over it as it stands changes nothing", async () => {
+    const old: Record<string, unknown> = { ...DEFAULT_BADGE_DESIGN, size: "strip100" };
+    delete old.footerLogo;
+    await db.update(events).set({ badgeDesign: old }).where(eq(events.id, eventId));
+    const read = await findEventForBadges(db, eventId, "ro");
+    expect(read!.design).toMatchObject({ footerLogo: "off", size: "strip100" });
+    expect(read!.dropped).toEqual([]);
+    // The select posts «Fără» for it; a form from before the select posts nothing. Neither is a change.
+    expect(await saveBadgeDesign(db, staff.ADMIN!, eventId, valuesOf({ "badge.design.size": "strip100", "badge.design.footerLogo": "off" }), NOW)).toEqual({ changed: false });
+    expect(await saveBadgeDesign(db, staff.ADMIN!, eventId, valuesOf({ "badge.design.size": "strip100" }), NOW)).toEqual({ changed: false });
+    expect(await trail("event.badge_design_changed")).toHaveLength(0);
+  });
+
+  it("refuses a level that is none of the four, naming the box and keeping what was typed", async () => {
+    const result = (await post(actions.saveBadgeDesignAction, designForm({ "badge.design.footerLogo": "loud", "badge.design.titleRo": "Crosul", "badge.design.titleEn": "The cross" }))) as FormOutcome;
+    expect(result).toMatchObject({ error: "VALIDATION_ERROR", fields: ["badge.design.footerLogo"] });
+    expect(result.values["badge.design.titleRo"]).toEqual(["Crosul"]);
+    expect(result.values["badge.design.footerLogo"]).toEqual(["loud"]);
+    expect(await stored()).toBeNull();
+  });
+
+  it("draws it on the saved design's sheet and pictures, pale, and nothing of it while off", async () => {
+    // The watermark's graphics state is the only fill opacity a badge sheet sets: none without it, the level's with it.
+    const off = (await bytes(await sheet("locale=ro"))).toString("latin1");
+    expect(off).not.toMatch(/\/ca \d/);
+    expect(await post(actions.saveBadgeDesignAction, designForm({ "badge.design.footerLogo": "strong" }))).toBe("redirected");
+    const strong = (await bytes(await sheet("locale=ro"))).toString("latin1");
+    expect(strong).toMatch(/\/ca 0\.35\b/);
+    // The saved design's picture is the designer's sample of the same design — and not the picture without the logo.
+    const saved = await bytes(await picture("locale=ro&role=none&v=x"));
+    const sample = await bytes(await picture("locale=ro&role=none&sample=1&footerLogo=strong"));
+    const without = await bytes(await picture("locale=ro&role=none&sample=1&footerLogo=off"));
+    expect(saved.equals(sample)).toBe(true);
+    expect(sample.equals(without)).toBe(false);
+  }, 120_000);
+});

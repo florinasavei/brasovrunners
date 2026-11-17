@@ -40,6 +40,8 @@ export type BadgeDesignFormValues = {
   labelRo: string;
   labelEn: string;
   writingLine: boolean;
+  /** «Logo-ul clubului jos, ca filigran» (§965): `off`, `faint`, `medium` or `strong` as posted — empty reads `off`, any other word is refused by the save. */
+  footerLogo: string;
   showFreeText: boolean;
   freeTextRo: string;
   freeTextEn: string;
@@ -82,6 +84,7 @@ const TEXTS = [
   "titleEn",
   "labelRo",
   "labelEn",
+  "footerLogo",
   "freeTextRo",
   "freeTextEn",
   "markerLabelRo",
@@ -134,6 +137,7 @@ export function readBadgeDesignForm(get: (name: string) => string | null): Badge
     labelRo: text("labelRo"),
     labelEn: text("labelEn"),
     writingLine: at("writingLine") !== null,
+    footerLogo: text("footerLogo"),
     showFreeText: at("showFreeText") !== null,
     freeTextRo: text("freeTextRo"),
     freeTextEn: text("freeTextEn"),
