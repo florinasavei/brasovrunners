@@ -2303,7 +2303,8 @@ only ones who see the names, addresses and telephone numbers.
 7. **Print the volunteers' badges** (§764). The «Voluntari» card → **«Ecusoane pentru voluntari»** opens a
    page of its own for the event, for the Organizer and the Administrators. A badge is a small, long strip
    — 90 × 35 mm (16 on an A4 sheet) or 100 × 40 mm (14), or your own width × height in whole millimetres,
-   60–200 by 30–100 — with the club's logo, the event's short title, «VOLUNTAR», the role on its coloured
+   60–200 by 30–287 (§NNN: up to one badge to an A4 page, the bands growing with it) — with the club's
+   logo, the event's short title, «VOLUNTAR», the role on its coloured
    band and a white space with «Nume:» and one faint line: **no name is printed**, the volunteer writes it
    with a marker, so the file holds no personal data. On a badge per role, a role under a category also
    prints the category's name — the volunteer's type — after «VOLUNTAR» («VOLUNTAR · PE TRASEU»), or, when
