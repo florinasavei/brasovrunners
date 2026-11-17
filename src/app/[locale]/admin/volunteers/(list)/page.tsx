@@ -41,7 +41,7 @@ import {
   type VolunteerAdminRow,
   type VolunteerSortKey,
 } from "@/modules/volunteers/admin-list";
-import { guardianAllowsConfirm, guardianAskOf, roleLabel, VOLUNTEER_DECISION_MAX, VOLUNTEER_STATES, type VolunteerState } from "@/modules/volunteers/domain/volunteer";
+import { guardianAllowsConfirm, guardianAskOf, roleLabel, VOLUNTEER_DECISION_MAX, VOLUNTEER_STATES, type VolunteerState, volunteerTypes } from "@/modules/volunteers/domain/volunteer";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
 import { listPlanPoints } from "@/modules/volunteers/plan-points";
 import { DECISION_ANCHOR } from "@/modules/volunteers/ui/VolunteerDecisionCard";
@@ -148,6 +148,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const words = await confirmWords();
   // The words of every role the page's rows name, given or offered — one read, whatever their events — each with its category's (§904):
   // «Direcționare (Traseu)», as the card and the person's page say it, so a name standing in two categories is never printed twice alike.
+  // The same read carries each category's place in the club's order, which «Tip» lists the categories in (§NNN).
   const [roleNames, rowNotes, emailSummaries] = await Promise.all([
     listRoleNames(db, [...new Set(rows.flatMap((row) => [...row.roleIds, ...row.choiceIds]))]),
     // «Note interne»: each row's live notes, newest first — ONE grouped read over the page's ids, never a query per row. The marker
@@ -181,6 +182,8 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     return words ? roleLabel(words, locale) : null;
   };
   const namesOf = (ids: readonly string[]) => ids.map(roleName).filter((name): name is string => name !== null);
+  // «Tip» (§NNN): the categories of the roles given, once each, in the club's order — from the same read, never one per row.
+  const typesOf = (ids: readonly string[]) => volunteerTypes(ids.map((id) => roleNames.get(id)), locale);
 
   const basePath = getPathname({ locale, href: "/admin/volunteers" });
   /** Only the list-shaping keys travel with a sort link, a page link or a pill. */
@@ -515,6 +518,22 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           // «De repartizat» (§761): the offer nobody has placed yet, the same words as the card's heading.
           <StatusChip glyph="open" color="warning" variant="outlined" label={t("volunteers.unassigned.title")} testId="volunteer-unassigned" />
         ),
+    },
+    {
+      /*
+        «Tip» (§NNN; the owner, 2026-11-17: «Practic voluntarii sunt de 2 tipuri: start-finish și pe traseu», then, of this list: «și în
+        tabelul ăsta»): where the person works — the categories of the roles GIVEN, in the club's own words and the page's language, each
+        once, in the categories' order, joined by «, ». A role under no category adds nothing («Alte activități» is no type); nobody given a
+        role, or only such roles, is an empty cell and no line on a phone's card. It neither sorts nor filters.
+      */
+      key: "type",
+      label: t("volunteers.screen.columnType"),
+      hint: t("volunteers.screen.typeHint"),
+      omitEmptyOnPhone: true,
+      render: (row) => {
+        const types = typesOf(row.roleIds);
+        return types.length > 0 ? <span data-testid="volunteer-type">{types.join(", ")}</span> : null;
+      },
     },
     // Read here, set on «Planul voluntarilor»: a cancelled person keeps their point in case they come back, and shows none.
     ...(pointNames.size > 0

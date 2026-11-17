@@ -412,7 +412,7 @@ describe("§774 the card: «Categorii», «Categoria» and the roles under their
     expect(page).toContain("Direcționare (Start / Sosire)");
     // The people grouped by role: the heading names it with its category.
     expect(/<section[^>]*aria-label="Direcționare \(Traseu\)"[^>]*data-testid="volunteer-group"/.test(page)).toBe(true);
-    // The badge's band shows the role only.
+    // The band's sample names the role alone, never «(Traseu)»: the badge prints the category on a small line of its own (§NNN).
     expect(page).not.toMatch(/data-testid="volunteer-role-colour"[^>]*>[^<]*\(Traseu\)/);
     const english = await drawCard({ volunteers: [maria] }, "en");
     expect(english).toContain("Guidance (Route)");

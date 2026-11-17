@@ -211,6 +211,21 @@ describe("§764 «Tipărire»", () => {
     expect(countBox).toContain('value="300"');
     expect(page).toContain("Doar „STAFF”, pentru cine vine fără rol.");
   });
+
+  it("stamps a role's picture with its category's names too, so a category renamed is a new picture (§NNN)", async () => {
+    const design = { ...DEFAULT_BADGE_DESIGN, mode: "perRole" as const };
+    const onRoute: BadgeRole = { ...ROLES[0], categoryId: "55555555-5555-4555-8555-555555555555", categoryRo: "Traseu", categoryEn: "Route" };
+    const pictureOf = async (one: BadgeRole) => {
+      const page = await html(() => BadgePrintPanel({ eventId: EVENT, locale: "ro", design, roles: [one], eventTitle: "Crosul" }));
+      return new RegExp(`badges/preview\\?locale=ro&amp;role=${one.id}&amp;v=([0-9a-f]+)`).exec(page)?.[1];
+    };
+    const under = await pictureOf(onRoute);
+    const renamed = await pictureOf({ ...onRoute, categoryRo: "Pe traseu" });
+    const renamedEn = await pictureOf({ ...onRoute, categoryEn: "On the route" });
+    const none = await pictureOf(ROLES[0]);
+    expect(under).toMatch(/^[0-9a-f]{8}$/);
+    expect(new Set([under, renamed, renamedEn, none]).size).toBe(4);
+  });
 });
 
 describe("§783 «Un singur ecuson» in the designer", () => {
