@@ -109,6 +109,8 @@ export type BibDesignFormValues = {
   emergencyPhone2Label: string;
   emergencyPhone3: string;
   emergencyPhone3Label: string;
+  emergencyPhone4: string;
+  emergencyPhone4Label: string;
   /** «Tipărit invers», «Distanța pe număr» and «Numărul și pe capete» (§750). */
   emergencyUpsideDown: boolean;
   showDistance: boolean;
@@ -185,6 +187,8 @@ const TEXTS = [
   "emergencyPhone2Label",
   "emergencyPhone3",
   "emergencyPhone3Label",
+  "emergencyPhone4",
+  "emergencyPhone4Label",
 ] as const;
 
 /**
@@ -239,6 +243,8 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     emergencyPhone2Label: field("emergencyPhone2Label") ?? "",
     emergencyPhone3: field("emergencyPhone3") ?? "",
     emergencyPhone3Label: field("emergencyPhone3Label") ?? "",
+    emergencyPhone4: field("emergencyPhone4") ?? "",
+    emergencyPhone4Label: field("emergencyPhone4Label") ?? "",
     emergencyUpsideDown: field("emergencyUpsideDown") === "on",
     showDistance: field("showDistance") === "on",
     numberStubs: field("numberStubs") === "on",

@@ -670,6 +670,29 @@ export default async function BibDesignPanel({
                     sx={{ width: { sm: 280 } }}
                   />
                 </Stack>
+                {/* The fourth (§NNN): four numbers in all, «112» among them. */}
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+                  <RecallField
+                    name="event.bibDesign.emergencyPhone4Label"
+                    label={t("editor.bibDesign.emergencyPhone4Label")}
+                    helperText={t("editor.bibDesign.emergencyPhoneLabelHelp", { max: BIB_EMERGENCY_NAME_MAX })}
+                    defaultValue={design.emergencyPhone4Label}
+                    autoComplete="off"
+                    slotProps={{ htmlInput: { maxLength: BIB_EMERGENCY_NAME_MAX }, inputLabel: { shrink: true } }}
+                    sx={{ width: { sm: 240 } }}
+                  />
+                  <RecallField
+                    name="event.bibDesign.emergencyPhone4"
+                    type="tel"
+                    label={t("editor.bibDesign.emergencyPhone4")}
+                    helperText={t("editor.bibDesign.emergencyPhone4Help")}
+                    placeholder={t("editor.bibDesign.emergencyPhone3Placeholder")}
+                    defaultValue={design.emergencyPhone4}
+                    autoComplete="off"
+                    slotProps={{ htmlInput: { maxLength: BIB_EMERGENCY_PHONE_MAX, inputMode: "tel" }, inputLabel: { shrink: true } }}
+                    sx={{ width: { sm: 280 } }}
+                  />
+                </Stack>
                 <CheckboxField name="event.bibDesign.emergencyUpsideDown" defaultChecked={design.emergencyUpsideDown} help={t("editor.bibDesign.emergencyUpsideDownHelp")}>
                   {t("editor.bibDesign.emergencyUpsideDown")}
                 </CheckboxField>

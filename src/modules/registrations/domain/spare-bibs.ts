@@ -86,6 +86,9 @@ export function spareStateOf(band: SpareBand | null, free: readonly number[]): S
   return next === undefined ? { kind: "out" } : { kind: "free", next };
 }
 
+/** «BIB-uri goale» (§NNN): at most this many in one file — fifty A4 pages of two. */
+export const BIB_BLANK_MAX = 100;
+
 /**
  * The first number a spare may not reach (§647, amending §444), or null: the hidden list's own series
  * when it sits above the race's (`hidden-list.ts#hiddenListBibStartOf`). The spares then stay between

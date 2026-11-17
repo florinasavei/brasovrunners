@@ -8,6 +8,7 @@ import { ELITE_NAME_MAX } from "@/db/schema/event-elite-entries";
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { countForm } from "@/i18n/count-form";
 import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
+import { BIB_BLANK_MAX } from "@/modules/registrations/domain/spare-bibs";
 import RegistrationStatusChip from "@/modules/registrations/ui/RegistrationStatusChip";
 import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import DetachedActionForm, { DetachedFields, DetachedForm } from "@/shared/forms/DetachedActionForm";
@@ -418,6 +419,8 @@ export async function EliteBibForms({
  */
 export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyTest, attention, spares = null, elite = null, eliteSaved = false }: Props) {
   const t = await getTranslations("Admin");
+  // The blank bibs' download names the sheet's language, as the sheet's own GET does (§NNN).
+  const blankLocale = await getLocale();
   // What «Alocă numerele» does, then when it is needed — two lines, one tooltip (`TOOLTIP_TEXT_SX` keeps the break).
   const assignWords = `${t("bibs.assignHelp")}\n${t("bibs.assignHelpMore")}`;
   return (
@@ -493,6 +496,29 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
             </Stack>
           </Panel>
         )}
+        {/*
+          «BIB-uri goale» (§NNN; the owner, 2026-11-17: «vreau și număr GOL, fără bib, fără nimic»): the race's bib with no
+          number and no name, as many as typed — written on by hand. A GET of the sheet's own route (`blank=N`): nothing is
+          reserved, nobody is named, so every role that downloads the sheet may download these.
+        */}
+        <Panel variant="section" glyph="print" level={5} title={t("bibs.blankTitle")} intro={t("bibs.blankHelp", { max: BIB_BLANK_MAX })} data-testid="bib-blank">
+          <Stack component="form" action={`/api/admin/events/${eventId}/bibs`} method="get" direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+            <input type="hidden" name="locale" value={blankLocale} />
+            <TextField
+              name="blank"
+              type="number"
+              label={t("bibs.blankCount")}
+              size="small"
+              defaultValue={10}
+              required
+              slotProps={{ htmlInput: { min: 1, max: BIB_BLANK_MAX, step: 1, inputMode: "numeric" } }}
+              sx={{ width: 110 }}
+            />
+            <GlyphButton icon="pdf" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="bib-blank-download">
+              {t("bibs.blankDownload")}
+            </GlyphButton>
+          </Stack>
+        </Panel>
         {spares && <SpareBibsSection spares={spares} mayReserve={mayAssign} />}
         {/* «Elită» (§895) beside the spares: names printed as bibs, never registrations. */}
         {elite && <EliteBibsSection elite={elite} mayEdit={mayAssign} saved={eliteSaved} />}
