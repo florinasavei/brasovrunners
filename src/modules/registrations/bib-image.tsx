@@ -612,8 +612,8 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   // The number and the name: white on a member's card, the body ink on the white paper.
   const ink = asCard ? BIB_MEMBER_CARD.text : COLOR.ink;
   // The profile's highest and lowest altitude (§NNN): this bib's band colour — the event's, or the members' — else the ink at
-  // 60%, decided by the function the sheet asks.
-  const altitudeInk = bibAltitudeInk({ band, ink, card: asCard });
+  // 60%, stronger on a member's card whose ground would carry it under 3 : 1; decided by the function the sheet asks.
+  const altitudeInk = bibAltitudeInk({ band, ink, card: cardBackground });
   const headerText = asCard ? BIB_MEMBER_CARD.text : bandText;
   // The race and its date at the right of the band, laid out as the sheet lays them out (§755): the
   // members' label on the band under them stops the column above it.

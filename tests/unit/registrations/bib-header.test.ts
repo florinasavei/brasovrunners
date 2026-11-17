@@ -477,7 +477,8 @@ describe("§755 the pictures' addresses change with the drawing", () => {
     // 7: a registration marked «Elită» prints its first name alone where the number goes.
     // 8: an empty room between the profile's row and the phone line when both are drawn (§959).
     // 9: an elite bib prints one word and never a number (§963).
-    // 10: the profile's highest and lowest altitude in the bib's band colour, or the ink at 60% (§NNN).
+    // 10: the profile's highest and lowest altitude in the bib's band colour, or the ink faded — 60%, more on a member's card whose
+    // ground needs it (§NNN).
     expect(BIB_DRAWING_VERSION).toBe(10);
     expect(bibPictureStamp(parts)).toBe(fnv1a(JSON.stringify([BIB_DRAWING_VERSION, parts])));
     // The same design under the drawing before this one: another address.

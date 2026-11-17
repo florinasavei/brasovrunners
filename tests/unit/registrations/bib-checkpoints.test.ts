@@ -428,7 +428,7 @@ describe("§804 the unticked checkpoint is not on the strip", () => {
 const SHEET = { eventTitle: "Crosul de toamnă", eventDate: "21 noiembrie 2026", generatedAt: new Date("2026-10-10T12:00:00Z"), replyTo: "club@example.test" };
 const SOURCES = [at(2.4, "10:20", ["WATER"]), at(5.1, "10:55", ["FOOD"]), at(7.2, "11:30", ["WATER"])];
 /** The picture's altitudes in the club's band colour, as the sheet's are on a bib with no colour of its own (§NNN). */
-const ALTITUDES = bibAltitudeInk({ band: bibBandColour(null), ink: "#000001", card: false });
+const ALTITUDES = bibAltitudeInk({ band: bibBandColour(null), ink: "#000001", card: null });
 
 type Call = { name: string; args: unknown[] };
 /** What the sheet asks pdfkit to draw: its paths, circles and texts, in the order drawn. */

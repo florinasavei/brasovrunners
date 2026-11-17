@@ -15,7 +15,15 @@ vi.mock("@/modules/registrations/bib-profile-strip", async (importOriginal) => {
   return { ...actual, bibAltitudeInk: spied.altitudeInk };
 });
 
-import { BIB_BAND_FALLBACK, BIB_MEMBER_CARD, type BibDesign, DEFAULT_BIB_DESIGN, DEFAULT_BIB_MEMBER_DESIGN } from "@/modules/registrations/bib-design";
+import {
+  BIB_BAND_FALLBACK,
+  BIB_MEMBER_CARD,
+  type BibDesign,
+  type BibMemberCardBackground,
+  bibMemberCardColourReadable,
+  DEFAULT_BIB_DESIGN,
+  DEFAULT_BIB_MEMBER_DESIGN,
+} from "@/modules/registrations/bib-design";
 import { BIB_IMAGE_SCALE, BIB_LAYOUT, BIB_MARGIN } from "@/modules/registrations/bib-geometry";
 import { bibExtrasBlock, renderBibImage } from "@/modules/registrations/bib-image";
 import { type BibProfileDrawing, bibProfileDrawing } from "@/modules/registrations/bib-profile";
@@ -29,9 +37,10 @@ import { BIB_COLOURS, COLOR, contrastRatio, mix } from "@/theme/brand";
  * §NNN, BR-REQ-038-01 — the owner, 2026-11-17, looking at the race's bib, its strip with «Start», «1», «2», «3», «km 4,5 · apă +
  * hrană», «6», «7 km», «Sosire» and the altitudes «622 m» and «815 m»: «pe viitor: aș vrea ca numerele de la elevație să fie un
  * pic colorate diferit, să nu se confunde cu markerii de distanță». The strip's highest and lowest altitude are drawn in the bib's
- * band colour — the ink at 60% where that colour reads too light on white, and on a member's card — and nothing else on the strip
- * changes colour. One function decides it (`bibAltitudeInk`); the sheet is read through what pdfkit is asked to fill, the picture
- * through its markup and its pixels. The track is made up, and so are the names.
+ * band colour — the ink at 60% where that colour reads too light on white; on a member's card the card's white, at 60% or stronger
+ * where 60% would read under 3 : 1 on the card's own ground — and nothing else on the strip changes colour. One function decides it
+ * (`bibAltitudeInk`); the sheet is read through what pdfkit is asked to fill, the picture through its markup and its pixels. The
+ * track is made up, and so are the names.
  */
 
 afterEach(() => vi.restoreAllMocks());
@@ -54,11 +63,15 @@ const DRAWING: BibProfileDrawing = bibProfileDrawing(parseGpxElevation(track())!
 const SHEET = { eventTitle: "Crosul de toamnă", eventDate: "21 noiembrie 2026", generatedAt: new Date("2026-10-10T12:00:00Z") };
 const RUNNER = { bibNumber: 7, registeredName: "Alergător Unu" };
 
-/** An event's own colour, the editor's green and red; the members' colour, its purple; a yellow an event's file may carry. */
+/** An event's own colour, the editor's green and red; the members' colour, its purple, teal or black; a yellow an event's file may carry. */
 const GREEN = BIB_COLOURS.find((choice) => choice.key === "green")!.hex;
 const RED = BIB_COLOURS.find((choice) => choice.key === "red")!.hex;
 const PURPLE = BIB_COLOURS.find((choice) => choice.key === "purple")!.hex;
+const TEAL = BIB_COLOURS.find((choice) => choice.key === "teal")!.hex;
+const BLACK = BIB_COLOURS.find((choice) => choice.key === "black")!.hex;
 const YELLOW = "#ffd400";
+/** A member's card's words (§695): white on the card's own ground. */
+const WHITE = BIB_MEMBER_CARD.text;
 
 /** The strip's words for a design, as its row lays them out: the two altitudes, and every other word in drawing order. */
 function stripWords(chosen: BibDesign) {
@@ -108,11 +121,16 @@ function stripRuns(runs: FilledRun[], words: ReturnType<typeof stripWords>, from
 
 const sheet = (chosen: BibDesign, more: Partial<Parameters<typeof renderBibSheet>[0]> = {}) => filledRuns({ rows: [RUNNER], ...SHEET, profile: DRAWING, design: chosen, ...more });
 
+/** Whether `ink` laid at `opacity` on `ground` reads at the altitudes' bar — the two mixed channel by channel, as the renderers lay it. */
+const readsOn = (ground: string, ink: string, opacity: number) => contrastRatio(mix(ground, ink, opacity), ground) >= BIB_LAYOUT.profileAltitudeContrast;
+/** The altitudes of a member's card on its ground; the band is whatever the bib's band would be, and is not read. */
+const onCard = (card: BibMemberCardBackground, band: string = PURPLE) => bibAltitudeInk({ band, ink: WHITE, card });
+
 describe("§NNN one function: the band's colour where it reads on white, else the ink at 60%", () => {
   it("takes the band's colour at 3 : 1 or more against white — the club's own blue and every colour the editor offers", () => {
     for (const band of [BIB_BAND_FALLBACK, ...BIB_COLOURS.map((choice) => choice.hex)]) {
       expect(contrastRatio(band, COLOR.surface), band).toBeGreaterThanOrEqual(BIB_LAYOUT.profileAltitudeContrast);
-      expect(bibAltitudeInk({ band, ink: COLOR.ink, card: false }), band).toEqual({ colour: band, opacity: 1 });
+      expect(bibAltitudeInk({ band, ink: COLOR.ink, card: null }), band).toEqual({ colour: band, opacity: 1 });
     }
   });
 
@@ -120,25 +138,61 @@ describe("§NNN one function: the band's colour where it reads on white, else th
     expect(BIB_LAYOUT.profileAltitudeContrast).toBe(3);
     expect(BIB_LAYOUT.profileAltitudeOpacity).toBe(0.6);
     const faded = { colour: COLOR.ink, opacity: 0.6 };
-    expect(bibAltitudeInk({ band: YELLOW, ink: COLOR.ink, card: false })).toEqual(faded);
+    expect(bibAltitudeInk({ band: YELLOW, ink: COLOR.ink, card: null })).toEqual(faded);
     // Either side of the line: #949494 reads at 3.03 : 1 on white, #959595 at 2.996 : 1.
     expect(contrastRatio("#949494", COLOR.surface)).toBeGreaterThan(3);
     expect(contrastRatio("#959595", COLOR.surface)).toBeLessThan(3);
-    expect(bibAltitudeInk({ band: "#949494", ink: COLOR.ink, card: false })).toEqual({ colour: "#949494", opacity: 1 });
-    expect(bibAltitudeInk({ band: "#959595", ink: COLOR.ink, card: false })).toEqual(faded);
-    for (const band of ["", "blue", "#fff", "#gggggg"]) expect(bibAltitudeInk({ band, ink: COLOR.ink, card: false }), band).toEqual(faded);
+    expect(bibAltitudeInk({ band: "#949494", ink: COLOR.ink, card: null })).toEqual({ colour: "#949494", opacity: 1 });
+    expect(bibAltitudeInk({ band: "#959595", ink: COLOR.ink, card: null })).toEqual(faded);
+    for (const band of ["", "blue", "#fff", "#gggggg"]) expect(bibAltitudeInk({ band, ink: COLOR.ink, card: null }), band).toEqual(faded);
     // The fallback itself clears the bar it applies, and stands apart from the kilometres' ink.
     const printed = mix(COLOR.ink, COLOR.surface, 1 - BIB_LAYOUT.profileAltitudeOpacity);
     expect(contrastRatio(printed, COLOR.surface)).toBeGreaterThanOrEqual(BIB_LAYOUT.profileAltitudeContrast);
     expect(contrastRatio(printed, COLOR.ink)).toBeGreaterThan(3);
   });
 
-  it("gives a member's card its own white at 60% whatever the members' colour, which is the card's ground there", () => {
-    for (const band of [PURPLE, BIB_BAND_FALLBACK, YELLOW]) {
-      expect(bibAltitudeInk({ band, ink: BIB_MEMBER_CARD.text, card: true }), band).toEqual({ colour: BIB_MEMBER_CARD.text, opacity: 0.6 });
+  it("gives a member's card its own white, never the band's colour, at 60% on the kit's gradient and on the veiled photograph", () => {
+    const gradient = { kind: "gradient", stops: BIB_MEMBER_CARD.gradient } as const;
+    for (const band of [PURPLE, BIB_BAND_FALLBACK, YELLOW]) expect(onCard(gradient, band), band).toEqual({ colour: WHITE, opacity: 0.6 });
+    // On the gradient, top and foot, the white at 60% reads at 3 : 1 or more.
+    for (const stop of BIB_MEMBER_CARD.gradient) expect(readsOn(stop, WHITE, 0.6), stop).toBe(true);
+    // Their photograph under the veil: over a white photograph — the lightest ground the veil gives — and a black one, 60% reads.
+    expect(onCard({ kind: "picture" })).toEqual({ colour: WHITE, opacity: 0.6 });
+    for (const photograph of [COLOR.surface, "#000000"]) {
+      expect(readsOn(mix(photograph, BIB_MEMBER_CARD.veil, BIB_MEMBER_CARD.veilOpacity), WHITE, 0.6), photograph).toBe(true);
     }
-    // On the kit's gradient, top and foot, that white still reads at 3 : 1 or more.
-    for (const stop of BIB_MEMBER_CARD.gradient) expect(contrastRatio(mix(stop, BIB_MEMBER_CARD.text, BIB_LAYOUT.profileAltitudeOpacity), stop)).toBeGreaterThanOrEqual(3);
+  });
+
+  it("lays it on a card's colour at the faintest of 60%, 65%, 70%… that reads at 3 : 1 there — the editor's red at 65%, its teal at 70%", () => {
+    expect(BIB_LAYOUT.profileAltitudeOpacityStep).toBe(0.05);
+    // Every colour the editor offers that a card carries (the green and the orange print the gradient), and what each takes.
+    const carried = BIB_COLOURS.filter((choice) => bibMemberCardColourReadable(choice.hex));
+    expect(Object.fromEntries(carried.map((choice) => [choice.key, onCard({ kind: "colour", colour: choice.hex })]))).toEqual({
+      red: { colour: WHITE, opacity: 0.65 },
+      purple: { colour: WHITE, opacity: 0.6 },
+      teal: { colour: WHITE, opacity: 0.7 },
+      black: { colour: WHITE, opacity: 0.6 },
+    });
+    // At 60% the red would read at 2.86 : 1 and the teal at 2.59 : 1 — under the bar the rest of the change keeps.
+    expect(readsOn(RED, WHITE, 0.6)).toBe(false);
+    expect(readsOn(TEAL, WHITE, 0.6)).toBe(false);
+    // Any colour a card carries — one an event's file may bring too: the strength chosen reads, and 5% less would not (or it is 60%).
+    let carriedColours = 0;
+    for (let r = 0; r < 256; r += 15) {
+      for (let g = 0; g < 256; g += 15) {
+        for (let b = 0; b < 256; b += 15) {
+          const colour = `#${[r, g, b].map((value) => value.toString(16).padStart(2, "0")).join("")}`;
+          if (!bibMemberCardColourReadable(colour)) continue;
+          carriedColours += 1;
+          const { opacity } = onCard({ kind: "colour", colour });
+          expect(readsOn(colour, WHITE, opacity), colour).toBe(true);
+          if (opacity > BIB_LAYOUT.profileAltitudeOpacity) {
+            expect(readsOn(colour, WHITE, Math.round((opacity - BIB_LAYOUT.profileAltitudeOpacityStep) * 100) / 100), colour).toBe(false);
+          }
+        }
+      }
+    }
+    expect(carriedColours).toBeGreaterThan(1000);
   });
 });
 
@@ -190,14 +244,27 @@ describe("§NNN the sheet fills the two altitudes, and only them, in that ink", 
     expect(runs.filter((run) => run.colour === GREEN).map((run) => run.text)).toEqual(words.altitudes);
   });
 
-  it("draws a member's card's altitudes in the card's white at 60%, the strip's other words in its white", async () => {
-    const chosen = design(members({ style: "card", bandColour: PURPLE }));
-    const words = stripWords(chosen);
-    const runs = await sheet(chosen, { bandColour: GREEN, rows: [{ ...RUNNER, member: true }] });
-    for (const run of stripRuns(runs, words)) {
-      expect(run, run.text).toEqual({ text: run.text, colour: BIB_MEMBER_CARD.text, opacity: words.altitudes.includes(run.text) ? 0.6 : 1 });
+  it("draws a member's card's altitudes in the card's white at the strength its ground needs, the strip's other words in its white", async () => {
+    const photograph = await sharp({ create: { width: 600, height: 400, channels: 3, background: "#ffffff" } }).png().toBuffer();
+    const cases: Array<[string, Partial<BibDesign["member"]>, number, { memberCard: Buffer } | undefined]> = [
+      ["the purple", { bandColour: PURPLE }, 0.6, undefined],
+      ["the red", { bandColour: RED }, 0.65, undefined],
+      ["the teal", { bandColour: TEAL }, 0.7, undefined],
+      ["the black", { bandColour: BLACK }, 0.6, undefined],
+      ["the kit's gradient", {}, 0.6, undefined],
+      ["the green, which a card does not carry: the gradient", { bandColour: GREEN }, 0.6, undefined],
+      ["a white photograph under the veil, over the red", { bandColour: RED }, 0.6, { memberCard: photograph }],
+    ];
+    for (const [name, member, opacity, pictures] of cases) {
+      const chosen = design(members({ style: "card", ...member }));
+      const words = stripWords(chosen);
+      const runs = await sheet(chosen, { bandColour: GREEN, rows: [{ ...RUNNER, member: true }], pictures });
+      for (const run of stripRuns(runs, words)) {
+        expect(run, `${name}: ${run.text}`).toEqual({ text: run.text, colour: WHITE, opacity: words.altitudes.includes(run.text) ? opacity : 1 });
+      }
+      // Never the band's colour on a card: no word of the sheet in the members' colour or the event's.
+      expect(runs.some((run) => run.colour === GREEN || (member.bandColour !== undefined && run.colour === member.bandColour)), name).toBe(false);
     }
-    expect(runs.some((run) => run.colour === PURPLE || run.colour === GREEN)).toBe(false);
   });
 
   it("fills no word in the band's colour with «Kilometrii și altitudinile pe profil» off: there is no altitude to draw", async () => {
@@ -208,7 +275,7 @@ describe("§NNN the sheet fills the two altitudes, and only them, in that ink", 
 });
 
 /** The strip's word boxes in the picture's markup: each one's words, colour and opacity. */
-function pictureWords(altitudeInk: BibAltitudeInk, ink = COLOR.ink) {
+function pictureWords(altitudeInk: BibAltitudeInk, ink: string = COLOR.ink) {
   const row = bibProfileRow(design(), { profile: DRAWING, profileFigures: null }, false);
   const element = bibExtrasBlock({ row, picture: null, emergency: null, turn: { block: false, profile: false, phone: false }, ink, altitudeInk }) as ReactElement;
   const tree = JSON.parse(JSON.stringify(element, (key, value) => (key === "_owner" || key === "_store" ? undefined : value)));
@@ -228,24 +295,33 @@ function pictureWords(altitudeInk: BibAltitudeInk, ink = COLOR.ink) {
 describe("§NNN the picture carries the same ink in its markup", () => {
   it("sets the band's colour on the two altitudes' boxes, the ink on every other word's, and no opacity", () => {
     const words = stripWords(design());
-    const boxes = pictureWords(bibAltitudeInk({ band: GREEN, ink: COLOR.ink, card: false }));
+    const boxes = pictureWords(bibAltitudeInk({ band: GREEN, ink: COLOR.ink, card: null }));
     expect(boxes.map((box) => box.text)).toEqual([...words.others, ...words.altitudes]);
     for (const box of boxes) expect(box, box.text).toEqual({ text: box.text, color: words.altitudes.includes(box.text) ? GREEN : COLOR.ink, opacity: undefined });
   });
 
   it("sets the ink and the sheet's 60% on the two altitudes' boxes alone under a colour too light", () => {
     const words = stripWords(design());
-    for (const box of pictureWords(bibAltitudeInk({ band: YELLOW, ink: COLOR.ink, card: false }))) {
+    for (const box of pictureWords(bibAltitudeInk({ band: YELLOW, ink: COLOR.ink, card: null }))) {
       expect(box, box.text).toEqual({ text: box.text, color: COLOR.ink, opacity: words.altitudes.includes(box.text) ? 0.6 : undefined });
+    }
+  });
+
+  it("sets the card's white at the strength its ground needs on the altitudes' boxes alone: 65% on a red card", () => {
+    const words = stripWords(design());
+    for (const box of pictureWords(onCard({ kind: "colour", colour: RED }), WHITE)) {
+      expect(box, box.text).toEqual({ text: box.text, color: WHITE, opacity: words.altitudes.includes(box.text) ? 0.65 : undefined });
     }
   });
 
   it("asks the function the sheet asks, the same question for the same bib: the event's, the members' band, their card, an elite bib", async () => {
     const cases: Array<[string, BibDesign, { member?: boolean; elite?: boolean }, Parameters<typeof bibAltitudeInk>[0]]> = [
-      ["an ordinary bib", design(), {}, { band: GREEN, ink: COLOR.ink, card: false }],
-      ["a member's bib with the members' band", design(members({ style: "band", bandColour: PURPLE })), { member: true }, { band: PURPLE, ink: COLOR.ink, card: false }],
-      ["a member's whole card", design(members({ style: "card", bandColour: PURPLE })), { member: true }, { band: PURPLE, ink: BIB_MEMBER_CARD.text, card: true }],
-      ["an elite bib", design(), { elite: true }, { band: GREEN, ink: COLOR.ink, card: false }],
+      ["an ordinary bib", design(), {}, { band: GREEN, ink: COLOR.ink, card: null }],
+      ["a member's bib with the members' band", design(members({ style: "band", bandColour: PURPLE })), { member: true }, { band: PURPLE, ink: COLOR.ink, card: null }],
+      ["a member's whole card", design(members({ style: "card", bandColour: PURPLE })), { member: true }, { band: PURPLE, ink: WHITE, card: { kind: "colour", colour: PURPLE } }],
+      ["a member's card in the red", design(members({ style: "card", bandColour: RED })), { member: true }, { band: RED, ink: WHITE, card: { kind: "colour", colour: RED } }],
+      ["a member's card on the kit's gradient", design(members({ style: "card" })), { member: true }, { band: GREEN, ink: WHITE, card: { kind: "gradient", stops: BIB_MEMBER_CARD.gradient } }],
+      ["an elite bib", design(), { elite: true }, { band: GREEN, ink: COLOR.ink, card: null }],
     ];
     for (const [name, chosen, who, asked] of cases) {
       const entry = { name: "Ana", bibNumber: null };
@@ -262,18 +338,25 @@ describe("§NNN the picture carries the same ink in its markup", () => {
 describe("§NNN the picture's pixels", () => {
   const px = (points: number) => points * BIB_IMAGE_SCALE;
   const channels = (hex: string) => [1, 3, 5].map((at) => Number.parseInt(hex.slice(at, at + 2), 16));
+  /** The first row of pixels under the header band, clear of its edge. */
+  const underHeader = Math.ceil(px(BIB_MARGIN + BIB_LAYOUT.bandHeight)) + 2;
+
+  /** The picture's raw pixels. */
+  async function rendered(input: Parameters<typeof renderBibImage>[0]) {
+    const response = await renderBibImage(input);
+    return sharp(Buffer.from(await response.arrayBuffer())).raw().toBuffer({ resolveWithObject: true });
+  }
 
   /**
    * How many pixels under the header are `colour` laid on the white paper at half strength or more: a pixel the colour explains,
    * channel by channel, within a few levels. A neutral ink anti-aliased on white is never one: its channels fall together.
    */
   async function pixelsOf(input: Parameters<typeof renderBibImage>[0], colour: string): Promise<number> {
-    const response = await renderBibImage(input);
-    const { data, info } = await sharp(Buffer.from(await response.arrayBuffer())).raw().toBuffer({ resolveWithObject: true });
+    const { data, info } = await rendered(input);
     const spans = channels(colour).map((value) => 255 - value);
     const across = spans.reduce((sum, span) => sum + span * span, 0);
     let count = 0;
-    for (let y = Math.ceil(px(BIB_MARGIN + BIB_LAYOUT.bandHeight)) + 2; y < info.height; y++) {
+    for (let y = underHeader; y < info.height; y++) {
       for (let x = 0; x < info.width; x++) {
         const at = (y * info.width + x) * info.channels;
         const pixel = [data[at], data[at + 1], data[at + 2]];
@@ -294,5 +377,29 @@ describe("§NNN the picture's pixels", () => {
     expect(await pixelsOf({ ...bib, bandColour: RED, design: chosen, member: true }, RED)).toBe(0);
     // A yellow band: its colour stays in the header, the altitudes take the ink.
     expect(await pixelsOf({ ...bib, bandColour: YELLOW, design: design() }, YELLOW)).toBe(0);
+  });
+
+  it("lays the altitudes under a yellow band at 60%: the very pixels the full ink draws, each 60% as dark", async () => {
+    const bib = { ...SHEET, ...RUNNER, profile: DRAWING, design: design() };
+    // A band in the ink's own colour reads on white, so its altitudes are the ink at full strength: the same words at the same
+    // place, every other pixel under the header the same as under the yellow band — only the altitudes' opacity differs.
+    expect(bibAltitudeInk({ band: COLOR.ink, ink: COLOR.ink, card: null })).toEqual({ colour: COLOR.ink, opacity: 1 });
+    const full = await rendered({ ...bib, bandColour: COLOR.ink });
+    const faded = await rendered({ ...bib, bandColour: YELLOW });
+    const { width, channels: stride } = full.info;
+    let differing = 0;
+    let darkest = 0;
+    for (let at = underHeader * width * stride; at < full.data.length; at += stride) {
+      // How far each channel is from the white paper: the full ink's darkness, and the faded one's.
+      const ink = [0, 1, 2].map((channel) => 255 - full.data[at + channel]);
+      const laid = [0, 1, 2].map((channel) => 255 - faded.data[at + channel]);
+      if (laid.every((value, channel) => value === ink[channel])) continue;
+      differing += 1;
+      darkest = Math.max(darkest, ...ink);
+      for (const channel of [0, 1, 2]) expect(Math.abs(laid[channel] - 0.6 * ink[channel]), `byte ${at + channel}`).toBeLessThanOrEqual(3);
+    }
+    // Drawn at the full ink, the faded picture would differ nowhere: it differs, and every pixel that differs is 60% as dark.
+    expect(differing).toBeGreaterThan(10);
+    expect(darkest).toBeGreaterThan(100);
   });
 });

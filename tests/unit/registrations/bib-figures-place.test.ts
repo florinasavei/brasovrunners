@@ -72,7 +72,7 @@ const SHEET = { eventTitle: "Crosul de toamnă", eventDate: "21 noiembrie 2026",
 const ROWS = [{ bibNumber: 7, registeredName: "Alergător Unu" }];
 const PHONE = "0700 000 001";
 /** The picture's strip in these tests is inked "#000001"; its altitudes in an event's band colour, the editor's green (§NNN). */
-const ALTITUDES: BibAltitudeInk = bibAltitudeInk({ band: "#1b8a3a", ink: "#000001", card: false });
+const ALTITUDES: BibAltitudeInk = bibAltitudeInk({ band: "#1b8a3a", ink: "#000001", card: null });
 
 afterEach(() => vi.restoreAllMocks());
 
