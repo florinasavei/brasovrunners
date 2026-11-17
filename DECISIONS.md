@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.60-2026-11-17 -->
+<!-- PROJECT_BASELINE: BR-V4.61-2026-11-17 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.60-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.61-2026-11-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -30550,3 +30550,25 @@ Baseline `BR-V4.59-2026-11-17`.
 **Refused.** A move that also frees the size, so that a logo moved up over «Nume:» grows there: on the default strip it would jump from 21.7 to 32.3 mm at the first millimetre and then fill the white, where the move could no longer show — the size says how large, the moves say where. A logo over a band or a row, wherever it is asked to go: their words must read. A logo narrower than 5 mm: a speck, not the club.
 
 Baseline `BR-V4.60-2026-11-17`.
+
+## 970. The backoffice uses the whole window
+
+**The owner, 2026-11-17, four days before Saturday's race, on a wide screen where the «Voluntari» list stood in the middle third of the window, its columns squeezed and its last ones cut:** «ce mă disperă în backoffice în general e că avem un max-width...».
+
+**What was there.** One width for every page, public and backoffice alike: `PAGE_WIDTH`, MUI's `xl` — 1536 px — chosen on 2026-09-17 when the owner asked twice for a wider page (`md` → `lg` → `xl`). Its own note already said that `false` would make a page fluid with only the gutters.
+
+**Decision.** The backoffice's main column — `BackofficeShell`'s `<Container id="main">`, which holds every staff page — takes the whole window, with only the container's gutters: `BACKOFFICE_WIDTH = false` beside `PAGE_WIDTH` in `src/theme/brand.ts`. Its lists are tables, and a table uses every column of room it is given: on a wide screen the columns stop being squeezed and the last ones are no longer cut. The public pages keep `PAGE_WIDTH` (`xl`): the header, the footer, the environment notice and every page a visitor reads; prose keeps `PROSE_MEASURE` inside a page, on the backoffice too. The resting notice (`AdminRestingNotice`) keeps its own narrow column — it is one paragraph.
+
+**Not done:** a width chosen per staff member or per page; the public header's width on staff pages (it is the site's own header).
+
+Baseline `BR-V4.61-2026-11-17`.
+
+## 971. «Are kit» in one press on a volunteer's page
+
+**The owner, 2026-11-17, on a volunteer's page, four days before the race:** «și nu pot bifa aici că are kit...». The page had the tick only inside «Modifică», folded at its foot, among the person's boxes; the «Voluntari» list has had it in one press since §904, in its «Kit» column — which, on a narrow page, stood past the right edge.
+
+**Decision.** The list's one-press «Are kit» (§904) also stands on the person's page, beside the name and the state: the same plain form and the same action (`setVolunteerKitAction`), posting the state it wants (`hasKit=1|0`), never a toggle, working with scripts off, and coming back to the person's page by the screen's validated way back (`returnTo`, §839); the service asks for the role again (`canManageVolunteers`) and audits the change as it does from the list. «Modifică» keeps its own box.
+
+**Not done:** the raffle's tick on the page; any other box of «Modifică» moved up.
+
+Baseline `BR-V4.61-2026-11-17`.

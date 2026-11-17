@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.61-2026-11-17
+
+- **The backoffice uses the whole screen** — staff pages and their tables are no longer held to 1536 px in the middle of a wide screen. §970.
+- **«Are kit» on a volunteer's page** — the kit's tick, one press, beside the name, as on the «Voluntari» list. §971.
 ## BR-V4.60-2026-11-17
 
 - **The badges' logo, sized and placed by the club** — on the volunteers' badges page, «Logo-ul clubului (filigran)» is a section of its own, after «Locul pentru nume», with the logo's size (% of the badge's width), the space kept around it and two moves, left–right and up–down, in millimetres; the logo always stays in the white area of the name, the preview follows as you type, and a badge left at the defaults prints exactly as before. §969.

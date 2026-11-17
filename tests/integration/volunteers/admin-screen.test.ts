@@ -547,7 +547,7 @@ describe("the person's page (§839)", () => {
     expect(page).toContain(">Șterge voluntarul<");
   });
 
-  it("ticks «Are kit» in one press beside the name, posting the state it wants and coming back here (§NNN)", async () => {
+  it("ticks «Are kit» in one press beside the name, posting the state it wants and coming back here (§971)", async () => {
     const page = await personPage(people.stefan);
     const kitForm = page.match(/<form[^>]*data-testid="volunteer-page-kit-form"[\s\S]*?<\/form>/)?.[0] ?? "";
     expect(kitForm).not.toBe("");

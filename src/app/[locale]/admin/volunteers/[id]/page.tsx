@@ -99,7 +99,7 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
         </Typography>
         <StatusChip glyph={STATE_CHIP[person.state].glyph} color={STATE_CHIP[person.state].color} label={t(`volunteers.states.${person.state}`)} testId="volunteer-state" />
         {/*
-          «Are kit» (§NNN; the owner, 2026-11-17, on this page: «nu pot bifa aici că are kit»): the list's one-press tick (§904) beside
+          «Are kit» (§971; the owner, 2026-11-17, on this page: «nu pot bifa aici că are kit»): the list's one-press tick (§904) beside
           the name — before, it sat only inside «Modifică» at the page's foot. The same plain form and action as the list's row: it
           posts the state it wants (`hasKit=1|0`), never a toggle, works with scripts off, and comes back here (`returnTo`). The
           service asks for the role again (`canManageVolunteers`).

@@ -704,7 +704,7 @@ export const HEADER_CLEARANCE_PX = { xs: 72, sm: 76 } as const;
 export const PAGE_WIDTH = "xl" as const;
 
 /**
- * How wide the backoffice is (§NNN; the owner, 2026-11-17, on a wide screen where the staff pages stood in the middle
+ * How wide the backoffice is (§970; the owner, 2026-11-17, on a wide screen where the staff pages stood in the middle
  * third: «ce mă disperă în backoffice în general e că avem un max-width...»): the whole window, with only the gutters —
  * its lists are tables that use every column of room they get. The public pages keep `PAGE_WIDTH`; prose keeps
  * `PROSE_MEASURE` here as everywhere.
