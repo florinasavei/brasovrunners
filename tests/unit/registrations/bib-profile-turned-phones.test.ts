@@ -27,6 +27,7 @@ import {
   BIB_EMERGENCY_LABEL_MAX,
   BIB_EMERGENCY_NAME_MAX,
   type BibDesign,
+  bibBandColour,
   bibEmergencyLine,
   DEFAULT_BIB_DESIGN,
   readBibDesign,
@@ -51,7 +52,7 @@ import {
 import { bibExtrasBlock, renderBibImage } from "@/modules/registrations/bib-image";
 import { type BibProfileDrawing, bibProfileDrawing } from "@/modules/registrations/bib-profile";
 import { bibProfileRow } from "@/modules/registrations/bib-profile-row";
-import { thinBibCheckpoints } from "@/modules/registrations/bib-profile-strip";
+import { bibAltitudeInk, thinBibCheckpoints } from "@/modules/registrations/bib-profile-strip";
 import { BIB_PICTURE_SLOTS } from "@/modules/registrations/bib-picture-frame";
 import { BIB_DRAWING_VERSION, bibPictureStamp } from "@/modules/registrations/domain/bib-stamp";
 import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
@@ -86,6 +87,9 @@ const SHEET = { eventTitle: "Crosul de toamnă", eventDate: "21 noiembrie 2026",
 /** Two made-up numbers in the shape a club types. */
 const PHONE_A = "0700 000 001";
 const PHONE_B = "+40 700 000 002";
+
+/** The picture's strip in these tests is inked "#000001"; its altitudes in the club's band colour (§NNN). */
+const ALTITUDES = bibAltitudeInk({ band: bibBandColour(null), ink: "#000001", card: null });
 
 let profilePng: Buffer;
 beforeEach(async () => {
@@ -213,6 +217,7 @@ describe("§759 the profile's row: the GPX drawn, or the club's picture, the fig
       emergency: null,
       turn: { block: false, profile: false, phone: false },
       ink: "#000001",
+      altitudeInk: ALTITUDES,
     }) as ReactElement<{ children: ReactElement[] }>;
     const markup = JSON.stringify(element, (key, value) => (key === "_owner" || key === "_store" ? undefined : value));
     expect(markup).toContain('"data-testid":"bib-profile-picture"');
@@ -286,7 +291,7 @@ describe("§759 the profile turned for the runner, and with the phone as one blo
 
   it("turns the whole block in the picture's markup — the profile, its figures and the phone inside one rotated box", () => {
     const row = bibProfileRow(design({ showProfile: true }), { profile: DRAWING, profileFigures: null }, false);
-    const block = bibExtrasBlock({ row, picture: null, emergency: { text: `Urgențe: ${PHONE_A}`, size: 9 }, turn: bibExtrasTurn({ profile: true, profileTurned: true, phone: true, phoneTurned: true }), ink: "#000001" }) as ReactElement<{
+    const block = bibExtrasBlock({ row, picture: null, emergency: { text: `Urgențe: ${PHONE_A}`, size: 9 }, turn: bibExtrasTurn({ profile: true, profileTurned: true, phone: true, phoneTurned: true }), ink: "#000001", altitudeInk: ALTITUDES }) as ReactElement<{
       style: Record<string, unknown>;
       "data-turn": string;
       children: Array<ReactElement<{ style?: Record<string, unknown>; "data-testid"?: string }>>;
@@ -316,7 +321,7 @@ describe("§759 the profile turned for the runner, and with the phone as one blo
     // The picture: the phone's row keeps the room above it, inside the block — so the block turned as one keeps it too.
     const row = bibProfileRow(design({ showProfile: true }), { profile: DRAWING, profileFigures: null }, false);
     for (const both of [true, false]) {
-      const block = bibExtrasBlock({ row, picture: null, emergency: { text: `Urgențe: ${PHONE_A}`, size: 9 }, turn: bibExtrasTurn({ profile: true, profileTurned: both, phone: true, phoneTurned: both }), ink: "#000001" }) as ReactElement<{
+      const block = bibExtrasBlock({ row, picture: null, emergency: { text: `Urgențe: ${PHONE_A}`, size: 9 }, turn: bibExtrasTurn({ profile: true, profileTurned: both, phone: true, phoneTurned: both }), ink: "#000001", altitudeInk: ALTITUDES }) as ReactElement<{
         children: Array<ReactElement<{ style?: Record<string, unknown>; "data-testid"?: string }>>;
       }>;
       const phoneRow = block.props.children[1];
@@ -324,7 +329,7 @@ describe("§759 the profile turned for the runner, and with the phone as one blo
       expect(phoneRow.props.style?.marginTop).toBeCloseTo(BIB_LAYOUT.emergencyGap * BIB_IMAGE_SCALE, 5);
     }
     // No profile: no room — the phone line stands where it always stood.
-    const alone = bibExtrasBlock({ row: null, picture: null, emergency: { text: `Urgențe: ${PHONE_A}`, size: 9 }, turn: bibExtrasTurn({ profile: false, profileTurned: false, phone: true, phoneTurned: false }), ink: "#000001" }) as ReactElement<{
+    const alone = bibExtrasBlock({ row: null, picture: null, emergency: { text: `Urgențe: ${PHONE_A}`, size: 9 }, turn: bibExtrasTurn({ profile: false, profileTurned: false, phone: true, phoneTurned: false }), ink: "#000001", altitudeInk: ALTITUDES }) as ReactElement<{
       children: Array<ReactElement<{ style?: Record<string, unknown> }> | null>;
     }>;
     expect(alone.props.children[1]!.props.style?.marginTop).toBeUndefined();
@@ -332,7 +337,7 @@ describe("§759 the profile turned for the runner, and with the phone as one blo
 
   it("turns only the profile's row in the picture when the phone reads the right way up", () => {
     const row = bibProfileRow(design({ showProfile: true }), { profile: DRAWING, profileFigures: null }, false);
-    const block = bibExtrasBlock({ row, picture: null, emergency: { text: `Urgențe: ${PHONE_A}`, size: 9 }, turn: bibExtrasTurn({ profile: true, profileTurned: true, phone: true, phoneTurned: false }), ink: "#000001" }) as ReactElement<{
+    const block = bibExtrasBlock({ row, picture: null, emergency: { text: `Urgențe: ${PHONE_A}`, size: 9 }, turn: bibExtrasTurn({ profile: true, profileTurned: true, phone: true, phoneTurned: false }), ink: "#000001", altitudeInk: ALTITUDES }) as ReactElement<{
       style: Record<string, unknown>;
       "data-turn": string;
       children: Array<ReactElement<{ style?: Record<string, unknown>; "data-testid"?: string }>>;
@@ -384,7 +389,7 @@ describe("§759 «Eticheta telefonului» and two numbers on one line", () => {
     const expected = `Urgențe traseu: Coordonator: ${PHONE_A} | Medic: ${PHONE_B}`;
     const runs = await drawnRuns(() => renderBibSheet({ rows: [{ bibNumber: 7, registeredName: "Alergător Unu" }], ...SHEET, emergencyLabel: "Urgențe", design: chosen }));
     expect(runs.filter((run) => run.text === expected)).toHaveLength(1);
-    const element = bibExtrasBlock({ row: null, picture: null, emergency: bibEmergencyFit(expected, bibFooterWidth), turn: bibExtrasTurn({ profile: false, profileTurned: false, phone: true, phoneTurned: true }), ink: "#000001" }) as ReactElement<{
+    const element = bibExtrasBlock({ row: null, picture: null, emergency: bibEmergencyFit(expected, bibFooterWidth), turn: bibExtrasTurn({ profile: false, profileTurned: false, phone: true, phoneTurned: true }), ink: "#000001", altitudeInk: ALTITUDES }) as ReactElement<{
       children: Array<ReactElement<{ children: string; style: Record<string, unknown> }> | null>;
     }>;
     const phoneRow = element.props.children[1]!;

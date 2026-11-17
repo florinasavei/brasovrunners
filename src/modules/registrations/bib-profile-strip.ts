@@ -1,5 +1,7 @@
 import { elevationGeometry, type ElevationGeometry, type ElevationLabel, type ElevationMarkerInput } from "@/modules/routes/elevation/geometry";
+import { COLOR, contrastRatio, HEX_COLOR, mix } from "@/theme/brand";
 import type { BibStripCheckpoint } from "./bib-checkpoints";
+import { BIB_MEMBER_CARD, type BibMemberCardBackground } from "./bib-design";
 import { BIB_LAYOUT } from "./bib-geometry";
 import type { BibProfileDrawing } from "./bib-profile";
 
@@ -12,7 +14,8 @@ import type { BibProfileDrawing } from "./bib-profile";
  * the event's page. Both renderers draw what this returns (`bibs-pdf.ts` with vectors, `bib-image.tsx` with an SVG)
  * at the same points, so the sheet and the picture cannot disagree (`tests/unit/registrations/bib-checkpoints.test.ts`).
  *
- * Pure: the core, the layout constants and the drawing's own words; no storage, no React.
+ * Pure: the core, the layout constants, the palette's contrast, the members' card's grounds and the drawing's own words; no
+ * storage, no React.
  *
  * What the bib asks of the core, and why:
  *
@@ -38,8 +41,11 @@ export type BibStripOptions = {
   showTimes: boolean;
 };
 
-/** A piece of text and where it stands in the strip's box: `baseline` is the text's baseline, `anchor` says which end of the text `x` is. */
-export type BibStripText = { text: string; x: number; baseline: number; anchor: "start" | "middle" | "end" };
+/**
+ * A piece of text and where it stands in the strip's box: `baseline` is the text's baseline, `anchor` says which end of the text `x`
+ * is. `altitude` marks the highest and the lowest altitude («622 m», «815 m»), the words drawn in their own ink (`bibAltitudeInk`).
+ */
+export type BibStripText = { text: string; x: number; baseline: number; anchor: "start" | "middle" | "end"; altitude: boolean };
 
 export type BibStrip = {
   /** The core's answer in the strip's box, in points from the box's top left: the line, the area, the ticks, the pins. */
@@ -56,6 +62,52 @@ export type BibStrip = {
 
 /** The glyph's scale inside a pin's ring: the core's glyphs are drawn in a 16-unit box (`glyphs.ts`), about 1.56 times the ring's radius across. */
 export const bibPinGlyphScale = (pinRadius: number): number => (pinRadius * 0.78) / 7.5;
+
+/** What the strip's highest and lowest altitude are drawn in: a colour, and the opacity it is laid on the paper at. */
+export type BibAltitudeInk = { colour: string; opacity: number };
+
+/**
+ * The ink of the strip's highest and lowest altitude, decided once for the sheet and the picture so they cannot disagree (§NNN;
+ * the owner, 2026-11-17, of «815 m» under the curve reading like one more distance: «aș vrea ca numerele de la elevație să fie un
+ * pic colorate diferit, să nu se confunde cu markerii de distanță»).
+ *
+ * - **The band's colour**: the colour this bib's own header band is drawn in — the event's, or the members' on a member's bib —
+ *   as the renderer already holds it (`band`; under the club's header picture, the colour the band would have), where it reads
+ *   on the white paper at `profileAltitudeContrast` : 1 or more against white (`COLOR.surface`), as WCAG computes it. The club's
+ *   own blue and each colour the editor offers (`BIB_COLOURS`) read so.
+ * - **Else the ink, faded**: at `profileAltitudeOpacity` (60 %), or stronger by `profileAltitudeOpacityStep` (5 %) at a time up to
+ *   the full ink, the first strength that still reads at `profileAltitudeContrast` : 1 on every ground the strip can stand on —
+ *   so the altitudes stand apart from the kilometres and still read. On the white paper that is 60 %: a colour too light for
+ *   small type on white — a yellow an event's file may carry; the editor offers none — never prints it. A member's card
+ *   (§695, `card`: its background as `bibMemberCardBackground` gives it to the renderer) has no band, and its strip stands in white
+ *   on the card's own ground (`cardGrounds`): its altitudes are always the card's white, at 60 % on the kit's gradient, on the
+ *   veiled photograph and on the editor's purple and black, and stronger on a colour where 60 % would read under that bar — the
+ *   red at 65 %, the teal at 70 %.
+ *
+ * Only the two altitudes take it: the kilometres and their unit, «Start» and «Sosire», the points' words and glyphs, the curve and
+ * its area keep `ink`, and the altitudes keep their size, weight and place.
+ */
+export function bibAltitudeInk(bib: { band: string; ink: string; card: BibMemberCardBackground | null }): BibAltitudeInk {
+  const L = BIB_LAYOUT;
+  if (!bib.card && HEX_COLOR.test(bib.band) && contrastRatio(bib.band, COLOR.surface) >= L.profileAltitudeContrast) return { colour: bib.band, opacity: 1 };
+  const grounds = bib.card ? cardGrounds(bib.card) : [COLOR.surface];
+  // `ink` laid at `opacity` on a ground is the two mixed channel by channel, as pdfkit's and Satori's compositing lays it.
+  const reads = (opacity: number) => grounds.every((ground) => contrastRatio(mix(ground, bib.ink, opacity), ground) >= L.profileAltitudeContrast);
+  let opacity: number = L.profileAltitudeOpacity;
+  while (opacity < 1 && !reads(opacity)) opacity = Math.min(1, Math.round((opacity + L.profileAltitudeOpacityStep) * 100) / 100);
+  return { colour: bib.ink, opacity };
+}
+
+/**
+ * What a member's card's strip stands on (§695), from its background as the renderer holds it: the members' colour; the kit's
+ * gradient, both its stops; their photograph under the veil — over a white photograph, the lightest ground the veil can give, as
+ * `member-bib-card.test.ts` measures the number's white on it.
+ */
+function cardGrounds(card: BibMemberCardBackground): readonly string[] {
+  if (card.kind === "colour") return [card.colour];
+  if (card.kind === "gradient") return card.stops;
+  return [mix(COLOR.surface, BIB_MEMBER_CARD.veil, BIB_MEMBER_CARD.veilOpacity)];
+}
 
 const isAid = (kinds: readonly string[]): boolean => kinds.includes("WATER") || kinds.includes("FOOD");
 
@@ -114,7 +166,7 @@ function clearOfPins(label: ElevationLabel, geometry: ElevationGeometry, textSiz
   return nearest ?? null;
 }
 
-const asText = (label: ElevationLabel): BibStripText => ({ text: label.text, x: label.x, baseline: label.y, anchor: label.anchor });
+const asText = (label: ElevationLabel, altitude: boolean): BibStripText => ({ text: label.text, x: label.x, baseline: label.y, anchor: label.anchor, altitude });
 
 export function bibProfileStrip(drawing: BibProfileDrawing, options: BibStripOptions): BibStrip {
   const L = BIB_LAYOUT;
@@ -162,11 +214,12 @@ export function bibProfileStrip(drawing: BibProfileDrawing, options: BibStripOpt
   });
 
   const texts: BibStripText[] = [];
-  if (geometry.endWords) texts.push(asText(geometry.endWords.start), asText(geometry.endWords.finish));
-  for (const marker of geometry.markers) if (marker.label) texts.push(asText(marker.label));
-  for (const label of geometry.kmLabels) texts.push(asText(label));
-  if (geometry.kmUnit) texts.push(asText(geometry.kmUnit));
-  for (const extreme of extremes) texts.push(asText(extreme.label));
+  if (geometry.endWords) texts.push(asText(geometry.endWords.start, false), asText(geometry.endWords.finish, false));
+  for (const marker of geometry.markers) if (marker.label) texts.push(asText(marker.label, false));
+  for (const label of geometry.kmLabels) texts.push(asText(label, false));
+  if (geometry.kmUnit) texts.push(asText(geometry.kmUnit, false));
+  // The altitudes last, as ever: the only words of the strip in their own ink (`bibAltitudeInk`).
+  for (const extreme of extremes) texts.push(asText(extreme.label, true));
 
   return { geometry: { ...geometry, extremes }, checkpoints, timesShown, scale: options.showScale, texts };
 }
