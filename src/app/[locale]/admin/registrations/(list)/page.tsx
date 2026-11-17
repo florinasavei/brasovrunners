@@ -237,7 +237,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canReadRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, bounced, promo, outside, memberBib, partner, reconfirm, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test, memberSweep } = current;
+  const { eventId, status, clubMember, bounced, promo, outside, partner, reconfirm, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test, memberSweep } = current;
   // What «Trimite acum» said about Mailgun's stop (§622): from the action's own address; unreadable says nothing.
   const untilParsed = current.until ? new Date(current.until) : null;
   const untilAt = untilParsed && !Number.isNaN(untilParsed.getTime()) ? untilParsed : null;
@@ -267,7 +267,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     emailBounced?: true;
     promoConsented?: true;
     outsideCapacity?: true;
-    memberBibAsked?: true;
     fromPartner?: true;
     partner?: string;
     reconfirm?: ReconfirmFilter;
@@ -282,8 +281,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     promoConsented: promo === "1" || undefined,
     // «În afara locurilor» (§643): the strip's own pill, narrowing to the rows seated outside the places.
     outsideCapacity: outside === "1" || undefined,
-    // The bibs page's link (§664): who asked for the members' bib and is no member account's.
-    memberBibAsked: memberBib === "asked" || undefined,
     // «De la parteneri» (the decision «De la parteneri»): the rows with a partner's name — in the list's one `WHERE`, so its count and pages too.
     fromPartner: partner === "1" || undefined,
     // «Reconfirmare» (the decision «Cere reconfirmarea»): one of three answers — in the same `WHERE`, so its count and pages too.
@@ -461,7 +458,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     // Rides with every sort, page and export link (§581): the file is the rows on screen.
     promo: promo === "1" ? "1" : undefined,
     outside: outside === "1" ? "1" : undefined,
-    memberBib: memberBib === "asked" ? "asked" : undefined,
     // «De la parteneri»: rides with every sort, page and export link, as the promo filter does — the file is the rows on screen.
     partner: partner === "1" ? "1" : undefined,
     // One partner (the list's column «Partener»): only as the server validated it, so an unknown name never travels on.
@@ -484,7 +480,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     `defaultEventFilter` over it, so `all` and a bookmarked link mean there what they mean here.
   */
   const exportQueryString = buildListHref("", listParams, { eventId: eventFilter.eventId ?? ALL_EVENTS }).replace(/^\?/, "");
-  const hasFilters = Boolean(eventId || status || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || partner === "1" || chosenPartner || isReconfirmFilter(reconfirm) || q);
+  const hasFilters = Boolean(eventId || status || clubMember || bounced || promo === "1" || outside === "1" || partner === "1" || chosenPartner || isReconfirmFilter(reconfirm) || q);
   /*
     Nobody chose a filter, yet the list is still narrowed: `defaultEventFilter` scoped it to the
     featured event with no URL parameter to show for it (§178). This is the shape §277 named —
@@ -1034,7 +1030,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     the results.
   */
   // A filter an invitation cannot answer hides the invitations; with «Stare» on an invitation state the search box is theirs.
-  const otherFilters = Boolean((status && !invitationFilter) || clubMember || bounced || promo === "1" || outside === "1" || memberBib === "asked" || partner === "1" || chosenPartner || isReconfirmFilter(reconfirm) || (q && !invitationFilter));
+  const otherFilters = Boolean((status && !invitationFilter) || clubMember || bounced || promo === "1" || outside === "1" || partner === "1" || chosenPartner || isReconfirmFilter(reconfirm) || (q && !invitationFilter));
   // With «Stare» on an invitation state (§943) the invitations are the list itself: every one of that state, whatever the page.
   const leadEvent = filters.eventId && !otherFilters && (invitationFilter || query.page === 1) ? filters.eventId : null;
   const leadNow = new Date();
@@ -1817,27 +1813,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         așteptare» was pressed, and the next «Filtrează» sent `status=` and dropped the filter the
         pill had set (§626). A new address is a new form; the fields start from what the address says.
       */}
-      {/* The bibs page's filter (§664), said in words since no box of the form carries it, and cleared by a link. */}
-      {memberBib === "asked" && (
-        <Typography variant="body2" data-testid="registrations-filter-member-bib">
-          {t("registrations.memberBibAskedFilter")}{" "}
-          <Box
-            component="a"
-            href={buildListHref(basePath, listParams, { memberBib: undefined })}
-            sx={{ color: "primary.main", display: "inline-flex", alignItems: "center", minHeight: 44 }}
-          >
-            {t("registrations.memberBibAskedClear")}
-          </Box>
-        </Typography>
-      )}
       <Box component="form" key={listQueryString} method="get" action={basePath}>
         <input type="hidden" name="sort" value={query.sort} />
         <input type="hidden" name="dir" value={query.dir} />
         <input type="hidden" name="perPage" value={String(query.perPage)} />
         {/* The «În afara locurilor» pill's filter (§643) survives «Filtrează»; the pill itself clears it. */}
         {outside === "1" && <input type="hidden" name="outside" value="1" />}
-        {/* The bibs page's filter (§664) survives «Filtrează»; the line above the list says it and clears it. */}
-        {memberBib === "asked" && <input type="hidden" name="memberBib" value="asked" />}
         <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", gap: 2, alignItems: "flex-start" }}>
           {/* BR-REQ-041-01 criterion 7. First, and widest, because on race morning it is the
               only one that gets used. */}

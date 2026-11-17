@@ -253,8 +253,10 @@ What is asked, and why each one is there:
   to tell them from a stranger was whether somebody happened to type the club's name into a free
   text box. Nobody's answer is checked against anything: most members of this club have no
   backoffice account, so a verified flag would say "no" for exactly the people the question is
-  asked to find. It is therefore for the club's own information only — it changes no price, no
-  place, and no position in a queue — and every screen that shows it says "declared". An
+  asked to find. It is therefore for the club's own information — it changes no price, no
+  place, and no position in a queue — and every screen that shows it says "declared". The one
+  thing it does change is a look: at a race whose number has a members' design, whoever ticked
+  it wears that design, with the same number in the same order (`DECISIONS.md` §NNN). An
   organizer corrects one that is wrong.
 
 An organizer entering a registration for somebody who telephoned may leave unknown details

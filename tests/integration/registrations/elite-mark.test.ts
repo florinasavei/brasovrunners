@@ -7,8 +7,8 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { countKits, countRegistrationsForAdmin, readPlaceOutlook, summariseRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
-import { countUnverifiedMemberBibs, listBibs } from "@/modules/registrations/bibs";
+import { countKits, readPlaceOutlook, summariseRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
+import { listBibs } from "@/modules/registrations/bibs";
 import { addEliteEntry } from "@/modules/registrations/elite-list";
 import { setRegistrationElite } from "@/modules/registrations/elite-mark";
 import { resolveDisplayName } from "@/modules/registrations/names";
@@ -352,21 +352,26 @@ describe("§897 a marked registration's bib", () => {
     expect(pages(Buffer.from(await (await get("locale=ro")).arrayBuffer()))).toBe(1);
   });
 
-  it("leaves the bibs page's «unverified members» line and the list it links to: an elite bib is never the ordinary one", async () => {
+  /*
+    §NNN replaced the bibs page's «unverified members» line (and the list it linked to) with the one rule: offered, the
+    member tick, not «Elită». What this case kept — an elite bib is never a members' bib — is asked of the rule itself:
+    a marked runner who ticked «Sunt membru» leaves the members' pile and wears the elite bib, and comes back unmarked.
+  */
+  it("takes a marked runner out of the members' bibs: an elite bib is never the members' design, whatever the tick", async () => {
     const admin = await as("ADMIN");
     await db.update(events).set({ bibDesign: { member: { enabled: true, bandColour: "#6a1b9a", label: "Membru BVR" } } }).where(eq(events.id, eventId));
     const ana = await runner("Ana Pop", "CONFIRMED", 12);
-    await runner("Ion Ionescu", "CONFIRMED", 13);
-    await db.update(registrations).set({ memberBibWanted: true });
-    const askedFilter = { eventId, memberBibAsked: true };
-    expect(await countUnverifiedMemberBibs(db, eventId)).toBe(2);
-    expect(await countRegistrationsForAdmin(db, askedFilter)).toBe(2);
+    const ion = await runner("Ion Ionescu", "CONFIRMED", 13);
+    await db.update(registrations).set({ clubMemberDeclared: true });
+    const members = async () => (await listBibs(db, eventId)).filter((row) => row.member).map((row) => row.id);
+    expect(await members()).toEqual([ana, ion]);
 
     await setRegistrationElite(db, admin, ana, true, NOW);
-    expect(await countUnverifiedMemberBibs(db, eventId)).toBe(1);
-    expect(await countRegistrationsForAdmin(db, askedFilter)).toBe(1);
+    expect(await members()).toEqual([ion]);
+    // On the elite sheet, never a members' bib.
+    expect((await listBibs(db, eventId, { elite: true })).map((row) => [row.id, row.member])).toEqual([[ana, false]]);
     await setRegistrationElite(db, admin, ana, false, later(1));
-    expect(await countUnverifiedMemberBibs(db, eventId)).toBe(2);
+    expect(await members()).toEqual([ana, ion]);
   });
 
   it("draws the registration's picture elite-style, never the members' design, under its own picture address", async () => {

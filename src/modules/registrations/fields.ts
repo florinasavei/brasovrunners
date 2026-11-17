@@ -134,13 +134,8 @@ const submissionFields = z.object({
    */
   clubMemberDeclared: z.boolean().default(false),
 
-  /**
-   * «Vreau numărul de membru» (§664): the wish to wear the members' race number. Asked only while
-   * the event's bib design offers it, under the member tick, and stored only then (`service.ts`); a
-   * wish and never a fact — the sheet prints the members' bib only for an address the club knows
-   * as a member's (§662). Unticked is absent from `FormData`, so `.default(false)` like the tick.
-   */
-  memberBibWanted: z.boolean().default(false),
+  // «Vreau numărul de membru» (§664) is asked no more (§NNN): the tick above decides the members' race number, and a
+  // posted wish is neither read (`form-mapping.ts`) nor kept — Zod drops a key the schema does not name.
 
   tshirtSize: z.enum(["NONE", "XS", "S", "M", "L", "XL", "XXL"]).default("NONE"),
 
@@ -464,7 +459,6 @@ export const answerRules = submissionFields.pick({
   stravaUrl: true,
   instagramHandle: true,
   clubMemberDeclared: true,
-  memberBibWanted: true,
   tshirtSize: true,
 }).shape;
 

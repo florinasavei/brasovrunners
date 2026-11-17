@@ -2168,6 +2168,12 @@ three rules (`DECISIONS.md` §30):
   that decided a price, a place or a queue position would decide it for anybody who ticked it.
   A member price, if the club ever wants one, needs a membership list and a decision recorded
   before it needs this column.
+- **It decides one look, and only that** (`DECISIONS.md` §NNN): at an event whose bib design
+  offers the members' race number, a registration with the tick, not marked «Elită», prints in
+  the members' design — the same number, in the same order — by one rule,
+  `registrations/member-bib.ts#PRINTS_MEMBER_BIB` (its TypeScript twin
+  `domain/member-bib.ts#printsMemberBib`). No account and no second question decide it; an
+  Administrator corrects a wrong tick with «Modifică datele».
 - **`false` means "did not say" as often as it means "no",** so it is reported as a presence and
   never as a negative: the export prints "declared", "verified" or an empty cell, and the
   backoffice filter narrows to the members, declared or verified, and offers no way to select the rest.

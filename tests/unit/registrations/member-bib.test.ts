@@ -8,12 +8,13 @@ import { renderBibImage } from "@/modules/registrations/bib-image";
 import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { memberBibExportCell } from "@/modules/registrations/csv";
 import { invitationDraft } from "@/modules/registrations/domain/invitations";
-import { memberBibKept, memberBibOf, memberBibTickedAtFirst } from "@/modules/registrations/domain/member-bib";
+import { MEMBER_BIB_EXPORT_YES, printsMemberBib } from "@/modules/registrations/domain/member-bib";
 
 /**
  * §664, BR-REQ-038-01 — the members' race number: the members' header and label on a member's bib,
  * the number and the name where they always are, both renderers reading `bib-geometry.ts`; and the
- * three facts that decide who wears it.
+ * three facts that decide who wears it — since §NNN the event's switch, the member tick and «Elită»,
+ * no longer «Vreau numărul de membru» and a member account.
  */
 
 const MEMBER_COLOUR = "#6a1b9a";
@@ -58,46 +59,40 @@ function carries(pdf: Buffer, hex: string): boolean {
 afterEach(() => vi.restoreAllMocks());
 
 describe("§664 who wears the members' bib", () => {
-  it("is kept only when offered, declared and wanted — a stale form stores false", () => {
-    expect(memberBibKept({ offered: true, declared: true, wanted: true })).toBe(true);
-    expect(memberBibKept({ offered: false, declared: true, wanted: true })).toBe(false);
-    expect(memberBibKept({ offered: true, declared: false, wanted: true })).toBe(false);
-    expect(memberBibKept({ offered: true, declared: true, wanted: false })).toBe(false);
+  /*
+    §NNN changed the rule (the owner, 2026-11-17: «că momentan nu se deosebesc cu nimic»): the three facts are now the
+    event's switch, the member tick and not «Elită». The wish («memberBibKept») and the account («memberBibOf»'s
+    `verified`) are gone, and with them the «asked» state; the whole truth table of the one rule replaces their cases.
+  */
+  it("prints exactly when offered, ticked and not elite — every other combination prints the ordinary bib (§NNN)", () => {
+    for (const offered of [true, false]) {
+      for (const declared of [true, false]) {
+        for (const elite of [true, false]) {
+          expect(printsMemberBib({ offered, declared, elite }), JSON.stringify({ offered, declared, elite })).toBe(offered && declared && !elite);
+        }
+      }
+    }
   });
 
-  it("prints only for a verified address; asked-but-unverified prints the ordinary bib", () => {
-    expect(memberBibOf({ offered: true, wanted: true, verified: true })).toBe("printed");
-    expect(memberBibOf({ offered: true, wanted: true, verified: false })).toBe("asked");
-    expect(memberBibOf({ offered: true, wanted: false, verified: true })).toBeNull();
-    // The switch went off after the person asked: nothing prints from the wish.
-    expect(memberBibOf({ offered: false, wanted: true, verified: true })).toBeNull();
-  });
-
-  it("reads «Member bib» = yes / asked / empty in the export", () => {
-    expect(memberBibExportCell({ memberBibOffered: true, memberBibWanted: true, memberVerified: true })).toBe("yes");
-    expect(memberBibExportCell({ memberBibOffered: true, memberBibWanted: true, memberVerified: false })).toBe("asked");
-    expect(memberBibExportCell({ memberBibOffered: true, memberBibWanted: false, memberVerified: true })).toBe("");
-    expect(memberBibExportCell({ memberVerified: true })).toBe("");
+  it("reads «Member bib» = yes / empty in the export — no «asked» any more, since nobody is asked (§NNN)", () => {
+    expect(memberBibExportCell({ memberBib: true })).toBe(MEMBER_BIB_EXPORT_YES);
+    expect(MEMBER_BIB_EXPORT_YES).toBe("yes");
+    expect(memberBibExportCell({ memberBib: false })).toBe("");
+    expect(memberBibExportCell({})).toBe("");
   });
 });
 
-describe("§664 «Vreau numărul de membru» starts ticked unless a refusal brought back an untick", () => {
-  it("is ticked on a fresh form and on a family sitting's shared boxes, which hold no member tick", () => {
-    expect(memberBibTickedAtFirst(null)).toBe(true);
-    expect(memberBibTickedAtFirst({ city: "Brașov", emergencyContactName: "Ana" })).toBe(true);
-  });
-
-  it("is ticked on the invitation form of an invited member, beside «Sunt membru»", () => {
+describe("§664 the invitation form's boxes for an invited member", () => {
+  /*
+    §NNN: «Vreau numărul de membru» is asked no more, so an invited member's form arrives with «Sunt membru» ticked and the
+    club's name only — the tick is what prints the members' bib. The non-member's draft is unchanged.
+  */
+  it("ticks «Sunt membru» with the club's name, and nothing about the members' bib", () => {
     const draft = invitationDraft({ name: "Ana Maria Pop", member: true }, "Brașov Runners");
-    expect(draft).toMatchObject({ firstName: "Ana Maria", lastName: "Pop", clubMemberDeclared: "on", memberBibWanted: "on" });
-    expect(memberBibTickedAtFirst(draft)).toBe(true);
-    // A non-member's invitation asks nothing of the members' bib, and the box (if shown) starts ticked.
+    expect(draft).toEqual({ firstName: "Ana Maria", lastName: "Pop", clubMemberDeclared: "on", clubName: "Brașov Runners" });
+    expect(draft).not.toHaveProperty("memberBibWanted");
+    // A non-member's invitation asks nothing of the members' bib.
     expect(invitationDraft({ name: "Ion", member: false }, "Brașov Runners")).toEqual({ firstName: "Ion", lastName: "" });
-  });
-
-  it("brings back what a refused press posted: the member tick with or without the wish", () => {
-    expect(memberBibTickedAtFirst({ clubMemberDeclared: "on" })).toBe(false);
-    expect(memberBibTickedAtFirst({ clubMemberDeclared: "on", memberBibWanted: "on" })).toBe(true);
   });
 });
 

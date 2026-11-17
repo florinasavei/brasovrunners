@@ -3,7 +3,6 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { CLUB_NAME } from "@/theme/brand";
 import { effectiveMinimumAge, isMinorOn, isUnderMinimumAge } from "./domain/age";
 import { shirtSizeKept } from "./domain/kit";
-import { memberBibKept } from "./domain/member-bib";
 import { registrationNameKey } from "./domain/name-key";
 import { answerRules, UNDER_MINIMUM_AGE } from "./fields";
 import { composeLegalName, resolveDisplayName } from "./names";
@@ -18,9 +17,9 @@ import { HOME_COUNTRY } from "@/modules/events/domain/place";
  * **The allowlist is every answer the person typed on the form** (`fields.ts`), each met by the
  * form's own rule (`answerRules`): the two names (the name of record follows them, with §389's rule
  * and §67's audit), the start-list name, the birth date, the sex, the citizenship, the country and the
- * city, the telephone, the emergency contact, the guardian, the club and the member tick, «Vreau
- * numărul de membru» (§664), the socials and the T-shirt. A key outside it is refused by name — never ignored, so a caller learns it asked
- * for something this verb does not do.
+ * city, the telephone, the emergency contact, the guardian, the club and the member tick — which, since §NNN, is
+ * also what prints the members' race number, so a wrong tick is corrected here —, the socials and the T-shirt. A key
+ * outside it is refused by name — never ignored, so a caller learns it asked for something this verb does not do.
  *
  * **Three kinds stay the person's, and the screen says why** (`LOCKED_ANSWER_KINDS`):
  * - the **address** is the registration's identity (§67, `AGENTS.md` §10.4): never an answer
@@ -50,7 +49,6 @@ export const EDITABLE_ANSWERS = [
   "emergencyContactPhone",
   "guardianName",
   "clubMemberDeclared",
-  "memberBibWanted",
   "clubName",
   "stravaUrl",
   "instagramHandle",
@@ -58,6 +56,13 @@ export const EDITABLE_ANSWERS = [
 ] as const satisfies readonly (keyof typeof answerRules)[];
 
 export type EditableAnswer = (typeof EDITABLE_ANSWERS)[number];
+
+/**
+ * Answers a correction once wrote and the form asks no more: never corrected, never posted, but the trail still holds
+ * their `registration.answer_corrected` rows, and the registration's page names them in words. «Vreau numărul de membru»
+ * (§664) left with §NNN: the member tick alone decides the members' race number now, and the column stays, read by nothing.
+ */
+export const RETIRED_ANSWERS = ["memberBibWanted"] as const;
 
 /** What a caller may post: a string as typed (empty clears an optional answer), the tick as a boolean. */
 export type AnswerChanges = Partial<Record<EditableAnswer, string | boolean | null>>;
@@ -207,7 +212,7 @@ function refuse(message: string, fields: readonly string[]): never {
 
 /** One posted value, through the form's own rule: a string trimmed (empty is "clear it"), the tick a boolean. */
 function normalized(field: EditableAnswer, raw: unknown): Value {
-  if (field === "clubMemberDeclared" || field === "memberBibWanted") {
+  if (field === "clubMemberDeclared") {
     if (typeof raw !== "boolean") refuse(`${field} is true or false`, [field]);
     return raw;
   }
@@ -247,8 +252,8 @@ const same = (a: unknown, b: unknown) => (a ?? null) === (b ?? null);
  *   still holds that name; a club typed while the tick stays on is refused, since the tick is the club;
  * - the **socials-on-the-list** tick goes when both socials are cleared — a tick about nothing;
  * - the **T-shirt** is kept only where the event gives one (`shirtSizeKept`);
- * - **«Vreau numărul de membru»** (§664) is kept only while the event offers the members' bib and
- *   the member tick is on (`memberBibKept`): clearing the tick clears it, audited like any column;
+ * - the **member tick** is the members' race number too (§NNN): ticked or cleared here, the next sheet prints the bib by
+ *   it — nothing else is written for it (`member_bib_wanted` is no answer any more, `RETIRED_ANSWERS`);
  * - the **guardian** goes when a corrected birth date makes the row an adult's on the day it was
  *   written, as the form never keeps one for an adult (§645) — audited like any other column; under a
  *   signed declaration it is the declaration's (`GUARDIAN_SIGNED`), so such a birth date is refused.
@@ -268,8 +273,6 @@ export function planAnswerEdit(
     answersWrittenAt: Date;
     /** The row has a declaration acceptance (online or paper): the guardian is the signed text's, not an answer any more. */
     declarationSigned: boolean;
-    /** The event's bib design offers the members' bib (§664); absent is "no". */
-    memberBibOffered?: boolean;
   },
 ): AnswerPlan {
   const keys = Object.keys(changes);
@@ -312,16 +315,6 @@ export function planAnswerEdit(
     } else if (!posted.has("clubName") || same(posted.get("clubName"), current.clubName)) {
       if (current.clubName === CLUB_NAME) next.clubName = null;
     }
-  }
-
-  // The members' bib (§664): only under the member tick and while the event offers it, as the form keeps it.
-  // Recomputed when the wish is posted, or when the tick is cleared under a standing wish — never a change nobody asked for.
-  if (posted.has("memberBibWanted") || (posted.has("clubMemberDeclared") && next.memberBibWanted === true)) {
-    next.memberBibWanted = memberBibKept({
-      offered: context.memberBibOffered === true,
-      declared: next.clubMemberDeclared === true,
-      wanted: next.memberBibWanted === true,
-    });
   }
 
   // The T-shirt, only where the event gives one.
