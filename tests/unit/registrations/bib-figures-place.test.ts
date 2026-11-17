@@ -395,7 +395,7 @@ describe("§804 the drawing version, and the numbers printed so far", () => {
     // The default place draws what the drawing always drew (below, byte for byte), so this choice raised nothing; 6 is the
     // emergency line's new form (§947), 7 the name an elite registration's bib prints and 8 the room between the profile's row
     // and the phone line (§NNN).
-    expect(BIB_DRAWING_VERSION).toBe(8);
+    expect(BIB_DRAWING_VERSION).toBe(9);
     const stamp = (place: (typeof BIB_PROFILE_FIGURES_PLACES)[number]) => bibPictureStamp([withPlace(place)]);
     expect(new Set(BIB_PROFILE_FIGURES_PLACES.map(stamp)).size).toBe(3);
   });
