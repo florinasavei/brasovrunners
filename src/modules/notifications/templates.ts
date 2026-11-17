@@ -1784,7 +1784,7 @@ function standardLinks(
  * read from the environment as the footer reads them: one that is not set is left out, and with neither the message is as
  * it was. Facebook first, as the footer has them.
  */
-function clubSocialLinks(labels: { facebook: string; instagram: string }) {
+function organizerSocialLinks(labels: { facebook: string; instagram: string }) {
   return [
     ...(env.CLUB_FACEBOOK_URL ? [{ label: labels.facebook, url: env.CLUB_FACEBOOK_URL }] : []),
     ...(env.CLUB_INSTAGRAM_URL ? [{ label: labels.instagram, url: env.CLUB_INSTAGRAM_URL }] : []),
@@ -4810,7 +4810,7 @@ export function buildTemplateContent(
         ...own,
         ...standardLinks(linkData, copy.moreLinks).filter((link) => !seen.has(link.url)),
         // The club's Facebook and Instagram, last, and on the organizers' own message alone (§NNN).
-        ...(messageType === "ORGANIZER_MESSAGE" ? clubSocialLinks(copy.moreLinks) : []),
+        ...(messageType === "ORGANIZER_MESSAGE" ? organizerSocialLinks(copy.moreLinks) : []),
       ];
     })(),
     closing: copy.closing,

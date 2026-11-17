@@ -878,7 +878,8 @@ Rules:
   environment's host. Set it in qa; unset elsewhere, the banner simply ends its sentence;
 - `CLUB_FACEBOOK_URL`, `CLUB_INSTAGRAM_URL`, `CLUB_STRAVA_URL` and `CLUB_YOUTUBE_URL` are the club's own profiles,
   shown in the footer and emitted as the `sameAs` of the `SportsOrganization` structured data
-  (BR-REQ-052-02). All optional, and **omitted entirely when unset** rather than emitted empty:
+  (BR-REQ-052-02); Facebook and Instagram are also the last two links of the organizers' message to
+  an event's participants (`DECISIONS.md` §NNN). All optional, and **omitted entirely when unset** rather than emitted empty:
   an empty `sameAs` is a claim that the club has no profiles, and a guessed one misinforms a
   search engine. The map link on an event is not configuration at all any more: it is a link
   the organizer pastes into `events.map_url` (`DECISIONS.md` §61), stored and never assembled;
