@@ -237,7 +237,7 @@ describe("§965 the watermark's one box", () => {
     expect(checked).toBe(sizes.length * ticks.length);
   });
 
-  it("raises the drawing's version to 3, so every picture's address changes with it", () => {
+  it("raised the drawing's version to 3, so every picture's address changed with it (a later drawing raises it further, §NNN)", () => {
     // 4 since the club sets the logo's size, the space round it and its place (§969, `badge-footer-logo-controls.test.ts`).
     expect(BADGE_DRAWING_VERSION).toBeGreaterThanOrEqual(3);
   });

@@ -37,6 +37,11 @@
  *
  * Every height is a share of the badge's content (`BADGE_LAYOUT`), so a larger badge is the same badge,
  * larger. Pure: imports the bib's pure measure and A4 only.
+ *
+ * **The space for the name** (§NNN; the owner, 2026-11-17, at 90 × 100 mm: «vreau un spațiu mai mare pt nume aici»): the share of the
+ * content the writing area takes before the free-text line and the telephone take theirs — 43 % by default, the badge as it always was,
+ * up to 80 % (`BADGE_NAME_SPACE`). The header and the role's band share what it leaves in their own 27 : 30 (`badgeRows`), and their words
+ * shrink with them (`badgeLayout`), so a taller badge can give its height to the name instead of to the bands.
  */
 
 import { A4_PAGE, BIB_TEXT_LINE } from "@/modules/registrations/bib-geometry";
@@ -92,8 +97,8 @@ export const BADGE_INSET = 2 * MM;
 export const BADGE_WRITING_MIN = 10 * MM;
 
 /**
- * The least of its natural height the header and the role's band keep when the rows under them take
- * theirs (§776): four fifths. A design whose ticked rows (the free-text line, the telephone) would
+ * The least of its natural height — at the design's space for the name (§NNN) — the header and the role's band keep when the rows
+ * under them take theirs (§776): four fifths. A design whose ticked rows (the free-text line, the telephone) would
  * squeeze the bands further is refused at the save (`badgeSizeRefusal`). That is a save-time rule: an imported event file or a copy of the event is read forgivingly and
  * may draw with the bands under four fifths of their height, which the drawing survives (`badgeRows` clamps).
  */
@@ -178,7 +183,7 @@ export const BADGE_FOOTER_LOGO_MIN_WIDTH = 5 * MM;
  * least size any line is set at. Both renderers read them through `badgeLayout`, never directly.
  */
 export const BADGE_LAYOUT = {
-  /** The header band, the role's band and the telephone's row. */
+  /** The header band, the role's band and the telephone's row — the two bands' at the default space for the name (§NNN, `badgeRows`). */
   headerShare: 0.27,
   roleShare: 0.3,
   phoneShare: 0.1,
@@ -235,6 +240,31 @@ export const BADGE_LAYOUT = {
  */
 export const BADGE_PAD_MAX = (100 * MM - 2 * BADGE_INSET) * BADGE_LAYOUT.headerShare * BADGE_LAYOUT.padShare;
 
+/**
+ * «Spațiul pentru nume (% din înălțime)» (§NNN): the share of the content's height, in whole percents, the writing area — «Nume:», its
+ * line, the marker's space, the watermark — takes before the free-text line and the telephone's row take theirs. 43 is the badge as it
+ * always was, the header's 27 and the role band's 30 being the rest, and the default of every design that never chose; up to 80, the two
+ * bands sharing what is left in their own 27 : 30 (`badgeRows`). Out of these bounds a value is refused at the save and read as the default.
+ */
+export const BADGE_NAME_SPACE = { min: 43, max: 80 } as const;
+export const DEFAULT_BADGE_NAME_SPACE = 43;
+
+/** Whether a value is a space for the name a badge is drawn with (§NNN): a whole number within `BADGE_NAME_SPACE`. */
+export function isBadgeNameSpace(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= BADGE_NAME_SPACE.min && value <= BADGE_NAME_SPACE.max;
+}
+
+/**
+ * What the header's and the role band's shares are multiplied by at a space for the name (§NNN), so that together they take
+ * (100 − share) % of the content in their own 27 : 30 — or null at the default, where they keep `BADGE_LAYOUT`'s shares as they are:
+ * the badge as it always was, to the last bit, never multiplied by a factor that is one only in theory. A share that is not a space for
+ * the name (`isBadgeNameSpace`; a caller's — the reader keeps a stored one within the bounds) is the default too.
+ */
+export function badgeBandsScale(nameSpacePct: number | undefined): number | null {
+  if (nameSpacePct === undefined || nameSpacePct === DEFAULT_BADGE_NAME_SPACE || !isBadgeNameSpace(nameSpacePct)) return null;
+  return (100 - nameSpacePct) / 100 / (BADGE_LAYOUT.headerShare + BADGE_LAYOUT.roleShare);
+}
+
 /** A row of the badge: its top from the paper's top, and its height, in points. */
 export type BadgeRow = { top: number; height: number };
 
@@ -245,8 +275,12 @@ export type BadgeRow = { top: number; height: number };
  * leaves it less, the header and the role's band shrink together, in proportion, until it has it, and
  * `squeeze` says how much of their natural height they kept (1 when none was lost); the free-text and
  * telephone rows keep their own. With no free text or telephone the area takes that row too.
+ *
+ * The bands' natural height is what the space for the name leaves (§NNN, `nameSpacePct`): their shares as they are at the default,
+ * 43, else (100 − share) % of the content in their 27 : 30 (`badgeBandsScale`). The free-text and telephone rows keep their shares
+ * whatever it is, and the squeeze — so the save's refusal (`badgeSizeRefusal`) — reads the bands' height at that share.
  */
-export function badgeRows(paper: { width: number; height: number }, phoneShown: boolean, freeShown = false): {
+export function badgeRows(paper: { width: number; height: number }, phoneShown: boolean, freeShown = false, nameSpacePct?: number): {
   content: { left: number; top: number; width: number; height: number };
   header: BadgeRow;
   role: BadgeRow;
@@ -259,8 +293,10 @@ export function badgeRows(paper: { width: number; height: number }, phoneShown: 
   const content = { left: BADGE_INSET, top: BADGE_INSET, width: paper.width - 2 * BADGE_INSET, height: paper.height - 2 * BADGE_INSET };
   const phoneHeight = phoneShown ? content.height * L.phoneShare : 0;
   const freeHeight = freeShown ? content.height * L.freeShare : 0;
-  let headerHeight = content.height * L.headerShare;
-  let roleHeight = content.height * L.roleShare;
+  // §NNN: at the default the bands take their shares as they are — the badge as it always was; past it, what the name's space leaves.
+  const scale = badgeBandsScale(nameSpacePct);
+  let headerHeight = scale === null ? content.height * L.headerShare : content.height * L.headerShare * scale;
+  let roleHeight = scale === null ? content.height * L.roleShare : content.height * L.roleShare * scale;
   let squeeze = 1;
   const left = content.height - headerHeight - roleHeight - phoneHeight - freeHeight;
   if (left < BADGE_WRITING_MIN) {
@@ -287,14 +323,17 @@ export type BadgeExtra = "freeText" | "phone";
  * (whole millimetres, at the same width) at which they all do — what the save's refusal says in words. Null
  * when everything fits. «Spațiu pentru marker» takes width, not height, and is never refused here: the
  * custom bounds keep both areas their minimum width (`BADGE_MARKER_MIN_WIDTH`, `BADGE_NAME_MIN_WIDTH`).
+ * The bands' height is read at the design's space for the name (§NNN): the more of it the name takes, the less the bands have to give.
  */
 export function badgeSizeRefusal(
-  choice: BadgeSizeChoice,
+  choice: BadgeSizeChoice & { nameSpacePct?: number },
   ticked: { freeText: boolean; phone: boolean },
 ): { what: BadgeExtra[]; minHeightMm: number } | null {
   const { widthMm, heightMm } = badgeSizeMm(choice);
-  const fits = (height: number) =>
-    badgeRows(badgePaper({ size: "custom", customWidthMm: widthMm, customHeightMm: height }), ticked.phone, ticked.freeText).squeeze + 1e-9 >= BADGE_BANDS_MIN_SHARE;
+  const fits = (height: number) => {
+    const paper = badgePaper({ size: "custom", customWidthMm: widthMm, customHeightMm: height });
+    return badgeRows(paper, ticked.phone, ticked.freeText, choice.nameSpacePct).squeeze + 1e-9 >= BADGE_BANDS_MIN_SHARE;
+  };
   if (fits(heightMm)) return null;
   let minHeightMm = heightMm + 1;
   while (minHeightMm < BADGE_CUSTOM_BOUNDS.height.max && !fits(minHeightMm)) minHeightMm += 1;
@@ -383,6 +422,8 @@ export type BadgeLayoutChoice = BadgeSizeChoice & {
   showPhone?: boolean;
   /** «Logo-ul clubului jos, ca filigran» (§965): absent or `off` draws none. */
   footerLogo?: BadgeFooterLogo;
+  /** «Spațiul pentru nume (% din înălțime)» (§NNN): absent, or the default, draws the bands as they always were. */
+  nameSpacePct?: number;
 } & BadgeFooterLogoPlacement;
 
 /** The club's lockup as a watermark (§965): its box, in points from the paper's top left corner, and its opacity. */
@@ -538,15 +579,24 @@ export function badgeFooterLogoOf(
  * role's name, at most the small line's size, shrunk until it fits and never cut (`badgeFitWhole`); the role's name gives up what the
  * three lines need of the band's height, never below its own least size. Either way inside the band: the rows, and so the save's fit
  * check (`badgeSizeRefusal`), are what they were.
+ *
+ * At a space for the name past the default (§NNN) the bands are lower, and their words shrink with them: their largest sizes are shares
+ * of the band's height as they always were, and their least sizes — the title's, «VOLUNTAR»'s, the role's name's — are multiplied by the
+ * bands' own factor (`badgeBandsScale`), so no line is ever taller than its band, and none is cut that the default would not cut. At the
+ * default they are the constants themselves.
  */
 export function badgeLayout(choice: BadgeLayoutChoice, words: BadgeLayoutWords, measure: BadgeMeasure): BadgeLayout {
   const L = BADGE_LAYOUT;
   const paper = badgePaper(choice);
-  const rows = badgeRows(paper, words.phone !== null || choice.showPhone === true, words.free !== null);
+  const rows = badgeRows(paper, words.phone !== null || choice.showPhone === true, words.free !== null, choice.nameSpacePct);
   const { content, header, role, free, writing, phone } = rows;
   // The pad grows with the header up to the 100 mm badge's, no further (`BADGE_PAD_MAX`, §967).
   const { pad, nameTop, nameSize } = badgeNameMarks(rows);
   const centred = (row: BadgeRow, size: number) => row.top + (row.height - badgeLineHeight(size)) / 2;
+  // §NNN: the bands' least sizes, as they are at the default space for the name, and shrunk with the bands past it.
+  const scale = badgeBandsScale(choice.nameSpacePct);
+  const least = (size: number) => (scale === null ? size : size * scale);
+  const roleMin = least(L.roleMinSize);
 
   const logoShown = choice.showLogo && !choice.headerPicture;
   const logoHeight = header.height * L.logoShare;
@@ -557,7 +607,7 @@ export function badgeLayout(choice: BadgeLayoutChoice, words: BadgeLayoutWords, 
   const titleRight = content.left + content.width - pad;
   const titleFitted =
     words.title && !choice.headerPicture
-      ? badgeFit(words.title, measure.bold, Math.max(0, titleRight - titleLeft), header.height * L.titleShare, L.titleMinSize)
+      ? badgeFit(words.title, measure.bold, Math.max(0, titleRight - titleLeft), header.height * L.titleShare, least(L.titleMinSize))
       : null;
   const title = titleFitted ? { ...titleFitted, top: centred(header, titleFitted.size), right: titleRight } : null;
 
@@ -567,7 +617,7 @@ export function badgeLayout(choice: BadgeLayoutChoice, words: BadgeLayoutWords, 
   let categoryLine: BadgeTextLine | null = null;
   if (words.role) {
     const labelMax = role.height * L.labelShare;
-    const labelMin = Math.min(L.roleMinSize, labelMax);
+    const labelMin = Math.min(roleMin, labelMax);
     // §962: the category beside «VOLUNTAR» when the small line holds both at its least size, else on a line of its own below.
     const category = words.category || null;
     const beside = category === null ? null : `${words.label}${BADGE_CATEGORY_SEPARATOR}${category}`;
@@ -575,9 +625,9 @@ export function badgeLayout(choice: BadgeLayoutChoice, words: BadgeLayoutWords, 
     const labelFitted = badgeFit(smallLine, measure.bold, bandWidth, labelMax, labelMin);
     // The band's height in points of type: the sizes of the lines stacked in it add up to no more than this.
     const room = role.height / BIB_TEXT_LINE;
-    const below = category !== null && smallLine !== beside ? badgeFitWhole(category, measure.bold, bandWidth, Math.max(0, Math.min(labelFitted.size, room - labelFitted.size - L.roleMinSize))) : null;
+    const below = category !== null && smallLine !== beside ? badgeFitWhole(category, measure.bold, bandWidth, Math.max(0, Math.min(labelFitted.size, room - labelFitted.size - roleMin))) : null;
     const nameMax = below ? Math.min(role.height * L.roleNameShare, room - labelFitted.size - below.size) : role.height * L.roleNameShare;
-    const nameFitted = badgeFit(words.role, measure.bold, bandWidth, nameMax, L.roleMinSize);
+    const nameFitted = badgeFit(words.role, measure.bold, bandWidth, nameMax, roleMin);
     const block = below
       ? badgeLineHeight(labelFitted.size) + badgeLineHeight(nameFitted.size) + badgeLineHeight(below.size)
       : badgeLineHeight(labelFitted.size) + badgeLineHeight(nameFitted.size);
@@ -586,7 +636,7 @@ export function badgeLayout(choice: BadgeLayoutChoice, words: BadgeLayoutWords, 
     roleLine = { ...nameFitted, top: top + badgeLineHeight(labelFitted.size) };
     if (below) categoryLine = { ...below, top: roleLine.top + badgeLineHeight(nameFitted.size) };
   } else {
-    const alone = badgeFit(words.label, measure.bold, bandWidth, role.height * L.aloneShare, L.roleMinSize);
+    const alone = badgeFit(words.label, measure.bold, bandWidth, role.height * L.aloneShare, roleMin);
     roleLine = { ...alone, top: centred(role, alone.size) };
   }
 

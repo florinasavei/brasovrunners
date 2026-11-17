@@ -38,6 +38,7 @@ import {
   BADGE_CUSTOM_BOUNDS,
   BADGE_FOOTER_LOGO_SETTINGS,
   BADGE_FOOTER_LOGOS,
+  BADGE_NAME_SPACE,
   type BadgeFooterLogoSetting,
   BADGE_SIZE_PRESETS,
   BADGE_SIZES,
@@ -49,6 +50,7 @@ import {
   badgeSheetGrid,
   badgeSizeMm,
   badgeSizeRefusal,
+  DEFAULT_BADGE_NAME_SPACE,
 } from "../badge-geometry";
 import { BADGE_DESIGN_FORM_PREFIX, badgePreviewUrl } from "../badge-query";
 import { badgeDefaultWords, badgeLabelIn } from "../badge-words";
@@ -120,6 +122,7 @@ export default async function BadgeDesignPanel({
     [box("titleEn")]: t("badges.design.titleEn"),
     [box("labelRo")]: t("badges.design.labelRo"),
     [box("labelEn")]: t("badges.design.labelEn"),
+    [box("nameSpacePct")]: t("badges.design.nameSpace"),
     [box("footerLogo")]: t("badges.design.footerLogo"),
     [box("footerLogoSizePct")]: t("badges.design.footerLogoSizePct"),
     [box("footerLogoPaddingMm")]: t("badges.design.footerLogoPaddingMm"),
@@ -134,15 +137,18 @@ export default async function BadgeDesignPanel({
     [box("phoneLabelEn")]: t("badges.design.phoneLabelEn"),
   });
 
-  // The header's shape at the saved size, for the crop box (§560's rule; a crop drawn at another size is trimmed, never squashed).
+  // The header's shape at the saved size and space for the name (§NNN), for the crop box (§560's rule; a crop drawn at another size is trimmed, never squashed).
   const freeShown = design.showFreeText && (design.freeTextRo !== "" || design.freeTextEn !== "");
-  const rows = badgeRows(badgePaper(design), badgePhoneRow(design), freeShown);
+  const rows = badgeRows(badgePaper(design), badgePhoneRow(design), freeShown, design.nameSpacePct);
   const headerRatio = (badgePaper(design).width - 2 * rows.content.left) / rows.header.height;
   const ratioWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
   const initialSrc = badgePreviewUrl({ eventId, locale, role: sampleRole, design, version });
   const { widthMm, heightMm } = badgeSizeMm(design);
-  // The limit in words (§776): the free-text line and the telephone together need this height, whatever the width — said beside the size, always.
-  const extrasNeed = badgeSizeRefusal({ size: "custom", customWidthMm: widthMm, customHeightMm: BADGE_CUSTOM_BOUNDS.height.min }, { freeText: true, phone: true })?.minHeightMm ?? null;
+  // The limit in words (§776): the free-text line and the telephone together need this height, whatever the width — said beside the size, always,
+  // at the saved space for the name (§NNN), which leaves the bands less to give up.
+  const extrasNeed =
+    badgeSizeRefusal({ size: "custom", customWidthMm: widthMm, customHeightMm: BADGE_CUSTOM_BOUNDS.height.min, nameSpacePct: design.nameSpacePct }, { freeText: true, phone: true })
+      ?.minHeightMm ?? null;
   const perSheet = (size: (typeof BADGE_SIZES)[number]) =>
     size === "custom" ? null : badgeSheetGrid(badgePaper({ size, customWidthMm: 0, customHeightMm: 0 })).perSheet;
   // The palette's colours the band may wear, and a kept colour that is not one of them (an imported event
@@ -207,7 +213,12 @@ export default async function BadgeDesignPanel({
   // «VOLUNTAR» as the page's language prints it: the sample of the one badge's band shows the club's own word.
   const bandWord = await badgeLabelIn(design, locale);
   const roleAside = design.labelRo ? `${design.labelRo} / ${design.labelEn}` : t("badges.design.labelDefaultAside");
-  const writingAside = design.writingLine ? t("badges.design.writingLine") : t("badges.design.writingPlain");
+  // «Locul pentru nume»'s closed line: the space for the name when it is not the default, then the line for the name; the logo has
+  // its own fold and its own closed line (§969).
+  const writingAside = words(
+    design.nameSpacePct !== DEFAULT_BADGE_NAME_SPACE && t("badges.design.nameSpaceAside", { pct: String(design.nameSpacePct) }),
+    design.writingLine ? t("badges.design.writingLine") : t("badges.design.writingPlain"),
+  );
   // The club's logo as a watermark (§965), in its own fold (§969): the level, and while it is drawn the share of the badge's width it is
   // drawn at — the very box the sheet and the picture draw, never the number typed: «Mediu · 30%», «Mediu · 24% (cât încape)» when its room
   // keeps it under the size asked, «Mediu · nu încape» when no logo fits.
@@ -511,12 +522,25 @@ export default async function BadgeDesignPanel({
             </Stack>
           </Panel>
 
-          {/* «Locul pentru nume»: no name is printed; «Nume:» and, if wanted, one faint line for the marker. */}
+          {/* «Locul pentru nume»: no name is printed; how much of the badge's height it takes, «Nume:» and, if wanted, one faint line
+              for the marker. The club's logo has its own fold below. */}
           <Panel glyph="badgeWriting" collapsible level={5} title={t("badges.design.sections.writing")} aside={writingAside} data-testid="badge-section-writing">
             <Stack spacing={1.5}>
               <Typography variant="caption" color="text.secondary">
                 {t("badges.design.writingHelp")}
               </Typography>
+              {droppedNote("nameSpacePct")}
+              {/* «Spațiul pentru nume» (§NNN): the fold's first box — the bands at the top share what it leaves; the preview follows it unsaved. */}
+              <RecallField
+                name={box("nameSpacePct")}
+                type="number"
+                label={t("badges.design.nameSpace")}
+                helperText={t("badges.design.nameSpaceHelp")}
+                defaultValue={String(design.nameSpacePct)}
+                slotProps={{ htmlInput: { min: BADGE_NAME_SPACE.min, max: BADGE_NAME_SPACE.max, step: 1, inputMode: "numeric" }, inputLabel: { shrink: true } }}
+                sx={{ width: { sm: 320 } }}
+                data-testid="badge-name-space"
+              />
               <CheckboxField name={box("writingLine")} defaultChecked={design.writingLine}>
                 {t("badges.design.writingLine")}
               </CheckboxField>
