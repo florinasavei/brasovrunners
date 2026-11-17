@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.57-2026-11-17
+
+- **Every volunteer agreement in one PDF** — «Contractele (PDF)» and «De semnat pe hârtie (PDF)» on the «Voluntari» list print the chosen event's agreements at once — the accepted copies and the sheets to sign, or the sheets alone — each person from a new page, in their own language. §966.
 ## BR-V4.56-2026-11-17
 
 - **The club's logo as a watermark on the volunteers' badges** — «Logo-ul clubului jos, ca filigran» in the badge designer puts the club's logo, large and pale, at the bottom of every badge under «Nume:», «Puțin vizibil», «Mediu» or «Bine vizibil»; the name written in marker reads over it, the preview shows it before the save, and nothing else on the badge moves. §965.

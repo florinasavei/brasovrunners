@@ -261,6 +261,28 @@ export function idDocumentsNoticeFor(input: Pick<DeclarationPdfInput, "entries" 
 }
 
 export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<Buffer> {
+  return renderDeclarationParts([input], { locale: input.locale, generatedAt: input.generatedAt });
+}
+
+/**
+ * One document of a file that holds several (§966): its entries, the words they are drawn with — each part in its own
+ * language — and the footer's second line. A part counts its own pages, «Pagina 1 din 2» from its first page, so a
+ * printed stack of them reads as the separate documents they are.
+ */
+export type DeclarationPart = Pick<DeclarationPdfInput, "entries" | "labels" | "idDocumentsNotice">;
+
+/**
+ * Several documents drawn into one file, one after the other (§966; the owner, 2026-11-17, of the volunteer agreements: «și
+ * vreau să pot printa și contractul de voluntariat, să am la fața locului»), each exactly as `renderDeclarationPdf` draws it
+ * on its own — its pages, its footers, its own page count — so the desk prints one file in place of dozens. pdfkit cannot
+ * append one finished PDF to another; every part is drawn into the one document instead. The file's language and its
+ * metadata (the first part's first entry, as a lone document's) are `file`'s and the first part's; at least one part, which
+ * may hold no entry: it is then the page that says so.
+ *
+ * A lone document is one part, and its file is byte for byte what it was before parts existed: the same calls, in the same
+ * order, on the same document (`tests/integration/volunteers/agreements-route.test.ts` holds the volunteer agreement to it).
+ */
+export async function renderDeclarationParts(parts: readonly [DeclarationPart, ...DeclarationPart[]], file: { locale: string; generatedAt: Date }): Promise<Buffer> {
   const [regular, bold, hand, logo] = await Promise.all([
     readFile(path.join(ASSETS, "Roboto-Regular.ttf")),
     readFile(path.join(ASSETS, "Roboto-Bold.ttf")),
@@ -269,20 +291,21 @@ export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<
   ]);
   LOGO = logo;
 
-  const first = input.entries[0];
+  const labels = parts[0].labels;
+  const first = parts[0].entries[0];
   const doc = new PDFDocument({
     size: "A4",
     margins: MARGIN,
     bufferPages: true,
     autoFirstPage: false,
     font: regular as unknown as string,
-    lang: input.locale,
+    lang: file.locale,
     info: {
-      Title: first ? `${first.title} — ${first.eventTitle}` : input.labels.organization,
-      Author: input.labels.organization,
-      Subject: first ? `${input.labels.version} ${first.version} · sha256 ${first.contentSha256}` : "",
-      CreationDate: input.generatedAt,
-      ModDate: input.generatedAt,
+      Title: first ? `${first.title} — ${first.eventTitle}` : labels.organization,
+      Author: labels.organization,
+      Subject: first ? `${labels.version} ${first.version} · sha256 ${first.contentSha256}` : "",
+      CreationDate: file.generatedAt,
+      ModDate: file.generatedAt,
     },
   });
   doc.registerFont("body", regular);
@@ -296,18 +319,33 @@ export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<
     doc.on("error", reject);
   });
 
-  // `openImage` is real and undeclared in `@types/pdfkit`; the object it returns is what `image()` reuses.
+  // `openImage` is real and undeclared in `@types/pdfkit`; the object it returns is what `image()` reuses — one lockup for every part.
   const lockup = (doc as unknown as { openImage(src: Buffer): unknown }).openImage(LOGO);
-  // How many pages the file has after each entry, so each page's footer names its own entry's version (§499).
+  for (const part of parts) drawPart(doc, part, lockup);
+
+  doc.end();
+  return finished;
+}
+
+/**
+ * One part into the document, after the pages already in it: its entries, then the footers of its own pages. Every
+ * entry starts on a new page (`drawEntry`), and sets the font, the size and the colour of everything it draws, so a part
+ * draws the same pages after another part as alone.
+ */
+function drawPart(doc: PDFKit.PDFDocument, part: DeclarationPart, lockup: unknown): void {
+  // The pages before this part: its own are counted from the next one.
+  const before = doc.bufferedPageRange();
+  const start = before.start + before.count;
+  // How many pages the part has after each entry, so each page's footer names its own entry's version (§499).
   const pagesAfterEach: number[] = [];
-  for (const entry of input.entries) {
-    drawEntry(doc, entry, input.labels, lockup);
-    pagesAfterEach.push(doc.bufferedPageRange().count);
+  for (const entry of part.entries) {
+    drawEntry(doc, entry, part.labels, lockup);
+    pagesAfterEach.push(doc.bufferedPageRange().count - before.count);
   }
-  const owners = pageOwners(input.entries, pagesAfterEach);
+  const owners = pageOwners(part.entries, pagesAfterEach);
 
   // A bundle with nothing in it is still a valid file that says so, rather than an error.
-  if (input.entries.length === 0) {
+  if (part.entries.length === 0) {
     doc.addPage();
     doc.font("body").fontSize(12).fillColor(COLOR.inkMuted).text("—", MARGIN.left, MARGIN.top);
   }
@@ -316,24 +354,26 @@ export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<
   // text on that page and when it was signed (§499) are what make a loose page say what it is. The
   // full hash is under each text's own signature block, where a printed copy is checked against it.
   const range = doc.bufferedPageRange();
-  const idDocumentsNotice = idDocumentsNoticeFor(input);
-  for (let i = range.start; i < range.start + range.count; i++) {
+  const end = range.start + range.count;
+  const count = end - start;
+  const idDocumentsNotice = idDocumentsNoticeFor(part);
+  for (let i = start; i < end; i++) {
     doc.switchToPage(i);
     const bottom = doc.page.margins.bottom;
     doc.page.margins.bottom = 0;
     const y = PAGE.height - MARGIN.bottom + DECLARATION_FOOTER.gap;
     doc.moveTo(MARGIN.left, y - 8).lineTo(PAGE.width - MARGIN.right, y - 8).strokeColor(COLOR.line).lineWidth(0.5).stroke();
-    const pageLabel = input.labels.page(i + 1, range.count);
+    const pageLabel = part.labels.page(i - start + 1, count);
     // The left line ends where the page count begins, measured, whatever length the language gives the date.
     const pageLabelWidth = doc.font("body").fontSize(DECLARATION_FOOTER.size).widthOfString(pageLabel);
     doc
       .fillColor(COLOR.inkMuted)
-      .text(declarationFooterLine(owners[i - range.start], input.labels), MARGIN.left, y, { width: TEXT_WIDTH - pageLabelWidth - 8, lineBreak: false })
+      .text(declarationFooterLine(owners[i - start], part.labels), MARGIN.left, y, { width: TEXT_WIDTH - pageLabelWidth - 8, lineBreak: false })
       .text(pageLabel, MARGIN.left, y, { width: TEXT_WIDTH, align: "right", lineBreak: false });
     let next = y + DECLARATION_FOOTER.size + 3;
     // The page's own entry's proof of signing (§556), on one line: a 64-character hash is long, so the
     // line is set a step smaller until it fits the width rather than wrapping into the notice below.
-    const proof = declarationProofLine(owners[i - range.start], input.labels);
+    const proof = declarationProofLine(owners[i - start], part.labels);
     if (proof) {
       let size = DECLARATION_FOOTER.size - 1;
       while (size > 5 && doc.font("body").fontSize(size).widthOfString(proof) > TEXT_WIDTH) size -= 0.5;
@@ -349,9 +389,6 @@ export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<
     }
     doc.page.margins.bottom = bottom;
   }
-
-  doc.end();
-  return finished;
 }
 
 /** The lockup at the head of each declaration: 140 points wide, as tall as its own proportion makes it (§885). */
