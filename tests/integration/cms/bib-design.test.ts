@@ -180,7 +180,7 @@ describe("§249 the bib's design, saved and read back", () => {
     // Nor «Fără linia punctată pe tăietură» (§955): the dashed line every sheet of two printed.
     const footerKeys = [
       "showEmail", "showPartners", "showEventInFooter", "showWebsite", "footerText", "headerImageCrop", "sponsorImageCrop", "member", "numberFormat", "sponsorPlace", "showProfile", "showEmergency", "emergencyPhone", "emergencyUpsideDown", "showDistance", "numberStubs", "showCheckpoints", "showCheckpointTimes", "showProfileScale",
-      "profileSource", "profileImageSrc", "showProfileFigures", "profileFiguresPlace", "profileOrientation", "emergencyLabel", "emergencyPhoneLabel", "emergencyPhone2", "emergencyPhone2Label", "emergencyPhone3", "emergencyPhone3Label",
+      "profileSource", "profileImageSrc", "showProfileFigures", "profileFiguresPlace", "profileOrientation", "emergencyLabel", "emergencyPhoneLabel", "emergencyPhone2", "emergencyPhone2Label", "emergencyPhone3", "emergencyPhone3Label", "emergencyPhone4", "emergencyPhone4Label",
       "eliteNumber", "eliteSponsors",
       "nameScale", "bandBleed",
       "hideCutLine",

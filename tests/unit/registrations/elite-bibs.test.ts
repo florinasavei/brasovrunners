@@ -80,15 +80,12 @@ describe("§895 the two design ticks", () => {
     expect([values.eliteNumber, values.eliteSponsors]).toEqual([true, false]);
   });
 
-  it("decide the number, the sponsors' row and the stubs of an elite bib", () => {
-    const off = { eliteNumber: false, eliteSponsors: false, numberStubs: true };
-    expect(bibEliteParts(off, { bibNumber: 7 })).toEqual({ number: null, sponsors: false, stubs: false });
-    // The number only when ticked AND the line has one.
-    expect(bibEliteParts({ ...off, eliteNumber: true }, { bibNumber: 7 })).toEqual({ number: 7, sponsors: false, stubs: false });
-    expect(bibEliteParts({ ...off, eliteNumber: true }, { bibNumber: null }).number).toBeNull();
-    // The stubs only on a sponsors' row, with a number to repeat.
-    expect(bibEliteParts({ ...off, eliteNumber: true, eliteSponsors: true }, { bibNumber: 7 })).toEqual({ number: 7, sponsors: true, stubs: true });
-    expect(bibEliteParts({ ...off, eliteSponsors: true }, { bibNumber: 7 })).toEqual({ number: null, sponsors: true, stubs: false });
+  it("§NNN never print a number on an elite bib, whatever the design held — the sponsors' row is the one choice left", () => {
+    // The name alone (the owner, 2026-11-17: «Doar numele, fără număr»): the old tick is read no more, so no number and no stubs.
+    expect(bibEliteParts({ eliteSponsors: false })).toEqual({ number: null, sponsors: false, stubs: false });
+    expect(bibEliteParts({ eliteSponsors: true })).toEqual({ number: null, sponsors: true, stubs: false });
+    // A design that still holds the old tick ticked draws no number either.
+    expect(bibEliteParts({ eliteNumber: true, eliteSponsors: true, numberStubs: true } as never)).toEqual({ number: null, sponsors: true, stubs: false });
   });
 });
 

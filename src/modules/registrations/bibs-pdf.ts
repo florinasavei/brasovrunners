@@ -42,7 +42,7 @@ import {
   bibProfileRowHeight,
   bibStubScale,
 } from "./bib-geometry";
-import { type BibEliteEntry, bibElite, bibEliteParts, eliteBibName } from "./bib-elite";
+import { type BibEliteEntry, bibElite, bibEliteParts, eliteBibName, eliteLineBibName } from "./bib-elite";
 import { bibHeader, bibTitleWidth } from "./bib-header";
 import type { BibRow } from "./bibs";
 import { formatRaceNumber } from "./domain/race-number";
@@ -84,6 +84,12 @@ import { formatRaceNumber } from "./domain/race-number";
 export type BibSheetRow = {
   bibNumber: BibRow["bibNumber"];
   registeredName: string | null;
+  /**
+   * «BIB-uri goale» (§NNN; the owner, 2026-11-17: «vreau și număr GOL, fără bib, fără nimic»): the race's bib with no
+   * number, no name and no line to write one on — the header, the strip, the phones, the sponsors and the small print
+   * only; the club writes on it by hand. `bibNumber` is not drawn (nor its stubs) and `registeredName` is not read.
+   */
+  blank?: boolean;
   /**
    * A member's bib (§664): the members' header and label over the same number, name and small
    * print. Drawn only while the design's members' switch is on; a spare is never a member's.
@@ -461,8 +467,10 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     const top = slot.y + BIB_MARGIN;
     const bottom = top + BIB_CARD.height;
     const row = item.kind === "bib" ? item.row : null;
+    // «BIB-uri goale» (§NNN): no number, no stubs, no name and no line for one.
+    const blankBib = row?.blank === true;
     // An elite bib (§895): the name where the number goes; the number and the sponsors' row only as the design ticks them.
-    const elite = item.kind === "elite" ? { entry: item.entry, ...bibEliteParts(design, item.entry) } : null;
+    const elite = item.kind === "elite" ? { entry: item.entry, ...bibEliteParts(design) } : null;
     const asMember = row?.member === true;
     // The members' design only while the switch is on (§664): their header, or their whole card (§695).
     const card = asMember ? memberCard : null;
@@ -472,7 +480,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       two stubs, with the number repeated and no picture (§750). An elite bib has it only with its tick (§895).
     */
     const rowPicture = elite && !elite.sponsors ? null : sponsorPicture;
-    const rowStubs = elite ? elite.stubs : stubs;
+    const rowStubs = elite ? elite.stubs : stubs && !blankBib;
     const sponsorHeight = rowPicture || rowStubs ? L.sponsorHeight : 0;
     const footerLines = card ? card.footer.lines : header.footer.lines;
     const footerHeight = card ? card.footer.height : header.footer.height;
@@ -641,7 +649,9 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     // As the event writes it (§735): «007» under «Trei cifre»; its length sizes it, as ever. An elite bib's own number, or none.
     const digits =
       item.kind === "bib"
-        ? formatRaceNumber(item.row.bibNumber, design.numberFormat)
+        ? blankBib
+          ? ""
+          : formatRaceNumber(item.row.bibNumber, design.numberFormat)
         : elite && elite.number !== null
           ? formatRaceNumber(elite.number, design.numberFormat)
           : "";
@@ -703,7 +713,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
         });
     };
 
-    if (nameAbove) drawName(top + L.bandHeight);
+    if (nameAbove && !blankBib) drawName(top + L.bandHeight);
 
     if (elite) {
       /*
@@ -720,7 +730,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
         doc.font("bold").fontSize(layout.number.size).fillColor(ink);
         doc.text(digits, left + (BIB_CARD.width - doc.widthOfString(digits)) / 2, numberTop + layout.number.top, { lineBreak: false });
       }
-    } else {
+    } else if (digits) {
       doc.font("bold").fontSize(numberSize).fillColor(ink);
       const numberHeight = doc.heightOfString(digits, { width: BIB_CARD.width, lineBreak: false });
       doc.text(digits, left, numberTop + (numberArea - numberHeight) / 2, {
@@ -731,7 +741,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     }
 
     // The name under the number, large enough to read at a finish line.
-    if (showName && !nameAbove) drawName(regionFoot - stripeHeight - extrasHeight - nameBlock);
+    if (showName && !nameAbove && !blankBib) drawName(regionFoot - stripeHeight - extrasHeight - nameBlock);
 
     /*
       The route's profile (§750): a row of its own under the name, `profileHeight` points, so it cannot
@@ -974,7 +984,8 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const pages: BibSheetPage<SheetItem>[] = input.elite
     ? sheetPages(
         [
-          ...input.elite.map((entry): SheetItem => ({ kind: "elite", entry, member: false })),
+          // A line of the list prints its first word, as a registration its first name (§NNN).
+          ...input.elite.map((entry): SheetItem => ({ kind: "elite", entry: { ...entry, name: eliteLineBibName(entry.name) }, member: false })),
           ...input.rows.map(eliteOf).filter((item): item is SheetItem => item !== null),
         ],
         { layout: input.layout, membersOn: false },

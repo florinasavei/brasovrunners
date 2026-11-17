@@ -3445,7 +3445,10 @@
         "emergencyPhone3": "Al treilea telefon (opțional)",
         "emergencyPhone3Help": "Pe același rând, după al doilea. Poate fi și un număr scurt, de exemplu 112.",
         "emergencyPhone3Placeholder": "112",
-        "emergencyPhone3Label": "Numele de lângă al treilea telefon"
+        "emergencyPhone3Label": "Numele de lângă al treilea telefon",
+        "emergencyPhone4": "Al patrulea telefon (opțional)",
+        "emergencyPhone4Help": "Pe același rând, după al treilea. De exemplu 112.",
+        "emergencyPhone4Label": "Numele de lângă al patrulea telefon"
       },
       "bibColour": "Culoarea numerelor de concurs (BIB)",
       "bibColourHelp": "Banda de sus a numărului tipărit, cea cu logo-ul clubului și cursa pe ea. „Culoarea clubului” dacă nu vrei una anume.",
@@ -7339,6 +7342,10 @@
       "downloadSpares": "Retipărește rezervele libere (PDF)",
       "sparesFree": "Rezervate pentru masă: {from}–{to}, libere încă {free} din {total}. Retipărirea le pune doar pe cele libere.",
       "sparesNone": "Rezervate pentru masă: {from}–{to}, date toate. Tipărește altele dacă mai e nevoie.",
+      "blankTitle": "BIB-uri goale (fără număr și fără nume)",
+      "blankHelp": "BIB-ul cursei fără număr și fără nume, ca să le scrii de mână. Nu se rezervă niciun număr. Între 1 și {max} odată.",
+      "blankCount": "Câte",
+      "blankDownload": "Descarcă BIB-urile goale",
       "sparesTitle": "Numere de rezervă pentru înscrierile de la fața locului",
       "sparesLine": "{from}–{to}, libere: {free}",
       "sparesLineNone": "Niciunul rezervat",
@@ -7359,9 +7366,9 @@
       "eliteHelp": "Numele lor se tipărește mare, în locul numărului. Nu sunt înscrieri: nu ocupă loc, nu primesc emailuri; se numără la kituri, la start și la BIB-uri; pe site apar doar cu «Apare pe site».",
       "eliteEmpty": "Niciun nume pe listă.",
       "eliteName": "Numele de pe BIB",
-      "eliteNameHelp": "Cum se tipărește, cel mult {max} de caractere. Se micșorează cât să încapă, pe un rând sau două.",
+      "eliteNameHelp": "Pe BIB se tipărește doar primul cuvânt (prenumele), mare, ca la cei înscriși. Cel mult {max} de caractere.",
       "eliteNumber": "Număr (opțional)",
-      "eliteNumberHelp": "Se tipărește sub nume doar cu «Număr pe BIB-urile de elită» bifat. Doar un număr liber, care apoi nu se mai dă nimănui.",
+      "eliteNumberHelp": "Nu se tipărește pe BIB: BIB-ul de elită are doar numele. Numărul rămâne rezervat și nu se mai dă nimănui.",
       "eliteNumberShown": "nr. {number}",
       "eliteAdd": "Adaugă pe lista de elită",
       "eliteAdding": "Se adaugă…",
@@ -7374,7 +7381,7 @@
       "eliteSampleCaption": "Așa se tipărește un BIB de elită, cu designul salvat și un nume de probă.",
       "eliteRegistered": "cu înscriere",
       "eliteRegisteredHelp": "Un alergător înscris se marchează din lista de înscrieri: «⋮» → «Marchează ca elită». Rămâne înscris și apare aici cu starea lui; BIB-ul de elită i se tipărește când e confirmat.",
-      "eliteRegisteredOnce": "Foaia obișnuită îi tipărește și ea, tot ca BIB-uri de elită: tipărește-i dintr-o singură foaie, nu din amândouă.",
+      "eliteRegisteredOnce": "Foaia obișnuită nu-i mai tipărește: BIB-urile lor sunt doar în foaia de elită, ca să nu le ai de două ori.",
       "eliteInResults": "Apare în clasament",
       "eliteOnSite": "Apare pe site",
       "eliteTicksHelp": "Bifează «Apare pe site» doar cu acordul persoanei.",
@@ -10414,7 +10421,9 @@
             "emergencyPhone2": "Număr: al doilea telefon",
             "emergencyPhone2Label": "Număr: numele celui de-al doilea telefon",
             "emergencyPhone3": "Număr: al treilea telefon",
-            "emergencyPhone3Label": "Număr: numele celui de-al treilea telefon"
+            "emergencyPhone3Label": "Număr: numele celui de-al treilea telefon",
+            "emergencyPhone4": "Număr: al patrulea telefon",
+            "emergencyPhone4Label": "Număr: numele celui de-al patrulea telefon"
           }
         },
         "translations": {
