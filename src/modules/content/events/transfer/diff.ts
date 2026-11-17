@@ -254,6 +254,11 @@ export const FIELD_LABELS = [
   "badges.design.writingLine",
   // «Logo-ul clubului jos, ca filigran» (§965): how visible the club's logo is at the badge's foot.
   "badges.design.footerLogo",
+  // Its size, the space round it and its two moves (§NNN).
+  "badges.design.footerLogoSizePct",
+  "badges.design.footerLogoPaddingMm",
+  "badges.design.footerLogoOffsetXMm",
+  "badges.design.footerLogoOffsetYMm",
   "badges.design.showFreeText",
   "badges.design.freeTextRo",
   "badges.design.freeTextEn",

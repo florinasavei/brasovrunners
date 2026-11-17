@@ -36,7 +36,9 @@ import {
 } from "../badge-design";
 import {
   BADGE_CUSTOM_BOUNDS,
+  BADGE_FOOTER_LOGO_SETTINGS,
   BADGE_FOOTER_LOGOS,
+  type BadgeFooterLogoSetting,
   BADGE_SIZE_PRESETS,
   BADGE_SIZES,
   badgeImageSize,
@@ -117,6 +119,10 @@ export default async function BadgeDesignPanel({
     [box("labelRo")]: t("badges.design.labelRo"),
     [box("labelEn")]: t("badges.design.labelEn"),
     [box("footerLogo")]: t("badges.design.footerLogo"),
+    [box("footerLogoSizePct")]: t("badges.design.footerLogoSizePct"),
+    [box("footerLogoPaddingMm")]: t("badges.design.footerLogoPaddingMm"),
+    [box("footerLogoOffsetXMm")]: t("badges.design.footerLogoOffsetXMm"),
+    [box("footerLogoOffsetYMm")]: t("badges.design.footerLogoOffsetYMm"),
     [box("freeTextRo")]: t("badges.design.freeTextRo"),
     [box("freeTextEn")]: t("badges.design.freeTextEn"),
     [box("markerLabelRo")]: t("badges.design.markerLabelRo"),
@@ -198,10 +204,23 @@ export default async function BadgeDesignPanel({
   // «VOLUNTAR» as the page's language prints it: the sample of the one badge's band shows the club's own word.
   const bandWord = await badgeLabelIn(design, locale);
   const roleAside = design.labelRo ? `${design.labelRo} / ${design.labelEn}` : t("badges.design.labelDefaultAside");
-  // The club's logo as a watermark (§965) is said in the closed line only when it is drawn.
-  const writingAside = words(
-    design.writingLine ? t("badges.design.writingLine") : t("badges.design.writingPlain"),
-    design.footerLogo !== "off" && t(`badges.design.footerLogoAside.${design.footerLogo}`),
+  const writingAside = design.writingLine ? t("badges.design.writingLine") : t("badges.design.writingPlain");
+  // The club's logo as a watermark (§965), in its own fold (§NNN): the level, and while it is drawn, its size — «Mediu · 67%».
+  const footerLogoAside = words(
+    t(`badges.design.footerLogos.${design.footerLogo}`),
+    design.footerLogo !== "off" && t("badges.design.footerLogoSizeAside", { size: String(design.footerLogoSizePct) }),
+  );
+  /** One of the logo's four numbers (§NNN): a native number box within its bounds, a whole step, its help line under it. */
+  const logoNumber = (key: BadgeFooterLogoSetting, label: string, help: string) => (
+    <RecallField
+      name={box(key)}
+      type="number"
+      label={label}
+      helperText={help}
+      defaultValue={String(design[key])}
+      fullWidth
+      slotProps={{ htmlInput: { min: BADGE_FOOTER_LOGO_SETTINGS[key].min, max: BADGE_FOOTER_LOGO_SETTINGS[key].max, step: 1, inputMode: "numeric" }, inputLabel: { shrink: true } }}
+    />
   );
   // The Romanian line only, cut short: the closed line sits in the section's heading, and a typed text may be 60 characters.
   const freeLetters = Array.from(design.freeTextRo);
@@ -474,8 +493,7 @@ export default async function BadgeDesignPanel({
             </Stack>
           </Panel>
 
-          {/* «Locul pentru nume»: no name is printed; «Nume:» and, if wanted, one faint line for the marker — and, if wanted, the club's
-              logo large and pale under them (§965), with how visible it is. */}
+          {/* «Locul pentru nume»: no name is printed; «Nume:» and, if wanted, one faint line for the marker. */}
           <Panel glyph="badgeWriting" collapsible level={5} title={t("badges.design.sections.writing")} aside={writingAside} data-testid="badge-section-writing">
             <Stack spacing={1.5}>
               <Typography variant="caption" color="text.secondary">
@@ -484,7 +502,15 @@ export default async function BadgeDesignPanel({
               <CheckboxField name={box("writingLine")} defaultChecked={design.writingLine}>
                 {t("badges.design.writingLine")}
               </CheckboxField>
-              {droppedNote("footerLogo")}
+            </Stack>
+          </Panel>
+
+          {/* «Logo-ul clubului (filigran)» (§965, a fold of its own since §NNN — the owner could not find it in «Locul pentru nume»): how
+              visible the club's logo is, large and pale in the writing area, then its size, the space kept round it and its two moves. Every
+              box is always there and always posted, «Fără» or not; the preview follows each as it is typed. */}
+          <Panel glyph="pictures" collapsible level={5} title={t("badges.design.sections.footerLogo")} aside={footerLogoAside} data-testid="badge-section-footer-logo">
+            <Stack spacing={1.5}>
+              {droppedNote("footerLogo", "footerLogoSizePct", "footerLogoPaddingMm", "footerLogoOffsetXMm", "footerLogoOffsetYMm")}
               <RecallField
                 select
                 name={box("footerLogo")}
@@ -500,6 +526,14 @@ export default async function BadgeDesignPanel({
                   </option>
                 ))}
               </RecallField>
+              <Stack {...PAIR}>
+                {logoNumber("footerLogoSizePct", t("badges.design.footerLogoSizePct"), t("badges.design.footerLogoSizeHelp"))}
+                {logoNumber("footerLogoPaddingMm", t("badges.design.footerLogoPaddingMm"), t("badges.design.footerLogoPaddingHelp"))}
+              </Stack>
+              <Stack {...PAIR}>
+                {logoNumber("footerLogoOffsetXMm", t("badges.design.footerLogoOffsetXMm"), t("badges.design.footerLogoOffsetXHelp"))}
+                {logoNumber("footerLogoOffsetYMm", t("badges.design.footerLogoOffsetYMm"), t("badges.design.footerLogoOffsetYHelp"))}
+              </Stack>
             </Stack>
           </Panel>
 

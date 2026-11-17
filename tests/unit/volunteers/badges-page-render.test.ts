@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { type ComponentProps, createElement, type ReactElement } from "react";
 import { renderToReadableStream } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { DEFAULT_BADGE_DESIGN } from "@/modules/volunteers/badges/badge-design";
+import { type BadgeDroppedKey, DEFAULT_BADGE_DESIGN } from "@/modules/volunteers/badges/badge-design";
 import type { BadgeRole, BadgeSingleStart } from "@/modules/volunteers/badges/badges";
 import { catalogueOf } from "@/i18n/catalogue";
 
@@ -314,8 +314,10 @@ describe("§965 «Logo-ul clubului jos, ca filigran» in the designer", () => {
     html(() => BadgeDesignPanel({ eventId: EVENT, locale: language, design, dropped, sampleRole: ROLES[0].id, version: "abc" }), language);
   const select = (page: string) => /<select[^>]*name="badge\.design\.footerLogo"[^>]*>[\s\S]*?<\/select>/.exec(page)?.[0] ?? "";
   const options = (page: string) => [...select(page).matchAll(/<option value="([^"]*)"( selected="")?>([^<]*)<\/option>/g)].map(([, value, selected, words]) => ({ value, selected: Boolean(selected), words }));
+  /** The logo's own fold (§NNN), from its heading to the next fold's. */
+  const logoFold = (page: string) => page.slice(page.indexOf('data-testid="badge-section-footer-logo"'), page.indexOf('data-testid="badge-section-marker"'));
 
-  it("is a native select of four choices in «Locul pentru nume», with its help line, the platform's «Fără» chosen for a design that never chose", async () => {
+  it("is a native select of four choices in the logo's own fold (§NNN), with its help line, the platform's «Fără» chosen for a design that never chose", async () => {
     const page = await draw();
     expect(options(page)).toEqual([
       { value: "off", selected: true, words: "Fără" },
@@ -325,29 +327,32 @@ describe("§965 «Logo-ul clubului jos, ca filigran» in the designer", () => {
     ]);
     expect(page).toContain("Logo-ul clubului jos, ca filigran");
     expect(page).toContain("Logo-ul clubului mare și palid în partea de jos a ecusonului. Numele scris cu markerul se citește peste el.");
-    // Beside the writing area's other look choice, in the section of the place it is drawn in.
-    const at = page.indexOf('name="badge.design.footerLogo"');
-    expect(at).toBeGreaterThan(page.indexOf('data-testid="badge-section-writing"'));
-    expect(at).toBeLessThan(page.indexOf('data-testid="badge-section-marker"'));
-    expect(at).toBeGreaterThan(page.indexOf('name="badge.design.writingLine"'));
-    // Off says nothing in the section's closed line; the preview's first address says off.
+    // In the fold of its own, right after «Locul pentru nume», which no longer holds it (§NNN: the owner could not find it there).
+    expect(logoFold(page)).toContain('name="badge.design.footerLogo"');
+    const writing = page.slice(page.indexOf('data-testid="badge-section-writing"'), page.indexOf('data-testid="badge-section-footer-logo"'));
+    expect(writing).toContain('name="badge.design.writingLine"');
+    expect(writing).not.toContain('name="badge.design.footerLogo"');
+    // Off is said as «Fără» in its own fold's closed line, never in the writing area's; the preview's first address says off.
     expect(page).not.toContain("Logo ca filigran");
     expect(page).toMatch(/badges\/preview\?[^"]*footerLogo=off/);
   });
 
-  it("keeps the chosen level selected, says it in the closed line, and draws the preview with it", async () => {
+  it("keeps the chosen level selected, says it in its fold's closed line — never in the writing area's — and draws the preview with it", async () => {
     const page = await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "medium" });
     expect(options(page).filter((option) => option.selected).map((option) => option.value)).toEqual(["medium"]);
-    expect(page).toContain("O linie subțire pentru nume · Logo ca filigran, mediu");
+    expect(logoFold(page)).toContain("Mediu · 67%");
     expect(page).toMatch(/badges\/preview\?[^"]*footerLogo=medium/);
-    expect(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "faint", writingLine: false })).toContain("Doar „Nume:” · Logo ca filigran, puțin vizibil");
-    expect(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "strong" })).toContain("Logo ca filigran, bine vizibil");
+    // «Locul pentru nume» says its own look alone.
+    expect(page).toContain("O linie subțire pentru nume");
+    expect(page).not.toContain("O linie subțire pentru nume · ");
+    expect(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "faint", writingLine: false })).not.toContain("Doar „Nume:” · ");
   });
 
-  it("says beside its section that a stored level could not be read", async () => {
+  it("says beside its fold that a stored level could not be read", async () => {
     const told = await draw(DEFAULT_BADGE_DESIGN, "ro", ["footerLogo"]);
-    const writing = told.slice(told.indexOf('data-testid="badge-section-writing"'), told.indexOf('data-testid="badge-section-marker"'));
-    expect(writing).toContain('data-testid="badge-dropped"');
+    expect(logoFold(told)).toContain('data-testid="badge-dropped"');
+    const writing = told.slice(told.indexOf('data-testid="badge-section-writing"'), told.indexOf('data-testid="badge-section-footer-logo"'));
+    expect(writing).not.toContain('data-testid="badge-dropped"');
     expect(await draw()).not.toContain('data-testid="badge-dropped"');
   });
 
@@ -361,7 +366,121 @@ describe("§965 «Logo-ul clubului jos, ca filigran» in the designer", () => {
     ]);
     expect(page).toContain("The club&#x27;s logo at the bottom, as a watermark");
     expect(page).toContain("The club&#x27;s logo, large and pale, at the bottom of the badge. The name written in marker reads over it.");
-    expect(page).toContain("A thin line for the name · Logo as a watermark, strong");
+    expect(logoFold(page)).toContain("Strong · 67%");
+    expect(page).not.toContain("A thin line for the name · ");
+  });
+});
+
+describe("§NNN «Logo-ul clubului (filigran)», a fold of its own, with the logo's size, space and place", () => {
+  const draw = (design = DEFAULT_BADGE_DESIGN, language: "ro" | "en" = "ro", dropped: BadgeDroppedKey[] = []) =>
+    html(() => BadgeDesignPanel({ eventId: EVENT, locale: language, design, dropped, sampleRole: ROLES[0].id, version: "abc" }), language);
+  const logoFold = (page: string) => page.slice(page.indexOf('data-testid="badge-section-footer-logo"'), page.indexOf('data-testid="badge-section-marker"'));
+  /** The fold's own heading: its title and its closed line, before its first control. */
+  const heading = (page: string) => logoFold(page).slice(0, logoFold(page).indexOf("<select"));
+  /** One number box of the fold, by its key: the `<input>` as drawn. */
+  const input = (page: string, key: string) => new RegExp(`<input[^>]*name="badge\\.design\\.${key}"[^>]*>`).exec(page)?.[0] ?? "";
+  const attribute = (tag: string, name: string) => new RegExp(`\\s${name}="([^"]*)"`).exec(tag)?.[1];
+  const BOXES = [
+    { key: "footerLogoSizePct", min: "10", max: "100", value: "67" },
+    { key: "footerLogoPaddingMm", min: "0", max: "20", value: "0" },
+    { key: "footerLogoOffsetXMm", min: "-100", max: "100", value: "0" },
+    { key: "footerLogoOffsetYMm", min: "-100", max: "100", value: "0" },
+  ] as const;
+
+  it("comes right after «Locul pentru nume», with the image's glyph, and holds the select and the four number boxes, in that order", async () => {
+    const page = await draw();
+    const order = ["badge-section-writing", "badge-section-footer-logo", "badge-section-marker", "badge-section-phone"].map((id) => page.indexOf(`data-testid="${id}"`));
+    expect(order.every((at) => at > -1)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    // The fold's own heading, folded like every section, with the glyph the house draws for a picture.
+    expect(heading(page)).toContain("Logo-ul clubului (filigran)");
+    expect(heading(page)).toContain('data-testid="ImageIcon"');
+    const fold = logoFold(page);
+    const controls = ["footerLogo", ...BOXES.map((box) => box.key)].map((key) => fold.indexOf(`name="badge.design.${key}"`));
+    expect(controls.every((at) => at > -1)).toBe(true);
+    expect([...controls].sort((a, b) => a - b)).toEqual(controls);
+    // Nothing else is posted from it: five controls, no more.
+    expect([...fold.matchAll(/name="badge\.design\.(\w+)"/g)].map((match) => match[1])).toEqual(["footerLogo", ...BOXES.map((box) => box.key)]);
+  });
+
+  it("draws each number as a native number box — whole steps within its bounds, the phone's numeric keyboard — at the design's value, always enabled", async () => {
+    const page = await draw();
+    for (const { key, min, max, value } of BOXES) {
+      const tag = input(page, key);
+      expect(tag, key).not.toBe("");
+      expect(attribute(tag, "type"), key).toBe("number");
+      expect(attribute(tag, "inputMode") ?? attribute(tag, "inputmode"), key).toBe("numeric");
+      expect(attribute(tag, "min"), key).toBe(min);
+      expect(attribute(tag, "max"), key).toBe(max);
+      expect(attribute(tag, "step"), key).toBe("1");
+      expect(attribute(tag, "value"), key).toBe(value);
+      // Posted whatever the level, «Fără» included: no box is disabled.
+      expect(tag, key).not.toMatch(/\sdisabled=/);
+    }
+    const moved = await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "strong", footerLogoSizePct: 90, footerLogoPaddingMm: 3, footerLogoOffsetXMm: -12, footerLogoOffsetYMm: 5 });
+    expect(BOXES.map(({ key }) => attribute(input(moved, key), "value"))).toEqual(["90", "3", "-12", "5"]);
+  });
+
+  it("says each box's label and help line in Romanian", async () => {
+    const fold = logoFold(await draw());
+    for (const words of [
+      "Mărimea logo-ului (% din lățimea ecusonului)",
+      "Cât de lat e logo-ul, din lățimea ecusonului. Se micșorează singur dacă nu încape.",
+      "Spațiu în jurul logo-ului (mm)",
+      "Spațiul păstrat liber în jurul logo-ului. Mai mult spațiu = logo mai mic.",
+      "Deplasare stânga–dreapta (mm)",
+      "Pozitiv = mai la dreapta, negativ = mai la stânga. Logo-ul rămâne în zona albă.",
+      "Deplasare sus–jos (mm)",
+      "Pozitiv = mai jos, negativ = mai sus. Logo-ul rămâne în zona albă.",
+    ]) {
+      expect(fold, words).toContain(words);
+    }
+  });
+
+  it("says the level in its closed line, and the size while the logo is drawn: «Fără», «Mediu · 67%», «Bine vizibil · 90%»", async () => {
+    expect(heading(await draw())).toContain("Fără");
+    expect(heading(await draw())).not.toContain("%");
+    expect(heading(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "medium" }))).toContain("Mediu · 67%");
+    expect(heading(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "strong", footerLogoSizePct: 90 }))).toContain("Bine vizibil · 90%");
+    expect(heading(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "faint", footerLogoSizePct: 10 }))).toContain("Puțin vizibil · 10%");
+    // A size kept while the logo is off is not said: off draws nothing.
+    expect(heading(await draw({ ...DEFAULT_BADGE_DESIGN, footerLogoSizePct: 40 }))).not.toContain("40%");
+  });
+
+  it("draws the preview's first address with the four numbers, as the island redraws it", async () => {
+    const page = await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "medium", footerLogoSizePct: 80, footerLogoPaddingMm: 4, footerLogoOffsetXMm: -30, footerLogoOffsetYMm: 7 });
+    const src = /badges\/preview\?[^"]*/.exec(page)?.[0].replaceAll("&amp;", "&") ?? "";
+    const params = new URLSearchParams(src.slice(src.indexOf("?") + 1));
+    expect([params.get("footerLogoSizePct"), params.get("footerLogoPaddingMm"), params.get("footerLogoOffsetXMm"), params.get("footerLogoOffsetYMm")]).toEqual(["80", "4", "-30", "7"]);
+  });
+
+  it("names the box beside a refusal by its label, and says beside the fold that a stored number could not be read", async () => {
+    const source = readFileSync("src/modules/volunteers/badges/ui/BadgeDesignPanel.tsx", "utf8");
+    for (const { key } of BOXES) expect(source, key).toContain(`[box("${key}")]: t("badges.design.${key}")`);
+    for (const key of BOXES.map((box) => box.key)) {
+      const told = await draw(DEFAULT_BADGE_DESIGN, "ro", [key]);
+      expect(logoFold(told), key).toContain('data-testid="badge-dropped"');
+    }
+  });
+
+  it("speaks English", async () => {
+    const page = await draw({ ...DEFAULT_BADGE_DESIGN, footerLogo: "medium", footerLogoSizePct: 50 }, "en");
+    expect(heading(page)).toContain("The club&#x27;s logo (watermark)");
+    expect(heading(page)).toContain("Medium · 50%");
+    const fold = logoFold(page);
+    for (const words of [
+      "Logo size (% of the badge&#x27;s width)",
+      "How wide the logo is, of the badge&#x27;s width. It shrinks by itself when it does not fit.",
+      "Space around the logo (mm)",
+      "Room kept clear around the logo. More room = a smaller logo.",
+      "Move left–right (mm)",
+      "Positive = further right, negative = further left. The logo stays in the white area.",
+      "Move up–down (mm)",
+      "Positive = lower, negative = higher. The logo stays in the white area.",
+    ]) {
+      expect(fold, words).toContain(words);
+    }
+    expect(heading(await draw(DEFAULT_BADGE_DESIGN, "en"))).toContain("None");
   });
 });
 
