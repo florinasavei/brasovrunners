@@ -345,7 +345,8 @@ describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view
     expect(printOf(page, classesIn(sectionTag))).not.toMatch(/display:none/);
     // The wide frame is printed whatever the sheet's width — after the screen's own rule, which hides it under `md` — and the
     // phone's blocks never.
-    const frame = classesIn(/<div class="[^"]*"><table[^>]*data-table-id="volunteer-plan"/.exec(plain)![0]);
+    // The frame carries its address since §NNN (the scrollbar above it finds it by it): any attributes, the table inside.
+    const frame = classesIn(/<div[^>]*class="[^"]*"[^>]*><table[^>]*data-table-id="volunteer-plan"/.exec(plain)![0]);
     expect(printOf(page, frame)).toMatch(/display:block/);
     const rules = rulesOf(page);
     expect(rules.indexOf(`@media print{.${frame[0]}{display:block`)).toBeGreaterThan(rules.indexOf(`.${frame[0]}{display:none`));
