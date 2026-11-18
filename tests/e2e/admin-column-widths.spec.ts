@@ -415,7 +415,8 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
           above: element.getBoundingClientRect().bottom <= frameElement.getBoundingClientRect().top + 0.5,
           position: getComputedStyle(element).position,
           top: Number.parseFloat(getComputedStyle(element).top),
-          headerBottom: document.querySelector("header")?.getBoundingClientRect().bottom ?? 0,
+          // The site header's own height: stuck at the window's top it ends there (the environment notice above it scrolls away).
+          header: document.querySelector("header")?.getBoundingClientRect().height ?? 0,
         };
       });
       expect(geometry.frameRoom).toBeGreaterThan(1);
@@ -424,7 +425,8 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
       expect(geometry.above).toBe(true);
       // Sticky under the site header, never behind it.
       expect(geometry.position).toBe("sticky");
-      expect(geometry.top).toBeGreaterThanOrEqual(geometry.headerBottom - 0.5);
+      expect(geometry.header).toBeGreaterThan(0);
+      expect(geometry.top).toBeGreaterThanOrEqual(geometry.header - 0.5);
 
       // The bar moves the frame…
       await bar.evaluate((element) => element.scrollTo({ left: 120 }));
