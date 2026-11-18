@@ -388,9 +388,16 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
     }
   });
 
-  test("§NNN a scrollbar at the top too: it moves the frame, the frame moves it, and it goes when the table fits", async ({ page }, testInfo) => {
+  test("§NNN a scrollbar at the top too: it moves the frame, the frame moves it, and it goes when the table fits", async ({ browserType }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "the bar is the wide table's: the phone's blocks have no columns to scroll");
-    test.setTimeout(90_000);
+    test.setTimeout(120_000);
+    // Headless Chromium starts with `--hide-scrollbars`: the bar would be a pixel tall, with no track and no thumb to drag.
+    // A browser of its own with the scrollbars drawn, as on a person's screen (`test.use`'s `launchOptions` would change the whole file's).
+    const browser = await browserType.launch({
+      executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined,
+      ignoreDefaultArgs: ["--hide-scrollbars"],
+    });
+    const page = await (await browser.newContext({ baseURL: testInfo.project.use.baseURL })).newPage();
     const seeded = await seed(`${testInfo.project.name}-${Date.now().toString(36)}`);
     try {
       // The small laptop of §943: the list's columns ask for more than this frame has.
@@ -444,6 +451,41 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
       await expect.poll(() => bar.evaluate((element) => Math.round(element.scrollWidth - element.clientWidth - element.scrollLeft))).toBe(0);
       await expect(frame).not.toHaveAttribute("data-more-end");
 
+      // A hand on the bar's thumb: the frame follows, and the bar is never written — no late echo of the frame's «scroll»
+      // pulls the thumb back under the pointer (the review's Chromium run: written 39 times, once 23 px back, mid-drag).
+      await frame.evaluate((element) => element.scrollTo({ left: 0 }));
+      await expect.poll(() => bar.evaluate((element) => Math.round(element.scrollLeft))).toBe(0);
+      await bar.evaluate((element) => {
+        const own = Object.getOwnPropertyDescriptor(Element.prototype, "scrollLeft") as PropertyDescriptor;
+        const record = { writes: 0, trail: [] as number[] };
+        (window as unknown as { barRecord: typeof record }).barRecord = record;
+        Object.defineProperty(element, "scrollLeft", {
+          configurable: true,
+          get: () => own.get?.call(element),
+          set: (value: number) => {
+            record.writes++;
+            own.set?.call(element, value);
+          },
+        });
+        element.addEventListener("scroll", () => record.trail.push(element.scrollLeft), { passive: true });
+      });
+      const track = await bar.boundingBox();
+      if (!track) throw new Error("the bar has no box");
+      // A track one can grab, not the pixel `--hide-scrollbars` leaves.
+      expect(track.height).toBeGreaterThanOrEqual(10);
+      const y = track.y + track.height - 6;
+      await page.mouse.move(track.x + 8, y);
+      await page.mouse.down();
+      for (let step = 1; step <= 40; step++) await page.mouse.move(track.x + 8 + step * 8, y);
+      await page.mouse.up();
+      const record = await page.evaluate(() => (window as unknown as { barRecord: { writes: number; trail: number[] } }).barRecord);
+      expect(record.trail.length).toBeGreaterThan(1);
+      expect(record.writes).toBe(0);
+      for (let index = 1; index < record.trail.length; index++) expect(record.trail[index]).toBeGreaterThanOrEqual(record.trail[index - 1] - 0.5);
+      const moved = await bar.evaluate((element) => element.scrollLeft);
+      expect(moved).toBeGreaterThan(0);
+      await expect.poll(() => frame.evaluate((element) => element.scrollLeft)).toBeCloseTo(moved, 0);
+
       // A screen where the table fits: no bar.
       await page.setViewportSize({ width: 3000, height: 900 });
       await expect.poll(() => frame.evaluate((element) => element.scrollWidth > element.clientWidth + 1)).toBe(false);
@@ -451,8 +493,28 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
       // Back to the laptop: back again.
       await page.setViewportSize({ width: 1000, height: 800 });
       await expect(bar).toBeVisible();
+
+      // A long list — the one row drawn forty times over, the browser's layout being the subject, not the rows — read
+      // halfway down: the bar has stayed at the window's top, under the site header, where its `top` puts it.
+      await frame.evaluate((element) => {
+        const body = element.querySelector("tbody") as HTMLTableSectionElement;
+        const row = body.querySelector("tr") as HTMLTableRowElement;
+        for (let copy = 0; copy < 40; copy++) body.append(row.cloneNode(true));
+      });
+      await bar.evaluate(() => window.scrollTo({ top: 0 }));
+      await page.evaluate(() => window.scrollBy(0, 600));
+      const stuck = await bar.evaluate((element) => ({
+        top: element.getBoundingClientRect().top,
+        sticky: Number.parseFloat(getComputedStyle(element).top),
+        frameBottom: (document.getElementById("table-frame-registrations") as HTMLElement).getBoundingClientRect().bottom,
+        scrolled: window.scrollY,
+      }));
+      expect(stuck.scrolled).toBeGreaterThanOrEqual(599);
+      expect(stuck.frameBottom).toBeGreaterThan(stuck.top);
+      expect(Math.abs(stuck.top - stuck.sticky)).toBeLessThanOrEqual(1);
     } finally {
       await cleanup(seeded);
+      await browser.close();
     }
   });
 

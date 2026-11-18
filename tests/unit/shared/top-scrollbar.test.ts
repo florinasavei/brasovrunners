@@ -4,7 +4,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
-import { keepInStep, mirrorContentWidth, overflowsSideways, watchScrollRow } from "@/shared/ui/scroll-row";
+import { isEcho, keepInStep, mirrorContentWidth, overflowsSideways, watchScrollRow } from "@/shared/ui/scroll-row";
 import { frameIdFor, TOP_SCROLLBAR_SX } from "@/shared/ui/top-scrollbar";
 import { ADMIN_TABLE_SURFACE } from "@/shared/ui/surface";
 import { HEADER_CLEARANCE_PX } from "@/theme/brand";
@@ -25,10 +25,17 @@ function scroller(scrollWidth: number, clientWidth: number) {
   const attrs = new Set<string>();
   const listeners = new Set<() => void>();
   let left = 0;
+  const say = () => {
+    if (el.later) el.pending = true;
+    else for (const listener of [...listeners]) listener();
+  };
   const el = {
     attrs,
     listeners,
     writes: 0,
+    /** As a browser does: «scroll» is said a frame later (`fire`), not inside the write. */
+    later: false,
+    pending: false,
     get scrollLeft() {
       return left;
     },
@@ -38,6 +45,12 @@ function scroller(scrollWidth: number, clientWidth: number) {
       const next = Math.max(0, Math.min(value, el.scrollWidth - el.clientWidth));
       if (next === left) return;
       left = next;
+      say();
+    },
+    /** The frame comes: the «scroll» held since the last move is said, once, with the position the box holds now. */
+    fire() {
+      if (!el.pending) return;
+      el.pending = false;
       for (const listener of [...listeners]) listener();
     },
     scrollWidth,
@@ -57,7 +70,7 @@ function scroller(scrollWidth: number, clientWidth: number) {
     /** A hand on the scrollbar: the position moves and the box says «scroll», with no write counted. */
     drag(value: number) {
       left = value;
-      for (const listener of [...listeners]) listener();
+      say();
     },
   };
   return el;
@@ -145,6 +158,56 @@ describe("§NNN watchScrollRow keeps a mirror in step", () => {
     expect(frame.listeners.size).toBe(0);
     bar.drag(0);
     expect(frame.scrollLeft).toBe(400);
+  });
+
+  it("answers no echo: the frame's late «scroll» never writes the bar back behind a hand that has moved it on", () => {
+    // The reviewer's drag in Chromium: the frame's «scroll» for the write came a frame later, and wrote the bar back 23 px.
+    const frame = Object.assign(scroller(1400, 1000), { later: true });
+    const bar = Object.assign(mirrorOf(frame, 1000), { later: true });
+    watchScrollRow(frame, undefined, undefined, undefined, bar);
+
+    bar.drag(250);
+    bar.fire();
+    expect(frame.scrollLeft).toBe(250);
+    expect(frame.writes).toBe(1);
+    // The hand moves on before the frame's echo of 250 is said.
+    bar.drag(300);
+    frame.fire();
+    expect(bar.writes).toBe(0);
+    expect(bar.scrollLeft).toBe(300);
+    // The bar's own «scroll» brings the frame over; that write's echo answers nothing either.
+    bar.fire();
+    expect(frame.scrollLeft).toBe(300);
+    frame.fire();
+    expect(bar.writes).toBe(0);
+    expect(frame.writes).toBe(2);
+
+    // The other way round: the frame scrolled by a hand, the bar's echo late, the frame already further.
+    frame.drag(340);
+    frame.fire();
+    expect(bar.scrollLeft).toBe(340);
+    expect(bar.writes).toBe(1);
+    frame.drag(380);
+    bar.fire();
+    expect(frame.writes).toBe(2);
+    expect(frame.scrollLeft).toBe(380);
+    frame.fire();
+    expect(bar.scrollLeft).toBe(380);
+    // Each echo was taken once: a hand's later move of the bar to a place it was once given still moves the frame.
+    bar.fire();
+    bar.drag(340);
+    bar.fire();
+    expect(frame.scrollLeft).toBe(340);
+  });
+
+  it("awaits no echo from a write the box could not make", () => {
+    const given: { value?: number } = {};
+    const to = { scrollLeft: 0 };
+    // A box at its end ignores the write (the setter keeps 0 here): no «scroll» will come, so none is awaited.
+    Object.defineProperty(to, "scrollLeft", { get: () => 0, set: () => undefined });
+    expect(keepInStep({ scrollLeft: 50 }, to, given)).toBe(true);
+    expect(given.value).toBeUndefined();
+    expect(isEcho({ scrollLeft: 50 }, given)).toBe(false);
   });
 
   it("follows the table's width: a column shown widens the bar's reach, a column hidden until it fits takes the bar away", () => {

@@ -108,15 +108,35 @@ export function mirrorContentWidth(mirrorClientWidth: number, scrollWidth: numbe
   return mirrorClientWidth + Math.max(0, scrollWidth - clientWidth);
 }
 
+/** The position one side was last given by the other, until that side's own «scroll» — the echo of the write — takes it. */
+export type GivenPosition = { value?: number };
+
 /**
- * One step of keeping two scrollers in step (§NNN): `to` takes `from`'s position only when they differ by a pixel or more.
- * The write makes `to` say «scroll» in its turn, and its listener finds them equal and writes nothing back — so the two
- * never answer each other for ever, a zoomed page's fractional positions included. Returns whether it wrote.
+ * One step of keeping two scrollers in step (§NNN): `to` takes `from`'s position only when they differ by a pixel or more,
+ * so a zoomed page's fractional positions never start a write. With `given`, it remembers the position `to` now holds,
+ * so `isEcho` knows `to`'s next «scroll» for the answer to this write rather than a hand's move. Returns whether it wrote.
  */
-export function keepInStep(from: { scrollLeft: number }, to: { scrollLeft: number }): boolean {
+export function keepInStep(from: { scrollLeft: number }, to: { scrollLeft: number }, given?: GivenPosition): boolean {
   if (Math.abs(from.scrollLeft - to.scrollLeft) < 1) return false;
+  const before = to.scrollLeft;
+  if (given) given.value = from.scrollLeft;
   to.scrollLeft = from.scrollLeft;
+  // A «scroll» said at once (a test's fake) already took it; a box that could not move says nothing, so nothing is awaited.
+  // Otherwise what the box holds now, clamped as it may be, is what its «scroll» will say.
+  if (given && given.value !== undefined) given.value = to.scrollLeft === before ? undefined : to.scrollLeft;
   return true;
+}
+
+/**
+ * Whether a «scroll» of `box` is the echo of the write `given` remembers (§NNN), not a hand's: the browser says «scroll» a
+ * frame after the write, when the other side's hand may already have moved on, and answering it would write the other side
+ * back to where it was — the thumb flickering back mid-drag, a running smooth scroll cut. The memory is taken either way:
+ * one write, one echo.
+ */
+export function isEcho(box: { scrollLeft: number }, given: GivenPosition): boolean {
+  const echo = given.value !== undefined && Math.abs(box.scrollLeft - given.value) < 1;
+  given.value = undefined;
+  return echo;
 }
 
 /**
@@ -126,7 +146,8 @@ export function keepInStep(from: { scrollLeft: number }, to: { scrollLeft: numbe
  * surface chips keeps the instance, so the row's scroll position survives and the cue must follow).
  * With `bar`, it also shows and moves the drawn scrollbar (`SCROLL_BAR_SX`) and hides the
  * browser's own while the drawn one is up. With `mirror` (§NNN), it shows a second scrollbar while the
- * scroller overflows, as far-reaching as the scroller, and keeps the two in step both ways (`keepInStep`):
+ * scroller overflows, as far-reaching as the scroller, and keeps the two in step both ways (`keepInStep`), the «scroll»
+ * that echoes its own write answering nothing (`isEcho`), so neither side is ever written back by a late echo:
  * the same scroll, resize and mutation that move the edge cue move the mirror, so a frame has one watcher.
  * The observers are constructors passed in, so a test can drive it without a browser. Returns the cleanup.
  */
@@ -137,7 +158,12 @@ export function watchScrollRow(
   bar?: ScrollBarElement,
   mirror?: ScrollMirrorElement,
 ): () => void {
-  const update = () => {
+  // What each side was last given by the other (§NNN): its next «scroll» is that write's echo, and answers nothing.
+  const givenFrame: GivenPosition = {};
+  const givenMirror: GivenPosition = {};
+  // `follow` false: this is the echo of the mirror's write, so the frame is where the mirror put it — or behind a hand
+  // that has moved the mirror on since, which the mirror's own «scroll» brings over.
+  const update = (follow = true) => {
     const left = Math.abs(el.scrollLeft);
     const room = el.scrollWidth - el.clientWidth;
     el.toggleAttribute("data-more-start", left > 1);
@@ -149,7 +175,7 @@ export function watchScrollRow(
       mirror.toggleAttribute("data-shown", shown);
       if (shown) {
         mirror.style.setProperty("--top-scrollbar-width", `${mirrorContentWidth(mirror.clientWidth, el.scrollWidth, el.clientWidth)}px`);
-        keepInStep(el, mirror);
+        if (follow) keepInStep(el, mirror, givenMirror);
       }
     }
     if (!bar) return;
@@ -163,7 +189,7 @@ export function watchScrollRow(
     bar.style.setProperty("--scroll-thumb-size", `${(size * 100).toFixed(2)}%`);
     bar.style.setProperty("--scroll-thumb-pos", `${(pos * 100).toFixed(2)}%`);
   };
-  const resize = Resize ? new Resize(update) : null;
+  const resize = Resize ? new Resize(() => update()) : null;
   const observeChildren = () => {
     resize?.disconnect();
     resize?.observe(el as never);
@@ -175,17 +201,19 @@ export function watchScrollRow(
         update();
       })
     : null;
-  // The mirror moved by a hand: the scroller follows, and its own «scroll» then finds the mirror already there.
+  // The scroller's «scroll»: the edge cue always; the mirror only when a hand moved the scroller, not the echo of `follow`'s write.
+  const onScroll = () => update(!isEcho(el, givenFrame));
+  // The mirror moved by a hand: the scroller follows. The mirror's «scroll» that answers `update`'s write answers nothing.
   const follow = () => {
-    if (mirror) keepInStep(mirror, el);
+    if (mirror && !isEcho(mirror, givenMirror)) keepInStep(mirror, el, givenFrame);
   };
   update();
-  el.addEventListener("scroll", update, { passive: true });
+  el.addEventListener("scroll", onScroll, { passive: true });
   mirror?.addEventListener("scroll", follow, { passive: true });
   observeChildren();
   mutation?.observe(el as never, { childList: true } as never);
   return () => {
-    el.removeEventListener("scroll", update);
+    el.removeEventListener("scroll", onScroll);
     mirror?.removeEventListener("scroll", follow);
     resize?.disconnect();
     mutation?.disconnect();
