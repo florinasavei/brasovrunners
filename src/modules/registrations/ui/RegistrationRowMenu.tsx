@@ -50,7 +50,15 @@ export type RegistrationMenuIcon = ActionIconName;
 type MenuSeparation = { separated?: boolean };
 
 export type RegistrationMenuItem =
-  | ({ kind: "link"; label: string; href: string; icon: RegistrationMenuIcon; color?: "error" } & MenuSeparation)
+  | ({
+      kind: "link";
+      label: string;
+      href: string;
+      icon: RegistrationMenuIcon;
+      color?: "error";
+      /** A file to open beside the list — one person's bib (§NNN): `target="_blank"`, `rel="noopener"`, the list kept. */
+      newTab?: boolean;
+    } & MenuSeparation)
   | ({
       kind: "submit";
       label: string;
@@ -108,6 +116,7 @@ export default function RegistrationRowMenu({ ariaLabel, items }: { ariaLabel: s
                 key={item.label}
                 component="a"
                 href={item.href}
+                {...(item.newTab ? { target: "_blank", rel: "noopener" } : {})}
                 onClick={() => setAnchor(null)}
                 sx={{ minHeight: 44, ...tint }}
               >

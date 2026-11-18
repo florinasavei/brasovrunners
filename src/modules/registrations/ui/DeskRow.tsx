@@ -7,10 +7,11 @@ import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { ELITE_NAME_MAX } from "@/db/schema/event-elite-entries";
 import type { DeskRegistration } from "@/modules/registrations/admin-repository";
-import { canManageRegistrations, type StaffRole } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations, canReadRegistrations, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { mayEndWaitlisted } from "@/modules/registrations/domain/row-verbs";
 import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
 import { bibPictureSrc } from "@/modules/registrations/domain/bib-stamp";
+import { hasOneBib, oneBibHref } from "@/modules/registrations/domain/one-bib";
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
 import { formatRaceNumber, raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { isTerminalStatus } from "@/modules/registrations/domain/state-machine";
@@ -88,8 +89,8 @@ export default async function DeskRow({
 }: {
   row: DeskRegistration;
   /**
-   * Who is looking (§975): an Administrator also gets «Elită și BIB» at the row's end; any other role — or none given — gets the
-   * row as it always was. A drawing decision only: the actions and the services assert the role again.
+   * Who is looking (§975): an Administrator also gets «Elită și BIB» at the row's end, and a role that reads the registrations
+   * «Descarcă BIB-ul (PDF)» in the BIB fold (§NNN); any other role — or none given — gets the row as it always was. A drawing decision only: the actions and the services assert the role again.
    */
   role?: StaffRole;
   /** The other people on this row's address at the event (§543, `familyOf`): names only, never an address. */
@@ -288,6 +289,25 @@ export default async function DeskRow({
                 decoding="async"
                 style={{ display: "block", width: "100%", maxWidth: 360, height: "auto" }}
               />
+              {/*
+                The same bib as a PDF, on its own A4 page (§NNN; the owner, 2026-11-18: «eu trebuie să pot descărca un BIB
+                doar pentru o persoană»): for a role that reads the registrations — the Organizer and the Administrators,
+                the route's own gate (§289) — never the desk's other roles, who see the picture as before.
+              */}
+              {role !== undefined && canReadRegistrations(role) && hasOneBib(row) && (
+                <GlyphButton
+                  icon="download"
+                  href={oneBibHref(row.eventId, row.id, locale)}
+                  target="_blank"
+                  rel="noopener"
+                  variant="outlined"
+                  size="small"
+                  sx={{ minHeight: 44, mt: 1 }}
+                  data-testid="one-bib-download"
+                >
+                  {t("registrations.oneBib.download")}
+                </GlyphButton>
+              )}
             </Box>
           )}
           {row.checkinCode && (

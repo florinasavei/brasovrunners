@@ -149,6 +149,7 @@ import { previewMemberTickSweep, readRowPhones } from "@/modules/registrations/a
 import { countForm, type CountForm } from "@/i18n/count-form";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { mayEndWaitlisted, rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
+import { hasOneBib, oneBibHref } from "@/modules/registrations/domain/one-bib";
 import { givePlaceRefusalAhead, specialGuestsListOn, staffOfferIfMadeNow, staffOfferQuestion, waitlistAddDoorOpen } from "@/modules/registrations/give-place-tip";
 import { noFreePlaceValues } from "@/modules/registrations/domain/capacity";
 import { outsideMarkConfirm } from "@/modules/registrations/ui/outside-mark-body";
@@ -2280,6 +2281,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   href: getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: row.id } } }),
                 },
               ];
+              // «Descarcă BIB-ul» (§NNN; the owner, 2026-11-18: «eu trebuie să pot descărca un BIB doar pentru o persoană»): this
+              // row's bib alone, as the sheets draw it, for every role that reads this list — only where the route prints one.
+              if (canReadRegistrations(actor.role) && hasOneBib(row)) {
+                items.push({ kind: "link", icon: "download", label: t("registrations.oneBib.menu"), href: oneBibHref(row.eventId, row.id, locale), newTab: true });
+              }
               if (verbs.includes("confirmOnPaper")) {
                 items.push({
                   kind: "submit",

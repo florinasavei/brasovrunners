@@ -4,7 +4,7 @@ import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
-import { registrations } from "@/db/schema/registrations";
+import { type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { type BibDesign, readBibDesign } from "./bib-design";
@@ -855,6 +855,38 @@ export async function listBibs<T extends Record<string, unknown>>(
 }
 
 /**
+ * One registration's bib, for the download of that bib alone (§NNN; the owner, 2026-11-18: «eu trebuie să pot descărca
+ * un BIB doar pentru o persoană»): the same columns `listBibs` reads, by the same rules — `member` by the one rule (§972),
+ * `elite` and the label for the elite drawing (§897, §975) — plus its state, so the route can say why there is no bib.
+ *
+ * Undefined for an id that is not a registration of this event, and for a test row (§30: a test registration never
+ * wears a number on paper): the route answers both as not found. `bibNumber` is null while no number is settled — an
+ * elite bib prints its label without one.
+ */
+export async function findRegistrationBib<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  registrationId: string,
+): Promise<(Omit<BibRow, "bibNumber"> & { bibNumber: number | null; status: RegistrationStatus }) | undefined> {
+  const [row] = await db
+    .select({
+      id: registrations.id,
+      bibNumber: registrations.bibNumber,
+      registeredName: registrations.registeredName,
+      firstName: registrations.firstName,
+      eliteBibLabel: registrations.eliteBibLabel,
+      member: PRINTS_MEMBER_BIB,
+      elite: registrations.elite,
+      status: registrations.status,
+    })
+    .from(registrations)
+    .where(and(eq(registrations.id, registrationId), eq(registrations.eventId, eventId), eq(registrations.kind, "REAL")))
+    .limit(1);
+  if (!row) return undefined;
+  return { ...row, member: row.member === true };
+}
+
+/**
  * How many bibs there are and how many are still unprinted (§264).
  *
  * One grouped query, because this is read on every load of the registrations list and the club's
@@ -1070,6 +1102,8 @@ export async function findEventForBibs<T extends Record<string, unknown>>(
 ): Promise<
   | {
       title: string;
+      /** The event's address in this language: the one bib's file name when it has no number (§NNN). */
+      slug: string;
       startsAt: Date;
       timezone: string;
       bibColour: string | null;
@@ -1087,6 +1121,7 @@ export async function findEventForBibs<T extends Record<string, unknown>>(
   const [row] = await db
     .select({
       title: eventTranslations.title,
+      slug: eventTranslations.slug,
       startsAt: events.startsAt,
       timezone: events.timezone,
       bibColour: events.bibColour,
@@ -1108,6 +1143,7 @@ export async function findEventForBibs<T extends Record<string, unknown>>(
   // column here: the bib has to name the same partners the event page does.
   return {
     title: row.title,
+    slug: row.slug,
     startsAt: row.startsAt,
     timezone: row.timezone,
     bibColour: row.bibColour,

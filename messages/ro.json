@@ -1902,7 +1902,10 @@
       "cancel": "Anulează înscrierea",
       "cancelBody": "Nu se poate desface. Refuzul, cu motivul lui, se face din pagina înscrierii.",
       "confirmOnPaperBody": "Confirmi că participantul a semnat declarația pe hârtie, la masă. Doar cu hârtia semnată în față. Apoi primește emailul de confirmare; dacă nu e loc, intră pe lista de așteptare, fără email acum.",
-      "downloadBib": "Descarcă numărul de concurs (BIB)",
+      "oneBib": {
+        "download": "Descarcă BIB-ul (PDF)",
+        "menu": "Descarcă BIB-ul"
+      },
       "notOnPublicList": "Nu apare public",
       "erase": "Șterge definitiv",
       "eraseTitle": "Ștergi definitiv înscrierea lui {name}?",

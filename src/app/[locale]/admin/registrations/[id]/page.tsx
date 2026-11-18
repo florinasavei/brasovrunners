@@ -37,6 +37,7 @@ import { SEX_CHOICES, sexShown } from "@/modules/registrations/domain/sex";
 import { sealPersonLookup } from "@/modules/registrations/person-data";
 import { instagramProfileUrl } from "@/modules/registrations/social-links";
 import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
+import { hasOneBib, oneBibHref } from "@/modules/registrations/domain/one-bib";
 import { formSentAt, journeyOf } from "@/modules/registrations/domain/journey";
 import { deadlineHoldsAPlace, rowDeadlineOf } from "@/modules/registrations/domain/row-deadline";
 import { countryName } from "@/modules/registrations/names";
@@ -902,20 +903,25 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                       </ActionForm>
                     </Box>
                   )}
-                  {registration.bibNumber !== null && (
+                  {canReadRegistrations(actor.role) && hasOneBib(registration) && (
                     /*
-                      This one bib, on its own A4 page (§180). The same route the event's sheet
-                      uses, asked for a range of exactly one and the one-per-page layout — so
-                      there is one renderer, one authorization check and one design, and a
-                      volunteer who has to reprint a single number does not download two hundred.
+                      This one bib, on its own A4 page (§180), exactly as the sheets draw it — the elite bib with its
+                      label (§975), the members' design, or the ordinary bib — through the sheet's route asked for this
+                      registration alone (§NNN; the owner, 2026-11-18: «eu trebuie să pot descărca un BIB doar pentru o
+                      persoană»). It replaced a range of one, `from=N&to=N`, which an elite bib is never in (§963). Drawn
+                      only where the route prints something: a real, confirmed registration with a number or the elite
+                      mark. A read — the Organizer's too (§289); the printed mark stays its own press.
                     */
                     <GlyphButton
-                      icon="print"
-                      href={`/api/admin/events/${registration.eventId}/bibs?locale=${locale}&from=${registration.bibNumber}&to=${registration.bibNumber}&layout=one`}
+                      icon="download"
+                      href={oneBibHref(registration.eventId, registration.id, locale)}
+                      target="_blank"
+                      rel="noopener"
                       variant="outlined"
                       sx={{ minHeight: 44 }}
+                      data-testid="one-bib-download"
                     >
-                      {tr("registrations.downloadBib")}
+                      {tr("registrations.oneBib.download")}
                     </GlyphButton>
                   )}
                 </Stack>
