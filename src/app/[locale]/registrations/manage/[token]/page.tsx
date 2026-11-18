@@ -62,9 +62,13 @@ import QrWithName, { type QrWords } from "@/modules/registrations/ui/QrWithName"
 import { readRaceDayContext, readReplacedActionLink, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
 import PublicFlash from "@/shared/feedback/PublicFlash";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { readRaffleManageView } from "@/modules/volunteers/raffle-roster";
+import { raffleManageCard } from "@/modules/volunteers/ui/RaffleManageCard";
 import {
   cancelRegistrationAction,
   completeAnswersFromManageAction,
+  raffleSignUpFromManageAction,
+  raffleWithdrawFromManageAction,
   reconfirmFromManageAction,
   selfCheckInAction,
   setListConsentFromManageAction,
@@ -98,6 +102,8 @@ type Props = {
     answersRefused?: string;
     /** «Da, vin la cursă»'s outcome (the decision «Cere reconfirmarea»): 1 recorded or already recorded, 0 refused. */
     reconfirm?: string;
+    /** The raffle card's outcome (§NNN): 1 signed up, w withdrawn, a the rules' tick missing, 0 refused. */
+    raffle?: string;
   }>;
 };
 
@@ -126,7 +132,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, started, here, list, withdrawn, promo, results, person, reason, answers, answersRefused, reconfirm } = await searchParams;
+  const { done, invalid, started, here, list, withdrawn, promo, results, person, reason, answers, answersRefused, reconfirm, raffle } = await searchParams;
   const t = await getTranslations("Registrations");
   // The words beside every QR (§547): whose it is, their number, the code.
   const qrWords: QrWords = {
@@ -269,6 +275,34 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                 : null,
             });
             return [one.id, card] as const;
+          }),
+        )
+      : [],
+  );
+
+  /*
+    «Tombola» (§NNN): per person, while the raffle's sign-up gate is open for their group and they are a confirmed real registration
+    with a number — signed up, «Nu mai particip»; not yet, the rules, the tick and «Particip la tombolă». One read of the gate for the
+    page; nothing drawn, and no further query, while it is shut.
+  */
+  const raffleView = live ? await readRaffleManageView(getDb(), live.registration.eventId, people.map((one) => ({ id: one.id, anotherAdult: one.anotherAdult })), locale, new Date()) : null;
+  const raffleCards = new Map<string, ReactNode>(
+    raffleView
+      ? await Promise.all(
+          [...raffleView.cards].map(async ([id, card]) => {
+            const element = await raffleManageCard({
+              locale,
+              token,
+              registrationId: id,
+              own: people.find((one) => one.id === id)?.own === true,
+              family,
+              card,
+              rules: raffleView.rules,
+              outcome: answeredFor === id ? (raffle ?? null) : null,
+              signUpAction: raffleSignUpFromManageAction,
+              withdrawAction: raffleWithdrawFromManageAction,
+            });
+            return [id, element] as const;
           }),
         )
       : [],
@@ -626,6 +660,9 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                     {!family && <Divider sx={{ mt: 3 }} />}
                   </Box>
                 )}
+
+                {/* «Tombola» (§NNN): the person's own raffle sign-up — the token read, never spent; drawn only while the gate is open. */}
+                {raffleCards.get(one.id)}
 
                 {/*
                   «Vii la …?» (the decision «Cere reconfirmarea»): asked only of a registration an organizer's message asked,

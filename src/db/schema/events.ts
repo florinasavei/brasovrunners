@@ -952,6 +952,30 @@ export const events = pgTable(
     hasRaffle: boolean("has_raffle").notNull().default(false),
 
     /**
+     * «Cine poate participa» (migration `0217`, §NNN; the owner, 2026-11-18: «trebuie să bifez acolo cine se poate înscrie: doar
+     * alergătorii și elitele și voluntarii»): the three groups of a raffle, each ticked by default — «Alergătorii» (the confirmed real
+     * registrations with a race number not marked «Elită»; an ambassador runs as a runner), «Elitele» (the registrations marked «Elită»
+     * and the lines of the race's elite list) and «Voluntarii» (the confirmed volunteers with a number). They decide in both modes
+     * below (`volunteers/domain/raffle.ts#raffleParticipation`). Boxes of the editor beside «Avem tombolă», saved with the event — the
+     * Administrator's save (§542); one edition's own, like `has_raffle`: no series edit, copy or event file carries them, and no public
+     * query reads them but the sign-up's gate (`raffleSignUpGate`).
+     */
+    raffleRunners: boolean("raffle_runners").notNull().default(true),
+    raffleElites: boolean("raffle_elites").notNull().default(true),
+    raffleVolunteers: boolean("raffle_volunteers").notNull().default(true),
+    /**
+     * «Cum» (§NNN; the owner, 2026-11-18: «Vreau să pot bifa asta: tombolă din oficiu vs tombolă cu înscriere separată»): false is
+     * «Din oficiu» — everybody of the ticked groups is in, as since §949 — and true «Cu înscriere separată»: only those who signed up
+     * (`event_raffle_entries`), having accepted «Regulamentul tombolei». False by default, so no event changes by itself.
+     */
+    raffleSignUp: boolean("raffle_sign_up").notNull().default(false),
+    /**
+     * «Înscrierile la tombolă sunt deschise» (§NNN): while ticked — and only in the sign-up mode, with the rules and the notice in
+     * force — the doors take sign-ups; the organizers untick it at the draw. False by default.
+     */
+    raffleSignUpOpen: boolean("raffle_sign_up_open").notNull().default(false),
+
+    /**
      * «Condiții de participare» → «Informații medicale» (§557; the owner, 2026-09-29: «trebuie să am
      * o bifă și pentru acele informații medicale, pentru că nu știu ce să fac cu ele»): the event asks
      * the optional health note (BR-REQ-031-05), GDPR art. 9 data the club collects only when it

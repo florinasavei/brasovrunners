@@ -108,7 +108,12 @@ export type DomainErrorCode =
   // The club's refusal under the terms (§618) posted with its email kept back (the design «telling the owner about every email a
   // staff press sends», slice 4; its question offers no «… fără email», §976): the terms promise the person is told the ground,
   // so the refusal never goes without its email.
-  | "REFUSAL_NEEDS_EMAIL";
+  | "REFUSAL_NEEDS_EMAIL"
+  // The raffle's sign-up (§NNN): the gate is shut (`raffleSignUpClosedFor`); the person is not one the raffle takes — not
+  // confirmed, no number, a test registration, a group not ticked; the rules' acceptance missing. Each writes nothing.
+  | "RAFFLE_SIGN_UP_CLOSED"
+  | "RAFFLE_NOT_ELIGIBLE"
+  | "RAFFLE_RULES_NOT_ACCEPTED";
 
 export class DomainError extends Error {
   readonly code: DomainErrorCode;

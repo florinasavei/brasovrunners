@@ -449,6 +449,25 @@ export const VOLUNTEER_MERGE_FIELDS = [
   VOLUNTEER_GUARDIAN_MERGE_FIELD,
 ] as const;
 
+/**
+ * «Regulamentul tombolei»'s own blank (§NNN): `{{raffleGroups}}` — who may take part, the groups the event ticks in «Cine poate
+ * participa», in the text's language («alergătorii confirmați, cu număr de concurs, elitele cursei și voluntarii confirmați, cu
+ * număr de voluntar», `volunteers/raffle-words.ts#raffleGroupsPhrase`). Filled when the person accepts, beside the event's own
+ * fields (`{{event}}`, `{{eventDate}}`, `{{eventLocation}}`), and kept with the acceptance (`event_raffle_entries.rules_facts`).
+ */
+export const RAFFLE_GROUPS_MERGE_FIELD = "raffleGroups";
+
+/**
+ * The privacy notice's marker for the raffle's sign-up (§NNN): filled, when the notice is shown, with the public form's own name,
+ * quoted (`volunteers/raffle-words.ts#raffleClause`) — „Înscrie-te la tombolă” / “Sign up for the raffle” — in the paragraph that
+ * says what a sign-up keeps (the number, the name typed, whether a volunteer, the rules' acceptance and its trace or the staff
+ * member who recorded it, the notice's version), why, who sees it, for how long (thirty days after the event's start) and how to
+ * withdraw. The gate, `{{rsvp}}`'s pattern (§811): no door of the raffle's sign-up opens until the notice in force names it in every
+ * language (`describesRaffle`, `raffleSignUpGate`); «Din oficiu» keeps nothing more and needs none. `/admin/tasks` carries the row
+ * `raffleNotice` while an event is in the sign-up mode and the notice is silent.
+ */
+export const RAFFLE_MERGE_FIELD = "raffle";
+
 /** The fields whose "" drops the paragraph that names them (see `MINIMUM_AGE_MERGE_FIELD`, `SERIES_MERGE_FIELDS`, `VOLUNTEER_MERGE_FIELDS`). */
 export const PARAGRAPH_MERGE_FIELDS: ReadonlySet<string> = new Set([
   MINIMUM_AGE_MERGE_FIELD,
@@ -611,6 +630,7 @@ export const MERGE_FIELDS = [
   GROUP_RUN_ALONE_MERGE_FIELD,
   GROUP_RUN_MINOR_AGE_MERGE_FIELD,
   ...VOLUNTEER_MERGE_FIELDS,
+  RAFFLE_GROUPS_MERGE_FIELD,
   ...DEADLINE_MERGE_FIELDS,
   LIST_STATES_MERGE_FIELD,
   LIST_SOCIALS_MERGE_FIELD,
@@ -638,6 +658,7 @@ export const MERGE_FIELDS = [
   VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD,
   VOLUNTEER_MINORS_NOTICE_MERGE_FIELD,
   VOLUNTEERS_LIST_NOTICE_MERGE_FIELD,
+  RAFFLE_MERGE_FIELD,
 ] as const;
 
 /**
@@ -982,6 +1003,15 @@ export function describesFeedbackSafetyGmail(body: unknown): boolean {
  */
 export function describesRelayQueue(body: unknown): boolean {
   return mergeFieldsIn(body).has(RELAY_QUEUE_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes the raffle's sign-up (§NNN): it names `{{raffle}}`. Half of the sign-up's gate
+ * (`raffleSignUpGate`) — with «Regulamentul tombolei» in force — and what `/admin/tasks`' row `raffleNotice` reads. Pure; asked of
+ * the notice in force, in every language.
+ */
+export function describesRaffle(body: unknown): boolean {
+  return mergeFieldsIn(body).has(RAFFLE_MERGE_FIELD);
 }
 
 /** Whether a privacy notice describes the team page (§459): it names `{{teamPage}}`. Pure. */

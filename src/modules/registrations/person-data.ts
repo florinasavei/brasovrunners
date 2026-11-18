@@ -4,6 +4,7 @@ import { type DeclarationAcceptance, declarationAcceptances } from "@/db/schema/
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventCheckpoints } from "@/db/schema/event-checkpoints";
 import { eventInvitations } from "@/db/schema/event-invitations";
+import { eventRaffleEntries } from "@/db/schema/event-raffle-entries";
 import { eventReserveEntries } from "@/db/schema/event-reserve-entries";
 import { eventResults } from "@/db/schema/event-results";
 import { eventRsvps, rsvpAskRefusals, rsvpRefuseTokens } from "@/db/schema/event-rsvps";
@@ -173,6 +174,28 @@ export type PersonData = {
    * what was typed — name, address, telephone number, their message and the organizers' notes, every column
    * of the row (art. 15 GDPR). Deleted by the event's «Voluntari» card, or thirty days after the event.
    */
+  /**
+   * The person's raffle sign-ups (§NNN, art. 15 GDPR): the event, which of their rows signed up, the door, the rules' version, moment,
+   * language and fingerprint, the name typed, the trace, the notice's version and the recorder's role — every column but the ids of the
+   * documents and the staff account. Gone with the registration or the offer, and thirty days after the event.
+   */
+  raffleEntries: Array<{
+    eventId: string;
+    eventTitle: string | null;
+    registrationId: string | null;
+    volunteerId: string | null;
+    method: (typeof eventRaffleEntries.$inferSelect)["method"];
+    rulesVersion: number | null;
+    rulesAcceptedAt: Date;
+    rulesLocale: string;
+    rulesTextHash: string;
+    typedName: string | null;
+    ip: string | null;
+    userAgent: string | null;
+    recordedByRole: StaffUser["role"] | null;
+    privacyNoticeVersion: number;
+    createdAt: Date;
+  }>;
   volunteerOffers: Array<{
     eventId: string;
     eventTitle: string | null;
@@ -616,6 +639,46 @@ async function collectPersonData<T extends Record<string, unknown>>(
     };
   });
 
+  /*
+    «Înscrierea la tombolă» (§NNN; art. 15 GDPR): every raffle sign-up of this address's registrations and volunteer offers — the door,
+    the rules' version, moment, language and fingerprint, the name typed on the form, the trace of an electronic sign-up, the notice's
+    version — and who recorded a desk's or the organizers' one as a role (§777), never a colleague's name. A line of the elite list has no
+    address and is no address's. The rows go with their registration or offer, and thirty days after the event.
+  */
+  const offerIds = offerRows.map((row) => row.id);
+  const raffleEntries =
+    registrationIds.length > 0 || offerIds.length > 0
+      ? await db
+          .select({
+            eventId: eventRaffleEntries.eventId,
+            eventTitle: eventTranslations.title,
+            registrationId: eventRaffleEntries.registrationId,
+            volunteerId: eventRaffleEntries.volunteerId,
+            method: eventRaffleEntries.method,
+            rulesVersion: legalDocuments.version,
+            rulesAcceptedAt: eventRaffleEntries.rulesAcceptedAt,
+            rulesLocale: eventRaffleEntries.rulesLocale,
+            rulesTextHash: eventRaffleEntries.rulesTextHash,
+            typedName: eventRaffleEntries.typedName,
+            ip: eventRaffleEntries.ip,
+            userAgent: eventRaffleEntries.userAgent,
+            recordedByRole: staffUsers.role,
+            privacyNoticeVersion: eventRaffleEntries.privacyNoticeVersion,
+            createdAt: eventRaffleEntries.createdAt,
+          })
+          .from(eventRaffleEntries)
+          .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, eventRaffleEntries.eventId), eq(eventTranslations.locale, "ro")))
+          .leftJoin(legalDocuments, eq(legalDocuments.id, eventRaffleEntries.rulesDocumentId))
+          .leftJoin(staffUsers, eq(staffUsers.id, eventRaffleEntries.recordedByStaffUserId))
+          .where(
+            or(
+              ...(registrationIds.length > 0 ? [inArray(eventRaffleEntries.registrationId, registrationIds)] : []),
+              ...(offerIds.length > 0 ? [inArray(eventRaffleEntries.volunteerId, offerIds)] : []),
+            ),
+          )
+          .orderBy(asc(eventRaffleEntries.createdAt), asc(eventRaffleEntries.id))
+      : [];
+
   const groupRuns = await groupRunDeclarationsOf(db, canonicalEmail);
 
   // «Lista internă de așteptare» (§854, §876): the lines whose typed address is this person's, the author as a role (§777).
@@ -797,6 +860,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
     rememberedBrowsers,
     volunteerInvitations,
     volunteerOffers,
+    raffleEntries,
     groupRunDeclarations: groupRuns,
     results: results.map((row) => ({ ...row, registrationId: row.registrationId as string })),
     notes,
@@ -1113,6 +1177,7 @@ export async function exportPersonData<T extends Record<string, unknown>>(
       volunteerOffers: data.volunteerOffers.length,
       volunteerNotes: data.volunteerOffers.reduce((total, offer) => total + offer.notes.length, 0),
       volunteerInvitations: data.volunteerInvitations.length,
+      raffleEntries: data.raffleEntries.length,
       groupRunDeclarations: data.groupRunDeclarations.length,
       results: data.results.length,
       notes: data.notes.length,

@@ -29,6 +29,8 @@ export const PUBLIC_TOAST_KEYS = [
   "volunteerSent",
   // The guardian's link page (§768): the parent's or guardian's agreement was recorded.
   "volunteerGuardianAccepted",
+  // The raffle's own page (§NNN): the sign-up is in — the thank-you is on that page, not the event's.
+  "raffleSignedUp",
 ] as const;
 
 export type PublicToastKey = (typeof PUBLIC_TOAST_KEYS)[number];

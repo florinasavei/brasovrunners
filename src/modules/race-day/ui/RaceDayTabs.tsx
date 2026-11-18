@@ -3,11 +3,14 @@ import { getTranslations } from "next-intl/server";
 import type { ReactElement } from "react";
 import { getPathname } from "@/i18n/navigation";
 import { canEnterResults, canWorkTheDesk, type StaffSubject } from "@/modules/staff-identity/domain/roles";
+import { getDb } from "@/db/client";
+import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
+import { raffleTabShown } from "@/modules/volunteers/raffle-roster";
 import { PANEL_GLYPHS, type PanelGlyphName } from "@/shared/ui/panel-glyphs";
 import SubNav, { type SubNavItem } from "@/shared/ui/SubNav";
 
-/** The three parts of «Ziua cursei». */
-export type RaceDayTab = "desk" | "results" | "items";
+/** The parts of «Ziua cursei». */
+export type RaceDayTab = "desk" | "results" | "items" | "raffle";
 
 /**
  * Each tab's picture, by its name in the subjects' table (§521): the desk's own cup, the results' board, a checklist.
@@ -17,6 +20,7 @@ const TAB_GLYPH = {
   desk: { glyph: "raceDay" },
   results: { glyph: "results" },
   items: { glyph: "todo" },
+  raffle: { glyph: "raffle" },
 } as const satisfies Record<RaceDayTab, { glyph: PanelGlyphName }>;
 
 /**
@@ -30,6 +34,9 @@ const TAB_GLYPH = {
  * pick their default as the desk does, and «Clasament», which has no page without an event, is not drawn. A tab whose page
  * the viewer's role cannot open is not drawn either — «Clasament» is `canEnterResults`' — and every page still asserts its
  * own gate on the server (BR-REQ-060-01).
+ *
+ * «Tombolă» (§NNN; the owner, 2026-11-18: «un tab de tombolă unde să văd toți participanții la tombolă») is the organizers' fourth
+ * (`canTakeRaffleList`), drawn only for an event chosen that holds a raffle — one read of the event's own switch.
  *
  * A function the page awaits, not an async component: the element it returns is drawn in the page's own tree, which every
  * screen test renders synchronously.
@@ -61,6 +68,10 @@ export async function raceDayTabs({ locale, active, eventId, actor }: { locale: 
       active: active === "items",
       glyph: glyph("items"),
     });
+  }
+  // «Tombolă» (§NNN): the organizers' tab (`canTakeRaffleList`), for an event that holds a raffle; the page asserts the role again.
+  if (eventId && canTakeRaffleList(actor) && (await raffleTabShown(getDb(), eventId))) {
+    items.push({ href: withEvent(getPathname({ locale, href: "/admin/checkin/tombola" })), label: t("raceDay.tabs.raffle"), active: active === "raffle", glyph: glyph("raffle") });
   }
   return (
     <Box sx={{ "@media print": { display: "none" } }} data-testid="race-day-tabs">

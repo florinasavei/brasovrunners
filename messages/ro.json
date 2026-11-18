@@ -1023,6 +1023,38 @@
         "other": "{count} vin",
         "go": "spune dacă vii"
       }
+    },
+    "raffle": {
+      "title": "Înscrie-te la tombolă",
+      "metaTitle": "Tombola — {event}",
+      "intro": "La {event} tragem la sorți premii dintre cei înscriși la tombolă. Înscrie-te cu numărul tău de concurs și cu numele cu care te-ai înscris.",
+      "introVolunteer": "Ești voluntar? Bifează „Sunt voluntar” și scrie numărul tău de voluntar.",
+      "number": "Numărul de concurs",
+      "numberHelp": "Numărul de pe BIB, doar cifre.",
+      "name": "Numele",
+      "nameHelp": "Numele cu care te-ai înscris, de exemplu „Ana Popescu”.",
+      "volunteer": "Sunt voluntar",
+      "volunteerHelp": "Scrie atunci, mai sus, numărul tău de voluntar.",
+      "rules": "Citește Regulamentul tombolei",
+      "accept": "Am citit și accept Regulamentul tombolei",
+      "notice": "Ce păstrăm despre înscriere scrie în <privacy>nota de confidențialitate</privacy>. Nu primești niciun e-mail pentru ea.",
+      "submit": "Particip la tombolă",
+      "submitting": "Te înscriem…",
+      "done": "Gata: ești înscris la tombolă. Mult noroc la extragere!",
+      "noMatch": "Nu am găsit o înscriere confirmată cu numărul și numele acestea. Verifică numărul de pe BIB și scrie numele cu care te-ai înscris — sau întreabă la masa organizatorilor.",
+      "limited": "Prea multe încercări. Încearcă din nou peste o oră sau întreabă la masa organizatorilor.",
+      "captcha": "Verificarea anti-roboți nu a trecut. Încearcă din nou.",
+      "fix": "Verifică ce ai scris mai jos.",
+      "errors": {
+        "number": "Scrie numărul de concurs, doar cifre.",
+        "name": "Scrie numele, cel mult 120 de caractere.",
+        "accept": "Bifează că accepți Regulamentul tombolei."
+      },
+      "back": "Înapoi la eveniment",
+      "callout": {
+        "line": "Avem tombolă! Înscrie-te cu numărul tău de concurs.",
+        "button": "Înscrie-te la tombolă"
+      }
     }
   },
   "Admin": {
@@ -1380,14 +1412,14 @@
       },
       "raffle": {
         "column": "Tombolă",
-        "columnHint": "Bifat: numărul persoanei apare pe „Lista pentru tombolă”, dacă înscrierea e confirmată și are număr. Debifează ca s-o scoți. Intern: persoana nu e anunțată.",
+        "columnHint": "Bifa: participă sau e scos de organizatori — debifează ca s-o scoți. Dedesubt: dacă participă acum, după grupele bifate și, cu înscriere separată, dacă s-a înscris. Intern: persoana nu e anunțată.",
         "tick": "Participă",
         "takeOutFor": "Scoate de la tombolă: {name}",
         "putInFor": "Pune la tombolă: {name}",
         "button": "Lista pentru tombolă (CSV)",
-        "buttonLabel": "Descarcă lista pentru tombolă: alergătorii și voluntarii confirmați care au număr și participă, cu numărul, numele, categoria și dacă persoana e prezentă",
+        "buttonLabel": "Descarcă lista pentru tombolă: alergătorii, elitele și voluntarii care participă, cu numărul, numele, grupa și dacă persoana e prezentă",
         "presentButton": "Lista pentru tombolă — doar prezenții (CSV)",
-        "presentButtonLabel": "Descarcă lista pentru tombolă — doar prezenții: alergătorii marcați prezenți la masă și voluntarii bifați „Prezent”, confirmați, cu număr, care participă",
+        "presentButtonLabel": "Descarcă lista pentru tombolă — doar prezenții: cei care participă și au fost prezenți — alergătorii marcați la masă, voluntarii și elitele bifați „Prezent”",
         "columns": {
           "number": "Număr",
           "name": "Nume",
@@ -1400,7 +1432,8 @@
         },
         "kinds": {
           "RUNNER": "Alergător",
-          "VOLUNTEER": "Voluntar"
+          "VOLUNTEER": "Voluntar",
+          "ELITE": "Elită"
         }
       },
       "export": "Descarcă CSV",
@@ -2834,7 +2867,10 @@
       "ADDRESS_INVALID": "Nu s-a schimbat nimic: adresa nu e o adresă de email validă. Verifică ce ai scris.",
       "ADDRESS_TRY_AGAIN": "Nu s-a schimbat nimic: înscrierea se schimba chiar în acel moment. Apasă din nou «Schimbă adresa».",
       "PARTNER_NAME_MISSING": "Scrie numele partenerului sau sponsorului, sau debifează «E de la parteneri».",
-      "RACE_DAY_ITEMS_FULL": "Lista are deja {max} de lucruri, cât poate ține. Șterge ce nu mai trebuie, apoi adaugă."
+      "RACE_DAY_ITEMS_FULL": "Lista are deja {max} de lucruri, cât poate ține. Șterge ce nu mai trebuie, apoi adaugă.",
+      "RAFFLE_SIGN_UP_CLOSED": "Înscrierile la tombolă sunt închise acum — sau regulamentul ori nota de confidențialitate nu sunt aprobate. Nu s-a scris nimic.",
+      "RAFFLE_NOT_ELIGIBLE": "Persoana nu poate participa la tombolă: trebuie să fie confirmată, cu număr, dintr-o grupă bifată. Nu s-a scris nimic.",
+      "RAFFLE_RULES_NOT_ACCEPTED": "Bifează întâi că persoana a acceptat Regulamentul tombolei. Nu s-a scris nimic."
     },
     "editor": {
       "draftPreview": {
@@ -3040,7 +3076,7 @@
       "kitShirt": "Tricou",
       "kitShirtHelp": "Dacă e bifat, formularul cere mărimea tricoului.",
       "hasRaffle": "Avem tombolă",
-      "hasRaffleHelp": "Doar pentru organizatori: pe site nu apare nimic. Bifat, listele de înscrieri și de voluntari arată coloana „Tombolă”, din care scoți pe cine nu participă.",
+      "hasRaffleHelp": "Doar pentru organizatori. Bifat, listele de înscrieri și de voluntari arată coloana „Tombolă”, iar „Ziua cursei” are fila „Tombolă”. Pe site apare ceva doar cu înscriere separată, deschisă: formularul tombolei.",
       "askHealthNote": "Informații medicale",
       "askHealthNoteHelp": "Dacă e bifat, formularul cere informații medicale (afecțiuni, alergii, medicație); se șterg la {days} după eveniment.",
       "registrationClosesAt": "Înscrierile se închid",
@@ -4067,6 +4103,20 @@
           "few": "{count} membri confirmați",
           "other": "{count} de membri confirmați"
         }
+      },
+      "raffle": {
+        "who": "Cine poate participa la tombolă",
+        "runners": "Alergătorii",
+        "elites": "Elitele",
+        "volunteers": "Voluntarii",
+        "whoHelp": "Alergătorii: înscrierile confirmate, cu număr de concurs (și ambasadorii). Elitele: înscrierile marcate „Elită” și cei de pe lista de elită a cursei. Voluntarii: cei confirmați, cu număr de voluntar. Bifele contează la ambele moduri de mai jos.",
+        "how": "Cum participă",
+        "howAutomatic": "Din oficiu: toți cei bifați mai sus",
+        "howSignUp": "Cu înscriere separată: doar cei care se înscriu",
+        "howHelp": "Cu înscriere separată, oamenii se înscriu din pagina înscrierii lor, din formularul de pe pagina evenimentului sau la masă, în ziua cursei, și acceptă Regulamentul tombolei.",
+        "howHelpMore": "Înscrierea se deschide doar cu Regulamentul tombolei aprobat și cu o notă de confidențialitate care o descrie — „Sarcini” spune cum. Până atunci, „Din oficiu” merge ca înainte.",
+        "open": "Înscrierile la tombolă sunt deschise",
+        "openHelp": "Contează doar „Cu înscriere separată”. Debifează la extragere: formularul și butoanele de înscriere dispar."
       }
     },
     "preview": {
@@ -4275,7 +4325,8 @@
         "GROUP_RUN_DECLARATION_ASPHALT": "Opțională, pentru o alergare de grup pe asfalt; se semnează pe pagina alergării, o dată pentru toate datele ei. Aprob-o împreună cu o notă de confidențialitate nouă.",
         "GROUP_RUN_DECLARATION_TRAIL": "Opțională, pentru o alergare de grup pe teren accidentat; se semnează pe pagina alergării, o dată pentru toate datele ei. Aprob-o împreună cu o notă de confidențialitate nouă.",
         "EVENT_DECLARATION_ROAD": "Declarația unui eveniment pe șosea sau în parc, cu riscurile asfaltului și ale traficului. Până o aprobi, aceste evenimente semnează declarația pentru eveniment montan.",
-        "VOLUNTEER_AGREEMENT": "Contractul pe care îl acceptă fiecare voluntar al unui eveniment: ajutor neplătit, ce face voluntarul, ce face clubul. Până îl aprobi, paginile nu arată formularul de voluntari."
+        "VOLUNTEER_AGREEMENT": "Contractul pe care îl acceptă fiecare voluntar al unui eveniment: ajutor neplătit, ce face voluntarul, ce face clubul. Până îl aprobi, paginile nu arată formularul de voluntari.",
+        "RAFFLE_RULES": "Regulamentul pe care îl acceptă cine se înscrie la tombola unui eveniment cu înscriere separată. Până îl aprobi, înscrierea la tombolă nu se deschide; tombola „din oficiu” nu are nevoie de el."
       },
       "empty": "Nu există niciun document legal. Înscrierile sunt refuzate până când există o notă de confidențialitate aprobată.",
       "emptyCanCreate": "Nu există încă niciun document legal, așa că înscrierile sunt refuzate. Începe cu nota de confidențialitate: Versiune nouă.",
@@ -4294,7 +4345,8 @@
         "GROUP_RUN_DECLARATION_ASPHALT": "Declarație pe propria răspundere (alergare de grup, asfalt)",
         "GROUP_RUN_DECLARATION_TRAIL": "Declarație pe propria răspundere (alergare de grup, teren accidentat)",
         "EVENT_DECLARATION_ROAD": "Declarație pe propria răspundere — eveniment pe asfalt / în parc",
-        "VOLUNTEER_AGREEMENT": "Contract de voluntariat"
+        "VOLUNTEER_AGREEMENT": "Contract de voluntariat",
+        "RAFFLE_RULES": "Regulamentul tombolei"
       },
       "referenced": "{signatures} semnături · {events} evenimente",
       "unreferenced": "Nefolosit încă",
@@ -4430,7 +4482,9 @@
         "rsvp": "Doar în nota de confidențialitate: numele butonului „Vin!”, între ghilimele. Cu el în nota în vigoare, paginile evenimentelor bifate primesc răspunsuri „Vin!” și arată câți vin",
         "rsvpAsk": "Doar în nota de confidențialitate: numele temei „Întrebarea «Vii?» înaintea alergărilor”, între ghilimele. Cu ea în nota în vigoare, abonații temei primesc întrebarea „Vii?” înainte de eveniment",
         "rsvpAskAnswerers": "Doar în nota de confidențialitate: numele butonului „Nu mă mai întreba la seria aceasta”, între ghilimele. Cu el în nota în vigoare, se întreabă „Vii?” și cei care au mai răspuns „Vin!”",
-        "rsvpMember": "Doar în nota de confidențialitate: semnul „{short}”, între ghilimele. Cu el în nota în vigoare, „Vin!” are bifa „Sunt membru al grupului …”, iar „Cine vine” arată semnul lângă numele afișate ale membrilor"
+        "rsvpMember": "Doar în nota de confidențialitate: semnul „{short}”, între ghilimele. Cu el în nota în vigoare, „Vin!” are bifa „Sunt membru al grupului …”, iar „Cine vine” arată semnul lângă numele afișate ale membrilor",
+        "raffleGroups": "Doar în Regulamentul tombolei: cine poate participa, după bifele evenimentului de la „Cine poate participa la tombolă”",
+        "raffle": "Doar în nota de confidențialitate: numele formularului tombolei, între ghilimele. Cu el în nota în vigoare, înscrierea la tombolă se poate deschide"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -4566,7 +4620,8 @@
         "EVENT_DECLARATION_ROAD": "Eveniment asfalt / parc",
         "GROUP_RUN_DECLARATION_ASPHALT": "Grup asfalt",
         "GROUP_RUN_DECLARATION_TRAIL": "Grup teren accidentat",
-        "VOLUNTEER_AGREEMENT": "Voluntari"
+        "VOLUNTEER_AGREEMENT": "Voluntari",
+        "RAFFLE_RULES": "Tombolă"
       },
       "filter": {
         "label": "Filtrează versiunile",
@@ -5592,6 +5647,25 @@
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Pleacă întrebarea doar spre cei al căror răspuns a fost dat sub nota nouă ori sub una mai nouă.",
             "Deschide ciorna, citește, „Salvează ciorna”, apoi „Aprobă și publică”, în ambele limbi. Dacă nu vrei această categorie, în „Setări” → „Emailuri” alege din nou „Abonații newsletterului”."
           ]
+        },
+        "raffleRules": {
+          "title": "Regulamentul tombolei",
+          "todo": "Un eveniment are tombolă cu înscriere separată, dar Regulamentul tombolei nu e în vigoare: înscrierea nu se deschide. „Din oficiu” merge între timp.",
+          "done": "Regulamentul tombolei e în vigoare: cine se înscrie la tombolă îl acceptă.",
+          "how": [
+            "/admin/legal → cardul „Regulamentul tombolei” → „Regenerează din șablon” → confirmă.",
+            "Citește textul: organizatorul, cine poate participa, cum se face înscrierea, extragerea, premiile, câștigătorii, datele. Un jurist ar trebui să-l citească întâi.",
+            "Completează datele clubului rămase între paranteze unghiulare, „Salvează ciorna”, apoi „Aprobă și publică”, în ambele limbi."
+          ]
+        },
+        "raffleNotice": {
+          "title": "Nota de confidențialitate: înscrierea la tombolă",
+          "todo": "Un eveniment are tombolă cu înscriere separată, dar nota în vigoare nu descrie înscrierea la tombolă: înscrierea nu se deschide. „Din oficiu” merge între timp.",
+          "done": "Nota în vigoare descrie înscrierea la tombolă: ce păstrăm, de ce, cine vede și cât timp.",
+          "how": [
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful „Tombola”, din secțiunea 5, descrie înscrierea.",
+            "Deschide ciorna, citește-o, „Salvează ciorna”, apoi „Aprobă și publică”, în ambele limbi."
+          ]
         }
       },
       "freeVerdict": {
@@ -6425,7 +6499,7 @@
         "raffleOut": "Nu participă la tombolă",
         "columnRaffle": "Tombolă",
         "raffleTick": "Participă",
-        "raffleHint": "Bifat: numărul persoanei apare pe „Lista pentru tombolă”, dacă e confirmată și are număr. Debifează ca s-o scoți. Intern: persoana nu e anunțată.",
+        "raffleHint": "Bifa: participă sau e scos de organizatori — debifează ca s-o scoți. Dedesubt: dacă participă acum, după grupele bifate și, cu înscriere separată, dacă s-a înscris. Intern: persoana nu e anunțată.",
         "columnMessage": "Mesaj",
         "messageHint": "Ce a scris persoana pentru organizatori când s-a oferit ca voluntar. Gol: n-a scris nimic.",
         "columnNotes": "Note interne",
@@ -7726,7 +7800,11 @@
       "eventInvitationsEraseBody": "Invitațiile deschise se retrag întâi, ca la „Retrage”: locul lor trece prin lista de așteptare. Apoi se șterg cele neacceptate; cele acceptate rămân cu înscrierea. Nu se poate anula.",
       "eventInvitationsErased": "Invitațiile acestei adrese au fost retrase și șterse; cele acceptate rămân cu înscrierile lor.",
       "eventInvitationsAcceptedKept": "O invitație acceptată e parte din înscrierea ei: se șterge odată cu înscrierea, din pagina înscrierii.",
-      "reconfirmations": "Reconfirmări ({count})"
+      "reconfirmations": "Reconfirmări ({count})",
+      "raffleEntries": "Înscrieri la tombolă ({count})",
+      "raffleEntry": "{event} · {method} · {when} · regulamentul, versiunea {version}",
+      "raffleTyped": "numele scris: {name}",
+      "raffleRecorded": "înregistrată de {role}"
     },
     "desk": {
       "title": "Masa de ridicare a numerelor",
@@ -7803,7 +7881,9 @@
         "checkinUndone": "Prezența a fost anulată.",
         "eliteMarked": "Marcat ca elită: BIB-ul lui se tipărește cu eticheta în locul numărului.",
         "eliteUnmarked": "Nu mai e elită: BIB-ul lui se tipărește din nou cu numărul.",
-        "eliteLabelSaved": "Eticheta pe BIB a fost salvată."
+        "eliteLabelSaved": "Eticheta pe BIB a fost salvată.",
+        "raffleSignedUp": "Gata: persoana e înscrisă la tombolă.",
+        "raffleAlready": "Persoana era deja înscrisă la tombolă."
       },
       "bibFree": "Numere libere la acest eveniment: {numbers}. Numărul salvat ajunge la participant pe email, cu codul QR; un număr deja purtat de altcineva este refuzat.",
       "guardian": "Minor — părinte/tutore: {name}",
@@ -12678,7 +12758,8 @@
         "desk": "Prezența",
         "results": "Clasament",
         "items": "Lucruri de adus",
-        "itemsShort": "Lucruri"
+        "itemsShort": "Lucruri",
+        "raffle": "Tombolă"
       },
       "items": {
         "title": "Lucruri de adus",
@@ -12719,6 +12800,104 @@
           "VALIDATION_ERROR": "Numele are între 1 și 120 de caractere, iar nota cel mult 200."
         }
       }
+    },
+    "raffle": {
+      "title": "Tombolă",
+      "intro": "Toți alergătorii, elitele și voluntarii evenimentului și dacă participă la tombolă. Extragerea o faceți voi, din fișier.",
+      "noEvent": "Niciun eveniment de arătat.",
+      "noRaffle": "Evenimentul ales nu are tombolă. „Avem tombolă” se bifează în editorul evenimentului, la „Numere de concurs”.",
+      "event": "Evenimentul",
+      "show": "Arată",
+      "settings": {
+        "who": "Participă: {groups}",
+        "nobody": "nicio grupă",
+        "groups": {
+          "RUNNER": "alergătorii",
+          "ELITE": "elitele",
+          "VOLUNTEER": "voluntarii"
+        },
+        "automatic": "din oficiu",
+        "signUp": "cu înscriere separată",
+        "open": "înscrieri deschise",
+        "closed": "înscrieri închise",
+        "why": "Închise pentru că: {why}",
+        "closedWhy": {
+          "noRaffle": "evenimentul nu are tombolă",
+          "notSignUpMode": "tombola e din oficiu",
+          "signUpClosed": "bifa „Înscrierile la tombolă sunt deschise” nu e pusă",
+          "notARace": "doar o cursă primește înscrieri la tombolă",
+          "notPublished": "evenimentul nu e publicat",
+          "notScheduled": "evenimentul e anulat sau încheiat",
+          "ended": "evenimentul s-a terminat",
+          "noRules": "Regulamentul tombolei nu e aprobat încă",
+          "noNotice": "nota de confidențialitate nu descrie încă tombola",
+          "groupNotAllowed": "nicio grupă nu e bifată"
+        },
+        "edit": "Schimbă în editor"
+      },
+      "counts": {
+        "total": "Participă: {count}",
+        "RUNNER": "Alergători: {count}",
+        "ELITE": "Elite: {count}",
+        "VOLUNTEER": "Voluntari: {count}",
+        "present": "Prezenți dintre ei: {count}"
+      },
+      "filters": {
+        "label": "Filtru",
+        "all": "Toți",
+        "in": "Participă",
+        "out": "Nu participă",
+        "present": "Doar prezenții",
+        "presentHint": "Cei care participă și au fost prezenți — aceiași ca în fișierul „doar prezenții”."
+      },
+      "columns": {
+        "number": "Nr.",
+        "name": "Nume",
+        "kind": "Grupa",
+        "in": "Participă",
+        "how": "Înscris",
+        "present": "Prezent",
+        "actions": "Acțiuni"
+      },
+      "yes": "Da",
+      "no": "Nu",
+      "reasons": {
+        "in": "da",
+        "groupNotAllowed": "grupa nu e bifată",
+        "notConfirmed": "neconfirmat",
+        "noNumber": "fără număr",
+        "takenOut": "scos de organizatori",
+        "notSignedUp": "nu s-a înscris"
+      },
+      "standing": {
+        "in": "Participă la tombolă",
+        "out": "Nu participă la tombolă: {reason}"
+      },
+      "methods": {
+        "LINK": "din pagina înscrierii",
+        "FORM": "din formular",
+        "DESK": "la masă",
+        "STAFF": "de organizatori"
+      },
+      "signedUpAt": "{method} · {when}",
+      "accepted": "A acceptat regulamentul",
+      "acceptedHelp": "Persoana a acceptat Regulamentul tombolei, pe hârtie sau verbal.",
+      "signUp": "Înscrie la tombolă",
+      "signUpShort": "Înscrie",
+      "signUpFor": "Înscrie la tombolă: {name}",
+      "takeOut": "Scoate",
+      "putBack": "Pune înapoi",
+      "takeOutFor": "Scoate de la tombolă: {name}",
+      "putBackFor": "Pune înapoi la tombolă: {name}",
+      "present": "Prezent",
+      "presentFor": "Prezent: {name}",
+      "delete": "Șterge înscrierea",
+      "deleteFor": "Șterge înscrierea la tombolă: {name}",
+      "deleteTitle": "Ștergi înscrierea la tombolă a persoanei {name}?",
+      "deleteBody": "Persoana nu mai participă la tombolă până nu se înscrie din nou. Nu i se trimite niciun e-mail.",
+      "cancel": "Renunță",
+      "print": "Tipărește",
+      "empty": "Nimeni de arătat aici."
     }
   },
   "NotFound": {
@@ -12759,7 +12938,14 @@
     "termsTitle": "Termeni și condiții",
     "privacyTitle": "Notă de confidențialitate",
     "volunteerAgreementTitle": "Contract de voluntariat",
-    "volunteerAgreementBlanks": "Un singur text pentru toate evenimentele: numele, rolul, evenimentul, data și locul se completează când accepți, iar PDF-ul pe care îl primești le arată."
+    "volunteerAgreementBlanks": "Un singur text pentru toate evenimentele: numele, rolul, evenimentul, data și locul se completează când accepți, iar PDF-ul pe care îl primești le arată.",
+    "raffleRulesTitle": "Regulamentul tombolei",
+    "raffleGroups": {
+      "RUNNER": "alergătorii înscriși și confirmați, cu număr de concurs",
+      "ELITE": "elitele cursei",
+      "VOLUNTEER": "voluntarii confirmați, cu număr de voluntar",
+      "and": "și"
+    }
   },
   "Registration": {
     "title": "Înscriere: {event}",
@@ -13644,6 +13830,22 @@
       "cannot": "Nu mai poți ajunge? Folosește „Anulează înscrierea” mai jos.",
       "done": "Am notat că vii — ne-ai răspuns {date}.",
       "failed": "Răspunsul nu a fost înregistrat pentru această înscriere."
+    },
+    "raffle": {
+      "title": "Tombola",
+      "intro": "La eveniment avem tombolă, cu înscriere separată: participi doar dacă te înscrii.",
+      "rules": "Citește Regulamentul tombolei",
+      "accept": "Am citit și accept Regulamentul tombolei",
+      "signUp": "Particip la tombolă",
+      "signingUp": "Te înscriem…",
+      "signedUp": "Ești înscris la tombolă.",
+      "withdraw": "Nu mai particip",
+      "done": "Gata: te-am înscris la tombolă.",
+      "withdrawn": "Nu mai participi la tombolă.",
+      "failed": "Nu s-a putut: înscrierile la tombolă s-au închis, sau persoana nu mai poate participa.",
+      "needAccept": "Bifează întâi că accepți Regulamentul tombolei.",
+      "otherAdult": "Persoana se înscrie singură, din pagina înscrierii ei. De aici o poți doar retrage.",
+      "withdrawing": "Te scoatem…"
     }
   },
   "Devs": {
@@ -14380,7 +14582,8 @@
       "familySignOneLeft": "A mai rămas o singură declarație de semnat la acest eveniment: se semnează din linkul primit pe email pentru acea persoană.",
       "familyWithdrawn": "Gata: înscrierea e anulată, iar adresa primește un email de confirmare.",
       "volunteerSent": "Oferta ta de voluntar a ajuns la organizatori.",
-      "volunteerGuardianAccepted": "Acordul tău a fost înregistrat."
+      "volunteerGuardianAccepted": "Acordul tău a fost înregistrat.",
+      "raffleSignedUp": "Ești înscris la tombolă. Mult noroc!"
     },
     "toast": {
       "saved": "Salvat.",
@@ -14891,7 +15094,15 @@
       "raceDayItemRemoved": "Lucru șters.",
       "raceDayItemBrought": "Bifat ca adus.",
       "raceDayItemUnbrought": "Debifat.",
-      "raceDayItemUnchanged": "Era deja așa; nimic de schimbat."
+      "raceDayItemUnchanged": "Era deja așa; nimic de schimbat.",
+      "raffleSignedUp": "Gata: persoana e înscrisă la tombolă.",
+      "raffleAlready": "Persoana era deja înscrisă la tombolă.",
+      "raffleDeleted": "Înscrierea la tombolă e ștearsă.",
+      "raffleTakenOut": "Scos de la tombolă.",
+      "rafflePutBack": "Pus înapoi la tombolă.",
+      "rafflePresentOn": "Bifat: prezent.",
+      "rafflePresentOff": "Debifat: absent.",
+      "raffleUnchanged": "Era deja așa; nimic de schimbat."
     },
     "mail": {
       "now": "Pleacă acum{road}: {what}.",

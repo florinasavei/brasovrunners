@@ -815,6 +815,52 @@ export default async function RegistrationBox({
                       <CheckboxField name="event.hasRaffle" defaultChecked={event?.hasRaffle ?? false} help={t("editor.hasRaffleHelp")}>
                         {t("editor.hasRaffle")}
                       </CheckboxField>
+                      {/*
+                        The raffle's settings (§NNN; the owner, 2026-11-18: «trebuie să bifez acolo cine se poate înscrie: doar alergătorii și
+                        elitele și voluntarii» and «tombolă din oficiu vs tombolă cu înscriere separată»), under «Avem tombolă» while it is
+                        ticked — hidden, never removed, so they still post. «Cine poate participa»: three ticks, all on by default, each with
+                        its marker; «Cum»: a native select of its two answers, so it always posts one; «Înscrierile … deschise»: a tick. Saved
+                        with the event — the Administrator's save (§542) — and one edition's own: no series edit, copy or event file carries them.
+                      */}
+                      <OnlyWhenTicked name="event.hasRaffle" initiallyTicked={event?.hasRaffle ?? false}>
+                        <Stack spacing={1} sx={{ pl: { sm: 4 } }} data-testid="raffle-settings">
+                          <Typography variant="subtitle2" component="p">
+                            {t("editor.raffle.who")}
+                          </Typography>
+                          {(
+                            [
+                              ["raffleRunners", event?.raffleRunners ?? true, t("editor.raffle.runners")],
+                              ["raffleElites", event?.raffleElites ?? true, t("editor.raffle.elites")],
+                              ["raffleVolunteers", event?.raffleVolunteers ?? true, t("editor.raffle.volunteers")],
+                            ] as const
+                          ).map(([name, on, label]) => (
+                            <Box key={name}>
+                              <input type="hidden" name={`event.${name}.present`} value="1" />
+                              <CheckboxField name={`event.${name}`} defaultChecked={on}>
+                                {label}
+                              </CheckboxField>
+                            </Box>
+                          ))}
+                          <BoxNote>{t("editor.raffle.whoHelp")}</BoxNote>
+                          <RecallField
+                            select
+                            name="event.raffleSignUp"
+                            label={t("editor.raffle.how")}
+                            defaultValue={event?.raffleSignUp === true ? "true" : "false"}
+                            slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+                            sx={{ width: { sm: 320 } }}
+                            data-testid="raffle-sign-up-mode"
+                          >
+                            <option value="false">{t("editor.raffle.howAutomatic")}</option>
+                            <option value="true">{t("editor.raffle.howSignUp")}</option>
+                          </RecallField>
+                          <BoxNote more={t("editor.raffle.howHelpMore")}>{t("editor.raffle.howHelp")}</BoxNote>
+                          <input type="hidden" name="event.raffleSignUpOpen.present" value="1" />
+                          <CheckboxField name="event.raffleSignUpOpen" defaultChecked={event?.raffleSignUpOpen ?? false} help={t("editor.raffle.openHelp")}>
+                            {t("editor.raffle.open")}
+                          </CheckboxField>
+                        </Stack>
+                      </OnlyWhenTicked>
                       <BibDesignPanel
                         eventId={event?.id ?? null}
                         design={design}

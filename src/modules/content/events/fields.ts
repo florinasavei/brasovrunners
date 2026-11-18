@@ -1014,6 +1014,15 @@ export const eventFieldsSchema = z
      */
     hasRaffle: z.boolean().optional(),
     /**
+     * The raffle's settings beside it (§NNN): «Cine poate participa» — the three groups —, «Cum» — `raffleSignUp`, «Cu înscriere
+     * separată» — and «Înscrierile la tombolă sunt deschise». Optional on the wire by the same discipline: absent is "not editing it".
+     */
+    raffleRunners: z.boolean().optional(),
+    raffleElites: z.boolean().optional(),
+    raffleVolunteers: z.boolean().optional(),
+    raffleSignUp: z.boolean().optional(),
+    raffleSignUpOpen: z.boolean().optional(),
+    /**
      * «Locurile din lista de așteptare se alocă automat» (§615): «Da» offers a freed or added place to
      * the head of the line at once, «Nu» leaves it to the organizer. Absent means this caller is not
      * editing it, by the kit's discipline (§554), so no save switches the offers by not mentioning them.

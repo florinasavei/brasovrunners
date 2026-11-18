@@ -53,6 +53,12 @@ export const routing = defineRouting({
      * like the registration's, never a registration; it answers 404 while the form could not be sent.
      */
     "/events/[slug]/volunteers": { ro: "/evenimente/[slug]/voluntari", en: "/events/[slug]/volunteers" },
+    /**
+     * The event's raffle sign-up (§NNN; the owner, 2026-11-18: «Practic oamenii trebuie să își treacă numărul de concurs și numele»):
+     * «Înscrie-te la tombolă» — a race number, a name, «Sunt voluntar», the rules and their acceptance. It answers 404 while the
+     * raffle's sign-up gate is shut (`raffleSignUpClosedFor`).
+     */
+    "/events/[slug]/tombola": { ro: "/evenimente/[slug]/tombola", en: "/events/[slug]/raffle" },
 
     /**
      * The three email-token landing pages (AGENTS.md §13.2, §13.3 scopes verify/complete/
@@ -315,6 +321,8 @@ export const routing = defineRouting({
     "/admin/checkin": "/admin/checkin",
     /** «Lucruri de adus» (§979): «Ziua cursei»'s checklist of the things to bring. A static segment, so it wins over `[code]`. */
     "/admin/checkin/lucruri": "/admin/checkin/lucruri",
+    /** «Tombolă» (§NNN): «Ziua cursei»'s raffle tab, the organizers'. A static segment, so it wins over `[code]`. */
+    "/admin/checkin/tombola": "/admin/checkin/tombola",
     "/admin/checkin/[code]": "/admin/checkin/[code]",
     "/admin/legal": "/admin/legal",
     "/admin/legal/new": "/admin/legal/new",

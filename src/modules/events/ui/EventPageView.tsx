@@ -37,6 +37,7 @@ import { RSVP_WHO_ID } from "@/modules/rsvp/rsvp-box";
 import RsvpBox from "@/modules/rsvp/ui/RsvpBox";
 import RsvpCount, { readRsvpsOf } from "@/modules/rsvp/ui/RsvpCount";
 import VolunteerCallout from "@/modules/volunteers/ui/VolunteerCallout";
+import RaffleCallout from "@/modules/volunteers/ui/RaffleCallout";
 import VolunteersList from "@/modules/volunteers/ui/VolunteersList";
 import RegistrationInterestForm from "@/modules/registrations/ui/RegistrationInterestForm";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
@@ -98,6 +99,8 @@ export type EventPageVisit = {
    * «Echipa de voluntari se formează.». A visit's page only, like the callout.
    */
   volunteersList?: { offerOpen: boolean } | null;
+  /** The raffle's sign-up is open (§NNN): one calm link to its own page. A visit's page only, like the volunteers' callout. */
+  raffle?: boolean;
 };
 
 /**
@@ -292,6 +295,9 @@ export default async function EventPageView({
           page — the form is no longer here. A visit's page only, and only where that page would answer 200 (the page decides,
           from the one read both share) — the preview before saving reads no public cache and takes no name. */}
       {visit?.volunteers && !membersOnly && <VolunteerCallout slug={slug} roleNames={visit.volunteers.roleNames} clubOnly={visit.volunteers.clubOnly === true} />}
+
+      {/* «Înscrie-te la tombolă» (§NNN): one calm link while the raffle's sign-up is open — the page decides, from the one gate. */}
+      {visit?.raffle && !membersOnly && <RaffleCallout slug={slug} />}
 
       {/* «Voluntarii» (§821), right after: a fold closed on arrival like «Condiții de participare», the names and roles of the confirmed volunteers who
           ticked «Vreau să apar pe lista publică a voluntarilor» — only where the club made the list public and the notice in force describes it (the card

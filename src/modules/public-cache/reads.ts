@@ -79,6 +79,7 @@ import {
   describesNewsletter,
   describesPromotionalMaterials,
   describesPromotionalMaterialsShared,
+  describesRaffle,
   describesResults,
   describesResultsNameAsk,
   describesRsvp,
@@ -92,6 +93,8 @@ import {
   namesVolunteerGuardian,
 } from "@/modules/legal-documents/domain/merge-fields";
 import { readPublicVolunteerRoles } from "@/modules/volunteers/volunteers";
+import { raffleSignUpClosedFor } from "@/modules/volunteers/domain/raffle";
+import { readRaffleEvent, settingsMayOpen } from "@/modules/volunteers/raffle-roster";
 import { readPublicVolunteersList } from "@/modules/volunteers/public-list";
 import { describesRefusal } from "@/modules/legal-documents/domain/refusal-clause";
 import { findCurrentApprovedDocument, findFirstResultsNameAskNoticeVersion, findFirstResultsNoticeVersion, findFirstRsvpMemberNoticeVersion, findFirstRsvpNoticeVersion, findFirstStatesNoticeVersion, findFirstVolunteersListNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
@@ -835,6 +838,44 @@ export async function cachedVolunteerMinorsOpen(now: Date): Promise<boolean> {
 export async function cachedVolunteerAgreementInForce(now: Date): Promise<boolean> {
   const versions = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("VOLUNTEER_AGREEMENT", locale, now)));
   return versions.every((version) => version !== undefined);
+}
+
+/**
+ * Whether «Regulamentul tombolei» is in force in every language (§NNN) — the raffle's sign-up page's and the event page's half of
+ * the gate, through the legal texts' own cached read. `raffleRulesInForce` is the uncached twin every door asks again.
+ */
+export async function cachedRaffleRulesInForce(now: Date): Promise<boolean> {
+  const versions = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("RAFFLE_RULES", locale, now)));
+  return versions.every((version) => version !== undefined);
+}
+
+/**
+ * Whether the privacy notice in force describes the raffle's sign-up (§NNN, `describesRaffle`), in every language — the cached
+ * twin of `noticeDescribesRaffle`, which every door asks again at every press.
+ */
+export async function cachedRaffleDescribed(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesRaffle(notice.body));
+}
+
+/**
+ * An event's raffle settings and the facts its gate reads (§NNN, `raffle-roster.ts#readRaffleEvent`), filed under the events' tag: the
+ * editor's save — the only writer of the settings — expires it. The only public read of the settings: nothing else public reads them.
+ */
+export async function cachedRaffleEvent(eventId: string) {
+  return publicRead(["events.raffle", eventId], ["events"], () => readRaffleEvent(getDb(), eventId));
+}
+
+/**
+ * Whether the raffle's public form takes sign-ups (§NNN): the one gate (`raffleSignUpClosedFor`) over the cached settings and the two
+ * cached legal halves, for any group the form serves — a registration's or a volunteer's. The legal texts are read only once the
+ * settings would open it. A page render, never a decision: the action asks every condition again, uncached.
+ */
+export async function cachedRaffleSignUpOpen(eventId: string, now: Date): Promise<boolean> {
+  const found = await cachedRaffleEvent(eventId);
+  if (!found || !settingsMayOpen(found.settings)) return false;
+  const [rulesInForce, noticeDescribesRaffle] = await Promise.all([cachedRaffleRulesInForce(now), cachedRaffleDescribed(now)]);
+  return raffleSignUpClosedFor({ settings: found.settings, event: found.event, rulesInForce, noticeDescribesRaffle }, now) === null;
 }
 
 /**
