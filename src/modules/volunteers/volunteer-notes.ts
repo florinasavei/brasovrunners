@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull, ne } from "drizzle-orm";
 import { eventVolunteerNotes, VOLUNTEER_NOTE_MAX } from "@/db/schema/event-volunteer-notes";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
@@ -32,6 +32,10 @@ import { type ExportNote, noteBodyOf } from "@/shared/notes/note-text";
  * that column. One exception keeps «Șterge» and «Modifică» true: deleting or changing a note whose words equal the column also
  * clears the column, in the same transaction, so the old words are really gone until the column's contract release drops it.
  *
+ * **On «Planul voluntarilor»** (§981, amending this section's «never elsewhere»; the owner, 2026-11-18: «să văd în plan și
+ * comentariile mele»): beside each person the plan draws, the words and the moment of each live note — on the screen only, never on
+ * paper — read in one query for the event (`listVolunteerNotesForPlan`), for a role this file's gate allows (`mayReadVolunteerNotes`).
+ *
  * Never imported by the registrations' notes (`modules/registrations/notes.ts`) or its table: the two kinds of note share only
  * the pure words (`shared/notes/note-text.ts`). A file that reads this one is a reviewed edit of
  * `tests/unit/volunteers/volunteer-notes-never-leave.test.ts`.
@@ -56,10 +60,24 @@ export type VolunteerNoteRow = {
  */
 export type VolunteerListNote = { id: string; createdAt: Date; body: string; editable: boolean };
 
+/**
+ * One live note as «Planul voluntarilor» draws it beside its person (§981): its words and its moment, newest first. No author and
+ * no press: the plan names nobody and changes no note — the person's page does.
+ */
+export type VolunteerPlanNote = { id: string; createdAt: Date; body: string };
+
 type Actor = Pick<StaffUser, "id" | "role">;
 
+/**
+ * Whether a role may read a volunteer's internal notes at all: the one gate every function below asserts. A screen that draws
+ * notes beside something a wider gate allows (the plan, §981) asks this first and leaves the notes out for anyone else.
+ */
+export function mayReadVolunteerNotes(role: StaffRole): boolean {
+  return canManageVolunteers(role);
+}
+
 function assertMayKeepNotes(actor: Pick<StaffUser, "role">): void {
-  if (!canManageVolunteers(actor.role)) {
+  if (!mayReadVolunteerNotes(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not read or write a volunteer's internal notes`);
   }
 }
@@ -249,6 +267,34 @@ export async function listVolunteerNotesForList<T extends Record<string, unknown
   for (const row of rows) {
     const list = notes.get(row.volunteerId) ?? [];
     list.push({ id: row.id, createdAt: row.createdAt, body: row.body, editable: mayChangeNote(actor, row.authorId) });
+    notes.set(row.volunteerId, list);
+  }
+  return notes;
+}
+
+/**
+ * The live notes of one event's people who are not cancelled — the people «Planul voluntarilor» draws (§981) —, in **one query** for
+ * the whole event, never one per person: each volunteer's list newest first, the words and the moment alone. Neither the author's
+ * name nor role is read: the plan names nobody. A volunteer with none is absent from the map; a deleted note is never read; a value
+ * that is no id reads nothing.
+ */
+export async function listVolunteerNotesForPlan<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "role">,
+  eventId: string,
+): Promise<Map<string, VolunteerPlanNote[]>> {
+  assertMayKeepNotes(actor);
+  const notes = new Map<string, VolunteerPlanNote[]>();
+  if (!isUuid(eventId)) return notes;
+  const rows = await db
+    .select({ id: eventVolunteerNotes.id, volunteerId: eventVolunteerNotes.volunteerId, body: eventVolunteerNotes.body, createdAt: eventVolunteerNotes.createdAt })
+    .from(eventVolunteerNotes)
+    .innerJoin(eventVolunteers, eq(eventVolunteers.id, eventVolunteerNotes.volunteerId))
+    .where(and(eq(eventVolunteers.eventId, eventId), ne(eventVolunteers.state, "CANCELLED"), isNull(eventVolunteerNotes.deletedAt)))
+    .orderBy(desc(eventVolunteerNotes.createdAt), desc(eventVolunteerNotes.id));
+  for (const row of rows) {
+    const list = notes.get(row.volunteerId) ?? [];
+    list.push({ id: row.id, createdAt: row.createdAt, body: row.body });
     notes.set(row.volunteerId, list);
   }
   return notes;

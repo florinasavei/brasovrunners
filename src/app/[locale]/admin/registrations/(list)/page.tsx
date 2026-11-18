@@ -48,6 +48,7 @@ import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
 import KitCount from "@/modules/registrations/ui/KitCount";
+import MembersAndPartners from "@/modules/registrations/ui/MembersAndPartners";
 import { readVolunteerKitFigures, volunteerKitHrefs } from "@/modules/volunteers/admin-list";
 import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 import { listEliteEntries } from "@/modules/registrations/elite-list";
@@ -149,6 +150,7 @@ import { previewMemberTickSweep, readRowPhones } from "@/modules/registrations/a
 import { countForm, type CountForm } from "@/i18n/count-form";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { mayEndWaitlisted, rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
+import { hasOneBib, oneBibHref } from "@/modules/registrations/domain/one-bib";
 import { givePlaceRefusalAhead, specialGuestsListOn, staffOfferIfMadeNow, staffOfferQuestion, waitlistAddDoorOpen } from "@/modules/registrations/give-place-tip";
 import { noFreePlaceValues } from "@/modules/registrations/domain/capacity";
 import { outsideMarkConfirm } from "@/modules/registrations/ui/outside-mark-body";
@@ -165,7 +167,7 @@ import { memberCanonicalEmails } from "@/modules/registrations/member-ticks";
 import EmailStateLine from "@/modules/registrations/ui/EmailStateLine";
 import { rejectedEmailWords, resendWarning, withResendWarning } from "@/modules/registrations/ui/rejected-email-words";
 import { needsEmailAction } from "@/modules/registrations/domain/email-state";
-import { CLUB_NAME } from "@/theme/brand";
+import { CLUB_NAME, CLUB_SHORT_NAME } from "@/theme/brand";
 import { actionKeyOf } from "@/shared/forms/action-key";
 
 type Props = {
@@ -1670,6 +1672,31 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         )}
       </SummaryStrip>
       {/*
+        «Dintre cei {n} confirmați» (§982; the owner, 2026-11-18: «câți sunt Brașov Runners și câți sunt de la sponsori?»): the
+        confirmed real registrations the chip «Confirmată» counts, by the list's own two filters — counted in `summary`'s one
+        query, and only with one event chosen (null otherwise). Each count opens the list filtered to exactly those people,
+        confirmed: the members (`clubMember=1`), any partner (`partner=1`), one partner by name where the filter takes it.
+      */}
+      {summary.composition && (
+        <MembersAndPartners
+          composition={summary.composition}
+          locale={locale}
+          club={CLUB_SHORT_NAME}
+          hrefs={{
+            members: buildListHref(basePath, listParams, { status: "CONFIRMED", clubMember: "1" }),
+            partners: buildListHref(basePath, listParams, { status: "CONFIRMED", partner: "1" }),
+            byPartner: Object.fromEntries(
+              summary.composition.byPartner.flatMap(({ name }) => {
+                // Only a name the filter takes (one of the event's partners, in their spelling); any other has no link.
+                const filterable = chosenPartnerOf(name, partnerSuggestions);
+                return filterable ? [[name, buildListHref(basePath, listParams, { status: "CONFIRMED", partner: undefined, [PARTNER_FILTER_PARAM]: filterable })]] : [];
+              }),
+            ),
+          }}
+          spaceAbove={1.5}
+        />
+      )}
+      {/*
         «Locuri», and «Pe site acum» inside it (§906) — the tick «Înscrierile pe site sunt deschise» beside it handed to
         an Administrator alone (the action asserts it again); the Organizer reads the state. An event with no capacity
         has no «Locuri»: the line and the tick stand alone.
@@ -2280,6 +2307,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   href: getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: row.id } } }),
                 },
               ];
+              // «Descarcă BIB-ul» (§980; the owner, 2026-11-18: «eu trebuie să pot descărca un BIB doar pentru o persoană»): this
+              // row's bib alone, as the sheets draw it, for every role that reads this list — only where the route prints one.
+              if (canReadRegistrations(actor.role) && hasOneBib(row)) {
+                items.push({ kind: "link", icon: "download", label: t("registrations.oneBib.menu"), href: oneBibHref(row.eventId, row.id, locale), newTab: true });
+              }
               if (verbs.includes("confirmOnPaper")) {
                 items.push({
                   kind: "submit",

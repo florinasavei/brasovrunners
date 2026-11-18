@@ -1150,6 +1150,44 @@
       "statusAll": "Toate stările",
       "summaryTotal": "Înscrieri: {count} (toate stările, anulate și expirate incluse)",
       "summaryTest": "De test: {count}",
+      "composition": {
+        "title": {
+          "one": "Dintre confirmați ({count}):",
+          "few": "Dintre cei {count} confirmați:",
+          "other": "Dintre cei {count} de confirmați:"
+        },
+        "members": {
+          "one": "{count} membru {club}",
+          "few": "{count} membri {club}",
+          "other": "{count} de membri {club}"
+        },
+        "verified": {
+          "one": "{count} verificat",
+          "few": "{count} verificați",
+          "other": "{count} de verificați"
+        },
+        "declared": {
+          "one": "{count} declarat",
+          "few": "{count} declarați",
+          "other": "{count} de declarați"
+        },
+        "split": "({verified}, {declared})",
+        "partners": {
+          "one": "{count} de la parteneri",
+          "few": "{count} de la parteneri",
+          "other": "{count} de la parteneri"
+        },
+        "others": {
+          "one": "{count} altul — nici membru, nici de la parteneri",
+          "few": "{count} ceilalți — nici membri, nici de la parteneri",
+          "other": "{count} ceilalți — nici membri, nici de la parteneri"
+        },
+        "both": {
+          "one": "{count} e și membru, și de la parteneri: numărat la amândouă.",
+          "few": "{count} sunt și membri, și de la parteneri: numărați la amândouă.",
+          "other": "{count} de oameni sunt și membri, și de la parteneri: numărați la amândouă."
+        }
+      },
       "kits": {
         "title": "Kituri de pregătit: {runners}",
         "titleWithVolunteers": "Kituri de pregătit: {count} = {runners} + {volunteers}",
@@ -1902,7 +1940,10 @@
       "cancel": "Anulează înscrierea",
       "cancelBody": "Nu se poate desface. Refuzul, cu motivul lui, se face din pagina înscrierii.",
       "confirmOnPaperBody": "Confirmi că participantul a semnat declarația pe hârtie, la masă. Doar cu hârtia semnată în față. Apoi primește emailul de confirmare; dacă nu e loc, intră pe lista de așteptare, fără email acum.",
-      "downloadBib": "Descarcă numărul de concurs (BIB)",
+      "oneBib": {
+        "download": "Descarcă BIB-ul (PDF)",
+        "menu": "Descarcă BIB-ul"
+      },
       "notOnPublicList": "Nu apare public",
       "erase": "Șterge definitiv",
       "eraseTitle": "Ștergi definitiv înscrierea lui {name}?",
@@ -6387,6 +6428,11 @@
         "messageHint": "Ce a scris persoana pentru organizatori când s-a oferit ca voluntar. Gol: n-a scris nimic.",
         "columnNotes": "Note interne",
         "notesHint": "Notele organizatorilor despre persoană: cele mai noi trei, fără zi și oră. Toate, cu autorul și data lor, sunt pe pagina persoanei. Voluntarul nu le vede.",
+        "columnMember": "Membru {club}",
+        "memberHint": "Răspunsul persoanei pe formular: „Fac parte din grupul {club}”. E declarația ei, neverificată. Bifa e pentru cine a răspuns da; gol pentru ceilalți.",
+        "memberYes": "Da, membru {club}",
+        "memberOnly": "Doar membrii {club}",
+        "memberOnlyHelp": "Cine a bifat pe formular „Fac parte din grupul {club}”: declarația persoanei, neverificată.",
         "columnType": "Tip",
         "typeHint": "Unde lucrează persoana, după categoria rolurilor date: de exemplu start/sosire sau traseu. Gol: niciun rol dat ori fără categorie. Categoriile se scriu în cardul „Voluntari” al evenimentului.",
         "filter": "Filtrează",
@@ -6506,6 +6552,8 @@
         "noVolunteers": "Evenimentul nu are încă voluntari.",
         "noRole": "fără rol dat",
         "notConfirmed": "încă de confirmat",
+        "decision": "Decizie: {decision}",
+        "notes": "Note interne",
         "column": "Punct",
         "columnHint": "Punctul la care stă voluntarul, la start–finish sau pe traseu, ales în „Planul voluntarilor”. Gol: încă fără punct.",
         "columnPoint": "{number}. {name}",

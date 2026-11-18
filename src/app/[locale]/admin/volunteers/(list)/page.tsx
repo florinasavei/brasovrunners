@@ -34,6 +34,7 @@ import {
   listRoleNames,
   listRolesWithCounts,
   listVolunteersForAdmin,
+  memberFilterOf,
   summariseVolunteersForAdmin,
   UNASSIGNED,
   VOLUNTEER_SORT_KEYS,
@@ -62,8 +63,10 @@ import Panel from "@/shared/ui/Panel";
 import RowNoteDialog from "@/shared/ui/RowNoteDialog";
 import StatusChip from "@/shared/ui/StatusChip";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import TickButton from "@/shared/ui/TickButton";
 import TipSpan from "@/shared/ui/TipSpan";
+import { CLUB_NAME, CLUB_SHORT_NAME } from "@/theme/brand";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -109,7 +112,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   if (!canManageVolunteers(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, state, role, q, kit, volunteerError } = current;
+  const { eventId, state, role, q, kit, member, volunteerError } = current;
   const query = parseListQuery(current, {
     sortable: VOLUNTEER_SORT_KEYS,
     // Newest offers first: the person somebody is asking about has usually just signed up.
@@ -127,12 +130,15 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const roleFilter = role === UNASSIGNED || (role && isUuid(role)) ? role : undefined;
   // «Are kit» (§904): «yes» or «no»; anything else in the address is no filter.
   const kitFilter = kitFilterOf(kit);
+  // «Doar membrii {club}» (§981): «1»; anything else in the address is no filter.
+  const memberFilter = memberFilterOf(member);
   const filters: VolunteerAdminFilters = {
     eventId: eventFilter.eventId,
     state: stateFilter,
     role: roleFilter,
     search: q || undefined,
     kit: kitFilter,
+    member: memberFilter,
   };
 
   const [rows, total, summary, eventRoles, t] = await Promise.all([
@@ -194,6 +200,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     role: roleFilter,
     q,
     kit: kitFilter === undefined ? undefined : kit,
+    member: memberFilter ? "1" : undefined,
     sort: current.sort,
     dir: current.dir,
     page: current.page,
@@ -202,7 +209,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const listQueryString = buildListHref("", listParams, {}).replace(/^\?/, "");
   // A press on a row comes back to this page of the list, every filter kept (§839), so the row's new chip is in view.
   const returnTo = buildListHref(basePath, listParams, { page: current.page });
-  const hasFilters = Boolean(eventId || stateFilter || roleFilter || q || kitFilter !== undefined);
+  const hasFilters = Boolean(eventId || stateFilter || roleFilter || q || kitFilter !== undefined || memberFilter);
   const autoScopedToFeatured = !hasFilters && eventFilter.eventId !== undefined;
   const scopeEvent = events.find((event) => event.id === filters.eventId) ?? null;
   // «Adaugă un voluntar de mână» for the event in scope (§862): the context a person's page reads, coming back to this page of the list.
@@ -420,6 +427,14 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     </Box>
   );
 
+  // «Membru {club}» (§981): the one tick every member's row draws — a glyph the eye reads and the words a screen reader says.
+  const memberWords = t("volunteers.screen.memberYes", { club: CLUB_SHORT_NAME });
+  const memberTick = (
+    <Box component="span" role="img" aria-label={memberWords} title={memberWords} sx={{ color: "success.main", fontWeight: 700 }} data-testid="volunteer-member">
+      ✓
+    </Box>
+  );
+
   const columns: readonly AdminColumn<VolunteerAdminRow>[] = [
     {
       key: "name",
@@ -468,6 +483,21 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           {row.city ?? "—"}
         </Box>
       ),
+    },
+    {
+      /*
+        «Membru {club}» (§981; the owner, 2026-11-18, three days before the race: «vreau la voluntari și să văd bifa "membru BVR"»):
+        the person's own answer «Fac parte din grupul {club}» on the form (`club_member`) — their claim, checked against nothing, as
+        the registration's tick is (§48) —, headed by the club's short name from its identity. A tick for yes, its words for a
+        screen reader; nothing for no: an empty cell in the table, no line on a phone's card. Hideable under «Coloane» like the
+        list's other answers; «Doar membrii {club}» in the filters shows the ticked alone. Read with the row, so no query is added.
+      */
+      key: "member",
+      label: t("volunteers.screen.columnMember", { club: CLUB_SHORT_NAME }),
+      hint: t("volunteers.screen.memberHint", { club: CLUB_NAME }),
+      align: "center",
+      omitEmptyOnPhone: true,
+      render: (row) => (row.clubMember ? memberTick : null),
     },
     {
       /*
@@ -849,6 +879,12 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
               <MenuItem value="yes">{t("volunteers.screen.kitYes")}</MenuItem>
               <MenuItem value="no">{t("volunteers.screen.kitNo")}</MenuItem>
             </TextField>
+            {/* «Doar membrii {club}» (§981): a tick, like the registrations list's — ticked submits `1`, unticked nothing. */}
+            <Box sx={{ minWidth: 220, maxWidth: 320, pt: 0.5 }} data-testid="volunteers-filter-member">
+              <CheckboxField name="member" value="1" defaultChecked={memberFilter === true} dense help={t("volunteers.screen.memberOnlyHelp", { club: CLUB_NAME })}>
+                {t("volunteers.screen.memberOnly", { club: CLUB_SHORT_NAME })}
+              </CheckboxField>
+            </Box>
             <Stack direction="row" spacing={1} sx={{ pt: 1, flexWrap: "wrap", gap: 1 }}>
               <GlyphButton icon="filter" type="submit" variant="contained" sx={TAP_TARGET}>
                 {t("volunteers.screen.filter")}

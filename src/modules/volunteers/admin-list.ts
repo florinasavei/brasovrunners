@@ -37,7 +37,17 @@ export type VolunteerAdminFilters = {
   search?: string;
   /** «Are kit» (§904): only the people ticked (`true`), only the ones not (`false`), or everyone (absent). */
   kit?: boolean;
+  /**
+   * «Doar membrii {club}» (§981): only the people who answered «Fac parte din grupul {club}» on the form (`club_member`) — their
+   * own claim, checked against nothing —, or everyone (absent). No «not members» half: the owner asked to see the members.
+   */
+  member?: true;
 };
+
+/** `?member=` as the list's address carries it (§981): «1», the members alone, or nothing — anything else is no filter. */
+export function memberFilterOf(value: string | undefined): true | undefined {
+  return value === "1" ? true : undefined;
+}
 
 /** `?kit=` as the list's address carries it (§904): «yes», «no», or nothing — anything else is no filter. */
 export function kitFilterOf(value: string | undefined): boolean | undefined {
@@ -81,6 +91,7 @@ function whereOf(filters: VolunteerAdminFilters): SQL | undefined {
   const term = filters.search?.trim();
   if (term) parts.push(nameMatches(eventVolunteers.name, term));
   if (filters.kit !== undefined) parts.push(eq(eventVolunteers.hasKit, filters.kit));
+  if (filters.member) parts.push(eq(eventVolunteers.clubMember, true));
   return parts.length > 0 ? and(...parts) : undefined;
 }
 

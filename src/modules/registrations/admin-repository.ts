@@ -680,16 +680,84 @@ export type RegistrationSummary = {
    * `byStatus` like anybody (they are registrations), and apart here, as the strip's own pill.
    */
   outside: number;
+  /**
+   * «Dintre cei {n} confirmați» (§982; the owner, 2026-11-18: «aș vrea să văd mai clar, câți sunt Brașov Runners și câți
+   * sunt de la sponsori?»): who the confirmed real registrations are — the people `byStatus.CONFIRMED` counts, the special
+   * guests among them, never a test row (§12.6) — by the list's own two filters. Null when no event is chosen: the block,
+   * like the panel's other event-bound lines, is about one event.
+   */
+  composition: RegistrationComposition | null;
 };
+
+/**
+ * The confirmed real registrations of one event split by «Doar membrii {club}» and «De la parteneri» (§982): members by the
+ * filter's own rule (§662, §973: the person's tick «Sunt membru», or an address of a member account), `verified` of them by
+ * the address — the row's «Membru (verificat)» wins over its «Membru (declarat)», as `membershipOf` says — and the rest
+ * declared; `partners` those with a partner's name, `byPartner` the names as written (one entry per name whatever its
+ * capitals, in one spelling met — the link takes the event's spelling through `chosenPartnerOf`), largest first; `both` the
+ * people in the two counts at once, so the figures add up: `others` = confirmed − members − partners + both. A runner who only
+ * typed the club's name in the club box (the Excel's «Club runner», §753/§787, `isClubRunner`) is not a member here — the
+ * members are the filter's people, so the link opens exactly them — and is counted under `others`.
+ */
+export type RegistrationComposition = {
+  confirmed: number;
+  members: number;
+  verified: number;
+  declared: number;
+  partners: number;
+  byPartner: { name: string; count: number }[];
+  both: number;
+  others: number;
+};
+
+/**
+ * The partners' names of the confirmed (one per registration), as one entry per name whatever its capitals, in the first
+ * spelling met (the link takes the event's spelling through `chosenPartnerOf`), largest first and, at a tie, by name.
+ */
+export function countByPartner(names: readonly string[]): { name: string; count: number }[] {
+  const byKey = new Map<string, { name: string; count: number }>();
+  for (const name of names) {
+    const key = name.toLocaleLowerCase("ro");
+    const entry = byKey.get(key);
+    if (entry) entry.count += 1;
+    else byKey.set(key, { name, count: 1 });
+  }
+  return [...byKey.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "ro"));
+}
 
 export async function summariseRegistrationsForAdmin<T extends Record<string, unknown>>(
   db: Database<T>,
   filters: RegistrationListFilters = {},
 ): Promise<RegistrationSummary> {
-  const conditions = registrationConditions(filters, filters.clubMember ? await membersFor(db, filters) : []);
+  // The member accounts are read for the composition too (§982) — only with one event chosen; the page hands them in, read once.
+  const members = filters.clubMember || filters.eventId ? await membersFor(db, filters) : [];
+  const conditions = registrationConditions(filters, members);
+  /*
+    The composition (§982) rides in this same grouped scan as FILTER clauses: each counts only the confirmed real rows, so
+    every group but the confirmed real ones yields zero. The columns are selected only with one event chosen; with every
+    event listed they are not in the query at all.
+  */
+  const composed = sql`(${registrations.status} = 'CONFIRMED' and ${registrations.kind} = 'REAL')`;
+  const member = sql`(${registrations.clubMemberDeclared} or ${memberVerifiedOf(members)})`;
+  const partner = sql`(${registrations.partnerName} is not null)`;
+  const compositionColumns = {
+    members: sql<number>`count(*) filter (where ${composed} and ${member})`.mapWith(Number),
+    verified: sql<number>`count(*) filter (where ${composed} and ${memberVerifiedOf(members)})`.mapWith(Number),
+    partners: sql<number>`count(*) filter (where ${composed} and ${partner})`.mapWith(Number),
+    both: sql<number>`count(*) filter (where ${composed} and ${member} and ${partner})`.mapWith(Number),
+    // One spelling of a name met per registration; the link takes the event's spelling through `chosenPartnerOf`.
+    partnerNames: sql<string[]>`coalesce(array_agg(${registrations.partnerName}) filter (where ${composed} and ${partner}), '{}')`,
+  };
+  const composition: Partial<typeof compositionColumns> = filters.eventId ? compositionColumns : {};
 
   const rows = await db
-    .select({ status: registrations.status, kind: registrations.kind, outside: registrations.outsideCapacity, total: count() })
+    .select({
+      status: registrations.status,
+      kind: registrations.kind,
+      outside: registrations.outsideCapacity,
+      total: count(),
+      ...composition,
+    })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))
     .leftJoin(
@@ -702,8 +770,16 @@ export async function summariseRegistrationsForAdmin<T extends Record<string, un
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .groupBy(registrations.status, registrations.kind, registrations.outsideCapacity);
 
-  const summary: RegistrationSummary = { byStatus: {}, real: 0, test: 0, outside: 0 };
+  const summary: RegistrationSummary = { byStatus: {}, real: 0, test: 0, outside: 0, composition: null };
+  const split = { members: 0, verified: 0, partners: 0, both: 0, names: [] as string[] };
   for (const row of rows) {
+    // Zero on every group but the confirmed real ones (the FILTER clauses above), so summing them all is safe; absent with
+    // every event listed.
+    split.members += row.members ?? 0;
+    split.verified += row.verified ?? 0;
+    split.partners += row.partners ?? 0;
+    split.both += row.both ?? 0;
+    split.names.push(...(row.partnerNames ?? []));
     if (row.kind === "TEST") {
       summary.test += row.total;
       continue;
@@ -711,6 +787,19 @@ export async function summariseRegistrationsForAdmin<T extends Record<string, un
     summary.real += row.total;
     if (row.outside) summary.outside += row.total;
     summary.byStatus[row.status] = (summary.byStatus[row.status] ?? 0) + row.total;
+  }
+  if (filters.eventId) {
+    const confirmed = summary.byStatus.CONFIRMED ?? 0;
+    summary.composition = {
+      confirmed,
+      members: split.members,
+      verified: split.verified,
+      declared: split.members - split.verified,
+      partners: split.partners,
+      byPartner: countByPartner(split.names),
+      both: split.both,
+      others: confirmed - split.members - split.partners + split.both,
+    };
   }
   return summary;
 }

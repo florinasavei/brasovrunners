@@ -4,8 +4,9 @@ import { describe, expect, it } from "vitest";
 
 /**
  * «Decizie pentru ziua cursei» (§954, BR-REQ-060-01) — what the organizers decided for a volunteer on race day is their own
- * line: it reaches the «Voluntari» list's column, the person's page, the event card's row of the person and «Toate datele unei
- * persoane» (art. 15), and nothing else. Never a public page, never an email, never a badge, never the desk, never the public
+ * line: it reaches the «Voluntari» list's column, the person's page, the event card's row of the person, «Toate datele unei
+ * persoane» (art. 15) and — since §981, amending §954's «not the plan» — «Planul voluntarilor», beside each person it draws (the
+ * day's plan, printed with it), and nothing else. Never a public page, never an email, never a badge, never the desk, never the public
  * volunteers' list, never the raffle's file — and, until a change of its own says so, not the volunteers' files either.
  *
  * The structural half of that promise, as `plan-never-leaves.test.ts` holds the point's and `volunteer-notes-never-leave.test.ts`
@@ -63,6 +64,9 @@ const READERS = new Set(
     // «Toate datele unei persoane» (art. 15): the offer's own row, and the line that draws it.
     "src/modules/registrations/person-data.ts",
     "src/modules/volunteers/ui/VolunteerAnswers.tsx",
+    // «Planul voluntarilor» (§981): the plan's read carries each person's line, and its page draws it under the person.
+    "src/modules/volunteers/plan.ts",
+    "src/app/[locale]/admin/events/[id]/plan-voluntari/page.tsx",
   ].map((file) => path.join(ROOT, file)),
 );
 
@@ -131,6 +135,14 @@ describe("§954 a volunteer's race-day decision stays with the organizers", () =
       expect(namesTheDecision(file, source), relative(file)).toBe(false);
       // Nor may one reach the press: the screen's actions are the staff's, by whatever path they are imported.
       expect(importsModule(file, source, ACTIONS_MODULE), relative(file)).toBe(false);
+    }
+  });
+
+  it("reaches no email through the plan: the point's email reads the plan's pictures and links, never its people (§981)", () => {
+    // «Trimite fiecăruia punctul lui» (§956) imports the plan's module for `readVolunteerPlanMaps`; the plan's people now carry the
+    // organizers' words, so the email's module must never read them through `readVolunteerPlan`.
+    for (const file of ["src/modules/volunteers/point-mail.ts", ...files.map(relative).filter((at) => at.startsWith("src/modules/notifications/"))]) {
+      expect(readFileSync(path.join(ROOT, file), "utf8"), file).not.toMatch(/\breadVolunteerPlan\b(?!Maps)/);
     }
   });
 
