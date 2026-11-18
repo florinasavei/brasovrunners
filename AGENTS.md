@@ -3923,7 +3923,7 @@ map of their own — and live with the plan («Poze și hărți», `DECISIONS.md
     and the map's link for a point that has coordinates; for a route point without them not a word changed (§16.3).
 
 - **Twelve pictures and twelve links an event, in their own two tables** (`db/schema/volunteer-plan.ts`, migration
-  `0212`): `event_volunteer_plan_pictures` — a stored picture by a real foreign key, once a plan, in its order — and
+  `0213`): `event_volunteer_plan_pictures` — a stored picture by a real foreign key, once a plan, in its order — and
   `event_volunteer_plan_links` — an `https:` or `http:` address written whole (at most 2 000 characters, read by the
   platform's own parser; never `javascript:`, `data:` or `mailto:`) and an optional label of at most 120, one for both
   languages as a plan point's name is. Each new one goes last; there is no reordering (remove and add again). Both cascade

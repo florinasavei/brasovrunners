@@ -630,7 +630,7 @@ export const events = pgTable(
      * its volunteers' points numbered on it: «trebui sa pot incarca si planul voluntarilor pe traseu in genul [pozei]»): the plan
      * as the organizers drew it — the map with the points on it — a stored picture (`media_assets`, §66), or null for none.
      *
-     * **Retired by «Poze și hărți» (migration `0212`, §NNN): written by nobody and read by nobody but `media/references.ts`.** A
+     * **Retired by «Poze și hărți» (migration `0213`, §NNN): written by nobody and read by nobody but `media/references.ts`.** A
      * plan holds several pictures since, in their own table (`volunteer-plan.ts`), into which the
      * migration copied each event's one picture. The column stays until a later contract release drops it: the reference check
      * still counts it, so nothing it names is swept before then, and the events' blank row still names it.

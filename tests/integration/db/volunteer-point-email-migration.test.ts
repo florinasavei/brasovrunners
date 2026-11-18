@@ -96,7 +96,7 @@ describe("migration 0210_volunteer_point_email", () => {
     const tablesOf = async (database: PGlite) =>
       (await database.query<{ table_name: string }>(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`)).rows.map((row) => row.table_name);
     // The same world stopped one migration short, and the world this migration leaves — never the head, whose later
-    // migrations add tables of their own (0212's «Poze și hărți»).
+    // migrations add tables of their own (0213's «Poze și hărți»).
     const journal = JSON.parse(readFileSync(`${MIGRATIONS}/meta/_journal.json`, "utf8")) as Journal;
     const through = mkdtempSync(path.join(tmpdir(), "volunteer-point-email-through-"));
     cpSync(MIGRATIONS, through, { recursive: true });

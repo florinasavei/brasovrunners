@@ -48,7 +48,7 @@ import { listVolunteers, type VolunteerItem } from "./volunteers";
   writer: the page reads them through `readVolunteerPlan`, and «Trimite fiecăruia punctul lui» (§956, `point-mail.ts`) sends
   them on as the message leaves (`readVolunteerPlanMaps`), so nobody but this file names the tables.
 
-  The one picture of §952 (a column of the events) was copied into the pictures by migration `0212` and is
+  The one picture of §952 (a column of the events) was copied into the pictures by migration `0213` and is
   written by nobody since; `media/references.ts` still counts it, so nothing it names is swept before the contract that
   drops it.
 */

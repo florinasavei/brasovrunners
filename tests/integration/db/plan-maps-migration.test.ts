@@ -8,24 +8,24 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0212_plan_maps` (§NNN «Poze și hărți», amending §952; the owner, 2026-11-18: «sa pot pune mai multe poze, si
+ * Migration `0213_plan_maps` (§NNN «Poze și hărți», amending §952; the owner, 2026-11-18: «sa pot pune mai multe poze, si
  * link-uri»), proven on real PostgreSQL (PGlite): two new tables — the plan's pictures and its links —, each cascading from
  * its event, with their checks; each event's one picture of the release before copied in at position 1 when it names a
  * stored picture that is no film's poster, so no plan loses its picture; the old column left where it was; and the file only
  * expands.
  */
 const MIGRATIONS = "src/db/migrations";
-const TAG = "0212_plan_maps";
+const TAG = "0213_plan_maps";
 
 type Journal = { entries: Array<{ idx: number; tag: string; when: number }> };
 
-const WITH_PICTURE = "aaaaaaaa-0000-4000-8000-000000000212";
-const WITH_POSTER = "aaaaaaaa-0001-4000-8000-000000000212";
-const WITH_NOTHING_THERE = "aaaaaaaa-0002-4000-8000-000000000212";
-const WITHOUT = "aaaaaaaa-0003-4000-8000-000000000212";
-const PICTURE = "bbbbbbbb-0000-4000-8000-000000000212";
-const POSTER = "bbbbbbbb-0001-4000-8000-000000000212";
-const GONE = "bbbbbbbb-0002-4000-8000-000000000212";
+const WITH_PICTURE = "aaaaaaaa-0000-4000-8000-000000000213";
+const WITH_POSTER = "aaaaaaaa-0001-4000-8000-000000000213";
+const WITH_NOTHING_THERE = "aaaaaaaa-0002-4000-8000-000000000213";
+const WITHOUT = "aaaaaaaa-0003-4000-8000-000000000213";
+const PICTURE = "bbbbbbbb-0000-4000-8000-000000000213";
+const POSTER = "bbbbbbbb-0001-4000-8000-000000000213";
+const GONE = "bbbbbbbb-0002-4000-8000-000000000213";
 
 let client: PGlite;
 let folder: string;
@@ -65,7 +65,7 @@ afterAll(async () => {
   if (folder) rmSync(folder, { recursive: true, force: true });
 });
 
-describe("migration 0212_plan_maps", () => {
+describe("migration 0213_plan_maps", () => {
   it("copies each plan's stored picture in at position 1 — never a film's poster or an id that names nothing — and leaves the column", async () => {
     expect((await client.query(`SELECT event_id, media_asset_id, position FROM event_volunteer_plan_pictures ORDER BY event_id`)).rows).toEqual([
       { event_id: WITH_PICTURE, media_asset_id: PICTURE, position: 1 },
