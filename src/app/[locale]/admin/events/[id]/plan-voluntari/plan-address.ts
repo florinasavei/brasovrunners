@@ -16,9 +16,10 @@ export function planViewOf(value: unknown): PlanView {
 
 /**
  * The fold a press that went through comes back open in (`saved=`, `shared/ui/fold.ts`'s «saved»): one word a fold, whatever
- * the press's own outcome — a picture changed or left as it was, a point added, the volunteers told.
+ * the press's own outcome — a picture or a link added or taken off (§NNN, «Poze și hărți»), a point added, the volunteers told,
+ * a person placed from their own line of «Fără punct» (§NNN).
  */
-export const PLAN_SAVED = { picture: "planPicture", added: "planPointAdded", sent: "planPointsSent" } as const;
+export const PLAN_SAVED = { maps: "planMaps", added: "planPointAdded", sent: "planPointsSent", unplaced: "planUnplaced" } as const;
 
 type PlanAddress = {
   view: PlanView;

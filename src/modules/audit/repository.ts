@@ -667,9 +667,14 @@ export type AuditAction =
   | "event.raffle_list_exported"
   // The picture of «Planul voluntarilor» (§952, `volunteers/plan.ts`), entity `event`: uploaded or changed (`set`: the stored
   // picture's id and the one it replaced, null for the first) or taken off (`removed`: the id it was). Ids only — never a
-  // file's name, an address or anything of a person.
+  // file's name, an address or anything of a person. Since «Poze și hărți» (§NNN, `volunteer-plan.ts`) a plan holds
+  // several pictures and links: a picture added (`added`) or removed (`removed`) carries the stored picture's id alone, a link
+  // added or removed the link's row id alone — never its address or its label. `set` is the release before's, kept for its rows.
   | "event.volunteer_plan_picture_set"
+  | "event.volunteer_plan_picture_added"
   | "event.volunteer_plan_picture_removed"
+  | "event.volunteer_plan_link_added"
+  | "event.volunteer_plan_link_removed"
   // «Trimite fiecăruia punctul lui» on «Planul voluntarilor» (§956, `volunteers/point-mail.ts`), entity `event`: one row a
   // press — how many messages it queued, how many people had already been told, stand at a point with no address or stand
   // at none, and whether it was «din nou tuturor» (`again`). Counts only: never a volunteer's id, a name, an address or a point.

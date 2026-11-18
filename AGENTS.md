@@ -3553,7 +3553,8 @@ outbox's retention (ninety days): a point told earlier than that is told again b
 Everything the message says is read at the send: the event and its day, the point's number in the route's
 order, its name, its kilometre and its note, the roles given and what they ask in the sentence the role's own
 message uses (nothing about roles when none is given), the contact person of the roles' category (§774), the
-plan's picture — shown once and linked to the whole of it in both halves — when the event has one, and the
+plan's pictures — each shown once and linked to the whole of it in both halves — and its links (`DECISIONS.md`
+§NNN) when the plan has some, and the
 event's page. It names no other volunteer and no telephone number but that contact's. The renderer withdraws
 it for a person cancelled or deleted, with no address or another address, at no point or at another point than
 the one queued (moved, taken off, the point deleted), and for an older round that still waited when a newer one
@@ -3883,7 +3884,9 @@ route and its volunteers' points numbered on it: «trebui sa pot incarca si plan
 (`/admin/events/[id]/plan-voluntari`, `modules/volunteers/plan.ts`; the decision of the same day that added it) is one
 event's points, each with the volunteers who stand at it (`event_volunteers.checkpoint_id`) — the organizers' own, for
 whoever works the volunteers (`canManageVolunteers`: the Organizer and the Administrators), built and printed on its
-page. Its picture is the plan as the organizers drew it — the map with the points on it — and lives with the plan:
+page. Its pictures and links are the plan as the organizers drew it — the map with the points on it, a Google My Maps
+map of their own — and live with the plan («Poze și hărți», `DECISIONS.md` §NNN, amending §952's one picture; the owner,
+2026-11-18: «Poza planului trebuie sa fie mai sus, si sa pot pune mai multe poze, si link-uri»):
 
 - **The points are of two kinds, and the plan has points of its own** (`DECISIONS.md` §961; the owner, 2026-11-17:
   «După ce încarc acea poză cu harta de voluntari vreau să pot defini punctele de mână, să pun nume punct și la ce km e
@@ -3912,42 +3915,60 @@ page. Its picture is the plan as the organizers drew it — the map with the poi
     (`volunteer_plan.point_added`, `point_changed`, `point_removed`: the point before and after and a count, never a
     person), a press that changes nothing writing nothing. None of it emails anybody or expires a public cache tag.
   - **The page** groups the points under «Start–finish» and «Pe traseu», on the screen and on the paper, adds them in
-    «Punctele planului» right under the picture (a kept form: a refusal names its box and keeps what was typed), and
+    «Punctele planului» under the plan (a kept form: a refusal names its box and keeps what was typed), and
     folds each point open onto «Modifică punctul» and «Șterge punctul», which asks first; a refused edit or delete
     lands at the page's alert with its code. A point with coordinates says them, with «Deschide pe hartă» — Google
     Maps' own address, a link only (`mapUrlOf`; the host is listed in `scripts/docs-check.mjs`).
   - **The email** tells a person at the start–finish their place with no number and no kilometre, and adds the numbers
     and the map's link for a point that has coordinates; for a route point without them not a word changed (§16.3).
 
-- **One stored picture an event**, `events.volunteer_plan_media_asset_id`: a `media_assets` row by id, nullable, with
-  **no foreign key, for the cover's reason** (`gallery.ts` imports `events.ts`; `db/schema/events.ts` says it at both
-  columns). The guards are the cover's: `media/references.ts` counts the column, so the sweep never takes the picture
-  and the pictures page's delete is refused; the plan's read joins the store, so an id that names nothing is no picture
-  rather than a broken one; and the write refuses an id that names no stored picture, or a film's poster (§485).
+- **Twelve pictures and twelve links an event, in their own two tables** (`db/schema/volunteer-plan.ts`, migration
+  `0212`): `event_volunteer_plan_pictures` — a stored picture by a real foreign key, once a plan, in its order — and
+  `event_volunteer_plan_links` — an `https:` or `http:` address written whole (at most 2 000 characters, read by the
+  platform's own parser; never `javascript:`, `data:` or `mailto:`) and an optional label of at most 120, one for both
+  languages as a plan point's name is. Each new one goes last; there is no reordering (remove and add again). Both cascade
+  from the event. The migration copied each event's one picture of §952 in; that column
+  (`events.volunteer_plan_media_asset_id`) is written by nobody now and counted by the reference check until a later
+  contract release drops it.
+- **The guards are the cover's and the gallery's:** `media/references.ts` counts the pictures' table (and the old
+  column), so the sweep never takes a plan's picture and the pictures page's delete is refused; the read joins the store,
+  so a picture deleted by hand takes its row with it; and the write refuses an id that names no stored picture, or a
+  film's poster (§485).
 - **The pictures page names the plan, not the event** (reference kind `volunteerPlan`): the picture is on the plan's
   page and nowhere in the event's editor, so the line links to the plan — in words alone for a role the plan is a 404
   for — and no «Din galerie» counts it among an event's pictures (`media/picker.ts`).
-- **Uploaded where the plan is**, through the backoffice's one upload (`/api/admin/media`, `media/ui/upload-picture.ts`,
-  the quality beside it as beside every upload) by an island that is handed strings and names only
-  (`volunteers/ui/PlanPictureUpload.tsx`) and then sends the page's own form. `setPlanPictureAction` and
-  `removePlanPictureAction` ask the capability at their door (`requireStaffCapability(canManageVolunteers)`), and
-  `plan.ts#setVolunteerPlanPicture` asks it again before anything is read, holds the event's row, and audits one row a
-  change — `event.volunteer_plan_picture_set` (the picture's id and the one it replaced) or
-  `event.volunteer_plan_picture_removed` (the id it was): the event and the pictures' ids, never a file's name. A press
-  that changes nothing writes nothing; the event's `version` does not move. «Șterge poza» asks first. A picture changed
-  or taken off is not deleted by the press: used nowhere, it is the sweep's after its week, as everywhere.
-- **Drawn above the points**, as wide as the column, a press opening the whole of it in a new tab; printed with the
-  plan, first after the sheet's title, in one piece (`break-inside: avoid`, and never taller than a sheet), its controls
-  left off the paper. `readVolunteerPlan` returns it beside the points — the whole picture and a display size
-  (`fullUrl`, `displayUrl`, the ladder's `srcSet`), at the store's public addresses — and the email that sends it on
-  reads the same picture, alone, from the same file (`readVolunteerPlanPicture`).
-- **One edition's, and the organizers'.** No public query and no public cache reads the column, and neither a series'
-  scope, a repeat, a duplicate nor the event's file carries it: it is this date's plan, and a file read on another
-  environment would name another bucket's object. It leaves by one road, the email below, which reads the picture
-  through the plan (`plan.ts#readVolunteerPlanPicture`, called by `point-mail.ts` alone) — so no file of the emails
-  names the column, and `tests/unit/volunteers/plan-picture-never-leaves.test.ts` still holds the same list of files
-  that may; a new reader is a reviewed edit of that list. As for every stored picture, the object itself is public
-  behind an unguessable key (§66), and the pictures page shows it to the roles that read that page.
+- **Added and taken off where the plan is.** A picture through the backoffice's one upload (`/api/admin/media`,
+  `media/ui/upload-picture.ts`, the quality beside it as beside every upload) by an island that is handed strings and
+  names only (`volunteers/ui/PlanPictureUpload.tsx`) and then sends the page's own form; a link through a kept form
+  (`ActionForm`: a refusal names its box and keeps what was typed). `addPlanPictureAction`, `removePlanPictureAction`,
+  `addPlanLinkAction` and `removePlanLinkAction` ask the capability at their door
+  (`requireStaffCapability(canManageVolunteers)`), and `plan.ts` asks it again before anything is read, holds the
+  event's row, refuses a thirteenth picture or link with its sentence, and audits one row a change —
+  `event.volunteer_plan_picture_added` / `_removed` (the stored picture's id) and `event.volunteer_plan_link_added` /
+  `_removed` (the link's id), never an address or a label. A press that changes nothing writes nothing; the event's
+  `version` does not move. «Șterge poza» and «Șterge linkul» ask first. A picture taken off is not deleted by the press:
+  used nowhere, it is the sweep's after its week, as everywhere.
+- **The first fold of the page, open when it holds something** («Poze și hărți», under the intro and above the views):
+  the pictures in a grid — two or three a row on a laptop, one on a phone, each no taller than 360 pixels, a press
+  opening the whole of one in a new tab —, the links each in bold opening in a new tab, its host in grey. Printed after
+  the rest of the plan (`order` in the page's flex column, so the view's plan is still the first thing after the title):
+  each picture in one piece, never taller than a sheet, each link its label and its whole address as text, the controls
+  left off the paper. Not embedded: a map in an iframe would need the content-security policy opened to its host.
+  `readVolunteerPlan` returns `pictures` (the whole picture and a display size — `fullUrl`, `displayUrl`, the ladder's
+  `srcSet` — at the store's public addresses) and `links` beside the points, and the email reads the same, alone, from
+  the same file (`readVolunteerPlanMaps`).
+- **One edition's, and the organizers'.** No public query and no public cache reads the tables or the column, and neither
+  a series' scope, a repeat, a duplicate nor the event's file carries them: it is this date's plan, and a file read on
+  another environment would name another bucket's objects. They leave by one road, the email below, which reads them
+  through the plan (`plan.ts#readVolunteerPlanMaps`, called by `point-mail.ts` alone) — so no file of the emails names
+  a table, and `tests/unit/volunteers/plan-picture-never-leaves.test.ts` holds the list of files that may name the
+  tables or the column; a new reader is a reviewed edit of that list. As for every stored picture, the object itself is
+  public behind an unguessable key (§66), and the pictures page shows it to the roles that read that page.
+- **«Fără punct» is a fold too** (`DECISIONS.md` §NNN, amending §949 and §974; the owner, 2026-11-18: «aici eu vreau sa
+  pot asigna voluntari la punct direct de aici»): last in both views, closed until a press made in it, its closed line
+  how many stand at no point, printed open. Each person's line carries, while the plan has a point, a native select of
+  the plan's points — «Pe traseu» numbered with its kilometre, then «La start–finish» — and «Pune», which posts the same
+  `placeVolunteerAction` as «Pune aici» (`at=unplaced`) and comes back to that fold, open.
 - **«Trimite fiecăruia punctul lui»** (`DECISIONS.md` §956; the second half of the owner's sentence — and, asked how,
   «Email din site, la apăsarea ta»). One press on the plan's page emails each placed volunteer their own point, what
   they do there and the plan's picture: `VOLUNTEER_POINT`, whose rule — who is written to, how the outbox's own rows

@@ -39,6 +39,7 @@ import { memberDiscountCodes } from "@/db/schema/member-discount-codes";
 import { memberTiers } from "@/db/schema/member-tiers";
 import { shopOrders, shopProducts, shopProductVariants } from "@/db/schema/shop";
 import { unreachableWindows } from "@/db/schema/unreachable-windows";
+import { eventVolunteerPlanLinks, eventVolunteerPlanPictures } from "@/db/schema/volunteer-plan";
 import { forgetCachedDeadlines } from "@/modules/deadlines/memo";
 import { forgetCachedAddressCap } from "@/modules/registrations/address-cap-memo";
 import { forgetCachedCalendarRsvpTo } from "@/modules/notifications/domain/calendar-rsvp";
@@ -133,6 +134,10 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(shopOrders);
   await db.delete(shopProductVariants);
   await db.delete(shopProducts);
+  // «Poze și hărți» of the volunteers' plan (§NNN): its pictures reference an event and an asset, its links an event —
+  // both cascade, and are named here before the assets and the events like the other children.
+  await db.delete(eventVolunteerPlanPictures);
+  await db.delete(eventVolunteerPlanLinks);
   // The gallery: items, then albums (which the cover references), then the assets.
   await db.delete(galleryItems);
   await db.delete(galleryAlbumTranslations);

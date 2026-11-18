@@ -10,7 +10,7 @@ import { ladderKeyPrefixOf } from "@/modules/media/ladder";
 import { OutboxMessageWithdrawn, type OutboxRow } from "@/modules/notifications/outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
-import { readVolunteerPlan, setVolunteerPlanPicture } from "@/modules/volunteers/plan";
+import { addVolunteerPlanPicture, readVolunteerPlan } from "@/modules/volunteers/plan";
 import { changePlanPoint } from "@/modules/volunteers/plan-points";
 import { previewVolunteerPoints, sendVolunteerPoints, volunteerPointAtSend } from "@/modules/volunteers/point-mail";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
@@ -179,8 +179,8 @@ describe("§961 the message of a person at the start–finish", () => {
       .insert(mediaAssets)
       .values({ keyPrefix: ladderKeyPrefixOf(randomUUID()), originalFilename: "harta-cu-puncte.png", width: 2400, height: 1600, byteSize: 1000, createdAt: NOW, lastReferencedAt: NOW })
       .returning();
-    await setVolunteerPlanPicture(db, staff.MODERATOR!, { eventId: race.raceId, assetId: stored.id }, at(1));
-    const { picture } = await readVolunteerPlan(db, staff.MODERATOR!, race.raceId);
+    await addVolunteerPlanPicture(db, staff.MODERATOR!, { eventId: race.raceId, assetId: stored.id }, at(1));
+    const [picture] = (await readVolunteerPlan(db, staff.MODERATOR!, race.raceId)).pictures;
     const withPicture = await render(await mailOf(race.people.radu));
     expect(withPicture.html).toContain(`<img src="${picture!.displayUrl}" alt="Planul voluntarilor desenat pe traseu"`);
     expect(withPicture.text).toContain(`Planul voluntarilor pe traseu, ca poză: ${picture!.fullUrl}`);

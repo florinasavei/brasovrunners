@@ -433,7 +433,7 @@ describe("§949 the plan's page", () => {
     // «Tabel» (§974) dials the people placed at a point too: Ana and Dan, the same digits, in its wide rows and again in each
     // one's phone block — and Ion under it, at no point.
     const tableView = await streamed(await planElement());
-    const table = tableView.slice(tableView.indexOf('data-testid="plan-table-section"'), tableView.indexOf('data-testid="plan-picture-section"'));
+    const table = tableView.slice(tableView.indexOf('data-testid="plan-table-section"'), tableView.indexOf('data-testid="plan-points-section"'));
     expect(telLinks(table).map((link) => /href="([^"]*)"/.exec(link)?.[1])).toEqual(["tel:+40700000001", "tel:+40700000002", "tel:+40700000001", "tel:+40700000002"]);
     expect(telLinks(tableView)).toHaveLength(4 + 1);
     // Every telephone link of either view, wherever it is, dials the digits and the plus alone.
