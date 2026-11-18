@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.66-2026-11-18
+
+- **«Descarcă BIB-ul (PDF)» — one person's race number on its own** — from the registration's page, the desk's «Vezi numărul de concurs (BIB)» and the list's «⋮», the bib exactly as the sheets draw it (elite with its label, member, ordinary), one to a page, for the Organizer and the Administrators; an elite runner's bib downloads too. §980.
+- **«Membru BVR» on the volunteers' list, and the organizers' decision and notes on the volunteers' plan** — a hideable column «Membru {club}» ticks whoever answered «Fac parte din grupul {club}» on the volunteer form, with a filter «Doar membrii {club}»; «Planul voluntarilor» shows, under each person on «Pe puncte», «Fără punct» and in the table, the race-day decision (printed) and the internal notes, newest first with their date (screen only). §981.
+- **Members and partners among the confirmed** — the registrations list's «Cine s-a înscris» says, for one event, «Dintre cei {n} confirmați:» how many are the club's members (verified and declared), how many came through partners (each partner by name, largest first), how many neither, and how many are both, each count a link to the list filtered to those people. §982.
 ## BR-V4.65-2026-11-18
 
 - **No email leaves unless the press says so** — a question that may send the person their email (a cancellation, one or in bulk; a race number by hand; «Marchează plătită»; «Transformă în voluntar»; the invitations on «Echipa»; a publication's alert) now ends in two answers, «Anulează înscrierea și trimite emailul» and «Anulează înscrierea fără email», instead of a «Trimite emailul» box ticked in advance; Enter presses neither. §976.

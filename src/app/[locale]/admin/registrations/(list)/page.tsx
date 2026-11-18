@@ -1672,7 +1672,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         )}
       </SummaryStrip>
       {/*
-        «Dintre cei {n} confirmați» (§NNN; the owner, 2026-11-18: «câți sunt Brașov Runners și câți sunt de la sponsori?»): the
+        «Dintre cei {n} confirmați» (§982; the owner, 2026-11-18: «câți sunt Brașov Runners și câți sunt de la sponsori?»): the
         confirmed real registrations the chip «Confirmată» counts, by the list's own two filters — counted in `summary`'s one
         query, and only with one event chosen (null otherwise). Each count opens the list filtered to exactly those people,
         confirmed: the members (`clubMember=1`), any partner (`partner=1`), one partner by name where the filter takes it.
@@ -2307,7 +2307,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   href: getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: row.id } } }),
                 },
               ];
-              // «Descarcă BIB-ul» (§NNN; the owner, 2026-11-18: «eu trebuie să pot descărca un BIB doar pentru o persoană»): this
+              // «Descarcă BIB-ul» (§980; the owner, 2026-11-18: «eu trebuie să pot descărca un BIB doar pentru o persoană»): this
               // row's bib alone, as the sheets draw it, for every role that reads this list — only where the route prints one.
               if (canReadRegistrations(actor.role) && hasOneBib(row)) {
                 items.push({ kind: "link", icon: "download", label: t("registrations.oneBib.menu"), href: oneBibHref(row.eventId, row.id, locale), newTab: true });

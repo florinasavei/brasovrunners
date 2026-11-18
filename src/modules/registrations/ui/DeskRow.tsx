@@ -90,7 +90,7 @@ export default async function DeskRow({
   row: DeskRegistration;
   /**
    * Who is looking (§975): an Administrator also gets «Elită și BIB» at the row's end, and a role that reads the registrations
-   * «Descarcă BIB-ul (PDF)» in the BIB fold (§NNN); any other role — or none given — gets the row as it always was. A drawing decision only: the actions and the services assert the role again.
+   * «Descarcă BIB-ul (PDF)» in the BIB fold (§980); any other role — or none given — gets the row as it always was. A drawing decision only: the actions and the services assert the role again.
    */
   role?: StaffRole;
   /** The other people on this row's address at the event (§543, `familyOf`): names only, never an address. */
@@ -290,7 +290,7 @@ export default async function DeskRow({
                 style={{ display: "block", width: "100%", maxWidth: 360, height: "auto" }}
               />
               {/*
-                The same bib as a PDF, on its own A4 page (§NNN; the owner, 2026-11-18: «eu trebuie să pot descărca un BIB
+                The same bib as a PDF, on its own A4 page (§980; the owner, 2026-11-18: «eu trebuie să pot descărca un BIB
                 doar pentru o persoană»): for a role that reads the registrations — the Organizer and the Administrators,
                 the route's own gate (§289) — never the desk's other roles, who see the picture as before.
               */}

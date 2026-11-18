@@ -19,7 +19,7 @@ type Props = Omit<ButtonProps, "startIcon" | "endIcon" | "component" | "href" | 
    */
   htmlFor?: string;
   /**
-   * With `href` only: a file to open beside the page — one person's bib (§NNN) — `target="_blank"` with its `rel`, the page
+   * With `href` only: a file to open beside the page — one person's bib (§980) — `target="_blank"` with its `rel`, the page
    * kept. Ignored on a submit and on a label.
    */
   target?: "_blank";

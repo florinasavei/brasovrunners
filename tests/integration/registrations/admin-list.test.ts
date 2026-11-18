@@ -425,7 +425,7 @@ describe("the counter above the list (§246)", () => {
       test: 1,
       // Nobody seated «În afara locurilor» (§643): the strip's own pill counts them apart.
       outside: 0,
-      // «Dintre cei {n} confirmați» (§NNN): one event chosen, so the confirmed are split by member and partner.
+      // «Dintre cei {n} confirmați» (§982): one event chosen, so the confirmed are split by member and partner.
       composition: { confirmed: 2, members: 0, verified: 0, declared: 0, partners: 0, byPartner: [], both: 0, others: 2 },
     });
   });
@@ -439,7 +439,7 @@ describe("the counter above the list (§246)", () => {
       real: 1,
       test: 0,
       outside: 0,
-      // «Dintre cei {n} confirmați» (§NNN): one event chosen, so the confirmed are split by member and partner.
+      // «Dintre cei {n} confirmați» (§982): one event chosen, so the confirmed are split by member and partner.
       composition: { confirmed: 1, members: 0, verified: 0, declared: 0, partners: 0, byPartner: [], both: 0, others: 1 },
     });
     // An event with nothing on it is four zeroes rather than an absence.
@@ -448,7 +448,7 @@ describe("the counter above the list (§246)", () => {
       real: 0,
       test: 0,
       outside: 0,
-      // «Dintre cei {n} confirmați» (§NNN): one event chosen, so the confirmed are split by member and partner.
+      // «Dintre cei {n} confirmați» (§982): one event chosen, so the confirmed are split by member and partner.
       composition: { confirmed: 0, members: 0, verified: 0, declared: 0, partners: 0, byPartner: [], both: 0, others: 0 },
     });
   });

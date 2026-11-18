@@ -681,7 +681,7 @@ export type RegistrationSummary = {
    */
   outside: number;
   /**
-   * «Dintre cei {n} confirmați» (§NNN; the owner, 2026-11-18: «aș vrea să văd mai clar, câți sunt Brașov Runners și câți
+   * «Dintre cei {n} confirmați» (§982; the owner, 2026-11-18: «aș vrea să văd mai clar, câți sunt Brașov Runners și câți
    * sunt de la sponsori?»): who the confirmed real registrations are — the people `byStatus.CONFIRMED` counts, the special
    * guests among them, never a test row (§12.6) — by the list's own two filters. Null when no event is chosen: the block,
    * like the panel's other event-bound lines, is about one event.
@@ -690,7 +690,7 @@ export type RegistrationSummary = {
 };
 
 /**
- * The confirmed real registrations of one event split by «Doar membrii {club}» and «De la parteneri» (§NNN): members by the
+ * The confirmed real registrations of one event split by «Doar membrii {club}» and «De la parteneri» (§982): members by the
  * filter's own rule (§662, §973: the person's tick «Sunt membru», or an address of a member account), `verified` of them by
  * the address — the row's «Membru (verificat)» wins over its «Membru (declarat)», as `membershipOf` says — and the rest
  * declared; `partners` those with a partner's name, `byPartner` the names as written (one entry per name whatever its
@@ -729,11 +729,11 @@ export async function summariseRegistrationsForAdmin<T extends Record<string, un
   db: Database<T>,
   filters: RegistrationListFilters = {},
 ): Promise<RegistrationSummary> {
-  // The member accounts are read for the composition too (§NNN) — only with one event chosen; the page hands them in, read once.
+  // The member accounts are read for the composition too (§982) — only with one event chosen; the page hands them in, read once.
   const members = filters.clubMember || filters.eventId ? await membersFor(db, filters) : [];
   const conditions = registrationConditions(filters, members);
   /*
-    The composition (§NNN) rides in this same grouped scan as FILTER clauses: each counts only the confirmed real rows, so
+    The composition (§982) rides in this same grouped scan as FILTER clauses: each counts only the confirmed real rows, so
     every group but the confirmed real ones yields zero. The columns are selected only with one event chosen; with every
     event listed they are not in the query at all.
   */

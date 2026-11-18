@@ -32,7 +32,7 @@ import { type ExportNote, noteBodyOf } from "@/shared/notes/note-text";
  * that column. One exception keeps «Șterge» and «Modifică» true: deleting or changing a note whose words equal the column also
  * clears the column, in the same transaction, so the old words are really gone until the column's contract release drops it.
  *
- * **On «Planul voluntarilor»** (§NNN, amending this section's «never elsewhere»; the owner, 2026-11-18: «să văd în plan și
+ * **On «Planul voluntarilor»** (§981, amending this section's «never elsewhere»; the owner, 2026-11-18: «să văd în plan și
  * comentariile mele»): beside each person the plan draws, the words and the moment of each live note — on the screen only, never on
  * paper — read in one query for the event (`listVolunteerNotesForPlan`), for a role this file's gate allows (`mayReadVolunteerNotes`).
  *
@@ -61,7 +61,7 @@ export type VolunteerNoteRow = {
 export type VolunteerListNote = { id: string; createdAt: Date; body: string; editable: boolean };
 
 /**
- * One live note as «Planul voluntarilor» draws it beside its person (§NNN): its words and its moment, newest first. No author and
+ * One live note as «Planul voluntarilor» draws it beside its person (§981): its words and its moment, newest first. No author and
  * no press: the plan names nobody and changes no note — the person's page does.
  */
 export type VolunteerPlanNote = { id: string; createdAt: Date; body: string };
@@ -70,7 +70,7 @@ type Actor = Pick<StaffUser, "id" | "role">;
 
 /**
  * Whether a role may read a volunteer's internal notes at all: the one gate every function below asserts. A screen that draws
- * notes beside something a wider gate allows (the plan, §NNN) asks this first and leaves the notes out for anyone else.
+ * notes beside something a wider gate allows (the plan, §981) asks this first and leaves the notes out for anyone else.
  */
 export function mayReadVolunteerNotes(role: StaffRole): boolean {
   return canManageVolunteers(role);
@@ -273,7 +273,7 @@ export async function listVolunteerNotesForList<T extends Record<string, unknown
 }
 
 /**
- * The live notes of one event's people who are not cancelled — the people «Planul voluntarilor» draws (§NNN) —, in **one query** for
+ * The live notes of one event's people who are not cancelled — the people «Planul voluntarilor» draws (§981) —, in **one query** for
  * the whole event, never one per person: each volunteer's list newest first, the words and the moment alone. Neither the author's
  * name nor role is read: the plan names nobody. A volunteer with none is absent from the map; a deleted note is never read; a value
  * that is no id reads nothing.

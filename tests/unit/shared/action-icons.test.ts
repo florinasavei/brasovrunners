@@ -156,7 +156,7 @@ const SAME_VERB: Array<{ glyph: string; keys: string[] }> = [
   { glyph: "markPrinted", keys: ["registrations.bibsMarkPrinted", "registrations.bibMarkPrinted"] },
   { glyph: "markUnprinted", keys: ["registrations.bibsMarkAllUnprinted", "registrations.bibMarkUnprinted"] },
   { glyph: "print", keys: ["registrations.bibsDownloadUnprinted", "bibs.downloadOnePerPage"] },
-  // One person's bib as a PDF (§NNN): the house's download, on the registration's page, the desk's BIB fold and the «⋮».
+  // One person's bib as a PDF (§980): the house's download, on the registration's page, the desk's BIB fold and the «⋮».
   { glyph: "download", keys: ["registrations.oneBib.download", "registrations.oneBib.menu"] },
   { glyph: "pdf", keys: ["registrations.bibsDownloadAll", "bibs.downloadAll", "bibs.download", "registrations.declarationsPdf"] },
   { glyph: "addPerson", keys: ["registrations.new", "registrations.create", "desk.walkIn", "staff.invite"] },

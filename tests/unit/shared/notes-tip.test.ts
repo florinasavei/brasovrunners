@@ -70,7 +70,7 @@ describe("§964 the same words without the day", () => {
   });
 });
 
-describe("§NNN a note as one line, beside a person on «Planul voluntarilor»", () => {
+describe("§981 a note as one line, beside a person on «Planul voluntarilor»", () => {
   it("puts every line break and run of spaces as one space, trims the ends, and keeps a short note whole", () => {
     expect(noteLine("  Are mașină,\npoate duce apa.\r\n\n  Sună-o  vineri ")).toBe("Are mașină, poate duce apa. Sună-o vineri");
     expect(noteLine("vine")).toBe("vine");

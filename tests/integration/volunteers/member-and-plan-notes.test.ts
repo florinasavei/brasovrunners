@@ -15,7 +15,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { type PlanRace, planVolunteer, seedPlanRace } from "../../helpers/volunteer-plan";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-060-01 — the owner, 2026-11-18, three days before the race: «vreau la voluntari și să văd bifa
+ * §981, BR-REQ-050-02, BR-REQ-060-01 — the owner, 2026-11-18, three days before the race: «vreau la voluntari și să văd bifa
  * "membru BVR" și să văd în plan și comentariile mele». Read from a real database, in Romanian and in English:
  *
  * - the «Voluntari» list has a column «Membru {club}», `{club}` the club's short name from its identity: a tick named for a screen
@@ -208,7 +208,7 @@ function personBlocks(page: string, testid: "plan-person" | "plan-unplaced-perso
   return elementsWith(page, testid).filter((block) => block.includes(`/admin/volunteers/${id}"`) || block.includes(`data-person="${id}"`));
 }
 
-describe("§NNN «Membru {club}» on the «Voluntari» list", () => {
+describe("§981 «Membru {club}» on the «Voluntari» list", () => {
   it("is a hideable column headed by the club's short name, with its «?», after «Oraș»", async () => {
     for (const locale of ["ro", "en"] as const) {
       const words = (locale === "ro" ? ro : en).Admin.volunteers.screen;
@@ -274,7 +274,7 @@ describe("§NNN «Membru {club}» on the «Voluntari» list", () => {
   });
 });
 
-describe("§NNN the plan's read carries the organizers' words", () => {
+describe("§981 the plan's read carries the organizers' words", () => {
   it("gives each person the decision and the live notes, newest first — never a deleted note, a cancelled person's or another event's", async () => {
     const plan = await readVolunteerPlan(db, staff.MODERATOR!, race.raceId);
     const everybody = [...plan.points.flatMap(({ people }) => people), ...plan.unplaced];
@@ -335,7 +335,7 @@ describe("§NNN the plan's read carries the organizers' words", () => {
   });
 });
 
-describe("§NNN «Planul voluntarilor» draws the decision and the notes under each person", () => {
+describe("§981 «Planul voluntarilor» draws the decision and the notes under each person", () => {
   it("at a point and under «Fără punct» («Pe puncte»), and in the table's people cell («Tabel»), in both languages", async () => {
     for (const locale of ["ro", "en"] as const) {
       state.locale = locale;

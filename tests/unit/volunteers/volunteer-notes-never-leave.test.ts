@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 /**
  * «Note interne» for volunteers (BR-REQ-060-01) — a volunteer's internal note reaches only the screens and files that carry it: the
  * volunteer's own page (the card), the «Voluntari» list (the marker, its tooltip, the column and «Modifică nota») and the event card's rows (the marker: a count and, in its tooltip, the words), the volunteers' files (the
- * «Notă» column, handed as words), «Toate datele unei persoane» (art. 15) and — since §NNN — «Planul voluntarilor», beside each
+ * «Notă» column, handed as words), «Toate datele unei persoane» (art. 15) and — since §981 — «Planul voluntarilor», beside each
  * person it draws, on the screen only. Never the public volunteers' list, never an email,
  * never a badge. The twin of `tests/unit/registrations/notes-never-leave.test.ts`: the structural half of that promise — no file
  * outside the list below so much as imports the table or the service, so a later join or a helpful new column cannot quietly start
@@ -36,7 +36,7 @@ const READERS = new Set(
     // The volunteers' files: one event's CSV and spreadsheet, and every event's spreadsheet — one grouped read each.
     "src/app/api/admin/events/[id]/volunteers/route.ts",
     "src/app/api/admin/volunteers/export/route.ts",
-    // «Planul voluntarilor» (§NNN): the plan's read — one query for the event's notes, behind the notes' own gate — and its page,
+    // «Planul voluntarilor» (§981): the plan's read — one query for the event's notes, behind the notes' own gate — and its page,
     // which draws them under each person and never on paper.
     "src/modules/volunteers/plan.ts",
     "src/app/[locale]/admin/events/[id]/plan-voluntari/page.tsx",
@@ -106,7 +106,7 @@ describe("«Note interne» for volunteers — who reads the notes", () => {
     }
   });
 
-  it("reaches no email through the plan: the point's email reads the plan's pictures and links, never its people (§NNN)", () => {
+  it("reaches no email through the plan: the point's email reads the plan's pictures and links, never its people (§981)", () => {
     // «Trimite fiecăruia punctul lui» (§956) imports the plan's module for `readVolunteerPlanMaps`; the plan's people now carry the
     // organizers' words, so the email's module must never read them through `readVolunteerPlan`.
     for (const file of ["src/modules/volunteers/point-mail.ts", ...files.map(relative).filter((at) => at.startsWith("src/modules/notifications/"))]) {

@@ -34,7 +34,7 @@ import { listVolunteers, type VolunteerItem } from "./volunteers";
   page or badge reads it. One email says a person their own point, and only at an organizer's press: «Trimite fiecăruia punctul
   lui» (§956, `point-mail.ts`). Placing, moving or taking somebody off writes to nobody.
 
-  Beside each person, the organizers' own words about them (§NNN, amending §954 and §935): the race-day decision and the
+  Beside each person, the organizers' own words about them (§981, amending §954 and §935): the race-day decision and the
   internal notes. They reach the plan's page and nothing that reads the plan for anybody else — the point's email reads the
   pictures and links (`readVolunteerPlanMaps`), never `readVolunteerPlan`.
 
@@ -60,7 +60,7 @@ import { listVolunteers, type VolunteerItem } from "./volunteers";
 
 /**
  * One person as the plan says them: the name, how to reach them, what they were given to do, and the point they stand at — and,
- * since §NNN (amending §954 and §935; the owner, 2026-11-18: «să văd în plan și comentariile mele»), the organizers' own words about
+ * since §981 (amending §954 and §935; the owner, 2026-11-18: «să văd în plan și comentariile mele»), the organizers' own words about
  * them: the race-day decision (`raceDayDecision`, §954, null while there is none), which the page prints, and the live internal
  * notes, newest first (`notes`, empty while there are none, and always empty for a role the notes' own gate refuses), which it
  * draws on the screen only.

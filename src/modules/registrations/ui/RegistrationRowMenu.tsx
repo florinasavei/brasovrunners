@@ -56,7 +56,7 @@ export type RegistrationMenuItem =
       href: string;
       icon: RegistrationMenuIcon;
       color?: "error";
-      /** A file to open beside the list — one person's bib (§NNN): `target="_blank"`, `rel="noopener"`, the list kept. */
+      /** A file to open beside the list — one person's bib (§980): `target="_blank"`, `rel="noopener"`, the list kept. */
       newTab?: boolean;
     } & MenuSeparation)
   | ({

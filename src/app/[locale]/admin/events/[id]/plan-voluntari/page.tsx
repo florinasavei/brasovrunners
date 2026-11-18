@@ -280,7 +280,7 @@ const PENCIL_FOLD_SX = {
  * after the rest of the plan, each picture in one piece and each link with its whole address. Added and taken off here by the
  * same people.
  *
- * The organizers' own words beside each person (§NNN, amending §954 and §935; the owner, 2026-11-18, three days before the race:
+ * The organizers' own words beside each person (§981, amending §954 and §935; the owner, 2026-11-18, three days before the race:
  * «să văd în plan și comentariile mele»): wherever a person is drawn — at a point, under «Fără punct», in the table's people cell —
  * the race-day decision in a quiet line of its own, which prints, and the person's internal notes, newest first with their day,
  * which never print. Both come with the plan's one read (`readVolunteerPlan`); the notes only for a role their own gate allows.
@@ -347,7 +347,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   // A note's moment on the club's clock, as the person's page and the files write it: the day and the hour, short.
   const noteDay = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
   /**
-   * A person's «Note interne» on the plan (§NNN, amending §935; the owner, 2026-11-18: «să văd în plan și comentariile mele»): the
+   * A person's «Note interne» on the plan (§981, amending §935; the owner, 2026-11-18: «să văd în plan și comentariile mele»): the
    * live notes, newest first, one line each — the words (`noteLine`: one line, a long one cut) and, quieter, the day and hour —, a list
    * a screen reader names «Note interne». Nothing for a person with none, or for a reader the notes' gate leaves out (the read hands
    * them none). Never on paper: remarks between colleagues stay on the screen, the plan handed around on the day carries none.
@@ -367,7 +367,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
     );
   /**
    * The organizers' own words about a person, under the person wherever the plan draws them — at a point, under «Fără punct» and in
-   * the table's people cell (§NNN, amending §954): the race-day decision in its own quiet line, «Decizie: vine la 8:00 la start»,
+   * the table's people cell (§981, amending §954): the race-day decision in its own quiet line, «Decizie: vine la 8:00 la start»,
    * which prints (it is the day's plan), then the notes, which do not. Nothing where there is neither.
    */
   const ownWordsOf = (person: VolunteerPlanPerson) => (
@@ -446,7 +446,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
       key: "people",
       label: t("volunteers.plan.table.columns.people"),
       // The point's people in the point's order, a line each: the name and the telephone to ring — and under it the organizers'
-      // decision and notes about the person (§NNN).
+      // decision and notes about the person (§981).
       render: ({ people }) =>
         people.length === 0 ? (
           <Box component="span" sx={{ color: "text.secondary", fontStyle: "italic" }} data-testid="plan-table-nobody">
@@ -467,7 +467,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
                     </Box>
                   </>
                 )}
-                {/* Under the name, the organizers' own words about the person (§NNN): the decision, printed; the notes, on the screen. */}
+                {/* Under the name, the organizers' own words about the person (§981): the decision, printed; the notes, on the screen. */}
                 {ownWordsOf(person)}
               </li>
             ))}

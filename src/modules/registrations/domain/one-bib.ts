@@ -2,7 +2,7 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
 import { formatRaceNumber, type RaceNumberFormat } from "./race-number";
 
 /**
- * One person's race number, downloaded on its own (§NNN; the owner, 2026-11-18, three days before the race: «eu trebuie
+ * One person's race number, downloaded on its own (§980; the owner, 2026-11-18, three days before the race: «eu trebuie
  * să pot descărca un BIB doar pentru o persoană»; BR-REQ-038-01).
  *
  * Decided here once, so the route that prints it and the three places that offer it — the registration's page, the

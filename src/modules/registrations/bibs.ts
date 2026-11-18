@@ -855,7 +855,7 @@ export async function listBibs<T extends Record<string, unknown>>(
 }
 
 /**
- * One registration's bib, for the download of that bib alone (§NNN; the owner, 2026-11-18: «eu trebuie să pot descărca
+ * One registration's bib, for the download of that bib alone (§980; the owner, 2026-11-18: «eu trebuie să pot descărca
  * un BIB doar pentru o persoană»): the same columns `listBibs` reads, by the same rules — `member` by the one rule (§972),
  * `elite` and the label for the elite drawing (§897, §975) — plus its state, so the route can say why there is no bib.
  *
@@ -1102,7 +1102,7 @@ export async function findEventForBibs<T extends Record<string, unknown>>(
 ): Promise<
   | {
       title: string;
-      /** The event's address in this language: the one bib's file name when it has no number (§NNN). */
+      /** The event's address in this language: the one bib's file name when it has no number (§980). */
       slug: string;
       startsAt: Date;
       timezone: string;

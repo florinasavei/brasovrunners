@@ -39,7 +39,7 @@ const PART_SUFFIX: Record<BibSheetPart, string> = { all: "", members: "-members"
  * spares instead, blank (§444); `elite=1` the event's «Elită» list and the registrations marked «Elită», the name
  * where the number goes (§895, §897; `-elite` in the file's name). The members' bibs print first, on pages of their own (§681);
  * `part=members` prints only theirs and `part=others` every bib but theirs — anything else, or
- * nothing, is the whole sheet, never an error. `registrationId=<uuid>` prints one person's bib alone (§NNN), one to a page,
+ * nothing, is the whole sheet, never an error. `registrationId=<uuid>` prints one person's bib alone (§980), one to a page,
  * whatever else the query says — refused as not found for another event's, an unknown or a test registration, and as
  * `NO_BIB_NUMBER` for one that wears no number and is not marked «Elită».
  *
@@ -71,7 +71,7 @@ export async function GET(
     return NextResponse.json({ error: "VALIDATION_ERROR" }, { status: 400 });
   }
   /*
-    One person's bib (§NNN; the owner, 2026-11-18: «eu trebuie să pot descărca un BIB doar pentru o persoană»): the
+    One person's bib (§980; the owner, 2026-11-18: «eu trebuie să pot descărca un BIB doar pentru o persoană»): the
     registration's page, the desk's BIB fold and the list's «⋮» link here. Its own path, asked before every other
     parameter, which it ignores — no range, part, spare, blank or elite sheet can change what it prints.
   */
@@ -155,7 +155,7 @@ export async function GET(
 }
 
 /**
- * One registration's bib (§NNN), drawn as the sheets draw it: an elite registration's elite bib — its «Eticheta pe BIB»
+ * One registration's bib (§980), drawn as the sheets draw it: an elite registration's elite bib — its «Eticheta pe BIB»
  * where the number goes (§897, §975) —, a member's the members' design (§681, §972), anybody else's the ordinary bib; one
  * A5 bib centred on its own A4 page, as `layout=one` (§79). Asked of the registration itself, so a bib the ordinary sheet
  * leaves to the elite sheet (§963) is still this person's to download. A GET that writes nothing: never the printed mark.

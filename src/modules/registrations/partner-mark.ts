@@ -21,7 +21,7 @@ import { isUuid } from "@/shared/ids";
  *
  * **A label, and nothing else.** No state, no place, no email, no declaration: nothing here is read by the allocator, the
  * capacity formula, a public page, the race-day desk, an email or the file given to sponsors — only by the backoffice's list
- * (and its summary's one count, «Dintre cei {n} confirmați: … de la parteneri», staff-only, §NNN), the registration's page,
+ * (and its summary's one count, «Dintre cei {n} confirmați: … de la parteneri», staff-only, §982), the registration's page,
  * the internal list, the invitations, the registrations' Excel and CSV and «Toate datele unei persoane»
  * (`tests/unit/registrations/partner-never-leaves.test.ts`).
  *

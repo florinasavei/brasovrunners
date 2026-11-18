@@ -907,7 +907,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                     /*
                       This one bib, on its own A4 page (§180), exactly as the sheets draw it — the elite bib with its
                       label (§975), the members' design, or the ordinary bib — through the sheet's route asked for this
-                      registration alone (§NNN; the owner, 2026-11-18: «eu trebuie să pot descărca un BIB doar pentru o
+                      registration alone (§980; the owner, 2026-11-18: «eu trebuie să pot descărca un BIB doar pentru o
                       persoană»). It replaced a range of one, `from=N&to=N`, which an elite bib is never in (§963). Drawn
                       only where the route prints something: a real, confirmed registration with a number or the elite
                       mark. A read — the Organizer's too (§289); the printed mark stays its own press.

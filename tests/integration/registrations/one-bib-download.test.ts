@@ -17,7 +17,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * One person's race number, downloaded on its own (§NNN; the owner, 2026-11-18: «eu trebuie să pot descărca un BIB doar
+ * One person's race number, downloaded on its own (§980; the owner, 2026-11-18: «eu trebuie să pot descărca un BIB doar
  * pentru o persoană»; BR-REQ-038-01, BR-REQ-060-01):
  *
  * - the sheet's route with `registrationId` prints exactly that registration's bib in its own style — the elite bib with
@@ -236,7 +236,7 @@ async function download(query: string, event = eventId) {
   return { response: response as Response, drawn: drawn.map((run) => run.text), runs: drawn, pdf };
 }
 
-describe("§NNN the route prints one registration's bib in its own style", () => {
+describe("§980 the route prints one registration's bib in its own style", () => {
   it("prints an ordinary bib alone — its number and its name — one A5 on its own A4, named by its number", async () => {
     await as("MODERATOR");
     const ion = await runner("Ion Ionescu", { bibNumber: 12 });
@@ -330,7 +330,7 @@ describe("§NNN the route prints one registration's bib in its own style", () =>
   });
 });
 
-describe("§NNN the route's refusals", () => {
+describe("§980 the route's refusals", () => {
   it("is not found for another event's registration, an unknown id, a malformed one and a test row — as JSON", async () => {
     await as("ADMIN");
     const elsewhere = await runner("Ion Ionescu", { bibNumber: 12, at: await race("alta") });
@@ -372,7 +372,7 @@ describe("§NNN the route's refusals", () => {
   });
 });
 
-describe("§NNN where the bib is drawn and named, decided once", () => {
+describe("§980 where the bib is drawn and named, decided once", () => {
   it("has a bib exactly when the route prints one", () => {
     const base = { status: "CONFIRMED" as const, kind: "REAL" as const, bibNumber: 12, elite: false };
     expect(hasOneBib(base)).toBe(true);
@@ -401,7 +401,7 @@ function expectButton(found: ReactElement<Props>[], registrationId: string, labe
   expect(button.props.children).toBe(label);
 }
 
-describe("§NNN «Descarcă BIB-ul (PDF)» on the registration's page", () => {
+describe("§980 «Descarcă BIB-ul (PDF)» on the registration's page", () => {
   const detailPage = async (id: string) =>
     elements(await RegistrationDetailPage({ params: Promise.resolve({ locale: state.locale, id }), searchParams: Promise.resolve({}) } as never));
 
@@ -425,7 +425,7 @@ describe("§NNN «Descarcă BIB-ul (PDF)» on the registration's page", () => {
   });
 });
 
-describe("§NNN «Descarcă BIB-ul (PDF)» in the desk row's BIB fold", () => {
+describe("§980 «Descarcă BIB-ul (PDF)» in the desk row's BIB fold", () => {
   const deskRow = async (id: string, role?: StaffRole) => {
     const row = (await listDeskRegistrations(db, { eventId, query: "", locale: "ro" })).find((candidate) => candidate.id === id);
     expect(row, id).toBeDefined();
@@ -460,7 +460,7 @@ describe("§NNN «Descarcă BIB-ul (PDF)» in the desk row's BIB fold", () => {
   });
 });
 
-describe("§NNN «Descarcă BIB-ul» in the registrations list's «⋮»", () => {
+describe("§980 «Descarcă BIB-ul» in the registrations list's «⋮»", () => {
   const listPage = async () =>
     AdminRegistrationsPage({ params: Promise.resolve({ locale: state.locale }), searchParams: Promise.resolve({ eventId }) } as never);
   const menuItems = (tree: ReactNode, id: string) => {

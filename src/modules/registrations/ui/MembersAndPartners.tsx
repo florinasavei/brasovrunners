@@ -12,7 +12,7 @@ type Counted = "title" | "members" | "verified" | "declared" | "partners" | "oth
 const LINK_SX = { display: "inline-flex", alignItems: "center", minHeight: 44, color: "primary.main" } as const;
 
 /**
- * «Dintre cei {n} confirmați» under the registrations list's state chips, for one event (§NNN; the owner, 2026-11-18, of
+ * «Dintre cei {n} confirmați» under the registrations list's state chips, for one event (§982; the owner, 2026-11-18, of
  * «Cine s-a înscris»: «aș vrea să văd mai clar, câți sunt Brașov Runners și câți sunt de la sponsori?»). Among the people the
  * chip «Confirmată» counts — the confirmed real registrations, the special guests among them, never a test row (§12.6):
  *

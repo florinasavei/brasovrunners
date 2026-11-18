@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.66` | one person's BIB downloaded on its own, from the registration, the desk and the list's «⋮» (§980) · «Membru BVR» on the volunteers' list; the organizers' decision and notes on the volunteers' plan (§981) · «Cine s-a înscris» counts the confirmed members and partners (§982) |
 | `BR-V4.65` | every question that may send the person their email ends in «… și trimite emailul» or «… fără email», no box ticked in advance (§976) · a scrollbar at the top of wide backoffice tables (§977) · «Poze și hărți» — several pictures and links at the top of the volunteers' plan — and «Fără punct» a fold you place people from (§978) · «Ziua cursei» in three tabs, «Lucruri de adus» and the walk-in's pick of a free spare (§979) |
 | `BR-V4.64` | «Eticheta pe BIB» per elite bib, elites at the desk, the participants' table in a fold (§975) |
 | `BR-V4.63` | «Planul voluntarilor» in two views — the points as one table, or each as a fold — with the page's sections folded and the names in bold (§974) |

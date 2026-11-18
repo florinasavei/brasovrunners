@@ -537,7 +537,7 @@ export const registrations = pgTable(
      * the internal list or an invitation sent with it, audited without the name. Read by the backoffice's list, page, filter,
      * the registrations' Excel and CSV and «Toate datele unei persoane» — never by the allocator, a state, an email, the desk,
      * a public page or the file given to sponsors. One count reads it, staff-only: the list's «Cine s-a înscris», «Dintre cei
-     * {n} confirmați» — how many came through partners, and each partner's count (§NNN); no other count does. Trimmed, 1 to
+     * {n} confirmați» — how many came through partners, and each partner's count (§982); no other count does. Trimmed, 1 to
      * `PARTNER_NAME_MAX` characters.
      */
     partnerName: text("partner_name"),

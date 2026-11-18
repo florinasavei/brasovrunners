@@ -130,7 +130,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const roleFilter = role === UNASSIGNED || (role && isUuid(role)) ? role : undefined;
   // «Are kit» (§904): «yes» or «no»; anything else in the address is no filter.
   const kitFilter = kitFilterOf(kit);
-  // «Doar membrii {club}» (§NNN): «1»; anything else in the address is no filter.
+  // «Doar membrii {club}» (§981): «1»; anything else in the address is no filter.
   const memberFilter = memberFilterOf(member);
   const filters: VolunteerAdminFilters = {
     eventId: eventFilter.eventId,
@@ -427,7 +427,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     </Box>
   );
 
-  // «Membru {club}» (§NNN): the one tick every member's row draws — a glyph the eye reads and the words a screen reader says.
+  // «Membru {club}» (§981): the one tick every member's row draws — a glyph the eye reads and the words a screen reader says.
   const memberWords = t("volunteers.screen.memberYes", { club: CLUB_SHORT_NAME });
   const memberTick = (
     <Box component="span" role="img" aria-label={memberWords} title={memberWords} sx={{ color: "success.main", fontWeight: 700 }} data-testid="volunteer-member">
@@ -486,7 +486,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     },
     {
       /*
-        «Membru {club}» (§NNN; the owner, 2026-11-18, three days before the race: «vreau la voluntari și să văd bifa "membru BVR"»):
+        «Membru {club}» (§981; the owner, 2026-11-18, three days before the race: «vreau la voluntari și să văd bifa "membru BVR"»):
         the person's own answer «Fac parte din grupul {club}» on the form (`club_member`) — their claim, checked against nothing, as
         the registration's tick is (§48) —, headed by the club's short name from its identity. A tick for yes, its words for a
         screen reader; nothing for no: an empty cell in the table, no line on a phone's card. Hideable under «Coloane» like the
@@ -879,7 +879,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
               <MenuItem value="yes">{t("volunteers.screen.kitYes")}</MenuItem>
               <MenuItem value="no">{t("volunteers.screen.kitNo")}</MenuItem>
             </TextField>
-            {/* «Doar membrii {club}» (§NNN): a tick, like the registrations list's — ticked submits `1`, unticked nothing. */}
+            {/* «Doar membrii {club}» (§981): a tick, like the registrations list's — ticked submits `1`, unticked nothing. */}
             <Box sx={{ minWidth: 220, maxWidth: 320, pt: 0.5 }} data-testid="volunteers-filter-member">
               <CheckboxField name="member" value="1" defaultChecked={memberFilter === true} dense help={t("volunteers.screen.memberOnlyHelp", { club: CLUB_NAME })}>
                 {t("volunteers.screen.memberOnly", { club: CLUB_SHORT_NAME })}

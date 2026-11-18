@@ -97,7 +97,7 @@ export function notesTip(
 }
 
 /**
- * A note as one line (§NNN, beside a person on «Planul voluntarilor»): its line breaks and every run of spaces one space, the ends
+ * A note as one line (§981, beside a person on «Planul voluntarilor»): its line breaks and every run of spaces one space, the ends
  * trimmed, and a long one cut at `TIP_NOTE_CHARS` with «…» — the length a marker's tooltip shows of it (`notesTip`).
  */
 export function noteLine(body: string): string {

@@ -11,7 +11,7 @@ import { CLUB_SHORT_NAME } from "@/theme/brand";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Cine s-a înscris» → «Dintre cei {n} confirmați» (§NNN; the owner, 2026-11-18: «aș vrea să văd mai clar, câți sunt Brașov
+ * «Cine s-a înscris» → «Dintre cei {n} confirmați» (§982; the owner, 2026-11-18: «aș vrea să văd mai clar, câți sunt Brașov
  * Runners și câți sunt de la sponsori?»; BR-REQ-050-02, BR-REQ-070-01): among the confirmed real registrations the chip
  * «Confirmată» counts — the special guests among them, never a test row, never another state or another event — how many are
  * the club's members (verified by a member account's address, or declared by the tick), how many came through partners
@@ -241,7 +241,7 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-describe("the confirmed by member and partner, counted with the summary (§NNN)", () => {
+describe("the confirmed by member and partner, counted with the summary (§982)", () => {
   it("counts the confirmed real registrations of the chosen event alone, members split, partners by name, the overlap", async () => {
     const race = await seedRace();
     const members = [...new Set(["membru-unu@example.org", "membru-doi@example.org"])];
