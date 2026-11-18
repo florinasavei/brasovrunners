@@ -694,8 +694,8 @@ export type RegistrationSummary = {
  * filter's own rule (§662, §973: the person's tick «Sunt membru», or an address of a member account), `verified` of them by
  * the address — the row's «Membru (verificat)» wins over its «Membru (declarat)», as `membershipOf` says — and the rest
  * declared; `partners` those with a partner's name, `byPartner` the names as written (one entry per name whatever its
- * capitals, in its newest spelling, as the partner filter suggests it), largest first; `both` the people in the two counts at once, so the figures add up:
- * `others` = confirmed − members − partners + both.
+ * capitals, in its newest spelling, as the partner filter suggests it), largest first; `both` the people in the two counts at
+ * once, so the figures add up: `others` = confirmed − members − partners + both.
  */
 export type RegistrationComposition = {
   confirmed: number;
