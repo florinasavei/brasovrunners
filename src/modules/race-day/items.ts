@@ -118,8 +118,9 @@ export async function changeRaceDayItem<T extends Record<string, unknown>>(
   const words = request.kind === "add" || request.kind === "edit" ? wordsOf(request) : null;
 
   return db.transaction(async (tx) => {
-    // The event's row, locked: two «Adaugă» at once count and number the list one after the other.
-    const [event] = await tx.select({ id: events.id }).from(events).where(eq(events.id, request.eventId)).limit(1).for("update");
+    // The event's row, locked: two «Adaugă» at once count and number the list one after the other. NO KEY UPDATE, as the
+    // volunteers' plan takes it: a registration's foreign-key check (KEY SHARE) on the same event never waits for a tick.
+    const [event] = await tx.select({ id: events.id }).from(events).where(eq(events.id, request.eventId)).limit(1).for("no key update");
     if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
 
     const audit = (action: AuditAction, itemId: string) =>
