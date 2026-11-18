@@ -18,6 +18,12 @@ type Props = Omit<ButtonProps, "startIcon" | "endIcon" | "component" | "href" | 
    * upload path drives. Never with `href`.
    */
   htmlFor?: string;
+  /**
+   * With `href` only: a file to open beside the page — one person's bib (§NNN) — `target="_blank"` with its `rel`, the page
+   * kept. Ignored on a submit and on a label.
+   */
+  target?: "_blank";
+  rel?: string;
 };
 
 /**
@@ -40,7 +46,7 @@ type Props = Omit<ButtonProps, "startIcon" | "endIcon" | "component" | "href" | 
  * never MUI's `Button` with its own `startIcon` import: the design guards (`tests/unit/design/`,
  * §694) refuse both a bare MUI `Button` and a direct `@mui/icons-material` import.
  */
-export default function GlyphButton({ icon, href, htmlFor, children, ...props }: Props) {
+export default function GlyphButton({ icon, href, htmlFor, target, rel, children, ...props }: Props) {
   const Icon = ACTION_ICONS[icon];
   const startIcon = <Icon fontSize="small" />;
   // With an `href`, MUI's ButtonBase renders its link component, a plain `<a>` — the element
@@ -57,7 +63,7 @@ export default function GlyphButton({ icon, href, htmlFor, children, ...props }:
       {children}
     </Button>
   ) : (
-    <Button href={href} startIcon={startIcon} {...props}>
+    <Button href={href} startIcon={startIcon} {...(target ? { target, rel } : {})} {...props}>
       {children}
     </Button>
   );
