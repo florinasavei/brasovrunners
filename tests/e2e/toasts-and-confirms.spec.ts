@@ -22,7 +22,7 @@ import { deleteSubscriber, seedConfirmedSubscriber } from "./support/newsletter"
 test.describe("§384 toasts and confirmations", () => {
   // A confirmed subscriber of everything, the spec's own: the publication's question is then known to offer the new-event
   // alert's two answers, whatever other specs left in the database. Gone at the end, whatever the test did.
-  const subscriber = `toast-subscriber-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}@example.org`;
+  const subscriber = `e2e-toast-subscriber-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}@test.invalid`;
   test.beforeEach(async () => {
     await seedConfirmedSubscriber(subscriber, ["ALL"]);
   });
