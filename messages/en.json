@@ -1385,7 +1385,9 @@
         "takeOutFor": "Take out of the raffle: {name}",
         "putInFor": "Put in the raffle: {name}",
         "button": "Raffle list (CSV)",
-        "buttonLabel": "Download the raffle list: the confirmed runners and volunteers who have a number and are in the raffle, with the number, the name, the category and whether the runner is present",
+        "buttonLabel": "Download the raffle list: the confirmed runners and volunteers who have a number and are in the raffle, with the number, the name, the category and whether the person is present",
+        "presentButton": "Raffle list — present only (CSV)",
+        "presentButtonLabel": "Download the raffle list — present only: the runners marked present at the desk and the volunteers ticked “Present”, confirmed, with a number, in the raffle",
         "columns": {
           "number": "Number",
           "name": "Name",
@@ -6447,6 +6449,18 @@
         "agreements": "Agreements (PDF)",
         "agreementsToSign": "To sign on paper (PDF)",
         "agreementsHelp": "Every volunteer not cancelled, each from a new page: those who accepted, with the accepted agreement; the others, with the sheet to sign on paper. Anyone with no agreement in force is left out."
+      },
+      "presence": {
+        "column": "Present",
+        "hint": "Ticked: the person came on race day; unticked: absent. “Raffle list — present only” takes only the volunteers ticked here and the runners marked present at the desk. Internal: the person is not told.",
+        "tick": "Present",
+        "summaryPresent": "Present: {count}",
+        "summaryAbsent": "Absent: {count}",
+        "filter": "Presence",
+        "all": "Everyone, present or absent",
+        "yes": "Present",
+        "no": "Absent",
+        "chip": "Present"
       },
       "decision": {
         "column": "Race-day decision",
@@ -14581,6 +14595,8 @@
       "volunteerDecisionCleared": "The decision for race day was cleared. Nothing was sent to anybody.",
       "volunteerRaffleOn": "In the raffle: back on the raffle's list.",
       "volunteerRaffleOff": "No longer in the raffle: not on the raffle's list.",
+      "volunteerPresentOn": "Ticked: present. Counted under “Present”.",
+      "volunteerPresentOff": "Cleared: absent.",
       "volunteerPlaced": "Stands at the chosen point: on the volunteers' plan.",
       "volunteerUnplaced": "No longer at any point: back under \"At no point\".",
       "eventTodoDone": "Ticked. The row is under “Done”.",

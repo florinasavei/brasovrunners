@@ -78,6 +78,28 @@ export async function setVolunteerRaffleAction(form: FormData): Promise<void> {
 }
 
 /**
+ * «Prezent» on a row of the «Voluntari» list and on the person's page (§NNN; the owner, 2026-11-18, three days before the race: «La
+ * voluntari trebuie să trec prezent/absent ca să pot face tombola doar pentru cei prezenți»): one press ticks a volunteer present on
+ * the day, or clears the tick — unticked is absent, and there is no third state. The form posts the state it wants (`present=1|0`),
+ * never a toggle, so a second press before the page answers saves the same. The coarse gate here (`canManageVolunteers`: the Organizer
+ * and the Administrators), and the service asks for the role again (BR-REQ-060-01: a tick drawn only on those two screens is a
+ * courtesy, never the permission); the change is audited as every edit of a person's boxes, nobody is told, and no public page is
+ * expired — no visitor reads it. The press comes back to the page it was made on — this page of the list with its filters, or the
+ * person's page — through the volunteers' one validated return, with the toast, or the refusal's code in the address.
+ */
+export async function setVolunteerPresentAction(form: FormData): Promise<void> {
+  const present = field(form, "present") === "1";
+  try {
+    const actor = await requireStaffCapability(canManageVolunteers);
+    const result = await changeVolunteer(getDb(), actor, { kind: "setPresent", eventId: eventIdOf(form), id: field(form, "volunteerId"), present }, new Date());
+    return backToCard(form, { saved: result.changed ? (present ? "volunteerPresentOn" : "volunteerPresentOff") : "volunteerUnchanged" });
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+}
+
+/**
  * «Modifică nota» on a row of the «Voluntari» list (§964; the owner, 2026-11-17, of that list: «lasă-mă să editez și nota
  * internă»): new words for the row's newest internal note, from the dialog over the list (`RowNoteDialog`, opened on the note's
  * words). The coarse gate here (`canManageVolunteers`: the Organizer and the Administrators), and the service asks again — and

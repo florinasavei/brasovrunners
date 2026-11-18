@@ -47,6 +47,13 @@ import { changeVolunteer } from "./volunteers";
   person would be back on «Lista pentru tombolă» by a press that was about something else. Each way through the tick's own
   writer (`changeVolunteer`'s `setRaffle`, `raffle-mark.ts`'s `setRegistrationInRaffle`), in the same transaction, so the
   trail says it as it says every tick; nobody is told, and nothing else of either row moves.
+
+  **«Prezent» travels one way** (§NNN): a runner the desk had checked in (`checked_in_at` set) is there, so the volunteer they
+  become is ticked «Prezent» by the volunteers' own tick (`changeVolunteer`'s `setPresent`), in the same transaction and with its
+  trail row — otherwise the new row would start absent, the column's default, and a press about something else would drop a
+  person who is there from «Lista pentru tombolă — doar prezenții» (the §953 lesson). A volunteer turned runner carries nothing:
+  checking a runner in is the desk's verb, with its own conditions — a confirmed registration, an event neither over nor
+  cancelled — and the entry here makes a registration that waits or holds a place, which the desk does not check in.
 */
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -109,7 +116,8 @@ export type RunnerToVolunteerResult = {
  *    address already on the event's volunteers is that entry's refusal (`VOLUNTEER_ALREADY_LISTED`): cancel the
  *    registration alone;
  * 3. the person is confirmed, which draws their number from the volunteers' series (§948) — and a runner an organizer had
- *    taken out of the raffle is taken out as a volunteer too (§953), by the volunteers' own tick;
+ *    taken out of the raffle is taken out as a volunteer too (§953), and a runner the desk had checked in is ticked «Prezent»
+ *    as a volunteer (§NNN), each by the volunteers' own tick;
  * 4. the registration is cancelled by the staff verb (`cancelRegistrationByStaff`): through the allocator, with its own
  *    trail row — a printed bib named in it (§311);
  * 5. one row ties the two: `registration.became_volunteer`, ids only.
@@ -189,6 +197,11 @@ export async function turnRunnerIntoVolunteer<T extends Record<string, unknown>>
     // default — in — so only a runner who was out is written, by the volunteers' own tick and with its trail row.
     if (!registration.inRaffle) {
       await changeVolunteer(tx, actor, { kind: "setRaffle", eventId: registration.eventId, id: volunteerId, inRaffle: false }, now);
+    }
+    // A runner the desk had checked in is there (§NNN): the row entered a moment ago starts absent, the column's default, so the
+    // volunteers' own tick says «Prezent» — with its trail row — and the present-only raffle file keeps the person.
+    if (registration.checkedInAt !== null) {
+      await changeVolunteer(tx, actor, { kind: "setPresent", eventId: registration.eventId, id: volunteerId, present: true }, now);
     }
     await cancelRegistrationByStaff(tx, actor, registration.id, input.reason, now, { sendEmail });
     await recordAuditEvent(tx, {

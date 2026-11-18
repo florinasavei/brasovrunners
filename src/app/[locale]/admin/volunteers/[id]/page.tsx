@@ -27,7 +27,7 @@ import StatusChip from "@/shared/ui/StatusChip";
 import TickButton from "@/shared/ui/TickButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { turnVolunteerIntoRunnerAction } from "../../registrations/actions";
-import { setVolunteerDecisionAction, setVolunteerKitAction } from "../actions";
+import { setVolunteerDecisionAction, setVolunteerKitAction, setVolunteerPresentAction } from "../actions";
 import { addVolunteerNoteAction, deleteVolunteerNoteAction, editVolunteerNoteAction } from "./note-actions";
 
 type Props = {
@@ -98,6 +98,20 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
           {person.name}
         </Typography>
         <StatusChip glyph={STATE_CHIP[person.state].glyph} color={STATE_CHIP[person.state].color} label={t(`volunteers.states.${person.state}`)} testId="volunteer-state" />
+        {/*
+          «Prezent» (§NNN; the owner, 2026-11-18: «La voluntari trebuie să trec prezent/absent ca să pot face tombola doar pentru cei
+          prezenți»): the list's one-press tick beside the name, before «Are kit» as the list's columns stand — the same plain form and
+          action, posting the state it wants (`present=1|0`), working with scripts off and coming back here (`returnTo`). Unticked is
+          absent. The service asks for the role again (`canManageVolunteers`).
+        */}
+        <Box component="form" action={setVolunteerPresentAction} data-testid="volunteer-page-present-form">
+          {volunteerHiddenFields({ locale, eventId: person.eventId, returnTo: path })}
+          <input type="hidden" name="volunteerId" value={person.id} />
+          <input type="hidden" name="present" value={person.present ? "0" : "1"} />
+          <TickButton checked={person.present} data-testid="volunteer-page-present-tick">
+            {t("volunteers.presence.tick")}
+          </TickButton>
+        </Box>
         {/*
           «Are kit» (§971; the owner, 2026-11-17, on this page: «nu pot bifa aici că are kit»): the list's one-press tick (§904) beside
           the name — before, it sat only inside «Modifică» at the page's foot. The same plain form and action as the list's row: it

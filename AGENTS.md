@@ -2934,12 +2934,18 @@ share the purpose. Steps 3–8 remain M4.
 «Lista pentru tombolă» (§948, `volunteers/raffle-list.ts`, `/api/admin/events/[id]/raffle`) is one more such file, for
 one event: everybody who wears a number there — a confirmed registration with a race number, a confirmed volunteer
 with one of the volunteers' series — by the number, as four columns: the number, the name, «Alergător» or «Voluntar»,
-and «Prezent» — whether the desk checked the runner in, empty for a volunteer, whom the desk checks nobody in as (§949:
+and «Prezent» — «Da» or «Nu»: whether the desk checked the runner in and, since 2026-11-18 (`DECISIONS.md` §NNN), whether
+the organizers ticked the volunteer «Prezent» on the «Voluntari» list (§15.11), where the cell was empty before (§949:
 the raffle is among who is there, and the club filters by it; a column rather than a condition, so a desk that did not
-check everybody in never empties the file). Never a test registration, anybody without a number, a cancelled person, a
+check everybody in never empties the file). Beside it, never in place of it, a second file: **«Lista pentru tombolă —
+doar prezenții»** (`?present=1`, named `tombola-prezenti-<day>.csv`) — the same people by the same rules, of whom only
+the runners the desk checked in and the volunteers ticked «Prezent», in the same four columns: the organizers' explicit
+second download, on the registrations list beside the whole file and, with one event chosen that holds a raffle, on
+the «Voluntari» list's toolbar with it. Never a test registration, anybody without a number, a cancelled person, a
 line of the elite list, or anybody an organizer took out («Participă la tombolă» unticked, §15.11), and nothing else
 of a person. Taken by whoever reads the registrations and works the volunteers (the Organizer and the Administrators),
-asserted in the route and the service; recorded as `event.raffle_list_exported` with the two counts, never a name.
+asserted in the route and the service; recorded as `event.raffle_list_exported` with the two counts and which of the
+two files it was (`onlyPresent`), never a name.
 
 ### 15.11 Staff-entered registration and administrative corrections
 
@@ -3288,10 +3294,27 @@ time and in any state, audited (`registration.raffle_included` / `registration.r
 it to change): the raffle is the organizers' own to run, and the tick moves nothing a registration owns. The «Voluntari» list has the same tick on a volunteer
 (`event_volunteers.in_raffle`), pressed by whoever works the volunteers (`canManageVolunteers`) and audited as every
 edit of a person's boxes. A tick decides one thing: whether the person's number is written on «Lista pentru tombolă»
-(§15.10), which also says, beside each runner, whether the desk checked them in. Read by those two lists, that file and
+(§15.10), which also says, beside each person, whether they were there — a runner the desk checked in, a volunteer
+ticked «Prezent» (below). Read by those two lists, that file and
 «Toate datele unei persoane»; never by a public page, an email, the desk, a count, another export, the allocator or the
 capacity formula (`tests/unit/registrations/raffle-never-leaves.test.ts`). No state, place, number, email or
 declaration moves, and the person is not told.
+
+Beside that tick, and like it a mark that changes nothing else: **«Prezent»** on a volunteer (2026-11-18, `DECISIONS.md`
+§NNN; the owner, three days before the race: «La voluntari trebuie să trec prezent/absent ca să pot face tombola doar
+pentru cei prezenți»). One boolean on the person's row (`event_volunteers.present`, false by default — unticked is absent,
+and there is no third state), ticked or cleared by one press on the «Voluntari» list's row — the column «Prezent», right
+before «Are kit» — or beside the name on the person's page, by whoever works the volunteers (`canManageVolunteers`,
+asserted by `setVolunteerPresentAction` and again by `volunteers.ts#changeVolunteer`, kind `setPresent`), for a person in
+any state, as «Are kit» is, and audited as every edit of a person's boxes (`volunteer.edited`: the box's name and the new
+value, never a name). The list's strip says «Prezenți: N» and «Absenți: K» beside «Cu kit» — always, a nought too — over
+«Înscris» and «Confirmat» (a cancelled person is neither present nor missing), each a pill that filters the list to exactly
+those people (`present=yes|no`). The mark decides one thing: a volunteer's «Prezent» on «Lista pentru tombolă», and who of
+them is on its present-only twin (§15.10). Read by that list, the person's page, that file, «Transformă în voluntar»
+(below) and «Toate datele unei persoane»; never by a public page, an email, a badge, the desk — which checks runners in,
+never a volunteer — the public volunteers' list or the allocator, and not by «Planul voluntarilor», the event editor's
+card or the volunteers' Excel and CSV until a change of their own (`tests/unit/volunteers/presence-never-leaves.test.ts`).
+No state, role, point, number, tick or email moves, no public cache is expired, and the person is not told.
 
 The «Voluntari» list keeps one more thing of the organizers' own on a volunteer, and it is words rather than a tick:
 **«Decizie pentru ziua cursei»** (2026-11-16, `DECISIONS.md` §954; the owner, of that list: «si la voluntar trebuie sa am
@@ -3360,6 +3383,13 @@ the registration the entry wrote, which takes the volunteer's tick whichever it 
 registration of that person cancelled earlier, and that row keeps what it once held. Neither the allocator nor the staff
 entry reads the column (`raffle-never-leaves.test.ts`), which is why the transform says it and not the entry. Nobody is
 told, and nothing else of either row moves.
+
+**«Prezent» moves one way** (2026-11-18, `DECISIONS.md` §NNN): a runner the desk had checked in is there, so «Transformă
+în voluntar» ticks the new volunteer «Prezent» — through the volunteers' own `setPresent`, in the transform's transaction
+and with that writer's audit row — and a press about something else never drops a person who is there from «Lista pentru
+tombolă — doar prezenții». «Transformă în alergător» carries nothing: checking a runner in is the desk's verb, with its
+own conditions (a confirmed registration, at an event neither over nor cancelled), and the entry makes a registration
+that waits or holds a place.
 
 ---
 

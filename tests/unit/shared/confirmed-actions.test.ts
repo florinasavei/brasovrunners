@@ -370,6 +370,9 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // The same tick on a row of the «Voluntari» list (§949).
   setVolunteerRaffleAction:
     "a mark on the club's own raffle list for one volunteer, undone by the same tick; it tells nobody and changes no state, role, number or count",
+  // «Prezent» on a row of the «Voluntari» list and on the person's page (§NNN): the organizers' mark that a volunteer came on the day.
+  setVolunteerPresentAction:
+    "a mark of who came on the day for one volunteer, undone by the same tick; it tells nobody and changes no state, role, number or count but «Prezenți» and «Absenți»",
   // «Decizie pentru ziua cursei» on a row of the «Voluntari» list and on the person's page (§954): the organizers' one line about a volunteer on race day.
   setVolunteerDecisionAction:
     "one line of the organizers' own about one volunteer, replaced by writing another or cleared by saving the box empty; it emails nobody and moves no state, role, point, number or tick",

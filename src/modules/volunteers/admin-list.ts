@@ -38,6 +38,11 @@ export type VolunteerAdminFilters = {
   /** «Are kit» (§904): only the people ticked (`true`), only the ones not (`false`), or everyone (absent). */
   kit?: boolean;
   /**
+   * «Prezenți» / «Absenți» (§NNN): only the people ticked «Prezent» (`true`), only the ones not (`false`), or everyone (absent) — and
+   * either half leaves the cancelled out, as the strip's two figures do: a cancelled person is neither present nor missing.
+   */
+  present?: boolean;
+  /**
    * «Doar membrii {club}» (§981): only the people who answered «Fac parte din grupul {club}» on the form (`club_member`) — their
    * own claim, checked against nothing —, or everyone (absent). No «not members» half: the owner asked to see the members.
    */
@@ -51,6 +56,11 @@ export function memberFilterOf(value: string | undefined): true | undefined {
 
 /** `?kit=` as the list's address carries it (§904): «yes», «no», or nothing — anything else is no filter. */
 export function kitFilterOf(value: string | undefined): boolean | undefined {
+  return value === "yes" ? true : value === "no" ? false : undefined;
+}
+
+/** `?present=` as the list's address carries it (§NNN): «yes» the present, «no» the absent, or nothing — anything else is no filter. */
+export function presentFilterOf(value: string | undefined): boolean | undefined {
   return value === "yes" ? true : value === "no" ? false : undefined;
 }
 
@@ -91,6 +101,9 @@ function whereOf(filters: VolunteerAdminFilters): SQL | undefined {
   const term = filters.search?.trim();
   if (term) parts.push(nameMatches(eventVolunteers.name, term));
   if (filters.kit !== undefined) parts.push(eq(eventVolunteers.hasKit, filters.kit));
+  // «Prezenți» / «Absenți» (§NNN): the strip's own people — the tick, among «Înscris» and «Confirmat» — so a pill shows the very
+  // people its figure counts, and «Absenți» never lists everybody who cancelled.
+  if (filters.present !== undefined) parts.push(eq(eventVolunteers.present, filters.present), ne(eventVolunteers.state, "CANCELLED"));
   if (filters.member) parts.push(eq(eventVolunteers.clubMember, true));
   return parts.length > 0 ? and(...parts) : undefined;
 }
@@ -197,36 +210,47 @@ export type VolunteerAdminSummary = {
   unassigned: number;
   /** «Cu kit» (§904): «Înscris» and «Confirmat» the organizers ticked «Are kit» on — a cancelled person is handed nothing. */
   withKit: number;
+  /** «Prezenți» (§NNN): «Înscris» and «Confirmat» the organizers ticked «Prezent» on — a cancelled person is neither present nor missing. */
+  present: number;
+  /** «Absenți» (§NNN): «Înscris» and «Confirmat» not ticked «Prezent» — unticked is absent; the cancelled left out, as above. */
+  absent: number;
 };
 
 /**
- * The strip's figures (§246's shape): by state, how many wait for a role and how many get a kit. Blind to the state, role and kit
- * filters on purpose — the strip says how the scope stands, and its pills are what set those filters. One grouped query and one count.
+ * The strip's figures (§246's shape): by state, how many wait for a role, how many get a kit and how many came and did not. Blind to the
+ * state, role, kit and presence filters on purpose — the strip says how the scope stands, and its pills are what set those filters. One
+ * grouped query and one count.
  */
 export async function summariseVolunteersForAdmin<T extends Record<string, unknown>>(
   db: Database<T>,
   filters: Pick<VolunteerAdminFilters, "eventId" | "search">,
 ): Promise<VolunteerAdminSummary> {
   const scope = whereOf({ eventId: filters.eventId, search: filters.search });
-  // By state and by the kit's tick at once: the states' figures add the two halves, «Cu kit» reads the ticked half of the active states.
+  // By state and by the two ticks at once: the states' figures add the halves, «Cu kit» reads the kit's ticked half of the active states,
+  // «Prezenți» and «Absenți» the two halves of «Prezent» among the same states (§NNN).
   const grouped = await db
-    .select({ state: eventVolunteers.state, hasKit: eventVolunteers.hasKit, n: count() })
+    .select({ state: eventVolunteers.state, hasKit: eventVolunteers.hasKit, present: eventVolunteers.present, n: count() })
     .from(eventVolunteers)
     .innerJoin(events, eq(events.id, eventVolunteers.eventId))
     .where(scope)
-    .groupBy(eventVolunteers.state, eventVolunteers.hasKit);
+    .groupBy(eventVolunteers.state, eventVolunteers.hasKit, eventVolunteers.present);
   const byState = Object.fromEntries(VOLUNTEER_STATES.map((state) => [state, 0])) as Record<VolunteerState, number>;
   let withKit = 0;
+  let present = 0;
+  let absent = 0;
   for (const row of grouped) {
     byState[row.state] += row.n;
-    if (row.hasKit && row.state !== "CANCELLED") withKit += row.n;
+    if (row.state === "CANCELLED") continue;
+    if (row.hasKit) withKit += row.n;
+    if (row.present) present += row.n;
+    else absent += row.n;
   }
   const [waiting] = await db
     .select({ n: count() })
     .from(eventVolunteers)
     .innerJoin(events, eq(events.id, eventVolunteers.eventId))
     .where(and(scope, noRoleGiven(), sql`${eventVolunteers.state} <> 'CANCELLED'`));
-  return { total: grouped.reduce((sum, row) => sum + row.n, 0), byState, unassigned: waiting?.n ?? 0, withKit };
+  return { total: grouped.reduce((sum, row) => sum + row.n, 0), byState, unassigned: waiting?.n ?? 0, withKit, present, absent };
 }
 
 /**

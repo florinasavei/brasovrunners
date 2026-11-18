@@ -8,7 +8,13 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { addVolunteerAction } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
-import { editVolunteerNoteFromListAction, setVolunteerDecisionAction, setVolunteerKitAction, setVolunteerRaffleAction } from "@/app/[locale]/admin/volunteers/actions";
+import {
+  editVolunteerNoteFromListAction,
+  setVolunteerDecisionAction,
+  setVolunteerKitAction,
+  setVolunteerPresentAction,
+  setVolunteerRaffleAction,
+} from "@/app/[locale]/admin/volunteers/actions";
 import { addVolunteerNoteFromListAction } from "@/app/[locale]/admin/volunteers/[id]/note-actions";
 import { getDb } from "@/db/client";
 import { VOLUNTEER_NOTE_MAX } from "@/db/schema/event-volunteer-notes";
@@ -35,6 +41,7 @@ import {
   listRolesWithCounts,
   listVolunteersForAdmin,
   memberFilterOf,
+  presentFilterOf,
   summariseVolunteersForAdmin,
   UNASSIGNED,
   VOLUNTEER_SORT_KEYS,
@@ -45,6 +52,7 @@ import {
 import { guardianAllowsConfirm, guardianAskOf, roleLabel, VOLUNTEER_DECISION_MAX, VOLUNTEER_STATES, type VolunteerState, volunteerTypes } from "@/modules/volunteers/domain/volunteer";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
 import { listPlanPoints } from "@/modules/volunteers/plan-points";
+import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 import { DECISION_ANCHOR } from "@/modules/volunteers/ui/VolunteerDecisionCard";
 import { GuardianVerbs, guardianChips, shortText, STATE_CHIP, VolunteerPersonFields, VolunteerStateForm, volunteerHiddenFields, volunteerPersonBoxes } from "@/modules/volunteers/ui/VolunteerPerson";
 import { listVolunteerNotesForList } from "@/modules/volunteers/volunteer-notes";
@@ -112,7 +120,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   if (!canManageVolunteers(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, state, role, q, kit, member, volunteerError } = current;
+  const { eventId, state, role, q, kit, present, member, volunteerError } = current;
   const query = parseListQuery(current, {
     sortable: VOLUNTEER_SORT_KEYS,
     // Newest offers first: the person somebody is asking about has usually just signed up.
@@ -130,6 +138,8 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const roleFilter = role === UNASSIGNED || (role && isUuid(role)) ? role : undefined;
   // «Are kit» (§904): «yes» or «no»; anything else in the address is no filter.
   const kitFilter = kitFilterOf(kit);
+  // «Prezenți» / «Absenți» (§NNN): «yes» or «no»; anything else in the address is no filter.
+  const presentFilter = presentFilterOf(present);
   // «Doar membrii {club}» (§981): «1»; anything else in the address is no filter.
   const memberFilter = memberFilterOf(member);
   const filters: VolunteerAdminFilters = {
@@ -138,13 +148,14 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     role: roleFilter,
     search: q || undefined,
     kit: kitFilter,
+    present: presentFilter,
     member: memberFilter,
   };
 
   const [rows, total, summary, eventRoles, t] = await Promise.all([
     listVolunteersForAdmin(db, filters, { limit: query.limit, offset: query.offset, sort: query.sort as VolunteerSortKey, dir: query.dir }, locale),
     countVolunteersForAdmin(db, filters),
-    // Blind to the state, the role and the kit (§246's rule): the strip says how the scope stands, and its pills set those filters.
+    // Blind to the state, the role, the kit and the presence (§246's rule): the strip says how the scope stands, and its pills set those filters.
     summariseVolunteersForAdmin(db, { eventId: filters.eventId, search: filters.search }),
     // The role select, with one event chosen: its roles and how many hold each.
     filters.eventId ? listRolesWithCounts(db, filters.eventId) : Promise.resolve([]),
@@ -200,6 +211,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     role: roleFilter,
     q,
     kit: kitFilter === undefined ? undefined : kit,
+    present: presentFilter === undefined ? undefined : present,
     member: memberFilter ? "1" : undefined,
     sort: current.sort,
     dir: current.dir,
@@ -209,7 +221,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const listQueryString = buildListHref("", listParams, {}).replace(/^\?/, "");
   // A press on a row comes back to this page of the list, every filter kept (§839), so the row's new chip is in view.
   const returnTo = buildListHref(basePath, listParams, { page: current.page });
-  const hasFilters = Boolean(eventId || stateFilter || roleFilter || q || kitFilter !== undefined || memberFilter);
+  const hasFilters = Boolean(eventId || stateFilter || roleFilter || q || kitFilter !== undefined || presentFilter !== undefined || memberFilter);
   const autoScopedToFeatured = !hasFilters && eventFilter.eventId !== undefined;
   const scopeEvent = events.find((event) => event.id === filters.eventId) ?? null;
   // «Adaugă un voluntar de mână» for the event in scope (§862): the context a person's page reads, coming back to this page of the list.
@@ -394,6 +406,23 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   /** One button that posts the state it wants, the card's own (`VolunteerStateForm`): never a toggle, and a reopening that emails asks first. */
   const stateButton = (row: VolunteerAdminRow, next: VolunteerState, label: string, icon: "confirm" | "cancel" | "undo") => (
     <VolunteerStateForm person={row} state={next} label={label} icon={icon} hidden={hidden(row)} words={words} t={t} />
+  );
+
+  /**
+   * «Prezent» on the row (§NNN; the owner, 2026-11-18, three days before the race: «La voluntari trebuie să trec prezent/absent ca să
+   * pot face tombola doar pentru cei prezenți»): the kit tick's own shape — the house's one-press tick in a plain form that posts the
+   * state it wants (`present=1|0`), never a toggle, working with scripts off and coming back to this page of the list. Unticked is
+   * absent. Drawn on every row, whatever the event, as «Are kit» is; the service asks for the role.
+   */
+  const presentTick = (row: VolunteerAdminRow) => (
+    <Box component="form" action={setVolunteerPresentAction} data-testid="volunteer-present-form">
+      {hidden(row)}
+      <input type="hidden" name="volunteerId" value={row.id} />
+      <input type="hidden" name="present" value={row.present ? "0" : "1"} />
+      <TickButton checked={row.present} aria-label={`${t("volunteers.presence.tick")}: ${shortText(row.name)}`} data-testid="volunteer-present-tick">
+        {t("volunteers.presence.tick")}
+      </TickButton>
+    </Box>
   );
 
   /**
@@ -643,6 +672,17 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       render: (row) => (row.choiceIds.length > 0 ? <span data-testid="volunteer-offered">{namesOf(row.choiceIds).join(", ")}</span> : <span aria-hidden>—</span>),
     },
     {
+      /*
+        «Prezent» (§NNN), right before «Are kit»: whether the person came on the day — the tick itself, one press; unticked is absent.
+        «Prezenți» and «Absenți» above count the two halves among the people not cancelled, and filter the list to them. On every row,
+        whatever the event, as the kit's; it neither sorts nor leaves at a width.
+      */
+      key: "present",
+      label: t("volunteers.presence.column"),
+      hint: t("volunteers.presence.hint"),
+      render: presentTick,
+    },
+    {
       // «Are kit» (§904): the tick itself, one press; «Cu kit» above counts the ticked who are not cancelled.
       key: "kit",
       label: t("volunteers.screen.columnKit"),
@@ -689,12 +729,13 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   ];
 
   /** A pill of the strip: a link to this list with the filter in the address; pressing the one in force clears it (§626). */
-  const pill = (patch: { state?: VolunteerState; role?: string; kit?: "yes" }, label: string, active: boolean) => (
+  const pill = (patch: { state?: VolunteerState; role?: string; kit?: "yes"; present?: "yes" | "no" }, label: string, active: boolean) => (
     <ChipLink
       href={buildListHref(basePath, listParams, {
         state: "state" in patch ? (active ? undefined : patch.state) : undefined,
         role: "role" in patch ? (active ? undefined : patch.role) : undefined,
         kit: "kit" in patch ? (active ? undefined : patch.kit) : undefined,
+        present: "present" in patch ? (active ? undefined : patch.present) : undefined,
       })}
       label={label}
       active={active}
@@ -746,6 +787,37 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
               {t("volunteers.csv")}
             </GlyphButton>
             {/*
+              «Lista pentru tombolă» and its present-only twin (§948, §NNN; the owner, 2026-11-18: «ca să pot face tombola doar pentru cei
+              prezenți»): with one event chosen that holds a raffle, the registrations list's two files here too — so «Prezent» is ticked
+              and the file taken on one screen. Plain links: the route asks for the role again (BR-REQ-060-01) and audits the download.
+            */}
+            {scopeEventRow?.hasRaffle && canTakeRaffleList(actor.role) && (
+              <>
+                <GlyphButton
+                  icon="download"
+                  href={`/api/admin/events/${scopeEvent.id}/raffle?lang=${locale}`}
+                  variant="text"
+                  size="small"
+                  sx={TAP_TARGET}
+                  aria-label={t("registrations.raffle.buttonLabel")}
+                  data-testid="volunteers-raffle-list"
+                >
+                  {t("registrations.raffle.button")}
+                </GlyphButton>
+                <GlyphButton
+                  icon="download"
+                  href={`/api/admin/events/${scopeEvent.id}/raffle?present=1&lang=${locale}`}
+                  variant="text"
+                  size="small"
+                  sx={TAP_TARGET}
+                  aria-label={t("registrations.raffle.presentButtonLabel")}
+                  data-testid="volunteers-raffle-present"
+                >
+                  {t("registrations.raffle.presentButton")}
+                </GlyphButton>
+              </>
+            )}
+            {/*
               Every agreement in one PDF (§966; the owner, 2026-11-17: «și vreau să pot printa și contractul de voluntariat, să am la
               fața locului»), for the desk, in place of one download per person: the accepted copies and the sheets to sign — or, on
               the second, the sheets alone. Plain links: the route asks for the role again (BR-REQ-060-01) and audits the download.
@@ -771,13 +843,13 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       </Stack>
 
       {/*
-        How the scope stands (§246's shape): everyone first, then each state, then how many wait for a role and how many
-        get a kit (§904) — every pill a filter (§626). The counts ignore the state, the role and the kit filters, so the
-        strip never empties to the one number somebody filtered to.
+        How the scope stands (§246's shape): everyone first, then each state, then how many wait for a role, how many get a
+        kit (§904) and how many came and did not (§NNN) — every pill a filter (§626). The counts ignore the state, the role,
+        the kit and the presence filters, so the strip never empties to the one number somebody filtered to.
       */}
       <Panel glyph="volunteers" title={t("volunteers.screen.summaryTitle")} aside={scopeEvent ? t("volunteers.screen.summaryScopeEvent", { event: scopeEvent.title ?? scopeEvent.id }) : t("volunteers.screen.summaryScopeAll")} data-testid="volunteers-summary">
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
-          {pill({ state: undefined, role: undefined }, t("volunteers.screen.summaryTotal", { count: summary.total }), !stateFilter && !roleFilter && kitFilter === undefined)}
+          {pill({ state: undefined, role: undefined }, t("volunteers.screen.summaryTotal", { count: summary.total }), !stateFilter && !roleFilter && kitFilter === undefined && presentFilter === undefined)}
           {VOLUNTEER_STATES.filter((value) => summary.byState[value] > 0 || stateFilter === value).map((value) =>
             pill({ state: value }, `${t(`volunteers.states.${value}`)}: ${summary.byState[value]}`, stateFilter === value),
           )}
@@ -785,6 +857,12 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
             pill({ role: UNASSIGNED }, t("volunteers.screen.summaryUnassigned", { count: summary.unassigned }), roleFilter === UNASSIGNED)}
           {/* «Cu kit» (§904; the owner, 2026-11-03: «ar trebui să număr pe header câți au kit»): the ticked who are not cancelled, always said — a nought too. */}
           {pill({ kit: "yes" }, t("volunteers.screen.summaryKit", { count: summary.withKit }), kitFilter === true)}
+          {/*
+            «Prezenți» and «Absenți» (§NNN; the owner, 2026-11-18: «trebuie să trec prezent/absent»): the two halves of «Prezent» among
+            «Înscris» and «Confirmat» — a cancelled person is neither — always said, a nought too, each a filter of the list to its people.
+          */}
+          {pill({ present: "yes" }, t("volunteers.presence.summaryPresent", { count: summary.present }), presentFilter === true)}
+          {pill({ present: "no" }, t("volunteers.presence.summaryAbsent", { count: summary.absent }), presentFilter === false)}
         </Stack>
         {scopeEvent && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
@@ -878,6 +956,19 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
               <MenuItem value="">{t("volunteers.screen.kitAll")}</MenuItem>
               <MenuItem value="yes">{t("volunteers.screen.kitYes")}</MenuItem>
               <MenuItem value="no">{t("volunteers.screen.kitNo")}</MenuItem>
+            </TextField>
+            {/* «Prezent» (§NNN): the present, the absent, or everyone — the «Prezenți» and «Absenți» pills above set the same. */}
+            <TextField
+              select
+              name="present"
+              label={t("volunteers.presence.filter")}
+              defaultValue={presentFilter === undefined ? "" : present}
+              sx={{ minWidth: 200 }}
+              data-testid="volunteers-filter-present"
+            >
+              <MenuItem value="">{t("volunteers.presence.all")}</MenuItem>
+              <MenuItem value="yes">{t("volunteers.presence.yes")}</MenuItem>
+              <MenuItem value="no">{t("volunteers.presence.no")}</MenuItem>
             </TextField>
             {/* «Doar membrii {club}» (§981): a tick, like the registrations list's — ticked submits `1`, unticked nothing. */}
             <Box sx={{ minWidth: 220, maxWidth: 320, pt: 0.5 }} data-testid="volunteers-filter-member">

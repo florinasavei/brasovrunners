@@ -264,3 +264,53 @@ describe("§949 «Tombolă» on the registrations list", () => {
     expect(raffleCellOf(tree, id).find((element) => element.props["data-testid"] === "registration-raffle-tick")?.props["aria-label"]).toMatch(/^Take out of the raffle: Runner \d+$/);
   });
 });
+
+/** A toolbar link of the list by its test id: the house's `GlyphButton`, its href and words as the page hands them over. */
+const buttonOf = (tree: ReactNode, testId: string) => elements(tree).find((element) => element.props["data-testid"] === testId);
+
+describe("§NNN «Lista pentru tombolă — doar prezenții» on the registrations list's toolbar", () => {
+  it("stands beside the whole file, under the same condition — one event chosen, a role that takes the file — linking to `?present=1`", async () => {
+    const race = await createRace();
+    await register(race.id);
+    for (const role of ["ADMIN", "MODERATOR"] as const) {
+      state.actor = await staff(role);
+      const tree = await listPage({ eventId: race.id });
+      const whole = buttonOf(tree, "registrations-raffle-list");
+      const present = buttonOf(tree, "registrations-raffle-present");
+      expect(whole?.props.href, role).toBe(`/api/admin/events/${race.id}/raffle?lang=ro`);
+      expect(present?.props.href, role).toBe(`/api/admin/events/${race.id}/raffle?present=1&lang=ro`);
+      expect(present?.props.children, role).toBe("Lista pentru tombolă — doar prezenții (CSV)");
+      // Its accessible name begins with the words it shows, and says who is in the file.
+      expect(String(present?.props["aria-label"]).toLowerCase(), role).toContain("lista pentru tombolă — doar prezenții");
+      expect(present?.props["aria-label"], role).toBe(ro.Admin.registrations.raffle.presentButtonLabel);
+      // The house's 44-pixel target, as every toolbar link.
+      expect(present?.props.sx, role).toEqual(whole?.props.sx);
+      // Right after the whole file: the two raffle files side by side.
+      const order = elements(tree).map((element) => element.props["data-testid"]);
+      expect(order.indexOf("registrations-raffle-present"), role).toBe(order.indexOf("registrations-raffle-list") + 1);
+    }
+    // Whether or not the event holds a raffle, as the whole file's link: the file is the club's to take.
+    await db.update(events).set({ hasRaffle: true }).where(eq(events.id, race.id));
+    expect(buttonOf(await listPage({ eventId: race.id }), "registrations-raffle-present")).toBeDefined();
+  });
+
+  it("is drawn for no list across every event — neither file is", async () => {
+    const race = await createRace();
+    await register(race.id);
+    state.actor = await staff("ADMIN");
+    const tree = await listPage({ eventId: "all" });
+    expect(buttonOf(tree, "registrations-raffle-list")).toBeUndefined();
+    expect(buttonOf(tree, "registrations-raffle-present")).toBeUndefined();
+  });
+
+  it("speaks English on the English page", async () => {
+    const race = await createRace();
+    await register(race.id);
+    state.actor = await staff("ADMIN");
+    state.locale = "en";
+    const present = buttonOf(await listPage({ eventId: race.id }), "registrations-raffle-present");
+    expect(present?.props.href).toBe(`/api/admin/events/${race.id}/raffle?present=1&lang=en`);
+    expect(present?.props.children).toBe("Raffle list — present only (CSV)");
+    expect(present?.props["aria-label"]).toBe(en.Admin.registrations.raffle.presentButtonLabel);
+  });
+});

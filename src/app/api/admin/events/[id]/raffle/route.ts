@@ -13,7 +13,13 @@ import { isUuid } from "@/shared/ids";
  * «Lista pentru tombolă» on an event's registrations list (§948; the owner, 2026-11-15: «vreau să fac o tombolă și
  * trebuie să pot exporta toți voluntarii și toți participanții»): everybody who wears a number at one event — the
  * confirmed runners and the confirmed volunteers — by the number, as a UTF-8 file with a BOM in the reader's language
- * (`lang`): the number, the name, «Alergător» or «Voluntar» (`modules/volunteers/raffle-list.ts`).
+ * (`lang`): the number, the name, «Alergător» or «Voluntar», and «Prezent» — a runner checked in at the desk, a volunteer
+ * ticked «Prezent» on the «Voluntari» list (`modules/volunteers/raffle-list.ts`).
+ *
+ * `?present=1` (§NNN; the owner, 2026-11-18: «ca să pot face tombola doar pentru cei prezenți») is the second file,
+ * «Lista pentru tombolă — doar prezenții», beside the whole one on the registrations and the «Voluntari» lists: the same
+ * four columns for the same people, of whom only those who were there, under a name of its own
+ * (`tombola-prezenti-<day>.csv`). Anything else in the address is the whole file.
  *
  * Whoever reads the registrations and works the volunteers may take it — the Organizer and the Administrators —
  * asserted here and again by the service (BR-REQ-060-01): the Tehnic role, a Redactor, a volunteer and a member are
@@ -32,13 +38,16 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
   const { id } = await context.params;
   if (!isUuid(id)) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
-  const lang = new URL(request.url).searchParams.get("lang");
+  const search = new URL(request.url).searchParams;
+  const lang = search.get("lang");
   const locale: Locale = (routing.locales as readonly string[]).includes(lang ?? "") ? (lang as Locale) : routing.defaultLocale;
+  // «doar prezenții» (§NNN): `present=1` and nothing else asks for the short file.
+  const onlyPresent = search.get("present") === "1";
   const now = new Date();
 
   let list;
   try {
-    list = await exportRaffleList(getDb(), actor, id, now);
+    list = await exportRaffleList(getDb(), actor, id, now, { onlyPresent });
   } catch (error) {
     if (isDomainError(error)) return NextResponse.json({ error: error.code }, { status: error.code === "NOT_FOUND" ? 404 : 403 });
     throw error;
@@ -47,7 +56,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const t = await getTranslations({ locale, namespace: "Admin" });
   const csv = buildRaffleCsv(
     { number: t("registrations.raffle.columns.number"), name: t("registrations.raffle.columns.name"), kind: t("registrations.raffle.columns.kind"), kinds: { RUNNER: t("registrations.raffle.kinds.RUNNER"), VOLUNTEER: t("registrations.raffle.kinds.VOLUNTEER") },
-      // «Prezent» (§949): whether the desk checked the runner in — the club filters by it; a volunteer's cell is empty.
+      // «Prezent» (§949, §NNN): whether the person was there — the desk's check-in for a runner, the «Voluntari» list's tick for a volunteer.
       present: t("registrations.raffle.columns.present"),
       presentYes: t("registrations.raffle.present.yes"),
       presentNo: t("registrations.raffle.present.no"),
@@ -58,7 +67,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   return new NextResponse(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": contentDisposition("attachment", raffleCsvFileName(day), "raffle"),
+      "Content-Disposition": contentDisposition("attachment", raffleCsvFileName(day, { onlyPresent }), "raffle"),
       "X-Robots-Tag": "noindex",
       "Cache-Control": "private, no-store",
     },

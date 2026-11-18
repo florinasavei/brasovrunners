@@ -1450,6 +1450,21 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               {t("registrations.raffle.button")}
             </GlyphButton>
           )}
+          {/* «Lista pentru tombolă — doar prezenții» (§NNN; the owner, 2026-11-18: «ca să pot face tombola doar pentru cei prezenți»):
+              beside the whole file, never in place of it — the runners the desk checked in and the volunteers ticked «Prezent». */}
+          {filters.eventId && canTakeRaffleList(actor.role) && (
+            <GlyphButton
+              icon="download"
+              href={`/api/admin/events/${filters.eventId}/raffle?present=1&lang=${locale}`}
+              variant="text"
+              size="small"
+              sx={TAP_TARGET}
+              aria-label={t("registrations.raffle.presentButtonLabel")}
+              data-testid="registrations-raffle-present"
+            >
+              {t("registrations.raffle.presentButton")}
+            </GlyphButton>
+          )}
           {/* With one event chosen, the organizer's own message to its registrants (§364) —
               the page lives under the event; this is the other door to it. */}
           {filters.eventId && canMessageParticipants(actor.role) && (

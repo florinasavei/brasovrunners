@@ -188,6 +188,11 @@ export type VolunteerItem = {
   hasKit: boolean;
   /** «Participă la tombolă» (§949): on the raffle's list of an event that holds one, unless the organizers unticked it. */
   inRaffle: boolean;
+  /**
+   * «Prezent» (§NNN): the organizers' mark that the person came on the day — unticked is absent — what the screen's «Prezenți: N» counts
+   * and «Lista pentru tombolă — doar prezenții» reads.
+   */
+  present: boolean;
   /** The volunteer's number (§948): drawn from the event's volunteers' series when confirmed, or the number they wore as a runner; null before, and on an event without the series. */
   bibNumber: number | null;
   /** «Planul voluntarilor» (§949): the point of the event's route the person stands at, or null — not placed yet, or not on the route. */
@@ -343,6 +348,7 @@ function volunteerItemOf(joined: VolunteerRowJoined, choiceIds: string[], roleId
     listOptIn: row.listOptIn,
     hasKit: row.hasKit,
     inRaffle: row.inRaffle,
+    present: row.present,
     bibNumber: row.bibNumber,
     checkpointId: row.checkpointId,
     raceDayDecision: row.raceDayDecision,
@@ -1675,6 +1681,11 @@ export type VolunteerRequest =
   /** «Participă la tombolă» ticked or cleared on the «Voluntari» list's row (§949): the form posts the state it wants, never a toggle. */
   | { kind: "setRaffle"; eventId: string; id: string; inRaffle: boolean }
   /**
+   * «Prezent» ticked or cleared on the «Voluntari» list's row or on the person's page (§NNN): the person came on the day, or — unticked —
+   * is absent. The form posts the state it wants, never a toggle. For a person in any state, as «Are kit».
+   */
+  | { kind: "setPresent"; eventId: string; id: string; present: boolean }
+  /**
    * «Planul voluntarilor» (§949): the point of the route the person stands at — one of the event's own «Puncte pe traseu» — or
    * none: an empty value takes the person off their point. The form posts the point it wants, never a toggle.
    */
@@ -2237,6 +2248,20 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       return { changed: true, volunteer: summary };
     }
 
+    if (request.kind === "setPresent") {
+      // «Prezent» (§NNN; the owner, 2026-11-18: «La voluntari trebuie să trec prezent/absent ca să pot face tombola doar pentru cei
+      // prezenți»): whether the person came on the day — the organizers' own mark, one press on the list's row or on the person's page,
+      // as «Are kit» is; unticked is absent. Only a real `true` ticks: anything else a forged request carries clears, the column's
+      // default. In any state, as the kit: the counts and the present-only raffle file read the state themselves. Audited as every
+      // other change of a person's boxes, naming the box and never anything typed; nobody is told, and no state, role, point, number,
+      // kit, raffle tick or decision moves.
+      const wanted = request.present === true;
+      if (current.present === wanted) return { changed: false, volunteer: summary };
+      await tx.update(eventVolunteers).set({ present: wanted, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
+      await audit("volunteer.edited", { volunteerId: current.id, fields: ["present"], present: wanted, assignedRoleIds: heldRoleIds });
+      return { changed: true, volunteer: summary };
+    }
+
     if (request.kind === "setCheckpoint") {
       // «Planul voluntarilor» (§949): where the person stands on the day — one of this event's points, or none. A cancelled person
       // is placed nowhere, though taking anybody off a point is always allowed. Audited as every other change of a person's boxes:
@@ -2460,14 +2485,14 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     return { changed: true, volunteer: { id: current.id, hasAddress: next.email !== null } };
   });
   // The organizers' own marks are shown on no public page — «Are kit» (§904), the point a person stands at on «Planul
-  // voluntarilor» and «Participă la tombolă» (§949) — so their presses leave the public cache as it was (§953): an expiry is
-  // a read that may wake the database, and no visitor would be shown anything new.
+  // voluntarilor», «Participă la tombolă» (§949) and «Prezent» (§NNN) — so their presses leave the public cache as it was (§953):
+  // an expiry is a read that may wake the database, and no visitor would be shown anything new.
   if (result.changed && !KINDS_NO_PUBLIC_PAGE_SHOWS.has(request.kind)) revalidatePublicContent("places");
   return result;
 }
 
 /** The presses that change nothing a public page reads: `changeVolunteer` expires no public cache for them. */
-const KINDS_NO_PUBLIC_PAGE_SHOWS: ReadonlySet<VolunteerRequest["kind"]> = new Set(["setKit", "setCheckpoint", "setRaffle"]);
+const KINDS_NO_PUBLIC_PAGE_SHOWS: ReadonlySet<VolunteerRequest["kind"]> = new Set(["setKit", "setCheckpoint", "setRaffle", "setPresent"]);
 
 /**
  * The volunteers' export (§754), «Descarcă CSV»: the same rows the card lists, recorded as

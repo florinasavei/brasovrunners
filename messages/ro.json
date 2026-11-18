@@ -1385,7 +1385,9 @@
         "takeOutFor": "Scoate de la tombolă: {name}",
         "putInFor": "Pune la tombolă: {name}",
         "button": "Lista pentru tombolă (CSV)",
-        "buttonLabel": "Descarcă lista pentru tombolă: alergătorii și voluntarii confirmați care au număr și participă, cu numărul, numele, categoria și dacă alergătorul e prezent",
+        "buttonLabel": "Descarcă lista pentru tombolă: alergătorii și voluntarii confirmați care au număr și participă, cu numărul, numele, categoria și dacă persoana e prezentă",
+        "presentButton": "Lista pentru tombolă — doar prezenții (CSV)",
+        "presentButtonLabel": "Descarcă lista pentru tombolă — doar prezenții: alergătorii marcați prezenți la masă și voluntarii bifați „Prezent”, confirmați, cu număr, care participă",
         "columns": {
           "number": "Număr",
           "name": "Nume",
@@ -6447,6 +6449,18 @@
         "agreements": "Contractele (PDF)",
         "agreementsToSign": "De semnat pe hârtie (PDF)",
         "agreementsHelp": "Toți voluntarii care nu sunt anulați, fiecare de la o pagină nouă: cine a acceptat, cu contractul acceptat; ceilalți, cu foaia de semnat pe hârtie. Cine nu are un contract în vigoare nu apare."
+      },
+      "presence": {
+        "column": "Prezent",
+        "hint": "Bifat: persoana a venit în ziua cursei; nebifat: absentă. „Lista pentru tombolă — doar prezenții” ia doar voluntarii bifați aici și alergătorii marcați prezenți la masă. Intern: nu e anunțată.",
+        "tick": "Prezent",
+        "summaryPresent": "Prezenți: {count}",
+        "summaryAbsent": "Absenți: {count}",
+        "filter": "Prezență",
+        "all": "Toți, prezenți sau absenți",
+        "yes": "Prezenți",
+        "no": "Absenți",
+        "chip": "Prezent"
       },
       "decision": {
         "column": "Decizie ziua cursei",
@@ -14581,6 +14595,8 @@
       "volunteerDecisionCleared": "Decizia pentru ziua cursei a fost ștearsă. Nu s-a trimis nimic nimănui.",
       "volunteerRaffleOn": "Participă la tombolă: e din nou pe lista pentru tombolă.",
       "volunteerRaffleOff": "Nu mai participă la tombolă: nu apare pe lista pentru tombolă.",
+      "volunteerPresentOn": "Bifat: prezent. Se numără la „Prezenți”.",
+      "volunteerPresentOff": "Debifat: absent.",
       "volunteerPlaced": "Stă la punctul ales: apare în planul voluntarilor.",
       "volunteerUnplaced": "Nu mai stă la niciun punct: e din nou la „Fără punct”.",
       "eventTodoDone": "Bifat. Rândul e la „Gata”.",
