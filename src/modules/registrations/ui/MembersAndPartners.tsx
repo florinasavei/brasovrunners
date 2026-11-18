@@ -8,8 +8,8 @@ import type { RegistrationComposition } from "../admin-repository";
 /** The counted phrases of the block, each in one, few and other (`count-form.ts`): «1 membru», «2 membri», «20 de membri». */
 type Counted = "title" | "members" | "verified" | "declared" | "partners" | "others" | "both";
 
-/** A link's own line height: 44 pixels to press, inline in the sentence. */
-const LINK_SX = { display: "inline-flex", alignItems: "center", minHeight: 44, color: "primary.main" } as const;
+/** A link's own line height: 44 pixels to press, inline in the sentence, never wider than its line. */
+const LINK_SX = { display: "inline-flex", alignItems: "center", minHeight: 44, maxWidth: "100%", color: "primary.main" } as const;
 
 /**
  * «Dintre cei {n} confirmați» under the registrations list's state chips, for one event (§982; the owner, 2026-11-18, of
@@ -56,7 +56,9 @@ export default async function MembersAndPartners({
     );
   const { members, verified, declared, partners, byPartner, both, others } = composition;
   return (
-    <Box data-testid="registrations-composition" sx={{ mt: spaceAbove }}>
+    // A partner's name is the club's typed text, up to `PARTNER_NAME_MAX` characters and one word if it likes: the block
+    // breaks it anywhere, so a phone never scrolls sideways for it (the 320-pixel rule, §1.5).
+    <Box data-testid="registrations-composition" sx={{ mt: spaceAbove, overflowWrap: "anywhere" }}>
       <Typography variant="subtitle2" component="p" sx={{ fontWeight: 600 }} data-testid="registrations-composition-title">
         {counted("title", composition.confirmed)}
       </Typography>
