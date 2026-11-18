@@ -14,17 +14,17 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section is the one page a session with none of the conversation reads; `yarn handoff` checks it against GitHub.
 
-- **Production and QA: `BR-V4.63`** (2026-11-17, §974: «Planul voluntarilor» in two views). The club's anniversary cross is on
-  Saturday 21 November 2026.
-- **Shipping (2026-11-18):** «Eticheta pe BIB» on every elite bib (the first name by default), the elites at the race-day desk
-  and the registrations list's «Participanți» fold — `feat/elite-bib-label-and-folds`, migration `0212`.
-- **Building (2026-11-18)**, each branch with its `.release/` entry, landed through the session's branch in small batches:
-  `feat/email-choice-two-answers` (a question that may email the person ends in «… și trimite emailul» / «… fără email»),
-  `feat/admin-table-top-scrollbar` (a scrollbar at the top of a wide table), `feat/plan-maps-and-unplaced` («Fără punct»
-  folded, each person placed from their own line; «Poze și hărți»: several pictures and links — its migration becomes `0213`
-  at its batch) and `feat/race-day-tabs-inventory-spares` («Ziua cursei» in three tabs, «Prezența», «Clasament» and «Lucruri
-  de adus»; the walk-in's number chosen among the free spares — its migration becomes `0214`). A container restart stopped
-  them once; each kept its work as a `wip:` commit (`docs/DISPATCHER.md` § After a crash).
+- **Production and QA: `BR-V4.64`** (2026-11-18, §975: «Eticheta pe BIB» on every elite bib, the elites at the race-day desk,
+  the registrations list's «Participanți» fold; migration `0212`). The club's anniversary cross is on Saturday 21 November 2026.
+- **Shipping (2026-11-18), one batch on the session's branch:** `feat/email-choice-two-answers` (a question that may email the
+  person ends in «… și trimite emailul» / «… fără email»), `feat/admin-table-top-scrollbar` (a scrollbar at the top of a wide
+  table), `feat/plan-maps-and-unplaced` («Fără punct» folded, each person placed from their own line; «Poze și hărți»: several
+  pictures and links — migration `0213`) and `feat/race-day-tabs-inventory-spares` («Ziua cursei» in three tabs, «Prezența»,
+  «Clasament» and «Lucruri de adus»; the walk-in's number chosen among the free spares — migration `0214`).
+- **Building:** nothing. Two container restarts stopped the chains on 2026-11-18; each kept its work as `wip:` commits
+  (`docs/DISPATCHER.md` § After a crash) and finished in its own worktree with no build, server or Playwright on the machine —
+  CI's shards were the e2e gate. Next, queued: `events.volunteer_plan_media_asset_id` leaves the schema (the contract after
+  `0213`, once this batch is the rollback floor).
 - **Waiting on the owner:** the rows of § Waiting on the owner below (last reviewed 2026-10-10). Three small word fixes from
   2026-11-17 are done only when asked: the member tick's confirmations on an elite registration, the order of the volunteers'
   plan's summary, and `docs/WHERE-THINGS-LIVE.md`'s §949 row.
