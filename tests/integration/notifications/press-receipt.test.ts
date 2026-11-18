@@ -308,7 +308,7 @@ describe("the bulk cancel's toast: the act, then what the press emailed", () => 
     expect(toast).toMatch(/^2 înscrieri anulate\. Pleacă [^:]+: „Înscriere anulată” către 2 persoane\.$/);
   });
 
-  it("«Trimite emailul» unticked: the act, and how many emails it kept back — nothing about any that left", async () => {
+  it("answered «… fără emailuri» (`sendEmail` off): the act, and how many emails it kept back — nothing about any that left", async () => {
     const event = await createEvent(5);
     const ana = await confirmedAddress(event, "Ana");
     const bia = await confirmedAddress(event, "Bia");

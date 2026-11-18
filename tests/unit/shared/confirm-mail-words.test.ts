@@ -285,6 +285,30 @@ describe("the email's two answers in the builder (§NNN, amending slice 4 of the
     }
     state.locale = "ro";
   });
+
+  it("gives whole answers to the two verbs the template words badly — «Creează și publică», «Acordul părintelui pe hârtie»", async () => {
+    for (const [locale, catalogue] of [["ro", ro], ["en", en]] as const) {
+      state.locale = locale;
+      const words = await confirmWords();
+      const { editor, volunteers } = catalogue.Admin;
+      const created = words.alertOptOut({ sendLabel: editor.createPublishSendButton, skipLabel: editor.createPublishSkipButton });
+      expect(created.emailOptOut).toEqual({ field: "sendEmail", sendLabel: editor.createPublishSendButton, skipLabel: editor.createPublishSkipButton });
+      const paper = words.mail({
+        to: "Ana Pop",
+        type: "VOLUNTEER_AGREEMENT_ACCEPTED",
+        optOut: { sendLabel: volunteers.guardian.paperSendButton, skipLabel: volunteers.guardian.paperSkipButton },
+      });
+      expect(paper.emailOptOut).toEqual({ field: "sendEmail", sendLabel: volunteers.guardian.paperSendButton, skipLabel: volunteers.guardian.paperSkipButton });
+      // Whole words: nothing for the dialog to fill, and no verb joined twice.
+      for (const label of [editor.createPublishSendButton, editor.createPublishSkipButton, volunteers.guardian.paperSendButton, volunteers.guardian.paperSkipButton]) {
+        expect(label, `${locale} ${label}`).not.toMatch(/[{}]/);
+        expect(label.split(/ (și|and) /).length, `${locale} ${label}`).toBeLessThanOrEqual(3);
+      }
+    }
+    expect(ro.Admin.editor.createPublishSendButton).toBe("Creează, publică și anunță abonații");
+    expect(ro.Admin.volunteers.guardian.paperSkipButton).toBe("Înregistrează acordul fără email");
+    state.locale = "ro";
+  });
 });
 
 describe("a confirmation the allocator may still turn into a place on the waiting list says «or none» (BR-REQ-037-07)", () => {

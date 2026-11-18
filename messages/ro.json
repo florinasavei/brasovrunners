@@ -3468,6 +3468,8 @@
         "black": "Negru"
       },
       "createAndPublish": "Creează și publică",
+      "createPublishSendButton": "Creează, publică și anunță abonații",
+      "createPublishSkipButton": "Creează și publică fără anunț",
       "publishing": "Se publică…",
       "createdPublished": "Evenimentul a fost creat și publicat. Este pe site, în ambele limbi.",
       "createdPublishedWithSeries": "Evenimentul și {dates} au fost create și publicate.",
@@ -6603,6 +6605,8 @@
         "pdf": "PDF cu acordul părintelui",
         "pdfToSign": "PDF de semnat de părinte",
         "paper": "Acordul părintelui pe hârtie",
+        "paperSendButton": "Înregistrează acordul și trimite emailul",
+        "paperSkipButton": "Înregistrează acordul fără email",
         "paperTitle": "Părintele lui {name} a semnat contractul pe hârtie?",
         "paperBody": "Se înregistrează că părintele sau tutorele lui {name} a semnat contractul tipărit, versiunea în vigoare, și că tu ai înregistrat semnătura. Păstrează foaia semnată.",
         "minorsClosed": "Linkul părintelui și „Acordul părintelui pe hârtie” așteaptă: nota sau contractul în vigoare nu descriu minorii («Sarcini»).",

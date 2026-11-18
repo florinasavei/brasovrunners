@@ -239,7 +239,8 @@ export function GuardianVerbs({
                   to: { name: person.name, address: person.email },
                   type: "VOLUNTEER_AGREEMENT_ACCEPTED",
                   also: [words.line("guardianCopy")],
-                  optOut: true,
+                  // Its own words: the template would join the noun «Acordul părintelui pe hârtie» to «și trimite emailul».
+                  optOut: { sendLabel: t("volunteers.guardian.paperSendButton"), skipLabel: t("volunteers.guardian.paperSkipButton") },
                 })
               : words.noMail(person.name, [words.line("guardianNone")])),
             confirmLabel: t("volunteers.guardian.paper"),

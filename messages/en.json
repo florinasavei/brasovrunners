@@ -3468,6 +3468,8 @@
         "black": "Black"
       },
       "createAndPublish": "Create and publish",
+      "createPublishSendButton": "Create, publish and tell the subscribers",
+      "createPublishSkipButton": "Create and publish without telling them",
       "publishing": "Publishing…",
       "createdPublished": "The event was created and published. It is on the site, in both languages.",
       "createdPublishedWithSeries": "The event and {dates} were created and published.",
@@ -6603,6 +6605,8 @@
         "pdf": "PDF with the parent's consent",
         "pdfToSign": "PDF for the parent to sign",
         "paper": "Parent's consent on paper",
+        "paperSendButton": "Record the consent and send the email",
+        "paperSkipButton": "Record the consent without the email",
         "paperTitle": "Did {name}'s parent sign the agreement on paper?",
         "paperBody": "This records that {name}'s parent or guardian signed the printed agreement, the version in force, and that you recorded the signature. Keep the signed sheet.",
         "minorsClosed": "The parent's link and “Parent's consent on paper” wait: the notice or the agreement in force does not describe minors (“Tasks”).",

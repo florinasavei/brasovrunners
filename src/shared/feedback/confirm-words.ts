@@ -273,10 +273,11 @@ export async function confirmWords() {
     /**
      * The publication's two answers (slice 4, §NNN): its email is a quieter line — the new-event alert the job sends later
      * (`alertLater`, `alertMaybe`) — so the answers name it: «{action} și anunță abonații» / «{action} fără anunț», the
-     * second for good: the subscribers are never told of this event.
+     * second for good: the subscribers are never told of this event. `labels`: a verb that reads badly in the template —
+     * «Creează și publică» — gives its two answers whole.
      */
-    alertOptOut: (): Pick<ConfirmSpec, "emailOptOut"> =>
-      optOutOf({ sendLabel: t.raw("confirm.mail.alertSendButton") as string, skipLabel: t.raw("confirm.mail.alertSkipButton") as string }, false),
+    alertOptOut: (labels?: { sendLabel: string; skipLabel: string }): Pick<ConfirmSpec, "emailOptOut"> =>
+      optOutOf(labels ?? { sendLabel: t.raw("confirm.mail.alertSendButton") as string, skipLabel: t.raw("confirm.mail.alertSkipButton") as string }, false),
   };
 }
 

@@ -81,6 +81,11 @@ export async function seedConfirmedSubscriber(email: string, topics: string[]): 
   );
 }
 
+/** A subscriber gone, as «Dezabonează-mă» leaves it — a spec's own, seeded above, tidied at its end. */
+export async function deleteSubscriber(email: string): Promise<void> {
+  await withDatabase((client) => client.query(`DELETE FROM newsletter_subscribers WHERE lower(delivery_email) = lower($1)`, [email]));
+}
+
 /** How many newsletter messages were queued for an address. */
 export async function newsletterMessagesTo(email: string): Promise<number> {
   return withDatabase(async (client) => {

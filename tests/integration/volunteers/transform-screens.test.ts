@@ -355,7 +355,7 @@ describe("§948 BR-REQ-037-03 «Transformă în voluntar»: the press", () => {
     expect(en.Feedback.toast.runnerBecameVolunteer).toBeTruthy();
   });
 
-  it("with «Trimite emailul» unticked sends the person nothing and says so on the way back; the English page writes its reason in English", async () => {
+  it("answered «Transformă în voluntar fără email» (`sendEmail` off) sends the person nothing and says so on the way back; the English page writes its reason in English", async () => {
     const { eventId, roleId } = await createRace();
     const radu = await runner(eventId, "Radu Munteanu");
 

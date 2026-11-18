@@ -2386,9 +2386,9 @@ or `on` among them, sends — and the action hands it to its service as an expli
 enqueue of the person's own message alone: false queues that row and so none of its club copies, never the offer to the
 next in line, the declaration's archive, a notice to the club or a refusal's ground (`REFUSAL_NEEDS_EMAIL` refuses the
 club's refusal without its email). The press's own audit row says `emailSkipped: true`; the two presses with no row of
-their own write one when skipped — `staff.invitation_not_sent` and `event.new_event_alert_skipped` (the publication's
-box marks the event seen with a `newsletter_sends` row of no recipients, in the publication's transaction). The editor's
-window box (`sendEmail.window`) keeps back only a deadline moved later under the move's own key
+their own write one when skipped — `staff.invitation_not_sent` and `event.new_event_alert_skipped` (the publication
+answered «… fără anunț» marks the event seen with a `newsletter_sends` row of no recipients, in the publication's
+transaction). The editor's window box (`sendEmail.window`) keeps back only a deadline moved later under the move's own key
 (`registrations/window-holds.ts#windowEmailSkippable`): a move that is the job's own last call or ask still goes. The
 presses are exactly `OPT_OUT_PRESSES` in `tests/unit/shared/emailing-presses.test.ts`, which fails any other action that
 reads the box — never a resend, an offer, a declaration to sign or the copy of a document the person signed.
