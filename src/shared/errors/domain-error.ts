@@ -103,8 +103,9 @@ export type DomainErrorCode =
   | "ELITE_NOT_MARKED"
   // «Eticheta pe BIB» longer than an elite bib carries (§975, `ELITE_NAME_MAX`): the sentence names the box and the limit.
   | "ELITE_LABEL_TOO_LONG"
-  // The club's refusal under the terms (§618) with «Trimite emailul» unticked (the design «telling the owner about every email a
-  // staff press sends», slice 4): the terms promise the person is told the ground, so the refusal never goes without its email.
+  // The club's refusal under the terms (§618) posted with its email kept back (the design «telling the owner about every email a
+  // staff press sends», slice 4; its question offers no «… fără email», §NNN): the terms promise the person is told the ground,
+  // so the refusal never goes without its email.
   | "REFUSAL_NEEDS_EMAIL";
 
 export class DomainError extends Error {

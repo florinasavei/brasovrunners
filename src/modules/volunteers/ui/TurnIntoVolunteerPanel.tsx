@@ -13,7 +13,8 @@ import Panel from "@/shared/ui/Panel";
  * alergător în voluntar și invers»): a closed fold beside «Anulează înscrierea», for the Administrator alone, holding
  * one form — the role the person takes, chosen from the event's own, and the button. The press asks first, naming both
  * emails the person gets («Înscriere anulată», then «Rolul tău de voluntar»), the freed place's offer to the first in
- * line, a printed bib that goes void, and «Trimite emailul» for the person's two together.
+ * line, a printed bib that goes void, and ends in two answers, «… și trimite emailul» or «… fără email», for the person's
+ * two together (§NNN).
  *
  * An event with no role yet says so and links its «Voluntari» card: a volunteer is entered with a role, and the
  * service refuses without one. Presentation only: the page draws it for a role that may manage registrations and a
@@ -70,12 +71,12 @@ export default async function TurnIntoVolunteerPanel({
             title: t("registrations.toVolunteer.confirmTitle"),
             // The printed bib is named before the press (§311), as the cancellation's own question names it.
             body: printedBib !== null ? `${t("confirm.cancelRegistrationPrintedBody", { number: printedBib })} ${body}` : body,
-            // Both of the person's emails, the second said with the first: unticking «Trimite emailul» keeps back the two.
+            // Both of the person's emails, the second said with the first: «… fără email» keeps back the two.
             ...words.mail({
               to: name,
               type: "REGISTRATION_CANCELLED",
               also: [
-                { ...words.line("andType", { type: t("emails.types.VOLUNTEER_ROLE_ASSIGNED") }), withEmail: true },
+                words.line("andType", { type: t("emails.types.VOLUNTEER_ROLE_ASSIGNED") }),
                 ...(freesAPlace ? [words.nextInLineMaybe()] : []),
               ],
               optOut: true,

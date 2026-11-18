@@ -108,8 +108,8 @@ async function runRoles(request: VolunteerRolesRequest) {
 
 /**
  * `press`, for the presses that can email the person (`notifications/press.ts`): told who pressed once the session is asserted.
- * `sendEmail`: «Trimite emailul» as the form posted it (slice 4) — beside the role buttons and in the forms, or in the
- * reopening's question; the service queues nothing while it is unticked.
+ * `sendEmail`: the choice as the form posted it (slice 4) — the «Trimite emailul» box beside the role buttons and in the
+ * forms, or the reopening's two answers (§NNN); the service queues nothing when it says `off`.
  */
 async function runVolunteer(request: VolunteerRequest, press?: EmailPressHandle, sendEmail = true) {
   const actor = await requireStaff();
@@ -496,7 +496,7 @@ export async function setVolunteerStateAction(form: FormData): Promise<void> {
   // An email press (`notifications/press.ts`): reopening a cancelled person who holds roles emails them.
   return inEmailPress("volunteers.state", async (press) => {
     const state = field(form, "state");
-    // «Trimite emailul» in the reopening's question (slice 4); the other state presses post none and send nothing anyway.
+    // The reopening's answer (slice 4, §NNN); the other state presses post none and send nothing anyway.
     const sendEmail = sendEmailOf(form);
     try {
       const result = await runVolunteer({ kind: "setState", eventId: eventIdOf(form), id: field(form, "volunteerId"), state }, press, sendEmail);
@@ -630,7 +630,7 @@ export async function requestVolunteerGuardianAction(form: FormData): Promise<vo
 export async function recordPaperVolunteerGuardianAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
   return inEmailPress("volunteers.guardianPaper", async (press) => {
-    // «Trimite emailul» in its question (slice 4): the volunteer's second copy of the agreement, now with the parent's consent.
+    // Its question's answer (slice 4, §NNN): the volunteer's second copy of the agreement, now with the parent's consent.
     const sendEmail = sendEmailOf(form);
     try {
       const actor = await requireStaff();

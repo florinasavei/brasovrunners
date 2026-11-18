@@ -2376,17 +2376,19 @@ whose change sends at the job's pass — say it in a `shared/feedback/MailLine.t
 no click. `tests/unit/shared/emailing-presses.test.ts` follows every posting of every emailing press, handed-down props
 included, and fails one that says nothing.
 
-**«Trimite emailul»** (`DECISIONS.md` §912). A press whose person's email may sensibly stay unsent offers a box, ticked
-by default: in its question (`ConfirmSpec.emailOptOut`, worded by the builder's `optOut`; the form carries a hidden
-`sendEmail` drawn `on`, and the answer writes `on` or `off` into it) or beside its button (`MailLine`'s `optOut`: the
-box, then a hidden `off` under the same name). One parser reads it, `shared/forms/send-email.ts#sendEmailOf` — no value,
+**«… și trimite emailul» / «… fără email»** (`DECISIONS.md` §912, §NNN). A press whose person's email may sensibly stay
+unsent lets the reader choose at every press: in its question, two answers in place of the one confirm — the contained
+«{action} și trimite emailul» and the outlined «{action} fără email» (`ConfirmSpec.emailOptOut`, worded by the builder's
+`optOut`, plural for a counted press; Enter answers neither; the form carries a hidden `sendEmail` drawn `on`, and the
+answer pressed writes `on` or `off` into it) — or, beside a button that asks nothing, a box «Trimite emailul», ticked by
+default (`MailLine`'s `optOut`: the box, then a hidden `off` under the same name). One parser reads it, `shared/forms/send-email.ts#sendEmailOf` — no value,
 or `on` among them, sends — and the action hands it to its service as an explicit `sendEmail` option that reaches the
 enqueue of the person's own message alone: false queues that row and so none of its club copies, never the offer to the
 next in line, the declaration's archive, a notice to the club or a refusal's ground (`REFUSAL_NEEDS_EMAIL` refuses the
 club's refusal without its email). The press's own audit row says `emailSkipped: true`; the two presses with no row of
-their own write one when skipped — `staff.invitation_not_sent` and `event.new_event_alert_skipped` (the publication's
-box marks the event seen with a `newsletter_sends` row of no recipients, in the publication's transaction). The editor's
-window box (`sendEmail.window`) keeps back only a deadline moved later under the move's own key
+their own write one when skipped — `staff.invitation_not_sent` and `event.new_event_alert_skipped` (the publication
+answered «… fără anunț» marks the event seen with a `newsletter_sends` row of no recipients, in the publication's
+transaction). The editor's window box (`sendEmail.window`) keeps back only a deadline moved later under the move's own key
 (`registrations/window-holds.ts#windowEmailSkippable`): a move that is the job's own last call or ask still goes. The
 presses are exactly `OPT_OUT_PRESSES` in `tests/unit/shared/emailing-presses.test.ts`, which fails any other action that
 reads the box — never a resend, an offer, a declaration to sign or the copy of a document the person signed.
@@ -3335,8 +3337,8 @@ never on both lists or on neither —
   (§765); never a place on a public list. Refused with nothing written: a registration that cannot be cancelled (§10.5),
   a test one, a person under eighteen on the event's day (`RUNNER_TO_VOLUNTEER_MINOR`: a minor volunteers with a parent's
   agreement, which the hand entry asks), a role that is not the event's, an address already on the event's volunteers.
-  The person's two emails — «Înscriere anulată» and «Rolul tău de voluntar» — go together or, with «Trimite emailul»
-  unticked, not at all; the next in line's offer always goes;
+  The person's two emails — «Înscriere anulată» and «Rolul tău de voluntar» — go together or, answered «… fără email»,
+  not at all; the next in line's offer always goes;
 - **a volunteer turned runner** is entered by the official waiting list's own entry (`enterOnWaitlistByStaff`, §872: the
   relay tick, the address vouched for, the one allocator — a counted free place or the back of the line, never ahead of
   anyone — that state's ordinary email, the declaration the person's own to sign) under the two names the Administrator
@@ -3717,7 +3719,7 @@ public event registration page. It carries no scoped token and creates none.
 adds a colleague on Echipa (`staff:<id>:invitation:<time>`), to the staff address, in the
 colleague's language — who added them, as what, the sign-in page as the action. No token:
 the sign-in page asserts who they are. Sent again from the row until they first sign in
-(`DECISIONS.md` §141). With «Trimite invitația acum» unticked the colleague is added and
+(`DECISIONS.md` §141). Answered «Adaugă fără invitație» the colleague is added and
 nothing is queued — nor is Zitadel asked; «Retrimite invitația» later sends the invitation and
 makes the Zitadel account when it is missing (`DECISIONS.md` §912).
 

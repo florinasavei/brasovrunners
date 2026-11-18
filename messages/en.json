@@ -2568,12 +2568,15 @@
         "none": "No email goes to {name}.",
         "toOrNothing": "1 email goes to {name}: “{type}” — or none, if they join the waiting list.",
         "toAddressOrNothing": "1 email goes to {name} ({address}): “{type}” — or none, if they join the waiting list.",
-        "noneType": "No “{type}” email goes.",
         "optOut": "Send the email",
+        "sendButton": "{action} and send the email",
+        "skipButton": "{action} without the email",
+        "sendButtonMany": "{action} and send the emails",
+        "skipButtonMany": "{action} without the emails",
+        "alertSendButton": "{action} and tell the subscribers",
+        "alertSkipButton": "{action} without telling them",
         "refusalTells": "A refusal tells the person its ground, in “Registration cancelled”: so that email always goes.",
         "windowSkipped": "With the box unticked, those whose deadline moves later are not sent it again; those whose deadline moves earlier still are.",
-        "alertOptOut": "Announce it to the newsletter's subscribers",
-        "alertOff": "The newsletter's subscribers are not told of this event, now or later.",
         "noneMany": "The people erased receive no email.",
         "club": {
           "one": "And {count} email to the club's mailboxes.",
@@ -3468,6 +3471,8 @@
         "black": "Black"
       },
       "createAndPublish": "Create and publish",
+      "createPublishSendButton": "Create, publish and tell the subscribers",
+      "createPublishSkipButton": "Create and publish without telling them",
       "publishing": "Publishing…",
       "createdPublished": "The event was created and published. It is on the site, in both languages.",
       "createdPublishedWithSeries": "The event and {dates} were created and published.",
@@ -4107,10 +4112,10 @@
       "membersInviting": "Adding…",
       "membersInvited": "Members added: {count}. The invitations are on their way.",
       "membersAdded": "Members added: {count}.",
-      "inviteOptOut": "Send the invitation now",
-      "inviteOptOutOff": "No invitation goes to {name} and Zitadel is not asked: you send it later, with “Resend the invitation”.",
-      "membersOptOut": "Send the invitations now",
-      "membersOptOutOff": "No invitation goes and Zitadel is not asked: you send them later, each with “Resend the invitation”.",
+      "inviteSendButton": "{action} and send the invitation",
+      "inviteSkipButton": "{action} without the invitation",
+      "membersSendButton": "{action} and send the invitations",
+      "membersSkipButton": "{action} without the invitations",
       "inviteNotSent": "No invitation went and Zitadel was not asked: send it whenever you like, with “Resend the invitation” beside each person.",
       "membersInviteFailed": "Members added: {count}, the invitations are on their way — but for {failed} of them the sign-in account could not be made. Press “Add the members” again with their addresses to retry.",
       "membersRetried": "Already members: {retried} — only their account was tried again.",
@@ -6603,6 +6608,8 @@
         "pdf": "PDF with the parent's consent",
         "pdfToSign": "PDF for the parent to sign",
         "paper": "Parent's consent on paper",
+        "paperSendButton": "Record the consent and send the email",
+        "paperSkipButton": "Record the consent without the email",
         "paperTitle": "Did {name}'s parent sign the agreement on paper?",
         "paperBody": "This records that {name}'s parent or guardian signed the printed agreement, the version in force, and that you recorded the signature. Keep the signed sheet.",
         "minorsClosed": "The parent's link and “Parent's consent on paper” wait: the notice or the agreement in force does not describe minors (“Tasks”).",
@@ -14788,12 +14795,12 @@
       "roles": "If the roles are no longer the same by then, the email is withdrawn.",
       "zitadel": "Zitadel sends the password link separately, now.",
       "skipped": {
-        "one": "{count} email did not go: you unticked “Send…”.",
-        "few": "{count} emails did not go: you unticked “Send…”.",
-        "other": "{count} emails did not go: you unticked “Send…”."
+        "one": "{count} email did not go, as you chose.",
+        "few": "{count} emails did not go, as you chose.",
+        "other": "{count} emails did not go, as you chose."
       },
       "alertLater": "The newsletter's subscribers get the announcement at the job's next pass.",
-      "alertSkipped": "The newsletter's subscribers are not told: you unticked the box."
+      "alertSkipped": "The newsletter's subscribers are not told, as you chose."
     },
     "via": {
       "mailgun": "Leaves by Mailgun.",

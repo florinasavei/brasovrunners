@@ -259,5 +259,7 @@ describe("§384 what Enter does in the dialog", () => {
     expect(confirmOnKey("Enter", true)).toBeNull();
     expect(confirmOnKey("Escape", false)).toBeNull();
     expect(confirmOnKey(" ", false)).toBeNull();
+    // A question with the email's two answers (§NNN): Enter answers neither.
+    expect(confirmOnKey("Enter", false, true)).toBeNull();
   });
 });

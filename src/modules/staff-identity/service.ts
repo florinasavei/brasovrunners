@@ -242,7 +242,7 @@ async function holdGivableTier<T extends Record<string, unknown>>(tx: Database<T
  * other role with a level is refused, naming the box. The invitation email is the same with or without one — the level is
  * the staff's label and the member is never told it.
  *
- * `sendEmail: false` («Trimite invitația acum» unticked — the design «telling the owner about every email a staff press
+ * `sendEmail: false` («Adaugă fără invitație», §NNN — the design «telling the owner about every email a staff press
  * sends», slice 4): the row is written as ever and no invitation is queued; one `staff.invitation_not_sent` audit row says
  * so (the row and the message by id and name, never an address). The action then asks nothing of Zitadel either, and
  * «Retrimite invitația» later sends both — making the account first when it is missing.
@@ -332,7 +332,7 @@ async function recordInvitationNotSent<T extends Record<string, unknown>>(tx: Da
  * The existing-address check is a courtesy, as in `inviteStaffUser`: the unique index is the
  * authority, and a colleague adding the same person at the same moment rolls the whole press back.
  *
- * `sendEmail: false` («Trimite invitațiile acum» unticked, slice 4): the rows are written and no invitation is queued; the
+ * `sendEmail: false` («Adaugă membrii fără invitații», slice 4, §NNN): the rows are written and no invitation is queued; the
  * action asks nothing of Zitadel and writes `emailSkipped` on its `staff.members_invited` row.
  */
 export async function inviteMembers<T extends Record<string, unknown>>(

@@ -82,7 +82,7 @@ export type RunnerToVolunteerInput = {
   /** Why the registration ends, for its own trail («Anulată de echipă»): the page's sentence, never anything of the person. */
   reason: string;
   /**
-   * «Trimite emailul»: the person's two emails — «Înscriere anulată» and «Rolul tău de voluntar» — or, unticked, neither.
+   * The question's answer (§NNN): the person's two emails — «Înscriere anulată» and «Rolul tău de voluntar» — or, «… fără email», neither.
    * The freed place's offer to the first in line is that person's email, and always goes.
    */
   sendEmail?: boolean;

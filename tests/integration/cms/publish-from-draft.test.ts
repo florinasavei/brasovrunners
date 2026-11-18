@@ -160,13 +160,13 @@ describe("BR-REQ-051-01 «Publică» from a draft in one press (§423)", () => {
   });
 
   /*
-    «Anunță abonații newsletterului» (the design «telling the owner about every email a staff press sends», slice 4): unticked at
-    the publication, the event is marked seen for the job's new-event alert in the publication's own transaction — the
+    The publication answered «Publică fără anunț» (`sendEmail` off; the design «telling the owner about every email a staff press
+    sends», slice 4, amended by §NNN): the event is marked seen for the job's new-event alert in the publication's own transaction — the
     `newsletter_sends` row with no recipients the job already writes for an event nobody would hear of — and one
     `event.new_event_alert_skipped` row says who chose so. The job then never announces it; a publication that does not say
     is announced as ever.
   */
-  describe("«Anunță abonații newsletterului» unticked (slice 4)", () => {
+  describe("«Publică fără anunț» (slice 4, amended by §NNN)", () => {
     const sendsOf = (eventId: string) => db.select().from(newsletterSends).where(eq(newsletterSends.eventId, eventId));
     const skipTrail = (eventId: string) =>
       db.select().from(auditLogs).where(and(eq(auditLogs.entityId, eventId), eq(auditLogs.action, "event.new_event_alert_skipped")));
@@ -184,7 +184,7 @@ describe("BR-REQ-051-01 «Publică» from a draft in one press (§423)", () => {
       });
     });
 
-    it("«Publică»: the race goes live, marked seen and audited, and the job announces only the one published without the untick", async () => {
+    it("«Publică»: the race goes live, marked seen and audited, and the job announces only the one published «… și anunță abonații»", async () => {
       const quiet = await createEvent(db, { actor: admin, fields: complete("tacuta", { type: "RACE" }), now: NOW });
       await publishEvent(db, { actor: admin, eventId: quiet.id, expectedVersion: quiet.version, now: NOW, announce: false });
       expect((await rowOf(quiet.id)).editorialStatus).toBe("PUBLISHED");

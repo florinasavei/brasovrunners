@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { cancelDialog, confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { deleteSubscriber, seedConfirmedSubscriber } from "./support/newsletter";
 
 /**
  * `DECISIONS.md` §384 — feedback and safety across the backoffice: a toast after every action
@@ -10,14 +11,25 @@ import { languagePanel, languageTab, openEditorBox, openFold } from "./support/f
  * On an event of this spec's own (each project makes one, named after itself, and deletes it at
  * the end, through the dialog that asks): the create lands with its toast, which goes by itself;
  * a draft save toasts and asks nothing; "send for review" toasts and asks nothing; "publish"
- * asks — the safe button has the focus, Escape leaves the event as it was, Enter confirms
- * because publishing is not destructive — and toasts; "take off the site" is destructive: Enter
+ * asks — the safe button has the focus, Escape leaves the event as it was; with a subscriber of its own to tell, the
+ * question ends in two answers (§NNN), Enter answers neither, and «Publică fără anunț» publishes it untold —
+ * and toasts; "take off the site" is destructive: Enter
  * on the focused cancel closes it and changes nothing, the backdrop cancels too, and only its red
  * button goes through. The toast never covers the primary button (measured at 320 px), has a
  * close button a thumb can hit, is not repeated by a refresh, and paints only after the action
  * answered — nothing of it runs inside the press.
  */
 test.describe("§384 toasts and confirmations", () => {
+  // A confirmed subscriber of everything, the spec's own: the publication's question is then known to offer the new-event
+  // alert's two answers, whatever other specs left in the database. Gone at the end, whatever the test did.
+  const subscriber = `e2e-toast-subscriber-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}@test.invalid`;
+  test.beforeEach(async () => {
+    await seedConfirmedSubscriber(subscriber, ["ALL"]);
+  });
+  test.afterEach(async () => {
+    await deleteSubscriber(subscriber);
+  });
+
   test("a save toasts, publishing asks first, a destructive question is safe by default, a refresh repeats nothing", async ({ page }) => {
     test.setTimeout(180_000);
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
@@ -129,19 +141,29 @@ test.describe("§384 toasts and confirmations", () => {
     const publish = page.getByRole("dialog", { name: `Publici „Alergare cu toast ${suffix}”?` });
     await expect(publish).toBeVisible();
     await expect(publish.getByTestId("confirm-dialog-cancel")).toBeFocused();
-    // Nothing about email: this event writes to nobody.
+    // No person's email: the press writes to nobody itself — the new-event alert is the job's, later, and the question ends
+    // in its two answers (§NNN), for the subscriber this spec seeded.
     await expect(publish.getByTestId("confirm-email")).toHaveCount(0);
+    await expect(publish.getByTestId("confirm-dialog-confirm")).toHaveText("Publică și anunță abonații");
+    await expect(publish.getByTestId("confirm-dialog-skip-email")).toHaveText("Publică fără anunț");
     await page.keyboard.press("Escape");
     await expect(publish).toBeHidden();
     await expect(page.getByText("În verificare", { exact: true })).toBeVisible();
     await expect(page.getByText("Publicat", { exact: true })).toHaveCount(0);
 
-    // Asked again, Enter confirms: publishing is not destructive.
+    // Asked again, Enter answers neither of the two (§NNN): it reaches the focused «Renunță», and the event stays in review.
     await page.getByRole("button", { name: "Publică" }).click();
     await expect(publish).toBeVisible();
     await page.keyboard.press("Enter");
     await expect(publish).toBeHidden();
+    await expect(page.getByText("În verificare", { exact: true })).toBeVisible();
+    await expect(page.getByText("Publicat", { exact: true })).toHaveCount(0);
+    // The answer meant: published, and the subscriber is never told of it — the toast says so.
+    await page.getByRole("button", { name: "Publică" }).click();
+    await publish.getByTestId("confirm-dialog-skip-email").click();
+    await expect(publish).toBeHidden();
     await expect(toast()).toContainText("Publicat. Este pe site în ambele limbi.", { timeout: 30_000 });
+    await expect(toast()).toContainText("Abonații newsletterului nu primesc anunțul, cum ai ales.");
     await expect(page.getByText("Publicat", { exact: true })).toBeVisible();
     await hydrated(page);
 

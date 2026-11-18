@@ -238,8 +238,9 @@ export function GuardianVerbs({
               ? words.mail({
                   to: { name: person.name, address: person.email },
                   type: "VOLUNTEER_AGREEMENT_ACCEPTED",
-                  also: [{ ...words.line("guardianCopy"), withEmail: true }],
-                  optOut: true,
+                  also: [words.line("guardianCopy")],
+                  // Its own words: the template would join the noun «Acordul părintelui pe hârtie» to «și trimite emailul».
+                  optOut: { sendLabel: t("volunteers.guardian.paperSendButton"), skipLabel: t("volunteers.guardian.paperSkipButton") },
                 })
               : words.noMail(person.name, [words.line("guardianNone")])),
             confirmLabel: t("volunteers.guardian.paper"),
@@ -368,11 +369,11 @@ export function VolunteerStateForm({
           ariaLabel={named}
           title={t("volunteers.reopenTitle", { name: shortText(person.name) })}
           body={t("volunteers.reopenBody", { name: shortText(person.name) })}
-          // «Trimite emailul» (slice 4): a person reopened may be told their roles by the organizers instead.
+          // «… fără email» (slice 4, §NNN): a person reopened may be told their roles by the organizers instead.
           mail={words.mail({
             to: { name: person.name, address: person.email },
             type: "VOLUNTEER_ROLE_ASSIGNED",
-            also: [{ ...words.line("rolesHeld", { minutes: ROLE_EMAIL_SETTLE_MINUTES }), withEmail: true }],
+            also: [words.line("rolesHeld", { minutes: ROLE_EMAIL_SETTLE_MINUTES })],
             optOut: true,
           })}
           confirmLabel={label}

@@ -66,10 +66,12 @@ describe("§841 the dialog's road line", () => {
     expect(dialog).toMatch(/data-testid="confirm-road-why"/);
   });
 
-  it("writes the road into the cookie on either way forward — the button, Enter, and the quiet answer", () => {
+  it("writes the road into the cookie on every way forward that sends — the button, Enter, and the quiet answer — and never on «… fără email» (§NNN)", () => {
     expect(dialog).toContain("document.cookie = emailRoadCookieLine({ road, group: spec.road.group }, Date.now());");
+    expect(dialog).toContain("if (spec.road && !emailOff) {");
     expect(dialog).toContain("const confirm = withRoad(onConfirm);");
-    expect(dialog).toContain("onClick={withRoad(alternative.onClick)}");
+    expect(dialog).toContain("const confirmWithoutEmail = withRoad(onConfirm, true);");
+    expect(dialog).toContain("onClick: withRoad(alternative.onClick)");
     expect(dialog).toContain("onClick={confirm}");
     expect(dialog).not.toContain("onClick={onConfirm}");
   });

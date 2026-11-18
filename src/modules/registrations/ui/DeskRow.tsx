@@ -430,7 +430,7 @@ export default async function DeskRow({
                   confirm={{
                     title: t("confirm.setBibTitle"),
                     body: t("confirm.setBibBody"),
-                    // «Trimite emailul» (slice 4): a number handed at the desk need not be emailed too.
+                    // «Salvează nr. fără email» (slice 4, §NNN): a number handed at the desk need not be emailed too.
                     ...words.mail({ to: row.registeredName, type: "BIB_ASSIGNED", test: row.kind === "TEST", optOut: true }),
                     confirmLabel: t("desk.saveBib"),
                     cancelLabel: words.cancel,

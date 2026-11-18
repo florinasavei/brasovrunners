@@ -260,10 +260,11 @@ describe("§948 BR-REQ-037-03 «Transformă în voluntar»: the fold on the regi
     expect(confirm.email).toBe("Pleacă 1 email către Radu Munteanu: „Înscriere anulată”.");
     const also = confirm.also ?? [];
     // The second email is the person's too: said with the first, and unsaid — like it — once the box is unticked.
-    expect(also).toContainEqual({ text: "Apoi încă 1 email către aceeași persoană: „Rolul tău de voluntar”.", withEmail: true });
+    expect(also).toContainEqual({ text: "Apoi încă 1 email către aceeași persoană: „Rolul tău de voluntar”." });
     // The next in line's offer is theirs, whatever the box says.
     expect(also).toContainEqual({ text: ro.Admin.confirm.mail.nextInLineMaybe });
-    expect(confirm.emailOptOut).toMatchObject({ field: "sendEmail", label: ro.Admin.confirm.mail.optOut, offLine: "Nu pleacă niciun email către Radu Munteanu." });
+    // Two answers (§NNN): «… și trimite emailul» / «… fără email», each the press's own verb filled in by the dialog.
+    expect(confirm.emailOptOut).toMatchObject({ field: "sendEmail", sendLabel: ro.Admin.confirm.mail.sendButton, skipLabel: ro.Admin.confirm.mail.skipButton });
 
     expect(hiddenOf(form)).toEqual({ uiLocale: "ro", registrationId: "11111111-1111-4111-8111-111111111111" });
     const select = elements(form.props.children).find((element) => element.props.name === "roleId") as Element;
@@ -354,7 +355,7 @@ describe("§948 BR-REQ-037-03 «Transformă în voluntar»: the press", () => {
     expect(en.Feedback.toast.runnerBecameVolunteer).toBeTruthy();
   });
 
-  it("with «Trimite emailul» unticked sends the person nothing and says so on the way back; the English page writes its reason in English", async () => {
+  it("answered «Transformă în voluntar fără email» (`sendEmail` off) sends the person nothing and says so on the way back; the English page writes its reason in English", async () => {
     const { eventId, roleId } = await createRace();
     const radu = await runner(eventId, "Radu Munteanu");
 
