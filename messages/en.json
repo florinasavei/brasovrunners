@@ -2775,7 +2775,7 @@
       "RESULT_FINISH_CLOSED": "The start was more than a day ago: the times are entered under «Results».",
       "REFUSAL_NEEDS_EMAIL": "Nothing was cancelled: the club's refusal always goes with the email that tells the person its ground.",
       "ELITE_NOT_MARKED": "The registration is no longer marked elite or ambassador, so its ticks no longer change. Nothing was written.",
-      "ELITE_LABEL_TOO_LONG": "«Bib label» holds at most {max} characters: shorten it and press «Save» again. Nothing was written.",
+      "ELITE_LABEL_TOO_LONG": "«Bib label» holds at most {max} characters: type a shorter one and press «Save» again. Nothing was written.",
       "ADDRESS_FAMILY_FORM_PENDING": "Nothing changed: a family form waits to be confirmed on the old address. Change the address once it is confirmed or lapses.",
       "ADDRESS_INVITED": "Nothing changed: the new address has an open invitation to this event. Withdraw the invitation in “Invitations” first.",
       "ADDRESS_UNCHANGED": "Nothing changed: it is the same inbox as the registration’s address now — an extra dot or “+” still leads there.",

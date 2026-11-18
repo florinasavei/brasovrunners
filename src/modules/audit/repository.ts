@@ -646,7 +646,7 @@ export type AuditAction =
    * «Eticheta pe BIB» on a line of the race's elite list (§NNN), entity `event`: the label set, changed or cleared. The
    * metadata is the line's id alone (`{ entryId }`) — never the label or the name.
    */
-  | "event.elite_entry_bib_label_set"
+  | "event_elite.bib_label_set"
   /**
    * A line's two ticks (§910), entity `event`: «Apare în clasament» (`in_results` / `out_of_results`) and «Apare pe site»
    * (`on_site` / `off_site`). The metadata is the line's id and the tick's new value (`{ entryId, inResults }` or

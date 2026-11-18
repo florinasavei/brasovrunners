@@ -203,11 +203,11 @@ describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
     expect(block(await render({ elite: { ...elite, registered } }, "en"), "bib-elite-registered")).toContain("registered");
   });
 
-  // The owner, 2026-11-10: «Luisa Rasina e Elită și nu apare aici» — every marked registration is a line, its state beside it.
+  // The owner, 2026-11-10: a registration marked «Elită» was missing here — every marked registration is a line, its state beside it.
   it("lists a marked registration still to sign with its state and no number: in the closed line's count, not yet on the sheet", async () => {
     const registered = [
-      { id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Silviu Stoica", status: "CONFIRMED" as const, bibNumber: 166, printed: true, bibLabel: "Dan", defaultLabel: "Dan", inResults: true, onSite: true },
-      { id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", name: "Luisa Rasina", status: "PENDING_DECLARATION" as const, bibNumber: null, printed: false, bibLabel: "Ioana", defaultLabel: "Ioana", inResults: true, onSite: true },
+      { id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Dan Stoica", status: "CONFIRMED" as const, bibNumber: 166, printed: true, bibLabel: "Dan", defaultLabel: "Dan", inResults: true, onSite: true },
+      { id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", name: "Ioana Pop", status: "PENDING_DECLARATION" as const, bibNumber: null, printed: false, bibLabel: "Ioana", defaultLabel: "Ioana", inResults: true, onSite: true },
     ];
     const card = block(await render({ elite: { ...elite, registered } }), "bib-elite");
     const lines = card.split('data-testid="bib-elite-registered"').slice(1);
@@ -216,13 +216,13 @@ describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
     const luisa = block(`<li data-testid="bib-elite-registered"${lines[1]}`, "bib-elite-registered");
     expect(silviu).toContain("nr. 166");
     expect(block(silviu, "bib-elite-registered-status")).toContain(REGISTRATION_STATUS_LABEL.CONFIRMED);
-    expect(luisa).toContain("Luisa Rasina");
+    expect(luisa).toContain("Ioana Pop");
     expect(luisa).toContain("cu înscriere");
     expect(block(luisa, "bib-elite-registered-status")).toContain(REGISTRATION_STATUS_LABEL.PENDING_DECLARATION);
     expect(luisa).not.toContain("nr. ");
     // Her ticks are the card's from now: the Administrator may hide her before she signs.
     expect(luisa).toContain(`form="bib-elite-registered-tick-onSite-${registered[1].id}"`);
-    // Every elite in the closed line, as on the registrations page; the sheet prints the two names and Silviu, not her yet.
+    // Every elite in the closed line, as on the registrations page; the sheet prints the two names and Dan, not her yet.
     expect(card).toContain("4 nume");
     expect(block(card, "bib-elite-download")).toContain("Descarcă BIB-urile de elită (3)");
     // Her alone: in the count, nothing to print — no sheet, and no line warning about printing her twice.

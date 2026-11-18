@@ -80,7 +80,7 @@ export async function setEliteEntryBibLabel<T extends Record<string, unknown>>(
     const label = parseEliteBibLabel(raw, eliteLineDefaultLabel(current.name));
     if (label === current.label) return { changed: false, eventId: current.eventId };
     await tx.update(eventEliteEntries).set({ bibLabel: label }).where(eq(eventEliteEntries.id, current.id));
-    await recordAuditEvent(tx, { actorStaffUserId: actor.id, action: "event.elite_entry_bib_label_set", entityType: "event", entityId: current.eventId, metadata: { entryId: current.id }, now });
+    await recordAuditEvent(tx, { actorStaffUserId: actor.id, action: "event_elite.bib_label_set", entityType: "event", entityId: current.eventId, metadata: { entryId: current.id }, now });
     return { changed: true, eventId: current.eventId };
   });
 }

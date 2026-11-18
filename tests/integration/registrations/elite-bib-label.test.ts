@@ -314,7 +314,7 @@ describe("§NNN «Eticheta pe BIB» on a line of the race's elite list", () => {
     expect(await lineLabelOf(id)).toBeNull();
     expect(await setEliteEntryBibLabel(db, admin, id, "", later(3))).toEqual({ changed: false, eventId });
 
-    const rows = (await trail()).filter((row) => row.action === "event.elite_entry_bib_label_set");
+    const rows = (await trail()).filter((row) => row.action === "event_elite.bib_label_set");
     expect(rows.map((row) => [row.entityType, row.entityId, row.metadataJson])).toEqual([
       ["event", eventId, { entryId: id }],
       ["event", eventId, { entryId: id }],
