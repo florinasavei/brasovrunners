@@ -179,7 +179,7 @@ describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
 
   // §897: a registration marked «Elită» on the registrations list prints on the same sheet, so the card lists it.
   it("lists the registrations marked «Elită» read-only, «cu înscriere», in its count and its sheet's, and says where they are marked", async () => {
-    const registered = [{ id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Ana Pop", status: "CONFIRMED" as const, bibNumber: 12, printed: true, inResults: true, onSite: true }];
+    const registered = [{ id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Ana Pop", status: "CONFIRMED" as const, bibNumber: 12, printed: true, bibLabel: "Ana", defaultLabel: "Ana", inResults: true, onSite: true }];
     const card = block(await render({ elite: { ...elite, registered } }), "bib-elite");
     const line = block(card, "bib-elite-registered");
     expect(line).toContain("Ana Pop");
@@ -203,29 +203,29 @@ describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
     expect(block(await render({ elite: { ...elite, registered } }, "en"), "bib-elite-registered")).toContain("registered");
   });
 
-  // The owner, 2026-11-10: «Luisa Rasina e Elită și nu apare aici» — every marked registration is a line, its state beside it.
+  // The owner, 2026-11-10: a registration marked «Elită» was missing here — every marked registration is a line, its state beside it.
   it("lists a marked registration still to sign with its state and no number: in the closed line's count, not yet on the sheet", async () => {
     const registered = [
-      { id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Silviu Stoica", status: "CONFIRMED" as const, bibNumber: 166, printed: true, inResults: true, onSite: true },
-      { id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", name: "Luisa Rasina", status: "PENDING_DECLARATION" as const, bibNumber: null, printed: false, inResults: true, onSite: true },
+      { id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Dan Stoica", status: "CONFIRMED" as const, bibNumber: 166, printed: true, bibLabel: "Dan", defaultLabel: "Dan", inResults: true, onSite: true },
+      { id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", name: "Ioana Pop", status: "PENDING_DECLARATION" as const, bibNumber: null, printed: false, bibLabel: "Ioana", defaultLabel: "Ioana", inResults: true, onSite: true },
     ];
     const card = block(await render({ elite: { ...elite, registered } }), "bib-elite");
     const lines = card.split('data-testid="bib-elite-registered"').slice(1);
     expect(lines).toHaveLength(2);
-    const silviu = block(`<li data-testid="bib-elite-registered"${lines[0]}`, "bib-elite-registered");
-    const luisa = block(`<li data-testid="bib-elite-registered"${lines[1]}`, "bib-elite-registered");
-    expect(silviu).toContain("nr. 166");
-    expect(block(silviu, "bib-elite-registered-status")).toContain(REGISTRATION_STATUS_LABEL.CONFIRMED);
-    expect(luisa).toContain("Luisa Rasina");
-    expect(luisa).toContain("cu înscriere");
-    expect(block(luisa, "bib-elite-registered-status")).toContain(REGISTRATION_STATUS_LABEL.PENDING_DECLARATION);
-    expect(luisa).not.toContain("nr. ");
-    // Her ticks are the card's from now: the Administrator may hide her before she signs.
-    expect(luisa).toContain(`form="bib-elite-registered-tick-onSite-${registered[1].id}"`);
-    // Every elite in the closed line, as on the registrations page; the sheet prints the two names and Silviu, not her yet.
+    const confirmedLine = block(`<li data-testid="bib-elite-registered"${lines[0]}`, "bib-elite-registered");
+    const pendingLine = block(`<li data-testid="bib-elite-registered"${lines[1]}`, "bib-elite-registered");
+    expect(confirmedLine).toContain("nr. 166");
+    expect(block(confirmedLine, "bib-elite-registered-status")).toContain(REGISTRATION_STATUS_LABEL.CONFIRMED);
+    expect(pendingLine).toContain("Ioana Pop");
+    expect(pendingLine).toContain("cu înscriere");
+    expect(block(pendingLine, "bib-elite-registered-status")).toContain(REGISTRATION_STATUS_LABEL.PENDING_DECLARATION);
+    expect(pendingLine).not.toContain("nr. ");
+    // The pending line's ticks are the card's from now: the Administrator may hide the person before they sign.
+    expect(pendingLine).toContain(`form="bib-elite-registered-tick-onSite-${registered[1].id}"`);
+    // Every elite in the closed line, as on the registrations page; the sheet prints the two names and Dan, not the pending one yet.
     expect(card).toContain("4 nume");
     expect(block(card, "bib-elite-download")).toContain("Descarcă BIB-urile de elită (3)");
-    // Her alone: in the count, nothing to print — no sheet, and no line warning about printing her twice.
+    // The pending one alone: in the count, nothing to print — no sheet, and no line warning about printing them twice.
     const alone = block(await render({ elite: { ...elite, entries: [], registered: [registered[1]] } }), "bib-elite");
     expect(alone).toContain("1 nume");
     expect(alone).not.toContain('data-testid="bib-elite-empty"');
@@ -235,7 +235,7 @@ describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
 
   // §910: per elite, «Apare în clasament» and «Apare pe site» — the house's tick, posting a form beside the save form.
   it("draws each line's two ticks as the Administrator's ticks, each naming its own small form, and says what they do", async () => {
-    const registered = [{ id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Ana Pop", status: "CONFIRMED" as const, bibNumber: 12, printed: true, inResults: false, onSite: true }];
+    const registered = [{ id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Ana Pop", status: "CONFIRMED" as const, bibNumber: 12, printed: true, bibLabel: "Ana", defaultLabel: "Ana", inResults: false, onSite: true }];
     const card = block(await render({ elite: { ...elite, registered } }), "bib-elite");
     const [kipchoge, kipyegon] = elite.entries;
     const tickOf = (html: string, form: string) => new RegExp(`<button[^>]*form="${form}"[^>]*>`).exec(html)?.[0] ?? "";
@@ -279,5 +279,43 @@ describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
     expect(opened).toMatch(/<details[^>]*data-testid="bib-elite"[^>]*open=""/);
     const closed = await render({ elite });
     expect(closed).not.toMatch(/<details[^>]*data-testid="bib-elite"[^>]*open=""/);
+  });
+
+  // §975 (the owner, 2026-11-18: «în dreptul fiecăruia vreau un „BIB Label” și să fie prenumele by default»).
+  it("gives every line a «Eticheta pe BIB» box filled with the label in force and «Salvează», each posting its own small form", async () => {
+    const labelled = { ...elite, entries: [{ ...elite.entries[0], bibLabel: "CAMPIONUL" }, elite.entries[1]] };
+    const registered = [{ id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Ana Pop", status: "CONFIRMED" as const, bibNumber: 12, printed: true, bibLabel: "Ana P.", defaultLabel: "Ana", inResults: true, onSite: true }];
+    const card = block(await render({ elite: { ...labelled, registered } }), "bib-elite");
+    /** The label box of the line whose form is `form`: its `<input>` tag. */
+    const boxOf = (form: string) => new RegExp(`<input[^>]*form="${form}"[^>]*>`).exec(card)?.[0] ?? "";
+    const [first, second] = labelled.entries;
+    // A typed label, and the default — the first word — where none is typed; the placeholder is always the default.
+    expect(boxOf(`bib-elite-label-${first.id}`)).toMatch(/value="CAMPIONUL"/);
+    expect(boxOf(`bib-elite-label-${first.id}`)).toContain(`placeholder="${first.name.split(" ")[0]}"`);
+    expect(boxOf(`bib-elite-label-${second.id}`)).toContain(`value="${second.name.split(" ")[0]}"`);
+    expect(boxOf(`bib-elite-registered-label-${registered[0].id}`)).toMatch(/value="Ana P\."/);
+    expect(boxOf(`bib-elite-registered-label-${registered[0].id}`)).toMatch(/placeholder="Ana"/);
+    for (const form of [`bib-elite-label-${first.id}`, `bib-elite-label-${second.id}`, `bib-elite-registered-label-${registered[0].id}`]) {
+      expect(boxOf(form)).toContain('name="eliteBibLabel"');
+      expect(boxOf(form)).toMatch(/maxlength="80"/i);
+      expect(card).toMatch(new RegExp(`<button[^>]*form="${form}"[^>]*aria-label="Salvează eticheta pe BIB"|<button[^>]*aria-label="Salvează eticheta pe BIB"[^>]*form="${form}"`));
+    }
+    expect(card.match(/data-testid="bib-elite-label"/g)).toHaveLength(3);
+    expect(card).toContain("Implicit: prenumele. Se tipărește mare, în locul numărului; cel mult 80 de caractere.");
+    // The add form no longer says only the first word prints: the label is set on the line once added.
+    expect(ro.Admin.bibs.eliteNameHelp).not.toContain("doar primul cuvânt");
+    expect(ro.Admin.bibs.eliteNameHelp).toContain("eticheta");
+    // In English too.
+    expect(block(await render({ elite: { ...labelled, registered } }, "en"), "bib-elite")).toContain("Bib label");
+  });
+
+  it("shows the Organizer each line's label in words, with no box and no «Salvează»", async () => {
+    const labelled = { ...elite, entries: [{ ...elite.entries[0], bibLabel: "CAMPIONUL" }, elite.entries[1]] };
+    const card = block(await render({ elite: labelled, mayAssign: false }), "bib-elite");
+    expect(card).not.toContain('name="eliteBibLabel"');
+    expect(card).not.toContain('form="bib-elite-label-');
+    expect(card.match(/data-testid="bib-elite-label-shown"/g)).toHaveLength(2);
+    expect(card).toContain("Pe BIB: CAMPIONUL");
+    expect(card).toContain(`Pe BIB: ${elite.entries[1].name.split(" ")[0]}`);
   });
 });

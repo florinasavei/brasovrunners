@@ -149,6 +149,7 @@ import { countEligibleWaitlisted, countOccupied, countOutsideCapacity, countRegi
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
 import { readPlaceDeadlines } from "@/modules/registrations/admin-repository";
+import { ELITE_NAME_MAX } from "@/db/schema/event-elite-entries";
 import { noFreePlaceValues, type PlacesTaken, placesTaken as placesTakenOf } from "@/modules/registrations/domain/capacity";
 import GroupRunDeclarationsPanel from "@/modules/group-run-declarations/ui/GroupRunDeclarationsPanel";
 import { listGroupRunDeclarations } from "@/modules/group-run-declarations/repository";
@@ -165,6 +166,7 @@ import {
   sendEventThanksAction,
   setEliteEntryTickAction,
   setRegisteredEliteTickAction,
+  setEliteBibLabelAction,
   duplicateEventAction,
   eraseGroupRunDeclarationAction,
   eraseGroupRunDeclarationsAction,
@@ -453,6 +455,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           name: row.name,
           status: row.status,
           bibNumber: row.bibNumber,
+          // «Eticheta pe BIB» (§975): the label in force and the first name it falls back to, both decided by `bib-elite.ts`.
+          bibLabel: row.bibLabel,
+          defaultLabel: row.defaultLabel,
           printed: eliteSheet?.has(row.id) ?? false,
           ...(eliteRegisteredTicks?.get(row.id) ?? { inResults: true, onSite: true }),
         })),
@@ -469,8 +474,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       }
     : null;
   const mayEditElite = elite !== null && canManageRegistrations(staffUser.role);
-  // Back from the elite card's add, delete or tick (`actions.ts#backToEliteCard`): the card and every fold around it open.
-  const eliteSaved = elite !== null && (saved === "eliteAdded" || saved === "eliteDeleted" || saved === "eliteTicked");
+  // Back from the elite card's add, delete, tick or label (`actions.ts#backToEliteCard`): the card and every fold around it open.
+  const eliteSaved = elite !== null && (saved === "eliteAdded" || saved === "eliteDeleted" || saved === "eliteTicked" || saved === "eliteLabelSaved");
   // The service offers the same list by the same function, so the `pick` indexes the preview posts mean the same rows.
   const gpxPlaced = gpxWaypoints ? offerableProposals(gpxWaypoints.proposals, checkpointRouteKm) : null;
   const checkpointsGpx =
@@ -995,7 +1000,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
         <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
           {/* «Trimite-i oferta» on a full event (§615) says who holds the places, as «Dă-i un loc» (§589). */}
-          {error && <Alert severity="error">{t(`errors.${error}`, noFreePlaceValues(error, query))}</Alert>}
+          {error && <Alert severity="error">{t(`errors.${error}`, noFreePlaceValues(error, query) ?? (error === "ELITE_LABEL_TOO_LONG" ? { max: ELITE_NAME_MAX } : undefined))}</Alert>}
           {saved === "bibsAssigned" && (
             /* Nothing assigned is an answer too (§286). */
             <Alert severity={assigned === "0" ? "info" : "success"}>
@@ -1106,7 +1111,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Alert>
           )}
           {saved &&
-            !["bibsAssigned", "sparesReserved", "eliteAdded", "eliteDeleted", "eliteTicked", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped", "groupRunDeclarationErased", "groupRunDeclarationsErased", "declarationResent"].includes(saved) &&
+            !["bibsAssigned", "sparesReserved", "eliteAdded", "eliteDeleted", "eliteTicked", "eliteLabelSaved", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped", "groupRunDeclarationErased", "groupRunDeclarationsErased", "declarationResent"].includes(saved) &&
             !(saved === "created" && (created || notPublished)) &&
             !(saved === "event" && offered) && <Alert severity="success">{t("saved")}</Alert>}
           {/* The save that announced the place (§328): public from now on, and nobody was told. */}
@@ -1475,6 +1480,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   eliteEntries={eliteEntries ?? []}
                   eliteTickAction={setEliteEntryTickAction}
                   eliteRegisteredTickAction={setRegisteredEliteTickAction}
+                  eliteLabelAction={setEliteBibLabelAction}
                   eliteRegistered={elite?.registered ?? []}
                   cancelLabel={words.cancel}
                 />

@@ -788,7 +788,7 @@ export async function isEventSpareNumber<T extends Record<string, unknown>>(
  * the person's first name alone (§948, `bib-elite.ts#eliteBibName`), which is why the row carries `firstName`: read
  * by the elite drawing and by nothing else — the ordinary bib's strip keeps the registered name.
  */
-export type BibRow = { id: string; bibNumber: number; registeredName: string; firstName: string | null; member: boolean; elite: boolean };
+export type BibRow = { id: string; bibNumber: number; registeredName: string; firstName: string | null; eliteBibLabel: string | null; member: boolean; elite: boolean };
 
 /**
  * Which bibs a sheet is being asked for (`DECISIONS.md` §264).
@@ -839,6 +839,8 @@ export async function listBibs<T extends Record<string, unknown>>(
       bibNumber: registrations.bibNumber,
       registeredName: registrations.registeredName,
       firstName: registrations.firstName,
+      // «Eticheta pe BIB» (§975): read by the elite drawing alone, through `bib-elite.ts#eliteBibName`.
+      eliteBibLabel: registrations.eliteBibLabel,
       /*
         The members' design, by the one rule (§972): offered, ticked, not «Elită» — the mark wins over the members' pile
         (§895, §897), inside the rule itself. Read off the row and its event alone: no member account is read for a sheet.
@@ -849,7 +851,7 @@ export async function listBibs<T extends Record<string, unknown>>(
     .from(registrations)
     .where(bibScopeWhere(eventId, scope))
     .orderBy(asc(registrations.bibNumber));
-  return rows.map((row) => ({ id: row.id, bibNumber: row.bibNumber as number, registeredName: row.registeredName, firstName: row.firstName, member: row.member === true, elite: row.elite }));
+  return rows.map((row) => ({ id: row.id, bibNumber: row.bibNumber as number, registeredName: row.registeredName, firstName: row.firstName, eliteBibLabel: row.eliteBibLabel, member: row.member === true, elite: row.elite }));
 }
 
 /**

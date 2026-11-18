@@ -9,25 +9,25 @@ Legend: **building** — a change is being implemented, reviewed and fixed on it
 **ready** — reviewed, waiting for the next small release · **waiting on the owner** — a
 decision or a click only the club can make · **released** — on production, with its baseline.
 
-## Where things stand — 2026-10-10, written for the next session (laptop or phone)
+## Where things stand — 2026-11-18, written for the next session (laptop or phone)
 
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
-This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
+This section is the one page a session with none of the conversation reads; `yarn handoff` checks it against GitHub.
 
-- **Production: `BR-V3.62`** (2026-10-20 01:02: §832–§834 — the «Vii?» email's tick says what it does, «Puncte pe traseu», the
-  calendar's next event says how far away it is; no migration). Waiting for «prod»: `BR-V3.63` (below — **migration `0176`**,
-  applied by the gated run `yarn ship` approves).
-- **QA: `BR-V3.63`** — hotfixes: the «Voluntari» card's tick «Arată butonul „Vreau să fiu voluntar" pe pagina evenimentului»
-  (on by default; off, the sign-up stays open by its link, shown in the card with «Copiază») (§835, migration `0176`) ·
-  «Confirmă prezența (opțional)» and «Cine vine (N)» are the last thing on the event page (§836).
-- **Building:** nothing. The owner's decisions from §803 (retention periods, December on Hobby or Pro, the Basic build machine,
-  QA's region/Node) are open.
-- **Waiting on the owner:** the privacy notice from the new template, approved in `/admin/legal` after a lawyer reads
-  the paragraph on what the site loads (its first sentence says what is used is strictly necessary and needs no consent,
-  art. 4(6) of Legea nr. 506/2004, while the same paragraph says Strava may set its own cookies without a press — the
-  lawyer's question, art. 4(5)); on production, whether Strava reads the pasted 3D and km options; whether the chip
-  «Membru (declarat)» should be pressable; a look at QA («Aspectul nou», «Pagina principală», the accent, both Outlook
-  rows) before phase 5; the photographs; «Tot numărul»'s default background; `shopNotice`; the Google calendar.
+- **Production and QA: `BR-V4.63`** (2026-11-17, §974: «Planul voluntarilor» in two views). The club's anniversary cross is on
+  Saturday 21 November 2026.
+- **Shipping (2026-11-18):** «Eticheta pe BIB» on every elite bib (the first name by default), the elites at the race-day desk
+  and the registrations list's «Participanți» fold — `feat/elite-bib-label-and-folds`, migration `0212`.
+- **Building (2026-11-18)**, each branch with its `.release/` entry, landed through the session's branch in small batches:
+  `feat/email-choice-two-answers` (a question that may email the person ends in «… și trimite emailul» / «… fără email»),
+  `feat/admin-table-top-scrollbar` (a scrollbar at the top of a wide table), `feat/plan-maps-and-unplaced` («Fără punct»
+  folded, each person placed from their own line; «Poze și hărți»: several pictures and links — its migration becomes `0213`
+  at its batch) and `feat/race-day-tabs-inventory-spares` («Ziua cursei» in three tabs, «Prezența», «Clasament» and «Lucruri
+  de adus»; the walk-in's number chosen among the free spares — its migration becomes `0214`). A container restart stopped
+  them once; each kept its work as a `wip:` commit (`docs/DISPATCHER.md` § After a crash).
+- **Waiting on the owner:** the rows of § Waiting on the owner below (last reviewed 2026-10-10). Three small word fixes from
+  2026-11-17 are done only when asked: the member tick's confirmations on an elite registration, the order of the volunteers'
+  plan's summary, and `docs/WHERE-THINGS-LIVE.md`'s §949 row.
 - **Later:** the e2e specs on written 2027 dates want a dates-from-today helper; pass `now` through
   `readRegistrationTokenContext`, `openRefusalsWhere` and the guardian rule; the concurrency suite fails on a seeded
   database; a nightly `yarn test:clock`; a guard for computed `COLOR[...]` keys; the «Invitații fără răspuns» line has
@@ -138,6 +138,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.64` | «Eticheta pe BIB» per elite bib, elites at the desk, the participants' table in a fold (§975) |
 | `BR-V4.63` | «Planul voluntarilor» in two views — the points as one table, or each as a fold — with the page's sections folded and the names in bold (§974) |
 | `BR-V4.62` | more room for the name on the volunteers' badges («Spațiul pentru nume», 43–80 %) (§972) · the members' race number for everyone who ticked «Sunt membru», no account and no second question (§973) |
 | `BR-V4.61` | the backoffice uses the whole screen (§970) · «Are kit» in one press on a volunteer's page (§971) |

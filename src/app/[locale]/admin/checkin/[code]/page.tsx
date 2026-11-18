@@ -66,7 +66,7 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
       </div>
       {row ? (
         <Stack component="ul" spacing={1} sx={{ m: 0, p: 0 }}>
-          <DeskRow row={row} locale={locale} back="code" showEvent minorSigns={minorSigns} spare={spares[row.eventId]} family={family} />
+          <DeskRow row={row} locale={locale} back="code" showEvent minorSigns={minorSigns} spare={spares[row.eventId]} family={family} role={actor.role} />
         </Stack>
       ) : (
         <Alert severity="warning">{t("desk.unknownCode")}</Alert>

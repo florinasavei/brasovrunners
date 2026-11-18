@@ -122,7 +122,7 @@ export async function GET(
   if (!event) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
 
   const now = new Date();
-  const eliteEntries = elite && blank === 0 ? (await listEliteEntries(db, actor, id)).map(({ name, bibNumber }) => ({ name, bibNumber })) : null;
+  const eliteEntries = elite && blank === 0 ? (await listEliteEntries(db, actor, id)).map(({ name, bibNumber, bibLabel }) => ({ name, bibNumber, bibLabel })) : null;
   const rows: BibSheetRow[] = blank > 0
     ? Array.from({ length: blank }, (): BibSheetRow => ({ bibNumber: 0, registeredName: null, blank: true }))
     : elite

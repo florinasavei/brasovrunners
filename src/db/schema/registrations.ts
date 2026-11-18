@@ -13,6 +13,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { ELITE_NAME_MAX } from "./event-elite-entries";
 import { events } from "./events";
 import { locale } from "./locale";
 import { participants } from "./participants";
@@ -490,6 +491,16 @@ export const registrations = pgTable(
      */
     elite: boolean("elite").notNull().default(false),
     /**
+     * «Eticheta pe BIB» (§975, amending §948; the owner, 2026-11-18: «în dreptul fiecăruia vreau un „BIB Label” și să fie
+     * prenumele by default»): what this registration's elite bib prints where the number goes, as the Administrator typed it —
+     * trimmed, one space between words, 1 to `ELITE_NAME_MAX` characters. Null is the default, today's rule: the first name
+     * (`bib-elite.ts#eliteBibName`, which decides the label once for the sheet, the picture and every screen). Written by the
+     * Administrator alone (`elite-label.ts`), audited by id; kept while the mark is off — inert, as the §910 ticks are — and
+     * printed again when it is marked. The person's data: erased with the registration, named in «Toate datele unei persoane»,
+     * never read by a public query, an export of the event, a copy or the event file.
+     */
+    eliteBibLabel: text("elite_bib_label"),
+    /**
      * «Ambasador» (§948; the owner, 2026-11-14: «pe lângă Elite, adaugă și categoria de „Ambasadori" ca să putem decide
      * pe cine premiem și pe cine nu», choosing «Ca Elită, fără BIB special»): the club's second category of invited
      * runner. Set and cleared by an Administrator at any time and in any state (`ambassador-mark.ts`), audited. It
@@ -695,6 +706,7 @@ export const registrations = pgTable(
       sql`(${t.expiryReason} IS NULL) = (${t.expiredAt} IS NULL)`,
     ),
     check("registrations_partner_name_length", partnerNameCheck(t.partnerName)),
+    check("registrations_elite_bib_label_length", sql`${t.eliteBibLabel} IS NULL OR char_length(${t.eliteBibLabel}) BETWEEN 1 AND ${sql.raw(String(ELITE_NAME_MAX))}`),
   ],
 );
 

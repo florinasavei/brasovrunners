@@ -101,6 +101,11 @@ export type AuditAction =
   | "registration.elite_marked"
   | "registration.elite_unmarked"
   /**
+   * «Eticheta pe BIB» (§975): an Administrator set, changed or cleared what this registration's elite bib prints where the
+   * number goes. No metadata: the row names the registration alone — never the label, which is a person's name.
+   */
+  | "registration.elite_bib_label_set"
+  /**
    * «Participă la tombolă» (§949): the Organizer or an Administrator took a registration off the raffle's list of its event,
    * or put it back (`raffle-mark.ts`; the row's actor says which of them) — or the tick travelled with a volunteer turned
    * runner (§953, `volunteers/transform.ts`). The metadata is the new value alone (`{ inRaffle }`): the mark changes that
@@ -637,6 +642,11 @@ export type AuditAction =
    */
   | "event_elite.added"
   | "event_elite.deleted"
+  /**
+   * «Eticheta pe BIB» on a line of the race's elite list (§975), entity `event`: the label set, changed or cleared. The
+   * metadata is the line's id alone (`{ entryId }`) — never the label or the name.
+   */
+  | "event_elite.bib_label_set"
   /**
    * A line's two ticks (§910), entity `event`: «Apare în clasament» (`in_results` / `out_of_results`) and «Apare pe site»
    * (`on_site` / `off_site`). The metadata is the line's id and the tick's new value (`{ entryId, inResults }` or

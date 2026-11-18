@@ -5,7 +5,9 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
+import { ELITE_NAME_MAX } from "@/db/schema/event-elite-entries";
 import type { DeskRegistration } from "@/modules/registrations/admin-repository";
+import { canManageRegistrations, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { mayEndWaitlisted } from "@/modules/registrations/domain/row-verbs";
 import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
 import { bibPictureSrc } from "@/modules/registrations/domain/bib-stamp";
@@ -31,6 +33,8 @@ import {
   confirmRegistrationNowAction,
   promoteRegistrationAction,
   setBibNumberAction,
+  setRegistrationEliteAction,
+  setRegistrationEliteBibLabelAction,
 } from "@/app/[locale]/admin/registrations/actions";
 
 /**
@@ -66,6 +70,8 @@ async function bibRefusalMessages(label: string) {
 
 /** «Arată numărul»'s glyph: the race number's, asked of `action-icons.ts` by name (§318). */
 const BibIcon = ACTION_ICONS.number;
+/** «Elită și BIB»'s glyph (§975): the elite mark's medal, by name. */
+const EliteIcon = ACTION_ICONS.elite;
 
 export default async function DeskRow({
   row,
@@ -78,8 +84,14 @@ export default async function DeskRow({
   minorSigns,
   spare = { kind: "none" },
   family = [],
+  role,
 }: {
   row: DeskRegistration;
+  /**
+   * Who is looking (§975): an Administrator also gets «Elită și BIB» at the row's end; any other role — or none given — gets the
+   * row as it always was. A drawing decision only: the actions and the services assert the role again.
+   */
+  role?: StaffRole;
   /** The other people on this row's address at the event (§543, `familyOf`): names only, never an address. */
   family?: readonly string[];
   locale: Locale;
@@ -199,6 +211,18 @@ export default async function DeskRow({
             <Typography component="span" sx={{ fontWeight: 600, fontSize: "1.05rem" }}>
               {row.registeredName}
             </Typography>
+            {/*
+              «Elită» and what the bib in the volunteer's hand says (§975; the owner, 2026-11-18: «aici trebuie să marchez dacă cineva
+              e elită și cum apare pe BIB»): every desk role sees them — a name the row already shows, never an address (§15.11).
+            */}
+            {row.elite && (
+              <>
+                <StatusChip glyph="elite" color="secondary" variant="outlined" label={t("registrations.elite.chip")} testId="desk-elite-chip" />
+                <Typography component="span" variant="body2" sx={{ fontWeight: 600, overflowWrap: "anywhere" }} data-testid="desk-elite-label">
+                  {t("desk.eliteLabel", { label: row.eliteLabel })}
+                </Typography>
+              </>
+            )}
             {/* A minor: the kit goes to the parent named here (§108). */}
             {row.guardianName && (
               <StatusChip glyph="family" variant="outlined" label={t("desk.guardian", { name: row.guardianName })} />
@@ -256,7 +280,7 @@ export default async function DeskRow({
               {/* The picture draws the paper's edge itself (A5 bibs, §338): no second frame round it. */}
               {/* eslint-disable-next-line @next/next/no-img-element -- our own PNG, drawn at a fixed size */}
               <img
-                src={bibPictureSrc({ eventId: row.eventId, registrationId: row.id, locale, stamp: row.bibStamp, member: row.memberBib, elite: row.elite })}
+                src={bibPictureSrc({ eventId: row.eventId, registrationId: row.id, locale, stamp: row.bibStamp, member: row.memberBib, elite: row.elite, eliteLabel: row.eliteLabel })}
                 alt={t("desk.bibAlt", { number: written(number) })}
                 width={BIB_IMAGE.width}
                 height={BIB_IMAGE.height}
@@ -458,6 +482,58 @@ export default async function DeskRow({
           )}
         </Stack>
       </Stack>
+      {/*
+        «Elită și BIB» (§975, amending §897; the owner, 2026-11-18: «aici trebuie să marchez dacă cineva e elită și cum apare pe
+        BIB»): the Administrator's alone (`canManageRegistrations`, the elite mark's own gate) — never drawn for another role, and
+        the actions and the services refuse one anyway (BR-REQ-060-01). A small fold at the row's end, closed: the desk's own
+        buttons stay where they were. Inside, the elite mark's existing verb, posting the state it wants, and while marked the
+        label box; both come back to the desk with its event, its search and the row.
+      */}
+      {!readOnly && role !== undefined && canManageRegistrations(role) && (
+        <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 1 }} data-testid="desk-elite-fold">
+          <Typography component="summary" variant="body2" color="text.secondary">
+            <EliteIcon aria-hidden sx={FOLD_GLYPH_SX} />
+            {t("desk.eliteFold")}
+          </Typography>
+          <Stack spacing={1} sx={{ mt: 1 }}>
+            {/* It asks nothing (§384): it tells nobody, moves nothing of the registration, and the same press undoes it. */}
+            <ActionForm action={setRegistrationEliteAction} data-testid="desk-elite-mark-form">
+              {hidden}
+              <input type="hidden" name="elite" value={row.elite ? "0" : "1"} />
+              <GlyphButton icon="elite" type="submit" variant="outlined" color={row.elite ? "inherit" : "secondary"} size="small" sx={{ minHeight: 44 }}>
+                {row.elite ? t("registrations.elite.unmark") : t("registrations.elite.mark")}
+              </GlyphButton>
+            </ActionForm>
+            {row.elite && (
+              <ActionForm
+                action={setRegistrationEliteBibLabelAction}
+                messages={await refusalMessages({ eliteBibLabel: t("bibs.eliteLabel") })}
+                scope={`elite-label-${row.id}`}
+                data-testid="desk-elite-label-form"
+              >
+                {hidden}
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ alignItems: { xs: "stretch", sm: "flex-start" } }}>
+                  <RecallField
+                    name="eliteBibLabel"
+                    size="small"
+                    label={t("bibs.eliteLabel")}
+                    helperText={t("bibs.eliteLabelHelp", { max: ELITE_NAME_MAX })}
+                    defaultValue={row.eliteLabel}
+                    placeholder={row.eliteDefaultLabel}
+                    slotProps={{ htmlInput: { maxLength: ELITE_NAME_MAX, autoComplete: "off" }, inputLabel: { shrink: true } }}
+                    sx={{ flex: 1, maxWidth: { sm: 360 }, "& .MuiInputBase-root": { minHeight: 44 } }}
+                  />
+                  <Box sx={{ flexShrink: 0 }}>
+                    <GlyphButton icon="save" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }} aria-label={t("bibs.eliteLabelSaveName")}>
+                      {t("bibs.eliteLabelSave")}
+                    </GlyphButton>
+                  </Box>
+                </Stack>
+              </ActionForm>
+            )}
+          </Stack>
+        </Box>
+      )}
     </Box>
   );
 }
