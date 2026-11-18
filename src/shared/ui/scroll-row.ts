@@ -82,20 +82,76 @@ export type ScrollRowElement = {
 type Watcher = new (callback: () => void) => { observe(target: never, options?: never): void; disconnect(): void };
 
 /**
+ * A second scrollbar kept in step with the scroller (§NNN; `TopScrollbar` draws it above a wide backoffice table): a box
+ * that scrolls sideways itself, its one child as wide as `--top-scrollbar-width` says. A real element satisfies it, and so
+ * does a fake in a test.
+ */
+export type ScrollMirrorElement = {
+  scrollLeft: number;
+  clientWidth: number;
+  toggleAttribute(name: string, force?: boolean): boolean;
+  style: { setProperty(name: string, value: string): void };
+  addEventListener(type: "scroll", listener: () => void, options?: { passive: boolean }): void;
+  removeEventListener(type: "scroll", listener: () => void): void;
+};
+
+/** Whether a scroller has anything past its edge (§NNN): more than a pixel, so a rounding never shows a bar. */
+export function overflowsSideways(scrollWidth: number, clientWidth: number): boolean {
+  return scrollWidth > clientWidth + 1;
+}
+
+/**
+ * How wide the mirror's child is (§NNN): its own width plus the scroller's room, so the two scroll exactly as far and one
+ * `scrollLeft` means the same place in both — the bar need not be as wide as the frame (its border, a vertical bar).
+ */
+export function mirrorContentWidth(mirrorClientWidth: number, scrollWidth: number, clientWidth: number): number {
+  return mirrorClientWidth + Math.max(0, scrollWidth - clientWidth);
+}
+
+/**
+ * One step of keeping two scrollers in step (§NNN): `to` takes `from`'s position only when they differ by a pixel or more.
+ * The write makes `to` say «scroll» in its turn, and its listener finds them equal and writes nothing back — so the two
+ * never answer each other for ever, a zoomed page's fractional positions included. Returns whether it wrote.
+ */
+export function keepInStep(from: { scrollLeft: number }, to: { scrollLeft: number }): boolean {
+  if (Math.abs(from.scrollLeft - to.scrollLeft) < 1) return false;
+  to.scrollLeft = from.scrollLeft;
+  return true;
+}
+
+/**
  * Keeps `data-more-start` / `data-more-end` true to the scroller (§720 amended): recomputed on
  * scroll, on a size change of the row or of any child, and, through a `MutationObserver` on the
  * child list, whenever a child is added or removed (a soft navigation to a month with other
  * surface chips keeps the instance, so the row's scroll position survives and the cue must follow).
  * With `bar`, it also shows and moves the drawn scrollbar (`SCROLL_BAR_SX`) and hides the
- * browser's own while the drawn one is up. The observers are constructors passed in, so a test can
- * drive it without a browser. Returns the cleanup.
+ * browser's own while the drawn one is up. With `mirror` (§NNN), it shows a second scrollbar while the
+ * scroller overflows, as far-reaching as the scroller, and keeps the two in step both ways (`keepInStep`):
+ * the same scroll, resize and mutation that move the edge cue move the mirror, so a frame has one watcher.
+ * The observers are constructors passed in, so a test can drive it without a browser. Returns the cleanup.
  */
-export function watchScrollRow(el: ScrollRowElement, Resize?: Watcher, Mutation?: Watcher, bar?: ScrollBarElement): () => void {
+export function watchScrollRow(
+  el: ScrollRowElement,
+  Resize?: Watcher,
+  Mutation?: Watcher,
+  bar?: ScrollBarElement,
+  mirror?: ScrollMirrorElement,
+): () => void {
   const update = () => {
     const left = Math.abs(el.scrollLeft);
     const room = el.scrollWidth - el.clientWidth;
     el.toggleAttribute("data-more-start", left > 1);
     el.toggleAttribute("data-more-end", room - left > 1);
+    if (mirror) {
+      // Shown first, so its own width can be read; then its child sized, then its place, in that order (a place past a
+      // narrower child would be clamped).
+      const shown = overflowsSideways(el.scrollWidth, el.clientWidth);
+      mirror.toggleAttribute("data-shown", shown);
+      if (shown) {
+        mirror.style.setProperty("--top-scrollbar-width", `${mirrorContentWidth(mirror.clientWidth, el.scrollWidth, el.clientWidth)}px`);
+        keepInStep(el, mirror);
+      }
+    }
     if (!bar) return;
     // The drawn bar: shown while the row overflows, its thumb the share on screen at the scroll's place.
     const overflows = room > 1;
@@ -119,12 +175,18 @@ export function watchScrollRow(el: ScrollRowElement, Resize?: Watcher, Mutation?
         update();
       })
     : null;
+  // The mirror moved by a hand: the scroller follows, and its own «scroll» then finds the mirror already there.
+  const follow = () => {
+    if (mirror) keepInStep(mirror, el);
+  };
   update();
   el.addEventListener("scroll", update, { passive: true });
+  mirror?.addEventListener("scroll", follow, { passive: true });
   observeChildren();
   mutation?.observe(el as never, { childList: true } as never);
   return () => {
     el.removeEventListener("scroll", update);
+    mirror?.removeEventListener("scroll", follow);
     resize?.disconnect();
     mutation?.disconnect();
   };

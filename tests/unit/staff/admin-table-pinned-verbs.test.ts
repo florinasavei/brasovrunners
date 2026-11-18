@@ -104,10 +104,11 @@ describe("§943 the row verbs stay in view", () => {
     expect(edge).toContain("right:100%");
     expect(edge).toContain("pointer-events:none");
     expect(css).toContain(`[data-more-end]>${table} [data-pinned]::before{opacity:1;}`);
-    // The frame's attribute is the chips rows' own watcher's, kept by the table's island.
-    const island = read("src", "modules", "staff-identity", "ui", "ColumnWidths.tsx");
-    expect(island).toMatch(/watchScrollRow\(table\.parentElement, ResizeObserver, MutationObserver\)/);
-    expect(island).toMatch(/for \(const stop of unwatch\) stop\(\);/);
+    // The frame's attribute is the chips rows' own watcher's — the frame's one, kept since §NNN by the island above it,
+    // which moves the second scrollbar too; the widths' island no longer watches the scroll.
+    const island = read("src", "shared", "ui", "TopScrollbar.tsx");
+    expect(island).toMatch(/return watchScrollRow\(\s*frame,/);
+    expect(read("src", "modules", "staff-identity", "ui", "ColumnWidths.tsx")).not.toContain("watchScrollRow");
     // A resized table clips its body cells, but not the verbs': the fade lies outside that cell.
     expect(css).toContain(`${table}[data-resized]>tbody>tr>td:not([data-pinned]){overflow:hidden;overflow-wrap:anywhere;}`);
   });

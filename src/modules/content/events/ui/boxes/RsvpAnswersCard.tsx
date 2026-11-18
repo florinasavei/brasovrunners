@@ -8,6 +8,8 @@ import type { ClubMemberKind } from "@/modules/rsvp/domain/public-member";
 import MemberChip from "@/modules/registrations/ui/MemberChip";
 import Panel from "@/shared/ui/Panel";
 import StatusChip from "@/shared/ui/StatusChip";
+import TopScrollbar from "@/shared/ui/TopScrollbar";
+import { frameIdFor } from "@/shared/ui/top-scrollbar";
 import { BoxNote } from "./box-kit";
 
 /** One answer, as the fold lists it — what `listRsvpsForAdmin` reads (addresses: only for a role that reads the registrations). */
@@ -53,7 +55,10 @@ export default async function RsvpAnswersCard({
       </Typography>
     ) : (
       <>
-        <Box sx={{ maxWidth: "100%", overflowX: "auto" }}>
+        {/* The table and its scrollbar at the top too (§NNN), in one box so the bar leaves with the table. */}
+        <Box>
+        <TopScrollbar frameId={frameIdFor("rsvp-answers")} />
+        <Box id={frameIdFor("rsvp-answers")} sx={{ maxWidth: "100%", overflowX: "auto" }}>
           <Box
             component="table"
             data-testid="rsvp-answers"
@@ -96,6 +101,7 @@ export default async function RsvpAnswersCard({
               ))}
             </Box>
           </Box>
+        </Box>
         </Box>
         <BoxNote>{t("editor.rsvpAnswers.note")}</BoxNote>
       </>

@@ -388,6 +388,72 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
     }
   });
 
+  test("§NNN a scrollbar at the top too: it moves the frame, the frame moves it, and it goes when the table fits", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "the bar is the wide table's: the phone's blocks have no columns to scroll");
+    test.setTimeout(90_000);
+    const seeded = await seed(`${testInfo.project.name}-${Date.now().toString(36)}`);
+    try {
+      // The small laptop of §943: the list's columns ask for more than this frame has.
+      await page.setViewportSize({ width: 1000, height: 800 });
+      await signIn(page, "Dev Administrator");
+      await page.goto(`/ro/admin/registrations?eventId=${seeded.eventId}&q=${encodeURIComponent(seeded.tag)}`);
+      await hydrated(page);
+      const main = page.locator("#main");
+      const frame = main.locator("#table-frame-registrations");
+      const bar = main.locator('[data-top-scrollbar="table-frame-registrations"]');
+      await expect(frame.locator('table[data-table-id="registrations"]')).toHaveCount(1);
+
+      // Shown while the frame overflows, right above it, decoration only: no name, no tab stop.
+      await expect(bar).toBeVisible();
+      await expect(bar).toHaveAttribute("aria-hidden", "true");
+      await expect(bar).toHaveAttribute("tabindex", "-1");
+      const geometry = await bar.evaluate((element) => {
+        const frameElement = document.getElementById("table-frame-registrations") as HTMLElement;
+        return {
+          barRoom: element.scrollWidth - element.clientWidth,
+          frameRoom: frameElement.scrollWidth - frameElement.clientWidth,
+          above: element.getBoundingClientRect().bottom <= frameElement.getBoundingClientRect().top + 0.5,
+          position: getComputedStyle(element).position,
+          top: Number.parseFloat(getComputedStyle(element).top),
+          headerBottom: document.querySelector("header")?.getBoundingClientRect().bottom ?? 0,
+        };
+      });
+      expect(geometry.frameRoom).toBeGreaterThan(1);
+      // Both reach exactly as far, so one position means the same column in both.
+      expect(Math.abs(geometry.barRoom - geometry.frameRoom)).toBeLessThanOrEqual(1);
+      expect(geometry.above).toBe(true);
+      // Sticky under the site header, never behind it.
+      expect(geometry.position).toBe("sticky");
+      expect(geometry.top).toBeGreaterThanOrEqual(geometry.headerBottom - 0.5);
+
+      // The bar moves the frame…
+      await bar.evaluate((element) => element.scrollTo({ left: 120 }));
+      await expect.poll(() => frame.evaluate((element) => Math.round(element.scrollLeft))).toBe(120);
+      // …a wheel over it too…
+      await bar.hover();
+      await page.mouse.wheel(60, 0);
+      await expect.poll(() => frame.evaluate((element) => Math.round(element.scrollLeft))).toBeGreaterThan(120);
+      // …and the frame moves the bar, which then rests: no answer back and forth.
+      await frame.evaluate((element) => element.scrollTo({ left: 40 }));
+      await expect.poll(() => bar.evaluate((element) => Math.round(element.scrollLeft))).toBe(40);
+      expect(await frame.evaluate((element) => Math.round(element.scrollLeft))).toBe(40);
+      // At the frame's end the bar is at its own end, and the pinned verbs' fade (§943, the same watcher) is gone.
+      await frame.evaluate((element) => element.scrollTo({ left: element.scrollWidth }));
+      await expect.poll(() => bar.evaluate((element) => Math.round(element.scrollWidth - element.clientWidth - element.scrollLeft))).toBe(0);
+      await expect(frame).not.toHaveAttribute("data-more-end");
+
+      // A screen where the table fits: no bar.
+      await page.setViewportSize({ width: 3000, height: 900 });
+      await expect.poll(() => frame.evaluate((element) => element.scrollWidth > element.clientWidth + 1)).toBe(false);
+      await expect(bar).toBeHidden();
+      // Back to the laptop: back again.
+      await page.setViewportSize({ width: 1000, height: 800 });
+      await expect(bar).toBeVisible();
+    } finally {
+      await cleanup(seeded);
+    }
+  });
+
   test("the phone layout has no column edge and no reset", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "the 320-px phone");
     test.setTimeout(60_000);
@@ -408,6 +474,8 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
       await expect(main.getByTestId("admin-table-reset-widths").filter({ visible: true })).toHaveCount(0);
       // Nor a «Coloane» menu (§661): the phone's blocks show every field.
       await expect(main.getByTestId("admin-table-columns").filter({ visible: true })).toHaveCount(0);
+      // Nor the scrollbar at the top (§NNN): a finger swipes the blocks' page, which never scrolls sideways.
+      await expect(main.locator("[data-top-scrollbar]").filter({ visible: true })).toHaveCount(0);
 
       // «și încă 2 emailuri» lands on the registration's own «Emailuri», open: the card is a closed fold on that page (nothing
       // here asks for attention), and the backoffice opens the fold its address names on arrival (`OpenFoldFromHash`, §336) —

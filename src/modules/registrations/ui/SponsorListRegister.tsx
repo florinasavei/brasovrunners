@@ -16,6 +16,8 @@ import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import { ROW_SX } from "@/shared/ui/row-fold";
+import TopScrollbar from "@/shared/ui/TopScrollbar";
+import { frameIdFor } from "@/shared/ui/top-scrollbar";
 import { copyOverdue, type GivenSponsorList, SPONSOR_REGISTER_ANCHOR } from "../sponsor-register";
 
 type Props = {
@@ -163,7 +165,10 @@ export default async function SponsorListRegister({ locale, lists, now, level, r
       openWhen={{ saved }}
       data-testid="sponsor-register"
     >
-      <Box sx={{ display: { xs: "none", md: "block" }, border: 1, borderColor: "divider", borderRadius: 1, overflowX: "auto" }}>
+      {/* The wide table and its scrollbar at the top too (§NNN), in one box so the bar leaves with the table. */}
+      <Box sx={{ display: { xs: "none", md: "block" } }}>
+      <TopScrollbar frameId={frameIdFor("sponsor-register")} />
+      <Box id={frameIdFor("sponsor-register")} sx={{ display: { xs: "none", md: "block" }, border: 1, borderColor: "divider", borderRadius: 1, overflowX: "auto" }}>
         <Table size="small" aria-label={title} data-testid="sponsor-register-table">
           <TableHead>
             <TableRow sx={{ bgcolor: "action.hover" }}>
@@ -193,6 +198,7 @@ export default async function SponsorListRegister({ locale, lists, now, level, r
             ))}
           </TableBody>
         </Table>
+      </Box>
       </Box>
 
       <Stack component="ul" sx={{ display: { xs: "flex", md: "none" }, listStyle: "none", p: 0, m: 0 }} data-testid="sponsor-register-lines">
