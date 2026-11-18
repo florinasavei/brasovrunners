@@ -1,25 +1,27 @@
-import { and, asc, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventResults, type EventResultRow } from "@/db/schema/event-results";
 import { events } from "@/db/schema/events";
 import { registrations, type RegistrationSex } from "@/db/schema/registrations";
-import type { StaffUser } from "@/db/schema/staff-users";
+import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { type AuditAction, recordAuditEvent } from "@/modules/audit/repository";
 import { type Deadlines, publicListClosesAt, publicListStillOpen } from "@/modules/deadlines/domain/deadlines";
 import { findFirstResultsNameAskNoticeVersion, findFirstResultsNoticeVersion, noticeDescribesResults, termsDescribeResults } from "@/modules/legal-documents/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
+import { eliteBibName, eliteLineBibName } from "@/modules/registrations/bib-elite";
 import { ageOnRaceDay, dayIn } from "@/modules/registrations/domain/age";
 import { RACE_NUMBER_FORMAT } from "@/modules/events/repository";
 import { hiddenListShownPublicly } from "@/modules/registrations/domain/hidden-list";
 import type { RaceNumberFormat } from "@/modules/registrations/domain/race-number";
 import { type SexChoice, sexShown } from "@/modules/registrations/domain/sex";
-import { canEnterResults, canPublishResults } from "@/modules/staff-identity/domain/roles";
+import { canEnterResults, canPublishResults, canRecordFinishes } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { ageBandStartsOf, DEFAULT_AGE_BAND_STARTS, isValidAgeBandStarts, sameAgeBandStarts } from "./domain/age-bands";
 import { type AwardRules, isValidAwardPlaces } from "./domain/awards";
 import { eventTakesResults } from "./domain/event-type";
+import { type EliteButtonView, finishStamp, mayUndo, raceGunMoment, raceGunWindowOpen, type RecentFinisherView, undoOpenUntil } from "./domain/finish-line";
 import { type FingerprintedResult, resultsFingerprint } from "./domain/fingerprint";
 import { foldEliteName, horsConcoursBibs, type OutOfRanking } from "./domain/hors-concours";
 import { parseResultsCsv } from "./domain/import-csv";
@@ -35,7 +37,9 @@ import { type PostedResultRow, resultBox } from "./rows";
  *
  * **Who.** The Organizer, the Administrator and the Superadministrator enter, import, rank and read (`canEnterResults`); the
  * Administrator and the Superadministrator alone publish (`canPublishResults`). The Tehnic role, the Redactor, the desk Volunteer
- * and a member are refused here, whatever the page drew (BR-REQ-060-01). **Nothing about a registration changes**: a result reads
+ * and a member are refused here, whatever the page drew (BR-REQ-060-01) — but for the finish line (§NNN): every role that works
+ * the desk records a finish on «Cronometrare» and undoes its own press for ten minutes (`canRecordFinishes`), and only whoever
+ * enters results presses «Start». **Nothing about a registration changes**: a result reads
  * the registration's name, sex and birth date and writes none of them; no state, no place, no number moves.
  *
  * **One race, one list.** Only a `RACE` takes results (`RESULTS_NOT_OPEN` for any other type). A row is a race number: found among
@@ -108,11 +112,15 @@ type RegisteredRunner = {
   resultsConsentVersion: number;
 };
 
+/** A line of the race's elite list (§895), as the finish line reads it (§NNN): its name and its number, if any. */
+type EliteLine = { id: string; name: string; bibNumber: number | null };
+
 /**
  * The event's registered runners, by race number and by registration — and the elites the Administrator left out of the ranking (§910,
- * `domain/hors-concours.ts`), read with them so every list ranked from them leaves out the same rows.
+ * `domain/hors-concours.ts`), read with them so every list ranked from them leaves out the same rows; and the race's elite list's lines
+ * (`lines`), the same read, for the finish line's buttons and its typed rows (§NNN).
  */
-type Runners = { byBib: Map<number, RegisteredRunner>; byRegistration: Map<string, RegisteredRunner>; out: OutOfRanking };
+type Runners = { byBib: Map<number, RegisteredRunner>; byRegistration: Map<string, RegisteredRunner>; out: OutOfRanking; lines: EliteLine[] };
 
 /**
  * Whether the published results may read the person's own list tick as given (§910): their «Vreau să apar» — and no Administrator
@@ -128,8 +136,14 @@ type EventFacts = {
   id: string;
   type: string;
   startsAt: Date;
-  /** The gun, when the race's own start differs from the gathering (`race_starts_at`); the finish line counts from `raceStartsAt ?? startsAt`. */
+  /** The gun as planned, when the race's own start differs from the gathering (`race_starts_at`). */
   raceStartsAt: Date | null;
+  /**
+   * «Start» as pressed on «Cronometrare» (§NNN), and by whom; null until pressed. The finish line counts from
+   * `raceGunAt ?? raceStartsAt ?? startsAt` (`gunOf`). Read by the backoffice's results alone: the public read never selects it.
+   */
+  raceGunAt: Date | null;
+  raceGunByStaffUserId: string | null;
   endsAt: Date | null;
   timezone: string;
   resultsPublished: boolean;
@@ -149,6 +163,11 @@ function assertMayEnter(actor: Actor): void {
   if (!canEnterResults(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not enter or read a race's results`);
 }
 
+/** The finish line's own gate (§NNN): every role that works the desk records a finish and undoes its own press. */
+function assertMayRecord(actor: Actor): void {
+  if (!canRecordFinishes(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not record a finish`);
+}
+
 function assertIds(...ids: string[]): void {
   // A forged form's malformed id is the refusal an unknown one gets, not a database error.
   if (ids.some((id) => !isUuid(id))) throw new DomainError("NOT_FOUND", "the event is not there");
@@ -161,6 +180,8 @@ async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eve
       type: events.type,
       startsAt: events.startsAt,
       raceStartsAt: events.raceStartsAt,
+      raceGunAt: events.raceGunAt,
+      raceGunByStaffUserId: events.raceGunByStaffUserId,
       endsAt: events.endsAt,
       timezone: events.timezone,
       resultsPublished: events.resultsPublished,
@@ -185,13 +206,17 @@ async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eve
  * is, never a test row — and the elite list's lines (§895): the unticked ones by number, or by folded name when they have none, and every
  * line's number, so a row its own line holds is never another line's by name.
  */
-async function loadOutOfRanking<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<OutOfRanking> {
+async function loadOutOfRanking<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<{ out: OutOfRanking; lines: EliteLine[] }> {
   const [hidden, lines] = await Promise.all([
     db
       .select({ id: registrations.id })
       .from(registrations)
       .where(and(eq(registrations.eventId, eventId), eq(registrations.kind, "REAL"), or(eq(registrations.elite, true), eq(registrations.ambassador, true)), eq(registrations.eliteHiddenFromResults, true))),
-    db.select({ name: eventEliteEntries.name, bibNumber: eventEliteEntries.bibNumber, inResults: eventEliteEntries.inResults }).from(eventEliteEntries).where(eq(eventEliteEntries.eventId, eventId)),
+    db
+      .select({ id: eventEliteEntries.id, name: eventEliteEntries.name, bibNumber: eventEliteEntries.bibNumber, inResults: eventEliteEntries.inResults })
+      .from(eventEliteEntries)
+      .where(eq(eventEliteEntries.eventId, eventId))
+      .orderBy(asc(eventEliteEntries.createdAt), asc(eventEliteEntries.id)),
   ]);
   const bibs = new Set<number>();
   const names = new Set<string>();
@@ -202,12 +227,35 @@ async function loadOutOfRanking<T extends Record<string, unknown>>(db: Database<
     if (line.bibNumber !== null) bibs.add(line.bibNumber);
     else names.add(foldEliteName(line.name));
   }
-  return { registrations: new Set(hidden.map((row) => row.id)), bibs, names, listedBibs };
+  return {
+    out: { registrations: new Set(hidden.map((row) => row.id)), bibs, names, listedBibs },
+    lines: lines.map((line) => ({ id: line.id, name: line.name, bibNumber: line.bibNumber })),
+  };
+}
+
+/**
+ * What the elites' bibs print where the number goes (§975: `bib-elite.ts#eliteBibName`, `#eliteLineBibName`) — by registration marked
+ * «Elită» and by line of the elite list — read for the finish line alone (§NNN): «Cronometrare»'s buttons and lines say an elite by
+ * the label on the bib, as the desk's row does. Its own query, so no other read of the results — the public one least of all — ever
+ * selects a label (`tests/unit/registrations/elite-label-never-leaves.test.ts`).
+ */
+async function loadEliteLabels<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<{ registrations: Map<string, string>; lines: Map<string, string> }> {
+  const [marked, lines] = await Promise.all([
+    db
+      .select({ id: registrations.id, eliteBibLabel: registrations.eliteBibLabel, firstName: registrations.firstName, registeredName: registrations.registeredName })
+      .from(registrations)
+      .where(and(eq(registrations.eventId, eventId), eq(registrations.kind, "REAL"), eq(registrations.elite, true))),
+    db.select({ id: eventEliteEntries.id, name: eventEliteEntries.name, bibLabel: eventEliteEntries.bibLabel }).from(eventEliteEntries).where(eq(eventEliteEntries.eventId, eventId)),
+  ]);
+  return {
+    registrations: new Map(marked.map((row) => [row.id, eliteBibName(row)])),
+    lines: new Map(lines.map((line) => [line.id, eliteLineBibName(line.name, line.bibLabel)])),
+  };
 }
 
 /** The registrations of the event that hold a race number — any state, never a test row — by that number and by registration. */
 async function loadRegisteredRunners<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<Runners> {
-  const [out, rows] = await Promise.all([
+  const [{ out, lines }, rows] = await Promise.all([
     loadOutOfRanking(db, eventId),
     db
       .select({
@@ -230,7 +278,7 @@ async function loadRegisteredRunners<T extends Record<string, unknown>>(db: Data
       .from(registrations)
       .where(and(eq(registrations.eventId, eventId), eq(registrations.kind, "REAL"), isNotNull(registrations.bibNumber))),
   ]);
-  const runners: Runners = { byBib: new Map(), byRegistration: new Map(), out };
+  const runners: Runners = { byBib: new Map(), byRegistration: new Map(), out, lines };
   for (const row of rows) {
     if (row.bibNumber === null) continue;
     const runner: RegisteredRunner = {
@@ -377,6 +425,11 @@ export type ResultRunner = {
     positionSex: number | null;
     positionCategory: number | null;
     categoryKey: string | null;
+    /**
+     * Who last wrote the row (§NNN, `updated_by_staff_user_id`): their display name, or null when that account is gone; and whether
+     * it was changed after it was written — «modificat de» — or is as it was first written — «introdus de».
+     */
+    writtenBy: { name: string | null; changed: boolean };
   } | null;
 };
 
@@ -395,8 +448,8 @@ export type EventResultsView = {
   ageBandsCustom: boolean;
 };
 
-/** A stored row as the page and the file show it: its own times and note, **the positions and the category read from the live answers** (`rankingOf`). */
-function resultOf(row: EventResultRow, ranked: Ranked): NonNullable<ResultRunner["result"]> {
+/** A stored row as the page and the file show it: its own times and note, **the positions and the category read from the live answers** (`rankingOf`), and who last wrote it. */
+function resultOf(row: EventResultRow, ranked: Ranked, staffNames: ReadonlyMap<string, string>): NonNullable<ResultRunner["result"]> {
   return {
     status: row.status,
     gunTimeMs: row.gunTimeMs,
@@ -406,7 +459,19 @@ function resultOf(row: EventResultRow, ranked: Ranked): NonNullable<ResultRunner
     positionSex: ranked.positionSex,
     positionCategory: ranked.positionCategory,
     categoryKey: ranked.categoryKey,
+    writtenBy: { name: row.updatedByStaffUserId === null ? null : (staffNames.get(row.updatedByStaffUserId) ?? null), changed: row.createdAt.getTime() !== row.updatedAt.getTime() },
   };
+}
+
+/**
+ * The display names of the staff accounts that wrote the rows (§NNN): one read for all of them. An account removed since is missing
+ * from the answer (`ON DELETE SET NULL` already cleared the row's column, and a stale id finds nothing): the page says «cont șters».
+ */
+async function staffNamesOf<T extends Record<string, unknown>>(db: Database<T>, ids: Iterable<string | null>): Promise<Map<string, string>> {
+  const wanted = [...new Set([...ids].filter((id): id is string => id !== null))];
+  if (wanted.length === 0) return new Map();
+  const rows = await db.select({ id: staffUsers.id, name: staffUsers.displayName }).from(staffUsers).where(inArray(staffUsers.id, wanted));
+  return new Map(rows.map((row) => [row.id, row.name]));
 }
 
 /**
@@ -430,6 +495,8 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
   const ranking = rankingOf(stored, runners, event);
   const rankedOf = (row: EventResultRow) => ranking.get(row.bibNumber) as Ranked;
   const hiddenShown = hiddenListShownPublicly(event);
+  // Who last wrote each row (§NNN): «introdus de …» / «modificat de …» on its line.
+  const staffNames = await staffNamesOf(db, stored.map((row) => row.updatedByStaffUserId));
 
   const registered: ResultRunner[] = [];
   // The typed rows a registered runner took over: a runner at that number with no result of its own shows the row as its own.
@@ -470,7 +537,7 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
       sex: runner.sex,
       birthDate: null,
       ageOnRaceDay: ageOnRaceDay(runner.birthDate, event.startsAt, event.timezone),
-      result: row ? resultOf(row, rankedOf(row)) : null,
+      result: row ? resultOf(row, rankedOf(row), staffNames) : null,
     });
   }
   registered.sort((a, b) => Number(b.checkedIn) - Number(a.checkedIn) || a.bibNumber - b.bibNumber);
@@ -507,7 +574,7 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
       sex: sexShown(row.sex),
       birthDate: row.birthDate,
       ageOnRaceDay: ageOnRaceDay(row.birthDate, event.startsAt, event.timezone),
-      result: resultOf(row, rankedOf(row)),
+      result: resultOf(row, rankedOf(row), staffNames),
     }));
 
   const counts: Record<ResultStatus, number> = { FINISHED: 0, DNF: 0, DNS: 0, DSQ: 0 };
@@ -810,10 +877,10 @@ export async function setResultAwards<T extends Record<string, unknown>>(db: Dat
 /** A finish refused with what the volunteer at the line needs: the number and the time the gun says, so a refused number is still written down. */
 export class FinishError extends DomainError {
   readonly bibNumber: number;
-  /** The time since the gun at the press (`RESULT_BIB_UNKNOWN`), or the time already stored (`RESULT_ALREADY_FINISHED`). */
+  /** The time since the gun at the press (`RESULT_BIB_UNKNOWN`): written down on paper, typed on «Clasament» later. */
   readonly gunTimeMs: number;
 
-  constructor(code: "RESULT_BIB_UNKNOWN" | "RESULT_ALREADY_FINISHED", bibNumber: number, gunTimeMs: number) {
+  constructor(code: "RESULT_BIB_UNKNOWN", bibNumber: number, gunTimeMs: number) {
     super(code, `finish refused for number ${bibNumber}`, ["bib"]);
     this.name = "FinishError";
     this.bibNumber = bibNumber;
@@ -821,117 +888,354 @@ export class FinishError extends DomainError {
   }
 }
 
-/** How long after the gun «Sosire» still stamps a time: a day. Later, the results are written on «Clasament». */
-export const FINISH_WINDOW_MS = 24 * 3_600_000;
+/**
+ * The gun the finish line counts from (§850, §NNN): «Start» as pressed on «Cronometrare», else the race's own planned start, else
+ * when the event begins. **The results' alone**: every other screen, the public page, the checkpoints' limits, the emails and iCal
+ * keep the editor's planned times (`plannedGunOf`).
+ */
+export function gunOf(event: { startsAt: Date; raceStartsAt: Date | null; raceGunAt?: Date | null }): Date {
+  return event.raceGunAt ?? event.raceStartsAt ?? event.startsAt;
+}
 
-export type FinishRecorded = { bibNumber: number; name: string | null; gunTimeMs: number; positionOverall: number | null };
-
-/** The gun the finish line counts from: the race's own start when the club stated one, else when the event begins. */
-export function gunOf(event: Pick<EventFacts, "startsAt" | "raceStartsAt">): Date {
+/** The gun as the editor planned it: what «Start»'s window is counted from, and what the line counts from until «Start» is pressed. */
+export function plannedGunOf(event: { startsAt: Date; raceStartsAt: Date | null }): Date {
   return event.raceStartsAt ?? event.startsAt;
 }
 
+/** What one press did (§NNN): recorded — or found already recorded by the same viewer at the same second, a retry — or a duplicate. */
+export type FinishOutcome =
+  | {
+      kind: "recorded";
+      resultId: string;
+      bibNumber: number;
+      name: string | null;
+      /** An elite's label («Eticheta pe BIB»), or null. */
+      label: string | null;
+      gunTimeMs: number;
+      positionOverall: number | null;
+      outOfRanking: boolean;
+      /** Nothing was written: the row was this viewer's already, at this very second — a retry of a press that was saved. */
+      again: boolean;
+    }
+  | {
+      kind: "duplicate";
+      resultId: string;
+      bibNumber: number;
+      name: string | null;
+      label: string | null;
+      /** This press's own time, in the trail beside the stored one. */
+      gunTimeMs: number;
+      storedGunTimeMs: number;
+      /** Who wrote the stored row — the display name — or null when that account is gone. */
+      storedBy: string | null;
+    };
+
+/** Whose a number is at the line: a confirmed registration's, or — no confirmed registration holding it — a line of the race's elite list. */
+type FinishTarget = { kind: "registration"; runner: RegisteredRunner } | { kind: "line"; line: EliteLine };
+
+function finishTargetOf(runners: Runners, bibNumber: number): FinishTarget | null {
+  const runner = runners.byBib.get(bibNumber);
+  if (runner && runner.status === "CONFIRMED") return { kind: "registration", runner };
+  const line = runners.lines.find((candidate) => candidate.bibNumber === bibNumber);
+  return line ? { kind: "line", line } : null;
+}
+
 /**
- * «Sosire» (§850): one race number typed as the runner crosses the line, and the site stamps the time since the gun — `now` minus
- * `raceStartsAt ?? startsAt`, to the millisecond — as that runner's «Sosit». The same rules as a line of «Clasament»: whoever enters results
- * (FORBIDDEN otherwise), a race only (`RESULTS_NOT_OPEN`), after the gun (`RESULT_FINISH_NOT_STARTED`), a number a **confirmed** registration
- * holds (`RESULT_BIB_UNKNOWN` otherwise, carrying the stamped time so the volunteer writes it down and the runner is typed on «Clasament»
- * later), within a day of the gun (`RESULT_FINISH_CLOSED`), not already finished (`RESULT_ALREADY_FINISHED`, carrying the time stored: a correction is «Clasament»'s). A runner stored as
- * «Abandon», «Neprezentat» or «Descalificat» by mistake who crosses the line becomes «Sosit» with the stamped time. One audit row as the
- * save writes it (`event_result.created` or `.updated`, the number and the times, never a name); the whole list is ranked again and
- * the public cache told, so a published ranking shows the finisher at once.
+ * A finish at the line — «Cronometrare» (§NNN, amending §850; «Sosire»'s press before it): one race number, typed or pressed as an
+ * elite's button, as the runner crosses, and the time since the gun (`gunOf`) stamped as that runner's «Sosit».
+ *
+ * **Who** — every role that works the desk (`canRecordFinishes`, FORBIDDEN otherwise). **The time** — the instant the island claims
+ * for the press (`claimedAtMs`, on the server's clock), when `domain/finish-line.ts#finishStamp` accepts it, else the server's own:
+ * a race only (`RESULTS_NOT_OPEN`), after the gun (`RESULT_FINISH_NOT_STARTED`), within a day of it (`RESULT_FINISH_CLOSED`).
+ *
+ * **Whose number.** A number a **confirmed** registration holds is that runner's, as before; a number none holds but a line of the
+ * race's elite list carries is that line's — a **typed** row with the line's name and number, no sex, no birth date and no agreement
+ * to be named (the line is ranked, or run hors concours, by `hors-concours.ts`' rule 3); anything else is refused carrying the time
+ * (`RESULT_BIB_UNKNOWN`), so the volunteer writes it down and the runner is typed on «Clasament» later.
+ *
+ * **The same number twice (the owner: «se poate întâmpla și ca mai mulți voluntari să treacă același număr»).** The first stored wins
+ * and nothing about its row changes. A press that finds the number already «Sosit» from **the same viewer at the same second** is a
+ * retry of a press that was saved — answered as saved, nothing written. Any other — another volunteer, or the same one a different
+ * second — is a duplicate: answered with who stored it and at what time, and its own time written to the trail
+ * (`event_result.finish_duplicate`, `{ bibNumber, gunTimeMs, storedGunTimeMs, finishLine: true }`, the actor the trail's own column),
+ * so «Istoricul sosirilor» shows both times. Two presses at once wait on the event's lock, and the unique indexes stand behind it.
+ *
+ * A runner stored as «Abandon», «Neprezentat» or «Descalificat» who crosses the line becomes «Sosit» at the stamped time, the chip time
+ * and the note kept. One audit row as the save writes it (`event_result.created` or `.updated`, the number and the times with
+ * `finishLine: true`, never a name); the whole list ranked again; the public cache told, so a published ranking shows the finisher.
  */
-export async function recordFinish<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, request: { eventId: string; bibNumber: number }, now: Date): Promise<FinishRecorded> {
-  assertMayEnter(actor);
+export async function recordFinish<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  request: { eventId: string; bibNumber: number; claimedAtMs?: number | null },
+  now: Date,
+): Promise<FinishOutcome> {
+  assertMayRecord(actor);
   assertIds(request.eventId);
   if (!Number.isInteger(request.bibNumber) || request.bibNumber <= 0) throw new DomainError("VALIDATION_ERROR", "the race number is not a whole number", ["bib"]);
-  const recorded = await db.transaction(async (tx): Promise<FinishRecorded> => {
+  const bibNumber = request.bibNumber;
+  const outcome = await db.transaction(async (tx): Promise<FinishOutcome> => {
     const event = await loadEvent(tx, request.eventId, true);
     if (!eventTakesResults(event.type)) throw new DomainError("RESULTS_NOT_OPEN", "only a race takes results");
-    const gun = gunOf(event);
-    if (now.getTime() <= gun.getTime()) throw new DomainError("RESULT_FINISH_NOT_STARTED", "the race has not started yet");
+    const stamp = finishStamp({ claimedAtMs: request.claimedAtMs ?? null, gunAtMs: gunOf(event).getTime(), nowMs: now.getTime() });
+    if (stamp.kind === "notStarted") throw new DomainError("RESULT_FINISH_NOT_STARTED", "the race has not started yet");
     // A day after the gun nobody is crossing a line: a late press is a mistake, and the time would not fit the column anyway (`RESULT_FINISH_CLOSED`).
-    if (now.getTime() - gun.getTime() > FINISH_WINDOW_MS) throw new DomainError("RESULT_FINISH_CLOSED", "the finish line closed a day after the gun");
-    // Stamped to the second: a line's clock reads seconds, and so does the ranking's time box.
-    const gunTimeMs = Math.max(1000, Math.floor((now.getTime() - gun.getTime()) / 1000) * 1000);
-    const [runners, stored] = await Promise.all([loadRegisteredRunners(tx, event.id), loadStored(tx, event.id, true)]);
-    const runner = runners.byBib.get(request.bibNumber);
-    if (!runner || runner.status !== "CONFIRMED") throw new FinishError("RESULT_BIB_UNKNOWN", request.bibNumber, gunTimeMs);
-    const claim = claimOf(runner, indexStored(stored, runners));
-    const before = claim.attached ? claim.row : undefined;
-    if (before && before.status === "FINISHED") throw new FinishError("RESULT_ALREADY_FINISHED", request.bibNumber, before.gunTimeMs ?? gunTimeMs);
+    if (stamp.kind === "closed") throw new DomainError("RESULT_FINISH_CLOSED", "the finish line closed a day after the gun");
+    const gunTimeMs = stamp.gunTimeMs;
+    const [runners, stored, labels] = await Promise.all([loadRegisteredRunners(tx, event.id), loadStored(tx, event.id, true), loadEliteLabels(tx, event.id)]);
+    const target = finishTargetOf(runners, bibNumber);
+    if (!target) throw new FinishError("RESULT_BIB_UNKNOWN", bibNumber, gunTimeMs);
+    const index = indexStored(stored, runners);
+    const before = target.kind === "registration" ? (claimOf(target.runner, index).attached ? claimOf(target.runner, index).row : undefined) : index.freeByBib.get(bibNumber);
+    const name = target.kind === "registration" ? target.runner.displayName : (before?.displayName ?? target.line.name);
+    const label = target.kind === "registration" ? (target.runner.elite ? (labels.registrations.get(target.runner.registrationId) ?? null) : null) : (labels.lines.get(target.line.id) ?? null);
+    const audit = (action: AuditAction, metadata: Record<string, unknown>) =>
+      recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: event.id, metadata, now });
+
+    if (before && before.status === "FINISHED") {
+      const ranked = rankingOf(stored, runners, event).get(before.bibNumber);
+      // A retry of a press that was saved — the same viewer, the same second: shown as saved, nothing written.
+      if (before.updatedByStaffUserId === actor.id && before.gunTimeMs === gunTimeMs) {
+        return { kind: "recorded", resultId: before.id, bibNumber, name, label, gunTimeMs, positionOverall: ranked?.positionOverall ?? null, outOfRanking: ranked?.outOfRanking === true, again: true };
+      }
+      // The first stored wins; this press's own time goes to the trail beside it, for the organizers to compare.
+      await audit("event_result.finish_duplicate", { bibNumber, gunTimeMs, storedGunTimeMs: before.gunTimeMs, finishLine: true });
+      const storedBy = before.updatedByStaffUserId === null ? null : ((await staffNamesOf(tx, [before.updatedByStaffUserId])).get(before.updatedByStaffUserId) ?? null);
+      return { kind: "duplicate", resultId: before.id, bibNumber, name, label, gunTimeMs, storedGunTimeMs: before.gunTimeMs ?? gunTimeMs, storedBy };
+    }
 
     let rows: EventResultRow[];
+    let resultId: string;
     if (before) {
       // A runner written off by mistake who crosses the line: the row becomes «Sosit» at the stamped time; the chip time and the note stay.
       const [updated] = await tx
         .update(eventResults)
-        .set({ status: "FINISHED", gunTimeMs, bibNumber: request.bibNumber, updatedAt: now, updatedByStaffUserId: actor.id })
+        .set({ status: "FINISHED", gunTimeMs, bibNumber, updatedAt: now, updatedByStaffUserId: actor.id })
         .where(eq(eventResults.id, before.id))
         .returning();
       rows = stored.map((row) => (row.id === before.id ? updated : row));
-      await recordAuditEvent(tx, {
-        actorStaffUserId: actor.id,
-        action: "event_result.updated",
-        entityType: "event",
-        entityId: event.id,
-        metadata: { bibNumber: request.bibNumber, status: "FINISHED", gunTimeMs, chipTimeMs: before.chipTimeMs, changed: ["time", "status"], finishLine: true },
-        now,
-      });
+      resultId = updated.id;
+      await audit("event_result.updated", { bibNumber, status: "FINISHED", gunTimeMs, chipTimeMs: before.chipTimeMs, changed: ["time", "status"], finishLine: true });
     } else {
       const [inserted] = await tx
         .insert(eventResults)
-        .values({ eventId: event.id, registrationId: runner.registrationId, bibNumber: request.bibNumber, status: "FINISHED", gunTimeMs, createdAt: now, updatedAt: now, updatedByStaffUserId: actor.id })
+        .values(
+          target.kind === "registration"
+            ? { eventId: event.id, registrationId: target.runner.registrationId, bibNumber, status: "FINISHED", gunTimeMs, createdAt: now, updatedAt: now, updatedByStaffUserId: actor.id }
+            : // An elite line's runner (§NNN): a typed row, the line's name and number, nothing else of a person — no agreement to be named.
+              { eventId: event.id, registrationId: null, bibNumber, displayName: target.line.name, status: "FINISHED", gunTimeMs, createdAt: now, updatedAt: now, updatedByStaffUserId: actor.id },
+        )
         .returning();
       rows = [...stored, inserted];
-      await recordAuditEvent(tx, {
-        actorStaffUserId: actor.id,
-        action: "event_result.created",
-        entityType: "event",
-        entityId: event.id,
-        metadata: { bibNumber: request.bibNumber, status: "FINISHED", gunTimeMs, chipTimeMs: null, finishLine: true },
-        now,
-      });
+      resultId = inserted.id;
+      await audit("event_result.created", { bibNumber, status: "FINISHED", gunTimeMs, chipTimeMs: null, finishLine: true });
     }
     await writeRanking(tx, event, runners, rows);
-    const ranked = rankingOf(rows, runners, event).get(request.bibNumber);
-    return { bibNumber: request.bibNumber, name: runner.displayName, gunTimeMs, positionOverall: ranked?.positionOverall ?? null };
+    const ranked = rankingOf(rows, runners, event).get(bibNumber);
+    return { kind: "recorded", resultId, bibNumber, name, label, gunTimeMs, positionOverall: ranked?.positionOverall ?? null, outOfRanking: ranked?.outOfRanking === true, again: false };
   });
-  revalidatePublicContent("events", "places");
-  return recorded;
+  if (outcome.kind === "recorded" && !outcome.again) revalidatePublicContent("events", "places");
+  return outcome;
 }
 
-/** One line of «Ultimii sosiți»: the number, the name as the backoffice sees it, the time and the overall place from the live answers. */
-export type RecentFinisher = { bibNumber: number; name: string | null; gunTimeMs: number; positionOverall: number | null; recordedAt: Date };
+/**
+ * «Anulează» at the line (§NNN, amending §850's «Undo at the line» refusal; the owner: «„Anulează" pe ce a introdus voluntarul, zece
+ * minute, pe pagină; altfel la „Clasament"»): the row a press of the viewer's own wrote, deleted — for ten minutes after it was written
+ * and only while nobody changed it since (`domain/finish-line.ts#mayUndo`: a «Sosit» row written once, by the viewer). A row corrected on
+ * «Clasament», or a runner written off and turned «Sosit» at the line, is refused (`RESULT_UNDO_NOT_ALLOWED`) — its correction is
+ * «Clasament»'s; a row gone already is NOT_FOUND. The others ranked again; one audit row, `event_result.deleted` with
+ * `{ bibNumber, status, gunTimeMs, finishLine: true, undo: true }`; the public cache told, as a delete does.
+ */
+export async function undoFinish<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, request: { eventId: string; resultId: string }, now: Date): Promise<{ bibNumber: number }> {
+  assertMayRecord(actor);
+  assertIds(request.eventId, request.resultId);
+  const undone = await db.transaction(async (tx) => {
+    const event = await loadEvent(tx, request.eventId, true);
+    if (!eventTakesResults(event.type)) throw new DomainError("RESULTS_NOT_OPEN", "only a race takes results");
+    const [runners, stored] = await Promise.all([loadRegisteredRunners(tx, event.id), loadStored(tx, event.id, true)]);
+    const target = stored.find((row) => row.id === request.resultId);
+    if (!target) throw new DomainError("NOT_FOUND", "there is no such result any more");
+    if (!mayUndo(target, actor.id, now.getTime())) throw new DomainError("RESULT_UNDO_NOT_ALLOWED", "only one's own unchanged press of the last ten minutes is undone here");
+    await tx.delete(eventResults).where(eq(eventResults.id, target.id));
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event_result.deleted",
+      entityType: "event",
+      entityId: event.id,
+      metadata: { bibNumber: target.bibNumber, status: target.status, gunTimeMs: target.gunTimeMs, finishLine: true, undo: true },
+      now,
+    });
+    await writeRanking(tx, event, runners, stored.filter((row) => row.id !== target.id));
+    return { bibNumber: target.bibNumber };
+  });
+  revalidatePublicContent("events", "places");
+  return undone;
+}
 
-export type FinishPageView = {
+/**
+ * «Start» and «Anulează startul» (§NNN; the owner: «un buton „Start" pe pagină, pe care îl apasă un organizator la pistol; fără el
+ * contează „Startul cursei" din editor»): the gun, as an organizer pressed it at the start line. Whoever enters results
+ * (`canEnterResults`, FORBIDDEN otherwise), a race only (`RESULTS_NOT_OPEN`), from three hours before the planned gun to six hours after
+ * (`RACE_GUN_WINDOW`), and only while no «Sosit» result is stored (`RACE_GUN_FIXED`: after the first finisher the gun is fixed — a
+ * correction is «Clasament»'s). The moment is the tap the island claims, within thirty seconds of the server's clock, else the server's
+ * own (`raceGunMoment`); a second press moves it; `clear` takes it off, back to the planned gun. One audit row a change —
+ * `event.race_gun_set` with `{ at, previous }`, `event.race_gun_cleared` with `{ previous }`, the instants alone, never a name — and no
+ * email. The public cache is not told: nothing public reads the gun. The event's `version` and its «last saved» are untouched — the
+ * editor's open form is not refused for it.
+ */
+export async function setRaceGun<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  request: { eventId: string; clear: boolean; claimedAtMs?: number | null },
+  now: Date,
+): Promise<{ changed: boolean; gunAt: Date | null }> {
+  assertMayEnter(actor);
+  assertIds(request.eventId);
+  return db.transaction(async (tx) => {
+    const event = await loadEvent(tx, request.eventId, true);
+    if (!eventTakesResults(event.type)) throw new DomainError("RESULTS_NOT_OPEN", "only a race has a gun");
+    if (!raceGunWindowOpen(plannedGunOf(event).getTime(), now.getTime())) throw new DomainError("RACE_GUN_WINDOW", "the gun is pressed from three hours before the planned start to six hours after");
+    const [finished] = await tx
+      .select({ id: eventResults.id })
+      .from(eventResults)
+      .where(and(eq(eventResults.eventId, event.id), eq(eventResults.status, "FINISHED")))
+      .limit(1);
+    if (finished) throw new DomainError("RACE_GUN_FIXED", "runners have finished: the gun is fixed");
+    const previous = event.raceGunAt?.toISOString() ?? null;
+    if (request.clear) {
+      if (event.raceGunAt === null) return { changed: false, gunAt: null };
+      await tx.update(events).set({ raceGunAt: null, raceGunByStaffUserId: null }).where(eq(events.id, event.id));
+      await recordAuditEvent(tx, { actorStaffUserId: actor.id, action: "event.race_gun_cleared", entityType: "event", entityId: event.id, metadata: { previous }, now });
+      return { changed: true, gunAt: null };
+    }
+    const gunAt = new Date(raceGunMoment(request.claimedAtMs ?? null, now.getTime()));
+    await tx.update(events).set({ raceGunAt: gunAt, raceGunByStaffUserId: actor.id }).where(eq(events.id, event.id));
+    await recordAuditEvent(tx, { actorStaffUserId: actor.id, action: "event.race_gun_set", entityType: "event", entityId: event.id, metadata: { at: gunAt.toISOString(), previous }, now });
+    return { changed: true, gunAt };
+  });
+}
+
+/** «Start» as the page says it: the gun counted from, whether it was pressed and by whom, the plan, and whether a finisher fixed it. */
+export type RaceGunView = { at: Date; pressed: boolean; byName: string | null; planned: Date; fixed: boolean; windowOpen: boolean };
+
+/** «Cronometrare»'s data (§NNN): the gun, the latest finishers, the elites' buttons and the two counts. */
+export type FinishLineView = {
   event: EventFacts;
-  /** The finishers, the latest recorded first, at most `limit`. */
-  recent: RecentFinisher[];
+  gun: RaceGunView;
+  /** «Ultimii sosiți», the latest written first, at most `limit`. */
+  recent: RecentFinisherView[];
+  /** The elites' buttons, by label (Romanian order). */
+  elites: EliteButtonView[];
   /** How many have finished, and how many registered runners hold a number. */
   finished: number;
   withNumber: number;
 };
 
-/** The «Sosire» page's data (§850), for whoever may enter results: the event, the latest finishers and the two counts. */
-export async function readFinishPage<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, eventId: string, limit: number): Promise<FinishPageView> {
-  assertMayEnter(actor);
+/**
+ * «Cronometrare»'s data (§NNN), for whoever records finishes (`canRecordFinishes`): the gun (`gunOf`, pressed or planned), «Ultimii
+ * sosiți» — the stored «Sosit» rows, the latest written first: the number or the elite's label, the name as the backoffice reads it,
+ * the time, the place from the live answers or «în afara clasamentului», who wrote it («introdus de» / «modificat de», null for an
+ * account gone) and until when the viewer may undo it (`undoOpenUntil`) — the elites' buttons and the counts.
+ *
+ * **The elites' buttons**: every confirmed real registration marked «Elită» — its label (`eliteBibName`), its full name, its number,
+ * none for one with no number yet — and every line of the race's elite list — its label (`eliteLineBibName`), its name and its number,
+ * or none; each «Sosit» already with its time; ordered by label in Romanian, then by name. Nothing here is an address: the desk sees
+ * the same names.
+ */
+export async function readFinishLine<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, eventId: string, now: Date, limit: number): Promise<FinishLineView> {
+  assertMayRecord(actor);
   assertIds(eventId);
   const event = await loadEvent(db, eventId, false);
-  const { ranking, runners } = await loadLiveRanking(db, event);
-  const stored = await loadStored(db, eventId, false);
+  const [runners, stored, labels, unnumberedElites] = await Promise.all([
+    loadRegisteredRunners(db, eventId),
+    loadStored(db, eventId, false),
+    loadEliteLabels(db, eventId),
+    db
+      .select({ id: registrations.id, displayName: registrations.displayName })
+      .from(registrations)
+      .where(and(eq(registrations.eventId, eventId), eq(registrations.kind, "REAL"), eq(registrations.status, "CONFIRMED"), eq(registrations.elite, true), isNull(registrations.bibNumber))),
+  ]);
+  // The places from the live answers, as every page reads them (`loadLiveRanking`'s rule, from the rows read once here).
+  const ranking = rankingOf(stored, runners, event);
+  const index = indexStored(stored, runners);
   const finished = stored.filter((row) => row.status === "FINISHED" && row.gunTimeMs !== null);
-  const recent = finished
-    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime() || b.bibNumber - a.bibNumber)
-    .slice(0, limit)
-    .map((row): RecentFinisher => ({
+  const latest = [...finished].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime() || b.bibNumber - a.bibNumber).slice(0, limit);
+  const staffNames = await staffNamesOf(db, [...latest.map((row) => row.updatedByStaffUserId), event.raceGunByStaffUserId]);
+  const lineByBib = new Map(runners.lines.flatMap((line) => (line.bibNumber === null ? [] : [[line.bibNumber, line] as const])));
+  const labelOfLine = (line: EliteLine | undefined) => (line ? (labels.lines.get(line.id) ?? line.name) : null);
+
+  const recent = latest.map((row): RecentFinisherView => {
+    const runner = row.registrationId !== null ? runners.byRegistration.get(row.registrationId) : undefined;
+    const ranked = ranking.get(row.bibNumber);
+    const until = undoOpenUntil(row, actor.id);
+    return {
+      resultId: row.id,
       bibNumber: row.bibNumber,
-      name: row.registrationId !== null ? (runners.byRegistration.get(row.registrationId)?.displayName ?? null) : row.displayName,
+      label: runner ? (runner.elite ? (labels.registrations.get(runner.registrationId) ?? null) : null) : row.registrationId === null ? labelOfLine(lineByBib.get(row.bibNumber)) : null,
+      name: runner ? runner.displayName : row.registrationId === null ? row.displayName : null,
       gunTimeMs: row.gunTimeMs as number,
-      positionOverall: ranking.get(row.bibNumber)?.positionOverall ?? null,
-      recordedAt: row.updatedAt,
-    }));
-  return { event, recent, finished: finished.length, withNumber: runners.byBib.size };
+      positionOverall: ranked?.positionOverall ?? null,
+      outOfRanking: ranked?.outOfRanking === true,
+      by: row.updatedByStaffUserId === null ? null : (staffNames.get(row.updatedByStaffUserId) ?? null),
+      changed: row.createdAt.getTime() !== row.updatedAt.getTime(),
+      undoUntilMs: until !== null && now.getTime() <= until ? until : null,
+    };
+  });
+
+  const finishedTime = (row: EventResultRow | undefined) => (row && row.status === "FINISHED" ? row.gunTimeMs : null);
+  const elites: EliteButtonView[] = [];
+  for (const runner of runners.byRegistration.values()) {
+    if (!runner.elite || runner.status !== "CONFIRMED") continue;
+    const claim = claimOf(runner, index);
+    elites.push({ key: `r:${runner.registrationId}`, kind: "registration", label: labels.registrations.get(runner.registrationId) ?? runner.displayName, name: runner.displayName, bibNumber: runner.bibNumber, finishedGunTimeMs: finishedTime(claim.row) });
+  }
+  for (const row of unnumberedElites) {
+    elites.push({ key: `r:${row.id}`, kind: "registration", label: labels.registrations.get(row.id) ?? row.displayName, name: row.displayName, bibNumber: null, finishedGunTimeMs: null });
+  }
+  for (const line of runners.lines) {
+    const holder = line.bibNumber === null ? undefined : runners.byBib.get(line.bibNumber);
+    // A number a confirmed registration holds is that runner's (rule 2): the line has no button of its own then.
+    if (holder && holder.status === "CONFIRMED") continue;
+    elites.push({
+      key: `l:${line.id}`,
+      kind: "line",
+      label: labels.lines.get(line.id) ?? line.name,
+      name: line.name,
+      bibNumber: line.bibNumber,
+      finishedGunTimeMs: line.bibNumber === null ? null : finishedTime(index.freeByBib.get(line.bibNumber)),
+    });
+  }
+  elites.sort((a, b) => a.label.localeCompare(b.label, "ro") || a.name.localeCompare(b.name, "ro") || a.key.localeCompare(b.key));
+
+  const gunAt = gunOf(event);
+  return {
+    event,
+    gun: {
+      at: gunAt,
+      pressed: event.raceGunAt !== null,
+      byName: event.raceGunByStaffUserId === null ? null : (staffNames.get(event.raceGunByStaffUserId) ?? null),
+      planned: plannedGunOf(event),
+      fixed: finished.length > 0,
+      windowOpen: raceGunWindowOpen(plannedGunOf(event).getTime(), now.getTime()),
+    },
+    recent,
+    elites,
+    finished: finished.length,
+    withNumber: runners.byBib.size,
+  };
+}
+
+/**
+ * The name each race number belongs to today, as the backoffice reads it (§NNN): a confirmed registration's, a typed row's, a line of
+ * the elite list's — read live, so «Istoricul sosirilor» may say the name beside a number the trail stores without one.
+ */
+export async function liveNamesByBib<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<Map<number, string>> {
+  const [runners, stored] = await Promise.all([loadRegisteredRunners(db, eventId), loadStored(db, eventId, false)]);
+  const names = new Map<number, string>();
+  for (const line of runners.lines) if (line.bibNumber !== null) names.set(line.bibNumber, line.name);
+  for (const row of stored) if (row.registrationId === null && row.displayName !== null) names.set(row.bibNumber, row.displayName);
+  for (const runner of runners.byBib.values()) if (runner.status === "CONFIRMED") names.set(runner.bibNumber, runner.displayName);
+  return names;
 }
 
 // ---- Publishing -------------------------------------------------------------------------------------------
@@ -1186,7 +1490,8 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
     .where(eq(events.id, eventId))
     .limit(1);
   if (!found || !found.resultsPublished || !eventTakesResults(found.type)) return null;
-  const event: EventFacts = { ...found, resultAgeBands: ageBandStartsOf(found.resultAgeBands) };
+  // The gun pressed on «Cronometrare» (§NNN) is the finish line's alone: the public read never selects it, and counts nothing from it.
+  const event: EventFacts = { ...found, raceGunAt: null, raceGunByStaffUserId: null, resultAgeBands: ageBandStartsOf(found.resultAgeBands) };
   if (options.now.getTime() < event.startsAt.getTime()) return null;
   if (!publicListStillOpen(event, options.now, options.deadlines)) return null;
 

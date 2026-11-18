@@ -93,6 +93,8 @@ const GROUP_SX = {
 
 /** The glyph before an entry's words: the words' size, inheriting their colour. */
 const GLYPH_SX = { display: "inline-flex", mr: 0.75, "& svg": { fontSize: 18 } } as const;
+/** …and, in a `compact` row, from `sm` up only: on a phone the words alone. */
+const COMPACT_GLYPH_SX = { ...GLYPH_SX, display: { xs: "none", sm: "inline-flex" } } as const;
 
 /**
  * A row of sub-tabs inside one backoffice section (`DECISIONS.md` §265), and the one look every
@@ -129,8 +131,13 @@ const GLYPH_SX = { display: "inline-flex", mr: 0.75, "& svg": { fontSize: 18 } }
  * `fits` (§974) is for a row that is never wider than the narrowest screen — the two views of
  * «Planul voluntarilor», «Tabel» and «Pe puncte»: it has no entry past the edge to bring into
  * view, so it carries no `SubNavCurrent` and no client code at all.
+ *
+ * `compact` (§NNN) leaves the glyphs off below `sm`: a `fits` row of four entries — «Ziua cursei»'s
+ * «Prezența», «Clasament», «Cronometrare», «Lucruri de adus» — holds 288 pixels on its short words
+ * alone, and a glyph before each would push the last past the edge. From `sm` up every entry wears
+ * its glyph as before.
  */
-export default function SubNav({ items, label, fits = false }: { items: readonly SubNavItem[]; label: string; fits?: boolean }) {
+export default function SubNav({ items, label, fits = false, compact = false }: { items: readonly SubNavItem[]; label: string; fits?: boolean; compact?: boolean }) {
   return (
     <Box component="nav" aria-label={label} sx={ROW_SX}>
       {fits ? null : <SubNavCurrent />}
@@ -146,7 +153,7 @@ export default function SubNav({ items, label, fits = false }: { items: readonly
             <Box component="li" key={item.href} sx={{ flex: "none" }}>
               <Box component="a" href={item.href} aria-current={item.active ? "page" : undefined} sx={ENTRY_SX}>
                 {item.glyph ? (
-                  <Box component="span" aria-hidden="true" sx={GLYPH_SX}>
+                  <Box component="span" aria-hidden="true" sx={compact ? COMPACT_GLYPH_SX : GLYPH_SX}>
                     {item.glyph}
                   </Box>
                 ) : null}

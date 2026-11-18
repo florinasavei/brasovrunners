@@ -946,7 +946,7 @@ while the name is gone (the outage grace).
 ## Race results: registering the finishers
 
 How a race's finishers get into «Clasament» and onto the event page (`DECISIONS.md` §808–§810, and the
-age categories, the podium and the finish line «Sosire» of this release; the owner's procedure is `SETUP.md` §45; the colleagues'
+age categories, the podium, and the finish line — «Sosire», since §NNN «Cronometrare» on «Ziua cursei»; the owner's procedure is `SETUP.md` §45; the colleagues'
 version is the backoffice «Ghid», sections Organizator and Administrator). Only a **race** has
 results; a group run has none.
 
@@ -956,7 +956,8 @@ Related requirements: `BR-REQ-050-02`, `BR-REQ-039-01`, `BR-REQ-060-01`.
 
 | Step | Who |
 | --- | --- |
-| Types each finisher's race number on «Sosire» as they cross (or notes number and time on paper) | Organizer or Administrator at the line (any volunteer for the paper sheet) |
+| Presses «Start» at the gun on «Cronometrare» | Organizer or Administrator |
+| Records each finisher on «Cronometrare» as they cross — the elite's button, or the bib's number and «Sosit» (or notes number and time on paper) | Any staff role that works the desk, the desk Volunteer included; anybody for the paper sheet |
 | Sets the race's age categories | Organizer or Administrator |
 | Enters or imports the times, saves the ranking | Organizer or Administrator |
 | Reads the podium and hands out the awards | Organizers |
@@ -970,23 +971,33 @@ Related requirements: `BR-REQ-050-02`, `BR-REQ-039-01`, `BR-REQ-060-01`.
    and for men. A later change recounts the saved results' category places, so decide before publishing.
 2. **Make sure every runner has a race number** (the desk gives them at check-in, `SETUP.md` §39; the printed
    sheet lists them). A result is a row per race number: no number, no row.
-3. **Plan the timing.** One phone at the line on «Sosire» (below) is enough for a club race; a second phone, or a
-   paper sheet of «number, time since the gun», as the backup for a race of more than a hundred.
+3. **Plan the timing.** One phone at the line on «Cronometrare» (below) is enough for a club race; for a bunch finish
+   two volunteers may press the same runners — the first press wins, the second is kept in «Istoricul sosirilor» —
+   and a paper sheet of «number, time since the gun» stays the backup for a race of more than a hundred.
 
-### At the finish: «Sosire»
+### At the finish: «Cronometrare»
 
-Open «Clasament» → **«Sosire»** on a phone at the line (`/admin/events/<id>/results/sosire`; Organizer or
-Administrator). The page shows the gun and a clock since it. As each runner crosses, type the race number and press
-**«Sosit»**: the site stamps the time since the gun (`race_starts_at`, else the event's start), to the second, as that
-runner's «Sosit», re-ranks, and the page comes back with the box empty, one sentence («Sosit: #102 Bia Marin · 0:45:12 ·
-locul 1») and «Ultimii sosiți», the latest press first. No stopwatch is needed and nothing has to be typed again later.
+Open **«Ziua cursei» → «Cronometrare»** on a phone at the line (`/admin/checkin/cronometrare?eventId=<id>`; the link on
+«Clasament» and the old `/admin/events/<id>/results/sosire` lead there; every role that works the desk). The page shows the
+gun and a clock since it.
 
-What the line refuses, in place, with the number kept in the box: a number no **confirmed** registration holds (the
-sentence carries the stamped time — write it on paper, the runner is typed on «Clasament» later under «Alergători
-neînscriși»); a number already finished (the stored time in the sentence — a correction is «Clasament»'s); a press before
-the gun, and one more than a day after it (the times are typed by then). A runner saved as «Abandon», «Neprezentat» or
-«Descalificat» by mistake who crosses the line becomes «Sosit» at the stamped time, the note kept. Two phones may work the
-same line: each press is its own transaction on the event's row.
+1. **«Start».** An Organizer or Administrator presses **«Start»** at the gun: the times count from that moment
+   (`events.race_gun_at`). Without it they count from the planned start (`race_starts_at`, else the event's start). It is
+   offered from three hours before the planned start to six after; «Mută startul acum» and «Anulează startul» move or
+   remove it until the first finisher, after which it is fixed. The public page, the emails and the checkpoints keep the
+   planned times.
+2. **Each finisher.** An elite: press their button at the top (the bib's label large, the name under it). Anyone else:
+   type the bib's number and press **«Sosit»** (or Enter) — the box empties at once. A bunch: «Prinde timpul» once per
+   runner, then the numbers in order; each takes the oldest caught moment. Every press is stamped with its own moment on
+   the server's clock, saved at once, and «Ultimii sosiți» names who entered it. Without signal the presses wait on the
+   phone and go by themselves; a reload sends what is left.
+3. **What the line says.** A number somebody entered first: «#123 era deja trecut de <nume> la <timp>» — nothing changes,
+   the second time is kept in «Istoricul sosirilor» on «Clasament» for the organizers to compare. A number no confirmed
+   registration and no elite line holds: refused, with the time to write on paper (the runner is typed on «Clasament»
+   later under «Alergători neînscriși»). Before the start, or more than a day after it: refused. A runner saved as
+   «Abandon», «Neprezentat» or «Descalificat» by mistake who crosses becomes «Sosit», the note kept.
+4. **A mistake.** «Anulează» on your own line, for ten minutes and while nobody changed it. After that — or for anybody
+   else's line — correct it on «Clasament», whose lines say «introdus de …» / «modificat de …».
 
 The fallback is the old way: somebody records «number, time since the gun» on paper, a phone or a timing app that
 exports CSV, and the times are entered or imported after the race (next section). Note who dropped out, who never

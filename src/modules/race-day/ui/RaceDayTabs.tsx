@@ -2,34 +2,38 @@ import Box from "@mui/material/Box";
 import { getTranslations } from "next-intl/server";
 import type { ReactElement } from "react";
 import { getPathname } from "@/i18n/navigation";
-import { canEnterResults, canWorkTheDesk, type StaffSubject } from "@/modules/staff-identity/domain/roles";
+import { canEnterResults, canRecordFinishes, canWorkTheDesk, type StaffSubject } from "@/modules/staff-identity/domain/roles";
 import { PANEL_GLYPHS, type PanelGlyphName } from "@/shared/ui/panel-glyphs";
 import SubNav, { type SubNavItem } from "@/shared/ui/SubNav";
 
-/** The three parts of «Ziua cursei». */
-export type RaceDayTab = "desk" | "results" | "items";
+/** The four parts of «Ziua cursei». */
+export type RaceDayTab = "desk" | "results" | "timing" | "items";
 
 /**
- * Each tab's picture, by its name in the subjects' table (§521): the desk's own cup, the results' board, a checklist.
+ * Each tab's picture, by its name in the subjects' table (§521): the desk's own cup, the results' board, the stopwatch, a checklist.
  * Looked up here, on the server; only the drawn `<svg>` reaches the browser.
  */
 const TAB_GLYPH = {
   desk: { glyph: "raceDay" },
   results: { glyph: "results" },
+  timing: { glyph: "timing" },
   items: { glyph: "todo" },
 } as const satisfies Record<RaceDayTab, { glyph: PanelGlyphName }>;
 
 /**
- * «Ziua cursei»'s three tabs (§979; the owner, 2026-11-18: «Pentru "Ziua Cursei" vreau un tab pentru "Clasament", ce am acum
- * pe aceasta pagina e de fapt "Prezenta"», and «un alt tab pentru ziua cursei unde sa bifam "lucruri de adus"»): «Prezența» —
- * the desk as it was —, «Clasament» — the chosen event's results (§808) — and «Lucruri de adus», the event's checklist.
+ * «Ziua cursei»'s four tabs (§979; the owner, 2026-11-18: «Pentru "Ziua Cursei" vreau un tab pentru "Clasament", ce am acum
+ * pe aceasta pagina e de fapt "Prezenta"», and «un alt tab pentru ziua cursei unde sa bifam "lucruri de adus"»; and, the same
+ * day, §NNN: «pentru ziua cursei am nevoie de o pagina noua pentru cronometrare»): «Prezența» — the desk as it was —,
+ * «Clasament» — the chosen event's results (§808) —, «Cronometrare» — the finish line, a number or an elite pressed as the
+ * runner crosses — and «Lucruri de adus», the event's checklist.
  *
- * The house's row of sub-tabs (`SubNav`, §360), `fits` — three short words a phone holds, «Lucruri» alone below `sm` — so no
- * script: plain links drawn on the server, the current one marked (`aria-current`), never on paper. Each carries the event
- * chosen on the page (the desk's select; on a results page, the page's own event); with none chosen the desk and the list
- * pick their default as the desk does, and «Clasament», which has no page without an event, is not drawn. A tab whose page
- * the viewer's role cannot open is not drawn either — «Clasament» is `canEnterResults`' — and every page still asserts its
- * own gate on the server (BR-REQ-060-01).
+ * The house's row of sub-tabs (`SubNav`, §360), `fits`: four short words a 320-pixel phone holds — below `sm` «Cronometrare»
+ * says «Sosiri» and «Lucruri de adus» «Lucruri», and the row draws no glyphs (`compact`) — so no script: plain links drawn on
+ * the server, the current one marked (`aria-current`), never on paper. Each carries the event chosen on the page (the desk's
+ * select; on a results page, the page's own event); with none chosen the desk, the finish line and the list pick their default
+ * as the desk does, and «Clasament», which has no page without an event, is not drawn. A tab whose page the viewer's role cannot
+ * open is not drawn either — «Clasament» is `canEnterResults`', «Cronometrare» `canRecordFinishes`' — and every page still
+ * asserts its own gate on the server (BR-REQ-060-01).
  *
  * A function the page awaits, not an async component: the element it returns is drawn in the page's own tree, which every
  * screen test renders synchronously.
@@ -53,6 +57,15 @@ export async function raceDayTabs({ locale, active, eventId, actor }: { locale: 
       glyph: glyph("results"),
     });
   }
+  if (canRecordFinishes(actor)) {
+    items.push({
+      href: withEvent(getPathname({ locale, href: "/admin/checkin/cronometrare" })),
+      label: t("raceDay.tabs.timing"),
+      short: t("raceDay.tabs.timingShort"),
+      active: active === "timing",
+      glyph: glyph("timing"),
+    });
+  }
   if (canWorkTheDesk(actor)) {
     items.push({
       href: withEvent(getPathname({ locale, href: "/admin/checkin/lucruri" })),
@@ -64,7 +77,7 @@ export async function raceDayTabs({ locale, active, eventId, actor }: { locale: 
   }
   return (
     <Box sx={{ "@media print": { display: "none" } }} data-testid="race-day-tabs">
-      <SubNav fits label={t("raceDay.tabs.label")} items={items} />
+      <SubNav fits compact label={t("raceDay.tabs.label")} items={items} />
     </Box>
   );
 }

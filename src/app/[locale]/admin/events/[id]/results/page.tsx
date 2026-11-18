@@ -7,6 +7,8 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
+import { countForm } from "@/i18n/count-form";
+import { CLUB_TIME_ZONE, formatDay, formatTimeWithSeconds } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventTitle } from "@/modules/content/events/repository";
@@ -19,6 +21,7 @@ import { RESULT_STATUSES } from "@/modules/results/domain/ranking";
 import { anonymousResultLabel } from "@/modules/results/domain/public-name";
 import ImportFilePicker from "@/modules/results/ui/ImportFilePicker";
 import { eventTakesResults } from "@/modules/results/domain/event-type";
+import { type FinishHistoryEntry, readFinishHistory } from "@/modules/results/finish-history";
 import { readEventResults, type ResultRunner } from "@/modules/results/results";
 import {
   DELETE_RESULT_FORM_ID,
@@ -199,6 +202,9 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   ];
   const marksByBib = new Map(view.registered.map((runner) => [runner.bibNumber, marksOf(runner)]));
 
+  // Who last wrote a stored result (§NNN): «introdus de …» while it is as first written, «modificat de …» once changed; «cont șters» for an account gone.
+  const writtenByOf = (runner: ResultRunner) =>
+    runner.result ? t(runner.result.writtenBy.changed ? "timing.changedBy" : "timing.enteredBy", { name: runner.result.writtenBy.name ?? t("timing.accountGone") }) : undefined;
   const registered: RegisteredLine[] = view.registered.map((runner) => ({
     bibNumber: runner.bibNumber,
     name: runner.name ?? "",
@@ -211,6 +217,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     hasResult: runner.result !== null,
     outOfRanking: runner.outOfRanking,
     marks: marksOf(runner),
+    writtenBy: writtenByOf(runner),
   }));
   const typed: TypedLine[] = view.typed.map((runner) => ({
     values: {
@@ -226,6 +233,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     place: placeOf(runner),
     hasResult: true,
     outOfRanking: runner.outOfRanking,
+    writtenBy: writtenByOf(runner),
   }));
 
   // ---- The refusal summary's labels, by the unindexed name of a box (`fieldLabelOf`) ------------------------------
@@ -261,6 +269,51 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
 
   const total = view.counts.FINISHED + view.counts.DNF + view.counts.DNS + view.counts.DSQ;
   const downloadHref = `/api/admin/events/${id}/results?lang=${locale}`;
+
+  // «Istoricul sosirilor» (§NNN): one line a write — when, who, what with the number and the time, and from where; the runner's
+  // name read live beside the number (the trail stores none).
+  const history = await readFinishHistory(db, actor, id);
+  const zone = event.timezone || CLUB_TIME_ZONE;
+  const historyLineWords = (line: FinishHistoryEntry): string => {
+    const when = `${formatDay(line.at, { locale, timeZone: zone, style: "short" })}, ${formatTimeWithSeconds(line.at, { locale, timeZone: zone })}`;
+    const what = line.what;
+    const runner = (bib: number | null) => (bib === null ? "#?" : `#${bib}${line.liveName ? ` ${line.liveName}` : ""}`);
+    const status = (value: string | null) => (value && (RESULT_STATUSES as readonly string[]).includes(value) ? t(`results.status.${value}`) : "");
+    const statusAndTime = (value: string | null, ms: number | null) => (value === "FINISHED" && ms !== null ? `${status(value)}, ${formatResultTime(ms)}` : status(value));
+    const instant = (at: Date | null) => (at === null ? "—" : formatTimeWithSeconds(at, { locale, timeZone: zone }));
+    let words: string;
+    switch (what.kind) {
+      case "finish":
+        words = t(what.turned ? "results.history.what.finishTurned" : "results.history.what.finish", { runner: runner(what.bibNumber), time: formatResultTime(what.gunTimeMs) || "—" });
+        break;
+      case "duplicate":
+        words = t("results.history.what.duplicate", { runner: runner(what.bibNumber), time: formatResultTime(what.gunTimeMs) || "—", stored: formatResultTime(what.storedGunTimeMs) || "—" });
+        break;
+      case "undo":
+        words = t("results.history.what.undo", { runner: runner(what.bibNumber), time: formatResultTime(what.gunTimeMs) || "—" });
+        break;
+      case "created":
+        words = t("results.history.what.created", { runner: runner(what.bibNumber), status: statusAndTime(what.status, what.gunTimeMs) });
+        break;
+      case "updated":
+        words = t(what.boxes.length > 0 ? "results.history.what.updatedBoxes" : "results.history.what.updated", {
+          runner: runner(what.bibNumber),
+          status: statusAndTime(what.status, what.gunTimeMs),
+          boxes: what.boxes.map((box) => t(`results.history.box.${box}`)).join(", "),
+        });
+        break;
+      case "deleted":
+        words = t("results.history.what.deleted", { runner: runner(what.bibNumber), status: status(what.status) });
+        break;
+      case "gunSet":
+        words = what.previous === null ? t("results.history.what.gunSet", { time: instant(what.at) }) : t("results.history.what.gunMoved", { time: instant(what.at), previous: instant(what.previous) });
+        break;
+      case "gunCleared":
+        words = t("results.history.what.gunCleared", { previous: instant(what.previous) });
+        break;
+    }
+    return t("results.history.line", { when, by: line.who ?? t("timing.accountGone"), what: words, where: t(`results.history.where.${line.where}`) });
+  };
 
   return (
     <Stack spacing={2}>
@@ -505,9 +558,36 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
         </Stack>
       </Panel>
 
+      {/* «Istoricul sosirilor» (§NNN): every write of the race's results — the line's presses, duplicates and undos, this page's saves, «Start» — newest first, with who. */}
+      <Panel glyph="history" collapsible level={3} title={t("results.history.title")} aside={t(`results.history.count.${countForm(history.lines.length, locale)}`, { count: String(history.lines.length) })} id="box-results-history" data-testid="results-history">
+        <Stack spacing={1}>
+          <Typography variant="body2" color="text.secondary">
+            {t("results.history.intro")}
+          </Typography>
+          {history.lines.length === 0 ? (
+            <Typography variant="body2" data-testid="results-history-empty">
+              {t("results.history.empty")}
+            </Typography>
+          ) : (
+            <Box component="ol" sx={{ m: 0, pl: 2.5, display: "grid", gap: 0.5 }}>
+              {history.lines.map((line) => (
+                <Typography component="li" variant="body2" key={line.id} sx={{ overflowWrap: "anywhere" }} data-testid="results-history-line" data-where={line.where}>
+                  {historyLineWords(line)}
+                </Typography>
+              ))}
+            </Box>
+          )}
+          {history.limited && (
+            <Typography variant="caption" color="text.secondary">
+              {t("results.history.limited", { count: String(history.lines.length) })}
+            </Typography>
+          )}
+        </Stack>
+      </Panel>
+
       <Box>
-        {/* «Sosire» (§850): the finish line's page — a number typed as the runner crosses, the time since the gun stamped. */}
-        <GlyphButton icon="checkIn" href={getPathname({ locale, href: { pathname: "/admin/events/[id]/results/sosire", params: { id } } })} variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="results-finish-link">
+        {/* «Cronometrare» (§NNN, in «Sosire»'s place, §850): «Ziua cursei»'s finish line — a number or an elite pressed as the runner crosses. */}
+        <GlyphButton icon="checkIn" href={`${getPathname({ locale, href: "/admin/checkin/cronometrare" })}?eventId=${id}`} variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="results-finish-link">
           {t("results.finish.link")}
         </GlyphButton>
       </Box>

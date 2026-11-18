@@ -691,9 +691,9 @@ list of roles, so adding a role later cannot silently take one away.
 
 | Staff role | Adds, on top of the role below |
 | --- | --- |
-| Volunteer (`CONTRIBUTOR`) | The race-day desk: scans, marks present, confirms on paper, gives a place, types a number. Nothing else (`DECISIONS.md` §103) |
+| Volunteer (`CONTRIBUTOR`) | The race-day desk: scans, marks present, confirms on paper, gives a place, types a number; and the finish line, «Cronometrare»: records a finisher by the bib's number or an elite's button, and undoes their own press for ten minutes (`DECISIONS.md` §NNN). Nothing else (`DECISIONS.md` §103) |
 | Copywriter (`COPYWRITER`) | The words of every event and page, in both languages, at any status; submits drafts for approval. No settings, no publishing |
-| Organizer (`MODERATOR`) | Reads every event and changes none of them (`DECISIONS.md` §542); pages and the gallery — approving, publishing, unpublishing, archiving; reads the registrations, the export and the numbers; messages an event's participants |
+| Organizer (`MODERATOR`) | Reads every event and changes none of them (`DECISIONS.md` §542); pages and the gallery — approving, publishing, unpublishing, archiving; reads the registrations, the export and the numbers; messages an event's participants; enters and corrects a race's results, presses «Start» at the gun and reads who entered each finish (`DECISIONS.md` §808, §NNN) |
 | Technical (dev) | The configuration report at `/devs`. **No participant data** |
 | Admin | Every event — creating, configuring, publishing, cancelling, a series (§542); changing registrations, participants, waiting lists, test registrations, and deleting an event |
 | Superadmin | The staff list itself: who is here and what they may do |

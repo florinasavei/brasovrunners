@@ -1,0 +1,179 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { getDb } from "@/db/client";
+import { getPathname } from "@/i18n/navigation";
+import type { Locale } from "@/i18n/routing";
+import { type FinishEntryOutcome, type FinishLineState, type FinishPressAnswer, type FinishUndoAnswer, isInstant, RECENT_FINISHERS } from "@/modules/results/domain/finish-line";
+import { FinishError, type FinishLineView, readFinishLine, recordFinish, setRaceGun, undoFinish } from "@/modules/results/results";
+import { canEnterResults, canRecordFinishes } from "@/modules/staff-identity/domain/roles";
+import type { StaffAccount } from "@/modules/staff-identity/repository";
+import { requireStaffCapability } from "@/modules/staff-identity/session";
+import { DomainError, isDomainError } from "@/shared/errors/domain-error";
+import { isUuid } from "@/shared/ids";
+import { eventIdOf, field, localeOf } from "@/app/[locale]/admin/events/[id]/volunteer-return";
+
+/*
+  «Cronometrare»'s presses (§NNN): a finish recorded and one's own undone — each twice, once for the island, which calls it and reads
+  the answer (`…PressAction`: the outcome, the page's state for the island to keep, the server's clock), and once for the plain
+  form a page with scripts off posts (`…FormAction`: back to the page with the outcome in its address, numbers and codes only,
+  never a name) — and «Start» / «Anulează startul», a plain form the island only stamps. Each asks its capability here, at the door
+  (`requireStaffCapability`: the finish and the undo `canRecordFinishes`, the gun `canEnterResults`), and the service asks again
+  (BR-REQ-060-01). None of them emails anybody.
+*/
+
+/** The page's state for the island: what `readFinishLine` read, with the server's clock taken last. */
+function stateOf(view: FinishLineView): FinishLineState {
+  return {
+    serverNowMs: Date.now(),
+    gunAtMs: view.gun.at.getTime(),
+    gunPressed: view.gun.pressed,
+    recent: view.recent,
+    elites: view.elites,
+    finished: view.finished,
+    withNumber: view.withNumber,
+  };
+}
+
+/** The page's state after a press, or null when the viewer may not read it (another event's id, a group run's refusal still reads). */
+async function stateAfter(actor: StaffAccount, eventId: string): Promise<FinishLineState | null> {
+  try {
+    return stateOf(await readFinishLine(getDb(), actor, eventId, new Date(), RECENT_FINISHERS));
+  } catch (error) {
+    if (isDomainError(error)) return null;
+    throw error;
+  }
+}
+
+/** What the island sends for one press: the event, the number and the press's moment on the server's clock. */
+function pressOf(input: unknown): { eventId: string; bibNumber: number; claimedAtMs: number | null } {
+  const raw = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
+  const eventId = typeof raw.eventId === "string" && isUuid(raw.eventId) ? raw.eventId : "";
+  const bibNumber = typeof raw.bibNumber === "number" && Number.isInteger(raw.bibNumber) ? raw.bibNumber : Number.NaN;
+  return { eventId, bibNumber, claimedAtMs: isInstant(raw.claimedAtMs) ? raw.claimedAtMs : null };
+}
+
+/** The staff session, or the island's «sign in again» (the entry waits on the phone), or a refusal for a role that may not. */
+async function doorOf(capability: typeof canRecordFinishes): Promise<{ actor: StaffAccount } | { session: true } | { refused: string }> {
+  try {
+    return { actor: await requireStaffCapability(capability) };
+  } catch (error) {
+    if (isDomainError(error) && error.code === "UNAUTHENTICATED") return { session: true };
+    if (isDomainError(error)) return { refused: error.code };
+    throw error;
+  }
+}
+
+/**
+ * A press of the island: one number — typed, or an elite's button — at the moment pressed (`claimedAtMs`, which the service holds to
+ * its bounds). The answer is the outcome — recorded (or already recorded by this viewer at that second: a retry), a duplicate with
+ * who stored it and when, or a refusal with its code and the time — and the page's state, so «Ultimii sosiți» and the elites' buttons
+ * follow every answer. A session that ended answers `session`: the entry stays on the phone until the volunteer signs in again.
+ */
+export async function recordFinishPressAction(input: unknown): Promise<FinishPressAnswer> {
+  const request = pressOf(input);
+  const door = await doorOf(canRecordFinishes);
+  if ("session" in door) return { kind: "session" };
+  const bibOrNull = Number.isInteger(request.bibNumber) && request.bibNumber > 0 ? request.bibNumber : null;
+  if ("refused" in door) return { kind: "answer", outcome: { kind: "refused", code: door.refused, bibNumber: bibOrNull, gunTimeMs: null }, state: null };
+  let outcome: FinishEntryOutcome;
+  try {
+    const recorded = await recordFinish(getDb(), door.actor, request, new Date());
+    outcome =
+      recorded.kind === "recorded"
+        ? { kind: "recorded", bibNumber: recorded.bibNumber, name: recorded.name, label: recorded.label, gunTimeMs: recorded.gunTimeMs, positionOverall: recorded.positionOverall, outOfRanking: recorded.outOfRanking, again: recorded.again }
+        : { kind: "duplicate", bibNumber: recorded.bibNumber, name: recorded.name, label: recorded.label, gunTimeMs: recorded.gunTimeMs, storedGunTimeMs: recorded.storedGunTimeMs, storedBy: recorded.storedBy };
+  } catch (error) {
+    if (error instanceof FinishError) outcome = { kind: "refused", code: error.code, bibNumber: error.bibNumber, gunTimeMs: error.gunTimeMs };
+    else if (isDomainError(error)) outcome = { kind: "refused", code: error.code, bibNumber: bibOrNull, gunTimeMs: null };
+    else throw error;
+  }
+  return { kind: "answer", outcome, state: await stateAfter(door.actor, request.eventId) };
+}
+
+/** «Anulează» of the island: one's own press of the last ten minutes, by its row's id; the answer carries the page's state. */
+export async function undoFinishPressAction(input: unknown): Promise<FinishUndoAnswer> {
+  const raw = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
+  const eventId = typeof raw.eventId === "string" && isUuid(raw.eventId) ? raw.eventId : "";
+  const resultId = typeof raw.resultId === "string" && isUuid(raw.resultId) ? raw.resultId : "";
+  const door = await doorOf(canRecordFinishes);
+  if ("session" in door) return { kind: "session" };
+  if ("refused" in door) return { kind: "answer", outcome: { kind: "refused", code: door.refused }, state: null };
+  try {
+    const undone = await undoFinish(getDb(), door.actor, { eventId, resultId }, new Date());
+    return { kind: "answer", outcome: { kind: "undone", bibNumber: undone.bibNumber }, state: await stateAfter(door.actor, eventId) };
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return { kind: "answer", outcome: { kind: "refused", code: error.code }, state: await stateAfter(door.actor, eventId) };
+  }
+}
+
+/** Back to the page for its event, with the outcome in the address: numbers and codes only, never a name. */
+function back(locale: Locale, eventId: string, outcome: Record<string, string>): never {
+  const query = new URLSearchParams();
+  if (eventId) query.set("eventId", eventId);
+  for (const [name, value] of Object.entries(outcome)) query.set(name, value);
+  redirect(`${getPathname({ locale, href: "/admin/checkin/cronometrare" })}?${query.toString()}`);
+}
+
+/**
+ * The box's «Sosit» and an elite's button with scripts off: the same service with the server's own clock (no moment is claimed),
+ * then back to the page saying what happened — `ok=<number>`, `dup=<number>&t=<this press's time>`, or `refused=<code>` with the
+ * number and the time to write down when there is one.
+ */
+export async function recordFinishFormAction(form: FormData): Promise<void> {
+  const locale = localeOf(form);
+  const eventId = eventIdOf(form);
+  const typed = field(form, "bib").trim();
+  const bibNumber = /^\d{1,6}$/.test(typed) ? Number(typed) : Number.NaN;
+  let outcome: Record<string, string>;
+  try {
+    const actor = await requireStaffCapability(canRecordFinishes);
+    if (!Number.isInteger(bibNumber) || bibNumber <= 0) throw new DomainError("VALIDATION_ERROR", "the race number is not a whole number", ["bib"]);
+    const recorded = await recordFinish(getDb(), actor, { eventId, bibNumber }, new Date());
+    outcome = recorded.kind === "recorded" ? { ok: String(bibNumber) } : { dup: String(bibNumber), t: String(recorded.gunTimeMs) };
+  } catch (error) {
+    if (error instanceof FinishError) outcome = { refused: error.code, bib: String(error.bibNumber), t: String(error.gunTimeMs) };
+    else if (isDomainError(error)) outcome = { refused: error.code, ...(Number.isInteger(bibNumber) && bibNumber > 0 ? { bib: String(bibNumber) } : {}) };
+    else throw error;
+  }
+  back(locale, eventId, outcome);
+}
+
+/** «Anulează» with scripts off: back to the page with `undone=<number>`, or the refusal's code. */
+export async function undoFinishFormAction(form: FormData): Promise<void> {
+  const locale = localeOf(form);
+  const eventId = eventIdOf(form);
+  let outcome: Record<string, string>;
+  try {
+    const actor = await requireStaffCapability(canRecordFinishes);
+    const undone = await undoFinish(getDb(), actor, { eventId, resultId: field(form, "resultId") }, new Date());
+    outcome = { undone: String(undone.bibNumber) };
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    outcome = { refused: error.code };
+  }
+  back(locale, eventId, outcome);
+}
+
+/**
+ * «Start», «Mută startul acum» and «Anulează startul» (`intent=start|clear`): whoever enters results, at the door and in the service.
+ * The moment is the tap the island wrote into the form (`claimedAtMs`), which the service keeps within thirty seconds of its own
+ * clock. Back to the page with `gun=set|cleared|unchanged`, or the refusal's code (`RACE_GUN_FIXED`, `RACE_GUN_WINDOW`, …).
+ */
+export async function setRaceGunAction(form: FormData): Promise<void> {
+  const locale = localeOf(form);
+  const eventId = eventIdOf(form);
+  const clear = field(form, "intent") === "clear";
+  const claimed = Number(field(form, "claimedAtMs"));
+  let outcome: Record<string, string>;
+  try {
+    const actor = await requireStaffCapability(canEnterResults);
+    const result = await setRaceGun(getDb(), actor, { eventId, clear, claimedAtMs: isInstant(claimed) ? claimed : null }, new Date());
+    outcome = { gun: !result.changed ? "unchanged" : clear ? "cleared" : "set" };
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    outcome = { refused: error.code };
+  }
+  back(locale, eventId, outcome);
+}

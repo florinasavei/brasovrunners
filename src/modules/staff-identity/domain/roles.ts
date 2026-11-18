@@ -804,6 +804,20 @@ export function canEnterResults(subject: StaffSubject): boolean {
 }
 
 /**
+ * **Recording a finish at the line (§NNN, amending §850)** — «Cronometrare», «Ziua cursei»'s timing page: a race number
+ * typed, or an elite's button pressed, as the runner crosses, and the press's own «Anulează» for ten minutes. The owner,
+ * 2026-11-18, three days before the race: «trebuie să am un mod ușor și eficient de a cronometra pentru voluntari», and,
+ * asked who: the desk's volunteers too. So **every staff role that works the desk** (`canWorkTheDesk`: the desk Volunteer,
+ * the Redactor, the Organizer, Tehnic and the Administrators), written as that function so the two lines move together;
+ * never a member, who is no staff (§524). A press sees what the desk already sees — a number, a name, a time — never an
+ * address. Everything else about a result stays `canEnterResults`': «Start», correcting, deleting, importing and reading
+ * «Clasament», and its «Istoricul sosirilor». Asserted in the page, both actions and again in the service (BR-REQ-060-01).
+ */
+export function canRecordFinishes(subject: StaffSubject): boolean {
+  return canWorkTheDesk(subject);
+}
+
+/**
  * **Publishing a race's results (§808)** — «Clasamentul e public pe pagina evenimentului»: the disclosure itself,
  * like the public participant list's switch (§201) and unlike the entering. **The Administrator and the
  * Superadministrator** alone (`canManageRegistrations`: whoever decides what the club tells the public about the

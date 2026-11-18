@@ -85,14 +85,19 @@ export type DomainErrorCode =
   | "RESULTS_NOT_OPEN"
   // The «Categorii de vârstă» box of a race's results cannot be read (§850): the sentence names what is wrong; nothing was saved.
   | "RESULTS_AGE_BANDS"
-  // «Sosire» (§850): the number typed at the line belongs to no confirmed registration; the sentence carries the stamped time to write down.
+  // «Cronometrare» (§850, §NNN): the number pressed at the line belongs to no confirmed registration and no line of the race's elite
+  // list; the line carries the stamped time to write down. (A number already «Sosit» is no refusal since §NNN: a duplicate, in the trail.)
   | "RESULT_BIB_UNKNOWN"
-  // «Sosire»: the number already has a «Sosit» time; a correction is «Clasament»'s.
-  | "RESULT_ALREADY_FINISHED"
-  // «Sosire» pressed before the gun: a finish cannot be before the start.
+  // «Cronometrare» pressed before the gun: a finish cannot be before the start.
   | "RESULT_FINISH_NOT_STARTED"
-  // «Sosire» pressed more than a day after the gun: the results are written on «Clasament» by then.
+  // «Cronometrare» pressed more than a day after the gun: the results are written on «Clasament» by then.
   | "RESULT_FINISH_CLOSED"
+  // «Anulează» at the line (§NNN) on a row that is not the viewer's own unchanged press of the last ten minutes: «Clasament» corrects it.
+  | "RESULT_UNDO_NOT_ALLOWED"
+  // «Start» outside its window (§NNN): from three hours before the planned gun to six hours after.
+  | "RACE_GUN_WINDOW"
+  // «Start» moved or taken off once a runner is «Sosit» (§NNN): the gun is fixed; a correction of the times is «Clasament»'s.
+  | "RACE_GUN_FIXED"
   // «Adaugă un lucru» on an event whose «Lucruri de adus» already holds the most a list may (§979): the sentence says how many.
   | "RACE_DAY_ITEMS_FULL"
   // A member tier deleted while members hold it (§811): give them another level first. The action adds how many.

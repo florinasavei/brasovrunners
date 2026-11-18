@@ -228,6 +228,19 @@ export const events = pgTable(
      */
     raceStartsAt: timestamp("race_starts_at", { withTimezone: true }),
 
+    /**
+     * «Start» on «Cronometrare» (§NNN; the owner, 2026-11-18: «un buton „Start" pe pagină, pe care îl apasă un
+     * organizator la pistol»): the moment the gun actually went, pressed at the start line by whoever enters results,
+     * and who pressed it. Null until pressed — then the planned gun (`race_starts_at`, else `starts_at`) is what the
+     * finish line counts from. **Read by the results alone** (`results/results.ts#gunOf`): the public page, the
+     * checkpoints' limits, the emails, iCal and the editor keep the planned times, so pressing it changes nothing a
+     * visitor or a runner reads. Moved by a second press and cleared by «Anulează startul» only while no «Sosit» result
+     * is stored; audited `event.race_gun_set` / `event.race_gun_cleared`. Never carried by a duplicate, a repeat, a
+     * series edit or the JSON file: a gun belongs to the one race that heard it.
+     */
+    raceGunAt: timestamp("race_gun_at", { withTimezone: true }),
+    raceGunByStaffUserId: uuid("race_gun_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
+
     timezone: text("timezone").notNull().default("Europe/Bucharest"),
 
     /**
@@ -1089,6 +1102,9 @@ export const events = pgTable(
           OR (${t.raceStartsAt} >= ${t.startsAt}
               AND (${t.endsAt} IS NULL OR ${t.raceStartsAt} <= ${t.endsAt}))`,
     ),
+
+    // «Start» (§NNN): who pressed it only beside the moment — the account may be removed (`SET NULL`), the moment stays.
+    check("events_race_gun_actor", sql`${t.raceGunByStaffUserId} IS NULL OR ${t.raceGunAt} IS NOT NULL`),
 
     /**
      * https only, at the database.

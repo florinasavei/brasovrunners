@@ -256,7 +256,10 @@ export const routing = defineRouting({
      * spelling in both locales, like `mesaje` and `urgente`: a backoffice address, read by the club.
      */
     "/admin/events/[id]/results": "/admin/events/[id]/results",
-    /** «Sosire» (§850): the finish line's page under «Clasament» — a number typed, a time stamped. One spelling in both locales, like `mesaje`. */
+    /**
+     * «Sosire» (§850): the finish line's page under «Clasament» until «Cronometrare» took its place (§NNN): kept so a saved link still
+     * works, it sends the reader on to `/admin/checkin/cronometrare?eventId=<id>`. One spelling in both locales, like `mesaje`.
+     */
     "/admin/events/[id]/results/sosire": "/admin/events/[id]/results/sosire",
     "/admin/staff": "/admin/staff",
     "/admin/registrations": "/admin/registrations",
@@ -315,6 +318,11 @@ export const routing = defineRouting({
     "/admin/checkin": "/admin/checkin",
     /** «Lucruri de adus» (§979): «Ziua cursei»'s checklist of the things to bring. A static segment, so it wins over `[code]`. */
     "/admin/checkin/lucruri": "/admin/checkin/lucruri",
+    /**
+     * «Cronometrare» (§NNN): «Ziua cursei»'s finish line — a number typed or an elite pressed as the runner crosses, saved at once.
+     * One spelling in both locales, like `lucruri`; a static segment, so it wins over `[code]`.
+     */
+    "/admin/checkin/cronometrare": "/admin/checkin/cronometrare",
     "/admin/checkin/[code]": "/admin/checkin/[code]",
     "/admin/legal": "/admin/legal",
     "/admin/legal/new": "/admin/legal/new",

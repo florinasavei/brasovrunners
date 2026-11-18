@@ -302,10 +302,17 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   saveEventResultsAction: "an editorial save of a race's results, undone by saving the old times again; it tells nobody, and on a ranking already public it edits the page like a save of a published page — making it public and a row's delete ask",
   // «Categorii de vârstă» (§850): a setting of the race's results, undone by typing the old ages again; it tells nobody and re-ranks what the next save would re-rank anyway.
   setResultAgeBandsAction: "an editorial save of the race's age groups, undone by saving the old ages (or an empty box) again; it tells nobody, deletes nothing and only ranks the saved results again",
-  // «Sosire» (§850): a finish line cannot ask before every runner; the stamped time is one line of the results, corrected or deleted on «Clasament».
   // «Premii» (§850): a setting of the card alone, undone by saving the old values again; nothing of the results moves.
   setResultAwardsAction: "an editorial save of how many places the podium lists and whether the categories are listed, undone by saving the old values again; it tells nobody and moves no result",
-  recordFinishAction: "one finisher's time stamped at the line, the same editorial save as a line of «Salvează tot clasamentul» — undone on «Clasament»; it tells nobody and deletes nothing",
+  // «Cronometrare» (§NNN, in «Sosire»'s place, §850): a finish line cannot ask before every runner — many arrive at once; the stamped time is one line of the results, the volunteer's own «Anulează» for ten minutes, then corrected or deleted on «Clasament».
+  recordFinishPressAction:
+    "one finisher's time stamped at the line, the same editorial save as a line of «Salvează tot clasamentul» — undone by the press's own «Anulează» or on «Clasament»; it tells nobody and deletes nothing, a second press of the number only writes the trail",
+  recordFinishFormAction: "the same press with scripts off: one finisher's time stamped at the line, undone by «Anulează» or on «Clasament»; it tells nobody and deletes nothing",
+  undoFinishPressAction:
+    "takes back the volunteer's own press of the last ten minutes, nobody having changed it — the press undone, the runner recorded again by pressing again; it tells nobody and touches nobody else's line",
+  undoFinishFormAction: "the same undo with scripts off: the volunteer's own unchanged press of the last ten minutes; pressing the number again records the runner again",
+  setRaceGunAction:
+    "«Start» pressed at the gun — its moment is the tap, so it cannot wait on a question — moved by another press, and taken off only after one («Anulează startul», a ConfirmSubmitButton); fixed after the first finisher; it tells nobody and changes nothing public",
   // «Ecusoane pentru voluntari» (§764): the club's own look of a printed strip, seen in the preview before the save.
   saveBadgeDesignAction: "an editorial save of the badges' look, undone by saving the old one; it tells nobody and prints nothing",
   saveBadgeRoleColoursAction: "an editorial save of the roles' band colours, undone by choosing again; it tells nobody",

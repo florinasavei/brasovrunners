@@ -1,59 +1,30 @@
-import { eq } from "drizzle-orm";
-import { createTranslator } from "next-intl";
-import { renderToStaticMarkup } from "react-dom/server";
+import { and, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import en from "../../../messages/en.json";
-import ro from "../../../messages/ro.json";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventResults } from "@/db/schema/event-results";
-import type { StaffUser } from "@/db/schema/staff-users";
+import { events } from "@/db/schema/events";
+import { registrations } from "@/db/schema/registrations";
+import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { FINISH_UNDO_WINDOW_MS } from "@/modules/results/domain/finish-line";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
-import { withClientWords } from "../../helpers/client-words";
-import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { createRace, person, RACE_STARTS_AT, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * §850 — «Sosire», the finish line (BR-REQ-050-02, BR-REQ-060-01): `recordFinish` stamps the time since the gun on a confirmed runner's
- * number, re-ranks, audits without a name and refuses what «Clasament» must handle (an unknown number with the time to write down, a
- * number already finished, a press before the gun, a group run, a role that may not); and the page as the server draws it, in both
- * languages — the clock, the box, the sentence after a press, «Ultimii sosiți» latest first.
+ * §850, §NNN — the finish line, «Cronometrare» (BR-REQ-050-02, BR-REQ-060-01): `recordFinish` stamps the time since the gun — the
+ * claimed press within the server's bounds, else its own — on a confirmed runner's number or an elite line's, re-ranks, audits without
+ * a name and refuses what «Clasament» must handle; every role that works the desk may press, a member may not; the same number twice
+ * keeps the first and writes the second to the trail, a retry of a saved press is no duplicate; `undoFinish` takes back one's own
+ * unchanged press for ten minutes; `setRaceGun` is «Start», pressed, moved and taken off until the first finisher, within its window;
+ * `readFinishLine` is the page's data; `readFinishHistory` is «Istoricul sosirilor» with who wrote each line.
  */
-const messages = { ro, en };
-let language: "ro" | "en" = "ro";
-const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown }));
 const revalidate = vi.hoisted(() => vi.fn());
-
 vi.mock("next/cache", () => ({ revalidatePath: () => {}, revalidateTag: () => {}, unstable_cache: (fn: unknown) => fn }));
 vi.mock("@/modules/public-cache/cache", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/modules/public-cache/cache")>()), revalidatePublicContent: revalidate }));
-vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, set: () => {}, delete: () => {} }), headers: async () => new Headers() }));
-vi.mock("@/auth", () => ({ auth: async () => null, signIn: async () => {}, signOut: async () => {} }));
-vi.mock("next/navigation", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("next/navigation")>()),
-  notFound: () => {
-    throw new Error("NEXT_NOT_FOUND");
-  },
-}));
-vi.mock("@/db/client", () => ({ getDb: () => state.db }));
-vi.mock("@/modules/staff-identity/session", () => ({
-  DEV_STAFF_COOKIE: "dev-staff",
-  requireStaff: async () => state.actor,
-  requireStaffCapability: async () => state.actor,
-}));
-vi.mock("@/app/[locale]/admin/events/[id]/results/actions", () => ({ recordFinishAction: async () => null }));
-vi.mock("next-intl/server", () => ({
-  setRequestLocale: () => {},
-  getLocale: async () => language,
-  getMessages: async () => messages[language],
-  getTranslations: async (arg?: string | { locale?: "ro" | "en"; namespace: string }) => {
-    const locale = typeof arg === "object" && arg.locale ? arg.locale : language;
-    const namespace = typeof arg === "string" ? arg : arg?.namespace;
-    return createTranslator({ locale, messages: messages[locale] as never, namespace: namespace as never });
-  },
-}));
 
-const { default: FinishPage } = await import("@/app/[locale]/admin/events/[id]/results/sosire/page");
-const { FinishError, gunOf, readFinishPage, recordFinish, saveEventResults } = await import("@/modules/results/results");
+const { FinishError, gunOf, readEventResults, readFinishLine, recordFinish, saveEventResults, setRaceGun, undoFinish } = await import("@/modules/results/results");
+const { readFinishHistory } = await import("@/modules/results/finish-history");
 
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -61,153 +32,325 @@ let raceId: string;
 const staff: Partial<Record<StaffRole, StaffUser>> = {};
 const GUN = RACE_STARTS_AT;
 const at = (minutes: number, seconds = 0) => new Date(GUN.getTime() + minutes * 60_000 + seconds * 1000);
+const ms = (minutes: number, seconds = 0) => minutes * 60_000 + seconds * 1000;
 
 beforeAll(async () => {
   ({ db, close } = await createTestDatabase());
-  state.db = db;
 });
 afterAll(async () => close());
 
 beforeEach(async () => {
   await resetTables(db);
   resetNoticeCounter();
-  language = "ro";
   revalidate.mockClear();
   for (const [role, name] of [["ADMIN", "Ana Admin"], ["MODERATOR", "Oana Organizator"], ["DEV", "Tudor Tehnic"], ["CONTRIBUTOR", "Vlad Voluntar"], ["COPYWRITER", "Radu Redactor"], ["MEMBER", "Membru Club"]] as const) staff[role] = await person(db, role, name);
   raceId = (await createRace(db)).id;
-  state.actor = staff.ADMIN;
   await registerRunner(db, raceId, { name: "Ana Popescu", bibNumber: 101, sex: "FEMALE", birthDate: "1996-05-01" });
   await registerRunner(db, raceId, { name: "Bia Marin", bibNumber: 102, sex: "FEMALE", birthDate: "1985-03-10" });
   await registerRunner(db, raceId, { name: "Dan Ionescu", bibNumber: 103, sex: "MALE", birthDate: "1996-11-21" });
 });
 
-const finish = (bib: number, now: Date, actor: StaffUser = staff.ADMIN!) => recordFinish(db, actor, { eventId: raceId, bibNumber: bib }, now);
+const finish = (bib: number, now: Date, actor: StaffUser = staff.CONTRIBUTOR!, claimedAt?: Date) =>
+  recordFinish(db, actor, { eventId: raceId, bibNumber: bib, claimedAtMs: claimedAt?.getTime() ?? null }, now);
 const stored = () => db.select().from(eventResults).where(eq(eventResults.eventId, raceId)).orderBy(eventResults.bibNumber);
-const trail = async () => (await db.select().from(auditLogs).where(eq(auditLogs.entityId, raceId)).orderBy(auditLogs.createdAt, auditLogs.id)).filter((row) => row.action.startsWith("event_result."));
+const trail = async () => (await db.select().from(auditLogs).where(eq(auditLogs.entityId, raceId)).orderBy(auditLogs.createdAt, auditLogs.id)).filter((row) => row.action.startsWith("event_result.") || row.action.startsWith("event.race_gun"));
 
-async function render(id = raceId, locale: "ro" | "en" = language, search: { ok?: string; finishError?: string } = {}, now = at(50)) {
-  language = locale;
-  const element = await atTheClock(now, () => FinishPage({ params: Promise.resolve({ locale, id }), searchParams: Promise.resolve(search) }));
-  return renderToStaticMarkup(withClientWords(element, locale));
+/** A line of the race's elite list, as the Administrator typed it (§895, §975). */
+async function eliteLine(name: string, bibNumber: number | null, over: Partial<typeof eventEliteEntries.$inferInsert> = {}) {
+  const [line] = await db.insert(eventEliteEntries).values({ eventId: raceId, name, bibNumber, ...over }).returning();
+  return line;
 }
-const text = (html: string) => html.replace(/<style[\s\S]*?<\/style>/g, "").replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/\s+/g, " ");
 
-describe("§850 recordFinish — the time since the gun, stamped", () => {
+describe("§850 §NNN recordFinish — the time since the gun, stamped", () => {
   it("writes «Sosit» with the time since the gun, ranks, audits the number and the times and never a name, and tells the public cache", async () => {
     const first = await finish(102, at(45, 12));
-    expect(first).toEqual({ bibNumber: 102, name: "Bia Marin", gunTimeMs: 45 * 60_000 + 12_000, positionOverall: 1 });
+    expect(first).toMatchObject({ kind: "recorded", bibNumber: 102, name: "Bia Marin", label: null, gunTimeMs: ms(45, 12), positionOverall: 1, outOfRanking: false, again: false });
     const second = await finish(101, at(50));
-    expect(second).toMatchObject({ bibNumber: 101, gunTimeMs: 50 * 60_000, positionOverall: 2 });
-    expect((await stored()).map((row) => [row.bibNumber, row.status, row.gunTimeMs, row.positionOverall, row.positionSex, row.categoryKey])).toEqual([
-      [101, "FINISHED", 3_000_000, 2, 2, "FEMALE:from30"],
-      [102, "FINISHED", 2_712_000, 1, 1, "FEMALE:from40"],
+    expect(second).toMatchObject({ kind: "recorded", bibNumber: 101, gunTimeMs: ms(50), positionOverall: 2 });
+    expect((await stored()).map((row) => [row.bibNumber, row.status, row.gunTimeMs, row.positionOverall, row.positionSex, row.categoryKey, row.updatedByStaffUserId])).toEqual([
+      [101, "FINISHED", 3_000_000, 2, 2, "FEMALE:from30", staff.CONTRIBUTOR!.id],
+      [102, "FINISHED", 2_712_000, 1, 1, "FEMALE:from40", staff.CONTRIBUTOR!.id],
     ]);
     const rows = await trail();
     expect(rows.map((row) => row.action)).toEqual(["event_result.created", "event_result.created"]);
     expect(rows[0].metadataJson).toEqual({ bibNumber: 102, status: "FINISHED", gunTimeMs: 2_712_000, chipTimeMs: null, finishLine: true });
+    expect(rows[0].actorStaffUserId).toBe(staff.CONTRIBUTOR!.id);
     expect(JSON.stringify(rows.map((row) => row.metadataJson))).not.toContain("Marin");
     expect(revalidate).toHaveBeenCalledTimes(2);
   });
 
-  it("counts from the race's own gun when the club stated one, else from the event's start", async () => {
+  it("counts from «Start» when pressed, else the race's own start, else the event's", async () => {
     expect(gunOf({ startsAt: GUN, raceStartsAt: null })).toEqual(GUN);
     const later = new Date(GUN.getTime() + 3_600_000);
     expect(gunOf({ startsAt: GUN, raceStartsAt: later })).toEqual(later);
+    const pressed = new Date(later.getTime() + 2 * 60_000 + 3_000);
+    expect(gunOf({ startsAt: GUN, raceStartsAt: later, raceGunAt: pressed })).toEqual(pressed);
     const withGun = await createRace(db, { raceStartsAt: later });
     await registerRunner(db, withGun.id, { name: "Eli Vasile", bibNumber: 7, sex: "MALE", birthDate: "1990-01-01" });
     // Fifty minutes after the gathering is ten minutes before the gun: refused; thirty minutes after the gun is a 30:00.
     await expect(recordFinish(db, staff.ADMIN!, { eventId: withGun.id, bibNumber: 7 }, at(50))).rejects.toMatchObject({ code: "RESULT_FINISH_NOT_STARTED" });
-    expect((await recordFinish(db, staff.ADMIN!, { eventId: withGun.id, bibNumber: 7 }, new Date(later.getTime() + 30 * 60_000))).gunTimeMs).toBe(30 * 60_000);
+    expect(await recordFinish(db, staff.ADMIN!, { eventId: withGun.id, bibNumber: 7 }, new Date(later.getTime() + 30 * 60_000))).toMatchObject({ gunTimeMs: 30 * 60_000 });
   });
 
-  it("refuses an unknown or unconfirmed number carrying the stamped time, a number already finished carrying the stored time, and a press before the gun", async () => {
+  it("refuses an unknown or unconfirmed number carrying the stamped time, a press before the gun, a day after it, and a number that is no number", async () => {
     const unknown = await finish(900, at(42, 13)).catch((error: unknown) => error);
     expect(unknown).toBeInstanceOf(FinishError);
-    expect(unknown).toMatchObject({ code: "RESULT_BIB_UNKNOWN", bibNumber: 900, gunTimeMs: 42 * 60_000 + 13_000, fields: ["bib"] });
+    expect(unknown).toMatchObject({ code: "RESULT_BIB_UNKNOWN", bibNumber: 900, gunTimeMs: ms(42, 13), fields: ["bib"] });
     await registerRunner(db, raceId, { name: "Cancelled Runner", bibNumber: 104, sex: "MALE", birthDate: "1990-01-01", status: "CANCELLED" });
     await expect(finish(104, at(43))).rejects.toMatchObject({ code: "RESULT_BIB_UNKNOWN", bibNumber: 104 });
-
-    await finish(102, at(45, 12));
-    const again = await finish(102, at(46)).catch((error: unknown) => error);
-    expect(again).toMatchObject({ code: "RESULT_ALREADY_FINISHED", bibNumber: 102, gunTimeMs: 45 * 60_000 + 12_000 });
-
     await expect(finish(101, new Date(GUN.getTime() - 1000))).rejects.toMatchObject({ code: "RESULT_FINISH_NOT_STARTED" });
     await expect(finish(101, GUN)).rejects.toMatchObject({ code: "RESULT_FINISH_NOT_STARTED" });
     await expect(finish(0, at(1))).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
     // A day after the gun the line is closed: the times are «Clasament»'s to type, and a 25-hour time would not fit the column anyway.
     await expect(finish(103, new Date(GUN.getTime() + 25 * 3_600_000))).rejects.toMatchObject({ code: "RESULT_FINISH_CLOSED" });
-    // Stamped to the second: the half second of the press is dropped, and a press within the first second reads 0:00:01.
-    expect((await finish(103, new Date(at(40, 7).getTime() + 500))).gunTimeMs).toBe(40 * 60_000 + 7_000);
-    expect((await stored()).map((row) => row.bibNumber)).toEqual([102, 103]);
+    // Stamped to the second: the half second of the press is dropped.
+    expect(await finish(103, new Date(at(40, 7).getTime() + 500))).toMatchObject({ gunTimeMs: ms(40, 7) });
+    expect((await stored()).map((row) => row.bibNumber)).toEqual([103]);
   });
 
   it("turns a runner written off by mistake into «Sosit» at the stamped time, keeping the note, and audits the change", async () => {
     await saveEventResults(db, staff.ADMIN!, { eventId: raceId, rows: [{ key: "r[101]", bib: "101", name: "", sex: "", birthDate: "", time: "", status: "DNF", chip: "", note: "a renunțat la km 5", agreed: "" }] }, at(30));
-    const recorded = await finish(101, at(55));
-    expect(recorded).toMatchObject({ bibNumber: 101, gunTimeMs: 55 * 60_000, positionOverall: 1 });
+    expect(await finish(101, at(55))).toMatchObject({ kind: "recorded", bibNumber: 101, gunTimeMs: ms(55), positionOverall: 1 });
     const [row] = await stored();
-    expect(row).toMatchObject({ bibNumber: 101, status: "FINISHED", gunTimeMs: 55 * 60_000, note: "a renunțat la km 5" });
-    expect((await trail()).at(-1)).toMatchObject({ action: "event_result.updated", metadataJson: { bibNumber: 101, status: "FINISHED", gunTimeMs: 55 * 60_000, chipTimeMs: null, changed: ["time", "status"], finishLine: true } });
+    expect(row).toMatchObject({ bibNumber: 101, status: "FINISHED", gunTimeMs: ms(55), note: "a renunțat la km 5" });
+    expect((await trail()).at(-1)).toMatchObject({ action: "event_result.updated", metadataJson: { bibNumber: 101, status: "FINISHED", gunTimeMs: ms(55), chipTimeMs: null, changed: ["time", "status"], finishLine: true } });
   });
 
-  it("is open to whoever enters results and refused to everyone else, and refused on an event that is not a race", async () => {
-    await expect(finish(103, at(40), staff.MODERATOR)).resolves.toMatchObject({ bibNumber: 103 });
-    for (const role of ["DEV", "CONTRIBUTOR", "COPYWRITER", "MEMBER"] as const) await expect(finish(101, at(41), staff[role]), role).rejects.toMatchObject({ code: "FORBIDDEN" });
+  it("is open to every role that works the desk — the desk Volunteer included — and refused to a member, and on an event that is not a race", async () => {
+    for (const [role, bib] of [["CONTRIBUTOR", 101], ["COPYWRITER", 102], ["DEV", 103]] as const) await expect(finish(bib, at(40), staff[role]), role).resolves.toMatchObject({ kind: "recorded", bibNumber: bib });
+    await expect(finish(101, at(41), staff.MEMBER)).rejects.toMatchObject({ code: "FORBIDDEN" });
     const run = await createRace(db, { type: "GROUP_RUN" });
     await expect(recordFinish(db, staff.ADMIN!, { eventId: run.id, bibNumber: 1 }, at(40))).rejects.toMatchObject({ code: "RESULTS_NOT_OPEN" });
     await expect(recordFinish(db, staff.ADMIN!, { eventId: "not-an-id", bibNumber: 1 }, at(40))).rejects.toMatchObject({ code: "NOT_FOUND" });
-    for (const role of ["DEV", "CONTRIBUTOR"] as const) await expect(readFinishPage(db, staff[role]!, raceId, 5)).rejects.toMatchObject({ code: "FORBIDDEN" });
-  });
-
-  it("lists the latest finishers first, with the live overall place, and counts the finished and the numbered", async () => {
-    await finish(102, at(45));
-    await finish(101, at(50));
-    await finish(103, at(44));
-    // Latest *recorded* first — the press's clock, not the race time: 101 was pressed at 50:00, 102 at 45:00, 103 at 44:00.
-    const view = await readFinishPage(db, staff.ADMIN!, raceId, 2);
-    expect(view.recent.map((row) => [row.bibNumber, row.name, row.gunTimeMs, row.positionOverall])).toEqual([
-      [101, "Ana Popescu", 50 * 60_000, 3],
-      [102, "Bia Marin", 45 * 60_000, 2],
-    ]);
-    expect(view.finished).toBe(3);
-    expect(view.withNumber).toBe(3);
+    await expect(readFinishLine(db, staff.MEMBER!, raceId, at(40), 5)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(readFinishLine(db, staff.CONTRIBUTOR!, raceId, at(40), 5)).resolves.toMatchObject({ finished: 3 });
   });
 });
 
-describe("§850 the «Sosire» page", () => {
-  it("draws the gun, the clock since it, the number box and «Sosit», and says nobody has finished", async () => {
-    const html = await render();
-    expect(html).toContain('data-testid="finish-title"');
-    expect(html).toContain('data-testid="finish-clock"');
-    expect(html).toContain('name="bib"');
-    expect(html).toMatch(/inputmode="numeric"/i);
-    const words = text(html);
-    expect(words).toContain("De la start: 0:50:00");
-    expect(words).toContain("Sosit");
-    expect(words).toContain("Nimeni nu a sosit încă.");
-    expect(words).toContain("0 sosiți din 3 cu număr");
-    expect(words).not.toContain("Cursa nu a început încă");
+describe("§NNN the claimed time: the moment pressed, within the server's bounds", () => {
+  it("stamps a queued press with the moment it was pressed, not the moment it arrived", async () => {
+    expect(await finish(101, at(50), staff.CONTRIBUTOR, at(45, 12))).toMatchObject({ gunTimeMs: ms(45, 12) });
+    // Five seconds ahead of the server is a phone's clock, taken; six is a runner not yet arrived: the server's own.
+    expect(await finish(102, at(50), staff.CONTRIBUTOR, at(50, 5))).toMatchObject({ gunTimeMs: ms(50, 5) });
+    expect(await finish(103, at(50), staff.CONTRIBUTOR, at(50, 6))).toMatchObject({ gunTimeMs: ms(50) });
   });
 
-  it("says who just finished from `?ok=`, lists the latest first and says the English words on the English page", async () => {
-    await finish(102, at(45, 12));
-    await finish(101, at(50));
-    const words = text(await render(raceId, "ro", { ok: "101" }, at(51)));
-    expect(words).toContain("Sosit: #101 Ana Popescu · 0:50:00 · locul 2");
-    expect(words).toMatch(/Ultimii sosiți.*#101 Ana Popescu · 0:50:00 · locul 2.*#102 Bia Marin · 0:45:12 · locul 1/);
-    expect(words).toContain("2 sosiți din 3 cu număr");
-    const english = text(await render(raceId, "en", {}, at(51)));
-    expect(english).toContain("Latest finishers");
-    expect(english).toContain("Since the start: 0:51:00");
-    expect(english).toContain("2 finished of 3 with a number");
+  it("takes its own time for a claim under a second or before the gun", async () => {
+    expect(await finish(101, at(50), staff.CONTRIBUTOR, new Date(GUN.getTime() + 400))).toMatchObject({ gunTimeMs: ms(50) });
+    expect(await finish(102, at(50), staff.CONTRIBUTOR, new Date(GUN.getTime() - 60_000))).toMatchObject({ gunTimeMs: ms(50) });
+  });
+});
+
+describe("§NNN the same number twice: the first stored wins", () => {
+  it("answers a retry of a saved press — the same volunteer, the same second — as saved, writing nothing", async () => {
+    await finish(101, at(45, 20), staff.CONTRIBUTOR, at(45, 12));
+    const [before] = await stored();
+    revalidate.mockClear();
+    const retry = await finish(101, at(46), staff.CONTRIBUTOR, at(45, 12));
+    expect(retry).toMatchObject({ kind: "recorded", bibNumber: 101, gunTimeMs: ms(45, 12), again: true, positionOverall: 1 });
+    expect(await stored()).toEqual([before]);
+    expect((await trail()).map((row) => row.action)).toEqual(["event_result.created"]);
+    expect(revalidate).not.toHaveBeenCalled();
   });
 
-  it("says the race has not started before the gun, says a group run has no results, and is a 404 for a role that may not", async () => {
-    const words = text(await render(raceId, "ro", {}, new Date(GUN.getTime() - 60_000)));
-    expect(words).toContain("Cursa nu a început încă");
+  it("keeps the first row untouched and writes another volunteer's press — or the same one's another second — to the trail with both times", async () => {
+    await finish(101, at(45, 20), staff.CONTRIBUTOR, at(45, 12));
+    const [before] = await stored();
+    const other = await finish(101, at(45, 30), staff.MODERATOR, at(45, 14));
+    expect(other).toMatchObject({ kind: "duplicate", bibNumber: 101, name: "Ana Popescu", gunTimeMs: ms(45, 14), storedGunTimeMs: ms(45, 12), storedBy: "Vlad Voluntar" });
+    const later = await finish(101, at(46), staff.CONTRIBUTOR, at(45, 59));
+    expect(later).toMatchObject({ kind: "duplicate", gunTimeMs: ms(45, 59), storedGunTimeMs: ms(45, 12), storedBy: "Vlad Voluntar" });
+    expect(await stored()).toEqual([before]);
+    const rows = await trail();
+    expect(rows.map((row) => [row.action, row.actorStaffUserId])).toEqual([
+      ["event_result.created", staff.CONTRIBUTOR!.id],
+      ["event_result.finish_duplicate", staff.MODERATOR!.id],
+      ["event_result.finish_duplicate", staff.CONTRIBUTOR!.id],
+    ]);
+    expect(rows[1].metadataJson).toEqual({ bibNumber: 101, gunTimeMs: ms(45, 14), storedGunTimeMs: ms(45, 12), finishLine: true });
+  });
+
+  it("says «cont șters» — no name — for a stored row whose account is gone", async () => {
+    const [gone] = await db.insert(staffUsers).values({ email: "gone@example.test", displayName: "Fost Voluntar", role: "CONTRIBUTOR" }).returning();
+    await finish(102, at(44), gone);
+    await db.delete(staffUsers).where(eq(staffUsers.id, gone.id));
+    expect(await finish(102, at(45), staff.CONTRIBUTOR)).toMatchObject({ kind: "duplicate", storedBy: null, storedGunTimeMs: ms(44) });
+  });
+});
+
+describe("§NNN an elite at the line", () => {
+  it("records a line of the race's elite list as a typed row with the line's name and number, nothing else of a person", async () => {
+    await eliteLine("Andrei Munteanu", 7, { bibLabel: "Andrei M." });
+    const recorded = await finish(7, at(31, 5));
+    expect(recorded).toMatchObject({ kind: "recorded", bibNumber: 7, name: "Andrei Munteanu", label: "Andrei M.", gunTimeMs: ms(31, 5), positionOverall: 1, outOfRanking: false });
+    const [row] = await stored();
+    expect(row).toMatchObject({ bibNumber: 7, registrationId: null, displayName: "Andrei Munteanu", sex: null, birthDate: null, nameAgreedAt: null, nameAgreedByStaffUserId: null, status: "FINISHED" });
+    // «Clasament» draws it as a typed runner, the same row.
+    const view = await readEventResults(db, staff.ADMIN!, raceId);
+    expect(view.typed.map((runner) => [runner.bibNumber, runner.name, runner.result?.status])).toEqual([[7, "Andrei Munteanu", "FINISHED"]]);
+  });
+
+  it("runs a line left out of the ranking hors concours (rule 3): no place, and nobody else's moves", async () => {
+    await eliteLine("Ion Rapid", 8, { inResults: false });
+    expect(await finish(8, at(29))).toMatchObject({ kind: "recorded", positionOverall: null, outOfRanking: true });
+    expect(await finish(101, at(40))).toMatchObject({ positionOverall: 1 });
+    const rows = await stored();
+    expect(rows.map((row) => [row.bibNumber, row.positionOverall])).toEqual([
+      [8, null],
+      [101, 1],
+    ]);
+  });
+
+  it("says a registration marked «Elită» by its label, and draws the elites' buttons by label, the numberless disabled", async () => {
+    const elite = await registerRunner(db, raceId, { name: "Silviu Dobre", bibNumber: 110, sex: "MALE", birthDate: "1992-01-01" });
+    await db.update(registrations).set({ elite: true, firstName: "Silviu" }).where(eq(registrations.id, elite.id));
+    const unnumbered = await registerRunner(db, raceId, { name: "Paul Stan", bibNumber: null, sex: "MALE", birthDate: "1990-01-01" });
+    await db.update(registrations).set({ elite: true, firstName: "Paul" }).where(eq(registrations.id, unnumbered.id));
+    await eliteLine("Ana Lungu", 9);
+    await eliteLine("Ștefan Iordache", null);
+    expect(await finish(110, at(28))).toMatchObject({ label: "Silviu", name: "Silviu Dobre" });
+    const view = await readFinishLine(db, staff.CONTRIBUTOR!, raceId, at(29), 20);
+    expect(view.elites.map((button) => [button.label, button.name, button.bibNumber, button.kind, button.finishedGunTimeMs])).toEqual([
+      ["Ana", "Ana Lungu", 9, "line", null],
+      ["Paul", "Paul Stan", null, "registration", null],
+      ["Silviu", "Silviu Dobre", 110, "registration", ms(28)],
+      ["Ștefan", "Ștefan Iordache", null, "line", null],
+    ]);
+  });
+});
+
+describe("§NNN «Anulează» at the line: one's own unchanged press, ten minutes", () => {
+  const resultOf = async (bib: number) => (await stored()).find((row) => row.bibNumber === bib)!;
+
+  it("deletes the volunteer's own press of the last ten minutes, ranks the others again and audits the undo", async () => {
+    await finish(101, at(40));
+    await finish(102, at(41));
+    const row = await resultOf(101);
+    revalidate.mockClear();
+    expect(await undoFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, resultId: row.id }, new Date(row.createdAt.getTime() + FINISH_UNDO_WINDOW_MS))).toEqual({ bibNumber: 101 });
+    expect((await stored()).map((one) => [one.bibNumber, one.positionOverall])).toEqual([[102, 1]]);
+    expect((await trail()).at(-1)).toMatchObject({ action: "event_result.deleted", actorStaffUserId: staff.CONTRIBUTOR!.id, metadataJson: { bibNumber: 101, status: "FINISHED", gunTimeMs: ms(40), finishLine: true, undo: true } });
+    expect(revalidate).toHaveBeenCalledTimes(1);
+    await expect(undoFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, resultId: row.id }, at(42))).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("refuses another's press, one past ten minutes, a row changed since and a member", async () => {
+    await finish(101, at(40));
+    const row = await resultOf(101);
+    await expect(undoFinish(db, staff.MODERATOR!, { eventId: raceId, resultId: row.id }, at(41))).rejects.toMatchObject({ code: "RESULT_UNDO_NOT_ALLOWED" });
+    await expect(undoFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, resultId: row.id }, new Date(row.createdAt.getTime() + FINISH_UNDO_WINDOW_MS + 1))).rejects.toMatchObject({ code: "RESULT_UNDO_NOT_ALLOWED" });
+    await expect(undoFinish(db, staff.MEMBER!, { eventId: raceId, resultId: row.id }, at(41))).rejects.toMatchObject({ code: "FORBIDDEN" });
+    // Corrected on «Clasament» since — by its writer even: changed, so «Clasament»'s now.
+    await db.update(eventResults).set({ note: "verificat", updatedAt: at(40, 30) }).where(eq(eventResults.id, row.id));
+    await expect(undoFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, resultId: row.id }, at(41))).rejects.toMatchObject({ code: "RESULT_UNDO_NOT_ALLOWED" });
+    // A runner written off and turned «Sosit» at the line was changed, not written: no undo here either.
+    await saveEventResults(db, staff.ADMIN!, { eventId: raceId, rows: [{ key: "r[102]", bib: "102", name: "", sex: "", birthDate: "", time: "", status: "DNS", chip: "", note: "", agreed: "" }, { key: "r[101]", bib: "101", name: "", sex: "", birthDate: "", time: "40:00", status: "", chip: "", note: "verificat", agreed: "" }] }, at(30));
+    await finish(102, at(43));
+    await expect(undoFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, resultId: (await resultOf(102)).id }, at(44))).rejects.toMatchObject({ code: "RESULT_UNDO_NOT_ALLOWED" });
+    expect((await stored()).map((one) => one.bibNumber)).toEqual([101, 102]);
+  });
+});
+
+describe("§NNN «Start»: the gun as pressed", () => {
+  const press = (now: Date, actor: StaffUser = staff.MODERATOR!, claimed?: Date) => setRaceGun(db, actor, { eventId: raceId, clear: false, claimedAtMs: claimed?.getTime() ?? null }, now);
+  const clear = (now: Date, actor: StaffUser = staff.MODERATOR!) => setRaceGun(db, actor, { eventId: raceId, clear: true }, now);
+  const gunAt = async () => (await db.select({ at: events.raceGunAt, by: events.raceGunByStaffUserId, version: events.version }).from(events).where(eq(events.id, raceId)))[0];
+
+  it("sets the gun to the tap within thirty seconds of the server's clock, moves it on a second press and counts the finishes from it", async () => {
+    const { version } = await gunAt();
+    expect(await press(at(2, 5), staff.MODERATOR, at(2, 3))).toEqual({ changed: true, gunAt: at(2, 3) });
+    expect(await gunAt()).toEqual({ at: at(2, 3), by: staff.MODERATOR!.id, version });
+    // A tap claimed a minute off is no tap of this press: the server's own clock.
+    expect(await press(at(2, 30), staff.ADMIN, at(1, 0))).toEqual({ changed: true, gunAt: at(2, 30) });
+    expect(await finish(101, at(47, 30))).toMatchObject({ gunTimeMs: ms(45) });
+    const rows = await trail();
+    expect(rows.filter((row) => row.action.startsWith("event.race_gun")).map((row) => [row.action, row.metadataJson])).toEqual([
+      ["event.race_gun_set", { at: at(2, 3).toISOString(), previous: null }],
+      ["event.race_gun_set", { at: at(2, 30).toISOString(), previous: at(2, 3).toISOString() }],
+    ]);
+  });
+
+  it("takes the gun off, back to the planned start, and finds nothing to take off twice", async () => {
+    await press(at(1));
+    expect(await clear(at(1, 30))).toEqual({ changed: true, gunAt: null });
+    expect(await gunAt()).toMatchObject({ at: null, by: null });
+    expect(await clear(at(1, 40))).toEqual({ changed: false, gunAt: null });
+    expect((await trail()).map((row) => [row.action, row.metadataJson])).toEqual([
+      ["event.race_gun_set", { at: at(1).toISOString(), previous: null }],
+      ["event.race_gun_cleared", { previous: at(1).toISOString() }],
+    ]);
+  });
+
+  it("is fixed once a runner is «Sosit», pressed only from three hours before the planned gun to six after, and only by whoever enters results", async () => {
+    await expect(press(new Date(GUN.getTime() - 3 * 3_600_000 - 1000))).rejects.toMatchObject({ code: "RACE_GUN_WINDOW" });
+    await expect(press(new Date(GUN.getTime() + 6 * 3_600_000 + 1000))).rejects.toMatchObject({ code: "RACE_GUN_WINDOW" });
+    for (const role of ["CONTRIBUTOR", "COPYWRITER", "DEV", "MEMBER"] as const) await expect(press(at(1), staff[role]), role).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await press(new Date(GUN.getTime() - 3 * 3_600_000));
+    await finish(101, at(40));
+    await expect(press(at(41))).rejects.toMatchObject({ code: "RACE_GUN_FIXED" });
+    await expect(clear(at(41))).rejects.toMatchObject({ code: "RACE_GUN_FIXED" });
     const run = await createRace(db, { type: "GROUP_RUN" });
-    expect(text(await render(run.id))).toContain("Doar o cursă are clasament");
-    state.actor = staff.CONTRIBUTOR;
-    await expect(render()).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(setRaceGun(db, staff.ADMIN!, { eventId: run.id, clear: false }, at(1))).rejects.toMatchObject({ code: "RESULTS_NOT_OPEN" });
+  });
+
+  it("is read by the finish line alone: «Clasament»'s, «Cronometrare»'s gun; the editor's planned start untouched", async () => {
+    await press(at(3));
+    const view = await readFinishLine(db, staff.CONTRIBUTOR!, raceId, at(4), 20);
+    expect(view.gun).toMatchObject({ at: at(3), pressed: true, byName: "Oana Organizator", planned: GUN, fixed: false, windowOpen: true });
+    const [row] = await db.select({ startsAt: events.startsAt, raceStartsAt: events.raceStartsAt }).from(events).where(eq(events.id, raceId));
+    expect(row).toEqual({ startsAt: GUN, raceStartsAt: null });
+  });
+});
+
+describe("§NNN readFinishLine — «Ultimii sosiți» with who entered each", () => {
+  it("lists the latest written first with the live place, who wrote it, and until when the viewer may undo their own", async () => {
+    await finish(102, at(45), staff.CONTRIBUTOR);
+    await finish(101, at(50), staff.MODERATOR);
+    await finish(103, at(44), staff.CONTRIBUTOR);
+    // Latest *written* first — the press's clock, not the race time: 101 was pressed at 50:00, 102 at 45:00, 103 at 44:00.
+    const view = await readFinishLine(db, staff.CONTRIBUTOR!, raceId, at(50, 30), 2);
+    expect(view.recent.map((line) => [line.bibNumber, line.name, line.gunTimeMs, line.positionOverall, line.by, line.changed, line.undoUntilMs !== null])).toEqual([
+      [101, "Ana Popescu", ms(50), 3, "Oana Organizator", false, false],
+      [102, "Bia Marin", ms(45), 2, "Vlad Voluntar", false, true],
+    ]);
+    expect(view.finished).toBe(3);
+    expect(view.withNumber).toBe(3);
+    // Ten minutes after it was written, the volunteer's own line has no «Anulează» any more.
+    const later = await readFinishLine(db, staff.CONTRIBUTOR!, raceId, at(60), 3);
+    expect(later.recent.find((line) => line.bibNumber === 102)?.undoUntilMs).toBeNull();
+  });
+});
+
+describe("§NNN «Istoricul sosirilor»", () => {
+  it("names who wrote each line, newest first, from the line and from «Clasament», with the number's name of today and never one in the trail", async () => {
+    await setRaceGun(db, staff.MODERATOR!, { eventId: raceId, clear: false }, at(0, 0));
+    await finish(101, at(40), staff.CONTRIBUTOR);
+    await finish(101, at(41), staff.DEV);
+    const row = (await stored())[0];
+    await undoFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, resultId: row.id }, at(42));
+    await saveEventResults(db, staff.ADMIN!, { eventId: raceId, rows: [{ key: "r[101]", bib: "101", name: "", sex: "", birthDate: "", time: "40:00", status: "", chip: "", note: "", agreed: "" }] }, at(43));
+    const history = await readFinishHistory(db, staff.MODERATOR!, raceId);
+    expect(history.limited).toBe(false);
+    expect(history.lines.map((line) => [line.what.kind, line.who, line.where, line.liveName])).toEqual([
+      ["created", "Ana Admin", "results", "Ana Popescu"],
+      ["undo", "Vlad Voluntar", "timing", "Ana Popescu"],
+      ["duplicate", "Tudor Tehnic", "timing", "Ana Popescu"],
+      ["finish", "Vlad Voluntar", "timing", "Ana Popescu"],
+      ["gunSet", "Oana Organizator", "timing", null],
+    ]);
+    const trailText = JSON.stringify((await db.select().from(auditLogs).where(and(eq(auditLogs.entityId, raceId)))).map((one) => one.metadataJson));
+    expect(trailText).not.toContain("Popescu");
+    await expect(readFinishHistory(db, staff.CONTRIBUTOR!, raceId)).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("says nobody for an account removed since, and keeps the line", async () => {
+    const [gone] = await db.insert(staffUsers).values({ email: "gone2@example.test", displayName: "Fost Voluntar", role: "CONTRIBUTOR" }).returning();
+    await finish(103, at(44), gone);
+    await db.delete(staffUsers).where(eq(staffUsers.id, gone.id));
+    const history = await readFinishHistory(db, staff.ADMIN!, raceId);
+    expect(history.lines.map((line) => [line.what.kind, line.who])).toEqual([["finish", null]]);
+    // «Clasament» says the same of the row: written by an account that is gone.
+    const view = await readEventResults(db, staff.ADMIN!, raceId);
+    expect(view.registered.find((runner) => runner.bibNumber === 103)?.result?.writtenBy).toEqual({ name: null, changed: false });
   });
 });

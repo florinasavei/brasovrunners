@@ -775,6 +775,20 @@ export type AuditAction =
   | "event_result.updated"
   | "event_result.deleted"
   /**
+   * «Cronometrare» (§NNN): a press of a number already «Sosit» — another volunteer, or the same one a different second. The first
+   * stored row stays as it was; this row keeps the press's own time beside the stored one (`{ bibNumber, gunTimeMs, storedGunTimeMs,
+   * finishLine: true }`; who pressed is the row's actor), so «Istoricul sosirilor» shows both for the organizers to compare. A finish
+   * pressed at the line marks its `event_result.created` / `.updated` with `finishLine: true`, and the line's own «Anulează» its
+   * `event_result.deleted` with `{ finishLine: true, undo: true }`. Never a name.
+   */
+  | "event_result.finish_duplicate"
+  /**
+   * «Start» and «Anulează startul» on «Cronometrare» (§NNN), entity `event`: the gun as an organizer pressed it at the start line
+   * (`{ at, previous }`, ISO instants, `previous` null for a first press) or taken off, back to the planned gun (`{ previous }`).
+   */
+  | "event.race_gun_set"
+  | "event.race_gun_cleared"
+  /**
    * «Clasamentul e public pe pagina evenimentului» (§808), entity `event`: the Administrator made a race's results public or took
    * them off, and «Descarcă clasamentul (CSV)» — the file has the names, so who downloaded it and how many rows are recorded.
    */
