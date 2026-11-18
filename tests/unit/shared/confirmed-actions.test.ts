@@ -354,6 +354,11 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
     "one of a marked registration's two ticks from the elite card, undone by the same tick; it tells nobody and only ever hides — ticked, the person's own ticks decide",
   setRegistrationEliteTickAction:
     "one of a marked registration's two ticks from the list's «⋮» or its page, undone by the same tick; it tells nobody and only ever hides — ticked, the person's own ticks decide",
+  // «Eticheta pe BIB» (§NNN): what an elite bib prints where the number goes, typed in a box beside its «Salvează».
+  setEliteBibLabelAction:
+    "the label one elite line's bib prints, saved from its own box on the elite card; it tells nobody, moves no state, place or count, and the same box undoes it",
+  setRegistrationEliteBibLabelAction:
+    "the label a marked registration's bib prints, saved from the desk's «Elită și BIB»; it tells nobody, moves no state, place or count, and the same box undoes it",
   // «Are kit» on a row of the «Voluntari» list (§904): the organizers' own mark of who gets the volunteers' kit, a one-press tick.
   setVolunteerKitAction:
     "a mark on the club's packing for one volunteer, undone by the same tick; it tells nobody and changes no state, role or count but «Cu kit»",

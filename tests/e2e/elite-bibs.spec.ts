@@ -120,7 +120,7 @@ test.describe("§895 «Elită — doar numele pe BIB»", () => {
     await expect(card.getByTestId("bib-elite-sample").locator("img")).toHaveAttribute("src", /[?&]elite=1(&|$)/);
 
     const add = card.getByTestId("bib-elite-add");
-    await add.getByRole("textbox", { name: /Numele de pe BIB/ }).fill(name);
+    await add.getByRole("textbox", { name: /^Numele/ }).fill(name);
     await add.getByRole("textbox", { name: /Număr \(opțional\)/ }).fill("901");
     const press = add.getByRole("button", { name: "Adaugă pe lista de elită" });
     // A thumb's target, with its glyph (BR-REQ-041-01 criterion 6, §521).
@@ -147,19 +147,37 @@ test.describe("§895 «Elită — doar numele pe BIB»", () => {
     expect(sheet.headers()["content-type"]).toBe("application/pdf");
     expect(sheet.headers()["content-disposition"] ?? "").toMatch(/-elite\.pdf/);
 
+    // «Eticheta pe BIB» (§NNN): the line's box holds the first word by default; a label typed and saved from its own small form
+    // (beside the save form, through `form=`) lands back on the card open, the box holding the label.
+    const labelBox = card.getByTestId("bib-elite-entry").getByRole("textbox", { name: /Eticheta pe BIB/ });
+    await expect(labelBox).toHaveValue(name.split(" ")[0]);
+    await labelBox.fill("Campionul");
+    const saveLabel = card.getByTestId("bib-elite-entry").getByRole("button", { name: "Salvează eticheta pe BIB" });
+    expect((await saveLabel.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await saveLabel.click();
+    await expect(page.getByTestId("toast-live")).toContainText("Eticheta pe BIB a fost salvată.", { timeout: 30_000 });
+    await expect(page).toHaveURL(/[?&]saved=eliteLabelSaved#bib-elite$/);
+    await hydrated(page);
+    card = page.getByTestId("bib-elite");
+    await expect(card).toHaveAttribute("open", "");
+    await expect(card.getByTestId("bib-elite-entry").getByRole("textbox", { name: /Eticheta pe BIB/ })).toHaveValue("Campionul");
+    expect(await withDatabase(async (client) => (await client.query<{ bib_label: string | null }>(`SELECT bib_label FROM event_elite_entries WHERE event_id = $1`, [eventId])).rows)).toEqual([
+      { bib_label: "Campionul" },
+    ]);
+
     // 901 is that line's now: a second name with it is refused on the number's box, and both boxes keep what was typed.
     const second = card.getByTestId("bib-elite-add");
-    await second.getByRole("textbox", { name: /Numele de pe BIB/ }).fill("Faith Kipyegon");
+    await second.getByRole("textbox", { name: /^Numele/ }).fill("Faith Kipyegon");
     await second.getByRole("textbox", { name: /Număr \(opțional\)/ }).fill("901");
     await second.getByRole("button", { name: "Adaugă pe lista de elită" }).click();
     await expect(card.getByTestId("form-refusal")).toContainText("Numărul acesta e deja folosit la eveniment", { timeout: 30_000 });
-    await expect(second.getByRole("textbox", { name: /Numele de pe BIB/ })).toHaveValue("Faith Kipyegon");
+    await expect(second.getByRole("textbox", { name: /^Numele/ })).toHaveValue("Faith Kipyegon");
     await expect(second.getByRole("textbox", { name: /Număr \(opțional\)/ })).toHaveValue("901");
     expect(await eliteLines(eventId)).toHaveLength(1);
 
     // «Salvează» on the event: the card's boxes belong to their own form, so its empty, required name box does not block
     // the save, and the number typed beside it is never posted — no line added, none doubled.
-    await second.getByRole("textbox", { name: /Numele de pe BIB/ }).fill("");
+    await second.getByRole("textbox", { name: /^Numele/ }).fill("");
     await second.getByRole("textbox", { name: /Număr \(opțional\)/ }).fill("902");
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await page.waitForURL(/saved=event/, { timeout: 30_000 });
@@ -221,7 +239,9 @@ test.describe("§895 «Elită — doar numele pe BIB»", () => {
     await expect(card.getByTestId("bib-elite-registered")).toContainText(name);
     await expect(card.getByTestId("bib-elite-registered")).toContainText("cu înscriere");
     await expect(card.getByTestId("bib-elite-registered")).toContainText("nr. 21");
-    await expect(card.getByTestId("bib-elite-registered").getByRole("button")).toHaveCount(0);
+    // No delete, no mark of its own: the one button on its line saves its «Eticheta pe BIB» (§NNN), the first name by default.
+    await expect(card.getByTestId("bib-elite-registered").getByRole("button")).toHaveCount(1);
+    await expect(card.getByTestId("bib-elite-registered").getByRole("button", { name: "Salvează eticheta pe BIB" })).toBeVisible();
     // The ordinary sheet no longer prints them (§963): the card says so, so nobody looks for that bib on it.
     await expect(card.getByTestId("bib-elite-registered-once")).toContainText("Foaia obișnuită nu-i mai tipărește");
     const download = card.getByTestId("bib-elite-download");

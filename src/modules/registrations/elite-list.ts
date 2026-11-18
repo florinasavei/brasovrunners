@@ -43,6 +43,8 @@ export type EliteEntryRow = {
   eventId: string;
   name: string;
   bibNumber: number | null;
+  /** «Eticheta pe BIB» (§NNN) as stored: null prints the name's first word (`bib-elite.ts#eliteLineBibName`). */
+  bibLabel: string | null;
   /** «Apare în clasament» (§910): false, the line's result runs hors concours. */
   inResults: boolean;
   /** «Apare pe site» (§910): true, the name shows under «Elitele cursei» while the event's public list is on. */
@@ -99,7 +101,7 @@ export async function listEliteEntries<T extends Record<string, unknown>>(db: Da
     .from(eventEliteEntries)
     .where(eq(eventEliteEntries.eventId, eventId))
     .orderBy(asc(eventEliteEntries.createdAt), asc(eventEliteEntries.id));
-  return rows.map((row) => ({ id: row.id, eventId: row.eventId, name: row.name, bibNumber: row.bibNumber, inResults: row.inResults, onSite: row.onSite, createdAt: row.createdAt }));
+  return rows.map((row) => ({ id: row.id, eventId: row.eventId, name: row.name, bibNumber: row.bibNumber, bibLabel: row.bibLabel, inResults: row.inResults, onSite: row.onSite, createdAt: row.createdAt }));
 }
 
 /** One name of «Elitele cursei» (§910): the name and the number, nothing else — no id, no tick, no date. */

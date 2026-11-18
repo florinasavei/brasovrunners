@@ -2082,6 +2082,21 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
 
       {/* A row's press leaves the row where it stood on screen (§943): strings only, no row crosses to it. */}
       <KeepRowPlace anchorPrefix={registrationRowAnchor("")} />
+      {/*
+        «Participanți» (§NNN; the owner, 2026-11-18: «partea asta cu toți participanții trebuie să fie colapsabilă»): the table, its
+        results line, its pager and the batch verbs that act on its ticks, in one fold — open on every arrival (`primary`: the list
+        is what the screen is for), its closed line the count the results line states. One fold for all of it, so the bulk form and
+        the ticks it owns (`form="bulk-cancel"`) are always both in the page, and every row's id and menu work as before.
+      */}
+      <Panel
+        glyph="registrations"
+        collapsible
+        openWhen={{ primary: true }}
+        title={t("registrations.tableFold")}
+        aside={t("list.results", { count: invitationFilter ? leadRows.length : total })}
+        id="registrations-table"
+        data-testid="registrations-table-fold"
+      >
       <AdminTable
         caption={t("registrations.tableCaption")}
         tableId="registrations"
@@ -2686,6 +2701,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           </Box>
         </Box>
       )}
+      </Panel>
 
       {/*
         Below the table since §948 (the owner, 2026-11-15, of the list for sponsors and of the folds «Invitații», «Lista

@@ -232,6 +232,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
               minorSigns={minorSigns}
               spare={spares[row.eventId]}
               family={(family.get(row.id) ?? []).map((member) => member.name)}
+              role={actor.role}
             />
           ))}
         </Stack>

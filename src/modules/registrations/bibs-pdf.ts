@@ -106,6 +106,8 @@ export type BibSheetRow = {
    * number goes (`bib-elite.ts#eliteBibName`); absent or empty, the registered name. Never drawn on an ordinary bib.
    */
   firstName?: string | null;
+  /** «Eticheta pe BIB» (§NNN), read only for a row drawn as an elite bib: when set, it prints instead of the first name. */
+  eliteBibLabel?: string | null;
 };
 
 /** One bib the sheet draws: a runner's (or a desk spare's) row, or an elite line (§895). `member` is the paging's (§681). */
@@ -986,21 +988,21 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   // The places on one page, upper half first (or the one centred place with `one`).
   const slots = bibSheetSlots(perPage, input.layout);
   /*
-    A registration marked «Elită» (§897) is an elite item like a line of the list: its name where the number goes — the
-    first name alone (§948) — its own number under it only as the design ticks — the same drawing, never a second one —
+    A registration marked «Elită» (§897) is an elite item like a line of the list: its name where the number goes — its
+    «Eticheta pe BIB», the first name by default (§NNN, `eliteBibName`) — its own number under it only as the design ticks — the same drawing, never a second one —
     and never a member's bib. A row with no name (a desk spare) is never one.
   */
   const eliteOf = (row: BibSheetRow): SheetItem | null =>
     row.registeredName === null
       ? null
-      : { kind: "elite", entry: { name: eliteBibName({ firstName: row.firstName, registeredName: row.registeredName }), bibNumber: row.bibNumber }, member: false };
+      : { kind: "elite", entry: { name: eliteBibName({ eliteBibLabel: row.eliteBibLabel, firstName: row.firstName, registeredName: row.registeredName }), bibNumber: row.bibNumber }, member: false };
   // The members' pile first, on pages of its own, while the event offers their bib (§681). The elite sheet (§895)
   // is its list, in the order the club typed it, then the marked registrations (§897), two to a page — no member's bib is ever among it.
   const pages: BibSheetPage<SheetItem>[] = input.elite
     ? sheetPages(
         [
-          // A line of the list prints its first word, as a registration its first name (§963).
-          ...input.elite.map((entry): SheetItem => ({ kind: "elite", entry: { ...entry, name: eliteLineBibName(entry.name) }, member: false })),
+          // A line of the list prints its «Eticheta pe BIB», its first word by default (§963, §NNN), as a registration its first name.
+          ...input.elite.map((entry): SheetItem => ({ kind: "elite", entry: { ...entry, name: eliteLineBibName(entry.name, entry.bibLabel) }, member: false })),
           ...input.rows.map(eliteOf).filter((item): item is SheetItem => item !== null),
         ],
         { layout: input.layout, membersOn: false },

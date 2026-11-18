@@ -79,6 +79,7 @@ import { readBibDesignForm } from "@/modules/registrations/bib-design-query";
 import { assignBibNumbers, reserveSpareBibs } from "@/modules/registrations/bibs";
 import { addEliteEntry, deleteEliteEntry, isEliteTick, setEliteEntryTick } from "@/modules/registrations/elite-list";
 import { isRegistrationEliteTick, setRegistrationEliteTick } from "@/modules/registrations/elite-mark";
+import { setEliteEntryBibLabel, setRegistrationEliteBibLabel } from "@/modules/registrations/elite-label";
 import { hiddenListRefusalOf, SPARES_BEFORE_HIDDEN_LIST } from "@/modules/registrations/domain/hidden-list";
 import { capacityBelowTakenRefusalOf } from "@/modules/registrations/domain/capacity";
 import { placesKeptRefusalOf } from "@/modules/registrations/domain/kept-places";
@@ -1157,7 +1158,7 @@ export async function reserveSpareBibsAction(_previous: FormOutcome | null, form
  * does), because a redirect to the same page is a soft navigation that `OpenFoldFromHash` never sees; `#bib-elite` then
  * only scrolls to it.
  */
-async function backToEliteCard(locale: Locale, eventId: string, saved: "eliteAdded" | "eliteDeleted" | "eliteTicked"): Promise<never> {
+async function backToEliteCard(locale: Locale, eventId: string, saved: "eliteAdded" | "eliteDeleted" | "eliteTicked" | "eliteLabelSaved"): Promise<never> {
   await flashOutcome({ saved });
   redirect(`${editorPath(locale, eventId)}?${new URLSearchParams({ saved })}#bib-elite`);
 }
@@ -1234,6 +1235,27 @@ export async function setRegisteredEliteTickAction(_previous: FormOutcome | null
     return backTo(editorPath(locale, eventId), outcomeOf(error));
   }
   return backToEliteCard(locale, eventId, "eliteTicked");
+}
+
+/**
+ * «Eticheta pe BIB» on a line of the elite card (§NNN): a line of the race's list (`entryId`) or a registration marked «Elită»
+ * (`registrationId`) — what its bib prints where the number goes; empty, or the default itself, back to the default (the first
+ * word, the first name). The Administrator's (`canManageRegistrations`), here at the door and again in `elite-label.ts`
+ * (BR-REQ-060-01). A plain form a line, posting the box beside it; it asks nothing (§384) — it tells nobody and the same box undoes
+ * it. Back to the elite card, open; a refusal (a label longer than `ELITE_NAME_MAX`, the line gone, the role) in the editor's banner.
+ */
+export async function setEliteBibLabelAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    const label = form.get("eliteBibLabel");
+    if (form.has("entryId")) await setEliteEntryBibLabel(getDb(), actor, text(form, "entryId"), label, new Date());
+    else await setRegistrationEliteBibLabel(getDb(), actor, text(form, "registrationId"), label, new Date());
+  } catch (error) {
+    return backTo(editorPath(locale, eventId), outcomeOf(error));
+  }
+  return backToEliteCard(locale, eventId, "eliteLabelSaved");
 }
 
 /**

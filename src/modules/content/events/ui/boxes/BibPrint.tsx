@@ -7,6 +7,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { ELITE_NAME_MAX } from "@/db/schema/event-elite-entries";
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { countForm } from "@/i18n/count-form";
+import { eliteLineBibName, eliteLineDefaultLabel } from "@/modules/registrations/bib-elite";
 import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
 import { BIB_BLANK_MAX } from "@/modules/registrations/domain/spare-bibs";
 import RegistrationStatusChip from "@/modules/registrations/ui/RegistrationStatusChip";
@@ -49,6 +50,14 @@ export function bibEliteTickForm(entryId: string, tick: EliteTickName): string {
 export function bibEliteRegisteredTickForm(registrationId: string, tick: EliteTickName): string {
   return `bib-elite-registered-tick-${tick}-${registrationId}`;
 }
+/** «Eticheta pe BIB» of a line of the separate list (§NNN, `setEliteBibLabelAction`): one small form per line, beside the save form. */
+export function bibEliteLabelForm(entryId: string): string {
+  return `bib-elite-label-${entryId}`;
+}
+/** «Eticheta pe BIB» of a registered runner's line (§NNN). */
+export function bibEliteRegisteredLabelForm(registrationId: string): string {
+  return `bib-elite-registered-label-${registrationId}`;
+}
 
 type Props = {
   eventId: string;
@@ -81,8 +90,11 @@ export type EliteTicks = { inResults: boolean; onSite: boolean };
 
 /** What the elite section shows (§895), read by the page (`elite-list.ts#listEliteEntries`). */
 export type EliteCard = {
-  /** The names in the order typed, with the number the club gave each, if any, and the line's two ticks (§910). */
-  entries: ReadonlyArray<{ id: string; name: string; bibNumber: number | null } & EliteTicks>;
+  /**
+   * The names in the order typed, with the number the club gave each, if any, the line's two ticks (§910) and its «Eticheta pe BIB»
+   * as stored (§NNN; null, the name's first word — `bib-elite.ts#eliteLineBibName` says which prints).
+   */
+  entries: ReadonlyArray<{ id: string; name: string; bibNumber: number | null; bibLabel?: string | null } & EliteTicks>;
   /**
    * The registrations an Administrator marked «Elită» (§897), in every state, as «Elite» on the registrations page lists them
    * (`elite-mark.ts#listEliteMarkedRegistrations`; the owner, 2026-11-10: «Luisa Rasina e Elită și nu apare aici») — each with
@@ -90,7 +102,18 @@ export type EliteCard = {
    * `bibs.ts#listBibs` with `elite`) and its two ticks (§910, `elite-mark.ts#listEliteTicks`). Marked and unmarked from the
    * registrations list's «⋮»; the ticks are the card's too.
    */
-  registered?: ReadonlyArray<{ id: string; name: string; status: RegistrationStatus; bibNumber: number | null; printed: boolean } & EliteTicks>;
+  registered?: ReadonlyArray<
+    {
+      id: string;
+      name: string;
+      status: RegistrationStatus;
+      bibNumber: number | null;
+      printed: boolean;
+      /** «Eticheta pe BIB» in force and its default, the first name (§NNN, `elite-mark.ts#listEliteMarkedRegistrations`). */
+      bibLabel: string;
+      defaultLabel: string;
+    } & EliteTicks
+  >;
   /** The sample elite bib: the preview route with `elite=1` and the stored design (`bib-design-query.ts#bibPreviewUrl`). */
   previewSrc: string;
   /** The sheet of every elite bib: the bibs route with `elite=1`. */
@@ -209,6 +232,53 @@ function EliteTickButtons({
 }
 
 /**
+ * «Eticheta pe BIB» on one line (§NNN; the owner, 2026-11-18: «în dreptul fiecăruia vreau un „BIB Label” și să fie prenumele by
+ * default»): the box, filled with the label in force, its placeholder the default, and «Salvează» — both naming the line's own small
+ * form (`BibPrintForms`) by `form=`, because the card stands inside the event's save form; a plain form that works without
+ * scripts and comes back to this card open. For whoever only reads the card (the Organizer), the label in words: what the bib says.
+ */
+function EliteLabelBox({
+  formId,
+  label,
+  defaultLabel,
+  mayEdit,
+  words,
+}: {
+  formId: string;
+  label: string;
+  defaultLabel: string;
+  mayEdit: boolean;
+  words: { label: string; help: string; save: string; saveName: string; shown: string };
+}) {
+  if (!mayEdit) {
+    return (
+      <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }} data-testid="bib-elite-label-shown">
+        {words.shown}
+      </Typography>
+    );
+  }
+  return (
+    <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ alignItems: { xs: "stretch", sm: "flex-start" }, mt: 0.5 }} data-testid="bib-elite-label">
+      <TextField
+        name="eliteBibLabel"
+        label={words.label}
+        helperText={words.help}
+        defaultValue={label}
+        placeholder={defaultLabel}
+        size="small"
+        slotProps={{ htmlInput: { maxLength: ELITE_NAME_MAX, autoComplete: "off", form: formId } }}
+        sx={{ flex: 1, maxWidth: { sm: 360 }, "& .MuiInputBase-root": { minHeight: 44 } }}
+      />
+      <Box sx={{ flexShrink: 0 }}>
+        <GlyphButton icon="save" type="submit" form={formId} variant="outlined" size="small" sx={{ minHeight: 44 }} aria-label={words.saveName} data-testid="bib-elite-label-save">
+          {words.save}
+        </GlyphButton>
+      </Box>
+    </Stack>
+  );
+}
+
+/**
  * «Elită — doar numele pe BIB» (§895; the owner, 2026-11-03, «Listă separată»): the race's elite runners as a list
  * of names, each printed with the **name where the number goes** — not registrations: no place, no email, no
  * declaration, no count. Beside the spares, a level-5 fold of the print card, closed, how many on its closed line.
@@ -243,6 +313,14 @@ async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; m
   const printed = elite.entries.length + printedRegistered;
   const aside = count === 0 ? t("bibs.eliteNone") : t(`bibs.eliteCount.${countForm(count, locale)}`, { count });
   const tickLabels: Record<EliteTickName, string> = { inResults: t("bibs.eliteInResults"), onSite: t("bibs.eliteOnSite") };
+  // «Eticheta pe BIB» (§NNN): the box's words, and the label in words for whoever only reads the card.
+  const labelWords = (label: string) => ({
+    label: t("bibs.eliteLabel"),
+    help: t("bibs.eliteLabelHelp", { max: ELITE_NAME_MAX }),
+    save: t("bibs.eliteLabelSave"),
+    saveName: t("bibs.eliteLabelSaveName"),
+    shown: t("bibs.eliteLabelShown", { label }),
+  });
   return (
     /*
       `#bib-elite` names this wrapper, not the fold (the owner, 2026-11-10: the card stays closed «even via link»): a link to it —
@@ -287,6 +365,13 @@ async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; m
                     )}
                   </Stack>
                   <EliteTickButtons ticks={entry} formOf={(tick) => bibEliteTickForm(entry.id, tick)} mayEdit={mayEdit} labels={tickLabels} />
+                  <EliteLabelBox
+                    formId={bibEliteLabelForm(entry.id)}
+                    label={eliteLineBibName(entry.name, entry.bibLabel)}
+                    defaultLabel={eliteLineDefaultLabel(entry.name)}
+                    mayEdit={mayEdit}
+                    words={labelWords(eliteLineBibName(entry.name, entry.bibLabel))}
+                  />
                 </Box>
               ))}
               {/* A registration marked «Elită» (§897): never deleted here — the mark is the registrations list's; its two ticks are the card's too (§910). */}
@@ -305,6 +390,13 @@ async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; m
                     )}
                   </Stack>
                   <EliteTickButtons ticks={entry} formOf={(tick) => bibEliteRegisteredTickForm(entry.id, tick)} mayEdit={mayEdit} labels={tickLabels} />
+                  <EliteLabelBox
+                    formId={bibEliteRegisteredLabelForm(entry.id)}
+                    label={entry.bibLabel}
+                    defaultLabel={entry.defaultLabel}
+                    mayEdit={mayEdit}
+                    words={labelWords(entry.bibLabel)}
+                  />
                 </Box>
               ))}
             </Stack>
@@ -562,6 +654,7 @@ export async function BibPrintForms({
   eliteTickAction,
   eliteRegisteredTickAction,
   eliteRegistered = [],
+  eliteLabelAction,
   cancelLabel,
 }: {
   eventId: string;
@@ -581,6 +674,8 @@ export async function BibPrintForms({
   /** `setRegisteredEliteTickAction` (§910), and the marked registrations it ticks — two small forms each; absent, none. */
   eliteRegisteredTickAction?: ActionFormAction;
   eliteRegistered?: ReadonlyArray<{ id: string; name: string } & EliteTicks>;
+  /** `setEliteBibLabelAction` (§NNN): one small form per line, list line and marked registration alike; absent, none. */
+  eliteLabelAction?: ActionFormAction;
   cancelLabel: string;
 }) {
   const t = await getTranslations("Admin");
@@ -684,6 +779,22 @@ export async function BibPrintForms({
             </ActionForm>
           )),
         )}
+      {/*
+        «Eticheta pe BIB» (§NNN): one small form per line, posting the box beside the line (`form=`). It asks nothing (§384): it tells
+        nobody and the same box undoes it.
+      */}
+      {mayAssign &&
+        eliteLabelAction &&
+        [
+          ...eliteEntries.map((entry) => ({ id: bibEliteLabelForm(entry.id), field: "entryId", value: entry.id })),
+          ...eliteRegistered.map((entry) => ({ id: bibEliteRegisteredLabelForm(entry.id), field: "registrationId", value: entry.id })),
+        ].map((line) => (
+          <ActionForm key={line.id} id={line.id} action={eliteLabelAction} hidden>
+            <input type="hidden" name="uiLocale" value={locale} />
+            <input type="hidden" name="eventId" value={eventId} />
+            <input type="hidden" name={line.field} value={line.value} />
+          </ActionForm>
+        ))}
       <form id={BIB_DOWNLOAD_FORM} action={`/api/admin/events/${eventId}/bibs`} method="get" hidden>
         <input type="hidden" name="locale" value={locale} />
       </form>
