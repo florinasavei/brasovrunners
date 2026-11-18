@@ -468,9 +468,9 @@ describe("§961 the plan's page: two groups, the summary, and the plan's own poi
       expect([...select.matchAll(/<option value="([0-9a-f-]{36})"/g)].map((match) => match[1]), id).toEqual([race.people.radu]);
       expect(pointOf(page, id)).toMatch(new RegExp(`data-testid="plan-place-form"[\\s\\S]*?name="checkpointId" value="${id}"`));
     }
-    // «Fără punct»: the people at no point at all, with the help that says where to put them.
+    // «Fără punct»: the people at no point at all, with the help that says where to put them — a fold since §978.
     const unplaced = page.slice(page.indexOf('data-testid="plan-unplaced"'));
-    expect(unplaced).toContain(`>${ro.Admin.volunteers.plan.unplacedTitle}</h3>`);
+    expect(unplaced).toContain(`</svg>${ro.Admin.volunteers.plan.unplacedTitle}<`);
     expect(ro.Admin.volunteers.plan.unplacedTitle).toBe("Fără punct");
     expect(unplaced).toContain(escaped(ro.Admin.volunteers.plan.unplacedHelp));
     expect(textOf(unplaced, "plan-person-name")).toEqual(["Radu Liber"]);
@@ -499,13 +499,13 @@ describe("§961 the plan's page: two groups, the summary, and the plan's own poi
     for (const catalogue of [ro, en]) expect(JSON.stringify(catalogue.Admin.volunteers.plan)).not.toMatch(/start-finish/i);
   });
 
-  it("draws «Adaugă un punct» under the picture and above «Trimite fiecăruia punctul lui»: the choice, the name, the kilometre, the coordinates", async () => {
+  it("draws «Adaugă un punct» under the plan and above «Trimite fiecăruia punctul lui»: the choice, the name, the kilometre, the coordinates", async () => {
     for (const locale of ["ro", "en"] as const) {
       state.locale = locale;
       const words = (locale === "ro" ? ro : en).Admin.volunteers.plan.points;
       const page = await planPage();
       // The fold's place on the page, and its anchor.
-      expect(page.indexOf('data-testid="plan-picture-section"')).toBeLessThan(page.indexOf('data-testid="plan-points-section"'));
+      expect(page.indexOf('data-testid="plan-maps-section"')).toBeLessThan(page.indexOf('data-testid="plan-points-section"'));
       expect(page.indexOf('data-testid="plan-points-section"')).toBeLessThan(page.indexOf('data-testid="plan-mail-section"'));
       expect(tagOf(page, 'data-testid="plan-points-section"')).toContain('id="plan-points"');
 

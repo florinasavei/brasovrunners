@@ -3,7 +3,7 @@ import path from "node:path";
 import { type ComponentProps, createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { type ConfirmSpec, optionAnswer, optionFields, tickAnswer, withOption } from "@/shared/feedback/notice";
+import { type ConfirmSpec, emailOptOutAnswer, optionAnswer, optionFields, tickAnswer, withOption } from "@/shared/feedback/notice";
 import ActionForm from "@/shared/forms/ActionForm";
 import { succeeded } from "@/shared/forms/outcome";
 
@@ -81,14 +81,30 @@ describe("§384 ActionForm asks first", () => {
     expect(dialog).toMatch(/const mayConfirm = !spec\.tick \|\| ticked;/);
     expect(dialog).toMatch(/if \(mayConfirm\) confirm\(\);/);
     expect(dialog).toMatch(/onClick=\{confirm\}\s*disabled=\{!mayConfirm\}/);
+    // Both of the email's answers wait for it too (§976).
+    expect(dialog).toMatch(/onClick=\{confirmWithoutEmail\}\s*disabled=\{!mayConfirm\}/);
   });
 
-  it("posts «Trimite emailul» `on` unless this press's question was answered with the box unticked (the design «telling the owner about every email a staff press sends», slice 4)", () => {
+  it("posts the email's choice `on` unless this press's question was answered «… fără email» (the design «telling the owner about every email a staff press sends», slice 4; §976)", () => {
     // Drawn `on` — as posted without JavaScript, which asks nothing — one hidden input per field the form's questions offer.
     expect(source).toMatch(/const optOutFields = useMemo\(\(\) => emailOptOutFields\(confirm\), \[confirm\]\);/);
     expect(source).toMatch(/\{optOutFields\.map\(\(field\) => \(\s*<input key=\{field\} type="hidden" name=\{field\} defaultValue="on" \/>/);
     // Every answer resets them all to `on` first, then writes this question's box: a dialog without the box never sends an earlier untick.
     expect(source).toMatch(/for \(const field of optOutFields\) write\(field, "on"\);\s*const optedOut = emailOptOutAnswer\(pending\.spec, given\.emailOff\);\s*if \(optedOut\) write\(optedOut\.field, optedOut\.value\);/);
+    // The answer is the button pressed: «… și trimite emailul» `emailOff: false`, «… fără email» `true` — never a box's state.
+    const dialog = readFileSync(path.join(ROOT, "src/shared/feedback/ConfirmDialog.tsx"), "utf8").replace(/\r\n/g, "\n");
+    expect(dialog).toContain("const withRoad = (answer: (given: ConfirmAnswer) => void, emailOff = false) => () => {");
+    expect(dialog).toContain("answer({ emailOff, optionOn });");
+    expect(dialog).not.toContain("setMailOff");
+    expect(dialog).not.toContain('data-testid="confirm-send-email"');
+    // The several-verb button (the bulk cancel): its hidden field beside it, `on` as drawn, the answer pressed written into it.
+    const button = readFileSync(path.join(ROOT, "src/shared/ui/ConfirmSubmitButton.tsx"), "utf8").replace(/\r\n/g, "\n");
+    expect(button).toContain('{mail?.emailOptOut && <input ref={optOut} type="hidden" name={mail.emailOptOut.field} defaultValue="on" form={form} />}');
+    expect(button).toContain('if (optOut.current) optOut.current.value = emailOptOutAnswer(open, given.emailOff)?.value ?? "on";');
+    // Each answer's value, as the two write it.
+    const spec: ConfirmSpec = { title: "t", body: "b", confirmLabel: "Anulează", cancelLabel: "x", emailOptOut: { field: "sendEmail", sendLabel: "{action} și trimite emailul", skipLabel: "{action} fără email" } };
+    expect(emailOptOutAnswer(spec, false)).toEqual({ field: "sendEmail", value: "on" });
+    expect(emailOptOutAnswer(spec, true)).toEqual({ field: "sendEmail", value: "off" });
   });
 
   it("offers a wider press as a box in the question, and posts it `on` only when ticked there and confirmed (§956)", () => {
@@ -122,7 +138,7 @@ describe("§384 ActionForm asks first", () => {
     const dialog = readFileSync(path.join(ROOT, "src/shared/feedback/ConfirmDialog.tsx"), "utf8").replace(/\r\n/g, "\n");
     expect(dialog).toMatch(/const \[option, setOption\] = useState<\{ spec: ConfirmSpec \| null; on: boolean \}>\(\{ spec: asked, on: false \}\);/);
     expect(dialog).toMatch(/const optionOn = option\.spec === asked && option\.on;/);
-    expect(dialog).toMatch(/const spec = withEmailOff\(withOption\(asked, optionOn\), emailOff\);/);
+    expect(dialog).toMatch(/const spec = withOption\(asked, optionOn\);/);
     expect(dialog).toMatch(/answer\(\{ emailOff, optionOn \}\);/);
     expect(dialog).toMatch(/const mayConfirm = !spec\.tick \|\| ticked;/);
     expect(dialog).toMatch(/\{asked\.option && \([\s\S]*?checked=\{optionOn\}[\s\S]*?data-testid="confirm-option"/);

@@ -13,14 +13,14 @@ import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { canonicalOrNull } from "./agreement";
-import { readVolunteerPlanPicture } from "./plan";
+import { readVolunteerPlanMaps } from "./plan";
 import { coordinatesOf, listPlanPoints } from "./plan-points";
 
 /*
   «Trimite fiecăruia punctul lui» (§956; the owner, 2026-11-16, with a picture of Saturday's route and its volunteers' points on
   it: «…si sa ii pot distribui din aplicatie, sa stie exact unde si cum» — and, asked how, «Email din site, la apăsarea ta»):
   one press on «Planul voluntarilor» emails each placed volunteer the point they stand at — its number in the route's order,
-  its name, its kilometre and its note — what they do there, and the plan's picture (`VOLUNTEER_POINT`).
+  its name, its kilometre and its note — what they do there, and the plan's pictures and links (`VOLUNTEER_POINT`, §978).
 
   **A point is any point of the plan (§961):** one of the event's «Puncte pe traseu», a point the organizers typed by hand on
   the plan's page, or a point at the start–finish — `plan-points.ts#listPlanPoints` is the one list of them, read here for
@@ -294,8 +294,13 @@ export type VolunteerPointFacts = {
   startFinish: boolean;
   /** Where the point is, when the organizers typed it (§961): the message says the numbers and links to a map. Null for none. */
   coordinates: Coordinates | null;
-  /** The plan's picture at a size for a message and whole, at the store's public addresses; null when the event has none. */
-  picture: { displayUrl: string; fullUrl: string; width: number; height: number } | null;
+  /**
+   * The plan's pictures (§978, amending §952's one), in the plan's order, each at a size for a message and whole, at the store's
+   * public addresses; empty when the plan has none.
+   */
+  pictures: { displayUrl: string; fullUrl: string; width: number; height: number }[];
+  /** The plan's links (§978), in the plan's order: the address, its label or null, and its host for a link with no label. */
+  links: { url: string; label: string | null; host: string }[];
 };
 
 /**
@@ -313,8 +318,8 @@ export type VolunteerPointFacts = {
  * The renderer has already withdrawn a cancelled person, a row with no address and an address corrected since
  * (`render.ts`); this reads only what is the point's — its number in the route's order, or none at the start–finish, its
  * name, its kilometre and where it is, from the plan's one list (`plan-points.ts#listPlanPoints`, §961), which is what
- * the plan's page reads, so the message and the page say one point one way; the picture is the plan's as it is now
- * (`plan.ts#readVolunteerPlanPicture`).
+ * the plan's page reads, so the message and the page say one point one way; the pictures and the links are the plan's as
+ * they are now (`plan.ts#readVolunteerPlanMaps`, §978).
  */
 export async function volunteerPointAtSend<T extends Record<string, unknown>>(db: Database<T>, row: Pick<OutboxRow, "payloadJson">): Promise<VolunteerPointFacts> {
   const payload = (row.payloadJson ?? {}) as { volunteerId?: unknown; checkpointId?: unknown; round?: unknown };
@@ -333,7 +338,7 @@ export async function volunteerPointAtSend<T extends Record<string, unknown>>(db
 
   const point = (await listPlanPoints(db, volunteer.eventId)).find((one) => one.id === queuedFor);
   if (!point) throw new OutboxMessageWithdrawn("the point is no longer on the event's plan");
-  const picture = await readVolunteerPlanPicture(db, volunteer.eventId);
+  const maps = await readVolunteerPlanMaps(db, volunteer.eventId);
   return {
     number: point.number,
     nameRo: point.nameRo,
@@ -343,6 +348,7 @@ export async function volunteerPointAtSend<T extends Record<string, unknown>>(db
     noteEn: point.noteEn,
     startFinish: point.startFinish,
     coordinates: coordinatesOf(point),
-    picture: picture ? { displayUrl: picture.displayUrl, fullUrl: picture.fullUrl, width: picture.width, height: picture.height } : null,
+    pictures: maps.pictures.map(({ displayUrl, fullUrl, width, height }) => ({ displayUrl, fullUrl, width, height })),
+    links: maps.links.map(({ url, label, host }) => ({ url, label, host })),
   };
 }

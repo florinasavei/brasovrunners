@@ -1422,6 +1422,20 @@
       "when": 1794969083670,
       "tag": "0212_elite_bib_label",
       "breakpoints": true
+    },
+    {
+      "idx": 203,
+      "version": "7",
+      "when": 1794969084670,
+      "tag": "0213_plan_maps",
+      "breakpoints": true
+    },
+    {
+      "idx": 204,
+      "version": "7",
+      "when": 1794969151591,
+      "tag": "0214_race_day_items",
+      "breakpoints": true
     }
   ]
 }

@@ -95,14 +95,23 @@ describe("migration 0210_volunteer_point_email", () => {
       (await database.query<{ column_name: string }>(`SELECT column_name FROM information_schema.columns WHERE table_name = '${table}' ORDER BY ordinal_position`)).rows.map((row) => row.column_name);
     const tablesOf = async (database: PGlite) =>
       (await database.query<{ table_name: string }>(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`)).rows.map((row) => row.table_name);
-    // The same world stopped one migration short.
+    // The same world stopped one migration short, and the world this migration leaves — never the head, whose later
+    // migrations add tables of their own (0213's «Poze și hărți»).
+    const journal = JSON.parse(readFileSync(`${MIGRATIONS}/meta/_journal.json`, "utf8")) as Journal;
+    const through = mkdtempSync(path.join(tmpdir(), "volunteer-point-email-through-"));
+    cpSync(MIGRATIONS, through, { recursive: true });
+    writeFileSync(path.join(through, "meta", "_journal.json"), JSON.stringify({ ...journal, entries: journal.entries.slice(0, journal.entries.findIndex((entry) => entry.tag === TAG) + 1) }));
     const earlier = new PGlite();
+    const after = new PGlite();
     try {
       await migrate(drizzle(earlier), { migrationsFolder: folder });
-      expect(await tablesOf(client)).toEqual(await tablesOf(earlier));
-      for (const table of ["email_outbox", "event_volunteers", "events"]) expect(await columnsOf(client, table), table).toEqual(await columnsOf(earlier, table));
+      await migrate(drizzle(after), { migrationsFolder: through });
+      expect(await tablesOf(after)).toEqual(await tablesOf(earlier));
+      for (const table of ["email_outbox", "event_volunteers", "events"]) expect(await columnsOf(after, table), table).toEqual(await columnsOf(earlier, table));
     } finally {
       await earlier.close();
+      await after.close();
+      rmSync(through, { recursive: true, force: true });
     }
   });
 

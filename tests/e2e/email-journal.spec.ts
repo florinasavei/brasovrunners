@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import pg from "pg";
-import { confirmDialog } from "./support/confirm";
+import { confirmDialog, confirmWithoutEmail } from "./support/confirm";
 import { FEATURED, hydrated, signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
@@ -14,6 +14,10 @@ import { openFold } from "./support/fold";
  *
  * Desktop only: one runner of its own, written straight into the database — the setup, not the subject
  * (`resend-now.spec.ts`) — and cancelled by the press under test.
+ *
+ * §976 — and the same press answered «Anulează înscrierea fără email»: the question ends in two answers (the owner,
+ * 2026-11-18: «vreau mereu sa confirm daca trimit un mail»), no box ticked in advance; the outlined one cancels with no
+ * «Înscriere anulată» queued for the person, and the toast says the email did not leave.
  */
 
 function databaseUrl(): string {
@@ -103,5 +107,44 @@ test.describe("§912 every email a staff press queues carries the press, and «E
     await expect(press.getByTestId("email-journal-press-head")).toContainText("Anulează înscrierea · de Dev Administrator");
     await expect(press).toContainText(`${name} · ${email}`);
     await expect(press).toContainText("„Înscriere anulată”");
+  });
+
+  test("«Anulează înscrierea fără email» cancels and queues nothing for the person, and the toast says the email did not leave (§976)", async ({ page }) => {
+    test.setTimeout(120_000);
+    const tag = Date.now().toString(36);
+    const name = `Fără email ${tag}`;
+    const email = `email-skip-${tag}@test.invalid`;
+    const registrationId = await seedRunner(name, email);
+
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/registrations/${registrationId}`);
+    await hydrated(page);
+    const cancelCard = page.getByTestId("cancel-registration");
+    await openFold(cancelCard);
+    await cancelCard.getByTestId("cancel-registration-form").getByRole("textbox", { name: "Motivul" }).fill("nu mai vine");
+    await cancelCard.getByRole("button", { name: "Anulează înscrierea" }).click();
+    // Two answers, no box: the email is the answer pressed.
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toContainText(`Pleacă 1 email către ${name}: „Înscriere anulată”.`);
+    await expect(dialog.getByRole("checkbox")).toHaveCount(0);
+    await expect(dialog.getByTestId("confirm-dialog-confirm")).toHaveText("Anulează înscrierea și trimite emailul");
+    await expect(dialog.getByTestId("confirm-dialog-skip-email")).toHaveText("Anulează înscrierea fără email");
+    await expect(dialog.getByTestId("confirm-dialog-cancel")).toBeFocused();
+    await confirmWithoutEmail(page);
+    await page.waitForURL(/saved=registrationCancelled/);
+    const toast = page.getByTestId("toast");
+    await expect(toast).toContainText("Înscrierea a fost anulată.", { timeout: 30_000 });
+    await expect(toast).toContainText("1 email nu a plecat, cum ai ales.");
+
+    // Cancelled, and nothing queued for the person: the outbox is where the platform captures every email it sends.
+    const state = await withDatabase(async (client) => {
+      const { rows: registration } = await client.query<{ status: string }>("SELECT status FROM registrations WHERE id = $1", [registrationId]);
+      const { rows: queued } = await client.query<{ message_type: string }>(
+        "SELECT message_type FROM email_outbox WHERE registration_id = $1 AND message_type = 'REGISTRATION_CANCELLED'",
+        [registrationId],
+      );
+      return { status: registration[0]?.status, queued: queued.length };
+    });
+    expect(state).toEqual({ status: "CANCELLED", queued: 0 });
   });
 });

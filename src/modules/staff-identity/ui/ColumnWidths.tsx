@@ -4,7 +4,6 @@ import { useTranslations } from "next-intl";
 import { useCallback, useLayoutEffect, useSyncExternalStore } from "react";
 import { hiddenStorageKey, storageKey } from "@/modules/staff-identity/domain/column-widths";
 import GlyphButton from "@/shared/ui/GlyphButton";
-import { watchScrollRow } from "@/shared/ui/scroll-row";
 import {
   applyHidden,
   clearPinnedEdge,
@@ -37,9 +36,10 @@ import {
  * changes this table's widths lays it out here too (`storage`), and the reset hands the keyboard's
  * focus to the table's first column edge rather than dropping it with the button.
  *
- * It also says, on the table's frame, whether columns lie past its right edge (§943): the pinned
- * verbs' column fades into them only then — and keeps that column's width as the frame's scroll
- * padding, so a press the browser scrolls into view is never left under it.
+ * It also keeps the pinned verbs' column's width as the frame's scroll padding (§943), so a press
+ * the browser scrolls into view is never left under it. Whether columns lie past the frame's right
+ * edge — what that column fades into — is said by the frame's one scroll watcher, which since §977
+ * lives in the island above the frame (`TopScrollbar`) and moves its second scrollbar too.
  */
 export default function ColumnWidths({ tableId }: { tableId: string }) {
   const t = useTranslations("Admin");
@@ -98,10 +98,6 @@ export default function ColumnWidths({ tableId }: { tableId: string }) {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(apply);
     });
-    // And whether more of the table lies past the frame's edge (§943): `data-more-end` on the frame
-    // is what gives the pinned verbs' column its fading edge, true to the scroll, to a drag that
-    // widens the table and to a column hidden or shown — the chips rows' own watcher.
-    const unwatch: (() => void)[] = [];
     // What the browser scrolls into view stops short of that column (`clearPinnedEdge`): its width
     // is its content's, so it is read here, now and whenever it changes.
     const pinned = new ResizeObserver(() => {
@@ -110,7 +106,6 @@ export default function ColumnWidths({ tableId }: { tableId: string }) {
     for (const table of tablesOf(tableId)) {
       if (!table.parentElement) continue;
       observer.observe(table.parentElement);
-      unwatch.push(watchScrollRow(table.parentElement, ResizeObserver, MutationObserver));
       const verbs = table.querySelector(":scope > thead th[data-pinned]");
       if (verbs) pinned.observe(verbs);
     }
@@ -118,7 +113,6 @@ export default function ColumnWidths({ tableId }: { tableId: string }) {
       cancelAnimationFrame(frame);
       observer.disconnect();
       pinned.disconnect();
-      for (const stop of unwatch) stop();
       window.removeEventListener("storage", onStorage);
     };
   }, [tableId]);

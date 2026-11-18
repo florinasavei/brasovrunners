@@ -457,7 +457,7 @@ describe("§683 the members' shop", () => {
     expect(paid.subject).toContain("Comanda ta e plătită");
   });
 
-  it("«Marchează plătită» with «Trimite emailul» unticked (the design «telling the owner about every email a staff press sends», slice 4): paid and audited, and the member is not emailed", async () => {
+  it("«Marchează plătită» answered «… fără email» (`sendEmail` off; the design «telling the owner about every email a staff press sends», slice 4, amended by §976): paid and audited, and the member is not emailed", async () => {
     const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
     const placed = await order(member, product.id, (await variantsOf(product.id)).L.id, 1);
     await moveOrderByClub(db, { actor: admin, orderId: placed.id, verb: "pay", now: NOW, sendEmail: false });
@@ -465,13 +465,13 @@ describe("§683 the members' shop", () => {
     expect(await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "SHOP_ORDER_PAID"))).toEqual([]);
     const [paid] = (await db.select().from(auditLogs).where(eq(auditLogs.entityId, placed.id))).filter((row) => row.action === "shop.order.paid");
     expect(paid.metadataJson).toMatchObject({ from: "PLACED", to: "PAID", by: "CLUB", emailSkipped: true });
-    // The box reaches the payment alone: the other verbs send nothing either way, and say nothing of a skip.
+    // The answer reaches the payment alone: the other verbs send nothing either way, and say nothing of a skip.
     await moveOrderByClub(db, { actor: admin, orderId: placed.id, verb: "handOver", now: NOW, sendEmail: false });
     const [handed] = (await db.select().from(auditLogs).where(eq(auditLogs.entityId, placed.id))).filter((row) => row.action === "shop.order.handed_over");
     expect(handed.metadataJson).not.toHaveProperty("emailSkipped");
   });
 
-  it("«Trimite emailul» unticked while «Îi scriem membrului pe email despre comenzi» is off (§704): paid, and no `emailSkipped` — no email would have left", async () => {
+  it("«Marchează plătită fără email» while «Îi scriem membrului pe email despre comenzi» is off (§704): paid, and no `emailSkipped` — no email would have left", async () => {
     await saveShopSettings(db, { actor: admin, fields: { paymentRo: "", paymentEn: "", ordersTo: "comenzi@example.org", emailMembers: "off" }, now: NOW });
     const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
     const placed = await order(member, product.id, (await variantsOf(product.id)).L.id, 1);

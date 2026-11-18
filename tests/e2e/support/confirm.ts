@@ -16,6 +16,18 @@ export async function confirmDialog(page: Page, name?: string | RegExp): Promise
 }
 
 /**
+ * The same dialog answered «… fără email» (§976): a question that may send the person their email ends in two answers,
+ * and this presses the outlined one — the same press, the person's email kept back. `confirmDialog` presses the other,
+ * «… și trimite emailul».
+ */
+export async function confirmWithoutEmail(page: Page, name?: string | RegExp): Promise<void> {
+  const dialog = name === undefined ? page.getByRole("dialog") : page.getByRole("dialog", { name });
+  await expect(dialog).toBeVisible();
+  await dialog.getByTestId("confirm-dialog-skip-email").click();
+  await expect(dialog).toBeHidden();
+}
+
+/**
  * The same dialog's quiet second answer (§482, §540): «Pune la coadă pentru trecerea programată» on
  * a resend, the outlined button between cancel and confirm.
  */

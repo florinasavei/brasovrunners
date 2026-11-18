@@ -767,7 +767,7 @@ export function renderBilingual(
     ...(data.cancellationReasonOther ? { cancellationReason: data.cancellationReasonOther } : {}),
     // The club's line of an invitation to volunteer, in the second half's own language (§354): never the first half's words.
     ...(data.volunteerInvitation ? { volunteerInvitation: { ...data.volunteerInvitation, message: data.volunteerInvitation.messageOther } } : {}),
-    // The plan's picture once a message (§956), as one QR is enough: the second half keeps its words and the link to the whole of it.
+    // The plan's pictures once a message (§956, §978), as one QR is enough: the second half keeps its words, the links to the whole of each, and the plan's links.
     ...(data.volunteerPoint ? { volunteerPoint: { ...data.volunteerPoint, pictureLinkOnly: true } } : {}),
     // A family's blocks in the second half: the words and the numbers, not the QR pictures again (§519).
     ...(data.familyConfirmed ? { familyConfirmed: data.familyConfirmed.map((person) => ({ ...person, qrUrl: undefined })) } : {}),
@@ -1178,10 +1178,11 @@ export type TemplateData = {
   /**
    * «Punctul tău de voluntar» (§956, `VOLUNTEER_POINT`): the point of the route the person stands at, read at the send
    * (`volunteers/point-mail.ts#volunteerPointAtSend`) — its place in the route's order (the number the plan's page gives it),
-   * its name and its note in each language (the club typed both), its kilometre, and the plan's picture when the event has
-   * one: at a size for a message and whole, both at the store's public addresses. What the person does there is `volunteer`
-   * above — the roles given and what they ask, as the role's own message says them. It names no other volunteer.
-   * `pictureLinkOnly` is the second half's (`renderBilingual`): the words and the link again, not the picture.
+   * its name and its note in each language (the club typed both), its kilometre, and the plan's pictures and links when it
+   * has some (§978, amending §952's one picture): each picture at a size for a message and whole, both at the store's public
+   * addresses; each link its address, its label (one for both languages) or null, and its host. What the person does there is
+   * `volunteer` above — the roles given and what they ask, as the role's own message says them. It names no other volunteer.
+   * `pictureLinkOnly` is the second half's (`renderBilingual`): the words and the links again, not the pictures.
    *
    * Since §961 a point is of one of two kinds. `startFinish` true is a point at the start–finish: the message says the
    * place with no number and no kilometre (`number` is null, `km` is not read). `coordinates` is where the point is,
@@ -1197,7 +1198,8 @@ export type TemplateData = {
     noteEn: string | null;
     startFinish?: boolean;
     coordinates?: { latitude: number; longitude: number } | null;
-    picture: { displayUrl: string; fullUrl: string; width: number; height: number } | null;
+    pictures: { displayUrl: string; fullUrl: string; width: number; height: number }[];
+    links?: { url: string; label: string | null; host: string }[];
     pictureLinkOnly?: boolean;
   };
   /**
@@ -1690,29 +1692,42 @@ function volunteerPointLines(locale: EmailLocale, d: TemplateData): (string | Em
 }
 
 /**
- * The plan's picture, after the words of «Punctul tău» (§956) and only when the event has one: as wide as the card's
- * column and never wider than its own pixels, the whole picture one press away, and the same link in words under it — for
- * a client that blocks pictures or cannot draw the store's WebP, and for the second half of the message, which carries the
- * link alone (`pictureLinkOnly`). A hosted picture at the store's public address, as the QR and a newsletter's pictures
- * are: never a data URI, which mail clients strip. The plain-text half names it with its address.
+ * The plan's pictures and links, after the words of «Punctul tău» (§956; several of each since §978) and only what the plan
+ * has. Each picture as wide as the card's column and never wider than its own pixels, the whole of it one press away, and the
+ * same link in words under it — for a client that blocks pictures or cannot draw the store's WebP, and for the second half
+ * of the message, which carries the links alone (`pictureLinkOnly`); with several, each link says which one it opens. A
+ * hosted picture at the store's public address, as the QR and a newsletter's pictures are: never a data URI, which mail
+ * clients strip. Then the plan's links — a Google My Maps map, for instance —, each its label or, with none, its host, in
+ * both halves. The plain-text half names each picture and each link with its address.
  */
-function volunteerPointPicture(locale: EmailLocale, d: TemplateData): EmailBodyPart[] {
-  const picture = d.volunteerPoint?.picture;
-  if (!picture) return [];
+function volunteerPointMaps(locale: EmailLocale, d: TemplateData): EmailBodyPart[] {
+  const point = d.volunteerPoint;
+  if (!point) return [];
   const words = T[locale].volunteerPointWords;
-  const linkOnly = d.volunteerPoint?.pictureLinkOnly === true;
-  const full = escapeHtml(picture.fullUrl);
-  const width = Math.max(1, Math.min(CARD_COLUMN_PX, Math.round(picture.width)));
-  const image = linkOnly
-    ? ""
-    : `<a href="${full}" style="display:block;line-height:0"><img src="${escapeHtml(picture.displayUrl)}" alt="${escapeHtml(words.pictureAlt)}" width="${width}" style="display:block;width:100%;max-width:${width}px;height:auto;border:0;margin:0 auto"></a>`;
-  const link = `<p style="margin:${linkOnly ? "0" : "8px 0 0"};font-size:15px;line-height:1.5"><a href="${full}" style="color:${COLOR.blueInk}">${escapeHtml(words.pictureOpen)}</a></p>`;
-  return [
-    {
+  const linkOnly = point.pictureLinkOnly === true;
+  const pictures = point.pictures ?? [];
+  const parts: EmailBodyPart[] = pictures.map((picture, at) => {
+    const full = escapeHtml(picture.fullUrl);
+    const width = Math.max(1, Math.min(CARD_COLUMN_PX, Math.round(picture.width)));
+    const open = words.pictureOpen(at + 1, pictures.length);
+    const image = linkOnly
+      ? ""
+      : `<a href="${full}" style="display:block;line-height:0"><img src="${escapeHtml(picture.displayUrl)}" alt="${escapeHtml(words.pictureAlt)}" width="${width}" style="display:block;width:100%;max-width:${width}px;height:auto;border:0;margin:0 auto"></a>`;
+    const link = `<p style="margin:${linkOnly ? "0" : "8px 0 0"};font-size:15px;line-height:1.5"><a href="${full}" style="color:${COLOR.blueInk}">${escapeHtml(open)}</a></p>`;
+    return {
       html: `<div data-email-part="volunteer-plan-picture" style="margin:0 0 16px">${image}${link}</div>`,
-      text: [`${words.pictureText}: ${picture.fullUrl}`],
-    },
-  ];
+      text: [`${words.pictureText(at + 1, pictures.length)}: ${picture.fullUrl}`],
+    };
+  });
+  const links = point.links ?? [];
+  if (links.length > 0) {
+    const items = links.map((link) => `<a href="${escapeHtml(link.url)}" style="color:${COLOR.blueInk}">${escapeHtml(link.label ?? link.host)}</a>`);
+    parts.push({
+      html: `<p data-email-part="volunteer-plan-links" style="margin:0 0 16px;font-size:15px;line-height:1.5"><strong>${escapeHtml(words.linksLabel)}</strong><br>${items.join("<br>")}</p>`,
+      text: [words.linksLabel, ...links.map((link) => `${link.label ?? link.host}: ${link.url}`)],
+    });
+  }
+  return parts;
 }
 
 /** The organizers' line about a volunteer (§754): the name and the roles the person offered for (§761). */
@@ -2483,8 +2498,8 @@ const T = {
     /*
       «Punctul tău de voluntar la …» (§956): an organizer pressed «Trimite fiecăruia punctul lui» on «Planul voluntarilor».
       Nothing to press. The point is the band's line and the event's start and place the bold one under it; the point's
-      note and the roles given with what they ask stand before these words, the plan's picture after them
-      (`volunteerPointLines`, `volunteerPointPicture`) — facts of this send, whoever wrote the words.
+      note and the roles given with what they ask stand before these words, the plan's pictures and links after them
+      (`volunteerPointLines`, `volunteerPointMaps`, §978) — facts of this send, whoever wrote the words.
       A person at the start–finish (§961) is not «at a point of the route»: the first sentence says the start–finish for
       them, and for a point of the route not a word of it changed.
     */
@@ -3016,8 +3031,8 @@ const T = {
     /** The volunteer category's contact person (§774), the words of «Persoana de contact» already joined: «Ana · 0712 345 678 · ana@club.test». */
     volunteerContact: (contacts: string) => `Întrebări despre voluntariat? ${contacts}`,
     /**
-     * «Punctul tău» (§956), the words around its own: the band's line, the note's label, the roles given, and the plan's picture —
-     * and, since §961, the band of a person at the start–finish and where a point with coordinates is.
+     * «Punctul tău» (§956), the words around its own: the band's line, the note's label, the roles given, and the plan's pictures
+     * and links (§978) — and, since §961, the band of a person at the start–finish and where a point with coordinates is.
      */
     volunteerPointWords: {
       line: (event: string, point: string) => `Punctul tău la ${event}: ${point}`,
@@ -3027,8 +3042,9 @@ const T = {
       noteLabel: "De știut la acest punct",
       roles: (roles: string, several: boolean) => `${several ? "Rolurile tale" : "Rolul tău"}: ${roles}.`,
       pictureAlt: "Planul voluntarilor desenat pe traseu",
-      pictureOpen: "Deschide planul voluntarilor (poza întreagă)",
-      pictureText: "Planul voluntarilor pe traseu, ca poză",
+      pictureOpen: (number: number, of: number) => (of > 1 ? `Deschide poza ${number} din ${of} a planului (întreagă)` : "Deschide planul voluntarilor (poza întreagă)"),
+      pictureText: (number: number, of: number) => (of > 1 ? `Planul voluntarilor, poza ${number} din ${of}` : "Planul voluntarilor pe traseu, ca poză"),
+      linksLabel: "Hărțile și linkurile planului",
     },
     /** The club's copy of a participant's message (§320): in front of the subject, and the first line. */
     clubCopy: {
@@ -3915,8 +3931,9 @@ const T = {
       noteLabel: "Good to know at this point",
       roles: (roles: string, several: boolean) => `${several ? "Your roles" : "Your role"}: ${roles}.`,
       pictureAlt: "The volunteers' plan drawn on the route",
-      pictureOpen: "Open the volunteers' plan (the whole picture)",
-      pictureText: "The volunteers' plan on the route, as a picture",
+      pictureOpen: (number: number, of: number) => (of > 1 ? `Open picture ${number} of ${of} of the plan (the whole of it)` : "Open the volunteers' plan (the whole picture)"),
+      pictureText: (number: number, of: number) => (of > 1 ? `The volunteers' plan, picture ${number} of ${of}` : "The volunteers' plan on the route, as a picture"),
+      linksLabel: "The plan's maps and links",
     },
     clubCopy: {
       subject: "[Club copy] ",
@@ -4670,8 +4687,8 @@ export function buildTemplateContent(
             : familyConfirmedShape
               ? [...copy.familyConfirmed.body(data), familyConfirmedPart(familyConfirmedPeople, copy.familyConfirmed.words, clubCopy)]
               : entry.body(data)),
-      // «Punctul tău» (§956): the plan's picture, linked to the whole of it, after the words whoever wrote them — only when the event has one.
-      ...(messageType === "VOLUNTEER_POINT" ? volunteerPointPicture(locale, data) : []),
+      // «Punctul tău» (§956, §978): the plan's pictures, each linked to the whole of it, then its links, after the words whoever wrote them — only what the plan has.
+      ...(messageType === "VOLUNTEER_POINT" ? volunteerPointMaps(locale, data) : []),
       /*
         Who signs a minor's declaration (§419, §330), after the body whoever wrote it — a fact about
         this registration and the text in force: on the request

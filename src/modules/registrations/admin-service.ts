@@ -1203,8 +1203,8 @@ export async function setOutsideCapacity<T extends Record<string, unknown>>(
  * (confirmed before §87) is given one the same way. Clearing a confirmed runner's number is
  * refused: it would be a number retired for nothing and a runner with none.
  *
- * `sendEmail: false` («Trimite emailul» unticked in the question — the design «telling the owner about every email a
- * staff press sends», slice 4): the number is written and audited exactly the same, the audit row says `emailSkipped`,
+ * `sendEmail: false` (the question answered «… fără email» — the design «telling the owner about every email a
+ * staff press sends», slice 4, §976): the number is written and audited exactly the same, the audit row says `emailSkipped`,
  * and no `BIB_ASSIGNED` is queued — nor its club copies.
  */
 export async function setBibNumberByStaff<T extends Record<string, unknown>>(
@@ -1354,7 +1354,7 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   revalidatePublicContent("places");
   // The runner is told (§105): the confirmation carried the old number, or none. A number at a
   // race that will not run is not news (§331): it is written, and nobody is mailed — nor when the
-  // staff member unticked «Trimite emailul» (slice 4).
+  // staff member answered «… fără email» (slice 4, §976).
   const event = await findEventForAllocation(db, updated.eventId);
   if (sendEmail && event?.eventStatus !== "CANCELLED") {
     await db.transaction(async (tx) => {
@@ -1558,11 +1558,11 @@ export async function clearMemberTicksByStaff<T extends Record<string, unknown>>
  * box that said so before the press; the audit row records the kind beside the reason. A refusal
  * without a ground is refused: the terms promise the person is told why.
  *
- * **«Trimite emailul» unticked** (`sendEmail: false`; the design «telling the owner about every email a staff press
- * sends», slice 4): the same cancellation through the same allocator, with no «Înscriere anulată» to the person — nor
+ * **«… fără email»** (`sendEmail: false`; the design «telling the owner about every email a staff press sends», slice 4,
+ * §976): the same cancellation through the same allocator, with no «Înscriere anulată» to the person — nor
  * its club copies — and `emailSkipped` on the audit row. The freed place's offer to the first in line is that person's
- * email, not this one's, and always goes. A refusal under the terms always tells the person: with the box unticked it is
- * refused (`REFUSAL_NEEDS_EMAIL`, naming the refusal's box), whatever the dialog offered.
+ * email, not this one's, and always goes. A refusal under the terms always tells the person: posted with its email kept
+ * back it is refused (`REFUSAL_NEEDS_EMAIL`, naming the refusal's box), whatever the dialog offered.
  */
 export type StaffCancelKind = "REFUSED_BY_ORGANIZER";
 
@@ -1650,8 +1650,8 @@ export async function cancelRegistrationByStaff<T extends Record<string, unknown
  * and the mark, §173) — so the banner names the bibs to pull out of the pile instead of leaving
  * the club to notice them on the bibs panel afterwards.
  *
- * `sendEmail: false` — the batch's one «Trimite emailul», unticked (slice 4 of the design «telling the owner about every
- * email a staff press sends») — reaches every row's cancellation alike: nobody ticked is emailed, every freed place is
+ * `sendEmail: false` — the batch's question answered «… fără emailuri» (slice 4 of the design «telling the owner about
+ * every email a staff press sends», §976) — reaches every row's cancellation alike: nobody ticked is emailed, every freed place is
  * still offered with its email, and each row's audit row says `emailSkipped`.
  */
 export async function bulkCancelRegistrationsByStaff<T extends Record<string, unknown>>(

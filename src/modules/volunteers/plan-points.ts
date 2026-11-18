@@ -259,7 +259,7 @@ const sameWords = (a: PointWords, b: PointWords): boolean => a.place === b.place
  *   one that is not there, is NOT_FOUND (`PlanPointGone`, said on the page as a point no longer on the plan).
  * - **`remove`:** a plan's own point only; an editor's is refused (it is deleted in the editor). The people who stood there
  *   stand at no point again — the reference's own `ON DELETE SET NULL` — and the result says how many.
- * - **How:** in one transaction under the event row's lock (`FOR NO KEY UPDATE`, as `setVolunteerPlanPicture` and «Pune
+ * - **How:** in one transaction under the event row's lock (`FOR NO KEY UPDATE`, as the presses of «Poze și hărți» (`plan.ts`) and «Pune
  *   aici» take it), so a point being deleted and a person being placed at it wait in a line, as do two presses that count
  *   the plan's points. A press that changes nothing writes nothing and audits nothing.
  * - **The trail:** one row a change — `volunteer_plan.point_added`, `.point_changed`, `.point_removed` — with the point's id,

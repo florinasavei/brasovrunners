@@ -29,6 +29,8 @@ import DeskRow from "@/modules/registrations/ui/DeskRow";
 import PaperConfirmationTip from "@/modules/registrations/ui/PaperConfirmationTip";
 import { familyOf } from "@/modules/registrations/family-marker";
 import QrScanButton from "@/modules/registrations/ui/QrScanButton";
+import { readSpareLines, spareLineWords } from "@/modules/registrations/spare-line";
+import { raceDayTabs } from "@/modules/race-day/ui/RaceDayTabs";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
@@ -96,12 +98,16 @@ export default async function DeskPage({ params, searchParams }: Props) {
     locale,
     href: { pathname: "/admin/checkin/[code]", params: { code: "__CODE__" } },
   });
+  // The chosen event's free desk spares (§444), in one line beside the counts (§979): what «Adaugă pe cineva» picks from.
+  const spareLine = eventId ? await spareLineWords((await readSpareLines(db, [eventId]))[eventId] ?? { kind: "none" }, locale) : null;
   const walkInHref = eventId
     ? `${getPathname({ locale, href: "/admin/registrations/new" })}?eventId=${eventId}&back=desk`
     : null;
 
   return (
     <Stack spacing={3}>
+      {/* «Ziua cursei»'s tabs (§979): this page is «Prezența»; the title under them is the desk's, as it was. */}
+      {await raceDayTabs({ locale, active: "desk", eventId, actor })}
       <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
         {t("desk.title")}
       </Typography>
@@ -198,6 +204,12 @@ export default async function DeskPage({ params, searchParams }: Props) {
             </GlyphButton>
           )}
         </Stack>
+      )}
+      {/* The free spares (§979, §444): the blank bibs a walk-in is handed, as ranges — or why there are none. */}
+      {counts && spareLine && (
+        <Typography variant="body2" color="text.secondary" data-testid="desk-spares">
+          {spareLine}
+        </Typography>
       )}
 
       {/* What the buttons on a row do, in one line, always visible (the owner: "I do not

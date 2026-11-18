@@ -21,6 +21,8 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import PrintButton from "@/shared/ui/PrintButton";
+import TopScrollbar from "@/shared/ui/TopScrollbar";
+import { frameIdFor } from "@/shared/ui/top-scrollbar";
 import { formatRaceNumber } from "@/modules/registrations/domain/race-number";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
@@ -98,8 +100,10 @@ export default async function EmergencySheetPage({ params }: Props) {
         <>
           <Typography variant="body2">{t("emergency.count", { count: rows.length })}</Typography>
           {/* Scrolls sideways on a phone rather than squeezing five columns into 320px; on paper
-              it is the full width of the sheet. */}
-          <Box sx={{ overflowX: "auto" }}>
+              it is the full width of the sheet. A wide screen gets its scrollbar at the top too (§977), never on paper. */}
+          <Box>
+          <TopScrollbar frameId={frameIdFor("emergency")} />
+          <Box id={frameIdFor("emergency")} sx={{ overflowX: "auto" }}>
             <Table size="small" aria-label={t("emergency.title")}>
               <TableHead>
                 <TableRow>
@@ -136,6 +140,7 @@ export default async function EmergencySheetPage({ params }: Props) {
                 ))}
               </TableBody>
             </Table>
+          </Box>
           </Box>
         </>
       )}

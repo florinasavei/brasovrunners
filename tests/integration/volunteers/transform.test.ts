@@ -22,7 +22,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * What is protected, on real PostgreSQL (PGlite), through the real registration flow:
  * - a runner turned volunteer is cancelled by the staff verb — the one allocator: the place offered to the first in line,
  *   never kept and never handed to the volunteer — and stands on the event's volunteers, confirmed, with the role given;
- * - the person's two emails go, or with «Trimite emailul» unticked neither; the next in line's offer always goes;
+ * - the person's two emails go, or answered «… fără email» (`sendEmail` off) neither; the next in line's offer always goes;
  * - the runner's number stays retired with the registration; the volunteer draws one from the volunteers' own series;
  * - the answers the person gave travel only under a privacy notice that names the volunteers' answers; the public
  *   list's tick never;
@@ -232,7 +232,7 @@ describe("§948 BR-REQ-037-03 «Transformă în voluntar»: a runner becomes a v
     expect(written).not.toContain("radu@");
   });
 
-  it("with «Trimite emailul» unticked sends the person neither email, says so in the trail, and still offers the freed place", async () => {
+  it("answered «… fără email» (`sendEmail` off) sends the person neither email, says so in the trail, and still offers the freed place", async () => {
     const { event, roleId } = await createRace(1);
     const radu = await registered(event, "Radu", 0, true);
     await registered(event, "Elena", 3, false);

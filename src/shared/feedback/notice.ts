@@ -412,14 +412,15 @@ export type ConfirmSpec = {
   /** Lines under the body, one fact each, drawn as a list: a resolved `placeChanges`. */
   lines?: readonly string[];
   /**
-   * «Trimite emailul» (the design «telling the owner about every email a staff press sends», slice 4): a box under the
-   * email line, ticked as the dialog opens. Unticked, the bold line says `offLine` instead, the road is not offered and
-   * the quieter lines that belong to the email (`ConfirmAlso.withEmail`: the club's copies of it) are not said; what the
-   * press sends to anybody else — the freed place's offer — is still said, and still goes. The confirm writes `on` or
-   * `off` into the form's hidden `field` (`emailOptOutAnswer`), which the action reads (`shared/forms/send-email.ts`).
-   * Worded by the builder (`confirmWords().mail({ …, optOut: true })`), on the presses where the person's email may
-   * sensibly stay unsent — never where the email is the point: a resend, an offer, a declaration to sign, the copy of a
-   * document the person signed.
+   * The email as a choice made at every press (§976, amending slice 4 of the design «telling the owner about every email a
+   * staff press sends»; the owner, 2026-11-18: «vreau mereu sa confirm daca trimit un mail»): the question's one confirm
+   * becomes two answers that each say whether the email leaves — «{action} și trimite emailul» (`sendLabel`) and
+   * «{action} fără email» (`skipLabel`), each `{action}` filled with `confirmLabel` (`emailAnswers`). The bold email line,
+   * its club copies and its road describe the sending answer; what the press sends anybody else — the freed place's offer
+   * — goes either way. The answer writes `on` or `off` into the form's hidden `field` (`emailOptOutAnswer`), which the
+   * action reads (`shared/forms/send-email.ts`). Enter answers neither. Worded by the builder (`confirmWords().mail({ …,
+   * optOut: true })`), on the presses where the person's email may sensibly stay unsent — never where the email is the
+   * point: a resend, an offer, a declaration to sign, the copy of a document the person signed.
    */
   emailOptOut?: ConfirmEmailOptOut;
   /**
@@ -439,7 +440,7 @@ export type ConfirmOption = { field: string; label: string; ticked: Partial<Pick
 /**
  * The dialog as it reads with its optional box ticked (§956): the body, the lines under it, the email line and the quieter
  * lines `ticked` names take the place of the question's own; what it does not name stays. The spec unchanged while
- * unticked, or without the box. Pure, like `withEmailOff`.
+ * unticked, or without the box. Pure.
  */
 export function withOption(spec: ConfirmSpec, on: boolean): ConfirmSpec {
   if (!spec.option || !on) return spec;
@@ -499,12 +500,26 @@ export function tickAnswer(spec: ConfirmSpec): { field: string; value: "on" } | 
   return spec.tick ? { field: spec.tick.field, value: "on" } : null;
 }
 
-/** `ConfirmSpec.emailOptOut`: the hidden input the answer fills, the box's words, and the bold line while it is unticked. */
-export type ConfirmEmailOptOut = { field: string; label: string; offLine: string };
+/**
+ * `ConfirmSpec.emailOptOut`: the hidden input the answer fills, and the two answers' words — each a template whose
+ * `{action}` is the question's own `confirmLabel` (`Admin.confirm.mail.sendButton`, `skipButton` and their kin).
+ */
+export type ConfirmEmailOptOut = { field: string; sendLabel: string; skipLabel: string };
 
 /**
- * What a confirmed dialog with «Trimite emailul» writes into its form: `on` while the box stayed ticked, `off` once
- * unticked; null for a dialog without the box. Pure, like `tickAnswer`.
+ * The two answers of a question that may send the person their email (§976): «Anulează înscrierea și trimite emailul»
+ * and «Anulează înscrierea fără email», each template's `{action}` filled with the question's verb; null for a question
+ * without the choice, which keeps its one confirm. Pure.
+ */
+export function emailAnswers(spec: ConfirmSpec): { send: string; skip: string } | null {
+  if (!spec.emailOptOut) return null;
+  const fill = (template: string) => template.split("{action}").join(spec.confirmLabel);
+  return { send: fill(spec.emailOptOut.sendLabel), skip: fill(spec.emailOptOut.skipLabel) };
+}
+
+/**
+ * What an answered dialog with the email's choice writes into its form: `on` for «… și trimite emailul», `off` for
+ * «… fără email»; null for a dialog without the choice. Pure, like `tickAnswer`.
  */
 export function emailOptOutAnswer(spec: ConfirmSpec, emailOff: boolean): { field: string; value: "on" | "off" } | null {
   return spec.emailOptOut ? { field: spec.emailOptOut.field, value: emailOff ? "off" : "on" } : null;
@@ -514,16 +529,6 @@ export function emailOptOutAnswer(spec: ConfirmSpec, emailOff: boolean): { field
 export function emailOptOutFields(specs: ConfirmSpec | readonly ConfirmSpec[] | undefined): string[] {
   const list = !specs ? [] : Array.isArray(specs) ? (specs as readonly ConfirmSpec[]) : [specs as ConfirmSpec];
   return [...new Set(list.flatMap((spec) => (spec.emailOptOut ? [spec.emailOptOut.field] : [])))];
-}
-
-/**
- * The dialog as it reads with «Trimite emailul» unticked: the bold line is `offLine`, the road goes, and the quieter
- * lines that belong to the email (`withEmail`) are not said. The spec unchanged while ticked, or without the box. Pure.
- */
-export function withEmailOff(spec: ConfirmSpec, emailOff: boolean): ConfirmSpec {
-  if (!spec.emailOptOut || !emailOff) return spec;
-  const kept = (spec.also ?? []).filter((line) => !line.withEmail);
-  return { ...spec, email: spec.emailOptOut.offLine, road: undefined, also: kept.length > 0 ? kept : undefined };
 }
 
 /** `ConfirmSpec.road`: the facts and the words of the dialog's road line, worded on the server. */
@@ -632,7 +637,6 @@ export function fillFromForm(spec: ConfirmSpec, valueOf: (field: string) => stri
     body: fillChosen(fill(spec.body)),
     ...(spec.email !== undefined ? { email: fill(spec.email) } : {}),
     ...(spec.also ? { also: spec.also.map((line) => ({ ...line, text: fill(line.text) })) } : {}),
-    ...(spec.emailOptOut ? { emailOptOut: { ...spec.emailOptOut, offLine: fill(spec.emailOptOut.offLine) } } : {}),
     fillFrom: undefined,
     fillFromChosen: undefined,
   };
@@ -648,11 +652,9 @@ export type FormCondition = { field: string; equals?: string; notEquals?: string
 
 /**
  * One quieter line of a dialog (`ConfirmSpec.also`): the words, and — when it is true only for some presses — the
- * conditions the posted form must meet for it to be said, as `ConfirmSpec.when`. `withEmail`: the line belongs to the
- * person's email — the club's copies of it, a test address's sentence — and goes unsaid while «Trimite emailul» is
- * unticked (`withEmailOff`).
+ * conditions the posted form must meet for it to be said, as `ConfirmSpec.when`.
  */
-export type ConfirmAlso = { text: string; when?: readonly FormCondition[]; withEmail?: boolean };
+export type ConfirmAlso = { text: string; when?: readonly FormCondition[] };
 
 /** The dialog with only the `also` lines whose conditions the posted form meets; the spec unchanged without any. */
 export function resolveAlso(spec: ConfirmSpec, valueOf: (field: string) => string | null): ConfirmSpec {
@@ -733,10 +735,10 @@ export function resolveEmailCount(spec: ConfirmSpec, valuesOf: (field: string) =
     }
   }
   const rest: ConfirmSpec = { ...spec, emailCount: undefined, email: undefined };
-  // Nobody written to: no email line, and no «Trimite emailul» either — there is nothing to leave unsent.
+  // Nobody written to: no email line, and no choice of the email either — one confirm, as there is nothing to leave unsent.
   if (total <= 0) return { ...rest, emailOptOut: undefined };
   const club = counted.club ? total * counted.club.each + sends * counted.club.once : 0;
-  const clubLine = counted.club && club > 0 ? [{ text: counted.club.forms[countForm(club, counted.locale)].replace("{count}", String(club)), withEmail: true }] : [];
+  const clubLine = counted.club && club > 0 ? [{ text: counted.club.forms[countForm(club, counted.locale)].replace("{count}", String(club)) }] : [];
   const also = [...clubLine, ...(spec.also ?? [])];
   return { ...rest, email: counted.forms[countForm(total, counted.locale)].replace("{count}", String(total)), ...(also.length > 0 ? { also } : {}) };
 }
@@ -771,8 +773,10 @@ function holds(condition: FormCondition, valueOf: (field: string) => string | nu
 /**
  * What a key does in the dialog: Enter confirms a dialog that is not destructive, whichever
  * button has the focus; a destructive one answers only to its own red button, and Escape is
- * the dialog's (MUI closes it, which cancels). Pure, so the rule is tested in Node.
+ * the dialog's (MUI closes it, which cancels). A question with the email's two answers (§976,
+ * `emailChoice`) is answered by neither on Enter, destructive or not: the reader presses the answer
+ * they mean. Pure, so the rule is tested in Node.
  */
-export function confirmOnKey(key: string, destructive: boolean | undefined): "confirm" | null {
-  return key === "Enter" && !destructive ? "confirm" : null;
+export function confirmOnKey(key: string, destructive: boolean | undefined, emailChoice = false): "confirm" | null {
+  return key === "Enter" && !destructive && !emailChoice ? "confirm" : null;
 }

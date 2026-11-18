@@ -46,6 +46,13 @@ import { openFold } from "./support/fold";
  * each view — the table as a table, the points with every fold open. Every press of the journeys above comes back to the
  * view it was pressed in, with what it changed open. What each cell and each fold says in both languages is
  * `tests/integration/volunteers/plan-table-screens.test.ts` and `plan-views-screens.test.ts`.
+ *
+ * And, since §978 (the owner, 2026-11-18: «aici eu vreau sa pot asigna voluntari la punct direct de aici: Si sectiunea trebuie
+ * sa fie collapsible. Poza planului trebuie sa fie mai sus, si sa pot pune mai multe poze, si link-uri»): «Fără punct» is a
+ * fold whose every person has the point to put them at in the phone's own list and «Pune», which comes back to that fold,
+ * open; and «Poze și hărți» is the first fold of the page, where the Organizer adds a map's address — a refused one keeping
+ * what was typed —, opens it in a new tab, sees it printed after the plan with its whole address, and deletes it after a
+ * question. The rules are `plan-unplaced-screens.test.ts`, `plan-picture.test.ts` and `plan-links.test.ts`.
  */
 function databaseUrl(): string {
   if (!process.env.DATABASE_URL && existsSync(".env.local")) process.loadEnvFile(".env.local");
@@ -660,11 +667,36 @@ test.describe("§961 «Punctele planului» on «Planul voluntarilor»", () => {
     await expect(startFinish.getByTestId("plan-point")).toHaveCount(0);
     await expect(startFinish.getByTestId("plan-group-none")).toBeVisible();
     await expect(startFinish.getByTestId("plan-group-count")).toHaveText("0 puncte · niciun voluntar");
+    // «Fără punct» is a fold (§978): closed, its line saying how many stand at no point; opened, Radu.
     const unplaced = page.getByTestId("plan-unplaced");
     await expect(unplaced.getByRole("heading", { level: 3, name: "Fără punct" })).toBeVisible();
+    expect(await unplaced.getAttribute("open")).toBeNull();
+    await expect(unplaced.getByTestId("plan-unplaced-count")).toHaveText("1 voluntar");
+    await openFold(unplaced);
     await expect(unplaced.getByTestId("plan-person-name")).toHaveText([radu.name]);
     await expect(summary).toHaveText("0 voluntari la start–finish · 2 voluntari pe traseu · 1 voluntar fără punct · 1 punct fără nimeni");
     await fits(page);
+
+    // ---- «Pune» on Radu's own line (§978): the point chosen in the phone's own list, one press, back to «Fără punct» open ---
+    const raduLine = unplaced.getByTestId("plan-unplaced-person").filter({ hasText: radu.name });
+    const choice = raduLine.getByTestId("plan-unplaced-select");
+    // The route in the plan's one order, numbered, with its kilometre; no start–finish group: it has no point left.
+    await expect(choice.locator("optgroup")).toHaveCount(1);
+    await expect(choice.locator("optgroup")).toHaveAttribute("label", "Pe traseu");
+    await expect(choice.locator("option")).toHaveText(["Alege punctul", "1. Intersecția Stejeriș · km 1,2", "2. Apă la cabană · km 5,5", "3. Izvorul cald · km 6,1"]);
+    const put = raduLine.getByRole("button", { name: `Pune la punctul ales: ${radu.name}` });
+    await thumbSized(put);
+    await thumbSized(choice);
+    await fits(page);
+    await choice.selectOption({ label: "3. Izvorul cald · km 6,1" });
+    await put.click();
+    await expect(page).toHaveURL(backTo(eventId, "view=points&saved=planUnplaced", "plan-unplaced"), { timeout: 30_000 });
+    await toastSays(page, "Stă la punctul ales: apare în planul voluntarilor.");
+    await hydrated(page);
+    await expect(page.getByTestId("plan-unplaced")).toHaveAttribute("open", "");
+    await expect(page.getByTestId("plan-unplaced-none")).toBeVisible();
+    await expect(page.getByTestId("plan-unplaced-count")).toHaveText("niciun voluntar");
+    await expect(summary).toHaveText("0 voluntari la start–finish · 3 voluntari pe traseu · 0 voluntari fără punct · 1 punct fără nimeni");
 
     // ---- Nothing of it told anybody: no message was queued by adding, placing, changing or deleting ----------------
     expect(await pointMails(eventId)).toEqual([]);
@@ -715,11 +747,13 @@ test.describe("§974 «Tabel» and «Pe puncte» on «Planul voluntarilor»", ()
     await thumbSized(table);
     await thumbSized(byPoint);
 
-    // ---- «Tabel»: the table under its heading, above the picture, the builder and the email — and none of the points ----
+    // ---- «Tabel»: the table under its heading, under «Poze și hărți» (§978) and above the builder and the email — and none
+    // of the points ----
     const section = page.getByTestId("plan-table-section");
     await expect(section.getByRole("heading", { level: 3, name: "Punctele, pe scurt" })).toBeVisible();
     const topOf = async (locator: Locator) => (await locator.boundingBox())?.y ?? Number.NaN;
-    for (const below of [page.getByTestId("plan-picture-section"), page.getByTestId("plan-points-section"), page.getByTestId("plan-mail-section")]) {
+    expect(await topOf(page.getByTestId("plan-maps-section"))).toBeLessThan(await topOf(section));
+    for (const below of [page.getByTestId("plan-points-section"), page.getByTestId("plan-mail-section")]) {
       expect(await topOf(section)).toBeLessThan(await topOf(below));
     }
     await expect(page.getByTestId("plan-point")).toHaveCount(0);
@@ -787,8 +821,8 @@ test.describe("§974 «Tabel» and «Pe puncte» on «Planul voluntarilor»", ()
     await expect(section.getByText("3 voluntari puși, 1 punct fără nimeni")).toBeVisible();
     await expect(section.getByTestId("admin-table-columns")).toBeHidden();
     await expect(section.locator("[data-column-resize]").filter({ visible: true })).toHaveCount(0);
-    // Nor the views' links, the builder or the email: the sheet is the plan.
-    for (const offPaper of ["plan-views", "plan-points-section", "plan-mail-section"]) await expect(page.getByTestId(offPaper)).toBeHidden();
+    // Nor the views' links, the builder or the email — nor «Poze și hărți», which holds nothing here: the sheet is the plan.
+    for (const offPaper of ["plan-views", "plan-points-section", "plan-mail-section", "plan-maps-section"]) await expect(page.getByTestId(offPaper)).toBeHidden();
     await page.emulateMedia({ media: "screen" });
 
     // ---- A name leads to that point on «Pe puncte», open in its open group, and on the screen ----------------------------
@@ -841,5 +875,86 @@ test.describe("§974 «Tabel» and «Pe puncte» on «Planul voluntarilor»", ()
     await expect(page).toHaveURL(new RegExp(`${planPath(eventId)}\\?view=table$`));
     await expect(page.getByTestId("plan-table-section")).toBeVisible();
     await expect(viewLink(page, "Tabel")).toHaveAttribute("aria-current", "page");
+  });
+});
+
+test.describe("§978 «Poze și hărți» on «Planul voluntarilor»", () => {
+  test.describe.configure({ timeout: 180_000 });
+
+  test("the Organizer adds the map of the plan as a link at the top of the page — a refused address keeps what was typed —, opens it in a new tab, prints it after the plan, and deletes it after a question", async ({
+    page,
+  }) => {
+    const { eventId } = await seed(`${test.info().project.name}-${Date.now().toString(36)}-m`);
+    // A made-up Google My Maps address, as «Distribuie» copies one.
+    const MY_MAP = "https://www.google.com/maps/d/viewer?mid=1AbCdEfGhIjKlMnOp";
+    const topOf = async (locator: Locator) => (await locator.boundingBox())?.y ?? Number.NaN;
+    await signIn(page, "Dev Moderator");
+    await page.goto(planPath(eventId));
+    await hydrated(page);
+
+    // ---- The first fold, under the intro and above the views; closed while it holds nothing ------------------------------
+    const maps = page.getByTestId("plan-maps-section");
+    await expect(maps.getByRole("heading", { level: 3, name: "Poze și hărți" })).toBeVisible();
+    expect(await maps.getAttribute("open")).toBeNull();
+    await expect(maps.getByTestId("plan-maps-state")).toHaveText("nicio poză · niciun link");
+    expect(await topOf(maps)).toBeLessThan(await topOf(page.getByTestId("plan-views")));
+    expect(await topOf(maps)).toBeLessThan(await topOf(page.getByTestId("plan-table-section")));
+    await openFold(maps);
+    await fits(page);
+
+    // ---- An address that is not whole: refused, its box named, what was typed kept ----------------------------------------
+    const url = maps.getByTestId("plan-link-add-url");
+    const label = maps.getByTestId("plan-link-add-label");
+    const add = maps.getByTestId("plan-link-add");
+    await thumbSized(add);
+    await url.fill("maps.google.com/d/viewer");
+    await label.fill("Harta voluntarilor");
+    await add.click();
+    await expect(maps.getByText("Scrie adresa întreagă, care începe cu https://.").first()).toBeVisible({ timeout: 30_000 });
+    await expect(url).toHaveValue("maps.google.com/d/viewer");
+    await expect(label).toHaveValue("Harta voluntarilor");
+
+    // ---- The whole address: back to the fold, open, the link drawn ---------------------------------------------------------
+    await url.fill(MY_MAP);
+    await add.click();
+    await expect(page).toHaveURL(backTo(eventId, "view=table&saved=planMaps", "plan-maps"), { timeout: 30_000 });
+    await toastSays(page, "Linkul e pe plan.");
+    // Open whenever it holds something, the address saying nothing of a press.
+    await page.goto(planPath(eventId));
+    await hydrated(page);
+    await expect(maps).toHaveAttribute("open", "");
+    await expect(maps.getByTestId("plan-maps-state")).toHaveText("nicio poză · 1 link");
+    const link = maps.getByTestId("plan-link-open");
+    await expect(link).toHaveText("Harta voluntarilor");
+    await expect(link).toHaveAttribute("href", MY_MAP);
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    await expect(link).toHaveCSS("font-weight", "700");
+    await thumbSized(link);
+    await expect(maps.getByTestId("plan-link-host")).toHaveText("google.com");
+    await fits(page);
+
+    // ---- On paper: the plan first, as always — the table, «Fără punct» —, then the link with its whole address; no control --
+    await page.emulateMedia({ media: "print" });
+    await expect(link).toBeVisible();
+    await expect(maps.getByTestId("plan-link-address")).toHaveText(MY_MAP);
+    await expect(maps.getByTestId("plan-link-address")).toBeVisible();
+    for (const offPaper of ["plan-link-host", "plan-link-remove-form", "plan-link-controls", "plan-maps-help"]) await expect(maps.getByTestId(offPaper)).toBeHidden();
+    await expect(maps.locator(":scope > summary")).toBeHidden();
+    expect(await topOf(link)).toBeGreaterThan(await topOf(page.getByTestId("plan-table-section")));
+    expect(await topOf(link)).toBeGreaterThan(await topOf(page.getByTestId("plan-unplaced")));
+    await page.emulateMedia({ media: "screen" });
+
+    // ---- «Șterge linkul» asks first, naming the link -----------------------------------------------------------------------
+    const remove = maps.getByRole("button", { name: "Șterge linkul Harta voluntarilor" });
+    await thumbSized(remove);
+    await remove.click();
+    await confirmDialog(page, "Ștergi linkul „Harta voluntarilor”?");
+    await expect(page).toHaveURL(backTo(eventId, "view=table&saved=planMaps", "plan-maps"), { timeout: 30_000 });
+    await toastSays(page, "Linkul a fost șters de pe plan.");
+    await hydrated(page);
+    await expect(maps).toHaveAttribute("open", "");
+    await expect(maps.getByTestId("plan-link")).toHaveCount(0);
+    await expect(maps.getByTestId("plan-maps-state")).toHaveText("nicio poză · niciun link");
   });
 });

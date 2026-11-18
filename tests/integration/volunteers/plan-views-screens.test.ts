@@ -215,13 +215,15 @@ describe("§974 «Tabel» and «Pe puncte»: two views by a link each", () => {
       expect(points).not.toContain('data-table-id="volunteer-plan"');
       expect(points).toContain('id="plan-list"');
       expect(planPointsOf(points)).toHaveLength(5);
-      // The view's own plan first, then the three folds, then the people at no point — on both.
+      // «Poze și hărți» first, under the intro and above the views (§978); then the view's own plan, the two folds, and the
+      // people at no point — on both.
       for (const page of [table, points]) {
         const at = (needle: string) => page.indexOf(needle);
         const plan = at('data-testid="plan-table-section"') >= 0 ? at('data-testid="plan-table-section"') : at('id="plan-list"');
+        expect(at('data-testid="plan-maps-section"')).toBeGreaterThan(at('data-testid="plan-help-points"'));
+        expect(at('data-testid="plan-views"')).toBeGreaterThan(at('data-testid="plan-maps-section"'));
         expect(plan).toBeGreaterThan(at('data-testid="plan-views"'));
-        expect(at('data-testid="plan-picture-section"')).toBeGreaterThan(plan);
-        expect(at('data-testid="plan-points-section"')).toBeGreaterThan(at('data-testid="plan-picture-section"'));
+        expect(at('data-testid="plan-points-section"')).toBeGreaterThan(plan);
         expect(at('data-testid="plan-mail-section"')).toBeGreaterThan(at('data-testid="plan-points-section"'));
         expect(at('data-testid="plan-unplaced"')).toBeGreaterThan(at('data-testid="plan-mail-section"'));
       }
@@ -352,8 +354,8 @@ describe("§974 «Pe puncte»: the groups and the points as folds", () => {
     for (const link of [...page.matchAll(/<a[^>]*data-testid="plan-table-point"[^>]*>/g)]) expect(screenOf(page, classesIn(link[0]))).toContain("font-weight:700");
     for (const catalogue of [ro, en]) {
       const plan = catalogue.Admin.volunteers.plan;
-      for (const counted of [plan.groups.points, plan.people, plan.mail.toTell]) expect(Object.keys(counted)).toEqual(["one", "few", "other"]);
-      expect(JSON.stringify([plan.views, plan.groups, plan.people, plan.peopleNone, plan.pointKm, plan.mail.toTell, plan.picture.has, plan.picture.hasNone])).not.toMatch(/plural|select,/);
+      for (const counted of [plan.groups.points, plan.people, plan.mail.toTell, plan.maps.pictures, plan.maps.links]) expect(Object.keys(counted)).toEqual(["one", "few", "other"]);
+      expect(JSON.stringify([plan.views, plan.groups, plan.people, plan.peopleNone, plan.pointKm, plan.mail.toTell, plan.maps, plan.unplaced])).not.toMatch(/plural|select,/);
     }
     expect([ro.Admin.volunteers.plan.groups.points.other, ro.Admin.volunteers.plan.people.other, ro.Admin.volunteers.plan.mail.toTell.other]).toEqual([
       "{count} de puncte",
@@ -405,7 +407,7 @@ describe("§974 «Modifică punctul»: the pencil", () => {
   });
 });
 
-describe("§974 the folds under the plan: the picture, «Adaugă un punct», the email", () => {
+describe("§974 the folds: «Poze și hărți» above the plan (§978), «Adaugă un punct» and the email under it, «Fără punct» last", () => {
   it("draws each as a closed fold saying what it holds, in both views and both languages", async () => {
     await withStartFinish();
     for (const locale of ["ro", "en"] as const) {
@@ -413,20 +415,24 @@ describe("§974 the folds under the plan: the picture, «Adaugă un punct», the
       const words = (locale === "ro" ? ro : en).Admin.volunteers.plan;
       for (const view of ["table", "points"]) {
         const page = await planPage({ view });
-        const picture = elementWith(page, 'data-testid="plan-picture-section"');
+        const maps = elementWith(page, 'data-testid="plan-maps-section"');
+        const unplaced = elementWith(page, 'data-testid="plan-unplaced"');
         const add = elementWith(page, 'data-testid="plan-points-section"');
         const mail = elementWith(page, 'data-testid="plan-mail-section"');
         for (const [fold, id, title, glyph] of [
-          [picture, "plan-picture", words.picture.title, "ImageIcon"],
+          [maps, "plan-maps", words.maps.title, "ImageIcon"],
           [add, "plan-points", words.points.addTitle, "AddIcon"],
           [mail, "plan-mail", words.mail.title, "MailIcon"],
+          [unplaced, "plan-unplaced", words.unplacedTitle, "VolunteerActivismIcon"],
         ] as const) {
           expect(fold, `${locale} ${view}: ${id}`).toMatch(new RegExp(`^<details[^>]*id="${id}"`));
           expect(drawnOpen(fold)).toBe(false);
           expect(barOf(fold)).toMatch(new RegExp(`<h3[^>]*><svg[^>]*aria-hidden="true"[^>]*data-testid="${glyph}"[^>]*>[\\s\\S]*?</svg>${escaped(title)}`));
         }
-        // What each holds, on its closed line: no picture yet; the four still to tell — Ana, Dan, Ion and Radu (Zoe has no address).
-        expect(textOf(barOf(picture), "plan-picture-state")).toBe(escaped(words.picture.hasNone));
+        // What each holds, on its closed line: no picture and no link yet; the four still to tell — Ana, Dan, Ion and Radu (Zoe
+        // has no address); nobody at no point.
+        expect(textOf(barOf(maps), "plan-maps-state")).toBe(`${words.maps.picturesNone} · ${words.maps.linksNone}`);
+        expect(textOf(barOf(unplaced), "plan-unplaced-count")).toBe(escaped(words.peopleNone));
         expect(textOf(barOf(mail), "plan-mail-state")).toBe(locale === "ro" ? "4 voluntari de anunțat" : "4 volunteers to tell");
         // Adding holds nothing to say: its bar is its title alone.
         expect(wordsOf(barOf(add))).toBe(escaped(words.points.addTitle));
@@ -445,9 +451,10 @@ describe("§974 the folds under the plan: the picture, «Adaugă un punct», the
   });
 
   it("opens the fold the last press saved in, and «Adaugă un punct» by itself on a plan with no point", async () => {
-    const open = (page: string) => ["plan-picture-section", "plan-points-section", "plan-mail-section"].filter((testid) => drawnOpen(elementWith(page, `data-testid="${testid}"`)));
+    const open = (page: string) => ["plan-maps-section", "plan-points-section", "plan-mail-section", "plan-unplaced"].filter((testid) => drawnOpen(elementWith(page, `data-testid="${testid}"`)));
     for (const view of ["table", "points"]) {
-      expect(open(await planPage({ view, saved: "planPicture" }))).toEqual(["plan-picture-section"]);
+      expect(open(await planPage({ view, saved: "planMaps" }))).toEqual(["plan-maps-section"]);
+      expect(open(await planPage({ view, saved: "planUnplaced" }))).toEqual(["plan-unplaced"]);
       expect(open(await planPage({ view, saved: "planPointAdded" }))).toEqual(["plan-points-section"]);
       expect(open(await planPage({ view, saved: "planPointsSent" }))).toEqual(["plan-mail-section"]);
       expect(open(await planPage({ view, saved: "volunteerPlaced" }))).toEqual([]);
@@ -538,7 +545,7 @@ describe("§974 the way back: every form carries its view, every press comes bac
 });
 
 describe("§974 on paper", () => {
-  it("prints the groups and the points open with no arrow, the views and the builders never, and a plan without a picture without its fold", async () => {
+  it("prints the groups and the points open with no arrow, the views and the builders never, and a plan with no picture or link without its fold", async () => {
     await withStartFinish();
     const page = await planPage({ view: "points" }, race.raceId, true);
     const plain = page.replace(/<style[\s\S]*?<\/style>/g, "");
@@ -550,7 +557,7 @@ describe("§974 on paper", () => {
       expect(print, attribute).not.toMatch(/^\{display:none|;\{display:none/);
     }
     // Never on paper: the views, the add, the email, and — with no picture — the picture's fold.
-    for (const testid of ["plan-views", "plan-points-section", "plan-mail-section", "plan-picture-section"]) {
+    for (const testid of ["plan-views", "plan-points-section", "plan-mail-section", "plan-maps-section"]) {
       expect(printOf(page, classesIn(tagOf(plain, `data-testid="${testid}"`))), testid).toMatch(/(^|;)\{display:none/);
     }
   });

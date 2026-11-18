@@ -3,7 +3,10 @@ import path from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
+import en from "../../../messages/en.json";
+import ro from "../../../messages/ro.json";
+import ConfirmDialog, { ConfirmDialogActions } from "@/shared/feedback/ConfirmDialog";
+import type { ConfirmSpec } from "@/shared/feedback/notice";
 import ToastProvider from "@/shared/feedback/ToastProvider";
 import { NextIntlClientProvider } from "next-intl";
 import type { ComponentProps } from "react";
@@ -30,7 +33,9 @@ describe("§384 ConfirmDialog", () => {
   });
 
   it("lets Enter confirm only a dialog that is not destructive, and stops the focused cancel from taking the key", () => {
-    expect(source).toMatch(/if \(confirmOnKey\(event\.key, spec\.destructive\) !== "confirm"\) return;/);
+    // A question with the email's two answers (§976) is answered by neither: Enter reaches the focused «Renunță».
+    expect(source).toMatch(/if \(confirmOnKey\(event\.key, spec\.destructive, emailChoice\) !== "confirm"\) return;/);
+    expect(source).toContain("const emailChoice = spec.emailOptOut !== undefined;");
     // `confirm` is `onConfirm` with the email's road written first (§841), so Enter and the button agree.
     // A dialog that asks for a tick (§888) answers Enter only once it is ticked, as its button does.
     expect(source).toMatch(/event\.preventDefault\(\);\s*if \(mayConfirm\) confirm\(\);/);
@@ -75,6 +80,107 @@ describe("§384 ConfirmDialog", () => {
     expect(html).not.toContain('role="dialog"');
     expect(html).not.toContain("Ștergi?");
     expect(renderToStaticMarkup(createElement(ConfirmDialog, { spec: null, open: false, onCancel: () => undefined, onConfirm: () => undefined }))).toBe("");
+  });
+});
+
+/**
+ * §976 — a question that may send the person their email ends in two answers that each say whether it leaves (the owner,
+ * 2026-11-18: «vreau mereu sa confirm daca trimit un mail»), amending slice 4's box ticked in advance. The row of answers
+ * is drawn apart from the portal (`ConfirmDialogActions`), so the server renders it here as the browser draws it.
+ */
+describe("§976 the email's two answers", () => {
+  const source = read("src/shared/feedback/ConfirmDialog.tsx");
+  const noop = () => undefined;
+  const draw = (spec: ConfirmSpec, mayConfirm = true, alternative: { label: string; onClick: () => void } | null = null) =>
+    renderToStaticMarkup(createElement(ConfirmDialogActions, { spec, mayConfirm, onCancel: noop, confirm: noop, confirmWithoutEmail: noop, alternative }));
+  /** Each `<button …>…</button>` of the row, by its test id. */
+  const buttons = (html: string) =>
+    Object.fromEntries([...html.matchAll(/<button([^>]*)>([\s\S]*?)<\/button>/g)].map((match) => [/data-testid="([^"]+)"/.exec(match[1])?.[1] ?? "", { attributes: match[1], text: match[2].replace(/<style[\s\S]*?<\/style>/g, "").replace(/<[^>]+>/g, "") }]));
+  const words = (catalogue: typeof ro | typeof en, many = false) => ({
+    field: "sendEmail",
+    sendLabel: many ? catalogue.Admin.confirm.mail.sendButtonMany : catalogue.Admin.confirm.mail.sendButton,
+    skipLabel: many ? catalogue.Admin.confirm.mail.skipButtonMany : catalogue.Admin.confirm.mail.skipButton,
+  });
+  const cancel: ConfirmSpec = {
+    title: "Anulezi înscrierea?",
+    body: "b",
+    confirmLabel: "Anulează înscrierea",
+    cancelLabel: "Renunță",
+    destructive: true,
+    email: "Pleacă 1 email către Ana Pop: „Înscriere anulată”.",
+    emailOptOut: words(ro),
+  };
+
+  it("draws no box: the confirm becomes «{action} și trimite emailul», contained, and an outlined «{action} fără email» beside «Renunță»", () => {
+    expect(source).not.toContain("confirm-send-email");
+    const row = buttons(draw(cancel));
+    expect(Object.keys(row)).toEqual(["confirm-dialog-cancel", "confirm-dialog-skip-email", "confirm-dialog-confirm"]);
+    expect(row["confirm-dialog-cancel"].text).toBe("Renunță");
+    expect(row["confirm-dialog-confirm"].text).toBe("Anulează înscrierea și trimite emailul");
+    expect(row["confirm-dialog-skip-email"].text).toBe("Anulează înscrierea fără email");
+    // The sending answer keeps the press's colour and glyph; the other is outlined, in the same colour.
+    expect(row["confirm-dialog-confirm"].attributes).toMatch(/MuiButton-contained/);
+    expect(row["confirm-dialog-confirm"].attributes).toMatch(/MuiButton-colorError/);
+    expect(row["confirm-dialog-skip-email"].attributes).toMatch(/MuiButton-outlined/);
+    expect(row["confirm-dialog-skip-email"].attributes).not.toMatch(/MuiButton-contained/);
+    expect(source).toContain('startIcon={spec.choice ? <SendIcon fontSize="small" /> : <CheckIcon fontSize="small" />}');
+    expect(source).toContain('startIcon={<CancelScheduleSendIcon fontSize="small" />}');
+  });
+
+  it("words them in English, and in the plural for a counted press — the bulk cancel", () => {
+    const english = buttons(draw({ ...cancel, confirmLabel: "Cancel the registration", cancelLabel: "Back", emailOptOut: words(en) }));
+    expect(english["confirm-dialog-confirm"].text).toBe("Cancel the registration and send the email");
+    expect(english["confirm-dialog-skip-email"].text).toBe("Cancel the registration without the email");
+    const bulk = buttons(draw({ ...cancel, confirmLabel: "Anulează înscrierile", emailOptOut: words(ro, true) }));
+    expect(bulk["confirm-dialog-confirm"].text).toBe("Anulează înscrierile și trimite emailurile");
+    expect(bulk["confirm-dialog-skip-email"].text).toBe("Anulează înscrierile fără emailuri");
+    const bulkEnglish = buttons(draw({ ...cancel, confirmLabel: "Cancel the registrations", emailOptOut: words(en, true) }));
+    expect(bulkEnglish["confirm-dialog-confirm"].text).toBe("Cancel the registrations and send the emails");
+    expect(bulkEnglish["confirm-dialog-skip-email"].text).toBe("Cancel the registrations without the emails");
+  });
+
+  it("words the publication's alert its own way", () => {
+    for (const [catalogue, verb, send, skip] of [
+      [ro, "Publică", "Publică și anunță abonații", "Publică fără anunț"],
+      [en, "Publish", "Publish and tell the subscribers", "Publish without telling them"],
+    ] as const) {
+      const mail = catalogue.Admin.confirm.mail;
+      const row = buttons(draw({ ...cancel, destructive: false, confirmLabel: verb, emailOptOut: { field: "sendEmail", sendLabel: mail.alertSendButton, skipLabel: mail.alertSkipButton } }));
+      expect(row["confirm-dialog-confirm"].text).toBe(send);
+      expect(row["confirm-dialog-skip-email"].text).toBe(skip);
+      expect(row["confirm-dialog-confirm"].attributes).toMatch(/MuiButton-colorPrimary/);
+    }
+  });
+
+  it("holds both answers while a required tick is unticked (§33), and lets both through once it is", () => {
+    const held = buttons(draw(cancel, false));
+    expect(held["confirm-dialog-confirm"].attributes).toMatch(/disabled=""/);
+    expect(held["confirm-dialog-skip-email"].attributes).toMatch(/disabled=""/);
+    expect(held["confirm-dialog-cancel"].attributes).not.toMatch(/disabled=""/);
+    const free = buttons(draw(cancel, true));
+    expect(free["confirm-dialog-confirm"].attributes).not.toMatch(/disabled=""/);
+    expect(free["confirm-dialog-skip-email"].attributes).not.toMatch(/disabled=""/);
+  });
+
+  it("keeps a second answer beside the two, and a question without the choice as it was: one confirm, its own verb", () => {
+    const both = buttons(draw(cancel, true, { label: "Altfel", onClick: noop }));
+    expect(Object.keys(both)).toEqual(["confirm-dialog-cancel", "confirm-dialog-alternative", "confirm-dialog-skip-email", "confirm-dialog-confirm"]);
+    const plain = buttons(draw({ ...cancel, emailOptOut: undefined }));
+    expect(Object.keys(plain)).toEqual(["confirm-dialog-cancel", "confirm-dialog-confirm"]);
+    expect(plain["confirm-dialog-confirm"].text).toBe("Anulează înscrierea");
+  });
+
+  it("gives each answer a full line on a phone and a thumb's 44 pixels, as the dialog's other buttons", () => {
+    expect(source).toContain('const ANSWER_SX = { ...TAP_TARGET, flex: { xs: "1 1 100%", sm: "0 0 auto" } } as const;');
+    expect(source.match(/sx=\{ANSWER_SX\}/g)).toHaveLength(4);
+    expect(source).toContain('<DialogActions sx={{ flexWrap: "wrap", gap: 1, "& > :not(:first-of-type)": { ml: 0 } }}>');
+  });
+
+  it("answers `emailOff: false` from the sending answer and `true` from «… fără email», the road written for the first alone", () => {
+    expect(source).toContain("const confirm = withRoad(onConfirm);");
+    expect(source).toContain("const confirmWithoutEmail = withRoad(onConfirm, true);");
+    expect(source).toMatch(/onClick=\{confirmWithoutEmail\}[\s\S]*?data-testid="confirm-dialog-skip-email"/);
+    expect(source).toMatch(/onClick=\{confirm\}[\s\S]*?data-testid="confirm-dialog-confirm"/);
   });
 });
 

@@ -228,33 +228,86 @@ describe("confirmWords — a press that writes to nobody, and the quieter lines"
   });
 });
 
-describe("«Trimite emailul» in the builder (the design «telling the owner about every email a staff press sends», slice 4)", () => {
-  it("draws the box with its usual words and field, the person's off line — and marks the club's count as the email's own", async () => {
+describe("the email's two answers in the builder (§976, amending slice 4 of the design «telling the owner about every email a staff press sends»)", () => {
+  it("words a person's press «{action} și trimite emailul» / «{action} fără email», raw for the dialog to fill, on the usual field", async () => {
     const words = await confirmWords();
     const mail = words.mail({ to: "Ana Pop", type: "BIB_ASSIGNED", optOut: true });
-    expect(mail.emailOptOut).toEqual({ field: "sendEmail", label: "Trimite emailul", offLine: "Nu pleacă niciun email către Ana Pop." });
-    // Unticked, the club's copies go with the email they copy; the next in line's offer is the page's line, never marked.
-    expect(mail.also?.every((line) => line.withEmail === true)).toBe(true);
-    expect(words.nextInLineMaybe().withEmail).toBeUndefined();
-    // No box where the press does not offer it.
+    expect(mail.emailOptOut).toEqual({ field: "sendEmail", sendLabel: "{action} și trimite emailul", skipLabel: "{action} fără email" });
+    // The club's count stays said: it describes the sending answer.
+    expect(mail.also?.map((line) => line.text)).toEqual(["Și 2 emailuri pentru căsuțele clubului."]);
+    // No choice where the press does not offer it: one confirm.
     expect(words.mail({ to: "Ana Pop", type: "BIB_ASSIGNED" }).emailOptOut).toBeUndefined();
   });
 
-  it("takes a press's own words for the box — the colleague's invitation — and the count's off line names the email", async () => {
+  it("words a counted press in the plural — the bulk cancel — and takes a press's own words — the colleague's invitation", async () => {
     const words = await confirmWords();
-    const invite = words.mail({ to: { name: "{displayName}", address: "{email}" }, type: "STAFF_INVITATION", optOut: { label: "Trimite invitația acum", offLine: "Nimic către {displayName}." } });
-    expect(invite.emailOptOut).toEqual({ field: "sendEmail", label: "Trimite invitația acum", offLine: "Nimic către {displayName}." });
     const bulk = words.mailCount({ field: "registrationId", counts: { a: 1 }, type: "REGISTRATION_CANCELLED", audience: "ticked", optOut: true });
-    expect(bulk.emailOptOut?.offLine).toBe("Nu pleacă niciun email „Înscriere anulată”.");
+    expect(bulk.emailOptOut).toEqual({ field: "sendEmail", sendLabel: "{action} și trimite emailurile", skipLabel: "{action} fără emailuri" });
+    const counted = words.mail({ to: { upToLinesOf: "members", audience: "memberAddresses" }, type: "MEMBER_INVITATION", optOut: true });
+    expect(counted.emailOptOut).toMatchObject({ sendLabel: "{action} și trimite emailurile", skipLabel: "{action} fără emailuri" });
+    const invite = words.mail({
+      to: { name: "{displayName}", address: "{email}" },
+      type: "STAFF_INVITATION",
+      optOut: { sendLabel: ro.Admin.staff.inviteSendButton, skipLabel: ro.Admin.staff.inviteSkipButton },
+    });
+    expect(invite.emailOptOut).toEqual({ field: "sendEmail", sendLabel: "{action} și trimite invitația", skipLabel: "{action} fără invitație" });
   });
 
-  it("offers the publication's own box, «Anunță abonații newsletterului», in both languages", async () => {
+  it("words every template in both languages with `{action}` and nothing else to fill — the publication's own included", async () => {
     for (const [locale, catalogue] of [["ro", ro], ["en", en]] as const) {
       state.locale = locale;
       const words = await confirmWords();
-      expect(words.alertOptOut().emailOptOut).toEqual({ field: "sendEmail", label: catalogue.Admin.confirm.mail.alertOptOut, offLine: catalogue.Admin.confirm.mail.alertOff });
-      expect(words.optOutLabel).toBe(catalogue.Admin.confirm.mail.optOut);
+      const mail = catalogue.Admin.confirm.mail;
+      expect(words.alertOptOut().emailOptOut).toEqual({ field: "sendEmail", sendLabel: mail.alertSendButton, skipLabel: mail.alertSkipButton });
+      expect(words.mail({ to: "Ana Pop", type: "BIB_ASSIGNED", optOut: true }).emailOptOut).toMatchObject({ sendLabel: mail.sendButton, skipLabel: mail.skipButton });
+      expect(words.mailCount({ field: "f", counts: {}, type: "REGISTRATION_CANCELLED", audience: "ticked", optOut: true }).emailOptOut).toMatchObject({
+        sendLabel: mail.sendButtonMany,
+        skipLabel: mail.skipButtonMany,
+      });
+      const staff = catalogue.Admin.staff;
+      for (const template of [
+        mail.sendButton,
+        mail.skipButton,
+        mail.sendButtonMany,
+        mail.skipButtonMany,
+        mail.alertSendButton,
+        mail.alertSkipButton,
+        staff.inviteSendButton,
+        staff.inviteSkipButton,
+        staff.membersSendButton,
+        staff.membersSkipButton,
+      ]) {
+        expect(template, `${locale} ${template}`).toMatch(/^\{action\} \S/);
+        expect(template.replace("{action}", ""), `${locale} ${template}`).not.toMatch(/[{}]/);
+      }
+      // The box beside a button keeps its words (`MailLine`): no question there.
+      expect(words.optOutLabel).toBe(mail.optOut);
     }
+    state.locale = "ro";
+  });
+
+  it("gives whole answers to the two verbs the template words badly — «Creează și publică», «Acordul părintelui pe hârtie»", async () => {
+    for (const [locale, catalogue] of [["ro", ro], ["en", en]] as const) {
+      state.locale = locale;
+      const words = await confirmWords();
+      const { editor, volunteers } = catalogue.Admin;
+      const created = words.alertOptOut({ sendLabel: editor.createPublishSendButton, skipLabel: editor.createPublishSkipButton });
+      expect(created.emailOptOut).toEqual({ field: "sendEmail", sendLabel: editor.createPublishSendButton, skipLabel: editor.createPublishSkipButton });
+      const paper = words.mail({
+        to: "Ana Pop",
+        type: "VOLUNTEER_AGREEMENT_ACCEPTED",
+        optOut: { sendLabel: volunteers.guardian.paperSendButton, skipLabel: volunteers.guardian.paperSkipButton },
+      });
+      expect(paper.emailOptOut).toEqual({ field: "sendEmail", sendLabel: volunteers.guardian.paperSendButton, skipLabel: volunteers.guardian.paperSkipButton });
+      // Whole words: nothing for the dialog to fill, and no verb joined twice.
+      for (const label of [editor.createPublishSendButton, editor.createPublishSkipButton, volunteers.guardian.paperSendButton, volunteers.guardian.paperSkipButton]) {
+        expect(label, `${locale} ${label}`).not.toMatch(/[{}]/);
+        expect(label.split(/ (și|and) /).length, `${locale} ${label}`).toBeLessThanOrEqual(3);
+      }
+    }
+    expect(ro.Admin.editor.createPublishSendButton).toBe("Creează, publică și anunță abonații");
+    expect(ro.Admin.volunteers.guardian.paperSkipButton).toBe("Înregistrează acordul fără email");
+    state.locale = "ro";
   });
 });
 
