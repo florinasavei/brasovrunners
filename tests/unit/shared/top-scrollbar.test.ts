@@ -14,7 +14,7 @@ import { withClientWords } from "../../helpers/client-words";
  * tabel si din partea asta de sus, fara sa mai fiu nevoit sa dau scroll pana jos». A backoffice table wider than its frame
  * gets a second scrollbar right above it, kept in step with the frame's own, so it scrolls sideways without going down to
  * its end. The geometry — the bar moving the frame and the frame the bar, in a real browser — is walked in
- * `tests/e2e/admin-column-widths.spec.ts`.
+ * `tests/e2e/admin-top-scrollbar.spec.ts`.
  */
 const ROOT = process.cwd();
 const read = (...parts: string[]) => readFileSync(path.join(ROOT, ...parts), "utf8").replace(/\r\n/g, "\n");
