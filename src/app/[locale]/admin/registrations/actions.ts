@@ -34,6 +34,8 @@ import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
 import { setRegistrationAmbassador } from "@/modules/registrations/ambassador-mark";
 import { deleteSponsorListRecord, SPONSOR_REGISTER_ANCHOR } from "@/modules/registrations/sponsor-register";
 import { isRegistrationEliteTick, setRegistrationElite, setRegistrationEliteTick } from "@/modules/registrations/elite-mark";
+import { setRegistrationEliteBibLabel } from "@/modules/registrations/elite-label";
+import { ELITE_NAME_MAX } from "@/db/schema/event-elite-entries";
 import { setRegistrationInRaffle } from "@/modules/registrations/raffle-mark";
 import { holdDeclarationAcceptance, releaseDeclarationAcceptance } from "@/modules/registrations/declaration-hold";
 import { findEventForRegistrationById } from "@/modules/events/repository";
@@ -675,7 +677,34 @@ export async function setRegistrationEliteAction(_previous: FormOutcome | null, 
     outcome = outcomeOf(error);
   }
   if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome, registrationId);
+  // Pressed on a row of the desk («Elită și BIB», §975, amending §897): back to the desk with its event, its search and the row.
+  if (form.has("back")) return backToDesk(form, locale, registrationId, outcome);
   return backTo(detailPath(locale, registrationId), outcome);
+}
+
+/**
+ * «Eticheta pe BIB» on a registration marked «Elită» (§975), from the desk's «Elită și BIB»: what its bib prints where the number
+ * goes — empty, or the first name itself, back to the first name. The Administrator's (`canManageRegistrations`, the elite mark's
+ * own gate): the coarse gate here, the service asserts it again (BR-REQ-060-01). It asks nothing (§384): it tells nobody and the
+ * same box undoes it. A label too long comes back in the row with the box still filled (§315), its sentence naming the limit;
+ * anything else goes back to the desk with its event, its search and the row, as the desk's other presses do.
+ */
+export async function setRegistrationEliteBibLabelAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+
+  let outcome: Record<string, string>;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    await setRegistrationEliteBibLabel(getDb(), actor, registrationId, form.get("eliteBibLabel"), new Date());
+    outcome = { saved: "eliteLabelSaved" };
+  } catch (error) {
+    if (isDomainError(error) && error.code === "ELITE_LABEL_TOO_LONG") {
+      return { ...refused(error, form), errorValues: { max: String(ELITE_NAME_MAX) } };
+    }
+    outcome = outcomeOf(error);
+  }
+  return backToDesk(form, locale, registrationId, outcome);
 }
 
 /**

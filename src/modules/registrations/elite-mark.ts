@@ -8,6 +8,7 @@ import { rerankEventResults } from "@/modules/results/results";
 import { canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
+import { eliteBibName, eliteDefaultLabel } from "./bib-elite";
 
 /**
  * «Marchează ca elită» / «Nu mai e elită» (§897; the owner, 2026-11-03: «ar trebui să pot marca pe cineva ca elită
@@ -197,7 +198,16 @@ export async function listEliteTicks<T extends Record<string, unknown>>(db: Data
 }
 
 /** A registration marked «Elită», as the registrations page's «Elite» panel lists it. */
-export type EliteMarkedRow = { id: string; name: string; status: RegistrationStatus; bibNumber: number | null };
+export type EliteMarkedRow = {
+  id: string;
+  name: string;
+  status: RegistrationStatus;
+  bibNumber: number | null;
+  /** «Eticheta pe BIB» in force (§975, `bib-elite.ts#eliteBibName`): what the bib prints where the number goes. */
+  bibLabel: string;
+  /** The label it prints with none typed: the first name (`eliteDefaultLabel`). */
+  defaultLabel: string;
+};
 
 /**
  * The registrations marked «Elită» at one event, for the registrations page's «Elite» panel and the editor's elite card —
@@ -211,9 +221,21 @@ export async function listEliteMarkedRegistrations<T extends Record<string, unkn
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not read an event's registrations`);
   }
   if (!isUuid(eventId)) return [];
-  return db
-    .select({ id: registrations.id, name: registrations.registeredName, status: registrations.status, bibNumber: registrations.bibNumber })
+  const rows = await db
+    .select({
+      id: registrations.id,
+      name: registrations.registeredName,
+      status: registrations.status,
+      bibNumber: registrations.bibNumber,
+      firstName: registrations.firstName,
+      eliteBibLabel: registrations.eliteBibLabel,
+    })
     .from(registrations)
     .where(and(eq(registrations.eventId, eventId), eq(registrations.elite, true), eq(registrations.kind, "REAL")))
     .orderBy(asc(registrations.registeredName), asc(registrations.id));
+  return rows.map(({ firstName, eliteBibLabel, ...row }) => ({
+    ...row,
+    bibLabel: eliteBibName({ eliteBibLabel, firstName, registeredName: row.name }),
+    defaultLabel: eliteDefaultLabel({ firstName, registeredName: row.name }),
+  }));
 }

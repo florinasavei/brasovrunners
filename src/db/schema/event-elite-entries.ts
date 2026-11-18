@@ -49,6 +49,12 @@ export const eventEliteEntries = pgTable(
     inResults: boolean("in_results").notNull().default(true),
     /** «Apare pe site» (§910): true, the name (and number) shows under «Elitele cursei» on the event page while its public list is on. */
     onSite: boolean("on_site").notNull().default(false),
+    /**
+     * «Eticheta pe BIB» (§975): what the line's bib prints where the number goes, as the club typed it — trimmed, inner spaces
+     * collapsed, 1 to `ELITE_NAME_MAX` characters. Null is the default: the name's first word (`bib-elite.ts#eliteLineBibName`).
+     * The club's typed text, as the line's name is; written by the Administrator alone (`elite-label.ts`), audited by id.
+     */
+    bibLabel: text("bib_label"),
     createdByStaffUserId: uuid("created_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -57,6 +63,7 @@ export const eventEliteEntries = pgTable(
     index("event_elite_entries_event_idx").on(t.eventId),
     check("event_elite_entries_name_length", sql`char_length(${t.name}) BETWEEN 1 AND ${sql.raw(String(ELITE_NAME_MAX))}`),
     check("event_elite_entries_bib_number", sql`${t.bibNumber} IS NULL OR ${t.bibNumber} BETWEEN 1 AND ${sql.raw(String(ELITE_NUMBER_MAX))}`),
+    check("event_elite_entries_bib_label_length", sql`${t.bibLabel} IS NULL OR char_length(${t.bibLabel}) BETWEEN 1 AND ${sql.raw(String(ELITE_NAME_MAX))}`),
   ],
 );
 

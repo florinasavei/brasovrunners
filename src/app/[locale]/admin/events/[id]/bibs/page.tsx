@@ -12,6 +12,7 @@ import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
 import { checkpointsStampPart } from "@/modules/event-checkpoints/domain/checkpoint";
 import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
+import { eliteBibName } from "@/modules/registrations/bib-elite";
 import { bibEventDate, findEventForBibs, listBibs } from "@/modules/registrations/bibs";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -171,7 +172,7 @@ export default async function EventBibsPage({ params }: Props) {
                   elite mark (§897): marked or unmarked, the picture is the sheet's. */}
               <Box
                 component="img"
-                src={bibPictureSrc({ eventId: id, registrationId: bib.id, locale, stamp: pictureStamp, member: bib.member, elite: bib.elite })}
+                src={bibPictureSrc({ eventId: id, registrationId: bib.id, locale, stamp: pictureStamp, member: bib.member, elite: bib.elite, eliteLabel: eliteBibName(bib) })}
                 alt={t("bibs.previewAlt", { number: formatRaceNumber(bib.bibNumber, event?.design.numberFormat), name: bib.registeredName })}
                 width={BIB_IMAGE.width}
                 height={BIB_IMAGE.height}

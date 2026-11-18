@@ -1,3 +1,5 @@
+import { ELITE_NAME_MAX } from "@/db/schema/event-elite-entries";
+import { DomainError } from "@/shared/errors/domain-error";
 import type { BibDesign } from "./bib-design";
 import { type BibEliteLayout, bibEliteLayout } from "./bib-geometry";
 import { bibTitleWidth } from "./bib-header";
@@ -10,6 +12,8 @@ import { bibTitleWidth } from "./bib-header";
 export type BibEliteEntry = {
   /** The name as stored: trimmed, one space between words, 1 to 80 characters. */
   name: string;
+  /** «Eticheta pe BIB» (§975): what prints where the number goes when the club typed one; null or absent, the name's first word. */
+  bibLabel?: string | null;
   /** The line's own number, when the club typed one. */
   bibNumber: number | null;
 };
@@ -34,27 +38,66 @@ export function bibEliteParts(design: Pick<BibDesign, "eliteSponsors">): { numbe
 }
 
 /**
- * The name a line of the race's elite list prints (§963, amending §948; the owner, 2026-11-17, of a line typed «Ingird
- * Mutter» beside registrations that print «Silviu», «Paul»: «la Ingrid de ce scrie și prenumele???»): the first word of what
- * the club typed, as a registration prints its first name alone — one word, large, read from the roadside.
+ * «Eticheta pe BIB» (§975, amending §948 and §963; the owner, 2026-11-18, of the elite list: «vreau să customizez cum apare pe
+ * BIB, dacă pun doar prenume sau cum afișez de fapt. Deci în dreptul fiecăruia vreau un „BIB Label” și să fie prenumele by
+ * default»): what an elite bib prints where the number goes is a label per line — the one the Administrator typed, when there
+ * is one, and otherwise the default below. Decided here once, for the sheet (`bibs-pdf.ts`), the picture (`bib-image.tsx`,
+ * through the preview route) and every screen that says it (the elite card, the desk), so none of them can drift.
  */
-export function eliteLineBibName(name: string): string {
+function storedLabel(label: string | null | undefined): string | null {
+  const typed = (label ?? "").trim().replace(/\s+/g, " ");
+  return typed === "" ? null : typed;
+}
+
+/**
+ * The default a line of the race's elite list prints (§963, amending §948; the owner, 2026-11-17, of a line that printed a
+ * whole name: «… de ce scrie și prenumele???»): the first word of what the club typed, as a registration prints its first
+ * name alone — one word, large, read from the roadside.
+ */
+export function eliteLineDefaultLabel(name: string): string {
   const first = name.trim().split(/\s+/)[0] ?? "";
   return first === "" ? name : first;
 }
 
 /**
- * The name a registration marked «Elită» prints where the number goes (§948, amending §897; the owner, 2026-11-15: «cele 6
- * elite … vor avea BIB-uri doar cu numele mic: Silviu, Ingrid, Paul, Delia»): the person's **first name alone**, as the
- * registration holds it — one word prints large and is read from the roadside, a full name prints small. A row that
- * keeps no first name (a registration from before the two halves were stored) prints the registered name, as it did.
- *
- * Only a registration's bib: a line of the race's elite list (`elite-list.ts`) prints what the club typed, which is
- * where any other words go — a full name, a nickname. Decided here once, for the sheet and the picture alike.
+ * The label a line of the race's elite list prints (§975): the line's own «Eticheta pe BIB» when the club typed one, else the
+ * name's first word (`eliteLineDefaultLabel`).
  */
-export function eliteBibName(row: { firstName?: string | null; registeredName: string }): string {
+export function eliteLineBibName(name: string, bibLabel?: string | null): string {
+  return storedLabel(bibLabel) ?? eliteLineDefaultLabel(name);
+}
+
+/**
+ * The default a registration marked «Elită» prints where the number goes (§948, amending §897; the owner, 2026-11-15: «cele 6
+ * elite … vor avea BIB-uri doar cu numele mic»): the person's **first name alone**, as the registration holds it — one word
+ * prints large and is read from the roadside, a full name prints small. A row that keeps no first name (a registration from
+ * before the two halves were stored) prints the registered name, as it did.
+ */
+export function eliteDefaultLabel(row: { firstName?: string | null; registeredName: string }): string {
   const first = (row.firstName ?? "").trim().replace(/\s+/g, " ");
   return first === "" ? row.registeredName : first;
+}
+
+/**
+ * The label a registration marked «Elită» prints (§975): its own «Eticheta pe BIB» when the Administrator typed one, else the
+ * first name (`eliteDefaultLabel`). A label kept while the mark is off is the same label when the mark comes back.
+ */
+export function eliteBibName(row: { eliteBibLabel?: string | null; firstName?: string | null; registeredName: string }): string {
+  return storedLabel(row.eliteBibLabel) ?? eliteDefaultLabel(row);
+}
+
+/**
+ * A typed «Eticheta pe BIB», ready to store (§975): trimmed, inner spaces collapsed to one — it is printed, and a double space
+ * would print as a gap. Empty, or the very default the line prints anyway, stores null — back to the default, so a corrected
+ * first name is followed again. Longer than `ELITE_NAME_MAX` is refused naming the box (`ELITE_LABEL_TOO_LONG`).
+ */
+export function parseEliteBibLabel(raw: unknown, defaultLabel: string, field = "eliteBibLabel"): string | null {
+  const typed = storedLabel(typeof raw === "string" ? raw : "");
+  if (typed === null || typed === defaultLabel) return null;
+  if ([...typed].length > ELITE_NAME_MAX) {
+    throw new DomainError("ELITE_LABEL_TOO_LONG", `a label of at most ${ELITE_NAME_MAX} characters`, [field]);
+  }
+  return typed;
 }
 
 /** The elite bib's name and number in the number's area, measured in the bold type both renderers embed. */

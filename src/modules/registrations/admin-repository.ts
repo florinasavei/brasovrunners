@@ -39,6 +39,7 @@ import { promoListed } from "./sponsor-list";
 import { healthNoteShown } from "./domain/health-note";
 import { memberCanonicalEmails } from "./member-ticks";
 import { PRINTS_MEMBER_BIB } from "./member-bib";
+import { eliteBibName, eliteDefaultLabel } from "./bib-elite";
 import { BIB_STAMP, RACE_NUMBER_FORMAT } from "@/modules/events/repository";
 import type { QueueOrder } from "./domain/waitlist";
 import { isRejectionCause, rejectionCause, type RejectionCause } from "@/modules/notifications/domain/rejection-cause";
@@ -1385,6 +1386,14 @@ export type DeskRegistration = {
   /** «Elită» (§897): the bib prints as an elite bib — part of the picture's address, so a mark is a fresh picture. */
   elite: boolean;
   /**
+   * «Eticheta pe BIB» in force (§975, `bib-elite.ts#eliteBibName`): what the elite bib in the volunteer's hand says where the
+   * number goes — the label the Administrator typed, else the first name. Said on the row only while `elite`; a name the row
+   * already shows, never an address (`AGENTS.md` §15.11). Part of the picture's address as a fingerprint (`bibPictureSrc`'s `l=`).
+   */
+  eliteLabel: string;
+  /** The label with none typed — the first name (`eliteDefaultLabel`): the Administrator's box's placeholder. */
+  eliteDefaultLabel: string;
+  /**
    * The bib prints in the members' design (§664), by the one rule (§972, `member-bib.ts#PRINTS_MEMBER_BIB`) — part of the
    * picture's address (`m=1`), so a tick corrected in «Modifică datele» or the design's switch moved is a fresh picture,
    * never the one the browser kept for the cache hour. The picture already shows it to every desk role; no address.
@@ -1433,6 +1442,9 @@ const DESK_COLUMNS = {
   raceNumberFormat: RACE_NUMBER_FORMAT,
   bibStamp: BIB_STAMP,
   elite: registrations.elite,
+  // The two halves «Eticheta pe BIB» is decided from (§975), read by `deskRowOf` alone and never handed to the row as they are.
+  deskFirstName: registrations.firstName,
+  deskStoredLabel: registrations.eliteBibLabel,
   // The members' race number (§664), by the one rule (§972): the picture's address carries it, as the bibs page's grid's does.
   memberBib: PRINTS_MEMBER_BIB,
   bibPrintedAt: registrations.bibPrintedAt,
@@ -1459,6 +1471,14 @@ function deskQuery<T extends Record<string, unknown>>(db: Database<T>, locale: L
     .leftJoin(checkedInBy, eq(checkedInBy.id, registrations.checkedInByStaffUserId));
 }
 
+type DeskSelected = Awaited<ReturnType<ReturnType<typeof deskQuery>["execute"]>>[number];
+
+/** A desk row as the screen reads it: the elite bib's label decided once, by `bib-elite.ts` (§975). */
+function deskRowOf({ deskFirstName, deskStoredLabel, ...row }: DeskSelected): DeskRegistration {
+  const names = { firstName: deskFirstName, registeredName: row.registeredName };
+  return { ...row, eliteLabel: eliteBibName({ ...names, eliteBibLabel: deskStoredLabel }), eliteDefaultLabel: eliteDefaultLabel(names) };
+}
+
 /** The QR, scanned or typed: one registration, from any event. */
 export async function findRegistrationByCheckinCode<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -1466,7 +1486,7 @@ export async function findRegistrationByCheckinCode<T extends Record<string, unk
   locale: Locale,
 ): Promise<DeskRegistration | undefined> {
   const [row] = await deskQuery(db, locale).where(eq(registrations.checkinCode, code)).limit(1);
-  return row;
+  return row ? deskRowOf(row) : undefined;
 }
 
 /**
@@ -1505,10 +1525,11 @@ export async function listDeskRegistrations<T extends Record<string, unknown>>(
       );
     }
   }
-  return deskQuery(db, input.locale)
+  const rows = await deskQuery(db, input.locale)
     .where(and(...conditions))
     .orderBy(asc(registrations.registeredName), asc(registrations.id))
     .limit(200);
+  return rows.map(deskRowOf);
 }
 
 /** The numbers the organizer watches during pickup. */
