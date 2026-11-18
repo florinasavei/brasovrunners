@@ -169,6 +169,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // «Șterge punctul» on a point of the plan's own (§961): the point goes and its people stand at no point again — asked
   // first, with the point's name and how many people stand there.
   removePlanPointAction: [],
+  // «Șterge» on a thing of «Lucruri de adus» (§NNN): the thing and its tick leave the list — asked first, naming the thing.
+  removeRaceDayItemAction: [],
   // Legal.
   approvePlatformTemplatesAction: [],
   // Every text at once (§532): drafts from the templates, and the drafts approved, each naming its texts.
@@ -387,6 +389,13 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Salvează punctul» in a point's «Modifică punctul» (§961): a plan's own point changed, or the coordinates of one of the event's points.
   editPlanPointAction:
     "the organizers' own words for a place of their plan — its name, its kilometre, its kind, where it is — replaced by saving them again; it tells nobody, is on no public page, and everybody stays at the point they stand at",
+  // «Lucruri de adus» on «Ziua cursei» (§NNN): the organizers' own checklist of things to bring to the race.
+  setRaceDayItemBroughtAction:
+    "a tick on the organizers' own checklist, posting the state it wants and undone by the same tick; it tells nobody, is on no public page and changes no person",
+  addRaceDayItemAction:
+    "adds a thing to the organizers' own checklist, undone by «Șterge», which asks; it tells nobody and is on no public page",
+  editRaceDayItemAction:
+    "the organizers' own words for a thing to bring, replaced by saving them again; it tells nobody, is on no public page and keeps its tick",
   addTestRegistrationsAction: "test rows, counted nowhere and absent from production, removed by a verb that asks",
   hardDeleteEventAction: "guarded by the event's title, typed: the typing is the question",
   eraseRegistrationFromListAction: "guarded by the registered name, typed: the typing is the question",

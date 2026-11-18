@@ -93,6 +93,8 @@ export type DomainErrorCode =
   | "RESULT_FINISH_NOT_STARTED"
   // «Sosire» pressed more than a day after the gun: the results are written on «Clasament» by then.
   | "RESULT_FINISH_CLOSED"
+  // «Adaugă un lucru» on an event whose «Lucruri de adus» already holds the most a list may (§NNN): the sentence says how many.
+  | "RACE_DAY_ITEMS_FULL"
   // A member tier deleted while members hold it (§811): give them another level first. The action adds how many.
   | "MEMBER_TIER_HAS_MEMBERS"
   // A member tier deleted while a discount code is for that tier alone (§811): an empty limit means every member, so the code would open to all.
