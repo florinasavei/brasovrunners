@@ -29,7 +29,7 @@ import { RAFFLE_NUMBER_MAX } from "@/modules/volunteers/domain/raffle";
 import { readRaffleRules } from "@/modules/volunteers/raffle-roster";
 import PublicFlash from "@/shared/feedback/PublicFlash";
 import CheckboxField from "@/shared/ui/CheckboxField";
-import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
+import { FOLD_GLYPH_SX, PUBLIC_FOLD_SX } from "@/shared/ui/disclosure";
 import LegalLink from "@/shared/ui/LegalLink";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -128,7 +128,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
               {t("raffle.done")}
             </Alert>
             {/* The toast the sign-up flashed (§427), here and on no other state of this page. */}
-            <PublicFlash accept={["raffleSignedUp"]} />
+            <PublicFlash accept={["raffleEntered"]} />
           </>
         ) : rules ? (
           <Stack component="form" action={raffleFormAction} spacing={2} data-testid="raffle-form-fields">
@@ -191,8 +191,8 @@ export default async function RafflePage({ params, searchParams }: Props) {
             )}
 
             {/* «Regulamentul tombolei», in force, its blanks filled for this event: read here, before the tick that accepts it. */}
-            <Box component="details" sx={BOXED_DISCLOSURE_SX} data-testid="raffle-rules">
-              <Typography component="summary" variant="subtitle2" sx={{ minHeight: 44, display: "flex", alignItems: "center", cursor: "pointer" }}>
+            <Box component="details" sx={PUBLIC_FOLD_SX} data-testid="raffle-rules">
+              <Typography component="summary" variant="subtitle2">
                 <GavelIcon aria-hidden sx={FOLD_GLYPH_SX} />
                 {t("raffle.rules")}
               </Typography>

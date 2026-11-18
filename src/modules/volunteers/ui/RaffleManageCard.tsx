@@ -9,7 +9,7 @@ import { getTranslations } from "next-intl/server";
 import type { ReactElement } from "react";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import CheckboxField from "@/shared/ui/CheckboxField";
-import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
+import { FOLD_GLYPH_SX, PUBLIC_FOLD_SX } from "@/shared/ui/disclosure";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import type { RaffleManageCard, RaffleRulesText } from "../raffle-roster";
 
@@ -88,8 +88,8 @@ export async function raffleManageCard(props: {
           {hidden}
           <Typography sx={{ mb: 1 }}>{t("raffle.intro")}</Typography>
           {/* «Regulamentul tombolei» in force, in this page's language, its blanks filled for the event: read before the tick. */}
-          <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mb: 1.5 }} data-testid="manage-raffle-rules">
-            <Typography component="summary" variant="subtitle2" sx={{ minHeight: 44, display: "flex", alignItems: "center", cursor: "pointer" }}>
+          <Box component="details" sx={{ ...PUBLIC_FOLD_SX, mb: 1.5 }} data-testid="manage-raffle-rules">
+            <Typography component="summary" variant="subtitle2">
               <GavelIcon aria-hidden sx={FOLD_GLYPH_SX} />
               {t("raffle.rules")}
             </Typography>

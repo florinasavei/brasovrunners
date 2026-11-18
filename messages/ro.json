@@ -12848,11 +12848,11 @@
       },
       "filters": {
         "label": "Filtru",
-        "all": "Toți",
-        "in": "Participă",
-        "out": "Nu participă",
-        "present": "Doar prezenții",
-        "presentHint": "Cei care participă și au fost prezenți — aceiași ca în fișierul „doar prezenții”."
+        "all": "Toți: {count}",
+        "in": "Participă: {count}",
+        "out": "Nu participă: {count}",
+        "present": "Doar prezenții: {count}",
+        "presentHint": "„Doar prezenții”: cei care participă și au fost prezenți — aceiași ca în fișierul „doar prezenții”."
       },
       "columns": {
         "number": "Nr.",
@@ -12874,8 +12874,9 @@
         "notSignedUp": "nu s-a înscris"
       },
       "standing": {
-        "in": "Participă la tombolă",
-        "out": "Nu participă la tombolă: {reason}"
+        "in": "Tombolă: participă",
+        "out": "Tombolă: nu participă",
+        "why": "De ce: {reason}"
       },
       "methods": {
         "LINK": "din pagina înscrierii",
@@ -14587,7 +14588,7 @@
       "familyWithdrawn": "Gata: înscrierea e anulată, iar adresa primește un email de confirmare.",
       "volunteerSent": "Oferta ta de voluntar a ajuns la organizatori.",
       "volunteerGuardianAccepted": "Acordul tău a fost înregistrat.",
-      "raffleSignedUp": "Ești înscris la tombolă. Mult noroc!"
+      "raffleEntered": "Ești înscris la tombolă. Mult noroc!"
     },
     "toast": {
       "saved": "Salvat.",

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { setRegistrationInRaffle } from "@/modules/registrations/raffle-mark";
-import { canSetRaffleMark, canManageVolunteers, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
+import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
 import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 import { deleteRaffleEntry, setEliteLineRaffleTick, signUpForRaffleAtDesk, signUpForRaffleByStaff } from "@/modules/volunteers/raffle-entries";
@@ -78,8 +78,8 @@ export async function raffleSignUpAction(form: FormData): Promise<void> {
 
 /**
  * «Scoate» / «Pune înapoi» on a row: the organizers' exclusion, posting the state it wants (`inRaffle=1|0`), through each kind's own
- * writer — a registration's tick (`raffle-mark.ts`, `canSetRaffleMark`), a volunteer's (`changeVolunteer`'s `setRaffle`,
- * `canManageVolunteers`) and a line of the elite list's (`setEliteLineRaffleTick`) — each audited as it always was.
+ * writer — a registration's tick (`raffle-mark.ts#setRegistrationInRaffle`), a volunteer's (`changeVolunteer`'s `setRaffle`) and a
+ * line of the elite list's (`setEliteLineRaffleTick`) — each asking its own role again and audited as it always was.
  */
 export async function raffleExclusionAction(form: FormData): Promise<void> {
   const person = personOf(form);
@@ -92,11 +92,10 @@ export async function raffleExclusionAction(form: FormData): Promise<void> {
     const now = new Date();
     let changed: boolean;
     if (person.table === "registration") {
-      // The registration's own tick and its own predicate (§953); each writer asks it again.
-      if (!canSetRaffleMark(actor)) throw new DomainError("FORBIDDEN", "may not change who is in the raffle");
+      // The registration's own tick (§953): its writer asks its own predicate again, and `canTakeRaffleList` implies it.
       changed = (await setRegistrationInRaffle(db, actor, person.id, inRaffle, now)).changed;
     } else if (person.table === "volunteer") {
-      if (!canManageVolunteers(actor)) throw new DomainError("FORBIDDEN", "may not change an event's volunteers");
+      // The volunteer's own tick: `changeVolunteer` asks `canManageVolunteers` again, which `canTakeRaffleList` implies.
       changed = (await changeVolunteer(db, actor, { kind: "setRaffle", eventId: eventIdOf(form), id: person.id, inRaffle }, now)).changed;
     } else {
       changed = (await setEliteLineRaffleTick(db, actor, { entryId: person.id, eventId: eventIdOf(form), tick: "inRaffle", on: inRaffle }, now)).changed;

@@ -644,6 +644,9 @@ describe("owner tasks", () => {
       "gmailFallbackNotice",
       "volunteerAgreement",
       "volunteerRoleChoicesAgreement",
+      // §NNN: the raffle's rules and its notice, shown done while both are in force.
+      "raffleRules",
+      "raffleNotice",
       "refusalTerms",
       "resultsTerms",
       "teamPageNotice",

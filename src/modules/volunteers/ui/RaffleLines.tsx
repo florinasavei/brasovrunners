@@ -20,14 +20,28 @@ import type { RaffleLine } from "../raffle-roster";
   renders synchronously (`race-day/ui/RaceDayTabs.tsx`'s shape). Only strings and the action cross to the islands they hold.
 */
 
-/** The line's words: «Participă la tombolă», or «Nu participă la tombolă: <de ce>». */
-export function raffleStandingWords(t: (key: string, values?: Record<string, string>) => string, reason: RaffleReason): string {
-  return reason === "in" ? t("raffle.standing.in") : t("raffle.standing.out", { reason: t(`raffle.reasons.${reason}`) });
+type Translate = (key: string, values?: Record<string, string>) => string;
+
+/** The chip's words, short enough for one line of a phone: «Tombolă: participă» or «Tombolă: nu participă». */
+export function raffleStandingWords(t: Translate, reason: RaffleReason): string {
+  return reason === "in" ? t("raffle.standing.in") : t("raffle.standing.out");
 }
 
-/** The chip-sized line, the house's state chip: green for in, plain for out. */
-function standingChip(words: string, reason: RaffleReason, testId: string): ReactElement {
-  return <StatusChip glyph={reason === "in" ? "done" : "cancelled"} color={reason === "in" ? "success" : "default"} variant="outlined" label={words} testId={testId} wrap />;
+/**
+ * The house's state chip — green for in, plain for out — and, when out, why in a few words beside it («De ce: nu s-a înscris»): the
+ * chip keeps its one line, the reason wraps as text does.
+ */
+function standingChip(t: Translate, reason: RaffleReason, testId: string): ReactElement {
+  return (
+    <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }} data-testid={testId} data-in={reason === "in" ? "1" : "0"}>
+      <StatusChip glyph={reason === "in" ? "done" : "cancelled"} color={reason === "in" ? "success" : "default"} variant="outlined" label={raffleStandingWords(t, reason)} />
+      {reason !== "in" && (
+        <Typography variant="body2" color="text.secondary" component="span" sx={{ overflowWrap: "anywhere" }}>
+          {t("raffle.standing.why", { reason: t(`raffle.reasons.${reason}`) })}
+        </Typography>
+      )}
+    </Box>
+  );
 }
 
 type ServerAction = (form: FormData) => Promise<void>;
@@ -54,10 +68,9 @@ function signUpForm(props: { action: ServerAction; hidden: ReactElement; label: 
  */
 export async function raffleDeskLine(props: { line: RaffleLine; locale: string; code: string; registrationId: string; name: string; action: ServerAction }): Promise<ReactElement> {
   const t = await getTranslations("Admin");
-  const words = raffleStandingWords(t, props.line.reason);
   return (
     <Stack spacing={1} data-testid="desk-raffle">
-      <Box>{standingChip(words, props.line.reason, "desk-raffle-line")}</Box>
+      {standingChip(t, props.line.reason, "desk-raffle-line")}
       {props.line.maySignUp &&
         signUpForm({
           action: props.action,
@@ -85,10 +98,9 @@ export async function raffleDeskLine(props: { line: RaffleLine; locale: string; 
  */
 export async function raffleVolunteerLine(props: { line: RaffleLine; locale: string; eventId: string; volunteerId: string; name: string; action: ServerAction }): Promise<ReactElement> {
   const t = await getTranslations("Admin");
-  const words = raffleStandingWords(t, props.line.reason);
   return (
     <Stack spacing={1} id="volunteer-raffle" sx={{ scrollMarginTop: 16 }} data-testid="volunteer-raffle">
-      <Box>{standingChip(words, props.line.reason, "volunteer-raffle-line")}</Box>
+      {standingChip(t, props.line.reason, "volunteer-raffle-line")}
       {props.line.maySignUp &&
         signUpForm({
           action: props.action,
@@ -115,11 +127,11 @@ export async function raffleVolunteerLine(props: { line: RaffleLine; locale: str
 /** A registration's page (§NNN): the line alone — the sign-up's staff doors are the desk and the «Tombolă» tab. */
 export async function raffleRegistrationLine(props: { line: RaffleLine }): Promise<ReactElement> {
   const t = await getTranslations("Admin");
-  return standingChip(raffleStandingWords(t, props.line.reason), props.line.reason, "registration-raffle-line");
+  return standingChip(t, props.line.reason, "registration-raffle-line");
 }
 
 /** The list's few words for the answer (§NNN): «Da», or «Nu · <de ce>». */
-export function raffleNoteWords(t: (key: string, values?: Record<string, string>) => string, reason: RaffleReason): string {
+export function raffleNoteWords(t: Translate, reason: RaffleReason): string {
   return reason === "in" ? t("raffle.yes") : `${t("raffle.no")} · ${t(`raffle.reasons.${reason}`)}`;
 }
 

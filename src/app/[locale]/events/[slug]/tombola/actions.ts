@@ -92,6 +92,6 @@ export async function raffleFormAction(form: FormData): Promise<void> {
   }
   await clearFormDraft(path);
   // The thank-you on the raffle's page, said twice the house's way: the banner the address asks for, and the toast (§427).
-  await flashPublic("raffleSignedUp");
+  await flashPublic("raffleEntered");
   redirect(`${path}?tombola=done#${FORM_ID}`);
 }

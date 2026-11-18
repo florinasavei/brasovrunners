@@ -12848,11 +12848,11 @@
       },
       "filters": {
         "label": "Filter",
-        "all": "Everybody",
-        "in": "Taking part",
-        "out": "Not taking part",
-        "present": "Present only",
-        "presentHint": "Those taking part who were present — the same as in the “present only” file."
+        "all": "Everybody: {count}",
+        "in": "Taking part: {count}",
+        "out": "Not taking part: {count}",
+        "present": "Present only: {count}",
+        "presentHint": "“Present only”: those taking part who were present — the same as in the “present only” file."
       },
       "columns": {
         "number": "No.",
@@ -12874,8 +12874,9 @@
         "notSignedUp": "did not sign up"
       },
       "standing": {
-        "in": "Taking part in the raffle",
-        "out": "Not taking part in the raffle: {reason}"
+        "in": "Raffle: taking part",
+        "out": "Raffle: not taking part",
+        "why": "Why: {reason}"
       },
       "methods": {
         "LINK": "from the registration's page",
@@ -14587,7 +14588,7 @@
       "familyWithdrawn": "Done: the registration is cancelled, and the address gets a confirmation email.",
       "volunteerSent": "Your volunteer offer reached the organizers.",
       "volunteerGuardianAccepted": "Your consent is recorded.",
-      "raffleSignedUp": "You are in the raffle. Good luck!"
+      "raffleEntered": "You are in the raffle. Good luck!"
     },
     "toast": {
       "saved": "Saved.",

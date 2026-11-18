@@ -22,6 +22,7 @@ import { RAFFLE_KINDS } from "@/modules/volunteers/domain/raffle";
 import { canTakeRaffleList, readRaffleRoster } from "@/modules/volunteers/raffle-list";
 import type { RaffleRosterRow } from "@/modules/volunteers/raffle-roster";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import ChipLink from "@/shared/ui/ChipLink";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { HEADING_SX } from "@/shared/ui/heading-scale";
@@ -93,9 +94,12 @@ export default async function RafflePage({ params, searchParams }: Props) {
   const roster = eventId ? await readRaffleRoster(db, actor, eventId, now) : null;
   const holds = roster?.settings.hasRaffle === true;
   const signUpMode = roster?.settings.signUp === true;
-  const rows = (roster?.rows ?? []).filter((row) =>
-    filter === "in" ? row.reason === "in" : filter === "out" ? row.reason !== "in" : filter === "present" ? row.reason === "in" && row.present : true,
-  );
+  const everybody = roster?.rows ?? [];
+  const keeps = (value: Filter) => (row: RaffleRosterRow) =>
+    value === "in" ? row.reason === "in" : value === "out" ? row.reason !== "in" : value === "present" ? row.reason === "in" && row.present : true;
+  const rows = everybody.filter(keeps(filter));
+  // How many each view holds, said on its pill.
+  const filterCounts = Object.fromEntries(FILTERS.map((value) => [value, everybody.filter(keeps(value)).length])) as Record<Filter, number>;
 
   const eventLabel = (candidate: (typeof events)[number]) =>
     `${candidate.title ?? candidate.id} · ${typedStartOrNull(candidate) ? formatDay(candidate.startsAt, { locale, timeZone: candidate.timezone, style: "short" }) : t("editor.dateToBeAnnounced")}`;
@@ -327,23 +331,25 @@ export default async function RafflePage({ params, searchParams }: Props) {
             ].join(" · ")}
           </Typography>
 
-          <Stack component="nav" aria-label={t("raffle.filters.label")} direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, ...NOT_ON_PAPER }} data-testid="raffle-filters">
+          {/* The four views, the house's filter pills (`ChipLink`, as the «Voluntari» list's «Prezenți» and «Absenți»): each says how
+              many it holds, the one in force is marked, and pressing it again is «Toți». «Doar prezenții» are the present-only file's people. */}
+          <Stack component="nav" aria-label={t("raffle.filters.label")} direction="row" sx={{ flexWrap: "wrap", gap: 1, ...NOT_ON_PAPER }} data-testid="raffle-filters">
             {FILTERS.map((value) => (
-              <GlyphButton
-                key={value}
-                icon="filter"
-                href={filterHref(value)}
-                variant={filter === value ? "contained" : "outlined"}
-                size="small"
-                aria-current={filter === value ? "page" : undefined}
-                title={value === "present" ? t("raffle.filters.presentHint") : undefined}
-                sx={TAP_TARGET}
-                data-testid={`raffle-filter-${value}`}
-              >
-                {t(`raffle.filters.${value}`)}
-              </GlyphButton>
+              <Box component="span" key={value} data-testid={`raffle-filter-${value}`}>
+                <ChipLink
+                  href={filterHref(filter === value ? "all" : value)}
+                  label={t(`raffle.filters.${value}`, { count: String(filterCounts[value]) })}
+                  active={filter === value}
+                  current={filter === value ? "page" : undefined}
+                  keepScroll
+                  wrap
+                />
+              </Box>
             ))}
           </Stack>
+          <Typography variant="caption" color="text.secondary" sx={NOT_ON_PAPER}>
+            {t("raffle.filters.presentHint")}
+          </Typography>
 
           <Box id="raffle-rows" sx={{ scrollMarginTop: 16 }}>
             <AdminTable
@@ -357,7 +363,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
               query={{ page: 1, perPage: Math.max(rows.length, 1), sort: "number", dir: "asc", offset: 0, limit: Math.max(rows.length, 1) }}
               total={rows.length}
               labels={{
-                results: t("raffle.counts.total", { count: String(rows.length) }),
+                results: t("list.results", { count: rows.length }),
                 page: t("list.page", { page: 1, pages: 1 }),
                 previous: t("list.previous"),
                 next: t("list.next"),
