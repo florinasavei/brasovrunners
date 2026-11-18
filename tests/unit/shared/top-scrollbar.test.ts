@@ -5,9 +5,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import { isEcho, keepInStep, mirrorContentWidth, overflowsSideways, watchScrollRow } from "@/shared/ui/scroll-row";
-import { frameIdFor, TOP_SCROLLBAR_SX } from "@/shared/ui/top-scrollbar";
+import { frameIdFor, placeUnderHeader, STICKY_HEADER_SELECTOR, stickyClearancePx, TOP_SCROLLBAR_SX } from "@/shared/ui/top-scrollbar";
 import { ADMIN_TABLE_SURFACE } from "@/shared/ui/surface";
-import { HEADER_CLEARANCE_PX } from "@/theme/brand";
 import { withClientWords } from "../../helpers/client-words";
 
 /**
@@ -241,12 +240,65 @@ describe("§NNN the bar's look", () => {
 
   it("sticks under the site header, opaque on what the table stands on, above the pinned verbs and the column edges", () => {
     expect(TOP_SCROLLBAR_SX.position).toBe("sticky");
-    expect(TOP_SCROLLBAR_SX.top).toBe(HEADER_CLEARANCE_PX.sm);
+    // The header's real height, which the island writes before it shows the bar — not the toasts' 76-px clearance.
+    expect(TOP_SCROLLBAR_SX.top).toBe("var(--top-scrollbar-top, 0px)");
     expect(TOP_SCROLLBAR_SX.backgroundColor).toBe(ADMIN_TABLE_SURFACE);
     // The pinned verbs are 2 (`AdminTable`), the column edges 1; the site header is far above (1100).
     expect(TOP_SCROLLBAR_SX.zIndex).toBe(3);
     expect(TOP_SCROLLBAR_SX.overflowX).toBe("auto");
     expect(TOP_SCROLLBAR_SX.overflowY).toBe("hidden");
+  });
+
+  it("sticks right under the sticky header at its real height — no strip, no overlap — and at the top where there is none", () => {
+    expect(stickyClearancePx({ offsetHeight: 53 }, "sticky")).toBe(53);
+    expect(stickyClearancePx({ offsetHeight: 60.4 }, "fixed")).toBe(60);
+    // A header that scrolls away with the page, or none at all: nothing to clear.
+    expect(stickyClearancePx({ offsetHeight: 53 }, "static")).toBe(0);
+    expect(stickyClearancePx(null, undefined)).toBe(0);
+  });
+
+  it("follows the header's height: written before the bar shows, and again whenever the header is resized", () => {
+    type Cb = () => void;
+    const observers: { cb: Cb; target?: unknown; stopped: boolean }[] = [];
+    class FakeResize {
+      entry: { cb: Cb; target?: unknown; stopped: boolean };
+      constructor(cb: Cb) {
+        this.entry = { cb, stopped: false };
+        observers.push(this.entry);
+      }
+      observe(target: unknown) {
+        this.entry.target = target;
+      }
+      disconnect() {
+        this.entry.stopped = true;
+      }
+    }
+    const props = new Map<string, string>();
+    const bar = { style: { setProperty: (name: string, value: string) => void props.set(name, value) } };
+    const header = { offsetHeight: 53 };
+    const stop = placeUnderHeader(bar, header, () => "sticky", FakeResize as never);
+    expect(props.get("--top-scrollbar-top")).toBe("53px");
+    expect(observers[0].target).toBe(header);
+    header.offsetHeight = 97;
+    observers[0].cb();
+    expect(props.get("--top-scrollbar-top")).toBe("97px");
+    stop();
+    expect(observers[0].stopped).toBe(true);
+
+    // No header on the page: the top of the window, and nothing to watch.
+    const none = new Map<string, string>();
+    placeUnderHeader({ style: { setProperty: (name: string, value: string) => void none.set(name, value) } }, null, () => undefined, FakeResize as never)();
+    expect(none.get("--top-scrollbar-top")).toBe("0px");
+    expect(observers).toHaveLength(1);
+  });
+
+  it("finds the header the site draws: the one sticky part above every backoffice page carries the mark", () => {
+    expect(STICKY_HEADER_SELECTOR).toBe("[data-sticky-header]");
+    const header = read("src", "shared", "ui", "SiteHeader.tsx");
+    expect(header).toMatch(/component="header"\s+(?:\/\/[^\n]*\n\s+)?data-sticky-header=""/);
+    const island = read("src", "shared", "ui", "TopScrollbar.tsx");
+    // Placed first, then shown.
+    expect(island.indexOf("placeUnderHeader(")).toBeLessThan(island.indexOf("watchScrollRow(frame"));
   });
 
   it("draws a grabbable track in the theme's colours, both schemes, no literal", () => {

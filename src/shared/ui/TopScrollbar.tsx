@@ -3,7 +3,7 @@
 import Box from "@mui/material/Box";
 import { useLayoutEffect, useRef } from "react";
 import { watchScrollRow } from "@/shared/ui/scroll-row";
-import { TOP_SCROLLBAR_SX } from "@/shared/ui/top-scrollbar";
+import { placeUnderHeader, STICKY_HEADER_SELECTOR, TOP_SCROLLBAR_SX } from "@/shared/ui/top-scrollbar";
 
 /**
  * A second horizontal scrollbar right above a frame that scrolls sideways (§NNN), so a long, wide table moves sideways
@@ -24,13 +24,15 @@ export default function TopScrollbar({ frameId }: { frameId: string }) {
     const frame = document.getElementById(frameId);
     const bar = ref.current;
     if (!frame || !bar) return;
-    return watchScrollRow(
-      frame,
-      typeof ResizeObserver === "undefined" ? undefined : ResizeObserver,
-      typeof MutationObserver === "undefined" ? undefined : MutationObserver,
-      undefined,
-      bar,
-    );
+    const Resize = typeof ResizeObserver === "undefined" ? undefined : ResizeObserver;
+    // Where it sticks first, then shown: right under the sticky site header, at its real height (§NNN).
+    const header = document.querySelector<HTMLElement>(STICKY_HEADER_SELECTOR);
+    const stopPlacing = placeUnderHeader(bar, header, () => (header ? getComputedStyle(header).position : undefined), Resize);
+    const stopWatching = watchScrollRow(frame, Resize, typeof MutationObserver === "undefined" ? undefined : MutationObserver, undefined, bar);
+    return () => {
+      stopWatching();
+      stopPlacing();
+    };
   }, [frameId]);
   return (
     <Box ref={ref} aria-hidden="true" tabIndex={-1} data-top-scrollbar={frameId} sx={TOP_SCROLLBAR_SX}>
