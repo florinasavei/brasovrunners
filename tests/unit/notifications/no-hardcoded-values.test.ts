@@ -204,6 +204,17 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Event.volunteers.profile.club",
           "Admin.volunteers.person.club",
           "Admin.volunteers.chips.club",
+          // «Membru {club}» on the volunteers' list (§981): the column's header and the cell's name (the short mark, «Membru BVR»),
+          // its «?», the filter's tick and its help — each handed the identity's constant at its one call.
+          "Admin.volunteers.screen.columnMember",
+          "Admin.volunteers.screen.memberHint",
+          "Admin.volunteers.screen.memberOnly",
+          "Admin.volunteers.screen.memberOnlyHelp",
+          "Admin.volunteers.screen.memberYes",
+          // «Dintre cei N confirmați:» in «Cine s-a înscris» (§982): the members' counted phrase, in its three forms.
+          "Admin.registrations.composition.members.few",
+          "Admin.registrations.composition.members.one",
+          "Admin.registrations.composition.members.other",
         ].sort(),
       );
     }

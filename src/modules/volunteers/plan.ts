@@ -13,6 +13,7 @@ import { isUuid } from "@/shared/ids";
 import { listRoleNames, type RoleNameWords } from "./admin-list";
 import { planLinkHost, PlanMapsRefusal, readPlanLinkLabel, readPlanLinkUrl } from "./domain/plan-link";
 import { listPlanPoints, type PlanPoint } from "./plan-points";
+import { listVolunteerNotesForPlan, mayReadVolunteerNotes, type VolunteerPlanNote } from "./volunteer-notes";
 import { listVolunteers, type VolunteerItem } from "./volunteers";
 
 /*
@@ -32,6 +33,10 @@ import { listVolunteers, type VolunteerItem } from "./volunteers";
   come back, and is simply not on the plan. Nothing here is the person's own answer: the plan is the organizers', and no public
   page or badge reads it. One email says a person their own point, and only at an organizer's press: «Trimite fiecăruia punctul
   lui» (§956, `point-mail.ts`). Placing, moving or taking somebody off writes to nobody.
+
+  Beside each person, the organizers' own words about them (§981, amending §954 and §935): the race-day decision and the
+  internal notes. They reach the plan's page and nothing that reads the plan for anybody else — the point's email reads the
+  pictures and links (`readVolunteerPlanMaps`), never `readVolunteerPlan`.
 
   Read by whoever works the volunteers (`canManageVolunteers`: the Organizer and the Administrators), asserted here
   (BR-REQ-060-01) as on the «Voluntari» list, whose names and telephone numbers these are; placing somebody is
@@ -53,8 +58,16 @@ import { listVolunteers, type VolunteerItem } from "./volunteers";
   drops it.
 */
 
-/** One person as the plan says them: the name, how to reach them, what they were given to do, and the point they stand at. */
-export type VolunteerPlanPerson = Pick<VolunteerItem, "id" | "name" | "phone" | "state" | "bibNumber" | "roleIds" | "checkpointId">;
+/**
+ * One person as the plan says them: the name, how to reach them, what they were given to do, and the point they stand at — and,
+ * since §981 (amending §954 and §935; the owner, 2026-11-18: «să văd în plan și comentariile mele»), the organizers' own words about
+ * them: the race-day decision (`raceDayDecision`, §954, null while there is none), which the page prints, and the live internal
+ * notes, newest first (`notes`, empty while there are none, and always empty for a role the notes' own gate refuses), which it
+ * draws on the screen only.
+ */
+export type VolunteerPlanPerson = Pick<VolunteerItem, "id" | "name" | "phone" | "state" | "bibNumber" | "roleIds" | "checkpointId" | "raceDayDecision"> & {
+  notes: VolunteerPlanNote[];
+};
 
 /**
  * One point of the plan and the people standing at it, by name. `number` is the point's place in the route's order (1 for
@@ -157,17 +170,36 @@ export async function readVolunteerPlanMaps<T extends Record<string, unknown>>(d
   return planMapsOf(db, eventId);
 }
 
-/** One event's plan: its points with their people, the people at none, and the plan's pictures and links. */
+/**
+ * One event's plan: its points with their people, the people at none, and the plan's pictures and links. Each person's decision comes
+ * with their row; their notes in ONE query for the event (`listVolunteerNotesForPlan`), beside the plan's other reads and never one
+ * per person — and only for a role the notes' own gate allows (`mayReadVolunteerNotes`): the others get each person's notes empty.
+ */
 export async function readVolunteerPlan<T extends Record<string, unknown>>(db: Database<T>, actor: Pick<StaffUser, "role">, eventId: string): Promise<VolunteerPlan> {
   if (!canManageVolunteers(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not read the volunteers' plan`);
   if (!isUuid(eventId)) throw new DomainError("NOT_FOUND", "the event is not there");
   const [event] = await db.select({ id: events.id }).from(events).where(eq(events.id, eventId)).limit(1);
   if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
 
-  const [points, everybody, maps] = await Promise.all([listPlanPoints(db, eventId), listVolunteers(db, eventId), planMapsOf(db, eventId)]);
+  const [points, everybody, maps, notes] = await Promise.all([
+    listPlanPoints(db, eventId),
+    listVolunteers(db, eventId),
+    planMapsOf(db, eventId),
+    mayReadVolunteerNotes(actor.role) ? listVolunteerNotesForPlan(db, actor, eventId) : Promise.resolve(new Map<string, VolunteerPlanNote[]>()),
+  ]);
   const people: VolunteerPlanPerson[] = everybody
     .filter((person) => person.state !== "CANCELLED")
-    .map(({ id, name, phone, state, bibNumber, roleIds, checkpointId }) => ({ id, name, phone, state, bibNumber, roleIds, checkpointId }))
+    .map(({ id, name, phone, state, bibNumber, roleIds, checkpointId, raceDayDecision }) => ({
+      id,
+      name,
+      phone,
+      state,
+      bibNumber,
+      roleIds,
+      checkpointId,
+      raceDayDecision,
+      notes: notes.get(id) ?? [],
+    }))
     .sort(byName);
   const onPlan = new Set(points.map((point) => point.id));
   return {

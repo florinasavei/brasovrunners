@@ -95,3 +95,12 @@ export function notesTip(
   const left = notes.length - shown.length;
   return [...shown, ...(left > 0 ? [more(left)] : [])].join("\n\n");
 }
+
+/**
+ * A note as one line (§981, beside a person on «Planul voluntarilor»): its line breaks and every run of spaces one space, the ends
+ * trimmed, and a long one cut at `TIP_NOTE_CHARS` with «…» — the length a marker's tooltip shows of it (`notesTip`).
+ */
+export function noteLine(body: string): string {
+  const chars = [...body.replace(/\s+/g, " ").trim()];
+  return chars.length > TIP_NOTE_CHARS ? `${chars.slice(0, TIP_NOTE_CHARS).join("").trimEnd()}…` : chars.join("");
+}

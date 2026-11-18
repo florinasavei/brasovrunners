@@ -1150,6 +1150,44 @@
       "statusAll": "All statuses",
       "summaryTotal": "Registrations: {count} (all states, cancelled and expired included)",
       "summaryTest": "Test: {count}",
+      "composition": {
+        "title": {
+          "one": "Of the confirmed ({count}):",
+          "few": "Of the {count} confirmed:",
+          "other": "Of the {count} confirmed:"
+        },
+        "members": {
+          "one": "{count} {club} member",
+          "few": "{count} {club} members",
+          "other": "{count} {club} members"
+        },
+        "verified": {
+          "one": "{count} verified",
+          "few": "{count} verified",
+          "other": "{count} verified"
+        },
+        "declared": {
+          "one": "{count} declared",
+          "few": "{count} declared",
+          "other": "{count} declared"
+        },
+        "split": "({verified}, {declared})",
+        "partners": {
+          "one": "{count} from partners",
+          "few": "{count} from partners",
+          "other": "{count} from partners"
+        },
+        "others": {
+          "one": "{count} other — neither a member nor from a partner",
+          "few": "{count} others — neither members nor from partners",
+          "other": "{count} others — neither members nor from partners"
+        },
+        "both": {
+          "one": "{count} is both a member and from a partner: counted in both.",
+          "few": "{count} are both members and from partners: counted in both.",
+          "other": "{count} are both members and from partners: counted in both."
+        }
+      },
       "kits": {
         "title": "Kits to prepare: {runners}",
         "titleWithVolunteers": "Kits to prepare: {count} = {runners} + {volunteers}",
@@ -1902,7 +1940,10 @@
       "cancel": "Cancel the registration",
       "cancelBody": "It cannot be undone. A refusal, with its reason, is made from the registration's page.",
       "confirmOnPaperBody": "You confirm the participant signed the declaration on paper, at the desk. Only with the signed paper in front of you. Then the confirmation email; if no place, the waiting list, with no email yet.",
-      "downloadBib": "Download the race number (BIB)",
+      "oneBib": {
+        "download": "Download the BIB (PDF)",
+        "menu": "Download the BIB"
+      },
       "notOnPublicList": "Not shown publicly",
       "erase": "Erase permanently",
       "eraseTitle": "Erase {name}'s registration for good?",
@@ -6387,6 +6428,11 @@
         "messageHint": "What the person wrote for the organizers when they offered to volunteer. Empty: they wrote nothing.",
         "columnNotes": "Internal notes",
         "notesHint": "The organizers' notes about the person: the three newest, without their day and time. All of them, with their author and date, are on the person's page. The volunteer never sees them.",
+        "columnMember": "{club} member",
+        "memberHint": "The person's own answer on the form: “I belong to the {club} group”. Their claim, checked against nothing. The tick is for whoever answered yes; empty for the others.",
+        "memberYes": "Yes, {club} member",
+        "memberOnly": "Only {club} members",
+        "memberOnlyHelp": "Whoever ticked “I belong to the {club} group” on the form: the person's own claim, checked against nothing.",
         "columnType": "Type",
         "typeHint": "Where the person works, from the category of the roles given: for example start/finish or the route. Empty: no role given, or none in a category. Categories are set in the event's “Volunteers” card.",
         "filter": "Filter",
@@ -6506,6 +6552,8 @@
         "noVolunteers": "The event has no volunteers yet.",
         "noRole": "no role given",
         "notConfirmed": "not confirmed yet",
+        "decision": "Decision: {decision}",
+        "notes": "Internal notes",
         "column": "Point",
         "columnHint": "The point the volunteer stands at, at the start–finish or on the route, chosen in \"The volunteers' plan\". Empty: not placed yet.",
         "columnPoint": "{number}. {name}",

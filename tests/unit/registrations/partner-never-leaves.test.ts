@@ -4,7 +4,8 @@ import { describe, expect, it } from "vitest";
 
 /**
  * «De la parteneri» (the decision «De la parteneri»; BR-REQ-060-01) — the partner's name is the organizers' own label, staff
- * only. It is read by the registrations list (its column «Partener», its sort, its filter and the row's editor), the registration's page, the internal list, the
+ * only. It is read by the registrations list (its column «Partener», its sort, its filter, the row's editor and its summary's one count,
+ * «Dintre cei {n} confirmați: … de la parteneri», §982), the registration's page, the internal list, the
  * invitations, the registrations' Excel and CSV and «Toate datele unei persoane», and by nothing else: never a public page
  * (the participants' list, the results, «Cine vine»), never an email, never the race-day desk, never the file given to
  * sponsors («Descarcă lista pentru sponsori» — close words, another thing: that file holds people who agreed to offers), and

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.65-2026-11-18 -->
+<!-- PROJECT_BASELINE: BR-V4.66-2026-11-18 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.65-2026-11-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.66-2026-11-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -30787,3 +30787,62 @@ Baseline `BR-V4.65-2026-11-18`.
 **Left out.** Copying a list from another event (or from last year's race) — a later ask; for now each race's list is typed once. Reordering the things by hand: a new thing goes last. The desk's rows and verbs, which another change was editing at the same time. A tick written on the printed list back into the site: the paper is a copy to carry, the page holds the ticks.
 
 Baseline `BR-V4.65-2026-11-18`.
+
+## 980. «Descarcă BIB-ul (PDF)»: one person's race number, downloaded on its own (amending §264, §180 and §963)
+
+**The owner, 2026-11-18, three days before the race:** «eu trebuie să pot descărca un BIB doar pentru o persoană» — I must be able to download the BIB of one person alone.
+
+**What there was.** The race numbers came only as sheets (§264, BR-REQ-038-01): every bib of an event, the unprinted batch, the members' or everybody else's pile (§681), the desk's spares (§444), the elite sheet (§895, §897), the blank bibs (§963) and a range `from`–`to`. The registration's page offered «Descarcă numărul de concurs (BIB)» as a range of exactly one (`from=N&to=N&layout=one`, §180) — and since §963 took the registrations marked «Elită» off every sheet but the elite one, that range was an empty file for an elite runner, whose bib, with its «Eticheta pe BIB» (§975), could only come out with every other elite bib.
+
+**Decision.** The sheet's route, `GET /api/admin/events/<id>/bibs`, takes `registrationId=<uuid>`: the PDF holds exactly that registration's bib, drawn as the sheets draw it — an elite registration's elite bib, its label where the number goes (§897, §948, §975), a member's bib in the members' design (§681, §972), anybody else's ordinary bib — one A5 bib centred on its own A4 page, as `layout=one` (§79), whatever else the query says (no range, part, spare, blank or elite sheet changes it). It is asked of the registration itself, so a bib the ordinary sheet leaves to the elite sheet is still this person's to download. The registration must be this event's and real — another event's id, an unknown id, a malformed one or a test row (§30: a test row never wears a number) is 404 `NOT_FOUND` — and must be confirmed and wear a number, or be marked «Elită», whose bib prints the label without one; otherwise 409 `NO_BIB_NUMBER`. Both as JSON, nothing rendered. A cancelled registration's number is retired and its paper void (§311), so it has no bib to download either. The gate is the sheet's own, `canReadRegistrations` — the Organizer and the Administrators (§289). A GET that writes nothing: it never marks a bib printed, which stays the club's own press on the list (§264). The file is `bib-<number>.pdf`, the number as the event writes it (§735), `bib-<number>-elite.pdf` for an elite bib, and with no number the event's slug and `-elite`; never the person's name.
+
+When a registration has such a bib is decided once (`domain/one-bib.ts#hasOneBib`), and the route and the three places that offer it ask the same function, so a link is drawn only where it succeeds. One press, «Descarcă BIB-ul (PDF)» / "Download the BIB (PDF)", with the house's download glyph, a 44-pixel target, opening in a new tab: on the registration's page beside its race number (replacing the range of one, which is gone); on the race-day desk's row inside «Vezi numărul de concurs (BIB)», beside the picture, for the roles that read the registrations — the desk's other roles see the picture as before and no link; and in the registrations list's «⋮» as «Descarcă BIB-ul» / "Download the BIB", for a row with a number or the elite mark. The backoffice's glyph button and the «⋮»'s link item each learned to open a file in a new tab for it, nothing else.
+
+**Left out.** No change to the sheets, their counts or their file names, to the «BIB tipărit» mark, or to the bib's picture (`bibPictureSrc`). No desk-wide download for the desk's other roles: a bib carries a name, and the PDF is the registrations' read (§289). No bib for a registration not yet confirmed, even marked «Elită»: the elite sheet prints none either. No batch of chosen people: the sheets' range and parts already cover a reprint of many.
+
+Baseline `BR-V4.66-2026-11-18`.
+
+## 981. «Membru {club}» on the «Voluntari» list, and the organizers' decision and notes beside each person on «Planul voluntarilor» (amending §954 and §935)
+
+**The owner, 2026-11-18, three days before the race:** «vreau la voluntari și să văd bifa "membru BVR" și să văd în plan și comentariile mele» — on the volunteers' list, the tick «member BVR»; and on the plan, his own comments.
+
+**1. «Membru {club}» on the «Voluntari» list.** The volunteer form asks «Fac parte din grupul {club}» (`event_volunteers.club_member`), and until now the answer was read only on the person's page and in the files. The list gets a column headed «Membru {club}» — the club's short name from its identity (`club/club.json`'s `shortName`, `CLUB_SHORT_NAME`), never a literal, so «Membru BVR» here and the fork's own short name elsewhere —: a tick (✓, with «Da, membru {club}» for a screen reader and in its tooltip) for a person who answered yes, nothing for the others — an empty cell in the table and no line on a phone's card. It stands after «Vârstă» and «Oraș», the person's other answers, is hideable under «Coloane» like them, and its «?» says it is the person's own claim, checked against nothing, as the registration's tick is (§48). Read with the row, so no query is added. In the filters, a tick «Doar membrii {club}» (`?member=1`) shows the ticked alone, as the registrations list's «Doar membrii» does; the strip's figures stay blind to it, as to the kit's filter (§246). No «not members» half: the owner asked to see the members. The volunteers' CSV and spreadsheets already carry the answer («Din grupul clubului») and are unchanged.
+
+**2. The organizers' own words on «Planul voluntarilor» (§949, §974).** Wherever the plan draws a person — at a point on «Pe puncte», under «Fără punct», and in the «Tabel» view's people cell under the name and the telephone — two things follow the person's line, each only when there is one:
+
+- **the race-day decision** (`event_volunteers.race_day_decision`, §954) in its own quiet line, «Decizie: vine la 8:00 la start». It is the day's plan, so it **prints**;
+- **the «Note interne»** (§935, `event_volunteer_notes`), newest first, each one line — its words, line breaks as spaces and a long one cut at 280 characters with «…» as the list's tooltip cuts it (§945), and, quieter, its day and hour on the club's clock — in a list named «Note interne» for a screen reader. Internal remarks stay on the screen: the notes **never print** (`NOT_ON_PAPER`), whatever the view.
+
+**How it is read.** `readVolunteerPlan` reads the decision with the person (the same `listVolunteers` row, no query added) and the notes in **one query** for the whole event (`volunteer-notes.ts#listVolunteerNotesForPlan`: the event's live notes of its people who are not cancelled, newest first; words and moment, never the author), beside the plan's other reads — never a query per person. The notes are read only for a role their own gate allows (`mayReadVolunteerNotes`, the notes' `canManageVolunteers`, asserted again inside the read); today that gate is the plan's own, so every reader of the plan sees them, and should the notes' gate ever narrow, the others would see the decision line alone.
+
+**What it amends.** §954 named «Planul voluntarilor» among the places that carry none of the decision, waiting for the plan's other work of that day; the plan now joins the organizers' screens that show it (the list, the person's page, the event card's row). §935 listed where a volunteer's notes reach; the plan's page joins them, on the screen only. Both guards name the plan's two files (`modules/volunteers/plan.ts`, the plan's page) as reviewed readers of the decision and of the notes. Nothing else changes where they go: never a public page, never an email — `point-mail.ts`, «Trimite fiecăruia punctul lui» (§956), reads the plan's pictures and links (`readVolunteerPlanMaps`) and not the plan's people —, never a badge, the desk, the public volunteers' list or the raffle's file; the decision still in none of the volunteers' files.
+
+**Decided without the owner:** the column headed by the short name («Membru BVR», his words) while its «?» and the filter's help quote the form's sentence with the club's full name, as the form says it; the tick's place, after «Oraș»; the optional filter, built (a tick, like the registrations list's); every note shown on the plan rather than the newest three, a person on the plan having few and the plan being where they are read on race morning; the notes' day shown on the plan (the list dropped it at §964; the brief asked for it here, quieter).
+
+**Refused.** Printing the notes — they are remarks between colleagues, and a printed plan is handed around on the day. A column on the plan's table for the decision — the people cell already holds each person's line, and a point's people would stand in two cells apart.
+
+**Verification.** `tests/integration/volunteers/member-and-plan-notes.test.ts` (the column and its filter, the plan's read and its query count, the gate, the three places on the page and the print styles), `tests/unit/shared/notes-tip.test.ts` (`noteLine`), and the two never-leave guards.
+
+Baseline `BR-V4.66-2026-11-18`.
+
+## 982. «Cine s-a înscris» says how many of the confirmed are the club's members and how many came through partners (amending §939)
+
+**The owner, 2026-11-18**, three days before the race, with a screenshot of «Cine s-a înscris» on the registrations list («Înscrieri: 200 … Confirmată: 181 … Invitați speciali: 17 … Locuri libere acum: 10 din 175 … Kituri de pregătit: 200 = 182 de alergători + 18 voluntari»): «și la partea de înscrieri aici, aș vrea să văd mai clar, câți sunt Brașov Runners și câți sunt de la sponsori?» The list could already answer it — the filters «Doar membrii {club}» (§662, §973) and «De la parteneri» (§939) — but only one filter at a time, and only by reading the pager's count.
+
+**Decision: one block under the state chips, «Dintre cei {n} confirmați:».** Among the people the chip «Confirmată» counts — the confirmed real registrations, the special guests among them (they are confirmed), never a test row (§30, `AGENTS.md` §12.6), and under the same filters the chips follow — three counted phrases:
+- «{m} membri {club}» — the members by the list's own rule (§662, §973): the person's tick «Sunt membru», or an address of a member account; and, when there are both kinds, «({v} verificați, {d} declarați)», a row verified by its address counted as verified whether or not it also ticked, as its chip says (`membershipOf`);
+- «{p} de la parteneri» — the registrations with a partner's name, then, quieter, each partner by name with its count, largest first («Partenerul A 5 · Partenerul B 2»), one entry per name whatever its capitals;
+- «{o} ceilalți — nici membri, nici de la parteneri».
+A person both a member and from a partner is counted in both, and one quiet line says how many are both, so the three numbers add up: others = confirmed − members − partners + both. `{club}` is the club's short mark from its identity (`CLUB_SHORT_NAME`), never written in the catalogues. Every phrase is counted in its own form (`countForm`), no ICU plural.
+
+**Each count is a link** to the list filtered to exactly those people, confirmed: the members (`clubMember=1`), any partner (`partner=1`), one partner by name (the list's one-partner filter) where the filter takes that name — one of the event's partners in their spelling. «Ceilalți» has no link: the list has no «not a member» filter, deliberately (§662), and this decision adds none.
+
+**One query.** The counts ride in the summary's own grouped scan (`summariseRegistrationsForAdmin`) as FILTER clauses that count only the confirmed real rows, the partners' names gathered by `array_agg` with the same filter and grouped in the reader — no second round trip. Only with one event chosen; with every event listed the block is not drawn, like the panel's other event-bound lines. The panel's other lines are unchanged.
+
+**Amends §939 («De la parteneri»).** That decision said the label touches no count. It now has exactly one: this backoffice summary, read by whoever may read the registrations list (the list's own gate), staff-only. No public page, no email, no export, no desk, no sponsors' file and no condition of the allocator or the capacity formula reads it — the structural test (`partner-never-leaves.test.ts`) is unchanged; the comment on the column says so.
+
+**Decided without the owner** (each easy to change): the club's short mark («BVR») in the words, as «Cine vine» says it (§831), rather than the full name; the block hidden while nobody is confirmed; the verified/declared split only when both are above nought; the confirmed only, not every state — the people who are certainly coming, the number the owner's screenshot leads with. The members are counted by the list filter's rule (the tick «Sunt membru» or a member account, §662, §973), so the link opens exactly those people; a runner who only typed the club's name in the club box — the registrations Excel's «Club runner», which its statistics count as the club's (§753, §787) — is counted here under «ceilalți», so this block and the Excel may give two different club numbers; counting that signal too is a one-line change, but the members' link would then open fewer people than the count says.
+
+**Refused.** A «not a member» filter for «ceilalți» (§662 says why the list has none); a separate query per count; the counts in any export or email; the partners' names anywhere outside the backoffice.
+
+Baseline `BR-V4.66-2026-11-18`.
