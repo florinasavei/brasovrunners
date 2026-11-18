@@ -13,10 +13,8 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 /** The island's words, translated on the server and handed over as strings (AGENTS.md §14.5). */
 export type PlanPictureUploadLabels = {
-  /** «Încarcă poza planului»: the button while the plan has no picture. */
+  /** «Adaugă o poză»: the button, whatever the plan already holds — a picture uploaded goes last (§NNN). */
   upload: string;
-  /** «Schimbă poza»: the same button once it has one. */
-  replace: string;
   /** «Se încarcă…», while the file goes up. */
   uploading: string;
   /** «Se salvează…», while the form that records the picture is on its way. */
@@ -32,8 +30,6 @@ export type PlanPictureUploadLabels = {
 };
 
 type Props = {
-  /** Whether the plan has a picture already: the button then changes it. */
-  replaces: boolean;
   /** The file input's id, which the button is the label of. */
   inputId: string;
   /** The page's language, for the weight's decimal mark. */
@@ -42,20 +38,21 @@ type Props = {
 };
 
 /**
- * «Încarcă poza planului» / «Schimbă poza» on «Planul voluntarilor» (§952; the owner, 2026-11-16: «trebui sa pot incarca si
- * planul voluntarilor pe traseu in genul [pozei]»): the plan as the organizers drew it, uploaded where the plan is.
+ * «Adaugă o poză» in «Poze și hărți» on «Planul voluntarilor» (§952; the owner, 2026-11-16: «trebui sa pot incarca si
+ * planul voluntarilor pe traseu in genul [pozei]» — and since §NNN, 2026-11-18: «sa pot pune mai multe poze»): the plan as the
+ * organizers drew it, uploaded where the plan is, one picture after another, each going last.
  *
  * An island for the one thing the server cannot do — send a file chosen on this device through the backoffice's one upload
  * (`uploadPicture`, the quality beside it as beside every upload, §414) — and nothing more. The page draws it inside the form
  * that records the picture: when the upload answers with the stored picture's id, the island writes it into the form's
  * `assetId` box and sends that form (`requestSubmit`, so React's action receives it as from a press), and the Server Action
- * does the rest — the role, the event, the picture, the trail (`plan-voluntari/actions.ts#setPlanPictureAction`). A picture
+ * does the rest — the role, the event, the picture, the limit, the trail (`plan-voluntari/actions.ts#addPlanPictureAction`). A picture
  * uploaded and never recorded — the tab closed in between — is used nowhere, and the sweep's after its week (§73).
  *
  * It is handed strings and nothing else: no row, no name, no component, no element. The file input is the native one behind
  * its label, 44 pixels tall for a thumb (BR-REQ-041-01 criterion 6).
  */
-export default function PlanPictureUpload({ replaces, inputId, lang, labels }: Props) {
+export default function PlanPictureUpload({ inputId, lang, labels }: Props) {
   const [state, setState] = useState<"idle" | "uploading" | "failed">("idle");
   const [chosen, setChosen] = useState<ChosenFacts | null>(null);
   // Shared with every other uploader of the sitting (§414).
@@ -91,8 +88,8 @@ export default function PlanPictureUpload({ replaces, inputId, lang, labels }: P
       <input ref={assetId} type="hidden" name="assetId" defaultValue="" />
       {/* The button, and the quality its upload takes beside it — under it on a phone, where the row wraps. */}
       <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "flex-start", columnGap: 3, rowGap: 1 }}>
-        <GlyphButton htmlFor={inputId} icon={replaces ? "replace" : "upload"} variant="outlined" disabled={busy} aria-busy={busy || undefined} sx={TAP_TARGET} data-testid="plan-picture-upload">
-          {state === "uploading" ? labels.uploading : pending ? labels.saving : replaces ? labels.replace : labels.upload}
+        <GlyphButton htmlFor={inputId} icon="upload" variant="outlined" disabled={busy} aria-busy={busy || undefined} sx={TAP_TARGET} data-testid="plan-picture-upload">
+          {state === "uploading" ? labels.uploading : pending ? labels.saving : labels.upload}
           <input id={inputId} type="file" accept="image/jpeg,image/png,image/webp" hidden disabled={busy} onChange={onChoose} />
         </GlyphButton>
         <ImageQualityChoice value={quality} onChange={setQuality} labels={labels.quality} disabled={busy} />

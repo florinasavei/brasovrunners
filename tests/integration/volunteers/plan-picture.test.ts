@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { type ComponentProps, createElement, type ReactElement, type ReactNode } from "react";
 import { renderToReadableStream } from "react-dom/server";
 import { createFormatter, createTranslator, NextIntlClientProvider } from "next-intl";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { eventCheckpoints } from "@/db/schema/event-checkpoints";
@@ -11,6 +11,7 @@ import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import { mediaAssets } from "@/db/schema/gallery";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { eventVolunteerPlanLinks, eventVolunteerPlanPictures, PLAN_PICTURES_MAX } from "@/db/schema/volunteer-plan";
 import { createEvent, duplicateEvent, repeatEvent } from "@/modules/content/events/service";
 import { exportEvent } from "@/modules/content/events/transfer/export";
 import { readEventFile, serializeEventFile } from "@/modules/content/events/transfer/file-format";
@@ -20,7 +21,7 @@ import { pictureUses, usedHere } from "@/modules/media/picker";
 import { countMediaAssets, deleteMediaAsset, listMediaAssetsForAdmin, sweepOrphanAssets } from "@/modules/media/references";
 import { getStorage, objectKey } from "@/modules/media/storage";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
-import { PLAN_PICTURE_DISPLAY_WIDTH, readVolunteerPlan, setVolunteerPlanPicture } from "@/modules/volunteers/plan";
+import { addVolunteerPlanLink, addVolunteerPlanPicture, PLAN_PICTURE_DISPLAY_WIDTH, readVolunteerPlan, readVolunteerPlanMaps, removeVolunteerPlanPicture } from "@/modules/volunteers/plan";
 import { decodeFlash } from "@/shared/feedback/notice";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -28,22 +29,23 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { drawnOpen, elementWith, planPointBar, planPointsOf, planSummaryOf } from "../../helpers/volunteer-plan";
 
 /**
- * §952, BR-REQ-050-02, BR-REQ-060-01 — the picture of «Planul voluntarilor» (the owner, 2026-11-16, with a picture of the route
- * and its volunteers' points numbered on it: «trebui sa pot incarca si planul voluntarilor pe traseu in genul [pozei]»), from a
- * real database:
+ * §952 amended by §NNN («Poze și hărți»), BR-REQ-050-02, BR-REQ-060-01 — the pictures of «Planul voluntarilor» (the owner,
+ * 2026-11-16, with a picture of the route and its volunteers' points numbered on it: «trebui sa pot incarca si planul
+ * voluntarilor pe traseu in genul [pozei]»; and 2026-11-18: «Poza planului trebuie sa fie mai sus, si sa pot pune mai multe
+ * poze»), from a real database:
  *
- * - whoever works the volunteers sets, changes and takes off an event's one picture; each change is one audit row naming the
- *   event and the pictures' ids and nothing else; a press that changes nothing writes nothing; the id must name a stored
- *   picture; the Tehnic role, the Redactor, a desk Volunteer and a member are refused with nothing written;
- * - the plan reads the picture — the whole of it and a display size — beside everything it read before;
- * - the reference check counts it: the sweep keeps it, the pictures page's delete is refused and the list names the plan, and
- *   once it is taken off and old enough the sweep takes it;
+ * - whoever works the volunteers adds stored pictures to an event's plan, each going last, and takes one off; twelve at most;
+ *   one already there changes nothing; each change is one audit row naming the event and the stored picture's id and nothing
+ *   else; the event's row does not move; the id must name a stored picture; the Tehnic role, the Redactor, a desk Volunteer
+ *   and a member are refused with nothing written;
+ * - the plan reads them in their order — the whole of each and a display size — beside everything it read before;
+ * - the reference check counts them: the sweep keeps them, the pictures page's delete is refused and the list names the plan;
+ *   once taken off and old enough the sweep takes them; the retired column of §952 is still counted;
  * - the Server Actions ask the capability at their own door, and say what happened;
- * - the page draws it in a fold of its own (§974) in both views, after the view's plan, saying on its closed line whether
- *   there is one, a link to the whole picture around it, with «Schimbă poza» and «Șterge poza», in both languages; a press
- *   comes back with the fold open; on paper the picture is one piece, printed whatever the screen had folded, and the fold's
- *   bar and the controls are not there; with no picture the page reads as before, plus the upload;
- * - a series' dates, a copy and the event's file do not carry it.
+ * - the page draws them in «Poze și hărți», the first fold, open when it holds something, in a grid, each a link to the whole
+ *   of it, with «Șterge poza» under each and «Adaugă o poză», in both languages; a press comes back with the fold open; on
+ *   paper the fold prints after the rest of the plan, each picture one piece, its controls off the sheet;
+ * - a series' dates, a copy and the event's file do not carry them; deleting the event deletes them.
  */
 const state = vi.hoisted(() => ({
   db: undefined as unknown,
@@ -54,7 +56,7 @@ const state = vi.hoisted(() => ({
   asked: [] as string[],
   /** The flash cookies the actions wrote. */
   flashed: [] as string[],
-  /** How many times the service was reached. */
+  /** How many times a service was reached. */
   serviceCalls: 0,
   /** Whether this environment has a store for pictures. */
   storage: true,
@@ -116,14 +118,18 @@ vi.mock("@/modules/staff-identity/session", async () => {
     },
   };
 });
-// The service itself, counted: a press refused at the action's door never reaches it.
+// The services themselves, counted: a press refused at the action's door never reaches them.
 vi.mock("@/modules/volunteers/plan", async (importOriginal) => {
   const real = await importOriginal<typeof import("@/modules/volunteers/plan")>();
   return {
     ...real,
-    setVolunteerPlanPicture: (...args: Parameters<typeof real.setVolunteerPlanPicture>) => {
+    addVolunteerPlanPicture: (...args: Parameters<typeof real.addVolunteerPlanPicture>) => {
       state.serviceCalls += 1;
-      return real.setVolunteerPlanPicture(...args);
+      return real.addVolunteerPlanPicture(...args);
+    },
+    removeVolunteerPlanPicture: (...args: Parameters<typeof real.removeVolunteerPlanPicture>) => {
+      state.serviceCalls += 1;
+      return real.removeVolunteerPlanPicture(...args);
     },
   };
 });
@@ -134,7 +140,7 @@ vi.mock("@/modules/media/storage", async (importOriginal) => ({
 }));
 
 const { default: VolunteerPlanPage } = await import("@/app/[locale]/admin/events/[id]/plan-voluntari/page");
-const { removePlanPictureAction, setPlanPictureAction } = await import("@/app/[locale]/admin/events/[id]/plan-voluntari/actions");
+const { addPlanPictureAction, removePlanPictureAction } = await import("@/app/[locale]/admin/events/[id]/plan-voluntari/actions");
 const { default: AdminPicturesPage } = await import("@/app/[locale]/admin/gallery/pictures/page");
 
 const NOW = new Date("2026-11-16T10:00:00.000Z");
@@ -225,11 +231,17 @@ beforeEach(async () => {
 
 /** Each press a second after the one before unless it is given its moment, so the trail reads in the order of the presses. */
 let presses = 0;
-const setPicture = (actor: StaffUser, assetId: unknown, eventId = raceId, at?: Date) =>
-  setVolunteerPlanPicture(db, actor, { eventId, assetId }, at ?? new Date(NOW.getTime() + ++presses * 1000));
-const rowOf = async (id = raceId) => (await db.select().from(events).where(eq(events.id, id)))[0];
+const moment = (at?: Date) => at ?? new Date(NOW.getTime() + ++presses * 1000);
+const addPicture = (actor: StaffUser, assetId: unknown, eventId = raceId, at?: Date) => addVolunteerPlanPicture(db, actor, { eventId, assetId }, moment(at));
+const removePicture = (actor: StaffUser, id: unknown, eventId = raceId, at?: Date) => removeVolunteerPlanPicture(db, actor, { eventId, id }, moment(at));
+/** The plan's picture rows of an event, in their order. */
+const rowsOf = async (eventId = raceId) =>
+  db.select().from(eventVolunteerPlanPictures).where(eq(eventVolunteerPlanPictures.eventId, eventId)).orderBy(asc(eventVolunteerPlanPictures.position));
+/** The row that holds a stored picture on a plan. */
+const rowIdOf = async (assetId: string, eventId = raceId) => (await rowsOf(eventId)).find((row) => row.mediaAssetId === assetId)!.id;
+const eventRowOf = async (id = raceId) => (await db.select().from(events).where(eq(events.id, id)))[0];
 const trail = async () =>
-  (await db.select().from(auditLogs).orderBy(asc(auditLogs.createdAt))).filter((row) => row.action === "event.volunteer_plan_picture_set" || row.action === "event.volunteer_plan_picture_removed");
+  (await db.select().from(auditLogs).orderBy(asc(auditLogs.createdAt))).filter((row) => row.action === "event.volunteer_plan_picture_added" || row.action === "event.volunteer_plan_picture_removed");
 const assetThere = async (id: string) => (await db.select({ id: mediaAssets.id }).from(mediaAssets).where(eq(mediaAssets.id, id))).length === 1;
 
 /** A page as the server streams it, Suspense settled; React's separators out of the way — and Emotion's styles too, unless asked for. */
@@ -246,6 +258,8 @@ const picturesPage = async () => html(await AdminPicturesPage({ params: Promise.
 
 /** The opening tag of the element carrying `testid`. */
 const tagOf = (page: string, testid: string) => page.match(new RegExp(`<[^>]*data-testid="${testid}"[^>]*>`))?.[0] ?? "";
+/** Every opening tag carrying `testid`. */
+const tagsOf = (page: string, testid: string) => [...page.matchAll(new RegExp(`<[^>]*data-testid="${testid}"[^>]*>`, "g"))].map((match) => match[0]);
 /** Everything Emotion wrote for the page, and the generated classes of one element. */
 const cssOf = (page: string) => [...page.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((match) => match[1]).join("\n");
 const classesOf = (page: string, testid: string) => (tagOf(page, testid).match(/class="([^"]*)"/)?.[1] ?? "").split(/\s+/).filter((name) => name.startsWith("css-"));
@@ -261,6 +275,11 @@ function rulesOf(page: string, testid: string): { screen: string; print: string 
     print: all((name) => new RegExp(`@media print\\{\\.${name}\\{([^}]*)\\}`, "g")),
   };
 }
+/** What the fold's own class says on paper, every rule of it — its own, its bar's, its body's. */
+const foldOnPaper = (markup: string) =>
+  classesOf(markup, "plan-maps-section")
+    .flatMap((name) => [...cssOf(markup).matchAll(/@media print\{((?:[^{}]*\{[^}]*\})+)\}/g)].flatMap((block) => [...block[1].matchAll(new RegExp(`\\.${name}([^{]*)\\{([^}]*)\\}`, "g"))].map((rule) => `${rule[1]}{${rule[2]}}`)))
+    .join(";");
 
 function form(fields: Record<string, string>): FormData {
   const data = new FormData();
@@ -275,117 +294,149 @@ async function press(action: (form: FormData) => Promise<void>, fields: Record<s
 }
 const toasted = () => state.flashed.map((value) => decodeFlash(value)?.key);
 
-describe("§952 the plan's picture: set, changed and taken off", () => {
-  it("lets the Organizer put a stored picture on the plan, audited with the ids alone, and moves nothing else of the event", async () => {
+describe("§NNN the plan's pictures: added, each last, and taken off", () => {
+  it("lets the Organizer add a stored picture to the plan, audited with its id alone, and moves nothing of the event", async () => {
     const picture = await storedPicture();
-    const before = await rowOf();
-    expect(before.volunteerPlanMediaAssetId).toBeNull();
+    const before = await eventRowOf();
 
-    expect(await setPicture(staff.MODERATOR!, picture.id)).toEqual({ changed: true, outcome: "set" });
+    expect(await addPicture(staff.MODERATOR!, picture.id)).toEqual({ changed: true });
 
-    const after = await rowOf();
-    expect(after.volunteerPlanMediaAssetId).toBe(picture.id);
-    // The version, the dates, the cover, every setting: as they were — an open editor's save is not made stale.
-    expect({ ...after, volunteerPlanMediaAssetId: null }).toEqual(before);
+    expect((await rowsOf()).map((row) => [row.mediaAssetId, row.position])).toEqual([[picture.id, 1]]);
+    // The version, the dates, the cover, every setting — and the retired column of §952: as they were.
+    expect(await eventRowOf()).toEqual(before);
 
     const rows = await trail();
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ action: "event.volunteer_plan_picture_set", actorStaffUserId: staff.MODERATOR!.id, entityType: "event", entityId: raceId });
-    // The event and the pictures' ids — never a file's name, an address or anything of a person.
-    expect(rows[0].metadataJson).toEqual({ assetId: picture.id, replaced: null });
+    expect(rows[0]).toMatchObject({ action: "event.volunteer_plan_picture_added", actorStaffUserId: staff.MODERATOR!.id, entityType: "event", entityId: raceId });
+    // The event and the stored picture's id — never a file's name, an address or anything of a person.
+    expect(rows[0].metadataJson).toEqual({ assetId: picture.id });
     expect(JSON.stringify(rows[0].metadataJson)).not.toMatch(/harta|png|Crosul|Ana/);
   });
 
-  it("writes nothing for a press that changes nothing, and says which picture another one replaced", async () => {
-    const first = await storedPicture();
-    const second = await storedPicture({ name: "harta-noua.png" });
-    await setPicture(staff.ADMIN!, first.id);
-    expect(await setPicture(staff.ADMIN!, first.id)).toEqual({ changed: false });
+  it("puts each new picture last, and changes nothing for one already on the plan", async () => {
+    const [first, second, third] = [await storedPicture(), await storedPicture({ name: "start.png" }), await storedPicture({ name: "parcare.png" })];
+    await addPicture(staff.ADMIN!, first.id);
+    await addPicture(staff.ADMIN!, second.id);
+    expect(await addPicture(staff.ADMIN!, first.id)).toEqual({ changed: false });
     // The same id as a person would paste it: upper case, a space around it.
-    expect(await setPicture(staff.ADMIN!, ` ${first.id.toUpperCase()} `)).toEqual({ changed: false });
-    expect(await trail()).toHaveLength(1);
+    expect(await addPicture(staff.ADMIN!, ` ${second.id.toUpperCase()} `)).toEqual({ changed: false });
+    await addPicture(staff.SUPERADMIN!, third.id);
+    expect((await rowsOf()).map((row) => [row.mediaAssetId, row.position])).toEqual([
+      [first.id, 1],
+      [second.id, 2],
+      [third.id, 3],
+    ]);
+    expect(await trail()).toHaveLength(3);
+    // …and the plan reads them in that order.
+    expect((await readVolunteerPlan(db, staff.MODERATOR!, raceId)).pictures.map((one) => one.assetId)).toEqual([first.id, second.id, third.id]);
+  });
 
-    expect(await setPicture(staff.SUPERADMIN!, second.id)).toEqual({ changed: true, outcome: "replaced" });
-    expect((await rowOf()).volunteerPlanMediaAssetId).toBe(second.id);
+  it("takes one picture off by its row, audited with the stored picture's id, and keeps the stored picture for the sweep", async () => {
+    const [first, second] = [await storedPicture(), await storedPicture()];
+    await addPicture(staff.MODERATOR!, first.id);
+    await addPicture(staff.MODERATOR!, second.id);
+
+    expect(await removePicture(staff.MODERATOR!, await rowIdOf(first.id))).toEqual({ changed: true });
+    expect((await rowsOf()).map((row) => row.mediaAssetId)).toEqual([second.id]);
     const rows = await trail();
-    expect(rows).toHaveLength(2);
-    expect(rows[1]).toMatchObject({ action: "event.volunteer_plan_picture_set", actorStaffUserId: staff.SUPERADMIN!.id, entityId: raceId });
-    expect(rows[1].metadataJson).toEqual({ assetId: second.id, replaced: first.id });
-    // The picture it replaced is not deleted by the press: used nowhere, it waits for the sweep (§73).
+    expect(rows.at(-1)).toMatchObject({ action: "event.volunteer_plan_picture_removed", actorStaffUserId: staff.MODERATOR!.id, entityType: "event", entityId: raceId });
+    expect(rows.at(-1)!.metadataJson).toEqual({ assetId: first.id });
     expect(await assetThere(first.id)).toBe(true);
+
+    // Gone already, a value that is no id, nothing at all: nothing to do.
+    for (const none of [randomUUID(), "not-an-id", "", null, undefined]) expect(await removePicture(staff.MODERATOR!, none)).toEqual({ changed: false });
+    expect(await trail()).toHaveLength(3);
+
+    // Added again, it goes last: the position after the greatest, never a gap filled in.
+    const third = await storedPicture();
+    await addPicture(staff.MODERATOR!, third.id);
+    await addPicture(staff.MODERATOR!, first.id);
+    expect((await rowsOf()).map((row) => [row.mediaAssetId, row.position])).toEqual([
+      [second.id, 2],
+      [third.id, 3],
+      [first.id, 4],
+    ]);
   });
 
-  it("takes the picture off with no value, audited with the id it was, and keeps the stored picture for the sweep", async () => {
+  it("is each event's own: another event's plan has its own pictures, and a row of it is not this plan's to take off", async () => {
     const picture = await storedPicture();
-    await setPicture(staff.MODERATOR!, picture.id);
-
-    expect(await setPicture(staff.MODERATOR!, null)).toEqual({ changed: true, outcome: "removed" });
-    expect((await rowOf()).volunteerPlanMediaAssetId).toBeNull();
-    const rows = await trail();
-    expect(rows).toHaveLength(2);
-    expect(rows[1]).toMatchObject({ action: "event.volunteer_plan_picture_removed", actorStaffUserId: staff.MODERATOR!.id, entityType: "event", entityId: raceId });
-    expect(rows[1].metadataJson).toEqual({ assetId: picture.id });
-    expect(await assetThere(picture.id)).toBe(true);
-
-    // Off already: nothing to do, however "no picture" was posted.
-    for (const none of ["", "   ", null, undefined]) expect(await setPicture(staff.MODERATOR!, none)).toEqual({ changed: false });
-    expect(await trail()).toHaveLength(2);
+    await addPicture(staff.ADMIN!, picture.id);
+    await addPicture(staff.ADMIN!, picture.id, otherId);
+    expect((await readVolunteerPlan(db, staff.ADMIN!, otherId)).pictures.map((one) => one.assetId)).toEqual([picture.id]);
+    // The other plan's row, posted on this event: nothing happens to either.
+    expect(await removePicture(staff.ADMIN!, await rowIdOf(picture.id, otherId))).toEqual({ changed: false });
+    expect(await rowsOf(otherId)).toHaveLength(1);
+    expect(await rowsOf()).toHaveLength(1);
   });
 
-  it("is one picture an event: another event's plan is its own", async () => {
-    const picture = await storedPicture();
-    await setPicture(staff.ADMIN!, picture.id);
-    expect((await rowOf(otherId)).volunteerPlanMediaAssetId).toBeNull();
-    expect((await readVolunteerPlan(db, staff.ADMIN!, otherId)).picture).toBeNull();
+  it(`holds ${PLAN_PICTURES_MAX} pictures at most: the next is refused with its sentence, and nothing is written`, async () => {
+    for (let n = 0; n < PLAN_PICTURES_MAX; n += 1) await addPicture(staff.ADMIN!, (await storedPicture()).id);
+    const extra = await storedPicture();
+    await expect(addPicture(staff.ADMIN!, extra.id)).rejects.toMatchObject({ code: "VALIDATION_ERROR", reason: "PLAN_PICTURES_FULL", values: { max: "12" } });
+    expect(await rowsOf()).toHaveLength(PLAN_PICTURES_MAX);
+    expect(await trail()).toHaveLength(PLAN_PICTURES_MAX);
+    // One taken off, there is room again.
+    await removePicture(staff.ADMIN!, (await rowsOf())[0].id);
+    expect(await addPicture(staff.ADMIN!, extra.id)).toEqual({ changed: true });
+    // The sentence, in both languages, with the number.
+    expect(ro.Admin.errors.PLAN_PICTURES_FULL).toContain("{max}");
+    expect(en.Admin.errors.PLAN_PICTURES_FULL).toContain("{max}");
   });
 
   it("refuses the Tehnic role, the Redactor, a desk Volunteer and a member, with nothing written (BR-REQ-060-01)", async () => {
     const picture = await storedPicture();
     const kept = await storedPicture({ name: "harta-pastrata.png" });
+    await addPicture(staff.ADMIN!, kept.id);
+    const keptRow = await rowIdOf(kept.id);
     for (const role of ["DEV", "COPYWRITER", "CONTRIBUTOR", "MEMBER"] as const) {
-      await expect(setPicture(staff[role]!, picture.id), role).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await expect(addPicture(staff[role]!, picture.id), role).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await expect(removePicture(staff[role]!, keptRow), role).rejects.toMatchObject({ code: "FORBIDDEN" });
+      // Refused before the event or the picture is so much as read.
+      await expect(addPicture(staff[role]!, "not-an-id", "not-an-id"), role).rejects.toMatchObject({ code: "FORBIDDEN" });
       await expect(readVolunteerPlan(db, staff[role]!, raceId), role).rejects.toMatchObject({ code: "FORBIDDEN" });
     }
-    expect((await rowOf()).volunteerPlanMediaAssetId).toBeNull();
-    expect(await trail()).toHaveLength(0);
-
-    // Nor may they change or take off the one that is there — refused before the event or the picture is so much as read.
-    await setPicture(staff.ADMIN!, kept.id);
-    for (const role of ["DEV", "COPYWRITER", "CONTRIBUTOR", "MEMBER"] as const) {
-      await expect(setPicture(staff[role]!, picture.id), role).rejects.toMatchObject({ code: "FORBIDDEN" });
-      await expect(setPicture(staff[role]!, null), role).rejects.toMatchObject({ code: "FORBIDDEN" });
-      await expect(setPicture(staff[role]!, "not-an-id", "not-an-id"), role).rejects.toMatchObject({ code: "FORBIDDEN" });
-    }
-    expect((await rowOf()).volunteerPlanMediaAssetId).toBe(kept.id);
+    expect((await rowsOf()).map((row) => row.mediaAssetId)).toEqual([kept.id]);
     expect(await trail()).toHaveLength(1);
   });
 
   it("asks for an event that is there", async () => {
     const picture = await storedPicture();
-    await expect(setPicture(staff.ADMIN!, picture.id, "11111111-1111-4111-8111-111111111111")).rejects.toMatchObject({ code: "NOT_FOUND" });
-    await expect(setPicture(staff.ADMIN!, picture.id, "not-an-id")).rejects.toMatchObject({ code: "NOT_FOUND" });
-    await expect(setPicture(staff.ADMIN!, null, "11111111-1111-4111-8111-111111111111")).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(addPicture(staff.ADMIN!, picture.id, "11111111-1111-4111-8111-111111111111")).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(addPicture(staff.ADMIN!, picture.id, "not-an-id")).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(removePicture(staff.ADMIN!, randomUUID(), "11111111-1111-4111-8111-111111111111")).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(await trail()).toHaveLength(0);
   });
 
-  it("asks for a stored picture: an id that names none, a film's poster and a value that is no id are refused, naming the box", async () => {
+  it("asks for a stored picture: nothing, an id that names none, a film's poster and a value that is no id are refused, naming the box", async () => {
     const kept = await storedPicture();
-    await setPicture(staff.ADMIN!, kept.id);
+    await addPicture(staff.ADMIN!, kept.id);
     // A film's automatic poster (§485) is a row of the store and no picture to put on a plan.
     const poster = await storedPicture({ keyPrefix: "yt-dQw4w9WgXcQ", width: 1280, height: 720 });
-    for (const value of ["11111111-1111-4111-8111-111111111111", poster.id, "the map", 42, { id: kept.id }, ["x"]]) {
-      await expect(setPicture(staff.ADMIN!, value), JSON.stringify(value)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["assetId"] });
+    for (const value of ["", "   ", null, undefined, "11111111-1111-4111-8111-111111111111", poster.id, "the map", 42, { id: kept.id }, ["x"]]) {
+      await expect(addPicture(staff.ADMIN!, value), JSON.stringify(value)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["assetId"] });
     }
-    // Nothing moved: the picture that was there is still the plan's, and the trail has its one row.
-    expect((await rowOf()).volunteerPlanMediaAssetId).toBe(kept.id);
+    expect((await rowsOf()).map((row) => row.mediaAssetId)).toEqual([kept.id]);
     expect(await trail()).toHaveLength(1);
+  });
+
+  it("is deleted with its event, and with a stored picture deleted by hand", async () => {
+    const [first, second] = [await storedPicture(), await storedPicture()];
+    await addPicture(staff.ADMIN!, first.id);
+    await addPicture(staff.ADMIN!, second.id);
+    await addPicture(staff.ADMIN!, first.id, otherId);
+    await db.delete(mediaAssets).where(eq(mediaAssets.id, second.id));
+    expect((await rowsOf()).map((row) => row.mediaAssetId)).toEqual([first.id]);
+    await db.delete(events).where(eq(events.id, raceId));
+    expect(await rowsOf()).toEqual([]);
+    expect(await rowsOf(otherId)).toHaveLength(1);
   });
 });
 
-describe("§952 the plan reads its picture", () => {
-  it("returns none without one, and everything the plan returned before", async () => {
+describe("§NNN the plan reads its pictures", () => {
+  it("returns none without any, and everything the plan returned before", async () => {
     const plan = await readVolunteerPlan(db, staff.MODERATOR!, raceId);
-    expect(plan.picture).toBeNull();
+    expect(plan.pictures).toEqual([]);
+    expect(plan.links).toEqual([]);
     expect(plan.points.map(({ number, point }) => [number, point.nameRo])).toEqual([
       [1, "Intersecția Stejeriș"],
       [2, "Apă la cabană"],
@@ -395,14 +446,15 @@ describe("§952 the plan reads its picture", () => {
     expect(plan.roles).toBeInstanceOf(Map);
   });
 
-  it("returns the whole picture and a display size of it, at the store's public addresses", async () => {
+  it("returns the whole of each picture and a display size of it, at the store's public addresses", async () => {
     const picture = await storedPicture({ width: 2400, height: 1600 });
-    await setPicture(staff.ADMIN!, picture.id);
-    const { picture: read } = await readVolunteerPlan(db, staff.MODERATOR!, raceId);
+    await addPicture(staff.ADMIN!, picture.id);
+    const [read] = (await readVolunteerPlan(db, staff.MODERATOR!, raceId)).pictures;
 
     const storage = getStorage();
     const full = storage.publicUrl(objectKey(picture.keyPrefix, "web"));
     expect(read).toEqual({
+      id: await rowIdOf(picture.id),
       assetId: picture.id,
       width: 2400,
       height: 1600,
@@ -411,60 +463,45 @@ describe("§952 the plan reads its picture", () => {
       srcSet: expect.stringContaining(`${full} 2400w`),
     });
     // Absolute, so a page and a message can carry them alike; the ladder below the master for a screen that chooses.
-    expect(read!.fullUrl).toMatch(/^https?:\/\/.+\/web\.webp$/);
-    expect(read!.displayUrl).toMatch(/^https?:\/\/.+\/1280w\.webp$/);
-    expect(read!.srcSet).toContain("/480w.webp 480w");
-    expect(read!.srcSet).toContain("/1920w.webp 1920w");
+    expect(read.fullUrl).toMatch(/^https?:\/\/.+\/web\.webp$/);
+    expect(read.displayUrl).toMatch(/^https?:\/\/.+\/1280w\.webp$/);
+    expect(read.srcSet).toContain("/480w.webp 480w");
+    expect(read.srcSet).toContain("/1920w.webp 1920w");
+    // The email's own read says the same pictures, with nobody signed in.
+    expect((await readVolunteerPlanMaps(db, raceId)).pictures).toEqual([read]);
+    expect(await readVolunteerPlanMaps(db, "not-an-id")).toEqual({ pictures: [], links: [] });
   });
 
   it("takes the widest stored file under the display size, and the master itself for a small picture or one stored before the ladder", async () => {
     const full = (prefix: string) => getStorage().publicUrl(objectKey(prefix, "web"));
-
-    // 1000 pixels wide: its rungs are 480 and 640 — the display size is the wider.
+    // 1000 pixels wide: its rungs are 480 and 640 — the display size is the wider. 500 wide: no rung under it — the master is
+    // both. Stored before the ladder (a version-4 prefix, §414): one file, and no `srcset` naming files that do not exist.
     const medium = await storedPicture({ width: 1000, height: 700 });
-    await setPicture(staff.ADMIN!, medium.id);
-    expect((await readVolunteerPlan(db, staff.ADMIN!, raceId)).picture).toMatchObject({ displayUrl: getStorage().publicUrl(objectKey(medium.keyPrefix, 640)), fullUrl: full(medium.keyPrefix) });
-
-    // 500 pixels wide: no rung under it — the master is both.
     const small = await storedPicture({ width: 500, height: 300 });
-    await setPicture(staff.ADMIN!, small.id);
-    expect((await readVolunteerPlan(db, staff.ADMIN!, raceId)).picture).toMatchObject({ displayUrl: full(small.keyPrefix), fullUrl: full(small.keyPrefix), srcSet: `${full(small.keyPrefix)} 500w` });
-
-    // Stored before the ladder (a version-4 prefix, §414): one file, and no `srcset` naming files that do not exist.
     const old = await storedPicture({ keyPrefix: randomUUID(), width: 2400, height: 1600 });
-    await setPicture(staff.ADMIN!, old.id);
-    const read = (await readVolunteerPlan(db, staff.ADMIN!, raceId)).picture;
-    expect(read).toMatchObject({ displayUrl: full(old.keyPrefix), fullUrl: full(old.keyPrefix) });
-    expect(read!.srcSet).toBeUndefined();
+    for (const one of [medium, small, old]) await addPicture(staff.ADMIN!, one.id);
+    const [m, s, o] = (await readVolunteerPlan(db, staff.ADMIN!, raceId)).pictures;
+    expect(m).toMatchObject({ displayUrl: getStorage().publicUrl(objectKey(medium.keyPrefix, 640)), fullUrl: full(medium.keyPrefix) });
+    expect(s).toMatchObject({ displayUrl: full(small.keyPrefix), fullUrl: full(small.keyPrefix), srcSet: `${full(small.keyPrefix)} 500w` });
+    expect(o).toMatchObject({ displayUrl: full(old.keyPrefix), fullUrl: full(old.keyPrefix) });
+    expect(o.srcSet).toBeUndefined();
   });
 
-  it("reads an id that names nothing, and an environment with no store, as no picture", async () => {
-    const picture = await storedPicture();
-    await setPicture(staff.ADMIN!, picture.id);
-
+  it("reads no picture where there is no store", async () => {
+    await addPicture(staff.ADMIN!, (await storedPicture()).id);
     state.storage = false;
-    expect((await readVolunteerPlan(db, staff.ADMIN!, raceId)).picture).toBeNull();
+    expect((await readVolunteerPlan(db, staff.ADMIN!, raceId)).pictures).toEqual([]);
     state.storage = true;
-    expect((await readVolunteerPlan(db, staff.ADMIN!, raceId)).picture).not.toBeNull();
-
-    // The column has no foreign key (`events.ts` says why): a row deleted by hand leaves the id, and the plan no picture.
-    await db.delete(mediaAssets).where(eq(mediaAssets.id, picture.id));
-    expect((await rowOf()).volunteerPlanMediaAssetId).toBe(picture.id);
-    const plan = await readVolunteerPlan(db, staff.ADMIN!, raceId);
-    expect(plan.picture).toBeNull();
-    expect(plan.points).toHaveLength(2);
-    // …and another picture can still take its place.
-    const next = await storedPicture();
-    expect(await setPicture(staff.ADMIN!, next.id)).toEqual({ changed: true, outcome: "replaced" });
+    expect((await readVolunteerPlan(db, staff.ADMIN!, raceId)).pictures).toHaveLength(1);
   });
 });
 
-describe("§952 a picture used as a plan's is the plan's (the reference check, §73)", () => {
-  it("is kept by the sweep, refused by the pictures page's delete, and listed as used by the event's plan", async () => {
+describe("§NNN a picture used on a plan is the plan's (the reference check, §73)", () => {
+  it("is kept by the sweep, refused by the pictures page's delete, and listed once as used by the event's plan", async () => {
     const picture = await storedPicture();
     await getStorage().put(objectKey(picture.keyPrefix, "web"), Buffer.from("web"), "image/webp");
     await getStorage().put(objectKey(picture.keyPrefix, "thumb"), Buffer.from("thumb"), "image/webp");
-    await setPicture(staff.MODERATOR!, picture.id);
+    await addPicture(staff.MODERATOR!, picture.id);
 
     // A month on, used by nothing but the plan: still there.
     expect(await sweepOrphanAssets(db, later(30))).toBe(0);
@@ -475,17 +512,20 @@ describe("§952 a picture used as a plan's is the plan's (the reference check, �
     const listed = (await listMediaAssetsForAdmin(db, "ro")).find((row) => row.id === picture.id);
     expect(listed?.references).toEqual([{ kind: "volunteerPlan", id: raceId, title: "Crosul" }]);
     expect((await listMediaAssetsForAdmin(db, "en")).find((row) => row.id === picture.id)?.references).toEqual([{ kind: "volunteerPlan", id: raceId, title: "The cross" }]);
+    // Named by the retired column of §952 as well — a plan of the release before, copied by the migration —: one line still.
+    await db.update(events).set({ volunteerPlanMediaAssetId: picture.id }).where(eq(events.id, raceId));
+    expect((await listMediaAssetsForAdmin(db, "ro")).find((row) => row.id === picture.id)?.references).toEqual([{ kind: "volunteerPlan", id: raceId, title: "Crosul" }]);
   });
 
   it("is the sweep's once it is taken off and old enough — the row and its files", async () => {
     const picture = await storedPicture();
     const web = objectKey(picture.keyPrefix, "web");
     await getStorage().put(web, Buffer.from("web"), "image/webp");
-    await setPicture(staff.MODERATOR!, picture.id);
+    await addPicture(staff.MODERATOR!, picture.id);
     // The sweep saw it used a month on…
     expect(await sweepOrphanAssets(db, later(30))).toBe(0);
     // …then «Șterge poza»: used nowhere, and listed so.
-    await setPicture(staff.MODERATOR!, null, raceId, later(30));
+    await removePicture(staff.MODERATOR!, await rowIdOf(picture.id), raceId, later(30));
     expect((await listMediaAssetsForAdmin(db, "ro")).find((row) => row.id === picture.id)?.references).toEqual([]);
     expect(await countMediaAssets(db, later(31))).toMatchObject({ total: 1, unreferenced: 1, sweepable: 0 });
 
@@ -498,14 +538,20 @@ describe("§952 a picture used as a plan's is the plan's (the reference check, �
     expect(await getStorage().get(web)).toBeNull();
   });
 
-  it("keeps a picture two plans use until both let go of it", async () => {
+  it("keeps a picture two plans use until both let go of it — and one the retired column still names", async () => {
     const picture = await storedPicture();
-    await setPicture(staff.ADMIN!, picture.id);
-    await setPicture(staff.ADMIN!, picture.id, otherId);
-    await setPicture(staff.ADMIN!, null);
+    await addPicture(staff.ADMIN!, picture.id);
+    await addPicture(staff.ADMIN!, picture.id, otherId);
+    await removePicture(staff.ADMIN!, await rowIdOf(picture.id));
     expect(await sweepOrphanAssets(db, later(60))).toBe(0);
-    await setPicture(staff.ADMIN!, null, otherId, later(60));
+    await removePicture(staff.ADMIN!, await rowIdOf(picture.id, otherId), otherId, later(60));
     expect(await sweepOrphanAssets(db, later(70))).toBe(1);
+
+    // The column of §952 is written by nobody now and counted until its contract: nothing it names is swept first.
+    const old = await storedPicture();
+    await db.update(events).set({ volunteerPlanMediaAssetId: old.id }).where(eq(events.id, otherId));
+    expect(await sweepOrphanAssets(db, later(90))).toBe(0);
+    expect(await assetThere(old.id)).toBe(true);
   });
 
   it("is no picture of the event's texts: «Din galerie» gives it no chip and «Acest eveniment» does not offer it", () => {
@@ -516,7 +562,7 @@ describe("§952 a picture used as a plan's is the plan's (the reference check, �
 
   it("is named on the pictures page with a link to the plan — and in words alone for a role the plan is a 404 for", async () => {
     const picture = await storedPicture();
-    await setPicture(staff.ADMIN!, picture.id);
+    await addPicture(staff.ADMIN!, picture.id);
     const planHref = `href="/ro/admin/events/${raceId}/plan-voluntari"`;
 
     const forOrganizer = await picturesPage();
@@ -537,77 +583,71 @@ describe("§952 a picture used as a plan's is the plan's (the reference check, �
   });
 });
 
-describe("§952 the page's presses: «Încarcă poza planului», «Schimbă poza», «Șterge poza»", () => {
-  // Back to the picture's fold, open, in the view the press came from — «Tabel» for a form that names none (§974).
-  const back = (view = "table") => `/ro/admin/events/${raceId}/plan-voluntari?view=${view}&saved=planPicture#plan-picture`;
+describe("§NNN the page's presses: «Adaugă o poză», «Șterge poza»", () => {
+  // Back to «Poze și hărți», open, in the view the press came from — «Tabel» for a form that names none (§974).
+  const back = (view = "table") => `/ro/admin/events/${raceId}/plan-voluntari?view=${view}&saved=planMaps#plan-maps`;
   const refusedAt = (code: string) => `/ro/admin/events/${raceId}/plan-voluntari?view=table&planError=${code}#admin-alert`;
 
-  it("records the uploaded picture, changes it and takes it off, coming back to the picture and saying what happened", async () => {
-    const first = await storedPicture();
-    const second = await storedPicture();
+  it("adds the uploaded picture and takes one off, coming back to the fold and saying what happened", async () => {
+    const [first, second] = [await storedPicture(), await storedPicture()];
 
-    expect(await press(setPlanPictureAction, { assetId: first.id })).toBe(back());
-    expect((await rowOf()).volunteerPlanMediaAssetId).toBe(first.id);
-    expect(toasted()).toEqual(["planPictureSet"]);
-
+    expect(await press(addPlanPictureAction, { assetId: first.id })).toBe(back());
+    expect(toasted()).toEqual(["planPictureAdded"]);
     // The same picture again: nothing to change, said so.
-    expect(await press(setPlanPictureAction, { assetId: first.id })).toBe(back());
+    expect(await press(addPlanPictureAction, { assetId: first.id })).toBe(back());
     expect(toasted()).toEqual(["volunteerUnchanged"]);
+    // Pressed on «Pe puncte», back to it.
+    expect(await press(addPlanPictureAction, { assetId: second.id, view: "points" })).toBe(back("points"));
+    expect((await rowsOf()).map((row) => row.mediaAssetId)).toEqual([first.id, second.id]);
 
-    expect(await press(setPlanPictureAction, { assetId: second.id })).toBe(back());
-    expect((await rowOf()).volunteerPlanMediaAssetId).toBe(second.id);
-    expect(toasted()).toEqual(["planPictureReplaced"]);
-
-    expect(await press(removePlanPictureAction)).toBe(back());
-    expect((await rowOf()).volunteerPlanMediaAssetId).toBeNull();
+    expect(await press(removePlanPictureAction, { pictureId: await rowIdOf(first.id) })).toBe(back());
     expect(toasted()).toEqual(["planPictureRemoved"]);
-    expect(await press(removePlanPictureAction)).toBe(back());
+    expect(await press(removePlanPictureAction, { pictureId: randomUUID() })).toBe(back());
     expect(toasted()).toEqual(["volunteerUnchanged"]);
-    // Pressed on «Pe puncte», back to it; and the address opens the fold, in either view.
-    expect(await press(setPlanPictureAction, { assetId: first.id, view: "points" })).toBe(back("points"));
-    for (const view of ["table", "points"]) expect(drawnOpen(elementWith(await planPage({ view, saved: "planPicture" }), 'data-testid="plan-picture-section"'))).toBe(true);
+    expect((await rowsOf()).map((row) => row.mediaAssetId)).toEqual([second.id]);
+    // The address opens the fold in either view — and so does the picture it holds.
+    for (const view of ["table", "points"]) expect(drawnOpen(elementWith(await planPage({ view, saved: "planMaps" }), 'data-testid="plan-maps-section"'))).toBe(true);
 
     // Every press asked the capability at the action's own door, by name.
-    expect(state.asked).toEqual(Array.from({ length: 6 }, () => "canManageVolunteers"));
-    // One row a change, none for the two presses that changed nothing (the presses' own clock is the real one: counted, not ordered).
-    expect((await trail()).map((row) => row.action).sort()).toEqual([
-      "event.volunteer_plan_picture_removed",
-      "event.volunteer_plan_picture_set",
-      "event.volunteer_plan_picture_set",
-      "event.volunteer_plan_picture_set",
-    ]);
+    expect(state.asked).toEqual(Array.from({ length: 5 }, () => "canManageVolunteers"));
+    // One row a change, none for the presses that changed nothing.
+    expect((await trail()).map((row) => row.action).sort()).toEqual(["event.volunteer_plan_picture_added", "event.volunteer_plan_picture_added", "event.volunteer_plan_picture_removed"]);
   });
 
-  it("every toast it writes has its sentence in both languages", () => {
-    for (const key of ["planPictureSet", "planPictureReplaced", "planPictureRemoved", "volunteerUnchanged"] as const) {
+  it("every toast and refusal it writes has its sentence in both languages", () => {
+    for (const key of ["planPictureAdded", "planPictureRemoved", "planLinkAdded", "planLinkRemoved", "volunteerUnchanged"] as const) {
       expect(ro.Feedback.toast[key], key).toEqual(expect.any(String));
       expect(en.Feedback.toast[key], key).toEqual(expect.any(String));
     }
-    for (const code of ["FORBIDDEN", "NOT_FOUND", "VALIDATION_ERROR"] as const) {
+    for (const code of ["FORBIDDEN", "NOT_FOUND", "VALIDATION_ERROR", "PLAN_PICTURES_FULL", "PLAN_LINKS_FULL", "PLAN_LINK_URL", "PLAN_LINK_LABEL"] as const) {
       expect(ro.Admin.errors[code], code).toEqual(expect.any(String));
       expect(en.Admin.errors[code], code).toEqual(expect.any(String));
     }
+    // The one-picture words of §952 are gone with the one picture.
+    for (const catalogue of [ro, en] as Record<string, unknown>[]) {
+      const toast = (catalogue as { Feedback: { toast: Record<string, unknown> } }).Feedback.toast;
+      expect(toast.planPictureSet).toBeUndefined();
+      expect(toast.planPictureReplaced).toBeUndefined();
+    }
   });
 
-  it("refuses the upload's form with no picture in it — taking the picture off is only «Șterge poza»", async () => {
-    const picture = await storedPicture();
-    await setPicture(staff.ADMIN!, picture.id);
-    for (const assetId of ["", "   "]) {
-      expect(await press(setPlanPictureAction, { assetId })).toBe(refusedAt("VALIDATION_ERROR"));
-    }
-    expect((await rowOf()).volunteerPlanMediaAssetId).toBe(picture.id);
+  it("refuses the upload's form with no picture in it, and a thirteenth picture with its sentence on the page", async () => {
+    for (const assetId of ["", "   "]) expect(await press(addPlanPictureAction, { assetId })).toBe(refusedAt("VALIDATION_ERROR"));
     expect(toasted()).toEqual([]);
-    // The page says the refusal in words.
     expect(await planPage({ planError: "VALIDATION_ERROR" })).toContain(ro.Admin.errors.VALIDATION_ERROR);
+
+    for (let n = 0; n < PLAN_PICTURES_MAX; n += 1) await addPicture(staff.ADMIN!, (await storedPicture()).id);
+    expect(await press(addPlanPictureAction, { assetId: (await storedPicture()).id })).toBe(refusedAt("PLAN_PICTURES_FULL"));
+    expect(await planPage({ planError: "PLAN_PICTURES_FULL" })).toContain("Planul are deja 12 poze, cât poate avea. Șterge una ca să adaugi alta.");
   });
 
   it("comes back with the refusal's code for a picture that is not one, and to the volunteers' screen for a form with no event", async () => {
-    expect(await press(setPlanPictureAction, { assetId: "11111111-1111-4111-8111-111111111111" })).toContain("planError=VALIDATION_ERROR#admin-alert");
-    expect(await press(setPlanPictureAction, { assetId: "the map" })).toContain("planError=VALIDATION_ERROR#admin-alert");
-    expect((await rowOf()).volunteerPlanMediaAssetId).toBeNull();
+    expect(await press(addPlanPictureAction, { assetId: "11111111-1111-4111-8111-111111111111" })).toContain("planError=VALIDATION_ERROR#admin-alert");
+    expect(await press(addPlanPictureAction, { assetId: "the map" })).toContain("planError=VALIDATION_ERROR#admin-alert");
+    expect(await rowsOf()).toEqual([]);
 
     const picture = await storedPicture();
-    expect(await press(setPlanPictureAction, { assetId: picture.id, eventId: "not-an-id" })).toBe("/ro/admin/volunteers");
+    expect(await press(addPlanPictureAction, { assetId: picture.id, eventId: "not-an-id" })).toBe("/ro/admin/volunteers");
     expect(await press(removePlanPictureAction, { eventId: "" })).toBe("/ro/admin/volunteers");
     expect(await trail()).toHaveLength(0);
   });
@@ -615,182 +655,178 @@ describe("§952 the page's presses: «Încarcă poza planului», «Schimbă poza
   it("refuses the Tehnic role, the Redactor, a desk Volunteer and a member at the action's own door: the service is never reached", async () => {
     const kept = await storedPicture();
     const wanted = await storedPicture();
-    await setPicture(staff.ADMIN!, kept.id);
+    await addPicture(staff.ADMIN!, kept.id);
+    const keptRow = await rowIdOf(kept.id);
     state.serviceCalls = 0;
     state.asked.length = 0;
 
     for (const role of ["DEV", "COPYWRITER", "CONTRIBUTOR", "MEMBER"] as const) {
       state.actor = staff[role];
-      expect(await press(setPlanPictureAction, { assetId: wanted.id }), role).toBe(refusedAt("FORBIDDEN"));
-      expect(await press(removePlanPictureAction), role).toBe(refusedAt("FORBIDDEN"));
+      expect(await press(addPlanPictureAction, { assetId: wanted.id }), role).toBe(refusedAt("FORBIDDEN"));
+      expect(await press(removePlanPictureAction, { pictureId: keptRow }), role).toBe(refusedAt("FORBIDDEN"));
     }
     expect(state.asked).toEqual(Array.from({ length: 8 }, () => "canManageVolunteers"));
     expect(state.serviceCalls).toBe(0);
-    expect((await rowOf()).volunteerPlanMediaAssetId).toBe(kept.id);
+    expect((await rowsOf()).map((row) => row.mediaAssetId)).toEqual([kept.id]);
     expect(await trail()).toHaveLength(1);
     expect(toasted()).toEqual([]);
   });
 });
 
-describe("§952 the plan's page draws the picture", () => {
-  it("reads as before with no picture, plus the upload", async () => {
+describe("§NNN «Poze și hărți» draws the pictures", () => {
+  it("is the first fold, closed while empty, saying it holds nothing — the plan as before under it, plus the upload", async () => {
+    for (const view of ["table", "points"]) {
+      const page = await planPage({ view });
+      const fold = elementWith(page, 'data-testid="plan-maps-section"');
+      expect(fold).toMatch(/^<details[^>]*id="plan-maps"/);
+      expect(drawnOpen(fold)).toBe(false);
+      // Under the intro, above the views' tabs and every other fold.
+      const at = (needle: string) => page.indexOf(needle);
+      expect(at('data-testid="plan-maps-section"')).toBeGreaterThan(at('data-testid="plan-help-points"'));
+      expect(at('data-testid="plan-maps-section"')).toBeLessThan(at('data-testid="plan-views"'));
+      // The first fold of the page.
+      expect(/^<details[^>]*>/.exec(page.slice(page.indexOf("<details")))?.[0]).toContain('id="plan-maps"');
+    }
     const page = await planPage();
-    // The plan as it was: its table, and on «Pe puncte» its points (§974).
-    expect(page).toContain(ro.Admin.volunteers.plan.title);
     expect(page).toContain('data-testid="plan-table-section"');
     const points = await planPage({ view: "points" });
-    // Four numbers since the plan has two kinds of points (§961): nobody at the start–finish, one person on the route.
     expect(planSummaryOf(points)).toBe("0 voluntari la start–finish · 1 voluntar pe traseu · 0 voluntari fără punct · 1 punct fără nimeni");
     expect(planPointBar(planPointsOf(points)[0])).toEqual({ name: "1. Intersecția Stejeriș", line: "1,2 km · 1 voluntar" });
 
+    const fold = elementWith(page, 'data-testid="plan-maps-section"');
+    expect(fold).toContain(`</svg>${ro.Admin.volunteers.plan.maps.title}<`);
+    expect(fold).toContain(`data-testid="plan-maps-state">nicio poză · niciun link<`);
     // No picture, no link to one, no «Șterge poza».
-    expect(page).not.toContain('data-testid="plan-picture"');
+    expect(fold).not.toContain('data-testid="plan-picture"');
     expect(page).not.toContain("<img");
-    expect(page).not.toContain('data-testid="plan-picture-remove-form"');
-    expect(page).not.toContain(ro.Admin.volunteers.plan.picture.remove);
-    expect(page).not.toContain(ro.Admin.volunteers.plan.picture.replace);
-
-    // The fold, closed, saying there is no picture yet; what to do, and the upload: the form the island sends, with the event
-    // in it and the picture's box empty.
-    const fold = elementWith(page, 'data-testid="plan-picture-section"');
-    expect(fold).toMatch(/^<details[^>]*id="plan-picture"/);
-    expect(drawnOpen(fold)).toBe(false);
-    expect(fold).toContain(`</svg>${ro.Admin.volunteers.plan.picture.title}<`);
-    expect(fold).toContain(`data-testid="plan-picture-state">${ro.Admin.volunteers.plan.picture.hasNone}<`);
-    expect(fold).toContain(ro.Admin.volunteers.plan.picture.none);
+    expect(fold).not.toContain('data-testid="plan-picture-remove-form"');
+    // The upload: the form the island sends, with the event in it and the picture's box empty.
     const upload = elementWith(fold, 'data-testid="plan-picture-form"');
     expect(upload).toContain(`name="eventId" value="${raceId}"`);
     expect(upload).toContain('name="uiLocale" value="ro"');
     expect(upload).toMatch(/<input[^>]*type="hidden"[^>]*name="assetId"[^>]*value=""/);
     expect(upload).toContain(ro.Admin.volunteers.plan.picture.upload);
+    expect(ro.Admin.volunteers.plan.picture.upload).toBe("Adaugă o poză");
     expect(upload).toMatch(/<input[^>]*id="plan-picture-file"[^>]*type="file"[^>]*accept="image\/jpeg,image\/png,image\/webp"/);
     // The button is the file input's label, and the quality stands beside the upload as beside every upload (§414).
     expect(tagOf(page, "plan-picture-upload")).toMatch(/^<label[^>]*for="plan-picture-file"/);
     expect(upload).toContain('data-testid="image-quality"');
-    expect(upload).toContain(ro.Admin.volunteers.plan.picture.help);
   });
 
-  it("draws the picture in its fold, after the view's plan, as wide as the column, a press opening the whole of it in a new tab", async () => {
-    const stored = await storedPicture({ width: 2400, height: 1600 });
-    await setPicture(staff.ADMIN!, stored.id);
-    const { picture } = await readVolunteerPlan(db, staff.ADMIN!, raceId);
+  it("opens with its pictures in a grid, each a link to the whole of it in a new tab, «Șterge poza» under each, the upload still there", async () => {
+    const stored = [await storedPicture({ width: 2400, height: 1600 }), await storedPicture({ width: 1200, height: 1800 })];
+    for (const one of stored) await addPicture(staff.ADMIN!, one.id);
+    const { pictures } = await readVolunteerPlan(db, staff.ADMIN!, raceId);
     const page = await planPage();
+    const fold = elementWith(page, 'data-testid="plan-maps-section"');
 
-    // After the view's plan — the table on «Tabel», the points on «Pe puncte» (§974) —, in its fold, which says it has one.
-    const at = (needle: string) => page.indexOf(needle);
-    expect(at('data-testid="plan-picture"')).toBeGreaterThan(at('data-testid="plan-table-section"'));
-    const points = await planPage({ view: "points" });
-    expect(points.indexOf('data-testid="plan-picture"')).toBeGreaterThan(points.indexOf('data-testid="plan-point"'));
-    expect(page).toContain(`data-testid="plan-picture-state">${ro.Admin.volunteers.plan.picture.has}<`);
+    // Open by itself: the owner wants the map in sight. Its closed line counts.
+    expect(drawnOpen(fold)).toBe(true);
+    expect(fold).toContain(`data-testid="plan-maps-state">2 poze · niciun link<`);
+    expect(drawnOpen(elementWith(await planPage({ view: "points" }), 'data-testid="plan-maps-section"'))).toBe(true);
 
-    // The link is the whole picture, in a new tab, named for a reader who does not see it.
-    const link = tagOf(page, "plan-picture-link");
-    expect(link).toMatch(/^<a /);
-    expect(link).toContain(`href="${picture!.fullUrl}"`);
-    expect(link).toContain('target="_blank"');
-    expect(link).toContain('rel="noopener noreferrer"');
-    expect(link).toContain(`aria-label="${ro.Admin.volunteers.plan.picture.open}"`);
-
+    // Each picture in the plan's order: its link the whole picture, in a new tab, named for a reader who does not see it.
+    const links = tagsOf(fold, "plan-picture-link");
+    expect(links).toHaveLength(2);
+    links.forEach((link, at) => {
+      expect(link).toMatch(/^<a /);
+      expect(link).toContain(`href="${pictures[at].fullUrl}"`);
+      expect(link).toContain('target="_blank"');
+      expect(link).toContain('rel="noopener noreferrer"');
+      expect(link).toContain(`aria-label="Deschide poza ${at + 1} a planului întreagă, într-o filă nouă"`);
+    });
     // The image: the display size, the ladder for a screen that chooses, its own size so the page does not jump.
-    const image = tagOf(page, "plan-picture-image");
-    expect(image).toMatch(/^<img /);
-    expect(image).toContain(`src="${picture!.displayUrl}"`);
-    expect(image).toMatch(/srcSet="[^"]*\/480w\.webp 480w[^"]*\/web\.webp 2400w"/i);
-    expect(image).toContain('sizes="(min-width: 1536px) 1488px, (min-width: 600px) calc(100vw - 48px), calc(100vw - 32px)"');
-    expect(image).toContain(`alt="${ro.Admin.volunteers.plan.picture.alt}"`);
-    expect(image).toContain('width="2400"');
-    expect(image).toContain('height="1600"');
-    expect(page).toContain(ro.Admin.volunteers.plan.picture.openHint);
-    expect(page).not.toContain(ro.Admin.volunteers.plan.picture.none);
+    const images = tagsOf(fold, "plan-picture-image");
+    expect(images[0]).toMatch(/^<img /);
+    expect(images[0]).toContain(`src="${pictures[0].displayUrl}"`);
+    expect(images[0]).toMatch(/srcSet="[^"]*\/480w\.webp 480w[^"]*\/web\.webp 2400w"/i);
+    expect(images[0]).toMatch(/sizes="[^"]+"/);
+    expect(images[0]).toContain('alt="Planul voluntarilor, poza 1"');
+    expect(images[1]).toContain('width="1200"');
+    expect(images[1]).toContain('height="1800"');
+    // The hint once, under the grid.
+    expect(fold.split(ro.Admin.volunteers.plan.picture.openHint)).toHaveLength(2);
 
-    // «Schimbă poza» in the upload's form, «Șterge poza» in its own, each with the event.
-    const controls = elementWith(page, 'data-testid="plan-picture-controls"');
-    expect(tagOf(page, "plan-picture-upload")).toMatch(/^<label[^>]*for="plan-picture-file"/);
-    expect(controls).toContain(ro.Admin.volunteers.plan.picture.replace);
-    expect(controls).not.toContain(ro.Admin.volunteers.plan.picture.upload);
-    const remove = controls.slice(controls.indexOf('data-testid="plan-picture-remove-form"'));
-    expect(remove).toContain(`name="eventId" value="${raceId}"`);
-    expect(remove).toMatch(/<button[^>]*type="submit"[^>]*>/);
-    expect(remove).toContain(ro.Admin.volunteers.plan.picture.remove);
-    // The remove form posts no picture: it cannot be turned into a set.
-    expect(remove).not.toContain('name="assetId"');
+    // «Șterge poza» under each, posting that picture's row and nothing that could add one.
+    const removes = [...fold.matchAll(/<form[^>]*data-testid="plan-picture-remove-form"[\s\S]*?<\/form>/g)].map((match) => match[0]);
+    expect(removes).toHaveLength(2);
+    removes.forEach((remove, at) => {
+      expect(remove).toContain(`name="pictureId" value="${pictures[at].id}"`);
+      expect(remove).toContain(`name="eventId" value="${raceId}"`);
+      expect(remove).not.toContain('name="assetId"');
+      expect(remove).toContain(ro.Admin.volunteers.plan.picture.remove);
+      expect(remove).toContain(`aria-label="Șterge poza ${at + 1}"`);
+    });
+    // «Adaugă o poză» still: it appends.
+    expect(elementWith(fold, 'data-testid="plan-picture-form"')).toContain(ro.Admin.volunteers.plan.picture.upload);
   });
 
-  it("is in English for an English reader", async () => {
-    const stored = await storedPicture();
+  it("names one picture without a number, and is in English for an English reader", async () => {
+    await addPicture(staff.ADMIN!, (await storedPicture()).id);
+    expect(tagOf(await planPage(), "plan-picture-image")).toContain(`alt="${ro.Admin.volunteers.plan.picture.alt}"`);
     state.locale = "en";
-    // As the markup carries an apostrophe and a quotation mark — the help names the button that sends the picture (§956).
     const escaped = (text: string) => text.replace(/'/g, "&#x27;").replace(/"/g, "&quot;");
-
-    const bare = await planPage();
-    expect(bare).toContain(escaped(en.Admin.volunteers.plan.picture.title));
-    expect(bare).toContain(escaped(en.Admin.volunteers.plan.picture.none));
-    expect(bare).toContain(escaped(en.Admin.volunteers.plan.picture.upload));
-    expect(bare).toContain(escaped(en.Admin.volunteers.plan.picture.help));
-    expect(bare).toContain('name="uiLocale" value="en"');
-
-    await setPicture(staff.ADMIN!, stored.id);
     const page = await planPage({ view: "points" });
-    expect(tagOf(page, "plan-picture-link")).toContain(`aria-label="${en.Admin.volunteers.plan.picture.open}"`);
+    expect(page).toContain(`</svg>${en.Admin.volunteers.plan.maps.title}<`);
+    expect(page).toContain(`data-testid="plan-maps-state">1 picture · no link<`);
+    expect(tagOf(page, "plan-picture-link")).toContain(`aria-label="${escaped(en.Admin.volunteers.plan.picture.open)}"`);
     expect(tagOf(page, "plan-picture-image")).toContain(`alt="${escaped(en.Admin.volunteers.plan.picture.alt)}"`);
     expect(page).toContain(en.Admin.volunteers.plan.picture.openHint);
-    expect(page).toContain(en.Admin.volunteers.plan.picture.replace);
+    expect(page).toContain(en.Admin.volunteers.plan.picture.upload);
     expect(page).toContain(en.Admin.volunteers.plan.picture.remove);
-    expect(page).toContain(`data-testid="plan-picture-state">${en.Admin.volunteers.plan.picture.has}<`);
+    expect(page).toContain(escaped(en.Admin.volunteers.plan.maps.help));
+    expect(page).toContain('name="uiLocale" value="en"');
     expect(planSummaryOf(page)).toBe("0 volunteers at the start–finish · 1 volunteer on the route · 0 volunteers at no point · 1 point with nobody");
   });
 
-  it("prints the picture after the view's plan, in one piece and whatever the screen had folded, and none of its controls", async () => {
-    const stored = await storedPicture();
-    await setPicture(staff.ADMIN!, stored.id);
+  it("draws the grid two or three a row on a laptop and one on a phone, each picture no taller than 360 pixels", async () => {
+    await addPicture(staff.ADMIN!, (await storedPicture({ width: 2400, height: 1600 })).id);
+    const page = await planPage({}, raceId, true);
+    expect(rulesOf(page, "plan-pictures").screen).toMatch(/display:grid;grid-template-columns:repeat\(auto-fill, minmax\(260px, 1fr\)\)/);
+    const image = rulesOf(page, "plan-picture-image").screen;
+    expect(image).toMatch(/width:100%/);
+    expect(image).toMatch(/max-width:2400px/);
+    expect(image).toMatch(/max-height:360px/);
+    expect(image).toMatch(/object-fit:contain/);
+  });
+
+  it("prints after the rest of the plan, each picture in one piece whatever the screen had folded, and none of its controls", async () => {
+    await addPicture(staff.ADMIN!, (await storedPicture()).id);
     const page = await planPage({}, raceId, true);
     const hiddenOnPaper = (testid: string) => /display:none/.test(rulesOf(page, testid).print);
 
-    // On the sheet: the figure and its image — never cut between two pages, never taller than one.
+    // On the sheet: the picture and its image — never cut between two pages, never taller than one.
     expect(hiddenOnPaper("plan-picture")).toBe(false);
     expect(hiddenOnPaper("plan-picture-image")).toBe(false);
     expect(rulesOf(page, "plan-picture").screen).toMatch(/break-inside:avoid/);
     expect(rulesOf(page, "plan-picture-image").print).toMatch(/max-height:17cm/);
     expect(rulesOf(page, "plan-picture-image").print).toMatch(/max-width:100%/);
-    // On the screen: as wide as the column, and never wider than its own pixels.
-    expect(rulesOf(page, "plan-picture-image").screen).toMatch(/width:100%/);
-    expect(rulesOf(page, "plan-picture-image").screen).toMatch(/max-width:2400px/);
+    // A column on paper, not the screen's grid.
+    expect(rulesOf(page, "plan-pictures").print).toMatch(/display:block/);
 
-    // Off the sheet: the island's button and its quality choice, «Șterge poza», and the links above the title.
-    expect(hiddenOnPaper("plan-picture-controls")).toBe(true);
-    const controls = elementWith(page, 'data-testid="plan-picture-controls"');
-    for (const inside of ['data-testid="plan-picture-upload"', 'data-testid="image-quality"', 'data-testid="plan-picture-remove-form"']) expect(controls, inside).toContain(inside);
+    // Off the sheet: the upload and its quality choice, «Șterge poza», the hint and the help.
+    for (const testid of ["plan-picture-controls", "plan-picture-remove-form", "plan-picture-hint", "plan-maps-help"]) expect(hiddenOnPaper(testid), testid).toBe(true);
 
-    // The fold (§974) on paper: the picture alone, shown whether the fold is open or shut — its body the browser would hide
-    // shown, its bar (the heading «Poza planului» and its closed line) and its frame left off.
-    // What the fold's own class says on paper, every rule of it — its own, its bar's, its body's.
-    const onPaper = (markup: string) =>
-      classesOf(markup, "plan-picture-section")
-        .flatMap((name) => [...cssOf(markup).matchAll(/@media print\{((?:[^{}]*\{[^}]*\})+)\}/g)].flatMap((block) => [...block[1].matchAll(new RegExp(`\\.${name}([^{]*)\\{([^}]*)\\}`, "g"))].map((rule) => `${rule[1]}{${rule[2]}}`)))
-        .join(";");
-    expect(onPaper(page)).not.toMatch(/(^|;)\{display:none/);
-    expect(onPaper(page)).toMatch(/(^|;)\{border:0px solid;padding-left:0px;padding-right:0px;background-color:transparent;/);
-    expect(onPaper(page)).toMatch(/>summary\{display:none/);
-    expect(onPaper(page)).toMatch(/::details-content\{display:block;content-visibility:visible/);
-
-    // After the view's plan on the sheet (§974, amending §952's «first after the title»): on «Tabel» the table is the one
-    // thing printed between the title and the picture; on «Pe puncte», the points.
+    // The fold on paper: shown whether open or shut, its bar and its frame left off — and moved after the rest of the plan
+    // (`order` in the page's flex column), so the view's plan is still the first thing after the title (§974).
+    expect(foldOnPaper(page)).not.toMatch(/(^|;)\{display:none/);
+    expect(foldOnPaper(page)).toMatch(/(^|;)\{[^}]*;order:1;border:0px solid;padding-left:0px;padding-right:0px;background-color:transparent;/);
+    expect(foldOnPaper(page)).toMatch(/>summary\{display:none/);
+    expect(foldOnPaper(page)).toMatch(/::details-content\{display:block;content-visibility:visible/);
+    // …inside the column the page is: a flex column, whose `order` the paper follows.
     const plain = page.replace(/<style[\s\S]*?<\/style>/g, "");
-    const before = plain.slice(plain.indexOf(ro.Admin.volunteers.plan.help), plain.indexOf('data-testid="plan-picture"'));
-    expect(before).toContain('data-testid="plan-table-section"');
-    expect(hiddenOnPaper("plan-table-section")).toBe(false);
-    expect(before).not.toContain('data-testid="plan-point"');
-    const points = (await planPage({ view: "points" })).replace(/<style[\s\S]*?<\/style>/g, "");
-    expect(points.indexOf('data-testid="plan-point"')).toBeLessThan(points.indexOf('data-testid="plan-picture"'));
-    // With no picture, the fold is off the sheet whole: a plan with no picture prints as it did.
-    await setPicture(staff.ADMIN!, null);
-    const bare = await planPage({}, raceId, true);
-    expect(onPaper(bare)).toMatch(/(^|;)\{display:none/);
+    const columnClass = /<div class="([^"]*)"/.exec(plain)?.[1].split(/\s+/).find((name) => name.startsWith("css-")) ?? "";
+    expect(columnClass).not.toBe("");
+    expect(elementWith(plain, 'data-testid="plan-maps-section"')).not.toBe("");
+    expect(cssOf(page)).toMatch(new RegExp(`\\.${columnClass}\\{[^}]*display:flex;[^}]*flex-direction:column`));
+
+    // With no picture and no link, the fold is off the sheet whole: a plan with nothing in it prints as it did.
+    await removePicture(staff.ADMIN!, (await rowsOf())[0].id);
+    expect(foldOnPaper(await planPage({}, raceId, true))).toMatch(/(^|;)\{display:none/);
   });
 
-  it("gives a thumb 44 pixels on both buttons", async () => {
-    const stored = await storedPicture();
-    await setPicture(staff.ADMIN!, stored.id);
+  it("gives a thumb 44 pixels on the upload and on «Șterge poza»", async () => {
+    await addPicture(staff.ADMIN!, (await storedPicture()).id);
     const page = await planPage({}, raceId, true);
     expect(rulesOf(page, "plan-picture-upload").screen).toMatch(/min-height:44px/);
     const removeButton = page.slice(page.indexOf('data-testid="plan-picture-remove-form"')).match(/<button[^>]*class="([^"]*)"/)?.[1] ?? "";
@@ -803,35 +839,37 @@ describe("§952 the plan's page draws the picture", () => {
     const source = readFileSync("src/app/[locale]/admin/events/[id]/plan-voluntari/page.tsx", "utf8");
     const call = source.slice(source.indexOf("<PlanPictureUpload"), source.indexOf("</Box>", source.indexOf("<PlanPictureUpload")));
     expect(call).toContain("labels={{");
-    // Every prop is a string, a boolean or the labels' strings: nothing drawn is handed across.
+    // Every prop is a string or the labels' strings: nothing drawn is handed across.
     expect(call.slice("<PlanPictureUpload".length)).not.toMatch(/<[A-Za-z]/);
     expect(call).not.toMatch(/Icon\b|icon=/);
     const island = readFileSync("src/modules/volunteers/ui/PlanPictureUpload.tsx", "utf8");
     expect(island.startsWith('"use client";')).toBe(true);
-    // Its glyphs come by name from the backoffice's table, through the house's button.
-    expect(island).toContain('icon={replaces ? "replace" : "upload"}');
+    // Its glyph comes by name from the backoffice's table, through the house's button; it only ever appends.
+    expect(island).toContain('icon="upload"');
+    expect(island).not.toMatch(/replace/i);
     expect(island).not.toMatch(/@mui\/icons-material/);
     expect(island).toContain("sx={TAP_TARGET}");
   });
 
-  it("offers no upload where there is no store, and draws no picture", async () => {
-    const stored = await storedPicture();
-    await setPicture(staff.ADMIN!, stored.id);
+  it(`offers no upload once the plan holds ${PLAN_PICTURES_MAX} pictures, and none where there is no store`, async () => {
+    for (let n = 0; n < PLAN_PICTURES_MAX; n += 1) await addPicture(staff.ADMIN!, (await storedPicture()).id);
+    const full = await planPage();
+    expect(tagsOf(full, "plan-picture")).toHaveLength(PLAN_PICTURES_MAX);
+    expect(full).not.toContain('data-testid="plan-picture-form"');
+
     state.storage = false;
     const page = await planPage();
     expect(page).toContain(ro.Admin.volunteers.plan.picture.noStorage);
-    // …and does not ask for an upload it cannot take.
-    expect(page).not.toContain(ro.Admin.volunteers.plan.picture.none);
     expect(page).not.toContain('data-testid="plan-picture-form"');
     expect(page).not.toContain('data-testid="plan-picture-remove-form"');
     expect(page).not.toContain("<img");
-    // The plan itself is as it was.
+    // The links still work, and the plan itself is as it was.
+    expect(page).toContain('data-testid="plan-link-add-form"');
     expect(page).toContain(">Intersecția Stejeriș<");
   });
 
-  it("is a 404 for the Tehnic role, the Redactor, a desk Volunteer and a member, picture or not", async () => {
-    const stored = await storedPicture();
-    await setPicture(staff.ADMIN!, stored.id);
+  it("is a 404 for the Tehnic role, the Redactor, a desk Volunteer and a member, pictures or not", async () => {
+    await addPicture(staff.ADMIN!, (await storedPicture()).id);
     for (const role of ["DEV", "COPYWRITER", "CONTRIBUTOR", "MEMBER"] as const) {
       state.actor = staff[role];
       await expect(planPage(), role).rejects.toThrow("NOT_FOUND");
@@ -844,7 +882,7 @@ describe("§952 the plan's page draws the picture", () => {
   });
 });
 
-describe("§952 the picture is one edition's: not carried by a series, a copy or the event's file", () => {
+describe("§NNN the pictures and links are one edition's: not carried by a series, a copy or the event's file", () => {
   const AT = new Date("2026-09-25T10:00:00.000Z");
   const FIELDS = {
     type: "RACE",
@@ -879,42 +917,49 @@ describe("§952 the picture is one edition's: not carried by a series, a copy or
     en: { slug: `the-cross-${slug}`, title: `The cross ${slug}`, excerpt: "With a plan." },
   });
   const nothingServed = (async () => new Response(null, { status: 404 })) as typeof fetch;
+  const MAP = "https://maps.example.test/d/viewer?mid=plan-serie";
+  const linksOf = async (ids: string[]) => db.select().from(eventVolunteerPlanLinks).where(inArray(eventVolunteerPlanLinks.eventId, ids));
 
-  it("leaves a series' later dates and a copy without it, and the source with its own", async () => {
+  it("leaves a series' later dates and a copy without them, and the source with its own", async () => {
     const admin = staff.ADMIN!;
     const picture = await storedPicture();
     const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: words("serie") }, now: AT });
-    await setPicture(admin, picture.id, source.id, AT);
+    await addPicture(admin, picture.id, source.id, AT);
+    await addVolunteerPlanLink(db, admin, { eventId: source.id, url: MAP, label: "Harta" }, AT);
 
     await repeatEvent(db, { actor: admin, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-10-21", publish: false }, now: AT });
     const dates = await db.select().from(events).where(eq(events.repeatOf, source.id));
     expect(dates.length).toBeGreaterThan(0);
-    for (const date of dates) expect(date.volunteerPlanMediaAssetId, date.id).toBeNull();
-
     const copy = await duplicateEvent(db, { actor: admin, eventId: source.id });
-    expect((await rowOf(copy.id)).volunteerPlanMediaAssetId).toBeNull();
-    expect((await rowOf(source.id)).volunteerPlanMediaAssetId).toBe(picture.id);
+    const others = [...dates.map((date) => date.id), copy.id];
+    expect(await db.select().from(eventVolunteerPlanPictures).where(inArray(eventVolunteerPlanPictures.eventId, others))).toEqual([]);
+    expect(await linksOf(others)).toEqual([]);
+    expect((await rowsOf(source.id)).map((row) => row.mediaAssetId)).toEqual([picture.id]);
+    expect((await linksOf([source.id])).map((row) => row.url)).toEqual([MAP]);
   });
 
-  it("is not in the event's file: an export does not name it, a new event from the file has none, and an import over an event leaves its own", async () => {
+  it("is not in the event's file: an export names neither, a new event from the file has none, and an import over an event leaves its own", async () => {
     const admin = staff.ADMIN!;
     const picture = await storedPicture();
     const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: words("sursa") }, now: AT });
-    await setPicture(admin, picture.id, source.id, AT);
+    await addPicture(admin, picture.id, source.id, AT);
+    await addVolunteerPlanLink(db, admin, { eventId: source.id, url: MAP, label: "Harta" }, AT);
 
     const { file } = await exportEvent(db, { actor: admin, eventId: source.id, now: AT });
     const text = serializeEventFile(file);
     expect(text).not.toContain(picture.id);
     expect(text).not.toContain(picture.keyPrefix);
-    expect(text).not.toMatch(/volunteerPlan|volunteer_plan|planPicture/i);
+    expect(text).not.toContain(MAP);
+    expect(text).not.toMatch(/volunteerPlan|volunteer_plan|planPicture|planLink/i);
     const read = readEventFile(text);
     if (!read.ok) throw new Error(`the export did not read back: ${read.refusal} ${read.detail ?? ""}`);
 
     const created = await importEventAsNew(db, { actor: admin, file: read.file, fetchImpl: nothingServed, now: AT });
-    expect((await rowOf(created.eventId)).volunteerPlanMediaAssetId).toBeNull();
+    expect(await rowsOf(created.eventId)).toEqual([]);
+    expect(await linksOf([created.eventId])).toEqual([]);
 
     // Over the event itself, once its distance has moved since the file was made: the import writes the file's distance
-    // back through the editor's own save, and the plan's picture — which no file names — stays where it was.
+    // back through the editor's own save, and the plan's pictures and links — which no file names — stay where they were.
     await db.update(events).set({ distanceMeters: 5000 }).where(eq(events.id, source.id));
     const diff = await diffEventImport(db, { actor: admin, file: read.file, eventId: source.id });
     const over = await importEventOver(db, {
@@ -927,11 +972,11 @@ describe("§952 the picture is one edition's: not carried by a series, a copy or
       now: AT,
     });
     expect(over.changed.length).toBeGreaterThan(0);
-    const after = await rowOf(source.id);
-    expect(after.distanceMeters).toBe(10_000);
-    expect(after.volunteerPlanMediaAssetId).toBe(picture.id);
-    // The trail of the plan's picture has the one press made here and nothing an import wrote.
-    expect(await db.select().from(auditLogs).where(and(eq(auditLogs.action, "event.volunteer_plan_picture_set"), eq(auditLogs.entityId, source.id)))).toHaveLength(1);
+    expect((await eventRowOf(source.id)).distanceMeters).toBe(10_000);
+    expect((await rowsOf(source.id)).map((row) => row.mediaAssetId)).toEqual([picture.id]);
+    expect((await linksOf([source.id])).map((row) => row.url)).toEqual([MAP]);
+    // The trail of the plan's pictures has the one press made here and nothing an import wrote.
+    expect(await db.select().from(auditLogs).where(and(eq(auditLogs.action, "event.volunteer_plan_picture_added"), eq(auditLogs.entityId, source.id)))).toHaveLength(1);
     expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "event.volunteer_plan_picture_removed"))).toHaveLength(0);
   });
 });

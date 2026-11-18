@@ -174,7 +174,8 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     rsvpAskDay: sample.rsvpAskDay,
     rsvpAskDayOther: other.rsvpAskDay,
     // «Punctul tău de voluntar» (§956): a made-up point of the made-up race with its note, both languages — read only by
-    // that message's template, which is its point and no field of the closed set. No picture: none of the club's own here.
+    // that message's template, which is its point and no field of the closed set. One picture and one link of the plan
+    // (§NNN), both at the site's own address: none of the club's stored pictures here.
     volunteerPoint: {
       number: EMAIL_SAMPLE_PLAN_POINT.number,
       nameRo: EMAIL_SAMPLE_PLAN_POINT.name.ro,
@@ -182,7 +183,15 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
       km: EMAIL_SAMPLE_PLAN_POINT.km,
       noteRo: EMAIL_SAMPLE_PLAN_POINT.note.ro,
       noteEn: EMAIL_SAMPLE_PLAN_POINT.note.en,
-      picture: null,
+      pictures: [
+        {
+          displayUrl: `${base}${EMAIL_SAMPLE_PLAN_POINT.picture.path}`,
+          fullUrl: `${base}${EMAIL_SAMPLE_PLAN_POINT.picture.path}`,
+          width: EMAIL_SAMPLE_PLAN_POINT.picture.width,
+          height: EMAIL_SAMPLE_PLAN_POINT.picture.height,
+        },
+      ],
+      links: [{ url: `${base}/${locale}${EMAIL_SAMPLE_PLAN_POINT.link.path}`, label: EMAIL_SAMPLE_PLAN_POINT.link.label, host: new URL(base).hostname.replace(/^www\./, "") }],
     },
   };
 }

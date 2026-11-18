@@ -7,6 +7,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { faqQuestions } from "@/db/schema/faq";
 import { newsletterSends } from "@/db/schema/newsletter";
 import { teamMembers, teamPageBoxes } from "@/db/schema/team";
+import { eventVolunteerPlanPictures } from "@/db/schema/volunteer-plan";
 import { shopProductPictures, shopProducts } from "@/db/schema/shop";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
@@ -144,6 +145,9 @@ const referencedSomewhere = sql`(
   -- the column has no foreign key, so this is what keeps the organizers' map from the sweep and from
   -- a delete on the pictures page. Drafts and past events included: a plan is reprinted.
   OR EXISTS (SELECT 1 FROM ${events} WHERE ${events.volunteerPlanMediaAssetId} = ${mediaAssets.id})
+  -- A picture of «Poze și hărți» (§NNN, amending §952): a plan holds several since, by id in their own table. The column
+  -- above is written by nobody now and still counted until the contract that drops it, so nothing it names is swept first.
+  OR EXISTS (SELECT 1 FROM ${eventVolunteerPlanPictures} WHERE ${eventVolunteerPlanPictures.mediaAssetId} = ${mediaAssets.id})
   -- No events.video_poster_url any more (§485): a film is a figure in the description, whose
   -- poster the event translation's own body names above (migration 0092 carried every stored
   -- poster there). The column is unread and leaves the database in BR-V2.11 (§491).
@@ -385,6 +389,11 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .from(mediaAssets)
     .innerJoin(events, eq(events.volunteerPlanMediaAssetId, mediaAssets.id))
     .leftJoin(eventTranslations, eq(eventTranslations.eventId, events.id));
+  // A picture of a plan's «Poze și hărți» (§NNN): the same line, «Planul voluntarilor: {title}» — one a plan, however it is held.
+  const inVolunteerPlanPictures = await db
+    .select({ assetId: eventVolunteerPlanPictures.mediaAssetId, id: eventVolunteerPlanPictures.eventId, title: eventTranslations.title, locale: eventTranslations.locale })
+    .from(eventVolunteerPlanPictures)
+    .leftJoin(eventTranslations, eq(eventTranslations.eventId, eventVolunteerPlanPictures.eventId));
 
   const inTeam = await db
     .select({ assetId: teamMembers.photoMediaAssetId, id: teamMembers.id, title: teamMembers.name })
@@ -465,7 +474,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   for (const row of [...inEvents, ...inBibDesigns, ...inCovers].sort((a) => (a.locale === locale ? -1 : 1))) {
     add(row.assetId, { kind: "event", id: row.id, title: row.title });
   }
-  for (const row of [...inVolunteerPlans].sort((a) => (a.locale === locale ? -1 : 1))) {
+  for (const row of [...inVolunteerPlans, ...inVolunteerPlanPictures].sort((a) => (a.locale === locale ? -1 : 1))) {
     add(row.assetId, { kind: "volunteerPlan", id: row.id, title: row.title });
   }
   for (const row of inTeam) if (row.assetId) add(row.assetId, { kind: "team", id: row.id, title: row.title });

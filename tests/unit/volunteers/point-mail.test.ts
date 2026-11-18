@@ -160,7 +160,12 @@ describe("§956 `VOLUNTEER_POINT`: a message type classed like the role's own", 
         km: 5.5,
         noteRo: "Pahare în cutia albastră.",
         noteEn: "Cups in the blue box.",
-        picture: { displayUrl: "https://media.example.test/plan/1280w.webp", fullUrl: "https://media.example.test/plan/web.webp", width: 2400, height: 1600 },
+        pictures: [{ displayUrl: "https://media.example.test/plan/1280w.webp", fullUrl: "https://media.example.test/plan/web.webp", width: 2400, height: 1600 }],
+        // The plan's links (§NNN): one with its label, one with none — said by its host.
+        links: [
+          { url: "https://maps.example.test/d/viewer?mid=1", label: "Harta voluntarilor", host: "maps.example.test" },
+          { url: "https://docs.example.test/plan", label: null, host: "docs.example.test" },
+        ],
       },
     };
     const message = renderBilingual("VOLUNTEER_POINT", "ro", data, undefined, copy);
@@ -170,7 +175,7 @@ describe("§956 `VOLUNTEER_POINT`: a message type classed like the role's own", 
     expect(roHalf).toContain("Ne vedem sâmbătă la Crosul de toamnă. Adu frontala.");
     expect(roHalf).not.toContain("Organizatorii te-au pus la un punct");
     // …between the platform's own lines, in the order a reader needs them: the point, its note, the role, then the words, then the picture.
-    const order = ["▶ Punctul tău la Crosul de toamnă: 3. 5,5 km — Apă la cabană", "De știut la acest punct\nPahare în cutia albastră.", "Rolul tău: Direcționare (Traseu).", "Ce presupune rolul: Arăți drumul.", "Ne vedem sâmbătă", "Planul voluntarilor pe traseu, ca poză: https://media.example.test/plan/web.webp"];
+    const order = ["▶ Punctul tău la Crosul de toamnă: 3. 5,5 km — Apă la cabană", "De știut la acest punct\nPahare în cutia albastră.", "Rolul tău: Direcționare (Traseu).", "Ce presupune rolul: Arăți drumul.", "Ne vedem sâmbătă", "Planul voluntarilor pe traseu, ca poză: https://media.example.test/plan/web.webp", "Hărțile și linkurile planului\nHarta voluntarilor: https://maps.example.test/d/viewer?mid=1\ndocs.example.test: https://docs.example.test/plan"];
     const positions = order.map((part) => roHalf.indexOf(part));
     expect(positions.every((position) => position >= 0), JSON.stringify(positions)).toBe(true);
     expect([...positions].sort((a, b) => a - b)).toEqual(positions);
@@ -182,15 +187,40 @@ describe("§956 `VOLUNTEER_POINT`: a message type classed like the role's own", 
     expect(message.html.match(/<img src="https:\/\/media\.example\.test\/plan\/1280w\.webp"/g)).toHaveLength(1);
     expect(message.html.match(/href="https:\/\/media\.example\.test\/plan\/web\.webp"/g)).toHaveLength(3);
     expect(message.html).toContain('width="550"');
+    // The links in both halves (§NNN), each its label or its host, linked; the plain text writes the addresses out.
+    expect(message.html.match(/<a href="https:\/\/maps\.example\.test\/d\/viewer\?mid=1"[^>]*>Harta voluntarilor<\/a>/g)).toHaveLength(2);
+    expect(message.html.match(/<a href="https:\/\/docs\.example\.test\/plan"[^>]*>docs\.example\.test<\/a>/g)).toHaveLength(2);
+    expect(enHalf).toContain("The plan's maps and links\nHarta voluntarilor: https://maps.example.test/d/viewer?mid=1");
   });
 
-  it("previews on «Emailuri» with a made-up point and its note — no role, no picture, nothing of a volunteer's", () => {
+  it("carries every picture of the plan in its order, each named by its number, and none of them twice (§NNN)", () => {
+    const pictures = [1, 2, 3].map((n) => ({ displayUrl: `https://media.example.test/p${n}/1280w.webp`, fullUrl: `https://media.example.test/p${n}/web.webp`, width: 1600, height: 1200 }));
+    const sample = emailSampleFor("VOLUNTEER_POINT", "ro");
+    const data: TemplateData = { ...sample, volunteerPoint: { ...sample.volunteerPoint!, pictures, links: [] } };
+    const message = renderBilingual("VOLUNTEER_POINT", "ro", data, undefined, null);
+    // The first half: each picture once, in the plan's order; the second half the links to them alone.
+    const images = [...message.html.matchAll(/<img src="https:\/\/media\.example\.test\/(p\d)\/1280w\.webp"/g)].map((match) => match[1]);
+    expect(images).toEqual(["p1", "p2", "p3"]);
+    expect(message.html).toContain("Deschide poza 2 din 3 a planului (întreagă)");
+    expect(message.html).toContain("Open picture 3 of 3 of the plan (the whole of it)");
+    expect(message.html).not.toContain('data-email-part="volunteer-plan-links"');
+    const [roHalf] = message.text.split("\n— — —\n");
+    expect(roHalf).toContain("Planul voluntarilor, poza 1 din 3: https://media.example.test/p1/web.webp");
+    expect(roHalf.indexOf("poza 1 din 3")).toBeLessThan(roHalf.indexOf("poza 3 din 3"));
+  });
+
+  it("previews on «Emailuri» with a made-up point, its note, one picture and one link — no role, nothing of a volunteer's", () => {
     const preview = renderBilingual("VOLUNTEER_POINT", "ro", emailSampleFor("VOLUNTEER_POINT", "ro"), undefined, null);
     expect(preview.text).toContain("▶ Punctul tău la Crosul de toamnă: 3. 5,5 km — Apă la cabană");
     expect(preview.text).toContain("▶ Your point at The autumn cross: 3. 5.5 km — Water at the hut");
     expect(preview.text).toContain("De știut la acest punct");
     expect(preview.text).not.toMatch(/Rolul tău|Your role|Ce presupune|What the role/);
-    expect(preview.html).not.toContain('data-email-part="volunteer-plan-picture"');
+    // One picture and one link of the plan (§NNN), at the site's own address: none of the club's stored pictures. The
+    // picture's part stands in both halves — drawn in the first, its link alone in the second —, the links' too.
+    expect(preview.html.match(/data-email-part="volunteer-plan-picture"/g)).toHaveLength(2);
+    expect(preview.html.match(/<img src="[^"]*\/brand\/logo-email-banner\.png" alt="Planul voluntarilor desenat pe traseu"/g)).toHaveLength(1);
+    expect(preview.html.match(/data-email-part="volunteer-plan-links"/g)).toHaveLength(2);
+    expect(preview.text).toMatch(/Harta voluntarilor \(Google My Maps\): https?:\/\/\S+\/ro\/EXAMPLE-map/);
     // The sample's point is that one message's alone: the role's own preview never shows it.
     const role = renderBilingual("VOLUNTEER_ROLE_ASSIGNED", "ro", emailSampleFor("VOLUNTEER_ROLE_ASSIGNED", "ro"), undefined, null);
     expect(role.text).not.toMatch(/Apă la cabană|Water at the hut|Punctul tău|Your point/);

@@ -161,8 +161,11 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // Asks only for the reopening that emails — a cancelled person who holds roles and has an address; the other state
   // presses email nobody and post as before, a `ConfirmSubmitButton` drawn only for that case.
   setVolunteerStateAction: [],
-  // «Șterge poza» on «Planul voluntarilor» (§952): the plan's picture taken off, asked first — only uploading it again brings it back.
+  // «Șterge poza» under a picture of «Poze și hărți» on «Planul voluntarilor» (§952, §NNN): that picture taken off the plan,
+  // asked first — only uploading it again brings it back.
   removePlanPictureAction: [],
+  // «Șterge linkul» under a link of «Poze și hărți» (§NNN): that link taken off the plan, asked first, naming it.
+  removePlanLinkAction: [],
   // «Trimite fiecăruia punctul lui» on «Planul voluntarilor» (§956): one email to every placed volunteer, asked first —
   // the question counts who is written to, who already knows their point, who has no address and who has no point.
   sendVolunteerPointsAction: [],
@@ -377,15 +380,19 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   // «Participă la tombolă» on a row of the registrations list (§949): on the raffle's list or off it, a one-press tick.
   setRegistrationRaffleAction:
     "a mark on the club's own raffle list for one registration, undone by the same tick; it tells nobody and changes no state, place, number or count",
-  // «Pune aici» / «Scoate» on «Planul voluntarilor» (§949): where a volunteer stands on the route, one press either way.
+  // «Pune aici» / «Scoate» on «Planul voluntarilor» (§949), and «Pune» on a person's line of «Fără punct» (§NNN): where a
+  // volunteer stands on the route, one press either way.
   placeVolunteerAction:
     "a line of the organizers' own plan for one volunteer, undone by «Scoate» or by another point; it tells nobody and changes no state, role, number or count",
   // «Cel mult câte roluri poate bifa o persoană» on the event's «Voluntari» card (§951): the public form's limit on the roles ticked, a box with its own «Salvează».
   setVolunteerChoicesMaxAction:
     "a setting of the event's public volunteers' form, undone by saving the old number or an empty box; it tells nobody, deletes nothing and changes nobody already listed — as the card's ticks beside it, which ask nothing either",
-  // «Încarcă poza planului» / «Schimbă poza» on «Planul voluntarilor» (§952): sent by the upload's island once the chosen file is stored.
-  setPlanPictureAction:
-    "records the picture just chosen and uploaded as the organizers' own plan's, undone by another upload or by «Șterge poza», which asks; it tells nobody, is on no public page and changes no point or person",
+  // «Adaugă o poză» in «Poze și hărți» on «Planul voluntarilor» (§952, §NNN): sent by the upload's island once the chosen file is stored.
+  addPlanPictureAction:
+    "adds the picture just chosen and uploaded, last, to the organizers' own plan, undone by «Șterge poza» under it, which asks; it tells nobody, is on no public page and changes no other picture, point or person",
+  // «Adaugă linkul» in «Poze și hărți» (§NNN): an address — a Google My Maps map — and its label go last among the plan's links.
+  addPlanLinkAction:
+    "adds a link, last, to the organizers' own plan, undone by «Șterge linkul» beside it, which asks; it tells nobody, is on no public page and changes no picture, point or person",
   // «Adaugă punctul» in «Punctele planului» on «Planul voluntarilor» (§961): a point of the plan's own, on the route or at the start–finish.
   addPlanPointAction:
     "adds a point to the organizers' own plan, undone by «Șterge punctul», which asks; it tells nobody, is on no public page, and no person stands anywhere they did not",
