@@ -101,8 +101,9 @@ export type DomainErrorCode =
   | "LEGAL_PLACEHOLDERS_LEFT"
   // «Apare în clasament» / «Apare pe site» on a registration no longer marked «Elită» (§910): a stale menu, or a colleague took the mark off first.
   | "ELITE_NOT_MARKED"
-  // The club's refusal under the terms (§618) with «Trimite emailul» unticked (the design «telling the owner about every email a
-  // staff press sends», slice 4): the terms promise the person is told the ground, so the refusal never goes without its email.
+  // The club's refusal under the terms (§618) posted with its email kept back (the design «telling the owner about every email a
+  // staff press sends», slice 4; its question offers no «… fără email», §NNN): the terms promise the person is told the ground,
+  // so the refusal never goes without its email.
   | "REFUSAL_NEEDS_EMAIL";
 
 export class DomainError extends Error {

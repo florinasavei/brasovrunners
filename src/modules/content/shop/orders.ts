@@ -338,7 +338,7 @@ const VERB_AUDIT = { pay: "shop.order.paid", handOver: "shop.order.handed_over",
  */
 async function moveOrder<T extends Record<string, unknown>>(
   tx: Transaction<T>,
-  /** `audit`: what the caller adds to the move's audit row — «Trimite emailul» unticked on a payment, `emailSkipped`. */
+  /** `audit`: what the caller adds to the move's audit row — a payment marked «… fără email», `emailSkipped`. */
   input: { actorId: string; orderId: string; verb: OrderVerb; by: OrderActor; ownerId?: string; now: Date; audit?: Readonly<Record<string, unknown>> },
 ): Promise<{ order: ShopOrder; from: ShopOrderStatus }> {
   // A member's own door names only their own orders: anybody else's is "no such order", never "not yours".
@@ -408,8 +408,8 @@ async function paidEmailWouldLeave<T extends Record<string, unknown>>(tx: Transa
  * «Marchează plătită», «Marchează predată», «Anulează» — the club's verbs, the Administrator's
  * (`canManageShop`). Marked paid, the member is told («Comanda ta e plătită»), in the language they
  * ordered in, at their account's address — none when the account is gone, and none when the shop manager
- * unticked «Trimite emailul» in the question (`sendEmail: false`; the design «telling the owner about every
- * email a staff press sends», slice 4), which the payment's audit row records as `emailSkipped` — only when the email
+ * answered the question «… fără email» (`sendEmail: false`; the design «telling the owner about every
+ * email a staff press sends», slice 4, §NNN), which the payment's audit row records as `emailSkipped` — only when the email
  * would have left (`paidEmailWouldLeave`).
  */
 export async function moveOrderByClub<T extends Record<string, unknown>>(

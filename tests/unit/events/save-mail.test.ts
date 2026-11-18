@@ -64,7 +64,7 @@ describe("the offers a save makes, as another question's lines", () => {
   const raiseWhen: FormCondition[] = [{ field: "event.waitlistAutoOffer", equals: "true" }];
 
   it("says the offers' email line and then its club count, each only while the offers are", () => {
-    const lines = raiseMailLines({ email: "Pleacă cel mult 3 emailuri „S-a eliberat un loc”.", also: [{ text: "Și cel mult 6 emailuri pentru căsuțele clubului.", withEmail: true }] }, raiseWhen);
+    const lines = raiseMailLines({ email: "Pleacă cel mult 3 emailuri „S-a eliberat un loc”.", also: [{ text: "Și cel mult 6 emailuri pentru căsuțele clubului." }] }, raiseWhen);
     const spec: ConfirmSpec = { title: "t", body: "b", confirmLabel: "c", cancelLabel: "x", also: lines };
     const texts = (offers: string) => (resolveAlso(spec, (field) => (field === "event.waitlistAutoOffer" ? offers : null)).also ?? []).map((one) => one.text);
     expect(texts("true")).toEqual(["Pleacă cel mult 3 emailuri „S-a eliberat un loc”.", "Și cel mult 6 emailuri pentru căsuțele clubului."]);

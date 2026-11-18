@@ -776,8 +776,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         ...base,
         title: t("confirm.publishTitle", { title: heading }),
         body: t("confirm.publishBody"),
-        // «Anunță abonații newsletterului» beside it (slice 4), only while an alert would go: unticked, the event is never announced.
-        ...(alertAudience !== null ? { also: [{ ...words.line("alertLater", { count: alertAudience }), withEmail: true }], ...words.alertOptOut() } : {}),
+        // The publication's two answers (slice 4, §NNN), only while an alert would go: «… fără anunț», the event is never announced.
+        ...(alertAudience !== null ? { also: [words.line("alertLater", { count: alertAudience })], ...words.alertOptOut() } : {}),
       };
     }
     if (to === "DRAFT" && live) return { ...base, title: t("confirm.unpublishTitle", { title: heading }), body: t("confirm.unpublishBody"), destructive: true };

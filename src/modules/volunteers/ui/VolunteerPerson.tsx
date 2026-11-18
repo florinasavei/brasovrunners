@@ -238,7 +238,7 @@ export function GuardianVerbs({
               ? words.mail({
                   to: { name: person.name, address: person.email },
                   type: "VOLUNTEER_AGREEMENT_ACCEPTED",
-                  also: [{ ...words.line("guardianCopy"), withEmail: true }],
+                  also: [words.line("guardianCopy")],
                   optOut: true,
                 })
               : words.noMail(person.name, [words.line("guardianNone")])),
@@ -368,11 +368,11 @@ export function VolunteerStateForm({
           ariaLabel={named}
           title={t("volunteers.reopenTitle", { name: shortText(person.name) })}
           body={t("volunteers.reopenBody", { name: shortText(person.name) })}
-          // «Trimite emailul» (slice 4): a person reopened may be told their roles by the organizers instead.
+          // «… fără email» (slice 4, §NNN): a person reopened may be told their roles by the organizers instead.
           mail={words.mail({
             to: { name: person.name, address: person.email },
             type: "VOLUNTEER_ROLE_ASSIGNED",
-            also: [{ ...words.line("rolesHeld", { minutes: ROLE_EMAIL_SETTLE_MINUTES }), withEmail: true }],
+            also: [words.line("rolesHeld", { minutes: ROLE_EMAIL_SETTLE_MINUTES })],
             optOut: true,
           })}
           confirmLabel={label}

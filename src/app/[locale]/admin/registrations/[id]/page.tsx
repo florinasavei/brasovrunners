@@ -1848,9 +1848,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             messages={refusal}
             confirm={(
               [
-                // The club's refusal under the terms (§618) always tells the person its ground: no «Trimite emailul» there, and a line says why.
+                // The club's refusal under the terms (§618) always tells the person its ground: one confirm, no «… fără email», and a line says why.
                 { when: [{ field: "refusedByOrganizer", equals: "on" }], optOut: false },
-                // Any other cancellation (slice 4): the person's email may stay unsent; the freed place's offer still goes.
+                // Any other cancellation (slice 4, §NNN): «… și trimite emailul» or «… fără email»; the freed place's offer goes either way.
                 { when: [], optOut: true },
               ] as const
             ).map(({ when, optOut }) => ({

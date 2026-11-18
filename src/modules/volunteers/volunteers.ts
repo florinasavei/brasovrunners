@@ -1929,8 +1929,8 @@ async function setRaceDayDecision<T extends Record<string, unknown>>(
  * words — and every change of the roles given is told to the person by one email naming the roles that stand
  * (`VOLUNTEER_ROLE_ASSIGNED`). `event_volunteers.role_id` mirrors the first role given until its contract release (§837).
  *
- * `sendEmail: false` («Trimite emailul» unticked beside the role buttons or the form, or in the reopening's question —
- * the design «telling the owner about every email a staff press sends», slice 4): the change is the same and nothing is
+ * `sendEmail: false` («Trimite emailul» unticked beside the role buttons or the form, or the reopening's question answered
+ * «… fără email» — the design «telling the owner about every email a staff press sends», slice 4, §NNN): the change is the same and nothing is
  * queued; its audit row says `emailSkipped` when the press would have emailed. A roles email an earlier press queued and
  * still holding is withdrawn at the send as ever once the roles it names no longer stand (`render.ts`).
  */

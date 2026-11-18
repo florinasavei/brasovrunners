@@ -318,6 +318,6 @@ describe("the bulk cancel's toast: the act, then what the press emailed", () => 
     form.set("sendEmail", "off");
     for (const row of [ana, bia]) form.append("registrationId", row.id);
     await expect(bulkCancelRegistrationsAction(form)).rejects.toThrow(/^REDIRECT /);
-    expect(drawn(flashed() as FormNotice)).toBe("2 înscrieri anulate. 2 emailuri nu au plecat: ai debifat „Trimite…”.");
+    expect(drawn(flashed() as FormNotice)).toBe("2 înscrieri anulate. 2 emailuri nu au plecat, cum ai ales.");
   });
 });

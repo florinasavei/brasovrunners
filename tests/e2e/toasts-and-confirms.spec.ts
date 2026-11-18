@@ -136,10 +136,20 @@ test.describe("§384 toasts and confirmations", () => {
     await expect(page.getByText("În verificare", { exact: true })).toBeVisible();
     await expect(page.getByText("Publicat", { exact: true })).toHaveCount(0);
 
-    // Asked again, Enter confirms: publishing is not destructive.
+    // Asked again, Enter confirms: publishing is not destructive — unless the question offers the new-event alert's two
+    // answers (§NNN: a subscriber another spec confirmed may want this event), where Enter answers neither: it reaches the
+    // focused «Renunță», and the reader presses the answer they mean.
     await page.getByRole("button", { name: "Publică" }).click();
     await expect(publish).toBeVisible();
-    await page.keyboard.press("Enter");
+    if ((await publish.getByTestId("confirm-dialog-skip-email").count()) > 0) {
+      await page.keyboard.press("Enter");
+      await expect(publish).toBeHidden();
+      await expect(page.getByText("În verificare", { exact: true })).toBeVisible();
+      await page.getByRole("button", { name: "Publică" }).click();
+      await publish.getByTestId("confirm-dialog-confirm").click();
+    } else {
+      await page.keyboard.press("Enter");
+    }
     await expect(publish).toBeHidden();
     await expect(toast()).toContainText("Publicat. Este pe site în ambele limbi.", { timeout: 30_000 });
     await expect(page.getByText("Publicat", { exact: true })).toBeVisible();

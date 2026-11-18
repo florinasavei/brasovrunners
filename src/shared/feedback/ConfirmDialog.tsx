@@ -1,6 +1,7 @@
 "use client";
 
 import AltRouteIcon from "@mui/icons-material/AltRoute";
+import CancelScheduleSendIcon from "@mui/icons-material/CancelScheduleSend";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import ScheduleSendIcon from "@mui/icons-material/ScheduleSend";
@@ -24,10 +25,10 @@ import Typography from "@mui/material/Typography";
 import { useId, useState } from "react";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { emailRoadCookieLine } from "./email-road";
-import { type ConfirmSpec, confirmOnKey, withEmailOff, withOption } from "./notice";
+import { type ConfirmSpec, confirmOnKey, emailAnswers, withOption } from "./notice";
 
 /**
- * What the reader answered besides yes: whether «Trimite emailul» was unticked (`ConfirmSpec.emailOptOut`), and whether
+ * What the reader answered besides yes: whether they chose «… fără email» (`ConfirmSpec.emailOptOut`, §NNN), and whether
  * the question's optional box was ticked (`ConfirmSpec.option`).
  */
 export type ConfirmAnswer = { emailOff: boolean; optionOn: boolean };
@@ -48,8 +49,9 @@ export type ConfirmAnswer = { emailOff: boolean; optionOn: boolean };
  * the dialog confirms one that is not destructive (`confirmOnKey`): the reader who pressed Enter
  * in a box to send the form meant to send it, and the question is a pause, not a trap. In a
  * destructive dialog Enter never confirms — it reaches the focused cancel button and cancels — so
- * only the red button itself does. A held key's repeats are swallowed: the Enter that submitted
- * the form, still down when the dialog opens, neither confirms nor cancels it. Escape and the
+ * only the red button itself does; nor in one that may send the person their email (§NNN, below). A held
+ * key's repeats are swallowed: the Enter that submitted the form, still down when the dialog opens,
+ * neither confirms nor cancels it. Escape and the
  * backdrop cancel either. An email the action will queue is a line of its own, in bold, so it is
  * never missed — the person named and the email by its name in «Emailuri», or «Nu pleacă niciun email
  * către …» (`confirmWords().mail`, `noMail`) — and what else the press sends follows the road, quieter
@@ -68,11 +70,15 @@ export type ConfirmAnswer = { emailOff: boolean; optionOn: boolean };
  * the action's `enqueueEmail` stamps the row with it. Nothing is decided here: a road the server
  * cannot take (Gmail gone) is the group's road again, and the group's setting never moves.
  *
- * **«Trimite emailul»** (`spec.emailOptOut`; the design «telling the owner about every email a staff press sends», slice
- * 4): a box after the quieter lines, ticked whenever a question opens. Unticked, the bold line says that no email
- * leaves to the person, the road is not offered and the lines that belong to that email — its club copies — go
- * (`withEmailOff`); what the press sends anybody else stays said. Either answer hands the box's state to the caller
- * (`ConfirmAnswer`), which writes it into the form (`emailOptOutAnswer`) before it is sent.
+ * **The email, a choice made at every press** (`spec.emailOptOut`; §NNN, amending slice 4 of the design «telling the owner
+ * about every email a staff press sends», whose box ticked in advance it replaces; the owner, 2026-11-18: «vreau mereu sa
+ * confirm daca trimit un mail»): the one confirm becomes two answers that each say whether the email leaves — the
+ * contained «{action} și trimite emailul», in the press's colour with its glyph, and the outlined «{action} fără email»
+ * (`emailAnswers`, each `{action}` the question's `confirmLabel`). The bold email line, its club copies and its road
+ * describe the first; the road is written only for it. Enter answers neither (`confirmOnKey`): it reaches the focused
+ * «Renunță», so the reader presses the answer they mean. Either answer hands the choice to the caller (`ConfirmAnswer`),
+ * which writes it into the form (`emailOptOutAnswer`) before it is sent. A required tick holds both; a second answer
+ * (`alternative`) stays beside them and sends.
  *
  * **A wider press, offered in the question** (`spec.option`, §956: «Trimite din nou tuturor» under «Trimite fiecăruia
  * punctul lui»): a box after the quieter lines, unticked whenever a question opens, that the confirm button never waits
@@ -104,23 +110,22 @@ export default function ConfirmDialog({
   // The dialog's own box (§888), unticked again for each new question, as the road is picked again.
   const [tick, setTick] = useState<{ spec: ConfirmSpec | null; on: boolean }>({ spec: asked, on: false });
   const ticked = tick.spec === asked && tick.on;
-  // «Trimite emailul», ticked again for each new question: a press never inherits the last one's untick.
-  const [mailOff, setMailOff] = useState<{ spec: ConfirmSpec | null; off: boolean }>({ spec: asked, off: false });
-  const emailOff = mailOff.spec === asked && mailOff.off;
   // The question's optional box (§956), unticked again for each new question: a press never inherits the last one's tick.
   const [option, setOption] = useState<{ spec: ConfirmSpec | null; on: boolean }>({ spec: asked, on: false });
   const optionOn = option.spec === asked && option.on;
   if (!asked) return null;
-  // The question as it reads now: with its optional box ticked, the wider press's words; with «Trimite emailul» unticked,
-  // no email line to the person, no road, none of its copies.
-  const spec = withEmailOff(withOption(asked, optionOn), emailOff);
-  // A dialog that asks for a tick answers only once it is ticked — Enter included.
+  // The question as it reads now: with its optional box ticked, the wider press's words.
+  const spec = withOption(asked, optionOn);
+  // A question with the email's two answers (§NNN) is answered by neither on Enter.
+  const emailChoice = spec.emailOptOut !== undefined;
+  // A dialog that asks for a tick answers only once it is ticked — Enter included, and both of the email's answers.
   const mayConfirm = !spec.tick || ticked;
 
-  // Either way forward carries the road to the action, as a cookie the request that follows reads once — and the box's state.
-  const withRoad = (answer: (given: ConfirmAnswer) => void) => () => {
-    // An email left unsent takes no road (`withEmailOff` dropped it): nothing is written for the action to read.
-    if (spec.road) {
+  // Each way forward says whether the person's email leaves; one that sends carries the road to the action, as a cookie
+  // the request that follows reads once.
+  const withRoad = (answer: (given: ConfirmAnswer) => void, emailOff = false) => () => {
+    // An email left unsent takes no road: nothing is written for the action to read.
+    if (spec.road && !emailOff) {
       try {
         document.cookie = emailRoadCookieLine({ road, group: spec.road.group }, Date.now());
       } catch {
@@ -130,6 +135,8 @@ export default function ConfirmDialog({
     answer({ emailOff, optionOn });
   };
   const confirm = withRoad(onConfirm);
+  // «… fără email» (§NNN): the same press, the person's email kept back.
+  const confirmWithoutEmail = withRoad(onConfirm, true);
 
   return (
     <Dialog
@@ -143,7 +150,7 @@ export default function ConfirmDialog({
           if (event.key === "Enter") event.preventDefault();
           return;
         }
-        if (confirmOnKey(event.key, spec.destructive) !== "confirm") return;
+        if (confirmOnKey(event.key, spec.destructive, emailChoice) !== "confirm") return;
         // Before the focused cancel button turns the Enter into its own click.
         event.preventDefault();
         if (mayConfirm) confirm();
@@ -208,15 +215,6 @@ export default function ConfirmDialog({
             {line.text}
           </DialogContentText>
         ))}
-        {asked.emailOptOut && (
-          // «Trimite emailul» (slice 4): ticked as the question opens; unticked, the person's email is not queued.
-          <FormControlLabel
-            control={<Checkbox checked={!emailOff} onChange={(_event, on) => setMailOff({ spec: asked, off: !on })} sx={CHECKBOX_TAP_TARGET} />}
-            label={<Typography variant="body2">{asked.emailOptOut.label}</Typography>}
-            sx={{ mt: 1.5, mx: 0, alignItems: "flex-start", "& .MuiFormControlLabel-label": { pt: 1.25 } }}
-            data-testid="confirm-send-email"
-          />
-        )}
         {asked.option && (
           // A wider press the reader may choose here (§956): unticked as the question opens, and the confirm never waits for it.
           <FormControlLabel
@@ -241,35 +239,91 @@ export default function ConfirmDialog({
         320 px: the row wraps, each button a full line of its own, rather than overflowing the
         paper — where the second button's middle lands outside it and a tap hits the backdrop.
       */}
-      <DialogActions sx={{ flexWrap: "wrap", gap: 1, "& > :not(:first-of-type)": { ml: 0 } }}>
-        <Button onClick={onCancel} autoFocus startIcon={<CloseIcon fontSize="small" />} sx={{ ...TAP_TARGET, flex: { xs: "1 1 100%", sm: "0 0 auto" } }} data-testid="confirm-dialog-cancel">
-          {spec.cancelLabel}
-        </Button>
-        {alternative && (
-          <Button
-            variant="outlined"
-            // «Pune la coadă pentru trecerea programată» (§540) wears the scheduled-send glyph.
-            startIcon={spec.choice ? <ScheduleSendIcon fontSize="small" /> : <AltRouteIcon fontSize="small" />}
-            onClick={withRoad(alternative.onClick)}
-            sx={{ ...TAP_TARGET, flex: { xs: "1 1 100%", sm: "0 0 auto" } }}
-            data-testid="confirm-dialog-alternative"
-          >
-            {alternative.label}
-          </Button>
-        )}
-        <Button
-          variant="contained"
-          color={spec.destructive ? "error" : "primary"}
-          // «Trimite acum, fără să aștepte trecerea programată» (§540) wears the send glyph.
-          startIcon={spec.choice ? <SendIcon fontSize="small" /> : <CheckIcon fontSize="small" />}
-          onClick={confirm}
-          disabled={!mayConfirm}
-          sx={{ ...TAP_TARGET, flex: { xs: "1 1 100%", sm: "0 0 auto" } }}
-          data-testid="confirm-dialog-confirm"
-        >
-          {spec.confirmLabel}
-        </Button>
-      </DialogActions>
+      <ConfirmDialogActions
+        spec={spec}
+        mayConfirm={mayConfirm}
+        onCancel={onCancel}
+        confirm={confirm}
+        confirmWithoutEmail={confirmWithoutEmail}
+        alternative={alternative ? { label: alternative.label, onClick: withRoad(alternative.onClick) } : null}
+      />
     </Dialog>
+  );
+}
+
+/** Every button of the dialog's row: full width on a phone (the wrap rule above), side by side from `sm`. */
+const ANSWER_SX = { ...TAP_TARGET, flex: { xs: "1 1 100%", sm: "0 0 auto" } } as const;
+
+/**
+ * The dialog's row of answers, apart so that a Node render can draw it (the `Dialog` around it is a portal, which renders
+ * nothing on the server): «Renunță», focused on open; the quiet second answer when there is one; and the confirm — or,
+ * on a question that may send the person their email (§NNN), the two answers in its place: the outlined «{action} fără
+ * email» and the contained «{action} și trimite emailul», both held by a required tick. The handlers come wrapped by the
+ * dialog, the road and the answer already in them.
+ */
+export function ConfirmDialogActions({
+  spec,
+  mayConfirm,
+  onCancel,
+  confirm,
+  confirmWithoutEmail,
+  alternative,
+}: {
+  spec: ConfirmSpec;
+  mayConfirm: boolean;
+  onCancel: () => void;
+  /** The sending answer — or the one confirm —, the road already written in it. */
+  confirm: () => void;
+  /** «… fără email», drawn only on a question with the email's choice. */
+  confirmWithoutEmail: () => void;
+  alternative?: { label: string; onClick: () => void } | null;
+}) {
+  // The email's two answers (§NNN), or none: a question without the choice keeps its one confirm.
+  const answers = emailAnswers(spec);
+  return (
+    <DialogActions sx={{ flexWrap: "wrap", gap: 1, "& > :not(:first-of-type)": { ml: 0 } }}>
+      <Button onClick={onCancel} autoFocus startIcon={<CloseIcon fontSize="small" />} sx={ANSWER_SX} data-testid="confirm-dialog-cancel">
+        {spec.cancelLabel}
+      </Button>
+      {alternative && (
+        <Button
+          variant="outlined"
+          // «Pune la coadă pentru trecerea programată» (§540) wears the scheduled-send glyph.
+          startIcon={spec.choice ? <ScheduleSendIcon fontSize="small" /> : <AltRouteIcon fontSize="small" />}
+          onClick={alternative.onClick}
+          sx={ANSWER_SX}
+          data-testid="confirm-dialog-alternative"
+        >
+          {alternative.label}
+        </Button>
+      )}
+      {answers && (
+        // «{action} fără email» (§NNN): outlined, beside the sending answer — the same press, nothing to the person.
+        <Button
+          variant="outlined"
+          color={spec.destructive ? "error" : "primary"}
+          startIcon={<CancelScheduleSendIcon fontSize="small" />}
+          onClick={confirmWithoutEmail}
+          disabled={!mayConfirm}
+          sx={ANSWER_SX}
+          data-testid="confirm-dialog-skip-email"
+        >
+          {answers.skip}
+        </Button>
+      )}
+      <Button
+        variant="contained"
+        color={spec.destructive ? "error" : "primary"}
+        // «Trimite acum, fără să aștepte trecerea programată» (§540) wears the send glyph.
+        startIcon={spec.choice ? <SendIcon fontSize="small" /> : <CheckIcon fontSize="small" />}
+        onClick={confirm}
+        disabled={!mayConfirm}
+        sx={ANSWER_SX}
+        data-testid="confirm-dialog-confirm"
+      >
+        {/* With the email's choice, «{action} și trimite emailul» (§NNN); else the verb alone. */}
+        {answers ? answers.send : spec.confirmLabel}
+      </Button>
+    </DialogActions>
   );
 }

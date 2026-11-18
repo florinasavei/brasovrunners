@@ -105,7 +105,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
   const current = await searchParams;
   const { error, saved, invite, reason, account, count, failed, retried, report, mailSkipped } = current;
   /**
-   * «Trimite invitația acum» unticked (slice 4) and an invitation kept back: `mailSkipped` counts them (`mailSkippedOf`), and
+   * «… fără invitație» (slice 4, §NNN) and an invitation kept back: `mailSkipped` counts them (`mailSkippedOf`), and
    * a press that added nobody new kept none back, so it carries none — and «Nu a plecat nicio invitație» is not said.
    */
   const invitationsKept = (mailSkippedCount(mailSkipped) ?? 0) > 0;
@@ -412,7 +412,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
         {saved === "invited" && invite === "invited" && <Alert severity="success">{t("staff.inviteSent")}</Alert>}
         {saved === "invited" && invite === "exists" && <Alert severity="success">{t("staff.inviteExists")}</Alert>}
         {saved === "invited" && invite === "unconfigured" && <Alert severity="success">{t("staff.inviteManual")}</Alert>}
-        {/* Added with «Trimite invitația acum» unticked (slice 4): nobody was written to and Zitadel was not asked. */}
+        {/* Added «fără invitație» (slice 4): nobody was written to and Zitadel was not asked. */}
         {(saved === "invited" || saved === "membersInvited") && invitationsKept && (
           <Alert severity="info" data-testid="staff-invite-not-sent">
             {t("staff.inviteNotSent")}
@@ -443,7 +443,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
         {/* «Adaugă mai mulți membri» (§524): how many, and how many accounts the provider refused. */}
         {saved === "membersInvited" && (
           <Alert severity={failed ? "warning" : "success"} data-testid="staff-members-report">
-            {/* Unticked «Trimite invitațiile acum» (slice 4): added, and no invitation is on its way — the info line above says so.
+            {/* «Adaugă membrii fără invitații» (slice 4): added, and no invitation is on its way — the info line above says so.
                 Nobody new added: no invitation is on its way either, and nothing claims one is. */}
             {failed
               ? t("staff.membersInviteFailed", { count: count ?? "0", failed })
@@ -543,9 +543,9 @@ export default async function StaffPage({ params, searchParams }: Props) {
             ...words.mail({
               to: { name: "{displayName}", address: "{email}" },
               type: kind === "MEMBER" ? "MEMBER_INVITATION" : "STAFF_INVITATION",
-              also: invitesSend ? [{ ...words.line("zitadel"), withEmail: true }] : [],
-              // «Trimite invitația acum» (slice 4): unticked, the person is added and told nothing — Zitadel is not asked either.
-              optOut: { label: t("staff.inviteOptOut"), offLine: t("staff.inviteOptOutOff", { name: "{displayName}" }) },
+              also: invitesSend ? [words.line("zitadel")] : [],
+              // «Adaugă fără invitație» (slice 4, §NNN): the person is added and told nothing — Zitadel is not asked either.
+              optOut: { sendLabel: t.raw("staff.inviteSendButton") as string, skipLabel: t.raw("staff.inviteSkipButton") as string },
             }),
             fillFrom: ["displayName", "email"],
             confirmLabel: t("staff.invite"),
@@ -658,9 +658,9 @@ export default async function StaffPage({ params, searchParams }: Props) {
             ...words.mail({
               to: { upToLinesOf: "members", audience: "memberAddresses" },
               type: "MEMBER_INVITATION",
-              also: invitesSend ? [{ ...words.line("zitadelEach"), withEmail: true }, { ...words.line("zitadelAgain"), withEmail: true }] : [],
-              // «Trimite invitațiile acum» (slice 4): unticked, the members are added and nobody is written to.
-              optOut: { label: t("staff.membersOptOut"), offLine: t("staff.membersOptOutOff") },
+              also: invitesSend ? [words.line("zitadelEach"), words.line("zitadelAgain")] : [],
+              // «Adaugă membrii fără invitații» (slice 4, §NNN): the members are added and nobody is written to.
+              optOut: { sendLabel: t.raw("staff.membersSendButton") as string, skipLabel: t.raw("staff.membersSkipButton") as string },
             }),
             confirmLabel: t("staff.membersInvite"),
             cancelLabel: words.cancel,

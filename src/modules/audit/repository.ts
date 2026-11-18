@@ -468,7 +468,7 @@ export type AuditAction =
    */
   | "event.holds_moved_by_window"
   /**
-   * A publication with «Anunță abonații newsletterului» unticked (the design «telling the owner about every email a staff
+   * A publication answered «… fără anunț» (§NNN; the design «telling the owner about every email a staff
    * press sends», slice 4): the event (the entity) is marked seen for the new-event alert — its `newsletter_sends` row with no
    * recipients — so the job never announces it. `emailSkipped`, never a subscriber. Written only when skipped.
    */
@@ -941,7 +941,7 @@ export type AuditAction =
    */
   | "staff.invitation_sent_now"
   /**
-   * «Adaugă o persoană» with «Trimite invitația acum» unticked (the design «telling the owner about every email a staff
+   * «Adaugă o persoană» answered «… fără invitație» (§NNN; the design «telling the owner about every email a staff
    * press sends», slice 4): the added row (the entity), `staffUserId`, the invitation's `messageType` and `emailSkipped` —
    * nothing was queued and Zitadel was not asked. Never an address. Written only when skipped.
    */

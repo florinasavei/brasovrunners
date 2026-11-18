@@ -190,7 +190,7 @@ export type SubmitButtonProps = {
   /**
    * A second Server Action of the form this button sits in (§287, as `ConfirmSubmitButton`'s): a volunteer's roles block is
    * one form whose «Dă-i rolul …» buttons post its action and whose «Ia-i rolul …» buttons post this one, so the block's one
-   * «Trimite emailul» reaches both (the design «telling the owner about every email a staff press sends», slice 4).
+   * «Trimite emailul» box reaches both (the design «telling the owner about every email a staff press sends», slice 4).
    */
   formAction?: (formData: FormData) => void | Promise<void>;
 };
