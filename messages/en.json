@@ -1902,7 +1902,10 @@
       "cancel": "Cancel the registration",
       "cancelBody": "It cannot be undone. A refusal, with its reason, is made from the registration's page.",
       "confirmOnPaperBody": "You confirm the participant signed the declaration on paper, at the desk. Only with the signed paper in front of you. Then the confirmation email; if no place, the waiting list, with no email yet.",
-      "downloadBib": "Download the race number (BIB)",
+      "oneBib": {
+        "download": "Download the BIB (PDF)",
+        "menu": "Download the BIB"
+      },
       "notOnPublicList": "Not shown publicly",
       "erase": "Erase permanently",
       "eraseTitle": "Erase {name}'s registration for good?",

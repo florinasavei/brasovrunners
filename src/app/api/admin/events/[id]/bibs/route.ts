@@ -7,9 +7,11 @@ import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { shownContactAddresses } from "@/modules/contact/shown-address";
 import { type BibSheetPart, type BibSheetRow, renderBibSheet } from "@/modules/registrations/bibs-pdf";
-import { bibEventDate, findEventForBibs, freeSpareBibNumbers, listBibs } from "@/modules/registrations/bibs";
+import { bibEventDate, findEventForBibs, findRegistrationBib, freeSpareBibNumbers, listBibs } from "@/modules/registrations/bibs";
+import { hasOneBib, oneBibFileName } from "@/modules/registrations/domain/one-bib";
 import { BIB_BLANK_MAX } from "@/modules/registrations/domain/spare-bibs";
 import { listEliteEntries } from "@/modules/registrations/elite-list";
+import { type BibEliteEntry, eliteBibName } from "@/modules/registrations/bib-elite";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { loadBibExtras, withBibCheckpoints } from "@/modules/registrations/bib-extras";
@@ -37,7 +39,9 @@ const PART_SUFFIX: Record<BibSheetPart, string> = { all: "", members: "-members"
  * spares instead, blank (§444); `elite=1` the event's «Elită» list and the registrations marked «Elită», the name
  * where the number goes (§895, §897; `-elite` in the file's name). The members' bibs print first, on pages of their own (§681);
  * `part=members` prints only theirs and `part=others` every bib but theirs — anything else, or
- * nothing, is the whole sheet, never an error.
+ * nothing, is the whole sheet, never an error. `registrationId=<uuid>` prints one person's bib alone (§NNN), one to a page,
+ * whatever else the query says — refused as not found for another event's, an unknown or a test registration, and as
+ * `NO_BIB_NUMBER` for one that wears no number and is not marked «Elită».
  *
  * **A GET that mutates nothing**, which is why marking a batch printed is a separate press on the
  * registrations list and not something this route does: the sheet has to be openable in a tab,
@@ -66,6 +70,13 @@ export async function GET(
   if (!hasLocale(routing.locales, locale)) {
     return NextResponse.json({ error: "VALIDATION_ERROR" }, { status: 400 });
   }
+  /*
+    One person's bib (§NNN; the owner, 2026-11-18: «eu trebuie să pot descărca un BIB doar pentru o persoană»): the
+    registration's page, the desk's BIB fold and the list's «⋮» link here. Its own path, asked before every other
+    parameter, which it ignores — no range, part, spare, blank or elite sheet can change what it prints.
+  */
+  const registrationId = url.searchParams.get("registrationId");
+  if (registrationId !== null) return oneBib(id, registrationId, locale);
   const bound = (name: string) => {
     const raw = url.searchParams.get(name);
     if (raw === null || raw === "") return undefined;
@@ -121,7 +132,6 @@ export async function GET(
   const event = await findEventForBibs(db, id, locale);
   if (!event) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
 
-  const now = new Date();
   const eliteEntries = elite && blank === 0 ? (await listEliteEntries(db, actor, id)).map(({ name, bibNumber, bibLabel }) => ({ name, bibNumber, bibLabel })) : null;
   const rows: BibSheetRow[] = blank > 0
     ? Array.from({ length: blank }, (): BibSheetRow => ({ bibNumber: 0, registeredName: null, blank: true }))
@@ -132,6 +142,62 @@ export async function GET(
           .filter((number) => (from === undefined || number >= from) && (to === undefined || number <= to))
           .map((bibNumber) => ({ bibNumber, registeredName: null }))
       : await listBibs(db, id, { from, to, only });
+
+  const pdf = await renderSheet(db, id, event, locale, { rows, ...(eliteEntries ? { elite: eliteEntries } : {}), layout, part, spares });
+
+  // The elite sheet is the list and the marked registrations (§895, §897): no range, no part, no «unprinted» in its name.
+  const suffix = blank > 0
+    ? `-blank-${blank}${layout === "one" ? "-one-per-page" : ""}`
+    : elite
+    ? `-elite${layout === "one" ? "-one-per-page" : ""}`
+    : `${spares ? "-spares" : ""}${from !== undefined || to !== undefined ? `-${from ?? 1}-${to ?? "end"}` : ""}${only && !spares ? "-unprinted" : ""}${PART_SUFFIX[part]}${layout === "one" ? "-one-per-page" : ""}`;
+  return pdfResponse(pdf, `bibs-${id.slice(0, 8)}${suffix}.pdf`);
+}
+
+/**
+ * One registration's bib (§NNN), drawn as the sheets draw it: an elite registration's elite bib — its «Eticheta pe BIB»
+ * where the number goes (§897, §975) —, a member's the members' design (§681, §972), anybody else's the ordinary bib; one
+ * A5 bib centred on its own A4 page, as `layout=one` (§79). Asked of the registration itself, so a bib the ordinary sheet
+ * leaves to the elite sheet (§963) is still this person's to download. A GET that writes nothing: never the printed mark.
+ */
+async function oneBib(eventId: string, registrationId: string, locale: string): Promise<Response> {
+  if (!isUuid(registrationId)) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
+  const db = getDb();
+  const event = await findEventForBibs(db, eventId, locale);
+  if (!event) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
+  // Another event's registration, an unknown one and a test row (§30) are all «not here».
+  const bib = await findRegistrationBib(db, eventId, registrationId);
+  if (!bib) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
+  // No settled number on a confirmed registration — or no confirmed registration — is no bib yet, unless the elite mark prints the label.
+  // (The reader returns real rows alone, hence the kind.)
+  if (!hasOneBib({ ...bib, kind: "REAL" })) return NextResponse.json({ error: "NO_BIB_NUMBER" }, { status: 409 });
+
+  const name = bib.elite ? eliteBibName(bib) : null;
+  const pdf = await renderSheet(
+    db,
+    eventId,
+    event,
+    locale,
+    name !== null
+      ? // Through the elite sheet's own path, one line of it: the label as typed, the number never printed (§963).
+        { rows: [], elite: [{ name, bibLabel: name, bibNumber: bib.bibNumber }], layout: "one", part: "all" }
+      : { rows: [{ ...bib, bibNumber: bib.bibNumber as number }], layout: "one", part: "all" },
+  );
+  return pdfResponse(pdf, oneBibFileName(bib, { slug: event.slug, numberFormat: event.design.numberFormat }));
+}
+
+type BibEvent = NonNullable<Awaited<ReturnType<typeof findEventForBibs>>>;
+
+/** The sheet's drawing, shared by every mode: the event's pictures, the small print's facts and the extras (§249). */
+async function renderSheet(
+  db: ReturnType<typeof getDb>,
+  id: string,
+  event: BibEvent,
+  locale: string,
+  sheet: { rows: BibSheetRow[]; elite?: BibEliteEntry[]; layout: "one" | "two"; part: BibSheetPart; spares?: boolean },
+): Promise<Buffer> {
+  const { rows, layout, part } = sheet;
+  const now = new Date();
 
   /*
     The club's own pictures, fetched here rather than inside the renderer (§249).
@@ -153,11 +219,11 @@ export async function GET(
   // The club's picture of the route's profile (§759), read only while the design draws it.
   const profile = loaded.profile?.png ?? null;
   // The sheet's own words, in its language: read only when the sheet prints them (§444, §664).
-  const admin = spares || anyMember ? await getTranslations({ locale, namespace: "Admin" }) : null;
+  const admin = sheet.spares === true || anyMember ? await getTranslations({ locale, namespace: "Admin" }) : null;
 
-  const pdf = await renderBibSheet({
+  return renderBibSheet({
     rows,
-    ...(eliteEntries ? { elite: eliteEntries } : {}),
+    ...(sheet.elite ? { elite: sheet.elite } : {}),
     eventTitle: event.title,
     // Empty while the date is to be announced later (§545): never the provisional day on paper.
     eventDate: bibEventDate(event, locale),
@@ -178,20 +244,17 @@ export async function GET(
     // The members' label when the club typed none (§664), in the sheet's language.
     ...(anyMember && admin ? { memberLabelDefault: admin("bibs.memberLabelDefault", { club: CLUB_NAME }) } : {}),
   });
+}
 
-  // The elite sheet is the list and the marked registrations (§895, §897): no range, no part, no «unprinted» in its name.
-  const suffix = blank > 0
-    ? `-blank-${blank}${layout === "one" ? "-one-per-page" : ""}`
-    : elite
-    ? `-elite${layout === "one" ? "-one-per-page" : ""}`
-    : `${spares ? "-spares" : ""}${from !== undefined || to !== undefined ? `-${from ?? 1}-${to ?? "end"}` : ""}${only && !spares ? "-unprinted" : ""}${PART_SUFFIX[part]}${layout === "one" ? "-one-per-page" : ""}`;
+function pdfResponse(pdf: Buffer, fileName: string): Response {
   return new Response(new Uint8Array(pdf), {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": contentDisposition("attachment", `bibs-${id.slice(0, 8)}${suffix}.pdf`, "bibs"),
+      "Content-Disposition": contentDisposition("attachment", fileName, "bibs"),
       "Content-Length": String(pdf.byteLength),
       "Cache-Control": "private, no-store",
     },
   });
 }
+
