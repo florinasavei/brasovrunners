@@ -21,8 +21,10 @@ import {
   StaffEventSelect,
   StaffGuardian,
   StaffHandedBibField,
+  StaffSparesLine,
+  type HandedBibSpares,
 } from "@/modules/registrations/ui/StaffEventBirthDate";
-import { spareStates } from "@/modules/registrations/bibs";
+import { readSpareLines, spareLineWords } from "@/modules/registrations/spare-line";
 import { dayIn, effectiveMinimumAge } from "@/modules/registrations/domain/age";
 import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -116,9 +118,15 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   };
   // The country of residence's list (§510), the public form's own: named and ordered here.
   const countries = countryOptions(locale, (code) => countryName(code, locale));
-  // The next free desk spare per event (§444), suggested only to the desk — a person on the
-  // telephone, entered from the list, is not standing at a table with a bib.
-  const spareSuggestions = fromDesk ? await spareStates(getDb(), events.map((event) => event.id)) : {};
+  // The free desk spares per event (§444), offered only to the desk — a person on the telephone, entered from the list, is
+  // not standing at a table with a bib: a select of them, the lowest chosen, and the desk's line saying them (§NNN).
+  const spareLines = fromDesk ? await readSpareLines(getDb(), events.map((event) => event.id)) : {};
+  const handedBibSpares: Record<string, HandedBibSpares> = Object.fromEntries(
+    Object.entries(spareLines).map(([id, line]) => [id, line.kind === "free" ? { kind: "free", options: line.options } : line]),
+  );
+  const spareWords: Record<string, string> = Object.fromEntries(
+    await Promise.all(Object.entries(spareLines).map(async ([id, line]) => [id, await spareLineWords(line, locale)] as const)),
+  );
   // «Elită» (§917): drawn for the role that marks (§897); the service refuses the box from any other.
   const mayMarkElite = canManageRegistrations(actor.role);
 
@@ -333,16 +341,24 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               <Typography variant="body2" color="text.secondary">
                 {t("desk.fastTrackHelp")}
               </Typography>
-              {/* The bib handed with the paper (§444): the next desk spare, suggested from the desk. */}
-              <Box sx={{ mt: 1.5 }}>
+              {/* The bib handed with the paper (§444): from the desk, a select of the free spares, the lowest chosen (§NNN),
+                  under the desk's line that says them; from the list, the box as before. */}
+              <Stack spacing={1.5} sx={{ mt: 1.5 }}>
+                <StaffSparesLine lines={spareWords} />
                 <StaffHandedBibField
                   label={t("desk.handedBib")}
-                  spareHelp={`${t("desk.handedBibHelp")} ${t("desk.handedBibFastTrackOnly")}`}
-                  noSpareHelp={`${t("desk.handedBibNoSpares")} ${t("desk.handedBibFastTrackOnly")}`}
-                  outHelp={`${t("desk.sparesOut")} ${t("desk.handedBibFastTrackOnly")}`}
-                  suggestions={spareSuggestions}
+                  words={{
+                    pickHelp: `${t("desk.handedBibPickHelp")} ${t("desk.handedBibFastTrackOnly")}`,
+                    otherLabel: t("desk.handedBibOtherLabel"),
+                    otherHelp: `${t("desk.handedBibOtherHelp")} ${t("desk.handedBibFastTrackOnly")}`,
+                    noSpareHelp: `${t("desk.handedBibNoSpares")} ${t("desk.handedBibFastTrackOnly")}`,
+                    outHelp: `${t("desk.sparesOut")} ${t("desk.handedBibFastTrackOnly")}`,
+                    otherOption: t("desk.handedBibOther"),
+                    noneOption: t("desk.handedBibNone"),
+                  }}
+                  spares={handedBibSpares}
                 />
-              </Box>
+              </Stack>
             </Box>
 
             {/*

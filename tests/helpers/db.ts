@@ -9,6 +9,7 @@ import { eventResults } from "@/db/schema/event-results";
 import { eventRsvps, rsvpAskRefusals } from "@/db/schema/event-rsvps";
 import { personSessions } from "@/db/schema/person-sessions";
 import { eventTodos } from "@/db/schema/event-todos";
+import { eventRaceDayItems } from "@/db/schema/race-day-items";
 import { eventVolunteerNotes } from "@/db/schema/event-volunteer-notes";
 import { eventVolunteerCategories, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
@@ -152,6 +153,8 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(personSessions);
   // An event's own to-dos (§749) cascade from it; deleted first like the translations.
   await db.delete(eventTodos);
+  // «Lucruri de adus» (§NNN) cascade from their event; deleted first like the to-dos.
+  await db.delete(eventRaceDayItems);
   // An event's volunteers (§754) cascade from it, and their role is `RESTRICT`: the people first, then the roles.
   // Their internal notes cascade from them; named first like the other children.
   await db.delete(eventVolunteerNotes);

@@ -697,6 +697,13 @@ export type AuditAction =
   | "volunteer_plan.point_added"
   | "volunteer_plan.point_changed"
   | "volunteer_plan.point_removed"
+  // «Lucruri de adus» on «Ziua cursei» (§NNN, `race-day/items.ts`), entity `event`: a thing to bring added, its words changed,
+  // deleted, ticked as brought or unticked. The metadata is the item's id alone — never its words, nor anything of a person.
+  | "event.race_day_item_added"
+  | "event.race_day_item_edited"
+  | "event.race_day_item_removed"
+  | "event.race_day_item_brought"
+  | "event.race_day_item_unbrought"
   /** «Arată public câți voluntari mai sunt necesari» (§773), entity `event`: the metadata holds `on` and nothing of a person. */
   | "event.volunteers_counts_switched"
   | "event.volunteers_list_switched"

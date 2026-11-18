@@ -2790,7 +2790,8 @@
       "ADDRESS_HOLDS_ENOUGH": "Nothing changed: this address already has as many registrations at the event as the club’s rules allow one address. Use another address.",
       "ADDRESS_INVALID": "Nothing changed: that is not a valid email address. Check what you typed.",
       "ADDRESS_TRY_AGAIN": "Nothing changed: the registration was being changed at the same moment. Press “Change the address” again.",
-      "PARTNER_NAME_MISSING": "Write the partner's or sponsor's name, or untick «From a partner»."
+      "PARTNER_NAME_MISSING": "Write the partner's or sponsor's name, or untick «From a partner».",
+      "RACE_DAY_ITEMS_FULL": "The list already holds {max} things, as many as it can. Delete what is no longer needed, then add."
     },
     "editor": {
       "draftPreview": {
@@ -7669,6 +7670,7 @@
       "title": "Number pickup desk",
       "howTitle": "How race day works, step by step",
       "how": [
+        "Three tabs at the top: “Attendance” (this desk), “Results” (the chosen race's results) and “Things to bring” (the checklist of what we bring to the race).",
         "Before the race (organizer): under “Taking part, registration and rules” → “Allocate and print”, press “Download every number (PDF)” and print them — two to an A4 sheet.",
         "Print a few “Paper declaration form (PDF)” too, for anyone who signs on the spot.",
         "An administrator prints blank numbers from “Spare bibs for on-the-spot entries” for people who register at the desk.",
@@ -7680,7 +7682,7 @@
         "No email arrived, or they cannot find the QR: search by name.",
         "If it says “Așteaptă semnarea declarației” (awaiting the declaration), give them the paper declaration to sign, press “Confirm on paper”, then “Mark present”.",
         "Never registered at all: “Add somebody”. Name and email.",
-        "The “This person is at the desk” tick is already set, and “Number given now” suggests the next spare number: hand them that bib and write their name on it in marker.",
+        "The “This person is at the desk” tick is already set, and “Number given now” has the lowest free spare number chosen: hand them that bib and write their name on it in marker.",
         "They sign the paper declaration, then “Mark present”. If the event is full they join the waiting list; “Give a place” only works once one is free.",
         "Made a mistake? “Undo” takes it back. Every press stays in the registration's history, with your name on it.",
         "At the end, the figures on this page are the race's figures: how many confirmed, how many here. Whoever did not come stays without “here”.",
@@ -7750,7 +7752,6 @@
       "voidExpired": "Registration expired on {date}",
       "voidPrinted": "Number {number} has been printed — do not hand it out. Numbers are never reused.",
       "handedBib": "Number given now",
-      "handedBibHelp": "Suggested: the next free spare number. Change it if you hand out another number from the box; leave it empty and the site picks one.",
       "handedBibNoSpares": "Type the number you hand them, or leave it empty and the site picks one.",
       "handedBibFastTrackOnly": "Only for someone confirmed here, at the desk (the tick above).",
       "nextSpare": "Next spare: {number}",
@@ -7759,7 +7760,20 @@
       "scanSwitch": "Another camera",
       "scanCamera": "Camera {n} of {total}",
       "eliteLabel": "On the bib: {label}",
-      "eliteFold": "Elite and bib"
+      "eliteFold": "Elite and bib",
+      "spares": {
+        "free": {
+          "one": "Free spare number ({count}): {numbers}",
+          "few": "Free spare numbers ({count}): {numbers}",
+          "other": "Free spare numbers ({count}): {numbers}"
+        },
+        "none": "No spare numbers for this race: an Administrator prints them from “Allocate and print”."
+      },
+      "handedBibPickHelp": "Choose the spare bib you hand them (the lowest is already chosen). “Another number…” if you hand another number from the box; “No number now” and the site picks one.",
+      "handedBibOther": "Another number…",
+      "handedBibNone": "No number now",
+      "handedBibOtherLabel": "The number on the bib",
+      "handedBibOtherHelp": "Type the number on the bib you hand them."
     },
     "emails": {
       "title": "The emails participants receive",
@@ -12595,6 +12609,54 @@
       "column": "Reconfirmed",
       "personAsked": "Reconfirmation asked on {asked}",
       "personAnswered": "pressed “I'm coming” on {at}"
+    },
+    "raceDay": {
+      "tabs": {
+        "label": "Race day",
+        "desk": "Attendance",
+        "results": "Results",
+        "items": "Things to bring",
+        "itemsShort": "Things"
+      },
+      "items": {
+        "title": "Things to bring",
+        "intro": "What we bring to the race: tick each thing once it is in the car or at the start. The list belongs to this event alone.",
+        "readOnly": "You tick what you brought. The Organizer and the Administrators write the list.",
+        "show": "Show",
+        "count": {
+          "one": "{count} thing",
+          "few": "{count} things",
+          "other": "{count} things"
+        },
+        "brought": {
+          "one": "{count} brought",
+          "few": "{count} brought",
+          "other": "{count} brought"
+        },
+        "broughtBy": "brought · {name} · {time}",
+        "broughtAt": "brought · {time}",
+        "edit": "Change “{label}”",
+        "label": "What we bring",
+        "labelHelp": "For example: Extension cords, Markers.",
+        "note": "Note (optional)",
+        "noteHelp": "How many, or who brings them: “3 pieces”, “Ana brings them”.",
+        "save": "Save",
+        "remove": "Delete",
+        "removeFor": "Delete “{label}”",
+        "removeTitle": "Delete “{label}”?",
+        "removeBody": "The thing leaves the list, with its tick. Nothing is sent to anybody.",
+        "addTitle": "Add a thing",
+        "add": "Add",
+        "empty": "The list is empty.",
+        "emptyAdd": "Add the first thing to bring below.",
+        "emptyReadOnly": "The Organizer or an administrator adds the things.",
+        "print": "Print the list",
+        "errors": {
+          "FORBIDDEN": "Your role does not allow this.",
+          "NOT_FOUND": "The thing is no longer on the list — a colleague may have deleted it.",
+          "VALIDATION_ERROR": "The name takes 1 to 120 characters, and the note at most 200."
+        }
+      }
     }
   },
   "NotFound": {
@@ -14759,7 +14821,13 @@
         "few": "{count} volunteers told their point. With no email address: {noAddress}.",
         "other": "{count} volunteers told their point. With no email address: {noAddress}."
       },
-      "noteEdited": "The note was changed."
+      "noteEdited": "The note was changed.",
+      "raceDayItemAdded": "Thing added.",
+      "raceDayItemSaved": "Thing saved.",
+      "raceDayItemRemoved": "Thing deleted.",
+      "raceDayItemBrought": "Ticked as brought.",
+      "raceDayItemUnbrought": "Unticked.",
+      "raceDayItemUnchanged": "It already was; nothing to change."
     },
     "mail": {
       "now": "Leaving now{road}: {what}.",

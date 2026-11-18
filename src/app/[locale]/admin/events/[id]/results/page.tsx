@@ -33,6 +33,7 @@ import {
 } from "@/modules/results/ui/ResultRows";
 import { canEnterResults, canPublishResults } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { raceDayTabs } from "@/modules/race-day/ui/RaceDayTabs";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
@@ -108,6 +109,8 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   const eventPath = { pathname: "/admin/events/[id]", params: { id } } as const;
   const head = (
     <>
+      {/* «Ziua cursei»'s tabs (§NNN): this page is «Clasament», for its own event; what follows is as it was. */}
+      {await raceDayTabs({ locale, active: "results", eventId: id, actor })}
       <Typography variant="body2">
         <Link href={eventPath}>{t("results.backToEvent")}</Link>
       </Typography>

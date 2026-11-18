@@ -2790,7 +2790,8 @@
       "ADDRESS_HOLDS_ENOUGH": "Nu s-a schimbat nimic: adresa aceasta are deja la eveniment atâtea înscrieri câte îi permit regulile clubului pentru o adresă. Folosește altă adresă.",
       "ADDRESS_INVALID": "Nu s-a schimbat nimic: adresa nu e o adresă de email validă. Verifică ce ai scris.",
       "ADDRESS_TRY_AGAIN": "Nu s-a schimbat nimic: înscrierea se schimba chiar în acel moment. Apasă din nou «Schimbă adresa».",
-      "PARTNER_NAME_MISSING": "Scrie numele partenerului sau sponsorului, sau debifează «E de la parteneri»."
+      "PARTNER_NAME_MISSING": "Scrie numele partenerului sau sponsorului, sau debifează «E de la parteneri».",
+      "RACE_DAY_ITEMS_FULL": "Lista are deja {max} de lucruri, cât poate ține. Șterge ce nu mai trebuie, apoi adaugă."
     },
     "editor": {
       "draftPreview": {
@@ -7669,6 +7670,7 @@
       "title": "Masa de ridicare a numerelor",
       "howTitle": "Cum merge ziua cursei, pas cu pas",
       "how": [
+        "Sus sunt trei taburi: „Prezența” (această masă), „Clasament” (rezultatele cursei alese) și „Lucruri de adus” (lista de bifat cu ce aducem la cursă).",
         "Înainte de cursă (organizator): în „Participare, înscrieri și regulament” → „Alocare și tipărire”, apasă „Descarcă toate numerele (PDF)” și tipărește-le — două pe o foaie A4.",
         "Tipărește și câteva „Formular declarație pe hârtie (PDF)”, pentru cine semnează pe loc.",
         "Un administrator tipărește din „Numere de rezervă pentru înscrierile de la fața locului” numere goale pentru cine se înscrie la masă.",
@@ -7680,7 +7682,7 @@
         "Nu a primit emailul sau nu găsește QR-ul: caută după nume.",
         "Dacă scrie „Așteaptă semnarea declarației”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă pe hârtie”, apoi „Marchează prezent”.",
         "Nu s-a înscris deloc: „Adaugă pe cineva”. Nume și email.",
-        "Bifa „Persoana este la masă” e deja pusă, iar „Numărul dat acum” propune următorul număr de rezervă: îi dai BIB-ul acela și îi scrii numele cu markerul.",
+        "Bifa „Persoana este la masă” e deja pusă, iar la „Numărul dat acum” e ales cel mai mic număr de rezervă liber: îi dai BIB-ul acela și îi scrii numele cu markerul.",
         "Semnează declarația pe hârtie, apoi „Marchează prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
         "Ai greșit? „Anulează prezența” o scoate. Orice apăsare rămâne în istoricul înscrierii, cu numele tău.",
         "La final, cifrele de pe această pagină sunt cifrele cursei: câți confirmați, câți prezenți. Cine nu a venit rămâne fără „prezent”.",
@@ -7750,7 +7752,6 @@
       "voidExpired": "Înscriere expirată {date}",
       "voidPrinted": "Numărul {number} a fost tipărit — nu se dă. Numerele nu se refolosesc.",
       "handedBib": "Numărul dat acum",
-      "handedBibHelp": "Propus: următorul număr de rezervă liber. Schimbă-l dacă dai alt număr din cutie; lasă-l gol și site-ul alege singur unul.",
       "handedBibNoSpares": "Scrie numărul pe care i-l dai, sau lasă gol și site-ul alege singur unul.",
       "handedBibFastTrackOnly": "Doar pentru cine e confirmat aici, la masă (bifa de mai sus).",
       "nextSpare": "Rezerva următoare: {number}",
@@ -7759,7 +7760,20 @@
       "scanSwitch": "Altă cameră",
       "scanCamera": "Camera {n} din {total}",
       "eliteLabel": "Pe BIB: {label}",
-      "eliteFold": "Elită și BIB"
+      "eliteFold": "Elită și BIB",
+      "spares": {
+        "free": {
+          "one": "Număr de rezervă liber ({count}): {numbers}",
+          "few": "Numere de rezervă libere ({count}): {numbers}",
+          "other": "Numere de rezervă libere ({count}): {numbers}"
+        },
+        "none": "Nu sunt numere de rezervă pentru această cursă: un Administrator le tipărește din „Alocare și tipărire”."
+      },
+      "handedBibPickHelp": "Alege BIB-ul de rezervă pe care i-l dai (cel mai mic e deja ales). „Alt număr…” dacă dai alt număr din cutie; „Fără număr acum” și site-ul alege singur unul.",
+      "handedBibOther": "Alt număr…",
+      "handedBibNone": "Fără număr acum",
+      "handedBibOtherLabel": "Numărul de pe BIB",
+      "handedBibOtherHelp": "Scrie numărul de pe BIB-ul pe care i-l dai."
     },
     "emails": {
       "title": "Emailurile trimise participanților",
@@ -12595,6 +12609,54 @@
       "column": "Reconfirmat",
       "personAsked": "Reconfirmare cerută {asked}",
       "personAnswered": "a apăsat „Vin” {at}"
+    },
+    "raceDay": {
+      "tabs": {
+        "label": "Ziua cursei",
+        "desk": "Prezența",
+        "results": "Clasament",
+        "items": "Lucruri de adus",
+        "itemsShort": "Lucruri"
+      },
+      "items": {
+        "title": "Lucruri de adus",
+        "intro": "Ce aducem la cursă: bifați fiecare lucru când e în mașină sau la start. Lista e doar a acestui eveniment.",
+        "readOnly": "Bifezi ce ai adus. Lista o scriu Organizatorul și Administratorii.",
+        "show": "Arată",
+        "count": {
+          "one": "{count} lucru",
+          "few": "{count} lucruri",
+          "other": "{count} de lucruri"
+        },
+        "brought": {
+          "one": "{count} adus",
+          "few": "{count} aduse",
+          "other": "{count} de aduse"
+        },
+        "broughtBy": "adus · {name} · {time}",
+        "broughtAt": "adus · {time}",
+        "edit": "Modifică „{label}”",
+        "label": "Ce aducem",
+        "labelHelp": "De exemplu: Prelungitoare, Markere.",
+        "note": "Notă (opțional)",
+        "noteHelp": "Câte bucăți, sau cine le aduce: „3 bucăți”, „le aduce Ana”.",
+        "save": "Salvează",
+        "remove": "Șterge",
+        "removeFor": "Șterge „{label}”",
+        "removeTitle": "Ștergi „{label}”?",
+        "removeBody": "Lucrul dispare din listă, cu bifa lui. Nu se trimite nimic nimănui.",
+        "addTitle": "Adaugă un lucru",
+        "add": "Adaugă",
+        "empty": "Lista e goală.",
+        "emptyAdd": "Adaugă mai jos primul lucru de adus.",
+        "emptyReadOnly": "Organizatorul sau un administrator adaugă lucrurile.",
+        "print": "Tipărește lista",
+        "errors": {
+          "FORBIDDEN": "Rolul tău nu permite această acțiune.",
+          "NOT_FOUND": "Lucrul nu mai e pe listă — poate l-a șters un coleg.",
+          "VALIDATION_ERROR": "Numele are între 1 și 120 de caractere, iar nota cel mult 200."
+        }
+      }
     }
   },
   "NotFound": {
@@ -14759,7 +14821,13 @@
         "few": "{count} voluntari anunțați. Fără adresă de email: {noAddress}.",
         "other": "{count} de voluntari anunțați. Fără adresă de email: {noAddress}."
       },
-      "noteEdited": "Nota a fost modificată."
+      "noteEdited": "Nota a fost modificată.",
+      "raceDayItemAdded": "Lucru adăugat.",
+      "raceDayItemSaved": "Lucru salvat.",
+      "raceDayItemRemoved": "Lucru șters.",
+      "raceDayItemBrought": "Bifat ca adus.",
+      "raceDayItemUnbrought": "Debifat.",
+      "raceDayItemUnchanged": "Era deja așa; nimic de schimbat."
     },
     "mail": {
       "now": "Pleacă acum{road}: {what}.",

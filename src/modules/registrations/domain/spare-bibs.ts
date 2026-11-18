@@ -188,3 +188,21 @@ export function spareRangeOfQuery(from: string | undefined, to: string | undefin
   const range = { from: Number(from), to: Number(to) };
   return range.from >= 1 && range.from <= range.to ? range : null;
 }
+
+/**
+ * The free spares as the desk reads them (§NNN, beside §444): runs of consecutive numbers written as a range, every other
+ * number alone, lowest first — `[155, 156, 157, 158, 160, 162, 163]` → «155–158, 160, 162–163». `write` turns a number into
+ * what the event's bibs print (`formatRaceNumber`, «007» under three digits). The input is the sorted list
+ * `freeSpareNumbers` gives; it is sorted again here, so a caller cannot make it lie.
+ */
+export function spareRunsText(free: readonly number[], write: (number: number) => string = String): string {
+  const sorted = [...new Set(free)].sort((a, b) => a - b);
+  const runs: string[] = [];
+  for (let start = 0; start < sorted.length; ) {
+    let end = start;
+    while (end + 1 < sorted.length && sorted[end + 1] === sorted[end] + 1) end += 1;
+    runs.push(end === start ? write(sorted[start]) : `${write(sorted[start])}–${write(sorted[end])}`);
+    start = end + 1;
+  }
+  return runs.join(", ");
+}
