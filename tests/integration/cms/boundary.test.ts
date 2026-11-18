@@ -180,6 +180,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin",
       "/admin/checkin",
       "/admin/checkin/[code]",
+      // «Lucruri de adus», the third tab of «Ziua cursei» (§979), by hand.
+      "/admin/checkin/lucruri",
       // The design system page (§692), by hand.
       "/admin/design",
       "/admin/events/[id]",

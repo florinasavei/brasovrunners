@@ -21,6 +21,7 @@ import * as pagesSchema from "./schema/pages";
 import * as gallerySchema from "./schema/gallery";
 import * as groupRunDeclarationsSchema from "./schema/group-run-declarations";
 import * as participantsSchema from "./schema/participants";
+import * as raceDayItemsSchema from "./schema/race-day-items";
 import * as rateLimitSchema from "./schema/rate-limit";
 import * as registrationsSchema from "./schema/registrations";
 import * as staffUsersSchema from "./schema/staff-users";
@@ -33,6 +34,7 @@ export const schema = {
   ...eventVolunteersSchema,
   ...eventVolunteerInvitationsSchema,
   ...eventCheckpointsSchema,
+  ...raceDayItemsSchema,
   ...participantsSchema,
   ...emailActionTokensSchema,
   ...emailOutboxSchema,

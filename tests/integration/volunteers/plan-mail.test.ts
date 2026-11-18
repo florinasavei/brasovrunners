@@ -14,7 +14,7 @@ import { ladderKeyPrefixOf } from "@/modules/media/ladder";
 import { processOutboxBatch, OutboxMessageWithdrawn, type OutboxRow } from "@/modules/notifications/outbox";
 import { createOutboxRenderer, renderOutboxMessage } from "@/modules/notifications/render";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
-import { readVolunteerPlan, setVolunteerPlanPicture } from "@/modules/volunteers/plan";
+import { addVolunteerPlanLink, addVolunteerPlanPicture, readVolunteerPlan, removeVolunteerPlanLink, removeVolunteerPlanPicture } from "@/modules/volunteers/plan";
 import { previewVolunteerPoints, sendVolunteerPoints, volunteerPointKey } from "@/modules/volunteers/point-mail";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import { env } from "@/shared/config/env";
@@ -37,7 +37,7 @@ import { PLAN_CONTACT_WORDS, PLAN_JUNCTION_NOTE, type PlanRace, planAddressOf, p
  * - **the trail:** one row a press — the event, the counts, whether «din nou tuturor» — never a person;
  * - **the message**, in both languages: the event and its day, the point's number, name, kilometre and note, the roles given
  *   and what they ask in the role message's own sentences (nothing about roles when none was given), the category's contact
- *   person, the plan's picture shown and linked when there is one, the event's page from `APP_BASE_URL` — and no other
+ *   person, the plan's pictures shown and linked and its links (§978) when there are some, the event's page from `APP_BASE_URL` — and no other
  *   volunteer's name or telephone number;
  * - **the state at the send:** withdrawn for a person cancelled or deleted, with no address or another one, at no point or
  *   at another point, for a point gone from the route, and for an older telling that still waited when a newer one was queued;
@@ -495,7 +495,7 @@ describe("§956 the message «Punctul tău de voluntar»", () => {
     expect(message.text).toContain("Mulțumim că ne ajuți la Crosul! Organizatorii te-au pus la un punct de pe traseu: e cel scris mai sus.");
   });
 
-  it("shows the plan's picture and links to the whole of it when the event has one — and neither when it has none", async () => {
+  it("shows the plan's pictures and links to the whole of each when the plan has some — and neither when it has none", async () => {
     await press(staff.MODERATOR!);
     const row = await mailOf(race.people.ana);
     const bare = await render(row);
@@ -505,8 +505,8 @@ describe("§956 the message «Punctul tău de voluntar»", () => {
     expect(bare.html.match(/<img /g)).toHaveLength(1);
 
     const stored = await storedPicture();
-    await setVolunteerPlanPicture(db, staff.MODERATOR!, { eventId: race.raceId, assetId: stored.id }, at(1));
-    const { picture } = await readVolunteerPlan(db, staff.MODERATOR!, race.raceId);
+    await addVolunteerPlanPicture(db, staff.MODERATOR!, { eventId: race.raceId, assetId: stored.id }, at(1));
+    const [picture] = (await readVolunteerPlan(db, staff.MODERATOR!, race.raceId)).pictures;
     expect(picture!.fullUrl).toMatch(/^https?:\/\//);
 
     // The same queued row, rendered when it leaves: the picture as the plan has it now.
@@ -527,16 +527,32 @@ describe("§956 the message «Punctul tău de voluntar»", () => {
     // The picture's address is the store's own, never a hostname written in the code.
     expect(picture!.displayUrl).toMatch(/\/1280w\.webp$/);
 
-    // A picture narrower than the message's column is drawn at its own width.
+    // A second picture (§978): both, in the plan's order, each drawn once; one narrower than the message's column is drawn at its own width.
     const small = await storedPicture(400, 300);
-    await setVolunteerPlanPicture(db, staff.MODERATOR!, { eventId: race.raceId, assetId: small.id }, at(2));
-    expect((await render(row)).html).toMatch(/<img src="[^"]+" alt="Planul voluntarilor desenat pe traseu" width="400"/);
+    await addVolunteerPlanPicture(db, staff.MODERATOR!, { eventId: race.raceId, assetId: small.id }, at(2));
+    const two = await render(row);
+    expect([...two.html.matchAll(/<img src="[^"]+" alt="Planul voluntarilor desenat pe traseu" width="(\d+)"/g)].map((match) => match[1])).toEqual(["550", "400"]);
+    expect(two.html).toContain("Deschide poza 1 din 2 a planului (întreagă)");
+    expect(two.html).toContain("Open picture 2 of 2 of the plan (the whole of it)");
 
-    // Taken off again before the send: neither the picture nor the link.
-    await setVolunteerPlanPicture(db, staff.MODERATOR!, { eventId: race.raceId, assetId: null }, at(3));
-    expect((await render(row)).html).not.toContain('data-email-part="volunteer-plan-picture"');
+    // A link of the plan (§978), read at the send too: in both halves, its label; the plain text writes the address.
+    await addVolunteerPlanLink(db, staff.MODERATOR!, { eventId: race.raceId, url: "https://maps.example.test/d/viewer?mid=plan", label: "Harta voluntarilor" }, at(3));
+    const withLink = await render(row);
+    expect(withLink.html.match(/data-email-part="volunteer-plan-links"/g)).toHaveLength(2);
+    expect(withLink.html.match(/<a href="https:\/\/maps\.example\.test\/d\/viewer\?mid=plan"[^>]*>Harta voluntarilor<\/a>/g)).toHaveLength(2);
+    expect(withLink.text).toContain("Harta voluntarilor: https://maps.example.test/d/viewer?mid=plan");
+    // The links stand after the pictures.
+    expect(withLink.html.indexOf('data-email-part="volunteer-plan-links"')).toBeGreaterThan(withLink.html.indexOf('data-email-part="volunteer-plan-picture"'));
+
+    // Taken off again before the send: neither the pictures nor their links, nor the plan's link.
+    const { pictures, links } = await readVolunteerPlan(db, staff.MODERATOR!, race.raceId);
+    for (const one of pictures) await removeVolunteerPlanPicture(db, staff.MODERATOR!, { eventId: race.raceId, id: one.id }, at(4));
+    for (const one of links) await removeVolunteerPlanLink(db, staff.MODERATOR!, { eventId: race.raceId, id: one.id }, at(4));
+    const none = await render(row);
+    expect(none.html).not.toContain('data-email-part="volunteer-plan-picture"');
+    expect(none.html).not.toContain('data-email-part="volunteer-plan-links"');
     // …and where no store is configured there is no address to draw.
-    await setVolunteerPlanPicture(db, staff.MODERATOR!, { eventId: race.raceId, assetId: stored.id }, at(4));
+    await addVolunteerPlanPicture(db, staff.MODERATOR!, { eventId: race.raceId, assetId: stored.id }, at(5));
     state.storage = false;
     expect((await render(row)).html).not.toContain('data-email-part="volunteer-plan-picture"');
   });

@@ -93,6 +93,8 @@ export type DomainErrorCode =
   | "RESULT_FINISH_NOT_STARTED"
   // «Sosire» pressed more than a day after the gun: the results are written on «Clasament» by then.
   | "RESULT_FINISH_CLOSED"
+  // «Adaugă un lucru» on an event whose «Lucruri de adus» already holds the most a list may (§979): the sentence says how many.
+  | "RACE_DAY_ITEMS_FULL"
   // A member tier deleted while members hold it (§811): give them another level first. The action adds how many.
   | "MEMBER_TIER_HAS_MEMBERS"
   // A member tier deleted while a discount code is for that tier alone (§811): an empty limit means every member, so the code would open to all.
@@ -103,8 +105,9 @@ export type DomainErrorCode =
   | "ELITE_NOT_MARKED"
   // «Eticheta pe BIB» longer than an elite bib carries (§975, `ELITE_NAME_MAX`): the sentence names the box and the limit.
   | "ELITE_LABEL_TOO_LONG"
-  // The club's refusal under the terms (§618) with «Trimite emailul» unticked (the design «telling the owner about every email a
-  // staff press sends», slice 4): the terms promise the person is told the ground, so the refusal never goes without its email.
+  // The club's refusal under the terms (§618) posted with its email kept back (the design «telling the owner about every email a
+  // staff press sends», slice 4; its question offers no «… fără email», §976): the terms promise the person is told the ground,
+  // so the refusal never goes without its email.
   | "REFUSAL_NEEDS_EMAIL";
 
 export class DomainError extends Error {

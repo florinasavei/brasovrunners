@@ -8,10 +8,11 @@ import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { mediaAssets } from "@/db/schema/gallery";
+import { eventVolunteerPlanPictures } from "@/db/schema/volunteer-plan";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { ladderKeyPrefixOf } from "@/modules/media/ladder";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
-import { setVolunteerPlanPicture } from "@/modules/volunteers/plan";
+import { addVolunteerPlanLink, addVolunteerPlanPicture, removeVolunteerPlanPicture } from "@/modules/volunteers/plan";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import { type ConfirmSpec, decodeFlash, withOption } from "@/shared/feedback/notice";
 import type { FormOutcome } from "@/shared/forms/outcome";
@@ -241,14 +242,20 @@ describe("§956 the plan's page: «Trimite fiecăruia punctul lui» and its four
     expect(question.destructive).toBeUndefined();
   });
 
-  it("says the picture goes with it when the plan has one", async () => {
+  it("says the pictures and links go with it when the plan has some (§978)", async () => {
     expect((await questionOf())!.body).toBe(ro.Admin.volunteers.plan.mail.confirmBody);
     const [stored] = await db
       .insert(mediaAssets)
       .values({ keyPrefix: ladderKeyPrefixOf(randomUUID()), originalFilename: "harta.png", width: 2400, height: 1600, byteSize: 1000, createdAt: NOW, lastReferencedAt: NOW })
       .returning();
-    await setVolunteerPlanPicture(db, staff.ADMIN!, { eventId: race.raceId, assetId: stored.id }, NOW);
-    expect((await questionOf())!.body).toBe(ro.Admin.volunteers.plan.mail.confirmBodyPicture);
+    await addVolunteerPlanPicture(db, staff.ADMIN!, { eventId: race.raceId, assetId: stored.id }, NOW);
+    expect((await questionOf())!.body).toBe(ro.Admin.volunteers.plan.mail.confirmBodyMaps);
+    // A link alone says so too.
+    const [row] = (await db.select().from(eventVolunteerPlanPictures)).filter((one) => one.eventId === race.raceId);
+    await removeVolunteerPlanPicture(db, staff.ADMIN!, { eventId: race.raceId, id: row.id }, NOW);
+    expect((await questionOf())!.body).toBe(ro.Admin.volunteers.plan.mail.confirmBody);
+    await addVolunteerPlanLink(db, staff.ADMIN!, { eventId: race.raceId, url: "https://maps.example.test/d/viewer?mid=1", label: "" }, NOW);
+    expect((await questionOf())!.body).toBe(ro.Admin.volunteers.plan.mail.confirmBodyMaps);
   });
 
   it("offers «Trimite din nou tuturor» as a box in the question while somebody already knows their point", async () => {

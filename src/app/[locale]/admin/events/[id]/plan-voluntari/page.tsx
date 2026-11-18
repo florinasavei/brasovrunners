@@ -9,6 +9,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Fragment, type ReactNode } from "react";
 import { getDb } from "@/db/client";
+import { PLAN_LINK_LABEL_MAX, PLAN_LINK_URL_MAX, PLAN_LINKS_MAX, PLAN_PICTURES_MAX } from "@/db/schema/volunteer-plan";
 import { countForm } from "@/i18n/count-form";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
@@ -22,6 +23,7 @@ import { formatPhone } from "@/modules/registrations/phone";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
+import { PLAN_LINK_BOXES, planLinkShort, planMapsRefusalValues } from "@/modules/volunteers/domain/plan-link";
 import { roleLabel } from "@/modules/volunteers/domain/volunteer";
 import { readVolunteerPlan, type VolunteerPlanPerson, type VolunteerPlanPoint } from "@/modules/volunteers/plan";
 import { coordinatesOf, PLAN_POINT_BOXES, type PlanPoint, planPointRefusalValues } from "@/modules/volunteers/plan-points";
@@ -46,13 +48,15 @@ import RadioField from "@/shared/ui/RadioField";
 import SubNav from "@/shared/ui/SubNav";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import {
+  addPlanLinkAction,
+  addPlanPictureAction,
   addPlanPointAction,
   editPlanPointAction,
   placeVolunteerAction,
+  removePlanLinkAction,
   removePlanPictureAction,
   removePlanPointAction,
   sendVolunteerPointsAction,
-  setPlanPictureAction,
 } from "./actions";
 import { PLAN_SAVED, planAddress, planViewOf } from "./plan-address";
 
@@ -98,6 +102,39 @@ const MAP_LINK_SX = { display: "inline-flex", alignItems: "center", ...TAP_TARGE
  */
 const PICTURE_ON_PAPER_MAX_HEIGHT = "17cm";
 
+/** The tallest a picture of «Poze și hărți» is drawn on the screen (§978): a row of the grid a laptop takes in at a glance. */
+const PICTURE_ON_SCREEN_MAX_HEIGHT = 360;
+
+/**
+ * The pictures of «Poze și hărți» on the screen (§978): a grid of cells at least 260 pixels wide — two or three a row on a
+ * laptop, one on a phone. On paper a column, one picture after the other, each one piece.
+ */
+const PICTURE_GRID_SX = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+  gap: 2,
+  listStyle: "none",
+  m: 0,
+  p: 0,
+  "@media print": { display: "block" },
+} as const;
+
+/**
+ * A link of «Poze și hărți» (§978): its label in bold, a thumb's 44 pixels tall (BR-REQ-041-01 criterion 6), a long one
+ * breaking inside the line rather than widening the page; on paper the words as text, no link's colour or height.
+ */
+const LINK_SX = {
+  display: "inline-flex",
+  alignItems: "center",
+  ...TAP_TARGET,
+  fontWeight: 700,
+  overflowWrap: "anywhere",
+  "@media print": { minHeight: 0, color: "inherit", textDecoration: "none" },
+} as const;
+
+/** The prefix of the ids the boxes of «Adaugă un link» carry, which its refusal's summary links to (`fieldId`). */
+const LINK_SCOPE = "plan-link-add";
+
 /** The prefix of the ids the boxes of «Adaugă un punct» carry, which its refusal's summary links to (`fieldId`). */
 const ADD_SCOPE = "plan-point-add";
 
@@ -107,7 +144,8 @@ const EditIcon = ACTION_ICONS.edit;
 /**
  * The picture each part of the page wears (§521), by its name in the subjects' table (`panel-glyphs.ts`): the two views — the
  * house's list (the one «Înscrieri» wears) and the pin of a point —, the two groups — the route, and the start and finish
- * line's flag —, each point's pin, and the three folds under the plan — the picture, the add, the email.
+ * line's flag —, each point's pin, «Poze și hărți» above the plan (§978), the two folds under it — the add, the email —, and
+ * «Fără punct» (§978).
  */
 const PART_GLYPH = {
   table: { glyph: "registrations" },
@@ -115,9 +153,10 @@ const PART_GLYPH = {
   route: { glyph: "course" },
   startFinish: { glyph: "finishLine" },
   point: { glyph: "checkpoints" },
-  picture: { glyph: "pictures" },
+  maps: { glyph: "pictures" },
   add: { glyph: "add" },
   mail: { glyph: "email" },
+  unplaced: { glyph: "volunteers" },
 } as const satisfies Record<string, { glyph: PanelGlyphName }>;
 
 const ListGlyph = PANEL_GLYPHS[PART_GLYPH.table.glyph];
@@ -142,11 +181,14 @@ const OPEN_ON_PAPER = {
 } as const;
 
 /**
- * The plan's picture on paper (§952): the picture alone, open whatever the screen had folded — the fold's frame, its bar and
- * its closed line are left off, so the sheet carries the map and nothing that builds it.
+ * «Poze și hărți» on paper (§952, §978): the pictures and the links alone, open whatever the screen had folded — the fold's
+ * frame, its bar and its closed line are left off, so the sheet carries the maps and nothing that builds them — and after the
+ * rest of the plan (`order` in the page's flex column), which prints first as it always did: the fold stands first on the
+ * screen, where the owner wants the map in sight.
  */
-const PICTURE_ON_PAPER = {
+const MAPS_ON_PAPER = {
   "@media print": {
+    order: 1,
     border: 0,
     px: 0,
     bgcolor: "transparent",
@@ -205,11 +247,12 @@ const PENCIL_FOLD_SX = {
  * and the points with nobody; the house's table (`AdminTable`: a block a point on a phone), printed as a table. «Pe puncte»
  * is the points themselves in two folds, «Pe traseu» and «La start–finish», each point a fold of its own whose bar says its
  * name in bold, its kilometre and how many stand there, and whose body holds where it is, its people with «Scoate», «Pune
- * aici» and the pencil of «Modifică punctul». Both views keep the three folds under the plan — the picture, «Adaugă un
- * punct», «Trimite fiecăruia punctul lui» —, each saying on its closed line what it holds, and «Fără punct». Every fold
- * starts closed and opens by itself for what the last press changed — a point and its group (`open=`), the fold a press
- * saved in (`saved=`) — or, «Adaugă un punct», on a plan with no point yet; and every press comes back to the view it was
- * pressed in.
+ * aici» and the pencil of «Modifică punctul». Both views keep «Poze și hărți» above them (§978: the first fold, under the
+ * intro), the two folds under the plan — «Adaugă un punct», «Trimite fiecăruia punctul lui» — and, last, «Fără punct», a
+ * fold too since §978, whose every person has the point to put them at and «Pune» on their own line; each fold says on its
+ * closed line what it holds. Every fold starts closed and opens by itself for what the last press changed — a point and its
+ * group (`open=`), the fold a press saved in (`saved=`) — or, «Adaugă un punct», on a plan with no point yet, and «Poze și
+ * hărți» whenever it holds something; and every press comes back to the view it was pressed in.
  *
  * **The points are of two kinds, in two groups (§961; the owner, 2026-11-17: «vreau să pot defini punctele de mână, să pun
  * nume punct și la ce km e și coordonate punct» — «Practic voluntarii sunt de 2 tipuri: start-finish și pe traseu»).**
@@ -223,13 +266,15 @@ const PENCIL_FOLD_SX = {
  *
  * One press tells the volunteers (§956; the owner: «…si sa ii pot distribui din aplicatie, sa stie exact unde si cum» —
  * «Email din site, la apăsarea ta»): «Trimite fiecăruia punctul lui» emails each person placed at a point their point,
- * what they do there and the plan's picture (`modules/volunteers/point-mail.ts`). It asks first, with the four numbers the
+ * what they do there and the plan's pictures and links (`modules/volunteers/point-mail.ts`). It asks first, with the four numbers the
  * service counted — who is written to, who already knows their point, who stands at a point with no address, who stands at
  * none — and «Trimite din nou tuturor», a tick in that question, writes to everybody again.
  *
  * The plan as the organizers drew it (§952; the owner, with a picture of the route and its points numbered on it: «trebui sa
- * pot incarca si planul voluntarilor pe traseu in genul [pozei]»): one picture, as wide as the column, a press opening the
- * whole of it in a new tab — and on paper after the view's plan, in one piece. Uploaded, changed and taken off here by the
+ * pot incarca si planul voluntarilor pe traseu in genul [pozei]» — and since §978, 2026-11-18: «Poza planului trebuie sa fie
+ * mai sus, si sa pot pune mai multe poze, si link-uri»): «Poze și hărți», up to twelve pictures in a grid, a press opening the
+ * whole of one in a new tab, and up to twelve links — a Google My Maps map, for instance — each opening in a new tab; on paper
+ * after the rest of the plan, each picture in one piece and each link with its whole address. Added and taken off here by the
  * same people.
  */
 export default async function VolunteerPlanPage({ params, searchParams }: Props) {
@@ -393,9 +438,8 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
     placed: t(`volunteers.plan.table.placed.${countForm(placed, locale)}`, { count: placed }),
     empty: counted("empty", empty),
   });
-  // The plan's picture (§952), and who is offered its controls: whoever works the volunteers — the action and the service ask again.
-  const picture = plan.picture;
-  const mayChangePicture = canManageVolunteers(actor.role);
+  // Who is offered the controls of «Poze și hărți» (§952, §978): whoever works the volunteers — the actions and the service ask again.
+  const mayChangeMaps = canManageVolunteers(actor.role);
   // Whether this environment can take a picture at all (`STORAGE_MODE`): without a store the page says so and offers no upload.
   const storeHere = isStorageConfigured();
   // Every form of the page carries the page's language, the event and the view it is pressed in (§974): its way back.
@@ -435,7 +479,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   const mailLines = [countLine("toWrite", mail.toWrite), countLine("told", mail.told), countLine("noAddress", mail.noAddress), countLine("unplaced", mail.unplaced)];
   // «Din nou tuturor»: everybody at a point with an address is written to, those who already know their point among them.
   const againLines = [countLine("toWrite", everybody), countLine("toldAmong", mail.told), countLine("noAddress", mail.noAddress), countLine("unplaced", mail.unplaced)];
-  const mailBody = t(picture ? "volunteers.plan.mail.confirmBodyPicture" : "volunteers.plan.mail.confirmBody");
+  const mailBody = t(plan.pictures.length > 0 || plan.links.length > 0 ? "volunteers.plan.mail.confirmBodyMaps" : "volunteers.plan.mail.confirmBody");
   const againMail = words.mail({ to: { count: everybody, audience: "volunteersAtPoints" }, type: "VOLUNTEER_POINT" });
   const mailConfirm: ConfirmSpec | null =
     everybody === 0
@@ -843,132 +887,128 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
     </Stack>
   );
 
-  return (
-    <Stack spacing={2}>
-      <Stack direction="row" sx={{ flexWrap: "wrap", gap: 2, ...NOT_ON_PAPER }}>
-        <Typography variant="body2">
-          <Link href={{ pathname: "/admin/volunteers", query: { eventId: id } }}>{t("volunteers.plan.back")}</Link>
-        </Typography>
-        <Typography variant="body2">
-          {/* To the points' own card in the editor («Puncte pe traseu», `CheckpointsCard`'s `box-checkpoints`), which the address opens — not the editor's top. */}
-          <Link href={{ pathname: "/admin/events/[id]", params: { id }, hash: "box-checkpoints" }}>{t("volunteers.plan.editPoints")}</Link>
-        </Typography>
-      </Stack>
+  /*
+    «Poze și hărți» (§978, amending §952 and §974; the owner, 2026-11-18: «Poza planului trebuie sa fie mai sus, si sa pot pune
+    mai multe poze, si link-uri, am facut spre exemplu un google maps custom map si vreau sa pot pune url-ul»): the plan as the
+    organizers drew it — its pictures and its links —, the first fold of the page in both views, right under the intro and
+    above the views' tabs, OPEN whenever it holds something (the owner wants the map high and in sight), shut while empty, and
+    open after a press in it (`saved=`). Its closed line says how many of each.
 
-      {/* Every backoffice page gives this id to its alert region; the Server Action redirects a refusal here with its code (§953),
-          so the region can take the focus and stands clear of the page's top edge, as the other pages' regions do. A sentence
-          of the plan's points that names a number (`{max}`) is given it (`planPointRefusalValues`). */}
-      <Box id="admin-alert" tabIndex={-1} aria-live="polite" sx={{ scrollMarginTop: 16, ...NOT_ON_PAPER }}>
-        {errorCode && <Alert severity="error">{t(`errors.${errorCode}`, planPointRefusalValues(errorCode))}</Alert>}
-      </Box>
+    The pictures stand in a grid — two or three a row on a laptop, one on a phone —, each drawn at its display size, never
+    taller than 360 pixels on the screen, a press opening the whole of it in a new tab, «Șterge poza» under it; then «Adaugă o
+    poză», which appends. The links are a list — each its label in bold, or the address shortened to its host and the start of
+    its path, opening in a new tab, its host after it in grey —, «Șterge linkul» beside each, then «Adaugă un link».
 
-      <Typography variant="h2" sx={HEADING_SX.title}>
-        {t("volunteers.plan.title")}
+    On paper the plan prints as before — the view's plan first (§974) — so the fold is moved after «Fără punct» there
+    (`order` inside the page's flex column): each picture one piece on a sheet, each link its label and its whole address as
+    text; its bar, its hint and every control off the sheet, and nothing at all for an empty fold.
+  */
+  const hasMaps = plan.pictures.length > 0 || plan.links.length > 0;
+  const picturesWords = plan.pictures.length === 0 ? t("volunteers.plan.maps.picturesNone") : t(`volunteers.plan.maps.pictures.${countForm(plan.pictures.length, locale)}`, { count: plan.pictures.length });
+  const linksWords = plan.links.length === 0 ? t("volunteers.plan.maps.linksNone") : t(`volunteers.plan.maps.links.${countForm(plan.links.length, locale)}`, { count: plan.links.length });
+  // A picture's words when the plan has several: «poza 2»; with one, the words of the one picture.
+  const several = plan.pictures.length > 1;
+  // «Adaugă un link»: the label of each box its refusal's summary can name, and the form drawn anew once the links change.
+  const linkRefusal = await refusalMessages({ [PLAN_LINK_BOXES.url]: t("volunteers.plan.link.url"), [PLAN_LINK_BOXES.label]: t("volunteers.plan.link.label") });
+  const linkFormKey = plan.links.map((link) => link.id).join(",");
+  const mapsFold = (
+    <Box
+      component="details"
+      id="plan-maps"
+      open={hasMaps || saved === PLAN_SAVED.maps || undefined}
+      data-testid="plan-maps-section"
+      sx={{ ...BOXED_DISCLOSURE_SX, ...(hasMaps ? MAPS_ON_PAPER : NOT_ON_PAPER), scrollMarginTop: 16 }}
+    >
+      {foldBar(PART_GLYPH.maps.glyph, t("volunteers.plan.maps.title"), { words: `${picturesWords} · ${linksWords}`, testId: "plan-maps-state" })}
+      <Typography variant="body2" color="text.secondary" sx={NOT_ON_PAPER} data-testid="plan-maps-help">
+        {t("volunteers.plan.maps.help")}
       </Typography>
-      {event && (
-        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-          {t("volunteers.plan.event", { event: event.title, date: when })}
-        </Typography>
-      )}
-      <Box sx={NOT_ON_PAPER}>
-        <Typography variant="body2" color="text.secondary">
-          {t("volunteers.plan.help")}
-        </Typography>
-        {/* Who sees which points (§961): the editor's are public too. That the ones added here are the plan's alone is said once,
-            where they are added («Adaugă un punct», `points.helpPrivate`). */}
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="plan-help-points">
-          {t("volunteers.plan.helpPoints")}
-        </Typography>
-      </Box>
 
-      {/* The two views (§974): plain links, the current one marked (`aria-current`), drawn on the server — the house's row of
-          sub-tabs, which two short words never make wider than a phone (`fits`: no script to scroll it). Never on paper. */}
-      <Box sx={NOT_ON_PAPER} data-testid="plan-views">
-        <SubNav
-          fits
-          label={t("volunteers.plan.views.label")}
-          items={[
-            { href: planAddress(planPath, { view: "table" }), label: t("volunteers.plan.views.table"), active: view === "table", glyph: <ListGlyph /> },
-            { href: planAddress(planPath, { view: "points" }), label: t("volunteers.plan.views.points"), active: view === "points", glyph: <PointIcon /> },
-          ]}
-        />
-      </Box>
-      <Box>
-        <PrintButton label={t("volunteers.plan.print")} />
-      </Box>
-
-      {view === "table" ? tableView : pointsView}
-
-      {/* The plan as the organizers drew it (§952), a fold in both views (§974) whose closed line says whether there is one; on
-          paper after the view's plan, the picture alone, open whatever the screen had folded — the fold's bar, its hint and
-          every control stay off the sheet, so a plan with no picture prints as it did. A press on it comes back with it open. */}
-      <Box
-        component="details"
-        id="plan-picture"
-        open={saved === PLAN_SAVED.picture || undefined}
-        data-testid="plan-picture-section"
-        sx={{ ...BOXED_DISCLOSURE_SX, ...(picture ? PICTURE_ON_PAPER : NOT_ON_PAPER), scrollMarginTop: 16 }}
-      >
-        {foldBar(PART_GLYPH.picture.glyph, t("volunteers.plan.picture.title"), { words: t(picture ? "volunteers.plan.picture.has" : "volunteers.plan.picture.hasNone"), testId: "plan-picture-state" })}
-        {picture ? (
-          // One piece on one sheet: never cut between two pages, and never taller than a sheet (`PICTURE_ON_PAPER_MAX_HEIGHT`).
-          <Box component="figure" sx={{ m: 0, breakInside: "avoid", "@media print": { mt: 0 } }} data-testid="plan-picture">
-            <Box
-              component="a"
-              href={picture.fullUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={t("volunteers.plan.picture.open")}
-              sx={{ display: "block", lineHeight: 0 }}
-              data-testid="plan-picture-link"
-            >
-              <Box
-                component="img"
-                src={picture.displayUrl}
-                srcSet={picture.srcSet}
-                sizes={picture.srcSet ? pictureSizes("page") : undefined}
-                alt={t("volunteers.plan.picture.alt")}
-                width={picture.width}
-                height={picture.height}
-                decoding="async"
-                // As wide as the column and never wider than its own pixels; on paper as large as fits one sheet, in its own shape.
-                sx={{
-                  display: "block",
-                  width: "100%",
-                  maxWidth: `${picture.width}px`,
-                  height: "auto",
-                  "@media print": { width: "auto", maxWidth: "100%", maxHeight: PICTURE_ON_PAPER_MAX_HEIGHT },
-                }}
-                data-testid="plan-picture-image"
-              />
-            </Box>
-            <Typography component="figcaption" variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5, ...NOT_ON_PAPER }}>
-              {t("volunteers.plan.picture.openHint")}
-            </Typography>
+      {/* The pictures, in the plan's order: a grid on the screen, one piece a sheet on paper. */}
+      {plan.pictures.length > 0 && (
+        <Box sx={{ mt: 1.5 }}>
+          <Box component="ul" aria-label={t("volunteers.plan.maps.picturesTitle")} sx={PICTURE_GRID_SX} data-testid="plan-pictures">
+            {plan.pictures.map((picture, at) => {
+              const number = at + 1;
+              return (
+                // One piece on one sheet: never cut between two pages, and never taller than a sheet (`PICTURE_ON_PAPER_MAX_HEIGHT`).
+                <Box component="li" key={picture.id} sx={{ minWidth: 0, breakInside: "avoid", "@media print": { mb: 2 } }} data-testid="plan-picture">
+                  <Box component="figure" sx={{ m: 0 }}>
+                    <Box
+                      component="a"
+                      href={picture.fullUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={several ? t("volunteers.plan.picture.openNumbered", { number }) : t("volunteers.plan.picture.open")}
+                      sx={{ display: "block", lineHeight: 0 }}
+                      data-testid="plan-picture-link"
+                    >
+                      <Box
+                        component="img"
+                        src={picture.displayUrl}
+                        srcSet={picture.srcSet}
+                        sizes={picture.srcSet ? pictureSizes("page", 50) : undefined}
+                        alt={several ? t("volunteers.plan.picture.altNumbered", { number }) : t("volunteers.plan.picture.alt")}
+                        width={picture.width}
+                        height={picture.height}
+                        decoding="async"
+                        // As wide as its cell, never wider than its own pixels nor taller than 360 pixels, in its own shape; on paper as large as fits one sheet.
+                        sx={{
+                          display: "block",
+                          width: "100%",
+                          maxWidth: `${picture.width}px`,
+                          height: "auto",
+                          maxHeight: PICTURE_ON_SCREEN_MAX_HEIGHT,
+                          objectFit: "contain",
+                          objectPosition: "left top",
+                          "@media print": { width: "auto", maxWidth: "100%", maxHeight: PICTURE_ON_PAPER_MAX_HEIGHT },
+                        }}
+                        data-testid="plan-picture-image"
+                      />
+                    </Box>
+                  </Box>
+                  {/* «Șterge poza» asks first: only uploading the picture again brings it back. */}
+                  {mayChangeMaps && (
+                    <Box component="form" action={removePlanPictureAction} sx={{ mt: 0.5, ...NOT_ON_PAPER }} data-testid="plan-picture-remove-form">
+                      {hidden}
+                      <input type="hidden" name="pictureId" value={picture.id} />
+                      <ConfirmSubmitButton
+                        label={t("volunteers.plan.picture.remove")}
+                        ariaLabel={t("volunteers.plan.picture.removeFor", { number })}
+                        icon="delete"
+                        color="error"
+                        variant="text"
+                        size="medium"
+                        title={t("volunteers.plan.picture.removeTitle", { number })}
+                        body={t("volunteers.plan.picture.removeBody")}
+                        confirmLabel={t("volunteers.plan.picture.remove")}
+                        cancelLabel={t("confirm.cancel")}
+                      />
+                    </Box>
+                  )}
+                </Box>
+              );
+            })}
           </Box>
-        ) : (
-          // What to do about it, said only to somebody who can: where there is no store, the line under says that instead.
-          mayChangePicture &&
-          storeHere && (
-            <Typography variant="body2" color="text.secondary" sx={NOT_ON_PAPER} data-testid="plan-picture-none">
-              {t("volunteers.plan.picture.none")}
-            </Typography>
-          )
-        )}
-        {/* Whoever works the volunteers — on this page, everybody it answers to; said here so the controls never outlive the gate. */}
-        {mayChangePicture &&
-          (storeHere ? (
-            <Stack spacing={1} sx={{ mt: 1.5, ...NOT_ON_PAPER }} data-testid="plan-picture-controls">
-              {/* The island uploads the file, writes the stored picture's id into this form and sends it (`setPlanPictureAction`). */}
-              <Box component="form" action={setPlanPictureAction} data-testid="plan-picture-form">
+          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5, ...NOT_ON_PAPER }} data-testid="plan-picture-hint">
+            {t("volunteers.plan.picture.openHint")}
+          </Typography>
+        </Box>
+      )}
+
+      {/* «Adaugă o poză» — whoever works the volunteers; on this page, everybody it answers to, said here so the controls never outlive the gate. */}
+      {mayChangeMaps &&
+        (storeHere ? (
+          plan.pictures.length < PLAN_PICTURES_MAX && (
+            <Box sx={{ mt: 1.5, ...NOT_ON_PAPER }} data-testid="plan-picture-controls">
+              {/* The island uploads the file, writes the stored picture's id into this form and sends it (`addPlanPictureAction`). */}
+              <Box component="form" action={addPlanPictureAction} data-testid="plan-picture-form">
                 {hidden}
                 <PlanPictureUpload
-                  replaces={picture !== null}
                   inputId="plan-picture-file"
                   lang={locale}
                   labels={{
                     upload: t("volunteers.plan.picture.upload"),
-                    replace: t("volunteers.plan.picture.replace"),
                     uploading: t("volunteers.plan.picture.uploading"),
                     saving: t("volunteers.plan.picture.saving"),
                     failed: t("volunteers.plan.picture.failed"),
@@ -990,30 +1030,155 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
                   }}
                 />
               </Box>
-              {/* «Șterge poza» asks first: only uploading the picture again brings it back. */}
-              {picture && (
-                <Box component="form" action={removePlanPictureAction} data-testid="plan-picture-remove-form">
-                  {hidden}
-                  <ConfirmSubmitButton
-                    label={t("volunteers.plan.picture.remove")}
-                    icon="delete"
-                    color="error"
-                    variant="text"
-                    size="medium"
-                    title={t("volunteers.plan.picture.removeTitle")}
-                    body={t("volunteers.plan.picture.removeBody")}
-                    confirmLabel={t("volunteers.plan.picture.remove")}
-                    cancelLabel={t("confirm.cancel")}
-                  />
+            </Box>
+          )
+        ) : (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, ...NOT_ON_PAPER }} data-testid="plan-picture-no-storage">
+            {t("volunteers.plan.picture.noStorage")}
+          </Typography>
+        ))}
+
+      {/* The links, in the plan's order: each opens in a new tab; on paper its label and its whole address, as text. */}
+      {plan.links.length > 0 && (
+        <Stack component="ul" spacing={0.5} aria-label={t("volunteers.plan.maps.linksTitle")} sx={{ listStyle: "none", m: 0, mt: 2, p: 0 }} data-testid="plan-links">
+          {plan.links.map((link) => {
+            const name = link.label ?? planLinkShort(link.url);
+            return (
+              <Box component="li" key={link.id} sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 1, breakInside: "avoid" }} data-testid="plan-link">
+                <Box sx={{ minWidth: 0, flex: "1 1 240px" }}>
+                  <Box
+                    component="a"
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={t("volunteers.plan.link.opens", { name })}
+                    sx={LINK_SX}
+                    data-testid="plan-link-open"
+                  >
+                    {name}
+                  </Box>
+                  <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1, overflowWrap: "anywhere", ...NOT_ON_PAPER }} data-testid="plan-link-host">
+                    {link.host}
+                  </Typography>
+                  {/* On paper the whole address, which a sheet cannot open: whoever holds it types or scans it. */}
+                  <Typography component="span" variant="body2" sx={{ display: "none", "@media print": { display: "inline", ml: 1, overflowWrap: "anywhere" } }} data-testid="plan-link-address">
+                    {link.url}
+                  </Typography>
                 </Box>
-              )}
+                {mayChangeMaps && (
+                  <Box component="form" action={removePlanLinkAction} sx={NOT_ON_PAPER} data-testid="plan-link-remove-form">
+                    {hidden}
+                    <input type="hidden" name="linkId" value={link.id} />
+                    <ConfirmSubmitButton
+                      label={t("volunteers.plan.link.remove")}
+                      ariaLabel={t("volunteers.plan.link.removeFor", { name })}
+                      icon="delete"
+                      color="error"
+                      variant="text"
+                      size="medium"
+                      title={t("volunteers.plan.link.removeTitle", { name })}
+                      body={t("volunteers.plan.link.removeBody")}
+                      confirmLabel={t("volunteers.plan.link.remove")}
+                      cancelLabel={t("confirm.cancel")}
+                    />
+                  </Box>
+                )}
+              </Box>
+            );
+          })}
+        </Stack>
+      )}
+
+      {/* «Adaugă un link»: a plain form and a Server Action, as «Adaugă un punct» — a refusal names its box and keeps what was typed (§315). */}
+      {mayChangeMaps && plan.links.length < PLAN_LINKS_MAX && (
+        <Box sx={{ mt: 2, maxWidth: 560, ...NOT_ON_PAPER }} data-testid="plan-link-controls">
+          <ActionForm key={linkFormKey} action={addPlanLinkAction} messages={linkRefusal} scope={LINK_SCOPE} data-testid="plan-link-add-form">
+            {hidden}
+            <Stack spacing={2} sx={{ alignItems: "flex-start" }}>
+              <RecallField
+                name={PLAN_LINK_BOXES.url}
+                label={t("volunteers.plan.link.url")}
+                helperText={t("volunteers.plan.link.hint")}
+                required
+                fullWidth
+                size="small"
+                slotProps={{ htmlInput: { maxLength: PLAN_LINK_URL_MAX, inputMode: "url", autoComplete: "url", spellCheck: false, "data-testid": "plan-link-add-url" } }}
+              />
+              <RecallField
+                name={PLAN_LINK_BOXES.label}
+                label={t("volunteers.plan.link.label")}
+                fullWidth
+                size="small"
+                slotProps={{ htmlInput: { maxLength: PLAN_LINK_LABEL_MAX, "data-testid": "plan-link-add-label" } }}
+              />
+              <GlyphButton icon="add" type="submit" variant="outlined" size="medium" sx={TAP_TARGET} data-testid="plan-link-add">
+                {t("volunteers.plan.link.add")}
+              </GlyphButton>
             </Stack>
-          ) : (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, ...NOT_ON_PAPER }} data-testid="plan-picture-no-storage">
-              {t("volunteers.plan.picture.noStorage")}
-            </Typography>
-          ))}
+          </ActionForm>
+        </Box>
+      )}
+    </Box>
+  );
+
+  return (
+    <Stack spacing={2}>
+      <Stack direction="row" sx={{ flexWrap: "wrap", gap: 2, ...NOT_ON_PAPER }}>
+        <Typography variant="body2">
+          <Link href={{ pathname: "/admin/volunteers", query: { eventId: id } }}>{t("volunteers.plan.back")}</Link>
+        </Typography>
+        <Typography variant="body2">
+          {/* To the points' own card in the editor («Puncte pe traseu», `CheckpointsCard`'s `box-checkpoints`), which the address opens — not the editor's top. */}
+          <Link href={{ pathname: "/admin/events/[id]", params: { id }, hash: "box-checkpoints" }}>{t("volunteers.plan.editPoints")}</Link>
+        </Typography>
+      </Stack>
+
+      {/* Every backoffice page gives this id to its alert region; the Server Action redirects a refusal here with its code (§953),
+          so the region can take the focus and stands clear of the page's top edge, as the other pages' regions do. A sentence
+          of the plan's points or of «Poze și hărți» that names a number (`{max}`) is given it (`planPointRefusalValues`,
+          `planMapsRefusalValues`). */}
+      <Box id="admin-alert" tabIndex={-1} aria-live="polite" sx={{ scrollMarginTop: 16, ...NOT_ON_PAPER }}>
+        {errorCode && <Alert severity="error">{t(`errors.${errorCode}`, { ...planPointRefusalValues(errorCode), ...planMapsRefusalValues(errorCode) })}</Alert>}
       </Box>
+
+      <Typography variant="h2" sx={HEADING_SX.title}>
+        {t("volunteers.plan.title")}
+      </Typography>
+      {event && (
+        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+          {t("volunteers.plan.event", { event: event.title, date: when })}
+        </Typography>
+      )}
+      <Box sx={NOT_ON_PAPER}>
+        <Typography variant="body2" color="text.secondary">
+          {t("volunteers.plan.help")}
+        </Typography>
+        {/* Who sees which points (§961): the editor's are public too. That the ones added here are the plan's alone is said once,
+            where they are added («Adaugă un punct», `points.helpPrivate`). */}
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="plan-help-points">
+          {t("volunteers.plan.helpPoints")}
+        </Typography>
+      </Box>
+
+      {mapsFold}
+
+      {/* The two views (§974): plain links, the current one marked (`aria-current`), drawn on the server — the house's row of
+          sub-tabs, which two short words never make wider than a phone (`fits`: no script to scroll it). Never on paper. */}
+      <Box sx={NOT_ON_PAPER} data-testid="plan-views">
+        <SubNav
+          fits
+          label={t("volunteers.plan.views.label")}
+          items={[
+            { href: planAddress(planPath, { view: "table" }), label: t("volunteers.plan.views.table"), active: view === "table", glyph: <ListGlyph /> },
+            { href: planAddress(planPath, { view: "points" }), label: t("volunteers.plan.views.points"), active: view === "points", glyph: <PointIcon /> },
+          ]}
+        />
+      </Box>
+      <Box>
+        <PrintButton label={t("volunteers.plan.print")} />
+      </Box>
+
+      {view === "table" ? tableView : pointsView}
 
       {/* «Adaugă un punct» (§961), a fold in both views (§974): where the organizers add the plan's own points by hand, one after
           another — open by itself on a plan with no point yet, the page's first work, and after a point it added. Never on the
@@ -1118,28 +1283,88 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
         )}
       </Box>
 
-      <Box sx={{ breakInside: "avoid" }} data-testid="plan-unplaced">
-        <Typography variant="h3" sx={HEADING_SX[3]}>
-          {t("volunteers.plan.unplacedTitle")}
-        </Typography>
+      {/* «Fără punct» (§949; a fold since §978, amending §974 — the owner, 2026-11-18: «aici eu vreau sa pot asigna voluntari la
+          punct direct de aici: Si sectiunea trebuie sa fie collapsible»): everybody at no point, last in both views. Closed as
+          every fold of the page, its closed line how many stand at no point, and open after a press made in it (`saved=`). On
+          each person's line, while the plan has a point, the point to put them at — a native select, as «Pune aici»'s: it
+          works without scripts and opens as the phone's own list — and «Pune». On paper it prints open, its arrow off, the
+          people without the forms. */}
+      <Box
+        component="details"
+        id="plan-unplaced"
+        open={saved === PLAN_SAVED.unplaced || undefined}
+        data-testid="plan-unplaced"
+        sx={{ ...BOXED_DISCLOSURE_SX, ...OPEN_ON_PAPER, breakInside: "avoid", scrollMarginTop: 16 }}
+      >
+        {foldBar(PART_GLYPH.unplaced.glyph, t("volunteers.plan.unplacedTitle"), { words: peopleWords(plan.unplaced.length), testId: "plan-unplaced-count" })}
         {placed === 0 && plan.unplaced.length === 0 ? (
-          <Typography variant="body2" sx={{ mt: 1 }}>
+          <Typography variant="body2" data-testid="plan-unplaced-nobody">
             {t("volunteers.plan.noVolunteers")}
           </Typography>
         ) : plan.unplaced.length === 0 ? (
-          <Typography variant="body2" sx={{ mt: 1 }} data-testid="plan-unplaced-none">
+          <Typography variant="body2" data-testid="plan-unplaced-none">
             {t("volunteers.plan.unplacedNone")}
           </Typography>
         ) : (
           <>
-            <Typography variant="body2" color="text.secondary" sx={NOT_ON_PAPER}>
+            <Typography variant="body2" color="text.secondary" sx={NOT_ON_PAPER} data-testid="plan-unplaced-help">
               {t("volunteers.plan.unplacedHelp")}
             </Typography>
             <Stack spacing={1} component="ul" sx={{ listStyle: "none", m: 0, mt: 1, p: 0 }}>
               {plan.unplaced.map((person) => (
-                <Box component="li" key={person.id} data-testid="plan-unplaced-person">
+                <Stack component="li" key={person.id} direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1, flexWrap: "wrap" }} data-testid="plan-unplaced-person">
                   {personWords(person)}
-                </Box>
+                  {plan.points.length > 0 && (
+                    <Stack component="form" action={placeVolunteerAction} direction="row" sx={{ gap: 1, alignItems: "center", flexWrap: "wrap", flex: "0 1 420px", minWidth: 0, ...NOT_ON_PAPER }} data-testid="plan-unplaced-place-form">
+                      {hidden}
+                      <input type="hidden" name="volunteerId" value={person.id} />
+                      <input type="hidden" name="at" value="unplaced" />
+                      <TextField
+                        select
+                        required
+                        size="small"
+                        name="checkpointId"
+                        label={t("volunteers.plan.unplaced.point")}
+                        defaultValue=""
+                        // A thumb's 44 pixels on the list itself (BR-REQ-041-01 criterion 6), not only on «Pune» beside it.
+                        sx={{ minWidth: 0, flex: "1 1 200px", "& .MuiNativeSelect-select": { boxSizing: "border-box", minHeight: 44 } }}
+                        slotProps={{ select: { native: true }, inputLabel: { shrink: true }, htmlInput: { "data-testid": "plan-unplaced-select" } }}
+                      >
+                        <option value="">{t("volunteers.plan.unplaced.choose")}</option>
+                        {/* The route's points in the plan's one order, numbered as everywhere; then the start–finish's. A group with no point is left out. */}
+                        {routePoints.length > 0 && (
+                          <optgroup label={t("volunteers.plan.groups.route")}>
+                            {routePoints.map(({ point, number }) => (
+                              <option key={point.id} value={point.id}>
+                                {t("volunteers.plan.unplaced.routeOption", { number: number ?? 0, name: nameOf(point), km: km(point.km) })}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {startFinishPoints.length > 0 && (
+                          <optgroup label={t("volunteers.plan.groups.startFinish")}>
+                            {startFinishPoints.map(({ point }) => (
+                              <option key={point.id} value={point.id}>
+                                {nameOf(point)}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                      </TextField>
+                      <GlyphButton
+                        icon="addPerson"
+                        type="submit"
+                        variant="outlined"
+                        size="small"
+                        sx={TAP_TARGET}
+                        aria-label={t("volunteers.plan.unplaced.placeFor", { name: person.name })}
+                        data-testid="plan-unplaced-place"
+                      >
+                        {t("volunteers.plan.unplaced.place")}
+                      </GlyphButton>
+                    </Stack>
+                  )}
+                </Stack>
               ))}
             </Stack>
           </>

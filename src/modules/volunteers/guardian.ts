@@ -426,8 +426,8 @@ export async function requestVolunteerGuardian<T extends Record<string, unknown>
  * printed (`printed`): what the row records must be what the sheet says. The staff member records the guardian's
  * signature; they never sign for them.
  *
- * `sendEmail: false` («Trimite emailul» unticked in its question — the design «telling the owner about every email a
- * staff press sends», slice 4): the record is the same, the volunteer's second copy of their agreement is not queued —
+ * `sendEmail: false` (its question answered «… fără email» — the design «telling the owner about every email a
+ * staff press sends», slice 4, §976): the record is the same, the volunteer's second copy of their agreement is not queued —
  * their first, sent when they accepted their own, stands; the guardian is sent nothing either way — and the audit row
  * says `emailSkipped` when a copy would have left.
  */

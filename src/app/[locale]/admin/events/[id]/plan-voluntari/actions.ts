@@ -9,7 +9,8 @@ import { CoordinatesRefusal } from "@/modules/event-checkpoints/domain/coordinat
 import { inEmailPress } from "@/modules/notifications/press";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
-import { setVolunteerPlanPicture } from "@/modules/volunteers/plan";
+import { PLAN_LINK_BOXES, PlanMapsRefusal } from "@/modules/volunteers/domain/plan-link";
+import { addVolunteerPlanLink, addVolunteerPlanPicture, removeVolunteerPlanLink, removeVolunteerPlanPicture } from "@/modules/volunteers/plan";
 import { changePlanPoint, PlanPointGone, PlanPointRefusal } from "@/modules/volunteers/plan-points";
 import { sendVolunteerPoints } from "@/modules/volunteers/point-mail";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
@@ -36,6 +37,11 @@ const viewOf = (form: FormData, fallback: PlanView = "table"): PlanView => (fiel
 const refusedAt = (path: string, view: PlanView, code: string, point?: string) =>
   planAddress(path, { view, planError: code, open: point && isUuid(point) ? point : undefined, hash: "admin-alert" });
 
+/** What a press made on a person's line of «Fără punct» posts as its `at` (§978): it comes back to that fold, open. */
+const UNPLACED_AT = "unplaced";
+/** The fold «Fără punct» (§978). */
+const UNPLACED_ANCHOR = "plan-unplaced";
+
 /**
  * «Pune aici» and «Scoate» on «Planul voluntarilor» (§949; the owner, 2026-11-16: «e foarte important sa avem planul de
  * voluntari si fiecare in ce punct ramane»): one press puts a volunteer at a point of the event's route, or takes them off the
@@ -47,6 +53,11 @@ const refusedAt = (path: string, view: PlanView, code: string, point?: string) =
  * role that may not — comes back to the page's alert (`#admin-alert`) with its code in the address (§953, the registrations
  * list's rule, §943): the alert is where the refusal's sentence is, at the top of a page that may be several screens long,
  * and a point deleted meanwhile has no anchor left to land on.
+ *
+ * «Pune» on a person's own line of «Fără punct» (§978, amending §949; the owner, 2026-11-18: «aici eu vreau sa pot asigna
+ * voluntari la punct direct de aici») is the same press from the other side: the person is posted, the point chosen in the
+ * line's select, and `at` is `unplaced` — it comes back to «Fără punct», drawn open (`PLAN_SAVED.unplaced`), the next person
+ * one press away. A refusal comes back to the page's alert as every press does.
  * It emails nobody: only «Trimite fiecăruia punctul lui» below does.
  */
 export async function placeVolunteerAction(form: FormData): Promise<void> {
@@ -69,18 +80,33 @@ export async function placeVolunteerAction(form: FormData): Promise<void> {
     refusal = error.code;
   }
   revalidatePath(path);
-  redirect(refusal ? refusedAt(path, view, refusal, at) : planAddress(path, isUuid(at) ? { view, open: at, hash: `point-${at}` } : { view }));
+  redirect(
+    refusal
+      ? refusedAt(path, view, refusal, at)
+      : at === UNPLACED_AT
+        ? planAddress(path, { view, savedIn: PLAN_SAVED.unplaced, hash: UNPLACED_ANCHOR })
+        : planAddress(path, isUuid(at) ? { view, open: at, hash: `point-${at}` } : { view }),
+  );
 }
 
 /**
- * A press on the plan's picture, start to finish (§952): the staff session and the capability, asked here by name at the door
- * of the action — whoever works the volunteers (`canManageVolunteers`: the Organizer and the Administrators, BR-REQ-060-01) —
- * before the service asks it again; then `press`, whose outcome becomes the toast; the way back is the plan, in the view the
- * press came from, at the picture's own fold, drawn open (`saved=`, §974) — or, refused, at the page's alert
- * (`#admin-alert`) with the refusal's code in the address, where its sentence is (§953's rule for every press of this page).
- * A plain function of this file, never a verb a browser may call: only the two actions under it are exported.
+ * The code a refused press of «Poze și hărți» is said with (§978): the rule's own sentence — the thirteenth picture or link,
+ * an address that is no web address, a label too long (`Admin.errors.<reason>`) — or the domain's code for everything else
+ * (a role that may not, an event that is not there, an id that names no stored picture).
  */
-async function pressOnPlanPicture(form: FormData, press: (actor: Pick<StaffUser, "id" | "role">, eventId: string) => Promise<void>): Promise<never> {
+function planMapsRefusalCode(error: DomainError): string {
+  return error instanceof PlanMapsRefusal ? error.reason : error.code;
+}
+
+/**
+ * A press of «Poze și hărți», start to finish (§978, amending §952): the staff session and the capability, asked here by name
+ * at the door of the action — whoever works the volunteers (`canManageVolunteers`: the Organizer and the Administrators,
+ * BR-REQ-060-01) — before the service asks it again; then `press`, whose outcome becomes the toast; the way back is the
+ * plan, in the view the press came from, at the fold «Poze și hărți», drawn open (`saved=`, §974) — or, refused, at the
+ * page's alert (`#admin-alert`) with the refusal's code in the address, where its sentence is (§953's rule for every press
+ * of this page). A plain function of this file, never a verb a browser may call.
+ */
+async function pressOnPlanMaps(form: FormData, press: (actor: Pick<StaffUser, "id" | "role">, eventId: string) => Promise<void>): Promise<never> {
   const locale = localeOf(form);
   const eventId = eventIdOf(form);
   // A form with no event names no plan to come back to: the volunteers' own screen.
@@ -94,40 +120,80 @@ async function pressOnPlanPicture(form: FormData, press: (actor: Pick<StaffUser,
     await press(actor, eventId);
   } catch (error) {
     if (!isDomainError(error)) throw error;
-    refusal = error.code;
+    refusal = planMapsRefusalCode(error);
   }
   revalidatePath(path);
-  redirect(refusal ? refusedAt(path, view, refusal) : planAddress(path, { view, savedIn: PLAN_SAVED.picture, hash: "plan-picture" }));
+  redirect(refusal ? refusedAt(path, view, refusal) : planAddress(path, { view, savedIn: PLAN_SAVED.maps, hash: MAPS_ANCHOR }));
 }
 
+/** The fold «Poze și hărți» (§978), where its presses come back to. */
+const MAPS_ANCHOR = "plan-maps";
+
 /**
- * «Încarcă poza planului» and «Schimbă poza» on «Planul voluntarilor» (§952; the owner, 2026-11-16, with a picture of the route
- * and its volunteers' points numbered on it: «trebui sa pot incarca si planul voluntarilor pe traseu in genul [pozei]»): the
- * picture the browser has just stored through the backoffice's one upload (`/api/admin/media`, which answers its id) becomes
- * the event's plan picture — the first, or another in the place of the one before. The island on the page posts this form the
- * moment its upload answers (`volunteers/ui/PlanPictureUpload.tsx`). The service holds the id to a stored picture and audits
- * the change; a form with no picture in it is refused here, so taking the picture off is only ever «Șterge poza», which asks.
+ * «Adaugă o poză» in «Poze și hărți» on «Planul voluntarilor» (§978, amending §952's one picture; the owner, 2026-11-18:
+ * «sa pot pune mai multe poze»): the picture the browser has just stored through the backoffice's one upload
+ * (`/api/admin/media`, which answers its id) goes last among the plan's pictures. The island on the page posts this form the
+ * moment its upload answers (`volunteers/ui/PlanPictureUpload.tsx`). The service holds the id to a stored picture, the
+ * plan to twelve pictures, and audits the change; a form with no picture in it is refused naming the box.
  */
-export async function setPlanPictureAction(form: FormData): Promise<void> {
-  await pressOnPlanPicture(form, async (actor, eventId) => {
-    const assetId = field(form, "assetId").trim();
-    if (assetId === "") throw new DomainError("VALIDATION_ERROR", "the plan's picture: no picture was posted", ["assetId"]);
-    const result = await setVolunteerPlanPicture(getDb(), actor, { eventId, assetId }, new Date());
-    if (!result.changed) await flashOutcome({ saved: "volunteerUnchanged" });
-    else if (result.outcome === "replaced") await flashOutcome({ saved: "planPictureReplaced" });
-    else await flashOutcome({ saved: "planPictureSet" });
+export async function addPlanPictureAction(form: FormData): Promise<void> {
+  await pressOnPlanMaps(form, async (actor, eventId) => {
+    const result = await addVolunteerPlanPicture(getDb(), actor, { eventId, assetId: field(form, "assetId") }, new Date());
+    await flashOutcome({ saved: result.changed ? "planPictureAdded" : "volunteerUnchanged" });
   });
 }
 
 /**
- * «Șterge poza» on «Planul voluntarilor» (§952): the plan's picture taken off the event — asked first on the page, since only
- * uploading it again brings it back. The points and the people are untouched; the stored picture, used nowhere else, is the
- * sweep's after its week (§73). The service audits it; a plan that has no picture answers «nimic de schimbat».
+ * «Șterge poza» under one picture of «Poze și hărți» (§978): that picture taken off the plan — asked first on the page, since
+ * only uploading it again brings it back. The other pictures, the links, the points and the people are untouched; the stored
+ * picture, used nowhere else, is the sweep's after its week (§73). A picture already gone answers «nimic de schimbat».
  */
 export async function removePlanPictureAction(form: FormData): Promise<void> {
-  await pressOnPlanPicture(form, async (actor, eventId) => {
-    const result = await setVolunteerPlanPicture(getDb(), actor, { eventId, assetId: null }, new Date());
+  await pressOnPlanMaps(form, async (actor, eventId) => {
+    const result = await removeVolunteerPlanPicture(getDb(), actor, { eventId, id: field(form, "pictureId") }, new Date());
     await flashOutcome({ saved: result.changed ? "planPictureRemoved" : "volunteerUnchanged" });
+  });
+}
+
+/**
+ * «Adaugă linkul» in «Poze și hărți» on «Planul voluntarilor» (§978; the owner, 2026-11-18: «am facut spre exemplu un google
+ * maps custom map si vreau sa pot pune url-ul»): an address and its optional label go last among the plan's links.
+ *
+ * The capability is asked here by name, at the door, before the service asks it again and holds what was typed to the rules.
+ * A refusal does not redirect: it comes back as the form's own state (§315), so a wrong address names its box and what was
+ * typed stays. A press that went through comes back to the fold, open, in the view it was pressed in, its outcome in the toast
+ * and the form empty for the next link. It emails nobody and no public page reads the link.
+ */
+export async function addPlanLinkAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const eventId = eventIdOf(form);
+  // A form with no event names no plan to come back to: the volunteers' own screen.
+  if (!eventId) redirect(getPathname({ locale, href: "/admin/volunteers" }));
+  const view = viewOf(form);
+  const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id: eventId } } });
+
+  let changed: boolean;
+  try {
+    const actor = await requireStaffCapability(canManageVolunteers);
+    changed = (await addVolunteerPlanLink(getDb(), actor, { eventId, url: field(form, PLAN_LINK_BOXES.url), label: field(form, PLAN_LINK_BOXES.label) }, new Date())).changed;
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    const outcome = refused(error, form);
+    return error instanceof PlanMapsRefusal ? { ...outcome, error: error.reason, errorValues: error.values } : outcome;
+  }
+  await flashOutcome({ saved: changed ? "planLinkAdded" : "volunteerUnchanged" });
+  revalidatePath(path);
+  redirect(planAddress(path, { view, savedIn: PLAN_SAVED.maps, hash: MAPS_ANCHOR }));
+}
+
+/**
+ * «Șterge linkul» under one link of «Poze și hărți» (§978): that link taken off the plan — asked first on the page, naming it.
+ * A link already gone answers «nimic de schimbat».
+ */
+export async function removePlanLinkAction(form: FormData): Promise<void> {
+  await pressOnPlanMaps(form, async (actor, eventId) => {
+    const result = await removeVolunteerPlanLink(getDb(), actor, { eventId, id: field(form, "linkId") }, new Date());
+    await flashOutcome({ saved: result.changed ? "planLinkRemoved" : "volunteerUnchanged" });
   });
 }
 

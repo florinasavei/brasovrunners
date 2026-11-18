@@ -567,8 +567,8 @@ export async function transitionEventAction(_previous: FormOutcome | null, form:
   let outcome: { error?: string; saved?: string };
   // What the toast adds about the new-event alert (`alertOutcome`); the page's banner never reads it.
   let alert: { alert?: "later" | "skipped" } = {};
-  // «Anunță abonații newsletterului» in «Publică»'s question (the design «telling the owner about every email a staff press
-  // sends», slice 4): unticked, the event goes live and the job never announces it. Offered only while an alert would go.
+  // «Publică»'s two answers (the design «telling the owner about every email a staff press sends», slice 4, §976):
+  // «… fără anunț», the event goes live and the job never announces it. Offered only while an alert would go.
   const announce = sendEmailOf(form);
   try {
     const actor = await requireStaff();
@@ -588,7 +588,7 @@ export async function transitionEventAction(_previous: FormOutcome | null, form:
 
 /**
  * What a publication's toast says of the new-event alert (slice 4; `mail-line.ts`'s `mailAlert`): `skipped` when
- * «Anunță abonații newsletterului» was unticked, `later` when the job's next pass announces the event to somebody
+ * the question was answered «… fără anunț», `later` when the job's next pass announces the event to somebody
  * (`previewEventAlertAudience`, the question's own count), nothing otherwise. A read that fails says nothing: the toast
  * is a courtesy, the publication stands.
  */
@@ -670,7 +670,7 @@ export async function bulkPublishEventsAction(form: FormData): Promise<void> {
 
   let published = 0;
   let failed = 0;
-  // One «Anunță abonații newsletterului» for the batch (slice 4): unticked, none of the events published is ever announced.
+  // One answer for the batch (slice 4, §976): «… fără anunț», none of the events published is ever announced.
   const announce = sendEmailOf(form);
   try {
     const actor = await requireStaff();
@@ -921,7 +921,7 @@ export async function createEventAction(_previous: FormOutcome | null, form: For
   let outcome: { saved: string; created?: string; notPublished?: string };
   let alert: { alert?: "later" | "skipped" } = {};
   let createdId: string;
-  // «Anunță abonații newsletterului» in «Creează și publică»'s question (slice 4): unticked, the new event is never announced.
+  // «Creează și publică»'s answer (slice 4, §976): «… fără anunț», the new event is never announced.
   const announce = sendEmailOf(form);
   try {
     const actor = await requireStaff();
@@ -1517,7 +1517,7 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
 
     let outcome: Record<string, string | undefined>;
     let toast: Record<string, string | undefined>;
-    // «Trimite invitația acum» in the question (slice 4): unticked, the row is added and nobody is written to — neither
+    // The question's answer (slice 4, §976): «Adaugă fără invitație», the row is added and nobody is written to — neither
     // the club's invitation nor Zitadel's account and its password email; «Retrimite invitația» sends both later.
     const sendEmail = sendEmailOf(form);
     try {
@@ -1587,7 +1587,7 @@ export async function inviteMembersAction(_previous: FormOutcome | null, form: F
 
     let outcome: Record<string, string | undefined>;
     let toast: Record<string, string | undefined>;
-    // «Trimite invitațiile acum» in the question (slice 4): unticked, the members are added and nobody is written to —
+    // The question's answer (slice 4, §976): «Adaugă membrii fără invitații», the members are added and nobody is written to —
     // no invitation queued, no Zitadel account asked for; «Retrimite invitația» on each row sends both later.
     const sendEmail = sendEmailOf(form);
     try {
@@ -1676,7 +1676,7 @@ export async function resendStaffInviteAction(_previous: FormOutcome | null, for
       // «Trimite acum» or «Pune la coadă» (§540): the dialog's answer, the queue when none was offered.
       const delivery = deliveryChoiceOf(form.get(DELIVERY_CHOICE_FIELD));
       const member = await resendStaffInvitation(getDb(), actor, text(form, "email"), new Date(), delivery);
-      // An account never made — added with «Trimite invitația acum» unticked (slice 4) — is made now (`reinviteZitadelUser`).
+      // An account never made — added «fără invitație» (slice 4) — is made now (`reinviteZitadelUser`).
       const invite =
         env.STAFF_AUTH_MODE === "provider"
           ? await reinviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale })

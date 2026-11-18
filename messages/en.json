@@ -2568,12 +2568,15 @@
         "none": "No email goes to {name}.",
         "toOrNothing": "1 email goes to {name}: “{type}” — or none, if they join the waiting list.",
         "toAddressOrNothing": "1 email goes to {name} ({address}): “{type}” — or none, if they join the waiting list.",
-        "noneType": "No “{type}” email goes.",
         "optOut": "Send the email",
+        "sendButton": "{action} and send the email",
+        "skipButton": "{action} without the email",
+        "sendButtonMany": "{action} and send the emails",
+        "skipButtonMany": "{action} without the emails",
+        "alertSendButton": "{action} and tell the subscribers",
+        "alertSkipButton": "{action} without telling them",
         "refusalTells": "A refusal tells the person its ground, in “Registration cancelled”: so that email always goes.",
         "windowSkipped": "With the box unticked, those whose deadline moves later are not sent it again; those whose deadline moves earlier still are.",
-        "alertOptOut": "Announce it to the newsletter's subscribers",
-        "alertOff": "The newsletter's subscribers are not told of this event, now or later.",
         "noneMany": "The people erased receive no email.",
         "club": {
           "one": "And {count} email to the club's mailboxes.",
@@ -2748,6 +2751,10 @@
       "PLAN_POINT_TOO_MANY": "Too many points added here: at most {max} an event. Delete one to add another.",
       "PLAN_POINT_IN_EDITOR": "This point is one of the \"Points on the route\": it is deleted in the event's editor, not here.",
       "PLAN_POINT_GONE": "The point is no longer on the plan: it was deleted meanwhile.",
+      "PLAN_PICTURES_FULL": "The plan already has {max} pictures, as many as it can hold. Delete one to add another.",
+      "PLAN_LINKS_FULL": "The plan already has {max} links, as many as it can hold. Delete one to add another.",
+      "PLAN_LINK_URL": "Write the whole address, starting with https://.",
+      "PLAN_LINK_LABEL": "What the link is can be at most {max} characters long.",
       "VOLUNTEER_CATEGORY_HAS_ROLES": "The category was not deleted: it has roles under it. Move or delete the roles first.",
       "VOLUNTEER_NAME_TAKEN": "That name is already used in this category (or among the event's categories). Choose another: the same name can stand in two categories, but not twice in one.",
       "VOLUNTEER_ROLE_INVALID": "“{role}” in “{category}”: {problem}. Nothing was saved.",
@@ -2783,7 +2790,8 @@
       "ADDRESS_HOLDS_ENOUGH": "Nothing changed: this address already has as many registrations at the event as the club’s rules allow one address. Use another address.",
       "ADDRESS_INVALID": "Nothing changed: that is not a valid email address. Check what you typed.",
       "ADDRESS_TRY_AGAIN": "Nothing changed: the registration was being changed at the same moment. Press “Change the address” again.",
-      "PARTNER_NAME_MISSING": "Write the partner's or sponsor's name, or untick «From a partner»."
+      "PARTNER_NAME_MISSING": "Write the partner's or sponsor's name, or untick «From a partner».",
+      "RACE_DAY_ITEMS_FULL": "The list already holds {max} things, as many as it can. Delete what is no longer needed, then add."
     },
     "editor": {
       "draftPreview": {
@@ -3468,6 +3476,8 @@
         "black": "Black"
       },
       "createAndPublish": "Create and publish",
+      "createPublishSendButton": "Create, publish and tell the subscribers",
+      "createPublishSkipButton": "Create and publish without telling them",
       "publishing": "Publishing…",
       "createdPublished": "The event was created and published. It is on the site, in both languages.",
       "createdPublishedWithSeries": "The event and {dates} were created and published.",
@@ -4107,10 +4117,10 @@
       "membersInviting": "Adding…",
       "membersInvited": "Members added: {count}. The invitations are on their way.",
       "membersAdded": "Members added: {count}.",
-      "inviteOptOut": "Send the invitation now",
-      "inviteOptOutOff": "No invitation goes to {name} and Zitadel is not asked: you send it later, with “Resend the invitation”.",
-      "membersOptOut": "Send the invitations now",
-      "membersOptOutOff": "No invitation goes and Zitadel is not asked: you send them later, each with “Resend the invitation”.",
+      "inviteSendButton": "{action} and send the invitation",
+      "inviteSkipButton": "{action} without the invitation",
+      "membersSendButton": "{action} and send the invitations",
+      "membersSkipButton": "{action} without the invitations",
       "inviteNotSent": "No invitation went and Zitadel was not asked: send it whenever you like, with “Resend the invitation” beside each person.",
       "membersInviteFailed": "Members added: {count}, the invitations are on their way — but for {failed} of them the sign-in account could not be made. Press “Add the members” again with their addresses to retry.",
       "membersRetried": "Already members: {retried} — only their account was tried again.",
@@ -6484,8 +6494,15 @@
         "takeOff": "Take off",
         "takeOffFor": "Take off this point: {name}",
         "unplacedTitle": "At no point",
-        "unplacedHelp": "Not placed yet. Put them at the start–finish or at a point on the route, with \"Put here\".",
+        "unplacedHelp": "Not at any point yet. Choose their point here, on each one's line, or with \"Put here\" at the point.",
         "unplacedNone": "Everybody stands at a point.",
+        "unplaced": {
+          "point": "The point",
+          "choose": "Choose the point",
+          "routeOption": "{number}. {name} · km {km}",
+          "place": "Put",
+          "placeFor": "Put at the chosen point: {name}"
+        },
         "noVolunteers": "The event has no volunteers yet.",
         "noRole": "no role given",
         "notConfirmed": "not confirmed yet",
@@ -6525,24 +6542,51 @@
           },
           "removeBodyNobody": "Nobody stands at this point."
         },
+        "maps": {
+          "title": "Pictures and maps",
+          "pictures": {
+            "one": "{count} picture",
+            "few": "{count} pictures",
+            "other": "{count} pictures"
+          },
+          "picturesNone": "no picture",
+          "links": {
+            "one": "{count} link",
+            "few": "{count} links",
+            "other": "{count} links"
+          },
+          "linksNone": "no link",
+          "help": "The route map with the points, other pictures and links — your own Google My Maps map, say. They print with the plan and go out with \"Send each their point\". Not on the site.",
+          "picturesTitle": "Pictures",
+          "linksTitle": "Links"
+        },
         "picture": {
-          "title": "The plan's picture",
           "alt": "The volunteers' plan drawn on the route",
+          "altNumbered": "The volunteers' plan, picture {number}",
           "open": "Open the whole picture of the plan, in a new tab",
-          "openHint": "Press the picture to open the whole of it, in a new tab.",
-          "none": "The plan has no picture yet. Upload the map of the route with the points drawn on it: it shows here and prints with the plan.",
-          "has": "uploaded",
-          "hasNone": "none yet",
-          "upload": "Upload the plan's picture",
-          "replace": "Change the picture",
+          "openNumbered": "Open the whole of the plan's picture {number}, in a new tab",
+          "openHint": "Press a picture to open the whole of it, in a new tab.",
+          "upload": "Add a picture",
           "uploading": "Uploading…",
           "saving": "Saving…",
           "failed": "The picture did not upload. Try again or choose another file (JPEG, PNG or WebP).",
-          "help": "A JPEG, PNG or WebP image — for instance the map of the route with the points numbered. It is on no page of the site; the volunteers get it only with \"Send each their point\".",
+          "help": "A JPEG, PNG or WebP image — for instance the map of the route with the points numbered. It goes after the others. It is on no page of the site; the volunteers get it only with \"Send each their point\".",
           "remove": "Delete the picture",
-          "removeTitle": "Delete the plan's picture?",
-          "removeBody": "The picture goes from the plan and from the printed sheet. The points and the people stay as they are. You can upload it again at any time.",
-          "noStorage": "Picture storage is not configured here, so the plan cannot have a picture."
+          "removeFor": "Delete picture {number}",
+          "removeTitle": "Delete the plan's picture {number}?",
+          "removeBody": "The picture goes from the plan and from the printed sheet. The other pictures, the links, the points and the people stay as they are. You can add it again at any time.",
+          "noStorage": "Picture storage is not configured here, so the plan cannot have pictures. Links work."
+        },
+        "link": {
+          "url": "Address (https://…)",
+          "label": "What it is (optional)",
+          "hint": "For instance your map in Google My Maps: \"Share\", access \"Anyone with the link\", then copy the link here.",
+          "add": "Add the link",
+          "opens": "{name} — opens in a new tab",
+          "remove": "Delete the link",
+          "removeFor": "Delete the link {name}",
+          "removeTitle": "Delete the link \"{name}\"?",
+          "removeBody": "The link goes from the plan and from the printed sheet. Whatever is at its address stays untouched. You can add it again at any time."
         },
         "mail": {
           "title": "Send each their point",
@@ -6560,7 +6604,7 @@
           "toTellNone": "nobody to tell",
           "confirmTitle": "Send each their point?",
           "confirmBody": "Each gets their point by email, and what they do there.",
-          "confirmBodyPicture": "Each gets their point by email, what they do there and the plan's picture.",
+          "confirmBodyMaps": "Each gets their point by email, what they do there and the plan's pictures and links.",
           "confirm": "Send",
           "againTick": "Send to everybody again, those who already know their point too",
           "againTitle": "Write to everybody again?",
@@ -6603,6 +6647,8 @@
         "pdf": "PDF with the parent's consent",
         "pdfToSign": "PDF for the parent to sign",
         "paper": "Parent's consent on paper",
+        "paperSendButton": "Record the consent and send the email",
+        "paperSkipButton": "Record the consent without the email",
         "paperTitle": "Did {name}'s parent sign the agreement on paper?",
         "paperBody": "This records that {name}'s parent or guardian signed the printed agreement, the version in force, and that you recorded the signature. Keep the signed sheet.",
         "minorsClosed": "The parent's link and “Parent's consent on paper” wait: the notice or the agreement in force does not describe minors (“Tasks”).",
@@ -7624,6 +7670,7 @@
       "title": "Number pickup desk",
       "howTitle": "How race day works, step by step",
       "how": [
+        "Three tabs at the top: “Attendance” (this desk), “Results” (the chosen race's results) and “Things to bring” (the checklist of what we bring to the race).",
         "Before the race (organizer): under “Taking part, registration and rules” → “Allocate and print”, press “Download every number (PDF)” and print them — two to an A4 sheet.",
         "Print a few “Paper declaration form (PDF)” too, for anyone who signs on the spot.",
         "An administrator prints blank numbers from “Spare bibs for on-the-spot entries” for people who register at the desk.",
@@ -7635,7 +7682,7 @@
         "No email arrived, or they cannot find the QR: search by name.",
         "If it says “Așteaptă semnarea declarației” (awaiting the declaration), give them the paper declaration to sign, press “Confirm on paper”, then “Mark present”.",
         "Never registered at all: “Add somebody”. Name and email.",
-        "The “This person is at the desk” tick is already set, and “Number given now” suggests the next spare number: hand them that bib and write their name on it in marker.",
+        "The “This person is at the desk” tick is already set, and “Number given now” has the lowest free spare number chosen: hand them that bib and write their name on it in marker.",
         "They sign the paper declaration, then “Mark present”. If the event is full they join the waiting list; “Give a place” only works once one is free.",
         "Made a mistake? “Undo” takes it back. Every press stays in the registration's history, with your name on it.",
         "At the end, the figures on this page are the race's figures: how many confirmed, how many here. Whoever did not come stays without “here”.",
@@ -7705,7 +7752,6 @@
       "voidExpired": "Registration expired on {date}",
       "voidPrinted": "Number {number} has been printed — do not hand it out. Numbers are never reused.",
       "handedBib": "Number given now",
-      "handedBibHelp": "Suggested: the next free spare number. Change it if you hand out another number from the box; leave it empty and the site picks one.",
       "handedBibNoSpares": "Type the number you hand them, or leave it empty and the site picks one.",
       "handedBibFastTrackOnly": "Only for someone confirmed here, at the desk (the tick above).",
       "nextSpare": "Next spare: {number}",
@@ -7714,7 +7760,20 @@
       "scanSwitch": "Another camera",
       "scanCamera": "Camera {n} of {total}",
       "eliteLabel": "On the bib: {label}",
-      "eliteFold": "Elite and bib"
+      "eliteFold": "Elite and bib",
+      "spares": {
+        "free": {
+          "one": "Free spare number ({count}): {numbers}",
+          "few": "Free spare numbers ({count}): {numbers}",
+          "other": "Free spare numbers ({count}): {numbers}"
+        },
+        "none": "No spare numbers for this race: an Administrator prints them from “Allocate and print”."
+      },
+      "handedBibPickHelp": "Choose the spare bib you hand them (the lowest is already chosen). “Another number…” if you hand another number from the box; “No number now” and the site picks one.",
+      "handedBibOther": "Another number…",
+      "handedBibNone": "No number now",
+      "handedBibOtherLabel": "The number on the bib",
+      "handedBibOtherHelp": "Type the number on the bib you hand them."
     },
     "emails": {
       "title": "The emails participants receive",
@@ -12550,6 +12609,54 @@
       "column": "Reconfirmed",
       "personAsked": "Reconfirmation asked on {asked}",
       "personAnswered": "pressed “I'm coming” on {at}"
+    },
+    "raceDay": {
+      "tabs": {
+        "label": "Race day",
+        "desk": "Attendance",
+        "results": "Results",
+        "items": "Things to bring",
+        "itemsShort": "Things"
+      },
+      "items": {
+        "title": "Things to bring",
+        "intro": "What we bring to the race: tick each thing once it is in the car or at the start. The list belongs to this event alone.",
+        "readOnly": "You tick what you brought. The Organizer and the Administrators write the list.",
+        "show": "Show",
+        "count": {
+          "one": "{count} thing",
+          "few": "{count} things",
+          "other": "{count} things"
+        },
+        "brought": {
+          "one": "{count} brought",
+          "few": "{count} brought",
+          "other": "{count} brought"
+        },
+        "broughtBy": "brought · {name} · {time}",
+        "broughtAt": "brought · {time}",
+        "edit": "Change “{label}”",
+        "label": "What we bring",
+        "labelHelp": "For example: Extension cords, Markers.",
+        "note": "Note (optional)",
+        "noteHelp": "How many, or who brings them: “3 pieces”, “Ana brings them”.",
+        "save": "Save",
+        "remove": "Delete",
+        "removeFor": "Delete “{label}”",
+        "removeTitle": "Delete “{label}”?",
+        "removeBody": "The thing leaves the list, with its tick. Nothing is sent to anybody.",
+        "addTitle": "Add a thing",
+        "add": "Add",
+        "empty": "The list is empty.",
+        "emptyAdd": "Add the first thing to bring below.",
+        "emptyReadOnly": "The Organizer or an administrator adds the things.",
+        "print": "Print the list",
+        "errors": {
+          "FORBIDDEN": "Your role does not allow this.",
+          "NOT_FOUND": "The thing is no longer on the list — a colleague may have deleted it.",
+          "VALIDATION_ERROR": "The name takes 1 to 120 characters, and the note at most 200."
+        }
+      }
     }
   },
   "NotFound": {
@@ -14697,9 +14804,10 @@
       "partnerSaved": "The partner was saved. Nothing was sent to anybody.",
       "partnerCleared": "No longer from a partner. Nothing was sent to anybody.",
       "partnerUnchanged": "It already was; nothing to change.",
-      "planPictureSet": "The plan's picture is on: it shows above the points and prints with the plan.",
-      "planPictureReplaced": "The plan's picture was changed.",
-      "planPictureRemoved": "The plan's picture was deleted.",
+      "planPictureAdded": "The picture is on the plan: it shows under \"Pictures and maps\" and prints with the plan.",
+      "planPictureRemoved": "The picture was deleted from the plan.",
+      "planLinkAdded": "The link is on the plan.",
+      "planLinkRemoved": "The link was deleted from the plan.",
       "planPointAdded": "Point added.",
       "planPointSaved": "Point saved.",
       "planPointRemoved": "Point deleted.",
@@ -14713,7 +14821,13 @@
         "few": "{count} volunteers told their point. With no email address: {noAddress}.",
         "other": "{count} volunteers told their point. With no email address: {noAddress}."
       },
-      "noteEdited": "The note was changed."
+      "noteEdited": "The note was changed.",
+      "raceDayItemAdded": "Thing added.",
+      "raceDayItemSaved": "Thing saved.",
+      "raceDayItemRemoved": "Thing deleted.",
+      "raceDayItemBrought": "Ticked as brought.",
+      "raceDayItemUnbrought": "Unticked.",
+      "raceDayItemUnchanged": "It already was; nothing to change."
     },
     "mail": {
       "now": "Leaving now{road}: {what}.",
@@ -14788,12 +14902,12 @@
       "roles": "If the roles are no longer the same by then, the email is withdrawn.",
       "zitadel": "Zitadel sends the password link separately, now.",
       "skipped": {
-        "one": "{count} email did not go: you unticked “Send…”.",
-        "few": "{count} emails did not go: you unticked “Send…”.",
-        "other": "{count} emails did not go: you unticked “Send…”."
+        "one": "{count} email did not go, as you chose.",
+        "few": "{count} emails did not go, as you chose.",
+        "other": "{count} emails did not go, as you chose."
       },
       "alertLater": "The newsletter's subscribers get the announcement at the job's next pass.",
-      "alertSkipped": "The newsletter's subscribers are not told: you unticked the box."
+      "alertSkipped": "The newsletter's subscribers are not told, as you chose."
     },
     "via": {
       "mailgun": "Leaves by Mailgun.",

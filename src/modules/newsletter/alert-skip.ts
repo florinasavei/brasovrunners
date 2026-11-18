@@ -3,7 +3,7 @@ import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 
 /**
- * «Anunță abonații newsletterului» unticked at a publication (the design «telling the owner about every email a staff
+ * A publication answered «… fără anunț» (§976; the design «telling the owner about every email a staff
  * press sends», 2026-11-03, slice 4): the event is marked seen for the new-event alert — its `newsletter_sends`
  * `EVENT_ALERT` row with no recipients, the marker `queueNewEventAlerts` already writes for an event nobody would be told
  * of, which it skips ever after and «Trimise» hides — so the job never announces it; one `event.new_event_alert_skipped`

@@ -15,7 +15,8 @@ import CheckboxField from "@/shared/ui/CheckboxField";
  * from the same facts — the person, the address, the email by its name in «Emailuri» — and the toast after the press
  * says what really left. A mail glyph and the sentence, then any quieter lines; a Server Component, nothing to run.
  *
- * **«Trimite emailul»** (`optOut`, slice 4): the box the dialogs draw, here in the form itself — ticked as drawn, posted
+ * **«Trimite emailul»** (`optOut`, slice 4): a box in the form itself, beside a button that asks nothing — a question offers
+ * two answers instead, «… și trimite emailul» and «… fără email» (§976) — ticked as drawn, posted
  * `on` while ticked, and followed by a hidden `off` under the same name so an unticked box still says so
  * (`shared/forms/send-email.ts#sendEmailOf`). Drawn inside the form it belongs to: a line beside a row of buttons is
  * inside their one form (the volunteer's roles), never tied to it from outside.

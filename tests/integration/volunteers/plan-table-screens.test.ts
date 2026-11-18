@@ -146,7 +146,7 @@ const escaped = (text: string) => text.replace(/&/g, "&amp;").replace(/'/g, "&#x
 /** A part of the page without its tags: the words a person reads. */
 const wordsOf = (part: string) => part.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 /** «Punctele, pe scurt», whole: from its section's opening tag to the picture's section, which the page draws next. */
-const sectionOf = (page: string) => page.slice(page.indexOf('data-testid="plan-table-section"'), page.indexOf('data-testid="plan-picture-section"'));
+const sectionOf = (page: string) => page.slice(page.indexOf('data-testid="plan-table-section"'), page.indexOf('data-testid="plan-points-section"'));
 /** The wide table of a part, and what comes after it in the section: the phone's blocks and the line under the table. */
 const wideOf = (part: string) => part.slice(part.indexOf("<table"), part.indexOf("</table>"));
 const afterTableOf = (part: string) => part.slice(part.indexOf("</table>"));
@@ -167,7 +167,7 @@ const printOf = (page: string, names: readonly string[]) =>
 const tallClass = (page: string, names: readonly string[]) => names.some((name) => new RegExp(`\\.${name}\\{[^}]*min-height:44px`).test(rulesOf(page)));
 
 describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view «Tabel» of «Planul voluntarilor»", () => {
-  it("stands under the title, the intro and the views, before the picture, the builder and the email, under its heading and the house's list glyph, with six columns", async () => {
+  it("stands under the title, the intro, «Poze și hărți» and the views, before the builder and the email, under its heading and the house's list glyph, with six columns", async () => {
     await fullPlan();
     for (const locale of ["ro", "en"] as const) {
       state.locale = locale;
@@ -175,12 +175,13 @@ describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view
       const page = await planPage();
       const at = (needle: string) => page.indexOf(needle);
 
-      // Its place: after the intro, the views and «Tipărește planul», before the picture, the builder, the email and «Fără punct».
+      // Its place: after the intro, the views and «Tipărește planul», before the builder, the email and «Fără punct».
       expect(at('data-testid="plan-table-section"'), locale).toBeGreaterThan(at(escaped(words.help)));
       expect(at('data-testid="plan-table-section"')).toBeGreaterThan(at('data-testid="plan-views"'));
       expect(at('data-testid="plan-table-section"')).toBeGreaterThan(at(escaped(words.print)));
-      expect(at('data-testid="plan-table-section"')).toBeLessThan(at('data-testid="plan-picture-section"'));
-      expect(at('data-testid="plan-picture-section"')).toBeLessThan(at('data-testid="plan-points-section"'));
+      // «Poze și hărți» above the views and the table (§978); the table above the two folds under it.
+      expect(at('data-testid="plan-maps-section"')).toBeLessThan(at('data-testid="plan-views"'));
+      expect(at('data-testid="plan-table-section"')).toBeLessThan(at('data-testid="plan-points-section"'));
       expect(at('data-testid="plan-points-section"')).toBeLessThan(at('data-testid="plan-mail-section"'));
       expect(at('data-testid="plan-mail-section"')).toBeLessThan(at('data-testid="plan-unplaced"'));
       // The default view: the table, and none of the points' folds, which are «Pe puncte».
@@ -345,7 +346,8 @@ describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view
     expect(printOf(page, classesIn(sectionTag))).not.toMatch(/display:none/);
     // The wide frame is printed whatever the sheet's width — after the screen's own rule, which hides it under `md` — and the
     // phone's blocks never.
-    const frame = classesIn(/<div class="[^"]*"><table[^>]*data-table-id="volunteer-plan"/.exec(plain)![0]);
+    // The frame carries its address since §977 (the scrollbar above it finds it by it): any attributes, the table inside.
+    const frame = classesIn(/<div[^>]*class="[^"]*"[^>]*><table[^>]*data-table-id="volunteer-plan"/.exec(plain)![0]);
     expect(printOf(page, frame)).toMatch(/display:block/);
     const rules = rulesOf(page);
     expect(rules.indexOf(`@media print{.${frame[0]}{display:block`)).toBeGreaterThan(rules.indexOf(`.${frame[0]}{display:none`));

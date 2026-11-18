@@ -55,7 +55,7 @@ const READERS = new Set(
     // The plan's points (§961): the one list of them — the editor's and the plan's own, in the plan's order, each with its
     // number — and «Șterge punctul», which counts the people it frees by the point they stand at.
     "src/modules/volunteers/plan-points.ts",
-    // The plan's page and its presses: placing, the picture, and «Trimite fiecăruia punctul lui» with the numbers of its question.
+    // The plan's page and its presses: placing — at a point or from «Fără punct» —, «Poze și hărți», and «Trimite fiecăruia punctul lui» with the numbers of its question.
     "src/app/[locale]/admin/events/[id]/plan-voluntari/page.tsx",
     "src/app/[locale]/admin/events/[id]/plan-voluntari/actions.ts",
     // The «Voluntari» list: the button to the plan and the column «Punct».
@@ -68,7 +68,7 @@ const READERS = new Set(
     "src/modules/volunteers/point-mail.ts",
     // The renderer: hands that point to the template for the one message type, and withdraws the message on a corrected address.
     RENDERER,
-    // The words of «Punctul tău de voluntar»: the band that names the point, its note, and the plan's picture.
+    // The words of «Punctul tău de voluntar»: the band that names the point, its note, and the plan's pictures and links.
     TEMPLATES,
     // «Emailuri»: the preview's made-up point, so the club reads the message before anybody is placed. Never a volunteer's.
     "src/modules/notifications/email-copy-fields.ts",
@@ -122,10 +122,10 @@ describe("§949 a volunteer's point stays with the organizers — and leaves by 
     expect([...renderer.matchAll(/\bvolunteerPointAtSend\(/g)]).toHaveLength(1);
   });
 
-  it("is drawn by one template alone: the point's lines and the plan's picture stand behind the message type, the band in its own entry", () => {
+  it("is drawn by one template alone: the point's lines and the plan's pictures and links stand behind the message type, the band in its own entry", () => {
     const templates = read(TEMPLATES);
     // The two parts the platform adds around the words: each called once, each only for «Punctul tău».
-    for (const part of ["volunteerPointLines", "volunteerPointPicture"]) {
+    for (const part of ["volunteerPointLines", "volunteerPointMaps"]) {
       const calls = templates.split("\n").filter((line) => new RegExp(`\\b${part}\\(locale, data\\)`).test(line));
       expect(calls, part).toHaveLength(1);
       expect(calls[0], part).toContain(`messageType === "VOLUNTEER_POINT" ? ${part}(locale, data) : []`);

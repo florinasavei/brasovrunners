@@ -156,9 +156,10 @@ export default async function NewEventPage({ params, searchParams }: Props) {
           title: t("confirm.createPublishTitle"),
           body: t("confirm.publishBody"),
           // The job announces a new event to the newsletter's subscribers at its next pass (§445), one a day at most — unless
-          // «Anunță abonații newsletterului» is unticked (slice 4): the event goes live and is never announced.
-          also: [{ ...words.line("alertMaybe"), withEmail: true }],
-          ...words.alertOptOut(),
+          // the question is answered «… fără anunț» (slice 4, §976): the event goes live and is never announced. Its own words:
+          // the template would say «Creează și publică și anunță abonații».
+          also: [words.line("alertMaybe")],
+          ...words.alertOptOut({ sendLabel: t("editor.createPublishSendButton"), skipLabel: t("editor.createPublishSkipButton") }),
           confirmLabel: t("editor.createAndPublish"),
           cancelLabel: words.cancel,
         },

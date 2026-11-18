@@ -17,6 +17,7 @@ import { gunOf, readFinishPage } from "@/modules/results/results";
 import FinishClock from "@/modules/results/ui/FinishClock";
 import { canEnterResults } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { raceDayTabs } from "@/modules/race-day/ui/RaceDayTabs";
 import { isDomainError } from "@/shared/errors/domain-error";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
@@ -84,6 +85,8 @@ export default async function FinishPage({ params, searchParams }: Props) {
   const resultsPath = { pathname: "/admin/events/[id]/results", params: { id } } as const;
   const head = (
     <>
+      {/* «Ziua cursei»'s tabs (§979): this page is «Clasament», for its own event; what follows is as it was. */}
+      {await raceDayTabs({ locale, active: "results", eventId: id, actor })}
       <Typography variant="body2">
         <Link href={resultsPath}>{t("results.finish.backToResults")}</Link>
       </Typography>

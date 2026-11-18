@@ -11,9 +11,10 @@ import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Trimite emailul» (the design «telling the owner about every email a staff press sends», 2026-11-03, slice 4): the
- * services of the presses that offer the box, with it unticked (`sendEmail: false`). Each does exactly what it does
- * ticked, keeps back the person's own email — and with it its club copies — and says `emailSkipped` on the press's own
+ * The email as the answer pressed (the design «telling the owner about every email a staff press sends», 2026-11-03,
+ * slice 4, amended by §976): the services of the presses whose question ends in «… și trimite emailul» or «… fără
+ * email», answered «… fără email» (`sendEmail: false`). Each does exactly what it does answered «… și trimite emailul»,
+ * keeps back the person's own email — and with it its club copies — and says `emailSkipped` on the press's own
  * audit row; what the press sends anybody else still goes: the freed place's offer to the first in line. A refusal under
  * the terms always tells the person its ground, so it is refused without its email.
  *
@@ -119,7 +120,7 @@ const mailTo = async (name: string, type: (typeof emailOutbox.$inferSelect)["mes
 const audited = async (action: string, entityId: string) =>
   (await db.select().from(auditLogs).where(and(eq(auditLogs.action, action), eq(auditLogs.entityId, entityId)))).map((row) => row.metadataJson as Record<string, unknown>);
 
-describe("«Trimite emailul» unticked on a cancellation (BR-REQ-037-03)", () => {
+describe("a cancellation answered «Anulează înscrierea fără email» (BR-REQ-037-03)", () => {
   it("cancels through the allocator, sends the person nothing — nor its club copies — and still offers the freed place to the first in line", async () => {
     const { radu } = await fullRace();
     const copiesBefore = await db.select().from(emailOutbox).where(sql`${emailOutbox.participantId} is null`);
@@ -135,14 +136,14 @@ describe("«Trimite emailul» unticked on a cancellation (BR-REQ-037-03)", () =>
     expect(await audited("registration.cancelled_by_staff", radu.id)).toEqual([expect.objectContaining({ reason: "nu mai vine", emailSkipped: true })]);
   });
 
-  it("ticked — or by a caller that does not say — tells the person, and the audit row says nothing of a skip", async () => {
+  it("answered «… și trimite emailul» — or by a caller that does not say — tells the person, and the audit row says nothing of a skip", async () => {
     const { radu } = await fullRace();
     await cancelRegistrationByStaff(db, admin, radu.id, "nu mai vine", at(10));
     expect(await mailTo("Radu", "REGISTRATION_CANCELLED")).toHaveLength(1);
     expect(await audited("registration.cancelled_by_staff", radu.id)).toEqual([expect.not.objectContaining({ emailSkipped: true })]);
   });
 
-  it("refuses the club's refusal under the terms without its email, naming the refusal's box — nothing cancelled", async () => {
+  it("refuses the club's refusal under the terms without its email, naming the refusal's tick — nothing cancelled", async () => {
     const { radu } = await fullRace();
     const refusal = await cancelRegistrationByStaff(db, admin, radu.id, "dosar incomplet", at(10), { kind: "REFUSED_BY_ORGANIZER", sendEmail: false }).catch((error: unknown) => error);
     expect(refusal).toMatchObject({ code: "REFUSAL_NEEDS_EMAIL", fields: ["refusedByOrganizer"] });
@@ -150,7 +151,7 @@ describe("«Trimite emailul» unticked on a cancellation (BR-REQ-037-03)", () =>
     expect(await audited("registration.cancelled_by_staff", radu.id)).toEqual([]);
   });
 
-  it("in bulk: one box for every row ticked — none of them emailed, each audited, each freed place still offered", async () => {
+  it("in bulk: one answer, «… fără emailuri», for every row ticked — none of them emailed, each audited, each freed place still offered", async () => {
     const event = await createEvent(2);
     const radu = await registered(event, "Radu", 0, true);
     const ana = await registered(event, "Ana", 3, true);
@@ -163,7 +164,7 @@ describe("«Trimite emailul» unticked on a cancellation (BR-REQ-037-03)", () =>
   });
 });
 
-describe("«Trimite emailul» unticked on a race number given by hand (BR-REQ-038-01)", () => {
+describe("a race number given by hand, answered «Salvează nr. fără email» (BR-REQ-038-01)", () => {
   it("writes and audits the number, and queues no «Numărul de concurs dat de mână»", async () => {
     const { radu } = await fullRace();
     await setBibNumberByStaff(db, admin, radu.id, 77, at(10), { sendEmail: false });
@@ -176,7 +177,7 @@ describe("«Trimite emailul» unticked on a race number given by hand (BR-REQ-03
   });
 });
 
-describe("«Trimite invitația acum» unticked on «Echipa» (BR-REQ-060-01)", () => {
+describe("«Adaugă fără invitație» on «Echipa» (BR-REQ-060-01)", () => {
   it("adds the colleague and queues no invitation; one staff.invitation_not_sent row says so, by id and message, never an address", async () => {
     const member = await inviteStaffUser(db, admin, { email: "nou@example.ro", displayName: "Nou Coleg", role: "MODERATOR", preferredLocale: "ro" }, { sendEmail: false });
     expect(member).toMatchObject({ email: "nou@example.ro", role: "MODERATOR" });
@@ -186,7 +187,7 @@ describe("«Trimite invitația acum» unticked on «Echipa» (BR-REQ-060-01)", (
     expect(JSON.stringify(trail)).not.toContain("example.ro");
   });
 
-  it("ticked, invites as ever; members added in one press with the box unticked are written to nobody", async () => {
+  it("«Adaugă și trimite invitația» invites as ever; members added «fără invitații» are written to nobody", async () => {
     await inviteStaffUser(db, admin, { email: "coleg@example.ro", displayName: "Coleg", role: "MODERATOR", preferredLocale: "ro" });
     expect((await db.select().from(emailOutbox).where(eq(emailOutbox.recipientEmail, "coleg@example.ro"))).map((row) => row.messageType)).toEqual(["STAFF_INVITATION"]);
     const { added } = await inviteMembers(db, admin, { rows: [{ email: "m1@example.ro", displayName: "Membru Unu" }, { email: "m2@example.ro", displayName: "Membru Doi" }], preferredLocale: "ro", sendEmail: false });

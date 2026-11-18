@@ -64,7 +64,7 @@ export async function flashOutcome(outcome: Readonly<Record<string, string | num
     return;
   }
   // Zitadel's own email (§123): its answer rides on the outcome of an invitation to the team. What the press chose not
-  // to send (slice 4): `mailSkipped`, how many emails «Trimite emailul» unticked kept back, `alert` for a publication's
+  // to send (slice 4, §976): `mailSkipped`, how many emails «… fără email» kept back, `alert` for a publication's
   // new-event alert.
   const alert = outcome.alert === "later" || outcome.alert === "skipped" ? outcome.alert : undefined;
   const told = await withPressMail(notice, { zitadel: outcome.invite === "invited", skipped: mailSkippedCount(outcome.mailSkipped) ?? 0, alert });
@@ -86,8 +86,8 @@ export async function flashOutcome(outcome: Readonly<Record<string, string | num
  * (null otherwise: the banner alone says why), never as a green tick. The toast is a courtesy: a read that fails falls
  * back to the plain notice. Exported for the presses that flash or answer with a notice themselves.
  *
- * What the press chose not to send is said whatever it queued (slice 4): `skipped` — how many emails «Trimite emailul»
- * unticked kept back, the person's or the people's of a bulk press (`mailSkipped`) — and a publication's new-event
+ * What the press chose not to send is said whatever it queued (slice 4, §976): `skipped` — how many emails «… fără email»
+ * (or a box unticked) kept back, the person's or the people's of a bulk press (`mailSkipped`) — and a publication's new-event
  * alert, left to the job's next pass or not sent at all (`mailAlert`).
  */
 export async function withPressMail(
