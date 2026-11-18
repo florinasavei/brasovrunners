@@ -694,7 +694,7 @@ export type RegistrationSummary = {
  * filter's own rule (§662, §973: the person's tick «Sunt membru», or an address of a member account), `verified` of them by
  * the address — the row's «Membru (verificat)» wins over its «Membru (declarat)», as `membershipOf` says — and the rest
  * declared; `partners` those with a partner's name, `byPartner` the names as written (one entry per name whatever its
- * capitals, the first spelling met), largest first; `both` the people in the two counts at once, so the figures add up:
+ * capitals, in its newest spelling, as the partner filter suggests it), largest first; `both` the people in the two counts at once, so the figures add up:
  * `others` = confirmed − members − partners + both.
  */
 export type RegistrationComposition = {
@@ -708,7 +708,10 @@ export type RegistrationComposition = {
   others: number;
 };
 
-/** The partners' names of the confirmed (one per registration), as one entry per name whatever its capitals, largest first. */
+/**
+ * The partners' names of the confirmed (one per registration, newest write first), as one entry per name whatever its capitals,
+ * in the first spelling met, largest first and, at a tie, by name.
+ */
 export function countByPartner(names: readonly string[]): { name: string; count: number }[] {
   const byKey = new Map<string, { name: string; count: number }>();
   for (const name of names) {
@@ -745,7 +748,8 @@ export async function summariseRegistrationsForAdmin<T extends Record<string, un
       verified: sql<number>`count(*) filter (where ${composed} and ${memberVerifiedOf(members)})`.mapWith(Number),
       partners: sql<number>`count(*) filter (where ${composed} and ${partner})`.mapWith(Number),
       both: sql<number>`count(*) filter (where ${composed} and ${member} and ${partner})`.mapWith(Number),
-      partnerNames: sql<string[]>`coalesce(array_agg(${registrations.partnerName}) filter (where ${composed} and ${partner}), '{}')`,
+      // Newest write first, so a name's first spelling met is the one the list's partner filter suggests (`listPartnerSuggestions`).
+      partnerNames: sql<string[]>`coalesce(array_agg(${registrations.partnerName} order by ${registrations.updatedAt} desc) filter (where ${composed} and ${partner}), '{}')`,
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))
