@@ -535,8 +535,10 @@ export const registrations = pgTable(
      * partner or sponsor through whom this person came — a name present means «de la parteneri», none means not. The
      * organizers' own label (`partner-mark.ts`): set by the Administrator on the registration's page, carried from a line of
      * the internal list or an invitation sent with it, audited without the name. Read by the backoffice's list, page, filter,
-     * the registrations' Excel and CSV and «Toate datele unei persoane» — never by the allocator, a state, a count, an email,
-     * the desk, a public page or the file given to sponsors. Trimmed, 1 to `PARTNER_NAME_MAX` characters.
+     * the registrations' Excel and CSV and «Toate datele unei persoane» — never by the allocator, a state, an email, the desk,
+     * a public page or the file given to sponsors. One count reads it, staff-only: the list's «Cine s-a înscris», «Dintre cei
+     * {n} confirmați» — how many came through partners, and each partner's count (§NNN); no other count does. Trimmed, 1 to
+     * `PARTNER_NAME_MAX` characters.
      */
     partnerName: text("partner_name"),
 

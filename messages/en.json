@@ -1150,6 +1150,44 @@
       "statusAll": "All statuses",
       "summaryTotal": "Registrations: {count} (all states, cancelled and expired included)",
       "summaryTest": "Test: {count}",
+      "composition": {
+        "title": {
+          "one": "Of the confirmed ({count}):",
+          "few": "Of the {count} confirmed:",
+          "other": "Of the {count} confirmed:"
+        },
+        "members": {
+          "one": "{count} {club} member",
+          "few": "{count} {club} members",
+          "other": "{count} {club} members"
+        },
+        "verified": {
+          "one": "{count} verified",
+          "few": "{count} verified",
+          "other": "{count} verified"
+        },
+        "declared": {
+          "one": "{count} declared",
+          "few": "{count} declared",
+          "other": "{count} declared"
+        },
+        "split": "({verified}, {declared})",
+        "partners": {
+          "one": "{count} from partners",
+          "few": "{count} from partners",
+          "other": "{count} from partners"
+        },
+        "others": {
+          "one": "{count} other — neither a member nor from a partner",
+          "few": "{count} others — neither members nor from partners",
+          "other": "{count} others — neither members nor from partners"
+        },
+        "both": {
+          "one": "{count} is both a member and from a partner: counted in both.",
+          "few": "{count} are both members and from partners: counted in both.",
+          "other": "{count} are both members and from partners: counted in both."
+        }
+      },
       "kits": {
         "title": "Kits to prepare: {runners}",
         "titleWithVolunteers": "Kits to prepare: {count} = {runners} + {volunteers}",

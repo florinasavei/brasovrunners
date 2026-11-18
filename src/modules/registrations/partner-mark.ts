@@ -19,10 +19,11 @@ import { isUuid } from "@/shared/ids";
  * (`parsePartnerMark`). The box suggests the names already written at the event (`listPartnerSuggestions`). The registrations
  * list's row editor is the one exception to the tick: a select of those names and a box (`partnerMarkOfRow`), the same parse.
  *
- * **A label, and nothing else.** No state, no place, no count, no email, no declaration: nothing here is read by the allocator,
- * the capacity formula, a public page, the race-day desk, an email or the file given to sponsors — only by the backoffice's
- * list, the registration's page, the internal list, the invitations, the registrations' Excel and CSV and «Toate datele unei
- * persoane» (`tests/unit/registrations/partner-never-leaves.test.ts`).
+ * **A label, and nothing else.** No state, no place, no email, no declaration: nothing here is read by the allocator, the
+ * capacity formula, a public page, the race-day desk, an email or the file given to sponsors — only by the backoffice's list
+ * (and its summary's one count, «Dintre cei {n} confirmați: … de la parteneri», staff-only, §NNN), the registration's page,
+ * the internal list, the invitations, the registrations' Excel and CSV and «Toate datele unei persoane»
+ * (`tests/unit/registrations/partner-never-leaves.test.ts`).
  *
  * **The trail** names who, when, which registration and whether a name is now present (`registration.partner_set`,
  * `{ partner }`) — never the name typed.

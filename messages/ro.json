@@ -1150,6 +1150,44 @@
       "statusAll": "Toate stările",
       "summaryTotal": "Înscrieri: {count} (toate stările, anulate și expirate incluse)",
       "summaryTest": "De test: {count}",
+      "composition": {
+        "title": {
+          "one": "Dintre confirmați ({count}):",
+          "few": "Dintre cei {count} confirmați:",
+          "other": "Dintre cei {count} de confirmați:"
+        },
+        "members": {
+          "one": "{count} membru {club}",
+          "few": "{count} membri {club}",
+          "other": "{count} de membri {club}"
+        },
+        "verified": {
+          "one": "{count} verificat",
+          "few": "{count} verificați",
+          "other": "{count} de verificați"
+        },
+        "declared": {
+          "one": "{count} declarat",
+          "few": "{count} declarați",
+          "other": "{count} de declarați"
+        },
+        "split": "({verified}, {declared})",
+        "partners": {
+          "one": "{count} de la parteneri",
+          "few": "{count} de la parteneri",
+          "other": "{count} de la parteneri"
+        },
+        "others": {
+          "one": "{count} altul — nici membru, nici de la parteneri",
+          "few": "{count} ceilalți — nici membri, nici de la parteneri",
+          "other": "{count} ceilalți — nici membri, nici de la parteneri"
+        },
+        "both": {
+          "one": "{count} e și membru, și de la parteneri: numărat la amândouă.",
+          "few": "{count} sunt și membri, și de la parteneri: numărați la amândouă.",
+          "other": "{count} de oameni sunt și membri, și de la parteneri: numărați la amândouă."
+        }
+      },
       "kits": {
         "title": "Kituri de pregătit: {runners}",
         "titleWithVolunteers": "Kituri de pregătit: {count} = {runners} + {volunteers}",
