@@ -1,6 +1,6 @@
 {
   "id": "e6be36d6-70db-4cda-bec2-9e9184b9e934",
-  "prevId": "3ae1f5ce-64ec-4c1e-9fea-250eb0e3c15b",
+  "prevId": "8d57cdf4-aabb-4e29-8013-74849174891b",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1297,6 +1297,12 @@
           "notNull": true,
           "default": false
         },
+        "bib_label": {
+          "name": "bib_label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_by_staff_user_id": {
           "name": "created_by_staff_user_id",
           "type": "uuid",
@@ -1367,6 +1373,10 @@
         "event_elite_entries_bib_number": {
           "name": "event_elite_entries_bib_number",
           "value": "\"event_elite_entries\".\"bib_number\" IS NULL OR \"event_elite_entries\".\"bib_number\" BETWEEN 1 AND 99999"
+        },
+        "event_elite_entries_bib_label_length": {
+          "name": "event_elite_entries_bib_label_length",
+          "value": "\"event_elite_entries\".\"bib_label\" IS NULL OR char_length(\"event_elite_entries\".\"bib_label\") BETWEEN 1 AND 80"
         }
       },
       "isRLSEnabled": false
@@ -9534,6 +9544,12 @@
           "notNull": true,
           "default": false
         },
+        "elite_bib_label": {
+          "name": "elite_bib_label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "ambassador": {
           "name": "ambassador",
           "type": "boolean",
@@ -10045,6 +10061,10 @@
         "registrations_partner_name_length": {
           "name": "registrations_partner_name_length",
           "value": "\"registrations\".\"partner_name\" IS NULL OR (char_length(\"registrations\".\"partner_name\") BETWEEN 1 AND 120 AND \"registrations\".\"partner_name\" = btrim(\"registrations\".\"partner_name\"))"
+        },
+        "registrations_elite_bib_label_length": {
+          "name": "registrations_elite_bib_label_length",
+          "value": "\"registrations\".\"elite_bib_label\" IS NULL OR char_length(\"registrations\".\"elite_bib_label\") BETWEEN 1 AND 80"
         }
       },
       "isRLSEnabled": false
@@ -11712,6 +11732,214 @@
         "unreachable_windows_applied_within_granted": {
           "name": "unreachable_windows_applied_within_granted",
           "value": "\"unreachable_windows\".\"applied_ms\" >= 0 and \"unreachable_windows\".\"applied_ms\" <= \"unreachable_windows\".\"granted_ms\" and (\"unreachable_windows\".\"step_ms\" is null or (\"unreachable_windows\".\"step_ms\" >= \"unreachable_windows\".\"applied_ms\" and \"unreachable_windows\".\"step_ms\" <= \"unreachable_windows\".\"granted_ms\"))"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.event_volunteer_plan_links": {
+      "name": "event_volunteer_plan_links",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "event_volunteer_plan_links_event_position_idx": {
+          "name": "event_volunteer_plan_links_event_position_idx",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "position",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "event_volunteer_plan_links_event_id_events_id_fk": {
+          "name": "event_volunteer_plan_links_event_id_events_id_fk",
+          "tableFrom": "event_volunteer_plan_links",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "event_volunteer_plan_links_url_length": {
+          "name": "event_volunteer_plan_links_url_length",
+          "value": "char_length(\"event_volunteer_plan_links\".\"url\") <= 2000"
+        },
+        "event_volunteer_plan_links_label_length": {
+          "name": "event_volunteer_plan_links_label_length",
+          "value": "\"event_volunteer_plan_links\".\"label\" IS NULL OR char_length(\"event_volunteer_plan_links\".\"label\") <= 120"
+        },
+        "event_volunteer_plan_links_position_positive": {
+          "name": "event_volunteer_plan_links_position_positive",
+          "value": "\"event_volunteer_plan_links\".\"position\" >= 1"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.event_volunteer_plan_pictures": {
+      "name": "event_volunteer_plan_pictures",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "media_asset_id": {
+          "name": "media_asset_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "event_volunteer_plan_pictures_event_position_idx": {
+          "name": "event_volunteer_plan_pictures_event_position_idx",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "position",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "event_volunteer_plan_pictures_event_id_events_id_fk": {
+          "name": "event_volunteer_plan_pictures_event_id_events_id_fk",
+          "tableFrom": "event_volunteer_plan_pictures",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "event_volunteer_plan_pictures_media_asset_id_media_assets_id_fk": {
+          "name": "event_volunteer_plan_pictures_media_asset_id_media_assets_id_fk",
+          "tableFrom": "event_volunteer_plan_pictures",
+          "tableTo": "media_assets",
+          "columnsFrom": [
+            "media_asset_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "event_volunteer_plan_pictures_event_asset_unique": {
+          "name": "event_volunteer_plan_pictures_event_asset_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "event_id",
+            "media_asset_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "event_volunteer_plan_pictures_position_positive": {
+          "name": "event_volunteer_plan_pictures_position_positive",
+          "value": "\"event_volunteer_plan_pictures\".\"position\" >= 1"
         }
       },
       "isRLSEnabled": false
