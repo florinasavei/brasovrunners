@@ -7,7 +7,7 @@ import { bibPictureSrc } from "@/modules/registrations/domain/bib-stamp";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
- * «Eticheta pe BIB» (§NNN, amending §948 and §963; the owner, 2026-11-18: «în dreptul fiecăruia vreau un „BIB Label” și să fie
+ * «Eticheta pe BIB» (§975, amending §948 and §963; the owner, 2026-11-18: «în dreptul fiecăruia vreau un „BIB Label” și să fie
  * prenumele by default»; BR-REQ-038-01) — what an elite bib prints where the number goes is decided once, in `bib-elite.ts`: the
  * stored label when there is one, else the default — a registration's first name, a list line's first word. The sheet reads it
  * from there (a drawn test, below); the picture's route and the screens too (`tests/integration/registrations/elite-bib-label.test.ts`).
@@ -25,7 +25,7 @@ async function drawn(run: () => Promise<unknown>): Promise<string[]> {
   }
 }
 
-describe("§NNN the label in force, for both kinds of elite bib", () => {
+describe("§975 the label in force, for both kinds of elite bib", () => {
   it("is a registration's stored label when it has one, else its first name, else the registered name", () => {
     expect(eliteBibName({ eliteBibLabel: "Ana P.", firstName: "Ana", registeredName: "Ana Pop" })).toBe("Ana P.");
     expect(eliteBibName({ eliteBibLabel: "  Ana   Pop  ", firstName: "Ana", registeredName: "Ana Pop" })).toBe("Ana Pop");
@@ -63,7 +63,7 @@ describe("§NNN the label in force, for both kinds of elite bib", () => {
   });
 });
 
-describe("§NNN the sheet prints the label in force", () => {
+describe("§975 the sheet prints the label in force", () => {
   it("draws a registration's label where it has one and its first name where it has none, and a list line's likewise", async () => {
     const rows = [
       { bibNumber: 7, registeredName: "Ana Pop", firstName: "Ana", eliteBibLabel: "Ana P.", elite: true },
@@ -87,7 +87,7 @@ describe("§NNN the sheet prints the label in force", () => {
   }, 30_000);
 });
 
-describe("§NNN the picture's address changes with the label", () => {
+describe("§975 the picture's address changes with the label", () => {
   it("carries a fingerprint of an elite bib's label, never the label itself, and nothing for a bib that is not elite", () => {
     const input = { eventId: "e", registrationId: "r", locale: "ro", stamp: "s" };
     const first = bibPictureSrc({ ...input, elite: true, eliteLabel: "Ana" });

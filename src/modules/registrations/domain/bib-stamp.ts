@@ -34,7 +34,7 @@ export function bibPictureStamp(parts: unknown): string {
 /**
  * The address of one registration's bib picture, stamped with what it is drawn from. `m=1` and `e=1` — a member's bib
  * (§664), an elite one (§897) — are read by nobody: a mark set or cleared is a new address, never the hour-old picture. An elite
- * bib's address carries a stamp of its «Eticheta pe BIB» too (`l=`, §NNN), read by nobody: a label changed is a new address — a
+ * bib's address carries a stamp of its «Eticheta pe BIB» too (`l=`, §975), read by nobody: a label changed is a new address — a
  * fingerprint, never the label itself, which is a person's name and would sit in the host's request log.
  */
 export function bibPictureSrc(input: { eventId: string; registrationId: string; locale: string; stamp: string; member?: boolean; elite?: boolean; eliteLabel?: string }): string {

@@ -70,7 +70,7 @@ async function bibRefusalMessages(label: string) {
 
 /** «Arată numărul»'s glyph: the race number's, asked of `action-icons.ts` by name (§318). */
 const BibIcon = ACTION_ICONS.number;
-/** «Elită și BIB»'s glyph (§NNN): the elite mark's medal, by name. */
+/** «Elită și BIB»'s glyph (§975): the elite mark's medal, by name. */
 const EliteIcon = ACTION_ICONS.elite;
 
 export default async function DeskRow({
@@ -88,7 +88,7 @@ export default async function DeskRow({
 }: {
   row: DeskRegistration;
   /**
-   * Who is looking (§NNN): an Administrator also gets «Elită și BIB» at the row's end; any other role — or none given — gets the
+   * Who is looking (§975): an Administrator also gets «Elită și BIB» at the row's end; any other role — or none given — gets the
    * row as it always was. A drawing decision only: the actions and the services assert the role again.
    */
   role?: StaffRole;
@@ -212,7 +212,7 @@ export default async function DeskRow({
               {row.registeredName}
             </Typography>
             {/*
-              «Elită» and what the bib in the volunteer's hand says (§NNN; the owner, 2026-11-18: «aici trebuie să marchez dacă cineva
+              «Elită» and what the bib in the volunteer's hand says (§975; the owner, 2026-11-18: «aici trebuie să marchez dacă cineva
               e elită și cum apare pe BIB»): every desk role sees them — a name the row already shows, never an address (§15.11).
             */}
             {row.elite && (
@@ -483,7 +483,7 @@ export default async function DeskRow({
         </Stack>
       </Stack>
       {/*
-        «Elită și BIB» (§NNN, amending §897; the owner, 2026-11-18: «aici trebuie să marchez dacă cineva e elită și cum apare pe
+        «Elită și BIB» (§975, amending §897; the owner, 2026-11-18: «aici trebuie să marchez dacă cineva e elită și cum apare pe
         BIB»): the Administrator's alone (`canManageRegistrations`, the elite mark's own gate) — never drawn for another role, and
         the actions and the services refuse one anyway (BR-REQ-060-01). A small fold at the row's end, closed: the desk's own
         buttons stay where they were. Inside, the elite mark's existing verb, posting the state it wants, and while marked the

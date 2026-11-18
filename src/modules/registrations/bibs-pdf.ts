@@ -106,7 +106,7 @@ export type BibSheetRow = {
    * number goes (`bib-elite.ts#eliteBibName`); absent or empty, the registered name. Never drawn on an ordinary bib.
    */
   firstName?: string | null;
-  /** «Eticheta pe BIB» (§NNN), read only for a row drawn as an elite bib: when set, it prints instead of the first name. */
+  /** «Eticheta pe BIB» (§975), read only for a row drawn as an elite bib: when set, it prints instead of the first name. */
   eliteBibLabel?: string | null;
 };
 
@@ -989,7 +989,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const slots = bibSheetSlots(perPage, input.layout);
   /*
     A registration marked «Elită» (§897) is an elite item like a line of the list: its name where the number goes — its
-    «Eticheta pe BIB», the first name by default (§NNN, `eliteBibName`) — its own number under it only as the design ticks — the same drawing, never a second one —
+    «Eticheta pe BIB», the first name by default (§975, `eliteBibName`) — its own number under it only as the design ticks — the same drawing, never a second one —
     and never a member's bib. A row with no name (a desk spare) is never one.
   */
   const eliteOf = (row: BibSheetRow): SheetItem | null =>
@@ -1001,7 +1001,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const pages: BibSheetPage<SheetItem>[] = input.elite
     ? sheetPages(
         [
-          // A line of the list prints its «Eticheta pe BIB», its first word by default (§963, §NNN), as a registration its first name.
+          // A line of the list prints its «Eticheta pe BIB», its first word by default (§963, §975), as a registration its first name.
           ...input.elite.map((entry): SheetItem => ({ kind: "elite", entry: { ...entry, name: eliteLineBibName(entry.name, entry.bibLabel) }, member: false })),
           ...input.rows.map(eliteOf).filter((item): item is SheetItem => item !== null),
         ],

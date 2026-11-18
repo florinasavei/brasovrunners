@@ -10,7 +10,7 @@ import { isUuid } from "@/shared/ids";
 import { eliteDefaultLabel, eliteLineDefaultLabel, parseEliteBibLabel } from "./bib-elite";
 
 /**
- * «Eticheta pe BIB» (§NNN, amending §948; the owner, 2026-11-18, of the elite list: «în dreptul fiecăruia vreau un „BIB Label” și
+ * «Eticheta pe BIB» (§975, amending §948; the owner, 2026-11-18, of the elite list: «în dreptul fiecăruia vreau un „BIB Label” și
  * să fie prenumele by default»): what an elite bib prints where the number goes, typed per line — on a registration marked «Elită»
  * (`registrations.elite_bib_label`) and on a line of the race's elite list (`event_elite_entries.bib_label`). Null is the default,
  * the rule from before: the first name, the line's first word; the label in force is decided once in `bib-elite.ts`.
@@ -35,7 +35,7 @@ function assertMayWrite(actor: Pick<StaffUser, "role">): void {
   }
 }
 
-/** «Eticheta pe BIB» on a registration (§NNN): the Administrator's; see the module's note. */
+/** «Eticheta pe BIB» on a registration (§975): the Administrator's; see the module's note. */
 export async function setRegistrationEliteBibLabel<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Actor,
@@ -60,7 +60,7 @@ export async function setRegistrationEliteBibLabel<T extends Record<string, unkn
   });
 }
 
-/** «Eticheta pe BIB» on a line of the race's elite list (§NNN): the Administrator's; the club's typed text, as the line's name is. */
+/** «Eticheta pe BIB» on a line of the race's elite list (§975): the Administrator's; the club's typed text, as the line's name is. */
 export async function setEliteEntryBibLabel<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Actor,

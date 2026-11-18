@@ -147,7 +147,7 @@ test.describe("§895 «Elită — doar numele pe BIB»", () => {
     expect(sheet.headers()["content-type"]).toBe("application/pdf");
     expect(sheet.headers()["content-disposition"] ?? "").toMatch(/-elite\.pdf/);
 
-    // «Eticheta pe BIB» (§NNN): the line's box holds the first word by default; a label typed and saved from its own small form
+    // «Eticheta pe BIB» (§975): the line's box holds the first word by default; a label typed and saved from its own small form
     // (beside the save form, through `form=`) lands back on the card open, the box holding the label.
     const labelBox = card.getByTestId("bib-elite-entry").getByRole("textbox", { name: /Eticheta pe BIB/ });
     await expect(labelBox).toHaveValue(name.split(" ")[0]);
@@ -239,7 +239,7 @@ test.describe("§895 «Elită — doar numele pe BIB»", () => {
     await expect(card.getByTestId("bib-elite-registered")).toContainText(name);
     await expect(card.getByTestId("bib-elite-registered")).toContainText("cu înscriere");
     await expect(card.getByTestId("bib-elite-registered")).toContainText("nr. 21");
-    // No delete, no mark of its own: the one button on its line saves its «Eticheta pe BIB» (§NNN), the first name by default.
+    // No delete, no mark of its own: the one button on its line saves its «Eticheta pe BIB» (§975), the first name by default.
     await expect(card.getByTestId("bib-elite-registered").getByRole("button")).toHaveCount(1);
     await expect(card.getByTestId("bib-elite-registered").getByRole("button", { name: "Salvează eticheta pe BIB" })).toBeVisible();
     // The ordinary sheet no longer prints them (§963): the card says so, so nobody looks for that bib on it.

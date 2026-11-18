@@ -12,7 +12,7 @@ import { bibTitleWidth } from "./bib-header";
 export type BibEliteEntry = {
   /** The name as stored: trimmed, one space between words, 1 to 80 characters. */
   name: string;
-  /** «Eticheta pe BIB» (§NNN): what prints where the number goes when the club typed one; null or absent, the name's first word. */
+  /** «Eticheta pe BIB» (§975): what prints where the number goes when the club typed one; null or absent, the name's first word. */
   bibLabel?: string | null;
   /** The line's own number, when the club typed one. */
   bibNumber: number | null;
@@ -38,7 +38,7 @@ export function bibEliteParts(design: Pick<BibDesign, "eliteSponsors">): { numbe
 }
 
 /**
- * «Eticheta pe BIB» (§NNN, amending §948 and §963; the owner, 2026-11-18, of the elite list: «vreau să customizez cum apare pe
+ * «Eticheta pe BIB» (§975, amending §948 and §963; the owner, 2026-11-18, of the elite list: «vreau să customizez cum apare pe
  * BIB, dacă pun doar prenume sau cum afișez de fapt. Deci în dreptul fiecăruia vreau un „BIB Label” și să fie prenumele by
  * default»): what an elite bib prints where the number goes is a label per line — the one the Administrator typed, when there
  * is one, and otherwise the default below. Decided here once, for the sheet (`bibs-pdf.ts`), the picture (`bib-image.tsx`,
@@ -60,7 +60,7 @@ export function eliteLineDefaultLabel(name: string): string {
 }
 
 /**
- * The label a line of the race's elite list prints (§NNN): the line's own «Eticheta pe BIB» when the club typed one, else the
+ * The label a line of the race's elite list prints (§975): the line's own «Eticheta pe BIB» when the club typed one, else the
  * name's first word (`eliteLineDefaultLabel`).
  */
 export function eliteLineBibName(name: string, bibLabel?: string | null): string {
@@ -79,7 +79,7 @@ export function eliteDefaultLabel(row: { firstName?: string | null; registeredNa
 }
 
 /**
- * The label a registration marked «Elită» prints (§NNN): its own «Eticheta pe BIB» when the Administrator typed one, else the
+ * The label a registration marked «Elită» prints (§975): its own «Eticheta pe BIB» when the Administrator typed one, else the
  * first name (`eliteDefaultLabel`). A label kept while the mark is off is the same label when the mark comes back.
  */
 export function eliteBibName(row: { eliteBibLabel?: string | null; firstName?: string | null; registeredName: string }): string {
@@ -87,7 +87,7 @@ export function eliteBibName(row: { eliteBibLabel?: string | null; firstName?: s
 }
 
 /**
- * A typed «Eticheta pe BIB», ready to store (§NNN): trimmed, inner spaces collapsed to one — it is printed, and a double space
+ * A typed «Eticheta pe BIB», ready to store (§975): trimmed, inner spaces collapsed to one — it is printed, and a double space
  * would print as a gap. Empty, or the very default the line prints anyway, stores null — back to the default, so a corrected
  * first name is followed again. Longer than `ELITE_NAME_MAX` is refused naming the box (`ELITE_LABEL_TOO_LONG`).
  */

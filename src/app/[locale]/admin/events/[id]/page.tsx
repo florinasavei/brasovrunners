@@ -455,7 +455,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           name: row.name,
           status: row.status,
           bibNumber: row.bibNumber,
-          // «Eticheta pe BIB» (§NNN): the label in force and the first name it falls back to, both decided by `bib-elite.ts`.
+          // «Eticheta pe BIB» (§975): the label in force and the first name it falls back to, both decided by `bib-elite.ts`.
           bibLabel: row.bibLabel,
           defaultLabel: row.defaultLabel,
           printed: eliteSheet?.has(row.id) ?? false,

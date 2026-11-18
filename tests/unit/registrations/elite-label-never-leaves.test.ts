@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { importsModule } from "../../helpers/module-imports";
 
 /**
- * «Eticheta pe BIB» (§NNN; BR-REQ-060-01, BR-REQ-039-01) — a registration's label is the person's data and a list line's is the
+ * «Eticheta pe BIB» (§975; BR-REQ-060-01, BR-REQ-039-01) — a registration's label is the person's data and a list line's is the
  * club's typed text: both reach the elite card, the desk's row, the two bib renderers, the one writer and «Toate datele unei
  * persoane» (which lists every column of a registration), and nothing else — never a public query, an email, the event's file or
  * copy, the registrations' Excel or CSV (which carry no elite mark to stand beside). The structural half of that promise, as
@@ -67,7 +67,7 @@ function functionSource(file: string, name: string): string {
   return next === -1 ? rest : rest.slice(0, next);
 }
 
-describe("§NNN «Eticheta pe BIB» stays with the bib", () => {
+describe("§975 «Eticheta pe BIB» stays with the bib", () => {
   const naming = sourceFiles(SRC).filter((file) => reads(file, readFileSync(file, "utf8")));
 
   it("is named only by the files reviewed to read it", () => {

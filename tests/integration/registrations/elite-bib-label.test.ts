@@ -20,7 +20,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Eticheta pe BIB» (§NNN, amending §948; the owner, 2026-11-18: «în dreptul fiecăruia vreau un „BIB Label” și să fie prenumele by
+ * «Eticheta pe BIB» (§975, amending §948; the owner, 2026-11-18: «în dreptul fiecăruia vreau un „BIB Label” și să fie prenumele by
  * default»; BR-REQ-038-01, BR-REQ-060-01) — the label an elite bib prints where the number goes, on a registration marked «Elită»
  * and on a line of the race's elite list. Null is the default — the first name, the line's first word. The Administrator's alone,
  * asserted in each action and again in the service; trimmed and folded; empty or the default itself back to null; too long refused
@@ -169,7 +169,7 @@ const lineLabelOf = async (id: string) => (await db.select({ label: eventEliteEn
 const trail = () => db.select().from(auditLogs).orderBy(auditLogs.createdAt);
 const deskLabel = async (id: string) => (await listDeskRegistrations(db, { eventId, query: "", locale: "ro" })).find((row) => row.id === id)?.eliteLabel;
 
-describe("§NNN «Eticheta pe BIB» on a registration marked «Elită»", () => {
+describe("§975 «Eticheta pe BIB» on a registration marked «Elită»", () => {
   it("prints the first name while none is typed, the label once typed, and the first name again once cleared or typed back", async () => {
     const admin = await staff("ADMIN");
     const ana = await runner("Ana", "Pop");
@@ -300,7 +300,7 @@ describe("§NNN «Eticheta pe BIB» on a registration marked «Elită»", () => 
   });
 });
 
-describe("§NNN «Eticheta pe BIB» on a line of the race's elite list", () => {
+describe("§975 «Eticheta pe BIB» on a line of the race's elite list", () => {
   it("prints the first word while none is typed, the label once typed, and the first word again once cleared", async () => {
     const admin = await staff("ADMIN");
     const { id } = await addEliteEntry(db, admin, eventId, { name: "Mara Ionescu", bibNumber: "" }, NOW);

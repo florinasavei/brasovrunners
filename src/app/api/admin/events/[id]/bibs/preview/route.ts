@@ -172,7 +172,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     The bib this row prints, by the one rule `bibs.ts#listBibs` prints by (§664, §972; `printsMemberBib`, the SQL
     `PRINTS_MEMBER_BIB`'s twin): the members' when the event's design offers it and the person ticked «Sunt membru al
     grupului» — no account on «Echipa», no second tick. A registration marked «Elită» (§897) draws as the sheet prints
-    it: an elite bib (§895) — its «Eticheta pe BIB», the first name by default, where the number goes (§948, §NNN, `eliteBibName`), its own number under it
+    it: an elite bib (§895) — its «Eticheta pe BIB», the first name by default, where the number goes (§948, §975, `eliteBibName`), its own number under it
     only as the design ticks — and never the members' design, which the rule says too.
   */
   const member = printsMemberBib({ offered: event.design.member.enabled, declared: row.clubMemberDeclared, elite: row.elite });

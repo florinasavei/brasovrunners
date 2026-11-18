@@ -13,7 +13,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (the owner, 2026-11-18, with screenshots: «partea asta cu toți participanții trebuie să fie colapsabilă» · «ce am acum pe
+ * §975 (the owner, 2026-11-18, with screenshots: «partea asta cu toți participanții trebuie să fie colapsabilă» · «ce am acum pe
  * această pagină [Ziua cursei] e de fapt „Prezența” și aici trebuie să marchez dacă cineva e elită și cum apare pe BIB»;
  * BR-REQ-037-08, BR-REQ-060-01) — the screens of «Eticheta pe BIB» and the list's fold:
  *
@@ -204,7 +204,7 @@ async function deskRow(id: string, role: StaffRole) {
 /** The desk's backoffice roles: every one of them works the desk. */
 const DESK_ROLES = STAFF_ROLES.filter((role) => role !== "MEMBER");
 
-describe("§NNN the desk says an elite's bib, and lets the Administrator change it", () => {
+describe("§975 the desk says an elite's bib, and lets the Administrator change it", () => {
   it("puts «Elită» and «Pe BIB: {label}» beside the name of a marked row, for every desk role, and nothing on an unmarked one", async () => {
     const ana = await register("Ana", "Pop", { elite: true });
     const labelled = await register("Dan", "Pop", { elite: true, eliteBibLabel: "Dan cel Iute" });
@@ -265,7 +265,7 @@ describe("§NNN the desk says an elite's bib, and lets the Administrator change 
   });
 });
 
-describe("§NNN «Participanți»: the registrations table in one fold", () => {
+describe("§975 «Participanți»: the registrations table in one fold", () => {
   it("folds the table, its pager and the batch verbs together, open on arrival, the results' count on its closed line", async () => {
     state.actor = await staff("ADMIN");
     await register("Ana", "Pop");

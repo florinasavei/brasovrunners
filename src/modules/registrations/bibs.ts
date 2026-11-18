@@ -839,7 +839,7 @@ export async function listBibs<T extends Record<string, unknown>>(
       bibNumber: registrations.bibNumber,
       registeredName: registrations.registeredName,
       firstName: registrations.firstName,
-      // «Eticheta pe BIB» (§NNN): read by the elite drawing alone, through `bib-elite.ts#eliteBibName`.
+      // «Eticheta pe BIB» (§975): read by the elite drawing alone, through `bib-elite.ts#eliteBibName`.
       eliteBibLabel: registrations.eliteBibLabel,
       /*
         The members' design, by the one rule (§972): offered, ticked, not «Elită» — the mark wins over the members' pile

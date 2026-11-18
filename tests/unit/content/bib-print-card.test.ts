@@ -281,7 +281,7 @@ describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
     expect(closed).not.toMatch(/<details[^>]*data-testid="bib-elite"[^>]*open=""/);
   });
 
-  // §NNN (the owner, 2026-11-18: «în dreptul fiecăruia vreau un „BIB Label” și să fie prenumele by default»).
+  // §975 (the owner, 2026-11-18: «în dreptul fiecăruia vreau un „BIB Label” și să fie prenumele by default»).
   it("gives every line a «Eticheta pe BIB» box filled with the label in force and «Salvează», each posting its own small form", async () => {
     const labelled = { ...elite, entries: [{ ...elite.entries[0], bibLabel: "CAMPIONUL" }, elite.entries[1]] };
     const registered = [{ id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Ana Pop", status: "CONFIRMED" as const, bibNumber: 12, printed: true, bibLabel: "Ana P.", defaultLabel: "Ana", inResults: true, onSite: true }];

@@ -491,7 +491,7 @@ export const registrations = pgTable(
      */
     elite: boolean("elite").notNull().default(false),
     /**
-     * «Eticheta pe BIB» (§NNN, amending §948; the owner, 2026-11-18: «în dreptul fiecăruia vreau un „BIB Label” și să fie
+     * «Eticheta pe BIB» (§975, amending §948; the owner, 2026-11-18: «în dreptul fiecăruia vreau un „BIB Label” și să fie
      * prenumele by default»): what this registration's elite bib prints where the number goes, as the Administrator typed it —
      * trimmed, one space between words, 1 to `ELITE_NAME_MAX` characters. Null is the default, today's rule: the first name
      * (`bib-elite.ts#eliteBibName`, which decides the label once for the sheet, the picture and every screen). Written by the

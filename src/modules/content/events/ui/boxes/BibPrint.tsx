@@ -50,11 +50,11 @@ export function bibEliteTickForm(entryId: string, tick: EliteTickName): string {
 export function bibEliteRegisteredTickForm(registrationId: string, tick: EliteTickName): string {
   return `bib-elite-registered-tick-${tick}-${registrationId}`;
 }
-/** «Eticheta pe BIB» of a line of the separate list (§NNN, `setEliteBibLabelAction`): one small form per line, beside the save form. */
+/** «Eticheta pe BIB» of a line of the separate list (§975, `setEliteBibLabelAction`): one small form per line, beside the save form. */
 export function bibEliteLabelForm(entryId: string): string {
   return `bib-elite-label-${entryId}`;
 }
-/** «Eticheta pe BIB» of a registered runner's line (§NNN). */
+/** «Eticheta pe BIB» of a registered runner's line (§975). */
 export function bibEliteRegisteredLabelForm(registrationId: string): string {
   return `bib-elite-registered-label-${registrationId}`;
 }
@@ -92,7 +92,7 @@ export type EliteTicks = { inResults: boolean; onSite: boolean };
 export type EliteCard = {
   /**
    * The names in the order typed, with the number the club gave each, if any, the line's two ticks (§910) and its «Eticheta pe BIB»
-   * as stored (§NNN; null, the name's first word — `bib-elite.ts#eliteLineBibName` says which prints).
+   * as stored (§975; null, the name's first word — `bib-elite.ts#eliteLineBibName` says which prints).
    */
   entries: ReadonlyArray<{ id: string; name: string; bibNumber: number | null; bibLabel?: string | null } & EliteTicks>;
   /**
@@ -109,7 +109,7 @@ export type EliteCard = {
       status: RegistrationStatus;
       bibNumber: number | null;
       printed: boolean;
-      /** «Eticheta pe BIB» in force and its default, the first name (§NNN, `elite-mark.ts#listEliteMarkedRegistrations`). */
+      /** «Eticheta pe BIB» in force and its default, the first name (§975, `elite-mark.ts#listEliteMarkedRegistrations`). */
       bibLabel: string;
       defaultLabel: string;
     } & EliteTicks
@@ -232,7 +232,7 @@ function EliteTickButtons({
 }
 
 /**
- * «Eticheta pe BIB» on one line (§NNN; the owner, 2026-11-18: «în dreptul fiecăruia vreau un „BIB Label” și să fie prenumele by
+ * «Eticheta pe BIB» on one line (§975; the owner, 2026-11-18: «în dreptul fiecăruia vreau un „BIB Label” și să fie prenumele by
  * default»): the box, filled with the label in force, its placeholder the default, and «Salvează» — both naming the line's own small
  * form (`BibPrintForms`) by `form=`, because the card stands inside the event's save form; a plain form that works without
  * scripts and comes back to this card open. For whoever only reads the card (the Organizer), the label in words: what the bib says.
@@ -313,7 +313,7 @@ async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; m
   const printed = elite.entries.length + printedRegistered;
   const aside = count === 0 ? t("bibs.eliteNone") : t(`bibs.eliteCount.${countForm(count, locale)}`, { count });
   const tickLabels: Record<EliteTickName, string> = { inResults: t("bibs.eliteInResults"), onSite: t("bibs.eliteOnSite") };
-  // «Eticheta pe BIB» (§NNN): the box's words, and the label in words for whoever only reads the card.
+  // «Eticheta pe BIB» (§975): the box's words, and the label in words for whoever only reads the card.
   const labelWords = (label: string) => ({
     label: t("bibs.eliteLabel"),
     help: t("bibs.eliteLabelHelp", { max: ELITE_NAME_MAX }),
@@ -674,7 +674,7 @@ export async function BibPrintForms({
   /** `setRegisteredEliteTickAction` (§910), and the marked registrations it ticks — two small forms each; absent, none. */
   eliteRegisteredTickAction?: ActionFormAction;
   eliteRegistered?: ReadonlyArray<{ id: string; name: string } & EliteTicks>;
-  /** `setEliteBibLabelAction` (§NNN): one small form per line, list line and marked registration alike; absent, none. */
+  /** `setEliteBibLabelAction` (§975): one small form per line, list line and marked registration alike; absent, none. */
   eliteLabelAction?: ActionFormAction;
   cancelLabel: string;
 }) {
@@ -780,7 +780,7 @@ export async function BibPrintForms({
           )),
         )}
       {/*
-        «Eticheta pe BIB» (§NNN): one small form per line, posting the box beside the line (`form=`). It asks nothing (§384): it tells
+        «Eticheta pe BIB» (§975): one small form per line, posting the box beside the line (`form=`). It asks nothing (§384): it tells
         nobody and the same box undoes it.
       */}
       {mayAssign &&

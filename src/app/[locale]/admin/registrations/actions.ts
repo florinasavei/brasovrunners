@@ -677,13 +677,13 @@ export async function setRegistrationEliteAction(_previous: FormOutcome | null, 
     outcome = outcomeOf(error);
   }
   if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome, registrationId);
-  // Pressed on a row of the desk («Elită și BIB», §NNN, amending §897): back to the desk with its event, its search and the row.
+  // Pressed on a row of the desk («Elită și BIB», §975, amending §897): back to the desk with its event, its search and the row.
   if (form.has("back")) return backToDesk(form, locale, registrationId, outcome);
   return backTo(detailPath(locale, registrationId), outcome);
 }
 
 /**
- * «Eticheta pe BIB» on a registration marked «Elită» (§NNN), from the desk's «Elită și BIB»: what its bib prints where the number
+ * «Eticheta pe BIB» on a registration marked «Elită» (§975), from the desk's «Elită și BIB»: what its bib prints where the number
  * goes — empty, or the first name itself, back to the first name. The Administrator's (`canManageRegistrations`, the elite mark's
  * own gate): the coarse gate here, the service asserts it again (BR-REQ-060-01). It asks nothing (§384): it tells nobody and the
  * same box undoes it. A label too long comes back in the row with the box still filled (§315), its sentence naming the limit;

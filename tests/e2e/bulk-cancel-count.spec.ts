@@ -110,7 +110,7 @@ test.describe("§384 the bulk cancel counts the emails it will send", () => {
     await hydrated(page);
     const main = page.locator("#main");
     const tick = (index: number) => main.getByRole("checkbox", { name: `Selectează înscrierea lui Anulat ${tag} ${index}` });
-    // The batch fold's own summary, not the «Participanți» fold around it (§NNN), which holds the same words further down.
+    // The batch fold's own summary, not the «Participanți» fold around it (§975), which holds the same words further down.
     const panel = main.locator("summary", { hasText: "Anulează înscrierile bifate" }).locator("xpath=..");
     await panel.locator(":scope > summary").click();
     const press = () => panel.getByRole("button", { name: "Anulează cele bifate" }).click();

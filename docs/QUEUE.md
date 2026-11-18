@@ -138,6 +138,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.64` | «Eticheta pe BIB» per elite bib, elites at the desk, the participants' table in a fold (§975) |
 | `BR-V4.63` | «Planul voluntarilor» in two views — the points as one table, or each as a fold — with the page's sections folded and the names in bold (§974) |
 | `BR-V4.62` | more room for the name on the volunteers' badges («Spațiul pentru nume», 43–80 %) (§972) · the members' race number for everyone who ticked «Sunt membru», no account and no second question (§973) |
 | `BR-V4.61` | the backoffice uses the whole screen (§970) · «Are kit» in one press on a volunteer's page (§971) |

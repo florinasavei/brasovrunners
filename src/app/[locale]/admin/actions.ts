@@ -1238,7 +1238,7 @@ export async function setRegisteredEliteTickAction(_previous: FormOutcome | null
 }
 
 /**
- * «Eticheta pe BIB» on a line of the elite card (§NNN): a line of the race's list (`entryId`) or a registration marked «Elită»
+ * «Eticheta pe BIB» on a line of the elite card (§975): a line of the race's list (`entryId`) or a registration marked «Elită»
  * (`registrationId`) — what its bib prints where the number goes; empty, or the default itself, back to the default (the first
  * word, the first name). The Administrator's (`canManageRegistrations`), here at the door and again in `elite-label.ts`
  * (BR-REQ-060-01). A plain form a line, posting the box beside it; it asks nothing (§384) — it tells nobody and the same box undoes

@@ -1386,7 +1386,7 @@ export type DeskRegistration = {
   /** «Elită» (§897): the bib prints as an elite bib — part of the picture's address, so a mark is a fresh picture. */
   elite: boolean;
   /**
-   * «Eticheta pe BIB» in force (§NNN, `bib-elite.ts#eliteBibName`): what the elite bib in the volunteer's hand says where the
+   * «Eticheta pe BIB» in force (§975, `bib-elite.ts#eliteBibName`): what the elite bib in the volunteer's hand says where the
    * number goes — the label the Administrator typed, else the first name. Said on the row only while `elite`; a name the row
    * already shows, never an address (`AGENTS.md` §15.11). Part of the picture's address as a fingerprint (`bibPictureSrc`'s `l=`).
    */
@@ -1442,7 +1442,7 @@ const DESK_COLUMNS = {
   raceNumberFormat: RACE_NUMBER_FORMAT,
   bibStamp: BIB_STAMP,
   elite: registrations.elite,
-  // The two halves «Eticheta pe BIB» is decided from (§NNN), read by `deskRowOf` alone and never handed to the row as they are.
+  // The two halves «Eticheta pe BIB» is decided from (§975), read by `deskRowOf` alone and never handed to the row as they are.
   deskFirstName: registrations.firstName,
   deskStoredLabel: registrations.eliteBibLabel,
   // The members' race number (§664), by the one rule (§972): the picture's address carries it, as the bibs page's grid's does.
@@ -1473,7 +1473,7 @@ function deskQuery<T extends Record<string, unknown>>(db: Database<T>, locale: L
 
 type DeskSelected = Awaited<ReturnType<ReturnType<typeof deskQuery>["execute"]>>[number];
 
-/** A desk row as the screen reads it: the elite bib's label decided once, by `bib-elite.ts` (§NNN). */
+/** A desk row as the screen reads it: the elite bib's label decided once, by `bib-elite.ts` (§975). */
 function deskRowOf({ deskFirstName, deskStoredLabel, ...row }: DeskSelected): DeskRegistration {
   const names = { firstName: deskFirstName, registeredName: row.registeredName };
   return { ...row, eliteLabel: eliteBibName({ ...names, eliteBibLabel: deskStoredLabel }), eliteDefaultLabel: eliteDefaultLabel(names) };

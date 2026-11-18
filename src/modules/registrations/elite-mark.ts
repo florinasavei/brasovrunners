@@ -203,7 +203,7 @@ export type EliteMarkedRow = {
   name: string;
   status: RegistrationStatus;
   bibNumber: number | null;
-  /** «Eticheta pe BIB» in force (§NNN, `bib-elite.ts#eliteBibName`): what the bib prints where the number goes. */
+  /** «Eticheta pe BIB» in force (§975, `bib-elite.ts#eliteBibName`): what the bib prints where the number goes. */
   bibLabel: string;
   /** The label it prints with none typed: the first name (`eliteDefaultLabel`). */
   defaultLabel: string;

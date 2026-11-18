@@ -43,7 +43,7 @@ export type EliteEntryRow = {
   eventId: string;
   name: string;
   bibNumber: number | null;
-  /** «Eticheta pe BIB» (§NNN) as stored: null prints the name's first word (`bib-elite.ts#eliteLineBibName`). */
+  /** «Eticheta pe BIB» (§975) as stored: null prints the name's first word (`bib-elite.ts#eliteLineBibName`). */
   bibLabel: string | null;
   /** «Apare în clasament» (§910): false, the line's result runs hors concours. */
   inResults: boolean;

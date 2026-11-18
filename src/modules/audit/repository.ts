@@ -101,7 +101,7 @@ export type AuditAction =
   | "registration.elite_marked"
   | "registration.elite_unmarked"
   /**
-   * «Eticheta pe BIB» (§NNN): an Administrator set, changed or cleared what this registration's elite bib prints where the
+   * «Eticheta pe BIB» (§975): an Administrator set, changed or cleared what this registration's elite bib prints where the
    * number goes. No metadata: the row names the registration alone — never the label, which is a person's name.
    */
   | "registration.elite_bib_label_set"
@@ -643,7 +643,7 @@ export type AuditAction =
   | "event_elite.added"
   | "event_elite.deleted"
   /**
-   * «Eticheta pe BIB» on a line of the race's elite list (§NNN), entity `event`: the label set, changed or cleared. The
+   * «Eticheta pe BIB» on a line of the race's elite list (§975), entity `event`: the label set, changed or cleared. The
    * metadata is the line's id alone (`{ entryId }`) — never the label or the name.
    */
   | "event_elite.bib_label_set"
