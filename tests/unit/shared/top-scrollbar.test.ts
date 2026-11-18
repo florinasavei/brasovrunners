@@ -10,7 +10,7 @@ import { ADMIN_TABLE_SURFACE } from "@/shared/ui/surface";
 import { withClientWords } from "../../helpers/client-words";
 
 /**
- * BR-REQ-041-01, `DECISIONS.md` §NNN — the owner, 2026-11-18, of the volunteers' wide list: «vreau sa pot da scroll intr-un
+ * BR-REQ-041-01, `DECISIONS.md` §977 — the owner, 2026-11-18, of the volunteers' wide list: «vreau sa pot da scroll intr-un
  * tabel si din partea asta de sus, fara sa mai fiu nevoit sa dau scroll pana jos». A backoffice table wider than its frame
  * gets a second scrollbar right above it, kept in step with the frame's own, so it scrolls sideways without going down to
  * its end. The geometry — the bar moving the frame and the frame the bar, in a real browser — is walked in
@@ -88,7 +88,7 @@ function mirrorOf(frame: ReturnType<typeof scroller>, clientWidth: number) {
   });
 }
 
-describe("§NNN the pure part", () => {
+describe("§977 the pure part", () => {
   it("shows the bar only while the frame has more than a pixel past its edge", () => {
     expect(overflowsSideways(1400, 1000)).toBe(true);
     expect(overflowsSideways(1000, 1000)).toBe(false);
@@ -117,7 +117,7 @@ describe("§NNN the pure part", () => {
   });
 });
 
-describe("§NNN watchScrollRow keeps a mirror in step", () => {
+describe("§977 watchScrollRow keeps a mirror in step", () => {
   it("shows the mirror while the frame overflows, as far-reaching as the frame, and hides it when the table fits", () => {
     const frame = scroller(1400, 1000);
     const bar = mirrorOf(frame, 1002);
@@ -231,7 +231,7 @@ describe("§NNN watchScrollRow keeps a mirror in step", () => {
   });
 });
 
-describe("§NNN the bar's look", () => {
+describe("§977 the bar's look", () => {
   it("is nothing until the island shows it, from md up only, and never on paper", () => {
     expect(TOP_SCROLLBAR_SX.display).toBe("none");
     expect(TOP_SCROLLBAR_SX["&[data-shown]"]).toEqual({ display: { xs: "none", md: "block" } });
@@ -354,7 +354,7 @@ function markup() {
   );
 }
 
-describe("§NNN AdminTable draws the bar above its desktop frame", () => {
+describe("§977 AdminTable draws the bar above its desktop frame", () => {
   it("draws one island, hidden from assistive technology and the keyboard, right before the frame it names", () => {
     const html = render();
     const frameId = frameIdFor("volunteers");

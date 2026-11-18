@@ -457,7 +457,7 @@ describe("§683 the members' shop", () => {
     expect(paid.subject).toContain("Comanda ta e plătită");
   });
 
-  it("«Marchează plătită» answered «… fără email» (`sendEmail` off; the design «telling the owner about every email a staff press sends», slice 4, amended by §NNN): paid and audited, and the member is not emailed", async () => {
+  it("«Marchează plătită» answered «… fără email» (`sendEmail` off; the design «telling the owner about every email a staff press sends», slice 4, amended by §976): paid and audited, and the member is not emailed", async () => {
     const product = await createProduct(db, { actor: admin, fields: PRODUCT, now: NOW });
     const placed = await order(member, product.id, (await variantsOf(product.id)).L.id, 1);
     await moveOrderByClub(db, { actor: admin, orderId: placed.id, verb: "pay", now: NOW, sendEmail: false });

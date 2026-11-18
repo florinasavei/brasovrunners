@@ -473,7 +473,7 @@ export type AuditAction =
    */
   | "event.holds_moved_by_window"
   /**
-   * A publication answered «… fără anunț» (§NNN; the design «telling the owner about every email a staff
+   * A publication answered «… fără anunț» (§976; the design «telling the owner about every email a staff
    * press sends», slice 4): the event (the entity) is marked seen for the new-event alert — its `newsletter_sends` row with no
    * recipients — so the job never announces it. `emailSkipped`, never a subscriber. Written only when skipped.
    */
@@ -677,7 +677,7 @@ export type AuditAction =
   | "event.raffle_list_exported"
   // The picture of «Planul voluntarilor» (§952, `volunteers/plan.ts`), entity `event`: uploaded or changed (`set`: the stored
   // picture's id and the one it replaced, null for the first) or taken off (`removed`: the id it was). Ids only — never a
-  // file's name, an address or anything of a person. Since «Poze și hărți» (§NNN, `volunteer-plan.ts`) a plan holds
+  // file's name, an address or anything of a person. Since «Poze și hărți» (§978, `volunteer-plan.ts`) a plan holds
   // several pictures and links: a picture added (`added`) or removed (`removed`) carries the stored picture's id alone, a link
   // added or removed the link's row id alone — never its address or its label. `set` is the release before's, kept for its rows.
   | "event.volunteer_plan_picture_set"
@@ -697,7 +697,7 @@ export type AuditAction =
   | "volunteer_plan.point_added"
   | "volunteer_plan.point_changed"
   | "volunteer_plan.point_removed"
-  // «Lucruri de adus» on «Ziua cursei» (§NNN, `race-day/items.ts`), entity `event`: a thing to bring added, its words changed,
+  // «Lucruri de adus» on «Ziua cursei» (§979, `race-day/items.ts`), entity `event`: a thing to bring added, its words changed,
   // deleted, ticked as brought or unticked. The metadata is the item's id alone — never its words, nor anything of a person.
   | "event.race_day_item_added"
   | "event.race_day_item_edited"
@@ -963,7 +963,7 @@ export type AuditAction =
    */
   | "staff.invitation_sent_now"
   /**
-   * «Adaugă o persoană» answered «… fără invitație» (§NNN; the design «telling the owner about every email a staff
+   * «Adaugă o persoană» answered «… fără invitație» (§976; the design «telling the owner about every email a staff
    * press sends», slice 4): the added row (the entity), `staffUserId`, the invitation's `messageType` and `emailSkipped` —
    * nothing was queued and Zitadel was not asked. Never an address. Written only when skipped.
    */

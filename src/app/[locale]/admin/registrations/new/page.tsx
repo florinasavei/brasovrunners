@@ -119,7 +119,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   // The country of residence's list (§510), the public form's own: named and ordered here.
   const countries = countryOptions(locale, (code) => countryName(code, locale));
   // The free desk spares per event (§444), offered only to the desk — a person on the telephone, entered from the list, is
-  // not standing at a table with a bib: a select of them, the lowest chosen, and the desk's line saying them (§NNN).
+  // not standing at a table with a bib: a select of them, the lowest chosen, and the desk's line saying them (§979).
   const spareLines = fromDesk ? await readSpareLines(getDb(), events.map((event) => event.id)) : {};
   const handedBibSpares: Record<string, HandedBibSpares> = Object.fromEntries(
     Object.entries(spareLines).map(([id, line]) => [id, line.kind === "free" ? { kind: "free", options: line.options } : line]),
@@ -341,7 +341,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               <Typography variant="body2" color="text.secondary">
                 {t("desk.fastTrackHelp")}
               </Typography>
-              {/* The bib handed with the paper (§444): from the desk, a select of the free spares, the lowest chosen (§NNN),
+              {/* The bib handed with the paper (§444): from the desk, a select of the free spares, the lowest chosen (§979),
                   under the desk's line that says them; from the list, the box as before. */}
               <Stack spacing={1.5} sx={{ mt: 1.5 }}>
                 <StaffSparesLine lines={spareWords} />

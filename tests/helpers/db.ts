@@ -135,7 +135,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(shopOrders);
   await db.delete(shopProductVariants);
   await db.delete(shopProducts);
-  // «Poze și hărți» of the volunteers' plan (§NNN): its pictures reference an event and an asset, its links an event —
+  // «Poze și hărți» of the volunteers' plan (§978): its pictures reference an event and an asset, its links an event —
   // both cascade, and are named here before the assets and the events like the other children.
   await db.delete(eventVolunteerPlanPictures);
   await db.delete(eventVolunteerPlanLinks);
@@ -153,7 +153,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(personSessions);
   // An event's own to-dos (§749) cascade from it; deleted first like the translations.
   await db.delete(eventTodos);
-  // «Lucruri de adus» (§NNN) cascade from their event; deleted first like the to-dos.
+  // «Lucruri de adus» (§979) cascade from their event; deleted first like the to-dos.
   await db.delete(eventRaceDayItems);
   // An event's volunteers (§754) cascade from it, and their role is `RESTRICT`: the people first, then the roles.
   // Their internal notes cascade from them; named first like the other children.

@@ -315,7 +315,7 @@ export async function setBibNumberAction(_previous: FormOutcome | null, form: Fo
   return inEmailPress("registrations.setBib", async (press) => {
     const locale = toLocale(form.get("uiLocale"));
     const registrationId = text(form, "registrationId");
-    // The question's answer (slice 4, §NNN): «… fără email», the number is given and the runner is not emailed it.
+    // The question's answer (slice 4, §976): «… fără email», the number is given and the runner is not emailed it.
     const sendEmail = sendEmailOf(form);
 
     try {
@@ -869,7 +869,7 @@ export async function cancelRegistrationAction(_previous: FormOutcome | null, fo
     const locale = toLocale(form.get("uiLocale"));
     const registrationId = text(form, "registrationId");
     const byOrganizer = form.get("refusedByOrganizer") === "on";
-    // The question's answer (slice 4, §NNN): no «… fără email» with the club's refusal, which the service refuses without it.
+    // The question's answer (slice 4, §976): no «… fără email» with the club's refusal, which the service refuses without it.
     const sendEmail = sendEmailOf(form);
 
     try {
@@ -1033,7 +1033,7 @@ export async function bulkCancelRegistrationsAction(form: FormData): Promise<voi
     let test = 0;
     let failed = 0;
     let voided: number[] = [];
-    // The batch's one answer (slice 4, §NNN): «… fără emailuri», nobody ticked is emailed; every freed place is still offered.
+    // The batch's one answer (slice 4, §976): «… fără emailuri», nobody ticked is emailed; every freed place is still offered.
     const sendEmail = sendEmailOf(form);
     try {
       const actor = await requireStaffCapability(canManageRegistrations);
@@ -1416,14 +1416,14 @@ export async function moveReserveEntryAction(_previous: FormOutcome | null, form
  * allocator, the place offered to the first in line — and its person entered on the event's volunteers with the role
  * chosen, confirmed, in one transaction (`volunteers/transform.ts`). The Administrator's alone: the coarse gate here,
  * the service's own assertion again (BR-REQ-060-01). The question names both of the person's emails and ends in
- * «… și trimite emailul» or «… fără email» for the two together (§NNN). A refusal keeps the role chosen and writes nothing; a success lands on the
+ * «… și trimite emailul» or «… fără email» for the two together (§976). A refusal keeps the role chosen and writes nothing; a success lands on the
  * volunteer's own page, where the roles, the agreement and «Modifică» are.
  */
 export async function turnRunnerIntoVolunteerAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   // An email press (`notifications/press.ts`): the cancellation, the role's email and the next in line's offer carry this cause, its id and who pressed.
   return inEmailPress("registrations.toVolunteer", async (press) => {
     const locale = toLocale(form.get("uiLocale"));
-    // The question's answer (slice 4, §NNN): the person's two emails together — never the offer to the next in line.
+    // The question's answer (slice 4, §976): the person's two emails together — never the offer to the next in line.
     const sendEmail = sendEmailOf(form);
     let moved: RunnerToVolunteerResult;
     try {

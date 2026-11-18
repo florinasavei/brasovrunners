@@ -100,7 +100,7 @@ export default async function EmergencySheetPage({ params }: Props) {
         <>
           <Typography variant="body2">{t("emergency.count", { count: rows.length })}</Typography>
           {/* Scrolls sideways on a phone rather than squeezing five columns into 320px; on paper
-              it is the full width of the sheet. A wide screen gets its scrollbar at the top too (§NNN), never on paper. */}
+              it is the full width of the sheet. A wide screen gets its scrollbar at the top too (§977), never on paper. */}
           <Box>
           <TopScrollbar frameId={frameIdFor("emergency")} />
           <Box id={frameIdFor("emergency")} sx={{ overflowX: "auto" }}>

@@ -18,7 +18,7 @@ type Props = {
    * `noMail`; the design «telling the owner about every email a staff press sends», slice 3): the email line, its road
    * and the quieter lines — the club's count, the next in line's offer. A count made from the ticks at the press
    * (`mailCount`: the bulk cancel's ticks exist only in the browser) is summed when the dialog opens. With the email's
-   * two answers (`emailOptOut`, §NNN) the button draws their hidden field beside itself, `on`, and the answer pressed —
+   * two answers (`emailOptOut`, §976) the button draws their hidden field beside itself, `on`, and the answer pressed —
    * «… și trimite emailurile» or «… fără emailuri» — writes `on` or `off` into it before the form is sent.
    */
   mail?: Pick<ConfirmSpec, "email" | "emailCount" | "also" | "road" | "emailOptOut">;
@@ -91,7 +91,7 @@ export default function ConfirmSubmitButton({
 }: Props) {
   const [open, setOpen] = useState<ConfirmSpec | null>(null);
   const anchor = useRef<HTMLButtonElement>(null);
-  // The email's answer's field (§NNN): `on` as drawn and without JavaScript; the answer pressed sets it.
+  // The email's answer's field (§976): `on` as drawn and without JavaScript; the answer pressed sets it.
   const optOut = useRef<HTMLInputElement>(null);
   const Icon = ACTION_ICONS[icon];
   const spec: ConfirmSpec = { title, body, confirmLabel, cancelLabel, ...mail, destructive: color === "error" };

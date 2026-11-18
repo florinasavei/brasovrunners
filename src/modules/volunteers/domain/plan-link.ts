@@ -2,7 +2,7 @@ import { PLAN_LINK_LABEL_MAX, PLAN_LINK_URL_MAX, PLAN_LINKS_MAX, PLAN_PICTURES_M
 import { DomainError } from "@/shared/errors/domain-error";
 
 /*
-  The links of «Poze și hărți» on «Planul voluntarilor» (§NNN; the owner, 2026-11-18: «am facut spre exemplu un google maps
+  The links of «Poze și hărți» on «Planul voluntarilor» (§978; the owner, 2026-11-18: «am facut spre exemplu un google maps
   custom map si vreau sa pot pune url-ul»): what an address must be to stand on the plan, and how the page and the email say
   one. Pure rules, so they are tested without a request; `plan.ts` holds them to what was posted and writes the row.
 */
@@ -45,7 +45,7 @@ export class PlanMapsRefusal extends DomainError {
 const NOT_IN_AN_ADDRESS = /[\s\u0000-\u001f\u007f]/;
 
 /**
- * The address a link is posted with, as it is kept (§NNN): trimmed; required; at most `PLAN_LINK_URL_MAX` characters; read
+ * The address a link is posted with, as it is kept (§978): trimmed; required; at most `PLAN_LINK_URL_MAX` characters; read
  * whole by the platform's own parser (`new URL`); an `https:` or `http:` address only — never `javascript:`, `data:`,
  * `mailto:` or a file — with a host; no space or control character inside. Anything else is refused naming the box.
  */
@@ -65,7 +65,7 @@ export function readPlanLinkUrl(value: unknown): string {
   return url;
 }
 
-/** The label a link is posted with (§NNN): trimmed, at most `PLAN_LINK_LABEL_MAX` characters, one for both languages; none is null. */
+/** The label a link is posted with (§978): trimmed, at most `PLAN_LINK_LABEL_MAX` characters, one for both languages; none is null. */
 export function readPlanLinkLabel(value: unknown): string | null {
   const label = typeof value === "string" ? value.trim() : "";
   if (label === "") return null;
@@ -86,7 +86,7 @@ export function planLinkHost(url: string): string {
 const SHORT_MAX = 48;
 
 /**
- * A link with no label, as the page writes it (§NNN): its host without `www.` and the start of its path —
+ * A link with no label, as the page writes it (§978): its host without `www.` and the start of its path —
  * «google.com/maps/d/viewer» —, cut with an ellipsis past `SHORT_MAX` characters. The whole address is the link's own.
  */
 export function planLinkShort(url: string): string {

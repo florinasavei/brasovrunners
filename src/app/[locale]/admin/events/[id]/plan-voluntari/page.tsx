@@ -102,11 +102,11 @@ const MAP_LINK_SX = { display: "inline-flex", alignItems: "center", ...TAP_TARGE
  */
 const PICTURE_ON_PAPER_MAX_HEIGHT = "17cm";
 
-/** The tallest a picture of «Poze și hărți» is drawn on the screen (§NNN): a row of the grid a laptop takes in at a glance. */
+/** The tallest a picture of «Poze și hărți» is drawn on the screen (§978): a row of the grid a laptop takes in at a glance. */
 const PICTURE_ON_SCREEN_MAX_HEIGHT = 360;
 
 /**
- * The pictures of «Poze și hărți» on the screen (§NNN): a grid of cells at least 260 pixels wide — two or three a row on a
+ * The pictures of «Poze și hărți» on the screen (§978): a grid of cells at least 260 pixels wide — two or three a row on a
  * laptop, one on a phone. On paper a column, one picture after the other, each one piece.
  */
 const PICTURE_GRID_SX = {
@@ -120,7 +120,7 @@ const PICTURE_GRID_SX = {
 } as const;
 
 /**
- * A link of «Poze și hărți» (§NNN): its label in bold, a thumb's 44 pixels tall (BR-REQ-041-01 criterion 6), a long one
+ * A link of «Poze și hărți» (§978): its label in bold, a thumb's 44 pixels tall (BR-REQ-041-01 criterion 6), a long one
  * breaking inside the line rather than widening the page; on paper the words as text, no link's colour or height.
  */
 const LINK_SX = {
@@ -144,8 +144,8 @@ const EditIcon = ACTION_ICONS.edit;
 /**
  * The picture each part of the page wears (§521), by its name in the subjects' table (`panel-glyphs.ts`): the two views — the
  * house's list (the one «Înscrieri» wears) and the pin of a point —, the two groups — the route, and the start and finish
- * line's flag —, each point's pin, «Poze și hărți» above the plan (§NNN), the two folds under it — the add, the email —, and
- * «Fără punct» (§NNN).
+ * line's flag —, each point's pin, «Poze și hărți» above the plan (§978), the two folds under it — the add, the email —, and
+ * «Fără punct» (§978).
  */
 const PART_GLYPH = {
   table: { glyph: "registrations" },
@@ -181,7 +181,7 @@ const OPEN_ON_PAPER = {
 } as const;
 
 /**
- * «Poze și hărți» on paper (§952, §NNN): the pictures and the links alone, open whatever the screen had folded — the fold's
+ * «Poze și hărți» on paper (§952, §978): the pictures and the links alone, open whatever the screen had folded — the fold's
  * frame, its bar and its closed line are left off, so the sheet carries the maps and nothing that builds them — and after the
  * rest of the plan (`order` in the page's flex column), which prints first as it always did: the fold stands first on the
  * screen, where the owner wants the map in sight.
@@ -247,9 +247,9 @@ const PENCIL_FOLD_SX = {
  * and the points with nobody; the house's table (`AdminTable`: a block a point on a phone), printed as a table. «Pe puncte»
  * is the points themselves in two folds, «Pe traseu» and «La start–finish», each point a fold of its own whose bar says its
  * name in bold, its kilometre and how many stand there, and whose body holds where it is, its people with «Scoate», «Pune
- * aici» and the pencil of «Modifică punctul». Both views keep «Poze și hărți» above them (§NNN: the first fold, under the
+ * aici» and the pencil of «Modifică punctul». Both views keep «Poze și hărți» above them (§978: the first fold, under the
  * intro), the two folds under the plan — «Adaugă un punct», «Trimite fiecăruia punctul lui» — and, last, «Fără punct», a
- * fold too since §NNN, whose every person has the point to put them at and «Pune» on their own line; each fold says on its
+ * fold too since §978, whose every person has the point to put them at and «Pune» on their own line; each fold says on its
  * closed line what it holds. Every fold starts closed and opens by itself for what the last press changed — a point and its
  * group (`open=`), the fold a press saved in (`saved=`) — or, «Adaugă un punct», on a plan with no point yet, and «Poze și
  * hărți» whenever it holds something; and every press comes back to the view it was pressed in.
@@ -271,7 +271,7 @@ const PENCIL_FOLD_SX = {
  * none — and «Trimite din nou tuturor», a tick in that question, writes to everybody again.
  *
  * The plan as the organizers drew it (§952; the owner, with a picture of the route and its points numbered on it: «trebui sa
- * pot incarca si planul voluntarilor pe traseu in genul [pozei]» — and since §NNN, 2026-11-18: «Poza planului trebuie sa fie
+ * pot incarca si planul voluntarilor pe traseu in genul [pozei]» — and since §978, 2026-11-18: «Poza planului trebuie sa fie
  * mai sus, si sa pot pune mai multe poze, si link-uri»): «Poze și hărți», up to twelve pictures in a grid, a press opening the
  * whole of one in a new tab, and up to twelve links — a Google My Maps map, for instance — each opening in a new tab; on paper
  * after the rest of the plan, each picture in one piece and each link with its whole address. Added and taken off here by the
@@ -438,7 +438,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
     placed: t(`volunteers.plan.table.placed.${countForm(placed, locale)}`, { count: placed }),
     empty: counted("empty", empty),
   });
-  // Who is offered the controls of «Poze și hărți» (§952, §NNN): whoever works the volunteers — the actions and the service ask again.
+  // Who is offered the controls of «Poze și hărți» (§952, §978): whoever works the volunteers — the actions and the service ask again.
   const mayChangeMaps = canManageVolunteers(actor.role);
   // Whether this environment can take a picture at all (`STORAGE_MODE`): without a store the page says so and offers no upload.
   const storeHere = isStorageConfigured();
@@ -888,7 +888,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   );
 
   /*
-    «Poze și hărți» (§NNN, amending §952 and §974; the owner, 2026-11-18: «Poza planului trebuie sa fie mai sus, si sa pot pune
+    «Poze și hărți» (§978, amending §952 and §974; the owner, 2026-11-18: «Poza planului trebuie sa fie mai sus, si sa pot pune
     mai multe poze, si link-uri, am facut spre exemplu un google maps custom map si vreau sa pot pune url-ul»): the plan as the
     organizers drew it — its pictures and its links —, the first fold of the page in both views, right under the intro and
     above the views' tabs, OPEN whenever it holds something (the owner wants the map high and in sight), shut while empty, and
@@ -1283,7 +1283,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
         )}
       </Box>
 
-      {/* «Fără punct» (§949; a fold since §NNN, amending §974 — the owner, 2026-11-18: «aici eu vreau sa pot asigna voluntari la
+      {/* «Fără punct» (§949; a fold since §978, amending §974 — the owner, 2026-11-18: «aici eu vreau sa pot asigna voluntari la
           punct direct de aici: Si sectiunea trebuie sa fie collapsible»): everybody at no point, last in both views. Closed as
           every fold of the page, its closed line how many stand at no point, and open after a press made in it (`saved=`). On
           each person's line, while the plan has a point, the point to put them at — a native select, as «Pune aici»'s: it

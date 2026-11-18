@@ -262,7 +262,7 @@ export async function moveShopOrderAction(_previous: FormOutcome | null, form: F
     const posted = text(form, "verb");
     const verb: OrderVerb = posted === "pay" ? "pay" : posted === "handOver" ? "handOver" : "cancel";
     const orderId = text(form, "orderId");
-    // «Marchează plătită»'s answer (slice 4, §NNN): «… fără email» `off`; the other two verbs offer none and send nothing.
+    // «Marchează plătită»'s answer (slice 4, §976): «… fără email» `off`; the other two verbs offer none and send nothing.
     const sendEmail = sendEmailOf(form);
     let outcome: { error?: string; saved?: string; mailSkipped?: string };
     try {

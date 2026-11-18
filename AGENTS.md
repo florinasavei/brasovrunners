@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.64-2026-11-18 -->
+<!-- PROJECT_BASELINE: BR-V4.65-2026-11-18 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.64-2026-11-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.65-2026-11-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2376,7 +2376,7 @@ whose change sends at the job's pass — say it in a `shared/feedback/MailLine.t
 no click. `tests/unit/shared/emailing-presses.test.ts` follows every posting of every emailing press, handed-down props
 included, and fails one that says nothing.
 
-**«… și trimite emailul» / «… fără email»** (`DECISIONS.md` §912, §NNN). A press whose person's email may sensibly stay
+**«… și trimite emailul» / «… fără email»** (`DECISIONS.md` §912, §976). A press whose person's email may sensibly stay
 unsent lets the reader choose at every press: in its question, two answers in place of the one confirm — the contained
 «{action} și trimite emailul» and the outlined «{action} fără email» (`ConfirmSpec.emailOptOut`, worded by the builder's
 `optOut`, plural for a counted press; Enter answers neither; the form carries a hidden `sendEmail` drawn `on`, and the
@@ -3556,7 +3556,7 @@ Everything the message says is read at the send: the event and its day, the poin
 order, its name, its kilometre and its note, the roles given and what they ask in the sentence the role's own
 message uses (nothing about roles when none is given), the contact person of the roles' category (§774), the
 plan's pictures — each shown once and linked to the whole of it in both halves — and its links (`DECISIONS.md`
-§NNN) when the plan has some, and the
+§978) when the plan has some, and the
 event's page. It names no other volunteer and no telephone number but that contact's. The renderer withdraws
 it for a person cancelled or deleted, with no address or another address, at no point or at another point than
 the one queued (moved, taken off, the point deleted), and for an older round that still waited when a newer one
@@ -3887,7 +3887,7 @@ route and its volunteers' points numbered on it: «trebui sa pot incarca si plan
 event's points, each with the volunteers who stand at it (`event_volunteers.checkpoint_id`) — the organizers' own, for
 whoever works the volunteers (`canManageVolunteers`: the Organizer and the Administrators), built and printed on its
 page. Its pictures and links are the plan as the organizers drew it — the map with the points on it, a Google My Maps
-map of their own — and live with the plan («Poze și hărți», `DECISIONS.md` §NNN, amending §952's one picture; the owner,
+map of their own — and live with the plan («Poze și hărți», `DECISIONS.md` §978, amending §952's one picture; the owner,
 2026-11-18: «Poza planului trebuie sa fie mai sus, si sa pot pune mai multe poze, si link-uri»):
 
 - **The points are of two kinds, and the plan has points of its own** (`DECISIONS.md` §961; the owner, 2026-11-17:
@@ -3966,7 +3966,7 @@ map of their own — and live with the plan («Poze și hărți», `DECISIONS.md
   a table, and `tests/unit/volunteers/plan-picture-never-leaves.test.ts` holds the list of files that may name the
   tables or the column; a new reader is a reviewed edit of that list. As for every stored picture, the object itself is
   public behind an unguessable key (§66), and the pictures page shows it to the roles that read that page.
-- **«Fără punct» is a fold too** (`DECISIONS.md` §NNN, amending §949 and §974; the owner, 2026-11-18: «aici eu vreau sa
+- **«Fără punct» is a fold too** (`DECISIONS.md` §978, amending §949 and §974; the owner, 2026-11-18: «aici eu vreau sa
   pot asigna voluntari la punct direct de aici»): last in both views, closed until a press made in it, its closed line
   how many stand at no point, printed open. Each person's line carries, while the plan has a point, a native select of
   the plan's points — «Pe traseu» numbered with its kilometre, then «La start–finish» — and «Pune», which posts the same

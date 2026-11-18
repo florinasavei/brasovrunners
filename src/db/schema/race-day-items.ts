@@ -4,7 +4,7 @@ import { events } from "./events";
 import { staffUsers } from "./staff-users";
 
 /**
- * «Lucruri de adus» (§NNN; the owner, 2026-11-18: «un alt tab pentru ziua cursei unde sa bifam "lucruri de adus" un fel de
+ * «Lucruri de adus» (§979; the owner, 2026-11-18: «un alt tab pentru ziua cursei unde sa bifam "lucruri de adus" un fel de
  * inventar, unde sa punem: prelungitoare, markere, etc»): one event's checklist of the things the organizers bring to the
  * race, ticked on race day from «Ziua cursei».
  *

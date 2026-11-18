@@ -81,11 +81,11 @@ describe("§384 ActionForm asks first", () => {
     expect(dialog).toMatch(/const mayConfirm = !spec\.tick \|\| ticked;/);
     expect(dialog).toMatch(/if \(mayConfirm\) confirm\(\);/);
     expect(dialog).toMatch(/onClick=\{confirm\}\s*disabled=\{!mayConfirm\}/);
-    // Both of the email's answers wait for it too (§NNN).
+    // Both of the email's answers wait for it too (§976).
     expect(dialog).toMatch(/onClick=\{confirmWithoutEmail\}\s*disabled=\{!mayConfirm\}/);
   });
 
-  it("posts the email's choice `on` unless this press's question was answered «… fără email» (the design «telling the owner about every email a staff press sends», slice 4; §NNN)", () => {
+  it("posts the email's choice `on` unless this press's question was answered «… fără email» (the design «telling the owner about every email a staff press sends», slice 4; §976)", () => {
     // Drawn `on` — as posted without JavaScript, which asks nothing — one hidden input per field the form's questions offer.
     expect(source).toMatch(/const optOutFields = useMemo\(\(\) => emailOptOutFields\(confirm\), \[confirm\]\);/);
     expect(source).toMatch(/\{optOutFields\.map\(\(field\) => \(\s*<input key=\{field\} type="hidden" name=\{field\} defaultValue="on" \/>/);

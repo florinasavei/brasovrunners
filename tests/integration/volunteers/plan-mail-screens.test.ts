@@ -242,7 +242,7 @@ describe("§956 the plan's page: «Trimite fiecăruia punctul lui» and its four
     expect(question.destructive).toBeUndefined();
   });
 
-  it("says the pictures and links go with it when the plan has some (§NNN)", async () => {
+  it("says the pictures and links go with it when the plan has some (§978)", async () => {
     expect((await questionOf())!.body).toBe(ro.Admin.volunteers.plan.mail.confirmBody);
     const [stored] = await db
       .insert(mediaAssets)

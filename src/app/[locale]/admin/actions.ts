@@ -567,7 +567,7 @@ export async function transitionEventAction(_previous: FormOutcome | null, form:
   let outcome: { error?: string; saved?: string };
   // What the toast adds about the new-event alert (`alertOutcome`); the page's banner never reads it.
   let alert: { alert?: "later" | "skipped" } = {};
-  // «Publică»'s two answers (the design «telling the owner about every email a staff press sends», slice 4, §NNN):
+  // «Publică»'s two answers (the design «telling the owner about every email a staff press sends», slice 4, §976):
   // «… fără anunț», the event goes live and the job never announces it. Offered only while an alert would go.
   const announce = sendEmailOf(form);
   try {
@@ -670,7 +670,7 @@ export async function bulkPublishEventsAction(form: FormData): Promise<void> {
 
   let published = 0;
   let failed = 0;
-  // One answer for the batch (slice 4, §NNN): «… fără anunț», none of the events published is ever announced.
+  // One answer for the batch (slice 4, §976): «… fără anunț», none of the events published is ever announced.
   const announce = sendEmailOf(form);
   try {
     const actor = await requireStaff();
@@ -921,7 +921,7 @@ export async function createEventAction(_previous: FormOutcome | null, form: For
   let outcome: { saved: string; created?: string; notPublished?: string };
   let alert: { alert?: "later" | "skipped" } = {};
   let createdId: string;
-  // «Creează și publică»'s answer (slice 4, §NNN): «… fără anunț», the new event is never announced.
+  // «Creează și publică»'s answer (slice 4, §976): «… fără anunț», the new event is never announced.
   const announce = sendEmailOf(form);
   try {
     const actor = await requireStaff();
@@ -1517,7 +1517,7 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
 
     let outcome: Record<string, string | undefined>;
     let toast: Record<string, string | undefined>;
-    // The question's answer (slice 4, §NNN): «Adaugă fără invitație», the row is added and nobody is written to — neither
+    // The question's answer (slice 4, §976): «Adaugă fără invitație», the row is added and nobody is written to — neither
     // the club's invitation nor Zitadel's account and its password email; «Retrimite invitația» sends both later.
     const sendEmail = sendEmailOf(form);
     try {
@@ -1587,7 +1587,7 @@ export async function inviteMembersAction(_previous: FormOutcome | null, form: F
 
     let outcome: Record<string, string | undefined>;
     let toast: Record<string, string | undefined>;
-    // The question's answer (slice 4, §NNN): «Adaugă membrii fără invitații», the members are added and nobody is written to —
+    // The question's answer (slice 4, §976): «Adaugă membrii fără invitații», the members are added and nobody is written to —
     // no invitation queued, no Zitadel account asked for; «Retrimite invitația» on each row sends both later.
     const sendEmail = sendEmailOf(form);
     try {

@@ -37,7 +37,7 @@ import { PLAN_CONTACT_WORDS, PLAN_JUNCTION_NOTE, type PlanRace, planAddressOf, p
  * - **the trail:** one row a press — the event, the counts, whether «din nou tuturor» — never a person;
  * - **the message**, in both languages: the event and its day, the point's number, name, kilometre and note, the roles given
  *   and what they ask in the role message's own sentences (nothing about roles when none was given), the category's contact
- *   person, the plan's pictures shown and linked and its links (§NNN) when there are some, the event's page from `APP_BASE_URL` — and no other
+ *   person, the plan's pictures shown and linked and its links (§978) when there are some, the event's page from `APP_BASE_URL` — and no other
  *   volunteer's name or telephone number;
  * - **the state at the send:** withdrawn for a person cancelled or deleted, with no address or another one, at no point or
  *   at another point, for a point gone from the route, and for an older telling that still waited when a newer one was queued;
@@ -527,7 +527,7 @@ describe("§956 the message «Punctul tău de voluntar»", () => {
     // The picture's address is the store's own, never a hostname written in the code.
     expect(picture!.displayUrl).toMatch(/\/1280w\.webp$/);
 
-    // A second picture (§NNN): both, in the plan's order, each drawn once; one narrower than the message's column is drawn at its own width.
+    // A second picture (§978): both, in the plan's order, each drawn once; one narrower than the message's column is drawn at its own width.
     const small = await storedPicture(400, 300);
     await addVolunteerPlanPicture(db, staff.MODERATOR!, { eventId: race.raceId, assetId: small.id }, at(2));
     const two = await render(row);
@@ -535,7 +535,7 @@ describe("§956 the message «Punctul tău de voluntar»", () => {
     expect(two.html).toContain("Deschide poza 1 din 2 a planului (întreagă)");
     expect(two.html).toContain("Open picture 2 of 2 of the plan (the whole of it)");
 
-    // A link of the plan (§NNN), read at the send too: in both halves, its label; the plain text writes the address.
+    // A link of the plan (§978), read at the send too: in both halves, its label; the plain text writes the address.
     await addVolunteerPlanLink(db, staff.MODERATOR!, { eventId: race.raceId, url: "https://maps.example.test/d/viewer?mid=plan", label: "Harta voluntarilor" }, at(3));
     const withLink = await render(row);
     expect(withLink.html.match(/data-email-part="volunteer-plan-links"/g)).toHaveLength(2);

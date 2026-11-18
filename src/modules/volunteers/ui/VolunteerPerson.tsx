@@ -369,7 +369,7 @@ export function VolunteerStateForm({
           ariaLabel={named}
           title={t("volunteers.reopenTitle", { name: shortText(person.name) })}
           body={t("volunteers.reopenBody", { name: shortText(person.name) })}
-          // «… fără email» (slice 4, §NNN): a person reopened may be told their roles by the organizers instead.
+          // «… fără email» (slice 4, §976): a person reopened may be told their roles by the organizers instead.
           mail={words.mail({
             to: { name: person.name, address: person.email },
             type: "VOLUNTEER_ROLE_ASSIGNED",

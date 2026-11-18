@@ -263,7 +263,7 @@ describe("§948 BR-REQ-037-03 «Transformă în voluntar»: the fold on the regi
     expect(also).toContainEqual({ text: "Apoi încă 1 email către aceeași persoană: „Rolul tău de voluntar”." });
     // The next in line's offer is theirs, whatever the box says.
     expect(also).toContainEqual({ text: ro.Admin.confirm.mail.nextInLineMaybe });
-    // Two answers (§NNN): «… și trimite emailul» / «… fără email», each the press's own verb filled in by the dialog.
+    // Two answers (§976): «… și trimite emailul» / «… fără email», each the press's own verb filled in by the dialog.
     expect(confirm.emailOptOut).toMatchObject({ field: "sendEmail", sendLabel: ro.Admin.confirm.mail.sendButton, skipLabel: ro.Admin.confirm.mail.skipButton });
 
     expect(hiddenOf(form)).toEqual({ uiLocale: "ro", registrationId: "11111111-1111-4111-8111-111111111111" });

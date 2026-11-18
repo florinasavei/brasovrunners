@@ -16,7 +16,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { drawnOpen, elementWith, type PlanRace, seedPlanRace } from "../../helpers/volunteer-plan";
 
 /**
- * §NNN, amending §949 and §974, BR-REQ-041-01, BR-REQ-060-01 — «Fără punct» on «Planul voluntarilor» (the owner, 2026-11-18:
+ * §978, amending §949 and §974, BR-REQ-041-01, BR-REQ-060-01 — «Fără punct» on «Planul voluntarilor» (the owner, 2026-11-18:
  * «aici eu vreau sa pot asigna voluntari la punct direct de aici: Si sectiunea trebuie sa fie collapsible»):
  *
  * - a fold (`plan-unplaced`), last in both views, closed as every fold of the page, its closed line how many stand at no
@@ -156,7 +156,7 @@ async function press(fields: Record<string, string>): Promise<string> {
 }
 const checkpointOf = async (id: string) => (await db.select({ checkpointId: eventVolunteers.checkpointId }).from(eventVolunteers).where(eq(eventVolunteers.id, id)))[0].checkpointId;
 
-describe("§NNN «Fără punct» is a fold", () => {
+describe("§978 «Fără punct» is a fold", () => {
   it("is last in both views, closed, its closed line how many stand at no point — and open after a press made in it", async () => {
     for (const view of ["table", "points"]) {
       const page = await planPage({ view });
@@ -195,7 +195,7 @@ describe("§NNN «Fără punct» is a fold", () => {
   });
 });
 
-describe("§NNN each person at no point has the point to put them at, and «Pune»", () => {
+describe("§978 each person at no point has the point to put them at, and «Pune»", () => {
   it("posts «Pune aici»'s own action with the person, `at=unplaced` and a required native select of the plan's points, grouped", async () => {
     const page = await planPage();
     const lines = linesOf(unplacedOf(page));

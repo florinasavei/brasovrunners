@@ -93,10 +93,10 @@ import ColumnWidthsScript from "./ColumnWidthsScript";
  * on (`ADMIN_TABLE_SURFACE`: the page, or the card a `Panel` or a fold says it is), then the row's
  * own fill again (the heading's, a lead row's, the hover's). While columns lie under it, its left
  * edge fades into them: the frame's one watcher — `watchScrollRow`, the chips rows' own, run by the
- * `TopScrollbar` island above the frame (§NNN, below) — keeps `data-more-end` on it, so a table that
+ * `TopScrollbar` island above the frame (§977, below) — keeps `data-more-end` on it, so a table that
  * fits wears no edge at all.
  *
- * ## A scrollbar at the top too (§NNN)
+ * ## A scrollbar at the top too (§977)
  *
  * The owner, 2026-11-18, of the volunteers' list: «vreau sa pot da scroll intr-un tabel si din partea asta de sus, fara
  * sa mai fiu nevoit sa dau scroll pana jos». The frame's own scrollbar is at its bottom, and a long list puts that a page
@@ -436,7 +436,7 @@ export default function AdminTable<Row>({
 
   return (
     <Stack spacing={2} sx={printable ? CONTROLS_OFF_PAPER : undefined}>
-      {/* The wide table's box (§NNN): its second scrollbar, sticky inside it, then its frame — not re-indented, so the diff stays the frame's. */}
+      {/* The wide table's box (§977): its second scrollbar, sticky inside it, then its frame — not re-indented, so the diff stays the frame's. */}
       <Box sx={{ display: { xs: "none", md: "block" }, ...(printable ? WIDE_ON_PAPER : {}) }}>
       <TopScrollbar frameId={frameId} />
       <Box

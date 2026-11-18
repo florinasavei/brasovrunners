@@ -120,7 +120,7 @@ export default async function SiteHeader() {
     <>
     <Box
       component="header"
-      // The one sticky part above every page: a backoffice table's top scrollbar sticks right under it, at its real height (§NNN).
+      // The one sticky part above every page: a backoffice table's top scrollbar sticks right under it, at its real height (§977).
       data-sticky-header=""
       sx={{
         borderBottom: 1,

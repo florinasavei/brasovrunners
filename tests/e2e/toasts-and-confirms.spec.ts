@@ -12,7 +12,7 @@ import { deleteSubscriber, seedConfirmedSubscriber } from "./support/newsletter"
  * the end, through the dialog that asks): the create lands with its toast, which goes by itself;
  * a draft save toasts and asks nothing; "send for review" toasts and asks nothing; "publish"
  * asks — the safe button has the focus, Escape leaves the event as it was; with a subscriber of its own to tell, the
- * question ends in two answers (§NNN), Enter answers neither, and «Publică fără anunț» publishes it untold —
+ * question ends in two answers (§976), Enter answers neither, and «Publică fără anunț» publishes it untold —
  * and toasts; "take off the site" is destructive: Enter
  * on the focused cancel closes it and changes nothing, the backdrop cancels too, and only its red
  * button goes through. The toast never covers the primary button (measured at 320 px), has a
@@ -142,7 +142,7 @@ test.describe("§384 toasts and confirmations", () => {
     await expect(publish).toBeVisible();
     await expect(publish.getByTestId("confirm-dialog-cancel")).toBeFocused();
     // No person's email: the press writes to nobody itself — the new-event alert is the job's, later, and the question ends
-    // in its two answers (§NNN), for the subscriber this spec seeded.
+    // in its two answers (§976), for the subscriber this spec seeded.
     await expect(publish.getByTestId("confirm-email")).toHaveCount(0);
     await expect(publish.getByTestId("confirm-dialog-confirm")).toHaveText("Publică și anunță abonații");
     await expect(publish.getByTestId("confirm-dialog-skip-email")).toHaveText("Publică fără anunț");
@@ -151,7 +151,7 @@ test.describe("§384 toasts and confirmations", () => {
     await expect(page.getByText("În verificare", { exact: true })).toBeVisible();
     await expect(page.getByText("Publicat", { exact: true })).toHaveCount(0);
 
-    // Asked again, Enter answers neither of the two (§NNN): it reaches the focused «Renunță», and the event stays in review.
+    // Asked again, Enter answers neither of the two (§976): it reaches the focused «Renunță», and the event stays in review.
     await page.getByRole("button", { name: "Publică" }).click();
     await expect(publish).toBeVisible();
     await page.keyboard.press("Enter");

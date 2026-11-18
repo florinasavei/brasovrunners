@@ -20,7 +20,7 @@ const TAB_GLYPH = {
 } as const satisfies Record<RaceDayTab, { glyph: PanelGlyphName }>;
 
 /**
- * «Ziua cursei»'s three tabs (§NNN; the owner, 2026-11-18: «Pentru "Ziua Cursei" vreau un tab pentru "Clasament", ce am acum
+ * «Ziua cursei»'s three tabs (§979; the owner, 2026-11-18: «Pentru "Ziua Cursei" vreau un tab pentru "Clasament", ce am acum
  * pe aceasta pagina e de fapt "Prezenta"», and «un alt tab pentru ziua cursei unde sa bifam "lucruri de adus"»): «Prezența» —
  * the desk as it was —, «Clasament» — the chosen event's results (§808) — and «Lucruri de adus», the event's checklist.
  *

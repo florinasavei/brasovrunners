@@ -14,7 +14,7 @@ import Panel from "@/shared/ui/Panel";
  * one form — the role the person takes, chosen from the event's own, and the button. The press asks first, naming both
  * emails the person gets («Înscriere anulată», then «Rolul tău de voluntar»), the freed place's offer to the first in
  * line, a printed bib that goes void, and ends in two answers, «… și trimite emailul» or «… fără email», for the person's
- * two together (§NNN).
+ * two together (§976).
  *
  * An event with no role yet says so and links its «Voluntari» card: a volunteer is entered with a role, and the
  * service refuses without one. Presentation only: the page draws it for a role that may manage registrations and a

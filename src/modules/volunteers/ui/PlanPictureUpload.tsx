@@ -13,7 +13,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 /** The island's words, translated on the server and handed over as strings (AGENTS.md §14.5). */
 export type PlanPictureUploadLabels = {
-  /** «Adaugă o poză»: the button, whatever the plan already holds — a picture uploaded goes last (§NNN). */
+  /** «Adaugă o poză»: the button, whatever the plan already holds — a picture uploaded goes last (§978). */
   upload: string;
   /** «Se încarcă…», while the file goes up. */
   uploading: string;
@@ -39,7 +39,7 @@ type Props = {
 
 /**
  * «Adaugă o poză» in «Poze și hărți» on «Planul voluntarilor» (§952; the owner, 2026-11-16: «trebui sa pot incarca si
- * planul voluntarilor pe traseu in genul [pozei]» — and since §NNN, 2026-11-18: «sa pot pune mai multe poze»): the plan as the
+ * planul voluntarilor pe traseu in genul [pozei]» — and since §978, 2026-11-18: «sa pot pune mai multe poze»): the plan as the
  * organizers drew it, uploaded where the plan is, one picture after another, each going last.
  *
  * An island for the one thing the server cannot do — send a file chosen on this device through the backoffice's one upload

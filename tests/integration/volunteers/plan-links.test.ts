@@ -19,7 +19,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { drawnOpen, elementWith } from "../../helpers/volunteer-plan";
 
 /**
- * §NNN «Poze și hărți», BR-REQ-060-01 — the links of «Planul voluntarilor» (the owner, 2026-11-18: «am facut spre exemplu un
+ * §978 «Poze și hărți», BR-REQ-060-01 — the links of «Planul voluntarilor» (the owner, 2026-11-18: «am facut spre exemplu un
  * google maps custom map si vreau sa pot pune url-ul»), from a real database:
  *
  * - whoever works the volunteers adds an address — `https:` or `http:` only, read whole, at most 2 000 characters — with an
@@ -212,7 +212,7 @@ async function addPress(fields: Record<string, string>): Promise<FormOutcome | s
 const toasted = () => state.flashed.map((value) => decodeFlash(value)?.key);
 const back = (view = "table") => `/ro/admin/events/${raceId}/plan-voluntari?view=${view}&saved=planMaps#plan-maps`;
 
-describe("§NNN the plan's links: added, each last, and taken off", () => {
+describe("§978 the plan's links: added, each last, and taken off", () => {
   it("lets the Organizer add an address with a label, audited with the link's id alone, and moves nothing of the event", async () => {
     const [before] = await db.select().from(events).where(eq(events.id, raceId));
     expect(await addLink(staff.MODERATOR!, `  ${MY_MAP}  `, "  Harta voluntarilor  ")).toEqual({ changed: true });
@@ -307,7 +307,7 @@ describe("§NNN the plan's links: added, each last, and taken off", () => {
   });
 });
 
-describe("§NNN the page's presses: «Adaugă linkul», «Șterge linkul»", () => {
+describe("§978 the page's presses: «Adaugă linkul», «Șterge linkul»", () => {
   it("adds a link and comes back to the fold, open; takes it off; says what happened each time", async () => {
     expect(await addPress({ url: MY_MAP, label: "Harta voluntarilor" })).toBe(back());
     expect(toasted()).toEqual(["planLinkAdded"]);
@@ -349,7 +349,7 @@ describe("§NNN the page's presses: «Adaugă linkul», «Șterge linkul»", () 
   });
 });
 
-describe("§NNN «Poze și hărți» draws the links", () => {
+describe("§978 «Poze și hărți» draws the links", () => {
   it("draws each link in bold, opening in a new tab, its host after it, with «Șterge linkul», and the fold open", async () => {
     await addLink(staff.ADMIN!, MY_MAP, "Harta voluntarilor");
     await addLink(staff.ADMIN!, "https://traseu.example.test/harti/2026/crosul-de-toamna-varianta-lunga-cu-puncte.pdf");

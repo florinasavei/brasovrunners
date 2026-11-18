@@ -16,7 +16,7 @@ export async function confirmDialog(page: Page, name?: string | RegExp): Promise
 }
 
 /**
- * The same dialog answered «… fără email» (§NNN): a question that may send the person their email ends in two answers,
+ * The same dialog answered «… fără email» (§976): a question that may send the person their email ends in two answers,
  * and this presses the outlined one — the same press, the person's email kept back. `confirmDialog` presses the other,
  * «… și trimite emailul».
  */

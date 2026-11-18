@@ -58,9 +58,9 @@ function partsOf(html: string) {
   const plain = plainOf(html);
   return {
     root: classesIn(/<div class="[^"]*MuiStack-root[^"]*"/.exec(plain)![0]),
-    // The frame carries its address since §NNN (the bar above it finds it by it): any attributes, the table right inside.
+    // The frame carries its address since §977 (the bar above it finds it by it): any attributes, the table right inside.
     wide: classesIn(/<div[^>]*class="[^"]*"[^>]*><table/.exec(plain)![0]),
-    // The box that holds the frame and its scrollbar at the top (§NNN), and that bar.
+    // The box that holds the frame and its scrollbar at the top (§977), and that bar.
     box: classesIn(/<div class="[^"]*"><div[^>]*data-top-scrollbar=/.exec(plain)![0]),
     bar: classesIn(/<div[^>]*data-top-scrollbar=[^>]*>/.exec(plain)![0]),
     blocks: classesIn(/<ul class="[^"]*MuiStack-root[^"]*"/.exec(plain)![0]),
@@ -95,7 +95,7 @@ describe("§974 a table on paper", () => {
     const css = cssOf(html);
     const { root, wide, blocks, hints, box, bar } = partsOf(html);
 
-    // The box around the frame is drawn on paper as the frame is (§NNN); the scrollbar at its top never is.
+    // The box around the frame is drawn on paper as the frame is (§977); the scrollbar at its top never is.
     expect(printOf(css, box)).toMatch(/display:block/);
     expect(printOf(css, bar)).toMatch(/display:none/);
     // The wide frame: hidden under `md` on a screen, drawn on paper — the print rule after the screen's.

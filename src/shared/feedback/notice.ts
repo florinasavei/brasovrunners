@@ -412,7 +412,7 @@ export type ConfirmSpec = {
   /** Lines under the body, one fact each, drawn as a list: a resolved `placeChanges`. */
   lines?: readonly string[];
   /**
-   * The email as a choice made at every press (§NNN, amending slice 4 of the design «telling the owner about every email a
+   * The email as a choice made at every press (§976, amending slice 4 of the design «telling the owner about every email a
    * staff press sends»; the owner, 2026-11-18: «vreau mereu sa confirm daca trimit un mail»): the question's one confirm
    * becomes two answers that each say whether the email leaves — «{action} și trimite emailul» (`sendLabel`) and
    * «{action} fără email» (`skipLabel`), each `{action}` filled with `confirmLabel` (`emailAnswers`). The bold email line,
@@ -507,7 +507,7 @@ export function tickAnswer(spec: ConfirmSpec): { field: string; value: "on" } | 
 export type ConfirmEmailOptOut = { field: string; sendLabel: string; skipLabel: string };
 
 /**
- * The two answers of a question that may send the person their email (§NNN): «Anulează înscrierea și trimite emailul»
+ * The two answers of a question that may send the person their email (§976): «Anulează înscrierea și trimite emailul»
  * and «Anulează înscrierea fără email», each template's `{action}` filled with the question's verb; null for a question
  * without the choice, which keeps its one confirm. Pure.
  */
@@ -773,7 +773,7 @@ function holds(condition: FormCondition, valueOf: (field: string) => string | nu
 /**
  * What a key does in the dialog: Enter confirms a dialog that is not destructive, whichever
  * button has the focus; a destructive one answers only to its own red button, and Escape is
- * the dialog's (MUI closes it, which cancels). A question with the email's two answers (§NNN,
+ * the dialog's (MUI closes it, which cancels). A question with the email's two answers (§976,
  * `emailChoice`) is answered by neither on Enter, destructive or not: the reader presses the answer
  * they mean. Pure, so the rule is tested in Node.
  */

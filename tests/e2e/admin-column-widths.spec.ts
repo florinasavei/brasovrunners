@@ -388,12 +388,12 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
     }
   });
 
-  test.describe("§NNN with Chromium's scrollbars drawn", () => {
+  test.describe("§977 with Chromium's scrollbars drawn", () => {
     // Headless Chromium starts with `--hide-scrollbars`: the bar would be a pixel tall, with no track and no thumb to drag.
     // Drawn here, as on a person's screen; the config's own executable kept (§501). A worker of its own for this one test.
     test.use({ launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined, ignoreDefaultArgs: ["--hide-scrollbars"] } });
 
-    test("§NNN a scrollbar at the top too: it moves the frame, the frame moves it, and it goes when the table fits", async ({ page }, testInfo) => {
+    test("§977 a scrollbar at the top too: it moves the frame, the frame moves it, and it goes when the table fits", async ({ page }, testInfo) => {
       test.skip(testInfo.project.name !== "desktop", "the bar is the wide table's: the phone's blocks have no columns to scroll");
       test.setTimeout(120_000);
       const seeded = await seed(`${testInfo.project.name}-${Date.now().toString(36)}`);
@@ -548,7 +548,7 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
       await expect(main.getByTestId("admin-table-reset-widths").filter({ visible: true })).toHaveCount(0);
       // Nor a «Coloane» menu (§661): the phone's blocks show every field.
       await expect(main.getByTestId("admin-table-columns").filter({ visible: true })).toHaveCount(0);
-      // Nor the scrollbar at the top (§NNN): a finger swipes the blocks' page, which never scrolls sideways.
+      // Nor the scrollbar at the top (§977): a finger swipes the blocks' page, which never scrolls sideways.
       await expect(main.locator("[data-top-scrollbar]").filter({ visible: true })).toHaveCount(0);
 
       // «și încă 2 emailuri» lands on the registration's own «Emailuri», open: the card is a closed fold on that page (nothing

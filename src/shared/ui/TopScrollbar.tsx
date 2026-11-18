@@ -6,7 +6,7 @@ import { watchScrollRow } from "@/shared/ui/scroll-row";
 import { placeUnderHeader, STICKY_HEADER_SELECTOR, TOP_SCROLLBAR_SX } from "@/shared/ui/top-scrollbar";
 
 /**
- * A second horizontal scrollbar right above a frame that scrolls sideways (§NNN), so a long, wide table moves sideways
+ * A second horizontal scrollbar right above a frame that scrolls sideways (§977), so a long, wide table moves sideways
  * from wherever the reader is rather than from its bottom edge. It receives the frame's address, a string (§370), finds
  * the frame by it and watches it with the chips rows' own watcher (`watchScrollRow`) — the one watcher that frame has,
  * which also keeps the frame's `data-more-*` edge cue (§943's fading verbs) — given this bar as its `mirror`: shown while
@@ -25,7 +25,7 @@ export default function TopScrollbar({ frameId }: { frameId: string }) {
     const bar = ref.current;
     if (!frame || !bar) return;
     const Resize = typeof ResizeObserver === "undefined" ? undefined : ResizeObserver;
-    // Where it sticks first, then shown: right under the sticky site header, at its real height (§NNN).
+    // Where it sticks first, then shown: right under the sticky site header, at its real height (§977).
     const header = document.querySelector<HTMLElement>(STICKY_HEADER_SELECTOR);
     const stopPlacing = placeUnderHeader(bar, header, () => (header ? getComputedStyle(header).position : undefined), Resize);
     const stopWatching = watchScrollRow(frame, Resize, typeof MutationObserver === "undefined" ? undefined : MutationObserver, undefined, bar);

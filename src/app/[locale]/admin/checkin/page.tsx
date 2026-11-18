@@ -98,7 +98,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
     locale,
     href: { pathname: "/admin/checkin/[code]", params: { code: "__CODE__" } },
   });
-  // The chosen event's free desk spares (§444), in one line beside the counts (§NNN): what «Adaugă pe cineva» picks from.
+  // The chosen event's free desk spares (§444), in one line beside the counts (§979): what «Adaugă pe cineva» picks from.
   const spareLine = eventId ? await spareLineWords((await readSpareLines(db, [eventId]))[eventId] ?? { kind: "none" }, locale) : null;
   const walkInHref = eventId
     ? `${getPathname({ locale, href: "/admin/registrations/new" })}?eventId=${eventId}&back=desk`
@@ -106,7 +106,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
 
   return (
     <Stack spacing={3}>
-      {/* «Ziua cursei»'s tabs (§NNN): this page is «Prezența»; the title under them is the desk's, as it was. */}
+      {/* «Ziua cursei»'s tabs (§979): this page is «Prezența»; the title under them is the desk's, as it was. */}
       {await raceDayTabs({ locale, active: "desk", eventId, actor })}
       <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
         {t("desk.title")}
@@ -205,7 +205,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
           )}
         </Stack>
       )}
-      {/* The free spares (§NNN, §444): the blank bibs a walk-in is handed, as ranges — or why there are none. */}
+      {/* The free spares (§979, §444): the blank bibs a walk-in is handed, as ranges — or why there are none. */}
       {counts && spareLine && (
         <Typography variant="body2" color="text.secondary" data-testid="desk-spares">
           {spareLine}

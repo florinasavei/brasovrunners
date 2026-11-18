@@ -138,6 +138,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.65` | every question that may send the person their email ends in «… și trimite emailul» or «… fără email», no box ticked in advance (§976) · a scrollbar at the top of wide backoffice tables (§977) · «Poze și hărți» — several pictures and links at the top of the volunteers' plan — and «Fără punct» a fold you place people from (§978) · «Ziua cursei» in three tabs, «Lucruri de adus» and the walk-in's pick of a free spare (§979) |
 | `BR-V4.64` | «Eticheta pe BIB» per elite bib, elites at the desk, the participants' table in a fold (§975) |
 | `BR-V4.63` | «Planul voluntarilor» in two views — the points as one table, or each as a fold — with the page's sections folded and the names in bold (§974) |
 | `BR-V4.62` | more room for the name on the volunteers' badges («Spațiul pentru nume», 43–80 %) (§972) · the members' race number for everyone who ticked «Sunt membru», no account and no second question (§973) |

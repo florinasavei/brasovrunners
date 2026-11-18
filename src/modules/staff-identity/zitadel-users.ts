@@ -200,7 +200,7 @@ export async function resendZitadelInvite(email: string, deps: Deps = {}): Promi
 
 /**
  * «Retrimite invitația» (§123): the invitation again to the account that exists — or, when there is none, the account
- * made and invited (`inviteZitadelUser`): somebody added «fără invitație» (§NNN) was never given one (the
+ * made and invited (`inviteZitadelUser`): somebody added «fără invitație» (§976) was never given one (the
  * design «telling the owner about every email a staff press sends», slice 4), and the resend is when they are.
  */
 export async function reinviteZitadelUser(person: { email: string; displayName: string; locale: Locale }, deps: Deps = {}): Promise<InviteOutcome> {

@@ -12,7 +12,7 @@ import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { eventIdOf, field, localeOf } from "@/app/[locale]/admin/events/[id]/volunteer-return";
 
 /*
-  The presses of «Lucruri de adus» (§NNN): add, change, delete, and the tick. Each asks its capability here, by name, at the
+  The presses of «Lucruri de adus» (§979): add, change, delete, and the tick. Each asks its capability here, by name, at the
   door — the tick whoever works the desk (`mayReadRaceDayItems`), the rest the Organizer and the Administrators
   (`mayWriteRaceDayItems`) — and the service asks it again (BR-REQ-060-01). A press that went through comes back to the list
   with its toast; a refused one-button press comes back to the page's alert with its code in the address; «Adaugă un lucru»

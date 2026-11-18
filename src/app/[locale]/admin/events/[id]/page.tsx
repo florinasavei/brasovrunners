@@ -781,7 +781,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         ...base,
         title: t("confirm.publishTitle", { title: heading }),
         body: t("confirm.publishBody"),
-        // The publication's two answers (slice 4, §NNN), only while an alert would go: «… fără anunț», the event is never announced.
+        // The publication's two answers (slice 4, §976), only while an alert would go: «… fără anunț», the event is never announced.
         ...(alertAudience !== null ? { also: [words.line("alertLater", { count: alertAudience })], ...words.alertOptOut() } : {}),
       };
     }

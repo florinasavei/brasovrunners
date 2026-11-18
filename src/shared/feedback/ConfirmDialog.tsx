@@ -28,7 +28,7 @@ import { emailRoadCookieLine } from "./email-road";
 import { type ConfirmSpec, confirmOnKey, emailAnswers, withOption } from "./notice";
 
 /**
- * What the reader answered besides yes: whether they chose «… fără email» (`ConfirmSpec.emailOptOut`, §NNN), and whether
+ * What the reader answered besides yes: whether they chose «… fără email» (`ConfirmSpec.emailOptOut`, §976), and whether
  * the question's optional box was ticked (`ConfirmSpec.option`).
  */
 export type ConfirmAnswer = { emailOff: boolean; optionOn: boolean };
@@ -49,7 +49,7 @@ export type ConfirmAnswer = { emailOff: boolean; optionOn: boolean };
  * the dialog confirms one that is not destructive (`confirmOnKey`): the reader who pressed Enter
  * in a box to send the form meant to send it, and the question is a pause, not a trap. In a
  * destructive dialog Enter never confirms — it reaches the focused cancel button and cancels — so
- * only the red button itself does; nor in one that may send the person their email (§NNN, below). A held
+ * only the red button itself does; nor in one that may send the person their email (§976, below). A held
  * key's repeats are swallowed: the Enter that submitted the form, still down when the dialog opens,
  * neither confirms nor cancels it. Escape and the
  * backdrop cancel either. An email the action will queue is a line of its own, in bold, so it is
@@ -70,7 +70,7 @@ export type ConfirmAnswer = { emailOff: boolean; optionOn: boolean };
  * the action's `enqueueEmail` stamps the row with it. Nothing is decided here: a road the server
  * cannot take (Gmail gone) is the group's road again, and the group's setting never moves.
  *
- * **The email, a choice made at every press** (`spec.emailOptOut`; §NNN, amending slice 4 of the design «telling the owner
+ * **The email, a choice made at every press** (`spec.emailOptOut`; §976, amending slice 4 of the design «telling the owner
  * about every email a staff press sends», whose box ticked in advance it replaces; the owner, 2026-11-18: «vreau mereu sa
  * confirm daca trimit un mail»): the one confirm becomes two answers that each say whether the email leaves — the
  * contained «{action} și trimite emailul», in the press's colour with its glyph, and the outlined «{action} fără email»
@@ -116,7 +116,7 @@ export default function ConfirmDialog({
   if (!asked) return null;
   // The question as it reads now: with its optional box ticked, the wider press's words.
   const spec = withOption(asked, optionOn);
-  // A question with the email's two answers (§NNN) is answered by neither on Enter.
+  // A question with the email's two answers (§976) is answered by neither on Enter.
   const emailChoice = spec.emailOptOut !== undefined;
   // A dialog that asks for a tick answers only once it is ticked — Enter included, and both of the email's answers.
   const mayConfirm = !spec.tick || ticked;
@@ -135,7 +135,7 @@ export default function ConfirmDialog({
     answer({ emailOff, optionOn });
   };
   const confirm = withRoad(onConfirm);
-  // «… fără email» (§NNN): the same press, the person's email kept back.
+  // «… fără email» (§976): the same press, the person's email kept back.
   const confirmWithoutEmail = withRoad(onConfirm, true);
 
   return (
@@ -257,7 +257,7 @@ const ANSWER_SX = { ...TAP_TARGET, flex: { xs: "1 1 100%", sm: "0 0 auto" } } as
 /**
  * The dialog's row of answers, apart so that a Node render can draw it (the `Dialog` around it is a portal, which renders
  * nothing on the server): «Renunță», focused on open; the quiet second answer when there is one; and the confirm — or,
- * on a question that may send the person their email (§NNN), the two answers in its place: the outlined «{action} fără
+ * on a question that may send the person their email (§976), the two answers in its place: the outlined «{action} fără
  * email» and the contained «{action} și trimite emailul», both held by a required tick. The handlers come wrapped by the
  * dialog, the road and the answer already in them.
  */
@@ -278,7 +278,7 @@ export function ConfirmDialogActions({
   confirmWithoutEmail: () => void;
   alternative?: { label: string; onClick: () => void } | null;
 }) {
-  // The email's two answers (§NNN), or none: a question without the choice keeps its one confirm.
+  // The email's two answers (§976), or none: a question without the choice keeps its one confirm.
   const answers = emailAnswers(spec);
   return (
     <DialogActions sx={{ flexWrap: "wrap", gap: 1, "& > :not(:first-of-type)": { ml: 0 } }}>
@@ -298,7 +298,7 @@ export function ConfirmDialogActions({
         </Button>
       )}
       {answers && (
-        // «{action} fără email» (§NNN): outlined, beside the sending answer — the same press, nothing to the person.
+        // «{action} fără email» (§976): outlined, beside the sending answer — the same press, nothing to the person.
         <Button
           variant="outlined"
           color={spec.destructive ? "error" : "primary"}
@@ -321,7 +321,7 @@ export function ConfirmDialogActions({
         sx={ANSWER_SX}
         data-testid="confirm-dialog-confirm"
       >
-        {/* With the email's choice, «{action} și trimite emailul» (§NNN); else the verb alone. */}
+        {/* With the email's choice, «{action} și trimite emailul» (§976); else the verb alone. */}
         {answers ? answers.send : spec.confirmLabel}
       </Button>
     </DialogActions>

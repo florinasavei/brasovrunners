@@ -39,7 +39,7 @@ import { listVolunteers, type VolunteerItem } from "./volunteers";
 */
 
 /*
-  «Poze și hărți» — the plan's pictures and links (§NNN, amending §952; the owner, 2026-11-18: «Poza planului trebuie sa fie mai
+  «Poze și hărți» — the plan's pictures and links (§978, amending §952; the owner, 2026-11-18: «Poza planului trebuie sa fie mai
   sus, si sa pot pune mai multe poze, si link-uri, am facut spre exemplu un google maps custom map si vreau sa pot pune
   url-ul»). The organizers have the plan as pictures — the map with the points drawn on it, a detail of the start — and as
   addresses — a Google My Maps map of their own —, and both live with the plan: up to twelve stored pictures and twelve links
@@ -63,7 +63,7 @@ export type VolunteerPlanPerson = Pick<VolunteerItem, "id" | "name" | "phone" | 
 export type VolunteerPlanPoint = { point: PlanPoint; number: number | null; people: VolunteerPlanPerson[] };
 
 /**
- * One picture of the plan, as whoever draws it needs it (§952, §NNN): its row's id (what «Șterge poza» posts), the stored
+ * One picture of the plan, as whoever draws it needs it (§952, §978): its row's id (what «Șterge poza» posts), the stored
  * picture's id and its own size, and two addresses — the whole picture (`fullUrl`, the master: what a press on the picture
  * opens) and the same picture at a display size (`displayUrl`: the widest stored file not above `PLAN_PICTURE_DISPLAY_WIDTH`,
  * or the master when it is narrower than every rung). Both are the store's public addresses, absolute, so a page and a message
@@ -72,10 +72,10 @@ export type VolunteerPlanPoint = { point: PlanPoint; number: number | null; peop
  */
 export type VolunteerPlanPicture = { id: string; assetId: string; width: number; height: number; fullUrl: string; displayUrl: string; srcSet: string | undefined };
 
-/** One link of the plan (§NNN): its row's id, the address as it was kept, its label or null, and its host without `www.`. */
+/** One link of the plan (§978): its row's id, the address as it was kept, its label or null, and its host without `www.`. */
 export type VolunteerPlanLink = { id: string; url: string; label: string | null; host: string };
 
-/** The plan's pictures and links (§NNN), each in the order they were added. */
+/** The plan's pictures and links (§978), each in the order they were added. */
 export type VolunteerPlanMaps = { pictures: VolunteerPlanPicture[]; links: VolunteerPlanLink[] };
 
 export type VolunteerPlan = VolunteerPlanMaps & {
@@ -217,7 +217,7 @@ function postedPictureId(value: unknown): string {
 }
 
 /**
- * «Adaugă o poză» (§NNN): the stored picture the browser has just uploaded through the backoffice's one upload
+ * «Adaugă o poză» (§978): the stored picture the browser has just uploaded through the backoffice's one upload
  * (`/api/admin/media`) goes last on the event's plan.
  *
  * - **Who:** `canManageVolunteers`, asked here whatever the action asked, before anything is read.
@@ -263,7 +263,7 @@ export async function addVolunteerPlanPicture<T extends Record<string, unknown>>
 }
 
 /**
- * «Șterge poza» (§NNN): one picture taken off the event's plan, by its row's id. A row that is not this plan's — gone already,
+ * «Șterge poza» (§978): one picture taken off the event's plan, by its row's id. A row that is not this plan's — gone already,
  * another event's, a value that is no id — changes nothing. The stored picture is not deleted here: used nowhere else, it is
  * the sweep's after its week (§73). The trail: `event.volunteer_plan_picture_removed`, the stored picture's id alone.
  */
@@ -295,7 +295,7 @@ export async function removeVolunteerPlanPicture<T extends Record<string, unknow
 }
 
 /**
- * «Adaugă linkul» (§NNN): an address — a Google My Maps map, a document — goes last on the event's plan, with an optional label.
+ * «Adaugă linkul» (§978): an address — a Google My Maps map, a document — goes last on the event's plan, with an optional label.
  *
  * - **Who:** `canManageVolunteers`, asked here whatever the action asked, before anything is read.
  * - **What:** the address an `http:` or `https:` one, read whole, at most 2 000 characters (`PLAN_LINK_URL`); the label at most
@@ -338,7 +338,7 @@ export async function addVolunteerPlanLink<T extends Record<string, unknown>>(
 }
 
 /**
- * «Șterge linkul» (§NNN): one link taken off the event's plan, by its id. A row that is not this plan's changes nothing. The
+ * «Șterge linkul» (§978): one link taken off the event's plan, by its id. A row that is not this plan's changes nothing. The
  * trail: `event.volunteer_plan_link_removed`, the link's id alone.
  */
 export async function removeVolunteerPlanLink<T extends Record<string, unknown>>(

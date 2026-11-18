@@ -47,7 +47,7 @@ import { openFold } from "./support/fold";
  * view it was pressed in, with what it changed open. What each cell and each fold says in both languages is
  * `tests/integration/volunteers/plan-table-screens.test.ts` and `plan-views-screens.test.ts`.
  *
- * And, since §NNN (the owner, 2026-11-18: «aici eu vreau sa pot asigna voluntari la punct direct de aici: Si sectiunea trebuie
+ * And, since §978 (the owner, 2026-11-18: «aici eu vreau sa pot asigna voluntari la punct direct de aici: Si sectiunea trebuie
  * sa fie collapsible. Poza planului trebuie sa fie mai sus, si sa pot pune mai multe poze, si link-uri»): «Fără punct» is a
  * fold whose every person has the point to put them at in the phone's own list and «Pune», which comes back to that fold,
  * open; and «Poze și hărți» is the first fold of the page, where the Organizer adds a map's address — a refused one keeping
@@ -667,7 +667,7 @@ test.describe("§961 «Punctele planului» on «Planul voluntarilor»", () => {
     await expect(startFinish.getByTestId("plan-point")).toHaveCount(0);
     await expect(startFinish.getByTestId("plan-group-none")).toBeVisible();
     await expect(startFinish.getByTestId("plan-group-count")).toHaveText("0 puncte · niciun voluntar");
-    // «Fără punct» is a fold (§NNN): closed, its line saying how many stand at no point; opened, Radu.
+    // «Fără punct» is a fold (§978): closed, its line saying how many stand at no point; opened, Radu.
     const unplaced = page.getByTestId("plan-unplaced");
     await expect(unplaced.getByRole("heading", { level: 3, name: "Fără punct" })).toBeVisible();
     expect(await unplaced.getAttribute("open")).toBeNull();
@@ -677,7 +677,7 @@ test.describe("§961 «Punctele planului» on «Planul voluntarilor»", () => {
     await expect(summary).toHaveText("0 voluntari la start–finish · 2 voluntari pe traseu · 1 voluntar fără punct · 1 punct fără nimeni");
     await fits(page);
 
-    // ---- «Pune» on Radu's own line (§NNN): the point chosen in the phone's own list, one press, back to «Fără punct» open ---
+    // ---- «Pune» on Radu's own line (§978): the point chosen in the phone's own list, one press, back to «Fără punct» open ---
     const raduLine = unplaced.getByTestId("plan-unplaced-person").filter({ hasText: radu.name });
     const choice = raduLine.getByTestId("plan-unplaced-select");
     // The route in the plan's one order, numbered, with its kilometre; no start–finish group: it has no point left.
@@ -747,7 +747,7 @@ test.describe("§974 «Tabel» and «Pe puncte» on «Planul voluntarilor»", ()
     await thumbSized(table);
     await thumbSized(byPoint);
 
-    // ---- «Tabel»: the table under its heading, under «Poze și hărți» (§NNN) and above the builder and the email — and none
+    // ---- «Tabel»: the table under its heading, under «Poze și hărți» (§978) and above the builder and the email — and none
     // of the points ----
     const section = page.getByTestId("plan-table-section");
     await expect(section.getByRole("heading", { level: 3, name: "Punctele, pe scurt" })).toBeVisible();
@@ -878,7 +878,7 @@ test.describe("§974 «Tabel» and «Pe puncte» on «Planul voluntarilor»", ()
   });
 });
 
-test.describe("§NNN «Poze și hărți» on «Planul voluntarilor»", () => {
+test.describe("§978 «Poze și hărți» on «Planul voluntarilor»", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("the Organizer adds the map of the plan as a link at the top of the page — a refused address keeps what was typed —, opens it in a new tab, prints it after the plan, and deletes it after a question", async ({

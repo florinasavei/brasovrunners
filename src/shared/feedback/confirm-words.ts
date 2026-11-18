@@ -64,7 +64,7 @@ export type MailInput = {
   /** What else the press sets off, said after the club's line: the next in line's offer, Zitadel's own email. */
   also?: readonly ConfirmAlso[];
   /**
-   * The email as a choice made at the press (§NNN, amending slice 4): the question ends in «{action} și trimite emailul» and
+   * The email as a choice made at the press (§976, amending slice 4): the question ends in «{action} și trimite emailul» and
    * «{action} fără email» — only on the presses whose service takes the option (`shared/forms/send-email.ts`). `true` for
    * the usual words and field.
    */
@@ -89,7 +89,7 @@ export type MailCountInput = {
   type: EmailMessageType;
   audience: MailAudience;
   also?: readonly ConfirmAlso[];
-  /** The email's two answers for the whole batch (§NNN): «… și trimite emailurile» or «… fără emailuri», the same for every person ticked. */
+  /** The email's two answers for the whole batch (§976): «… și trimite emailurile» or «… fără emailuri», the same for every person ticked. */
   optOut?: MailOptOut;
 };
 
@@ -161,7 +161,7 @@ export async function confirmWords() {
     count > 0 ? [{ text: counted(upTo ? "confirm.mail.clubUpTo" : "confirm.mail.club", count) }] : [];
   const testLine: ConfirmAlso = { text: t("confirm.mail.test") };
   /**
-   * The email's two answers (§NNN): their field and their words, templates the dialog fills with the question's verb —
+   * The email's two answers (§976): their field and their words, templates the dialog fills with the question's verb —
    * «{action} și trimite emailul» / «{action} fără email» for a person, «… emailurile» / «… fără emailuri» for a count
    * (`many`). Raw: `{action}` is the dialog's to fill.
    */
@@ -253,7 +253,7 @@ export async function confirmWords() {
 
   return {
     cancel: t("confirm.cancel"),
-    /** «Trimite emailul»: the box's words, for a `MailLine` beside a button (slice 4) — a question offers two answers instead (§NNN). */
+    /** «Trimite emailul»: the box's words, for a `MailLine` beside a button (slice 4) — a question offers two answers instead (§976). */
     optOutLabel: t("confirm.mail.optOut"),
     queue: (count: number) => t(`confirm.emailMessages.${countForm(count, locale)}`, { count }),
     road,
@@ -271,7 +271,7 @@ export async function confirmWords() {
     /** A quiet line in the builder's voice, for what a press sends besides its email: Zitadel's own, the job's later. */
     line: (key: MailLineKey, values?: Record<string, string | number>): ConfirmAlso => ({ text: t(`confirm.mail.${key}`, values) }),
     /**
-     * The publication's two answers (slice 4, §NNN): its email is a quieter line — the new-event alert the job sends later
+     * The publication's two answers (slice 4, §976): its email is a quieter line — the new-event alert the job sends later
      * (`alertLater`, `alertMaybe`) — so the answers name it: «{action} și anunță abonații» / «{action} fără anunț», the
      * second for good: the subscribers are never told of this event. `labels`: a verb that reads badly in the template —
      * «Creează și publică» — gives its two answers whole.

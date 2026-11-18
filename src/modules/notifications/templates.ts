@@ -767,7 +767,7 @@ export function renderBilingual(
     ...(data.cancellationReasonOther ? { cancellationReason: data.cancellationReasonOther } : {}),
     // The club's line of an invitation to volunteer, in the second half's own language (§354): never the first half's words.
     ...(data.volunteerInvitation ? { volunteerInvitation: { ...data.volunteerInvitation, message: data.volunteerInvitation.messageOther } } : {}),
-    // The plan's pictures once a message (§956, §NNN), as one QR is enough: the second half keeps its words, the links to the whole of each, and the plan's links.
+    // The plan's pictures once a message (§956, §978), as one QR is enough: the second half keeps its words, the links to the whole of each, and the plan's links.
     ...(data.volunteerPoint ? { volunteerPoint: { ...data.volunteerPoint, pictureLinkOnly: true } } : {}),
     // A family's blocks in the second half: the words and the numbers, not the QR pictures again (§519).
     ...(data.familyConfirmed ? { familyConfirmed: data.familyConfirmed.map((person) => ({ ...person, qrUrl: undefined })) } : {}),
@@ -1179,7 +1179,7 @@ export type TemplateData = {
    * «Punctul tău de voluntar» (§956, `VOLUNTEER_POINT`): the point of the route the person stands at, read at the send
    * (`volunteers/point-mail.ts#volunteerPointAtSend`) — its place in the route's order (the number the plan's page gives it),
    * its name and its note in each language (the club typed both), its kilometre, and the plan's pictures and links when it
-   * has some (§NNN, amending §952's one picture): each picture at a size for a message and whole, both at the store's public
+   * has some (§978, amending §952's one picture): each picture at a size for a message and whole, both at the store's public
    * addresses; each link its address, its label (one for both languages) or null, and its host. What the person does there is
    * `volunteer` above — the roles given and what they ask, as the role's own message says them. It names no other volunteer.
    * `pictureLinkOnly` is the second half's (`renderBilingual`): the words and the links again, not the pictures.
@@ -1692,7 +1692,7 @@ function volunteerPointLines(locale: EmailLocale, d: TemplateData): (string | Em
 }
 
 /**
- * The plan's pictures and links, after the words of «Punctul tău» (§956; several of each since §NNN) and only what the plan
+ * The plan's pictures and links, after the words of «Punctul tău» (§956; several of each since §978) and only what the plan
  * has. Each picture as wide as the card's column and never wider than its own pixels, the whole of it one press away, and the
  * same link in words under it — for a client that blocks pictures or cannot draw the store's WebP, and for the second half
  * of the message, which carries the links alone (`pictureLinkOnly`); with several, each link says which one it opens. A
@@ -2499,7 +2499,7 @@ const T = {
       «Punctul tău de voluntar la …» (§956): an organizer pressed «Trimite fiecăruia punctul lui» on «Planul voluntarilor».
       Nothing to press. The point is the band's line and the event's start and place the bold one under it; the point's
       note and the roles given with what they ask stand before these words, the plan's pictures and links after them
-      (`volunteerPointLines`, `volunteerPointMaps`, §NNN) — facts of this send, whoever wrote the words.
+      (`volunteerPointLines`, `volunteerPointMaps`, §978) — facts of this send, whoever wrote the words.
       A person at the start–finish (§961) is not «at a point of the route»: the first sentence says the start–finish for
       them, and for a point of the route not a word of it changed.
     */
@@ -3032,7 +3032,7 @@ const T = {
     volunteerContact: (contacts: string) => `Întrebări despre voluntariat? ${contacts}`,
     /**
      * «Punctul tău» (§956), the words around its own: the band's line, the note's label, the roles given, and the plan's pictures
-     * and links (§NNN) — and, since §961, the band of a person at the start–finish and where a point with coordinates is.
+     * and links (§978) — and, since §961, the band of a person at the start–finish and where a point with coordinates is.
      */
     volunteerPointWords: {
       line: (event: string, point: string) => `Punctul tău la ${event}: ${point}`,
@@ -4687,7 +4687,7 @@ export function buildTemplateContent(
             : familyConfirmedShape
               ? [...copy.familyConfirmed.body(data), familyConfirmedPart(familyConfirmedPeople, copy.familyConfirmed.words, clubCopy)]
               : entry.body(data)),
-      // «Punctul tău» (§956, §NNN): the plan's pictures, each linked to the whole of it, then its links, after the words whoever wrote them — only what the plan has.
+      // «Punctul tău» (§956, §978): the plan's pictures, each linked to the whole of it, then its links, after the words whoever wrote them — only what the plan has.
       ...(messageType === "VOLUNTEER_POINT" ? volunteerPointMaps(locale, data) : []),
       /*
         Who signs a minor's declaration (§419, §330), after the body whoever wrote it — a fact about

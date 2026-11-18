@@ -215,7 +215,7 @@ describe("§974 «Tabel» and «Pe puncte»: two views by a link each", () => {
       expect(points).not.toContain('data-table-id="volunteer-plan"');
       expect(points).toContain('id="plan-list"');
       expect(planPointsOf(points)).toHaveLength(5);
-      // «Poze și hărți» first, under the intro and above the views (§NNN); then the view's own plan, the two folds, and the
+      // «Poze și hărți» first, under the intro and above the views (§978); then the view's own plan, the two folds, and the
       // people at no point — on both.
       for (const page of [table, points]) {
         const at = (needle: string) => page.indexOf(needle);
@@ -407,7 +407,7 @@ describe("§974 «Modifică punctul»: the pencil", () => {
   });
 });
 
-describe("§974 the folds: «Poze și hărți» above the plan (§NNN), «Adaugă un punct» and the email under it, «Fără punct» last", () => {
+describe("§974 the folds: «Poze și hărți» above the plan (§978), «Adaugă un punct» and the email under it, «Fără punct» last", () => {
   it("draws each as a closed fold saying what it holds, in both views and both languages", async () => {
     await withStartFinish();
     for (const locale of ["ro", "en"] as const) {

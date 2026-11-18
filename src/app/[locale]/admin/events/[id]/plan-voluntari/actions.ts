@@ -37,9 +37,9 @@ const viewOf = (form: FormData, fallback: PlanView = "table"): PlanView => (fiel
 const refusedAt = (path: string, view: PlanView, code: string, point?: string) =>
   planAddress(path, { view, planError: code, open: point && isUuid(point) ? point : undefined, hash: "admin-alert" });
 
-/** What a press made on a person's line of «Fără punct» posts as its `at` (§NNN): it comes back to that fold, open. */
+/** What a press made on a person's line of «Fără punct» posts as its `at` (§978): it comes back to that fold, open. */
 const UNPLACED_AT = "unplaced";
-/** The fold «Fără punct» (§NNN). */
+/** The fold «Fără punct» (§978). */
 const UNPLACED_ANCHOR = "plan-unplaced";
 
 /**
@@ -54,7 +54,7 @@ const UNPLACED_ANCHOR = "plan-unplaced";
  * list's rule, §943): the alert is where the refusal's sentence is, at the top of a page that may be several screens long,
  * and a point deleted meanwhile has no anchor left to land on.
  *
- * «Pune» on a person's own line of «Fără punct» (§NNN, amending §949; the owner, 2026-11-18: «aici eu vreau sa pot asigna
+ * «Pune» on a person's own line of «Fără punct» (§978, amending §949; the owner, 2026-11-18: «aici eu vreau sa pot asigna
  * voluntari la punct direct de aici») is the same press from the other side: the person is posted, the point chosen in the
  * line's select, and `at` is `unplaced` — it comes back to «Fără punct», drawn open (`PLAN_SAVED.unplaced`), the next person
  * one press away. A refusal comes back to the page's alert as every press does.
@@ -90,7 +90,7 @@ export async function placeVolunteerAction(form: FormData): Promise<void> {
 }
 
 /**
- * The code a refused press of «Poze și hărți» is said with (§NNN): the rule's own sentence — the thirteenth picture or link,
+ * The code a refused press of «Poze și hărți» is said with (§978): the rule's own sentence — the thirteenth picture or link,
  * an address that is no web address, a label too long (`Admin.errors.<reason>`) — or the domain's code for everything else
  * (a role that may not, an event that is not there, an id that names no stored picture).
  */
@@ -99,7 +99,7 @@ function planMapsRefusalCode(error: DomainError): string {
 }
 
 /**
- * A press of «Poze și hărți», start to finish (§NNN, amending §952): the staff session and the capability, asked here by name
+ * A press of «Poze și hărți», start to finish (§978, amending §952): the staff session and the capability, asked here by name
  * at the door of the action — whoever works the volunteers (`canManageVolunteers`: the Organizer and the Administrators,
  * BR-REQ-060-01) — before the service asks it again; then `press`, whose outcome becomes the toast; the way back is the
  * plan, in the view the press came from, at the fold «Poze și hărți», drawn open (`saved=`, §974) — or, refused, at the
@@ -126,11 +126,11 @@ async function pressOnPlanMaps(form: FormData, press: (actor: Pick<StaffUser, "i
   redirect(refusal ? refusedAt(path, view, refusal) : planAddress(path, { view, savedIn: PLAN_SAVED.maps, hash: MAPS_ANCHOR }));
 }
 
-/** The fold «Poze și hărți» (§NNN), where its presses come back to. */
+/** The fold «Poze și hărți» (§978), where its presses come back to. */
 const MAPS_ANCHOR = "plan-maps";
 
 /**
- * «Adaugă o poză» in «Poze și hărți» on «Planul voluntarilor» (§NNN, amending §952's one picture; the owner, 2026-11-18:
+ * «Adaugă o poză» in «Poze și hărți» on «Planul voluntarilor» (§978, amending §952's one picture; the owner, 2026-11-18:
  * «sa pot pune mai multe poze»): the picture the browser has just stored through the backoffice's one upload
  * (`/api/admin/media`, which answers its id) goes last among the plan's pictures. The island on the page posts this form the
  * moment its upload answers (`volunteers/ui/PlanPictureUpload.tsx`). The service holds the id to a stored picture, the
@@ -144,7 +144,7 @@ export async function addPlanPictureAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Șterge poza» under one picture of «Poze și hărți» (§NNN): that picture taken off the plan — asked first on the page, since
+ * «Șterge poza» under one picture of «Poze și hărți» (§978): that picture taken off the plan — asked first on the page, since
  * only uploading it again brings it back. The other pictures, the links, the points and the people are untouched; the stored
  * picture, used nowhere else, is the sweep's after its week (§73). A picture already gone answers «nimic de schimbat».
  */
@@ -156,7 +156,7 @@ export async function removePlanPictureAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Adaugă linkul» in «Poze și hărți» on «Planul voluntarilor» (§NNN; the owner, 2026-11-18: «am facut spre exemplu un google
+ * «Adaugă linkul» in «Poze și hărți» on «Planul voluntarilor» (§978; the owner, 2026-11-18: «am facut spre exemplu un google
  * maps custom map si vreau sa pot pune url-ul»): an address and its optional label go last among the plan's links.
  *
  * The capability is asked here by name, at the door, before the service asks it again and holds what was typed to the rules.
@@ -187,7 +187,7 @@ export async function addPlanLinkAction(_previous: FormOutcome | null, form: For
 }
 
 /**
- * «Șterge linkul» under one link of «Poze și hărți» (§NNN): that link taken off the plan — asked first on the page, naming it.
+ * «Șterge linkul» under one link of «Poze și hărți» (§978): that link taken off the plan — asked first on the page, naming it.
  * A link already gone answers «nimic de schimbat».
  */
 export async function removePlanLinkAction(form: FormData): Promise<void> {

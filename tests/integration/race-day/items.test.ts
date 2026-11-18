@@ -10,7 +10,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { createRace } from "../../helpers/results";
 
 /**
- * §NNN — «Lucruri de adus», the service (BR-REQ-060-01, BR-REQ-037-08): whoever works the desk reads and ticks; the Organizer
+ * §979 — «Lucruri de adus», the service (BR-REQ-060-01, BR-REQ-037-08): whoever works the desk reads and ticks; the Organizer
  * and the Administrators add, change and delete; a tick posts the state it wants and stamps who and when; at most
  * `RACE_DAY_ITEMS_MAX` things; one audit row a change, the item's id alone; the rows go with their event.
  */
@@ -42,7 +42,7 @@ const trail = async () =>
     metadata: row.metadataJson,
   }));
 
-describe("§NNN the gates, for every role", () => {
+describe("§979 the gates, for every role", () => {
   const DESK = new Set<StaffRole>(["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN", "SUPERADMIN"]);
   const WRITERS = new Set<StaffRole>(["MODERATOR", "ADMIN", "SUPERADMIN"]);
 
@@ -72,7 +72,7 @@ describe("§NNN the gates, for every role", () => {
   }
 });
 
-describe("§NNN the list and its words", () => {
+describe("§979 the list and its words", () => {
   it("appends in order, trims the words, keeps an empty note as none, and refuses words out of bounds by their box", async () => {
     await add("MODERATOR", "  Prelungitoare ", " 3 bucăți ");
     await add("MODERATOR", "Markere");
@@ -102,7 +102,7 @@ describe("§NNN the list and its words", () => {
   });
 });
 
-describe("§NNN the tick", () => {
+describe("§979 the tick", () => {
   it("posts the state it wants: ticked stamps who and when, a second tick saves the same and writes nothing, unticked clears both", async () => {
     const { item } = await add("MODERATOR");
     expect((await tick("CONTRIBUTOR", item.id, true)).changed).toBe(true);
@@ -130,7 +130,7 @@ describe("§NNN the tick", () => {
   });
 });
 
-describe("§NNN the trail, and the event", () => {
+describe("§979 the trail, and the event", () => {
   it("writes one audit row a change, the item's id alone — and none for a press that changed nothing", async () => {
     const { item } = await add("MODERATOR", "Prelungitoare", "le aduce Ana");
     await changeRaceDayItem(db, staff.ADMIN!, { kind: "edit", eventId, id: item.id, label: "Prelungitoare", note: "le aduce Ana" }, NOW);

@@ -8,7 +8,7 @@ import { mailSkippedCount, mailSkippedOf, SEND_EMAIL_FIELD, sendEmailOf, WINDOW_
 
 /**
  * Leaving the person's email unsent (the design «telling the owner about every email a staff press sends», 2026-11-03,
- * slice 4; §NNN, 2026-11-18: a choice made at every press, two answers in place of a box ticked in advance): the one
+ * slice 4; §976, 2026-11-18: a choice made at every press, two answers in place of a box ticked in advance): the one
  * parser, the question's two answers and what each writes into the form, and the toast's sentence for what the press
  * chose not to send. Pure.
  */
@@ -52,7 +52,7 @@ describe("sendEmailOf — the one parser", () => {
   });
 });
 
-describe("the question's two answers (§NNN)", () => {
+describe("the question's two answers (§976)", () => {
   const spec: ConfirmSpec = {
     title: "Anulezi?",
     body: "b",

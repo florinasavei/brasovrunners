@@ -1460,7 +1460,7 @@ export async function transitionEvent<T extends Record<string, unknown>>(
 export type PublishEventInput = Omit<TransitionEventInput, "to"> & {
   /**
    * The publication's answer, «… și anunță abonații» or «… fără anunț» (the design «telling the owner about every email a
-   * staff press sends», slice 4, §NNN):
+   * staff press sends», slice 4, §976):
    * false, the event is marked seen for the new-event alert in the publication's own transaction (`skipNewEventAlert`),
    * so the job never announces it. Absent or true, the job announces it as ever.
    */
@@ -3756,7 +3756,7 @@ export async function createEventAndPublish<T extends Record<string, unknown>>(
   const result = await db.transaction(async (tx) => {
     const created = await insertPreparedEvent(tx, input.actor, prepared, now);
     const { event, published, refusal } = await publishNewEvent(tx, input.actor, created, input.publish, now);
-    // «… fără anunț» (slice 4, §NNN): the event live, and never announced.
+    // «… fără anunț» (slice 4, §976): the event live, and never announced.
     if (published && input.announce === false) await skipNewEventAlert(tx, { actorStaffUserId: input.actor.id, eventId: event.id, now });
     if (!input.repeat) return { event, published, refusal, repeated: 0 };
 

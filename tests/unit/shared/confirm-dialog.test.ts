@@ -33,7 +33,7 @@ describe("§384 ConfirmDialog", () => {
   });
 
   it("lets Enter confirm only a dialog that is not destructive, and stops the focused cancel from taking the key", () => {
-    // A question with the email's two answers (§NNN) is answered by neither: Enter reaches the focused «Renunță».
+    // A question with the email's two answers (§976) is answered by neither: Enter reaches the focused «Renunță».
     expect(source).toMatch(/if \(confirmOnKey\(event\.key, spec\.destructive, emailChoice\) !== "confirm"\) return;/);
     expect(source).toContain("const emailChoice = spec.emailOptOut !== undefined;");
     // `confirm` is `onConfirm` with the email's road written first (§841), so Enter and the button agree.
@@ -84,11 +84,11 @@ describe("§384 ConfirmDialog", () => {
 });
 
 /**
- * §NNN — a question that may send the person their email ends in two answers that each say whether it leaves (the owner,
+ * §976 — a question that may send the person their email ends in two answers that each say whether it leaves (the owner,
  * 2026-11-18: «vreau mereu sa confirm daca trimit un mail»), amending slice 4's box ticked in advance. The row of answers
  * is drawn apart from the portal (`ConfirmDialogActions`), so the server renders it here as the browser draws it.
  */
-describe("§NNN the email's two answers", () => {
+describe("§976 the email's two answers", () => {
   const source = read("src/shared/feedback/ConfirmDialog.tsx");
   const noop = () => undefined;
   const draw = (spec: ConfirmSpec, mayConfirm = true, alternative: { label: string; onClick: () => void } | null = null) =>

@@ -175,7 +175,7 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     rsvpAskDayOther: other.rsvpAskDay,
     // «Punctul tău de voluntar» (§956): a made-up point of the made-up race with its note, both languages — read only by
     // that message's template, which is its point and no field of the closed set. One picture and one link of the plan
-    // (§NNN), both at the site's own address: none of the club's stored pictures here.
+    // (§978), both at the site's own address: none of the club's stored pictures here.
     volunteerPoint: {
       number: EMAIL_SAMPLE_PLAN_POINT.number,
       nameRo: EMAIL_SAMPLE_PLAN_POINT.name.ro,

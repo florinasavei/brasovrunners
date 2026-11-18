@@ -15,7 +15,7 @@ import { withClientWords } from "../../helpers/client-words";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Ziua cursei» as the server draws it (BR-REQ-037-07, BR-REQ-060-01, BR-REQ-041-01 criterion 6): the three tabs on the
+ * §979 — «Ziua cursei» as the server draws it (BR-REQ-037-07, BR-REQ-060-01, BR-REQ-041-01 criterion 6): the three tabs on the
  * desk, «Lucruri de adus» and both results pages — the current one marked, the event carried, «Clasament» not drawn for a role
  * that cannot open it —; the «Lucruri de adus» page by role; the desk's line of free spares (§444) as ranges, and its two
  * other states; and the walk-in's «Numărul dat acum» as a select of the free spares, the lowest chosen.
@@ -196,7 +196,7 @@ function tabs(html: string): Array<{ href: string; label: string; current: boole
   }));
 }
 
-describe("§NNN the tabs of «Ziua cursei»", () => {
+describe("§979 the tabs of «Ziua cursei»", () => {
   it("stand on the desk, «Prezența» current and the title under them unchanged, each carrying the chosen event", async () => {
     const id = await race();
     const html = await desk(id);
@@ -246,7 +246,7 @@ describe("§NNN the tabs of «Ziua cursei»", () => {
   });
 });
 
-describe("§NNN «Lucruri de adus»", () => {
+describe("§979 «Lucruri de adus»", () => {
   it("counts, draws a row a thing with its tick form, its note and who brought it when — and the writer's pencil and «Șterge»", async () => {
     const id = await race();
     const { item: cords } = await changeRaceDayItem(db, staff.ADMIN!, { kind: "add", eventId: id, label: "Prelungitoare", note: "3 bucăți" }, new Date());
@@ -310,7 +310,7 @@ describe("§NNN «Lucruri de adus»", () => {
   });
 });
 
-describe("§NNN the free spares on the desk", () => {
+describe("§979 the free spares on the desk", () => {
   const line = (html: string) => {
     const match = /data-testid="desk-spares"[^>]*>([^<]*)</.exec(html);
     return match ? text(match[1]).trim() : null;
@@ -337,7 +337,7 @@ describe("§NNN the free spares on the desk", () => {
   });
 });
 
-describe("§NNN the walk-in's «Numărul dat acum»", () => {
+describe("§979 the walk-in's «Numărul dat acum»", () => {
   const select = (html: string) => /<select[^>]*name="bibNumber"[^>]*>([\s\S]*?)<\/select>/.exec(html)?.[1];
   const options = (inner: string) => [...inner.matchAll(/<option value="([^"]*)"( selected="")?>([^<]*)<\/option>/g)].map((match) => ({ value: match[1], selected: Boolean(match[2]), label: match[3] }));
 
@@ -400,7 +400,7 @@ describe("§NNN the walk-in's «Numărul dat acum»", () => {
   });
 });
 
-describe("§NNN the top nav on «Lucruri de adus»", () => {
+describe("§979 the top nav on «Lucruri de adus»", () => {
   it("keeps «Ziua cursei» lit: the page's path is under the desk's, and the results keep their place", async () => {
     const { activeAdminTabHref } = await import("@/modules/staff-identity/domain/admin-tab-match");
     const nav = [{ href: "/ro/admin" }, { href: "/ro/admin/checkin" }, { href: "/ro/admin/registrations" }];

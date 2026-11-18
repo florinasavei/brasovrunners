@@ -60,7 +60,7 @@ export default function BulkBar({
     /** What a publication sets off at the job's next pass (§445): the new-event alert to the newsletter's subscribers. */
     publishAlso: string;
     /**
-     * The publication's two answers (the design «telling the owner about every email a staff press sends», slice 4, §NNN):
+     * The publication's two answers (the design «telling the owner about every email a staff press sends», slice 4, §976):
      * one choice for the batch; «… fără anunț», none of the events published is ever announced. Worded on the server.
      */
     publishOptOut?: ConfirmEmailOptOut;

@@ -304,7 +304,7 @@ export const EMAIL_SAMPLE_FAMILY_CONFIRMED = [
  * preview shows the band that names the point and the line the message adds under it, around the club's words. Machinery
  * lines of the message, never fields of the closed set: no club text can hold them, and the save has nothing of them to
  * refuse. No role, as no volunteer's preview has one (the message says nothing about roles then). One picture and one link of
- * the plan (§NNN), so the preview draws the part they make: the platform's own banner standing for the map — a preview draws
+ * the plan (§978), so the preview draws the part they make: the platform's own banner standing for the map — a preview draws
  * none of the club's stored pictures — and a made-up map's address on the site itself, with its label (one for both
  * languages, as a plan's link has).
  */

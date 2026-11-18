@@ -179,7 +179,7 @@ describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view
       expect(at('data-testid="plan-table-section"'), locale).toBeGreaterThan(at(escaped(words.help)));
       expect(at('data-testid="plan-table-section"')).toBeGreaterThan(at('data-testid="plan-views"'));
       expect(at('data-testid="plan-table-section"')).toBeGreaterThan(at(escaped(words.print)));
-      // «Poze și hărți» above the views and the table (§NNN); the table above the two folds under it.
+      // «Poze și hărți» above the views and the table (§978); the table above the two folds under it.
       expect(at('data-testid="plan-maps-section"')).toBeLessThan(at('data-testid="plan-views"'));
       expect(at('data-testid="plan-table-section"')).toBeLessThan(at('data-testid="plan-points-section"'));
       expect(at('data-testid="plan-points-section"')).toBeLessThan(at('data-testid="plan-mail-section"'));
@@ -346,7 +346,7 @@ describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view
     expect(printOf(page, classesIn(sectionTag))).not.toMatch(/display:none/);
     // The wide frame is printed whatever the sheet's width — after the screen's own rule, which hides it under `md` — and the
     // phone's blocks never.
-    // The frame carries its address since §NNN (the scrollbar above it finds it by it): any attributes, the table inside.
+    // The frame carries its address since §977 (the scrollbar above it finds it by it): any attributes, the table inside.
     const frame = classesIn(/<div[^>]*class="[^"]*"[^>]*><table[^>]*data-table-id="volunteer-plan"/.exec(plain)![0]);
     expect(printOf(page, frame)).toMatch(/display:block/);
     const rules = rulesOf(page);

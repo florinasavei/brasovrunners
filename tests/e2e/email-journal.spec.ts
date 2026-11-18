@@ -15,7 +15,7 @@ import { openFold } from "./support/fold";
  * Desktop only: one runner of its own, written straight into the database — the setup, not the subject
  * (`resend-now.spec.ts`) — and cancelled by the press under test.
  *
- * §NNN — and the same press answered «Anulează înscrierea fără email»: the question ends in two answers (the owner,
+ * §976 — and the same press answered «Anulează înscrierea fără email»: the question ends in two answers (the owner,
  * 2026-11-18: «vreau mereu sa confirm daca trimit un mail»), no box ticked in advance; the outlined one cancels with no
  * «Înscriere anulată» queued for the person, and the toast says the email did not leave.
  */
@@ -109,7 +109,7 @@ test.describe("§912 every email a staff press queues carries the press, and «E
     await expect(press).toContainText("„Înscriere anulată”");
   });
 
-  test("«Anulează înscrierea fără email» cancels and queues nothing for the person, and the toast says the email did not leave (§NNN)", async ({ page }) => {
+  test("«Anulează înscrierea fără email» cancels and queues nothing for the person, and the toast says the email did not leave (§976)", async ({ page }) => {
     test.setTimeout(120_000);
     const tag = Date.now().toString(36);
     const name = `Fără email ${tag}`;

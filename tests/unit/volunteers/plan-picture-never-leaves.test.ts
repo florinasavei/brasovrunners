@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * The pictures and links of «Planul voluntarilor» (§952, §NNN «Poze și hărți», BR-REQ-060-01) — the organizers' own drawing of
+ * The pictures and links of «Planul voluntarilor» (§952, §978 «Poze și hărți», BR-REQ-060-01) — the organizers' own drawing of
  * the plan and their maps stay with the plan. Their two tables (`event_volunteer_plan_pictures`, `event_volunteer_plan_links`)
  * are read and written by the plan alone and counted by the pictures' reference check, and by nothing else; the retired column
  * of §952 (`events.volunteer_plan_media_asset_id`) is written by nobody now and named only by its schema, the reference check
@@ -62,7 +62,7 @@ function sourceFiles(dir: string, acc: string[] = []): string[] {
 const read = (file: string) => readFileSync(path.join(ROOT, file), "utf8");
 const relative = (file: string) => path.relative(ROOT, file).split(path.sep).join("/");
 
-describe("§952, §NNN the plan's pictures and links stay with the plan", () => {
+describe("§952, §978 the plan's pictures and links stay with the plan", () => {
   const all = sourceFiles(SRC);
   const namingColumn = all.filter((file) => NAMES_THE_COLUMN.test(readFileSync(file, "utf8")));
   const namingMaps = all.filter((file) => NAMES_THE_MAPS.test(readFileSync(file, "utf8")));

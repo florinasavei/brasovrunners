@@ -104,7 +104,7 @@ describe("§943 the row verbs stay in view", () => {
     expect(edge).toContain("right:100%");
     expect(edge).toContain("pointer-events:none");
     expect(css).toContain(`[data-more-end]>${table} [data-pinned]::before{opacity:1;}`);
-    // The frame's attribute is the chips rows' own watcher's — the frame's one, kept since §NNN by the island above it,
+    // The frame's attribute is the chips rows' own watcher's — the frame's one, kept since §977 by the island above it,
     // which moves the second scrollbar too; the widths' island no longer watches the scroll.
     const island = read("src", "shared", "ui", "TopScrollbar.tsx");
     expect(island).toMatch(/watchScrollRow\(\s*frame,/);

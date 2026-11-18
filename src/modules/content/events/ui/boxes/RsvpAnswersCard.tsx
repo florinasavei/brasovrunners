@@ -55,7 +55,7 @@ export default async function RsvpAnswersCard({
       </Typography>
     ) : (
       <>
-        {/* The table and its scrollbar at the top too (§NNN), in one box so the bar leaves with the table. */}
+        {/* The table and its scrollbar at the top too (§977), in one box so the bar leaves with the table. */}
         <Box>
         <TopScrollbar frameId={frameIdFor("rsvp-answers")} />
         <Box id={frameIdFor("rsvp-answers")} sx={{ maxWidth: "100%", overflowX: "auto" }}>

@@ -409,7 +409,7 @@ async function paidEmailWouldLeave<T extends Record<string, unknown>>(tx: Transa
  * (`canManageShop`). Marked paid, the member is told («Comanda ta e plătită»), in the language they
  * ordered in, at their account's address — none when the account is gone, and none when the shop manager
  * answered the question «… fără email» (`sendEmail: false`; the design «telling the owner about every
- * email a staff press sends», slice 4, §NNN), which the payment's audit row records as `emailSkipped` — only when the email
+ * email a staff press sends», slice 4, §976), which the payment's audit row records as `emailSkipped` — only when the email
  * would have left (`paidEmailWouldLeave`).
  */
 export async function moveOrderByClub<T extends Record<string, unknown>>(

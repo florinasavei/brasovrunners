@@ -29,7 +29,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { drawnOpen, elementWith, planPointBar, planPointsOf, planSummaryOf } from "../../helpers/volunteer-plan";
 
 /**
- * §952 amended by §NNN («Poze și hărți»), BR-REQ-050-02, BR-REQ-060-01 — the pictures of «Planul voluntarilor» (the owner,
+ * §952 amended by §978 («Poze și hărți»), BR-REQ-050-02, BR-REQ-060-01 — the pictures of «Planul voluntarilor» (the owner,
  * 2026-11-16, with a picture of the route and its volunteers' points numbered on it: «trebui sa pot incarca si planul
  * voluntarilor pe traseu in genul [pozei]»; and 2026-11-18: «Poza planului trebuie sa fie mai sus, si sa pot pune mai multe
  * poze»), from a real database:
@@ -294,7 +294,7 @@ async function press(action: (form: FormData) => Promise<void>, fields: Record<s
 }
 const toasted = () => state.flashed.map((value) => decodeFlash(value)?.key);
 
-describe("§NNN the plan's pictures: added, each last, and taken off", () => {
+describe("§978 the plan's pictures: added, each last, and taken off", () => {
   it("lets the Organizer add a stored picture to the plan, audited with its id alone, and moves nothing of the event", async () => {
     const picture = await storedPicture();
     const before = await eventRowOf();
@@ -432,7 +432,7 @@ describe("§NNN the plan's pictures: added, each last, and taken off", () => {
   });
 });
 
-describe("§NNN the plan reads its pictures", () => {
+describe("§978 the plan reads its pictures", () => {
   it("returns none without any, and everything the plan returned before", async () => {
     const plan = await readVolunteerPlan(db, staff.MODERATOR!, raceId);
     expect(plan.pictures).toEqual([]);
@@ -496,7 +496,7 @@ describe("§NNN the plan reads its pictures", () => {
   });
 });
 
-describe("§NNN a picture used on a plan is the plan's (the reference check, §73)", () => {
+describe("§978 a picture used on a plan is the plan's (the reference check, §73)", () => {
   it("is kept by the sweep, refused by the pictures page's delete, and listed once as used by the event's plan", async () => {
     const picture = await storedPicture();
     await getStorage().put(objectKey(picture.keyPrefix, "web"), Buffer.from("web"), "image/webp");
@@ -583,7 +583,7 @@ describe("§NNN a picture used on a plan is the plan's (the reference check, §7
   });
 });
 
-describe("§NNN the page's presses: «Adaugă o poză», «Șterge poza»", () => {
+describe("§978 the page's presses: «Adaugă o poză», «Șterge poza»", () => {
   // Back to «Poze și hărți», open, in the view the press came from — «Tabel» for a form that names none (§974).
   const back = (view = "table") => `/ro/admin/events/${raceId}/plan-voluntari?view=${view}&saved=planMaps#plan-maps`;
   const refusedAt = (code: string) => `/ro/admin/events/${raceId}/plan-voluntari?view=table&planError=${code}#admin-alert`;
@@ -673,7 +673,7 @@ describe("§NNN the page's presses: «Adaugă o poză», «Șterge poza»", () =
   });
 });
 
-describe("§NNN «Poze și hărți» draws the pictures", () => {
+describe("§978 «Poze și hărți» draws the pictures", () => {
   it("is the first fold, closed while empty, saying it holds nothing — the plan as before under it, plus the upload", async () => {
     for (const view of ["table", "points"]) {
       const page = await planPage({ view });
@@ -882,7 +882,7 @@ describe("§NNN «Poze și hărți» draws the pictures", () => {
   });
 });
 
-describe("§NNN the pictures and links are one edition's: not carried by a series, a copy or the event's file", () => {
+describe("§978 the pictures and links are one edition's: not carried by a series, a copy or the event's file", () => {
   const AT = new Date("2026-09-25T10:00:00.000Z");
   const FIELDS = {
     type: "RACE",

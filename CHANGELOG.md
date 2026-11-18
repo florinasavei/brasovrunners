@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.65-2026-11-18
+
+- **No email leaves unless the press says so** — a question that may send the person their email (a cancellation, one or in bulk; a race number by hand; «Marchează plătită»; «Transformă în voluntar»; the invitations on «Echipa»; a publication's alert) now ends in two answers, «Anulează înscrierea și trimite emailul» and «Anulează înscrierea fără email», instead of a «Trimite emailul» box ticked in advance; Enter presses neither. §976.
+- **A scrollbar at the top of wide backoffice tables** — a table wider than the screen (the volunteers', the registrations', every list) now has a second horizontal scrollbar right above it, kept in step with the one at its bottom and sticky right under the site header while the table is on screen, so it scrolls sideways without going down to its end; also on the emergency sheet, «Liste date sponsorilor» and the «Vin!» answers. §977.
+- **«Planul voluntarilor»: «Poze și hărți» first, and «Fără punct» you place people from** — the plan's map is now several pictures and links (a Google My Maps address, for instance) in the page's first fold, open when it holds something and printed after the plan; «Fără punct» folds, and each person in it gets the plan's points in a list and «Pune»; «Trimite fiecăruia punctul lui» sends every picture and link. §978.
+- **«Ziua cursei» in three tabs** — «Prezența» (the desk as it was), «Clasament» (the chosen race's results) and «Lucruri de adus», a per-event checklist of what to bring, ticked on the day; the desk lists the free spare numbers as ranges, and «Adaugă pe cineva» picks the walk-in's number from them. §979.
 ## BR-V4.64-2026-11-18
 
 - **«Eticheta pe BIB» for every elite bib, elites at the desk, and the participants' table in a fold** — each line of «Elită — doar numele pe BIB» and each registration marked «Elită» gets a box for what its bib prints where the number goes, the first name by default; the race-day desk shows «Elită» and «Pe BIB: …» on an elite's row and lets an Administrator mark an elite and change the label there; the registrations list's table, pager and batch verbs sit in one fold «Participanți», open by default. §975.

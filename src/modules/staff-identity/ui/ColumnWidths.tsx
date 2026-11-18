@@ -38,7 +38,7 @@ import {
  *
  * It also keeps the pinned verbs' column's width as the frame's scroll padding (§943), so a press
  * the browser scrolls into view is never left under it. Whether columns lie past the frame's right
- * edge — what that column fades into — is said by the frame's one scroll watcher, which since §NNN
+ * edge — what that column fades into — is said by the frame's one scroll watcher, which since §977
  * lives in the island above the frame (`TopScrollbar`) and moves its second scrollbar too.
  */
 export default function ColumnWidths({ tableId }: { tableId: string }) {

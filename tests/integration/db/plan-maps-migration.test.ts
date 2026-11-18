@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0213_plan_maps` (§NNN «Poze și hărți», amending §952; the owner, 2026-11-18: «sa pot pune mai multe poze, si
+ * Migration `0213_plan_maps` (§978 «Poze și hărți», amending §952; the owner, 2026-11-18: «sa pot pune mai multe poze, si
  * link-uri»), proven on real PostgreSQL (PGlite): two new tables — the plan's pictures and its links —, each cascading from
  * its event, with their checks; each event's one picture of the release before copied in at position 1 when it names a
  * stored picture that is no film's poster, so no plan loses its picture; the old column left where it was; and the file only

@@ -154,7 +154,7 @@ export function StaffBirthDateField({
   );
 }
 
-/** Where one event's desk spares stand for the walk-in's box (§444, §NNN): none reserved, every one given, or the free ones. */
+/** Where one event's desk spares stand for the walk-in's box (§444, §979): none reserved, every one given, or the free ones. */
 export type HandedBibSpares =
   | { kind: "none" }
   | { kind: "out" }
@@ -169,7 +169,7 @@ const NO_NUMBER = "";
  * with the event, so a new choice brings its own spares — and after a refusal it holds what was posted (§315). Plain data
  * crosses the boundary: each event's spares by id, and the words.
  *
- * **While the chosen event has free spares (§NNN; the owner, 2026-11-18: «trebuie sa pot selecta din acele BIB-uri goale (de
+ * **While the chosen event has free spares (§979; the owner, 2026-11-18: «trebuie sa pot selecta din acele BIB-uri goale (de
  * rezerva)»)** the box is a native select of them, lowest first and the lowest chosen — the number proposed before — then
  * «Alt număr…», which shows the number box to type another bib from the box, and «Fără număr acum», which posts nothing so the
  * site draws one. Without spares it is the number box as it always was. The server is unchanged: it receives a number or none,
@@ -281,7 +281,7 @@ function SpareBibChoice({
 }
 
 /**
- * «Numere de rezervă libere» on the walk-in's form (§NNN): the chosen event's line, the desk's own words (`spare-line.ts`),
+ * «Numere de rezervă libere» on the walk-in's form (§979): the chosen event's line, the desk's own words (`spare-line.ts`),
  * following the event select. Plain strings by id; an event missing here says nothing.
  */
 export function StaffSparesLine({ lines }: { lines: Readonly<Record<string, string>> }) {

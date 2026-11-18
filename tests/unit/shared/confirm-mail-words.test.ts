@@ -228,7 +228,7 @@ describe("confirmWords — a press that writes to nobody, and the quieter lines"
   });
 });
 
-describe("the email's two answers in the builder (§NNN, amending slice 4 of the design «telling the owner about every email a staff press sends»)", () => {
+describe("the email's two answers in the builder (§976, amending slice 4 of the design «telling the owner about every email a staff press sends»)", () => {
   it("words a person's press «{action} și trimite emailul» / «{action} fără email», raw for the dialog to fill, on the usual field", async () => {
     const words = await confirmWords();
     const mail = words.mail({ to: "Ana Pop", type: "BIB_ASSIGNED", optOut: true });

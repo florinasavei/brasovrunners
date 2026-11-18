@@ -190,7 +190,7 @@ export function spareRangeOfQuery(from: string | undefined, to: string | undefin
 }
 
 /**
- * The free spares as the desk reads them (§NNN, beside §444): runs of consecutive numbers written as a range, every other
+ * The free spares as the desk reads them (§979, beside §444): runs of consecutive numbers written as a range, every other
  * number alone, lowest first — `[155, 156, 157, 158, 160, 162, 163]` → «155–158, 160, 162–163». `write` turns a number into
  * what the event's bibs print (`formatRaceNumber`, «007» under three digits). The input is the sorted list
  * `freeSpareNumbers` gives; it is sorted again here, so a caller cannot make it lie.

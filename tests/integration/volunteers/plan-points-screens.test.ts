@@ -468,7 +468,7 @@ describe("§961 the plan's page: two groups, the summary, and the plan's own poi
       expect([...select.matchAll(/<option value="([0-9a-f-]{36})"/g)].map((match) => match[1]), id).toEqual([race.people.radu]);
       expect(pointOf(page, id)).toMatch(new RegExp(`data-testid="plan-place-form"[\\s\\S]*?name="checkpointId" value="${id}"`));
     }
-    // «Fără punct»: the people at no point at all, with the help that says where to put them — a fold since §NNN.
+    // «Fără punct»: the people at no point at all, with the help that says where to put them — a fold since §978.
     const unplaced = page.slice(page.indexOf('data-testid="plan-unplaced"'));
     expect(unplaced).toContain(`</svg>${ro.Admin.volunteers.plan.unplacedTitle}<`);
     expect(ro.Admin.volunteers.plan.unplacedTitle).toBe("Fără punct");

@@ -9,7 +9,7 @@ import { formatRaceNumber, type RaceNumberFormat } from "./domain/race-number";
 import { spareRunsText } from "./domain/spare-bibs";
 
 /**
- * «Numere de rezervă libere» (§NNN; the owner, 2026-11-18: «trebuie sa pot selecta din acele BIB-uri goale (de rezerva) care
+ * «Numere de rezervă libere» (§979; the owner, 2026-11-18: «trebuie sa pot selecta din acele BIB-uri goale (de rezerva) care
  * momentan sunt intre 155 si 163, trebuie sa si afisez undeva asta»): where one event's desk spares (§444) stand, as the
  * desk and the walk-in's form say it — none reserved, every one given, or the free ones, each as the event's bibs print it.
  */

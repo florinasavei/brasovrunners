@@ -3,10 +3,10 @@ import { formatRaceNumber } from "@/modules/registrations/domain/race-number";
 import { spareRunsText } from "@/modules/registrations/domain/spare-bibs";
 
 /**
- * §NNN — the desk's line of free spares (§444) writes runs of consecutive numbers as ranges, every other number alone, lowest
+ * §979 — the desk's line of free spares (§444) writes runs of consecutive numbers as ranges, every other number alone, lowest
  * first, each as the event's bibs print it.
  */
-describe("§NNN spareRunsText", () => {
+describe("§979 spareRunsText", () => {
   it("writes runs as ranges and lone numbers alone", () => {
     expect(spareRunsText([155, 156, 157, 158, 159, 160, 161, 162, 163])).toBe("155–163");
     expect(spareRunsText([155, 156, 157, 158, 160, 162, 163])).toBe("155–158, 160, 162–163");

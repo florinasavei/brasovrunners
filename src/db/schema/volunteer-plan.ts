@@ -4,7 +4,7 @@ import { events } from "./events";
 import { mediaAssets } from "./gallery";
 
 /**
- * «Poze și hărți» of «Planul voluntarilor» (§NNN, amending §952; the owner, 2026-11-18: «Poza planului trebuie sa fie mai sus,
+ * «Poze și hărți» of «Planul voluntarilor» (§978, amending §952; the owner, 2026-11-18: «Poza planului trebuie sa fie mai sus,
  * si sa pot pune mai multe poze, si link-uri, am facut spre exemplu un google maps custom map si vreau sa pot pune url-ul»):
  * the plan as the organizers drew it — several stored pictures and several addresses (a Google My Maps map, for instance) —,
  * kept with the plan of one event. Written and read by whoever works the volunteers (`canManageVolunteers`), in
@@ -18,9 +18,9 @@ import { mediaAssets } from "./gallery";
  * (the events' plan picture column, no longer written: the contract that drops it is a later release) are here.
  */
 
-/** The most pictures one plan holds (§NNN): a map or two, a detail of the start, the parking — never an album. */
+/** The most pictures one plan holds (§978): a map or two, a detail of the start, the parking — never an album. */
 export const PLAN_PICTURES_MAX = 12;
-/** The most links one plan holds (§NNN). */
+/** The most links one plan holds (§978). */
 export const PLAN_LINKS_MAX = 12;
 /** The longest address a link may be, in characters: a Google My Maps link is some eighty; a long one with its query, a few hundred. */
 export const PLAN_LINK_URL_MAX = 2000;

@@ -12,7 +12,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 
 /**
  * The email as the answer pressed (the design «telling the owner about every email a staff press sends», 2026-11-03,
- * slice 4, amended by §NNN): the services of the presses whose question ends in «… și trimite emailul» or «… fără
+ * slice 4, amended by §976): the services of the presses whose question ends in «… și trimite emailul» or «… fără
  * email», answered «… fără email» (`sendEmail: false`). Each does exactly what it does answered «… și trimite emailul»,
  * keeps back the person's own email — and with it its club copies — and says `emailSkipped` on the press's own
  * audit row; what the press sends anybody else still goes: the freed place's offer to the first in line. A refusal under

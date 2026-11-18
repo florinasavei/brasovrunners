@@ -192,7 +192,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     await page.getByRole("checkbox", { name: /a cerut/ }).check();
     /*
       «Numărul dat acum» (§444) is a select of the free desk spares, the lowest chosen, only where
-      somebody printed spares for this event (§NNN); elsewhere it is the box, empty. A spare is on
+      somebody printed spares for this event (§979); elsewhere it is the box, empty. A spare is on
       paper already, so the page would say «E tipărit» and the list would offer no «Marchează BIB-ul
       ca printat». «Fără număr acum» — or the box left empty — lets the confirmation draw the next
       number in order (§548): the path this story is about, whatever a shared database holds.

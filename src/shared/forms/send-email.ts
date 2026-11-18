@@ -1,6 +1,6 @@
 /**
  * Leaving the person's own email unsent (the design «telling the owner about every email a staff press sends», 2026-11-03,
- * slice 4, its section 4: the owner's choice 3 — let him leave the person's email unsent where that is sensible; §NNN:
+ * slice 4, its section 4: the owner's choice 3 — let him leave the person's email unsent where that is sensible; §976:
  * a choice made at every press).
  *
  * The one parser of the choice, for every press that offers it. Two ways it reaches a form:

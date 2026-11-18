@@ -145,7 +145,7 @@ const referencedSomewhere = sql`(
   -- the column has no foreign key, so this is what keeps the organizers' map from the sweep and from
   -- a delete on the pictures page. Drafts and past events included: a plan is reprinted.
   OR EXISTS (SELECT 1 FROM ${events} WHERE ${events.volunteerPlanMediaAssetId} = ${mediaAssets.id})
-  -- A picture of «Poze și hărți» (§NNN, amending §952): a plan holds several since, by id in their own table. The column
+  -- A picture of «Poze și hărți» (§978, amending §952): a plan holds several since, by id in their own table. The column
   -- above is written by nobody now and still counted until the contract that drops it, so nothing it names is swept first.
   OR EXISTS (SELECT 1 FROM ${eventVolunteerPlanPictures} WHERE ${eventVolunteerPlanPictures.mediaAssetId} = ${mediaAssets.id})
   -- No events.video_poster_url any more (§485): a film is a figure in the description, whose
@@ -389,7 +389,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .from(mediaAssets)
     .innerJoin(events, eq(events.volunteerPlanMediaAssetId, mediaAssets.id))
     .leftJoin(eventTranslations, eq(eventTranslations.eventId, events.id));
-  // A picture of a plan's «Poze și hărți» (§NNN): the same line, «Planul voluntarilor: {title}» — one a plan, however it is held.
+  // A picture of a plan's «Poze și hărți» (§978): the same line, «Planul voluntarilor: {title}» — one a plan, however it is held.
   const inVolunteerPlanPictures = await db
     .select({ assetId: eventVolunteerPlanPictures.mediaAssetId, id: eventVolunteerPlanPictures.eventId, title: eventTranslations.title, locale: eventTranslations.locale })
     .from(eventVolunteerPlanPictures)

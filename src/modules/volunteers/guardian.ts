@@ -427,7 +427,7 @@ export async function requestVolunteerGuardian<T extends Record<string, unknown>
  * signature; they never sign for them.
  *
  * `sendEmail: false` (its question answered «… fără email» — the design «telling the owner about every email a
- * staff press sends», slice 4, §NNN): the record is the same, the volunteer's second copy of their agreement is not queued —
+ * staff press sends», slice 4, §976): the record is the same, the volunteer's second copy of their agreement is not queued —
  * their first, sent when they accepted their own, stands; the guardian is sent nothing either way — and the audit row
  * says `emailSkipped` when a copy would have left.
  */

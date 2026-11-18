@@ -324,7 +324,7 @@ export default function ActionFormIsland({
 
   // The question on screen, with the button that asked it — the submitter, replayed on "yes".
   const [asking, setAsking] = useState<{ spec: ConfirmSpec; submitter: HTMLElement | null } | null>(null);
-  // The email's answers' fields (§NNN): drawn below as hidden `on`, so a press posts the field whichever question it met.
+  // The email's answers' fields (§976): drawn below as hidden `on`, so a press posts the field whichever question it met.
   const optOutFields = useMemo(() => emailOptOutFields(confirm), [confirm]);
   // The questions' optional boxes (§956, `ConfirmSpec.option`): each a hidden input the page drew empty, answered `on` or empty.
   const optionalFields = useMemo(() => optionFields(confirm), [confirm]);
@@ -341,7 +341,7 @@ export default function ActionFormIsland({
     }
     const element = event.currentTarget;
     const submitter = ((event.nativeEvent as SubmitEvent).submitter ?? null) as HTMLElement | null;
-    // A press let through unasked sends the person's email (§NNN): no earlier question's «… fără email» rides along —
+    // A press let through unasked sends the person's email (§976): no earlier question's «… fără email» rides along —
     // and it is the narrower press (§956): no earlier question's optional tick rides along either.
     const unasked = () => {
       for (const field of optOutFields) {
@@ -411,7 +411,7 @@ export default function ActionFormIsland({
     // A box ticked in the dialog (§888): its hidden input carries the tick to the action; the dialog let nothing through unticked.
     const ticked = which === "confirm" ? tickAnswer(pending.spec) : null;
     if (ticked) write(ticked.field, ticked.value);
-    // The email's answer (§NNN): every opt-out of this form back to `on`, then this question's — «… fără email» `off` —, so a
+    // The email's answer (§976): every opt-out of this form back to `on`, then this question's — «… fără email» `off` —, so a
     // dialog without the choice (the club's refusal, which always tells the person) never sends an earlier press's «fără email».
     for (const field of optOutFields) write(field, "on");
     const optedOut = emailOptOutAnswer(pending.spec, given.emailOff);

@@ -13,7 +13,7 @@ import { openFold } from "./support/fold";
  * What only a browser can see, and the unit and PGlite tests cannot: each press is a form in a fold on a long page,
  * posted through the one confirmation dialog — so, as the Administrator: the fold on the registration's page opens, the
  * role is chosen from the event's own, the question names the person's two emails and ends in «… și trimite emailul» or
- * «… fără email» (§NNN), and the
+ * «… fără email» (§976), and the
  * press lands on the volunteer's own page, where the person is «Confirmat» and wears the first number of the volunteers'
  * series; from there the second fold holds the two names filled from the volunteer's one line and the relay tick, its
  * question names the address, and the press lands on the registration's page with the place and the declaration still to
@@ -115,7 +115,7 @@ test.describe("§948 «Transformă în voluntar» and «Transformă în alergăt
     await expect(dialog).toContainText(`Pleacă 1 email către ${runner}: „Înscriere anulată”.`);
     await expect(dialog).toContainText("Apoi încă 1 email către aceeași persoană: „Rolul tău de voluntar”.");
     await expect(dialog).toContainText("Locul eliberat se oferă primului de pe lista de așteptare");
-    // No box ticked in advance (§NNN): the email is the answer pressed.
+    // No box ticked in advance (§976): the email is the answer pressed.
     await expect(dialog.getByRole("checkbox")).toHaveCount(0);
     await expect(dialog.getByTestId("confirm-dialog-confirm")).toHaveText("Transformă în voluntar și trimite emailul");
     await expect(dialog.getByTestId("confirm-dialog-skip-email")).toHaveText("Transformă în voluntar fără email");

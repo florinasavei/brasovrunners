@@ -3,10 +3,10 @@ import { PLAN_LINK_LABEL_MAX, PLAN_LINK_URL_MAX, PLAN_LINKS_MAX, PLAN_PICTURES_M
 import { planLinkHost, planLinkShort, planMapsRefusalValues, PlanMapsRefusal, readPlanLinkLabel, readPlanLinkUrl } from "@/modules/volunteers/domain/plan-link";
 
 /**
- * §NNN «Poze și hărți» — what an address must be to stand on the volunteers' plan, and how the page and the email say one: pure
+ * §978 «Poze și hărți» — what an address must be to stand on the volunteers' plan, and how the page and the email say one: pure
  * rules (`volunteers/domain/plan-link.ts`), held by the service before anything is written.
  */
-describe("§NNN a link of the plan", () => {
+describe("§978 a link of the plan", () => {
   it("takes an http(s) address, trimmed, as typed", () => {
     expect(readPlanLinkUrl("  https://www.google.com/maps/d/viewer?mid=1AbC&usp=sharing ")).toBe("https://www.google.com/maps/d/viewer?mid=1AbC&usp=sharing");
     expect(readPlanLinkUrl("http://traseu.example.test/harta.pdf")).toBe("http://traseu.example.test/harta.pdf");

@@ -1,7 +1,7 @@
 import { ADMIN_TABLE_SURFACE } from "@/shared/ui/surface";
 
 /**
- * The second scrollbar above a wide backoffice table (§NNN; the owner, 2026-11-18, of the volunteers' list: «vreau sa pot
+ * The second scrollbar above a wide backoffice table (§977; the owner, 2026-11-18, of the volunteers' list: «vreau sa pot
  * da scroll intr-un tabel si din partea asta de sus, fara sa mai fiu nevoit sa dau scroll pana jos»). The pure half: the
  * frame's address and the bar's look, plain strings and objects, so a Server Component can name the frame and the island
  * (`TopScrollbar`) can find it — no element crosses the boundary (§370). `watchScrollRow`'s `mirror` keeps it in step.
@@ -16,7 +16,7 @@ export function frameIdFor(name: string): string {
 export const STICKY_HEADER_SELECTOR = "[data-sticky-header]";
 
 /**
- * How far from the window's top the bar sticks (§NNN): the sticky header's real height, border included — so no strip of
+ * How far from the window's top the bar sticks (§977): the sticky header's real height, border included — so no strip of
  * rows shows between the two and the bar never slides under the header — and 0 where there is no sticky header (none
  * found, or not sticky there). Read, not a constant: the header's height follows its logo, its links and the club's
  * look, and `HEADER_CLEARANCE_PX` (76) is a toast's and an anchor's clearance, taller than the header itself.
@@ -29,7 +29,7 @@ export function stickyClearancePx(header: { offsetHeight: number } | null, posit
 type Watcher = new (callback: () => void) => { observe(target: never): void; disconnect(): void };
 
 /**
- * Keeps `--top-scrollbar-top` on the bar equal to `stickyClearancePx` (§NNN): written at once — before the bar is first
+ * Keeps `--top-scrollbar-top` on the bar equal to `stickyClearancePx` (§977): written at once — before the bar is first
  * shown — and again whenever the header's size changes (a window narrowed until a link folds, the club's look switched).
  * `position` reads the header's computed position at that moment. The observer is a constructor passed in, so a test can
  * drive it without a browser. Returns the cleanup.

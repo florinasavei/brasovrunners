@@ -10,7 +10,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
 /*
-  «Lucruri de adus» (§NNN; the owner, 2026-11-18, three days before the race: «un alt tab pentru ziua cursei unde sa bifam
+  «Lucruri de adus» (§979; the owner, 2026-11-18, three days before the race: «un alt tab pentru ziua cursei unde sa bifam
   "lucruri de adus" un fel de inventar, unde sa punem: prelungitoare, markere, etc»): one event's checklist of the things the
   organizers bring to the race, on its own tab of «Ziua cursei» (`/admin/checkin/lucruri`).
 

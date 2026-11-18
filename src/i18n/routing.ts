@@ -313,7 +313,7 @@ export const routing = defineRouting({
     "/admin/shop/products/new": "/admin/shop/products/new",
     "/admin/shop/products/[id]": "/admin/shop/products/[id]",
     "/admin/checkin": "/admin/checkin",
-    /** «Lucruri de adus» (§NNN): «Ziua cursei»'s checklist of the things to bring. A static segment, so it wins over `[code]`. */
+    /** «Lucruri de adus» (§979): «Ziua cursei»'s checklist of the things to bring. A static segment, so it wins over `[code]`. */
     "/admin/checkin/lucruri": "/admin/checkin/lucruri",
     "/admin/checkin/[code]": "/admin/checkin/[code]",
     "/admin/legal": "/admin/legal",

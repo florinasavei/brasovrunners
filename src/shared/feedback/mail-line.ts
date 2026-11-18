@@ -24,7 +24,7 @@ import type { FormNotice } from "./notice";
  * Pure, so it is unit-tested in Node; the cookie is the browser's to rewrite, so every value is checked before it is
  * read, and a line that does not add up is no line.
  *
- * **What the press chose not to send** (slice 4, §NNN): «… fără email», or a box unticked (`mailSkipped`, how many emails it kept
+ * **What the press chose not to send** (slice 4, §976): «… fără email», or a box unticked (`mailSkipped`, how many emails it kept
  * back) is said first — the person was sent nothing, or the people of a bulk press —, then whatever else left (the offer to the next in line); a publication's new-event alert
  * (`mailAlert`) is said last: left to the job's next pass, or not sent at all.
  */

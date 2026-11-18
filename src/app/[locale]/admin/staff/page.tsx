@@ -105,7 +105,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
   const current = await searchParams;
   const { error, saved, invite, reason, account, count, failed, retried, report, mailSkipped } = current;
   /**
-   * «… fără invitație» (slice 4, §NNN) and an invitation kept back: `mailSkipped` counts them (`mailSkippedOf`), and
+   * «… fără invitație» (slice 4, §976) and an invitation kept back: `mailSkipped` counts them (`mailSkippedOf`), and
    * a press that added nobody new kept none back, so it carries none — and «Nu a plecat nicio invitație» is not said.
    */
   const invitationsKept = (mailSkippedCount(mailSkipped) ?? 0) > 0;
@@ -544,7 +544,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
               to: { name: "{displayName}", address: "{email}" },
               type: kind === "MEMBER" ? "MEMBER_INVITATION" : "STAFF_INVITATION",
               also: invitesSend ? [words.line("zitadel")] : [],
-              // «Adaugă fără invitație» (slice 4, §NNN): the person is added and told nothing — Zitadel is not asked either.
+              // «Adaugă fără invitație» (slice 4, §976): the person is added and told nothing — Zitadel is not asked either.
               optOut: { sendLabel: t.raw("staff.inviteSendButton") as string, skipLabel: t.raw("staff.inviteSkipButton") as string },
             }),
             fillFrom: ["displayName", "email"],
@@ -659,7 +659,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
               to: { upToLinesOf: "members", audience: "memberAddresses" },
               type: "MEMBER_INVITATION",
               also: invitesSend ? [words.line("zitadelEach"), words.line("zitadelAgain")] : [],
-              // «Adaugă membrii fără invitații» (slice 4, §NNN): the members are added and nobody is written to.
+              // «Adaugă membrii fără invitații» (slice 4, §976): the members are added and nobody is written to.
               optOut: { sendLabel: t.raw("staff.membersSendButton") as string, skipLabel: t.raw("staff.membersSkipButton") as string },
             }),
             confirmLabel: t("staff.membersInvite"),

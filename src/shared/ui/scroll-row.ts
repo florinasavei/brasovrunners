@@ -82,7 +82,7 @@ export type ScrollRowElement = {
 type Watcher = new (callback: () => void) => { observe(target: never, options?: never): void; disconnect(): void };
 
 /**
- * A second scrollbar kept in step with the scroller (§NNN; `TopScrollbar` draws it above a wide backoffice table): a box
+ * A second scrollbar kept in step with the scroller (§977; `TopScrollbar` draws it above a wide backoffice table): a box
  * that scrolls sideways itself, its one child as wide as `--top-scrollbar-width` says. A real element satisfies it, and so
  * does a fake in a test.
  */
@@ -95,13 +95,13 @@ export type ScrollMirrorElement = {
   removeEventListener(type: "scroll", listener: () => void): void;
 };
 
-/** Whether a scroller has anything past its edge (§NNN): more than a pixel, so a rounding never shows a bar. */
+/** Whether a scroller has anything past its edge (§977): more than a pixel, so a rounding never shows a bar. */
 export function overflowsSideways(scrollWidth: number, clientWidth: number): boolean {
   return scrollWidth > clientWidth + 1;
 }
 
 /**
- * How wide the mirror's child is (§NNN): its own width plus the scroller's room, so the two scroll exactly as far and one
+ * How wide the mirror's child is (§977): its own width plus the scroller's room, so the two scroll exactly as far and one
  * `scrollLeft` means the same place in both — the bar need not be as wide as the frame (its border, a vertical bar).
  */
 export function mirrorContentWidth(mirrorClientWidth: number, scrollWidth: number, clientWidth: number): number {
@@ -112,7 +112,7 @@ export function mirrorContentWidth(mirrorClientWidth: number, scrollWidth: numbe
 export type GivenPosition = { value?: number };
 
 /**
- * One step of keeping two scrollers in step (§NNN): `to` takes `from`'s position only when they differ by a pixel or more,
+ * One step of keeping two scrollers in step (§977): `to` takes `from`'s position only when they differ by a pixel or more,
  * so a zoomed page's fractional positions never start a write. With `given`, it remembers the position `to` now holds,
  * so `isEcho` knows `to`'s next «scroll» for the answer to this write rather than a hand's move. Returns whether it wrote.
  */
@@ -128,7 +128,7 @@ export function keepInStep(from: { scrollLeft: number }, to: { scrollLeft: numbe
 }
 
 /**
- * Whether a «scroll» of `box` is the echo of the write `given` remembers (§NNN), not a hand's: the browser says «scroll» a
+ * Whether a «scroll» of `box` is the echo of the write `given` remembers (§977), not a hand's: the browser says «scroll» a
  * frame after the write, when the other side's hand may already have moved on, and answering it would write the other side
  * back to where it was — the thumb flickering back mid-drag, a running smooth scroll cut. The memory is taken either way:
  * one write, one echo.
@@ -145,7 +145,7 @@ export function isEcho(box: { scrollLeft: number }, given: GivenPosition): boole
  * child list, whenever a child is added or removed (a soft navigation to a month with other
  * surface chips keeps the instance, so the row's scroll position survives and the cue must follow).
  * With `bar`, it also shows and moves the drawn scrollbar (`SCROLL_BAR_SX`) and hides the
- * browser's own while the drawn one is up. With `mirror` (§NNN), it shows a second scrollbar while the
+ * browser's own while the drawn one is up. With `mirror` (§977), it shows a second scrollbar while the
  * scroller overflows, as far-reaching as the scroller, and keeps the two in step both ways (`keepInStep`), the «scroll»
  * that echoes its own write answering nothing (`isEcho`), so neither side is ever written back by a late echo:
  * the same scroll, resize and mutation that move the edge cue move the mirror, so a frame has one watcher.
@@ -158,7 +158,7 @@ export function watchScrollRow(
   bar?: ScrollBarElement,
   mirror?: ScrollMirrorElement,
 ): () => void {
-  // What each side was last given by the other (§NNN): its next «scroll» is that write's echo, and answers nothing.
+  // What each side was last given by the other (§977): its next «scroll» is that write's echo, and answers nothing.
   const givenFrame: GivenPosition = {};
   const givenMirror: GivenPosition = {};
   // `follow` false: this is the echo of the mirror's write, so the frame is where the mirror put it — or behind a hand

@@ -74,7 +74,7 @@ const ITEM_FOLD_SX = { flex: "1 1 160px", minWidth: 0, "&[open]": { flexBasis: "
 const ITEM_WORDS_SX = { gridArea: "words", minWidth: 0 } as const;
 
 /**
- * «Lucruri de adus» (§NNN; the owner, 2026-11-18: «de asemenea un alt tab pentru ziua cursei unde sa bifam "lucruri de adus"
+ * «Lucruri de adus» (§979; the owner, 2026-11-18: «de asemenea un alt tab pentru ziua cursei unde sa bifam "lucruri de adus"
  * un fel de inventar, unde sa punem: prelungitoare, markere, etc»): one event's checklist of the things the organizers bring to
  * the race, the third tab of «Ziua cursei» (`raceDayTabs`).
  *

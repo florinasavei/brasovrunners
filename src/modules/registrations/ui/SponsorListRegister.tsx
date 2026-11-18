@@ -165,7 +165,7 @@ export default async function SponsorListRegister({ locale, lists, now, level, r
       openWhen={{ saved }}
       data-testid="sponsor-register"
     >
-      {/* The wide table and its scrollbar at the top too (§NNN), in one box so the bar leaves with the table. */}
+      {/* The wide table and its scrollbar at the top too (§977), in one box so the bar leaves with the table. */}
       <Box sx={{ display: { xs: "none", md: "block" } }}>
         <TopScrollbar frameId={frameIdFor("sponsor-register")} />
         <Box id={frameIdFor("sponsor-register")} sx={{ border: 1, borderColor: "divider", borderRadius: 1, overflowX: "auto" }}>
