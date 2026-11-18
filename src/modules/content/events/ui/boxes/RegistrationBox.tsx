@@ -829,14 +829,14 @@ export default async function RegistrationBox({
                           </Typography>
                           {(
                             [
-                              ["raffleRunners", event?.raffleRunners ?? true, t("editor.raffle.runners")],
-                              ["raffleElites", event?.raffleElites ?? true, t("editor.raffle.elites")],
-                              ["raffleVolunteers", event?.raffleVolunteers ?? true, t("editor.raffle.volunteers")],
+                              ["raffleRunners", event?.raffleRunners ?? true, t("editor.raffle.runners"), t("editor.raffle.runnersHelp")],
+                              ["raffleElites", event?.raffleElites ?? true, t("editor.raffle.elites"), t("editor.raffle.elitesHelp")],
+                              ["raffleVolunteers", event?.raffleVolunteers ?? true, t("editor.raffle.volunteers"), t("editor.raffle.volunteersHelp")],
                             ] as const
-                          ).map(([name, on, label]) => (
+                          ).map(([name, on, label, help]) => (
                             <Box key={name}>
                               <input type="hidden" name={`event.${name}.present`} value="1" />
-                              <CheckboxField name={`event.${name}`} defaultChecked={on}>
+                              <CheckboxField name={`event.${name}`} defaultChecked={on} help={help}>
                                 {label}
                               </CheckboxField>
                             </Box>

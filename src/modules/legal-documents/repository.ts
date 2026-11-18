@@ -1,6 +1,7 @@
 import { and, desc, eq, isNull, lte, sql } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
+import { eventRaffleEntries } from "@/db/schema/event-raffle-entries";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import {
@@ -1083,12 +1084,14 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       // Every signature against this version: a race's acceptances, a group run's optional
       // self-declarations (§393), a volunteer's accepted agreement (§758) and a guardian's (§768: the version
       // in force when the parent pressed, which may not be the volunteer's own) — each is somebody
-      // relying on these exact words, and the guardian's column is a RESTRICT foreign key too.
+      // relying on these exact words, and the guardian's column is a RESTRICT foreign key too. A raffle sign-up's acceptance of
+      // «Regulamentul tombolei» (§NNN) is one more: its column is RESTRICT as well, so the version is never deleted under it.
       acceptanceCount: sql<number>`(
         (select count(*)::int from ${declarationAcceptances} where ${declarationAcceptances.legalDocumentId} = ${legalDocuments.id})
         + (select count(*)::int from ${groupRunDeclarations} where ${groupRunDeclarations.legalDocumentId} = ${legalDocuments.id})
         + (select count(*)::int from ${eventVolunteers} where ${eventVolunteers.agreementDocumentId} = ${legalDocuments.id})
         + (select count(*)::int from ${eventVolunteers} where ${eventVolunteers.guardianDocumentId} = ${legalDocuments.id})
+        + (select count(*)::int from ${eventRaffleEntries} where ${eventRaffleEntries.rulesDocumentId} = ${legalDocuments.id})
       )`,
       eventCount: sql<number>`(select count(*)::int from ${events} where ${events.declarationDocumentId} = ${legalDocuments.id})`,
       // Matched on the version *number*, per key, because that is the only shape this reference

@@ -459,7 +459,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
         {t("volunteers.screen.raffleTick")}
       </TickButton>
       {/* «În dreptul fiecărei persoane» (§NNN): Da, or Nu with the reason in a few words. */}
-      {raffleReasons.has(row.id) && <RaffleStandingNote words={raffleNoteWords(t, raffleReasons.get(row.id) ?? "in")} inRaffle={raffleReasons.get(row.id) === "in"} />}
+      {raffleReasons.has(row.id) && <RaffleStandingNote words={raffleNoteWords(t, raffleReasons.get(row.id) ?? "in")} takesPart={raffleReasons.get(row.id) === "in"} />}
     </Box>
   );
 

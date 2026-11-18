@@ -1412,7 +1412,7 @@
       },
       "raffle": {
         "column": "Tombolă",
-        "columnHint": "Bifa: participă sau e scos de organizatori — debifează ca s-o scoți. Dedesubt: dacă participă acum, după grupele bifate și, cu înscriere separată, dacă s-a înscris. Intern: persoana nu e anunțată.",
+        "columnHint": "Bifat: participă; debifează ca s-o scoți. Dedesubt: dacă participă acum — după grupele bifate și, cu înscriere separată, dacă s-a înscris. Intern: persoana nu e anunțată.",
         "tick": "Participă",
         "takeOutFor": "Scoate de la tombolă: {name}",
         "putInFor": "Pune la tombolă: {name}",
@@ -3076,7 +3076,7 @@
       "kitShirt": "Tricou",
       "kitShirtHelp": "Dacă e bifat, formularul cere mărimea tricoului.",
       "hasRaffle": "Avem tombolă",
-      "hasRaffleHelp": "Doar pentru organizatori. Bifat, listele de înscrieri și de voluntari arată coloana „Tombolă”, iar „Ziua cursei” are fila „Tombolă”. Pe site apare ceva doar cu înscriere separată, deschisă: formularul tombolei.",
+      "hasRaffleHelp": "Pentru organizatori: listele de înscrieri și de voluntari arată coloana „Tombolă”, iar „Ziua cursei” fila „Tombolă”. Pe site apare doar formularul, cu înscriere separată deschisă.",
       "askHealthNote": "Informații medicale",
       "askHealthNoteHelp": "Dacă e bifat, formularul cere informații medicale (afecțiuni, alergii, medicație); se șterg la {days} după eveniment.",
       "registrationClosesAt": "Înscrierile se închid",
@@ -4109,7 +4109,10 @@
         "runners": "Alergătorii",
         "elites": "Elitele",
         "volunteers": "Voluntarii",
-        "whoHelp": "Alergătorii: înscrierile confirmate, cu număr de concurs (și ambasadorii). Elitele: înscrierile marcate „Elită” și cei de pe lista de elită a cursei. Voluntarii: cei confirmați, cu număr de voluntar. Bifele contează la ambele moduri de mai jos.",
+        "runnersHelp": "Înscrierile confirmate, cu număr de concurs, nemarcate „Elită” — și ambasadorii.",
+        "elitesHelp": "Înscrierile marcate „Elită” și cei de pe lista de elită a cursei.",
+        "volunteersHelp": "Voluntarii confirmați, cu număr de voluntar.",
+        "whoHelp": "Bifele contează în ambele moduri de mai jos.",
         "how": "Cum participă",
         "howAutomatic": "Din oficiu: toți cei bifați mai sus",
         "howSignUp": "Cu înscriere separată: doar cei care se înscriu",
@@ -4611,7 +4614,8 @@
         "general": "Documente generale",
         "race": "Declarații de cursă",
         "groupRun": "Declarații pentru alergările de grup",
-        "volunteers": "Contractul voluntarilor"
+        "volunteers": "Contractul voluntarilor",
+        "raffle": "Regulamentul tombolei"
       },
       "shortKeys": {
         "PRIVACY_NOTICE": "GDPR",
@@ -6499,7 +6503,7 @@
         "raffleOut": "Nu participă la tombolă",
         "columnRaffle": "Tombolă",
         "raffleTick": "Participă",
-        "raffleHint": "Bifa: participă sau e scos de organizatori — debifează ca s-o scoți. Dedesubt: dacă participă acum, după grupele bifate și, cu înscriere separată, dacă s-a înscris. Intern: persoana nu e anunțată.",
+        "raffleHint": "Bifat: participă; debifează ca s-o scoți. Dedesubt: dacă participă acum — după grupele bifate și, cu înscriere separată, dacă s-a înscris. Intern: persoana nu e anunțată.",
         "columnMessage": "Mesaj",
         "messageHint": "Ce a scris persoana pentru organizatori când s-a oferit ca voluntar. Gol: n-a scris nimic.",
         "columnNotes": "Note interne",

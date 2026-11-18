@@ -55,7 +55,7 @@ const whoEn = [
 
 const signUpRo = [
   "Tombola cere o înscriere separată de înscrierea la eveniment. Cât timp înscrierile la tombolă sunt deschise, te înscrii într-unul dintre aceste feluri:",
-  "• din pagina înscrierii tale la eveniment, la care duce legătura „Gestionează înscrierea” din e-mailurile primite;",
+  "• din pagina înscrierii tale la eveniment, la care duce legătura din e-mailurile primite de la organizator;",
   "• din formularul tombolei de pe pagina evenimentului, cu numărul tău de concurs și numele cu care te-ai înscris; un voluntar bifează că este voluntar și scrie numărul său de voluntar;",
   "• la organizatori, în ziua evenimentului, spunând că accepți acest regulament, pe hârtie sau verbal; tot organizatorii îi înscriu pe voluntari și pe cei de pe lista de elită care le cer acest lucru.",
   "Înscrierea se face numai cu acceptarea acestui regulament. Organizatorul închide înscrierile cel târziu la începutul extragerii.",
@@ -63,7 +63,7 @@ const signUpRo = [
 
 const signUpEn = [
   "The raffle needs a sign-up of its own, separate from the registration for the event. While the raffle's sign-ups are open, you sign up in one of these ways:",
-  "• from your registration's own page for the event, which the “Manage your registration” link in the emails you received opens;",
+  "• from your registration's own page for the event, which the link in the emails you received from the organiser opens;",
   "• from the raffle's form on the event's page, with your race number and the name you registered with; a volunteer ticks that they are a volunteer and types their volunteer number;",
   "• with the organisers, on the day of the event, by saying that you accept these rules, on paper or aloud; the organisers also sign up the volunteers and the people on the elite list who ask them to.",
   "A sign-up is made only by accepting these rules. The organiser closes the sign-ups at the start of the draw at the latest.",
@@ -108,11 +108,11 @@ const dataEn = [
 ];
 
 const withdrawRo = [
-  "Te poți retrage oricând până la extragere: din pagina înscrierii tale, cu „Nu mai particip”, sau spunându-le organizatorilor.",
+  "Te poți retrage oricând până la extragere: din pagina înscrierii tale sau spunându-le organizatorilor.",
 ];
 
 const withdrawEn = [
-  "You may withdraw at any time before the draw: from your registration's own page, with “I'm no longer taking part”, or by telling the organisers.",
+  "You may withdraw at any time before the draw: from your registration's own page or by telling the organisers.",
 ];
 
 const disputesRo = [

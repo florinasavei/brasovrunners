@@ -1412,7 +1412,7 @@
       },
       "raffle": {
         "column": "Raffle",
-        "columnHint": "The tick: in, or taken out by the organisers — untick to take them out. Under it: whether they take part now, by the ticked groups and, with a separate sign-up, whether they signed up. Internal: the person is not told.",
+        "columnHint": "Ticked: in; untick to take the person out. Under it: whether they take part now — by the ticked groups and, with a separate sign-up, whether they signed up. Internal: the person is not told.",
         "tick": "In the raffle",
         "takeOutFor": "Take out of the raffle: {name}",
         "putInFor": "Put in the raffle: {name}",
@@ -3076,7 +3076,7 @@
       "kitShirt": "T-shirt",
       "kitShirtHelp": "When ticked, the form asks for the T-shirt size.",
       "hasRaffle": "We hold a raffle",
-      "hasRaffleHelp": "For the organisers only. Ticked, the registrations' and the volunteers' lists show the “Raffle” column, and “Race day” has the “Raffle” tab. The site shows something only with an open separate sign-up: the raffle's form.",
+      "hasRaffleHelp": "For the organizers: the registrations' and volunteers' lists show the “Raffle” column, and “Race day” the “Raffle” tab. The site shows only the form, with an open separate sign-up.",
       "askHealthNote": "Medical information",
       "askHealthNoteHelp": "When ticked, the form asks for medical information (conditions, allergies, medication); it is deleted {days} after the event.",
       "registrationClosesAt": "Registration closes",
@@ -4109,7 +4109,10 @@
         "runners": "The runners",
         "elites": "The elites",
         "volunteers": "The volunteers",
-        "whoHelp": "Runners: the confirmed registrations with a race number (ambassadors too). Elites: the registrations marked “Elite” and the people on the race's elite list. Volunteers: the confirmed ones with a volunteer number. The ticks count in both modes below.",
+        "runnersHelp": "The confirmed registrations with a race number, not marked “Elite” — ambassadors too.",
+        "elitesHelp": "The registrations marked “Elite” and the people on the race's elite list.",
+        "volunteersHelp": "The confirmed volunteers with a volunteer number.",
+        "whoHelp": "The ticks count in both modes below.",
         "how": "How people take part",
         "howAutomatic": "Automatically: everybody ticked above",
         "howSignUp": "With a separate sign-up: only those who sign up",
@@ -4611,7 +4614,8 @@
         "general": "General documents",
         "race": "Race declarations",
         "groupRun": "Group run declarations",
-        "volunteers": "The volunteers' agreement"
+        "volunteers": "The volunteers' agreement",
+        "raffle": "The raffle rules"
       },
       "shortKeys": {
         "PRIVACY_NOTICE": "GDPR",
@@ -6499,7 +6503,7 @@
         "raffleOut": "Not in the raffle",
         "columnRaffle": "Raffle",
         "raffleTick": "In the raffle",
-        "raffleHint": "The tick: in, or taken out by the organisers — untick to take them out. Under it: whether they take part now, by the ticked groups and, with a separate sign-up, whether they signed up. Internal: the person is not told.",
+        "raffleHint": "Ticked: in; untick to take the person out. Under it: whether they take part now — by the ticked groups and, with a separate sign-up, whether they signed up. Internal: the person is not told.",
         "columnMessage": "Message",
         "messageHint": "What the person wrote for the organizers when they offered to volunteer. Empty: they wrote nothing.",
         "columnNotes": "Internal notes",

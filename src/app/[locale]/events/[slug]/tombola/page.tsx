@@ -19,6 +19,7 @@ import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { cachedRaffleEvent, cachedRaffleSignUpOpen } from "@/modules/public-cache/reads";
 import { BOT_CHECK_SLOT_SX } from "@/modules/registrations/domain/turnstile-widget";
 import { readFormDraft } from "@/modules/registrations/form-draft";
+import { parseInterestSince } from "@/modules/registrations/interest-box";
 import { turnstileSiteKey } from "@/modules/registrations/turnstile";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { formEventBySlug } from "@/modules/resilience/event-copy";
@@ -100,7 +101,11 @@ export default async function RafflePage({ params, searchParams }: Props) {
   const typed = outcome !== null && outcome !== "done" ? ((await readFormDraft()) ?? {}) : {};
   const refused = new Set((one(asked.fields) ?? "").split(",").filter((box): box is (typeof BOXES)[number] => (BOXES as readonly string[]).includes(box)));
   const siteKey = turnstileSiteKey();
-  const renderedAt = now.toISOString();
+  // A corrected form is timed from the render it corrects (§146), as the volunteers' page times it: a second press seconds after a
+  // refusal is a person trying again, never a post the timing check would take for a script's and quietly keep nothing of.
+  const renderedAt = ((outcome !== null && outcome !== "done" && parseInterestSince(one(asked.since), now)) || now).toISOString();
+  // The bot check's own attempt is this render's, so a second try draws a fresh widget.
+  const attempt = now.toISOString();
   const eventHref = getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } });
 
   return (
@@ -220,7 +225,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
 
             {siteKey && (
               <Box sx={BOT_CHECK_SLOT_SX}>
-                <BotCheck siteKey={siteKey} locale={locale} attempt={renderedAt} notice />
+                <BotCheck siteKey={siteKey} locale={locale} attempt={attempt} notice />
               </Box>
             )}
 

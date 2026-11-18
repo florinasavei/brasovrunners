@@ -15,6 +15,14 @@ import { importsModule } from "../../helpers/module-imports";
  * A reader is found by what it names — the columns — or by what it imports (§953): the mark's module by any spelling, the
  * `@/` alias or a relative path. The words alone missed `./raffle-mark`, the import a file beside the module would write —
  * the allocator's own file among them.
+ *
+ * Since §NNN (the owner, 2026-11-18: «tombolă din oficiu vs tombolă cu înscriere separată», «vreau să văd în dreptul fiecărei
+ * persoane dacă participă la tombolă»): the raffle's settings beside the switch, a line of the elite list's own tick, the one
+ * answer that reads them all (`volunteers/domain/raffle.ts#raffleParticipation`), the reads that put it beside each person
+ * (`volunteers/raffle-roster.ts`) and «Ziua cursei» → «Tombolă» are readers too. The desk's view of a person shows that answer in
+ * words — «Participă la tombolă» or why not — through `readRaffleLine`, and names no tick; no desk query reads one. The one public
+ * read of the settings is the sign-up's gate (`public-cache/reads.ts#cachedRaffleEvent`, through `readRaffleEvent`), which names
+ * no column either.
  */
 const ROOT = process.cwd();
 const SRC = path.join(ROOT, "src");
@@ -55,6 +63,15 @@ const READERS = new Set(
     // «Toate datele unei persoane» (art. 15): the volunteer's tick, and the line that says it.
     "src/modules/registrations/person-data.ts",
     "src/modules/volunteers/ui/VolunteerAnswers.tsx",
+    // §NNN: a line of the race's elite list takes part like a person — its own tick, and its one writer.
+    "src/db/schema/event-elite-entries.ts",
+    "src/modules/volunteers/raffle-entries.ts",
+    // §NNN: the one answer (the switch, the groups, the mode and every tick), and the reads that put it beside each person.
+    "src/modules/volunteers/domain/raffle.ts",
+    "src/modules/volunteers/raffle-roster.ts",
+    // §NNN: «Ziua cursei» → «Tombolă» — everybody with the answer, and «Scoate» / «Pune înapoi» through each kind's own writer.
+    "src/app/[locale]/admin/checkin/tombola/page.tsx",
+    "src/app/[locale]/admin/checkin/tombola/actions.ts",
   ].map((file) => path.join(ROOT, file)),
 );
 
@@ -104,6 +121,13 @@ describe("§949 the raffle's switch and ticks stay with the organizers", () => {
       "src/modules/volunteers/workbook.ts",
       "src/modules/registrations/csv.ts",
       "src/modules/registrations/workbook.ts",
+      // §NNN: the desk's view of a person says the answer in words and names no tick; the tabs ask whether the event holds a
+      // raffle through the roster; the public cache and the raffle's public page read the gate, never a column.
+      "src/app/[locale]/admin/checkin/[code]/page.tsx",
+      "src/modules/race-day/ui/RaceDayTabs.tsx",
+      "src/modules/public-cache/reads.ts",
+      "src/app/[locale]/events/[slug]/tombola/page.tsx",
+      "src/app/[locale]/events/[slug]/page.tsx",
     ]) {
       expect(reads(file), file).toBe(false);
     }

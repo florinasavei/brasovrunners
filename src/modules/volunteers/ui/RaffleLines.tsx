@@ -124,9 +124,9 @@ export function raffleNoteWords(t: (key: string, values?: Record<string, string>
 }
 
 /** Under a list's «Tombolă» tick (§NNN): the answer in a few words — «Da», or «Nu · <de ce>». */
-export function RaffleStandingNote({ words, inRaffle }: { words: string; inRaffle: boolean }) {
+export function RaffleStandingNote({ words, takesPart }: { words: string; takesPart: boolean }) {
   return (
-    <Typography variant="caption" component="p" color={inRaffle ? "success.main" : "text.secondary"} sx={{ m: 0, overflowWrap: "anywhere" }} data-testid="raffle-standing">
+    <Typography variant="caption" component="p" color={takesPart ? "success.main" : "text.secondary"} sx={{ m: 0, overflowWrap: "anywhere" }} data-testid="raffle-standing" data-in={takesPart ? "1" : "0"}>
       {words}
     </Typography>
   );

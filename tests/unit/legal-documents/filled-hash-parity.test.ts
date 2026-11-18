@@ -23,10 +23,11 @@ const FACTS: ClubFacts = {
 };
 
 const RECORDED: Record<string, { ro: string; en: string; both: string }> = {
+  // Edited on purpose (§NNN): the paragraph «Tombola ({{raffle}})» in section 5 and its line in section 7.
   PRIVACY_NOTICE: {
-    ro: "67d6e65d63cf67698ff4f0b5b7992de2f771995096578e319388d178c8e6738a",
-    en: "862ba70c7910c45222f6a581d4727163ef802aa5c970cce1bcf11f39d166405e",
-    both: "f3551af518b87fef681f2346ddb449895000e4228d3ff00741c95cc5afe0f293",
+    ro: "6656782e1db5fbc416c80593b7e7b0ffe66a3ac25cbaa9604bc767afead143ca",
+    en: "2272bfd9f8814c30f77ef34e55665dce5eb73851442cb59ceb23a1002a133f8c",
+    both: "420f9f082c164d2376e187bbbe75bae0b733366bbc4c52dd787e2df18e461456",
   },
   TERMS: {
     ro: "d4f30d2e01521edb464620af19d13fc0af7f3179c40ee2c7cb57b2290162e05c",
@@ -57,6 +58,12 @@ const RECORDED: Record<string, { ro: string; en: string; both: string }> = {
     ro: "cb659310d0f031ceb595fc65342e5f216bde100e257e9b841a33d07c57ae4d7e",
     en: "d9ebe8f8340ba9d30534eb64eac69f24d1253f99d8d072334e95f96c13bf8762",
     both: "b0910e76c29f7b57e8109a74b1cca7f776f4bb49648c97c0ba59c8697c1ae4aa",
+  },
+  // «Regulamentul tombolei» (§NNN): a new template, recorded as written.
+  RAFFLE_RULES: {
+    ro: "0f20824850abb6bef7138db03feadd674d7e5f63df49b47cb4491f18ada38293",
+    en: "60f4411672cbe6108dae5e9ee9d22ac7d5dbbb6b343a23c7e9b49920fcfb62d6",
+    both: "d3cafa8fcc25b0abf859278faf8e5a8c5ccfbc71cc96200f68482719afc76003",
   },
 };
 
