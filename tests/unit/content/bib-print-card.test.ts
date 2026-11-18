@@ -212,20 +212,20 @@ describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
     const card = block(await render({ elite: { ...elite, registered } }), "bib-elite");
     const lines = card.split('data-testid="bib-elite-registered"').slice(1);
     expect(lines).toHaveLength(2);
-    const silviu = block(`<li data-testid="bib-elite-registered"${lines[0]}`, "bib-elite-registered");
-    const luisa = block(`<li data-testid="bib-elite-registered"${lines[1]}`, "bib-elite-registered");
-    expect(silviu).toContain("nr. 166");
-    expect(block(silviu, "bib-elite-registered-status")).toContain(REGISTRATION_STATUS_LABEL.CONFIRMED);
-    expect(luisa).toContain("Ioana Pop");
-    expect(luisa).toContain("cu înscriere");
-    expect(block(luisa, "bib-elite-registered-status")).toContain(REGISTRATION_STATUS_LABEL.PENDING_DECLARATION);
-    expect(luisa).not.toContain("nr. ");
-    // Her ticks are the card's from now: the Administrator may hide her before she signs.
-    expect(luisa).toContain(`form="bib-elite-registered-tick-onSite-${registered[1].id}"`);
-    // Every elite in the closed line, as on the registrations page; the sheet prints the two names and Dan, not her yet.
+    const confirmedLine = block(`<li data-testid="bib-elite-registered"${lines[0]}`, "bib-elite-registered");
+    const pendingLine = block(`<li data-testid="bib-elite-registered"${lines[1]}`, "bib-elite-registered");
+    expect(confirmedLine).toContain("nr. 166");
+    expect(block(confirmedLine, "bib-elite-registered-status")).toContain(REGISTRATION_STATUS_LABEL.CONFIRMED);
+    expect(pendingLine).toContain("Ioana Pop");
+    expect(pendingLine).toContain("cu înscriere");
+    expect(block(pendingLine, "bib-elite-registered-status")).toContain(REGISTRATION_STATUS_LABEL.PENDING_DECLARATION);
+    expect(pendingLine).not.toContain("nr. ");
+    // The pending line's ticks are the card's from now: the Administrator may hide the person before they sign.
+    expect(pendingLine).toContain(`form="bib-elite-registered-tick-onSite-${registered[1].id}"`);
+    // Every elite in the closed line, as on the registrations page; the sheet prints the two names and Dan, not the pending one yet.
     expect(card).toContain("4 nume");
     expect(block(card, "bib-elite-download")).toContain("Descarcă BIB-urile de elită (3)");
-    // Her alone: in the count, nothing to print — no sheet, and no line warning about printing her twice.
+    // The pending one alone: in the count, nothing to print — no sheet, and no line warning about printing them twice.
     const alone = block(await render({ elite: { ...elite, entries: [], registered: [registered[1]] } }), "bib-elite");
     expect(alone).toContain("1 nume");
     expect(alone).not.toContain('data-testid="bib-elite-empty"');

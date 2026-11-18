@@ -50,9 +50,9 @@ function storedLabel(label: string | null | undefined): string | null {
 }
 
 /**
- * The default a line of the race's elite list prints (§963, amending §948; the owner, 2026-11-17: «la Ingrid de ce scrie și
- * prenumele???»): the first word of what the club typed, as a registration prints its first name alone — one word, large,
- * read from the roadside.
+ * The default a line of the race's elite list prints (§963, amending §948; the owner, 2026-11-17, of a line that printed a
+ * whole name: «… de ce scrie și prenumele???»): the first word of what the club typed, as a registration prints its first
+ * name alone — one word, large, read from the roadside.
  */
 export function eliteLineDefaultLabel(name: string): string {
   const first = name.trim().split(/\s+/)[0] ?? "";
