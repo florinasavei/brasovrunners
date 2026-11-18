@@ -989,15 +989,21 @@ gun and a clock since it.
 2. **Each finisher.** An elite: press their button at the top (the bib's label large, the name under it). Anyone else:
    type the bib's number and press **«Sosit»** (or Enter) — the box empties at once. A bunch: «Prinde timpul» once per
    runner, then the numbers in order; each takes the oldest caught moment. Every press is stamped with its own moment on
-   the server's clock, saved at once, and «Ultimii sosiți» names who entered it. Without signal the presses wait on the
-   phone and go by themselves; a reload sends what is left.
+   the server's clock (the phone's wall clock and an offset measured by a round trip, so a locked screen or a wrong clock
+   changes nothing), saved at once, and «Ultimii sosiți» names who entered it. Without signal the presses wait on the
+   phone and go by themselves; a reload sends what is left — only by the account that pressed them. «Site-ul a fost
+   actualizat» (a deploy during the race): reload the page, the presses wait.
 3. **What the line says.** A number somebody entered first: «#123 era deja trecut de <nume> la <timp>» — nothing changes,
    the second time is kept in «Istoricul sosirilor» on «Clasament» for the organizers to compare. A number no confirmed
    registration and no elite line holds: refused, with the time to write on paper (the runner is typed on «Clasament»
-   later under «Alergători neînscriși»). Before the start, or more than a day after it: refused. A runner saved as
-   «Abandon», «Neprezentat» or «Descalificat» by mistake who crosses becomes «Sosit», the note kept.
-4. **A mistake.** «Anulează» on your own line, for ten minutes and while nobody changed it. After that — or for anybody
-   else's line — correct it on «Clasament», whose lines say «introdus de …» / «modificat de …».
+   later under «Alergători neînscriși»). Before the start, or more than a day after it: refused — and a press arriving
+   more than a day and three hours after the start is refused whatever moment it carries. A runner saved as «Abandon»
+   or «Neprezentat» by mistake who crosses becomes «Sosit», the note kept; one saved «Descalificat», or written off after
+   the moment a press carries, stays as decided — the press goes to «Istoricul sosirilor».
+4. **A mistake.** «Anulează» on your own line, for ten minutes, while nobody changed it and nobody pressed the number
+   again after you (a second press of it is somebody else's, maybe the right one: the line then says «Clasament»
+   corrects it). After that — or for anybody else's line, or a line typed on «Clasament» — correct it on «Clasament»,
+   whose lines say «introdus de …» / «modificat de …».
 
 The fallback is the old way: somebody records «number, time since the gun» on paper, a phone or a timing app that
 exports CSV, and the times are entered or imported after the race (next section). Note who dropped out, who never

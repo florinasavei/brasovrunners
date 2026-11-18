@@ -3,7 +3,7 @@ import { FINISH_HISTORY_ACTIONS, finishHistory, finishHistoryLine, historyBibOf 
 
 /**
  * §NNN — «Istoricul sosirilor» read from the trail (BR-REQ-050-02): each row of the race's results as one line — a press at the line,
- * a duplicate with both times, the line's undo, a «Clasament» save's rows with the boxes it changed, «Start» set, moved and taken off —
+ * a duplicate with both times or with the decision of «Clasament» that stays, the line's undo, a «Clasament» save's rows with the boxes it changed, «Start» set, moved and taken off —
  * from where («Cronometrare» or «Clasament»), by whom (null for an account gone), newest first; metadata read field by field, an
  * action it does not read left out.
  */
@@ -30,8 +30,12 @@ describe("§NNN «Istoricul sosirilor»", () => {
     });
     expect(finishHistoryLine(row("3", "event_result.finish_duplicate", 3, { bibNumber: 101, gunTimeMs: 2_720_000, storedGunTimeMs: 2_712_000, finishLine: true }))).toMatchObject({
       where: "timing",
-      what: { kind: "duplicate", bibNumber: 101, gunTimeMs: 2_720_000, storedGunTimeMs: 2_712_000 },
+      what: { kind: "duplicate", bibNumber: 101, gunTimeMs: 2_720_000, storedGunTimeMs: 2_712_000, storedStatus: "FINISHED" },
     });
+    // A press of a runner «Clasament» disqualified: its decision, which stays, beside the press's time.
+    expect(
+      finishHistoryLine(row("3b", "event_result.finish_duplicate", 3, { bibNumber: 102, gunTimeMs: 2_730_000, storedGunTimeMs: null, storedStatus: "DSQ", storedResultId: "r-102", finishLine: true }))?.what,
+    ).toEqual({ kind: "duplicate", bibNumber: 102, gunTimeMs: 2_730_000, storedGunTimeMs: null, storedStatus: "DSQ" });
     expect(finishHistoryLine(row("4", "event_result.deleted", 4, { bibNumber: 101, status: "FINISHED", gunTimeMs: 2_712_000, finishLine: true, undo: true }))).toMatchObject({
       where: "timing",
       what: { kind: "undo", bibNumber: 101, gunTimeMs: 2_712_000 },

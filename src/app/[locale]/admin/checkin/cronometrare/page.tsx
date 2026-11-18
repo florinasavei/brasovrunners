@@ -16,6 +16,7 @@ import { raceDayTabs } from "@/modules/race-day/ui/RaceDayTabs";
 import { listEventsAcceptingRegistrations, listEventsForDesk } from "@/modules/registrations/admin-repository";
 import { eventTakesResults } from "@/modules/results/domain/event-type";
 import { RECENT_FINISHERS } from "@/modules/results/domain/finish-line";
+import { RESULT_STATUSES } from "@/modules/results/domain/ranking";
 import { formatResultTime } from "@/modules/results/domain/result-time";
 import { type FinishLineView, readFinishLine } from "@/modules/results/results";
 import FinishLine, { type FinishLineWords } from "@/modules/results/ui/FinishLine";
@@ -28,11 +29,11 @@ import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { HEADING_SX } from "@/shared/ui/heading-scale";
 import QuietHelp from "@/shared/ui/QuietHelp";
-import { recordFinishFormAction, recordFinishPressAction, setRaceGunAction, undoFinishFormAction, undoFinishPressAction } from "./actions";
+import { readFinishClockAction, recordFinishFormAction, recordFinishPressAction, setRaceGunAction, undoFinishFormAction, undoFinishPressAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ eventId?: string; ok?: string; dup?: string; t?: string; refused?: string; bib?: string; undone?: string; gun?: string }>;
+  searchParams: Promise<{ eventId?: string; ok?: string; dup?: string; s?: string; t?: string; refused?: string; bib?: string; undone?: string; gun?: string }>;
 };
 
 /** Reads the stored rows and is returned to right after every plain press. */
@@ -70,8 +71,9 @@ const number = (raw: string | undefined) => (raw !== undefined && /^\d{1,9}$/.te
  * results (`canEnterResults`), pressed at the gun and moved or taken off until the first finisher; without it the editor's «Startul
  * cursei» counts — and the finish line (`FinishLine`, the page's island): the elites' buttons first, the number box, «⏱ Prinde
  * timpul», the presses of this phone and «Ultimii sosiți» with who entered each. With scripts off every form posts and the page comes
- * back here saying what happened (`?ok=`, `?dup=`, `?refused=`, `?undone=`, `?gun=`: numbers and codes, never a name). A group run
- * says it has no results, and nothing more.
+ * back here saying what happened (`?ok=`, `?dup=` with `?s=` when the row is a decision of «Clasament», `?refused=`, `?undone=`,
+ * `?gun=`: numbers and codes, never a name). A group run says it has no results, and nothing more. The islands get the server's clock
+ * as the page was drawn — read last, after every read — and the viewer's staff id, whose presses alone the page sends.
  *
  * Every staff role that works the desk opens it (`canRecordFinishes`); anybody else meets the 404 an unknown page gets
  * (BR-REQ-060-01), and every action and the service assert again. Nothing on it is public; no chip time is asked here.
@@ -131,6 +133,9 @@ export default async function TimingPage({ params, searchParams }: Props) {
     if (dup !== null) {
       const line = recentOf(dup);
       const mine = time(number(query.t));
+      // The row a decision of «Clasament» — «Abandon», «Neprezentat», «Descalificat» —, which the press left as it was.
+      const decided = RESULT_STATUSES.find((status) => status !== "FINISHED" && status === query.s);
+      if (decided) return { severity: "warning" as const, text: t("timing.banner.decided", { who: `#${dup}`, status: t(`results.status.${decided}`), mine }) };
       return {
         severity: "warning" as const,
         text: line
@@ -244,11 +249,15 @@ export default async function TimingPage({ params, searchParams }: Props) {
     place: t.raw("timing.place") as string,
     outOfRanking: t("results.outOfRanking"),
     duplicate: t.raw("timing.entries.duplicate") as string,
+    decided: t.raw("timing.entries.decided") as string,
+    otherAccount: t.raw("timing.entries.otherAccount") as string,
+    status: Object.fromEntries(RESULT_STATUSES.map((status) => [status, t(`results.status.${status}`)])),
     refused: Object.fromEntries(LINE_REFUSALS.map((code) => [code, t.raw(`timing.refused.${code}`) as string])),
     refusedOther: t.raw("timing.refused.other") as string,
     accountGone: t("timing.accountGone"),
     offline: t("timing.offline"),
     session: t("timing.session"),
+    reload: t("timing.reload"),
     waitingCount: t.raw("timing.entries.waitingCount") as string,
     recentTitle: t("timing.recent.title"),
     recentAside: t.raw("timing.recent.aside") as string,
@@ -260,7 +269,11 @@ export default async function TimingPage({ params, searchParams }: Props) {
     undone: t("timing.undo.done"),
     undoRefused: Object.fromEntries(UNDO_REFUSALS.map((code) => [code, t(`timing.undo.refused.${code}`)])),
     undoRefusedOther: t("timing.undo.refused.other"),
+    undoPressedAgain: { other: t("timing.undo.pressedAgain.other"), self: t("timing.undo.pressedAgain.self") },
   };
+  // The server's clock for the islands, read after every read above: the page's delivery is the only lag left in it, and the
+  // finish line measures that away with its first round trip.
+  const drawnAtMs = new Date().getTime();
 
   return (
     <Stack spacing={2}>
@@ -287,7 +300,7 @@ export default async function TimingPage({ params, searchParams }: Props) {
         )}
         {mayStart && !gun.fixed && gun.windowOpen && (
           <Stack direction="row" sx={{ gap: 1, alignItems: "center", flexWrap: "wrap" }}>
-            <RaceGunPress action={setRaceGunAction} eventId={view.event.id} uiLocale={locale} serverNowMs={now.getTime()} label={gun.pressed ? t("timing.gun.move") : t("timing.gun.start")} />
+            <RaceGunPress action={setRaceGunAction} eventId={view.event.id} uiLocale={locale} serverNowMs={drawnAtMs} label={gun.pressed ? t("timing.gun.move") : t("timing.gun.start")} />
             {gun.pressed && (
               <Box component="form" action={setRaceGunAction} data-testid="race-gun-clear-form">
                 <input type="hidden" name="uiLocale" value={locale} />
@@ -319,10 +332,12 @@ export default async function TimingPage({ params, searchParams }: Props) {
         key={view.event.id}
         eventId={view.event.id}
         uiLocale={locale}
-        initial={{ serverNowMs: now.getTime(), gunAtMs: gun.at.getTime(), gunPressed: gun.pressed, recent: view.recent, elites: view.elites, finished: view.finished, withNumber: view.withNumber }}
+        staffId={actor.id}
+        initial={{ serverNowMs: drawnAtMs, gunAtMs: gun.at.getTime(), gunPressed: gun.pressed, recent: view.recent, elites: view.elites, finished: view.finished, withNumber: view.withNumber }}
         words={words}
         record={recordFinishPressAction}
         undo={undoFinishPressAction}
+        clock={readFinishClockAction}
         recordForm={recordFinishFormAction}
         undoForm={undoFinishFormAction}
       />

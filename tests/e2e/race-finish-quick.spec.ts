@@ -4,10 +4,11 @@ import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN — «Cronometrare», the finish line of «Ziua cursei» (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01), walked at 320 pixels and on
- * a desk against a production build: an Organizer presses «Start»; the desk Volunteer — the lowest role — types a number and presses
- * an elite's button, sees each saved at once with «introdus de» and its own name, types the same number again and reads the
- * duplicate's line, and undoes the elite's press. The four tabs fit the phone, and nothing scrolls sideways.
+ * §NNN — «Cronometrare», the finish line of «Ziua cursei» (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01, BR-REQ-037-08), walked at
+ * 320 pixels and on a desk against a production build: an Organizer, whose row holds the four tabs and fits the phone, presses
+ * «Start»; the desk Volunteer — the lowest role, three tabs — types a number and presses an elite's button, sees each saved at once
+ * with «introdus de» and its own name, types the same number again and reads the duplicate's line — its own line now saying
+ * «Clasament» corrects it, no «Anulează» — and undoes the elite's press. Nothing scrolls sideways.
  *
  * The race, its two runners and its elite line are written straight into the database — the setup, not the subject — one per project
  * and run, so the two projects never meet.
@@ -78,10 +79,14 @@ test.describe("§NNN «Cronometrare»", () => {
     const eventId = await seedRace(tag);
     const timingUrl = `/ro/admin/checkin/cronometrare?eventId=${eventId}`;
 
-    // The Organizer, at the gun.
+    // The Organizer, at the gun — whose row of «Ziua cursei» holds all four tabs, and fits the phone.
     await signIn(page, "Dev Moderator");
     await page.goto(timingUrl);
     await hydrated(page);
+    await expect(page.getByTestId("race-day-tabs").getByRole("link")).toHaveCount(4);
+    const fourFit = await page.getByTestId("race-day-tabs").locator("nav").evaluate((nav) => nav.scrollWidth <= nav.clientWidth + 1);
+    expect(fourFit).toBe(true);
+    await noHorizontalScroll(page);
     await expect(page.getByTestId("race-gun-line")).toContainText("Startul planificat:");
     await page.getByTestId("race-gun-start").click();
     await expect(page.getByTestId("timing-banner")).toContainText("Startul a fost dat", { timeout: 15_000 });
@@ -132,6 +137,9 @@ test.describe("§NNN «Cronometrare»", () => {
     const duplicate = page.locator('[data-testid="finish-entry"][data-bib="101"][data-state="duplicate"]');
     await expect(duplicate).toContainText(/#101 era deja trecut de Dev Contributor la 0:\d\d:\d\d/, { timeout: 15_000 });
     await expect(page.locator('[data-testid="finish-recent-row"][data-bib="101"]')).toHaveCount(1);
+    // Pressed twice, 101 is no longer undone here: which press was right is «Clasament»'s to say.
+    await expect(recent101.getByTestId("finish-undo")).toHaveCount(0);
+    await expect(recent101.getByTestId("finish-undo-closed")).toContainText("l-ai mai trecut o dată");
 
     // Undo the elite's press: the line leaves «Ultimii sosiți», the button is pressable again.
     await recent7.getByTestId("finish-undo").click();

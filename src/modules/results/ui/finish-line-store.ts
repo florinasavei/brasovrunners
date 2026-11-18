@@ -1,13 +1,14 @@
 import { readStoredFinishLine, type StoredFinishLine, storedFinishLine } from "../domain/finish-line";
 
 /**
- * What «Cronometrare»'s island keeps on the phone for one event (§NNN): the presses and the kept times, behind one small store the
- * island reads with `useSyncExternalStore` — the storage is an outside system, read once per event on the phone and written on every
- * change. **Every read and write of the storage is in a `try`**: a private window, a full or blocked storage, and the page still works,
- * the store holding the lines in memory and only forgetting them on a reload. On the server — and in the first render after it, the
- * hydration — the store is empty (`EMPTY_FINISH_LINE`), so the page's markup is the same with storage or without.
+ * What «Cronometrare»'s island keeps on the phone for one event (§NNN): the presses — each with the staff account that pressed it —
+ * and each account's kept times, behind one small store the island reads with `useSyncExternalStore` — the storage is an outside
+ * system, read once per event on the phone and written on every change. **Every read and write of the storage is in a `try`**: a
+ * private window, a full or blocked storage, and the page still works, the store holding the lines in memory and only forgetting them
+ * on a reload. On the server — and in the first render after it, the hydration — the store is empty (`EMPTY_FINISH_LINE`), so the
+ * page's markup is the same with storage or without.
  */
-export const EMPTY_FINISH_LINE: StoredFinishLine = { entries: [], kept: [] };
+export const EMPTY_FINISH_LINE: StoredFinishLine = { entries: [], kept: {} };
 
 const lines = new Map<string, StoredFinishLine>();
 const listeners = new Set<() => void>();

@@ -9,7 +9,8 @@
  * read is said as nothing, never guessed.
  *
  * - **What.** A press at the line (`finishLine: true` on `event_result.created` / `.updated`); a press of a number already «Sosit»
- *   (`event_result.finish_duplicate`, both times); the line's own «Anulează» (`event_result.deleted` with `undo: true`); a
+ *   (`event_result.finish_duplicate`, both times) — or of a runner «Clasament» wrote off, whose decision stays (the same row, its
+ *   `storedStatus` the decision; a row without one is a «Sosit»'s); the line's own «Anulează» (`event_result.deleted` with `undo: true`); a
  *   «Clasament» save's created, changed and deleted rows (the boxes that changed named); and «Start» set or taken off.
  * - **Where.** «Cronometrare» for a press at the line and for «Start» — the old «Sosire» wrote `finishLine` too —, «Clasament» for
  *   the rest.
@@ -40,7 +41,7 @@ export type HistoryBox = (typeof HISTORY_BOXES)[number];
 /** What a line says happened. */
 export type FinishHistoryWhat =
   | { kind: "finish"; bibNumber: number | null; gunTimeMs: number | null; turned: boolean }
-  | { kind: "duplicate"; bibNumber: number | null; gunTimeMs: number | null; storedGunTimeMs: number | null }
+  | { kind: "duplicate"; bibNumber: number | null; gunTimeMs: number | null; storedGunTimeMs: number | null; storedStatus: string }
   | { kind: "undo"; bibNumber: number | null; gunTimeMs: number | null }
   | { kind: "created"; bibNumber: number | null; status: string | null; gunTimeMs: number | null }
   | { kind: "updated"; bibNumber: number | null; status: string | null; gunTimeMs: number | null; boxes: HistoryBox[] }
@@ -88,7 +89,7 @@ export function finishHistoryLine(row: FinishHistoryRow): FinishHistoryLine | nu
         ? { ...base, where: "timing", what: { kind: "undo", bibNumber, gunTimeMs } }
         : { ...base, where: "results", what: { kind: "deleted", bibNumber, status: text(metadata.status) } };
     case "event_result.finish_duplicate":
-      return { ...base, where: "timing", what: { kind: "duplicate", bibNumber, gunTimeMs, storedGunTimeMs: whole(metadata.storedGunTimeMs) } };
+      return { ...base, where: "timing", what: { kind: "duplicate", bibNumber, gunTimeMs, storedGunTimeMs: whole(metadata.storedGunTimeMs), storedStatus: text(metadata.storedStatus) ?? "FINISHED" } };
     case "event.race_gun_set":
       return { ...base, where: "timing", what: { kind: "gunSet", at: instant(metadata.at), previous: instant(metadata.previous) } };
     case "event.race_gun_cleared":

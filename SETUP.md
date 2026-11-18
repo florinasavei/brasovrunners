@@ -2590,14 +2590,20 @@ enter them; **only the Administrator and the Superadministrator make them public
      disabled: give it a number on the elite list (the bib still prints none). An elite already in shows «✓» and the time.
    - **Everyone else:** type the number on the bib and press «Sosit» (or Enter); the box empties at once for the next number. Several
      at once: «Prinde timpul» once for each, then the numbers in order — each takes the oldest caught time. Every press is saved at
-     once with the moment it was pressed; without signal it waits on that phone and goes by itself, and a reload sends what is left.
+     once with the moment it was pressed, on the site's clock (a phone whose clock is wrong, or whose screen locked, still stamps
+     right); without signal it waits on that phone and goes by itself, and a reload sends what is left — by the account that pressed
+     it: on a phone another volunteer signs into, their presses stand unsent with the time to write on paper. «Site-ul a fost
+     actualizat» means reload the page; nothing pressed is lost.
    - **What a line says:** saved, with the place; «#123 era deja trecut de <nume> la <timp>» for a number somebody entered first — the
-     first time stays, the second is kept in «Istoricul sosirilor»; a refusal with the time to write on paper (a number nobody confirmed
-     holds — type the runner later under «Alergători neînscriși» —, a press before the start or more than a day after it).
+     first time stays, the second is kept in «Istoricul sosirilor»; «#123 e trecut «Descalificat» …» for a runner «Clasament» decided —
+     the decision stays, the press is kept in the history; a refusal with the time to write on paper (a number nobody confirmed holds —
+     type the runner later under «Alergători neînscriși» —, a press before the start, or one more than a day after it).
    - **«Ultimii sosiți»** names who entered each line; **«Anulează»** takes back your own press for ten minutes, while nobody changed
-     it. After that, and for anybody else's, correct it on «Clasament», whose fold **«Istoricul sosirilor»** lists every write with who
-     and when, and whose lines each say «introdus de …» or «modificat de …».
-   A runner marked «Abandon» or «Neprezentat» by mistake becomes «Sosit» when their number is pressed; a published ranking shows each
+     it and nobody entered the number again after you (the line then says «Clasament» corrects it). After that, and for anybody else's,
+     correct it on «Clasament», whose fold **«Istoricul sosirilor»** lists every write with who and when, and whose lines each say
+     «introdus de …» or «modificat de …».
+   A runner marked «Abandon» or «Neprezentat» by mistake becomes «Sosit» when their number is pressed — not «Descalificat», and not a
+   press made before you wrote the runner off (a phone that had no signal): those stay as you decided. A published ranking shows each
    finisher at once. The paper sheet and the CSV import (steps 2–3) remain the backup.
 
 

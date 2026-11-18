@@ -775,11 +775,14 @@ export type AuditAction =
   | "event_result.updated"
   | "event_result.deleted"
   /**
-   * «Cronometrare» (§NNN): a press of a number already «Sosit» — another volunteer, or the same one a different second. The first
-   * stored row stays as it was; this row keeps the press's own time beside the stored one (`{ bibNumber, gunTimeMs, storedGunTimeMs,
-   * finishLine: true }`; who pressed is the row's actor), so «Istoricul sosirilor» shows both for the organizers to compare. A finish
-   * pressed at the line marks its `event_result.created` / `.updated` with `finishLine: true`, and the line's own «Anulează» its
-   * `event_result.deleted` with `{ finishLine: true, undo: true }`. Never a name.
+   * «Cronometrare» (§NNN): a press of a number already «Sosit» — another volunteer, or the same one a different second — or of a
+   * runner «Clasament» wrote off whose decision stays («Descalificat», or an «Abandon» / «Neprezentat» written after the moment
+   * pressed). The stored row stays as it was; this row keeps the press's own time beside the stored one (`{ bibNumber, gunTimeMs,
+   * storedGunTimeMs, storedStatus, storedResultId, finishLine: true }`; who pressed is the row's actor), so «Istoricul sosirilor»
+   * shows both for the organizers to compare, and a later «Anulează» of the stored row knows its number was pressed again. A finish
+   * pressed at the line marks its `event_result.created` / `.updated` with `finishLine: true` and the row's `resultId` (the undo's
+   * proof the line wrote it), and the line's own «Anulează» its `event_result.deleted` with `{ finishLine: true, undo: true }`.
+   * Never a name.
    */
   | "event_result.finish_duplicate"
   /**

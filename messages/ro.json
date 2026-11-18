@@ -9423,7 +9423,7 @@
                 "Trece o elită: apasă-i butonul de sus (eticheta de pe BIB, cu numele sub ea). Trece oricine altcineva: scrie numărul de pe BIB și apasă «Sosit». Căsuța se golește pe loc pentru următorul.",
                 "Vin mai mulți deodată: apasă «Prinde timpul» o dată pentru fiecare, apoi scrie numerele în ordine.",
                 "Un rând roșu îți spune ce să notezi pe hârtie, cu timpul. Fără semnal, apăsările așteaptă pe telefon și pleacă singure.",
-                "Ai greșit? «Anulează» pe rândul tău din «Ultimii sosiți», în primele 10 minute. Altfel spune-i organizatorului: corectează la «Clasament»."
+                "Ai greșit? «Anulează» pe rândul tău din «Ultimii sosiți», în primele 10 minute, cât nu l-a mai trecut nimeni după tine. Altfel spune-i organizatorului: corectează la «Clasament»."
               ]
             },
             {
@@ -9679,7 +9679,7 @@
               "steps": [
                 "«Clasament» e în editorul cursei, în cardul «Înscrierile primite» de la sfârșitul paginii (lângă «Vezi înscrierile acestui eveniment»), nu în «Participare, înscrieri și regulament». Butonul apare doar la o cursă publicată sau al cărei start a trecut; la o ciornă, deschide adresa paginii direct.",
                 "La linia de sosire deschide «Cronometrare» pe telefon: «Ziua cursei» în bara de sus → «Cronometrare» (sau linkul de pe «Clasament»). La start apasă «Start» exact când se dă startul; fără el, timpii se numără de la «Startul cursei» din editor. Când trece o elită, apasă-i butonul (eticheta de pe BIB, cu numele sub ea); pe oricine altcineva îl treci cu numărul de pe BIB și «Sosit». Se salvează pe loc, cu timpul de la start, iar «Ultimii sosiți» arată cine a introdus fiecare rând. Nu e nevoie de cronometru.",
-                "Vin mai mulți deodată? Apasă «Prinde timpul» o dată pentru fiecare, apoi scrie numerele în ordine: fiecare ia cel mai vechi timp prins. Un număr fără înscriere confirmată e refuzat, cu timpul lui pe rând: notează-l pe hârtie și scrie-l după cursă la «Clasament», la «Alergători neînscriși». Un număr trecut a doua oară — de tine sau de alt voluntar — nu schimbă nimic: rămâne primul timp, iar al doilea apare în «Istoricul sosirilor», la «Clasament». Ai greșit? «Anulează» pe rândul tău, 10 minute; după aceea, la «Clasament». Dacă preferi cronometrul sau o aplicație, notează numărul și timpul fiecăruia și scrie-i după, la «Clasament» — pașii următori.",
+                "Vin mai mulți deodată? Apasă «Prinde timpul» o dată pentru fiecare, apoi scrie numerele în ordine: fiecare ia cel mai vechi timp prins. Un număr fără înscriere confirmată e refuzat, cu timpul lui pe rând: notează-l pe hârtie și scrie-l după cursă la «Clasament», la «Alergători neînscriși». Un număr trecut a doua oară — de tine sau de alt voluntar — nu schimbă nimic: rămâne primul timp, iar al doilea apare în «Istoricul sosirilor», la «Clasament». Un alergător trecut «Descalificat» la «Clasament» rămâne așa când îi treci numărul. Ai greșit? «Anulează» pe rândul tău, 10 minute, cât nu l-a mai trecut nimeni după tine; după aceea, la «Clasament». Dacă preferi cronometrul sau o aplicație, notează numărul și timpul fiecăruia și scrie-i după, la «Clasament» — pașii următori.",
                 "La «Alergători înscriși» e un rând pentru fiecare înscris cu număr. Scrie timpul în «Timp» (h:mm:ss sau mm:ss); «Stare» rămâne pe «Din timp (Sosit / Neprezentat)» — un timp înseamnă «Sosit». Pentru cine n-a terminat alege «Abandon», «Neprezentat» sau «Descalificat», fără timp. «Timp cip» și «Notă» sunt opționale.",
                 "Ai timpii într-un fișier? Deschide «Importă din CSV», lipește textul (număr, timp pe fiecare rând; cu timp cip și stare dacă ai) sau alege fișierul și apasă «Importă din CSV». Rândurile intră în căsuțe; nimic nu se salvează încă.",
                 "Un număr pe care nu-l are nicio înscriere ajunge la «Alergători neînscriși»: scrie-i numele și, pentru categorie, sexul și data nașterii. Bifează «A acceptat să apară cu numele în clasament» doar dacă persoana ți-a spus-o. «Adaugă un alergător neînscris» face un rând gol.",
@@ -12420,6 +12420,7 @@
           "finish": "a trecut {runner} la {time}",
           "finishTurned": "a trecut {runner} la {time} (era trecut ca nesosit)",
           "duplicate": "a trecut din nou {runner} la {time} — rămâne {stored}",
+          "kept": "a trecut {runner} la {time} — rămâne {status}, cum e la «Clasament»",
           "undo": "a anulat {runner} ({time})",
           "created": "a adăugat {runner}: {status}",
           "updated": "a modificat {runner}: {status}",
@@ -12758,6 +12759,7 @@
       "changedBy": "modificat de {name}",
       "offline": "Fără legătură cu site-ul: ce ai apăsat așteaptă pe telefon și pleacă singur când revine semnalul.",
       "session": "Sesiunea ta s-a încheiat: intră din nou în cont. Ce ai apăsat rămâne pe telefon și pleacă după ce intri.",
+      "reload": "Site-ul a fost actualizat: reîncarcă pagina. Ce ai apăsat așteaptă pe telefon și pleacă după reîncărcare.",
       "elites": {
         "title": "Elite",
         "help": "Apasă pe elită când trece linia: pe BIB-ul ei e doar eticheta, fără număr.",
@@ -12777,7 +12779,9 @@
         "waiting": "se salvează…",
         "saved": "salvat",
         "waitingCount": "de trimis: {count}",
-        "duplicate": "era deja trecut de {by} la {time} — rămâne așa; apăsarea ta ({mine}) e în «Istoricul sosirilor»."
+        "duplicate": "era deja trecut de {by} la {time} — rămâne așa; apăsarea ta ({mine}) e în «Istoricul sosirilor».",
+        "decided": "e trecut «{status}» de {by} la «Clasament» — rămâne așa; apăsarea ta ({mine}) e în «Istoricul sosirilor».",
+        "otherAccount": "apăsat în alt cont pe telefonul acesta — nu se trimite de aici; notează pe hârtie: {time}"
       },
       "refused": {
         "RESULT_BIB_UNKNOWN": "nicio înscriere confirmată și nicio elită cu numărul acesta — notează pe hârtie: {time}",
@@ -12803,6 +12807,10 @@
           "NOT_FOUND": "nu mai e în clasament",
           "FORBIDDEN": "rolul tău nu poate anula",
           "other": "nu s-a anulat: corectează la «Clasament»"
+        },
+        "pressedAgain": {
+          "other": "alt voluntar l-a trecut și el după tine: nu se mai anulează aici — corectează la «Clasament»",
+          "self": "l-ai mai trecut o dată după aceea: nu se mai anulează aici — corectează la «Clasament»"
         }
       },
       "gun": {
@@ -12823,6 +12831,7 @@
         "recordedShort": "Sosit: {who}.",
         "duplicate": "{who} era deja trecut de {by} la {time} — rămâne așa; apăsarea ta ({mine}) e în «Istoricul sosirilor».",
         "duplicateShort": "{who} era deja trecut — rămâne primul timp; apăsarea ta ({mine}) e în «Istoricul sosirilor».",
+        "decided": "{who} e trecut «{status}» la «Clasament» — rămâne așa; apăsarea ta ({mine}) e în «Istoricul sosirilor».",
         "undone": "Anulat: {who}.",
         "gun": {
           "set": "Startul a fost dat: {time}.",
@@ -12833,7 +12842,7 @@
           "RESULT_BIB_UNKNOWN": "{who}: nicio înscriere confirmată și nicio elită cu numărul acesta. Timpul lui: {time} — notează-l pe hârtie.",
           "RESULT_FINISH_NOT_STARTED": "{who}: cursa nu a pornit încă — o sosire nu poate fi înainte de start.",
           "RESULT_FINISH_CLOSED": "{who}: startul a fost acum mai bine de o zi — timpii se scriu la «Clasament».",
-          "RESULT_UNDO_NOT_ALLOWED": "Nu se mai anulează aici: doar sosirea ta, neschimbată, în primele 10 minute. Corectează la «Clasament».",
+          "RESULT_UNDO_NOT_ALLOWED": "Nu se mai anulează aici: doar sosirea ta, apăsată aici, neschimbată și netrecută din nou de nimeni, în primele 10 minute. Corectează la «Clasament».",
           "RACE_GUN_FIXED": "Startul e fixat: au sosit deja alergători. Corectează timpii la «Clasament».",
           "RACE_GUN_WINDOW": "«Start» se apasă de cu 3 ore înainte de startul planificat până la 6 ore după.",
           "RESULTS_NOT_OPEN": "Doar o cursă are cronometrare.",

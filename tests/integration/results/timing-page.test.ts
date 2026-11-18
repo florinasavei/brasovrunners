@@ -18,9 +18,10 @@ import { createRace, person, RACE_STARTS_AT, registerRunner, resetNoticeCounter 
  * §NNN — «Cronometrare» as the server draws it (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01 criterion 6), in both languages: the
  * fourth tab of «Ziua cursei» current; the gun's line, and «Start» for whoever enters results only; the elites' buttons first, by
  * label, 56 pixels and more, the numberless one disabled with what to do and a finished one with its time; the number box with the
- * numeric keypad; «Ultimii sosiți» with who entered each and «Anulează» on the viewer's own; the sentence a plain press comes back
- * with; a group run's one alert; a member's 404. And the old «Sosire» sending its reader on with the event, and «Clasament» saying
- * who wrote each line, folding «Istoricul sosirilor» and linking «Cronometrare».
+ * numeric keypad; «Ultimii sosiți» with who entered each and «Anulează» on the viewer's own press at the line — or, the number pressed
+ * again since, the sentence that «Clasament» corrects it; the sentence a plain press comes back with; a group run's one alert; a
+ * member's 404. And the old «Sosire» sending its reader on with the event, and «Clasament» saying who wrote each line, folding
+ * «Istoricul sosirilor» and linking «Cronometrare».
  */
 const messages = { ro, en };
 let language: "ro" | "en" = "ro";
@@ -50,6 +51,7 @@ vi.mock("@/app/[locale]/admin/checkin/cronometrare/actions", () => ({
   recordFinishFormAction: async () => {},
   undoFinishFormAction: async () => {},
   setRaceGunAction: async () => {},
+  readFinishClockAction: async () => ({ kind: "session" }),
 }));
 vi.mock("@/app/[locale]/admin/events/[id]/results/actions", () => ({
   saveEventResultsAction: async () => null,
@@ -98,7 +100,7 @@ beforeEach(async () => {
   state.actor = staff.ADMIN;
 });
 
-type Search = { eventId?: string; ok?: string; dup?: string; t?: string; refused?: string; bib?: string; undone?: string; gun?: string };
+type Search = { eventId?: string; ok?: string; dup?: string; s?: string; t?: string; refused?: string; bib?: string; undone?: string; gun?: string };
 /** The page's markup with Emotion's styles in it (`raw`), or without them, whose CSS would otherwise read as words. */
 async function timing(search: Search = { eventId: raceId }, now = at(50), locale: "ro" | "en" = language, raw = false) {
   language = locale;
@@ -200,12 +202,36 @@ describe("§NNN «Cronometrare»: the page", () => {
     expect(text(await timing({ eventId: raceId }, at(50), "en"))).toMatch(/#102 Bia Marin · 0:45:12 · place 1 · entered by Vlad Voluntar/);
   });
 
+  it("says on the viewer's own line why there is no «Anulează» once the number was pressed again, and offers none on a row typed on «Clasament»", async () => {
+    await recordFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, bibNumber: 102 }, at(45, 12));
+    await recordFinish(db, staff.COPYWRITER!, { eventId: raceId, bibNumber: 102 }, at(45, 20));
+    state.actor = staff.CONTRIBUTOR;
+    const html = await timing({ eventId: raceId }, at(46));
+    expect(html).not.toContain('data-testid="finish-undo"');
+    expect(html).toContain('data-testid="finish-undo-closed"');
+    expect(text(html)).toContain("alt voluntar l-a trecut și el după tine: nu se mai anulează aici — corectează la «Clasament»");
+    language = "en";
+    expect(text(await timing({ eventId: raceId }, at(46), "en"))).toContain("another volunteer entered it after you too: it is no longer undone here — correct it under «Results»");
+    language = "ro";
+    // The Organizer typed 101 on «Clasament» a minute ago: his own row, as written, yet no «Anulează» here — it was never pressed at the line.
+    await saveEventResults(db, staff.MODERATOR!, { eventId: raceId, rows: [{ key: "r[101]", bib: "101", name: "", sex: "", birthDate: "", time: "46:00", status: "", chip: "", note: "", agreed: "" }, { key: "r[102]", bib: "102", name: "", sex: "", birthDate: "", time: "45:12", status: "", chip: "", note: "", agreed: "" }] }, at(46, 30));
+    state.actor = staff.MODERATOR;
+    const organizer = await timing({ eventId: raceId }, at(47));
+    expect(text(organizer)).toContain("#101 Ana Popescu · 0:46:00 · locul 2 · introdus de Oana Organizator");
+    expect(organizer).not.toContain('data-testid="finish-undo"');
+    expect(organizer).not.toContain('data-testid="finish-undo-closed"');
+  });
+
   it("says what a plain press did on its way back: recorded, a duplicate with who and when, a refusal with the time to write down", async () => {
     await recordFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, bibNumber: 102 }, at(45, 12));
     expect(text(await timing({ eventId: raceId, ok: "102" }))).toContain("Sosit: #102 Bia Marin · 0:45:12");
     expect(text(await timing({ eventId: raceId, dup: "102", t: "2720000" }))).toContain("#102 era deja trecut de Vlad Voluntar la 0:45:12 — rămâne așa; apăsarea ta (0:45:20)");
     expect(text(await timing({ eventId: raceId, refused: "RESULT_BIB_UNKNOWN", bib: "900", t: "2712000" }))).toContain("#900: nicio înscriere confirmată și nicio elită cu numărul acesta. Timpul lui: 0:45:12");
     expect(text(await timing({ eventId: raceId, refused: "RACE_GUN_FIXED" }))).toContain("Startul e fixat");
+    // A runner «Clasament» disqualified: the press left the row as it was, and says so with its own time.
+    expect(text(await timing({ eventId: raceId, dup: "101", s: "DSQ", t: "2720000" }))).toContain("#101 e trecut «Descalificat» la «Clasament» — rămâne așa; apăsarea ta (0:45:20) e în «Istoricul sosirilor».");
+    // A state that is no decision says what a duplicate says.
+    expect(text(await timing({ eventId: raceId, dup: "102", s: "<b>", t: "2720000" }))).toContain("#102 era deja trecut de Vlad Voluntar la 0:45:12");
     // A code the page does not know says nothing.
     expect(await timing({ eventId: raceId, refused: "<script>" })).not.toContain('data-testid="timing-banner"');
   });
@@ -279,5 +305,12 @@ describe("§NNN «Clasament»: who wrote each line, «Istoricul sosirilor», and
     // The row itself is the first press's, untouched.
     const [row] = await db.select().from(eventResults).where(eq(eventResults.eventId, raceId));
     expect(row.gunTimeMs).toBe(45 * 60_000 + 12_000);
+  });
+
+  it("says a press of a runner «Clasament» disqualified with the decision that stays", async () => {
+    await saveEventResults(db, staff.MODERATOR!, { eventId: raceId, rows: [{ key: "r[101]", bib: "101", name: "", sex: "", birthDate: "", time: "", status: "DSQ", chip: "", note: "", agreed: "" }] }, at(50));
+    await recordFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, bibNumber: 101 }, at(51, 3));
+    const lines = [...(await results(at(52))).matchAll(/data-testid="results-history-line" data-where="(\w+)"[^>]*>([^<]*)</g)].map((match) => text(match[2]).trim());
+    expect(lines[0]).toBe("Sâm., 21 nov. 2026, 09:51:03 · Vlad Voluntar a trecut #101 Ana Popescu la 0:51:03 — rămâne Descalificat, cum e la «Clasament» · Cronometrare");
   });
 });

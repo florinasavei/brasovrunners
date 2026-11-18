@@ -287,7 +287,11 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
         words = t(what.turned ? "results.history.what.finishTurned" : "results.history.what.finish", { runner: runner(what.bibNumber), time: formatResultTime(what.gunTimeMs) || "—" });
         break;
       case "duplicate":
-        words = t("results.history.what.duplicate", { runner: runner(what.bibNumber), time: formatResultTime(what.gunTimeMs) || "—", stored: formatResultTime(what.storedGunTimeMs) || "—" });
+        // A press of a runner «Clasament» wrote off: the decision stays, said by its word; of a «Sosit», the first time stays.
+        words =
+          what.storedStatus !== "FINISHED" && status(what.storedStatus) !== ""
+            ? t("results.history.what.kept", { runner: runner(what.bibNumber), time: formatResultTime(what.gunTimeMs) || "—", status: status(what.storedStatus) })
+            : t("results.history.what.duplicate", { runner: runner(what.bibNumber), time: formatResultTime(what.gunTimeMs) || "—", stored: formatResultTime(what.storedGunTimeMs) || "—" });
         break;
       case "undo":
         words = t("results.history.what.undo", { runner: runner(what.bibNumber), time: formatResultTime(what.gunTimeMs) || "—" });

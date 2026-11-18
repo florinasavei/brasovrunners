@@ -1,4 +1,5 @@
-import { and, asc, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { auditLogs } from "@/db/schema/audit-logs";
 import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventResults, type EventResultRow } from "@/db/schema/event-results";
 import { events } from "@/db/schema/events";
@@ -21,7 +22,21 @@ import { isUuid } from "@/shared/ids";
 import { ageBandStartsOf, DEFAULT_AGE_BAND_STARTS, isValidAgeBandStarts, sameAgeBandStarts } from "./domain/age-bands";
 import { type AwardRules, isValidAwardPlaces } from "./domain/awards";
 import { eventTakesResults } from "./domain/event-type";
-import { type EliteButtonView, finishStamp, mayUndo, raceGunMoment, raceGunWindowOpen, type RecentFinisherView, undoOpenUntil } from "./domain/finish-line";
+import {
+  type EliteButtonView,
+  FINISH_UNDO_WINDOW_MS,
+  finishStamp,
+  LINE_TRAIL_ACTIONS,
+  type LineTrailRow,
+  mayUndo,
+  pressMeets,
+  raceGunMoment,
+  raceGunWindowOpen,
+  type RecentFinisherView,
+  undoClosedBy,
+  undoOpenUntil,
+  undoTrailOf,
+} from "./domain/finish-line";
 import { type FingerprintedResult, resultsFingerprint } from "./domain/fingerprint";
 import { foldEliteName, horsConcoursBibs, type OutOfRanking } from "./domain/hors-concours";
 import { parseResultsCsv } from "./domain/import-csv";
@@ -902,7 +917,7 @@ export function plannedGunOf(event: { startsAt: Date; raceStartsAt: Date | null 
   return event.raceStartsAt ?? event.startsAt;
 }
 
-/** What one press did (§NNN): recorded — or found already recorded by the same viewer at the same second, a retry — or a duplicate. */
+/** What one press did (§NNN): recorded — or found already recorded by the same viewer at the same second, a retry — or a number whose row stays as stored. */
 export type FinishOutcome =
   | {
       kind: "recorded";
@@ -918,6 +933,7 @@ export type FinishOutcome =
       again: boolean;
     }
   | {
+      /** The number's row stays as stored: «Sosit» already, or a decision of «Clasament» the press must not undo (`storedStatus`). */
       kind: "duplicate";
       resultId: string;
       bibNumber: number;
@@ -925,7 +941,9 @@ export type FinishOutcome =
       label: string | null;
       /** This press's own time, in the trail beside the stored one. */
       gunTimeMs: number;
-      storedGunTimeMs: number;
+      storedStatus: ResultStatus;
+      /** The stored time, which stays; null for a decision with none. */
+      storedGunTimeMs: number | null;
       /** Who wrote the stored row — the display name — or null when that account is gone. */
       storedBy: string | null;
     };
@@ -946,7 +964,9 @@ function finishTargetOf(runners: Runners, bibNumber: number): FinishTarget | nul
  *
  * **Who** — every role that works the desk (`canRecordFinishes`, FORBIDDEN otherwise). **The time** — the instant the island claims
  * for the press (`claimedAtMs`, on the server's clock), when `domain/finish-line.ts#finishStamp` accepts it, else the server's own:
- * a race only (`RESULTS_NOT_OPEN`), after the gun (`RESULT_FINISH_NOT_STARTED`), within a day of it (`RESULT_FINISH_CLOSED`).
+ * a race only (`RESULTS_NOT_OPEN`), after the gun (`RESULT_FINISH_NOT_STARTED`), within a day of it (`RESULT_FINISH_CLOSED`) — and a
+ * press arriving more than a day and three hours after the gun is refused whatever it claims, so a queue left on a phone for days
+ * never adds a finisher to a ranking long published.
  *
  * **Whose number.** A number a **confirmed** registration holds is that runner's, as before; a number none holds but a line of the
  * race's elite list carries is that line's — a **typed** row with the line's name and number, no sex, no birth date and no agreement
@@ -954,15 +974,20 @@ function finishTargetOf(runners: Runners, bibNumber: number): FinishTarget | nul
  * (`RESULT_BIB_UNKNOWN`), so the volunteer writes it down and the runner is typed on «Clasament» later.
  *
  * **The same number twice (the owner: «se poate întâmpla și ca mai mulți voluntari să treacă același număr»).** The first stored wins
- * and nothing about its row changes. A press that finds the number already «Sosit» from **the same viewer at the same second** is a
- * retry of a press that was saved — answered as saved, nothing written. Any other — another volunteer, or the same one a different
- * second — is a duplicate: answered with who stored it and at what time, and its own time written to the trail
- * (`event_result.finish_duplicate`, `{ bibNumber, gunTimeMs, storedGunTimeMs, finishLine: true }`, the actor the trail's own column),
- * so «Istoricul sosirilor» shows both times. Two presses at once wait on the event's lock, and the unique indexes stand behind it.
+ * and nothing about its row changes (`domain/finish-line.ts#pressMeets`). A press that finds the number already «Sosit» from **the
+ * same viewer at the same second** is a retry of a press that was saved — answered as saved, nothing written. Any other — another
+ * volunteer, or the same one a different second — is a duplicate: answered with who stored it and at what time, and its own time
+ * written to the trail (`event_result.finish_duplicate`, `{ bibNumber, gunTimeMs, storedGunTimeMs, storedStatus, storedResultId,
+ * finishLine: true }`, the actor the trail's own column), so «Istoricul sosirilor» shows both times. Two presses at once wait on the
+ * event's lock, and the unique indexes stand behind it.
  *
- * A runner stored as «Abandon», «Neprezentat» or «Descalificat» who crosses the line becomes «Sosit» at the stamped time, the chip time
- * and the note kept. One audit row as the save writes it (`event_result.created` or `.updated`, the number and the times with
- * `finishLine: true`, never a name); the whole list ranked again; the public cache told, so a published ranking shows the finisher.
+ * **A decision of «Clasament» stays.** A runner stored «Descalificat» stays so whoever presses the number — the press's time goes to
+ * the trail the same way, `storedStatus: "DSQ"`, for the organizers —, and so does an «Abandon» or a «Neprezentat» written after the
+ * moment the press claims: a press queued on a phone without signal, or a second volunteer's, never overwrites a later decision. A
+ * runner stored «Abandon» or «Neprezentat» before the moment pressed — written off by mistake — who crosses the line becomes «Sosit»
+ * at the stamped time, the chip time and the note kept. One audit row as the save writes it (`event_result.created` or `.updated`,
+ * the number and the times with `finishLine: true` and the row's id, `resultId` — the undo's proof the line wrote it —, never a name);
+ * the whole list ranked again; the public cache told, so a published ranking shows the finisher.
  */
 export async function recordFinish<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -992,16 +1017,19 @@ export async function recordFinish<T extends Record<string, unknown>>(
     const audit = (action: AuditAction, metadata: Record<string, unknown>) =>
       recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: event.id, metadata, now });
 
-    if (before && before.status === "FINISHED") {
-      const ranked = rankingOf(stored, runners, event).get(before.bibNumber);
+    // The moment the press stands for: the one it claimed when the stamp took it, else the server's own.
+    const pressedAtMs = stamp.claimed && request.claimedAtMs ? request.claimedAtMs : now.getTime();
+    const meets = before ? pressMeets(before, { actorId: actor.id, gunTimeMs, atMs: pressedAtMs }) : null;
+    if (before && meets === "retry") {
       // A retry of a press that was saved — the same viewer, the same second: shown as saved, nothing written.
-      if (before.updatedByStaffUserId === actor.id && before.gunTimeMs === gunTimeMs) {
-        return { kind: "recorded", resultId: before.id, bibNumber, name, label, gunTimeMs, positionOverall: ranked?.positionOverall ?? null, outOfRanking: ranked?.outOfRanking === true, again: true };
-      }
-      // The first stored wins; this press's own time goes to the trail beside it, for the organizers to compare.
-      await audit("event_result.finish_duplicate", { bibNumber, gunTimeMs, storedGunTimeMs: before.gunTimeMs, finishLine: true });
+      const ranked = rankingOf(stored, runners, event).get(before.bibNumber);
+      return { kind: "recorded", resultId: before.id, bibNumber, name, label, gunTimeMs, positionOverall: ranked?.positionOverall ?? null, outOfRanking: ranked?.outOfRanking === true, again: true };
+    }
+    if (before && (meets === "pressedAgain" || meets === "decided")) {
+      // The row stays — the first «Sosit», or «Clasament»'s decision; this press's own time goes to the trail beside it, for the organizers.
+      await audit("event_result.finish_duplicate", { bibNumber, gunTimeMs, storedGunTimeMs: before.gunTimeMs, storedStatus: before.status, storedResultId: before.id, finishLine: true });
       const storedBy = before.updatedByStaffUserId === null ? null : ((await staffNamesOf(tx, [before.updatedByStaffUserId])).get(before.updatedByStaffUserId) ?? null);
-      return { kind: "duplicate", resultId: before.id, bibNumber, name, label, gunTimeMs, storedGunTimeMs: before.gunTimeMs ?? gunTimeMs, storedBy };
+      return { kind: "duplicate", resultId: before.id, bibNumber, name, label, gunTimeMs, storedStatus: before.status, storedGunTimeMs: before.gunTimeMs, storedBy };
     }
 
     let rows: EventResultRow[];
@@ -1015,7 +1043,7 @@ export async function recordFinish<T extends Record<string, unknown>>(
         .returning();
       rows = stored.map((row) => (row.id === before.id ? updated : row));
       resultId = updated.id;
-      await audit("event_result.updated", { bibNumber, status: "FINISHED", gunTimeMs, chipTimeMs: before.chipTimeMs, changed: ["time", "status"], finishLine: true });
+      await audit("event_result.updated", { bibNumber, status: "FINISHED", gunTimeMs, chipTimeMs: before.chipTimeMs, changed: ["time", "status"], finishLine: true, resultId });
     } else {
       const [inserted] = await tx
         .insert(eventResults)
@@ -1028,7 +1056,7 @@ export async function recordFinish<T extends Record<string, unknown>>(
         .returning();
       rows = [...stored, inserted];
       resultId = inserted.id;
-      await audit("event_result.created", { bibNumber, status: "FINISHED", gunTimeMs, chipTimeMs: null, finishLine: true });
+      await audit("event_result.created", { bibNumber, status: "FINISHED", gunTimeMs, chipTimeMs: null, finishLine: true, resultId });
     }
     await writeRanking(tx, event, runners, rows);
     const ranked = rankingOf(rows, runners, event).get(bibNumber);
@@ -1039,12 +1067,33 @@ export async function recordFinish<T extends Record<string, unknown>>(
 }
 
 /**
+ * The finish line's own rows of the trail since `since` (§NNN): the presses' `event_result.created` and the presses of a number stored
+ * already, which say which row the line wrote and which number was pressed again (`domain/finish-line.ts#undoTrailOf`). The indexed
+ * key (`audit_logs_entity_idx`: the entity type, the id, the time), so a read touches the last minutes of this race alone.
+ */
+async function loadLineTrail<T extends Record<string, unknown>>(db: Database<T>, eventId: string, since: Date): Promise<LineTrailRow[]> {
+  return db
+    .select({ action: auditLogs.action, actorStaffUserId: auditLogs.actorStaffUserId, metadata: auditLogs.metadataJson })
+    .from(auditLogs)
+    .where(and(eq(auditLogs.entityType, "event"), eq(auditLogs.entityId, eventId), gte(auditLogs.createdAt, since), inArray(auditLogs.action, [...LINE_TRAIL_ACTIONS])));
+}
+
+/**
+ * How far before a row's own instant its trail is read: a press waiting on the event's lock wrote its row with the moment it took
+ * before the wait, so a press of the same number may carry an instant a little older than the row it found.
+ */
+const LINE_TRAIL_SLACK_MS = 60_000;
+
+/**
  * «Anulează» at the line (§NNN, amending §850's «Undo at the line» refusal; the owner: «„Anulează" pe ce a introdus voluntarul, zece
- * minute, pe pagină; altfel la „Clasament"»): the row a press of the viewer's own wrote, deleted — for ten minutes after it was written
- * and only while nobody changed it since (`domain/finish-line.ts#mayUndo`: a «Sosit» row written once, by the viewer). A row corrected on
- * «Clasament», or a runner written off and turned «Sosit» at the line, is refused (`RESULT_UNDO_NOT_ALLOWED`) — its correction is
- * «Clasament»'s; a row gone already is NOT_FOUND. The others ranked again; one audit row, `event_result.deleted` with
- * `{ bibNumber, status, gunTimeMs, finishLine: true, undo: true }`; the public cache told, as a delete does.
+ * minute, pe pagină; altfel la „Clasament"»): the row a press of the viewer's own wrote, deleted — for ten minutes after it was written,
+ * only while nobody changed it since and only while nobody pressed its number again (`domain/finish-line.ts#mayUndo`: a «Sosit» row
+ * written once, by the viewer, whose `event_result.created` of the line names it, and no `event_result.finish_duplicate` names it
+ * since). A row typed or imported on «Clasament», corrected there, a runner written off and turned «Sosit» at the line, and a number
+ * another volunteer — or the viewer — pressed after it are refused (`RESULT_UNDO_NOT_ALLOWED`): deleting it would leave the runner
+ * with no time when the later press was the right one, and the correction is «Clasament»'s; a row gone already is NOT_FOUND. The
+ * others ranked again; one audit row, `event_result.deleted` with `{ bibNumber, status, gunTimeMs, finishLine: true, undo: true }`;
+ * the public cache told, as a delete does.
  */
 export async function undoFinish<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, request: { eventId: string; resultId: string }, now: Date): Promise<{ bibNumber: number }> {
   assertMayRecord(actor);
@@ -1055,7 +1104,10 @@ export async function undoFinish<T extends Record<string, unknown>>(db: Database
     const [runners, stored] = await Promise.all([loadRegisteredRunners(tx, event.id), loadStored(tx, event.id, true)]);
     const target = stored.find((row) => row.id === request.resultId);
     if (!target) throw new DomainError("NOT_FOUND", "there is no such result any more");
-    if (!mayUndo(target, actor.id, now.getTime())) throw new DomainError("RESULT_UNDO_NOT_ALLOWED", "only one's own unchanged press of the last ten minutes is undone here");
+    const trail = await loadLineTrail(tx, event.id, new Date(target.createdAt.getTime() - LINE_TRAIL_SLACK_MS));
+    if (!mayUndo(target, actor.id, undoTrailOf(target, trail), now.getTime())) {
+      throw new DomainError("RESULT_UNDO_NOT_ALLOWED", "only one's own press at the line of the last ten minutes, unchanged and not pressed again since, is undone here");
+    }
     await tx.delete(eventResults).where(eq(eventResults.id, target.id));
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
@@ -1135,7 +1187,8 @@ export type FinishLineView = {
  * «Cronometrare»'s data (§NNN), for whoever records finishes (`canRecordFinishes`): the gun (`gunOf`, pressed or planned), «Ultimii
  * sosiți» — the stored «Sosit» rows, the latest written first: the number or the elite's label, the name as the backoffice reads it,
  * the time, the place from the live answers or «în afara clasamentului», who wrote it («introdus de» / «modificat de», null for an
- * account gone) and until when the viewer may undo it (`undoOpenUntil`) — the elites' buttons and the counts.
+ * account gone), until when the viewer may undo it (`undoOpenUntil`, from the line's own trail of the last ten minutes) and, for the
+ * viewer's own press whose number was pressed again since, by whom (`undoClosedBy`) — the elites' buttons and the counts.
  *
  * **The elites' buttons**: every confirmed real registration marked «Elită» — its label (`eliteBibName`), its full name, its number,
  * none for one with no number yet — and every line of the race's elite list — its label (`eliteLineBibName`), its name and its number,
@@ -1146,7 +1199,7 @@ export async function readFinishLine<T extends Record<string, unknown>>(db: Data
   assertMayRecord(actor);
   assertIds(eventId);
   const event = await loadEvent(db, eventId, false);
-  const [runners, stored, labels, unnumberedElites] = await Promise.all([
+  const [runners, stored, labels, unnumberedElites, trail] = await Promise.all([
     loadRegisteredRunners(db, eventId),
     loadStored(db, eventId, false),
     loadEliteLabels(db, eventId),
@@ -1154,6 +1207,8 @@ export async function readFinishLine<T extends Record<string, unknown>>(db: Data
       .select({ id: registrations.id, displayName: registrations.displayName })
       .from(registrations)
       .where(and(eq(registrations.eventId, eventId), eq(registrations.kind, "REAL"), eq(registrations.status, "CONFIRMED"), eq(registrations.elite, true), isNull(registrations.bibNumber))),
+    // The rows a press of the last ten minutes may still undo, and the presses of their numbers since.
+    loadLineTrail(db, eventId, new Date(now.getTime() - FINISH_UNDO_WINDOW_MS - LINE_TRAIL_SLACK_MS)),
   ]);
   // The places from the live answers, as every page reads them (`loadLiveRanking`'s rule, from the rows read once here).
   const ranking = rankingOf(stored, runners, event);
@@ -1167,7 +1222,8 @@ export async function readFinishLine<T extends Record<string, unknown>>(db: Data
   const recent = latest.map((row): RecentFinisherView => {
     const runner = row.registrationId !== null ? runners.byRegistration.get(row.registrationId) : undefined;
     const ranked = ranking.get(row.bibNumber);
-    const until = undoOpenUntil(row, actor.id);
+    const rowTrail = undoTrailOf(row, trail);
+    const until = undoOpenUntil(row, actor.id, rowTrail);
     return {
       resultId: row.id,
       bibNumber: row.bibNumber,
@@ -1179,6 +1235,7 @@ export async function readFinishLine<T extends Record<string, unknown>>(db: Data
       by: row.updatedByStaffUserId === null ? null : (staffNames.get(row.updatedByStaffUserId) ?? null),
       changed: row.createdAt.getTime() !== row.updatedAt.getTime(),
       undoUntilMs: until !== null && now.getTime() <= until ? until : null,
+      pressedAgain: undoClosedBy(row, actor.id, rowTrail, now.getTime()),
     };
   });
 

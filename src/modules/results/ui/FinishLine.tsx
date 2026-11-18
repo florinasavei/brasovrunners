@@ -4,16 +4,18 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { unstable_isUnrecognizedActionError } from "next/navigation";
 import { type FormEvent, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { CLUB_TIME_ZONE, formatTimeWithSeconds } from "@/i18n/dates";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import {
-  anchorAtLoad,
-  anchorFromAnswer,
+  CLOCK_RESYNC_MS,
   clockReading,
   dropKept,
   type EliteButtonView,
   entryStateOf,
+  FINISH_FAILED_TRIES,
+  type FinishClockAnswer,
   type FinishEntry,
   type FinishEntryOutcome,
   type FinishLineState,
@@ -21,18 +23,19 @@ import {
   type FinishUndoAnswer,
   finishStorageKey,
   keepTime,
+  keptOf,
   nextToSend,
   pressEntry,
   type RecentFinisherView,
-  type ServerAnchor,
-  serverNowOf,
   settleEntry,
   stampedGunTime,
   takeOldestKept,
   waitingCount,
+  withKept,
 } from "../domain/finish-line";
 import { EMPTY_FINISH_LINE, finishLineSnapshot, subscribeFinishLine, writeFinishLine } from "./finish-line-store";
 import { formatResultTime } from "../domain/result-time";
+import { measureServerClock, seedServerClock, serverClockNow } from "./server-clock";
 
 /**
  * «Cronometrare»'s finish line (§NNN; the owner, 2026-11-18: «un view rapid, în care să introduc și să se salveze instant, gen că a
@@ -46,14 +49,20 @@ import { formatResultTime } from "../domain/result-time";
  * - **The box**: the numeric keypad, Enter or «Sosit» records, and the box is empty at once, keeping the focus for the next number.
  * - **«⏱ Prinde timpul»** for a bunch: each press keeps one moment (oldest first, each with its ✕); the next number or elite pressed
  *   takes the oldest kept moment instead of now.
- * - **The times** are stamped at the press on the server's clock (`domain/finish-line.ts`: the anchor of the page, re-taken from
- *   every answer), so a phone whose clock is wrong stamps right; the server floors them and holds them to its bounds.
+ * - **The times** are stamped at the press on the server's clock (`server-clock.ts`: the phone's wall clock and the offset measured
+ *   by a round trip as the page wakes — again when it is shown after five minutes away — and by every answer), so a phone whose
+ *   clock is wrong, or whose screen locked between two finishers, stamps right; the server floors them and holds them to its bounds.
  * - **The queue**: every press is a line under the box at once («se salvează…») and is sent through the Server Action in the order
  *   pressed; an unsent one waits in this phone's storage for this event (every read and write in a `try`: without storage the page
- *   works, it only forgets on a reload), is retried by itself, and a reload sends what is left. A press the server already had from
- *   this viewer at that second is shown saved; one that another volunteer — or this one, another second — had stored first says who
- *   and when; a refusal stands on its line with the time to write on paper, never blocking the box.
- * - **«Ultimii sosiți»**, refreshed from every answer: who entered each, and «Anulează» on one's own for ten minutes.
+ *   works, it only forgets on a reload), is retried by itself, and a reload sends what is left. Each is the press of the account
+ *   signed in when it was pressed and is sent only from that account's page: another account's, left on this phone, stands on its
+ *   line unsent with the time to write on paper, so the trail never names somebody who did not press. A press the server already had
+ *   from this viewer at that second is shown saved; one that another volunteer — or this one, another second — had stored first says
+ *   who and when, and one whose runner «Clasament» wrote off says so; a refusal stands on its line with the time to write on paper,
+ *   never blocking the box, and so does a press the server could not record three times. A site updated under the page asks for a
+ *   reload, the presses waiting.
+ * - **«Ultimii sosiți»**, refreshed from every answer: who entered each, and «Anulează» on one's own for ten minutes — or, the number
+ *   pressed again since, the line that says «Clasament» corrects it.
  *
  * Plain data crosses the boundary — strings, numbers, booleans and the Server Actions — never an element (`AGENTS.md` §14.1); the
  * glyphs are named (`GlyphButton`).
@@ -82,11 +91,19 @@ export type FinishLineWords = {
   place: string;
   outOfRanking: string;
   duplicate: string;
+  /** A press of a number «Clasament» wrote off — «{status}» stays. */
+  decided: string;
+  /** Another account's press, left on this phone unsent. */
+  otherAccount: string;
+  /** The words of each state a stored row may have (`FINISHED`, `DNF`, `DNS`, `DSQ`). */
+  status: Record<string, string>;
   refused: Record<string, string>;
   refusedOther: string;
   accountGone: string;
   offline: string;
   session: string;
+  /** The site was updated under the page: reload it, the presses waiting. */
+  reload: string;
   waitingCount: string;
   recentTitle: string;
   recentAside: string;
@@ -98,17 +115,23 @@ export type FinishLineWords = {
   undone: string;
   undoRefused: Record<string, string>;
   undoRefusedOther: string;
+  /** Why one's own press of the last ten minutes has no «Anulează»: its number pressed again since, by another account or by oneself. */
+  undoPressedAgain: { other: string; self: string };
 };
 
 type Props = {
   eventId: string;
   uiLocale: string;
+  /** The viewer's staff account: the presses this page sends are its own; another account's, left on the phone, are only shown. */
+  staffId: string;
   /** The page's state as the server drew it: the gun, «Ultimii sosiți», the elites, the counts and the server's clock. */
   initial: FinishLineState;
   words: FinishLineWords;
   /** The Server Actions the island calls (`cronometrare/actions.ts`). */
   record: (input: unknown) => Promise<FinishPressAnswer>;
   undo: (input: unknown) => Promise<FinishUndoAnswer>;
+  /** The server's clock, asked as the page wakes. */
+  clock: () => Promise<FinishClockAnswer>;
   /** …and the ones the forms post with scripts off. */
   recordForm: (form: FormData) => Promise<void>;
   undoForm: (form: FormData) => Promise<void>;
@@ -119,8 +142,8 @@ function fill(template: string, values: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (placeholder, name: string) => values[name] ?? placeholder);
 }
 
-/** The phone's monotonic clock: a wall clock moved under the page does not move the stamps. */
-const localNow = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
+/** The phone's wall clock, which keeps time while the screen is locked: the round trips are measured on it (`server-clock.ts`). */
+const wallNow = () => Date.now();
 
 /** An entry's id: unique enough on one phone, never shown. */
 function entryId(): string {
@@ -135,61 +158,106 @@ const BIG_SX = { minHeight: 56, fontSize: "1.125rem" } as const;
 /** Nothing to watch: `useSyncExternalStore`'s way of saying «true in the browser, false on the server and while hydrating». */
 const NOTHING_TO_WATCH = () => () => {};
 
-export default function FinishLine({ eventId, uiLocale, initial, words, record, undo, recordForm, undoForm }: Props) {
+export default function FinishLine({ eventId, uiLocale, staffId, initial, words, record, undo, clock, recordForm, undoForm }: Props) {
   const storageKey = finishStorageKey(eventId);
   // The presses and the kept times: this phone's, behind the store the storage is read into (`finish-line-store.ts`) — empty on the
   // server and while hydrating, so the markup is the same with storage or without.
   const line = useSyncExternalStore(subscribeFinishLine, () => finishLineSnapshot(storageKey), () => EMPTY_FINISH_LINE);
   const entries = line.entries;
-  const kept = line.kept;
+  const kept = keptOf(line, staffId);
   const hydrated = useSyncExternalStore(NOTHING_TO_WATCH, () => true, () => false);
   // The newest state the server answered with; the page's own while none is newer (a page drawn again after «Start» brings its own).
   const [answered, setAnswered] = useState<FinishLineState | null>(null);
   const state = answered && answered.serverNowMs >= initial.serverNowMs ? answered : initial;
   const [offline, setOffline] = useState(false);
   const [session, setSession] = useState(false);
+  const [reload, setReload] = useState(false);
   const [hint, setHint] = useState(false);
   const [undoLines, setUndoLines] = useState<Record<string, string>>({});
   // The server's clock, re-read every second for the clock and for «Anulează»'s ten minutes; the server's own `now` until the first tick.
   const [nowMs, setNowMs] = useState(initial.serverNowMs);
 
-  const anchor = useRef<ServerAnchor>(anchorAtLoad(initial.serverNowMs, 0));
   const pumping = useRef(false);
   const failures = useRef(0);
+  // How many times the server answered that it could not record each entry: past `FINISH_FAILED_TRIES` it is settled refused.
+  const failedTries = useRef(new Map<string, number>());
   const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionEnded = useRef(false);
+  // The site was deployed again under the page: its actions are gone until a reload, so nothing more is sent.
+  const outdated = useRef(false);
+  const lastClock = useRef(0);
   const box = useRef<HTMLInputElement>(null);
 
-  const serverNow = useCallback(() => serverNowOf(anchor.current, localNow()), []);
   const commitEntries = useCallback(
     (change: (current: FinishEntry[]) => FinishEntry[]) => writeFinishLine(storageKey, (current) => ({ ...current, entries: change(current.entries) })),
     [storageKey],
   );
-  const commitKept = useCallback((change: (current: number[]) => number[]) => writeFinishLine(storageKey, (current) => ({ ...current, kept: change(current.kept) })), [storageKey]);
+  const commitKept = useCallback(
+    (change: (current: number[]) => number[]) => writeFinishLine(storageKey, (current) => withKept(current, staffId, change(keptOf(current, staffId)))),
+    [staffId, storageKey],
+  );
+  const markOutdated = useCallback(() => {
+    outdated.current = true;
+    setReload(true);
+  }, []);
+
+  /** The server's clock asked over one round trip: as the page wakes, and when it is shown again after `CLOCK_RESYNC_MS`. */
+  const askClock = useCallback(
+    (always: boolean) => {
+      const sentAtMs = wallNow();
+      if (!always && sentAtMs - lastClock.current < CLOCK_RESYNC_MS) return;
+      lastClock.current = sentAtMs;
+      clock().then(
+        (answer: FinishClockAnswer) => {
+          if (answer.kind === "clock") measureServerClock({ ...answer.clock, sentAtMs, backAtMs: wallNow() });
+          else if (answer.kind === "session") {
+            sessionEnded.current = true;
+            setSession(true);
+          }
+        },
+        // No answer: the next answer measures the clock instead; a site deployed again asks for a reload.
+        (error: unknown) => {
+          if (unstable_isUnrecognizedActionError(error)) markOutdated();
+        },
+      );
+    },
+    [clock, markOutdated],
+  );
 
   /** A state the server answered with, kept when it is the newest one heard. */
   const adopt = useCallback((next: FinishLineState) => {
     setAnswered((current) => (current && current.serverNowMs > next.serverNowMs ? current : next));
   }, []);
 
-  /** Sends what waits, one at a time in the order pressed, until nothing waits or the network fails (then it tries again later). */
+  /**
+   * Sends what waits of the viewer's own, one at a time in the order pressed, until nothing waits, the network fails (then it tries
+   * again later), the session ends or the site was updated under the page.
+   */
   const pump = useCallback(async () => {
     if (pumping.current) return;
     pumping.current = true;
+    const later = (delayMs: number) => {
+      if (retryTimer.current) clearTimeout(retryTimer.current);
+      retryTimer.current = setTimeout(() => void pump(), delayMs);
+    };
     try {
       for (;;) {
-        const next = nextToSend(finishLineSnapshot(storageKey).entries);
-        if (!next || sessionEnded.current) break;
-        const sentAt = localNow();
+        const next = nextToSend(finishLineSnapshot(storageKey).entries, staffId);
+        if (!next || sessionEnded.current || outdated.current) break;
+        const sentAtMs = wallNow();
         let answer: FinishPressAnswer;
         try {
-          answer = await record({ eventId, bibNumber: next.bibNumber, claimedAtMs: next.pressedAtMs });
-        } catch {
+          answer = await record({ eventId, staffId, bibNumber: next.bibNumber, claimedAtMs: next.pressedAtMs });
+        } catch (error) {
+          // The site deployed again: this page's actions are gone until a reload, which sends what waits.
+          if (unstable_isUnrecognizedActionError(error)) {
+            markOutdated();
+            break;
+          }
           // No answer — no signal, a server that did not reply: the entry waits, and is tried again by itself.
           failures.current += 1;
           setOffline(true);
-          if (retryTimer.current) clearTimeout(retryTimer.current);
-          retryTimer.current = setTimeout(() => void pump(), retryDelay(failures.current));
+          later(retryDelay(failures.current));
           break;
         }
         failures.current = 0;
@@ -199,28 +267,50 @@ export default function FinishLine({ eventId, uiLocale, initial, words, record, 
           setSession(true);
           break;
         }
-        if (answer.state) {
-          anchor.current = anchorFromAnswer(answer.state.serverNowMs, sentAt, localNow());
-          adopt(answer.state);
+        if (answer.kind === "failed") {
+          // The site answered but could not record it: tried again a few times, then settled with its time to write on paper.
+          const tries = (failedTries.current.get(next.id) ?? 0) + 1;
+          if (tries < FINISH_FAILED_TRIES) {
+            failedTries.current.set(next.id, tries);
+            later(retryDelay(tries));
+            break;
+          }
+          failedTries.current.delete(next.id);
+          commitEntries((current) => settleEntry(current, next.id, { kind: "refused", code: "UNEXPECTED", bibNumber: next.bibNumber, gunTimeMs: null }));
+          continue;
         }
+        measureServerClock({ ...answer.clock, sentAtMs, backAtMs: wallNow() });
+        if (answer.state) adopt(answer.state);
         const outcome: FinishEntryOutcome = answer.outcome;
         commitEntries((current) => settleEntry(current, next.id, outcome));
       }
     } finally {
       pumping.current = false;
     }
-  }, [adopt, commitEntries, eventId, record, storageKey]);
+  }, [adopt, commitEntries, eventId, markOutdated, record, staffId, storageKey]);
 
-  // Waking: the server's clock from here on, the clock ticking, and whatever this phone kept waiting sent at once.
+  // Waking: the server's clock asked, the clock ticking, whatever this phone kept waiting sent at once — and both again when the page
+  // is shown after a while, comes back from the browser's memory or finds its signal again.
   useEffect(() => {
-    anchor.current = anchorAtLoad(initial.serverNowMs, localNow());
-    const tick = setInterval(() => setNowMs(serverNowOf(anchor.current, localNow())), 1000);
-    const online = () => void pump();
-    window.addEventListener("online", online);
+    seedServerClock(initial.serverNowMs);
+    const tick = setInterval(() => setNowMs(serverClockNow()), 1000);
+    const wake = () => {
+      askClock(false);
+      void pump();
+    };
+    const shown = () => {
+      if (document.visibilityState === "visible") wake();
+    };
+    window.addEventListener("online", wake);
+    window.addEventListener("pageshow", wake);
+    document.addEventListener("visibilitychange", shown);
+    askClock(true);
     void pump();
     return () => {
       clearInterval(tick);
-      window.removeEventListener("online", online);
+      window.removeEventListener("online", wake);
+      window.removeEventListener("pageshow", wake);
+      document.removeEventListener("visibilitychange", shown);
       if (retryTimer.current) clearTimeout(retryTimer.current);
     };
     // Once per page: the event and its storage do not change under a mounted island.
@@ -230,13 +320,13 @@ export default function FinishLine({ eventId, uiLocale, initial, words, record, 
   /** One press: the moment — the oldest kept one, else now on the server's clock — a line at once, and the queue on its way. */
   const press = useCallback(
     (bibNumber: number, label: string | null) => {
-      const taken = takeOldestKept(finishLineSnapshot(storageKey).kept);
+      const taken = takeOldestKept(keptOf(finishLineSnapshot(storageKey), staffId));
       if (taken.atMs !== null) commitKept(() => taken.rest);
-      const pressedAtMs = taken.atMs ?? serverNow();
-      commitEntries((current) => pressEntry(current, { id: entryId(), bibNumber, label, pressedAtMs }));
+      const pressedAtMs = taken.atMs ?? serverClockNow();
+      commitEntries((current) => pressEntry(current, { id: entryId(), staffId, bibNumber, label, pressedAtMs }));
       void pump();
     },
-    [commitEntries, commitKept, pump, serverNow, storageKey],
+    [commitEntries, commitKept, pump, staffId, storageKey],
   );
 
   const onBox = (event: FormEvent<HTMLFormElement>) => {
@@ -271,12 +361,13 @@ export default function FinishLine({ eventId, uiLocale, initial, words, record, 
 
   const onUndo = async (event: FormEvent<HTMLFormElement>, line: RecentFinisherView) => {
     event.preventDefault();
-    const sentAt = localNow();
+    const sentAtMs = wallNow();
     let answer: FinishUndoAnswer;
     try {
       answer = await undo({ eventId, resultId: line.resultId });
-    } catch {
-      setOffline(true);
+    } catch (error) {
+      if (unstable_isUnrecognizedActionError(error)) markOutdated();
+      else setOffline(true);
       return;
     }
     setOffline(false);
@@ -284,10 +375,8 @@ export default function FinishLine({ eventId, uiLocale, initial, words, record, 
       setSession(true);
       return;
     }
-    if (answer.state) {
-      anchor.current = anchorFromAnswer(answer.state.serverNowMs, sentAt, localNow());
-      adopt(answer.state);
-    }
+    measureServerClock({ ...answer.clock, sentAtMs, backAtMs: wallNow() });
+    if (answer.state) adopt(answer.state);
     const outcome = answer.outcome;
     setUndoLines((current) => ({
       ...current,
@@ -299,20 +388,23 @@ export default function FinishLine({ eventId, uiLocale, initial, words, record, 
   const clockAt = (ms: number) => formatTimeWithSeconds(new Date(ms), { locale: uiLocale, timeZone: CLUB_TIME_ZONE });
   const who = (bibNumber: number, label: string | null) => (label ? `${label} (#${bibNumber})` : `#${bibNumber}`);
   const reading = clockReading(nowMs, state.gunAtMs);
-  const waiting = waitingCount(entries);
+  const waiting = waitingCount(entries, staffId);
 
   /** What an entry's line says. */
   const entryLine = (entry: FinishEntry): string => {
     const head = who(entry.bibNumber, entry.label ?? (entry.outcome && "label" in entry.outcome ? entry.outcome.label : null));
     const pressed = entry.pressedAtMs >= state.gunAtMs ? time(stampedGunTime(entry.pressedAtMs, state.gunAtMs)) : "—";
     const outcome = entry.outcome;
-    if (!outcome) return `${head} · ${pressed} · ${words.waiting}`;
+    if (!outcome) return entry.staffId === staffId ? `${head} · ${pressed} · ${words.waiting}` : `${head}: ${fill(words.otherAccount, { time: pressed })}`;
     if (outcome.kind === "recorded") {
       const place = outcome.outOfRanking ? words.outOfRanking : outcome.positionOverall === null ? null : fill(words.place, { position: String(outcome.positionOverall) });
       return [`✓ ${head}${outcome.name ? ` ${outcome.name}` : ""}`, time(outcome.gunTimeMs), place, words.saved].filter(Boolean).join(" · ");
     }
     if (outcome.kind === "duplicate") {
-      return `${head} ${fill(words.duplicate, { by: outcome.storedBy ?? words.accountGone, time: time(outcome.storedGunTimeMs), mine: time(outcome.gunTimeMs) })}`;
+      const by = outcome.storedBy ?? words.accountGone;
+      return outcome.storedStatus === "FINISHED"
+        ? `${head} ${fill(words.duplicate, { by, time: time(outcome.storedGunTimeMs), mine: time(outcome.gunTimeMs) })}`
+        : `${head} ${fill(words.decided, { status: words.status[outcome.storedStatus] ?? outcome.storedStatus, by, mine: time(outcome.gunTimeMs) })}`;
     }
     const template = words.refused[outcome.code] ?? words.refusedOther;
     return `${head}: ${fill(template, { time: outcome.gunTimeMs === null ? pressed : time(outcome.gunTimeMs), clock: clockAt(entry.pressedAtMs) })}`;
@@ -379,7 +471,12 @@ export default function FinishLine({ eventId, uiLocale, initial, words, record, 
           {words.session}
         </Alert>
       )}
-      {offline && !session && (
+      {reload && !session && (
+        <Alert severity="warning" data-testid="finish-reload">
+          {words.reload}
+        </Alert>
+      )}
+      {offline && !session && !reload && (
         <Alert severity="warning" data-testid="finish-offline">
           {words.offline}
         </Alert>
@@ -451,7 +548,7 @@ export default function FinishLine({ eventId, uiLocale, initial, words, record, 
       {hydrated && (
         <Box data-testid="finish-keep">
           <Stack direction="row" sx={{ gap: 1, alignItems: "center", flexWrap: "wrap" }}>
-            <GlyphButton type="button" icon="keepTime" variant="outlined" sx={BIG_SX} onClick={() => commitKept((current) => keepTime(current, serverNow()))} data-testid="finish-keep-button">
+            <GlyphButton type="button" icon="keepTime" variant="outlined" sx={BIG_SX} onClick={() => commitKept((current) => keepTime(current, serverClockNow()))} data-testid="finish-keep-button">
               {words.keep}
             </GlyphButton>
             {kept.length > 0 && (
@@ -492,14 +589,14 @@ export default function FinishLine({ eventId, uiLocale, initial, words, record, 
           </Typography>
           <Box component="ul" sx={{ m: 0, p: 0, listStyle: "none", display: "grid", gap: 0.5 }}>
             {[...entries].reverse().map((entry) => {
-              const kind = entryStateOf(entry);
+              const kind = entryStateOf(entry, staffId);
               return (
                 <Typography
                   component="li"
                   variant="body2"
                   key={entry.id}
                   color={kind === "waiting" ? "text.secondary" : kind === "saved" ? "success.main" : kind === "duplicate" ? "warning.main" : "error.main"}
-                  sx={{ fontWeight: kind === "refused" || kind === "duplicate" ? 600 : 400, overflowWrap: "anywhere" }}
+                  sx={{ fontWeight: kind === "waiting" || kind === "saved" ? 400 : 600, overflowWrap: "anywhere" }}
                   data-testid="finish-entry"
                   data-state={kind}
                   data-bib={entry.bibNumber}
@@ -553,6 +650,11 @@ export default function FinishLine({ eventId, uiLocale, initial, words, record, 
                     {undoLines[line.resultId] !== undefined && (
                       <Typography variant="caption" color="text.secondary" data-testid="finish-undo-line">
                         {undoLines[line.resultId]}
+                      </Typography>
+                    )}
+                    {line.pressedAgain !== null && undoLines[line.resultId] === undefined && (
+                      <Typography variant="caption" color="text.secondary" data-testid="finish-undo-closed">
+                        {words.undoPressedAgain[line.pressedAgain]}
                       </Typography>
                     )}
                   </Stack>

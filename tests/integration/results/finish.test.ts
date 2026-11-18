@@ -6,18 +6,20 @@ import { eventResults } from "@/db/schema/event-results";
 import { events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { FINISH_UNDO_WINDOW_MS } from "@/modules/results/domain/finish-line";
+import { FINISH_ARRIVAL_GRACE_MS, FINISH_UNDO_WINDOW_MS, FINISH_WINDOW_MS } from "@/modules/results/domain/finish-line";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { createRace, person, RACE_STARTS_AT, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
  * §850, §NNN — the finish line, «Cronometrare» (BR-REQ-050-02, BR-REQ-060-01): `recordFinish` stamps the time since the gun — the
- * claimed press within the server's bounds, else its own — on a confirmed runner's number or an elite line's, re-ranks, audits without
- * a name and refuses what «Clasament» must handle; every role that works the desk may press, a member may not; the same number twice
- * keeps the first and writes the second to the trail, a retry of a saved press is no duplicate; `undoFinish` takes back one's own
- * unchanged press for ten minutes; `setRaceGun` is «Start», pressed, moved and taken off until the first finisher, within its window;
- * `readFinishLine` is the page's data; `readFinishHistory` is «Istoricul sosirilor» with who wrote each line.
+ * claimed press within the server's bounds, else its own, nothing a day and three hours after the gun — on a confirmed runner's number
+ * or an elite line's, re-ranks, audits without a name and refuses what «Clasament» must handle; every role that works the desk may
+ * press, a member may not; the same number twice keeps the first and writes the second to the trail, a retry of a saved press is no
+ * duplicate, and a decision of «Clasament» — «Descalificat», or a write-off later than the moment pressed — stays; `undoFinish` takes
+ * back one's own press at the line, unchanged and not pressed again, for ten minutes; `setRaceGun` is «Start», pressed, moved and taken
+ * off until the first finisher, within its window; `readFinishLine` is the page's data; `readFinishHistory` is «Istoricul sosirilor»
+ * with who wrote each line.
  */
 const revalidate = vi.hoisted(() => vi.fn());
 vi.mock("next/cache", () => ({ revalidatePath: () => {}, revalidateTag: () => {}, unstable_cache: (fn: unknown) => fn }));
@@ -73,7 +75,9 @@ describe("§850 §NNN recordFinish — the time since the gun, stamped", () => {
     ]);
     const rows = await trail();
     expect(rows.map((row) => row.action)).toEqual(["event_result.created", "event_result.created"]);
-    expect(rows[0].metadataJson).toEqual({ bibNumber: 102, status: "FINISHED", gunTimeMs: 2_712_000, chipTimeMs: null, finishLine: true });
+    // The row's id beside the times: the undo's proof the line wrote it.
+    const row102 = (await stored()).find((row) => row.bibNumber === 102)!;
+    expect(rows[0].metadataJson).toEqual({ bibNumber: 102, status: "FINISHED", gunTimeMs: 2_712_000, chipTimeMs: null, finishLine: true, resultId: row102.id });
     expect(rows[0].actorStaffUserId).toBe(staff.CONTRIBUTOR!.id);
     expect(JSON.stringify(rows.map((row) => row.metadataJson))).not.toContain("Marin");
     expect(revalidate).toHaveBeenCalledTimes(2);
@@ -103,6 +107,9 @@ describe("§850 §NNN recordFinish — the time since the gun, stamped", () => {
     await expect(finish(0, at(1))).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
     // A day after the gun the line is closed: the times are «Clasament»'s to type, and a 25-hour time would not fit the column anyway.
     await expect(finish(103, new Date(GUN.getTime() + 25 * 3_600_000))).rejects.toMatchObject({ code: "RESULT_FINISH_CLOSED" });
+    // A queued press claiming a moment of the race is still taken a few hours after the day — and refused after that, whatever it claims.
+    await expect(finish(103, new Date(GUN.getTime() + FINISH_WINDOW_MS + FINISH_ARRIVAL_GRACE_MS + 1000), staff.CONTRIBUTOR, at(12, 3))).rejects.toMatchObject({ code: "RESULT_FINISH_CLOSED" });
+    await expect(finish(103, new Date(GUN.getTime() + 30 * 24 * 3_600_000), staff.CONTRIBUTOR, at(12, 3))).rejects.toMatchObject({ code: "RESULT_FINISH_CLOSED" });
     // Stamped to the second: the half second of the press is dropped.
     expect(await finish(103, new Date(at(40, 7).getTime() + 500))).toMatchObject({ gunTimeMs: ms(40, 7) });
     expect((await stored()).map((row) => row.bibNumber)).toEqual([103]);
@@ -113,7 +120,49 @@ describe("§850 §NNN recordFinish — the time since the gun, stamped", () => {
     expect(await finish(101, at(55))).toMatchObject({ kind: "recorded", bibNumber: 101, gunTimeMs: ms(55), positionOverall: 1 });
     const [row] = await stored();
     expect(row).toMatchObject({ bibNumber: 101, status: "FINISHED", gunTimeMs: ms(55), note: "a renunțat la km 5" });
-    expect((await trail()).at(-1)).toMatchObject({ action: "event_result.updated", metadataJson: { bibNumber: 101, status: "FINISHED", gunTimeMs: ms(55), chipTimeMs: null, changed: ["time", "status"], finishLine: true } });
+    expect((await trail()).at(-1)).toMatchObject({ action: "event_result.updated", metadataJson: { bibNumber: 101, status: "FINISHED", gunTimeMs: ms(55), chipTimeMs: null, changed: ["time", "status"], finishLine: true, resultId: row.id } });
+  });
+
+  it("never turns «Descalificat» into «Sosit» at the line: the row stays, the press's time goes to the trail beside it", async () => {
+    await finish(101, at(40), staff.CONTRIBUTOR);
+    await saveEventResults(db, staff.MODERATOR!, { eventId: raceId, rows: [{ key: "r[101]", bib: "101", name: "", sex: "", birthDate: "", time: "", status: "DSQ", chip: "", note: "a tăiat traseul", agreed: "" }] }, at(50));
+    const [before] = await stored();
+    // A Redactor's press claimed at 40:02 — queued on a phone without signal, or a second volunteer — arriving at 55:00.
+    const late = await finish(101, at(55), staff.COPYWRITER, at(40, 2));
+    expect(late).toMatchObject({ kind: "duplicate", bibNumber: 101, gunTimeMs: ms(40, 2), storedStatus: "DSQ", storedGunTimeMs: null, storedBy: "Oana Organizator" });
+    // A fresh press of the disqualified runner crossing the line is no different.
+    expect(await finish(101, at(56), staff.CONTRIBUTOR)).toMatchObject({ kind: "duplicate", storedStatus: "DSQ", gunTimeMs: ms(56) });
+    expect(await stored()).toEqual([before]);
+    expect(before).toMatchObject({ status: "DSQ", gunTimeMs: null, note: "a tăiat traseul", positionOverall: null });
+    expect((await trail()).filter((row) => row.action === "event_result.finish_duplicate").map((row) => [row.actorStaffUserId, row.metadataJson])).toEqual([
+      [staff.COPYWRITER!.id, { bibNumber: 101, gunTimeMs: ms(40, 2), storedGunTimeMs: null, storedStatus: "DSQ", storedResultId: before.id, finishLine: true }],
+      [staff.CONTRIBUTOR!.id, { bibNumber: 101, gunTimeMs: ms(56), storedGunTimeMs: null, storedStatus: "DSQ", storedResultId: before.id, finishLine: true }],
+    ]);
+  });
+
+  it("leaves an «Abandon» or a «Neprezentat» written after the moment pressed: a queued press never overwrites a later decision", async () => {
+    await saveEventResults(
+      db,
+      staff.MODERATOR!,
+      {
+        eventId: raceId,
+        rows: [
+          { key: "r[101]", bib: "101", name: "", sex: "", birthDate: "", time: "", status: "DNF", chip: "", note: "", agreed: "" },
+          { key: "r[102]", bib: "102", name: "", sex: "", birthDate: "", time: "", status: "DNS", chip: "", note: "", agreed: "" },
+        ],
+      },
+      at(50),
+    );
+    const before = await stored();
+    expect(await finish(101, at(55), staff.CONTRIBUTOR, at(45))).toMatchObject({ kind: "duplicate", storedStatus: "DNF", gunTimeMs: ms(45) });
+    expect(await finish(102, at(55), staff.CONTRIBUTOR, at(49, 59))).toMatchObject({ kind: "duplicate", storedStatus: "DNS" });
+    expect(await stored()).toEqual(before);
+    // Pressed after the decision, the runner crossed the line: turned «Sosit», as a runner written off by mistake.
+    expect(await finish(101, at(55, 30), staff.CONTRIBUTOR, at(55))).toMatchObject({ kind: "recorded", gunTimeMs: ms(55) });
+    expect((await stored()).map((row) => [row.bibNumber, row.status])).toEqual([
+      [101, "FINISHED"],
+      [102, "DNS"],
+    ]);
   });
 
   it("is open to every role that works the desk — the desk Volunteer included — and refused to a member, and on an event that is not a race", async () => {
@@ -167,7 +216,7 @@ describe("§NNN the same number twice: the first stored wins", () => {
       ["event_result.finish_duplicate", staff.MODERATOR!.id],
       ["event_result.finish_duplicate", staff.CONTRIBUTOR!.id],
     ]);
-    expect(rows[1].metadataJson).toEqual({ bibNumber: 101, gunTimeMs: ms(45, 14), storedGunTimeMs: ms(45, 12), finishLine: true });
+    expect(rows[1].metadataJson).toEqual({ bibNumber: 101, gunTimeMs: ms(45, 14), storedGunTimeMs: ms(45, 12), storedStatus: "FINISHED", storedResultId: before.id, finishLine: true });
   });
 
   it("says «cont șters» — no name — for a stored row whose account is gone", async () => {
@@ -232,6 +281,34 @@ describe("§NNN «Anulează» at the line: one's own unchanged press, ten minute
     expect((await trail()).at(-1)).toMatchObject({ action: "event_result.deleted", actorStaffUserId: staff.CONTRIBUTOR!.id, metadataJson: { bibNumber: 101, status: "FINISHED", gunTimeMs: ms(40), finishLine: true, undo: true } });
     expect(revalidate).toHaveBeenCalledTimes(1);
     await expect(undoFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, resultId: row.id }, at(42))).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("refuses one's own press once another volunteer pressed the number after it: the runner keeps a time, «Clasament» corrects it", async () => {
+    // Vlad pressed 102 for another runner; Radu pressed 102 as 102 crossed — a duplicate. Vlad's undo would leave 102 with no time.
+    await finish(102, at(40), staff.CONTRIBUTOR);
+    await finish(102, at(41, 30), staff.COPYWRITER);
+    const row = await resultOf(102);
+    await expect(undoFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, resultId: row.id }, at(42))).rejects.toMatchObject({ code: "RESULT_UNDO_NOT_ALLOWED" });
+    expect(await stored()).toEqual([row]);
+    // The page says why there is no «Anulează» on Vlad's own line, and «Istoricul sosirilor» keeps both times.
+    const view = await readFinishLine(db, staff.CONTRIBUTOR!, raceId, at(42), 20);
+    expect(view.recent.map((line) => [line.bibNumber, line.undoUntilMs, line.pressedAgain])).toEqual([[102, null, "other"]]);
+    // Pressed again by Vlad himself: the same — which of his two presses was right is «Clasament»'s to say.
+    await finish(101, at(43), staff.CONTRIBUTOR);
+    await finish(101, at(43, 20), staff.CONTRIBUTOR);
+    const own = await resultOf(101);
+    await expect(undoFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, resultId: own.id }, at(44))).rejects.toMatchObject({ code: "RESULT_UNDO_NOT_ALLOWED" });
+    expect((await readFinishLine(db, staff.CONTRIBUTOR!, raceId, at(44), 20)).recent.find((line) => line.bibNumber === 101)?.pressedAgain).toBe("self");
+  });
+
+  it("refuses a row typed on «Clasament» — never pressed at the line — though its writer saved it a minute ago", async () => {
+    await saveEventResults(db, staff.MODERATOR!, { eventId: raceId, rows: [{ key: "r[101]", bib: "101", name: "", sex: "", birthDate: "", time: "40:00", status: "", chip: "", note: "", agreed: "" }] }, at(45));
+    const row = await resultOf(101);
+    expect(row).toMatchObject({ updatedByStaffUserId: staff.MODERATOR!.id, createdAt: row.updatedAt });
+    await expect(undoFinish(db, staff.MODERATOR!, { eventId: raceId, resultId: row.id }, at(46))).rejects.toMatchObject({ code: "RESULT_UNDO_NOT_ALLOWED" });
+    const view = await readFinishLine(db, staff.MODERATOR!, raceId, at(46), 20);
+    expect(view.recent.map((line) => [line.bibNumber, line.undoUntilMs, line.pressedAgain])).toEqual([[101, null, null]]);
+    expect(await stored()).toEqual([row]);
   });
 
   it("refuses another's press, one past ten minutes, a row changed since and a member", async () => {
@@ -325,18 +402,29 @@ describe("§NNN «Istoricul sosirilor»", () => {
   it("names who wrote each line, newest first, from the line and from «Clasament», with the number's name of today and never one in the trail", async () => {
     await setRaceGun(db, staff.MODERATOR!, { eventId: raceId, clear: false }, at(0, 0));
     await finish(101, at(40), staff.CONTRIBUTOR);
-    await finish(101, at(41), staff.DEV);
-    const row = (await stored())[0];
-    await undoFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, resultId: row.id }, at(42));
-    await saveEventResults(db, staff.ADMIN!, { eventId: raceId, rows: [{ key: "r[101]", bib: "101", name: "", sex: "", birthDate: "", time: "40:00", status: "", chip: "", note: "", agreed: "" }] }, at(43));
+    await undoFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, resultId: (await stored())[0].id }, at(40, 30));
+    await finish(101, at(41), staff.CONTRIBUTOR);
+    await finish(101, at(41, 10), staff.DEV);
+    const ana = { key: "r[101]", bib: "101", name: "", sex: "", birthDate: "", time: "41:05", status: "", chip: "", note: "", agreed: "" };
+    await saveEventResults(db, staff.ADMIN!, { eventId: raceId, rows: [ana] }, at(43));
+    await saveEventResults(db, staff.ADMIN!, { eventId: raceId, rows: [ana, { key: "r[102]", bib: "102", name: "", sex: "", birthDate: "", time: "", status: "DSQ", chip: "", note: "", agreed: "" }] }, at(43, 30));
+    await finish(102, at(44), staff.CONTRIBUTOR);
     const history = await readFinishHistory(db, staff.MODERATOR!, raceId);
     expect(history.limited).toBe(false);
     expect(history.lines.map((line) => [line.what.kind, line.who, line.where, line.liveName])).toEqual([
-      ["created", "Ana Admin", "results", "Ana Popescu"],
-      ["undo", "Vlad Voluntar", "timing", "Ana Popescu"],
+      ["duplicate", "Vlad Voluntar", "timing", "Bia Marin"],
+      ["created", "Ana Admin", "results", "Bia Marin"],
+      ["updated", "Ana Admin", "results", "Ana Popescu"],
       ["duplicate", "Tudor Tehnic", "timing", "Ana Popescu"],
       ["finish", "Vlad Voluntar", "timing", "Ana Popescu"],
+      ["undo", "Vlad Voluntar", "timing", "Ana Popescu"],
+      ["finish", "Vlad Voluntar", "timing", "Ana Popescu"],
       ["gunSet", "Oana Organizator", "timing", null],
+    ]);
+    // The press of a runner «Clasament» disqualified is in the trail with the decision that stays; a «Sosit»'s with its time.
+    expect(history.lines.filter((line) => line.what.kind === "duplicate").map((line) => line.what)).toEqual([
+      { kind: "duplicate", bibNumber: 102, gunTimeMs: ms(44), storedGunTimeMs: null, storedStatus: "DSQ" },
+      { kind: "duplicate", bibNumber: 101, gunTimeMs: ms(41, 10), storedGunTimeMs: ms(41), storedStatus: "FINISHED" },
     ]);
     const trailText = JSON.stringify((await db.select().from(auditLogs).where(and(eq(auditLogs.entityId, raceId)))).map((one) => one.metadataJson));
     expect(trailText).not.toContain("Popescu");

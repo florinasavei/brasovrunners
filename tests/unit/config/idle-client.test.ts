@@ -45,8 +45,9 @@ const ALLOWED_INTERVALS: Record<string, string> = {
   "src/shared/ui/VideoVolumeBar.tsx": "bounded handshake after a click",
   // The calendar card's countdown to the hour (§843): reads the visitor's own clock once a minute and writes a line of text — no request, no read.
   "src/modules/events/ui/AwayLine.tsx": "the visitor's clock, once a minute, no request",
-  // «Cronometrare»'s clock since the gun (§850, §NNN): the server's clock read through the page's anchor once a second on one backoffice page — a line of
-  // text and «Anulează»'s ten minutes, no request, no read; a press that failed is tried again on a timeout, never on this interval.
+  // «Cronometrare»'s clock since the gun (§850, §NNN): the server's clock read through the phone's wall clock and the measured offset once a second on one
+  // backoffice page — a line of text and «Anulează»'s ten minutes, no request, no read; a press that failed is tried again on a timeout, and the clock is
+  // asked as the page wakes or is shown again, never on this interval.
   "src/modules/results/ui/FinishLine.tsx": "the clock since the gun, once a second, no request",
 };
 

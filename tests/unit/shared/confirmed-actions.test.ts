@@ -313,6 +313,8 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   undoFinishFormAction: "the same undo with scripts off: the volunteer's own unchanged press of the last ten minutes; pressing the number again records the runner again",
   setRaceGunAction:
     "«Start» pressed at the gun — its moment is the tap, so it cannot wait on a question — moved by another press, and taken off only after one («Anulează startul», a ConfirmSubmitButton); fixed after the first finisher; it tells nobody and changes nothing public",
+  // The server's clock «Cronometrare»'s island asks as the page wakes (§NNN): a read, no press.
+  readFinishClockAction: "reads the server's clock for the page's stamps and writes nothing; nobody presses it, the page asks it as it wakes",
   // «Ecusoane pentru voluntari» (§764): the club's own look of a printed strip, seen in the preview before the save.
   saveBadgeDesignAction: "an editorial save of the badges' look, undone by saving the old one; it tells nobody and prints nothing",
   saveBadgeRoleColoursAction: "an editorial save of the roles' band colours, undone by choosing again; it tells nobody",

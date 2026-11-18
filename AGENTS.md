@@ -1618,24 +1618,41 @@ themselves are §808's: one row per race number, ranked from the live answers, p
   `race_starts_at` ?? `starts_at`, read by the results alone — the public page, the checkpoints' limits, the emails,
   iCal and the editor keep the planned times. «Start» may be pressed from three hours before the planned gun to six
   after (`RACE_GUN_WINDOW`), moved by a second press and taken off by «Anulează startul» only while no «Sosit» result is
-  stored (`RACE_GUN_FIXED`); its moment is the tap within thirty seconds of the server's clock, else the server's own;
-  audited `event.race_gun_set` / `event.race_gun_cleared` with the instants alone; no email; no public cache.
+  stored (`RACE_GUN_FIXED`); its moment is the tap when the server hears it at most ten seconds later (and at most five
+  seconds ahead of its clock), else the server's own (`raceGunMoment`); audited `event.race_gun_set` /
+  `event.race_gun_cleared` with the instants alone; no email; no public cache.
+- **The clock.** The islands stamp on the server's clock read through the phone's **wall clock** (`Date.now()`, which
+  keeps time while the screen is locked — `performance.now()` does not on most phones) plus an offset measured over a
+  round trip as NTP measures one: the clock's own question as the page wakes (`readFinishClockAction`, again when the
+  page is shown after five minutes) and every answer, each carrying the server's instants at the arrival and at the
+  answer (`domain/finish-line.ts#sampleOfRoundTrip`, `betterSample`; `ui/server-clock.ts`, kept on the phone for half a
+  day). The page's own `now` is read after every read and only seeds it.
 - **A press.** A number — typed, or an elite's button: a registration marked «Elită» with a number, or a line of the
   race's elite list, whose press writes a *typed* row with the line's name and number and nothing else of a person —
-  stamped with the moment the island claims on the server's clock (`domain/finish-line.ts#finishStamp`: at least a
-  second, at most the server's own time since the gun plus five seconds, within a day; otherwise the server's own),
-  floored to the second. The island sends every press at once, keeps the unsent ones in that phone's `localStorage` for
-  the event (every access in a `try`, the page working without it) and retries them in order.
-- **The same number twice.** The first stored wins and its row is never touched. A retry of a saved press — the same
-  actor, the same second — is answered as saved and writes nothing; any other press of a number already «Sosit» is a
-  duplicate: answered with who stored it and when, and written to the trail as `event_result.finish_duplicate`
-  (`{ bibNumber, gunTimeMs, storedGunTimeMs, finishLine: true }`, the actor the row's own column), never as a refusal.
-  The event row's lock (`FOR NO KEY UPDATE`) serializes two presses at once; the unique indexes stand behind it
-  (`tests/concurrency/finish-line.test.ts`).
-- **Undo.** «Anulează» deletes a row its viewer wrote in the last ten minutes that nobody changed since (`created_at` =
-  `updated_at`, `updated_by_staff_user_id` the viewer, `domain/finish-line.ts#mayUndo`), ranks again and audits
-  `event_result.deleted` with `{ …, finishLine: true, undo: true }`; anything else is `RESULT_UNDO_NOT_ALLOWED` —
-  «Clasament»'s. `writeRanking` never touches `updated_at`, so a re-rank is no change.
+  stamped with the moment the island claims (`domain/finish-line.ts#finishStamp`: at least a second, at most the
+  server's own time since the gun plus five seconds, within a day; otherwise the server's own), floored to the second;
+  a press arriving more than a day and three hours after the gun is refused whatever it claims
+  (`FINISH_ARRIVAL_GRACE_MS`). The island sends every press at once, keeps the unsent ones in that phone's
+  `localStorage` for the event (every access in a `try`, the page working without it) and retries them in order —
+  each the press of the account signed in when it was pressed, sent only from that account's page (the action answers
+  `session` to another's), so the trail never names somebody who did not press. A press the server could not record
+  (`failed`, logged) is tried three times, then settled with its time to write on paper; a site deployed under the page
+  asks for a reload.
+- **The same number twice.** The first stored wins and its row is never touched (`domain/finish-line.ts#pressMeets`). A
+  retry of a saved press — the same actor, the same second — is answered as saved and writes nothing; any other press of
+  a number already «Sosit» is a duplicate: answered with who stored it and when, and written to the trail as
+  `event_result.finish_duplicate` (`{ bibNumber, gunTimeMs, storedGunTimeMs, storedStatus, storedResultId, finishLine:
+  true }`, the actor the row's own column), never as a refusal. **A decision of «Clasament» stays** the same way: a row
+  «Descalificat» whoever presses it, and an «Abandon» or a «Neprezentat» written after the moment the press claims — only
+  one written before it (a runner written off by mistake) becomes «Sosit». The event row's lock (`FOR NO KEY UPDATE`)
+  serializes two presses at once; the unique indexes stand behind it (`tests/concurrency/finish-line.test.ts`).
+- **Undo.** «Anulează» deletes a row its viewer's press at the line wrote in the last ten minutes (its
+  `event_result.created` carries `finishLine` and the row's `resultId`), that nobody changed since (`created_at` =
+  `updated_at`, `updated_by_staff_user_id` the viewer) and whose number nobody pressed again since (no
+  `event_result.finish_duplicate` names it: `domain/finish-line.ts#undoTrailOf`, `mayUndo`); it ranks again and audits
+  `event_result.deleted` with `{ …, finishLine: true, undo: true }`. Anything else — a row typed or imported on
+  «Clasament» included — is `RESULT_UNDO_NOT_ALLOWED`, «Clasament»'s, and the viewer's own line says why when the
+  number was pressed again. `writeRanking` never touches `updated_at`, so a re-rank is no change.
 - **The history.** «Istoricul sosirilor», a fold on «Clasament» (`finish-history.ts`), reads every write of the race's
   results from `audit_logs` joined to `staff_users` — presses, duplicates, undos, «Clasament»'s created, changed and
   deleted rows, «Start» — newest first, naming who («cont șters» for an account gone) and from where; the trail stores a
@@ -1643,7 +1660,9 @@ themselves are §808's: one row per race number, ranked from the live answers, p
   «Clasament» says who last wrote it («introdus de» / «modificat de», `event_results.updated_by_staff_user_id`).
 
 MUST NOT: a finish recorded by a member or a page that only hides the box; a second write to a row a duplicate found
-(the first stays); the public page, an email or iCal counting from the pressed gun; a runner's name in the trail.
+(the first stays); a press turning «Descalificat», or a decision later than its moment, into «Sosit»; an undo that leaves
+a runner another press recorded without a time; a press recorded under another account than the one that pressed it;
+stamping on `performance.now()`; the public page, an email or iCal counting from the pressed gun; a runner's name in the trail.
 
 ---
 

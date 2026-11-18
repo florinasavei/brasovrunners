@@ -8,11 +8,12 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { createRace, person, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * §NNN — «Cronometrare»'s Server Actions (BR-REQ-050-02, BR-REQ-060-01): the island's press answers the outcome and the page's state,
- * «sign in again» for a session that ended (the entry waits on the phone), and a refusal — never the page — for a member; the plain
- * forms come back to the page with the outcome in the address, numbers and codes only; «Start» is whoever enters results'. The
- * session's door is the real one's shape: no session is UNAUTHENTICATED, a capability not held is FORBIDDEN. The actions read the
- * real clock, so the race started an hour ago.
+ * §NNN — «Cronometrare»'s Server Actions (BR-REQ-050-02, BR-REQ-060-01): the island's press answers the outcome, the page's state and
+ * the server's clock, «sign in again» for a session that ended or is another account's than the press's (the entry waits on the
+ * phone), `failed` for a press the server could not record, and a refusal — never the page — for a member; the clock's own question;
+ * the plain forms come back to the page with the outcome in the address, numbers and codes only; «Start» is whoever enters results'.
+ * The session's door is the real one's shape: no session is UNAUTHENTICATED, a capability not held is FORBIDDEN. The actions read
+ * the real clock, so the race started an hour ago.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, redirected: [] as string[] }));
 
@@ -44,7 +45,9 @@ vi.mock("@/modules/staff-identity/session", async () => {
   };
 });
 
-const { recordFinishFormAction, recordFinishPressAction, setRaceGunAction, undoFinishFormAction, undoFinishPressAction } = await import("@/app/[locale]/admin/checkin/cronometrare/actions");
+const { readFinishClockAction, recordFinishFormAction, recordFinishPressAction, setRaceGunAction, undoFinishFormAction, undoFinishPressAction } = await import(
+  "@/app/[locale]/admin/checkin/cronometrare/actions"
+);
 
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -89,12 +92,17 @@ const page = (query: string) => `/ro/admin/checkin/cronometrare?eventId=${raceId
 describe("§NNN the island's press", () => {
   it("answers the outcome — the claimed moment kept — and the page's state, with who entered the line and the server's clock", async () => {
     const claimed = gun.getTime() + 45 * 60_000 + 12_000;
-    const answer = await recordFinishPressAction({ eventId: raceId, bibNumber: 102, claimedAtMs: claimed });
+    const sentAtMs = Date.now();
+    const answer = await recordFinishPressAction({ eventId: raceId, staffId: staff.CONTRIBUTOR!.id, bibNumber: 102, claimedAtMs: claimed });
     expect(answer).toMatchObject({ kind: "answer", outcome: { kind: "recorded", bibNumber: 102, name: "Bia Marin", gunTimeMs: 45 * 60_000 + 12_000, positionOverall: 1, again: false } });
     if (answer.kind !== "answer" || !answer.state) throw new Error("no state");
-    expect(answer.state.recent.map((line) => [line.bibNumber, line.by, line.undoUntilMs !== null])).toEqual([[102, "Vlad Voluntar", true]]);
+    expect(answer.state.recent.map((line) => [line.bibNumber, line.by, line.undoUntilMs !== null, line.pressedAgain])).toEqual([[102, "Vlad Voluntar", true, null]]);
     expect(answer.state.gunAtMs).toBe(gun.getTime());
     expect(Math.abs(answer.state.serverNowMs - Date.now())).toBeLessThan(10_000);
+    // The server's two instants of the request — its arrival and its answer — for the island to measure the round trip.
+    expect(answer.clock.receivedAtMs).toBeGreaterThanOrEqual(sentAtMs);
+    expect(answer.clock.answeredAtMs).toBeGreaterThanOrEqual(answer.clock.receivedAtMs);
+    expect(answer.clock.answeredAtMs).toBeLessThanOrEqual(Date.now());
     // The same press again — a retry — is saved; another volunteer's is a duplicate naming who stored it.
     expect(await recordFinishPressAction({ eventId: raceId, bibNumber: 102, claimedAtMs: claimed })).toMatchObject({ outcome: { kind: "recorded", again: true } });
     state.actor = staff.MODERATOR;
@@ -112,10 +120,46 @@ describe("§NNN the island's press", () => {
     expect(unknown.state).not.toBeNull();
     expect(await recordFinishPressAction({ eventId: raceId, bibNumber: -3 })).toMatchObject({ outcome: { kind: "refused", code: "VALIDATION_ERROR", bibNumber: null } });
     state.actor = staff.MEMBER;
-    expect(await recordFinishPressAction({ eventId: raceId, bibNumber: 101 })).toEqual({ kind: "answer", outcome: { kind: "refused", code: "FORBIDDEN", bibNumber: 101, gunTimeMs: null }, state: null });
+    expect(await recordFinishPressAction({ eventId: raceId, bibNumber: 101 })).toMatchObject({ kind: "answer", outcome: { kind: "refused", code: "FORBIDDEN", bibNumber: 101, gunTimeMs: null }, state: null, clock: { receivedAtMs: expect.any(Number) } });
     state.actor = undefined;
     expect(await recordFinishPressAction({ eventId: raceId, bibNumber: 101 })).toEqual({ kind: "session" });
     expect(await stored()).toHaveLength(0);
+  });
+
+  it("records a press only under the account that pressed it: another account's session answers «sign in again», nothing written", async () => {
+    state.actor = staff.MODERATOR;
+    expect(await recordFinishPressAction({ eventId: raceId, staffId: staff.CONTRIBUTOR!.id, bibNumber: 101, claimedAtMs: Date.now() - 2_000 })).toEqual({ kind: "session" });
+    expect(await stored()).toHaveLength(0);
+    // The Organizer's own press goes.
+    expect(await recordFinishPressAction({ eventId: raceId, staffId: staff.MODERATOR!.id, bibNumber: 101 })).toMatchObject({ outcome: { kind: "recorded", bibNumber: 101 } });
+    expect((await stored()).map((row) => row.updatedByStaffUserId)).toEqual([staff.MODERATOR!.id]);
+  });
+
+  it("answers `failed` — not an error, not a refusal — for a press the server could not record, so the phone tries it again", async () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    const real = state.db;
+    state.db = new Proxy(db, { get: (target, name) => (name === "transaction" ? () => Promise.reject(new Error("the connection was lost")) : Reflect.get(target, name)) });
+    try {
+      expect(await recordFinishPressAction({ eventId: raceId, staffId: staff.CONTRIBUTOR!.id, bibNumber: 101 })).toEqual({ kind: "failed" });
+      expect(logged).toHaveBeenCalled();
+    } finally {
+      state.db = real;
+      logged.mockRestore();
+    }
+    expect(await stored()).toHaveLength(0);
+  });
+
+  it("answers the server's clock to the island as it wakes, and «sign in again» for a session that ended", async () => {
+    const before = Date.now();
+    const answer = await readFinishClockAction();
+    expect(answer).toMatchObject({ kind: "clock" });
+    if (answer.kind !== "clock") throw new Error("no clock");
+    expect(answer.clock.receivedAtMs).toBeGreaterThanOrEqual(before);
+    expect(answer.clock.answeredAtMs).toBeGreaterThanOrEqual(answer.clock.receivedAtMs);
+    state.actor = staff.MEMBER;
+    expect(await readFinishClockAction()).toEqual({ kind: "refused" });
+    state.actor = undefined;
+    expect(await readFinishClockAction()).toEqual({ kind: "session" });
   });
 
   it("undoes the viewer's own press and refuses another's, the page's state with each answer", async () => {
@@ -138,6 +182,9 @@ describe("§NNN the plain forms (scripts off)", () => {
     state.actor = staff.MODERATOR;
     const duplicate = await post(recordFinishFormAction, form({ bib: "101" }));
     expect(duplicate).toMatch(new RegExp(`^${page("dup=101&t=")}\\d+$`.replace(/\?/g, "\\?")));
+    // A runner «Clasament» disqualified: the row stays, and the page is told its state.
+    await db.update(eventResults).set({ status: "DSQ", gunTimeMs: null, positionOverall: null, positionSex: null, positionCategory: null }).where(eq(eventResults.bibNumber, 101));
+    expect(await post(recordFinishFormAction, form({ bib: "101" }))).toMatch(/&dup=101&t=\d+&s=DSQ$/);
     expect(await post(recordFinishFormAction, form({ bib: "900" }))).toMatch(/&refused=RESULT_BIB_UNKNOWN&bib=900&t=\d+$/);
     expect(await post(recordFinishFormAction, form({ bib: "abc" }))).toBe(page("refused=VALIDATION_ERROR"));
     state.actor = staff.MEMBER;
