@@ -92,8 +92,9 @@ import ColumnWidthsScript from "./ColumnWidthsScript";
  * are never the cells a narrow screen cuts. A pinned cell is opaque — the surface the table stands
  * on (`ADMIN_TABLE_SURFACE`: the page, or the card a `Panel` or a fold says it is), then the row's
  * own fill again (the heading's, a lead row's, the hover's). While columns lie under it, its left
- * edge fades into them: `ColumnWidths` keeps `data-more-end` on the frame (`watchScrollRow`, the
- * chips rows' own watcher), so a table that fits wears no edge at all.
+ * edge fades into them: the frame's one watcher — `watchScrollRow`, the chips rows' own, run by the
+ * `TopScrollbar` island above the frame (§NNN, below) — keeps `data-more-end` on it, so a table that
+ * fits wears no edge at all.
  *
  * ## A scrollbar at the top too (§NNN)
  *

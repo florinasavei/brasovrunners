@@ -500,8 +500,14 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
           const row = body.querySelector("tr") as HTMLTableRowElement;
           for (let copy = 0; copy < 40; copy++) body.append(row.cloneNode(true));
         });
+        // Scrolled 400 px past the bar's own place on the page — wherever the «Sumar», the filters and the notices above
+        // the table end — so the bar is past its natural position while the forty rows keep the table on screen.
         await bar.evaluate(() => window.scrollTo({ top: 0 }));
-        await page.evaluate(() => window.scrollBy(0, 600));
+        const target = await bar.evaluate((element) => {
+          const top = Math.round(element.getBoundingClientRect().top + window.scrollY + 400);
+          window.scrollTo({ top });
+          return top;
+        });
         const stuck = await bar.evaluate((element) => ({
           top: element.getBoundingClientRect().top,
           sticky: Number.parseFloat(getComputedStyle(element).top),
@@ -509,7 +515,7 @@ test.describe("§650 a backoffice table's columns can be resized", () => {
           headerBottom: (document.querySelector("[data-sticky-header]") as HTMLElement).getBoundingClientRect().bottom,
           scrolled: window.scrollY,
         }));
-        expect(stuck.scrolled).toBeGreaterThanOrEqual(599);
+        expect(stuck.scrolled).toBeGreaterThanOrEqual(target - 1);
         expect(stuck.frameBottom).toBeGreaterThan(stuck.top);
         expect(Math.abs(stuck.top - stuck.sticky)).toBeLessThanOrEqual(1);
         expect(Math.abs(stuck.top - stuck.headerBottom)).toBeLessThanOrEqual(1);

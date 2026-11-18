@@ -309,6 +309,8 @@ describe("§NNN the bar's look", () => {
     expect(TOP_SCROLLBAR_SX["@supports not selector(::-webkit-scrollbar)"]).toEqual({
       scrollbarWidth: "thin",
       scrollbarColor: "var(--mui-palette-text-secondary) var(--mui-palette-divider)",
+      // A strip one can grab where Firefox's scrollbars are overlays, not the one-pixel child alone.
+      minHeight: "12px",
     });
     expect(Object.keys(TOP_SCROLLBAR_SX)).not.toContain("scrollbarWidth");
     expect(JSON.stringify(TOP_SCROLLBAR_SX)).not.toMatch(/#[0-9a-fA-F]{3,8}|rgb\(|hsl\(/);

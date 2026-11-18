@@ -58,8 +58,9 @@ export function placeUnderHeader(
  * Its track is drawn, not left to the platform: where scrollbars are overlays that appear only mid-scroll (a Mac, a
  * tablet), an undrawn bar is nothing to grab. Chrome and Safari draw it from `::-webkit-scrollbar` (12 px, a thumb in the
  * muted text's colour on the divider's); Firefox, which has no such selector, from `scrollbar-width` and `scrollbar-color` —
- * set only there, because Chrome ignores the `::-webkit-scrollbar` rules once those are set. MUI's palette variables, both
- * schemes, no literal (§694).
+ * set only there, because Chrome ignores the `::-webkit-scrollbar` rules once those are set — and there the box itself is
+ * 12 px tall (`minHeight`), so where Firefox's scrollbars are overlays (a Mac's default, GTK's) there is a strip to point at
+ * and grab rather than a one-pixel line. MUI's palette variables, both schemes, no literal (§694).
  */
 export const TOP_SCROLLBAR_SX = {
   display: "none",
@@ -80,6 +81,7 @@ export const TOP_SCROLLBAR_SX = {
   "@supports not selector(::-webkit-scrollbar)": {
     scrollbarWidth: "thin",
     scrollbarColor: "var(--mui-palette-text-secondary) var(--mui-palette-divider)",
+    minHeight: "12px",
   },
   "@media print": { "&, &[data-shown]": { display: "none" } },
 } as const;
