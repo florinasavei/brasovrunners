@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { notesTip, TIP_NOTE_CHARS, TIP_NOTES } from "@/shared/notes/note-text";
+import { noteLine, notesTip, TIP_NOTE_CHARS, TIP_NOTES } from "@/shared/notes/note-text";
 
 /**
  * BR-REQ-070-01, `DECISIONS.md` §943 — the owner, 2026-11-12, of the marker «1 notă» on the registrations list: «Ar trebui
@@ -67,5 +67,20 @@ describe("§964 the same words without the day", () => {
     expect(notesTip(notes, null, more).split("\n\n")).toEqual(["nota 1", "nota 2", "nota 3", "… și încă 2"]);
     // The dated tooltip of the same notes is the same lines with their days: only the day is left out.
     expect(notesTip(notes, when, more).split("\n\n")).toEqual(["ziua 20: nota 1", "ziua 19: nota 2", "ziua 18: nota 3", "… și încă 2"]);
+  });
+});
+
+describe("§NNN a note as one line, beside a person on «Planul voluntarilor»", () => {
+  it("puts every line break and run of spaces as one space, trims the ends, and keeps a short note whole", () => {
+    expect(noteLine("  Are mașină,\npoate duce apa.\r\n\n  Sună-o  vineri ")).toBe("Are mașină, poate duce apa. Sună-o vineri");
+    expect(noteLine("vine")).toBe("vine");
+  });
+
+  it("cuts a long note at the tooltip's length with «…», counting characters, not bytes", () => {
+    const exact = "ș".repeat(TIP_NOTE_CHARS);
+    expect(noteLine(exact)).toBe(exact);
+    expect(noteLine(`${exact}x`)).toBe(`${exact}…`);
+    // A cut that falls after a space does not leave it before the «…».
+    expect(noteLine(`${"a".repeat(TIP_NOTE_CHARS - 1)} rest`)).toBe(`${"a".repeat(TIP_NOTE_CHARS - 1)}…`);
   });
 });

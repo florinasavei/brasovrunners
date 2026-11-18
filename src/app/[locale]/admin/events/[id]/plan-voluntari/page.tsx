@@ -11,6 +11,7 @@ import { Fragment, type ReactNode } from "react";
 import { getDb } from "@/db/client";
 import { PLAN_LINK_LABEL_MAX, PLAN_LINK_URL_MAX, PLAN_LINKS_MAX, PLAN_PICTURES_MAX } from "@/db/schema/volunteer-plan";
 import { countForm } from "@/i18n/count-form";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { CHECKPOINT_NAME_MAX } from "@/modules/event-checkpoints/domain/checkpoint";
@@ -29,6 +30,7 @@ import { readVolunteerPlan, type VolunteerPlanPerson, type VolunteerPlanPoint } 
 import { coordinatesOf, PLAN_POINT_BOXES, type PlanPoint, planPointRefusalValues } from "@/modules/volunteers/plan-points";
 import { previewVolunteerPoints } from "@/modules/volunteers/point-mail";
 import PlanPictureUpload from "@/modules/volunteers/ui/PlanPictureUpload";
+import type { VolunteerPlanNote } from "@/modules/volunteers/volunteer-notes";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import type { ConfirmSpec } from "@/shared/feedback/notice";
@@ -37,6 +39,7 @@ import { fieldId } from "@/shared/forms/outcome";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { isUuid } from "@/shared/ids";
+import { noteLine } from "@/shared/notes/note-text";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
@@ -276,6 +279,11 @@ const PENCIL_FOLD_SX = {
  * whole of one in a new tab, and up to twelve links — a Google My Maps map, for instance — each opening in a new tab; on paper
  * after the rest of the plan, each picture in one piece and each link with its whole address. Added and taken off here by the
  * same people.
+ *
+ * The organizers' own words beside each person (§NNN, amending §954 and §935; the owner, 2026-11-18, three days before the race:
+ * «să văd în plan și comentariile mele»): wherever a person is drawn — at a point, under «Fără punct», in the table's people cell —
+ * the race-day decision in a quiet line of its own, which prints, and the person's internal notes, newest first with their day,
+ * which never print. Both come with the plan's one read (`readVolunteerPlan`); the notes only for a role their own gate allows.
  */
 export default async function VolunteerPlanPage({ params, searchParams }: Props) {
   const { locale, id } = await params;
@@ -335,6 +343,43 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
   const peopleWords = (count: number) => (count === 0 ? t("volunteers.plan.peopleNone") : t(`volunteers.plan.people.${countForm(count, locale)}`, { count }));
   const nameOf = (point: PlanPoint) => (locale === "ro" ? point.nameRo : point.nameEn);
   const planPath = getPathname({ locale, href: { pathname: "/admin/events/[id]/plan-voluntari", params: { id } } });
+
+  // A note's moment on the club's clock, as the person's page and the files write it: the day and the hour, short.
+  const noteDay = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
+  /**
+   * A person's «Note interne» on the plan (§NNN, amending §935; the owner, 2026-11-18: «să văd în plan și comentariile mele»): the
+   * live notes, newest first, one line each — the words (`noteLine`: one line, a long one cut) and, quieter, the day and hour —, a list
+   * a screen reader names «Note interne». Nothing for a person with none, or for a reader the notes' gate leaves out (the read hands
+   * them none). Never on paper: remarks between colleagues stay on the screen, the plan handed around on the day carries none.
+   */
+  const notesOf = (notes: readonly VolunteerPlanNote[]) =>
+    notes.length === 0 ? null : (
+      <Box component="ul" aria-label={t("volunteers.plan.notes")} sx={{ listStyle: "none", m: 0, p: 0, ...NOT_ON_PAPER }} data-testid="plan-person-notes">
+        {notes.map((note) => (
+          <Typography component="li" key={note.id} variant="body2" sx={{ overflowWrap: "break-word" }} data-testid="plan-person-note">
+            <span data-testid="plan-person-note-words">{noteLine(note.body)}</span>
+            <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1, whiteSpace: "nowrap" }} data-testid="plan-person-note-date">
+              {noteDay(note.createdAt)}
+            </Typography>
+          </Typography>
+        ))}
+      </Box>
+    );
+  /**
+   * The organizers' own words about a person, under the person wherever the plan draws them — at a point, under «Fără punct» and in
+   * the table's people cell (§NNN, amending §954): the race-day decision in its own quiet line, «Decizie: vine la 8:00 la start»,
+   * which prints (it is the day's plan), then the notes, which do not. Nothing where there is neither.
+   */
+  const ownWordsOf = (person: VolunteerPlanPerson) => (
+    <>
+      {person.raceDayDecision && (
+        <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "break-word" }} data-testid="plan-person-decision">
+          {t("volunteers.plan.decision", { decision: person.raceDayDecision })}
+        </Typography>
+      )}
+      {notesOf(person.notes)}
+    </>
+  );
 
   /*
     «Punctele, pe scurt» (§974; the owner, 2026-11-17: «aș vrea să văd punctele ca și tabel, mai ales pe traseu»), the view
@@ -400,7 +445,8 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
     {
       key: "people",
       label: t("volunteers.plan.table.columns.people"),
-      // The point's people in the point's order, a line each: the name and the telephone to ring.
+      // The point's people in the point's order, a line each: the name and the telephone to ring — and under it the organizers'
+      // decision and notes about the person (§NNN).
       render: ({ people }) =>
         people.length === 0 ? (
           <Box component="span" sx={{ color: "text.secondary", fontStyle: "italic" }} data-testid="plan-table-nobody">
@@ -421,6 +467,8 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
                     </Box>
                   </>
                 )}
+                {/* Under the name, the organizers' own words about the person (§NNN): the decision, printed; the notes, on the screen. */}
+                {ownWordsOf(person)}
               </li>
             ))}
           </Box>
@@ -532,7 +580,10 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
     );
   };
 
-  /** One person's line: who, their number, how to reach them, what they do — the same words at a point and under «Fără punct». */
+  /**
+   * One person's line: who, their number, how to reach them, what they do — the same words at a point and under «Fără punct» —, and
+   * under it the organizers' own words about them (`ownWordsOf`).
+   */
   const personWords = (person: VolunteerPlanPerson) => {
     const roles = rolesOf(person);
     return (
@@ -556,6 +607,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
         <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "break-word" }}>
           {[roles.length > 0 ? roles.join(", ") : t("volunteers.plan.noRole"), ...(person.state === "REGISTERED" ? [t("volunteers.plan.notConfirmed")] : [])].join(" · ")}
         </Typography>
+        {ownWordsOf(person)}
       </Box>
     );
   };
