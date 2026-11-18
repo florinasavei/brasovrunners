@@ -61,7 +61,7 @@ beforeEach(async () => {
   await resetTables(db);
   resetNoticeCounter();
   for (const [role, name] of [["ADMIN", "Ana Admin"], ["MODERATOR", "Oana Organizator"], ["DEV", "Tudor Tehnic"]] as const) staff[role] = await person(db, role, name);
-  // A race that has started: the Administrator's tick is refused before the gun, and the actions read the real clock.
+  // A race that has started (the actions read the real clock): the tick before the gun is a test of its own, on a race still ahead.
   raceId = (await createRace(db, { startsAt: new Date("2026-06-01T07:00:00.000Z") })).id;
   await registerRunner(db, raceId, { name: "Ana Popescu", bibNumber: 101, sex: "FEMALE", birthDate: "1996-05-01" });
   await registerRunner(db, raceId, { name: "Bia Marin", bibNumber: 102, sex: "FEMALE", birthDate: "1985-03-10" });
@@ -254,15 +254,23 @@ describe("§808 the Administrator's tick behind the notice's gate", () => {
     expect(await post(setResultsPublishedAction, form({ published: "on" }))).toBe("redirected");
   });
 
-  it("refuses it ticked before the race has started, with the box unticked, for a race still ahead", async () => {
-    await approveResultsTexts(db);
+  it("accepts it ticked before the race has started (§NNN), with the toast that says it shows from the start — and still refuses it under no notice", async () => {
     const ahead = (await createRace(db, { startsAt: new Date("2099-06-01T07:00:00.000Z") })).id;
     const data = form({ published: "on" });
     data.set("eventId", ahead);
-    const result = outcome(await post(setResultsPublishedAction, data));
-    expect(result.error).toBe("RESULTS_NOT_STARTED");
-    expect(result.values.published).toBeUndefined();
-    expect((await db.select({ published: events.resultsPublished }).from(events).where(eq(events.id, ahead)))[0].published).toBe(false);
+    // The gates are kept before the start: no notice that describes the results, no tick.
+    const refused = outcome(await post(setResultsPublishedAction, data));
+    expect(refused.error).toBe("RESULTS_NOTICE");
+    expect(refused.values.published).toBeUndefined();
+    await approveResultsTexts(db);
+    expect(await post(setResultsPublishedAction, data)).toBe("redirected");
+    expect((await db.select({ published: events.resultsPublished }).from(events).where(eq(events.id, ahead)))[0].published).toBe(true);
+    expect(state.cookies.map(([, value]) => value).join(" ")).toContain("resultsPublishedFromStart");
+    // Once the race has started, the toast is the usual one.
+    state.cookies.length = 0;
+    expect(await post(setResultsPublishedAction, form({ published: "on" }))).toBe("redirected");
+    expect(state.cookies.map(([, value]) => value).join(" ")).not.toContain("resultsPublishedFromStart");
+    expect(state.cookies.map(([, value]) => value).join(" ")).toContain("resultsPublished");
   });
 
   it("accepts it under a notice and terms that name {{results}}, and takes it off with the box unticked", async () => {

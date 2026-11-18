@@ -2536,13 +2536,15 @@ enter them; **only the Administrator and the Superadministrator make them public
    colleague saved is refused («Altcineva a salvat între timp. Reîncarcă pagina…») rather than written over theirs. **«Șterge»** on a line is its own press and asks first.
    «Descarcă clasamentul (CSV)» is the file with the names as the backoffice sees them; the download is recorded in the trail, without a name.
 5. **«Clasamentul e public pe pagina evenimentului»** (the Administrator's tick, with its own «Salvează», asks first): off for every event. It
-   only works **after the race has started** (you may type the results before) and under the notice and terms of step 1. The public read —
+   works under the notice and terms of step 1, and **may be ticked before the race** (§NNN): the card then says **«Public de la start»** with the
+   start's day and hour, and the site shows nothing until the start; from the start every result you save appears, and while the race runs
+   (until its end, or six hours after the start when it has none) the open page refreshes itself every 30 seconds. The public read —
    `readPublicEventResults` — shows a name **only for a registered runner who ticked, whose registration is confirmed, who is not a special
    guest the event hides, and who registered under a notice that described the results**; a runner the club typed by hand is named only while
    the staff's record of their agreement stands (step 3), and otherwise appears as «Participant #număr». **What the event's page shows, and when.** Under «Cine vine» a card **«Clasament»**
    (`#clasament`, open when the page opens) with one row per result: the place, the race number, the name or «Participant #număr», the time (the chip
    time in a line under it, when you typed one) and the category with the place in it; the runners who did not finish come last, with «Abandon»,
-   «Neprezentat» or «Descalificat» and no place. A line says when it was published and until when it stays on the page (the day and the hour) — the same period as the public
+   «Neprezentat» or «Descalificat» and no place. A line says when it was published (the start, when it was ticked before it) and until when it stays on the page (the day and the hour) — the same period as the public
    list, counted from the end of the race («Setări» → «Termene»). A visitor can tick a category or type part of a race number to narrow the table
    (the table shows every row without a script). The card appears **only while all of these hold** — the tick is on, the race has started, the notice and
    the terms in force name `{{results}}` in both languages, **the race's start hour was announced** (a race still saved with «Ora se anunță» has no

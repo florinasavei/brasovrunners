@@ -1019,9 +1019,11 @@ this list; correct a time and save, and the podium follows. The public page is u
 
 ### Publish
 
-An Administrator ticks «Clasamentul e public pe pagina evenimentului» and «Salvează». Refused before the race has
-started and while the privacy notice or the terms in force do not describe the results (`/admin/legal`;
-`/admin/tasks` carries the rows). On the page: place, number, time, category and the date it leaves; a name only for
+An Administrator ticks «Clasamentul e public pe pagina evenimentului» and «Salvează». Refused while the privacy
+notice or the terms in force do not describe the results (`/admin/legal`; `/admin/tasks` carries the rows). It may be
+ticked before the race (§NNN): «Public de la start», and nothing shows until the start; from the start every saved
+result appears, and while the race runs the open page refreshes itself every 30 seconds. Under each «Pe site:
+Participant #…» on «Clasament» a sentence says why there is no name. On the page: place, number, time, category and the date it leaves; a name only for
 a registered runner who ticked «Vreau să apar pe lista de participanți & rezultate» under a notice that described
 the results, or a typed runner the staff recorded as agreeing; everyone else «Participant #număr». The ranking
 leaves the page with the public list's period («Setări» → «Termene»). Untick at any time; the rows stay.

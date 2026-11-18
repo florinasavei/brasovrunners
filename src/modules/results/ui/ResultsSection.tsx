@@ -4,17 +4,21 @@ import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { PublicEvent } from "@/modules/events/repository";
+import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
 import { formatRaceNumber } from "@/modules/registrations/domain/race-number";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
 import { SR_ONLY_SX } from "@/shared/ui/sr-only";
 import { DENSITY } from "@/theme/density";
 import { categoryLabeller } from "../category-labels";
+import { resultsShownSince } from "../domain/from-start";
+import { resultsLiveAt, resultsLiveUntil } from "../domain/live-window";
 import { anonymousResultLabel } from "../domain/public-name";
 import { formatResultTime } from "../domain/result-time";
 import { readEventResultsForPage } from "../public-page";
 import { categoriesPresent, categoryGlyphOf } from "./results-filter";
 import ResultsFilter from "./ResultsFilter";
+import ResultsLiveRefresh from "./ResultsLiveRefresh";
 
 /** What the table's number and time cells say for a row with none: the backoffice's and the start list's own dash (§548). */
 const NO_VALUE = "—";
@@ -52,6 +56,14 @@ type ResultsEvent = Pick<PublicEvent, "id" | "type" | "resultsPublished" | "star
  * «Categorie» (the words of the club's statistics, §787, and «loc N» in it). At 320 pixels each row is a block (`EventCheckpoints`'
  * stack, tightened to three lines): the place at the left, the name over the number and the time, the category under them. The one
  * island, `ResultsFilter`, narrows the rows by category and by number; without a script everything shows.
+ *
+ * ## Public from the start, and live while the race runs (§NNN)
+ *
+ * The Administrator may tick the results public before the race; nothing above changes for that — the read is `null` until the start,
+ * so the section is not drawn — and from the start the «Publicat …» line names the start, not the earlier tick (`resultsShownSince`).
+ * While the race runs (`live-window.ts#resultsLiveAt`: from the start until its end, or six hours for a race saved without one) a
+ * second island, `ResultsLiveRefresh`, refreshes the page every 30 seconds while it is open and visible, with one calm line saying so;
+ * the page is held to the window's end, so a copy made during the race is made again without it.
  */
 export default async function ResultsSection(props: { event: ResultsEvent }) {
   return readOrWhileAway(() => resultsSectionOrThrow(props), null);
@@ -70,10 +82,15 @@ async function resultsSectionOrThrow({ event }: { event: ResultsEvent }) {
   const { rows } = results;
   const categories = categoriesPresent(rows.map((row) => row.categoryKey)).map((key) => ({ key, label: categoryLabel(key), glyph: categoryGlyphOf(key) }));
   const day = (date: Date, withTime: boolean) => formatDay(date, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline", withTime });
-  const line = results.publishedAt
-    ? t("results.published", { published: day(results.publishedAt, true), until: day(results.closesAt, true) })
+  // Ticked before the race (§NNN), the results have been on the page since its start, not since the tick.
+  const shownSince = resultsShownSince(results.publishedAt, event.startsAt);
+  const line = shownSince
+    ? t("results.published", { published: day(shownSince, true), until: day(results.closesAt, true) })
     : t("results.until", { until: day(results.closesAt, true) });
   const numberOf = (bibNumber: number) => formatRaceNumber(bibNumber, event.raceNumberFormat);
+  // While the race runs, the page refreshes itself (§NNN): held to the window's end, so a copy kept past it is made again without the island.
+  const liveUntil = resultsLiveAt(event, now) ? resultsLiveUntil(event) : null;
+  if (liveUntil) await holdPageUntil([liveUntil], now);
 
   return (
     // Google honours `data-nosnippet` only on span, div and section elements: the wrapper carries it, as the start list's does, so
@@ -104,6 +121,8 @@ async function resultsSectionOrThrow({ event }: { event: ResultsEvent }) {
         <Typography variant="body2" color="text.secondary" data-testid="results-published" sx={{ pb: 1 }}>
           {line}
         </Typography>
+
+        {liveUntil && <ResultsLiveRefresh until={liveUntil.getTime()} line={t("results.live")} />}
 
         {rows.length > 1 && (
           <ResultsFilter

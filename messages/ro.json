@@ -914,6 +914,7 @@
       "anonymous": "Participant #{bib}",
       "published": "Publicat {published} · rămâne pe pagină până {until}",
       "until": "Rămâne pe pagină până {until}",
+      "live": "Se actualizează singur la 30 de secunde.",
       "caption": "Clasamentul cursei: întâi cei care au terminat, în ordinea sosirii, apoi cei care nu au terminat.",
       "columnPlace": "Loc",
       "columnName": "Nume",
@@ -2803,7 +2804,6 @@
       "RESULTS_IMPORT_INVALID": "Fișierul CSV nu poate fi citit: {where}{problem}. Nimic nu s-a importat.",
       "RESULTS_NOTICE": "Nota de confidențialitate în vigoare nu descrie încă clasamentul. Aprobă o notă nouă din șablon, în «Documente legale»; «Sarcini» spune cum.",
       "RESULTS_TERMS": "Termenii în vigoare nu descriu încă clasamentul: cei vechi promiteau că te întreabă înainte. Aprobă termeni noi din șablon, în «Documente legale»; «Sarcini» spune cum.",
-      "RESULTS_NOT_STARTED": "Clasamentul se poate publica după ce a început cursa. Îl poți scrie de pe acum.",
       "RESULTS_NOT_OPEN": "Doar o cursă are clasament.",
       "MEMBER_TIER_HAS_MEMBERS": "Nivelul nu s-a șters. Membri cu acest nivel: {count}. Dă-le alt nivel întâi, în „Echipa”.",
       "MEMBER_TIER_IN_CODES": "Nivelul nu s-a șters. Coduri de reducere doar pentru el: {count}. Schimbă-le nivelurile întâi.",
@@ -10067,8 +10067,10 @@
             {
               "title": "Publică clasamentul pe pagina evenimentului",
               "steps": [
-                "Clasamentul apare pe site doar după ce îl publici, doar după ce a început cursa și doar dacă nota de confidențialitate și termenii în vigoare descriu clasamentul — «Documente legale» spune dacă trebuie aprobate texte noi; «Sarcini» are rândul.",
+                "Clasamentul apare pe site doar după ce îl publici, doar de la startul cursei și doar dacă nota de confidențialitate și termenii în vigoare descriu clasamentul — «Documente legale» spune dacă trebuie aprobate texte noi; «Sarcini» are rândul.",
                 "Pe «Clasament», la «Pe pagina evenimentului», bifează «Clasamentul e public pe pagina evenimentului» și apasă «Salvează». Pagina arată locul, numărul, timpul și categoria; numele doar la cine a bifat lista la înscriere sau la alergătorul neînscris care a acceptat — ceilalți apar ca „Participant #număr”.",
+                "Poți bifa și înainte de cursă: cardul spune «Public de la start», cu ziua și ora startului. Până la start pe site nu apare nimic; de la start apare fiecare rezultat pe care îl salvezi, iar cât ține cursa pagina se actualizează singură la 30 de secunde.",
+                "Sub fiecare „Pe site: Participant #…” scrie de ce nu apare numele, iar sus, «Cu nume pe site…» spune câți din cei din clasament apar cu numele. Numele îl pune doar bifa persoanei; un administrator poate doar să-l ascundă.",
                 "Clasamentul stă pe pagină cât lista publică a participanților, de la sfârșitul cursei («Setări» → «Termene»). Debifezi oricând; rezultatele rămân salvate.",
                 "Cine s-a înscris sub o notă de confidențialitate mai veche, care nu descria clasamentul, apare ca „Participant #număr”, chiar dacă a bifat lista. Abia după ce clubul aprobă o notă de confidențialitate care numește bifa lângă clasament (câmpul {{resultsNameAsk}}, în «Documente legale») — după ce clubul și avocatul modifică fraza care le spune că apar doar cu numărul — pagina înscrierii lor (linkul din emailul ei) le arată «Vreau să apar cu numele în clasament». Clubul nu trimite un email nou pentru asta: spune-le cu «Trimite un mesaj participanților», din editorul cursei, că pot bifa din linkul înscrierii și că pot debifa oricând."
               ]
@@ -12212,7 +12214,7 @@
       "intro": "Scrie timpii, importă-i dintr-un CSV și salvează tot dintr-o dată. Locurile se calculează singure.",
       "introMore": "Un rând pe alergător, după numărul de concurs. Locurile sunt în total, la sex și la categorie; timpurile egale împart locul. Un rând cu doar o notă înseamnă neprezentat.",
       "notRace": "Doar o cursă are clasament. Alergările de grup și celelalte evenimente nu au.",
-      "notStarted": "Cursa nu a început încă. Poți scrie rezultate de pe acum.",
+      "notStarted": "Cursa nu a început încă. Poți scrie rezultate și bifa clasamentul public de pe acum; pe site nu apare nimic până la start.",
       "summary": {
         "FINISHED": "Sosiți: {count}",
         "DNF": "Abandon: {count}",
@@ -12270,6 +12272,17 @@
         "outOfRanking": "Pe site: nu apare — elită în afara clasamentului",
         "outOfRankingAmbassador": "Pe site: nu apare — ambasador în afara clasamentului"
       },
+      "namedCount": "Cu nume pe site: {named} din {shown}",
+      "publicWhy": {
+        "noResultsNotice": "Nota de confidențialitate în vigoare nu descrie clasamentul: nimeni nu apare cu numele.",
+        "noName": "Nu are un nume de arătat.",
+        "typedNoAgreement": "Alergător trecut de mână: nu s-a notat acordul pentru nume.",
+        "notTicked": "N-a bifat „Vreau să apar pe lista de participanți & rezultate”.",
+        "hiddenByClub": "Un administrator a debifat „Apare pe site”.",
+        "notConfirmed": "Înscrierea nu e confirmată.",
+        "hiddenGuest": "Invitat special: evenimentul nu arată public invitații speciali.",
+        "olderNotice": "Înscris sub o notă de confidențialitate mai veche: apare cu numele doar dacă cere din pagina înscrierii, când nota o permite."
+      },
       "outOfRanking": "în afara clasamentului",
       "nameless": "Fără nume: înscrierea a fost ștearsă. Rezultatul rămâne, fără nume.",
       "addRow": "Adaugă un alergător neînscris",
@@ -12278,6 +12291,8 @@
       "agreedHelp": "Bifezi doar dacă persoana ți-a spus-o; pentru un minor, părintele sau tutorele. Cine a bifat și când rămân în jurnal.",
       "noPlace": "fără loc încă",
       "noPlaceSettled": "fără loc",
+      "placeHint": "„Loc” e locul în clasament: general și, sub el, la sex și la categorie. Îl calculează site-ul din timpi; până scrii un timp, rândul spune „fără loc încă”.",
+      "placeHelp": "Timpii egali împart locul, iar următorul e sărit (1, 2, 2, 4). Categoria e sexul și grupa de vârstă din ziua cursei. „Fără loc” rămâne la abandon, neprezentat și descalificat.",
       "place": {
         "sex": "la sex: {position}",
         "category": "la categorie ({category}): {position}"
@@ -12295,17 +12310,20 @@
         "help": "Pagina arată locul, numărul, timpul și categoria. Numele apare doar la cine a bifat lista sau la cel adăugat de mână care a acceptat să apară cu numele; ceilalți apar ca „Participant #număr”.",
         "confirmOnTitle": "Faci clasamentul public?",
         "confirmOnBody": "Oricine poate citi clasamentul pe pagina evenimentului, cu numele doar al celor care au bifat sau au acceptat.",
+        "confirmOnBodyFromStart": "De la start, oricine poate citi clasamentul pe pagina evenimentului, pe măsură ce sosesc alergătorii, cu numele doar al celor care au bifat sau au acceptat. Până la start nu apare nimic.",
         "confirmOffTitle": "Scoți clasamentul de pe site?",
         "confirmOffBody": "Pagina evenimentului nu mai arată clasamentul. Rezultatele rămân salvate.",
         "gate": "Nota de confidențialitate în vigoare nu descrie încă clasamentul, așa că nu-l poți publica.",
         "gateTerms": "Termenii în vigoare nu descriu încă clasamentul: cei vechi promiteau că te întreabă înainte. Aprobă termeni noi ca să-l publici.",
-        "gateStart": "Clasamentul se poate publica după ce a început cursa.",
+        "beforeStart": "Poți bifa de pe acum: pe site, clasamentul apare de la start, {start}, pe măsură ce sosesc alergătorii.",
+        "fromStart": "Pe site apare de la start, {start}, pe măsură ce sosesc alergătorii.",
         "gateLink": "Documente legale",
         "adminOnly": "Doar un administrator poate publica clasamentul.",
         "empty": "Nu e niciun rezultat salvat încă.",
         "save": "Salvează",
         "saving": "Se salvează…",
         "stateOn": "Public",
+        "stateFromStart": "Public de la start",
         "stateOff": "Nepublic"
       },
       "export": "Descarcă clasamentul (CSV)",
@@ -14817,6 +14835,7 @@
       },
       "resultDeleted": "Rezultat șters. Locurile celorlalți s-au recalculat.",
       "resultsPublished": "Clasamentul e acum public pe pagina evenimentului.",
+      "resultsPublishedFromStart": "Gata: clasamentul apare pe pagina evenimentului de la start, pe măsură ce sosesc alergătorii.",
       "resultsUnpublished": "Clasamentul nu mai e public pe pagina evenimentului.",
       "resultsPublicUnchanged": "Era deja așa; nimic de schimbat.",
       "rsvpAskAudience": "Alegerea pentru întrebarea „Vii?” a fost salvată.",

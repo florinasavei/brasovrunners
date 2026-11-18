@@ -78,9 +78,8 @@ export type DomainErrorCode =
   // «Clasamentul e public» ticked while the privacy notice in force does not describe the results (§808, `{{results}}`): approve one first.
   | "RESULTS_NOTICE"
   // «Clasamentul e public» ticked while the terms in force do not describe the results (§808): the older terms promised to ask separately first.
+  // (Ticked before the race is accepted since §NNN: set then, shown from the start — there is no refusal for it.)
   | "RESULTS_TERMS"
-  // «Clasamentul e public» ticked before the race has started (§808): the notice says the results appear only after the race. Entering them stays open.
-  | "RESULTS_NOT_STARTED"
   // Results entered, imported or published for an event that is not a race (§808): the page says so, and so does the save.
   | "RESULTS_NOT_OPEN"
   // The «Categorii de vârstă» box of a race's results cannot be read (§850): the sentence names what is wrong; nothing was saved.

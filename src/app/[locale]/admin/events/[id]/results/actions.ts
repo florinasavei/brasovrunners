@@ -178,22 +178,23 @@ export async function deleteEventResultAction(_previous: FormOutcome | null, for
 /**
  * «Clasamentul e public pe pagina evenimentului»: the Administrator's tick (a box and one button, never a toggle), saved on its own —
  * the disclosure has its own gate and its own audit row, and does not ride on a save of the rows. The state the box shows is the state
- * wanted, so two presses end where the second aimed. Switching it on is refused before the race has started (`RESULTS_NOT_STARTED`) and
- * while the privacy notice or the terms in force do not name `{{results}}` (`RESULTS_NOTICE`, `RESULTS_TERMS`): the summary says so, the
- * box comes back unticked, and the page's note links «Documente legale».
+ * wanted, so two presses end where the second aimed. Switching it on is refused while the privacy notice or the terms in force do not
+ * name `{{results}}` (`RESULTS_NOTICE`, `RESULTS_TERMS`): the summary says so, the box comes back unticked, and the page's note links
+ * «Documente legale». Before the race it is accepted (§NNN): the toast says the results show from the start.
  */
 export async function setResultsPublishedAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const on = field(form, "published") === "on";
-  let changed: boolean;
+  let outcome: { changed: boolean; fromStart?: true };
   try {
     const actor = await requireStaff();
-    changed = (await setResultsPublished(getDb(), actor, eventIdOf(form), on, new Date())).changed;
+    outcome = await setResultsPublished(getDb(), actor, eventIdOf(form), on, new Date());
   } catch (error) {
-    if (isDomainError(error) && (error.code === "RESULTS_NOTICE" || error.code === "RESULTS_TERMS" || error.code === "RESULTS_NOT_STARTED" || error.code === "RESULTS_NOT_OPEN")) return refused(error, form, { never: ["published"] });
+    if (isDomainError(error) && (error.code === "RESULTS_NOTICE" || error.code === "RESULTS_TERMS" || error.code === "RESULTS_NOT_OPEN")) return refused(error, form, { never: ["published"] });
     if (!isDomainError(error)) throw error;
     return backToPage(form, { error: error.code });
   }
-  return backToPage(form, { saved: !changed ? "resultsPublicUnchanged" : on ? "resultsPublished" : "resultsUnpublished" });
+  const published = outcome.fromStart ? "resultsPublishedFromStart" : "resultsPublished";
+  return backToPage(form, { saved: !outcome.changed ? "resultsPublicUnchanged" : on ? published : "resultsUnpublished" });
 }
 
 /**

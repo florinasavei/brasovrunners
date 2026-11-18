@@ -287,9 +287,11 @@ describe("§808 the page, in Romanian", () => {
     expect(await render()).not.toContain('data-testid="results-terms-missing"');
   });
 
-  it("says the race's start is the gate while the race is ahead, and nothing of it once the gun has gone", async () => {
+  it("says, while the race is ahead, that the tick may be set now and the results show from its start — its day and hour — and nothing of it once the gun has gone (§NNN)", async () => {
     const future = await createRace(db, { startsAt: new Date("2027-05-01T07:00:00Z") });
-    expect(text(await render(future.id))).toContain("Clasamentul se poate publica după ce a început cursa");
+    const words = text(await render(future.id));
+    expect(words).toContain("Poți bifa de pe acum: pe site, clasamentul apare de la start, sâm., 1 mai 2027, la 10:00, pe măsură ce sosesc alergătorii.");
+    expect(words).not.toContain("Clasamentul se poate publica după ce a început cursa");
     expect(await render()).not.toContain('data-testid="results-publish-not-started"');
   });
 

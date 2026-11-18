@@ -49,6 +49,15 @@ const ALLOWED_INTERVALS: Record<string, string> = {
   "src/modules/results/ui/FinishClock.tsx": "the volunteer's clock, once a second, no request",
 };
 
+/**
+ * The one public island that asks the server again on a timer, decided rather than slipped in (§NNN; the owner, 2026-11-18, choosing
+ * «LIVE» for a race's results): «Clasament» while the race runs — every 30 seconds, only while the tab is visible, nothing from the
+ * window's end (`results/domain/live-window.ts`). Any other island that refreshes the page from a timer is a poll this rule refuses.
+ */
+const ALLOWED_TIMED_REFRESH: Record<string, string> = {
+  "src/modules/results/ui/ResultsLiveRefresh.tsx": "a race's results while it runs: 30 s, a visible tab only, nothing after the race",
+};
+
 function clientFiles(dir: string): string[] {
   const files: string[] = [];
   for (const entry of readdirSync(dir)) {
@@ -67,6 +76,22 @@ describe("§577 no client island polls or keeps alive on a timer", () => {
       .map((path) => relative(root, path).replace(/\\/g, "/"))
       .filter((path) => !(path in ALLOWED_INTERVALS));
     expect(offenders).toEqual([]);
+  });
+
+  it("refreshes a page from a timer only where it is named with its bound — the results while a race runs (§NNN)", () => {
+    const root = process.cwd();
+    const offenders = clientFiles(join(root, "src"))
+      .filter((path) => {
+        const source = readFileSync(path, "utf8");
+        return /\.refresh\(\)/.test(source) && /\bset(Timeout|Interval)\s*\(/.test(source);
+      })
+      .map((path) => relative(root, path).replace(/\\/g, "/"))
+      .filter((path) => !(path in ALLOWED_TIMED_REFRESH));
+    expect(offenders).toEqual([]);
+    // The named one is bounded: it stops at the window's end, and asks nothing while the tab is hidden.
+    const source = readFileSync(join(root, "src/modules/results/ui/live-refresh.ts"), "utf8");
+    expect(source).toMatch(/clock\.now\(\) < options\.until/);
+    expect(source).toMatch(/if \(!clock\.visible\(\)\) return;/);
   });
 
   it("keeps the countdown's timer to the clock: no request, no router, cleared with the card (§843)", () => {
