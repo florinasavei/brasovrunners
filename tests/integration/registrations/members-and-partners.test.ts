@@ -341,6 +341,15 @@ describe("«Dintre cei {n} confirmați» in «Cine s-a înscris»", () => {
     expect(plain).toContain("13 ceilalți");
   });
 
+  it("says the singular with a noun, the number never bare", async () => {
+    const ro = words(await drawn(figures({ confirmed: 1 })));
+    expect(ro).toContain("Dintre confirmați (1):");
+    expect(ro).toContain("1 altul — nici membru, nici de la parteneri");
+    const en = words(await drawn(figures({ confirmed: 1 }), "en"));
+    expect(en).toContain("Of the confirmed (1):");
+    expect(en).toContain("1 other — neither a member nor from a partner");
+  });
+
   it("links a count only above nought, and a partner only where the filter takes its name", async () => {
     const html = await drawn(figures({ confirmed: 3, partners: 2, byPartner: [{ name: CAFE, count: 1 }, { name: BAKERY, count: 1 }] }), "ro", {
       members: "/ro/admin/registrations?clubMember=1",

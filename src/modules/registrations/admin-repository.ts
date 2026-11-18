@@ -694,8 +694,10 @@ export type RegistrationSummary = {
  * filter's own rule (§662, §973: the person's tick «Sunt membru», or an address of a member account), `verified` of them by
  * the address — the row's «Membru (verificat)» wins over its «Membru (declarat)», as `membershipOf` says — and the rest
  * declared; `partners` those with a partner's name, `byPartner` the names as written (one entry per name whatever its
- * capitals, in its newest spelling, as the partner filter suggests it), largest first; `both` the people in the two counts at
- * once, so the figures add up: `others` = confirmed − members − partners + both.
+ * capitals, in one spelling met — the link takes the event's spelling through `chosenPartnerOf`), largest first; `both` the
+ * people in the two counts at once, so the figures add up: `others` = confirmed − members − partners + both. A runner who only
+ * typed the club's name in the club box (the Excel's «Club runner», §753/§787, `isClubRunner`) is not a member here — the
+ * members are the filter's people, so the link opens exactly them — and is counted under `others`.
  */
 export type RegistrationComposition = {
   confirmed: number;
@@ -709,8 +711,8 @@ export type RegistrationComposition = {
 };
 
 /**
- * The partners' names of the confirmed (one per registration, newest write first), as one entry per name whatever its capitals,
- * in the first spelling met, largest first and, at a tie, by name.
+ * The partners' names of the confirmed (one per registration), as one entry per name whatever its capitals, in the first
+ * spelling met (the link takes the event's spelling through `chosenPartnerOf`), largest first and, at a tie, by name.
  */
 export function countByPartner(names: readonly string[]): { name: string; count: number }[] {
   const byKey = new Map<string, { name: string; count: number }>();
@@ -732,11 +734,21 @@ export async function summariseRegistrationsForAdmin<T extends Record<string, un
   const conditions = registrationConditions(filters, members);
   /*
     The composition (§NNN) rides in this same grouped scan as FILTER clauses: each counts only the confirmed real rows, so
-    every group but the confirmed real ones yields zero, and with no event chosen nothing is counted at all.
+    every group but the confirmed real ones yields zero. The columns are selected only with one event chosen; with every
+    event listed they are not in the query at all.
   */
-  const composed: SQL = filters.eventId ? sql`(${registrations.status} = 'CONFIRMED' and ${registrations.kind} = 'REAL')` : sql`false`;
+  const composed = sql`(${registrations.status} = 'CONFIRMED' and ${registrations.kind} = 'REAL')`;
   const member = sql`(${registrations.clubMemberDeclared} or ${memberVerifiedOf(members)})`;
   const partner = sql`(${registrations.partnerName} is not null)`;
+  const compositionColumns = {
+    members: sql<number>`count(*) filter (where ${composed} and ${member})`.mapWith(Number),
+    verified: sql<number>`count(*) filter (where ${composed} and ${memberVerifiedOf(members)})`.mapWith(Number),
+    partners: sql<number>`count(*) filter (where ${composed} and ${partner})`.mapWith(Number),
+    both: sql<number>`count(*) filter (where ${composed} and ${member} and ${partner})`.mapWith(Number),
+    // One spelling of a name met per registration; the link takes the event's spelling through `chosenPartnerOf`.
+    partnerNames: sql<string[]>`coalesce(array_agg(${registrations.partnerName}) filter (where ${composed} and ${partner}), '{}')`,
+  };
+  const composition: Partial<typeof compositionColumns> = filters.eventId ? compositionColumns : {};
 
   const rows = await db
     .select({
@@ -744,12 +756,7 @@ export async function summariseRegistrationsForAdmin<T extends Record<string, un
       kind: registrations.kind,
       outside: registrations.outsideCapacity,
       total: count(),
-      members: sql<number>`count(*) filter (where ${composed} and ${member})`.mapWith(Number),
-      verified: sql<number>`count(*) filter (where ${composed} and ${memberVerifiedOf(members)})`.mapWith(Number),
-      partners: sql<number>`count(*) filter (where ${composed} and ${partner})`.mapWith(Number),
-      both: sql<number>`count(*) filter (where ${composed} and ${member} and ${partner})`.mapWith(Number),
-      // Newest write first, so a name's first spelling met is the one the list's partner filter suggests (`listPartnerSuggestions`).
-      partnerNames: sql<string[]>`coalesce(array_agg(${registrations.partnerName} order by ${registrations.updatedAt} desc) filter (where ${composed} and ${partner}), '{}')`,
+      ...composition,
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))
@@ -766,11 +773,12 @@ export async function summariseRegistrationsForAdmin<T extends Record<string, un
   const summary: RegistrationSummary = { byStatus: {}, real: 0, test: 0, outside: 0, composition: null };
   const split = { members: 0, verified: 0, partners: 0, both: 0, names: [] as string[] };
   for (const row of rows) {
-    // Zero on every group but the confirmed real ones (the FILTER clauses above), so summing them all is safe.
-    split.members += row.members;
-    split.verified += row.verified;
-    split.partners += row.partners;
-    split.both += row.both;
+    // Zero on every group but the confirmed real ones (the FILTER clauses above), so summing them all is safe; absent with
+    // every event listed.
+    split.members += row.members ?? 0;
+    split.verified += row.verified ?? 0;
+    split.partners += row.partners ?? 0;
+    split.both += row.both ?? 0;
     split.names.push(...(row.partnerNames ?? []));
     if (row.kind === "TEST") {
       summary.test += row.total;

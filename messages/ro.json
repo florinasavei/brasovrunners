@@ -1152,7 +1152,7 @@
       "summaryTest": "De test: {count}",
       "composition": {
         "title": {
-          "one": "Din {count} confirmat:",
+          "one": "Dintre confirmați ({count}):",
           "few": "Dintre cei {count} confirmați:",
           "other": "Dintre cei {count} de confirmați:"
         },
@@ -1178,7 +1178,7 @@
           "other": "{count} de la parteneri"
         },
         "others": {
-          "one": "{count} nici membru, nici de la parteneri",
+          "one": "{count} altul — nici membru, nici de la parteneri",
           "few": "{count} ceilalți — nici membri, nici de la parteneri",
           "other": "{count} ceilalți — nici membri, nici de la parteneri"
         },

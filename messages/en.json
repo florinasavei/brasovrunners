@@ -1152,7 +1152,7 @@
       "summaryTest": "Test: {count}",
       "composition": {
         "title": {
-          "one": "Of the {count} confirmed:",
+          "one": "Of the confirmed ({count}):",
           "few": "Of the {count} confirmed:",
           "other": "Of the {count} confirmed:"
         },
