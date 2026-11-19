@@ -1,0 +1,114 @@
+import { describe, expect, it } from "vitest";
+import {
+  gateRequestOf,
+  isTeamAgreementPath,
+  localeOfPath,
+  TEAM_AGREEMENT_NAME_MAX,
+  TEAM_AGREEMENT_PATH,
+  TEAM_AGREEMENT_REFUSAL,
+  teamAgreementName,
+  teamAgreementReturnTo,
+} from "@/modules/staff-identity/domain/team-agreement";
+
+/**
+ * §NNN BR-REQ-060-01 — the team's undertaking at sign-in, the parts that are rules rather than reads: which request is a page
+ * being drawn (sent to the undertaking) and which is refused (a Server Action, a route handler), where a refused page wanted to
+ * go — a same-site path only —, the undertaking's own address, and the full name typed under it.
+ */
+const headers = (entries: Record<string, string>) => new Headers(entries);
+
+describe("§NNN which request the gate sends to the undertaking, and which it refuses", () => {
+  it("sends a page being drawn, the path the proxy wrote kept", () => {
+    expect(gateRequestOf(headers({ "x-br-path": "/ro/admin/checkin/ABC123" }))).toEqual({ kind: "page", path: "/ro/admin/checkin/ABC123" });
+    // A router request is a page too (`RSC: 1`), its own parameter dropped later by the way back.
+    expect(gateRequestOf(headers({ "x-br-path": "/ro/admin/guide?_rsc=1x2y", rsc: "1" }))).toEqual({ kind: "page", path: "/ro/admin/guide?_rsc=1x2y" });
+  });
+
+  it("refuses a Server Action, whatever page it was posted from", () => {
+    expect(gateRequestOf(headers({ "x-br-path": "/ro/admin/checkin", "next-action": "7f3a" }))).toEqual({ kind: "refuse" });
+  });
+
+  it("refuses a route handler: the proxy does not run on /api, so no path reaches one", () => {
+    expect(gateRequestOf(headers({}))).toEqual({ kind: "refuse" });
+    expect(gateRequestOf(headers({ "x-br-path": "" }))).toEqual({ kind: "refuse" });
+  });
+
+  it("says, for the logs, what to do — never who", () => {
+    expect(TEAM_AGREEMENT_REFUSAL).toMatch(/accept it on \/admin\/acord/);
+    expect(TEAM_AGREEMENT_REFUSAL).not.toMatch(/@/);
+  });
+});
+
+describe("§NNN the undertaking's own page", () => {
+  it("is /admin/acord, with or without its locale, its query or a trailing slash", () => {
+    expect(TEAM_AGREEMENT_PATH).toBe("/admin/acord");
+    for (const path of ["/admin/acord", "/ro/admin/acord", "/en/admin/acord", "/ro/admin/acord?returnTo=%2Fro%2Fadmin", "/ro/admin/acord/"]) {
+      expect(isTeamAgreementPath(path), path).toBe(true);
+    }
+  });
+
+  it("is no other page", () => {
+    for (const path of ["/ro/admin", "/ro/admin/acordx", "/ro/admin/checkin", "/ro/acord", "/ro/admin/acord/more", null, undefined, ""]) {
+      expect(isTeamAgreementPath(path), String(path)).toBe(false);
+    }
+  });
+});
+
+describe("§NNN the way back — a same-site path only", () => {
+  it("keeps where a page wanted to go, its query included", () => {
+    expect(teamAgreementReturnTo("/ro/admin/checkin/ABC123")).toBe("/ro/admin/checkin/ABC123");
+    expect(teamAgreementReturnTo("/ro/admin/checkin?eventId=e1&q=Ana")).toBe("/ro/admin/checkin?eventId=e1&q=Ana");
+    expect(teamAgreementReturnTo("/ro/devs")).toBe("/ro/devs");
+  });
+
+  it("drops the router's own parameter and a fragment", () => {
+    expect(teamAgreementReturnTo("/ro/admin/guide?_rsc=abc")).toBe("/ro/admin/guide");
+    expect(teamAgreementReturnTo("/ro/admin/checkin?eventId=e1&_rsc=abc#row")).toBe("/ro/admin/checkin?eventId=e1");
+  });
+
+  it("refuses anything that is not a path on this site — never an open redirect", () => {
+    for (const value of [
+      "https://example.test/ro/admin",
+      "//example.test/ro/admin",
+      "/\\example.test",
+      "/ro/admin\\..\\x",
+      "ro/admin",
+      "javascript:alert(1)",
+      "/ro/admin\n/next",
+      `/${"a".repeat(600)}`,
+      "",
+      null,
+      undefined,
+    ]) {
+      expect(teamAgreementReturnTo(value), String(value)).toBeNull();
+    }
+  });
+
+  it("is never the undertaking itself: a way back to the page you are on is none", () => {
+    expect(teamAgreementReturnTo("/ro/admin/acord")).toBeNull();
+    expect(teamAgreementReturnTo("/ro/admin/acord?returnTo=%2Fro%2Fadmin")).toBeNull();
+  });
+
+  it("reads the locale a path starts with", () => {
+    expect(localeOfPath("/en/admin/checkin")).toBe("en");
+    expect(localeOfPath("/ro")).toBe("ro");
+    expect(localeOfPath("/ro?x=1")).toBe("ro");
+    expect(localeOfPath("/admin")).toBeNull();
+    expect(localeOfPath(null)).toBeNull();
+  });
+});
+
+describe("§NNN the full name typed under the undertaking", () => {
+  it("is trimmed, its spaces collapsed, 1 to 200 characters", () => {
+    expect(teamAgreementName("  Ana   Maria\tPop ")).toBe("Ana Maria Pop");
+    expect(teamAgreementName("A")).toBe("A");
+    expect(teamAgreementName("x".repeat(TEAM_AGREEMENT_NAME_MAX))).toHaveLength(200);
+  });
+
+  it("is nothing when empty, only spaces, too long or not a string", () => {
+    expect(TEAM_AGREEMENT_NAME_MAX).toBe(200);
+    for (const value of ["", "   ", "\n\t", "x".repeat(201), undefined, null, 42]) {
+      expect(teamAgreementName(value), String(value)).toBeNull();
+    }
+  });
+});

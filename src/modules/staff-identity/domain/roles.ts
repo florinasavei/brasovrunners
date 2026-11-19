@@ -1013,6 +1013,19 @@ export function canWriteLegalTexts(subject: StaffSubject): boolean {
 }
 
 /**
+ * **Who accepts the team's undertaking before the backoffice opens (§NNN; the owner, 2026-11-19: «Voluntarii trebuie să
+ * semneze acordul GDPR când intră în platformă»)** — every backoffice role below the Administrator: the volunteer, the Redactor,
+ * the Organizer and the Tehnic, each of whom sees some of the participants', volunteers' or members' data under the club's
+ * authority (GDPR art. 29, 32(4)). Not the Administrator or the Superadministrator, who run the club and approve the text
+ * itself; and never a club member, who has no backoffice at all (§524). The gate asks this first, so an Administrator's
+ * request reads nothing more (`session.ts`).
+ */
+export function mustAcceptTeamAgreement(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
+  return isBackofficeRole(role) && !atLeast(role, "ADMIN");
+}
+
+/**
  * **The platform settings that can stop the service — the Superadministrator's (§450).**
  *
  * What makes a Superadministrator more than an Administrator: a setting whose wrong value takes

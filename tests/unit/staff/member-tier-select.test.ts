@@ -50,6 +50,8 @@ vi.mock("@/shared/feedback/confirm-words", () => ({ confirmWords: async () => ({
 vi.mock("@/modules/notifications/send-now-choice", () => ({ sendNowChoiceFor: async () => null }));
 vi.mock("@/shared/forms/refusal-messages", () => ({ refusalMessages: async () => ({}) }));
 vi.mock("@/modules/notifications/delivery-evidence", () => ({ refusedInvitations: async () => new Map() }));
+// The team's undertaking (§NNN) is a read of its acceptances; the levels do not depend on it.
+vi.mock("@/modules/staff-identity/team-agreement", () => ({ teamAgreementStates: async () => new Map() }));
 vi.mock("@/app/[locale]/admin/actions", () => ({
   changeStaffRoleAction: vi.fn(),
   inviteStaffAction: vi.fn(),

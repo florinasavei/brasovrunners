@@ -32,7 +32,7 @@ import RichText from "@/modules/content/rich-text/ui/RichText";
 import EventDescription from "@/modules/events/ui/EventDescription";
 import { isDevStaffSwitcherEnabled } from "@/modules/staff-identity/dev-switcher";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
-import { getCurrentStaffUser } from "@/modules/staff-identity/session";
+import { assertTeamAgreementAccepted, getCurrentStaffUser } from "@/modules/staff-identity/session";
 import { forecastForEvent } from "@/modules/weather/source";
 import { isUuid } from "@/shared/ids";
 import { PAGE_WIDTH } from "@/theme/brand";
@@ -79,6 +79,9 @@ export default async function PreviewEventPage({ params }: Props) {
     if (isDevStaffSwitcherEnabled()) redirect(getPathname({ locale, href: "/sign-in" }));
     notFound();
   }
+  // The team's undertaking (§NNN): a draft is the backoffice's, so a colleague who owes the version in force reads it first,
+  // this preview kept as the way back — a page's own redirect, as `requireStaff` sends every backoffice page.
+  await assertTeamAgreementAccepted(staffUser);
 
   if (!isUuid(id)) notFound();
 

@@ -886,7 +886,8 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
           {t("legal.title")}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {t("legal.intro", { count: PLATFORM_APPROVAL_KEYS.length })}
+          {/* Every text of the catalogue, the team's undertaking (§NNN) among them — not the one press's, which leaves it out. */}
+          {t("legal.intro", { count: LEGAL_DOCUMENT_KEYS.length })}
         </Typography>
       </Stack>
 

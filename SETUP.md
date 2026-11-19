@@ -1154,7 +1154,8 @@ Sign-in is Zitadel plus the `staff_users` allowlist (§25), so a volunteer needs
    **Colaborator**. The name typed here is what the audit trail shows on every check-in — and on
    every finish they record («introdus de …» on «Cronometrare» and «Clasament», «Istoricul sosirilor»).
 3. Hand them the guide: **Ghid** in the backoffice bar, first section — and have them open
-   **Ziua cursei** on their phone once, the day before, so sign-in is already done.
+   **Ziua cursei** on their phone once, the day before, so sign-in is already done. While the team's
+   undertaking is in force (§48), that first sign-in opens it: they accept it then, never at the desk.
 
 One account per volunteer is the honest audit trail; one shared "Voluntar masă" account is
 acceptable when there is no time, and the trail then says "Voluntar masă". Remove or downgrade
@@ -2779,3 +2780,40 @@ An agent never approves either text.
    sign-up mode.
 7. **The data.** A sign-up is deleted thirty days after the event's start by the nightly sweep, or with its registration or offer;
    «Toate datele unei persoane» lists it. It is in no email, on no public page or list and on no badge.
+
+## 48. Angajamentul echipei — the team's undertaking, approved before race day
+
+The owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în platformă». Every colleague below the
+Administrator — a **Voluntar**, a **Redactor**, an **Organizator**, a **Tehnic** — accepts the club's «Angajament de
+confidențialitate și protecția datelor pentru echipă» once per version, before any backoffice page opens to them
+(`DECISIONS.md` §NNN). **Nobody is asked anything until the club approves a version**: an agent never approves it, the seed
+never puts one in force (`yarn db:seed:legal` included), and no migration brings one to production. So the club's steps are:
+
+1. **A lawyer reads the platform's text first.** `/admin/legal` → «Versiune nouă» → under «Pornește de la șablon»,
+   «Angajament de confidențialitate și protecția datelor pentru echipă». Ten sections: the club and the team member; acting
+   under the club's authority and on its instructions (GDPR art. 29 and 32(4)); which data, and only for the role's tasks;
+   confidentiality during and after the role; no copies, exports, photographs or screenshots beyond the task; the printed
+   lists on race day, handed back or destroyed after; the personal account and a session never left open unattended; a lost
+   phone, a wrong recipient or any incident told to the club at once; access withdrawn when the role ends or the undertaking
+   is broken; the team member's data, the acceptance and the law. It is neither a contract of employment nor a volunteering
+   contract. The lawyer's questions are at the top of `src/modules/legal-documents/templates/team-agreement.ts` (whether this
+   is the right instrument, confidentiality «fără limită de timp», the sentence on liability, a colleague under eighteen, and
+   how long the acceptance is kept — the platform deletes it with the account).
+2. **Approve it on its own, at least a day before the race — never on its morning.** Type the club's facts where a `<…>`
+   stands (the approval refuses a text that still holds one), «Salvează ciorna», then «Aprobă și publică», in **both**
+   languages, on QA first, then on production. It is **not** among the texts of «Aprobă acum textele care lipsesc…», and
+   «Aprobă ciornele» holds its draft back — «se aprobă separat» — even when «Regenerează din șabloane» made it with the
+   others: from the moment it is in force, every Voluntar, Redactor, Organizator and Tehnic is stopped at their next page
+   until they accept it.
+   Until a version is in force `/admin/tasks` carries the row «Angajamentul echipei».
+3. **What a colleague sees.** At their next page — the first sign-in, or a page of a session already open — `/admin/acord`:
+   the text in force with its version line, «Numele tău complet», «Am citit și accept angajamentul» and «Accept și intru»,
+   then back to the page they asked for, a scanned race number included. Until they accept, no backoffice page, action or
+   file answers them, and «Ieși din cont» stays at the top. Administrators and Superadministrators are never asked.
+4. **Who has accepted.** «Echipa» shows on each row «Angajamentul echipei: Acceptat — versiunea N, <data>, ca „<numele
+   scris>”», «Neacceptat» or «Nu e cerut». Have the race-day volunteers sign in the day before (§34), so nobody meets the
+   text at the desk.
+5. **A new version** — a corrected text, approved the same way — is asked again of everybody below the Administrator, once.
+   An acceptance (the name typed, the version, the moment, the text's fingerprint, the IP address and the browser) stays
+   with its account and goes when «Retrage accesul» removes it; the trail keeps `staff.team_agreement_accepted` without the
+   name.

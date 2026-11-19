@@ -56,6 +56,8 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   volunteerAgreement: { kind: "section", section: "legal" },
   raffleRules: { kind: "section", section: "legal" },
   raffleNotice: { kind: "section", section: "legal" },
+  // The team's undertaking (§NNN) is approved on «Documente legale» too, on its own.
+  teamAgreement: { kind: "section", section: "legal" },
   volunteerRoleChoicesAgreement: { kind: "section", section: "legal" },
   gmailFallbackNotice: { kind: "section", section: "legal" },
   refusalTerms: { kind: "section", section: "legal" },

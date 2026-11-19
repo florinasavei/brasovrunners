@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { legalDocuments } from "@/db/schema/legal-documents";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
+import { PLATFORM_APPROVAL_KEYS } from "@/modules/legal-documents/domain/keys";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { approvePlatformTemplates } from "@/modules/legal-documents/service";
 import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
@@ -52,9 +52,12 @@ describe("the platform's texts approved in one act", () => {
 
   it("creates and approves version 1 of each text with the facts in, in the approver's name", async () => {
     const result = await approvePlatformTemplates(db, superadmin, FACTS, NOW);
-    expect(result).toEqual({ approved: [...LEGAL_DOCUMENT_KEYS], alreadyApproved: [] });
+    expect(result).toEqual({ approved: [...PLATFORM_APPROVAL_KEYS], alreadyApproved: [] });
+    // The team's undertaking is not the press's (§NNN): approved, it stops every colleague below the Administrator at
+    // their next request, so it is approved on its own — never as a side effect of the participants' texts.
+    expect(await findCurrentApprovedDocument(db, "STAFF_DATA_AGREEMENT", "ro", NOW)).toBeUndefined();
 
-    for (const key of LEGAL_DOCUMENT_KEYS) {
+    for (const key of PLATFORM_APPROVAL_KEYS) {
       for (const locale of ["ro", "en"] as const) {
         const inForce = await findCurrentApprovedDocument(db, key, locale, NOW);
         expect(inForce, `${key} ${locale}`).toBeDefined();
@@ -65,15 +68,15 @@ describe("the platform's texts approved in one act", () => {
       }
     }
     const rows = await db.select().from(legalDocuments);
-    expect(rows).toHaveLength(LEGAL_DOCUMENT_KEYS.length);
+    expect(rows).toHaveLength(PLATFORM_APPROVAL_KEYS.length);
     expect(rows.every((row) => row.isApproved && row.approvedByStaffUserId === superadmin.id && row.effectiveAt.getTime() === NOW.getTime())).toBe(true);
   });
 
   it("leaves a text already in force alone, and approves only the missing ones", async () => {
     await approvePlatformTemplates(db, superadmin, FACTS, NOW);
     const again = await approvePlatformTemplates(db, superadmin, FACTS, new Date(NOW.getTime() + 60_000));
-    expect(again).toEqual({ approved: [], alreadyApproved: [...LEGAL_DOCUMENT_KEYS] });
-    expect(await db.select().from(legalDocuments)).toHaveLength(LEGAL_DOCUMENT_KEYS.length);
+    expect(again).toEqual({ approved: [], alreadyApproved: [...PLATFORM_APPROVAL_KEYS] });
+    expect(await db.select().from(legalDocuments)).toHaveLength(PLATFORM_APPROVAL_KEYS.length);
   });
 
   it("approves the road declaration alone for a club whose three texts were already in force (§515)", async () => {
@@ -82,7 +85,7 @@ describe("the platform's texts approved in one act", () => {
     await db.delete(legalDocuments).where(eq(legalDocuments.key, "EVENT_DECLARATION_ROAD"));
     const later = new Date(NOW.getTime() + 60_000);
     const result = await approvePlatformTemplates(db, admin, FACTS, later);
-    expect(result).toEqual({ approved: ["EVENT_DECLARATION_ROAD"], alreadyApproved: LEGAL_DOCUMENT_KEYS.filter((key) => key !== "EVENT_DECLARATION_ROAD") });
+    expect(result).toEqual({ approved: ["EVENT_DECLARATION_ROAD"], alreadyApproved: PLATFORM_APPROVAL_KEYS.filter((key) => key !== "EVENT_DECLARATION_ROAD") });
     expect((await findCurrentApprovedDocument(db, "EVENT_DECLARATION_ROAD", "ro", later))?.version).toBe(1);
   });
 

@@ -7,7 +7,7 @@ import { BACKOFFICE_CLIENT_MESSAGES, pickMessages } from "@/i18n/client-messages
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { canSeeDiagnostics } from "@/modules/staff-identity/domain/roles";
-import { getCurrentStaffUser } from "@/modules/staff-identity/session";
+import { getCurrentStaffUser, teamAgreementOwedFor } from "@/modules/staff-identity/session";
 import BackofficeShell from "@/modules/staff-identity/ui/BackofficeShell";
 import { env } from "@/shared/config/env";
 import { signOutAction } from "../admin/actions";
@@ -38,13 +38,17 @@ export default async function DevsLayout({ children, params }: Props) {
     redirect(getPathname({ locale, href: "/sign-in" }));
   }
   if (!canSeeDiagnostics(staffUser.role)) notFound();
+  // The team's undertaking (§NNN): a Tehnic who owes the version in force reads it on `/admin/acord` first, `/devs` kept as the
+  // way back — sent there by the page under this layout (`requireStaff`, as every page under `/devs` asks), never by the layout,
+  // whose redirect the client router would keep and replay; the shell meanwhile draws no tabs.
+  const teamAgreementOwed = await teamAgreementOwedFor(staffUser);
 
   const messages = await getMessages({ locale });
 
   return (
     // The same nested provider as `/admin`'s layout (§353): the shell and its islands are the same.
     <NextIntlClientProvider messages={pickMessages(messages, BACKOFFICE_CLIENT_MESSAGES)} formats={null}>
-      <BackofficeShell locale={locale} staffUser={staffUser} signOut={signOutAction}>
+      <BackofficeShell locale={locale} staffUser={staffUser} signOut={signOutAction} bare={teamAgreementOwed !== null}>
         {children}
       </BackofficeShell>
     </NextIntlClientProvider>

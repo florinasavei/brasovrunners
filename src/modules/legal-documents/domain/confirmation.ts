@@ -39,6 +39,8 @@ export const DOCUMENT_CODES: Record<LegalDocumentKey, string> = {
   VOLUNTEER_AGREEMENT: "VOLUNTEER",
   // «Regulamentul tombolei» (§984): one word, the same in both languages.
   RAFFLE_RULES: "RAFFLE",
+  // The team's undertaking (§NNN): one word, the same in both languages.
+  STAFF_DATA_AGREEMENT: "TEAM",
 };
 
 /** What the screen shows and the server expects, e.g. `GDPR 2`. One string per version. */

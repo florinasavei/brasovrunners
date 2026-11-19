@@ -54,6 +54,7 @@ import {
   groupRunDeclarationsNameMinor,
   groupRunDeclarationsSeriesCurrent,
 } from "@/modules/legal-documents/repository";
+import { teamAgreementInForce } from "@/modules/staff-identity/team-agreement";
 import { branchesSwitchedOn } from "@/modules/feedback/domain/branches";
 import { readFeedbackSettings } from "@/modules/feedback/settings";
 import { countVisibleProducts } from "@/modules/content/shop/repository";
@@ -554,6 +555,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       raffleSignUpEvents: await countRaffleSignUpEvents(db, now),
       raffleRulesInForce: await raffleRulesInForce(db, now),
       raffleDescribed: await noticeDescribesRaffle(db, now),
+      // §NNN: the team's undertaking in force; until one is, nobody is asked at sign-in and the club's row says to approve it.
+      teamAgreementInForce: await teamAgreementInForce(db, now),
       // §683: the members' shop, described by the notice in force; the row waits only while a product is visible.
       shopDescribed: await noticeDescribesMembersShop(db, now),
       visibleShopProducts: await countVisibleProducts(db),

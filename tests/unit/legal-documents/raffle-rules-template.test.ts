@@ -34,7 +34,8 @@ const text = (body: { sections: ReadonlyArray<{ heading?: string; paragraphs: re
 describe("§984 BR-REQ-053-01 «Regulamentul tombolei» is a legal document of the platform", () => {
   it("is a key of its own, last, in a group of its own, with a one-word code and a name in both languages", () => {
     expect(RAFFLE_RULES_KEY).toBe("RAFFLE_RULES");
-    expect(LEGAL_DOCUMENT_KEYS.at(-1)).toBe("RAFFLE_RULES");
+    // Last but for the team's undertaking, appended after it (§NNN).
+    expect(LEGAL_DOCUMENT_KEYS.at(-2)).toBe("RAFFLE_RULES");
     expect(LEGAL_KIND_GROUPS.find((group) => group.id === "raffle")?.keys).toEqual(["RAFFLE_RULES"]);
     expect(DOCUMENT_CODES.RAFFLE_RULES).toBe("RAFFLE");
     expect(LEGAL_TEMPLATES.RAFFLE_RULES.ro).toEqual({ title: "Regulamentul tombolei", body: raffleRulesRo });

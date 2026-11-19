@@ -178,6 +178,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     expect(Object.keys(routing.pathnames).sort()).toEqual([
       "/",
       "/admin",
+      // The team's undertaking, where a colleague below the Administrator accepts it (§NNN), by hand.
+      "/admin/acord",
       "/admin/checkin",
       "/admin/checkin/[code]",
       // «Cronometrare», «Ziua cursei»'s finish line (§986), by hand.

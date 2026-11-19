@@ -153,7 +153,9 @@ describe("BR-REQ-053-01 sample legal documents (DECISIONS.md §29)", () => {
     expect(() => assertSampleLegalDocumentsAllowed()).not.toThrow();
   });
 
-  it("covers every key in both languages — the three a registration rests on, the road race's declaration (§515), the group runs' two (§393), the volunteer agreement (§758) and «Regulamentul tombolei» (§984)", () => {
+  it("covers every key in both languages — the three a registration rests on, the road race's declaration (§515), the group runs' two (§393), the volunteer agreement (§758) and «Regulamentul tombolei» (§984) — but the team's undertaking (§NNN)", () => {
+    // Approved on a test database, the team's undertaking would send every non-Administrator signed in there to /admin/acord.
+    expect(SAMPLE_DOCUMENTS.map((document) => document.key)).not.toContain("STAFF_DATA_AGREEMENT");
     expect(SAMPLE_DOCUMENTS.map((document) => document.key).sort()).toEqual([
       "EVENT_DECLARATION",
       "EVENT_DECLARATION_ROAD",
