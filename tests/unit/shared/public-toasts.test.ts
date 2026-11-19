@@ -76,7 +76,7 @@ describe("§427 the flash a public action writes", () => {
     for (const other of ["saved", "event", "registrationConfirmed", "", "contactSent.x"]) expect(isPublicToastKey(other), other).toBe(false);
   });
 
-  it("is written by the six public actions, each key by at least one, and only after a success", () => {
+  it("is written by the seven public actions, each key by at least one, and only after a success", () => {
     const actions = filesUnder(APP, (name) => name === "actions.ts").filter((file) => !relative(file).includes("/admin/"));
     const written = new Map<string, string[]>();
     for (const file of actions) {
@@ -96,6 +96,8 @@ describe("§427 the flash a public action writes", () => {
         // The volunteers' own page and the guardian's link page (§768).
         "src/app/[locale]/events/[slug]/volunteers/actions.ts",
         "src/app/[locale]/volunteers/guardian/[token]/actions.ts",
+        // The raffle's own form (§NNN): the thank-you on that page.
+        "src/app/[locale]/events/[slug]/tombola/actions.ts",
       ]),
     );
     // A cancel flashes only when the link did it: a refused link says so on the page, not in a toast.
@@ -170,6 +172,8 @@ describe("§427 mounted only where a flow lands", () => {
   it("the slot is in the pages the flows land on, in their success branch, and in no layout", () => {
     expect(importers("PublicFlash")).toEqual([
       "src/app/[locale]/contact/page.tsx",
+      // The raffle's own page (§NNN), on its thank-you.
+      "src/app/[locale]/events/[slug]/tombola/page.tsx",
       "src/app/[locale]/registrations/declare/[token]/page.tsx",
       "src/app/[locale]/registrations/manage/[token]/page.tsx",
       "src/app/[locale]/registrations/mine/[token]/page.tsx",

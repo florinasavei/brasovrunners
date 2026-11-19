@@ -174,6 +174,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   removePlanPointAction: [],
   // «Șterge» on a thing of «Lucruri de adus» (§979): the thing and its tick leave the list — asked first, naming the thing.
   removeRaceDayItemAction: [],
+  // «Șterge înscrierea» on a row of «Ziua cursei» → «Tombolă» (§NNN): a person's raffle sign-up taken off — asked first, naming the person.
+  raffleDeleteEntryAction: [],
   // Legal.
   approvePlatformTemplatesAction: [],
   // Every text at once (§532): drafts from the templates, and the drafts approved, each naming its texts.
@@ -411,6 +413,18 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
     "adds a thing to the organizers' own checklist, undone by «Șterge», which asks; it tells nobody and is on no public page",
   editRaceDayItemAction:
     "the organizers' own words for a thing to bring, replaced by saving them again; it tells nobody, is on no public page and keeps its tick",
+  // «Înscrie la tombolă» on «Ziua cursei» → «Tombolă» and on a volunteer's page (§NNN): the organizers record a person's sign-up.
+  raffleSignUpAction:
+    "records one person's raffle sign-up, the acceptance of the rules ticked by its own box, undone by «Șterge înscrierea», which asks; it emails nobody, is on no public page and changes no state, place, number or count but the raffle's",
+  // The same at the race-day desk, on the desk's view of a person (§NNN).
+  raffleDeskSignUpAction:
+    "records one person's raffle sign-up at the desk, the acceptance of the rules ticked by its own box, undone on «Tombolă» by «Șterge înscrierea», which asks; it emails nobody and changes no state, place, number or count but the raffle's",
+  // «Scoate» / «Pune înapoi» on a row of «Tombolă» (§NNN): the organizers' exclusion, through each kind's own tick.
+  raffleExclusionAction:
+    "the organizers' own mark of who is in the raffle for one person, posting the state it wants and undone by the same press; it tells nobody and changes no state, place, number or count but the raffle's",
+  // «Prezent» on a line of the elite list, on «Tombolă» (§NNN): the organizers' mark that the line's person came.
+  raffleElitePresentAction:
+    "a mark of who came on the day for one line of the elite list, undone by the same tick; it tells nobody and changes nothing but the raffle's «Doar prezenții»",
   addTestRegistrationsAction: "test rows, counted nowhere and absent from production, removed by a verb that asks",
   hardDeleteEventAction: "guarded by the event's title, typed: the typing is the question",
   eraseRegistrationFromListAction: "guarded by the registered name, typed: the typing is the question",

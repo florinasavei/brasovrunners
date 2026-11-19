@@ -415,6 +415,13 @@ function eventFieldsFrom(form: FormData) {
     kitShirt: form.get("event.kitShirt.present") === "1" ? form.get("event.kitShirt") === "on" : undefined,
     // «Avem tombolă» (§949): a checkbox in «Numere de concurs», read only when the form carried its marker.
     hasRaffle: form.get("event.hasRaffle.present") === "1" ? form.get("event.hasRaffle") === "on" : undefined,
+    // The raffle's settings beside it (§NNN): the three groups and the open tick, by their own markers; «Cum» a select whose two
+    // values are the only answers — anything else is "not editing it", never a switch.
+    raffleRunners: form.get("event.raffleRunners.present") === "1" ? form.get("event.raffleRunners") === "on" : undefined,
+    raffleElites: form.get("event.raffleElites.present") === "1" ? form.get("event.raffleElites") === "on" : undefined,
+    raffleVolunteers: form.get("event.raffleVolunteers.present") === "1" ? form.get("event.raffleVolunteers") === "on" : undefined,
+    raffleSignUp: form.get("event.raffleSignUp") === "true" ? true : form.get("event.raffleSignUp") === "false" ? false : undefined,
+    raffleSignUpOpen: form.get("event.raffleSignUpOpen.present") === "1" ? form.get("event.raffleSignUpOpen") === "on" : undefined,
     // «Locurile din lista de așteptare se alocă automat» (§615): a «Da»/«Nu» select, read only when the
     // form carried it — anything but its two values is "not editing it", never a switch.
     waitlistAutoOffer: form.get("event.waitlistAutoOffer") === "true" ? true : form.get("event.waitlistAutoOffer") === "false" ? false : undefined,

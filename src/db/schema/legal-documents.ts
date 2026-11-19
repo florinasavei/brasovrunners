@@ -37,6 +37,10 @@ export const legalDocumentKey = pgEnum("legal_document_key", [
   // The volunteer agreement (§758, amending §754): what every volunteer of an event accepts before being listed —
   // unpaid help, the role's tasks, the club's duties, Romania's volunteering law (Legea nr. 78/2014).
   "VOLUNTEER_AGREEMENT",
+  // «Regulamentul tombolei» (§NNN): what a person accepts to sign up for an event's raffle in the sign-up mode — who may take
+  // part, how to sign up, the draw, the prizes, the winner, the data. Added in a migration of its own (`0216`): PostgreSQL
+  // cannot use an enum value in the transaction that adds it.
+  "RAFFLE_RULES",
 ]);
 
 export type LegalDocumentKey = (typeof legalDocumentKey.enumValues)[number];

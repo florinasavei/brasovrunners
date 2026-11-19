@@ -122,7 +122,8 @@ export type AuditAction =
   /**
    * «Transformă în voluntar» (§948, `volunteers/transform.ts`): the registration was cancelled by the staff verb and its person
    * entered on the event's volunteers, in one transaction. Beside the cancellation's own row; the metadata is the volunteer's
-   * id, the role given and the state the registration left — never a name.
+   * id, the role given and the state the registration left — and, when the person held a raffle sign-up, its id, moved to the
+   * volunteer (`raffleEntryId`, §NNN) — never a name.
    */
   | "registration.became_volunteer"
   /**
@@ -657,6 +658,22 @@ export type AuditAction =
   | "event_elite.on_site"
   | "event_elite.off_site"
   /**
+   * A line's raffle ticks (§NNN), entity `event`: «Participă la tombolă» (`in_raffle` / `out_of_raffle`) and «Prezent»
+   * (`present` / `absent`), set on «Ziua cursei» → «Tombolă». The metadata is the line's id and the tick's new value — never the name.
+   */
+  | "event_elite.in_raffle"
+  | "event_elite.out_of_raffle"
+  | "event_elite.present"
+  | "event_elite.absent"
+  /**
+   * «Înscrierea la tombolă» (§NNN, `volunteers/raffle-entries.ts`), entity `event`: a person signed up for the event's raffle —
+   * the door (`method`: LINK, FORM, DESK, STAFF), the person's group (`kind`: RUNNER, ELITE, VOLUNTEER) and the entry's id — or
+   * withdrew or was taken off the sign-ups (`by`: `person` from their own link, `staff` at «Șterge înscrierea»). Never a name, a
+   * number or a typed word: the row the metadata names is deleted thirty days after the event, and the trail outlives it.
+   */
+  | "event_raffle.entry_created"
+  | "event_raffle.entry_withdrawn"
+  /**
    * An event's volunteers (§754), entity `event`: the switch «Primește voluntari», a role added, changed,
    * moved or removed (the club's own words), and a volunteer entered, changed, confirmed, cancelled,
    * deleted or signed up on the page (`volunteer.signed_up`, no actor). The metadata holds ids, the roles'
@@ -740,7 +757,8 @@ export type AuditAction =
   /**
    * «Transformă în alergător» (§948, `volunteers/transform.ts`), entity `event`: the volunteer was cancelled and entered on the
    * official waiting list's own entry, in one transaction. The metadata is the volunteer's id, the registration's and the
-   * state it landed in — never a name or an address.
+   * state it landed in — and, when the person held a raffle sign-up, its id, moved to the registration (`raffleEntryId`, §NNN)
+   * — never a name or an address.
    */
   | "volunteer.became_runner"
   | "volunteer.signed_up"

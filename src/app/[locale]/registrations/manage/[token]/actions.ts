@@ -1,6 +1,9 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect, RedirectType } from "next/navigation";
+import { readSignatureTrace } from "@/modules/legal-documents/domain/signature-trace";
+import { signUpForRaffleByLink, withdrawFromRaffleByLink } from "@/modules/volunteers/raffle-entries";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -215,6 +218,53 @@ function answerDraftOf(form: FormData): Record<string, string> {
     if (typeof value === "string" && value !== "") draft[name] = value;
   }
   return draft;
+}
+
+/**
+ * «Particip la tombolă» from the participant's own link (LINK, §NNN), per person like the switches above: the token read, never spent,
+ * POST only. The rules' tick is the person's own act (`accept=on`); this request's IP address and browser are the acceptance's trace
+ * (§771). A refusal writes nothing: the tick missing (`raffle=a`), the gate shut or the person no longer one the raffle takes
+ * (`raffle=0`); a person the link does not manage — or another adult on the address, who signs up from their own link — is the
+ * refused link. No email leaves.
+ */
+export async function raffleSignUpFromManageAction(form: FormData): Promise<void> {
+  const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
+  const token = String(form.get("token") ?? "");
+  const person = personOf(form);
+  const path = getPathname({ locale, href: { pathname: "/registrations/manage/[token]", params: { token } } });
+  const who = person ? `&person=${encodeURIComponent(person)}` : "";
+
+  try {
+    const result = await signUpForRaffleByLink(
+      getDb(),
+      { secret: token, accepted: form.get("accept") === "on", locale, registrationId: person, trace: readSignatureTrace(await headers()) },
+      new Date(),
+    );
+    redirect(result.ok ? `${path}?raffle=1${who}#raffle` : `${path}?invalid=1`);
+  } catch (error) {
+    if (isDomainError(error) && error.code === "RAFFLE_RULES_NOT_ACCEPTED") redirect(`${path}?raffle=a${who}#raffle`);
+    if (isDomainError(error) && (error.code === "RAFFLE_SIGN_UP_CLOSED" || error.code === "RAFFLE_NOT_ELIGIBLE")) redirect(`${path}?raffle=0${who}#raffle`);
+    if (isDomainError(error)) redirect(`${path}?invalid=1`);
+    throw error;
+  }
+}
+
+/** «Nu mai particip» from the participant's own link (LINK, §NNN): the sign-up taken away, audited; the token read, never spent. */
+export async function raffleWithdrawFromManageAction(form: FormData): Promise<void> {
+  const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
+  const token = String(form.get("token") ?? "");
+  const person = personOf(form);
+  const path = getPathname({ locale, href: { pathname: "/registrations/manage/[token]", params: { token } } });
+  const who = person ? `&person=${encodeURIComponent(person)}` : "";
+
+  try {
+    const result = await withdrawFromRaffleByLink(getDb(), { secret: token, registrationId: person }, new Date());
+    redirect(result.ok ? `${path}?raffle=w${who}#raffle` : `${path}?invalid=1`);
+  } catch (error) {
+    if (isDomainError(error) && error.code === "RAFFLE_SIGN_UP_CLOSED") redirect(`${path}?raffle=0${who}#raffle`);
+    if (isDomainError(error)) redirect(`${path}?invalid=1`);
+    throw error;
+  }
 }
 
 /**

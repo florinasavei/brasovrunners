@@ -2654,3 +2654,53 @@ turns on event by event. Three steps are the club's: the notice (1), the tick (2
    - **When.** «Setări» → «Termene» → the fold «Înainte de start»: «Întrebarea „Vii?” pleacă înainte de start cu (zile)» — 0 to 7, **1** by default, and **0 means never** (the fold's closed line then reads «„Vii?” nu se trimite») — and «Întrebarea „Vii?” pleacă de la ora» — 0 to 23 on the club's clock, **8** by default (0 is midnight). The email leaves at the job's first run at or after that hour on that calendar day, and says the day in words («mâine», «poimâine», «peste 3 zile»; in the club's own words for the email it is the field `{rsvpAskDay}`, never a «mâine» typed by hand). The «Vin» button lives until the event's start, however many days ahead it went. Change it and a question already queued but not yet sent follows the new numbers at its send; one that no longer fits is dropped, never sent late.
    - **To whom.** «Setări» → «Emailuri» → «Cui îi trimitem întrebarea „Vii?”» — three radios: the newsletter's subscribers of the topic (**the default**), the people who answered «Vin!» at an earlier date of the same series (a weekly run's earlier Sundays; an answer is kept thirty days after its date, so about the last month), or both (one email each; someone on both lists is asked as a subscriber; a «Vin» pressed in a subscriber's question counts as an earlier answer only while that address still receives the topic, so someone who unticked the topic is not asked through this list). **The second audience is gated twice.** First, the privacy notice: approve it again from the template (`/admin/legal` → the «GDPR» card → «Regenerează din șablon»; a lawyer reads the new sentences in section 5's «Vin!» paragraph and section 7's line about refusals first). The marker `{{rsvpAskAnswerers}}` is the switch and it is silent in every notice approved before it: until a notice that names it is in force in both languages, nobody of that audience is asked, whatever the club chose, and `/admin/tasks` carries the row `rsvpAskAnswerersNotice` while the choice is ANSWERERS or BOTH. An answer given under an older notice is never asked again (it agreed to being counted, not to being asked). Second, each person: every such email carries **«Nu mă mai întreba la seria aceasta»**, a link to a page with one button (opening it records nothing; the press does, once). The link does not depend on the answer: it still works after «Nu vin» in the same email and after the event, until sixty days after the start. The refusal is kept as the address's canonical form and the series' key, nothing else, for as long as the series lives and a year after its last date; it holds for both lists, shows in «Date despre persoană», and is not erased with the answers (forgetting it would ask the person again; the links, which hold the address, are erased). «Date despre persoană» names the refused series by its type and the title the club wrote.
    - **Which events.** The event editor's «Vin!» block, under «Acceptă răspunsuri „Vin!”»: the tick «Trimite emailul „Vii?” înainte de această dată» — **on** by default for every event; unticked, that date is never asked (its «Vin!» still works). Its help says, in the club's own numbers, who gets the email, how long before the start and from what hour (read from «Termene» and «Emailuri», with a link to each), with 0 days it says the email is off and draws the tick disabled, and while the privacy notice in force does not describe the email (or, for the earlier answerers, that use) it says the email does not leave yet instead of promising it. It is carried by a series, by «Duplică» and by the event's JSON file (written only when off).
+
+## 47. Tombola cu înscriere separată — a raffle only those who sign up are in
+
+An event's raffle (`DECISIONS.md` §949) is **«Din oficiu»** by default: everybody of the groups the club ticks — the confirmed runners
+with a race number, the race's elites, the confirmed volunteers with a number — is in it, nobody signs anything, and the organizers take
+out whom they like. **«Cu înscriere separată»** (`DECISIONS.md` §NNN; the owner, 2026-11-18: «Dar pentru tombolă trebuie să am o înscriere
+separată») puts in only those who sign up, each accepting the club's «Regulamentul tombolei». It **stays shut until two texts are in force
+in both languages** — the rules and a privacy notice that describes the sign-up — so the club's steps are 1 and 2, once, then 3 per event.
+An agent never approves either text.
+
+1. **Write and approve «Regulamentul tombolei» — a lawyer reads it first.** `/admin/legal` → the card «Regulamentul tombolei» →
+   «Regenerează din șablon» → confirm. The platform's text has nine sections: the organiser, who may take part (the groups the event
+   ticks, filled in by itself — the elites are «sportivii de top ai cursei» there, the mark «Elită» being the organizers' own), how to sign up (the three ways), the draw (at the event, at the announced time, among those signed up,
+   the winner present), the prizes (as the organizers announce them), the winners (no name online without the person's agreement), the
+   data (pointing to the privacy notice), withdrawal, disputes. Type the club's facts where a `<…>` stands — the approval refuses a
+   text that still holds one —, «Salvează ciorna», then «Aprobă și publică», in **both** languages. The lawyer's questions are written at
+   the top of `src/modules/legal-documents/templates/raffle-rules.ts` (a prize above the tax-free threshold; a minor taking part;
+   whether a free raffle's rules must be lodged anywhere). Until a version is in force in both languages `/admin/tasks` carries the row
+   «Regulamentul tombolei» while an event asks a sign-up.
+2. **Approve a privacy notice that names the raffle's sign-up.** `/admin/legal` → the «GDPR» card → «Regenerează din șablon» → confirm.
+   Section 5 gains the paragraph «Tombola („Înscrie-te la tombolă”)» — what a sign-up keeps (who the person is for the raffle, the name
+   typed on the form, whether a volunteer, the rules' acceptance with its trace or the staff member who recorded it, the notice's
+   version), why, the basis (the taking part, art. 6(1)(b), and the proof, art. 6(1)(f) — **the lawyer reads that sentence first**),
+   who sees it (the organizers and the administrators), no email, how to withdraw — and section 7 the line «Înscrierile la tombolă:
+   30 de zile de la începutul evenimentului». Read, «Salvează ciorna», «Aprobă și publică», both languages. The marker is `{{raffle}}`;
+   until a notice naming it is in force in both languages `/admin/tasks` carries the row «Nota de confidențialitate: înscrierea la
+   tombolă» while an event asks a sign-up.
+3. **Set the event** (an Administrator: the event's save is theirs, §542). `/admin/events` → the race → «Numere de concurs» → «Avem
+   tombolă», then, under it: **«Cine poate participa la tombolă»** — «Alergătorii», «Elitele», «Voluntarii», all ticked by default; they
+   decide in both modes —, **«Cum participă»** → «Cu înscriere separată: doar cei care se înscriu», and **«Înscrierile la tombolă sunt
+   deschise»**. Save. None of the four travels to a series' other dates, a copy or the event's file.
+4. **What people see, while it is open.** The event's page has one line and one button, «Înscrie-te la tombolă», to the raffle's page
+   (`/evenimente/<slug>/tombola`, `/en/events/<slug>/raffle`): the race number, the name as at registration, «Sunt voluntar» (then the
+   volunteer's own number) while the volunteers may take part, the rules in a fold and «Am citit și accept Regulamentul tombolei». A
+   number and a name that do not belong together get one neutral sentence; a person already in reads the thank-you again; nobody is
+   emailed. On «Gestionează înscrierea» (the link in every email) a confirmed runner with a number has a «Tombola» card: the rules, the
+   tick, «Particip la tombolă», and once in, «Nu mai particip». At the desk, every volunteer sees «Tombolă: participă / nu participă» under
+   each person the search finds (and on a scanned person's view) and signs them up with «Înscrie la tombolă», having heard the person
+   accept the rules (or read them a paper copy). A runner turned volunteer, or back, keeps their sign-up. A line
+   of the race's elite list has no number and no link: the organizers sign it up on the «Tombolă» tab.
+5. **On race day:** «Ziua cursei» → **«Tombolă»** (the Organizer and the Administrators): everybody of the three groups with «Participă: Da»
+   or «Nu» and why, how and when each signed up, «Prezent», the counts, the filters «Participă», «Nu participă», «Doar prezenții», the
+   presses «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» and an elite line's «Prezent», and the two files. **At the draw,
+   untick «Înscrierile la tombolă sunt deschise»** in the editor, then take «Lista pentru tombolă» (or «— doar prezenții») and draw from it.
+6. **The fallback is «Din oficiu».** If the two texts are not approved in time, leave «Cum participă» at «Din oficiu» (or set it back):
+   the raffle is the one the club had — the ticked groups, confirmed with a number, minus whom the organizers took out — and nothing
+   else is asked of anybody. Sign-ups already made are kept until their thirty days; they count again if the event goes back to the
+   sign-up mode.
+7. **The data.** A sign-up is deleted thirty days after the event's start by the nightly sweep, or with its registration or offer;
+   «Toate datele unei persoane» lists it. It is in no email, on no public page or list and on no badge.

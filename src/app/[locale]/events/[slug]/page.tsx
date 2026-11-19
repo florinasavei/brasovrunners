@@ -26,6 +26,8 @@ import { parseRsvpOutcome } from "@/modules/rsvp/rsvp-box";
 import { volunteersAdvertised } from "@/modules/volunteers/domain/access";
 import { openRoleNames } from "@/modules/volunteers/domain/volunteer";
 import { readVolunteerOffer } from "@/modules/volunteers/offer";
+import { raffleSignUpEndsAt } from "@/modules/volunteers/domain/raffle";
+import { cachedRaffleSignUpOpen } from "@/modules/public-cache/reads";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { nextWallMidnight } from "@/modules/events/domain/page-clock";
 import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
@@ -222,6 +224,13 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   const advertised = volunteersAdvertised(volunteerOffer);
   const volunteersList = !membersOnly && event.volunteersListPublic === true ? { offerOpen: advertised } : null;
   if (volunteersList && event.startsAt) await holdPageUntil([new Date(event.startsAt.getTime() + RETENTION_PERIODS.volunteerDaysAfterEvent * 86_400_000)], now);
+  /*
+    «Înscrie-te la tombolă» (§NNN): one calm link while the raffle's sign-up gate is open (`cachedRaffleSignUpOpen`), from the public
+    cache — expired by the editor's save and by an approval — and the page made again when the sign-up ends with the event. Never on a
+    members' event; while the database is away the link is simply not drawn.
+  */
+  const raffleOpen = membersOnly ? false : await readOrWhileAway(() => cachedRaffleSignUpOpen(event.id, now), false);
+  if (raffleOpen && event.startsAt) await holdPageUntil([raffleSignUpEndsAt({ startsAt: event.startsAt, endsAt: event.endsAt ?? null, timezone: event.timezone }) ?? event.startsAt], now);
   const volunteerRoleNames = volunteerOffer
     ? // A name once, though the same role may stand in two categories (§774): the box says what is needed, the page says where.
       openRoleNames(volunteerOffer.roles, locale)
@@ -290,6 +299,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
           // «Arată butonul „Vreau să fiu voluntar"» (§835): unticked, the page says nothing about them either — the sign-up stays open by its link.
           volunteers: volunteerRoleNames.length > 0 && volunteerOffer && advertised ? { roleNames: volunteerRoleNames, clubOnly: volunteerOffer.access === "MEMBERS" } : null,
           volunteersList,
+          raffle: raffleOpen,
         }}
       />
     </Container>

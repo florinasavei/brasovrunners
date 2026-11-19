@@ -53,6 +53,9 @@ import { guardianAllowsConfirm, guardianAskOf, roleLabel, VOLUNTEER_DECISION_MAX
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
 import { listPlanPoints } from "@/modules/volunteers/plan-points";
 import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
+import type { RaffleReason } from "@/modules/volunteers/domain/raffle";
+import { raffleReasonsFor } from "@/modules/volunteers/raffle-roster";
+import { RaffleStandingNote, raffleNoteWords } from "@/modules/volunteers/ui/RaffleLines";
 import { DECISION_ANCHOR } from "@/modules/volunteers/ui/VolunteerDecisionCard";
 import { GuardianVerbs, guardianChips, shortText, STATE_CHIP, VolunteerPersonFields, VolunteerStateForm, volunteerHiddenFields, volunteerPersonBoxes } from "@/modules/volunteers/ui/VolunteerPerson";
 import { listVolunteerNotesForList } from "@/modules/volunteers/volunteer-notes";
@@ -226,6 +229,8 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const scopeEvent = events.find((event) => event.id === filters.eventId) ?? null;
   // «Adaugă un voluntar de mână» for the event in scope (§862): the context a person's page reads, coming back to this page of the list.
   const scopeEventRow = scopeEvent ? await findEventForRegistrationById(db, scopeEvent.id) : undefined;
+  // Beside the raffle's tick (§NNN): whether each row takes part, and why not, by the one answer — one read for the page's rows.
+  const raffleReasons = scopeEvent && scopeEventRow?.hasRaffle ? await raffleReasonsFor(db, scopeEvent.id, { volunteerIds: rows.map((row) => row.id) }) : new Map<string, RaffleReason>();
   // «Punct» (§949): with one event chosen that has points on its plan, each row says where its person stands — the point's place
   // in the route's order and its name, as «Planul voluntarilor» says them. One read for the page, never one per row.
   // The points and their numbers are the plan's own list (§961, `plan-points.ts#listPlanPoints`), so this column, the plan's
@@ -453,6 +458,8 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       <TickButton checked={row.inRaffle} aria-label={`${t("volunteers.screen.raffleTick")}: ${shortText(row.name)}`} data-testid="volunteer-raffle-tick">
         {t("volunteers.screen.raffleTick")}
       </TickButton>
+      {/* «În dreptul fiecărei persoane» (§NNN): Da, or Nu with the reason in a few words. */}
+      {raffleReasons.has(row.id) && <RaffleStandingNote words={raffleNoteWords(t, raffleReasons.get(row.id) ?? "in")} takesPart={raffleReasons.get(row.id) === "in"} />}
     </Box>
   );
 

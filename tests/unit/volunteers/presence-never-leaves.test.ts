@@ -21,6 +21,9 @@ import { importsModule } from "../../helpers/module-imports";
  * since every row the staff screens read now carries the field, the surfaces that read volunteers are held to more: none of them
  * reads any `present` at all. A reader is also found by what it imports — the «Voluntari» screen's actions, which hold the press —
  * by any spelling: the `@/` alias or a relative path, resolved from the importing file (`tests/helpers/module-imports.ts`).
+ *
+ * Since §NNN the raffle's roster and «Ziua cursei» → «Tombolă» read it too: that tab is the organizers' (`canTakeRaffleList`),
+ * not the desk, and shows who was there beside whether they take part. The desk's own pages stay held to reading none.
  */
 const ROOT = process.cwd();
 const SRC = path.join(ROOT, "src");
@@ -62,6 +65,12 @@ const READERS = new Set(
     // «Toate datele unei persoane» (art. 15): the offer's own row, and the line that draws it.
     "src/modules/registrations/person-data.ts",
     "src/modules/volunteers/ui/VolunteerAnswers.tsx",
+    // §NNN: the raffle's roster reads it beside each volunteer, for the files and «Ziua cursei» → «Tombolă» — the organizers' tab
+    // (`canTakeRaffleList`), whose «Doar prezenții», «Prezent» column and present-only download are the raffle's, not the desk's.
+    "src/modules/volunteers/raffle-roster.ts",
+    "src/app/[locale]/admin/checkin/tombola/page.tsx",
+    // §NNN: a line of the race's elite list's own «Prezent» (`event_elite_entries.present`), named alike — the organizers' tick on that tab.
+    "src/db/schema/event-elite-entries.ts",
   ].map((file) => path.join(ROOT, file)),
 );
 
@@ -78,6 +87,8 @@ const relative = (file: string) => path.relative(ROOT, file).replaceAll("\\", "/
 
 /** The surfaces that read volunteers or a race's people, where no `present` of any kind is read: a leak there would be the field itself. */
 function readsVolunteers(at: string): boolean {
+  // «Ziua cursei» → «Tombolă» (§NNN) is the organizers' raffle tab, not the desk: who was there is what its «Doar prezenții» filters by.
+  if (at.startsWith("src/app/[locale]/admin/checkin/tombola/")) return false;
   return (
     // The event's pages, its volunteers' page and its public form.
     at.startsWith("src/app/[locale]/events/") ||

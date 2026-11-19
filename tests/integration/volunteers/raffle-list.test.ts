@@ -22,7 +22,8 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * What is protected, on real PostgreSQL (PGlite), through the service and the real route:
  * - the file is everybody who wears a number at the event — the confirmed runners and the confirmed volunteers — by the
  *   number, each once: never a registration that waits, is held, cancelled or a test one, never a cancelled volunteer,
- *   anybody without a number, a line of the elite list or another event's person;
+ *   anybody without a number or another event's person; and since §NNN a line of the race's elite list takes part like a
+ *   person, «Elită» by its number (the three groups and the two modes are `raffle-sign-up.test.ts`'s);
  * - three columns and nothing else of a person: the number, the name, which of the two they are — in the reader's language;
  * - whoever reads the registrations and works the volunteers takes it; every other role is refused, by the service and
  *   by the route;
@@ -166,6 +167,7 @@ async function everybody() {
   await volunteer("Vlad Offered", null, "REGISTERED");
   await volunteer("Zoe Cancelled", 502, "CANCELLED");
   await volunteer("Confirmed Nonumber Volunteer", null);
+  // A line of the race's elite list: in the draw since §NNN, «Elită» by its number — «Elitele» is ticked by default.
   await db.insert(eventEliteEntries).values({ eventId, name: "Eliud K.", bibNumber: 777 });
   // Another event's people, wearing numbers of their own.
   const other = await race("Alt cros");
@@ -182,8 +184,9 @@ describe("§948 BR-REQ-071-01 «Lista pentru tombolă»: everybody who wears a n
       { number: 2, name: "Radu Munteanu", kind: "RUNNER", present: false },
       { number: 500, name: "Ion Voluntar", kind: "VOLUNTEER", present: false },
       { number: 501, name: "Oana Voluntar", kind: "VOLUNTEER", present: false },
+      { number: 777, name: "Eliud K.", kind: "ELITE", present: false },
     ]);
-    expect(list).toMatchObject({ runners: 2, volunteers: 2 });
+    expect(list).toMatchObject({ runners: 2, elites: 1, volunteers: 2 });
     expect(new Set(list.rows.map((row) => row.number)).size).toBe(list.rows.length);
   });
 
@@ -197,16 +200,17 @@ describe("§948 BR-REQ-071-01 «Lista pentru tombolă»: everybody who wears a n
     expect(list.rows).toEqual([
       { number: 1, name: "Ana Pop", kind: "RUNNER", present: true },
       { number: 500, name: "Ion Voluntar", kind: "VOLUNTEER", present: false },
+      { number: 777, name: "Eliud K.", kind: "ELITE", present: false },
     ]);
-    expect(list).toMatchObject({ runners: 1, volunteers: 1 });
+    expect(list).toMatchObject({ runners: 1, elites: 1, volunteers: 1 });
     // Ticked again, they are back: the mark is the only thing that took them out.
     await db.update(registrations).set({ inRaffle: true }).where(eq(registrations.registeredName, "Radu Munteanu"));
-    expect((await exportRaffleList(db, admin, eventId, NOW)).rows.map((row) => row.name)).toEqual(["Ana Pop", "Radu Munteanu", "Ion Voluntar"]);
+    expect((await exportRaffleList(db, admin, eventId, NOW)).rows.map((row) => row.name)).toEqual(["Ana Pop", "Radu Munteanu", "Ion Voluntar", "Eliud K."]);
   });
 
   it("is empty, not an error, on an event where nobody has a number yet", async () => {
     await runner("Elena Waiting", null, "WAITLISTED");
-    expect(await exportRaffleList(db, admin, eventId, NOW)).toEqual({ rows: [], runners: 0, volunteers: 0 });
+    expect(await exportRaffleList(db, admin, eventId, NOW)).toEqual({ rows: [], runners: 0, elites: 0, volunteers: 0 });
   });
 
   it("records the download with two counts — who, which event, never a name or a number", async () => {
@@ -216,7 +220,7 @@ describe("§948 BR-REQ-071-01 «Lista pentru tombolă»: everybody who wears a n
     expect(more).toEqual([]);
     expect(row).toMatchObject({ actorStaffUserId: admin.id, participantId: null, entityType: "event", entityId: eventId, createdAt: NOW });
     // Which of the two files (§NNN): the whole one.
-    expect(row.metadataJson).toEqual({ runners: 2, volunteers: 2, onlyPresent: false });
+    expect(row.metadataJson).toEqual({ runners: 2, elites: 1, volunteers: 2, onlyPresent: false, signUp: false });
   });
 
   it("BR-REQ-060-01: is taken by whoever reads the registrations and works the volunteers — the Organizer and the Administrators — and refused to every other role, nothing recorded", async () => {
@@ -226,7 +230,7 @@ describe("§948 BR-REQ-071-01 «Lista pentru tombolă»: everybody who wears a n
       const may = canReadRegistrations(role) && canManageVolunteers(role);
       expect(canTakeRaffleList(role), role).toBe(may);
       if (may) {
-        expect((await exportRaffleList(db, actor, eventId, NOW)).rows, role).toHaveLength(4);
+        expect((await exportRaffleList(db, actor, eventId, NOW)).rows, role).toHaveLength(5);
         continue;
       }
       expect((await failureOf(exportRaffleList(db, actor, eventId, NOW))).code, role).toBe("FORBIDDEN");
@@ -275,7 +279,7 @@ describe("§948 BR-REQ-071-01 the file", () => {
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
     expect(response.headers.get("X-Robots-Tag")).toBe("noindex");
     const body = await response.text();
-    expect(body.replace(/^﻿/, "").split("\r\n")).toEqual(["Number,Name,Category,Present", "1,Ana Pop,Runner,No", "2,Radu Munteanu,Runner,No", "500,Ion Voluntar,Volunteer,No", "501,Oana Voluntar,Volunteer,No", ""]);
+    expect(body.replace(/^﻿/, "").split("\r\n")).toEqual(["Number,Name,Category,Present", "1,Ana Pop,Runner,No", "2,Radu Munteanu,Runner,No", "500,Ion Voluntar,Volunteer,No", "501,Oana Voluntar,Volunteer,No", "777,Eliud K.,Elite,No", ""]);
     // Romanian by default, and for a language the site does not speak.
     expect((await (await file(eventId, "?lang=xx")).text()).replace(/^﻿/, "").split("\r\n")[0]).toBe("Număr,Nume,Categorie,Prezent");
     // Nothing else of anybody: no address, no telephone.
@@ -364,7 +368,12 @@ describe("§NNN BR-REQ-071-01 «Prezent» for a volunteer, and «Lista pentru to
     await exportRaffleList(db, admin, eventId, NOW, { onlyPresent: true });
     await exportRaffleList(db, admin, eventId, NOW);
     const rows = await trail();
-    expect(rows.map((row) => row.metadataJson)).toEqual(expect.arrayContaining([{ runners: 1, volunteers: 1, onlyPresent: true }, { runners: 2, volunteers: 2, onlyPresent: false }]));
+    expect(rows.map((row) => row.metadataJson)).toEqual(
+      expect.arrayContaining([
+        { runners: 1, elites: 0, volunteers: 1, onlyPresent: true, signUp: false },
+        { runners: 2, elites: 0, volunteers: 2, onlyPresent: false, signUp: false },
+      ]),
+    );
     expect(rows).toHaveLength(2);
     const everything = JSON.stringify(rows);
     expect(everything).not.toMatch(/Ana|Ion|Radu|Oana|\b500\b|\b501\b/);

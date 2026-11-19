@@ -55,6 +55,17 @@ export const eventEliteEntries = pgTable(
      * The club's typed text, as the line's name is; written by the Administrator alone (`elite-label.ts`), audited by id.
      */
     bibLabel: text("bib_label"),
+    /**
+     * «Participă la tombolă» (migration `0217`, §NNN): a line takes part in the event's raffle like a person — on by default, the
+     * organizers' exclusion as for a registration (`registrations.in_raffle`) and a volunteer, set on «Ziua cursei» → «Tombolă» by
+     * the Organizer or an Administrator (`canTakeRaffleList`), audited by the line's id. Read by the raffle alone.
+     */
+    inRaffle: boolean("in_raffle").notNull().default(true),
+    /**
+     * «Prezent» (§NNN): the organizers' tick that the line's person came — off by default; the desk checks no line in. Set on the
+     * «Tombolă» tab, audited by id; what «Doar prezenții» and the present-only file read for a line.
+     */
+    present: boolean("present").notNull().default(false),
     createdByStaffUserId: uuid("created_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

@@ -55,7 +55,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
   const t = await getTranslations({ locale, namespace: "Admin" });
   const csv = buildRaffleCsv(
-    { number: t("registrations.raffle.columns.number"), name: t("registrations.raffle.columns.name"), kind: t("registrations.raffle.columns.kind"), kinds: { RUNNER: t("registrations.raffle.kinds.RUNNER"), VOLUNTEER: t("registrations.raffle.kinds.VOLUNTEER") },
+    // The three groups (§NNN): «Elită» is a registration marked «Elită» and a line of the race's elite list.
+    { number: t("registrations.raffle.columns.number"), name: t("registrations.raffle.columns.name"), kind: t("registrations.raffle.columns.kind"), kinds: { RUNNER: t("registrations.raffle.kinds.RUNNER"), ELITE: t("registrations.raffle.kinds.ELITE"), VOLUNTEER: t("registrations.raffle.kinds.VOLUNTEER") },
       // «Prezent» (§949, §NNN): whether the person was there — the desk's check-in for a runner, the «Voluntari» list's tick for a volunteer.
       present: t("registrations.raffle.columns.present"),
       presentYes: t("registrations.raffle.present.yes"),

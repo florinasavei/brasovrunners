@@ -4,6 +4,7 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventEliteEntries } from "@/db/schema/event-elite-entries";
+import { eventRaffleEntries } from "@/db/schema/event-raffle-entries";
 import { eventResults } from "@/db/schema/event-results";
 import { eventRsvpAsks, eventRsvps, rsvpAskRefusals, rsvpRefuseTokens } from "@/db/schema/event-rsvps";
 import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
@@ -156,6 +157,8 @@ export const RETENTION = {
   groupRunIdDocumentDaysAfterEvent: GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS,
   /** A volunteer's offer goes thirty days after the event's start (§754); the privacy notice says exactly this. */
   volunteerDaysAfterEvent: RETENTION_PERIODS.volunteerDaysAfterEvent,
+  /** A raffle sign-up goes thirty days after the event's start (§NNN); the privacy notice says exactly this. */
+  raffleDaysAfterEvent: RETENTION_PERIODS.raffleDaysAfterEvent,
   /** An answer «Vin!» goes thirty days after the event's end (§811); the privacy notice says exactly this. */
   rsvpDaysAfterEvent: RETENTION_PERIODS.rsvpDaysAfterEvent,
   /** …and seven days after it was typed when its address never used the emailed link. */
@@ -194,6 +197,8 @@ export type PruneCounts = {
   volunteers: number;
   /** The club's invitations to volunteer, gone with the offers, thirty days after the event started (§820). */
   volunteerInvitations: number;
+  /** Raffle sign-ups, gone thirty days after the event started (§NNN). */
+  raffleEntries: number;
   /** A race's results rows deleted with its registrations, three years after the race (§808). */
   results: number;
   /** A race's elite list, its names gone with its registrations, three years after the race (§895). */
@@ -229,6 +234,7 @@ export const PRUNE_STEPS = [
   "newsletter",
   "invitations",
   "volunteers",
+  "event-raffle-entries",
   "event-results",
   "event-elite-entries",
   "rsvps",
@@ -330,6 +336,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     invitations: 0,
     volunteers: 0,
     volunteerInvitations: 0,
+    raffleEntries: 0,
     results: 0,
     eliteEntries: 0,
     rsvps: 0,
@@ -710,6 +717,23 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
   });
   // The event page's card «Voluntarii» (§821) is filed under "places": the names this step has just removed must leave it too. After the step's commit.
   if (counts.volunteers > 0) revalidatePublicContent("places");
+
+  /*
+    The raffle's sign-ups (§NNN): who signed up for an event's raffle, the name typed on the form, the rules' acceptance with its trace
+    or its recorder — kept to hold the draw and as proof of the acceptance. Deleted thirty days after the event's start, as the volunteers'
+    offers are, and the privacy notice's sections 5 and 7 say so; the row's own age is asked too, so one wrong year typed in the editor
+    never takes a sign-up of yesterday. A row the step above left without its volunteer went with it already (`ON DELETE CASCADE`), as
+    one of a registration erased or swept goes with it. Nothing public shows a sign-up, so no cache needs telling.
+  */
+  await step("event-raffle-entries", async (tx) => {
+    const cutoff = daysBefore(now, RETENTION.raffleDaysAfterEvent);
+    const over = tx.select({ id: events.id }).from(events).where(lt(events.startsAt, cutoff));
+    const deleted = await tx
+      .delete(eventRaffleEntries)
+      .where(and(inArray(eventRaffleEntries.eventId, over), lt(eventRaffleEntries.createdAt, cutoff)))
+      .returning({ id: eventRaffleEntries.id });
+    counts.raffleEntries = deleted.length;
+  });
 
   /*
     A race's results (§808): a result row holds a race number, a time, the positions and the category — the sex and the age band of a

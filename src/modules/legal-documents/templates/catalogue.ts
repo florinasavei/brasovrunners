@@ -5,6 +5,7 @@ import { type ClubFacts, fillClubFacts } from "./club-facts";
 import { declarationRoadEn, declarationRoadRo, declarationTrailEn, declarationTrailRo } from "./declaration";
 import { groupRunAsphaltEn, groupRunAsphaltRo, groupRunTrailEn, groupRunTrailRo } from "./group-run-declaration";
 import { privacyNoticeEn, privacyNoticeRo } from "./privacy-notice";
+import { raffleRulesEn, raffleRulesRo } from "./raffle-rules";
 import { termsEn, termsRo } from "./terms";
 import { volunteerAgreementEn, volunteerAgreementRo } from "./volunteer-agreement";
 
@@ -62,6 +63,11 @@ export const LEGAL_TEMPLATES: Record<LegalDocumentKey, Record<Locale, { title: s
   VOLUNTEER_AGREEMENT: {
     ro: { title: "Contract de voluntariat", body: volunteerAgreementRo },
     en: { title: "Volunteer agreement", body: volunteerAgreementEn },
+  },
+  // «Regulamentul tombolei» (§NNN): what a person accepts to sign up for an event's raffle in the sign-up mode.
+  RAFFLE_RULES: {
+    ro: { title: "Regulamentul tombolei", body: raffleRulesRo },
+    en: { title: "Raffle rules", body: raffleRulesEn },
   },
 };
 

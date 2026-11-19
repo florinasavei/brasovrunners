@@ -55,6 +55,9 @@ import HiddenListChip from "@/modules/registrations/ui/HiddenListChip";
 import HiddenListRadio from "@/modules/registrations/ui/HiddenListRadio";
 import RegistrationStatusChip from "@/modules/registrations/ui/RegistrationStatusChip";
 import { familyOf } from "@/modules/registrations/family-marker";
+import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
+import { readRaffleLine } from "@/modules/volunteers/raffle-roster";
+import { raffleRegistrationLine } from "@/modules/volunteers/ui/RaffleLines";
 import { canKeepRegistrationNotes, canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { listRegistrationNotes } from "@/modules/registrations/notes";
 import NotesCard from "@/modules/registrations/ui/NotesCard";
@@ -172,6 +175,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // The members' race number (§664): «Număr de membru» when the row prints one — by the one rule the sheet prints by
   // (§972, `PRINTS_MEMBER_BIB`): the event offers it, the person ticked «Sunt membru», not «Elită». No account is read for it.
   const memberBib = registration.memberBib;
+  // The raffle's line (§NNN): for the organizers (`canTakeRaffleList`), at an event that holds one — a test registration takes no part.
+  const raffle = canTakeRaffleList(actor) ? await readRaffleLine(db, { table: "registration", id }, timelineNow) : null;
 
   const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns, family, partnerShares, invitedBy, notes, emailTries] = await Promise.all([
     listDeclarationAcceptances(db, id),
@@ -559,6 +564,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {membership && (
           <MemberChip membership={membership} label={tr(`registrations.member.${membership}`)} hint={tr(`registrations.member.${membership}Hint`)} />
         )}
+        {/* The raffle (§NNN): whether the person takes part, for the organizers, at an event that holds one — the one answer's words. */}
+        {raffle && (await raffleRegistrationLine({ line: raffle }))}
       </Stack>
       {/* Where this person is, as steps (§145): the same derivation the list's "Etapă"
           column uses, so the page never contradicts the row that led here. */}

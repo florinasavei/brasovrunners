@@ -185,6 +185,9 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   "newsletterNotFound",
   // «Dezabonează» on a row the person had already left, or a second press (§550).
   "newsletterUnsubscribedGone",
+  // «Înscrie la tombolă» on a person signed up already, and a raffle tick pressed as it already stood (§NNN).
+  "raffleAlready",
+  "raffleUnchanged",
 ]);
 
 /**

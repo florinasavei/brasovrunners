@@ -15,6 +15,8 @@ import {
   FEEDBACK_FORMS_NAMED_MERGE_FIELD,
   FEEDBACK_SAFETY_GMAIL_MERGE_FIELD,
   RELAY_QUEUE_MERGE_FIELD,
+  RAFFLE_GROUPS_MERGE_FIELD,
+  RAFFLE_MERGE_FIELD,
   MEMBERS_SHOP_MERGE_FIELD,
   VOLUNTEERS_MERGE_FIELD,
   VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD,
@@ -49,6 +51,7 @@ import { eventInvitationsClause } from "@/modules/registrations/invitation-words
 import { feedbackFormsClause, feedbackFormsNamedClause, feedbackSafetyGmailClause, relayQueueClause } from "@/modules/feedback/notice-words";
 import { membersShopClause } from "@/modules/content/shop/notice-words";
 import { volunteerAgreementClause, volunteerMinorsClause, volunteerProfileClause, volunteersClause, volunteersListClause } from "@/modules/volunteers/notice-words";
+import { EVERY_RAFFLE_GROUP, raffleClause, raffleGroupsPhrase } from "@/modules/volunteers/raffle-words";
 import { resultsClause, resultsNameAskClause } from "@/modules/results/notice-words";
 import { rsvpAskAnswerersClause, rsvpAskClause, rsvpClause, rsvpMemberClause } from "@/modules/rsvp/notice-words";
 
@@ -357,6 +360,20 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${VOLUNTEERS_LIST_NOTICE_MERGE_FIELD}}}`,
     messageKey: VOLUNTEERS_LIST_NOTICE_MERGE_FIELD,
     example: inBoth((locale) => volunteersListClause(locale)),
+  },
+  // «Regulamentul tombolei»'s blank (§NNN): who may take part, the groups the event ticks, filled when the person accepts — the
+  // example is every group ticked, the default.
+  {
+    token: `{{${RAFFLE_GROUPS_MERGE_FIELD}}}`,
+    messageKey: RAFFLE_GROUPS_MERGE_FIELD,
+    example: inBoth((locale) => raffleGroupsPhrase(EVERY_RAFFLE_GROUP, locale)),
+  },
+  // The privacy notice's marker for the raffle's sign-up (§NNN): the public form's name, and — with «Regulamentul tombolei» in force —
+  // the switch: no door of the sign-up opens until the notice in force names it (`describesRaffle`).
+  {
+    token: `{{${RAFFLE_MERGE_FIELD}}}`,
+    messageKey: RAFFLE_MERGE_FIELD,
+    example: inBoth((locale) => raffleClause(locale)),
   },
 ];
 

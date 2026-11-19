@@ -1,6 +1,7 @@
 import { and, desc, eq, isNull, lte, sql } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
+import { eventRaffleEntries } from "@/db/schema/event-raffle-entries";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import {
@@ -22,6 +23,7 @@ import {
   describesFeedbackFormsNamed,
   describesFeedbackSafetyGmail,
   describesRelayQueue,
+  describesRaffle,
   describesMembersShop,
   describesVolunteerAgreement,
   describesVolunteerMinors,
@@ -493,6 +495,27 @@ export async function noticeDescribesVolunteerAgreement<T extends Record<string,
 export async function volunteerAgreementInForce<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const versions = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "VOLUNTEER_AGREEMENT", locale, now)));
   return versions.every((version) => version !== undefined);
+}
+
+/**
+ * Whether «Regulamentul tombolei» is in force in every language (§NNN): half of the raffle's sign-up gate (`raffleSignUpGate`) and
+ * what `/admin/tasks`' row `raffleRules` reads. Every language, as the volunteer agreement: a person accepts in the language of the
+ * page, and a sign-up open in one language only would refuse half its visitors. A public page asks the cached twin
+ * (`cachedRaffleRulesInForce`).
+ */
+export async function raffleRulesInForce<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const versions = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "RAFFLE_RULES", locale, now)));
+  return versions.every((version) => version !== undefined);
+}
+
+/**
+ * Whether the privacy notice in force describes the raffle's sign-up (§NNN, `describesRaffle`) — in every language. The other half of
+ * the sign-up's gate, asked again by every door at every press; the event page and the form's page read the cached twin
+ * (`cachedRaffleDescribed`).
+ */
+export async function noticeDescribesRaffle<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesRaffle(notice.body));
 }
 
 /**
@@ -1061,12 +1084,14 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       // Every signature against this version: a race's acceptances, a group run's optional
       // self-declarations (§393), a volunteer's accepted agreement (§758) and a guardian's (§768: the version
       // in force when the parent pressed, which may not be the volunteer's own) — each is somebody
-      // relying on these exact words, and the guardian's column is a RESTRICT foreign key too.
+      // relying on these exact words, and the guardian's column is a RESTRICT foreign key too. A raffle sign-up's acceptance of
+      // «Regulamentul tombolei» (§NNN) is one more: its column is RESTRICT as well, so the version is never deleted under it.
       acceptanceCount: sql<number>`(
         (select count(*)::int from ${declarationAcceptances} where ${declarationAcceptances.legalDocumentId} = ${legalDocuments.id})
         + (select count(*)::int from ${groupRunDeclarations} where ${groupRunDeclarations.legalDocumentId} = ${legalDocuments.id})
         + (select count(*)::int from ${eventVolunteers} where ${eventVolunteers.agreementDocumentId} = ${legalDocuments.id})
         + (select count(*)::int from ${eventVolunteers} where ${eventVolunteers.guardianDocumentId} = ${legalDocuments.id})
+        + (select count(*)::int from ${eventRaffleEntries} where ${eventRaffleEntries.rulesDocumentId} = ${legalDocuments.id})
       )`,
       eventCount: sql<number>`(select count(*)::int from ${events} where ${events.declarationDocumentId} = ${legalDocuments.id})`,
       // Matched on the version *number*, per key, because that is the only shape this reference
