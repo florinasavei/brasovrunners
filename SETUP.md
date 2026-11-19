@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.66-2026-11-18 -->
+<!-- PROJECT_BASELINE: BR-V4.67-2026-11-19 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V4.66-2026-11-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.67-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1132,14 +1132,17 @@ the project id from the project's **Settings → General → Project ID** (`prj_
 
 Every desk verb (BR-REQ-037-08) is open to the lowest role, so a volunteer is a **Voluntar**
 (`CONTRIBUTOR` in the database; since `DECISIONS.md` §103 that role is the desk and nothing
-else, and `/admin` takes them straight to it).
+else, and `/admin` takes them straight to it). The finish line is the desk's too since §986:
+a Voluntar records finishers on **Ziua cursei → Cronometrare** and undoes their own press for
+ten minutes; «Start», «Clasament» and its corrections stay the Organizer's and the Administrators'.
 Sign-in is Zitadel plus the `staff_users` allowlist (§25), so a volunteer needs both:
 
 1. Zitadel console → **Users** → **New** — email (theirs, or a club address for a shared desk
    account such as `voluntar@<club domain>`), a name, an initial password; untick "email
    verification required" if the address is the club's. Repeat per volunteer.
 2. Site → **Echipa** (`/admin/staff`, Superadministrator) → add the same email with the role
-   **Colaborator**. The name typed here is what the audit trail shows on every check-in.
+   **Colaborator**. The name typed here is what the audit trail shows on every check-in — and on
+   every finish they record («introdus de …» on «Cronometrare» and «Clasament», «Istoricul sosirilor»).
 3. Hand them the guide: **Ghid** in the backoffice bar, first section — and have them open
    **Ziua cursei** on their phone once, the day before, so sign-in is already done.
 
@@ -2536,13 +2539,16 @@ enter them; **only the Administrator and the Superadministrator make them public
    colleague saved is refused («Altcineva a salvat între timp. Reîncarcă pagina…») rather than written over theirs. **«Șterge»** on a line is its own press and asks first.
    «Descarcă clasamentul (CSV)» is the file with the names as the backoffice sees them; the download is recorded in the trail, without a name.
 5. **«Clasamentul e public pe pagina evenimentului»** (the Administrator's tick, with its own «Salvează», asks first): off for every event. It
-   only works **after the race has started** (you may type the results before) and under the notice and terms of step 1. The public read —
+   works under the notice and terms of step 1, and **may be ticked before the race** (§985): the card then says **«Public de la start»** with the
+   start's day and hour, and the site shows nothing until the start; from the start every result you save appears, and while the race runs
+   (until its end, or six hours after the start when it has none) the open page refreshes itself every 30 seconds — a page opened before the first
+   finish too, which shows it at its next refresh, and one opened before the start, which asks nothing until the start and then does the same. The public read —
    `readPublicEventResults` — shows a name **only for a registered runner who ticked, whose registration is confirmed, who is not a special
    guest the event hides, and who registered under a notice that described the results**; a runner the club typed by hand is named only while
    the staff's record of their agreement stands (step 3), and otherwise appears as «Participant #număr». **What the event's page shows, and when.** Under «Cine vine» a card **«Clasament»**
    (`#clasament`, open when the page opens) with one row per result: the place, the race number, the name or «Participant #număr», the time (the chip
    time in a line under it, when you typed one) and the category with the place in it; the runners who did not finish come last, with «Abandon»,
-   «Neprezentat» or «Descalificat» and no place. A line says when it was published and until when it stays on the page (the day and the hour) — the same period as the public
+   «Neprezentat» or «Descalificat» and no place. A line says when it was published (the start, when it was ticked before it) and until when it stays on the page (the day and the hour) — the same period as the public
    list, counted from the end of the race («Setări» → «Termene»). A visitor can tick a category or type part of a race number to narrow the table
    (the table shows every row without a script). The card appears **only while all of these hold** — the tick is on, the race has started, the notice and
    the terms in force name `{{results}}` in both languages, **the race's start hour was announced** (a race still saved with «Ora se anunță» has no
@@ -2574,15 +2580,38 @@ enter them; **only the Administrator and the Superadministrator make them public
    **before** you publish the ranking, or say on the page that they changed: a runner's place in the category can move. The Excel of the
    registrations keeps the platform's groups in its «Statistici», whatever a race chose.
 
-8. **«Sosire» — the finish line on a phone (§850).** «Clasament» → «Sosire». The page shows the gun («Startul») and a clock since
-   it. As each runner crosses, type the race number and press «Sosit»: the site stamps the time since the gun — the race's own start
-   when you stated one in «Când și unde», else the event's start — to the second, as the runner's «Sosit», and the page comes back
-   with the box empty, a sentence naming who and what time, and «Ultimii sosiți», the latest press first. Refused in place, the number
-   kept in the box: a number no confirmed registration holds (the sentence carries the time — write it down, type the runner later under
-   «Alergători neînscriși»), a number already finished (corrections are «Clasament»'s), a press before the gun or more than a day after
-   it. A runner marked «Abandon» or «Neprezentat» by mistake becomes «Sosit» when their number is typed. The Organizer and the
-   Administrator may use it; a published ranking shows each finisher at once. The paper sheet and the CSV import (steps 2–3) remain the
-   backup.
+8. **«Cronometrare» — the finish line on a phone (§850, §986).** «Ziua cursei» → **«Cronometrare»** (`/admin/checkin/cronometrare`;
+   the link «Cronometrare» on «Clasament», and the old «Sosire» address, open it with the race chosen). Every role that works the desk
+   may record finishes — the desk Volunteer too (SETUP §34) —; «Start», «Clasament» and its corrections stay the Organizer's and the
+   Administrators'.
+   - **«Start».** At the gun an Organizer presses **«Start»**: the times count from that moment. Without it they count from «Startul
+     cursei» in «Când și unde», else the event's start. It shows from three hours before the planned start to six after; pressed early
+     or late, press «Mută startul acum» at the right moment — more than ten seconds after your first press: one within ten seconds is
+     taken for the same press, sent twice — or «Anulează startul» (it asks) — both only until the first finisher, after which the start
+     is fixed and a correction is «Clasament»'s. If another organizer gave the start first, your page's «Start» moves nothing: the page
+     says who gave it and when, and offers «Mută startul acum» only from then on.
+   - **The elites first:** a big button per elite — a registration marked «Elită» with a race number, and a line of the elite list with
+     a number — the bib's label large and the full name under it; press it as the elite crosses. A line with no number is drawn
+     disabled: give it a number on the elite list (the bib still prints none). An elite already in shows «✓» and the time.
+   - **Everyone else:** type the number on the bib and press «Sosit» (or Enter); the box empties at once for the next number. Several
+     at once: «Prinde timpul» once for each, then the numbers in order — each takes the oldest caught time. Every press is saved at
+     once with the moment it was pressed, on the site's clock (a phone whose clock is wrong, or whose screen locked, still stamps
+     right); without signal it waits on that phone and goes by itself, and a reload sends what is left — by the account that pressed
+     it: on a phone another volunteer signs into, their presses stand unsent with the time to write on paper. A press the site answers
+     it could not save waits too and is sent again by itself, the next ones going meanwhile; presses waiting under another race are
+     named at the top of the page, with a link to that race's page, which alone sends them. «Site-ul a fost actualizat» means reload
+     the page; nothing pressed is lost.
+   - **What a line says:** saved, with the place; «#123 era deja trecut de <nume> la <timp>» for a number somebody entered first — the
+     first time stays, the second is kept in «Istoricul sosirilor»; «#123 e trecut «Descalificat» …» for a runner «Clasament» decided —
+     the decision stays, the press is kept in the history; a refusal with the time to write on paper (a number nobody confirmed holds —
+     type the runner later under «Alergători neînscriși» —, a press before the start, or one more than a day after it).
+   - **«Ultimii sosiți»** names who entered each line; **«Anulează»** takes back your own press for ten minutes, while nobody changed
+     it and nobody entered the number again after you (the line then says «Clasament» corrects it). After that, and for anybody else's,
+     correct it on «Clasament», whose fold **«Istoricul sosirilor»** lists every write with who and when, and whose lines each say
+     «introdus de …» or «modificat de …».
+   A runner marked «Abandon» or «Neprezentat» by mistake becomes «Sosit» when their number is pressed — not «Descalificat», and not a
+   press made before you wrote the runner off (a phone that had no signal): those stay as you decided. A published ranking shows each
+   finisher at once. The paper sheet and the CSV import (steps 2–3) remain the backup.
 
 
 ## 46. Răspunsurile „Vin!” — let people say they are coming to a turn-up event, and show how many
@@ -2654,3 +2683,53 @@ turns on event by event. Three steps are the club's: the notice (1), the tick (2
    - **When.** «Setări» → «Termene» → the fold «Înainte de start»: «Întrebarea „Vii?” pleacă înainte de start cu (zile)» — 0 to 7, **1** by default, and **0 means never** (the fold's closed line then reads «„Vii?” nu se trimite») — and «Întrebarea „Vii?” pleacă de la ora» — 0 to 23 on the club's clock, **8** by default (0 is midnight). The email leaves at the job's first run at or after that hour on that calendar day, and says the day in words («mâine», «poimâine», «peste 3 zile»; in the club's own words for the email it is the field `{rsvpAskDay}`, never a «mâine» typed by hand). The «Vin» button lives until the event's start, however many days ahead it went. Change it and a question already queued but not yet sent follows the new numbers at its send; one that no longer fits is dropped, never sent late.
    - **To whom.** «Setări» → «Emailuri» → «Cui îi trimitem întrebarea „Vii?”» — three radios: the newsletter's subscribers of the topic (**the default**), the people who answered «Vin!» at an earlier date of the same series (a weekly run's earlier Sundays; an answer is kept thirty days after its date, so about the last month), or both (one email each; someone on both lists is asked as a subscriber; a «Vin» pressed in a subscriber's question counts as an earlier answer only while that address still receives the topic, so someone who unticked the topic is not asked through this list). **The second audience is gated twice.** First, the privacy notice: approve it again from the template (`/admin/legal` → the «GDPR» card → «Regenerează din șablon»; a lawyer reads the new sentences in section 5's «Vin!» paragraph and section 7's line about refusals first). The marker `{{rsvpAskAnswerers}}` is the switch and it is silent in every notice approved before it: until a notice that names it is in force in both languages, nobody of that audience is asked, whatever the club chose, and `/admin/tasks` carries the row `rsvpAskAnswerersNotice` while the choice is ANSWERERS or BOTH. An answer given under an older notice is never asked again (it agreed to being counted, not to being asked). Second, each person: every such email carries **«Nu mă mai întreba la seria aceasta»**, a link to a page with one button (opening it records nothing; the press does, once). The link does not depend on the answer: it still works after «Nu vin» in the same email and after the event, until sixty days after the start. The refusal is kept as the address's canonical form and the series' key, nothing else, for as long as the series lives and a year after its last date; it holds for both lists, shows in «Date despre persoană», and is not erased with the answers (forgetting it would ask the person again; the links, which hold the address, are erased). «Date despre persoană» names the refused series by its type and the title the club wrote.
    - **Which events.** The event editor's «Vin!» block, under «Acceptă răspunsuri „Vin!”»: the tick «Trimite emailul „Vii?” înainte de această dată» — **on** by default for every event; unticked, that date is never asked (its «Vin!» still works). Its help says, in the club's own numbers, who gets the email, how long before the start and from what hour (read from «Termene» and «Emailuri», with a link to each), with 0 days it says the email is off and draws the tick disabled, and while the privacy notice in force does not describe the email (or, for the earlier answerers, that use) it says the email does not leave yet instead of promising it. It is carried by a series, by «Duplică» and by the event's JSON file (written only when off).
+
+## 47. Tombola cu înscriere separată — a raffle only those who sign up are in
+
+An event's raffle (`DECISIONS.md` §949) is **«Din oficiu»** by default: everybody of the groups the club ticks — the confirmed runners
+with a race number, the race's elites, the confirmed volunteers with a number — is in it, nobody signs anything, and the organizers take
+out whom they like. **«Cu înscriere separată»** (`DECISIONS.md` §984; the owner, 2026-11-18: «Dar pentru tombolă trebuie să am o înscriere
+separată») puts in only those who sign up, each accepting the club's «Regulamentul tombolei». It **stays shut until two texts are in force
+in both languages** — the rules and a privacy notice that describes the sign-up — so the club's steps are 1 and 2, once, then 3 per event.
+An agent never approves either text.
+
+1. **Write and approve «Regulamentul tombolei» — a lawyer reads it first.** `/admin/legal` → the card «Regulamentul tombolei» →
+   «Regenerează din șablon» → confirm. The platform's text has nine sections: the organiser, who may take part (the groups the event
+   ticks, filled in by itself — the elites are «sportivii de top ai cursei» there, the mark «Elită» being the organizers' own), how to sign up (the three ways), the draw (at the event, at the announced time, among those signed up,
+   the winner present), the prizes (as the organizers announce them), the winners (no name online without the person's agreement), the
+   data (pointing to the privacy notice), withdrawal, disputes. Type the club's facts where a `<…>` stands — the approval refuses a
+   text that still holds one —, «Salvează ciorna», then «Aprobă și publică», in **both** languages. The lawyer's questions are written at
+   the top of `src/modules/legal-documents/templates/raffle-rules.ts` (a prize above the tax-free threshold; a minor taking part;
+   whether a free raffle's rules must be lodged anywhere). Until a version is in force in both languages `/admin/tasks` carries the row
+   «Regulamentul tombolei» while an event asks a sign-up.
+2. **Approve a privacy notice that names the raffle's sign-up.** `/admin/legal` → the «GDPR» card → «Regenerează din șablon» → confirm.
+   Section 5 gains the paragraph «Tombola („Înscrie-te la tombolă”)» — what a sign-up keeps (who the person is for the raffle, the name
+   typed on the form, whether a volunteer, the rules' acceptance with its trace or the staff member who recorded it, the notice's
+   version), why, the basis (the taking part, art. 6(1)(b), and the proof, art. 6(1)(f) — **the lawyer reads that sentence first**),
+   who sees it (the organizers and the administrators), no email, how to withdraw — and section 7 the line «Înscrierile la tombolă:
+   30 de zile de la începutul evenimentului». Read, «Salvează ciorna», «Aprobă și publică», both languages. The marker is `{{raffle}}`;
+   until a notice naming it is in force in both languages `/admin/tasks` carries the row «Nota de confidențialitate: înscrierea la
+   tombolă» while an event asks a sign-up.
+3. **Set the event** (an Administrator: the event's save is theirs, §542). `/admin/events` → the race → «Numere de concurs» → «Avem
+   tombolă», then, under it: **«Cine poate participa la tombolă»** — «Alergătorii», «Elitele», «Voluntarii», all ticked by default; they
+   decide in both modes —, **«Cum participă»** → «Cu înscriere separată: doar cei care se înscriu», and **«Înscrierile la tombolă sunt
+   deschise»**. Save. None of the four travels to a series' other dates, a copy or the event's file.
+4. **What people see, while it is open.** The event's page has one line and one button, «Înscrie-te la tombolă», to the raffle's page
+   (`/evenimente/<slug>/tombola`, `/en/events/<slug>/raffle`): the race number, the name as at registration, «Sunt voluntar» (then the
+   volunteer's own number) while the volunteers may take part, the rules in a fold and «Am citit și accept Regulamentul tombolei». A
+   number and a name that do not belong together get one neutral sentence; a person already in reads the thank-you again; nobody is
+   emailed. On «Gestionează înscrierea» (the link in every email) a confirmed runner with a number has a «Tombola» card: the rules, the
+   tick, «Particip la tombolă», and once in, «Nu mai particip». At the desk, every volunteer sees «Tombolă: participă / nu participă» under
+   each person the search finds (and on a scanned person's view) and signs them up with «Înscrie la tombolă», having heard the person
+   accept the rules (or read them a paper copy) — never a person the organizers took out: putting them back is the organizers' own tick. A runner turned volunteer, or back, keeps their sign-up. A line
+   of the race's elite list has no number and no link: the organizers sign it up on the «Tombolă» tab.
+5. **On race day:** «Ziua cursei» → **«Tombolă»** (the Organizer and the Administrators): everybody of the three groups with «Participă: Da»
+   or «Nu» and why, how and when each signed up, «Prezent», the counts, the filters «Participă», «Nu participă», «Doar prezenții», the
+   presses «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» and an elite line's «Prezent», and the two files. **At the draw,
+   untick «Înscrierile la tombolă sunt deschise»** in the editor, then take «Lista pentru tombolă» (or «— doar prezenții») and draw from it.
+6. **The fallback is «Din oficiu».** If the two texts are not approved in time, leave «Cum participă» at «Din oficiu» (or set it back):
+   the raffle is the one the club had — the ticked groups, confirmed with a number, minus whom the organizers took out — and nothing
+   else is asked of anybody. Sign-ups already made are kept until their thirty days; they count again if the event goes back to the
+   sign-up mode.
+7. **The data.** A sign-up is deleted thirty days after the event's start by the nightly sweep, or with its registration or offer;
+   «Toate datele unei persoane» lists it. It is in no email, on no public page or list and on no badge.

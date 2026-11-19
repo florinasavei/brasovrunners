@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.66-2026-11-18 -->
+<!-- PROJECT_BASELINE: BR-V4.67-2026-11-19 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.66-2026-11-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.67-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -956,6 +956,8 @@ Logical/public route mapping includes:
 /events/[slug]                  /ro/evenimente/[slug]       /en/events/[slug]
 /events/[slug]/register         /ro/evenimente/[slug]/inscriere
                                 /en/events/[slug]/register
+/events/[slug]/tombola          /ro/evenimente/[slug]/tombola
+                                /en/events/[slug]/raffle    (§984: a 404 while the raffle's gate is shut, §15.11)
 /races                          /ro/curse                    /en/races
 /news/[slug]                    /ro/noutati/[slug]           /en/news/[slug]
 /gallery/[slug]                 /ro/galerie/[slug]           /en/gallery/[slug]
@@ -1111,9 +1113,9 @@ sees them as Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadmini
 `staff-labels.ts`):
 
 ```text
-CONTRIBUTOR  the volunteer: the race-day desk and the guide, nothing else
+CONTRIBUTOR  the volunteer: the race-day desk — a person's raffle sign-up there included, the person having accepted its rules (§984) —, the finish line «Cronometrare» — a finish recorded, one's own press undone for ten minutes (`canRecordFinishes` = `canWorkTheDesk`, §986, §10.11) — and the guide, nothing else
 COPYWRITER   the words of any event and any page, at any status; submit a draft for review
-MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs — and tick the raffle on a registration, the one thing it changes there (`canSetRaffleMark`, §949); the messages; enter, import and rank a race's results (`canEnterResults`, §808)
+MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs — and tick the raffle on a registration, the one thing it changes there (`canSetRaffleMark`, §949), and keep the raffle on «Ziua cursei» → «Tombolă» — the sign-ups it records, «Șterge înscrierea», the organizers' exclusion and an elite line's raffle and «Prezent» ticks (`canTakeRaffleList`, §984); the messages; enter, import and rank a race's results, press «Start» at the gun and read «Istoricul sosirilor» (`canEnterResults`, §808, §986)
 DEV          + the configuration report (/devs). No participant data — and, by §289, not the list either
 ADMIN        + every event (create, configure, publish, cancel, a series: `canEditEventFields`, §542), changing a registration, legal texts, emails, tasks, delete an event, make a race's results public (`canPublishResults`, §808)
 SUPERADMIN   + staff administration: the list itself, and every role on it
@@ -1501,7 +1503,7 @@ V1 internal registration requires approved declaration version.
 - acceptance requires explicit checkbox + typed full name, which must be the declarant's own — the registered name, or the parent's or guardian's for a minor — compared after folding case, whitespace, diacritics, typographic punctuation and invisible characters, and refused otherwise before anything is recorded (`DECISIONS.md` §314);
 - acceptance requires the registration to hold every answer the public form requires of that person (`registrations/missing-answers.ts`, read off the form's own schema) — a staff entry or a line of the internal list moved onto the official one holds a name and an address, so the declaration's page asks the rest above the signature and saves them as the person's own in the signature's transaction; `signDeclaration` refuses any signature while one is missing, naming them. Never filled in by default and never by staff for the person; after a confirmation the manage link completes them, the declaration untouched (`DECISIONS.md` §905). On a staff row, while no declaration is signed, the same page draws the name the club typed, prefilled, for the person to check and correct as on the form; it is saved in that same transaction, and the signature is checked against the name it leaves — never from the manage link, never on a public row, never under a signed declaration (`DECISIONS.md` §907);
 - acceptance stores version/hash/locale/name/server timestamp;
-- no raw IP/user-agent stored by default — the one exception is the trace of an **electronic** signature (§771, the owner, 2026-10-14): the caller's IP address and browser at the moment the typed name was posted (`declaration_acceptances.ip` / `user_agent`, and the same on a group run's declaration and on the volunteer agreement's and its guardian's acceptance), written only at an electronic acceptance (the race's email link, a group run's page, the volunteer's form or link, the guardian's link) — never with `PAPER`, whatever the caller passes (`signature-trace.ts#traceColumns`) —, read from the request's headers by the action (`readSignatureTrace`, never a form box), kept as long as the row and deleted with it, printed small under the signature of the PDF, listed in «Toate datele unei persoane», and named in the privacy notice's template (the declaration's, the group run's and the volunteers' paragraphs);
+- no raw IP/user-agent stored by default — the one exception is the trace of an **electronic** signature (§771, the owner, 2026-10-14): the caller's IP address and browser at the moment the typed name was posted (`declaration_acceptances.ip` / `user_agent`, and the same on a group run's declaration, on the volunteer agreement's and its guardian's acceptance, and on a raffle sign-up's acceptance of «Regulamentul tombolei», `event_raffle_entries`, §984), written only at an electronic acceptance (the race's email link, a group run's page, the volunteer's form or link, the guardian's link, the raffle's card on the manage link and its public form) — never with `PAPER`, nor at the desk or by the organizers, whatever the caller passes (`signature-trace.ts#traceColumns`) —, read from the request's headers by the action (`readSignatureTrace`, never a form box), kept as long as the row and deleted with it, printed small under the signature of the PDF, listed in «Toate datele unei persoane», and named in the privacy notice's template (the declaration's, the group run's and the volunteers' paragraphs);
 - staff cannot sign on participant's behalf;
 - do not label as qualified electronic signature;
 - exact wording/effect approved by human/legal owner;
@@ -1571,6 +1573,23 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
   the row and in the audit trail (`event_results.name_agreed_at`, `publicResultName`), and never when
   a confirmed registration holds the number: a registered runner's name follows their own tick, never
   a staff mark;
+- a race's results may be ticked public before the race (§985, the owner, 2026-11-18: «public from the
+  start»): «Clasament» says «Public de la start» with the start's day and hour, and nothing is shown
+  before the event's start — the public read, the cached read, the section, the listing's chip and the
+  page's hold all wait for `startsAt` (`results/domain/results-open.ts#resultsOnShow`,
+  `resultsClockInstants`); from the start every stored row shows as it is saved, the «Publicat …» line
+  naming the start (`domain/from-start.ts`). While the race runs — the start until its end, or six hours
+  for a race saved without one (`domain/live-window.ts`) — `ResultsLiveRefresh` refreshes the open page
+  every 30 seconds while the tab is visible and stops at the window's end, decided from the event's row
+  alone (the tick as saved, `resultsTicked`), so a page opened before the first finish refreshes too,
+  silently, and a page opened before the start carries it hidden and armed to the start, asking nothing
+  until then (one timer, re-armed at most once a day): the one public island that asks the server again
+  on a timer (§577), named in `tests/unit/config/idle-client.test.ts`. A
+  refresh is a CDN request for an anonymous visitor at the bare address, but a full server render each
+  time for a signed-in tab or an address with a query the page reads (the live twin, §549). Who is
+  named does not change; «Clasament»
+  says why a line is «Participant #…» from the same input (`domain/public-name-reason.ts`, one rule with
+  `publicResultName`);
 - a race's elite runners (§910, the owner, 2026-11-04: per elite, «Apare în clasament» and «Apare pe
   site»): a registration marked «Elită» (§897) is named by its own tick and nothing else — the
   Administrator's «Apare pe site» on it only hides. Unticked (`registrations.elite_hidden_from_site`,
@@ -1602,6 +1621,94 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
   (to keep a minor off) and nothing else;
 - `tests/privacy/public-surface.test.ts` is where these are asserted. That file may be extended
   and MUST NOT be weakened.
+
+### 10.11 The finish line: «Cronometrare»
+
+A race's finishers are recorded at the line on «Cronometrare» (`/admin/checkin/cronometrare`, the third of «Ziua
+cursei»'s tabs — «Prezența», «Clasament», «Cronometrare», «Tombolă», «Lucruri de adus», a row that scrolls on a phone —,
+`DECISIONS.md` §986, in the place of §850's «Sosire», whose address now sends its reader on). The results
+themselves are §808's: one row per race number, ranked from the live answers, published only by an Administrator.
+
+- **Who.** Every staff role that works the desk records a finish and undoes its own press (`canRecordFinishes`, defined
+  as `canWorkTheDesk`: the desk Volunteer included, never a member); «Start», «Clasament», its corrections, its deletes,
+  its import and «Istoricul sosirilor» stay `canEnterResults`' (the Organizer and the Administrators). Asserted at the
+  page, at each action's door and again in the service (BR-REQ-060-01). The page shows a number, a name and a time —
+  what the desk already shows — never an address.
+- **The gun.** `results.ts#gunOf` = `events.race_gun_at` (the «Start» an organizer pressed, `setRaceGun`) ?? the planned
+  `race_starts_at` ?? `starts_at`, read by the results alone — the public page, the checkpoints' limits, the emails,
+  iCal and the editor keep the planned times. «Start» may be pressed from three hours before the planned gun to six
+  after (`RACE_GUN_WINDOW`), moved by a second press and taken off by «Anulează startul» only while no «Sosit» result is
+  stored (`RACE_GUN_FIXED`); its moment is the tap when the server hears it at most ten seconds later (and at most five
+  seconds ahead of its clock), else the server's own (`raceGunMoment`). A press is never doubled into a second «Start»:
+  the button is busy while its press is on its way (`ui/RaceGunPress.tsx`), and the organizer's own «Start» heard again
+  within ten seconds of theirs is answered with the gun as it stands, nothing written (`raceGunRepeats`, `?gun=repeat`).
+  A «Start» moves only the gun its page saw: the form says it (`seenGunAtMs`, empty for none), and one whose page saw
+  another than the gun stored — another organizer's press since — is refused (`RACE_GUN_CHANGED`), nothing written, the
+  page drawn again saying who gave the start and when.
+  Audited `event.race_gun_set` / `event.race_gun_cleared` with the instants alone; no email; no public cache.
+- **The clock.** The islands stamp on the server's clock read through the phone's **wall clock** (`Date.now()`, which
+  keeps time while the screen is locked — `performance.now()` does not on most phones) plus an offset measured over a
+  round trip as NTP measures one: the clock's own question as the page wakes (`readFinishClockAction`, again every time
+  it is shown, comes back from the browser's memory or finds its signal) and every answer, each carrying the server's
+  instants at the arrival and at the answer (`domain/finish-line.ts#sampleOfRoundTrip`, `betterSample`;
+  `ui/server-clock.ts`, kept on the phone for half a day). The page's own `now` is read after every read and only seeds
+  it. **The clock's question carries the gun** (`results.ts#readFinishGun`, one query on the event's row behind
+  `canRecordFinishes`, with who pressed «Start» and whether a «Sosit» is stored): «Start» is pressed on the organizer's
+  phone, so a volunteer's page drawn before it learns of it from the next question — asked, besides, every thirty seconds
+  while the page is shown and no finisher is stored on any phone (`FINISH_GUN_ASK_MS`, `gunFixed`), never after —, and
+  the line counts from the newer of that gun and the last press's answer (`lineGun`): the gun's sentence above the clock,
+  «De la start», «Cursa nu a pornit încă» and the paper times of waiting lines follow.
+- **A press.** A number — typed, or an elite's button: a registration marked «Elită» with a number, or a line of the
+  race's elite list, whose press writes a *typed* row with the line's name and number and nothing else of a person —
+  stamped with the moment the island claims (`domain/finish-line.ts#finishStamp`: at least a second, at most the
+  server's own time since the gun plus five seconds, within a day; a claim before the gun is refused as not started,
+  never stamped with its arrival's time; the server's own time only for a claim ahead of its clock, or none), floored to
+  the second; a press arriving more than a day and three hours after the gun is refused whatever it claims
+  (`FINISH_ARRIVAL_GRACE_MS`). The island sends every press at once with its own id (`pressId`), keeps the unsent ones in
+  that phone's `localStorage` for the event (every access in a `try`, the page working without it; every write reads the
+  storage again first and the `storage` event brings another tab's writes in, so a second tab of the event writes over
+  nothing; presses waiting under another event are named on the page, whose page alone sends them) and retries them in
+  order — each the press of the account signed in when it was pressed, sent only from that account's page (the action
+  answers `session` to another's), so the trail never names somebody who did not press. A press the server could not
+  record (`failed`, logged) waits out a backoff while the ones after it go, and is tried again until the server answers
+  it — never given up, a later press of its number waiting behind it; one whose request hangs, neither answered nor
+  failed, is still awaited, and after ten seconds the line says the signal is weak (`FINISH_PRESS_SLOW_MS`); a site
+  deployed under the page asks for a reload. **«⏱ Prinde timpul»** keeps one moment a press, each account its own, each
+  chip saying its age; the next number or elite takes the oldest — but a moment older than ten minutes
+  (`KEPT_TIME_MAX_AGE_MS`, `staleKept`) is no bunch any more: it is dropped when the line is read or pressed, and one
+  line says its time, to be written on paper.
+- **The same number twice.** The first stored wins and its row is never touched (`domain/finish-line.ts#pressMeets`). A
+  retry — the same press sent again, known by its id in the trail's metadata (`results.ts#loadSavedPress`,
+  `domain/finish-line.ts#savedPressOf`) — is answered as it was answered the first time and writes nothing, but a retry
+  whose row is gone since (undone at the line, deleted on «Clasament») is refused `RESULT_PRESS_UNDONE`, «anulat între
+  timp — vezi «Clasament»», never recorded again and never shown saved; only a press with no id (the plain form) is
+  guessed a retry by the same actor at the same second. Any other press of a number already
+  «Sosit» is a duplicate: answered with who stored it and when, and written to the trail as
+  `event_result.finish_duplicate` (`{ bibNumber, gunTimeMs, storedGunTimeMs, storedStatus, storedResultId, finishLine:
+  true, pressId }`, the actor the row's own column), never as a refusal. **A decision of «Clasament» stays** the same way: a row
+  «Descalificat» whoever presses it, and an «Abandon» or a «Neprezentat» written after the moment the press claims — only
+  one written before it (a runner written off by mistake) becomes «Sosit». The event row's lock (`FOR NO KEY UPDATE`)
+  serializes two presses at once; the unique indexes stand behind it (`tests/concurrency/finish-line.test.ts`).
+- **Undo.** «Anulează» deletes a row its viewer's press at the line wrote in the last ten minutes (its
+  `event_result.created` carries `finishLine` and the row's `resultId`), that nobody changed since (`created_at` =
+  `updated_at`, `updated_by_staff_user_id` the viewer) and whose number nobody pressed again since (no
+  `event_result.finish_duplicate` names it: `domain/finish-line.ts#undoTrailOf`, `mayUndo`); it ranks again and audits
+  `event_result.deleted` with `{ …, finishLine: true, undo: true }`. Anything else — a row typed or imported on
+  «Clasament» included — is `RESULT_UNDO_NOT_ALLOWED`, «Clasament»'s, and the viewer's own line says why when the
+  number was pressed again. `writeRanking` never touches `updated_at`, so a re-rank is no change.
+- **The history.** «Istoricul sosirilor», a fold on «Clasament» (`finish-history.ts`), reads every write of the race's
+  results from `audit_logs` joined to `staff_users` — presses, duplicates, undos, «Clasament»'s created, changed and
+  deleted rows, «Start» — newest first, naming who («cont șters» for an account gone) and from where; the trail stores a
+  number and never a runner's name, and the line adds the name the number belongs to today, read live. Each line of
+  «Clasament» says who last wrote it («introdus de» / «modificat de», `event_results.updated_by_staff_user_id`).
+
+MUST NOT: a finish recorded by a member or a page that only hides the box; a second write to a row a duplicate found
+(the first stays); a press turning «Descalificat», or a decision later than its moment, into «Sosit»; an undo that leaves
+a runner another press recorded without a time; a press recorded under another account than the one that pressed it;
+stamping on `performance.now()`; a claim before the gun stamped with its arrival's time; a retry written to the trail a
+second time; a retry recording again a press whose row was undone or deleted since; a press given up for a passing server
+error; a press doubled into a second «Start»; a page left counting from a gun «Start» moved; a kept moment older than ten
+minutes given to a number; the public page, an email or iCal counting from the pressed gun; a runner's name in the trail.
 
 ---
 
@@ -1868,6 +1975,7 @@ events
 - version integer              -- optimistic concurrency for the event row
 - starts_at timestamptz          -- when the event begins; for a race, the gathering
 - race_starts_at timestamptz null -- the gun time, when it differs from the event start
+- race_gun_at timestamptz null    -- «Start» as pressed on «Cronometrare» (§986, §10.11), and race_gun_by_staff_user_id beside it; read by the results alone
 - ends_at timestamptz null
 - timezone text NOT NULL DEFAULT Europe/Bucharest
 - map_url text null              -- the meeting point on a map: the organizer's own link, stored not assembled
@@ -1999,7 +2107,8 @@ declaration. Acceptance evidence hashes the same way for all three.
 ```text
 legal_documents
 - id
-- key PRIVACY_NOTICE|TERMS|EVENT_DECLARATION
+- key PRIVACY_NOTICE|TERMS|EVENT_DECLARATION|EVENT_DECLARATION_ROAD|GROUP_RUN_DECLARATION_ASPHALT
+      |GROUP_RUN_DECLARATION_TRAIL|VOLUNTEER_AGREEMENT|RAFFLE_RULES
 - version integer
 - effective_at
 - is_approved boolean
@@ -2024,6 +2133,19 @@ UNIQUE(legal_document_id, locale)
 A version referenced by an acceptance is immutable. Exactly one approved version per key
 is current at a given time, resolved by `effective_at`. The public legal routes render
 the current approved version for the requested locale.
+
+**«Regulamentul tombolei»** (`RAFFLE_RULES`, 2026-11-18, `DECISIONS.md` §984; added by a migration of its own, `0216`,
+because PostgreSQL cannot use an enum value in the transaction that adds it) is what a person accepts to sign up for an
+event's raffle «Cu înscriere separată» (§15.11): one text for every raffle, the platform's template in both languages
+(`templates/raffle-rules.ts` — the organiser, who may take part, how to sign up, the draw, the prizes, the winners, the
+data, withdrawal, disputes), the club's four facts as visible `<PLACEHOLDER>`s and the event's as merge fields filled at
+the acceptance (`{{event}}`, `{{eventDate}}`, `{{eventLocation}}` and `{{raffleGroups}}`, the groups the event ticks).
+Approved in `/admin/legal` like the volunteer agreement, its own group there; seeded outside production as a sample under
+the not-approved banner (`yarn db:seed:legal` too), never in production. An acceptance keeps the version, the moment, the
+language, `signedTextHash` over the text with its blanks filled and the blanks themselves (`event_raffle_entries`), and is
+one more reliance on the version (`ON DELETE RESTRICT`, counted on the legal list). No door of the raffle's sign-up opens
+until a version is in force in every language **and** the privacy notice in force names `{{raffle}}` in every language
+(`describesRaffle`, `noticeDescribesRaffle`, the cached twins in `public-cache/reads.ts`); «Din oficiu» needs neither.
 
 Writing, and what may be undone (`DECISIONS.md` §46 and §53, BR-REQ-053-02):
 
@@ -2933,13 +3055,32 @@ share the purpose. Steps 3–8 remain M4.
 
 «Lista pentru tombolă» (§948, `volunteers/raffle-list.ts`, `/api/admin/events/[id]/raffle`) is one more such file, for
 one event: everybody who wears a number there — a confirmed registration with a race number, a confirmed volunteer
-with one of the volunteers' series — by the number, as four columns: the number, the name, «Alergător» or «Voluntar»,
-and «Prezent» — whether the desk checked the runner in, empty for a volunteer, whom the desk checks nobody in as (§949:
+with one of the volunteers' series — by the number, as four columns: the number, the name, «Alergător», «Elită» or «Voluntar»,
+and «Prezent» — «Da» or «Nu»: whether the runner was checked in — at the desk, or by «Am ajuns» from their own link — and,
+since 2026-11-18 (`DECISIONS.md` §983), whether
+the organizers ticked the volunteer «Prezent» on the «Voluntari» list (§15.11), where the cell was empty before (§949:
 the raffle is among who is there, and the club filters by it; a column rather than a condition, so a desk that did not
-check everybody in never empties the file). Never a test registration, anybody without a number, a cancelled person, a
-line of the elite list, or anybody an organizer took out («Participă la tombolă» unticked, §15.11), and nothing else
+check everybody in never empties the file). Beside it, never in place of it, a second file: **«Lista pentru tombolă —
+doar prezenții»** (`?present=1`, named `tombola-prezenti-<day>.csv`) — the same people by the same rules, of whom only
+the runners checked in (at the desk, or by «Am ajuns» from their own link), the volunteers ticked «Prezent» and the lines
+of the race's elite list ticked «Prezent» on «Ziua cursei» → «Tombolă», in the same four columns: the organizers' explicit
+second download, on the registrations list beside the whole file and, with one event chosen that holds a raffle, on
+the «Voluntari» list's toolbar with it. Never a test registration, a registration or a volunteer without a number, a cancelled
+person, or anybody an organizer took out («Participă la tombolă» unticked, §15.11), and nothing else
 of a person. Taken by whoever reads the registrations and works the volunteers (the Organizer and the Administrators),
-asserted in the route and the service; recorded as `event.raffle_list_exported` with the two counts, never a name.
+asserted in the route and the service; recorded as `event.raffle_list_exported` with the counts and which of the
+two files it was (`onlyPresent`), never a name.
+
+Since 2026-11-18 (`DECISIONS.md` §984) who is on both files is one answer, the one every raffle screen reads too
+(`volunteers/domain/raffle.ts#raffleParticipation`, through `raffle-roster.ts#readRaffleRosterRows`): of the groups the
+event ticks in «Cine poate participa» — «Alergătorii» (a confirmed real registration with a race number, not marked
+«Elită»; an ambassador runs as a runner), «Elitele» (a registration marked «Elită», and a line of the race's elite list,
+§895, which takes part by name: its number when it has one, else an empty number cell, the numberless lines after the
+numbered ones, by name) and «Voluntarii» (a confirmed volunteer with a number) — everybody not taken out and, on an event
+«Cu înscriere separată», only those who signed up (§15.11). The third column says «Alergător», «Elită» or «Voluntar» — a
+registration marked «Elită» is «Elită» too — and a line's «Prezent» is the organizers' tick on «Ziua cursei» → «Tombolă»;
+the trail row carries the three groups' counts and whether the event asked a sign-up (`signUp`). «Din oficiu» with every
+group ticked — the default — is the file as it was, the elite list's lines added.
 
 ### 15.11 Staff-entered registration and administrative corrections
 
@@ -3105,8 +3246,9 @@ BR-REQ-037-05):
      `registrations.checkin_code`: an identifier, stored in clear, that confers nothing — the
      page it opens is behind staff sign-in.
    - **Who.** Every desk verb is open to every staff role (`canWorkTheDesk`): a volunteer with
-     a phone is a CONTRIBUTOR and the desk is their whole backoffice. The desk shows a name, a
-     state and a number, never an address. **The list, the export and the race numbers are the
+     a phone is a CONTRIBUTOR and the desk is their whole backoffice — a person's raffle sign-up at the
+     desk included (§984, the person having accepted its rules), and the finish line «Cronometrare»
+     beside it (`canRecordFinishes`, §10.11). The desk shows a name, a state and a number, never an address. **The list, the export and the race numbers are the
      Organizer's too since §289** (`canReadRegistrations`, a set that excludes DEV); cancel,
      erase, rename, resend, the printing mark, the elite mark (§897) and the ambassador mark (§948) stay
      Administrator-only (`canManageRegistrations`). Each verb is audited under the volunteer's own id.
@@ -3285,13 +3427,88 @@ authorizes no write; asserted by `setRegistrationRaffleAction` and `raffle-mark.
 «doar adminul și organizatorul pot bifa și vedea asta») — at any
 time and in any state, audited (`registration.raffle_included` / `registration.raffle_excluded`, the new value only).
 **It is the one thing the Organizer changes on a registration** (§289 gave the Organizer the list to read and nothing on
-it to change): the raffle is the organizers' own to run, and the tick moves nothing a registration owns. The «Voluntari» list has the same tick on a volunteer
+it to change): the raffle is the organizers' own to run, and the tick moves nothing a registration owns. Beside it the
+raffle's own rows, not the registration's: the sign-ups the Organizer records, «Șterge înscrierea» and an elite line's
+ticks, on «Ziua cursei» → «Tombolă» (§984, below). The «Voluntari» list has the same tick on a volunteer
 (`event_volunteers.in_raffle`), pressed by whoever works the volunteers (`canManageVolunteers`) and audited as every
 edit of a person's boxes. A tick decides one thing: whether the person's number is written on «Lista pentru tombolă»
-(§15.10), which also says, beside each runner, whether the desk checked them in. Read by those two lists, that file and
-«Toate datele unei persoane»; never by a public page, an email, the desk, a count, another export, the allocator or the
-capacity formula (`tests/unit/registrations/raffle-never-leaves.test.ts`). No state, place, number, email or
+(§15.10), which also says, beside each person, whether they were there — a runner checked in at the desk or by «Am
+ajuns» from their own link, a volunteer ticked «Prezent» (below). Read by those two lists, that file, «Toate datele unei persoane» and the raffle's one answer
+below, which the «Tombolă» tab, the person's pages and the desk (its list and its view of a person) put into words; never
+by a public page, an email, another export, the allocator or the capacity formula (`tests/unit/registrations/raffle-never-leaves.test.ts`). No state, place, number, email or
 declaration moves, and the person is not told.
+
+**A raffle with a sign-up of its own** (2026-11-18, `DECISIONS.md` §984; the owner: «Dar pentru tombolă trebuie să am o
+înscriere separată» — «Practic oamenii trebuie să își treacă numărul de concurs și numele, dar trebuie să am și o bifă de
+„voluntar”» — «trebuie să bifez acolo cine se poate înscrie: doar alergătorii și elitele și voluntarii» — «vreau să văd în
+dreptul fiecărei persoane dacă participă la tombolă»). Beside «Avem tombolă», in the editor (the Administrator's save,
+§542; one edition's own, as `has_raffle`: no series edit, copy or event file carries them, and no public query reads them but
+the gate below): **«Cine poate participa»** — «Alergătorii», «Elitele», «Voluntarii» (`events.raffle_runners`,
+`raffle_elites`, `raffle_volunteers`, each on by default) —, **«Cum»** — «Din oficiu», everybody of the ticked groups, the
+file as it was, or «Cu înscriere separată» (`events.raffle_sign_up`, off by default): only those who signed up — and
+**«Înscrierile la tombolă sunt deschise»** (`events.raffle_sign_up_open`, off by default; unticked at the draw). The groups
+decide in both modes. A line of the race's elite list takes part like a person: «Participă la tombolă» and «Prezent» of its
+own (`event_elite_entries.in_raffle`, on by default; `present`, off by default — the desk checks no line in), both ticked on
+the «Tombolă» tab by the Organizer and the Administrators (`canTakeRaffleList`), audited by the line's id.
+
+*Who takes part* is one pure function (`volunteers/domain/raffle.ts#raffleParticipation`), and every file, count, list
+column, page, the desk and the tab read it: `in`, or the first thing that keeps the person out — `groupNotAllowed`,
+`notConfirmed`, `noNumber`, `takenOut`, `notSignedUp` (the last only «Cu înscriere separată»). *The gate* is one pure rule
+(`raffleSignUpClosedFor`): a raffle, the sign-up mode, the sign-ups open, a published, scheduled race not ended (its end,
+else the next midnight after its start day on its own clock), «Regulamentul tombolei» in force and the privacy notice in
+force naming `{{raffle}}`, both in every language (§12.5), and the person's group ticked. Shut, no door is drawn and every
+action refuses, writing nothing. *The store* is `event_raffle_entries`: one row per person per event — exactly one of a
+registration, a volunteer or a line of the elite list, each `ON DELETE CASCADE` like the event —, the door (`method` LINK,
+FORM, DESK, STAFF), the rules' acceptance (version, moment, language, `signedTextHash` over the text with its blanks filled,
+the blanks), the name typed on the form, the IP address and browser of an electronic door, the staff member who recorded a
+desk's or the organizers' one (`SET NULL`) and the notice's version; deleted thirty days after the event's start by the
+maintenance sweep (`jobs/retention.ts`, step `event-raffle-entries`), listed in «Toate datele unei persoane», audited as
+`event_raffle.entry_created` / `entry_withdrawn` with the door and the group — never a name.
+
+*The doors*, while the gate is open: **LINK** — a «Tombola» card on the person's own «Gestionează înscrierea» for a confirmed
+real registration with a number of a ticked group: the rules in a fold, «Am citit și accept Regulamentul tombolei»,
+«Particip la tombolă»; once in, «Nu mai particip»; POST only, the link read and never spent, another adult on the address
+taken out from it but never signed up (§547, §421). **FORM** — the event's own page `/events/[slug]/tombola`, linked from
+the event page by one calm link while the gate is open: «Numărul de concurs», «Numele», «Sunt voluntar» while the volunteers
+may, the rules and the tick, the notice's line; the honeypot, the timing check, Turnstile when its keys are set and two
+throttles (§19.4). The number names a confirmed real registration of a ticked group (or, with «Sunt voluntar», a confirmed
+volunteer) whose registered name holds every word typed — both folded: case, diacritics, punctuation, spaces; at least two
+words unless the name has one (`typedNameMatches`); anything else is one neutral sentence that says neither which half was
+wrong nor whether the number exists, and a person in already reads the thank-you again. **DESK** — inside every row of the
+desk's list (where a search by name or number, or a typed code, lands; one read for the rows shown) and on the view of a
+scanned person: «Tombolă: participă / nu participă» and why, to every desk role, in both modes — but the organizers' own
+exclusion, «scos de organizatori», only to the Organizer and the Administrators (`canTakeRaffleList`), every other desk role
+reading «nu participă» alone there — and «Înscrie la tombolă» in
+the open sign-up mode for a person the organizers did not take out (the «Tombolă» tab keeps its own), the person having accepted the rules on paper or aloud, coming back where it was pressed. **STAFF** — the organizers' «Înscrie» on
+a volunteer's page and on the tab, a line of the elite list's only door. Nobody is emailed at any door, at a withdrawal or at
+«Șterge înscrierea», and no public cache is expired: no public page reads a sign-up
+(`tests/unit/volunteers/raffle-entries-never-leave.test.ts`).
+
+*Beside each person*: the registrations list's and the «Voluntari» list's «Tombolă» column (one event chosen that holds a
+raffle) says «Da», or «Nu» with the reason in a few words, under the organizers' tick; a registration's page and a
+volunteer's page say it in one line. **«Ziua cursei» → «Tombolă»** (`/admin/checkin/tombola`, the Organizer's and the
+Administrators', drawn among the tabs only for an event that holds a raffle) has the settings in one line, the counts by
+group and how many of them were there, the filters «Toți», «Participă», «Nu participă», «Doar prezenții», everybody of the
+three groups in one table — number, name, group, «Participă» with the reason, how and when they signed up, «Prezent» —, the
+organizers' «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» (asked first) and a line's «Prezent», both files, and
+prints without its controls. The draw itself is the club's, outside the site.
+
+Beside that tick, and like it a mark that changes nothing else: **«Prezent»** on a volunteer (2026-11-18, `DECISIONS.md`
+§983; the owner, three days before the race: «La voluntari trebuie să trec prezent/absent ca să pot face tombola doar
+pentru cei prezenți»). One boolean on the person's row (`event_volunteers.present`, false by default — unticked is absent,
+and there is no third state), ticked or cleared by one press on the «Voluntari» list's row — the column «Prezent», right
+before «Are kit» — or beside the name on the person's page, by whoever works the volunteers (`canManageVolunteers`,
+asserted by `setVolunteerPresentAction` and again by `volunteers.ts#changeVolunteer`, kind `setPresent`), for a person in
+any state, as «Are kit» is, and audited as every edit of a person's boxes (`volunteer.edited`: the box's name and the new
+value, never a name). The list's strip says «Prezenți: N» and «Absenți: K» beside «Cu kit» — always, a nought too — over
+the event's and the search's «Înscris» and «Confirmat» (a cancelled person is neither present nor missing), each a pill
+that filters the list to those people (`present=yes|no`), combined with the list's other filters as «Cu kit» is: with
+«Doar membrii» or a state chosen it lists the ones that filter keeps too, fewer than the figure. The mark decides one thing: a volunteer's «Prezent» on «Lista pentru tombolă», and who of
+them is on its present-only twin (§15.10). Read by that list, the person's page, that file, «Transformă în voluntar»
+(below) and «Toate datele unei persoane»; never by a public page, an email, a badge, the desk — which checks runners in,
+never a volunteer — the public volunteers' list or the allocator, and not by «Planul voluntarilor», the event editor's
+card or the volunteers' Excel and CSV until a change of their own (`tests/unit/volunteers/presence-never-leaves.test.ts`).
+No state, role, point, number, tick or email moves, no public cache is expired, and the person is not told.
 
 The «Voluntari» list keeps one more thing of the organizers' own on a volunteer, and it is words rather than a tick:
 **«Decizie pentru ziua cursei»** (2026-11-16, `DECISIONS.md` §954; the owner, of that list: «si la voluntar trebuie sa am
@@ -3359,7 +3576,21 @@ writer's audit row: the volunteers' `setRaffle` for a runner who was out; `raffl
 the registration the entry wrote, which takes the volunteer's tick whichever it is — the entry may restart a
 registration of that person cancelled earlier, and that row keeps what it once held. Neither the allocator nor the staff
 entry reads the column (`raffle-never-leaves.test.ts`), which is why the transform says it and not the entry. Nobody is
-told, and nothing else of either row moves.
+told, and nothing else of either row moves but «Prezent» and a raffle sign-up (below).
+
+**«Prezent» moves one way** (2026-11-18, `DECISIONS.md` §983): a runner the desk had checked in is there, so «Transformă
+în voluntar» ticks the new volunteer «Prezent» — through the volunteers' own `setPresent`, in the transform's transaction
+and with that writer's audit row — and a press about something else never drops a person who is there from «Lista pentru
+tombolă — doar prezenții». «Transformă în alergător» carries nothing: checking a runner in is the desk's verb, with its
+own conditions (a confirmed registration, at an event neither over nor cancelled), and the entry makes a registration
+that waits or holds a place.
+
+**A raffle sign-up moves both ways** (2026-11-18, `DECISIONS.md` §984): where the event's raffle asks a sign-up of its own,
+the person's sign-up — the same `event_raffle_entries` row, its door and its acceptance of the same rules for the same
+event — moves to the row the person becomes, in the transform's transaction (`raffle-entries.ts#moveRaffleEntry`), its id
+in the transform's own trail row (`raffleEntryId`). Otherwise the cancelled row would keep it and the new one read «nu s-a
+înscris»: a press about something else would drop a person who signed up. A registration the entry restarted that holds a
+sign-up already keeps its own, and the other stays with its cancelled row until the sweep.
 
 ---
 
@@ -4190,6 +4421,7 @@ an IP or a device. One key per surface, and each names what is actually being de
 | Admin resend | the registration id | two organizers, or one loop, filling a participant's inbox |
 | Token validation | the presented token's **hash**, never the secret | one email link hammered in a retry loop. Not enumeration: a 32-byte secret is not guessed |
 | Management/profile link request | the canonical email identity (§10.4) | one address typed repeatedly into a form nobody has to prove they own — a mailbox flood aimed at **somebody else's** inbox. Built: `/registrations/resend` takes an address and answers identically whatever it finds, generically as §15.1 requires, so it cannot be used to discover who is registered. The profile half is still unbuilt (M4). Since §675 both link forms (`/registrations/resend` and «Înscrierile mele», `/registrations/mine`) also carry the honeypot, the timing check and Turnstile, answered with the form's silence: a spam-looking post counts nothing and looks nothing up; only a token Cloudflare rejected comes back, with the refusal line and never the address in the URL |
+| The raffle's public form (`DECISIONS.md` §984) | the number typed at the event, hashed with the scope (five an hour), and, apart, the event (a thousand an hour) | a script trying names for one number, or numbers at one event. The form takes no address, so the person defended is the number's; it answers one neutral sentence whatever it finds, and «limited» says only to try again later or ask at the desk |
 | Job endpoints (auth-adjacent) | the job name | a leaked `JOB_SECRET` draining the outbox without limit. Counted only *after* the secret verifies, so an anonymous flood cannot lock the scheduler out |
 | Uploads | not built; media storage is deferred (§17) | — |
 

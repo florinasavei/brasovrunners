@@ -646,6 +646,12 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     ...(fields.kitShirt === undefined ? {} : { kitShirt: fields.kitShirt }),
     // «Avem tombolă» (§949), by the same discipline: a caller that did not post the box writes nothing.
     ...(fields.hasRaffle === undefined ? {} : { hasRaffle: fields.hasRaffle }),
+    // The raffle's settings (§984), by the same discipline: a caller that did not post a box writes nothing for it.
+    ...(fields.raffleRunners === undefined ? {} : { raffleRunners: fields.raffleRunners }),
+    ...(fields.raffleElites === undefined ? {} : { raffleElites: fields.raffleElites }),
+    ...(fields.raffleVolunteers === undefined ? {} : { raffleVolunteers: fields.raffleVolunteers }),
+    ...(fields.raffleSignUp === undefined ? {} : { raffleSignUp: fields.raffleSignUp }),
+    ...(fields.raffleSignUpOpen === undefined ? {} : { raffleSignUpOpen: fields.raffleSignUpOpen }),
     // «Locurile din lista de așteptare se alocă automat» (§615), by the same discipline: a caller that
     // did not post the select writes nothing, so no save changes who hands out the places by omission.
     ...(fields.waitlistAutoOffer === undefined ? {} : { waitlistAutoOffer: fields.waitlistAutoOffer }),
@@ -3229,6 +3235,9 @@ function blankEventRow(now: Date): EditableEvent {
     startsAt: now,
     endsAt: null,
     raceStartsAt: null,
+    // «Start» (§986): pressed on «Cronometrare» alone, read by the results alone; no save, copy, repeat or series edit carries it.
+    raceGunAt: null,
+    raceGunByStaffUserId: null,
     timezone: CLUB_TIME_ZONE,
     mapUrl: null,
     latitude: null,
@@ -3321,6 +3330,11 @@ function blankEventRow(now: Date): EditableEvent {
     publicRegistrationOpen: true,
     kitShirt: false,
     hasRaffle: false,
+    raffleRunners: true,
+    raffleElites: true,
+    raffleVolunteers: true,
+    raffleSignUp: false,
+    raffleSignUpOpen: false,
     askHealthNote: false,
     declarationDocumentId: null,
     externalProvider: null,

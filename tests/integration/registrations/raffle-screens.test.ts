@@ -264,3 +264,101 @@ describe("§949 «Tombolă» on the registrations list", () => {
     expect(raffleCellOf(tree, id).find((element) => element.props["data-testid"] === "registration-raffle-tick")?.props["aria-label"]).toMatch(/^Take out of the raffle: Runner \d+$/);
   });
 });
+
+/** A toolbar link of the list by its test id: the house's `GlyphButton`, its href and words as the page hands them over. */
+const buttonOf = (tree: ReactNode, testId: string) => elements(tree).find((element) => element.props["data-testid"] === testId);
+
+describe("§983 «Lista pentru tombolă — doar prezenții» on the registrations list's toolbar", () => {
+  it("stands beside the whole file, under the same condition — one event chosen, a role that takes the file — linking to `?present=1`", async () => {
+    const race = await createRace();
+    await register(race.id);
+    for (const role of ["ADMIN", "MODERATOR"] as const) {
+      state.actor = await staff(role);
+      const tree = await listPage({ eventId: race.id });
+      const whole = buttonOf(tree, "registrations-raffle-list");
+      const present = buttonOf(tree, "registrations-raffle-present");
+      expect(whole?.props.href, role).toBe(`/api/admin/events/${race.id}/raffle?lang=ro`);
+      expect(present?.props.href, role).toBe(`/api/admin/events/${race.id}/raffle?present=1&lang=ro`);
+      expect(present?.props.children, role).toBe("Lista pentru tombolă — doar prezenții (CSV)");
+      // Each accessible name begins with the very words it shows, «(CSV)» included (label in name), and says who is in the file.
+      expect(String(present?.props["aria-label"]).startsWith(`${present?.props.children}:`), role).toBe(true);
+      expect(String(whole?.props["aria-label"]).startsWith(`${whole?.props.children}:`), role).toBe(true);
+      expect(present?.props["aria-label"], role).toBe(ro.Admin.registrations.raffle.presentButtonLabel);
+      // A runner who pressed «Am ajuns» from their own link is there as much as one the desk checked in.
+      expect(present?.props["aria-label"], role).toContain("„Am ajuns”");
+      // The house's 44-pixel target, as every toolbar link.
+      expect(present?.props.sx, role).toEqual(whole?.props.sx);
+      // Right after the whole file: the two raffle files side by side.
+      const order = elements(tree).map((element) => element.props["data-testid"]);
+      expect(order.indexOf("registrations-raffle-present"), role).toBe(order.indexOf("registrations-raffle-list") + 1);
+    }
+    // Whether or not the event holds a raffle, as the whole file's link: the file is the club's to take.
+    await db.update(events).set({ hasRaffle: true }).where(eq(events.id, race.id));
+    expect(buttonOf(await listPage({ eventId: race.id }), "registrations-raffle-present")).toBeDefined();
+  });
+
+  it("is drawn for no list across every event — neither file is", async () => {
+    const race = await createRace();
+    await register(race.id);
+    state.actor = await staff("ADMIN");
+    const tree = await listPage({ eventId: "all" });
+    expect(buttonOf(tree, "registrations-raffle-list")).toBeUndefined();
+    expect(buttonOf(tree, "registrations-raffle-present")).toBeUndefined();
+  });
+
+  it("speaks English on the English page", async () => {
+    const race = await createRace();
+    await register(race.id);
+    state.actor = await staff("ADMIN");
+    state.locale = "en";
+    const present = buttonOf(await listPage({ eventId: race.id }), "registrations-raffle-present");
+    expect(present?.props.href).toBe(`/api/admin/events/${race.id}/raffle?present=1&lang=en`);
+    expect(present?.props.children).toBe("Raffle list — present only (CSV)");
+    expect(present?.props["aria-label"]).toBe(en.Admin.registrations.raffle.presentButtonLabel);
+    expect(String(present?.props["aria-label"]).startsWith("Raffle list — present only (CSV):")).toBe(true);
+  });
+});
+
+describe("§984 «Tombolă» beside each person: whether they take part, and why not, under the organizers' tick", () => {
+  /** The few words under a row's tick — «Da», or «Nu · <de ce>» — and whether they say in: the note as the cell hands it over. */
+  const standingOf = (tree: ReactNode, id: string) => {
+    const note = raffleCellOf(tree, id).find((element) => "takesPart" in element.props && "words" in element.props);
+    return note ? { words: note.props.words, in: note.props.takesPart === true ? "1" : "0" } : undefined;
+  };
+
+  it("says Da or Nu with the reason by the one answer, «Din oficiu» and «Cu înscriere separată», and keeps the tick beside it", async () => {
+    const race = await createRace();
+    await db.update(events).set({ hasRaffle: true }).where(eq(events.id, race.id));
+    const ana = await register(race.id, { bibNumber: 1 });
+    const out = await register(race.id, { bibNumber: 2, inRaffle: false });
+    const numberless = await register(race.id);
+    const waiting = await register(race.id, { status: "WAITLISTED", waitlistedAt: new Date() });
+    state.actor = await staff("MODERATOR");
+
+    let tree = await listPage({ eventId: race.id });
+    expect(standingOf(tree, ana)).toEqual({ words: "Da", in: "1" });
+    expect(standingOf(tree, out)).toEqual({ words: "Nu · scos de organizatori", in: "0" });
+    expect(standingOf(tree, numberless)).toEqual({ words: "Nu · fără număr", in: "0" });
+    expect(standingOf(tree, waiting)).toEqual({ words: "Nu · neconfirmat", in: "0" });
+    // The organizers' tick is still the cell's: the exclusion is theirs in both modes.
+    expect(raffleCellOf(tree, ana).find((element) => element.props["data-testid"] === "registration-raffle-tick")?.props.checked).toBe(true);
+
+    // «Cu înscriere separată»: nobody signed up yet, so the runner with a number does not take part — and says why.
+    await db.update(events).set({ raffleSignUp: true }).where(eq(events.id, race.id));
+    tree = await listPage({ eventId: race.id });
+    expect(standingOf(tree, ana)).toEqual({ words: "Nu · nu s-a înscris", in: "0" });
+    // «Alergătorii» unticked: the group first.
+    await db.update(events).set({ raffleRunners: false }).where(eq(events.id, race.id));
+    expect(standingOf(await listPage({ eventId: race.id }), ana)).toEqual({ words: "Nu · grupa nu e bifată", in: "0" });
+  });
+
+  it("is drawn with the column alone — no raffle, no note — and speaks English", async () => {
+    const race = await createRace();
+    const ana = await register(race.id, { bibNumber: 1 });
+    state.actor = await staff("ADMIN");
+    expect(standingOf(await listPage({ eventId: race.id }), ana)).toBeUndefined();
+    await db.update(events).set({ hasRaffle: true, raffleSignUp: true }).where(eq(events.id, race.id));
+    state.locale = "en";
+    expect(standingOf(await listPage({ eventId: race.id }), ana)).toEqual({ words: "No · did not sign up", in: "0" });
+  });
+});

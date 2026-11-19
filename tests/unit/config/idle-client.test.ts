@@ -45,8 +45,21 @@ const ALLOWED_INTERVALS: Record<string, string> = {
   "src/shared/ui/VideoVolumeBar.tsx": "bounded handshake after a click",
   // The calendar card's countdown to the hour (§843): reads the visitor's own clock once a minute and writes a line of text — no request, no read.
   "src/modules/events/ui/AwayLine.tsx": "the visitor's clock, once a minute, no request",
-  // The finish line's clock since the gun (§850): the volunteer's own clock once a second on one backoffice page, a line of text — no request, no read; the press stamps the server's clock.
-  "src/modules/results/ui/FinishClock.tsx": "the volunteer's clock, once a second, no request",
+  // «Cronometrare»'s clock since the gun (§850, §986): the server's clock read through the phone's wall clock and the measured offset once a second on one
+  // backoffice page — a line of text, «Anulează»'s ten minutes and a kept moment too old to give, no request, no read; a press that failed is tried again on
+  // a timeout. And, before the race's first finisher only, the clock's question — which carries the gun «Start» moves on the organizer's phone — every
+  // thirty seconds while the page is shown (`FINISH_GUN_ASK_MS`): a backoffice page at the finish line, nothing once a runner is «Sosit».
+  "src/modules/results/ui/FinishLine.tsx": "the clock since the gun once a second, no request; the gun asked every 30 s before the first finisher, while shown",
+};
+
+/**
+ * The one public island that asks the server again on a timer, decided rather than slipped in (§985; the owner, 2026-11-18, choosing
+ * «LIVE» for a race's results): «Clasament» while the race runs — every 30 seconds, only while the tab is visible, nothing before the
+ * race's start (a page drawn earlier is armed to it) and nothing from the window's end (`results/domain/live-window.ts`). Any other
+ * island that refreshes the page from a timer is a poll this rule refuses.
+ */
+const ALLOWED_TIMED_REFRESH: Record<string, string> = {
+  "src/modules/results/ui/ResultsLiveRefresh.tsx": "a race's results while it runs: 30 s, a visible tab only, nothing before the start or after the race",
 };
 
 function clientFiles(dir: string): string[] {
@@ -67,6 +80,23 @@ describe("§577 no client island polls or keeps alive on a timer", () => {
       .map((path) => relative(root, path).replace(/\\/g, "/"))
       .filter((path) => !(path in ALLOWED_INTERVALS));
     expect(offenders).toEqual([]);
+  });
+
+  it("refreshes a page from a timer only where it is named with its bound — the results while a race runs (§985)", () => {
+    const root = process.cwd();
+    const offenders = clientFiles(join(root, "src"))
+      .filter((path) => {
+        const source = readFileSync(path, "utf8");
+        return /\.refresh\(\)/.test(source) && /\bset(Timeout|Interval)\s*\(/.test(source);
+      })
+      .map((path) => relative(root, path).replace(/\\/g, "/"))
+      .filter((path) => !(path in ALLOWED_TIMED_REFRESH));
+    expect(offenders).toEqual([]);
+    // The named one is bounded: it stops at the window's end, asks nothing before its start, and nothing while the tab is hidden.
+    const source = readFileSync(join(root, "src/modules/results/ui/live-refresh.ts"), "utf8");
+    expect(source).toMatch(/clock\.now\(\) < options\.until/);
+    expect(source).toMatch(/clock\.now\(\) >= from &&/);
+    expect(source).toMatch(/if \(!clock\.visible\(\)\) return;/);
   });
 
   it("keeps the countdown's timer to the clock: no request, no router, cleared with the card (§843)", () => {

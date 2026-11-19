@@ -7,7 +7,6 @@ import { events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import type { FormOutcome } from "@/shared/forms/outcome";
-import { formatResultTime } from "@/modules/results/domain/result-time";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { approvePrivacyNotice, approveResultsTexts, approveTerms, createRace, person, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
@@ -43,7 +42,7 @@ vi.mock("next-intl/server", async () => {
   };
 });
 
-const { saveEventResultsAction, deleteEventResultAction, recordFinishAction, setResultAgeBandsAction, setResultAwardsAction, setResultsPublishedAction } = await import("@/app/[locale]/admin/events/[id]/results/actions");
+const { saveEventResultsAction, deleteEventResultAction, setResultAgeBandsAction, setResultAwardsAction, setResultsPublishedAction } = await import("@/app/[locale]/admin/events/[id]/results/actions");
 const { readEventResults } = await import("@/modules/results/results");
 
 let db: TestDatabase;
@@ -61,7 +60,7 @@ beforeEach(async () => {
   await resetTables(db);
   resetNoticeCounter();
   for (const [role, name] of [["ADMIN", "Ana Admin"], ["MODERATOR", "Oana Organizator"], ["DEV", "Tudor Tehnic"]] as const) staff[role] = await person(db, role, name);
-  // A race that has started: the Administrator's tick is refused before the gun, and the actions read the real clock.
+  // A race that has started (the actions read the real clock): the tick before the gun is a test of its own, on a race still ahead.
   raceId = (await createRace(db, { startsAt: new Date("2026-06-01T07:00:00.000Z") })).id;
   await registerRunner(db, raceId, { name: "Ana Popescu", bibNumber: 101, sex: "FEMALE", birthDate: "1996-05-01" });
   await registerRunner(db, raceId, { name: "Bia Marin", bibNumber: 102, sex: "FEMALE", birthDate: "1985-03-10" });
@@ -254,15 +253,23 @@ describe("§808 the Administrator's tick behind the notice's gate", () => {
     expect(await post(setResultsPublishedAction, form({ published: "on" }))).toBe("redirected");
   });
 
-  it("refuses it ticked before the race has started, with the box unticked, for a race still ahead", async () => {
-    await approveResultsTexts(db);
+  it("accepts it ticked before the race has started (§985), with the toast that says it shows from the start — and still refuses it under no notice", async () => {
     const ahead = (await createRace(db, { startsAt: new Date("2099-06-01T07:00:00.000Z") })).id;
     const data = form({ published: "on" });
     data.set("eventId", ahead);
-    const result = outcome(await post(setResultsPublishedAction, data));
-    expect(result.error).toBe("RESULTS_NOT_STARTED");
-    expect(result.values.published).toBeUndefined();
-    expect((await db.select({ published: events.resultsPublished }).from(events).where(eq(events.id, ahead)))[0].published).toBe(false);
+    // The gates are kept before the start: no notice that describes the results, no tick.
+    const refused = outcome(await post(setResultsPublishedAction, data));
+    expect(refused.error).toBe("RESULTS_NOTICE");
+    expect(refused.values.published).toBeUndefined();
+    await approveResultsTexts(db);
+    expect(await post(setResultsPublishedAction, data)).toBe("redirected");
+    expect((await db.select({ published: events.resultsPublished }).from(events).where(eq(events.id, ahead)))[0].published).toBe(true);
+    expect(state.cookies.map(([, value]) => value).join(" ")).toContain("resultsPublishedFromStart");
+    // Once the race has started, the toast is the usual one.
+    state.cookies.length = 0;
+    expect(await post(setResultsPublishedAction, form({ published: "on" }))).toBe("redirected");
+    expect(state.cookies.map(([, value]) => value).join(" ")).not.toContain("resultsPublishedFromStart");
+    expect(state.cookies.map(([, value]) => value).join(" ")).toContain("resultsPublished");
   });
 
   it("accepts it under a notice and terms that name {{results}}, and takes it off with the box unticked", async () => {
@@ -345,61 +352,6 @@ describe("§850 «Salvează categoriile»", () => {
     expect(await post(setResultAgeBandsAction, form({ ageBands: "18, 40" }))).toBe("redirected");
     expect(state.redirected.at(-1)).toContain("resultsError=FORBIDDEN");
     expect(await bandsOf()).toBeNull();
-  });
-});
-
-describe("§850 «Sosire»: one number, one press", () => {
-  // The actions read the real clock, so the finish line's race started an hour ago; `raceId` (June) is a day past the gun and refused.
-  let liveId: string;
-  const live = (fields: Record<string, string>) => {
-    const data = form(fields);
-    data.set("eventId", liveId);
-    return data;
-  };
-  const liveRows = () => db.select().from(eventResults).where(eq(eventResults.eventId, liveId)).orderBy(eventResults.bibNumber);
-  beforeEach(async () => {
-    liveId = (await createRace(db, { startsAt: new Date(Date.now() - 3_600_000) })).id;
-    await registerRunner(db, liveId, { name: "Ana Popescu", bibNumber: 101, sex: "FEMALE", birthDate: "1996-05-01" });
-    await registerRunner(db, liveId, { name: "Bia Marin", bibNumber: 102, sex: "FEMALE", birthDate: "1985-03-10" });
-  });
-
-  it("stamps the time since the gun as the runner's «Sosit» and goes back to the finish page with the number", async () => {
-    expect(await post(recordFinishAction, live({ bib: " 102 " }))).toBe("redirected");
-    expect(state.redirected.at(-1)).toMatch(/\/results\/sosire\?ok=102$/);
-    const [row] = await liveRows();
-    expect(row).toMatchObject({ bibNumber: 102, status: "FINISHED", positionOverall: 1 });
-    // The gun was an hour ago and the clock is real: the stamped time is about an hour, to the second, not a typed value.
-    expect(row.gunTimeMs).toBeGreaterThanOrEqual(3_600_000);
-    expect(row.gunTimeMs).toBeLessThan(3_700_000);
-    expect(row.gunTimeMs! % 1000).toBe(0);
-    // A day after its gun, the June race's line is closed: the time is «Clasament»'s to type.
-    expect(outcome(await post(recordFinishAction, form({ bib: "101" }))).error).toBe("RESULT_FINISH_CLOSED");
-  });
-
-  it("refuses in place a number no confirmed registration holds, with the stamped time in the sentence and the number kept in the box", async () => {
-    const result = outcome(await post(recordFinishAction, live({ bib: "900" })));
-    expect(result.error).toBe("RESULT_BIB_UNKNOWN");
-    expect(result.fields).toEqual(["bib"]);
-    expect(result.errorValues?.bib).toBe("900");
-    expect(result.errorValues?.time).toMatch(/^1:0\d:\d\d$/);
-    expect(result.values.bib).toEqual(["900"]);
-    expect(await liveRows()).toHaveLength(0);
-  });
-
-  it("refuses a second press for the same number with the time already stored, and a box that is not a number", async () => {
-    expect(await post(recordFinishAction, live({ bib: "101" }))).toBe("redirected");
-    const again = outcome(await post(recordFinishAction, live({ bib: "101" })));
-    expect(again.error).toBe("RESULT_ALREADY_FINISHED");
-    expect(again.errorValues?.time).toBe(formatResultTime((await liveRows())[0].gunTimeMs));
-    expect(outcome(await post(recordFinishAction, live({ bib: "abc" }))).error).toBe("VALIDATION_ERROR");
-    expect(outcome(await post(recordFinishAction, live({ bib: "" }))).fields).toEqual(["bib"]);
-  });
-
-  it("is refused for a role that may not enter results", async () => {
-    state.actor = staff.DEV;
-    expect(await post(recordFinishAction, live({ bib: "101" }))).toBe("redirected");
-    expect(state.redirected.at(-1)).toContain("sosire?finishError=FORBIDDEN");
-    expect(await liveRows()).toHaveLength(0);
   });
 });
 

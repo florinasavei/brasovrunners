@@ -224,6 +224,30 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
               </Box>
               <Divider />
               {/*
+                «Înscrierea la tombolă» (§984; art. 15 GDPR): each raffle sign-up of this address's registrations and offers — the event,
+                the door, when, the rules' version, the name typed, who recorded it as a role (§777), the trace — erased with its row.
+              */}
+              <Box component="section" data-testid="person-raffle-entries">
+                <Typography variant="h3" sx={{ ...HEADING_SX[3], mb: 1 }}>
+                  {t("person.raffleEntries", { count: data.raffleEntries.length })}
+                </Typography>
+                {data.raffleEntries.length === 0 ? (
+                  <Typography variant="body2">{t("person.none")}</Typography>
+                ) : (
+                  <Stack spacing={0.5}>
+                    {data.raffleEntries.map((entry, index) => (
+                      <Typography key={index} variant="body2" sx={{ overflowWrap: "anywhere" }} data-testid="person-raffle-entry">
+                        {t("person.raffleEntry", { event: entry.eventTitle ?? entry.eventId, method: t(`raffle.methods.${entry.method}`), when: inline(entry.createdAt), version: String(entry.rulesVersion ?? "—") })}
+                        {entry.typedName ? ` · ${t("person.raffleTyped", { name: entry.typedName })}` : ""}
+                        {entry.recordedByRole ? ` · ${t("person.raffleRecorded", { role: STAFF_ROLE_LABEL[entry.recordedByRole] })}` : ""}
+                        {entry.ip || entry.userAgent ? ` · ${[entry.ip, entry.userAgent].filter((part): part is string => Boolean(part)).join(" · ")}` : ""}
+                      </Typography>
+                    ))}
+                  </Stack>
+                )}
+              </Box>
+              <Divider />
+              {/*
                 «Cere reconfirmarea» (the decision «Cere reconfirmarea»; art. 15 GDPR): each ask of an organizer's message and,
                 when the person pressed «Vin», when — the registration's own rows, erased with it.
               */}

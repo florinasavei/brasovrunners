@@ -9,9 +9,8 @@ import { type Locale, routing } from "@/i18n/routing";
 import { ResultsCsvError } from "@/modules/results/domain/import-csv";
 import { mergeImportedRows } from "@/modules/results/import-merge";
 import { parseAgeBandStarts } from "@/modules/results/domain/age-bands";
-import { formatResultTime } from "@/modules/results/domain/result-time";
 import { AWARD_PLACES_MAX, AWARD_PLACES_MIN } from "@/modules/results/domain/awards";
-import { deleteEventResult, FinishError, importResultsCsv, recordFinish, ResultRowError, saveEventResults, setResultAgeBands, setResultAwards, setResultsPublished } from "@/modules/results/results";
+import { deleteEventResult, importResultsCsv, ResultRowError, saveEventResults, setResultAgeBands, setResultAwards, setResultsPublished } from "@/modules/results/results";
 import { EXTRA_ROWS, postedResultRows } from "@/modules/results/rows";
 import { RESULT_NAME_MAX, RESULT_NOTE_MAX } from "@/modules/results/domain/ranking";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -178,22 +177,23 @@ export async function deleteEventResultAction(_previous: FormOutcome | null, for
 /**
  * «Clasamentul e public pe pagina evenimentului»: the Administrator's tick (a box and one button, never a toggle), saved on its own —
  * the disclosure has its own gate and its own audit row, and does not ride on a save of the rows. The state the box shows is the state
- * wanted, so two presses end where the second aimed. Switching it on is refused before the race has started (`RESULTS_NOT_STARTED`) and
- * while the privacy notice or the terms in force do not name `{{results}}` (`RESULTS_NOTICE`, `RESULTS_TERMS`): the summary says so, the
- * box comes back unticked, and the page's note links «Documente legale».
+ * wanted, so two presses end where the second aimed. Switching it on is refused while the privacy notice or the terms in force do not
+ * name `{{results}}` (`RESULTS_NOTICE`, `RESULTS_TERMS`): the summary says so, the box comes back unticked, and the page's note links
+ * «Documente legale». Before the race it is accepted (§985): the toast says the results show from the start.
  */
 export async function setResultsPublishedAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const on = field(form, "published") === "on";
-  let changed: boolean;
+  let outcome: { changed: boolean; fromStart?: true };
   try {
     const actor = await requireStaff();
-    changed = (await setResultsPublished(getDb(), actor, eventIdOf(form), on, new Date())).changed;
+    outcome = await setResultsPublished(getDb(), actor, eventIdOf(form), on, new Date());
   } catch (error) {
-    if (isDomainError(error) && (error.code === "RESULTS_NOTICE" || error.code === "RESULTS_TERMS" || error.code === "RESULTS_NOT_STARTED" || error.code === "RESULTS_NOT_OPEN")) return refused(error, form, { never: ["published"] });
+    if (isDomainError(error) && (error.code === "RESULTS_NOTICE" || error.code === "RESULTS_TERMS" || error.code === "RESULTS_NOT_OPEN")) return refused(error, form, { never: ["published"] });
     if (!isDomainError(error)) throw error;
     return backToPage(form, { error: error.code });
   }
-  return backToPage(form, { saved: !changed ? "resultsPublicUnchanged" : on ? "resultsPublished" : "resultsUnpublished" });
+  const published = outcome.fromStart ? "resultsPublishedFromStart" : "resultsPublished";
+  return backToPage(form, { saved: !outcome.changed ? "resultsPublicUnchanged" : on ? published : "resultsUnpublished" });
 }
 
 /**
@@ -220,38 +220,6 @@ export async function setResultAgeBandsAction(_previous: FormOutcome | null, for
     return backToPage(form, { error: error.code });
   }
   return backToPage(form, { saved: changed ? "resultsCategoriesSaved" : "resultsCategoriesUnchanged" });
-}
-
-/**
- * «Sosire» (§850): the finish line's one press — the number typed as the runner crosses, the time since the gun stamped by the service
- * (`recordFinish`). It works with scripts off: the page comes back with `?ok=<number>` and says who and what time, the box empty for the next
- * runner. A number no confirmed registration holds, or one already finished, is refused in place with the time in the sentence, the box keeping
- * the number — the volunteer writes the time down and «Clasament» takes the rest later. A press before the gun is refused the same way.
- */
-export async function recordFinishAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  const typed = field(form, "bib").trim();
-  const bibNumber = /^\d{1,6}$/.test(typed) ? Number(typed) : Number.NaN;
-  let recorded;
-  try {
-    if (!Number.isInteger(bibNumber) || bibNumber <= 0) throw new DomainError("VALIDATION_ERROR", "the race number is not a whole number", ["bib"]);
-    const actor = await requireStaff();
-    recorded = await recordFinish(getDb(), actor, { eventId: eventIdOf(form), bibNumber }, new Date());
-  } catch (error) {
-    if (error instanceof FinishError) return { ...refused(error, form), errorValues: { bib: String(error.bibNumber), time: formatResultTime(error.gunTimeMs) } };
-    if (isDomainError(error) && (error.code === "VALIDATION_ERROR" || error.code === "RESULT_FINISH_NOT_STARTED" || error.code === "RESULT_FINISH_CLOSED" || error.code === "RESULTS_NOT_OPEN")) return refused(error, form);
-    if (!isDomainError(error)) throw error;
-    return backToFinish(form, { error: error.code });
-  }
-  return backToFinish(form, { ok: String(recorded.bibNumber) });
-}
-
-/** Back to «Sosire», with the number just recorded (`?ok=`) for the page's sentence, or a code for its banner. Numbers only, never a name. */
-async function backToFinish(form: FormData, outcome: { ok?: string; error?: string }): Promise<never> {
-  const locale = localeOf(form);
-  const id = eventIdOf(form);
-  const path = getPathname({ locale, href: { pathname: "/admin/events/[id]/results/sosire", params: { id } } });
-  revalidatePath(path);
-  redirect(`${path}${outcome.ok ? `?ok=${encodeURIComponent(outcome.ok)}` : outcome.error ? `?finishError=${encodeURIComponent(outcome.error)}` : ""}`);
 }
 
 /**

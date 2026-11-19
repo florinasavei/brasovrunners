@@ -4,17 +4,21 @@ import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { PublicEvent } from "@/modules/events/repository";
+import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
 import { formatRaceNumber } from "@/modules/registrations/domain/race-number";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
 import { SR_ONLY_SX } from "@/shared/ui/sr-only";
 import { DENSITY } from "@/theme/density";
 import { categoryLabeller } from "../category-labels";
+import { resultsShownSince } from "../domain/from-start";
+import { resultsLiveInstants, resultsLiveRefreshWindow } from "../domain/live-window";
 import { anonymousResultLabel } from "../domain/public-name";
 import { formatResultTime } from "../domain/result-time";
-import { readEventResultsForPage } from "../public-page";
+import { readEventResultsForPage, readResultsGates } from "../public-page";
 import { categoriesPresent, categoryGlyphOf } from "./results-filter";
 import ResultsFilter from "./ResultsFilter";
+import ResultsLiveRefresh from "./ResultsLiveRefresh";
 
 /** What the table's number and time cells say for a row with none: the backoffice's and the start list's own dash (§548). */
 const NO_VALUE = "—";
@@ -23,7 +27,7 @@ const NO_VALUE = "—";
 const TABLE_ID = "results-table";
 
 /** What the section reads of the event — all of it on the page's row and the listing's. */
-type ResultsEvent = Pick<PublicEvent, "id" | "type" | "resultsPublished" | "startsAt" | "endsAt" | "raceNumberFormat">;
+type ResultsEvent = Pick<PublicEvent, "id" | "type" | "resultsPublished" | "resultsTicked" | "startsAt" | "endsAt" | "raceNumberFormat">;
 
 /**
  * **«Clasament»** — a race's published results on its page, under `#clasament` (§809, race results part 2; the owner, 2026-10-17:
@@ -33,7 +37,8 @@ type ResultsEvent = Pick<PublicEvent, "id" | "type" | "resultsPublished" | "star
  * ## When there is nothing at all
  *
  * `readEventResultsForPage` answers `null` — not published, the privacy notice or the terms in force not describing the results, the
- * race not started, the public list's period over (§421) — and then this draws **nothing**: no heading, no «în curând». The page is
+ * race not started, the public list's period over (§421) — and then this draws **nothing** to see: no heading, no «în curând» (on a
+ * ticked race before its window's end, the silent clock alone — below). The page is
  * held until the race starts and until the period ends (`holdPageUntil`), so a static copy is made again then. While the database is
  * away the section is left out and the page stands, as the start list is (`readOrWhileAway`); like it, it is never served from a saved
  * copy: a stale ranking is a wrong place.
@@ -52,13 +57,36 @@ type ResultsEvent = Pick<PublicEvent, "id" | "type" | "resultsPublished" | "star
  * «Categorie» (the words of the club's statistics, §787, and «loc N» in it). At 320 pixels each row is a block (`EventCheckpoints`'
  * stack, tightened to three lines): the place at the left, the name over the number and the time, the category under them. The one
  * island, `ResultsFilter`, narrows the rows by category and by number; without a script everything shows.
+ *
+ * ## Public from the start, and live while the race runs (§985)
+ *
+ * The Administrator may tick the results public before the race; nothing above changes for that — the read is `null` until the start,
+ * so the section is not drawn — and from the start the «Publicat …» line names the start, not the earlier tick (`resultsShownSince`).
+ * While the race runs (`live-window.ts#resultsLiveAt`: from the start until its end, or six hours for a race saved without one) a
+ * second island, `ResultsLiveRefresh`, refreshes the page every 30 seconds while it is open and visible, with one calm line saying so.
+ * Whether it is drawn is read from the event's row alone — the tick as saved, a race, the window (`resultsLiveRefreshWindow`) — never
+ * from a read that can fail: so while nothing else is drawn before the window's end (before the start, the sheet still empty before the
+ * first finish, or the database away at that render) the island is drawn alone and silent in the section's place, and a page opened
+ * then shows what the race brings, the first result, or the section back, at a later refresh. Drawn before the start, it is armed to
+ * the start and asks nothing until then: it says no more than that the results are ticked, never a result. The page is held to the
+ * window's start and end (`resultsLiveInstants`): a copy made before the race is made again at its start, and one made during it is
+ * made again at its end, without the island.
  */
-export default async function ResultsSection(props: { event: ResultsEvent }) {
-  return readOrWhileAway(() => resultsSectionOrThrow(props), null);
+export default async function ResultsSection({ event }: { event: ResultsEvent }) {
+  const now = new Date();
+  const holds = resultsLiveInstants(event, now);
+  if (holds.length > 0) await holdPageUntil(holds, now);
+  const live = resultsLiveRefreshWindow(event, now);
+  const section = await readOrWhileAway(() => resultsSectionOrThrow(event, now, live), null);
+  if (section !== null || live === null) return section;
+  // Before the window's end and nothing drawn: the clock alone, with no line — unless the texts in force no longer describe the results,
+  // when no result saved could show. Read as the section reads them (cached); while the database is away, the clock stays.
+  const gates = await readOrWhileAway(() => readResultsGates(now), null);
+  if (gates !== null && !(gates.noticeDescribes && gates.termsDescribe)) return null;
+  return <ResultsLiveRefresh from={live.from.getTime()} until={live.until.getTime()} line={null} />;
 }
 
-async function resultsSectionOrThrow({ event }: { event: ResultsEvent }) {
-  const now = new Date();
+async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { from: Date; until: Date } | null) {
   const results = await readEventResultsForPage(event, now);
   if (!results || results.rows.length === 0) return null;
 
@@ -70,8 +98,10 @@ async function resultsSectionOrThrow({ event }: { event: ResultsEvent }) {
   const { rows } = results;
   const categories = categoriesPresent(rows.map((row) => row.categoryKey)).map((key) => ({ key, label: categoryLabel(key), glyph: categoryGlyphOf(key) }));
   const day = (date: Date, withTime: boolean) => formatDay(date, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline", withTime });
-  const line = results.publishedAt
-    ? t("results.published", { published: day(results.publishedAt, true), until: day(results.closesAt, true) })
+  // Ticked before the race (§985), the results have been on the page since its start, not since the tick.
+  const shownSince = resultsShownSince(results.publishedAt, event.startsAt);
+  const line = shownSince
+    ? t("results.published", { published: day(shownSince, true), until: day(results.closesAt, true) })
     : t("results.until", { until: day(results.closesAt, true) });
   const numberOf = (bibNumber: number) => formatRaceNumber(bibNumber, event.raceNumberFormat);
 
@@ -104,6 +134,9 @@ async function resultsSectionOrThrow({ event }: { event: ResultsEvent }) {
         <Typography variant="body2" color="text.secondary" data-testid="results-published" sx={{ pb: 1 }}>
           {line}
         </Typography>
+
+        {/* While the race runs (§985): the clock, with its line, under «Publicat …». */}
+        {live && <ResultsLiveRefresh from={live.from.getTime()} until={live.until.getTime()} line={t("results.live")} />}
 
         {rows.length > 1 && (
           <ResultsFilter
