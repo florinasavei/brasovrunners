@@ -1777,6 +1777,8 @@
           "cancelled_by_staff": "Cancelled by staff",
           "resend_rate_limited": "Resend rate-limited",
           "bib_set": "Race number changed",
+          "invitation_blank_bib_given": "Blank bib given at confirmation, as the invitation asked",
+          "invitation_blank_bib_missed": "No blank bib free at confirmation: the ordinary number, though the invitation asked for a blank one",
           "confirmed_by_staff": "Confirmed at the desk (address vouched for, declaration on paper)",
           "promoted_by_staff": "Given a place ahead of the waiting list",
           "checked_in": "Marked as here",
@@ -2088,6 +2090,11 @@
       "placeGiven": "Place given; the declaration email has left. Deadline: {deadline}.",
       "placeGivenRaised": "Place given, on a supplementary place: the capacity is now {n}. The declaration email has left. Deadline: {deadline}.",
       "invitedBy": "Registered by invitation — sent by {who}, {when}",
+      "invitationBlankBib": {
+        "pending": "The invitation gives a blank bib at confirmation: the lowest one free then.",
+        "given": "At confirmation, got blank bib {number}, as the invitation asked.",
+        "missed": "The invitation asked for a blank bib, but none was free at confirmation: got number {number}."
+      },
       "answers": {
         "title": "The registration's answers",
         "open": "Change the answers",
@@ -6581,6 +6588,7 @@
         "kitNo": "No kit",
         "columnKit": "Kit",
         "ageHint": "The age on the event's day, the one the parent's agreement for minors goes by. «—»: not given.",
+        "contactHint": "The email address and, under it, the phone number, as the person or the organiser typed them. Press the address to write, the number to call. Only organisers and administrators see them.",
         "raffleOut": "Not in the raffle",
         "columnRaffle": "Raffle",
         "raffleTick": "In the raffle",
@@ -10163,6 +10171,7 @@
                 "Press «Download the sheet» and print it. Each number has an empty name line; at the desk the name is written on in marker, and the form suggests the next free number.",
                 "Need them again? «Reprint the free spares (PDF)» puts only the numbers not yet given on the sheet and reserves no more.",
                 "Somebody registered, even with their bib printed, gets a blank bib? «Registrations» → their registration → «Give a blank bib» → in «Blank bib» choose the number on the paper → «Give the bib». The old number is retired, and the bib printed with it is no longer good.",
+                "An invitation can carry a blank bib: under «Send new invitations» tick «Gets a blank bib when confirmed»; when confirmed, the person gets the lowest blank bib free then.",
                 "Who has each blank bib given shows under «Spare bibs for on-the-spot entries»: the number, then the name, with a link to the registration."
               ]
             },
@@ -12052,6 +12061,15 @@
       "outsideHelp": "For organizers, volunteers, pacemakers and invited runners, who take none of the announced places: the invitation holds no place, and the registration will be a special guest's.",
       "eliteLabel": "Elite",
       "eliteHelp": "Internal: the registrations will be marked «Elite»; the people do not see the mark, it only changes how the bib prints.",
+      "blankBibLabel": "Gets a blank bib when confirmed",
+      "blankBibHelp": {
+        "one": "Gets the lowest blank bib free at the moment of confirmation, or the ordinary number if none is left; free now: {numbers}.",
+        "few": "Gets the lowest blank bib free at the moment of confirmation, or the ordinary number if none is left; free now ({count}): {numbers}.",
+        "other": "Gets the lowest blank bib free at the moment of confirmation, or the ordinary number if none is left; free now ({count}): {numbers}."
+      },
+      "blankBibHelpOut": "Every blank bib is given now: when confirmed, the person gets one only if more are printed by then, otherwise the ordinary number.",
+      "blankBibChip": "Blank bib when confirmed",
+      "blankBibGiven": "Blank bib: {number}",
       "localeLegend": "Language of the invitation",
       "localeRo": "Română",
       "localeEn": "English",
@@ -12079,6 +12097,7 @@
         "locale": "Language for addresses the club does not know: {language}.",
         "outside": "On the special guests list: they hold no place.",
         "elite": "The registrations will be marked «Elite» — internal, the people are not told.",
+        "blankBib": "When confirmed, each person gets the lowest blank bib free then.",
         "confirmRaise": {
           "one": "Add {count} place and send",
           "few": "Add {count} places and send",
@@ -12138,6 +12157,7 @@
         "INVITATION_BAD_DAYS": "Days until it expires: a whole number from 1 to 60.",
         "INVITATION_UNREAD_LINE": "Lines {lines} are not a name and an address: no invitation was sent.",
         "INVITATION_UNREAD_ROW": "The people on rows {lines} lack a name or a valid email address: no invitation was sent.",
+        "INVITATION_NO_SPARES": "The race has no blank bibs reserved: print them first from «Allocate and print»; no invitation was sent.",
         "SUPPLEMENTARY_PLACE_UNCONFIRMED": "Nothing was sent: the places changed since you opened the page. Press again: the question now says how many places are added.",
         "FORBIDDEN": "Only an administrator sends invitations.",
         "NOT_FOUND": "The event no longer exists.",

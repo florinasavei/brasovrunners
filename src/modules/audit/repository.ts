@@ -85,6 +85,14 @@ export type AuditAction =
   /** One number typed by hand, or cleared (BR-REQ-038-01 criterion 7). */
   | "registration.bib_set"
   /**
+   * «La confirmare primește un BIB gol» (§992): the confirmation of a registration whose invitation carried the tick gave it the
+   * lowest free desk spare (`_given`), or found none free and gave the allocator's number (`_missed`). `{ eventId, invitationId,
+   * bibNumber }` — the number it wears, never a name; the actor is the Administrator who sent the invitation, as «Elită» from
+   * the send is audited (§917). About the registration, so its timeline says it.
+   */
+  | "registration.invitation_blank_bib_given"
+  | "registration.invitation_blank_bib_missed"
+  /**
    * Bibs the club says are on paper, or no longer are (§264).
    *
    * The batch's row names the event, the scope and the count and no participant — a printing

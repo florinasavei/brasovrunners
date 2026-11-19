@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.71-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.75-2026-11-19 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.71-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.75-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31093,3 +31093,80 @@ Baseline `BR-V4.70-2026-11-19`.
 **Not done.** Retiring a deleted line's number: deleting still frees it (§895) — a line's draw steps over any number a stored result carries, but a runner's draw does not read the results.
 
 Baseline `BR-V4.71-2026-11-19`.
+
+## 991. The volunteer agreement is signed by both parties on paper: the Association's column on the right (amending §758 and §966)
+
+**The owner, 2026-11-19, from his phone, two days before Saturday's race (2026-11-21), «destul de urgent»:** «pentru contractele de voluntariat trebuie să modific template-ul și să las în dreapta și „Asociația” ca să printăm și să semnăm fizic». The club prints the volunteer agreements for the race — one at a time from a person's page, or every one at once with §966's «Contractele (PDF)» and «De semnat pe hârtie (PDF)» — and wants each signed on paper by both parties: the volunteer on the left, the Association on the right. Until now the accepted copy carried the volunteer's acceptance alone, and the sheet to sign stacked «Semnătura voluntarului» and «Pentru organizator (nume și semnătură)» down the left margin. Amends §758 (the agreement's PDF) and §966 (the event's file of every agreement).
+
+**Decision.**
+
+- *Two columns, on every shape.* Every signature block of the volunteer agreement's PDF — the accepted copy the emails carry and the card downloads, the sheet to sign at the desk, a minor's sheet and copy, the parent's or guardian's own entry once they accepted, and every person's pages in the event's file of all agreements, alone or in the sheets' file — is two columns under «DREPT PENTRU CARE SEMNĂM,» / “IN WITNESS WHEREOF, WE SIGN,”: two parties sign. **On the left**, the volunteer's side, exactly the rows it always had: the signature with the typed name in its hand, the date, the electronic signature's trace (§771) and how it was accepted — with «încă neprimit» while a minor's parent's consent is still to come — or, on a sheet, the blank lines; for a minor, the volunteer's line and the parent's or guardian's under it. **On the right**, from past the page's middle, «Asociația» / “The Association”, the club's legal name under it, and the three lines its representative fills in by hand — «Reprezentant (nume și funcție)» / “Representative (name and position)”, «Semnătura» / “Signature”, «Data» / “Date” — each a label over a dotted line across the column. Under both columns, across the page: the version and the text's sha256, and the proof of signing (§556), whose 64-character hash needs the page's width. The sheet's «Pentru organizator (nume și semnătură)» is this column now, not a second line beside it: an adult's sheet has the volunteer's line alone on the left.
+- *The club's name comes from its facts, never from the code.* `CLUB_LEGAL_NAME` — the fact the approved text's «<DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>» is filled with when a version starts from the platform's text (§132) — else the club's one name (`CLUB_NAME`, `club/club.json`), as the emails' privacy line names the controller (§323): `agreement-pdf.ts#agreementHostName`. No literal, the repository being public (§98) and a fork another club (§882).
+- *Drawn by the renderer, on request.* The agreement's words (`WORDS`, Romanian and English) hand the column to the renderer the declarations share as `labels.hostSignature` (`volunteerAgreementLabels`); `registrations/declaration-pdf.ts#drawSignatureColumns` draws it — two equal columns and a 24-point gutter. The whole block is measured before a line of it is drawn — the heading, the taller of the two columns, the lines under both — so it moves to the next page whole, as the single-column block does, and never reaches the footer. Every word stays inside its column: a value that does not fit beside its label goes under it, a long typed name is set smaller under its label, from 26 points down to 14, and wraps inside the column there; the trace and the method wrap inside it. The signer's rows are one list (`signerRows`), which both shapes of block draw.
+- *The legal text is unchanged.* The signature block is the renderer's, not the approved text's: no template moved, no version waits for approval, no «Șablon nou» email goes out, and a copy of an acceptance already recorded prints with the column too — its fingerprint is over the text, which is the same.
+- *The race declaration is unchanged.* It, its blank form for the desk, a minor's beside a parent's (§330), the event's bundle (§418) and the group run's (§769) pass no column and draw byte for byte what they drew before: `tests/unit/registrations/declaration-pdf-unchanged.test.ts` holds ten of their shapes against digests captured from the code before the change, and finds no «Asociația» in any. The one-person agreement's own digests (§966's `agreements-route.test.ts`) were captured again: the column is their one change.
+
+**Not in this change.**
+
+- *«L.S.»*, where a stamp goes: the house's legal texts and PDFs use none; it is one more word in `WORDS` if the club stamps its contracts.
+- *A record of the Association's signature.* Its representative signs the paper by hand; «Semnat pe hârtie» still records the volunteer's signature alone, naming the staff member who recorded it (§758).
+
+**Refused.**
+
+- *Signature lines written into the agreement's template.* A new version for the club to approve two days before the race, and every acceptance recorded under the version in force would still print without them: the block is the renderer's to draw.
+- *The column on the race declaration.* A declaration is the runner's own, a minor's with a parent's beside it (§95, §330): the club signs nothing there, and its file stays the one already printed and signed.
+
+Baseline `BR-V4.72-2026-11-19`.
+
+## 992. An invitation can carry a blank bib: the invited person wears one of the desk's spares when confirmed (amending §647 and §444)
+
+**The owner, 2026-11-19, from his phone, two days before Saturday's race (2026-11-21):** «când invit pe cineva, trebuie să pot să-i dau unul dintre locurile de rezervă» — *when I invite somebody, I must be able to give them one of the reserve places*. Asked whether he meant a place kept for the club («Locuri păstrate pentru club», §914) or a blank bib from the desk's spares (§444, §989), he answered «Ambele» — both. The named bibs are printed; the club holds the pile of blank spares (154, 155, …).
+
+**The kept place was already the invitation's (§914).** Every staff verb counts against the whole capacity, an invitation among them: while a place kept for the club is free, an invitation takes it with no supplementary place, whoever waits for the site's places (`invitationFreePlaces`; SPECS BR-REQ-034-02 criterion 34; `tests/integration/registrations/kept-places.test.ts`, «an invitation takes a kept place with no supplementary place while the public line waits»). Nothing changed there. A new test sends one with the blank-bib tick on a race whose site's places are taken while somebody waits: it takes the kept place, the capacity unchanged and the person waiting still waiting, and its confirmation then takes the lowest spare — both, as asked.
+
+**Decision — the tick.** On «Trimite invitații noi», beside «Elită» and drawn the same way, «La confirmare primește un BIB gol» / “Gets a blank bib when confirmed”: unticked by default, drawn only while the event has desk spares reserved, its line naming the spares free now as the desk writes them («… libere acum (3): 154–156.»), or saying that every one is given. Ticked, the send's question adds «La confirmare, fiecare primește cel mai mic BIB gol liber atunci.» One tick for the whole send, as «Elită» and «E de la parteneri». Stored on each invitation: `event_invitations.blank_bib`, a boolean, false by default (migration `0219`, expand only, generated by drizzle-kit; no existing column could carry it — `elite`, `partner_name` and `outside_capacity` each mean something else). Audited as a flag on `event.invitation_sent`, never a name. Under the event lock the send refuses the tick on an event with no reservation (`INVITATION_NO_SPARES`: «Cursa nu are BIB-uri goale rezervate: tipărește-le întâi din «Alocare și tipărire»; nu s-a trimis nicio invitație.»), before anything is written or anybody emailed; a reservation is never removed, so only a post the page never drew meets it. A reservation whose spares are all given at the send is no refusal: the club may print more before the confirmation, and the confirmation says what happened.
+
+**Decision — the number, at the confirmation.** A number exists only once a registration is confirmed (§548), so the spare is given then — not at the send or at the acceptance: an invitation holds a place, never a number, and one that lapses or is withdrawn leaves no spare taken. `service.ts#bibAtConfirmation`, the one place both confirmation transitions draw a number (`signDeclaration`, the person's own signature from the link; `acceptDeclarationOnPaper`, the desk's paper — «Confirmă aici», «Dă-i un loc»), asks for the accepted invitation naming the registration (`findBlankBibInvitationOfRegistration`: by its link, or taken over by another route, `markInvitationAdopted`, as «Elită» from the send follows it, §917). With the tick, the number is **the lowest of the desk's spares free at that moment** (`freeSpareBibNumbers`: the reservation less every number worn, retired or stepped over by a print) instead of the allocator's next one, marked printed (`bib_printed_at`: a spare is on paper, §444), read and written in the confirmation's own transaction under the event row's lock — the one every number at the event is drawn, typed or handed under — so no draw, desk, typed number, «Dă-i un BIB gol» or second invitation reaches the same spare in between, and the partial unique index on `(event_id, bib_number)` is the last word. The confirmation's own email (`REGISTRATION_CONFIRMED`) says the number with the QR, as every confirmation's does: no second email. The spares card lists it («154 → name», `givenSpareBibs`, §989); the desk's suggestion, the walk-in's box and the reprint of the free spares skip it.
+
+- **None free then:** the ordinary draw, so a runner is never left without a number, and the registration's trail says the blank bib could not be given.
+- **A number handed with the paper at the desk wins** (`handedBibAtConfirmation`, §444): the paper in the volunteer's hand is what the runner wears — usually a spare, which serves the tick anyway; no trail line.
+- **«Lista de invitați speciali» (§643, §648)** follows the same rule: the blank bib, over the special guests' own series — the tick is the Administrator's choice for that person.
+- **A test registration wears no number** (`AGENTS.md` §12.6): no spare and no line.
+
+**What the Administrator sees.** On the invitation's row in «Invitații», «BIB gol la confirmare» with the number's glyph, asked by name, and «BIB gol: 154» once the registration it became wears that spare — read from the spares card's own reader. On the registration's page, under «Înscriere pe invitație — trimisă de …»: before the confirmation «Invitația îi dă un BIB gol la confirmare: cel mai mic liber atunci.»; after it «La confirmare a primit BIB-ul gol 154, cum cerea invitația.» or «Invitația cerea un BIB gol, dar la confirmare nu mai era niciunul liber: a primit numărul 23.» The trail («Ce a făcut echipa») carries `registration.invitation_blank_bib_given` or `registration.invitation_blank_bib_missed` — `{ eventId, invitationId, bibNumber }`, never a name — under the Administrator who sent the invitation, as «Elită» from the send is audited, its sentence and «nr. 154» in both languages. The person is told only the number, as any runner is.
+
+**Authorization unchanged.** Inviting is the Administrator's (`canManageRegistrations`), asserted at the action, in the admin service and in the service; the Organizer reads the chip and is handed no form (§289); the desk's verbs keep their roles.
+
+**Refused.** Reserving the spare at the send or at the acceptance: a number before the confirmation is what §548 removed, and an invitation that lapses would keep a spare nobody wears. A spare chosen by its number at the send («154 for Ana»): the owner asked for one of the spares, the lowest free one is what the desk hands too (§444), and a chosen number could be handed at the desk in the meantime. Refusing the confirmation when no spare is free: a runner is never left without a number. A second email (`BIB_ASSIGNED`) at the confirmation: the confirmation's own email carries the number.
+
+**Not done.** The race-day desk's row does not say that a runner's number is a blank bib; the spares card and the registration's page do. The tick of an invitation already sent cannot be changed: no such verb was asked — withdraw it and send again.
+
+No dependency. Both languages, the backoffice's plain words, the glyph asked by its name, 44-pixel targets. The administrators' guide gains one step under «Numere de rezervă pentru cine se înscrie la masă»; `AGENTS.md` §15.11 verb 7, `BUSINESS.md` (the invitation, BR-BUS-037) and `SETUP.md` (the invitations' procedure) say it.
+
+**Held by** `tests/integration/registrations/invitation-blank-bib.test.ts` (the tick stored, audited and refused without spares; the action's post; the Organizer refused; each confirmation path — the person's signature, the desk's paper, a registration that took the invitation over — giving the lowest free spare, printed, the trail under the sender and the number in the confirmation's email; a handed number winning; an unticked invitation's ordinary number; a special guest's blank bib; a test registration's none; no spare free and the ordinary number with its line; two confirmations in turn; a spare the invitation took refused at the desk, typed or as «Dă-i un BIB gol», and the reverse; «Ambele» with a kept place; the form's tick and its line, the row's chip), `tests/integration/registrations/invitation-blank-bib-screens.test.ts` (the registration page's line before and after the confirmation, and the trail, in both languages), `tests/concurrency/invitation-blank-bib.test.ts` (two confirmations at once on two connections take two spares; a confirmation and a walk-in handed the same spare at once never share it), `tests/integration/registrations/kept-places.test.ts` (the kept place, as before) and e2e `tests/e2e/invitation-blank-bib.spec.ts` on the phone and the desktop.
+
+Baseline `BR-V4.73-2026-11-19`.
+
+## 993. The registrations list says when a registration was cancelled, under «Anulată»
+
+**The owner, 2026-11-19, two days before Saturday's race:** «când anulează cineva, vreau să văd și când a anulat». The registrations list's «Stare» column said «Anulată» and nothing more; the moment lived in the step's cell only as its hover title («3/6 · … · Anulată …»), which a phone never shows, and on the registration's own page.
+
+**Decision.** Under the state's chip, on a cancelled registration, the moment it was cancelled — the row's own `cancelled_at`, to the minute on the club's clock, in the list's short form (`formatDay`, as «Trimisă» and the timeline write a moment) — and on a lapsed one, under «Expirată», its `expired_at` the same way: a registration that is over says when it ended. Nothing under a live registration. It is read from the row the list already selects, no query, for every role that reads the list, and «Stare» is a column a phone's card always draws.
+
+**Not in this change.** A «Cancelled at» column in the export: the export says why (`Cancellation reason`); when is one more column if the club asks for it.
+
+Baseline `BR-V4.74-2026-11-19`.
+
+## 994. The volunteers' addresses on «Voluntari» and on the plan's table, and the plan's names in capitals
+
+**The owner, 2026-11-19, two days before Saturday's race, with a picture of «Punctele, pe scurt» (§974):** «Aici vreau numele cu caps și vreau și mailul», **and then, with a picture of the «Voluntari» list (§839):** «și aici vreau să văd mailurile». A volunteer's address was on the person's own page alone; the plan's table gave each person's name and telephone, and the decision and the notes under them (§981), all in one weight, so one person ran into the next.
+
+**Decision.**
+
+- *«Punctele, pe scurt».* Each person's name in capitals (`text-transform`, so the words stay as typed for a screen reader and a copy), on the screen and on the paper, and after the telephone the address, a `mailto:` link with the telephone's shape — a thumb's 44 pixels on the screen, the address as text on the paper — breaking inside the cell rather than widening the table. A row the club typed without an address has none. The plan's one read (`readVolunteerPlan`) carries the address with the telephone; nothing else reads it, and «Trimite fiecăruia punctul lui» (§956) sends nobody else's address.
+- *«Voluntari».* A column «Contact», right after «Nume», as the registrations list's «Contact» (§943): the address, a `mailto:` link, and under it the telephone, a `tel:` link a phone rings, read grouped. A row the club typed with neither (§865) has an empty cell and no line on a phone's card; one with only one of them has that one. «Coloane» hides it. Its «?» says who sees them.
+- *Who sees them.* The same three roles as both screens already: the Organizer, the Administrator and the Superadministrator (`canManageVolunteers`), who read the same address on the person's page. No other role, and no public page.
+
+**Not in this change.** The names in capitals on «Pe puncte» and on the badges: the owner asked for the table.
+
+Baseline `BR-V4.75-2026-11-19`.

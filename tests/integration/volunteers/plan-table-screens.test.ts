@@ -11,7 +11,7 @@ import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
-import { elementWith, type PlanRace, planPointsOf, planSummaryOf, seedPlanRace } from "../../helpers/volunteer-plan";
+import { elementWith, type PlanRace, planAddressOf, planPointsOf, planSummaryOf, seedPlanRace } from "../../helpers/volunteer-plan";
 
 /**
  * §974, BR-REQ-050-02, BR-REQ-041-01, BR-REQ-060-01 — «Punctele, pe scurt», the view «Tabel» of «Planul voluntarilor» (the
@@ -223,19 +223,19 @@ describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view
       expect(rows.map((cells) => cells.map(wordsOf)), locale).toEqual(
         locale === "ro"
           ? [
-              ["1", "Intersecția Stejeriș", "1,2", "—", "Ana Pop +40 700 000 011 Zoe Manea", "2"],
+              ["1", "Intersecția Stejeriș", "1,2", "—", "Ana Pop +40 700 000 011 ana.pop@example.test Zoe Manea", "2"],
               ["2", "Izvor", "3,4", `${PIATA} ${openMap}`, "niciunul", "0"],
-              ["3", "Apă la cabană", "5,5", "—", "Dan Ene +40 700 000 022", "1"],
-              ["4", "Podul de lemn", "7,25", "—", "Ion Lupu +40 700 000 033", "1"],
-              ["", "Kituri și numere", "start–finish", `${PIATA} ${openMap}`, "Radu Liber +40 700 000 044", "1"],
+              ["3", "Apă la cabană", "5,5", "—", "Dan Ene +40 700 000 022 dan.ene@example.test", "1"],
+              ["4", "Podul de lemn", "7,25", "—", "Ion Lupu +40 700 000 033 ion.lupu@example.test", "1"],
+              ["", "Kituri și numere", "start–finish", `${PIATA} ${openMap}`, "Radu Liber +40 700 000 044 radu.liber@example.test", "1"],
               ["", "Linia de start", "start–finish", "—", "niciunul", "0"],
             ]
           : [
-              ["1", "Stejeriș junction", "1.2", "—", "Ana Pop +40 700 000 011 Zoe Manea", "2"],
+              ["1", "Stejeriș junction", "1.2", "—", "Ana Pop +40 700 000 011 ana.pop@example.test Zoe Manea", "2"],
               ["2", "Izvor", "3.4", `${PIATA} ${openMap}`, "nobody", "0"],
-              ["3", "Water at the hut", "5.5", "—", "Dan Ene +40 700 000 022", "1"],
-              ["4", "The wooden bridge", "7.25", "—", "Ion Lupu +40 700 000 033", "1"],
-              ["", "Kituri și numere", "start–finish", `${PIATA} ${openMap}`, "Radu Liber +40 700 000 044", "1"],
+              ["3", "Water at the hut", "5.5", "—", "Dan Ene +40 700 000 022 dan.ene@example.test", "1"],
+              ["4", "The wooden bridge", "7.25", "—", "Ion Lupu +40 700 000 033 ion.lupu@example.test", "1"],
+              ["", "Kituri și numere", "start–finish", `${PIATA} ${openMap}`, "Radu Liber +40 700 000 044 radu.liber@example.test", "1"],
               ["", "Linia de start", "start–finish", "—", "nobody", "0"],
             ],
       );
@@ -272,6 +272,11 @@ describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view
         "tel:+40700000033",
         "tel:+40700000044",
       ]);
+      // §994 — «și vreau și mailul»: after the telephone, the address to write to, a `mailto:` link; Zoe, typed with none, has none.
+      expect(tagsOf(wideOf(section), "plan-table-email").map((tag) => /href="([^"]*)"/.exec(tag)?.[1])).toEqual(
+        ["Ana Pop", "Dan Ene", "Ion Lupu", "Radu Liber"].map((name) => `mailto:${planAddressOf(name)}`),
+      );
+      expect(textsOf(wideOf(section), "plan-table-email")).toEqual(["Ana Pop", "Dan Ene", "Ion Lupu", "Radu Liber"].map(planAddressOf));
       expect(section).not.toContain("Eva Stan");
       expect(section).not.toContain("Mara Dinu");
       for (const id of order) {
@@ -320,7 +325,7 @@ describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view
       state.locale = locale;
       const section = sectionOf(await planPage(race.otherId));
       expect(rowsOf(wideOf(section)).map((cells) => cells.map(wordsOf))).toEqual([
-        ["1", locale === "ro" ? "Punctul altui eveniment" : "Another event's point", "3", "—", "Mara Dinu +40 700 000 066", "1"].map((cell) => escaped(cell)),
+        ["1", locale === "ro" ? "Punctul altui eveniment" : "Another event's point", "3", "—", "Mara Dinu +40 700 000 066 mara.dinu@example.test", "1"].map((cell) => escaped(cell)),
       ]);
       expect(afterTableOf(section)).toContain(`>${total}<`);
     }
@@ -357,8 +362,12 @@ describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view
     // The map's link stays off the paper; the numbers print.
     for (const tag of tagsOf(section, "plan-table-map")) expect(printOf(page, classesIn(tag))).toMatch(/display:none/);
     expect(tagsOf(section, "plan-table-coordinates")[0]).toBe('<span data-testid="plan-table-coordinates">');
-    // A name and a telephone print as text: no height, no link's colour, no underline.
-    for (const testid of ["plan-table-point", "plan-table-phone"]) {
+    // §994 — «Aici vreau numele cu caps»: each person's name in capitals, on the screen and on the paper, the words as typed.
+    const personName = classesIn(tagsOf(section, "plan-table-person-name")[0]);
+    expect(personName.some((name) => new RegExp(`\\.${name}\\{[^}]*text-transform:uppercase`).test(rulesOf(page)))).toBe(true);
+    expect(textsOf(section, "plan-table-person-name")[0]).toBe("Ana Pop");
+    // A name, a telephone and an address print as text: no height, no link's colour, no underline.
+    for (const testid of ["plan-table-point", "plan-table-phone", "plan-table-email"]) {
       const names = classesIn(tagsOf(section, testid)[0]);
       expect(printOf(page, names), testid).toMatch(/min-height:0;[^}]*color:inherit;[^}]*text-decoration:none/);
       // 44 pixels tall on a screen (BR-REQ-041-01 criterion 6), the map's link too.

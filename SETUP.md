@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.71-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.75-2026-11-19 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V4.71-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.75-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1722,6 +1722,16 @@ languages go live together; that is the rule, not a setting.
      keep none of the announced places. The tick shows only while the race's **«Folosește lista de
      invitați speciali»** (item 5) is ticked; switched off since the page was opened, the send is refused with
      the same sentence the registration's own «Lista de invitați speciali» gives;
+   - «La confirmare primește un BIB gol» (unticked by default) for a person who should wear one of the
+     desk's blank spare bibs: the tick shows only once spares are printed («Alocare și tipărire» →
+     «Numere de rezervă pentru înscrierile de la fața locului»), and the line under it says which are free
+     now. When that person's registration is confirmed — by their own signature, on paper at the desk, or
+     by a registration of their address that took the invitation over — they get the lowest blank bib free
+     at that moment, marked printed, and the confirmation's email says its number; if none is free then,
+     they get the next ordinary number and their registration's page says so. Hand them that blank bib
+     with their name written on it; the spares card lists it («154 → name») like any spare given, and the
+     invitation's row shows «BIB gol: 154». A number the desk hands with the paper wins over the tick. It
+     works with «Pe lista de invitați speciali» too: the blank bib instead of the special guests' series;
    - «Trimite invitațiile» asks first: how many invitations, how many places are free for them, until
      when the invitation lasts and in which language a new address gets it, and — on a full race, or
      while anybody is on the waiting list — how many supplementary places it adds and what the capacity
@@ -2300,8 +2310,10 @@ only ones who see the names, addresses and telephone numbers.
    way and when, and «PDF contract» for their copy) or «Contract neacceptat încă». For a person you entered
    by hand: **«Trimite linkul contractului»** emails them the agreement and a single-use link to accept it
    (valid 14 days; a new press sends a new link that replaces the old), or print **«PDF de semnat»** — the
-   agreement filled for them, with the volunteer's and the organizer's signature lines — let them sign it
-   at the desk, keep the sheet, and press **«Semnat pe hârtie»**, which records the version in force and
+   agreement filled for them, with the volunteer's signature line on the left and, on the right, «Asociația»:
+   the club's legal name (`CLUB_LEGAL_NAME`, else the club's name) and the lines its representative fills in by
+   hand, «Reprezentant (nume și funcție)», «Semnătura», «Data» — let them sign it at the desk, have the club's
+   representative sign the right side, keep the sheet, and press **«Semnat pe hârtie»**, which records the version in force and
    your name as the one who recorded it, and emails the person their copy. While nobody gave the person a
    role, the agreement names the roles they offered for: the platform's text says so in its own sentence
    («Rolul îl stabilesc organizatorii dintre cele pentru care voluntarul s-a oferit — …»); a version approved
@@ -2389,7 +2401,7 @@ only ones who see the names, addresses and telephone numbers.
    - **On the card**: a minor shows «Acordul părintelui lipsește» until the parent accepts («Link trimis părintelui» while a link is live,
      «Acordul părintelui primit» after), with the parent's name beside the age. **«Confirmă» is refused** with that sentence until the parent has accepted.
      «Trimite linkul părintelui» sends the email again (only with an address); **«PDF de semnat de părinte»** is the sheet for the desk — the volunteer's line
-     and the parent's — and **«Acordul părintelui pe hârtie»** records that the parent signed it (after a question), naming you; the sheet is kept
+     and the parent's on the left, the Association's on the right — and **«Acordul părintelui pe hârtie»** records that the parent signed it (after a question), naming you; the sheet is kept
      by the club. A volunteer entered by hand under 18 needs the parent's name (the address only if you have it: the consent may be on paper); a
      person's age changed to 18 or more clears the parent's data. The CSV and «Toate datele unei persoane» carry the parent too.
      A person already «Confirmat» cannot be changed to an age under 18 in one save: the card says «Acordul părintelui lipsește», and you move them

@@ -28,6 +28,7 @@ import { findCurrentApprovedDocument, volunteerMinorsOpen } from "@/modules/lega
 import { readEmailSummaries } from "@/modules/notifications/email-summaries";
 import EmailSummaryCell from "@/modules/notifications/ui/EmailSummary";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
+import { formatPhone } from "@/modules/registrations/phone";
 import NotesMark from "@/modules/registrations/ui/NotesMark";
 import { buildListHref, pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import { canManageRegistrations, canManageVolunteers } from "@/modules/staff-identity/domain/roles";
@@ -103,6 +104,12 @@ function isVolunteerState(value: string | undefined): value is VolunteerState {
  * for the cell still breaks, and the column is never counted as one character wide.
  */
 const MESSAGE_CELL_SX = { display: "inline-block", minWidth: { xs: 0, md: "12rem" }, maxWidth: "26rem", whiteSpace: "pre-line", overflowWrap: "break-word" } as const;
+
+/**
+ * A person's address in the list's «Contact» column (§994): on a line of its own, as the registrations list's «Contact» writes
+ * one (§943) — a floor so a full table cannot squeeze it to a letter a line, broken only when it is longer than the column.
+ */
+const EMAIL_CELL_SX = { display: "inline-block", minWidth: { xs: 0, md: "12rem" }, overflowWrap: "anywhere" } as const;
 
 /**
  * «Voluntari» (§839; the owner, 2026-10-21: «a nicer volunteers screen, similar to the participants area»): the
@@ -505,6 +512,34 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           {notesOf(row)}
         </Stack>
       ),
+    },
+    {
+      /*
+        «Contact» (§994; the owner, 2026-11-19: «și aici vreau să văd mailurile»), right after the name, as the registrations
+        list's «Contact» (§943): the address, a `mailto:` link, and under it the telephone, a `tel:` link a phone rings — each as
+        the person typed it, or as the organizer did on a row the club entered. Both were on the person's page alone. The same
+        three roles as the rest of the list (`canManageVolunteers`); a row the club typed with neither has an empty cell and no
+        line on a phone's card. «Coloane» hides it.
+      */
+      key: "contact",
+      label: t("registrations.columnContact"),
+      hint: t("volunteers.screen.contactHint"),
+      omitEmptyOnPhone: true,
+      render: (row) =>
+        row.email === null && row.phone === null ? null : (
+          <Stack spacing={0.25} sx={{ alignItems: { xs: "flex-end", md: "flex-start" } }}>
+            {row.email !== null && (
+              <Box component="a" href={`mailto:${row.email}`} sx={EMAIL_CELL_SX} data-testid="volunteer-email">
+                {row.email}
+              </Box>
+            )}
+            {row.phone !== null && (
+              <Box component="a" href={`tel:${row.phone.replace(/[^\d+]/g, "")}`} sx={{ whiteSpace: "nowrap" }} data-testid="volunteer-phone">
+                {formatPhone(row.phone)}
+              </Box>
+            )}
+          </Stack>
+        ),
     },
     {
       /*
