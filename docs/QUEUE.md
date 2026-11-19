@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.72` | the volunteer agreement signed by both parties on paper: the Association's column on the right (§991) |
 | `BR-V4.71` | every line of the elite list has a number, so «Cronometrare» times every elite the same (§990) |
 | `BR-V4.70` | «Dă-i un BIB gol»: a free desk spare for a confirmed runner, printed or not, the old number retired, and the spares card lists who has each (§989) |
 | `BR-V4.69` | «Ecusoane cu nume» and the volunteers' Excel — the hotfixes' tests — and branches named for what they carry (§988) |
