@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.74` | the registrations list says when someone cancelled (§993) |
 | `BR-V4.73` | an invitation can carry a blank bib: the lowest free desk spare at the confirmation (§992) |
 | `BR-V4.72` | the volunteer agreement signed by both parties on paper: the Association's column on the right (§991) |
 | `BR-V4.71` | every line of the elite list has a number, so «Cronometrare» times every elite the same (§990) |

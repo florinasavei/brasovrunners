@@ -280,7 +280,7 @@ describe("§650 «Până când» on the registrations list", () => {
     expect(last("Ana Confirmată")).toEqual(["", ""]);
   });
 
-  it("§NNN «Stare»: under «Anulată» and «Expirată» the moment the row ended, from the row; nothing under a live one", async () => {
+  it("§993 «Stare»: under «Anulată» and «Expirată» the moment the row ended, from the row; nothing under a live one", async () => {
     // The owner, 2026-11-19: «când anulează cineva, vreau să văd și când a anulat».
     const race = await createRace("Crosul");
     const cancelledAt = new Date("2026-11-18T19:42:00.000Z");

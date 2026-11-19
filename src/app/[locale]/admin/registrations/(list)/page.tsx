@@ -769,7 +769,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       // The state as the registration's page and the desk draw it (§847): one table, the glyph before the word.
       render: (row) => {
         /*
-          Under «Anulată» or «Expirată», when it ended (§NNN; the owner, 2026-11-19: «când anulează cineva, vreau să văd
+          Under «Anulată» or «Expirată», when it ended (§993; the owner, 2026-11-19: «când anulează cineva, vreau să văd
           și când a anulat»): the row's own `cancelled_at` or `expired_at`, no query, to the minute as the timeline says
           it. The journey's cell carried the moment only in its hover title, which a phone never shows.
         */
