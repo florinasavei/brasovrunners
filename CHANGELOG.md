@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.70-2026-11-19
+
+- **«Dă-i un BIB gol»: a blank bib from the desk's spares for a runner already registered** — on a confirmed registration's page, choose one of the event's free spare numbers and the runner wears it from then on, even when their named bib was already printed; the old number is retired and never given to anybody again, the email is your choice, and the spares card lists who has each blank bib («154 → name»). §989.
+## BR-V4.69-2026-11-19
+
+- **«Ecusoane cu nume» on the volunteers' badges, and a volunteers' Excel that opens cleanly** — below «Tipărire», one line a badge prints the word on its band, the first name and, if wanted, the band's colour, starting from the event's confirmed volunteers, the name standing above the club's logo watermark when the logo leaves it room; every «Descarcă Excel» of the volunteers opens in Excel without the offer to «recover» it. Both shipped as hotfixes on 2026-11-19; their tests follow, with the rule that a branch is named for what it carries. §988.
 ## BR-V4.68-2026-11-19
 
 - **«Atașează traseul (GPX)» in «Trimite un mesaj participanților»** — one more tick in the composer, shown when the event has a GPX file: every email of the send then carries the route's GPX attached, with one line and a link to the same file under your words, in both languages, so a phone that hides attachments still gets it; the preview shows the line and the question before «Trimite» says it. §987.

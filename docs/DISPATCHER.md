@@ -40,7 +40,8 @@ building, what waits on me, and the usage band you are working in.
    Save every result, as returned, to the session's scratchpad as `item-<tag>.json` —
    `yarn docs:land` reads those files.
 4. **Integrate.** When two to four branches are `ship` (or `ship-with-fixes` with nits only), branch
-   `batch/<date>-<letter>` from `origin/qa` with `--no-track`, check it out, and
+   `batch/<what-it-gathers>` from `origin/qa` with `--no-track` — named for every change it carries
+   (`batch/race-day-timing-raffle-results-presence`), never a date or a letter alone — check it out, and
    `yarn batch:merge feat/a feat/b …`: the journal, the catalogues and the tests resolved by rule,
    sibling snapshots re-linked, `yarn migrations:check` and `yarn typecheck` at the end; any
    other conflict stops it (the Conflict merge card), and the same command resumes. Then `yarn lint`.
@@ -227,7 +228,7 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
   Then the owner adds the label **ship** — `.github/workflows/release.yml` merges `qa` in by rule,
   lands the entry, pushes the landing and runs `yarn ship` (`docs/RUNBOOKS.md` § Release from the
   phone). One pull request per release; the next label waits for the running one.
-- **Several changes in one release:** a session cuts `batch/<date>-<letter>` from `origin/qa`,
+- **Several changes in one release:** a session cuts `batch/<what-it-gathers>` from `origin/qa`,
   runs `yarn batch:merge` with the branches, pushes, and opens one pull request carrying every
   entry; one label lands them all, numbered in the order the entries were added.
 - **What a branch writes, and what that costs:** a branch writes its own README index row, its
@@ -268,6 +269,9 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
 
 - A feature branch, a PR into `qa`, never a push to `qa` or `main`; the release is the `qa → main`
   PR (`SETUP.md` § Contributing).
+- Every branch is named for what it carries — the `branch` a card hands its workflow, a batch, an
+  integration of several changes (named for all of them), a hotfix — never a generated name such as
+  `claude/quirky-ramanujan-…`; the owner's standing rule of 2026-11-19 (CLAUDE.md § Working conventions).
 - Every code PR bumps the baseline and opens its CHANGELOG section (`yarn docs:land` does it).
 - Implementers never edit `DECISIONS.md`, `CHANGELOG.md`, `SPECS.md`, a baseline marker, or
   CLAUDE.md's baseline line; the dispatcher (or `release.yml`) lands their text from

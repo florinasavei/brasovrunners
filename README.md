@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.68-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.70-2026-11-19 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V4.68-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.70-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 > **Write code once, run forever, always vibe.**
 
@@ -464,7 +464,7 @@ No paid MUI X or Tiptap cloud feature is required for V1.
 There are two long-lived branches:
 
 ```text
-feature/*, fix/*, chore/*
+feat/*, fix/*, chore/*
             |
             v
            qa  ------------------> QA host
@@ -478,7 +478,9 @@ Rules:
 
 - `qa` is the default branch and current integrated release candidate;
 - normal branches start from `qa` and open pull requests into `qa`;
-- feature/fix pull requests use squash merge;
+- a branch is named for what it carries — every change in it, never a generated name such as
+  `claude/quirky-ramanujan-…` (`SETUP.md` § Contributing, `DECISIONS.md` §988);
+- feat/fix pull requests use squash merge;
 - production promotion is a reviewed `qa -> main` pull request;
 - the release pull request uses a merge commit so branch ancestry remains clear;
 - direct pushes to `qa` and `main` are blocked;

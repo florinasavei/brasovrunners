@@ -7,7 +7,7 @@ import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
-import { readSheet } from "../../helpers/xlsx";
+import { readSheet, unzip } from "../../helpers/xlsx";
 
 /**
  * §839 — «Descarcă Excel» for an event's volunteers (the owner, 2026-10-21: «I wanna be able to export volunteers in
@@ -130,6 +130,21 @@ describe("«Descarcă Excel» (§839)", () => {
     // The CSV keeps its own order (§761): the role given first, nothing moved.
     expect(text.split("\r\n")[0].startsWith(`${ro.Admin.volunteers.csvColumns.role},`)).toBe(true);
     expect(text).toContain("Ana Pop");
+  });
+
+  it("holds one <definedNames>, as a workbook may (CT_Workbook), carrying the filter's and the printed titles' names — so Excel opens it without «recover» (§988)", async () => {
+    for (const lang of ["ro", "en"]) {
+      const workbook = unzip(Buffer.from(await (await download(`format=xlsx&lang=${lang}`)).arrayBuffer())).get("xl/workbook.xml") ?? "";
+      // The writer's own empty `<definedNames/>` is the one that carries the names; a second element after `</sheets>` was what Excel repaired.
+      expect(workbook.match(/<definedNames[\s/>]/g), lang).toHaveLength(1);
+      const names = /<definedNames>([\s\S]*?)<\/definedNames>/.exec(workbook)?.[1] ?? "";
+      expect(names.match(/<definedName /g), lang).toHaveLength(2);
+      expect(names).toContain('<definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">');
+      expect(names).toContain('<definedName name="_xlnm.Print_Titles" localSheetId="0">');
+      // Where the schema wants it: after the sheets, before the calculation's properties.
+      expect(workbook.indexOf("<definedNames>")).toBeGreaterThan(workbook.indexOf("</sheets>"));
+      expect(workbook.indexOf("</definedNames>")).toBeLessThan(workbook.indexOf("<calcPr"));
+    }
   });
 
   it("is refused to the Tehnic role whatever the format", async () => {

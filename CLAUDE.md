@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.68-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.70-2026-11-19 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V4.68-2026-11-19`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V4.70-2026-11-19`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -20,9 +20,9 @@ production carries clearly marked sample legal text (`DECISIONS.md` §29), so th
 journey can be walked on QA end to end. What is left is not application code — it is
 `/admin/tasks`, which reads it from the system, summarised in `docs/OWNER-TODO.md`.
 
-[`WEEKEND.md`](./WEEKEND.md) records the narrower pilot this replaced — Romanian event pages
-only, no registration, no email, no login — and is now a historical scope document rather than
-the current one. The original ten-pull-request M1 plan is a table in `DECISIONS.md` §118; it exists.
+[`WEEKEND.md`](./WEEKEND.md) records the narrower pilot this replaced and is now a historical
+scope document rather than the current one. The original ten-pull-request M1 plan is a table in
+`DECISIONS.md` §118; it exists.
 
 ## Commands that exist right now
 
@@ -205,7 +205,9 @@ than any training data can be trusted on. Pin exact versions in `package.json`.
   PRs"); before that the rule was to stage and hand back a message. A release is the `qa →
   main` PR the owner merges; approving the production migration run and redeploying after it
   are authorised ("approve / deploy prod for me").
-- Branch from `qa` with `--no-track`, PR into `qa`. `main` is production. `SETUP.md` § Contributing.
+- Branch from `qa` with `--no-track`, PR into `qa`. `main` is production. **A branch is named for
+  all it carries** (the owner, 2026-11-19, §988), never a generated `claude/quirky-ramanujan-…`.
+  `SETUP.md` § Contributing.
 - Windows development machine, Linux CI. Anything with paths or line endings: test both.
 - The owner also works from a phone through Claude Code on the web. A cloud session prepares
   itself (`scripts/cloud-setup.sh`, run by the `SessionStart` hook in `.claude/settings.json`:
@@ -213,6 +215,6 @@ than any training data can be trusted on. Pin exact versions in `package.json`.
   local values only; §501); keep that script working when you change setup, the database
   version or the dev server. `docs/DEVELOPMENT.md` § Coding from the phone.
 - Tests are named by the `BR-REQ-*` they cover, or by the `AGENTS.md` section for cross-cutting
-  mechanisms (jobs, health). `WEEKEND.md` records the six that mattered for the original pilot.
+  mechanisms (jobs, health).
 - No `BaseService`, barrels, dispatch tables, or wrappers around MUI. `AGENTS.md` §1.3.
 - When a doc contradicts this file, the doc wins and this file is wrong — fix it here.

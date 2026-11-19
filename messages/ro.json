@@ -1954,6 +1954,7 @@
       "bibColumnHint": "Numărul de concurs:\n– «—»: înscrierea nu e confirmată încă; numărul vine la confirmare.\n– 12: dat la confirmare și trimis pe email.\n– 12 ✓: tipărit.",
       "bibSettled": "Numărul de concurs: {number}, dat la confirmare și trimis pe email. Dacă îl schimbi, persoana primește noul număr pe email, iar cel vechi nu se mai dă nimănui.",
       "bibSettledPrinted": "Numărul de concurs: {number}. E tipărit, deci nu se mai schimbă.",
+      "bibSettledPrintedBlank": "Numărul de concurs: {number}. E tipărit, deci se schimbă doar cu un BIB gol.",
       "bibNone": "Nu are încă un număr de concurs.",
       "bibChange": "Schimbă numărul",
       "bibPrinted": "BIB printat",
@@ -1979,6 +1980,19 @@
       "oneBib": {
         "download": "Descarcă BIB-ul (PDF)",
         "menu": "Descarcă BIB-ul"
+      },
+      "spareBib": {
+        "fold": "Dă-i un BIB gol",
+        "number": "BIB-ul gol",
+        "give": "Dă-i BIB-ul",
+        "help": "BIB-urile de rezervă încă nedate, cu linia pentru nume goală: alege numărul de pe BIB-ul din mâna persoanei.",
+        "confirmTitle": "Îi dai BIB-ul gol?",
+        "confirmBody": "{name} poartă de acum numărul {spareNumber}, de pe BIB-ul gol.",
+        "confirmOld": "Numărul {old} se retrage și nu se mai dă nimănui.",
+        "confirmOldPrinted": "Numărul {old} se retrage și nu se mai dă nimănui, iar BIB-ul tipărit cu el nu mai e valabil.",
+        "trail": "BIB gol dat: {to}",
+        "trailReplaced": "BIB gol dat: {to}, în locul numărului {from}, retras",
+        "trailReplacedPrinted": "BIB gol dat: {to}, în locul numărului tipărit {from}, retras"
       },
       "notOnPublicList": "Nu apare public",
       "erase": "Șterge definitiv",
@@ -2756,6 +2770,7 @@
       "SAMPLE_VALUE_IN_EMAIL": "Textul conține valoarea de exemplu „{value}” — folosește {placeholder}.",
       "SAMPLE_VALUES_IN_EMAIL": "Textul conține valori de exemplu, nu câmpuri: {found}. Folosește câmpurile în locul lor.",
       "BIB_NUMBER_TAKEN": "Numărul acesta e deja al altcuiva la acest eveniment: dat, rezervat, pe lista de elită sau al unei înscrieri șterse. Alege alt număr din cutie și încearcă din nou.",
+      "SPARE_BIB_TAKEN": "BIB-ul gol ales e deja al altcuiva: tocmai l-a dat cineva sau e retras. Reîncarcă pagina și alege alt BIB gol.",
       "ELITE_NUMBER_TAKEN": "Numărul acesta e deja folosit la eveniment: al unei înscrieri, al altui nume de elită sau o rezervă a mesei. Scrie alt număr sau lasă căsuța goală.",
       "RESERVE_ELITE_NAME": "Numele are peste {max} de caractere și nu încape pe BIB. Scrie-l mai scurt în editorul evenimentului, la „Elită — doar numele pe BIB”.",
       "WALK_IN_BIB_TAKEN": "Persoana e înscrisă, dar numărul tocmai l-a dat altcineva, deci e neconfirmată. Caut-o în listă și apasă „Confirmă aici” cu alt număr.",
@@ -7666,6 +7681,12 @@
       "sparesReadOnly": "Doar un administrator rezervă numere noi.",
       "sparesReserved": "Rezervate numerele {from}–{to}. Descarcă foaia și tipărește-o.",
       "sparesDownloadRange": "Descarcă foaia {from}–{to} (PDF)",
+      "sparesGiven": {
+        "one": "{count} BIB gol dat:",
+        "few": "{count} BIB-uri goale date:",
+        "other": "{count} de BIB-uri goale date:"
+      },
+      "sparesGivenLine": "{number} → {name}",
       "eliteTitle": "Elită — doar numele pe BIB",
       "eliteNone": "nicio persoană",
       "eliteCount": {
@@ -10080,7 +10101,9 @@
                 "«Alergări» → «Editează» → «Participare, înscrieri și regulament» → «Numere de concurs (BIB)» → «Alocare și tipărire» → «Numere de rezervă pentru înscrierile de la fața locului».",
                 "La «Câte» scrie câte numere goale vrei, apoi apasă «Tipărește» și confirmă. Fereastra spune de la ce număr încep: de atunci nimeni înscris online nu le mai primește.",
                 "Apasă «Descarcă foaia» și tipărește-o. Fiecare număr are linia pentru nume goală; la masă se scrie numele cu markerul, iar formularul propune următorul număr liber.",
-                "Ai nevoie de ele din nou? «Retipărește rezervele libere (PDF)» pune pe foaie doar numerele încă nedate și nu rezervă altele."
+                "Ai nevoie de ele din nou? «Retipărește rezervele libere (PDF)» pune pe foaie doar numerele încă nedate și nu rezervă altele.",
+                "Cineva înscris, chiar cu BIB-ul tipărit, primește un BIB gol? «Înscrieri» → înscrierea lui → «Dă-i un BIB gol» → la «BIB-ul gol» alege numărul de pe hârtie → «Dă-i BIB-ul». Numărul vechi se retrage, iar BIB-ul tipărit cu el nu mai e bun.",
+                "Cine are fiecare BIB gol dat apare sub «Numere de rezervă pentru înscrierile de la fața locului»: numărul, apoi numele, cu link spre înscriere."
               ]
             },
             {
