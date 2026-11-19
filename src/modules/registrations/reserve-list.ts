@@ -12,6 +12,7 @@ import { canKeepRegistrationNotes, canManageRegistrations } from "@/modules/staf
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { enterOnWaitlistByStaff, type WaitlistEntryByStaffResult } from "./admin-service";
+import { pickEliteLineNumber } from "./bibs";
 import { HIDDEN_LIST_OFF } from "./domain/hidden-list";
 import { parseEliteEntry } from "./elite-list";
 import { addRegistrationNote } from "./notes";
@@ -458,11 +459,14 @@ export async function settleReserveEntry<T extends Record<string, unknown>>(db: 
  * One transaction: the event row locked as `addEliteEntry` locks it (the lock every draw takes, `AGENTS.md`
  * §10.6), then the line — the order an event's delete takes them in — then the elite line written with the line's
  * first and last name through `parseEliteEntry` (trimmed, inner spaces collapsed, 1 to `ELITE_NAME_MAX`
- * characters; a longer name is refused naming `name`, and nothing is written) and **no number** (the editor's
- * card is where a number is given, with its checks), and the line deleted. The note is not carried — an elite
- * line has none — nor the partner's name («De la parteneri»: it labels a registration, and nobody is registered), and the
- * address, if any, goes with the line. The trail: `event_elite.added` for the new line
- * and `event_reserve.moved` for the old one, ids only. A second press on a line already moved finds it gone.
+ * characters; a longer name is refused naming `name`, and nothing is written) and **a number of its own** (§990,
+ * amending «no number» here: the line drew none, and «Cronometrare» drew it grey and could not time it) — the race's next
+ * free one, nobody else's, drawn under the same lock as an add with an empty box draws it (`bibs.ts#pickEliteLineNumber`;
+ * none left in the race's series is refused, `ELITE_NO_FREE_NUMBER`, nothing written) — and the line deleted. The note is
+ * not carried — an elite line has none — nor the partner's name («De la parteneri»: it labels a registration, and nobody
+ * is registered), and the address, if any, goes with the line. The trail: `event_elite.added` for the new line with
+ * `event_elite.number_given` for its number (`{ entryId, bibNumber }`), and `event_reserve.moved` for the old one, ids
+ * only. A second press on a line already moved finds it gone.
  */
 export async function moveReserveEntryToElite<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -482,9 +486,11 @@ export async function moveReserveEntryToElite<T extends Record<string, unknown>>
     if (!event) throw new DomainError("NOT_FOUND", "no such event");
     const entry = await lockedEntry(tx, entryId);
     const { name } = parseEliteEntry({ name: `${entry.firstName} ${entry.lastName}`, bibNumber: null });
+    const bibNumber = await pickEliteLineNumber(tx, entry.eventId);
+    if (bibNumber === null) throw new DomainError("ELITE_NO_FREE_NUMBER", "the race's own series has no free number left for an elite line");
     const [elite] = await tx
       .insert(eventEliteEntries)
-      .values({ eventId: entry.eventId, name, bibNumber: null, createdByStaffUserId: actor.id, createdAt: now })
+      .values({ eventId: entry.eventId, name, bibNumber, createdByStaffUserId: actor.id, createdAt: now })
       .returning({ id: eventEliteEntries.id });
     await tx.delete(eventReserveEntries).where(eq(eventReserveEntries.id, entry.id));
     await recordAuditEvent(tx, {
@@ -493,6 +499,14 @@ export async function moveReserveEntryToElite<T extends Record<string, unknown>>
       entityType: "event",
       entityId: entry.eventId,
       metadata: { entryId: elite.id, reserveEntryId: entry.id },
+      now,
+    });
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event_elite.number_given",
+      entityType: "event",
+      entityId: entry.eventId,
+      metadata: { entryId: elite.id, bibNumber },
       now,
     });
     await recordAuditEvent(tx, {

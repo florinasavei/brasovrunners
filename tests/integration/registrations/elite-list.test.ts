@@ -89,15 +89,16 @@ async function failureOf(operation: Promise<unknown>) {
 }
 
 describe("§895 the race's elite list", () => {
-  it("keeps names in the order typed, with an optional number, and registers, emails and tells nobody", async () => {
+  it("keeps names in the order typed, each with a number — typed, or drawn by itself (§990) — and registers, emails and tells nobody", async () => {
     const race = await createRace();
     const admin = await staff("ADMIN");
-    await addEliteEntry(db, admin, race, { name: "  Eliud   Kipchoge ", bibNumber: "" }, NOW);
-    await addEliteEntry(db, admin, race, { name: "Faith Kipyegon", bibNumber: " 2 " }, later(1));
+    // No number typed: the race's next free one, 1 on a race nobody has a number at yet.
+    expect((await addEliteEntry(db, admin, race, { name: "  Eliud   Kipchoge ", bibNumber: "" }, NOW)).bibNumber).toBe(1);
+    expect((await addEliteEntry(db, admin, race, { name: "Faith Kipyegon", bibNumber: " 2 " }, later(1))).bibNumber).toBe(2);
 
     const rows = await listEliteEntries(db, admin, race);
     expect(rows.map((row) => [row.name, row.bibNumber])).toEqual([
-      ["Eliud Kipchoge", null],
+      ["Eliud Kipchoge", 1],
       ["Faith Kipyegon", 2],
     ]);
     expect(await db.select().from(registrations)).toHaveLength(0);
@@ -216,19 +217,20 @@ describe("§895 the race's elite list", () => {
       const refusal = await failureOf(addEliteEntry(db, admin, race, { name: "Eliud Kipchoge", bibNumber: number }, later(1)));
       expect([refusal.code, refusal.fields], number).toEqual(["CONFLICT", ["bibNumber"]]);
     }
-    // Without a number the same name goes in: only the number is one person's.
+    // Without a number the same name goes in, drawing the race's next free one (§990): 1 the runner's, 2 the other line's — 3.
     await addEliteEntry(db, admin, race, { name: "Eliud Kipchoge", bibNumber: "" }, later(2));
-    expect((await listEliteEntries(db, admin, race)).map((row) => row.bibNumber)).toEqual([2, null]);
-    expect((await db.select().from(auditLogs)).map((row) => row.action)).toEqual(["event_elite.added", "event_elite.added"]);
+    expect((await listEliteEntries(db, admin, race)).map((row) => row.bibNumber)).toEqual([2, 3]);
+    expect((await db.select().from(auditLogs)).map((row) => row.action)).toEqual(["event_elite.added", "event_elite.added", "event_elite.number_given"]);
 
-    // The other way round: a confirmed runner with no number yet, then «Alocă numerele» — 2 is the elite runner's, so 3.
+    // The other way round: a confirmed runner with no number yet, then «Alocă numerele» — 2 and 3 are the elite runners', so 4.
     await confirmedRunner(race, "ion@example.org", null);
     expect(await assignBibNumbers(db, { actor: admin, eventId: race, now: later(3) })).toMatchObject({ assigned: 1 });
     const worn = (await db.select({ number: registrations.bibNumber }).from(registrations)).map((row) => row.number);
-    expect(worn.sort((a, b) => (a ?? 0) - (b ?? 0))).toEqual([1, 3]);
+    expect(worn.sort((a, b) => (a ?? 0) - (b ?? 0))).toEqual([1, 4]);
     // The desk's box and its suggestions say the same.
     expect(await bibNumberInUse(db, { eventId: race, number: 2 })).toBe(true);
-    expect(await suggestFreeBibNumbers(db, race, 1, 2)).toEqual([4, 5]);
+    expect(await bibNumberInUse(db, { eventId: race, number: 3 })).toBe(true);
+    expect(await suggestFreeBibNumbers(db, race, 1, 2)).toEqual([5, 6]);
 
     // Deleted, the line's number is nobody's again.
     const [faith] = await db.select().from(eventEliteEntries).where(eq(eventEliteEntries.bibNumber, 2));

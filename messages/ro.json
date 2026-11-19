@@ -2873,6 +2873,10 @@
       "REFUSAL_NEEDS_EMAIL": "Nu s-a anulat nimic: refuzul clubului pleacă întotdeauna cu emailul care îi spune persoanei motivul.",
       "ELITE_NOT_MARKED": "Înscrierea nu mai e marcată ca elită sau ambasador, așa că bifele ei nu se mai schimbă. Nu s-a scris nimic.",
       "ELITE_LABEL_TOO_LONG": "«Eticheta pe BIB» are cel mult {max} de caractere: scrie una mai scurtă și apasă din nou «Salvează». Nu s-a scris nimic.",
+      "ELITE_NO_FREE_NUMBER": "Seria cursei nu mai are niciun număr liber pentru lista de elită. Scrie tu un număr liber, pe lista de elită. Nu s-a scris nimic.",
+      "ELITE_NUMBER_HAS_RESULT": "Numărul nu se mai schimbă: la «Clasament» e un rezultat pe el, care și-ar pierde alergătorul. Corectează întâi la «Clasament».",
+      "ELITE_LINE_NUMBER_TAKEN": "Numărul acesta e deja folosit la eveniment: al unei înscrieri, al altui nume de elită sau o rezervă a mesei. Scrie alt număr; nu s-a schimbat nimic.",
+      "ELITE_LINE_NUMBER_INVALID": "Scrie numărul ca număr întreg, de la 1 la 99999; nu s-a schimbat nimic.",
       "ADDRESS_FAMILY_FORM_PENDING": "Nu s-a schimbat nimic: un formular de familie așteaptă confirmarea pe adresa veche. Schimbă adresa după ce e confirmat sau expiră.",
       "ADDRESS_INVITED": "Nu s-a schimbat nimic: adresa nouă are o invitație deschisă la acest eveniment. Retrage întâi invitația din «Invitații».",
       "ADDRESS_UNCHANGED": "Nu s-a schimbat nimic: e aceeași căsuță de email ca adresa de acum a înscrierii — un punct sau un „+” în plus duc tot acolo.",
@@ -7695,8 +7699,15 @@
       "eliteName": "Numele",
       "eliteNameHelp": "Numele persoanei, cum îl știi. Pe BIB se tipărește eticheta — implicit primul cuvânt —, pe care o schimbi pe rândul ei, după ce e adăugat. Cel mult {max} de caractere.",
       "eliteNumber": "Număr (opțional)",
-      "eliteNumberHelp": "Nu se tipărește pe BIB: BIB-ul de elită are doar numele. Numărul rămâne rezervat și nu se mai dă nimănui.",
+      "eliteNumberHelp": "Lăsat gol, numele primește singur următorul număr liber al cursei, pe care nu-l mai primește nimeni. Nu se tipărește pe BIB: e numărul de la sosire.",
       "eliteNumberShown": "nr. {number}",
+      "eliteNoNumber": "fără număr",
+      "eliteLineNumber": "Număr",
+      "eliteLineNumberHelp": "Numărul de la sosire, pentru cronometrare. Nu se tipărește pe BIB.",
+      "eliteLineNumberSave": "Salvează",
+      "eliteLineNumberSaveName": "Salvează numărul",
+      "eliteNumberAll": "Dă număr elitelor fără număr ({count})",
+      "eliteNumberAllHelp": "Fiecare primește următorul număr liber al cursei, ca să fie cronometrat ca celelalte elite. Nu se trimite nimic nimănui.",
       "eliteLabel": "Eticheta pe BIB",
       "eliteLabelHelp": "Implicit: prenumele. Se tipărește mare, în locul numărului; cel mult {max} de caractere.",
       "eliteLabelSave": "Salvează",
@@ -13028,7 +13039,9 @@
         "aria": "Sosit: {label} — {name}",
         "finished": "✓ {time}",
         "noNumberLine": "Fără număr: un Administrator îi pune unul pe lista de elită (pe BIB tot nu se tipărește). Până atunci, notează-i timpul pe hârtie.",
-        "noNumberRegistration": "Fără număr de concurs: dă-i unul la «Prezența» (pe BIB tot nu se tipărește). Până atunci, notează-i timpul pe hârtie."
+        "noNumberRegistration": "Fără număr de concurs: dă-i unul la «Prezența» (pe BIB tot nu se tipărește). Până atunci, notează-i timpul pe hârtie.",
+        "giveNumber": "Dă-i un număr",
+        "giveNumberAria": "Dă-i un număr: {label} — {name}"
       },
       "keep": {
         "button": "Prinde timpul",
@@ -13105,6 +13118,7 @@
         "duplicateShort": "{who} era deja trecut — rămâne primul timp; apăsarea ta ({mine}) e în «Istoricul sosirilor».",
         "decided": "{who} e trecut «{status}» la «Clasament» — rămâne așa; apăsarea ta ({mine}) e în «Istoricul sosirilor».",
         "undone": "Anulat: {who}.",
+        "numbered": "{who} are acum număr: se cronometrează ca celelalte elite.",
         "gun": {
           "set": "Startul a fost dat: {time}.",
           "cleared": "Startul a fost anulat: sosirile se numără de la startul planificat.",
@@ -13123,7 +13137,8 @@
           "RESULTS_NOT_OPEN": "Doar o cursă are cronometrare.",
           "VALIDATION_ERROR": "Scrie numărul de pe BIB, doar cifre.",
           "FORBIDDEN": "Rolul tău nu poate face asta.",
-          "NOT_FOUND": "Nu mai e: evenimentul sau rândul a fost șters între timp."
+          "NOT_FOUND": "Nu mai e: evenimentul sau rândul a fost șters între timp.",
+          "ELITE_NO_FREE_NUMBER": "Seria cursei nu mai are niciun număr liber: un Administrator îi scrie unul pe lista de elită, în editorul evenimentului."
         }
       }
     }
@@ -15295,6 +15310,14 @@
       "eventImportedOver": "Importat peste eveniment.",
       "eliteTicked": "Bifa a fost salvată. Nu s-a trimis nimic nimănui.",
       "eliteLabelSaved": "Eticheta pe BIB a fost salvată. Nu s-a trimis nimic nimănui.",
+      "eliteNumbered": {
+        "one": "{count} nume de elită a primit număr. Nu s-a trimis nimic nimănui.",
+        "few": "{count} nume de elită au primit număr. Nu s-a trimis nimic nimănui.",
+        "other": "{count} de nume de elită au primit număr. Nu s-a trimis nimic nimănui."
+      },
+      "eliteNumberedNone": "Toate numele de elită aveau deja număr; nimic de schimbat.",
+      "eliteNumberSet": "Numărul a fost salvat. Nu s-a trimis nimic nimănui.",
+      "eliteNumberUnchanged": "Numărul era deja acesta; nimic de schimbat.",
       "addressChanged": "Adresa a fost schimbată; ambele adrese primesc un email.",
       "partnerSaved": "Partenerul a fost salvat. Nu s-a trimis nimic nimănui.",
       "partnerCleared": "Nu mai e de la parteneri. Nu s-a trimis nimic nimănui.",

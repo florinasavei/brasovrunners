@@ -13,8 +13,9 @@ import {
   isInstant,
   RECENT_FINISHERS,
 } from "@/modules/results/domain/finish-line";
+import { giveEliteLineNumber } from "@/modules/registrations/elite-list";
 import { FinishError, type FinishGunReading, type FinishLineView, readFinishGun, readFinishLine, recordFinish, setRaceGun, undoFinish } from "@/modules/results/results";
-import { canEnterResults, canRecordFinishes } from "@/modules/staff-identity/domain/roles";
+import { canEnterResults, canManageRegistrations, canRecordFinishes } from "@/modules/staff-identity/domain/roles";
 import type { StaffAccount } from "@/modules/staff-identity/repository";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -25,10 +26,11 @@ import { eventIdOf, field, localeOf } from "@/app/[locale]/admin/events/[id]/vol
   «Cronometrare»'s presses (§986): a finish recorded and one's own undone — each twice, once for the island, which calls it and reads
   the answer (`…PressAction`: the outcome, the page's state for the island to keep, the server's clock at the request's arrival and
   at its answer), and once for the plain form a page with scripts off posts (`…FormAction`: back to the page with the outcome in its
-  address, numbers and codes only, never a name) — «Start» / «Anulează startul», a plain form the island only stamps, and the
-  server's clock the island asks as it wakes (`readFinishClockAction`), with the gun. Each asks its capability here, at the door
-  (`requireStaffCapability`: the finish, the undo and the clock `canRecordFinishes`, the gun `canEnterResults`), and the service
-  asks again (BR-REQ-060-01). None of them emails anybody.
+  address, numbers and codes only, never a name) — «Start» / «Anulează startul», a plain form the island only stamps, the
+  server's clock the island asks as it wakes (`readFinishClockAction`), with the gun, and «Dă-i un număr» on an elite line drawn
+  without one (§990, `giveEliteNumberFormAction`). Each asks its capability here, at the door (`requireStaffCapability`: the
+  finish, the undo and the clock `canRecordFinishes`, the gun `canEnterResults`, the line's number `canManageRegistrations` — who
+  writes the elite list), and the service asks again (BR-REQ-060-01). None of them emails anybody.
 */
 
 /** The page's state for the island: what `readFinishLine` read, with the server's clock taken last. */
@@ -215,6 +217,29 @@ export async function recordFinishFormAction(form: FormData): Promise<void> {
     if (error instanceof FinishError) outcome = { refused: error.code, bib: String(error.bibNumber), t: String(error.gunTimeMs) };
     else if (isDomainError(error)) outcome = { refused: error.code, ...(Number.isInteger(bibNumber) && bibNumber > 0 ? { bib: String(bibNumber) } : {}) };
     else throw error;
+  }
+  back(locale, eventId, outcome);
+}
+
+/**
+ * «Dă-i un număr» on «Cronometrare» (§990; the owner, 2026-11-19, of «Ingrid» drawn grey: «vreau să apară la fel! și să o pot
+ * cronometra»): the elite line the button names (`entryId`) given the race's next free number, nobody else's
+ * (`elite-list.ts#giveEliteLineNumber`), so its button is pressed like every other elite's. Who writes the elite list — the
+ * Administrator (`canManageRegistrations`) — at the door and again in the service; the page draws the button for nobody else.
+ * Asks nothing (§384): it tells nobody and prints nothing — the bib carries the label alone. Back to the page with
+ * `numbered=<number>` — also for a line a colleague numbered first, the number it has — or the refusal's code.
+ */
+export async function giveEliteNumberFormAction(form: FormData): Promise<void> {
+  const locale = localeOf(form);
+  const eventId = eventIdOf(form);
+  let outcome: Record<string, string>;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    const line = await giveEliteLineNumber(getDb(), actor, field(form, "entryId"), new Date());
+    outcome = { numbered: String(line.bibNumber) };
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    outcome = { refused: error.code };
   }
   back(locale, eventId, outcome);
 }

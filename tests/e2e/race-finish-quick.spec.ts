@@ -219,6 +219,59 @@ test.describe("§986 «Cronometrare»", () => {
     await noHorizontalScroll(page);
   });
 
+  /**
+   * §990 — the owner, 2026-11-19, of «Ingrid» drawn grey with «Fără număr: …»: «vreau să apară la fel! și să o pot cronometra». An
+   * elite line written before every line drew its own number: an Administrator presses «Dă-i un număr» in the grey button's place,
+   * the page comes back saying the number, the line's button is the same blue button as every other elite's, and a press records
+   * its «Sosit» under the line's name.
+   */
+  test("an Administrator gives a numberless elite line its number in one press: its button turns blue like the others and a press records its «Sosit»", async ({ page }) => {
+    const tag = `${test.info().project.name}-number-${Date.now().toString(36)}`;
+    const eventId = await seedRace(tag);
+    await query(`INSERT INTO event_elite_entries (event_id, name, bib_number) VALUES ($1, $2, NULL)`, [eventId, `Ingrid ${tag}`]);
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/checkin/cronometrare?eventId=${eventId}`);
+    await hydrated(page);
+
+    // In the grey button's place: «Dă-i un număr», naming the line, as tall as every elite's button.
+    const give = page.getByTestId("finish-elite-give-number");
+    await expect(give).toHaveCount(1);
+    await expect(give).toContainText("Ingrid");
+    await expect(give).toContainText(`Dă-i un număr · Ingrid ${tag}`);
+    expect(await give.evaluate((button) => button.getBoundingClientRect().height)).toBeGreaterThanOrEqual(56);
+    await expect(page.getByTestId("finish-elite-no-number")).toHaveCount(0);
+    await give.click();
+
+    // Back on the page: the number said, and the line's button the same blue button as Andrei's — pressable.
+    await expect(page.getByTestId("timing-banner")).toContainText(/Ingrid \(#\d+\) are acum număr: se cronometrează ca celelalte elite\./, { timeout: 15_000 });
+    await expect(page.getByTestId("finish-elite-give-number")).toHaveCount(0);
+    const [{ number }] = await query<{ number: number }>(`SELECT bib_number AS number FROM event_elite_entries WHERE event_id = $1 AND name = $2`, [eventId, `Ingrid ${tag}`]);
+    expect(number).toBeGreaterThan(0);
+    const ingrid = page.locator(`[data-testid="finish-elite"][data-bib="${number}"]`).getByTestId("finish-elite-button");
+    const andrei = page.locator('[data-testid="finish-elite"][data-bib="7"]').getByTestId("finish-elite-button");
+    await expect(ingrid).toBeEnabled();
+    await expect(ingrid).toContainText(`Ingrid ${tag}`);
+    const look = (button: typeof ingrid) =>
+      button.evaluate((element) => ({ colour: getComputedStyle(element).backgroundColor, blue: element.classList.contains("MuiButton-contained") && element.classList.contains("MuiButton-colorPrimary") }));
+    // The pointer off the buttons — it was over «Dă-i un număr», now her button — and the colour's transition let finish.
+    await page.mouse.move(0, 0);
+    const andreiLook = await look(andrei);
+    expect(andreiLook.blue).toBe(true);
+    await expect.poll(() => look(ingrid)).toEqual(andreiLook);
+    expect(await ingrid.evaluate((button) => button.getBoundingClientRect().height)).toBeGreaterThanOrEqual(56);
+
+    // Pressed as she crosses the line: «Sosit», under her name, entered by the Administrator — the button then says ✓.
+    await ingrid.click();
+    const recent = page.locator(`[data-testid="finish-recent-row"][data-bib="${number}"]`);
+    await expect(recent).toContainText(`Ingrid (#${number}) Ingrid ${tag}`, { timeout: 15_000 });
+    await expect(recent).toContainText("introdus de Dev Administrator");
+    await expect(ingrid).toBeDisabled();
+    await expect(ingrid).toContainText("✓");
+    const rows = await query<{ name: string; status: string }>(`SELECT display_name AS name, status FROM event_results WHERE event_id = $1 AND bib_number = $2`, [eventId, number]);
+    expect(rows).toEqual([{ name: `Ingrid ${tag}`, status: "FINISHED" }]);
+    await noHorizontalScroll(page);
+  });
+
   test("a page drawn before another organizer's «Start» says that gun at the clock's next answer, and its own «Start» moves nothing", async ({ page }) => {
     const tag = `${test.info().project.name}-gun-${Date.now().toString(36)}`;
     const eventId = await seedRace(tag);

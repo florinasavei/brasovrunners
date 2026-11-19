@@ -644,6 +644,14 @@ export type AuditAction =
   | "event_elite.added"
   | "event_elite.deleted"
   /**
+   * A line's number (§990), entity `event`: given by itself — at the add with no number typed, at a move from the internal list,
+   * or by «Dă-i un număr» / «Dă număr elitelor fără număr» — `number_given` with `{ entryId, bibNumber }`; or typed in the line's
+   * «Număr» box on the elite card, `number_set` with `{ entryId, from, to }` (`from` null for a line that had none). The press is
+   * about the number, so the number is in it; never the name.
+   */
+  | "event_elite.number_given"
+  | "event_elite.number_set"
+  /**
    * «Eticheta pe BIB» on a line of the race's elite list (§975), entity `event`: the label set, changed or cleared. The
    * metadata is the line's id alone (`{ entryId }`) — never the label or the name.
    */
