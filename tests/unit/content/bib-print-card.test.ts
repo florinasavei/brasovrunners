@@ -165,6 +165,34 @@ describe("§895 «Elită — doar numele pe BIB» beside the spares", () => {
     expect(card).not.toContain("bib-elite-delete-");
     expect(card).toContain(ro.Admin.bibs.eliteReadOnly);
     expect(card).toContain('data-testid="bib-elite-download"');
+    // §NNN: she reads each line's number, or that it has none, and has no box and no press to change it.
+    expect(card).not.toContain('name="eliteLineNumber"');
+    expect(card).not.toContain('data-testid="bib-elite-number-all"');
+    expect([...card.matchAll(/data-testid="bib-elite-entry-number"[^>]*>([^<]*)</g)].map((match) => match[1])).toEqual(["nr. 7", "fără număr"]);
+  });
+
+  it("gives the Administrator each line's «Număr» box and, while a line has none, «Dă număr elitelor fără număr (N)» — each naming its own form (§NNN)", async () => {
+    const card = block(await render({ elite }), "bib-elite");
+    // One box a line, filled with its number (empty for none), required, on the numeric keypad, posting the line's own form.
+    for (const entry of elite.entries) {
+      const box = new RegExp(`<input[^>]*name="eliteLineNumber"[^>]*>`, "g");
+      const boxes = [...card.matchAll(box)].map((match) => match[0]).filter((tag) => tag.includes(`form="bib-elite-number-${entry.id}"`));
+      expect(boxes, entry.name).toHaveLength(1);
+      expect(boxes[0]).toContain('inputMode="numeric"');
+      expect(boxes[0]).toContain("required");
+      expect(boxes[0]).toContain(`value="${entry.bibNumber ?? ""}"`);
+      expect(card).toMatch(new RegExp(`<button[^>]*form="bib-elite-number-${entry.id}"[^>]*>`));
+    }
+    expect(card).toContain(ro.Admin.bibs.eliteLineNumberHelp);
+    // The numberless line: «fără număr» on its row, and the one press for every such line, its count, a 44-pixel target.
+    const all = block(card, "bib-elite-number-all");
+    expect(all).toContain("Dă număr elitelor fără număr (1)");
+    expect(all).toMatch(/<button[^>]*form="bib-elite-number-all"/);
+    expect(all).toContain(ro.Admin.bibs.eliteNumberAllHelp);
+    expect(block(await render({ elite }, "en"), "bib-elite-number-all")).toContain("Number the elites without one (1)");
+    // Every line numbered: no press drawn.
+    const numbered = { ...elite, entries: elite.entries.map((entry) => ({ ...entry, bibNumber: entry.bibNumber ?? 8 })) };
+    expect(block(await render({ elite: numbered }), "bib-elite")).not.toContain('data-testid="bib-elite-number-all"');
   });
 
   it("says the list is empty, offers no sheet, and is not drawn where no bib prints", async () => {

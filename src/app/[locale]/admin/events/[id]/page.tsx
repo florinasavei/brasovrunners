@@ -167,6 +167,8 @@ import {
   setEliteEntryTickAction,
   setRegisteredEliteTickAction,
   setEliteBibLabelAction,
+  setEliteNumberAction,
+  giveEliteNumbersAction,
   duplicateEventAction,
   eraseGroupRunDeclarationAction,
   eraseGroupRunDeclarationsAction,
@@ -197,6 +199,21 @@ type Props = {
 };
 
 export const dynamic = "force-dynamic";
+
+/**
+ * The elite card's presses (`actions.ts#backToEliteCard`): back from one, the card and every fold around it open, and the page's
+ * generic «Salvat» banner stays away — the toast says what happened. «Număr» and «Dă număr elitelor fără număr» since §NNN.
+ */
+const ELITE_CARD_SAVES: readonly string[] = [
+  "eliteAdded",
+  "eliteDeleted",
+  "eliteTicked",
+  "eliteLabelSaved",
+  "eliteNumbered",
+  "eliteNumberedNone",
+  "eliteNumberSet",
+  "eliteNumberUnchanged",
+];
 
 /**
  * The one editing screen (BR-REQ-050-01, BR-REQ-051-01), as boxes (§350; the owner asked for "a
@@ -474,8 +491,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       }
     : null;
   const mayEditElite = elite !== null && canManageRegistrations(staffUser.role);
-  // Back from the elite card's add, delete, tick or label (`actions.ts#backToEliteCard`): the card and every fold around it open.
-  const eliteSaved = elite !== null && (saved === "eliteAdded" || saved === "eliteDeleted" || saved === "eliteTicked" || saved === "eliteLabelSaved");
+  // Back from the elite card's add, delete, tick, label or number (`actions.ts#backToEliteCard`): the card and every fold around it open.
+  const eliteSaved = elite !== null && saved !== undefined && ELITE_CARD_SAVES.includes(saved);
   // The service offers the same list by the same function, so the `pick` indexes the preview posts mean the same rows.
   const gpxPlaced = gpxWaypoints ? offerableProposals(gpxWaypoints.proposals, checkpointRouteKm) : null;
   const checkpointsGpx =
@@ -1111,7 +1128,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Alert>
           )}
           {saved &&
-            !["bibsAssigned", "sparesReserved", "eliteAdded", "eliteDeleted", "eliteTicked", "eliteLabelSaved", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped", "groupRunDeclarationErased", "groupRunDeclarationsErased", "declarationResent"].includes(saved) &&
+            ![...ELITE_CARD_SAVES, "bibsAssigned", "sparesReserved", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped", "groupRunDeclarationErased", "groupRunDeclarationsErased", "declarationResent"].includes(saved) &&
             !(saved === "created" && (created || notPublished)) &&
             !(saved === "event" && offered) && <Alert severity="success">{t("saved")}</Alert>}
           {/* The save that announced the place (§328): public from now on, and nobody was told. */}
@@ -1481,6 +1498,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   eliteTickAction={setEliteEntryTickAction}
                   eliteRegisteredTickAction={setRegisteredEliteTickAction}
                   eliteLabelAction={setEliteBibLabelAction}
+                  eliteNumberAction={setEliteNumberAction}
+                  eliteNumberAllAction={giveEliteNumbersAction}
                   eliteRegistered={elite?.registered ?? []}
                   cancelLabel={words.cancel}
                 />

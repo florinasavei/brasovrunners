@@ -1,6 +1,7 @@
 import { and, asc, eq, gt, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { eventEliteEntries } from "@/db/schema/event-elite-entries";
+import { eventResults } from "@/db/schema/event-results";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -18,6 +19,7 @@ import { formatDay } from "@/i18n/dates";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
+  BIB_NUMBER_MAX,
   freeSpareNumbers,
   isSpareNumber,
   nextSpareCandidates,
@@ -90,10 +92,12 @@ export function seriesBounds(band: { start: number; hiddenStart: number | null }
  * once on this database (the maintenance job), so a number shown before this release is never
  * drawn for somebody else in the minutes between the deploy and that run.
  *
- * And the numbers the club typed on «Elită — doar numele pe BIB» (§895): an elite bib can print its
- * line's number, so a draw, the desk's box, a suggestion and a print of spares treat it as worn, and
- * no runner is handed the number an elite runner wears. Only the numbers are read — never a name, and
- * the lines are in no count. `addEliteEntry` refuses the other way round, under the same event lock.
+ * And the numbers of the lines of «Elită — doar numele pe BIB» (§895) — typed, or given by the line's own
+ * draw since §NNN (`pickEliteLineNumber`): the line's number is its runner's at the finish line, so a
+ * draw — a confirmation's, the hidden list's, «Alocă numerele», a volunteer's —, the desk's box, a
+ * suggestion and a print of spares treat it as worn, and no runner is handed the number an elite runner
+ * runs under. Only the numbers are read — never a name, and the lines are in no count. `addEliteEntry`
+ * refuses the other way round, under the same event lock.
  */
 async function wornNumbers<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -399,6 +403,51 @@ export async function pickBibNumber<T extends Record<string, unknown>>(
     }
   }
   throw new DomainError("VALIDATION_ERROR", `every race number from ${from} to ${ceiling} is taken at this event`);
+}
+
+/**
+ * The numbers this event's stored results carry (§808): a runner typed on «Clasament» keeps the number typed though no
+ * registration and no line holds it, and a line given that number would take that row for its own (`hors-concours.ts`, rule
+ * 3) — a stranger's time on an elite. Read for a line's own draw alone (`pickEliteLineNumber`).
+ */
+async function storedResultNumbers<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number[]> {
+  const rows = await db.select({ number: eventResults.bibNumber }).from(eventResults).where(eq(eventResults.eventId, eventId));
+  return rows.map((row) => row.number);
+}
+
+/**
+ * The number a line of the race's elite list is given when it has none (§NNN, amending §895 and §986; the owner, 2026-11-19,
+ * of an elite drawn grey on «Cronometrare»: «vreau să apară la fel! și să o pot cronometra»). The elite bib prints its label
+ * and never a number (§963, §975), so the number is the line's at the finish line alone — the press, the results,
+ * «Participant #…» — and the finish line keys everything by a number.
+ *
+ * **The rule: the next free number of the race's own series, as the next confirmation would draw it** (`pickBibNumber`,
+ * «race») — from the race's first number up, the lowest one that nobody at the event wears, wore or holds (`numbersInUse`:
+ * every registration's, a cancelled one's and an old held one's included, every other line's, every volunteer's, the
+ * erased, replaced and deleted ones, the numbers a print of spares stepped over), that no stored result carries, and that
+ * is none of the desk's spares (§444). Unlike a confirmation it never runs past the race's series: it stays below the hidden
+ * list's own series when that sits above the race's (`seriesBounds`, §647), never inside it, and at most `BIB_NUMBER_MAX`.
+ * Null when no number is left there — the caller refuses in words (`ELITE_NO_FREE_NUMBER`), and the club types one.
+ *
+ * **Nobody else's, then or later.** The caller holds the event row's lock — the one every draw of a number at this event
+ * takes (`AGENTS.md` §10.6) — so nothing can reach the number between this read and the line's write; and from that write on
+ * every draw and every typed number reads the line's number as worn (`wornNumbers`, `bibNumberInUse`). `taken` carries the
+ * numbers already given in the same press, for a press that numbers several lines at once.
+ */
+export async function pickEliteLineNumber<T extends Record<string, unknown>>(tx: Database<T>, eventId: string, taken: Set<number> = new Set()): Promise<number | null> {
+  // The rows first, then the retired numbers (`numbersInUse` reads them in that order — `erasedBibNumbers` says why).
+  for (const number of await numbersInUse(tx, eventId)) taken.add(number);
+  for (const number of await storedResultNumbers(tx, eventId)) taken.add(number);
+  const band = await bandOf(tx, eventId);
+  const { from, to } = seriesBounds(band, "race");
+  const last = Math.min(to, BIB_NUMBER_MAX);
+  for (let candidate = Math.max(1, from); candidate <= last; candidate += 1) {
+    if (!taken.has(candidate) && !isSpareNumber(band.spare, candidate)) {
+      taken.add(candidate);
+      return candidate;
+    }
+  }
+  return null;
 }
 
 /** One confirmed runner whose number shown before §548 is kept as their race number, and what the message to them needs. */

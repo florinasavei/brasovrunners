@@ -55,7 +55,9 @@ import { measureServerClock, seedServerClock, serverClockNow } from "./server-cl
  * With scripts on, a press never waits for the network:
  *
  * - **The elites first**: one big button an elite, the bib's label large and the full name under it; pressing it records that
- *   elite's number. A line with no number is drawn disabled with what to do; one already «Sosit» says «✓ <time>» and is not pressed.
+ *   elite's number. A line with no number is drawn disabled with what to do — or, for a viewer who writes the elite list
+ *   (`mayNumber`), in its place «Dă-i un număr» (§NNN), a plain form that gives the line the race's next free number and comes back
+ *   with the line's button like every other —; one already «Sosit» says «✓ <time>» and is not pressed.
  * - **The box**: the numeric keypad, Enter or «Sosit» records, and the box is empty at once, keeping the focus for the next number.
  * - **«⏱ Prinde timpul»** for a bunch: each press keeps one moment (oldest first, each with its age and its ✕); the next number or
  *   elite pressed takes the oldest kept moment instead of now — one older than ten minutes is no bunch any more: it is dropped when
@@ -103,6 +105,9 @@ export type FinishLineWords = {
   eliteFinished: string;
   eliteNoNumberLine: string;
   eliteNoNumberRegistration: string;
+  /** «Dă-i un număr» on a line drawn without a number, for a viewer who writes the elite list (§NNN), and its name for a reader: «… {label} — {name}». */
+  eliteGiveNumber: string;
+  eliteGiveNumberAria: string;
   boxLabel: string;
   bibHint: string;
   record: string;
@@ -177,7 +182,16 @@ type Props = {
   /** …and the ones the forms post with scripts off. */
   recordForm: (form: FormData) => Promise<void>;
   undoForm: (form: FormData) => Promise<void>;
+  /**
+   * Whether the viewer writes the race's elite list (`canManageRegistrations`): only then is a line drawn without a number
+   * «Dă-i un număr» (§NNN) — the server asks again — and `numberForm` is the plain form's action (`giveEliteNumberFormAction`).
+   */
+  mayNumber: boolean;
+  numberForm: (form: FormData) => Promise<void>;
 };
+
+/** The one plain form «Dă-i un număr» posts (§NNN), beside the elites' form — forms cannot nest —, each button naming its line. */
+const NUMBER_FORM_ID = "finish-elite-number";
 
 /** A template's placeholders filled; a placeholder with no value is left as written. */
 function fill(template: string, values: Record<string, string>): string {
@@ -209,7 +223,7 @@ const BIG_SX = { minHeight: 56, fontSize: "1.125rem" } as const;
 /** Nothing to watch: `useSyncExternalStore`'s way of saying «true in the browser, false on the server and while hydrating». */
 const NOTHING_TO_WATCH = () => () => {};
 
-export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, staffId, initial, words, record, undo, clock, recordForm, undoForm }: Props) {
+export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, staffId, initial, words, record, undo, clock, recordForm, undoForm, mayNumber, numberForm }: Props) {
   const storageKey = finishStorageKey(eventId);
   // The presses and the kept times: this phone's, behind the store the storage is read into (`finish-line-store.ts`) — empty on the
   // server and while hydrating, so the markup is the same with storage or without.
@@ -537,7 +551,39 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
     </>
   );
 
+  /** A line drawn without a number, for a viewer who writes the elite list: «Dă-i un număr» in the grey button's place (§NNN). */
+  const numberable = (elite: EliteButtonView): elite is EliteButtonView & { entryId: string } => mayNumber && elite.kind === "line" && elite.bibNumber === null && elite.entryId !== null;
+
   const eliteButton = (elite: EliteButtonView) => {
+    if (numberable(elite)) {
+      // Posts the plain form beside the elites' one (`NUMBER_FORM_ID`) with the line's id; the page comes back with its number, the
+      // line's button then the same blue button as every other elite's.
+      return (
+        <Box key={elite.key} sx={{ display: "grid", gap: 0.5, alignContent: "start" }} data-testid="finish-elite" data-bib="">
+          <GlyphButton
+            type="submit"
+            form={NUMBER_FORM_ID}
+            name="entryId"
+            value={elite.entryId}
+            icon="number"
+            variant="outlined"
+            color="primary"
+            aria-label={fill(words.eliteGiveNumberAria, { label: elite.label, name: elite.name })}
+            sx={{ minHeight: 64, justifyContent: "flex-start", textAlign: "left", textTransform: "none", width: "100%" }}
+            data-testid="finish-elite-give-number"
+          >
+            <Box component="span" sx={{ display: "grid", minWidth: 0 }}>
+              <Box component="span" sx={{ fontSize: "1.25rem", fontWeight: 700, lineHeight: 1.2, overflowWrap: "anywhere" }}>
+                {elite.label}
+              </Box>
+              <Box component="span" sx={{ fontSize: "0.75rem", lineHeight: 1.3, overflowWrap: "anywhere" }}>
+                {`${words.eliteGiveNumber} · ${elite.name}`}
+              </Box>
+            </Box>
+          </GlyphButton>
+        </Box>
+      );
+    }
     const disabled = elite.bibNumber === null || elite.finishedGunTimeMs !== null || waitingNumbers.has(elite.bibNumber);
     return (
       <Box key={elite.key} sx={{ display: "grid", gap: 0.5, alignContent: "start" }} data-testid="finish-elite" data-bib={elite.bibNumber ?? ""}>
@@ -621,6 +667,12 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
             {hidden}
             {state.elites.map(eliteButton)}
           </Box>
+          {/* «Dă-i un număr»'s own form (§NNN), beside the elites' — never inside it: each button names it and posts its line's id. */}
+          {state.elites.some(numberable) && (
+            <Box component="form" id={NUMBER_FORM_ID} action={numberForm} hidden data-testid="finish-elite-number-form">
+              {hidden}
+            </Box>
+          )}
         </Box>
       )}
 

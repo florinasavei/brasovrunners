@@ -77,7 +77,7 @@ import {
 import { env } from "@/shared/config/env";
 import { readBibDesignForm } from "@/modules/registrations/bib-design-query";
 import { assignBibNumbers, reserveSpareBibs } from "@/modules/registrations/bibs";
-import { addEliteEntry, deleteEliteEntry, isEliteTick, setEliteEntryTick } from "@/modules/registrations/elite-list";
+import { addEliteEntry, deleteEliteEntry, giveEliteNumbers, isEliteTick, setEliteEntryNumber, setEliteEntryTick } from "@/modules/registrations/elite-list";
 import { isRegistrationEliteTick, setRegistrationEliteTick } from "@/modules/registrations/elite-mark";
 import { setEliteEntryBibLabel, setRegistrationEliteBibLabel } from "@/modules/registrations/elite-label";
 import { hiddenListRefusalOf, SPARES_BEFORE_HIDDEN_LIST } from "@/modules/registrations/domain/hidden-list";
@@ -1165,8 +1165,14 @@ export async function reserveSpareBibsAction(_previous: FormOutcome | null, form
  * does), because a redirect to the same page is a soft navigation that `OpenFoldFromHash` never sees; `#bib-elite` then
  * only scrolls to it.
  */
-async function backToEliteCard(locale: Locale, eventId: string, saved: "eliteAdded" | "eliteDeleted" | "eliteTicked" | "eliteLabelSaved"): Promise<never> {
-  await flashOutcome({ saved });
+async function backToEliteCard(
+  locale: Locale,
+  eventId: string,
+  saved: "eliteAdded" | "eliteDeleted" | "eliteTicked" | "eliteLabelSaved" | "eliteNumbered" | "eliteNumberedNone" | "eliteNumberSet" | "eliteNumberUnchanged",
+  count?: number,
+): Promise<never> {
+  // `count` is the toast's alone (how many lines a press numbered); the address keeps `saved`, which opens the card.
+  await flashOutcome(count === undefined ? { saved } : { saved, count });
   redirect(`${editorPath(locale, eventId)}?${new URLSearchParams({ saved })}#bib-elite`);
 }
 
@@ -1263,6 +1269,52 @@ export async function setEliteBibLabelAction(_previous: FormOutcome | null, form
     return backTo(editorPath(locale, eventId), outcomeOf(error));
   }
   return backToEliteCard(locale, eventId, "eliteLabelSaved");
+}
+
+/**
+ * «Dă număr elitelor fără număr (N)» on the elite card (§NNN): every line of the event's elite list without a number given the
+ * race's next free one, nobody else's (`elite-list.ts#giveEliteNumbers`), so «Cronometrare» times each like every other elite.
+ * The Administrator's (`canManageRegistrations`), here at the door and again in the service (BR-REQ-060-01). It asks nothing
+ * (§384): it tells nobody, prints nothing — the bib carries the label alone — and each line's «Număr» box changes the number.
+ * Back to the elite card, open, the toast saying how many; a press that found none — a stale card — says so; a refusal (no
+ * number left in the race's series, the role) in the editor's banner.
+ */
+export async function giveEliteNumbersAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  let given: number;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    given = (await giveEliteNumbers(getDb(), actor, eventId, new Date())).numbered.length;
+  } catch (error) {
+    return backTo(editorPath(locale, eventId), outcomeOf(error));
+  }
+  const outcome: { saved: "eliteNumbered" | "eliteNumberedNone"; count?: number } = given > 0 ? { saved: "eliteNumbered", count: given } : { saved: "eliteNumberedNone" };
+  return backToEliteCard(locale, eventId, outcome.saved, outcome.count);
+}
+
+/**
+ * «Număr» and its «Salvează» on one line of the elite card (§NNN): the number the Administrator types for the line — the line's
+ * first, or another in the place of its own (`elite-list.ts#setEliteEntryNumber`, the add's checks). The Administrator's
+ * (`canManageRegistrations`), here at the door and again in the service (BR-REQ-060-01). A plain form a line, posting the box
+ * beside it; it asks nothing (§384) — it tells nobody, prints nothing and the same box changes it again. Back to the elite card,
+ * open; a refusal in the editor's banner, in its own words: a number somebody has or a spare (`ELITE_LINE_NUMBER_TAKEN`), a box
+ * that is not a whole number from 1 to 99 999 (`ELITE_LINE_NUMBER_INVALID`), a result stored on the line's number
+ * (`ELITE_NUMBER_HAS_RESULT`), the line gone, the role.
+ */
+export async function setEliteNumberAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  let changed: boolean;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    changed = (await setEliteEntryNumber(getDb(), actor, text(form, "entryId"), form.get("eliteLineNumber"), new Date())).changed;
+  } catch (error) {
+    const said = isDomainError(error) && error.code === "CONFLICT" ? "ELITE_LINE_NUMBER_TAKEN" : isDomainError(error) && error.code === "VALIDATION_ERROR" ? "ELITE_LINE_NUMBER_INVALID" : null;
+    return backTo(editorPath(locale, eventId), said ? { error: said } : outcomeOf(error));
+  }
+  const outcome: { saved: "eliteNumberSet" | "eliteNumberUnchanged" } = changed ? { saved: "eliteNumberSet" } : { saved: "eliteNumberUnchanged" };
+  return backToEliteCard(locale, eventId, outcome.saved);
 }
 
 /**

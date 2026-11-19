@@ -1,6 +1,8 @@
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { eventEliteEntries } from "@/db/schema/event-elite-entries";
+import { eventResults } from "@/db/schema/event-results";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
@@ -40,7 +42,8 @@ vi.mock("@/modules/staff-identity/session", () => ({
 }));
 vi.mock("@/modules/notifications/drain", () => ({ drainOutboxAfterResponse: () => undefined, drainOutboxRowsAfterResponse: () => undefined }));
 
-const { addEliteEntryAction, deleteEliteEntryAction } = await import("@/app/[locale]/admin/actions");
+const { addEliteEntryAction, deleteEliteEntryAction, giveEliteNumbersAction, setEliteNumberAction } = await import("@/app/[locale]/admin/actions");
+const { giveEliteNumberFormAction } = await import("@/app/[locale]/admin/checkin/cronometrare/actions");
 const { setRegistrationEliteAction } = await import("@/app/[locale]/admin/registrations/actions");
 const { listEliteMarkedRegistrations } = await import("@/modules/registrations/elite-mark");
 
@@ -126,6 +129,17 @@ describe("§895 the elite list's Server Actions", () => {
     expect(await db.select().from(auditLogs)).toHaveLength(0);
   });
 
+  it("adds a name with no number typed and lands on the card, the line holding the number it drew (§NNN)", async () => {
+    await as("ADMIN");
+    expect(await outcomeOf(addEliteEntryAction(null, form({ eliteName: "Ingrid Pop", eliteNumber: "" })))).toEqual({ redirect: "/ro/admin/events/x?saved=eliteAdded#bib-elite" });
+    const [line] = await db.select().from(eventEliteEntries);
+    expect([line.name, line.bibNumber]).toEqual(["Ingrid Pop", 1]);
+    expect((await db.select().from(auditLogs)).map((row) => [row.action, row.metadataJson])).toEqual([
+      ["event_elite.added", { entryId: line.id }],
+      ["event_elite.number_given", { entryId: line.id, bibNumber: 1 }],
+    ]);
+  });
+
   it("deletes for the Administrator, lands on the card, and a second press finds the line gone", async () => {
     const admin = await as("ADMIN");
     const [line] = await db.insert(eventEliteEntries).values({ eventId, name: "Faith Kipyegon", bibNumber: 2, createdByStaffUserId: admin.id }).returning();
@@ -190,6 +204,61 @@ describe("the elite panel's «Nu mai e elită» press (2026-11-11)", () => {
     const done = await outcomeOf(setRegistrationEliteAction(null, pressed(id)));
     expect(JSON.stringify(done)).toContain("error=FORBIDDEN");
     expect((await db.select().from(registrations))[0].elite).toBe(true);
+    expect(await db.select().from(auditLogs)).toHaveLength(0);
+  });
+});
+
+/**
+ * §NNN — the elite lines' numbers, through the real actions (BR-REQ-060-01): «Dă număr elitelor fără număr (N)» and a line's
+ * «Număr» on the editor's card, «Dă-i un număr» on «Cronometrare». The Administrator's alone, asked at each door and again in the
+ * service; each comes back where it was pressed with what happened, numbers and codes only.
+ */
+describe("§NNN the elite lines' numbers, pressed", () => {
+  const numberOf = async (id: string) => (await db.select({ number: eventEliteEntries.bibNumber }).from(eventEliteEntries).where(eq(eventEliteEntries.id, id)))[0]?.number;
+
+  it("«Dă număr elitelor fără număr» numbers the lines without one and lands on the card; a second press says there were none", async () => {
+    const admin = await as("ADMIN");
+    const [ingrid] = await db.insert(eventEliteEntries).values({ eventId, name: "Ingrid Pop", bibNumber: null, createdByStaffUserId: admin.id }).returning();
+    expect(await outcomeOf(giveEliteNumbersAction(null, form({})))).toEqual({ redirect: "/ro/admin/events/x?saved=eliteNumbered#bib-elite" });
+    expect(await numberOf(ingrid.id)).toBe(1);
+    expect(await outcomeOf(giveEliteNumbersAction(null, form({})))).toEqual({ redirect: "/ro/admin/events/x?saved=eliteNumberedNone#bib-elite" });
+    expect((await db.select().from(auditLogs)).map((row) => row.action)).toEqual(["event_elite.number_given"]);
+  });
+
+  it("a line's «Număr» saves, and says a taken number, a box that is no number and a number with a result in their own words", async () => {
+    const admin = await as("ADMIN");
+    const [ingrid] = await db.insert(eventEliteEntries).values({ eventId, name: "Ingrid Pop", bibNumber: 4, createdByStaffUserId: admin.id }).returning();
+    const [paul] = await db.insert(eventEliteEntries).values({ eventId, name: "Paul Stan", bibNumber: 9, createdByStaffUserId: admin.id }).returning();
+    const press = (entryId: string, eliteLineNumber: string) => outcomeOf(setEliteNumberAction(null, form({ entryId, eliteLineNumber })));
+    expect(await press(ingrid.id, "12")).toEqual({ redirect: "/ro/admin/events/x?saved=eliteNumberSet#bib-elite" });
+    expect(await numberOf(ingrid.id)).toBe(12);
+    expect(await press(ingrid.id, "12")).toEqual({ redirect: "/ro/admin/events/x?saved=eliteNumberUnchanged#bib-elite" });
+    expect(await press(ingrid.id, "9")).toEqual({ redirect: "/ro/admin/events/x?error=ELITE_LINE_NUMBER_TAKEN#admin-alert" });
+    expect(await press(ingrid.id, "")).toEqual({ redirect: "/ro/admin/events/x?error=ELITE_LINE_NUMBER_INVALID#admin-alert" });
+    await db.insert(eventResults).values({ eventId, registrationId: null, bibNumber: 9, displayName: "Paul Stan", status: "DNF" });
+    expect(await press(paul.id, "15")).toEqual({ redirect: "/ro/admin/events/x?error=ELITE_NUMBER_HAS_RESULT#admin-alert" });
+    expect(await numberOf(paul.id)).toBe(9);
+    expect((await db.select().from(auditLogs)).map((row) => [row.action, row.metadataJson])).toEqual([["event_elite.number_set", { entryId: ingrid.id, from: 4, to: 12 }]]);
+  });
+
+  it("«Dă-i un număr» on «Cronometrare» numbers its line and comes back with the number; a second press brings the same", async () => {
+    const admin = await as("ADMIN");
+    const [ingrid] = await db.insert(eventEliteEntries).values({ eventId, name: "Ingrid Pop", bibNumber: null, createdByStaffUserId: admin.id }).returning();
+    const first = await outcomeOf(giveEliteNumberFormAction(form({ entryId: ingrid.id })));
+    expect(first).toEqual({ redirect: `/ro/admin/events/x?eventId=${eventId}&numbered=1` });
+    expect(await outcomeOf(giveEliteNumberFormAction(form({ entryId: ingrid.id })))).toEqual(first);
+    expect(await numberOf(ingrid.id)).toBe(1);
+    expect(await outcomeOf(giveEliteNumberFormAction(form({ entryId: "00000000-0000-4000-8000-000000000000" })))).toEqual({ redirect: `/ro/admin/events/x?eventId=${eventId}&refused=NOT_FOUND` });
+  });
+
+  it.each<StaffRole>(["MODERATOR", "DEV", "CONTRIBUTOR"])("refuses %s at every door: no number given or changed, nothing in the trail", async (role) => {
+    const admin = await as("ADMIN");
+    const [ingrid] = await db.insert(eventEliteEntries).values({ eventId, name: "Ingrid Pop", bibNumber: null, createdByStaffUserId: admin.id }).returning();
+    await as(role);
+    expect(await outcomeOf(giveEliteNumbersAction(null, form({})))).toEqual({ redirect: "/ro/admin/events/x?error=FORBIDDEN#admin-alert" });
+    expect(await outcomeOf(setEliteNumberAction(null, form({ entryId: ingrid.id, eliteLineNumber: "5" })))).toEqual({ redirect: "/ro/admin/events/x?error=FORBIDDEN#admin-alert" });
+    expect(await outcomeOf(giveEliteNumberFormAction(form({ entryId: ingrid.id })))).toEqual({ redirect: `/ro/admin/events/x?eventId=${eventId}&refused=FORBIDDEN` });
+    expect(await numberOf(ingrid.id)).toBeNull();
     expect(await db.select().from(auditLogs)).toHaveLength(0);
   });
 });

@@ -10,8 +10,8 @@ export const ELITE_NUMBER_MAX = 99_999;
 
 /**
  * «Elită — doar numele pe BIB» (§895; the owner, 2026-11-03, «Listă separată»): the race's elite runners, a
- * name per line, printed as bibs that carry the **name where the number usually is** — the number only when
- * the design ticks «Număr pe BIB-urile de elită» and the line has one.
+ * name per line, printed as bibs that carry the **label where the number usually is** and never the number (§963,
+ * §975) — the line's number is its runner's at the finish line, in the results and in «Participant #…» (§NNN).
  *
  * **Not a registration**: no participant, no address, no declaration, no place, no slot in the queue, no state,
  * no email, no count the club or the public is given — the allocator, «Locuri», the kits, the registrations'
@@ -26,7 +26,8 @@ export const ELITE_NUMBER_MAX = 99_999;
  * (`jobs/retention.ts`, step `event-elite-entries`); the trail names the line's id, never the name.
  *
  * A line's number is one person's: refused when the event already has it on somebody or among the
- * desk's spares, and read as worn by every draw (`bibs.ts#wornNumbers`) so no runner is given it.
+ * desk's spares, drawn only among the numbers nobody has (§NNN), and read as worn by every draw
+ * (`bibs.ts#wornNumbers`) so no runner is given it.
  *
  * **Two ticks of the Administrator's per line (§910)**: «Apare în clasament» (`in_results`, ticked by default) —
  * unticked, the result the club typed for this line's number (or, for a line with no number, for its name) is
@@ -43,7 +44,11 @@ export const eventEliteEntries = pgTable(
       .references(() => events.id, { onDelete: "cascade" }),
     /** As printed: trimmed, inner spaces collapsed, 1 to `ELITE_NAME_MAX` characters. */
     name: text("name").notNull(),
-    /** The number printed under the name when the design asks for it; optional, a positive whole number. */
+    /**
+     * The line's number (§NNN): typed at the add or in the line's «Număr» box, else drawn by the line itself under the event's
+     * lock (`bibs.ts#pickEliteLineNumber`); never printed (§963). Null only on a line written before every line drew one, until
+     * «Dă-i un număr» or «Dă număr elitelor fără număr» gives it one — «Cronometrare» times only a number.
+     */
     bibNumber: integer("bib_number"),
     /** «Apare în clasament» (§910): false, the line's result runs hors concours — out of the public results and of the positions. */
     inResults: boolean("in_results").notNull().default(true),

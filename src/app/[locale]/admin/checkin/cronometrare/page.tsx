@@ -21,7 +21,7 @@ import { formatResultTime } from "@/modules/results/domain/result-time";
 import { type FinishLineView, readFinishLine } from "@/modules/results/results";
 import FinishLine, { type FinishLineWords } from "@/modules/results/ui/FinishLine";
 import RaceGunPress from "@/modules/results/ui/RaceGunPress";
-import { canEnterResults, canRecordFinishes } from "@/modules/staff-identity/domain/roles";
+import { canEnterResults, canManageRegistrations, canRecordFinishes } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
@@ -29,11 +29,19 @@ import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { HEADING_SX } from "@/shared/ui/heading-scale";
 import QuietHelp from "@/shared/ui/QuietHelp";
-import { readFinishClockAction, recordFinishFormAction, recordFinishPressAction, setRaceGunAction, undoFinishFormAction, undoFinishPressAction } from "./actions";
+import {
+  giveEliteNumberFormAction,
+  readFinishClockAction,
+  recordFinishFormAction,
+  recordFinishPressAction,
+  setRaceGunAction,
+  undoFinishFormAction,
+  undoFinishPressAction,
+} from "./actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ eventId?: string; ok?: string; dup?: string; s?: string; t?: string; refused?: string; bib?: string; undone?: string; gun?: string }>;
+  searchParams: Promise<{ eventId?: string; ok?: string; dup?: string; s?: string; t?: string; refused?: string; bib?: string; undone?: string; gun?: string; numbered?: string }>;
 };
 
 /** Reads the stored rows and is returned to right after every plain press. */
@@ -53,6 +61,8 @@ const BANNER_REFUSALS = [
   "VALIDATION_ERROR",
   "FORBIDDEN",
   "NOT_FOUND",
+  // «Dă-i un număr» on an elite line with no number left in the race's series (§NNN).
+  "ELITE_NO_FREE_NUMBER",
 ] as const;
 /** The island's refusals by code, each `Admin.timing.refused.<code>`; any other is `refusedOther`. */
 const LINE_REFUSALS = ["RESULT_BIB_UNKNOWN", "RESULT_FINISH_NOT_STARTED", "RESULT_FINISH_CLOSED", "RESULT_PRESS_UNDONE", "RESULTS_NOT_OPEN", "VALIDATION_ERROR", "FORBIDDEN", "NOT_FOUND"] as const;
@@ -69,8 +79,9 @@ const number = (raw: string | undefined) => (raw !== undefined && /^\d{1,9}$/.te
  * The event is the one the address names (`?eventId=`, any race — «Clasament»'s tab and the old «Sosire» send theirs), else the
  * desk's own default, as «Lucruri de adus» picks it; the desk's select changes it. On a race: the gun — «Start» for whoever enters
  * results (`canEnterResults`), pressed at the gun and moved or taken off until the first finisher; without it the editor's «Startul
- * cursei» counts — and the finish line (`FinishLine`, the page's island): the elites' buttons first, the number box, «⏱ Prinde
- * timpul», the presses of this phone and «Ultimii sosiți» with who entered each. With scripts off every form posts and the page comes
+ * cursei» counts — and the finish line (`FinishLine`, the page's island): the elites' buttons first — a line of the elite list
+ * without a number is «Dă-i un număr» for whoever writes the list (§NNN), back here with `?numbered=` and the line's button blue —,
+ * the number box, «⏱ Prinde timpul», the presses of this phone and «Ultimii sosiți» with who entered each. With scripts off every form posts and the page comes
  * back here saying what happened (`?ok=`, `?dup=` with `?s=` when the row is a decision of «Clasament», `?refused=` —
  * `RACE_GUN_CHANGED`, a «Start» whose page saw another gun than the one stored, said with the gun as it stands (§986) —, `?undone=`,
  * `?gun=` — `repeat` for an organizer's own «Start» heard again within ten seconds —: numbers and codes, never a name). The gun's
@@ -148,6 +159,12 @@ export default async function TimingPage({ params, searchParams }: Props) {
     }
     const undone = number(query.undone);
     if (undone !== null) return { severity: "success" as const, text: t("timing.banner.undone", { who: `#${undone}` }) };
+    // «Dă-i un număr» (§NNN): the line, by its bib's label and the number it now holds, its button the blue one below.
+    const numbered = number(query.numbered);
+    if (numbered !== null) {
+      const elite = view?.elites.find((candidate) => candidate.bibNumber === numbered);
+      return { severity: "success" as const, text: t("timing.banner.numbered", { who: who(numbered, elite?.label) }) };
+    }
     // A «Start» whose page saw another gun (§986): the gun as it stands now — who gave it and when — or that it was taken off since.
     if (query.refused === "RACE_GUN_CHANGED") {
       return {
@@ -246,6 +263,8 @@ export default async function TimingPage({ params, searchParams }: Props) {
     eliteFinished: t.raw("timing.elites.finished") as string,
     eliteNoNumberLine: t("timing.elites.noNumberLine"),
     eliteNoNumberRegistration: t("timing.elites.noNumberRegistration"),
+    eliteGiveNumber: t("timing.elites.giveNumber"),
+    eliteGiveNumberAria: t.raw("timing.elites.giveNumberAria") as string,
     boxLabel: t("timing.boxLabel"),
     bibHint: t("timing.bibHint"),
     record: t("timing.record"),
@@ -378,6 +397,9 @@ export default async function TimingPage({ params, searchParams }: Props) {
         clock={readFinishClockAction}
         recordForm={recordFinishFormAction}
         undoForm={undoFinishFormAction}
+        // «Dă-i un număr» on an elite line drawn without a number (§NNN): for whoever writes the elite list; the action asks again.
+        mayNumber={canManageRegistrations(actor.role)}
+        numberForm={giveEliteNumberFormAction}
       />
     </Stack>
   );

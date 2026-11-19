@@ -58,6 +58,12 @@ export function bibEliteLabelForm(entryId: string): string {
 export function bibEliteRegisteredLabelForm(registrationId: string): string {
   return `bib-elite-registered-label-${registrationId}`;
 }
+/** «Număr» of a line of the separate list (§NNN, `setEliteNumberAction`): one small form per line, beside the save form. */
+export function bibEliteNumberForm(entryId: string): string {
+  return `bib-elite-number-${entryId}`;
+}
+/** «Dă număr elitelor fără număr (N)» (§NNN, `giveEliteNumbersAction`): one small form, beside the save form. */
+export const BIB_ELITE_NUMBER_ALL_FORM = "bib-elite-number-all";
 
 type Props = {
   eventId: string;
@@ -279,6 +285,43 @@ function EliteLabelBox({
 }
 
 /**
+ * «Număr» on one line of the separate list (§NNN; the owner, 2026-11-19, of an elite drawn grey on «Cronometrare»: «vreau să apară
+ * la fel! și să o pot cronometra»): the box, filled with the line's number — the one it drew by itself or one typed —, and
+ * «Salvează», both naming the line's own small form (`BibPrintForms`) by `form=`, because the card stands inside the event's save
+ * form; a plain form that works without scripts and comes back to this card open. The number is the line's at the finish line and
+ * is never printed: the help says so. For whoever only reads the card, nothing — the line's number is in its first row.
+ */
+function EliteNumberBox({
+  formId,
+  bibNumber,
+  words,
+}: {
+  formId: string;
+  bibNumber: number | null;
+  words: { label: string; help: string; save: string; saveName: string };
+}) {
+  return (
+    <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ alignItems: { xs: "stretch", sm: "flex-start" }, mt: 0.5 }} data-testid="bib-elite-number">
+      <TextField
+        name="eliteLineNumber"
+        label={words.label}
+        helperText={words.help}
+        defaultValue={bibNumber === null ? "" : String(bibNumber)}
+        size="small"
+        required
+        slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[0-9]*", maxLength: 5, autoComplete: "off", form: formId } }}
+        sx={{ flex: 1, maxWidth: { sm: 360 }, "& .MuiInputBase-root": { minHeight: 44 } }}
+      />
+      <Box sx={{ flexShrink: 0 }}>
+        <GlyphButton icon="save" type="submit" form={formId} variant="outlined" size="small" sx={{ minHeight: 44 }} aria-label={words.saveName} data-testid="bib-elite-number-save">
+          {words.save}
+        </GlyphButton>
+      </Box>
+    </Stack>
+  );
+}
+
+/**
  * «Elită — doar numele pe BIB» (§895; the owner, 2026-11-03, «Listă separată»): the race's elite runners as a list
  * of names, each printed with the **name where the number goes** — not registrations: no place, no email, no
  * declaration, no count. Beside the spares, a level-5 fold of the print card, closed, how many on its closed line.
@@ -301,6 +344,10 @@ function EliteLabelBox({
  * Every line, a name of the list or a marked registration, carries the two ticks (§910, `EliteTickButtons`): «Apare în
  * clasament» and «Apare pe site», the Administrator's to change; the help under the list says what each does and that a
  * name goes on the site only with the person's agreement.
+ *
+ * Every name of the list has a number (§NNN): drawn by itself at the add when none is typed, typed or changed by the
+ * Administrator in the line's «Număr» box (`EliteNumberBox`), and — for a line left from before without one, said «fără
+ * număr» — given by one press, «Dă număr elitelor fără număr (N)», drawn only while N > 0.
  */
 async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; mayEdit: boolean; saved: boolean }) {
   const t = await getTranslations("Admin");
@@ -321,6 +368,9 @@ async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; m
     saveName: t("bibs.eliteLabelSaveName"),
     shown: t("bibs.eliteLabelShown", { label }),
   });
+  // «Număr» (§NNN): the box's words, and how many names still have none — the one-press button's count, drawn only above nought.
+  const numberWords = { label: t("bibs.eliteLineNumber"), help: t("bibs.eliteLineNumberHelp"), save: t("bibs.eliteLineNumberSave"), saveName: t("bibs.eliteLineNumberSaveName") };
+  const numberless = elite.entries.filter((entry) => entry.bibNumber === null).length;
   return (
     /*
       `#bib-elite` names this wrapper, not the fold (the owner, 2026-11-10: the card stays closed «even via link»): a link to it —
@@ -352,11 +402,10 @@ async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; m
                 <Box key={entry.id} component="li" data-testid="bib-elite-entry">
                   <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", columnGap: 1 }}>
                     <Typography sx={{ fontWeight: 600, overflowWrap: "anywhere" }}>{entry.name}</Typography>
-                    {entry.bibNumber !== null && (
-                      <Typography variant="body2" color="text.secondary">
-                        {t("bibs.eliteNumberShown", { number: entry.bibNumber })}
-                      </Typography>
-                    )}
+                    {/* The line's number, or — a line left from before without one (§NNN) — that it has none. */}
+                    <Typography variant="body2" color="text.secondary" data-testid="bib-elite-entry-number">
+                      {entry.bibNumber !== null ? t("bibs.eliteNumberShown", { number: entry.bibNumber }) : t("bibs.eliteNoNumber")}
+                    </Typography>
                     {mayEdit && (
                       // The question is the line's own form (`BibPrintForms`, §384); this button only submits it.
                       <GlyphButton icon="delete" type="submit" form={bibEliteDeleteForm(entry.id)} variant="text" color="error" size="small" sx={{ minHeight: 44 }}>
@@ -372,6 +421,7 @@ async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; m
                     mayEdit={mayEdit}
                     words={labelWords(eliteLineBibName(entry.name, entry.bibLabel))}
                   />
+                  {mayEdit && <EliteNumberBox formId={bibEliteNumberForm(entry.id)} bibNumber={entry.bibNumber} words={numberWords} />}
                 </Box>
               ))}
               {/* A registration marked «Elită» (§897): never deleted here — the mark is the registrations list's; its two ticks are the card's too (§910). */}
@@ -399,6 +449,20 @@ async function EliteBibsSection({ elite, mayEdit, saved }: { elite: EliteCard; m
                   />
                 </Box>
               ))}
+            </Stack>
+          )}
+          {/*
+            The names left from before without a number (§NNN): one press numbers them all, each nobody else's, so «Cronometrare»
+            times them like every other elite. The Administrator's; the button only submits its own form (`BibPrintForms`).
+          */}
+          {mayEdit && numberless > 0 && (
+            <Stack spacing={0.5} sx={{ alignItems: "flex-start" }} data-testid="bib-elite-number-all">
+              <GlyphButton icon="number" type="submit" form={BIB_ELITE_NUMBER_ALL_FORM} variant="contained" size="small" sx={{ minHeight: 44 }} data-testid="bib-elite-number-all-press">
+                {t("bibs.eliteNumberAll", { count: numberless })}
+              </GlyphButton>
+              <Typography variant="caption" color="text.secondary">
+                {t("bibs.eliteNumberAllHelp")}
+              </Typography>
             </Stack>
           )}
           {/*
@@ -655,6 +719,8 @@ export async function BibPrintForms({
   eliteRegisteredTickAction,
   eliteRegistered = [],
   eliteLabelAction,
+  eliteNumberAction,
+  eliteNumberAllAction,
   cancelLabel,
 }: {
   eventId: string;
@@ -667,8 +733,11 @@ export async function BibPrintForms({
   sparesFrom?: number | null;
   /** `deleteEliteEntryAction` (§895), and the lines it may delete — one small form each; absent, none. */
   eliteDeleteAction?: ActionFormAction;
-  /** The list's lines, with their two ticks (§910): the delete's question names the line, each tick's form posts the state it wants. */
-  eliteEntries?: ReadonlyArray<{ id: string; name: string } & EliteTicks>;
+  /**
+   * The list's lines, with their two ticks (§910) and their number (§NNN): the delete's question names the line, each tick's form
+   * posts the state it wants, and the one-press numbering's form is drawn only while a line has none.
+   */
+  eliteEntries?: ReadonlyArray<{ id: string; name: string; bibNumber?: number | null } & EliteTicks>;
   /** `setEliteEntryTickAction` (§910): two small forms per list line; absent, none. */
   eliteTickAction?: ActionFormAction;
   /** `setRegisteredEliteTickAction` (§910), and the marked registrations it ticks — two small forms each; absent, none. */
@@ -676,6 +745,10 @@ export async function BibPrintForms({
   eliteRegistered?: ReadonlyArray<{ id: string; name: string } & EliteTicks>;
   /** `setEliteBibLabelAction` (§975): one small form per line, list line and marked registration alike; absent, none. */
   eliteLabelAction?: ActionFormAction;
+  /** `setEliteNumberAction` (§NNN): one small form per list line, posting its «Număr» box; absent, none. */
+  eliteNumberAction?: ActionFormAction;
+  /** `giveEliteNumbersAction` (§NNN): «Dă număr elitelor fără număr (N)», one form, while a line has none; absent, none. */
+  eliteNumberAllAction?: ActionFormAction;
   cancelLabel: string;
 }) {
   const t = await getTranslations("Admin");
@@ -795,6 +868,27 @@ export async function BibPrintForms({
             <input type="hidden" name={line.field} value={line.value} />
           </ActionForm>
         ))}
+      {/*
+        «Număr» (§NNN): one small form per list line, posting the box beside the line (`form=`). It asks nothing (§384): it tells
+        nobody, prints nothing, and the same box changes it again; the server refuses a number somebody has or a line whose result
+        is stored.
+      */}
+      {mayAssign &&
+        eliteNumberAction &&
+        eliteEntries.map((entry) => (
+          <ActionForm key={`number-${entry.id}`} id={bibEliteNumberForm(entry.id)} action={eliteNumberAction} hidden>
+            <input type="hidden" name="uiLocale" value={locale} />
+            <input type="hidden" name="eventId" value={eventId} />
+            <input type="hidden" name="entryId" value={entry.id} />
+          </ActionForm>
+        ))}
+      {/* «Dă număr elitelor fără număr (N)» (§NNN): asks nothing — it tells nobody, prints nothing, and each line's box changes it. */}
+      {mayAssign && eliteNumberAllAction && eliteEntries.some((entry) => entry.bibNumber === null) && (
+        <ActionForm id={BIB_ELITE_NUMBER_ALL_FORM} action={eliteNumberAllAction} hidden>
+          <input type="hidden" name="uiLocale" value={locale} />
+          <input type="hidden" name="eventId" value={eventId} />
+        </ActionForm>
+      )}
       <form id={BIB_DOWNLOAD_FORM} action={`/api/admin/events/${eventId}/bibs`} method="get" hidden>
         <input type="hidden" name="locale" value={locale} />
       </form>

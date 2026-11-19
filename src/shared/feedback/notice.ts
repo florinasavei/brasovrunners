@@ -188,6 +188,9 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   // «Înscrie la tombolă» on a person signed up already, and a raffle tick pressed as it already stood (§984).
   "raffleAlready",
   "raffleUnchanged",
+  // «Dă număr elitelor fără număr» finding every line numbered already, and a line's «Număr» saved as it stood (§NNN).
+  "eliteNumberedNone",
+  "eliteNumberUnchanged",
 ]);
 
 /**

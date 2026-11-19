@@ -52,6 +52,7 @@ vi.mock("@/app/[locale]/admin/checkin/cronometrare/actions", () => ({
   undoFinishFormAction: async () => {},
   setRaceGunAction: async () => {},
   readFinishClockAction: async () => ({ kind: "session" }),
+  giveEliteNumberFormAction: async () => {},
 }));
 vi.mock("@/app/[locale]/admin/events/[id]/results/actions", () => ({
   saveEventResultsAction: async () => null,
@@ -75,6 +76,7 @@ const { default: TimingPage } = await import("@/app/[locale]/admin/checkin/crono
 const { default: FinishPage } = await import("@/app/[locale]/admin/events/[id]/results/sosire/page");
 const { default: ResultsPage } = await import("@/app/[locale]/admin/events/[id]/results/page");
 const { recordFinish, saveEventResults, setRaceGun } = await import("@/modules/results/results");
+const { giveEliteLineNumber } = await import("@/modules/registrations/elite-list");
 
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -100,7 +102,7 @@ beforeEach(async () => {
   state.actor = staff.ADMIN;
 });
 
-type Search = { eventId?: string; ok?: string; dup?: string; s?: string; t?: string; refused?: string; bib?: string; undone?: string; gun?: string };
+type Search = { eventId?: string; ok?: string; dup?: string; s?: string; t?: string; refused?: string; bib?: string; undone?: string; gun?: string; numbered?: string };
 /** The page's markup with Emotion's styles in it (`raw`), or without them, whose CSS would otherwise read as words. */
 async function timing(search: Search = { eventId: raceId }, now = at(50), locale: "ro" | "en" = language, raw = false) {
   language = locale;
@@ -171,6 +173,8 @@ describe("§986 «Cronometrare»: the page", () => {
       { eventId: raceId, name: "Andrei Pop", bibNumber: null },
     ]);
     await recordFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, bibNumber: 110 }, at(31, 5));
+    // The desk Volunteer, who does not write the elite list: the numberless line keeps its note (§NNN — an Administrator's page, below).
+    state.actor = staff.CONTRIBUTOR;
     const html = await timing();
     const elites = [...html.matchAll(/data-testid="finish-elite" data-bib="(\d*)"/g)].map((match) => match[1]);
     expect(elites).toEqual(["7", "", "110"]);
@@ -186,6 +190,56 @@ describe("§986 «Cronometrare»: the page", () => {
     // The two buttons that cannot be pressed: the numberless line and the elite already in.
     const buttons = [...html.matchAll(/<button([^>]*)data-testid="finish-elite-button"/g)].map((match) => match[1].includes('disabled=""'));
     expect(buttons).toEqual([false, true, true]);
+    expect(html).not.toContain('data-testid="finish-elite-give-number"');
+    expect(html).not.toContain('id="finish-elite-number"');
+  });
+
+  it("draws «Dă-i un număr» in a numberless line's grey button's place for whoever writes the elite list, and the line's button blue once numbered (§NNN)", async () => {
+    await db.insert(eventEliteEntries).values({ eventId: raceId, name: "Andrei Munteanu", bibNumber: 7 });
+    const [ingrid] = await db.insert(eventEliteEntries).values({ eventId: raceId, name: "Ingrid Pop", bibNumber: null }).returning({ id: eventEliteEntries.id });
+    // The Administrator: in the place of the grey button, one press naming the line, posting a plain form of its own beside the elites'.
+    const html = await timing();
+    const cell = /<button([^>]*data-testid="finish-elite-give-number"[^>]*)>/.exec(html);
+    expect(cell?.[1]).toContain('type="submit"');
+    expect(cell?.[1]).toContain('form="finish-elite-number"');
+    expect(cell?.[1]).toContain('name="entryId"');
+    expect(cell?.[1]).toContain(`value="${ingrid.id}"`);
+    expect(html).toMatch(/<form[^>]*id="finish-elite-number"/);
+    expect(html.match(/data-testid="finish-elite-button"/g)).toHaveLength(1);
+    const words = text(html);
+    expect(words).toContain("Ingrid Dă-i un număr · Ingrid Pop");
+    expect(words).not.toContain("Fără număr: un Administrator");
+    // A thumb's target, as every elite's: 64 pixels drawn.
+    expect(await timing({ eventId: raceId }, at(50), "ro", true)).toMatch(/min-height:64px/);
+    expect(text(await timing({ eventId: raceId }, at(50), "en"))).toContain("Ingrid Give a number · Ingrid Pop");
+    language = "ro";
+
+    // Every other role at the line keeps the note: the Organizer does not write the elite list either.
+    for (const role of ["MODERATOR", "CONTRIBUTOR", "DEV", "COPYWRITER"] as const) {
+      state.actor = staff[role];
+      const page = await timing();
+      expect(page, role).not.toContain('data-testid="finish-elite-give-number"');
+      expect(text(page), role).toContain("Fără număr: un Administrator îi pune unul pe lista de elită");
+    }
+
+    // Numbered — as the press does it —, the page says so and the line is a button like every other elite's, pressed by its number.
+    state.actor = staff.ADMIN;
+    const given = await giveEliteLineNumber(db, staff.ADMIN!, ingrid.id, at(49));
+    const after = await timing({ eventId: raceId, numbered: String(given.bibNumber) });
+    expect(text(after)).toContain(`Ingrid (#${given.bibNumber}) are acum număr: se cronometrează ca celelalte elite.`);
+    expect(after).not.toContain('data-testid="finish-elite-give-number"');
+    const buttons = [...after.matchAll(/data-testid="finish-elite" data-bib="(\d*)"/g)].map((match) => match[1]);
+    expect(buttons).toEqual(["7", String(given.bibNumber)]);
+    const pressable = [...after.matchAll(/<button([^>]*)data-testid="finish-elite-button"/g)].map((match) => [/value="(\d+)"/.exec(match[1])?.[1], match[1].includes('disabled=""')]);
+    expect(pressable).toEqual([
+      ["7", false],
+      [String(given.bibNumber), false],
+    ]);
+    language = "en";
+    expect(text(await timing({ eventId: raceId, numbered: String(given.bibNumber) }, at(50), "en"))).toContain(`Ingrid (#${given.bibNumber}) now has a number: timed like the other elites.`);
+    language = "ro";
+    // A refusal of the press comes back in the banner, in words.
+    expect(text(await timing({ eventId: raceId, refused: "ELITE_NO_FREE_NUMBER" }))).toContain("Seria cursei nu mai are niciun număr liber");
   });
 
   it("lists who entered each finisher, «cont șters» for an account gone, and «Anulează» on the viewer's own for ten minutes", async () => {

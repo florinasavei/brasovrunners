@@ -452,8 +452,13 @@ export type EliteButtonView = {
   label: string;
   /** The full name, small under the label, so two «Andrei» are told apart. */
   name: string;
-  /** The number a press records; null — drawn disabled — for a line or a registration with none. */
+  /**
+   * The number a press records; null for a line or a registration with none — drawn disabled with what to do, or, for a line and
+   * a viewer who writes the elite list, as «Dă-i un număr» (§NNN).
+   */
   bibNumber: number | null;
+  /** The line of the elite list a `line` button stands for, by its id — what «Dă-i un număr» posts (§NNN); null for a registration. */
+  entryId: string | null;
   /** Already «Sosit»: the time, and the button cannot be pressed. */
   finishedGunTimeMs: number | null;
 };

@@ -329,6 +329,23 @@ describe("§986 an elite at the line", () => {
       ["Ștefan", "Ștefan Iordache", null, "line", null],
     ]);
   });
+
+  it("draws a line numbered by «Dă-i un număr» as every other elite, and its press records «Sosit» under the line's name (§NNN)", async () => {
+    const ingrid = await eliteLine("Ingrid Pop", null);
+    const before = await readFinishLine(db, staff.ADMIN!, raceId, at(29), 20);
+    // Without a number: the line's id for «Dă-i un număr», nothing to press.
+    expect(before.elites.map((button) => [button.label, button.bibNumber, button.entryId])).toEqual([["Ingrid", null, ingrid.id]]);
+    const { giveEliteLineNumber } = await import("@/modules/registrations/elite-list");
+    // The race's next free number: 101–103 are the runners', from the race's first number 1 — so 1.
+    const given = await giveEliteLineNumber(db, staff.ADMIN!, ingrid.id, at(29));
+    expect(given).toMatchObject({ bibNumber: 1, given: true });
+    const after = await readFinishLine(db, staff.CONTRIBUTOR!, raceId, at(30), 20);
+    expect(after.elites).toEqual([{ key: `l:${ingrid.id}`, kind: "line", label: "Ingrid", name: "Ingrid Pop", bibNumber: 1, entryId: ingrid.id, finishedGunTimeMs: null }]);
+    // Pressed by the desk Volunteer: the line's own typed row, its name and number, ranked like any finisher.
+    expect(await finish(1, at(31, 5))).toMatchObject({ kind: "recorded", bibNumber: 1, name: "Ingrid Pop", label: "Ingrid", gunTimeMs: ms(31, 5), positionOverall: 1 });
+    expect((await stored()).map((row) => [row.bibNumber, row.registrationId, row.displayName, row.status])).toEqual([[1, null, "Ingrid Pop", "FINISHED"]]);
+    expect((await readFinishLine(db, staff.CONTRIBUTOR!, raceId, at(32), 20)).elites[0].finishedGunTimeMs).toBe(ms(31, 5));
+  });
 });
 
 describe("§986 «Anulează» at the line: one's own unchanged press, ten minutes", () => {
