@@ -7,7 +7,7 @@ import type { Database } from "@/db/types";
 import { isUuid } from "@/shared/ids";
 
 /**
- * Who ticked a volunteer «Prezent», and when (§NNN; the owner, 2026-11-19: «vreau și tracing pentru voluntariat, gen cine a
+ * Who ticked a volunteer «Prezent», and when (§NNN; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a
  * scanat, cine a marcat prezent»): what the tick on the «Voluntari» list and on the person's page says while it is ticked —
  * «QR1, 08:20» — from the newest `volunteer.edited` row that set `present: true` (`volunteers.ts`, kind `setPresent`: entity
  * `event`, the event's id, `{ volunteerId, fields: ["present"], present }`). Nothing new is stored: every tick was audited with its

@@ -47,7 +47,7 @@ import { isMinorOn } from "@/modules/registrations/domain/age";
 import { fieldId } from "@/shared/forms/outcome";
 import { formatRaceNumber, raceNumberTextOf } from "@/modules/registrations/domain/race-number";
 import { checkedInByOf, checkedInWords } from "@/modules/registrations/domain/checked-in-by";
-import { OPENED_FROM_REGISTRATION } from "@/modules/race-day/domain/journal";
+import { OPENED_FROM_REGISTRATION } from "@/modules/registrations/domain/code-scans";
 import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition, holdsAPlace, isActiveStatus, isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import { missingAnswersHeld } from "@/modules/registrations/missing-answers";

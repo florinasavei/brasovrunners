@@ -1,10 +1,11 @@
 import { isUuid } from "@/shared/ids";
 
 /**
- * «Ziua cursei» → «Jurnal» (§NNN; the owner, 2026-11-19: «vreau și tracing pentru voluntariat, gen cine a scanat, cine a marcat
- * prezent»), the pure half: what a line is, the page's two filters as the address carries them, which of the three reads a filter
- * asks, the reads' newest lines merged under one cap, and the counts per account. No database, no request, no words: `journal.ts`
- * reads, the page says it.
+ * «Ziua cursei» → «Jurnal» (§NNN; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a
+ * marcat prezent»), the pure half: what a line is, the page's two filters as the address carries them, which of the three reads a
+ * filter asks, the reads' newest lines merged under one cap, and the counts per account. No database, no request, no words:
+ * `journal.ts` reads, the page says it. The organizers' alone (`canReadRaceDayJournal`): the desk's «Scanat înainte» is its own
+ * (`registrations/domain/code-scans.ts`).
  *
  * Five kinds of line, each from what the platform already keeps: a desk code opened at the desk (`registration.code_scanned`), a
  * runner marked present at the desk or by their own «Am ajuns», a check-in taken back (`registration.checked_in`,
@@ -141,29 +142,4 @@ export function knownAccount(account: JournalAccount, accounts: readonly Journal
   if (account.kind === "all") return account;
   const known = accounts.some((who) => (account.kind === "staff" ? who.kind === "staff" && who.id === account.id : who.kind === account.kind));
   return known ? account : { kind: "all" };
-}
-
-/** One scan of a code as «Scanat înainte» reads it: when, and who — a staff account's name, or none for an account deleted since. */
-export type CodeScan = { id: string; at: Date; actorId: string | null; actorName: string | null };
-
-/**
- * The value of `?from=` that says the registration's own page opened the scanned view (its «Deschide la masă», §NNN): the backoffice
- * looking at its own row, not a code scanned at the table — so no scan is recorded for it.
- */
-export const OPENED_FROM_REGISTRATION = "registration";
-
-/** How many earlier scans «Scanat înainte» names, the newest. */
-export const EARLIER_SCANS_SHOWN = 3;
-
-/**
- * «Scanat înainte» on the scanned page (§NNN): the newest three scans of the code but the one this visit counts as, oldest first so
- * the line reads in the order they happened. `scans` are the code's newest, newest first. The visit's own scan is the row it wrote or
- * repeated (`ownScanId`); on the page coming back from a desk verb — the same visit, a press later — it is the viewer's newest scan.
- */
-export function earlierScans(scans: readonly CodeScan[], visit: { ownScanId: string | null; backFromVerb: boolean; viewerId: string }): CodeScan[] {
-  const own = visit.ownScanId ?? (visit.backFromVerb ? (scans.find((scan) => scan.actorId === visit.viewerId)?.id ?? null) : null);
-  return scans
-    .filter((scan) => scan.id !== own)
-    .slice(0, EARLIER_SCANS_SHOWN)
-    .reverse();
 }

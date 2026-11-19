@@ -251,7 +251,7 @@ export default async function DeskRow({
               return desk && <DeskEmailChip label={desk.label} hint={desk.hint} />;
             })()}
             {/*
-              Who marked them present (§NNN; the owner, 2026-11-19: «vreau și tracing … cine a marcat prezent»): «Prezent la 08:12 ·
+              Who marked them present (§NNN; the owner, 2026-11-19: «vreau si tracing … cine a marcat prezent»): «Prezent la 08:12 ·
               QR2», «· prin „Am ajuns”» for the person's own press, «· cont șters» for an account gone since — for every desk role,
               from the desk's own query (`checked-in-by.ts`), never a read per row.
             */}

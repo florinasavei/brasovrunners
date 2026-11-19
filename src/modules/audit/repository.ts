@@ -206,7 +206,7 @@ export type AuditAction =
   | "registration.checked_in"
   | "registration.checkin_undone"
   /**
-   * The registration's desk code opened at the desk (§NNN; the owner, 2026-11-19: «vreau și tracing pentru voluntariat, gen cine a
+   * The registration's desk code opened at the desk (§NNN; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a
    * scanat, cine a marcat prezent»): `/admin/checkin/<code>` — what the phone's camera or «Scanează» opens — drawn for a desk role,
    * not as the page coming back from a desk verb, not as a router prefetch and not from the registration's own page. One row per
    * account and registration within two minutes (`registrations/admin-service.ts#recordCodeScan`): a reload or a second look is

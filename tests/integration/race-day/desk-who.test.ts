@@ -19,7 +19,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { statementsOf } from "../../helpers/statements";
 
 /**
- * §NNN, BR-REQ-037-08 — the desk says who marked a runner present (the owner, 2026-11-19: «vreau și tracing pentru voluntariat,
+ * §NNN, BR-REQ-037-08 — the desk says who marked a runner present (the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari]
  * gen cine a scanat, cine a marcat prezent»): «Prezent la 08:12 · QR1» on every desk row — the desk's list, a search by name and by
  * number, the scanned page — «· prin „Am ajuns”» for the person's own press and «· cont șters» for an account deleted since, for
  * every role that works the desk, in both languages; read by the desk's own queries — the account's name joined, the person's own

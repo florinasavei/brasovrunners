@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  type CodeScan,
-  earlierScans,
   JOURNAL_LINES_MAX,
   type JournalLine,
   journalAccountOf,
@@ -17,10 +15,10 @@ import {
 import { checkedInByOf, checkedInWords } from "@/modules/registrations/domain/checked-in-by";
 
 /**
- * §NNN — «Ziua cursei» → «Jurnal» and «Scanat înainte», the pure half (`race-day/domain/journal.ts`): the address's two filters,
- * which reads a filter asks, the reads merged under one cap with how many more, the counts per account (a test registration's
- * never counted, its account still offered), an unknown account read as everybody, and the visit's own scan left out of the
- * earlier ones; and who marked a runner present, in the desk chip's words.
+ * §NNN — «Ziua cursei» → «Jurnal», the pure half (`race-day/domain/journal.ts`): the address's two filters, which reads a filter
+ * asks, the reads merged under one cap with how many more, the counts per account (a test registration's never counted, its
+ * account still offered) and an unknown account read as everybody; and who marked a runner present, in the desk chip's words.
+ * The desk's «Scanat înainte» is its own module's (`tests/unit/registrations/code-scans.test.ts`).
  */
 const ACCOUNT = "0b6c1e7e-6f6a-4c55-9a43-2f6f3c5b8a10";
 const OTHER = "1c7d2f8f-7a7b-4d66-8b54-3a7a4d6c9b21";
@@ -126,30 +124,6 @@ describe("§NNN the counts per account", () => {
     expect(knownAccount({ kind: "participant" }, accounts)).toEqual({ kind: "participant" });
     expect(knownAccount({ kind: "removed" }, accounts)).toEqual({ kind: "all" });
     expect(knownAccount({ kind: "all" }, [])).toEqual({ kind: "all" });
-  });
-});
-
-describe("§NNN «Scanat înainte»", () => {
-  const scan = (id: string, minute: number, actorId: string | null): CodeScan => ({ id, at: new Date(Date.UTC(2099, 10, 21, 6, minute)), actorId, actorName: actorId });
-  // The code's newest scans, newest first, as `listCodeScans` reads them.
-  const scans = [scan("d", 12, "qr2"), scan("c", 9, "admin"), scan("b", 7, "qr3"), scan("a", 5, "qr1")];
-
-  it("names the newest three but the visit's own, oldest first", () => {
-    expect(earlierScans(scans, { ownScanId: "d", backFromVerb: false, viewerId: "qr2" }).map((one) => one.id)).toEqual(["a", "b", "c"]);
-    // A visit that recorded nothing (a prefetch is never drawn; the registration's own link): the newest three.
-    expect(earlierScans(scans, { ownScanId: null, backFromVerb: false, viewerId: "admin" }).map((one) => one.id)).toEqual(["b", "c", "d"]);
-  });
-
-  it("back from a verb, leaves out the viewer's newest scan — the visit's own, a press later — and only that one", () => {
-    expect(earlierScans(scans, { ownScanId: null, backFromVerb: true, viewerId: "qr2" }).map((one) => one.id)).toEqual(["a", "b", "c"]);
-    expect(earlierScans([scan("e", 20, "qr1"), ...scans], { ownScanId: null, backFromVerb: true, viewerId: "qr1" }).map((one) => one.id)).toEqual(["b", "c", "d"]);
-    // A viewer who never scanned it: nothing to leave out.
-    expect(earlierScans(scans, { ownScanId: null, backFromVerb: true, viewerId: "nobody" }).map((one) => one.id)).toEqual(["b", "c", "d"]);
-  });
-
-  it("is empty with no earlier scan", () => {
-    expect(earlierScans([scan("d", 12, "qr2")], { ownScanId: "d", backFromVerb: false, viewerId: "qr2" })).toEqual([]);
-    expect(earlierScans([], { ownScanId: null, backFromVerb: true, viewerId: "qr2" })).toEqual([]);
   });
 });
 

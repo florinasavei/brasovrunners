@@ -14,7 +14,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-037-08 — the registration's own page (the owner, 2026-11-19: «vreau și tracing pentru voluntariat, gen cine a
+ * §NNN, BR-REQ-037-08 — the registration's own page (the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a
  * scanat, cine a marcat prezent»):
  *
  * - its trail «Ce a făcut echipa» names each scan of the code at the desk — «Cod scanat la masă» / “Code scanned at the desk” —

@@ -19,19 +19,20 @@ import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-037-08, BR-REQ-060-01 — a scan is recorded (the owner, 2026-11-19: «vreau și tracing pentru voluntariat, gen cine
+ * §NNN, BR-REQ-037-08, BR-REQ-060-01 — a scan is recorded (the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine
  * a scanat, cine a marcat prezent»), read from a real database through the scanned page itself (`/admin/checkin/<code>`):
  *
  * - opened by a desk role for a code that names a registration: one `registration.code_scanned` row — the registration, the staff
- *   account, `{ eventId }` and nothing else (no name, no code); never for the page back from a desk verb (`saved`, `error`), a
- *   router prefetch (`Next-Router-Prefetch`, and the segment prefetch's header), the registration's own «Deschide la masă»
- *   (`from=registration`), an unknown or a malformed code, or a role that cannot work the desk (the 404, and the service's FORBIDDEN);
+ *   account, `{ eventId }` and nothing else (no name, no code); never for the page back from a desk verb (`saved`, `error`), the
+ *   page switched to the other language (`from=language`, what the language switch lands with), a router prefetch
+ *   (`Next-Router-Prefetch`, and the segment prefetch's header), the registration's own «Deschide la masă» (`from=registration`), an
+ *   unknown or a malformed code, or a role that cannot work the desk (the 404, and the service's FORBIDDEN);
  * - one per account and registration within two minutes, again after; another account's own within them;
  * - a write that fails is a warning, and the runner is drawn all the same;
  * - erased, the registration's scan rows are scrubbed of whom like its other rows, and the trail of the registration names the scan;
  * - «Scanat înainte»: nothing when nobody scanned before; the newest three earlier scans, oldest first, with who and when, never the
- *   visit's own — the one it wrote, the one it repeats, or, back from a verb, the viewer's newest —, the day beside one of another
- *   day, an account gone since as «cont șters»; both languages.
+ *   visit's own — the one it wrote, the one it repeats, or, back from a verb or in the other language, the viewer's newest —, the
+ *   day beside one of another day, an account gone since as «cont șters»; both languages.
  *
  * The race is in 2099, so no date of the suite's calendar is reached; the made-up people and the desk accounts are nobody.
  */
@@ -180,7 +181,7 @@ describe("§NNN a scan is recorded when a desk role opens the code's page", () =
     expect(metadata).not.toContain(code);
   });
 
-  it("writes nothing for the page coming back from a desk verb — `saved` or `error` —, a router prefetch, or the registration's own link", async () => {
+  it("writes nothing for the page coming back from a desk verb — `saved` or `error` —, switched to the other language, a router prefetch, or the registration's own link", async () => {
     await open(at("08:12"), { saved: "checkedIn" });
     await open(at("08:13"), { error: "CONFLICT" });
     state.headers = new Headers({ "Next-Router-Prefetch": "1" });
@@ -189,8 +190,13 @@ describe("§NNN a scan is recorded when a desk role opens the code's page", () =
     await open(at("08:15"));
     state.headers = new Headers();
     const fromRegistration = await open(at("08:16"), { from: "registration" }, { actor: staff.ADMIN });
+    // What the language switch lands with (`events/locale-switch.ts`), whatever the page had: the page already open, never a scan.
+    state.locale = "en";
+    const otherLanguage = await open(at("08:17"), { from: "language" }, { actor: desk.qr2 });
+    state.locale = "ro";
     // Each still draws the runner: the desk works the same, only the trail is spared.
     expect(words(fromRegistration)).toContain("Ana Pop");
+    expect(words(otherLanguage)).toContain("Ana Pop");
     expect(await scans()).toEqual([]);
     // The same visit with no such sign is one.
     await open(at("08:17"));
@@ -277,6 +283,8 @@ describe("§NNN «Scanat înainte» under the scanned row", () => {
     expect(scannedBefore(await open(at("08:13")))).toBe("Scanat înainte: QR1 la 08:05, QR3 la 08:07, Coleg ADMIN la 08:09");
     // Back from a verb, a press later: the viewer's own newest scan is the visit's, still left out.
     expect(scannedBefore(await open(at("08:20"), { saved: "checkedIn" }))).toBe("Scanat înainte: QR1 la 08:05, QR3 la 08:07, Coleg ADMIN la 08:09");
+    // Switched to the other language and back past the two minutes (`from=language`): the same visit, no new scan, its own still left out.
+    expect(scannedBefore(await open(at("08:25"), { from: "language" }))).toBe("Scanat înainte: QR1 la 08:05, QR3 la 08:07, Coleg ADMIN la 08:09");
     // Past the two minutes, a new visit: the 08:12 scan is an earlier one now.
     expect(scannedBefore(await open(at("08:30")))).toBe("Scanat înainte: QR3 la 08:07, Coleg ADMIN la 08:09, QR2 la 08:12");
   });

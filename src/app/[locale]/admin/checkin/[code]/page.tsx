@@ -15,10 +15,10 @@ import { findRegistrationByCheckinCode } from "@/modules/registrations/admin-rep
 import { recordCodeScan } from "@/modules/registrations/admin-service";
 import { spareStates } from "@/modules/registrations/bibs";
 import { isCheckinCode, normalizeCheckinCode } from "@/modules/registrations/checkin-code";
+import { listCodeScans } from "@/modules/registrations/code-scans";
+import { type CodeScan, EARLIER_SCANS_SHOWN, earlierScans, OPENED_FROM_REGISTRATION, OPENED_IN_THE_OTHER_LANGUAGE } from "@/modules/registrations/domain/code-scans";
 import DeskRow from "@/modules/registrations/ui/DeskRow";
 import { familyOf } from "@/modules/registrations/family-marker";
-import { type CodeScan, EARLIER_SCANS_SHOWN, earlierScans, OPENED_FROM_REGISTRATION } from "@/modules/race-day/domain/journal";
-import { listCodeScans } from "@/modules/race-day/journal";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
@@ -39,13 +39,15 @@ export const dynamic = "force-dynamic";
  * identifies, it does not authorize. A code nobody has is a sentence with a way back, not a 404, because at a desk the likeliest
  * cause is a mistyped letter.
  *
- * **A scan is recorded (§NNN; the owner, 2026-11-19: «vreau și tracing pentru voluntariat, gen cine a scanat, cine a marcat
- * prezent»).** Opened for a code that names a registration, one `registration.code_scanned` row under the viewer's staff account
- * (`admin-service.ts#recordCodeScan`, one per account and registration within two minutes) — unless the page is coming back from a
- * desk verb (`saved`, `error`), is a router prefetch (`Next-Router-Prefetch`) or is the registration's own «Deschide la masă»
+ * **A scan is recorded (§NNN; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a
+ * marcat prezent»).** Opened for a code that names a registration, one `registration.code_scanned` row under the viewer's staff
+ * account (`admin-service.ts#recordCodeScan`, one per account and registration within two minutes) — unless the page is coming back
+ * from a desk verb (`saved`, `error`), is the page already open switched to the other language (`from=language`, what the language
+ * switch lands with), is a router prefetch (`Next-Router-Prefetch`) or is the registration's own «Deschide la masă»
  * (`from=registration`). A write that fails is a warning in the log and the runner is drawn all the same: the desk never waits on
  * the trail. Under the row, «Scanat înainte: QR1 la 08:05, QR3 la 08:07» — the newest three earlier scans of this code, but the
- * one this visit counts as —, so a second pickup is seen at the table.
+ * one this visit counts as —, so a second pickup is seen at the table. Both read through the desk's own modules
+ * (`registrations/code-scans.ts`), never the organizers' «Jurnal».
  */
 export default async function ScannedCodePage({ params, searchParams }: Props) {
   const { locale, code: raw } = await params;
@@ -63,12 +65,13 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
   const now = new Date();
   const row = isCheckinCode(code) ? await findRegistrationByCheckinCode(db, code, locale) : undefined;
 
-  // The scan (§NNN): never for the page back from a verb, a prefetch of the address, or the registration's own link to it.
-  const backFromVerb = saved !== undefined || error !== undefined;
+  // The scan (§NNN): never for the same visit again — the page back from a verb, or switched to the other language —, a prefetch of
+  // the address, or the registration's own link to it.
+  const sameVisit = saved !== undefined || error !== undefined || query.from === OPENED_IN_THE_OTHER_LANGUAGE;
   const requestHeaders = await headers();
   const prefetch = requestHeaders.get("next-router-prefetch") !== null || requestHeaders.get("next-router-segment-prefetch") !== null;
   let ownScanId: string | null = null;
-  if (row && !backFromVerb && !prefetch && query.from !== OPENED_FROM_REGISTRATION) {
+  if (row && !sameVisit && !prefetch && query.from !== OPENED_FROM_REGISTRATION) {
     try {
       ownScanId = (await recordCodeScan(db, actor, row, now)).scanId;
     } catch (failure) {
@@ -86,7 +89,7 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
   // The raffle (§984): whether the person takes part, for every desk role — and, in the sign-up mode with its gate open, the desk's sign-up.
   const raffle = row ? await readRaffleLine(db, { table: "registration", id: row.id }, now) : null;
   // «Scanat înainte» (§NNN): the code's newest scans, one more than the line names, so this visit's own can be left out.
-  const earlier = row ? earlierScans(await listCodeScans(db, row.id, EARLIER_SCANS_SHOWN + 1), { ownScanId, backFromVerb, viewerId: actor.id }) : [];
+  const earlier = row ? earlierScans(await listCodeScans(db, row.id, EARLIER_SCANS_SHOWN + 1), { ownScanId, sameVisit, viewerId: actor.id }) : [];
   // Each on the event's clock: the hour alone on today's date, the day beside it otherwise (a code opened the day before).
   const scanWords = (scan: CodeScan) => {
     if (!row) return "";

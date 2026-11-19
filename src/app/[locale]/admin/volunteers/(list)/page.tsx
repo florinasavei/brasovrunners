@@ -417,16 +417,10 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   );
 
   /**
-   * «Prezent» on the row (§983; the owner, 2026-11-18, three days before the race: «La voluntari trebuie să trec prezent/absent ca să
-   * pot face tombola doar pentru cei prezenți»): the kit tick's own shape — the house's one-press tick in a plain form that posts the
-   * state it wants (`present=1|0`), never a toggle, working with scripts off and coming back to this page of the list. Unticked is
-   * absent. Drawn on every row, whatever the event, as «Are kit» is; the service asks for the role.
+   * Under «Prezent» while ticked, who ticked it and when (§NNN; the owner, 2026-11-19: «vreau si tracing pentru voluntarim
+   * [voluntari] gen cine a scanat, cine a marcat prezent»): «QR1, 08:20» under the tick, on the event's clock — from the trail, read
+   * once for the page (`present-by.ts`). Unticked, nothing; a tick the trail does not name, nothing either.
    */
-  /*
-    While ticked, who ticked it and when (§NNN; the owner, 2026-11-19: «vreau și tracing pentru voluntariat, gen cine a scanat, cine a
-    marcat prezent»): «QR1, 08:20» under the tick, on the event's clock — from the trail, read once for the page (`present-by.ts`).
-    Unticked, nothing; a tick the trail does not name, nothing either.
-  */
   const presentByLine = (row: VolunteerAdminRow) => {
     const by = row.present ? presentTicks.get(row.id) : undefined;
     if (!by) return null;
@@ -436,6 +430,13 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       </Typography>
     );
   };
+
+  /**
+   * «Prezent» on the row (§983; the owner, 2026-11-18, three days before the race: «La voluntari trebuie să trec prezent/absent ca să
+   * pot face tombola doar pentru cei prezenți»): the kit tick's own shape — the house's one-press tick in a plain form that posts the
+   * state it wants (`present=1|0`), never a toggle, working with scripts off and coming back to this page of the list. Unticked is
+   * absent. Drawn on every row, whatever the event, as «Are kit» is; the service asks for the role.
+   */
   const presentTick = (row: VolunteerAdminRow) => (
     <Box component="form" action={setVolunteerPresentAction} data-testid="volunteer-present-form">
       {hidden(row)}

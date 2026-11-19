@@ -23,8 +23,8 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { statementsOf } from "../../helpers/statements";
 
 /**
- * §NNN, BR-REQ-037-08, BR-REQ-050-02, BR-REQ-060-01 — «Ziua cursei» → «Jurnal» (the owner, 2026-11-19: «vreau și tracing pentru
- * voluntariat, gen cine a scanat, cine a marcat prezent»), read from a real database through the page:
+ * §NNN, BR-REQ-037-08, BR-REQ-050-02, BR-REQ-060-01 — «Ziua cursei» → «Jurnal» (the owner, 2026-11-19: «vreau si tracing pentru
+ * voluntarim [voluntari] gen cine a scanat, cine a marcat prezent»), read from a real database through the page:
  *
  * - for the Organizer, the Administrator and the Superadministrator; a 404 and no tab for every other role, and the read refuses them;
  * - the chosen event's scans, check-ins (at the desk and by «Am ajuns») and undos and its volunteers' «Prezent» ticked and unticked,

@@ -33,7 +33,7 @@ const TAB_GLYPH = {
  * participanții la tombolă»): «Prezența» — the desk as it was —, «Clasament» — the chosen event's results (§808) —,
  * «Cronometrare» — the finish line, a number or an elite pressed as the runner crosses —, «Tombolă» — the organizers' raffle,
  * everybody of the three groups — and «Lucruri de adus», the event's checklist; and, after it, §NNN (the owner, 2026-11-19: «vreau
- * și tracing pentru voluntariat, gen cine a scanat, cine a marcat prezent»): «Jurnal», who scanned, who marked present and who
+ * si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a marcat prezent»): «Jurnal», who scanned, who marked present and who
  * ticked a volunteer, for the organizers alone (`canReadRaceDayJournal`).
  *
  * The house's row of sub-tabs (`SubNav`, §360): plain links drawn on the server, the current one marked (`aria-current`), never

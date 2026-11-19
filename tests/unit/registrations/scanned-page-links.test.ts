@@ -3,8 +3,8 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * §NNN — a scan is what the desk opens, never a link that prefetched the page (the owner, 2026-11-19: «vreau și tracing pentru
- * voluntariat, gen cine a scanat, cine a marcat prezent»). The scanned page (`/admin/checkin/<code>`) records a scan when it is
+ * §NNN — a scan is what the desk opens, never a link that prefetched the page (the owner, 2026-11-19: «vreau si tracing pentru
+ * voluntarim [voluntari] gen cine a scanat, cine a marcat prezent»). The scanned page (`/admin/checkin/<code>`) records a scan when it is
  * drawn; a Next `<Link>` to it in view would prefetch it — a request with `Next-Router-Prefetch`, which the page refuses as a scan
  * by that header (`tests/integration/race-day/scan-record.test.ts`) — and would cost a function per view besides. So every
  * `<Link>` in `src/` that names the scanned page says `prefetch={false}`; the one there is, the registration's «Deschide la masă»,

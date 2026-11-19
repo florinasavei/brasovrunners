@@ -14,7 +14,6 @@ import { canReadRaceDayJournal } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import {
-  type CodeScan,
   JOURNAL_LINES_MAX,
   type JournalAccount,
   type JournalKind,
@@ -31,9 +30,11 @@ import {
 } from "./domain/journal";
 
 /*
-  «Ziua cursei» → «Jurnal» (§NNN; the owner, 2026-11-19: «vreau și tracing pentru voluntariat, gen cine a scanat, cine a marcat
-  prezent»), the reads: one event's scans, check-ins and undos of its registrations and «Prezent» ticks of its volunteers, newest
-  first, with how many each staff account did — and «Scanat înainte», the earlier scans of one code.
+  «Ziua cursei» → «Jurnal» (§NNN; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a
+  marcat prezent»), the reads: one event's scans, check-ins and undos of its registrations and «Prezent» ticks of its volunteers,
+  newest first, with how many each staff account did. The organizers' alone (`canReadRaceDayJournal`), and so never imported by a
+  page of the desk: the scanned page's «Scanat înainte» reads the same scan rows through the desk's own module
+  (`registrations/code-scans.ts`), which reads nothing else.
 
   **Nothing new is stored but the scan** (`registration.code_scanned`, `admin-service.ts#recordCodeScan`): the desk's check-ins
   and undos were audited with their actor all along, and so was every «Prezent» on a volunteer (`volunteer.edited`, `fields:
@@ -278,19 +279,4 @@ export async function readRaceDayJournal<T extends Record<string, unknown>>(
     },
   ]);
   return { event, summary, accounts, account, kind: input.kind, lines: merged.lines, more: merged.more };
-}
-
-/**
- * The newest scans of one desk code (§NNN), newest first, with who: one indexed read (`audit_logs_entity_idx`, the registration),
- * one more than «Scanat înainte» names, so the visit's own scan can be left out (`domain/journal.ts#earlierScans`).
- */
-export async function listCodeScans<T extends Record<string, unknown>>(db: Database<T>, registrationId: string, limit: number): Promise<CodeScan[]> {
-  if (!isUuid(registrationId)) return [];
-  return db
-    .select({ id: auditLogs.id, at: auditLogs.createdAt, actorId: auditLogs.actorStaffUserId, actorName: actorOf.displayName })
-    .from(auditLogs)
-    .leftJoin(actorOf, eq(actorOf.id, auditLogs.actorStaffUserId))
-    .where(and(eq(auditLogs.entityType, "registration"), eq(auditLogs.entityId, registrationId), eq(auditLogs.action, "registration.code_scanned")))
-    .orderBy(desc(auditLogs.createdAt), desc(auditLogs.id))
-    .limit(limit);
 }

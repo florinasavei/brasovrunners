@@ -16,8 +16,8 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { statementsOf } from "../../helpers/statements";
 
 /**
- * §NNN, §983, BR-REQ-050-02 — who ticked a volunteer «Prezent», and when (the owner, 2026-11-19: «vreau și tracing pentru
- * voluntariat, gen cine a scanat, cine a marcat prezent»), on the «Voluntari» list and on the person's page, read from a real
+ * §NNN, §983, BR-REQ-050-02 — who ticked a volunteer «Prezent», and when (the owner, 2026-11-19: «vreau si tracing pentru
+ * voluntarim [voluntari] gen cine a scanat, cine a marcat prezent»), on the «Voluntari» list and on the person's page, read from a real
  * database: while ticked, «Org1, 08:20» under the tick — from the newest trail row that set it, a tick again after an untick naming
  * the second —, «cont șters» for an account gone since; unticked, nothing; ticked with no such row, nothing; both languages; read
  * in ONE query for the page's rows, however many, and none when no row is ticked.

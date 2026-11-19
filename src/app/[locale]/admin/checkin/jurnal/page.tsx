@@ -52,7 +52,7 @@ const TIME_SX = { fontVariantNumeric: "tabular-nums", color: "text.secondary", m
 const WHOM_LINK_STYLE = { display: "inline-flex", alignItems: "center", minHeight: 44 } as const;
 
 /**
- * «Jurnal» — «Ziua cursei»'s log (§NNN; the owner, 2026-11-19: «vreau și tracing pentru voluntariat, gen cine a scanat, cine a
+ * «Jurnal» — «Ziua cursei»'s log (§NNN; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a
  * marcat prezent»), its last tab (`raceDayTabs`): for the chosen event, newest first, every code scanned at the desk, every runner
  * marked present — at the desk, or by their own «Am ajuns» — and every check-in taken back, and every volunteer ticked or unticked
  * «Prezent». Each line: the time to the second on the event's clock (the day beside it when it is not the race's), who — the staff
