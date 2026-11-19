@@ -114,6 +114,17 @@ describe("BR-REQ-040-01 where a language switch lands", () => {
     expect(await resolveLocaleSwitch(db, "/ro/autentificare", "en")).toBe("/en/sign-in");
   });
 
+  /*
+    §NNN — the scanned page in the other language is the page already open, never a code scanned again: the switch, which knows the
+    path alone, lands marked so (`from=language`), and the page records no scan for it (`race-day/scan-record.test.ts`).
+  */
+  it("keeps the desk code on its page in the other language, marked as the page already open", async () => {
+    expect(await resolveLocaleSwitch(db, "/ro/admin/checkin/ABCDEFGHJK", "en")).toBe("/en/admin/checkin/ABCDEFGHJK?from=language");
+    expect(await resolveLocaleSwitch(db, "/en/admin/checkin/ABCDEFGHJK", "ro")).toBe("/ro/admin/checkin/ABCDEFGHJK?from=language");
+    // The organizers' log is a page of its own, not a code: it carries no mark.
+    expect(await resolveLocaleSwitch(db, "/ro/admin/checkin/jurnal", "en")).toBe("/en/admin/checkin/jurnal");
+  });
+
   it("sends an unrecognised path to the listing rather than nowhere", async () => {
     for (const path of ["/", "/evenimente", "/de/veranstaltungen", "/ro/nu-exista-ruta"]) {
       expect(await resolveLocaleSwitch(db, path, "en"), path).toBe("/en/events");

@@ -40,6 +40,7 @@ import { healthNoteShown } from "./domain/health-note";
 import { memberCanonicalEmails } from "./member-ticks";
 import { PRINTS_MEMBER_BIB } from "./member-bib";
 import { eliteBibName, eliteDefaultLabel } from "./bib-elite";
+import { CHECKED_IN_BY_SELF } from "./checked-in-by";
 import { BIB_STAMP, RACE_NUMBER_FORMAT } from "@/modules/events/repository";
 import type { QueueOrder } from "./domain/waitlist";
 import { isRejectionCause, rejectionCause, type RejectionCause } from "@/modules/notifications/domain/rejection-cause";
@@ -1059,6 +1060,8 @@ export type RegistrationDetail = {
   checkedInAt: Date | null;
   /** Null when the participant checked themselves in, or the staff row is gone. */
   checkedInByName: string | null;
+  /** Checked in by the person themselves, «Am ajuns» (§NNN, `checked-in-by.ts`): what tells a null name apart from a deleted account. */
+  checkedInBySelf: boolean;
   /** Who vouched for the address at the desk, when nobody clicked a link. */
   emailConfirmedByName: string | null;
   /** «Schimbă adresa»: when an Administrator last moved the registration to another address, and who (null once the account is gone). */
@@ -1127,6 +1130,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
   idDocument: latestIdDocument,
       checkedInAt: registrations.checkedInAt,
       checkedInByName: checkedInBy.displayName,
+      checkedInBySelf: CHECKED_IN_BY_SELF,
       emailConfirmedByName: emailConfirmedBy.displayName,
       addressChangedAt: registrations.addressChangedAt,
       addressChangedByName: addressChangedBy.displayName,
@@ -1501,7 +1505,10 @@ export type DeskRegistration = {
   /** Null until confirmed. */
   checkinCode: string | null;
   checkedInAt: Date | null;
+  /** The staff account that marked the runner present; null for the person's own «Am ajuns», or an account gone since. */
   checkedInByName: string | null;
+  /** Checked in by the person themselves, «Am ajuns» (§NNN, `checked-in-by.ts`): what tells a null name apart from a deleted account. */
+  checkedInBySelf: boolean;
   /**
    * The desk sees whom an email does not reach (`DECISIONS.md` §76, §663, §670) — which, when and why: its own
    * projection, never the address and never the provider's words (§67, `AGENTS.md` §15.11).
@@ -1543,7 +1550,10 @@ const DESK_COLUMNS = {
   idDocument: latestIdDocument,
   minorIdDocument: latestMinorIdDocument,
   checkedInAt: registrations.checkedInAt,
+  // Who marked the runner present (§NNN): the account's name by the join below, and the person's own «Am ajuns» told apart from
+  // an account deleted since by one indexed probe of the trail — inside this query, never one per row.
   checkedInByName: checkedInBy.displayName,
+  checkedInBySelf: CHECKED_IN_BY_SELF,
   emailState: deskEmailStateSql(),
   emailConfirmedAt: registrations.emailConfirmedAt,
 };

@@ -19,7 +19,7 @@ import { addVolunteerNoteFromListAction } from "@/app/[locale]/admin/volunteers/
 import { getDb } from "@/db/client";
 import { VOLUNTEER_NOTE_MAX } from "@/db/schema/event-volunteer-notes";
 import { countForm } from "@/i18n/count-form";
-import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 import { findEventForRegistrationById } from "@/modules/events/repository";
@@ -53,6 +53,7 @@ import {
 } from "@/modules/volunteers/admin-list";
 import { guardianAllowsConfirm, guardianAskOf, roleLabel, VOLUNTEER_DECISION_MAX, VOLUNTEER_STATES, type VolunteerState, volunteerTypes } from "@/modules/volunteers/domain/volunteer";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
+import { readPresentTicks } from "@/modules/volunteers/present-by";
 import { listPlanPoints } from "@/modules/volunteers/plan-points";
 import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 import type { RaffleReason } from "@/modules/volunteers/domain/raffle";
@@ -189,7 +190,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   // The words of every role the page's rows name, given or offered — one read, whatever their events — each with its category's (§904):
   // «Direcționare (Traseu)», as the card and the person's page say it, so a name standing in two categories is never printed twice alike.
   // The same read carries each category's place in the club's order, which «Tip» lists the categories in (§962).
-  const [roleNames, rowNotes, emailSummaries, withContract] = await Promise.all([
+  const [roleNames, rowNotes, emailSummaries, withContract, presentTicks] = await Promise.all([
     listRoleNames(db, [...new Set(rows.flatMap((row) => [...row.roleIds, ...row.choiceIds]))]),
     // «Note interne»: each row's live notes, newest first — ONE grouped read over the page's ids, never a query per row. The marker
     // says how many and, in its tooltip, the words (§945, as the registrations list's, §943); each note's id and whether the reader
@@ -202,6 +203,8 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     // «Contract semnat» (§NNN): which of the page's rows have their signed agreement attached — ONE read over the page's ids; the
     // service asks for the role again. Existence only: no name, no byte of a file reaches the list.
     volunteersWithSignedContract(db, actor, rows.map((row) => row.id)),
+    // «Prezent» (§NNN): who ticked each ticked row, and when — ONE read over the page's ticked rows, never a query per row.
+    readPresentTicks(db, rows),
   ]);
   // The marker's tooltip and the column (§945, §950): the newest notes' words, the older ones counted — no author's name, and since
   // §964 no day or hour either (the owner, 2026-11-17: «la nota internă nu mai afișa și data»). The person's page keeps both.
@@ -438,6 +441,21 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   );
 
   /**
+   * Under «Prezent» while ticked, who ticked it and when (§NNN; the owner, 2026-11-19: «vreau si tracing pentru voluntarim
+   * [voluntari] gen cine a scanat, cine a marcat prezent»): «QR1, 08:20» under the tick, on the event's clock — from the trail, read
+   * once for the page (`present-by.ts`). Unticked, nothing; a tick the trail does not name, nothing either.
+   */
+  const presentByLine = (row: VolunteerAdminRow) => {
+    const by = row.present ? presentTicks.get(row.id) : undefined;
+    if (!by) return null;
+    return (
+      <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block" }} data-testid="volunteer-present-by">
+        {t("volunteers.presence.by", { who: by.name ?? t("desk.byRemoved"), time: formatTime(by.at, { locale, timeZone: by.timezone }) })}
+      </Typography>
+    );
+  };
+
+  /**
    * «Prezent» on the row (§983; the owner, 2026-11-18, three days before the race: «La voluntari trebuie să trec prezent/absent ca să
    * pot face tombola doar pentru cei prezenți»): the kit tick's own shape — the house's one-press tick in a plain form that posts the
    * state it wants (`present=1|0`), never a toggle, working with scripts off and coming back to this page of the list. Unticked is
@@ -451,6 +469,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       <TickButton checked={row.present} aria-label={`${t("volunteers.presence.tick")}: ${shortText(row.name)}`} data-testid="volunteer-present-tick">
         {t("volunteers.presence.tick")}
       </TickButton>
+      {presentByLine(row)}
     </Box>
   );
 

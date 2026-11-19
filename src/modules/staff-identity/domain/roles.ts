@@ -818,6 +818,19 @@ export function canRecordFinishes(subject: StaffSubject): boolean {
 }
 
 /**
+ * **«Ziua cursei» → «Jurnal» (§NNN)** — who scanned a runner's code, who marked a runner present or took it back and who ticked a
+ * volunteer «Prezent», for one event, newest first, with how many each staff account did. The owner, 2026-11-19: «vreau si tracing
+ * pentru voluntarim [voluntari] gen cine a scanat, cine a marcat prezent». Whoever reads the participant list (`canReadRegistrations`): **the
+ * Organizer, the Administrator and the Superadministrator**, written as that function so moving the line moves both — the log names
+ * every runner and volunteer of the event beside the colleague who acted. The desk's other roles (the desk Volunteer, the Redactor,
+ * Tehnic) work the desk and are named in the log, but read none of it: the tab is not drawn for them and the page is the 404 an
+ * unknown page gets (BR-REQ-060-01); a member is no staff (§524). Reading only: nothing on the page changes anything.
+ */
+export function canReadRaceDayJournal(subject: StaffSubject): boolean {
+  return canReadRegistrations(subject);
+}
+
+/**
  * **Publishing a race's results (§808)** — «Clasamentul e public pe pagina evenimentului»: the disclosure itself,
  * like the public participant list's switch (§201) and unlike the entering. **The Administrator and the
  * Superadministrator** alone (`canManageRegistrations`: whoever decides what the club tells the public about the

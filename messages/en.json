@@ -1783,6 +1783,7 @@
           "promoted_by_staff": "Given a place ahead of the waiting list",
           "checked_in": "Marked as here",
           "checkin_undone": "Check-in undone",
+          "code_scanned": "Code scanned at the desk",
           "bibs_printed": "Bib marked as printed",
           "bibs_unprinted": "Bib marked as not printed",
           "list_consent_changed": "Public-list choice changed by the participant",
@@ -6634,7 +6635,8 @@
         "all": "Everyone, present or absent",
         "yes": "Present",
         "no": "Absent",
-        "chip": "Present"
+        "chip": "Present",
+        "by": "{who}, {time}"
       },
       "decision": {
         "column": "Race-day decision",
@@ -7924,13 +7926,15 @@
       "title": "Number pickup desk",
       "howTitle": "How race day works, step by step",
       "how": [
-        "Three tabs at the top: “Attendance” (this desk), “Results” (the chosen race's results) and “Things to bring” (the checklist of what we bring to the race).",
+        "Tabs at the top: “Attendance” (this desk), “Timing” and “Things to bring”; organizers also get “Results”, “Raffle” and “Log” (who scanned, who marked present).",
         "Before the race (organizer): under “Taking part, registration and rules” → “Allocate and print”, press “Download every number (PDF)” and print them — two to an A4 sheet.",
         "Print a few “Paper declaration form (PDF)” too, for anyone who signs on the spot.",
         "An administrator prints blank numbers from “Spare bibs for on-the-spot entries” for people who register at the desk.",
         "Volunteers: an Administrator makes their accounts from “Staff”, with the Volunteer role. With their account they open this page on their phone. That is all they see: name, state, number.",
+        "Everyone at the table signs in with their own account, never someone else's: “Log” shows who scanned each code and who marked each runner present.",
         "No email addresses, and nobody can be cancelled from here.",
         "Every confirmed participant got a QR code by email. At the desk: press “Scan” (on Android) or open the phone's camera and point it at the code — the person's row opens.",
+        "Under the row it says “Scanned before: …”? The code was opened at the desk before: check the person has not already picked up their number.",
         "Or search by name or by race number.",
         "Press “Mark present” and hand over the number from the pile. No number? Type it in the box and press “Save no.”.",
         "No email arrived, or they cannot find the QR: search by name.",
@@ -7938,7 +7942,7 @@
         "Never registered at all: “Add somebody”. Name and email.",
         "The “This person is at the desk” tick is already set, and “Number given now” has the lowest free spare number chosen: hand them that bib and write their name on it in marker.",
         "They sign the paper declaration, then “Mark present”. If the event is full they join the waiting list; “Give a place” only works once one is free.",
-        "Made a mistake? “Undo” takes it back. Every press stays in the registration's history, with your name on it.",
+        "Made a mistake? “Undo” takes it back. Every press stays in the registration's history and in “Log”, with your name on it.",
         "At the end, the figures on this page are the race's figures: how many confirmed, how many here. Whoever did not come stays without “here”.",
         "A red box saying “Registration cancelled” or “expired”? The person no longer has a place, even with the email in hand: no number, no check-in.",
         "If it says the number was printed, pull that bib out of the pile — numbers are never reused."
@@ -7964,6 +7968,9 @@
       "nobody": "Nobody matches.",
       "backToDesk": "← Back to the desk",
       "scannedTitle": "Scanned participant",
+      "scannedBefore": "Scanned before: {scans}",
+      "scannedBeforeAt": "{who} at {time}",
+      "scannedBeforeOn": "{who} at {time} ({day})",
       "confirmHere": "Confirm on paper",
       "idDocument": "Identity document",
       "idDocumentMinor": "Identity document (minor)",
@@ -7977,7 +7984,8 @@
       "checkIn": "Mark present",
       "undoCheckIn": "Undo",
       "checkedInAt": "Here since {time} · {who}",
-      "bySelf": "themselves",
+      "bySelf": "via “I have arrived”",
+      "byRemoved": "deleted account",
       "fastTrack": "This person is at the desk: I vouch for the address, and the declaration is signed on paper now.",
       "fastTrackHelp": "Confirmed on the spot, without the email link: the participant signs the declaration on paper in front of you; you record it. If full, they join the waiting list; else they get the confirmation.",
       "paperWhen": "Only at the desk, with the declaration the participant signed on paper in front of you. The declaration and, if the address was not confirmed, the address are recorded on your name; you never sign.",
@@ -9559,6 +9567,7 @@
               "title": "Open the desk",
               "steps": [
                 "Sign in (see “First steps”). A Volunteer lands on the desk; everyone else presses «Race day» in the top bar.",
+                "Sign in with your own account, never a colleague's: everything you press at the desk carries the account's name, and the organizers read it under «Log».",
                 "Under «Event» pick today's race, then press «Search».",
                 "At the top you see how many are confirmed, how many are here, how many have no number and how many are unconfirmed. Those are the race's figures.",
                 "Take two piles from the organizer: the numbers printed with names, and the spare numbers, with an empty name line, for people who register at the desk. Nobody who registered online gets a spare."
@@ -9570,6 +9579,7 @@
                 "The participant shows you the QR code from the confirmation email.",
                 "Press «Scan» and hold the code in the frame (it works on Android). On an iPhone: open the Camera app, point it at the code and tap the link that appears.",
                 "The person's row opens: check the name with them.",
+                "Under the row it says «Scanned before: …»? The code was opened at the desk before: check the person has not already picked up their number; if they have, call an organizer.",
                 "Press «Mark present». It asks nothing; a message appears at the bottom.",
                 "Hand over the race number from the pile — the number is shown large on the row. To see the number drawn: «Show the race number (BIB)».",
                 "For the next one: «Back to the desk»."
@@ -9617,7 +9627,7 @@
               "title": "Pressed the wrong thing",
               "steps": [
                 "On the same row press «Undo».",
-                "Everything you press stays in the registration's history, with your name. Nothing is lost."
+                "Everything you press stays in the registration's history and in «Log», with your name. Nothing is lost."
               ]
             },
             {
@@ -9636,6 +9646,17 @@
                 "Several at once: press «Catch the time» once for each, then type the numbers in order.",
                 "A red line tells you what to write on paper, with the time. Without signal, the presses wait on the phone and go by themselves.",
                 "Pressed the wrong one? «Undo» on your line in «Latest finishers», in the first 10 minutes, while nobody entered it again after you. Otherwise tell the organizer: they correct it under «Results»."
+              ]
+            },
+            {
+              "title": "The log: who scanned, who marked present",
+              "steps": [
+                "The Organizer and the Administrators open it: «Race day» → «Log», then pick the race under «Event» and press «Show».",
+                "At the top, «By account»: for each account, how many codes it scanned, how many runners it marked present, how many check-ins it undid and how many volunteers it ticked.",
+                "Below, newest first: the time, who, what they did and to whom. The name leads to the registration or to the volunteer's page.",
+                "“the participant” means the runner pressed «I have arrived — mark me as here» from their own link themselves; “deleted account”, an account removed from «Staff» since.",
+                "«Account» and «What was done» choose what you see; then «Show». The newest 300 lines show, and under them how many more there are.",
+                "For the log to name the person, everyone at the desk has their own Volunteer account: do not use one account on several phones."
               ]
             },
             {
@@ -9868,7 +9889,7 @@
                 "Print the numbers (see above).",
                 "«Events» → «Open» → «Registrations received»: print a few «Paper declaration form (PDF)» and, if it is there, «Paper declaration form for a minor (PDF)».",
                 "There too, «Emergency sheet»: the phones and emergency contacts of everyone confirmed, on one page. Take it to the race and destroy it afterwards.",
-                "Volunteers: ask an administrator to make their accounts with the Voluntar role, then show them this guide's “Race day” section.",
+                "Volunteers: ask an administrator to make each of them an account with the Voluntar role — one per person, so «Log» says who scanned and who marked present —, then show them this guide's “Race day” section.",
                 "On race day: «Race day» in the top bar."
               ]
             },
@@ -13004,7 +13025,8 @@
         "itemsShort": "Things",
         "raffle": "Raffle",
         "timing": "Timing",
-        "timingShort": "Timing"
+        "timingShort": "Timing",
+        "journal": "Log"
       },
       "items": {
         "title": "Things to bring",
@@ -13044,6 +13066,74 @@
           "NOT_FOUND": "The thing is no longer on the list — a colleague may have deleted it.",
           "VALIDATION_ERROR": "The name takes 1 to 120 characters, and the note at most 200."
         }
+      },
+      "journal": {
+        "title": "Race-day log",
+        "intro": "Who scanned the codes, who marked runners present and who ticked volunteers, newest first.",
+        "ownAccount": "For the log to name the person, everyone works the desk under their own account.",
+        "account": "Account",
+        "accounts": {
+          "all": "Every account",
+          "participant": "Participants, via “I have arrived”",
+          "removed": "Deleted accounts"
+        },
+        "kind": "What was done",
+        "kinds": {
+          "all": "Everything",
+          "scanned": "Codes scanned",
+          "checkedIn": "Marked present",
+          "undone": "Check-ins undone",
+          "volunteerPresent": "Volunteers ticked present",
+          "volunteerAbsent": "Volunteers unticked"
+        },
+        "show": "Show",
+        "summaryTitle": "By account",
+        "counts": {
+          "scanned": {
+            "one": "{count} scan",
+            "few": "{count} scans",
+            "other": "{count} scans"
+          },
+          "checkedIn": {
+            "one": "{count} marked present",
+            "few": "{count} marked present",
+            "other": "{count} marked present"
+          },
+          "undone": {
+            "one": "{count} check-in undone",
+            "few": "{count} check-ins undone",
+            "other": "{count} check-ins undone"
+          },
+          "volunteerTicks": {
+            "one": "{count} volunteer tick",
+            "few": "{count} volunteer ticks",
+            "other": "{count} volunteer ticks"
+          }
+        },
+        "linesTitle": "What happened, newest first",
+        "verbs": {
+          "scanned": "scanned",
+          "checkedIn": "marked present",
+          "undone": "undid the check-in of",
+          "volunteerPresent": "ticked present",
+          "volunteerAbsent": "unticked present"
+        },
+        "who": {
+          "participant": "the participant"
+        },
+        "whom": {
+          "numbered": "{name} (no. {number})",
+          "test": "{name} (test)",
+          "volunteer": "{name} (volunteer)"
+        },
+        "timeOnDay": "{time} ({day})",
+        "more": {
+          "one": "and {count} more line, older",
+          "few": "and {count} more lines, older",
+          "other": "and {count} more lines, older"
+        },
+        "empty": "Nothing yet at this event: no code scanned, nobody marked present, no volunteer ticked.",
+        "emptyFiltered": "Nothing for this choice. Pick “Every account” and “Everything”."
       }
     },
     "raffle": {

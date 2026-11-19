@@ -206,6 +206,16 @@ export type AuditAction =
   | "registration.checked_in"
   | "registration.checkin_undone"
   /**
+   * The registration's desk code opened at the desk (§NNN; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a
+   * scanat, cine a marcat prezent»): `/admin/checkin/<code>` — what the phone's camera or «Scanează» opens — drawn for a desk role,
+   * not as the page coming back from a desk verb, not as a router prefetch and not from the registration's own page. One row per
+   * account and registration within two minutes (`registrations/admin-service.ts#recordCodeScan`): a reload or a second look is
+   * one scan. The actor is the staff account; `{ eventId }` and nothing else — never a name, never the code. About the
+   * registration, so the erase scrubs it like the rest (`scrubRegistrationsFromAudit`), its timeline says it, and «Ziua cursei» →
+   * «Jurnal» reads it (`race-day/journal.ts`).
+   */
+  | "registration.code_scanned"
+  /**
    * The participant's own answer to the public list, changed after registration
    * (BR-REQ-039-01; `registrations/list-consent.ts`). The one action with no staff actor: the
    * person did it themselves, from a link. Metadata is the shape — LISTED or NOT_LISTED, before

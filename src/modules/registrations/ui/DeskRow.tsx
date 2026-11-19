@@ -25,6 +25,7 @@ import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import StatusChip from "@/shared/ui/StatusChip";
+import { checkedInByOf, checkedInWords } from "../domain/checked-in-by";
 import DeskEmailChip from "./DeskEmailChip";
 import FamilyChip from "./FamilyChip";
 import GivePlaceButton from "./GivePlaceButton";
@@ -249,14 +250,20 @@ export default async function DeskRow({
                 : null;
               return desk && <DeskEmailChip label={desk.label} hint={desk.hint} />;
             })()}
+            {/*
+              Who marked them present (§NNN; the owner, 2026-11-19: «vreau si tracing … cine a marcat prezent»): «Prezent la 08:12 ·
+              QR2», «· prin „Am ajuns”» for the person's own press, «· cont șters» for an account gone since — for every desk role,
+              from the desk's own query (`checked-in-by.ts`), never a read per row.
+            */}
             {row.checkedInAt && (
               <StatusChip
                 glyph="checkedIn"
                 color="success"
                 variant="outlined"
+                testId="desk-checked-in"
                 label={t("desk.checkedInAt", {
                   time: formatTime(row.checkedInAt, { locale, timeZone: row.eventTimezone }),
-                  who: row.checkedInByName ?? t("desk.bySelf"),
+                  who: checkedInWords(checkedInByOf(row), { self: t("desk.bySelf"), removed: t("desk.byRemoved") }),
                 })}
               />
             )}
