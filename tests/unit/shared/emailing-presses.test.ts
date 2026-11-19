@@ -25,6 +25,7 @@ const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8
 const REGISTRATIONS = "src/app/[locale]/admin/registrations/actions.ts";
 const RESERVE = "src/app/[locale]/admin/registrations/reserve-actions.ts";
 const REGISTRATION = "src/app/[locale]/admin/registrations/[id]/actions.ts";
+const SPARE_BIB = "src/app/[locale]/admin/registrations/[id]/spare-bib-actions.ts";
 const INVITATIONS = "src/app/[locale]/admin/registrations/invitation-actions.ts";
 const PERSON = "src/app/[locale]/admin/registrations/person/actions.ts";
 const ADMIN = "src/app/[locale]/admin/actions.ts";
@@ -52,6 +53,8 @@ export const EMAILING_PRESSES: Readonly<Record<string, Press>> = {
   confirmRegistrationNowAction: { file: REGISTRATIONS, causes: ["registrations.confirmPaper"], actor: "named" },
   promoteRegistrationAction: { file: REGISTRATIONS, causes: ["registrations.givePlace"], actor: "named" },
   setBibNumberAction: { file: REGISTRATIONS, causes: ["registrations.setBib"], actor: "named" },
+  // «Dă-i un BIB gol» (§NNN): a number given by hand too — the same cause, its own file beside the page.
+  giveSpareBibAction: { file: SPARE_BIB, causes: ["registrations.setBib"], actor: "named" },
   setOutsideCapacityAction: { file: REGISTRATIONS, causes: ["registrations.specialGuests"], actor: "named" },
   changeRegistrationAddressAction: { file: REGISTRATIONS, causes: ["registrations.changeAddress"], actor: "named" },
   cancelRegistrationAction: { file: REGISTRATIONS, causes: ["registrations.cancel"], actor: "named" },
@@ -472,6 +475,7 @@ describe("every emailing press says its email before it is pressed (slice 3)", (
  */
 const OPT_OUT_PRESSES: Readonly<Record<string, { file: string; passes: RegExp }>> = {
   setBibNumberAction: { file: REGISTRATIONS, passes: /setBibNumberByStaff\([^;]*\{ sendEmail \}\)/ },
+  giveSpareBibAction: { file: SPARE_BIB, passes: /giveSpareBibByStaff\([^;]*\{ sendEmail \}\)/ },
   cancelRegistrationAction: { file: REGISTRATIONS, passes: /cancelRegistrationByStaff\([^;]*\bsendEmail,/ },
   // «Transformă în voluntar» (§948): one box for the person's two emails — the cancellation's and the role's.
   turnRunnerIntoVolunteerAction: { file: REGISTRATIONS, passes: /turnRunnerIntoVolunteer\([^;]*\bsendEmail \}/ },

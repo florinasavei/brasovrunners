@@ -1215,10 +1215,73 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   now: Date,
   options: { sendEmail?: boolean } = {},
 ): Promise<Registration> {
-  const sendEmail = options.sendEmail !== false;
+  return writeBibNumberByStaff(db, actor, registrationId, bibNumber, now, { sendEmail: options.sendEmail !== false, blankBib: false });
+}
+
+/** «Dă-i un BIB gol»'s select on the registration's page (§NNN): the box every refusal of that press names. */
+export const SPARE_BIB_FIELD = "spareNumber";
+
+/** The mark on a refusal of «Dă-i un BIB gol» whose blank bib is somebody's already — given a moment ago, or retired (§NNN). */
+const SPARE_BIB_TAKEN = "spareBibTaken";
+
+/**
+ * The page's word for a refused blank bib (§NNN): `SPARE_BIB_TAKEN` when the bib chosen was given to somebody else
+ * meanwhile or is retired, null for any other error, which keeps its own code.
+ */
+export function spareBibRefusalCode(error: unknown): "SPARE_BIB_TAKEN" | null {
+  return isDomainError(error) && error.code === "CONFLICT" && error.fields.includes(SPARE_BIB_TAKEN) ? "SPARE_BIB_TAKEN" : null;
+}
+
+/**
+ * «Dă-i un BIB gol» (§NNN; the owner, 2026-11-19, holding the sheet of spares: «trebuie să pot aloca numere dintre cele
+ * goale, adică astea — spre ex. 154 deja e la …»): a confirmed runner is given one of the event's free desk
+ * spares (§444) — the blank bib already in their hand, the name written on in marker — and wears its number from now on.
+ *
+ * The one place a **printed** number changes, amending §311. A printed bib never moved because the paper would then name
+ * a number nobody wears. Here the paper in the runner's hand is the blank bib, and the old number — printed or not — is
+ * retired exactly as §548 retires a replaced one (the audit row's `from`, `bibs.ts#replacedBibNumbers`): never drawn,
+ * suggested or given again, so no two people ever wear one number, and the old printed bib is void.
+ *
+ * The rest is `setBibNumberByStaff`'s one rule (`writeBibNumberByStaff`): under the event row's lock, the number must be
+ * one of the event's spares (`isEventSpareNumber`) nobody wears and none retired, the registration confirmed and real;
+ * replacing a number is the Administrator's, filling a row with none any desk role's; the row is marked printed, since a
+ * spare is on paper; one `registration.bib_set` row with `spare: true` and `printedReplaced`; `BIB_ASSIGNED` unless the
+ * question was answered «… fără email». Every refusal names the select (`SPARE_BIB_FIELD`).
+ */
+export async function giveSpareBibByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationId: string,
+  spareNumber: number | null,
+  now: Date,
+  options: { sendEmail?: boolean } = {},
+): Promise<Registration> {
+  if (spareNumber === null) {
+    assertDesk(actor);
+    throw new DomainError("VALIDATION_ERROR", "choose one of the event's blank bibs", [SPARE_BIB_FIELD]);
+  }
+  return writeBibNumberByStaff(db, actor, registrationId, spareNumber, now, { sendEmail: options.sendEmail !== false, blankBib: true });
+}
+
+/**
+ * A race number by hand, for both presses: «Schimbă numărul» (`blankBib: false`) and «Dă-i un BIB gol» (`blankBib: true`,
+ * §NNN). One rule, two differences: the blank bib must be one of the event's spares and may replace a printed number; the
+ * typed number may be any free number and never replaces a printed one (§311). The typed box's refusals keep the fields
+ * they always had (its action names the box); the blank bib's name its select.
+ */
+async function writeBibNumberByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationId: string,
+  bibNumber: number | null,
+  now: Date,
+  mode: { sendEmail: boolean; blankBib: boolean },
+): Promise<Registration> {
+  const { sendEmail, blankBib } = mode;
+  const box = (typedFields: readonly string[] = []): string[] => (blankBib ? [SPARE_BIB_FIELD] : [...typedFields]);
   assertDesk(actor);
   if (bibNumber !== null && (!Number.isInteger(bibNumber) || bibNumber < 1 || bibNumber > 99_999)) {
-    throw new DomainError("VALIDATION_ERROR", "a race number is a whole number from 1 to 99999");
+    throw new DomainError("VALIDATION_ERROR", "a race number is a whole number from 1 to 99999", box());
   }
   const current = await findRegistrationById(db, registrationId);
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
@@ -1232,14 +1295,15 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
     throw new DomainError(
       "VALIDATION_ERROR",
       `this registration is ${current.status.toLowerCase()}; its race number is retired and cannot be changed`,
+      box(),
     );
   }
   // Not confirmed yet: the number comes with the confirmation, in its order (§548).
   if (current.status !== "CONFIRMED") {
-    throw new DomainError("VALIDATION_ERROR", "a race number is given when the registration is confirmed, not before");
+    throw new DomainError("VALIDATION_ERROR", "a race number is given when the registration is confirmed, not before", box());
   }
   if (current.kind !== "REAL") {
-    throw new DomainError("VALIDATION_ERROR", "a test registration wears no race number");
+    throw new DomainError("VALIDATION_ERROR", "a test registration wears no race number", box());
   }
   if (bibNumber === null) {
     throw new DomainError("VALIDATION_ERROR", "a confirmed registration keeps its race number; type another one to change it");
@@ -1253,10 +1317,14 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
     throw new DomainError(
       "FORBIDDEN",
       `role ${actor.role} may not replace a confirmed registration's race number; AGENTS.md §10.2 reserves it to ADMIN`,
+      box(),
     );
   }
-  // A number that is on paper stays on it (§311): moving it would leave the printed bib pointing at nobody.
-  if (current.bibNumber !== null && current.bibPrintedAt !== null) {
+  /*
+    A number that is on paper stays on it (§311): moving it would leave the printed bib pointing at nobody. The blank bib
+    alone replaces one (§NNN): the paper in the runner's hand is then the spare, and the printed number is retired below.
+  */
+  if (!blankBib && current.bibNumber !== null && current.bibPrintedAt !== null) {
     throw new DomainError("VALIDATION_ERROR", "this race number is already printed; it cannot be changed");
   }
 
@@ -1277,43 +1345,52 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
         number here and is told to look again.
       */
       const [locked] = await tx
-        .select({ bibNumber: registrations.bibNumber })
+        .select({ bibNumber: registrations.bibNumber, bibPrintedAt: registrations.bibPrintedAt })
         .from(registrations)
         .where(eq(registrations.id, registrationId))
         .limit(1);
       if (!locked) throw new DomainError("NOT_FOUND", "no such registration");
       if (locked.bibNumber !== current.bibNumber) {
-        throw new DomainError("CONFLICT", "this race number was changed by somebody else a moment ago; look at it again", ["bibNumber"]);
+        throw new DomainError("CONFLICT", "this race number was changed by somebody else a moment ago; look at it again", box(["bibNumber"]));
       }
       const replaced = locked.bibNumber;
-      if (await bibNumberInUse(tx, { eventId: current.eventId, number: bibNumber, exceptRegistrationId: registrationId })) {
-        throw new DomainError("CONFLICT", `number ${bibNumber} is already somebody's at this event`, ["bibNumber"]);
-      }
       /*
         A desk spare is on paper already (§444): printed blank and handed out with the name written
         on. Marked printed, so the next "unprinted" sheet does not print a second one with the name,
-        and a cancellation lists it among the bibs that exist (§311).
+        and a cancellation lists it among the bibs that exist (§311). The blank bib must be one (§NNN):
+        a number nobody printed blank is the typed box's, with its own rules.
       */
       const spare = await isEventSpareNumber(tx, current.eventId, bibNumber);
+      if (blankBib && !spare) {
+        throw new DomainError("VALIDATION_ERROR", `number ${bibNumber} is not one of this event's blank bibs`, box());
+      }
+      if (await bibNumberInUse(tx, { eventId: current.eventId, number: bibNumber, exceptRegistrationId: registrationId })) {
+        throw new DomainError("CONFLICT", `number ${bibNumber} is already somebody's at this event`, blankBib ? [SPARE_BIB_FIELD, SPARE_BIB_TAKEN] : ["bibNumber"]);
+      }
       const [row] = await tx
         .update(registrations)
         .set({ bibNumber, updatedAt: now, ...(spare ? { bibPrintedAt: now } : {}) })
         /*
           The refusals above, again, in the write itself (§311): `current` was read before this
           transaction, so a registration cancelled — or a number printed — in between would
-          otherwise still have its number moved. No row back means one of them became true.
+          otherwise still have its number moved. No row back means one of them became true. The
+          blank bib replaces a printed number (§NNN), so its write asks only the state and the number.
         */
         .where(
           and(
             eq(registrations.id, registrationId),
             eq(registrations.status, "CONFIRMED"),
-            or(isNull(registrations.bibPrintedAt), isNull(registrations.bibNumber)),
+            blankBib ? undefined : or(isNull(registrations.bibPrintedAt), isNull(registrations.bibNumber)),
             replaced === null ? isNull(registrations.bibNumber) : eq(registrations.bibNumber, replaced),
           ),
         )
         .returning();
       if (!row) {
-        throw new DomainError("VALIDATION_ERROR", "this registration is over or its race number is printed; the number cannot be changed");
+        throw new DomainError(
+          "VALIDATION_ERROR",
+          blankBib ? "this registration is over; its race number cannot be changed" : "this registration is over or its race number is printed; the number cannot be changed",
+          box(),
+        );
       }
       /*
         Nor a number retired here (§311, §548) — erased with its row or replaced by hand. The unique
@@ -1321,12 +1398,14 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
         do, read **after** the write, inside it: an erasure commits its audit row before its row goes.
       */
       if ((await retiredBibNumbers(tx, current.eventId)).includes(bibNumber)) {
-        throw new DomainError("CONFLICT", `number ${bibNumber} was worn at this event before and stays retired`);
+        throw new DomainError("CONFLICT", `number ${bibNumber} was worn at this event before and stays retired`, blankBib ? [SPARE_BIB_FIELD, SPARE_BIB_TAKEN] : []);
       }
       /*
         The audit row, in the same transaction: its `from` is what retires the replaced number
         (`bibs.ts#replacedBibNumbers`), so a draw that could see the new number and not the row
         saying the old one is retired must be impossible. The event is named so the read can find it.
+        A blank bib says so (§NNN), and whether the number it replaced was on paper — the bib to pull
+        from the pile; never a name.
       */
       await recordAuditEvent(tx, {
         actorStaffUserId: actor.id,
@@ -1334,7 +1413,13 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
         action: "registration.bib_set",
         entityType: "registration",
         entityId: registrationId,
-        metadata: { eventId: current.eventId, from: replaced, to: bibNumber, ...(sendEmail ? {} : { emailSkipped: true }) },
+        metadata: {
+          eventId: current.eventId,
+          from: replaced,
+          to: bibNumber,
+          ...(blankBib ? { spare: true, printedReplaced: replaced !== null && locked.bibPrintedAt !== null } : {}),
+          ...(sendEmail ? {} : { emailSkipped: true }),
+        },
         now,
       });
       return row;
@@ -1342,7 +1427,7 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   } catch (error) {
     const message = error instanceof Error ? `${error.message} ${String((error as { cause?: unknown }).cause ?? "")}` : "";
     if (/registrations_event_bib_number_unique/.test(message)) {
-      throw new DomainError("CONFLICT", `number ${bibNumber} is already worn by somebody else at this event`);
+      throw new DomainError("CONFLICT", `number ${bibNumber} is already worn by somebody else at this event`, blankBib ? [SPARE_BIB_FIELD, SPARE_BIB_TAKEN] : []);
     }
     throw error;
   }

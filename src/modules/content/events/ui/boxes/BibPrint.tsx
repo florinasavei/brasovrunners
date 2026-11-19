@@ -7,6 +7,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { ELITE_NAME_MAX } from "@/db/schema/event-elite-entries";
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { countForm } from "@/i18n/count-form";
+import { Link } from "@/i18n/navigation";
 import { eliteLineBibName, eliteLineDefaultLabel } from "@/modules/registrations/bib-elite";
 import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
 import { BIB_BLANK_MAX } from "@/modules/registrations/domain/spare-bibs";
@@ -20,6 +21,7 @@ import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
+import { TAP_TARGET } from "@/shared/ui/tap-target";
 import TickButton from "@/shared/ui/TickButton";
 import TipSpan from "@/shared/ui/TipSpan";
 
@@ -129,7 +131,46 @@ export type SpareCard = {
   nextFrom: number | null;
   /** At most this many per print. */
   perPrint: number;
+  /**
+   * The spares somebody wears (§NNN, `bibs.ts#givenSpareBibs`), lowest first: the number as the event writes it, the
+   * registration it is on, its name and its state — «154 → Radu Pop». Names only, for whoever reads the bibs.
+   */
+  given?: ReadonlyArray<GivenSpareLine>;
 };
+
+/** One line of the spares given (§NNN): the number written as the bib prints it, and whose it is. */
+export type GivenSpareLine = { registrationId: string; number: string; name: string; status: RegistrationStatus };
+
+/**
+ * «N BIB-uri goale date:» (§NNN; the owner, 2026-11-19: «spre ex. 154 deja e la …»): each spare given, lowest first,
+ * the whole line a link to the registration — «154 → Radu Pop» — and the state beside a line that is not confirmed (a
+ * cancelled runner's spare stays retired, §311). What a person sees at a glance before handing the next blank bib.
+ */
+export async function GivenSpareBibs({ given }: { given: ReadonlyArray<GivenSpareLine> }) {
+  if (given.length === 0) return null;
+  const t = await getTranslations("Admin");
+  const locale = await getLocale();
+  return (
+    <Box data-testid="bib-spares-given">
+      <Typography variant="body2">{t(`bibs.sparesGiven.${countForm(given.length, locale)}`, { count: given.length })}</Typography>
+      <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+        {given.map((line) => (
+          <Box
+            component="li"
+            key={line.registrationId}
+            data-testid="bib-spares-given-line"
+            sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", columnGap: 1, fontVariantNumeric: "tabular-nums", "& a": { display: "inline-flex", alignItems: "center", ...TAP_TARGET } }}
+          >
+            <Link href={{ pathname: "/admin/registrations/[id]", params: { id: line.registrationId } }}>
+              {t("bibs.sparesGivenLine", { number: line.number, name: line.name })}
+            </Link>
+            {line.status !== "CONFIRMED" && <RegistrationStatusChip status={line.status} />}
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+}
 
 /**
  * «Numere de rezervă pentru înscrierile de la fața locului» (§444, amending §338): the club types
@@ -165,6 +206,8 @@ async function SpareBibsSection({ spares, mayReserve }: { spares: SpareCard; may
               : t("bibs.sparesNone", { from: band.from, to: band.to })}
           </Typography>
         )}
+        {/* Who wears the spares already given (§NNN): «154 → Radu Pop», each a link to the registration. */}
+        {band && <GivenSpareBibs given={spares.given ?? []} />}
         <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
           {mayReserve && spares.nextFrom !== null ? (
             <>

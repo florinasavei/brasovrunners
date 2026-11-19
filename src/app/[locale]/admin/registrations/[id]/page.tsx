@@ -29,14 +29,14 @@ import {
   type OutboxHistoryRow,
   termsLineKindFor,
 } from "@/modules/registrations/admin-repository";
-import { readEmergencyDetails, readRegistrationAnswers } from "@/modules/registrations/admin-service";
+import { readEmergencyDetails, readRegistrationAnswers, SPARE_BIB_FIELD } from "@/modules/registrations/admin-service";
 import { EDITABLE_ANSWERS, EMERGENCY_ANSWERS, RETIRED_ANSWERS } from "@/modules/registrations/answers";
 import { countryOptions } from "@/modules/registrations/countries";
 import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import { SEX_CHOICES, sexShown } from "@/modules/registrations/domain/sex";
 import { sealPersonLookup } from "@/modules/registrations/person-data";
 import { instagramProfileUrl } from "@/modules/registrations/social-links";
-import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
+import { freeSpareBibNumbers, suggestFreeBibNumbers } from "@/modules/registrations/bibs";
 import { hasOneBib, oneBibHref } from "@/modules/registrations/domain/one-bib";
 import { formSentAt, journeyOf } from "@/modules/registrations/domain/journey";
 import { deadlineHoldsAPlace, rowDeadlineOf } from "@/modules/registrations/domain/row-deadline";
@@ -95,6 +95,7 @@ import { CLUB_NAME } from "@/theme/brand";
 import { resendRegistrationEmailAction } from "./actions";
 import { addRegistrationNoteAction, deleteRegistrationNoteAction } from "./note-actions";
 import { setRegistrationPartnerAction } from "./partner-actions";
+import { giveSpareBibAction } from "./spare-bib-actions";
 import DeclarationHoldForm from "@/modules/registrations/ui/DeclarationHoldForm";
 import { roleLabel, rolesWithCategoryWords } from "@/modules/volunteers/domain/volunteer";
 import TurnIntoVolunteerPanel from "@/modules/volunteers/ui/TurnIntoVolunteerPanel";
@@ -143,6 +144,17 @@ const BibIcon = ACTION_ICONS.number;
 function auditLabelValues(metadata: unknown): Record<string, string> | undefined {
   const { from, to } = (metadata ?? {}) as { from?: unknown; to?: unknown };
   return Number.isInteger(from) && Number.isInteger(to) ? { from: String(from), to: String(to) } : undefined;
+}
+
+/**
+ * A trail row written by «Dă-i un BIB gol» (§NNN): `registration.bib_set` with `spare: true` — the blank bib's number, the
+ * number it replaced or none, and whether that one was printed. Null for any other row, a typed number's included.
+ */
+function spareBibOf(action: string, metadata: unknown): { from: number | null; to: number; printedReplaced: boolean } | null {
+  if (action !== "registration.bib_set") return null;
+  const { spare, from, to, printedReplaced } = (metadata ?? {}) as { spare?: unknown; from?: unknown; to?: unknown; printedReplaced?: unknown };
+  if (spare !== true || !Number.isInteger(to)) return null;
+  return { from: Number.isInteger(from) ? (from as number) : null, to: to as number, printedReplaced: printedReplaced === true };
 }
 
 /**
@@ -406,6 +418,15 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       ? tr(`registrations.answers.fields.${field}`, { club: CLUB_NAME })
       : field;
   const trailLabel = (action: string, metadata: unknown): string => {
+    // «Dă-i un BIB gol» (§NNN): the blank bib given, and the number it retired — the printed one named as printed, the bib to pull.
+    const blankBib = spareBibOf(action, metadata);
+    if (blankBib) {
+      if (blankBib.from === null) return tr("registrations.spareBib.trail", { to: written(blankBib.to) });
+      return tr(blankBib.printedReplaced ? "registrations.spareBib.trailReplacedPrinted" : "registrations.spareBib.trailReplaced", {
+        from: written(blankBib.from),
+        to: written(blankBib.to),
+      });
+    }
     // «Completează-ți datele» (§905): the person's own completion names its fields in words, never a value.
     if (action === "registration.answers_completed") {
       const fields = (metadata as { fields?: unknown } | null)?.fields;
@@ -418,6 +439,11 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   };
   const trailMetadata = (action: string, metadata: unknown): Record<string, unknown> => {
     const shown = { ...((metadata ?? {}) as Record<string, unknown>) };
+    // A blank bib's label already says both numbers (§NNN): no second «— → 154» under it.
+    if (spareBibOf(action, metadata)) {
+      delete shown.from;
+      delete shown.to;
+    }
     if (action === "registration.answer_corrected") {
       delete shown.field;
       if (!emergencyOpen && EMERGENCY_ANSWERS.has(String((metadata as { field?: unknown } | null)?.field ?? ""))) {
@@ -494,6 +520,29 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // sentence is "correct it and send again", not a colleague's save to reload for.
   const bibRefusal = await refusalMessages({ bibNumber: tr("registrations.bibNumber") });
   bibRefusal.keptConflict = bibRefusal.kept;
+  /*
+    «Dă-i un BIB gol» (§NNN): the event's free desk spares, lowest first, for a confirmed real registration, printed or not.
+    Replacing a number is the Administrator's (§548), so another role is offered it only on a row with no number yet; read
+    only where the fold can be drawn, and the service decides again under the event's lock.
+  */
+  const blankBibs =
+    registration.status === "CONFIRMED" && registration.kind === "REAL" && (registration.bibNumber === null || mayManage)
+      ? (await freeSpareBibNumbers(db, registration.eventId)).free
+      : [];
+  const spareRefusal = blankBibs.length > 0 ? await refusalMessages({ [SPARE_BIB_FIELD]: tr("registrations.spareBib.number") }) : null;
+  /*
+    The question says what the press does (§384): the runner wears the number chosen — `{spareNumber}`, filled from the select
+    as it reads at the press — and the number it replaces is retired, its printed bib void when it was printed.
+  */
+  const spareBibBody =
+    blankBibs.length > 0
+      ? [
+          (tr.raw("registrations.spareBib.confirmBody") as string).replace("{name}", () => registration.registeredName),
+          ...(registration.bibNumber !== null
+            ? [tr(registration.bibPrintedAt !== null ? "registrations.spareBib.confirmOldPrinted" : "registrations.spareBib.confirmOld", { old: written(registration.bibNumber) })]
+            : []),
+        ].join(" ")
+      : "";
   // «E de la parteneri» (the decision «De la parteneri»): the Administrator's form — its box named in a refusal, and the event's earlier names.
   const partnerRefusal = mayManage ? await refusalMessages({ partnerName: tr("partner.name") }) : null;
   const partnerSuggestions = mayManage ? await listPartnerSuggestions(db, actor, registration.eventId) : [];
@@ -904,6 +953,66 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                             </Stack>
                             <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
                               {tr("desk.bibFree", { numbers: freeBibs.join(", ") })}
+                            </Typography>
+                          </Box>
+                        </RecallDetails>
+                      </ActionForm>
+                    </Box>
+                  )}
+                  {spareRefusal && (
+                    /*
+                      «Dă-i un BIB gol» (§NNN; the owner, 2026-11-19: «trebuie să pot aloca numere dintre cele goale, adică astea —
+                      spre ex. 154 deja e la …»): one of the event's free desk spares, for the runner holding that blank
+                      bib, printed or not — the one way a printed number changes. A native select, lowest first and the lowest
+                      chosen; the question names the number chosen and the one retired, and the email is the answer pressed
+                      (§976). A refusal comes back with the fold open, naming the select (§315).
+                    */
+                    <Box sx={{ alignSelf: "stretch" }}>
+                      <ActionForm
+                        action={giveSpareBibAction}
+                        messages={spareRefusal}
+                        confirm={{
+                          title: tr("registrations.spareBib.confirmTitle"),
+                          body: spareBibBody,
+                          fillFromChosen: [SPARE_BIB_FIELD],
+                          ...words.mail({ to: registration.registeredName, type: "BIB_ASSIGNED", test: registration.kind === "TEST", optOut: true }),
+                          confirmLabel: tr("registrations.spareBib.give"),
+                          cancelLabel: words.cancel,
+                        }}
+                        scope="spare-bib"
+                        data-testid="spare-bib-form"
+                      >
+                        <RecallDetails sx={BOXED_DISCLOSURE_SX}>
+                          <Typography component="summary" variant="body2" color="primary" data-testid="spare-bib-fold">
+                            <BibIcon aria-hidden sx={FOLD_GLYPH_SX} />
+                            {tr("registrations.spareBib.fold")}
+                          </Typography>
+                          <Box>
+                            {deskHidden}
+                            <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ alignItems: { xs: "stretch", sm: "center" } }}>
+                              <RecallField
+                                name={SPARE_BIB_FIELD}
+                                select
+                                label={tr("registrations.spareBib.number")}
+                                defaultValue={String(blankBibs[0])}
+                                size="small"
+                                slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+                                // The select itself is the thumb's target (BR-REQ-041-01 criterion 6), as «Planul voluntarilor»'s are.
+                                sx={{ width: { xs: "100%", sm: 160 }, "& .MuiNativeSelect-select": { boxSizing: "border-box", minHeight: 44 } }}
+                                data-testid="spare-bib-choice"
+                              >
+                                {blankBibs.map((number) => (
+                                  <option key={number} value={String(number)}>
+                                    {written(number)}
+                                  </option>
+                                ))}
+                              </RecallField>
+                              <GlyphButton icon="number" type="submit" variant="outlined" sx={{ minHeight: 44 }} data-testid="spare-bib-give">
+                                {tr("registrations.spareBib.give")}
+                              </GlyphButton>
+                            </Stack>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                              {tr("registrations.spareBib.help")}
                             </Typography>
                           </Box>
                         </RecallDetails>

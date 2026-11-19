@@ -1953,7 +1953,7 @@
       "columnBib": "Race number (BIB)",
       "bibColumnHint": "The race number:\n– «—»: not confirmed yet; the number comes with the confirmation.\n– 12: given at the confirmation and emailed.\n– 12 ✓: printed.",
       "bibSettled": "Race number: {number}, given at the confirmation and emailed. If you change it, the person is emailed the new one, and the old one is never given to anybody else.",
-      "bibSettledPrinted": "Race number: {number}. It is printed, so it no longer changes.",
+      "bibSettledPrinted": "Race number: {number}. It is printed, so it changes only for a blank bib.",
       "bibNone": "No race number yet.",
       "bibChange": "Change the number",
       "bibPrinted": "Bib printed",
@@ -1979,6 +1979,19 @@
       "oneBib": {
         "download": "Download the BIB (PDF)",
         "menu": "Download the BIB"
+      },
+      "spareBib": {
+        "fold": "Give a blank bib",
+        "number": "Blank bib",
+        "give": "Give the bib",
+        "help": "The spare bibs nobody has yet, with an empty name line: pick the number on the bib in the person's hand.",
+        "confirmTitle": "Give the blank bib?",
+        "confirmBody": "{name} wears number {spareNumber} from now on, from the blank bib.",
+        "confirmOld": "Number {old} is retired and never given to anybody else.",
+        "confirmOldPrinted": "Number {old} is retired and never given to anybody else, and the bib printed with it is no longer valid.",
+        "trail": "Blank bib given: {to}",
+        "trailReplaced": "Blank bib given: {to}, in place of number {from}, retired",
+        "trailReplacedPrinted": "Blank bib given: {to}, in place of the printed number {from}, retired"
       },
       "notOnPublicList": "Not shown publicly",
       "erase": "Erase permanently",
@@ -2756,6 +2769,7 @@
       "SAMPLE_VALUE_IN_EMAIL": "The text contains the sample value “{value}” — use {placeholder}.",
       "SAMPLE_VALUES_IN_EMAIL": "The text contains sample values, not fields: {found}. Use the fields in their place.",
       "BIB_NUMBER_TAKEN": "That number is already somebody's at this event: given, held, on the elite list, or worn by an erased registration. Pick another number from the box and try again.",
+      "SPARE_BIB_TAKEN": "The blank bib chosen is already somebody's: somebody just gave it, or it is retired. Reload the page and pick another blank bib.",
       "ELITE_NUMBER_TAKEN": "That number is already used at this event: a registration's, another elite name's, or one of the desk's spares. Type another number or leave the box empty.",
       "RESERVE_ELITE_NAME": "The name is longer than {max} characters and does not fit on a bib. Type it shorter in the event's editor, under “Elite — the name only on the bib”.",
       "WALK_IN_BIB_TAKEN": "The person is entered, but somebody just gave that number away, so they are unconfirmed. Find them in the list and press “Confirm here” with another number.",
@@ -7662,6 +7676,12 @@
       "sparesReadOnly": "Only an administrator reserves new numbers.",
       "sparesReserved": "Numbers {from}–{to} reserved. Download the sheet and print it.",
       "sparesDownloadRange": "Download the sheet {from}–{to} (PDF)",
+      "sparesGiven": {
+        "one": "{count} blank bib given:",
+        "few": "{count} blank bibs given:",
+        "other": "{count} blank bibs given:"
+      },
+      "sparesGivenLine": "{number} → {name}",
       "eliteTitle": "Elite — the name only on the bib",
       "eliteNone": "nobody",
       "eliteCount": {
@@ -10068,7 +10088,9 @@
                 "«Events» → «Edit» → «Taking part, registration and rules» → «Race numbers (bibs)» → «Allocate and print» → «Spare bibs for on-the-spot entries».",
                 "In «How many» type how many blank numbers you want, then press «Print» and confirm. The window says which number they start from: from then on nobody who registers online gets them.",
                 "Press «Download the sheet» and print it. Each number has an empty name line; at the desk the name is written on in marker, and the form suggests the next free number.",
-                "Need them again? «Reprint the free spares (PDF)» puts only the numbers not yet given on the sheet and reserves no more."
+                "Need them again? «Reprint the free spares (PDF)» puts only the numbers not yet given on the sheet and reserves no more.",
+                "Somebody registered, even with their bib printed, gets a blank bib? «Registrations» → their registration → «Give a blank bib» → in «Blank bib» choose the number on the paper → «Give the bib». The old number is retired, and the bib printed with it is no longer good.",
+                "Who has each blank bib given shows under «Spare bibs for on-the-spot entries»: the number, then the name, with a link to the registration."
               ]
             },
             {

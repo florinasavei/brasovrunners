@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, gt, gte, inArray, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
@@ -629,6 +629,49 @@ export async function freeSpareBibNumbers<T extends Record<string, unknown>>(
   if (!spare) return { band: null, free: [] };
   // The rows first, then the erased numbers (§311), as every draw here reads them.
   return { band: spare, free: freeSpareNumbers(spare, await numbersInUse(db, eventId)) };
+}
+
+/** One desk spare somebody wears (§NNN): the number, the registration, its name and its state. */
+export type GivenSpareBib = {
+  registrationId: string;
+  bibNumber: number;
+  /** How the event writes the number (§735): «007» on the card when the blank bib says «007». */
+  raceNumberFormat: RaceNumberFormat;
+  registeredName: string;
+  status: RegistrationStatus;
+};
+
+/**
+ * The desk's spares already given (§NNN; the owner, 2026-11-19: «spre ex. 154 deja e la …»): every real
+ * registration of the event wearing a number of the reservation, lowest first — handed at the desk with the paper
+ * (§444), typed by hand, or given as «Dă-i un BIB gol». A number a print stepped over is its runner's own, never a
+ * blank bib (`skippedSpareNumbers`), so it is not listed. Every state is listed: a cancelled runner's spare stays
+ * retired (§311), and the line says the state. For staff who read the registrations, names only — never an address.
+ */
+export async function givenSpareBibs<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<GivenSpareBib[]> {
+  const [event] = await db
+    .select({ walkInBibStart: events.walkInBibStart, walkInBibCount: events.walkInBibCount, format: sql<string>`coalesce(${events.bibDesign} ->> 'numberFormat', 'plain')`.mapWith(readRaceNumberFormat) })
+    .from(events)
+    .where(eq(events.id, eventId))
+    .limit(1);
+  const band = event ? spareBandOf(event) : null;
+  if (!event || !band) return [];
+  const rows = await db
+    .select({ id: registrations.id, bibNumber: registrations.bibNumber, registeredName: registrations.registeredName, status: registrations.status })
+    .from(registrations)
+    .where(
+      and(
+        eq(registrations.eventId, eventId),
+        eq(registrations.kind, "REAL"),
+        gte(registrations.bibNumber, band.from),
+        lte(registrations.bibNumber, band.to),
+      ),
+    )
+    .orderBy(asc(registrations.bibNumber));
+  const skipped = new Set(await skippedSpareNumbers(db, eventId));
+  return rows
+    .filter((row): row is typeof row & { bibNumber: number } => row.bibNumber !== null && !skipped.has(row.bibNumber))
+    .map((row) => ({ registrationId: row.id, bibNumber: row.bibNumber, raceNumberFormat: event.format, registeredName: row.registeredName, status: row.status }));
 }
 
 /**

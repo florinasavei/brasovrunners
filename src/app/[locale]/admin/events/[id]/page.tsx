@@ -133,7 +133,8 @@ import InfoTip from "@/shared/ui/InfoTip";
 import { previewDeclarationResend } from "@/modules/registrations/bulk-resend";
 import { countAddressRefusingMail } from "@/modules/registrations/email-state";
 import { previewWindowHolds } from "@/modules/registrations/window-holds";
-import { countBibs, listBibs, spareCardState } from "@/modules/registrations/bibs";
+import { countBibs, givenSpareBibs, listBibs, spareCardState } from "@/modules/registrations/bibs";
+import { formatRaceNumber } from "@/modules/registrations/domain/race-number";
 import { readBibDesign } from "@/modules/registrations/bib-design";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
 import { bibPictureStamp } from "@/modules/registrations/domain/bib-stamp";
@@ -269,8 +270,21 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const rsvpRows = canReadRegistrations(staffUser.role) && rsvpCounts.confirmed + rsvpCounts.unconfirmed > 0 ? await listRsvpsForAdmin(db, event.id) : null;
   // The desk's spares (§444): what is reserved, how much of it is free, where the next print starts.
   const spareState = bibCounts ? await spareCardState(db, event.id) : null;
+  // Who wears the spares already given (§NNN): «154 → Radu Pop» on the card — read only once there is a reservation.
+  const givenSpares = spareState?.band ? await givenSpareBibs(db, event.id) : [];
   const spares = spareState
-    ? { band: spareState.band, free: spareState.free, nextFrom: spareState.candidates[0] ?? null, perPrint: SPARE_BIBS_PER_PRINT }
+    ? {
+        band: spareState.band,
+        free: spareState.free,
+        nextFrom: spareState.candidates[0] ?? null,
+        perPrint: SPARE_BIBS_PER_PRINT,
+        given: givenSpares.map((given) => ({
+          registrationId: given.registrationId,
+          number: formatRaceNumber(given.bibNumber, given.raceNumberFormat),
+          name: given.registeredName,
+          status: given.status,
+        })),
+      }
     : null;
   /*
     «Elită — doar numele pe BIB» (§895), beside the spares and only where they are (an event that prints bibs, a role
