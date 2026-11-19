@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.68-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.69-2026-11-19 -->
 
 # Running this locally
 
-**Baseline `BR-V4.68-2026-11-19`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V4.69-2026-11-19`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -422,6 +422,17 @@ change: a branch, a pull request into `qa`, the `qa → main` release PR, and th
 workflow (`DECISIONS.md` §31). The weather and anything else outside the policy's allowlist
 stays silent, as it is built to. To run the same setup on a Linux machine of your own,
 `bash scripts/cloud-setup.sh --force`.
+
+**The branch is named for the work, not for the session** (the owner, 2026-11-19, §988). A cloud
+session starts on a branch it did not name, `claude/<words>-<letters>`; the pull request goes from
+one named for what it carries — `feat/<what>`, `fix/<what>`, a gathering of several changes named
+for all of them. Write the release entry for that name from the first commit
+(`.release/feat-<what>.json` with `"branch": "feat/<what>"`; renaming a branch renames neither the
+file nor its `branch` field), and rename the branch before the first push (`git branch -m
+feat/<what>`). Where the session may push only the branch it was given, create the named branch
+with the GitHub tools only if they allow it; otherwise push the given branch and ask the owner to
+rename it, or to open the pull request from a branch named for the work — never a way around what
+the session's environment allows. The pull request goes from the named branch.
 
 ## Where things live
 

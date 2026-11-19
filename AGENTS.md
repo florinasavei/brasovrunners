@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.68-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.69-2026-11-19 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.68-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.69-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -37,7 +37,7 @@ Do not turn this into a generic race platform, social network, generic CMS, micr
 The permanent release flow is:
 
 ```text
-feature/*, fix/*, chore/*
+feat/*, fix/*, chore/*
             |
             v
            qa  ------------------> QA deployment
@@ -554,13 +554,19 @@ main
 ### 6.2 Short-lived branches
 
 ```text
-feature/<short-name>
-fix/<short-name>
-chore/<short-name>
-hotfix/<short-name>
+feat/<what-it-carries>
+fix/<what-it-carries>
+chore/<what-it-carries>
+hotfix/<what-it-carries>
 ```
 
-Use lowercase kebab-case. Delete after merge.
+Use lowercase kebab-case. Delete after merge. The name MUST say what the branch carries, and
+a branch that gathers several changes names all of them (`feat/race-day-timing-raffle-results-presence`);
+the branch a pull request comes from MUST NOT be a generated name such as `claude/quirky-ramanujan-…`
+(a cloud session's given branch only carries the work until it goes up under its name,
+`docs/DEVELOPMENT.md` § Coding from the phone) — the owner, 2026-11-19:
+«numele branch-urilor trebuie să reflecte ce se află în ele» (`DECISIONS.md` §988). A batch keeps
+its `batch/` prefix, which `yarn handoff` reads, and is named for what it gathers.
 
 ### 6.3 Normal flow
 
