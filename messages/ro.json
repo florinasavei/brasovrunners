@@ -9742,6 +9742,7 @@
                 "Ca fiecare confirmat să primească sub mesaj numărul lui de concurs și codul QR, bifează «Trimite și numărul de concurs și codul QR». Ceilalți primesc mesajul fără ele.",
                 "Ca cei înscriși care nu au semnat încă declarația să o poată semna din email, bifează «Trimite și linkul pentru semnarea declarației»: primesc sub mesaj butonul „Semnează declarația”. Ceilalți primesc mesajul fără el.",
                 "Ca toți destinatarii să vadă sub mesaj programul evenimentului, oră cu oră, bifează «Include programul evenimentului». Bifa e activă doar când evenimentul are un program cu ore.",
+                "Ca toți destinatarii să primească traseul ca fișier GPX, atașat emailului și cu un link sub mesaj, bifează «Atașează traseul (GPX)». Bifa apare doar când evenimentul are un fișier GPX încărcat în editor.",
                 "La «Cum arată emailul» citește ambele variante: «Înscris în română» și «Înscris în engleză». «Mărește» arată emailul întreg; codul QR de acolo e un exemplu.",
                 "La «Confirmă trimiterea» vezi încă o dată cui pleacă mesajul. Scrie numărul de destinatari în «Scrie la câți trimiți»: dacă nu e exact numărul de acolo, nu pleacă nimic.",
                 "Apasă «Trimite mesajul», apoi în fereastră «Trimite»: fereastra spune cât durează și dacă încap toate acum. În «Mesaje trimise» vezi câte au plecat și câți au reconfirmat.",
@@ -10995,6 +10996,9 @@
       "includeProgrammeHelp": "Sub cuvintele tale apare programul evenimentului, oră cu oră, așa cum e pe pagina lui.",
       "includeProgrammeNone": "Evenimentul nu are încă un program cu ore. Îl adaugi în editorul evenimentului, la „{card}”.",
       "confirmProgramme": "Emailul include programul evenimentului.",
+      "includeRouteGpx": "Atașează traseul (GPX)",
+      "includeRouteGpxHelp": "Fiecare email are atașat fișierul GPX de pe pagina evenimentului și, sub cuvintele tale, un link spre el.",
+      "confirmRouteGpx": "Emailul are atașat traseul, ca fișier GPX.",
       "bodyFormat": "Pentru text îngroșat, pune-l între câte două steluțe: **așa**.",
       "reminderFill": {
         "button": "Completează cu textul de reminder",

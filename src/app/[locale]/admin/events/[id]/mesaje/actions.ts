@@ -87,6 +87,8 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
           signLink: posted(form, "signLink") === "1",
           // «Include programul evenimentului» (§958): the same; every email of the send then carries the event's programme.
           includeProgramme: posted(form, "includeProgramme") === "1",
+          // «Atașează traseul (GPX)» (§987): the same; the service ignores it for an event that has no GPX.
+          includeRouteGpx: posted(form, "includeRouteGpx") === "1",
           ...words,
         },
         new Date(),
@@ -160,6 +162,8 @@ export async function previewParticipantMessageAction(input: {
   signLink?: unknown;
   /** «Include programul evenimentului» as the box stands (§958): only `true` draws the event's programme under the words. */
   includeProgramme?: unknown;
+  /** «Atașează traseul (GPX)» as the box stands (§987): only `true` draws the route's line and its link under the words. */
+  includeRouteGpx?: unknown;
 }): Promise<ParticipantMessagePreview | null> {
   // From the network: every field is read as a string, whatever was sent.
   const read = (value: unknown, max: number) => (typeof value === "string" ? value.slice(0, max) : "");
@@ -174,6 +178,7 @@ export async function previewParticipantMessageAction(input: {
       sendQr: input.sendQr === true,
       signLink: input.signLink === true,
       includeProgramme: input.includeProgramme === true,
+      includeRouteGpx: input.includeRouteGpx === true,
     });
   } catch (error) {
     if (isDomainError(error)) return null;
