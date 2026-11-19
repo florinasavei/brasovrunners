@@ -37,7 +37,7 @@ Do not turn this into a generic race platform, social network, generic CMS, micr
 The permanent release flow is:
 
 ```text
-feature/*, fix/*, chore/*
+feat/*, fix/*, chore/*
             |
             v
            qa  ------------------> QA deployment
@@ -554,13 +554,17 @@ main
 ### 6.2 Short-lived branches
 
 ```text
-feature/<short-name>
-fix/<short-name>
-chore/<short-name>
-hotfix/<short-name>
+feat/<what-it-carries>
+fix/<what-it-carries>
+chore/<what-it-carries>
+hotfix/<what-it-carries>
 ```
 
-Use lowercase kebab-case. Delete after merge.
+Use lowercase kebab-case. Delete after merge. The name MUST say what the branch carries, and
+a branch that gathers several changes names all of them (`feat/race-day-timing-raffle-results-presence`);
+it MUST NOT be a generated name such as `claude/quirky-ramanujan-…` — the owner, 2026-11-19:
+«numele branch-urilor trebuie să reflecte ce se află în ele» (`DECISIONS.md` §NNN). A batch keeps
+its `batch/` prefix, which `yarn handoff` reads, and is named for what it gathers.
 
 ### 6.3 Normal flow
 

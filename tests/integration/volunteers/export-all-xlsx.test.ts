@@ -228,6 +228,10 @@ describe("«Descarcă Excel: toate evenimentele» (§846)", () => {
     // The header, the event and the name stay on screen; the filter is one column wider.
     expect(unzip(buffer).get("xl/worksheets/sheet1.xml")).toMatch(/<pane [^>]*xSplit="2"/);
     expect(unzip(buffer).get("xl/worksheets/sheet1.xml")).toContain('<autoFilter ref="A1:W6"/>');
+    // One `<definedNames>` in this file too (§NNN): the writer's own, carrying the wider filter's name and the printed titles.
+    const workbook = unzip(buffer).get("xl/workbook.xml") ?? "";
+    expect(workbook.match(/<definedNames[\s/>]/g)).toHaveLength(1);
+    expect(workbook).toContain(`<definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">'Voluntari'!$A$1:$W$6</definedName>`);
     // «Pe roluri»: each event's roles, each with its total.
     const roles = readSheet(buffer, 2).rows.slice(1);
     expect(roles.map((row) => [row[0], row[1]])).toEqual([
@@ -256,6 +260,7 @@ describe("«Descarcă Excel: toate evenimentele» (§846)", () => {
     const buffer = await bytes(await allEvents("lang=ro"));
     expect(readSheet(buffer).rows).toHaveLength(1);
     expect(unzip(buffer).get("xl/worksheets/sheet1.xml")).toContain('<autoFilter ref="A1:W1"/>');
+    expect(unzip(buffer).get("xl/workbook.xml")?.match(/<definedNames[\s/>]/g)).toHaveLength(1);
     // The roles still say what each event needs.
     expect(readSheet(buffer, 2).rows.slice(1).map((row) => row[1])).toEqual(["Marcaj", words.sheet.total, "Punct de apă", "Sosire", "Ajutor", words.sheet.total]);
 

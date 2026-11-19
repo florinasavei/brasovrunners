@@ -12,7 +12,7 @@ Read [`README.md`](./README.md), [`BUSINESS.md`](./BUSINESS.md), [`SPECS.md`](./
 ## 1. Locked topology
 
 ```text
-short-lived branch
+short-lived branch, named for what it carries (§ Contributing)
         |
         v
 pull request to qa
@@ -842,7 +842,7 @@ differently; there is no allowlist to add it to, on purpose.
 ```bash
 git switch qa
 git pull --ff-only origin qa
-git switch -c feature/<short-name>
+git switch -c feat/<what-it-carries>
 ```
 
 Branch from `qa`, never from `main`. Names are lowercase kebab-case with one of four
@@ -850,13 +850,20 @@ prefixes, and the branch is deleted after merge:
 
 | Prefix | Use |
 | --- | --- |
-| `feature/` | new behavior |
+| `feat/` | new behavior |
 | `fix/` | a defect in merged behavior |
 | `chore/` | tooling, documentation, dependencies, no product behavior |
 | `hotfix/` | production emergency only; branches from `main`, not `qa` |
 
-Name a change after what it does, not after the file it touches: `feature/waitlist-offer-expiry`,
-not `feature/update-registrations`.
+**A branch's name says what is in it** — the owner's standing rule since 2026-11-19: «ține minte
+de acum! numele branch-urilor trebuie să reflecte ce se află în ele» (`DECISIONS.md` §NNN). Name it
+after what it carries, not after the file it touches or the tool that opened it:
+`feat/waitlist-offer-expiry`, not `feat/update-registrations`;
+`hotfix/volunteers-excel-one-defined-names`, never a generated name such as
+`claude/quirky-ramanujan-…`. A branch that gathers several changes is named for all of them:
+`feat/race-day-timing-raffle-results-presence`. Its `.release/<branch-slug>.json` carries the
+same name (`.release/README.md`), so a branch renamed before its pull request takes its entry
+with it.
 
 **Before pushing:**
 

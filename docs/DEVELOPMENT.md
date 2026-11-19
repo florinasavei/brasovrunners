@@ -423,6 +423,15 @@ workflow (`DECISIONS.md` §31). The weather and anything else outside the policy
 stays silent, as it is built to. To run the same setup on a Linux machine of your own,
 `bash scripts/cloud-setup.sh --force`.
 
+**The branch is named for the work, not for the session** (the owner, 2026-11-19, §NNN). A cloud
+session starts on a branch it did not name, `claude/<words>-<letters>`; the pull request goes from
+one named for what it carries — `feat/<what>`, `fix/<what>`, a gathering of several changes named
+for all of them. Write the release entry for that name from the first commit
+(`.release/feat-<what>.json` with `"branch": "feat/<what>"`), then either rename the branch before
+the first push (`git branch -m feat/<what>`) or, where the session may push only the branch it was
+given, push that one and make the named branch from its last commit with the GitHub tools; open the
+pull request from the named branch.
+
 ## Where things live
 
 ```text

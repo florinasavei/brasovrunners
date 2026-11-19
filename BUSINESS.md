@@ -849,6 +849,8 @@ Every normal release is tested in QA before production.
 
 - `qa` contains the integrated release candidate.
 - `main` contains production.
+- Every change reaches `qa` on a branch named for what it carries, so whoever reads the list of
+  pull requests knows what each one will change.
 - QA uses synthetic participant data.
 - QA cannot send arbitrary live email.
 - Production data is not copied into QA.
