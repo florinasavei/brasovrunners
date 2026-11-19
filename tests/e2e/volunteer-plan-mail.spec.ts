@@ -769,6 +769,8 @@ test.describe("§974 «Tabel» and «Pe puncte» on «Planul voluntarilor»", ()
     await expect(shown("plan-table-km")).toHaveText(["1,2", "3,4", "5,5", "start–finish"]);
     await expect(shown("plan-table-coordinates")).toHaveText(["—", "45.64271, 25.58871", "—", "—"]);
     await expect(shown("plan-table-person-name")).toHaveText([ana.name, dan.name, radu.name]);
+    // §NNN — «Aici vreau numele cu caps»: each name in capitals, the words as typed underneath.
+    for (let index = 0; index < 3; index++) await expect(shown("plan-table-person-name").nth(index)).toHaveCSS("text-transform", "uppercase");
     await expect(shown("plan-table-nobody")).toHaveText(["niciunul"]);
     await expect(shown("plan-table-count")).toHaveText(["1", "0", "1", "1"]);
     await expect(section.getByText("3 voluntari puși, 1 punct fără nimeni")).toBeVisible();
@@ -778,6 +780,13 @@ test.describe("§974 «Tabel» and «Pe puncte» on «Planul voluntarilor»", ()
     for (let index = 0; index < 3; index++) {
       await expect(phones.nth(index)).toHaveAttribute("href", "tel:+40712345678");
       await thumbSized(phones.nth(index));
+    }
+    // §NNN — «și vreau și mailul»: after the telephone, the address to write to, a thumb's too.
+    const addresses = shown("plan-table-email");
+    await expect(addresses).toHaveText([ana.email, dan.email, radu.email]);
+    for (const [index, person] of [ana, dan, radu].entries()) {
+      await expect(addresses.nth(index)).toHaveAttribute("href", `mailto:${person.email}`);
+      await thumbSized(addresses.nth(index));
     }
     const map = shown("plan-table-map");
     await expect(map).toHaveCount(1);
@@ -795,10 +804,10 @@ test.describe("§974 «Tabel» and «Pe puncte» on «Planul voluntarilor»", ()
       await expect(wide.locator("thead th")).toHaveText(["Nr.", "Punct", "Km", "Coordonate", "Voluntari", "Câți"]);
       const rows = wide.locator("tbody tr");
       await expect(rows).toHaveCount(4);
-      await expect(rows.nth(0).locator("td")).toHaveText(["1", "Intersecția Stejeriș", "1,2", "—", `${ana.name} +40 712 345 678`, "1"]);
+      await expect(rows.nth(0).locator("td")).toHaveText(["1", "Intersecția Stejeriș", "1,2", "—", `${ana.name} +40 712 345 678 ${ana.email}`, "1"]);
       await expect(rows.nth(1).locator("td")).toHaveText(["2", "Izvorul rece", "3,4", "45.64271, 25.58871 Deschide pe hartă", "niciunul", "0"]);
-      await expect(rows.nth(2).locator("td")).toHaveText(["3", "Apă la cabană", "5,5", "—", `${dan.name} +40 712 345 678`, "1"]);
-      await expect(rows.nth(3).locator("td")).toHaveText(["", "Kituri și numere", "start–finish", "—", `${radu.name} +40 712 345 678`, "1"]);
+      await expect(rows.nth(2).locator("td")).toHaveText(["3", "Apă la cabană", "5,5", "—", `${dan.name} +40 712 345 678 ${dan.email}`, "1"]);
+      await expect(rows.nth(3).locator("td")).toHaveText(["", "Kituri și numere", "start–finish", "—", `${radu.name} +40 712 345 678 ${radu.email}`, "1"]);
     } else {
       // ---- A phone: no table, a block a point headed by its name — and no «Nr.» line at the start–finish ----------------
       await expect(section.locator("table")).toBeHidden();
@@ -818,6 +827,8 @@ test.describe("§974 «Tabel» and «Pe puncte» on «Planul voluntarilor»", ()
     await expect(blocks).toHaveCount(0);
     await expect(shown("plan-table-map")).toHaveCount(0);
     await expect(shown("plan-table-coordinates")).toHaveText(["—", "45.64271, 25.58871", "—", "—"]);
+    // The addresses print, as text.
+    await expect(shown("plan-table-email")).toHaveText([ana.email, dan.email, radu.email]);
     await expect(section.getByText("3 voluntari puși, 1 punct fără nimeni")).toBeVisible();
     await expect(section.getByTestId("admin-table-columns")).toBeHidden();
     await expect(section.locator("[data-column-resize]").filter({ visible: true })).toHaveCount(0);
