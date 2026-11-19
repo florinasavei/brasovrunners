@@ -75,6 +75,8 @@ export type DomainErrorCode =
   // A piece of a large file sent in pieces whose upload is not there any more — replaced by a newer one, gone with its person — or that
   // is not the next piece (sent twice, out of turn): the page sends the file again from the start.
   | "VOLUNTEER_CONTRACT_UPLOAD_GONE"
+  // «Încarcă contractele semnate» pressed with no file chosen, scripts off (§NNN): said as such, never as «0 attached».
+  | "VOLUNTEER_CONTRACTS_NONE_CHOSEN"
   // «Trimite fiecăruia punctul lui» with nobody to write to (§956): no volunteer with an address stands at a point of the route…
   | "VOLUNTEER_POINTS_NOBODY"
   // …or every one who does was already told the point they stand at, and the press did not ask to write to everybody again.

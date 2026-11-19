@@ -69,11 +69,14 @@ describe("§NNN a signed agreement is what its own bytes say", () => {
     expect(SIGNED_CONTRACT_PART_BYTES).toBe(BROWSER_SEND_BYTES);
     expect(SIGNED_CONTRACT_PART_BYTES).toBeLessThan(4.5 * 1000 * 1000);
     expect(pdfOfSize(SIGNED_CONTRACT_MAX_BYTES)).toHaveLength(SIGNED_CONTRACT_MAX_BYTES);
-    // The refusal says the limit the code holds, in both languages.
-    const max = formatBytes(SIGNED_CONTRACT_MAX_BYTES, "ro");
-    expect(max).toBe("10 MB");
-    expect(ro.Admin.errors.VOLUNTEER_CONTRACT_TOO_LARGE).toContain(max);
-    expect(en.Admin.errors.VOLUNTEER_CONTRACT_TOO_LARGE).toContain(formatBytes(SIGNED_CONTRACT_MAX_BYTES, "en"));
+    expect(formatBytes(SIGNED_CONTRACT_MAX_BYTES, "ro")).toBe("10 MB");
+    // The limit is written once: the card's intro and the upload's reason say it through `{max}`, filled from the constant, and
+    // the refusal names no number, so a changed limit can never leave a sentence saying the old one.
+    for (const catalogue of [ro, en]) {
+      expect(catalogue.Admin.volunteers.contract.intro).toContain("{max}");
+      expect(catalogue.Admin.volunteers.contract.reasons.tooLarge).toContain("{max}");
+      expect(catalogue.Admin.errors.VOLUNTEER_CONTRACT_TOO_LARGE).not.toMatch(/\d/);
+    }
   });
 });
 
@@ -159,10 +162,11 @@ describe("§NNN «Încarcă contractele semnate» matches each file to one volun
       { kind: "refused", reason: "cancelledOnly" },
       { kind: "refused", reason: "noName" },
     ]);
+    // The second file for the same person carries the person's id: the sender tries it only if the first was refused by its bytes.
     expect(match("Contract-voluntariat-Anais-Meyson.docx", "Anais Meyson scan.pdf", "Contract-voluntariat-Anais-Meyson.pdf")).toEqual([
       { kind: "matched", volunteerId: "anais" },
       { kind: "refused", reason: "noMatch" },
-      { kind: "refused", reason: "twice" },
+      { kind: "refused", reason: "twice", volunteerId: "anais" },
     ]);
   });
 

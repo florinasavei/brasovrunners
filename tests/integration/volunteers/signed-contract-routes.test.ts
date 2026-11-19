@@ -272,6 +272,22 @@ describe("§NNN the event's route: «Încarcă contractele semnate»", () => {
     expect(JSON.stringify(state.cookies)).not.toContain("Ilie");
   });
 
+  it("with scripts off and no file chosen, comes back to the list with the refusal in the address — never «0 attached»", async () => {
+    // A box left empty posts one nameless, empty file.
+    const response = await bulk(
+      [
+        ["locale", "ro"],
+        ["returnTo", `/ro/admin/volunteers?eventId=${raceId}`],
+        ["files", new File([], "")],
+      ],
+      staff.MODERATOR,
+    );
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(`/ro/admin/volunteers?eventId=${raceId}&volunteerError=VOLUNTEER_CONTRACTS_NONE_CHOSEN`);
+    expect(toast()).toBeNull();
+    expect(await documents()).toEqual([]);
+  });
+
   it("goes back to the event's list and never to a forged address", async () => {
     const response = await bulk(
       [

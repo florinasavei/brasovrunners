@@ -19,7 +19,8 @@ import { isUuid } from "@/shared/ids";
  *   one), and lists the files left with their reasons — the names stay in the page, never in an address.
  * - **With scripts off** the form posts every file (`files`): each matched one is attached in a transaction of its own, so one bad
  *   file never stops the others, and the page comes back (303) to the list it came from, the toast saying how many were attached
- *   and how many were not — counts only: a file's name carries a person's, and goes in neither a cookie nor an address.
+ *   and how many were not — counts only: a file's name carries a person's, and goes in neither a cookie nor an address. Pressed
+ *   with no file chosen, it comes back with `VOLUNTEER_CONTRACTS_NONE_CHOSEN` in the address, never «0 attached».
  *
  * Whoever works the volunteers (`canManageVolunteers`), asserted here and again by the service (BR-REQ-060-01): no session is 401,
  * any other role 403, an event nobody has or a malformed id 404. A refusal writes nothing.
@@ -63,7 +64,8 @@ export async function POST(request: Request, context: Context): Promise<Response
     }
   }
 
-  // With scripts off: every file the form carries — a box left empty posts one nameless, empty file, which is no file.
+  // With scripts off: every file the form carries — a box left empty posts one nameless, empty file, which is no file, and none at
+  // all is the service's `VOLUNTEER_CONTRACTS_NONE_CHOSEN`, back in the address like every refusal.
   const posted = form.getAll("files").filter((file): file is File => file instanceof File && (file.size > 0 || file.name !== ""));
   const locale = localeOf(form);
   const back = volunteersScreenPathOf(String(form.get("returnTo") ?? "")) ?? `${getPathname({ locale, href: "/admin/volunteers" })}?eventId=${id}`;

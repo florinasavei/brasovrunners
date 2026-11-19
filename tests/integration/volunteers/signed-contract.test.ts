@@ -328,6 +328,9 @@ describe("§NNN «Încarcă contractele semnate»: each file to one volunteer of
         { fileName: "Contract-voluntariat-Ilie-Vasile.docx", bytes: SAMPLE_FILES.docx() },
         { fileName: "Contract-voluntariat-Anais-Meyson.pdf", bytes: SAMPLE_FILES.pdf() },
         { fileName: "Contract-voluntariat-Radu-Stan.docx", bytes: new Uint8Array() },
+        // Ion's second file: his first was refused by its bytes, so this one takes its turn; a third is one too many.
+        { fileName: "Contract-voluntariat-Ion-Musat.docx", bytes: SAMPLE_FILES.docx() },
+        { fileName: "Contract-voluntariat-Ion-Musat (1).docx", bytes: SAMPLE_FILES.docx() },
       ],
       NOW,
     );
@@ -339,11 +342,24 @@ describe("§NNN «Încarcă contractele semnate»: each file to one volunteer of
       { fileName: "Contract-voluntariat-Ilie-Vasile.docx", outcome: "refused", reason: "noMatch" },
       { fileName: "Contract-voluntariat-Anais-Meyson.pdf", outcome: "refused", reason: "twice" },
       { fileName: "Contract-voluntariat-Radu-Stan.docx", outcome: "refused", reason: "cancelledOnly" },
+      { fileName: "Contract-voluntariat-Ion-Musat.docx", outcome: "attached", replaced: false },
+      { fileName: "Contract-voluntariat-Ion-Musat (1).docx", outcome: "refused", reason: "twice" },
     ]);
     const rows = await documents();
-    expect(rows.map((row) => row.volunteerId).sort()).toEqual([people.anais, people.tampu].sort());
+    expect(rows.map((row) => row.volunteerId).sort()).toEqual([people.anais, people.musat, people.tampu].sort());
+    // The upload never replaced its own file: Anaïs keeps her first, Ion the one that passed.
+    expect(rows.find((row) => row.volunteerId === people.anais)?.fileName).toBe("Contract-voluntariat-Anais-Meyson.docx");
+    expect(rows.find((row) => row.volunteerId === people.musat)?.fileName).toBe("Contract-voluntariat-Ion-Musat.docx");
     // Nothing went to the other event's volunteer of the same name.
     expect(rows.some((row) => row.volunteerId === people.other)).toBe(false);
+  });
+
+  it("refuses an upload of no file at all, after the role and the event, writing nothing", async () => {
+    await expect(attachSignedContractsByName(db, staff.MODERATOR!, raceId, [], NOW)).rejects.toMatchObject({ code: "VOLUNTEER_CONTRACTS_NONE_CHOSEN" });
+    await expect(attachSignedContractsByName(db, staff.DEV!, raceId, [], NOW)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(attachSignedContractsByName(db, staff.ADMIN!, "00000000-0000-4000-8000-000000000000", [], NOW)).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(await documents()).toEqual([]);
+    expect(await trail()).toEqual([]);
   });
 });
 

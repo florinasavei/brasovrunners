@@ -14,7 +14,10 @@ import { openFold } from "./support/fold";
  * row and «Contracte semnate: 1 din 2» on its strip; «Descarcă» hands the very bytes back as an attachment under the file's
  * name; «Înlocuiește» takes a scan larger than one request carries, in pieces each under the host's 4.5 MB, and gives the same
  * bytes back; and «Încarcă contractele semnate» attaches a whole folder at once by the names — the matched one attached, the
- * other listed with its reason, in the page. No horizontal scroll at any width.
+ * other listed with its reason, in the page, and a file refused by its bytes leaving its person's next file its turn; pressed with
+ * no file chosen, it says so in the plural. No horizontal scroll at any width. With scripts off the volunteer's card is walked; the
+ * «Voluntari» list streams behind its loading skeleton, which a script reveals, so its plain form's refusal of an empty press is
+ * the route's integration test (`signed-contract-routes.test.ts`).
  *
  * The race and its two volunteers are written straight into the database — the setup, not the subject — one set per project and
  * test, so the two projects never share a row, and removed after. Never a real person: every name and file is made up.
@@ -87,6 +90,8 @@ const PDF = Buffer.from("%PDF-1.7\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntraile
 const zipEntry = (name: string) => Buffer.concat([Buffer.from([0x50, 0x4b, 0x03, 0x04]), Buffer.alloc(22), Buffer.from([name.length, 0, 0, 0]), Buffer.from(name, "latin1")]);
 const DOCX = Buffer.concat([zipEntry("[Content_Types].xml"), zipEntry("word/document.xml"), Buffer.from("<w:document/>", "latin1")]);
 const DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+/** A made-up program, whatever its name says: none of the formats by its bytes. */
+const PROGRAM = Buffer.concat([Buffer.from("MZ", "latin1"), Buffer.alloc(58), Buffer.from([0x80, 0, 0, 0]), Buffer.alloc(64), Buffer.from("PE\0\0", "latin1")]);
 
 test.describe("§NNN «Contract semnat» — attached on the volunteer's page, seen on the list, downloaded, and a folder at once", () => {
   test.describe.configure({ timeout: 180_000 });
@@ -154,17 +159,27 @@ test.describe("§NNN «Contract semnat» — attached on the volunteer's page, s
       await fitsTheScreen(page);
 
       // ---- «Încarcă contractele semnate»: Ion's file by his name, a stranger's left with its reason -----------------------------
-      // The file names are ASCII, as the owner's are: «Mușat» is «Musat» there; the run's tag is part of each made-up name.
+      // The file names are ASCII, as the owner's are: «Mușat» is «Musat» there; the run's tag is part of each made-up name. Ion's
+      // first file is a program named .pdf, refused by its bytes, so his second takes its turn instead of being «twice».
       const ionFile = `Contract-voluntariat-Ion-Musat-${tag}.docx`;
+      const ionProgram = `Contract-voluntariat-Ion-Musat-${tag}.pdf`;
       const fold = page.locator("#volunteers-contracts");
       await openFold(fold);
+      const bulkStatus = fold.getByTestId("volunteers-contracts-upload-status");
+      // Pressed with nothing chosen: said in the plural, nothing sent.
+      await fold.getByTestId("volunteers-contracts-upload-submit").click();
+      await expect(bulkStatus).toHaveText("Alege întâi fișierele contractelor semnate, apoi încarcă-le.");
       await fold.getByTestId("volunteers-contracts-upload-input").setInputFiles([
+        { name: ionProgram, mimeType: "application/pdf", buffer: PROGRAM },
         { name: ionFile, mimeType: DOCX_TYPE, buffer: DOCX },
         { name: "Contract-voluntariat-Maria-Nimeni.docx", mimeType: DOCX_TYPE, buffer: DOCX },
       ]);
       await fold.getByTestId("volunteers-contracts-upload-submit").click();
-      await expect(fold.getByTestId("volunteers-contracts-upload-status")).toContainText("Am atașat 1 contract semnat.", { timeout: 30_000 });
-      await expect(fold.getByTestId("volunteers-contracts-upload-left")).toContainText("Contract-voluntariat-Maria-Nimeni.docx: niciun voluntar al evenimentului nu are acest nume");
+      await expect(bulkStatus).toContainText("Am atașat 1 contract semnat.", { timeout: 30_000 });
+      const leftOver = fold.getByTestId("volunteers-contracts-upload-left");
+      await expect(leftOver).toContainText("Contract-voluntariat-Maria-Nimeni.docx: niciun voluntar al evenimentului nu are acest nume");
+      await expect(leftOver).toContainText(`${ionProgram}: nu e PDF, Word, JPEG, PNG sau HEIC`);
+      await expect(leftOver.locator("li")).toHaveCount(2);
       // The page is drawn again under the island's lines: the strip counts both now.
       await expect(strip.getByRole("link", { name: "Contracte semnate: 2 din 2" })).toBeVisible({ timeout: 30_000 });
       expect((await contractsOf(seeded.eventId)).map((row) => row.file_name)).toEqual(["Contract-voluntariat-Anais-Meyson-scan.pdf", ionFile]);

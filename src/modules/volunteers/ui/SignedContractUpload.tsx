@@ -188,20 +188,28 @@ export default function SignedContractUpload({ mode, action, uploadTemplate, loc
       return setStatus({ kind: "refused", text: sentence("FAILED") });
     }
     const leftOver: Left[] = [];
+    // Every file that names one volunteer: the first of theirs, and a later one (`twice`) as a spare behind it.
     const toSend = files.flatMap((file, index) => {
       const match = matches[index];
-      if (match?.kind === "matched" && typeof match.volunteerId === "string") return [{ file, volunteerId: match.volunteerId }];
+      if ((match?.kind === "matched" || match?.reason === "twice") && typeof match.volunteerId === "string") return [{ file, volunteerId: match.volunteerId }];
       leftOver.push({ file: file.name, reason: reasonText(match?.reason ?? "gone") });
       return [];
     });
-    let attached = 0;
+    /** The volunteers a file of this upload was attached to. */
+    const attachedTo = new Set<string>();
     for (const [index, { file, volunteerId }] of toSend.entries()) {
+      // A spare goes up only when no earlier file of this upload was attached to the person: the earlier one was refused.
+      if (attachedTo.has(volunteerId)) {
+        leftOver.push({ file: file.name, reason: reasonText("twice") });
+        continue;
+      }
       setStatus({ kind: "busy", text: fill(labels.sending, { done: index + 1, total: toSend.length }) });
       const refused = tooBig(file);
       const sent = refused ? ({ ok: false, code: refused } as const) : await sendFile(file, (uploadTemplate ?? "").replace("{volunteer}", volunteerId), partBytes);
-      if (sent.ok) attached += 1;
+      if (sent.ok) attachedTo.add(volunteerId);
       else leftOver.push({ file: file.name, reason: reasonText(reasonOfCode(sent.code)) });
     }
+    const attached = attachedTo.size;
     if (input.current) input.current.value = "";
     setLeft(leftOver);
     const said = labels.attached ? fill(labels.attached[countForm(attached, locale)], { count: attached }) : "";

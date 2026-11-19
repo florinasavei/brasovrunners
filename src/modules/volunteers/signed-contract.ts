@@ -409,8 +409,9 @@ export function batchReasonOf(code: string): "empty" | "tooLarge" | "type" | "go
 /**
  * «Încarcă contractele semnate» in one request (§NNN) — the form as it posts with scripts off: every file matched by its name, and
  * each matched one attached in a transaction of its own, so **one bad file never stops the others**: a file refused by its bytes,
- * or whose volunteer was deleted meanwhile, is listed with the reason and the next one goes on. The page's own way, with scripts,
- * is the match above and one request a file.
+ * or whose volunteer was deleted meanwhile, is listed with the reason and the next one goes on — and a later file for the same
+ * person (`twice`) takes its turn then, since nothing of this upload is theirs yet. The page's own way, with scripts, is the match
+ * above and one request a file, by the same rule. No file at all is `VOLUNTEER_CONTRACTS_NONE_CHOSEN`, never «0 attached».
  */
 export async function attachSignedContractsByName<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -420,15 +421,20 @@ export async function attachSignedContractsByName<T extends Record<string, unkno
   now: Date,
 ): Promise<SignedContractBatchOutcome[]> {
   const matches = await matchSignedContractFiles(db, actor, eventId, files.map((file) => file.fileName));
+  if (files.length === 0) throw new DomainError("VOLUNTEER_CONTRACTS_NONE_CHOSEN", "no file was chosen");
   const outcomes: SignedContractBatchOutcome[] = [];
+  /** The volunteers a file of this upload was attached to: a spare for one of them stays out. */
+  const attachedTo = new Set<string>();
   for (const [index, file] of files.entries()) {
     const match = matches[index];
-    if (match.kind === "refused") {
-      outcomes.push({ fileName: file.fileName, outcome: "refused", reason: match.reason });
+    const volunteerId = match.kind === "matched" || match.reason === "twice" ? match.volunteerId : null;
+    if (volunteerId === null || attachedTo.has(volunteerId)) {
+      outcomes.push({ fileName: file.fileName, outcome: "refused", reason: match.kind === "refused" ? match.reason : "twice" });
       continue;
     }
     try {
-      const stored = await attachSignedContract(db, actor, { eventId, volunteerId: match.volunteerId, fileName: file.fileName, bytes: file.bytes }, now);
+      const stored = await attachSignedContract(db, actor, { eventId, volunteerId, fileName: file.fileName, bytes: file.bytes }, now);
+      attachedTo.add(volunteerId);
       outcomes.push({ fileName: file.fileName, outcome: "attached", replaced: stored.replaced });
     } catch (error) {
       if (!(error instanceof DomainError) || error.code === "FORBIDDEN") throw error;

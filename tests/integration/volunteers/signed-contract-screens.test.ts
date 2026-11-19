@@ -271,9 +271,11 @@ describe("§NNN «Încarcă contractele semnate» on the list", () => {
     });
     const back = new URL(String(island.props.returnTo), "https://example.test");
     expect([back.pathname, back.searchParams.get("eventId"), back.searchParams.get("sort")]).toEqual(["/ro/admin/volunteers", raceId, "name"]);
-    const labels = island.props.labels as { submit: string; reasons: Record<string, string> };
+    const labels = island.props.labels as { submit: string; chooseFirst: string; reasons: Record<string, string> };
     expect(labels.submit).toBe("Încarcă contractele semnate");
     expect(labels.reasons.tooLarge).toBe("fișierul are peste 10 MB");
+    // Pressed with nothing chosen, the island says what the plain form comes back with: the files, in the plural.
+    expect(labels.chooseFirst).toBe(ro.Admin.errors.VOLUNTEER_CONTRACTS_NONE_CHOSEN);
     // Only strings and numbers cross to the island.
     for (const [key, value] of Object.entries(island.props)) expect(["string", "number", "object"], key).toContain(typeof value);
   });
@@ -324,6 +326,7 @@ describe("§NNN the volunteer's card «Contract semnat»", () => {
     expect(byTestId(tree, "volunteer-contract-download")).toEqual([]);
     const [island] = elements(tree).filter((element) => element.type === SignedContractUpload);
     expect((island.props.labels as { submit: string }).submit).toBe("Încarcă");
+    expect((island.props.labels as { chooseFirst: string }).chooseFirst).toBe(ro.Admin.volunteers.contract.chooseFirst);
     const page = await html(whole);
     const form = /<form[^>]*data-testid="volunteer-contract-upload"[\s\S]*?<\/form>/.exec(page)?.[0] ?? "";
     expect(form).toContain(`action="/api/admin/events/${raceId}/volunteers/${people.ion}/signed-contract"`);

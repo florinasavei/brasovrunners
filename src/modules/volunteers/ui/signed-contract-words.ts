@@ -39,6 +39,8 @@ export function signedContractUploadLabels(t: Words, locale: string, mode: "one"
   }
   return {
     ...common,
+    // Pressed with nothing chosen: the sentence the plain form comes back with (§NNN), the files in the plural.
+    chooseFirst: t("errors.VOLUNTEER_CONTRACTS_NONE_CHOSEN"),
     choose: t("volunteers.contract.bulkChoose"),
     submit: t("volunteers.contract.bulkSubmit"),
     // Filled in the browser, file by file: the raw sentence with its `{done}` and `{total}`.

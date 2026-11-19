@@ -242,7 +242,15 @@ export type ContractNameRefusal =
   /** An earlier file of the same upload is already that volunteer's. */
   | "twice";
 
-export type ContractFileMatch = { kind: "matched"; volunteerId: string } | { kind: "refused"; reason: ContractNameRefusal };
+export type ContractFileMatch =
+  | { kind: "matched"; volunteerId: string }
+  /**
+   * A later file naming the volunteer an earlier one matched: a spare, with the person's id. It goes up only when every earlier
+   * file of the same upload for that person was refused (by its bytes, or never received), and otherwise is left as `twice` — so
+   * one upload never replaces its own file, and a good file never stays out behind a bad one (§NNN).
+   */
+  | { kind: "refused"; reason: "twice"; volunteerId: string }
+  | { kind: "refused"; reason: Exclude<ContractNameRefusal, "twice"> };
 
 /** One volunteer of the event as the match reads them. */
 export type ContractCandidate = { id: string; name: string; cancelled: boolean };
@@ -255,7 +263,8 @@ const wordsInOrder = (folded: string): string => folded.split(" ").filter(Boolea
  * with the reason — never a guess. A file is first compared with the volunteers who are not cancelled: the folded name exactly,
  * and only when nobody has it, the same words in another order («Popescu-Ion» for «Ion Popescu»). Exactly one is the match; two
  * or more is `ambiguous`. Nobody among them, and a cancelled volunteer with the name, is `cancelledOnly`; nobody at all is
- * `noMatch`. A volunteer an earlier file of the same upload matched is `twice`, so one upload never replaces its own file.
+ * `noMatch`. A volunteer an earlier file of the same upload matched is `twice`, with the person's id: the sender tries it only
+ * when the earlier file was refused, so one upload never replaces its own file and never leaves a good one out.
  * The candidates are the event's alone: a volunteer of another event is never among them (the service reads them by the event).
  */
 export function matchContractFiles(fileNames: readonly string[], volunteers: readonly ContractCandidate[]): ContractFileMatch[] {
@@ -278,7 +287,7 @@ export function matchContractFiles(fileNames: readonly string[], volunteers: rea
     const found = findIn(active, wanted);
     if (found.length > 1) return { kind: "refused", reason: "ambiguous" };
     if (found.length === 1) {
-      if (taken.has(found[0].id)) return { kind: "refused", reason: "twice" };
+      if (taken.has(found[0].id)) return { kind: "refused", reason: "twice", volunteerId: found[0].id };
       taken.add(found[0].id);
       return { kind: "matched", volunteerId: found[0].id };
     }
