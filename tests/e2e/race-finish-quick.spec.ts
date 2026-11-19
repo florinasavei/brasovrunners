@@ -6,8 +6,9 @@ import { hydrated, signIn } from "./support/featured-event";
 
 /**
  * §NNN — «Cronometrare», the finish line of «Ziua cursei» (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01, BR-REQ-037-08), walked at
- * 320 pixels and on a desk against a production build: an Organizer, whose row holds the four tabs and fits the phone, taps «Start»
- * twice — one «Start» —; the desk Volunteer — the lowest role, three tabs — types a number and presses an elite's button, sees each
+ * 320 pixels and on a desk against a production build: an Organizer, whose row holds the five tabs of a race with a raffle — wider
+ * than the phone, so the row scrolls inside itself, «Cronometrare» in view and every tab one swipe away —, taps «Start» twice — one
+ * «Start» —; the desk Volunteer — the lowest role, three tabs that fit — types a number and presses an elite's button, sees each
  * saved at once with «introdus de» and its own name, types the same number again and reads the duplicate's line — its own line now
  * saying «Clasament» corrects it, no «Anulează» —, undoes the elite's press, and is told of a press of theirs waiting under another
  * race on the phone. Nothing scrolls sideways.
@@ -22,13 +23,16 @@ function databaseUrl(): string {
   return url;
 }
 
-/** A race whose planned gun was a few minutes ago, with runners 101 and 102 and an elite line «Andrei <tag>» wearing 7. */
+/**
+ * A race whose planned gun was a few minutes ago, with runners 101 and 102 and an elite line «Andrei <tag>» wearing 7 — and a raffle
+ * («Avem tombolă»), so the organizers' row of «Ziua cursei» holds all five tabs.
+ */
 async function seedRace(tag: string): Promise<string> {
   const client = new pg.Client({ connectionString: databaseUrl() });
   await client.connect();
   try {
     const { rows } = await client.query<{ id: string }>(
-      `INSERT INTO events (type, starts_at, registration_mode, location_name) VALUES ('RACE', now() - interval '3 minutes', 'INTERNAL', 'Parcul Tractorul') RETURNING id`,
+      `INSERT INTO events (type, starts_at, registration_mode, location_name, has_raffle) VALUES ('RACE', now() - interval '3 minutes', 'INTERNAL', 'Parcul Tractorul', true) RETURNING id`,
     );
     const eventId = rows[0].id;
     await client.query(`INSERT INTO event_translations (event_id, locale, slug, title, excerpt) VALUES ($1, 'ro', $2, $3, 'O cursă.'), ($1, 'en', $4, $5, 'A race.')`, [
@@ -84,6 +88,40 @@ async function noHorizontalScroll(page: Page) {
   expect(overflow).toBeLessThanOrEqual(1);
 }
 
+/**
+ * «Ziua cursei»'s row (§NNN): the current entry wholly inside the row as the scroller left it, the row scrolling inside itself, and
+ * every entry reachable by a sideways swipe — scrolled to, each lies wholly inside the row — while the page never scrolls sideways.
+ */
+async function everyTabReachable(page: Page) {
+  const nav = page.getByTestId("race-day-tabs").locator("nav");
+  await expect
+    .poll(() =>
+      nav.evaluate((row) => {
+        const entry = row.querySelector('[aria-current="page"]');
+        if (!entry) return "no current entry";
+        const bar = row.getBoundingClientRect();
+        const box = entry.getBoundingClientRect();
+        return box.left >= bar.left - 1 && box.right <= bar.right + 1 ? "in view" : `${Math.round(box.left - bar.left)}–${Math.round(box.right - bar.left)} px of a ${Math.round(bar.width)} px row`;
+      }),
+    )
+    .toBe("in view");
+  const reach = await nav.evaluate((row) => {
+    const scrolls = ["auto", "scroll"].includes(getComputedStyle(row).overflowX);
+    const start = row.scrollLeft;
+    const missed: string[] = [];
+    for (const link of Array.from(row.querySelectorAll("a"))) {
+      link.scrollIntoView({ behavior: "instant", block: "nearest", inline: "nearest" });
+      const bar = row.getBoundingClientRect();
+      const box = link.getBoundingClientRect();
+      if (box.left < bar.left - 1 || box.right > bar.right + 1) missed.push(link.textContent ?? "");
+    }
+    row.scrollLeft = start;
+    return { scrolls, missed };
+  });
+  expect(reach).toEqual({ scrolls: true, missed: [] });
+  await noHorizontalScroll(page);
+}
+
 test.describe("§NNN «Cronometrare»", () => {
   test.describe.configure({ timeout: 180_000 });
 
@@ -92,14 +130,13 @@ test.describe("§NNN «Cronometrare»", () => {
     const eventId = await seedRace(tag);
     const timingUrl = `/ro/admin/checkin/cronometrare?eventId=${eventId}`;
 
-    // The Organizer, at the gun — whose row of «Ziua cursei» holds all four tabs, and fits the phone.
+    // The Organizer, at the gun — whose row of «Ziua cursei» holds all five tabs: wider than a phone, so it scrolls inside itself.
     await signIn(page, "Dev Moderator");
     await page.goto(timingUrl);
     await hydrated(page);
-    await expect(page.getByTestId("race-day-tabs").getByRole("link")).toHaveCount(4);
-    const fourFit = await page.getByTestId("race-day-tabs").locator("nav").evaluate((nav) => nav.scrollWidth <= nav.clientWidth + 1);
-    expect(fourFit).toBe(true);
-    await noHorizontalScroll(page);
+    await expect(page.getByTestId("race-day-tabs").getByRole("link")).toHaveText([/Prezența/, /Clasament/, /Cronometrare|Sosiri/, /Tombolă/, /Lucruri/], { useInnerText: true });
+    await expect(page.getByTestId("race-day-tabs").locator('[aria-current="page"]')).toContainText(/Cronometrare|Sosiri/);
+    await everyTabReachable(page);
     await expect(page.getByTestId("race-gun-line")).toContainText("Startul planificat:");
     // Tapped twice, the second tap while the first is on its way: one «Start», and the page says it was given — not that it stayed.
     await page.getByTestId("race-gun-start").dblclick();
@@ -113,7 +150,7 @@ test.describe("§NNN «Cronometrare»", () => {
     await signIn(page, "Dev Contributor");
     await page.goto(timingUrl);
     await hydrated(page);
-    // «Ziua cursei»'s four tabs, «Cronometrare» current; the volunteer has no «Clasament» and no «Start».
+    // «Ziua cursei»'s tabs, «Cronometrare» current; the volunteer has no «Clasament», no «Tombolă» and no «Start» — three that fit.
     const tabs = page.getByTestId("race-day-tabs").getByRole("link");
     await expect(tabs).toHaveCount(3);
     await expect(page.getByTestId("race-day-tabs").locator('[aria-current="page"]')).toContainText(/Cronometrare|Sosiri/);

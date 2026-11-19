@@ -16,8 +16,9 @@ import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
  *   diacritics, the words swapped — sign the runner up, after one wrong name was answered with the one neutral sentence;
  * - a second runner signs up from the «Tombola» card of their own «Gestionează înscrierea», the link read and never spent;
  * - the desk's volunteer records a third at the desk's view of the person, who accepted the rules on paper;
- * - the Organizer sees all three on «Ziua cursei» → «Tombolă» with «Participă: Da», the volunteer who did not sign up «Nu», the
- *   counts and the filters, and takes the file — and its present-only twin.
+ * - the Organizer sees all three on «Ziua cursei» → «Tombolă» — the fourth of five tabs, in a row that scrolls inside itself, every
+ *   tab one swipe away — with «Participă: Da», the volunteer who did not sign up «Nu», the counts and the filters, and takes the file
+ *   — and its present-only twin.
  *
  * Every tap target a thumb hits is 44 pixels, and no page scrolls sideways. The race and its people are written straight into the
  * database — the setup, not the subject — one set per project and test, and removed after. Never a real person.
@@ -281,8 +282,10 @@ test.describe("§NNN the raffle with a sign-up of its own: the form, the link, t
         await hydrated(page);
         const tabs = page.getByTestId("race-day-tabs");
         await expect(tabs.getByRole("link", { name: "Tombolă" })).toHaveAttribute("aria-current", "page");
-        // Four entries are wider than a phone's row (§NNN), so the row is no `fits` row: its current entry is brought into view —
-        // «Tombolă», the last, wholly inside the row, on the phone and on the desktop alike (`SubNavCurrent`, §731).
+        // The organizers' five (§NNN): «Prezența», «Clasament», «Cronometrare» («Sosiri» on a phone), «Tombolă», «Lucruri de adus».
+        await expect(tabs.getByRole("link")).toHaveText([/Prezența/, /Clasament/, /Cronometrare|Sosiri/, /Tombolă/, /Lucruri/], { useInnerText: true });
+        // Five entries are wider than a phone's row, so the row is no `fits` row: its current entry is brought into view —
+        // «Tombolă», wholly inside the row, on the phone and on the desktop alike (`SubNavCurrent`, §731).
         await expect
           .poll(async () =>
             tabs.locator("nav").evaluate((nav) => {
@@ -294,6 +297,21 @@ test.describe("§NNN the raffle with a sign-up of its own: the form, the link, t
             }),
           )
           .toBe("in view");
+        // …and every other entry is one sideways swipe away: scrolled to, it lies wholly inside the row, which scrolls inside itself.
+        const reach = await tabs.locator("nav").evaluate((nav) => {
+          const scrolls = ["auto", "scroll"].includes(getComputedStyle(nav).overflowX);
+          const start = nav.scrollLeft;
+          const missed: string[] = [];
+          for (const link of Array.from(nav.querySelectorAll("a"))) {
+            link.scrollIntoView({ behavior: "instant", block: "nearest", inline: "nearest" });
+            const bar = nav.getBoundingClientRect();
+            const box = link.getBoundingClientRect();
+            if (box.left < bar.left - 1 || box.right > bar.right + 1) missed.push(link.textContent ?? "");
+          }
+          nav.scrollLeft = start;
+          return { scrolls, missed };
+        });
+        expect(reach).toEqual({ scrolls: true, missed: [] });
         await expect(page.getByTestId("raffle-settings-line")).toHaveText("Participă: alergătorii, elitele, voluntarii · cu înscriere separată · înscrieri deschise");
         await expect(page.getByTestId("raffle-counts")).toHaveText("Participă: 3 · Alergători: 3 · Elite: 0 · Voluntari: 0 · Prezenți dintre ei: 1");
         const names = page.locator('[data-testid="raffle-row-name"]:visible');

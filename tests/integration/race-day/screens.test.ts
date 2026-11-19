@@ -15,10 +15,12 @@ import { withClientWords } from "../../helpers/client-words";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §979, §NNN — «Ziua cursei» as the server draws it (BR-REQ-037-07, BR-REQ-060-01, BR-REQ-041-01 criterion 6): the four tabs
- * on the desk, «Lucruri de adus», «Cronometrare» and «Clasament» — the current one marked, the event carried, «Clasament» not drawn
- * for a role that cannot open it, «Cronometrare» for every role that works the desk, its short word for a phone —; the «Lucruri de adus» page by role; the desk's line of free spares (§444) as ranges, and its two
- * other states; and the walk-in's «Numărul dat acum» as a select of the free spares, the lowest chosen.
+ * §979, §NNN — «Ziua cursei» as the server draws it (BR-REQ-037-07, BR-REQ-060-01, BR-REQ-041-01 criterion 6): the tabs on the
+ * desk, «Lucruri de adus», «Cronometrare» and «Clasament» — the current one marked, the event carried, «Clasament» not drawn for a
+ * role that cannot open it, «Cronometrare» for every role that works the desk, its short word for a phone, and the organizers'
+ * «Tombolă» fourth of five for an event that holds a raffle, in a row that scrolls rather than one that fits —; the «Lucruri de adus»
+ * page by role; the desk's line of free spares (§444) as ranges, and its two other states; and the walk-in's «Numărul dat acum» as a
+ * select of the free spares, the lowest chosen.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en" }));
 
@@ -241,12 +243,47 @@ describe("§979 the tabs of «Ziua cursei»", () => {
     ]);
   });
 
-  it("draw no glyph below `sm` (`compact`), so the four fit a 320-pixel phone, and every glyph from `sm` up", async () => {
+  it("draw no glyph below `sm` (`compact`), so a role's row of three fits a 320-pixel phone, and every glyph from `sm` up", async () => {
     const id = await race();
     const raw = renderToStaticMarkup(withClientWords(await raceDayTabs({ locale: "ro", active: "timing", eventId: id, actor: staff.ADMIN! }), "ro"));
     // Four glyph wrappers, each `display: none` below `sm` and inline-flex from it.
     expect(strip(raw).match(/<span[^>]*aria-hidden="true"[^>]*><svg/g)).toHaveLength(4);
     expect(raw).toMatch(/@media \(min-width:600px\)\{[^}]*display:inline-flex/);
+  });
+
+  it("stand five for the organizers of an event that holds a raffle — «Tombolă» fourth, before «Lucruri de adus» — in a row that scrolls (§NNN)", async () => {
+    const id = await race({ hasRaffle: true });
+    for (const role of ["MODERATOR", "ADMIN"] as const) {
+      state.actor = staff[role];
+      expect(tabs(await desk(id)), role).toEqual([
+        { href: `/ro/admin/checkin?eventId=${id}`, label: "Prezența", current: true },
+        { href: `/ro/admin/events/${id}/results`, label: "Clasament", current: false },
+        { href: `/ro/admin/checkin/cronometrare?eventId=${id}`, label: "Cronometrare Sosiri", current: false },
+        { href: `/ro/admin/checkin/tombola?eventId=${id}`, label: "Tombolă", current: false },
+        { href: `/ro/admin/checkin/lucruri?eventId=${id}`, label: "Lucruri de adus Lucruri", current: false },
+      ]);
+    }
+    expect(tabs(await timing(id)).map((tab) => [tab.label, tab.current])).toEqual([
+      ["Prezența", false],
+      ["Clasament", false],
+      ["Cronometrare Sosiri", true],
+      ["Tombolă", false],
+      ["Lucruri de adus Lucruri", false],
+    ]);
+    // Five are wider than a phone: the row carries the scroller that brings the current entry into view (`SubNavCurrent`, its hidden
+    // span), scrolls inside itself, and still draws its glyphs from `sm` up only.
+    const raw = renderToStaticMarkup(withClientWords(await raceDayTabs({ locale: "ro", active: "items", eventId: id, actor: staff.ADMIN! }), "ro"));
+    expect(raw).toMatch(/<span hidden=""><\/span>/);
+    expect(raw).toMatch(/overflow-x:auto/);
+    expect(strip(raw).match(/<span[^>]*aria-hidden="true"[^>]*><svg/g)).toHaveLength(5);
+    // The desk's other roles keep their three, «Tombolă» being the organizers'.
+    for (const role of ["CONTRIBUTOR", "COPYWRITER", "DEV"] as const) {
+      state.actor = staff[role];
+      expect(tabs(await desk(id)).map((tab) => tab.label), role).toEqual(["Prezența", "Cronometrare Sosiri", "Lucruri de adus Lucruri"]);
+    }
+    state.actor = staff.MODERATOR;
+    state.locale = "en";
+    expect(tabs(await desk(id)).map((tab) => tab.label)).toEqual(["Attendance", "Results", "Timing Timing", "Raffle", "Things to bring Things"]);
   });
 
   it("draw no «Clasament» for a role that cannot open the results — «Cronometrare» for every desk role — and say the tabs in English too", async () => {
