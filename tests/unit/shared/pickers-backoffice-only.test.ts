@@ -112,6 +112,9 @@ const isBackofficeRoute = (file: string) => file.startsWith("src/app/[locale]/ad
 const PICKER_PROVIDER = "src/shared/forms/pickers/PickerProvider.tsx";
 const DATE_FIELD = "src/shared/forms/pickers/DateField.tsx";
 const TIME_FIELD = "src/shared/forms/pickers/TimeField.tsx";
+/** «Clasament»'s clock picker (§999): the lazily loaded clock, and the host that loads it — its dynamic `import()` is an edge of the walk. */
+const CLOCK_PICKER = "src/shared/forms/pickers/ClockPicker.tsx";
+const CLOCK_PICKER_HOST = "src/shared/forms/pickers/ClockPickerHost.tsx";
 
 describe("the date and time pickers never reach a public page", () => {
   it("PickerProvider reaches only /admin routes, where it is mounted", () => {
@@ -129,6 +132,15 @@ describe("the date and time pickers never reach a public page", () => {
       const routes = [...reached].filter((file) => file.startsWith("src/app/"));
       expect(routes.filter((file) => !isBackofficeRoute(file)), start).toEqual([]);
       expect(routes.length, start).toBeGreaterThan(0);
+    }
+  });
+
+  it("the clock picker and its host reach only /admin routes — «Clasament» — where PickerProvider is mounted", () => {
+    for (const start of [CLOCK_PICKER, CLOCK_PICKER_HOST]) {
+      const reached = reaching(start);
+      const routes = [...reached].filter((file) => file.startsWith("src/app/"));
+      expect(routes.filter((file) => !isBackofficeRoute(file)), start).toEqual([]);
+      expect(reached.has("src/app/[locale]/admin/events/[id]/results/page.tsx"), start).toBe(true);
     }
   });
 

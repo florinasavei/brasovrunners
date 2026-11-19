@@ -2,6 +2,7 @@ import { parseLocalizedPath } from "@/i18n/alternate-path";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { findPublishedAlbumSiblingSlug } from "@/modules/content/gallery/repository";
+import { OPENED_IN_THE_OTHER_LANGUAGE } from "@/modules/registrations/domain/code-scans";
 import {
   findPublishedPageBySlug,
   findPublishedPageSiblingSlug,
@@ -149,11 +150,15 @@ export async function resolveLocaleSwitch(
     return getPathname({ locale: target, href: { pathname: parsed.route, params: { name } } });
   }
 
-  // The desk code is the same in either language (BR-REQ-037-08).
+  /*
+    The desk code is the same in either language (BR-REQ-037-08). And the page in the other language is the page already open, not
+    a code scanned again (§996): the switch knows the path alone, never the query the page had — a `?saved=` an hour after the scan,
+    the registration's own `?from=registration` — so it lands marked `from=language`, which records no scan.
+  */
   if (parsed.route === "/admin/checkin/[code]") {
     const code = parsed.params.code;
     if (!code) return listing;
-    return getPathname({ locale: target, href: { pathname: parsed.route, params: { code } } });
+    return getPathname({ locale: target, href: { pathname: parsed.route, params: { code }, query: { from: OPENED_IN_THE_OTHER_LANGUAGE } } });
   }
 
   return getPathname({ locale: target, href: parsed.route });

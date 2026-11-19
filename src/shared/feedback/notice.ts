@@ -109,6 +109,8 @@ const SENTENCES: Readonly<Record<string, { count?: string; values?: Readonly<Rec
   invitationsSentRaised: { count: "count", values: { capacity: "capacity" } },
   // «Trimite fiecăruia punctul lui» with people at a point who have no address (§956): how many messages, and how many such people.
   planPointsSentSomeWithout: { count: "queued", values: { noAddress: "noAddress" } },
+  // «Încarcă contractele semnate» with scripts off (§998): how many files were attached, and how many were not — counts, never a name.
+  volunteerContractsAttachedSome: { count: "count", values: { left: "left" } },
 };
 
 /**
@@ -138,8 +140,9 @@ export const DERIVED_TOAST_KEYS: readonly string[] = [
  * The provider's answers that mean the verb happened (§171, §288). A staff verb that reaches
  * Zitadel redirects with `saved` whatever Zitadel said — the page's banner tells `failed`,
  * `missing` and `unconfigured` apart — so a green "the link was sent" is owed only to these.
+ * `ready` (§1000): the account already signs in, so nothing was missing and nothing had to be sent.
  */
-const PROVIDER_DONE: ReadonlySet<string> = new Set(["invited", "exists", "done"]);
+const PROVIDER_DONE: ReadonlySet<string> = new Set(["invited", "exists", "ready", "done"]);
 const PROVIDER_FIELDS = ["invite", "account"] as const;
 
 /** Whether a provider's answer means the verb happened (above): the actions choose their toast by it. */
@@ -180,6 +183,8 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   // «Salvează tot clasamentul» with every result as it was, and the publish tick pressed as it already stood (§808).
   "resultsUnchanged",
   "resultsPublicUnchanged",
+  // «Resetează clasamentul» on a race with no result and no start given, from a page that drew it so (§997).
+  "resultsResetNothing",
   // The newsletter (§445): the same form pressed twice, and an address that was not on the list.
   "newsletterDuplicate",
   "newsletterNotFound",
@@ -191,6 +196,8 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   // «Dă număr elitelor fără număr» finding every line numbered already, and a line's «Număr» saved as it stood (§990).
   "eliteNumberedNone",
   "eliteNumberUnchanged",
+  // «Șterge» on a signed agreement another colleague had deleted first (§998).
+  "volunteerContractNone",
 ]);
 
 /**

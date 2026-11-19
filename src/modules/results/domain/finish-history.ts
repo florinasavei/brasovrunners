@@ -11,7 +11,9 @@
  * - **What.** A press at the line (`finishLine: true` on `event_result.created` / `.updated`); a press of a number already «Sosit»
  *   (`event_result.finish_duplicate`, both times) — or of a runner «Clasament» wrote off, whose decision stays (the same row, its
  *   `storedStatus` the decision; a row without one is a «Sosit»'s); the line's own «Anulează» (`event_result.deleted` with `undo: true`); a
- *   «Clasament» save's created, changed and deleted rows (the boxes that changed named); and «Start» set or taken off.
+ *   «Clasament» save's created, changed and deleted rows (the boxes that changed named); «Start» set or taken off; and «Resetează
+ *   clasamentul» (§997, `event.results_reset`: how many results went and whether a gun went with them), the line that says why
+ *   every press and save older than it has no row any more.
  * - **Where.** «Cronometrare» for a press at the line and for «Start» — the old «Sosire» wrote `finishLine` too —, «Clasament» for
  *   the rest.
  * - **Who.** The staff member's display name; «cont șters» for an account removed since (`ON DELETE SET NULL`). The trail stores a
@@ -26,6 +28,7 @@ export const FINISH_HISTORY_ACTIONS = [
   "event_result.finish_duplicate",
   "event.race_gun_set",
   "event.race_gun_cleared",
+  "event.results_reset",
 ] as const;
 
 /** How many rows the fold reads, newest first: a race of a few hundred runners, its corrections and its duplicates. */
@@ -47,7 +50,9 @@ export type FinishHistoryWhat =
   | { kind: "updated"; bibNumber: number | null; status: string | null; gunTimeMs: number | null; boxes: HistoryBox[] }
   | { kind: "deleted"; bibNumber: number | null; status: string | null }
   | { kind: "gunSet"; at: Date | null; previous: Date | null }
-  | { kind: "gunCleared"; previous: Date | null };
+  | { kind: "gunCleared"; previous: Date | null }
+  /** «Resetează clasamentul» (§997): how many results went — null for a count that cannot be read — and whether a gun went too. */
+  | { kind: "reset"; results: number | null; gunCleared: boolean };
 
 export type FinishHistoryLine = {
   id: string;
@@ -94,6 +99,13 @@ export function finishHistoryLine(row: FinishHistoryRow): FinishHistoryLine | nu
       return { ...base, where: "timing", what: { kind: "gunSet", at: instant(metadata.at), previous: instant(metadata.previous) } };
     case "event.race_gun_cleared":
       return { ...base, where: "timing", what: { kind: "gunCleared", previous: instant(metadata.previous) } };
+    case "event.results_reset":
+      // A count of nought is a reset that took only the gun: read as a count, never as nothing.
+      return {
+        ...base,
+        where: "results",
+        what: { kind: "reset", results: typeof metadata.results === "number" && Number.isInteger(metadata.results) && metadata.results >= 0 ? metadata.results : null, gunCleared: metadata.gunCleared === true },
+      };
     default:
       return null;
   }
@@ -106,7 +118,7 @@ export function finishHistory(rows: readonly FinishHistoryRow[]): FinishHistoryL
     .flatMap((row) => finishHistoryLine(row) ?? []);
 }
 
-/** The number a line is about, for the name read live beside it; null for «Start». */
+/** The number a line is about, for the name read live beside it; null for «Start» and for a reset, which are about no runner. */
 export function historyBibOf(what: FinishHistoryWhat): number | null {
-  return what.kind === "gunSet" || what.kind === "gunCleared" ? null : what.bibNumber;
+  return what.kind === "gunSet" || what.kind === "gunCleared" || what.kind === "reset" ? null : what.bibNumber;
 }

@@ -2178,7 +2178,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
               : or(eq(eventVolunteerInvitations.canonicalEmail, current.canonicalEmail), eq(eventVolunteerInvitations.volunteerId, current.id)),
           ),
         );
-      // The person's choices go with them (CASCADE).
+      // The person's choices go with them (CASCADE), and so does their signed agreement with any upload of it half-sent (§998).
       await tx.delete(eventVolunteers).where(eq(eventVolunteers.id, current.id));
       // The number, when the person had one (§948): the row is gone, and the trail is what keeps it from being drawn again (`bibs.ts#retiredBibNumbers`).
       await audit("volunteer.deleted", { volunteerId: current.id, assignedRoleIds: heldRoleIds, state: current.state, ...(current.bibNumber !== null ? { bibNumber: current.bibNumber } : {}) });

@@ -71,6 +71,7 @@ import RemoveDoneIcon from "@mui/icons-material/RemoveDone";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import RouteIcon from "@mui/icons-material/Route";
 import SaveIcon from "@mui/icons-material/Save";
+import ScheduleIcon from "@mui/icons-material/Schedule";
 import ScreenRotationAltIcon from "@mui/icons-material/ScreenRotationAlt";
 import SearchIcon from "@mui/icons-material/Search";
 import SendIcon from "@mui/icons-material/Send";
@@ -284,7 +285,10 @@ export type ActionIconName =
   // «Cronometrare» (§986): «Start» — the flag an organizer drops at the gun — and «⏱ Prinde timpul», the stopwatch that keeps one
   // moment for the next number pressed when runners arrive in a bunch.
   | "raceStart"
-  | "keepTime";
+  | "keepTime"
+  // «Clasament»'s «Timp» and «Timp cip» (§999): the clock face on the button beside each box that opens the page's one clock
+  // picker — a time picked, never the stopwatch of «Cronometrare», which keeps one.
+  | "pickTime";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,
 // because this table must never reach a public page (above).
 
@@ -396,4 +400,5 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   tools: SpeedIcon,
   raceStart: FlagIcon,
   keepTime: TimerIcon,
+  pickTime: ScheduleIcon,
 };

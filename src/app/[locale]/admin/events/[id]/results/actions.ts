@@ -10,7 +10,7 @@ import { ResultsCsvError } from "@/modules/results/domain/import-csv";
 import { mergeImportedRows } from "@/modules/results/import-merge";
 import { parseAgeBandStarts } from "@/modules/results/domain/age-bands";
 import { AWARD_PLACES_MAX, AWARD_PLACES_MIN } from "@/modules/results/domain/awards";
-import { deleteEventResult, importResultsCsv, ResultRowError, saveEventResults, setResultAgeBands, setResultAwards, setResultsPublished } from "@/modules/results/results";
+import { deleteEventResult, importResultsCsv, resetEventResults, ResultRowError, saveEventResults, setResultAgeBands, setResultAwards, setResultsPublished } from "@/modules/results/results";
 import { EXTRA_ROWS, postedResultRows } from "@/modules/results/rows";
 import { RESULT_NAME_MAX, RESULT_NOTE_MAX } from "@/modules/results/domain/ranking";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -23,7 +23,7 @@ import { RESULTS_CSV_MAX_CHARS } from "@/modules/results/domain/import-csv";
 /*
   A race's results (§808): the Server Actions behind «Clasament». Each is a plain form that works with scripts off; every one asks
   the service, which asserts the role again (the Organizer and the Administrators enter, import and delete; only the Administrators
-  publish — BR-REQ-060-01), so the buttons the page draws are a courtesy.
+  publish and reset — BR-REQ-060-01), so the buttons the page draws are a courtesy.
 */
 
 function localeOf(form: FormData): Locale {
@@ -220,6 +220,40 @@ export async function setResultAgeBandsAction(_previous: FormOutcome | null, for
     return backToPage(form, { error: error.code });
   }
   return backToPage(form, { saved: changed ? "resultsCategoriesSaved" : "resultsCategoriesUnchanged" });
+}
+
+/**
+ * The gun a «Resetează clasamentul» form says its page saw (§997, as «Start»'s `seenGunAtMs`, §986): empty for none, else the instant
+ * the page drew; anything else is taken for none, so a forged value wipes no gun that stands unseen. A form without the field (none is
+ * drawn so) is not asked.
+ */
+function seenGunOf(form: FormData): number | null | undefined {
+  if (!form.has("seenGunAtMs")) return undefined;
+  const raw = field(form, "seenGunAtMs");
+  const seen = Number(raw);
+  return raw !== "" && Number.isInteger(seen) && seen > 0 ? seen : null;
+}
+
+/**
+ * «Resetează clasamentul» (§997): the Administrator's one press at the foot of «Clasament», asked first, before the race's planned
+ * start. It posts what the page drew — how many results (`results`) and the gun it saw (`seenGunAtMs`) — so a page drawn before
+ * another result arrived, or before «Start» was given, moved or taken off, wipes nothing (CONFLICT). Back to the page with the toast
+ * «Clasamentul a fost resetat.» — or, a one-button form with no boxes to keep, the refusal's code for the page's banner: CONFLICT,
+ * `RESULTS_RESET_AFTER_START` once the planned start has passed, FORBIDDEN for any other role, `RESULTS_NOT_OPEN`, NOT_FOUND.
+ */
+export async function resetEventResultsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const counted = field(form, "results").trim();
+  // A count the page did not draw — missing, or not a whole number — is a page that saw nothing: the service refuses it (CONFLICT).
+  const seenResults = /^\d{1,6}$/.test(counted) ? Number(counted) : Number.NaN;
+  let changed: boolean;
+  try {
+    const actor = await requireStaff();
+    changed = (await resetEventResults(getDb(), actor, { eventId: eventIdOf(form), seenResults, seenGunAtMs: seenGunOf(form) }, new Date())).changed;
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return backToPage(form, { error: error.code });
+  }
+  return backToPage(form, { saved: changed ? "resultsReset" : "resultsResetNothing" });
 }
 
 /**

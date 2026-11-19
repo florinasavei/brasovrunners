@@ -67,6 +67,16 @@ export type DomainErrorCode =
   | "VOLUNTEER_NO_EMAIL"
   // The guardian's link or paper record while the privacy notice and the agreement in force do not both describe minors (§768).
   | "VOLUNTEER_MINORS_CLOSED"
+  // «Contract semnat» (§998): a file with no bytes, one past `SIGNED_CONTRACT_MAX_BYTES`, or one whose own bytes are not a PDF, a Word
+  // document or a photograph (JPEG, PNG, HEIC) — whatever its name says. Each writes nothing.
+  | "VOLUNTEER_CONTRACT_EMPTY"
+  | "VOLUNTEER_CONTRACT_TOO_LARGE"
+  | "VOLUNTEER_CONTRACT_TYPE"
+  // A piece of a large file sent in pieces whose upload is not there any more — replaced by a newer one, gone with its person — or that
+  // is not the next piece (sent twice, out of turn): the page sends the file again from the start.
+  | "VOLUNTEER_CONTRACT_UPLOAD_GONE"
+  // «Încarcă contractele semnate» pressed with no file chosen, scripts off (§998): said as such, never as «0 attached».
+  | "VOLUNTEER_CONTRACTS_NONE_CHOSEN"
   // «Trimite fiecăruia punctul lui» with nobody to write to (§956): no volunteer with an address stands at a point of the route…
   | "VOLUNTEER_POINTS_NOBODY"
   // …or every one who does was already told the point they stand at, and the press did not ask to write to everybody again.
@@ -95,6 +105,11 @@ export type DomainErrorCode =
   | "RESULT_UNDO_NOT_ALLOWED"
   // A press sent again whose row is gone since — undone at the line, deleted on «Clasament» (§986): told so, never recorded again.
   | "RESULT_PRESS_UNDONE"
+  // A press made before «Resetează clasamentul» and sent after it — a queue on a phone without signal (§997): it belongs to the
+  // trial the reset wiped, so it is refused, its line on the phone saying why, and never brings a test finish back.
+  | "RESULT_PRESS_BEFORE_RESET"
+  // «Resetează clasamentul» once the race's planned gun has passed (§997): the results can only be wiped before the start.
+  | "RESULTS_RESET_AFTER_START"
   // «Start» outside its window (§986): from three hours before the planned gun to six hours after.
   | "RACE_GUN_WINDOW"
   // «Start» moved or taken off once a runner is «Sosit» (§986): the gun is fixed; a correction of the times is «Clasament»'s.

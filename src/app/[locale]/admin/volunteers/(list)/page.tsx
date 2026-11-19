@@ -19,7 +19,7 @@ import { addVolunteerNoteFromListAction } from "@/app/[locale]/admin/volunteers/
 import { getDb } from "@/db/client";
 import { VOLUNTEER_NOTE_MAX } from "@/db/schema/event-volunteer-notes";
 import { countForm } from "@/i18n/count-form";
-import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 import { findEventForRegistrationById } from "@/modules/events/repository";
@@ -35,6 +35,7 @@ import { canManageRegistrations, canManageVolunteers } from "@/modules/staff-ide
 import { requireStaff } from "@/modules/staff-identity/session";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import {
+  contractFilterOf,
   countVolunteersForAdmin,
   kitFilterOf,
   listEventsWithVolunteers,
@@ -52,6 +53,7 @@ import {
 } from "@/modules/volunteers/admin-list";
 import { guardianAllowsConfirm, guardianAskOf, roleLabel, VOLUNTEER_DECISION_MAX, VOLUNTEER_STATES, type VolunteerState, volunteerTypes } from "@/modules/volunteers/domain/volunteer";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
+import { readPresentTicks } from "@/modules/volunteers/present-by";
 import { listPlanPoints } from "@/modules/volunteers/plan-points";
 import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 import type { RaffleReason } from "@/modules/volunteers/domain/raffle";
@@ -60,6 +62,11 @@ import { RaffleStandingNote, raffleNoteWords } from "@/modules/volunteers/ui/Raf
 import { DECISION_ANCHOR } from "@/modules/volunteers/ui/VolunteerDecisionCard";
 import { GuardianVerbs, guardianChips, shortText, STATE_CHIP, VolunteerPersonFields, VolunteerStateForm, volunteerHiddenFields, volunteerPersonBoxes } from "@/modules/volunteers/ui/VolunteerPerson";
 import { listVolunteerNotesForList } from "@/modules/volunteers/volunteer-notes";
+import { SIGNED_CONTRACT_MAX_BYTES } from "@/db/schema/event-volunteer-documents";
+import { SIGNED_CONTRACT_ACCEPT, SIGNED_CONTRACT_PART_BYTES } from "@/modules/volunteers/domain/signed-contract";
+import { volunteersWithSignedContract } from "@/modules/volunteers/signed-contract";
+import SignedContractUpload from "@/modules/volunteers/ui/SignedContractUpload";
+import { signedContractUploadLabels } from "@/modules/volunteers/ui/signed-contract-words";
 import { ROLE_EMAIL_SETTLE_MINUTES } from "@/modules/volunteers/volunteers";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import MailLine from "@/shared/feedback/MailLine";
@@ -120,6 +127,10 @@ const EMAIL_CELL_SX = { display: "inline-block", minWidth: { xs: 0, md: "12rem" 
  * one link away: they belong to the event, not to a list across events. «Adaugă un voluntar de mână» stands here too
  * while one event is in scope (§862; the owner, 2026-10-28: «as vrea sa pot adauga manual un voluntar si de aici»):
  * the card's own form, for that event, coming back to this list.
+ *
+ * «Contract semnat» (§998): a row whose signed agreement is attached wears the chip, the strip says «Contracte semnate: N din M»
+ * and the filters take «Cu / Fără contract semnat»; with one event in scope, «Încarcă contractele semnate» attaches a folder of
+ * the club's files at once, each to the one volunteer of that event whose name it carries.
  */
 export default async function AdminVolunteersPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -130,7 +141,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   if (!canManageVolunteers(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, state, role, q, kit, present, member, volunteerError } = current;
+  const { eventId, state, role, q, kit, present, member, contract, volunteerError } = current;
   const query = parseListQuery(current, {
     sortable: VOLUNTEER_SORT_KEYS,
     // Newest offers first: the person somebody is asking about has usually just signed up.
@@ -152,6 +163,8 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const presentFilter = presentFilterOf(present);
   // «Doar membrii {club}» (§981): «1»; anything else in the address is no filter.
   const memberFilter = memberFilterOf(member);
+  // «Contract semnat» (§998): «yes» or «no»; anything else in the address is no filter.
+  const contractFilter = contractFilterOf(contract);
   const filters: VolunteerAdminFilters = {
     eventId: eventFilter.eventId,
     state: stateFilter,
@@ -160,6 +173,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     kit: kitFilter,
     present: presentFilter,
     member: memberFilter,
+    contract: contractFilter,
   };
 
   const [rows, total, summary, eventRoles, t] = await Promise.all([
@@ -176,7 +190,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   // The words of every role the page's rows name, given or offered — one read, whatever their events — each with its category's (§904):
   // «Direcționare (Traseu)», as the card and the person's page say it, so a name standing in two categories is never printed twice alike.
   // The same read carries each category's place in the club's order, which «Tip» lists the categories in (§962).
-  const [roleNames, rowNotes, emailSummaries] = await Promise.all([
+  const [roleNames, rowNotes, emailSummaries, withContract, presentTicks] = await Promise.all([
     listRoleNames(db, [...new Set(rows.flatMap((row) => [...row.roleIds, ...row.choiceIds]))]),
     // «Note interne»: each row's live notes, newest first — ONE grouped read over the page's ids, never a query per row. The marker
     // says how many and, in its tooltip, the words (§945, as the registrations list's, §943); each note's id and whether the reader
@@ -186,6 +200,11 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     // Administrator and the Superadministrator, whose the person's own «Emailuri» is (§915). For the Organizer the reader is not
     // called and the column is not drawn; the reader asks for the role again (BR-REQ-060-01).
     canManageRegistrations(actor) ? readEmailSummaries(db, actor, { volunteerIds: rows.map((row) => row.id) }) : Promise.resolve(null),
+    // «Contract semnat» (§998): which of the page's rows have their signed agreement attached — ONE read over the page's ids; the
+    // service asks for the role again. Existence only: no name, no byte of a file reaches the list.
+    volunteersWithSignedContract(db, actor, rows.map((row) => row.id)),
+    // «Prezent» (§996): who ticked each ticked row, and when — ONE read over the page's ticked rows, never a query per row.
+    readPresentTicks(db, rows),
   ]);
   // The marker's tooltip and the column (§945, §950): the newest notes' words, the older ones counted — no author's name, and since
   // §964 no day or hour either (the owner, 2026-11-17: «la nota internă nu mai afișa și data»). The person's page keeps both.
@@ -223,6 +242,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     kit: kitFilter === undefined ? undefined : kit,
     present: presentFilter === undefined ? undefined : present,
     member: memberFilter ? "1" : undefined,
+    contract: contractFilter === undefined ? undefined : contract,
     sort: current.sort,
     dir: current.dir,
     page: current.page,
@@ -231,7 +251,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const listQueryString = buildListHref("", listParams, {}).replace(/^\?/, "");
   // A press on a row comes back to this page of the list, every filter kept (§839), so the row's new chip is in view.
   const returnTo = buildListHref(basePath, listParams, { page: current.page });
-  const hasFilters = Boolean(eventId || stateFilter || roleFilter || q || kitFilter !== undefined || presentFilter !== undefined || memberFilter);
+  const hasFilters = Boolean(eventId || stateFilter || roleFilter || q || kitFilter !== undefined || presentFilter !== undefined || memberFilter || contractFilter !== undefined);
   const autoScopedToFeatured = !hasFilters && eventFilter.eventId !== undefined;
   const scopeEvent = events.find((event) => event.id === filters.eventId) ?? null;
   // «Adaugă un voluntar de mână» for the event in scope (§862): the context a person's page reads, coming back to this page of the list.
@@ -421,6 +441,21 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   );
 
   /**
+   * Under «Prezent» while ticked, who ticked it and when (§996; the owner, 2026-11-19: «vreau si tracing pentru voluntarim
+   * [voluntari] gen cine a scanat, cine a marcat prezent»): «QR1, 08:20» under the tick, on the event's clock — from the trail, read
+   * once for the page (`present-by.ts`). Unticked, nothing; a tick the trail does not name, nothing either.
+   */
+  const presentByLine = (row: VolunteerAdminRow) => {
+    const by = row.present ? presentTicks.get(row.id) : undefined;
+    if (!by) return null;
+    return (
+      <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block" }} data-testid="volunteer-present-by">
+        {t("volunteers.presence.by", { who: by.name ?? t("desk.byRemoved"), time: formatTime(by.at, { locale, timeZone: by.timezone }) })}
+      </Typography>
+    );
+  };
+
+  /**
    * «Prezent» on the row (§983; the owner, 2026-11-18, three days before the race: «La voluntari trebuie să trec prezent/absent ca să
    * pot face tombola doar pentru cei prezenți»): the kit tick's own shape — the house's one-press tick in a plain form that posts the
    * state it wants (`present=1|0`), never a toggle, working with scripts off and coming back to this page of the list. Unticked is
@@ -434,6 +469,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       <TickButton checked={row.present} aria-label={`${t("volunteers.presence.tick")}: ${shortText(row.name)}`} data-testid="volunteer-present-tick">
         {t("volunteers.presence.tick")}
       </TickButton>
+      {presentByLine(row)}
     </Box>
   );
 
@@ -626,6 +662,8 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       render: (row) => (
         <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
           <StatusChip glyph={STATE_CHIP[row.state].glyph} color={STATE_CHIP[row.state].color} label={t(`volunteers.states.${row.state}`)} testId="volunteer-state" />
+          {/* «Contract semnat» (§998): the signed agreement is attached to the person's record — on the organizers' list alone. */}
+          {withContract.has(row.id) && <StatusChip glyph="signedContract" color="success" variant="outlined" label={t("volunteers.contract.chip")} testId="volunteer-contract-chip" />}
           {/* A minor whose parent has not agreed: the person's block's own chips — the parent's agreement missing, or a link sent — never a second condition. */}
           {guardianAskOf(row, true, now).kind !== "none" && (
             <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.5 }}>
@@ -775,13 +813,14 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   ];
 
   /** A pill of the strip: a link to this list with the filter in the address; pressing the one in force clears it (§626). */
-  const pill = (patch: { state?: VolunteerState; role?: string; kit?: "yes"; present?: "yes" | "no" }, label: string, active: boolean) => (
+  const pill = (patch: { state?: VolunteerState; role?: string; kit?: "yes"; present?: "yes" | "no"; contract?: "yes" }, label: string, active: boolean) => (
     <ChipLink
       href={buildListHref(basePath, listParams, {
         state: "state" in patch ? (active ? undefined : patch.state) : undefined,
         role: "role" in patch ? (active ? undefined : patch.role) : undefined,
         kit: "kit" in patch ? (active ? undefined : patch.kit) : undefined,
         present: "present" in patch ? (active ? undefined : patch.present) : undefined,
+        contract: "contract" in patch ? (active ? undefined : patch.contract) : undefined,
       })}
       label={label}
       active={active}
@@ -895,7 +934,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       */}
       <Panel glyph="volunteers" title={t("volunteers.screen.summaryTitle")} aside={scopeEvent ? t("volunteers.screen.summaryScopeEvent", { event: scopeEvent.title ?? scopeEvent.id }) : t("volunteers.screen.summaryScopeAll")} data-testid="volunteers-summary">
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
-          {pill({ state: undefined, role: undefined }, t("volunteers.screen.summaryTotal", { count: summary.total }), !stateFilter && !roleFilter && kitFilter === undefined && presentFilter === undefined)}
+          {pill({ state: undefined, role: undefined }, t("volunteers.screen.summaryTotal", { count: summary.total }), !stateFilter && !roleFilter && kitFilter === undefined && presentFilter === undefined && contractFilter === undefined)}
           {VOLUNTEER_STATES.filter((value) => summary.byState[value] > 0 || stateFilter === value).map((value) =>
             pill({ state: value }, `${t(`volunteers.states.${value}`)}: ${summary.byState[value]}`, stateFilter === value),
           )}
@@ -909,6 +948,16 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           */}
           {pill({ present: "yes" }, t("volunteers.presence.summaryPresent", { count: summary.present }), presentFilter === true)}
           {pill({ present: "no" }, t("volunteers.presence.summaryAbsent", { count: summary.absent }), presentFilter === false)}
+          {/*
+            «Contracte semnate: N din M» (§998; the owner, 2026-11-19: «trebuie pentru fiecare voluntar să pot atașa „contract
+            semnat”»): among «Înscris» and «Confirmat», how many have their signed agreement attached — always said, a nought too — a
+            pill to exactly those people; «Fără contract semnat» in the filters lists the others.
+          */}
+          {pill(
+            { contract: "yes" },
+            t("volunteers.contract.summary", { count: summary.withContract, total: summary.byState.REGISTERED + summary.byState.CONFIRMED }),
+            contractFilter === true,
+          )}
         </Stack>
         {scopeEvent && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
@@ -935,6 +984,39 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
               <GlyphSubmitButton label={t("volunteers.person.add")} pendingLabel={t("volunteers.person.adding")} icon="addPerson" />
             </Box>
           </ActionForm>
+        </Panel>
+      )}
+
+      {/*
+        «Încarcă contractele semnate» (§998; the owner, 2026-11-19, holding one Word file per volunteer named
+        «Contract-voluntariat-<Nume>.docx»): every file at once, each attached to the one volunteer of THIS event whose name it
+        carries, the rest listed with the reason to attach by hand. With one event in scope only: a name is matched among one
+        event's people. A plain form posting the files to the event's route, so it works with scripts off; the island matches the
+        names first and sends one request a file.
+      */}
+      {scopeEvent && (
+        <Panel
+          glyph="declaration"
+          collapsible
+          title={t("volunteers.contract.bulkTitle")}
+          intro={t("volunteers.contract.bulkIntro")}
+          aside={t("volunteers.screen.summaryScopeEvent", { event: scopeEvent.title ?? scopeEvent.id })}
+          id="volunteers-contracts"
+          data-testid="volunteers-contracts"
+        >
+          <SignedContractUpload
+            mode="many"
+            action={`/api/admin/events/${scopeEvent.id}/volunteers/signed-contracts`}
+            uploadTemplate={`/api/admin/events/${scopeEvent.id}/volunteers/{volunteer}/signed-contract`}
+            locale={locale}
+            returnTo={returnTo}
+            maxBytes={SIGNED_CONTRACT_MAX_BYTES}
+            partBytes={SIGNED_CONTRACT_PART_BYTES}
+            accept={SIGNED_CONTRACT_ACCEPT}
+            inputId={`signed-contracts-${scopeEvent.id}`}
+            labels={signedContractUploadLabels(t, locale, "many")}
+            testId="volunteers-contracts-upload"
+          />
         </Panel>
       )}
 
@@ -1015,6 +1097,19 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
               <MenuItem value="">{t("volunteers.presence.all")}</MenuItem>
               <MenuItem value="yes">{t("volunteers.presence.yes")}</MenuItem>
               <MenuItem value="no">{t("volunteers.presence.no")}</MenuItem>
+            </TextField>
+            {/* «Contract semnat» (§998): with it, without it — who is left after «Încarcă contractele semnate» — or everyone. */}
+            <TextField
+              select
+              name="contract"
+              label={t("volunteers.contract.filter")}
+              defaultValue={contractFilter === undefined ? "" : contract}
+              sx={{ minWidth: 220 }}
+              data-testid="volunteers-filter-contract"
+            >
+              <MenuItem value="">{t("volunteers.contract.filterAll")}</MenuItem>
+              <MenuItem value="yes">{t("volunteers.contract.filterYes")}</MenuItem>
+              <MenuItem value="no">{t("volunteers.contract.filterNo")}</MenuItem>
             </TextField>
             {/* «Doar membrii {club}» (§981): a tick, like the registrations list's — ticked submits `1`, unticked nothing. */}
             <Box sx={{ minWidth: 220, maxWidth: 320, pt: 0.5 }} data-testid="volunteers-filter-member">

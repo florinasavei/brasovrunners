@@ -29,6 +29,8 @@ import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { parseClubMember } from "@/modules/rsvp/domain/public-member";
 import { roleLabel } from "@/modules/volunteers/domain/volunteer";
+import { signedContractsOfOffers } from "@/modules/volunteers/signed-contract";
+import type { VolunteerDocumentFormat } from "@/db/schema/event-volunteer-documents";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { InvitationRefusal, type InvitationState, invitationState } from "./domain/invitations";
@@ -280,6 +282,11 @@ export type PersonData = {
     agreementUserAgent: string | null;
     guardianIp: string | null;
     guardianUserAgent: string | null;
+    /**
+     * «Contract semnat» (§998): the signed copy of the agreement the organizers attached — the name it was uploaded with, its format,
+     * its length and when — or null. Never its bytes: the volunteer's page downloads the file itself (art. 15 GDPR).
+     */
+    signedContract: { fileName: string; format: VolunteerDocumentFormat; size: number; uploadedAt: Date } | null;
   }>;
   /**
    * The group-run declarations signed with this address (§393, §769) — the signer's own and, for a minor, the minor's
@@ -621,6 +628,8 @@ async function collectPersonData<T extends Record<string, unknown>>(
           .where(and(inArray(eventVolunteerNotes.volunteerId, offerRows.map((offer) => offer.id)), isNull(eventVolunteerNotes.deletedAt)))
           .orderBy(asc(eventVolunteerNotes.createdAt), asc(eventVolunteerNotes.id))
       : [];
+  // The offers' signed agreements (§998): one read for every offer of the person, their facts and never their bytes.
+  const signedContracts = await signedContractsOfOffers(db, offerRows.map((offer) => offer.id));
   // A role is named as a role is named alone (§774): «Direcționare (Traseu)», so the same name under two categories is two roles to read;
   // several roles given are joined by «, » (§837), none is null.
   const volunteerOffers = offerRows.map(({ id, ...offer }) => {
@@ -636,6 +645,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
       roleNameEn: given.length > 0 ? given.map((role) => roleLabel(role, "en")).join(", ") : null,
       chosenRolesRo: chosen.map((choice) => roleLabel(choice, "ro")),
       chosenRolesEn: chosen.map((choice) => roleLabel(choice, "en")),
+      signedContract: signedContracts.get(id) ?? null,
     };
   });
 
@@ -1176,6 +1186,7 @@ export async function exportPersonData<T extends Record<string, unknown>>(
       rememberedBrowsers: data.rememberedBrowsers.length,
       volunteerOffers: data.volunteerOffers.length,
       volunteerNotes: data.volunteerOffers.reduce((total, offer) => total + offer.notes.length, 0),
+      signedContracts: data.volunteerOffers.filter((offer) => offer.signedContract !== null).length,
       volunteerInvitations: data.volunteerInvitations.length,
       raffleEntries: data.raffleEntries.length,
       groupRunDeclarations: data.groupRunDeclarations.length,

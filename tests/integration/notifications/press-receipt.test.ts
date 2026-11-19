@@ -257,6 +257,39 @@ describe("the toast after a press says what the press queued", () => {
     });
     expect(flashed()).toMatchObject({ kind: "success", key: "invited", values: { mailType: "STAFF_INVITATION", mailZitadel: "1" } });
   });
+
+  /**
+   * §1000: an account found without a password gets a new code from Zitadel — its email goes too; one that already signs in
+   * (`ready`) gets nothing from Zitadel, and the toast names the club's email alone, still green.
+   */
+  it("names Zitadel's email for an account found without a password, and not for one that already signs in", async () => {
+    for (const [invite, zitadel] of [
+      ["exists", true],
+      ["ready", false],
+    ] as const) {
+      state.jar.clear();
+      state.set.length = 0;
+      await inEmailPress("club.staffInvite", async (press) => {
+        press.by(admin.id);
+        await db.transaction((tx) =>
+          enqueueEmail(tx, {
+            participantId: null,
+            registrationId: null,
+            messageType: "STAFF_INVITATION",
+            locale: "ro",
+            recipientEmail: `${invite}@example.ro`,
+            payload: {},
+            idempotencyKey: `staff-invitation:${invite}`,
+            now: new Date(),
+          }),
+        );
+        await flashOutcome({ saved: "invited", invite });
+      });
+      const notice = flashed();
+      expect(notice, invite).toMatchObject({ kind: "success", key: "invited", values: { mailType: "STAFF_INVITATION" } });
+      expect(notice?.values?.mailZitadel, invite).toBe(zitadel ? "1" : undefined);
+    }
+  });
 });
 
 /**

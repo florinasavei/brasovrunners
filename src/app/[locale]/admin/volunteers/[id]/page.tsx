@@ -7,7 +7,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { VOLUNTEER_NOTE_MAX } from "@/db/schema/event-volunteer-notes";
-import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { readEmailHistory } from "@/modules/notifications/email-history";
@@ -17,10 +17,13 @@ import { canManageRegistrations, canManageVolunteers } from "@/modules/staff-ide
 import { requireStaff } from "@/modules/staff-identity/session";
 import { findVolunteerForAdmin } from "@/modules/volunteers/admin-list";
 import { volunteerPersonContextOf } from "@/modules/volunteers/person-context";
+import { readPresentTicks } from "@/modules/volunteers/present-by";
 import TurnIntoRunnerPanel from "@/modules/volunteers/ui/TurnIntoRunnerPanel";
 import VolunteerDecisionCard from "@/modules/volunteers/ui/VolunteerDecisionCard";
 import VolunteerPerson, { STATE_CHIP, volunteerHiddenFields } from "@/modules/volunteers/ui/VolunteerPerson";
 import { listVolunteerNotes } from "@/modules/volunteers/volunteer-notes";
+import { readSignedContract } from "@/modules/volunteers/signed-contract";
+import SignedContractCard from "@/modules/volunteers/ui/SignedContractCard";
 import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 import { readRaffleLine } from "@/modules/volunteers/raffle-roster";
 import { raffleVolunteerLine } from "@/modules/volunteers/ui/RaffleLines";
@@ -32,6 +35,7 @@ import TickButton from "@/shared/ui/TickButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { turnVolunteerIntoRunnerAction } from "../../registrations/actions";
 import { setVolunteerDecisionAction, setVolunteerKitAction, setVolunteerPresentAction } from "../actions";
+import { deleteSignedContractAction } from "./contract-actions";
 import { addVolunteerNoteAction, deleteVolunteerNoteAction, editVolunteerNoteAction } from "./note-actions";
 
 type Props = {
@@ -57,7 +61,8 @@ export const dynamic = "force-dynamic";
  * «Decizie pentru ziua cursei» (§954) stands right after it, still before the person's block: the organizers' one line about
  * what they decided for the person on race day, with the form that writes it (`VolunteerDecisionCard`, `../actions.ts`).
  *
- * Under the person's block, for the Administrator alone: «Transformă în alergător» (§948, `TurnIntoRunnerPanel`).
+ * Under the person's block: «Contract semnat» (§998, `SignedContractCard`), the signed copy of the agreement — attach, download,
+ * replace, delete — and, for the Administrator alone, «Transformă în alergător» (§948, `TurnIntoRunnerPanel`).
  */
 export default async function AdminVolunteerPage({ params, searchParams }: Props) {
   const { locale, id } = await params;
@@ -75,13 +80,18 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
 
   const t = await getTranslations("Admin");
   const path = getPathname({ locale, href: { pathname: "/admin/volunteers/[id]", params: { id } } });
-  const [context, emails, notes] = await Promise.all([
+  const [context, emails, notes, contract, presentTicks] = await Promise.all([
     volunteerPersonContextOf(db, person.event, locale, now, path),
     // «Emailuri» (§915): read only for the Administrator and the Superadministrator; the reader asks again.
     canManageRegistrations(actor) ? readEmailHistory(db, actor, { volunteerId: person.id }, now) : Promise.resolve(null),
     // «Note interne»: the person's live notes, newest first; the service asks for the role again.
     listVolunteerNotes(db, actor, person.id),
+    // «Contract semnat» (§998): the signed copy's facts, never its bytes; the service asks for the role again.
+    readSignedContract(db, actor, person.id),
+    // «Prezent» (§996): who ticked it and when, while ticked — the list's one read, for this one row.
+    readPresentTicks(db, [person]),
   ]);
+  const presentBy = person.present ? presentTicks.get(person.id) : undefined;
   // The raffle's line (§984), for the organizers — the roles that take the raffle's file — of an event that holds one.
   const raffle = canTakeRaffleList(actor) ? await readRaffleLine(db, { table: "volunteer", id: person.id }, now) : null;
   const { volunteerError, saved } = await searchParams;
@@ -118,6 +128,12 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
             {t("volunteers.presence.tick")}
           </TickButton>
         </Box>
+        {/* While ticked, who ticked it and when (§996), on the event's clock, as the list's row says it; unticked, nothing. */}
+        {presentBy && (
+          <Typography variant="body2" color="text.secondary" data-testid="volunteer-page-present-by">
+            {t("volunteers.presence.by", { who: presentBy.name ?? t("desk.byRemoved"), time: formatTime(presentBy.at, { locale, timeZone: presentBy.timezone }) })}
+          </Typography>
+        )}
         {/*
           «Are kit» (§971; the owner, 2026-11-17, on this page: «nu pot bifa aici că are kit»): the list's one-press tick (§904) beside
           the name — before, it sat only inside «Modifică» at the page's foot. The same plain form and action as the list's row: it
@@ -168,6 +184,13 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
       <VolunteerDecisionCard locale={locale} person={person} returnTo={path} action={setVolunteerDecisionAction} />
 
       <VolunteerPerson person={person} context={context} as="section" />
+
+      {/*
+        «Contract semnat» (§998; the owner, 2026-11-19: «trebuie pentru fiecare voluntar să pot atașa „contract semnat”»): the signed
+        copy of the agreement, right under the person's block, where the agreement's acceptance is said — kept in the database, read
+        and downloaded only by whoever works the volunteers, gone with the person's data.
+      */}
+      <SignedContractCard locale={locale} person={person} contract={contract} returnTo={path} deleteAction={deleteSignedContractAction} />
 
       {/*
         «Transformă în alergător» (§948): the person entered on the race's official waiting list and cancelled here, in one

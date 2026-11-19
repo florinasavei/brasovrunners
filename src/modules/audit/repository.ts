@@ -206,6 +206,16 @@ export type AuditAction =
   | "registration.checked_in"
   | "registration.checkin_undone"
   /**
+   * The registration's desk code opened at the desk (§996; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a
+   * scanat, cine a marcat prezent»): `/admin/checkin/<code>` — what the phone's camera or «Scanează» opens — drawn for a desk role,
+   * not as the page coming back from a desk verb, not as a router prefetch and not from the registration's own page. One row per
+   * account and registration within two minutes (`registrations/admin-service.ts#recordCodeScan`): a reload or a second look is
+   * one scan. The actor is the staff account; `{ eventId }` and nothing else — never a name, never the code. About the
+   * registration, so the erase scrubs it like the rest (`scrubRegistrationsFromAudit`), its timeline says it, and «Ziua cursei» →
+   * «Jurnal» reads it (`race-day/journal.ts`).
+   */
+  | "registration.code_scanned"
+  /**
    * The participant's own answer to the public list, changed after registration
    * (BR-REQ-039-01; `registrations/list-consent.ts`). The one action with no staff actor: the
    * person did it themselves, from a link. Metadata is the shape — LISTED or NOT_LISTED, before
@@ -826,6 +836,12 @@ export type AuditAction =
   | "event.race_gun_set"
   | "event.race_gun_cleared"
   /**
+   * «Resetează clasamentul» on «Clasament» (§997), entity `event`: every result of a race deleted and the gun pressed on «Cronometrare»
+   * taken off, before the planned start, by an Administrator — `{ results, gunCleared }`, how many rows went and whether a gun was
+   * cleared; never a name, a number or a time. The moment is the row's own: a press a phone made before it is refused after it.
+   */
+  | "event.results_reset"
+  /**
    * «Clasamentul e public pe pagina evenimentului» (§808), entity `event`: the Administrator made a race's results public or took
    * them off, and «Descarcă clasamentul (CSV)» — the file has the names, so who downloaded it and how many rows are recorded.
    */
@@ -846,6 +862,16 @@ export type AuditAction =
   | "volunteer.agreement_recorded"
   /** The agreement's PDF downloaded from the card (§758): a file with a name in it leaves the site; who and when. */
   | "volunteer.agreement_downloaded"
+  /**
+   * «Contract semnat» (§998), entity `event`: a volunteer's signed agreement attached (`uploaded`), attached in place of another
+   * (`replaced`, with the old copy's length and format), deleted, and downloaded — a file with a signature leaves the site. The
+   * metadata is the volunteer's id, the file's length in bytes and its format (`PDF`, `DOCX`…) — **never the file's name**, which
+   * carries the person's, and never a byte of it.
+   */
+  | "volunteer.signed_contract_uploaded"
+  | "volunteer.signed_contract_replaced"
+  | "volunteer.signed_contract_deleted"
+  | "volunteer.signed_contract_downloaded"
   /**
    * Every agreement of an event in one PDF, from the «Voluntari» list (§966), entity `event`: «Contractele (PDF)», or — `only`
    * «unsigned» — «De semnat pe hârtie (PDF)». The metadata counts what the file holds (the agreements, the accepted copies and the
