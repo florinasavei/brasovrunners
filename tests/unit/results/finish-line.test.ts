@@ -55,6 +55,7 @@ import {
   undoOpenUntil,
   undoTrailOf,
   waitingCount,
+  withoutSettled,
   withKept,
 } from "@/modules/results/domain/finish-line";
 
@@ -478,6 +479,26 @@ describe("§986 the queue: in the order pressed, answered once, the waiting ones
     expect(nextRetryAt(entries, "vlad", held)).toBeNull();
     // Another account's hold is not this viewer's to wait for.
     expect(nextRetryAt(entries, "radu", new Map([["c", { tries: 1, untilMs: now }]]))).toBeNull();
+  });
+
+  it("«Golește lista» (§NNN) drops every line the server answered — saved, refused, a duplicate, undone — and keeps every press still waiting, any account's", () => {
+    const recorded = (bibNumber: number) => ({ kind: "recorded" as const, bibNumber, name: null, label: null, gunTimeMs: 1_000, positionOverall: 1, outOfRanking: false, again: false });
+    let entries: FinishEntry[] = [];
+    entries = settleEntry(pressEntry(entries, entry("saved", 101, at(10))), "saved", recorded(101));
+    entries = settleEntry(pressEntry(entries, entry("refused", 102, at(10, 1))), "refused", { kind: "refused", code: "RESULT_FINISH_NOT_STARTED", bibNumber: 102, gunTimeMs: null });
+    entries = settleEntry(pressEntry(entries, entry("duplicate", 101, at(10, 2))), "duplicate", { kind: "duplicate", bibNumber: 101, name: null, label: null, gunTimeMs: 2_000, storedStatus: "FINISHED", storedGunTimeMs: 1_000, storedBy: "Vlad" });
+    entries = pressEntry(entries, entry("mine-waiting", 103, at(10, 3)));
+    entries = pressEntry(entries, entry("radu-waiting", 104, at(10, 4), "radu"));
+    entries = markUndone(entries, "vlad", 101);
+    expect(entries.map(stateOf)).toEqual(["undone", "refused", "duplicate", "waiting", "otherAccount"]);
+    const cleared = withoutSettled(entries);
+    expect(cleared.map((one) => one.id)).toEqual(["mine-waiting", "radu-waiting"]);
+    expect(cleared.map(stateOf)).toEqual(["waiting", "otherAccount"]);
+    // Nothing answered: nothing goes; an empty list stays empty.
+    expect(withoutSettled(cleared)).toEqual(cleared);
+    expect(withoutSettled([])).toEqual([]);
+    // The list it was given is not changed.
+    expect(entries).toHaveLength(5);
   });
 
   it("marks the viewer's latest recorded press of the number «anulat» once «Anulează» undid it — nobody else's, nothing else (§986)", () => {

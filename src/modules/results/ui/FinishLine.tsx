@@ -41,6 +41,7 @@ import {
   staleKept,
   takeOldestKept,
   waitingCount,
+  withoutSettled,
   withKept,
 } from "../domain/finish-line";
 import { EMPTY_FINISH_LINE, finishLineSnapshot, NO_WAITING_ELSEWHERE, subscribeFinishLine, waitingElsewhereSnapshot, writeFinishLine } from "./finish-line-store";
@@ -123,6 +124,8 @@ export type FinishLineWords = {
   /** The volunteer wrote them down: the line goes. */
   keptStaleDone: string;
   entriesTitle: string;
+  /** «Golește lista»: the lines the server already answered go from this phone; what has not left stays (§NNN). */
+  entriesClear: string;
   waiting: string;
   saved: string;
   place: string;
@@ -781,10 +784,26 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
 
       {hydrated && entries.length > 0 && (
         <Box component="section" aria-labelledby="finish-entries-title" data-testid="finish-entries">
-          <Typography id="finish-entries-title" variant="subtitle1" component="p" sx={{ fontWeight: 700 }}>
-            {words.entriesTitle}
-            {waiting > 0 ? ` · ${fill(words.waitingCount, { count: String(waiting) })}` : ""}
-          </Typography>
+          <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+            <Typography id="finish-entries-title" variant="subtitle1" component="p" sx={{ fontWeight: 700 }}>
+              {words.entriesTitle}
+              {waiting > 0 ? ` · ${fill(words.waitingCount, { count: String(waiting) })}` : ""}
+            </Typography>
+            {/* «Golește lista» (§NNN): only while a line the server answered is there; a press still waiting is never cleared. */}
+            {entries.some((entry) => entry.outcome !== null) && (
+              <GlyphButton
+                type="button"
+                icon="dismiss"
+                variant="text"
+                size="small"
+                sx={{ minHeight: 44 }}
+                onClick={() => commitEntries(withoutSettled)}
+                data-testid="finish-entries-clear"
+              >
+                {words.entriesClear}
+              </GlyphButton>
+            )}
+          </Stack>
           <Box component="ul" sx={{ m: 0, p: 0, listStyle: "none", display: "grid", gap: 0.5 }}>
             {[...entries].reverse().map((entry) => {
               const kind = entryStateOf(entry, staffId);

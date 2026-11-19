@@ -290,6 +290,7 @@ export default async function TimingPage({ params, searchParams }: Props) {
     keptStale: { one: t.raw("timing.keep.stale.one") as string, few: t.raw("timing.keep.stale.few") as string, other: t.raw("timing.keep.stale.other") as string },
     keptStaleDone: t("timing.keep.staleDone"),
     entriesTitle: t("timing.entries.title"),
+    entriesClear: t("timing.entries.clear"),
     waiting: t("timing.entries.waiting"),
     saved: t("timing.entries.saved"),
     place: t.raw("timing.place") as string,
