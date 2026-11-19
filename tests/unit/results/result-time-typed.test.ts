@@ -37,9 +37,13 @@ const READ: ReadonlyArray<[string, string, number]> = [
   ["23.45", "23:45", hms(0, 23, 45)],
   ["9,05", "9:05", hms(0, 9, 5)],
   ["45 12", "45:12", hms(0, 45, 12)],
-  // Three groups that are no h:mm:ss are minutes, seconds and a fraction; four are h:mm:ss.t.
+  // Three groups are h:mm:ss first — a stopwatch's «12.34.56» too, knowingly: read longer than meant, it puts the runner lower, never higher.
+  ["12.34.56", "12:34:56", hms(12, 34, 56)],
+  // Three groups that are no h:mm:ss are minutes, seconds and a fraction when the first is ten or more; four are h:mm:ss.t.
   ["23.45.6", "23:45.6", hms(0, 23, 45) + 600],
   ["23.45.67", "23:45.67", hms(0, 23, 45) + 670],
+  ["10.23.4", "10:23.4", hms(0, 10, 23) + 400],
+  ["123,45,6", "123:45.6", hms(2, 3, 45) + 600],
   ["1.23.45.6", "1:23:45.6", hms(1, 23, 45) + 600],
   ["1:23.45.6", "1:23:45.6", hms(1, 23, 45) + 600],
   // Spaces around what was typed are trimmed.
@@ -55,6 +59,9 @@ const UNREAD: readonly string[] = [
   "5",
   "1234567", // seven digits
   "1.5.30", // a one-digit minute after an hour, as the server refuses «1:5:30»
+  "1.23.4", // an h:mm:ss with a digit missing — never 1:23.4, 83 seconds that would rank first
+  "01.23.4", // the same, a leading zero on the hour
+  "0.45.1", // the same under an hour — never 0:45.1
   "23.4", // a one-digit second
   "2375", // 75 seconds
   "1.60.00", // 60 minutes after an hour
@@ -92,6 +99,20 @@ describe("§NNN normalizeTypedResultTime: what a time box makes of what was type
     }
     expect(normalizeTypedResultTime("")).toBe("");
     expect(normalizeTypedResultTime("   ")).toBe("");
+  });
+
+  it("reads three groups as minutes, seconds and a fraction only from ten minutes: a first group under ten is an hour with a digit missing", () => {
+    for (let first = 0; first <= 9; first += 1) {
+      for (const typed of [`${first}.23.4`, `0${first}.23.4`, `00${first}.23.4`, `${first},05,9`, `${first} 59 1`]) {
+        expect(normalizeTypedResultTime(typed), typed).toBe(typed);
+      }
+    }
+    // From ten the same text is a time in minutes, never under ten of them.
+    for (let first = 10; first <= 999; first += 1) {
+      const written = normalizeTypedResultTime(`${first}.23.4`);
+      expect(written, `${first}.23.4`).toBe(`${first}:23.4`);
+      expect(parseResultTime(written)).toBeGreaterThanOrEqual(sec(10 * 60));
+    }
   });
 
   it("writes nothing the server's parser would refuse, and never changes what a time the server read means", () => {

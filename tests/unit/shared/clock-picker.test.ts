@@ -129,6 +129,8 @@ describe("§NNN the picker is loaded on the first press, and only there", () => 
     for (const file of ["src/shared/forms/pickers/ClockPickerHost.tsx", "src/shared/forms/pickers/clock-values.ts", "src/modules/results/ui/ResultRows.tsx", "src/modules/results/domain/result-time.ts"]) {
       expect(read(file), file).not.toMatch(/from "(?:@mui\/x-date-pickers[^"]*|dayjs[^"]*)"/);
     }
+    // The results' domain imports nothing, the forms' pickers least of all: the picker's `ClockTime` is matched by its shape.
+    expect(read("src/modules/results/domain/result-time.ts")).not.toMatch(/^import\b/m);
   });
 
   it("pins the 24-hour clock where the clock is drawn, and picks every minute and every second", () => {

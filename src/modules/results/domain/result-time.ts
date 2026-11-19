@@ -8,15 +8,14 @@
  * - `m:ss` or `mm:ss` — `45:12`, `9:05`; here the minutes may pass sixty (`125:30` is two hours, five minutes);
  * - either with a fraction of a second after a dot or a comma, up to three digits — `45:12.3`, `1:23:45,25`.
  *
- * Pure: no database, no React, no catalogue. A time that is not one of these, or is zero, or runs past two days,
- * is `null` — the caller says which box and why.
+ * Pure: no database, no React, no catalogue, and no import at all. A time that is not one of these, or is zero, or
+ * runs past two days, is `null` — the caller says which box and why.
  *
  * The browser's half lives here too (§NNN): what the «Timp» and «Timp cip» boxes make of a time typed in another
  * shape — digits alone, dots, commas, spaces — on leaving the box (`normalizeTypedResultTime`), and what the clock
  * picker beside them opens at and writes (`clockOfResultTime`, `resultTimeOfClock`). Both answer in the shapes
  * `parseResultTime` reads, so the server's parser and its refusals stay as they were.
  */
-import type { ClockTime } from "@/shared/forms/pickers/clock-values";
 
 /** The longest time taken at face value: two days. A typo (`999:99:99`) is refused, never stored. */
 export const RESULT_TIME_MAX_MS = 48 * 60 * 60 * 1000;
@@ -74,8 +73,12 @@ const TYPED_SEPARATOR = /\s*[.,:]\s*|\s+/;
  *   the hours, its leading zero dropped — «945» is 9:45, «2345» is 23:45, «12345» and «012345» are 1:23:45 — and a
  *   fraction after them stays one: «2345,6» is 23:45.6.
  * - **Groups** of one to three digits between separators: two are minutes and seconds («23.45» → 23:45); three are
- *   hours, minutes and seconds («1.23.45», «1 23 45», «1,23,45» → 1:23:45) or, when that is no time, minutes,
- *   seconds and a fraction («23.45.6» → 23:45.6); four are hours, minutes, seconds and a fraction.
+ *   hours, minutes and seconds («1.23.45», «1 23 45», «1,23,45» → 1:23:45) — a stopwatch's «12.34.56» too, read as
+ *   twelve hours: a reading longer than meant puts the runner lower, never higher, and the box shows it once it is
+ *   left — or, when that is no time and the first group is ten or more (two digits, a leading zero not counted),
+ *   minutes, seconds and a fraction («23.45.6» → 23:45.6). A first group under ten is an hour: «1.23.4» and «01.23.4»
+ *   are an h:mm:ss with a digit missing, and stay as typed for the server's refusal rather than becoming 1:23.4, 83
+ *   seconds that would rank first. Four groups are hours, minutes, seconds and a fraction.
  */
 function typedShapes(text: string): string[] {
   const digits = TYPED_DIGITS.exec(text);
@@ -95,7 +98,7 @@ function typedShapes(text: string): string[] {
     case 2:
       return [`${lead}:${second}`];
     case 3:
-      return [`${lead}:${second}:${third}`, `${lead}:${second}.${third}`];
+      return lead.length >= 2 ? [`${lead}:${second}:${third}`, `${lead}:${second}.${third}`] : [`${lead}:${second}:${third}`];
     case 4:
       return [`${lead}:${second}:${third}.${fourth}`];
     default:
@@ -108,14 +111,22 @@ function typedShapes(text: string): string[] {
  * phone's decimal keypad has digits and one separator, and no colon. A text the server already reads is left exactly
  * as typed (trimmed) — `h:mm:ss`, `mm:ss`, `mm:ss.t` and their commas; digits alone and the usual separators become the
  * shape they stand for (`typedShapes`): «2345» → «23:45», «12345» → «1:23:45», «2345,6» → «23:45.6», «1.23.45» →
- * «1:23:45». Whatever it writes, `parseResultTime` reads; anything else — «45», «1.5.30», «25:61», a word — comes back
- * as typed, trimmed, for the server to refuse with its own sentence, as `normalizeTypedTime` does for the event's hour.
+ * «1:23:45». Whatever it writes, `parseResultTime` reads; anything else — «45», «1.5.30», «1.23.4», «25:61», a word —
+ * comes back as typed, trimmed, for the server to refuse with its own sentence, as `normalizeTypedTime` does for the
+ * event's hour.
  */
 export function normalizeTypedResultTime(typed: string): string {
   const text = typed.trim();
   if (text === "" || parseResultTime(text) !== null) return text;
   return typedShapes(text).find((shape) => parseResultTime(shape) !== null) ?? text;
 }
+
+/**
+ * A time on the clock picker's three columns — whole hours of a day (0–23), minutes, seconds. The picker's own
+ * `ClockTime` (`shared/forms/pickers/clock-values.ts`) by its shape alone, written here so that the results' domain
+ * depends on nothing of the forms: the page hands these two readings to the picker, and TypeScript matches the shapes.
+ */
+type ClockReading = { hours: number; minutes: number; seconds: number };
 
 /** A day's seconds: the clock's hours stop at 23, so a time of a day or more is typed, never picked. */
 const DAY_SECONDS = 24 * 60 * 60;
@@ -125,7 +136,7 @@ const DAY_SECONDS = 24 * 60 * 60;
  * seconds — a box with tenths («45:12.3») opens at 0:45:12. Null — the picker opens at 0:00:00 — for an empty box, a
  * text that is no time, or a time of 24 hours or more, which the clock's hours cannot show.
  */
-export function clockOfResultTime(text: string): ClockTime | null {
+export function clockOfResultTime(text: string): ClockReading | null {
   const ms = parseResultTime(normalizeTypedResultTime(text));
   if (ms === null) return null;
   const whole = Math.floor(ms / 1000);
@@ -134,6 +145,6 @@ export function clockOfResultTime(text: string): ClockTime | null {
 }
 
 /** What «OK» writes into the box for a picked time: `h:mm:ss`, the hour without a leading zero («1:23:45», «0:45:12») — `formatResultTime`'s own. */
-export function resultTimeOfClock(time: ClockTime): string {
+export function resultTimeOfClock(time: ClockReading): string {
   return formatResultTime(((time.hours * 60 + time.minutes) * 60 + time.seconds) * 1000);
 }
