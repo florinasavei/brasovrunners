@@ -291,6 +291,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // A race's results (§808): a result deleted is gone from the ranking, and the Administrator's tick makes the ranking public or takes it off the site.
   deleteEventResultAction: [],
   setResultsPublishedAction: [],
+  // «Resetează clasamentul» (§NNN): every result of the race and the gun given, wiped before the start — nothing to undo it with.
+  resetEventResultsAction: [],
 };
 
 /**

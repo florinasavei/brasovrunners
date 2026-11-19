@@ -74,4 +74,20 @@ describe("§986 «Istoricul sosirilor»", () => {
     expect(lines.map((line) => historyBibOf(line.what))).toEqual([3, 2, 1]);
     expect(FINISH_HISTORY_ACTIONS).toContain("event_result.finish_duplicate");
   });
+
+  /** §NNN — «Resetează clasamentul»: a line of «Clasament» saying how many results went and whether the gun went with them. */
+  it("reads «Resetează clasamentul» as «Clasament»'s, with its count and its gun, about no runner", () => {
+    expect(FINISH_HISTORY_ACTIONS).toContain("event.results_reset");
+    expect(finishHistoryLine(row("14", "event.results_reset", 5, { results: 4, gunCleared: true }, "Ana Admin"))).toMatchObject({
+      where: "results",
+      who: "Ana Admin",
+      what: { kind: "reset", results: 4, gunCleared: true },
+    });
+    // The gun alone — no result was stored — is a count of nought, never a count unknown.
+    expect(finishHistoryLine(row("15", "event.results_reset", 6, { results: 0, gunCleared: true }))?.what).toEqual({ kind: "reset", results: 0, gunCleared: true });
+    // What cannot be read is said as nothing: no count, no gun.
+    expect(finishHistoryLine(row("16", "event.results_reset", 7, { results: "four", gunCleared: "yes" }))?.what).toEqual({ kind: "reset", results: null, gunCleared: false });
+    expect(finishHistoryLine(row("17", "event.results_reset", 8, null))?.what).toEqual({ kind: "reset", results: null, gunCleared: false });
+    expect(historyBibOf({ kind: "reset", results: 4, gunCleared: true })).toBeNull();
+  });
 });

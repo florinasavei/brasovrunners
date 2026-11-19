@@ -575,6 +575,8 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     // §808: a race's results — the Organizer enters, imports and reads them with the Administrators; only the Administrators make them public; never Tehnic, the volunteer or a member.
     canEnterResults: /*       */ [false, false, false, true, false, true, true],
     canPublishResults: /*     */ [false, false, false, false, false, true, true],
+    // §NNN: «Resetează clasamentul» — the whole list wiped before the start, the Administrators alone, as the publication.
+    canResetResults: /*       */ [false, false, false, false, false, true, true],
     // §986: a finish recorded at the line («Cronometrare») — every role that works the desk, the desk Volunteer included; never a member.
     canRecordFinishes: /*     */ [false, true, true, true, true, true, true],
     // §777: internal notes on a registration — read and written by the Organizer and the Administrators; never Tehnic, the volunteer or a member.

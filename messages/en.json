@@ -2899,7 +2899,8 @@
       "RESULT_UNDO_NOT_ALLOWED": "It cannot be undone here any more: only your own unchanged finish, in its first 10 minutes. Correct it under «Results».",
       "RACE_GUN_WINDOW": "«Start» is pressed from 3 hours before the planned start until 6 hours after.",
       "RACE_GUN_FIXED": "The start is fixed: runners have finished. Correct the times under «Results».",
-      "RACE_GUN_CHANGED": "Somebody else set, moved or cancelled the start meanwhile: your press changed nothing. The page now shows the start as it is."
+      "RACE_GUN_CHANGED": "Somebody else set, moved or cancelled the start meanwhile: your press changed nothing. The page now shows the start as it is.",
+      "RESULTS_RESET_AFTER_START": "The results can only be reset before the start."
     },
     "editor": {
       "draftPreview": {
@@ -9835,7 +9836,7 @@
                 "Have the times in a file? Open «Import from CSV», paste the text (number, time on each line; with chip time and status if you have them) or choose the file and press «Import from CSV». The lines fill the boxes; nothing is saved yet.",
                 "A number no registration holds goes under «Runners who did not register»: write the name and, for a category, the sex and the date of birth. Tick «Agreed to appear by name in the results» only if the person told you so. «Add a runner who did not register» makes an empty line.",
                 "Press «Save all the results» once, for the whole page. The places — overall, by sex and by category — are counted by the site; equal times share a place. An emptied line is a deleted result. You can correct and save again at any time.",
-                "«Download the results (CSV)» is the file with the names, for you. Publishing on the event's page is the Administrator's."
+                "«Download the results (CSV)» is the file with the names, for you. Publishing on the event's page is the Administrator's. A trial run before the race? The Administrator wipes it with «Reset the results»."
               ]
             },
             {
@@ -10239,6 +10240,15 @@
                 "Under each “On the site: Participant #…” it says why the name does not show, and at the top «Named on the site…» says how many of those in the results appear by name. For a registered runner, only their own tick puts a name there; an administrator can only hide it.",
                 "The results stay on the page as long as the public participant list, from the end of the race («Settings» → «Deadlines»). Untick at any time; the results stay saved.",
                 "Whoever registered under an older privacy notice, which did not describe the results, appears as “Participant #number”, even if they ticked the list. Only once the club approves a privacy notice that names that tick beside the results (the field {{resultsNameAsk}}, in «Legal documents») — after the club and its lawyer amend the sentence telling them they appear only by number — does their registration's page (the link in its email) show them «I want to appear by name in the results». The club sends no new email for it: tell them with «Send a message to participants», from the race's editor, that they can tick it from their registration's link and untick it at any time."
+              ]
+            },
+            {
+              "title": "Reset the results after trial runs, before the race",
+              "steps": [
+                "Tried «Timing» before the race — a trial «Start», a few finishes? On «Results», at the foot of the page, open «Reset the results»: it deletes everything written, so race day starts from zero.",
+                "Press «Reset the results». The question says how many results are deleted — finishes, times, states, notes and the lines of runners who did not register — and the start given, if one was. Whatever has not left the phones at «Timing» yet no longer counts: on the phone, its line says why.",
+                "Kept: the registrations and their numbers, check-ins, the elite list, the awards, the age bands and the tick «The results are public on the event's page». On «Timing» the clock shows «The race has not started yet.» again.",
+                "Only until the race's planned start — a trial «Start» does not close it — and only an Administrator sees the button. After the start, the button is grey. It cannot be undone."
               ]
             },
             {
@@ -12629,7 +12639,13 @@
           "deleted": "deleted the result of {runner} ({status})",
           "gunSet": "started the race at {time}",
           "gunMoved": "moved the start to {time} (was {previous})",
-          "gunCleared": "cancelled the start (was {previous})"
+          "gunCleared": "cancelled the start (was {previous})",
+          "reset": {
+            "one": "reset the results: {count} result deleted",
+            "few": "reset the results: {count} results deleted",
+            "other": "reset the results: {count} results deleted"
+          },
+          "resetGun": "{reset}, the start cancelled"
         },
         "box": {
           "bib": "number",
@@ -12643,6 +12659,26 @@
           "registration": "registration",
           "nameAgreed": "name consent"
         }
+      },
+      "reset": {
+        "title": "Reset the results",
+        "aside": "Only before the start",
+        "intro": "For the trial runs before the race: deletes every result and the start given on «Timing», so race day starts from zero.",
+        "introMore": "Kept: the registrations and their numbers, check-ins, the elite list, the awards, the age bands and the public results tick. Only until the planned start; it cannot be undone.",
+        "button": "Reset the results",
+        "pending": "Resetting…",
+        "afterStart": "The results can only be reset before the start.",
+        "nothing": "Nothing to reset: no results and no start given.",
+        "confirmTitle": "Reset the results?",
+        "confirmCount": {
+          "one": "The race's {count} result is deleted — its finish, time, state, note or the line of a runner who did not register.",
+          "few": "All {count} results of the race are deleted — finishes, times, states, notes and the lines of runners who did not register.",
+          "other": "All {count} results of the race are deleted — finishes, times, states, notes and the lines of runners who did not register."
+        },
+        "confirmGun": "The start given at {time} is deleted too.",
+        "confirmGunOnly": "There are no results; the start given at {time} is deleted.",
+        "confirmPhones": "Whatever waits on the phones at «Timing», not sent yet, is lost. It cannot be undone.",
+        "changed": "New results arrived or the start changed meanwhile: nothing was deleted. Look again and reset if you still want to."
       }
     },
     "reserve": {
@@ -13106,6 +13142,7 @@
         "FORBIDDEN": "your role cannot record finishes — write it on paper: {time}",
         "NOT_FOUND": "the event is no longer on the site — write it on paper: {time}",
         "RESULT_PRESS_UNDONE": "undone since — see «Results»",
+        "RESULT_PRESS_BEFORE_RESET": "pressed before the results were reset — it no longer counts",
         "other": "not saved — write it on paper: {time}"
       },
       "recent": {
@@ -15312,6 +15349,8 @@
       "resultsPublishedFromStart": "Done: the results appear on the event's page from the start, as the runners arrive.",
       "resultsUnpublished": "The results are no longer public on the event's page.",
       "resultsPublicUnchanged": "It was already so; nothing to change.",
+      "resultsReset": "The results were reset.",
+      "resultsResetNothing": "There was nothing to reset.",
       "rsvpAskAudience": "The choice for the “Coming?” question was saved.",
       "resultsCategoriesSaved": "The age categories are saved; the category places were recounted.",
       "resultsCategoriesUnchanged": "The categories were already so; nothing to change.",

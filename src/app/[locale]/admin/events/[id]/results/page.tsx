@@ -8,7 +8,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { countForm } from "@/i18n/count-form";
-import { CLUB_TIME_ZONE, formatDay, formatTimeWithSeconds } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatDay, formatTime, formatTimeWithSeconds } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventTitle } from "@/modules/content/events/repository";
@@ -24,7 +24,7 @@ import { anonymousResultLabel } from "@/modules/results/domain/public-name";
 import ImportFilePicker from "@/modules/results/ui/ImportFilePicker";
 import { eventTakesResults } from "@/modules/results/domain/event-type";
 import { type FinishHistoryEntry, readFinishHistory } from "@/modules/results/finish-history";
-import { readEventResults, type ResultRunner } from "@/modules/results/results";
+import { plannedGunOf, readEventResults, type ResultRunner } from "@/modules/results/results";
 import {
   DELETE_RESULT_FORM_ID,
   type PlaceView,
@@ -36,7 +36,7 @@ import {
   type TypedLine,
   TypedResultLines,
 } from "@/modules/results/ui/ResultRows";
-import { canEnterResults, canPublishResults } from "@/modules/staff-identity/domain/roles";
+import { canEnterResults, canPublishResults, canResetResults } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { raceDayTabs } from "@/modules/race-day/ui/RaceDayTabs";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -52,7 +52,7 @@ import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import StatusChip from "@/shared/ui/StatusChip";
 import { VISUALLY_HIDDEN } from "@/shared/ui/visually-hidden";
-import { deleteEventResultAction, saveEventResultsAction, setResultAgeBandsAction, setResultAwardsAction, setResultsPublishedAction } from "./actions";
+import { deleteEventResultAction, resetEventResultsAction, saveEventResultsAction, setResultAgeBandsAction, setResultAwardsAction, setResultsPublishedAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -64,8 +64,12 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
-/** The codes the page's banner says: a one-button form that has no boxes to keep redirects with `?resultsError=`. */
-const BANNER_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "RESULTS_NOTICE", "RESULTS_TERMS"] as const;
+/**
+ * The codes the page's banner says: a one-button form that has no boxes to keep redirects with `?resultsError=`. CONFLICT and
+ * `RESULTS_RESET_AFTER_START` are «Resetează clasamentul»'s (§NNN) — the save says its own CONFLICT in place, so here the code is
+ * the reset's and the banner says so in the reset's words.
+ */
+const BANNER_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "RESULTS_NOTICE", "RESULTS_TERMS", "CONFLICT", "RESULTS_RESET_AFTER_START"] as const;
 
 /**
  * «Clasament» (`DECISIONS.md` §808; the owner, 2026-10-17: «Aș vrea să pot pune și clasament la final după cursă»): one race's results, on
@@ -76,7 +80,10 @@ const BANNER_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "RESULTS_NO
  * «Timp cip» and «Notă», and the position the last save gave; then the runners the club types by hand. Each line's «Șterge» is the page's
  * one small form beside, asked first. The Administrator's tick «Clasamentul e public pe pagina evenimentului» is a form of its own: the
  * disclosure has its own gate (the privacy notice in force must describe the results) and its own audit row, and does not ride on a save.
- * «Descarcă clasamentul (CSV)» is the file, names included — the backoffice sees every name.
+ * «Descarcă clasamentul (CSV)» is the file, names included — the backoffice sees every name. At the foot, the Administrator's danger
+ * card «Resetează clasamentul» (§NNN): before the planned start, one asked press wipes every result and the gun pressed on
+ * «Cronometrare», the question counting what goes; after the start it is drawn disabled with the sentence why, for anybody else not
+ * at all.
  *
  * Whoever enters results — the Organizer, the Administrator, the Superadministrator (`canEnterResults`); anybody else meets the 404 an
  * unknown page gets (BR-REQ-060-01), and every action asserts again. A group run has no results: the page says so and offers nothing.
@@ -335,9 +342,29 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       case "gunCleared":
         words = t("results.history.what.gunCleared", { previous: instant(what.previous) });
         break;
+      case "reset": {
+        // «Resetează clasamentul» (§NNN): how many results went, counted by `countForm`, and the gun with them when one was given.
+        const count = what.results ?? 0;
+        const reset = t(`results.history.what.reset.${countForm(count, locale)}`, { count: String(count) });
+        words = what.gunCleared ? t("results.history.what.resetGun", { reset }) : reset;
+        break;
+      }
     }
     return t("results.history.line", { when, by: line.who ?? t("timing.accountGone"), what: words, where: t(`results.history.where.${line.where}`) });
   };
+
+  // «Resetează clasamentul» (§NNN): the Administrator's card, open while the planned gun is ahead on the server's clock — a test «Start»
+  // moves the line's gun, never the plan. The question counts what goes: the results, the gun when one was given, the phones' queue.
+  const mayReset = canResetResults(actor.role);
+  const resetOpen = plannedGunOf(event).getTime() > now.getTime();
+  const resetGun = event.raceGunAt;
+  const resetSomething = total > 0 || resetGun !== null;
+  const resetGunTime = resetGun ? formatTime(resetGun, { locale, timeZone: zone }) : "";
+  const resetBody = [
+    ...(total > 0 ? [t(`results.reset.confirmCount.${countForm(total, locale)}`, { count: String(total) })] : []),
+    ...(resetGun ? [t(total > 0 ? "results.reset.confirmGun" : "results.reset.confirmGunOnly", { time: resetGunTime })] : []),
+    t("results.reset.confirmPhones"),
+  ].join(" ");
 
   return (
     <Stack spacing={2}>
@@ -371,7 +398,8 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       )}
       {errorCode && (
         <Alert severity="error" data-testid="results-error">
-          {t(`errors.${errorCode}`)}
+          {/* A CONFLICT here is the reset's (§NNN): results arrived or the start changed since its page was drawn — nothing was wiped. */}
+          {errorCode === "CONFLICT" ? t("results.reset.changed") : t(`errors.${errorCode}`)}
         </Alert>
       )}
 
@@ -665,6 +693,56 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
           {t("results.registrationsLink")}
         </GlyphButton>
       </Box>
+
+      {/*
+        «Resetează clasamentul» (§NNN): the page's one card that destroys, at its foot, a closed fold whose border says so (`Panel`'s
+        `danger`, the registration's erase card's shape). The Administrator's alone (`canResetResults`; the action and the service ask
+        again). Before the planned start: one press, asked first, posting what the page drew — the count and the gun —, so a page
+        older than another result wipes nothing. With nothing to wipe, or once the planned start has passed, the button is drawn
+        disabled with the sentence why.
+      */}
+      {mayReset && (
+        <Panel
+          glyph="erase"
+          level={3}
+          collapsible
+          tone="danger"
+          title={t("results.reset.title")}
+          aside={t("results.reset.aside")}
+          intro={t("results.reset.intro")}
+          introMore={t("results.reset.introMore")}
+          id="box-results-reset"
+          data-testid="results-reset"
+        >
+          {resetOpen && resetSomething ? (
+            <ActionForm
+              action={resetEventResultsAction}
+              confirm={{ title: t("results.reset.confirmTitle"), body: resetBody, confirmLabel: t("results.reset.button"), cancelLabel: confirm.cancel, destructive: true }}
+              data-testid="results-reset-form"
+            >
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="eventId" value={id} />
+              {/* What the page drew: a reset from a page older than another result, or than another «Start», is refused (CONFLICT). */}
+              <input type="hidden" name="results" value={String(total)} />
+              <input type="hidden" name="seenGunAtMs" value={resetGun ? String(resetGun.getTime()) : ""} />
+              <Box>
+                <GlyphSubmitButton icon="reset" color="error" variant="outlined" label={t("results.reset.button")} pendingLabel={t("results.reset.pending")} />
+              </Box>
+            </ActionForm>
+          ) : (
+            <Stack spacing={1}>
+              <Box>
+                <GlyphButton icon="reset" color="error" variant="outlined" disabled sx={{ minHeight: 44 }} data-testid="results-reset-disabled">
+                  {t("results.reset.button")}
+                </GlyphButton>
+              </Box>
+              <Typography variant="body2" color="text.secondary" data-testid="results-reset-why">
+                {t(resetOpen ? "results.reset.nothing" : "results.reset.afterStart")}
+              </Typography>
+            </Stack>
+          )}
+        </Panel>
+      )}
     </Stack>
   );
 }
