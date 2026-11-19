@@ -32,7 +32,7 @@ import { roleDescription } from "../../helpers/role-description";
  *   `?only=unsigned` the sheets alone; nobody with nothing accepted while no agreement is in force;
  * - one audit row per download, its counts and `only`, never a name;
  * - and the one-person file is byte for byte what it was before its drawing learned to share a document (§758, §768) — but for
- *   the Association's column on the right of every signature block (§NNN), alone and in the event's file alike.
+ *   the Association's column on the right of every signature block (§991), alone and in the event's file alike.
  *
  * The PDF's words are read as `measuredRuns` catches them; the people are fixed rows, every printed value pinned, so the
  * one-person files' digests hold from one run to the next.
@@ -40,7 +40,7 @@ import { roleDescription } from "../../helpers/role-description";
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown }));
 
 /**
- * The club's legal name, which the Association's column prints (§NNN), fixed and made up (§98) — so the files and their digests
+ * The club's legal name, which the Association's column prints (§991), fixed and made up (§98) — so the files and their digests
  * are the same on any machine, whatever its environment says.
  */
 const LEGAL_NAME = vi.hoisted(() => "Asociația Exemplu");
@@ -337,7 +337,7 @@ describe("§966 the one-person agreement's file is what it was before every agre
     consent to come (the copy that says so, and `?for=guardian`'s sheet for the parent) and accepted by both (two entries).
     `pdfContentDigest` is the file with its streams inflated, so the same digest is the same file byte for byte on any one
     machine's zlib. A deliberate change of the agreement's PDF captures them again; the bundle's refactor changed none. The
-    Association's column on the right of every signature block (§NNN) was one: captured again from the code that draws it.
+    Association's column on the right of every signature block (§991) was one: captured again from the code that draws it.
   */
   const GOLDEN = {
     acceptedAdult: "fb9afb5627bc36c8957d98aabfc7b6b507c21f7cde3d7025f6b7dc92f6c245cf",
@@ -467,7 +467,7 @@ describe("§966 every agreement of an event in one PDF (BR-REQ-060-01)", () => {
     expect(ana).toContain("Acceptat electronic");
     expect(radu).toContain("Semnat pe hârtie, la organizatori; înregistrat de Ana Admin");
     expect(radu).toContain("Acordul părintelui sau tutorelui, Mihai Tânăr, acceptat electronic");
-    // The rest: the sheets, each in the person's own language — the Association's column beside every one (§NNN), the parent's line under a minor's.
+    // The rest: the sheets, each in the person's own language — the Association's column beside every one (§991), the parent's line under a minor's.
     expect(cezar).toContain(`Asociația ${LEGAL_NAME} Reprezentant (nume și funcție):`);
     expect(john).toContain(`The Association ${LEGAL_NAME} Representative (name and position):`);
     expect(dan).toContain("Semnătura părintelui sau tutorelui:");
@@ -547,7 +547,7 @@ describe("§966 every agreement of an event in one PDF (BR-REQ-060-01)", () => {
   });
 });
 
-describe("§NNN the Association signs on the right of every agreement, in the event's file and alone (BR-REQ-053-03)", () => {
+describe("§991 the Association signs on the right of every agreement, in the event's file and alone (BR-REQ-053-03)", () => {
   const { signer, host } = DECLARATION_SIGNATURE_COLUMNS;
   const MIDDLE = DECLARATION_PAGE.width / 2;
   /** The page's measure: the heading and the version, fingerprint and proof under both columns are set across it. */

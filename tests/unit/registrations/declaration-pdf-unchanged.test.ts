@@ -13,7 +13,7 @@ import { drawnRuns } from "../../helpers/pdf-drawn";
 import { pdfContentDigest } from "../../helpers/pdf-content";
 
 /**
- * §NNN (the owner, 2026-11-19: «pentru contractele de voluntariat trebuie să modific template-ul și să las în dreapta și
+ * §991 (the owner, 2026-11-19: «pentru contractele de voluntariat trebuie să modific template-ul și să las în dreapta și
  * „Asociația” ca să printăm și să semnăm fizic») — the volunteer agreement's signature block gained the Association's column
  * on the right, and nothing else did: the race declaration (BR-REQ-033-02), its blank form for the desk, a minor's beside a
  * parent's (§330), the event's bundle (§418) and the group run's (§769) are drawn by the same renderer
@@ -142,9 +142,9 @@ const SHAPES: Record<string, () => Promise<Buffer>> = {
   },
 };
 
-describe("§NNN the race declaration's PDF draws exactly what it drew before the Association's column (BR-REQ-033-02)", () => {
+describe("§991 the race declaration's PDF draws exactly what it drew before the Association's column (BR-REQ-033-02)", () => {
   /*
-    Captured from the code as it stood before the volunteer agreement's signature block learned a second column (§NNN). A change
+    Captured from the code as it stood before the volunteer agreement's signature block learned a second column (§991). A change
     to the race declaration's own PDF captures them again, deliberately; the Association's column moved none.
   */
   const GOLDEN: Record<keyof typeof SHAPES, string> = {

@@ -6,7 +6,7 @@ import { DECLARATION_FOOTER, DECLARATION_MARGIN, DECLARATION_PAGE } from "@/modu
 export type DrawnRun = { page: number; text: string; x: number | undefined; y: number | undefined; width: number | undefined; size: number | undefined };
 
 /**
- * A run with how it was set (§NNN): `font`, the face's own name («Roboto-Regular», «Caveat-Regular»), and `measured`, how wide
+ * A run with how it was set (§991): `font`, the face's own name («Roboto-Regular», «Caveat-Regular»), and `measured`, how wide
  * the words are on one line in that face at that size — where a run that names no `width` ends, so a layout test can hold it
  * inside its column.
  */
@@ -26,7 +26,7 @@ export async function drawnRuns(render: () => Promise<unknown>): Promise<DrawnRu
 }
 
 /**
- * The same runs, each with how it was set (§NNN, `MeasuredRun`). A call of its own, so the runs other tests hash whole
+ * The same runs, each with how it was set (§991, `MeasuredRun`). A call of its own, so the runs other tests hash whole
  * (`bib-figures-place.test.ts`) keep the shape they were captured with.
  */
 export async function measuredRuns(render: () => Promise<unknown>): Promise<MeasuredRun[]> {

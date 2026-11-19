@@ -35,7 +35,7 @@ import { isVolunteerMinor } from "./domain/volunteer";
  *
  * No line asks for an identity document: the agreement names none (`noIdDocument`).
  *
- * **Signed by both parties (§NNN, amending §758 and §966; the owner, 2026-11-19, printing them for the race: «să las în
+ * **Signed by both parties (§991, amending §758 and §966; the owner, 2026-11-19, printing them for the race: «să las în
  * dreapta și „Asociația” ca să printăm și să semnăm fizic»).** Every shape's signature block is two columns under «DREPT
  * PENTRU CARE SEMNĂM»: on the left the volunteer's side exactly as it was — the acceptance with the name in its hand, the
  * date, the trace and how it was accepted, or the blank lines of the sheet; under eighteen the volunteer and the parent or
@@ -63,7 +63,7 @@ const WORDS: Record<
   {
     signature: string;
     volunteerSignature: string;
-    /** The Association's column (§NNN): the party, then the lines its representative fills in by hand. */
+    /** The Association's column (§991): the party, then the lines its representative fills in by hand. */
     host: string;
     hostLines: readonly [representative: string, signature: string, date: string];
     whereupon: string;
@@ -116,7 +116,7 @@ const WORDS: Record<
 };
 
 /**
- * Who the volunteer agreement is signed with, as its right-hand column names it (§NNN): the club's legal name — the fact the
+ * Who the volunteer agreement is signed with, as its right-hand column names it (§991): the club's legal name — the fact the
  * approved text's «<DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>» is filled with when the club starts a version from the
  * platform's text (`CLUB_LEGAL_NAME`, §132) — else the club's one name (`CLUB_NAME`, `club/club.json`), as the emails'
  * privacy line names the controller (§323). Never a literal: the repository is public (§98).
@@ -128,7 +128,7 @@ export function agreementHostName(): string {
 /**
  * The declaration's labels with the agreement's own signature words in place (pure, for its test). The volunteer signs on the
  * left — under eighteen (§768) with the parent's or guardian's line under theirs — and the Association on the right, on every
- * shape (§NNN): its column, «Asociația», `hostName` under it and the lines its representative fills in by hand, so every
+ * shape (§991): its column, «Asociația», `hostName` under it and the lines its representative fills in by hand, so every
  * block says «DREPT PENTRU CARE SEMNĂM». A single guardian's signature, while the volunteer has not accepted their own, reads
  * as theirs.
  */
@@ -409,7 +409,7 @@ async function volunteerAgreementPages<T extends Record<string, unknown>>(
     contentSha256: document.contentSha256,
     effectiveAt: document.effectiveAt,
     // The volunteer's signature line — and under eighteen the parent's or guardian's under it — and the date, written by hand, on
-    // the left; the Association's on the right (§NNN, `labels.hostSignature`), which is the organizer's line the sheet used to carry.
+    // the left; the Association's on the right (§991, `labels.hostSignature`), which is the organizer's line the sheet used to carry.
     forMinor: guardianName !== null,
     noIdDocument: true,
   };

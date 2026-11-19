@@ -733,7 +733,7 @@ describe("§768 volunteers under eighteen and their guardian", () => {
       expect(text).not.toContain("Acceptat electronic");
     });
 
-    it("an adult's sheet has the volunteer's line alone beside the Association's column (§NNN), no parent's line and no clause about a minor", async () => {
+    it("an adult's sheet has the volunteer's line alone beside the Association's column (§991), no parent's line and no clause about a minor", async () => {
       const { event, role } = await seedEvent();
       const adult = (await changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleIds: [role.id], name: "Ion", email: "ion@example.test", phone: "+40712345680", note: "", birthDate: aged(40) } }, NOW)).volunteer.id;
       const text = await words(adult);

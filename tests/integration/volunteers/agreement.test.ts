@@ -467,7 +467,7 @@ describe("§758 the volunteer agreement", () => {
       expect(text).not.toContain("Act de identitate");
     });
 
-    it("prints a copy to sign at the desk for a person who has not accepted: their blanks, the volunteer's line and the Association's column (§NNN), no typed signature", async () => {
+    it("prints a copy to sign at the desk for a person who has not accepted: their blanks, the volunteer's line and the Association's column (§991), no typed signature", async () => {
       const { event, role } = await seedEvent();
       const id = await byHand(event.id, role.id);
       // Nothing in force: nothing to print.
@@ -480,7 +480,7 @@ describe("§758 the volunteer agreement", () => {
       expect(text).toContain("Punct de apă");
       expect(text).toContain("DREPT PENTRU CARE SEMNĂM,");
       expect(text).toContain("Semnătura voluntarului:");
-      // The organizer's line is the Association's column on the right now (§NNN): the club's name and its representative's lines.
+      // The organizer's line is the Association's column on the right now (§991): the club's name and its representative's lines.
       expect(text).not.toContain("Pentru organizator (nume și semnătură):");
       expect(text).toContain(`Asociația ${agreementHostName()} Reprezentant (nume și funcție):`);
       expect(text).not.toContain("Acceptat electronic");

@@ -186,7 +186,7 @@ describe("§758 the agreement's blanks", () => {
 });
 
 describe("§758 the PDF's own words", () => {
-  it("signs as the volunteer — the parent or guardian under them for a minor — and, on the right, the Association (§NNN), never with an identity document", () => {
+  it("signs as the volunteer — the parent or guardian under them for a minor — and, on the right, the Association (§991), never with an identity document", () => {
     const labels = volunteerAgreementLabels("ro", new Date("2026-10-13T10:00:00Z"), false, "Asociația Exemplu");
     expect(labels.signature).toBe("Semnătura voluntarului");
     expect(labels.minorSignature).toBe("Semnătura voluntarului");

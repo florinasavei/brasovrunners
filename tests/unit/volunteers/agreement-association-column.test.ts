@@ -8,7 +8,7 @@ import { CLUB_NAME } from "@/theme/brand";
 import { type MeasuredRun, measuredRuns } from "../../helpers/pdf-drawn";
 
 /**
- * §NNN (amending §758 and §966; the owner, 2026-11-19, two days before the race: «pentru contractele de voluntariat trebuie să
+ * §991 (amending §758 and §966; the owner, 2026-11-19, two days before the race: «pentru contractele de voluntariat trebuie să
  * modific template-ul și să las în dreapta și „Asociația” ca să printăm și să semnăm fizic») — the volunteer agreement is signed
  * by both parties on paper: every shape's signature block is two columns under «DREPT PENTRU CARE SEMNĂM», the volunteer's
  * side on the left exactly as it was, and on the right «Asociația», the club's legal name and the lines its representative
@@ -151,7 +151,7 @@ beforeEach(() => {
   state.env = { CLUB_LEGAL_NAME: LEGAL_NAME };
 });
 
-describe("§NNN the Association's column on the right of every shape (BR-REQ-053-03)", () => {
+describe("§991 the Association's column on the right of every shape (BR-REQ-053-03)", () => {
   it("holds «Asociația», the club's legal name and a dotted line under each of the representative's three labels, past the page's middle", async () => {
     for (const [name, shape] of Object.entries(SHAPES)) {
       const [block] = blocks(await render([shape.entry], { guardian: shape.guardian }));
@@ -240,7 +240,7 @@ describe("§NNN the Association's column on the right of every shape (BR-REQ-053
   });
 });
 
-describe("§NNN nothing crosses its column, the margin or the page", () => {
+describe("§991 nothing crosses its column, the margin or the page", () => {
   it("sets a long name under its label, smaller until it fits the column, and wraps the longest browser string and the method inside it", async () => {
     const long = "Alexandra-Maria Constantinescu-Popovici";
     const longer = "Alexandra-Maria Ioana Constantinescu-Popovici-Dumitrescu";
@@ -304,7 +304,7 @@ describe("§NNN nothing crosses its column, the margin or the page", () => {
   });
 });
 
-describe("§NNN the club's legal name, never a literal", () => {
+describe("§991 the club's legal name, never a literal", () => {
   it("is the fact the legal templates are filled with, else the club's one name", () => {
     state.env = { CLUB_LEGAL_NAME: LEGAL_NAME };
     expect(agreementHostName()).toBe(LEGAL_NAME);

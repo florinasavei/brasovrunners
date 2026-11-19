@@ -22,7 +22,7 @@ import { COLOR, LOGO_HEIGHT_SHARE } from "@/theme/brand";
  * `pdfkit` as in `legal-documents/pdf.ts`; Roboto for the text because the standard fonts
  * cannot spell ș and ț. Pure over its inputs: every label arrives translated.
  *
- * **Signed by both parties** (§NNN): a caller whose text the host organisation signs too — the volunteer agreement —
+ * **Signed by both parties** (§991): a caller whose text the host organisation signs too — the volunteer agreement —
  * passes `labels.hostSignature`, and every signature block is two columns, the signer's rows on the left and the
  * host's on the right (`drawSignatureColumns`). Every other caller passes none and draws its block as it always did.
  */
@@ -98,7 +98,7 @@ export type DeclarationEntry = {
 };
 
 /**
- * The second party of a text signed by both on paper (§NNN): the host organisation's column, drawn on the right of the
+ * The second party of a text signed by both on paper (§991): the host organisation's column, drawn on the right of the
  * signer's — the party it is, its name, and the lines its representative fills in by hand. Words and a name only: the
  * renderer draws the column, the caller says what it holds.
  */
@@ -154,7 +154,7 @@ export type DeclarationPdfInput = {
     /** «IP» (§771): the word before the address in the trace line. */
     ip: string;
     /**
-     * The volunteer agreement's second party (§NNN; the owner, 2026-11-19: «să las în dreapta și „Asociația” ca să printăm
+     * The volunteer agreement's second party (§991; the owner, 2026-11-19: «să las în dreapta și „Asociația” ca să printăm
      * și să semnăm fizic»): with it every entry's signature block is two columns under «DREPT PENTRU CARE SEMNĂM» — the
      * signer's side on the left, exactly the rows it always had, and this column on the right — with the version, the
      * fingerprint and the proof under both. Absent — the race declaration, its blank form, the group run's — the block is
@@ -201,7 +201,7 @@ const TEXT_WIDTH = PAGE.width - MARGIN.left - MARGIN.right;
 const BLANK_LINE = "………………………………………………";
 
 /**
- * The signature block in two columns (§NNN): the signer's from the left margin, the host's from past the page's middle, two
+ * The signature block in two columns (§991): the signer's from the left margin, the host's from past the page's middle, two
  * equal widths and a gutter between — exported so the layout test measures against these rather than copies.
  */
 const SIGNATURE_GUTTER = 24;
@@ -507,7 +507,7 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
   const twoSigners = signature ? signature.minor !== null : Boolean(entry.forMinor);
   // The trace of an electronic signature (§771) is one more small line, or two with a long browser string: the room is asked for with the block.
   const traceLine = declarationTraceLine(entry, labels);
-  // Signed by the host too (§NNN): the two-column block. Without a host — every text but the volunteer agreement — what follows, as it always was.
+  // Signed by the host too (§991): the two-column block. Without a host — every text but the volunteer agreement — what follows, as it always was.
   if (labels.hostSignature) {
     drawSignatureColumns(doc, entry, labels, labels.hostSignature, traceLine);
     return;
@@ -601,11 +601,11 @@ function signerRows(entry: DeclarationEntry, labels: DeclarationPdfInput["labels
   return rows;
 }
 
-/** A column of the two-column signature block (§NNN): where it starts and how wide it is. */
+/** A column of the two-column signature block (§991): where it starts and how wide it is. */
 type SignatureColumn = { readonly x: number; readonly width: number };
 
 /**
- * The two-column block's rhythm (§NNN), the single-column block's own (`drawEntry`): a 10.5-point line of words, 22 points
+ * The two-column block's rhythm (§991), the single-column block's own (`drawEntry`): a 10.5-point line of words, 22 points
  * from one row to the next, 30 under a name in its hand beside its label; a name under its label starts 8 points under the
  * label's top, at 26 points, smaller until it fits its column — a little lower as it gets smaller, so its letters keep clear
  * of the label — never under 14, where a longer one wraps inside the column. A line to fill in by hand is its label and, 22
@@ -624,7 +624,7 @@ function dotsFor(doc: PDFKit.PDFDocument, width: number): string {
 }
 
 /**
- * One row of a signature column (§NNN), measured — and drawn with `draw` — from its top `y`: the label, and its value beside it
+ * One row of a signature column (§991), measured — and drawn with `draw` — from its top `y`: the label, and its value beside it
  * when that fits inside the column, else under it inside the column. Returns where the next row starts. The one arithmetic
  * measures and draws, so the room the block asks for before drawing is the room it draws, and nothing it sets reaches past
  * its column: a value under its label is wrapped or set smaller to the column's width.
@@ -674,7 +674,7 @@ function columnRow(doc: PDFKit.PDFDocument, column: SignatureColumn, y: number, 
 }
 
 /**
- * The signer's column (§NNN): exactly the rows the single-column block draws (`signerRows`), then, small, the electronic
+ * The signer's column (§991): exactly the rows the single-column block draws (`signerRows`), then, small, the electronic
  * signature's trace straight under the signature and its date (§771), and how it was signed — the signer's own side, every
  * word of it inside the column. Returns its bottom.
  */
@@ -694,7 +694,7 @@ function signerColumn(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: 
   return y;
 }
 
-/** The host's column (§NNN): the party, its name under it, and each of its representative's lines to fill in by hand. Returns its bottom. */
+/** The host's column (§991): the party, its name under it, and each of its representative's lines to fill in by hand. Returns its bottom. */
 function hostColumn(doc: PDFKit.PDFDocument, host: DeclarationHostSignature, column: SignatureColumn, top: number, draw: boolean): number {
   let y = top;
   for (const [words, face, after] of [
@@ -710,7 +710,7 @@ function hostColumn(doc: PDFKit.PDFDocument, host: DeclarationHostSignature, col
 }
 
 /**
- * The signature block of a text the host signs too (§NNN; the owner, 2026-11-19, of the volunteer agreements printed for the
+ * The signature block of a text the host signs too (§991; the owner, 2026-11-19, of the volunteer agreements printed for the
  * race: «să las în dreapta și „Asociația” ca să printăm și să semnăm fizic»): «DREPT PENTRU CARE SEMNĂM» across the page —
  * two parties sign — the signer's column on the left and the host's on the right from the same line, and under the taller of
  * the two, across the page, the version, the fingerprint and the proof of signing, whose 64-character hash needs the page's
