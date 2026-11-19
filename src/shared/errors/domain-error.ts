@@ -114,6 +114,11 @@ export type DomainErrorCode =
   | "ELITE_NOT_MARKED"
   // «Eticheta pe BIB» longer than an elite bib carries (§975, `ELITE_NAME_MAX`): the sentence names the box and the limit.
   | "ELITE_LABEL_TOO_LONG"
+  // A line of the elite list given its number by itself, and the race's own series has no free number left for it (§990,
+  // `bibs.ts#pickEliteLineNumber`): the sentence says to type one on the elite list.
+  | "ELITE_NO_FREE_NUMBER"
+  // A line's «Număr» changed while a result is stored on its number (§990): the result would lose its runner, so it is refused.
+  | "ELITE_NUMBER_HAS_RESULT"
   // The club's refusal under the terms (§618) posted with its email kept back (the design «telling the owner about every email a
   // staff press sends», slice 4; its question offers no «… fără email», §976): the terms promise the person is told the ground,
   // so the refusal never goes without its email.

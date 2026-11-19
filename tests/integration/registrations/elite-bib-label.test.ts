@@ -327,7 +327,9 @@ describe("§975 «Eticheta pe BIB» on a line of the race's elite list", () => {
 
   it("is the Administrator's alone, and never on the public «Elitele cursei»", async () => {
     const admin = await staff("ADMIN");
-    const { id } = await addEliteEntry(db, admin, eventId, { name: "Mara Ionescu", bibNumber: "" }, NOW);
+    // No number typed: the line draws its own (§990), which «Elitele cursei» says beside the name.
+    const { id, bibNumber } = await addEliteEntry(db, admin, eventId, { name: "Mara Ionescu", bibNumber: "" }, NOW);
+    expect(Number.isInteger(bibNumber)).toBe(true);
     for (const role of REFUSED) {
       const actor = await staff(role);
       expect((await failureOf(setEliteEntryBibLabel(db, actor, id, "MARA", NOW))).code, role).toBe("FORBIDDEN");
@@ -343,6 +345,6 @@ describe("§975 «Eticheta pe BIB» on a line of the race's elite list", () => {
     // Shown on the site, the line is its name and its number — never the label.
     await db.update(eventEliteEntries).set({ onSite: true }).where(eq(eventEliteEntries.id, id));
     const shown = await listPublicEliteEntries(db, eventId);
-    expect(shown).toEqual([{ name: "Mara Ionescu", bibNumber: null }]);
+    expect(shown).toEqual([{ name: "Mara Ionescu", bibNumber }]);
   });
 });

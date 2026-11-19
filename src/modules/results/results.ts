@@ -1386,10 +1386,18 @@ export async function readFinishLine<T extends Record<string, unknown>>(db: Data
   for (const runner of runners.byRegistration.values()) {
     if (!runner.elite || runner.status !== "CONFIRMED") continue;
     const claim = claimOf(runner, index);
-    elites.push({ key: `r:${runner.registrationId}`, kind: "registration", label: labels.registrations.get(runner.registrationId) ?? runner.displayName, name: runner.displayName, bibNumber: runner.bibNumber, finishedGunTimeMs: finishedTime(claim.row) });
+    elites.push({
+      key: `r:${runner.registrationId}`,
+      kind: "registration",
+      label: labels.registrations.get(runner.registrationId) ?? runner.displayName,
+      name: runner.displayName,
+      bibNumber: runner.bibNumber,
+      entryId: null,
+      finishedGunTimeMs: finishedTime(claim.row),
+    });
   }
   for (const row of unnumberedElites) {
-    elites.push({ key: `r:${row.id}`, kind: "registration", label: labels.registrations.get(row.id) ?? row.displayName, name: row.displayName, bibNumber: null, finishedGunTimeMs: null });
+    elites.push({ key: `r:${row.id}`, kind: "registration", label: labels.registrations.get(row.id) ?? row.displayName, name: row.displayName, bibNumber: null, entryId: null, finishedGunTimeMs: null });
   }
   for (const line of runners.lines) {
     const holder = line.bibNumber === null ? undefined : runners.byBib.get(line.bibNumber);
@@ -1401,6 +1409,8 @@ export async function readFinishLine<T extends Record<string, unknown>>(db: Data
       label: labels.lines.get(line.id) ?? line.name,
       name: line.name,
       bibNumber: line.bibNumber,
+      // What «Dă-i un număr» posts for a line drawn without a number (§990): the line's id, never shown.
+      entryId: line.id,
       finishedGunTimeMs: line.bibNumber === null ? null : finishedTime(index.freeByBib.get(line.bibNumber)),
     });
   }

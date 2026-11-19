@@ -1,10 +1,11 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventResults } from "@/db/schema/event-results";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
-import { addEliteEntry, deleteEliteEntry, setEliteEntryTick } from "@/modules/registrations/elite-list";
+import { addEliteEntry, deleteEliteEntry, giveEliteLineNumber, setEliteEntryNumber, setEliteEntryTick } from "@/modules/registrations/elite-list";
 import { setRegistrationElite, setRegistrationEliteTick } from "@/modules/registrations/elite-mark";
 import { exportEventResults, readEventResults, readPublicEventResults, saveEventResults, setResultsPublished } from "@/modules/results/results";
 import type { PostedResultRow } from "@/modules/results/rows";
@@ -135,7 +136,8 @@ describe("§910 a separate-list elite out of the ranking, by its number or its n
 
   it("by the name, for a line with no number: the one typed row carrying it — folded — and none while two rows carry it", async () => {
     await field();
-    const faith = await addEliteEntry(db, admin, raceId, { name: "Faith Kipyegon", bibNumber: "" }, NOW);
+    // A line from before every line drew its own number (§990) — production still holds such lines —, written as it was then.
+    const [faith] = await db.insert(eventEliteEntries).values({ eventId: raceId, name: "Faith Kipyegon", bibNumber: null, createdByStaffUserId: admin.id }).returning({ id: eventEliteEntries.id });
     await save([line(101, { time: "44:00" }), typed(0, { bib: "900", name: "faith  KIPYEGON", sex: "female", time: "40:00" }), typed(1, { bib: "901", name: "Maria Pop", sex: "female", time: "46:00" })]);
     await setEliteEntryTick(db, admin, faith.id, "inResults", false, NOW);
     expect(await storedPositions()).toMatchObject({ 900: [null, null, null], 101: [1, 1, 1], 901: [2, 2, null] });
@@ -143,6 +145,23 @@ describe("§910 a separate-list elite out of the ranking, by its number or its n
     // A second typed row with that name: the rule cannot tell them apart, so neither leaves the ranking.
     await save([line(101, { time: "44:00" }), typed(0, { bib: "900", name: "faith  KIPYEGON", sex: "female", time: "40:00" }), typed(1, { bib: "901", name: "Faith Kipyegon", sex: "female", time: "46:00" })]);
     expect(await storedPositions()).toMatchObject({ 900: [1, 1, null], 101: [2, 2, 1], 901: [3, 3, null] });
+  });
+
+  it("a number given to a line matched by its name ends the match, ranked again in the same press — and its box can take the row's number (§990)", async () => {
+    await field();
+    const [faith] = await db.insert(eventEliteEntries).values({ eventId: raceId, name: "Faith Kipyegon", bibNumber: null, createdByStaffUserId: admin.id }).returning({ id: eventEliteEntries.id });
+    await save([line(101, { time: "44:00" }), typed(0, { bib: "900", name: "Faith Kipyegon", sex: "female", time: "40:00" })]);
+    await setEliteEntryTick(db, admin, faith.id, "inResults", false, NOW);
+    expect(await storedPositions()).toMatchObject({ 900: [null, null, null], 101: [1, 1, 1] });
+    revalidate.mockClear();
+    // «Dă-i un număr»: the race's next free number, never one a stored result carries — so not 900, whose row is matched by name no more.
+    const given = await giveEliteLineNumber(db, admin, faith.id, NOW);
+    expect(given.bibNumber).not.toBe(900);
+    expect(await storedPositions()).toMatchObject({ 900: [1, 1, null], 101: [2, 2, 1] });
+    expect(revalidate).toHaveBeenCalled();
+    // The line's «Număr» takes the row's number — no result is stored on the line's own yet — and the row is the line's again (rule 3).
+    expect(await setEliteEntryNumber(db, admin, faith.id, "900", NOW)).toMatchObject({ changed: true });
+    expect(await storedPositions()).toMatchObject({ 900: [null, null, null], 101: [1, 1, 1] });
   });
 
   it("deleting a line out of the ranking puts its result back, in the same transaction", async () => {

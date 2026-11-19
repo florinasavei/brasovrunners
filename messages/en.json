@@ -2873,6 +2873,10 @@
       "REFUSAL_NEEDS_EMAIL": "Nothing was cancelled: the club's refusal always goes with the email that tells the person its ground.",
       "ELITE_NOT_MARKED": "The registration is no longer marked elite or ambassador, so its ticks no longer change. Nothing was written.",
       "ELITE_LABEL_TOO_LONG": "«Bib label» holds at most {max} characters: type a shorter one and press «Save» again. Nothing was written.",
+      "ELITE_NO_FREE_NUMBER": "The race's series has no free number left for the elite list. Type a free number yourself, on the elite list. Nothing was written.",
+      "ELITE_NUMBER_HAS_RESULT": "The number can no longer change: «Results» holds a result on it, which would lose its runner. Correct it under «Results» first.",
+      "ELITE_LINE_NUMBER_TAKEN": "That number is already used at this event: a registration's, another elite name's, or one of the desk's spares. Type another number; nothing changed.",
+      "ELITE_LINE_NUMBER_INVALID": "Type the number as a whole number from 1 to 99999; nothing changed.",
       "ADDRESS_FAMILY_FORM_PENDING": "Nothing changed: a family form waits to be confirmed on the old address. Change the address once it is confirmed or lapses.",
       "ADDRESS_INVITED": "Nothing changed: the new address has an open invitation to this event. Withdraw the invitation in “Invitations” first.",
       "ADDRESS_UNCHANGED": "Nothing changed: it is the same inbox as the registration’s address now — an extra dot or “+” still leads there.",
@@ -7695,8 +7699,15 @@
       "eliteName": "Name",
       "eliteNameHelp": "The person's name, as you know it. The bib prints its label — the first word by default — which you change on its line once it is added. At most {max} characters.",
       "eliteNumber": "Number (optional)",
-      "eliteNumberHelp": "Not printed on the bib: an elite bib carries the name alone. The number stays reserved and is given to nobody else.",
+      "eliteNumberHelp": "Left empty, the name gets the race's next free number by itself, which nobody else is then given. Not printed on the bib: it is the number at the finish line.",
       "eliteNumberShown": "no. {number}",
+      "eliteNoNumber": "no number",
+      "eliteLineNumber": "Number",
+      "eliteLineNumberHelp": "The number at the finish line, for the timing. Not printed on the bib.",
+      "eliteLineNumberSave": "Save",
+      "eliteLineNumberSaveName": "Save the number",
+      "eliteNumberAll": "Number the elites without one ({count})",
+      "eliteNumberAllHelp": "Each gets the race's next free number, so it is timed like the other elites. Nothing is sent to anyone.",
       "eliteLabel": "Bib label",
       "eliteLabelHelp": "Default: the first name. It prints large, where the number goes; at most {max} characters.",
       "eliteLabelSave": "Save",
@@ -13028,7 +13039,9 @@
         "aria": "Finished: {label} — {name}",
         "finished": "✓ {time}",
         "noNumberLine": "No number: an Administrator gives the line one on the elite list (the bib still prints none). Until then, write the time on paper.",
-        "noNumberRegistration": "No race number: give one at «Attendance» (the bib still prints none). Until then, write the time on paper."
+        "noNumberRegistration": "No race number: give one at «Attendance» (the bib still prints none). Until then, write the time on paper.",
+        "giveNumber": "Give a number",
+        "giveNumberAria": "Give a number: {label} — {name}"
       },
       "keep": {
         "button": "Catch the time",
@@ -13105,6 +13118,7 @@
         "duplicateShort": "{who} was already entered — the first time stays; your press ({mine}) is in «Finish history».",
         "decided": "{who} is marked «{status}» under «Results» — it stays; your press ({mine}) is in «Finish history».",
         "undone": "Undone: {who}.",
+        "numbered": "{who} now has a number: timed like the other elites.",
         "gun": {
           "set": "The start was set: {time}.",
           "cleared": "The start was cancelled: finishes count from the planned start.",
@@ -13123,7 +13137,8 @@
           "RESULTS_NOT_OPEN": "Only a race has timing.",
           "VALIDATION_ERROR": "Type the number on the bib, digits only.",
           "FORBIDDEN": "Your role cannot do this.",
-          "NOT_FOUND": "It is gone: the event or the line was deleted meanwhile."
+          "NOT_FOUND": "It is gone: the event or the line was deleted meanwhile.",
+          "ELITE_NO_FREE_NUMBER": "The race's series has no free number left: an Administrator types one for the line on the elite list, in the event editor."
         }
       }
     }
@@ -15295,6 +15310,14 @@
       "eventImportedOver": "Imported over the event.",
       "eliteTicked": "The tick was saved. Nothing was sent to anyone.",
       "eliteLabelSaved": "The bib label was saved. Nothing was sent to anyone.",
+      "eliteNumbered": {
+        "one": "{count} elite name got a number. Nothing was sent to anyone.",
+        "few": "{count} elite names got a number. Nothing was sent to anyone.",
+        "other": "{count} elite names got a number. Nothing was sent to anyone."
+      },
+      "eliteNumberedNone": "Every elite name already had a number; nothing to change.",
+      "eliteNumberSet": "The number was saved. Nothing was sent to anyone.",
+      "eliteNumberUnchanged": "The number was already this one; nothing to change.",
       "addressChanged": "The address was changed; both addresses get an email.",
       "partnerSaved": "The partner was saved. Nothing was sent to anybody.",
       "partnerCleared": "No longer from a partner. Nothing was sent to anybody.",

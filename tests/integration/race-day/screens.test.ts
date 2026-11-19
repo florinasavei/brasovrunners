@@ -80,6 +80,7 @@ vi.mock("@/app/[locale]/admin/checkin/cronometrare/actions", () => ({
   undoFinishFormAction: vi.fn(),
   setRaceGunAction: vi.fn(),
   readFinishClockAction: vi.fn(),
+  giveEliteNumberFormAction: vi.fn(),
 }));
 vi.mock("@/modules/notifications/send-now-choice", () => ({ sendNowChoiceFor: async () => null }));
 

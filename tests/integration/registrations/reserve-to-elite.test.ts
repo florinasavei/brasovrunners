@@ -122,7 +122,7 @@ async function refusal(work: Promise<unknown>): Promise<unknown> {
 }
 
 describe("§903 «Mută pe lista de elită» on a line of the internal list", () => {
-  it("writes the line's name onto the elite list with no number and deletes the line, in one press: nobody registered, emailed or seated", async () => {
+  it("writes the line's name onto the elite list with a number of its own and deletes the line, in one press: nobody registered, emailed or seated", async () => {
     // The name as it prints: trimmed, the inner spaces collapsed (`parseEliteEntry`).
     const entryId = await line("  Mara ", "Munteanu   Pop");
 
@@ -130,7 +130,8 @@ describe("§903 «Mută pe lista de elită» on a line of the internal list", ()
 
     const [moved, ...more] = await elite();
     expect(more).toEqual([]);
-    expect(moved).toMatchObject({ eventId, name: "Mara Munteanu Pop", bibNumber: null, createdByStaffUserId: admin.id });
+    // The race's next free number (§990): nobody has one yet, so 1 — «Cronometrare» times the line like every other elite.
+    expect(moved).toMatchObject({ eventId, name: "Mara Munteanu Pop", bibNumber: 1, createdByStaffUserId: admin.id });
     expect(await lines()).toEqual([]);
     // Not a registration: no person, no row, no email, and the note on nothing.
     expect(await db.select().from(registrations)).toEqual([]);
@@ -149,6 +150,10 @@ describe("§903 «Mută pe lista de elită» on a line of the internal list", ()
     const [added] = await trail("event_elite.added");
     expect(added).toMatchObject({ actorStaffUserId: admin.id, entityType: "event", entityId: eventId });
     expect(added.metadataJson).toEqual({ entryId: eliteEntryId, reserveEntryId: entryId });
+    // The number the line drew (§990), by the line's id and the number alone.
+    const [given] = await trail("event_elite.number_given");
+    expect(given).toMatchObject({ actorStaffUserId: admin.id, entityType: "event", entityId: eventId });
+    expect(given.metadataJson).toEqual({ entryId: eliteEntryId, bibNumber: 1 });
     const [moved] = await trail("event_reserve.moved");
     expect(moved).toMatchObject({ actorStaffUserId: admin.id, entityType: "event", entityId: eventId });
     expect(moved.metadataJson).toEqual({ entryId, eliteEntryId });
@@ -161,7 +166,7 @@ describe("§903 «Mută pe lista de elită» on a line of the internal list", ()
     expect((await lines())[0].email).toBeNull();
 
     await expect(moveReserveEntryToEliteAction(null, press(entryId))).rejects.toThrow(/saved=reserveMovedToElite/);
-    expect((await elite()).map((row) => [row.name, row.bibNumber])).toEqual([["Ion Ionescu", null]]);
+    expect((await elite()).map((row) => [row.name, row.bibNumber])).toEqual([["Ion Ionescu", 1]]);
     expect(await lines()).toEqual([]);
     expect(await db.select().from(participants)).toEqual([]);
   });

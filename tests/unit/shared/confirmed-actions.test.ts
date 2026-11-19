@@ -317,6 +317,9 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
     "«Start» pressed at the gun — its moment is the tap, so it cannot wait on a question — moved by another press, and taken off only after one («Anulează startul», a ConfirmSubmitButton); fixed after the first finisher; it tells nobody and changes nothing public",
   // The server's clock «Cronometrare»'s island asks as the page wakes (§986): a read, no press.
   readFinishClockAction: "reads the server's clock for the page's stamps and writes nothing; nobody presses it, the page asks it as it wakes",
+  // «Dă-i un număr» on «Cronometrare», in a numberless elite line's grey button's place (§990): the line's number, nothing printed.
+  giveEliteNumberFormAction:
+    "gives one elite line without a number the race's next free number, nobody else's, so its button is timed like the others; it tells nobody and prints nothing — the bib carries the label alone — and the line's «Număr» box on the elite card changes it",
   // «Ecusoane pentru voluntari» (§764): the club's own look of a printed strip, seen in the preview before the save.
   saveBadgeDesignAction: "an editorial save of the badges' look, undone by saving the old one; it tells nobody and prints nothing",
   saveBadgeRoleColoursAction: "an editorial save of the roles' band colours, undone by choosing again; it tells nobody",
@@ -375,6 +378,11 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
     "the label one elite line's bib prints, saved from its own box on the elite card; it tells nobody, moves no state, place or count, and the same box undoes it",
   setRegistrationEliteBibLabelAction:
     "the label a marked registration's bib prints, saved from the desk's «Elită și BIB»; it tells nobody, moves no state, place or count, and the same box undoes it",
+  // «Număr» and «Dă număr elitelor fără număr (N)» on the elite card (§990): an elite line's number at the finish line, never printed.
+  setEliteNumberAction:
+    "the number one elite line holds at the finish line, typed in its own box on the elite card; it tells nobody, prints nothing — the bib carries the label alone — and the same box changes it again, refused once a result is stored on it",
+  giveEliteNumbersAction:
+    "gives the elite lines without a number the race's next free numbers, nobody else's; it tells nobody and prints nothing, and each line's «Număr» box changes its number",
   // «Are kit» on a row of the «Voluntari» list (§904): the organizers' own mark of who gets the volunteers' kit, a one-press tick.
   setVolunteerKitAction:
     "a mark on the club's packing for one volunteer, undone by the same tick; it tells nobody and changes no state, role or count but «Cu kit»",
