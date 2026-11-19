@@ -37,9 +37,14 @@ This section is the one page a session with none of the conversation reads; `yar
 
 - **One branch per change**, cut from `origin/qa` with `--no-track`, carrying its `.release/<branch>.json`
   (`.release/README.md`); never an edit to `DECISIONS.md`, `CHANGELOG.md`, `SPECS.md` or a baseline on the branch.
-- **A batch** collects reviewed branches: `git checkout -B batch/<date>-<x> origin/qa --no-track` → `yarn batch:merge
-  <branch>…` → `yarn docs:land --tree --apply` → `yarn docs:check` → one commit (the hook runs `yarn check`; on a busy
-  machine `VITEST_MAX_WORKERS=4 git commit …`) → push → a pull request into `qa` → merge on green CI.
+- **Every branch is named for what it carries** (the owner, 2026-11-19: «numele branch-urilor trebuie să reflecte ce se
+  află în ele», §NNN) — one that gathers several changes, a batch among them, is named for all of them; never a
+  generated `claude/…` name. A cloud session opens its pull request from a branch named for the work, its release entry
+  written for that name from the first commit (`docs/DEVELOPMENT.md` § Coding from the phone).
+- **A batch** collects reviewed branches: `git checkout -B batch/<what-it-gathers> origin/qa --no-track` (named for every
+  change it gathers, never a date or a letter alone) → `yarn batch:merge <branch>…` → `yarn docs:land --tree --apply` →
+  `yarn docs:check` → one commit (the hook runs `yarn check`; on a busy machine `VITEST_MAX_WORKERS=4 git commit …`) →
+  push → a pull request into `qa` → merge on green CI.
 - **Two-step release:** QA first; production only on the owner's word («prod»). The release is a `qa` → `main` pull
   request merged on green. **A release with a migration stops at the `migrate.yml` run on `main`, gated by the
   Production environment: only the owner can approve it** (GitHub → Actions → the run → Review deployments → Production

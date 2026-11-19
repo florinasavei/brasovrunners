@@ -480,7 +480,7 @@ Rules:
 - normal branches start from `qa` and open pull requests into `qa`;
 - a branch is named for what it carries — every change in it, never a generated name such as
   `claude/quirky-ramanujan-…` (`SETUP.md` § Contributing, `DECISIONS.md` §NNN);
-- feature/fix pull requests use squash merge;
+- feat/fix pull requests use squash merge;
 - production promotion is a reviewed `qa -> main` pull request;
 - the release pull request uses a merge commit so branch ancestry remains clear;
 - direct pushes to `qa` and `main` are blocked;

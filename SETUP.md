@@ -862,8 +862,9 @@ after what it carries, not after the file it touches or the tool that opened it:
 `hotfix/volunteers-excel-one-defined-names`, never a generated name such as
 `claude/quirky-ramanujan-…`. A branch that gathers several changes is named for all of them:
 `feat/race-day-timing-raffle-results-presence`. Its `.release/<branch-slug>.json` carries the
-same name (`.release/README.md`), so a branch renamed before its pull request takes its entry
-with it.
+same name, in the file's name and in its `branch` field (`.release/README.md`), and `git branch -m`
+changes neither — so rename the entry (file and `branch` field) with the branch, or write it for
+the final name from the first commit (`docs/DEVELOPMENT.md` § Coding from the phone).
 
 **Before pushing:**
 
@@ -911,7 +912,7 @@ Hotfix:
 ```bash
 git switch main
 git pull --ff-only origin main
-git switch -c hotfix/<name>
+git switch -c hotfix/<what-it-carries>
 ```
 
 PR to `main`, deploy, then immediately PR/merge `main` back to `qa`.

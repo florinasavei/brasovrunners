@@ -427,10 +427,12 @@ stays silent, as it is built to. To run the same setup on a Linux machine of you
 session starts on a branch it did not name, `claude/<words>-<letters>`; the pull request goes from
 one named for what it carries — `feat/<what>`, `fix/<what>`, a gathering of several changes named
 for all of them. Write the release entry for that name from the first commit
-(`.release/feat-<what>.json` with `"branch": "feat/<what>"`), then either rename the branch before
-the first push (`git branch -m feat/<what>`) or, where the session may push only the branch it was
-given, push that one and make the named branch from its last commit with the GitHub tools; open the
-pull request from the named branch.
+(`.release/feat-<what>.json` with `"branch": "feat/<what>"`; renaming a branch renames neither the
+file nor its `branch` field), and rename the branch before the first push (`git branch -m
+feat/<what>`). Where the session may push only the branch it was given, create the named branch
+with the GitHub tools only if they allow it; otherwise push the given branch and ask the owner to
+rename it, or to open the pull request from a branch named for the work — never a way around what
+the session's environment allows. The pull request goes from the named branch.
 
 ## Where things live
 
