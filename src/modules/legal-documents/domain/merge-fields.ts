@@ -451,7 +451,7 @@ export const VOLUNTEER_MERGE_FIELDS = [
 
 /**
  * «Regulamentul tombolei»'s own blank (§NNN): `{{raffleGroups}}` — who may take part, the groups the event ticks in «Cine poate
- * participa», in the text's language («alergătorii confirmați, cu număr de concurs, elitele cursei și voluntarii confirmați, cu
+ * participa», in the text's language («alergătorii confirmați, cu număr de concurs, sportivii de top ai cursei și voluntarii confirmați, cu
  * număr de voluntar», `volunteers/raffle-words.ts#raffleGroupsPhrase`). Filled when the person accepts, beside the event's own
  * fields (`{{event}}`, `{{eventDate}}`, `{{eventLocation}}`), and kept with the acceptance (`event_raffle_entries.rules_facts`).
  */

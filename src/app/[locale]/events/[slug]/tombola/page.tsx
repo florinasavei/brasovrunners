@@ -24,7 +24,7 @@ import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { formEventBySlug } from "@/modules/resilience/event-copy";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { RAFFLE_TYPED_NAME_MAX } from "@/db/schema/event-raffle-entries";
-import { RAFFLE_NUMBER_MAX } from "@/modules/volunteers/domain/raffle";
+import { RAFFLE_NUMBER_MAX, raffleAsksSignUp } from "@/modules/volunteers/domain/raffle";
 import { readRaffleRules } from "@/modules/volunteers/raffle-roster";
 import PublicFlash from "@/shared/feedback/PublicFlash";
 import CheckboxField from "@/shared/ui/CheckboxField";
@@ -91,7 +91,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
   const outcome: Outcome | null = (OUTCOMES as readonly string[]).includes(answer ?? "") ? (answer as Outcome) : null;
   const [open, raffle] = await Promise.all([readOrWhileAway(() => cachedRaffleSignUpOpen(event.id, now), false), readOrWhileAway(() => cachedRaffleEvent(event.id), null)]);
   // The thank-you too only where a raffle asks a sign-up: an address typed with `?tombola=done` never says «ești înscris» elsewhere.
-  if (!raffle || !raffle.settings.hasRaffle || !raffle.settings.signUp || (!open && outcome !== "done")) notFound();
+  if (!raffle || !raffleAsksSignUp(raffle.settings) || (!open && outcome !== "done")) notFound();
 
   const t = await getTranslations("Event");
   const tForm = await getTranslations("Registration");

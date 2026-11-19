@@ -23,11 +23,12 @@ const FACTS: ClubFacts = {
 };
 
 const RECORDED: Record<string, { ro: string; en: string; both: string }> = {
-  // Edited on purpose (§NNN): the paragraph «Tombola ({{raffle}})» in section 5 and its line in section 7.
+  // Edited on purpose (§NNN): the paragraph «Tombola ({{raffle}})» in section 5 and its line in section 7 — the elites named
+  // «sportivii de top», as every text a participant reads names them (§917).
   PRIVACY_NOTICE: {
-    ro: "6656782e1db5fbc416c80593b7e7b0ffe66a3ac25cbaa9604bc767afead143ca",
-    en: "2272bfd9f8814c30f77ef34e55665dce5eb73851442cb59ceb23a1002a133f8c",
-    both: "420f9f082c164d2376e187bbbe75bae0b733366bbc4c52dd787e2df18e461456",
+    ro: "2ef3d1a891bf11bd31e0b7ddb50a9b1f223ec1cdfc6c9a7cdf004fe93682ce0e",
+    en: "a3e9c5d8cd4299692c86dd37bdeac8fd057b8e7908e8365ebab9c777e2bd5c37",
+    both: "bf6a2eebcfbf9703b431df4c8705b5c5169dd03384de6aed55611667f19c0cf2",
   },
   TERMS: {
     ro: "d4f30d2e01521edb464620af19d13fc0af7f3179c40ee2c7cb57b2290162e05c",
@@ -59,11 +60,11 @@ const RECORDED: Record<string, { ro: string; en: string; both: string }> = {
     en: "d9ebe8f8340ba9d30534eb64eac69f24d1253f99d8d072334e95f96c13bf8762",
     both: "b0910e76c29f7b57e8109a74b1cca7f776f4bb49648c97c0ba59c8697c1ae4aa",
   },
-  // «Regulamentul tombolei» (§NNN): a new template, recorded as written.
+  // «Regulamentul tombolei» (§NNN): a new template, recorded as written — the elites named «sportivii de top» (§917).
   RAFFLE_RULES: {
-    ro: "0f20824850abb6bef7138db03feadd674d7e5f63df49b47cb4491f18ada38293",
-    en: "60f4411672cbe6108dae5e9ee9d22ac7d5dbbb6b343a23c7e9b49920fcfb62d6",
-    both: "d3cafa8fcc25b0abf859278faf8e5a8c5ccfbc71cc96200f68482719afc76003",
+    ro: "8710143232cad3595bb0a56fae639688be796e09561f90df8ea190d973e3fc93",
+    en: "b167ae50d261b163635108bbd8c19f7c2d861902d8e6cd2e4ae352dcf63fd388",
+    both: "cb917ff3ff8cffa25e04799fa533d3929eccf8aab401fb471e178c224b61eb99",
   },
 };
 

@@ -6,7 +6,7 @@ import { nextMidnightIn } from "@/i18n/dates";
   fiecărei persoane dacă participă la tombolă»). No clock but the one passed in, no database: every door, page, list, file and
   count reads these few functions, so the screen that says «Participă: Da» and the file the draw is made from cannot disagree.
 
-  - **The three groups** (`RaffleKind`): `RUNNER` — a registration not marked «Elită» (an ambassador runs as a runner); `ELITE` — a
+  - **The three groups** (`RaffleKind`): `RUNNER` — a registration not marked «Elită» (one marked «Ambasador» runs as a runner); `ELITE` — a
     registration marked «Elită» (§897) and a line of the race's elite list (§895); `VOLUNTEER` — an event's volunteer (§754).
   - **The settings** (`RaffleSettings`): «Avem tombolă», the three ticks of «Cine poate participa», «Cum» — «Din oficiu» or «Cu
     înscriere separată» — and «Înscrierile la tombolă sunt deschise».
@@ -57,7 +57,15 @@ export function raffleSettingsOf(row: RaffleSettingsRow): RaffleSettings {
   };
 }
 
-/** A registration's group: «Elită» is the elites', every other registration — an ambassador's too — the runners'. */
+/**
+ * Whether the event's raffle asks a sign-up of its own (§NNN): «Avem tombolă» and «Cu înscriere separată», open or not. What the
+ * raffle's page asks before it says the thank-you to a person reading the answer to their own post — never on an event that asks none.
+ */
+export function raffleAsksSignUp(settings: Pick<RaffleSettings, "hasRaffle" | "signUp">): boolean {
+  return settings.hasRaffle && settings.signUp;
+}
+
+/** A registration's group: «Elită» is the elites', every other registration — one marked «Ambasador» too — the runners'. */
 export function raffleKindOfRegistration(registration: { elite: boolean }): RaffleKind {
   return registration.elite ? "ELITE" : "RUNNER";
 }

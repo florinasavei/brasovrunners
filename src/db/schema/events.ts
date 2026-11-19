@@ -954,7 +954,7 @@ export const events = pgTable(
     /**
      * «Cine poate participa» (migration `0217`, §NNN; the owner, 2026-11-18: «trebuie să bifez acolo cine se poate înscrie: doar
      * alergătorii și elitele și voluntarii»): the three groups of a raffle, each ticked by default — «Alergătorii» (the confirmed real
-     * registrations with a race number not marked «Elită»; an ambassador runs as a runner), «Elitele» (the registrations marked «Elită»
+     * registrations with a race number not marked «Elită»; one marked «Ambasador» runs as a runner), «Elitele» (the registrations marked «Elită»
      * and the lines of the race's elite list) and «Voluntarii» (the confirmed volunteers with a number). They decide in both modes
      * below (`volunteers/domain/raffle.ts#raffleParticipation`). Boxes of the editor beside «Avem tombolă», saved with the event — the
      * Administrator's save (§542); one edition's own, like `has_raffle`: no series edit, copy or event file carries them, and no public

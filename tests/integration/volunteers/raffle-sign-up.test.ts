@@ -246,7 +246,7 @@ describe("§NNN BR-REQ-050-02 the public form (FORM): a race number and a name",
       event: title.title,
       eventDate: expect.stringContaining("2026"),
       eventLocation: "Parcul Noua",
-      raffleGroups: "alergătorii înscriși și confirmați, cu număr de concurs, elitele cursei și voluntarii confirmați, cu număr de voluntar",
+      raffleGroups: "alergătorii înscriși și confirmați, cu număr de concurs, sportivii de top ai cursei și voluntarii confirmați, cu număr de voluntar",
     });
     // The trail says the door and the group, never a name or a number.
     const [audit] = await signUpTrail();
@@ -429,7 +429,7 @@ describe("§NNN BR-REQ-037-08 the desk (DESK): every desk role, the person havin
     expect(await signUpForRaffleAtDesk(db, actor, { registrationId: jane.id, accepted: true }, NOW)).toBe("already");
     const [row] = await entries();
     expect(row.rulesLocale).toBe("en");
-    expect((row.rulesFacts as Record<string, string>).raffleGroups).toBe("the registered and confirmed runners with a race number, the race's elites and the confirmed volunteers with a volunteer number");
+    expect((row.rulesFacts as Record<string, string>).raffleGroups).toBe("the registered and confirmed runners with a race number, the race's top athletes and the confirmed volunteers with a volunteer number");
     // The desk's line says it, in words — and «Înscrie» is no longer offered.
     expect(await readRaffleLine(db, { table: "registration", id: jane.id }, NOW)).toEqual({ reason: "in", signUpMode: true, signedUp: true, maySignUp: false });
   });

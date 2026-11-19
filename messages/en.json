@@ -4110,7 +4110,7 @@
         "elites": "The elites",
         "volunteers": "The volunteers",
         "runnersHelp": "The confirmed registrations with a race number, not marked “Elite” — ambassadors too.",
-        "elitesHelp": "The registrations marked “Elite” and the people on the race's elite list.",
+        "elitesHelp": "The registrations marked “Elite” and the people on the race's elite list. In the rules: “the race's top athletes”.",
         "volunteersHelp": "The confirmed volunteers with a volunteer number.",
         "whoHelp": "The ticks count in both modes below.",
         "how": "How people take part",
@@ -12947,7 +12947,7 @@
     "raffleRulesTitle": "Raffle rules",
     "raffleGroups": {
       "RUNNER": "the registered and confirmed runners with a race number",
-      "ELITE": "the race's elites",
+      "ELITE": "the race's top athletes",
       "VOLUNTEER": "the confirmed volunteers with a volunteer number",
       "and": "and"
     }

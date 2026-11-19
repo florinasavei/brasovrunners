@@ -829,14 +829,15 @@ export default async function RegistrationBox({
                           </Typography>
                           {(
                             [
-                              ["raffleRunners", event?.raffleRunners ?? true, t("editor.raffle.runners"), t("editor.raffle.runnersHelp")],
-                              ["raffleElites", event?.raffleElites ?? true, t("editor.raffle.elites"), t("editor.raffle.elitesHelp")],
-                              ["raffleVolunteers", event?.raffleVolunteers ?? true, t("editor.raffle.volunteers"), t("editor.raffle.volunteersHelp")],
+                              // Each box's whole name written out: what the editor's reader takes is found by name (`event-form-together.test.ts`).
+                              ["event.raffleRunners", event?.raffleRunners ?? true, t("editor.raffle.runners"), t("editor.raffle.runnersHelp")],
+                              ["event.raffleElites", event?.raffleElites ?? true, t("editor.raffle.elites"), t("editor.raffle.elitesHelp")],
+                              ["event.raffleVolunteers", event?.raffleVolunteers ?? true, t("editor.raffle.volunteers"), t("editor.raffle.volunteersHelp")],
                             ] as const
                           ).map(([name, on, label, help]) => (
                             <Box key={name}>
-                              <input type="hidden" name={`event.${name}.present`} value="1" />
-                              <CheckboxField name={`event.${name}`} defaultChecked={on} help={help}>
+                              <input type="hidden" name={`${name}.present`} value="1" />
+                              <CheckboxField name={name} defaultChecked={on} help={help}>
                                 {label}
                               </CheckboxField>
                             </Box>

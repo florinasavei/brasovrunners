@@ -238,7 +238,7 @@ describe("§NNN BR-REQ-050-02 the raffle's own page: the form while the gate is 
     expect(words(fold)).toContain(`Tombola are loc la evenimentul Crosul tombolei ${serial}`);
     expect(words(fold)).toContain("în Parcul Noua");
     // The filled blank is drawn in bold: its words, the sentence's period after the tag.
-    expect(words(fold)).toContain("Pot participa la tombolă alergătorii înscriși și confirmați, cu număr de concurs, elitele cursei și voluntarii confirmați, cu număr de voluntar");
+    expect(words(fold)).toContain("Pot participa la tombolă alergătorii înscriși și confirmați, cu număr de concurs, sportivii de top ai cursei și voluntarii confirmați, cu număr de voluntar");
     expect(fold).not.toContain("{{");
     // The acceptance's tick, required, its words the owner's; the notice's line with its link; no email promised.
     expect(tagOf(markup, 'name="accept"')).toMatch(/required/);

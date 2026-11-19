@@ -51,7 +51,7 @@ import { eventInvitationsClause } from "@/modules/registrations/invitation-words
 import { feedbackFormsClause, feedbackFormsNamedClause, feedbackSafetyGmailClause, relayQueueClause } from "@/modules/feedback/notice-words";
 import { membersShopClause } from "@/modules/content/shop/notice-words";
 import { volunteerAgreementClause, volunteerMinorsClause, volunteerProfileClause, volunteersClause, volunteersListClause } from "@/modules/volunteers/notice-words";
-import { raffleClause, raffleGroupsPhrase } from "@/modules/volunteers/raffle-words";
+import { EVERY_RAFFLE_GROUP, raffleClause, raffleGroupsPhrase } from "@/modules/volunteers/raffle-words";
 import { resultsClause, resultsNameAskClause } from "@/modules/results/notice-words";
 import { rsvpAskAnswerersClause, rsvpAskClause, rsvpClause, rsvpMemberClause } from "@/modules/rsvp/notice-words";
 
@@ -366,7 +366,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
   {
     token: `{{${RAFFLE_GROUPS_MERGE_FIELD}}}`,
     messageKey: RAFFLE_GROUPS_MERGE_FIELD,
-    example: inBoth((locale) => raffleGroupsPhrase({ RUNNER: true, ELITE: true, VOLUNTEER: true }, locale)),
+    example: inBoth((locale) => raffleGroupsPhrase(EVERY_RAFFLE_GROUP, locale)),
   },
   // The privacy notice's marker for the raffle's sign-up (§NNN): the public form's name, and — with «Regulamentul tombolei» in force —
   // the switch: no door of the sign-up opens until the notice in force names it (`describesRaffle`).

@@ -4110,7 +4110,7 @@
         "elites": "Elitele",
         "volunteers": "Voluntarii",
         "runnersHelp": "Înscrierile confirmate, cu număr de concurs, nemarcate „Elită” — și ambasadorii.",
-        "elitesHelp": "Înscrierile marcate „Elită” și cei de pe lista de elită a cursei.",
+        "elitesHelp": "Înscrierile marcate „Elită” și cei de pe lista de elită a cursei. În regulament: „sportivii de top ai cursei”.",
         "volunteersHelp": "Voluntarii confirmați, cu număr de voluntar.",
         "whoHelp": "Bifele contează în ambele moduri de mai jos.",
         "how": "Cum participă",
@@ -12947,7 +12947,7 @@
     "raffleRulesTitle": "Regulamentul tombolei",
     "raffleGroups": {
       "RUNNER": "alergătorii înscriși și confirmați, cu număr de concurs",
-      "ELITE": "elitele cursei",
+      "ELITE": "sportivii de top ai cursei",
       "VOLUNTEER": "voluntarii confirmați, cu număr de voluntar",
       "and": "și"
     }

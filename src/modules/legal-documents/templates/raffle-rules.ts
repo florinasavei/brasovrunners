@@ -40,7 +40,7 @@ const whoRo = [
   // «Cine poate participa» (§NNN): the groups the event ticks, in words, filled when the person accepts.
   "Pot participa la tombolă {{raffleGroups}}.",
   "Participarea este gratuită: nu se cumpără nimic și nu se plătește nimic pentru ea.",
-  "Fiecare persoană participă o singură dată: cu numărul ei de concurs sau de voluntar, iar o persoană de pe lista de elită a cursei, cu numele.",
+  "Fiecare persoană participă o singură dată: cu numărul ei de concurs sau de voluntar, iar un sportiv de top fără număr, cu numele.",
   "Organizatorul poate hotărî ca unele persoane să nu participe la tombolă, de exemplu cele care o organizează.",
   "Un participant minor se înscrie cu acordul părintelui sau al tutorelui său.",
 ];
@@ -48,7 +48,7 @@ const whoRo = [
 const whoEn = [
   "The raffle is open to {{raffleGroups}}.",
   "Taking part is free: nothing is bought and nothing is paid for it.",
-  "Each person takes part once: with their race number or volunteer number, and a person on the race's elite list, by name.",
+  "Each person takes part once: with their race number or volunteer number, and a top athlete without a number, by name.",
   "The organiser may decide that some people do not take part in the raffle, for example those who run it.",
   "A participant who is a minor signs up with the agreement of their parent or guardian.",
 ];
@@ -57,7 +57,7 @@ const signUpRo = [
   "Tombola cere o înscriere separată de înscrierea la eveniment. Cât timp înscrierile la tombolă sunt deschise, te înscrii într-unul dintre aceste feluri:",
   "• din pagina înscrierii tale la eveniment, la care duce legătura din e-mailurile primite de la organizator;",
   "• din formularul tombolei de pe pagina evenimentului, cu numărul tău de concurs și numele cu care te-ai înscris; un voluntar bifează că este voluntar și scrie numărul său de voluntar;",
-  "• la organizatori, în ziua evenimentului, spunând că accepți acest regulament, pe hârtie sau verbal; tot organizatorii îi înscriu pe voluntari și pe cei de pe lista de elită care le cer acest lucru.",
+  "• la organizatori, în ziua evenimentului, spunând că accepți acest regulament, pe hârtie sau verbal; tot organizatorii îi înscriu pe voluntari și pe sportivii de top fără număr care le cer acest lucru.",
   "Înscrierea se face numai cu acceptarea acestui regulament. Organizatorul închide înscrierile cel târziu la începutul extragerii.",
 ];
 
@@ -65,17 +65,17 @@ const signUpEn = [
   "The raffle needs a sign-up of its own, separate from the registration for the event. While the raffle's sign-ups are open, you sign up in one of these ways:",
   "• from your registration's own page for the event, which the link in the emails you received from the organiser opens;",
   "• from the raffle's form on the event's page, with your race number and the name you registered with; a volunteer ticks that they are a volunteer and types their volunteer number;",
-  "• with the organisers, on the day of the event, by saying that you accept these rules, on paper or aloud; the organisers also sign up the volunteers and the people on the elite list who ask them to.",
+  "• with the organisers, on the day of the event, by saying that you accept these rules, on paper or aloud; the organisers also sign up the volunteers and the top athletes without a number who ask them to.",
   "A sign-up is made only by accepting these rules. The organiser closes the sign-ups at the start of the draw at the latest.",
 ];
 
 const drawRo = [
-  "Extragerea are loc la eveniment, la ora anunțată de organizator, dintre cei înscriși, în fața celor prezenți. Se extrag numere de concurs sau de voluntar, iar pentru o persoană de pe lista de elită, numele.",
+  "Extragerea are loc la eveniment, la ora anunțată de organizator, dintre cei înscriși, în fața celor prezenți. Se extrag numere de concurs sau de voluntar, iar pentru un sportiv de top fără număr, numele.",
   "Câștigătorul trebuie să fie prezent la extragere. Dacă nu este, se extrage altcineva în locul lui.",
 ];
 
 const drawEn = [
-  "The draw takes place at the event, at the time the organiser announces, among those signed up, in front of those present. Race numbers or volunteer numbers are drawn, and for a person on the elite list, the name.",
+  "The draw takes place at the event, at the time the organiser announces, among those signed up, in front of those present. Race numbers or volunteer numbers are drawn, and for a top athlete without a number, the name.",
   "A winner must be present at the draw. If they are not, someone else is drawn in their place.",
 ];
 

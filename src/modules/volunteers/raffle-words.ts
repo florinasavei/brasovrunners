@@ -1,6 +1,9 @@
 import { catalogueOf } from "@/i18n/catalogue";
 import { RAFFLE_KINDS, type RaffleGroups } from "./domain/raffle";
 
+/** Every group ticked, the editor's default: the legal editor's example of `{{raffleGroups}}`. */
+export const EVERY_RAFFLE_GROUP: RaffleGroups = { RUNNER: true, ELITE: true, VOLUNTEER: true };
+
 // The platform's words with the club's own laid over them (§887, `i18n/catalogue.ts`).
 const en = catalogueOf("en");
 const ro = catalogueOf("ro");
@@ -17,8 +20,9 @@ export function raffleClause(locale: string): string {
 
 /**
  * What «Regulamentul tombolei»'s `{{raffleGroups}}` becomes (§NNN): the groups the event ticks in «Cine poate participa», in the
- * text's language and the house's order — «alergătorii confirmați, cu număr de concurs, elitele cursei și voluntarii confirmați, cu
- * număr de voluntar» — joined as a sentence joins them. "" when none is ticked: the gate opens no sign-up then, so no text is read.
+ * text's language and the house's order — «alergătorii confirmați, cu număr de concurs, sportivii de top ai cursei și voluntarii
+ * confirmați, cu număr de voluntar» — joined as a sentence joins them. The elites are «sportivii de top»: the mark «Elită» is the
+ * organizers' own, and no word a participant reads names it (§917). "" when none is ticked: the gate opens no sign-up then, so no text is read.
  */
 export function raffleGroupsPhrase(groups: RaffleGroups, locale: string): string {
   const words = locale === "en" ? en.Legal.raffleGroups : ro.Legal.raffleGroups;
