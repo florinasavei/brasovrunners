@@ -46,7 +46,7 @@ import { raffleDeskSignUpAction } from "./tombola/actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  /** `row`: the registration the last press on the list named (§NNN), whose section the page draws open. */
+  /** `row`: the registration the last press on the list named (§1002), whose section the page draws open. */
   searchParams: Promise<{ eventId?: string; q?: string; saved?: string; error?: string; row?: string } & Partial<Record<keyof PlacesTaken, string>>>;
 };
 
@@ -80,7 +80,7 @@ const SECTION_GLYPH = {
  * A GET reads and never writes: the search is a form with method="get", and every button on a
  * row is its own POST.
  *
- * The list folds by state (§NNN; the owner, 2026-11-19: «Pe ziua cursei trebuie să fac secțiuni collapsible în funcție de
+ * The list folds by state (§1002; the owner, 2026-11-19: «Pe ziua cursei trebuie să fac secțiuni collapsible în funcție de
  * status»): one section per state in the table's working order — «De ridicat numărul», «Fără declarație semnată», «Prezenți»,
  * «Adresă neconfirmată», «Ofertă de loc deschisă», «Pe lista de așteptare», and «Anulate sau expirate» when a number found such
  * a row — each a level-3 `Panel` whose summary says its words and the count of its rows, the empty ones not drawn
@@ -151,7 +151,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
     ? `${getPathname({ locale, href: "/admin/registrations/new" })}?eventId=${eventId}&back=desk`
     : null;
 
-  // The desk's list in sections, one per state (§NNN): a search (a name fragment or a number) opens each section it found somebody
+  // The desk's list in sections, one per state (§1002): a search (a name fragment or a number) opens each section it found somebody
   // in, and the row a press came back with (`row=`) opens the section that holds it now. A typed code draws its runner alone.
   const returnedRow = returnedRowOf(query.row);
   const sections = byCode

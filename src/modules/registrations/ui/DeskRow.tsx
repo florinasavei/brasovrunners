@@ -168,7 +168,7 @@ export default async function DeskRow({
   return (
     <Box
       component="li"
-      // The row a press comes back to (§NNN): the desk's list lands here, in the section that now holds it, drawn open.
+      // The row a press comes back to (§1002): the desk's list lands here, in the section that now holds it, drawn open.
       id={registrationRowAnchor(row.id)}
       data-testid="desk-row"
       sx={{
@@ -225,7 +225,7 @@ export default async function DeskRow({
               {row.registeredName}
             </Typography>
             {/*
-              The eye (§NNN; the owner, 2026-11-19: «trebuie să văd dacă oamenii doresc să apară anonimi sau nu, să apară un ochișor»):
+              The eye (§1004; the owner, 2026-11-19: «trebuie să văd dacă oamenii doresc să apară anonimi sau nu, să apară un ochișor»):
               open with «Cu nume» when the person appears by name on the site — the list and the results —, crossed with «Anonim» when
               they did not tick it or the club hid them; for every desk role, from the desk's own query. Not on a row that is over.
             */}

@@ -5,7 +5,7 @@ import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-037-08, BR-REQ-041-01 criterion 6, `DECISIONS.md` §NNN — the desk's list folded by state (the owner, 2026-11-19: «Pe
+ * BR-REQ-037-08, BR-REQ-041-01 criterion 6, `DECISIONS.md` §1002 — the desk's list folded by state (the owner, 2026-11-19: «Pe
  * ziua cursei trebuie să fac secțiuni collapsible în funcție de status»), walked by the desk's volunteer at 320 pixels and on a
  * desktop against the production build:
  *
@@ -138,7 +138,7 @@ const section = (page: Page, key: string) => page.getByTestId(`desk-section-${ke
 const summaryOf = (fold: Locator) => fold.locator(":scope > summary");
 const rowOf = (fold: Locator, person: Person) => fold.getByTestId("desk-row").filter({ hasText: person.name });
 
-test.describe("§NNN BR-REQ-037-08 the desk's list folded by state", () => {
+test.describe("§1002 BR-REQ-037-08 the desk's list folded by state", () => {
   test.describe.configure({ timeout: 120_000 });
 
   test("the sections in the working order, a check-in back on its row in «Prezenți» opened, a search opening what it found", async ({ page }) => {

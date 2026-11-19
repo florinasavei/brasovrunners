@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.78-2026-11-19
+
+- **The race-day desk folds by state** — «Prezența» lists its runners in sections, in working order: «De ridicat numărul» and «Fără declarație semnată» open, «Prezenți», «Adresă neconfirmată», «Ofertă de loc deschisă» and «Pe lista de așteptare» folded, each with how many; a search opens what it found, and a press comes back to its row, its section open. §1002.
+- **The registrations list says why someone cancelled** — under the cancellation's day and minute in «Stare», the person's own reason («Accidentare sau boală», «Alt program», or «Alt motiv» with their words) or «Anulată de organizatori». §1003.
+- **An eye on the desk** — beside each runner's name on «Prezența», «Cu nume» with an open eye when they appear by name on the site, «Anonim» with a crossed eye when they did not tick it or the club hid them. §1004.
 ## BR-V4.77-2026-11-19
 
 - **«Ziua cursei» → «Jurnal»: who scanned, who marked present** — every scan of a runner's code at the desk is recorded; the desk's chip says who marked a runner present («Prezent la 08:12 · QR2», «prin „Am ajuns”»); the scanned page says «Scanat înainte: …»; a volunteer's «Prezent» says who ticked it and when; and the organizers' new «Jurnal» tab lists every scan, check-in, undo and volunteer tick of an event, newest first, with the count per account. §996.

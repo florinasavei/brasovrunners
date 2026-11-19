@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.77-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.78-2026-11-19 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.77-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.78-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31324,3 +31324,53 @@ Baseline `BR-V4.77-2026-11-19`.
 **Not in this change.** Clearing the other phones: each clears its own.
 
 Baseline `BR-V4.77-2026-11-19`.
+
+## 1002. The race-day desk's list folds by state: «De ridicat numărul» first, a search opening what it found, a press back on its row with its section open
+
+**The owner, 2026-11-19:** «Pe ziua cursei trebuie să fac secțiuni collapsible în funcție de status» — on race day the desk's list must fold by state.
+
+**Decision.** The desk's list («Ziua cursei» → «Prezența», `/admin/checkin`) is one fold per state, in the table's working order — what the volunteer does first comes first —, each a level-3 `Panel` (the house's boxed fold, its 44-pixel summary a heading) whose summary says its words and the count of its rows, «De ridicat numărul (12)»:
+
+1. «De ridicat numărul» / “To pick up” — confirmed, not checked in. Open on every arrival (`primary`: what the desk is for).
+2. «Fără declarație semnată» / “Declaration not signed” — `PENDING_DECLARATION`, the rows «Confirmă pe hârtie» is pressed on. Open while it has rows (`attention`).
+3. «Prezenți» / “Present” — confirmed and checked in. Closed.
+4. «Adresă neconfirmată» / “Address not confirmed” — `PENDING_EMAIL_CONFIRMATION`. Closed.
+5. «Ofertă de loc deschisă» / “Place offered” — `WAITLIST_OFFERED`. Closed.
+6. «Pe lista de așteptare» / “On the waiting list” — `WAITLISTED`, in the state's own words (`REGISTRATION_STATUS_LABEL`, §35). Closed.
+7. «Anulate sau expirate» / “Cancelled or expired” — drawn only when a race number found such a row (BR-REQ-037-08 criterion 8, §311). Open (`attention`: a printed bib may have to come out of the pile).
+
+A section with no rows is not drawn; inside each, the rows keep the list's order (by name, then id). The rule is one module, `registrations/domain/desk-sections.ts` (`deskSectionOf`, `deskSections`); a row that is over is in the last section whatever else it carries. Each section wears a glyph from `panel-glyphs.ts` — the bib, the paper, the person-with-tick, the address, the seat (`placeOffered`, added: the picture the state's chip wears), the hourglass, the row that is over —, so a column of closed sections reads by picture too. Server Components only: every section is a `<details>`, so it folds before hydration and with JavaScript off.
+
+**The count is of the real rows.** A test registration is drawn in its section, labelled «Test», and left out of the section's number, as the desk's counters above the list leave it out (§30, §420): the sections' numbers and the counters agree.
+
+**Every row, with no cap.** The desk's list had stopped at 200 rows by name since it was built (§67). In one flat list the cut went unsaid; under a section's number it would say something false — on a race of 177 confirmed and more, the names that sort last would be missing from «De ridicat numărul» while its number read as the whole of the numbers still to hand out, short of «Confirmați» above it. `listDeskRegistrations` now reads every row its search matches: a race of a few hundred entries is drawn with the page, as «Doar anumiți participanți» draws every active registration (§945), the closed sections folding the bulk — to be paged should an event ever hold thousands. So «De ridicat numărul» and «Prezenți» add up to «Confirmați», and «Fără declarație semnată», «Adresă neconfirmată», «Ofertă de loc deschisă» and «Pe lista de așteptare» to «Neconfirmați».
+
+**A search** — a name fragment or a number — draws only the sections it found somebody in, each open (`inUse`); **a typed code** names one runner, drawn alone as before, with no section.
+
+**The way back after a press.** Every press on a row of the list — «Marchează prezent», «Anulează prezența», «Salvează nr.», «Confirmă pe hârtie», «Dă-i un loc», «Elită și BIB», «Înscrie la tombolă» — and the walk-in's «Adaugă înscrierea» opened from the desk come back with the event, the search and the row in the address (`row=<id>`, a registration's id and nothing about the person), landing on the row (`#reg-<id>`, `list-row.ts#listReturnAnchor`, as a row's press on the registrations list has since §943) when the press went through and on the alert when it was refused. The server draws open the section that holds the row now, whatever moved it — a check-in lands in «Prezenți», a paper confirmation on a full race in «Pe lista de așteptare» (`saved`, or `refused`) —, because a redirect to the same page runs no `OpenFoldFromHash`; the row's `<li>` carries the id, so a full load lands there too. The outcome is the toast's to say: the desk's raffle sign-up, which said it only in the alert, now flashes its toast as well when it comes back to a row of the list.
+
+**Unchanged.** The rows' content and verbs, the counters, what a search matches, the scanned page `/admin/checkin/<code>` (one row, no section, its presses back to its alert), and the desk of a race that is over: the sections fold the same, every row read-only.
+
+**Refused.** Open states kept in the browser (the desk works before hydration; a `<details>` is the fold); counting test registrations in a section's number (it would disagree with the counters and break §30); opening every section after a press (the volunteer would lose the list's shape); landing on the alert after a press that went through (with the sections open above, the row would be out of sight — the toast says the outcome); keeping a cap, sorted by section, with a sentence when it is reached (the last sections would still be cut under a number that reads as all of them).
+
+**Verification.** Unit `tests/unit/registrations/desk-sections.test.ts` (the order, the states, why each opens, the count, the words in both catalogues); integration `tests/integration/registrations/race-day-desk-sections.test.ts` (the page on a real database: every section and its count, the counters, a race of 239 rows not over — more than the 200 the list used to stop at — drawn whole, «De ridicat numărul (N)» and «Prezenți (N)» adding up to «Confirmați» and the four other sections to «Neconfirmați», a name search, a number, a code, the scanned page, a race that is over, both languages, and each press's way back through the real actions — check-in, undo, a saved number, a paper confirmation with a place and on a full race, the elite mark, the walk-in, a refusal); `tests/integration/volunteers/raffle-tab-screens.test.ts` (the desk's sign-up back on its row with its toast); e2e `tests/e2e/race-day-sections.spec.ts` at 320 pixels and on a desktop.
+
+Baseline `BR-V4.78-2026-11-19`.
+
+## 1003. The registrations list says why someone cancelled, under when (amending §993)
+
+**The owner, 2026-11-19, with a picture of the registrations list filtered to «Anulată», whose «Stare» already said the moment under the chip (§993):** «aș vrea să văd aici și când a anulat cineva și de ce». The person's own reason (§558) — «Accidentare sau boală», «Alt program», «Alt motiv» with their words — was asked at every self-cancellation and said on the registration's page and in the export, never in the list.
+
+**Decision.** Under a cancelled registration's moment in «Stare», why — in the registration page's words: the person's answer (`registrations.cancelReasonKinds`), «Alt motiv — „<their words>”» for the third, or «Anulată de organizatori» / “Cancelled by the organisers” when staff cancelled it (`cancellation_source` = `ADMIN`, now read by the list's query with the row's other columns, no query per row). Nothing for a cancellation from before the reasons were asked, and nothing under «Expirată», whose cause is the timeline's. A long «Alt motiv» wraps inside the cell, which stays at most 16rem wide on the table. For every role that reads the list, as the registration's page shows it to them.
+
+Baseline `BR-V4.78-2026-11-19`.
+
+## 1004. The desk's eye: whether a runner appears by name on the site or anonymously
+
+**The owner, 2026-11-19, with a picture of the race-day desk:** «și aici trebuie să văd dacă oamenii doresc să apară anonimi sau nu, să apară un ochișor». Whether a runner appears by name on the site — the public list and the results — was said on the registrations list («Nu apare public») and in «Clasament», never at the desk where the volunteers meet the runners.
+
+**Decision.** Beside each runner's name on the desk's row — the list, a search, the scanned page — a chip with an eye: open, «Cu nume» / “By name”, when the person appears by name on the site; crossed, «Anonim» / “Anonymous”, when they did not tick «Vreau să apar pe lista de participanți & rezultate» or an Administrator unticked «Apare pe site» on them as an elite or an ambassador (§910, §948). The desk's own query reads the public list's one condition (`repository.ts#namedOnPublicList`, now exported) as a column of the row, no query per row, so the eye and the list never disagree. For every desk role: the person's own public wish, a fact the row already holds, never an address. Not drawn on a row that is over.
+
+**Not in this change.** The results' further conditions (a privacy notice that describes them, a special guest the event hides): the eye says the person's wish and the club's hide, which is what the desk can act on.
+
+Baseline `BR-V4.78-2026-11-19`.

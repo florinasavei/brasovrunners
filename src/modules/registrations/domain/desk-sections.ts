@@ -3,7 +3,7 @@ import type { FoldOpenWhen } from "@/shared/ui/fold";
 import { isUuid } from "@/shared/ids";
 
 /**
- * The desk's list in folding sections, one per state (§NNN; the owner, 2026-11-19: «Pe ziua cursei trebuie să fac secțiuni
+ * The desk's list in folding sections, one per state (§1002; the owner, 2026-11-19: «Pe ziua cursei trebuie să fac secțiuni
  * collapsible în funcție de status»).
  *
  * The desk drew every row of the chosen event in one list, ordered by name: on race morning the people still to hand a number

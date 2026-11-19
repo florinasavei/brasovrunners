@@ -21,7 +21,7 @@ import { withClientWords } from "../../helpers/client-words";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-037-08 (criteria 3, 4, 8), `DECISIONS.md` §NNN — the desk's list in folding sections, one per state (the owner,
+ * BR-REQ-037-08 (criteria 3, 4, 8), `DECISIONS.md` §1002 — the desk's list in folding sections, one per state (the owner,
  * 2026-11-19: «Pe ziua cursei trebuie să fac secțiuni collapsible în funcție de status»), as the server draws the page on a
  * real database (PGlite): the seven sections in the table's working order, each a level-3 fold whose summary says its words and
  * the count of its real rows, open or closed as decided, the empty ones absent, each section's rows in the list's own order; every
@@ -324,7 +324,7 @@ function expectBackOnTheRow(to: URL, id: string, saved: string, q?: string) {
   expect(Object.fromEntries(to.searchParams)).toEqual({ eventId, ...(q ? { q } : {}), row: id, saved });
 }
 
-describe("§NNN BR-REQ-037-08 the desk's list in sections, one per state", () => {
+describe("§1002 BR-REQ-037-08 the desk's list in sections, one per state", () => {
   it("draws the sections in the table's working order, «<words> (N)», open or closed as decided, each section's rows by name", async () => {
     await saturday();
     expect(sectionsOf(await desk())).toEqual([
@@ -438,7 +438,7 @@ describe("§NNN BR-REQ-037-08 the desk's list in sections, one per state", () =>
   });
 });
 
-describe("§NNN BR-REQ-037-08 criterion 4 a search opens the sections it found somebody in; a code draws its runner alone", () => {
+describe("§1002 BR-REQ-037-08 criterion 4 a search opens the sections it found somebody in; a code draws its runner alone", () => {
   it("a name fragment: only the sections holding a match, each open, the rows by name", async () => {
     await saturday();
     expect(sectionsOf(await desk({ q: "pop" }))).toEqual([
@@ -468,7 +468,7 @@ describe("§NNN BR-REQ-037-08 criterion 4 a search opens the sections it found s
   });
 });
 
-describe("§NNN BR-REQ-037-08 the scanned page is as it was: one runner, no section, its presses back to it", () => {
+describe("§1002 BR-REQ-037-08 the scanned page is as it was: one runner, no section, its presses back to it", () => {
   it("draws the scanned runner alone, and a press there comes back to the scanned page's alert, with no row in the address", async () => {
     const people = await saturday();
     const [{ code }] = await db.select({ code: registrations.checkinCode }).from(registrations).where(eq(registrations.id, people.ana));
@@ -480,7 +480,7 @@ describe("§NNN BR-REQ-037-08 the scanned page is as it was: one runner, no sect
   });
 });
 
-describe("§NNN BR-REQ-037-08 a race that is over folds the same, and offers no verb", () => {
+describe("§1002 BR-REQ-037-08 a race that is over folds the same, and offers no verb", () => {
   it("draws the sections, each row read-only", async () => {
     await saturday();
     await db.update(events).set({ eventStatus: "COMPLETED" }).where(eq(events.id, eventId));
@@ -500,7 +500,7 @@ describe("§NNN BR-REQ-037-08 a race that is over folds the same, and offers no 
   });
 });
 
-describe("§NNN BR-REQ-037-08 the way back: each press comes back to its row, in the section that holds it now, drawn open", () => {
+describe("§1002 BR-REQ-037-08 the way back: each press comes back to its row, in the section that holds it now, drawn open", () => {
   it("«Marchează prezent»: the row in «Prezenți», opened; «Anulează prezența»: back in «De ridicat numărul»", async () => {
     const people = await saturday();
     const checkedIn = await redirectedTo(checkInAction(null, form({ registrationId: people.ana, back: "desk", eventId, direction: "in" })));

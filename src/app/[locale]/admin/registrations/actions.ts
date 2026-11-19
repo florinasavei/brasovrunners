@@ -99,7 +99,7 @@ async function backTo(
   outcome: Record<string, string | undefined>,
   /** The page's own query, carried in the URL and never into the flash (a desk search is a name). */
   params: Record<string, string | undefined> = {},
-  /** Where the page lands: the alert unless the caller names the row its press changed (the desk's list, §NNN). */
+  /** Where the page lands: the alert unless the caller names the row its press changed (the desk's list, §1002). */
   hash = "admin-alert",
 ): Promise<never> {
   await flashOutcome(outcome);
@@ -113,7 +113,7 @@ async function backTo(
 }
 
 /**
- * The desk's list after a press on one of its rows (§NNN): the row in the address (`row=`, a registration's id and nothing
+ * The desk's list after a press on one of its rows (§1002): the row in the address (`row=`, a registration's id and nothing
  * about the person), so the page draws open the section that now holds it — whatever moved it, a check-in moving a runner to
  * «Prezenți» — and the fragment that lands on the row when the press went through, on the alert when it was refused (as a
  * row's press on the registrations list, §943: `listReturnAnchor`). The outcome is the toast's to say, as always.
@@ -180,7 +180,7 @@ async function backToDesk(form: FormData, locale: Locale, registrationId: string
     return backToList(locale, text(form, "listQuery"), said, registrationId);
   }
   const target = returnTo(form, locale, registrationId);
-  // A row of the desk's list (§NNN): back to that row, in the section that now holds it, drawn open.
+  // A row of the desk's list (§1002): back to that row, in the section that now holds it, drawn open.
   if (text(form, "back") === "desk") {
     const { row, hash } = deskRowReturn(registrationId, outcome);
     return backTo(target.path, outcome, { ...target.params, row }, hash);
@@ -390,7 +390,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
 
     let outcome: { error?: string; saved?: string };
     let reserveEventId: string | null = null;
-    // The row the entry wrote or restarted: the desk comes back to it, in the section its state put it in (§NNN).
+    // The row the entry wrote or restarted: the desk comes back to it, in the section its state put it in (§1002).
     let createdId: string | null = null;
     try {
       // Every role: a walk-in on race morning is entered by the volunteer at the table
@@ -510,7 +510,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
     }
 
     // A success goes to where the new row is visible with the status it actually landed in —
-    // the desk, when the form was opened from there (on the new row, in the section its state put it in, drawn open, §NNN),
+    // the desk, when the form was opened from there (on the new row, in the section its state put it in, drawn open, §1002),
     // otherwise the list.
     const fromDesk = text(form, "back") === "desk";
     if (fromDesk) {

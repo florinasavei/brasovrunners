@@ -775,7 +775,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         */
         const endedAt = row.status === "CANCELLED" ? row.cancelledAt : row.status === "EXPIRED" ? row.expiredAt : null;
         /*
-          …and why (§NNN; the owner, 2026-11-19, on the list filtered to «Anulată»: «aș vrea să văd aici și când a anulat cineva
+          …and why (§1003; the owner, 2026-11-19, on the list filtered to «Anulată»: «aș vrea să văd aici și când a anulat cineva
           și de ce»): the person's own answer (§558), in the registration page's words — «Alt motiv» with their words after it —,
           or that the organizers cancelled it. Nothing for a cancellation from before the reasons were asked.
         */

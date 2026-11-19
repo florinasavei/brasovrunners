@@ -544,12 +544,12 @@ describe("§995 the desk row's identity document, by role", () => {
 });
 
 /**
- * §NNN — the eye on the desk row (the owner, 2026-11-19: «trebuie să văd dacă oamenii doresc să apară anonimi sau nu, să apară un
+ * §1004 — the eye on the desk row (the owner, 2026-11-19: «trebuie să văd dacă oamenii doresc să apară anonimi sau nu, să apară un
  * ochișor»): «Cu nume» with the open eye when the person appears by name on the site — their «Vreau să apar» ticked and no
  * Administrator's «Apare pe site» unticked on an elite —, «Anonim» with the crossed eye otherwise; the desk's own query reads the
  * public list's one condition, for every desk role; no eye on a row that is over.
  */
-describe("§NNN the desk row's eye: by name or anonymous", () => {
+describe("§1004 the desk row's eye: by name or anonymous", () => {
   const rowOf = async (id: string) => (await listDeskRegistrations(db, { eventId, query: "", locale: "ro" })).find((candidate) => candidate.id === id);
   const eyeOf = async (id: string, role: StaffRole = "CONTRIBUTOR") => {
     const row = await rowOf(id);

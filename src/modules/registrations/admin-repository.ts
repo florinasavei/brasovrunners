@@ -196,7 +196,7 @@ export type RegistrationListRow = {
   offerEmailQueued?: boolean;
   declarationAcceptedAt: Date | null;
   cancelledAt: Date | null;
-  /** Who cancelled (`PARTICIPANT` or `ADMIN`), null on a row never cancelled: the list's «Stare» says a staff cancellation (§NNN). */
+  /** Who cancelled (`PARTICIPANT` or `ADMIN`), null on a row never cancelled: the list's «Stare» says a staff cancellation (§1003). */
   cancellationSource: string | null;
   /** The participant's own reason for cancelling (§558): the export's «Cancellation reason». Null on a staff cancellation. */
   cancelReasonKind: RegistrationCancelReasonKind | null;
@@ -1483,7 +1483,7 @@ export type DeskRegistration = {
   /** «Elită» (§897): the bib prints as an elite bib — part of the picture's address, so a mark is a fresh picture. */
   elite: boolean;
   /**
-   * Whether the person appears by name on the site (§NNN; the owner, 2026-11-19, on the desk: «trebuie să văd dacă oamenii doresc să
+   * Whether the person appears by name on the site (§1004; the owner, 2026-11-19, on the desk: «trebuie să văd dacă oamenii doresc să
    * apară anonimi sau nu, să apară un ochișor»): the public list's one condition (`repository.ts#namedOnPublicList`) — their own «Vreau
    * să apar pe lista de participanți & rezultate», and no Administrator's «Apare pe site» unticked on an elite or an ambassador. A wish
    * the row already carries for every desk role, never an address.
@@ -1549,7 +1549,7 @@ const DESK_COLUMNS = {
   raceNumberFormat: RACE_NUMBER_FORMAT,
   bibStamp: BIB_STAMP,
   elite: registrations.elite,
-  // «Cu nume» / «Anonim» (§NNN): the public list's own condition, so the desk's eye and the list never disagree.
+  // «Cu nume» / «Anonim» (§1004): the public list's own condition, so the desk's eye and the list never disagree.
   namedOnSite: sql<boolean>`${namedOnPublicList()}`.mapWith(Boolean),
   // The two halves «Eticheta pe BIB» is decided from (§975), read by `deskRowOf` alone and never handed to the row as they are.
   deskFirstName: registrations.firstName,
@@ -1607,7 +1607,7 @@ export async function findRegistrationByCheckinCode<T extends Record<string, unk
  * what "no email arrived" comes down to at a desk — and never a cancelled or expired one,
  * **except by its number**: the one exception BR-REQ-037-08 criterion 4 names (§311).
  *
- * **Every row it matches, with no cap** (§NNN). The list folds by state and each section says how many it holds — «De ridicat
+ * **Every row it matches, with no cap** (§1002). The list folds by state and each section says how many it holds — «De ridicat
  * numărul (N)», read as the whole of the numbers still to hand out, beside the counters above it (`countDesk`, every row of the
  * event). A cap by name (200, until then) took the names that sort last out of their section and made its number short of the
  * counters. A race has at most a few hundred entries: they are drawn with the page, as «Doar anumiți participanți» draws every

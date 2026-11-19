@@ -7,7 +7,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * BR-REQ-037-08, `DECISIONS.md` §NNN — the desk's list in folding sections, one per state (the owner, 2026-11-19: «Pe ziua
+ * BR-REQ-037-08, `DECISIONS.md` §1002 — the desk's list in folding sections, one per state (the owner, 2026-11-19: «Pe ziua
  * cursei trebuie să fac secțiuni collapsible în funcție de status»): the table's working order, each section's rows in the list's
  * own order, the empty ones left out, which open by themselves and why, the count of the real rows only (§30), and the words of
  * every section in both catalogues.
@@ -25,7 +25,7 @@ const HERE = new Date("2026-11-21T07:30:00.000Z");
 const drawn = (rows: readonly Row[], options: Parameters<typeof deskSections>[1]) =>
   deskSections(rows, options).map((section) => [section.key, section.rows.map((one) => one.id), section.count, opensByItself(section.openWhen)] as const);
 
-describe("§NNN BR-REQ-037-08 the desk's sections", () => {
+describe("§1002 BR-REQ-037-08 the desk's sections", () => {
   it("place every state in its section — confirmed by whether the person is here, a row that is over by its state alone", () => {
     const cases: Array<[RegistrationStatus, Date | null, DeskSectionKey]> = [
       ["CONFIRMED", null, "toPickUp"],

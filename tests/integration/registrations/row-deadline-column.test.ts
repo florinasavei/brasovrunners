@@ -310,7 +310,7 @@ describe("§650 «Până când» on the registrations list", () => {
     }
   });
 
-  it("§NNN «Stare»: under a cancellation's moment, why — the person's answer, «Alt motiv» with their words, or the organizers", async () => {
+  it("§1003 «Stare»: under a cancellation's moment, why — the person's answer, «Alt motiv» with their words, or the organizers", async () => {
     // The owner, 2026-11-19, on the list filtered to «Anulată»: «aș vrea să văd aici și când a anulat cineva și de ce».
     const race = await createRace("Crosul");
     const cancelledAt = new Date("2026-11-18T19:42:00.000Z");

@@ -148,7 +148,7 @@ export async function raffleDeleteEntryAction(form: FormData): Promise<void> {
  * Where the desk's press comes back to, rebuilt from fields and never taken from the form as a path: the desk's list with its event
  * and its search (`back=desk`, as the desk's other verbs come back to it), or else the scanned person's view.
  *
- * On the desk's list (§NNN) the row comes back too, as the desk's other verbs bring it (`row=`, the registration's id alone): the
+ * On the desk's list (§1002) the row comes back too, as the desk's other verbs bring it (`row=`, the registration's id alone): the
  * section that holds it is drawn open, and a sign-up that went through lands on the row — its toast saying so — a refusal on
  * the alert (`listReturnAnchor`, §943).
  */
