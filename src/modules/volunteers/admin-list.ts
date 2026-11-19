@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, exists, gt, inArray, isNull, ne, notExists, or, type SQL, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, exists, gt, inArray, isNull, ne, not, notExists, or, type SQL, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { nameMatches } from "@/db/name-search";
 import { eventVolunteerCategories, eventVolunteerRoleAssignments, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
@@ -8,6 +8,7 @@ import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { buildListHref } from "@/modules/staff-identity/domain/admin-list-query";
 import { type RoleTypeWords, VOLUNTEER_STATES, type VolunteerState } from "./domain/volunteer";
+import { hasSignedContract } from "./signed-contract";
 import { type VolunteerItem, volunteerItemsOf } from "./volunteers";
 
 /**
@@ -47,6 +48,12 @@ export type VolunteerAdminFilters = {
    * own claim, checked against nothing —, or everyone (absent). No «not members» half: the owner asked to see the members.
    */
   member?: true;
+  /**
+   * «Contract semnat» (§NNN): only the people whose signed agreement is attached (`true`), only the ones whose is not (`false`) —
+   * who is left after «Încarcă contractele semnate» —, or everyone (absent). Either half leaves the cancelled out, as the strip's
+   * «Contracte semnate: N din M» does: a cancelled person owes no agreement.
+   */
+  contract?: boolean;
 };
 
 /** `?member=` as the list's address carries it (§981): «1», the members alone, or nothing — anything else is no filter. */
@@ -61,6 +68,11 @@ export function kitFilterOf(value: string | undefined): boolean | undefined {
 
 /** `?present=` as the list's address carries it (§983): «yes» the present, «no» the absent, or nothing — anything else is no filter. */
 export function presentFilterOf(value: string | undefined): boolean | undefined {
+  return value === "yes" ? true : value === "no" ? false : undefined;
+}
+
+/** `?contract=` as the list's address carries it (§NNN): «yes» with a signed agreement, «no» without, or nothing — anything else is no filter. */
+export function contractFilterOf(value: string | undefined): boolean | undefined {
   return value === "yes" ? true : value === "no" ? false : undefined;
 }
 
@@ -105,6 +117,8 @@ function whereOf(filters: VolunteerAdminFilters): SQL | undefined {
   // people its figure counts, and «Absenți» never lists everybody who cancelled.
   if (filters.present !== undefined) parts.push(eq(eventVolunteers.present, filters.present), ne(eventVolunteers.state, "CANCELLED"));
   if (filters.member) parts.push(eq(eventVolunteers.clubMember, true));
+  // «Contract semnat» (§NNN): the strip's own people — among «Înscris» and «Confirmat» — with the copy attached, or without it.
+  if (filters.contract !== undefined) parts.push(filters.contract ? hasSignedContract(eventVolunteers.id) : not(hasSignedContract(eventVolunteers.id)), ne(eventVolunteers.state, "CANCELLED"));
   return parts.length > 0 ? and(...parts) : undefined;
 }
 
@@ -214,12 +228,14 @@ export type VolunteerAdminSummary = {
   present: number;
   /** «Absenți» (§983): «Înscris» and «Confirmat» not ticked «Prezent» — unticked is absent; the cancelled left out, as above. */
   absent: number;
+  /** «Contracte semnate: N din M» (§NNN): «Înscris» and «Confirmat» whose signed agreement is attached — N; M is the two states' sum. */
+  withContract: number;
 };
 
 /**
- * The strip's figures (§246's shape): by state, how many wait for a role, how many get a kit and how many came and did not. Blind to the
- * state, role, kit and presence filters on purpose — the strip says how the scope stands, and its pills are what set those filters. One
- * grouped query and one count.
+ * The strip's figures (§246's shape): by state, how many wait for a role, how many get a kit, how many came and did not, and how many
+ * signed agreements are attached (§NNN). Blind to the state, role, kit, presence and contract filters on purpose — the strip says how
+ * the scope stands, and its pills are what set those filters. One grouped query and two counts.
  */
 export async function summariseVolunteersForAdmin<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -250,7 +266,13 @@ export async function summariseVolunteersForAdmin<T extends Record<string, unkno
     .from(eventVolunteers)
     .innerJoin(events, eq(events.id, eventVolunteers.eventId))
     .where(and(scope, noRoleGiven(), sql`${eventVolunteers.state} <> 'CANCELLED'`));
-  return { total: grouped.reduce((sum, row) => sum + row.n, 0), byState, unassigned: waiting?.n ?? 0, withKit, present, absent };
+  // «Contracte semnate» (§NNN): the active people whose signed copy is attached — its existence only, never a row of the table.
+  const [signed] = await db
+    .select({ n: count() })
+    .from(eventVolunteers)
+    .innerJoin(events, eq(events.id, eventVolunteers.eventId))
+    .where(and(scope, hasSignedContract(eventVolunteers.id), sql`${eventVolunteers.state} <> 'CANCELLED'`));
+  return { total: grouped.reduce((sum, row) => sum + row.n, 0), byState, unassigned: waiting?.n ?? 0, withKit, present, absent, withContract: signed?.n ?? 0 };
 }
 
 /**

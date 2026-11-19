@@ -853,6 +853,16 @@ export type AuditAction =
   /** The agreement's PDF downloaded from the card (§758): a file with a name in it leaves the site; who and when. */
   | "volunteer.agreement_downloaded"
   /**
+   * «Contract semnat» (§NNN), entity `event`: a volunteer's signed agreement attached (`uploaded`), attached in place of another
+   * (`replaced`, with the old copy's length and format), deleted, and downloaded — a file with a signature leaves the site. The
+   * metadata is the volunteer's id, the file's length in bytes and its format (`PDF`, `DOCX`…) — **never the file's name**, which
+   * carries the person's, and never a byte of it.
+   */
+  | "volunteer.signed_contract_uploaded"
+  | "volunteer.signed_contract_replaced"
+  | "volunteer.signed_contract_deleted"
+  | "volunteer.signed_contract_downloaded"
+  /**
    * Every agreement of an event in one PDF, from the «Voluntari» list (§966), entity `event`: «Contractele (PDF)», or — `only`
    * «unsigned» — «De semnat pe hârtie (PDF)». The metadata counts what the file holds (the agreements, the accepted copies and the
    * sheets to sign), never a name.

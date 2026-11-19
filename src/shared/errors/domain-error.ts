@@ -67,6 +67,16 @@ export type DomainErrorCode =
   | "VOLUNTEER_NO_EMAIL"
   // The guardian's link or paper record while the privacy notice and the agreement in force do not both describe minors (§768).
   | "VOLUNTEER_MINORS_CLOSED"
+  // «Contract semnat» (§NNN): a file with no bytes, one past `SIGNED_CONTRACT_MAX_BYTES`, or one whose own bytes are not a PDF, a Word
+  // document or a photograph (JPEG, PNG, HEIC) — whatever its name says. Each writes nothing.
+  | "VOLUNTEER_CONTRACT_EMPTY"
+  | "VOLUNTEER_CONTRACT_TOO_LARGE"
+  | "VOLUNTEER_CONTRACT_TYPE"
+  // A piece of a large file sent in pieces whose upload is not there any more — replaced by a newer one, gone with its person — or that
+  // is not the next piece (sent twice, out of turn): the page sends the file again from the start.
+  | "VOLUNTEER_CONTRACT_UPLOAD_GONE"
+  // «Încarcă contractele semnate» pressed with no file chosen, scripts off (§NNN): said as such, never as «0 attached».
+  | "VOLUNTEER_CONTRACTS_NONE_CHOSEN"
   // «Trimite fiecăruia punctul lui» with nobody to write to (§956): no volunteer with an address stands at a point of the route…
   | "VOLUNTEER_POINTS_NOBODY"
   // …or every one who does was already told the point they stand at, and the press did not ask to write to everybody again.

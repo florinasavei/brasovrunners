@@ -305,6 +305,8 @@ describe("the list's repository (§839)", () => {
       // «Prezenți» / «Absenți» (§983): nobody ticked «Prezent» yet — the three not cancelled are absent, Mihai is neither.
       present: 0,
       absent: 3,
+      // «Contracte semnate» (§NNN): no signed agreement attached yet.
+      withContract: 0,
     });
     expect((await summariseVolunteersForAdmin(db, {})).total).toBe(5);
     // «Ana Pop», «Dana Ionescu» and «Ștefan Tănase»: the folded «tanase» holds «ana» too.
