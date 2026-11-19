@@ -1,6 +1,6 @@
 {
   "id": "eb6c38a5-cada-422b-a70f-da8898e23d70",
-  "prevId": "e6be36d6-70db-4cda-bec2-9e9184b9e934",
+  "prevId": "fb3c7d2e-3d0a-4f66-bd78-6b9c0edc64c9",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1303,6 +1303,20 @@
           "primaryKey": false,
           "notNull": false
         },
+        "in_raffle": {
+          "name": "in_raffle",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "present": {
+          "name": "present",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "created_by_staff_user_id": {
           "name": "created_by_staff_user_id",
           "type": "uuid",
@@ -1672,6 +1686,267 @@
         "event_invitations_partner_name_length": {
           "name": "event_invitations_partner_name_length",
           "value": "\"event_invitations\".\"partner_name\" IS NULL OR (char_length(\"event_invitations\".\"partner_name\") BETWEEN 1 AND 120 AND \"event_invitations\".\"partner_name\" = btrim(\"event_invitations\".\"partner_name\"))"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.event_raffle_entries": {
+      "name": "event_raffle_entries",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "registration_id": {
+          "name": "registration_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "volunteer_id": {
+          "name": "volunteer_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "elite_entry_id": {
+          "name": "elite_entry_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "method": {
+          "name": "method",
+          "type": "raffle_entry_method",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rules_document_id": {
+          "name": "rules_document_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rules_accepted_at": {
+          "name": "rules_accepted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rules_locale": {
+          "name": "rules_locale",
+          "type": "locale",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rules_text_hash": {
+          "name": "rules_text_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rules_facts": {
+          "name": "rules_facts",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "typed_name": {
+          "name": "typed_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ip": {
+          "name": "ip",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recorded_by_staff_user_id": {
+          "name": "recorded_by_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "privacy_notice_version": {
+          "name": "privacy_notice_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "event_raffle_entries_event_idx": {
+          "name": "event_raffle_entries_event_idx",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "event_raffle_entries_event_id_events_id_fk": {
+          "name": "event_raffle_entries_event_id_events_id_fk",
+          "tableFrom": "event_raffle_entries",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "event_raffle_entries_registration_id_registrations_id_fk": {
+          "name": "event_raffle_entries_registration_id_registrations_id_fk",
+          "tableFrom": "event_raffle_entries",
+          "tableTo": "registrations",
+          "columnsFrom": [
+            "registration_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "event_raffle_entries_volunteer_id_event_volunteers_id_fk": {
+          "name": "event_raffle_entries_volunteer_id_event_volunteers_id_fk",
+          "tableFrom": "event_raffle_entries",
+          "tableTo": "event_volunteers",
+          "columnsFrom": [
+            "volunteer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "event_raffle_entries_elite_entry_id_event_elite_entries_id_fk": {
+          "name": "event_raffle_entries_elite_entry_id_event_elite_entries_id_fk",
+          "tableFrom": "event_raffle_entries",
+          "tableTo": "event_elite_entries",
+          "columnsFrom": [
+            "elite_entry_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "event_raffle_entries_rules_document_id_legal_documents_id_fk": {
+          "name": "event_raffle_entries_rules_document_id_legal_documents_id_fk",
+          "tableFrom": "event_raffle_entries",
+          "tableTo": "legal_documents",
+          "columnsFrom": [
+            "rules_document_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "event_raffle_entries_recorded_by_staff_user_id_staff_users_id_fk": {
+          "name": "event_raffle_entries_recorded_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "event_raffle_entries",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "recorded_by_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "event_raffle_entries_registration_unique": {
+          "name": "event_raffle_entries_registration_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "registration_id"
+          ]
+        },
+        "event_raffle_entries_volunteer_unique": {
+          "name": "event_raffle_entries_volunteer_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "volunteer_id"
+          ]
+        },
+        "event_raffle_entries_elite_entry_unique": {
+          "name": "event_raffle_entries_elite_entry_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "elite_entry_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "event_raffle_entries_one_person": {
+          "name": "event_raffle_entries_one_person",
+          "value": "num_nonnulls(\"event_raffle_entries\".\"registration_id\", \"event_raffle_entries\".\"volunteer_id\", \"event_raffle_entries\".\"elite_entry_id\") = 1"
+        },
+        "event_raffle_entries_rules_hash_sha256": {
+          "name": "event_raffle_entries_rules_hash_sha256",
+          "value": "\"event_raffle_entries\".\"rules_text_hash\" ~ '^[0-9a-f]{64}$'"
+        },
+        "event_raffle_entries_typed_name_form": {
+          "name": "event_raffle_entries_typed_name_form",
+          "value": "\"event_raffle_entries\".\"typed_name\" IS NULL OR (\"event_raffle_entries\".\"method\" = 'FORM' AND char_length(\"event_raffle_entries\".\"typed_name\") BETWEEN 1 AND 120)"
+        },
+        "event_raffle_entries_trace_electronic": {
+          "name": "event_raffle_entries_trace_electronic",
+          "value": "(\"event_raffle_entries\".\"ip\" IS NULL AND \"event_raffle_entries\".\"user_agent\" IS NULL) OR \"event_raffle_entries\".\"method\" IN ('LINK', 'FORM')"
+        },
+        "event_raffle_entries_recorder_staff": {
+          "name": "event_raffle_entries_recorder_staff",
+          "value": "\"event_raffle_entries\".\"recorded_by_staff_user_id\" IS NULL OR \"event_raffle_entries\".\"method\" IN ('DESK', 'STAFF')"
+        },
+        "event_raffle_entries_notice_version_positive": {
+          "name": "event_raffle_entries_notice_version_positive",
+          "value": "\"event_raffle_entries\".\"privacy_notice_version\" >= 1"
         }
       },
       "isRLSEnabled": false
@@ -3879,6 +4154,13 @@
           "notNull": true,
           "default": true
         },
+        "present": {
+          "name": "present",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "bib_number": {
           "name": "bib_number",
           "type": "integer",
@@ -5277,6 +5559,41 @@
         },
         "has_raffle": {
           "name": "has_raffle",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "raffle_runners": {
+          "name": "raffle_runners",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "raffle_elites": {
+          "name": "raffle_elites",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "raffle_volunteers": {
+          "name": "raffle_volunteers",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "raffle_sign_up": {
+          "name": "raffle_sign_up",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "raffle_sign_up_open": {
+          "name": "raffle_sign_up_open",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
@@ -12080,6 +12397,16 @@
         "REGROUP"
       ]
     },
+    "public.raffle_entry_method": {
+      "name": "raffle_entry_method",
+      "schema": "public",
+      "values": [
+        "LINK",
+        "FORM",
+        "DESK",
+        "STAFF"
+      ]
+    },
     "public.event_result_status": {
       "name": "event_result_status",
       "schema": "public",
@@ -12248,7 +12575,8 @@
         "GROUP_RUN_DECLARATION_ASPHALT",
         "GROUP_RUN_DECLARATION_TRAIL",
         "EVENT_DECLARATION_ROAD",
-        "VOLUNTEER_AGREEMENT"
+        "VOLUNTEER_AGREEMENT",
+        "RAFFLE_RULES"
       ]
     },
     "public.locale": {
