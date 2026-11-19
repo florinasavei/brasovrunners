@@ -1113,9 +1113,9 @@ sees them as Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadmini
 `staff-labels.ts`):
 
 ```text
-CONTRIBUTOR  the volunteer: the race-day desk, the finish line «Cronometrare» — a finish recorded, one's own press undone for ten minutes (`canRecordFinishes` = `canWorkTheDesk`, §NNN, §10.11) — and the guide, nothing else
+CONTRIBUTOR  the volunteer: the race-day desk — a person's raffle sign-up there included, the person having accepted its rules (§NNN) —, the finish line «Cronometrare» — a finish recorded, one's own press undone for ten minutes (`canRecordFinishes` = `canWorkTheDesk`, §NNN, §10.11) — and the guide, nothing else
 COPYWRITER   the words of any event and any page, at any status; submit a draft for review
-MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs — and tick the raffle on a registration, the one thing it changes there (`canSetRaffleMark`, §949), and keep the raffle's own sign-ups and the elite list's raffle ticks on «Ziua cursei» → «Tombolă» (`canTakeRaffleList`, §NNN); the messages; enter, import and rank a race's results, press «Start» at the gun and read «Istoricul sosirilor» (`canEnterResults`, §808, §NNN)
+MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs — and tick the raffle on a registration, the one thing it changes there (`canSetRaffleMark`, §949), and keep the raffle on «Ziua cursei» → «Tombolă» — the sign-ups it records, «Șterge înscrierea», the organizers' exclusion and an elite line's raffle and «Prezent» ticks (`canTakeRaffleList`, §NNN); the messages; enter, import and rank a race's results, press «Start» at the gun and read «Istoricul sosirilor» (`canEnterResults`, §808, §NNN)
 DEV          + the configuration report (/devs). No participant data — and, by §289, not the list either
 ADMIN        + every event (create, configure, publish, cancel, a series: `canEditEventFields`, §542), changing a registration, legal texts, emails, tasks, delete an event, make a race's results public (`canPublishResults`, §808)
 SUPERADMIN   + staff administration: the list itself, and every role on it
@@ -3242,8 +3242,9 @@ BR-REQ-037-05):
      `registrations.checkin_code`: an identifier, stored in clear, that confers nothing — the
      page it opens is behind staff sign-in.
    - **Who.** Every desk verb is open to every staff role (`canWorkTheDesk`): a volunteer with
-     a phone is a CONTRIBUTOR and the desk is their whole backoffice. The desk shows a name, a
-     state and a number, never an address. **The list, the export and the race numbers are the
+     a phone is a CONTRIBUTOR and the desk is their whole backoffice — a person's raffle sign-up at the
+     desk included (§NNN, the person having accepted its rules), and the finish line «Cronometrare»
+     beside it (`canRecordFinishes`, §10.11). The desk shows a name, a state and a number, never an address. **The list, the export and the race numbers are the
      Organizer's too since §289** (`canReadRegistrations`, a set that excludes DEV); cancel,
      erase, rename, resend, the printing mark, the elite mark (§897) and the ambassador mark (§948) stay
      Administrator-only (`canManageRegistrations`). Each verb is audited under the volunteer's own id.
@@ -3422,7 +3423,9 @@ authorizes no write; asserted by `setRegistrationRaffleAction` and `raffle-mark.
 «doar adminul și organizatorul pot bifa și vedea asta») — at any
 time and in any state, audited (`registration.raffle_included` / `registration.raffle_excluded`, the new value only).
 **It is the one thing the Organizer changes on a registration** (§289 gave the Organizer the list to read and nothing on
-it to change): the raffle is the organizers' own to run, and the tick moves nothing a registration owns. The «Voluntari» list has the same tick on a volunteer
+it to change): the raffle is the organizers' own to run, and the tick moves nothing a registration owns. Beside it the
+raffle's own rows, not the registration's: the sign-ups the Organizer records, «Șterge înscrierea» and an elite line's
+ticks, on «Ziua cursei» → «Tombolă» (§NNN, below). The «Voluntari» list has the same tick on a volunteer
 (`event_volunteers.in_raffle`), pressed by whoever works the volunteers (`canManageVolunteers`) and audited as every
 edit of a person's boxes. A tick decides one thing: whether the person's number is written on «Lista pentru tombolă»
 (§15.10), which also says, beside each person, whether they were there — a runner checked in at the desk or by «Am
@@ -3469,7 +3472,9 @@ volunteer) whose registered name holds every word typed — both folded: case, d
 words unless the name has one (`typedNameMatches`); anything else is one neutral sentence that says neither which half was
 wrong nor whether the number exists, and a person in already reads the thank-you again. **DESK** — inside every row of the
 desk's list (where a search by name or number, or a typed code, lands; one read for the rows shown) and on the view of a
-scanned person: «Tombolă: participă / nu participă» and why, to every desk role, in both modes, and «Înscrie la tombolă» in
+scanned person: «Tombolă: participă / nu participă» and why, to every desk role, in both modes — but the organizers' own
+exclusion, «scos de organizatori», only to the Organizer and the Administrators (`canTakeRaffleList`), every other desk role
+reading «nu participă» alone there — and «Înscrie la tombolă» in
 the open sign-up mode, the person having accepted the rules on paper or aloud, coming back where it was pressed. **STAFF** — the organizers' «Înscrie» on
 a volunteer's page and on the tab, a line of the elite list's only door. Nobody is emailed at any door, at a withdrawal or at
 «Șterge înscrierea», and no public cache is expired: no public page reads a sign-up
