@@ -180,6 +180,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin",
       "/admin/checkin",
       "/admin/checkin/[code]",
+      // «Cronometrare», «Ziua cursei»'s finish line (§NNN), by hand.
+      "/admin/checkin/cronometrare",
       // «Lucruri de adus», the third tab of «Ziua cursei» (§979), by hand.
       "/admin/checkin/lucruri",
       // «Tombolă», the organizers' tab of «Ziua cursei» (§NNN), by hand.
@@ -201,7 +203,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/events/[id]/plan-voluntari",
       // A race's results (§808), entered or imported by race number and ranked: by hand, like the pages beside it.
       "/admin/events/[id]/results",
-      // The finish line (§850): a number typed, a time stamped — by hand, like the results page it belongs to.
+      // The finish line's first page (§850), kept to send a saved link on to «Cronometrare» (§NNN) — by hand.
       "/admin/events/[id]/results/sosire",
       // The emergency sheet (§322), printed and carried on race day: by hand, like the rest.
       "/admin/events/[id]/urgente",

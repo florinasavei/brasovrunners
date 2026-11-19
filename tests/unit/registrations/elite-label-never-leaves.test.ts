@@ -45,6 +45,9 @@ const READERS = new Set(
     "src/modules/registrations/admin-repository.ts",
     "src/modules/registrations/ui/DeskRow.tsx",
     "src/app/[locale]/admin/registrations/actions.ts",
+    // «Cronometrare» (§NNN): the elites' buttons and lines say an elite by the label on the bib, as the desk's row does — read by the
+    // finish line's own query (`loadEliteLabels`), never by the public read of the results (below).
+    "src/modules/results/results.ts",
   ].map((file) => path.join(ROOT, file)),
 );
 
@@ -96,5 +99,16 @@ describe("§975 «Eticheta pe BIB» stays with the bib", () => {
     }
     // «Elitele cursei» on the event page: the name and the number, never the label.
     expect(NAMES_THE_LABEL.test(functionSource("src/modules/registrations/elite-list.ts", "listPublicEliteEntries"))).toBe(false);
+    // The published results (§NNN): the results module reads the label for «Cronometrare» alone — its own loader, which the public
+    // read never calls; the loaders every read shares name no label.
+    const results = readFileSync(path.join(ROOT, "src/modules/results/results.ts"), "utf8");
+    expect(NAMES_THE_LABEL.test(functionSource("src/modules/results/results.ts", "readPublicEventResults"))).toBe(false);
+    expect(functionSource("src/modules/results/results.ts", "readPublicEventResults")).not.toContain("loadEliteLabels");
+    for (const loader of ["loadRegisteredRunners", "loadOutOfRanking"]) {
+      const start = results.indexOf(`async function ${loader}`);
+      expect(start, loader).toBeGreaterThan(-1);
+      const body = results.slice(start, results.indexOf("\n}\n", start));
+      expect(NAMES_THE_LABEL.test(body), loader).toBe(false);
+    }
   });
 });

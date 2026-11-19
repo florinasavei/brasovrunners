@@ -3235,6 +3235,9 @@ function blankEventRow(now: Date): EditableEvent {
     startsAt: now,
     endsAt: null,
     raceStartsAt: null,
+    // «Start» (§NNN): pressed on «Cronometrare» alone, read by the results alone; no save, copy, repeat or series edit carries it.
+    raceGunAt: null,
+    raceGunByStaffUserId: null,
     timezone: CLUB_TIME_ZONE,
     mapUrl: null,
     latitude: null,

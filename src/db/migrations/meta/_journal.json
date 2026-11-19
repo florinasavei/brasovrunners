@@ -1457,6 +1457,13 @@
       "when": 1795040221583,
       "tag": "0217_raffle_sign_up",
       "breakpoints": true
+    },
+    {
+      "idx": 208,
+      "version": "7",
+      "when": 1795040222583,
+      "tag": "0218_race_gun",
+      "breakpoints": true
     }
   ]
 }

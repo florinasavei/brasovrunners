@@ -2853,7 +2853,6 @@
       "VINVITE_NOT_FOUND": "The invitation no longer exists.",
       "RESULTS_AGE_BANDS": "The age categories were not saved: {problem}.",
       "RESULT_BIB_UNKNOWN": "Number {bib} has no confirmed registration. Its time: {time} — write it down and enter it under «Results», under “Runners who did not register”.",
-      "RESULT_ALREADY_FINISHED": "Number {bib} has already finished, at {time}. A correction is made under «Results».",
       "RESULT_FINISH_NOT_STARTED": "The race has not started yet: a finish cannot be before the start.",
       "RESULT_FINISH_CLOSED": "The start was more than a day ago: the times are entered under «Results».",
       "REFUSAL_NEEDS_EMAIL": "Nothing was cancelled: the club's refusal always goes with the email that tells the person its ground.",
@@ -2870,7 +2869,10 @@
       "RACE_DAY_ITEMS_FULL": "The list already holds {max} things, as many as it can. Delete what is no longer needed, then add.",
       "RAFFLE_SIGN_UP_CLOSED": "Raffle sign-ups are closed now — or the rules or the privacy notice are not approved. Nothing was written.",
       "RAFFLE_NOT_ELIGIBLE": "The person cannot take part in the raffle: they must be confirmed, with a number, in a ticked group. Nothing was written.",
-      "RAFFLE_RULES_NOT_ACCEPTED": "First tick that the person accepted the raffle rules. Nothing was written."
+      "RAFFLE_RULES_NOT_ACCEPTED": "First tick that the person accepted the raffle rules. Nothing was written.",
+      "RESULT_UNDO_NOT_ALLOWED": "It cannot be undone here any more: only your own unchanged finish, in its first 10 minutes. Correct it under «Results».",
+      "RACE_GUN_WINDOW": "«Start» is pressed from 3 hours before the planned start until 6 hours after.",
+      "RACE_GUN_FIXED": "The start is fixed: runners have finished. Correct the times under «Results»."
     },
     "editor": {
       "draftPreview": {
@@ -9513,6 +9515,16 @@
               ]
             },
             {
+              "title": "At the finish line: «Timing»",
+              "steps": [
+                "«Race day» → «Timing» and choose the race. The organizer presses «Start» at the gun; you see the clock since the start.",
+                "An elite crosses: press their button at the top (the bib's label, with the name under it). Anyone else crosses: type the number on the bib and press «Finished». The box empties at once for the next one.",
+                "Several at once: press «Catch the time» once for each, then type the numbers in order.",
+                "A red line tells you what to write on paper, with the time. Without signal, the presses wait on the phone and go by themselves.",
+                "Pressed the wrong one? «Undo» on your line in «Latest finishers», in the first 10 minutes, while nobody entered it again after you. Otherwise tell the organizer: they correct it under «Results»."
+              ]
+            },
+            {
               "title": "What you do not do at the desk (and that is fine)",
               "steps": [
                 "You see no email addresses, and you do not cancel, erase or export lists. For those, call an Administrator."
@@ -9764,8 +9776,8 @@
               "title": "The race's results: how to register the finishers",
               "steps": [
                 "«Results» is in the race's editor, in the card «Registrations received» at the end of the page (beside «See this event's registrations»), not in «Taking part, registration and rules». The button shows only for a published race or one whose start has passed; for a draft, open the page's address directly.",
-                "At the finish line open «Finish» (from «Results», or «Events» → the race → the card «Registrations received», at the end of the editor → «Results» → «Finish»), on a phone. The page shows the clock since the start. When a runner crosses the line, type their race number and press «Finished»: the site stamps the time since the start, and «Latest finishers» shows what you recorded. No stopwatch needed.",
-                "A number with no confirmed registration is refused, with its time in the sentence: write it on paper and enter it after the race under «Results», under «Runners who did not register». Somebody marked dropped out by mistake becomes finished when you type their number. If you prefer a stopwatch or an app, note each runner's number and time and enter them afterwards under «Results» — the next steps.",
+                "At the finish line open «Timing» on a phone: «Race day» in the top bar → «Timing» (or the link on «Results»). At the start press «Start» right at the gun; without it, the times count from «Race start» in the editor. When an elite crosses, press their button (the bib's label, with the name under it); anyone else you enter by the number on the bib and «Finished». It is saved at once, with the time since the start, and «Latest finishers» shows who entered each line. No stopwatch needed.",
+                "Several arriving at once? Press «Catch the time» once for each, then type the numbers in order: each takes the oldest time caught. A number with no confirmed registration is refused, with its time on its line: write it on paper and enter it after the race under «Results», under «Runners who did not register». A number entered a second time — by you or by another volunteer — changes nothing: the first time stays, and the second shows in «Finish history», under «Results». A runner marked «Disqualified» under «Results» stays so when you enter their number. Pressed the wrong one? «Undo» on your line, for 10 minutes, while nobody entered it again after you; after that, under «Results». If you prefer a stopwatch or an app, note each runner's number and time and enter them afterwards under «Results» — the next steps.",
                 "Under «Registered runners» there is a line for every registered runner with a number. Write the time in «Time» (h:mm:ss or mm:ss); «Status» stays on «From the time (Finished / Did not start)» — a time means «Finished». For who did not finish choose «Dropped out», «Did not start» or «Disqualified», with no time. «Chip time» and «Note» are optional.",
                 "Have the times in a file? Open «Import from CSV», paste the text (number, time on each line; with chip time and status if you have them) or choose the file and press «Import from CSV». The lines fill the boxes; nothing is saved yet.",
                 "A number no registration holds goes under «Runners who did not register»: write the name and, for a category, the sex and the date of birth. Tick «Agreed to appear by name in the results» only if the person told you so. «Add a runner who did not register» makes an empty line.",
@@ -12509,25 +12521,48 @@
         "saving": "Saving…"
       },
       "finish": {
-        "title": "Finish: {event}",
-        "link": "Finish",
-        "backToResults": "Back to the results",
-        "intro": "Type the race number as the runner crosses the line and press «Finished»: the site stamps the time since the start. Corrections are made under «Results».",
-        "more": "A number with no confirmed registration is refused with the time in the sentence: write it down and enter it under «Results». Somebody marked dropped out by mistake becomes finished.",
-        "gun": "Start: {time}",
-        "elapsed": "Since the start: {time}",
-        "notStarted": "The race has not started yet. Finishes are recorded after the start.",
-        "bibLabel": "Race number",
-        "record": "Finished",
-        "recording": "Recording…",
-        "recorded": "Finished: #{bib} {name} · {time} · place {position}",
-        "recordedNameless": "Finished: #{bib} · {time} · place {position}",
-        "recent": {
-          "title": "Latest finishers",
-          "aside": "{finished} finished of {withNumber} with a number",
-          "empty": "Nobody has finished yet.",
-          "line": "#{bib} {name} · {time} · place {position}",
-          "lineNameless": "#{bib} · {time} · place {position}"
+        "link": "Timing"
+      },
+      "history": {
+        "title": "Finish history",
+        "count": {
+          "one": "{count} line",
+          "few": "{count} lines",
+          "other": "{count} lines"
+        },
+        "intro": "Every write of the results, newest first: when, who, what and from where. The name beside a number is today's: the history keeps only the number.",
+        "empty": "Nothing written yet.",
+        "limited": "The newest {count} are shown.",
+        "line": "{when} · {by} {what} · {where}",
+        "where": {
+          "timing": "Timing",
+          "results": "Results"
+        },
+        "what": {
+          "finish": "entered {runner} at {time}",
+          "finishTurned": "entered {runner} at {time} (was marked as not finished)",
+          "duplicate": "entered {runner} again at {time} — {stored} stays",
+          "kept": "entered {runner} at {time} — {status} stays, as under «Results»",
+          "undo": "undid {runner} ({time})",
+          "created": "added {runner}: {status}",
+          "updated": "changed {runner}: {status}",
+          "updatedBoxes": "changed {runner}: {status} ({boxes})",
+          "deleted": "deleted the result {runner} ({status})",
+          "gunSet": "started the race at {time}",
+          "gunMoved": "moved the start to {time} (was {previous})",
+          "gunCleared": "cancelled the start (was {previous})"
+        },
+        "box": {
+          "bib": "number",
+          "status": "status",
+          "time": "time",
+          "chip": "chip time",
+          "note": "note",
+          "name": "name",
+          "sex": "sex",
+          "birthDate": "birth date",
+          "registration": "registration",
+          "nameAgreed": "name consent"
         }
       }
     },
@@ -12784,7 +12819,9 @@
         "results": "Results",
         "items": "Things to bring",
         "itemsShort": "Things",
-        "raffle": "Raffle"
+        "raffle": "Raffle",
+        "timing": "Timing",
+        "timingShort": "Timing"
       },
       "items": {
         "title": "Things to bring",
@@ -12923,6 +12960,124 @@
       "cancel": "Cancel",
       "print": "Print",
       "empty": "Nobody to show here."
+    },
+    "timing": {
+      "title": "Timing",
+      "show": "Show",
+      "intro": "When someone crosses the line: for an elite, press their button; for anyone else, type the bib's number and press «Finished». Saved at once; corrections are made under «Results».",
+      "more": "Several at once? Press «Catch the time» for each, then type the numbers in order. Without signal, the presses wait on the phone. A number entered twice keeps the first time.",
+      "clock": "Since the start: {time}",
+      "notStarted": "The race has not started yet.",
+      "boxLabel": "Number on the bib",
+      "bibHint": "Digits only: the number on the bib.",
+      "record": "Finished",
+      "place": "place {position}",
+      "accountGone": "account deleted",
+      "enteredBy": "entered by {name}",
+      "changedBy": "changed by {name}",
+      "offline": "No connection to the site: what you pressed waits on the phone and goes by itself when the signal is back.",
+      "session": "Your session has ended: sign in again. What you pressed stays on the phone and goes once you are back in.",
+      "reload": "The site was updated: reload the page. What you pressed waits on the phone and goes after the reload.",
+      "elsewhere": {
+        "one": "{count} press is waiting at {event}: it is sent only from that event's page.",
+        "few": "{count} presses are waiting at {event}: they are sent only from that event's page.",
+        "other": "{count} presses are waiting at {event}: they are sent only from that event's page."
+      },
+      "elsewhereOpen": "Open its page",
+      "elsewhereUnnamed": "another event",
+      "elites": {
+        "title": "Elites",
+        "help": "Press the elite as they cross the line: their bib carries the label alone, no number.",
+        "aria": "Finished: {label} — {name}",
+        "finished": "✓ {time}",
+        "noNumberLine": "No number: an Administrator gives the line one on the elite list (the bib still prints none). Until then, write the time on paper.",
+        "noNumberRegistration": "No race number: give one at «Attendance» (the bib still prints none). Until then, write the time on paper."
+      },
+      "keep": {
+        "button": "Catch the time",
+        "help": "Several at once: press once for each, then type the numbers in order — each takes the oldest time caught.",
+        "kept": "Times caught",
+        "drop": "Remove the caught time {time}"
+      },
+      "entries": {
+        "title": "On this phone",
+        "waiting": "saving…",
+        "saved": "saved",
+        "waitingCount": "to send: {count}",
+        "duplicate": "was already entered by {by} at {time} — it stays; your press ({mine}) is in «Finish history».",
+        "decided": "is marked «{status}» by {by} under «Results» — it stays; your press ({mine}) is in «Finish history».",
+        "otherAccount": "pressed under another account on this phone — not sent from here; write it on paper: {time}"
+      },
+      "refused": {
+        "RESULT_BIB_UNKNOWN": "no confirmed registration and no elite has this number — write it on paper: {time}",
+        "RESULT_FINISH_NOT_STARTED": "the race has not started yet — write the hour on paper: {clock}",
+        "RESULT_FINISH_CLOSED": "the start was more than a day ago — the time is entered under «Results»: {time}",
+        "RESULTS_NOT_OPEN": "only a race has timing — write it on paper: {time}",
+        "VALIDATION_ERROR": "the number is not valid — write it on paper: {time}",
+        "FORBIDDEN": "your role cannot record finishes — write it on paper: {time}",
+        "NOT_FOUND": "the event is no longer on the site — write it on paper: {time}",
+        "other": "not saved — write it on paper: {time}"
+      },
+      "recent": {
+        "title": "Latest finishers",
+        "aside": "{finished} finished of {withNumber} with a number",
+        "empty": "Nobody has finished yet."
+      },
+      "undo": {
+        "button": "Undo",
+        "aria": "Undo the finish {who}",
+        "done": "undone",
+        "refused": {
+          "RESULT_UNDO_NOT_ALLOWED": "cannot be undone here any more: correct it under «Results»",
+          "NOT_FOUND": "no longer in the results",
+          "FORBIDDEN": "your role cannot undo",
+          "other": "not undone: correct it under «Results»"
+        },
+        "pressedAgain": {
+          "other": "another volunteer entered it after you too: it is no longer undone here — correct it under «Results»",
+          "self": "you entered it once more afterwards: it is no longer undone here — correct it under «Results»"
+        }
+      },
+      "gun": {
+        "start": "Start",
+        "move": "Move the start to now",
+        "sending": "Sending…",
+        "clear": "Cancel the start",
+        "clearTitle": "Cancel the start?",
+        "clearBody": "Finishes will count from the planned start again ({time}).",
+        "pressed": "Start: {time} · pressed by {by}",
+        "planned": "Planned start: {time} (from the editor). Until «Start» is pressed, finishes count from it.",
+        "startHelp": "Press «Start» right at the gun: the times count from then.",
+        "moveHelp": "Pressed early or late? Press again right at the gun, more than ten seconds after the first press. After the first finisher, the start no longer moves.",
+        "fixed": "The start is fixed: runners have finished. A correction of the times is made under «Results».",
+        "window": "The «Start» button shows from 3 hours before the planned start until 6 hours after."
+      },
+      "banner": {
+        "recorded": "Finished: {who} · {time}",
+        "recordedShort": "Finished: {who}.",
+        "duplicate": "{who} was already entered by {by} at {time} — it stays; your press ({mine}) is in «Finish history».",
+        "duplicateShort": "{who} was already entered — the first time stays; your press ({mine}) is in «Finish history».",
+        "decided": "{who} is marked «{status}» under «Results» — it stays; your press ({mine}) is in «Finish history».",
+        "undone": "Undone: {who}.",
+        "gun": {
+          "set": "The start was set: {time}.",
+          "cleared": "The start was cancelled: finishes count from the planned start.",
+          "unchanged": "The start had not been set: nothing to cancel.",
+          "repeat": "The start stays at {time}: a second press within ten seconds of the first does not move it."
+        },
+        "refused": {
+          "RESULT_BIB_UNKNOWN": "{who}: no confirmed registration and no elite has this number. Its time: {time} — write it on paper.",
+          "RESULT_FINISH_NOT_STARTED": "{who}: the race has not started yet — a finish cannot be before the start.",
+          "RESULT_FINISH_CLOSED": "{who}: the start was more than a day ago — the times are entered under «Results».",
+          "RESULT_UNDO_NOT_ALLOWED": "It cannot be undone here any more: only your own finish pressed here, unchanged and not entered again by anybody, in its first 10 minutes. Correct it under «Results».",
+          "RACE_GUN_FIXED": "The start is fixed: runners have finished. Correct the times under «Results».",
+          "RACE_GUN_WINDOW": "«Start» is pressed from 3 hours before the planned start until 6 hours after.",
+          "RESULTS_NOT_OPEN": "Only a race has timing.",
+          "VALIDATION_ERROR": "Type the number on the bib, digits only.",
+          "FORBIDDEN": "Your role cannot do this.",
+          "NOT_FOUND": "It is gone: the event or the line was deleted meanwhile."
+        }
+      }
     }
   },
   "NotFound": {

@@ -86,6 +86,8 @@ export type RegisteredLine = {
    * result this is. Staff-only: this page is the backoffice's, and the published results carry neither.
    */
   marks?: readonly ResultMark[];
+  /** Who last wrote the stored result (§NNN): «introdus de Ana Pop» / «modificat de Dan Ion»; absent while there is none. */
+  writtenBy?: string;
 };
 
 /** One of the club's two marks on a registration, as a line of «Clasament» and a row of «Premii» draw it. */
@@ -103,6 +105,8 @@ export type TypedLine = {
   hasResult: boolean;
   /** A separate-list elite's line left out of the ranking (§910), recognised by its number or its name: «în afara clasamentului». */
   outOfRanking?: boolean;
+  /** Who last wrote the stored result (§NNN), as a registered line says it. */
+  writtenBy?: string;
 };
 
 /** The one delete form of the page (`ActionForm`, `id` below): a line's «Șterge» names it with `form=` and posts the number as its own value. */
@@ -324,9 +328,15 @@ export function RegisteredResultLines({ lines, words }: { lines: readonly Regist
                   {line.publicLine}
                 </Typography>
               </Box>
+              {/* Right under «Pe site: Participant #…», why the site shows no name (§NNN); then who last wrote the result (§NNN). */}
               {line.publicReason && (
                 <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }} data-testid="result-public-reason">
                   {line.publicReason}
+                </Typography>
+              )}
+              {line.writtenBy && (
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }} data-testid="result-written-by">
+                  {line.writtenBy}
                 </Typography>
               )}
             </Box>
@@ -411,6 +421,11 @@ function TypedLinesOf({ lines, words }: { lines: readonly TypedLine[]; words: Re
                 {line?.publicReason && (
                   <Typography variant="caption" color="text.secondary" sx={{ gridColumn: "1 / -1" }} data-testid="typed-public-reason">
                     {line.publicReason}
+                  </Typography>
+                )}
+                {line?.writtenBy && (
+                  <Typography variant="caption" color="text.secondary" sx={{ gridColumn: "1 / -1" }} data-testid="result-written-by">
+                    {line.writtenBy}
                   </Typography>
                 )}
               </Box>

@@ -1132,14 +1132,17 @@ the project id from the project's **Settings → General → Project ID** (`prj_
 
 Every desk verb (BR-REQ-037-08) is open to the lowest role, so a volunteer is a **Voluntar**
 (`CONTRIBUTOR` in the database; since `DECISIONS.md` §103 that role is the desk and nothing
-else, and `/admin` takes them straight to it).
+else, and `/admin` takes them straight to it). The finish line is the desk's too since §NNN:
+a Voluntar records finishers on **Ziua cursei → Cronometrare** and undoes their own press for
+ten minutes; «Start», «Clasament» and its corrections stay the Organizer's and the Administrators'.
 Sign-in is Zitadel plus the `staff_users` allowlist (§25), so a volunteer needs both:
 
 1. Zitadel console → **Users** → **New** — email (theirs, or a club address for a shared desk
    account such as `voluntar@<club domain>`), a name, an initial password; untick "email
    verification required" if the address is the club's. Repeat per volunteer.
 2. Site → **Echipa** (`/admin/staff`, Superadministrator) → add the same email with the role
-   **Colaborator**. The name typed here is what the audit trail shows on every check-in.
+   **Colaborator**. The name typed here is what the audit trail shows on every check-in — and on
+   every finish they record («introdus de …» on «Cronometrare» and «Clasament», «Istoricul sosirilor»).
 3. Hand them the guide: **Ghid** in the backoffice bar, first section — and have them open
    **Ziua cursei** on their phone once, the day before, so sign-in is already done.
 
@@ -2577,15 +2580,37 @@ enter them; **only the Administrator and the Superadministrator make them public
    **before** you publish the ranking, or say on the page that they changed: a runner's place in the category can move. The Excel of the
    registrations keeps the platform's groups in its «Statistici», whatever a race chose.
 
-8. **«Sosire» — the finish line on a phone (§850).** «Clasament» → «Sosire». The page shows the gun («Startul») and a clock since
-   it. As each runner crosses, type the race number and press «Sosit»: the site stamps the time since the gun — the race's own start
-   when you stated one in «Când și unde», else the event's start — to the second, as the runner's «Sosit», and the page comes back
-   with the box empty, a sentence naming who and what time, and «Ultimii sosiți», the latest press first. Refused in place, the number
-   kept in the box: a number no confirmed registration holds (the sentence carries the time — write it down, type the runner later under
-   «Alergători neînscriși»), a number already finished (corrections are «Clasament»'s), a press before the gun or more than a day after
-   it. A runner marked «Abandon» or «Neprezentat» by mistake becomes «Sosit» when their number is typed. The Organizer and the
-   Administrator may use it; a published ranking shows each finisher at once. The paper sheet and the CSV import (steps 2–3) remain the
-   backup.
+8. **«Cronometrare» — the finish line on a phone (§850, §NNN).** «Ziua cursei» → **«Cronometrare»** (`/admin/checkin/cronometrare`;
+   the link «Cronometrare» on «Clasament», and the old «Sosire» address, open it with the race chosen). Every role that works the desk
+   may record finishes — the desk Volunteer too (SETUP §34) —; «Start», «Clasament» and its corrections stay the Organizer's and the
+   Administrators'.
+   - **«Start».** At the gun an Organizer presses **«Start»**: the times count from that moment. Without it they count from «Startul
+     cursei» in «Când și unde», else the event's start. It shows from three hours before the planned start to six after; pressed early
+     or late, press «Mută startul acum» at the right moment — more than ten seconds after your first press: one within ten seconds is
+     taken for the same press, sent twice — or «Anulează startul» (it asks) — both only until the first finisher, after which the start
+     is fixed and a correction is «Clasament»'s.
+   - **The elites first:** a big button per elite — a registration marked «Elită» with a race number, and a line of the elite list with
+     a number — the bib's label large and the full name under it; press it as the elite crosses. A line with no number is drawn
+     disabled: give it a number on the elite list (the bib still prints none). An elite already in shows «✓» and the time.
+   - **Everyone else:** type the number on the bib and press «Sosit» (or Enter); the box empties at once for the next number. Several
+     at once: «Prinde timpul» once for each, then the numbers in order — each takes the oldest caught time. Every press is saved at
+     once with the moment it was pressed, on the site's clock (a phone whose clock is wrong, or whose screen locked, still stamps
+     right); without signal it waits on that phone and goes by itself, and a reload sends what is left — by the account that pressed
+     it: on a phone another volunteer signs into, their presses stand unsent with the time to write on paper. A press the site answers
+     it could not save waits too and is sent again by itself, the next ones going meanwhile; presses waiting under another race are
+     named at the top of the page, with a link to that race's page, which alone sends them. «Site-ul a fost actualizat» means reload
+     the page; nothing pressed is lost.
+   - **What a line says:** saved, with the place; «#123 era deja trecut de <nume> la <timp>» for a number somebody entered first — the
+     first time stays, the second is kept in «Istoricul sosirilor»; «#123 e trecut «Descalificat» …» for a runner «Clasament» decided —
+     the decision stays, the press is kept in the history; a refusal with the time to write on paper (a number nobody confirmed holds —
+     type the runner later under «Alergători neînscriși» —, a press before the start, or one more than a day after it).
+   - **«Ultimii sosiți»** names who entered each line; **«Anulează»** takes back your own press for ten minutes, while nobody changed
+     it and nobody entered the number again after you (the line then says «Clasament» corrects it). After that, and for anybody else's,
+     correct it on «Clasament», whose fold **«Istoricul sosirilor»** lists every write with who and when, and whose lines each say
+     «introdus de …» or «modificat de …».
+   A runner marked «Abandon» or «Neprezentat» by mistake becomes «Sosit» when their number is pressed — not «Descalificat», and not a
+   press made before you wrote the runner off (a phone that had no signal): those stay as you decided. A published ranking shows each
+   finisher at once. The paper sheet and the CSV import (steps 2–3) remain the backup.
 
 
 ## 46. Răspunsurile „Vin!” — let people say they are coming to a turn-up event, and show how many

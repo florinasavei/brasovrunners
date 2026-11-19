@@ -15,9 +15,9 @@ import { withClientWords } from "../../helpers/client-words";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §979 — «Ziua cursei» as the server draws it (BR-REQ-037-07, BR-REQ-060-01, BR-REQ-041-01 criterion 6): the three tabs on the
- * desk, «Lucruri de adus» and both results pages — the current one marked, the event carried, «Clasament» not drawn for a role
- * that cannot open it —; the «Lucruri de adus» page by role; the desk's line of free spares (§444) as ranges, and its two
+ * §979, §NNN — «Ziua cursei» as the server draws it (BR-REQ-037-07, BR-REQ-060-01, BR-REQ-041-01 criterion 6): the four tabs
+ * on the desk, «Lucruri de adus», «Cronometrare» and «Clasament» — the current one marked, the event carried, «Clasament» not drawn
+ * for a role that cannot open it, «Cronometrare» for every role that works the desk, its short word for a phone —; the «Lucruri de adus» page by role; the desk's line of free spares (§444) as ranges, and its two
  * other states; and the walk-in's «Numărul dat acum» as a select of the free spares, the lowest chosen.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en" }));
@@ -70,16 +70,24 @@ vi.mock("@/app/[locale]/admin/events/[id]/results/actions", () => ({
   setResultsPublishedAction: vi.fn(),
   setResultAgeBandsAction: vi.fn(),
   setResultAwardsAction: vi.fn(),
-  recordFinishAction: vi.fn(),
+}));
+vi.mock("@/app/[locale]/admin/checkin/cronometrare/actions", () => ({
+  recordFinishPressAction: vi.fn(),
+  undoFinishPressAction: vi.fn(),
+  recordFinishFormAction: vi.fn(),
+  undoFinishFormAction: vi.fn(),
+  setRaceGunAction: vi.fn(),
+  readFinishClockAction: vi.fn(),
 }));
 vi.mock("@/modules/notifications/send-now-choice", () => ({ sendNowChoiceFor: async () => null }));
 
 const { default: DeskPage } = await import("@/app/[locale]/admin/checkin/page");
 const { default: ItemsPage } = await import("@/app/[locale]/admin/checkin/lucruri/page");
 const { default: ResultsPage } = await import("@/app/[locale]/admin/events/[id]/results/page");
-const { default: FinishPage } = await import("@/app/[locale]/admin/events/[id]/results/sosire/page");
+const { default: TimingPage } = await import("@/app/[locale]/admin/checkin/cronometrare/page");
 const { default: NewRegistrationPage } = await import("@/app/[locale]/admin/registrations/new/page");
 const { StaffEventScope, StaffHandedBibField } = await import("@/modules/registrations/ui/StaffEventBirthDate");
+const { raceDayTabs } = await import("@/modules/race-day/ui/RaceDayTabs");
 
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -181,7 +189,7 @@ async function desk(eventId?: string): Promise<string> {
 const items = async (eventId?: string, error?: string) =>
   render(await ItemsPage({ params: Promise.resolve({ locale: state.locale }), searchParams: Promise.resolve({ ...(eventId ? { eventId } : {}), ...(error ? { error } : {}) }) } as never));
 const results = async (id: string) => render(await ResultsPage({ params: Promise.resolve({ locale: state.locale, id }), searchParams: Promise.resolve({}) } as never));
-const finish = async (id: string) => render(await FinishPage({ params: Promise.resolve({ locale: state.locale, id }), searchParams: Promise.resolve({}) } as never));
+const timing = async (eventId?: string) => render(await TimingPage({ params: Promise.resolve({ locale: state.locale }), searchParams: Promise.resolve(eventId ? { eventId } : {}) } as never));
 const walkIn = async (eventId: string, back = "desk") =>
   render(await NewRegistrationPage({ params: Promise.resolve({ locale: state.locale }), searchParams: Promise.resolve({ eventId, back }) } as never));
 
@@ -203,6 +211,7 @@ describe("§979 the tabs of «Ziua cursei»", () => {
     expect(tabs(html)).toEqual([
       { href: `/ro/admin/checkin?eventId=${id}`, label: "Prezența", current: true },
       { href: `/ro/admin/events/${id}/results`, label: "Clasament", current: false },
+      { href: `/ro/admin/checkin/cronometrare?eventId=${id}`, label: "Cronometrare Sosiri", current: false },
       { href: `/ro/admin/checkin/lucruri?eventId=${id}`, label: "Lucruri de adus Lucruri", current: false },
     ]);
     expect(html.indexOf('data-testid="race-day-tabs"')).toBeLessThan(html.indexOf("Masa de ridicare a numerelor"));
@@ -210,37 +219,52 @@ describe("§979 the tabs of «Ziua cursei»", () => {
     expect(html).toMatch(/data-testid="race-day-tabs"/);
   });
 
-  it("stand on «Lucruri de adus», current, and on both results pages as «Clasament», for the page's own event", async () => {
+  it("stand on «Lucruri de adus», current, on «Clasament» for the page's own event, and on «Cronometrare» (§NNN), current", async () => {
     const id = await race();
     expect(tabs(await items(id)).map((tab) => [tab.label, tab.current])).toEqual([
       ["Prezența", false],
       ["Clasament", false],
+      ["Cronometrare Sosiri", false],
       ["Lucruri de adus Lucruri", true],
     ]);
-    for (const html of [await results(id), await finish(id)]) {
-      expect(tabs(html)).toEqual([
-        { href: `/ro/admin/checkin?eventId=${id}`, label: "Prezența", current: false },
-        { href: `/ro/admin/events/${id}/results`, label: "Clasament", current: true },
-        { href: `/ro/admin/checkin/lucruri?eventId=${id}`, label: "Lucruri de adus Lucruri", current: false },
-      ]);
-    }
+    expect(tabs(await results(id))).toEqual([
+      { href: `/ro/admin/checkin?eventId=${id}`, label: "Prezența", current: false },
+      { href: `/ro/admin/events/${id}/results`, label: "Clasament", current: true },
+      { href: `/ro/admin/checkin/cronometrare?eventId=${id}`, label: "Cronometrare Sosiri", current: false },
+      { href: `/ro/admin/checkin/lucruri?eventId=${id}`, label: "Lucruri de adus Lucruri", current: false },
+    ]);
+    expect(tabs(await timing(id)).map((tab) => [tab.label, tab.current])).toEqual([
+      ["Prezența", false],
+      ["Clasament", false],
+      ["Cronometrare Sosiri", true],
+      ["Lucruri de adus Lucruri", false],
+    ]);
   });
 
-  it("draw no «Clasament» for a role that cannot open the results, and say the tabs in English too", async () => {
+  it("draw no glyph below `sm` (`compact`), so the four fit a 320-pixel phone, and every glyph from `sm` up", async () => {
+    const id = await race();
+    const raw = renderToStaticMarkup(withClientWords(await raceDayTabs({ locale: "ro", active: "timing", eventId: id, actor: staff.ADMIN! }), "ro"));
+    // Four glyph wrappers, each `display: none` below `sm` and inline-flex from it.
+    expect(strip(raw).match(/<span[^>]*aria-hidden="true"[^>]*><svg/g)).toHaveLength(4);
+    expect(raw).toMatch(/@media \(min-width:600px\)\{[^}]*display:inline-flex/);
+  });
+
+  it("draw no «Clasament» for a role that cannot open the results — «Cronometrare» for every desk role — and say the tabs in English too", async () => {
     const id = await race();
     for (const role of ["CONTRIBUTOR", "COPYWRITER", "DEV"] as const) {
       state.actor = staff[role];
-      expect(tabs(await desk(id)).map((tab) => tab.label), role).toEqual(["Prezența", "Lucruri de adus Lucruri"]);
+      expect(tabs(await desk(id)).map((tab) => tab.label), role).toEqual(["Prezența", "Cronometrare Sosiri", "Lucruri de adus Lucruri"]);
     }
     state.actor = staff.MODERATOR;
     state.locale = "en";
-    expect(tabs(await desk(id)).map((tab) => tab.label)).toEqual(["Attendance", "Results", "Things to bring Things"]);
+    expect(tabs(await desk(id)).map((tab) => tab.label)).toEqual(["Attendance", "Results", "Timing Timing", "Things to bring Things"]);
   });
 
   it("carry no event, and draw no «Clasament», when no event takes entries", async () => {
     const html = await desk();
     expect(tabs(html)).toEqual([
       { href: "/ro/admin/checkin", label: "Prezența", current: true },
+      { href: "/ro/admin/checkin/cronometrare", label: "Cronometrare Sosiri", current: false },
       { href: "/ro/admin/checkin/lucruri", label: "Lucruri de adus Lucruri", current: false },
     ]);
   });
@@ -405,6 +429,8 @@ describe("§979 the top nav on «Lucruri de adus»", () => {
     const { activeAdminTabHref } = await import("@/modules/staff-identity/domain/admin-tab-match");
     const nav = [{ href: "/ro/admin" }, { href: "/ro/admin/checkin" }, { href: "/ro/admin/registrations" }];
     expect(activeAdminTabHref(nav, "/ro/admin/checkin/lucruri")).toBe("/ro/admin/checkin");
+    // «Cronometrare» (§NNN) the same: under the desk's path.
+    expect(activeAdminTabHref(nav, "/ro/admin/checkin/cronometrare")).toBe("/ro/admin/checkin");
     expect(activeAdminTabHref(nav, "/ro/admin/events/0b6c1e7e-6f6a-4c55-9a43-2f6f3c5b8a10/results")).toBe("/ro/admin");
   });
 });

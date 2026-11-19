@@ -1113,9 +1113,9 @@ sees them as Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadmini
 `staff-labels.ts`):
 
 ```text
-CONTRIBUTOR  the volunteer: the race-day desk and the guide, nothing else
+CONTRIBUTOR  the volunteer: the race-day desk, the finish line «Cronometrare» — a finish recorded, one's own press undone for ten minutes (`canRecordFinishes` = `canWorkTheDesk`, §NNN, §10.11) — and the guide, nothing else
 COPYWRITER   the words of any event and any page, at any status; submit a draft for review
-MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs — and tick the raffle on a registration, the one thing it changes there (`canSetRaffleMark`, §949), and keep the raffle's own sign-ups and the elite list's raffle ticks on «Ziua cursei» → «Tombolă» (`canTakeRaffleList`, §NNN); the messages; enter, import and rank a race's results (`canEnterResults`, §808)
+MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs — and tick the raffle on a registration, the one thing it changes there (`canSetRaffleMark`, §949), and keep the raffle's own sign-ups and the elite list's raffle ticks on «Ziua cursei» → «Tombolă» (`canTakeRaffleList`, §NNN); the messages; enter, import and rank a race's results, press «Start» at the gun and read «Istoricul sosirilor» (`canEnterResults`, §808, §NNN)
 DEV          + the configuration report (/devs). No participant data — and, by §289, not the list either
 ADMIN        + every event (create, configure, publish, cancel, a series: `canEditEventFields`, §542), changing a registration, legal texts, emails, tasks, delete an event, make a race's results public (`canPublishResults`, §808)
 SUPERADMIN   + staff administration: the list itself, and every role on it
@@ -1622,6 +1622,76 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
 - `tests/privacy/public-surface.test.ts` is where these are asserted. That file may be extended
   and MUST NOT be weakened.
 
+### 10.11 The finish line: «Cronometrare»
+
+A race's finishers are recorded at the line on «Cronometrare» (`/admin/checkin/cronometrare`, the fourth tab of «Ziua
+cursei», `DECISIONS.md` §NNN, in the place of §850's «Sosire», whose address now sends its reader on). The results
+themselves are §808's: one row per race number, ranked from the live answers, published only by an Administrator.
+
+- **Who.** Every staff role that works the desk records a finish and undoes its own press (`canRecordFinishes`, defined
+  as `canWorkTheDesk`: the desk Volunteer included, never a member); «Start», «Clasament», its corrections, its deletes,
+  its import and «Istoricul sosirilor» stay `canEnterResults`' (the Organizer and the Administrators). Asserted at the
+  page, at each action's door and again in the service (BR-REQ-060-01). The page shows a number, a name and a time —
+  what the desk already shows — never an address.
+- **The gun.** `results.ts#gunOf` = `events.race_gun_at` (the «Start» an organizer pressed, `setRaceGun`) ?? the planned
+  `race_starts_at` ?? `starts_at`, read by the results alone — the public page, the checkpoints' limits, the emails,
+  iCal and the editor keep the planned times. «Start» may be pressed from three hours before the planned gun to six
+  after (`RACE_GUN_WINDOW`), moved by a second press and taken off by «Anulează startul» only while no «Sosit» result is
+  stored (`RACE_GUN_FIXED`); its moment is the tap when the server hears it at most ten seconds later (and at most five
+  seconds ahead of its clock), else the server's own (`raceGunMoment`). A press is never doubled into a second «Start»:
+  the button is busy while its press is on its way (`ui/RaceGunPress.tsx`), and the organizer's own «Start» heard again
+  within ten seconds of theirs is answered with the gun as it stands, nothing written (`raceGunRepeats`, `?gun=repeat`).
+  Audited `event.race_gun_set` / `event.race_gun_cleared` with the instants alone; no email; no public cache.
+- **The clock.** The islands stamp on the server's clock read through the phone's **wall clock** (`Date.now()`, which
+  keeps time while the screen is locked — `performance.now()` does not on most phones) plus an offset measured over a
+  round trip as NTP measures one: the clock's own question as the page wakes (`readFinishClockAction`, again when the
+  page is shown after five minutes) and every answer, each carrying the server's instants at the arrival and at the
+  answer (`domain/finish-line.ts#sampleOfRoundTrip`, `betterSample`; `ui/server-clock.ts`, kept on the phone for half a
+  day). The page's own `now` is read after every read and only seeds it.
+- **A press.** A number — typed, or an elite's button: a registration marked «Elită» with a number, or a line of the
+  race's elite list, whose press writes a *typed* row with the line's name and number and nothing else of a person —
+  stamped with the moment the island claims (`domain/finish-line.ts#finishStamp`: at least a second, at most the
+  server's own time since the gun plus five seconds, within a day; a claim before the gun is refused as not started,
+  never stamped with its arrival's time; the server's own time only for a claim ahead of its clock, or none), floored to
+  the second; a press arriving more than a day and three hours after the gun is refused whatever it claims
+  (`FINISH_ARRIVAL_GRACE_MS`). The island sends every press at once with its own id (`pressId`), keeps the unsent ones in
+  that phone's `localStorage` for the event (every access in a `try`, the page working without it; every write reads the
+  storage again first and the `storage` event brings another tab's writes in, so a second tab of the event writes over
+  nothing; presses waiting under another event are named on the page, whose page alone sends them) and retries them in
+  order — each the press of the account signed in when it was pressed, sent only from that account's page (the action
+  answers `session` to another's), so the trail never names somebody who did not press. A press the server could not
+  record (`failed`, logged) waits out a backoff while the ones after it go, and is tried again until the server answers
+  it — never given up, a later press of its number waiting behind it; a site deployed under the page asks for a reload.
+- **The same number twice.** The first stored wins and its row is never touched (`domain/finish-line.ts#pressMeets`). A
+  retry — the same press sent again, known by its id in the trail's metadata (`results.ts#loadSavedPress`,
+  `domain/finish-line.ts#savedPressOf`) — is answered as it was answered the first time and writes nothing; only a press
+  with no id (the plain form) is guessed a retry by the same actor at the same second. Any other press of a number already
+  «Sosit» is a duplicate: answered with who stored it and when, and written to the trail as
+  `event_result.finish_duplicate` (`{ bibNumber, gunTimeMs, storedGunTimeMs, storedStatus, storedResultId, finishLine:
+  true, pressId }`, the actor the row's own column), never as a refusal. **A decision of «Clasament» stays** the same way: a row
+  «Descalificat» whoever presses it, and an «Abandon» or a «Neprezentat» written after the moment the press claims — only
+  one written before it (a runner written off by mistake) becomes «Sosit». The event row's lock (`FOR NO KEY UPDATE`)
+  serializes two presses at once; the unique indexes stand behind it (`tests/concurrency/finish-line.test.ts`).
+- **Undo.** «Anulează» deletes a row its viewer's press at the line wrote in the last ten minutes (its
+  `event_result.created` carries `finishLine` and the row's `resultId`), that nobody changed since (`created_at` =
+  `updated_at`, `updated_by_staff_user_id` the viewer) and whose number nobody pressed again since (no
+  `event_result.finish_duplicate` names it: `domain/finish-line.ts#undoTrailOf`, `mayUndo`); it ranks again and audits
+  `event_result.deleted` with `{ …, finishLine: true, undo: true }`. Anything else — a row typed or imported on
+  «Clasament» included — is `RESULT_UNDO_NOT_ALLOWED`, «Clasament»'s, and the viewer's own line says why when the
+  number was pressed again. `writeRanking` never touches `updated_at`, so a re-rank is no change.
+- **The history.** «Istoricul sosirilor», a fold on «Clasament» (`finish-history.ts`), reads every write of the race's
+  results from `audit_logs` joined to `staff_users` — presses, duplicates, undos, «Clasament»'s created, changed and
+  deleted rows, «Start» — newest first, naming who («cont șters» for an account gone) and from where; the trail stores a
+  number and never a runner's name, and the line adds the name the number belongs to today, read live. Each line of
+  «Clasament» says who last wrote it («introdus de» / «modificat de», `event_results.updated_by_staff_user_id`).
+
+MUST NOT: a finish recorded by a member or a page that only hides the box; a second write to a row a duplicate found
+(the first stays); a press turning «Descalificat», or a decision later than its moment, into «Sosit»; an undo that leaves
+a runner another press recorded without a time; a press recorded under another account than the one that pressed it;
+stamping on `performance.now()`; a claim before the gun stamped with its arrival's time; a retry written to the trail a
+second time; a press given up for a passing server error; a press doubled into a second «Start»; the public page, an email
+or iCal counting from the pressed gun; a runner's name in the trail.
+
 ---
 
 ## 11. Mini CMS
@@ -1887,6 +1957,7 @@ events
 - version integer              -- optimistic concurrency for the event row
 - starts_at timestamptz          -- when the event begins; for a race, the gathering
 - race_starts_at timestamptz null -- the gun time, when it differs from the event start
+- race_gun_at timestamptz null    -- «Start» as pressed on «Cronometrare» (§NNN, §10.11), and race_gun_by_staff_user_id beside it; read by the results alone
 - ends_at timestamptz null
 - timezone text NOT NULL DEFAULT Europe/Bucharest
 - map_url text null              -- the meeting point on a map: the organizer's own link, stored not assembled
