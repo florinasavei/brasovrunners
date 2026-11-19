@@ -197,7 +197,12 @@ function sheetFeature(sheet: string, lastColumn: number, rowCount: number): Feat
               : xml.replace(/(<worksheet[^>]*>)/, "$1<sheetPr><pageSetUpPr fitToPage=\"1\"/></sheetPr>").replace("<pageSetup ", '<pageSetup fitToWidth="1" fitToHeight="0" '),
         },
         "xl/workbook.xml": {
-          transform: (xml) => (xml.includes("<definedNames>") ? xml.replace("<definedNames>", `<definedNames>${names}`) : xml.replace("</sheets>", `</sheets><definedNames>${names}</definedNames>`)),
+          // The writer always writes an empty `<definedNames/>`, and a workbook holds one `<definedNames>` (CT_Workbook): the names go
+          // into that one element, opened. A second one after `</sheets>` was the content Excel offered to «recover» in every file.
+          transform: (xml) => {
+            const opened = xml.replace("<definedNames/>", "<definedNames></definedNames>");
+            return opened.includes("<definedNames>") ? opened.replace("<definedNames>", `<definedNames>${names}`) : opened.replace("</sheets>", `</sheets><definedNames>${names}</definedNames>`);
+          },
         },
       },
     },

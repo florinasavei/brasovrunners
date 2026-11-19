@@ -145,6 +145,8 @@ describe("the volunteers' spreadsheet, «formatat frumos» (§846)", () => {
     expect(parts.get("xl/workbook.xml")).toContain(`<definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">'Voluntari'!$A$1:$V$5</definedName>`);
     // Printed, the header repeats on every page.
     expect(parts.get("xl/workbook.xml")).toContain(`<definedName name="_xlnm.Print_Titles" localSheetId="0">'Voluntari'!$1:$1</definedName>`);
+    // One `<definedNames>`, as a workbook may hold: the writer's own empty one carries the names; a second made Excel «recover» the file.
+    expect(parts.get("xl/workbook.xml")?.match(/<definedNames[\s/>]/g)).toHaveLength(1);
     // The header and the name stay on screen.
     expect(sheet).toMatch(/<pane [^>]*xSplit="1"/);
     expect(sheet).toMatch(/<pane [^>]*ySplit="1"/);
