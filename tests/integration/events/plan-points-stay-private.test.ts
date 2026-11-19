@@ -31,6 +31,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *   a point of the plan standing past the route's length breaks no event save;
  * - and the people standing at the plan's own points stay there through all of it.
  *
+ * Since §1009 the same holds for «Notă pentru voluntari», which any point may carry — the plan's own and the editor's: no public
+ * reader says a word of it, a copy carries none, and the editor's save and an import leave it on a kept row.
+ *
  * That no other file reads the plan's side of the table is `tests/unit/volunteers/plan-points-never-leave.test.ts`.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown }));
@@ -44,7 +47,10 @@ const NOW = new Date("2026-11-16T10:00:00.000Z");
 const SPRING = "44.123456, 26.654321";
 const KITS = "44.234567, 26.765432";
 const WATER = "44.345678, 26.876543";
-const SECRETS = ["Izvorul ascuns", "Kituri secrete", "44.123456", "26.654321", "44.234567", "26.765432", "44.345678", "26.876543"];
+/** «Notă pentru voluntari» (§1009) of an editor's point and of one of the plan's own: words no public reader may say. */
+const WATER_NOTE = { ro: "Nota ascunsă a apei\nPaharele sub masă", en: "The water's hidden note\nCups under the table" };
+const SPRING_NOTE = { ro: "Nota ascunsă a izvorului", en: "The spring's hidden note" };
+const SECRETS = ["Izvorul ascuns", "Kituri secrete", "44.123456", "26.654321", "44.234567", "26.765432", "44.345678", "26.876543", "ascunsă", "hidden note", "Paharele sub", "Cups under"];
 
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -148,8 +154,14 @@ async function publicSide() {
 async function addThePlansOwn() {
   points.spring = (await changePlanPoint(db, organizer, { kind: "add", eventId, place: "route", name: "Izvorul ascuns", km: "3,4", coordinates: SPRING }, NOW)).id;
   points.kits = (await changePlanPoint(db, organizer, { kind: "add", eventId, place: "startFinish", name: "Kituri secrete", km: "", coordinates: KITS }, NOW)).id;
-  // …and where one of the editor's own points is.
-  await changePlanPoint(db, organizer, { kind: "edit", eventId, id: points.water, place: "route", name: "", km: "", coordinates: WATER }, NOW);
+  // …and where one of the editor's own points is, with its note for the volunteers (§1009) — and the spring's note too.
+  await changePlanPoint(db, organizer, { kind: "edit", eventId, id: points.water, place: "route", name: "", km: "", coordinates: WATER, volunteerNoteRo: WATER_NOTE.ro, volunteerNoteEn: WATER_NOTE.en }, NOW);
+  await changePlanPoint(
+    db,
+    organizer,
+    { kind: "edit", eventId, id: points.spring, place: "route", name: "Izvorul ascuns", km: "3,4", coordinates: SPRING, volunteerNoteRo: SPRING_NOTE.ro, volunteerNoteEn: SPRING_NOTE.en },
+    NOW,
+  );
   people.ana = await volunteer("Ana", points.spring);
   people.radu = await volunteer("Radu", points.kits);
 }
@@ -174,12 +186,12 @@ describe("§961 every reader that existed returns what it returned", () => {
     await addThePlansOwn();
     // They are in the table, and the plan's own reader sees all five.
     expect((await rowsOf()).length).toBe(5);
-    expect((await listPlanPoints(db, eventId)).map((point) => [point.number, point.nameRo, point.latitude])).toEqual([
-      [null, "Kituri secrete", 44.234567],
-      [1, "Intersecția Stejeriș", null],
-      [2, "Izvorul ascuns", 44.123456],
-      [3, "Apă la cabană", 44.345678],
-      [4, "Podul de lemn", null],
+    expect((await listPlanPoints(db, eventId)).map((point) => [point.number, point.nameRo, point.latitude, point.volunteerNoteRo])).toEqual([
+      [null, "Kituri secrete", 44.234567, null],
+      [1, "Intersecția Stejeriș", null, null],
+      [2, "Izvorul ascuns", 44.123456, SPRING_NOTE.ro],
+      [3, "Apă la cabană", 44.345678, WATER_NOTE.ro],
+      [4, "Podul de lemn", null, null],
     ]);
 
     // …and the public side is, value for value, what it was.
@@ -192,7 +204,7 @@ describe("§961 every reader that existed returns what it returned", () => {
     for (const reader of [after.list, after.page, after.bib ?? []]) {
       for (const row of reader) expect(Object.keys(row).sort()).toEqual([...CHECKPOINT_KEYS].sort());
     }
-    for (const row of after.config.route.checkpoints) for (const key of Object.keys(row)) expect(key).not.toMatch(/plan|startFinish|latitude|longitude|coordinates/i);
+    for (const row of after.config.route.checkpoints) for (const key of Object.keys(row)) expect(key).not.toMatch(/plan|startFinish|latitude|longitude|coordinates|volunteer/i);
   });
 
   it("changes no stamp of the race number's picture when a point of the plan's own is added, moved, given coordinates or deleted", async () => {
@@ -228,8 +240,11 @@ describe("§961 every reader that existed returns what it returned", () => {
     const [other] = await db.insert(events).values({ type: "RACE", startsAt: new Date("2026-12-05T07:00:00.000Z") }).returning({ id: events.id });
     expect(await copyCheckpoints(db, eventId, other.id, NOW)).toBe(3);
     expect((await rowsOf(other.id)).every((row) => !row.planOnly && !row.startFinish && row.latitude === null && row.longitude === null)).toBe(true);
+    // Nor a note for the volunteers (§1009): the copy's plan is written anew, by whoever works its volunteers.
+    for (const rows of [copied, await rowsOf(other.id)]) expect(rows.map((row) => [row.volunteerNoteRo, row.volunteerNoteEn])).toEqual(rows.map(() => [null, null]));
     // The source keeps everything it had.
     expect((await rowsOf()).length).toBe(5);
+    expect(await rowOf(points.water)).toMatchObject({ volunteerNoteRo: WATER_NOTE.ro, volunteerNoteEn: WATER_NOTE.en });
   });
 });
 
@@ -261,10 +276,20 @@ describe("§961 every writer that existed leaves the plan's own points and every
     // The plan's own two rows: every column as it was — not renumbered, not renamed, not deleted.
     expect(await rowOf(points.spring)).toEqual(own.spring);
     expect(await rowOf(points.kits)).toEqual(own.kits);
-    // The kept row: the editor's columns are the save's, the coordinates still the plan's.
-    expect(await rowOf(points.water)).toMatchObject({ nameRo: "Apă la izvor", km: "6.00", cutoffMinutes: 90, latitude: "44.345678", longitude: "26.876543", planOnly: false, startFinish: false });
-    // The new point is the editor's own, with no coordinates.
-    expect((await rowsOf()).find((row) => row.nameRo === "Sosire")).toMatchObject({ planOnly: false, startFinish: false, latitude: null, longitude: null });
+    // The kept row: the editor's columns are the save's, the coordinates and the note for the volunteers (§1009) still the plan's.
+    expect(await rowOf(points.water)).toMatchObject({
+      nameRo: "Apă la izvor",
+      km: "6.00",
+      cutoffMinutes: 90,
+      latitude: "44.345678",
+      longitude: "26.876543",
+      volunteerNoteRo: WATER_NOTE.ro,
+      volunteerNoteEn: WATER_NOTE.en,
+      planOnly: false,
+      startFinish: false,
+    });
+    // The new point is the editor's own, with no coordinates and no note.
+    expect((await rowsOf()).find((row) => row.nameRo === "Sosire")).toMatchObject({ planOnly: false, startFinish: false, latitude: null, longitude: null, volunteerNoteRo: null, volunteerNoteEn: null });
     expect(await rowOf(points.junction)).toBeUndefined();
     // The editor's list is its own three; the people at the plan's own points stand where they stood.
     expect((await listCheckpoints(db, eventId)).map((row) => row.nameRo)).toEqual(["Apă la izvor", "Podul de lemn", "Sosire"]);
@@ -328,8 +353,8 @@ describe("§961 every writer that existed leaves the plan's own points and every
 
     expect(await rowOf(points.spring)).toEqual(own.spring);
     expect(await rowOf(points.kits)).toEqual(own.kits);
-    // The kept row: the file's words, the plan's coordinates.
-    expect(await rowOf(points.water)).toMatchObject({ nameEn: "Water by the hut", cutoffMinutes: 45, noteRo: "Pahare noi", latitude: "44.345678", longitude: "26.876543" });
+    // The kept row: the file's words, the plan's coordinates and its note for the volunteers (§1009).
+    expect(await rowOf(points.water)).toMatchObject({ nameEn: "Water by the hut", cutoffMinutes: 45, noteRo: "Pahare noi", latitude: "44.345678", longitude: "26.876543", volunteerNoteRo: WATER_NOTE.ro, volunteerNoteEn: WATER_NOTE.en });
     // The points the file no longer has are gone, coordinates and all; the file's new point has none.
     expect(await rowOf(points.junction)).toBeUndefined();
     expect(await rowOf(points.bridge)).toBeUndefined();
