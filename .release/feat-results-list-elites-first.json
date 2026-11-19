@@ -1,0 +1,14 @@
+{
+  "branch": "feat/results-list-elites-first",
+  "decisionsTitle": "«Clasament» lists the elites first among «Alergători înscriși»",
+  "decisionsSection": "**The owner, 2026-11-19, with a picture of «Clasament»'s «Alergători înscriși» — a line per registered runner, the checked-in first, then by number:** «și aici trebuie să afișez mai întâi elitele». The elites — the race's fastest, timed first on the day — were scattered among everybody else by their numbers.\n\n**Decision.** The registrations marked «Elită» (§897) come first among «Alergători înscriși»; then, as before, the checked-in, then by number — the same order inside the elites. One sort in `results.ts#readEventResults`, which the page draws as it reads it; the «Elită» chip already on each such line says why it is at the top. An ambassador alone — a label that changes nothing (§949) — keeps its place. The places, the published results, the export and «Alergători neînscriși» are as they were: only the order of the lines on the page changes.",
+  "changelogLine": "- **«Clasament» lists the elites first** — among «Alergători înscriși», the registrations marked «Elită» come first, then the checked-in, then by number. §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-050-02",
+      "text": "Given a race's «Clasament» with registrations marked «Elită», when «Alergători înscriși» is drawn, then the elites' lines come first, then the checked-in runners', then the others', by race number inside each, an ambassador who is not an elite keeping the runners' order; the places, the published results and the export are unchanged (2026-11-19, `DECISIONS.md` §NNN). Verification: integration `results/results.test.ts`, `results/page.test.ts`."
+    }
+  ],
+  "docsNotes": "",
+  "batchLine": "«Clasament» lists the elites first"
+}

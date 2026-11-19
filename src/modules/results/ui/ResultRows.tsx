@@ -452,7 +452,7 @@ function DeleteButton({ bibNumber, runner, words }: { bibNumber: number; runner:
   );
 }
 
-/** The runners who registered: a line each, checked-in first, each with its four boxes and, once it has a result, «Șterge». */
+/** The runners who registered: a line each, the elites first, then the checked-in, each with its four boxes and, once it has a result, «Șterge». */
 export function RegisteredResultLines({ lines, words }: { lines: readonly RegisteredLine[]; words: ResultWords }) {
   return (
     <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0, ...TIME_STYLES }} data-testid="result-lines">
