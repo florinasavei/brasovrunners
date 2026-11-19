@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.68-2026-11-19
+
+- **«Atașează traseul (GPX)» in «Trimite un mesaj participanților»** — one more tick in the composer, shown when the event has a GPX file: every email of the send then carries the route's GPX attached, with one line and a link to the same file under your words, in both languages, so a phone that hides attachments still gets it; the preview shows the line and the question before «Trimite» says it. §987.
 ## BR-V4.67-2026-11-19
 
 - **«Prezent» on the «Voluntari» list, and the raffle among who is there** — a one-press tick «Prezent» on every volunteer's row and beside the name on the person's page, «Prezenți: N» and «Absenți: K» on the list's strip, each a filter; a volunteer's «Prezent» on «Lista pentru tombolă» now says «Da» or «Nu», and a second file beside it, «Lista pentru tombolă — doar prezenții», holds only the runners checked in — at the desk or with «Am ajuns» — and the volunteers ticked present — on the registrations list and on the «Voluntari» list. Seen by the organizers only: nobody is emailed. §983.

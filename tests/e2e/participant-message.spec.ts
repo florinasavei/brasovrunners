@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { confirmDialog } from "./support/confirm";
 import { expect, test } from "@playwright/test";
@@ -27,6 +28,10 @@ import { openEditorBox } from "./support/fold";
  *
  * And §958 — «Include programul evenimentului»: on an event with a timed programme the tick is offered, a thumb's
  * target, and ticked it puts the programme under the words of the preview, one block a half in that half's language.
+ *
+ * And §987 — «Atașează traseul (GPX)»: on an event with a GPX the tick is offered, a thumb's target, and ticked it puts
+ * under the words of the preview the line that says the route is attached, one a half, with the link to the file; on an
+ * event without a GPX there is no tick at all.
  *
  * Each project writes its own event straight into the database — the setup, not the subject, as
  * `support/action-link.ts` argues — so the two never count each other's rows: a confirmed
@@ -105,6 +110,12 @@ async function seedEvent(tag: string, people: readonly Person[] = FOUR): Promise
 /** The event's timed programme (§117), written straight into its row — the setup, not the subject. */
 async function setProgramme(eventId: string, rows: readonly unknown[]): Promise<void> {
   await withDatabase((client) => client.query("UPDATE events SET schedule_items = $1::jsonb WHERE id = $2", [JSON.stringify(rows), eventId]));
+}
+
+/** The event's GPX (§718) as the editor's upload stores it, written straight into its row — the setup, not the subject. */
+async function setRouteGpx(eventId: string, key: string): Promise<void> {
+  const gpx = { key, name: "Traseu e2e.gpx", size: 2048, uploadedAt: new Date().toISOString() };
+  await withDatabase((client) => client.query("UPDATE events SET route_gpx = $1::jsonb WHERE id = $2", [JSON.stringify(gpx), eventId]));
 }
 
 /** The participants' own organizer-message rows for the event — never the club's copies. */
@@ -386,6 +397,63 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     await tick.uncheck();
     await expect.poll(blocks, { timeout: 30_000 }).toBe(0);
     expect(await queuedFor(eventId)).toEqual([]);
+
+    // Nothing wider than the phone.
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
+  });
+
+  test("§987 «Atașează traseul (GPX)»: offered only on an event with a GPX, ticked it puts the line and the file's link under the words of the preview", async ({ page }) => {
+    test.setTimeout(150_000);
+    const tag = `${test.info().project.name}-${Date.now().toString(36)}-gpx`;
+    const withGpx = await seedEvent(tag);
+    const without = await seedEvent(`${tag}-fara`);
+    created.push(withGpx, without);
+    // A key of the shape the upload writes and the database's CHECK holds (`events/domain/route-gpx.ts#ROUTE_GPX_KEY`: the
+    // environment in letters); the preview reads the row, never the file.
+    const key = `spec/route-gpx/${randomUUID()}/traseu-e2e.gpx`;
+    await setRouteGpx(withGpx, key);
+    /** The preview's email, as the sandboxed frame holds it. */
+    const previewHtml = async () => (await page.getByTestId("participant-message-preview").locator("iframe").getAttribute("srcdoc")) ?? "";
+    const routeLines = async () => (await previewHtml()).split('data-email-part="route-gpx"').length - 1;
+
+    await signIn(page, "Dev Administrator");
+
+    // No GPX, no tick: the box is not drawn at all.
+    await page.goto(`/ro/admin/events/${without}/mesaje`);
+    await hydrated(page);
+    await expect(page.getByTestId("participant-message-programme")).toBeVisible();
+    await expect(page.getByTestId("participant-message-route-gpx")).toHaveCount(0);
+
+    // A GPX: offered, off by default, with its help line, and a thumb's target (BR-REQ-041-01 criterion 6).
+    await page.goto(`/ro/admin/events/${withGpx}/mesaje`);
+    await hydrated(page);
+    const box = page.getByTestId("participant-message-route-gpx");
+    const tick = box.getByRole("checkbox", { name: "Atașează traseul (GPX)" });
+    await expect(tick).toBeEnabled();
+    await expect(tick).not.toBeChecked();
+    await expect(box).toContainText("Fiecare email are atașat fișierul GPX de pe pagina evenimentului");
+    const target = await box.locator(".MuiCheckbox-root").boundingBox();
+    expect(target?.width ?? 0).toBeGreaterThanOrEqual(44);
+    expect(target?.height ?? 0).toBeGreaterThanOrEqual(44);
+
+    // The preview is the real email: no line until the box is ticked…
+    await expect.poll(async () => (await previewHtml()).includes("Vezi pagina evenimentului"), { timeout: 30_000 }).toBe(true);
+    expect(await routeLines()).toBe(0);
+    // …then one a half, the Romanian registrant's first, each linking the file under its own name.
+    await tick.check();
+    await expect.poll(routeLines, { timeout: 30_000 }).toBe(2);
+    const html = await previewHtml();
+    expect(html).toContain("Traseul e atașat acestui email, ca fișier GPX.");
+    expect(html).toContain("The route is attached to this email as a GPX file.");
+    expect(html.indexOf("Traseul e atașat")).toBeLessThan(html.indexOf("The route is attached"));
+    expect(html).toContain(`/${key}"`);
+    expect(html).toContain(">traseu-e2e.gpx</a>");
+
+    // Unticked again, it is gone. Neither press sent anything.
+    await tick.uncheck();
+    await expect.poll(routeLines, { timeout: 30_000 }).toBe(0);
+    expect(await queuedFor(withGpx)).toEqual([]);
 
     // Nothing wider than the phone.
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
