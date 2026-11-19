@@ -1459,6 +1459,8 @@ const SLUG_ROUTES = new Set([
   "/events/[slug]/register",
   "/events/[slug]/declaration",
   "/events/[slug]/volunteers",
+  // The raffle's public form (§NNN): its slug per language is the event's, as the volunteers' page's.
+  "/events/[slug]/tombola",
   "/gallery/[slug]",
   "/pages/[slug]",
 ]);

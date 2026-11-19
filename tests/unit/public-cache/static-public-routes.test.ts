@@ -98,6 +98,8 @@ const PER_REQUEST: Record<string, string> = {
   "src/app/[locale]/events/[slug]/declaration/page.tsx": "the group run's signing form (§393)",
   // The volunteers' own page (§768): the registration page's model — a form, so its render time is the bot check's clock, its refusals come back from the draft cookie, its answer is in the address.
   "src/app/[locale]/events/[slug]/volunteers/page.tsx": "the volunteers' form: the draft cookie, the render time, ?volunteer= and ?vfields= (§768)",
+  // The raffle's own page (§NNN): the volunteers' page's model — a form timed from its render, refusals back from the draft cookie.
+  "src/app/[locale]/events/[slug]/tombola/page.tsx": "the raffle's form: the draft cookie, the render time, ?tombola= and ?fields= (§NNN)",
   "src/app/[locale]/registrations/mine/page.tsx": "a form that takes an address: ?sent= says its outcome (BR-REQ-036-04)",
   "src/app/[locale]/registrations/resend/page.tsx": "a form that takes an address: ?sent= and ?event= (BR-REQ-036-02)",
   "src/app/[locale]/registrations/confirm/[token]/page.tsx": TOKEN_PAGE,
