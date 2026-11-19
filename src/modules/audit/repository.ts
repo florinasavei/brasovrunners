@@ -817,6 +817,11 @@ export type AuditAction =
    */
   | "event.badge_design_changed"
   | "volunteer_role.badge_colour_changed"
+  /**
+   * «Ecusoane cu nume» downloaded (the hotfix of 2026-11-19, `volunteers/badges/badge-named.ts`), entity `event`: how many badges the
+   * file held — never a name, a word or a colour printed on one.
+   */
+  | "event.badges_named_printed"
   /** A message's own words, rewritten by the club (§247). */
   | "email_copy.changed"
   /** Who at the club receives the declaration copies and the confirmation notices (§244, §245). */

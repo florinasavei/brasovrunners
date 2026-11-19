@@ -523,6 +523,20 @@ export async function countConfirmedVolunteers<T extends Record<string, unknown>
 }
 
 /**
+ * «Ecusoane cu nume» (the hotfix of 2026-11-19, `badge-named.ts`): the event's confirmed volunteers' names, by name — what the list on
+ * the badges page starts from, one first name a line. Their names alone: no address, telephone or anything else of them. A cancelled
+ * or not yet confirmed person is never read. For whoever designs the badges — the page asks `canDesignVolunteerBadges` before it reads.
+ */
+export async function listConfirmedVolunteerNames<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<string[]> {
+  const rows = await db
+    .select({ name: eventVolunteers.name })
+    .from(eventVolunteers)
+    .where(and(eq(eventVolunteers.eventId, eventId), eq(eventVolunteers.state, "CONFIRMED")))
+    .orderBy(asc(eventVolunteers.name));
+  return rows.map((row) => row.name);
+}
+
+/**
  * `badgeSingleStart` for an event: its confirmed volunteers counted, its roles' needs added up (`badgeRoleNeed`) — a role without a number (§784)
  * adds the people it was given, or nothing while it has none, never a hole in the sum.
  */
