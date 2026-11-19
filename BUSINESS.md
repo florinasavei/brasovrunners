@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.68-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.69-2026-11-19 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V4.68-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.69-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -849,6 +849,8 @@ Every normal release is tested in QA before production.
 
 - `qa` contains the integrated release candidate.
 - `main` contains production.
+- Every change reaches `qa` on a branch named for what it carries, so whoever reads the list of
+  pull requests knows what each one will change.
 - QA uses synthetic participant data.
 - QA cannot send arbitrary live email.
 - Production data is not copied into QA.

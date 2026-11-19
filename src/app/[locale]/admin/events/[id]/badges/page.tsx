@@ -28,11 +28,14 @@ type Props = { params: Promise<{ locale: string; id: string }>; searchParams: Pr
  * under the event like its bibs — the event editor is long enough, and the «Voluntari» card links here
  * with one button.
  *
- * Three cards: «Cum arată ecusonul» (the designer, with its live preview), «Culorile rolurilor» (each
- * role's band) and «Tipărire» (per role, with spares and the badges «fără rol»). Whoever designs the
- * badges — the Organizer, the Administrator and the Superadministrator (`canDesignVolunteerBadges`),
- * asserted here, in the actions, the service and both routes; anyone else meets the 404 an unknown page
- * gets. A print the route refused comes back here with `?refused=` and an alert that says why. No volunteer is read on this page: a badge carries a role, never a person.
+ * Four cards: «Cum arată ecusonul» (the designer, with its live preview), «Culorile rolurilor» (each
+ * role's band), «Tipărire» (per role, with spares and the badges «fără rol») and «Ecusoane cu nume» (one
+ * line a badge: a word, a first name and, if typed, a colour). Whoever designs the badges — the Organizer, the
+ * Administrator and the Superadministrator (`canDesignVolunteerBadges`), asserted here, in the actions,
+ * the service and the routes; anyone else meets the 404 an unknown page gets. A print the route refused
+ * comes back here with `?refused=` and an alert that says why. Of the volunteers the page reads the
+ * confirmed ones' names for «Ecusoane cu nume» (§988) and, for «Tipărire», how many they are — nothing
+ * else of them; a badge per role carries a role, never a person.
  */
 export default async function EventBadgesPage({ params, searchParams }: Props) {
   const { locale, id } = await params;
