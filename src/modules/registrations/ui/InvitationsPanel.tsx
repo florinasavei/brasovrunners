@@ -21,8 +21,12 @@ import type { FormOutcome } from "@/shared/forms/outcome";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import StatusChip from "@/shared/ui/StatusChip";
+import { RACE_NUMBER_FORMAT } from "@/modules/events/repository";
 import { readInvitationForecast } from "../admin-service";
 import { currentAddressCap } from "../address-cap";
+import { freeSpareBibNumbers, givenSpareBibs } from "../bibs";
+import { formatRaceNumber } from "../domain/race-number";
+import { spareRunsText } from "../domain/spare-bibs";
 import { HIDDEN_LIST_OFF } from "../domain/hidden-list";
 import { INVITATION_DAYS_DEFAULT, INVITATION_DAYS_MAX, INVITATION_REFUSALS, invitationState, resendDeadlineChoices } from "../domain/invitations";
 import { listEventInvitations } from "../invitation-repository";
@@ -42,6 +46,8 @@ const INVITATION_STATES = ["sent", "accepted", "expired", "withdrawn"] as const;
  * deadline and who sent it; and, for the Administrator, the send («Trimite invitații») and each open
  * invitation's «Retrimite» and «Retrage», and «Șterge» on one that ended unaccepted (§948). The Organizer
  * reads the list and is offered no verb (§289); every verb asserts the role on the server whatever this draws.
+ * An invitation sent with «La confirmare primește un BIB gol» wears its chip, and the spare's number once its registration
+ * wears one (§992).
  *
  * The send's forecast — how many places are free for invitations — is the allocator's count
  * (`countOccupied` → `computeOccupied`) against the capacity, less everyone eligible who waits, as the
@@ -76,12 +82,31 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
   const t = await getTranslations("Admin");
   const dialog = await confirmWords();
   const [event] = await db
-    .select({ capacity: events.capacity, timezone: events.timezone, hiddenListEnabled: events.hiddenListEnabled, startsAt: events.startsAt, eventStatus: events.eventStatus })
+    .select({
+      capacity: events.capacity,
+      timezone: events.timezone,
+      hiddenListEnabled: events.hiddenListEnabled,
+      startsAt: events.startsAt,
+      eventStatus: events.eventStatus,
+      numberFormat: RACE_NUMBER_FORMAT,
+    })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
   if (!event) return null;
   const invitations = await listEventInvitations(db, eventId);
+  /*
+    The desk's spares (§444): the free ones for «La confirmare primește un BIB gol» on the send (§992), read for the role that
+    may send; and the spares worn — the card's own reader (`givenSpareBibs`, §989) — which say on a ticked invitation's row
+    which spare its registration got. Each read only when something here needs it.
+  */
+  const spares = mayManage ? await freeSpareBibNumbers(db, eventId) : { band: null, free: [] };
+  const spareWorn = new Map(
+    invitations.some((row) => row.blankBib && row.acceptedRegistrationId !== null)
+      ? (await givenSpareBibs(db, eventId)).map((given) => [given.registrationId, given.bibNumber] as const)
+      : [],
+  );
+  const written = (number: number) => formatRaceNumber(number, event.numberFormat);
   const byState = { sent: 0, accepted: 0, expired: 0, withdrawn: 0 };
   for (const row of invitations) byState[invitationState(row, now)] += 1;
   const pending = byState.sent;
@@ -127,6 +152,9 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
       outsideHelp: t("invitations.outsideHelp"),
       eliteLabel: t("invitations.eliteLabel"),
       eliteHelp: t("invitations.eliteHelp"),
+      blankBibLabel: t("invitations.blankBibLabel"),
+      blankBibHelp: counted("invitations.blankBibHelp"),
+      blankBibHelpOut: t("invitations.blankBibHelpOut"),
       partnerLabel: t("partner.tick"),
       partnerNameLabel: t("partner.name"),
       partnerHelp: t("partner.nameHelp"),
@@ -143,6 +171,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
       dialogNoRaise: t("invitations.dialog.noRaise"),
       dialogOutside: t("invitations.dialog.outside"),
       dialogElite: t("invitations.dialog.elite"),
+      dialogBlankBib: t("invitations.dialog.blankBib"),
       dialogPartner: t.raw("partner.dialog") as string,
       dialogDays: counted("invitations.dialog.days"),
       dialogLocale: t.raw("invitations.dialog.locale") as string,
@@ -175,6 +204,8 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
         daysMax={INVITATION_DAYS_MAX}
         hiddenListEnabled={event.hiddenListEnabled}
         placesMax={addressCap.registrationsPerAddress}
+        // The tick only while the club reserved spares (§444); the line says which are free now, as the desk writes them.
+        blankBibSpares={spares.band ? { count: spares.free.length, numbers: spareRunsText(spares.free, written) } : null}
         partnerSuggestions={partnerSuggestions}
         partnerNameMax={PARTNER_NAME_MAX}
         words={words}
@@ -279,6 +310,19 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                           accepted one by the registration it became as it stands now («Nu mai e elită» takes it off here too). */}
                       {(state === "sent" ? row.elite : state === "accepted" && row.acceptedElite === true) && (
                         <StatusChip glyph="elite" color="secondary" variant="outlined" label={t("registrations.elite.chip")} testId="invitation-elite-chip" />
+                      )}
+                      {/* «BIB gol la confirmare» (§992): the send's tick, staff-only, in every state — and, once the registration it
+                          became wears one of the desk's spares, that spare («BIB gol: 154»), as the spares card lists it. */}
+                      {row.blankBib && (
+                        <StatusChip
+                          glyph="number"
+                          variant="outlined"
+                          label={(() => {
+                            const worn = row.acceptedRegistrationId !== null ? spareWorn.get(row.acceptedRegistrationId) : undefined;
+                            return worn !== undefined ? t("invitations.blankBibGiven", { number: written(worn) }) : t("invitations.blankBibChip");
+                          })()}
+                          testId="invitation-blank-bib-chip"
+                        />
                       )}
                       {/* «Partener: {name}» (the decision «De la parteneri»): staff-only — the send's name, and once accepted the
                           registration's as it stands now (its page may have changed or cleared it). */}

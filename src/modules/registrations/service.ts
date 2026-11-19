@@ -29,8 +29,8 @@ import { drainOutboxRowsAfterResponse } from "@/modules/notifications/drain";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { enqueueEmail, type OutboxRow } from "@/modules/notifications/outbox";
 import { outboxIdsForKey } from "@/modules/notifications/send-at-once";
-import { bibNumberInUse, isEventSpareNumber, pickBibNumber } from "./bibs";
-import { handsSpareAtConfirm } from "./domain/spare-bibs";
+import { bibNumberInUse, freeSpareBibNumbers, isEventSpareNumber, pickBibNumber } from "./bibs";
+import { handsSpareAtConfirm, spareBandOf } from "./domain/spare-bibs";
 import { HIDDEN_LIST_OFF } from "./domain/hidden-list";
 import type { CancelReason } from "./domain/cancel-reason";
 import { shirtSizeKept } from "./domain/kit";
@@ -127,7 +127,14 @@ import {
 import * as repo from "./repository";
 import { watchPlacesAlert } from "./places-alert";
 import { publicDoorOpen, publicRegistrationPausedError } from "./domain/public-door";
-import { countInvitationsOfParticipant, findInvitationById, findLiveInvitationsOfParticipant, findOpenInvitations, invitationOpen } from "./invitation-repository";
+import {
+  countInvitationsOfParticipant,
+  findBlankBibInvitationOfRegistration,
+  findInvitationById,
+  findLiveInvitationsOfParticipant,
+  findOpenInvitations,
+  invitationOpen,
+} from "./invitation-repository";
 import { writeRegistrationEliteMark } from "./elite-mark";
 import { normalizePartnerName, writeRegistrationPartnerName } from "./partner-mark";
 import { confirmsInvitationRaises, INVITATION_BATCH_MAX, InvitationRefusal, invitationDeadline, invitationFreePlaces, invitationRaises, invitationState, validInvitationDays } from "./domain/invitations";
@@ -320,16 +327,68 @@ function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDes
  * A number the row already wears is kept: a cancelled confirmed registration that restarted keeps
  * its retired number and gets it back at its new confirmation (§173), never a second one. A test
  * registration wears none (`AGENTS.md` §12.6).
+ *
+ * **An invitation's blank bib (§992; the owner, 2026-11-19: «când invit pe cineva, trebuie să pot să-i dau unul dintre
+ * locurile de rezervă» — «Ambele»).** When the invitation this registration came from was sent with «La confirmare primește
+ * un BIB gol» (`findBlankBibInvitationOfRegistration`: the accepted invitation naming it, by its link or taken over), the
+ * number is the **lowest of the desk's spares free at this moment** (`freeSpareBibNumbers`: the reservation less every
+ * number worn, retired or stepped over by a print, §444) instead of the allocator's next one — read under the event row's
+ * lock this confirmation holds, the one every number at the event is drawn, typed or handed under, so no draw, desk, typed
+ * number or «Dă-i un BIB gol» can reach the same spare between this read and the write. It is marked printed, a spare being
+ * on paper (§444), so the next unprinted sheet never prints it again with a name. Whichever path confirms — the person's own
+ * signature, the paper at the desk, «Dă-i un loc» — and whichever list (a special guest's too, §643: the tick is the
+ * Administrator's choice, over the hidden list's own series). **None free then**: the ordinary draw, so a runner is never
+ * left without a number, and the trail says the blank bib could not be given (`recordInvitationBlankBib`). A number handed
+ * at the desk with the paper wins over the tick (`handedBibAtConfirmation`): the paper in the volunteer's hand is what the
+ * runner wears.
  */
+type BibAtConfirmation = {
+  /** What the confirmation writes on the row: the number, and the printed mark when it is a spare. */
+  changes: { bibNumber: number | null; bibPrintedAt?: Date };
+  /** A ticked invitation's outcome, for the trail after the transition; null for every other registration. */
+  invitationBlankBib: { invitationId: string; invitedByStaffUserId: string | null; given: boolean } | null;
+};
+
 async function bibAtConfirmation<T extends Record<string, unknown>>(
   tx: Database<T>,
   current: Registration,
-): Promise<{ bibNumber: number | null }> {
-  if (current.bibNumber !== null) return { bibNumber: current.bibNumber };
-  if (current.kind !== "REAL") return { bibNumber: null };
+  now: Date,
+): Promise<BibAtConfirmation> {
+  if (current.bibNumber !== null) return { changes: { bibNumber: current.bibNumber }, invitationBlankBib: null };
+  if (current.kind !== "REAL") return { changes: { bibNumber: null }, invitationBlankBib: null };
   // A row on the hidden list draws from the hidden list's own series when the event has one (§647).
   // A row that changes list after this keeps its number: a number once given is never moved (§173).
-  return { bibNumber: await pickBibNumber(tx, current.eventId, new Set(), undefined, current.outsideCapacity ? "hidden" : "race") };
+  const draw = () => pickBibNumber(tx, current.eventId, new Set(), undefined, current.outsideCapacity ? "hidden" : "race");
+  const invitation = await findBlankBibInvitationOfRegistration(tx, current.id);
+  if (!invitation) return { changes: { bibNumber: await draw() }, invitationBlankBib: null };
+  const [spare] = (await freeSpareBibNumbers(tx, current.eventId)).free;
+  const outcome = { invitationId: invitation.id, invitedByStaffUserId: invitation.invitedByStaffUserId };
+  if (spare === undefined) return { changes: { bibNumber: await draw() }, invitationBlankBib: { ...outcome, given: false } };
+  return { changes: { bibNumber: spare, bibPrintedAt: current.bibPrintedAt ?? now }, invitationBlankBib: { ...outcome, given: true } };
+}
+
+/**
+ * The trail's line of an invitation's blank bib (§992), after the confirmation's transition and in its transaction: the spare
+ * given (`registration.invitation_blank_bib_given`), or none free and the allocator's number
+ * (`registration.invitation_blank_bib_missed`) — about the registration, so its page says it; the number it wears and the
+ * ids, never a name; under the Administrator who sent the invitation, as «Elită» from the send is audited (§917).
+ */
+async function recordInvitationBlankBib<T extends Record<string, unknown>>(
+  tx: Database<T>,
+  confirmed: Registration,
+  outcome: BibAtConfirmation["invitationBlankBib"],
+  now: Date,
+): Promise<void> {
+  if (!outcome || confirmed.bibNumber === null) return;
+  await recordAuditEvent(tx, {
+    actorStaffUserId: outcome.invitedByStaffUserId,
+    participantId: confirmed.participantId,
+    action: outcome.given ? "registration.invitation_blank_bib_given" : "registration.invitation_blank_bib_missed",
+    entityType: "registration",
+    entityId: confirmed.id,
+    metadata: { eventId: confirmed.eventId, invitationId: outcome.invitationId, bibNumber: confirmed.bibNumber },
+    now,
+  });
 }
 
 /**
@@ -3801,6 +3860,9 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       }),
     });
 
+    // The race number, drawn now and at no other moment (§548): the next one in confirmation order — or, for an invitation
+    // sent with «La confirmare primește un BIB gol», the lowest free desk spare (§992).
+    const bib = await bibAtConfirmation(tx, current, now);
     const confirmed = await repo.transitionRegistration(tx, {
       id: current.id,
       to: "CONFIRMED",
@@ -3809,12 +3871,12 @@ export async function signDeclaration<T extends Record<string, unknown>>(
         confirmedAt: now,
         holdExpiresAt: null,
         checkinCode: current.checkinCode ?? newCheckinCode(),
-        // The race number, drawn now and at no other moment (§548): the next one in confirmation order.
-        ...(await bibAtConfirmation(tx, current)),
+        ...bib.changes,
       },
       now,
     });
     if (!confirmed) throw new DomainError("CONFLICT", "this registration changed state concurrently");
+    await recordInvitationBlankBib(tx, confirmed, bib.invitationBlankBib, now);
 
     await enqueueConfirmation(tx, confirmed, now);
     await enqueueDeclarationCopies(tx, confirmed, now);
@@ -3955,6 +4017,12 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
       signer: { registeredName: current.registeredName, guardianName: current.guardianName, locale: current.locale, idDocument: null, minorIdDocument: null, acceptedAt: now },
     }),
   });
+  /*
+    As in `signDeclaration` (§548): the next number in confirmation order, or an invitation's blank bib (§992) — unless the
+    desk handed one with the paper, a spare above all (§444): the paper in the volunteer's hand is what the runner wears.
+  */
+  const bib: BibAtConfirmation =
+    handedBib !== undefined ? { changes: await handedBibAtConfirmation(tx, current, handedBib, now), invitationBlankBib: null } : await bibAtConfirmation(tx, current, now);
   const confirmed = await repo.transitionRegistration(tx, {
     id: current.id,
     to: "CONFIRMED",
@@ -3963,13 +4031,12 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
       confirmedAt: now,
       holdExpiresAt: null,
       checkinCode: current.checkinCode ?? newCheckinCode(),
-      // As in `signDeclaration` (§548): the next number in confirmation order — unless the desk
-      // handed one with the paper, a spare above all (§444).
-      ...(handedBib !== undefined ? await handedBibAtConfirmation(tx, current, handedBib, now) : await bibAtConfirmation(tx, current)),
+      ...bib.changes,
     },
     now,
   });
   if (!confirmed) throw new DomainError("CONFLICT", "this registration changed state concurrently");
+  await recordInvitationBlankBib(tx, confirmed, bib.invitationBlankBib, now);
 
   await enqueueConfirmation(tx, confirmed, now);
   // The copy of the paper declaration's record, by email, as after an electronic signature (§95).
@@ -4564,6 +4631,12 @@ export type InvitationSendInput = {
    */
   partnerName?: string | null;
   /**
+   * «La confirmare primește un BIB gol» for the whole send (§992): each invitation stores it, and the registration it becomes
+   * wears, once confirmed, the lowest free desk spare (`bibAtConfirmation`). Only on an event with spares reserved — asked
+   * under the lock, `INVITATION_NO_SPARES` otherwise, before anything is written. Internal: the person is told only the number.
+   */
+  blankBib?: boolean;
+  /**
    * «Limba invitației» for a typed address the club has never seen (Romanian by default): a member is
    * written to in the account's language, and an address the club knows in its participant's.
    */
@@ -4612,7 +4685,8 @@ export async function invitationHeldForRegistration<T extends Record<string, unk
  * 1. **The event**: local, scheduled, published, dated (§533) and not started — the invitation's deadline
  *    is `min(now + days, start)` (`invitationDeadline`). Neither end of the public window is asked: the
  *    club may invite before it opens and after it closes (organizers, pacemakers, volunteers invited
- *    late), as «Trimite-i oferta» offers after the close (§642).
+ *    late), as «Trimite-i oferta» offers after the close (§642). «La confirmare primește un BIB gol» (§992) only on an event
+ *    with desk spares reserved (§444), or the send is refused with `INVITATION_NO_SPARES`.
  * 2. **The line is served first** and the stale holds expire (`fillAvailableSpots`, as `placeForNewcomer`):
  *    a place somebody waiting is owed is offered to them before any invitation counts what is left.
  * 3. **Each person**, in order: the address canonicalized (§10.4); refused when the same person — the same
@@ -4683,6 +4757,12 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
     if (input.outsideCapacity && !lockedEvent.hiddenListEnabled) {
       throw new DomainError("VALIDATION_ERROR", "the hidden list is off for this event: tick «Folosește lista ascunsă» in the event's settings first", [HIDDEN_LIST_OFF]);
     }
+    /*
+      «La confirmare primește un BIB gol» (§992) is a promise of one of the desk's spares (§444): the form draws the tick only
+      while the event has a reservation, and the server asks the same under the lock — a reservation is never removed, so
+      only a post the page never drew reaches this. Every spare given since is fine: the confirmation says so on the trail.
+    */
+    if (input.blankBib === true && spareBandOf(lockedEvent) === null) throw new InvitationRefusal("INVITATION_NO_SPARES");
 
     // The line first, and every stale hold — an invitation past its deadline among them — expired (§10.6).
     const offersMade = await fillAvailableSpots(tx, locked, now, settings);
@@ -4807,6 +4887,7 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
         supplementaryRaise: raised,
         elite: input.elite === true,
         partnerName,
+        blankBib: input.blankBib === true,
         lastSentAt: now,
       });
       const idempotencyKey = `invitation:${invitationId}:sent:${now.toISOString()}`;
@@ -4836,6 +4917,8 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
           ...(input.elite === true ? { elite: true } : {}),
           // «E de la parteneri»: that the send carried a partner's name, never the name.
           ...(partnerName !== null ? { partner: true } : {}),
+          // «La confirmare primește un BIB gol» (§992): that the send asked for a desk spare at the confirmation.
+          ...(input.blankBib === true ? { blankBib: true } : {}),
         },
         now,
       });

@@ -1777,6 +1777,8 @@
           "cancelled_by_staff": "Anulată de echipă",
           "resend_rate_limited": "Retrimitere limitată",
           "bib_set": "Număr de concurs schimbat",
+          "invitation_blank_bib_given": "BIB gol dat la confirmare, cum cerea invitația",
+          "invitation_blank_bib_missed": "Niciun BIB gol liber la confirmare: numărul obișnuit, deși invitația cerea unul gol",
           "confirmed_by_staff": "Confirmat la masă (adresă garantată, declarație pe hârtie)",
           "promoted_by_staff": "Loc dat înaintea listei de așteptare",
           "checked_in": "Marcat prezent",
@@ -2088,6 +2090,11 @@
       "placeGiven": "Loc dat; emailul cu declarația a plecat. Termen: {deadline}.",
       "placeGivenRaised": "Loc dat, pe un loc suplimentar: capacitatea e acum {n}. Emailul cu declarația a plecat. Termen: {deadline}.",
       "invitedBy": "Înscriere pe invitație — trimisă de {who}, {when}",
+      "invitationBlankBib": {
+        "pending": "Invitația îi dă un BIB gol la confirmare: cel mai mic liber atunci.",
+        "given": "La confirmare a primit BIB-ul gol {number}, cum cerea invitația.",
+        "missed": "Invitația cerea un BIB gol, dar la confirmare nu mai era niciunul liber: a primit numărul {number}."
+      },
       "answers": {
         "title": "Datele înscrierii",
         "open": "Modifică datele",
@@ -10103,6 +10110,7 @@
                 "Apasă «Descarcă foaia» și tipărește-o. Fiecare număr are linia pentru nume goală; la masă se scrie numele cu markerul, iar formularul propune următorul număr liber.",
                 "Ai nevoie de ele din nou? «Retipărește rezervele libere (PDF)» pune pe foaie doar numerele încă nedate și nu rezervă altele.",
                 "Cineva înscris, chiar cu BIB-ul tipărit, primește un BIB gol? «Înscrieri» → înscrierea lui → «Dă-i un BIB gol» → la «BIB-ul gol» alege numărul de pe hârtie → «Dă-i BIB-ul». Numărul vechi se retrage, iar BIB-ul tipărit cu el nu mai e bun.",
+                "O invitație poate da un BIB gol: la «Trimite invitații noi» bifează «La confirmare primește un BIB gol»; când se confirmă, persoana primește cel mai mic BIB gol liber atunci.",
                 "Cine are fiecare BIB gol dat apare sub «Numere de rezervă pentru înscrierile de la fața locului»: numărul, apoi numele, cu link spre înscriere."
               ]
             },
@@ -11992,6 +12000,15 @@
       "outsideHelp": "Pentru organizatori, voluntari, pacemakeri și sportivi invitați, care nu iau niciunul dintre locurile anunțate: invitația nu ține un loc, iar înscrierea va fi a unui invitat special.",
       "eliteLabel": "Elită",
       "eliteHelp": "Intern: înscrierile vor fi marcate «Elită»; persoanele nu văd marcajul, schimbă doar cum se tipărește BIB-ul.",
+      "blankBibLabel": "La confirmare primește un BIB gol",
+      "blankBibHelp": {
+        "one": "Primește cel mai mic BIB gol liber în clipa confirmării, sau numărul obișnuit dacă nu mai e niciunul; liber acum: {numbers}.",
+        "few": "Primește cel mai mic BIB gol liber în clipa confirmării, sau numărul obișnuit dacă nu mai e niciunul; libere acum ({count}): {numbers}.",
+        "other": "Primește cel mai mic BIB gol liber în clipa confirmării, sau numărul obișnuit dacă nu mai e niciunul; libere acum ({count}): {numbers}."
+      },
+      "blankBibHelpOut": "Toate BIB-urile goale sunt date acum: la confirmare primește unul doar dacă se tipăresc altele până atunci, altfel numărul obișnuit.",
+      "blankBibChip": "BIB gol la confirmare",
+      "blankBibGiven": "BIB gol: {number}",
       "localeLegend": "Limba invitației",
       "localeRo": "Română",
       "localeEn": "English",
@@ -12019,6 +12036,7 @@
         "locale": "Limba pentru adresele pe care clubul nu le cunoaște: {language}.",
         "outside": "Pe lista de invitați speciali: nu țin niciun loc.",
         "elite": "Înscrierile vor fi marcate «Elită» — intern, persoanele nu sunt anunțate.",
+        "blankBib": "La confirmare, fiecare primește cel mai mic BIB gol liber atunci.",
         "confirmRaise": {
           "one": "Adaugă {count} loc și trimite",
           "few": "Adaugă {count} locuri și trimite",
@@ -12078,6 +12096,7 @@
         "INVITATION_BAD_DAYS": "Zilele până expiră: un număr întreg de la 1 la 60.",
         "INVITATION_UNREAD_LINE": "Rândurile {lines} nu au un nume și o adresă: nu s-a trimis nicio invitație.",
         "INVITATION_UNREAD_ROW": "Persoanele de pe rândurile {lines} nu au și un nume, și o adresă de email bună: nu s-a trimis nicio invitație.",
+        "INVITATION_NO_SPARES": "Cursa nu are BIB-uri goale rezervate: tipărește-le întâi din «Alocare și tipărire»; nu s-a trimis nicio invitație.",
         "SUPPLEMENTARY_PLACE_UNCONFIRMED": "Nu s-a trimis nimic: locurile s-au schimbat de când ai deschis pagina. Apasă din nou: întrebarea spune acum câte locuri se adaugă.",
         "FORBIDDEN": "Doar un administrator trimite invitații.",
         "NOT_FOUND": "Evenimentul nu mai există.",
