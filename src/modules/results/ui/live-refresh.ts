@@ -3,8 +3,9 @@
  *
  * While the page is visible it calls `refresh` every `everyMs`; while it is hidden it calls nothing, and once it is visible again it calls
  * at once if a refresh is due, then resumes the period from there. At `until` it stops for good — no call, no timer — and says so once
- * (`onEnd`), so the island takes its line away. A refresh is `router.refresh()`: the page's own server render again, through the public
- * cache — an unchanged page costs one request, and only a result written since (which expires the page, §333) a render and a read.
+ * (`onEnd`), so the island takes its line away. A refresh is `router.refresh()`: the page's own server render again — for an anonymous
+ * visitor the static page, one request the CDN answers while nothing changed, and a render once a save expired it (§333, §549); for a
+ * signed-in tab, or an address with a query the page reads, the live twin, a server render every time (§577).
  */
 export type LiveRefreshClock = {
   /** Milliseconds since the epoch: `Date.now`. */

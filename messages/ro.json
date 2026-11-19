@@ -12215,6 +12215,7 @@
       "introMore": "Un rând pe alergător, după numărul de concurs. Locurile sunt în total, la sex și la categorie; timpurile egale împart locul. Un rând cu doar o notă înseamnă neprezentat.",
       "notRace": "Doar o cursă are clasament. Alergările de grup și celelalte evenimente nu au.",
       "notStarted": "Cursa nu a început încă. Poți scrie rezultate și bifa clasamentul public de pe acum; pe site nu apare nimic până la start.",
+      "notStartedEnterOnly": "Cursa nu a început încă. Poți scrie rezultate de pe acum; pe site nu apare nimic până la start.",
       "summary": {
         "FINISHED": "Sosiți: {count}",
         "DNF": "Abandon: {count}",
@@ -12316,7 +12317,9 @@
         "gate": "Nota de confidențialitate în vigoare nu descrie încă clasamentul, așa că nu-l poți publica.",
         "gateTerms": "Termenii în vigoare nu descriu încă clasamentul: cei vechi promiteau că te întreabă înainte. Aprobă termeni noi ca să-l publici.",
         "beforeStart": "Poți bifa de pe acum: pe site, clasamentul apare de la start, {start}, pe măsură ce sosesc alergătorii.",
+        "beforeStartUnannounced": "Poți bifa de pe acum: pe site, clasamentul apare de la start, după ce anunți ora startului, pe măsură ce sosesc alergătorii.",
         "fromStart": "Pe site apare de la start, {start}, pe măsură ce sosesc alergătorii.",
+        "fromStartUnannounced": "Pe site apare de la start, după ce anunți ora startului, pe măsură ce sosesc alergătorii.",
         "gateLink": "Documente legale",
         "adminOnly": "Doar un administrator poate publica clasamentul.",
         "empty": "Nu e niciun rezultat salvat încă.",

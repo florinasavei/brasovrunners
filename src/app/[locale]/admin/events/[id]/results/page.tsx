@@ -11,6 +11,7 @@ import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventTitle } from "@/modules/content/events/repository";
+import { startHeldBack } from "@/modules/events/domain/dated";
 import { noticeDescribesResults, termsDescribeResults } from "@/modules/legal-documents/repository";
 import { bandWordsFrom, categoryLabelOf } from "@/modules/results/category-words";
 import { bandKeysOf, bandLabelOf, formatAgeBandStarts } from "@/modules/results/domain/age-bands";
@@ -108,7 +109,9 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   const started = event.startsAt.getTime() <= now.getTime();
   // The tick as the page says it (§NNN): off, «Public de la start» while ticked before the race — nothing shows until then — or «Public».
   const publishState = resultsPublishState(event, now);
-  const startWords = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short", position: "inline", withTime: true });
+  // The start's day and hour, as the site will show them — none while the date or the hour is to be announced (§533): the public read
+  // has no start then, so nothing shows until it is announced, and the card says that instead of the hour stored.
+  const startWords = startHeldBack(event) ? null : formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short", position: "inline", withTime: true });
   const errorCode = BANNER_ERRORS.find((code) => code === resultsError);
 
   const eventPath = { pathname: "/admin/events/[id]", params: { id } } as const;
@@ -303,7 +306,8 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       )}
       {!started && (
         <Alert severity="info" data-testid="results-not-started">
-          {t("results.notStarted")}
+          {/* The tick is the Administrator's (`canPublishResults`): the Organizer is told only what they may do before the start. */}
+          {t(mayPublish ? "results.notStarted" : "results.notStartedEnterOnly")}
         </Alert>
       )}
       {errorCode && (
@@ -345,6 +349,15 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
             </Stack>
           </Panel>
 
+          {/* «Loc» in plain words (§NNN; the owner, 2026-11-18: «ce inseamna "Loc" aici?») — once, above both panels of lines, since a phone
+              has no column header and a typed runner's line says «Loc:» too; nothing while there is no line at all. */}
+          {(registered.length > 0 || typed.length > 0) && (
+            <Typography variant="body2" color="text.secondary" data-testid="results-place-hint">
+              {t("results.placeHint")}
+              <QuietHelp text={t("results.placeHelp")} testId="results-place-help" />
+            </Typography>
+          )}
+
           <Panel glyph="results" level={3} title={t("results.registered.title")} aside={t("results.registered.aside", { count: String(registered.length) })} id="box-results-registered" data-testid="results-registered">
             {registered.length === 0 ? (
               <Typography variant="body2" color="text.secondary" data-testid="results-registered-empty">
@@ -352,11 +365,6 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
               </Typography>
             ) : (
               <>
-                {/* «Loc» in plain words (§NNN; the owner, 2026-11-18: «ce inseamna "Loc" aici?») — said above the lines, since a phone has no column header. */}
-                <Typography variant="body2" color="text.secondary" data-testid="results-place-hint">
-                  {t("results.placeHint")}
-                  <QuietHelp text={t("results.placeHelp")} testId="results-place-help" />
-                </Typography>
                 <ResultsHeader words={words} />
                 <RegisteredResultLines lines={registered} words={words} />
               </>
@@ -504,12 +512,14 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
           {publishState === "fromStart" ? (
             <Stack direction="row" sx={{ gap: 1, alignItems: "center", flexWrap: "wrap" }} data-testid="results-publish-from-start">
               <StatusChip glyph="planned" color="primary" variant="outlined" label={t("results.publish.stateFromStart")} testId="results-from-start-chip" />
-              <Typography variant="body2">{t("results.publish.fromStart", { start: startWords })}</Typography>
+              <Typography variant="body2">{startWords !== null ? t("results.publish.fromStart", { start: startWords }) : t("results.publish.fromStartUnannounced")}</Typography>
             </Stack>
           ) : (
-            !started && (
+            // «Poți bifa de pe acum» is said to whoever may tick it: the Organizer's card says «Doar un administrator…» below.
+            !started &&
+            mayPublish && (
               <Alert severity="info" data-testid="results-publish-not-started">
-                {t("results.publish.beforeStart", { start: startWords })}
+                {startWords !== null ? t("results.publish.beforeStart", { start: startWords }) : t("results.publish.beforeStartUnannounced")}
               </Alert>
             )
           )}

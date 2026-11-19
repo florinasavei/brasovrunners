@@ -14,9 +14,13 @@ import { hydrated, signIn } from "./support/featured-event";
  * 2. the race's page, for a visitor, shows nothing of it;
  * 3. the race starts (its start moved into the past — the setup, not the subject) and a finisher is saved: the visitor's page shows the
  *    ranking with «Se actualizează singur la 30 de secunde»;
- * 4. another finisher is saved while the visitor's page stays open: nothing changes by itself until the page's own clock — Playwright's
- *    `page.clock`, fast-forwarded instead of waited — reaches thirty seconds; then the new row is there, with no reload;
- * 5. past the race's window the line goes and the page asks nothing more.
+ * 4. the visitor narrows the table to «101»; another finisher is saved while the page stays open: nothing changes by itself until the
+ *    page's own clock — Playwright's `page.clock`, fast-forwarded instead of waited — reaches thirty seconds; then the new row is there,
+ *    with no reload, hidden by the number already typed, and shown once the box is cleared;
+ * 5. past the race's window the line goes and the page asks nothing more — counted across a further fast-forward.
+ *
+ * And a page opened during the race **before the first finish** — the sheet still empty, so no «Clasament» yet — shows that first finish
+ * at its next refresh: the clock is drawn alone and silent while there is no section to draw it in.
  *
  * The page is anonymous on purpose: its rows come through the public cache and the static page, so the row appearing proves the tag the
  * results' save expires is the one the section's read is filed under (§333). The backoffice is a second browser context.
@@ -97,6 +101,21 @@ const resultsUrl = (eventId: string) => `/ro/admin/events/${eventId}/results`;
 const publicUrl = (slug: string) => `/ro/evenimente/${slug}`;
 const row = (page: Page, bib: number) => page.locator(`[data-testid="result-row"][data-bib="${bib}"]`);
 
+/** Every request the page makes from now on, and those to its own address — what `router.refresh()` asks. */
+function recordRequests(page: Page, slug: string): { all: string[]; refreshes: () => number } {
+  const all: string[] = [];
+  page.on("request", (request) => all.push(request.url()));
+  return { all, refreshes: () => all.filter((url) => new URL(url).pathname === publicUrl(slug)).length };
+}
+
+/** Marks the document, so a later check can tell a refresh (the same document) from a reload (a new one). */
+async function markDocument(page: Page) {
+  await page.evaluate(() => {
+    (window as unknown as { __sameDocument: boolean }).__sameDocument = true;
+  });
+}
+const sameDocument = (page: Page) => page.evaluate(() => (window as unknown as { __sameDocument?: boolean }).__sameDocument === true);
+
 /** One saved line of «Clasament», by the page's own one button. */
 async function saveLine(admin: Page, eventId: string, fill: (page: Page) => Promise<unknown>) {
   await admin.goto(resultsUrl(eventId));
@@ -169,23 +188,34 @@ test.describe("§NNN «Clasament» public from the start, and live while the rac
       await expect(row(page, 102).getByTestId("result-name")).toHaveText("Participant #102");
       await expect(row(page, 102).getByTestId("result-status")).toHaveText("Neprezentat");
       await expect(row(page, 103)).toHaveCount(0);
-      await page.evaluate(() => {
-        (window as unknown as { __sameDocument: boolean }).__sameDocument = true;
-      });
+      await markDocument(page);
       await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1_000);
 
       // ---- 4. Another finisher while the page stays open: there only once the page's clock says thirty seconds ---------------------
+      // The visitor looks for number 101 first: the table keeps only Ana.
+      const search = page.getByTestId("results-bib-search");
+      await search.fill("101");
+      await expect(row(page, 102)).toBeHidden();
+      await expect(row(page, 101)).toBeVisible();
       await saveLine(admin, eventId, (p) => p.locator('[name="r[103].time"]').fill("47:30"));
       // The page does not change by itself in the meantime: no timer has fired yet.
       await page.waitForTimeout(2_000);
       await expect(row(page, 103)).toHaveCount(0);
+      const requests = recordRequests(page, slug);
       await page.clock.fastForward(30_000);
       await page.clock.resume();
-      await expect(row(page, 103)).toBeVisible({ timeout: 30_000 });
+      // The refresh brings Dan's row — hidden, since «101» is still typed (`ResultsFilter` narrows the rows a refresh redraws).
+      await expect(row(page, 103)).toHaveCount(1, { timeout: 30_000 });
+      await expect(row(page, 103)).toBeHidden();
+      await expect(row(page, 101)).toBeVisible();
+      expect(requests.refreshes()).toBeGreaterThan(0);
+      // Cleared, every row shows, in the ranking's order.
+      await search.fill("");
+      await expect(row(page, 103)).toBeVisible();
       await expect(row(page, 103).getByTestId("result-name")).toHaveText(`Dan Ionescu ${tag}`);
       await expect(section.getByTestId("result-row").evaluateAll((rows) => rows.map((tr) => tr.getAttribute("data-bib")))).resolves.toEqual(["103", "101", "102"]);
       // The same document: a refresh, never a reload.
-      expect(await page.evaluate(() => (window as unknown as { __sameDocument?: boolean }).__sameDocument)).toBe(true);
+      expect(await sameDocument(page)).toBe(true);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow).toBeLessThanOrEqual(1);
 
@@ -193,6 +223,53 @@ test.describe("§NNN «Clasament» public from the start, and live while the rac
       await page.clock.fastForward(6 * 3_600_000);
       await expect(section.getByTestId("results-live")).toHaveCount(0);
       await expect(row(page, 103)).toBeVisible();
+      // From here, the page asks nothing at all — whatever the clock does.
+      const after = recordRequests(page, slug);
+      await page.clock.fastForward(5 * 60_000);
+      await page.waitForTimeout(2_000);
+      await page.clock.fastForward(5 * 60_000);
+      await page.waitForTimeout(2_000);
+      expect(after.all).toEqual([]);
+      expect(await sameDocument(page)).toBe(true);
+    } finally {
+      await backoffice.close();
+    }
+  });
+
+  test("a page opened during the race before the first finish shows that finish at its next refresh, with no reload", async ({ page, browser }) => {
+    const tag = `${test.info().project.name}-empty-${Date.now().toString(36)}`;
+    const { eventId, slug } = await seedRace(tag);
+    test.skip(!(await textsNameResults()), "the texts in force do not describe the results: nothing can be published (the first test walks that refusal)");
+    // Ticked two days ago and started ten minutes ago, with nothing typed — the setup, not the subject (the first test walks the tick).
+    await sql(`UPDATE events SET results_published = true, results_published_at = now() - interval '2 days', starts_at = now() - interval '10 minutes' WHERE id = $1`, [eventId]);
+    const backoffice = await browser.newContext({ baseURL: test.info().project.use.baseURL });
+    const admin = await backoffice.newPage();
+    try {
+      await signIn(admin, "Dev Administrator");
+
+      // The visitor opens the race's page: no «Clasament» yet — nothing is stored — but the page's clock is there, silent.
+      await page.clock.install();
+      await page.goto(publicUrl(slug));
+      await hydrated(page);
+      await expect(page.getByRole("heading", { name: `Cursa în direct ${tag}` })).toBeVisible();
+      await expect(page.getByTestId("results-section")).toHaveCount(0);
+      await expect(page.getByTestId("results-live-quiet")).toHaveCount(1);
+      await expect(page.getByTestId("results-live-quiet")).toBeHidden();
+      await markDocument(page);
+      await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1_000);
+
+      // The first finish is saved while the page stays open: nothing until the page's clock reaches thirty seconds, then the ranking.
+      await saveLine(admin, eventId, (p) => p.locator('[name="r[101].time"]').fill("31:15"));
+      await page.waitForTimeout(2_000);
+      await expect(page.getByTestId("results-section")).toHaveCount(0);
+      await page.clock.fastForward(30_000);
+      await page.clock.resume();
+      const section = page.getByTestId("results-section");
+      await expect(section).toBeVisible({ timeout: 30_000 });
+      await expect(row(page, 101).getByTestId("result-name")).toHaveText(`Ana Popescu ${tag}`);
+      await expect(section.getByTestId("results-live")).toHaveText("Se actualizează singur la 30 de secunde.");
+      await expect(page.getByTestId("results-live-quiet")).toHaveCount(0);
+      expect(await sameDocument(page)).toBe(true);
     } finally {
       await backoffice.close();
     }

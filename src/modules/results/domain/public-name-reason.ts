@@ -31,10 +31,11 @@ export const UNNAMED_REASONS = PUBLIC_NAME_REASONS.filter((reason): reason is Ex
 
 /**
  * `publicResultName`'s input, and the one fact it does not need: whether `ticked` is false because of the club rather than the person.
- * `results.ts#tickedForTheSite` folds the two into `ticked` (the club's «Apare pe site» only hides), so the reason carries it beside.
+ * `results.ts#tickedForTheSite` folds the two into `ticked` (the club's «Apare pe site» only hides), so the reason carries it beside —
+ * a boolean worked out there, beside the tick, from the same columns (`results.ts#siteHiddenByClub`): this file reads no mark.
  */
 export type PublicNameReasonInput = PublicNameInput & {
-  /** The person ticked «Vreau să apar…» and an Administrator unticked «Apare pe site» on the marked registration (`siteHiddenByClub`). Never names anybody. */
+  /** The person ticked «Vreau să apar…» and an Administrator unticked «Apare pe site» on the marked registration. Never names anybody. */
   hiddenByClub?: boolean;
 };
 
@@ -57,13 +58,4 @@ export function publicNameReason(runner: PublicNameReasonInput): PublicNameReaso
  */
 export function publicNameVerdict(runner: PublicNameReasonInput): { named: boolean; nameReason: PublicNameReason } {
   return { named: publicResultName(runner) !== null, nameReason: publicNameReason(runner) };
-}
-
-/**
- * Whether the person ticked «Vreau să apar pe lista de participanți & rezultate» and the club's «Apare pe site», unticked on the
- * registration while it is marked «Elită» or «Ambasador» (§910, §948), is what reads that tick as off — the columns
- * `results.ts#tickedForTheSite` reads. A person who did not tick is `notTicked`, whatever the club ticked.
- */
-export function siteHiddenByClub(row: { listOptOut: boolean | null; elite: boolean | null; ambassador: boolean | null; eliteHiddenFromSite: boolean | null }): boolean {
-  return row.listOptOut === false && (row.elite === true || row.ambassador === true) && row.eliteHiddenFromSite === true;
 }

@@ -1,7 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { catalogueOf } from "@/i18n/catalogue";
 import { resultsPublishState, resultsShownSince } from "@/modules/results/domain/from-start";
-import { RESULTS_LIVE_HOURS_WITHOUT_END, RESULTS_REFRESH_MS, resultsLiveAt, resultsLiveUntil } from "@/modules/results/domain/live-window";
+import {
+  RESULTS_LIVE_HOURS_WITHOUT_END,
+  RESULTS_REFRESH_MS,
+  resultsLiveAt,
+  resultsLiveInstants,
+  resultsLiveRefreshUntil,
+  resultsLiveUntil,
+} from "@/modules/results/domain/live-window";
 import { startLiveRefresh } from "@/modules/results/ui/live-refresh";
 
 /**
@@ -43,6 +50,38 @@ describe("§NNN the live window", () => {
     expect(RESULTS_REFRESH_MS).toBe(30_000);
     expect(catalogueOf("ro").Event.results.live).toContain(`${RESULTS_REFRESH_MS / 1000} de secunde`);
     expect(catalogueOf("en").Event.results.live).toContain(`${RESULTS_REFRESH_MS / 1000} seconds`);
+  });
+});
+
+describe("§NNN the island from the event's row alone: the tick as saved, a race, the window — never whether a result is stored", () => {
+  /** `resultsTicked` is the Administrator's tick as saved; `resultsPublished` on the page's row also needs a stored result, and is not read here. */
+  const race = { type: "RACE", resultsTicked: true, startsAt: STARTS, endsAt: ENDS };
+  const BEFORE = new Date(STARTS.getTime() - 2 * 24 * HOUR);
+
+  it("refreshes inside the window of a race whose results are ticked — an empty sheet included — and stops at its end", () => {
+    expect(resultsLiveRefreshUntil(race, STARTS)).toEqual(ENDS);
+    expect(resultsLiveRefreshUntil(race, new Date(ENDS.getTime() - 1))).toEqual(ENDS);
+    expect(resultsLiveRefreshUntil(race, new Date(STARTS.getTime() - 1))).toBeNull();
+    expect(resultsLiveRefreshUntil(race, ENDS)).toBeNull();
+    // Saved without an end: six hours from the start.
+    expect(resultsLiveRefreshUntil({ ...race, endsAt: null }, STARTS)).toEqual(new Date(STARTS.getTime() + 6 * HOUR));
+  });
+
+  it("never refreshes a race whose results are not ticked, an event that takes none, or an event whose date is to be announced", () => {
+    expect(resultsLiveRefreshUntil({ ...race, resultsTicked: false }, STARTS)).toBeNull();
+    expect(resultsLiveRefreshUntil({ ...race, type: "GROUP_RUN" }, STARTS)).toBeNull();
+    expect(resultsLiveRefreshUntil({ ...race, startsAt: null }, STARTS)).toBeNull();
+  });
+
+  it("holds the page to the window's start and end still ahead, so a copy made before the race is made again with the island", () => {
+    expect(resultsLiveInstants(race, BEFORE)).toEqual([STARTS, ENDS]);
+    expect(resultsLiveInstants(race, STARTS)).toEqual([ENDS]);
+    expect(resultsLiveInstants(race, ENDS)).toEqual([]);
+    expect(resultsLiveInstants({ ...race, endsAt: null }, BEFORE)).toEqual([STARTS, new Date(STARTS.getTime() + 6 * HOUR)]);
+    // Nothing to hold for: not ticked, not a race, no date.
+    expect(resultsLiveInstants({ ...race, resultsTicked: false }, BEFORE)).toEqual([]);
+    expect(resultsLiveInstants({ ...race, type: "GROUP_RUN" }, BEFORE)).toEqual([]);
+    expect(resultsLiveInstants({ ...race, startsAt: null }, BEFORE)).toEqual([]);
   });
 });
 

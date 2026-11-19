@@ -150,12 +150,16 @@ describe("§NNN nothing public before the start, even with a row stored", () => 
     }
   });
 
-  it("the section draws nothing at all — no heading, no «în curând», no number — and holds the page to the start", async () => {
+  it("the section draws nothing at all — no heading, no «în curând», no number, no clock — and holds the page to the start", async () => {
     await tickedBeforeTheRace();
     for (const at of [BEFORE, JUST_BEFORE]) {
       state.holds = [];
       expect(await section(at), at.toISOString()).toBe("");
-      expect(state.holds, at.toISOString()).toEqual([[RACE_STARTS_AT, CLOSES]]);
+      // The live window's start and end (the island comes at the start), then the section's own: the start and the period's end.
+      expect(state.holds, at.toISOString()).toEqual([
+        [RACE_STARTS_AT, LIVE_UNTIL],
+        [RACE_STARTS_AT, CLOSES],
+      ]);
     }
   });
 
@@ -203,8 +207,9 @@ describe("§NNN from the start, every stored row — and live while the race run
       state.holds = [];
       const html = await section(at);
       expect(html, at.toISOString()).toContain('data-testid="results-live"');
+      expect(html, at.toISOString()).not.toContain('data-testid="results-live-quiet"');
       expect(text(html), at.toISOString()).toContain("Se actualizează singur la 30 de secunde.");
-      expect(state.holds, at.toISOString()).toEqual([[RACE_STARTS_AT, CLOSES], [LIVE_UNTIL]]);
+      expect(state.holds, at.toISOString()).toEqual([[LIVE_UNTIL], [RACE_STARTS_AT, CLOSES]]);
     }
     state.holds = [];
     const after = await section(LIVE_UNTIL);
@@ -220,5 +225,98 @@ describe("§NNN from the start, every stored row — and live while the race run
     language = "en";
     expect(text(await section(new Date(ends.getTime() - 1)))).toContain("Updates itself every 30 seconds.");
     expect(await section(ends)).not.toContain('data-testid="results-live"');
+  });
+});
+
+/**
+ * A database that is away at a render (§447): every use is refused as a socket refuses, which `readOrWhileAway` reads as «leave the part
+ * out». The event's row was read before — the page has it from its own read, which serves a copy or the resting page on its own.
+ */
+function awayDatabase(): unknown {
+  const refused = Object.assign(new Error("connect ECONNREFUSED 127.0.0.1:5432"), { code: "ECONNREFUSED" });
+  return new Proxy(
+    {},
+    {
+      get: () => {
+        throw refused;
+      },
+    },
+  );
+}
+
+describe("§NNN the clock with no section: an empty sheet before the first finish, and a database away at a render", () => {
+  /** Ana (ticked); the texts approved; the results ticked public two days before the race — and nothing typed. */
+  async function tickedWithAnEmptySheet() {
+    await registerRunner(db, raceId, { name: "Ana Popescu", bibNumber: 101, sex: "FEMALE", birthDate: "1996-05-01" });
+    await approveResultsTexts(db);
+    await setResultsPublished(db, admin, raceId, true, BEFORE);
+  }
+
+  it("draws the clock alone and silent from the start on an empty sheet — no section, no line — so the first finish reaches an open page", async () => {
+    await tickedWithAnEmptySheet();
+    // The row: the tick as saved, but «published and has a row» is false — the chip and the section read that one.
+    const event = await eventRow();
+    expect({ resultsTicked: event.resultsTicked, resultsPublished: event.resultsPublished }).toEqual({ resultsTicked: true, resultsPublished: false });
+
+    // Before the start: nothing at all, the page held to the start so the copy is made again with the clock.
+    expect(await section(BEFORE)).toBe("");
+    expect(state.holds).toEqual([[RACE_STARTS_AT, LIVE_UNTIL]]);
+
+    // From the start: the island alone, hidden — nothing to read, nothing to see — and the page held to the window's end.
+    for (const at of [RACE_STARTS_AT, new Date(LIVE_UNTIL.getTime() - 1)]) {
+      state.holds = [];
+      const html = await section(at);
+      expect(html, at.toISOString()).toMatch(/<span hidden="" data-testid="results-live-quiet"><\/span>/);
+      expect(html, at.toISOString()).not.toContain('id="clasament"');
+      expect(html, at.toISOString()).not.toContain('data-testid="results-live"');
+      expect(text(html), at.toISOString()).toBe("");
+      expect(state.holds, at.toISOString()).toEqual([[LIVE_UNTIL]]);
+    }
+
+    // After the window: nothing, and nothing held.
+    state.holds = [];
+    expect(await section(LIVE_UNTIL)).toBe("");
+    expect(state.holds).toEqual([]);
+
+    // The first finish saved during the race: the next render is the section, with its line and the clock inside it.
+    const FIRST_FINISH = new Date(RACE_STARTS_AT.getTime() + 25 * 60_000);
+    await saveEventResults(db, admin, { eventId: raceId, rows: [line(101, { time: "25:00" })] }, FIRST_FINISH);
+    const html = await section(new Date(FIRST_FINISH.getTime() + 30_000));
+    expect(html).toContain('id="clasament"');
+    expect(text(html)).toContain("Ana Popescu");
+    expect(html).toContain('data-testid="results-live"');
+    expect(html).not.toContain('data-testid="results-live-quiet"');
+  });
+
+  it("draws no clock for a race whose results are not ticked, nor once the texts in force no longer describe the results", async () => {
+    await registerRunner(db, raceId, { name: "Ana Popescu", bibNumber: 101 });
+    await approveResultsTexts(db);
+    expect(await section(RACE_STARTS_AT)).toBe("");
+    expect(state.holds).toEqual([]);
+
+    await setResultsPublished(db, admin, raceId, true, BEFORE);
+    expect(await section(RACE_STARTS_AT)).toContain('data-testid="results-live-quiet"');
+    // A newer notice in force that does not describe the results: no result saved could show, so there is nothing to refresh for.
+    await approvePrivacyNotice(db, { results: false });
+    expect(await section(RACE_STARTS_AT)).toBe("");
+  });
+
+  it("keeps the clock while the database is away at a render: «Clasament» is left out of that render, the island stays, alone", async () => {
+    await tickedBeforeTheRace();
+    const at = new Date(RACE_STARTS_AT.getTime() + 3_600_000);
+    const event = await eventRow();
+    state.db = awayDatabase();
+    let away: string;
+    try {
+      away = withoutStyles(renderToStaticMarkup(withClientWords((await atTheClock(at, () => ResultsSection({ event }))) as ReactNode, language)));
+    } finally {
+      state.db = db;
+    }
+    expect(away).not.toContain('id="clasament"');
+    expect(away).toContain('data-testid="results-live-quiet"');
+    // The database back: the next refresh draws the section again, the clock inside it.
+    const back = await section(new Date(at.getTime() + 30_000));
+    expect(back).toContain('id="clasament"');
+    expect(back).toContain('data-testid="results-live"');
   });
 });

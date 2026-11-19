@@ -12215,6 +12215,7 @@
       "introMore": "One line per runner, by race number. Places are overall, by sex and by category; equal times share a place. A line with only a note means did not start.",
       "notRace": "Only a race has results. Group runs and the other events have none.",
       "notStarted": "The race has not started yet. You can type results and tick the results public already; nothing shows on the site before the start.",
+      "notStartedEnterOnly": "The race has not started yet. You can type results already; nothing shows on the site before the start.",
       "summary": {
         "FINISHED": "Finished: {count}",
         "DNF": "Dropped out: {count}",
@@ -12316,7 +12317,9 @@
         "gate": "The privacy notice in force does not describe the results yet, so you cannot publish them.",
         "gateTerms": "The terms in force do not describe the results yet: the older ones promised to ask first. Approve new terms to publish.",
         "beforeStart": "You can tick it already: on the site, the results appear from the start, {start}, as the runners arrive.",
+        "beforeStartUnannounced": "You can tick it already: on the site, the results appear from the start, once you announce the start's hour, as the runners arrive.",
         "fromStart": "It appears on the site from the start, {start}, as the runners arrive.",
+        "fromStartUnannounced": "It appears on the site from the start, once you announce the start's hour, as the runners arrive.",
         "gateLink": "Legal documents",
         "adminOnly": "Only an administrator can publish the results.",
         "empty": "No result is saved yet.",

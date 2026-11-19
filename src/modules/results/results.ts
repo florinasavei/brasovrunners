@@ -24,7 +24,7 @@ import { type FingerprintedResult, resultsFingerprint } from "./domain/fingerpri
 import { foldEliteName, horsConcoursBibs, type OutOfRanking } from "./domain/hors-concours";
 import { parseResultsCsv } from "./domain/import-csv";
 import { publicResultName } from "./domain/public-name";
-import { type PublicNameReason, publicNameVerdict, siteHiddenByClub } from "./domain/public-name-reason";
+import { type PublicNameReason, publicNameVerdict } from "./domain/public-name-reason";
 import { type Rankable, RESULTS_MAX, rankResults, type ResultStatus, type Ranked } from "./domain/ranking";
 import { type ReadRow, type ResultRowProblem, readResultRow } from "./domain/row-input";
 import { type PostedResultRow, resultBox } from "./rows";
@@ -127,6 +127,16 @@ function tickedForTheSite(row: { listOptOut: boolean | null; elite: boolean | nu
   return row.listOptOut === false && !((row.elite === true || row.ambassador === true) && row.eliteHiddenFromSite === true);
 }
 
+/**
+ * The other half of the same columns, for «Clasament»'s reason alone (§NNN, `domain/public-name-reason.ts#publicNameReason`): the person
+ * ticked, and the club's «Apare pe site», unticked on the registration while it is marked «Elită» or «Ambasador» (§910, §948), is what
+ * `tickedForTheSite` reads as off. Kept here, beside the tick, so the mark is read where it already was; the reason takes the boolean.
+ * A person who did not tick is their own answer, whatever the club ticked; a typed row's left join reads nulls, and is never this.
+ */
+function siteHiddenByClub(row: { listOptOut: boolean | null; elite: boolean | null; ambassador: boolean | null; eliteHiddenFromSite: boolean | null }): boolean {
+  return row.listOptOut === false && (row.elite === true || row.ambassador === true) && row.eliteHiddenFromSite === true;
+}
+
 type EventFacts = {
   id: string;
   type: string;
@@ -134,6 +144,12 @@ type EventFacts = {
   /** The gun, when the race's own start differs from the gathering (`race_starts_at`); the finish line counts from `raceStartsAt ?? startsAt`. */
   raceStartsAt: Date | null;
   endsAt: Date | null;
+  /**
+   * «Data se anunță» and «Ora se anunță» (§533): while either is on, the public side has no start, so «Clasament» names no hour (§NNN).
+   * Read by `loadEvent`, for the backoffice; the public read leaves them out — the page it serves already has no start then.
+   */
+  dateToBeAnnounced?: boolean;
+  timeToBeAnnounced?: boolean;
   timezone: string;
   resultsPublished: boolean;
   resultsPublishedAt: Date | null;
@@ -165,6 +181,8 @@ async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eve
       startsAt: events.startsAt,
       raceStartsAt: events.raceStartsAt,
       endsAt: events.endsAt,
+      dateToBeAnnounced: events.dateToBeAnnounced,
+      timeToBeAnnounced: events.timeToBeAnnounced,
       timezone: events.timezone,
       resultsPublished: events.resultsPublished,
       resultsPublishedAt: events.resultsPublishedAt,

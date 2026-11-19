@@ -1578,8 +1578,12 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
   `resultsClockInstants`); from the start every stored row shows as it is saved, the «Publicat …» line
   naming the start (`domain/from-start.ts`). While the race runs — the start until its end, or six hours
   for a race saved without one (`domain/live-window.ts`) — `ResultsLiveRefresh` refreshes the open page
-  every 30 seconds while the tab is visible and stops at the window's end: the one public timer §577
-  allows, named in `tests/unit/config/idle-client.test.ts`. Who is named does not change; «Clasament»
+  every 30 seconds while the tab is visible and stops at the window's end, decided from the event's row
+  alone (the tick as saved, `resultsTicked`), so a page opened before the first finish refreshes too,
+  silently: the one public timer §577 allows, named in `tests/unit/config/idle-client.test.ts`. A
+  refresh is a CDN request for an anonymous visitor at the bare address, but a full server render each
+  time for a signed-in tab or an address with a query the page reads (the live twin, §549). Who is
+  named does not change; «Clasament»
   says why a line is «Participant #…» from the same input (`domain/public-name-reason.ts`, one rule with
   `publicResultName`);
 - a race's elite runners (§910, the owner, 2026-11-04: per elite, «Apare în clasament» and «Apare pe

@@ -12,10 +12,10 @@ import { SR_ONLY_SX } from "@/shared/ui/sr-only";
 import { DENSITY } from "@/theme/density";
 import { categoryLabeller } from "../category-labels";
 import { resultsShownSince } from "../domain/from-start";
-import { resultsLiveAt, resultsLiveUntil } from "../domain/live-window";
+import { resultsLiveInstants, resultsLiveRefreshUntil } from "../domain/live-window";
 import { anonymousResultLabel } from "../domain/public-name";
 import { formatResultTime } from "../domain/result-time";
-import { readEventResultsForPage } from "../public-page";
+import { readEventResultsForPage, readResultsGates } from "../public-page";
 import { categoriesPresent, categoryGlyphOf } from "./results-filter";
 import ResultsFilter from "./ResultsFilter";
 import ResultsLiveRefresh from "./ResultsLiveRefresh";
@@ -27,7 +27,7 @@ const NO_VALUE = "—";
 const TABLE_ID = "results-table";
 
 /** What the section reads of the event — all of it on the page's row and the listing's. */
-type ResultsEvent = Pick<PublicEvent, "id" | "type" | "resultsPublished" | "startsAt" | "endsAt" | "raceNumberFormat">;
+type ResultsEvent = Pick<PublicEvent, "id" | "type" | "resultsPublished" | "resultsTicked" | "startsAt" | "endsAt" | "raceNumberFormat">;
 
 /**
  * **«Clasament»** — a race's published results on its page, under `#clasament` (§809, race results part 2; the owner, 2026-10-17:
@@ -37,7 +37,8 @@ type ResultsEvent = Pick<PublicEvent, "id" | "type" | "resultsPublished" | "star
  * ## When there is nothing at all
  *
  * `readEventResultsForPage` answers `null` — not published, the privacy notice or the terms in force not describing the results, the
- * race not started, the public list's period over (§421) — and then this draws **nothing**: no heading, no «în curând». The page is
+ * race not started, the public list's period over (§421) — and then this draws **nothing** to see: no heading, no «în curând» (inside
+ * the race's window, the silent clock alone — below). The page is
  * held until the race starts and until the period ends (`holdPageUntil`), so a static copy is made again then. While the database is
  * away the section is left out and the page stands, as the start list is (`readOrWhileAway`); like it, it is never served from a saved
  * copy: a stale ranking is a wrong place.
@@ -62,15 +63,28 @@ type ResultsEvent = Pick<PublicEvent, "id" | "type" | "resultsPublished" | "star
  * The Administrator may tick the results public before the race; nothing above changes for that — the read is `null` until the start,
  * so the section is not drawn — and from the start the «Publicat …» line names the start, not the earlier tick (`resultsShownSince`).
  * While the race runs (`live-window.ts#resultsLiveAt`: from the start until its end, or six hours for a race saved without one) a
- * second island, `ResultsLiveRefresh`, refreshes the page every 30 seconds while it is open and visible, with one calm line saying so;
- * the page is held to the window's end, so a copy made during the race is made again without it.
+ * second island, `ResultsLiveRefresh`, refreshes the page every 30 seconds while it is open and visible, with one calm line saying so.
+ * Whether it is drawn is read from the event's row alone — the tick as saved, a race, the window (`resultsLiveRefreshUntil`) — never
+ * from a read that can fail: so while nothing else is drawn inside the window (the sheet still empty before the first finish, or the
+ * database away at that render) the island is drawn alone and silent in the section's place, and a page opened then shows the first
+ * result, or the section back, at a later refresh. The page is held to the window's start and end (`resultsLiveInstants`), so a copy
+ * made before the race is made again with the island, and one made during it again without.
  */
-export default async function ResultsSection(props: { event: ResultsEvent }) {
-  return readOrWhileAway(() => resultsSectionOrThrow(props), null);
+export default async function ResultsSection({ event }: { event: ResultsEvent }) {
+  const now = new Date();
+  const holds = resultsLiveInstants(event, now);
+  if (holds.length > 0) await holdPageUntil(holds, now);
+  const liveUntil = resultsLiveRefreshUntil(event, now);
+  const section = await readOrWhileAway(() => resultsSectionOrThrow(event, now, liveUntil), null);
+  if (section !== null || liveUntil === null) return section;
+  // Inside the window and nothing drawn: the clock alone, with no line — unless the texts in force no longer describe the results,
+  // when no result saved could show. Read as the section reads them (cached); while the database is away, the clock stays.
+  const gates = await readOrWhileAway(() => readResultsGates(now), null);
+  if (gates !== null && !(gates.noticeDescribes && gates.termsDescribe)) return null;
+  return <ResultsLiveRefresh until={liveUntil.getTime()} line={null} />;
 }
 
-async function resultsSectionOrThrow({ event }: { event: ResultsEvent }) {
-  const now = new Date();
+async function resultsSectionOrThrow(event: ResultsEvent, now: Date, liveUntil: Date | null) {
   const results = await readEventResultsForPage(event, now);
   if (!results || results.rows.length === 0) return null;
 
@@ -88,9 +102,6 @@ async function resultsSectionOrThrow({ event }: { event: ResultsEvent }) {
     ? t("results.published", { published: day(shownSince, true), until: day(results.closesAt, true) })
     : t("results.until", { until: day(results.closesAt, true) });
   const numberOf = (bibNumber: number) => formatRaceNumber(bibNumber, event.raceNumberFormat);
-  // While the race runs, the page refreshes itself (§NNN): held to the window's end, so a copy kept past it is made again without the island.
-  const liveUntil = resultsLiveAt(event, now) ? resultsLiveUntil(event) : null;
-  if (liveUntil) await holdPageUntil([liveUntil], now);
 
   return (
     // Google honours `data-nosnippet` only on span, div and section elements: the wrapper carries it, as the start list's does, so
@@ -122,6 +133,7 @@ async function resultsSectionOrThrow({ event }: { event: ResultsEvent }) {
           {line}
         </Typography>
 
+        {/* While the race runs (§NNN): the clock, with its line, under «Publicat …». */}
         {liveUntil && <ResultsLiveRefresh until={liveUntil.getTime()} line={t("results.live")} />}
 
         {rows.length > 1 && (

@@ -2538,7 +2538,8 @@ enter them; **only the Administrator and the Superadministrator make them public
 5. **«Clasamentul e public pe pagina evenimentului»** (the Administrator's tick, with its own «Salvează», asks first): off for every event. It
    works under the notice and terms of step 1, and **may be ticked before the race** (§NNN): the card then says **«Public de la start»** with the
    start's day and hour, and the site shows nothing until the start; from the start every result you save appears, and while the race runs
-   (until its end, or six hours after the start when it has none) the open page refreshes itself every 30 seconds. The public read —
+   (until its end, or six hours after the start when it has none) the open page refreshes itself every 30 seconds — a page opened before the first
+   finish too, which shows it at its next refresh. The public read —
    `readPublicEventResults` — shows a name **only for a registered runner who ticked, whose registration is confirmed, who is not a special
    guest the event hides, and who registered under a notice that described the results**; a runner the club typed by hand is named only while
    the staff's record of their agreement stands (step 3), and otherwise appears as «Participant #număr». **What the event's page shows, and when.** Under «Cine vine» a card **«Clasament»**

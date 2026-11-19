@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { catalogueOf } from "@/i18n/catalogue";
 import { type PublicNameInput, publicResultName } from "@/modules/results/domain/public-name";
-import { PUBLIC_NAME_REASONS, publicNameReason, publicNameVerdict, type PublicNameReasonInput, siteHiddenByClub, UNNAMED_REASONS } from "@/modules/results/domain/public-name-reason";
+import { PUBLIC_NAME_REASONS, publicNameReason, publicNameVerdict, type PublicNameReasonInput, UNNAMED_REASONS } from "@/modules/results/domain/public-name-reason";
 
 /**
  * §NNN, BR-REQ-039-01 — why a published result is «Participant #…» (the owner, 2026-11-18, with every line of «Clasament» reading «Pe site:
@@ -123,20 +123,6 @@ describe("§NNN each reason names its case", () => {
   it("says there is no name to show when every condition holds but the name is blank", () => {
     expect(publicNameReason({ ...named, displayName: "  " })).toBe("noName");
     expect(publicNameReason({ ...named, displayName: null })).toBe("noName");
-  });
-});
-
-describe("§NNN siteHiddenByClub", () => {
-  it("is the person's tick on and the club's «Apare pe site» off on a marked registration — and nothing else", () => {
-    expect(siteHiddenByClub({ listOptOut: false, elite: true, ambassador: false, eliteHiddenFromSite: true })).toBe(true);
-    expect(siteHiddenByClub({ listOptOut: false, elite: false, ambassador: true, eliteHiddenFromSite: true })).toBe(true);
-    // The person did not tick: their own answer, whatever the club ticked.
-    expect(siteHiddenByClub({ listOptOut: true, elite: true, ambassador: false, eliteHiddenFromSite: true })).toBe(false);
-    // The mark taken off leaves the tick inert (§910).
-    expect(siteHiddenByClub({ listOptOut: false, elite: false, ambassador: false, eliteHiddenFromSite: true })).toBe(false);
-    expect(siteHiddenByClub({ listOptOut: false, elite: true, ambassador: false, eliteHiddenFromSite: false })).toBe(false);
-    // A typed row's left join reads nulls.
-    expect(siteHiddenByClub({ listOptOut: null, elite: null, ambassador: null, eliteHiddenFromSite: null })).toBe(false);
   });
 });
 

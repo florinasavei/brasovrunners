@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
+import { events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { PostedResultRow } from "@/modules/results/rows";
@@ -60,7 +61,7 @@ vi.mock("next-intl/server", () => ({
 }));
 
 const { default: ResultsPage } = await import("@/app/[locale]/admin/events/[id]/results/page");
-const { saveEventResults, setResultsPublished } = await import("@/modules/results/results");
+const { readEventResults, saveEventResults, setResultsPublished } = await import("@/modules/results/results");
 
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -213,6 +214,43 @@ describe("§NNN «Pe site: Participant #…» says why, in Romanian", () => {
     expect(hint).toMatch(/aria-label="Timpii egali împart locul/);
     // Above the lines, so a phone (no column header) reads it before the first «Loc:».
     expect(html.indexOf('data-testid="results-place-hint"')).toBeLessThan(html.indexOf('data-testid="result-line"'));
+    // Once, above both panels — the typed runners' lines say «Loc:» too.
+    expect(html.match(/data-testid="results-place-hint"/g)).toHaveLength(1);
+    expect(html.indexOf('data-testid="results-place-hint"')).toBeLessThan(html.indexOf('data-testid="results-registered"'));
+  });
+
+  it("explains «Loc» once for a race whose only lines are typed by hand, and not at all with no line", async () => {
+    expect(await render()).not.toContain('data-testid="results-place-hint"');
+    await approvePrivacyNotice(db, { results: true });
+    await saveEventResults(db, admin, { eventId: raceId, rows: [typed(0, { bib: "900", name: "Ion Tastat", time: "55:00" })] }, AFTER_THE_RACE);
+    const html = await render();
+    expect(html).toContain('data-testid="results-registered-empty"');
+    expect(html.match(/data-testid="results-place-hint"/g)).toHaveLength(1);
+    expect(html.indexOf('data-testid="results-place-hint"')).toBeLessThan(html.indexOf('data-testid="results-typed"'));
+  });
+});
+
+describe("§NNN the club's «Apare pe site» told from the person's own tick — read beside the tick, in results.ts", () => {
+  it("says «hiddenByClub» exactly when the person ticked and the club unticked «Apare pe site» on an elite or an ambassador, and names as before", async () => {
+    await approvePrivacyNotice(db, { results: true });
+    const cases: { bib: number; ticked: boolean; elite: boolean; ambassador: boolean; hidden: boolean }[] = [];
+    let bib = 200;
+    for (const ticked of [true, false]) for (const elite of [true, false]) for (const ambassador of [true, false]) for (const hidden of [true, false]) cases.push({ bib: bib++, ticked, elite, ambassador, hidden });
+    for (const runner of cases) {
+      const registration = await registerRunner(db, raceId, { name: `Alergator ${runner.bib}`, bibNumber: runner.bib, ticked: runner.ticked });
+      await db.update(registrations).set({ elite: runner.elite, ambassador: runner.ambassador, eliteHiddenFromSite: runner.hidden }).where(eq(registrations.id, registration.id));
+    }
+    await saveEventResults(db, admin, { eventId: raceId, rows: [...cases.map((runner) => line(runner.bib, { time: "50:00" })), typed(0, { bib: "900", name: "Ion Tastat", time: "55:00" })] }, AFTER_THE_RACE);
+    const view = await readEventResults(db, admin, raceId);
+    for (const runner of cases) {
+      const read = view.registered.find((line) => line.bibNumber === runner.bib);
+      // The club's tick counts under either mark, and only on a person who ticked; with both marks off it is inert (§910, §948).
+      const hiddenByClub = runner.ticked && (runner.elite || runner.ambassador) && runner.hidden;
+      const named = runner.ticked && !hiddenByClub;
+      expect({ ...runner, named: read?.named, reason: read?.nameReason }).toEqual({ ...runner, named, reason: named ? "named" : hiddenByClub ? "hiddenByClub" : "notTicked" });
+    }
+    // A runner typed by hand has no registration, so no mark and no club tick: its own reason.
+    expect(view.typed.map((line) => line.nameReason)).toEqual(["typedNoAgreement"]);
   });
 });
 
@@ -251,6 +289,39 @@ describe("§NNN «Public de la start» on the publish card", () => {
     expect(html).toContain('data-testid="results-publish-not-started"');
     expect(html).not.toContain('data-testid="results-from-start-chip"');
     expect(text(html)).toContain("Poți bifa de pe acum: pe site, clasamentul apare de la start, sâm., 21 nov. 2026, la 09:00, pe măsură ce sosesc alergătorii.");
+  });
+});
+
+describe("§NNN before the race, for whoever may not tick, and while the start's hour is to be announced", () => {
+  const BEFORE = new Date(RACE_STARTS_AT.getTime() - 2 * 86_400_000);
+
+  it("tells the Organizer only that results may be typed — no «bifa», no «Poți bifa de pe acum»", async () => {
+    await field();
+    state.actor = await person(db, "MODERATOR", "Oana Organizator");
+    const html = await render(BEFORE);
+    expect(text(html)).toContain("Cursa nu a început încă. Poți scrie rezultate de pe acum; pe site nu apare nimic până la start.");
+    expect(text(html)).not.toContain("bifa clasamentul public");
+    expect(html).not.toContain('data-testid="results-publish-not-started"');
+    expect(html).toContain('data-testid="results-publish-admin-only"');
+    // And in English.
+    const en = text(await render(BEFORE, "en"));
+    expect(en).toContain("The race has not started yet. You can type results already; nothing shows on the site before the start.");
+    expect(en).not.toContain("You can tick it already");
+  });
+
+  it("names no hour while «Ora se anunță» is on: the results appear once the start's hour is announced", async () => {
+    await field();
+    await db.update(events).set({ timeToBeAnnounced: true }).where(eq(events.id, raceId));
+    const unticked = text(await render(BEFORE));
+    expect(unticked).toContain("Poți bifa de pe acum: pe site, clasamentul apare de la start, după ce anunți ora startului, pe măsură ce sosesc alergătorii.");
+    expect(unticked).not.toContain("la 09:00");
+    await approveResultsTexts(db);
+    await setResultsPublished(db, admin, raceId, true, BEFORE);
+    const html = await render(BEFORE);
+    const card = text(html.slice(html.indexOf('data-testid="results-publish"')));
+    expect(card).toContain("Pe site apare de la start, după ce anunți ora startului, pe măsură ce sosesc alergătorii.");
+    expect(card).not.toContain("la 09:00");
+    expect(text(await render(BEFORE, "en"))).toContain("It appears on the site from the start, once you announce the start's hour, as the runners arrive.");
   });
 });
 
