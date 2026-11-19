@@ -103,7 +103,7 @@ export async function inviteAction(_previous: InvitationSendState, form: FormDat
           // «Elită» for the whole send (§917), beside «Pe lista de invitați speciali»: the registration each becomes is marked.
           elite: form.get("elite") === "1",
           partnerName,
-          // «La confirmare primește un BIB gol» for the whole send (§NNN): the lowest free desk spare at each confirmation.
+          // «La confirmare primește un BIB gol» for the whole send (§992): the lowest free desk spare at each confirmation.
           blankBib: form.get("blankBib") === "1",
           locale: form.get("inviteLocale") === "en" ? "en" : "ro",
           addPlaceTo: confirmedCapacityOf(form.get("addPlace")),

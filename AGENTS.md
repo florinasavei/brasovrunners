@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.72-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.73-2026-11-19 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.72-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.73-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -3251,7 +3251,7 @@ BR-REQ-037-05):
      BIB gol» (`giveSpareBibByStaff`, §989), the one way a printed number changes: the old number
      retired as a replaced one is, replacing it the Administrator's; the lowest free spare is also what the
      confirmation gives a registration whose invitation was sent «La confirmare primește un BIB gol» (verb 7,
-     §NNN) — and **check-in** (`checked_in_at`, by
+     §992) — and **check-in** (`checked_in_at`, by
      whom or by the participant from their own link). The code the QR encodes is
      `registrations.checkin_code`: an identifier, stored in clear, that confers nothing — the
      page it opens is behind staff sign-in.
@@ -3309,7 +3309,7 @@ BR-REQ-037-05):
    verification email) and seats the registration in the invitation's place through the one allocator.
    A registration of the invited address that reaches its place by another route takes the invitation
    over in the same transaction (`event.invitation_accepted` with `adopted`).
-   «La confirmare primește un BIB gol» (2026-11-19, §NNN; the owner: «când invit pe cineva, trebuie să pot să-i dau unul
+   «La confirmare primește un BIB gol» (2026-11-19, §992; the owner: «când invit pe cineva, trebuie să pot să-i dau unul
    dintre locurile de rezervă» — «Ambele»), unticked by default and drawn only while the event has desk spares (§444) —
    refused otherwise under the lock (`INVITATION_NO_SPARES`), nothing written — stores `event_invitations.blank_bib`; the
    confirmation of the registration the invitation became, by whichever path (the person's own signature, the desk's paper,

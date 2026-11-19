@@ -47,7 +47,7 @@ const INVITATION_STATES = ["sent", "accepted", "expired", "withdrawn"] as const;
  * invitation's «Retrimite» and «Retrage», and «Șterge» on one that ended unaccepted (§948). The Organizer
  * reads the list and is offered no verb (§289); every verb asserts the role on the server whatever this draws.
  * An invitation sent with «La confirmare primește un BIB gol» wears its chip, and the spare's number once its registration
- * wears one (§NNN).
+ * wears one (§992).
  *
  * The send's forecast — how many places are free for invitations — is the allocator's count
  * (`countOccupied` → `computeOccupied`) against the capacity, less everyone eligible who waits, as the
@@ -96,7 +96,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
   if (!event) return null;
   const invitations = await listEventInvitations(db, eventId);
   /*
-    The desk's spares (§444): the free ones for «La confirmare primește un BIB gol» on the send (§NNN), read for the role that
+    The desk's spares (§444): the free ones for «La confirmare primește un BIB gol» on the send (§992), read for the role that
     may send; and the spares worn — the card's own reader (`givenSpareBibs`, §989) — which say on a ticked invitation's row
     which spare its registration got. Each read only when something here needs it.
   */
@@ -311,7 +311,7 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                       {(state === "sent" ? row.elite : state === "accepted" && row.acceptedElite === true) && (
                         <StatusChip glyph="elite" color="secondary" variant="outlined" label={t("registrations.elite.chip")} testId="invitation-elite-chip" />
                       )}
-                      {/* «BIB gol la confirmare» (§NNN): the send's tick, staff-only, in every state — and, once the registration it
+                      {/* «BIB gol la confirmare» (§992): the send's tick, staff-only, in every state — and, once the registration it
                           became wears one of the desk's spares, that spare («BIB gol: 154»), as the spares card lists it. */}
                       {row.blankBib && (
                         <StatusChip

@@ -328,7 +328,7 @@ function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDes
  * its retired number and gets it back at its new confirmation (§173), never a second one. A test
  * registration wears none (`AGENTS.md` §12.6).
  *
- * **An invitation's blank bib (§NNN; the owner, 2026-11-19: «când invit pe cineva, trebuie să pot să-i dau unul dintre
+ * **An invitation's blank bib (§992; the owner, 2026-11-19: «când invit pe cineva, trebuie să pot să-i dau unul dintre
  * locurile de rezervă» — «Ambele»).** When the invitation this registration came from was sent with «La confirmare primește
  * un BIB gol» (`findBlankBibInvitationOfRegistration`: the accepted invitation naming it, by its link or taken over), the
  * number is the **lowest of the desk's spares free at this moment** (`freeSpareBibNumbers`: the reservation less every
@@ -368,7 +368,7 @@ async function bibAtConfirmation<T extends Record<string, unknown>>(
 }
 
 /**
- * The trail's line of an invitation's blank bib (§NNN), after the confirmation's transition and in its transaction: the spare
+ * The trail's line of an invitation's blank bib (§992), after the confirmation's transition and in its transaction: the spare
  * given (`registration.invitation_blank_bib_given`), or none free and the allocator's number
  * (`registration.invitation_blank_bib_missed`) — about the registration, so its page says it; the number it wears and the
  * ids, never a name; under the Administrator who sent the invitation, as «Elită» from the send is audited (§917).
@@ -3861,7 +3861,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     });
 
     // The race number, drawn now and at no other moment (§548): the next one in confirmation order — or, for an invitation
-    // sent with «La confirmare primește un BIB gol», the lowest free desk spare (§NNN).
+    // sent with «La confirmare primește un BIB gol», the lowest free desk spare (§992).
     const bib = await bibAtConfirmation(tx, current, now);
     const confirmed = await repo.transitionRegistration(tx, {
       id: current.id,
@@ -4018,7 +4018,7 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
     }),
   });
   /*
-    As in `signDeclaration` (§548): the next number in confirmation order, or an invitation's blank bib (§NNN) — unless the
+    As in `signDeclaration` (§548): the next number in confirmation order, or an invitation's blank bib (§992) — unless the
     desk handed one with the paper, a spare above all (§444): the paper in the volunteer's hand is what the runner wears.
   */
   const bib: BibAtConfirmation =
@@ -4631,7 +4631,7 @@ export type InvitationSendInput = {
    */
   partnerName?: string | null;
   /**
-   * «La confirmare primește un BIB gol» for the whole send (§NNN): each invitation stores it, and the registration it becomes
+   * «La confirmare primește un BIB gol» for the whole send (§992): each invitation stores it, and the registration it becomes
    * wears, once confirmed, the lowest free desk spare (`bibAtConfirmation`). Only on an event with spares reserved — asked
    * under the lock, `INVITATION_NO_SPARES` otherwise, before anything is written. Internal: the person is told only the number.
    */
@@ -4685,7 +4685,7 @@ export async function invitationHeldForRegistration<T extends Record<string, unk
  * 1. **The event**: local, scheduled, published, dated (§533) and not started — the invitation's deadline
  *    is `min(now + days, start)` (`invitationDeadline`). Neither end of the public window is asked: the
  *    club may invite before it opens and after it closes (organizers, pacemakers, volunteers invited
- *    late), as «Trimite-i oferta» offers after the close (§642). «La confirmare primește un BIB gol» (§NNN) only on an event
+ *    late), as «Trimite-i oferta» offers after the close (§642). «La confirmare primește un BIB gol» (§992) only on an event
  *    with desk spares reserved (§444), or the send is refused with `INVITATION_NO_SPARES`.
  * 2. **The line is served first** and the stale holds expire (`fillAvailableSpots`, as `placeForNewcomer`):
  *    a place somebody waiting is owed is offered to them before any invitation counts what is left.
@@ -4758,7 +4758,7 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
       throw new DomainError("VALIDATION_ERROR", "the hidden list is off for this event: tick «Folosește lista ascunsă» in the event's settings first", [HIDDEN_LIST_OFF]);
     }
     /*
-      «La confirmare primește un BIB gol» (§NNN) is a promise of one of the desk's spares (§444): the form draws the tick only
+      «La confirmare primește un BIB gol» (§992) is a promise of one of the desk's spares (§444): the form draws the tick only
       while the event has a reservation, and the server asks the same under the lock — a reservation is never removed, so
       only a post the page never drew reaches this. Every spare given since is fine: the confirmation says so on the trail.
     */
@@ -4917,7 +4917,7 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
           ...(input.elite === true ? { elite: true } : {}),
           // «E de la parteneri»: that the send carried a partner's name, never the name.
           ...(partnerName !== null ? { partner: true } : {}),
-          // «La confirmare primește un BIB gol» (§NNN): that the send asked for a desk spare at the confirmation.
+          // «La confirmare primește un BIB gol» (§992): that the send asked for a desk spare at the confirmation.
           ...(input.blankBib === true ? { blankBib: true } : {}),
         },
         now,

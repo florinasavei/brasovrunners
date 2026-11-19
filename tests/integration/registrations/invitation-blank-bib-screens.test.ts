@@ -14,7 +14,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-038-01 — an invitation's blank bib on the registration's page: under «Înscriere pe invitație — trimisă de …»,
+ * §992, BR-REQ-038-01 — an invitation's blank bib on the registration's page: under «Înscriere pe invitație — trimisă de …»,
  * what the invitation's «La confirmare primește un BIB gol» will do before the confirmation, and after it which spare the
  * confirmation gave, or that none was free and which ordinary number came; the trail («Ce a făcut echipa») says the same in
  * its own words with the number, under the Administrator who sent the invitation. Both languages; nothing for an
@@ -228,7 +228,7 @@ const byTestId = (all: ReactElement<Props>[], id: string) => all.find((element) 
 const lineOf = async (id: string) => textOf(byTestId(await detailPage(id), "registration-invitation-blank-bib")?.props.children);
 const trailLines = async (id: string) => elements(byTestId(await detailPage(id), "audit-trail")).map((element) => textOf(element.props.children));
 
-describe("§NNN the registration's page says what its invitation's blank bib did", () => {
+describe("§992 the registration's page says what its invitation's blank bib did", () => {
   it("before the confirmation, what it will do; after it, the spare given — on the page and in the trail, under the sender", async () => {
     const race = await createRace();
     const ana = await invited(race.id, { blankBib: true });

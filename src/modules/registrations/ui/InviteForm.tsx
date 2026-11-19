@@ -46,7 +46,7 @@ export type InviteFormWords = {
   eliteLabel: string;
   eliteHelp: string;
   /**
-   * «La confirmare primește un BIB gol» for the whole send (§NNN), and its line: the free desk spares now, counted, with
+   * «La confirmare primește un BIB gol» for the whole send (§992), and its line: the free desk spares now, counted, with
    * `{count}` and `{numbers}` («155–158, 160»); `blankBibHelpOut` when every spare is given.
    */
   blankBibLabel: string;
@@ -77,7 +77,7 @@ export type InviteFormWords = {
   dialogOutside: string;
   /** «Înscrierile vor fi marcate «Elită» — intern, persoanele nu sunt anunțate.»: said only with «Elită» ticked. */
   dialogElite: string;
-  /** «La confirmare, fiecare primește cel mai mic BIB gol liber atunci.»: said only with the blank bib ticked (§NNN). */
+  /** «La confirmare, fiecare primește cel mai mic BIB gol liber atunci.»: said only with the blank bib ticked (§992). */
   dialogBlankBib: string;
   /** «Înscrierile vor fi marcate «Partener: {name}» — intern …»: said only with «E de la parteneri» ticked. */
   dialogPartner: string;
@@ -122,7 +122,7 @@ function fill(template: string, values: Record<string, string | number>): string
 /**
  * «Trimite invitații» (§647): the members' zone accounts as ticks with a search, the typed lines
  * «Nume <adresă>», the days, «Pe lista ascunsă» (§643's `outside_capacity`) and «Limba invitației» for
- * an address the club has never seen, «La confirmare primește un BIB gol» while the event has desk spares (§NNN),
+ * an address the club has never seen, «La confirmare primește un BIB gol» while the event has desk spares (§992),
  * and — before anything is sent — the dialog that
  * says how many people, how many places are free, and whether the send adds supplementary places and
  * what the capacity becomes (§642: a raise is never pressed through a button that does not name it).
@@ -161,7 +161,7 @@ export default function InviteForm({
   /** The club's people per address (§576): the most a row's «Locuri» may ask; the server asks it again under the lock. */
   placesMax: number;
   /**
-   * The event's desk spares (§444) for «La confirmare primește un BIB gol» (§NNN): how many are free now and which, as the
+   * The event's desk spares (§444) for «La confirmare primește un BIB gol» (§992): how many are free now and which, as the
    * desk writes them — or null when the club reserved none, and then the tick is not drawn (the server refuses it anyway).
    */
   blankBibSpares?: { count: number; numbers: string } | null;
@@ -188,7 +188,7 @@ export default function InviteForm({
   // «Elită» (§917): controlled like «Pe lista ascunsă», so a refused send keeps it for the corrected press.
   const [elite, setElite] = useState(false);
   const eliteHelpId = useId();
-  // «La confirmare primește un BIB gol» (§NNN): unticked by default, controlled like «Elită»; posted only while it is drawn.
+  // «La confirmare primește un BIB gol» (§992): unticked by default, controlled like «Elită»; posted only while it is drawn.
   const [blankBib, setBlankBib] = useState(false);
   const blankBibHelpId = useId();
   const blankBibTicked = blankBibSpares !== null && blankBib;
@@ -486,7 +486,7 @@ export default function InviteForm({
           </Typography>
         </Box>
         {/*
-          «La confirmare primește un BIB gol» (§NNN; the owner: «când invit pe cineva, trebuie să pot să-i dau unul dintre locurile
+          «La confirmare primește un BIB gol» (§992; the owner: «când invit pe cineva, trebuie să pot să-i dau unul dintre locurile
           de rezervă» — «Ambele»), beside «Elită» and drawn the same way, only while the event has desk spares reserved: the line
           under it says which are free now; the confirmation takes the lowest free at its own moment, under the event's lock.
         */}

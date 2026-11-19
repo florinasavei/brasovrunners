@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.72-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.73-2026-11-19 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V4.72-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.73-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -349,7 +349,7 @@ For a capped event:
   the Administrator confirms before the send; one sent «pe lista de invitați speciali» keeps none (`DECISIONS.md` §647); a
   place kept for the club nobody holds needs none (`DECISIONS.md` §914). While the race has blank spare bibs printed for
   the desk, the Administrator may also tick that the invited person gets one: once their registration is confirmed they
-  wear the lowest blank bib free at that moment, and an ordinary number when none is left (`DECISIONS.md` §NNN);
+  wear the lowest blank bib free at that moment, and an ordinary number when none is left (`DECISIONS.md` §992);
 - **«Locuri păstrate pentru club»** (*places kept for the club*): of the capacity, a number of places the site never gives.
   The site takes registrations until only these are left — then it reads full, or offers the waiting list — and announces
   the capacity less them («N înscriși din 165 de locuri»); nothing public names the reserve. The waiting list is never

@@ -168,7 +168,7 @@ export async function findInvitationOfRegistration<T extends Record<string, unkn
 }
 
 /**
- * The invitation a registration came from when it was sent with «La confirmare primește un BIB gol» (§NNN), or nothing: the
+ * The invitation a registration came from when it was sent with «La confirmare primește un BIB gol» (§992), or nothing: the
  * accepted invitation naming the registration — by its link or taken over by another route (`markInvitationAdopted`) — whose
  * tick asks the confirmation for the lowest free desk spare instead of the allocator's number (`service.ts#bibAtConfirmation`).
  * Read under the confirmation's event lock; the sender is who the trail names, as «Elită» from the send is (§917).

@@ -80,7 +80,7 @@ export const eventInvitations = pgTable(
      */
     partnerName: text("partner_name"),
     /**
-     * «La confirmare primește un BIB gol» at the send (§NNN; the owner, 2026-11-19: «când invit pe cineva, trebuie să pot
+     * «La confirmare primește un BIB gol» at the send (§992; the owner, 2026-11-19: «când invit pe cineva, trebuie să pot
      * să-i dau unul dintre locurile de rezervă» — a place kept for the club or a blank bib? «Ambele»): the registration this
      * invitation becomes, once CONFIRMED by whichever path, wears the lowest of the desk's spares (§444) free at that moment
      * instead of the allocator's next number, marked printed — a spare is on paper — in the confirmation's own transaction,

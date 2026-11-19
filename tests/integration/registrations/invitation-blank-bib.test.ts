@@ -20,7 +20,7 @@ import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — an invitation can carry a blank bib (the owner, 2026-11-19, two days before the race: «când invit pe cineva, trebuie
+ * §992 — an invitation can carry a blank bib (the owner, 2026-11-19, two days before the race: «când invit pe cineva, trebuie
  * să pot să-i dau unul dintre locurile de rezervă»; asked whether he meant a place kept for the club or a blank bib: «Ambele»).
  * BR-REQ-037-07 (the send), BR-REQ-038-01 (the number), BR-REQ-034-02 (the kept place), on a real database (PGlite):
  *
@@ -235,7 +235,7 @@ const trailOf = (registrationId: string) =>
     .then((rows) => rows.filter((row) => row.action.startsWith("registration.invitation_blank_bib")));
 const refusalOf = (work: Promise<unknown>) => work.then(() => null, (error: unknown) => error);
 
-describe("§NNN BR-REQ-037-07 the send stores «La confirmare primește un BIB gol»", () => {
+describe("§992 BR-REQ-037-07 the send stores «La confirmare primește un BIB gol»", () => {
   it("stores the tick on every invitation of the send, audited by a flag and never a name; unticked by default", async () => {
     const event = await createEvent();
     await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }, { name: "Ion Pop", email: "ion@example.invalid" }], days: 7, outsideCapacity: false, blankBib: true }, admin, at(1));
@@ -305,7 +305,7 @@ describe("§NNN BR-REQ-037-07 the send stores «La confirmare primește un BIB g
   });
 });
 
-describe("§NNN BR-REQ-038-01 a ticked invitation's registration, confirmed, wears the lowest free spare, printed", () => {
+describe("§992 BR-REQ-038-01 a ticked invitation's registration, confirmed, wears the lowest free spare, printed", () => {
   it("by the person's own signature from the link: the lowest free spare, printed, its trail line under the sender, and the confirmation's email says it", async () => {
     const event = await createEvent();
     // 154 is on a walk-in already: the lowest free spare is 155.
@@ -436,7 +436,7 @@ describe("§NNN BR-REQ-038-01 a ticked invitation's registration, confirmed, wea
   });
 });
 
-describe("§NNN no spare free at the confirmation: the ordinary number and the trail's line, never a runner without a number", () => {
+describe("§992 no spare free at the confirmation: the ordinary number and the trail's line, never a runner without a number", () => {
   it("every spare given since the send: the allocator's next number, not printed, and the line says the blank bib could not be given", async () => {
     const event = await createEvent({ spares: [154, 1] });
     await invite(event, "Ana Pop", "ana@example.invalid", { blankBib: true });
@@ -449,7 +449,7 @@ describe("§NNN no spare free at the confirmation: the ordinary number and the t
   });
 });
 
-describe("§NNN §444 two confirmations never take one spare, and the desk never hands the same", () => {
+describe("§992 §444 two confirmations never take one spare, and the desk never hands the same", () => {
   it("two ticked confirmations, one after the other, take the two lowest spares in turn", async () => {
     const event = await createEvent();
     await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }, { name: "Ion Pop", email: "ion@example.invalid" }], days: 7, outsideCapacity: false, blankBib: true }, admin, at(1));
@@ -487,7 +487,7 @@ describe("§NNN §444 two confirmations never take one spare, and the desk never
   });
 });
 
-describe("§914 §NNN «Ambele»: an invitation takes a place kept for the club, and then a blank bib", () => {
+describe("§914 §992 «Ambele»: an invitation takes a place kept for the club, and then a blank bib", () => {
   it("the site's places taken and somebody waiting: the invitation takes a kept place with no supplementary place, and its confirmation the lowest spare", async () => {
     const event = await createEvent({ capacity: 3, kept: 1 });
     // The site's two places, then the line.
@@ -539,7 +539,7 @@ async function panel(event: EventInput, mayManage: boolean, now: Date) {
   );
 }
 
-describe("§NNN «Invitații»: the tick on the form only while the event has spares, and its chip on the row", () => {
+describe("§992 «Invitații»: the tick on the form only while the event has spares, and its chip on the row", () => {
   it.each(["ro", "en"] as const)("%s: the form is handed the free spares as the desk writes them, and the tick's words", async (locale) => {
     state.locale = locale;
     const catalogue = (locale === "ro" ? ro : en).Admin.invitations;

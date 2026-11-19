@@ -14,7 +14,7 @@ import { confirmRegistrationByStaff, createRegistrationByStaff, handedBibRefusal
 import { approveNotices, removeApprovedNotices } from "./legal-fixture";
 
 /**
- * §NNN × §444 × BR-REQ-038-01 — an invitation's blank bib on two real connections: the confirmation of a registration whose
+ * §992 × §444 × BR-REQ-038-01 — an invitation's blank bib on two real connections: the confirmation of a registration whose
  * invitation carried «La confirmare primește un BIB gol» reads the lowest free desk spare and writes it under the event row's
  * lock, the one every number at the event is drawn, typed or handed under.
  *
@@ -29,7 +29,7 @@ import { approveNotices, removeApprovedNotices } from "./legal-fixture";
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
 
-describe("§NNN §444 BR-REQ-038-01 an invitation's blank bib, on two connections", () => {
+describe("§992 §444 BR-REQ-038-01 an invitation's blank bib, on two connections", () => {
   const pool = new pg.Pool({ connectionString: DATABASE_URL, max: 20 });
   const db = drizzle(pool);
   const NOW = new Date("2026-09-26T08:00:00.000Z");

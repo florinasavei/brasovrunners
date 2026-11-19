@@ -4,7 +4,7 @@ import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN, BR-REQ-037-07, BR-REQ-041-01 — «La confirmare primește un BIB gol» on the invitation form (the owner, 2026-11-19:
+ * §992, BR-REQ-037-07, BR-REQ-041-01 — «La confirmare primește un BIB gol» on the invitation form (the owner, 2026-11-19:
  * «când invit pe cineva, trebuie să pot să-i dau unul dintre locurile de rezervă» — «Ambele»): an Administrator sends an
  * invitation that will wear one of the desk's blank spare bibs once its registration is confirmed.
  *
@@ -54,7 +54,7 @@ async function seedRace(tag: string): Promise<string> {
 
 const fitsTheWidth = () => document.documentElement.scrollWidth <= document.documentElement.clientWidth;
 
-test.describe("§NNN «La confirmare primește un BIB gol»", () => {
+test.describe("§992 «La confirmare primește un BIB gol»", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test.afterAll(async () => {
