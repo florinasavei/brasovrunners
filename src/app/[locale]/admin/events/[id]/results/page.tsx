@@ -7,13 +7,16 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
+import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventTitle } from "@/modules/content/events/repository";
+import { startHeldBack } from "@/modules/events/domain/dated";
 import { noticeDescribesResults, termsDescribeResults } from "@/modules/legal-documents/repository";
 import { bandWordsFrom, categoryLabelOf } from "@/modules/results/category-words";
 import { bandKeysOf, bandLabelOf, formatAgeBandStarts } from "@/modules/results/domain/age-bands";
 import { awardsOf } from "@/modules/results/domain/awards";
+import { resultsPublishState } from "@/modules/results/domain/from-start";
 import { formatResultTime } from "@/modules/results/domain/result-time";
 import { RESULT_STATUSES } from "@/modules/results/domain/ranking";
 import { anonymousResultLabel } from "@/modules/results/domain/public-name";
@@ -60,7 +63,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /** The codes the page's banner says: a one-button form that has no boxes to keep redirects with `?resultsError=`. */
-const BANNER_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "RESULTS_NOTICE", "RESULTS_TERMS", "RESULTS_NOT_STARTED"] as const;
+const BANNER_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "RESULTS_NOTICE", "RESULTS_TERMS"] as const;
 
 /**
  * «Clasament» (`DECISIONS.md` §808; the owner, 2026-10-17: «Aș vrea să pot pune și clasament la final după cursă»): one race's results, on
@@ -104,6 +107,11 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   const noticeDescribes = takes ? await noticeDescribesResults(db, now) : false;
   const termsDescribe = takes ? await termsDescribeResults(db, now) : false;
   const started = event.startsAt.getTime() <= now.getTime();
+  // The tick as the page says it (§NNN): off, «Public de la start» while ticked before the race — nothing shows until then — or «Public».
+  const publishState = resultsPublishState(event, now);
+  // The start's day and hour, as the site will show them — none while the date or the hour is to be announced (§533): the public read
+  // has no start then, so nothing shows until it is announced, and the card says that instead of the hour stored.
+  const startWords = startHeldBack(event) ? null : formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short", position: "inline", withTime: true });
   const errorCode = BANNER_ERRORS.find((code) => code === resultsError);
 
   const eventPath = { pathname: "/admin/events/[id]", params: { id } } as const;
@@ -184,6 +192,13 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       : runner.named
         ? t("results.publicLine.named")
         : t("results.publicLine.anonymous", { label: anonymousLabel });
+  // Why a «Participant #…» line shows no name (§NNN, `publicNameReason`, read with `named`): under the line — or, while no approved
+  // notice describes the results (the same reason for every line), once at the top of the page instead.
+  const nobodyNamed = [...view.registered, ...view.typed].some((runner) => runner.nameReason === "noResultsNotice");
+  const publicReasonOf = (runner: ResultRunner) => (runner.named || runner.outOfRanking || nobodyNamed ? undefined : t(`results.publicWhy.${runner.nameReason}`));
+  // «Cu nume pe site: N din M» (§NNN): M, the lines the published results would show — a stored result, not an elite out of the ranking; N, those named.
+  const onSite = [...view.registered, ...view.typed].filter((runner) => runner.result !== null && !runner.outOfRanking);
+  const namedOnSite = onSite.filter((runner) => runner.named).length;
   const valuesOf = (runner: ResultRunner) => ({
     time: formatResultTime(runner.result?.gunTimeMs),
     // A runner with no result yet shows the blank status; one with a result shows it — the line is saved exactly as drawn.
@@ -206,6 +221,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     // What the published list would say of the runner — `publicResultName`'s own answer (the tick, a confirmed registration, a notice that
     // described the results), never a guess from the tick alone; an elite out of the ranking (§910) is not on it at all.
     publicLine: publicLineOf(runner, anonymousResultLabel(locale, runner.bibNumber, event.raceNumberFormat)),
+    publicReason: publicReasonOf(runner),
     values: valuesOf(runner),
     place: placeOf(runner),
     hasResult: runner.result !== null,
@@ -223,6 +239,8 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     agreed: runner.nameAgreed === true,
     // The registered lines' caption, from the same answer (`publicResultName`): a tick saved while no notice describes the results names nobody yet.
     publicLine: publicLineOf(runner, anonymousResultLabel(locale, runner.bibNumber)),
+    // A nameless line (an erased registration's) says why in its own sentence («Fără nume: …»).
+    publicReason: runner.name === null ? undefined : publicReasonOf(runner),
     place: placeOf(runner),
     hasResult: true,
     outOfRanking: runner.outOfRanking,
@@ -273,11 +291,23 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
         {RESULT_STATUSES.map((status) => (
           <StatusChip key={status} glyph={status === "FINISHED" ? "done" : status === "DNS" ? "didNotStart" : status === "DNF" ? "droppedOut" : "failed"} variant="outlined" label={t(`results.summary.${status}`, { count: String(view.counts[status]) })} />
         ))}
-        <StatusChip glyph={event.resultsPublished ? "visible" : "hidden"} color={event.resultsPublished ? "success" : "default"} label={event.resultsPublished ? t("results.publish.stateOn") : t("results.publish.stateOff")} testId="results-published-chip" />
+        <StatusChip glyph="wantsList" variant="outlined" label={t("results.namedCount", { named: String(namedOnSite), shown: String(onSite.length) })} testId="results-named-count" />
+        <StatusChip
+          glyph={publishState === "on" ? "visible" : publishState === "fromStart" ? "planned" : "hidden"}
+          color={publishState === "on" ? "success" : publishState === "fromStart" ? "primary" : "default"}
+          label={t(publishState === "on" ? "results.publish.stateOn" : publishState === "fromStart" ? "results.publish.stateFromStart" : "results.publish.stateOff")}
+          testId="results-published-chip"
+        />
       </Stack>
+      {nobodyNamed && (
+        <Alert severity="info" data-testid="results-names-nobody">
+          {t("results.publicWhy.noResultsNotice")} <Link href="/admin/legal">{t("results.publish.gateLink")}</Link>
+        </Alert>
+      )}
       {!started && (
         <Alert severity="info" data-testid="results-not-started">
-          {t("results.notStarted")}
+          {/* The tick is the Administrator's (`canPublishResults`): the Organizer is told only what they may do before the start. */}
+          {t(mayPublish ? "results.notStarted" : "results.notStartedEnterOnly")}
         </Alert>
       )}
       {errorCode && (
@@ -318,6 +348,15 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
               </Box>
             </Stack>
           </Panel>
+
+          {/* «Loc» in plain words (§NNN; the owner, 2026-11-18: «ce inseamna "Loc" aici?») — once, above both panels of lines, since a phone
+              has no column header and a typed runner's line says «Loc:» too; nothing while there is no line at all. */}
+          {(registered.length > 0 || typed.length > 0) && (
+            <Typography variant="body2" color="text.secondary" data-testid="results-place-hint">
+              {t("results.placeHint")}
+              <QuietHelp text={t("results.placeHelp")} testId="results-place-help" />
+            </Typography>
+          )}
 
           <Panel glyph="results" level={3} title={t("results.registered.title")} aside={t("results.registered.aside", { count: String(registered.length) })} id="box-results-registered" data-testid="results-registered">
             {registered.length === 0 ? (
@@ -452,7 +491,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
         </Stack>
       </Panel>
 
-      <Panel glyph="publication" level={3} title={t("results.publish.title")} aside={event.resultsPublished ? t("results.publish.stateOn") : t("results.publish.stateOff")} id="box-results-publish" data-testid="results-publish">
+      <Panel glyph="publication" level={3} title={t("results.publish.title")} aside={t(publishState === "on" ? "results.publish.stateOn" : publishState === "fromStart" ? "results.publish.stateFromStart" : "results.publish.stateOff")} id="box-results-publish" data-testid="results-publish">
         <Stack spacing={1.5}>
           <Typography variant="body2" color="text.secondary">
             {t("results.publish.help")}
@@ -469,10 +508,20 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
               <Link href="/admin/legal">{t("results.publish.gateLink")}</Link>
             </Alert>
           )}
-          {!started && (
-            <Alert severity="info" data-testid="results-publish-not-started">
-              {t("results.publish.gateStart")}
-            </Alert>
+          {/* Before the race (§NNN) the tick may be set: ticked, it says so with the start's day and hour; unticked, that it may be. Nothing shows before the start either way. */}
+          {publishState === "fromStart" ? (
+            <Stack direction="row" sx={{ gap: 1, alignItems: "center", flexWrap: "wrap" }} data-testid="results-publish-from-start">
+              <StatusChip glyph="planned" color="primary" variant="outlined" label={t("results.publish.stateFromStart")} testId="results-from-start-chip" />
+              <Typography variant="body2">{startWords !== null ? t("results.publish.fromStart", { start: startWords }) : t("results.publish.fromStartUnannounced")}</Typography>
+            </Stack>
+          ) : (
+            // «Poți bifa de pe acum» is said to whoever may tick it: the Organizer's card says «Doar un administrator…» below.
+            !started &&
+            mayPublish && (
+              <Alert severity="info" data-testid="results-publish-not-started">
+                {startWords !== null ? t("results.publish.beforeStart", { start: startWords }) : t("results.publish.beforeStartUnannounced")}
+              </Alert>
+            )
           )}
           {mayPublish ? (
             <ActionForm
@@ -481,7 +530,14 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
               messages={publishBoxes}
               // Making the ranking public, and taking it off the site, ask first (§384): the first spec asks when the box is ticked, the second — no `when` — otherwise.
               confirm={[
-                { when: [{ field: "published", equals: "on" }], title: t("results.publish.confirmOnTitle"), body: t("results.publish.confirmOnBody"), confirmLabel: t("results.publish.save"), cancelLabel: confirm.cancel },
+                {
+                  when: [{ field: "published", equals: "on" }],
+                  title: t("results.publish.confirmOnTitle"),
+                  // Before the race (§NNN) the question says the results show from the start, not now.
+                  body: t(started ? "results.publish.confirmOnBody" : "results.publish.confirmOnBodyFromStart"),
+                  confirmLabel: t("results.publish.save"),
+                  cancelLabel: confirm.cancel,
+                },
                 { title: t("results.publish.confirmOffTitle"), body: t("results.publish.confirmOffBody"), confirmLabel: t("results.publish.save"), cancelLabel: confirm.cancel },
               ]}
               data-testid="results-publish-form"

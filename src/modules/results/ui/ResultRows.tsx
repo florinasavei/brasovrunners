@@ -73,6 +73,8 @@ export type RegisteredLine = {
   present: boolean;
   /** «Public: Participant #101» or «Public: cu numele» — what the published list would say of this runner. */
   publicLine: string;
+  /** Under a «Participant #…» line, why the site shows no name (`publicNameReason`, §NNN); absent when named, or said once for the page. */
+  publicReason?: string;
   values: LineValues;
   place: PlaceView | null;
   /** A result is stored for this number: the line offers «Șterge». */
@@ -95,6 +97,8 @@ export type TypedLine = {
   agreed: boolean;
   /** «Pe site: cu numele» or «Pe site: Participant #900» — what the published ranking would say of the stored line (`publicResultName`'s own answer), the registered lines' caption. */
   publicLine: string;
+  /** Under a «Participant #…» line, why the site shows no name (`publicNameReason`, §NNN); absent when named, or said once for the page. */
+  publicReason?: string;
   place: PlaceView | null;
   hasResult: boolean;
   /** A separate-list elite's line left out of the ranking (§910), recognised by its number or its name: «în afara clasamentului». */
@@ -320,6 +324,11 @@ export function RegisteredResultLines({ lines, words }: { lines: readonly Regist
                   {line.publicLine}
                 </Typography>
               </Box>
+              {line.publicReason && (
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }} data-testid="result-public-reason">
+                  {line.publicReason}
+                </Typography>
+              )}
             </Box>
             <PlaceCell place={line.place} words={words} settled={line.hasResult} outOfRanking={line.outOfRanking} />
             <CommonBoxes rowKey={`r[${line.bibNumber}]`} values={line.values} words={words} runner={runner} />
@@ -397,6 +406,11 @@ function TypedLinesOf({ lines, words }: { lines: readonly TypedLine[]; words: Re
                 {line && (
                   <Typography variant="caption" color="text.secondary" sx={{ gridColumn: "1 / -1" }} data-testid="typed-public-line">
                     {line.publicLine}
+                  </Typography>
+                )}
+                {line?.publicReason && (
+                  <Typography variant="caption" color="text.secondary" sx={{ gridColumn: "1 / -1" }} data-testid="typed-public-reason">
+                    {line.publicReason}
                   </Typography>
                 )}
               </Box>

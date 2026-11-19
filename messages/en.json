@@ -914,6 +914,7 @@
       "anonymous": "Participant #{bib}",
       "published": "Published {published} · on this page until {until}",
       "until": "On this page until {until}",
+      "live": "Updates itself every 30 seconds.",
       "caption": "The race results: first those who finished, in order of arrival, then those who did not.",
       "columnPlace": "Place",
       "columnName": "Name",
@@ -2838,7 +2839,6 @@
       "RESULTS_IMPORT_INVALID": "The CSV file cannot be read: {where}{problem}. Nothing was imported.",
       "RESULTS_NOTICE": "The privacy notice in force does not describe the results yet. Approve a new one from the template in «Legal documents»; «Tasks» says how.",
       "RESULTS_TERMS": "The terms in force do not describe the results yet: the older ones promised to ask first. Approve new terms from the template in «Legal documents»; «Tasks» says how.",
-      "RESULTS_NOT_STARTED": "The results can be made public after the race has started. You can type them already.",
       "RESULTS_NOT_OPEN": "Only a race has results.",
       "MEMBER_TIER_HAS_MEMBERS": "The level was not deleted. Members with this level: {count}. Give them another level first, on “Team”.",
       "MEMBER_TIER_IN_CODES": "The level was not deleted. Discount codes for it alone: {count}. Change their levels first.",
@@ -10165,8 +10165,10 @@
             {
               "title": "Publish the results on the event's page",
               "steps": [
-                "The results appear on the site only once you publish them, only after the race has started and only if the privacy notice and the terms in force describe the results — «Legal documents» says whether new texts must be approved; «Tasks» has the row.",
+                "The results appear on the site only once you publish them, only from the start of the race and only if the privacy notice and the terms in force describe the results — «Legal documents» says whether new texts must be approved; «Tasks» has the row.",
                 "On «Results», under «On the event's page», tick «The results are public on the event's page» and press «Save». The page shows the place, the number, the time and the category; a name only for who ticked the list at registration or a runner who did not register and agreed — everyone else is “Participant #number”.",
+                "You can tick it before the race too: the card says «Public from the start», with the start's day and hour. Before the start nothing shows on the site; from the start every result you save appears, and while the race runs the page updates itself every 30 seconds.",
+                "Under each “On the site: Participant #…” it says why the name does not show, and at the top «Named on the site…» says how many of those in the results appear by name. For a registered runner, only their own tick puts a name there; an administrator can only hide it.",
                 "The results stay on the page as long as the public participant list, from the end of the race («Settings» → «Deadlines»). Untick at any time; the results stay saved.",
                 "Whoever registered under an older privacy notice, which did not describe the results, appears as “Participant #number”, even if they ticked the list. Only once the club approves a privacy notice that names that tick beside the results (the field {{resultsNameAsk}}, in «Legal documents») — after the club and its lawyer amend the sentence telling them they appear only by number — does their registration's page (the link in its email) show them «I want to appear by name in the results». The club sends no new email for it: tell them with «Send a message to participants», from the race's editor, that they can tick it from their registration's link and untick it at any time."
               ]
@@ -12310,7 +12312,8 @@
       "intro": "Type the times, import them from a CSV and save everything at once. The places work themselves out.",
       "introMore": "One line per runner, by race number. Places are overall, by sex and by category; equal times share a place. A line with only a note means did not start.",
       "notRace": "Only a race has results. Group runs and the other events have none.",
-      "notStarted": "The race has not started yet. You can type results already.",
+      "notStarted": "The race has not started yet. You can type results and tick the results public already; nothing shows on the site before the start.",
+      "notStartedEnterOnly": "The race has not started yet. You can type results already; nothing shows on the site before the start.",
       "summary": {
         "FINISHED": "Finished: {count}",
         "DNF": "Dropped out: {count}",
@@ -12368,6 +12371,17 @@
         "outOfRanking": "On the site: not shown — an elite out of the results",
         "outOfRankingAmbassador": "On the site: not shown — an ambassador out of the results"
       },
+      "namedCount": "Named on the site: {named} of {shown}",
+      "publicWhy": {
+        "noResultsNotice": "The privacy notice in force does not describe the results: nobody appears by name.",
+        "noName": "Has no name to show.",
+        "typedNoAgreement": "A runner entered by hand: no agreement to the name was recorded.",
+        "notTicked": "Did not tick “I want to appear on the participants & results list”.",
+        "hiddenByClub": "An administrator unticked “On the site”.",
+        "notConfirmed": "The registration is not confirmed.",
+        "hiddenGuest": "A special guest: the event does not show its special guests publicly.",
+        "olderNotice": "Registered under an older privacy notice: appears by name only if they ask from their registration's page, once the notice allows it."
+      },
       "outOfRanking": "out of the results",
       "nameless": "No name: the registration was erased. The result stays, nameless.",
       "addRow": "Add a runner who did not register",
@@ -12376,6 +12390,8 @@
       "agreedHelp": "Tick only if the person told you so; for a minor, the parent or guardian. Who ticked it and when stay in the log.",
       "noPlace": "no place yet",
       "noPlaceSettled": "no place",
+      "placeHint": "“Place” is the place in the results: overall and, under it, by sex and by category. The site works it out from the times; until a time is typed, the line says “no place yet”.",
+      "placeHelp": "Equal times share a place and the next is skipped (1, 2, 2, 4). The category is the sex and the age group on the race's day. “No place” stays for dropped out, did not start and disqualified.",
       "place": {
         "sex": "by sex: {position}",
         "category": "in the category ({category}): {position}"
@@ -12393,17 +12409,22 @@
         "help": "The page shows place, number, time and category. A name appears only for those who ticked the list, or for a runner added by hand who agreed; the rest are “Participant #number”.",
         "confirmOnTitle": "Make the results public?",
         "confirmOnBody": "Anyone can read the results on the event's page, with the name only of those who ticked or agreed.",
+        "confirmOnBodyFromStart": "From the start, anyone can read the results on the event's page as the runners arrive, with the name only of those who ticked or agreed. Nothing shows before the start.",
         "confirmOffTitle": "Take the results off the site?",
         "confirmOffBody": "The event's page no longer shows the results. They stay saved.",
         "gate": "The privacy notice in force does not describe the results yet, so you cannot publish them.",
         "gateTerms": "The terms in force do not describe the results yet: the older ones promised to ask first. Approve new terms to publish.",
-        "gateStart": "You can publish the results after the race has started.",
+        "beforeStart": "You can tick it already: on the site, the results appear from the start, {start}, as the runners arrive.",
+        "beforeStartUnannounced": "You can tick it already: on the site, the results appear from the start, once you announce the start's hour, as the runners arrive.",
+        "fromStart": "It appears on the site from the start, {start}, as the runners arrive.",
+        "fromStartUnannounced": "It appears on the site from the start, once you announce the start's hour, as the runners arrive.",
         "gateLink": "Legal documents",
         "adminOnly": "Only an administrator can publish the results.",
         "empty": "No result is saved yet.",
         "save": "Save",
         "saving": "Saving…",
         "stateOn": "Public",
+        "stateFromStart": "Public from the start",
         "stateOff": "Not public"
       },
       "export": "Download the results (CSV)",
@@ -15039,6 +15060,7 @@
       },
       "resultDeleted": "Result deleted. The others' places were worked out again.",
       "resultsPublished": "The results are now public on the event's page.",
+      "resultsPublishedFromStart": "Done: the results appear on the event's page from the start, as the runners arrive.",
       "resultsUnpublished": "The results are no longer public on the event's page.",
       "resultsPublicUnchanged": "It was already so; nothing to change.",
       "rsvpAskAudience": "The choice for the “Coming?” question was saved.",

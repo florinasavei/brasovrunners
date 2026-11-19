@@ -1573,6 +1573,23 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
   the row and in the audit trail (`event_results.name_agreed_at`, `publicResultName`), and never when
   a confirmed registration holds the number: a registered runner's name follows their own tick, never
   a staff mark;
+- a race's results may be ticked public before the race (§NNN, the owner, 2026-11-18: «public from the
+  start»): «Clasament» says «Public de la start» with the start's day and hour, and nothing is shown
+  before the event's start — the public read, the cached read, the section, the listing's chip and the
+  page's hold all wait for `startsAt` (`results/domain/results-open.ts#resultsOnShow`,
+  `resultsClockInstants`); from the start every stored row shows as it is saved, the «Publicat …» line
+  naming the start (`domain/from-start.ts`). While the race runs — the start until its end, or six hours
+  for a race saved without one (`domain/live-window.ts`) — `ResultsLiveRefresh` refreshes the open page
+  every 30 seconds while the tab is visible and stops at the window's end, decided from the event's row
+  alone (the tick as saved, `resultsTicked`), so a page opened before the first finish refreshes too,
+  silently, and a page opened before the start carries it hidden and armed to the start, asking nothing
+  until then (one timer, re-armed at most once a day): the one public island that asks the server again
+  on a timer (§577), named in `tests/unit/config/idle-client.test.ts`. A
+  refresh is a CDN request for an anonymous visitor at the bare address, but a full server render each
+  time for a signed-in tab or an address with a query the page reads (the live twin, §549). Who is
+  named does not change; «Clasament»
+  says why a line is «Participant #…» from the same input (`domain/public-name-reason.ts`, one rule with
+  `publicResultName`);
 - a race's elite runners (§910, the owner, 2026-11-04: per elite, «Apare în clasament» and «Apare pe
   site»): a registration marked «Elită» (§897) is named by its own tick and nothing else — the
   Administrator's «Apare pe site» on it only hides. Unticked (`registrations.elite_hidden_from_site`,

@@ -401,16 +401,21 @@ describe("§808 the publish gate: the terms and the race's start", () => {
     await expect(setResultsPublished(db, staff.ADMIN!, raceId, true, NOW)).resolves.toEqual({ changed: true });
   });
 
-  it("refuses to make them public before the race has started, while entering them stays open", async () => {
+  it("accepts the tick before the race has started (§NNN, amending the refusal) — set now, shown from the start — while entering them stays open", async () => {
     await approveResultsTexts(db);
     await field();
     const before = new Date(RACE_STARTS_AT.getTime() - 60 * 60 * 1000);
-    await expect(setResultsPublished(db, staff.ADMIN!, raceId, true, before)).rejects.toMatchObject({ code: "RESULTS_NOT_STARTED" });
     await expect(saveEventResults(db, staff.ADMIN!, { eventId: raceId, rows: [line(101, { time: "50:00" })] }, before)).resolves.toMatchObject({ created: 1 });
-    expect((await db.select({ published: events.resultsPublished }).from(events).where(eq(events.id, raceId)))[0].published).toBe(false);
-    // Once the gun has gone off it goes through, and the same press turned off is never refused.
+    await expect(setResultsPublished(db, staff.ADMIN!, raceId, true, before)).resolves.toEqual({ changed: true, fromStart: true });
+    expect((await db.select({ published: events.resultsPublished, at: events.resultsPublishedAt }).from(events).where(eq(events.id, raceId)))[0]).toEqual({ published: true, at: before });
+    // Nothing public before the gun, the row stored or not; from the gun on, the row.
+    const options = { deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: 1, firstResultsNameAskNoticeVersion: null };
+    expect(await readPublicEventResults(db, raceId, { ...options, now: new Date(RACE_STARTS_AT.getTime() - 1) })).toBeNull();
+    expect((await readPublicEventResults(db, raceId, { ...options, now: RACE_STARTS_AT }))?.rows.map((row) => row.bibNumber)).toEqual([101]);
+    // The same press turned off is never refused; on again once the gun has gone off says nothing of the start.
+    await expect(setResultsPublished(db, staff.ADMIN!, raceId, false, new Date(before.getTime() + 1000))).resolves.toEqual({ changed: true });
     await expect(setResultsPublished(db, staff.ADMIN!, raceId, true, RACE_STARTS_AT)).resolves.toEqual({ changed: true });
-    await expect(setResultsPublished(db, staff.ADMIN!, raceId, false, before)).resolves.toEqual({ changed: true });
+    expect((await trailActions()).filter((action) => action.startsWith("event_results."))).toEqual(["event_results.published", "event_results.unpublished", "event_results.published"]);
   });
 });
 

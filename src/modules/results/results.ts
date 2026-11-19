@@ -24,6 +24,7 @@ import { type FingerprintedResult, resultsFingerprint } from "./domain/fingerpri
 import { foldEliteName, horsConcoursBibs, type OutOfRanking } from "./domain/hors-concours";
 import { parseResultsCsv } from "./domain/import-csv";
 import { publicResultName } from "./domain/public-name";
+import { type PublicNameReason, publicNameVerdict } from "./domain/public-name-reason";
 import { type Rankable, RESULTS_MAX, rankResults, type ResultStatus, type Ranked } from "./domain/ranking";
 import { type ReadRow, type ResultRowProblem, readResultRow } from "./domain/row-input";
 import { type PostedResultRow, resultBox } from "./rows";
@@ -91,6 +92,8 @@ type RegisteredRunner = {
    * unticked «Apare pe site» on the registration marked «Elită» (§910, `tickedForTheSite`).
    */
   ticked: boolean;
+  /** The person ticked, and the club's «Apare pe site» is what reads the tick as off (`siteHiddenByClub`): «Clasament»'s reason only (§NNN). */
+  hiddenByClub: boolean;
   /**
    * The club's two marks on the registration, «Elită» (§897) and «Ambasador» (§948): the backoffice's «Clasament» and «Premii»
    * say them beside the runner, so the club sees whose result it awards. Staff-only — the public read copies neither.
@@ -124,6 +127,16 @@ function tickedForTheSite(row: { listOptOut: boolean | null; elite: boolean | nu
   return row.listOptOut === false && !((row.elite === true || row.ambassador === true) && row.eliteHiddenFromSite === true);
 }
 
+/**
+ * The other half of the same columns, for «Clasament»'s reason alone (§NNN, `domain/public-name-reason.ts#publicNameReason`): the person
+ * ticked, and the club's «Apare pe site», unticked on the registration while it is marked «Elită» or «Ambasador» (§910, §948), is what
+ * `tickedForTheSite` reads as off. Kept here, beside the tick, so the mark is read where it already was; the reason takes the boolean.
+ * A person who did not tick is their own answer, whatever the club ticked; a typed row's left join reads nulls, and is never this.
+ */
+function siteHiddenByClub(row: { listOptOut: boolean | null; elite: boolean | null; ambassador: boolean | null; eliteHiddenFromSite: boolean | null }): boolean {
+  return row.listOptOut === false && (row.elite === true || row.ambassador === true) && row.eliteHiddenFromSite === true;
+}
+
 type EventFacts = {
   id: string;
   type: string;
@@ -131,6 +144,12 @@ type EventFacts = {
   /** The gun, when the race's own start differs from the gathering (`race_starts_at`); the finish line counts from `raceStartsAt ?? startsAt`. */
   raceStartsAt: Date | null;
   endsAt: Date | null;
+  /**
+   * «Data se anunță» and «Ora se anunță» (§533): while either is on, the public side has no start, so «Clasament» names no hour (§NNN).
+   * Read by `loadEvent`, for the backoffice; the public read leaves them out — the page it serves already has no start then.
+   */
+  dateToBeAnnounced?: boolean;
+  timeToBeAnnounced?: boolean;
   timezone: string;
   resultsPublished: boolean;
   resultsPublishedAt: Date | null;
@@ -162,6 +181,8 @@ async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eve
       startsAt: events.startsAt,
       raceStartsAt: events.raceStartsAt,
       endsAt: events.endsAt,
+      dateToBeAnnounced: events.dateToBeAnnounced,
+      timeToBeAnnounced: events.timeToBeAnnounced,
       timezone: events.timezone,
       resultsPublished: events.resultsPublished,
       resultsPublishedAt: events.resultsPublishedAt,
@@ -241,6 +262,7 @@ async function loadRegisteredRunners<T extends Record<string, unknown>>(db: Data
       birthDate: row.birthDate,
       // The person's own tick — read as unticked while the club unticked «Apare pe site» on a marked elite (§910): a staff tick only hides.
       ticked: tickedForTheSite(row),
+      hiddenByClub: siteHiddenByClub(row),
       elite: row.elite,
       ambassador: row.ambassador,
       checkedIn: row.checkedInAt !== null,
@@ -350,6 +372,8 @@ export type ResultRunner = {
    * made under a notice that described the results; a typed one by the staff-recorded agreement, a name to show and a notice that described them.
    */
   named: boolean;
+  /** Why the published results would not name this runner, or `named` (`publicNameReason`, from the very input `named` is read from; §NNN). */
+  nameReason: PublicNameReason;
   /** A typed runner: the staff recorded that the person agreed to appear by name (§810); null for a registered runner, whose own tick answers. */
   nameAgreed: boolean | null;
   /**
@@ -446,21 +470,22 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
       name: runner.displayName,
       registered: true,
       ticked: runner.ticked,
-      named:
-        publicResultName({
-          registered: true,
-          ticked: runner.ticked,
-          displayName: runner.displayName,
-          confirmed: runner.status === "CONFIRMED",
-          hidden: runner.outsideCapacity && !hiddenShown,
-          noticeVersion: runner.noticeVersion,
-          firstResultsNoticeVersion,
-          firstResultsNameAskNoticeVersion,
-          resultsNameConsent: runner.resultsNameConsent,
-          resultsConsentVersion: runner.resultsConsentVersion,
-          typedNameAgreed: false,
-          typedDisplayName: null,
-        }) !== null,
+      // `named` — `publicResultName`'s own answer — and, from the same input, why not (§NNN).
+      ...publicNameVerdict({
+        registered: true,
+        ticked: runner.ticked,
+        displayName: runner.displayName,
+        confirmed: runner.status === "CONFIRMED",
+        hidden: runner.outsideCapacity && !hiddenShown,
+        noticeVersion: runner.noticeVersion,
+        firstResultsNoticeVersion,
+        firstResultsNameAskNoticeVersion,
+        resultsNameConsent: runner.resultsNameConsent,
+        resultsConsentVersion: runner.resultsConsentVersion,
+        typedNameAgreed: false,
+        typedDisplayName: null,
+        hiddenByClub: runner.hiddenByClub,
+      }),
       nameAgreed: null,
       // The registration's own tick (§910): drawn so before a result is typed, and its row, once typed, ranked accordingly.
       outOfRanking: runners.out.registrations.has(runner.registrationId) || (row !== undefined && rankedOf(row).outOfRanking === true),
@@ -483,21 +508,21 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
       name: row.displayName,
       registered: false,
       ticked: null,
-      named:
-        publicResultName({
-          registered: false,
-          ticked: false,
-          displayName: null,
-          confirmed: false,
-          hidden: false,
-          noticeVersion: null,
-          firstResultsNoticeVersion,
-          firstResultsNameAskNoticeVersion,
-          resultsNameConsent: false,
-          resultsConsentVersion: null,
-          typedNameAgreed: row.nameAgreedAt !== null,
-          typedDisplayName: row.displayName,
-        }) !== null,
+      // `named` — `publicResultName`'s own answer — and, from the same input, why not (§NNN).
+      ...publicNameVerdict({
+        registered: false,
+        ticked: false,
+        displayName: null,
+        confirmed: false,
+        hidden: false,
+        noticeVersion: null,
+        firstResultsNoticeVersion,
+        firstResultsNameAskNoticeVersion,
+        resultsNameConsent: false,
+        resultsConsentVersion: null,
+        typedNameAgreed: row.nameAgreedAt !== null,
+        typedDisplayName: row.displayName,
+      }),
       nameAgreed: row.nameAgreedAt !== null,
       // A separate-list elite's line left out (§910), recognised by its number or, for a line with none, by its name (`hors-concours.ts`).
       outOfRanking: rankedOf(row).outOfRanking === true,
@@ -938,12 +963,15 @@ export async function readFinishPage<T extends Record<string, unknown>>(db: Data
 
 /**
  * «Clasamentul e public pe pagina evenimentului» (§808): the Administrator's switch, the disclosure itself. Refused for any other role
- * (FORBIDDEN). **Switching it on is refused** until the race has started (`RESULTS_NOT_STARTED`: the notice says the results appear «doar
- * după cursă»), while the privacy notice in force, in every language, does not name `{{results}}` (`RESULTS_NOTICE`) — the club's
- * approval of the text is what lets a result reach the page, as for the list's states (§396) — and while the terms in force do not
- * (`RESULTS_TERMS`: the older terms promised to ask separately before a named result); switching it off never is. A press that changes nothing writes and records nothing. The moment of the last switching on is kept, and the cache is told.
+ * (FORBIDDEN). **Switching it on is refused** for an event that is not a race (`RESULTS_NOT_OPEN`), while the privacy notice in force, in
+ * every language, does not name `{{results}}` (`RESULTS_NOTICE`) — the club's approval of the text is what lets a result reach the page, as
+ * for the list's states (§396) — and while the terms in force do not (`RESULTS_TERMS`: the older terms promised to ask separately before a
+ * named result); switching it off never is. **Before the race it is accepted** (§NNN, amending §808's refusal; the owner, 2026-11-18:
+ * «public from the start»): the tick is set, and nothing is shown before the start — the public read, the section, the listing's chip and
+ * the page's hold all wait for `startsAt` (`domain/results-open.ts#resultsOnShow`) — so the answer says `fromStart`. A press that changes
+ * nothing writes and records nothing. The moment of the last switching on is kept, and the cache is told.
  */
-export async function setResultsPublished<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, eventId: string, on: boolean, now: Date): Promise<{ changed: boolean }> {
+export async function setResultsPublished<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, eventId: string, on: boolean, now: Date): Promise<{ changed: boolean; fromStart?: true }> {
   if (!canPublishResults(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not publish a race's results`);
   assertIds(eventId);
   const outcome = await db.transaction(async (tx) => {
@@ -951,15 +979,14 @@ export async function setResultsPublished<T extends Record<string, unknown>>(db:
     if (event.resultsPublished === on) return { changed: false };
     if (on) {
       if (!eventTakesResults(event.type)) throw new DomainError("RESULTS_NOT_OPEN", "only a race takes results");
-      // The notice promises the results appear only after the race: entering them stays open before the gun, publishing does not.
-      if (event.startsAt.getTime() > now.getTime()) throw new DomainError("RESULTS_NOT_STARTED", "the race has not started yet");
       if (!(await noticeDescribesResults(tx, now))) throw new DomainError("RESULTS_NOTICE", "the privacy notice in force does not describe the results");
       // The terms a runner accepted promised «te vom întreba separat» before any named result: the club approves the new terms first.
       if (!(await termsDescribeResults(tx, now))) throw new DomainError("RESULTS_TERMS", "the terms in force do not describe the results");
     }
     await tx.update(events).set({ resultsPublished: on, resultsPublishedAt: on ? now : null }).where(eq(events.id, event.id));
     await recordAuditEvent(tx, { actorStaffUserId: actor.id, action: on ? "event_results.published" : "event_results.unpublished", entityType: "event", entityId: event.id, metadata: {}, now });
-    return { changed: true };
+    // Ticked before the race (§NNN): set now, shown from the start.
+    return on && event.startsAt.getTime() > now.getTime() ? { changed: true, fromStart: true as const } : { changed: true };
   });
   if (outcome.changed) revalidatePublicContent("events", "places");
   return outcome;
