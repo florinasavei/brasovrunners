@@ -904,7 +904,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                     {registration.bibNumber === null
                       ? tr("registrations.bibNone")
                       : registration.bibPrintedAt !== null
-                        ? tr("registrations.bibSettledPrinted", { number: written(registration.bibNumber) })
+                        ? /* «… se schimbă doar cu un BIB gol» only where «Dă-i un BIB gol» is offered below; elsewhere it no longer changes. */
+                          tr(blankBibs.length > 0 ? "registrations.bibSettledPrintedBlank" : "registrations.bibSettledPrinted", { number: written(registration.bibNumber) })
                         : tr("registrations.bibSettled", { number: written(registration.bibNumber) })}
                   </Typography>
                   {/* The members' race number (§664, §972), beside the number: the sheet prints this row's bib in the members' design. */}

@@ -274,7 +274,10 @@ describe("§NNN «Dă-i un BIB gol» on the registration's page", () => {
     await register(full.id, { bibNumber: 154 });
     await register(full.id, { bibNumber: 155 });
     const late = await register(full.id, { bibNumber: 9, printed: true });
-    expect(spareForm(await detailPage(late.id))).toBeUndefined();
+    const latePage = await detailPage(late.id);
+    expect(spareForm(latePage)).toBeUndefined();
+    // No blank bib to give: the printed number's line keeps saying it no longer changes.
+    expect(latePage.some((element) => textOf(element.props.children) === "Numărul de concurs: 9. E tipărit, deci nu se mai schimbă.")).toBe(true);
 
     const none = await createRace(null);
     const plain = await register(none.id, { bibNumber: 4, printed: true });
@@ -292,7 +295,10 @@ describe("§NNN «Dă-i un BIB gol» on the registration's page", () => {
     const numbered = await register(race.id, { bibNumber: 27, printed: true });
     const gap = await register(race.id, { bibNumber: null });
     state.actor = await staff("MODERATOR");
-    expect(spareForm(await detailPage(numbered.id))).toBeUndefined();
+    const numberedPage = await detailPage(numbered.id);
+    expect(spareForm(numberedPage)).toBeUndefined();
+    // Not the Organizer's to change: the line says it no longer changes, never «doar cu un BIB gol».
+    expect(numberedPage.some((element) => textOf(element.props.children) === "Numărul de concurs: 27. E tipărit, deci nu se mai schimbă.")).toBe(true);
     const confirm = spareForm(await detailPage(gap.id))?.props.confirm as Record<string, unknown>;
     // No old number, so no sentence about one.
     expect(confirm.body).toBe(`${gap.registeredName} poartă de acum numărul {spareNumber}, de pe BIB-ul gol.`);
