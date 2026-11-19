@@ -12,7 +12,9 @@ import { findCurrentApprovedDocument, findVersionWithTranslations } from "@/modu
 import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { type DeclarationEntry, type DeclarationPart, renderDeclarationParts, renderDeclarationPdf } from "@/modules/registrations/declaration-pdf";
 import type { DeclarationLabels } from "@/modules/registrations/signed-declaration";
+import { env } from "@/shared/config/env";
 import { isUuid } from "@/shared/ids";
+import { CLUB_NAME } from "@/theme/brand";
 import { listVolunteerIdsByName } from "./admin-list";
 import { agreementBlanks, agreementBody, agreementMergeValues, readAgreementFacts, volunteerRoles } from "./agreement";
 import { isVolunteerMinor } from "./domain/volunteer";
@@ -28,18 +30,27 @@ import { isVolunteerMinor } from "./domain/volunteer";
  *   hand the page showed it in, the moment, how it was accepted, the version's hash and the text's own. The copy
  *   the person's email carries and the backoffice row downloads.
  * - **to sign on paper** — not accepted yet: the version in force in the person's language, filled for them and
- *   their role, with two signature lines, the volunteer's and the organizer's, and a date line, nothing typed in
- *   them. What the desk prints for a person entered by hand who signs there (§758's third way).
+ *   their role, with the volunteer's signature line and a date line, nothing typed in them. What the desk prints for a
+ *   person entered by hand who signs there (§758's third way).
  *
- * Neither line asks for an identity document: the agreement names none (`noIdDocument`).
+ * No line asks for an identity document: the agreement names none (`noIdDocument`).
+ *
+ * **Signed by both parties (§NNN, amending §758 and §966; the owner, 2026-11-19, printing them for the race: «să las în
+ * dreapta și „Asociația” ca să printăm și să semnăm fizic»).** Every shape's signature block is two columns under «DREPT
+ * PENTRU CARE SEMNĂM»: on the left the volunteer's side exactly as it was — the acceptance with the name in its hand, the
+ * date, the trace and how it was accepted, or the blank lines of the sheet; under eighteen the volunteer and the parent or
+ * guardian — and on the right «Asociația», the club's legal name (`agreementHostName`) and the lines its representative
+ * fills in by hand: «Reprezentant (nume și funcție)», «Semnătura», «Data». The sheet's former «Pentru organizator (nume și
+ * semnătură)» is that column. The renderer draws it (`labels.hostSignature`); the approved text is untouched, so no new
+ * version waits for approval, and the race declaration, which passes no column, is drawn as before.
  *
  * **A volunteer under eighteen (§768)** has a parent or guardian who accepts the same text in their own name, so the
  * signature block has a second signer: the volunteer's own acceptance and the guardian's — the typed name from the link,
  * or the paper — under one date, the guardian's version, blanks and fingerprint when they accepted, and a line that says
- * the consent is still to come while it is. The sheet to sign on paper has the volunteer's line and the guardian's, in
- * place of the organizer's. The PDF for adults is unchanged. Once the guardian accepted, the PDF draws **two entries** —
- * the volunteer's own acceptance (their version, blanks and fingerprint) and the guardian's (theirs, which may be a
- * newer version) — so neither person's fingerprint is replaced by the other's.
+ * the consent is still to come while it is. The sheet to sign on paper has the volunteer's line and the guardian's under
+ * it. Once the guardian accepted, the PDF draws **two entries** — the volunteer's own acceptance (their version, blanks
+ * and fingerprint) and the guardian's (theirs, which may be a newer version) — so neither person's fingerprint is replaced
+ * by the other's; the Association's column stands beside each.
  *
  * **Every agreement of an event in one file (§966)** — for the desk, printed at once in place of dozens of downloads:
  * each person's pages exactly as their own file has them, one person after another in one document
@@ -52,7 +63,9 @@ const WORDS: Record<
   {
     signature: string;
     volunteerSignature: string;
-    organizerSignature: string;
+    /** The Association's column (§NNN): the party, then the lines its representative fills in by hand. */
+    host: string;
+    hostLines: readonly [representative: string, signature: string, date: string];
     whereupon: string;
     whereuponTogether: string;
     acceptedOnForm: string;
@@ -67,7 +80,8 @@ const WORDS: Record<
   ro: {
     signature: "Semnătura voluntarului",
     volunteerSignature: "Semnătura voluntarului",
-    organizerSignature: "Pentru organizator (nume și semnătură)",
+    host: "Asociația",
+    hostLines: ["Reprezentant (nume și funcție)", "Semnătura", "Data"],
     whereupon: "DREPT PENTRU CARE SEMNEZ,",
     whereuponTogether: "DREPT PENTRU CARE SEMNĂM,",
     acceptedOnForm:
@@ -84,7 +98,8 @@ const WORDS: Record<
   en: {
     signature: "Volunteer's signature",
     volunteerSignature: "Volunteer's signature",
-    organizerSignature: "For the organiser (name and signature)",
+    host: "The Association",
+    hostLines: ["Representative (name and position)", "Signature", "Date"],
     whereupon: "IN WITNESS WHEREOF, I SIGN,",
     whereuponTogether: "IN WITNESS WHEREOF, WE SIGN,",
     acceptedOnForm:
@@ -101,19 +116,32 @@ const WORDS: Record<
 };
 
 /**
- * The declaration's labels with the agreement's own signature words in place (pure, for its test). For a volunteer under
- * eighteen (§768) the second line is the parent's or guardian's — the organizer's is for an adult's desk copy — and a
- * single guardian's signature, while the volunteer has not accepted their own, reads as theirs.
+ * Who the volunteer agreement is signed with, as its right-hand column names it (§NNN): the club's legal name — the fact the
+ * approved text's «<DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>» is filled with when the club starts a version from the
+ * platform's text (`CLUB_LEGAL_NAME`, §132) — else the club's one name (`CLUB_NAME`, `club/club.json`), as the emails'
+ * privacy line names the controller (§323). Never a literal: the repository is public (§98).
  */
-export function volunteerAgreementLabels(locale: Locale, now: Date, guardian = false): DeclarationLabels {
+export function agreementHostName(): string {
+  return env.CLUB_LEGAL_NAME ?? CLUB_NAME;
+}
+
+/**
+ * The declaration's labels with the agreement's own signature words in place (pure, for its test). The volunteer signs on the
+ * left — under eighteen (§768) with the parent's or guardian's line under theirs — and the Association on the right, on every
+ * shape (§NNN): its column, «Asociația», `hostName` under it and the lines its representative fills in by hand, so every
+ * block says «DREPT PENTRU CARE SEMNĂM». A single guardian's signature, while the volunteer has not accepted their own, reads
+ * as theirs.
+ */
+export function volunteerAgreementLabels(locale: Locale, now: Date, guardian = false, hostName = agreementHostName()): DeclarationLabels {
   const words = WORDS[locale];
   return {
     ...declarationWords(locale, now),
     signature: guardian ? words.guardianSignature : words.signature,
     minorSignature: words.volunteerSignature,
-    guardianSignature: guardian ? words.guardianSignature : words.organizerSignature,
+    guardianSignature: words.guardianSignature,
     whereupon: words.whereupon,
     whereuponTogether: words.whereuponTogether,
+    hostSignature: { heading: words.host, name: hostName, lines: words.hostLines },
   };
 }
 
@@ -380,8 +408,9 @@ async function volunteerAgreementPages<T extends Record<string, unknown>>(
     version: document.version,
     contentSha256: document.contentSha256,
     effectiveAt: document.effectiveAt,
-    // Two signature lines — the volunteer's, then the organizer's (the parent's or guardian's, under eighteen) — and the date, written by hand.
-    forMinor: true,
+    // The volunteer's signature line — and under eighteen the parent's or guardian's under it — and the date, written by hand, on
+    // the left; the Association's on the right (§NNN, `labels.hostSignature`), which is the organizer's line the sheet used to carry.
+    forMinor: guardianName !== null,
     noIdDocument: true,
   };
   return { part: { entries: [entry], labels: volunteerAgreementLabels(row.locale, now, guardianName !== null) }, locale: row.locale, accepted: false };

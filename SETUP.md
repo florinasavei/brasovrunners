@@ -2298,8 +2298,10 @@ only ones who see the names, addresses and telephone numbers.
    way and when, and «PDF contract» for their copy) or «Contract neacceptat încă». For a person you entered
    by hand: **«Trimite linkul contractului»** emails them the agreement and a single-use link to accept it
    (valid 14 days; a new press sends a new link that replaces the old), or print **«PDF de semnat»** — the
-   agreement filled for them, with the volunteer's and the organizer's signature lines — let them sign it
-   at the desk, keep the sheet, and press **«Semnat pe hârtie»**, which records the version in force and
+   agreement filled for them, with the volunteer's signature line on the left and, on the right, «Asociația»:
+   the club's legal name (`CLUB_LEGAL_NAME`, else the club's name) and the lines its representative fills in by
+   hand, «Reprezentant (nume și funcție)», «Semnătura», «Data» — let them sign it at the desk, have the club's
+   representative sign the right side, keep the sheet, and press **«Semnat pe hârtie»**, which records the version in force and
    your name as the one who recorded it, and emails the person their copy. While nobody gave the person a
    role, the agreement names the roles they offered for: the platform's text says so in its own sentence
    («Rolul îl stabilesc organizatorii dintre cele pentru care voluntarul s-a oferit — …»); a version approved
@@ -2387,7 +2389,7 @@ only ones who see the names, addresses and telephone numbers.
    - **On the card**: a minor shows «Acordul părintelui lipsește» until the parent accepts («Link trimis părintelui» while a link is live,
      «Acordul părintelui primit» after), with the parent's name beside the age. **«Confirmă» is refused** with that sentence until the parent has accepted.
      «Trimite linkul părintelui» sends the email again (only with an address); **«PDF de semnat de părinte»** is the sheet for the desk — the volunteer's line
-     and the parent's — and **«Acordul părintelui pe hârtie»** records that the parent signed it (after a question), naming you; the sheet is kept
+     and the parent's on the left, the Association's on the right — and **«Acordul părintelui pe hârtie»** records that the parent signed it (after a question), naming you; the sheet is kept
      by the club. A volunteer entered by hand under 18 needs the parent's name (the address only if you have it: the consent may be on paper); a
      person's age changed to 18 or more clears the parent's data. The CSV and «Toate datele unei persoane» carry the parent too.
      A person already «Confirmat» cannot be changed to an age under 18 in one save: the card says «Acordul părintelui lipsește», and you move them

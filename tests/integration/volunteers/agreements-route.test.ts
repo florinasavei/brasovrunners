@@ -8,6 +8,7 @@ import { legalDocuments } from "@/db/schema/legal-documents";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
+import { DECLARATION_MARGIN, DECLARATION_PAGE, DECLARATION_SIGNATURE_COLUMNS } from "@/modules/registrations/declaration-pdf";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { listVolunteerIdsByName } from "@/modules/volunteers/admin-list";
 import type { AgreementFacts } from "@/modules/volunteers/agreement";
@@ -15,7 +16,7 @@ import { eventAgreementsFileName } from "@/modules/volunteers/agreement-pdf";
 import { DomainError } from "@/shared/errors/domain-error";
 import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
-import { type DrawnRun, drawnRuns } from "../../helpers/pdf-drawn";
+import { type MeasuredRun, measuredRuns } from "../../helpers/pdf-drawn";
 import { pdfContentDigest } from "../../helpers/pdf-content";
 import { roleDescription } from "../../helpers/role-description";
 
@@ -30,12 +31,23 @@ import { roleDescription } from "../../helpers/role-description";
  *   pages of their own file — the accepted copies, the sheets to sign, a minor's parent's sheet while that consent is to come;
  *   `?only=unsigned` the sheets alone; nobody with nothing accepted while no agreement is in force;
  * - one audit row per download, its counts and `only`, never a name;
- * - and the one-person file is byte for byte what it was before its drawing learned to share a document (§758, §768).
+ * - and the one-person file is byte for byte what it was before its drawing learned to share a document (§758, §768) — but for
+ *   the Association's column on the right of every signature block (§NNN), alone and in the event's file alike.
  *
- * The PDF's words are read as `drawnRuns` catches them; the people are fixed rows, every printed value pinned, so the
+ * The PDF's words are read as `measuredRuns` catches them; the people are fixed rows, every printed value pinned, so the
  * one-person files' digests hold from one run to the next.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown }));
+
+/**
+ * The club's legal name, which the Association's column prints (§NNN), fixed and made up (§98) — so the files and their digests
+ * are the same on any machine, whatever its environment says.
+ */
+const LEGAL_NAME = vi.hoisted(() => "Asociația Exemplu");
+vi.mock("@/shared/config/env", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/shared/config/env")>();
+  return { ...actual, env: new Proxy(actual.env, { get: (target, key) => (key === "CLUB_LEGAL_NAME" ? LEGAL_NAME : Reflect.get(target, key)) }) };
+});
 
 vi.mock("@/db/client", () => ({ getDb: () => state.db }));
 vi.mock("@/modules/staff-identity/session", () => ({
@@ -324,15 +336,16 @@ describe("§966 the one-person agreement's file is what it was before every agre
     (his sheet, in English), and the minors — not accepted (the sheet with the parent's line), accepted with the parent's
     consent to come (the copy that says so, and `?for=guardian`'s sheet for the parent) and accepted by both (two entries).
     `pdfContentDigest` is the file with its streams inflated, so the same digest is the same file byte for byte on any one
-    machine's zlib. A deliberate change of the agreement's PDF captures them again; the bundle's refactor changed none.
+    machine's zlib. A deliberate change of the agreement's PDF captures them again; the bundle's refactor changed none. The
+    Association's column on the right of every signature block (§NNN) was one: captured again from the code that draws it.
   */
   const GOLDEN = {
-    acceptedAdult: "0706f8da395cacfd1ba9c2dab87a49c6cb98d8d6e9ce677d2b517227f6686239",
-    notAcceptedAdult: "4dc6ab3a55cdce683a317cd78052c97d3d0e95b340a7ea13afcfe8c21712edfc",
-    minorNotAccepted: "4135c87a2838b0b608e4bc474dfef35acb22e2b27d964c66d6a21b023a62c739",
-    minorGuardianPending: "cd42682de1dd2c57298f50114da536571e293e0b5689d39b5f01634abdb8d3b1",
-    minorGuardianSheet: "f6051accbd8d4af9f6f8d3e97c6a5d18fecb474fa31d2c3b7d8e75823cffab46",
-    minorBothAccepted: "3b167e177344cfb101ad502ee0e06340b7b17697986f8278f8ad0cabc689fc78",
+    acceptedAdult: "fb9afb5627bc36c8957d98aabfc7b6b507c21f7cde3d7025f6b7dc92f6c245cf",
+    notAcceptedAdult: "0da738e2cb42f48e982e0b08a62fd4b706877472e6ef2bd8b3fc70fb821285e5",
+    minorNotAccepted: "57e94a94ff01afe00dde25b1c27a78282e469bc6ff8d14a5e98f017da5cdfb0f",
+    minorGuardianPending: "6b560c72476b0d2fb93db4b8d532a81d43a2b0b61656b97bb0be82299217585a",
+    minorGuardianSheet: "a0046e37f2e68aa333908fad9c630f93fbebcb8b120f54b5747e02c52e348d20",
+    minorBothAccepted: "1d44eca3e5932b622907a9bb206c2d2cb5584db5581001d6d905856d68c85ffd",
   };
 
   it("is byte for byte the same file for an accepted adult, an adult who has not accepted, and a minor in each of the parent's states", async () => {
@@ -361,12 +374,12 @@ async function eventFile(actor: StaffUser | undefined, query = "", id = eventId)
 }
 
 /** One page of a file as it was drawn: every `text()` call on it, in order — the words, where, how wide and how big. */
-type Page = Array<Omit<DrawnRun, "page">>;
+type Page = Array<Omit<MeasuredRun, "page">>;
 
-/** What a route's file draws, page by page (`drawnRuns`: pdfkit writes glyph ids, so the words are caught on their way in). */
+/** What a route's file draws, page by page (`measuredRuns`: pdfkit writes glyph ids, so the words are caught on their way in). */
 async function pagesOf(answer: () => Promise<Response>): Promise<{ response: Response; pages: Page[] }> {
   let response: Response | undefined;
-  const runs = await drawnRuns(async () => {
+  const runs = await measuredRuns(async () => {
     response = await answer();
   });
   const pages: Page[] = [];
@@ -454,9 +467,9 @@ describe("§966 every agreement of an event in one PDF (BR-REQ-060-01)", () => {
     expect(ana).toContain("Acceptat electronic");
     expect(radu).toContain("Semnat pe hârtie, la organizatori; înregistrat de Ana Admin");
     expect(radu).toContain("Acordul părintelui sau tutorelui, Mihai Tânăr, acceptat electronic");
-    // The rest: the sheets, each in the person's own language — the organizer's line beside an adult's, the parent's beside a minor's.
-    expect(cezar).toContain("Pentru organizator (nume și semnătură):");
-    expect(john).toContain("For the organiser (name and signature):");
+    // The rest: the sheets, each in the person's own language — the Association's column beside every one (§NNN), the parent's line under a minor's.
+    expect(cezar).toContain(`Asociația ${LEGAL_NAME} Reprezentant (nume și funcție):`);
+    expect(john).toContain(`The Association ${LEGAL_NAME} Representative (name and position):`);
     expect(dan).toContain("Semnătura părintelui sau tutorelui:");
     // Ioana accepted her own and her mother's consent is still to come: the mother's sheet, as her page's «Acordul părintelui pe hârtie».
     expect(ioana).toContain("Semnătura părintelui sau tutorelui:");
@@ -531,5 +544,67 @@ describe("§966 every agreement of an event in one PDF (BR-REQ-060-01)", () => {
         { only: "unsigned", agreements: 0, accepted: 0, toSign: 0 },
       ]),
     );
+  });
+});
+
+describe("§NNN the Association signs on the right of every agreement, in the event's file and alone (BR-REQ-053-03)", () => {
+  const { signer, host } = DECLARATION_SIGNATURE_COLUMNS;
+  const MIDDLE = DECLARATION_PAGE.width / 2;
+  /** The page's measure: the heading and the version, fingerprint and proof under both columns are set across it. */
+  const TEXT_WIDTH = DECLARATION_PAGE.width - DECLARATION_MARGIN.left - DECLARATION_MARGIN.right;
+  const HEADING = /^(DREPT PENTRU CARE SEMNĂM|IN WITNESS WHEREOF, WE SIGN),$/;
+
+  /** Each signature block of a person's pages: the runs after its heading on its page, above the footer, by column. */
+  function blocksOf(person: Page[]) {
+    return person.flatMap((page) =>
+      page.flatMap((run, index) => {
+        if (!HEADING.test(run.text)) return [];
+        const after = page.slice(index + 1).filter((next) => (next.y ?? 0) < DECLARATION_PAGE.height - DECLARATION_MARGIN.bottom && next.width !== TEXT_WIDTH);
+        return [{ left: after.filter((next) => (next.x ?? 0) < host.x), right: after.filter((next) => (next.x ?? 0) >= host.x) }];
+      }),
+    );
+  }
+
+  it("draws beside each signature block of every person «Asociația», the club's legal name and the representative's three lines past the page's middle, the volunteer's side on the left", async () => {
+    const found = peopleOf((await pagesOf(() => eventFile(staff.ADMIN!))).pages);
+    const order = ["Ana Pop", "cezar Dobre", "Dan Tânărul", "Ioana Mică", "John Smith", "Radu Tânăr"];
+    expect(found).toHaveLength(order.length);
+    for (const [index, person] of found.entries()) {
+      const name = order[index];
+      const english = name === "John Smith";
+      const blocks = blocksOf(person);
+      // One block per entry: Radu's two — his own acceptance and his father's — each with the Association beside it.
+      expect(blocks, name).toHaveLength(name === "Radu Tânăr" ? 2 : 1);
+      for (const block of blocks) {
+        expect(block.right.map((run) => run.text).filter((text) => !/^…+$/.test(text)), name).toEqual(
+          english
+            ? ["The Association", LEGAL_NAME, "Representative (name and position):", "Signature:", "Date:"]
+            : ["Asociația", LEGAL_NAME, "Reprezentant (nume și funcție):", "Semnătura:", "Data:"],
+        );
+        for (const run of block.right) expect(run.x!, `${name}: «${run.text}»`).toBeGreaterThan(MIDDLE);
+        // The volunteer's side: their signature line first, at the margin, every word of it left of the middle.
+        expect(block.left[0]?.text, name).toMatch(/^(Semnătura voluntarului|Volunteer's signature|Semnătura părintelui sau tutorelui):$/);
+        for (const run of block.left) expect((run.x ?? 0) + (run.width ?? run.measured), `${name}: «${run.text}»`).toBeLessThan(MIDDLE);
+      }
+    }
+    // The accepted copies keep the name in its hand on the left; the sheets their dotted lines.
+    const [ana, cezar] = found.map((person) => blocksOf(person)[0]);
+    expect(ana.left.map((run) => run.text)).toContain("Ana Pop");
+    expect(ana.left.some((run) => run.text.startsWith("Semnat electronic la ") && run.width === signer.width)).toBe(true);
+    expect(cezar.left.map((run) => run.text)).toEqual(["Semnătura voluntarului:", expect.stringMatching(/^…+$/), "Data:", expect.stringMatching(/^…+$/)]);
+  });
+
+  it("draws the same column on a person's own file — the copy, the sheet, the parent's sheet", async () => {
+    for (const [person, query] of [
+      [people.ana, ""],
+      [people.john, ""],
+      [people.dan, ""],
+      [people.ioana, "?for=guardian"],
+      [people.radu, ""],
+    ] as const) {
+      const blocks = blocksOf((await pagesOf(() => onePerson(person, query))).pages);
+      expect(blocks.length).toBeGreaterThan(0);
+      for (const block of blocks) expect(block.right.map((run) => run.text)).toContain(LEGAL_NAME);
+    }
   });
 });

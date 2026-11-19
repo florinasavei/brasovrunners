@@ -21,6 +21,10 @@ import { COLOR, LOGO_HEIGHT_SHARE } from "@/theme/brand";
  *
  * `pdfkit` as in `legal-documents/pdf.ts`; Roboto for the text because the standard fonts
  * cannot spell ș and ț. Pure over its inputs: every label arrives translated.
+ *
+ * **Signed by both parties** (§NNN): a caller whose text the host organisation signs too — the volunteer agreement —
+ * passes `labels.hostSignature`, and every signature block is two columns, the signer's rows on the left and the
+ * host's on the right (`drawSignatureColumns`). Every other caller passes none and draws its block as it always did.
  */
 export type DeclarationEntry = {
   title: string;
@@ -93,6 +97,20 @@ export type DeclarationEntry = {
   textHash?: string | null;
 };
 
+/**
+ * The second party of a text signed by both on paper (§NNN): the host organisation's column, drawn on the right of the
+ * signer's — the party it is, its name, and the lines its representative fills in by hand. Words and a name only: the
+ * renderer draws the column, the caller says what it holds.
+ */
+export type DeclarationHostSignature = {
+  /** The party, at the column's head: «Asociația» / "The Association". */
+  heading: string;
+  /** Its name under the heading — the club's legal name, as the caller reads it from the club's facts, never a literal. */
+  name: string;
+  /** The lines filled in by hand, top to bottom, each a label over a dotted line: «Reprezentant (nume și funcție)», «Semnătura», «Data». */
+  lines: readonly string[];
+};
+
 export type DeclarationPdfInput = {
   /** One for a runner's copy or the blank form; every signed one of an event for the archive. */
   entries: readonly DeclarationEntry[];
@@ -135,6 +153,14 @@ export type DeclarationPdfInput = {
     signedElectronically: (when: string) => string;
     /** «IP» (§771): the word before the address in the trace line. */
     ip: string;
+    /**
+     * The volunteer agreement's second party (§NNN; the owner, 2026-11-19: «să las în dreapta și „Asociația” ca să printăm
+     * și să semnăm fizic»): with it every entry's signature block is two columns under «DREPT PENTRU CARE SEMNĂM» — the
+     * signer's side on the left, exactly the rows it always had, and this column on the right — with the version, the
+     * fingerprint and the proof under both. Absent — the race declaration, its blank form, the group run's — the block is
+     * drawn down the left margin as it always was (`tests/unit/registrations/declaration-pdf-unchanged.test.ts`).
+     */
+    hostSignature?: DeclarationHostSignature;
   };
 };
 
@@ -173,6 +199,17 @@ const PAGE = DECLARATION_PAGE;
 const MARGIN = DECLARATION_MARGIN;
 const TEXT_WIDTH = PAGE.width - MARGIN.left - MARGIN.right;
 const BLANK_LINE = "………………………………………………";
+
+/**
+ * The signature block in two columns (§NNN): the signer's from the left margin, the host's from past the page's middle, two
+ * equal widths and a gutter between — exported so the layout test measures against these rather than copies.
+ */
+const SIGNATURE_GUTTER = 24;
+const SIGNATURE_COLUMN_WIDTH = (TEXT_WIDTH - SIGNATURE_GUTTER) / 2;
+export const DECLARATION_SIGNATURE_COLUMNS = {
+  signer: { x: MARGIN.left, width: SIGNATURE_COLUMN_WIDTH },
+  host: { x: MARGIN.left + SIGNATURE_COLUMN_WIDTH + SIGNATURE_GUTTER, width: SIGNATURE_COLUMN_WIDTH },
+} as const;
 
 /**
  * Which version of which text an entry carries, under its title (§499): «Versiunea 3, în vigoare
@@ -470,6 +507,11 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
   const twoSigners = signature ? signature.minor !== null : Boolean(entry.forMinor);
   // The trace of an electronic signature (§771) is one more small line, or two with a long browser string: the room is asked for with the block.
   const traceLine = declarationTraceLine(entry, labels);
+  // Signed by the host too (§NNN): the two-column block. Without a host — every text but the volunteer agreement — what follows, as it always was.
+  if (labels.hostSignature) {
+    drawSignatureColumns(doc, entry, labels, labels.hostSignature, traceLine);
+    return;
+  }
   const traceHeight = traceLine ? doc.font("body").fontSize(8).heightOfString(traceLine, { width: TEXT_WIDTH }) + 8 : 0;
   const blockHeight = (twoSigners ? 260 : 170) + traceHeight;
   if (doc.y + blockHeight > PAGE.height - MARGIN.bottom) doc.addPage();
@@ -505,20 +547,10 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
     doc.x = MARGIN.left;
   };
 
-  if (twoSigners) {
-    // The minor first, as the text names them first; then the parent or guardian who declares
-    // with them. A document line only where a document was asked (or on the blank form).
-    const minor = signature?.minor ?? null;
-    row(labels.minorSignature, minor ? minor.typedName : null, Boolean(minor));
-    if (!entry.noIdDocument && (signature ? minor !== null && minor.idDocument !== null : true)) row(labels.idDocument, minor ? minor.idDocument : null);
-    doc.moveDown(0.4);
-    row(labels.guardianSignature, signature ? signature.typedName : null, Boolean(signature));
-    if (!entry.noIdDocument && (signature ? signature.idDocument !== null : true)) row(labels.idDocument, signature ? signature.idDocument : null);
-  } else {
-    row(entry.signatureLabel ?? labels.signature, signature ? signature.typedName : null, Boolean(signature));
-    if (!entry.noIdDocument && (signature ? signature.idDocument !== null : true)) row(labels.idDocument, signature ? signature.idDocument : null);
+  for (const item of signerRows(entry, labels)) {
+    if (item === "gap") doc.moveDown(0.4);
+    else row(item.label, item.value, item.hand);
   }
-  row(labels.date, signature ? signature.signedAt : null);
   doc.moveDown(0.4);
   // The electronic signature's trace, small, straight under the signature and its date: when, from which address, in which browser (§771).
   if (traceLine) {
@@ -538,4 +570,167 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
       doc.y,
       { width: TEXT_WIDTH },
     );
+}
+
+/**
+ * The signer's rows of a signature block, top to bottom, for both shapes of block: the signature — or, signed by two (§330),
+ * the minor's and then the parent's or guardian's with a little room between (`"gap"`) — each with its identity-document line
+ * where one is asked (on the blank form, always; never where the text asks none, §758), then the date. `hand` is a typed name,
+ * set in the handwriting face; a null value is a blank, on the form printed to sign by hand. Pure.
+ */
+type SignerRow = { label: string; value: string | null; hand: boolean } | "gap";
+
+function signerRows(entry: DeclarationEntry, labels: DeclarationPdfInput["labels"]): SignerRow[] {
+  const signature = entry.signature;
+  const twoSigners = signature ? signature.minor !== null : Boolean(entry.forMinor);
+  const rows: SignerRow[] = [];
+  if (twoSigners) {
+    // The minor first, as the text names them first; then the parent or guardian who declares
+    // with them. A document line only where a document was asked (or on the blank form).
+    const minor = signature?.minor ?? null;
+    rows.push({ label: labels.minorSignature, value: minor ? minor.typedName : null, hand: Boolean(minor) });
+    if (!entry.noIdDocument && (signature ? minor !== null && minor.idDocument !== null : true)) rows.push({ label: labels.idDocument, value: minor ? minor.idDocument : null, hand: false });
+    rows.push("gap");
+    rows.push({ label: labels.guardianSignature, value: signature ? signature.typedName : null, hand: Boolean(signature) });
+    if (!entry.noIdDocument && (signature ? signature.idDocument !== null : true)) rows.push({ label: labels.idDocument, value: signature ? signature.idDocument : null, hand: false });
+  } else {
+    rows.push({ label: entry.signatureLabel ?? labels.signature, value: signature ? signature.typedName : null, hand: Boolean(signature) });
+    if (!entry.noIdDocument && (signature ? signature.idDocument !== null : true)) rows.push({ label: labels.idDocument, value: signature ? signature.idDocument : null, hand: false });
+  }
+  rows.push({ label: labels.date, value: signature ? signature.signedAt : null, hand: false });
+  return rows;
+}
+
+/** A column of the two-column signature block (§NNN): where it starts and how wide it is. */
+type SignatureColumn = { readonly x: number; readonly width: number };
+
+/**
+ * The two-column block's rhythm (§NNN), the single-column block's own (`drawEntry`): a 10.5-point line of words, 22 points
+ * from one row to the next, 30 under a name in its hand beside its label; a name under its label starts 8 points under the
+ * label's top, at 26 points, smaller until it fits its column — a little lower as it gets smaller, so its letters keep clear
+ * of the label — never under 14, where a longer one wraps inside the column. A line to fill in by hand is its label and, 22
+ * points under the label's top, a dotted line across the column: room to write above the dots, the space a signature takes.
+ * The small lines under a signature are 5 points apart, as `moveDown(0.4)` sets them; the lines under both columns, 8.
+ */
+const COLUMN = { line: 13, row: 22, handRow: 30, handSize: 26, handMinSize: 14, handIndent: 14, blankDrop: 22, gap: 5, tailGap: 8 } as const;
+
+/** The dotted line to write on: as many of the blank's dots as fit `width`, at the body's size. */
+function dotsFor(doc: PDFKit.PDFDocument, width: number): string {
+  const dot = BLANK_LINE[0];
+  doc.font("body").fontSize(10.5);
+  let dots = dot.repeat(Math.max(1, Math.floor(width / doc.widthOfString(dot))));
+  while (dots.length > 1 && doc.widthOfString(dots) > width) dots = dots.slice(0, -1);
+  return dots;
+}
+
+/**
+ * One row of a signature column (§NNN), measured — and drawn with `draw` — from its top `y`: the label, and its value beside it
+ * when that fits inside the column, else under it inside the column. Returns where the next row starts. The one arithmetic
+ * measures and draws, so the room the block asks for before drawing is the room it draws, and nothing it sets reaches past
+ * its column: a value under its label is wrapped or set smaller to the column's width.
+ */
+function columnRow(doc: PDFKit.PDFDocument, column: SignatureColumn, y: number, row: Exclude<SignerRow, "gap">, draw: boolean): number {
+  const caption = `${row.label}:`;
+  doc.font("body").fontSize(10.5);
+  const captionWidth = doc.widthOfString(caption);
+  // Every label is a few of the platform's words, well inside a column; one that were not would wrap inside it, its value under it.
+  const oneLine = captionWidth <= column.width;
+  const captionBottom = oneLine ? y + COLUMN.line : y + doc.heightOfString(caption, { width: column.width });
+  if (draw) doc.fillColor(COLOR.ink).text(caption, column.x, y, oneLine ? { lineBreak: false } : { width: column.width });
+  const besideX = column.x + captionWidth + 8;
+  const room = oneLine ? column.x + column.width - besideX : 0;
+
+  if (row.value === null) {
+    // To fill in by hand: the dotted line under the label, across the column.
+    const top = captionBottom - COLUMN.line + COLUMN.blankDrop;
+    if (draw) doc.font("body").fontSize(10.5).fillColor(COLOR.inkMuted).text(dotsFor(doc, column.width), column.x, top, { lineBreak: false });
+    return top + COLUMN.row;
+  }
+  if (row.hand) {
+    // The typed name in the hand the page showed it in, on its label's baseline when it fits beside it (`drawEntry`'s row)…
+    if (doc.font("hand").fontSize(COLUMN.handSize).widthOfString(row.value) <= room) {
+      if (draw) doc.fillColor(COLOR.blueInk).text(row.value, besideX, y - 10, { lineBreak: false });
+      return y + COLUMN.handRow;
+    }
+    // …else on the line under it, at the size that fits the column, and wrapped inside it at the smallest.
+    const width = column.width - COLUMN.handIndent;
+    let size: number = COLUMN.handSize;
+    while (size > COLUMN.handMinSize && doc.font("hand").fontSize(size).widthOfString(row.value) > width) size -= 1;
+    const fits = doc.font("hand").fontSize(size).widthOfString(row.value) <= width;
+    const top = captionBottom - COLUMN.line + 8 + (COLUMN.handSize - size) / 2;
+    const height = doc.heightOfString(row.value, { width });
+    if (draw) doc.fillColor(COLOR.blueInk).text(row.value, column.x + COLUMN.handIndent, top, fits ? { lineBreak: false } : { width });
+    return top + height + COLUMN.gap;
+  }
+  // Plain words — the date: beside the label, or under it wrapped inside the column.
+  doc.font("body").fontSize(10.5);
+  if (doc.widthOfString(row.value) <= room) {
+    if (draw) doc.fillColor(COLOR.ink).text(row.value, besideX, y, { lineBreak: false });
+    return y + COLUMN.row;
+  }
+  const height = doc.heightOfString(row.value, { width: column.width });
+  if (draw) doc.fillColor(COLOR.ink).text(row.value, column.x, captionBottom, { width: column.width });
+  return captionBottom + height + COLUMN.row - COLUMN.line;
+}
+
+/**
+ * The signer's column (§NNN): exactly the rows the single-column block draws (`signerRows`), then, small, the electronic
+ * signature's trace straight under the signature and its date (§771), and how it was signed — the signer's own side, every
+ * word of it inside the column. Returns its bottom.
+ */
+function signerColumn(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: DeclarationPdfInput["labels"], traceLine: string | undefined, column: SignatureColumn, top: number, draw: boolean): number {
+  let y = top;
+  for (const item of signerRows(entry, labels)) y = item === "gap" ? y + COLUMN.gap : columnRow(doc, column, y, item, draw);
+  for (const [words, size] of [
+    [traceLine, 8],
+    [entry.signature?.method, 8.5],
+  ] as const) {
+    if (!words) continue;
+    y += COLUMN.gap;
+    const height = doc.font("body").fontSize(size).heightOfString(words, { width: column.width });
+    if (draw) doc.fillColor(COLOR.inkMuted).text(words, column.x, y, { width: column.width });
+    y += height;
+  }
+  return y;
+}
+
+/** The host's column (§NNN): the party, its name under it, and each of its representative's lines to fill in by hand. Returns its bottom. */
+function hostColumn(doc: PDFKit.PDFDocument, host: DeclarationHostSignature, column: SignatureColumn, top: number, draw: boolean): number {
+  let y = top;
+  for (const [words, face, after] of [
+    [host.heading, "bold", 1],
+    [host.name, "body", 8],
+  ] as const) {
+    const height = doc.font(face).fontSize(10.5).heightOfString(words, { width: column.width });
+    if (draw) doc.fillColor(COLOR.ink).text(words, column.x, y, { width: column.width });
+    y += height + after;
+  }
+  for (const line of host.lines) y = columnRow(doc, column, y, { label: line, value: null, hand: false }, draw);
+  return y;
+}
+
+/**
+ * The signature block of a text the host signs too (§NNN; the owner, 2026-11-19, of the volunteer agreements printed for the
+ * race: «să las în dreapta și „Asociația” ca să printăm și să semnăm fizic»): «DREPT PENTRU CARE SEMNĂM» across the page —
+ * two parties sign — the signer's column on the left and the host's on the right from the same line, and under the taller of
+ * the two, across the page, the version, the fingerprint and the proof of signing, whose 64-character hash needs the page's
+ * width. Measured whole before a line of it is drawn, so it moves to a new page together, as the single-column block does.
+ */
+function drawSignatureColumns(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: DeclarationPdfInput["labels"], host: DeclarationHostSignature, traceLine: string | undefined): void {
+  const { signer, host: hostBox } = DECLARATION_SIGNATURE_COLUMNS;
+  // About a line of the text above, and under the heading — the single-column block's `moveDown(1)` and `moveDown(0.8)`.
+  const above = 12;
+  const underHeading = 10;
+  const tail = [`${labels.version} ${entry.version} · sha256 ${entry.contentSha256}`, declarationProofLine(entry, labels)].filter(Boolean).join("\n");
+  const headingHeight = doc.font("bold").fontSize(11).heightOfString(labels.whereuponTogether, { width: TEXT_WIDTH });
+  const columnsHeight = Math.max(signerColumn(doc, entry, labels, traceLine, signer, 0, false), hostColumn(doc, host, hostBox, 0, false));
+  const tailHeight = doc.font("body").fontSize(8.5).heightOfString(tail, { width: TEXT_WIDTH });
+  if (doc.y + above + headingHeight + underHeading + columnsHeight + COLUMN.tailGap + tailHeight > PAGE.height - MARGIN.bottom) doc.addPage();
+
+  let y = doc.y + above;
+  doc.font("bold").fontSize(11).fillColor(COLOR.ink).text(labels.whereuponTogether, MARGIN.left, y, { width: TEXT_WIDTH });
+  y += headingHeight + underHeading;
+  y = Math.max(signerColumn(doc, entry, labels, traceLine, signer, y, true), hostColumn(doc, host, hostBox, y, true)) + COLUMN.tailGap;
+  doc.font("body").fontSize(8.5).fillColor(COLOR.inkMuted).text(tail, MARGIN.left, y, { width: TEXT_WIDTH });
+  doc.x = MARGIN.left;
 }

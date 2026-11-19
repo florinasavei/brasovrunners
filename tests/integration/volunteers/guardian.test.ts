@@ -14,7 +14,7 @@ import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import type { OutboxRow } from "@/modules/notifications/outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { acceptVolunteerAgreementByLink, mintVolunteerAgreementLink, readVolunteerAgreementLink, readAgreementFacts } from "@/modules/volunteers/agreement";
-import { renderVolunteerAgreementPdf } from "@/modules/volunteers/agreement-pdf";
+import { agreementHostName, renderVolunteerAgreementPdf } from "@/modules/volunteers/agreement-pdf";
 import { ageOn } from "@/modules/registrations/domain/age";
 import { agreementMinimumAge, agreementRolesStamp, guardianStandingOf } from "@/modules/volunteers/domain/volunteer";
 import {
@@ -733,11 +733,13 @@ describe("§768 volunteers under eighteen and their guardian", () => {
       expect(text).not.toContain("Acceptat electronic");
     });
 
-    it("an adult's PDF is unchanged: the organizer's line, no clause about a minor", async () => {
+    it("an adult's sheet has the volunteer's line alone beside the Association's column (§NNN), no parent's line and no clause about a minor", async () => {
       const { event, role } = await seedEvent();
       const adult = (await changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleIds: [role.id], name: "Ion", email: "ion@example.test", phone: "+40712345680", note: "", birthDate: aged(40) } }, NOW)).volunteer.id;
       const text = await words(adult);
-      expect(text).toContain("Pentru organizator (nume și semnătură):");
+      expect(text).toContain("Semnătura voluntarului:");
+      expect(text).toContain(`Asociația ${agreementHostName()} Reprezentant (nume și funcție):`);
+      expect(text).not.toContain("Pentru organizator (nume și semnătură):");
       expect(text).not.toContain("Semnătura părintelui sau tutorelui");
       expect(text).not.toContain("Voluntarul fiind minor");
     });
