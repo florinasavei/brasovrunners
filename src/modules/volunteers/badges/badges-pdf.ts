@@ -160,10 +160,16 @@ export async function renderBadgeSheet(input: BadgeSheetInput): Promise<Buffer> 
   const drawPrintedName = (name: string, layout: BadgeLayout, x: number, y: number) => {
     const width = layout.content.width - 2 * layout.pad;
     const ems = Math.max(bibTitleWidth(name), 0.01);
-    const size = Math.max(6, Math.min(layout.writing.height * 0.5, width / ems));
+    // Where «Nume:» goes: above the watermark (§965 stands it under «Nume:»'s line), so the name never sits on the logo — unless the
+    // logo leaves less than a third of the writing area above it (a size the club typed, §969); then the area's middle, over it.
+    const mark = layout.footerLogo;
+    const above = mark ? mark.top - layout.writing.top : 0;
+    const overLogo = !mark || above < layout.writing.height / 3;
+    const room = overLogo ? layout.writing : { top: layout.writing.top, height: above };
+    const size = Math.max(6, Math.min(room.height * (overLogo ? 0.5 : 0.75), width / ems));
     doc.font("bold").fontSize(size).fillColor(COLOR.ink);
     const left = x + layout.content.left + layout.pad + (width - doc.widthOfString(name)) / 2;
-    const top = y + layout.writing.top + (layout.writing.height - size) / 2;
+    const top = y + room.top + (room.height - size) / 2;
     doc.text(name, left, top, { lineBreak: false });
   };
 
