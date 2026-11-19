@@ -66,7 +66,7 @@ describe("§NNN a column a phone's block draws first", () => {
   });
 
   it("reads in the columns' order when no column says so", () => {
-    const html = render(COLUMNS.map(({ phoneFirst: _first, ...column }) => column));
+    const html = render(COLUMNS.map((column) => ({ ...column, phoneFirst: undefined })));
     const phone = html.slice(html.lastIndexOf("<ul"));
     expect(order(phone, labels)).toEqual(labels);
   });

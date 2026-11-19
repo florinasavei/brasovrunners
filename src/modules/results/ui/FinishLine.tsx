@@ -372,8 +372,8 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
     window.addEventListener("online", wake);
     window.addEventListener("pageshow", wake);
     document.addEventListener("visibilitychange", shown);
+    // A kept moment gone stale while the page was closed is dropped by the first tick, a second from now: never in this body.
     askClock();
-    sweepKept();
     void pump();
     return () => {
       clearInterval(tick);

@@ -35,9 +35,10 @@ const TAB_GLYPH = {
  * The house's row of sub-tabs (`SubNav`, §360): plain links drawn on the server, the current one marked (`aria-current`), never
  * on paper. Each carries the event chosen on the page (the desk's select; on a results page, the page's own event); with none
  * chosen the desk, the finish line and the list pick their default as the desk does, and «Clasament», which has no page without
- * an event, and «Tombolă», which asks the chosen event whether it holds a raffle, are not drawn. A tab whose page the viewer's role cannot open is not drawn either — «Clasament» is
- * `canEnterResults`', «Cronometrare» `canRecordFinishes`', «Tombolă» `canTakeRaffleList`' and only for an event that holds a
- * raffle (one read of the event's own switch) — and every page still asserts its own gate on the server (BR-REQ-060-01).
+ * an event, and «Tombolă», which asks the chosen event whether it holds a raffle, are not drawn. A tab whose page the viewer's
+ * role cannot open is not drawn either — «Clasament» is `canEnterResults`', «Cronometrare» `canRecordFinishes`', «Tombolă»
+ * `canTakeRaffleList`' and only for an event that holds a raffle (one read of the event's own switch) — and every page still
+ * asserts its own gate on the server (BR-REQ-060-01).
  *
  * **Five entries are wider than a phone** (about 360 pixels on their short words alone, in a 288-pixel row), so the row is not
  * `fits`: it carries `SubNavCurrent` (§731), which scrolls the current entry into view — «Lucruri de adus», the last, included —,
