@@ -12018,6 +12018,15 @@
       "edit": "Modifică punctul"
     },
     "badges": {
+      "named": {
+        "title": "Ecusoane cu nume",
+        "aside": "o linie = un ecuson",
+        "intro": "Un ecuson pe linie, de exemplu „ORGANIZATOR; Dany; albastru”. Lista pornește cu voluntarii confirmați: schimbă, adaugă sau șterge linii. Mărimea, antetul și logo-ul vin din designul de mai sus.",
+        "label": "Ecusoanele, câte unul pe linie",
+        "help": "Cuvântul de pe bandă; Prenume; culoare (opțional: {colours} sau un cod #RRGGBB). Fără „;”, linia e doar prenumele. Lista nu se salvează: se tipărește ce e scris acum.",
+        "empty": "Niciun voluntar confirmat încă: scrie liniile de mână.",
+        "download": "Descarcă PDF cu nume"
+      },
       "backToEvent": "Înapoi la eveniment",
       "title": "Ecusoane pentru voluntari — {event}",
       "intro": "Ecusoanele sunt benzi mici și lungi, fără nume tipărit: numele se scrie cu markerul. Implicit e un singur ecuson pentru toți; dacă vrei, fiecare rol are ecusonul lui, pe banda lui.",

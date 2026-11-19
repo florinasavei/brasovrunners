@@ -12018,6 +12018,15 @@
       "edit": "Edit the point"
     },
     "badges": {
+      "named": {
+        "title": "Badges with names",
+        "aside": "one line = one badge",
+        "intro": "One badge per line, for example “ORGANISER; Dany; blue”. The list starts with the confirmed volunteers: change, add or delete lines. The size, the header and the logo come from the design above.",
+        "label": "The badges, one per line",
+        "help": "Word on the band; First name; colour (optional: {colours} or a #RRGGBB code). Without “;”, the line is just the first name. The list is not saved: what is written now is printed.",
+        "empty": "No confirmed volunteers yet: write the lines by hand.",
+        "download": "Download PDF with names"
+      },
       "backToEvent": "Back to the event",
       "title": "Volunteer badges — {event}",
       "intro": "Badges are small, long strips with no printed name: the name is written with a marker. By default there is one badge for every volunteer; if you want, each role can have its own, on its coloured band.",
