@@ -1,6 +1,7 @@
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { DomainError } from "@/shared/errors/domain-error";
 import { confirmationPhrase } from "./confirmation";
+import { TEAM_AGREEMENT_KEY } from "./keys";
 
 /**
  * The three presses over many versions at once on `/admin/legal` (§532): regenerate every text
@@ -72,9 +73,16 @@ export function regenerationOutcome(
  *   would never put it in force (`findCurrentApprovedDocument` takes the highest): an approval
  *   that changes nothing on the site is a record that misleads;
  * - `placeholders` — a club fact is still a `<PLACEHOLDER>`: a notice that reads
- *   `<ADRESA SEDIULUI>` is not a notice, the refusal `approvePlatformTemplates` makes (§132).
+ *   `<ADRESA SEDIULUI>` is not a notice, the refusal `approvePlatformTemplates` makes (§132);
+ * - `alone` — the team's undertaking (`STAFF_DATA_AGREEMENT`, §1006), a draft the press would
+ *   otherwise approve: from the moment a version of it is in force, every colleague below the
+ *   Administrator is stopped at their next request until they accept it — on race day, the whole
+ *   desk. So it is approved on its own, on its draft's page («Aprobă și publică»), read and pressed
+ *   for itself, never as a side effect of a press about the participants' texts — as the one press
+ *   leaves it out (`PLATFORM_APPROVAL_KEYS`). «Regenerează din șabloane» still makes its draft: a
+ *   draft puts nothing in force.
  */
-export type DraftApprovalOutcome = "ready" | "superseded" | "behind" | "placeholders";
+export type DraftApprovalOutcome = "ready" | "superseded" | "behind" | "placeholders" | "alone";
 
 export function draftApprovalOutcome(
   draft: BatchVersion,
@@ -85,6 +93,8 @@ export function draftApprovalOutcome(
   if (ofKey.some((row) => !row.isApproved && row.version > draft.version)) return "superseded";
   if (ofKey.some((row) => row.isApproved && row.withdrawnAt === null && row.version > draft.version)) return "behind";
   if (hasPlaceholders) return "placeholders";
+  // Last, so a draft held for another reason says that one: the undertaking is held only where it would be approved.
+  if (draft.key === TEAM_AGREEMENT_KEY) return "alone";
   return "ready";
 }
 

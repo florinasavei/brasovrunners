@@ -77,7 +77,7 @@ const BANNER_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "RESULTS_NO
  * a page of their own under the event like its bibs and its messages — the event editor is long enough, and its «Înscrieri» card links here.
  *
  * ONE form, ONE «Salvează tot clasamentul» (§791's model): above the lines, «Importă din CSV» — a file or pasted text whose rows fill the
- * boxes and save nothing; then a line for every registered runner who holds a race number (checked in first), each with «Timp», «Status»,
+ * boxes and save nothing; then a line for every registered runner who holds a race number (the elites first, then the checked in), each with «Timp», «Status»,
  * «Timp cip» and «Notă», and the position the last save gave; then the runners the club types by hand. Each line's «Șterge» is the page's
  * one small form beside, asked first. The Administrator's tick «Clasamentul e public pe pagina evenimentului» is a form of its own: the
  * disclosure has its own gate (the privacy notice in force must describe the results) and its own audit row, and does not ride on a save.

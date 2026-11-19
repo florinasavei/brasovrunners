@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V4.77-2026-11-19`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V4.80-2026-11-20`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -989,7 +989,7 @@ gun and a clock since it.
    nothing either, and the page then says who gave the start and when. The public page, the emails and the checkpoints keep
    the planned times.
 2. **Each finisher.** An elite: press their button at the top (the bib's label large, the name under it). Anyone else:
-   type the bib's number and press **«Sosit»** (or Enter) — the box empties at once. A bunch: «Prinde timpul» once per
+   type the bib's number and press **«Sosit»** (or Enter) — the box empties at once. A bunch: «Finish» once per
    runner, then the numbers in order; each takes the oldest caught moment. Every press is stamped with its own moment on
    the server's clock (the phone's wall clock and an offset measured by a round trip, so a locked screen or a wrong clock
    changes nothing), saved at once, and «Ultimii sosiți» names who entered it. Without signal the presses wait on the

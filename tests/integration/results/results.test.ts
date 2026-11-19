@@ -561,6 +561,21 @@ describe("§808 the delete and the export", () => {
     // The fingerprint is a short hash, never the rows.
     expect(view.fingerprint).toMatch(/^[0-9a-f]{16}$/);
   });
+
+  it("reads the elites first, then the checked-in, then by number; an ambassador alone keeps the runners' order", async () => {
+    const { bia, dan, eli } = await field();
+    // Bia (checked in) and Dan (not) are marked «Elită»; Eli is an ambassador only — a label that changes nothing (§949).
+    await db.update(registrations).set({ elite: true }).where(eq(registrations.id, bia.id));
+    await db.update(registrations).set({ elite: true }).where(eq(registrations.id, dan.id));
+    await db.update(registrations).set({ ambassador: true }).where(eq(registrations.id, eli.id));
+    const view = await readEventResults(db, staff.ADMIN!, raceId);
+    expect(view.registered.map((runner) => [runner.bibNumber, runner.elite, runner.checkedIn])).toEqual([
+      [102, true, true],
+      [103, true, false],
+      [101, false, true],
+      [104, false, false],
+    ]);
+  });
 });
 
 describe("§808 the public name is the public list's rule, and one rule more: the notice line", () => {

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.77-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.80-2026-11-20 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.77-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.80-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1679,7 +1679,7 @@ themselves are §808's: one row per race number, ranked from the live answers, p
   record (`failed`, logged) waits out a backoff while the ones after it go, and is tried again until the server answers
   it — never given up, a later press of its number waiting behind it; one whose request hangs, neither answered nor
   failed, is still awaited, and after ten seconds the line says the signal is weak (`FINISH_PRESS_SLOW_MS`); a site
-  deployed under the page asks for a reload. **«⏱ Prinde timpul»** keeps one moment a press, each account its own, each
+  deployed under the page asks for a reload. **«⏱ Finish»** keeps one moment a press, each account its own, each
   chip saying its age; the next number or elite takes the oldest — but a moment older than ten minutes
   (`KEPT_TIME_MAX_AGE_MS`, `staleKept`) is no bunch any more: it is dropped when the line is read or pressed, and one
   line says its time, to be written on paper.
@@ -2114,7 +2114,7 @@ declaration. Acceptance evidence hashes the same way for all three.
 legal_documents
 - id
 - key PRIVACY_NOTICE|TERMS|EVENT_DECLARATION|EVENT_DECLARATION_ROAD|GROUP_RUN_DECLARATION_ASPHALT
-      |GROUP_RUN_DECLARATION_TRAIL|VOLUNTEER_AGREEMENT|RAFFLE_RULES
+      |GROUP_RUN_DECLARATION_TRAIL|VOLUNTEER_AGREEMENT|RAFFLE_RULES|STAFF_DATA_AGREEMENT
 - version integer
 - effective_at
 - is_approved boolean
@@ -2152,6 +2152,19 @@ language, `signedTextHash` over the text with its blanks filled and the blanks t
 one more reliance on the version (`ON DELETE RESTRICT`, counted on the legal list). No door of the raffle's sign-up opens
 until a version is in force in every language **and** the privacy notice in force names `{{raffle}}` in every language
 (`describesRaffle`, `noticeDescribesRaffle`, the cached twins in `public-cache/reads.ts`); «Din oficiu» needs neither.
+
+**«Angajament de confidențialitate și protecția datelor pentru echipă»** (`STAFF_DATA_AGREEMENT`, 2026-11-19, `DECISIONS.md`
+§1006; its value and its acceptances' table in migration `0221`, which names the value nowhere else) is what every colleague
+below the Administrator accepts, once per version, before the backoffice answers them (§13.1): the platform's template in
+both languages (`templates/team-agreement.ts` — the club's authority, GDPR art. 29 and 32(4); the data only for the role's
+tasks; confidentiality during and after the role; no copies beyond the task; the printed lists; the session; incidents;
+access withdrawn), the club's four facts as visible `<PLACEHOLDER>`s and no merge field. Approved in `/admin/legal` **on
+its own** — never by the one press (`PLATFORM_APPROVAL_KEYS` leaves it out) nor by «Aprobă ciornele», which holds its
+draft back even when «Regenerează din șabloane» made it with the others (`draftApprovalOutcome`'s `alone`) — and **never
+seeded** on any environment (`NEVER_SEEDED_KEYS`): a version in force gates the whole team. An acceptance
+(`staff_team_agreement_acceptances`, one per account and version) keeps the version, its hash, the language, the name
+typed, `signedTextHash`, the moment, the IP address and the browser; `RESTRICT` on the version, counted on the legal
+list; `CASCADE` with the account.
 
 Writing, and what may be undone (`DECISIONS.md` §46 and §53, BR-REQ-053-02):
 
@@ -2680,6 +2693,19 @@ its `staff_user_permissions` in one query, on every request, so a withdrawn gran
 next request exactly as a changed role does; the development switcher takes the same path.
 `requireStaffCapability(predicate)` hands the predicate that actor, never its role alone, and an
 actor read without its grants holds none — a forgotten read refuses, it never opens.
+
+**The team's undertaking is asserted in `requireStaff` (`DECISIONS.md` §1006).** While an approved version of
+`STAFF_DATA_AGREEMENT` is in force (§12.5), a colleague `mustAcceptTeamAgreement` names — every backoffice role below
+`ADMIN` — who has not accepted *that* version is answered by nothing of the backoffice: a page being drawn (the proxy's
+`x-br-path`, no `next-action` header) is sent to `/admin/acord?returnTo=<the page>`, a same-site path only; a Server
+Action and a route handler are refused with `FORBIDDEN`, the reason saying to accept the undertaking. The staff preview
+asks the same through `assertTeamAgreementAccepted`. The admin and `/devs` layouts ask `teamAgreementOwedFor` and only
+draw the shell bare while it is owed: **a layout never redirects for it** — the client router keeps a layout's redirect
+with the layout and replays it on every navigation beneath it, `/admin/acord` included (a loop the end-to-end run met from
+the sign-in), and Next tells neither a layout nor the proxy whether a page is drawn for the router. The page's own
+`requireStaff` sends the reader, a page being fetched afresh on every navigation. Only `/admin/acord` and its action ask
+`requireStaffBeforeTeamAgreement()` — the staff session before the undertaking —, and sign-out asks nothing. No version in
+force, no gate; a new version is asked once more.
 
 ### 13.2 Email action tokens
 

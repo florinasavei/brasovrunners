@@ -66,6 +66,20 @@ describe("draftApprovalOutcome", () => {
     expect(draftApprovalOutcome(older, [older, approved], false)).toBe("behind");
     expect(draftApprovalOutcome(older, [older, { ...approved, withdrawnAt: new Date() }], false)).toBe("ready");
   });
+
+  it("§1006 holds the team's undertaking back where it would be approved: alone, never with the other drafts", () => {
+    // A draft the press would approve: never, it is approved on its own page — a version in force stops the whole team.
+    const team = row({ id: "t1", version: 1, key: "STAFF_DATA_AGREEMENT" });
+    expect(draftApprovalOutcome(team, [team], false)).toBe("alone");
+    // Held for another reason first, it says that one: the reason the club can act on.
+    const teamNewer = row({ id: "t2", version: 2, key: "STAFF_DATA_AGREEMENT" });
+    expect(draftApprovalOutcome(team, [team, teamNewer], false)).toBe("superseded");
+    expect(draftApprovalOutcome(teamNewer, [team, teamNewer], true)).toBe("placeholders");
+    expect(draftApprovalOutcome(teamNewer, [team, teamNewer], false)).toBe("alone");
+    // Every other text of the catalogue, unchanged.
+    const raffle = row({ id: "r1", version: 1, key: "RAFFLE_RULES" });
+    expect(draftApprovalOutcome(raffle, [raffle, team], false)).toBe("ready");
+  });
 });
 
 describe("deletionOrder", () => {

@@ -480,7 +480,7 @@ export type ResultRunner = {
 
 export type EventResultsView = {
   event: EventFacts;
-  /** Registered runners with a race number — checked-in first, then by number — each with its result when it has one. */
+  /** Registered runners with a race number — the elites first, then the checked-in, then by number — each with its result when it has one. */
   registered: ResultRunner[];
   /** Rows no registration holds the number of: typed by hand, or left nameless by an erased registration's. */
   typed: ResultRunner[];
@@ -586,7 +586,8 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
       result: row ? resultOf(row, rankedOf(row), staffNames) : null,
     });
   }
-  registered.sort((a, b) => Number(b.checkedIn) - Number(a.checkedIn) || a.bibNumber - b.bibNumber);
+  // The elites first — the owner, 2026-11-19: «aici trebuie să afișez mai întâi elitele» —, then the checked-in, then by number.
+  registered.sort((a, b) => Number(b.elite) - Number(a.elite) || Number(b.checkedIn) - Number(a.checkedIn) || a.bibNumber - b.bibNumber);
 
   const typed: ResultRunner[] = [...index.freeByBib.values()]
     .filter((row) => !taken.has(row.id) && !heldBibs.has(row.bibNumber))
@@ -1404,7 +1405,8 @@ export type FinishLineView = {
   recent: RecentFinisherView[];
   /** The elites' buttons, by label (Romanian order). */
   elites: EliteButtonView[];
-  /** How many have finished, and how many registered runners hold a number. */
+  /** How many have finished, and how many numbers the line takes: the confirmed registrations' and the elite list's lines' — never one a
+   * cancellation retired (§173), which stays on its row so it is never reused. */
   finished: number;
   withNumber: number;
 };
@@ -1500,6 +1502,13 @@ export async function readFinishLine<T extends Record<string, unknown>>(db: Data
   }
   elites.sort((a, b) => a.label.localeCompare(b.label, "ro") || a.name.localeCompare(b.name, "ro") || a.key.localeCompare(b.key));
 
+  // «… din N cu număr»: the numbers this line takes (`FinishTarget`) — a confirmed registration's, a line of the elite list's — never a
+  // cancelled or expired row's, whose number stays retired on it (§173). The owner, 2026-11-19, of «0 sosiți din 199 cu număr» with
+  // 172 runners holding a place: «cum pot să am 199 cu număr?».
+  const numbersTaken = new Set<number>();
+  for (const runner of runners.byBib.values()) if (runner.status === "CONFIRMED") numbersTaken.add(runner.bibNumber);
+  for (const line of runners.lines) if (line.bibNumber !== null) numbersTaken.add(line.bibNumber);
+
   const gunAt = gunOf(event);
   return {
     event,
@@ -1514,7 +1523,7 @@ export async function readFinishLine<T extends Record<string, unknown>>(db: Data
     recent,
     elites,
     finished: finished.length,
-    withNumber: runners.byBib.size,
+    withNumber: numbersTaken.size,
   };
 }
 

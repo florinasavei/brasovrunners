@@ -34,7 +34,7 @@ import { isUuid } from "@/shared/ids";
  *   before its own clock, else the server's own (`raceGunMoment`); it may be pressed from three hours before the planned gun to
  *   six hours after (`raceGunWindowOpen`); a second «Start» of the same organizer heard within ten seconds of their last is the
  *   same press sent twice, and changes nothing (`raceGunRepeats`).
- * - **«⏱ Prinde timpul».** Each press keeps one instant, oldest first; the next number or elite pressed takes the oldest kept
+ * - **«⏱ Finish».** Each press keeps one instant, oldest first; the next number or elite pressed takes the oldest kept
  *   one instead of now (`takeOldestKept`). The kept instants are the staff account's that kept them (`keptOf`, `withKept`).
  * - **The queue.** Every entry is one staff account's press (`staffId`) with an id of its own, which the server keeps in the
  *   trail and recognises a retry by; kept, in the order pressed, until the server answered it. The oldest one of the viewer's
@@ -68,7 +68,7 @@ export const RACE_GUN_CLAIM_TOLERANCE_MS = 10_000;
 export const RACE_GUN_REPEAT_MS = 10_000;
 /** How many of the latest finishers «Ultimii sosiți» lists. */
 export const RECENT_FINISHERS = 20;
-/** How many kept times «⏱ Prinde timpul» holds at most: a press past it keeps nothing more. */
+/** How many kept times «⏱ Finish» holds at most: a press past it keeps nothing more. */
 export const KEPT_TIMES_MAX = 50;
 /** How many answered lines the phone keeps under the box; the waiting ones are always kept. */
 export const ENTRIES_KEPT = 30;
@@ -91,7 +91,7 @@ export const FINISH_GUN_ASK_MS = 30_000;
 /** How long a press may wait for its answer before the line says the signal is weak — it is still awaited, and nothing else changes. */
 export const FINISH_PRESS_SLOW_MS = 10_000;
 /**
- * How old a kept moment of «⏱ Prinde timpul» may be and still be given to the next number (§986): ten minutes. An older one is no bunch
+ * How old a kept moment of «⏱ Finish» may be and still be given to the next number (§986): ten minutes. An older one is no bunch
  * any more — a moment forgotten on the phone, a page left open since the morning —, so it is dropped when the line is read or pressed,
  * and the line says its time, to be written on paper.
  */
@@ -385,7 +385,7 @@ export function undoClosedBy(row: UndoableRow, actorId: string, trail: UndoTrail
   return trail.pressedAgain;
 }
 
-// ---- «⏱ Prinde timpul» -------------------------------------------------------------------------------------
+// ---- «⏱ Finish» -------------------------------------------------------------------------------------
 
 /** One more kept time, oldest first; past `KEPT_TIMES_MAX` nothing more is kept. */
 export function keepTime(kept: readonly number[], atMs: number): number[] {

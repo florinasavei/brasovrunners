@@ -536,13 +536,15 @@ describe("§984 BR-REQ-037-08 beside each person: the desk's list and its view o
     expect(signUp?.props.action).toBe(actions.raffleDeskSignUpAction);
     const hidden = (name: string) => elements(signUp).find((element) => element.props.name === name)?.props.value;
     expect([hidden("back"), hidden("eventId"), hidden("q"), hidden("registrationId"), hidden("code")]).toEqual(["desk", eventId, "Ana Popescu", people.ana, undefined]);
+    // Back to the list with the row (§1002, the desk's sections): `row=` opens the section that holds it; a refusal lands on the
+    // alert, a sign-up on the row with its toast, the alert's sentence being out of sight there.
     expect(await press(actions.raffleDeskSignUpAction, { back: "desk", q: "Ana Popescu", registrationId: people.ana })).toEqual({
-      to: `/ro/admin/checkin?eventId=${eventId}&q=Ana+Popescu&error=RAFFLE_RULES_NOT_ACCEPTED#admin-alert`,
+      to: `/ro/admin/checkin?eventId=${eventId}&q=Ana+Popescu&row=${people.ana}&error=RAFFLE_RULES_NOT_ACCEPTED#admin-alert`,
       toast: null,
     });
     expect(await press(actions.raffleDeskSignUpAction, { back: "desk", q: "Ana Popescu", registrationId: people.ana, accepted: "on" })).toEqual({
-      to: `/ro/admin/checkin?eventId=${eventId}&q=Ana+Popescu&saved=raffleSignedUp#admin-alert`,
-      toast: null,
+      to: `/ro/admin/checkin?eventId=${eventId}&q=Ana+Popescu&row=${people.ana}&saved=raffleSignedUp#reg-${people.ana}`,
+      toast: { kind: "success", key: "raffleSignedUp" },
     });
     expect((await entries()).map((entry) => [entry.registrationId, entry.method])).toEqual([[people.ana, "DESK"]]);
     expect(words(await html(byTestId(await deskList("Ana Popescu"), "desk-raffle")[0]))).toBe("Tombolă: participă");

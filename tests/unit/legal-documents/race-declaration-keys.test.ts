@@ -119,9 +119,12 @@ describe("§515 the editor's start for a race's declaration", () => {
 });
 
 describe("§515 the one press approves every text of the catalogue", () => {
-  it("covers exactly the catalogue's keys: the registration's three, the road declaration, the group runs' two, the volunteer agreement and the raffle's rules (§984)", () => {
+  it("covers the catalogue's keys but the team's undertaking: the registration's three, the road declaration, the group runs' two, the volunteer agreement and the raffle's rules (§984)", () => {
     expect([...PLATFORM_APPROVAL_KEYS]).toEqual(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD", "GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL", "VOLUNTEER_AGREEMENT", "RAFFLE_RULES"]);
-    expect([...PLATFORM_APPROVAL_KEYS].sort()).toEqual(Object.keys(LEGAL_TEMPLATES).sort());
+    // The team's undertaking (§1006) is the one text the press leaves out: approved, it stops every colleague below the
+    // Administrator at their next request, so the club approves it on its own, read for itself.
+    expect([...PLATFORM_APPROVAL_KEYS].sort()).toEqual(Object.keys(LEGAL_TEMPLATES).filter((key) => key !== "STAFF_DATA_AGREEMENT").sort());
+    expect(PLATFORM_APPROVAL_KEYS).not.toContain("STAFF_DATA_AGREEMENT");
   });
 
   it("counts its texts in the messages rather than writing a number", () => {

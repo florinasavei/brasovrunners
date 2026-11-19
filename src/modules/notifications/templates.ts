@@ -2087,16 +2087,26 @@ function legalTemplatesFacts(locale: EmailLocale, d: TemplateData): TemplateCont
  */
 export function lawyerReads(locale: EmailLocale, keys: readonly string[]): string {
   const moved = LEGAL_DOCUMENT_KEYS.filter((key) => keys.includes(key));
-  const declarations = moved.some((key) => key !== "TERMS" && key !== "PRIVACY_NOTICE" && key !== "VOLUNTEER_AGREEMENT" && key !== "RAFFLE_RULES");
+  const declarations = moved.some(
+    (key) => key !== "TERMS" && key !== "PRIVACY_NOTICE" && key !== "VOLUNTEER_AGREEMENT" && key !== "RAFFLE_RULES" && key !== "STAFF_DATA_AGREEMENT",
+  );
   const terms = moved.includes("TERMS");
   // The volunteer agreement (§758) is a contract, not a declaration: named as itself, for the lawyer to read too.
   const agreement = moved.includes("VOLUNTEER_AGREEMENT");
   // «Regulamentul tombolei» (§984) is a raffle's rules, not a declaration: named as itself too.
   const raffle = moved.includes("RAFFLE_RULES");
+  // The team's undertaking (§1006) is the colleagues' own text, not a declaration: named as itself too.
+  const team = moved.includes("STAFF_DATA_AGREEMENT");
   const words = locale === "ro"
-    ? { declarations: "declarațiile", terms: "termenii", agreement: "contractul de voluntariat", raffle: "regulamentul tombolei", and: " și ", changed: "textele schimbate", first: "mai ales", lead: "Înainte de aprobare, un jurist ar trebui să citească" }
-    : { declarations: "the declarations", terms: "the terms", agreement: "the volunteer agreement", raffle: "the raffle rules", and: " and ", changed: "the changed texts", first: "above all", lead: "Before approving, a lawyer should read" };
-  const items = [declarations ? words.declarations : null, terms ? words.terms : null, agreement ? words.agreement : null, raffle ? words.raffle : null].filter((w): w is string => w !== null);
+    ? { declarations: "declarațiile", terms: "termenii", agreement: "contractul de voluntariat", raffle: "regulamentul tombolei", team: "angajamentul echipei", and: " și ", changed: "textele schimbate", first: "mai ales", lead: "Înainte de aprobare, un jurist ar trebui să citească" }
+    : { declarations: "the declarations", terms: "the terms", agreement: "the volunteer agreement", raffle: "the raffle rules", team: "the team's undertaking", and: " and ", changed: "the changed texts", first: "above all", lead: "Before approving, a lawyer should read" };
+  const items = [
+    declarations ? words.declarations : null,
+    terms ? words.terms : null,
+    agreement ? words.agreement : null,
+    raffle ? words.raffle : null,
+    team ? words.team : null,
+  ].filter((w): w is string => w !== null);
   const named = items.length <= 2 ? items.join(words.and) : `${items.slice(0, -1).join(", ")}${words.and}${items[items.length - 1]}`;
   const nothingElse = moved.every((key) => key !== "PRIVACY_NOTICE");
   if (!named) return `${words.lead} ${words.changed}.`;

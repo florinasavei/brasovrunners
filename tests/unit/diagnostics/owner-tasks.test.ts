@@ -48,6 +48,7 @@ const LAUNCHED: OwnerTaskInputs = {
   raffleSignUpEvents: 0,
   raffleRulesInForce: true,
   raffleDescribed: true,
+  teamAgreementInForce: true,
   shopDescribed: true,
   visibleShopProducts: 1,
   volunteersDescribed: true,
@@ -297,6 +298,22 @@ describe("owner tasks", () => {
       const item = catalogue.Admin.tasks.items.raffleRules;
       expect(item.title && item.todo && item.done).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  it("§1006: the team's undertaking's row is open while no version is in force, done once one is, never blocking, always the club's", () => {
+    expect(stateOf({ ...LAUNCHED, teamAgreementInForce: false }, "teamAgreement")).toBe("open");
+    expect(stateOf(LAUNCHED, "teamAgreement")).toBe("done");
+    const row = ownerTasks({ ...LAUNCHED, teamAgreementInForce: false }).find((task) => task.id === "teamAgreement");
+    expect(row).toMatchObject({ owner: "club", kind: "text", state: "open" });
+    // Its own gate: nothing else in place yet, it still says what is missing, and nothing a runner does waits on it.
+    expect(stateOf({ ...LAUNCHED, hasApprovedPrivacyNotice: false, teamAgreementInForce: false }, "teamAgreement")).toBe("open");
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.teamAgreement;
+      expect(item.title && item.todo && item.done).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+      // The lawyer reads it first, against the regulation's articles the text rests on.
+      expect(item.how.join("\n")).toMatch(/29.*32/);
     }
   });
 
@@ -679,6 +696,8 @@ describe("owner tasks", () => {
       // §984: the raffle's rules and its notice, shown done while both are in force.
       "raffleRules",
       "raffleNotice",
+      // §1006: the team's undertaking, shown done while a version is in force; always on the list — every club has a team.
+      "teamAgreement",
       "refusalTerms",
       "resultsTerms",
       "teamPageNotice",

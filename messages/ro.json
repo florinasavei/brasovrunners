@@ -1455,6 +1455,7 @@
       "confirmed": "Confirmată",
       "cancelled": "Anulată",
       "cancelReasonLabel": "Motivul anulării",
+      "cancelledByStaff": "Anulată de organizatori",
       "cancelReasonOther": "{kind} — „{text}”",
       "cancelReasonKinds": {
         "INJURY_OR_ILLNESS": "Accidentare sau boală",
@@ -4279,6 +4280,12 @@
         "revokeTitle": "Îi iei magazinul?",
         "revokeBody": "{name} nu mai vede secțiunea «Magazin» de la următoarea pagină pe care o deschide.",
         "revoke": "Ia-i magazinul"
+      },
+      "teamAgreement": {
+        "line": "Angajamentul echipei: {state}",
+        "accepted": "Acceptat — versiunea {version}, {date}, ca „{name}”",
+        "notAccepted": "Neacceptat",
+        "notRequired": "Nu e cerut"
       }
     },
     "queue": {
@@ -4363,7 +4370,7 @@
     },
     "legal": {
       "title": "Documente legale",
-      "intro": "Nota de confidențialitate, termenii, declarațiile de concurs pentru eveniment montan și pentru șosea sau parc, cele două declarații ale alergărilor de grup: {count} texte. O corectură e o versiune nouă.",
+      "intro": "Textele clubului: nota de confidențialitate, termenii, declarațiile, contractul voluntarilor, regulamentul tombolei și angajamentul echipei — {count} texte. O corectură e o versiune nouă.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: ce date luăm de la participanți, de ce și cât le ținem. Se bifează la înscriere.",
         "TERMS": "Regulile site-ului și ale înscrierii, nu regulamentul cursei — acela e pe pagina evenimentului. Se bifează la înscriere.",
@@ -4372,7 +4379,8 @@
         "GROUP_RUN_DECLARATION_TRAIL": "Opțională, pentru o alergare de grup pe teren accidentat; se semnează pe pagina alergării, o dată pentru toate datele ei. Aprob-o împreună cu o notă de confidențialitate nouă.",
         "EVENT_DECLARATION_ROAD": "Declarația unui eveniment pe șosea sau în parc, cu riscurile asfaltului și ale traficului. Până o aprobi, aceste evenimente semnează declarația pentru eveniment montan.",
         "VOLUNTEER_AGREEMENT": "Contractul pe care îl acceptă fiecare voluntar al unui eveniment: ajutor neplătit, ce face voluntarul, ce face clubul. Până îl aprobi, paginile nu arată formularul de voluntari.",
-        "RAFFLE_RULES": "Regulamentul pe care îl acceptă cine se înscrie la tombola unui eveniment cu înscriere separată. Până îl aprobi, înscrierea la tombolă nu se deschide; tombola „din oficiu” nu are nevoie de el."
+        "RAFFLE_RULES": "Regulamentul pe care îl acceptă cine se înscrie la tombola unui eveniment cu înscriere separată. Până îl aprobi, înscrierea la tombolă nu se deschide; tombola „din oficiu” nu are nevoie de el.",
+        "STAFF_DATA_AGREEMENT": "Angajamentul pe care îl acceptă fiecare coleg din echipă, în afară de administratori, înainte să lucreze în backoffice. Până îl aprobi, nimeni nu e întrebat. Se aprobă separat."
       },
       "empty": "Nu există niciun document legal. Înscrierile sunt refuzate până când există o notă de confidențialitate aprobată.",
       "emptyCanCreate": "Nu există încă niciun document legal, așa că înscrierile sunt refuzate. Începe cu nota de confidențialitate: Versiune nouă.",
@@ -4392,7 +4400,8 @@
         "GROUP_RUN_DECLARATION_TRAIL": "Declarație pe propria răspundere (alergare de grup, teren accidentat)",
         "EVENT_DECLARATION_ROAD": "Declarație pe propria răspundere — eveniment pe asfalt / în parc",
         "VOLUNTEER_AGREEMENT": "Contract de voluntariat",
-        "RAFFLE_RULES": "Regulamentul tombolei"
+        "RAFFLE_RULES": "Regulamentul tombolei",
+        "STAFF_DATA_AGREEMENT": "Angajament de confidențialitate și protecția datelor pentru echipă"
       },
       "referenced": "{signatures} semnături · {events} evenimente",
       "unreferenced": "Nefolosit încă",
@@ -4596,7 +4605,8 @@
         "held": {
           "superseded": "există o ciornă mai nouă a aceluiași text; șterge-o pe aceasta sau aprob-o de pe pagina ei.",
           "behind": "o versiune aprobată cu număr mai mare este deja oferită, deci aceasta n-ar intra niciodată în vigoare.",
-          "placeholders": "mai are câmpuri de completat, de forma '<'…>; deschide ciorna și scrie-le."
+          "placeholders": "mai are câmpuri de completat, de forma '<'…>; deschide ciorna și scrie-le.",
+          "alone": "angajamentul echipei se aprobă separat, de pe pagina ciornei, cu «Aprobă și publică»: din acel moment, fiecare coleg care nu e administrator e oprit la următoarea pagină până îl acceptă."
         },
         "deleteIntro": "Bifează în tabel versiunile de șters, apoi apasă butonul: vezi lista înainte de ștergere.",
         "deleteTicked": "Șterge versiunile bifate",
@@ -4658,7 +4668,8 @@
         "race": "Declarații de cursă",
         "groupRun": "Declarații pentru alergările de grup",
         "volunteers": "Contractul voluntarilor",
-        "raffle": "Regulamentul tombolei"
+        "raffle": "Regulamentul tombolei",
+        "team": "Angajamentul echipei"
       },
       "shortKeys": {
         "PRIVACY_NOTICE": "GDPR",
@@ -4668,7 +4679,8 @@
         "GROUP_RUN_DECLARATION_ASPHALT": "Grup asfalt",
         "GROUP_RUN_DECLARATION_TRAIL": "Grup teren accidentat",
         "VOLUNTEER_AGREEMENT": "Voluntari",
-        "RAFFLE_RULES": "Tombolă"
+        "RAFFLE_RULES": "Tombolă",
+        "STAFF_DATA_AGREEMENT": "Echipă"
       },
       "filter": {
         "label": "Filtrează versiunile",
@@ -4789,6 +4801,17 @@
         "en": "English"
       },
       "tabIncomplete": "incomplet"
+    },
+    "teamAgreement": {
+      "title": "Angajamentul echipei",
+      "intro": "Înainte să lucrezi în backoffice, citește angajamentul de mai jos și acceptă-l. Îl accepți o singură dată pentru fiecare versiune.",
+      "fullName": "Numele tău complet",
+      "fullNameHelp": "Prenumele și numele de familie, ca semnătură.",
+      "accept": "Am citit și accept angajamentul",
+      "acceptRequired": "Bifează că ai citit și accepți angajamentul.",
+      "submit": "Accept și intru",
+      "submitting": "Se salvează…",
+      "signOutHint": "Până accepți, paginile backoffice-ului nu se deschid. Poți ieși din cont oricând, de sus."
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -5712,6 +5735,19 @@
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful „Tombola”, din secțiunea 5, descrie înscrierea.",
             "Deschide ciorna, citește-o, „Salvează ciorna”, apoi „Aprobă și publică”, în ambele limbi."
+          ]
+        },
+        "teamAgreement": {
+          "title": "Angajamentul echipei",
+          "todo": "Niciun angajament al echipei nu e în vigoare: voluntarii, redactorii, organizatorii și tehnicii nu l-au acceptat. Aprobă-l înainte de ziua cursei.",
+          "done": "Angajamentul echipei e în vigoare: fiecare coleg, în afară de administratori, îl acceptă la prima intrare.",
+          "how": [
+            "/admin/legal → „Versiune nouă” → sub „Pornește de la șablon”, „Angajament de confidențialitate și protecția datelor pentru echipă”.",
+            "Nici „Aprobă acum textele care lipsesc…”, nici „Aprobă ciornele” nu îl aprobă, chiar dacă „Regenerează din șabloane” i-a făcut ciorna: se aprobă separat, citit pentru el.",
+            "Un jurist ar trebui să-l citească întâi: autoritatea clubului (art. 29 și 32 alin. (4) GDPR), confidențialitatea după rol, răspunderea și cât se păstrează acceptarea.",
+            "Completează datele clubului rămase între paranteze unghiulare, în ambele limbi, „Salvează ciorna”, apoi „Aprobă și publică”.",
+            "Aprobă-l cu cel puțin o zi înainte de cursă: din acel moment, fiecare coleg care nu e administrator e oprit la prima pagină până îl acceptă.",
+            "„Echipa” arată, pe rândul fiecărui coleg, dacă l-a acceptat."
           ]
         }
       },
@@ -7944,6 +7980,8 @@
         "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” (pe Android) sau deschide camera telefonului și îndreapt-o spre cod — se deschide rândul persoanei.",
         "Sub rând scrie „Scanat înainte: …”? Codul a mai fost deschis la masă: verifică dacă persoana nu și-a luat deja numărul.",
         "Sau caută după nume ori după numărul de concurs.",
+        "Lista e împărțită pe stări, cu câți sunt în fiecare. „De ridicat numărul” și „Fără declarație semnată” stau deschise; „Prezenți”, „Pe lista de așteptare” și celelalte se deschid din titlu.",
+        "O căutare deschide doar secțiunile cu potriviri. După o apăsare revii la rândul persoanei, cu secțiunea lui deschisă: cine e marcat prezent trece la „Prezenți”.",
         "Apasă „Marchează prezent” și dă-i numărul din teanc. Nu are număr? Scrie-l în căsuță și apasă „Salvează nr.”.",
         "Nu a primit emailul sau nu găsește QR-ul: caută după nume.",
         "Dacă scrie „Așteaptă semnarea declarației”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă pe hârtie”, apoi „Marchează prezent”.",
@@ -8032,7 +8070,18 @@
       "scanSwitch": "Altă cameră",
       "scanCamera": "Camera {n} din {total}",
       "eliteLabel": "Pe BIB: {label}",
+      "siteNamed": "Cu nume",
+      "siteAnonymous": "Anonim",
       "eliteFold": "Elită și BIB",
+      "sections": {
+        "toPickUp": "De ridicat numărul ({n})",
+        "unsigned": "Fără declarație semnată ({n})",
+        "checkedIn": "Prezenți ({n})",
+        "addressUnconfirmed": "Adresă neconfirmată ({n})",
+        "offered": "Ofertă de loc deschisă ({n})",
+        "waitlisted": "Pe lista de așteptare ({n})",
+        "voided": "Anulate sau expirate ({n})"
+      },
       "spares": {
         "free": {
           "one": "Număr de rezervă liber ({count}): {numbers}",
@@ -9511,6 +9560,17 @@
               ]
             },
             {
+              "title": "Angajamentul echipei, la prima intrare",
+              "steps": [
+                "Dacă rolul tău este «Voluntar», «Redactor», «Organizator» sau «Tehnic», la prima intrare după ce clubul aprobă angajamentul echipei se deschide pagina lui, în locul paginii pe care ai cerut-o.",
+                "Citește textul până la capăt: ce date vezi, cum le păstrezi confidențiale, ce faci cu listele tipărite și ce faci dacă pierzi telefonul.",
+                "Scrie-ți numele în «Numele tău complet», bifează «Am citit și accept angajamentul» și apasă «Accept și intru».",
+                "Ajungi pe pagina pe care o ceruseși, de exemplu pe numărul scanat la masă. Angajamentul îl accepți o singură dată; o versiune nouă ți se cere din nou, tot o dată.",
+                "Până accepți, nicio pagină a backoffice-ului nu se deschide. «Ieși din cont» rămâne sus.",
+                "Administratorii nu îl acceptă aici: ei aprobă textul în «Documente legale»."
+              ]
+            },
+            {
               "title": "Bara de sus: ce găsești în fiecare tab",
               "steps": [
                 "Vezi doar taburile rolului tău; restul nu există pentru tine, și e în regulă.",
@@ -9578,6 +9638,8 @@
                 "Intră cu contul tău, nu cu al unui coleg: tot ce apeși la masă poartă numele contului, iar organizatorii îl citesc în «Jurnal».",
                 "La «Eveniment» alege cursa de azi, apoi apasă «Caută».",
                 "Sus vezi câți sunt confirmați, câți au venit, câți nu au număr și câți nu au confirmat. Sunt cifrele cursei.",
+                "Dedesubt, lista e pe secțiuni, după stare, în ordinea în care lucrezi: «De ridicat numărul», «Fără declarație semnată», «Prezenți», «Adresă neconfirmată», «Ofertă de loc deschisă», «Pe lista de așteptare». Lângă fiecare titlu, câți sunt; o secțiune fără nimeni nu apare.",
+                "Primele două stau deschise. Pe celelalte le deschizi sau le închizi apăsând pe titlu.",
                 "Ia de la organizator două teancuri: numerele tipărite cu nume și numerele de rezervă, cu linia pentru nume goală, pentru cine se înscrie la masă. Pe cele de rezervă nu le primește nimeni înscris online."
               ]
             },
@@ -9598,7 +9660,9 @@
               "steps": [
                 "În căsuța «Nume, număr sau cod» scrie o parte din nume, numărul de concurs sau codul din email.",
                 "Apasă «Caută».",
-                "Pe rândul potrivit: «Marchează prezent», apoi îi dai numărul."
+                "Apar doar secțiunile în care e cineva care se potrivește, deschise.",
+                "Pe rândul potrivit: «Marchează prezent», apoi îi dai numărul.",
+                "Pagina revine la rândul lui, acum în secțiunea «Prezenți», deschisă. Tot de acolo, la nevoie, «Anulează prezența»."
               ]
             },
             {
@@ -9641,6 +9705,7 @@
             {
               "title": "Un chenar roșu: înscriere anulată sau expirată",
               "steps": [
+                "Căutat după numărul de concurs, rândul apare în secțiunea «Anulate sau expirate», deschisă.",
                 "Persoana nu mai are loc, chiar dacă are emailul în mână: nu-i da număr și nu o marca prezentă.",
                 "Dacă scrie că numărul a fost tipărit, scoate BIB-ul acela din teanc — numerele nu se refolosesc.",
                 "Cheamă un organizator. Dacă mai sunt locuri, o înscrieți din nou cu «Adaugă pe cineva»."
@@ -9651,7 +9716,7 @@
               "steps": [
                 "«Ziua cursei» → «Cronometrare» și alege cursa. Organizatorul apasă «Start» la pistol; tu vezi ceasul de la start.",
                 "Trece o elită: apasă-i butonul de sus (eticheta de pe BIB, cu numele sub ea). Trece oricine altcineva: scrie numărul de pe BIB și apasă «Sosit». Căsuța se golește pe loc pentru următorul.",
-                "Vin mai mulți deodată: apasă «Prinde timpul» o dată pentru fiecare, apoi scrie numerele în ordine.",
+                "Vin mai mulți deodată: apasă «Finish» o dată pentru fiecare, apoi scrie numerele în ordine.",
                 "Un rând roșu îți spune ce să notezi pe hârtie, cu timpul. Fără semnal, apăsările așteaptă pe telefon și pleacă singure.",
                 "Ai greșit? «Anulează» pe rândul tău din «Ultimii sosiți», în primele 10 minute, cât nu l-a mai trecut nimeni după tine. Altfel spune-i organizatorului: corectează la «Clasament»."
               ]
@@ -9932,7 +9997,7 @@
               "steps": [
                 "«Clasament» e în editorul cursei, în cardul «Înscrierile primite» de la sfârșitul paginii (lângă «Vezi înscrierile acestui eveniment»), nu în «Participare, înscrieri și regulament». Butonul apare doar la o cursă publicată sau al cărei start a trecut; la o ciornă, deschide adresa paginii direct.",
                 "La linia de sosire deschide «Cronometrare» pe telefon: «Ziua cursei» în bara de sus → «Cronometrare» (sau linkul de pe «Clasament»). La start apasă «Start» exact când se dă startul; fără el, timpii se numără de la «Startul cursei» din editor. Când trece o elită, apasă-i butonul (eticheta de pe BIB, cu numele sub ea); pe oricine altcineva îl treci cu numărul de pe BIB și «Sosit». Se salvează pe loc, cu timpul de la start, iar «Ultimii sosiți» arată cine a introdus fiecare rând. Nu e nevoie de cronometru.",
-                "Vin mai mulți deodată? Apasă «Prinde timpul» o dată pentru fiecare, apoi scrie numerele în ordine: fiecare ia cel mai vechi timp prins. Un număr fără înscriere confirmată e refuzat, cu timpul lui pe rând: notează-l pe hârtie și scrie-l după cursă la «Clasament», la «Alergători neînscriși». Un număr trecut a doua oară — de tine sau de alt voluntar — nu schimbă nimic: rămâne primul timp, iar al doilea apare în «Istoricul sosirilor», la «Clasament». Un alergător trecut «Descalificat» la «Clasament» rămâne așa când îi treci numărul. Ai greșit? «Anulează» pe rândul tău, 10 minute, cât nu l-a mai trecut nimeni după tine; după aceea, la «Clasament». Dacă preferi cronometrul sau o aplicație, notează numărul și timpul fiecăruia și scrie-i după, la «Clasament» — pașii următori.",
+                "Vin mai mulți deodată? Apasă «Finish» o dată pentru fiecare, apoi scrie numerele în ordine: fiecare ia cel mai vechi timp prins. Un număr fără înscriere confirmată e refuzat, cu timpul lui pe rând: notează-l pe hârtie și scrie-l după cursă la «Clasament», la «Alergători neînscriși». Un număr trecut a doua oară — de tine sau de alt voluntar — nu schimbă nimic: rămâne primul timp, iar al doilea apare în «Istoricul sosirilor», la «Clasament». Un alergător trecut «Descalificat» la «Clasament» rămâne așa când îi treci numărul. Ai greșit? «Anulează» pe rândul tău, 10 minute, cât nu l-a mai trecut nimeni după tine; după aceea, la «Clasament». Dacă preferi cronometrul sau o aplicație, notează numărul și timpul fiecăruia și scrie-i după, la «Clasament» — pașii următori.",
                 "La «Alergători înscriși» e un rând pentru fiecare înscris cu număr. Scrie timpul în «Timp» (h:mm:ss sau mm:ss) — merg și doar cifrele, fără două puncte: 12345 devine 1:23:45 când ieși din căsuță — sau apasă ceasul de lângă căsuță, alege orele (de la 0 la 23), minutele și secundele și apasă «OK». Zecimile (mm:ss.t) le scrii în căsuță. «Stare» rămâne pe «Din timp (Sosit / Neprezentat)» — un timp înseamnă «Sosit». Pentru cine n-a terminat alege «Abandon», «Neprezentat» sau «Descalificat», fără timp. «Timp cip» și «Notă» sunt opționale; «Timp cip» are și el ceasul lui.",
                 "Ai timpii într-un fișier? Deschide «Importă din CSV», lipește textul (număr, timp pe fiecare rând; cu timp cip și stare dacă ai) sau alege fișierul și apasă «Importă din CSV». Rândurile intră în căsuțe; nimic nu se salvează încă.",
                 "Un număr pe care nu-l are nicio înscriere ajunge la «Alergători neînscriși»: scrie-i numele și, pentru categorie, sexul și data nașterii. Bifează «A acceptat să apară cu numele în clasament» doar dacă persoana ți-a spus-o. «Adaugă un alergător neînscris» face un rând gol.",
@@ -10320,7 +10385,8 @@
                 "Apasă «Adaugă» și confirmă. Persoana primește invitația pe email și își alege parola.",
                 "Nu a primit-o: apasă rândul ei, apoi «Retrimite invitația» → «Trimite acum, fără să aștepte trecerea programată».",
                 "Pe rândul persoanei (apasă-l ca să se deschidă): alt rol — «Rol», apoi «Schimbă rolul»; a plecat din echipă — «Retrage accesul», ultimul.",
-                "Magazinul fără rolul de Administrator: apasă rândul colegului, bifează «Gestionează magazinul» și confirmă. Găsește «Magazin» în bara de sus; adresele membrilor nu le vede."
+                "Magazinul fără rolul de Administrator: apasă rândul colegului, bifează «Gestionează magazinul» și confirmă. Găsește «Magazin» în bara de sus; adresele membrilor nu le vede.",
+                "Un coleg nou care nu e administrator acceptă angajamentul echipei la prima intrare, dacă unul e în vigoare: rândul lui din «Echipa» arată dacă l-a acceptat."
               ]
             },
             {
@@ -10431,6 +10497,17 @@
                 "Pe pagina ciornei: «Descarcă PDF» ca să-l citești pe hârtie sau să-l dai unui avocat.",
                 "La «Aprobă versiunea» bifează «Confirm că textul este aprobat de club și poate deveni public», apasă «Aprobă și publică» și confirmă.",
                 "Un text aprobat nu se mai schimbă. Corectura e versiunea următoare: «Pornește versiunea următoare din aceasta»."
+              ]
+            },
+            {
+              "title": "Aprobă angajamentul echipei",
+              "steps": [
+                "«Documente legale» → «Versiune nouă» → sub «Pornește de la șablon», «Angajament de confidențialitate și protecția datelor pentru echipă».",
+                "Completează datele clubului rămase de forma <…>, în română și în engleză, și apasă «Salvează ciorna». Un jurist ar trebui să citească textul întâi.",
+                "La «Aprobă versiunea» bifează «Confirm că textul este aprobat de club și poate deveni public», apasă «Aprobă și publică» și confirmă.",
+                "Aprobă-l cu cel puțin o zi înainte de cursă, nu în dimineața ei: din acel moment, fiecare voluntar, redactor, organizator și tehnic e oprit la următoarea pagină până acceptă.",
+                "Nu e printre textele din «Aprobă acum textele care lipsesc…» și nici din «Aprobă ciornele», chiar dacă «Regenerează din șabloane» i-a făcut ciorna: se aprobă separat, citit pentru el.",
+                "«Echipa» arată pe rândul fiecărui coleg dacă a acceptat — versiunea, data și numele scris —, «Neacceptat» sau «Nu e cerut»."
               ]
             },
             {
@@ -13257,7 +13334,7 @@
       "title": "Cronometrare",
       "show": "Arată",
       "intro": "Când trece cineva linia: la o elită apasă-i butonul, la oricine altcineva scrie numărul de pe BIB și apasă «Sosit». Se salvează pe loc; corecturile se fac la «Clasament».",
-      "more": "Vin mulți deodată? Apasă «Prinde timpul» pentru fiecare, apoi scrie numerele în ordine. Fără semnal, apăsările așteaptă pe telefon. Un număr trecut de două ori păstrează primul timp.",
+      "more": "Vin mulți deodată? Apasă «Finish» pentru fiecare, apoi scrie numerele în ordine. Fără semnal, apăsările așteaptă pe telefon. Un număr trecut de două ori păstrează primul timp.",
       "clock": "De la start: {time}",
       "notStarted": "Cursa nu a pornit încă.",
       "boxLabel": "Numărul de pe BIB",
@@ -13288,7 +13365,7 @@
         "giveNumberAria": "Dă-i un număr: {label} — {name}"
       },
       "keep": {
-        "button": "Prinde timpul",
+        "button": "Finish",
         "help": "Vin mai mulți deodată: apasă o dată pentru fiecare, apoi scrie numerele în ordine — fiecare ia cel mai vechi timp prins. Un timp prins de peste 10 minute se șterge: îl notezi pe hârtie.",
         "kept": "Timpi prinși",
         "drop": "Șterge timpul prins {time}",
@@ -15200,6 +15277,7 @@
       "legalVersionWithdrawn": "Versiunea a fost retrasă.",
       "legalVersionErased": "Versiunea a fost ștearsă definitiv.",
       "legalVersionRetired": "Versiunea a fost ștearsă din listă; textul rămâne în arhivă.",
+      "teamAgreementAccepted": "Gata: angajamentul e acceptat.",
       "albumCreated": "Albumul a fost creat.",
       "album": "Albumul a fost salvat.",
       "photoRemoved": "Fotografia a fost ștearsă.",

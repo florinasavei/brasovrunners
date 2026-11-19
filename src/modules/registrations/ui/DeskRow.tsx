@@ -14,6 +14,7 @@ import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
 import { bibPictureSrc } from "@/modules/registrations/domain/bib-stamp";
 import { hasOneBib, oneBibHref } from "@/modules/registrations/domain/one-bib";
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
+import { registrationRowAnchor } from "@/modules/registrations/domain/list-row";
 import { formatRaceNumber, raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
@@ -167,6 +168,8 @@ export default async function DeskRow({
   return (
     <Box
       component="li"
+      // The row a press comes back to (§1002): the desk's list lands here, in the section that now holds it, drawn open.
+      id={registrationRowAnchor(row.id)}
       data-testid="desk-row"
       sx={{
         listStyle: "none",
@@ -175,6 +178,7 @@ export default async function DeskRow({
         borderRadius: 1,
         p: 1.5,
         bgcolor: row.checkedInAt ? "success.50" : "background.paper",
+        scrollMarginTop: 16,
       }}
     >
       {/*
@@ -220,6 +224,19 @@ export default async function DeskRow({
             <Typography component="span" sx={{ fontWeight: 600, fontSize: "1.05rem" }}>
               {row.registeredName}
             </Typography>
+            {/*
+              The eye (§1004; the owner, 2026-11-19: «trebuie să văd dacă oamenii doresc să apară anonimi sau nu, să apară un ochișor»):
+              open with «Cu nume» when the person appears by name on the site — the list and the results —, crossed with «Anonim» when
+              they did not tick it or the club hid them; for every desk role, from the desk's own query. Not on a row that is over.
+            */}
+            {!terminal && (
+              <StatusChip
+                glyph={row.namedOnSite ? "visible" : "hidden"}
+                variant="outlined"
+                label={t(row.namedOnSite ? "desk.siteNamed" : "desk.siteAnonymous")}
+                testId="desk-site-name"
+              />
+            )}
             {/*
               «Elită» and what the bib in the volunteer's hand says (§975; the owner, 2026-11-18: «aici trebuie să marchez dacă cineva
               e elită și cum apare pe BIB»): every desk role sees them — a name the row already shows, never an address (§15.11).
