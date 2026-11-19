@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.76-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.77-2026-11-19 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V4.76-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.77-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1081,7 +1081,9 @@ even on the free plan. Nothing is charged inside the allowance.
    the photos stay in the EU like everything else. Then Settings → **Public access**: enable the
    `r2.dev` subdomain (or connect a custom domain) and copy the public URL — that is
    `R2_PUBLIC_BASE_URL`. Reads are public because the gallery is; writes only ever go through
-   the token below, and keys are opaque, so nothing is listable or guessable.
+   the token below, and keys are opaque, so nothing is listable or guessable. So nothing private
+   is ever put there: a volunteer's signed agreement («Contract semnat») is kept in the database
+   and downloaded only through the backoffice (`DECISIONS.md` §998).
 4. **Token.** R2 → "Manage R2 API Tokens" → Create API token → name `brasovrunners-site`,
    permission **Object Read & Write**, scoped to that one bucket, no TTL. Copy the **Access Key
    ID**, the **Secret Access Key** and the **endpoint** (`https://<account id>.r2.cloudflarestorage.com`)
@@ -1354,10 +1356,31 @@ it "Add" creates the account too and Zitadel sends the password link.
 4. Vercel → the production project → Settings → Environment Variables:
    `ZITADEL_MANAGEMENT_PAT` = the token (Production). The same on the QA project. Redeploy
    both.
-5. Check: Echipa → add yourself with a second address → the alert says the invitation is on
-   its way with the password link, and two mails arrive: the club's (through Mailgun) and
-   Zitadel's from `noreply@mail.<club domain>` (Zitadel's SMTP, §35). A colleague who never
+5. Check: Echipa → add yourself with a second address → the alert says two emails are on their
+   way, Zitadel's first, and two mails arrive: Zitadel's from `noreply@mail.<club domain>`
+   (Zitadel's SMTP, §35), subject «Invitație la …» («Invitation to …» for an English account),
+   and the club's (through Mailgun), whose numbered steps say to open Zitadel's first. The
+   club's leaves only once Zitadel has answered (`DECISIONS.md` §1000). A colleague who never
    signed in has "Resend the invitation" on their row.
+6. **Zitadel's own email, in the club's words** — once, the owner's to do (`DECISIONS.md` §1000).
+   Zitadel writes its invitation in its default words; written here, the two emails speak the
+   same language. Zitadel console → **Organization** → **Settings** → **Message Texts** →
+   **Invite User** → language **Română**:
+   - **Subject**: leave it `Invitație la {{.ApplicationName}}`. The club's email names
+     Zitadel's by this subject; a different one sends people looking for an email they cannot
+     find.
+   - **Title**: `Invitație la {{.ApplicationName}}`.
+   - **Greeting**: `Bună, {{.DisplayName}},`
+   - **Text**: `Te-am adăugat la {{.ApplicationName}}: în echipa care administrează site-ul,
+     sau ca membru. Apasă butonul de mai jos și alege-ți parola. Apoi intră pe site cu
+     butonul din celălalt email, de la noi.`
+   - **Button text**: `Alege-ți parola`.
+
+   Save, then **English**: Subject `Invitation to {{.ApplicationName}}`, Text `You were added to
+   {{.ApplicationName}}: to the team that runs the website, or as a member. Press the button
+   below and choose your password. Then sign in with the button in the other email, ours.`,
+   Button text `Choose your password`. `{{.ApplicationName}}` is the club's name, which "Add"
+   sends Zitadel with every invitation; nothing on this screen is a secret.
 
 Locally the development switcher is the provider, so nothing is sent and the alert says so.
 
@@ -2532,7 +2555,10 @@ enter them; **only the Administrator and the Superadministrator make them public
    chosen (both links are drawn for a published race and for one that has started, before the start too; the page then says the race has not begun
    and lets you write from now on; a typed address works for any race). The page has a line for every
    registered runner who holds a race number — the checked-in first, then by number — with four boxes: **«Timp»** (`h:mm:ss`, `mm:ss` or
-   `mm:ss.t`), **«Stare»** (Sosit, Abandon, Neprezentat, Descalificat), **«Timp cip»** (optional) and **«Notă»**. A line with every box empty is
+   `mm:ss.t`), **«Stare»** (Sosit, Abandon, Neprezentat, Descalificat), **«Timp cip»** (optional) and **«Notă»**. The two time boxes are
+   typed or picked (§999): digits alone become a time when the box is left (`12345` → `1:23:45`, `2345,6` → `23:45.6`; a dot, a comma or a
+   space stands for a colon), and the clock beside each box opens the hours, minutes and seconds on the 24-hour clock — «OK» writes
+   `h:mm:ss`, tenths are typed. A line with every box empty is
    no result. The blank choice of «Stare» reads «Din timp (Sosit / Neprezentat)» because it is exactly that: a time typed with no state is
    «Sosit»; a note alone is «Neprezentat»; abandon, neprezentat and descalificat are written without a time. A number a **cancelled or
    expired** registration holds is refused («numărul aparține unei înscrieri neconfirmate»): a result is never filed under a cancelled

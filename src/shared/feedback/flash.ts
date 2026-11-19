@@ -63,11 +63,13 @@ export async function flashOutcome(outcome: Readonly<Record<string, string | num
   } catch {
     return;
   }
-  // Zitadel's own email (§123): its answer rides on the outcome of an invitation to the team. What the press chose not
-  // to send (slice 4, §976): `mailSkipped`, how many emails «… fără email» kept back, `alert` for a publication's
-  // new-event alert.
+  // Zitadel's own email (§123): its answer rides on the outcome of an invitation to the team — an account made, or one
+  // found without a password, which Zitadel sent a new code (§1000); never `ready`, to which Zitadel sends nothing. What
+  // the press chose not to send (slice 4, §976): `mailSkipped`, how many emails «… fără email» kept back, `alert` for a
+  // publication's new-event alert.
   const alert = outcome.alert === "later" || outcome.alert === "skipped" ? outcome.alert : undefined;
-  const told = await withPressMail(notice, { zitadel: outcome.invite === "invited", skipped: mailSkippedCount(outcome.mailSkipped) ?? 0, alert });
+  const zitadel = outcome.invite === "invited" || outcome.invite === "exists";
+  const told = await withPressMail(notice, { zitadel, skipped: mailSkippedCount(outcome.mailSkipped) ?? 0, alert });
   if (told) await flash(told);
 }
 

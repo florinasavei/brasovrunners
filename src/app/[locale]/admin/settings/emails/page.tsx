@@ -325,6 +325,14 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     // what a participant will actually receive rather than what the platform ships.
     const content = renderBilingual(messageType, emailLocale, sample, actionUrl, written.copy);
     /*
+      The invitation whose account the person makes (§1000) — no Zitadel key, or Zitadel did not make it: its own preview
+      after the one Zitadel's email comes first in, the platform's steps alone.
+    */
+    const selfSignIn =
+      messageType === "STAFF_INVITATION" || messageType === "MEMBER_INVITATION"
+        ? renderBilingual(messageType, emailLocale, { ...sample, signInSteps: "self" }, actionUrl, written.copy)
+        : null;
+    /*
       The organizer's message has no stored words to read or warn about (§364): it is written per
       send, the save refuses an entry for it and the send ignores one, so a hand-made entry in the
       setting is neither shown nor flagged here — the card would be saying something untrue.
@@ -343,7 +351,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       language being edited.
     */
     const sampleLanguages = mayWrite && !perSend(messageType) ? sampleLanguagesOf(written.copy, messageType) : [];
-    return { messageType, content, own, samples, sampleLanguages };
+    return { messageType, content, own, samples, sampleLanguages, selfSignIn };
   });
   const anySamples = cards.some((card) => card.sampleLanguages.length > 0);
 
@@ -525,7 +533,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         }))}
         // A saved text holding sample values, in either language, opens the card to whoever may fix it (§359).
         openWhen={{ saved: copySaved, inUse: lang !== undefined, attention: anySamples }}
-        messages={cards.flatMap(({ messageType, content, own, samples, sampleLanguages }): ParticipantEmailCard[] => {
+        messages={cards.flatMap(({ messageType, content, own, samples, sampleLanguages, selfSignIn }): ParticipantEmailCard[] => {
           const card = {
             type: messageType,
             name: t(`emails.types.${messageType}`),
@@ -563,6 +571,27 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
               />
             ) : undefined,
           };
+          // The invitation in its second shape (§1000): the steps of an account the person makes, right after the first.
+          if (selfSignIn) {
+            return [
+              card,
+              {
+                type: messageType,
+                id: `${messageType}-self`,
+                name: t("emails.selfSignIn.name", { type: t(`emails.types.${messageType}`) }),
+                whenShort: t("emails.selfSignIn.whenShort"),
+                when: t("emails.selfSignIn.when"),
+                subjectLine: `${t("emails.subject")}: ${selfSignIn.subject}`,
+                html: selfSignIn.html,
+                justSaved: false,
+                editor: (
+                  <Alert severity="info" sx={{ mb: 2 }} data-testid="email-self-sign-in">
+                    {t("emails.selfSignIn.platformWords")}
+                  </Alert>
+                ),
+              },
+            ];
+          }
           if (messageType === "VERIFY_REGISTRATION_EMAIL") {
             return [
               card,

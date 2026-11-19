@@ -182,6 +182,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/checkin/[code]",
       // «Cronometrare», «Ziua cursei»'s finish line (§986), by hand.
       "/admin/checkin/cronometrare",
+      // «Jurnal», «Ziua cursei»'s log of who scanned and who marked present (§996), by hand.
+      "/admin/checkin/jurnal",
       // «Lucruri de adus», the third tab of «Ziua cursei» (§979), by hand.
       "/admin/checkin/lucruri",
       // «Tombolă», the organizers' tab of «Ziua cursei» (§984), by hand.

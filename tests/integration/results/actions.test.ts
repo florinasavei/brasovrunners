@@ -42,7 +42,7 @@ vi.mock("next-intl/server", async () => {
   };
 });
 
-const { saveEventResultsAction, deleteEventResultAction, setResultAgeBandsAction, setResultAwardsAction, setResultsPublishedAction } = await import("@/app/[locale]/admin/events/[id]/results/actions");
+const { saveEventResultsAction, deleteEventResultAction, resetEventResultsAction, setResultAgeBandsAction, setResultAwardsAction, setResultsPublishedAction } = await import("@/app/[locale]/admin/events/[id]/results/actions");
 const { readEventResults } = await import("@/modules/results/results");
 
 let db: TestDatabase;
@@ -377,5 +377,77 @@ describe("§850 «Salvează premiile»", () => {
       expect(result.values.awardPlaces, typed).toEqual([typed]);
     }
     expect(await current()).toEqual({ places: 3, categories: true });
+  });
+});
+
+/**
+ * §997 — «Resetează clasamentul» as the page posts it: what the page drew (the count, the gun), the toast «Clasamentul a fost resetat.»,
+ * and the banner's code for every refusal. The action reads the real clock, so the race to reset is ahead of it, by two hours.
+ */
+describe("§997 «Resetează clasamentul»", () => {
+  let aheadId: string;
+  let gunAt: Date;
+  const aheadRows = () => db.select().from(eventResults).where(eq(eventResults.eventId, aheadId));
+  const resetForm = (fields: Record<string, string>) => {
+    const data = form(fields);
+    data.set("eventId", aheadId);
+    return data;
+  };
+
+  beforeEach(async () => {
+    aheadId = (await createRace(db, { startsAt: new Date(Date.now() + 2 * 3_600_000) })).id;
+    await registerRunner(db, aheadId, { name: "Ana Popescu", bibNumber: 101, sex: "FEMALE", birthDate: "1996-05-01" });
+    await registerRunner(db, aheadId, { name: "Bia Marin", bibNumber: 102, sex: "FEMALE", birthDate: "1985-03-10" });
+    // The trial's «Start» and two results — as «Cronometrare» and «Clasament» wrote them: the setup, not the subject.
+    gunAt = new Date(Date.now() - 10 * 60_000);
+    await db.update(events).set({ raceGunAt: gunAt, raceGunByStaffUserId: staff.ADMIN!.id }).where(eq(events.id, aheadId));
+    await post(saveEventResultsAction, resetForm({ "r[101].time": "8:00", "r[102].status": "DNS" }));
+    expect(await aheadRows()).toHaveLength(2);
+    state.redirected.length = 0;
+    state.cookies.length = 0;
+  });
+
+  it("wipes the results and the gun the page drew, then goes back to the page with «Clasamentul a fost resetat.»", async () => {
+    expect(await post(resetEventResultsAction, resetForm({ results: "2", seenGunAtMs: String(gunAt.getTime()) }))).toBe("redirected");
+    expect(await aheadRows()).toEqual([]);
+    expect((await db.select({ gun: events.raceGunAt }).from(events).where(eq(events.id, aheadId)))[0].gun).toBeNull();
+    expect(state.redirected.at(-1)).toMatch(/\/admin\/events\/[0-9a-f-]{36}\/results$/);
+    expect(state.cookies.map(([, value]) => value).join(" ")).toContain("resultsReset");
+    expect(ro.Feedback.toast.resultsReset).toBe("Clasamentul a fost resetat.");
+    expect(en.Feedback.toast.resultsReset).toBe("The results were reset.");
+    // Pressed again from the same page: nothing is there any more, so the count it drew is stale — refused, nothing written.
+    expect(await post(resetEventResultsAction, resetForm({ results: "2", seenGunAtMs: String(gunAt.getTime()) }))).toBe("redirected");
+    expect(state.redirected.at(-1)).toContain("resultsError=CONFLICT");
+    // From a page drawn after it: nothing to wipe, a toast that says so.
+    state.cookies.length = 0;
+    expect(await post(resetEventResultsAction, resetForm({ results: "0", seenGunAtMs: "" }))).toBe("redirected");
+    expect(state.cookies.map(([, value]) => value).join(" ")).toContain("resultsResetNothing");
+  });
+
+  it("refuses a page that drew another count, another gun or no count at all, with CONFLICT for the banner: nothing wiped", async () => {
+    const posts: Record<string, string>[] = [
+      { results: "1", seenGunAtMs: String(gunAt.getTime()) },
+      { results: "2", seenGunAtMs: "" },
+      { seenGunAtMs: String(gunAt.getTime()) },
+      { results: "doi", seenGunAtMs: String(gunAt.getTime()) },
+    ];
+    for (const fields of posts) {
+      expect(await post(resetEventResultsAction, resetForm(fields))).toBe("redirected");
+      expect(state.redirected.at(-1), JSON.stringify(fields)).toContain("resultsError=CONFLICT");
+    }
+    expect(await aheadRows()).toHaveLength(2);
+  });
+
+  it("refuses the Organizer and a race whose planned start has passed, each with its code for the banner", async () => {
+    state.actor = staff.MODERATOR;
+    expect(await post(resetEventResultsAction, resetForm({ results: "2", seenGunAtMs: String(gunAt.getTime()) }))).toBe("redirected");
+    expect(state.redirected.at(-1)).toContain("resultsError=FORBIDDEN");
+    expect(await aheadRows()).toHaveLength(2);
+    // The file's own race started in June.
+    state.actor = staff.ADMIN;
+    await post(saveEventResultsAction, form({ "r[101].time": "50:00" }));
+    expect(await post(resetEventResultsAction, form({ results: "1", seenGunAtMs: "" }))).toBe("redirected");
+    expect(state.redirected.at(-1)).toContain("resultsError=RESULTS_RESET_AFTER_START");
+    expect(await stored()).toHaveLength(1);
   });
 });

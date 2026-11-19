@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.77` | «Ziua cursei» keeps who scanned and who marked present, and its «Jurnal» tab lists it (§996) · «Resetează clasamentul»: the trial runs wiped before the planned start (§997) · «Contract semnat»: each volunteer's signed agreement attached privately, one by one or a whole folder at once by name (§998) · a 24-hour clock picker beside «Timp» and «Timp cip» on «Clasament», digits alone read as a time (§999) · the team's and the members' invitation says the Zitadel sign-in steps in order and leaves after Zitadel was asked (§1000) · «Golește lista» on «Cronometrare» clears the phone's answered lines (§1001) |
 | `BR-V4.76` | the desk shows identity documents only to the Organizer and the Administrators (§995) |
 | `BR-V4.75` | the volunteers' addresses on «Voluntari» and on the plan's table, the plan's names in capitals (§994) |
 | `BR-V4.74` | the registrations list says when someone cancelled (§993) |

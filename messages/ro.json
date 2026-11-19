@@ -1783,6 +1783,7 @@
           "promoted_by_staff": "Loc dat înaintea listei de așteptare",
           "checked_in": "Marcat prezent",
           "checkin_undone": "Prezență anulată",
+          "code_scanned": "Cod scanat la masă",
           "bibs_printed": "BIB marcat ca printat",
           "bibs_unprinted": "BIB marcat ca neprintat",
           "list_consent_changed": "Alegerea pentru lista publică schimbată de participant",
@@ -2841,6 +2842,11 @@
       "VOLUNTEER_GUARDIAN_NO_EMAIL": "Părintele sau tutorele nu are un email trecut, deci nu are cui să-i plece linkul. Acordul se ia pe hârtie, sau adaugă emailul în „Modifică”.",
       "VOLUNTEER_NO_EMAIL": "Voluntarul nu are adresă de email, deci linkul nu are unde pleca. Contractul și acordul părintelui se semnează pe hârtie, sau adaugă adresa în „Modifică”.",
       "VOLUNTEER_MINORS_CLOSED": "Clubul nu primește încă voluntari sub 18 ani: nota de confidențialitate și contractul în vigoare nu descriu încă minorii. Aprobă-le întâi; «Sarcini» spune cum.",
+      "VOLUNTEER_CONTRACT_EMPTY": "Fișierul e gol. Alege contractul semnat și încarcă-l din nou.",
+      "VOLUNTEER_CONTRACT_TOO_LARGE": "Fișierul e prea mare pentru a fi atașat. Încarcă un PDF sau o poză mai mică.",
+      "VOLUNTEER_CONTRACT_TYPE": "Fișierul nu e PDF, Word, JPEG, PNG sau HEIC. Nu s-a atașat nimic.",
+      "VOLUNTEER_CONTRACT_UPLOAD_GONE": "Încărcarea s-a întrerupt. Trimite fișierul din nou.",
+      "VOLUNTEER_CONTRACTS_NONE_CHOSEN": "Alege întâi fișierele contractelor semnate, apoi încarcă-le.",
       "VOLUNTEER_POINTS_NOBODY": "Nu am trimis nimic: niciun voluntar cu adresă de email nu stă încă la un punct. Pune oamenii la puncte, apoi trimite.",
       "VOLUNTEER_POINTS_ALL_TOLD": "Nu am trimis nimic: toți cei de la puncte își știu deja punctul. Ca să le scrii din nou, alege „Trimite din nou tuturor”.",
       "PLAN_POINT_PLACE_UNKNOWN": "Alege unde e punctul: pe traseu sau la start–finish.",
@@ -2899,7 +2905,8 @@
       "RESULT_UNDO_NOT_ALLOWED": "Nu se mai anulează aici: doar sosirea ta, neschimbată, în primele 10 minute. Corectează la «Clasament».",
       "RACE_GUN_WINDOW": "«Start» se apasă de cu 3 ore înainte de startul planificat până la 6 ore după.",
       "RACE_GUN_FIXED": "Startul e fixat: au sosit deja alergători. Corectează timpii la «Clasament».",
-      "RACE_GUN_CHANGED": "Startul a fost dat, mutat sau anulat între timp de altcineva: apăsarea ta nu a schimbat nimic. Pagina arată acum startul așa cum e."
+      "RACE_GUN_CHANGED": "Startul a fost dat, mutat sau anulat între timp de altcineva: apăsarea ta nu a schimbat nimic. Pagina arată acum startul așa cum e.",
+      "RESULTS_RESET_AFTER_START": "Clasamentul se poate reseta doar înainte de start."
     },
     "editor": {
       "draftPreview": {
@@ -4173,10 +4180,14 @@
       "invite": "Adaugă",
       "inviteHelp": "Adaugă adresa pe lista echipei și trimite invitația pe email. Contul de autentificare se creează singur doar cu cheia Zitadel pusă; până atunci, din consola Zitadel.",
       "inviteHelpSends": "Adaugă adresa pe lista echipei, îi creează contul de autentificare și îi trimite pe email invitația și linkul pentru parolă.",
-      "inviteSent": "Adăugat. Invitația e pe drum către căsuța lui de email, cu linkul pentru alegerea parolei.",
-      "inviteExists": "Adăugat, invitația e pe drum. Are deja un cont de autentificare cu această adresă — se poate autentifica la /admin imediat.",
-      "inviteManual": "Adăugat, iar invitația e pe drum, dar contul de autentificare nu s-a creat: lipsește cheia Zitadel. Creează-l din consola Zitadel cu exact această adresă.",
-      "inviteFailed": "Adăugat și invitația e pe drum, dar furnizorul de autentificare a refuzat să creeze contul ({reason}). Își poate face contul din pagina de autentificare, cu exact această adresă.",
+      "inviteSent": "Adăugat. Primește două emailuri: unul de la Zitadel, cu butonul „Acceptare invitație”, pentru parolă, și unul de la noi, cu pașii.",
+      "inviteExists": "Adăugat. Avea deja cont la Zitadel, fără parolă: primește tot două emailuri, unul de la Zitadel, cu un cod nou, și unul de la noi, cu pașii.",
+      "inviteReady": "Adăugat. Are deja cont la Zitadel, cu parolă: primește doar emailul nostru, cu pașii, și intră cu parola pe care o are.",
+      "inviteManual": "Adăugat. Primește un singur email, de la noi, cu pașii ca să-și facă singur contul: lipsește cheia Zitadel, așa că nu s-a creat aici.",
+      "inviteFailed": "Adăugat, dar Zitadel nu a făcut contul ({reason}): primește doar emailul nostru, cu pașii ca să-și facă singur contul din pagina de autentificare.",
+      "resendSent": "Trimisă din nou. Primește două emailuri: unul de la Zitadel, cu un cod nou (cel vechi nu mai merge), și unul de la noi, cu pașii.",
+      "resendReady": "Trimisă din nou, doar de la noi: are deja cont la Zitadel, cu parolă, și intră cu ea.",
+      "resendManual": "Trimisă din nou: primește un singur email, de la noi, cu pașii ca să-și facă singur contul — lipsește cheia Zitadel.",
       "resendInvite": "Retrimite invitația",
       "resendInvitePending": "Se trimite…",
       "pending": "Nu s-a autentificat încă",
@@ -4206,7 +4217,7 @@
         "SUPERADMIN": "plus setările tehnice care pot opri serviciul — cât de des verifică site-ul, limitele bazei de date, verificarea anti-robot — și numirea altui Superadministrator.",
         "MEMBER": "zona membrilor de pe site, după autentificare. Fără backoffice."
       },
-      "resendFailed": "Invitația nu a plecat: la furnizorul de autentificare nu există cont cu această adresă ({reason}). Verifică adresa din listă — dacă e greșită, retrage accesul și adaugă persoana din nou cu adresa corectă.",
+      "resendFailed": "Emailul nostru e pe drum, dar Zitadel nu a trimis codul ({reason}): primește doar emailul nostru, cu pașii ca să-și facă singur contul din pagina de autentificare.",
       "passwordReset": "Trimite resetare de parolă",
       "passwordResetPending": "Se trimite…",
       "passwordResetSent": "Gata. I-am trimis pe email linkul cu care își pune o parolă nouă.",
@@ -4250,10 +4261,11 @@
       "membersInviteFailed": "Membri adăugați: {count}, invitațiile sunt pe drum — dar pentru {failed} dintre ei contul de autentificare nu s-a putut face. Apasă din nou „Adaugă membrii” cu adresele lor ca să reîncerci.",
       "membersRetried": "Erau deja membri: {retried} — li s-a reîncercat doar contul.",
       "membersOutcome": {
-        "created": "cont creat, invitația trimisă",
-        "invited": "contul exista, invitația trimisă din nou",
-        "failed": "eșuat: {reason}",
-        "unconfigured": "fără cheie de invitații: contul se face din consola Zitadel"
+        "created": "cont creat: două emailuri, întâi de la Zitadel, pentru parolă, apoi de la noi",
+        "invited": "contul exista, fără parolă: două emailuri, întâi de la Zitadel, cu un cod nou, apoi de la noi",
+        "ready": "are deja cont, cu parolă: doar emailul nostru",
+        "failed": "Zitadel nu a făcut contul ({reason}): doar emailul nostru, își face singur contul",
+        "unconfigured": "fără cheia Zitadel: doar emailul nostru, își face singur contul"
       },
       "permissions": {
         "shopManage": "Gestionează magazinul",
@@ -6356,6 +6368,61 @@
         "missing": "Niciun contract de voluntariat nu e în vigoare: nu se poate trimite sau tipări încă. Aprobă-l în «Documente legale».",
         "noticeMissing": "Nota de confidențialitate în vigoare nu descrie încă acceptarea contractului: linkul și „Semnat pe hârtie” așteaptă. «Sarcini» spune ce trebuie aprobat."
       },
+      "contract": {
+        "title": "Contract semnat",
+        "intro": "Copia semnată a contractului de voluntariat: PDF, Word, JPEG, PNG sau HEIC, cel mult {max}. Doar organizatorii o văd; se șterge odată cu datele voluntarului.",
+        "none": "Niciun contract semnat atașat.",
+        "uploadedBy": "Atașat {when} de {who}",
+        "uploadedAt": "Atașat {when}",
+        "choose": "Fișierul contractului semnat",
+        "upload": "Încarcă",
+        "replace": "Înlocuiește",
+        "replaceHelp": "Un fișier nou îl înlocuiește pe cel de acum.",
+        "sending": "Se încarcă…",
+        "done": "Contractul semnat e atașat.",
+        "chooseFirst": "Alege întâi fișierul.",
+        "failed": "Nu s-a putut încărca. Încearcă din nou.",
+        "download": "Descarcă",
+        "downloadNamed": "Descarcă contractul semnat: {name}",
+        "delete": "Șterge",
+        "deleting": "Se șterge…",
+        "deleteTitle": "Ștergi contractul semnat?",
+        "deleteBody": "Fișierul atașat pentru {name} se șterge de tot. Acceptarea contractului, pe site sau pe hârtie, rămâne cum e.",
+        "chip": "Contract semnat",
+        "summary": "Contracte semnate: {count} din {total}",
+        "filter": "Contract semnat",
+        "filterAll": "Toți, cu sau fără contract semnat",
+        "filterYes": "Cu contract semnat",
+        "filterNo": "Fără contract semnat",
+        "bulkTitle": "Încarcă contractele semnate",
+        "bulkIntro": "Alege toate fișierele deodată: fiecare se atașează voluntarului evenimentului al cărui nume îl poartă, ca Contract-voluntariat-Ana-Pop.docx.",
+        "bulkChoose": "Fișierele contractelor semnate",
+        "bulkSubmit": "Încarcă contractele semnate",
+        "bulkMatching": "Se caută voluntarii după nume…",
+        "bulkSending": "Se încarcă {done} din {total}…",
+        "bulkAttached": {
+          "one": "Am atașat {count} contract semnat.",
+          "few": "Am atașat {count} contracte semnate.",
+          "other": "Am atașat {count} de contracte semnate."
+        },
+        "bulkLeft": {
+          "one": "{count} fișier nu s-a atașat. Atașează-l de mână, pe pagina voluntarului:",
+          "few": "{count} fișiere nu s-au atașat. Atașează-le de mână, pe pagina fiecărui voluntar:",
+          "other": "{count} de fișiere nu s-au atașat. Atașează-le de mână, pe pagina fiecărui voluntar:"
+        },
+        "bulkLine": "{file}: {reason}",
+        "reasons": {
+          "noName": "numele fișierului nu spune al cui e",
+          "noMatch": "niciun voluntar al evenimentului nu are acest nume",
+          "ambiguous": "mai mulți voluntari ai evenimentului au acest nume",
+          "cancelledOnly": "numele e al unui voluntar anulat",
+          "twice": "alt fișier din aceeași încărcare e deja al acestui voluntar",
+          "empty": "fișierul e gol",
+          "tooLarge": "fișierul are peste {max}",
+          "type": "nu e PDF, Word, JPEG, PNG sau HEIC",
+          "gone": "nu s-a putut încărca; încearcă din nou"
+        }
+      },
       "excel": "Descarcă Excel",
       "csv": "Descarcă CSV",
       "csvHelp": "Un rând pe voluntar, grupat pe rolul dat, cei de repartizat primii — ca foaie Excel sau ca CSV. Fișierul conține adrese și telefoane: păstrează-l la fel de atent ca lista.",
@@ -6568,7 +6635,8 @@
         "all": "Toți, prezenți sau absenți",
         "yes": "Prezenți",
         "no": "Absenți",
-        "chip": "Prezent"
+        "chip": "Prezent",
+        "by": "{who}, {time}"
       },
       "decision": {
         "column": "Decizie ziua cursei",
@@ -7798,6 +7866,7 @@
       "results": "Rezultate la curse ({count})",
       "traceVolunteer": "Urma semnăturii voluntarului: IP {ip} · browser {browser}",
       "traceGuardian": "Urma semnăturii părintelui sau tutorelui: IP {ip} · browser {browser}",
+      "signedContract": "Contract semnat atașat: {name} · {format} · {size} · {when}",
       "notes": "Note interne ({count})",
       "noteBy": "{role} · {date} · {event}",
       "noteAuthorGone": "cont șters",
@@ -7857,13 +7926,15 @@
       "title": "Masa de ridicare a numerelor",
       "howTitle": "Cum merge ziua cursei, pas cu pas",
       "how": [
-        "Sus sunt trei taburi: „Prezența” (această masă), „Clasament” (rezultatele cursei alese) și „Lucruri de adus” (lista de bifat cu ce aducem la cursă).",
+        "Sus sunt taburile zilei cursei: „Prezența” (această masă), „Cronometrare” și „Lucruri de adus”; organizatorii au și „Clasament”, „Tombolă” și „Jurnal” (cine a scanat, cine a marcat prezent).",
         "Înainte de cursă (organizator): în „Participare, înscrieri și regulament” → „Alocare și tipărire”, apasă „Descarcă toate numerele (PDF)” și tipărește-le — două pe o foaie A4.",
         "Tipărește și câteva „Formular declarație pe hârtie (PDF)”, pentru cine semnează pe loc.",
         "Un administrator tipărește din „Numere de rezervă pentru înscrierile de la fața locului” numere goale pentru cine se înscrie la masă.",
         "Voluntarii: un Administrator le face conturi din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr.",
+        "Fiecare om de la masă intră cu contul lui, nu cu al altcuiva: „Jurnal” arată cine a scanat fiecare cod și cine a marcat prezent pe fiecare.",
         "Nu văd adrese de email și nu pot anula pe nimeni.",
         "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” (pe Android) sau deschide camera telefonului și îndreapt-o spre cod — se deschide rândul persoanei.",
+        "Sub rând scrie „Scanat înainte: …”? Codul a mai fost deschis la masă: verifică dacă persoana nu și-a luat deja numărul.",
         "Sau caută după nume ori după numărul de concurs.",
         "Apasă „Marchează prezent” și dă-i numărul din teanc. Nu are număr? Scrie-l în căsuță și apasă „Salvează nr.”.",
         "Nu a primit emailul sau nu găsește QR-ul: caută după nume.",
@@ -7871,7 +7942,7 @@
         "Nu s-a înscris deloc: „Adaugă pe cineva”. Nume și email.",
         "Bifa „Persoana este la masă” e deja pusă, iar la „Numărul dat acum” e ales cel mai mic număr de rezervă liber: îi dai BIB-ul acela și îi scrii numele cu markerul.",
         "Semnează declarația pe hârtie, apoi „Marchează prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
-        "Ai greșit? „Anulează prezența” o scoate. Orice apăsare rămâne în istoricul înscrierii, cu numele tău.",
+        "Ai greșit? „Anulează prezența” o scoate. Orice apăsare rămâne în istoricul înscrierii și în „Jurnal”, cu numele tău.",
         "La final, cifrele de pe această pagină sunt cifrele cursei: câți confirmați, câți prezenți. Cine nu a venit rămâne fără „prezent”.",
         "Apare un chenar roșu „Înscriere anulată” sau „expirată”? Persoana nu mai are loc, chiar dacă are emailul în mână: nu i se dă număr și nu se marchează prezentă.",
         "Dacă scrie că numărul a fost tipărit, scoate BIB-ul acela din teanc — numerele nu se refolosesc."
@@ -7897,6 +7968,9 @@
       "nobody": "Nimeni nu se potrivește.",
       "backToDesk": "← Înapoi la masă",
       "scannedTitle": "Participant scanat",
+      "scannedBefore": "Scanat înainte: {scans}",
+      "scannedBeforeAt": "{who} la {time}",
+      "scannedBeforeOn": "{who} la {time} ({day})",
       "confirmHere": "Confirmă pe hârtie",
       "idDocument": "Act de identitate",
       "idDocumentMinor": "Act de identitate (minor)",
@@ -7910,7 +7984,8 @@
       "checkIn": "Marchează prezent",
       "undoCheckIn": "Anulează prezența",
       "checkedInAt": "Prezent la {time} · {who}",
-      "bySelf": "singur",
+      "bySelf": "prin „Am ajuns”",
+      "byRemoved": "cont șters",
       "fastTrack": "Persoana este la masă: confirm eu adresa, iar declarația se semnează pe hârtie acum.",
       "fastTrackHelp": "Confirmată pe loc, fără link din email: participantul semnează declarația pe hârtie în fața ta, iar tu o înregistrezi. Dacă e plin, intră pe lista de așteptare; altfel primește emailul de confirmare.",
       "paperWhen": "Doar la masă, cu declarația semnată pe hârtie de participant în fața ta. Declarația și, dacă adresa nu era confirmată, adresa se înregistrează pe numele tău; nu semnezi tu.",
@@ -9090,6 +9165,12 @@
         "when": "Când o adresă a înscris mai multe persoane deodată și le-a confirmat pe toate: un singur email, cu codul QR, codul de la masă și numărul de concurs al fiecăreia.",
         "platformWords": "Folosește mereu textul implicit. Textul scris de club pentru «Înscriere confirmată (cu QR și număr)» e pentru o singură persoană și nu intră aici."
       },
+      "selfSignIn": {
+        "name": "{type} — persoana își face singură contul",
+        "whenShort": "când contul nu îl face Zitadel",
+        "when": "Când „Adaugă” sau „Retrimite invitația” nu poate cere contul de la Zitadel — lipsește cheia sau Zitadel nu l-a făcut: persoana își face contul din pagina de autentificare.",
+        "platformWords": "Folosește mereu textul implicit. Textul scris de club pentru acest email e pentru contul făcut de Zitadel și nu intră aici."
+      },
       "whenMore": {
         "COMPLETE_DECLARATION": "Locul e ținut {hold} de la plecarea emailului, sau până la termen la un eveniment îndepărtat. Termenul contează doar dacă așteaptă cineva; altfel declarația se semnează și la masă.",
         "BIB_ASSIGNED": "Când un organizator scrie numărul unei înscrieri confirmate, în pagina ei sau la masă. Altfel, numărul vine cu confirmarea. Cu linkul de gestionare. Niciodată pentru un eveniment anulat.",
@@ -9486,6 +9567,7 @@
               "title": "Deschide masa",
               "steps": [
                 "Intră în backoffice (vezi „Primii pași”). Un Voluntar ajunge direct la masă; ceilalți apasă «Ziua cursei» în bara de sus.",
+                "Intră cu contul tău, nu cu al unui coleg: tot ce apeși la masă poartă numele contului, iar organizatorii îl citesc în «Jurnal».",
                 "La «Eveniment» alege cursa de azi, apoi apasă «Caută».",
                 "Sus vezi câți sunt confirmați, câți au venit, câți nu au număr și câți nu au confirmat. Sunt cifrele cursei.",
                 "Ia de la organizator două teancuri: numerele tipărite cu nume și numerele de rezervă, cu linia pentru nume goală, pentru cine se înscrie la masă. Pe cele de rezervă nu le primește nimeni înscris online."
@@ -9497,6 +9579,7 @@
                 "Participantul îți arată codul QR din emailul de confirmare.",
                 "Apasă «Scanează» și ține codul în cadru (merge pe Android). Pe iPhone: deschide aplicația Cameră, îndreapt-o spre cod și atinge linkul care apare.",
                 "Se deschide rândul persoanei: verifică numele cu ea.",
+                "Sub rând scrie «Scanat înainte: …»? Codul a mai fost deschis la masă: verifică dacă persoana nu și-a luat deja numărul; dacă și l-a luat, cheamă un organizator.",
                 "Apasă «Marchează prezent». Nu te întreabă nimic; jos apare un mesaj.",
                 "Dă-i numărul de concurs din teanc — numărul e scris mare pe rând. Ca să vezi numărul desenat: «Vezi numărul de concurs (BIB)».",
                 "Pentru următorul: «Înapoi la masă»."
@@ -9544,7 +9627,7 @@
               "title": "Ai apăsat greșit",
               "steps": [
                 "Pe același rând apasă «Anulează prezența».",
-                "Tot ce apeși rămâne în istoricul înscrierii, cu numele tău. Nu se pierde nimic."
+                "Tot ce apeși rămâne în istoricul înscrierii și în «Jurnal», cu numele tău. Nu se pierde nimic."
               ]
             },
             {
@@ -9563,6 +9646,17 @@
                 "Vin mai mulți deodată: apasă «Prinde timpul» o dată pentru fiecare, apoi scrie numerele în ordine.",
                 "Un rând roșu îți spune ce să notezi pe hârtie, cu timpul. Fără semnal, apăsările așteaptă pe telefon și pleacă singure.",
                 "Ai greșit? «Anulează» pe rândul tău din «Ultimii sosiți», în primele 10 minute, cât nu l-a mai trecut nimeni după tine. Altfel spune-i organizatorului: corectează la «Clasament»."
+              ]
+            },
+            {
+              "title": "Jurnalul: cine a scanat, cine a marcat prezent",
+              "steps": [
+                "Îl deschid Organizatorul și Administratorii: «Ziua cursei» → «Jurnal», apoi alege cursa la «Eveniment» și apasă «Arată».",
+                "Sus, «Pe conturi»: pentru fiecare cont, câte coduri a scanat, câți alergători a marcat prezenți, câte prezențe a anulat și câți voluntari a bifat.",
+                "Dedesubt, cel mai nou primul: ora, cine, ce a făcut și pe cine. Numele duce la înscriere sau la pagina voluntarului.",
+                "„participantul” înseamnă că alergătorul a apăsat singur «Am ajuns — marchează-mă prezent» din linkul lui; „cont șters”, un cont scos de atunci din «Echipa».",
+                "«Cont» și «Ce s-a făcut» aleg ce vezi; apoi «Arată». Se văd cele mai noi 300 de rânduri, iar dedesubt câte mai sunt.",
+                "Ca jurnalul să numească omul, fiecare om de la masă are contul lui de Voluntar: nu folosiți un singur cont pe mai multe telefoane."
               ]
             },
             {
@@ -9795,7 +9889,7 @@
                 "Tipărește numerele (vezi mai sus).",
                 "«Alergări» → «Deschide» → «Înscrierile primite»: tipărește câteva «Formular declarație pe hârtie (PDF)» și, dacă apare, «Formular declarație pentru un minor (PDF)».",
                 "Tot acolo, «Fișă de urgență»: telefoanele și contactele de urgență ale celor confirmați, pe o pagină. O iei la cursă și o distrugi după.",
-                "Voluntarii: roagă un Administrator să le facă conturi cu rolul Voluntar, apoi arată-le secțiunea „Ziua cursei” din ghidul acesta.",
+                "Voluntarii: roagă un Administrator să le facă fiecăruia un cont cu rolul Voluntar — câte unul de om, ca «Jurnal» să spună cine a scanat și cine a marcat prezent —, apoi arată-le secțiunea „Ziua cursei” din ghidul acesta.",
                 "În ziua cursei: «Ziua cursei» în bara de sus."
               ]
             },
@@ -9820,11 +9914,11 @@
                 "«Clasament» e în editorul cursei, în cardul «Înscrierile primite» de la sfârșitul paginii (lângă «Vezi înscrierile acestui eveniment»), nu în «Participare, înscrieri și regulament». Butonul apare doar la o cursă publicată sau al cărei start a trecut; la o ciornă, deschide adresa paginii direct.",
                 "La linia de sosire deschide «Cronometrare» pe telefon: «Ziua cursei» în bara de sus → «Cronometrare» (sau linkul de pe «Clasament»). La start apasă «Start» exact când se dă startul; fără el, timpii se numără de la «Startul cursei» din editor. Când trece o elită, apasă-i butonul (eticheta de pe BIB, cu numele sub ea); pe oricine altcineva îl treci cu numărul de pe BIB și «Sosit». Se salvează pe loc, cu timpul de la start, iar «Ultimii sosiți» arată cine a introdus fiecare rând. Nu e nevoie de cronometru.",
                 "Vin mai mulți deodată? Apasă «Prinde timpul» o dată pentru fiecare, apoi scrie numerele în ordine: fiecare ia cel mai vechi timp prins. Un număr fără înscriere confirmată e refuzat, cu timpul lui pe rând: notează-l pe hârtie și scrie-l după cursă la «Clasament», la «Alergători neînscriși». Un număr trecut a doua oară — de tine sau de alt voluntar — nu schimbă nimic: rămâne primul timp, iar al doilea apare în «Istoricul sosirilor», la «Clasament». Un alergător trecut «Descalificat» la «Clasament» rămâne așa când îi treci numărul. Ai greșit? «Anulează» pe rândul tău, 10 minute, cât nu l-a mai trecut nimeni după tine; după aceea, la «Clasament». Dacă preferi cronometrul sau o aplicație, notează numărul și timpul fiecăruia și scrie-i după, la «Clasament» — pașii următori.",
-                "La «Alergători înscriși» e un rând pentru fiecare înscris cu număr. Scrie timpul în «Timp» (h:mm:ss sau mm:ss); «Stare» rămâne pe «Din timp (Sosit / Neprezentat)» — un timp înseamnă «Sosit». Pentru cine n-a terminat alege «Abandon», «Neprezentat» sau «Descalificat», fără timp. «Timp cip» și «Notă» sunt opționale.",
+                "La «Alergători înscriși» e un rând pentru fiecare înscris cu număr. Scrie timpul în «Timp» (h:mm:ss sau mm:ss) — merg și doar cifrele, fără două puncte: 12345 devine 1:23:45 când ieși din căsuță — sau apasă ceasul de lângă căsuță, alege orele (de la 0 la 23), minutele și secundele și apasă «OK». Zecimile (mm:ss.t) le scrii în căsuță. «Stare» rămâne pe «Din timp (Sosit / Neprezentat)» — un timp înseamnă «Sosit». Pentru cine n-a terminat alege «Abandon», «Neprezentat» sau «Descalificat», fără timp. «Timp cip» și «Notă» sunt opționale; «Timp cip» are și el ceasul lui.",
                 "Ai timpii într-un fișier? Deschide «Importă din CSV», lipește textul (număr, timp pe fiecare rând; cu timp cip și stare dacă ai) sau alege fișierul și apasă «Importă din CSV». Rândurile intră în căsuțe; nimic nu se salvează încă.",
                 "Un număr pe care nu-l are nicio înscriere ajunge la «Alergători neînscriși»: scrie-i numele și, pentru categorie, sexul și data nașterii. Bifează «A acceptat să apară cu numele în clasament» doar dacă persoana ți-a spus-o. «Adaugă un alergător neînscris» face un rând gol.",
                 "Apasă «Salvează tot clasamentul» o dată, pentru toată pagina. Locurile — în total, la sex și la categorie — se calculează singure; timpii egali împart locul. Un rând golit e un rezultat șters. Poți corecta și salva din nou oricând.",
-                "«Descarcă clasamentul (CSV)» e fișierul cu numele, pentru voi. Publicarea pe pagina evenimentului o face Administratorul."
+                "«Descarcă clasamentul (CSV)» e fișierul cu numele, pentru voi. Publicarea pe pagina evenimentului o face Administratorul. Ați făcut o probă înainte de cursă? Administratorul o șterge cu «Resetează clasamentul»."
               ]
             },
             {
@@ -10228,6 +10322,15 @@
                 "Sub fiecare „Pe site: Participant #…” scrie de ce nu apare numele, iar sus, «Cu nume pe site…» spune câți din cei din clasament apar cu numele. La un alergător înscris, numele îl pune doar bifa lui; un administrator poate doar să-l ascundă.",
                 "Clasamentul stă pe pagină cât lista publică a participanților, de la sfârșitul cursei («Setări» → «Termene»). Debifezi oricând; rezultatele rămân salvate.",
                 "Cine s-a înscris sub o notă de confidențialitate mai veche, care nu descria clasamentul, apare ca „Participant #număr”, chiar dacă a bifat lista. Abia după ce clubul aprobă o notă de confidențialitate care numește bifa lângă clasament (câmpul {{resultsNameAsk}}, în «Documente legale») — după ce clubul și avocatul modifică fraza care le spune că apar doar cu numărul — pagina înscrierii lor (linkul din emailul ei) le arată «Vreau să apar cu numele în clasament». Clubul nu trimite un email nou pentru asta: spune-le cu «Trimite un mesaj participanților», din editorul cursei, că pot bifa din linkul înscrierii și că pot debifa oricând."
+              ]
+            },
+            {
+              "title": "Resetează clasamentul după probe, înainte de cursă",
+              "steps": [
+                "Ați încercat «Cronometrare» înainte de cursă — un «Start» de probă, câteva sosiri? Pe «Clasament», la capătul paginii, deschide «Resetează clasamentul»: șterge tot ce s-a scris, ca ziua cursei să înceapă de la zero.",
+                "Apasă «Resetează clasamentul». Întrebarea spune câte rezultate se șterg — sosiri, timpi, stări, note și rândurile alergătorilor neînscriși — și startul dat, dacă a fost dat. Ce n-a plecat încă de pe telefoanele de la «Cronometrare» nu mai contează: pe telefon, rândul spune de ce.",
+                "Rămân înscrierile și numerele lor, prezența, lista de elită, premiile, categoriile de vârstă și bifa «Clasamentul e public pe pagina evenimentului». Pe «Cronometrare» ceasul arată iar «Cursa nu a pornit încă.»",
+                "Se poate doar până la startul planificat al cursei — un «Start» de probă nu-l închide — și doar un Administrator vede butonul. După start, butonul e gri. Nu se poate anula."
               ]
             },
             {
@@ -12389,8 +12492,8 @@
       "backToEvent": "Înapoi la eveniment",
       "link": "Clasament",
       "registrationsLink": "Înscrierile evenimentului",
-      "intro": "Scrie timpii, importă-i dintr-un CSV și salvează tot dintr-o dată. Locurile se calculează singure.",
-      "introMore": "Un rând pe alergător, după numărul de concurs. Locurile sunt în total, la sex și la categorie; timpurile egale împart locul. Un rând cu doar o notă înseamnă neprezentat.",
+      "intro": "Scrie timpii sau alege-i de la ceasul de lângă căsuță, importă-i dintr-un CSV și salvează tot dintr-o dată. Locurile se calculează singure.",
+      "introMore": "Un rând pe alergător, după numărul de concurs. Timpul se poate scrie și doar din cifre: 12345 e 1:23:45. Timpii egali împart locul; un rând cu doar o notă înseamnă neprezentat.",
       "notRace": "Doar o cursă are clasament. Alergările de grup și celelalte evenimente nu au.",
       "notStarted": "Cursa nu a început încă. Poți scrie rezultate și bifa clasamentul public de pe acum; pe site nu apare nimic până la start.",
       "notStartedEnterOnly": "Cursa nu a început încă. Poți scrie rezultate de pe acum; pe site nu apare nimic până la start.",
@@ -12443,6 +12546,13 @@
         "place": "Loc"
       },
       "timePlaceholder": "h:mm:ss",
+      "pickTime": "Alege timpul: {runner}",
+      "pickChip": "Alege timpul cip: {runner}",
+      "picker": {
+        "help": "Ore de la 0 la 23, minute și secunde. Zecimile (mm:ss.t) și timpii de o zi sau mai mult se scriu în căsuță; „OK” pune secunde întregi.",
+        "ok": "OK",
+        "cancel": "Anulează"
+      },
       "birthDatePlaceholder": "ZZ.LL.AAAA",
       "present": "Prezent",
       "publicLine": {
@@ -12618,7 +12728,13 @@
           "deleted": "a șters rezultatul {runner} ({status})",
           "gunSet": "a dat startul la {time}",
           "gunMoved": "a mutat startul la {time} (era {previous})",
-          "gunCleared": "a anulat startul (era {previous})"
+          "gunCleared": "a anulat startul (era {previous})",
+          "reset": {
+            "one": "a resetat clasamentul: {count} rezultat șters",
+            "few": "a resetat clasamentul: {count} rezultate șterse",
+            "other": "a resetat clasamentul: {count} de rezultate șterse"
+          },
+          "resetGun": "{reset}, startul anulat"
         },
         "box": {
           "bib": "număr",
@@ -12632,6 +12748,26 @@
           "registration": "înscriere",
           "nameAgreed": "acordul pentru nume"
         }
+      },
+      "reset": {
+        "title": "Resetează clasamentul",
+        "aside": "Doar înainte de start",
+        "intro": "Pentru probele dinainte de cursă: șterge toate rezultatele și startul dat la «Cronometrare», ca ziua cursei să înceapă de la zero.",
+        "introMore": "Rămân înscrierile și numerele lor, prezența, lista de elită, premiile, categoriile de vârstă și bifa de clasament public. Doar până la startul planificat; nu se poate anula.",
+        "button": "Resetează clasamentul",
+        "pending": "Se resetează…",
+        "afterStart": "Clasamentul se poate reseta doar înainte de start.",
+        "nothing": "Nimic de resetat: niciun rezultat și niciun start dat.",
+        "confirmTitle": "Resetezi clasamentul?",
+        "confirmCount": {
+          "one": "Se șterge {count} rezultat al cursei — sosirea, timpul, starea, nota sau rândul unui alergător neînscris.",
+          "few": "Se șterg toate cele {count} rezultate ale cursei — sosiri, timpi, stări, note și rândurile alergătorilor neînscriși.",
+          "other": "Se șterg toate cele {count} de rezultate ale cursei — sosiri, timpi, stări, note și rândurile alergătorilor neînscriși."
+        },
+        "confirmGun": "Se șterge și startul dat la {time}.",
+        "confirmGunOnly": "Nu e niciun rezultat; se șterge startul dat la {time}.",
+        "confirmPhones": "Ce e pe telefoanele de la «Cronometrare» și n-a plecat încă se pierde. Nu se poate anula.",
+        "changed": "Între timp au venit rezultate noi sau startul s-a schimbat: nu s-a șters nimic. Uită-te din nou și resetează dacă vrei."
       }
     },
     "reserve": {
@@ -12889,7 +13025,8 @@
         "itemsShort": "Lucruri",
         "raffle": "Tombolă",
         "timing": "Cronometrare",
-        "timingShort": "Sosiri"
+        "timingShort": "Sosiri",
+        "journal": "Jurnal"
       },
       "items": {
         "title": "Lucruri de adus",
@@ -12929,6 +13066,74 @@
           "NOT_FOUND": "Lucrul nu mai e pe listă — poate l-a șters un coleg.",
           "VALIDATION_ERROR": "Numele are între 1 și 120 de caractere, iar nota cel mult 200."
         }
+      },
+      "journal": {
+        "title": "Jurnalul zilei cursei",
+        "intro": "Cine a scanat codurile, cine a marcat prezenți alergătorii și cine a bifat voluntarii, cel mai nou primul.",
+        "ownAccount": "Ca jurnalul să numească omul, fiecare lucrează la masă cu contul lui.",
+        "account": "Cont",
+        "accounts": {
+          "all": "Toate conturile",
+          "participant": "Participanții, prin „Am ajuns”",
+          "removed": "Conturi șterse"
+        },
+        "kind": "Ce s-a făcut",
+        "kinds": {
+          "all": "Tot",
+          "scanned": "Coduri scanate",
+          "checkedIn": "Marcați prezenți",
+          "undone": "Prezențe anulate",
+          "volunteerPresent": "Voluntari bifați prezenți",
+          "volunteerAbsent": "Voluntari debifați"
+        },
+        "show": "Arată",
+        "summaryTitle": "Pe conturi",
+        "counts": {
+          "scanned": {
+            "one": "{count} scanare",
+            "few": "{count} scanări",
+            "other": "{count} de scanări"
+          },
+          "checkedIn": {
+            "one": "{count} marcat prezent",
+            "few": "{count} marcați prezenți",
+            "other": "{count} de marcați prezenți"
+          },
+          "undone": {
+            "one": "{count} prezență anulată",
+            "few": "{count} prezențe anulate",
+            "other": "{count} de prezențe anulate"
+          },
+          "volunteerTicks": {
+            "one": "{count} bifă la voluntari",
+            "few": "{count} bife la voluntari",
+            "other": "{count} de bife la voluntari"
+          }
+        },
+        "linesTitle": "Ce s-a întâmplat, cel mai nou primul",
+        "verbs": {
+          "scanned": "a scanat",
+          "checkedIn": "a marcat prezent",
+          "undone": "a anulat prezența",
+          "volunteerPresent": "a bifat prezent",
+          "volunteerAbsent": "a debifat prezent"
+        },
+        "who": {
+          "participant": "participantul"
+        },
+        "whom": {
+          "numbered": "{name} (nr. {number})",
+          "test": "{name} (test)",
+          "volunteer": "{name} (voluntar)"
+        },
+        "timeOnDay": "{time} ({day})",
+        "more": {
+          "one": "și încă {count} rând, mai vechi",
+          "few": "și încă {count} rânduri, mai vechi",
+          "other": "și încă {count} de rânduri, mai vechi"
+        },
+        "empty": "Nimic încă la acest eveniment: niciun cod scanat, nimeni marcat prezent, niciun voluntar bifat.",
+        "emptyFiltered": "Nimic pentru alegerea aceasta. Alege „Toate conturile” și „Tot”."
       }
     },
     "raffle": {
@@ -13079,6 +13284,7 @@
       },
       "entries": {
         "title": "Pe telefonul acesta",
+        "clear": "Golește lista — rămâne doar ce n-a plecat",
         "waiting": "se salvează…",
         "saved": "salvat",
         "waitingCount": "de trimis: {count}",
@@ -13095,6 +13301,7 @@
         "FORBIDDEN": "rolul tău nu poate trece sosiri — notează pe hârtie: {time}",
         "NOT_FOUND": "evenimentul nu mai e pe site — notează pe hârtie: {time}",
         "RESULT_PRESS_UNDONE": "anulat între timp — vezi «Clasament»",
+        "RESULT_PRESS_BEFORE_RESET": "apăsat înainte de resetarea clasamentului — nu mai contează",
         "other": "nu s-a salvat — notează pe hârtie: {time}"
       },
       "recent": {
@@ -15239,6 +15446,20 @@
       "checkpointsUnchanged": "Nimic de schimbat la punctele de pe traseu.",
       "volunteerAgreementRequested": "Contract cerut.",
       "volunteerAgreementRecorded": "Contract înregistrat ca semnat pe hârtie.",
+      "volunteerContractUploaded": "Contractul semnat e atașat.",
+      "volunteerContractReplaced": "Contractul semnat a fost înlocuit.",
+      "volunteerContractDeleted": "Contractul semnat a fost șters.",
+      "volunteerContractNone": "Nu mai era atașat niciun contract semnat.",
+      "volunteerContractsAttached": {
+        "one": "Am atașat {count} contract semnat.",
+        "few": "Am atașat {count} contracte semnate.",
+        "other": "Am atașat {count} de contracte semnate."
+      },
+      "volunteerContractsAttachedSome": {
+        "one": "Am atașat {count} contract semnat. Fișiere neatașate: {left}; filtrul „Fără contract semnat” arată cine a rămas.",
+        "few": "Am atașat {count} contracte semnate. Fișiere neatașate: {left}; filtrul „Fără contract semnat” arată cine a rămas.",
+        "other": "Am atașat {count} de contracte semnate. Fișiere neatașate: {left}; filtrul „Fără contract semnat” arată cine a rămas."
+      },
       "badgeDesignSaved": "Ecusonul a fost salvat.",
       "badgeDesignUnchanged": "Nimic de schimbat la ecuson.",
       "badgeColoursSaved": "Culorile rolurilor au fost salvate.",
@@ -15301,6 +15522,8 @@
       "resultsPublishedFromStart": "Gata: clasamentul apare pe pagina evenimentului de la start, pe măsură ce sosesc alergătorii.",
       "resultsUnpublished": "Clasamentul nu mai e public pe pagina evenimentului.",
       "resultsPublicUnchanged": "Era deja așa; nimic de schimbat.",
+      "resultsReset": "Clasamentul a fost resetat.",
+      "resultsResetNothing": "Nu era nimic de resetat.",
       "rsvpAskAudience": "Alegerea pentru întrebarea „Vii?” a fost salvată.",
       "resultsCategoriesSaved": "Am salvat categoriile de vârstă; locurile la categorie s-au recalculat.",
       "resultsCategoriesUnchanged": "Categoriile erau deja așa; nimic de schimbat.",

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventResults, type EventResultRow } from "@/db/schema/event-results";
@@ -16,7 +16,7 @@ import { RACE_NUMBER_FORMAT } from "@/modules/events/repository";
 import { hiddenListShownPublicly } from "@/modules/registrations/domain/hidden-list";
 import type { RaceNumberFormat } from "@/modules/registrations/domain/race-number";
 import { type SexChoice, sexShown } from "@/modules/registrations/domain/sex";
-import { canEnterResults, canPublishResults, canRecordFinishes } from "@/modules/staff-identity/domain/roles";
+import { canEnterResults, canPublishResults, canRecordFinishes, canResetResults } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { ageBandStartsOf, DEFAULT_AGE_BAND_STARTS, isValidAgeBandStarts, sameAgeBandStarts } from "./domain/age-bands";
@@ -26,6 +26,7 @@ import {
   type EliteButtonView,
   FINISH_UNDO_WINDOW_MS,
   finishStamp,
+  isInstant,
   LINE_TRAIL_ACTIONS,
   type LineTrailRow,
   mayUndo,
@@ -56,7 +57,8 @@ import { type PostedResultRow, resultBox } from "./rows";
  * them — read by the event page.
  *
  * **Who.** The Organizer, the Administrator and the Superadministrator enter, import, rank and read (`canEnterResults`); the
- * Administrator and the Superadministrator alone publish (`canPublishResults`). The Tehnic role, the Redactor, the desk Volunteer
+ * Administrator and the Superadministrator alone publish (`canPublishResults`) and, before the start, wipe the whole list
+ * («Resetează clasamentul», `canResetResults`, §997: `resetEventResults`). The Tehnic role, the Redactor, the desk Volunteer
  * and a member are refused here, whatever the page drew (BR-REQ-060-01) — but for the finish line (§986): every role that works
  * the desk records a finish on «Cronometrare» and undoes its own press for ten minutes (`canRecordFinishes`), and only whoever
  * enters results presses «Start». **Nothing about a registration changes**: a result reads
@@ -916,6 +918,77 @@ export async function setResultAwards<T extends Record<string, unknown>>(db: Dat
   return outcome;
 }
 
+// ---- Resetting before the start ---------------------------------------------------------------------------
+
+/** What «Resetează clasamentul» posts: the event, and what its page drew — the results it counted and the gun it saw. */
+export type ResetResultsRequest = {
+  eventId: string;
+  /** How many results the page drew (`EventResultsView.counts`, summed): a page drawn before more arrived is refused (CONFLICT). */
+  seenResults: number;
+  /** The gun the page drew — null for none, else its instant; `undefined` for a caller that does not guard it (a script, a test). */
+  seenGunAtMs?: number | null;
+};
+
+/** What a reset did: how many results it deleted and whether it took a gun off; `changed` false — nothing was there, nothing written. */
+export type ResetResultsOutcome = { changed: boolean; deleted: number; gunCleared: boolean };
+
+/**
+ * «Resetează clasamentul» (§997; the trial runs before a race: a test «Start», a few test finishes): the race's whole list wiped
+ * **before the start**, so race day starts from zero.
+ *
+ * **Who** — the Administrator and the Superadministrator (`canResetResults`, FORBIDDEN otherwise). **What** — a race only
+ * (`RESULTS_NOT_OPEN`), and only while its planned gun (`plannedGunOf`: `race_starts_at`, else `starts_at`) is still ahead on the
+ * server's clock (`RESULTS_RESET_AFTER_START` at it and after): a test «Start» pressed earlier moves the finish line's gun, never
+ * the plan, so it does not close the reset. **Nobody wipes what they did not see**: the page posts how many results it drew and the
+ * gun it saw, and a page drawn before another result arrived — or before «Start» was given, moved or taken off — is refused with
+ * CONFLICT, nothing written.
+ *
+ * In **one transaction under the event row's lock** — the lock every press of the line, every save and «Start» take, so none of
+ * them lands between the count and the delete: every `event_results` row of the event is deleted (the registered runners' and the
+ * runners typed by hand, whatever their state) and `race_gun_at` / `race_gun_by_staff_user_id` are cleared. Nothing else moves: the
+ * awards' rules, the age bands, «Clasament public», the elite list and its numbers, the registrations, their numbers and their
+ * check-ins stay; nothing is ranked again — nothing is left. One audit row, `event.results_reset` with `{ results, gunCleared }`,
+ * never a name; a press a phone made before it is refused after it (`recordFinish`, `RESULT_PRESS_BEFORE_RESET`). A reset that
+ * finds nothing to wipe writes and records nothing. The public cache is told once, after the commit.
+ */
+export async function resetEventResults<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, request: ResetResultsRequest, now: Date): Promise<ResetResultsOutcome> {
+  if (!canResetResults(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not reset a race's results`);
+  assertIds(request.eventId);
+  const outcome = await db.transaction(async (tx): Promise<ResetResultsOutcome> => {
+    const event = await loadEvent(tx, request.eventId, true);
+    if (!eventTakesResults(event.type)) throw new DomainError("RESULTS_NOT_OPEN", "only a race has results to reset");
+    if (plannedGunOf(event).getTime() <= now.getTime()) throw new DomainError("RESULTS_RESET_AFTER_START", "the results are reset only before the planned start");
+    const stored = await loadStored(tx, event.id, true);
+    const gunAtMs = event.raceGunAt?.getTime() ?? null;
+    if (request.seenResults !== stored.length || (request.seenGunAtMs !== undefined && request.seenGunAtMs !== gunAtMs)) {
+      throw new DomainError("CONFLICT", "results arrived, or the start changed, since the page was drawn");
+    }
+    const gunCleared = gunAtMs !== null;
+    if (stored.length === 0 && !gunCleared) return { changed: false, deleted: 0, gunCleared: false };
+    if (stored.length > 0) await tx.delete(eventResults).where(eq(eventResults.eventId, event.id));
+    if (gunCleared) await tx.update(events).set({ raceGunAt: null, raceGunByStaffUserId: null }).where(eq(events.id, event.id));
+    await recordAuditEvent(tx, { actorStaffUserId: actor.id, action: "event.results_reset", entityType: "event", entityId: event.id, metadata: { results: stored.length, gunCleared }, now });
+    return { changed: true, deleted: stored.length, gunCleared };
+  });
+  if (outcome.changed) revalidatePublicContent("events", "places");
+  return outcome;
+}
+
+/**
+ * Whether «Resetează clasamentul» wiped the race after `sinceMs` (§997): an `event.results_reset` row of the race's trail newer than
+ * that instant, `sinceMs` a moment already come on the server's clock. The indexed key (`audit_logs_entity_idx`: the entity type, the
+ * id, the time), read from the instant on — a press made now reads the last seconds of the race's trail, a queued one the minutes it
+ * waited.
+ */
+async function resetSince<T extends Record<string, unknown>>(db: Database<T>, eventId: string, sinceMs: number): Promise<boolean> {
+  const [row] = await db
+    .select({ id: auditLogs.id })
+    .from(auditLogs)
+    .where(and(eq(auditLogs.entityType, "event"), eq(auditLogs.entityId, eventId), gt(auditLogs.createdAt, new Date(sinceMs)), eq(auditLogs.action, "event.results_reset")))
+    .limit(1);
+  return row !== undefined;
+}
+
 // ---- The finish line --------------------------------------------------------------------------------------
 
 /** A finish refused with what the volunteer at the line needs: the number and the time the gun says, so a refused number is still written down. */
@@ -1003,6 +1076,10 @@ function finishTargetOf(runners: Runners, bibNumber: number): FinishTarget | nul
  * to be named (the line is ranked, or run hors concours, by `hors-concours.ts`' rule 3); anything else is refused carrying the time
  * (`RESULT_BIB_UNKNOWN`), so the volunteer writes it down and the runner is typed on «Clasament» later.
  *
+ * **A press older than «Resetează clasamentul» (§997)** — made during the trial the reset wiped, and sent after it from a phone that
+ * found its signal again — is refused (`RESULT_PRESS_BEFORE_RESET`, `resetSince`), before anything else is read: no test finish
+ * comes back, and the phone's line says why.
+ *
  * **A retry is the same press (the owner asked that the history be exact).** The island sends each press with its own id
  * (`pressId`), which every row of the trail the press writes keeps; a press whose id the trail already holds — the answer lost on the
  * way, the phone sending it again — is answered as it was the first time, from the trail (`loadSavedPress`,
@@ -1042,6 +1119,13 @@ export async function recordFinish<T extends Record<string, unknown>>(
   const outcome = await db.transaction(async (tx): Promise<FinishOutcome> => {
     const event = await loadEvent(tx, request.eventId, true);
     if (!eventTakesResults(event.type)) throw new DomainError("RESULTS_NOT_OPEN", "only a race takes results");
+    // A press a phone made before «Resetează clasamentul» and sent after it (§997) — a trial the reset wiped, waiting on a phone
+    // without signal: refused, its line on the phone saying why, so no test finish comes back; its retry too, whatever it was
+    // answered then. Read under the event's lock the reset takes, so a press is before it or after it. A press claims its moment;
+    // one with none — or one claiming a moment not yet come on the server's clock — is after any reset there was.
+    if (isInstant(request.claimedAtMs) && request.claimedAtMs < now.getTime() && (await resetSince(tx, event.id, request.claimedAtMs))) {
+      throw new DomainError("RESULT_PRESS_BEFORE_RESET", "the press was made before the results were reset");
+    }
     const [runners, stored, labels] = await Promise.all([loadRegisteredRunners(tx, event.id), loadStored(tx, event.id, true), loadEliteLabels(tx, event.id)]);
     const target = finishTargetOf(runners, bibNumber);
     const index = indexStored(stored, runners);

@@ -64,8 +64,21 @@ const BANNER_REFUSALS = [
   // «Dă-i un număr» on an elite line with no number left in the race's series (§990).
   "ELITE_NO_FREE_NUMBER",
 ] as const;
-/** The island's refusals by code, each `Admin.timing.refused.<code>`; any other is `refusedOther`. */
-const LINE_REFUSALS = ["RESULT_BIB_UNKNOWN", "RESULT_FINISH_NOT_STARTED", "RESULT_FINISH_CLOSED", "RESULT_PRESS_UNDONE", "RESULTS_NOT_OPEN", "VALIDATION_ERROR", "FORBIDDEN", "NOT_FOUND"] as const;
+/**
+ * The island's refusals by code, each `Admin.timing.refused.<code>`; any other is `refusedOther`. `RESULT_PRESS_BEFORE_RESET` is a
+ * press this phone kept from before «Resetează clasamentul» (§997): settled with the reason, never sent again.
+ */
+const LINE_REFUSALS = [
+  "RESULT_BIB_UNKNOWN",
+  "RESULT_FINISH_NOT_STARTED",
+  "RESULT_FINISH_CLOSED",
+  "RESULT_PRESS_UNDONE",
+  "RESULT_PRESS_BEFORE_RESET",
+  "RESULTS_NOT_OPEN",
+  "VALIDATION_ERROR",
+  "FORBIDDEN",
+  "NOT_FOUND",
+] as const;
 const UNDO_REFUSALS = ["RESULT_UNDO_NOT_ALLOWED", "NOT_FOUND", "FORBIDDEN"] as const;
 
 const number = (raw: string | undefined) => (raw !== undefined && /^\d{1,9}$/.test(raw) ? Number(raw) : null);
@@ -277,6 +290,7 @@ export default async function TimingPage({ params, searchParams }: Props) {
     keptStale: { one: t.raw("timing.keep.stale.one") as string, few: t.raw("timing.keep.stale.few") as string, other: t.raw("timing.keep.stale.other") as string },
     keptStaleDone: t("timing.keep.staleDone"),
     entriesTitle: t("timing.entries.title"),
+    entriesClear: t("timing.entries.clear"),
     waiting: t("timing.entries.waiting"),
     saved: t("timing.entries.saved"),
     place: t.raw("timing.place") as string,

@@ -10,15 +10,17 @@ import { openFold } from "./support/fold";
  * A Contributor — the lowest role, which is what a volunteer at the pickup table is given —
  * opens the desk, enters a walk-in who never registered, sees them confirmed on the spot,
  * types their number, marks them here, and then opens the page their QR would have opened and
- * takes the check-in back. The QR image itself is fetched as the email would fetch it.
+ * takes the check-in back. The QR image itself is fetched as the email would fetch it. Then the
+ * organizer reads «Ziua cursei» → «Jurnal» (§996): the scan, the check-in and the undo, each named
+ * with the volunteer's account, on a phone and on a desktop.
  *
  * Runs against the seeded database; both Playwright projects share it, so every name, address
  * and race number carries the project's name.
  */
 test.describe("BR-REQ-037-08 the race-day desk", () => {
-  // One long story on one page, four server actions in a row: under the full suite's load a
-  // round trip can take longer than the five seconds an expectation waits by default.
-  test.describe.configure({ timeout: 60_000 });
+  // One long story on one page, four server actions in a row and a second sign-in for «Jurnal» (§996): under the full
+  // suite's load a round trip can take longer than the five seconds an expectation waits by default.
+  test.describe.configure({ timeout: 90_000 });
 
   test("a volunteer enters a walk-in, gives a number, checks them in, and opens their QR page", async ({ page }) => {
     // An organizer opens registration on the featured event (the seed configures none).
@@ -40,7 +42,8 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
 
     // The desk works the featured event. A native select, so this needs no hydration.
     const option = page.locator('select[name="eventId"] option', { hasText: FEATURED.title });
-    await page.selectOption('select[name="eventId"]', (await option.getAttribute("value")) as string);
+    const eventId = (await option.getAttribute("value")) as string;
+    await page.selectOption('select[name="eventId"]', eventId);
     await page.getByRole("button", { name: "Caută" }).click();
 
     // A walk-in: never registered, standing at the table.
@@ -86,7 +89,8 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     // Check-in asks nothing (§384): one tap per runner at the desk.
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.locator("#admin-alert")).toContainText("Marcat prezent", { timeout: 15_000 });
-    await expect(page.getByTestId("desk-row").filter({ hasText: suffix })).toContainText("Prezent la");
+    // …and who marked them (§996): the volunteer's own account, on the row's chip.
+    await expect(page.getByTestId("desk-row").filter({ hasText: suffix }).getByTestId("desk-checked-in")).toContainText(/Prezent la \d\d:\d\d · Dev Contributor/);
 
     // The QR the email links to, and the page it opens.
     const qr = await page.request.get(`/api/registrations/qr/${code}.png`);
@@ -108,6 +112,47 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
       viewportWidth: document.documentElement.clientWidth,
     }));
     expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
+
+    // The volunteer has no «Jurnal»: not among the tabs, and its address is the 404 of an unknown page (§996).
+    await page.goto(`/ro/admin/checkin?eventId=${eventId}`);
+    await expect(page.getByTestId("race-day-tabs").getByRole("link", { name: "Jurnal" })).toHaveCount(0);
+    expect((await page.goto(`/ro/admin/checkin/jurnal?eventId=${eventId}`))?.status()).toBe(404);
+
+    // The organizer reads who did what (§996): the scan, the check-in and the undo, each with the volunteer's account.
+    await page.goto("/ro/admin/checkin");
+    await page.getByRole("button", { name: "Ieși din cont" }).click();
+    await expect(page).not.toHaveURL(/\/admin/, { timeout: 30_000 });
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/checkin?eventId=${eventId}`);
+    await hydrated(page);
+    await page.getByTestId("race-day-tabs").getByRole("link", { name: "Jurnal" }).click();
+    await expect(page).toHaveURL(new RegExp(`/ro/admin/checkin/jurnal\\?eventId=${eventId}`));
+    await expect(page.getByTestId("race-day-tabs").locator('[aria-current="page"]')).toContainText("Jurnal");
+    await expect(page.getByTestId("race-day-journal-title")).toBeVisible();
+    const lines = page.getByTestId("race-day-journal-line").filter({ hasText: suffix });
+    await expect(lines.filter({ hasText: "Dev Contributor a scanat" })).toHaveCount(1);
+    await expect(lines.filter({ hasText: "Dev Contributor a marcat prezent" })).toHaveCount(1);
+    await expect(lines.filter({ hasText: "Dev Contributor a anulat prezența" })).toHaveCount(1);
+    // Newest first, to the second: the undo above the scan, the scan above the check-in made before it.
+    const kinds = await lines.evaluateAll((items) => items.map((item) => item.getAttribute("data-kind")));
+    expect(kinds).toEqual(["undone", "scanned", "checkedIn"]);
+    await expect(lines.first()).toContainText(/^\d\d:\d\d:\d\d/);
+    await expect(page.getByTestId("race-day-journal-account-line").filter({ hasText: "Dev Contributor" })).toBeVisible();
+    // The volunteer's lines alone, by the account filter: still the three.
+    const filters = page.getByTestId("race-day-journal-filters");
+    await filters.locator('select[name="account"]').selectOption({ label: "Dev Contributor" });
+    await filters.getByRole("button", { name: "Arată" }).click();
+    await expect(page).toHaveURL(/account=/);
+    await expect(page.getByTestId("race-day-journal-line").filter({ hasText: suffix })).toHaveCount(3);
+    // The name leads to the registration's page.
+    await page.getByTestId("race-day-journal-line").filter({ hasText: suffix }).first().getByTestId("race-day-journal-whom").click();
+    await expect(page).toHaveURL(/\/ro\/admin\/registrations\/[0-9a-f-]{36}/);
+    await expect(page.getByTestId("audit-trail")).toBeVisible();
+    // A phone and a desktop alike: the log is never wider than the viewport.
+    await page.goBack();
+    await expect(page.getByTestId("race-day-journal-title")).toBeVisible();
+    const journalWidth = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(journalWidth).toBeLessThanOrEqual(0);
   });
 
   /**

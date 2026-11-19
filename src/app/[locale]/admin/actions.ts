@@ -59,16 +59,20 @@ import { sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { inEmailPress } from "@/modules/notifications/press";
 import { DEV_STAFF_COOKIE, requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import {
+  type InviteOutcome,
   inviteZitadelUser,
+  isZitadelInviteConfigured,
   reinviteZitadelUser,
   sendZitadelPasswordReset,
   setZitadelUserActive,
 } from "@/modules/staff-identity/zitadel-users";
+import { signInStepsAfter } from "@/modules/staff-identity/domain/zitadel-invite";
 import {
   assertMayManageAccount,
   changeStaffRole,
   inviteMembers,
   inviteStaffUser,
+  releaseInvitationHold,
   resendStaffInvitation,
   revokeStaffUser,
   setMemberTier,
@@ -1567,6 +1571,27 @@ export async function eraseGroupRunDeclarationsAction(_previous: FormOutcome | n
   return backTo(path, { saved: "groupRunDeclarationsErased", erased: String(erased) });
 }
 
+/**
+ * Whether a press asks Zitadel for the account (§123) — Zitadel is the provider and its key is set — and so whether the
+ * club's invitation says Zitadel's steps and waits for its answer (§1000).
+ */
+function asksZitadel(): boolean {
+  return env.STAFF_AUTH_MODE === "provider" && isZitadelInviteConfigured();
+}
+
+/**
+ * The club's invitation let go once Zitadel answered (§1000), before the press's response, so the drain after it sends the
+ * email with the steps that answer makes true. A failure here is logged, never the press's: the row is added, Zitadel was
+ * asked, and the hold's minute lets the email go anyway.
+ */
+async function releaseAfterZitadel(staffUserId: string, answer: InviteOutcome): Promise<void> {
+  try {
+    await releaseInvitationHold(getDb(), staffUserId, signInStepsAfter(answer.kind));
+  } catch (error) {
+    console.error("[staff] the invitation's hold could not be let go; it leaves when the hold ends", error);
+  }
+}
+
 /** Adding a person (§123); a member may get a level in the same step (§811, §817). A refused address or name comes back in its box (§315). */
 export async function inviteStaffAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   // An email press (`notifications/press.ts`): every row it queues carries this cause, its id and who pressed.
@@ -1579,6 +1604,9 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
     // The question's answer (slice 4, §976): «Adaugă fără invitație», the row is added and nobody is written to — neither
     // the club's invitation nor Zitadel's account and its password email; «Retrimite invitația» sends both later.
     const sendEmail = sendEmailOf(form);
+    // Zitadel asked for the account after the row commits (§123): the club's invitation then says Zitadel's steps and waits
+    // for its answer (§1000). «… fără invitație» asks Zitadel nothing.
+    const zitadelInvite = sendEmail && asksZitadel();
     try {
       // The coarse gate first, so a non-Administrator never reaches the service; the service
       // asserts it again for callers that are not this action.
@@ -1596,7 +1624,7 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
           role: text(form, "role") as StaffRole,
           preferredLocale: toLocale(form.get("preferredLocale")),
         },
-        { tierId: tierId === "" ? null : tierId, sendEmail },
+        { tierId: tierId === "" ? null : tierId, sendEmail, zitadelInvite },
       );
       if (!sendEmail) {
         // Added, told nothing: the banner and the toast say so, and Zitadel is not asked.
@@ -1609,6 +1637,8 @@ export async function inviteStaffAction(_previous: FormOutcome | null, form: For
           env.STAFF_AUTH_MODE === "provider"
             ? await inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale })
             : ({ kind: "unconfigured" } as const);
+        // Zitadel answered: the club's invitation may leave, with the steps the answer makes true (§1000).
+        if (zitadelInvite) await releaseAfterZitadel(member.id, invite);
         outcome = { saved: "invited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
         // Without Zitadel as the provider the allowlist row is the whole verb, and "added to the team"
         // is true: the toast says so. Under the provider `unconfigured` means no key, and the banner
@@ -1649,6 +1679,8 @@ export async function inviteMembersAction(_previous: FormOutcome | null, form: F
     // The question's answer (slice 4, §976): «Adaugă membrii fără invitații», the members are added and nobody is written to —
     // no invitation queued, no Zitadel account asked for; «Retrimite invitația» on each row sends both later.
     const sendEmail = sendEmailOf(form);
+    // As «Adaugă»'s (§1000): each invitation says Zitadel's steps and waits for Zitadel's answer for that member.
+    const zitadelInvite = sendEmail && asksZitadel();
     try {
       const actor = await requireStaffCapability(canManageStaff);
       press.by(actor.id);
@@ -1659,12 +1691,16 @@ export async function inviteMembersAction(_previous: FormOutcome | null, form: F
         preferredLocale: toLocale(form.get("preferredLocale")),
         tierId: tierId === "" ? null : tierId,
         sendEmail,
+        zitadelInvite,
       });
       const lines: MemberAccountLine[] =
         env.STAFF_AUTH_MODE === "provider" && sendEmail
-          ? await createMemberAccounts([...added, ...existing], (member) =>
-              inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale }),
-            )
+          ? await createMemberAccounts([...added, ...existing], async (member) => {
+              const invite = await inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale });
+              // That member's invitation leaves once Zitadel answered for them (§1000); an address already a member has none waiting.
+              if (zitadelInvite) await releaseAfterZitadel(member.id, invite);
+              return invite;
+            })
           : [];
       const counts = countAccountLines(lines);
       const report = await recordAuditEvent(getDb(), {
@@ -1734,12 +1770,16 @@ export async function resendStaffInviteAction(_previous: FormOutcome | null, for
       // The platform's own invitation again (§141), then Zitadel's password link where the key is set (§123).
       // «Trimite acum» or «Pune la coadă» (§540): the dialog's answer, the queue when none was offered.
       const delivery = deliveryChoiceOf(form.get(DELIVERY_CHOICE_FIELD));
-      const member = await resendStaffInvitation(getDb(), actor, text(form, "email"), new Date(), delivery);
+      // Zitadel asked again after the row is queued (§123): the invitation says its steps and waits for its answer (§1000).
+      const zitadelInvite = asksZitadel();
+      const member = await resendStaffInvitation(getDb(), actor, text(form, "email"), new Date(), delivery, { zitadelInvite });
       // An account never made — added «fără invitație» (slice 4) — is made now (`reinviteZitadelUser`).
       const invite =
         env.STAFF_AUTH_MODE === "provider"
           ? await reinviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale })
           : ({ kind: "unconfigured" } as const);
+      // Before the response, so «Trimite acum»'s drain after it finds the row due (§540, §1000).
+      if (zitadelInvite) await releaseAfterZitadel(member.id, invite);
       outcome = { saved: "reinvited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
       // The provider's answer rides along: a failed or unconfigured Zitadel invite holds the green toast back (§171, §288),
       // and an info toast says what the club's own invitation was and when it leaves (`PROVIDER_FAILED_TOASTS`). Without

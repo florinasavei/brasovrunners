@@ -34,7 +34,11 @@ export function eventIdOf(form: FormData): string {
  */
 const VOLUNTEERS_SCREEN_PATH = /^\/(ro|en)\/admin\/volunteers(\/[0-9a-f-]{36})?(\?[A-Za-z0-9=&%._+-]*)?$/;
 function returnToOf(form: FormData): string | null {
-  const raw = field(form, "returnTo");
+  return volunteersScreenPathOf(field(form, "returnTo"));
+}
+
+/** `raw` when it is a path of the «Voluntari» screen — the list with its query, or one person's page — else null: a route's way back (§998). */
+export function volunteersScreenPathOf(raw: string): string | null {
   return VOLUNTEERS_SCREEN_PATH.test(raw) ? raw : null;
 }
 
