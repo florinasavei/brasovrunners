@@ -314,3 +314,47 @@ describe("§NNN «Lista pentru tombolă — doar prezenții» on the registratio
     expect(present?.props["aria-label"]).toBe(en.Admin.registrations.raffle.presentButtonLabel);
   });
 });
+
+describe("§NNN «Tombolă» beside each person: whether they take part, and why not, under the organizers' tick", () => {
+  /** The few words under a row's tick — «Da», or «Nu · <de ce>» — and whether they say in: the note as the cell hands it over. */
+  const standingOf = (tree: ReactNode, id: string) => {
+    const note = raffleCellOf(tree, id).find((element) => "takesPart" in element.props && "words" in element.props);
+    return note ? { words: note.props.words, in: note.props.takesPart === true ? "1" : "0" } : undefined;
+  };
+
+  it("says Da or Nu with the reason by the one answer, «Din oficiu» and «Cu înscriere separată», and keeps the tick beside it", async () => {
+    const race = await createRace();
+    await db.update(events).set({ hasRaffle: true }).where(eq(events.id, race.id));
+    const ana = await register(race.id, { bibNumber: 1 });
+    const out = await register(race.id, { bibNumber: 2, inRaffle: false });
+    const numberless = await register(race.id);
+    const waiting = await register(race.id, { status: "WAITLISTED", waitlistedAt: new Date() });
+    state.actor = await staff("MODERATOR");
+
+    let tree = await listPage({ eventId: race.id });
+    expect(standingOf(tree, ana)).toEqual({ words: "Da", in: "1" });
+    expect(standingOf(tree, out)).toEqual({ words: "Nu · scos de organizatori", in: "0" });
+    expect(standingOf(tree, numberless)).toEqual({ words: "Nu · fără număr", in: "0" });
+    expect(standingOf(tree, waiting)).toEqual({ words: "Nu · neconfirmat", in: "0" });
+    // The organizers' tick is still the cell's: the exclusion is theirs in both modes.
+    expect(raffleCellOf(tree, ana).find((element) => element.props["data-testid"] === "registration-raffle-tick")?.props.checked).toBe(true);
+
+    // «Cu înscriere separată»: nobody signed up yet, so the runner with a number does not take part — and says why.
+    await db.update(events).set({ raffleSignUp: true }).where(eq(events.id, race.id));
+    tree = await listPage({ eventId: race.id });
+    expect(standingOf(tree, ana)).toEqual({ words: "Nu · nu s-a înscris", in: "0" });
+    // «Alergătorii» unticked: the group first.
+    await db.update(events).set({ raffleRunners: false }).where(eq(events.id, race.id));
+    expect(standingOf(await listPage({ eventId: race.id }), ana)).toEqual({ words: "Nu · grupa nu e bifată", in: "0" });
+  });
+
+  it("is drawn with the column alone — no raffle, no note — and speaks English", async () => {
+    const race = await createRace();
+    const ana = await register(race.id, { bibNumber: 1 });
+    state.actor = await staff("ADMIN");
+    expect(standingOf(await listPage({ eventId: race.id }), ana)).toBeUndefined();
+    await db.update(events).set({ hasRaffle: true, raffleSignUp: true }).where(eq(events.id, race.id));
+    state.locale = "en";
+    expect(standingOf(await listPage({ eventId: race.id }), ana)).toEqual({ words: "No · did not sign up", in: "0" });
+  });
+});

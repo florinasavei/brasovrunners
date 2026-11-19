@@ -288,3 +288,28 @@ describe("§949 «Tombolă» on the «Voluntari» list", () => {
     expect(after.volunteerOffers.map((offer) => offer.inRaffle)).toEqual([false]);
   });
 });
+
+describe("§NNN «Tombolă» beside each volunteer: whether they take part, and why not, under the organizers' tick", () => {
+  /** The few words under a row's tick, on both of its drawings (the table and the phone card). */
+  const standingOf = (page: string, id: string) =>
+    raffleFormsOf(page, id).map((one) => /data-testid="raffle-standing" data-in="(\d)"[^>]*>([^<]*)</.exec(one)?.slice(1).join(" ") ?? "none");
+
+  it("says Da or Nu with the reason by the one answer, in both modes, beside the tick", async () => {
+    await db.update(events).set({ hasRaffle: true }).where(eq(events.id, raceId));
+    await db.update(eventVolunteers).set({ inRaffle: false }).where(eq(eventVolunteers.id, people.zoe));
+    await db.update(eventVolunteers).set({ bibNumber: 502 }).where(eq(eventVolunteers.id, people.zoe));
+    let page = await listPage();
+    expect(standingOf(page, people.ana)).toEqual(["1 Da", "1 Da"]);
+    expect(standingOf(page, people.dan)).toEqual(["0 Nu · fără număr", "0 Nu · fără număr"]);
+    expect(standingOf(page, people.ion)).toEqual(["0 Nu · neconfirmat", "0 Nu · neconfirmat"]);
+    expect(standingOf(page, people.zoe)).toEqual(["0 Nu · scos de organizatori", "0 Nu · scos de organizatori"]);
+    // «Cu înscriere separată», «Voluntarii» unticked: the group, before anything else.
+    await db.update(events).set({ raffleSignUp: true }).where(eq(events.id, raceId));
+    expect(standingOf(await listPage(), people.ana)).toEqual(["0 Nu · nu s-a înscris", "0 Nu · nu s-a înscris"]);
+    await db.update(events).set({ raffleVolunteers: false }).where(eq(events.id, raceId));
+    page = await listPage();
+    expect(standingOf(page, people.ana)).toEqual(["0 Nu · grupa nu e bifată", "0 Nu · grupa nu e bifată"]);
+    state.locale = "en";
+    expect(standingOf(await listPage(), people.ana)).toEqual(["0 No · group not ticked", "0 No · group not ticked"]);
+  });
+});
