@@ -46,9 +46,10 @@ function row(key: LegalDocumentKey, version: number, extra: Partial<OverviewVers
 }
 
 describe("the texts' groups", () => {
-  it("are the catalogue's eight texts in five groups, in the catalogue's own order", () => {
-    // The volunteer agreement in a group of its own (§758), and «Regulamentul tombolei» in one of its own, last (§984).
-    expect(LEGAL_KIND_GROUPS.map((group) => group.id)).toEqual(["general", "race", "groupRun", "volunteers", "raffle"]);
+  it("are the catalogue's nine texts in six groups, in the catalogue's own order", () => {
+    // The volunteer agreement in a group of its own (§758), «Regulamentul tombolei» in one of its own (§984), and the team's
+    // undertaking in one of its own, last (§NNN).
+    expect(LEGAL_KIND_GROUPS.map((group) => group.id)).toEqual(["general", "race", "groupRun", "volunteers", "raffle", "team"]);
     expect(LEGAL_KIND_GROUPS.flatMap((group) => group.keys)).toEqual([...LEGAL_DOCUMENT_KEYS]);
   });
 
@@ -64,6 +65,7 @@ describe("the texts' groups", () => {
       groupRun: "Declarații pentru alergările de grup",
       volunteers: "Contractul voluntarilor",
       raffle: "Regulamentul tombolei",
+      team: "Angajamentul echipei",
     });
   });
 });
@@ -193,7 +195,7 @@ describe("a text's card", () => {
       pending: "Ciornă în așteptare: versiunea 4",
       dialog: "O ciornă nouă pentru GDPR, din șablon, versiunea 4; textul în vigoare nu se schimbă până nu o aprobi.",
       count: "4 versiuni din 11",
-      regenerate: "Regenerează din șabloane (4 din 8)",
+      regenerate: "Regenerează din șabloane (4 din 9)",
       rule: "Doar textele cu «Șablon nou» se regenerează; celelalte au deja cuvintele șablonului.",
     });
     expect(format("en")).toEqual({
@@ -203,7 +205,7 @@ describe("a text's card", () => {
       pending: "Draft waiting: version 4",
       dialog: "A new draft of GDPR, from the template, version 4; the text in force does not change until you approve it.",
       count: "4 versions of 11",
-      regenerate: "Regenerate from the templates (4 of 8)",
+      regenerate: "Regenerate from the templates (4 of 9)",
       rule: "Only the texts marked «New template» are regenerated; the others already have the template's words.",
     });
   });

@@ -82,6 +82,7 @@ export type TaskId =
   | "volunteerRoleChoicesAgreement"
   | "raffleRules"
   | "raffleNotice"
+  | "teamAgreement"
   | "gmailFallbackNotice"
   | "refusalTerms"
   | "teamPageNotice"
@@ -147,6 +148,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   volunteerRoleChoicesAgreement: "text",
   raffleRules: "text",
   raffleNotice: "text",
+  teamAgreement: "text",
   gmailFallbackNotice: "text",
   refusalTerms: "text",
   teamPageNotice: "text",
@@ -358,6 +360,11 @@ export type OwnerTaskInputs = {
   raffleRulesInForce: boolean;
   /** Does the notice in force, in every language, name `{{raffle}}` (§984, `noticeDescribesRaffle`)? Until it does, no door of a raffle's sign-up opens. */
   raffleDescribed: boolean;
+  /**
+   * Is a version of the team's undertaking in force (§NNN, `teamAgreementInForce`)? Until one is, no colleague is asked
+   * anything at sign-in — a text the club has not approved binds nobody — and the club's row says to approve it.
+   */
+  teamAgreementInForce: boolean;
   /**
    * Does the notice in force, in every language, describe the members' shop (§683,
    * `noticeDescribesMembersShop`)? Until it does, the members' zone draws no shop and an order is refused.
@@ -921,6 +928,13 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   if (input.raffleDescribed || input.raffleSignUpEvents > 0) {
     push("raffleNotice", { owner: "club", state: input.raffleDescribed ? "done" : "open" });
   }
+
+  /*
+    The team's undertaking (§NNN): open while no version of it is in force — the volunteers, the Redactors, the Organizers and
+    the Tehnic work with the participants' data having undertaken nothing, and nobody is asked at sign-in —, done by itself the
+    day a version takes effect. Always on the list: every club has a team. Never blocking: nothing a runner does waits on it.
+  */
+  push("teamAgreement", { owner: "club", state: input.teamAgreementInForce ? "done" : "open" });
 
   /*
     The club's right to refuse a registration (§636, §618), the same shape in the terms: open,

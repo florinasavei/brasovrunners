@@ -4277,6 +4277,12 @@
         "revokeTitle": "Îi iei magazinul?",
         "revokeBody": "{name} nu mai vede secțiunea «Magazin» de la următoarea pagină pe care o deschide.",
         "revoke": "Ia-i magazinul"
+      },
+      "teamAgreement": {
+        "line": "Angajamentul echipei: {state}",
+        "accepted": "Acceptat — versiunea {version}, {date}, ca „{name}”",
+        "notAccepted": "Neacceptat",
+        "notRequired": "Nu e cerut"
       }
     },
     "queue": {
@@ -4361,7 +4367,7 @@
     },
     "legal": {
       "title": "Documente legale",
-      "intro": "Nota de confidențialitate, termenii, declarațiile de concurs pentru eveniment montan și pentru șosea sau parc, cele două declarații ale alergărilor de grup: {count} texte. O corectură e o versiune nouă.",
+      "intro": "Textele clubului: nota de confidențialitate, termenii, declarațiile, contractul voluntarilor, regulamentul tombolei și angajamentul echipei — {count} texte. O corectură e o versiune nouă.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: ce date luăm de la participanți, de ce și cât le ținem. Se bifează la înscriere.",
         "TERMS": "Regulile site-ului și ale înscrierii, nu regulamentul cursei — acela e pe pagina evenimentului. Se bifează la înscriere.",
@@ -4370,7 +4376,8 @@
         "GROUP_RUN_DECLARATION_TRAIL": "Opțională, pentru o alergare de grup pe teren accidentat; se semnează pe pagina alergării, o dată pentru toate datele ei. Aprob-o împreună cu o notă de confidențialitate nouă.",
         "EVENT_DECLARATION_ROAD": "Declarația unui eveniment pe șosea sau în parc, cu riscurile asfaltului și ale traficului. Până o aprobi, aceste evenimente semnează declarația pentru eveniment montan.",
         "VOLUNTEER_AGREEMENT": "Contractul pe care îl acceptă fiecare voluntar al unui eveniment: ajutor neplătit, ce face voluntarul, ce face clubul. Până îl aprobi, paginile nu arată formularul de voluntari.",
-        "RAFFLE_RULES": "Regulamentul pe care îl acceptă cine se înscrie la tombola unui eveniment cu înscriere separată. Până îl aprobi, înscrierea la tombolă nu se deschide; tombola „din oficiu” nu are nevoie de el."
+        "RAFFLE_RULES": "Regulamentul pe care îl acceptă cine se înscrie la tombola unui eveniment cu înscriere separată. Până îl aprobi, înscrierea la tombolă nu se deschide; tombola „din oficiu” nu are nevoie de el.",
+        "STAFF_DATA_AGREEMENT": "Angajamentul pe care îl acceptă fiecare coleg din echipă, în afară de administratori, înainte să lucreze în backoffice. Până îl aprobi, nimeni nu e întrebat. Se aprobă separat."
       },
       "empty": "Nu există niciun document legal. Înscrierile sunt refuzate până când există o notă de confidențialitate aprobată.",
       "emptyCanCreate": "Nu există încă niciun document legal, așa că înscrierile sunt refuzate. Începe cu nota de confidențialitate: Versiune nouă.",
@@ -4390,7 +4397,8 @@
         "GROUP_RUN_DECLARATION_TRAIL": "Declarație pe propria răspundere (alergare de grup, teren accidentat)",
         "EVENT_DECLARATION_ROAD": "Declarație pe propria răspundere — eveniment pe asfalt / în parc",
         "VOLUNTEER_AGREEMENT": "Contract de voluntariat",
-        "RAFFLE_RULES": "Regulamentul tombolei"
+        "RAFFLE_RULES": "Regulamentul tombolei",
+        "STAFF_DATA_AGREEMENT": "Angajament de confidențialitate și protecția datelor pentru echipă"
       },
       "referenced": "{signatures} semnături · {events} evenimente",
       "unreferenced": "Nefolosit încă",
@@ -4656,7 +4664,8 @@
         "race": "Declarații de cursă",
         "groupRun": "Declarații pentru alergările de grup",
         "volunteers": "Contractul voluntarilor",
-        "raffle": "Regulamentul tombolei"
+        "raffle": "Regulamentul tombolei",
+        "team": "Angajamentul echipei"
       },
       "shortKeys": {
         "PRIVACY_NOTICE": "GDPR",
@@ -4666,7 +4675,8 @@
         "GROUP_RUN_DECLARATION_ASPHALT": "Grup asfalt",
         "GROUP_RUN_DECLARATION_TRAIL": "Grup teren accidentat",
         "VOLUNTEER_AGREEMENT": "Voluntari",
-        "RAFFLE_RULES": "Tombolă"
+        "RAFFLE_RULES": "Tombolă",
+        "STAFF_DATA_AGREEMENT": "Echipă"
       },
       "filter": {
         "label": "Filtrează versiunile",
@@ -4787,6 +4797,17 @@
         "en": "English"
       },
       "tabIncomplete": "incomplet"
+    },
+    "teamAgreement": {
+      "title": "Angajamentul echipei",
+      "intro": "Înainte să lucrezi în backoffice, citește angajamentul de mai jos și acceptă-l. Îl accepți o singură dată pentru fiecare versiune.",
+      "fullName": "Numele tău complet",
+      "fullNameHelp": "Prenumele și numele de familie, ca semnătură.",
+      "accept": "Am citit și accept angajamentul",
+      "acceptRequired": "Bifează că ai citit și accepți angajamentul.",
+      "submit": "Accept și intru",
+      "submitting": "Se salvează…",
+      "signOutHint": "Până accepți, paginile backoffice-ului nu se deschid. Poți ieși din cont oricând, de sus."
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -5710,6 +5731,19 @@
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful „Tombola”, din secțiunea 5, descrie înscrierea.",
             "Deschide ciorna, citește-o, „Salvează ciorna”, apoi „Aprobă și publică”, în ambele limbi."
+          ]
+        },
+        "teamAgreement": {
+          "title": "Angajamentul echipei",
+          "todo": "Niciun angajament al echipei nu e în vigoare: voluntarii, redactorii, organizatorii și tehnicii nu l-au acceptat. Aprobă-l înainte de ziua cursei.",
+          "done": "Angajamentul echipei e în vigoare: fiecare coleg, în afară de administratori, îl acceptă la prima intrare.",
+          "how": [
+            "/admin/legal → „Versiune nouă” → sub „Pornește de la șablon”, „Angajament de confidențialitate și protecția datelor pentru echipă”.",
+            "Butonul „Aprobă acum textele care lipsesc…” nu îl aprobă: se aprobă separat, citit pentru el.",
+            "Un jurist ar trebui să-l citească întâi: autoritatea clubului (art. 29 și 32 alin. (4) GDPR), confidențialitatea după rol, răspunderea și cât se păstrează acceptarea.",
+            "Completează datele clubului rămase între paranteze unghiulare, în ambele limbi, „Salvează ciorna”, apoi „Aprobă și publică”.",
+            "Aprobă-l cu cel puțin o zi înainte de cursă: din acel moment, fiecare coleg care nu e administrator e oprit la prima pagină până îl acceptă.",
+            "„Echipa” arată, pe rândul fiecărui coleg, dacă l-a acceptat."
           ]
         }
       },
@@ -9503,6 +9537,17 @@
               ]
             },
             {
+              "title": "Angajamentul echipei, la prima intrare",
+              "steps": [
+                "Dacă rolul tău este «Voluntar», «Redactor», «Organizator» sau «Tehnic», la prima intrare după ce clubul aprobă angajamentul echipei se deschide pagina lui, în locul paginii pe care ai cerut-o.",
+                "Citește textul până la capăt: ce date vezi, cum le păstrezi confidențiale, ce faci cu listele tipărite și ce faci dacă pierzi telefonul.",
+                "Scrie-ți numele în «Numele tău complet», bifează «Am citit și accept angajamentul» și apasă «Accept și intru».",
+                "Ajungi pe pagina pe care o ceruseși, de exemplu pe numărul scanat la masă. Angajamentul îl accepți o singură dată; o versiune nouă ți se cere din nou, tot o dată.",
+                "Până accepți, nicio pagină a backoffice-ului nu se deschide. «Ieși din cont» rămâne sus.",
+                "Administratorii nu îl acceptă aici: ei aprobă textul în «Documente legale»."
+              ]
+            },
+            {
               "title": "Bara de sus: ce găsești în fiecare tab",
               "steps": [
                 "Vezi doar taburile rolului tău; restul nu există pentru tine, și e în regulă.",
@@ -10301,7 +10346,8 @@
                 "Apasă «Adaugă» și confirmă. Persoana primește invitația pe email și își alege parola.",
                 "Nu a primit-o: apasă rândul ei, apoi «Retrimite invitația» → «Trimite acum, fără să aștepte trecerea programată».",
                 "Pe rândul persoanei (apasă-l ca să se deschidă): alt rol — «Rol», apoi «Schimbă rolul»; a plecat din echipă — «Retrage accesul», ultimul.",
-                "Magazinul fără rolul de Administrator: apasă rândul colegului, bifează «Gestionează magazinul» și confirmă. Găsește «Magazin» în bara de sus; adresele membrilor nu le vede."
+                "Magazinul fără rolul de Administrator: apasă rândul colegului, bifează «Gestionează magazinul» și confirmă. Găsește «Magazin» în bara de sus; adresele membrilor nu le vede.",
+                "Un coleg nou care nu e administrator acceptă angajamentul echipei la prima intrare, dacă unul e în vigoare: rândul lui din «Echipa» arată dacă l-a acceptat."
               ]
             },
             {
@@ -10412,6 +10458,17 @@
                 "Pe pagina ciornei: «Descarcă PDF» ca să-l citești pe hârtie sau să-l dai unui avocat.",
                 "La «Aprobă versiunea» bifează «Confirm că textul este aprobat de club și poate deveni public», apasă «Aprobă și publică» și confirmă.",
                 "Un text aprobat nu se mai schimbă. Corectura e versiunea următoare: «Pornește versiunea următoare din aceasta»."
+              ]
+            },
+            {
+              "title": "Aprobă angajamentul echipei",
+              "steps": [
+                "«Documente legale» → «Versiune nouă» → sub «Pornește de la șablon», «Angajament de confidențialitate și protecția datelor pentru echipă».",
+                "Completează datele clubului rămase de forma <…>, în română și în engleză, și apasă «Salvează ciorna». Un jurist ar trebui să citească textul întâi.",
+                "La «Aprobă versiunea» bifează «Confirm că textul este aprobat de club și poate deveni public», apasă «Aprobă și publică» și confirmă.",
+                "Aprobă-l cu cel puțin o zi înainte de cursă, nu în dimineața ei: din acel moment, fiecare voluntar, redactor, organizator și tehnic e oprit la următoarea pagină până acceptă.",
+                "Nu e printre textele din «Aprobă acum textele care lipsesc…»: se aprobă separat, citit pentru el.",
+                "«Echipa» arată pe rândul fiecărui coleg dacă a acceptat — versiunea, data și numele scris —, «Neacceptat» sau «Nu e cerut»."
               ]
             },
             {
@@ -15181,6 +15238,7 @@
       "legalVersionWithdrawn": "Versiunea a fost retrasă.",
       "legalVersionErased": "Versiunea a fost ștearsă definitiv.",
       "legalVersionRetired": "Versiunea a fost ștearsă din listă; textul rămâne în arhivă.",
+      "teamAgreementAccepted": "Gata: angajamentul e acceptat.",
       "albumCreated": "Albumul a fost creat.",
       "album": "Albumul a fost salvat.",
       "photoRemoved": "Fotografia a fost ștearsă.",

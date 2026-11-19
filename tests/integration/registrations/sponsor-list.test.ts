@@ -74,6 +74,7 @@ const { GET: downloadSponsorListNow } = await import("@/app/api/admin/registrati
  */
 const downloadSponsorList = (...args: Parameters<typeof downloadSponsorListNow>) => atTheClock(NOW, () => downloadSponsorListNow(...args));
 const { GET: exportRegistrations } = await import("@/app/api/admin/registrations/export/route");
+const { requireStaff } = await import("@/modules/staff-identity/session");
 const { default: SponsorListButton } = await import("@/modules/registrations/ui/SponsorListButton");
 const { default: SponsorListRegister } = await import("@/modules/registrations/ui/SponsorListRegister");
 
@@ -606,7 +607,9 @@ describe("BR-REQ-071-01 §929 «Cui dai lista» is required", () => {
     expect(nameless.status).toBe(400);
     expect(await nameless.json()).toEqual({ error: "RECIPIENT_REQUIRED" });
 
-    // Nothing read: the database hears from a nameless request exactly what it hears from a refused role's — the sign-in.
+    // Nothing read: the database hears from a nameless request exactly what it hears from the Administrator's sign-in alone. The
+    // baseline is that sign-in itself since §NNN: a refused Tehnic's is one read longer, the question whether the team's undertaking
+    // is owed, which an Administrator is never asked.
     const asked: string[] = [];
     state.db = new Proxy(db as object, {
       get(target, key) {
@@ -619,10 +622,14 @@ describe("BR-REQ-071-01 §929 «Cui dai lista» is required", () => {
     try {
       state.cookie = tehnic.id;
       expect((await downloadSponsorList(new Request("http://localhost/api/admin/registrations/sponsor-list"))).status).toBe(403);
-      const signIn = [...asked];
-      expect(signIn.length).toBeGreaterThan(0);
+      const refused = [...asked];
       asked.length = 0;
       state.cookie = admin.id;
+      await requireStaff();
+      const signIn = [...asked];
+      expect(signIn.length).toBeGreaterThan(0);
+      expect(refused).toEqual([...signIn, "select"]);
+      asked.length = 0;
       expect((await downloadSponsorList(new Request("http://localhost/api/admin/registrations/sponsor-list?format=xlsx&to=%20"))).status).toBe(400);
       expect(asked).toEqual(signIn);
     } finally {

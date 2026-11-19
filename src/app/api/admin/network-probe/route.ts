@@ -1,5 +1,6 @@
 import { NETWORK_PROBE_MARKER } from "@/modules/diagnostics/network-check";
-import { getCurrentStaffUser } from "@/modules/staff-identity/session";
+import { requireStaff } from "@/modules/staff-identity/session";
+import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
  * The network check's plain-form probe (§436): `/admin/network` posts a small
@@ -13,7 +14,13 @@ import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 export const dynamic = "force-dynamic";
 
 export async function POST(): Promise<Response> {
-  if (!(await getCurrentStaffUser())) return new Response("Not found", { status: 404 });
+  // The staff session's one door (§NNN): a colleague who owes the team's undertaking is refused here too, the same 404.
+  try {
+    await requireStaff();
+  } catch (error) {
+    if (isDomainError(error)) return new Response("Not found", { status: 404 });
+    throw error;
+  }
   return new Response(`<!doctype html><title>ok</title><p id="${NETWORK_PROBE_MARKER}">ok</p>`, {
     headers: {
       "content-type": "text/html; charset=utf-8",

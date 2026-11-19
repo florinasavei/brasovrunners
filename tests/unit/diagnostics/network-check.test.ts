@@ -16,14 +16,18 @@ const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8").replace(/\r\n/g, "\n");
 
 const session = vi.hoisted(() => ({ staff: null as null | { id: string; role: string } }));
-vi.mock("@/modules/staff-identity/session", () => ({
-  DEV_STAFF_COOKIE: "dev-staff",
-  getCurrentStaffUser: async () => session.staff,
-  requireStaff: async () => {
-    if (!session.staff) throw Object.assign(new Error("no staff session"), { code: "UNAUTHENTICATED" });
-    return session.staff;
-  },
-}));
+// The session's refusal as it is thrown: a domain error — the probe asks `requireStaff` since §NNN, the team's undertaking's one door.
+vi.mock("@/modules/staff-identity/session", async () => {
+  const { DomainError } = await import("@/shared/errors/domain-error");
+  return {
+    DEV_STAFF_COOKIE: "dev-staff",
+    getCurrentStaffUser: async () => session.staff,
+    requireStaff: async () => {
+      if (!session.staff) throw new DomainError("UNAUTHENTICATED", "no staff session");
+      return session.staff;
+    },
+  };
+});
 
 const { POST } = await import("@/app/api/admin/network-probe/route");
 const { probeSaveAction } = await import("@/app/[locale]/admin/network/actions");

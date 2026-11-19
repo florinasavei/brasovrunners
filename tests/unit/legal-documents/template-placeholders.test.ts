@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
-import { SAMPLE_DOCUMENTS } from "@/db/seeds/sample-legal-documents";
+import { NEVER_SEEDED_KEYS, SAMPLE_DOCUMENTS } from "@/db/seeds/sample-legal-documents";
 import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { mergeFieldsIn } from "@/modules/legal-documents/domain/merge-fields";
@@ -64,7 +64,8 @@ describe("§357 the gaps of the platform's legal texts survive the seed and the 
 
   for (const key of KEYS) {
     for (const locale of LOCALES) {
-      it(`${key} ${locale}: the seeded sample carries every merge field and placeholder, as often as the template`, () => {
+      // The team's undertaking is never seeded (§NNN): its prefill below still keeps every gap.
+      it.skipIf(NEVER_SEEDED_KEYS.has(key))(`${key} ${locale}: the seeded sample carries every merge field and placeholder, as often as the template`, () => {
         const template = LEGAL_TEMPLATES[key][locale].body;
         const sample = SAMPLE_DOCUMENTS.find((document) => document.key === key)!.translations.find((t) => t.locale === locale)!.body;
         // The template's own sections, word for word, between the banner and the review note.

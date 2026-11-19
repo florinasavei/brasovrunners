@@ -37,12 +37,18 @@ export default async function BackofficeShell({
   locale,
   staffUser,
   signOut,
+  bare = false,
   children,
 }: {
   locale: Locale;
   staffUser: Pick<StaffUser, "displayName" | "email" | "role"> & Pick<StaffActor, "permissions">;
   /** The sign-out Server Action; handed in so this module never imports the app's actions. */
   signOut: (form: FormData) => Promise<void>;
+  /**
+   * The team's undertaking waits (§NNN): the title, who is signed in and the sign-out, and no tabs — every section would only
+   * send the colleague back to `/admin/acord` — so no count is read either.
+   */
+  bare?: boolean;
   children: ReactNode;
 }) {
   const t = await getTranslations("Admin");
@@ -76,7 +82,7 @@ export default async function BackofficeShell({
     bills compute time (§68). Only for the roles that may open the list — the Organizer since
     §289 — so for everybody else there is no query and no number.
   */
-  const breakdown = canReadRegistrations(staffUser.role)
+  const breakdown = !bare && canReadRegistrations(staffUser.role)
     ? await registeredBadgeBreakdown(getDb(), new Date(), locale)
     : null;
   /*
@@ -128,13 +134,13 @@ export default async function BackofficeShell({
     how many of them the organizers still have to confirm or give a role. Until then the badge was the unanswered offers alone
     (§839). Memoized a minute like the registrations' badge, read only for the roles that may open the list.
   */
-  const volunteerCounts = canManageVolunteers(staffUser.role) ? await volunteersBadgeCount(getDb(), new Date()) : null;
+  const volunteerCounts = !bare && canManageVolunteers(staffUser.role) ? await volunteersBadgeCount(getDb(), new Date()) : null;
   const volunteerPills: CountPill[] =
     volunteerCounts && volunteerCounts.toAct > 0
       ? [{ kind: "toAct", count: volunteerCounts.toAct, label: t("nav.volunteersToActLabel", { count: volunteerCounts.toAct }) }]
       : [];
 
-  const tabs: AdminTab[] = visibleAdminSections(staffUser).map((section) => ({
+  const tabs: AdminTab[] = (bare ? [] : visibleAdminSections(staffUser)).map((section) => ({
     href: SECTION_HREF[section],
     label: t(`nav.${section}`),
     section,
@@ -201,7 +207,7 @@ export default async function BackofficeShell({
         may open is not offered to anybody else, and the page behind it answers 404 to a typed
         URL regardless (BR-REQ-060-01).
       */}
-      <AdminTabs items={tabs} />
+      {!bare && <AdminTabs items={tabs} />}
 
       {children}
 

@@ -1,12 +1,18 @@
-import { cookies } from "next/headers";
+import { hasLocale } from "next-intl";
+import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getDb } from "@/db/client";
+import { getPathname } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
 import { DomainError } from "@/shared/errors/domain-error";
 import { env } from "@/shared/config/env";
 import { isDevStaffSwitcherEnabled } from "./dev-switcher";
 import { isBackofficeRole, type StaffSubject } from "./domain/roles";
+import { gateRequestOf, isTeamAgreementPath, localeOfPath, TEAM_AGREEMENT_REFUSAL, teamAgreementReturnTo } from "./domain/team-agreement";
 import { findStaffUserById, type StaffAccount } from "./repository";
 import { DEV_STAFF_COOKIE } from "./dev-staff-cookie";
+import { type TeamAgreementVersion, teamAgreementOwedBy } from "./team-agreement";
 
 /**
  * Who is signing this request, and the three helpers AGENTS.md §13.1 names.
@@ -68,7 +74,41 @@ export async function getCurrentStaffUser(): Promise<StaffAccount | null> {
   return account && isBackofficeRole(account.role) ? account : null;
 }
 
+/**
+ * The staff member signing this request — and, since §NNN, one who owes the team's undertaking nothing.
+ *
+ * **The team's undertaking (§NNN; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în
+ * platformă»).** A colleague below the Administrator (`mustAcceptTeamAgreement`) who has not accepted the version of
+ * `STAFF_DATA_AGREEMENT` in force is answered by nothing of the backoffice until they do, and it is asserted here — the one line
+ * every backoffice page, action and route handler asks before anything else — never by hiding a button:
+ *
+ * - a page being drawn sends the reader to `/admin/acord`, the page they asked for kept as `returnTo` (a same-site path only);
+ * - a Server Action and an admin route handler are refused with `FORBIDDEN`, its message saying to accept the undertaking first
+ *   (`gateRequestOf` says which is which).
+ *
+ * No version in force, no gate: a text the club has not approved binds nobody. An Administrator's request reads nothing more.
+ * The undertaking's own page and its action ask `requireStaffBeforeTeamAgreement`; sign-out asks nothing.
+ */
 export async function requireStaff(): Promise<StaffAccount> {
+  const staffUser = await requireStaffBeforeTeamAgreement();
+  await assertTeamAgreementAccepted(staffUser);
+  return staffUser;
+}
+
+/**
+ * The team's undertaking asked of a staff member the caller has read already (§NNN): nothing when nothing is owed; otherwise a
+ * page being drawn is sent to `/admin/acord` and anything else is refused with `FORBIDDEN`. `requireStaff` asks it, and so does
+ * the staff preview of a draft, which reads its staff member itself to answer a stranger 404.
+ */
+export async function assertTeamAgreementAccepted(staffUser: StaffSubject & { id: string }): Promise<void> {
+  if (await teamAgreementOwedBy(getDb(), staffUser, new Date())) await refuseUntilTeamAgreementAccepted();
+}
+
+/**
+ * The staff session alone, before the team's undertaking (§NNN): for `/admin/acord` and its «Accept și intru» only — the one page
+ * and the one action a colleague who owes the undertaking may reach. Everything else asks `requireStaff`.
+ */
+export async function requireStaffBeforeTeamAgreement(): Promise<StaffAccount> {
   const staffUser = await getCurrentStaffUser();
   if (!staffUser) {
     throw new DomainError(
@@ -77,6 +117,37 @@ export async function requireStaff(): Promise<StaffAccount> {
     );
   }
   return staffUser;
+}
+
+/**
+ * The undertaking's address for a reader who was going to `path` (§NNN), in the path's own language: `/ro/admin/acord?returnTo=…`,
+ * or without a way back when the path is none a reader may be sent to (`teamAgreementReturnTo`).
+ */
+function teamAgreementHref(path: string): string {
+  const prefix = localeOfPath(path);
+  const locale = hasLocale(routing.locales, prefix) ? prefix : routing.defaultLocale;
+  const returnTo = teamAgreementReturnTo(path);
+  return getPathname({ locale, href: { pathname: "/admin/acord", query: returnTo ? { returnTo } : {} } });
+}
+
+/** The refusal of a request from a colleague who owes the undertaking: a page is sent to it, anything else is FORBIDDEN. */
+async function refuseUntilTeamAgreementAccepted(): Promise<never> {
+  const request = gateRequestOf(await headers());
+  if (request.kind === "page" && !isTeamAgreementPath(request.path)) redirect(teamAgreementHref(request.path));
+  throw new DomainError("FORBIDDEN", TEAM_AGREEMENT_REFUSAL);
+}
+
+/**
+ * What a layout drawing the backoffice's shell asks (§NNN): the version of the team's undertaking this colleague owes, if any —
+ * the shell then draws no tabs, only who is signed in and the sign-out. **A layout never redirects for it**: the client router
+ * keeps a layout's answer with the layout and replays it on every navigation beneath it, so a layout's redirect to
+ * `/admin/acord` — a page under that same layout — is replayed on the undertaking's own page, a loop of requests and a page that
+ * never shows (the first end-to-end run met it from the sign-in, 2026-11-19); and Next lets neither a layout nor the proxy tell
+ * a page drawn for the router from a whole document. The page under it sends the reader, through its own `requireStaff`: a
+ * page is fetched afresh on every navigation.
+ */
+export async function teamAgreementOwedFor(staffUser: StaffSubject & { id: string }): Promise<TeamAgreementVersion | null> {
+  return teamAgreementOwedBy(getDb(), staffUser, new Date());
 }
 
 /**

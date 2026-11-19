@@ -748,6 +748,13 @@ the person themselves, and every change is recorded. Changing the person's role 
 not hold it takes it away. A permission opens the job and nothing more: it is never a way to a
 member's or a participant's address.
 
+**The team's undertaking, before the backoffice opens (`DECISIONS.md` §NNN).** Every colleague below the administrator — a
+volunteer, a copywriter, an organizer, a technical helper — accepts the club's «Angajament de confidențialitate și protecția
+datelor pentru echipă» once per version before any page, press or file of the backoffice answers them: that they act under
+the club's authority, use the participants', volunteers' and members' data only for their role's tasks and keep them
+confidential, during and after the role. Until the club approves a version nobody is asked; an admin and a superadmin
+never are; a new version is asked once more. The team page says who accepted which version, when and under which name.
+
 Participants are not application roles. Having permission to write articles does not grant access to participant data.
 
 **«Voluntar» names two different things, and the words keep them apart (`DECISIONS.md` §754).** The

@@ -93,7 +93,8 @@ describe("migration 0216_raffle_rules_key", () => {
     expect(auditMigration(sql)).toMatchObject({ expands: true, contracts: false });
     expect(sql.trim()).toBe(`ALTER TYPE "public"."legal_document_key" ADD VALUE 'RAFFLE_RULES';`);
     const values = (await client.query<{ value: string }>(`SELECT unnest(enum_range(NULL::legal_document_key))::text AS value`)).rows.map((row) => row.value);
-    expect(values.at(-1)).toBe("RAFFLE_RULES");
+    // Right after the volunteer agreement; a later migration appends the team's undertaking after it (`0221`, §NNN).
+    expect(values.indexOf("RAFFLE_RULES")).toBe(values.indexOf("VOLUNTEER_AGREEMENT") + 1);
     expect(values).toContain("VOLUNTEER_AGREEMENT");
   });
 });

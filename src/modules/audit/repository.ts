@@ -1058,6 +1058,12 @@ export type AuditAction =
   | "staff.permission.granted"
   | "staff.permission.revoked"
   /**
+   * The team's undertaking accepted on `/admin/acord` (§NNN): the colleague is the actor and the entity (`staff_user`); the
+   * metadata is the version — `legalDocumentId`, `version`, the `locale` read — and the acceptance's row id. Never the name typed,
+   * which stays on the acceptance's own row. Written once per account and version: a second press writes nothing.
+   */
+  | "staff.team_agreement_accepted"
+  /**
    * «Tradu din română» (§464): one row per press — who, which boxes by name, how many characters
    * went to which provider. Never the words, in either language. Also the day's meter: the
    * translation budget sums these rows' `characters` since the club's midnight.

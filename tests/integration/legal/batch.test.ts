@@ -4,7 +4,7 @@ import { auditLogs } from "@/db/schema/audit-logs";
 import { legalDocumentNumbering, legalDocuments } from "@/db/schema/legal-documents";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { textToBody } from "@/modules/legal-documents/domain/body-text";
-import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
+import { LEGAL_DOCUMENT_KEYS, PLATFORM_APPROVAL_KEYS } from "@/modules/legal-documents/domain/keys";
 import { findCurrentApprovedDocument, listVersionsForBackoffice } from "@/modules/legal-documents/repository";
 import {
   approveDrafts,
@@ -110,17 +110,21 @@ describe("every legal text at once (§532)", () => {
       await resetTables(db);
       [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" }).returning();
       await approvePlatformTemplates(db, admin, FACTS, NOW);
-      expect((await planTemplateRegeneration(db, FACTS, LATER)).every((item) => item.outcome === "unchanged")).toBe(true);
-      expect(await regenerateFromTemplates(db, admin, FACTS, [...LEGAL_DOCUMENT_KEYS], LATER)).toEqual({
+      // Every template the press approved; the team's undertaking it leaves out (§NNN), so that one still has a draft to make.
+      const approvedPlan = await planTemplateRegeneration(db, FACTS, LATER);
+      expect(approvedPlan.filter((item) => item.key !== "STAFF_DATA_AGREEMENT").every((item) => item.outcome === "unchanged")).toBe(true);
+      expect(approvedPlan.find((item) => item.key === "STAFF_DATA_AGREEMENT")?.outcome).toBe("create");
+      expect(await regenerateFromTemplates(db, admin, FACTS, [...PLATFORM_APPROVAL_KEYS], LATER)).toEqual({
         created: [],
-        skipped: [...LEGAL_DOCUMENT_KEYS],
+        skipped: [...PLATFORM_APPROVAL_KEYS],
       });
     });
 
     it("drafts the text again when the club's facts changed, the version in force untouched", async () => {
       await approvePlatformTemplates(db, admin, FACTS, NOW);
       const moved = { ...FACTS, registeredAddress: "Str. Nouă nr. 2, Brașov" };
-      const result = await regenerateFromTemplates(db, admin, moved, [...LEGAL_DOCUMENT_KEYS], LATER);
+      // The texts the press put in force; the team's undertaking it leaves out (§NNN) has no version in force to keep.
+      const result = await regenerateFromTemplates(db, admin, moved, [...PLATFORM_APPROVAL_KEYS], LATER);
       // Only the texts that name the seat change.
       expect(result.created.length).toBeGreaterThan(0);
       for (const key of result.created) {
