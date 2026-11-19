@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.73-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.74-2026-11-19 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.73-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.74-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31146,3 +31146,13 @@ No dependency. Both languages, the backoffice's plain words, the glyph asked by 
 **Held by** `tests/integration/registrations/invitation-blank-bib.test.ts` (the tick stored, audited and refused without spares; the action's post; the Organizer refused; each confirmation path — the person's signature, the desk's paper, a registration that took the invitation over — giving the lowest free spare, printed, the trail under the sender and the number in the confirmation's email; a handed number winning; an unticked invitation's ordinary number; a special guest's blank bib; a test registration's none; no spare free and the ordinary number with its line; two confirmations in turn; a spare the invitation took refused at the desk, typed or as «Dă-i un BIB gol», and the reverse; «Ambele» with a kept place; the form's tick and its line, the row's chip), `tests/integration/registrations/invitation-blank-bib-screens.test.ts` (the registration page's line before and after the confirmation, and the trail, in both languages), `tests/concurrency/invitation-blank-bib.test.ts` (two confirmations at once on two connections take two spares; a confirmation and a walk-in handed the same spare at once never share it), `tests/integration/registrations/kept-places.test.ts` (the kept place, as before) and e2e `tests/e2e/invitation-blank-bib.spec.ts` on the phone and the desktop.
 
 Baseline `BR-V4.73-2026-11-19`.
+
+## 993. The registrations list says when a registration was cancelled, under «Anulată»
+
+**The owner, 2026-11-19, two days before Saturday's race:** «când anulează cineva, vreau să văd și când a anulat». The registrations list's «Stare» column said «Anulată» and nothing more; the moment lived in the step's cell only as its hover title («3/6 · … · Anulată …»), which a phone never shows, and on the registration's own page.
+
+**Decision.** Under the state's chip, on a cancelled registration, the moment it was cancelled — the row's own `cancelled_at`, to the minute on the club's clock, in the list's short form (`formatDay`, as «Trimisă» and the timeline write a moment) — and on a lapsed one, under «Expirată», its `expired_at` the same way: a registration that is over says when it ended. Nothing under a live registration. It is read from the row the list already selects, no query, for every role that reads the list, and «Stare» is a column a phone's card always draws.
+
+**Not in this change.** A «Cancelled at» column in the export: the export says why (`Cancellation reason`); when is one more column if the club asks for it.
+
+Baseline `BR-V4.74-2026-11-19`.

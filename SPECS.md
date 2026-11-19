@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.73-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.74-2026-11-19 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V4.73-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.74-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1727,6 +1727,7 @@ registration — and it lists registrations and never changes an address.
 13. The «Emailuri» column costs one statement a page of people — each person's three newest emails and their count computed in it — and none for a page with no rows; an id that is not a uuid never reaches the database, at most 200 people are asked about in one call, and the statement names only the email's type, its state, when it was queued and when it left, how many it reached and whether it was delivered, and of the payload only the volunteer's id and the club-copy flag — never an address, a body, a link, `last_error` or the provider's words; it writes nothing (2026-11-17, `DECISIONS.md` §960).
 14. What became of an email is one judgement (`emailOutcomeOf`): waiting while it is queued or held, failed once its tries are spent, rejected when the recipient's server refused it or the person marked it as spam, captured when the environment kept it (`recipient_count = 0`), delivered when the recipient's server took it, sent otherwise; the fold's chip, its waiting mark and its closed line and the lists' column all ask it, so a row never reads one way on a list and another on the person's page (2026-11-17, `DECISIONS.md` §960).
 15. Given the registrations list, then its table, its results line, its pager and the batch cancel and erase that act on its ticks sit in one fold «Participanți», open on arrival, whose closed line is the count the results line states; every row's menu and the batch forms work as before (2026-11-18, `DECISIONS.md` §975).
+16. Given the registrations list, when it renders a cancelled registration, then its «Stare» cell — in the table and on a phone's card — says under «Anulată» the moment it was cancelled, to the minute on the club's clock, from the row's `cancelled_at`; a lapsed one says under «Expirată» its `expired_at` the same way; a registration that is not over has nothing under its state (2026-11-19, `DECISIONS.md` §993).
 
 **Verification:** integration `backoffice/registration-detail.test.ts`
 
