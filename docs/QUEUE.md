@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V4.68` | «Atașează traseul (GPX)»: the organizers' message to an event's participants can carry the event's route as a GPX file (§987) |
 | `BR-V4.67` | «Prezent» on a volunteer and «Lista pentru tombolă — doar prezenții»: the raffle among who is there (§983) · a raffle with a sign-up of its own — «Regulamentul tombolei», the form, the link and the desk — and «Ziua cursei» → «Tombolă» (§984) · race results public from the start, live every 30 seconds, and why «Participant #…» (§985) · «Cronometrare»: the finish line on «Ziua cursei» — every desk role, the elites first, «Start», the same number twice in the trail (§986) |
 | `BR-V4.66` | one person's BIB downloaded on its own, from the registration, the desk and the list's «⋮» (§980) · «Membru BVR» on the volunteers' list; the organizers' decision and notes on the volunteers' plan (§981) · «Cine s-a înscris» counts the confirmed members and partners (§982) |
 | `BR-V4.65` | every question that may send the person their email ends in «… și trimite emailul» or «… fără email», no box ticked in advance (§976) · a scrollbar at the top of wide backoffice tables (§977) · «Poze și hărți» — several pictures and links at the top of the volunteers' plan — and «Fără punct» a fold you place people from (§978) · «Ziua cursei» in three tabs, «Lucruri de adus» and the walk-in's pick of a free spare (§979) |

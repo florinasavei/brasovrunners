@@ -1239,7 +1239,7 @@ export type TemplateData = {
    */
   organizerProgramme?: boolean;
   /**
-   * «Atașează traseul (GPX)» (§NNN): the send ticked it and the event has a GPX as the message leaves — the line under the
+   * «Atașează traseul (GPX)» (§987): the send ticked it and the event has a GPX as the message leaves — the line under the
    * organizers' words, with `url`, the address the event page's «Descarcă traseul (GPX)» opens (`getStorage().publicUrl`,
    * never a host typed here), under `fileName`, the file's own name. `attached` says whether the file rides on this very
    * email: the line says «atașat» only then — never on a club copy (§320), nor when the store gave no file. Set by the
@@ -1909,7 +1909,7 @@ function organizerQrImage(locale: EmailLocale, d: TemplateData): TemplateContent
 }
 
 /**
- * «Atașează traseul (GPX)» (§NNN; the owner, 2026-11-19: «vreau să pot pune în mail și traseul cursei GPX»): under the
+ * «Atașează traseul (GPX)» (§987; the owner, 2026-11-19: «vreau să pot pune în mail și traseul cursei GPX»): under the
  * organizers' words — and under the number and the desk code of §943 — one line in this half's language with the link to
  * the route's file, under the file's own name, so a mail client that hides attachments still gives it. It says the file
  * is attached only when it is (`attached`, as the volunteer agreement's sentence is said only when the PDF rides along,
@@ -3008,7 +3008,7 @@ const T = {
       note: "Încă nu ai semnat declarația pe proprie răspundere: înscrierea ta este completă doar după ce o semnezi.",
     },
     /**
-     * «Atașează traseul (GPX)» (§NNN), on a send that ticked it: the line under the organizers' words, before the link to
+     * «Atașează traseul (GPX)» (§987), on a send that ticked it: the line under the organizers' words, before the link to
      * the file — «atașat» only when the file rides on this email, the link alone on a club copy or when the store gave none.
      */
     routeGpx: {
@@ -4403,7 +4403,7 @@ export function buildTemplateContent(
       organizerQr: undefined,
       // …nor the link to anybody's declaration (§947): it signs for one person, and is that person's alone.
       signDeclarationUrl: undefined,
-      // The route's link names nobody and stays (§NNN); the file is never on a copy (§320), so the line does not say it is.
+      // The route's link names nobody and stays (§987); the file is never on a copy (§320), so the line does not say it is.
       organizerRouteGpx: data.organizerRouteGpx ? { ...data.organizerRouteGpx, attached: false } : undefined,
       thanksUrl: undefined,
       // «Spune-ne cum a fost» (§676) goes with the button it may be, as the results link does.
@@ -4830,7 +4830,7 @@ export function buildTemplateContent(
       ...organizerMessageParts(messageType, data, locale, bulkCopy),
       // …and under it, where the send asked for them, the confirmed runner's own number and desk code (§943).
       ...(messageType === "ORGANIZER_MESSAGE" ? organizerQrLines(locale, data) : []),
-      // …and, where the send ticked «Atașează traseul (GPX)», the line with the route's file (§NNN).
+      // …and, where the send ticked «Atașează traseul (GPX)», the line with the route's file (§987).
       ...(messageType === "ORGANIZER_MESSAGE" ? organizerRouteGpxLines(locale, data) : []),
       // A newsletter's own words, and what the platform says around every newsletter message (§445).
       ...newsletterParts(messageType, data),

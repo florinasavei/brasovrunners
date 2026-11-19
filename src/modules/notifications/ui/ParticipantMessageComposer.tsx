@@ -84,7 +84,7 @@ export type ComposerConfirm = { field: string; title: string; count: string; cou
  * What the boxes hold when the page is drawn right after a send to the people ticked (§945): that send's words and its
  * three ticks, so a trial is followed by the same message to everybody. Absent after any other send: the boxes are empty.
  * `includeProgramme` (§958) is there only when that send ticked «Include programul evenimentului», and `includeRouteGpx`
- * (§NNN) only when it ticked «Atașează traseul (GPX)».
+ * (§987) only when it ticked «Atașează traseul (GPX)».
  */
 export type ComposerKept = {
   subjectRo: string;
@@ -149,7 +149,7 @@ export type ComposerLabels = {
   includeProgramme: string;
   includeProgrammeHelp: string;
   includeProgrammeNone: string;
-  /** «Atașează traseul (GPX)» (§NNN) and its help line: the GPX of the event's page attached to every email, with its link. */
+  /** «Atașează traseul (GPX)» (§987) and its help line: the GPX of the event's page attached to every email, with its link. */
   includeRouteGpx: string;
   includeRouteGpxHelp: string;
   /**
@@ -184,7 +184,7 @@ export type PreviewInput = {
   signLink: boolean;
   /** The tick «Include programul evenimentului» as it stands: the preview draws the event's programme under the words (§958). */
   includeProgramme: boolean;
-  /** The tick «Atașează traseul (GPX)» as it stands: the preview draws the line that says the route is attached, with its link (§NNN). */
+  /** The tick «Atașează traseul (GPX)» as it stands: the preview draws the line that says the route is attached, with its link (§987). */
   includeRouteGpx: boolean;
 };
 export type PreviewResult = { subject: string; html: string; unknown: string[] } | null;
@@ -202,7 +202,7 @@ type Props = {
    */
   hasProgramme: boolean;
   /**
-   * Whether the event has a GPX to attach (§NNN), as the page read it — the file its event page offers. Without one
+   * Whether the event has a GPX to attach (§987), as the page read it — the file its event page offers. Without one
    * «Atașează traseul (GPX)» is not drawn at all.
    */
   hasRouteGpx: boolean;
@@ -306,7 +306,7 @@ export default function ParticipantMessageComposer({
   const [includeProgramme, setIncludeProgramme] = useState(
     () => hasProgramme && (recall.has ? recall.value("includeProgramme") === "1" : kept?.includeProgramme === true),
   );
-  // «Atașează traseul (GPX)» (§NNN): off unless ticked, controlled and kept the same way — and never on for an event with
+  // «Atașează traseul (GPX)» (§987): off unless ticked, controlled and kept the same way — and never on for an event with
   // no GPX, whose box is not drawn: there is no file to attach.
   const [includeRouteGpx, setIncludeRouteGpx] = useState(
     () => hasRouteGpx && (recall.has ? recall.value("includeRouteGpx") === "1" : kept?.includeRouteGpx === true),
@@ -677,7 +677,7 @@ export default function ParticipantMessageComposer({
       </Box>
 
       {/*
-        «Atașează traseul (GPX)» (§NNN): every email of the send gets the event's GPX — the file its page offers — attached,
+        «Atașează traseul (GPX)» (§987): every email of the send gets the event's GPX — the file its page offers — attached,
         and under these words a line with the link to it. Drawn only when the event has such a file: without one there is
         no box, nothing posts, and the send ignores a tick posted for it anyway.
       */}

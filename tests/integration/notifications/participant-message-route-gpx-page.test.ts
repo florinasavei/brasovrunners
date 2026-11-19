@@ -16,7 +16,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { confirmed } from "../../helpers/typed-count";
 
 /**
- * §NNN — «Atașează traseul (GPX)» on the page of «Trimite un mesaj participanților» (BR-REQ-080-01): the tick beside the
+ * §987 — «Atașează traseul (GPX)» on the page of «Trimite un mesaj participanților» (BR-REQ-080-01): the tick beside the
  * composer's other ticks, off by default, drawn only when the event has a GPX its page offers (the file of «Traseul»,
  * §718) and not at all without one; the one line the question before «Trimite» says only for a press that posts the
  * tick; and, back from a trial to the people ticked, the tick as that trial left it. The page is a Server Component: it
@@ -174,7 +174,7 @@ beforeEach(async () => {
   state.actor = await organizer();
 });
 
-describe("§NNN «Atașează traseul (GPX)» on the composer's page", () => {
+describe("§987 «Atașează traseul (GPX)» on the composer's page", () => {
   it("an event with a GPX: the tick is offered after the other ticks, off by default, with its help line — in Romanian and in English", async () => {
     const race = await createRace(GPX);
     await register(race.id);

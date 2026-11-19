@@ -71,7 +71,7 @@ export const routeGpxKeyOf = (stored: unknown): string | null => readRouteGpx(st
 /**
  * The event's GPX as its page offers it (`events/ui/EventRoute.tsx`, the event page's `isStorageConfigured()`): the
  * stored file while this environment has a store to serve it from, and none otherwise. What «Atașează traseul (GPX)»
- * (§NNN) asks on the composer's page, at the send and when each email leaves, so the three agree with the page.
+ * (§987) asks on the composer's page, at the send and when each email leaves, so the three agree with the page.
  */
 export function offeredRouteGpx(stored: unknown): RouteGpx | null {
   return isStorageConfigured() ? readRouteGpx(stored) : null;

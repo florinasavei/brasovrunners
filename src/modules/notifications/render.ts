@@ -219,7 +219,7 @@ export function createOutboxRenderer(options: { readEventRows?: EventRowsReader;
     return rows;
   };
   /*
-    «Atașează traseul (GPX)» (§NNN): the route's file read from the store once per batch by its key, as the event's rows
+    «Atașează traseul (GPX)» (§987): the route's file read from the store once per batch by its key, as the event's rows
     are above — a send's twenty rows in one batch read it once, not twenty times. Only a file the store gave is kept for
     the batch: a read that gave nothing is asked again by the next row, as a failed read of the rows is.
   */
@@ -239,7 +239,7 @@ export function createOutboxRenderer(options: { readEventRows?: EventRowsReader;
 }
 
 /**
- * The route's GPX as the store gives it now (§NNN), or null when it gives none — a key that is not there, a store having
+ * The route's GPX as the store gives it now (§987), or null when it gives none — a key that is not there, a store having
  * a bad minute. Never throws: the file rides beside the organizers' words, and a participant's email leaves without it
  * rather than not at all (`renderRow` says so in the log, and the line under the words then gives the link alone).
  */
@@ -264,7 +264,7 @@ async function renderRow(
   eventRows: (db: RendererDb, eventId: string) => Promise<readonly EventNotificationRow[]>,
   replyTo: string | undefined,
   rebase: DeadlineRebase | null = null,
-  /** The route's GPX from the store by its key (§NNN), read once per batch (`createOutboxRenderer`). */
+  /** The route's GPX from the store by its key (§987), read once per batch (`createOutboxRenderer`). */
   routeGpxBytes: (key: string) => Promise<Buffer | null> = readRouteGpxBytes,
 ): Promise<OutgoingEmail> {
   const locale = row.locale as Locale;
@@ -746,7 +746,7 @@ async function renderRow(
     language first and the other language's own words in the second half (§354). A row whose
     payload cannot be read goes with the platform's subject and framing sentence alone.
   */
-  // «Atașează traseul (GPX)» (§NNN): the route's file as the store gave it for this message, attached with the others below.
+  // «Atașează traseul (GPX)» (§987): the route's file as the store gave it for this message, attached with the others below.
   let routeGpxAttachment: EmailAttachment | undefined;
   if (row.messageType === "ORGANIZER_MESSAGE") {
     const words = readOrganizerMessagePayload(row.payloadJson);
@@ -767,7 +767,7 @@ async function renderRow(
     */
     if (readOrganizerIncludeProgramme(row.payloadJson)) data.organizerProgramme = true;
     /*
-      «Atașează traseul (GPX)» (§NNN): the send's flag, and nothing of the file — the event's GPX as it stands when this
+      «Atașează traseul (GPX)» (§987): the send's flag, and nothing of the file — the event's GPX as it stands when this
       message leaves, read as its page offers it (`offeredRouteGpx`): a file replaced since the press leaves as the new one,
       and an event left with no GPX sends the message without the line and without the file. The bytes come from the store
       now and are kept nowhere; a club copy carries no attachment (§320), so for one the store is not even asked. A store
@@ -1935,7 +1935,7 @@ async function renderRow(
       data.signedAtFormattedOther = formatInSentence(signed.acceptedAt, signedZone, otherLocale(locale));
     }
   }
-  // «Atașează traseul (GPX)» (§NNN): the route's file under its own name, typed as the page serves it — never on a club copy (§320).
+  // «Atașează traseul (GPX)» (§987): the route's file under its own name, typed as the page serves it — never on a club copy (§320).
   if (routeGpxAttachment && !clubCopy) attachments = [...(attachments ?? []), routeGpxAttachment];
   // The volunteer's accepted agreement (§758), beside nothing else: no calendar, no declaration rides on these.
   if (volunteerAgreementPdf) {

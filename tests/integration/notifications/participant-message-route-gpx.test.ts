@@ -24,7 +24,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { confirmed } from "../../helpers/typed-count";
 
 /**
- * §NNN — «Atașează traseul (GPX)» on «Trimite un mesaj participanților» (the owner, 2026-11-19, two days before the race:
+ * §987 — «Atașează traseul (GPX)» on «Trimite un mesaj participanților» (the owner, 2026-11-19, two days before the race:
  * «vreau să pot pune în mail și traseul cursei GPX»; BR-REQ-080-01, BR-REQ-080-02, BR-REQ-060-01) — the twin of §958's
  * «Include programul evenimentului».
  *
@@ -259,7 +259,7 @@ function pageDownloadHref(routeGpx: unknown): string | undefined {
   return /href="([^"]+)"/.exec(tag)?.[1];
 }
 
-describe("§NNN the send: the flag rides on every row and on the club's copy, never the file", () => {
+describe("§987 the send: the flag rides on every row and on the club's copy, never the file", () => {
   it("flags every row of «Toți cei înscriși» — every state, a test row too — and the club's copy, and the audit row names the tick", async () => {
     const admin = await staff("ADMIN");
     await updateClubNotices(db, admin, { participants: { bcc: ["arhiva@club.test"] } }, new Date());
@@ -355,7 +355,7 @@ describe("§NNN the send: the flag rides on every row and on the club's copy, ne
   });
 });
 
-describe("§NNN the email as it leaves: the file attached, and the line with its link under the organizers' words", () => {
+describe("§987 the email as it leaves: the file attached, and the line with its link under the organizers' words", () => {
   it("attaches the event's GPX — its own name, `application/gpx+xml`, the bytes as uploaded — for every state of registration", async () => {
     const people = await everybody();
     await send();
@@ -529,7 +529,7 @@ describe("§NNN the email as it leaves: the file attached, and the line with its
   });
 });
 
-describe("§NNN the club's copy, and every other message", () => {
+describe("§987 the club's copy, and every other message", () => {
   it("the club's one copy carries no file — the store is not even asked — and its line gives the link alone", async () => {
     const admin = await staff("ADMIN");
     await updateClubNotices(db, admin, { participants: { bcc: ["arhiva@club.test"] } }, new Date());
@@ -594,7 +594,7 @@ describe("§NNN the club's copy, and every other message", () => {
   });
 });
 
-describe("§NNN the preview on the form", () => {
+describe("§987 the preview on the form", () => {
   it("draws the line with the file said attached and its link, in the tab's language first — and nothing without the tick; nothing is read, queued or attached", async () => {
     await person("Ana", "CONFIRMED", { bib: 7 });
     const get = vi.spyOn(getStorage(), "get");
@@ -639,7 +639,7 @@ describe("§NNN the preview on the form", () => {
   });
 });
 
-describe("§NNN the form's tick reaches the send", () => {
+describe("§987 the form's tick reaches the send", () => {
   function form(fields: Record<string, string>, ticked: readonly string[] = []): FormData {
     const posted = new FormData();
     posted.set("uiLocale", "ro");

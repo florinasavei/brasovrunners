@@ -322,7 +322,7 @@ export function readOrganizerIncludeProgramme(payload: unknown): boolean {
 }
 
 /**
- * Whether this row carries «Atașează traseul (GPX)» (§NNN; the owner, 2026-11-19: «vreau să pot pune în mail și traseul
+ * Whether this row carries «Atașează traseul (GPX)» (§987; the owner, 2026-11-19: «vreau să pot pune în mail și traseul
  * cursei GPX»): the payload's `includeRouteGpx`, beside the words — the twin of `includeProgramme` above. About nobody in
  * particular too, so the send sets it on **every** row it queues, whatever the registration's state, and on the club's
  * copy; anything but `true` — a send that did not tick it, a tick on an event with no GPX, an older row, a hand-made one —

@@ -304,7 +304,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
     press whose form posts the tick (a ticked box posts `1`, an unticked or a disabled one posts nothing).
   */
   const programmeLine: ConfirmAlso = { text: t("participantMessages.confirmProgramme"), when: [{ field: "includeProgramme", equals: "1" }] };
-  // «Atașează traseul (GPX)» (§NNN) the same way: one quiet line, only for a press whose form posts that tick.
+  // «Atașează traseul (GPX)» (§987) the same way: one quiet line, only for a press whose form posts that tick.
   const routeGpxLine: ConfirmAlso = { text: t("participantMessages.confirmRouteGpx"), when: [{ field: "includeRouteGpx", equals: "1" }] };
   const chosenConfirm = withSendNowChoice(
     {
@@ -359,7 +359,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
   */
   const hasProgramme = readScheduleItems(event.scheduleItems).length > 0;
   /*
-    «Atașează traseul (GPX)» (§NNN) is offered only when the event has a GPX its page offers (`offeredRouteGpx`): the file
+    «Atașează traseul (GPX)» (§987) is offered only when the event has a GPX its page offers (`offeredRouteGpx`): the file
     the editor uploaded under «Linkuri și fișiere», with a store to serve it from. Without one the tick is not drawn at
     all — and the send ignores a tick posted for such an event.
   */
@@ -442,7 +442,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
                     signLink: keptMessage.signLink,
                     // «Include programul evenimentului» (§958): named only when that send ticked it.
                     ...(keptMessage.includeProgramme ? { includeProgramme: true } : {}),
-                    // «Atașează traseul (GPX)» (§NNN): the same.
+                    // «Atașează traseul (GPX)» (§987): the same.
                     ...(keptMessage.includeRouteGpx ? { includeRouteGpx: true } : {}),
                   },
                 }

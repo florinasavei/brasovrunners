@@ -29,7 +29,7 @@ import { openEditorBox } from "./support/fold";
  * And §958 — «Include programul evenimentului»: on an event with a timed programme the tick is offered, a thumb's
  * target, and ticked it puts the programme under the words of the preview, one block a half in that half's language.
  *
- * And §NNN — «Atașează traseul (GPX)»: on an event with a GPX the tick is offered, a thumb's target, and ticked it puts
+ * And §987 — «Atașează traseul (GPX)»: on an event with a GPX the tick is offered, a thumb's target, and ticked it puts
  * under the words of the preview the line that says the route is attached, one a half, with the link to the file; on an
  * event without a GPX there is no tick at all.
  *
@@ -403,7 +403,7 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     expect(overflow).toBeLessThanOrEqual(0);
   });
 
-  test("§NNN «Atașează traseul (GPX)»: offered only on an event with a GPX, ticked it puts the line and the file's link under the words of the preview", async ({ page }) => {
+  test("§987 «Atașează traseul (GPX)»: offered only on an event with a GPX, ticked it puts the line and the file's link under the words of the preview", async ({ page }) => {
     test.setTimeout(150_000);
     const tag = `${test.info().project.name}-${Date.now().toString(36)}-gpx`;
     const withGpx = await seedEvent(tag);

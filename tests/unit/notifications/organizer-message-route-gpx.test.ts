@@ -10,7 +10,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * `DECISIONS.md` §NNN — «Atașează traseul (GPX)» on «Trimite un mesaj participanților» (the owner, 2026-11-19, two days
+ * `DECISIONS.md` §987 — «Atașează traseul (GPX)» on «Trimite un mesaj participanților» (the owner, 2026-11-19, two days
  * before the race: «vreau să pot pune în mail și traseul cursei GPX»; BR-REQ-080-01), the twin of §958's «Include
  * programul evenimentului». The pure half: the row's flag; the event's GPX as its page offers it; and the line in the
  * message — one a half, under the organizers' words, each in its own language, with the link to the file under the
@@ -73,7 +73,7 @@ const lines = (html: string) => [...html.matchAll(/<p data-email-part="route-gpx
 /** A message without them — what is left must be the message of a send that did not tick (the card joins its parts with a line break). */
 const withoutLines = (html: string) => html.replace(/<p data-email-part="route-gpx"[^>]*>[^]*?<\/p>\n/g, "");
 
-describe("§NNN the row's flag", () => {
+describe("§987 the row's flag", () => {
   it("reads the flag from the row's payload, and nothing else as a yes", () => {
     expect(readOrganizerIncludeRouteGpx({ subject: {}, body: {}, includeRouteGpx: true })).toBe(true);
     expect(readOrganizerIncludeRouteGpx({ includeRouteGpx: true, clubCopy: true })).toBe(true);
@@ -83,7 +83,7 @@ describe("§NNN the row's flag", () => {
   });
 });
 
-describe("§NNN the event's GPX as its page offers it", () => {
+describe("§987 the event's GPX as its page offers it", () => {
   it("is the stored file while the environment has a store, and none without one, or for a value that is no GPX", () => {
     storage.configured = true;
     expect(offeredRouteGpx(GPX)).toEqual(GPX);
@@ -97,7 +97,7 @@ describe("§NNN the event's GPX as its page offers it", () => {
   });
 });
 
-describe("§NNN the line in the organizers' message: under the words, with the link to the file", () => {
+describe("§987 the line in the organizers' message: under the words, with the link to the file", () => {
   it("draws one line a half, each in its own language, the link under the file's own name — in the HTML and in the text", () => {
     const email = render("ro", ATTACHED);
     const found = lines(email.html);
@@ -156,7 +156,7 @@ describe("§NNN the line in the organizers' message: under the words, with the l
   });
 });
 
-describe("§NNN nothing else of the organizers' message changes with the tick", () => {
+describe("§987 nothing else of the organizers' message changes with the tick", () => {
   it("builds the very same message outside the line: the facts line, every link, the buttons, the closing", () => {
     for (const locale of ["ro", "en"] as const) {
       const ticked = buildTemplateContent("ORGANIZER_MESSAGE", locale, ATTACHED, DATA.eventUrl);
@@ -193,7 +193,7 @@ describe("§NNN nothing else of the organizers' message changes with the tick", 
   });
 });
 
-describe("§NNN the club's copy, and every other message", () => {
+describe("§987 the club's copy, and every other message", () => {
   it("the club's copy keeps the line with the link — the copy of one message or the send's one copy — and never says the file is attached", () => {
     for (const copy of [{ clubCopy: true }, { clubCopy: true, clubCopyRecipients: 12, participantName: "" }]) {
       // Even handed `attached: true`, a copy has no file (§320): the template says the link alone.
@@ -225,7 +225,7 @@ describe("§NNN the club's copy, and every other message", () => {
   });
 });
 
-describe("§NNN the tick's words, in both catalogues and in the email", () => {
+describe("§987 the tick's words, in both catalogues and in the email", () => {
   const wordsOf = (catalogue: typeof ro) => catalogue.Admin.participantMessages;
 
   it("names the tick, says what it does in one plain sentence, and the question's line — each within 200 characters", () => {
@@ -259,11 +259,11 @@ describe("§NNN the tick's words, in both catalogues and in the email", () => {
 });
 
 /**
- * The structural half of «the flag decides a file and a line of an email, and nothing else» (§NNN), as for §958: the files
+ * The structural half of «the flag decides a file and a line of an email, and nothing else» (§987), as for §958: the files
  * that name the flag, its reader or the template's field are a reviewed list — none of the allocator's, the capacity
  * formula's, a state's or a deadline's is on it.
  */
-describe("§NNN the flag decides a file and a line of an email, and nothing else", () => {
+describe("§987 the flag decides a file and a line of an email, and nothing else", () => {
   const ROOT = process.cwd();
   const NAMES_THE_FLAG = /\bincludeRouteGpx\b|readOrganizerIncludeRouteGpx|\borganizerRouteGpx\b/;
   const READERS = [
