@@ -9610,6 +9610,7 @@
                 "For each confirmed runner to get their own race number and QR code under the message, tick «Also send the race number and the QR code». Everyone else gets the message without them.",
                 "For those registered who have not signed the declaration yet to sign it from the email, tick «Also send the link to sign the declaration»: they get the “Sign the declaration” button under the message. Everyone else gets the message without it.",
                 "For every recipient to see the event's programme under the message, hour by hour, tick «Include the event's programme». The tick is available only when the event has a timed programme.",
+                "For every recipient to get the route as a GPX file, attached to the email and linked under the message, tick «Attach the route (GPX)». The tick shows only when the event has a GPX file uploaded in the editor.",
                 "Under «How the email looks» read both versions: «Registered in Romanian» and «Registered in English». «Enlarge» shows the whole email; the QR code there is an example.",
                 "Under «Confirm the send» you see once more who the message goes to. Type the number of recipients in «Type how many you send to»: unless it is exactly the number there, nothing is sent.",
                 "Press «Send the message», then «Send» in the window: it says how long the send takes and whether they all fit now. «Messages sent» shows how many left and how many re-confirmed.",
@@ -10859,6 +10860,9 @@
       "includeProgrammeHelp": "Under your words the email shows the event's programme, hour by hour, as it is on its page.",
       "includeProgrammeNone": "The event has no timed programme yet. You add it in the event's editor, under “{card}”.",
       "confirmProgramme": "The email includes the event's programme.",
+      "includeRouteGpx": "Attach the route (GPX)",
+      "includeRouteGpxHelp": "Every email has the GPX file from the event's page attached and, under your words, a link to it.",
+      "confirmRouteGpx": "The email has the route attached as a GPX file.",
       "bodyFormat": "For bold text, put it between two asterisks on each side: **like this**.",
       "reminderFill": {
         "button": "Fill in the reminder text",

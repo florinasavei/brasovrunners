@@ -12,8 +12,11 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { replyToInForce } from "@/modules/contact/shown-address";
+import { offeredRouteGpx } from "@/modules/content/events/route-gpx";
 import { placeToBeAnnouncedWords } from "@/modules/events/calendar-labels";
+import { routeGpxFileName } from "@/modules/events/domain/route-gpx";
 import { findEventNotificationDetails } from "@/modules/events/repository";
+import { getStorage } from "@/modules/media/storage";
 import { eventDay, howItWentOpen, howItWentUrl } from "@/modules/feedback/links";
 import { lockEventForCapacity } from "@/modules/registrations/repository";
 import { canMessageParticipants } from "@/modules/staff-identity/domain/roles";
@@ -174,6 +177,14 @@ export type SendParticipantMessageInput = {
    * event when the email leaves. Nothing in a state, a place, a deadline, the allocator or the capacity formula reads it.
    */
   includeProgramme?: boolean;
+  /**
+   * «Atașează traseul (GPX)» (§NNN; the owner, 2026-11-19: «vreau să pot pune în mail și traseul cursei GPX»): the event's
+   * GPX attached to every email of the send, with a line and its link under the organizers' words — the twin of
+   * `includeProgramme`: **every** row and the club's copy carry the flag, never the file, which the renderer reads from
+   * the store when each email leaves. Ignored for an event that has no GPX when the send queues it, whatever was posted.
+   * Nothing in a state, a place, a deadline, the allocator or the capacity formula reads it.
+   */
+  includeRouteGpx?: boolean;
 };
 
 export type SendParticipantMessageResult =
@@ -317,14 +328,26 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
     const sendQr = input.sendQr === true;
     const signLink = input.signLink === true;
     const includeProgramme = input.includeProgramme === true;
+    /*
+      «Atașează traseul (GPX)» (§NNN): only for an event that has a GPX now, under the lock, as its page offers it — a tick
+      posted for an event without one (a forged post, a file removed since the page was drawn) flags nothing.
+    */
+    const includeRouteGpx = input.includeRouteGpx === true && offeredRouteGpx(event.routeGpx) !== null;
     const typed = { subject: { ro: message.subject.ro, en: message.subject.en }, body: { ro: message.body.ro, en: message.body.en } };
     /*
       «Include programul evenimentului» (§958): the one flag that is the send's and not a row's — the programme is about
       nobody in particular, so it rides beside the words on every row this send queues, whatever the registration's
       state, and on the club's copy, which shows what the participants got. A flag, never the rows: the renderer reads
       the programme off the event when each email leaves. Unticked, the words alone, as they always were.
+
+      «Atașează traseul (GPX)» (§NNN) is the second such flag, and rides the same way: a flag, never the file, which the
+      renderer reads from the store when each email leaves.
     */
-    const words = includeProgramme ? { ...typed, includeProgramme: true } : typed;
+    const words = {
+      ...typed,
+      ...(includeProgramme ? { includeProgramme: true } : {}),
+      ...(includeRouteGpx ? { includeRouteGpx: true } : {}),
+    };
 
     let real = 0;
     let test = 0;
@@ -411,6 +434,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
     // The club's one copy of this send (§419): the words and how many real participants it reached — never a row's
     // flag: it asks nobody, and it carries nobody's number, QR, desk code or link to a declaration (§320, §943, §947). Marked like a row when it leaves now.
     // The send's own flag is in `words` (§958): the copy draws the event's programme as the participants' emails do — it is on the public page, and nobody's.
+    // So is «Atașează traseul (GPX)» (§NNN): the copy says the route's link, which names nobody, and carries no file (§320).
     await enqueueBulkClubCopies(tx, {
       messageType: "ORGANIZER_MESSAGE",
       eventId: input.eventId,
@@ -448,6 +472,8 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         // «Include programul evenimentului» (§958): the tick alone — every email of the send carries it, so there is no
         // number of its own to count, and never the programme's rows, which are the event's.
         ...(includeProgramme ? { includeProgramme: true } : {}),
+        // «Atașează traseul (GPX)» (§NNN): the tick alone, the same way — never the file, and nothing for a tick the event had no GPX for.
+        ...(includeRouteGpx ? { includeRouteGpx: true } : {}),
       },
       now,
     });
@@ -582,16 +608,16 @@ export async function listParticipantMessages<T extends Record<string, unknown>>
  * What the composer's boxes hold again after a send to the people ticked (§945): the words in both languages and the
  * three ticks, as that send carried them — and `includeProgramme` (§958), present only when that send ticked «Include
  * programul evenimentului»: a trial with the programme under its words is followed by the same message to everybody,
- * not by one that has silently lost it.
+ * not by one that has silently lost it. `includeRouteGpx` (§NNN) the same, for «Atașează traseul (GPX)».
  */
-export type KeptMessage = OrganizerMessage & { askReconfirm: boolean; sendQr: boolean; signLink: boolean; includeProgramme?: true };
+export type KeptMessage = OrganizerMessage & { askReconfirm: boolean; sendQr: boolean; signLink: boolean; includeProgramme?: true; includeRouteGpx?: true };
 
 /**
  * The words of a send to the people ticked, read back for the composer (§945): such a send is a trial as often as not,
  * and the same message to everybody must not have to be typed a second time — four boxes, in two languages. Read from
  * what the send itself wrote, and from nothing new: the three ticks from its audit row — and «Include programul
- * evenimentului» when it was ticked (§958) — the words from the payload of one of its own outbox rows — the one text an
- * outbox row keeps (§364) — for as long as those rows are kept.
+ * evenimentului» (§958) and «Atașează traseul (GPX)» (§NNN) when they were ticked — the words from the payload of one of
+ * its own outbox rows — the one text an outbox row keeps (§364) — for as long as those rows are kept.
  *
  * `null` — and the boxes empty, as after any other send — for an id that names no send of this event, for a send to a
  * group (§364: after one, the next press is a new message), and once the rows are gone.
@@ -610,7 +636,14 @@ export async function readKeptMessage<T extends Record<string, unknown>>(db: Dat
       ),
     )
     .limit(1);
-  const metadata = (sent?.metadata ?? null) as { audience?: unknown; askReconfirm?: unknown; sendQr?: unknown; signLink?: unknown; includeProgramme?: unknown } | null;
+  const metadata = (sent?.metadata ?? null) as {
+    audience?: unknown;
+    askReconfirm?: unknown;
+    sendQr?: unknown;
+    signLink?: unknown;
+    includeProgramme?: unknown;
+    includeRouteGpx?: unknown;
+  } | null;
   if (metadata?.audience !== CHOSEN_AUDIENCE) return null;
   const [row] = await db
     .select({ payload: emailOutbox.payloadJson })
@@ -626,6 +659,8 @@ export async function readKeptMessage<T extends Record<string, unknown>>(db: Dat
     signLink: metadata.signLink === true,
     // «Include programul evenimentului» (§958): named only by a send that ticked it, from the same audit row.
     ...(metadata.includeProgramme === true ? { includeProgramme: true as const } : {}),
+    // «Atașează traseul (GPX)» (§NNN): the same — only a send that flagged its rows names it.
+    ...(metadata.includeRouteGpx === true ? { includeRouteGpx: true as const } : {}),
   };
 }
 
@@ -729,6 +764,8 @@ export async function previewParticipantMessage<T extends Record<string, unknown
     signLink?: boolean;
     /** «Include programul evenimentului» as the box stands: the preview draws the event's programme under the words, from its rows as they are now (§958). */
     includeProgramme?: boolean;
+    /** «Atașează traseul (GPX)» as the box stands: the preview draws the line that says the route is attached, with its link (§NNN). */
+    includeRouteGpx?: boolean;
   },
 ): Promise<ParticipantMessagePreview> {
   if (!canMessageParticipants(actor.role)) {
@@ -762,6 +799,12 @@ export async function previewParticipantMessage<T extends Record<string, unknown
   const feedbackOpen = !details.membersOnly && (await howItWentOpen(db, new Date()));
   const day = eventDay(details.startsAt, details.timezone);
   const contactOf = (language: Locale) => `${env.APP_BASE_URL}${getPathname({ locale: language, href: "/contact" })}`;
+  /*
+    «Atașează traseul (GPX)» (§NNN) when the box is ticked and the event has a GPX now: the line a participant's email
+    carries, the file said attached — what a send this minute would carry — with the link to the same file the event page
+    offers. Nothing is attached to a preview and nothing is read from the store. Unticked, or no GPX, the preview is what it was.
+  */
+  const routeGpx = input.includeRouteGpx === true ? offeredRouteGpx(details.routeGpx) : null;
 
   const data: TemplateData = {
     participantName: EMAIL_SAMPLE[locale].participantName,
@@ -821,6 +864,7 @@ export async function previewParticipantMessage<T extends Record<string, unknown
           ...(otherDetails && otherDetails.locale !== details.locale ? { eventFactsOther: emailEventFacts(otherDetails, otherEventUrl) } : {}),
         }
       : {}),
+    ...(routeGpx ? { organizerRouteGpx: { url: getStorage().publicUrl(routeGpx.key), fileName: routeGpxFileName(routeGpx.key), attached: true } } : {}),
     ...(words.subject[locale] ? { organizerSubject: words.subject[locale] } : {}),
     ...(words.subject[other] ? { organizerSubjectOther: words.subject[other] } : {}),
     ...(words.body[locale] ? { organizerBody: words.body[locale] } : {}),

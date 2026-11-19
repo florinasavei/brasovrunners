@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 import { events } from "@/db/schema/events";
 import type { Database } from "@/db/types";
 import { checkGpx, cleanGpxName, type GpxRefusal, readRouteGpx, type RouteGpx, routeGpxHeaders, routeGpxKey } from "@/modules/events/domain/route-gpx";
-import type { Storage } from "@/modules/media/storage";
+import { isStorageConfigured, type Storage } from "@/modules/media/storage";
 
 /**
  * The GPX of «Traseul» in the store (§718): put on upload, deleted when no event names it.
@@ -67,3 +67,12 @@ export async function releaseRouteGpx<T extends Record<string, unknown>>(
 
 /** The key a stored column names, or null. */
 export const routeGpxKeyOf = (stored: unknown): string | null => readRouteGpx(stored)?.key ?? null;
+
+/**
+ * The event's GPX as its page offers it (`events/ui/EventRoute.tsx`, the event page's `isStorageConfigured()`): the
+ * stored file while this environment has a store to serve it from, and none otherwise. What «Atașează traseul (GPX)»
+ * (§NNN) asks on the composer's page, at the send and when each email leaves, so the three agree with the page.
+ */
+export function offeredRouteGpx(stored: unknown): RouteGpx | null {
+  return isStorageConfigured() ? readRouteGpx(stored) : null;
+}

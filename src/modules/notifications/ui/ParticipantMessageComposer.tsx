@@ -83,7 +83,8 @@ export type ComposerConfirm = { field: string; title: string; count: string; cou
 /**
  * What the boxes hold when the page is drawn right after a send to the people ticked (§945): that send's words and its
  * three ticks, so a trial is followed by the same message to everybody. Absent after any other send: the boxes are empty.
- * `includeProgramme` (§958) is there only when that send ticked «Include programul evenimentului».
+ * `includeProgramme` (§958) is there only when that send ticked «Include programul evenimentului», and `includeRouteGpx`
+ * (§NNN) only when it ticked «Atașează traseul (GPX)».
  */
 export type ComposerKept = {
   subjectRo: string;
@@ -94,6 +95,7 @@ export type ComposerKept = {
   sendQr: boolean;
   signLink: boolean;
   includeProgramme?: boolean;
+  includeRouteGpx?: boolean;
 };
 
 export type ComposerLabels = {
@@ -147,6 +149,9 @@ export type ComposerLabels = {
   includeProgramme: string;
   includeProgrammeHelp: string;
   includeProgrammeNone: string;
+  /** «Atașează traseul (GPX)» (§NNN) and its help line: the GPX of the event's page attached to every email, with its link. */
+  includeRouteGpx: string;
+  includeRouteGpxHelp: string;
   /**
    * «Completează cu textul de reminder»: the button, its question before it replaces typed words, and the ready text in
    * both languages — read on the server from both catalogues with its `{placeholders}` literal, whatever the UI language.
@@ -179,6 +184,8 @@ export type PreviewInput = {
   signLink: boolean;
   /** The tick «Include programul evenimentului» as it stands: the preview draws the event's programme under the words (§958). */
   includeProgramme: boolean;
+  /** The tick «Atașează traseul (GPX)» as it stands: the preview draws the line that says the route is attached, with its link (§NNN). */
+  includeRouteGpx: boolean;
 };
 export type PreviewResult = { subject: string; html: string; unknown: string[] } | null;
 
@@ -194,6 +201,11 @@ type Props = {
    * «Include programul evenimentului» is drawn disabled, with the sentence that says why and where one is written.
    */
   hasProgramme: boolean;
+  /**
+   * Whether the event has a GPX to attach (§NNN), as the page read it — the file its event page offers. Without one
+   * «Atașează traseul (GPX)» is not drawn at all.
+   */
+  hasRouteGpx: boolean;
   defaultAudience: string;
   maxSubject: number;
   maxBody: number;
@@ -245,7 +257,19 @@ const PREVIEW_PAUSE_MS = 500;
  * compares the number with the rows it is about to write and queues nothing on any other. The
  * box is never handed back after a refusal — it is typed again — and the question still follows.
  */
-export default function ParticipantMessageComposer({ eventId, audiences, chosen, kept, hasProgramme, defaultAudience, maxSubject, maxBody, labels, preview }: Props) {
+export default function ParticipantMessageComposer({
+  eventId,
+  audiences,
+  chosen,
+  kept,
+  hasProgramme,
+  hasRouteGpx,
+  defaultAudience,
+  maxSubject,
+  maxBody,
+  labels,
+  preview,
+}: Props) {
   const recall = useRecall();
   const recalledAudience = recall.value("audience");
   const [audience, setAudience] = useState(
@@ -282,9 +306,14 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
   const [includeProgramme, setIncludeProgramme] = useState(
     () => hasProgramme && (recall.has ? recall.value("includeProgramme") === "1" : kept?.includeProgramme === true),
   );
-  // Any of the four ticks as the form holds it now — what a press would post.
+  // «Atașează traseul (GPX)» (§NNN): off unless ticked, controlled and kept the same way — and never on for an event with
+  // no GPX, whose box is not drawn: there is no file to attach.
+  const [includeRouteGpx, setIncludeRouteGpx] = useState(
+    () => hasRouteGpx && (recall.has ? recall.value("includeRouteGpx") === "1" : kept?.includeRouteGpx === true),
+  );
+  // Any of the five ticks as the form holds it now — what a press would post; a box not drawn is not ticked.
   const readTick = useCallback(
-    (name: "askReconfirm" | "sendQr" | "signLink" | "includeProgramme"): boolean =>
+    (name: "askReconfirm" | "sendQr" | "signLink" | "includeProgramme" | "includeRouteGpx"): boolean =>
       root.current?.querySelector<HTMLInputElement>(`input[name="${name}"]`)?.checked === true,
     [],
   );
@@ -308,6 +337,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
         sendQr: readTick("sendQr"),
         signLink: readTick("signLink"),
         includeProgramme: readTick("includeProgramme"),
+        includeRouteGpx: readTick("includeRouteGpx"),
       })
         .then((result) => {
           if (ticket !== asked.current) return;
@@ -645,6 +675,37 @@ export default function ParticipantMessageComposer({ eventId, audiences, chosen,
           {hasProgramme ? labels.includeProgrammeHelp : labels.includeProgrammeNone}
         </Typography>
       </Box>
+
+      {/*
+        «Atașează traseul (GPX)» (§NNN): every email of the send gets the event's GPX — the file its page offers — attached,
+        and under these words a line with the link to it. Drawn only when the event has such a file: without one there is
+        no box, nothing posts, and the send ignores a tick posted for it anyway.
+      */}
+      {hasRouteGpx && (
+        <Box data-testid="participant-message-route-gpx">
+          <FormControlLabel
+            control={
+              <Checkbox
+                name="includeRouteGpx"
+                value="1"
+                checked={includeRouteGpx}
+                onChange={(event) => {
+                  setIncludeRouteGpx(event.target.checked);
+                  // The preview at once, as the ticks above: the box decides a line, not words being typed.
+                  pause.cancel();
+                  refresh(language);
+                }}
+                slotProps={{ input: { "aria-describedby": "participant-message-route-gpx-help" } }}
+                sx={CHECKBOX_TAP_TARGET}
+              />
+            }
+            label={labels.includeRouteGpx}
+          />
+          <Typography id="participant-message-route-gpx-help" variant="caption" color="text.secondary" component="p">
+            {labels.includeRouteGpxHelp}
+          </Typography>
+        </Box>
+      )}
 
       {/* The message as it will arrive (§364): the server renders it, the tabs pick whose copy. */}
       <Box data-testid="participant-message-preview">

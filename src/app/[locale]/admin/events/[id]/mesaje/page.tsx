@@ -14,6 +14,7 @@ import { findEventNotificationDetails } from "@/modules/events/repository";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing } from "@/modules/content/events/repository";
+import { offeredRouteGpx } from "@/modules/content/events/route-gpx";
 import { typedStartShape } from "@/modules/events/domain/provisional-start";
 import { readRepeatRule } from "@/modules/events/domain/repeat";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
@@ -303,12 +304,14 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
     press whose form posts the tick (a ticked box posts `1`, an unticked or a disabled one posts nothing).
   */
   const programmeLine: ConfirmAlso = { text: t("participantMessages.confirmProgramme"), when: [{ field: "includeProgramme", equals: "1" }] };
+  // «Atașează traseul (GPX)» (§NNN) the same way: one quiet line, only for a press whose form posts that tick.
+  const routeGpxLine: ConfirmAlso = { text: t("participantMessages.confirmRouteGpx"), when: [{ field: "includeRouteGpx", equals: "1" }] };
   const chosenConfirm = withSendNowChoice(
     {
       when: [{ field: "audience", equals: CHOSEN_AUDIENCE }],
       title: t("participantMessages.chosen.confirmTitle"),
       body: [t("participantMessages.confirmBody"), testPeople.length > 0 ? t("participantMessages.chosen.testNote") : ""].filter(Boolean).join(" "),
-      ...words.mail({ to: { ticksOf: CHOSEN_FIELD, audience: "participants", uncounted: testPeople }, type: "ORGANIZER_MESSAGE", also: [programmeLine] }),
+      ...words.mail({ to: { ticksOf: CHOSEN_FIELD, audience: "participants", uncounted: testPeople }, type: "ORGANIZER_MESSAGE", also: [programmeLine, routeGpxLine] }),
       confirmLabel: t("participantMessages.confirmSend"),
       cancelLabel: words.cancel,
     },
@@ -325,7 +328,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
         ...(choice.warningLine ? { warning: choice.warningLine } : {}),
         // No "0 participants" for a group of test rows alone: the test line says who is written to. The message named, and
         // the club's one copy of the send (§419) — the design «telling the owner about every email a staff press sends», slice 3.
-        ...words.mail({ to: { count: choice.real, audience: "participants" }, type: "ORGANIZER_MESSAGE", also: [programmeLine] }),
+        ...words.mail({ to: { count: choice.real, audience: "participants" }, type: "ORGANIZER_MESSAGE", also: [programmeLine, routeGpxLine] }),
         confirmLabel: t("participantMessages.confirmSend"),
         cancelLabel: words.cancel,
       },
@@ -355,6 +358,12 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
     count — the message draws timed rows only, as the facts block does.
   */
   const hasProgramme = readScheduleItems(event.scheduleItems).length > 0;
+  /*
+    «Atașează traseul (GPX)» (§NNN) is offered only when the event has a GPX its page offers (`offeredRouteGpx`): the file
+    the editor uploaded under «Linkuri și fișiere», with a store to serve it from. Without one the tick is not drawn at
+    all — and the send ignores a tick posted for such an event.
+  */
+  const hasRouteGpx = offeredRouteGpx(event.routeGpx) !== null;
   const nobodyAnywhere = counts.ALL_ACTIVE.real + counts.ALL_ACTIVE.test === 0;
   const sentCount = /^\d+$/.test(sent ?? "") ? Number(sent) : null;
   const sentTest = /^\d+$/.test(test ?? "") ? Number(test) : 0;
@@ -433,10 +442,13 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
                     signLink: keptMessage.signLink,
                     // «Include programul evenimentului» (§958): named only when that send ticked it.
                     ...(keptMessage.includeProgramme ? { includeProgramme: true } : {}),
+                    // «Atașează traseul (GPX)» (§NNN): the same.
+                    ...(keptMessage.includeRouteGpx ? { includeRouteGpx: true } : {}),
                   },
                 }
               : {})}
             hasProgramme={hasProgramme}
+            hasRouteGpx={hasRouteGpx}
             defaultAudience="ALL_ACTIVE"
             maxSubject={ORGANIZER_SUBJECT_MAX}
             maxBody={ORGANIZER_BODY_MAX}
@@ -498,6 +510,8 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
               includeProgrammeHelp: t("participantMessages.includeProgrammeHelp"),
               // Where the programme is written, by the editor card's own title — never a second name for it.
               includeProgrammeNone: t("participantMessages.includeProgrammeNone", { card: t("editor.boxes.programme.title") }),
+              includeRouteGpx: t("participantMessages.includeRouteGpx"),
+              includeRouteGpxHelp: t("participantMessages.includeRouteGpxHelp"),
               reminderFill: {
                 button: t("participantMessages.reminderFill.button"),
                 confirmTitle: t("participantMessages.reminderFill.confirmTitle"),
