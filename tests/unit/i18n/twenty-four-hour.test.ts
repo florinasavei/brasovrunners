@@ -71,6 +71,12 @@ function hourObjects(text: string): string[] {
 const ASKS_HOUR = /\bhour\b\s*[:,}]/;
 const PINS_H23 = /hourCycle:\s*["']h23["']|hour12:\s*false/;
 
+/**
+ * MUI X's `ampm` prop, unless it is written `ampm={false}` — the one spelling that pins the 24-hour clock (§NNN: the results'
+ * clock picker passes it, so its hours never follow the adapter's language). Any other `ampm` asks for, or leaves room for, AM/PM.
+ */
+const TWELVE_HOUR_PROP = /\bampm\b(?!=\{false\})/;
+
 /** `.toLocaleString(` on something named like a date — a number's (`count.toLocaleString`) groups digits, never an hour. */
 const DATE_TO_LOCALE_STRING = /\b(?:\w*(?:[Dd]ate|[Aa]t|[Tt]ime|[Ww]hen|now)|new Date\([^)]*\))\.toLocaleString\(/;
 
@@ -105,7 +111,7 @@ describe("BR-REQ-050-02 every time reads 24-hour, in both languages (§349, §43
       if (/type=["{]*["']time["']|type:\s*["']time["']/.test(text)) offenders.push(`${relative}: type="time"`);
       if (/type=["{]*["']datetime-local["']|type:\s*["']datetime-local["']/.test(text)) offenders.push(`${relative}: type="datetime-local"`);
       if (/hour12:\s*true|hourCycle:\s*["']h1[12]["']/.test(text)) offenders.push(`${relative}: a 12-hour option`);
-      if (/\bampm\b/.test(text)) offenders.push(`${relative}: ampm`);
+      if (TWELVE_HOUR_PROP.test(text)) offenders.push(`${relative}: ampm`);
       // Outside the helper, a formatter that shows an hour pins the cycle itself: with no
       // `hourCycle: "h23"` / `hour12: false`, `{ hour: "2-digit" }` in "en" prints «07:00 PM».
       if (relative !== HELPER) {
@@ -138,6 +144,11 @@ describe("BR-REQ-050-02 every time reads 24-hour, in both languages (§349, §43
     expect(hourObjects(`function at(hour: number) { return { hour, minute: 0 }; }`)).toEqual([]);
     expect(DATE_TO_LOCALE_STRING.test("startsAt.toLocaleString(locale)")).toBe(true);
     expect(DATE_TO_LOCALE_STRING.test("value.toLocaleString(locale)")).toBe(false);
+    // `ampm={false}` pins the 24-hour clock and passes; every other `ampm` is refused.
+    expect(TWELVE_HOUR_PROP.test("<MultiSectionDigitalClock ampm={false} />")).toBe(false);
+    for (const written of ["<TimePicker ampm />", "<TimePicker ampm={true} />", "<TimePicker ampm={twelve} />", "{ ampm: false }", "const ampm = true;"]) {
+      expect(TWELVE_HOUR_PROP.test(written), written).toBe(true);
+    }
   });
 });
 

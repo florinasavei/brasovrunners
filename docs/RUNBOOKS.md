@@ -1016,7 +1016,9 @@ started and any disqualification with the reason for the note box either way.
 ### After the race: enter and save
 
 1. Open «Clasament». Under «Alergători înscriși» every registered runner with a number has a line.
-2. **Type** the times in «Timp» (`h:mm:ss`, `mm:ss` or `mm:ss.t`). A time alone means «Sosit». For the others pick
+2. **Type** the times in «Timp» (`h:mm:ss`, `mm:ss` or `mm:ss.t`; digits alone work too — `12345` becomes `1:23:45` when the box is
+   left — and a dot, a comma or a space stands for a colon), **or pick them**: the clock beside «Timp» and «Timp cip» opens the hours,
+   minutes and seconds on the 24-hour clock, and «OK» writes `h:mm:ss` (tenths are typed). A time alone means «Sosit». For the others pick
    the state in «Stare», without a time. «Timp cip» and «Notă» are optional.
 3. **Or import**: «Importă din CSV» — paste or choose a file of `number, time[, chip time][, status]`, with or without
    a header, comma, semicolon or tab separated. The rows fill the boxes; nothing is saved yet. A bad line refuses
