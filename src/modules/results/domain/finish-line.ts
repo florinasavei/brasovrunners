@@ -1,3 +1,5 @@
+import { isUuid } from "@/shared/ids";
+
 /**
  * «Cronometrare» (§NNN, amending §850; the owner, 2026-11-18, three days before the race: «trebuie să mai am un view rapid, în
  * care să introduc și să se salveze instant, gen că a ajuns NR X, Y, Z» — «ca s-ar putea să ajungă mulți deodată»): the pure
@@ -19,23 +21,28 @@
  * - **The stamp.** A press is an instant on that clock (`pressedAtMs`). The time since the gun is floored to the second and is
  *   at least one second, as «Sosire» always stamped it. The server accepts the instant the island claims when its time is at
  *   least a second and at most the server's own time since the gun plus five seconds — a queued entry sent late keeps the
- *   moment the runner crossed, a phone running ahead cannot stamp a runner who has not arrived — and within a day of the gun;
- *   otherwise it stamps its own (`finishStamp`). A press that arrives more than a day and three hours after the gun is refused
+ *   moment the runner crossed, a phone running ahead cannot stamp a runner who has not arrived — and within a day of the gun
+ *   (`finishStamp`). A claim before the gun is refused as not started, never stamped with the arrival's time: a press queued
+ *   before the gun and sent later would be a finisher made up at its arrival. Only a claim ahead of the server's clock, and no
+ *   claim at all, take the server's own time. A press that arrives more than a day and three hours after the gun is refused
  *   whatever it claims: a queue that waited that long is «Clasament»'s to type.
- * - **A stored row of the number** (`pressMeets`). «Sosit» already: the same viewer at the same second is a retry, anybody else
- *   a press again; «Descalificat», or a decision written on «Clasament» after the moment pressed: the decision stays; only an
- *   «Abandon» or a «Neprezentat» older than the press is a runner written off by mistake, turned «Sosit».
+ * - **A stored row of the number** (`pressMeets`). «Sosit» already: a press again — but for a press with no id of its own (the
+ *   plain form), the same viewer at the same second is taken for a retry; a press with its id was already looked for in the
+ *   trail (`savedPressOf`). «Descalificat», or a decision written on «Clasament» after the moment pressed: the decision stays;
+ *   only an «Abandon» or a «Neprezentat» older than the press is a runner written off by mistake, turned «Sosit».
  * - **«Start».** The gun is the moment pressed when the server hears it at most ten seconds later and at most five seconds
  *   before its own clock, else the server's own (`raceGunMoment`); it may be pressed from three hours before the planned gun to
- *   six hours after (`raceGunWindowOpen`).
+ *   six hours after (`raceGunWindowOpen`); a second «Start» of the same organizer heard within ten seconds of their last is the
+ *   same press sent twice, and changes nothing (`raceGunRepeats`).
  * - **«⏱ Prinde timpul».** Each press keeps one instant, oldest first; the next number or elite pressed takes the oldest kept
  *   one instead of now (`takeOldestKept`). The kept instants are the staff account's that kept them (`keptOf`, `withKept`).
- * - **The queue.** Every entry is one staff account's press (`staffId`), kept, in the order pressed, until the server answered
- *   it; the oldest one of the viewer's own waiting is sent first (`nextToSend`) — another account's, left on the same phone,
- *   is shown and never sent from this one; an answer settles it (`settleEntry`), a press the server could not record is
- *   settled refused after `FINISH_FAILED_TRIES` answers, so the queue moves on, and the settled lines past `ENTRIES_KEPT` are
- *   dropped, never a waiting one. What the phone keeps in its storage is read back tolerantly (`readStoredFinishLine`): a value
- *   that is not an entry is left out, never thrown.
+ * - **The queue.** Every entry is one staff account's press (`staffId`) with an id of its own, which the server keeps in the
+ *   trail and recognises a retry by; kept, in the order pressed, until the server answered it. The oldest one of the viewer's
+ *   own waiting is sent first (`nextToSend`) — another account's, left on the same phone, is shown and never sent from this one.
+ *   A press the server could not record waits out a backoff (`holdAfterFailure`) while the ones after it go, and is tried again
+ *   and again — never settled by a failure —, a later press of its number waiting behind it; only an answer settles it
+ *   (`settleEntry`), and the settled lines past `ENTRIES_KEPT` are dropped, never a waiting one. What the phone keeps in its
+ *   storage is read back tolerantly (`readStoredFinishLine`): a value that is not an entry is left out, never thrown.
  * - **«Anulează».** A row the viewer's own press at the line wrote (its `event_result.created` row of the trail says
  *   `finishLine` and names the row), that nobody changed since — its creation and its last change the same instant, by the
  *   viewer — and whose number nobody pressed again since, may be undone for ten minutes after it was written
@@ -56,14 +63,18 @@ export const RACE_GUN_OPENS_BEFORE_MS = 3 * 3_600_000;
 export const RACE_GUN_CLOSES_AFTER_MS = 6 * 3_600_000;
 /** How long before the server hears it the tap «Start» claims may be and still be the gun: a slow upload at a crowded start line. */
 export const RACE_GUN_CLAIM_TOLERANCE_MS = 10_000;
+/** How long after an organizer's «Start» was heard a second one of theirs is the same press sent twice: a tap again on a slow signal. */
+export const RACE_GUN_REPEAT_MS = 10_000;
 /** How many of the latest finishers «Ultimii sosiți» lists. */
 export const RECENT_FINISHERS = 20;
 /** How many kept times «⏱ Prinde timpul» holds at most: a press past it keeps nothing more. */
 export const KEPT_TIMES_MAX = 50;
 /** How many answered lines the phone keeps under the box; the waiting ones are always kept. */
 export const ENTRIES_KEPT = 30;
-/** How many times the server may answer that it could not record one press before the phone settles it refused, its time to write down. */
-export const FINISH_FAILED_TRIES = 3;
+/** The first wait before a press is sent again — after no answer, or one that it could not be recorded —, doubling… */
+export const FINISH_RETRY_FIRST_MS = 2_000;
+/** …up to this, and then every this long, for as long as the press waits. */
+export const FINISH_RETRY_MAX_MS = 30_000;
 /** The phone's storage key prefix: one entry per event. */
 export const FINISH_STORAGE_PREFIX = "finish-line:";
 /** The phone's storage key of the server's clock: one for every event (an event's key ends in its id, never this word). */
@@ -180,16 +191,20 @@ export type FinishStamp = { kind: "stamped"; gunTimeMs: number; claimed: boolean
 
 /**
  * The time a press is stamped with (§NNN). A press arriving more than `FINISH_WINDOW_MS` and `FINISH_ARRIVAL_GRACE_MS` after the gun
- * is `closed` whatever it claims. Else the claimed instant counts when its time since the gun — floored to the second — is at least a
- * second, at most the server's own time plus `FINISH_CLAIM_AHEAD_MS`, and within `FINISH_WINDOW_MS`; anything else, or no claim, is the
- * server's own time, refused before the gun (`notStarted`) and past the window (`closed`).
+ * is `closed` whatever it claims. Else the claimed instant's time since the gun, floored to the second, decides: under a second — a
+ * press before the gun — is `notStarted`, never the arrival's time instead (a press queued before the gun and sent later would be a
+ * finisher made up at its arrival, and would fix the gun); within the server's own time plus `FINISH_CLAIM_AHEAD_MS` it is the stamp,
+ * `closed` past `FINISH_WINDOW_MS`. Only a claim ahead of that, or no claim, is the server's own time — refused before the gun
+ * (`notStarted`) and past the window (`closed`).
  */
 export function finishStamp(input: { claimedAtMs: number | null | undefined; gunAtMs: number; nowMs: number }): FinishStamp {
   const own = input.nowMs - input.gunAtMs;
   if (own > FINISH_WINDOW_MS + FINISH_ARRIVAL_GRACE_MS) return { kind: "closed", gunTimeMs: Math.floor(own / SECOND) * SECOND };
   if (isInstant(input.claimedAtMs)) {
     const claim = Math.floor((input.claimedAtMs - input.gunAtMs) / SECOND) * SECOND;
-    if (claim >= SECOND && claim <= own + FINISH_CLAIM_AHEAD_MS && claim <= FINISH_WINDOW_MS) return { kind: "stamped", gunTimeMs: claim, claimed: true };
+    if (claim < SECOND) return { kind: "notStarted" };
+    if (claim <= own + FINISH_CLAIM_AHEAD_MS) return claim <= FINISH_WINDOW_MS ? { kind: "stamped", gunTimeMs: claim, claimed: true } : { kind: "closed", gunTimeMs: claim };
+    // A claim ahead of the server's clock — a phone running fast, a runner who has not arrived: the server's own time.
   }
   if (own <= 0) return { kind: "notStarted" };
   if (own > FINISH_WINDOW_MS) return { kind: "closed", gunTimeMs: Math.floor(own / SECOND) * SECOND };
@@ -201,15 +216,49 @@ export type MetRow = { status: string; gunTimeMs: number | null; updatedAt: Date
 
 /**
  * What a press does to the stored row of its number (§NNN; the owner: «se poate întâmpla și ca mai mulți voluntari să treacă
- * același număr»): `retry` — «Sosit» by the same viewer at the same second, a press already saved —; `pressedAgain` — «Sosit» by
- * anybody else, or by the viewer another second: the first stays —; `decided` — «Descalificat», which the line never undoes, or an
- * «Abandon» / «Neprezentat» written after the moment pressed (`atMs`), a later decision a queued press must not overwrite —; and
- * `turned` — an «Abandon» or a «Neprezentat» written before the press: a runner written off by mistake, who crossed the line.
+ * același număr»): `retry` — «Sosit» by the same viewer at the same second, taken for a press already saved, but only for a press
+ * with no id of its own (`identified` false: the plain form, an older page) —; `pressedAgain` — «Sosit» by anybody else, by the
+ * viewer another second, or by the viewer at all when the press carries its id: the trail, read first, said it is not this press's
+ * retry (`savedPressOf`), so the first stays —; `decided` — «Descalificat», which the line never undoes, or an «Abandon» /
+ * «Neprezentat» written after the moment pressed (`atMs`), a later decision a queued press must not overwrite —; and `turned` — an
+ * «Abandon» or a «Neprezentat» written before the press: a runner written off by mistake, who crossed the line.
  */
-export function pressMeets(row: MetRow, press: { actorId: string; gunTimeMs: number; atMs: number }): "retry" | "pressedAgain" | "decided" | "turned" {
-  if (row.status === "FINISHED") return row.updatedByStaffUserId === press.actorId && row.gunTimeMs === press.gunTimeMs ? "retry" : "pressedAgain";
+export function pressMeets(row: MetRow, press: { actorId: string; gunTimeMs: number; atMs: number; identified: boolean }): "retry" | "pressedAgain" | "decided" | "turned" {
+  if (row.status === "FINISHED") return !press.identified && row.updatedByStaffUserId === press.actorId && row.gunTimeMs === press.gunTimeMs ? "retry" : "pressedAgain";
   if (row.status === "DSQ" || press.atMs < row.updatedAt.getTime()) return "decided";
   return "turned";
+}
+
+/** The rows of the trail a press of the line writes, where its id is kept (`pressId`): a retry is looked for among them. */
+export const PRESS_TRAIL_ACTIONS = ["event_result.created", "event_result.updated", "event_result.finish_duplicate"] as const;
+
+/** A press the trail already holds, as it was answered: recorded, or a number found stored — the stored row's id, the times and the state. */
+export type SavedPress =
+  | { kind: "recorded"; resultId: string; gunTimeMs: number }
+  | { kind: "duplicate"; storedResultId: string; gunTimeMs: number; storedGunTimeMs: number | null; storedStatus: string };
+
+/**
+ * A press found in the trail by its id (§NNN), read back as it was answered — so its retry, the answer lost on the way, is answered
+ * the same and writes nothing: a «Sosit» it wrote (`event_result.created` / `.updated` with `finishLine`, its `resultId`), or a number
+ * it found stored (`event_result.finish_duplicate`). Null for a row of another number — an id is one press's, of one number — or one
+ * that cannot be read: the press is then taken as new.
+ */
+export function savedPressOf(row: { action: string; metadata: unknown }, bibNumber: number): SavedPress | null {
+  const metadata = row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata) ? (row.metadata as Record<string, unknown>) : {};
+  if (metadata.finishLine !== true || metadata.bibNumber !== bibNumber || typeof metadata.gunTimeMs !== "number") return null;
+  if (row.action === "event_result.created" || row.action === "event_result.updated") {
+    return typeof metadata.resultId === "string" ? { kind: "recorded", resultId: metadata.resultId, gunTimeMs: metadata.gunTimeMs } : null;
+  }
+  if (row.action === "event_result.finish_duplicate" && typeof metadata.storedResultId === "string") {
+    return {
+      kind: "duplicate",
+      storedResultId: metadata.storedResultId,
+      gunTimeMs: metadata.gunTimeMs,
+      storedGunTimeMs: typeof metadata.storedGunTimeMs === "number" ? metadata.storedGunTimeMs : null,
+      storedStatus: typeof metadata.storedStatus === "string" ? metadata.storedStatus : "FINISHED",
+    };
+  }
+  return null;
 }
 
 // ---- «Start» --------------------------------------------------------------------------------------------
@@ -226,6 +275,19 @@ export function raceGunWindowOpen(plannedGunMs: number, nowMs: number): boolean 
 export function raceGunMoment(claimedAtMs: number | null | undefined, nowMs: number): number {
   if (!isInstant(claimedAtMs)) return nowMs;
   return claimedAtMs - nowMs <= FINISH_CLAIM_AHEAD_MS && nowMs - claimedAtMs <= RACE_GUN_CLAIM_TOLERANCE_MS ? claimedAtMs : nowMs;
+}
+
+/** The gun's latest audit row, as much as a «Start» reads of it: `event.race_gun_set` or `event.race_gun_cleared`, who and when it was heard. */
+export type RaceGunTrailRow = { action: string; actorStaffUserId: string | null; at: Date };
+
+/**
+ * Whether a «Start» heard at `nowMs` is the actor's own last one sent twice (§NNN): the gun's latest row is a «Start» of theirs — so the
+ * gun stands as they set it — heard at most `RACE_GUN_REPEAT_MS` before. A tap again while the first was still on its way on a slow
+ * signal: answered with the gun as it stands, nothing written. Another organizer's press, one after «Anulează startul», and one of
+ * theirs later than that are a press of their own, which moves the gun.
+ */
+export function raceGunRepeats(last: RaceGunTrailRow | null | undefined, actorId: string, nowMs: number): boolean {
+  return last?.action === "event.race_gun_set" && last.actorStaffUserId === actorId && nowMs - last.at.getTime() <= RACE_GUN_REPEAT_MS;
 }
 
 // ---- «Anulează» ------------------------------------------------------------------------------------------
@@ -341,9 +403,8 @@ export type EliteButtonView = {
 /** The page's state as every answer carries it, so the island stays the server's. */
 export type FinishLineState = {
   serverNowMs: number;
+  /** The gun the line counts from: «Start» as pressed, else the plan (`results.ts#gunOf`). */
   gunAtMs: number;
-  /** «Start» was pressed: the gun is the moment pressed, not the editor's plan. */
-  gunPressed: boolean;
   recent: RecentFinisherView[];
   elites: EliteButtonView[];
   finished: number;
@@ -360,7 +421,7 @@ export type FinishEntryOutcome =
       gunTimeMs: number;
       positionOverall: number | null;
       outOfRanking: boolean;
-      /** The server had it already, from this viewer at this second: a retry, shown as saved. */
+      /** The server had it already — the same press sent again, its answer lost on the way —: shown as saved. */
       again: boolean;
     }
   | {
@@ -382,7 +443,7 @@ export type FinishEntryOutcome =
 
 /**
  * A press's answer, with the server's clock; or that the staff session ended — or is another account's than the press's — (the entry
- * waits; sign in again); or that the server could not record it (`failed`: tried again, then settled refused).
+ * waits; sign in again); or that the server could not record it (`failed`: the entry waits and is tried again, the next ones sent).
  */
 export type FinishPressAnswer =
   | { kind: "answer"; outcome: FinishEntryOutcome; state: FinishLineState | null; clock: ServerClockReading }
@@ -401,6 +462,7 @@ export type FinishClockAnswer = { kind: "clock"; clock: ServerClockReading } | {
 
 /** One press on this phone: waiting, or answered. */
 export type FinishEntry = {
+  /** The press's own id, sent with it and kept in the trail (`pressId`): a retry of it is recognised by it, exactly. */
   id: string;
   /** The staff account that pressed it: sent only from a page of that account, so the trail names who really entered it. */
   staffId: string;
@@ -429,9 +491,44 @@ function trimEntries(entries: FinishEntry[]): FinishEntry[] {
   });
 }
 
-/** The entry to send next: the oldest of the viewer's own waiting, in the order pressed. */
-export function nextToSend(entries: readonly FinishEntry[], staffId: string): FinishEntry | undefined {
-  return entries.find((entry) => entry.outcome === null && entry.staffId === staffId);
+/** The entries the server answered it could not record, each held until it is tried again: how many times it failed, and until when. */
+export type HeldEntries = ReadonlyMap<string, { tries: number; untilMs: number }>;
+
+/** The wait before a press is tried again after its `tries`-th failure: two seconds, doubling, every thirty at most — never a last one. */
+export function finishRetryDelay(tries: number): number {
+  return Math.min(FINISH_RETRY_MAX_MS, FINISH_RETRY_FIRST_MS * 2 ** Math.min(16, Math.max(0, tries - 1)));
+}
+
+/** An entry the server could not record once more: held for the next wait, its failures counted — still waiting, never settled. */
+export function holdAfterFailure(held: HeldEntries, id: string, nowMs: number): { tries: number; untilMs: number } {
+  const tries = (held.get(id)?.tries ?? 0) + 1;
+  return { tries, untilMs: nowMs + finishRetryDelay(tries) };
+}
+
+/**
+ * The entry to send next: the oldest of the viewer's own waiting whose turn has come, in the order pressed. One the server could not
+ * record waits out its hold (`held`) while the ones after it go — but a later press of the same number waits behind it, so the phone's
+ * first press of a number is still the first one the server hears.
+ */
+export function nextToSend(entries: readonly FinishEntry[], staffId: string, held: HeldEntries = new Map(), nowMs = 0): FinishEntry | undefined {
+  const heldNumbers = new Set<number>();
+  for (const entry of entries) {
+    if (entry.outcome !== null || entry.staffId !== staffId) continue;
+    const ready = (held.get(entry.id)?.untilMs ?? Number.NEGATIVE_INFINITY) <= nowMs;
+    if (ready && !heldNumbers.has(entry.bibNumber)) return entry;
+    heldNumbers.add(entry.bibNumber);
+  }
+  return undefined;
+}
+
+/** When the first of the viewer's own held entries may be tried again, or null when none of them is held. */
+export function nextRetryAt(entries: readonly FinishEntry[], staffId: string, held: HeldEntries): number | null {
+  let first: number | null = null;
+  for (const entry of entries) {
+    const hold = entry.outcome === null && entry.staffId === staffId ? held.get(entry.id) : undefined;
+    if (hold && (first === null || hold.untilMs < first)) first = hold.untilMs;
+  }
+  return first;
 }
 
 /** How many of the viewer's own wait to be sent. */
@@ -458,8 +555,18 @@ export function finishStorageKey(eventId: string): string {
   return `${FINISH_STORAGE_PREFIX}${eventId}`;
 }
 
-/** What one event's line keeps on the phone: the presses, and the kept times of each staff account. */
-export type StoredFinishLine = { entries: FinishEntry[]; kept: Record<string, number[]> };
+/** The event a storage key is the line of, or null for any other key — the clock's (`CLOCK_STORAGE_KEY`), another page's. */
+export function eventIdOfStorageKey(key: string): string | null {
+  if (!key.startsWith(FINISH_STORAGE_PREFIX)) return null;
+  const eventId = key.slice(FINISH_STORAGE_PREFIX.length);
+  return isUuid(eventId) ? eventId : null;
+}
+
+/**
+ * What one event's line keeps on the phone: the presses, the kept times of each staff account, and the event's title as its page
+ * named it — so another event's page can say where presses wait («N apăsări așteaptă la …»); null for a line written without one.
+ */
+export type StoredFinishLine = { entries: FinishEntry[]; kept: Record<string, number[]>; title: string | null };
 
 /** The viewer's kept times. */
 export function keptOf(line: StoredFinishLine, staffId: string): number[] {
@@ -515,7 +622,7 @@ function readOutcome(value: unknown): FinishEntryOutcome | null | undefined {
  * without them, as without the storage.
  */
 export function readStoredFinishLine(raw: string | null | undefined): StoredFinishLine {
-  const empty: StoredFinishLine = { entries: [], kept: {} };
+  const empty: StoredFinishLine = { entries: [], kept: {}, title: null };
   if (!raw) return empty;
   let parsed: unknown;
   try {
@@ -524,7 +631,7 @@ export function readStoredFinishLine(raw: string | null | undefined): StoredFini
     return empty;
   }
   if (!parsed || typeof parsed !== "object") return empty;
-  const stored = parsed as { entries?: unknown; kept?: unknown };
+  const stored = parsed as { entries?: unknown; kept?: unknown; title?: unknown };
   const entries: FinishEntry[] = [];
   const seen = new Set<string>();
   for (const item of Array.isArray(stored.entries) ? stored.entries : []) {
@@ -546,10 +653,10 @@ export function readStoredFinishLine(raw: string | null | undefined): StoredFini
       if (owner !== "" && valid.length > 0) kept[owner] = valid;
     }
   }
-  return { entries: trimEntries(entries), kept };
+  return { entries: trimEntries(entries), kept, title: isText(stored.title) && stored.title.trim() !== "" ? stored.title : null };
 }
 
 /** One event's line, ready for the phone's storage. */
 export function storedFinishLine(line: StoredFinishLine): string {
-  return JSON.stringify({ entries: line.entries, kept: line.kept });
+  return JSON.stringify({ entries: line.entries, kept: line.kept, title: line.title });
 }

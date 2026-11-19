@@ -9,9 +9,10 @@ import { createRace, person, registerRunner, resetNoticeCounter } from "../../he
 
 /**
  * §NNN — «Cronometrare»'s Server Actions (BR-REQ-050-02, BR-REQ-060-01): the island's press answers the outcome, the page's state and
- * the server's clock, «sign in again» for a session that ended or is another account's than the press's (the entry waits on the
- * phone), `failed` for a press the server could not record, and a refusal — never the page — for a member; the clock's own question;
- * the plain forms come back to the page with the outcome in the address, numbers and codes only; «Start» is whoever enters results'.
+ * the server's clock, the same press sent again — its id — as saved, «sign in again» for a session that ended or is another account's
+ * than the press's (the entry waits on the phone), `failed` for a press the server could not record, and a refusal — never the page —
+ * for a member; the clock's own question; the plain forms come back to the page with the outcome in the address, numbers and codes
+ * only; «Start» is whoever enters results', and the organizer's own «Start» heard again within ten seconds changes nothing.
  * The session's door is the real one's shape: no session is UNAUTHENTICATED, a capability not held is FORBIDDEN. The actions read
  * the real clock, so the race started an hour ago.
  */
@@ -93,7 +94,8 @@ describe("§NNN the island's press", () => {
   it("answers the outcome — the claimed moment kept — and the page's state, with who entered the line and the server's clock", async () => {
     const claimed = gun.getTime() + 45 * 60_000 + 12_000;
     const sentAtMs = Date.now();
-    const answer = await recordFinishPressAction({ eventId: raceId, staffId: staff.CONTRIBUTOR!.id, bibNumber: 102, claimedAtMs: claimed });
+    const pressId = "4a7e0c1d-2b3f-4c5d-8e9f-0a1b2c3d4e5f";
+    const answer = await recordFinishPressAction({ eventId: raceId, staffId: staff.CONTRIBUTOR!.id, bibNumber: 102, claimedAtMs: claimed, pressId });
     expect(answer).toMatchObject({ kind: "answer", outcome: { kind: "recorded", bibNumber: 102, name: "Bia Marin", gunTimeMs: 45 * 60_000 + 12_000, positionOverall: 1, again: false } });
     if (answer.kind !== "answer" || !answer.state) throw new Error("no state");
     expect(answer.state.recent.map((line) => [line.bibNumber, line.by, line.undoUntilMs !== null, line.pressedAgain])).toEqual([[102, "Vlad Voluntar", true, null]]);
@@ -103,7 +105,9 @@ describe("§NNN the island's press", () => {
     expect(answer.clock.receivedAtMs).toBeGreaterThanOrEqual(sentAtMs);
     expect(answer.clock.answeredAtMs).toBeGreaterThanOrEqual(answer.clock.receivedAtMs);
     expect(answer.clock.answeredAtMs).toBeLessThanOrEqual(Date.now());
-    // The same press again — a retry — is saved; another volunteer's is a duplicate naming who stored it.
+    // The same press again — its id — is saved, and so is a press with no id at that second (the guess); another volunteer's is a
+    // duplicate naming who stored it.
+    expect(await recordFinishPressAction({ eventId: raceId, staffId: staff.CONTRIBUTOR!.id, bibNumber: 102, claimedAtMs: claimed, pressId })).toMatchObject({ outcome: { kind: "recorded", again: true } });
     expect(await recordFinishPressAction({ eventId: raceId, bibNumber: 102, claimedAtMs: claimed })).toMatchObject({ outcome: { kind: "recorded", again: true } });
     state.actor = staff.MODERATOR;
     expect(await recordFinishPressAction({ eventId: raceId, bibNumber: 102, claimedAtMs: claimed + 4000 })).toMatchObject({
@@ -209,6 +213,9 @@ describe("§NNN «Start»", () => {
     state.actor = staff.MODERATOR;
     const tap = Date.now() - 1500;
     expect(await post(setRaceGunAction, form({ intent: "start", claimedAtMs: String(tap) }))).toBe(page("gun=set"));
+    expect(await gunOfRace()).toEqual({ at: new Date(tap), by: staff.MODERATOR!.id });
+    // The same tap sent again — queued behind the first, claiming its own moment —: the gun as it stands, nothing written.
+    expect(await post(setRaceGunAction, form({ intent: "start", claimedAtMs: String(Date.now()) }))).toBe(page("gun=repeat"));
     expect(await gunOfRace()).toEqual({ at: new Date(tap), by: staff.MODERATOR!.id });
     expect(await post(setRaceGunAction, form({ intent: "clear" }))).toBe(page("gun=cleared"));
     expect(await post(setRaceGunAction, form({ intent: "clear" }))).toBe(page("gun=unchanged"));

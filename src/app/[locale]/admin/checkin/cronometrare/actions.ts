@@ -36,7 +36,6 @@ function stateOf(view: FinishLineView): FinishLineState {
   return {
     serverNowMs: Date.now(),
     gunAtMs: view.gun.at.getTime(),
-    gunPressed: view.gun.pressed,
     recent: view.recent,
     elites: view.elites,
     finished: view.finished,
@@ -57,13 +56,17 @@ async function stateAfter(actor: StaffAccount, eventId: string): Promise<FinishL
   }
 }
 
-/** What the island sends for one press: the event, the account that pressed it, the number and the press's moment on the server's clock. */
-function pressOf(input: unknown): { eventId: string; staffId: string | null; bibNumber: number; claimedAtMs: number | null } {
+/**
+ * What the island sends for one press: the event, the account that pressed it, the number, the press's moment on the server's clock
+ * and the press's own id (`pressId`), by which the service knows its retry exactly.
+ */
+function pressOf(input: unknown): { eventId: string; staffId: string | null; bibNumber: number; claimedAtMs: number | null; pressId: string | null } {
   const raw = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
   const eventId = typeof raw.eventId === "string" && isUuid(raw.eventId) ? raw.eventId : "";
   const staffId = typeof raw.staffId === "string" && isUuid(raw.staffId) ? raw.staffId : null;
   const bibNumber = typeof raw.bibNumber === "number" && Number.isInteger(raw.bibNumber) ? raw.bibNumber : Number.NaN;
-  return { eventId, staffId, bibNumber, claimedAtMs: isInstant(raw.claimedAtMs) ? raw.claimedAtMs : null };
+  const pressId = typeof raw.pressId === "string" && isUuid(raw.pressId) ? raw.pressId : null;
+  return { eventId, staffId, bibNumber, claimedAtMs: isInstant(raw.claimedAtMs) ? raw.claimedAtMs : null, pressId };
 }
 
 /** The staff session, or the island's «sign in again» (the entry waits on the phone), or a refusal for a role that may not. */
@@ -79,12 +82,13 @@ async function doorOf(capability: typeof canRecordFinishes): Promise<{ actor: St
 
 /**
  * A press of the island: one number — typed, or an elite's button — at the moment pressed (`claimedAtMs`, which the service holds to
- * its bounds). The answer is the outcome — recorded (or already recorded by this viewer at that second: a retry), a number stored
- * already with who stored it and its time or the decision «Clasament» wrote, or a refusal with its code and the time — the page's
- * state, so «Ultimii sosiți» and the elites' buttons follow every answer, and the server's clock at the arrival and at the answer.
- * A session that ended answers `session`, and so does one of another account than the press's (`staffId`): the press is recorded
- * only under who pressed it, so the entry stays on the phone until that volunteer signs in again. A press the server could not
- * record for a reason that is neither the network nor a rule answers `failed`: the island tries it again, then writes it on paper.
+ * its bounds), with its own id (`pressId`). The answer is the outcome — recorded (or recorded already: the same press sent again, its
+ * id in the trail), a number stored already with who stored it and its time or the decision «Clasament» wrote, or a refusal with its
+ * code and the time — the page's state, so «Ultimii sosiți» and the elites' buttons follow every answer, and the server's clock at
+ * the arrival and at the answer. A session that ended answers `session`, and so does one of another account than the press's
+ * (`staffId`): the press is recorded only under who pressed it, so the entry stays on the phone until that volunteer signs in again.
+ * A press the server could not record for a reason that is neither the network nor a rule answers `failed`: the island keeps it
+ * waiting and tries it again, sending the presses after it meanwhile.
  */
 export async function recordFinishPressAction(input: unknown): Promise<FinishPressAnswer> {
   const receivedAtMs = Date.now();
@@ -210,7 +214,8 @@ export async function undoFinishFormAction(form: FormData): Promise<void> {
 /**
  * «Start», «Mută startul acum» and «Anulează startul» (`intent=start|clear`): whoever enters results, at the door and in the service.
  * The moment is the tap the island wrote into the form (`claimedAtMs`), which the service keeps when it hears it at most ten seconds
- * later (`raceGunMoment`). Back to the page with `gun=set|cleared|unchanged`, or the refusal's code (`RACE_GUN_FIXED`, `RACE_GUN_WINDOW`, …).
+ * later (`raceGunMoment`). Back to the page with `gun=set|cleared|unchanged`, `gun=repeat` for the organizer's own «Start» heard again
+ * within ten seconds (the gun as it stands, nothing written), or the refusal's code (`RACE_GUN_FIXED`, `RACE_GUN_WINDOW`, …).
  */
 export async function setRaceGunAction(form: FormData): Promise<void> {
   const locale = localeOf(form);
@@ -221,7 +226,7 @@ export async function setRaceGunAction(form: FormData): Promise<void> {
   try {
     const actor = await requireStaffCapability(canEnterResults);
     const result = await setRaceGun(getDb(), actor, { eventId, clear, claimedAtMs: isInstant(claimed) ? claimed : null }, new Date());
-    outcome = { gun: !result.changed ? "unchanged" : clear ? "cleared" : "set" };
+    outcome = { gun: result.repeated ? "repeat" : !result.changed ? "unchanged" : clear ? "cleared" : "set" };
   } catch (error) {
     if (!isDomainError(error)) throw error;
     outcome = { refused: error.code };

@@ -12760,6 +12760,13 @@
       "offline": "Fără legătură cu site-ul: ce ai apăsat așteaptă pe telefon și pleacă singur când revine semnalul.",
       "session": "Sesiunea ta s-a încheiat: intră din nou în cont. Ce ai apăsat rămâne pe telefon și pleacă după ce intri.",
       "reload": "Site-ul a fost actualizat: reîncarcă pagina. Ce ai apăsat așteaptă pe telefon și pleacă după reîncărcare.",
+      "elsewhere": {
+        "one": "{count} apăsare așteaptă la {event}: se trimite doar de pe pagina lui.",
+        "few": "{count} apăsări așteaptă la {event}: se trimit doar de pe pagina lui.",
+        "other": "{count} de apăsări așteaptă la {event}: se trimit doar de pe pagina lui."
+      },
+      "elsewhereOpen": "Deschide pagina",
+      "elsewhereUnnamed": "alt eveniment",
       "elites": {
         "title": "Elite",
         "help": "Apasă pe elită când trece linia: pe BIB-ul ei e doar eticheta, fără număr.",
@@ -12816,13 +12823,14 @@
       "gun": {
         "start": "Start",
         "move": "Mută startul acum",
+        "sending": "Se trimite…",
         "clear": "Anulează startul",
         "clearTitle": "Anulezi startul?",
         "clearBody": "Sosirile se vor număra din nou de la startul planificat ({time}).",
         "pressed": "Startul: {time} · apăsat de {by}",
         "planned": "Startul planificat: {time} (din editor). Până la «Start», sosirile se numără de la el.",
         "startHelp": "Apasă «Start» exact când se dă startul: de atunci se numără timpii.",
-        "moveHelp": "Ai apăsat devreme sau târziu? Apasă din nou exact la start. După primul sosit, startul nu se mai mută.",
+        "moveHelp": "Ai apăsat devreme sau târziu? Apasă din nou exact la start, la peste zece secunde de prima apăsare. După primul sosit, startul nu se mai mută.",
         "fixed": "Startul e fixat: au sosit deja alergători. O corectură a timpilor se face la «Clasament».",
         "window": "Butonul «Start» apare cu 3 ore înainte de startul planificat și rămâne până la 6 ore după."
       },
@@ -12836,7 +12844,8 @@
         "gun": {
           "set": "Startul a fost dat: {time}.",
           "cleared": "Startul a fost anulat: sosirile se numără de la startul planificat.",
-          "unchanged": "Startul nu era dat: nimic de anulat."
+          "unchanged": "Startul nu era dat: nimic de anulat.",
+          "repeat": "Startul rămâne la {time}: a doua apăsare, în cel mult zece secunde de la prima, nu îl mută."
         },
         "refused": {
           "RESULT_BIB_UNKNOWN": "{who}: nicio înscriere confirmată și nicio elită cu numărul acesta. Timpul lui: {time} — notează-l pe hârtie.",

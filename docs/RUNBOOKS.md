@@ -984,15 +984,18 @@ gun and a clock since it.
 1. **«Start».** An Organizer or Administrator presses **«Start»** at the gun: the times count from that moment
    (`events.race_gun_at`). Without it they count from the planned start (`race_starts_at`, else the event's start). It is
    offered from three hours before the planned start to six after; «Mută startul acum» and «Anulează startul» move or
-   remove it until the first finisher, after which it is fixed. The public page, the emails and the checkpoints keep the
-   planned times.
+   remove it until the first finisher, after which it is fixed — a second press of one's own within ten seconds is taken
+   for the same press, sent twice, and changes nothing. The public page, the emails and the checkpoints keep the planned
+   times.
 2. **Each finisher.** An elite: press their button at the top (the bib's label large, the name under it). Anyone else:
    type the bib's number and press **«Sosit»** (or Enter) — the box empties at once. A bunch: «Prinde timpul» once per
    runner, then the numbers in order; each takes the oldest caught moment. Every press is stamped with its own moment on
    the server's clock (the phone's wall clock and an offset measured by a round trip, so a locked screen or a wrong clock
    changes nothing), saved at once, and «Ultimii sosiți» names who entered it. Without signal the presses wait on the
-   phone and go by themselves; a reload sends what is left — only by the account that pressed them. «Site-ul a fost
-   actualizat» (a deploy during the race): reload the page, the presses wait.
+   phone and go by themselves; a reload sends what is left — only by the account that pressed them. A press the site
+   could not save (a passing database error in a bunch finish) waits too and is tried again by itself while the next
+   ones go; a press sent twice is recognised by its own id and kept once. «Site-ul a fost actualizat» (a deploy during
+   the race): reload the page, the presses wait.
 3. **What the line says.** A number somebody entered first: «#123 era deja trecut de <nume> la <timp>» — nothing changes,
    the second time is kept in «Istoricul sosirilor» on «Clasament» for the organizers to compare. A number no confirmed
    registration and no elite line holds: refused, with the time to write on paper (the runner is typed on «Clasament»

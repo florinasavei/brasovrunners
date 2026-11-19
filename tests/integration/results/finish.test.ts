@@ -13,13 +13,14 @@ import { createRace, person, RACE_STARTS_AT, registerRunner, resetNoticeCounter 
 
 /**
  * §850, §NNN — the finish line, «Cronometrare» (BR-REQ-050-02, BR-REQ-060-01): `recordFinish` stamps the time since the gun — the
- * claimed press within the server's bounds, else its own, nothing a day and three hours after the gun — on a confirmed runner's number
- * or an elite line's, re-ranks, audits without a name and refuses what «Clasament» must handle; every role that works the desk may
- * press, a member may not; the same number twice keeps the first and writes the second to the trail, a retry of a saved press is no
- * duplicate, and a decision of «Clasament» — «Descalificat», or a write-off later than the moment pressed — stays; `undoFinish` takes
- * back one's own press at the line, unchanged and not pressed again, for ten minutes; `setRaceGun` is «Start», pressed, moved and taken
- * off until the first finisher, within its window; `readFinishLine` is the page's data; `readFinishHistory` is «Istoricul sosirilor»
- * with who wrote each line.
+ * claimed press within the server's bounds, a claim before the gun refused, the server's own time for a claim ahead of it, nothing a
+ * day and three hours after the gun — on a confirmed runner's number or an elite line's, re-ranks, audits without a name and refuses
+ * what «Clasament» must handle; every role that works the desk may press, a member may not; the same number twice keeps the first and
+ * writes the second to the trail, a retry — known by the press's own id, else guessed — is no duplicate and writes nothing, and a
+ * decision of «Clasament» — «Descalificat», or a write-off later than the moment pressed — stays; `undoFinish` takes back one's own
+ * press at the line, unchanged and not pressed again, for ten minutes; `setRaceGun` is «Start», pressed, moved and taken off until the
+ * first finisher, within its window, the organizer's own press sent twice changing nothing; `readFinishLine` is the page's data;
+ * `readFinishHistory` is «Istoricul sosirilor» with who wrote each line.
  */
 const revalidate = vi.hoisted(() => vi.fn());
 vi.mock("next/cache", () => ({ revalidatePath: () => {}, revalidateTag: () => {}, unstable_cache: (fn: unknown) => fn }));
@@ -184,9 +185,14 @@ describe("§NNN the claimed time: the moment pressed, within the server's bounds
     expect(await finish(103, at(50), staff.CONTRIBUTOR, at(50, 6))).toMatchObject({ gunTimeMs: ms(50) });
   });
 
-  it("takes its own time for a claim under a second or before the gun", async () => {
-    expect(await finish(101, at(50), staff.CONTRIBUTOR, new Date(GUN.getTime() + 400))).toMatchObject({ gunTimeMs: ms(50) });
-    expect(await finish(102, at(50), staff.CONTRIBUTOR, new Date(GUN.getTime() - 60_000))).toMatchObject({ gunTimeMs: ms(50) });
+  it("refuses a claim before the gun — or in its first second — as not started, never stamping its arrival, and leaves the gun free", async () => {
+    // A press queued on a phone before the gun, arriving fifty minutes into the race: no finisher made up at 50:00.
+    await expect(finish(101, at(50), staff.CONTRIBUTOR, new Date(GUN.getTime() - 60_000))).rejects.toMatchObject({ code: "RESULT_FINISH_NOT_STARTED" });
+    await expect(finish(102, at(50), staff.CONTRIBUTOR, new Date(GUN.getTime() + 400))).rejects.toMatchObject({ code: "RESULT_FINISH_NOT_STARTED" });
+    expect(await stored()).toEqual([]);
+    expect(await trail()).toEqual([]);
+    // Nothing fixed the gun: «Start» still moves it.
+    expect(await setRaceGun(db, staff.MODERATOR!, { eventId: raceId, clear: false }, at(50, 30))).toMatchObject({ changed: true });
   });
 });
 
@@ -217,6 +223,40 @@ describe("§NNN the same number twice: the first stored wins", () => {
       ["event_result.finish_duplicate", staff.CONTRIBUTOR!.id],
     ]);
     expect(rows[1].metadataJson).toEqual({ bibNumber: 101, gunTimeMs: ms(45, 14), storedGunTimeMs: ms(45, 12), storedStatus: "FINISHED", storedResultId: before.id, finishLine: true });
+  });
+
+  it("answers a retry carrying the press's own id from the trail, exactly as it was answered — a «Sosit» or a number found — writing nothing", async () => {
+    const pressId = "4a7e0c1d-2b3f-4c5d-8e9f-0a1b2c3d4e5f";
+    const press = (actor: StaffUser, id: string, claimedAt: Date, now: Date) => recordFinish(db, actor, { eventId: raceId, bibNumber: 101, claimedAtMs: claimedAt.getTime(), pressId: id }, now);
+    // A phone six seconds ahead: its claim of 45:26 refused at 45:20, the server's own time stamped.
+    expect(await press(staff.CONTRIBUTOR!, pressId, at(45, 26), at(45, 20))).toMatchObject({ kind: "recorded", gunTimeMs: ms(45, 20), again: false });
+    const [before] = await stored();
+    expect((await trail())[0].metadataJson).toEqual({ bibNumber: 101, status: "FINISHED", gunTimeMs: ms(45, 20), chipTimeMs: null, finishLine: true, resultId: before.id, pressId });
+    revalidate.mockClear();
+    // The answer lost, the phone sends the same press two seconds later — its claim now within bounds, another second: the same press.
+    expect(await press(staff.CONTRIBUTOR!, pressId, at(45, 26), at(45, 22))).toMatchObject({ kind: "recorded", resultId: before.id, gunTimeMs: ms(45, 20), positionOverall: 1, again: true });
+    // …and still the press it was after the day and its grace.
+    expect(await press(staff.CONTRIBUTOR!, pressId, at(45, 26), new Date(GUN.getTime() + FINISH_WINDOW_MS + FINISH_ARRIVAL_GRACE_MS + 60_000))).toMatchObject({ kind: "recorded", again: true });
+    expect(await stored()).toEqual([before]);
+    expect(revalidate).not.toHaveBeenCalled();
+    // Another volunteer's press of 101: a duplicate, its id in the trail; its retry is answered as that duplicate, no second row.
+    const otherId = "9c8b7a6d-5e4f-4d3c-9b2a-1f0e9d8c7b6a";
+    const duplicate = await press(staff.MODERATOR!, otherId, at(45, 21), at(45, 25));
+    expect(duplicate).toMatchObject({ kind: "duplicate", gunTimeMs: ms(45, 21), storedGunTimeMs: ms(45, 20), storedStatus: "FINISHED", storedBy: "Vlad Voluntar" });
+    expect(await press(staff.MODERATOR!, otherId, at(45, 21), at(45, 31))).toEqual(duplicate);
+    // A second press of the volunteer's own, with an id of its own at the very second stored: no guess — the trail said it is another press.
+    expect(await press(staff.CONTRIBUTOR!, "1b2c3d4e-5f60-4718-a9b0-c1d2e3f4a5b6", at(45, 20), at(45, 40))).toMatchObject({ kind: "duplicate", storedBy: "Vlad Voluntar" });
+    const rows = await trail();
+    expect(rows.map((row) => [row.action, (row.metadataJson as { pressId?: string }).pressId])).toEqual([
+      ["event_result.created", pressId],
+      ["event_result.finish_duplicate", otherId],
+      ["event_result.finish_duplicate", "1b2c3d4e-5f60-4718-a9b0-c1d2e3f4a5b6"],
+    ]);
+    // «Istoricul sosirilor» shows each press once.
+    expect((await readFinishHistory(db, staff.ADMIN!, raceId)).lines.map((line) => line.what.kind)).toEqual(["duplicate", "duplicate", "finish"]);
+    // An id another account used is not this one's press: the Organizer's retry is answered, the volunteer sending that id is not.
+    expect(await press(staff.CONTRIBUTOR!, otherId, at(45, 21), at(45, 50))).toMatchObject({ kind: "duplicate", gunTimeMs: ms(45, 21) });
+    expect((await trail()).filter((row) => row.action === "event_result.finish_duplicate")).toHaveLength(3);
   });
 
   it("says «cont șters» — no name — for a stored row whose account is gone", async () => {
@@ -333,7 +373,7 @@ describe("§NNN «Start»: the gun as pressed", () => {
   const clear = (now: Date, actor: StaffUser = staff.MODERATOR!) => setRaceGun(db, actor, { eventId: raceId, clear: true }, now);
   const gunAt = async () => (await db.select({ at: events.raceGunAt, by: events.raceGunByStaffUserId, version: events.version }).from(events).where(eq(events.id, raceId)))[0];
 
-  it("sets the gun to the tap within thirty seconds of the server's clock, moves it on a second press and counts the finishes from it", async () => {
+  it("sets the gun to the tap heard at most ten seconds after it and at most five seconds ahead, moves it on a second press and counts the finishes from it", async () => {
     const { version } = await gunAt();
     expect(await press(at(2, 5), staff.MODERATOR, at(2, 3))).toEqual({ changed: true, gunAt: at(2, 3) });
     expect(await gunAt()).toEqual({ at: at(2, 3), by: staff.MODERATOR!.id, version });
@@ -345,6 +385,22 @@ describe("§NNN «Start»: the gun as pressed", () => {
       ["event.race_gun_set", { at: at(2, 3).toISOString(), previous: null }],
       ["event.race_gun_set", { at: at(2, 30).toISOString(), previous: at(2, 3).toISOString() }],
     ]);
+  });
+
+  it("takes the organizer's own «Start» heard again within ten seconds for the same press sent twice: the gun as it stands, nothing written", async () => {
+    expect(await press(at(1, 0), staff.MODERATOR, at(0, 59))).toEqual({ changed: true, gunAt: at(0, 59) });
+    // The same tap again, queued behind the first on a slow signal, heard eight seconds later and claiming its own moment.
+    expect(await press(at(1, 8), staff.MODERATOR, at(1, 2))).toEqual({ changed: false, gunAt: at(0, 59), repeated: true });
+    expect((await gunAt()).at).toEqual(at(0, 59));
+    // Another organizer within the ten seconds: a press of their own, which moves it — and the first one's after that is theirs too.
+    expect(await press(at(1, 9), staff.ADMIN)).toEqual({ changed: true, gunAt: at(1, 9) });
+    expect(await press(at(1, 12), staff.MODERATOR)).toEqual({ changed: true, gunAt: at(1, 12) });
+    // Their own again more than ten seconds later: a press of its own, which moves the gun.
+    expect(await press(at(1, 23), staff.MODERATOR)).toEqual({ changed: true, gunAt: at(1, 23) });
+    // After «Anulează startul», a «Start» within the ten seconds is a press of its own.
+    await clear(at(1, 25));
+    expect(await press(at(1, 27), staff.MODERATOR)).toEqual({ changed: true, gunAt: at(1, 27) });
+    expect((await trail()).map((row) => row.action)).toEqual(["event.race_gun_set", "event.race_gun_set", "event.race_gun_set", "event.race_gun_set", "event.race_gun_cleared", "event.race_gun_set"]);
   });
 
   it("takes the gun off, back to the planned start, and finds nothing to take off twice", async () => {

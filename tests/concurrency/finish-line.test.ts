@@ -15,7 +15,8 @@ import { type FinishOutcome, recordFinish } from "@/modules/results/results";
  * volunteers press one race number at the same moment. Every press of the finish line takes the event row's lock first
  * (`results.ts#loadEvent`, `FOR NO KEY UPDATE`), so the presses run one after the other: the first writes the row, every later one
  * reads it under the lock and is a duplicate — its own time in the trail, the row untouched — and the unique index on the event and
- * the number stands behind the lock.
+ * the number stands behind the lock. And one press sent twice at once — two tabs of one phone, a retry racing its first send — is
+ * one row and one line of the trail: the second, under the lock, finds the first's id in the trail and is answered as saved.
  *
  * A third connection holds the event row while the presses queue on it, so they all arrive before any of them writes: the overlap
  * is forced every run, not hoped for. PGlite has one connection and cannot show this (`tests/helpers/db.ts`).
@@ -108,5 +109,29 @@ describe("§NNN one number pressed by several volunteers at once, on real connec
       .where(and(eq(auditLogs.entityId, eventId), inArray(auditLogs.action, ["event_result.created", "event_result.finish_duplicate"])));
     expect(trail.filter((one) => one.action === "event_result.created")).toEqual([{ action: "event_result.created", actor: row.updatedByStaffUserId }]);
     expect(trail.filter((one) => one.action === "event_result.finish_duplicate")).toHaveLength(volunteers.length - 1);
+  });
+
+  it("keeps one press sent four times at once — its own id — as one row and one line of the trail, every other send answered as saved", async () => {
+    await db.delete(auditLogs).where(eq(auditLogs.entityId, eventId));
+    await db.delete(eventResults).where(eq(eventResults.eventId, eventId));
+    const holder = await pool.connect();
+    const pressId = "4a7e0c1d-2b3f-4c5d-8e9f-0a1b2c3d4e5f";
+    let outcomes: FinishOutcome[] = [];
+    try {
+      await holder.query("BEGIN");
+      await holder.query("SELECT id FROM events WHERE id = $1 FOR UPDATE", [eventId]);
+      // The same entry of one phone, sent by two tabs and retried: one claim, one id, four connections.
+      const sends = [0, 1, 2, 3].map(() => recordFinish(db, volunteers[0], { eventId, bibNumber: 101, claimedAtMs: NOW.getTime() - 6_000, pressId }, NOW));
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await holder.query("COMMIT");
+      outcomes = await Promise.all(sends);
+    } finally {
+      holder.release();
+    }
+    expect(outcomes.map((outcome) => outcome.kind)).toEqual(["recorded", "recorded", "recorded", "recorded"]);
+    expect(outcomes.filter((outcome) => outcome.kind === "recorded" && !outcome.again)).toHaveLength(1);
+    expect(await db.select().from(eventResults).where(eq(eventResults.eventId, eventId))).toHaveLength(1);
+    const trail = await db.select({ action: auditLogs.action }).from(auditLogs).where(eq(auditLogs.entityId, eventId));
+    expect(trail).toEqual([{ action: "event_result.created" }]);
   });
 });

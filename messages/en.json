@@ -12426,7 +12426,7 @@
           "updated": "changed {runner}: {status}",
           "updatedBoxes": "changed {runner}: {status} ({boxes})",
           "deleted": "deleted the result {runner} ({status})",
-          "gunSet": "gave the start at {time}",
+          "gunSet": "started the race at {time}",
           "gunMoved": "moved the start to {time} (was {previous})",
           "gunCleared": "cancelled the start (was {previous})"
         },
@@ -12746,7 +12746,7 @@
     "timing": {
       "title": "Timing",
       "show": "Show",
-      "intro": "When someone crosses the line: for an elite press their button, for anyone else type the bib's number and press «Finished». Saved at once; corrections are made under «Results».",
+      "intro": "When someone crosses the line: for an elite, press their button; for anyone else, type the bib's number and press «Finished». Saved at once; corrections are made under «Results».",
       "more": "Several at once? Press «Catch the time» for each, then type the numbers in order. Without signal, the presses wait on the phone. A number entered twice keeps the first time.",
       "clock": "Since the start: {time}",
       "notStarted": "The race has not started yet.",
@@ -12760,6 +12760,13 @@
       "offline": "No connection to the site: what you pressed waits on the phone and goes by itself when the signal is back.",
       "session": "Your session has ended: sign in again. What you pressed stays on the phone and goes once you are back in.",
       "reload": "The site was updated: reload the page. What you pressed waits on the phone and goes after the reload.",
+      "elsewhere": {
+        "one": "{count} press is waiting at {event}: it is sent only from that event's page.",
+        "few": "{count} presses are waiting at {event}: they are sent only from that event's page.",
+        "other": "{count} presses are waiting at {event}: they are sent only from that event's page."
+      },
+      "elsewhereOpen": "Open its page",
+      "elsewhereUnnamed": "another event",
       "elites": {
         "title": "Elites",
         "help": "Press the elite as they cross the line: their bib carries the label alone, no number.",
@@ -12816,13 +12823,14 @@
       "gun": {
         "start": "Start",
         "move": "Move the start to now",
+        "sending": "Sending…",
         "clear": "Cancel the start",
         "clearTitle": "Cancel the start?",
         "clearBody": "Finishes will count from the planned start again ({time}).",
         "pressed": "Start: {time} · pressed by {by}",
         "planned": "Planned start: {time} (from the editor). Until «Start» is pressed, finishes count from it.",
         "startHelp": "Press «Start» right at the gun: the times count from then.",
-        "moveHelp": "Pressed early or late? Press again right at the gun. After the first finisher, the start no longer moves.",
+        "moveHelp": "Pressed early or late? Press again right at the gun, more than ten seconds after the first press. After the first finisher, the start no longer moves.",
         "fixed": "The start is fixed: runners have finished. A correction of the times is made under «Results».",
         "window": "The «Start» button shows from 3 hours before the planned start until 6 hours after."
       },
@@ -12834,9 +12842,10 @@
         "decided": "{who} is marked «{status}» under «Results» — it stays; your press ({mine}) is in «Finish history».",
         "undone": "Undone: {who}.",
         "gun": {
-          "set": "The start was given: {time}.",
+          "set": "The start was set: {time}.",
           "cleared": "The start was cancelled: finishes count from the planned start.",
-          "unchanged": "The start had not been given: nothing to cancel."
+          "unchanged": "The start had not been set: nothing to cancel.",
+          "repeat": "The start stays at {time}: a second press within ten seconds of the first does not move it."
         },
         "refused": {
           "RESULT_BIB_UNKNOWN": "{who}: no confirmed registration and no elite has this number. Its time: {time} — write it on paper.",

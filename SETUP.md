@@ -2583,8 +2583,9 @@ enter them; **only the Administrator and the Superadministrator make them public
    Administrators'.
    - **«Start».** At the gun an Organizer presses **«Start»**: the times count from that moment. Without it they count from «Startul
      cursei» in «Când și unde», else the event's start. It shows from three hours before the planned start to six after; pressed early
-     or late, press «Mută startul acum» at the right moment, or «Anulează startul» (it asks) — both only until the first finisher, after
-     which the start is fixed and a correction is «Clasament»'s.
+     or late, press «Mută startul acum» at the right moment — more than ten seconds after your first press: one within ten seconds is
+     taken for the same press, sent twice — or «Anulează startul» (it asks) — both only until the first finisher, after which the start
+     is fixed and a correction is «Clasament»'s.
    - **The elites first:** a big button per elite — a registration marked «Elită» with a race number, and a line of the elite list with
      a number — the bib's label large and the full name under it; press it as the elite crosses. A line with no number is drawn
      disabled: give it a number on the elite list (the bib still prints none). An elite already in shows «✓» and the time.
@@ -2592,8 +2593,10 @@ enter them; **only the Administrator and the Superadministrator make them public
      at once: «Prinde timpul» once for each, then the numbers in order — each takes the oldest caught time. Every press is saved at
      once with the moment it was pressed, on the site's clock (a phone whose clock is wrong, or whose screen locked, still stamps
      right); without signal it waits on that phone and goes by itself, and a reload sends what is left — by the account that pressed
-     it: on a phone another volunteer signs into, their presses stand unsent with the time to write on paper. «Site-ul a fost
-     actualizat» means reload the page; nothing pressed is lost.
+     it: on a phone another volunteer signs into, their presses stand unsent with the time to write on paper. A press the site answers
+     it could not save waits too and is sent again by itself, the next ones going meanwhile; presses waiting under another race are
+     named at the top of the page, with a link to that race's page, which alone sends them. «Site-ul a fost actualizat» means reload
+     the page; nothing pressed is lost.
    - **What a line says:** saved, with the place; «#123 era deja trecut de <nume> la <timp>» for a number somebody entered first — the
      first time stays, the second is kept in «Istoricul sosirilor»; «#123 e trecut «Descalificat» …» for a runner «Clasament» decided —
      the decision stays, the press is kept in the history; a refusal with the time to write on paper (a number nobody confirmed holds —

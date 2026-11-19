@@ -72,8 +72,9 @@ const number = (raw: string | undefined) => (raw !== undefined && /^\d{1,9}$/.te
  * cursei» counts — and the finish line (`FinishLine`, the page's island): the elites' buttons first, the number box, «⏱ Prinde
  * timpul», the presses of this phone and «Ultimii sosiți» with who entered each. With scripts off every form posts and the page comes
  * back here saying what happened (`?ok=`, `?dup=` with `?s=` when the row is a decision of «Clasament», `?refused=`, `?undone=`,
- * `?gun=`: numbers and codes, never a name). A group run says it has no results, and nothing more. The islands get the server's clock
- * as the page was drawn — read last, after every read — and the viewer's staff id, whose presses alone the page sends.
+ * `?gun=` — `repeat` for an organizer's own «Start» heard again within ten seconds —: numbers and codes, never a name). A group run
+ * says it has no results, and nothing more. The islands get the server's clock as the page was drawn — read last, after every read
+ * —, the viewer's staff id, whose presses alone the page sends, and the event's title, which the finish line keeps on the phone.
  *
  * Every staff role that works the desk opens it (`canRecordFinishes`); anybody else meets the 404 an unknown page gets
  * (BR-REQ-060-01), and every action and the service assert again. Nothing on it is public; no chip time is asked here.
@@ -145,7 +146,7 @@ export default async function TimingPage({ params, searchParams }: Props) {
     }
     const undone = number(query.undone);
     if (undone !== null) return { severity: "success" as const, text: t("timing.banner.undone", { who: `#${undone}` }) };
-    if (query.gun === "set" || query.gun === "cleared" || query.gun === "unchanged") {
+    if (query.gun === "set" || query.gun === "cleared" || query.gun === "unchanged" || query.gun === "repeat") {
       const at = view?.gun.pressed ? clock(view.gun.at) : "";
       return { severity: "success" as const, text: t(`timing.banner.gun.${query.gun}`, { time: at }) };
     }
@@ -270,7 +271,12 @@ export default async function TimingPage({ params, searchParams }: Props) {
     undoRefused: Object.fromEntries(UNDO_REFUSALS.map((code) => [code, t(`timing.undo.refused.${code}`)])),
     undoRefusedOther: t("timing.undo.refused.other"),
     undoPressedAgain: { other: t("timing.undo.pressedAgain.other"), self: t("timing.undo.pressedAgain.self") },
+    elsewhere: { one: t.raw("timing.elsewhere.one") as string, few: t.raw("timing.elsewhere.few") as string, other: t.raw("timing.elsewhere.other") as string },
+    elsewhereOpen: t("timing.elsewhereOpen"),
+    elsewhereUnnamed: t("timing.elsewhereUnnamed"),
   };
+  // The event's title, kept with its line on the phone: another event's page names where presses wait.
+  const eventTitle = options.find((candidate) => candidate.id === view.event.id)?.title ?? null;
   // The server's clock for the islands, read after every read above: the page's delivery is the only lag left in it, and the
   // finish line measures that away with its first round trip.
   const drawnAtMs = new Date().getTime();
@@ -300,7 +306,14 @@ export default async function TimingPage({ params, searchParams }: Props) {
         )}
         {mayStart && !gun.fixed && gun.windowOpen && (
           <Stack direction="row" sx={{ gap: 1, alignItems: "center", flexWrap: "wrap" }}>
-            <RaceGunPress action={setRaceGunAction} eventId={view.event.id} uiLocale={locale} serverNowMs={drawnAtMs} label={gun.pressed ? t("timing.gun.move") : t("timing.gun.start")} />
+            <RaceGunPress
+              action={setRaceGunAction}
+              eventId={view.event.id}
+              uiLocale={locale}
+              serverNowMs={drawnAtMs}
+              label={gun.pressed ? t("timing.gun.move") : t("timing.gun.start")}
+              pendingLabel={t("timing.gun.sending")}
+            />
             {gun.pressed && (
               <Box component="form" action={setRaceGunAction} data-testid="race-gun-clear-form">
                 <input type="hidden" name="uiLocale" value={locale} />
@@ -331,9 +344,10 @@ export default async function TimingPage({ params, searchParams }: Props) {
       <FinishLine
         key={view.event.id}
         eventId={view.event.id}
+        eventTitle={eventTitle}
         uiLocale={locale}
         staffId={actor.id}
-        initial={{ serverNowMs: drawnAtMs, gunAtMs: gun.at.getTime(), gunPressed: gun.pressed, recent: view.recent, elites: view.elites, finished: view.finished, withNumber: view.withNumber }}
+        initial={{ serverNowMs: drawnAtMs, gunAtMs: gun.at.getTime(), recent: view.recent, elites: view.elites, finished: view.finished, withNumber: view.withNumber }}
         words={words}
         record={recordFinishPressAction}
         undo={undoFinishPressAction}

@@ -243,6 +243,11 @@ describe("§NNN «Cronometrare»: the page", () => {
     expect(words).toContain("Startul a fost dat: 09:00:03.");
     expect(words).toContain("Mută startul acum");
     expect(words).toContain("Anulează startul");
+    // The organizer's own «Start» heard again within ten seconds: the page says the gun stays.
+    expect(text(await timing({ eventId: raceId, gun: "repeat" }, at(1)))).toContain("Startul rămâne la 09:00:03: a doua apăsare, în cel mult zece secunde de la prima, nu îl mută.");
+    language = "en";
+    expect(text(await timing({ eventId: raceId, gun: "set" }, at(1), "en"))).toContain("The start was set: 09:00:03.");
+    language = "ro";
     await recordFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, bibNumber: 101 }, at(40));
     const html = await timing({ eventId: raceId }, at(41));
     words = text(html);

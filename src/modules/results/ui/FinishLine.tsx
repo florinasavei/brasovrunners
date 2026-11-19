@@ -2,10 +2,12 @@
 
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { unstable_isUnrecognizedActionError } from "next/navigation";
 import { type FormEvent, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { countForm, type CountForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatTimeWithSeconds } from "@/i18n/dates";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import {
@@ -14,16 +16,18 @@ import {
   dropKept,
   type EliteButtonView,
   entryStateOf,
-  FINISH_FAILED_TRIES,
   type FinishClockAnswer,
   type FinishEntry,
   type FinishEntryOutcome,
   type FinishLineState,
   type FinishPressAnswer,
   type FinishUndoAnswer,
+  finishRetryDelay,
   finishStorageKey,
+  holdAfterFailure,
   keepTime,
   keptOf,
+  nextRetryAt,
   nextToSend,
   pressEntry,
   type RecentFinisherView,
@@ -33,7 +37,7 @@ import {
   waitingCount,
   withKept,
 } from "../domain/finish-line";
-import { EMPTY_FINISH_LINE, finishLineSnapshot, subscribeFinishLine, writeFinishLine } from "./finish-line-store";
+import { EMPTY_FINISH_LINE, finishLineSnapshot, NO_WAITING_ELSEWHERE, subscribeFinishLine, waitingElsewhereSnapshot, writeFinishLine } from "./finish-line-store";
 import { formatResultTime } from "../domain/result-time";
 import { measureServerClock, seedServerClock, serverClockNow } from "./server-clock";
 
@@ -53,14 +57,17 @@ import { measureServerClock, seedServerClock, serverClockNow } from "./server-cl
  *   by a round trip as the page wakes — again when it is shown after five minutes away — and by every answer), so a phone whose
  *   clock is wrong, or whose screen locked between two finishers, stamps right; the server floors them and holds them to its bounds.
  * - **The queue**: every press is a line under the box at once («se salvează…») and is sent through the Server Action in the order
- *   pressed; an unsent one waits in this phone's storage for this event (every read and write in a `try`: without storage the page
- *   works, it only forgets on a reload), is retried by itself, and a reload sends what is left. Each is the press of the account
- *   signed in when it was pressed and is sent only from that account's page: another account's, left on this phone, stands on its
- *   line unsent with the time to write on paper, so the trail never names somebody who did not press. A press the server already had
- *   from this viewer at that second is shown saved; one that another volunteer — or this one, another second — had stored first says
- *   who and when, and one whose runner «Clasament» wrote off says so; a refusal stands on its line with the time to write on paper,
- *   never blocking the box, and so does a press the server could not record three times. A site updated under the page asks for a
- *   reload, the presses waiting.
+ *   pressed, with its own id; an unsent one waits in this phone's storage for this event (every read and write in a `try`: without
+ *   storage the page works, it only forgets on a reload), is retried by itself, and a reload sends what is left. A second tab of the
+ *   event writes over none of it (`finish-line-store.ts`), and presses waiting under another event are named above the box — only
+ *   that event's page sends them. Each is the press of the account signed in when it was pressed and is sent only from that
+ *   account's page: another account's, left on this phone, stands on its line unsent with the time to write on paper, so the trail
+ *   never names somebody who did not press. A press the server already had — its id in the trail — is shown saved; one that another
+ *   volunteer — or this one, pressed again — had stored first says who and when, and one whose runner «Clasament» wrote off says so;
+ *   a refusal stands on its line with the time to write on paper, never blocking the box. A press the server could not record waits
+ *   on its line with its time and is tried again and again, the presses after it going meanwhile, until the server answers it. An
+ *   elite's button waits while its press does, so a double tap is one press. A site updated under the page asks for a reload, the
+ *   presses waiting.
  * - **«Ultimii sosiți»**, refreshed from every answer: who entered each, and «Anulează» on one's own for ten minutes — or, the number
  *   pressed again since, the line that says «Clasament» corrects it.
  *
@@ -117,10 +124,18 @@ export type FinishLineWords = {
   undoRefusedOther: string;
   /** Why one's own press of the last ten minutes has no «Anulează»: its number pressed again since, by another account or by oneself. */
   undoPressedAgain: { other: string; self: string };
+  /** Presses waiting under another event on this phone: «{count} apăsări așteaptă la {event}», by `countForm`. */
+  elsewhere: Record<CountForm, string>;
+  /** The link to that event's page. */
+  elsewhereOpen: string;
+  /** That event, when its line keeps no title. */
+  elsewhereUnnamed: string;
 };
 
 type Props = {
   eventId: string;
+  /** The event's title, kept with its line on the phone, so another event's page can say where presses wait; null for none. */
+  eventTitle: string | null;
   uiLocale: string;
   /** The viewer's staff account: the presses this page sends are its own; another account's, left on the phone, are only shown. */
   staffId: string;
@@ -145,26 +160,37 @@ function fill(template: string, values: Record<string, string>): string {
 /** The phone's wall clock, which keeps time while the screen is locked: the round trips are measured on it (`server-clock.ts`). */
 const wallNow = () => Date.now();
 
-/** An entry's id: unique enough on one phone, never shown. */
+/**
+ * A press's own id, never shown: a UUID, which the server keeps in the trail and knows its retry by — `randomUUID` where the browser
+ * has it (a secure page), else the same shape from `getRandomValues`, else from `Math.random` (version 4, its variant bits set): an
+ * old browser presses as any other, never an error.
+ */
 function entryId(): string {
-  return typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  const random = typeof crypto === "undefined" ? undefined : crypto;
+  if (typeof random?.randomUUID === "function") return random.randomUUID();
+  const bytes = new Uint8Array(16);
+  if (typeof random?.getRandomValues === "function") random.getRandomValues(bytes);
+  else for (let index = 0; index < bytes.length; index += 1) bytes[index] = Math.floor(Math.random() * 256);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
-
-/** The waits between two tries of the same entry when the network failed: two seconds, doubling, at most thirty. */
-const retryDelay = (failures: number) => Math.min(30_000, 2_000 * 2 ** Math.max(0, failures - 1));
 
 const BIG_SX = { minHeight: 56, fontSize: "1.125rem" } as const;
 
 /** Nothing to watch: `useSyncExternalStore`'s way of saying «true in the browser, false on the server and while hydrating». */
 const NOTHING_TO_WATCH = () => () => {};
 
-export default function FinishLine({ eventId, uiLocale, staffId, initial, words, record, undo, clock, recordForm, undoForm }: Props) {
+export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, initial, words, record, undo, clock, recordForm, undoForm }: Props) {
   const storageKey = finishStorageKey(eventId);
   // The presses and the kept times: this phone's, behind the store the storage is read into (`finish-line-store.ts`) — empty on the
   // server and while hydrating, so the markup is the same with storage or without.
   const line = useSyncExternalStore(subscribeFinishLine, () => finishLineSnapshot(storageKey), () => EMPTY_FINISH_LINE);
   const entries = line.entries;
   const kept = keptOf(line, staffId);
+  // The viewer's presses waiting under another event on this phone: said above the box, since only that event's page sends them.
+  const elsewhere = useSyncExternalStore(subscribeFinishLine, () => waitingElsewhereSnapshot(storageKey, staffId), () => NO_WAITING_ELSEWHERE);
   const hydrated = useSyncExternalStore(NOTHING_TO_WATCH, () => true, () => false);
   // The newest state the server answered with; the page's own while none is newer (a page drawn again after «Start» brings its own).
   const [answered, setAnswered] = useState<FinishLineState | null>(null);
@@ -179,8 +205,8 @@ export default function FinishLine({ eventId, uiLocale, staffId, initial, words,
 
   const pumping = useRef(false);
   const failures = useRef(0);
-  // How many times the server answered that it could not record each entry: past `FINISH_FAILED_TRIES` it is settled refused.
-  const failedTries = useRef(new Map<string, number>());
+  // The entries the server answered it could not record: each waits out its own backoff while the ones after it go (`nextToSend`).
+  const held = useRef(new Map<string, { tries: number; untilMs: number }>());
   const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionEnded = useRef(false);
   // The site was deployed again under the page: its actions are gone until a reload, so nothing more is sent.
@@ -188,13 +214,14 @@ export default function FinishLine({ eventId, uiLocale, staffId, initial, words,
   const lastClock = useRef(0);
   const box = useRef<HTMLInputElement>(null);
 
+  // Each write keeps the event's title with its line, for another event's page to name it.
   const commitEntries = useCallback(
-    (change: (current: FinishEntry[]) => FinishEntry[]) => writeFinishLine(storageKey, (current) => ({ ...current, entries: change(current.entries) })),
-    [storageKey],
+    (change: (current: FinishEntry[]) => FinishEntry[]) => writeFinishLine(storageKey, (current) => ({ ...current, title: eventTitle ?? current.title, entries: change(current.entries) })),
+    [eventTitle, storageKey],
   );
   const commitKept = useCallback(
-    (change: (current: number[]) => number[]) => writeFinishLine(storageKey, (current) => withKept(current, staffId, change(keptOf(current, staffId)))),
-    [staffId, storageKey],
+    (change: (current: number[]) => number[]) => writeFinishLine(storageKey, (current) => withKept({ ...current, title: eventTitle ?? current.title }, staffId, change(keptOf(current, staffId)))),
+    [eventTitle, staffId, storageKey],
   );
   const markOutdated = useCallback(() => {
     outdated.current = true;
@@ -231,7 +258,8 @@ export default function FinishLine({ eventId, uiLocale, staffId, initial, words,
 
   /**
    * Sends what waits of the viewer's own, one at a time in the order pressed, until nothing waits, the network fails (then it tries
-   * again later), the session ends or the site was updated under the page.
+   * again later), the session ends or the site was updated under the page. A press the server could not record is held for its
+   * backoff and the next ones go; when only held ones are left, the pump comes back for the first of them.
    */
   const pump = useCallback(async () => {
     if (pumping.current) return;
@@ -242,12 +270,18 @@ export default function FinishLine({ eventId, uiLocale, staffId, initial, words,
     };
     try {
       for (;;) {
-        const next = nextToSend(finishLineSnapshot(storageKey).entries, staffId);
-        if (!next || sessionEnded.current || outdated.current) break;
+        if (sessionEnded.current || outdated.current) break;
+        const waiting = finishLineSnapshot(storageKey).entries;
+        const next = nextToSend(waiting, staffId, held.current, wallNow());
+        if (!next) {
+          const retryAt = nextRetryAt(waiting, staffId, held.current);
+          if (retryAt !== null) later(Math.max(0, retryAt - wallNow()));
+          break;
+        }
         const sentAtMs = wallNow();
         let answer: FinishPressAnswer;
         try {
-          answer = await record({ eventId, staffId, bibNumber: next.bibNumber, claimedAtMs: next.pressedAtMs });
+          answer = await record({ eventId, staffId, bibNumber: next.bibNumber, claimedAtMs: next.pressedAtMs, pressId: next.id });
         } catch (error) {
           // The site deployed again: this page's actions are gone until a reload, which sends what waits.
           if (unstable_isUnrecognizedActionError(error)) {
@@ -257,7 +291,7 @@ export default function FinishLine({ eventId, uiLocale, staffId, initial, words,
           // No answer — no signal, a server that did not reply: the entry waits, and is tried again by itself.
           failures.current += 1;
           setOffline(true);
-          later(retryDelay(failures.current));
+          later(finishRetryDelay(failures.current));
           break;
         }
         failures.current = 0;
@@ -268,17 +302,12 @@ export default function FinishLine({ eventId, uiLocale, staffId, initial, words,
           break;
         }
         if (answer.kind === "failed") {
-          // The site answered but could not record it: tried again a few times, then settled with its time to write on paper.
-          const tries = (failedTries.current.get(next.id) ?? 0) + 1;
-          if (tries < FINISH_FAILED_TRIES) {
-            failedTries.current.set(next.id, tries);
-            later(retryDelay(tries));
-            break;
-          }
-          failedTries.current.delete(next.id);
-          commitEntries((current) => settleEntry(current, next.id, { kind: "refused", code: "UNEXPECTED", bibNumber: next.bibNumber, gunTimeMs: null }));
+          // The site answered but could not record it — a passing database error, a bunch finish's busiest second: the press stays
+          // waiting with its time, is tried again after its backoff and again after that, and the presses after it go meanwhile.
+          held.current.set(next.id, holdAfterFailure(held.current, next.id, wallNow()));
           continue;
         }
+        held.current.delete(next.id);
         measureServerClock({ ...answer.clock, sentAtMs, backAtMs: wallNow() });
         if (answer.state) adopt(answer.state);
         const outcome: FinishEntryOutcome = answer.outcome;
@@ -389,6 +418,8 @@ export default function FinishLine({ eventId, uiLocale, staffId, initial, words,
   const who = (bibNumber: number, label: string | null) => (label ? `${label} (#${bibNumber})` : `#${bibNumber}`);
   const reading = clockReading(nowMs, state.gunAtMs);
   const waiting = waitingCount(entries, staffId);
+  // The numbers whose press of the viewer's still waits on this phone: an elite's button waits with it, so a double tap is one press.
+  const waitingNumbers = new Set(entries.flatMap((entry) => (entry.outcome === null && entry.staffId === staffId ? [entry.bibNumber] : [])));
 
   /** What an entry's line says. */
   const entryLine = (entry: FinishEntry): string => {
@@ -424,7 +455,7 @@ export default function FinishLine({ eventId, uiLocale, staffId, initial, words,
   );
 
   const eliteButton = (elite: EliteButtonView) => {
-    const disabled = elite.bibNumber === null || elite.finishedGunTimeMs !== null;
+    const disabled = elite.bibNumber === null || elite.finishedGunTimeMs !== null || waitingNumbers.has(elite.bibNumber);
     return (
       <Box key={elite.key} sx={{ display: "grid", gap: 0.5, alignContent: "start" }} data-testid="finish-elite" data-bib={elite.bibNumber ?? ""}>
         <GlyphButton
@@ -481,6 +512,14 @@ export default function FinishLine({ eventId, uiLocale, staffId, initial, words,
           {words.offline}
         </Alert>
       )}
+      {/* The viewer's presses waiting under another event on this phone: only that event's page sends them. */}
+      {hydrated &&
+        elsewhere.map((other) => (
+          <Alert key={other.eventId} severity="info" data-testid="finish-elsewhere" data-event={other.eventId}>
+            {fill(words.elsewhere[countForm(other.count, uiLocale)], { count: String(other.count), event: other.title ?? words.elsewhereUnnamed })}{" "}
+            <Link href={`?eventId=${encodeURIComponent(other.eventId)}`}>{words.elsewhereOpen}</Link>
+          </Alert>
+        ))}
 
       {state.elites.length > 0 && (
         <Box component="section" aria-labelledby="finish-elites-title" data-testid="finish-elites">

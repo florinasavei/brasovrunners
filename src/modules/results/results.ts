@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { eventEliteEntries } from "@/db/schema/event-elite-entries";
 import { eventResults, type EventResultRow } from "@/db/schema/event-results";
@@ -29,10 +29,14 @@ import {
   LINE_TRAIL_ACTIONS,
   type LineTrailRow,
   mayUndo,
+  PRESS_TRAIL_ACTIONS,
   pressMeets,
   raceGunMoment,
+  raceGunRepeats,
   raceGunWindowOpen,
   type RecentFinisherView,
+  type SavedPress,
+  savedPressOf,
   undoClosedBy,
   undoOpenUntil,
   undoTrailOf,
@@ -41,7 +45,7 @@ import { type FingerprintedResult, resultsFingerprint } from "./domain/fingerpri
 import { foldEliteName, horsConcoursBibs, type OutOfRanking } from "./domain/hors-concours";
 import { parseResultsCsv } from "./domain/import-csv";
 import { publicResultName } from "./domain/public-name";
-import { type Rankable, RESULTS_MAX, rankResults, type ResultStatus, type Ranked } from "./domain/ranking";
+import { isResultStatus, type Rankable, RESULTS_MAX, rankResults, type ResultStatus, type Ranked } from "./domain/ranking";
 import { type ReadRow, type ResultRowProblem, readResultRow } from "./domain/row-input";
 import { type PostedResultRow, resultBox } from "./rows";
 
@@ -917,7 +921,7 @@ export function plannedGunOf(event: { startsAt: Date; raceStartsAt: Date | null 
   return event.raceStartsAt ?? event.startsAt;
 }
 
-/** What one press did (§NNN): recorded — or found already recorded by the same viewer at the same second, a retry — or a number whose row stays as stored. */
+/** What one press did (§NNN): recorded — or found recorded already, the same press sent again (its id in the trail; else guessed) — or a number whose row stays as stored. */
 export type FinishOutcome =
   | {
       kind: "recorded";
@@ -929,7 +933,7 @@ export type FinishOutcome =
       gunTimeMs: number;
       positionOverall: number | null;
       outOfRanking: boolean;
-      /** Nothing was written: the row was this viewer's already, at this very second — a retry of a press that was saved. */
+      /** Nothing was written: the same press sent again — its id in the trail, or, for a press with none, this viewer's row at this very second. */
       again: boolean;
     }
   | {
@@ -963,73 +967,106 @@ function finishTargetOf(runners: Runners, bibNumber: number): FinishTarget | nul
  * elite's button, as the runner crosses, and the time since the gun (`gunOf`) stamped as that runner's «Sosit».
  *
  * **Who** — every role that works the desk (`canRecordFinishes`, FORBIDDEN otherwise). **The time** — the instant the island claims
- * for the press (`claimedAtMs`, on the server's clock), when `domain/finish-line.ts#finishStamp` accepts it, else the server's own:
- * a race only (`RESULTS_NOT_OPEN`), after the gun (`RESULT_FINISH_NOT_STARTED`), within a day of it (`RESULT_FINISH_CLOSED`) — and a
- * press arriving more than a day and three hours after the gun is refused whatever it claims, so a queue left on a phone for days
- * never adds a finisher to a ranking long published.
+ * for the press (`claimedAtMs`, on the server's clock), as `domain/finish-line.ts#finishStamp` holds it: a race only
+ * (`RESULTS_NOT_OPEN`), after the gun (`RESULT_FINISH_NOT_STARTED` — a claim before it too, never stamped with the arrival's time
+ * instead, so a press queued before the gun is no finisher made up when it arrives), within a day of it (`RESULT_FINISH_CLOSED`); the
+ * server's own time only for a claim ahead of its clock, or none. A press arriving more than a day and three hours after the gun is
+ * refused whatever it claims, so a queue left on a phone for days never adds a finisher to a ranking long published.
  *
  * **Whose number.** A number a **confirmed** registration holds is that runner's, as before; a number none holds but a line of the
  * race's elite list carries is that line's — a **typed** row with the line's name and number, no sex, no birth date and no agreement
  * to be named (the line is ranked, or run hors concours, by `hors-concours.ts`' rule 3); anything else is refused carrying the time
  * (`RESULT_BIB_UNKNOWN`), so the volunteer writes it down and the runner is typed on «Clasament» later.
  *
+ * **A retry is the same press (the owner asked that the history be exact).** The island sends each press with its own id
+ * (`pressId`), which every row of the trail the press writes keeps; a press whose id the trail already holds — the answer lost on the
+ * way, the phone sending it again — is answered as it was the first time, from the trail (`loadSavedPress`,
+ * `domain/finish-line.ts#savedPressOf`), and writes nothing: no second row, no second line in «Istoricul sosirilor». A press with no id
+ * (the plain form, a page of before) falls back to the guess: the number already «Sosit» from **the same viewer at the same second** is
+ * taken for its retry.
+ *
  * **The same number twice (the owner: «se poate întâmpla și ca mai mulți voluntari să treacă același număr»).** The first stored wins
- * and nothing about its row changes (`domain/finish-line.ts#pressMeets`). A press that finds the number already «Sosit» from **the
- * same viewer at the same second** is a retry of a press that was saved — answered as saved, nothing written. Any other — another
- * volunteer, or the same one a different second — is a duplicate: answered with who stored it and at what time, and its own time
- * written to the trail (`event_result.finish_duplicate`, `{ bibNumber, gunTimeMs, storedGunTimeMs, storedStatus, storedResultId,
- * finishLine: true }`, the actor the trail's own column), so «Istoricul sosirilor» shows both times. Two presses at once wait on the
- * event's lock, and the unique indexes stand behind it.
+ * and nothing about its row changes (`domain/finish-line.ts#pressMeets`). Any other press of a number already «Sosit» — another
+ * volunteer, or the same one again — is a duplicate: answered with who stored it and at what time, and its own time written to the
+ * trail (`event_result.finish_duplicate`, `{ bibNumber, gunTimeMs, storedGunTimeMs, storedStatus, storedResultId, finishLine: true,
+ * pressId }`, the actor the trail's own column), so «Istoricul sosirilor» shows both times. Two presses at once wait on the event's
+ * lock, and the unique indexes stand behind it.
  *
  * **A decision of «Clasament» stays.** A runner stored «Descalificat» stays so whoever presses the number — the press's time goes to
  * the trail the same way, `storedStatus: "DSQ"`, for the organizers —, and so does an «Abandon» or a «Neprezentat» written after the
  * moment the press claims: a press queued on a phone without signal, or a second volunteer's, never overwrites a later decision. A
  * runner stored «Abandon» or «Neprezentat» before the moment pressed — written off by mistake — who crosses the line becomes «Sosit»
  * at the stamped time, the chip time and the note kept. One audit row as the save writes it (`event_result.created` or `.updated`,
- * the number and the times with `finishLine: true` and the row's id, `resultId` — the undo's proof the line wrote it —, never a name);
- * the whole list ranked again; the public cache told, so a published ranking shows the finisher.
+ * the number and the times with `finishLine: true`, the row's id, `resultId` — the undo's proof the line wrote it —, and the press's
+ * `pressId`, never a name); the whole list ranked again; the public cache told, so a published ranking shows the finisher.
  */
 export async function recordFinish<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Actor,
-  request: { eventId: string; bibNumber: number; claimedAtMs?: number | null },
+  request: { eventId: string; bibNumber: number; claimedAtMs?: number | null; pressId?: string | null },
   now: Date,
 ): Promise<FinishOutcome> {
   assertMayRecord(actor);
   assertIds(request.eventId);
   if (!Number.isInteger(request.bibNumber) || request.bibNumber <= 0) throw new DomainError("VALIDATION_ERROR", "the race number is not a whole number", ["bib"]);
   const bibNumber = request.bibNumber;
+  // The press's own id, as the island sent it; a malformed one is none, and the press is then taken as one without.
+  const pressId = typeof request.pressId === "string" && isUuid(request.pressId) ? request.pressId : null;
   const outcome = await db.transaction(async (tx): Promise<FinishOutcome> => {
     const event = await loadEvent(tx, request.eventId, true);
     if (!eventTakesResults(event.type)) throw new DomainError("RESULTS_NOT_OPEN", "only a race takes results");
+    const [runners, stored, labels] = await Promise.all([loadRegisteredRunners(tx, event.id), loadStored(tx, event.id, true), loadEliteLabels(tx, event.id)]);
+    const target = finishTargetOf(runners, bibNumber);
+    const index = indexStored(stored, runners);
+    const before = !target ? undefined : target.kind === "registration" ? (claimOf(target.runner, index).attached ? claimOf(target.runner, index).row : undefined) : index.freeByBib.get(bibNumber);
+    const name = !target ? null : target.kind === "registration" ? target.runner.displayName : (before?.displayName ?? target.line.name);
+    const label = !target ? null : target.kind === "registration" ? (target.runner.elite ? (labels.registrations.get(target.runner.registrationId) ?? null) : null) : (labels.lines.get(target.line.id) ?? null);
+    const writerOf = async (staffId: string | null) => (staffId === null ? null : ((await staffNamesOf(tx, [staffId])).get(staffId) ?? null));
+
+    // A press the trail already holds by its id — the answer lost on the way, the phone sending it again: answered as it was, from
+    // the trail, nothing written. Read before the stamp, so a retry arriving after the line closed is still the press it was.
+    const saved = pressId === null ? null : await loadSavedPress(tx, event.id, actor.id, pressId, bibNumber);
+    if (saved?.kind === "recorded") {
+      const row = stored.find((candidate) => candidate.id === saved.resultId);
+      const ranked = row ? rankingOf(stored, runners, event).get(row.bibNumber) : undefined;
+      return { kind: "recorded", resultId: saved.resultId, bibNumber, name, label, gunTimeMs: saved.gunTimeMs, positionOverall: ranked?.positionOverall ?? null, outOfRanking: ranked?.outOfRanking === true, again: true };
+    }
+    if (saved?.kind === "duplicate") {
+      const row = stored.find((candidate) => candidate.id === saved.storedResultId);
+      return {
+        kind: "duplicate",
+        resultId: saved.storedResultId,
+        bibNumber,
+        name,
+        label,
+        gunTimeMs: saved.gunTimeMs,
+        storedStatus: isResultStatus(saved.storedStatus) ? saved.storedStatus : "FINISHED",
+        storedGunTimeMs: saved.storedGunTimeMs,
+        storedBy: await writerOf(row?.updatedByStaffUserId ?? null),
+      };
+    }
+
     const stamp = finishStamp({ claimedAtMs: request.claimedAtMs ?? null, gunAtMs: gunOf(event).getTime(), nowMs: now.getTime() });
     if (stamp.kind === "notStarted") throw new DomainError("RESULT_FINISH_NOT_STARTED", "the race has not started yet");
     // A day after the gun nobody is crossing a line: a late press is a mistake, and the time would not fit the column anyway (`RESULT_FINISH_CLOSED`).
     if (stamp.kind === "closed") throw new DomainError("RESULT_FINISH_CLOSED", "the finish line closed a day after the gun");
     const gunTimeMs = stamp.gunTimeMs;
-    const [runners, stored, labels] = await Promise.all([loadRegisteredRunners(tx, event.id), loadStored(tx, event.id, true), loadEliteLabels(tx, event.id)]);
-    const target = finishTargetOf(runners, bibNumber);
     if (!target) throw new FinishError("RESULT_BIB_UNKNOWN", bibNumber, gunTimeMs);
-    const index = indexStored(stored, runners);
-    const before = target.kind === "registration" ? (claimOf(target.runner, index).attached ? claimOf(target.runner, index).row : undefined) : index.freeByBib.get(bibNumber);
-    const name = target.kind === "registration" ? target.runner.displayName : (before?.displayName ?? target.line.name);
-    const label = target.kind === "registration" ? (target.runner.elite ? (labels.registrations.get(target.runner.registrationId) ?? null) : null) : (labels.lines.get(target.line.id) ?? null);
     const audit = (action: AuditAction, metadata: Record<string, unknown>) =>
-      recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: event.id, metadata, now });
+      recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: event.id, metadata: pressId === null ? metadata : { ...metadata, pressId }, now });
 
     // The moment the press stands for: the one it claimed when the stamp took it, else the server's own.
     const pressedAtMs = stamp.claimed && request.claimedAtMs ? request.claimedAtMs : now.getTime();
-    const meets = before ? pressMeets(before, { actorId: actor.id, gunTimeMs, atMs: pressedAtMs }) : null;
+    const meets = before ? pressMeets(before, { actorId: actor.id, gunTimeMs, atMs: pressedAtMs, identified: pressId !== null }) : null;
     if (before && meets === "retry") {
-      // A retry of a press that was saved — the same viewer, the same second: shown as saved, nothing written.
+      // A press with no id of its own, taken for the retry of one that was saved — the same viewer, the same second: shown as saved, nothing written.
       const ranked = rankingOf(stored, runners, event).get(before.bibNumber);
       return { kind: "recorded", resultId: before.id, bibNumber, name, label, gunTimeMs, positionOverall: ranked?.positionOverall ?? null, outOfRanking: ranked?.outOfRanking === true, again: true };
     }
     if (before && (meets === "pressedAgain" || meets === "decided")) {
       // The row stays — the first «Sosit», or «Clasament»'s decision; this press's own time goes to the trail beside it, for the organizers.
       await audit("event_result.finish_duplicate", { bibNumber, gunTimeMs, storedGunTimeMs: before.gunTimeMs, storedStatus: before.status, storedResultId: before.id, finishLine: true });
-      const storedBy = before.updatedByStaffUserId === null ? null : ((await staffNamesOf(tx, [before.updatedByStaffUserId])).get(before.updatedByStaffUserId) ?? null);
-      return { kind: "duplicate", resultId: before.id, bibNumber, name, label, gunTimeMs, storedStatus: before.status, storedGunTimeMs: before.gunTimeMs, storedBy };
+      return { kind: "duplicate", resultId: before.id, bibNumber, name, label, gunTimeMs, storedStatus: before.status, storedGunTimeMs: before.gunTimeMs, storedBy: await writerOf(before.updatedByStaffUserId) };
     }
 
     let rows: EventResultRow[];
@@ -1064,6 +1101,28 @@ export async function recordFinish<T extends Record<string, unknown>>(
   });
   if (outcome.kind === "recorded" && !outcome.again) revalidatePublicContent("events", "places");
   return outcome;
+}
+
+/**
+ * A press of the line the trail already holds by its id (§NNN), read back as it was answered (`domain/finish-line.ts#savedPressOf`):
+ * the actor's own rows of this race a press writes, the id in their metadata. The indexed key first (`audit_logs_entity_idx`: the
+ * entity type, the id), so the metadata is read on this race's rows alone; nothing is written.
+ */
+async function loadSavedPress<T extends Record<string, unknown>>(db: Database<T>, eventId: string, actorId: string, pressId: string, bibNumber: number): Promise<SavedPress | null> {
+  const [row] = await db
+    .select({ action: auditLogs.action, metadata: auditLogs.metadataJson })
+    .from(auditLogs)
+    .where(
+      and(
+        eq(auditLogs.entityType, "event"),
+        eq(auditLogs.entityId, eventId),
+        eq(auditLogs.actorStaffUserId, actorId),
+        inArray(auditLogs.action, [...PRESS_TRAIL_ACTIONS]),
+        sql`${auditLogs.metadataJson} ->> 'pressId' = ${pressId}`,
+      ),
+    )
+    .limit(1);
+  return row ? savedPressOf(row, bibNumber) : null;
 }
 
 /**
@@ -1129,23 +1188,37 @@ export async function undoFinish<T extends Record<string, unknown>>(db: Database
  * contează „Startul cursei" din editor»): the gun, as an organizer pressed it at the start line. Whoever enters results
  * (`canEnterResults`, FORBIDDEN otherwise), a race only (`RESULTS_NOT_OPEN`), from three hours before the planned gun to six hours after
  * (`RACE_GUN_WINDOW`), and only while no «Sosit» result is stored (`RACE_GUN_FIXED`: after the first finisher the gun is fixed — a
- * correction is «Clasament»'s). The moment is the tap the island claims, within thirty seconds of the server's clock, else the server's
- * own (`raceGunMoment`); a second press moves it; `clear` takes it off, back to the planned gun. One audit row a change —
- * `event.race_gun_set` with `{ at, previous }`, `event.race_gun_cleared` with `{ previous }`, the instants alone, never a name — and no
- * email. The public cache is not told: nothing public reads the gun. The event's `version` and its «last saved» are untouched — the
- * editor's open form is not refused for it.
+ * correction is «Clasament»'s). The moment is the tap the island claims when the server hears it at most ten seconds after it and it
+ * is at most five seconds ahead, else the server's own (`raceGunMoment`); a second press moves it; `clear` takes it off, back to the
+ * planned gun. **A press is never doubled into a second «Start»** (the review: a tap again on a slow start-line signal, queued behind
+ * the first, moved the gun by the gap and shortened every runner's time): a «Start» of the organizer whose «Start» the gun stands at,
+ * heard at most ten seconds after theirs (`domain/finish-line.ts#raceGunRepeats`, read from the gun's own audit rows), is answered with
+ * the gun as it stands (`repeated`) and writes nothing — the page's button is busy while its press is on its way, too
+ * (`ui/RaceGunPress.tsx`). One audit row a change — `event.race_gun_set` with `{ at, previous }`, `event.race_gun_cleared` with
+ * `{ previous }`, the instants alone, never a name — and no email. The public cache is not told: nothing public reads the gun. The
+ * event's `version` and its «last saved» are untouched — the editor's open form is not refused for it.
  */
 export async function setRaceGun<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Actor,
   request: { eventId: string; clear: boolean; claimedAtMs?: number | null },
   now: Date,
-): Promise<{ changed: boolean; gunAt: Date | null }> {
+): Promise<{ changed: boolean; gunAt: Date | null; repeated?: true }> {
   assertMayEnter(actor);
   assertIds(request.eventId);
   return db.transaction(async (tx) => {
     const event = await loadEvent(tx, request.eventId, true);
     if (!eventTakesResults(event.type)) throw new DomainError("RESULTS_NOT_OPEN", "only a race has a gun");
+    if (!request.clear && event.raceGunAt !== null && event.raceGunByStaffUserId === actor.id) {
+      // The gun stands as this organizer set it: their «Start» heard again within ten seconds is that press sent twice.
+      const [last] = await tx
+        .select({ action: auditLogs.action, actorStaffUserId: auditLogs.actorStaffUserId, at: auditLogs.createdAt })
+        .from(auditLogs)
+        .where(and(eq(auditLogs.entityType, "event"), eq(auditLogs.entityId, event.id), inArray(auditLogs.action, ["event.race_gun_set", "event.race_gun_cleared"])))
+        .orderBy(desc(auditLogs.createdAt))
+        .limit(1);
+      if (raceGunRepeats(last, actor.id, now.getTime())) return { changed: false, gunAt: event.raceGunAt, repeated: true };
+    }
     if (!raceGunWindowOpen(plannedGunOf(event).getTime(), now.getTime())) throw new DomainError("RACE_GUN_WINDOW", "the gun is pressed from three hours before the planned start to six hours after");
     const [finished] = await tx
       .select({ id: eventResults.id })

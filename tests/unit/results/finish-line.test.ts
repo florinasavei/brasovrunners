@@ -7,29 +7,38 @@ import {
   dropKept,
   ENTRIES_KEPT,
   entryStateOf,
+  eventIdOfStorageKey,
   FINISH_ARRIVAL_GRACE_MS,
   FINISH_CLAIM_AHEAD_MS,
+  FINISH_RETRY_FIRST_MS,
+  FINISH_RETRY_MAX_MS,
   FINISH_UNDO_WINDOW_MS,
   FINISH_WINDOW_MS,
   type FinishEntry,
+  finishRetryDelay,
   finishStamp,
   finishStorageKey,
+  holdAfterFailure,
   isInstant,
   keepTime,
   keptOf,
   KEPT_TIMES_MAX,
   type LineTrailRow,
   mayUndo,
+  nextRetryAt,
   nextToSend,
   pressEntry,
   pressMeets,
   RACE_GUN_CLAIM_TOLERANCE_MS,
+  RACE_GUN_REPEAT_MS,
   raceGunMoment,
+  raceGunRepeats,
   raceGunWindowOpen,
   readStoredClockSample,
   readStoredFinishLine,
   sampleOfPage,
   sampleOfRoundTrip,
+  savedPressOf,
   serverNowAt,
   settleEntry,
   stampedGunTime,
@@ -45,10 +54,12 @@ import {
 
 /**
  * §NNN — «Cronometrare»'s pure parts (BR-REQ-050-02): the server's clock read through the phone's wall clock and an offset measured
- * over round trips, the best sample kept; the stamp floored to the second, the claimed time held to the server's bounds and a press
- * arriving after the day and its grace refused; what a press does to a stored row; «Start»'s window and its tap; «Anulează»'s ten
- * minutes on one's own press at the line, unchanged and not pressed again; the kept times oldest first, each account's own; the
- * queue in the order pressed, each account sending its own; and the phone's storage read back tolerantly.
+ * over round trips, the best sample kept; the stamp floored to the second, the claimed time held to the server's bounds, a claim
+ * before the gun refused as not started and a press arriving after the day and its grace refused; what a press does to a stored row,
+ * and a press found in the trail by its id read back as it was answered; «Start»'s window, its tap and the organizer's own press sent
+ * twice; «Anulează»'s ten minutes on one's own press at the line, unchanged and not pressed again; the kept times oldest first, each
+ * account's own; the queue in the order pressed, each account sending its own, a press the server could not record held for its
+ * backoff while the next ones go and never given up; and the phone's storage read back tolerantly.
  */
 const GUN = Date.UTC(2026, 10, 21, 7, 0, 0);
 const at = (minutes: number, seconds = 0, ms = 0) => GUN + minutes * 60_000 + seconds * 1000 + ms;
@@ -126,14 +137,27 @@ describe("§NNN the stamp: the claimed press within the server's bounds, else th
     expect(finishStamp({ claimedAtMs: at(0, 1), gunAtMs: GUN, nowMs: now })).toEqual({ kind: "stamped", gunTimeMs: 1000, claimed: true });
   });
 
-  it("takes its own time for a claim past now plus five seconds, under a second, before the gun, or no claim at all", () => {
+  it("takes its own time only for a claim past now plus five seconds, or no claim at all", () => {
     const own = { kind: "stamped", gunTimeMs: now - GUN, claimed: false };
     expect(finishStamp({ claimedAtMs: now + FINISH_CLAIM_AHEAD_MS + 1000, gunAtMs: GUN, nowMs: now })).toEqual(own);
-    expect(finishStamp({ claimedAtMs: at(0, 0, 999), gunAtMs: GUN, nowMs: now })).toEqual(own);
-    expect(finishStamp({ claimedAtMs: GUN - 60_000, gunAtMs: GUN, nowMs: now })).toEqual(own);
     expect(finishStamp({ claimedAtMs: null, gunAtMs: GUN, nowMs: now })).toEqual(own);
     expect(finishStamp({ claimedAtMs: 1.5, gunAtMs: GUN, nowMs: now })).toEqual(own);
     expect(finishStamp({ claimedAtMs: Number.NaN, gunAtMs: GUN, nowMs: now })).toEqual(own);
+  });
+
+  it("refuses a claim before the gun — or in its first second — as not started, never stamping the arrival's time instead", () => {
+    // A press queued before the gun and sent fifty minutes later would be a finisher made up at its arrival, the gun fixed by it.
+    expect(finishStamp({ claimedAtMs: GUN - 60_000, gunAtMs: GUN, nowMs: now })).toEqual({ kind: "notStarted" });
+    expect(finishStamp({ claimedAtMs: GUN - 1, gunAtMs: GUN, nowMs: now })).toEqual({ kind: "notStarted" });
+    expect(finishStamp({ claimedAtMs: GUN, gunAtMs: GUN, nowMs: now })).toEqual({ kind: "notStarted" });
+    expect(finishStamp({ claimedAtMs: at(0, 0, 999), gunAtMs: GUN, nowMs: now })).toEqual({ kind: "notStarted" });
+    // A «Start» pressed late, after a press claimed before it: the same — the time is the paper's, the line says the hour to write down.
+    expect(finishStamp({ claimedAtMs: at(1), gunAtMs: at(2), nowMs: at(30) })).toEqual({ kind: "notStarted" });
+  });
+
+  it("closes a claim past the day though it arrives within the grace: the runner crossed after the line closed", () => {
+    const claimed = GUN + FINISH_WINDOW_MS + 2_000;
+    expect(finishStamp({ claimedAtMs: claimed, gunAtMs: GUN, nowMs: claimed + 1_000 })).toEqual({ kind: "closed", gunTimeMs: FINISH_WINDOW_MS + 2_000 });
   });
 
   it("refuses before the gun and past a day of it — unless the claim, taken within the day, says when the runner crossed", () => {
@@ -158,12 +182,17 @@ describe("§NNN the stamp: the claimed press within the server's bounds, else th
 describe("§NNN what a press does to the stored row of its number", () => {
   const written = new Date(at(40));
   const row = (status: string, by = "vlad", gunTimeMs: number | null = at(40) - GUN) => ({ status, gunTimeMs, updatedAt: written, updatedByStaffUserId: by });
-  const press = (atMs: number, actorId = "radu", gunTimeMs = atMs - GUN) => ({ actorId, gunTimeMs, atMs });
+  const press = (atMs: number, actorId = "radu", gunTimeMs = atMs - GUN, identified = false) => ({ actorId, gunTimeMs, atMs, identified });
 
-  it("is a retry for the same viewer at the same second, and a press again for anybody else or another second", () => {
+  it("is a retry for the same viewer at the same second, and a press again for anybody else or another second — for a press with no id", () => {
     expect(pressMeets(row("FINISHED"), press(at(40), "vlad"))).toBe("retry");
     expect(pressMeets(row("FINISHED"), press(at(40, 2), "vlad"))).toBe("pressedAgain");
     expect(pressMeets(row("FINISHED"), press(at(40)))).toBe("pressedAgain");
+  });
+
+  it("guesses no retry for a press carrying its own id: the trail, read first, said it is another press", () => {
+    expect(pressMeets(row("FINISHED"), press(at(40), "vlad", at(40) - GUN, true))).toBe("pressedAgain");
+    expect(pressMeets(row("DNF", "oana", null), press(at(41), "vlad", at(41) - GUN, true))).toBe("turned");
   });
 
   it("leaves «Descalificat» as it is, whenever pressed, and a written-off runner decided after the moment pressed", () => {
@@ -177,6 +206,27 @@ describe("§NNN what a press does to the stored row of its number", () => {
   it("turns «Abandon» or «Neprezentat» written before the moment pressed: a runner written off by mistake, crossing the line", () => {
     expect(pressMeets(row("DNF", "oana", null), press(at(40)))).toBe("turned");
     expect(pressMeets(row("DNS", "oana", null), press(at(55)))).toBe("turned");
+  });
+});
+
+describe("§NNN a press found in the trail by its id, read back as it was answered", () => {
+  const created = { action: "event_result.created", metadata: { bibNumber: 101, status: "FINISHED", gunTimeMs: 2_712_000, chipTimeMs: null, finishLine: true, resultId: "row-1", pressId: "p" } };
+
+  it("reads a «Sosit» it wrote — created or turned — and a number it found stored, with both times and the state", () => {
+    expect(savedPressOf(created, 101)).toEqual({ kind: "recorded", resultId: "row-1", gunTimeMs: 2_712_000 });
+    expect(savedPressOf({ ...created, action: "event_result.updated" }, 101)).toEqual({ kind: "recorded", resultId: "row-1", gunTimeMs: 2_712_000 });
+    const duplicate = { action: "event_result.finish_duplicate", metadata: { bibNumber: 101, gunTimeMs: 2_714_000, storedGunTimeMs: 2_712_000, storedStatus: "FINISHED", storedResultId: "row-1", finishLine: true, pressId: "q" } };
+    expect(savedPressOf(duplicate, 101)).toEqual({ kind: "duplicate", storedResultId: "row-1", gunTimeMs: 2_714_000, storedGunTimeMs: 2_712_000, storedStatus: "FINISHED" });
+    // A decision of «Clasament» found: no time stored.
+    expect(savedPressOf({ ...duplicate, metadata: { ...duplicate.metadata, storedGunTimeMs: null, storedStatus: "DSQ" } }, 101)).toMatchObject({ storedGunTimeMs: null, storedStatus: "DSQ" });
+  });
+
+  it("is none for another number's row, a «Clasament» save's, and one that cannot be read: the press is then new", () => {
+    expect(savedPressOf(created, 102)).toBeNull();
+    expect(savedPressOf({ ...created, metadata: { ...created.metadata, finishLine: undefined } }, 101)).toBeNull();
+    expect(savedPressOf({ ...created, metadata: { ...created.metadata, resultId: 7 } }, 101)).toBeNull();
+    expect(savedPressOf({ action: "event_result.deleted", metadata: created.metadata }, 101)).toBeNull();
+    expect(savedPressOf({ action: "event_result.created", metadata: "not an object" }, 101)).toBeNull();
   });
 });
 
@@ -199,6 +249,19 @@ describe("§NNN «Start»", () => {
     expect(raceGunMoment(GUN + FINISH_CLAIM_AHEAD_MS + 1, GUN)).toBe(GUN);
     expect(raceGunMoment(null, GUN)).toBe(GUN);
     expect(raceGunMoment(-5, GUN)).toBe(GUN);
+  });
+
+  it("takes the organizer's own «Start» heard again within ten seconds for the same press sent twice — and nothing else", () => {
+    const set = { action: "event.race_gun_set", actorStaffUserId: "oana", at: new Date(GUN) };
+    expect(RACE_GUN_REPEAT_MS).toBe(10_000);
+    expect(raceGunRepeats(set, "oana", GUN + 3_000)).toBe(true);
+    expect(raceGunRepeats(set, "oana", GUN + RACE_GUN_REPEAT_MS)).toBe(true);
+    expect(raceGunRepeats(set, "oana", GUN + RACE_GUN_REPEAT_MS + 1)).toBe(false);
+    // Another organizer's press, a press after «Anulează startul», and the first press of all are presses of their own.
+    expect(raceGunRepeats(set, "ana", GUN + 3_000)).toBe(false);
+    expect(raceGunRepeats({ ...set, action: "event.race_gun_cleared" }, "oana", GUN + 3_000)).toBe(false);
+    expect(raceGunRepeats(undefined, "oana", GUN + 3_000)).toBe(false);
+    expect(raceGunRepeats({ ...set, actorStaffUserId: null }, "oana", GUN + 3_000)).toBe(false);
   });
 });
 
@@ -249,7 +312,7 @@ describe("§NNN «Anulează»: one's own press at the line, written once, not pr
 
 describe("§NNN «⏱ Prinde timpul»: kept times, oldest first, each account's own", () => {
   it("keeps the kept times of each staff account apart on the phone's line", () => {
-    let line = withKept({ entries: [], kept: {} }, "vlad", [at(10), at(10, 2)]);
+    let line = withKept({ entries: [], kept: {}, title: null }, "vlad", [at(10), at(10, 2)]);
     line = withKept(line, "radu", [at(11)]);
     expect(keptOf(line, "vlad")).toEqual([at(10), at(10, 2)]);
     expect(keptOf(line, "radu")).toEqual([at(11)]);
@@ -308,6 +371,40 @@ describe("§NNN the queue: in the order pressed, answered once, the waiting ones
     expect(nextToSend(entries, "vlad")?.id).toBe("vlad-1");
   });
 
+  it("holds a press the server could not record while the next ones go, tries it again when its turn comes, and never gives it up", () => {
+    let entries: FinishEntry[] = [];
+    entries = pressEntry(entries, entry("a", 101, at(40)));
+    entries = pressEntry(entries, entry("b", 102, at(40, 1)));
+    entries = pressEntry(entries, entry("c", 101, at(40, 2)));
+    entries = pressEntry(entries, entry("d", 103, at(40, 3)));
+    const held = new Map<string, { tries: number; untilMs: number }>();
+    const now = at(41);
+    // «a» answered `failed`: held for two seconds, and «b» goes — but «c», a later press of 101, waits behind it.
+    held.set("a", holdAfterFailure(held, "a", now));
+    expect(held.get("a")).toEqual({ tries: 1, untilMs: now + FINISH_RETRY_FIRST_MS });
+    expect(nextToSend(entries, "vlad", held, now)?.id).toBe("b");
+    entries = settleEntry(entries, "b", { kind: "recorded", bibNumber: 102, name: null, label: null, gunTimeMs: 2_401_000, positionOverall: 1, outOfRanking: false, again: false });
+    expect(nextToSend(entries, "vlad", held, now)?.id).toBe("d");
+    entries = settleEntry(entries, "d", { kind: "recorded", bibNumber: 103, name: null, label: null, gunTimeMs: 2_403_000, positionOverall: 2, outOfRanking: false, again: false });
+    // Only the held one and the press behind it are left: nothing goes until «a»'s hold is over, and the pump knows when that is.
+    expect(nextToSend(entries, "vlad", held, now)).toBeUndefined();
+    expect(nextRetryAt(entries, "vlad", held)).toBe(now + FINISH_RETRY_FIRST_MS);
+    // Its turn come, «a» goes first — before the later press of its number — still waiting, never settled by a failure.
+    expect(nextToSend(entries, "vlad", held, now + FINISH_RETRY_FIRST_MS)?.id).toBe("a");
+    expect(entries.map((one) => entryStateOf(one, "vlad"))).toEqual(["waiting", "saved", "waiting", "saved"]);
+    // Failing again and again, it waits longer each time — two seconds, doubling, every thirty at most —, never a last try.
+    for (let tries = 2; tries <= 8; tries += 1) held.set("a", holdAfterFailure(held, "a", now));
+    expect(held.get("a")).toEqual({ tries: 8, untilMs: now + FINISH_RETRY_MAX_MS });
+    expect([1, 2, 3, 4, 5, 6, 100].map(finishRetryDelay)).toEqual([2_000, 4_000, 8_000, 16_000, 30_000, 30_000, 30_000]);
+    // Answered at last: settled, and the press behind it goes.
+    entries = settleEntry(entries, "a", { kind: "recorded", bibNumber: 101, name: null, label: null, gunTimeMs: 2_400_000, positionOverall: 1, outOfRanking: false, again: false });
+    held.delete("a");
+    expect(nextToSend(entries, "vlad", held, now)?.id).toBe("c");
+    expect(nextRetryAt(entries, "vlad", held)).toBeNull();
+    // Another account's hold is not this viewer's to wait for.
+    expect(nextRetryAt(entries, "radu", new Map([["c", { tries: 1, untilMs: now }]]))).toBeNull();
+  });
+
   it("keeps the newest answered lines past the limit and every waiting one, whoever's", () => {
     let entries: FinishEntry[] = [pressEntry([], entry("waiting", 999, at(1)))[0]];
     for (let index = 0; index < ENTRIES_KEPT + 5; index += 1) {
@@ -322,7 +419,16 @@ describe("§NNN the queue: in the order pressed, answered once, the waiting ones
 });
 
 describe("§NNN the phone's storage", () => {
-  it("is one key per event, written and read back whole", () => {
+  it("is one key per event, found again by its event's id — the clock's key and any other are no event's line", () => {
+    const eventId = "0b6f6c2e-5d1a-4c47-9a53-3f0d2b1c4e5f";
+    expect(finishStorageKey(eventId)).toBe(`finish-line:${eventId}`);
+    expect(eventIdOfStorageKey(finishStorageKey(eventId))).toBe(eventId);
+    expect(eventIdOfStorageKey("finish-line:clock")).toBeNull();
+    expect(eventIdOfStorageKey("finish-line:")).toBeNull();
+    expect(eventIdOfStorageKey(`other:${eventId}`)).toBeNull();
+  });
+
+  it("is written and read back whole, the event's title with it", () => {
     expect(finishStorageKey("abc")).toBe("finish-line:abc");
     const entries = settleEntry(pressEntry([], { id: "a", staffId: "vlad", bibNumber: 7, label: "Andrei", pressedAtMs: at(3) }), "a", {
       kind: "duplicate",
@@ -344,12 +450,15 @@ describe("§NNN the phone's storage", () => {
       storedGunTimeMs: null,
       storedBy: "Oana",
     });
-    const line = { entries: pressEntry(decided, { id: "c", staffId: "radu", bibNumber: 9, label: null, pressedAtMs: at(5) }), kept: { vlad: [at(5)] } };
+    const line = { entries: pressEntry(decided, { id: "c", staffId: "radu", bibNumber: 9, label: null, pressedAtMs: at(5) }), kept: { vlad: [at(5)] }, title: "Crosul Toamnei" };
     expect(readStoredFinishLine(storedFinishLine(line))).toEqual(line);
+    // A line written before the title was kept, or with an empty one: none.
+    expect(readStoredFinishLine(JSON.stringify({ entries: [], kept: {} })).title).toBeNull();
+    expect(readStoredFinishLine(JSON.stringify({ entries: [], kept: {}, title: "  " })).title).toBeNull();
   });
 
   it("reads nothing, broken JSON, another shape and every malformed entry or kept time as left out, never thrown", () => {
-    const empty = { entries: [], kept: {} };
+    const empty = { entries: [], kept: {}, title: null };
     expect(readStoredFinishLine(null)).toEqual(empty);
     expect(readStoredFinishLine("{not json")).toEqual(empty);
     expect(readStoredFinishLine("42")).toEqual(empty);
@@ -365,7 +474,7 @@ describe("§NNN the phone's storage", () => {
       ],
       kept: { vlad: [at(2), "x", -4, at(3)], radu: "soon", "": [at(4)] },
     });
-    expect(readStoredFinishLine(raw)).toEqual({ entries: [{ id: "ok", staffId: "vlad", bibNumber: 5, label: null, pressedAtMs: at(1), outcome: null }], kept: { vlad: [at(2), at(3)] } });
+    expect(readStoredFinishLine(raw)).toEqual({ entries: [{ id: "ok", staffId: "vlad", bibNumber: 5, label: null, pressedAtMs: at(1), outcome: null }], kept: { vlad: [at(2), at(3)] }, title: null });
     // Kept times stored as a bare list belong to nobody: left out.
     expect(readStoredFinishLine(JSON.stringify({ entries: [], kept: [at(2)] })).kept).toEqual({});
     expect(isInstant(at(1))).toBe(true);
