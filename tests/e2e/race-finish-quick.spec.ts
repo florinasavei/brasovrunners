@@ -10,8 +10,9 @@ import { hydrated, signIn } from "./support/featured-event";
  * than the phone, so the row scrolls inside itself, «Cronometrare» in view and every tab one swipe away —, taps «Start» twice — one
  * «Start» —; the desk Volunteer — the lowest role, three tabs that fit — types a number and presses an elite's button, sees each
  * saved at once with «introdus de» and its own name, types the same number again and reads the duplicate's line — its own line now
- * saying «Clasament» corrects it, no «Anulează» —, undoes the elite's press, and is told of a press of theirs waiting under another
- * race on the phone. Nothing scrolls sideways.
+ * saying «Clasament» corrects it, no «Anulează» —, undoes the elite's press — the phone's line of it then saying «anulat» —, and is
+ * told of a press of theirs waiting under another race on the phone. And an Organizer's page drawn before another organizer's «Start»
+ * says that gun at its clock's next answer, and its own «Start» moves nothing. Nothing scrolls sideways.
  *
  * The race, its two runners and its elite line are written straight into the database — the setup, not the subject — one per project
  * and run, so the two projects never meet.
@@ -194,10 +195,15 @@ test.describe("§NNN «Cronometrare»", () => {
     await expect(recent101.getByTestId("finish-undo")).toHaveCount(0);
     await expect(recent101.getByTestId("finish-undo-closed")).toContainText("l-ai mai trecut o dată");
 
-    // Undo the elite's press: the line leaves «Ultimii sosiți», the button is pressable again.
+    // Undo the elite's press: the line leaves «Ultimii sosiți», the button is pressable again — and the phone's own line of the press
+    // says «anulat», no longer «salvat».
     await recent7.getByTestId("finish-undo").click();
     await expect(page.locator('[data-testid="finish-recent-row"][data-bib="7"]')).toHaveCount(0, { timeout: 15_000 });
     await expect(elite).toBeEnabled();
+    const entry7 = page.locator('[data-testid="finish-entry"][data-bib="7"]').first();
+    await expect(entry7).toHaveAttribute("data-state", "undone");
+    await expect(entry7).toContainText(/Andrei \(#7\) · 0:\d\d:\d\d · anulat/);
+    await expect(entry7).not.toContainText("salvat");
 
     // A press of this account left waiting under another race on this phone: named above the box, with a link to that race's page.
     const [volunteer] = await query<{ id: string }>(`SELECT id FROM staff_users WHERE email = 'dev-contributor@dev.test'`, []);
@@ -210,6 +216,33 @@ test.describe("§NNN «Cronometrare»", () => {
     await expect(elsewhere).toContainText(`1 apăsare așteaptă la Crosul ${tag}: se trimite doar de pe pagina lui.`);
     await expect(elsewhere.getByRole("link")).toHaveAttribute("href", `?eventId=${elsewhereId}`);
 
+    await noHorizontalScroll(page);
+  });
+
+  test("a page drawn before another organizer's «Start» says that gun at the clock's next answer, and its own «Start» moves nothing", async ({ page }) => {
+    const tag = `${test.info().project.name}-gun-${Date.now().toString(36)}`;
+    const eventId = await seedRace(tag);
+    await signIn(page, "Dev Moderator");
+    await page.goto(`/ro/admin/checkin/cronometrare?eventId=${eventId}`);
+    await hydrated(page);
+    const line = page.getByTestId("race-gun-line");
+    await expect(line).toContainText("Până la «Start», sosirile se numără de la el.");
+    // Another organizer gives the start on their own phone — written here as their press writes it: the setup, not the subject.
+    const [other] = await query<{ id: string }>(`INSERT INTO staff_users (email, display_name, role) VALUES ($1, $2, 'MODERATOR') RETURNING id`, [`timing-other-${tag}@test.invalid`, `Alt Organizator ${tag}`]);
+    await query(`UPDATE events SET race_gun_at = now() - interval '2 seconds', race_gun_by_staff_user_id = $2 WHERE id = $1`, [eventId, other.id]);
+    // The clock's next answer — asked when the phone finds its signal again — brings it: the sentence is that gun's, with who gave it.
+    await page.evaluate(() => window.dispatchEvent(new Event("online")));
+    await expect(line).toContainText(new RegExp(`Startul: \\d\\d:\\d\\d:\\d\\d · apăsat de Alt Organizator ${tag}`), { timeout: 15_000 });
+    await expect(line).not.toContainText("Până la «Start»");
+    // This page's button still says «Start»: pressed, it moves nothing, and the page, drawn again, says who gave the start and when.
+    await page.getByTestId("race-gun-start").click();
+    await expect(page.getByTestId("timing-banner")).toContainText(new RegExp(`Startul a fost dat deja de Alt Organizator ${tag} la \\d\\d:\\d\\d:\\d\\d: apăsarea ta nu l-a mutat\\.`), { timeout: 15_000 });
+    const [gun] = await query<{ by: string }>(`SELECT race_gun_by_staff_user_id AS by FROM events WHERE id = $1`, [eventId]);
+    expect(gun.by).toBe(other.id);
+    const starts = await query<{ count: string }>(`SELECT count(*) FROM audit_logs WHERE entity_id = $1 AND action = 'event.race_gun_set'`, [eventId]);
+    expect(Number(starts[0].count)).toBe(0);
+    // Drawn again under the gun as it stands, the button is «Mută startul acum».
+    await expect(page.getByTestId("race-gun-start")).toContainText("Mută startul acum");
     await noHorizontalScroll(page);
   });
 });

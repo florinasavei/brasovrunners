@@ -12,7 +12,8 @@ import { createRace, person, registerRunner, resetNoticeCounter } from "../../he
  * the server's clock, the same press sent again — its id — as saved, «sign in again» for a session that ended or is another account's
  * than the press's (the entry waits on the phone), `failed` for a press the server could not record, and a refusal — never the page —
  * for a member; the clock's own question; the plain forms come back to the page with the outcome in the address, numbers and codes
- * only; «Start» is whoever enters results', and the organizer's own «Start» heard again within ten seconds changes nothing.
+ * only; «Start» is whoever enters results', the organizer's own «Start» heard again within ten seconds changes nothing, and a «Start»
+ * whose page saw another gun moves nothing; the clock's answer says who pressed «Start» and whether a «Sosit» is stored.
  * The session's door is the real one's shape: no session is UNAUTHENTICATED, a capability not held is FORBIDDEN. The actions read
  * the real clock, so the race started an hour ago.
  */
@@ -192,6 +193,31 @@ describe("§NNN the island's press", () => {
     expect(lineGunAt(drawn, { gunAtMs: answer.gunAtMs!, serverMs: answer.clock.answeredAtMs })).toBe(row.raceGunAt!.getTime());
   });
 
+  it("says with the gun whether «Start» was pressed and by whom, and whether a «Sosit» is stored — on any phone (§NNN)", async () => {
+    const { lineGun } = await import("@/modules/results/domain/finish-line");
+    expect(await readFinishClockAction({ eventId: raceId })).toMatchObject({ kind: "clock", gunAtMs: gun.getTime(), gunPressed: false, gunByName: null, gunFixed: false });
+    // The volunteer's page, drawn before the gun: the plan, and nobody finished.
+    const { readFinishLine } = await import("@/modules/results/results");
+    const drawnAt = new Date();
+    const view = await readFinishLine(db, staff.CONTRIBUTOR!, raceId, drawnAt, 20);
+    const drawn = { serverNowMs: drawnAt.getTime(), gunAtMs: view.gun.at.getTime(), gunPressed: view.gun.pressed, gunByName: view.gun.byName, finished: view.finished };
+    expect(lineGun(drawn, null)).toEqual({ atMs: gun.getTime(), pressed: false, byName: null, fixed: false });
+    // The Organizer presses «Start» on their phone; another volunteer records the first finisher on theirs.
+    state.actor = staff.MODERATOR;
+    await post(setRaceGunAction, form({ intent: "start", seenGunAtMs: "", claimedAtMs: String(Date.now() - 5_000) }));
+    const [row] = await db.select({ raceGunAt: events.raceGunAt }).from(events).where(eq(events.id, raceId));
+    const pressedAnswer = await readFinishClockAction({ eventId: raceId });
+    expect(pressedAnswer).toMatchObject({ gunAtMs: row.raceGunAt!.getTime(), gunPressed: true, gunByName: "Oana Organizator", gunFixed: false });
+    await recordFinishPressAction({ eventId: raceId, staffId: staff.MODERATOR!.id, bibNumber: 101 });
+    // This volunteer's page recorded nobody, yet its clock's next answer says the gun is fixed: the half-minute question stops.
+    state.actor = staff.CONTRIBUTOR;
+    const answer = await readFinishClockAction({ eventId: raceId });
+    if (answer.kind !== "clock" || answer.gunAtMs === null) throw new Error("no clock");
+    expect(answer).toMatchObject({ gunPressed: true, gunByName: "Oana Organizator", gunFixed: true });
+    const heard = { gunAtMs: answer.gunAtMs, serverMs: answer.clock.answeredAtMs, pressed: answer.gunPressed, byName: answer.gunByName, fixed: answer.gunFixed };
+    expect(lineGun(drawn, heard)).toEqual({ atMs: row.raceGunAt!.getTime(), pressed: true, byName: "Oana Organizator", fixed: true });
+  });
+
   it("undoes the viewer's own press and refuses another's, the page's state with each answer", async () => {
     await recordFinishPressAction({ eventId: raceId, bibNumber: 101 });
     const [row] = await stored();
@@ -254,5 +280,21 @@ describe("§NNN «Start»", () => {
     await post(recordFinishFormAction, form({ bib: "101" }));
     state.actor = staff.ADMIN;
     expect(await post(setRaceGunAction, form({ intent: "start" }))).toBe(page("refused=RACE_GUN_FIXED"));
+  });
+
+  it("moves only the gun its page saw: a second organizer's «Start» from a page drawn before the first comes back refused (§NNN)", async () => {
+    state.actor = staff.MODERATOR;
+    const tap = Date.now() - 1000;
+    expect(await post(setRaceGunAction, form({ intent: "start", seenGunAtMs: "", claimedAtMs: String(tap) }))).toBe(page("gun=set"));
+    // The Administrator's page, drawn before it, still said «Start»: the press moves nothing and the page, drawn again, says who and when.
+    state.actor = staff.ADMIN;
+    expect(await post(setRaceGunAction, form({ intent: "start", seenGunAtMs: "", claimedAtMs: String(Date.now()) }))).toBe(page("refused=RACE_GUN_CHANGED"));
+    expect(await gunOfRace()).toEqual({ at: new Date(tap), by: staff.MODERATOR!.id });
+    // A forged gun is no gun the page saw: refused too.
+    expect(await post(setRaceGunAction, form({ intent: "start", seenGunAtMs: "soon" }))).toBe(page("refused=RACE_GUN_CHANGED"));
+    // From the page drawn again — «Mută startul acum» under the gun as it stands — it moves.
+    const moved = Date.now() - 500;
+    expect(await post(setRaceGunAction, form({ intent: "start", seenGunAtMs: String(tap), claimedAtMs: String(moved) }))).toBe(page("gun=set"));
+    expect(await gunOfRace()).toEqual({ at: new Date(moved), by: staff.ADMIN!.id });
   });
 });

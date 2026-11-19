@@ -1224,14 +1224,19 @@ export async function undoFinish<T extends Record<string, unknown>>(db: Database
  * the first, moved the gun by the gap and shortened every runner's time): a «Start» of the organizer whose «Start» the gun stands at,
  * heard at most ten seconds after theirs (`domain/finish-line.ts#raceGunRepeats`, read from the gun's own audit rows), is answered with
  * the gun as it stands (`repeated`) and writes nothing — the page's button is busy while its press is on its way, too
- * (`ui/RaceGunPress.tsx`). One audit row a change — `event.race_gun_set` with `{ at, previous }`, `event.race_gun_cleared` with
- * `{ previous }`, the instants alone, never a name — and no email. The public cache is not told: nothing public reads the gun. The
- * event's `version` and its «last saved» are untouched — the editor's open form is not refused for it.
+ * (`ui/RaceGunPress.tsx`). **A «Start» moves only the gun its page saw** (the integration's review: with two organizers at the start
+ * line, the one who pressed seconds later — their page still saying «Start» — moved the first one's gun and shortened every runner's
+ * time): the press says the gun its page was drawn with (`seenGunAtMs`: null for none, else its instant), and one whose page saw
+ * another than the gun stored — given, moved or taken off since by another press — is refused (`RACE_GUN_CHANGED`), nothing written,
+ * the page drawn again saying who gave the start and when; only a «Mută startul acum» from a page that saw the gun as it stands moves
+ * it. A caller that says nothing (`undefined`) is not asked. One audit row a change — `event.race_gun_set` with `{ at, previous }`,
+ * `event.race_gun_cleared` with `{ previous }`, the instants alone, never a name — and no email. The public cache is not told: nothing
+ * public reads the gun. The event's `version` and its «last saved» are untouched — the editor's open form is not refused for it.
  */
 export async function setRaceGun<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Actor,
-  request: { eventId: string; clear: boolean; claimedAtMs?: number | null },
+  request: { eventId: string; clear: boolean; claimedAtMs?: number | null; seenGunAtMs?: number | null },
   now: Date,
 ): Promise<{ changed: boolean; gunAt: Date | null; repeated?: true }> {
   assertMayEnter(actor);
@@ -1248,6 +1253,11 @@ export async function setRaceGun<T extends Record<string, unknown>>(
         .orderBy(desc(auditLogs.createdAt))
         .limit(1);
       if (raceGunRepeats(last, actor.id, now.getTime())) return { changed: false, gunAt: event.raceGunAt, repeated: true };
+    }
+    // The page saw another gun than the one stored: another organizer gave it, moved it or took it off since — that page's «Start» is
+    // a press about a gun that is no more, and moves nothing.
+    if (!request.clear && request.seenGunAtMs !== undefined && (event.raceGunAt?.getTime() ?? null) !== request.seenGunAtMs) {
+      throw new DomainError("RACE_GUN_CHANGED", "the start was given, moved or taken off since the page was drawn");
     }
     if (!raceGunWindowOpen(plannedGunOf(event).getTime(), now.getTime())) throw new DomainError("RACE_GUN_WINDOW", "the gun is pressed from three hours before the planned start to six hours after");
     const [finished] = await tx
@@ -1270,17 +1280,33 @@ export async function setRaceGun<T extends Record<string, unknown>>(
   });
 }
 
+/** The gun as the clock's question reads it: the instant counted from, whether «Start» was pressed and by whom, and whether a finisher fixed it. */
+export type FinishGunReading = { at: Date; pressed: boolean; byName: string | null; fixed: boolean };
+
 /**
  * The gun the finish line counts from (`gunOf`: «Start» as pressed, else the plan), for the island's clock question (§NNN): «Start» is
  * pressed on the organizer's phone, so a volunteer's page drawn before it learns of it here — as it wakes, when it is shown again and,
- * while no finisher is stored, every half minute. Whoever records finishes (`canRecordFinishes`); one indexed read of the event's row
- * (its primary key), nothing written; null for an id that is no event.
+ * while no finisher is stored, every half minute — with who pressed it, for the line to say the gun it counts from, and whether a
+ * «Sosit» is stored (`fixed`, as `setRaceGun`'s `RACE_GUN_FIXED` reads it), so a phone that records nobody stops asking from the first
+ * finisher anybody records. Whoever records finishes (`canRecordFinishes`); one query — the event's row by its primary key, its
+ * presser's name and an `EXISTS` on the race's results by the event's index —, nothing written; null for an id that is no event.
  */
-export async function readFinishGun<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, eventId: string): Promise<Date | null> {
+export async function readFinishGun<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, eventId: string): Promise<FinishGunReading | null> {
   assertMayRecord(actor);
   if (!isUuid(eventId)) return null;
-  const [row] = await db.select({ startsAt: events.startsAt, raceStartsAt: events.raceStartsAt, raceGunAt: events.raceGunAt }).from(events).where(eq(events.id, eventId)).limit(1);
-  return row ? gunOf(row) : null;
+  const [row] = await db
+    .select({
+      startsAt: events.startsAt,
+      raceStartsAt: events.raceStartsAt,
+      raceGunAt: events.raceGunAt,
+      byName: staffUsers.displayName,
+      fixed: sql<boolean>`exists (select 1 from ${eventResults} where ${eventResults.eventId} = ${events.id} and ${eventResults.status} = 'FINISHED')`,
+    })
+    .from(events)
+    .leftJoin(staffUsers, eq(staffUsers.id, events.raceGunByStaffUserId))
+    .where(eq(events.id, eventId))
+    .limit(1);
+  return row ? { at: gunOf(row), pressed: row.raceGunAt !== null, byName: row.raceGunAt === null ? null : (row.byName ?? null), fixed: row.fixed === true } : null;
 }
 
 /** «Start» as the page says it: the gun counted from, whether it was pressed and by whom, the plan, and whether a finisher fixed it. */

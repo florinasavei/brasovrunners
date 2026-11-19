@@ -2588,7 +2588,8 @@ enter them; **only the Administrator and the Superadministrator make them public
      cursei» in «Când și unde», else the event's start. It shows from three hours before the planned start to six after; pressed early
      or late, press «Mută startul acum» at the right moment — more than ten seconds after your first press: one within ten seconds is
      taken for the same press, sent twice — or «Anulează startul» (it asks) — both only until the first finisher, after which the start
-     is fixed and a correction is «Clasament»'s.
+     is fixed and a correction is «Clasament»'s. If another organizer gave the start first, your page's «Start» moves nothing: the page
+     says who gave it and when, and offers «Mută startul acum» only from then on.
    - **The elites first:** a big button per elite — a registration marked «Elită» with a race number, and a line of the elite list with
      a number — the bib's label large and the full name under it; press it as the elite crosses. A line with no number is drawn
      disabled: give it a number on the elite list (the bib still prints none). An elite already in shows «✓» and the time.
@@ -2720,7 +2721,7 @@ An agent never approves either text.
    emailed. On «Gestionează înscrierea» (the link in every email) a confirmed runner with a number has a «Tombola» card: the rules, the
    tick, «Particip la tombolă», and once in, «Nu mai particip». At the desk, every volunteer sees «Tombolă: participă / nu participă» under
    each person the search finds (and on a scanned person's view) and signs them up with «Înscrie la tombolă», having heard the person
-   accept the rules (or read them a paper copy). A runner turned volunteer, or back, keeps their sign-up. A line
+   accept the rules (or read them a paper copy) — never a person the organizers took out: putting them back is the organizers' own tick. A runner turned volunteer, or back, keeps their sign-up. A line
    of the race's elite list has no number and no link: the organizers sign it up on the «Tombolă» tab.
 5. **On race day:** «Ziua cursei» → **«Tombolă»** (the Organizer and the Administrators): everybody of the three groups with «Participă: Da»
    or «Nu» and why, how and when each signed up, «Prezent», the counts, the filters «Participă», «Nu participă», «Doar prezenții», the

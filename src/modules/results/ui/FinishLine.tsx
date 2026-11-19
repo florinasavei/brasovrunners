@@ -30,7 +30,8 @@ import {
   keepTime,
   keptAge,
   keptOf,
-  lineGunAt,
+  lineGun,
+  markUndone,
   nextRetryAt,
   nextToSend,
   pressEntry,
@@ -65,7 +66,9 @@ import { measureServerClock, seedServerClock, serverClockNow } from "./server-cl
  * - **The gun** comes with the clock's every answer (§NNN): «Start» is pressed on the organizer's phone, so a page drawn before it —
  *   every volunteer's at the line — counts from it at the next answer; while no finisher is stored the clock is asked every half
  *   minute too (`FINISH_GUN_ASK_MS`), and the newer of that gun and the last press's answer is the one the line counts from
- *   (`lineGunAt`).
+ *   (`lineGun`). The sentence above the clock is that gun's — «Startul: … · apăsat de …», or the plan while nobody pressed it —, never
+ *   the one the page was drawn with; and the clock's answer says whether a «Sosit» is stored on any phone, which ends the half-minute
+ *   question as this page's own first finisher does.
  * - **The queue**: every press is a line under the box at once («se salvează…») and is sent through the Server Action in the order
  *   pressed, with its own id; an unsent one waits in this phone's storage for this event (every read and write in a `try`: without
  *   storage the page works, it only forgets on a reload), is retried by itself, and a reload sends what is left. A second tab of the
@@ -79,7 +82,8 @@ import { measureServerClock, seedServerClock, serverClockNow } from "./server-cl
  *   elite's button waits while its press does, so a double tap is one press. A site updated under the page asks for a reload, the
  *   presses waiting.
  * - **«Ultimii sosiți»**, refreshed from every answer: who entered each, and «Anulează» on one's own for ten minutes — or, the number
- *   pressed again since, the line that says «Clasament» corrects it.
+ *   pressed again since, the line that says «Clasament» corrects it. Undone, the phone's own line of the press says «anulat»
+ *   (`markUndone`), never «salvat» for a runner whose result is gone.
  *
  * Plain data crosses the boundary — strings, numbers, booleans and the Server Actions — never an element (`AGENTS.md` §14.1); the
  * glyphs are named (`GlyphButton`).
@@ -87,6 +91,10 @@ import { measureServerClock, seedServerClock, serverClockNow } from "./server-cl
 
 /** The words of the island, in the page's language: templates the island fills itself (`{time}`, `{bib}`…). */
 export type FinishLineWords = {
+  /** The gun's sentence once «Start» was pressed: «Startul: {time} · apăsat de {by}»… */
+  gunPressed: string;
+  /** …and, while nobody pressed it, the plan's, whole: «Startul planificat: … Până la «Start», sosirile se numără de la el.». */
+  gunPlanned: string;
   clock: string;
   notStarted: string;
   elitesTitle: string;
@@ -154,6 +162,8 @@ type Props = {
   /** The event's title, kept with its line on the phone, so another event's page can say where presses wait; null for none. */
   eventTitle: string | null;
   uiLocale: string;
+  /** The event's time zone, the gun's hour said in it — as the page says it. */
+  timeZone: string;
   /** The viewer's staff account: the presses this page sends are its own; another account's, left on the phone, are only shown. */
   staffId: string;
   /** The page's state as the server drew it: the gun, «Ultimii sosiți», the elites, the counts and the server's clock. */
@@ -199,7 +209,7 @@ const BIG_SX = { minHeight: 56, fontSize: "1.125rem" } as const;
 /** Nothing to watch: `useSyncExternalStore`'s way of saying «true in the browser, false on the server and while hydrating». */
 const NOTHING_TO_WATCH = () => () => {};
 
-export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, initial, words, record, undo, clock, recordForm, undoForm }: Props) {
+export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, staffId, initial, words, record, undo, clock, recordForm, undoForm }: Props) {
   const storageKey = finishStorageKey(eventId);
   // The presses and the kept times: this phone's, behind the store the storage is read into (`finish-line-store.ts`) — empty on the
   // server and while hydrating, so the markup is the same with storage or without.
@@ -219,7 +229,8 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
   const [undoLines, setUndoLines] = useState<Record<string, string>>({});
   // The server's clock, re-read every second for the clock and for «Anulează»'s ten minutes; the server's own `now` until the first tick.
   const [nowMs, setNowMs] = useState(initial.serverNowMs);
-  // The gun as the clock's question last heard it (§NNN): «Start» pressed on another phone reaches this page by it.
+  // The gun as the clock's question last heard it (§NNN): «Start» pressed on another phone reaches this page by it, with who pressed
+  // it and whether a finisher is stored.
   const [heardGun, setHeardGun] = useState<HeardGun | null>(null);
   // The kept moments dropped for being older than ten minutes: their times, said on the line for paper until the volunteer clears it.
   const [staleTimes, setStaleTimes] = useState<number[]>([]);
@@ -260,7 +271,8 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
           measureServerClock({ ...answer.clock, sentAtMs, backAtMs: wallNow() });
           const gunAtMs = answer.gunAtMs;
           const serverMs = answer.clock.answeredAtMs;
-          if (gunAtMs !== null) setHeardGun((current) => (current && current.serverMs > serverMs ? current : { gunAtMs, serverMs }));
+          const heard: HeardGun | null = gunAtMs === null ? null : { gunAtMs, serverMs, pressed: answer.gunPressed, byName: answer.gunByName, fixed: answer.gunFixed };
+          if (heard) setHeardGun((current) => (current && current.serverMs > serverMs ? current : heard));
         } else if (answer.kind === "session") {
           sessionEnded.current = true;
           setSession(true);
@@ -386,9 +398,13 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // The gun the line counts from and says: the newer of the last state the server answered with and the clock's question (§NNN).
+  const gun = lineGun(state, heardGun);
+
   // Before the first finisher the gun may still be pressed, moved or taken off — on the organizer's phone: the clock, which carries it,
-  // is asked every half minute while the page is shown. From the first finisher the gun is fixed, and nothing is asked on a timer.
-  const noFinisherYet = state.finished === 0;
+  // is asked every half minute while the page is shown. From the first finisher the gun is fixed, and nothing is asked on a timer —
+  // the first finisher of any phone: the clock's answer says one is stored, so a phone that records nobody stops asking too.
+  const noFinisherYet = !gun.fixed;
   useEffect(() => {
     if (!noFinisherYet) return;
     const timer = setInterval(() => {
@@ -464,6 +480,11 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
     measureServerClock({ ...answer.clock, sentAtMs, backAtMs: wallNow() });
     if (answer.state) adopt(answer.state);
     const outcome = answer.outcome;
+    // Undone: the line leaves «Ultimii sosiți» with the state, so the phone's own line of the press says «anulat» instead of «salvat».
+    if (outcome.kind === "undone") {
+      const undoneBib = outcome.bibNumber;
+      commitEntries((current) => markUndone(current, staffId, undoneBib));
+    }
     setUndoLines((current) => ({
       ...current,
       [line.resultId]: outcome.kind === "undone" ? words.undone : (words.undoRefused[outcome.code] ?? words.undoRefusedOther),
@@ -473,8 +494,9 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
   const time = (ms: number | null) => (ms === null ? "—" : formatResultTime(ms));
   const clockAt = (ms: number) => formatTimeWithSeconds(new Date(ms), { locale: uiLocale, timeZone: CLUB_TIME_ZONE });
   const who = (bibNumber: number, label: string | null) => (label ? `${label} (#${bibNumber})` : `#${bibNumber}`);
-  // The gun the line counts from: the newer of the last state the server answered with and the clock's question (§NNN).
-  const gunAtMs = lineGunAt(state, heardGun);
+  const gunAtMs = gun.atMs;
+  // The gun's sentence, of the gun the clock counts from: pressed — the hour in the event's zone, as the page says it — or the plan.
+  const gunLine = gun.pressed ? fill(words.gunPressed, { time: formatTimeWithSeconds(new Date(gun.atMs), { locale: uiLocale, timeZone }), by: gun.byName ?? words.accountGone }) : words.gunPlanned;
   const reading = clockReading(nowMs, gunAtMs);
   const waiting = waitingCount(entries, staffId);
   // The numbers whose press of the viewer's still waits on this phone: an elite's button waits with it, so a double tap is one press.
@@ -487,6 +509,8 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
     const outcome = entry.outcome;
     if (!outcome) return entry.staffId === staffId ? `${head} · ${pressed} · ${words.waiting}` : `${head}: ${fill(words.otherAccount, { time: pressed })}`;
     if (outcome.kind === "recorded") {
+      // Undone since by this phone's «Anulează» (§NNN): the number, its time and «anulat» — no «✓», no place, no «salvat».
+      if (entry.undone) return [head, time(outcome.gunTimeMs), words.undone].join(" · ");
       const place = outcome.outOfRanking ? words.outOfRanking : outcome.positionOverall === null ? null : fill(words.place, { position: String(outcome.positionOverall) });
       return [`✓ ${head}${outcome.name ? ` ${outcome.name}` : ""}`, time(outcome.gunTimeMs), place, words.saved].filter(Boolean).join(" · ");
     }
@@ -552,6 +576,10 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
 
   return (
     <Stack spacing={2} data-testid="finish-line">
+      {/* The gun the clock counts from, in words — «Start» pressed on another phone changes it at the clock's next answer (§NNN). */}
+      <Typography variant="body2" sx={{ fontWeight: 600 }} data-testid="race-gun-line">
+        {gunLine}
+      </Typography>
       <Typography variant="h4" component="p" sx={{ fontVariantNumeric: "tabular-nums" }} suppressHydrationWarning data-testid="finish-clock">
         {reading === null ? words.notStarted : fill(words.clock, { time: formatResultTime(reading) })}
       </Typography>
@@ -713,8 +741,8 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, staffId, ini
                   component="li"
                   variant="body2"
                   key={entry.id}
-                  color={kind === "waiting" ? "text.secondary" : kind === "saved" ? "success.main" : kind === "duplicate" ? "warning.main" : "error.main"}
-                  sx={{ fontWeight: kind === "waiting" || kind === "saved" ? 400 : 600, overflowWrap: "anywhere" }}
+                  color={kind === "waiting" || kind === "undone" ? "text.secondary" : kind === "saved" ? "success.main" : kind === "duplicate" ? "warning.main" : "error.main"}
+                  sx={{ fontWeight: kind === "waiting" || kind === "saved" || kind === "undone" ? 400 : 600, overflowWrap: "anywhere" }}
                   data-testid="finish-entry"
                   data-state={kind}
                   data-bib={entry.bibNumber}

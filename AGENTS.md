@@ -1642,6 +1642,9 @@ themselves are §808's: one row per race number, ranked from the live answers, p
   seconds ahead of its clock), else the server's own (`raceGunMoment`). A press is never doubled into a second «Start»:
   the button is busy while its press is on its way (`ui/RaceGunPress.tsx`), and the organizer's own «Start» heard again
   within ten seconds of theirs is answered with the gun as it stands, nothing written (`raceGunRepeats`, `?gun=repeat`).
+  A «Start» moves only the gun its page saw: the form says it (`seenGunAtMs`, empty for none), and one whose page saw
+  another than the gun stored — another organizer's press since — is refused (`RACE_GUN_CHANGED`), nothing written, the
+  page drawn again saying who gave the start and when.
   Audited `event.race_gun_set` / `event.race_gun_cleared` with the instants alone; no email; no public cache.
 - **The clock.** The islands stamp on the server's clock read through the phone's **wall clock** (`Date.now()`, which
   keeps time while the screen is locked — `performance.now()` does not on most phones) plus an offset measured over a
@@ -1649,11 +1652,12 @@ themselves are §808's: one row per race number, ranked from the live answers, p
   it is shown, comes back from the browser's memory or finds its signal) and every answer, each carrying the server's
   instants at the arrival and at the answer (`domain/finish-line.ts#sampleOfRoundTrip`, `betterSample`;
   `ui/server-clock.ts`, kept on the phone for half a day). The page's own `now` is read after every read and only seeds
-  it. **The clock's question carries the gun** (`results.ts#readFinishGun`, one indexed read of the event's row behind
-  `canRecordFinishes`): «Start» is pressed on the organizer's phone, so a volunteer's page drawn before it learns of it
-  from the next question — asked, besides, every thirty seconds while the page is shown and no finisher is stored
-  (`FINISH_GUN_ASK_MS`), never after —, and the line counts from the newer of that gun and the last press's answer
-  (`lineGunAt`): «De la start», «Cursa nu a pornit încă» and the paper times of waiting lines follow.
+  it. **The clock's question carries the gun** (`results.ts#readFinishGun`, one query on the event's row behind
+  `canRecordFinishes`, with who pressed «Start» and whether a «Sosit» is stored): «Start» is pressed on the organizer's
+  phone, so a volunteer's page drawn before it learns of it from the next question — asked, besides, every thirty seconds
+  while the page is shown and no finisher is stored on any phone (`FINISH_GUN_ASK_MS`, `gunFixed`), never after —, and
+  the line counts from the newer of that gun and the last press's answer (`lineGun`): the gun's sentence above the clock,
+  «De la start», «Cursa nu a pornit încă» and the paper times of waiting lines follow.
 - **A press.** A number — typed, or an elite's button: a registration marked «Elită» with a number, or a line of the
   race's elite list, whose press writes a *typed* row with the line's name and number and nothing else of a person —
   stamped with the moment the island claims (`domain/finish-line.ts#finishStamp`: at least a second, at most the
@@ -3058,11 +3062,11 @@ the organizers ticked the volunteer «Prezent» on the «Voluntari» list (§15.
 the raffle is among who is there, and the club filters by it; a column rather than a condition, so a desk that did not
 check everybody in never empties the file). Beside it, never in place of it, a second file: **«Lista pentru tombolă —
 doar prezenții»** (`?present=1`, named `tombola-prezenti-<day>.csv`) — the same people by the same rules, of whom only
-the runners checked in (at the desk, or by «Am ajuns» from their own link) and the volunteers ticked «Prezent», in the
-same four columns: the organizers' explicit
+the runners checked in (at the desk, or by «Am ajuns» from their own link), the volunteers ticked «Prezent» and the lines
+of the race's elite list ticked «Prezent» on «Ziua cursei» → «Tombolă», in the same four columns: the organizers' explicit
 second download, on the registrations list beside the whole file and, with one event chosen that holds a raffle, on
-the «Voluntari» list's toolbar with it. Never a test registration, anybody without a number, a cancelled person, or
-anybody an organizer took out («Participă la tombolă» unticked, §15.11), and nothing else
+the «Voluntari» list's toolbar with it. Never a test registration, a registration or a volunteer without a number, a cancelled
+person, or anybody an organizer took out («Participă la tombolă» unticked, §15.11), and nothing else
 of a person. Taken by whoever reads the registrations and works the volunteers (the Organizer and the Administrators),
 asserted in the route and the service; recorded as `event.raffle_list_exported` with the counts and which of the
 two files it was (`onlyPresent`), never a name.
@@ -3475,7 +3479,7 @@ desk's list (where a search by name or number, or a typed code, lands; one read 
 scanned person: «Tombolă: participă / nu participă» and why, to every desk role, in both modes — but the organizers' own
 exclusion, «scos de organizatori», only to the Organizer and the Administrators (`canTakeRaffleList`), every other desk role
 reading «nu participă» alone there — and «Înscrie la tombolă» in
-the open sign-up mode, the person having accepted the rules on paper or aloud, coming back where it was pressed. **STAFF** — the organizers' «Înscrie» on
+the open sign-up mode for a person the organizers did not take out (the «Tombolă» tab keeps its own), the person having accepted the rules on paper or aloud, coming back where it was pressed. **STAFF** — the organizers' «Înscrie» on
 a volunteer's page and on the tab, a line of the elite list's only door. Nobody is emailed at any door, at a withdrawal or at
 «Șterge înscrierea», and no public cache is expired: no public page reads a sign-up
 (`tests/unit/volunteers/raffle-entries-never-leave.test.ts`).

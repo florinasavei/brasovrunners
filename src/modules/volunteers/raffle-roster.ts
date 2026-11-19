@@ -373,19 +373,23 @@ export async function raffleReasonsFor<T extends Record<string, unknown>>(
 /** One person's raffle line: the answer, whether the event asks a sign-up and whether they hold one, and whether «Înscrie» may be offered. */
 export type RaffleLine = { reason: RaffleReason; signUpMode: boolean; signedUp: boolean; maySignUp: boolean };
 
-/** The line from what was read — the one place it is decided, for one person and for a page of them. */
+/**
+ * The line from what was read — the one place it is decided, for one person and for a page of them. «Înscrie la tombolă» is offered
+ * only to a person the organizers did not take out (`inRaffle`): a sign-up would leave them «nu participă» while the desk said they
+ * were signed up — the «Tombolă» tab keeps its own offer, where the organizers read why.
+ */
 function raffleLineOf(person: Omit<RafflePerson, "signedUp">, facts: RaffleGateFacts, signedUp: boolean, now: Date): RaffleLine {
   return {
     reason: raffleParticipation({ ...person, signedUp }, facts.settings),
     signUpMode: facts.settings.signUp,
     signedUp,
-    maySignUp: facts.settings.signUp && !signedUp && raffleEligible(person) && raffleSignUpClosedFor(facts, now, person.kind) === null,
+    maySignUp: facts.settings.signUp && !signedUp && raffleEligible(person) && person.inRaffle && raffleSignUpClosedFor(facts, now, person.kind) === null,
   };
 }
 
 /**
  * One person's raffle line, for their page or the desk (§NNN): null for an event that holds no raffle; else the answer, and whether a
- * staff «Înscrie la tombolă» may be offered — the gate open for their group, the person eligible and not in yet.
+ * staff «Înscrie la tombolă» may be offered — the gate open for their group, the person eligible, not taken out and not in yet.
  */
 export async function readRaffleLine<T extends Record<string, unknown>>(db: Database<T>, ref: RafflePersonRef, now: Date): Promise<RaffleLine | null> {
   const person = await readRafflePerson(db, ref);

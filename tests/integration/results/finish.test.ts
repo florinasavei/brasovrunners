@@ -19,14 +19,15 @@ import { createRace, person, RACE_STARTS_AT, registerRunner, resetNoticeCounter 
  * writes the second to the trail, a retry — known by the press's own id, else guessed — is no duplicate and writes nothing, and a
  * decision of «Clasament» — «Descalificat», or a write-off later than the moment pressed — stays; `undoFinish` takes back one's own
  * press at the line, unchanged and not pressed again, for ten minutes; `setRaceGun` is «Start», pressed, moved and taken off until the
- * first finisher, within its window, the organizer's own press sent twice changing nothing; `readFinishLine` is the page's data;
- * `readFinishHistory` is «Istoricul sosirilor» with who wrote each line.
+ * first finisher, within its window, the organizer's own press sent twice changing nothing and a press whose page saw another gun
+ * moving nothing; `readFinishGun` is the clock's question's gun; `readFinishLine` is the page's data; `readFinishHistory` is
+ * «Istoricul sosirilor» with who wrote each line.
  */
 const revalidate = vi.hoisted(() => vi.fn());
 vi.mock("next/cache", () => ({ revalidatePath: () => {}, revalidateTag: () => {}, unstable_cache: (fn: unknown) => fn }));
 vi.mock("@/modules/public-cache/cache", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/modules/public-cache/cache")>()), revalidatePublicContent: revalidate }));
 
-const { FinishError, gunOf, readEventResults, readFinishLine, recordFinish, saveEventResults, setRaceGun, undoFinish } = await import("@/modules/results/results");
+const { FinishError, gunOf, readEventResults, readFinishGun, readFinishLine, recordFinish, saveEventResults, setRaceGun, undoFinish } = await import("@/modules/results/results");
 const { readFinishHistory } = await import("@/modules/results/finish-history");
 
 let db: TestDatabase;
@@ -423,6 +424,42 @@ describe("§NNN «Start»: the gun as pressed", () => {
     await clear(at(1, 25));
     expect(await press(at(1, 27), staff.MODERATOR)).toEqual({ changed: true, gunAt: at(1, 27) });
     expect((await trail()).map((row) => row.action)).toEqual(["event.race_gun_set", "event.race_gun_set", "event.race_gun_set", "event.race_gun_set", "event.race_gun_cleared", "event.race_gun_set"]);
+  });
+
+  it("moves only the gun the page saw: two organizers at the start line, the later «Start» refused, nothing written (§NNN)", async () => {
+    // Both pages drawn before anybody pressed: each one's «Start» says it saw no gun.
+    const start = (now: Date, actor: StaffUser, seenGunAtMs: number | null) => setRaceGun(db, actor, { eventId: raceId, clear: false, claimedAtMs: null, seenGunAtMs }, now);
+    expect(await start(at(0, 1), staff.MODERATOR!, null)).toEqual({ changed: true, gunAt: at(0, 1) });
+    // The Administrator presses seconds later on a page still saying «Start»: refused — every runner's time stays counted from the first.
+    await expect(start(at(0, 4), staff.ADMIN!, null)).rejects.toMatchObject({ code: "RACE_GUN_CHANGED" });
+    expect(await gunAt()).toMatchObject({ at: at(0, 1), by: staff.MODERATOR!.id });
+    // The organizer's own second tap, queued behind the first and saying the same page's «none»: the press sent twice, as before.
+    expect(await start(at(0, 6), staff.MODERATOR!, null)).toEqual({ changed: false, gunAt: at(0, 1), repeated: true });
+    // The Administrator's page drawn again saw the gun as it stands: its «Mută startul acum» moves it.
+    expect(await start(at(0, 30), staff.ADMIN!, at(0, 1).getTime())).toEqual({ changed: true, gunAt: at(0, 30) });
+    // A «Mută startul acum» under the gun of before, and one under a gun taken off since, move nothing either.
+    await expect(start(at(0, 50), staff.MODERATOR!, at(0, 1).getTime())).rejects.toMatchObject({ code: "RACE_GUN_CHANGED" });
+    await clear(at(0, 55), staff.ADMIN!);
+    await expect(start(at(1, 10), staff.MODERATOR!, at(0, 30).getTime())).rejects.toMatchObject({ code: "RACE_GUN_CHANGED" });
+    expect(await gunAt()).toMatchObject({ at: null, by: null });
+    // Each refusal wrote nothing: the trail holds the two «Start» and the one «Anulează startul».
+    expect((await trail()).map((row) => row.action)).toEqual(["event.race_gun_set", "event.race_gun_set", "event.race_gun_cleared"]);
+  });
+
+  it("reads the gun for the clock's question with who pressed it and whether a «Sosit» fixed it (§NNN)", async () => {
+    expect(await readFinishGun(db, staff.CONTRIBUTOR!, raceId)).toEqual({ at: GUN, pressed: false, byName: null, fixed: false });
+    await press(at(0, 2));
+    expect(await readFinishGun(db, staff.CONTRIBUTOR!, raceId)).toEqual({ at: at(0, 2), pressed: true, byName: "Oana Organizator", fixed: false });
+    // An «Abandon» typed on «Clasament» fixes nothing; the first «Sosit» — whoever recorded it — does.
+    await db.insert(eventResults).values({ eventId: raceId, bibNumber: 900, displayName: "Ion Abandon", status: "DNF", updatedAt: at(10), createdAt: at(10) });
+    expect((await readFinishGun(db, staff.CONTRIBUTOR!, raceId))?.fixed).toBe(false);
+    await finish(101, at(40), staff.COPYWRITER!);
+    expect(await readFinishGun(db, staff.CONTRIBUTOR!, raceId)).toEqual({ at: at(0, 2), pressed: true, byName: "Oana Organizator", fixed: true });
+    // An account gone since: the gun stands, nobody named.
+    await db.update(events).set({ raceGunByStaffUserId: null }).where(eq(events.id, raceId));
+    expect((await readFinishGun(db, staff.CONTRIBUTOR!, raceId))?.byName).toBeNull();
+    expect(await readFinishGun(db, staff.CONTRIBUTOR!, "0b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b")).toBeNull();
+    await expect(readFinishGun(db, staff.MEMBER!, raceId)).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
   it("takes the gun off, back to the planned start, and finds nothing to take off twice", async () => {

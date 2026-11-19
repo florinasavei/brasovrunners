@@ -985,8 +985,9 @@ gun and a clock since it.
    (`events.race_gun_at`). Without it they count from the planned start (`race_starts_at`, else the event's start). It is
    offered from three hours before the planned start to six after; «Mută startul acum» and «Anulează startul» move or
    remove it until the first finisher, after which it is fixed — a second press of one's own within ten seconds is taken
-   for the same press, sent twice, and changes nothing. The public page, the emails and the checkpoints keep the planned
-   times.
+   for the same press, sent twice, and changes nothing; a «Start» from a page drawn before another organizer's press moves
+   nothing either, and the page then says who gave the start and when. The public page, the emails and the checkpoints keep
+   the planned times.
 2. **Each finisher.** An elite: press their button at the top (the bib's label large, the name under it). Anyone else:
    type the bib's number and press **«Sosit»** (or Enter) — the box empties at once. A bunch: «Prinde timpul» once per
    runner, then the numbers in order; each takes the oldest caught moment. Every press is stamped with its own moment on

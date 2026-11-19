@@ -99,6 +99,9 @@ export type DomainErrorCode =
   | "RACE_GUN_WINDOW"
   // «Start» moved or taken off once a runner is «Sosit» (§NNN): the gun is fixed; a correction of the times is «Clasament»'s.
   | "RACE_GUN_FIXED"
+  // «Start» from a page that saw another gun than the one stored (§NNN): another organizer gave it, moved it or took it off since;
+  // the page drawn again says who and when, and only a «Mută startul acum» from a page that saw the gun as it stands moves it.
+  | "RACE_GUN_CHANGED"
   // «Adaugă un lucru» on an event whose «Lucruri de adus» already holds the most a list may (§979): the sentence says how many.
   | "RACE_DAY_ITEMS_FULL"
   // A member tier deleted while members hold it (§811): give them another level first. The action adds how many.

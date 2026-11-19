@@ -13,7 +13,7 @@ import {
   isInstant,
   RECENT_FINISHERS,
 } from "@/modules/results/domain/finish-line";
-import { FinishError, type FinishLineView, readFinishGun, readFinishLine, recordFinish, setRaceGun, undoFinish } from "@/modules/results/results";
+import { FinishError, type FinishGunReading, type FinishLineView, readFinishGun, readFinishLine, recordFinish, setRaceGun, undoFinish } from "@/modules/results/results";
 import { canEnterResults, canRecordFinishes } from "@/modules/staff-identity/domain/roles";
 import type { StaffAccount } from "@/modules/staff-identity/repository";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
@@ -36,6 +36,8 @@ function stateOf(view: FinishLineView): FinishLineState {
   return {
     serverNowMs: Date.now(),
     gunAtMs: view.gun.at.getTime(),
+    gunPressed: view.gun.pressed,
+    gunByName: view.gun.byName,
     recent: view.recent,
     elites: view.elites,
     finished: view.finished,
@@ -150,9 +152,11 @@ export async function undoFinishPressAction(input: unknown): Promise<FinishUndoA
 /**
  * The server's clock, which the island asks as the page wakes, every time it is shown again and, while no finisher is stored, every
  * half minute — so a press is stamped on it (`domain/finish-line.ts#sampleOfRoundTrip`): when the request arrived and when it was
- * answered. **With the gun** (§NNN, `readFinishGun`: one indexed read of the event's row, behind the same door): «Start» is pressed on
- * the organizer's phone, and a volunteer's page drawn before it counts from it at the next answer. Nothing written. A session that
- * ended answers `session`, so the page says so before the first press; a gun that could not be read is null — the page keeps its own.
+ * answered. **With the gun** (§NNN, `readFinishGun`: one query on the event's row, behind the same door): «Start» is pressed on the
+ * organizer's phone, and a volunteer's page drawn before it counts from it — and says it, with who pressed it — at the next answer;
+ * and whether a «Sosit» is stored (`gunFixed`), so the island stops asking on a timer from the first finisher anybody records.
+ * Nothing written. A session that ended answers `session`, so the page says so before the first press; a gun that could not be read
+ * is null — the page keeps its own.
  */
 export async function readFinishClockAction(input?: unknown): Promise<FinishClockAnswer> {
   const receivedAtMs = Date.now();
@@ -161,16 +165,23 @@ export async function readFinishClockAction(input?: unknown): Promise<FinishCloc
   const door = await doorOf(canRecordFinishes);
   if ("session" in door) return { kind: "session" };
   if ("refused" in door) return { kind: "refused" };
-  let gunAtMs: number | null = null;
+  let gun: FinishGunReading | null = null;
   if (eventId) {
     try {
-      gunAtMs = (await readFinishGun(getDb(), door.actor, eventId))?.getTime() ?? null;
+      gun = await readFinishGun(getDb(), door.actor, eventId);
     } catch (error) {
       // The clock is answered all the same: the page counts from the gun it has until the next question reads one.
       if (!isDomainError(error)) console.error("[timing] the gun could not be read for the clock", error);
     }
   }
-  return { kind: "clock", clock: { receivedAtMs, answeredAtMs: Date.now() }, gunAtMs };
+  return {
+    kind: "clock",
+    clock: { receivedAtMs, answeredAtMs: Date.now() },
+    gunAtMs: gun?.at.getTime() ?? null,
+    gunPressed: gun?.pressed === true,
+    gunByName: gun?.byName ?? null,
+    gunFixed: gun?.fixed === true,
+  };
 }
 
 /** Back to the page for its event, with the outcome in the address: numbers and codes only, never a name. */
@@ -225,10 +236,23 @@ export async function undoFinishFormAction(form: FormData): Promise<void> {
 }
 
 /**
+ * The gun a «Start» form says its page saw (`seenGunAtMs`, §NNN): empty for none — the page said «Start» —, else the instant its
+ * «Mută startul acum» was drawn under; anything else is taken for none, so a forged value moves no gun that stands. A form without
+ * the field (none is drawn so) is not asked.
+ */
+function seenGunOf(form: FormData): number | null | undefined {
+  if (!form.has("seenGunAtMs")) return undefined;
+  const seen = Number(field(form, "seenGunAtMs"));
+  return field(form, "seenGunAtMs") !== "" && isInstant(seen) ? seen : null;
+}
+
+/**
  * «Start», «Mută startul acum» and «Anulează startul» (`intent=start|clear`): whoever enters results, at the door and in the service.
  * The moment is the tap the island wrote into the form (`claimedAtMs`), which the service keeps when it hears it at most ten seconds
- * later (`raceGunMoment`). Back to the page with `gun=set|cleared|unchanged`, `gun=repeat` for the organizer's own «Start» heard again
- * within ten seconds (the gun as it stands, nothing written), or the refusal's code (`RACE_GUN_FIXED`, `RACE_GUN_WINDOW`, …).
+ * later (`raceGunMoment`); the gun the page saw (`seenGunAtMs`) is asked against the one stored, so a page drawn before another
+ * organizer's «Start» moves nothing. Back to the page with `gun=set|cleared|unchanged`, `gun=repeat` for the organizer's own «Start»
+ * heard again within ten seconds (the gun as it stands, nothing written), or the refusal's code (`RACE_GUN_CHANGED` — the page, drawn
+ * again, says who gave the start and when —, `RACE_GUN_FIXED`, `RACE_GUN_WINDOW`, …).
  */
 export async function setRaceGunAction(form: FormData): Promise<void> {
   const locale = localeOf(form);
@@ -238,7 +262,7 @@ export async function setRaceGunAction(form: FormData): Promise<void> {
   let outcome: Record<string, string>;
   try {
     const actor = await requireStaffCapability(canEnterResults);
-    const result = await setRaceGun(getDb(), actor, { eventId, clear, claimedAtMs: isInstant(claimed) ? claimed : null }, new Date());
+    const result = await setRaceGun(getDb(), actor, { eventId, clear, claimedAtMs: isInstant(claimed) ? claimed : null, seenGunAtMs: seenGunOf(form) }, new Date());
     outcome = { gun: result.repeated ? "repeat" : !result.changed ? "unchanged" : clear ? "cleared" : "set" };
   } catch (error) {
     if (!isDomainError(error)) throw error;

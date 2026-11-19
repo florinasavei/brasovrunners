@@ -2872,7 +2872,8 @@
       "RAFFLE_RULES_NOT_ACCEPTED": "Bifează întâi că persoana a acceptat Regulamentul tombolei. Nu s-a scris nimic.",
       "RESULT_UNDO_NOT_ALLOWED": "Nu se mai anulează aici: doar sosirea ta, neschimbată, în primele 10 minute. Corectează la «Clasament».",
       "RACE_GUN_WINDOW": "«Start» se apasă de cu 3 ore înainte de startul planificat până la 6 ore după.",
-      "RACE_GUN_FIXED": "Startul e fixat: au sosit deja alergători. Corectează timpii la «Clasament»."
+      "RACE_GUN_FIXED": "Startul e fixat: au sosit deja alergători. Corectează timpii la «Clasament».",
+      "RACE_GUN_CHANGED": "Startul a fost dat, mutat sau anulat între timp de altcineva: apăsarea ta nu a schimbat nimic. Pagina arată acum startul așa cum e."
     },
     "editor": {
       "draftPreview": {
@@ -4169,9 +4170,9 @@
       "deactivateAccountBody": "Contul lui {name} se oprește la furnizor: nu se mai poate autentica nicăieri. Rândul din Echipa rămâne.",
       "revokeTitle": "Retragi accesul?",
       "revokeBody": "{name} nu mai intră în backoffice. Contul de la furnizor rămâne — dezactivează-l separat dacă pleacă din club.",
-      "roleHelp": "Fiecare rol poate ce poate cel de sub el, plus ce scrie aici. Voluntarii văd doar masa de ridicare.",
+      "roleHelp": "Fiecare rol poate ce poate cel de sub el, plus ce scrie aici. Voluntarii văd doar ziua cursei: masa de ridicare și «Cronometrare».",
       "roles": {
-        "CONTRIBUTOR": "masa de ridicare: scanează codurile, marchează prezența, confirmă pe hârtie, dă un loc liber, scrie un număr. Atât.",
+        "CONTRIBUTOR": "masa de ridicare: scanează codurile, marchează prezența, confirmă pe hârtie, dă un loc liber, scrie un număr, înscrie la tombolă; la «Cronometrare» trece sosirile și își anulează apăsarea. Atât.",
         "COPYWRITER": "textele: descrierea, regulamentul, programul și paginile site-ului, în ambele limbi. Fără setări, fără publicare.",
         "MODERATOR": "înscrierile și ziua cursei: citește evenimentele, înscrierile, exportul și numerele, scrie participanților, lucrează la masă, ține galeria. Nu creează, nu setează, nu publică un eveniment.",
         "DEV": "pagina tehnică /devs, ca să depaneze. Nu creează și nu setează evenimente; nu vede datele participanților.",
@@ -13072,7 +13073,9 @@
           "set": "Startul a fost dat: {time}.",
           "cleared": "Startul a fost anulat: sosirile se numără de la startul planificat.",
           "unchanged": "Startul nu era dat: nimic de anulat.",
-          "repeat": "Startul rămâne la {time}: a doua apăsare, în cel mult zece secunde de la prima, nu îl mută."
+          "repeat": "Startul rămâne la {time}: a doua apăsare, în cel mult zece secunde de la prima, nu îl mută.",
+          "changed": "Startul a fost dat deja de {by} la {time}: apăsarea ta nu l-a mutat.",
+          "changedCleared": "Startul a fost anulat între timp: apăsarea ta nu l-a dat. Apasă «Start» exact când se dă startul."
         },
         "refused": {
           "RESULT_BIB_UNKNOWN": "{who}: nicio înscriere confirmată și nicio elită cu numărul acesta. Timpul lui: {time} — notează-l pe hârtie.",
@@ -14143,7 +14146,7 @@
     "rolesIntro": "Fiecare rol poate tot ce poate cel de sub el, plus încă ceva. Linia care contează este între Tehnic și Administrator: de acolo în sus se văd datele participanților.",
     "youAre": "rolul tău",
     "roleSummary": {
-      "CONTRIBUTOR": "masa de ridicare a numerelor, și atât",
+      "CONTRIBUTOR": "masa de ridicare a numerelor și înscrierea la tombolă, plus «Cronometrare»: trece sosirile și își anulează apăsarea; atât",
       "COPYWRITER": "textele oricărui eveniment și ale paginilor; trimite spre aprobare",
       "MODERATOR": "înscrierile și ziua cursei: citește evenimentele, înscrierile, exportul și numerele, scrie participanților, ține galeria; nu modifică un eveniment",
       "DEV": "pagina de configurare; nu modifică evenimente, fără date despre participanți",

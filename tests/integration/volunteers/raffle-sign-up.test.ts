@@ -28,7 +28,7 @@ import {
   withdrawFromRaffleByLink,
 } from "@/modules/volunteers/raffle-entries";
 import { canTakeRaffleList, exportRaffleList, readRaffleRoster } from "@/modules/volunteers/raffle-list";
-import { readRaffleLine, readRaffleManageCards, readRaffleRules, raffleReasonsFor } from "@/modules/volunteers/raffle-roster";
+import { readRaffleDeskLines, readRaffleLine, readRaffleManageCards, readRaffleRules, raffleReasonsFor } from "@/modules/volunteers/raffle-roster";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -432,6 +432,23 @@ describe("§NNN BR-REQ-037-08 the desk (DESK): every desk role, the person havin
     expect((row.rulesFacts as Record<string, string>).raffleGroups).toBe("the registered and confirmed runners with a race number, the race's top athletes and the confirmed volunteers with a volunteer number");
     // The desk's line says it, in words — and «Înscrie» is no longer offered.
     expect(await readRaffleLine(db, { table: "registration", id: jane.id }, NOW)).toEqual({ reason: "in", signUpMode: true, signedUp: true, maySignUp: false });
+  });
+
+  it("offers «Înscrie la tombolă» to nobody the organizers took out — at the desk and on a volunteer's page —, the «Tombolă» tab keeping its own (§NNN)", async () => {
+    const ana = await runner("Ana Popescu", 7, { inRaffle: false });
+    const radu = await runner("Radu Ionescu", 8);
+    const ion = await volunteer("Ion Voluntar", 500, { inRaffle: false });
+    // The scanned person's view and the desk's list: «nu participă», and no «Înscrie» that would answer «e înscrisă» while the row stays out.
+    expect(await readRaffleLine(db, { table: "registration", id: ana.id }, NOW)).toEqual({ reason: "takenOut", signUpMode: true, signedUp: false, maySignUp: false });
+    const desk = await readRaffleDeskLines(db, [{ id: ana.id, eventId }, { id: radu.id, eventId }], NOW);
+    expect(desk.get(ana.id)).toMatchObject({ reason: "takenOut", maySignUp: false });
+    // Somebody nobody took out is offered it as before.
+    expect(desk.get(radu.id)).toMatchObject({ reason: "notSignedUp", maySignUp: true });
+    // A volunteer's page, which the organizers open: no «Înscrie» either.
+    expect(await readRaffleLine(db, { table: "volunteer", id: ion }, NOW)).toMatchObject({ reason: "takenOut", maySignUp: false });
+    // The «Tombolă» tab keeps its offer, the reason «scos de organizatori» beside it.
+    const roster = await readRaffleRoster(db, await staff("MODERATOR"), eventId, NOW);
+    expect(roster?.rows.find((row) => row.ref.id === ana.id)).toMatchObject({ reason: "takenOut", maySignUp: true });
   });
 });
 

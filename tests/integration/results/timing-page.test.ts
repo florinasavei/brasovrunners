@@ -257,6 +257,37 @@ describe("§NNN «Cronometrare»: the page", () => {
     expect(words).toContain("#101 Ana Popescu · 0:39:57");
   });
 
+  it("sends with «Start» the gun the page saw, and says who gave the start when a press under another gun was refused (§NNN)", async () => {
+    // Drawn before anybody pressed: «Start» says it saw no gun.
+    expect(await timing({ eventId: raceId }, at(0))).toMatch(/<input type="hidden" name="seenGunAtMs" value=""\/>/);
+    await setRaceGun(db, staff.MODERATOR!, { eventId: raceId, clear: false }, at(0, 3));
+    // Drawn after: «Mută startul acum» under the gun as it stands.
+    expect(await timing({ eventId: raceId }, at(1))).toContain(`<input type="hidden" name="seenGunAtMs" value="${at(0, 3).getTime()}"/>`);
+    // The Administrator's press from a page drawn before it came back refused: who gave the start, and when.
+    expect(text(await timing({ eventId: raceId, refused: "RACE_GUN_CHANGED" }, at(1)))).toContain("Startul a fost dat deja de Oana Organizator la 09:00:03: apăsarea ta nu l-a mutat.");
+    language = "en";
+    expect(text(await timing({ eventId: raceId, refused: "RACE_GUN_CHANGED" }, at(1), "en"))).toContain("The start was already given by Oana Organizator at 09:00:03: your press did not move it.");
+    language = "ro";
+    // Taken off since: the press set nothing, and the page asks for «Start» again.
+    await setRaceGun(db, staff.MODERATOR!, { eventId: raceId, clear: true }, at(1, 30));
+    expect(text(await timing({ eventId: raceId, refused: "RACE_GUN_CHANGED" }, at(2)))).toContain("Startul a fost anulat între timp: apăsarea ta nu l-a dat.");
+  });
+
+  it("draws the gun's sentence in the finish line's island, the one its clock counts from — for every role (§NNN)", async () => {
+    state.actor = staff.CONTRIBUTOR;
+    let html = await timing({ eventId: raceId }, at(0));
+    // Inside the island, right above the clock — no «Start» box for the volunteer.
+    const island = html.slice(html.indexOf('data-testid="finish-line"'));
+    expect(island).toContain('data-testid="race-gun-line"');
+    expect(island.indexOf('data-testid="race-gun-line"')).toBeLessThan(island.indexOf('data-testid="finish-clock"'));
+    expect(html).not.toContain('data-testid="race-gun"');
+    expect(text(html)).toContain("Până la «Start», sosirile se numără de la el.");
+    await setRaceGun(db, staff.MODERATOR!, { eventId: raceId, clear: false }, at(0, 3));
+    html = await timing({ eventId: raceId }, at(1));
+    expect(text(html)).toContain("Startul: 09:00:03 · apăsat de Oana Organizator");
+    expect(text(html)).not.toContain("Până la «Start»");
+  });
+
   it("offers no «Start» outside its window, says a group run has no results, and finds the address's event though the desk does not list it", async () => {
     expect(text(await timing({ eventId: raceId }, new Date(GUN.getTime() + 7 * 3_600_000)))).toContain("Butonul «Start» apare cu 3 ore înainte de startul planificat");
     const run = await createRace(db, { type: "GROUP_RUN" });

@@ -46,7 +46,8 @@ import { isUuid } from "@/shared/ids";
  * - **«Anulează».** A row the viewer's own press at the line wrote (its `event_result.created` row of the trail says
  *   `finishLine` and names the row), that nobody changed since — its creation and its last change the same instant, by the
  *   viewer — and whose number nobody pressed again since, may be undone for ten minutes after it was written
- *   (`undoTrailOf`, `undoOpenUntil`); pressed again, the line says so (`undoClosedBy`) and the correction is «Clasament»'s.
+ *   (`undoTrailOf`, `undoOpenUntil`); pressed again, the line says so (`undoClosedBy`) and the correction is «Clasament»'s. Undone,
+ *   the phone's own line of the press says «anulat» (`markUndone`), never «salvat» for a runner with no result.
  */
 
 /** How long after the gun the line still stamps a time: a day (§850). Later, the times are typed on «Clasament». */
@@ -192,16 +193,32 @@ export function stampedGunTime(atMs: number, gunAtMs: number): number {
   return Math.max(SECOND, Math.floor((atMs - gunAtMs) / SECOND) * SECOND);
 }
 
-/** The gun as the clock's own question last heard it (§NNN): the instant, and the server's time it was said at. */
-export type HeardGun = { gunAtMs: number; serverMs: number };
+/**
+ * The gun as the clock's own question last heard it (§NNN): the instant, the server's time it was said at, whether «Start» was pressed
+ * and by whom — the line says it (`lineGun`) — and whether a «Sosit» is stored, which fixes the gun and ends the half-minute question.
+ */
+export type HeardGun = { gunAtMs: number; serverMs: number; pressed: boolean; byName: string | null; fixed: boolean };
 
 /**
  * The gun the line counts from (§NNN): the newer of what the server last said — the page's state, drawn or answered to a press (its
  * `serverNowMs`), and the clock's question (`HeardGun`, its answer's time). «Start» pressed on another phone reaches a page drawn
  * before it by the clock; a press answered after that clock brings the gun as it then stood.
  */
-export function lineGunAt(state: { serverNowMs: number; gunAtMs: number }, heard: HeardGun | null): number {
+export function lineGunAt(state: { serverNowMs: number; gunAtMs: number }, heard: Pick<HeardGun, "gunAtMs" | "serverMs"> | null): number {
   return heard && heard.serverMs > state.serverNowMs ? heard.gunAtMs : state.gunAtMs;
+}
+
+/** The gun as the line says it: the instant counted from, whether «Start» was pressed and by whom, and whether a finisher fixed it. */
+export type LineGun = { atMs: number; pressed: boolean; byName: string | null; fixed: boolean };
+
+/**
+ * The whole gun of the line (§NNN), from the newer answer as `lineGunAt` picks it — so the sentence above the clock is the gun the
+ * clock counts from, never the one the page was drawn with («Startul planificat … Până la «Start»…» after «Start» was pressed on
+ * another phone): the state's own («Start» as pressed and its presser, fixed once it counts a finisher), or the clock's question's.
+ */
+export function lineGun(state: Pick<FinishLineState, "serverNowMs" | "gunAtMs" | "gunPressed" | "gunByName" | "finished">, heard: HeardGun | null): LineGun {
+  if (heard && heard.serverMs > state.serverNowMs) return { atMs: heard.gunAtMs, pressed: heard.pressed, byName: heard.byName, fixed: heard.fixed };
+  return { atMs: state.gunAtMs, pressed: state.gunPressed, byName: state.gunByName, fixed: state.finished > 0 };
 }
 
 /** The clock's reading at `nowMs`: whole seconds since the gun, or null before it. */
@@ -446,6 +463,9 @@ export type FinishLineState = {
   serverNowMs: number;
   /** The gun the line counts from: «Start» as pressed, else the plan (`results.ts#gunOf`). */
   gunAtMs: number;
+  /** Whether «Start» was pressed, and who pressed it — their display name, or null when that account is gone: the line says it (§NNN). */
+  gunPressed: boolean;
+  gunByName: string | null;
   recent: RecentFinisherView[];
   elites: EliteButtonView[];
   finished: number;
@@ -499,9 +519,13 @@ export type FinishUndoAnswer =
 /**
  * The server's clock as the page asks it when it wakes, is shown again or, before the first finisher, every half minute (§NNN) — with
  * the gun the line counts from (`gunAtMs`, «Start» as pressed, else the plan; null when the event could not be read), so a page drawn
- * before «Start» counts from it.
+ * before «Start» counts from it; whether «Start» was pressed and by whom, so the line says the gun it counts from; and whether a
+ * «Sosit» is stored (`gunFixed`) — on any phone — so the island stops asking on a timer from the first finisher, its own or not.
  */
-export type FinishClockAnswer = { kind: "clock"; clock: ServerClockReading; gunAtMs: number | null } | { kind: "session" } | { kind: "refused" };
+export type FinishClockAnswer =
+  | { kind: "clock"; clock: ServerClockReading; gunAtMs: number | null; gunPressed: boolean; gunByName: string | null; gunFixed: boolean }
+  | { kind: "session" }
+  | { kind: "refused" };
 
 // ---- The queue -------------------------------------------------------------------------------------------
 
@@ -517,6 +541,8 @@ export type FinishEntry = {
   /** The press, on the server's clock. */
   pressedAtMs: number;
   outcome: FinishEntryOutcome | null;
+  /** A recorded press this phone's «Anulează» undid since (§NNN): its line says «anulat», no longer «salvat». The phone's own fact, never an answer's. */
+  undone?: true;
 };
 
 /** The press appended, waiting; the answered lines past `ENTRIES_KEPT` dropped, oldest first — never a waiting one. */
@@ -586,10 +612,24 @@ export function settleEntry(entries: readonly FinishEntry[], id: string, outcome
   return trimEntries(entries.map((entry) => (entry.id === id && entry.outcome === null ? { ...entry, outcome } : entry)));
 }
 
-/** How a line under the box reads an entry: waiting, another account's left unsent, saved, already there, or refused. */
-export function entryStateOf(entry: FinishEntry, staffId: string): "waiting" | "otherAccount" | "saved" | "duplicate" | "refused" {
+/**
+ * The entries with the viewer's press of `bibNumber` that «Anulează» just undid marked so (§NNN): the latest recorded one of that number
+ * by that account not marked yet — an undo takes away the row the newest such press wrote —, so the phone's own line stops saying
+ * «salvat» for a runner whose result is gone. Nothing else changes; with no such entry (pressed in another tab, or with scripts off),
+ * nothing at all.
+ */
+export function markUndone(entries: readonly FinishEntry[], staffId: string, bibNumber: number): FinishEntry[] {
+  let at = -1;
+  entries.forEach((entry, index) => {
+    if (entry.staffId === staffId && entry.bibNumber === bibNumber && entry.outcome?.kind === "recorded" && !entry.undone) at = index;
+  });
+  return at < 0 ? [...entries] : entries.map((entry, index) => (index === at ? { ...entry, undone: true } : entry));
+}
+
+/** How a line under the box reads an entry: waiting, another account's left unsent, saved, undone since, already there, or refused. */
+export function entryStateOf(entry: FinishEntry, staffId: string): "waiting" | "otherAccount" | "saved" | "undone" | "duplicate" | "refused" {
   if (entry.outcome === null) return entry.staffId === staffId ? "waiting" : "otherAccount";
-  if (entry.outcome.kind === "recorded") return "saved";
+  if (entry.outcome.kind === "recorded") return entry.undone ? "undone" : "saved";
   return entry.outcome.kind;
 }
 
@@ -689,7 +729,9 @@ export function readStoredFinishLine(raw: string | null | undefined): StoredFini
     const outcome = readOutcome(entry.outcome ?? null);
     if (outcome === undefined) continue;
     seen.add(entry.id);
-    entries.push({ id: entry.id, staffId: entry.staffId, bibNumber: entry.bibNumber, label: isText(entry.label) ? entry.label : null, pressedAtMs: entry.pressedAtMs, outcome });
+    // «anulat» is kept only on a recorded press: an undo takes away a row a press wrote.
+    const undone = entry.undone === true && outcome?.kind === "recorded" ? { undone: true as const } : {};
+    entries.push({ id: entry.id, staffId: entry.staffId, bibNumber: entry.bibNumber, label: isText(entry.label) ? entry.label : null, pressedAtMs: entry.pressedAtMs, outcome, ...undone });
   }
   const kept: Record<string, number[]> = {};
   if (stored.kept && typeof stored.kept === "object" && !Array.isArray(stored.kept)) {

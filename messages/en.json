@@ -2872,7 +2872,8 @@
       "RAFFLE_RULES_NOT_ACCEPTED": "First tick that the person accepted the raffle rules. Nothing was written.",
       "RESULT_UNDO_NOT_ALLOWED": "It cannot be undone here any more: only your own unchanged finish, in its first 10 minutes. Correct it under «Results».",
       "RACE_GUN_WINDOW": "«Start» is pressed from 3 hours before the planned start until 6 hours after.",
-      "RACE_GUN_FIXED": "The start is fixed: runners have finished. Correct the times under «Results»."
+      "RACE_GUN_FIXED": "The start is fixed: runners have finished. Correct the times under «Results».",
+      "RACE_GUN_CHANGED": "Somebody else set, moved or cancelled the start meanwhile: your press changed nothing. The page now shows the start as it is."
     },
     "editor": {
       "draftPreview": {
@@ -4169,9 +4170,9 @@
       "deactivateAccountBody": "{name}'s account is switched off at the provider: they cannot sign in anywhere. The row in Echipa stays.",
       "revokeTitle": "Take the access away?",
       "revokeBody": "{name} can no longer open the backoffice. The provider account stays — deactivate it separately if they are leaving the club.",
-      "roleHelp": "Each role can do what the one below it can, plus what it says here. Volunteers see the desk only.",
+      "roleHelp": "Each role can do what the one below it can, plus what it says here. Volunteers see race day only: the desk and «Timing».",
       "roles": {
-        "CONTRIBUTOR": "the desk: scans codes, marks people present, confirms on paper, gives a free place, types a number. That is all.",
+        "CONTRIBUTOR": "the desk: scans codes, marks people present, confirms on paper, gives a free place, types a number, signs up for the raffle; under «Timing», records finishes and undoes their own press. That is all.",
         "COPYWRITER": "the words: descriptions, rules, programmes and the site's pages, in both languages. No settings, no publishing.",
         "MODERATOR": "registrations and race day: reads the events, the registrations, the export and the numbers, messages the participants, works the desk, keeps the gallery. Creates, sets up and publishes no event.",
         "DEV": "the technical page /devs, to diagnose. Creates and sets up no event; sees no participant data.",
@@ -13072,7 +13073,9 @@
           "set": "The start was set: {time}.",
           "cleared": "The start was cancelled: finishes count from the planned start.",
           "unchanged": "The start had not been set: nothing to cancel.",
-          "repeat": "The start stays at {time}: a second press within ten seconds of the first does not move it."
+          "repeat": "The start stays at {time}: a second press within ten seconds of the first does not move it.",
+          "changed": "The start was already given by {by} at {time}: your press did not move it.",
+          "changedCleared": "The start was cancelled meanwhile: your press did not set it. Press «Start» right at the gun."
         },
         "refused": {
           "RESULT_BIB_UNKNOWN": "{who}: no confirmed registration and no elite has this number. Its time: {time} — write it on paper.",
@@ -14143,7 +14146,7 @@
     "rolesIntro": "Each role can do everything the one below it can, plus one thing more. The line that matters is between Technical and Admin: from there up, participant data is visible.",
     "youAre": "your role",
     "roleSummary": {
-      "CONTRIBUTOR": "the race-number desk, and nothing else",
+      "CONTRIBUTOR": "the race-number desk and the raffle sign-up, plus «Timing»: records finishes and undoes their own press; nothing else",
       "COPYWRITER": "the words of any event and of the pages; submits for approval",
       "MODERATOR": "registrations and race day: reads the events, the registrations, the export and the numbers, messages the participants, keeps the gallery; changes no event",
       "DEV": "the configuration page; changes no event, no participant data",

@@ -25,8 +25,10 @@ import {
   keptOf,
   KEPT_TIME_MAX_AGE_MS,
   KEPT_TIMES_MAX,
+  lineGun,
   lineGunAt,
   type LineTrailRow,
+  markUndone,
   mayUndo,
   nextRetryAt,
   nextToSend,
@@ -61,10 +63,11 @@ import {
  * over round trips, the best sample kept; the stamp floored to the second, the claimed time held to the server's bounds, a claim
  * before the gun refused as not started and a press arriving after the day and its grace refused; what a press does to a stored row,
  * and a press found in the trail by its id read back as it was answered; «Start»'s window, its tap and the organizer's own press sent
- * twice, and the gun the line counts from — the newer of the last answer and the clock's question; «Anulează»'s ten minutes on one's
- * own press at the line, unchanged and not pressed again; the kept times oldest first, each account's own, each with its age, none
- * older than ten minutes given to a number; the queue in the order pressed, each account sending its own, a press the server could
- * not record held for its backoff while the next ones go and never given up; and the phone's storage read back tolerantly.
+ * twice, and the gun the line counts from — the newer of the last answer and the clock's question —, the one its sentence says, and
+ * whether a finisher fixed it; «Anulează»'s ten minutes on one's own press at the line, unchanged and not pressed again, the phone's
+ * line of an undone press saying «anulat»; the kept times oldest first, each account's own, each with its age, none older than ten
+ * minutes given to a number; the queue in the order pressed, each account sending its own, a press the server could not record held
+ * for its backoff while the next ones go and never given up; and the phone's storage read back tolerantly.
  */
 const GUN = Date.UTC(2026, 10, 21, 7, 0, 0);
 const at = (minutes: number, seconds = 0, ms = 0) => GUN + minutes * 60_000 + seconds * 1000 + ms;
@@ -295,6 +298,24 @@ describe("§NNN the gun the line counts from: the newer of the last answer and t
     const answeredBefore = { serverNowMs: pressed + 10_000, gunAtMs: planned };
     expect(lineGunAt(answeredBefore, heard)).toBe(pressed);
   });
+
+  it("says the gun it counts from — pressed and by whom, or the plan — and whether a finisher fixed it, from the same newer answer (§NNN)", () => {
+    const drawn = { serverNowMs: GUN - 2 * 60_000, gunAtMs: planned, gunPressed: false, gunByName: null, finished: 0 };
+    // Drawn before «Start»: the plan, nothing fixed — the half-minute question goes on.
+    expect(lineGun(drawn, null)).toEqual({ atMs: planned, pressed: false, byName: null, fixed: false });
+    // «Start» on the organizer's phone, heard by the clock: the sentence names who pressed it, never «Startul planificat … Până la «Start»».
+    const heard = { gunAtMs: pressed, serverMs: pressed + 20_000, pressed: true, byName: "Oana", fixed: false };
+    expect(lineGun(drawn, heard)).toEqual({ atMs: pressed, pressed: true, byName: "Oana", fixed: false });
+    // Another phone's first finisher, heard by the clock: fixed — though this page's own state counts nobody.
+    expect(lineGun(drawn, { ...heard, serverMs: pressed + 60_000, fixed: true }).fixed).toBe(true);
+    // A press's answer newer than the clock's: its own gun and its own count.
+    const answered = { serverNowMs: pressed + 90_000, gunAtMs: pressed, gunPressed: true, gunByName: "Oana", finished: 1 };
+    expect(lineGun(answered, heard)).toEqual({ atMs: pressed, pressed: true, byName: "Oana", fixed: true });
+    // «Anulează startul» on the organizer's phone, heard after: the plan again, its sentence with it.
+    expect(lineGun(answered, { gunAtMs: planned, serverMs: pressed + 120_000, pressed: false, byName: null, fixed: false })).toEqual({ atMs: planned, pressed: false, byName: null, fixed: false });
+    // The same reading `lineGunAt` gives.
+    expect(lineGun(drawn, heard).atMs).toBe(lineGunAt(drawn, heard));
+  });
 });
 
 describe("§NNN «Anulează»: one's own press at the line, written once, not pressed again, for ten minutes", () => {
@@ -457,6 +478,30 @@ describe("§NNN the queue: in the order pressed, answered once, the waiting ones
     expect(nextRetryAt(entries, "vlad", held)).toBeNull();
     // Another account's hold is not this viewer's to wait for.
     expect(nextRetryAt(entries, "radu", new Map([["c", { tries: 1, untilMs: now }]]))).toBeNull();
+  });
+
+  it("marks the viewer's latest recorded press of the number «anulat» once «Anulează» undid it — nobody else's, nothing else (§NNN)", () => {
+    const recorded = (bibNumber: number, gunTimeMs: number) => ({ kind: "recorded" as const, bibNumber, name: null, label: null, gunTimeMs, positionOverall: 1, outOfRanking: false, again: false });
+    let entries: FinishEntry[] = [];
+    entries = settleEntry(pressEntry(entries, entry("first", 21, at(18, 3))), "first", recorded(21, 1_083_000));
+    entries = settleEntry(pressEntry(entries, entry("other", 21, at(18, 4), "radu")), "other", recorded(21, 1_084_000));
+    entries = settleEntry(pressEntry(entries, entry("again", 21, at(18, 9))), "again", { kind: "duplicate", bibNumber: 21, name: null, label: null, gunTimeMs: 1_089_000, storedStatus: "FINISHED", storedGunTimeMs: 1_083_000, storedBy: "Vlad" });
+    entries = pressEntry(entries, entry("waiting", 22, at(18, 10)));
+    const undone = markUndone(entries, "vlad", 21);
+    // Vlad's recorded press of 21 reads «anulat»; Radu's, Vlad's duplicate and the waiting press are as they were.
+    expect(undone.map(stateOf)).toEqual(["undone", "saved", "duplicate", "waiting"]);
+    expect(undone.map((one) => entryStateOf(one, "radu"))).toEqual(["undone", "saved", "duplicate", "otherAccount"]);
+    // The press recorded again after its undo, undone again: the newer one is marked, the older stays «anulat».
+    const later = settleEntry(pressEntry(undone, entry("later", 21, at(25))), "later", recorded(21, 1_500_000));
+    expect(markUndone(later, "vlad", 21).map(stateOf)).toEqual(["undone", "saved", "duplicate", "waiting", "undone"]);
+    // No recorded press of the number on this phone — undone from another tab, or with scripts off —: nothing changes.
+    expect(markUndone(undone, "vlad", 21)).toEqual(undone);
+    expect(markUndone(entries, "vlad", 99)).toEqual(entries);
+    // Kept on the phone and read back, a recorded press only.
+    const stored = readStoredFinishLine(storedFinishLine({ entries: undone, kept: {}, title: null }));
+    expect(stored.entries.map(stateOf)).toEqual(["undone", "saved", "duplicate", "waiting"]);
+    const forged = JSON.stringify({ entries: [{ ...entries[2], undone: true }, { ...entries[3], undone: true }], kept: {} });
+    expect(readStoredFinishLine(forged).entries.map(stateOf)).toEqual(["duplicate", "waiting"]);
   });
 
   it("keeps the newest answered lines past the limit and every waiting one, whoever's", () => {

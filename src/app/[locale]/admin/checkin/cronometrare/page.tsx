@@ -71,8 +71,10 @@ const number = (raw: string | undefined) => (raw !== undefined && /^\d{1,9}$/.te
  * results (`canEnterResults`), pressed at the gun and moved or taken off until the first finisher; without it the editor's «Startul
  * cursei» counts — and the finish line (`FinishLine`, the page's island): the elites' buttons first, the number box, «⏱ Prinde
  * timpul», the presses of this phone and «Ultimii sosiți» with who entered each. With scripts off every form posts and the page comes
- * back here saying what happened (`?ok=`, `?dup=` with `?s=` when the row is a decision of «Clasament», `?refused=`, `?undone=`,
- * `?gun=` — `repeat` for an organizer's own «Start» heard again within ten seconds —: numbers and codes, never a name). A group run
+ * back here saying what happened (`?ok=`, `?dup=` with `?s=` when the row is a decision of «Clasament», `?refused=` —
+ * `RACE_GUN_CHANGED`, a «Start» whose page saw another gun than the one stored, said with the gun as it stands (§NNN) —, `?undone=`,
+ * `?gun=` — `repeat` for an organizer's own «Start» heard again within ten seconds —: numbers and codes, never a name). The gun's
+ * sentence is the island's, of the gun its clock counts from; «Start» sends the gun this page saw. A group run
  * says it has no results, and nothing more. The islands get the server's clock as the page was drawn — read last, after every read
  * —, the viewer's staff id, whose presses alone the page sends, and the event's title, which the finish line keeps on the phone.
  *
@@ -146,6 +148,13 @@ export default async function TimingPage({ params, searchParams }: Props) {
     }
     const undone = number(query.undone);
     if (undone !== null) return { severity: "success" as const, text: t("timing.banner.undone", { who: `#${undone}` }) };
+    // A «Start» whose page saw another gun (§NNN): the gun as it stands now — who gave it and when — or that it was taken off since.
+    if (query.refused === "RACE_GUN_CHANGED") {
+      return {
+        severity: "warning" as const,
+        text: view?.gun.pressed ? t("timing.banner.gun.changed", { by: view.gun.byName ?? t("timing.accountGone"), time: clock(view.gun.at) }) : t("timing.banner.gun.changedCleared"),
+      };
+    }
     if (query.gun === "set" || query.gun === "cleared" || query.gun === "unchanged" || query.gun === "repeat") {
       const at = view?.gun.pressed ? clock(view.gun.at) : "";
       return { severity: "success" as const, text: t(`timing.banner.gun.${query.gun}`, { time: at }) };
@@ -224,11 +233,11 @@ export default async function TimingPage({ params, searchParams }: Props) {
   const plannedWords = typedStartOrNull({ startsAt: gun.planned, timezone: view.event.timezone })
     ? formatDay(gun.planned, { locale, timeZone: view.event.timezone || CLUB_TIME_ZONE, style: "short", position: "inline", withTime: true })
     : t("editor.dateToBeAnnounced");
-  const gunLine = gun.pressed
-    ? t("timing.gun.pressed", { time: clock(gun.at), by: gun.byName ?? t("timing.accountGone") })
-    : t("timing.gun.planned", { time: plannedWords });
 
   const words: FinishLineWords = {
+    // The gun's sentence is the island's (§NNN): drawn from the gun its clock counts from, which the clock's answer brings.
+    gunPressed: t.raw("timing.gun.pressed") as string,
+    gunPlanned: t("timing.gun.planned", { time: plannedWords }),
     clock: t.raw("timing.clock") as string,
     notStarted: t("timing.notStarted"),
     elitesTitle: t("timing.elites.title"),
@@ -293,56 +302,57 @@ export default async function TimingPage({ params, searchParams }: Props) {
         <QuietHelp text={t("timing.more")} />
       </Typography>
 
-      {/* The gun: «Start» for whoever enters results, until the first finisher; the sentence for everybody. */}
-      <Box sx={{ display: "grid", gap: 1 }} data-testid="race-gun">
-        <Typography variant="body2" sx={{ fontWeight: 600 }} data-testid="race-gun-line">
-          {gunLine}
-        </Typography>
-        {mayStart && gun.fixed && (
-          <Typography variant="body2" color="text.secondary" data-testid="race-gun-fixed">
-            {t("timing.gun.fixed")}
-          </Typography>
-        )}
-        {mayStart && !gun.fixed && !gun.windowOpen && (
-          <Typography variant="body2" color="text.secondary" data-testid="race-gun-window">
-            {t("timing.gun.window")}
-          </Typography>
-        )}
-        {mayStart && !gun.fixed && gun.windowOpen && (
-          <Stack direction="row" sx={{ gap: 1, alignItems: "center", flexWrap: "wrap" }}>
-            <RaceGunPress
-              action={setRaceGunAction}
-              eventId={view.event.id}
-              uiLocale={locale}
-              serverNowMs={drawnAtMs}
-              label={gun.pressed ? t("timing.gun.move") : t("timing.gun.start")}
-              pendingLabel={t("timing.gun.sending")}
-            />
-            {gun.pressed && (
-              <Box component="form" action={setRaceGunAction} data-testid="race-gun-clear-form">
-                <input type="hidden" name="uiLocale" value={locale} />
-                <input type="hidden" name="eventId" value={view.event.id} />
-                <input type="hidden" name="intent" value="clear" />
-                <ConfirmSubmitButton
-                  label={t("timing.gun.clear")}
-                  icon="undo"
-                  variant="text"
-                  size="medium"
-                  title={t("timing.gun.clearTitle")}
-                  body={t("timing.gun.clearBody", { time: plannedWords })}
-                  confirmLabel={t("timing.gun.clear")}
-                  cancelLabel={t("confirm.cancel")}
-                />
-              </Box>
-            )}
-          </Stack>
-        )}
-        {mayStart && !gun.fixed && gun.windowOpen && (
-          <Typography variant="caption" color="text.secondary">
-            {gun.pressed ? t("timing.gun.moveHelp") : t("timing.gun.startHelp")}
-          </Typography>
-        )}
-      </Box>
+      {/* The gun: «Start» for whoever enters results, until the first finisher; the sentence, for everybody, is the island's (§NNN). */}
+      {mayStart && (
+        <Box sx={{ display: "grid", gap: 1 }} data-testid="race-gun">
+          {gun.fixed && (
+            <Typography variant="body2" color="text.secondary" data-testid="race-gun-fixed">
+              {t("timing.gun.fixed")}
+            </Typography>
+          )}
+          {!gun.fixed && !gun.windowOpen && (
+            <Typography variant="body2" color="text.secondary" data-testid="race-gun-window">
+              {t("timing.gun.window")}
+            </Typography>
+          )}
+          {!gun.fixed && gun.windowOpen && (
+            <Stack direction="row" sx={{ gap: 1, alignItems: "center", flexWrap: "wrap" }}>
+              {/* The gun this page saw goes with the press: another organizer's «Start» since refuses it (`RACE_GUN_CHANGED`). */}
+              <RaceGunPress
+                action={setRaceGunAction}
+                eventId={view.event.id}
+                uiLocale={locale}
+                serverNowMs={drawnAtMs}
+                seenGunAtMs={gun.pressed ? gun.at.getTime() : null}
+                label={gun.pressed ? t("timing.gun.move") : t("timing.gun.start")}
+                pendingLabel={t("timing.gun.sending")}
+              />
+              {gun.pressed && (
+                <Box component="form" action={setRaceGunAction} data-testid="race-gun-clear-form">
+                  <input type="hidden" name="uiLocale" value={locale} />
+                  <input type="hidden" name="eventId" value={view.event.id} />
+                  <input type="hidden" name="intent" value="clear" />
+                  <ConfirmSubmitButton
+                    label={t("timing.gun.clear")}
+                    icon="undo"
+                    variant="text"
+                    size="medium"
+                    title={t("timing.gun.clearTitle")}
+                    body={t("timing.gun.clearBody", { time: plannedWords })}
+                    confirmLabel={t("timing.gun.clear")}
+                    cancelLabel={t("confirm.cancel")}
+                  />
+                </Box>
+              )}
+            </Stack>
+          )}
+          {!gun.fixed && gun.windowOpen && (
+            <Typography variant="caption" color="text.secondary">
+              {gun.pressed ? t("timing.gun.moveHelp") : t("timing.gun.startHelp")}
+            </Typography>
+          )}
+        </Box>
+      )}
 
       {/* Keyed by the event: another race is another line — its own phone storage, its own queue. */}
       <FinishLine
@@ -350,8 +360,18 @@ export default async function TimingPage({ params, searchParams }: Props) {
         eventId={view.event.id}
         eventTitle={eventTitle}
         uiLocale={locale}
+        timeZone={view.event.timezone || CLUB_TIME_ZONE}
         staffId={actor.id}
-        initial={{ serverNowMs: drawnAtMs, gunAtMs: gun.at.getTime(), recent: view.recent, elites: view.elites, finished: view.finished, withNumber: view.withNumber }}
+        initial={{
+          serverNowMs: drawnAtMs,
+          gunAtMs: gun.at.getTime(),
+          gunPressed: gun.pressed,
+          gunByName: gun.byName,
+          recent: view.recent,
+          elites: view.elites,
+          finished: view.finished,
+          withNumber: view.withNumber,
+        }}
         words={words}
         record={recordFinishPressAction}
         undo={undoFinishPressAction}
