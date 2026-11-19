@@ -2855,6 +2855,8 @@
       "COORDINATES_INVALID": "Nu am înțeles coordonatele. Scrie-le ca în Google Maps, de exemplu 45.64271, 25.58871.",
       "PLAN_POINT_TOO_MANY": "Sunt prea multe puncte adăugate aici: cel mult {max} la un eveniment. Șterge unul ca să adaugi altul.",
       "PLAN_POINT_IN_EDITOR": "Acest punct e din „Puncte pe traseu”: se șterge din editorul evenimentului, nu de aici.",
+      "PLAN_POINT_NOTE_ONE_LANGUAGE": "Scrie nota pentru voluntari și în română, și în engleză, sau lasă ambele casete goale.",
+      "PLAN_POINT_NOTE_TOO_LONG": "Nota pentru voluntari are prea multe caractere: cel mult {max} în fiecare limbă.",
       "PLAN_POINT_GONE": "Punctul nu mai e pe plan: a fost șters între timp.",
       "PLAN_PICTURES_FULL": "Planul are deja {max} poze, cât poate avea. Șterge una ca să adaugi alta.",
       "PLAN_LINKS_FULL": "Planul are deja {max} linkuri, cât poate avea. Șterge unul ca să adaugi altul.",
@@ -6717,6 +6719,7 @@
         },
         "pointTitle": "{number}. {title}",
         "pointKm": "{km} km",
+        "personNumber": "{number}.",
         "people": {
           "one": "{count} voluntar",
           "few": "{count} voluntari",
@@ -6762,6 +6765,11 @@
           "kmHelper": "Doar pentru un punct de pe traseu.",
           "coordinates": "Coordonate (opțional)",
           "coordinatesHelper": "Ca în Google Maps: ține apăsat pe hartă și copiază numerele, de exemplu 45.64271, 25.58871.",
+          "volunteerNote": "Notă pentru voluntari:",
+          "volunteerNoteRo": "Notă pentru voluntari (română)",
+          "volunteerNoteEn": "Notă pentru voluntari (engleză)",
+          "volunteerNoteHelper": "Ce trebuie să știe toți cei de la acest punct: apare pe plan și în emailul fiecăruia.",
+          "volunteerNoteHelperBoth": "În ambele limbi sau în niciuna, cel mult {max} de caractere în fiecare.",
           "add": "Adaugă punctul",
           "openMap": "Deschide pe hartă",
           "openMapFor": "Deschide pe hartă: {name}",
@@ -9891,6 +9899,17 @@
                 "Tot acolo, «Fișă de urgență»: telefoanele și contactele de urgență ale celor confirmați, pe o pagină. O iei la cursă și o distrugi după.",
                 "Voluntarii: roagă un Administrator să le facă fiecăruia un cont cu rolul Voluntar — câte unul de om, ca «Jurnal» să spună cine a scanat și cine a marcat prezent —, apoi arată-le secțiunea „Ziua cursei” din ghidul acesta.",
                 "În ziua cursei: «Ziua cursei» în bara de sus."
+              ]
+            },
+            {
+              "title": "Planul voluntarilor: cine stă la ce punct",
+              "steps": [
+                "«Voluntari» în bara de sus: alege evenimentul, apasă «Filtrează», apoi «Planul voluntarilor».",
+                "«Tabel» arată toate punctele într-un singur tabel; «Pe puncte», fiecare punct cu oamenii lui. Acolo, la un punct, alege un voluntar și apasă «Pune aici»; «Scoate» îl ia de la punct.",
+                "Voluntarii fiecărui punct sunt numerotați, cu numele îngroșat și o linie subțire între doi — pe ecran și pe hârtie.",
+                "Ce trebuie să știe toți cei de la un punct: pe «Pe puncte» deschide punctul, apasă creionul («Modifică punctul»), scrie «Notă pentru voluntari (română)» și «Notă pentru voluntari (engleză)» — în ambele limbi sau în niciuna — și apasă «Salvează punctul». Nota apare sub numele punctului, în tabel și pe hârtie.",
+                "«Tipărește planul» tipărește ce vezi: tabelul, sau toate punctele, deschise.",
+                "Când planul e gata: «Trimite fiecăruia punctul lui». Fiecare voluntar pus la un punct primește un email cu punctul lui, nota pentru voluntari a punctului, ce are de făcut și pozele planului. Nimeni nu e anunțat înainte."
               ]
             },
             {

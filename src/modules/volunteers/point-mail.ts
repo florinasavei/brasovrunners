@@ -290,6 +290,12 @@ export type VolunteerPointFacts = {
   km: number;
   noteRo: string | null;
   noteEn: string | null;
+  /**
+   * «Notă pentru voluntari» (§NNN): what everybody standing at the point has to know, in each language — both or neither, line
+   * breaks as `\n` — said as its own paragraph under the point's name, each half in its own language. Null for none.
+   */
+  volunteerNoteRo: string | null;
+  volunteerNoteEn: string | null;
   /** A point at the start–finish, not on the route (§961): the message says the place with no number and no kilometre. */
   startFinish: boolean;
   /** Where the point is, when the organizers typed it (§961): the message says the numbers and links to a map. Null for none. */
@@ -317,7 +323,8 @@ export type VolunteerPointFacts = {
  *
  * The renderer has already withdrawn a cancelled person, a row with no address and an address corrected since
  * (`render.ts`); this reads only what is the point's — its number in the route's order, or none at the start–finish, its
- * name, its kilometre and where it is, from the plan's one list (`plan-points.ts#listPlanPoints`, §961), which is what
+ * name, its kilometre, where it is and its «Notă pentru voluntari» (§NNN), from the plan's one list
+ * (`plan-points.ts#listPlanPoints`, §961), which is what
  * the plan's page reads, so the message and the page say one point one way; the pictures and the links are the plan's as
  * they are now (`plan.ts#readVolunteerPlanMaps`, §978).
  */
@@ -346,6 +353,8 @@ export async function volunteerPointAtSend<T extends Record<string, unknown>>(db
     km: point.km,
     noteRo: point.noteRo,
     noteEn: point.noteEn,
+    volunteerNoteRo: point.volunteerNoteRo,
+    volunteerNoteEn: point.volunteerNoteEn,
     startFinish: point.startFinish,
     coordinates: coordinatesOf(point),
     pictures: maps.pictures.map(({ displayUrl, fullUrl, width, height }) => ({ displayUrl, fullUrl, width, height })),

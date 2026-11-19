@@ -219,23 +219,25 @@ describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view
       const openMap = escaped(words.points.openMap);
 
       // One row a point, in the order the owner reads the day: the route by kilometre — the plan's own «Izvor», typed last,
-      // second at 3.4 km and numbered so — then the start–finish as the page lists it, with no number.
+      // second at 3.4 km and numbered so — then the start–finish as the page lists it, with no number. Since §NNN each point's
+      // people are a numbered list, so the cell's words begin with «1.» and a second person reads «2.» (the owner, 2026-11-19:
+      // «vreau sa numerotez aici voluntarii»).
       expect(rows.map((cells) => cells.map(wordsOf)), locale).toEqual(
         locale === "ro"
           ? [
-              ["1", "Intersecția Stejeriș", "1,2", "—", "Ana Pop +40 700 000 011 ana.pop@example.test Zoe Manea", "2"],
+              ["1", "Intersecția Stejeriș", "1,2", "—", "1. Ana Pop +40 700 000 011 ana.pop@example.test 2. Zoe Manea", "2"],
               ["2", "Izvor", "3,4", `${PIATA} ${openMap}`, "niciunul", "0"],
-              ["3", "Apă la cabană", "5,5", "—", "Dan Ene +40 700 000 022 dan.ene@example.test", "1"],
-              ["4", "Podul de lemn", "7,25", "—", "Ion Lupu +40 700 000 033 ion.lupu@example.test", "1"],
-              ["", "Kituri și numere", "start–finish", `${PIATA} ${openMap}`, "Radu Liber +40 700 000 044 radu.liber@example.test", "1"],
+              ["3", "Apă la cabană", "5,5", "—", "1. Dan Ene +40 700 000 022 dan.ene@example.test", "1"],
+              ["4", "Podul de lemn", "7,25", "—", "1. Ion Lupu +40 700 000 033 ion.lupu@example.test", "1"],
+              ["", "Kituri și numere", "start–finish", `${PIATA} ${openMap}`, "1. Radu Liber +40 700 000 044 radu.liber@example.test", "1"],
               ["", "Linia de start", "start–finish", "—", "niciunul", "0"],
             ]
           : [
-              ["1", "Stejeriș junction", "1.2", "—", "Ana Pop +40 700 000 011 ana.pop@example.test Zoe Manea", "2"],
+              ["1", "Stejeriș junction", "1.2", "—", "1. Ana Pop +40 700 000 011 ana.pop@example.test 2. Zoe Manea", "2"],
               ["2", "Izvor", "3.4", `${PIATA} ${openMap}`, "nobody", "0"],
-              ["3", "Water at the hut", "5.5", "—", "Dan Ene +40 700 000 022 dan.ene@example.test", "1"],
-              ["4", "The wooden bridge", "7.25", "—", "Ion Lupu +40 700 000 033 ion.lupu@example.test", "1"],
-              ["", "Kituri și numere", "start–finish", `${PIATA} ${openMap}`, "Radu Liber +40 700 000 044 radu.liber@example.test", "1"],
+              ["3", "Water at the hut", "5.5", "—", "1. Dan Ene +40 700 000 022 dan.ene@example.test", "1"],
+              ["4", "The wooden bridge", "7.25", "—", "1. Ion Lupu +40 700 000 033 ion.lupu@example.test", "1"],
+              ["", "Kituri și numere", "start–finish", `${PIATA} ${openMap}`, "1. Radu Liber +40 700 000 044 radu.liber@example.test", "1"],
               ["", "Linia de start", "start–finish", "—", "nobody", "0"],
             ],
       );
@@ -324,8 +326,9 @@ describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view
     ] as const) {
       state.locale = locale;
       const section = sectionOf(await planPage(race.otherId));
+      // The one person numbered too (§NNN): «1.» before her name.
       expect(rowsOf(wideOf(section)).map((cells) => cells.map(wordsOf))).toEqual([
-        ["1", locale === "ro" ? "Punctul altui eveniment" : "Another event's point", "3", "—", "Mara Dinu +40 700 000 066 mara.dinu@example.test", "1"].map((cell) => escaped(cell)),
+        ["1", locale === "ro" ? "Punctul altui eveniment" : "Another event's point", "3", "—", "1. Mara Dinu +40 700 000 066 mara.dinu@example.test", "1"].map((cell) => escaped(cell)),
       ]);
       expect(afterTableOf(section)).toContain(`>${total}<`);
     }
@@ -374,6 +377,84 @@ describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view
       expect(tallClass(page, names), testid).toBe(true);
     }
     expect(tallClass(page, classesIn(tagsOf(section, "plan-table-map")[0]))).toBe(true);
+  });
+
+  it("numbers each point's people from 1, each name in bold and in capitals, a thin line between two — in the table and the phone's blocks, on paper too (§NNN)", async () => {
+    await fullPlan();
+    // The rules from the page as streamed; its structure from the same markup with Emotion's `<style>` tags taken out.
+    const page = await planPage(race.raceId, true);
+    const section = sectionOf(page.replace(/<style[\s\S]*?<\/style>/g, ""));
+    const rows = rowsOf(wideOf(section));
+
+    // The owner, 2026-11-19: «vreau sa numerotez aici voluntarii si sa fac cu bold numele lor»: «1.», «2.»… in the point's
+    // order — the plan's, by name —, starting again at each point; the words of the number are the catalogue's, in both.
+    expect(textsOf(rows[0][4], "plan-table-person-number")).toEqual(["1.", "2."]);
+    expect(textsOf(rows[0][4], "plan-table-person-name")).toEqual(["Ana Pop", "Zoe Manea"]);
+    expect(rows.map((cells) => textsOf(cells[4], "plan-table-person-number"))).toEqual([["1.", "2."], [], ["1."], ["1."], ["1."], []]);
+    expect([ro.Admin.volunteers.plan.personNumber, en.Admin.volunteers.plan.personNumber]).toEqual(["{number}.", "{number}."]);
+    // The phone's blocks say the same — the one render serves both.
+    expect(textsOf(afterTableOf(section), "plan-table-person-number")).toEqual(["1.", "2.", "1.", "1.", "1."]);
+    // A list that is ordered: an `<ol>` a point, never a bullet drawn.
+    const lists = tagsOf(section, "plan-table-people");
+    expect(lists).toHaveLength(8);
+    for (const tag of lists) expect(tag).toMatch(/^<ol /);
+    const listClasses = classesIn(lists[0]);
+    expect(listClasses.some((name) => new RegExp(`\\.${name}\\{[^}]*list-style:none`).test(rulesOf(page)))).toBe(true);
+
+    // Each name in bold — and still in capitals (§994) —, the words as typed underneath.
+    const name = classesIn(tagsOf(section, "plan-table-person-name")[0]);
+    expect(name.some((part) => new RegExp(`\\.${part}\\{[^}]*font-weight:700`).test(rulesOf(page)))).toBe(true);
+    expect(name.some((part) => new RegExp(`\\.${part}\\{[^}]*text-transform:uppercase`).test(rulesOf(page)))).toBe(true);
+    // The number itself is plain text before the name: no class, nothing hidden from a reader or the paper.
+    expect(tagsOf(section, "plan-table-person-number")[0]).toBe('<span data-testid="plan-table-person-number">');
+
+    // «vreau un separator acolo la voluntari sa se vada ca e o lista»: a one-pixel line in the house's divider colour on every
+    // person but the first — a rule of the list, under no `@media`, so the paper draws it as the screen does.
+    const separator = listClasses.flatMap((part) => [...rulesOf(page).matchAll(new RegExp(`\\.${part}>li\\+li\\{([^}]*)\\}`, "g"))].map((match) => match[1])).join(";");
+    expect(separator).toMatch(/border-top:1px solid/);
+    expect(separator).toMatch(/border-color:rgba\(/);
+    expect(separator).toMatch(/padding-top:/);
+    expect(printOf(page, listClasses)).not.toMatch(/border|display:none/);
+    // The first person carries no line: the rule is `li + li`, never `li`.
+    expect(listClasses.some((part) => new RegExp(`\\.${part}>li\\{`).test(rulesOf(page)))).toBe(false);
+  });
+
+  it("draws a point's «Notă pentru voluntari» under its name in the «Punct» cell — the page's language, its line breaks kept, wrapping inside the cell, printed — and nothing for a point with none (§NNN)", async () => {
+    const { spring } = await fullPlan();
+    const note = { ro: "Direcționați spre stânga la intersecție.\nPurtați vesta reflectorizantă.", en: "Send the runners left at the junction.\nWear the reflective vest." };
+    // An editor's point and one of the plan's own, as «Salvează punctul» writes them.
+    await changePlanPoint(db, staff.ADMIN!, { kind: "edit", eventId: race.raceId, id: race.points.junction, place: "route", name: "", km: "", coordinates: "", volunteerNoteRo: note.ro, volunteerNoteEn: note.en }, NOW);
+    await changePlanPoint(db, staff.ADMIN!, { kind: "edit", eventId: race.raceId, id: spring, place: "route", name: "Izvor", km: "3,4", coordinates: PIATA, volunteerNoteRo: "Apă la izvor.", volunteerNoteEn: "Water at the spring." }, NOW);
+    for (const locale of ["ro", "en"] as const) {
+      state.locale = locale;
+      const words = (locale === "ro" ? ro : en).Admin.volunteers.plan.points;
+      const page = await planPage(race.raceId, true);
+      const section = sectionOf(page.replace(/<style[\s\S]*?<\/style>/g, ""));
+      const rows = rowsOf(wideOf(section));
+
+      // Under the name, in the cell: the label in bold, then the note in the page's language, its line break as typed.
+      const cell = rows[0][1];
+      expect(cell.indexOf('data-testid="plan-table-point"'), locale).toBeLessThan(cell.indexOf('data-testid="plan-table-volunteer-note"'));
+      expect(textsOf(cell, "plan-table-volunteer-note-words")).toEqual([escaped(note[locale])]);
+      expect(wordsOf(/<p[^>]*data-testid="plan-table-volunteer-note"[\s\S]*?<\/p>/.exec(cell)![0])).toBe(`${escaped(words.volunteerNote)} ${wordsOf(escaped(note[locale]))}`);
+      expect(cell).toMatch(new RegExp(`<strong[^>]*>${escaped(words.volunteerNote)}</strong>`));
+      expect(wordsOf(rows[1][1])).toBe(`Izvor ${escaped(words.volunteerNote)} ${locale === "ro" ? "Apă la izvor." : "Water at the spring."}`);
+      // The points that have none say nothing more than their name.
+      expect(rows.map((cells) => cells[1].includes('data-testid="plan-table-volunteer-note"'))).toEqual([true, true, false, false, false, false]);
+      // The phone's blocks: under the block's headline, the same note.
+      expect(textsOf(afterTableOf(section), "plan-table-volunteer-note-words")).toEqual([escaped(note[locale]), locale === "ro" ? "Apă la izvor." : "Water at the spring."]);
+
+      // Wrapping inside the cell, never widening the table at 320 pixels: the line breaks kept, a long word broken, its width held.
+      const block = classesIn(tagsOf(section, "plan-table-volunteer-note")[0]);
+      const rule = block.map((part) => new RegExp(`\\.${part}\\{([^}]*)\\}`).exec(rulesOf(page))?.[1] ?? "").join(";");
+      expect(rule).toMatch(/white-space:pre-line/);
+      expect(rule).toMatch(/overflow-wrap:anywhere/);
+      expect(rule).toMatch(/max-width:42ch/);
+      // Its own weight: the phone's block draws the cell inside a bold headline.
+      expect(rule).toMatch(/font-weight:400/);
+      // Printed with the table: nothing takes it off the paper.
+      expect(printOf(page, block)).not.toMatch(/display:none/);
+    }
   });
 
   it("draws no table for a plan with no point, and the page stays the 404 it was for whoever may not work the volunteers", async () => {

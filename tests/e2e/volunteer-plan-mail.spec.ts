@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { existsSync } from "node:fs";
 import pg from "pg";
+import { capturedEmail } from "./support/captured-email";
 import { cancelDialog, confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
@@ -53,6 +54,14 @@ import { openFold } from "./support/fold";
  * open; and «Poze și hărți» is the first fold of the page, where the Organizer adds a map's address — a refused one keeping
  * what was typed —, opens it in a new tab, sees it printed after the plan with its whole address, and deletes it after a
  * question. The rules are `plan-unplaced-screens.test.ts`, `plan-picture.test.ts` and `plan-links.test.ts`.
+ *
+ * And, since §NNN (the owner, 2026-11-19: «si am nevoie de un nou field "noua pentru voluntari"», «vreau sa numerotez aici
+ * voluntarii si sa fac cu bold numele lor», «vreau un separator acolo la voluntari sa se vada ca e o lista»): the Organizer
+ * writes a point's «Notă pentru voluntari» in its «Modifică punctul» — a note in one language alone refused —, reads it under
+ * the point's name on «Pe puncte» and in «Punctele, pe scurt», on the screen and on paper, the point's people numbered, their
+ * names in bold with a line between two, nothing wider than a 320-pixel phone; and the email of each person at that point
+ * carries the note, in both halves. The rules are `plan-points.test.ts`, `plan-table-screens.test.ts`,
+ * `plan-points-screens.test.ts` and `plan-points-mail.test.ts`.
  */
 function databaseUrl(): string {
   if (!process.env.DATABASE_URL && existsSync(".env.local")) process.loadEnvFile(".env.local");
@@ -804,10 +813,11 @@ test.describe("§974 «Tabel» and «Pe puncte» on «Planul voluntarilor»", ()
       await expect(wide.locator("thead th")).toHaveText(["Nr.", "Punct", "Km", "Coordonate", "Voluntari", "Câți"]);
       const rows = wide.locator("tbody tr");
       await expect(rows).toHaveCount(4);
-      await expect(rows.nth(0).locator("td")).toHaveText(["1", "Intersecția Stejeriș", "1,2", "—", `${ana.name} +40 712 345 678 ${ana.email}`, "1"]);
+      // Since §NNN a point's people are a numbered list: the cell's words begin with «1.».
+      await expect(rows.nth(0).locator("td")).toHaveText(["1", "Intersecția Stejeriș", "1,2", "—", `1. ${ana.name} +40 712 345 678 ${ana.email}`, "1"]);
       await expect(rows.nth(1).locator("td")).toHaveText(["2", "Izvorul rece", "3,4", "45.64271, 25.58871 Deschide pe hartă", "niciunul", "0"]);
-      await expect(rows.nth(2).locator("td")).toHaveText(["3", "Apă la cabană", "5,5", "—", `${dan.name} +40 712 345 678 ${dan.email}`, "1"]);
-      await expect(rows.nth(3).locator("td")).toHaveText(["", "Kituri și numere", "start–finish", "—", `${radu.name} +40 712 345 678 ${radu.email}`, "1"]);
+      await expect(rows.nth(2).locator("td")).toHaveText(["3", "Apă la cabană", "5,5", "—", `1. ${dan.name} +40 712 345 678 ${dan.email}`, "1"]);
+      await expect(rows.nth(3).locator("td")).toHaveText(["", "Kituri și numere", "start–finish", "—", `1. ${radu.name} +40 712 345 678 ${radu.email}`, "1"]);
     } else {
       // ---- A phone: no table, a block a point headed by its name — and no «Nr.» line at the start–finish ----------------
       await expect(section.locator("table")).toBeHidden();
@@ -967,5 +977,156 @@ test.describe("§978 «Poze și hărți» on «Planul voluntarilor»", () => {
     await expect(maps).toHaveAttribute("open", "");
     await expect(maps.getByTestId("plan-link")).toHaveCount(0);
     await expect(maps.getByTestId("plan-maps-state")).toHaveText("nicio poză · niciun link");
+  });
+});
+
+test.describe("§NNN «Notă pentru voluntari» and the numbered people on «Planul voluntarilor»", () => {
+  test.describe.configure({ timeout: 180_000 });
+
+  /** An element's box inside the screen's width: what «nothing wider than the phone» means for one element. */
+  async function insideTheScreen(page: Page, element: Locator) {
+    const viewport = page.viewportSize();
+    const box = await element.boundingBox();
+    expect(viewport).not.toBeNull();
+    expect(box).not.toBeNull();
+    if (viewport && box) {
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 0.5);
+    }
+  }
+
+  test("the Organizer writes a point's note in «Modifică punctul», reads it under the point's name in both views and on paper, the people numbered in bold with a line between two — and the point's email carries it", async ({
+    page,
+  }) => {
+    const seeded = await seed(`${test.info().project.name}-${Date.now().toString(36)}-n`);
+    const { eventId, points, ana, dan, radu } = seeded;
+    // Radu at the junction beside Ana — the setup, not the subject: a point with two people, so its list has a second line.
+    await withDatabase((client) => client.query(`UPDATE event_volunteers SET checkpoint_id = $2 WHERE id = $1`, [radu.id, points.junction]));
+    const NOTE = { ro: "Direcționați spre stânga la intersecție.\nPurtați vesta reflectorizantă.", en: "Send the runners left at the junction.\nWear the reflective vest." };
+    await signIn(page, "Dev Moderator");
+    await page.goto(`${planPath(eventId)}?view=points`);
+    await hydrated(page);
+
+    // ---- «Pe puncte»: the junction's people numbered in its order, and no note yet ----------------------------------------
+    const junction = await openPoint(page, "route", "Intersecția Stejeriș");
+    await expect(junction.getByTestId("plan-person-number")).toHaveText(["1.", "2."]);
+    await expect(junction.getByTestId("plan-person-name")).toHaveText([ana.name, radu.name]);
+    await expect(junction.getByTestId("plan-point-volunteer-note")).toHaveCount(0);
+
+    // ---- The pencil: the note's two boxes, empty, each stopped at 500 characters and a thumb's height ----------------------
+    const fold = junction.getByTestId("plan-point-edit");
+    await openFold(fold);
+    const noteRo = fold.getByTestId("plan-point-edit-note-ro");
+    const noteEn = fold.getByTestId("plan-point-edit-note-en");
+    await expect(noteRo).toHaveValue("");
+    await expect(noteEn).toHaveValue("");
+    for (const box of [noteRo, noteEn]) {
+      await expect(box).toHaveAttribute("maxlength", "500");
+      await thumbSized(box);
+      await insideTheScreen(page, box);
+    }
+    await expect(fold.getByText("În ambele limbi sau în niciuna, cel mult 500 de caractere în fiecare.")).toBeVisible();
+    await fits(page);
+
+    // ---- One language alone is refused: the page's alert says why, the point open under it, nothing saved -----------------
+    await noteRo.fill("Doar în română.");
+    await fold.getByTestId("plan-point-save").click();
+    await expect(page).toHaveURL(new RegExp(`${planPath(eventId)}\\?view=points&open=${points.junction}&planError=PLAN_POINT_NOTE_ONE_LANGUAGE#admin-alert$`), { timeout: 30_000 });
+    await hydrated(page);
+    await expect(page.locator("#admin-alert")).toContainText("Scrie nota pentru voluntari și în română, și în engleză, sau lasă ambele casete goale.");
+    await expect(junction).toHaveAttribute("open", "");
+    await expect(junction.getByTestId("plan-point-volunteer-note")).toHaveCount(0);
+
+    // ---- Both languages, two lines each: saved, back to the point, open -------------------------------------------------
+    await openFold(fold);
+    await noteRo.fill(NOTE.ro);
+    await noteEn.fill(NOTE.en);
+    await fold.getByTestId("plan-point-save").click();
+    await expect(page).toHaveURL(backTo(eventId, `view=points&open=${points.junction}`, `point-${points.junction}`), { timeout: 30_000 });
+    await toastSays(page, "Punct salvat.");
+    await hydrated(page);
+    await expect(junction).toHaveAttribute("open", "");
+
+    // Under the point's bar, in the page's language: the label in bold, the note's line break a line break, inside the screen.
+    const pointNote = junction.getByTestId("plan-point-volunteer-note");
+    await expect(pointNote).toHaveText(`Notă pentru voluntari: ${NOTE.ro}`);
+    await expect(pointNote.locator("strong")).toHaveCSS("font-weight", "700");
+    expect(await pointNote.evaluate((element) => (element as HTMLElement).innerText)).toContain("intersecție.\nPurtați");
+    await insideTheScreen(page, pointNote);
+    // The pencil's boxes hold what was saved, to be changed or emptied.
+    await expect(noteRo).toHaveValue(NOTE.ro);
+    await expect(noteEn).toHaveValue(NOTE.en);
+    await fits(page);
+    // On paper, with the point and its numbered people.
+    await page.emulateMedia({ media: "print" });
+    await expect(pointNote).toBeVisible();
+    await expect(junction.getByTestId("plan-person-number")).toHaveText(["1.", "2."]);
+    await expect(junction.getByTestId("plan-person-number").first()).toBeVisible();
+    await page.emulateMedia({ media: "screen" });
+
+    // ---- «Tabel»: the note under the point's name, the people numbered, in bold, a line between two ---------------------
+    await viewLink(page, "Tabel").click();
+    await expect(page).toHaveURL(new RegExp(`${planPath(eventId)}\\?view=table$`));
+    await hydrated(page);
+    const section = page.getByTestId("plan-table-section");
+    const shown = (testid: string) => section.getByTestId(testid).filter({ visible: true });
+    await expect(shown("plan-table-volunteer-note")).toHaveText([`Notă pentru voluntari: ${NOTE.ro}`]);
+    expect(await shown("plan-table-volunteer-note").evaluate((element) => (element as HTMLElement).innerText)).toContain("intersecție.\nPurtați");
+    await insideTheScreen(page, shown("plan-table-volunteer-note"));
+    // The junction's two, then the water's one: numbered again from 1 at each point.
+    await expect(shown("plan-table-person-number")).toHaveText(["1.", "2.", "1."]);
+    await expect(shown("plan-table-person-name")).toHaveText([ana.name, radu.name, dan.name]);
+    for (let index = 0; index < 3; index++) {
+      await expect(shown("plan-table-person-name").nth(index)).toHaveCSS("font-weight", "700");
+      await expect(shown("plan-table-person-name").nth(index)).toHaveCSS("text-transform", "uppercase");
+    }
+    // A thin line on the second person of a point, none on the first of each.
+    const people = shown("plan-table-person");
+    await expect(people).toHaveCount(3);
+    await expect(people.nth(0)).toHaveCSS("border-top-width", "0px");
+    await expect(people.nth(1)).toHaveCSS("border-top-width", "1px");
+    await expect(people.nth(1)).toHaveCSS("border-top-style", "solid");
+    await expect(people.nth(2)).toHaveCSS("border-top-width", "0px");
+    if ((page.viewportSize()?.width ?? 0) >= 900) {
+      // A desktop: the row's cells say it — the note on its own line under the name, the number first on each person's line.
+      const row = section.locator('table[data-table-id="volunteer-plan"] tbody tr').first();
+      await expect(row.locator("td").nth(1)).toHaveText(`Intersecția Stejeriș Notă pentru voluntari: ${NOTE.ro}`, { useInnerText: true });
+      await expect(row.locator("td").nth(4).locator("li")).toHaveText([`1. ${ana.name} +40 712 345 678 ${ana.email}`, `2. ${radu.name} +40 712 345 678 ${radu.email}`]);
+    }
+    await fits(page);
+
+    // ---- On paper: the table with the note, the numbers, the bold names and the line -------------------------------------
+    await page.emulateMedia({ media: "print" });
+    await expect(section.locator('table[data-table-id="volunteer-plan"]')).toBeVisible();
+    await expect(shown("plan-table-volunteer-note")).toHaveText([`Notă pentru voluntari: ${NOTE.ro}`]);
+    await expect(shown("plan-table-person-number")).toHaveText(["1.", "2.", "1."]);
+    await expect(shown("plan-table-person-name").first()).toHaveCSS("font-weight", "700");
+    await expect(shown("plan-table-person").nth(1)).toHaveCSS("border-top-width", "1px");
+    await page.emulateMedia({ media: "screen" });
+
+    // ---- «Trimite fiecăruia punctul lui»: the three at a point are told ----------------------------------------------------
+    await openMail(page);
+    await mailSection(page).send.click();
+    await confirmDialog(page, QUESTION);
+    await expect(page).toHaveURL(backTo(eventId, "view=table&saved=planPointsSent", "plan-mail"), { timeout: 30_000 });
+    await toastSays(page, "3 voluntari anunțați.");
+
+    // ---- The message, as the server sent it (local: `/devs` → «Emailuri», which an Administrator opens) -----------------
+    await page.context().clearCookies();
+    await signIn(page, "Dev Administrator");
+    // Ana's, at the junction: the note, its own paragraph under the point, in both halves.
+    const anaMail = await capturedEmail(page, ana.email, "Notă pentru voluntari");
+    expect(anaMail.text).toContain(`Notă pentru voluntari: ${NOTE.ro}`);
+    expect(anaMail.text).toContain(`Note for the volunteers: ${NOTE.en}`);
+    expect(anaMail.text.indexOf("Punctul tău la")).toBeLessThan(anaMail.text.indexOf("Notă pentru voluntari"));
+    // Dan's, at the water, which has none: not a word of it.
+    const danMail = await capturedEmail(page, dan.email, "Punctul tău la");
+    expect(danMail.text).not.toMatch(/Notă pentru voluntari|Note for the volunteers|Direcționați/);
+
+    // ---- And the database holds what the page says: both languages, the line break kept ----------------------------------
+    const [stored] = await withDatabase(
+      async (client) => (await client.query<{ ro: string; en: string }>(`SELECT volunteer_note_ro AS ro, volunteer_note_en AS en FROM event_checkpoints WHERE id = $1`, [points.junction])).rows,
+    );
+    expect(stored).toEqual(NOTE);
   });
 });

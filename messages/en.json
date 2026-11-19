@@ -2855,6 +2855,8 @@
       "COORDINATES_INVALID": "We could not read the coordinates. Write them as Google Maps does, for example 45.64271, 25.58871.",
       "PLAN_POINT_TOO_MANY": "Too many points added here: at most {max} an event. Delete one to add another.",
       "PLAN_POINT_IN_EDITOR": "This point is one of the \"Points on the route\": it is deleted in the event's editor, not here.",
+      "PLAN_POINT_NOTE_ONE_LANGUAGE": "Write the note for the volunteers in both Romanian and English, or leave both boxes empty.",
+      "PLAN_POINT_NOTE_TOO_LONG": "The note for the volunteers is too long: at most {max} characters in each language.",
       "PLAN_POINT_GONE": "The point is no longer on the plan: it was deleted meanwhile.",
       "PLAN_PICTURES_FULL": "The plan already has {max} pictures, as many as it can hold. Delete one to add another.",
       "PLAN_LINKS_FULL": "The plan already has {max} links, as many as it can hold. Delete one to add another.",
@@ -6717,6 +6719,7 @@
         },
         "pointTitle": "{number}. {title}",
         "pointKm": "{km} km",
+        "personNumber": "{number}.",
         "people": {
           "one": "{count} volunteer",
           "few": "{count} volunteers",
@@ -6762,6 +6765,11 @@
           "kmHelper": "Only for a point on the route.",
           "coordinates": "Coordinates (optional)",
           "coordinatesHelper": "As in Google Maps: press and hold on the map and copy the numbers, for example 45.64271, 25.58871.",
+          "volunteerNote": "Note for the volunteers:",
+          "volunteerNoteRo": "Note for the volunteers (Romanian)",
+          "volunteerNoteEn": "Note for the volunteers (English)",
+          "volunteerNoteHelper": "What everybody at this point needs to know: it is on the plan and in each one's email.",
+          "volunteerNoteHelperBoth": "In both languages or in neither, at most {max} characters each.",
           "add": "Add the point",
           "openMap": "Open on the map",
           "openMapFor": "Open on the map: {name}",
@@ -9891,6 +9899,17 @@
                 "There too, «Emergency sheet»: the phones and emergency contacts of everyone confirmed, on one page. Take it to the race and destroy it afterwards.",
                 "Volunteers: ask an administrator to make each of them an account with the Voluntar role — one per person, so «Log» says who scanned and who marked present —, then show them this guide's “Race day” section.",
                 "On race day: «Race day» in the top bar."
+              ]
+            },
+            {
+              "title": "The volunteers' plan: who stands at which point",
+              "steps": [
+                "«Volunteers» in the top bar: choose the event, press «Filter», then «The volunteers' plan».",
+                "«Table» shows every point in one table; «By point», each point with its people. There, at a point, choose a volunteer and press «Put here»; «Take off» takes them off the point.",
+                "Each point's volunteers are numbered, their names in bold, with a thin line between two — on the screen and on paper.",
+                "What everybody at a point has to know: on «By point» open the point, press the pencil («Change the point»), write «Note for the volunteers (Romanian)» and «Note for the volunteers (English)» — in both languages or in neither — and press «Save the point». The note shows under the point's name, in the table and on paper.",
+                "«Print the plan» prints what you see: the table, or every point, open.",
+                "Once the plan is ready: «Send each their point». Each volunteer placed at a point gets an email with their point, the point's note for the volunteers, what they do there and the plan's pictures. Nobody is told before."
               ]
             },
             {

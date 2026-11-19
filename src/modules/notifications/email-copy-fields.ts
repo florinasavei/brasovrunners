@@ -188,6 +188,9 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
       km: EMAIL_SAMPLE_PLAN_POINT.km,
       noteRo: EMAIL_SAMPLE_PLAN_POINT.note.ro,
       noteEn: EMAIL_SAMPLE_PLAN_POINT.note.en,
+      // «Notă pentru voluntari» (§NNN): the paragraph under the band, each half in its own language.
+      volunteerNoteRo: EMAIL_SAMPLE_PLAN_POINT.volunteerNote.ro,
+      volunteerNoteEn: EMAIL_SAMPLE_PLAN_POINT.volunteerNote.en,
       pictures: [
         {
           displayUrl: `${base}${EMAIL_SAMPLE_PLAN_POINT.picture.path}`,

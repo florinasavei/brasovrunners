@@ -11,7 +11,7 @@ import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { PLAN_LINK_BOXES, PlanMapsRefusal } from "@/modules/volunteers/domain/plan-link";
 import { addVolunteerPlanLink, addVolunteerPlanPicture, removeVolunteerPlanLink, removeVolunteerPlanPicture } from "@/modules/volunteers/plan";
-import { changePlanPoint, PlanPointGone, PlanPointRefusal } from "@/modules/volunteers/plan-points";
+import { changePlanPoint, PLAN_POINT_BOXES, PlanPointGone, PlanPointRefusal } from "@/modules/volunteers/plan-points";
 import { sendVolunteerPoints } from "@/modules/volunteers/point-mail";
 import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -259,6 +259,15 @@ function planPointBoxes(form: FormData) {
 }
 
 /**
+ * The two boxes of «Notă pentru voluntari» in «Modifică punctul» (§NNN), as the service takes them — or nothing, for a form that
+ * has neither (one drawn before them): the service then keeps the note the point has.
+ */
+function planPointNoteBoxes(form: FormData): { volunteerNoteRo?: string; volunteerNoteEn?: string } {
+  const [ro, en] = [PLAN_POINT_BOXES.volunteerNoteRo, PLAN_POINT_BOXES.volunteerNoteEn];
+  return form.has(ro) || form.has(en) ? { volunteerNoteRo: field(form, ro), volunteerNoteEn: field(form, en) } : {};
+}
+
+/**
  * «Adaugă punctul» in «Punctele planului» on «Planul voluntarilor» (§961; the owner, 2026-11-17: «vreau să pot defini
  * punctele de mână, să pun nume punct și la ce km e și coordonate punct» — «Practic voluntarii sunt de 2 tipuri: start-finish
  * și pe traseu»): a point of the plan's own, on the route — with its kilometre — or at the start–finish, with its name and,
@@ -297,7 +306,8 @@ export async function addPlanPointAction(_previous: FormOutcome | null, form: Fo
  * «Salvează punctul» in a point's «Modifică punctul» on «Planul voluntarilor» (§961): a point of the plan's own changed —
  * its name, its kilometre, its coordinates, and whether it is on the route or at the start–finish — or, for one of the
  * event's «Puncte pe traseu», its coordinates alone: whatever else such a form posts is never read (its name and kilometre
- * are public, and are the editor's). The capability is asked here by name, at the door, and the service asks it again.
+ * are public, and are the editor's). Of either, its «Notă pentru voluntari» in both languages (§NNN), held by the service to
+ * both or neither and `PLAN_POINT_NOTE_MAX` characters. The capability is asked here by name, at the door, and the service asks it again.
  *
  * A press that went through comes back to its point, in the view it was pressed in, the point and its group drawn open
  * (`open=`, §974), its outcome in the toast; a refused one — a name left empty, a kilometre that is no number, coordinates in
@@ -317,7 +327,7 @@ export async function editPlanPointAction(form: FormData): Promise<void> {
   let refusal: string | null = null;
   try {
     const actor = await requireStaffCapability(canManageVolunteers);
-    const result = await changePlanPoint(getDb(), actor, { kind: "edit", eventId, id: pointId, ...planPointBoxes(form) }, new Date());
+    const result = await changePlanPoint(getDb(), actor, { kind: "edit", eventId, id: pointId, ...planPointBoxes(form), ...planPointNoteBoxes(form) }, new Date());
     await flashOutcome({ saved: result.changed ? "planPointSaved" : "volunteerUnchanged" });
   } catch (error) {
     if (!isDomainError(error)) throw error;

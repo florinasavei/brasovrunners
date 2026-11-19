@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
-import { eventCheckpoints } from "@/db/schema/event-checkpoints";
+import { eventCheckpoints, PLAN_POINT_NOTE_MAX } from "@/db/schema/event-checkpoints";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -9,6 +9,7 @@ import { CHECKPOINT_NAME_MAX, type CheckpointKind, readKm } from "@/modules/even
 import { COORDINATES_BOX, type Coordinates, parseCoordinates } from "@/modules/event-checkpoints/domain/coordinates";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
+import { isWrittenText, missingLanguage } from "@/shared/forms/both-languages";
 import { isUuid } from "@/shared/ids";
 
 /*
@@ -43,6 +44,14 @@ import { isUuid } from "@/shared/ids";
 
   Nothing here emails anybody, moves a person's state or number, or expires a public cache tag: no public page reads these
   rows. Telling the volunteers stays one press of its own, «Trimite fiecăruia punctul lui» (§956).
+
+  **«Notă pentru voluntari» (§NNN; the owner, 2026-11-19: «si am nevoie de un nou field "noua pentru voluntari"»).** Every
+  point — the editor's and the plan's own alike — may carry what everybody standing there has to know («Direcționați spre
+  stânga la intersecție; vestă reflectorizantă»), in Romanian and in English, both or neither, at most `PLAN_POINT_NOTE_MAX`
+  characters each, its line breaks kept (`volunteer_note_ro`, `volunteer_note_en`). It is the plan's side of
+  a point as the coordinates are: written here, in the point's own «Salvează punctul», read through `listPlanPoints` by the
+  plan's page and the point's email, and never by the public side — which has its own short note, `note_ro` / `note_en`, the
+  event's page shows.
 */
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -73,6 +82,12 @@ export type PlanPoint = {
   /** Where the point is, six decimals — both or neither. */
   latitude: number | null;
   longitude: number | null;
+  /**
+   * «Notă pentru voluntari» (§NNN): what everybody standing here has to know, in each language — both or neither, line breaks
+   * as `\n`. Any point may have one, the editor's too; null for none.
+   */
+  volunteerNoteRo: string | null;
+  volunteerNoteEn: string | null;
   /** The point's place in the route's order, 1 for the first — the number the picture's points follow; null at the start–finish. */
   number: number | null;
 };
@@ -110,6 +125,8 @@ export async function listPlanPoints<T extends Record<string, unknown>>(db: Data
       startFinish: eventCheckpoints.startFinish,
       latitude: eventCheckpoints.latitude,
       longitude: eventCheckpoints.longitude,
+      volunteerNoteRo: eventCheckpoints.volunteerNoteRo,
+      volunteerNoteEn: eventCheckpoints.volunteerNoteEn,
     })
     .from(eventCheckpoints)
     .where(eq(eventCheckpoints.eventId, eventId))
@@ -135,6 +152,8 @@ export async function listPlanPoints<T extends Record<string, unknown>>(db: Data
     startFinish: row.startFinish,
     latitude: row.latitude === null || row.longitude === null ? null : Number(row.latitude),
     longitude: row.latitude === null || row.longitude === null ? null : Number(row.longitude),
+    volunteerNoteRo: row.volunteerNoteRo,
+    volunteerNoteEn: row.volunteerNoteEn,
     number: row.startFinish ? null : (onRoute += 1),
   }));
 }
@@ -143,17 +162,34 @@ export async function listPlanPoints<T extends Record<string, unknown>>(db: Data
 // The verbs: «Adaugă punctul», «Salvează punctul», «Șterge punctul»
 // ---------------------------------------------------------------------------------------------
 
-/** The form's boxes, as a refusal names them. */
-export const PLAN_POINT_BOXES = { place: "place", name: "name", km: "km", coordinates: COORDINATES_BOX } as const;
+/** The form's boxes, as a refusal names them — the two of «Notă pentru voluntari» (§NNN) in «Modifică punctul» alone. */
+export const PLAN_POINT_BOXES = {
+  place: "place",
+  name: "name",
+  km: "km",
+  coordinates: COORDINATES_BOX,
+  volunteerNoteRo: "volunteerNoteRo",
+  volunteerNoteEn: "volunteerNoteEn",
+} as const;
 
 /** The sentences a refused press of the plan's points is answered with: `Admin.errors.<reason>`. */
-export const PLAN_POINT_REASONS = ["PLAN_POINT_PLACE_UNKNOWN", "PLAN_POINT_NAME_MISSING", "PLAN_POINT_KM_INVALID", "PLAN_POINT_TOO_MANY", "PLAN_POINT_IN_EDITOR"] as const;
+export const PLAN_POINT_REASONS = [
+  "PLAN_POINT_PLACE_UNKNOWN",
+  "PLAN_POINT_NAME_MISSING",
+  "PLAN_POINT_KM_INVALID",
+  "PLAN_POINT_TOO_MANY",
+  "PLAN_POINT_IN_EDITOR",
+  // «Notă pentru voluntari» (§NNN): written in one language only, or longer than `PLAN_POINT_NOTE_MAX` in one of them.
+  "PLAN_POINT_NOTE_ONE_LANGUAGE",
+  "PLAN_POINT_NOTE_TOO_LONG",
+] as const;
 export type PlanPointReason = (typeof PLAN_POINT_REASONS)[number];
 
-/** What a reason's sentence needs filled in (`{max}`): the longest name, the most points. Words of the code, never of a person. */
+/** What a reason's sentence needs filled in (`{max}`): the longest name, the most points, the longest note. Words of the code, never of a person. */
 export function planPointRefusalValues(reason: string): Record<string, string> {
   if (reason === "PLAN_POINT_NAME_MISSING") return { max: String(CHECKPOINT_NAME_MAX) };
   if (reason === "PLAN_POINT_TOO_MANY") return { max: String(PLAN_POINTS_MAX) };
+  if (reason === "PLAN_POINT_NOTE_TOO_LONG") return { max: String(PLAN_POINT_NOTE_MAX) };
   return {};
 }
 
@@ -195,8 +231,12 @@ export class PlanPointGone extends DomainError {
 export type PlanPointRequest =
   /** «Adaugă punctul»: a new point of the plan's own. */
   | { kind: "add"; eventId: string; place: unknown; name: unknown; km: unknown; coordinates: unknown }
-  /** «Salvează punctul»: all of a plan's own point, the kind included — or the coordinates alone of an editor's point. */
-  | { kind: "edit"; eventId: string; id: unknown; place: unknown; name: unknown; km: unknown; coordinates: unknown }
+  /**
+   * «Salvează punctul»: all of a plan's own point, the kind included — or the coordinates alone of an editor's point —, and of
+   * either its «Notă pentru voluntari» (§NNN). A request that names neither of the note's boxes (`undefined`, a form drawn
+   * before them) keeps the note as it is.
+   */
+  | { kind: "edit"; eventId: string; id: unknown; place: unknown; name: unknown; km: unknown; coordinates: unknown; volunteerNoteRo?: unknown; volunteerNoteEn?: unknown }
   /** «Șterge punctul»: a plan's own point; its people stand at no point again. */
   | { kind: "remove"; eventId: string; id: unknown };
 
@@ -242,6 +282,39 @@ function columnsOf(words: PointWords) {
 
 const sameWords = (a: PointWords, b: PointWords): boolean => a.place === b.place && a.name === b.name && a.km === b.km && a.latitude === b.latitude && a.longitude === b.longitude;
 
+/** «Notă pentru voluntari» as it is stored (§NNN): both languages, or null in both. */
+type VolunteerNote = { ro: string | null; en: string | null };
+
+/** A note's words as they are stored: line breaks as `\n` — a browser posts a textarea's as `\r\n` —, the ends trimmed. */
+const noteWords = (value: unknown): string => (typeof value === "string" ? value.replace(/\r\n?/g, "\n").trim() : "");
+
+/**
+ * What «Notă pentru voluntari» (§NNN) was posted as, held to the rules: each language at most `PLAN_POINT_NOTE_MAX` characters —
+ * counted as the table's check counts them (`char_length`: an emoji is one) — and both written or neither (§352: the house's rule
+ * for every text the club types, `shared/forms/both-languages.ts`); both empty is no note. The first thing wrong, in the order of
+ * the form's boxes, is refused naming its box: a language too long, then the language left empty.
+ */
+function volunteerNoteOf(request: { volunteerNoteRo?: unknown; volunteerNoteEn?: unknown }): VolunteerNote {
+  const pair = { ro: noteWords(request.volunteerNoteRo), en: noteWords(request.volunteerNoteEn) };
+  if ([...pair.ro].length > PLAN_POINT_NOTE_MAX) throw new PlanPointRefusal("PLAN_POINT_NOTE_TOO_LONG", [PLAN_POINT_BOXES.volunteerNoteRo]);
+  if ([...pair.en].length > PLAN_POINT_NOTE_MAX) throw new PlanPointRefusal("PLAN_POINT_NOTE_TOO_LONG", [PLAN_POINT_BOXES.volunteerNoteEn]);
+  const missing = missingLanguage(pair, isWrittenText);
+  if (missing) throw new PlanPointRefusal("PLAN_POINT_NOTE_ONE_LANGUAGE", [missing === "ro" ? PLAN_POINT_BOXES.volunteerNoteRo : PLAN_POINT_BOXES.volunteerNoteEn]);
+  return pair.ro === "" ? { ro: null, en: null } : pair;
+}
+
+/** Whether a request names the note at all: a form drawn before its boxes posts neither, and keeps the note it had. */
+const namesTheNote = (request: { volunteerNoteRo?: unknown; volunteerNoteEn?: unknown }): boolean => request.volunteerNoteRo !== undefined || request.volunteerNoteEn !== undefined;
+
+const sameNote = (a: VolunteerNote, b: VolunteerNote): boolean => a.ro === b.ro && a.en === b.en;
+
+/**
+ * What the trail says of a note that changed (§NNN): only whether there was one before and is one after — never its words, which
+ * may well name a person («Ana aduce steagurile»). Nothing for a note that did not change.
+ */
+const noteTrail = (before: VolunteerNote, after: VolunteerNote): Record<string, unknown> =>
+  sameNote(before, after) ? {} : { volunteerNote: { from: before.ro !== null, to: after.ro !== null } };
+
 /**
  * One change to the points of one event's volunteers' plan, by one staff member (§961).
  *
@@ -257,6 +330,9 @@ const sameWords = (a: PointWords, b: PointWords): boolean => a.place === b.place
  *   to the route it needs one. Of an editor's point, ONLY the coordinates: a posted name, kilometre or place for it is never
  *   read and never written — those are changed in the event's editor, where they are public. A point of another event, or
  *   one that is not there, is NOT_FOUND (`PlanPointGone`, said on the page as a point no longer on the plan).
+ * - **«Notă pentru voluntari» (§NNN), on `edit` of either kind:** both languages or neither, each at most
+ *   `PLAN_POINT_NOTE_MAX` characters, line breaks kept (`volunteerNoteOf`), read after the point's other boxes; both empty
+ *   takes the note off. A request that names neither box keeps the note as it is.
  * - **`remove`:** a plan's own point only; an editor's is refused (it is deleted in the editor). The people who stood there
  *   stand at no point again — the reference's own `ON DELETE SET NULL` — and the result says how many.
  * - **How:** in one transaction under the event row's lock (`FOR NO KEY UPDATE`, as the presses of «Poze și hărți» (`plan.ts`) and «Pune
@@ -264,7 +340,8 @@ const sameWords = (a: PointWords, b: PointWords): boolean => a.place === b.place
  *   the plan's points. A press that changes nothing writes nothing and audits nothing.
  * - **The trail:** one row a change — `volunteer_plan.point_added`, `.point_changed`, `.point_removed` — with the point's id,
  *   whether it is the plan's own, and its place, name, kilometre and coordinates before and after; a removal also says how
- *   many people it freed. A count, never a person.
+ *   many people it freed, and a change of the note whether there was one before and is one after (`volunteerNote`), never its
+ *   words. A count, never a person.
  *
  * Nobody is emailed, no state or number of a person moves, and no public cache tag is expired: no public page reads these rows.
  */
@@ -322,6 +399,8 @@ export async function changePlanPoint<T extends Record<string, unknown>>(db: Dat
         startFinish: eventCheckpoints.startFinish,
         latitude: eventCheckpoints.latitude,
         longitude: eventCheckpoints.longitude,
+        volunteerNoteRo: eventCheckpoints.volunteerNoteRo,
+        volunteerNoteEn: eventCheckpoints.volunteerNoteEn,
       })
       .from(eventCheckpoints)
       .where(and(eq(eventCheckpoints.id, id), eq(eventCheckpoints.eventId, event.id)))
@@ -349,26 +428,35 @@ export async function changePlanPoint<T extends Record<string, unknown>>(db: Dat
       return { changed: true, outcome: "removed", id: current.id, freed };
     }
 
+    // «Notă pentru voluntari» (§NNN), of either kind of point: as it is, and as the press would leave it — read after the
+    // point's other boxes, so the first thing wrong is refused first; a request that names neither box keeps it.
+    const noteBefore: VolunteerNote = { ro: current.volunteerNoteRo, en: current.volunteerNoteEn };
+    const noteAfter = (): VolunteerNote => (request.kind === "edit" && namesTheNote(request) ? volunteerNoteOf(request) : noteBefore);
+    const noteColumns = (note: VolunteerNote) => ({ volunteerNoteRo: note.ro, volunteerNoteEn: note.en });
+
     if (current.planOnly) {
       const after = wordsOf(request);
-      if (sameWords(before, after)) return { changed: false, id: current.id };
+      const note = noteAfter();
+      if (sameWords(before, after) && sameNote(noteBefore, note)) return { changed: false, id: current.id };
       await tx
         .update(eventCheckpoints)
-        .set(columnsOf(after))
+        .set({ ...columnsOf(after), ...noteColumns(note) })
         .where(and(eq(eventCheckpoints.id, current.id), eq(eventCheckpoints.eventId, event.id), eq(eventCheckpoints.planOnly, true)));
-      await audit("volunteer_plan.point_changed", { pointId: current.id, planOnly: true, from: before, to: after });
+      await audit("volunteer_plan.point_changed", { pointId: current.id, planOnly: true, from: before, to: after, ...noteTrail(noteBefore, note) });
       return { changed: true, outcome: "edited", id: current.id };
     }
 
-    // An editor's point: where it is, and nothing else — its name, kilometre and place are the editor's, and are not read here.
+    // An editor's point: where it is and its note for the volunteers, and nothing else — its name, kilometre and place are the
+    // editor's, and are not read here.
     const coordinates = parseCoordinates(text(request.coordinates), PLAN_POINT_BOXES.coordinates);
     const after: PointWords = { ...before, latitude: coordinates?.latitude ?? null, longitude: coordinates?.longitude ?? null };
-    if (sameWords(before, after)) return { changed: false, id: current.id };
+    const note = noteAfter();
+    if (sameWords(before, after) && sameNote(noteBefore, note)) return { changed: false, id: current.id };
     await tx
       .update(eventCheckpoints)
-      .set({ latitude: after.latitude === null ? null : after.latitude.toFixed(6), longitude: after.longitude === null ? null : after.longitude.toFixed(6) })
+      .set({ latitude: after.latitude === null ? null : after.latitude.toFixed(6), longitude: after.longitude === null ? null : after.longitude.toFixed(6), ...noteColumns(note) })
       .where(and(eq(eventCheckpoints.id, current.id), eq(eventCheckpoints.eventId, event.id)));
-    await audit("volunteer_plan.point_changed", { pointId: current.id, planOnly: false, from: before, to: after });
+    await audit("volunteer_plan.point_changed", { pointId: current.id, planOnly: false, from: before, to: after, ...noteTrail(noteBefore, note) });
     return { changed: true, outcome: "edited", id: current.id };
   });
 }

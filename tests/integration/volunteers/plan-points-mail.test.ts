@@ -70,7 +70,9 @@ beforeEach(async () => {
 });
 
 type PointBoxes = { place: string; name: string; km: string; coordinates: string };
-function point(request: ({ kind: "add" } & PointBoxes) | ({ kind: "edit"; id: string } & PointBoxes) | { kind: "remove"; id: string }) {
+/** «Notă pentru voluntari» (§NNN), as «Salvează punctul» posts it. */
+type NoteBoxes = { volunteerNoteRo?: string; volunteerNoteEn?: string };
+function point(request: ({ kind: "add" } & PointBoxes) | ({ kind: "edit"; id: string } & PointBoxes & NoteBoxes) | { kind: "remove"; id: string }) {
   return changePlanPoint(db, staff.MODERATOR!, { ...request, eventId: race.raceId }, NOW);
 }
 const place = (id: string, checkpointId: string) => changeVolunteer(db, staff.ADMIN!, { kind: "setCheckpoint", eventId: race.raceId, id, checkpointId }, NOW);
@@ -266,6 +268,89 @@ describe("§961 a point that has coordinates says where it is", () => {
     expect(whereOf((await render(row)).html)).toHaveLength(2);
     await point({ kind: "edit", id: race.points.junction, place: "route", name: "", km: "", coordinates: "" });
     expect(await render(row)).toEqual(before);
+  });
+});
+
+/*
+  §NNN, BR-REQ-080-02, BR-REQ-050-02 — «Notă pentru voluntari» in «Punctul tău de voluntar» (the owner, 2026-11-19: «si am nevoie de
+  un nou field "noua pentru voluntari"»): the point's note for the people standing at it, its own paragraph right under the band
+  that names the point, each half in its own language — and nothing at all for a point that has none.
+*/
+describe("§NNN the message says the point's «Notă pentru voluntari»", () => {
+  const NOTE = { ro: "Direcționați spre stânga la intersecție.\nPurtați vesta reflectorizantă.", en: "Send the runners left at the junction.\nWear the reflective vest." };
+  /** «Notă pentru voluntari» of each half, as the HTML carries it. */
+  const notesOf = (html: string) => [...html.matchAll(/<p data-email-part="volunteer-point-note"[^>]*>([^]*?)<\/p>/g)].map((match) => match[1]);
+  const writeNote = (id: string, note: { ro: string; en: string } = NOTE) =>
+    point({ kind: "edit", id, place: "route", name: "", km: "", coordinates: "", volunteerNoteRo: note.ro, volunteerNoteEn: note.en });
+
+  it("says it as its own paragraph under the band, in both halves — the person's language first —, its line breaks kept, in the text and in the HTML", async () => {
+    await writeNote(race.points.junction);
+    await press();
+    // Ana, Romanian: the Romanian half first.
+    const ana = await render(await mailOf(race.people.ana));
+    const [ro, en] = halves(ana.text);
+    expect(ro).toContain(`Notă pentru voluntari: ${NOTE.ro}`);
+    expect(en).toContain(`Note for the volunteers: ${NOTE.en}`);
+    // Each half its own words alone.
+    expect(ro).not.toMatch(/Note for the volunteers|Send the runners/);
+    expect(en).not.toMatch(/Notă pentru voluntari|Direcționați/);
+    // Right under the band, before where the point is said, the point's own public note and the roles.
+    expect(ro.indexOf("▶ Punctul tău la Crosul: 1. 1,2 km — Intersecția Stejeriș")).toBeLessThan(ro.indexOf("Notă pentru voluntari"));
+    expect(ro.indexOf("Notă pentru voluntari")).toBeLessThan(ro.indexOf(`De știut la acest punct\n${PLAN_JUNCTION_NOTE.ro}`));
+    expect(ro.indexOf("Notă pentru voluntari")).toBeLessThan(ro.indexOf("Rolul tău: Direcționare (Traseu)."));
+    expect(en.indexOf("▶ Your point at The cross")).toBeLessThan(en.indexOf("Note for the volunteers"));
+    // The HTML: one paragraph a half, the label in bold, the line break a <br>.
+    expect(notesOf(ana.html)).toEqual([
+      "<strong>Notă pentru voluntari:</strong> Direcționați spre stânga la intersecție.<br>Purtați vesta reflectorizantă.",
+      "<strong>Note for the volunteers:</strong> Send the runners left at the junction.<br>Wear the reflective vest.",
+    ]);
+    // Dan, English, at another point with no note — and Radu nowhere: his message says nothing of one.
+    const dan = await render(await mailOf(race.people.dan));
+    expect(notesOf(dan.html)).toEqual([]);
+    for (const whole of [dan.text, dan.html]) expect(whole).not.toMatch(/Notă pentru voluntari|Note for the volunteers|Direcționați|Send the runners/);
+  });
+
+  it("puts an English volunteer's half first, says the note of a start–finish point and a route point of the plan's own, and escapes what was typed", async () => {
+    await place(race.people.dan, own.kits);
+    await place(race.people.ion, own.spring);
+    await point({ kind: "edit", id: own.kits, place: "startFinish", name: "Kituri și numere", km: "", coordinates: PIATA_TYPED, volunteerNoteRo: "Kiturile sunt în cutii <albastre> & numerotate.", volunteerNoteEn: "The kits are in <blue> boxes & numbered." });
+    await point({ kind: "edit", id: own.spring, place: "route", name: "Izvor", km: "3,4", coordinates: "", volunteerNoteRo: "Apă la izvor.", volunteerNoteEn: "Water at the spring." });
+    await press();
+    const dan = await render(await mailOf(race.people.dan));
+    const [first, second] = halves(dan.text);
+    expect(first).toContain("Note for the volunteers: The kits are in <blue> boxes & numbered.");
+    expect(second).toContain("Notă pentru voluntari: Kiturile sunt în cutii <albastre> & numerotate.");
+    // Under the band, before «Unde e punctul».
+    expect(first.indexOf("▶ You are at the start–finish: Kituri și numere")).toBeLessThan(first.indexOf("Note for the volunteers"));
+    expect(first.indexOf("Note for the volunteers")).toBeLessThan(first.indexOf("Where the point is"));
+    // Plain text in the HTML, never markup: what was typed is escaped.
+    expect(notesOf(dan.html)).toEqual([
+      "<strong>Note for the volunteers:</strong> The kits are in &lt;blue&gt; boxes &amp; numbered.",
+      "<strong>Notă pentru voluntari:</strong> Kiturile sunt în cutii &lt;albastre&gt; &amp; numerotate.",
+    ]);
+    const ion = await render(await mailOf(race.people.ion));
+    expect(ion.text).toContain("Notă pentru voluntari: Apă la izvor.");
+    expect(ion.text).toContain("Note for the volunteers: Water at the spring.");
+  });
+
+  it("says the note as it stands when the message leaves: written, changed or taken off since the press", async () => {
+    await press();
+    const row = await mailOf(race.people.ana);
+    const before = await render(row);
+    expect(notesOf(before.html)).toEqual([]);
+    // Written after the press, before the send: the message carries it.
+    await writeNote(race.points.junction);
+    expect(halves((await render(row)).text)[0]).toContain(`Notă pentru voluntari: ${NOTE.ro}`);
+    // Changed: the new words.
+    await writeNote(race.points.junction, { ro: "Altă notă.", en: "Another note." });
+    const changed = await render(row);
+    expect(changed.text).toContain("Notă pentru voluntari: Altă notă.");
+    expect(changed.text).not.toContain("Direcționați");
+    // Taken off: the message is the one it was, to the byte.
+    await writeNote(race.points.junction, { ro: "", en: "" });
+    expect(await render(row)).toEqual(before);
+    // Nobody «already told» is told again because the note changed: «Trimite din nou tuturor» is how a new note is sent.
+    expect(await preview()).toMatchObject({ toWrite: 0, told: 3 });
   });
 });
 

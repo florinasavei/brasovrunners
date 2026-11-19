@@ -160,6 +160,9 @@ describe("§956 `VOLUNTEER_POINT`: a message type classed like the role's own", 
         km: 5.5,
         noteRo: "Pahare în cutia albastră.",
         noteEn: "Cups in the blue box.",
+        // «Notă pentru voluntari» (§NNN): the platform's line too, whoever wrote the words.
+        volunteerNoteRo: "Umpleți paharele devreme.",
+        volunteerNoteEn: "Fill the cups early.",
         pictures: [{ displayUrl: "https://media.example.test/plan/1280w.webp", fullUrl: "https://media.example.test/plan/web.webp", width: 2400, height: 1600 }],
         // The plan's links (§978): one with its label, one with none — said by its host.
         links: [
@@ -174,14 +177,25 @@ describe("§956 `VOLUNTEER_POINT`: a message type classed like the role's own", 
     // The club's words…
     expect(roHalf).toContain("Ne vedem sâmbătă la Crosul de toamnă. Adu frontala.");
     expect(roHalf).not.toContain("Organizatorii te-au pus la un punct");
-    // …between the platform's own lines, in the order a reader needs them: the point, its note, the role, then the words, then the picture.
-    const order = ["▶ Punctul tău la Crosul de toamnă: 3. 5,5 km — Apă la cabană", "De știut la acest punct\nPahare în cutia albastră.", "Rolul tău: Direcționare (Traseu).", "Ce presupune rolul: Arăți drumul.", "Ne vedem sâmbătă", "Planul voluntarilor pe traseu, ca poză: https://media.example.test/plan/web.webp", "Hărțile și linkurile planului\nHarta voluntarilor: https://maps.example.test/d/viewer?mid=1\ndocs.example.test: https://docs.example.test/plan"];
+    // …between the platform's own lines, in the order a reader needs them: the point, its note for the volunteers (§NNN), its
+    // public note, the role, then the words, then the picture.
+    const order = [
+      "▶ Punctul tău la Crosul de toamnă: 3. 5,5 km — Apă la cabană",
+      "Notă pentru voluntari: Umpleți paharele devreme.",
+      "De știut la acest punct\nPahare în cutia albastră.",
+      "Rolul tău: Direcționare (Traseu).",
+      "Ce presupune rolul: Arăți drumul.",
+      "Ne vedem sâmbătă",
+      "Planul voluntarilor pe traseu, ca poză: https://media.example.test/plan/web.webp",
+      "Hărțile și linkurile planului\nHarta voluntarilor: https://maps.example.test/d/viewer?mid=1\ndocs.example.test: https://docs.example.test/plan",
+    ];
     const positions = order.map((part) => roHalf.indexOf(part));
     expect(positions.every((position) => position >= 0), JSON.stringify(positions)).toBe(true);
     expect([...positions].sort((a, b) => a - b)).toEqual(positions);
     // The English half keeps the platform's words — the club rewrote the Romanian ones alone — and the same lines.
     expect(enHalf).toContain("The organizers have put you at a point of the route");
     expect(enHalf).toContain("▶ Your point at The autumn cross: 3. 5.5 km — Water at the hut");
+    expect(enHalf).toContain("Note for the volunteers: Fill the cups early.");
     expect(enHalf).toContain("Your role: Guidance (Route).");
     // The picture once, in the first half; the link to the whole of it in both.
     expect(message.html.match(/<img src="https:\/\/media\.example\.test\/plan\/1280w\.webp"/g)).toHaveLength(1);
@@ -214,6 +228,12 @@ describe("§956 `VOLUNTEER_POINT`: a message type classed like the role's own", 
     expect(preview.text).toContain("▶ Punctul tău la Crosul de toamnă: 3. 5,5 km — Apă la cabană");
     expect(preview.text).toContain("▶ Your point at The autumn cross: 3. 5.5 km — Water at the hut");
     expect(preview.text).toContain("De știut la acest punct");
+    // Its «Notă pentru voluntari» (§NNN), in each half's language, under the band — two lines, so the kept line break shows.
+    const [roHalf, enHalf] = preview.text.split("\n— — —\n");
+    expect(roHalf).toContain("Notă pentru voluntari: Umpleți paharele înainte de primul alergător.\nPurtați vesta reflectorizantă.");
+    expect(enHalf).toContain("Note for the volunteers: Fill the cups before the first runner.\nWear the reflective vest.");
+    expect(roHalf.indexOf("▶ Punctul tău")).toBeLessThan(roHalf.indexOf("Notă pentru voluntari"));
+    expect(preview.html.match(/<p data-email-part="volunteer-point-note"[^>]*><strong>[^<]*<\/strong> [^<]*<br>[^<]*<\/p>/g)).toHaveLength(2);
     expect(preview.text).not.toMatch(/Rolul tău|Your role|Ce presupune|What the role/);
     // One picture and one link of the plan (§978), at the site's own address: none of the club's stored pictures. The
     // picture's part stands in both halves — drawn in the first, its link alone in the second —, the links' too.
