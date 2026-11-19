@@ -530,6 +530,26 @@ describe("§986 readFinishLine — «Ultimii sosiți» with who entered each", (
   });
 });
 
+describe("§986 «… din N cu număr»: the numbers the line takes, never a retired one", () => {
+  it("counts the confirmed registrations' numbers and the elite list's numbered lines — not a cancelled or expired row's number, a test row's or a line without one", async () => {
+    // A cancelled and an expired registration keep their numbers on the row, retired (§173); a test row holds one too.
+    await registerRunner(db, raceId, { name: "Ion Anulat", bibNumber: 104, status: "CANCELLED" });
+    await registerRunner(db, raceId, { name: "Eli Expirat", bibNumber: 105, status: "EXPIRED" });
+    await registerRunner(db, raceId, { name: "Test Proba", bibNumber: 106, kind: "TEST" });
+    // The elite list: Ingrid with a number of her own, a line still waiting for one, and a line whose number a confirmed runner holds.
+    await eliteLine("Ingrid", 900);
+    await eliteLine("Fara Numar", null);
+    await eliteLine("Dublura", 101);
+    const view = await readFinishLine(db, staff.CONTRIBUTOR!, raceId, at(1), 20);
+    // 101, 102, 103 (confirmed) and 900 (Ingrid's line): 104 and 105 were retired by a cancellation and an expiry, 106 is a test row.
+    expect(view.withNumber).toBe(4);
+    // The same numbers are what the line refuses and takes.
+    await expect(finish(104, at(40))).rejects.toMatchObject({ code: "RESULT_BIB_UNKNOWN", bibNumber: 104 });
+    await finish(900, at(41));
+    expect((await readFinishLine(db, staff.CONTRIBUTOR!, raceId, at(42), 20)).finished).toBe(1);
+  });
+});
+
 describe("§986 «Istoricul sosirilor»", () => {
   it("names who wrote each line, newest first, from the line and from «Clasament», with the number's name of today and never one in the trail", async () => {
     await setRaceGun(db, staff.MODERATOR!, { eventId: raceId, clear: false }, at(0, 0));

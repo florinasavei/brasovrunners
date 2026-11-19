@@ -89,6 +89,12 @@ describe("§357 the sample legal documents, seeded and re-seeded", () => {
     for (const key of KEYS) expect((await versionsOf(key)).map((row) => row.version), key).toEqual([1]);
   });
 
+  it("never writes the team's undertaking, so a test database signs every colleague in where they asked (§1006)", async () => {
+    await seedSampleLegalDocuments(NOW);
+    await seedSampleLegalDocuments(new Date(NOW.getTime() + 60_000));
+    expect(await versionsOf("STAFF_DATA_AGREEMENT")).toEqual([]);
+  });
+
   it("inserts the next version of the declaration when the template has changed, and leaves the other two alone", async () => {
     // QA as it stands before this change: the declaration without the new risks, the other two current.
     const before = declarationBeforeThisChange();

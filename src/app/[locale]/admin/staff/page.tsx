@@ -23,6 +23,8 @@ import { assignableRoles, canGrantPermission, canHoldMemberTier, canManageMember
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { listStaff } from "@/modules/staff-identity/service";
+import { type TeamAgreementState, teamAgreementStates } from "@/modules/staff-identity/team-agreement";
+import { CLUB_TIME_ZONE, formatDateInWords } from "@/i18n/dates";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
@@ -122,6 +124,20 @@ export default async function StaffPage({ params, searchParams }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const staff = await listStaff(getDb(), actor);
+  /*
+    The team's undertaking (§1006), on every row for the Administrators who read this page: «Acceptat — versiunea N, <data>, ca
+    „<numele scris>”», «Neacceptat», or «Nu e cerut» for the roles that are not asked (an Administrator, a member). One read of
+    the acceptances for the whole list.
+  */
+  const agreements = await teamAgreementStates(getDb(), staff, new Date());
+  const agreementWords = (state: TeamAgreementState): string =>
+    state.kind === "accepted"
+      ? t("staff.teamAgreement.accepted", {
+          version: state.version,
+          date: formatDateInWords(state.acceptedAt, { locale, timeZone: CLUB_TIME_ZONE }),
+          name: state.typedName,
+        })
+      : t(`staff.teamAgreement.${state.kind}`);
   // The levels the club named (§811), in its order and this language: the select of a member's row and of «Adaugă mai mulți membri». Hidden ones are no longer given.
   const tiers = (await listAllMemberTiers(getDb())).map((tier) => ({ ...tierViewOf(tier, locale), hidden: tier.hidden }));
   const givableTiers = tiers.filter((tier) => !tier.hidden);
@@ -183,6 +199,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
     const level = canHoldMemberTier(member.role) ? tierOf(member.memberTierId) : undefined;
     // The invitation email was refused (§671): until the person signs in, the row says why it did not reach them.
     const refusedFor = member.firstSignedInAt === null ? invitationRefusals.get(member.email.trim().toLowerCase()) : undefined;
+    const agreement = agreements.get(member.id);
     const ids = (
       <>
         <input type="hidden" name="uiLocale" value={locale} />
@@ -209,6 +226,12 @@ export default async function StaffPage({ params, searchParams }: Props) {
         {locked && (
           <Typography variant="body2" color="text.secondary" sx={{ display: "block" }} data-testid="staff-superadmin-row">
             {t("staff.superadminRow")}
+          </Typography>
+        )}
+        {/* The team's undertaking (§1006): a line of words, never a chip — an accepted one carries the version, the day and the name typed. */}
+        {agreement && (
+          <Typography variant="body2" color="text.secondary" sx={{ display: "block", overflowWrap: "anywhere" }} data-testid="staff-team-agreement" data-state={agreement.kind}>
+            {t("staff.teamAgreement.line", { state: agreementWords(agreement) })}
           </Typography>
         )}
       </Box>

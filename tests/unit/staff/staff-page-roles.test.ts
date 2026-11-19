@@ -14,6 +14,8 @@ import { STAFF_ROLES, type StaffRole } from "@/modules/staff-identity/domain/rol
  */
 let actor: StaffUser;
 let team: StaffUser[];
+/** Each row's state of the team's undertaking (§1006), as `teamAgreementStates` would read it; none unless a test says. */
+let agreements = new Map<string, unknown>();
 
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");
@@ -53,6 +55,8 @@ vi.mock("@/modules/notifications/send-now-choice", () => ({ sendNowChoiceFor: as
 vi.mock("@/shared/forms/refusal-messages", () => ({ refusalMessages: async () => ({}) }));
 // The invitations' refusals (§671) are a read of the outbox; the roles do not depend on them.
 vi.mock("@/modules/notifications/delivery-evidence", () => ({ refusedInvitations: async () => new Map() }));
+// The team's undertaking (§1006): each row's state, as the test sets it.
+vi.mock("@/modules/staff-identity/team-agreement", () => ({ teamAgreementStates: async () => agreements }));
 vi.mock("@/app/[locale]/admin/actions", () => ({
   changeStaffRoleAction: vi.fn(),
   inviteStaffAction: vi.fn(),
@@ -357,5 +361,38 @@ describe("§1000 the inviter's one line after a press, as the page draws it", ()
     expect((await line({ saved: "reinvited", invite: "failed", reason: "x" }))[0].severity).toBe("warning");
     expect(await line({ saved: "invited", mailSkipped: "1" })).toEqual([]);
     expect(await line({ saved: "passwordReset", account: "done" })).toEqual([]);
+  });
+});
+
+describe("§1006 BR-REQ-060-01 «Echipa» says where each colleague stands with the team's undertaking", () => {
+  const lineOf = (tree: ReactElement<Props>[]) => tree.find((element) => element.props["data-testid"] === "staff-team-agreement");
+  const words = (node: ReactNode): string => (Array.isArray(node) ? node.map(words).join("") : typeof node === "string" || typeof node === "number" ? String(node) : isValidElement<Props>(node) ? words(node.props.children) : "");
+
+  it("draws, on each row, «Acceptat» with the version, the day and the name typed, «Neacceptat», or «Nu e cerut»", async () => {
+    agreements = new Map<string, unknown>([
+      ["m-CONTRIBUTOR", { kind: "accepted", version: 2, acceptedAt: new Date("2026-11-19T09:30:00.000Z"), typedName: "Ana Maria Pop" }],
+      ["m-MODERATOR", { kind: "notAccepted" }],
+      ["m-ADMIN", { kind: "notRequired" }],
+      ["m-MEMBER", { kind: "notRequired" }],
+    ]);
+    const page = await render("ADMIN");
+    expect(words(lineOf(page.rows.get("m-CONTRIBUTOR")!)?.props.children)).toBe("Angajamentul echipei: Acceptat — versiunea 2, 19 noiembrie 2026, ca „Ana Maria Pop”");
+    expect(lineOf(page.rows.get("m-CONTRIBUTOR")!)?.props["data-state"]).toBe("accepted");
+    expect(words(lineOf(page.rows.get("m-MODERATOR")!)?.props.children)).toBe("Angajamentul echipei: Neacceptat");
+    expect(words(lineOf(page.rows.get("m-ADMIN")!)?.props.children)).toBe("Angajamentul echipei: Nu e cerut");
+    expect(words(lineOf(page.rows.get("m-MEMBER")!)?.props.children)).toBe("Angajamentul echipei: Nu e cerut");
+    // A row the read did not answer for draws no line at all, never a guess.
+    expect(lineOf(page.rows.get("m-DEV")!)).toBeUndefined();
+  });
+
+  it("is on the reader's own row and on a Superadministrator's locked row too: a line of words, never a control", async () => {
+    agreements = new Map<string, unknown>([
+      ["reader", { kind: "notRequired" }],
+      ["m-SUPERADMIN", { kind: "notRequired" }],
+    ]);
+    const page = await render("ADMIN");
+    expect(lineOf(page.rows.get("reader")!)?.props["data-state"]).toBe("notRequired");
+    expect(lineOf(page.rows.get("m-SUPERADMIN")!)?.props["data-state"]).toBe("notRequired");
+    agreements = new Map();
   });
 });

@@ -11,7 +11,7 @@ import { isTranslationConfigured } from "@/infrastructure/translate/translator";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import AdminRestingNotice from "@/modules/resilience/ui/AdminRestingNotice";
 import { canTranslateTexts } from "@/modules/staff-identity/domain/roles";
-import { getCurrentAccount, getCurrentStaffUser } from "@/modules/staff-identity/session";
+import { getCurrentAccount, getCurrentStaffUser, teamAgreementOwedFor } from "@/modules/staff-identity/session";
 import { canOpenTaskPanel } from "@/modules/diagnostics/domain/task-panels";
 import { canOpenSettingsTab } from "@/modules/staff-identity/domain/settings-tabs";
 import { readTranslationCredit } from "@/modules/translate/credit";
@@ -66,8 +66,17 @@ export default async function AdminLayout({ children, params }: Props) {
     throws pass straight through.
   */
   let staffUser: Awaited<ReturnType<typeof getCurrentStaffUser>>;
+  let teamAgreementOwed: Awaited<ReturnType<typeof teamAgreementOwedFor>> = null;
   try {
     staffUser = await getCurrentStaffUser();
+    /*
+      The team's undertaking (§1006): while a colleague below the Administrator owes the version in force, the shell draws no
+      tabs — every one of them would only lead to `/admin/acord` — and keeps who is signed in and the sign-out. This layout never
+      sends them there itself: the client router keeps a layout's redirect with the layout and replays it under it, the
+      undertaking's own page included — a loop the first end-to-end run met from the sign-in. The page under it does, through its
+      own `requireStaff`, as every page, action and route of the backoffice asks.
+    */
+    if (staffUser) teamAgreementOwed = await teamAgreementOwedFor(staffUser);
   } catch (error) {
     unstable_rethrow(error);
     if (!isDatabaseAwayError(error)) throw error;
@@ -120,7 +129,7 @@ export default async function AdminLayout({ children, params }: Props) {
       merging with them, so this subtree's whole list is named here. `/devs` nests the same.
     */
     <NextIntlClientProvider messages={pickMessages(messages, BACKOFFICE_CLIENT_MESSAGES)} formats={null}>
-      <BackofficeShell locale={locale} staffUser={staffUser} signOut={signOutAction}>
+      <BackofficeShell locale={locale} staffUser={staffUser} signOut={signOutAction} bare={teamAgreementOwed !== null}>
         {/* Mounted once, for every date and time box in the backoffice (`shared/forms/pickers`,
             `DECISIONS.md` §345) — never on a public route, which never imports this shell. The
             toasts the same: one provider, every backoffice form's "it worked" (§384). */}

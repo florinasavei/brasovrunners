@@ -837,3 +837,36 @@ function grepPermissionsHas(dir: string): string[] {
   }
   return found;
 }
+
+describe("§1006 BR-REQ-060-01 who accepts the team's undertaking before the backoffice opens", () => {
+  // In STAFF_ROLES order: Membru, Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadministrator.
+  const ASKED: Record<StaffRole, boolean> = {
+    MEMBER: false,
+    CONTRIBUTOR: true,
+    COPYWRITER: true,
+    MODERATOR: true,
+    DEV: true,
+    ADMIN: false,
+    SUPERADMIN: false,
+  };
+
+  it.each(STAFF_ROLES.map((role) => [role, ASKED[role]] as const))("mustAcceptTeamAgreement(%s) is %s", (role, expected) => {
+    expect(roles.mustAcceptTeamAgreement(role)).toBe(expected);
+  });
+
+  it("asks every backoffice role below the Administrator, and never a club member, who has no backoffice (§524)", () => {
+    expect(STAFF_ROLES.filter((role) => roles.mustAcceptTeamAgreement(role))).toEqual(["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV"]);
+    for (const role of STAFF_ROLES) {
+      if (!roles.mustAcceptTeamAgreement(role)) continue;
+      expect(roles.isBackofficeRole(role), role).toBe(true);
+      // Nobody is asked to accept a text they could approve themselves.
+      expect(roles.canWriteLegalTexts(role), role).toBe(false);
+    }
+  });
+
+  it("reads the role alone: a grant on top of it (§687) neither asks nor spares anybody", () => {
+    const shop: StaffActor["permissions"] = new Set(["shop.manage"]);
+    expect(roles.mustAcceptTeamAgreement({ role: "CONTRIBUTOR", permissions: shop })).toBe(true);
+    expect(roles.mustAcceptTeamAgreement({ role: "ADMIN", permissions: shop })).toBe(false);
+  });
+});

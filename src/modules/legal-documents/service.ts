@@ -1150,11 +1150,12 @@ export async function readLegalOverview<T extends Record<string, unknown>>(
  *
  * Drafts only, and that is the rule, not caution: nothing is in force until the club reads it and
  * approves it (§46), and approval stays its own press — one version at a time, or every draft at
- * once through `approveDrafts`, which the page offers next. A draft is made by `createDraftVersion`,
- * the long way's own function: the number derived, the hash computed from what is stored, the
- * author on the row. A text whose facts the deployment does not know keeps its `<PLACEHOLDER>`,
- * exactly as "start from the platform's text" leaves it, for the Administrator to type — and
- * `approveDrafts` will not approve it until then.
+ * once through `approveDrafts`, which the page offers next, the team's undertaking excepted: its
+ * draft is made here like every text's, and approved only on its own draft's page (§1006). A draft
+ * is made by `createDraftVersion`, the long way's own function: the number derived, the hash
+ * computed from what is stored, the author on the row. A text whose facts the deployment does not
+ * know keeps its `<PLACEHOLDER>`, exactly as "start from the platform's text" leaves it, for the
+ * Administrator to type — and `approveDrafts` will not approve it until then.
  *
  * `keys` is what the page's confirm dialog named; a key the rows no longer call for (another tab
  * made the draft meanwhile) is skipped rather than doubled.
@@ -1250,7 +1251,9 @@ function assertDraftsReady(plan: readonly DraftApprovalItem[], ids: readonly str
     if (item.outcome !== "ready") {
       throw new DomainError(
         "CONFLICT",
-        `version ${item.row.key} ${item.row.version} is no longer ready to approve (${item.outcome}); nothing was approved`,
+        item.outcome === "alone"
+          ? `version ${item.row.key} ${item.row.version} is approved on its own page, never with other drafts (§1006); nothing was approved`
+          : `version ${item.row.key} ${item.row.version} is no longer ready to approve (${item.outcome}); nothing was approved`,
       );
     }
   }
@@ -1262,10 +1265,11 @@ function assertDraftsReady(plan: readonly DraftApprovalItem[], ids: readonly str
  *
  * `versionIds` is what the confirm dialog named, and every one must still be `ready` when the
  * press lands — the newest draft of its key, above every approved version still offered, no
- * placeholder left. One that is not (a draft edited into a placeholder, a newer draft typed in
- * another tab) refuses the whole press with a `CONFLICT`, because an approval is one-way and the
- * club approved the list it read, not the one the rows became. Approval stays the
- * Administrator's (`assertMayEdit`, §450), and one-way (§46).
+ * placeholder left, and not the team's undertaking, which is approved on its own page (`alone`,
+ * §1006). One that is not (a draft edited into a placeholder, a newer draft typed in another tab, a
+ * page that named the undertaking's draft) refuses the whole press with a `CONFLICT`, because an
+ * approval is one-way and the club approved the list it read, not the one the rows became.
+ * Approval stays the Administrator's (`assertMayEdit`, §450), and one-way (§46).
  */
 export async function approveDrafts<T extends Record<string, unknown>>(
   db: Database<T>,

@@ -67,6 +67,12 @@ const RECORDED: Record<string, { ro: string; en: string; both: string }> = {
     en: "df01842273e0a6c3947ce57204a4e6cc88daed90bc7bfb6a904b2a54556d9467",
     both: "882c63752ec8a9afbbf008a8f2e2274931ab2403c88c3b6e27a1a78a3a62a35b",
   },
+  // The team's undertaking (§1006): a new template, recorded as written.
+  STAFF_DATA_AGREEMENT: {
+    ro: "02d60c654e8a5cf0dd148047559bad8709ae05be1fa2c14edd06d7aaf72bee45",
+    en: "c31b4ef87a62a2c1de8b35f78c6b2acf91e954b6ccba1ad62dcacac75a14a839",
+    both: "00b74bd53bca4c083e2b767fbf89d626dd4851a638c1399124e3724943ff461e",
+  },
 };
 
 describe("BR-REQ-101-01: every legal template's filled hash is the one recorded on origin/qa (§882)", () => {

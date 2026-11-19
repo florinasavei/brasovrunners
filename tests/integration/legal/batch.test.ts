@@ -4,7 +4,7 @@ import { auditLogs } from "@/db/schema/audit-logs";
 import { legalDocumentNumbering, legalDocuments } from "@/db/schema/legal-documents";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { textToBody } from "@/modules/legal-documents/domain/body-text";
-import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
+import { LEGAL_DOCUMENT_KEYS, PLATFORM_APPROVAL_KEYS } from "@/modules/legal-documents/domain/keys";
 import { findCurrentApprovedDocument, listVersionsForBackoffice } from "@/modules/legal-documents/repository";
 import {
   approveDrafts,
@@ -110,17 +110,21 @@ describe("every legal text at once (§532)", () => {
       await resetTables(db);
       [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" }).returning();
       await approvePlatformTemplates(db, admin, FACTS, NOW);
-      expect((await planTemplateRegeneration(db, FACTS, LATER)).every((item) => item.outcome === "unchanged")).toBe(true);
-      expect(await regenerateFromTemplates(db, admin, FACTS, [...LEGAL_DOCUMENT_KEYS], LATER)).toEqual({
+      // Every template the press approved; the team's undertaking it leaves out (§1006), so that one still has a draft to make.
+      const approvedPlan = await planTemplateRegeneration(db, FACTS, LATER);
+      expect(approvedPlan.filter((item) => item.key !== "STAFF_DATA_AGREEMENT").every((item) => item.outcome === "unchanged")).toBe(true);
+      expect(approvedPlan.find((item) => item.key === "STAFF_DATA_AGREEMENT")?.outcome).toBe("create");
+      expect(await regenerateFromTemplates(db, admin, FACTS, [...PLATFORM_APPROVAL_KEYS], LATER)).toEqual({
         created: [],
-        skipped: [...LEGAL_DOCUMENT_KEYS],
+        skipped: [...PLATFORM_APPROVAL_KEYS],
       });
     });
 
     it("drafts the text again when the club's facts changed, the version in force untouched", async () => {
       await approvePlatformTemplates(db, admin, FACTS, NOW);
       const moved = { ...FACTS, registeredAddress: "Str. Nouă nr. 2, Brașov" };
-      const result = await regenerateFromTemplates(db, admin, moved, [...LEGAL_DOCUMENT_KEYS], LATER);
+      // The texts the press put in force; the team's undertaking it leaves out (§1006) has no version in force to keep.
+      const result = await regenerateFromTemplates(db, admin, moved, [...PLATFORM_APPROVAL_KEYS], LATER);
       // Only the texts that name the seat change.
       expect(result.created.length).toBeGreaterThan(0);
       for (const key of result.created) {
@@ -174,16 +178,48 @@ describe("every legal text at once (§532)", () => {
     it("approves the ready drafts in one press, each in force from the press", async () => {
       await regenerateFromTemplates(db, admin, FACTS, [...LEGAL_DOCUMENT_KEYS], NOW);
       const plan = await planDraftApproval(db);
-      expect(plan.every((item) => item.outcome === "ready")).toBe(true);
+      // Every text of the catalogue is ready but the team's undertaking, held back on its own (§1006, the next test).
+      expect(plan.filter((item) => item.outcome === "ready").map((item) => item.row.key).sort()).toEqual([...PLATFORM_APPROVAL_KEYS].sort());
+      const ready = plan.filter((item) => item.outcome === "ready");
 
-      const approved = await approveDrafts(db, admin, plan.map((item) => item.row.id), LATER);
-      expect(approved).toBe(LEGAL_DOCUMENT_KEYS.length);
-      for (const key of LEGAL_DOCUMENT_KEYS) {
+      const approved = await approveDrafts(db, admin, ready.map((item) => item.row.id), LATER);
+      expect(approved).toBe(PLATFORM_APPROVAL_KEYS.length);
+      for (const key of PLATFORM_APPROVAL_KEYS) {
         const inForce = await findCurrentApprovedDocument(db, key, "en", LATER);
         expect(inForce?.version, key).toBe(1);
       }
-      const rows = await db.select().from(legalDocuments);
+      const rows = (await db.select().from(legalDocuments)).filter((row) => row.key !== "STAFF_DATA_AGREEMENT");
       expect(rows.every((row) => row.isApproved && row.approvedByStaffUserId === admin.id && row.effectiveAt.getTime() === LATER.getTime())).toBe(true);
+    });
+
+    it("§1006 never puts the team's undertaking in force: «Regenerează din șabloane» drafts it, «Aprobă ciornele» holds it back", async () => {
+      // The two presses as an Administrator two days before the race would make them, on a deployment that knows the club's
+      // four facts — so no placeholder is left to stop the undertaking's draft.
+      const regenerated = await regenerateFromTemplates(db, admin, FACTS, [...LEGAL_DOCUMENT_KEYS], NOW);
+      expect(regenerated.created).toContain("STAFF_DATA_AGREEMENT");
+      const plan = await planDraftApproval(db);
+      const team = plan.find((item) => item.row.key === "STAFF_DATA_AGREEMENT");
+      expect(team?.outcome).toBe("alone");
+
+      // Every draft the page offers to approve together: the undertaking is not among them, and none of the team is stopped.
+      const offered = plan.filter((item) => item.outcome === "ready").map((item) => item.row.id);
+      expect(offered).not.toContain(team?.row.id);
+      await approveDrafts(db, admin, offered, LATER);
+      expect(await findCurrentApprovedDocument(db, "STAFF_DATA_AGREEMENT", "ro", LATER)).toBeUndefined();
+      expect(await findCurrentApprovedDocument(db, "STAFF_DATA_AGREEMENT", "en", LATER)).toBeUndefined();
+      const [draft] = await db.select().from(legalDocuments).where(eq(legalDocuments.key, "STAFF_DATA_AGREEMENT"));
+      expect(draft.isApproved).toBe(false);
+
+      // A page that names its draft anyway — a stale tab, a crafted post — refuses the whole press: nothing is approved.
+      const terms = await createDraftVersion(db, admin, { key: "TERMS", translations: translations("t2") }, LATER);
+      expect(await codeOf(approveDrafts(db, admin, [terms, draft.id], LATER))).toBe("CONFLICT");
+      expect(await codeOf(approveDrafts(db, admin, [draft.id], LATER))).toBe("CONFLICT");
+      expect((await findCurrentApprovedDocument(db, "TERMS", "ro", LATER))?.version).toBe(1);
+      expect(await findCurrentApprovedDocument(db, "STAFF_DATA_AGREEMENT", "ro", LATER)).toBeUndefined();
+
+      // Its own page's «Aprobă și publică» is the one way it comes into force.
+      await approveVersion(db, admin, draft.id, LATER);
+      expect((await findCurrentApprovedDocument(db, "STAFF_DATA_AGREEMENT", "ro", LATER))?.id).toBe(draft.id);
     });
 
     it("holds back an older draft, a draft behind an approved version and a draft with a placeholder", async () => {

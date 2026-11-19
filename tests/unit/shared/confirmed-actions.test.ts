@@ -457,6 +457,9 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   lookUpPersonAction: "reads; changes nothing",
   signInAsDevIdentityAction: "the development sign-in: a session, not data",
   signOutAction: "a session, not data",
+  // «Accept și intru» on /admin/acord (§1006): the colleague's own acceptance of the team's undertaking, not a verb on anybody else.
+  acceptTeamAgreementAction:
+    "the colleague's own acceptance of the team's undertaking, the question being the page itself — the text, the full name typed and «Am citit și accept angajamentul» ticked; it emails nobody, changes nobody else and only opens the backoffice to this account, and a second press stores nothing",
   probeSaveAction: "the network check's probe (§436): answers ok, changes nothing",
   addClubTodoAction: "a line on the club's own checklist (§438): emails nobody, removed by a delete that asks",
   editClubTodoAction: "an editorial save of a checklist line, like a page's; its delete asks",

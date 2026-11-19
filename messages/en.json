@@ -4278,6 +4278,12 @@
         "revokeTitle": "Take the shop away?",
         "revokeBody": "{name} no longer sees the “Shop” section from the next page they open.",
         "revoke": "Take the shop away"
+      },
+      "teamAgreement": {
+        "line": "Team undertaking: {state}",
+        "accepted": "Accepted — version {version}, {date}, as “{name}”",
+        "notAccepted": "Not accepted",
+        "notRequired": "Not required"
       }
     },
     "queue": {
@@ -4362,7 +4368,7 @@
     },
     "legal": {
       "title": "Legal documents",
-      "intro": "The privacy notice, the terms, the race declarations for a mountain event and for a road or park event, the two group-run declarations: {count} texts. A correction is a new version.",
+      "intro": "The club's texts: the privacy notice, the terms, the declarations, the volunteer agreement, the raffle rules and the team's undertaking — {count} texts. A correction is a new version.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: what data we take from participants, why and for how long. Ticked at registration.",
         "TERMS": "The rules of the site and of registering, not the race rules — those are on the event's page. Ticked at registration.",
@@ -4371,7 +4377,8 @@
         "GROUP_RUN_DECLARATION_TRAIL": "Optional, for a group run on a trail; signed on the run's page, once for every date of it. Approve it together with a new privacy notice.",
         "EVENT_DECLARATION_ROAD": "The declaration of a road or park event, with the risks of asphalt and traffic. Until you approve it, these events sign the mountain event declaration.",
         "VOLUNTEER_AGREEMENT": "The agreement every volunteer of an event accepts: unpaid help, what the volunteer does, what the club does. Until you approve it, no page shows the volunteer form.",
-        "RAFFLE_RULES": "The rules a person accepts to sign up for the raffle of an event with a separate sign-up. Until you approve them, the raffle's sign-up does not open; an automatic raffle needs none."
+        "RAFFLE_RULES": "The rules a person accepts to sign up for the raffle of an event with a separate sign-up. Until you approve them, the raffle's sign-up does not open; an automatic raffle needs none.",
+        "STAFF_DATA_AGREEMENT": "The undertaking every colleague of the team but the administrators accepts before working in the backoffice. Until you approve it, nobody is asked. It is approved on its own."
       },
       "empty": "No legal document exists. Registration is refused until an approved privacy notice exists.",
       "emptyCanCreate": "No legal document exists yet, so registration is refused. Start with the privacy notice: New version.",
@@ -4391,7 +4398,8 @@
         "GROUP_RUN_DECLARATION_TRAIL": "Self-declaration (group run, trail)",
         "EVENT_DECLARATION_ROAD": "Self-declaration — road / park event",
         "VOLUNTEER_AGREEMENT": "Volunteer agreement",
-        "RAFFLE_RULES": "Raffle rules"
+        "RAFFLE_RULES": "Raffle rules",
+        "STAFF_DATA_AGREEMENT": "Team confidentiality and data protection undertaking"
       },
       "referenced": "{signatures} signatures · {events} events",
       "unreferenced": "Not yet used",
@@ -4595,7 +4603,8 @@
         "held": {
           "superseded": "a newer draft of the same text exists; delete this one or approve it from its own page.",
           "behind": "an approved version with a higher number is already offered, so this one would never take effect.",
-          "placeholders": "still has fields to fill in, written '<'…>; open the draft and type them."
+          "placeholders": "still has fields to fill in, written '<'…>; open the draft and type them.",
+          "alone": "the team's undertaking is approved on its own, on the draft's page, with «Approve and publish»: from then on every colleague but the Administrators is stopped at their next page until they accept it."
         },
         "deleteIntro": "Tick the versions to delete in the table, then press the button: you see the list before anything is deleted.",
         "deleteTicked": "Delete the ticked versions",
@@ -4657,7 +4666,8 @@
         "race": "Race declarations",
         "groupRun": "Group run declarations",
         "volunteers": "The volunteers' agreement",
-        "raffle": "The raffle rules"
+        "raffle": "The raffle rules",
+        "team": "The team's undertaking"
       },
       "shortKeys": {
         "PRIVACY_NOTICE": "GDPR",
@@ -4667,7 +4677,8 @@
         "GROUP_RUN_DECLARATION_ASPHALT": "Group asphalt",
         "GROUP_RUN_DECLARATION_TRAIL": "Group trail",
         "VOLUNTEER_AGREEMENT": "Volunteers",
-        "RAFFLE_RULES": "Raffle"
+        "RAFFLE_RULES": "Raffle",
+        "STAFF_DATA_AGREEMENT": "Team"
       },
       "filter": {
         "label": "Filter the versions",
@@ -4788,6 +4799,17 @@
         "en": "English"
       },
       "tabIncomplete": "incomplete"
+    },
+    "teamAgreement": {
+      "title": "The team's undertaking",
+      "intro": "Before you work in the backoffice, read the undertaking below and accept it. You accept it once for each version.",
+      "fullName": "Your full name",
+      "fullNameHelp": "Your first and last name, as a signature.",
+      "accept": "I have read and accept the undertaking",
+      "acceptRequired": "Tick that you have read and accept the undertaking.",
+      "submit": "Accept and enter",
+      "submitting": "Saving…",
+      "signOutHint": "Until you accept, the backoffice's pages do not open. You can sign out at any time, at the top."
     },
     "tasks": {
       "title": "What is still to do",
@@ -5711,6 +5733,19 @@
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from template” → confirm. The paragraph “The raffle”, in section 5, describes the sign-up.",
             "Open the draft, read it, “Save draft”, then “Approve and publish”, in both languages."
+          ]
+        },
+        "teamAgreement": {
+          "title": "The team's undertaking",
+          "todo": "No team undertaking is in force: the volunteers, copywriters, organisers and technical colleagues have not accepted one. Approve it before race day.",
+          "done": "The team's undertaking is in force: every colleague but the administrators accepts it at their first sign-in.",
+          "how": [
+            "/admin/legal → “New version” → under “Start from the template”, “Team confidentiality and data protection undertaking”.",
+            "Neither “Approve the missing texts now…” nor “Approve the drafts” approves it, even when “Regenerate from the templates” made its draft: it is approved on its own, read for itself.",
+            "A lawyer should read it first: the club's authority (Articles 29 and 32(4) GDPR), confidentiality after the role, liability and how long the acceptance is kept.",
+            "Fill in the club's facts left in angle brackets, in both languages, “Save draft”, then “Approve and publish”.",
+            "Approve it at least a day before the race: from then on, every colleague who is not an administrator is stopped at their first page until they accept it.",
+            "“Staff” shows, on each colleague's row, whether they accepted it."
           ]
         }
       },
@@ -9517,6 +9552,17 @@
               ]
             },
             {
+              "title": "The team's undertaking, at your first sign-in",
+              "steps": [
+                "If your role is «Voluntar», «Redactor», «Organizator» or «Tehnic», the first time you enter after the club approves the team's undertaking its page opens instead of the page you asked for.",
+                "Read the text to the end: which data you see, how you keep it confidential, what to do with printed lists and what to do if you lose your phone.",
+                "Type your name in «Your full name», tick «I have read and accept the undertaking» and press «Accept and enter».",
+                "You land on the page you had asked for, for example the number scanned at the desk. You accept the undertaking once; a new version is asked again, once too.",
+                "Until you accept, no backoffice page opens. «Sign out» stays at the top.",
+                "Administrators do not accept it here: they approve the text in «Legal documents»."
+              ]
+            },
+            {
               "title": "The top bar: what each tab holds",
               "steps": [
                 "You see only your role's tabs; the rest do not exist for you, and that is fine.",
@@ -9662,7 +9708,7 @@
               "steps": [
                 "«Race day» → «Timing» and choose the race. The organizer presses «Start» at the gun; you see the clock since the start.",
                 "An elite crosses: press their button at the top (the bib's label, with the name under it). Anyone else crosses: type the number on the bib and press «Finished». The box empties at once for the next one.",
-                "Several at once: press «Catch the time» once for each, then type the numbers in order.",
+                "Several at once: press «Finish» once for each, then type the numbers in order.",
                 "A red line tells you what to write on paper, with the time. Without signal, the presses wait on the phone and go by themselves.",
                 "Pressed the wrong one? «Undo» on your line in «Latest finishers», in the first 10 minutes, while nobody entered it again after you. Otherwise tell the organizer: they correct it under «Results»."
               ]
@@ -9932,7 +9978,7 @@
               "steps": [
                 "«Results» is in the race's editor, in the card «Registrations received» at the end of the page (beside «See this event's registrations»), not in «Taking part, registration and rules». The button shows only for a published race or one whose start has passed; for a draft, open the page's address directly.",
                 "At the finish line open «Timing» on a phone: «Race day» in the top bar → «Timing» (or the link on «Results»). At the start press «Start» right at the gun; without it, the times count from «Race start» in the editor. When an elite crosses, press their button (the bib's label, with the name under it); anyone else you enter by the number on the bib and «Finished». It is saved at once, with the time since the start, and «Latest finishers» shows who entered each line. No stopwatch needed.",
-                "Several arriving at once? Press «Catch the time» once for each, then type the numbers in order: each takes the oldest time caught. A number with no confirmed registration is refused, with its time on its line: write it on paper and enter it after the race under «Results», under «Runners who did not register». A number entered a second time — by you or by another volunteer — changes nothing: the first time stays, and the second shows in «Finish history», under «Results». A runner marked «Disqualified» under «Results» stays so when you enter their number. Pressed the wrong one? «Undo» on your line, for 10 minutes, while nobody entered it again after you; after that, under «Results». If you prefer a stopwatch or an app, note each runner's number and time and enter them afterwards under «Results» — the next steps.",
+                "Several arriving at once? Press «Finish» once for each, then type the numbers in order: each takes the oldest time caught. A number with no confirmed registration is refused, with its time on its line: write it on paper and enter it after the race under «Results», under «Runners who did not register». A number entered a second time — by you or by another volunteer — changes nothing: the first time stays, and the second shows in «Finish history», under «Results». A runner marked «Disqualified» under «Results» stays so when you enter their number. Pressed the wrong one? «Undo» on your line, for 10 minutes, while nobody entered it again after you; after that, under «Results». If you prefer a stopwatch or an app, note each runner's number and time and enter them afterwards under «Results» — the next steps.",
                 "Under «Registered runners» there is a line for every registered runner with a number. Write the time in «Time» (h:mm:ss or mm:ss) — digits alone work too, without colons: 12345 becomes 1:23:45 when you leave the box — or press the clock beside the box, pick the hours (0 to 23), minutes and seconds and press «OK». Tenths (mm:ss.t) are typed in the box. «Status» stays on «From the time (Finished / Did not start)» — a time means «Finished». For who did not finish choose «Dropped out», «Did not start» or «Disqualified», with no time. «Chip time» and «Note» are optional; «Chip time» has its own clock too.",
                 "Have the times in a file? Open «Import from CSV», paste the text (number, time on each line; with chip time and status if you have them) or choose the file and press «Import from CSV». The lines fill the boxes; nothing is saved yet.",
                 "A number no registration holds goes under «Runners who did not register»: write the name and, for a category, the sex and the date of birth. Tick «Agreed to appear by name in the results» only if the person told you so. «Add a runner who did not register» makes an empty line.",
@@ -10320,7 +10366,8 @@
                 "Press «Add» and confirm. The person gets the invitation by email and chooses a password.",
                 "It never arrived: press their row, then «Resend the invitation» → «Send now, without waiting for the scheduled round».",
                 "On the person's row (press it to open it): another role — «Role», then «Change role»; left the team — «Revoke access», the last.",
-                "The shop without the Administrator role: press the colleague's row, tick «Manages the shop» and confirm. They find «Shop» in the top bar; they never see the members' addresses."
+                "The shop without the Administrator role: press the colleague's row, tick «Manages the shop» and confirm. They find «Shop» in the top bar; they never see the members' addresses.",
+                "A new colleague who is not an administrator accepts the team's undertaking at their first sign-in, when one is in force: their row on «Staff» shows whether they did."
               ]
             },
             {
@@ -10431,6 +10478,17 @@
                 "On the draft's page: «Download PDF» to read it on paper or give it to a lawyer.",
                 "Under «Approve this version» tick «I confirm the club has approved this text and it may become public», press «Approve and publish» and confirm.",
                 "An approved text never changes. A correction is the next version: «Start the next version from this one»."
+              ]
+            },
+            {
+              "title": "Approve the team's undertaking",
+              "steps": [
+                "«Legal documents» → «New version» → under «Start from the template», «Team confidentiality and data protection undertaking».",
+                "Fill in the club's facts left shaped <…>, in Romanian and in English, and press «Save draft». A lawyer should read the text first.",
+                "Under «Approve this version» tick «I confirm the club has approved this text and it may become public», press «Approve and publish» and confirm.",
+                "Approve it at least a day before the race, not on its morning: from then on, every volunteer, copywriter, organiser and technical colleague is stopped at the next page until they accept.",
+                "It is among the texts of neither «Approve the missing texts now…» nor «Approve the drafts», even when «Regenerate from the templates» made its draft: it is approved on its own, read for itself.",
+                "«Staff» shows on each colleague's row whether they accepted — the version, the date and the name typed —, «Not accepted» or «Not required»."
               ]
             },
             {
@@ -13257,7 +13315,7 @@
       "title": "Timing",
       "show": "Show",
       "intro": "When someone crosses the line: for an elite, press their button; for anyone else, type the bib's number and press «Finished». Saved at once; corrections are made under «Results».",
-      "more": "Several at once? Press «Catch the time» for each, then type the numbers in order. Without signal, the presses wait on the phone. A number entered twice keeps the first time.",
+      "more": "Several at once? Press «Finish» for each, then type the numbers in order. Without signal, the presses wait on the phone. A number entered twice keeps the first time.",
       "clock": "Since the start: {time}",
       "notStarted": "The race has not started yet.",
       "boxLabel": "Number on the bib",
@@ -13288,7 +13346,7 @@
         "giveNumberAria": "Give a number: {label} — {name}"
       },
       "keep": {
-        "button": "Catch the time",
+        "button": "Finish",
         "help": "Several at once: press once for each, then type the numbers in order — each takes the oldest time caught. A time caught more than 10 minutes ago is removed: write it on paper.",
         "kept": "Times caught",
         "drop": "Remove the caught time {time}",
@@ -15200,6 +15258,7 @@
       "legalVersionWithdrawn": "The version was withdrawn.",
       "legalVersionErased": "The version was erased.",
       "legalVersionRetired": "The version has been deleted from the list; its text stays in the archive.",
+      "teamAgreementAccepted": "Done: the undertaking is accepted.",
       "albumCreated": "The album was created.",
       "album": "The album was saved.",
       "photoRemoved": "The photo was removed.",

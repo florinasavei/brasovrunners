@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import clubLegal from "@club/legal.json";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
-import { SAMPLE_DOCUMENTS } from "@/db/seeds/sample-legal-documents";
+import { NEVER_SEEDED_KEYS, SAMPLE_DOCUMENTS } from "@/db/seeds/sample-legal-documents";
 import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
@@ -100,7 +100,8 @@ describe("§357 no hardcoded value in a legal template", () => {
         expect(hardcodedValuesIn([translation.title, ...texts(translation.body)].join("\n"))).toEqual([]);
       });
 
-      it(`${key} ${locale}: nor does the seeded sample, banner and review note included`, () => {
+      // The team's undertaking is never seeded (§1006): approved, it would stop every non-Administrator signed in on a test database.
+      it.skipIf(NEVER_SEEDED_KEYS.has(key))(`${key} ${locale}: nor does the seeded sample, banner and review note included`, () => {
         const sample = SAMPLE_DOCUMENTS.find((document) => document.key === key)!.translations.find((t) => t.locale === locale)!;
         expect(hardcodedValuesIn([sample.title, ...texts(sample.body)].join("\n"))).toEqual([]);
       });
