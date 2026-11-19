@@ -267,10 +267,17 @@ test.describe("§NNN the raffle with a sign-up of its own: the form, the link, t
       });
 
       await test.step("the Organizer sees everybody on «Ziua cursei» → «Tombolă», the three with «Participă: Da»", async () => {
+        // Out first: the sign-in page sends a signed-in colleague to their own landing, and the switcher's buttons never show.
+        await page.getByRole("button", { name: "Ieși din cont" }).click();
+        await expect(page).not.toHaveURL(/\/admin/, { timeout: 30_000 });
         await signIn(page, "Dev Moderator");
         await page.goto(`/ro/admin/checkin/tombola?eventId=${seeded.eventId}`);
         await hydrated(page);
-        await expect(page.getByTestId("race-day-tabs").getByRole("link", { name: "Tombolă" })).toHaveAttribute("aria-current", "page");
+        const tabs = page.getByTestId("race-day-tabs");
+        await expect(tabs.getByRole("link", { name: "Tombolă" })).toHaveAttribute("aria-current", "page");
+        // How wide the race day's row is on this screen, said in the report: the tabs of the other branches join this row (§979).
+        const row = await tabs.locator("nav").evaluate((nav) => ({ scroll: nav.scrollWidth, client: nav.clientWidth }));
+        console.log(`race-day tabs (${test.info().project.name}): ${row.scroll}px of entries in ${row.client}px`);
         await expect(page.getByTestId("raffle-settings-line")).toHaveText("Participă: alergătorii, elitele, voluntarii · cu înscriere separată · înscrieri deschise");
         await expect(page.getByTestId("raffle-counts")).toHaveText("Participă: 3 · Alergători: 3 · Elite: 0 · Voluntari: 0 · Prezenți dintre ei: 1");
         const names = page.locator('[data-testid="raffle-row-name"]:visible');
