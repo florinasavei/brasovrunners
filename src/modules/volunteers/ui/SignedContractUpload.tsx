@@ -227,7 +227,12 @@ export default function SignedContractUpload({ mode, action, uploadTemplate, loc
   }
 
   return (
-    <Box component="form" method="post" action={action} encType="multipart/form-data" onSubmit={onSubmit} noValidate data-testid={testId} sx={{ minWidth: 0 }}>
+    /*
+      The card's width, never the file box's own (the release's e2e at 320 px, 2026-11-19): in a column that does not stretch its
+      items, a form takes its content's width, and a native file box is wider than a phone's card — 306 px in a 290 px column, so
+      the person's page ran 15 px past the screen. At the card's width the box's `max-width: 100%` holds it inside.
+    */
+    <Box component="form" method="post" action={action} encType="multipart/form-data" onSubmit={onSubmit} noValidate data-testid={testId} sx={{ minWidth: 0, width: "100%" }}>
       <input type="hidden" name="locale" value={locale} />
       {returnTo && <input type="hidden" name="returnTo" value={returnTo} />}
       <Stack direction={{ xs: "column", sm: "row" }} sx={{ alignItems: { xs: "stretch", sm: "center" }, flexWrap: "wrap", gap: 1 }}>
