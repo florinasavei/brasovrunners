@@ -16,7 +16,7 @@ import type { RaffleManageCard, RaffleRulesText } from "../raffle-roster";
 type ServerAction = (form: FormData) => Promise<void>;
 
 /**
- * The «Tombolă» card of «Gestionează înscrierea» (LINK, §NNN), one person's: drawn only while the raffle's sign-up gate is open for the
+ * The «Tombolă» card of «Gestionează înscrierea» (LINK, §984), one person's: drawn only while the raffle's sign-up gate is open for the
  * person's group and the person is a confirmed real registration with a number (`readRaffleManageCards`). Signed up, it says so and offers
  * «Nu mai particip»; not yet, «Regulamentul tombolei» in a fold, «Am citit și accept Regulamentul tombolei» and «Particip la tombolă»;
  * another adult on the address is offered the way out alone (§421). Two POSTs, each its own form, the token read and never spent; the GET

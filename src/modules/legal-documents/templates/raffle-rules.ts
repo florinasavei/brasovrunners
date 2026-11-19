@@ -1,7 +1,7 @@
 import type { LegalDocumentBody } from "../domain/content-hash";
 
 /**
- * «Regulamentul tombolei» (§NNN; the owner, 2026-11-18: «Dar pentru tombolă trebuie să am o înscriere separată» — and, asked, that
+ * «Regulamentul tombolei» (§984; the owner, 2026-11-18: «Dar pentru tombolă trebuie să am o înscriere separată» — and, asked, that
  * a person accepts a raffle's rules approved by the club, without which the sign-up does not open).
  *
  * One text for every event's raffle in the sign-up mode («Cu înscriere separată»), accepted by every person who signs up — from
@@ -37,7 +37,7 @@ const organiserEn = [
 ];
 
 const whoRo = [
-  // «Cine poate participa» (§NNN): the groups the event ticks, in words, filled when the person accepts.
+  // «Cine poate participa» (§984): the groups the event ticks, in words, filled when the person accepts.
   "Pot participa la tombolă {{raffleGroups}}.",
   "Participarea este gratuită: nu se cumpără nimic și nu se plătește nimic pentru ea.",
   "Fiecare persoană participă o singură dată: cu numărul ei de concurs sau de voluntar, iar un sportiv de top fără număr, cu numele.",

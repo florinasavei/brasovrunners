@@ -308,7 +308,7 @@ describe("§799 «Condiții de participare» inside «Regulamentul»", () => {
       "translations.ro.pausedNote", "translations.en.pausedNote",
       // «Avem tombolă» (§949): a tick with its marker, in «Numere de concurs».
       "event.hasRaffle", "event.hasRaffle.present",
-      // The raffle's settings beside it (§NNN): «Cine poate participa» — three ticks with their markers —, «Cum» and the open tick.
+      // The raffle's settings beside it (§984): «Cine poate participa» — three ticks with their markers —, «Cum» and the open tick.
       "event.raffleRunners", "event.raffleRunners.present", "event.raffleElites", "event.raffleElites.present", "event.raffleVolunteers", "event.raffleVolunteers.present",
       "event.raffleSignUp", "event.raffleSignUpOpen", "event.raffleSignUpOpen.present",
     ];

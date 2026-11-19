@@ -63,7 +63,7 @@ export function volunteersListClause(locale: string): string {
 }
 
 /**
- * The notice's merge values, beside the other features' on the legal pages — the raffle's sign-up (§NNN, `raffleClause`) among
+ * The notice's merge values, beside the other features' on the legal pages — the raffle's sign-up (§984, `raffleClause`) among
  * them: the raffle lives in this module, and every page that fills the volunteers' markers fills its marker too.
  */
 export function volunteersMergeValues(locale: string): {

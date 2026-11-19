@@ -179,7 +179,7 @@ export async function deleteEventResultAction(_previous: FormOutcome | null, for
  * the disclosure has its own gate and its own audit row, and does not ride on a save of the rows. The state the box shows is the state
  * wanted, so two presses end where the second aimed. Switching it on is refused while the privacy notice or the terms in force do not
  * name `{{results}}` (`RESULTS_NOTICE`, `RESULTS_TERMS`): the summary says so, the box comes back unticked, and the page's note links
- * «Documente legale». Before the race it is accepted (§NNN): the toast says the results show from the start.
+ * «Documente legale». Before the race it is accepted (§985): the toast says the results show from the start.
  */
 export async function setResultsPublishedAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const on = field(form, "published") === "on";

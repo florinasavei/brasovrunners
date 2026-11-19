@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0215_volunteer_present` (§NNN; the owner, 2026-11-18, three days before the race: «La voluntari trebuie să trec
+ * Migration `0215_volunteer_present` (§983; the owner, 2026-11-18, three days before the race: «La voluntari trebuie să trec
  * prezent/absent ca să pot face tombola doar pentru cei prezenți»), proven on real PostgreSQL (PGlite): one column on the event's
  * volunteers, `present`, a boolean, not null, false by default — so every volunteer from before reads not present, whatever their
  * state or their other ticks, and a row written without the column too — and nothing else; the file only expands.

@@ -281,7 +281,7 @@ export type ActionIconName =
   | "volunteers"
   // «Unelte» (§926): the speed dial its public page wears, on its «Pagini» row and its «Ordinea meniului» entry.
   | "tools"
-  // «Cronometrare» (§NNN): «Start» — the flag an organizer drops at the gun — and «⏱ Prinde timpul», the stopwatch that keeps one
+  // «Cronometrare» (§986): «Start» — the flag an organizer drops at the gun — and «⏱ Prinde timpul», the stopwatch that keeps one
   // moment for the next number pressed when runners arrive in a bunch.
   | "raceStart"
   | "keepTime";

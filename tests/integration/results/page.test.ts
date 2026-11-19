@@ -287,7 +287,7 @@ describe("§808 the page, in Romanian", () => {
     expect(await render()).not.toContain('data-testid="results-terms-missing"');
   });
 
-  it("says, while the race is ahead, that the tick may be set now and the results show from its start — its day and hour — and nothing of it once the gun has gone (§NNN)", async () => {
+  it("says, while the race is ahead, that the tick may be set now and the results show from its start — its day and hour — and nothing of it once the gun has gone (§985)", async () => {
     const future = await createRace(db, { startsAt: new Date("2027-05-01T07:00:00Z") });
     await approveResultsTexts(db);
     const words = text(await render(future.id));
@@ -296,7 +296,7 @@ describe("§808 the page, in Romanian", () => {
     expect(await render()).not.toContain('data-testid="results-publish-not-started"');
   });
 
-  it("tells an Administrator neither «bifa» sentence before the race while no notice or terms in force describe the results: the tick would be refused (§NNN)", async () => {
+  it("tells an Administrator neither «bifa» sentence before the race while no notice or terms in force describe the results: the tick would be refused (§985)", async () => {
     const future = await createRace(db, { startsAt: new Date("2027-05-01T07:00:00Z") });
     for (const texts of ["none", "notice only"] as const) {
       if (texts === "notice only") await approvePrivacyNotice(db, { results: true });

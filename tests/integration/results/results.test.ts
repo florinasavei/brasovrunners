@@ -401,7 +401,7 @@ describe("§808 the publish gate: the terms and the race's start", () => {
     await expect(setResultsPublished(db, staff.ADMIN!, raceId, true, NOW)).resolves.toEqual({ changed: true });
   });
 
-  it("accepts the tick before the race has started (§NNN, amending the refusal) — set now, shown from the start — while entering them stays open", async () => {
+  it("accepts the tick before the race has started (§985, amending the refusal) — set now, shown from the start — while entering them stays open", async () => {
     await approveResultsTexts(db);
     await field();
     const before = new Date(RACE_STARTS_AT.getTime() - 60 * 60 * 1000);

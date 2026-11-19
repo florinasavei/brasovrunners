@@ -23,7 +23,7 @@ import { type RaffleRoster, readRaffleRosterRows } from "./raffle-roster";
   place of it, a second one: **«Lista pentru tombolă — doar prezenții»** (`onlyPresent`) — the same people, of whom only the
   runners checked in — at the desk, or by «Am ajuns» from their own link — and the volunteers ticked «Prezent».
 
-  Since §NNN (the owner, 2026-11-18: «trebuie să bifez acolo cine se poate înscrie: doar alergătorii și elitele și voluntarii» and «tombolă
+  Since §984 (the owner, 2026-11-18: «trebuie să bifez acolo cine se poate înscrie: doar alergătorii și elitele și voluntarii» and «tombolă
   din oficiu vs tombolă cu înscriere separată»): who is in the file is the one function's answer (`domain/raffle.ts#raffleParticipation`,
   read through `raffle-roster.ts#readRaffleRosterRows`) — the groups the event ticks in «Cine poate participa», and, «Cu înscriere separată»,
   only those who signed up — and the file has three groups: «Alergător», «Elită» — a registration marked «Elită» (§897) and a line of the
@@ -51,7 +51,7 @@ export type RaffleListOptions = { onlyPresent?: boolean };
 
 /**
  * Whoever reads the registrations' list and works the volunteers: the Organizer and the Administrators. A role or an account, so an
- * action may ask it at its door (`requireStaffCapability(canTakeRaffleList)`, §NNN).
+ * action may ask it at its door (`requireStaffCapability(canTakeRaffleList)`, §984).
  */
 export function canTakeRaffleList(subject: StaffSubject): boolean {
   return canReadRegistrations(subject) && canManageVolunteers(subject);

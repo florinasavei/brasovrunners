@@ -59,7 +59,7 @@ import {
 } from "@/modules/results/domain/finish-line";
 
 /**
- * §NNN — «Cronometrare»'s pure parts (BR-REQ-050-02): the server's clock read through the phone's wall clock and an offset measured
+ * §986 — «Cronometrare»'s pure parts (BR-REQ-050-02): the server's clock read through the phone's wall clock and an offset measured
  * over round trips, the best sample kept; the stamp floored to the second, the claimed time held to the server's bounds, a claim
  * before the gun refused as not started and a press arriving after the day and its grace refused; what a press does to a stored row,
  * and a press found in the trail by its id read back as it was answered; «Start»'s window, its tap and the organizer's own press sent
@@ -72,7 +72,7 @@ import {
 const GUN = Date.UTC(2026, 10, 21, 7, 0, 0);
 const at = (minutes: number, seconds = 0, ms = 0) => GUN + minutes * 60_000 + seconds * 1000 + ms;
 
-describe("§NNN the server's clock: the phone's wall clock and a measured offset", () => {
+describe("§986 the server's clock: the phone's wall clock and a measured offset", () => {
   it("reads the page's own reading against the wall clock as the island woke, and the phone's own clock while nothing is known", () => {
     const page = sampleOfPage(at(10), 5_000);
     expect(page).toEqual({ offsetMs: at(10) - 5_000, rttMs: null, atServerMs: at(10) });
@@ -136,7 +136,7 @@ describe("§NNN the server's clock: the phone's wall clock and a measured offset
   });
 });
 
-describe("§NNN the stamp: the claimed press within the server's bounds, else the server's own", () => {
+describe("§986 the stamp: the claimed press within the server's bounds, else the server's own", () => {
   const now = at(50);
 
   it("keeps a claimed time from a second up to the server's own time plus five seconds, floored", () => {
@@ -187,7 +187,7 @@ describe("§NNN the stamp: the claimed press within the server's bounds, else th
   });
 });
 
-describe("§NNN what a press does to the stored row of its number", () => {
+describe("§986 what a press does to the stored row of its number", () => {
   const written = new Date(at(40));
   const row = (status: string, by = "vlad", gunTimeMs: number | null = at(40) - GUN) => ({ status, gunTimeMs, updatedAt: written, updatedByStaffUserId: by });
   const press = (atMs: number, actorId = "radu", gunTimeMs = atMs - GUN, identified = false) => ({ actorId, gunTimeMs, atMs, identified });
@@ -217,7 +217,7 @@ describe("§NNN what a press does to the stored row of its number", () => {
   });
 });
 
-describe("§NNN a press found in the trail by its id, read back as it was answered", () => {
+describe("§986 a press found in the trail by its id, read back as it was answered", () => {
   const created = { action: "event_result.created", metadata: { bibNumber: 101, status: "FINISHED", gunTimeMs: 2_712_000, chipTimeMs: null, finishLine: true, resultId: "row-1", pressId: "p" } };
 
   it("reads a «Sosit» it wrote — created or turned — and a number it found stored, with both times and the state", () => {
@@ -238,7 +238,7 @@ describe("§NNN a press found in the trail by its id, read back as it was answer
   });
 });
 
-describe("§NNN «Start»", () => {
+describe("§986 «Start»", () => {
   it("is pressed from three hours before the planned gun to six hours after", () => {
     expect(raceGunWindowOpen(GUN, GUN - 3 * 3_600_000)).toBe(true);
     expect(raceGunWindowOpen(GUN, GUN - 3 * 3_600_000 - 1)).toBe(false);
@@ -273,7 +273,7 @@ describe("§NNN «Start»", () => {
   });
 });
 
-describe("§NNN the gun the line counts from: the newer of the last answer and the clock's question", () => {
+describe("§986 the gun the line counts from: the newer of the last answer and the clock's question", () => {
   const planned = GUN;
   const pressed = GUN + 4 * 60_000;
 
@@ -299,7 +299,7 @@ describe("§NNN the gun the line counts from: the newer of the last answer and t
     expect(lineGunAt(answeredBefore, heard)).toBe(pressed);
   });
 
-  it("says the gun it counts from — pressed and by whom, or the plan — and whether a finisher fixed it, from the same newer answer (§NNN)", () => {
+  it("says the gun it counts from — pressed and by whom, or the plan — and whether a finisher fixed it, from the same newer answer (§986)", () => {
     const drawn = { serverNowMs: GUN - 2 * 60_000, gunAtMs: planned, gunPressed: false, gunByName: null, finished: 0 };
     // Drawn before «Start»: the plan, nothing fixed — the half-minute question goes on.
     expect(lineGun(drawn, null)).toEqual({ atMs: planned, pressed: false, byName: null, fixed: false });
@@ -318,7 +318,7 @@ describe("§NNN the gun the line counts from: the newer of the last answer and t
   });
 });
 
-describe("§NNN «Anulează»: one's own press at the line, written once, not pressed again, for ten minutes", () => {
+describe("§986 «Anulează»: one's own press at the line, written once, not pressed again, for ten minutes", () => {
   const written = new Date(at(45));
   const mine = { id: "row-1", status: "FINISHED", createdAt: written, updatedAt: written, updatedByStaffUserId: "me" };
   const created: LineTrailRow = { action: "event_result.created", actorStaffUserId: "me", metadata: { bibNumber: 101, finishLine: true, resultId: "row-1" } };
@@ -363,7 +363,7 @@ describe("§NNN «Anulează»: one's own press at the line, written once, not pr
   });
 });
 
-describe("§NNN «⏱ Prinde timpul»: kept times, oldest first, each account's own", () => {
+describe("§986 «⏱ Prinde timpul»: kept times, oldest first, each account's own", () => {
   it("keeps the kept times of each staff account apart on the phone's line", () => {
     let line = withKept({ entries: [], kept: {}, title: null }, "vlad", [at(10), at(10, 2)]);
     line = withKept(line, "radu", [at(11)]);
@@ -409,7 +409,7 @@ describe("§NNN «⏱ Prinde timpul»: kept times, oldest first, each account's 
   });
 });
 
-describe("§NNN the queue: in the order pressed, answered once, the waiting ones never dropped, each account sending its own", () => {
+describe("§986 the queue: in the order pressed, answered once, the waiting ones never dropped, each account sending its own", () => {
   const entry = (id: string, bibNumber: number, pressedAtMs: number, staffId = "vlad") => ({ id, staffId, bibNumber, label: null, pressedAtMs });
   const stateOf = (one: FinishEntry) => entryStateOf(one, "vlad");
 
@@ -480,7 +480,7 @@ describe("§NNN the queue: in the order pressed, answered once, the waiting ones
     expect(nextRetryAt(entries, "radu", new Map([["c", { tries: 1, untilMs: now }]]))).toBeNull();
   });
 
-  it("marks the viewer's latest recorded press of the number «anulat» once «Anulează» undid it — nobody else's, nothing else (§NNN)", () => {
+  it("marks the viewer's latest recorded press of the number «anulat» once «Anulează» undid it — nobody else's, nothing else (§986)", () => {
     const recorded = (bibNumber: number, gunTimeMs: number) => ({ kind: "recorded" as const, bibNumber, name: null, label: null, gunTimeMs, positionOverall: 1, outOfRanking: false, again: false });
     let entries: FinishEntry[] = [];
     entries = settleEntry(pressEntry(entries, entry("first", 21, at(18, 3))), "first", recorded(21, 1_083_000));
@@ -517,7 +517,7 @@ describe("§NNN the queue: in the order pressed, answered once, the waiting ones
   });
 });
 
-describe("§NNN the phone's storage", () => {
+describe("§986 the phone's storage", () => {
   it("is one key per event, found again by its event's id — the clock's key and any other are no event's line", () => {
     const eventId = "0b6f6c2e-5d1a-4c47-9a53-3f0d2b1c4e5f";
     expect(finishStorageKey(eventId)).toBe(`finish-line:${eventId}`);

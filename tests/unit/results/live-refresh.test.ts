@@ -12,7 +12,7 @@ import {
 import { LIVE_REFRESH_MAX_WAIT_MS, startLiveRefresh } from "@/modules/results/ui/live-refresh";
 
 /**
- * §NNN, BR-REQ-039-01 — a race's public «Clasament» from the start and live while it runs (the owner, 2026-11-18: «pe site live trebuie
+ * §985, BR-REQ-039-01 — a race's public «Clasament» from the start and live while it runs (the owner, 2026-11-18: «pe site live trebuie
  * sa vad lista de finish»): the window in which the open page refreshes itself (the start until the end, or six hours for a race saved
  * without one), the clock that asks nothing before the start, refreshes every 30 seconds while the page is visible and stops at the
  * window's end, and the two words of «Public de la start» — what «Clasament» says of the tick and the moment the public line names.
@@ -22,7 +22,7 @@ const ENDS = new Date("2026-11-21T11:00:00.000Z");
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 
-describe("§NNN the live window", () => {
+describe("§985 the live window", () => {
   it("runs from the start until the end", () => {
     const race = { startsAt: STARTS, endsAt: ENDS };
     expect(resultsLiveUntil(race)).toEqual(ENDS);
@@ -54,7 +54,7 @@ describe("§NNN the live window", () => {
   });
 });
 
-describe("§NNN the island from the event's row alone: the tick as saved, a race, the window — never whether a result is stored", () => {
+describe("§985 the island from the event's row alone: the tick as saved, a race, the window — never whether a result is stored", () => {
   /** `resultsTicked` is the Administrator's tick as saved; `resultsPublished` on the page's row also needs a stored result, and is not read here. */
   const race = { type: "RACE", resultsTicked: true, startsAt: STARTS, endsAt: ENDS };
   const BEFORE = new Date(STARTS.getTime() - 2 * 24 * HOUR);
@@ -93,7 +93,7 @@ describe("§NNN the island from the event's row alone: the tick as saved, a race
   });
 });
 
-describe("§NNN «Public de la start»", () => {
+describe("§985 «Public de la start»", () => {
   it("says the tick is off, on and waiting for the start, or on and showing", () => {
     expect(resultsPublishState({ resultsPublished: false, startsAt: STARTS }, new Date(STARTS.getTime() - HOUR))).toBe("off");
     expect(resultsPublishState({ resultsPublished: false, startsAt: STARTS }, ENDS)).toBe("off");
@@ -112,7 +112,7 @@ describe("§NNN «Public de la start»", () => {
   });
 });
 
-describe("§NNN the refresh clock", () => {
+describe("§985 the refresh clock", () => {
   let visible = true;
   let refreshes = 0;
   let ended = 0;
@@ -213,7 +213,7 @@ describe("§NNN the refresh clock", () => {
   });
 });
 
-describe("§NNN the refresh clock on a page drawn before the start (`from`): one timer to the start, nothing asked before it", () => {
+describe("§985 the refresh clock on a page drawn before the start (`from`): one timer to the start, nothing asked before it", () => {
   let visible = true;
   let refreshes = 0;
   /** Every wait the clock asked the browser for, in milliseconds. */

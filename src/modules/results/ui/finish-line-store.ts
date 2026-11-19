@@ -1,7 +1,7 @@
 import { eventIdOfStorageKey, readStoredFinishLine, type StoredFinishLine, storedFinishLine, waitingCount } from "../domain/finish-line";
 
 /**
- * What «Cronometrare»'s island keeps on the phone for one event (§NNN): the presses — each with the staff account that pressed it —
+ * What «Cronometrare»'s island keeps on the phone for one event (§986): the presses — each with the staff account that pressed it —
  * each account's kept times and the event's title, behind one small store the island reads with `useSyncExternalStore` — the storage
  * is an outside system. **Every read and write of the storage is in a `try`**: a private window, a full or blocked storage, and the
  * page still works, the store holding the lines in memory and only forgetting them on a reload. On the server — and in the first

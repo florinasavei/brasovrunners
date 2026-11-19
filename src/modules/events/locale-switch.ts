@@ -34,7 +34,7 @@ export async function resolveLocaleSwitch(
   if (!parsed) return listing;
 
   // The group run's self-declaration page (§393) is the event's page in the other language too.
-  // The volunteers' page (§768) likewise: its slug per language is the event's — and the raffle's (§NNN).
+  // The volunteers' page (§768) likewise: its slug per language is the event's — and the raffle's (§984).
   if (
     parsed.route === "/events/[slug]" ||
     parsed.route === "/events/[slug]/register" ||

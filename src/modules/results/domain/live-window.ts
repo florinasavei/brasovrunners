@@ -1,5 +1,5 @@
 /**
- * While a race runs, its public «Clasament» refreshes itself (§NNN; the owner, 2026-11-18: «pe site live trebuie sa vad lista de
+ * While a race runs, its public «Clasament» refreshes itself (§985; the owner, 2026-11-18: «pe site live trebuie sa vad lista de
  * finish» — and, asked, «LIVE»: every 30 seconds while the page is open, and nothing after the race). This is the window: from the
  * event's start — the moment the section may first be drawn (`results-open.ts#resultsOnShow`) — until its end, or six hours after the
  * start for a race saved without an end (the start is the meeting time, and a club race is over well within it). A page drawn before

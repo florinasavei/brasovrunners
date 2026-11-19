@@ -23,7 +23,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-037-08, BR-REQ-060-01 — the raffle on the organizers' and the desk's screens (the owner, 2026-11-18:
+ * §984, BR-REQ-050-02, BR-REQ-037-08, BR-REQ-060-01 — the raffle on the organizers' and the desk's screens (the owner, 2026-11-18:
  * «Tot pentru ziua cursei vreau să am un tab de tombolă unde să văd toți participanții la tombolă», «vreau să văd în dreptul
  * fiecărei persoane dacă participă la tombolă»), read from a real database:
  *
@@ -266,7 +266,7 @@ async function saturday() {
   return { ana, eliud, elena, ion, zoe };
 }
 
-describe("§NNN «Ziua cursei» → «Tombolă»: everybody of the three groups, and whether they take part", () => {
+describe("§984 «Ziua cursei» → «Tombolă»: everybody of the three groups, and whether they take part", () => {
   it("draws the settings in one line, the counts, the four filters and every person «Din oficiu», with the two files", async () => {
     await saturday();
     const page = await tab();
@@ -371,7 +371,7 @@ describe("§NNN «Ziua cursei» → «Tombolă»: everybody of the three groups,
   });
 });
 
-describe("§NNN BR-REQ-060-01 the tab's presses: each asks its capability and comes back with its toast or its refusal", () => {
+describe("§984 BR-REQ-060-01 the tab's presses: each asks its capability and comes back with its toast or its refusal", () => {
   it("«Înscrie» records a STAFF sign-up and comes back to the row; without the acceptance, or for a desk role, it writes nothing", async () => {
     const people = await saturday();
     await signUpMode();
@@ -441,7 +441,7 @@ describe("§NNN BR-REQ-060-01 the tab's presses: each asks its capability and co
   });
 });
 
-describe("§NNN BR-REQ-037-08 beside each person: the desk's list and its view of a person, a volunteer's page, every desk role", () => {
+describe("§984 BR-REQ-037-08 beside each person: the desk's list and its view of a person, a volunteer's page, every desk role", () => {
   const codeOf = async (id: string) => String((await db.select({ code: registrations.checkinCode }).from(registrations).where(eq(registrations.id, id)))[0].code);
   const deskView = async (id: string) => ScannedCodePage({ params: Promise.resolve({ locale: state.locale, code: await codeOf(id) }), searchParams: Promise.resolve({}) });
 
@@ -471,7 +471,7 @@ describe("§NNN BR-REQ-037-08 beside each person: the desk's list and its view o
     expect(byTestId(await deskView(people.ana), "desk-raffle")).toEqual([]);
   });
 
-  it("says «scos de organizatori» to the organizers alone — every other desk role reads «nu participă» alone — and every other reason to all (§NNN)", async () => {
+  it("says «scos de organizatori» to the organizers alone — every other desk role reads «nu participă» alone — and every other reason to all (§984)", async () => {
     const people = await saturday();
     await db.update(registrations).set({ inRaffle: false }).where(eq(registrations.id, people.ana));
     for (const role of ["MODERATOR", "ADMIN", "SUPERADMIN"] as const) {
@@ -492,7 +492,7 @@ describe("§NNN BR-REQ-037-08 beside each person: the desk's list and its view o
     expect(words(await html(byTestId(await deskList(), "desk-raffle")[0]))).toBe("Tombolă: nu participă De ce: scos de organizatori");
   });
 
-  it("draws no raffle line for a test registration — on the desk, its view and its page — and no note on the registrations list (§NNN)", async () => {
+  it("draws no raffle line for a test registration — on the desk, its view and its page — and no note on the registrations list (§984)", async () => {
     await saturday();
     const test = await runner("Test Confirmat", 70, { kind: "TEST" });
     state.actor = staff.MODERATOR;

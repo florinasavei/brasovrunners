@@ -8,7 +8,7 @@ import type { VolunteerPersonContext } from "@/modules/volunteers/ui/VolunteerPe
 import type { VolunteerItem, VolunteerRole } from "@/modules/volunteers/volunteers";
 
 /**
- * §NNN — «Prezent» on a volunteer (the owner, 2026-11-18, three days before the race: «La voluntari trebuie să trec prezent/absent ca
+ * §983 — «Prezent» on a volunteer (the owner, 2026-11-18, three days before the race: «La voluntari trebuie să trec prezent/absent ca
  * să pot face tombola doar pentru cei prezenți») as the server draws the person's block: on the person's own page a ticked person
  * wears the chip «Prezent» among their chips — in words and a glyph, never a colour alone — and an absent one none; the event
  * editor's «Voluntari» card keeps its rows as they were, ticked or not; and «Toate datele unei persoane» adds «Prezent» to the offer's
@@ -193,7 +193,7 @@ async function drawCard(volunteers: VolunteerItem[], language: "ro" | "en" = "ro
 /** The chip, as `StatusChip` draws it: its test id, and the words inside it. */
 const chipOf = (page: string) => /<div\b[^>]*data-testid="volunteer-present"[\s\S]*?<\/div>/.exec(page)?.[0] ?? "";
 
-describe("§NNN «Prezent» among the person's chips on their own page", () => {
+describe("§983 «Prezent» among the person's chips on their own page", () => {
   it("draws the chip «Prezent» for a person ticked present — the words and the person-with-tick glyph — and nothing for one absent", async () => {
     const ticked = person({ present: true });
     const page = await drawPage(ticked);
@@ -225,7 +225,7 @@ describe("§NNN «Prezent» among the person's chips on their own page", () => {
   });
 });
 
-describe("§NNN the event editor's «Voluntari» card is left as it was", () => {
+describe("§983 the event editor's «Voluntari» card is left as it was", () => {
   it("draws no «Prezent» chip on a row, ticked or not, in either language", async () => {
     const ticked = person({ present: true, hasKit: true });
     for (const language of ["ro", "en"] as const) {
@@ -239,7 +239,7 @@ describe("§NNN the event editor's «Voluntari» card is left as it was", () => 
   });
 });
 
-describe("§NNN «Toate datele unei persoane» lists «Prezent» among what is kept about an offer", () => {
+describe("§983 «Toate datele unei persoane» lists «Prezent» among what is kept about an offer", () => {
   it("adds «Prezent» to the offer's line when the row holds it, and nothing when it does not — both languages", async () => {
     const base = { age: null, dateOfBirth: null, sex: null, city: null, volunteeredBefore: false, clubMember: false, shirtSize: null, guardianName: null, guardianEmail: null, guardianAcceptedAt: null, guardianMethod: null };
     locale = "ro";

@@ -35,7 +35,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 vi.mock("next/cache", async () => (await import("../../helpers/next-cache")).fakeNextCache.module);
 
 /**
- * §NNN — the raffle's own sign-up (the owner, 2026-11-18: «Dar pentru tombolă trebuie să am o înscriere separată» — asked, he chose
+ * §984 — the raffle's own sign-up (the owner, 2026-11-18: «Dar pentru tombolă trebuie să am o înscriere separată» — asked, he chose
  * that in the sign-up mode only those who sign up are in; that they sign up three ways — a tick in their own link, a public form on
  * the site, at the desk on race day — and accept a «Regulamentul tombolei» approved by the club; «trebuie să bifez acolo cine se
  * poate înscrie: doar alergătorii și elitele și voluntarii»). BR-REQ-050-02 for the doors and the settings, BR-REQ-071-01 for who is
@@ -213,7 +213,7 @@ const setGroups = (groups: Partial<Record<RaffleKind, boolean>>) =>
     .set({ ...("RUNNER" in groups ? { raffleRunners: groups.RUNNER } : {}), ...("ELITE" in groups ? { raffleElites: groups.ELITE } : {}), ...("VOLUNTEER" in groups ? { raffleVolunteers: groups.VOLUNTEER } : {}) })
     .where(eq(events.id, eventId));
 
-describe("§NNN BR-REQ-050-02 the public form (FORM): a race number and a name", () => {
+describe("§984 BR-REQ-050-02 the public form (FORM): a race number and a name", () => {
   it("signs up a confirmed runner by number and name, keeping the acceptance as the volunteer agreement keeps one — and emails nobody", async () => {
     const ana = await runner("Ana Maria Popescu", 7);
     expect(await signUpForRaffleByForm(db, eventId, form(" 7 ", "  popescu   ana "), NOW, TRACE)).toBe("done");
@@ -344,7 +344,7 @@ describe("§NNN BR-REQ-050-02 the public form (FORM): a race number and a name",
   });
 });
 
-describe("§NNN BR-REQ-036-02 the person's own link (LINK): POST only, the token read and never spent", () => {
+describe("§984 BR-REQ-036-02 the person's own link (LINK): POST only, the token read and never spent", () => {
   const manageToken = async (participantId: string, registrationId: string) =>
     (await issueActionToken(db, { participantId, registrationId, purpose: "MANAGE_REGISTRATION", expiresAt: START, now: NOW })).secret;
 
@@ -405,7 +405,7 @@ describe("§NNN BR-REQ-036-02 the person's own link (LINK): POST only, the token
   });
 });
 
-describe("§NNN BR-REQ-037-08 the desk (DESK): every desk role, the person having accepted on paper or aloud", () => {
+describe("§984 BR-REQ-037-08 the desk (DESK): every desk role, the person having accepted on paper or aloud", () => {
   it("records a sign-up for every role that works the desk — the desk member the recorder, no trace — and refuses every other", async () => {
     for (const role of STAFF_ROLES) {
       const person = await runner(`Alergător ${role}`, 100 + STAFF_ROLES.indexOf(role));
@@ -434,7 +434,7 @@ describe("§NNN BR-REQ-037-08 the desk (DESK): every desk role, the person havin
     expect(await readRaffleLine(db, { table: "registration", id: jane.id }, NOW)).toEqual({ reason: "in", signUpMode: true, signedUp: true, maySignUp: false });
   });
 
-  it("offers «Înscrie la tombolă» to nobody the organizers took out — at the desk and on a volunteer's page —, the «Tombolă» tab keeping its own (§NNN)", async () => {
+  it("offers «Înscrie la tombolă» to nobody the organizers took out — at the desk and on a volunteer's page —, the «Tombolă» tab keeping its own (§984)", async () => {
     const ana = await runner("Ana Popescu", 7, { inRaffle: false });
     const radu = await runner("Radu Ionescu", 8);
     const ion = await volunteer("Ion Voluntar", 500, { inRaffle: false });
@@ -452,7 +452,7 @@ describe("§NNN BR-REQ-037-08 the desk (DESK): every desk role, the person havin
   });
 });
 
-describe("§NNN BR-REQ-060-01 the organizers (STAFF): a volunteer, a line of the elite list, anybody of the event", () => {
+describe("§984 BR-REQ-060-01 the organizers (STAFF): a volunteer, a line of the elite list, anybody of the event", () => {
   it("lets the Organizer and the Administrators sign a volunteer and an elite line up; every other role is refused, nothing written", async () => {
     const ion = await volunteer("Ion Voluntar", 500);
     const line = await eliteLine("Eliud K.");
@@ -480,7 +480,7 @@ describe("§NNN BR-REQ-060-01 the organizers (STAFF): a volunteer, a line of the
   });
 });
 
-describe("§NNN BR-REQ-050-02 the one gate: each condition alone shuts every door, writing nothing", () => {
+describe("§984 BR-REQ-050-02 the one gate: each condition alone shuts every door, writing nothing", () => {
   type Shut = { label: string; event?: Partial<typeof events.$inferInsert>; texts?: () => Promise<void>; at?: Date };
   const conditions: Shut[] = [
     { label: "no raffle", event: { hasRaffle: false } },
@@ -552,7 +552,7 @@ describe("§NNN BR-REQ-050-02 the one gate: each condition alone shuts every doo
   });
 });
 
-describe("§NNN BR-REQ-071-01 who takes part: one answer for both modes and every group tick", () => {
+describe("§984 BR-REQ-071-01 who takes part: one answer for both modes and every group tick", () => {
   /** The owner's race: a runner, an elite registration, two volunteers, two lines of the elite list, and people the raffle never takes. */
   async function saturday() {
     const ana = await runner("Ana Popescu", 7, { checkedInAt: NOW });
@@ -663,7 +663,7 @@ describe("§NNN BR-REQ-071-01 who takes part: one answer for both modes and ever
   });
 });
 
-describe("§NNN BR-REQ-071-01 a line of the elite list: its two ticks, the organizers'", () => {
+describe("§984 BR-REQ-071-01 a line of the elite list: its two ticks, the organizers'", () => {
   it("takes a line out and puts it back, ticks it present and clears it — audited by its id, never its name, the same value writing nothing", async () => {
     await db.update(events).set({ raffleSignUp: false }).where(eq(events.id, eventId));
     const line = await eliteLine("Eliud K.", 777);
@@ -693,7 +693,7 @@ describe("§NNN BR-REQ-071-01 a line of the elite list: its two ticks, the organ
   });
 });
 
-describe("§NNN «Șterge înscrierea»: the organizers take a sign-up off, at any time", () => {
+describe("§984 «Șterge înscrierea»: the organizers take a sign-up off, at any time", () => {
   it("deletes it, audited as the staff's, for the organizers alone — and finds none of another event", async () => {
     const ana = await runner("Ana Popescu", 7);
     await signUpForRaffleByForm(db, eventId, form("7", "Ana Popescu"), NOW, TRACE);
@@ -712,7 +712,7 @@ describe("§NNN «Șterge înscrierea»: the organizers take a sign-up off, at a
   });
 });
 
-describe("§NNN BR-REQ-070-01 the sign-up's life: «Toate datele unei persoane», the sweep, its person, the legal list", () => {
+describe("§984 BR-REQ-070-01 the sign-up's life: «Toate datele unei persoane», the sweep, its person, the legal list", () => {
   it("is listed in the person's data with its door, its version, the name typed and the trace", async () => {
     const ana = await runner("Ana Popescu", 7);
     await signUpForRaffleByForm(db, eventId, form("7", "Ana Popescu"), NOW, TRACE);
@@ -758,7 +758,7 @@ describe("§NNN BR-REQ-070-01 the sign-up's life: «Toate datele unei persoane»
   });
 });
 
-describe("§NNN /admin/tasks: how many raffles ahead ask a sign-up", () => {
+describe("§984 /admin/tasks: how many raffles ahead ask a sign-up", () => {
   it("counts a raffle «Cu înscriere separată» from a day behind on — never a cancelled one, one «Din oficiu» or a sign-up set on no raffle", async () => {
     const { countRaffleSignUpEvents } = await import("@/modules/volunteers/raffle-roster");
     // The fixture's race, tomorrow: one.
@@ -775,7 +775,7 @@ describe("§NNN /admin/tasks: how many raffles ahead ask a sign-up", () => {
   });
 });
 
-describe("§NNN the sign-up is nobody's message", () => {
+describe("§984 the sign-up is nobody's message", () => {
   it("queues no email at any door, at a withdrawal or at a deletion", async () => {
     const ana = await runner("Ana Popescu", 7);
     const radu = await runner("Radu Munteanu", 2);

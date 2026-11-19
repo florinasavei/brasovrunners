@@ -27,7 +27,7 @@ const TAB_GLYPH = {
 /**
  * «Ziua cursei»'s five tabs (§979; the owner, 2026-11-18: «Pentru "Ziua Cursei" vreau un tab pentru "Clasament", ce am acum
  * pe aceasta pagina e de fapt "Prezenta"», and «un alt tab pentru ziua cursei unde sa bifam "lucruri de adus"»; and, the same
- * day, §NNN: «pentru ziua cursei am nevoie de o pagina noua pentru cronometrare», and §NNN: «un tab de tombolă unde să văd toți
+ * day, §986: «pentru ziua cursei am nevoie de o pagina noua pentru cronometrare», and §984: «un tab de tombolă unde să văd toți
  * participanții la tombolă»): «Prezența» — the desk as it was —, «Clasament» — the chosen event's results (§808) —,
  * «Cronometrare» — the finish line, a number or an elite pressed as the runner crosses —, «Tombolă» — the organizers' raffle,
  * everybody of the three groups — and «Lucruri de adus», the event's checklist.
@@ -78,7 +78,7 @@ export async function raceDayTabs({ locale, active, eventId, actor }: { locale: 
       glyph: glyph("timing"),
     });
   }
-  // «Tombolă» (§NNN): the organizers' tab (`canTakeRaffleList`), for an event that holds a raffle; the page asserts the role again.
+  // «Tombolă» (§984): the organizers' tab (`canTakeRaffleList`), for an event that holds a raffle; the page asserts the role again.
   if (eventId && canTakeRaffleList(actor) && (await raffleTabShown(getDb(), eventId))) {
     items.push({ href: withEvent(getPathname({ locale, href: "/admin/checkin/tombola" })), label: t("raceDay.tabs.raffle"), active: active === "raffle", glyph: glyph("raffle") });
   }
@@ -93,7 +93,7 @@ export async function raceDayTabs({ locale, active, eventId, actor }: { locale: 
   }
   return (
     <Box sx={{ "@media print": { display: "none" } }} data-testid="race-day-tabs">
-      {/* Not `fits` (§NNN): the organizers' five entries are wider than a phone, so the current one is scrolled into view. */}
+      {/* Not `fits` (§984): the organizers' five entries are wider than a phone, so the current one is scrolled into view. */}
       <SubNav compact label={t("raceDay.tabs.label")} items={items} />
     </Box>
   );

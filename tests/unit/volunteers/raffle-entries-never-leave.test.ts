@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { importsModule } from "../../helpers/module-imports";
 
 /**
- * «Înscrierea la tombolă» (§NNN, BR-REQ-070-01, BR-REQ-060-01; the owner, 2026-11-18: «pentru tombolă trebuie să am o înscriere
+ * «Înscrierea la tombolă» (§984, BR-REQ-070-01, BR-REQ-060-01; the owner, 2026-11-18: «pentru tombolă trebuie să am o înscriere
  * separată»): who signed up for an event's raffle, the name they typed, their acceptance of «Regulamentul tombolei» with its trace
  * or its recorder — kept for the organizers alone. It reaches the doors that write it (the person's own link, the public form,
  * the desk, the organizers), the «Tombolă» tab, the lists' «Tombolă» column, the person's pages, the raffle's files, the sweep
@@ -82,7 +82,7 @@ function mustNeverShow(at: string): boolean {
   );
 }
 
-describe("§NNN BR-REQ-070-01 the raffle's sign-ups stay with the organizers", () => {
+describe("§984 BR-REQ-070-01 the raffle's sign-ups stay with the organizers", () => {
   const files = sourceFiles(SRC);
   const naming = files.filter((file) => namesTheEntries(file, readFileSync(file, "utf8")));
 

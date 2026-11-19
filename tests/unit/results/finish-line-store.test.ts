@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CLOCK_STORAGE_KEY, type FinishEntry, finishStorageKey, pressEntry, readStoredFinishLine, type StoredFinishLine, storedFinishLine } from "@/modules/results/domain/finish-line";
 
 /**
- * §NNN — «Cronometrare»'s phone store (`results/ui/finish-line-store.ts`, BR-REQ-050-02): a second tab of the same event never writes
+ * §986 — «Cronometrare»'s phone store (`results/ui/finish-line-store.ts`, BR-REQ-050-02): a second tab of the same event never writes
  * its copy over the first tab's waiting presses — every write reads the storage again first, and the browser's `storage` event brings
  * another tab's writes into this one's memory and tells its readers —; memory ahead of a storage that refused a write is not read
  * over; a page finds the viewer's presses waiting under another event, with that event's title; and without any storage the store
@@ -64,7 +64,7 @@ function otherTabWrites(key: string, value: StoredFinishLine) {
 }
 const ids = (value: StoredFinishLine) => value.entries.map((one) => one.id);
 
-describe("§NNN a second tab of the same event", () => {
+describe("§986 a second tab of the same event", () => {
   it("never writes over the first tab's presses: every write changes what the storage holds now", () => {
     store.writeFinishLine(KEY, (current) => ({ ...current, entries: pressEntry(current.entries, entry("a1", 101)) }));
     // The second tab pressed 102 — its write reached the storage, its event not yet this tab.
@@ -107,7 +107,7 @@ describe("§NNN a second tab of the same event", () => {
   });
 });
 
-describe("§NNN presses waiting under another event", () => {
+describe("§986 presses waiting under another event", () => {
   it("are the viewer's own waiting ones of every other event's line, with its title — not the clock, not this event's, not another account's", () => {
     storage.map.set(finishStorageKey(OTHER), storedFinishLine(line(pressEntry(pressEntry(pressEntry([], entry("o1", 7)), entry("o2", 8)), entry("r1", 9, "radu")), "Crosul Toamnei")));
     storage.map.set(KEY, storedFinishLine(line(pressEntry([], entry("a1", 101)))));

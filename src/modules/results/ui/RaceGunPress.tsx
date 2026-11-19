@@ -7,7 +7,7 @@ import GlyphButton from "@/shared/ui/GlyphButton";
 import { seedServerClock, serverClockNow } from "./server-clock";
 
 /**
- * «Start» on «Cronometrare» (§NNN; the owner: «un buton „Start" pe pagină, pe care îl apasă un organizator la pistol»): one plain
+ * «Start» on «Cronometrare» (§986; the owner: «un buton „Start" pe pagină, pe care îl apasă un organizator la pistol»): one plain
  * form, so it works with scripts off — the server then takes its own clock for the gun. With scripts on, the moment of the tap is
  * written into the form before it leaves (`claimedAtMs`), on the server's clock as this phone measured it (`server-clock.ts`, the
  * finish line's island beside it asking the server as the page wakes; the wall clock, so a phone that slept while the organizer

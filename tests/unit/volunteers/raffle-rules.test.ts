@@ -19,7 +19,7 @@ import {
 } from "@/modules/volunteers/domain/raffle";
 
 /**
- * §NNN — the raffle's rules, pure (the owner, 2026-11-18: «Vreau să pot bifa asta: tombolă din oficiu vs tombolă cu înscriere
+ * §984 — the raffle's rules, pure (the owner, 2026-11-18: «Vreau să pot bifa asta: tombolă din oficiu vs tombolă cu înscriere
  * separată», «trebuie să bifez acolo cine se poate înscrie: doar alergătorii și elitele și voluntarii», «vreau să văd în dreptul
  * fiecărei persoane dacă participă la tombolă»). BR-REQ-050-02 for the settings and the gate, BR-REQ-071-01 for who is in the file.
  *
@@ -54,7 +54,7 @@ function openFacts(over: { settings?: Partial<RaffleSettings>; event?: Partial<R
   };
 }
 
-describe("§NNN BR-REQ-050-02 the one gate of the raffle's sign-up", () => {
+describe("§984 BR-REQ-050-02 the one gate of the raffle's sign-up", () => {
   it("is open for a raffle in the sign-up mode, open, at a published scheduled race not ended, with the rules and the notice in force", () => {
     expect(raffleSignUpClosedFor(openFacts(), NOW)).toBeNull();
     for (const kind of RAFFLE_KINDS) expect(raffleSignUpClosedFor(openFacts(), NOW, kind), kind).toBeNull();
@@ -120,7 +120,7 @@ describe("§NNN BR-REQ-050-02 the one gate of the raffle's sign-up", () => {
 /** A person the raffle takes in either mode: confirmed, with a number, not taken out — and, for the sign-up mode, signed up. */
 const PERSON: RafflePerson = { kind: "RUNNER", confirmed: true, hasNumber: true, inRaffle: true, signedUp: true };
 
-describe("§NNN BR-REQ-071-01 who takes part, and why not — one answer for both modes", () => {
+describe("§984 BR-REQ-071-01 who takes part, and why not — one answer for both modes", () => {
   it("is «in» for a confirmed person with a number of a ticked group, not taken out, in both modes — signed up in the sign-up mode", () => {
     for (const kind of RAFFLE_KINDS) {
       expect(raffleParticipation({ ...PERSON, kind }, { groups: ALL_GROUPS, signUp: false }), kind).toBe("in");
@@ -181,7 +181,7 @@ describe("§NNN BR-REQ-071-01 who takes part, and why not — one answer for bot
   });
 });
 
-describe("§NNN BR-REQ-050-02 the public form's matcher: the typed name against the registered one, folded", () => {
+describe("§984 BR-REQ-050-02 the public form's matcher: the typed name against the registered one, folded", () => {
   it.each([
     // [typed, registered, matches]
     ["Ana Popescu", "Ana Popescu", true],

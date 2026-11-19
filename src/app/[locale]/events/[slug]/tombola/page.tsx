@@ -64,7 +64,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /**
- * The raffle's own page (§NNN; the owner, 2026-11-18: «Practic oamenii trebuie să își treacă numărul de concurs și numele, dar trebuie
+ * The raffle's own page (§984; the owner, 2026-11-18: «Practic oamenii trebuie să își treacă numărul de concurs și numele, dar trebuie
  * să am și o bifă de „voluntar”»): `/evenimente/<slug>/tombola` and `/en/events/<slug>/raffle` — «Înscrie-te la tombolă»: the race number
  * (digits only), the name as at registration, «Sunt voluntar» while the event's volunteers may take part, «Regulamentul tombolei» in a fold
  * with its blanks filled for the event, the acceptance's tick, the privacy notice's line, the honeypot, the render time and — where the
@@ -184,7 +184,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
               autoComplete="name"
               slotProps={{ htmlInput: { maxLength: RAFFLE_TYPED_NAME_MAX, "data-testid": "raffle-name" } }}
             />
-            {/* «Sunt voluntar» (§NNN): only while the event's volunteers may take part; the number is then the volunteer's own. */}
+            {/* «Sunt voluntar» (§984): only while the event's volunteers may take part; the number is then the volunteer's own. */}
             {volunteersMay && (
               <CheckboxField name="volunteer" defaultChecked={typed.volunteer === "on"} help={t("raffle.volunteerHelp")}>
                 {t("raffle.volunteer")}

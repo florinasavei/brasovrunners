@@ -1,5 +1,5 @@
 /**
- * «Istoricul sosirilor» (§NNN; the owner, 2026-11-18: «când un voluntar introduce numărul și numele, trebuie să pun în istorie și
+ * «Istoricul sosirilor» (§986; the owner, 2026-11-18: «când un voluntar introduce numărul și numele, trebuie să pun în istorie și
  * numele voluntarului care a făcut asta, ca să putem corecta pe viitor»): every write of a race's results, read back from the audit
  * trail — never from a table of its own — newest first, one line each: when, who, what, and from where.
  *

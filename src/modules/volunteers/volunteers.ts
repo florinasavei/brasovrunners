@@ -189,7 +189,7 @@ export type VolunteerItem = {
   /** «Participă la tombolă» (§949): on the raffle's list of an event that holds one, unless the organizers unticked it. */
   inRaffle: boolean;
   /**
-   * «Prezent» (§NNN): the organizers' mark that the person came on the day — unticked is absent — what the screen's «Prezenți: N» counts
+   * «Prezent» (§983): the organizers' mark that the person came on the day — unticked is absent — what the screen's «Prezenți: N» counts
    * and «Lista pentru tombolă — doar prezenții» reads.
    */
   present: boolean;
@@ -1681,7 +1681,7 @@ export type VolunteerRequest =
   /** «Participă la tombolă» ticked or cleared on the «Voluntari» list's row (§949): the form posts the state it wants, never a toggle. */
   | { kind: "setRaffle"; eventId: string; id: string; inRaffle: boolean }
   /**
-   * «Prezent» ticked or cleared on the «Voluntari» list's row or on the person's page (§NNN): the person came on the day, or — unticked —
+   * «Prezent» ticked or cleared on the «Voluntari» list's row or on the person's page (§983): the person came on the day, or — unticked —
    * is absent. The form posts the state it wants, never a toggle. For a person in any state, as «Are kit».
    */
   | { kind: "setPresent"; eventId: string; id: string; present: boolean }
@@ -2249,7 +2249,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     }
 
     if (request.kind === "setPresent") {
-      // «Prezent» (§NNN; the owner, 2026-11-18: «La voluntari trebuie să trec prezent/absent ca să pot face tombola doar pentru cei
+      // «Prezent» (§983; the owner, 2026-11-18: «La voluntari trebuie să trec prezent/absent ca să pot face tombola doar pentru cei
       // prezenți»): whether the person came on the day — the organizers' own mark, one press on the list's row or on the person's page,
       // as «Are kit» is; unticked is absent. Only a real `true` ticks: anything else a forged request carries clears, the column's
       // default. In any state, as the kit: the counts and the present-only raffle file read the state themselves. Audited as every
@@ -2485,7 +2485,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     return { changed: true, volunteer: { id: current.id, hasAddress: next.email !== null } };
   });
   // The organizers' own marks are shown on no public page — «Are kit» (§904), the point a person stands at on «Planul
-  // voluntarilor», «Participă la tombolă» (§949) and «Prezent» (§NNN) — so their presses leave the public cache as it was (§953):
+  // voluntarilor», «Participă la tombolă» (§949) and «Prezent» (§983) — so their presses leave the public cache as it was (§953):
   // an expiry is a read that may wake the database, and no visitor would be shown anything new.
   if (result.changed && !KINDS_NO_PUBLIC_PAGE_SHOWS.has(request.kind)) revalidatePublicContent("places");
   return result;

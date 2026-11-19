@@ -1,7 +1,7 @@
 import { isUuid } from "@/shared/ids";
 
 /**
- * «Cronometrare» (§NNN, amending §850; the owner, 2026-11-18, three days before the race: «trebuie să mai am un view rapid, în
+ * «Cronometrare» (§986, amending §850; the owner, 2026-11-18, three days before the race: «trebuie să mai am un view rapid, în
  * care să introduc și să se salveze instant, gen că a ajuns NR X, Y, Z» — «ca s-ar putea să ajungă mulți deodată»): the pure
  * parts of the finish line, shared by the service (`../results.ts`), the actions and the islands (`../ui/FinishLine.tsx`,
  * `../ui/RaceGunPress.tsx`, `../ui/server-clock.ts`).
@@ -83,7 +83,7 @@ export const CLOCK_STORAGE_KEY = `${FINISH_STORAGE_PREFIX}clock`;
 /** How long a clock sample the phone kept is believed by the next page: half a day, a race day. */
 export const CLOCK_SAMPLE_KEPT_MS = 12 * 3_600_000;
 /**
- * How often the island asks the server's clock — and with it the gun — while no finisher is stored yet (§NNN): «Start» is pressed on
+ * How often the island asks the server's clock — and with it the gun — while no finisher is stored yet (§986): «Start» is pressed on
  * the organizer's phone, so a volunteer's page drawn before it learns of it this way, within half a minute. From the first finisher the
  * gun is fixed (`RACE_GUN_FIXED`) and nothing more is asked on a timer.
  */
@@ -91,7 +91,7 @@ export const FINISH_GUN_ASK_MS = 30_000;
 /** How long a press may wait for its answer before the line says the signal is weak — it is still awaited, and nothing else changes. */
 export const FINISH_PRESS_SLOW_MS = 10_000;
 /**
- * How old a kept moment of «⏱ Prinde timpul» may be and still be given to the next number (§NNN): ten minutes. An older one is no bunch
+ * How old a kept moment of «⏱ Prinde timpul» may be and still be given to the next number (§986): ten minutes. An older one is no bunch
  * any more — a moment forgotten on the phone, a page left open since the morning —, so it is dropped when the line is read or pressed,
  * and the line says its time, to be written on paper.
  */
@@ -194,13 +194,13 @@ export function stampedGunTime(atMs: number, gunAtMs: number): number {
 }
 
 /**
- * The gun as the clock's own question last heard it (§NNN): the instant, the server's time it was said at, whether «Start» was pressed
+ * The gun as the clock's own question last heard it (§986): the instant, the server's time it was said at, whether «Start» was pressed
  * and by whom — the line says it (`lineGun`) — and whether a «Sosit» is stored, which fixes the gun and ends the half-minute question.
  */
 export type HeardGun = { gunAtMs: number; serverMs: number; pressed: boolean; byName: string | null; fixed: boolean };
 
 /**
- * The gun the line counts from (§NNN): the newer of what the server last said — the page's state, drawn or answered to a press (its
+ * The gun the line counts from (§986): the newer of what the server last said — the page's state, drawn or answered to a press (its
  * `serverNowMs`), and the clock's question (`HeardGun`, its answer's time). «Start» pressed on another phone reaches a page drawn
  * before it by the clock; a press answered after that clock brings the gun as it then stood.
  */
@@ -212,7 +212,7 @@ export function lineGunAt(state: { serverNowMs: number; gunAtMs: number }, heard
 export type LineGun = { atMs: number; pressed: boolean; byName: string | null; fixed: boolean };
 
 /**
- * The whole gun of the line (§NNN), from the newer answer as `lineGunAt` picks it — so the sentence above the clock is the gun the
+ * The whole gun of the line (§986), from the newer answer as `lineGunAt` picks it — so the sentence above the clock is the gun the
  * clock counts from, never the one the page was drawn with («Startul planificat … Până la «Start»…» after «Start» was pressed on
  * another phone): the state's own («Start» as pressed and its presser, fixed once it counts a finisher), or the clock's question's.
  */
@@ -231,7 +231,7 @@ export function clockReading(nowMs: number, gunAtMs: number): number | null {
 export type FinishStamp = { kind: "stamped"; gunTimeMs: number; claimed: boolean } | { kind: "notStarted" } | { kind: "closed"; gunTimeMs: number };
 
 /**
- * The time a press is stamped with (§NNN). A press arriving more than `FINISH_WINDOW_MS` and `FINISH_ARRIVAL_GRACE_MS` after the gun
+ * The time a press is stamped with (§986). A press arriving more than `FINISH_WINDOW_MS` and `FINISH_ARRIVAL_GRACE_MS` after the gun
  * is `closed` whatever it claims. Else the claimed instant's time since the gun, floored to the second, decides: under a second — a
  * press before the gun — is `notStarted`, never the arrival's time instead (a press queued before the gun and sent later would be a
  * finisher made up at its arrival, and would fix the gun); within the server's own time plus `FINISH_CLAIM_AHEAD_MS` it is the stamp,
@@ -256,7 +256,7 @@ export function finishStamp(input: { claimedAtMs: number | null | undefined; gun
 export type MetRow = { status: string; gunTimeMs: number | null; updatedAt: Date; updatedByStaffUserId: string | null };
 
 /**
- * What a press does to the stored row of its number (§NNN; the owner: «se poate întâmpla și ca mai mulți voluntari să treacă
+ * What a press does to the stored row of its number (§986; the owner: «se poate întâmpla și ca mai mulți voluntari să treacă
  * același număr»): `retry` — «Sosit» by the same viewer at the same second, taken for a press already saved, but only for a press
  * with no id of its own (`identified` false: the plain form, an older page) —; `pressedAgain` — «Sosit» by anybody else, by the
  * viewer another second, or by the viewer at all when the press carries its id: the trail, read first, said it is not this press's
@@ -279,7 +279,7 @@ export type SavedPress =
   | { kind: "duplicate"; storedResultId: string; gunTimeMs: number; storedGunTimeMs: number | null; storedStatus: string };
 
 /**
- * A press found in the trail by its id (§NNN), read back as it was answered — so its retry, the answer lost on the way, is answered
+ * A press found in the trail by its id (§986), read back as it was answered — so its retry, the answer lost on the way, is answered
  * the same and writes nothing: a «Sosit» it wrote (`event_result.created` / `.updated` with `finishLine`, its `resultId`), or a number
  * it found stored (`event_result.finish_duplicate`). Null for a row of another number — an id is one press's, of one number — or one
  * that cannot be read: the press is then taken as new.
@@ -322,7 +322,7 @@ export function raceGunMoment(claimedAtMs: number | null | undefined, nowMs: num
 export type RaceGunTrailRow = { action: string; actorStaffUserId: string | null; at: Date };
 
 /**
- * Whether a «Start» heard at `nowMs` is the actor's own last one sent twice (§NNN): the gun's latest row is a «Start» of theirs — so the
+ * Whether a «Start» heard at `nowMs` is the actor's own last one sent twice (§986): the gun's latest row is a «Start» of theirs — so the
  * gun stands as they set it — heard at most `RACE_GUN_REPEAT_MS` before. A tap again while the first was still on its way on a slow
  * signal: answered with the gun as it stands, nothing written. Another organizer's press, one after «Anulează startul», and one of
  * theirs later than that are a press of their own, which moves the gun.
@@ -333,7 +333,7 @@ export function raceGunRepeats(last: RaceGunTrailRow | null | undefined, actorId
 
 // ---- «Anulează» ------------------------------------------------------------------------------------------
 
-/** The rows of the trail the undo reads (§NNN): a press's `event_result.created`, and a press of the same number after it. */
+/** The rows of the trail the undo reads (§986): a press's `event_result.created`, and a press of the same number after it. */
 export const LINE_TRAIL_ACTIONS = ["event_result.created", "event_result.finish_duplicate"] as const;
 
 /** One of those audit rows, as the reader hands it over. */
@@ -403,7 +403,7 @@ export function dropKept(kept: readonly number[], index: number): number[] {
 }
 
 /**
- * The kept times still young enough to give a number (§NNN), and those older than `KEPT_TIME_MAX_AGE_MS` at `nowMs` — dropped, their
+ * The kept times still young enough to give a number (§986), and those older than `KEPT_TIME_MAX_AGE_MS` at `nowMs` — dropped, their
  * moments said on the line for paper. A moment ahead of `nowMs` (a clock measured again) is young.
  */
 export function staleKept(kept: readonly number[], nowMs: number): { fresh: number[]; stale: number[] } {
@@ -463,7 +463,7 @@ export type FinishLineState = {
   serverNowMs: number;
   /** The gun the line counts from: «Start» as pressed, else the plan (`results.ts#gunOf`). */
   gunAtMs: number;
-  /** Whether «Start» was pressed, and who pressed it — their display name, or null when that account is gone: the line says it (§NNN). */
+  /** Whether «Start» was pressed, and who pressed it — their display name, or null when that account is gone: the line says it (§986). */
   gunPressed: boolean;
   gunByName: string | null;
   recent: RecentFinisherView[];
@@ -517,7 +517,7 @@ export type FinishUndoAnswer =
   | { kind: "session" };
 
 /**
- * The server's clock as the page asks it when it wakes, is shown again or, before the first finisher, every half minute (§NNN) — with
+ * The server's clock as the page asks it when it wakes, is shown again or, before the first finisher, every half minute (§986) — with
  * the gun the line counts from (`gunAtMs`, «Start» as pressed, else the plan; null when the event could not be read), so a page drawn
  * before «Start» counts from it; whether «Start» was pressed and by whom, so the line says the gun it counts from; and whether a
  * «Sosit» is stored (`gunFixed`) — on any phone — so the island stops asking on a timer from the first finisher, its own or not.
@@ -541,7 +541,7 @@ export type FinishEntry = {
   /** The press, on the server's clock. */
   pressedAtMs: number;
   outcome: FinishEntryOutcome | null;
-  /** A recorded press this phone's «Anulează» undid since (§NNN): its line says «anulat», no longer «salvat». The phone's own fact, never an answer's. */
+  /** A recorded press this phone's «Anulează» undid since (§986): its line says «anulat», no longer «salvat». The phone's own fact, never an answer's. */
   undone?: true;
 };
 
@@ -613,7 +613,7 @@ export function settleEntry(entries: readonly FinishEntry[], id: string, outcome
 }
 
 /**
- * The entries with the viewer's press of `bibNumber` that «Anulează» just undid marked so (§NNN): the latest recorded one of that number
+ * The entries with the viewer's press of `bibNumber` that «Anulează» just undid marked so (§986): the latest recorded one of that number
  * by that account not marked yet — an undo takes away the row the newest such press wrote —, so the phone's own line stops saying
  * «salvat» for a runner whose result is gone. Nothing else changes; with no such entry (pressed in another tab, or with scripts off),
  * nothing at all.

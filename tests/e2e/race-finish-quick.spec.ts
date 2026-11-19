@@ -5,7 +5,7 @@ import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN — «Cronometrare», the finish line of «Ziua cursei» (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01, BR-REQ-037-08), walked at
+ * §986 — «Cronometrare», the finish line of «Ziua cursei» (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01, BR-REQ-037-08), walked at
  * 320 pixels and on a desk against a production build: an Organizer, whose row holds the five tabs of a race with a raffle — wider
  * than the phone, so the row scrolls inside itself, «Cronometrare» in view and every tab one swipe away —, taps «Start» twice — one
  * «Start» —; the desk Volunteer — the lowest role, three tabs that fit — types a number and presses an elite's button, sees each
@@ -90,7 +90,7 @@ async function noHorizontalScroll(page: Page) {
 }
 
 /**
- * «Ziua cursei»'s row (§NNN): the current entry wholly inside the row as the scroller left it, the row scrolling inside itself, and
+ * «Ziua cursei»'s row (§984, §986): the current entry wholly inside the row as the scroller left it, the row scrolling inside itself, and
  * every entry reachable by a sideways swipe — scrolled to, each lies wholly inside the row — while the page never scrolls sideways.
  */
 async function everyTabReachable(page: Page) {
@@ -123,7 +123,7 @@ async function everyTabReachable(page: Page) {
   await noHorizontalScroll(page);
 }
 
-test.describe("§NNN «Cronometrare»", () => {
+test.describe("§986 «Cronometrare»", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("an Organizer taps «Start» twice and gets one; the desk Volunteer records a number and an elite, sees who entered them, meets a duplicate, undoes a press and is told of one waiting elsewhere", async ({ page }) => {

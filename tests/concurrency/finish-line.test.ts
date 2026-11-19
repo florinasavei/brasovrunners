@@ -11,7 +11,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { type FinishOutcome, recordFinish } from "@/modules/results/results";
 
 /**
- * §NNN — «se poate întâmpla și ca mai mulți voluntari să treacă același număr» (BR-REQ-050-02), on real connections: several
+ * §986 — «se poate întâmpla și ca mai mulți voluntari să treacă același număr» (BR-REQ-050-02), on real connections: several
  * volunteers press one race number at the same moment. Every press of the finish line takes the event row's lock first
  * (`results.ts#loadEvent`, `FOR NO KEY UPDATE`), so the presses run one after the other: the first writes the row, every later one
  * reads it under the lock and is a duplicate — its own time in the trail, the row untouched — and the unique index on the event and
@@ -24,7 +24,7 @@ import { type FinishOutcome, recordFinish } from "@/modules/results/results";
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
 
-describe("§NNN one number pressed by several volunteers at once, on real connections", () => {
+describe("§986 one number pressed by several volunteers at once, on real connections", () => {
   const pool = new pg.Pool({ connectionString: DATABASE_URL, max: 20 });
   const db = drizzle(pool);
   const GUN = new Date("2026-11-21T07:00:00.000Z");

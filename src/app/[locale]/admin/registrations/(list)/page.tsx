@@ -533,7 +533,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const specialGuestsOn = waitlistAddOpen && filters.eventId ? await specialGuestsListOn(filters.eventId) : false;
   // «Tombolă» (§949): the column of an event that holds a raffle («Avem tombolă» in its editor), with that one event chosen.
   const raffleOn = filters.eventId ? await eventHoldsRaffle(db, filters.eventId) : false;
-  // Beside the tick (§NNN): whether each row takes part, and why not, by the one answer — one read for the page's rows.
+  // Beside the tick (§984): whether each row takes part, and why not, by the one answer — one read for the page's rows.
   const raffleReasons = raffleOn && filters.eventId ? await raffleReasonsFor(db, filters.eventId, { registrationIds: rows.map((row) => row.id) }) : new Map<string, RaffleReason>();
   // The editor's elite card (§895): the kits' elites, the «Elite» fold and the way back from «Mută pe lista de elită» link there.
   const eliteCardHref = filters.eventId ? `${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: filters.eventId } } })}#bib-elite` : null;
@@ -895,7 +895,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 >
                   {t("registrations.raffle.tick")}
                 </TickButton>
-                {/* «În dreptul fiecărei persoane» (§NNN): Da, or Nu with the reason in a few words. */}
+                {/* «În dreptul fiecărei persoane» (§984): Da, or Nu with the reason in a few words. */}
                 {raffleReasons.has(row.id) && <RaffleStandingNote words={raffleNoteWords(t, raffleReasons.get(row.id) ?? "in")} takesPart={raffleReasons.get(row.id) === "in"} />}
               </Box>
             ),
@@ -1457,7 +1457,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               {t("registrations.raffle.button")}
             </GlyphButton>
           )}
-          {/* «Lista pentru tombolă — doar prezenții» (§NNN; the owner, 2026-11-18: «ca să pot face tombola doar pentru cei prezenți»):
+          {/* «Lista pentru tombolă — doar prezenții» (§983; the owner, 2026-11-18: «ca să pot face tombola doar pentru cei prezenți»):
               beside the whole file, never in place of it — the runners the desk checked in and the volunteers ticked «Prezent». */}
           {filters.eventId && canTakeRaffleList(actor.role) && (
             <GlyphButton

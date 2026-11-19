@@ -243,7 +243,7 @@ export function formatTime(date: Date, options: { locale: string; timeZone: stri
 
 /**
  * "09:30:07", always 24-hour, in the zone the caller names: a moment a second decides — «Start» as pressed and the lines of
- * «Istoricul sosirilor» (§NNN), where two presses of one number may be a second apart.
+ * «Istoricul sosirilor» (§986), where two presses of one number may be a second apart.
  */
 export function formatTimeWithSeconds(date: Date, options: { locale: string; timeZone: string }): string {
   return formatter(intlLocale(options.locale), { ...DATE_FORMATS.time, second: "2-digit", timeZone: options.timeZone }).format(date);

@@ -8,7 +8,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the raffle's settings beside «Avem tombolă» (the owner, 2026-11-18: «trebuie să bifez acolo cine se poate înscrie: doar
+ * §984 — the raffle's settings beside «Avem tombolă» (the owner, 2026-11-18: «trebuie să bifez acolo cine se poate înscrie: doar
  * alergătorii și elitele și voluntarii», «Vreau să pot bifa asta: tombolă din oficiu vs tombolă cu înscriere separată»), BR-REQ-050-02
  * and BR-REQ-060-01: «Cine poate participa» (three ticks, all on by default), «Cum» (`raffle_sign_up`, «Din oficiu» by default) and
  * «Înscrierile la tombolă sunt deschise» (`raffle_sign_up_open`, shut by default), saved through the editor's real action by their
@@ -135,7 +135,7 @@ async function postSave(form: FormData) {
   expect(outcome, JSON.stringify(outcome)).toBe("redirected");
 }
 
-describe("§NNN BR-REQ-050-02 the raffle's settings in the event editor", () => {
+describe("§984 BR-REQ-050-02 the raffle's settings in the event editor", () => {
   it("start as every group ticked, «Din oficiu» and the sign-ups shut, on every event", async () => {
     const plain = await createEvent(db, { actor: admin, fields: { ...FIELDS, hasRaffle: true, translations: TRANSLATIONS }, now: NOW });
     expect(settingsOf(await reloadEvent(plain.id))).toEqual(DEFAULTS);

@@ -4,7 +4,7 @@ import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-071-01 — «Prezent» on the «Voluntari» list and «Lista pentru tombolă — doar prezenții» (the owner,
+ * §983, BR-REQ-050-02, BR-REQ-071-01 — «Prezent» on the «Voluntari» list and «Lista pentru tombolă — doar prezenții» (the owner,
  * 2026-11-18, three days before the race: «La voluntari trebuie să trec prezent/absent ca să pot face tombola doar pentru cei
  * prezenți»), walked as the Organizer at 320 pixels and on a desktop, against the production build.
  *
@@ -97,7 +97,7 @@ async function fitsTheScreen(page: Page): Promise<void> {
   expect(overflow, "horizontal overflow").toBeLessThanOrEqual(0);
 }
 
-test.describe("§NNN «Prezent» on the «Voluntari» list and the raffle among the present", () => {
+test.describe("§983 «Prezent» on the «Voluntari» list and the raffle among the present", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("the Organizer ticks a volunteer present, sees «Prezenți: 1», filters «Absenți» and takes the present-only raffle file", async ({ page }) => {

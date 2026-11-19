@@ -109,10 +109,10 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   const noticeDescribes = takes ? await noticeDescribesResults(db, now) : false;
   const termsDescribe = takes ? await termsDescribeResults(db, now) : false;
   const started = event.startsAt.getTime() <= now.getTime();
-  // Whether the tick could be set now (§NNN): an Administrator, and the notice and the terms in force describing the results — else the
+  // Whether the tick could be set now (§985): an Administrator, and the notice and the terms in force describing the results — else the
   // tick is refused, and the cards below say why; no sentence says it may be ticked before the race while it cannot.
   const canTick = mayPublish && noticeDescribes && termsDescribe;
-  // The tick as the page says it (§NNN): off, «Public de la start» while ticked before the race — nothing shows until then — or «Public».
+  // The tick as the page says it (§985): off, «Public de la start» while ticked before the race — nothing shows until then — or «Public».
   const publishState = resultsPublishState(event, now);
   // The start's day and hour, as the site will show them — none while the date or the hour is to be announced (§533): the public read
   // has no start then, so nothing shows until it is announced, and the card says that instead of the hour stored.
@@ -197,11 +197,11 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       : runner.named
         ? t("results.publicLine.named")
         : t("results.publicLine.anonymous", { label: anonymousLabel });
-  // Why a «Participant #…» line shows no name (§NNN, `publicNameReason`, read with `named`): under the line — or, while no approved
+  // Why a «Participant #…» line shows no name (§985, `publicNameReason`, read with `named`): under the line — or, while no approved
   // notice describes the results (the same reason for every line), once at the top of the page instead.
   const nobodyNamed = [...view.registered, ...view.typed].some((runner) => runner.nameReason === "noResultsNotice");
   const publicReasonOf = (runner: ResultRunner) => (runner.named || runner.outOfRanking || nobodyNamed ? undefined : t(`results.publicWhy.${runner.nameReason}`));
-  // «Cu nume pe site: N din M» (§NNN): M, the lines the published results would show — a stored result, not an elite out of the ranking; N, those named.
+  // «Cu nume pe site: N din M» (§985): M, the lines the published results would show — a stored result, not an elite out of the ranking; N, those named.
   const onSite = [...view.registered, ...view.typed].filter((runner) => runner.result !== null && !runner.outOfRanking);
   const namedOnSite = onSite.filter((runner) => runner.named).length;
   const valuesOf = (runner: ResultRunner) => ({
@@ -219,7 +219,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   ];
   const marksByBib = new Map(view.registered.map((runner) => [runner.bibNumber, marksOf(runner)]));
 
-  // Who last wrote a stored result (§NNN): «introdus de …» while it is as first written, «modificat de …» once changed; «cont șters» for an account gone.
+  // Who last wrote a stored result (§986): «introdus de …» while it is as first written, «modificat de …» once changed; «cont șters» for an account gone.
   const writtenByOf = (runner: ResultRunner) =>
     runner.result ? t(runner.result.writtenBy.changed ? "timing.changedBy" : "timing.enteredBy", { name: runner.result.writtenBy.name ?? t("timing.accountGone") }) : undefined;
   const registered: RegisteredLine[] = view.registered.map((runner) => ({
@@ -290,7 +290,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   const total = view.counts.FINISHED + view.counts.DNF + view.counts.DNS + view.counts.DSQ;
   const downloadHref = `/api/admin/events/${id}/results?lang=${locale}`;
 
-  // «Istoricul sosirilor» (§NNN): one line a write — when, who, what with the number and the time, and from where; the runner's
+  // «Istoricul sosirilor» (§986): one line a write — when, who, what with the number and the time, and from where; the runner's
   // name read live beside the number (the trail stores none).
   const history = await readFinishHistory(db, actor, id);
   const zone = event.timezone || CLUB_TIME_ZONE;
@@ -408,7 +408,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
             </Stack>
           </Panel>
 
-          {/* «Loc» in plain words (§NNN; the owner, 2026-11-18: «ce inseamna "Loc" aici?») — once, above both panels of lines, since a phone
+          {/* «Loc» in plain words (§985; the owner, 2026-11-18: «ce inseamna "Loc" aici?») — once, above both panels of lines, since a phone
               has no column header and a typed runner's line says «Loc:» too; nothing while there is no line at all. */}
           {(registered.length > 0 || typed.length > 0) && (
             <Typography variant="body2" color="text.secondary" data-testid="results-place-hint">
@@ -567,7 +567,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
               <Link href="/admin/legal">{t("results.publish.gateLink")}</Link>
             </Alert>
           )}
-          {/* Before the race (§NNN) the tick may be set: ticked, it says so with the start's day and hour; unticked, that it may be. Nothing shows before the start either way. */}
+          {/* Before the race (§985) the tick may be set: ticked, it says so with the start's day and hour; unticked, that it may be. Nothing shows before the start either way. */}
           {publishState === "fromStart" ? (
             <Stack direction="row" sx={{ gap: 1, alignItems: "center", flexWrap: "wrap" }} data-testid="results-publish-from-start">
               <StatusChip glyph="planned" color="primary" variant="outlined" label={t("results.publish.stateFromStart")} testId="results-from-start-chip" />
@@ -593,7 +593,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
                 {
                   when: [{ field: "published", equals: "on" }],
                   title: t("results.publish.confirmOnTitle"),
-                  // Before the race (§NNN) the question says the results show from the start, not now.
+                  // Before the race (§985) the question says the results show from the start, not now.
                   body: t(started ? "results.publish.confirmOnBody" : "results.publish.confirmOnBodyFromStart"),
                   confirmLabel: t("results.publish.save"),
                   cancelLabel: confirm.cancel,
@@ -621,7 +621,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
         </Stack>
       </Panel>
 
-      {/* «Istoricul sosirilor» (§NNN): every write of the race's results — the line's presses, duplicates and undos, this page's saves, «Start» — newest first, with who. */}
+      {/* «Istoricul sosirilor» (§986): every write of the race's results — the line's presses, duplicates and undos, this page's saves, «Start» — newest first, with who. */}
       <Panel glyph="history" collapsible level={3} title={t("results.history.title")} aside={t(`results.history.count.${countForm(history.lines.length, locale)}`, { count: String(history.lines.length) })} id="box-results-history" data-testid="results-history">
         <Stack spacing={1}>
           <Typography variant="body2" color="text.secondary">
@@ -649,7 +649,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       </Panel>
 
       <Box>
-        {/* «Cronometrare» (§NNN, in «Sosire»'s place, §850): «Ziua cursei»'s finish line — a number or an elite pressed as the runner crosses. */}
+        {/* «Cronometrare» (§986, in «Sosire»'s place, §850): «Ziua cursei»'s finish line — a number or an elite pressed as the runner crosses. */}
         <GlyphButton icon="checkIn" href={`${getPathname({ locale, href: "/admin/checkin/cronometrare" })}?eventId=${id}`} variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="results-finish-link">
           {t("results.finish.link")}
         </GlyphButton>

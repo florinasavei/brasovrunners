@@ -550,7 +550,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       feedbackSafetyGmailChosen: (await readFeedbackSettings(db)).safety.via === "gmail",
       // §778: a visitor's message waits in the outbox until it leaves; the notice in force must say so.
       relayQueueDescribed: await noticeDescribesRelayQueue(db, now),
-      // §NNN: the raffle's sign-up — its rules and its notice in force; the rows wait only while a raffle ahead asks a sign-up.
+      // §984: the raffle's sign-up — its rules and its notice in force; the rows wait only while a raffle ahead asks a sign-up.
       raffleSignUpEvents: await countRaffleSignUpEvents(db, now),
       raffleRulesInForce: await raffleRulesInForce(db, now),
       raffleDescribed: await noticeDescribesRaffle(db, now),

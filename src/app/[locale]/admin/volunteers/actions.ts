@@ -78,7 +78,7 @@ export async function setVolunteerRaffleAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Prezent» on a row of the «Voluntari» list and on the person's page (§NNN; the owner, 2026-11-18, three days before the race: «La
+ * «Prezent» on a row of the «Voluntari» list and on the person's page (§983; the owner, 2026-11-18, three days before the race: «La
  * voluntari trebuie să trec prezent/absent ca să pot face tombola doar pentru cei prezenți»): one press ticks a volunteer present on
  * the day, or clears the tick — unticked is absent, and there is no third state. The form posts the state it wants (`present=1|0`),
  * never a toggle, so a second press before the page answers saves the same. The coarse gate here (`canManageVolunteers`: the Organizer

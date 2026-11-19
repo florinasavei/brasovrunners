@@ -1,5 +1,5 @@
 /**
- * «Public de la start» (§NNN; the owner, 2026-11-18, choosing «public from the start»): the Administrator may tick «Clasamentul e public
+ * «Public de la start» (§985; the owner, 2026-11-18, choosing «public from the start»): the Administrator may tick «Clasamentul e public
  * pe pagina evenimentului» before the race, and the site shows nothing until the race starts — the section, the listing's chip, the
  * cached read and the page's hold all wait for `startsAt` (`results-open.ts#resultsOnShow`, unchanged) — then shows every result as it
  * is saved. Pure, so «Clasament» and the public section say the same about it.

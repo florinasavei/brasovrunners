@@ -7,7 +7,7 @@ import { RESULTS_REFRESH_MS } from "../domain/live-window";
 import { startLiveRefresh } from "./live-refresh";
 
 /**
- * «Se actualizează singur la 30 de secunde» (§NNN; the owner, 2026-11-18: «pe site live trebuie sa vad lista de finish», and, asked,
+ * «Se actualizează singur la 30 de secunde» (§985; the owner, 2026-11-18: «pe site live trebuie sa vad lista de finish», and, asked,
  * «LIVE» — the public list refreshes itself every 30 seconds while the page is open, and does nothing after the race).
  *
  * Drawn by `ResultsSection` on a race whose results are ticked public, until the race's window ends (`live-window.ts#resultsLiveRefreshWindow`):

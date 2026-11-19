@@ -217,9 +217,9 @@ export const PANEL_GLYPHS = {
   // clock of a managed history), the consent withdrawn (the privacy shield), cancel and erase (their verbs' glyphs).
   tell: RecordVoiceOverIcon,
   raceDay: EmojiEventsIcon,
-  // «Cronometrare» (§NNN): «Ziua cursei»'s finish line — the stopwatch, the deadlines' own picture of time running.
+  // «Cronometrare» (§986): «Ziua cursei»'s finish line — the stopwatch, the deadlines' own picture of time running.
   timing: TimerIcon,
-  // «Ziua cursei» → «Tombolă» (§NNN): a wrapped prize.
+  // «Ziua cursei» → «Tombolă» (§984): a wrapped prize.
   raffle: RedeemIcon,
   answers: BadgeIcon,
   emergency: MedicalServicesIcon,

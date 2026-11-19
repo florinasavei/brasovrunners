@@ -22,7 +22,7 @@ import { isUuid } from "@/shared/ids";
 import { eventIdOf, field, localeOf } from "@/app/[locale]/admin/events/[id]/volunteer-return";
 
 /*
-  «Cronometrare»'s presses (§NNN): a finish recorded and one's own undone — each twice, once for the island, which calls it and reads
+  «Cronometrare»'s presses (§986): a finish recorded and one's own undone — each twice, once for the island, which calls it and reads
   the answer (`…PressAction`: the outcome, the page's state for the island to keep, the server's clock at the request's arrival and
   at its answer), and once for the plain form a page with scripts off posts (`…FormAction`: back to the page with the outcome in its
   address, numbers and codes only, never a name) — «Start» / «Anulează startul», a plain form the island only stamps, and the
@@ -152,7 +152,7 @@ export async function undoFinishPressAction(input: unknown): Promise<FinishUndoA
 /**
  * The server's clock, which the island asks as the page wakes, every time it is shown again and, while no finisher is stored, every
  * half minute — so a press is stamped on it (`domain/finish-line.ts#sampleOfRoundTrip`): when the request arrived and when it was
- * answered. **With the gun** (§NNN, `readFinishGun`: one query on the event's row, behind the same door): «Start» is pressed on the
+ * answered. **With the gun** (§986, `readFinishGun`: one query on the event's row, behind the same door): «Start» is pressed on the
  * organizer's phone, and a volunteer's page drawn before it counts from it — and says it, with who pressed it — at the next answer;
  * and whether a «Sosit» is stored (`gunFixed`), so the island stops asking on a timer from the first finisher anybody records.
  * Nothing written. A session that ended answers `session`, so the page says so before the first press; a gun that could not be read
@@ -236,7 +236,7 @@ export async function undoFinishFormAction(form: FormData): Promise<void> {
 }
 
 /**
- * The gun a «Start» form says its page saw (`seenGunAtMs`, §NNN): empty for none — the page said «Start» —, else the instant its
+ * The gun a «Start» form says its page saw (`seenGunAtMs`, §986): empty for none — the page said «Start» —, else the instant its
  * «Mută startul acum» was drawn under; anything else is taken for none, so a forged value moves no gun that stands. A form without
  * the field (none is drawn so) is not asked.
  */

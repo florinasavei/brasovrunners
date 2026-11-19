@@ -64,7 +64,7 @@ export const LEGAL_TEMPLATES: Record<LegalDocumentKey, Record<Locale, { title: s
     ro: { title: "Contract de voluntariat", body: volunteerAgreementRo },
     en: { title: "Volunteer agreement", body: volunteerAgreementEn },
   },
-  // «Regulamentul tombolei» (§NNN): what a person accepts to sign up for an event's raffle in the sign-up mode.
+  // «Regulamentul tombolei» (§984): what a person accepts to sign up for an event's raffle in the sign-up mode.
   RAFFLE_RULES: {
     ro: { title: "Regulamentul tombolei", body: raffleRulesRo },
     en: { title: "Raffle rules", body: raffleRulesEn },

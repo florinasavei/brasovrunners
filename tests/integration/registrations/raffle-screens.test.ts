@@ -268,7 +268,7 @@ describe("§949 «Tombolă» on the registrations list", () => {
 /** A toolbar link of the list by its test id: the house's `GlyphButton`, its href and words as the page hands them over. */
 const buttonOf = (tree: ReactNode, testId: string) => elements(tree).find((element) => element.props["data-testid"] === testId);
 
-describe("§NNN «Lista pentru tombolă — doar prezenții» on the registrations list's toolbar", () => {
+describe("§983 «Lista pentru tombolă — doar prezenții» on the registrations list's toolbar", () => {
   it("stands beside the whole file, under the same condition — one event chosen, a role that takes the file — linking to `?present=1`", async () => {
     const race = await createRace();
     await register(race.id);
@@ -319,7 +319,7 @@ describe("§NNN «Lista pentru tombolă — doar prezenții» on the registratio
   });
 });
 
-describe("§NNN «Tombolă» beside each person: whether they take part, and why not, under the organizers' tick", () => {
+describe("§984 «Tombolă» beside each person: whether they take part, and why not, under the organizers' tick", () => {
   /** The few words under a row's tick — «Da», or «Nu · <de ce>» — and whether they say in: the note as the cell hands it over. */
   const standingOf = (tree: ReactNode, id: string) => {
     const note = raffleCellOf(tree, id).find((element) => "takesPart" in element.props && "words" in element.props);

@@ -841,7 +841,7 @@ export async function cachedVolunteerAgreementInForce(now: Date): Promise<boolea
 }
 
 /**
- * Whether «Regulamentul tombolei» is in force in every language (§NNN) — the raffle's sign-up page's and the event page's half of
+ * Whether «Regulamentul tombolei» is in force in every language (§984) — the raffle's sign-up page's and the event page's half of
  * the gate, through the legal texts' own cached read. `raffleRulesInForce` is the uncached twin every door asks again.
  */
 export async function cachedRaffleRulesInForce(now: Date): Promise<boolean> {
@@ -850,7 +850,7 @@ export async function cachedRaffleRulesInForce(now: Date): Promise<boolean> {
 }
 
 /**
- * Whether the privacy notice in force describes the raffle's sign-up (§NNN, `describesRaffle`), in every language — the cached
+ * Whether the privacy notice in force describes the raffle's sign-up (§984, `describesRaffle`), in every language — the cached
  * twin of `noticeDescribesRaffle`, which every door asks again at every press.
  */
 export async function cachedRaffleDescribed(now: Date): Promise<boolean> {
@@ -859,7 +859,7 @@ export async function cachedRaffleDescribed(now: Date): Promise<boolean> {
 }
 
 /**
- * An event's raffle settings and the facts its gate reads (§NNN, `raffle-roster.ts#readRaffleEvent`), filed under the events' tag: the
+ * An event's raffle settings and the facts its gate reads (§984, `raffle-roster.ts#readRaffleEvent`), filed under the events' tag: the
  * editor's save — the only writer of the settings — expires it. The only public read of the settings: nothing else public reads them.
  */
 export async function cachedRaffleEvent(eventId: string) {
@@ -867,7 +867,7 @@ export async function cachedRaffleEvent(eventId: string) {
 }
 
 /**
- * Whether the raffle's public form takes sign-ups (§NNN): the one gate (`raffleSignUpClosedFor`) over the cached settings and the two
+ * Whether the raffle's public form takes sign-ups (§984): the one gate (`raffleSignUpClosedFor`) over the cached settings and the two
  * cached legal halves, for any group the form serves — a registration's or a volunteer's. The legal texts are read only once the
  * settings would open it. A page render, never a decision: the action asks every condition again, uncached.
  */
@@ -1459,7 +1459,7 @@ const SLUG_ROUTES = new Set([
   "/events/[slug]/register",
   "/events/[slug]/declaration",
   "/events/[slug]/volunteers",
-  // The raffle's public form (§NNN): its slug per language is the event's, as the volunteers' page's.
+  // The raffle's public form (§984): its slug per language is the event's, as the volunteers' page's.
   "/events/[slug]/tombola",
   "/gallery/[slug]",
   "/pages/[slug]",

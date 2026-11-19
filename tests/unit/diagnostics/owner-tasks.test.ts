@@ -284,7 +284,7 @@ describe("owner tasks", () => {
     }
   });
 
-  it("§NNN: the raffle's rules' row is open while a raffle ahead asks a sign-up and no «Regulamentul tombolei» is in force, done once one is, absent otherwise", () => {
+  it("§984: the raffle's rules' row is open while a raffle ahead asks a sign-up and no «Regulamentul tombolei» is in force, done once one is, absent otherwise", () => {
     expect(stateOf({ ...LAUNCHED, raffleRulesInForce: false, raffleSignUpEvents: 1 }, "raffleRules")).toBe("open");
     expect(stateOf(LAUNCHED, "raffleRules")).toBe("done");
     expect(stateOf({ ...LAUNCHED, raffleSignUpEvents: 2 }, "raffleRules")).toBe("done");
@@ -300,7 +300,7 @@ describe("owner tasks", () => {
     }
   });
 
-  it("§NNN: the notice's row for the raffle's sign-up is open while a raffle ahead asks one and the notice names no {{raffle}}, done once it does, absent otherwise", () => {
+  it("§984: the notice's row for the raffle's sign-up is open while a raffle ahead asks one and the notice names no {{raffle}}, done once it does, absent otherwise", () => {
     expect(stateOf({ ...LAUNCHED, raffleDescribed: false, raffleSignUpEvents: 1 }, "raffleNotice")).toBe("open");
     expect(stateOf(LAUNCHED, "raffleNotice")).toBe("done");
     expect(stateOf({ ...LAUNCHED, raffleSignUpEvents: 3 }, "raffleNotice")).toBe("done");
@@ -676,7 +676,7 @@ describe("owner tasks", () => {
       "gmailFallbackNotice",
       "volunteerAgreement",
       "volunteerRoleChoicesAgreement",
-      // §NNN: the raffle's rules and its notice, shown done while both are in force.
+      // §984: the raffle's rules and its notice, shown done while both are in force.
       "raffleRules",
       "raffleNotice",
       "refusalTerms",

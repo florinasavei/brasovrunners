@@ -29,7 +29,7 @@ import {
 import { raffleGroupsPhrase } from "./raffle-words";
 
 /*
-  The raffle's reads (§NNN): the event's settings and the gate's facts, the rules a person reads before accepting, one person of any
+  The raffle's reads (§984): the event's settings and the gate's facts, the rules a person reads before accepting, one person of any
   of the three tables, and everybody of an event with the one answer (`domain/raffle.ts#raffleParticipation`). No writes and no role
   checks here: every caller asks its own role (BR-REQ-060-01) — the files and the tab through `raffle-list.ts`, the doors through
   `raffle-entries.ts`, the lists, the pages and the desk at their own door. Uncached: a public page asks the public cache's twins
@@ -77,7 +77,7 @@ export async function readRaffleEvent<T extends Record<string, unknown>>(
 }
 
 /**
- * How many raffles ahead ask a sign-up (§NNN): events that hold a raffle «Cu înscriere separată», not cancelled, whose start is no more
+ * How many raffles ahead ask a sign-up (§984): events that hold a raffle «Cu înscriere separată», not cancelled, whose start is no more
  * than a day behind — race day included. What `/admin/tasks`' rows `raffleRules` and `raffleNotice` wait on.
  */
 export async function countRaffleSignUpEvents<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<number> {
@@ -88,7 +88,7 @@ export async function countRaffleSignUpEvents<T extends Record<string, unknown>>
   return row?.count ?? 0;
 }
 
-/** Whether «Ziua cursei» draws its «Tombolă» tab for the event (§NNN): it holds a raffle. False for an event that is not there. */
+/** Whether «Ziua cursei» draws its «Tombolă» tab for the event (§984): it holds a raffle. False for an event that is not there. */
 export async function raffleTabShown<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<boolean> {
   return (await readRaffleEvent(db, eventId))?.settings.hasRaffle === true;
 }
@@ -205,7 +205,7 @@ export async function readRafflePerson<T extends Record<string, unknown>>(db: Da
     .where(eq(eventEliteEntries.id, ref.id))
     .limit(1);
   if (!row) return null;
-  // A line of the elite list has no state and takes part by name, its number or none (§NNN).
+  // A line of the elite list has no state and takes part by name, its number or none (§984).
   return {
     ref,
     eventId: row.eventId,
@@ -262,7 +262,7 @@ export type RaffleRoster = {
 };
 
 /**
- * Everybody of the event's three groups with the answer (§NNN). Who is listed: every real registration still standing (cancelled,
+ * Everybody of the event's three groups with the answer (§984). Who is listed: every real registration still standing (cancelled,
  * expired and test ones left out — a test registration is in no count the club is given, §30), every volunteer not cancelled, every
  * line of the elite list; who takes part is the one function's answer. Four queries, whatever the size of the event. The caller
  * asks the role (`raffle-list.ts#readRaffleRoster`).
@@ -388,7 +388,7 @@ function raffleLineOf(person: Omit<RafflePerson, "signedUp">, facts: RaffleGateF
 }
 
 /**
- * One person's raffle line, for their page or the desk (§NNN): null for an event that holds no raffle; else the answer, and whether a
+ * One person's raffle line, for their page or the desk (§984): null for an event that holds no raffle; else the answer, and whether a
  * staff «Înscrie la tombolă» may be offered — the gate open for their group, the person eligible, not taken out and not in yet.
  */
 export async function readRaffleLine<T extends Record<string, unknown>>(db: Database<T>, ref: RafflePersonRef, now: Date): Promise<RaffleLine | null> {
@@ -402,7 +402,7 @@ export async function readRaffleLine<T extends Record<string, unknown>>(db: Data
 }
 
 /**
- * The desk list's lines (§NNN), one read for the rows it shows — a search by name or number, or a typed code, lands there and not on
+ * The desk list's lines (§984), one read for the rows it shows — a search by name or number, or a typed code, lands there and not on
  * the scanned person's view, so every row says the raffle too. Per event on the page (one, or two when a code found a runner of
  * another event): the gate's facts once, the rows and their sign-ups in one query each. A row of an event without a raffle has none.
  */
@@ -434,7 +434,7 @@ export async function readRaffleDeskLines<T extends Record<string, unknown>>(db:
 }
 
 /**
- * The manage page's raffle (§NNN): each person's card (`readRaffleManageCards`) and, when some card is drawn, the rules in force in the
+ * The manage page's raffle (§984): each person's card (`readRaffleManageCards`) and, when some card is drawn, the rules in force in the
  * page's language, filled for the event — read once for the page. Empty cards and no rules while the gate is shut.
  */
 export async function readRaffleManageView<T extends Record<string, unknown>>(
@@ -454,7 +454,7 @@ export async function readRaffleManageView<T extends Record<string, unknown>>(
 export type RaffleManageCard = { signedUp: boolean; maySignUp: boolean };
 
 /**
- * The «Tombolă» card of the manage page, per person (§NNN): drawn only while the gate is open for the person's group and the person
+ * The «Tombolă» card of the manage page, per person (§984): drawn only while the gate is open for the person's group and the person
  * is a confirmed real registration with a number — the door's own condition, so a card never leads to a refusal. `maySignUp` is
  * false for another adult on the address (§421), who is offered the way out alone. One read of the gate for the page.
  */

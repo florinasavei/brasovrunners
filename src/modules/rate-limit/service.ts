@@ -125,7 +125,7 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
    */
   "rsvp-name": { limit: 30, windowMs: 60 * 60_000 },
   /**
-   * The raffle's public form (§NNN), keyed on the hashed event and number typed — the form takes no address, and the key is never
+   * The raffle's public form (§984), keyed on the hashed event and number typed — the form takes no address, and the key is never
    * an IP (§19.4): the person defended is the number's, against a script trying names for it. Five an hour is a person mistyping
    * their name and trying again; the form answers one neutral sentence whatever it finds, refused or not.
    */

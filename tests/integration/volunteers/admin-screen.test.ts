@@ -302,7 +302,7 @@ describe("the list's repository (§839)", () => {
       unassigned: 1,
       // «Cu kit» (§904): nobody ticked «Are kit» yet.
       withKit: 0,
-      // «Prezenți» / «Absenți» (§NNN): nobody ticked «Prezent» yet — the three not cancelled are absent, Mihai is neither.
+      // «Prezenți» / «Absenți» (§983): nobody ticked «Prezent» yet — the three not cancelled are absent, Mihai is neither.
       present: 0,
       absent: 3,
     });

@@ -16,7 +16,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-060-01 — «Prezent» on the organizers' screens (the owner, 2026-11-18, three days before the race: «La
+ * §983, BR-REQ-050-02, BR-REQ-060-01 — «Prezent» on the organizers' screens (the owner, 2026-11-18, three days before the race: «La
  * voluntari trebuie să trec prezent/absent ca să pot face tombola doar pentru cei prezenți»), read from a real database:
  *
  * - the «Voluntari» list has the column «Prezent» right before «Are kit», with its «?», on every row whatever the scope: the house's
@@ -251,7 +251,7 @@ async function press(fields: Record<string, string>): Promise<{ to: string; toas
 }
 const presentOf = async (id: string) => (await db.select({ present: eventVolunteers.present }).from(eventVolunteers).where(eq(eventVolunteers.id, id)))[0].present;
 
-describe("§NNN «Prezent» on the «Voluntari» list — the column", () => {
+describe("§983 «Prezent» on the «Voluntari» list — the column", () => {
   it("stands right before «Are kit», under the catalogue's heading with its «?», on every row whatever the scope — for the Organizer and an Administrator — and neither sorts nor leaves at a width", async () => {
     for (const [locale, catalogue, role] of [
       ["ro", ro, "MODERATOR"],
@@ -323,7 +323,7 @@ describe("§NNN «Prezent» on the «Voluntari» list — the column", () => {
   });
 });
 
-describe("§NNN «Prezenți» and «Absenți» on the strip — the figures and the filters", () => {
+describe("§983 «Prezenți» and «Absenți» on the strip — the figures and the filters", () => {
   it("counts the ticked and the unticked among «Înscris» and «Confirmat» beside «Cu kit» — a cancelled person is neither — each a pill to its people", async () => {
     const tree = await listTree({ eventId: raceId });
     const labels = pillsOf(tree).map((pill) => pill.label);
@@ -397,7 +397,7 @@ describe("§NNN «Prezenți» and «Absenți» on the strip — the figures and 
   });
 });
 
-describe("§NNN the raffle's two files on the «Voluntari» list's toolbar", () => {
+describe("§983 the raffle's two files on the «Voluntari» list's toolbar", () => {
   it("are drawn for one event chosen that holds a raffle — the whole file and the present-only one — for the Organizer and an Administrator", async () => {
     await db.update(events).set({ hasRaffle: true }).where(eq(events.id, raceId));
     for (const role of ["MODERATOR", "ADMIN", "SUPERADMIN"] as const) {
@@ -427,7 +427,7 @@ describe("§NNN the raffle's two files on the «Voluntari» list's toolbar", () 
   });
 });
 
-describe("§NNN «Prezent» on the person's page", () => {
+describe("§983 «Prezent» on the person's page", () => {
   it("is the same one-press tick beside «Are kit» — the list's action, this page as its way back — and the chip «Prezent» when ticked", async () => {
     const tree = await personTree(people.ana);
     const all = elements(tree);
@@ -467,7 +467,7 @@ describe("§NNN «Prezent» on the person's page", () => {
   });
 });
 
-describe("§NNN setVolunteerPresentAction — the press", () => {
+describe("§983 setVolunteerPresentAction — the press", () => {
   it("ticks from the list's row and comes back to the SAME list address — filters, sort and page — with the toast", async () => {
     const back = `/ro/admin/volunteers?eventId=${raceId}&present=no&sort=name&dir=asc&page=2`;
     expect(await press({ volunteerId: people.ion, present: "1", returnTo: back })).toEqual({ to: back, toast: { kind: "success", key: "volunteerPresentOn" } });
@@ -538,7 +538,7 @@ describe("§NNN setVolunteerPresentAction — the press", () => {
   });
 });
 
-describe("§NNN «Prezent» among what is kept about a person (art. 15 GDPR)", () => {
+describe("§983 «Prezent» among what is kept about a person (art. 15 GDPR)", () => {
   it("is in «Toate datele unei persoane» — the offer's own row, on the page and in the file", async () => {
     const before = await viewPersonData(db, staff.ADMIN!, "ion.lupu@example.test", NOW);
     expect(before.volunteerOffers.map((offer) => offer.present)).toEqual([false]);

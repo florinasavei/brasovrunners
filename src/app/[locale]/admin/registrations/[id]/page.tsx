@@ -175,7 +175,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // The members' race number (§664): «Număr de membru» when the row prints one — by the one rule the sheet prints by
   // (§972, `PRINTS_MEMBER_BIB`): the event offers it, the person ticked «Sunt membru», not «Elită». No account is read for it.
   const memberBib = registration.memberBib;
-  // The raffle's line (§NNN): for the organizers (`canTakeRaffleList`), at an event that holds one — a test registration takes no part.
+  // The raffle's line (§984): for the organizers (`canTakeRaffleList`), at an event that holds one — a test registration takes no part.
   const raffle = canTakeRaffleList(actor) ? await readRaffleLine(db, { table: "registration", id }, timelineNow) : null;
 
   const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns, family, partnerShares, invitedBy, notes, emailTries] = await Promise.all([
@@ -564,7 +564,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {membership && (
           <MemberChip membership={membership} label={tr(`registrations.member.${membership}`)} hint={tr(`registrations.member.${membership}Hint`)} />
         )}
-        {/* The raffle (§NNN): whether the person takes part, for the organizers, at an event that holds one — the one answer's words. */}
+        {/* The raffle (§984): whether the person takes part, for the organizers, at an event that holds one — the one answer's words. */}
         {raffle && (await raffleRegistrationLine({ line: raffle }))}
       </Stack>
       {/* Where this person is, as steps (§145): the same derivation the list's "Etapă"

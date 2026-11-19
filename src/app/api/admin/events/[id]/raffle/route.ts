@@ -16,7 +16,7 @@ import { isUuid } from "@/shared/ids";
  * (`lang`): the number, the name, «Alergător» or «Voluntar», and «Prezent» — a runner checked in at the desk or by «Am ajuns»
  * from their own link, a volunteer ticked «Prezent» on the «Voluntari» list (`modules/volunteers/raffle-list.ts`).
  *
- * `?present=1` (§NNN; the owner, 2026-11-18: «ca să pot face tombola doar pentru cei prezenți») is the second file,
+ * `?present=1` (§983; the owner, 2026-11-18: «ca să pot face tombola doar pentru cei prezenți») is the second file,
  * «Lista pentru tombolă — doar prezenții», beside the whole one on the registrations and the «Voluntari» lists: the same
  * four columns for the same people, of whom only those who were there, under a name of its own
  * (`tombola-prezenti-<day>.csv`). Anything else in the address is the whole file.
@@ -42,7 +42,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const search = new URL(request.url).searchParams;
   const lang = search.get("lang");
   const locale: Locale = (routing.locales as readonly string[]).includes(lang ?? "") ? (lang as Locale) : routing.defaultLocale;
-  // «doar prezenții» (§NNN): `present=1` and nothing else asks for the short file.
+  // «doar prezenții» (§983): `present=1` and nothing else asks for the short file.
   const onlyPresent = search.get("present") === "1";
   const now = new Date();
 
@@ -56,9 +56,9 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
   const t = await getTranslations({ locale, namespace: "Admin" });
   const csv = buildRaffleCsv(
-    // The three groups (§NNN): «Elită» is a registration marked «Elită» and a line of the race's elite list.
+    // The three groups (§984): «Elită» is a registration marked «Elită» and a line of the race's elite list.
     { number: t("registrations.raffle.columns.number"), name: t("registrations.raffle.columns.name"), kind: t("registrations.raffle.columns.kind"), kinds: { RUNNER: t("registrations.raffle.kinds.RUNNER"), ELITE: t("registrations.raffle.kinds.ELITE"), VOLUNTEER: t("registrations.raffle.kinds.VOLUNTEER") },
-      // «Prezent» (§949, §NNN): whether the person was there — a runner's check-in (the desk's, or «Am ajuns»), the «Voluntari» list's tick for a volunteer.
+      // «Prezent» (§949, §983): whether the person was there — a runner's check-in (the desk's, or «Am ajuns»), the «Voluntari» list's tick for a volunteer.
       present: t("registrations.raffle.columns.present"),
       presentYes: t("registrations.raffle.present.yes"),
       presentNo: t("registrations.raffle.present.no"),

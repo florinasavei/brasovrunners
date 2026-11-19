@@ -646,7 +646,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     ...(fields.kitShirt === undefined ? {} : { kitShirt: fields.kitShirt }),
     // «Avem tombolă» (§949), by the same discipline: a caller that did not post the box writes nothing.
     ...(fields.hasRaffle === undefined ? {} : { hasRaffle: fields.hasRaffle }),
-    // The raffle's settings (§NNN), by the same discipline: a caller that did not post a box writes nothing for it.
+    // The raffle's settings (§984), by the same discipline: a caller that did not post a box writes nothing for it.
     ...(fields.raffleRunners === undefined ? {} : { raffleRunners: fields.raffleRunners }),
     ...(fields.raffleElites === undefined ? {} : { raffleElites: fields.raffleElites }),
     ...(fields.raffleVolunteers === undefined ? {} : { raffleVolunteers: fields.raffleVolunteers }),
@@ -3235,7 +3235,7 @@ function blankEventRow(now: Date): EditableEvent {
     startsAt: now,
     endsAt: null,
     raceStartsAt: null,
-    // «Start» (§NNN): pressed on «Cronometrare» alone, read by the results alone; no save, copy, repeat or series edit carries it.
+    // «Start» (§986): pressed on «Cronometrare» alone, read by the results alone; no save, copy, repeat or series edit carries it.
     raceGunAt: null,
     raceGunByStaffUserId: null,
     timezone: CLUB_TIME_ZONE,

@@ -61,7 +61,7 @@ const UNDO_REFUSALS = ["RESULT_UNDO_NOT_ALLOWED", "NOT_FOUND", "FORBIDDEN"] as c
 const number = (raw: string | undefined) => (raw !== undefined && /^\d{1,9}$/.test(raw) ? Number(raw) : null);
 
 /**
- * «Cronometrare» (§NNN, amending §850; the owner, 2026-11-18, three days before the race: «pentru ziua cursei am nevoie de o pagină
+ * «Cronometrare» (§986, amending §850; the owner, 2026-11-18, three days before the race: «pentru ziua cursei am nevoie de o pagină
  * nouă pentru cronometrare, practic trebuie să trec data sosirii pentru fiecare alergător, la elite trec doar prenumele, ca așa sunt
  * trecuți, la resturi trec BIB și așa îi identific» — «un view rapid, în care să introduc și să se salveze instant» — «ca s-ar putea
  * să ajungă mulți deodată»): «Ziua cursei»'s finish line, its third tab (`raceDayTabs`), in «Sosire»'s place.
@@ -72,7 +72,7 @@ const number = (raw: string | undefined) => (raw !== undefined && /^\d{1,9}$/.te
  * cursei» counts — and the finish line (`FinishLine`, the page's island): the elites' buttons first, the number box, «⏱ Prinde
  * timpul», the presses of this phone and «Ultimii sosiți» with who entered each. With scripts off every form posts and the page comes
  * back here saying what happened (`?ok=`, `?dup=` with `?s=` when the row is a decision of «Clasament», `?refused=` —
- * `RACE_GUN_CHANGED`, a «Start» whose page saw another gun than the one stored, said with the gun as it stands (§NNN) —, `?undone=`,
+ * `RACE_GUN_CHANGED`, a «Start» whose page saw another gun than the one stored, said with the gun as it stands (§986) —, `?undone=`,
  * `?gun=` — `repeat` for an organizer's own «Start» heard again within ten seconds —: numbers and codes, never a name). The gun's
  * sentence is the island's, of the gun its clock counts from; «Start» sends the gun this page saw. A group run
  * says it has no results, and nothing more. The islands get the server's clock as the page was drawn — read last, after every read
@@ -148,7 +148,7 @@ export default async function TimingPage({ params, searchParams }: Props) {
     }
     const undone = number(query.undone);
     if (undone !== null) return { severity: "success" as const, text: t("timing.banner.undone", { who: `#${undone}` }) };
-    // A «Start» whose page saw another gun (§NNN): the gun as it stands now — who gave it and when — or that it was taken off since.
+    // A «Start» whose page saw another gun (§986): the gun as it stands now — who gave it and when — or that it was taken off since.
     if (query.refused === "RACE_GUN_CHANGED") {
       return {
         severity: "warning" as const,
@@ -235,7 +235,7 @@ export default async function TimingPage({ params, searchParams }: Props) {
     : t("editor.dateToBeAnnounced");
 
   const words: FinishLineWords = {
-    // The gun's sentence is the island's (§NNN): drawn from the gun its clock counts from, which the clock's answer brings.
+    // The gun's sentence is the island's (§986): drawn from the gun its clock counts from, which the clock's answer brings.
     gunPressed: t.raw("timing.gun.pressed") as string,
     gunPlanned: t("timing.gun.planned", { time: plannedWords }),
     clock: t.raw("timing.clock") as string,
@@ -302,7 +302,7 @@ export default async function TimingPage({ params, searchParams }: Props) {
         <QuietHelp text={t("timing.more")} />
       </Typography>
 
-      {/* The gun: «Start» for whoever enters results, until the first finisher; the sentence, for everybody, is the island's (§NNN). */}
+      {/* The gun: «Start» for whoever enters results, until the first finisher; the sentence, for everybody, is the island's (§986). */}
       {mayStart && (
         <Box sx={{ display: "grid", gap: 1 }} data-testid="race-gun">
           {gun.fixed && (

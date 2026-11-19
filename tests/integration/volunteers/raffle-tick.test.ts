@@ -289,7 +289,7 @@ describe("§949 «Tombolă» on the «Voluntari» list", () => {
   });
 });
 
-describe("§NNN «Tombolă» beside each volunteer: whether they take part, and why not, under the organizers' tick", () => {
+describe("§984 «Tombolă» beside each volunteer: whether they take part, and why not, under the organizers' tick", () => {
   /** The few words under a row's tick, on both of its drawings (the table and the phone card). */
   const standingOf = (page: string, id: string) =>
     raffleFormsOf(page, id).map((one) => /data-testid="raffle-standing" data-in="(\d)"[^>]*>([^<]*)</.exec(one)?.slice(1).join(" ") ?? "none");

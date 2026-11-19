@@ -28,7 +28,7 @@ function text(form: FormData, name: string): string {
 }
 
 /**
- * «Particip la tombolă» on the event's raffle page (FORM, §NNN): a race number and a name, matched to one person by the service. The
+ * «Particip la tombolă» on the event's raffle page (FORM, §984): a race number and a name, matched to one person by the service. The
  * house's public-form defences — Turnstile first, here; the honeypot, the timing check and the two throttles in the service — and
  * one answer for every refusal of the match: `?tombola=nomatch`, the neutral sentence that names neither half. A person signed up
  * already reads the same thank-you as a new one. Every answer comes back to the raffle's page, at the form; what was typed comes

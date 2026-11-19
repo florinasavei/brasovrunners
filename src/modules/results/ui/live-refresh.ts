@@ -1,5 +1,5 @@
 /**
- * The clock of `ResultsLiveRefresh` (§NNN), with no React and no DOM in it, so a test drives it with fake timers.
+ * The clock of `ResultsLiveRefresh` (§985), with no React and no DOM in it, so a test drives it with fake timers.
  *
  * Nothing before `from`, the window's start: a page drawn before the race arms one timer to it and asks nothing — not on the timer, not
  * on becoming visible — waking at most once a day to arm again (`LIVE_REFRESH_MAX_WAIT_MS`), since a race may be ticked weeks ahead and

@@ -132,7 +132,7 @@ const COMPACT_GLYPH_SX = { ...GLYPH_SX, display: { xs: "none", sm: "inline-flex"
  * «Planul voluntarilor», «Tabel» and «Pe puncte»: it has no entry past the edge to bring into
  * view, so it carries no `SubNavCurrent` and no client code at all.
  *
- * `compact` (§NNN) leaves the glyphs off below `sm`: «Ziua cursei»'s row — «Prezența», «Clasament»,
+ * `compact` (§986) leaves the glyphs off below `sm`: «Ziua cursei»'s row — «Prezența», «Clasament»,
  * «Cronometrare», «Tombolă», «Lucruri de adus», as the role and the event draw them — says its short
  * words alone on a phone, so a role's row of three holds 288 pixels whole and the organizers' five
  * scroll by little; a glyph before each would push more past the edge. From `sm` up every entry

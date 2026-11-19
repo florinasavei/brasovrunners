@@ -37,7 +37,7 @@ export const DOCUMENT_CODES: Record<LegalDocumentKey, string> = {
   GROUP_RUN_DECLARATION_TRAIL: "TRAIL",
   // The volunteer agreement (§758): one word, the same in both languages.
   VOLUNTEER_AGREEMENT: "VOLUNTEER",
-  // «Regulamentul tombolei» (§NNN): one word, the same in both languages.
+  // «Regulamentul tombolei» (§984): one word, the same in both languages.
   RAFFLE_RULES: "RAFFLE",
 };
 

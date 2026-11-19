@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.66-2026-11-18 -->
+<!-- PROJECT_BASELINE: BR-V4.67-2026-11-19 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V4.66-2026-11-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.67-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1132,7 +1132,7 @@ the project id from the project's **Settings → General → Project ID** (`prj_
 
 Every desk verb (BR-REQ-037-08) is open to the lowest role, so a volunteer is a **Voluntar**
 (`CONTRIBUTOR` in the database; since `DECISIONS.md` §103 that role is the desk and nothing
-else, and `/admin` takes them straight to it). The finish line is the desk's too since §NNN:
+else, and `/admin` takes them straight to it). The finish line is the desk's too since §986:
 a Voluntar records finishers on **Ziua cursei → Cronometrare** and undoes their own press for
 ten minutes; «Start», «Clasament» and its corrections stay the Organizer's and the Administrators'.
 Sign-in is Zitadel plus the `staff_users` allowlist (§25), so a volunteer needs both:
@@ -2539,7 +2539,7 @@ enter them; **only the Administrator and the Superadministrator make them public
    colleague saved is refused («Altcineva a salvat între timp. Reîncarcă pagina…») rather than written over theirs. **«Șterge»** on a line is its own press and asks first.
    «Descarcă clasamentul (CSV)» is the file with the names as the backoffice sees them; the download is recorded in the trail, without a name.
 5. **«Clasamentul e public pe pagina evenimentului»** (the Administrator's tick, with its own «Salvează», asks first): off for every event. It
-   works under the notice and terms of step 1, and **may be ticked before the race** (§NNN): the card then says **«Public de la start»** with the
+   works under the notice and terms of step 1, and **may be ticked before the race** (§985): the card then says **«Public de la start»** with the
    start's day and hour, and the site shows nothing until the start; from the start every result you save appears, and while the race runs
    (until its end, or six hours after the start when it has none) the open page refreshes itself every 30 seconds — a page opened before the first
    finish too, which shows it at its next refresh, and one opened before the start, which asks nothing until the start and then does the same. The public read —
@@ -2580,7 +2580,7 @@ enter them; **only the Administrator and the Superadministrator make them public
    **before** you publish the ranking, or say on the page that they changed: a runner's place in the category can move. The Excel of the
    registrations keeps the platform's groups in its «Statistici», whatever a race chose.
 
-8. **«Cronometrare» — the finish line on a phone (§850, §NNN).** «Ziua cursei» → **«Cronometrare»** (`/admin/checkin/cronometrare`;
+8. **«Cronometrare» — the finish line on a phone (§850, §986).** «Ziua cursei» → **«Cronometrare»** (`/admin/checkin/cronometrare`;
    the link «Cronometrare» on «Clasament», and the old «Sosire» address, open it with the race chosen). Every role that works the desk
    may record finishes — the desk Volunteer too (SETUP §34) —; «Start», «Clasament» and its corrections stay the Organizer's and the
    Administrators'.
@@ -2688,7 +2688,7 @@ turns on event by event. Three steps are the club's: the notice (1), the tick (2
 
 An event's raffle (`DECISIONS.md` §949) is **«Din oficiu»** by default: everybody of the groups the club ticks — the confirmed runners
 with a race number, the race's elites, the confirmed volunteers with a number — is in it, nobody signs anything, and the organizers take
-out whom they like. **«Cu înscriere separată»** (`DECISIONS.md` §NNN; the owner, 2026-11-18: «Dar pentru tombolă trebuie să am o înscriere
+out whom they like. **«Cu înscriere separată»** (`DECISIONS.md` §984; the owner, 2026-11-18: «Dar pentru tombolă trebuie să am o înscriere
 separată») puts in only those who sign up, each accepting the club's «Regulamentul tombolei». It **stays shut until two texts are in force
 in both languages** — the rules and a privacy notice that describes the sign-up — so the club's steps are 1 and 2, once, then 3 per event.
 An agent never approves either text.

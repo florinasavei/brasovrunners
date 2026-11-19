@@ -224,7 +224,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
               </Box>
               <Divider />
               {/*
-                «Înscrierea la tombolă» (§NNN; art. 15 GDPR): each raffle sign-up of this address's registrations and offers — the event,
+                «Înscrierea la tombolă» (§984; art. 15 GDPR): each raffle sign-up of this address's registrations and offers — the event,
                 the door, when, the rules' version, the name typed, who recorded it as a role (§777), the trace — erased with its row.
               */}
               <Box component="section" data-testid="person-raffle-entries">

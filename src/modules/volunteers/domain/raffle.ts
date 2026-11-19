@@ -1,7 +1,7 @@
 import { nextMidnightIn } from "@/i18n/dates";
 
 /*
-  The raffle's rules, pure (§NNN; the owner, 2026-11-18: «Vreau să pot bifa asta: tombolă din oficiu vs tombolă cu înscriere
+  The raffle's rules, pure (§984; the owner, 2026-11-18: «Vreau să pot bifa asta: tombolă din oficiu vs tombolă cu înscriere
   separată», «trebuie să bifez acolo cine se poate înscrie: doar alergătorii și elitele și voluntarii» and «vreau să văd în dreptul
   fiecărei persoane dacă participă la tombolă»). No clock but the one passed in, no database: every door, page, list, file and
   count reads these few functions, so the screen that says «Participă: Da» and the file the draw is made from cannot disagree.
@@ -58,7 +58,7 @@ export function raffleSettingsOf(row: RaffleSettingsRow): RaffleSettings {
 }
 
 /**
- * Whether the event's raffle asks a sign-up of its own (§NNN): «Avem tombolă» and «Cu înscriere separată», open or not. What the
+ * Whether the event's raffle asks a sign-up of its own (§984): «Avem tombolă» and «Cu înscriere separată», open or not. What the
  * raffle's page asks before it says the thank-you to a person reading the answer to their own post — never on an event that asks none.
  */
 export function raffleAsksSignUp(settings: Pick<RaffleSettings, "hasRaffle" | "signUp">): boolean {
@@ -108,7 +108,7 @@ export type RaffleGateClosed =
   | "groupNotAllowed";
 
 /**
- * When the sign-up ends with the event (§NNN): its own end, else the next midnight after its start day on its own clock — the
+ * When the sign-up ends with the event (§984): its own end, else the next midnight after its start day on its own clock — the
  * race-day desk signs people up after the start, so the start itself does not close it (`address-change.ts#eventEndForMove`'s
  * reading). Null for an event with no start.
  */
@@ -118,7 +118,7 @@ export function raffleSignUpEndsAt(event: Pick<RaffleGateEvent, "startsAt" | "en
 }
 
 /**
- * The one rule every door, page and action reads (§NNN): null while a sign-up may be taken, else why not. The sign-up opens only
+ * The one rule every door, page and action reads (§984): null while a sign-up may be taken, else why not. The sign-up opens only
  * for **a raffle** («Avem tombolă»), **in the sign-up mode** («Cu înscriere separată»), **while the sign-ups are open**, at **a
  * published, scheduled race not ended**, while **«Regulamentul tombolei» is in force** and **the privacy notice in force names
  * `{{raffle}}`** — both in every language — and for **a group ticked** in «Cine poate participa»: the person's own `kind`, or,
@@ -159,14 +159,14 @@ export type RafflePerson = {
   confirmed: boolean;
   /** Wears a number: a registration's race number, a volunteer's own (§948). A line of the elite list takes part by name: always true. */
   hasNumber: boolean;
-  /** «Participă la tombolă»: not taken out by the organizers (§949; a line's own tick, §NNN). */
+  /** «Participă la tombolă»: not taken out by the organizers (§949; a line's own tick, §984). */
   inRaffle: boolean;
   /** Signed up (`event_raffle_entries`): read in the sign-up mode only. */
   signedUp: boolean;
 };
 
 /**
- * Whether a person takes part in the event's raffle, and the reason (§NNN) — the one function the files (whole and present-only),
+ * Whether a person takes part in the event's raffle, and the reason (§984) — the one function the files (whole and present-only),
  * the counts, the «Tombolă» tab, the lists' «Tombolă» columns, the person's pages and the desk read. In the order a person is told:
  * the group ticked in «Cine poate participa» (both modes), the state, the number, the organizers' exclusion, and — only «Cu
  * înscriere separată» — the sign-up. «Din oficiu» is §949's file for the ticked groups: everybody confirmed with a number and not
@@ -181,7 +181,7 @@ export function raffleParticipation(person: RafflePerson, settings: Pick<RaffleS
   return "in";
 }
 
-/** A row of the raffle's files and tab, in the order they are read: the numbers rising, then the numberless lines by name (§NNN). */
+/** A row of the raffle's files and tab, in the order they are read: the numbers rising, then the numberless lines by name (§984). */
 export function compareRaffleRows(a: { number: number | null; name: string; kind: RaffleKind }, b: { number: number | null; name: string; kind: RaffleKind }): number {
   if (a.number !== null && b.number !== null) return a.number - b.number || RAFFLE_KINDS.indexOf(a.kind) - RAFFLE_KINDS.indexOf(b.kind) || a.name.localeCompare(b.name, "ro");
   if (a.number !== null) return -1;
@@ -197,7 +197,7 @@ export function compareRaffleRows(a: { number: number | null; name: string; kind
 export const RAFFLE_NUMBER_MAX = 99_999;
 
 /**
- * A name as the matcher compares it (§NNN): lower case, the diacritics gone (ș and ş alike are s, ă and â are a), every
+ * A name as the matcher compares it (§984): lower case, the diacritics gone (ș and ş alike are s, ă and â are a), every
  * punctuation mark — a hyphen, an apostrophe, a dot — a space, the spaces collapsed and the ends trimmed.
  */
 export function foldName(value: string): string {
@@ -216,7 +216,7 @@ export function nameWords(value: string): string[] {
 }
 
 /**
- * Whether a name typed on the public form names the registered person (§NNN): both folded (`foldName`), **every typed word is one
+ * Whether a name typed on the public form names the registered person (§984): both folded (`foldName`), **every typed word is one
  * of the registered name's words** — each used once, so «Ana Ana» is not «Ana Popescu» — and **at least two words are typed**,
  * unless the registered name has only one. «Popescu Ana», «ana popescu» and «Ana-Maria Popescu» for «Ana Maria Popescu» match;
  * «Popescu» alone, «Ana Ionescu» and an empty box do not. The order does not matter: people write their names both ways.

@@ -92,7 +92,7 @@ const NOT_A_BOX = new Set([
   "freePlacesByOfferOnly",
   // «Eliberează singur locurile nesemnate la termen» (§914): a tick with its marker, both answers valid.
   "releaseUnsignedAtDeadline",
-  // The raffle's settings beside «Avem tombolă» (§NNN): three ticks with their markers, a native select of two valid answers, a tick.
+  // The raffle's settings beside «Avem tombolă» (§984): three ticks with their markers, a native select of two valid answers, a tick.
   "raffleRunners",
   "raffleElites",
   "raffleVolunteers",

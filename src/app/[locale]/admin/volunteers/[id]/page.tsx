@@ -82,7 +82,7 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
     // «Note interne»: the person's live notes, newest first; the service asks for the role again.
     listVolunteerNotes(db, actor, person.id),
   ]);
-  // The raffle's line (§NNN), for the organizers — the roles that take the raffle's file — of an event that holds one.
+  // The raffle's line (§984), for the organizers — the roles that take the raffle's file — of an event that holds one.
   const raffle = canTakeRaffleList(actor) ? await readRaffleLine(db, { table: "volunteer", id: person.id }, now) : null;
   const { volunteerError, saved } = await searchParams;
   const errorCode = volunteerError && /^[A-Z_]{1,48}$/.test(volunteerError) && t.has(`errors.${volunteerError}`) ? volunteerError : null;
@@ -105,7 +105,7 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
         </Typography>
         <StatusChip glyph={STATE_CHIP[person.state].glyph} color={STATE_CHIP[person.state].color} label={t(`volunteers.states.${person.state}`)} testId="volunteer-state" />
         {/*
-          «Prezent» (§NNN; the owner, 2026-11-18: «La voluntari trebuie să trec prezent/absent ca să pot face tombola doar pentru cei
+          «Prezent» (§983; the owner, 2026-11-18: «La voluntari trebuie să trec prezent/absent ca să pot face tombola doar pentru cei
           prezenți»): the list's one-press tick beside the name, before «Are kit» as the list's columns stand — the same plain form and
           action, posting the state it wants (`present=1|0`), working with scripts off and coming back here (`returnTo`). Unticked is
           absent. The service asks for the role again (`canManageVolunteers`).
@@ -144,7 +144,7 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
         </GlyphButton>
       </Stack>
 
-      {/* The raffle (§NNN): whether the person takes part, in one line, and the organizers' «Înscrie la tombolă» while the sign-up is open. */}
+      {/* The raffle (§984): whether the person takes part, in one line, and the organizers' «Înscrie la tombolă» while the sign-up is open. */}
       {raffle && (await raffleVolunteerLine({ line: raffle, locale, eventId: person.eventId, volunteerId: person.id, name: person.name, action: raffleSignUpAction }))}
 
       {/* «Note interne» first, before the person's block: what the organizers left about the person is read before anything else. */}

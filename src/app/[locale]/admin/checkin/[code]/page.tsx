@@ -55,7 +55,7 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
   const spares = row ? await spareStates(db, [row.eventId]) : {};
   // Who came with this runner (§543), as on the desk's list: names only.
   const family = row ? ((await familyOf(db, [row])).get(row.id) ?? []).map((member) => member.name) : [];
-  // The raffle (§NNN): whether the person takes part, for every desk role — and, in the sign-up mode with its gate open, the desk's sign-up.
+  // The raffle (§984): whether the person takes part, for every desk role — and, in the sign-up mode with its gate open, the desk's sign-up.
   const raffle = row ? await readRaffleLine(db, { table: "registration", id: row.id }, new Date()) : null;
 
   return (

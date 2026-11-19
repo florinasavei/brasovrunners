@@ -117,7 +117,7 @@ import ColumnWidthsScript from "./ColumnWidthsScript";
  *
  * A block lists its lines in the columns' order, but for the few a column puts first on a phone
  * (`phoneFirst`): right under the headline, in their own order, the rest after them. The «Voluntari»
- * list's state and its «Prezent» tick (§NNN) — what race morning reads and presses on a phone — would
+ * list's state and its «Prezent» tick (§983) — what race morning reads and presses on a phone — would
  * otherwise sit a dozen lines down a card; the wide table keeps every column where it stands.
  *
  * ## A table on one page, and on paper (§974)
@@ -165,7 +165,7 @@ export type AdminColumn<Row> = {
   omitEmptyOnPhone?: boolean;
   /**
    * On a phone, this column's line comes first in the row's block — right under the headline, before every column that does not
-   * say so, the columns that do in their own order (§NNN). The wide table, the «Coloane» menu and the exports keep the columns'
+   * say so, the columns that do in their own order (§983). The wide table, the «Coloane» menu and the exports keep the columns'
    * order. Off by default: a block reads in the columns' order.
    */
   phoneFirst?: boolean;

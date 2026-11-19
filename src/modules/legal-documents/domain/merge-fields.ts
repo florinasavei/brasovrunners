@@ -450,7 +450,7 @@ export const VOLUNTEER_MERGE_FIELDS = [
 ] as const;
 
 /**
- * «Regulamentul tombolei»'s own blank (§NNN): `{{raffleGroups}}` — who may take part, the groups the event ticks in «Cine poate
+ * «Regulamentul tombolei»'s own blank (§984): `{{raffleGroups}}` — who may take part, the groups the event ticks in «Cine poate
  * participa», in the text's language («alergătorii confirmați, cu număr de concurs, sportivii de top ai cursei și voluntarii confirmați, cu
  * număr de voluntar», `volunteers/raffle-words.ts#raffleGroupsPhrase`). Filled when the person accepts, beside the event's own
  * fields (`{{event}}`, `{{eventDate}}`, `{{eventLocation}}`), and kept with the acceptance (`event_raffle_entries.rules_facts`).
@@ -458,7 +458,7 @@ export const VOLUNTEER_MERGE_FIELDS = [
 export const RAFFLE_GROUPS_MERGE_FIELD = "raffleGroups";
 
 /**
- * The privacy notice's marker for the raffle's sign-up (§NNN): filled, when the notice is shown, with the public form's own name,
+ * The privacy notice's marker for the raffle's sign-up (§984): filled, when the notice is shown, with the public form's own name,
  * quoted (`volunteers/raffle-words.ts#raffleClause`) — „Înscrie-te la tombolă” / “Sign up for the raffle” — in the paragraph that
  * says what a sign-up keeps (the number, the name typed, whether a volunteer, the rules' acceptance and its trace or the staff
  * member who recorded it, the notice's version), why, who sees it, for how long (thirty days after the event's start) and how to
@@ -1006,7 +1006,7 @@ export function describesRelayQueue(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes the raffle's sign-up (§NNN): it names `{{raffle}}`. Half of the sign-up's gate
+ * Whether a privacy notice describes the raffle's sign-up (§984): it names `{{raffle}}`. Half of the sign-up's gate
  * (`raffleSignUpGate`) — with «Regulamentul tombolei» in force — and what `/admin/tasks`' row `raffleNotice` reads. Pure; asked of
  * the notice in force, in every language.
  */

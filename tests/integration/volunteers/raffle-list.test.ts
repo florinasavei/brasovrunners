@@ -22,14 +22,14 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * What is protected, on real PostgreSQL (PGlite), through the service and the real route:
  * - the file is everybody who wears a number at the event — the confirmed runners and the confirmed volunteers — by the
  *   number, each once: never a registration that waits, is held, cancelled or a test one, never a cancelled volunteer,
- *   anybody without a number or another event's person; and since §NNN a line of the race's elite list takes part like a
+ *   anybody without a number or another event's person; and since §984 a line of the race's elite list takes part like a
  *   person, «Elită» by its number (the three groups and the two modes are `raffle-sign-up.test.ts`'s);
  * - three columns and nothing else of a person: the number, the name, which of the two they are — in the reader's language;
  * - whoever reads the registrations and works the volunteers takes it; every other role is refused, by the service and
  *   by the route;
  * - the download is recorded with two counts, never a name or a number.
  *
- * §NNN (the owner, 2026-11-18, three days before the race: «La voluntari trebuie să trec prezent/absent ca să pot face tombola
+ * §983 (the owner, 2026-11-18, three days before the race: «La voluntari trebuie să trec prezent/absent ca să pot face tombola
  * doar pentru cei prezenți»): a volunteer's «Prezent» is «Da» or «Nu» by the organizers' tick (`event_volunteers.present`), as a
  * runner's is by the desk's check-in; and `?present=1` is a second file beside the whole one — the same rules, of whom only the
  * runners the desk checked in and the volunteers ticked «Prezent» — under a name of its own, its download said in the trail.
@@ -167,7 +167,7 @@ async function everybody() {
   await volunteer("Vlad Offered", null, "REGISTERED");
   await volunteer("Zoe Cancelled", 502, "CANCELLED");
   await volunteer("Confirmed Nonumber Volunteer", null);
-  // A line of the race's elite list: in the draw since §NNN, «Elită» by its number — «Elitele» is ticked by default.
+  // A line of the race's elite list: in the draw since §984, «Elită» by its number — «Elitele» is ticked by default.
   await db.insert(eventEliteEntries).values({ eventId, name: "Eliud K.", bibNumber: 777 });
   // Another event's people, wearing numbers of their own.
   const other = await race("Alt cros");
@@ -179,7 +179,7 @@ describe("§948 BR-REQ-071-01 «Lista pentru tombolă»: everybody who wears a n
     await everybody();
     const list = await exportRaffleList(db, admin, eventId, NOW);
     expect(list.rows).toEqual([
-      // «Prezent» (§949, §NNN): nobody was checked in at the desk yet, and no volunteer was ticked «Prezent» on the «Voluntari» list.
+      // «Prezent» (§949, §983): nobody was checked in at the desk yet, and no volunteer was ticked «Prezent» on the «Voluntari» list.
       { number: 1, name: "Ana Pop", kind: "RUNNER", present: false },
       { number: 2, name: "Radu Munteanu", kind: "RUNNER", present: false },
       { number: 500, name: "Ion Voluntar", kind: "VOLUNTEER", present: false },
@@ -219,7 +219,7 @@ describe("§948 BR-REQ-071-01 «Lista pentru tombolă»: everybody who wears a n
     const [row, ...more] = await trail();
     expect(more).toEqual([]);
     expect(row).toMatchObject({ actorStaffUserId: admin.id, participantId: null, entityType: "event", entityId: eventId, createdAt: NOW });
-    // Which of the two files (§NNN): the whole one.
+    // Which of the two files (§983): the whole one.
     expect(row.metadataJson).toEqual({ runners: 2, elites: 1, volunteers: 2, onlyPresent: false, signUp: false });
   });
 
@@ -251,7 +251,7 @@ describe("§948 BR-REQ-071-01 the file", () => {
     presentNo: catalogue.Admin.registrations.raffle.present.no,
   });
 
-  it("is four columns — the number, the name, which of the two, whether the person is present (§949, §NNN) — with a BOM, CRLF lines and every cell made safe for a spreadsheet", () => {
+  it("is four columns — the number, the name, which of the two, whether the person is present (§949, §983) — with a BOM, CRLF lines and every cell made safe for a spreadsheet", () => {
     const csv = buildRaffleCsv(words(ro), [
       { number: 1, name: "Ana Pop", kind: "RUNNER", present: true },
       { number: 2, name: '=HYPERLINK("x")', kind: "RUNNER", present: false },
@@ -259,12 +259,12 @@ describe("§948 BR-REQ-071-01 the file", () => {
       { number: 501, name: "Oana Voluntar", kind: "VOLUNTEER", present: false },
     ]);
     expect(csv.charCodeAt(0)).toBe(0xfeff);
-    // A volunteer's «Prezent» is said as a runner's (§NNN): «Da» or «Nu», by the tick on the «Voluntari» list — never an empty cell.
+    // A volunteer's «Prezent» is said as a runner's (§983): «Da» or «Nu», by the tick on the «Voluntari» list — never an empty cell.
     expect(csv.slice(1)).toBe(['Număr,Nume,Categorie,Prezent', "1,Ana Pop,Alergător,Da", `2,"'=HYPERLINK(""x"")",Alergător,Nu`, '500,"Pop, Ion",Voluntar,Da', "501,Oana Voluntar,Voluntar,Nu", ""].join("\r\n"));
     expect(buildRaffleCsv(words(en), [{ number: 500, name: "Ion", kind: "VOLUNTEER", present: true }]).slice(1)).toBe("Number,Name,Category,Present\r\n500,Ion,Volunteer,Yes\r\n");
     expect(buildRaffleCsv(words(en), []).slice(1)).toBe("Number,Name,Category,Present\r\n");
     expect(raffleCsvFileName("2026-11-21")).toBe("tombola-2026-11-21.csv");
-    // The present-only file has a name of its own, plain ASCII (§NNN); only a real `true` asks for it.
+    // The present-only file has a name of its own, plain ASCII (§983); only a real `true` asks for it.
     expect(raffleCsvFileName("2026-11-21", { onlyPresent: true })).toBe("tombola-prezenti-2026-11-21.csv");
     expect(raffleCsvFileName("2026-11-21", { onlyPresent: false })).toBe("tombola-2026-11-21.csv");
     expect(raffleCsvFileName("2026-11-21", { onlyPresent: true })).toMatch(/^[\x20-\x7e]+$/);
@@ -303,7 +303,7 @@ describe("§948 BR-REQ-071-01 the file", () => {
   });
 });
 
-describe("§NNN BR-REQ-071-01 «Prezent» for a volunteer, and «Lista pentru tombolă — doar prezenții»", () => {
+describe("§983 BR-REQ-071-01 «Prezent» for a volunteer, and «Lista pentru tombolă — doar prezenții»", () => {
   /**
    * The owner's race on Saturday: two runners checked in at the desk (Ana, and Dana who was taken out of the raffle), one not
    * (Radu); two volunteers ticked «Prezent» (Ion, and Zoe who was cancelled since), one not (Oana) — and the people the whole file

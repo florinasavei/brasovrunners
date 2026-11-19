@@ -498,7 +498,7 @@ export async function volunteerAgreementInForce<T extends Record<string, unknown
 }
 
 /**
- * Whether «Regulamentul tombolei» is in force in every language (§NNN): half of the raffle's sign-up gate (`raffleSignUpGate`) and
+ * Whether «Regulamentul tombolei» is in force in every language (§984): half of the raffle's sign-up gate (`raffleSignUpGate`) and
  * what `/admin/tasks`' row `raffleRules` reads. Every language, as the volunteer agreement: a person accepts in the language of the
  * page, and a sign-up open in one language only would refuse half its visitors. A public page asks the cached twin
  * (`cachedRaffleRulesInForce`).
@@ -509,7 +509,7 @@ export async function raffleRulesInForce<T extends Record<string, unknown>>(db: 
 }
 
 /**
- * Whether the privacy notice in force describes the raffle's sign-up (§NNN, `describesRaffle`) — in every language. The other half of
+ * Whether the privacy notice in force describes the raffle's sign-up (§984, `describesRaffle`) — in every language. The other half of
  * the sign-up's gate, asked again by every door at every press; the event page and the form's page read the cached twin
  * (`cachedRaffleDescribed`).
  */
@@ -1085,7 +1085,7 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       // self-declarations (§393), a volunteer's accepted agreement (§758) and a guardian's (§768: the version
       // in force when the parent pressed, which may not be the volunteer's own) — each is somebody
       // relying on these exact words, and the guardian's column is a RESTRICT foreign key too. A raffle sign-up's acceptance of
-      // «Regulamentul tombolei» (§NNN) is one more: its column is RESTRICT as well, so the version is never deleted under it.
+      // «Regulamentul tombolei» (§984) is one more: its column is RESTRICT as well, so the version is never deleted under it.
       acceptanceCount: sql<number>`(
         (select count(*)::int from ${declarationAcceptances} where ${declarationAcceptances.legalDocumentId} = ${legalDocuments.id})
         + (select count(*)::int from ${groupRunDeclarations} where ${groupRunDeclarations.legalDocumentId} = ${legalDocuments.id})

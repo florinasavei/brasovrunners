@@ -415,7 +415,7 @@ function eventFieldsFrom(form: FormData) {
     kitShirt: form.get("event.kitShirt.present") === "1" ? form.get("event.kitShirt") === "on" : undefined,
     // «Avem tombolă» (§949): a checkbox in «Numere de concurs», read only when the form carried its marker.
     hasRaffle: form.get("event.hasRaffle.present") === "1" ? form.get("event.hasRaffle") === "on" : undefined,
-    // The raffle's settings beside it (§NNN): the three groups and the open tick, by their own markers; «Cum» a select whose two
+    // The raffle's settings beside it (§984): the three groups and the open tick, by their own markers; «Cum» a select whose two
     // values are the only answers — anything else is "not editing it", never a switch.
     raffleRunners: form.get("event.raffleRunners.present") === "1" ? form.get("event.raffleRunners") === "on" : undefined,
     raffleElites: form.get("event.raffleElites.present") === "1" ? form.get("event.raffleElites") === "on" : undefined,

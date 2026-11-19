@@ -16,7 +16,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — «Regulamentul tombolei», a legal document of the platform (BR-REQ-053-01; the owner, 2026-11-18, asked: a person accepts a
+ * §984 — «Regulamentul tombolei», a legal document of the platform (BR-REQ-053-01; the owner, 2026-11-18, asked: a person accepts a
  * raffle's rules approved by the club, without which the sign-up does not open), and the privacy notice's `{{raffle}}`:
  *
  * - a key of its own, last, in a group of its own on `/admin/legal`, approved by the one press like the volunteer agreement, its code
@@ -31,7 +31,7 @@ import ro from "../../../messages/ro.json";
 
 const text = (body: { sections: ReadonlyArray<{ heading?: string; paragraphs: readonly string[] }> }) => body.sections.flatMap((section) => [section.heading ?? "", ...section.paragraphs]).join("\n");
 
-describe("§NNN BR-REQ-053-01 «Regulamentul tombolei» is a legal document of the platform", () => {
+describe("§984 BR-REQ-053-01 «Regulamentul tombolei» is a legal document of the platform", () => {
   it("is a key of its own, last, in a group of its own, with a one-word code and a name in both languages", () => {
     expect(RAFFLE_RULES_KEY).toBe("RAFFLE_RULES");
     expect(LEGAL_DOCUMENT_KEYS.at(-1)).toBe("RAFFLE_RULES");
@@ -94,7 +94,7 @@ describe("§NNN BR-REQ-053-01 «Regulamentul tombolei» is a legal document of t
   });
 });
 
-describe("§NNN BR-REQ-053-01 the privacy notice's `{{raffle}}`, the marker of the sign-up's gate", () => {
+describe("§984 BR-REQ-053-01 the privacy notice's `{{raffle}}`, the marker of the sign-up's gate", () => {
   it("is named in sections 5 and 7 of the template, in both languages, and nowhere else", () => {
     for (const body of [privacyNoticeRo, privacyNoticeEn]) {
       expect(describesRaffle(body)).toBe(true);

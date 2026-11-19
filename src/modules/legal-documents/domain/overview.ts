@@ -21,7 +21,7 @@ export const LEGAL_KIND_GROUPS = [
   { id: "groupRun", keys: ["GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL"] },
   // The volunteer agreement (§758): its own group — it binds no runner, it is the helpers' text.
   { id: "volunteers", keys: ["VOLUNTEER_AGREEMENT"] },
-  // «Regulamentul tombolei» (§NNN): its own group — what a person accepts to sign up for a raffle, no registration's text.
+  // «Regulamentul tombolei» (§984): its own group — what a person accepts to sign up for a raffle, no registration's text.
   { id: "raffle", keys: ["RAFFLE_RULES"] },
 ] as const satisfies ReadonlyArray<{ id: string; keys: readonly LegalDocumentKey[] }>;
 

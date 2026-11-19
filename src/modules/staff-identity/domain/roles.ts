@@ -804,7 +804,7 @@ export function canEnterResults(subject: StaffSubject): boolean {
 }
 
 /**
- * **Recording a finish at the line (§NNN, amending §850)** — «Cronometrare», «Ziua cursei»'s timing page: a race number
+ * **Recording a finish at the line (§986, amending §850)** — «Cronometrare», «Ziua cursei»'s timing page: a race number
  * typed, or an elite's button pressed, as the runner crosses, and the press's own «Anulează» for ten minutes. The owner,
  * 2026-11-18, three days before the race: «trebuie să am un mod ușor și eficient de a cronometra pentru voluntari», and,
  * asked who: the desk's volunteers too. So **every staff role that works the desk** (`canWorkTheDesk`: the desk Volunteer,

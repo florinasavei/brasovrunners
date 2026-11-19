@@ -13,7 +13,7 @@ import { liveNamesByBib } from "./results";
 export type FinishHistoryEntry = FinishHistoryLine & { liveName: string | null };
 
 /**
- * «Istoricul sosirilor» for one race (§NNN): its audit rows about the results, newest first and at most `limit`, with the staff
+ * «Istoricul sosirilor» for one race (§986): its audit rows about the results, newest first and at most `limit`, with the staff
  * member's name — a left join, as «Istoric capacitate» reads it (`registrations/capacity-history.ts`): an account removed since
  * leaves none — and, beside each number, the name it belongs to today (`liveNamesByBib`). For whoever enters results
  * (`canEnterResults`, FORBIDDEN otherwise): the fold is «Clasament»'s. Both conditions name the indexed key

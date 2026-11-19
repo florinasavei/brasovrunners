@@ -1014,7 +1014,7 @@ export const eventFieldsSchema = z
      */
     hasRaffle: z.boolean().optional(),
     /**
-     * The raffle's settings beside it (§NNN): «Cine poate participa» — the three groups —, «Cum» — `raffleSignUp`, «Cu înscriere
+     * The raffle's settings beside it (§984): «Cine poate participa» — the three groups —, «Cum» — `raffleSignUp`, «Cu înscriere
      * separată» — and «Înscrierile la tombolă sunt deschise». Optional on the wire by the same discipline: absent is "not editing it".
      */
     raffleRunners: z.boolean().optional(),

@@ -91,7 +91,7 @@ export default async function DeskRow({
 }: {
   row: DeskRegistration;
   /**
-   * What the page draws under the row, inside it: the event's raffle (§NNN) — «Tombolă: participă / nu participă» and, in the open
+   * What the page draws under the row, inside it: the event's raffle (§984) — «Tombolă: participă / nu participă» and, in the open
    * sign-up mode, «Înscrie la tombolă» (`RaffleLines.tsx#raffleDeskLine`) — read by the page for every row it shows in one read.
    */
   children?: ReactNode;
@@ -509,7 +509,7 @@ export default async function DeskRow({
           )}
         </Stack>
       </Stack>
-      {/* The event's raffle (§NNN), the page's to read and draw: under the row's own buttons, above the Administrator's fold. */}
+      {/* The event's raffle (§984), the page's to read and draw: under the row's own buttons, above the Administrator's fold. */}
       {children ? <Box sx={{ mt: 1.5 }}>{children}</Box> : null}
       {/*
         «Elită și BIB» (§975, amending §897; the owner, 2026-11-18: «aici trebuie să marchez dacă cineva e elită și cum apare pe

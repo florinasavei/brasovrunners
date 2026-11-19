@@ -19,7 +19,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-036-02, BR-REQ-041-01 — the raffle's public doors on their screens (the owner, 2026-11-18: «Practic
+ * §984, BR-REQ-050-02, BR-REQ-036-02, BR-REQ-041-01 — the raffle's public doors on their screens (the owner, 2026-11-18: «Practic
  * oamenii trebuie să își treacă numărul de concurs și numele, dar trebuie să am și o bifă de „voluntar”»), read from a real database:
  *
  * - the raffle's own page, `/evenimente/<slug>/tombola` and `/en/events/<slug>/raffle`: the form while the one gate is open — the
@@ -212,7 +212,7 @@ async function managePage(secret: string, query: Record<string, string> = {}, lo
 const manageToken = async (participantId: string, registrationId: string) =>
   (await issueActionToken(db, { participantId, registrationId, purpose: "MANAGE_REGISTRATION", expiresAt: START, now: new Date() })).secret;
 
-describe("§NNN BR-REQ-050-02 the raffle's own page: the form while the gate is open, a 404 while it is shut", () => {
+describe("§984 BR-REQ-050-02 the raffle's own page: the form while the gate is open, a 404 while it is shut", () => {
   it("draws the number, the name, «Sunt voluntar», the rules filled for the event, the tick, the notice's line and the bot defences", async () => {
     await approveTexts();
     const page = await rafflePage();
@@ -334,7 +334,7 @@ describe("§NNN BR-REQ-050-02 the raffle's own page: the form while the gate is 
   });
 });
 
-describe("§NNN BR-REQ-041-01 the event page's one calm link to the raffle's page", () => {
+describe("§984 BR-REQ-041-01 the event page's one calm link to the raffle's page", () => {
   it("is drawn from the gate's cached twin — open only while every condition holds — never on a members' event", async () => {
     await approveTexts();
     expect(await cachedRaffleSignUpOpen(eventId, new Date())).toBe(true);
@@ -358,7 +358,7 @@ describe("§NNN BR-REQ-041-01 the event page's one calm link to the raffle's pag
   });
 });
 
-describe("§NNN BR-REQ-036-02 «Gestionează înscrierea»'s «Tombola» card", () => {
+describe("§984 BR-REQ-036-02 «Gestionează înscrierea»'s «Tombola» card", () => {
   it("offers a confirmed runner with a number the rules, the tick and «Particip la tombolă» — the GET writing nothing, the link not spent", async () => {
     await approveTexts();
     const ana = await runner("Ana Popescu", 7);

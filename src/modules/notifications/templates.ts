@@ -1968,7 +1968,7 @@ export function lawyerReads(locale: EmailLocale, keys: readonly string[]): strin
   const terms = moved.includes("TERMS");
   // The volunteer agreement (§758) is a contract, not a declaration: named as itself, for the lawyer to read too.
   const agreement = moved.includes("VOLUNTEER_AGREEMENT");
-  // «Regulamentul tombolei» (§NNN) is a raffle's rules, not a declaration: named as itself too.
+  // «Regulamentul tombolei» (§984) is a raffle's rules, not a declaration: named as itself too.
   const raffle = moved.includes("RAFFLE_RULES");
   const words = locale === "ro"
     ? { declarations: "declarațiile", terms: "termenii", agreement: "contractul de voluntariat", raffle: "regulamentul tombolei", and: " și ", changed: "textele schimbate", first: "mai ales", lead: "Înainte de aprobare, un jurist ar trebui să citească" }

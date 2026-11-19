@@ -17,7 +17,7 @@ export const LEGAL_DOCUMENT_KEYS = [
   "GROUP_RUN_DECLARATION_ASPHALT",
   "GROUP_RUN_DECLARATION_TRAIL",
   "VOLUNTEER_AGREEMENT",
-  // «Regulamentul tombolei» (§NNN), last: what a person accepts to sign up for an event's raffle.
+  // «Regulamentul tombolei» (§984), last: what a person accepts to sign up for an event's raffle.
   "RAFFLE_RULES",
 ] as const satisfies readonly LegalDocumentKey[];
 
@@ -51,7 +51,7 @@ export const PLATFORM_APPROVAL_KEYS = LEGAL_DOCUMENT_KEYS;
 export const VOLUNTEER_AGREEMENT_KEY = "VOLUNTEER_AGREEMENT" as const satisfies LegalDocumentKey;
 
 /**
- * «Regulamentul tombolei» (§NNN; the owner, 2026-11-18: «pentru tombolă trebuie să am o înscriere separată»): what a person accepts
+ * «Regulamentul tombolei» (§984; the owner, 2026-11-18: «pentru tombolă trebuie să am o înscriere separată»): what a person accepts
  * to sign up for an event's raffle in the sign-up mode — from their registration's page, on the event's public form, at the desk,
  * or recorded by the organizers. One text for every event's raffle; the event and the groups it ticks are its blanks
  * (`RAFFLE_RULES_MERGE_FIELDS`). No door of the sign-up opens until a version is in force in every language (`raffleSignUpGate`).

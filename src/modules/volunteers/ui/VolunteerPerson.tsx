@@ -981,7 +981,7 @@ export default async function VolunteerPerson({ person, context, as = "li" }: { 
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.5, mt: 0.5 }} data-testid="volunteer-claims">
           {/* The volunteer's number (§948): first, as a runner's on the registrations list — what the raffle and the badge say. */}
           {person.bibNumber !== null && <StatusChip glyph="number" color="primary" variant="outlined" label={t("volunteers.chips.number", { number: person.bibNumber })} testId="volunteer-number" />}
-          {/* «Prezent» (§NNN): the person came on the day — the organizers' mark, ticked beside the name on the person's own page or on
+          {/* «Prezent» (§983): the person came on the day — the organizers' mark, ticked beside the name on the person's own page or on
               the «Voluntari» list. Said on that page alone: the event editor's card keeps its row as it was. Nothing for the absent. */}
           {as === "section" && person.present && <StatusChip glyph="checkedIn" color="success" variant="outlined" label={t("volunteers.presence.chip")} testId="volunteer-present" />}
           {/* «Vrea pe lista publică» (§821): the person wants to appear — named on the event's page only once confirmed, while the club's list is public and the notice describes it. */}

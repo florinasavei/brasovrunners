@@ -38,7 +38,7 @@ export type VolunteerAdminFilters = {
   /** «Are kit» (§904): only the people ticked (`true`), only the ones not (`false`), or everyone (absent). */
   kit?: boolean;
   /**
-   * «Prezenți» / «Absenți» (§NNN): only the people ticked «Prezent» (`true`), only the ones not (`false`), or everyone (absent) — and
+   * «Prezenți» / «Absenți» (§983): only the people ticked «Prezent» (`true`), only the ones not (`false`), or everyone (absent) — and
    * either half leaves the cancelled out, as the strip's two figures do: a cancelled person is neither present nor missing.
    */
   present?: boolean;
@@ -59,7 +59,7 @@ export function kitFilterOf(value: string | undefined): boolean | undefined {
   return value === "yes" ? true : value === "no" ? false : undefined;
 }
 
-/** `?present=` as the list's address carries it (§NNN): «yes» the present, «no» the absent, or nothing — anything else is no filter. */
+/** `?present=` as the list's address carries it (§983): «yes» the present, «no» the absent, or nothing — anything else is no filter. */
 export function presentFilterOf(value: string | undefined): boolean | undefined {
   return value === "yes" ? true : value === "no" ? false : undefined;
 }
@@ -101,7 +101,7 @@ function whereOf(filters: VolunteerAdminFilters): SQL | undefined {
   const term = filters.search?.trim();
   if (term) parts.push(nameMatches(eventVolunteers.name, term));
   if (filters.kit !== undefined) parts.push(eq(eventVolunteers.hasKit, filters.kit));
-  // «Prezenți» / «Absenți» (§NNN): the strip's own people — the tick, among «Înscris» and «Confirmat» — so a pill shows the very
+  // «Prezenți» / «Absenți» (§983): the strip's own people — the tick, among «Înscris» and «Confirmat» — so a pill shows the very
   // people its figure counts, and «Absenți» never lists everybody who cancelled.
   if (filters.present !== undefined) parts.push(eq(eventVolunteers.present, filters.present), ne(eventVolunteers.state, "CANCELLED"));
   if (filters.member) parts.push(eq(eventVolunteers.clubMember, true));
@@ -210,9 +210,9 @@ export type VolunteerAdminSummary = {
   unassigned: number;
   /** «Cu kit» (§904): «Înscris» and «Confirmat» the organizers ticked «Are kit» on — a cancelled person is handed nothing. */
   withKit: number;
-  /** «Prezenți» (§NNN): «Înscris» and «Confirmat» the organizers ticked «Prezent» on — a cancelled person is neither present nor missing. */
+  /** «Prezenți» (§983): «Înscris» and «Confirmat» the organizers ticked «Prezent» on — a cancelled person is neither present nor missing. */
   present: number;
-  /** «Absenți» (§NNN): «Înscris» and «Confirmat» not ticked «Prezent» — unticked is absent; the cancelled left out, as above. */
+  /** «Absenți» (§983): «Înscris» and «Confirmat» not ticked «Prezent» — unticked is absent; the cancelled left out, as above. */
   absent: number;
 };
 
@@ -227,7 +227,7 @@ export async function summariseVolunteersForAdmin<T extends Record<string, unkno
 ): Promise<VolunteerAdminSummary> {
   const scope = whereOf({ eventId: filters.eventId, search: filters.search });
   // By state and by the two ticks at once: the states' figures add the halves, «Cu kit» reads the kit's ticked half of the active states,
-  // «Prezenți» and «Absenți» the two halves of «Prezent» among the same states (§NNN).
+  // «Prezenți» and «Absenți» the two halves of «Prezent» among the same states (§983).
   const grouped = await db
     .select({ state: eventVolunteers.state, hasKit: eventVolunteers.hasKit, present: eventVolunteers.present, n: count() })
     .from(eventVolunteers)

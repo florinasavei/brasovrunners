@@ -5,7 +5,7 @@ import { confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN — a race's «Clasament» public from the start and live while it runs (BR-REQ-039-01, BR-REQ-053-01, BR-REQ-041-01 criterion 1; the
+ * §985 — a race's «Clasament» public from the start and live while it runs (BR-REQ-039-01, BR-REQ-053-01, BR-REQ-041-01 criterion 1; the
  * owner, 2026-11-18: «pe site live trebuie sa vad lista de finish, atat ca admin cat si public» — and, asked, «public from the start»,
  * «LIVE»), walked at 320 pixels and on a desk against a production build:
  *
@@ -135,7 +135,7 @@ async function saveLine(admin: Page, eventId: string, fill: (page: Page) => Prom
   await expect(admin.getByTestId("toast-live")).toContainText("Am salvat 1 rezultat", { timeout: 30_000 });
 }
 
-test.describe("§NNN «Clasament» public from the start, and live while the race runs", () => {
+test.describe("§985 «Clasament» public from the start, and live while the race runs", () => {
   test.describe.configure({ timeout: 240_000 });
 
   test("ticked before the race it shows nothing; from the start it shows the finishers and refreshes itself every 30 seconds", async ({ page, browser }) => {

@@ -8,7 +8,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { createRace, person, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * §NNN — «Cronometrare»'s Server Actions (BR-REQ-050-02, BR-REQ-060-01): the island's press answers the outcome, the page's state and
+ * §986 — «Cronometrare»'s Server Actions (BR-REQ-050-02, BR-REQ-060-01): the island's press answers the outcome, the page's state and
  * the server's clock, the same press sent again — its id — as saved, «sign in again» for a session that ended or is another account's
  * than the press's (the entry waits on the phone), `failed` for a press the server could not record, and a refusal — never the page —
  * for a member; the clock's own question; the plain forms come back to the page with the outcome in the address, numbers and codes
@@ -91,7 +91,7 @@ async function post(action: (form: FormData) => Promise<void>, data: FormData): 
 const stored = () => db.select().from(eventResults).where(eq(eventResults.eventId, raceId)).orderBy(eventResults.bibNumber);
 const page = (query: string) => `/ro/admin/checkin/cronometrare?eventId=${raceId}&${query}`;
 
-describe("§NNN the island's press", () => {
+describe("§986 the island's press", () => {
   it("answers the outcome — the claimed moment kept — and the page's state, with who entered the line and the server's clock", async () => {
     const claimed = gun.getTime() + 45 * 60_000 + 12_000;
     const sentAtMs = Date.now();
@@ -171,7 +171,7 @@ describe("§NNN the island's press", () => {
     expect(await readFinishClockAction({ eventId: raceId })).toEqual({ kind: "session" });
   });
 
-  it("carries «Start» pressed on another account's phone to a page drawn before it: the clock's answer moves the island's gun (§NNN)", async () => {
+  it("carries «Start» pressed on another account's phone to a page drawn before it: the clock's answer moves the island's gun (§986)", async () => {
     // The volunteer's page, drawn before the gun: it counts from the plan.
     const { readFinishLine } = await import("@/modules/results/results");
     const { lineGunAt } = await import("@/modules/results/domain/finish-line");
@@ -193,7 +193,7 @@ describe("§NNN the island's press", () => {
     expect(lineGunAt(drawn, { gunAtMs: answer.gunAtMs!, serverMs: answer.clock.answeredAtMs })).toBe(row.raceGunAt!.getTime());
   });
 
-  it("says with the gun whether «Start» was pressed and by whom, and whether a «Sosit» is stored — on any phone (§NNN)", async () => {
+  it("says with the gun whether «Start» was pressed and by whom, and whether a «Sosit» is stored — on any phone (§986)", async () => {
     const { lineGun } = await import("@/modules/results/domain/finish-line");
     expect(await readFinishClockAction({ eventId: raceId })).toMatchObject({ kind: "clock", gunAtMs: gun.getTime(), gunPressed: false, gunByName: null, gunFixed: false });
     // The volunteer's page, drawn before the gun: the plan, and nobody finished.
@@ -232,7 +232,7 @@ describe("§NNN the island's press", () => {
   });
 });
 
-describe("§NNN the plain forms (scripts off)", () => {
+describe("§986 the plain forms (scripts off)", () => {
   it("come back to the page with what happened: recorded, a duplicate with its time, a refusal with the number and the time", async () => {
     expect(await post(recordFinishFormAction, form({ bib: " 101 " }))).toBe(page("ok=101"));
     state.actor = staff.MODERATOR;
@@ -258,7 +258,7 @@ describe("§NNN the plain forms (scripts off)", () => {
   });
 });
 
-describe("§NNN «Start»", () => {
+describe("§986 «Start»", () => {
   const gunOfRace = async () => (await db.select({ at: events.raceGunAt, by: events.raceGunByStaffUserId }).from(events).where(eq(events.id, raceId)))[0];
 
   it("sets the gun at the tap the island wrote into the form, clears it, and is refused to the desk Volunteer", async () => {
@@ -282,7 +282,7 @@ describe("§NNN «Start»", () => {
     expect(await post(setRaceGunAction, form({ intent: "start" }))).toBe(page("refused=RACE_GUN_FIXED"));
   });
 
-  it("moves only the gun its page saw: a second organizer's «Start» from a page drawn before the first comes back refused (§NNN)", async () => {
+  it("moves only the gun its page saw: a second organizer's «Start» from a page drawn before the first comes back refused (§986)", async () => {
     state.actor = staff.MODERATOR;
     const tap = Date.now() - 1000;
     expect(await post(setRaceGunAction, form({ intent: "start", seenGunAtMs: "", claimedAtMs: String(tap) }))).toBe(page("gun=set"));

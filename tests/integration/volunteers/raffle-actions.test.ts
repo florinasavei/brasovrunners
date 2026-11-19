@@ -11,7 +11,7 @@ import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-036-02 — the raffle's three public presses as their actions answer them (the review: no test called
+ * §984, BR-REQ-050-02, BR-REQ-036-02 — the raffle's three public presses as their actions answer them (the review: no test called
  * them): the event's raffle form (`events/[slug]/tombola/actions.ts`) and the two of «Gestionează înscrierea»
  * (`registrations/manage/[token]/actions.ts`). Every refusal's address — `?tombola=captcha`, `?tombola=invalid&fields=…`,
  * `?tombola=nomatch`, `?tombola=limited`, a shut gate on the event's page, `?raffle=a|0|1|w`, `?invalid=1` — and that no address
@@ -189,7 +189,7 @@ function carriesNothingTyped(address: string, typed: { name: string; number: str
   expect(url.search, address).not.toMatch(new RegExp(`=${typed.number}(&|$)`));
 }
 
-describe("§NNN the event's raffle form: every answer comes back to the form, the typed words never in the address", () => {
+describe("§984 the event's raffle form: every answer comes back to the form, the typed words never in the address", () => {
   const RENDERED = () => new Date(Date.now() - 60_000).toISOString();
   const post = (fields: { number?: string; name?: string; accept?: boolean; volunteer?: boolean; slug?: string; locale?: string }) => {
     const form = new FormData();
@@ -260,7 +260,7 @@ describe("§NNN the event's raffle form: every answer comes back to the form, th
   });
 });
 
-describe("§NNN «Gestionează înscrierea»: the raffle's two presses, the link read and never spent", () => {
+describe("§984 «Gestionează înscrierea»: the raffle's two presses, the link read and never spent", () => {
   const manageToken = async (participantId: string, registrationId: string) =>
     (await issueActionToken(db, { participantId, registrationId, purpose: "MANAGE_REGISTRATION", expiresAt: new Date(Date.now() + 2 * DAY), now: new Date() })).secret;
   const press = (action: (form: FormData) => Promise<void>, token: string, fields: { accept?: boolean; registrationId?: string } = {}) => {

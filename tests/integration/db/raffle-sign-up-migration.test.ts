@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migrations `0216_raffle_rules_key` and `0217_raffle_sign_up` (§NNN; the owner, 2026-11-18: «Vreau să pot bifa asta: tombolă din
+ * Migrations `0216_raffle_rules_key` and `0217_raffle_sign_up` (§984; the owner, 2026-11-18: «Vreau să pot bifa asta: tombolă din
  * oficiu vs tombolă cu înscriere separată»), proven on real PostgreSQL (PGlite) over a database migrated by the release before
  * (BR-REQ-053-01 for the legal document's key):
  *

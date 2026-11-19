@@ -8,7 +8,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 
 /**
- * The event page's one calm link to the raffle's sign-up (§NNN): a line, «Avem tombolă! Înscrie-te cu numărul tău de concurs.», and
+ * The event page's one calm link to the raffle's sign-up (§984): a line, «Avem tombolă! Înscrie-te cu numărul tău de concurs.», and
  * one outlined button, «Înscrie-te la tombolă», to the raffle's own page (`/evenimente/<slug>/tombola`) — drawn only while that page
  * would answer 200 (`cachedRaffleSignUpOpen`, the page decides). Nothing else of the raffle is on the event's page: no count, no name.
  * A Server Component: the button is a plain link (`ButtonLink`, 44 pixels, a glyph before its words), not prefetched.

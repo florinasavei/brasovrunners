@@ -352,11 +352,11 @@ export type OwnerTaskInputs = {
    * not true of the contact and feedback forms now. Nothing is gated on it: the message is kept either way.
    */
   relayQueueDescribed: boolean;
-  /** How many raffles ahead are «Cu înscriere separată» (§NNN, `countRaffleSignUpEvents`): the two rows below wait only while there is one. */
+  /** How many raffles ahead are «Cu înscriere separată» (§984, `countRaffleSignUpEvents`): the two rows below wait only while there is one. */
   raffleSignUpEvents: number;
-  /** Is «Regulamentul tombolei» in force in every language (§NNN, `raffleRulesInForce`)? Until it is, no door of a raffle's sign-up opens. */
+  /** Is «Regulamentul tombolei» in force in every language (§984, `raffleRulesInForce`)? Until it is, no door of a raffle's sign-up opens. */
   raffleRulesInForce: boolean;
-  /** Does the notice in force, in every language, name `{{raffle}}` (§NNN, `noticeDescribesRaffle`)? Until it does, no door of a raffle's sign-up opens. */
+  /** Does the notice in force, in every language, name `{{raffle}}` (§984, `noticeDescribesRaffle`)? Until it does, no door of a raffle's sign-up opens. */
   raffleDescribed: boolean;
   /**
    * Does the notice in force, in every language, describe the members' shop (§683,
@@ -910,7 +910,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   }
 
   /*
-    The raffle's sign-up (§NNN): two texts, each its own row — «Regulamentul tombolei» in force, and a notice naming `{{raffle}}`. Open
+    The raffle's sign-up (§984): two texts, each its own row — «Regulamentul tombolei» in force, and a notice naming `{{raffle}}`. Open
     while a raffle ahead is «Cu înscriere separată» and the text is not in force in every language (no door opens then — the club ticked
     the mode and the site shows no form: it must hear why), done by itself the day the text takes effect, absent while no raffle asks a
     sign-up and none was ever approved. Never blocking: «Din oficiu» needs neither.

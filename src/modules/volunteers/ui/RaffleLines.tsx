@@ -11,7 +11,7 @@ import type { RaffleReason } from "../domain/raffle";
 import type { RaffleLine } from "../raffle-roster";
 
 /*
-  «În dreptul fiecărei persoane» (§NNN; the owner, 2026-11-18: «vreau să văd în dreptul fiecărei persoane dacă participă la tombolă»): the
+  «În dreptul fiecărei persoane» (§984; the owner, 2026-11-18: «vreau să văd în dreptul fiecărei persoane dacă participă la tombolă»): the
   one line that says whether a person takes part in the event's raffle and, when not, why — the same words on the desk (each row of its
   list and a scanned person's view), a registration's page, a volunteer's page and under the lists' «Tombolă» tick, all from the one
   answer (`raffleParticipation`). Beside it,
@@ -66,7 +66,7 @@ function signUpForm(props: { action: ServerAction; hidden: ReactElement; label: 
 export type RaffleDeskBack = { to: "code"; code: string } | { to: "desk"; eventId?: string; q?: string };
 
 /**
- * A person at the desk (§NNN), under their row on the desk's list and on the scanned person's view: «Tombolă: participă / nu
+ * A person at the desk (§984), under their row on the desk's list and on the scanned person's view: «Tombolă: participă / nu
  * participă» for every desk role, always, in both modes, with why — but the organizers' own exclusion, «scos de organizatori»
  * (`takenOut`), is said only to the organizers (`organizer`: `canTakeRaffleList`, the Organizer and the Administrators, whose decision
  * it is); every other desk role reads «Tombolă: nu participă» alone there. Every other reason is said to all — «nu s-a înscris» is
@@ -104,7 +104,7 @@ export async function raffleDeskLine(props: { line: RaffleLine; locale: string; 
 }
 
 /**
- * A volunteer's page (§NNN): the line, and — for the organizers who open the page, in the sign-up mode with its gate open —
+ * A volunteer's page (§984): the line, and — for the organizers who open the page, in the sign-up mode with its gate open —
  * «Înscrie la tombolă» (STAFF), coming back to the page.
  */
 export async function raffleVolunteerLine(props: { line: RaffleLine; locale: string; eventId: string; volunteerId: string; name: string; action: ServerAction }): Promise<ReactElement> {
@@ -135,18 +135,18 @@ export async function raffleVolunteerLine(props: { line: RaffleLine; locale: str
   );
 }
 
-/** A registration's page (§NNN): the line alone — the sign-up's staff doors are the desk and the «Tombolă» tab. */
+/** A registration's page (§984): the line alone — the sign-up's staff doors are the desk and the «Tombolă» tab. */
 export async function raffleRegistrationLine(props: { line: RaffleLine }): Promise<ReactElement> {
   const t = await getTranslations("Admin");
   return standingChip(t, props.line.reason, "registration-raffle-line");
 }
 
-/** The list's few words for the answer (§NNN): «Da», or «Nu · <de ce>». */
+/** The list's few words for the answer (§984): «Da», or «Nu · <de ce>». */
 export function raffleNoteWords(t: Translate, reason: RaffleReason): string {
   return reason === "in" ? t("raffle.yes") : `${t("raffle.no")} · ${t(`raffle.reasons.${reason}`)}`;
 }
 
-/** Under a list's «Tombolă» tick (§NNN): the answer in a few words — «Da», or «Nu · <de ce>». */
+/** Under a list's «Tombolă» tick (§984): the answer in a few words — «Da», or «Nu · <de ce>». */
 export function RaffleStandingNote({ words, takesPart }: { words: string; takesPart: boolean }) {
   return (
     <Typography variant="caption" component="p" color={takesPart ? "success.main" : "text.secondary"} sx={{ m: 0, overflowWrap: "anywhere" }} data-testid="raffle-standing" data-in={takesPart ? "1" : "0"}>

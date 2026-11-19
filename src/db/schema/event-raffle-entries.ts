@@ -8,11 +8,11 @@ import { locale } from "./locale";
 import { registrations } from "./registrations";
 import { staffUsers } from "./staff-users";
 
-/** The longest name the public raffle form keeps as typed (§NNN): a registration's name fits well inside it. */
+/** The longest name the public raffle form keeps as typed (§984): a registration's name fits well inside it. */
 export const RAFFLE_TYPED_NAME_MAX = 120;
 
 /**
- * Which door a raffle sign-up came through (§NNN): `LINK` — the «Tombolă» card on the person's own «Gestionează înscrierea»;
+ * Which door a raffle sign-up came through (§984): `LINK` — the «Tombolă» card on the person's own «Gestionează înscrierea»;
  * `FORM` — the public page `/events/[slug]/tombola`, a race number and a name; `DESK` — the race-day desk's view of a person,
  * the person having accepted the rules on paper or aloud; `STAFF` — the organizers, on a volunteer's page or on the «Tombolă» tab.
  */
@@ -20,7 +20,7 @@ export const raffleEntryMethod = pgEnum("raffle_entry_method", ["LINK", "FORM", 
 export type RaffleEntryMethod = (typeof raffleEntryMethod.enumValues)[number];
 
 /**
- * «Înscrierea la tombolă» (migration `0217`, §NNN; the owner, 2026-11-18: «pentru tombolă trebuie să am o înscriere separată»):
+ * «Înscrierea la tombolă» (migration `0217`, §984; the owner, 2026-11-18: «pentru tombolă trebuie să am o înscriere separată»):
  * one row per person who signed up for an event's raffle in the sign-up mode («Cu înscriere separată», `events.raffle_sign_up`).
  *
  * **The person is exactly one of three** (`event_raffle_entries_one_person`): a registration, a volunteer or a line of the race's

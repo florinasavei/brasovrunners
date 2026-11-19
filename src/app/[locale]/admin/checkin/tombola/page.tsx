@@ -54,7 +54,7 @@ const ONLY_ON_PAPER = { display: "none", "@media print": { display: "block" } } 
 const ALERT_CODES = ["FORBIDDEN", "NOT_FOUND", "VALIDATION_ERROR", "RAFFLE_SIGN_UP_CLOSED", "RAFFLE_NOT_ELIGIBLE", "RAFFLE_RULES_NOT_ACCEPTED"] as const;
 
 /**
- * «Ziua cursei» → «Tombolă» (§NNN; the owner, 2026-11-18: «Tot pentru ziua cursei vreau să am un tab de tombolă unde să văd toți
+ * «Ziua cursei» → «Tombolă» (§984; the owner, 2026-11-18: «Tot pentru ziua cursei vreau să am un tab de tombolă unde să văd toți
  * participanții la tombolă», and «vreau să văd în dreptul fiecărei persoane dacă participă la tombolă»): everybody of one event's three
  * groups — the registrations still standing, the volunteers not cancelled, the lines of the elite list — in one table, by the number,
  * each with whether they take part and why not (`raffleParticipation`), how and when they signed up in the sign-up mode, and whether

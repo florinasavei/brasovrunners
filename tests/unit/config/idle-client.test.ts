@@ -45,7 +45,7 @@ const ALLOWED_INTERVALS: Record<string, string> = {
   "src/shared/ui/VideoVolumeBar.tsx": "bounded handshake after a click",
   // The calendar card's countdown to the hour (§843): reads the visitor's own clock once a minute and writes a line of text — no request, no read.
   "src/modules/events/ui/AwayLine.tsx": "the visitor's clock, once a minute, no request",
-  // «Cronometrare»'s clock since the gun (§850, §NNN): the server's clock read through the phone's wall clock and the measured offset once a second on one
+  // «Cronometrare»'s clock since the gun (§850, §986): the server's clock read through the phone's wall clock and the measured offset once a second on one
   // backoffice page — a line of text, «Anulează»'s ten minutes and a kept moment too old to give, no request, no read; a press that failed is tried again on
   // a timeout. And, before the race's first finisher only, the clock's question — which carries the gun «Start» moves on the organizer's phone — every
   // thirty seconds while the page is shown (`FINISH_GUN_ASK_MS`): a backoffice page at the finish line, nothing once a runner is «Sosit».
@@ -53,7 +53,7 @@ const ALLOWED_INTERVALS: Record<string, string> = {
 };
 
 /**
- * The one public island that asks the server again on a timer, decided rather than slipped in (§NNN; the owner, 2026-11-18, choosing
+ * The one public island that asks the server again on a timer, decided rather than slipped in (§985; the owner, 2026-11-18, choosing
  * «LIVE» for a race's results): «Clasament» while the race runs — every 30 seconds, only while the tab is visible, nothing before the
  * race's start (a page drawn earlier is armed to it) and nothing from the window's end (`results/domain/live-window.ts`). Any other
  * island that refreshes the page from a timer is a poll this rule refuses.
@@ -82,7 +82,7 @@ describe("§577 no client island polls or keeps alive on a timer", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("refreshes a page from a timer only where it is named with its bound — the results while a race runs (§NNN)", () => {
+  it("refreshes a page from a timer only where it is named with its bound — the results while a race runs (§985)", () => {
     const root = process.cwd();
     const offenders = clientFiles(join(root, "src"))
       .filter((path) => {

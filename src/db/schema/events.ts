@@ -229,7 +229,7 @@ export const events = pgTable(
     raceStartsAt: timestamp("race_starts_at", { withTimezone: true }),
 
     /**
-     * «Start» on «Cronometrare» (§NNN; the owner, 2026-11-18: «un buton „Start" pe pagină, pe care îl apasă un
+     * «Start» on «Cronometrare» (§986; the owner, 2026-11-18: «un buton „Start" pe pagină, pe care îl apasă un
      * organizator la pistol»): the moment the gun actually went, pressed at the start line by whoever enters results,
      * and who pressed it. Null until pressed — then the planned gun (`race_starts_at`, else `starts_at`) is what the
      * finish line counts from. **Read by the results alone** (`results/results.ts#gunOf`): the public page, the
@@ -965,7 +965,7 @@ export const events = pgTable(
     hasRaffle: boolean("has_raffle").notNull().default(false),
 
     /**
-     * «Cine poate participa» (migration `0217`, §NNN; the owner, 2026-11-18: «trebuie să bifez acolo cine se poate înscrie: doar
+     * «Cine poate participa» (migration `0217`, §984; the owner, 2026-11-18: «trebuie să bifez acolo cine se poate înscrie: doar
      * alergătorii și elitele și voluntarii»): the three groups of a raffle, each ticked by default — «Alergătorii» (the confirmed real
      * registrations with a race number not marked «Elită»; one marked «Ambasador» runs as a runner), «Elitele» (the registrations marked «Elită»
      * and the lines of the race's elite list) and «Voluntarii» (the confirmed volunteers with a number). They decide in both modes
@@ -977,13 +977,13 @@ export const events = pgTable(
     raffleElites: boolean("raffle_elites").notNull().default(true),
     raffleVolunteers: boolean("raffle_volunteers").notNull().default(true),
     /**
-     * «Cum» (§NNN; the owner, 2026-11-18: «Vreau să pot bifa asta: tombolă din oficiu vs tombolă cu înscriere separată»): false is
+     * «Cum» (§984; the owner, 2026-11-18: «Vreau să pot bifa asta: tombolă din oficiu vs tombolă cu înscriere separată»): false is
      * «Din oficiu» — everybody of the ticked groups is in, as since §949 — and true «Cu înscriere separată»: only those who signed up
      * (`event_raffle_entries`), having accepted «Regulamentul tombolei». False by default, so no event changes by itself.
      */
     raffleSignUp: boolean("raffle_sign_up").notNull().default(false),
     /**
-     * «Înscrierile la tombolă sunt deschise» (§NNN): while ticked — and only in the sign-up mode, with the rules and the notice in
+     * «Înscrierile la tombolă sunt deschise» (§984): while ticked — and only in the sign-up mode, with the rules and the notice in
      * force — the doors take sign-ups; the organizers untick it at the draw. False by default.
      */
     raffleSignUpOpen: boolean("raffle_sign_up_open").notNull().default(false),
@@ -1127,7 +1127,7 @@ export const events = pgTable(
               AND (${t.endsAt} IS NULL OR ${t.raceStartsAt} <= ${t.endsAt}))`,
     ),
 
-    // «Start» (§NNN): who pressed it only beside the moment — the account may be removed (`SET NULL`), the moment stays.
+    // «Start» (§986): who pressed it only beside the moment — the account may be removed (`SET NULL`), the moment stays.
     check("events_race_gun_actor", sql`${t.raceGunByStaffUserId} IS NULL OR ${t.raceGunAt} IS NOT NULL`),
 
     /**

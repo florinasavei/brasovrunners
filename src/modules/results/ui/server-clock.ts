@@ -11,7 +11,7 @@ import {
 } from "../domain/finish-line";
 
 /**
- * The server's clock on this phone, for «Cronometrare»'s two islands (§NNN): the finish line (`FinishLine.tsx`) stamps every press with
+ * The server's clock on this phone, for «Cronometrare»'s two islands (§986): the finish line (`FinishLine.tsx`) stamps every press with
  * it and «Start» (`RaceGunPress.tsx`) the gun's tap. One sample for the page, in this module — both islands read the same — and on the
  * phone (`CLOCK_STORAGE_KEY`), so the next page starts from a measured one rather than from its own reading, late by the page's
  * delivery and old after a back navigation. Read through the **wall clock** (`Date.now()`), which keeps time while the screen is

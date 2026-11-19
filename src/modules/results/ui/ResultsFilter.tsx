@@ -64,7 +64,7 @@ export default function ResultsFilter({
     if (shown !== null) setVisible(shown);
   };
 
-  // While the race runs the server redraws the rows every 30 seconds (`ResultsLiveRefresh`, §NNN): a row it adds or changes is
+  // While the race runs the server redraws the rows every 30 seconds (`ResultsLiveRefresh`, §985): a row it adds or changes is
   // narrowed by the chip and the number already chosen, never shown whatever they say. Only `hidden` is written, which is not watched.
   const chosen = useRef<{ category: string | null; bib: string }>({ category: null, bib: "" });
   useEffect(() => {

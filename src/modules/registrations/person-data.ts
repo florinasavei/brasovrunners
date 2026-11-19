@@ -170,7 +170,7 @@ export type PersonData = {
     expiresAt: Date;
   }>;
   /**
-   * The person's raffle sign-ups (§NNN, art. 15 GDPR): the event, which of their rows signed up, the door, the rules' version, moment,
+   * The person's raffle sign-ups (§984, art. 15 GDPR): the event, which of their rows signed up, the door, the rules' version, moment,
    * language and fingerprint, the name typed, the trace, the notice's version and the recorder's role — every column but the ids of the
    * documents and the staff account. Gone with the registration or the offer, and thirty days after the event.
    */
@@ -246,7 +246,7 @@ export type PersonData = {
     hasKit: boolean;
     /** «Participă la tombolă» (§949): whether the organizers left the person on the raffle's list — a column of the row like any other (art. 15 GDPR). */
     inRaffle: boolean;
-    /** «Prezent» (§NNN): whether the organizers marked the person present on the day — unticked is absent — a column of the row like any other (art. 15 GDPR). */
+    /** «Prezent» (§983): whether the organizers marked the person present on the day — unticked is absent — a column of the row like any other (art. 15 GDPR). */
     present: boolean;
     /**
      * «Planul voluntarilor» (§949): the point of the route the organizers put the person at, by the name the club gave it; null while
@@ -640,7 +640,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
   });
 
   /*
-    «Înscrierea la tombolă» (§NNN; art. 15 GDPR): every raffle sign-up of this address's registrations and volunteer offers — the door,
+    «Înscrierea la tombolă» (§984; art. 15 GDPR): every raffle sign-up of this address's registrations and volunteer offers — the door,
     the rules' version, moment, language and fingerprint, the name typed on the form, the trace of an electronic sign-up, the notice's
     version — and who recorded a desk's or the organizers' one as a role (§777), never a colleague's name. A line of the elite list has no
     address and is no address's. The rows go with their registration or offer, and thirty days after the event.

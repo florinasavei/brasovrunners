@@ -253,7 +253,7 @@ describe("§808 the Administrator's tick behind the notice's gate", () => {
     expect(await post(setResultsPublishedAction, form({ published: "on" }))).toBe("redirected");
   });
 
-  it("accepts it ticked before the race has started (§NNN), with the toast that says it shows from the start — and still refuses it under no notice", async () => {
+  it("accepts it ticked before the race has started (§985), with the toast that says it shows from the start — and still refuses it under no notice", async () => {
     const ahead = (await createRace(db, { startsAt: new Date("2099-06-01T07:00:00.000Z") })).id;
     const data = form({ published: "on" });
     data.set("eventId", ahead);

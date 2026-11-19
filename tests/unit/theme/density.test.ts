@@ -215,7 +215,7 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   // The volunteers' own page (§768) and the guardian's link page, form pages like the registration's.
   { file: "src/app/[locale]/events/[slug]/volunteers/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/volunteers/guardian/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
-  // The raffle's own page (§NNN), a form page like the volunteers': born on the scale. New, so xsBefore is sm.
+  // The raffle's own page (§984), a form page like the volunteers': born on the scale. New, so xsBefore is sm.
   { file: "src/app/[locale]/events/[slug]/tombola/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 3 },
   { file: "src/app/[locale]/preview/events/[id]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   // The editor's preview frame (§579): the listing's and the event page's own container. New, so xsBefore is sm.

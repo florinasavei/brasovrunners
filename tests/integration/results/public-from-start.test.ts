@@ -19,7 +19,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { approvePrivacyNotice, approveResultsTexts, approveTerms, createRace, person, RACE_STARTS_AT, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * §NNN — «Public de la start» and the live «Clasament» (BR-REQ-039-01, BR-REQ-053-01, BR-REQ-060-01; the owner, 2026-11-18: «pe site live
+ * §985 — «Public de la start» and the live «Clasament» (BR-REQ-039-01, BR-REQ-053-01, BR-REQ-060-01; the owner, 2026-11-18: «pe site live
  * trebuie sa vad lista de finish … trebe sa setez ca toata lumea apare pe site», and, asked, «public from the start», «LIVE»).
  *
  * The Administrator ticks the results public two days before the race, with a «Neprezentat» already typed: the service accepts it (every
@@ -120,7 +120,7 @@ const text = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " "
 /** The live island drawn alone, with nothing to read or see: the whole of the section's markup. */
 const QUIET = '<span hidden="" data-testid="results-live-quiet"></span>';
 
-describe("§NNN the tick before the race: accepted, every other gate kept, audited as before", () => {
+describe("§985 the tick before the race: accepted, every other gate kept, audited as before", () => {
   it("accepts it two days before the race, says it shows from the start, and records the moment and one audit row", async () => {
     await expect(tickedBeforeTheRace()).resolves.toEqual({ changed: true, fromStart: true });
     const [event] = await db.select({ published: events.resultsPublished, at: events.resultsPublishedAt }).from(events).where(eq(events.id, raceId));
@@ -144,7 +144,7 @@ describe("§NNN the tick before the race: accepted, every other gate kept, audit
   });
 });
 
-describe("§NNN nothing public before the start, even with a row stored", () => {
+describe("§985 nothing public before the start, even with a row stored", () => {
   it("the read, the cached read and the page's read are null until the start", async () => {
     await tickedBeforeTheRace();
     const gates = await readResultsGates(BEFORE);
@@ -184,7 +184,7 @@ describe("§NNN nothing public before the start, even with a row stored", () => 
   });
 });
 
-describe("§NNN from the start, every stored row — and live while the race runs", () => {
+describe("§985 from the start, every stored row — and live while the race runs", () => {
   it("shows the row typed before the start from the gun on, in the read, the cached read, the chip and the section", async () => {
     await tickedBeforeTheRace();
     const gates = await readResultsGates(RACE_STARTS_AT);
@@ -251,7 +251,7 @@ function awayDatabase(): unknown {
   );
 }
 
-describe("§NNN the clock with no section: before the start, an empty sheet before the first finish, and a database away at a render", () => {
+describe("§985 the clock with no section: before the start, an empty sheet before the first finish, and a database away at a render", () => {
   /** Ana (ticked); the texts approved; the results ticked public two days before the race — and nothing typed. */
   async function tickedWithAnEmptySheet() {
     await registerRunner(db, raceId, { name: "Ana Popescu", bibNumber: 101, sex: "FEMALE", birthDate: "1996-05-01" });

@@ -33,7 +33,7 @@ export const RETENTION_PERIODS = {
    */
   volunteerDaysAfterEvent: 30,
   /**
-   * A raffle sign-up (§NNN): who signed up for one event's raffle and their acceptance of its rules — kept to hold the draw and as proof
+   * A raffle sign-up (§984): who signed up for one event's raffle and their acceptance of its rules — kept to hold the draw and as proof
    * of the acceptance, with no claim behind it once the prizes are handed out. Thirty days after the event's start, as a volunteer's offer;
    * the privacy notice's sections 5 and 7 say exactly this.
    */

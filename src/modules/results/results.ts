@@ -57,7 +57,7 @@ import { type PostedResultRow, resultBox } from "./rows";
  *
  * **Who.** The Organizer, the Administrator and the Superadministrator enter, import, rank and read (`canEnterResults`); the
  * Administrator and the Superadministrator alone publish (`canPublishResults`). The Tehnic role, the Redactor, the desk Volunteer
- * and a member are refused here, whatever the page drew (BR-REQ-060-01) — but for the finish line (§NNN): every role that works
+ * and a member are refused here, whatever the page drew (BR-REQ-060-01) — but for the finish line (§986): every role that works
  * the desk records a finish on «Cronometrare» and undoes its own press for ten minutes (`canRecordFinishes`), and only whoever
  * enters results presses «Start». **Nothing about a registration changes**: a result reads
  * the registration's name, sex and birth date and writes none of them; no state, no place, no number moves.
@@ -115,7 +115,7 @@ type RegisteredRunner = {
    * unticked «Apare pe site» on the registration marked «Elită» (§910, `tickedForTheSite`).
    */
   ticked: boolean;
-  /** The person ticked, and the club's «Apare pe site» is what reads the tick as off (`siteHiddenByClub`): «Clasament»'s reason only (§NNN). */
+  /** The person ticked, and the club's «Apare pe site» is what reads the tick as off (`siteHiddenByClub`): «Clasament»'s reason only (§985). */
   hiddenByClub: boolean;
   /**
    * The club's two marks on the registration, «Elită» (§897) and «Ambasador» (§948): the backoffice's «Clasament» and «Premii»
@@ -134,13 +134,13 @@ type RegisteredRunner = {
   resultsConsentVersion: number;
 };
 
-/** A line of the race's elite list (§895), as the finish line reads it (§NNN): its name and its number, if any. */
+/** A line of the race's elite list (§895), as the finish line reads it (§986): its name and its number, if any. */
 type EliteLine = { id: string; name: string; bibNumber: number | null };
 
 /**
  * The event's registered runners, by race number and by registration — and the elites the Administrator left out of the ranking (§910,
  * `domain/hors-concours.ts`), read with them so every list ranked from them leaves out the same rows; and the race's elite list's lines
- * (`lines`), the same read, for the finish line's buttons and its typed rows (§NNN).
+ * (`lines`), the same read, for the finish line's buttons and its typed rows (§986).
  */
 type Runners = { byBib: Map<number, RegisteredRunner>; byRegistration: Map<string, RegisteredRunner>; out: OutOfRanking; lines: EliteLine[] };
 
@@ -155,7 +155,7 @@ function tickedForTheSite(row: { listOptOut: boolean | null; elite: boolean | nu
 }
 
 /**
- * The other half of the same columns, for «Clasament»'s reason alone (§NNN, `domain/public-name-reason.ts#publicNameReason`): the person
+ * The other half of the same columns, for «Clasament»'s reason alone (§985, `domain/public-name-reason.ts#publicNameReason`): the person
  * ticked, and the club's «Apare pe site», unticked on the registration while it is marked «Elită» or «Ambasador» (§910, §948), is what
  * `tickedForTheSite` reads as off. Kept here, beside the tick, so the mark is read where it already was; the reason takes the boolean.
  * A person who did not tick is their own answer, whatever the club ticked; a typed row's left join reads nulls, and is never this.
@@ -171,14 +171,14 @@ type EventFacts = {
   /** The gun as planned, when the race's own start differs from the gathering (`race_starts_at`). */
   raceStartsAt: Date | null;
   /**
-   * «Start» as pressed on «Cronometrare» (§NNN), and by whom; null until pressed. The finish line counts from
+   * «Start» as pressed on «Cronometrare» (§986), and by whom; null until pressed. The finish line counts from
    * `raceGunAt ?? raceStartsAt ?? startsAt` (`gunOf`). Read by the backoffice's results alone: the public read never selects it.
    */
   raceGunAt: Date | null;
   raceGunByStaffUserId: string | null;
   endsAt: Date | null;
   /**
-   * «Data se anunță» and «Ora se anunță» (§533): while either is on, the public side has no start, so «Clasament» names no hour (§NNN).
+   * «Data se anunță» and «Ora se anunță» (§533): while either is on, the public side has no start, so «Clasament» names no hour (§985).
    * Read by `loadEvent`, for the backoffice; the public read leaves them out — the page it serves already has no start then.
    */
   dateToBeAnnounced?: boolean;
@@ -201,7 +201,7 @@ function assertMayEnter(actor: Actor): void {
   if (!canEnterResults(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not enter or read a race's results`);
 }
 
-/** The finish line's own gate (§NNN): every role that works the desk records a finish and undoes its own press. */
+/** The finish line's own gate (§986): every role that works the desk records a finish and undoes its own press. */
 function assertMayRecord(actor: Actor): void {
   if (!canRecordFinishes(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not record a finish`);
 }
@@ -275,7 +275,7 @@ async function loadOutOfRanking<T extends Record<string, unknown>>(db: Database<
 
 /**
  * What the elites' bibs print where the number goes (§975: `bib-elite.ts#eliteBibName`, `#eliteLineBibName`) — by registration marked
- * «Elită» and by line of the elite list — read for the finish line alone (§NNN): «Cronometrare»'s buttons and lines say an elite by
+ * «Elită» and by line of the elite list — read for the finish line alone (§986): «Cronometrare»'s buttons and lines say an elite by
  * the label on the bib, as the desk's row does. Its own query, so no other read of the results — the public one least of all — ever
  * selects a label (`tests/unit/registrations/elite-label-never-leaves.test.ts`).
  */
@@ -439,7 +439,7 @@ export type ResultRunner = {
    * made under a notice that described the results; a typed one by the staff-recorded agreement, a name to show and a notice that described them.
    */
   named: boolean;
-  /** Why the published results would not name this runner, or `named` (`publicNameReason`, from the very input `named` is read from; §NNN). */
+  /** Why the published results would not name this runner, or `named` (`publicNameReason`, from the very input `named` is read from; §985). */
   nameReason: PublicNameReason;
   /** A typed runner: the staff recorded that the person agreed to appear by name (§810); null for a registered runner, whose own tick answers. */
   nameAgreed: boolean | null;
@@ -469,7 +469,7 @@ export type ResultRunner = {
     positionCategory: number | null;
     categoryKey: string | null;
     /**
-     * Who last wrote the row (§NNN, `updated_by_staff_user_id`): their display name, or null when that account is gone; and whether
+     * Who last wrote the row (§986, `updated_by_staff_user_id`): their display name, or null when that account is gone; and whether
      * it was changed after it was written — «modificat de» — or is as it was first written — «introdus de».
      */
     writtenBy: { name: string | null; changed: boolean };
@@ -507,7 +507,7 @@ function resultOf(row: EventResultRow, ranked: Ranked, staffNames: ReadonlyMap<s
 }
 
 /**
- * The display names of the staff accounts that wrote the rows (§NNN): one read for all of them. An account removed since is missing
+ * The display names of the staff accounts that wrote the rows (§986): one read for all of them. An account removed since is missing
  * from the answer (`ON DELETE SET NULL` already cleared the row's column, and a stale id finds nothing): the page says «cont șters».
  */
 async function staffNamesOf<T extends Record<string, unknown>>(db: Database<T>, ids: Iterable<string | null>): Promise<Map<string, string>> {
@@ -538,7 +538,7 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
   const ranking = rankingOf(stored, runners, event);
   const rankedOf = (row: EventResultRow) => ranking.get(row.bibNumber) as Ranked;
   const hiddenShown = hiddenListShownPublicly(event);
-  // Who last wrote each row (§NNN): «introdus de …» / «modificat de …» on its line.
+  // Who last wrote each row (§986): «introdus de …» / «modificat de …» on its line.
   const staffNames = await staffNamesOf(db, stored.map((row) => row.updatedByStaffUserId));
 
   const registered: ResultRunner[] = [];
@@ -556,7 +556,7 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
       name: runner.displayName,
       registered: true,
       ticked: runner.ticked,
-      // `named` — `publicResultName`'s own answer — and, from the same input, why not (§NNN).
+      // `named` — `publicResultName`'s own answer — and, from the same input, why not (§985).
       ...publicNameVerdict({
         registered: true,
         ticked: runner.ticked,
@@ -594,7 +594,7 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
       name: row.displayName,
       registered: false,
       ticked: null,
-      // `named` — `publicResultName`'s own answer — and, from the same input, why not (§NNN).
+      // `named` — `publicResultName`'s own answer — and, from the same input, why not (§985).
       ...publicNameVerdict({
         registered: false,
         ticked: false,
@@ -933,7 +933,7 @@ export class FinishError extends DomainError {
 }
 
 /**
- * The gun the finish line counts from (§850, §NNN): «Start» as pressed on «Cronometrare», else the race's own planned start, else
+ * The gun the finish line counts from (§850, §986): «Start» as pressed on «Cronometrare», else the race's own planned start, else
  * when the event begins. **The results' alone**: every other screen, the public page, the checkpoints' limits, the emails and iCal
  * keep the editor's planned times (`plannedGunOf`).
  */
@@ -946,7 +946,7 @@ export function plannedGunOf(event: { startsAt: Date; raceStartsAt: Date | null 
   return event.raceStartsAt ?? event.startsAt;
 }
 
-/** What one press did (§NNN): recorded — or found recorded already, the same press sent again (its id in the trail; else guessed) — or a number whose row stays as stored. */
+/** What one press did (§986): recorded — or found recorded already, the same press sent again (its id in the trail; else guessed) — or a number whose row stays as stored. */
 export type FinishOutcome =
   | {
       kind: "recorded";
@@ -988,7 +988,7 @@ function finishTargetOf(runners: Runners, bibNumber: number): FinishTarget | nul
 }
 
 /**
- * A finish at the line — «Cronometrare» (§NNN, amending §850; «Sosire»'s press before it): one race number, typed or pressed as an
+ * A finish at the line — «Cronometrare» (§986, amending §850; «Sosire»'s press before it): one race number, typed or pressed as an
  * elite's button, as the runner crosses, and the time since the gun (`gunOf`) stamped as that runner's «Sosit».
  *
  * **Who** — every role that works the desk (`canRecordFinishes`, FORBIDDEN otherwise). **The time** — the instant the island claims
@@ -1117,7 +1117,7 @@ export async function recordFinish<T extends Record<string, unknown>>(
         .values(
           target.kind === "registration"
             ? { eventId: event.id, registrationId: target.runner.registrationId, bibNumber, status: "FINISHED", gunTimeMs, createdAt: now, updatedAt: now, updatedByStaffUserId: actor.id }
-            : // An elite line's runner (§NNN): a typed row, the line's name and number, nothing else of a person — no agreement to be named.
+            : // An elite line's runner (§986): a typed row, the line's name and number, nothing else of a person — no agreement to be named.
               { eventId: event.id, registrationId: null, bibNumber, displayName: target.line.name, status: "FINISHED", gunTimeMs, createdAt: now, updatedAt: now, updatedByStaffUserId: actor.id },
         )
         .returning();
@@ -1134,7 +1134,7 @@ export async function recordFinish<T extends Record<string, unknown>>(
 }
 
 /**
- * A press of the line the trail already holds by its id (§NNN), read back as it was answered (`domain/finish-line.ts#savedPressOf`):
+ * A press of the line the trail already holds by its id (§986), read back as it was answered (`domain/finish-line.ts#savedPressOf`):
  * the actor's own rows of this race a press writes, the id in their metadata. The indexed key first (`audit_logs_entity_idx`: the
  * entity type, the id), so the metadata is read on this race's rows alone; nothing is written.
  */
@@ -1156,7 +1156,7 @@ async function loadSavedPress<T extends Record<string, unknown>>(db: Database<T>
 }
 
 /**
- * The finish line's own rows of the trail since `since` (§NNN): the presses' `event_result.created` and the presses of a number stored
+ * The finish line's own rows of the trail since `since` (§986): the presses' `event_result.created` and the presses of a number stored
  * already, which say which row the line wrote and which number was pressed again (`domain/finish-line.ts#undoTrailOf`). The indexed
  * key (`audit_logs_entity_idx`: the entity type, the id, the time), so a read touches the last minutes of this race alone.
  */
@@ -1174,7 +1174,7 @@ async function loadLineTrail<T extends Record<string, unknown>>(db: Database<T>,
 const LINE_TRAIL_SLACK_MS = 60_000;
 
 /**
- * «Anulează» at the line (§NNN, amending §850's «Undo at the line» refusal; the owner: «„Anulează" pe ce a introdus voluntarul, zece
+ * «Anulează» at the line (§986, amending §850's «Undo at the line» refusal; the owner: «„Anulează" pe ce a introdus voluntarul, zece
  * minute, pe pagină; altfel la „Clasament"»): the row a press of the viewer's own wrote, deleted — for ten minutes after it was written,
  * only while nobody changed it since and only while nobody pressed its number again (`domain/finish-line.ts#mayUndo`: a «Sosit» row
  * written once, by the viewer, whose `event_result.created` of the line names it, and no `event_result.finish_duplicate` names it
@@ -1214,7 +1214,7 @@ export async function undoFinish<T extends Record<string, unknown>>(db: Database
 }
 
 /**
- * «Start» and «Anulează startul» (§NNN; the owner: «un buton „Start" pe pagină, pe care îl apasă un organizator la pistol; fără el
+ * «Start» and «Anulează startul» (§986; the owner: «un buton „Start" pe pagină, pe care îl apasă un organizator la pistol; fără el
  * contează „Startul cursei" din editor»): the gun, as an organizer pressed it at the start line. Whoever enters results
  * (`canEnterResults`, FORBIDDEN otherwise), a race only (`RESULTS_NOT_OPEN`), from three hours before the planned gun to six hours after
  * (`RACE_GUN_WINDOW`), and only while no «Sosit» result is stored (`RACE_GUN_FIXED`: after the first finisher the gun is fixed — a
@@ -1284,7 +1284,7 @@ export async function setRaceGun<T extends Record<string, unknown>>(
 export type FinishGunReading = { at: Date; pressed: boolean; byName: string | null; fixed: boolean };
 
 /**
- * The gun the finish line counts from (`gunOf`: «Start» as pressed, else the plan), for the island's clock question (§NNN): «Start» is
+ * The gun the finish line counts from (`gunOf`: «Start» as pressed, else the plan), for the island's clock question (§986): «Start» is
  * pressed on the organizer's phone, so a volunteer's page drawn before it learns of it here — as it wakes, when it is shown again and,
  * while no finisher is stored, every half minute — with who pressed it, for the line to say the gun it counts from, and whether a
  * «Sosit» is stored (`fixed`, as `setRaceGun`'s `RACE_GUN_FIXED` reads it), so a phone that records nobody stops asking from the first
@@ -1312,7 +1312,7 @@ export async function readFinishGun<T extends Record<string, unknown>>(db: Datab
 /** «Start» as the page says it: the gun counted from, whether it was pressed and by whom, the plan, and whether a finisher fixed it. */
 export type RaceGunView = { at: Date; pressed: boolean; byName: string | null; planned: Date; fixed: boolean; windowOpen: boolean };
 
-/** «Cronometrare»'s data (§NNN): the gun, the latest finishers, the elites' buttons and the two counts. */
+/** «Cronometrare»'s data (§986): the gun, the latest finishers, the elites' buttons and the two counts. */
 export type FinishLineView = {
   event: EventFacts;
   gun: RaceGunView;
@@ -1326,7 +1326,7 @@ export type FinishLineView = {
 };
 
 /**
- * «Cronometrare»'s data (§NNN), for whoever records finishes (`canRecordFinishes`): the gun (`gunOf`, pressed or planned), «Ultimii
+ * «Cronometrare»'s data (§986), for whoever records finishes (`canRecordFinishes`): the gun (`gunOf`, pressed or planned), «Ultimii
  * sosiți» — the stored «Sosit» rows, the latest written first: the number or the elite's label, the name as the backoffice reads it,
  * the time, the place from the live answers or «în afara clasamentului», who wrote it («introdus de» / «modificat de», null for an
  * account gone), until when the viewer may undo it (`undoOpenUntil`, from the line's own trail of the last ten minutes) and, for the
@@ -1425,7 +1425,7 @@ export async function readFinishLine<T extends Record<string, unknown>>(db: Data
 }
 
 /**
- * The name each race number belongs to today, as the backoffice reads it (§NNN): a confirmed registration's, a typed row's, a line of
+ * The name each race number belongs to today, as the backoffice reads it (§986): a confirmed registration's, a typed row's, a line of
  * the elite list's — read live, so «Istoricul sosirilor» may say the name beside a number the trail stores without one.
  */
 export async function liveNamesByBib<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<Map<number, string>> {
@@ -1444,7 +1444,7 @@ export async function liveNamesByBib<T extends Record<string, unknown>>(db: Data
  * (FORBIDDEN). **Switching it on is refused** for an event that is not a race (`RESULTS_NOT_OPEN`), while the privacy notice in force, in
  * every language, does not name `{{results}}` (`RESULTS_NOTICE`) — the club's approval of the text is what lets a result reach the page, as
  * for the list's states (§396) — and while the terms in force do not (`RESULTS_TERMS`: the older terms promised to ask separately before a
- * named result); switching it off never is. **Before the race it is accepted** (§NNN, amending §808's refusal; the owner, 2026-11-18:
+ * named result); switching it off never is. **Before the race it is accepted** (§985, amending §808's refusal; the owner, 2026-11-18:
  * «public from the start»): the tick is set, and nothing is shown before the start — the public read, the section, the listing's chip and
  * the page's hold all wait for `startsAt` (`domain/results-open.ts#resultsOnShow`) — so the answer says `fromStart`. A press that changes
  * nothing writes and records nothing. The moment of the last switching on is kept, and the cache is told.
@@ -1463,7 +1463,7 @@ export async function setResultsPublished<T extends Record<string, unknown>>(db:
     }
     await tx.update(events).set({ resultsPublished: on, resultsPublishedAt: on ? now : null }).where(eq(events.id, event.id));
     await recordAuditEvent(tx, { actorStaffUserId: actor.id, action: on ? "event_results.published" : "event_results.unpublished", entityType: "event", entityId: event.id, metadata: {}, now });
-    // Ticked before the race (§NNN): set now, shown from the start.
+    // Ticked before the race (§985): set now, shown from the start.
     return on && event.startsAt.getTime() > now.getTime() ? { changed: true, fromStart: true as const } : { changed: true };
   });
   if (outcome.changed) revalidatePublicContent("events", "places");
@@ -1691,7 +1691,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
     .where(eq(events.id, eventId))
     .limit(1);
   if (!found || !found.resultsPublished || !eventTakesResults(found.type)) return null;
-  // The gun pressed on «Cronometrare» (§NNN) is the finish line's alone: the public read never selects it, and counts nothing from it.
+  // The gun pressed on «Cronometrare» (§986) is the finish line's alone: the public read never selects it, and counts nothing from it.
   const event: EventFacts = { ...found, raceGunAt: null, raceGunByStaffUserId: null, resultAgeBands: ageBandStartsOf(found.resultAgeBands) };
   if (options.now.getTime() < event.startsAt.getTime()) return null;
   if (!publicListStillOpen(event, options.now, options.deadlines)) return null;

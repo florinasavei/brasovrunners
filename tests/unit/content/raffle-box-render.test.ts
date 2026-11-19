@@ -8,7 +8,7 @@ import type { LanguageEntry } from "@/modules/content/events/ui/boxes/box-kit";
 import { blankTranslation } from "@/modules/content/events/ui/TranslationFields";
 
 /**
- * §NNN, BR-REQ-050-02 — the raffle's settings in the event editor, rendered (the owner, 2026-11-18: «trebuie să bifez acolo cine se
+ * §984, BR-REQ-050-02 — the raffle's settings in the event editor, rendered (the owner, 2026-11-18: «trebuie să bifez acolo cine se
  * poate înscrie: doar alergătorii și elitele și voluntarii» and «Vreau să pot bifa asta: tombolă din oficiu vs tombolă cu înscriere
  * separată»): under «Avem tombolă», in «Numere de concurs», «Cine poate participa la tombolă» — «Alergătorii», «Elitele»,
  * «Voluntarii», each ticked by default and posted with its marker —, «Cum participă» — «Din oficiu» by default or «Cu înscriere
@@ -105,7 +105,7 @@ function inputOf(markup: string, name: string): string {
 const words = (markup: string) => markup.replace(/<[^>]+>/g, " ").replace(/&quot;/g, '"').replace(/\s+/g, " ").trim();
 const checked = (tag: string) => /\schecked(=|\s|\/|>)/.test(tag);
 
-describe("§NNN BR-REQ-050-02 «Avem tombolă» and the raffle's settings beside it", () => {
+describe("§984 BR-REQ-050-02 «Avem tombolă» and the raffle's settings beside it", () => {
   it("asks who may take part — the three groups ticked by default, each with its marker — how, and whether the sign-ups are open", async () => {
     const settings = settingsOf(await box(RACE));
     const text = words(settings);

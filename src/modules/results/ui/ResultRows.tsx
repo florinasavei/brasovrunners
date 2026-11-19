@@ -73,7 +73,7 @@ export type RegisteredLine = {
   present: boolean;
   /** «Public: Participant #101» or «Public: cu numele» — what the published list would say of this runner. */
   publicLine: string;
-  /** Under a «Participant #…» line, why the site shows no name (`publicNameReason`, §NNN); absent when named, or said once for the page. */
+  /** Under a «Participant #…» line, why the site shows no name (`publicNameReason`, §985); absent when named, or said once for the page. */
   publicReason?: string;
   values: LineValues;
   place: PlaceView | null;
@@ -86,7 +86,7 @@ export type RegisteredLine = {
    * result this is. Staff-only: this page is the backoffice's, and the published results carry neither.
    */
   marks?: readonly ResultMark[];
-  /** Who last wrote the stored result (§NNN): «introdus de Ana Pop» / «modificat de Dan Ion»; absent while there is none. */
+  /** Who last wrote the stored result (§986): «introdus de Ana Pop» / «modificat de Dan Ion»; absent while there is none. */
   writtenBy?: string;
 };
 
@@ -99,13 +99,13 @@ export type TypedLine = {
   agreed: boolean;
   /** «Pe site: cu numele» or «Pe site: Participant #900» — what the published ranking would say of the stored line (`publicResultName`'s own answer), the registered lines' caption. */
   publicLine: string;
-  /** Under a «Participant #…» line, why the site shows no name (`publicNameReason`, §NNN); absent when named, or said once for the page. */
+  /** Under a «Participant #…» line, why the site shows no name (`publicNameReason`, §985); absent when named, or said once for the page. */
   publicReason?: string;
   place: PlaceView | null;
   hasResult: boolean;
   /** A separate-list elite's line left out of the ranking (§910), recognised by its number or its name: «în afara clasamentului». */
   outOfRanking?: boolean;
-  /** Who last wrote the stored result (§NNN), as a registered line says it. */
+  /** Who last wrote the stored result (§986), as a registered line says it. */
   writtenBy?: string;
 };
 
@@ -328,7 +328,7 @@ export function RegisteredResultLines({ lines, words }: { lines: readonly Regist
                   {line.publicLine}
                 </Typography>
               </Box>
-              {/* Right under «Pe site: Participant #…», why the site shows no name (§NNN); then who last wrote the result (§NNN). */}
+              {/* Right under «Pe site: Participant #…», why the site shows no name (§985); then who last wrote the result (§986). */}
               {line.publicReason && (
                 <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }} data-testid="result-public-reason">
                   {line.publicReason}

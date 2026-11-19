@@ -14,7 +14,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { AFTER_THE_RACE, approvePrivacyNotice, approveResultsTexts, createRace, person, RACE_STARTS_AT, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * §NNN — «Clasament» says why a line is «Participant #…», how many the site names, what «Loc» is, and «Public de la start»
+ * §985 — «Clasament» says why a line is «Participant #…», how many the site names, what «Loc» is, and «Public de la start»
  * (BR-REQ-050-02, BR-REQ-039-01; the owner, 2026-11-18, with every line reading «Pe site: Participant #001», «Nepublic» and «Cursa nu a
  * început încă»: «toate BIB-urile insa doar numele celor care au bifat ca vor sa apara se vad» — and «ce inseamna "Loc" aici?»).
  *
@@ -152,7 +152,7 @@ async function field() {
   await db.update(registrations).set({ status: "CANCELLED", cancelledAt: AFTER_THE_RACE, cancellationSource: "ADMIN" }).where(eq(registrations.id, dan.id));
 }
 
-describe("§NNN «Pe site: Participant #…» says why, in Romanian", () => {
+describe("§985 «Pe site: Participant #…» says why, in Romanian", () => {
   it("says under each unnamed line the reason the rule gives, and nothing under a named line", async () => {
     await field();
     const html = await render();
@@ -230,7 +230,7 @@ describe("§NNN «Pe site: Participant #…» says why, in Romanian", () => {
   });
 });
 
-describe("§NNN the club's «Apare pe site» told from the person's own tick — read beside the tick, in results.ts", () => {
+describe("§985 the club's «Apare pe site» told from the person's own tick — read beside the tick, in results.ts", () => {
   it("says «hiddenByClub» exactly when the person ticked and the club unticked «Apare pe site» on an elite or an ambassador, and names as before", async () => {
     await approvePrivacyNotice(db, { results: true });
     const cases: { bib: number; ticked: boolean; elite: boolean; ambassador: boolean; hidden: boolean }[] = [];
@@ -254,7 +254,7 @@ describe("§NNN the club's «Apare pe site» told from the person's own tick —
   });
 });
 
-describe("§NNN «Public de la start» on the publish card", () => {
+describe("§985 «Public de la start» on the publish card", () => {
   const BEFORE = new Date(RACE_STARTS_AT.getTime() - 2 * 86_400_000);
 
   it("says, ticked before the race, «Public de la start» with the start's day and hour — in the summary, the card's header and the card", async () => {
@@ -293,7 +293,7 @@ describe("§NNN «Public de la start» on the publish card", () => {
   });
 });
 
-describe("§NNN before the race, for whoever may not tick, and while the start's hour is to be announced", () => {
+describe("§985 before the race, for whoever may not tick, and while the start's hour is to be announced", () => {
   const BEFORE = new Date(RACE_STARTS_AT.getTime() - 2 * 86_400_000);
 
   it("tells the Organizer only that results may be typed — no «bifa», no «Poți bifa de pe acum»", async () => {
@@ -326,7 +326,7 @@ describe("§NNN before the race, for whoever may not tick, and while the start's
   });
 });
 
-describe("§NNN the same in English", () => {
+describe("§985 the same in English", () => {
   it("says the reasons, the count, «Place», and «Public from the start» in English", async () => {
     await field();
     await approveResultsTexts(db);

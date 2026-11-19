@@ -6,7 +6,7 @@ import { mintActionLink } from "./support/action-link";
 import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-036-02, BR-REQ-037-08, BR-REQ-071-01 — the raffle with a sign-up of its own (the owner, 2026-11-18:
+ * §984, BR-REQ-050-02, BR-REQ-036-02, BR-REQ-037-08, BR-REQ-071-01 — the raffle with a sign-up of its own (the owner, 2026-11-18:
  * «Dar pentru tombolă trebuie să am o înscriere separată» — «Practic oamenii trebuie să își treacă numărul de concurs și numele» —
  * «vreau să văd în dreptul fiecărei persoane dacă participă la tombolă»), walked at 320 pixels and on a desktop against the
  * production build, with the approved sample texts the database holds (the seed's «Regulamentul tombolei» and a privacy notice
@@ -156,7 +156,7 @@ const csvLines = async (page: Page, href: string) => {
   return { disposition: response.headers()["content-disposition"] ?? "", lines: (await response.text()).replace(/^﻿/, "").split("\r\n") };
 };
 
-test.describe("§NNN the raffle with a sign-up of its own: the form, the link, the desk, the tab and the file", () => {
+test.describe("§984 the raffle with a sign-up of its own: the form, the link, the desk, the tab and the file", () => {
   test.describe.configure({ timeout: 300_000 });
 
   test("three people sign up by three doors, and the Organizer sees them on «Tombolă» with «Participă: Da» and takes the file", async ({ page }) => {
@@ -265,7 +265,7 @@ test.describe("§NNN the raffle with a sign-up of its own: the form, the link, t
         const entries = await entriesOf(seeded.eventId);
         expect(entries.at(-1)).toMatchObject({ registrationId: seeded.cristina.id, method: "DESK", ip: null });
         expect(entries.at(-1)?.recordedBy).not.toBeNull();
-        // The desk's list says it too, inside each row a search finds (§NNN): Ana, in by the form a moment ago.
+        // The desk's list says it too, inside each row a search finds (§984): Ana, in by the form a moment ago.
         await page.goto(`/ro/admin/checkin?eventId=${seeded.eventId}&q=${encodeURIComponent(seeded.ana.name)}`);
         await hydrated(page);
         const row = page.getByTestId("desk-row").filter({ hasText: seeded.ana.name });
@@ -282,7 +282,7 @@ test.describe("§NNN the raffle with a sign-up of its own: the form, the link, t
         await hydrated(page);
         const tabs = page.getByTestId("race-day-tabs");
         await expect(tabs.getByRole("link", { name: "Tombolă" })).toHaveAttribute("aria-current", "page");
-        // The organizers' five (§NNN): «Prezența», «Clasament», «Cronometrare» («Sosiri» on a phone), «Tombolă», «Lucruri de adus».
+        // The organizers' five (§984, §986): «Prezența», «Clasament», «Cronometrare» («Sosiri» on a phone), «Tombolă», «Lucruri de adus».
         await expect(tabs.getByRole("link")).toHaveText([/Prezența/, /Clasament/, /Cronometrare|Sosiri/, /Tombolă/, /Lucruri/], { useInnerText: true });
         // Five entries are wider than a phone's row, so the row is no `fits` row: its current entry is brought into view —
         // «Tombolă», wholly inside the row, on the phone and on the desktop alike (`SubNavCurrent`, §731).

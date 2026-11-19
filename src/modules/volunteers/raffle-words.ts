@@ -9,7 +9,7 @@ const en = catalogueOf("en");
 const ro = catalogueOf("ro");
 
 /**
- * What the privacy notice's `{{raffle}}` becomes (§NNN): the public form's own heading, quoted, in that language — „Înscrie-te la
+ * What the privacy notice's `{{raffle}}` becomes (§984): the public form's own heading, quoted, in that language — „Înscrie-te la
  * tombolă” / “Sign up for the raffle” — read from the catalogue the form's page reads (`Event.raffle.title`), so the approved
  * sentence names what a visitor sees. Outside a request, like `notice-words.ts`, for the legal pages, the declaration and the
  * token legend.
@@ -19,7 +19,7 @@ export function raffleClause(locale: string): string {
 }
 
 /**
- * What «Regulamentul tombolei»'s `{{raffleGroups}}` becomes (§NNN): the groups the event ticks in «Cine poate participa», in the
+ * What «Regulamentul tombolei»'s `{{raffleGroups}}` becomes (§984): the groups the event ticks in «Cine poate participa», in the
  * text's language and the house's order — «alergătorii confirmați, cu număr de concurs, sportivii de top ai cursei și voluntarii
  * confirmați, cu număr de voluntar» — joined as a sentence joins them. The elites are «sportivii de top»: the mark «Elită» is the
  * organizers' own, and no word a participant reads names it (§917). "" when none is ticked: the gate opens no sign-up then, so no text is read.

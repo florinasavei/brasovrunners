@@ -15,7 +15,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { createRace, person, RACE_STARTS_AT, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * §NNN — «Cronometrare» as the server draws it (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01 criterion 6), in both languages: the
+ * §986 — «Cronometrare» as the server draws it (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01 criterion 6), in both languages: the
  * fourth tab of «Ziua cursei» current; the gun's line, and «Start» for whoever enters results only; the elites' buttons first, by
  * label, 56 pixels and more, the numberless one disabled with what to do and a finished one with its time; the number box with the
  * numeric keypad; «Ultimii sosiți» with who entered each and «Anulează» on the viewer's own press at the line — or, the number pressed
@@ -125,7 +125,7 @@ function tabs(html: string): Array<{ href: string; label: string; current: boole
   }));
 }
 
-describe("§NNN «Cronometrare»: the page", () => {
+describe("§986 «Cronometrare»: the page", () => {
   it("stands fourth of «Ziua cursei»'s tabs, current, each tab carrying the event, the short words for a phone", async () => {
     const html = await timing();
     expect(tabs(html)).toEqual([
@@ -257,7 +257,7 @@ describe("§NNN «Cronometrare»: the page", () => {
     expect(words).toContain("#101 Ana Popescu · 0:39:57");
   });
 
-  it("sends with «Start» the gun the page saw, and says who gave the start when a press under another gun was refused (§NNN)", async () => {
+  it("sends with «Start» the gun the page saw, and says who gave the start when a press under another gun was refused (§986)", async () => {
     // Drawn before anybody pressed: «Start» says it saw no gun.
     expect(await timing({ eventId: raceId }, at(0))).toMatch(/<input type="hidden" name="seenGunAtMs" value=""\/>/);
     await setRaceGun(db, staff.MODERATOR!, { eventId: raceId, clear: false }, at(0, 3));
@@ -273,7 +273,7 @@ describe("§NNN «Cronometrare»: the page", () => {
     expect(text(await timing({ eventId: raceId, refused: "RACE_GUN_CHANGED" }, at(2)))).toContain("Startul a fost anulat între timp: apăsarea ta nu l-a dat.");
   });
 
-  it("draws the gun's sentence in the finish line's island, the one its clock counts from — for every role (§NNN)", async () => {
+  it("draws the gun's sentence in the finish line's island, the one its clock counts from — for every role (§986)", async () => {
     state.actor = staff.CONTRIBUTOR;
     let html = await timing({ eventId: raceId }, at(0));
     // Inside the island, right above the clock — no «Start» box for the volunteer.
@@ -302,7 +302,7 @@ describe("§NNN «Cronometrare»: the page", () => {
   });
 });
 
-describe("§NNN the old «Sosire» address", () => {
+describe("§986 the old «Sosire» address", () => {
   it("sends whoever records finishes on to «Cronometrare» with its event, and is the 404 for a member and for a malformed id", async () => {
     state.actor = staff.CONTRIBUTOR;
     await expect(FinishPage({ params: Promise.resolve({ locale: "ro", id: raceId }) })).rejects.toThrow(`NEXT_REDIRECT /ro/admin/checkin/cronometrare?eventId=${raceId}`);
@@ -313,7 +313,7 @@ describe("§NNN the old «Sosire» address", () => {
   });
 });
 
-describe("§NNN «Clasament»: who wrote each line, «Istoricul sosirilor», and the link to «Cronometrare»", () => {
+describe("§986 «Clasament»: who wrote each line, «Istoricul sosirilor», and the link to «Cronometrare»", () => {
   it("says «introdus de» on a line as first written and «modificat de» once changed, and links «Cronometrare» with the event", async () => {
     await recordFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, bibNumber: 102 }, at(45, 12));
     await saveEventResults(db, staff.ADMIN!, { eventId: raceId, rows: [{ key: "r[101]", bib: "101", name: "", sex: "", birthDate: "", time: "50:00", status: "", chip: "", note: "", agreed: "" }, { key: "r[102]", bib: "102", name: "", sex: "", birthDate: "", time: "45:12", status: "", chip: "", note: "a trecut linia", agreed: "" }] }, at(60));

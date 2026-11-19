@@ -99,7 +99,7 @@ export type EventPageVisit = {
    * «Echipa de voluntari se formează.». A visit's page only, like the callout.
    */
   volunteersList?: { offerOpen: boolean } | null;
-  /** The raffle's sign-up is open (§NNN): one calm link to its own page. A visit's page only, like the volunteers' callout. */
+  /** The raffle's sign-up is open (§984): one calm link to its own page. A visit's page only, like the volunteers' callout. */
   raffle?: boolean;
 };
 
@@ -296,7 +296,7 @@ export default async function EventPageView({
           from the one read both share) — the preview before saving reads no public cache and takes no name. */}
       {visit?.volunteers && !membersOnly && <VolunteerCallout slug={slug} roleNames={visit.volunteers.roleNames} clubOnly={visit.volunteers.clubOnly === true} />}
 
-      {/* «Înscrie-te la tombolă» (§NNN): one calm link while the raffle's sign-up is open — the page decides, from the one gate. */}
+      {/* «Înscrie-te la tombolă» (§984): one calm link while the raffle's sign-up is open — the page decides, from the one gate. */}
       {visit?.raffle && !membersOnly && <RaffleCallout slug={slug} />}
 
       {/* «Voluntarii» (§821), right after: a fold closed on arrival like «Condiții de participare», the names and roles of the confirmed volunteers who

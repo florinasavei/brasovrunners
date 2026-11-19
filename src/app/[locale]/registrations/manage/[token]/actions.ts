@@ -221,7 +221,7 @@ function answerDraftOf(form: FormData): Record<string, string> {
 }
 
 /**
- * «Particip la tombolă» from the participant's own link (LINK, §NNN), per person like the switches above: the token read, never spent,
+ * «Particip la tombolă» from the participant's own link (LINK, §984), per person like the switches above: the token read, never spent,
  * POST only. The rules' tick is the person's own act (`accept=on`); this request's IP address and browser are the acceptance's trace
  * (§771). A refusal writes nothing: the tick missing (`raffle=a`), the gate shut or the person no longer one the raffle takes
  * (`raffle=0`); a person the link does not manage — or another adult on the address, who signs up from their own link — is the
@@ -249,7 +249,7 @@ export async function raffleSignUpFromManageAction(form: FormData): Promise<void
   }
 }
 
-/** «Nu mai particip» from the participant's own link (LINK, §NNN): the sign-up taken away, audited; the token read, never spent. */
+/** «Nu mai particip» from the participant's own link (LINK, §984): the sign-up taken away, audited; the token read, never spent. */
 export async function raffleWithdrawFromManageAction(form: FormData): Promise<void> {
   const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
   const token = String(form.get("token") ?? "");

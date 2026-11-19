@@ -11,7 +11,7 @@ import { changeVolunteer, listVolunteers } from "@/modules/volunteers/volunteers
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-060-01 — «Prezent» on a volunteer (the owner, 2026-11-18, three days before the race: «La voluntari
+ * §983, BR-REQ-050-02, BR-REQ-060-01 — «Prezent» on a volunteer (the owner, 2026-11-18, three days before the race: «La voluntari
  * trebuie să trec prezent/absent ca să pot face tombola doar pentru cei prezenți»): `changeVolunteer`'s kind `setPresent`, on a real
  * PostgreSQL in memory.
  *
@@ -119,7 +119,7 @@ const trail = async () => (await db.select().from(auditLogs).orderBy(asc(auditLo
 const minutesLater = (minutes: number) => new Date(LATER.getTime() + minutes * 60_000);
 const mark = (actor: StaffUser, id: string, present: unknown, eventId = raceId, now = LATER) => changeVolunteer(db, actor, { kind: "setPresent", eventId, id, present: present as boolean }, now);
 
-describe("§NNN who marks a volunteer «Prezent»", () => {
+describe("§983 who marks a volunteer «Prezent»", () => {
   it("lets the Organizer, the Administrator and the Superadministrator tick and clear it — whoever works the volunteers", async () => {
     expect(await presentOf(people.ana)).toBe(false);
     expect(await mark(staff.MODERATOR!, people.ana, true)).toEqual({ changed: true, volunteer: { id: people.ana, hasAddress: true } });
@@ -147,7 +147,7 @@ describe("§NNN who marks a volunteer «Prezent»", () => {
   });
 });
 
-describe("§NNN whose «Prezent» it is", () => {
+describe("§983 whose «Prezent» it is", () => {
   it("is NOT_FOUND for another event's person, for nobody's id and for an id or an event that is no id — with nothing written", async () => {
     // Mara is the other event's: posted as the race's, she is not there.
     await expect(mark(staff.ADMIN!, people.mara, true)).rejects.toMatchObject({ code: "NOT_FOUND" });
@@ -183,7 +183,7 @@ describe("§NNN whose «Prezent» it is", () => {
   });
 });
 
-describe("§NNN what «Prezent» writes, and what it leaves alone", () => {
+describe("§983 what «Prezent» writes, and what it leaves alone", () => {
   it("writes nothing and audits nothing when the value is the same — ticked again, or cleared while absent", async () => {
     await mark(staff.MODERATOR!, people.ana, true, raceId, NOW);
     expect(await trail()).toHaveLength(1);

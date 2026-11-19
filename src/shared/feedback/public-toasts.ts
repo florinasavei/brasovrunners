@@ -29,7 +29,7 @@ export const PUBLIC_TOAST_KEYS = [
   "volunteerSent",
   // The guardian's link page (§768): the parent's or guardian's agreement was recorded.
   "volunteerGuardianAccepted",
-  // The raffle's own page (§NNN): the sign-up is in — the thank-you is on that page, not the event's.
+  // The raffle's own page (§984): the sign-up is in — the thank-you is on that page, not the event's.
   "raffleEntered",
 ] as const;
 

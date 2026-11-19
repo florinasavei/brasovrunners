@@ -141,7 +141,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const roleFilter = role === UNASSIGNED || (role && isUuid(role)) ? role : undefined;
   // «Are kit» (§904): «yes» or «no»; anything else in the address is no filter.
   const kitFilter = kitFilterOf(kit);
-  // «Prezenți» / «Absenți» (§NNN): «yes» or «no»; anything else in the address is no filter.
+  // «Prezenți» / «Absenți» (§983): «yes» or «no»; anything else in the address is no filter.
   const presentFilter = presentFilterOf(present);
   // «Doar membrii {club}» (§981): «1»; anything else in the address is no filter.
   const memberFilter = memberFilterOf(member);
@@ -229,7 +229,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const scopeEvent = events.find((event) => event.id === filters.eventId) ?? null;
   // «Adaugă un voluntar de mână» for the event in scope (§862): the context a person's page reads, coming back to this page of the list.
   const scopeEventRow = scopeEvent ? await findEventForRegistrationById(db, scopeEvent.id) : undefined;
-  // Beside the raffle's tick (§NNN): whether each row takes part, and why not, by the one answer — one read for the page's rows.
+  // Beside the raffle's tick (§984): whether each row takes part, and why not, by the one answer — one read for the page's rows.
   const raffleReasons = scopeEvent && scopeEventRow?.hasRaffle ? await raffleReasonsFor(db, scopeEvent.id, { volunteerIds: rows.map((row) => row.id) }) : new Map<string, RaffleReason>();
   // «Punct» (§949): with one event chosen that has points on its plan, each row says where its person stands — the point's place
   // in the route's order and its name, as «Planul voluntarilor» says them. One read for the page, never one per row.
@@ -414,7 +414,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   );
 
   /**
-   * «Prezent» on the row (§NNN; the owner, 2026-11-18, three days before the race: «La voluntari trebuie să trec prezent/absent ca să
+   * «Prezent» on the row (§983; the owner, 2026-11-18, three days before the race: «La voluntari trebuie să trec prezent/absent ca să
    * pot face tombola doar pentru cei prezenți»): the kit tick's own shape — the house's one-press tick in a plain form that posts the
    * state it wants (`present=1|0`), never a toggle, working with scripts off and coming back to this page of the list. Unticked is
    * absent. Drawn on every row, whatever the event, as «Are kit» is; the service asks for the role.
@@ -458,7 +458,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       <TickButton checked={row.inRaffle} aria-label={`${t("volunteers.screen.raffleTick")}: ${shortText(row.name)}`} data-testid="volunteer-raffle-tick">
         {t("volunteers.screen.raffleTick")}
       </TickButton>
-      {/* «În dreptul fiecărei persoane» (§NNN): Da, or Nu with the reason in a few words. */}
+      {/* «În dreptul fiecărei persoane» (§984): Da, or Nu with the reason in a few words. */}
       {raffleReasons.has(row.id) && <RaffleStandingNote words={raffleNoteWords(t, raffleReasons.get(row.id) ?? "in")} takesPart={raffleReasons.get(row.id) === "in"} />}
     </Box>
   );
@@ -586,7 +586,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       sortable: true,
       initialDir: "asc",
       essential: true,
-      // On a phone's card, right under the name, with «Prezent» after it (§NNN): what race morning reads first.
+      // On a phone's card, right under the name, with «Prezent» after it (§983): what race morning reads first.
       phoneFirst: true,
       render: (row) => (
         <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
@@ -682,14 +682,14 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     },
     {
       /*
-        «Prezent» (§NNN), right before «Are kit»: whether the person came on the day — the tick itself, one press; unticked is absent.
+        «Prezent» (§983), right before «Are kit»: whether the person came on the day — the tick itself, one press; unticked is absent.
         «Prezenți» and «Absenți» above count the two halves among the people not cancelled, and filter the list to them. On every row,
         whatever the event, as the kit's; it neither sorts nor leaves at a width.
       */
       key: "present",
       label: t("volunteers.presence.column"),
       hint: t("volunteers.presence.hint"),
-      // On a phone's card the tick comes right after the name and the state, not a dozen lines down (§NNN): one press per person who came.
+      // On a phone's card the tick comes right after the name and the state, not a dozen lines down (§983): one press per person who came.
       phoneFirst: true,
       render: presentTick,
     },
@@ -798,7 +798,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
               {t("volunteers.csv")}
             </GlyphButton>
             {/*
-              «Lista pentru tombolă» and its present-only twin (§948, §NNN; the owner, 2026-11-18: «ca să pot face tombola doar pentru cei
+              «Lista pentru tombolă» and its present-only twin (§948, §983; the owner, 2026-11-18: «ca să pot face tombola doar pentru cei
               prezenți»): with one event chosen that holds a raffle, the registrations list's two files here too — so «Prezent» is ticked
               and the file taken on one screen. Plain links: the route asks for the role again (BR-REQ-060-01) and audits the download.
             */}
@@ -855,7 +855,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
 
       {/*
         How the scope stands (§246's shape): everyone first, then each state, then how many wait for a role, how many get a
-        kit (§904) and how many came and did not (§NNN) — every pill a filter (§626). The counts ignore the state, the role,
+        kit (§904) and how many came and did not (§983) — every pill a filter (§626). The counts ignore the state, the role,
         the kit and the presence filters, so the strip never empties to the one number somebody filtered to.
       */}
       <Panel glyph="volunteers" title={t("volunteers.screen.summaryTitle")} aside={scopeEvent ? t("volunteers.screen.summaryScopeEvent", { event: scopeEvent.title ?? scopeEvent.id }) : t("volunteers.screen.summaryScopeAll")} data-testid="volunteers-summary">
@@ -869,7 +869,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           {/* «Cu kit» (§904; the owner, 2026-11-03: «ar trebui să număr pe header câți au kit»): the ticked who are not cancelled, always said — a nought too. */}
           {pill({ kit: "yes" }, t("volunteers.screen.summaryKit", { count: summary.withKit }), kitFilter === true)}
           {/*
-            «Prezenți» and «Absenți» (§NNN; the owner, 2026-11-18: «trebuie să trec prezent/absent»): the two halves of «Prezent» among
+            «Prezenți» and «Absenți» (§983; the owner, 2026-11-18: «trebuie să trec prezent/absent»): the two halves of «Prezent» among
             «Înscris» and «Confirmat» — a cancelled person is neither — always said, a nought too, each a filter of the list to its people.
           */}
           {pill({ present: "yes" }, t("volunteers.presence.summaryPresent", { count: summary.present }), presentFilter === true)}
@@ -968,7 +968,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
               <MenuItem value="yes">{t("volunteers.screen.kitYes")}</MenuItem>
               <MenuItem value="no">{t("volunteers.screen.kitNo")}</MenuItem>
             </TextField>
-            {/* «Prezent» (§NNN): the present, the absent, or everyone — the «Prezenți» and «Absenți» pills above set the same. */}
+            {/* «Prezent» (§983): the present, the absent, or everyone — the «Prezenți» and «Absenți» pills above set the same. */}
             <TextField
               select
               name="present"

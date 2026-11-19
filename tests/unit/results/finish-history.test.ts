@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { FINISH_HISTORY_ACTIONS, finishHistory, finishHistoryLine, historyBibOf } from "@/modules/results/domain/finish-history";
 
 /**
- * §NNN — «Istoricul sosirilor» read from the trail (BR-REQ-050-02): each row of the race's results as one line — a press at the line,
+ * §986 — «Istoricul sosirilor» read from the trail (BR-REQ-050-02): each row of the race's results as one line — a press at the line,
  * a duplicate with both times or with the decision of «Clasament» that stays, the line's undo, a «Clasament» save's rows with the boxes it changed, «Start» set, moved and taken off —
  * from where («Cronometrare» or «Clasament»), by whom (null for an account gone), newest first; metadata read field by field, an
  * action it does not read left out.
@@ -15,7 +15,7 @@ const row = (id: string, action: string, minute: number, metadata: unknown, acto
   metadata,
 });
 
-describe("§NNN «Istoricul sosirilor»", () => {
+describe("§986 «Istoricul sosirilor»", () => {
   it("reads the line's presses, duplicates and undos as «Cronometrare», a save's rows as «Clasament»", () => {
     expect(finishHistoryLine(row("1", "event_result.created", 1, { bibNumber: 101, status: "FINISHED", gunTimeMs: 2_712_000, chipTimeMs: null, finishLine: true }))).toMatchObject({
       where: "timing",

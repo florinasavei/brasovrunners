@@ -102,7 +102,7 @@ describe("§254 the anti-bot switch", () => {
       ["src", "app", "[locale]", "registrations", "mine", "page.tsx"],
       ["src", "app", "[locale]", "registrations", "resend", "page.tsx"],
       ["src", "app", "[locale]", "contact", "feedback", "page.tsx"],
-      // The raffle's public form (§NNN).
+      // The raffle's public form (§984).
       ["src", "app", "[locale]", "events", "[slug]", "tombola", "page.tsx"],
     ]) {
       expect(read(...page), page.join("/")).toContain("cachedBotCheckSiteKey");

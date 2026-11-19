@@ -15,7 +15,7 @@ import { withClientWords } from "../../helpers/client-words";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §979, §NNN — «Ziua cursei» as the server draws it (BR-REQ-037-07, BR-REQ-060-01, BR-REQ-041-01 criterion 6): the tabs on the
+ * §979, §984, §986 — «Ziua cursei» as the server draws it (BR-REQ-037-07, BR-REQ-060-01, BR-REQ-041-01 criterion 6): the tabs on the
  * desk, «Lucruri de adus», «Cronometrare» and «Clasament» — the current one marked, the event carried, «Clasament» not drawn for a
  * role that cannot open it, «Cronometrare» for every role that works the desk, its short word for a phone, and the organizers'
  * «Tombolă» fourth of five for an event that holds a raffle, in a row that scrolls rather than one that fits —; the «Lucruri de adus»
@@ -221,7 +221,7 @@ describe("§979 the tabs of «Ziua cursei»", () => {
     expect(html).toMatch(/data-testid="race-day-tabs"/);
   });
 
-  it("stand on «Lucruri de adus», current, on «Clasament» for the page's own event, and on «Cronometrare» (§NNN), current", async () => {
+  it("stand on «Lucruri de adus», current, on «Clasament» for the page's own event, and on «Cronometrare» (§986), current", async () => {
     const id = await race();
     expect(tabs(await items(id)).map((tab) => [tab.label, tab.current])).toEqual([
       ["Prezența", false],
@@ -251,7 +251,7 @@ describe("§979 the tabs of «Ziua cursei»", () => {
     expect(raw).toMatch(/@media \(min-width:600px\)\{[^}]*display:inline-flex/);
   });
 
-  it("stand five for the organizers of an event that holds a raffle — «Tombolă» fourth, before «Lucruri de adus» — in a row that scrolls (§NNN)", async () => {
+  it("stand five for the organizers of an event that holds a raffle — «Tombolă» fourth, before «Lucruri de adus» — in a row that scrolls (§984)", async () => {
     const id = await race({ hasRaffle: true });
     for (const role of ["MODERATOR", "ADMIN"] as const) {
       state.actor = staff[role];
@@ -466,7 +466,7 @@ describe("§979 the top nav on «Lucruri de adus»", () => {
     const { activeAdminTabHref } = await import("@/modules/staff-identity/domain/admin-tab-match");
     const nav = [{ href: "/ro/admin" }, { href: "/ro/admin/checkin" }, { href: "/ro/admin/registrations" }];
     expect(activeAdminTabHref(nav, "/ro/admin/checkin/lucruri")).toBe("/ro/admin/checkin");
-    // «Cronometrare» (§NNN) the same: under the desk's path.
+    // «Cronometrare» (§986) the same: under the desk's path.
     expect(activeAdminTabHref(nav, "/ro/admin/checkin/cronometrare")).toBe("/ro/admin/checkin");
     expect(activeAdminTabHref(nav, "/ro/admin/events/0b6c1e7e-6f6a-4c55-9a43-2f6f3c5b8a10/results")).toBe("/ro/admin");
   });

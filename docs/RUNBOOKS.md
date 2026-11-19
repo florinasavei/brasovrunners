@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V4.66-2026-11-18`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V4.67-2026-11-19`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -946,7 +946,7 @@ while the name is gone (the outage grace).
 ## Race results: registering the finishers
 
 How a race's finishers get into «Clasament» and onto the event page (`DECISIONS.md` §808–§810, and the
-age categories, the podium, and the finish line — «Sosire», since §NNN «Cronometrare» on «Ziua cursei»; the owner's procedure is `SETUP.md` §45; the colleagues'
+age categories, the podium, and the finish line — «Sosire», since §986 «Cronometrare» on «Ziua cursei»; the owner's procedure is `SETUP.md` §45; the colleagues'
 version is the backoffice «Ghid», sections Organizator and Administrator). Only a **race** has
 results; a group run has none.
 
@@ -1042,7 +1042,7 @@ this list; correct a time and save, and the podium follows. The public page is u
 
 An Administrator ticks «Clasamentul e public pe pagina evenimentului» and «Salvează». Refused while the privacy
 notice or the terms in force do not describe the results (`/admin/legal`; `/admin/tasks` carries the rows). It may be
-ticked before the race (§NNN): «Public de la start», and nothing shows until the start; from the start every saved
+ticked before the race (§985): «Public de la start», and nothing shows until the start; from the start every saved
 result appears, and while the race runs the open page refreshes itself every 30 seconds. Under each «Pe site:
 Participant #…» on «Clasament» a sentence says why there is no name. On the page: place, number, time, category and the date it leaves; a name only for
 a registered runner who ticked «Vreau să apar pe lista de participanți & rezultate» under a notice that described

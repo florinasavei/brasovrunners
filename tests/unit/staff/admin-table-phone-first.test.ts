@@ -5,7 +5,7 @@ import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminT
 import { withClientWords } from "../../helpers/client-words";
 
 /**
- * §NNN — `phoneFirst`: a column whose line a phone's block draws right under the headline (the «Voluntari» list's state and its
+ * §983 — `phoneFirst`: a column whose line a phone's block draws right under the headline (the «Voluntari» list's state and its
  * «Prezent» tick, which race morning reads and presses on a phone, would otherwise sit a dozen lines down a card), the columns that
  * say so in their own order and the rest after them — while the wide table keeps every column where the array puts it.
  */
@@ -49,7 +49,7 @@ const order = (html: string, labels: readonly string[]) =>
     .sort((a, b) => a.at - b.at)
     .map((entry) => entry.label);
 
-describe("§NNN a column a phone's block draws first", () => {
+describe("§983 a column a phone's block draws first", () => {
   const labels = ["Vârstă", "Oraș", "Stare", "Are kit", "Prezent", "Din"];
 
   it("draws the state and «Prezent» right under the headline on a phone, then the rest in the columns' order", () => {

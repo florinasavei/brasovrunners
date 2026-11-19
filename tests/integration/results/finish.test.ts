@@ -12,7 +12,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { createRace, person, RACE_STARTS_AT, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * §850, §NNN — the finish line, «Cronometrare» (BR-REQ-050-02, BR-REQ-060-01): `recordFinish` stamps the time since the gun — the
+ * §850, §986 — the finish line, «Cronometrare» (BR-REQ-050-02, BR-REQ-060-01): `recordFinish` stamps the time since the gun — the
  * claimed press within the server's bounds, a claim before the gun refused, the server's own time for a claim ahead of it, nothing a
  * day and three hours after the gun — on a confirmed runner's number or an elite line's, re-ranks, audits without a name and refuses
  * what «Clasament» must handle; every role that works the desk may press, a member may not; the same number twice keeps the first and
@@ -65,7 +65,7 @@ async function eliteLine(name: string, bibNumber: number | null, over: Partial<t
   return line;
 }
 
-describe("§850 §NNN recordFinish — the time since the gun, stamped", () => {
+describe("§850 §986 recordFinish — the time since the gun, stamped", () => {
   it("writes «Sosit» with the time since the gun, ranks, audits the number and the times and never a name, and tells the public cache", async () => {
     const first = await finish(102, at(45, 12));
     expect(first).toMatchObject({ kind: "recorded", bibNumber: 102, name: "Bia Marin", label: null, gunTimeMs: ms(45, 12), positionOverall: 1, outOfRanking: false, again: false });
@@ -178,7 +178,7 @@ describe("§850 §NNN recordFinish — the time since the gun, stamped", () => {
   });
 });
 
-describe("§NNN the claimed time: the moment pressed, within the server's bounds", () => {
+describe("§986 the claimed time: the moment pressed, within the server's bounds", () => {
   it("stamps a queued press with the moment it was pressed, not the moment it arrived", async () => {
     expect(await finish(101, at(50), staff.CONTRIBUTOR, at(45, 12))).toMatchObject({ gunTimeMs: ms(45, 12) });
     // Five seconds ahead of the server is a phone's clock, taken; six is a runner not yet arrived: the server's own.
@@ -197,7 +197,7 @@ describe("§NNN the claimed time: the moment pressed, within the server's bounds
   });
 });
 
-describe("§NNN the same number twice: the first stored wins", () => {
+describe("§986 the same number twice: the first stored wins", () => {
   it("answers a retry of a saved press — the same volunteer, the same second — as saved, writing nothing", async () => {
     await finish(101, at(45, 20), staff.CONTRIBUTOR, at(45, 12));
     const [before] = await stored();
@@ -260,7 +260,7 @@ describe("§NNN the same number twice: the first stored wins", () => {
     expect((await trail()).filter((row) => row.action === "event_result.finish_duplicate")).toHaveLength(3);
   });
 
-  it("refuses a retry whose row is gone since — undone at the line, or deleted on «Clasament» —, never recording it again (§NNN)", async () => {
+  it("refuses a retry whose row is gone since — undone at the line, or deleted on «Clasament» —, never recording it again (§986)", async () => {
     const pressId = "5d6e7f80-91a2-4b3c-8d4e-5f6071829304";
     const press = (id: string, bib: number, claimedAt: Date, now: Date) => recordFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, bibNumber: bib, claimedAtMs: claimedAt.getTime(), pressId: id }, now);
     expect(await press(pressId, 101, at(40), at(40, 1))).toMatchObject({ kind: "recorded", again: false });
@@ -290,7 +290,7 @@ describe("§NNN the same number twice: the first stored wins", () => {
   });
 });
 
-describe("§NNN an elite at the line", () => {
+describe("§986 an elite at the line", () => {
   it("records a line of the race's elite list as a typed row with the line's name and number, nothing else of a person", async () => {
     await eliteLine("Andrei Munteanu", 7, { bibLabel: "Andrei M." });
     const recorded = await finish(7, at(31, 5));
@@ -331,7 +331,7 @@ describe("§NNN an elite at the line", () => {
   });
 });
 
-describe("§NNN «Anulează» at the line: one's own unchanged press, ten minutes", () => {
+describe("§986 «Anulează» at the line: one's own unchanged press, ten minutes", () => {
   const resultOf = async (bib: number) => (await stored()).find((row) => row.bibNumber === bib)!;
 
   it("deletes the volunteer's own press of the last ten minutes, ranks the others again and audits the undo", async () => {
@@ -391,7 +391,7 @@ describe("§NNN «Anulează» at the line: one's own unchanged press, ten minute
   });
 });
 
-describe("§NNN «Start»: the gun as pressed", () => {
+describe("§986 «Start»: the gun as pressed", () => {
   const press = (now: Date, actor: StaffUser = staff.MODERATOR!, claimed?: Date) => setRaceGun(db, actor, { eventId: raceId, clear: false, claimedAtMs: claimed?.getTime() ?? null }, now);
   const clear = (now: Date, actor: StaffUser = staff.MODERATOR!) => setRaceGun(db, actor, { eventId: raceId, clear: true }, now);
   const gunAt = async () => (await db.select({ at: events.raceGunAt, by: events.raceGunByStaffUserId, version: events.version }).from(events).where(eq(events.id, raceId)))[0];
@@ -426,7 +426,7 @@ describe("§NNN «Start»: the gun as pressed", () => {
     expect((await trail()).map((row) => row.action)).toEqual(["event.race_gun_set", "event.race_gun_set", "event.race_gun_set", "event.race_gun_set", "event.race_gun_cleared", "event.race_gun_set"]);
   });
 
-  it("moves only the gun the page saw: two organizers at the start line, the later «Start» refused, nothing written (§NNN)", async () => {
+  it("moves only the gun the page saw: two organizers at the start line, the later «Start» refused, nothing written (§986)", async () => {
     // Both pages drawn before anybody pressed: each one's «Start» says it saw no gun.
     const start = (now: Date, actor: StaffUser, seenGunAtMs: number | null) => setRaceGun(db, actor, { eventId: raceId, clear: false, claimedAtMs: null, seenGunAtMs }, now);
     expect(await start(at(0, 1), staff.MODERATOR!, null)).toEqual({ changed: true, gunAt: at(0, 1) });
@@ -446,7 +446,7 @@ describe("§NNN «Start»: the gun as pressed", () => {
     expect((await trail()).map((row) => row.action)).toEqual(["event.race_gun_set", "event.race_gun_set", "event.race_gun_cleared"]);
   });
 
-  it("reads the gun for the clock's question with who pressed it and whether a «Sosit» fixed it (§NNN)", async () => {
+  it("reads the gun for the clock's question with who pressed it and whether a «Sosit» fixed it (§986)", async () => {
     expect(await readFinishGun(db, staff.CONTRIBUTOR!, raceId)).toEqual({ at: GUN, pressed: false, byName: null, fixed: false });
     await press(at(0, 2));
     expect(await readFinishGun(db, staff.CONTRIBUTOR!, raceId)).toEqual({ at: at(0, 2), pressed: true, byName: "Oana Organizator", fixed: false });
@@ -494,7 +494,7 @@ describe("§NNN «Start»: the gun as pressed", () => {
   });
 });
 
-describe("§NNN readFinishLine — «Ultimii sosiți» with who entered each", () => {
+describe("§986 readFinishLine — «Ultimii sosiți» with who entered each", () => {
   it("lists the latest written first with the live place, who wrote it, and until when the viewer may undo their own", async () => {
     await finish(102, at(45), staff.CONTRIBUTOR);
     await finish(101, at(50), staff.MODERATOR);
@@ -513,7 +513,7 @@ describe("§NNN readFinishLine — «Ultimii sosiți» with who entered each", (
   });
 });
 
-describe("§NNN «Istoricul sosirilor»", () => {
+describe("§986 «Istoricul sosirilor»", () => {
   it("names who wrote each line, newest first, from the line and from «Clasament», with the number's name of today and never one in the trail", async () => {
     await setRaceGun(db, staff.MODERATOR!, { eventId: raceId, clear: false }, at(0, 0));
     await finish(101, at(40), staff.CONTRIBUTOR);

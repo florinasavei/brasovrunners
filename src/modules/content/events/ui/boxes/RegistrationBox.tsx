@@ -816,7 +816,7 @@ export default async function RegistrationBox({
                         {t("editor.hasRaffle")}
                       </CheckboxField>
                       {/*
-                        The raffle's settings (§NNN; the owner, 2026-11-18: «trebuie să bifez acolo cine se poate înscrie: doar alergătorii și
+                        The raffle's settings (§984; the owner, 2026-11-18: «trebuie să bifez acolo cine se poate înscrie: doar alergătorii și
                         elitele și voluntarii» and «tombolă din oficiu vs tombolă cu înscriere separată»), under «Avem tombolă» while it is
                         ticked — hidden, never removed, so they still post. «Cine poate participa»: three ticks, all on by default, each with
                         its marker; «Cum»: a native select of its two answers, so it always posts one; «Înscrierile … deschise»: a tick. Saved

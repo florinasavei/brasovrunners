@@ -2,7 +2,7 @@ import { holdsResultsNameConsent } from "./name-consent";
 import { type PublicNameInput, publicResultName } from "./public-name";
 
 /**
- * Why a published result carries no name (§NNN; the owner, 2026-11-18, looking at «Clasament» with «Pe site: Participant #001» on
+ * Why a published result carries no name (§985; the owner, 2026-11-18, looking at «Clasament» with «Pe site: Participant #001» on
  * every line: «toate BIB-urile insa doar numele celor care au bifat ca vor sa apara se vad»). «Clasament» says it under each line's
  * «Pe site: Participant #…», so the club reads what keeps the name off — and that only the runner can change most of it.
  *

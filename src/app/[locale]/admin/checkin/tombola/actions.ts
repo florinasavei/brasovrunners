@@ -17,7 +17,7 @@ import { isUuid } from "@/shared/ids";
 import { eventIdOf, field, localeOf } from "@/app/[locale]/admin/events/[id]/volunteer-return";
 
 /*
-  The organizers' presses of «Ziua cursei» → «Tombolă» (§NNN), and the desk's «Înscrie la tombolă». Each asks its capability at the
+  The organizers' presses of «Ziua cursei» → «Tombolă» (§984), and the desk's «Înscrie la tombolă». Each asks its capability at the
   door, by name — the tab's the Organizer's and the Administrators' (`canTakeRaffleList`), the desk's every desk role
   (`canWorkTheDesk`) — and the service asks it again (BR-REQ-060-01). A press that went through comes back with its toast; a refused
   one comes back to the page's alert with its code in the address. None of them emails anybody, and no public cache is expired:

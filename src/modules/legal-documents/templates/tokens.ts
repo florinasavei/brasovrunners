@@ -361,14 +361,14 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: VOLUNTEERS_LIST_NOTICE_MERGE_FIELD,
     example: inBoth((locale) => volunteersListClause(locale)),
   },
-  // «Regulamentul tombolei»'s blank (§NNN): who may take part, the groups the event ticks, filled when the person accepts — the
+  // «Regulamentul tombolei»'s blank (§984): who may take part, the groups the event ticks, filled when the person accepts — the
   // example is every group ticked, the default.
   {
     token: `{{${RAFFLE_GROUPS_MERGE_FIELD}}}`,
     messageKey: RAFFLE_GROUPS_MERGE_FIELD,
     example: inBoth((locale) => raffleGroupsPhrase(EVERY_RAFFLE_GROUP, locale)),
   },
-  // The privacy notice's marker for the raffle's sign-up (§NNN): the public form's name, and — with «Regulamentul tombolei» in force —
+  // The privacy notice's marker for the raffle's sign-up (§984): the public form's name, and — with «Regulamentul tombolei» in force —
   // the switch: no door of the sign-up opens until the notice in force names it (`describesRaffle`).
   {
     token: `{{${RAFFLE_MERGE_FIELD}}}`,

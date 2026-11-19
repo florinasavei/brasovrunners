@@ -123,7 +123,7 @@ export type AuditAction =
    * «Transformă în voluntar» (§948, `volunteers/transform.ts`): the registration was cancelled by the staff verb and its person
    * entered on the event's volunteers, in one transaction. Beside the cancellation's own row; the metadata is the volunteer's
    * id, the role given and the state the registration left — and, when the person held a raffle sign-up, its id, moved to the
-   * volunteer (`raffleEntryId`, §NNN) — never a name.
+   * volunteer (`raffleEntryId`, §984) — never a name.
    */
   | "registration.became_volunteer"
   /**
@@ -658,7 +658,7 @@ export type AuditAction =
   | "event_elite.on_site"
   | "event_elite.off_site"
   /**
-   * A line's raffle ticks (§NNN), entity `event`: «Participă la tombolă» (`in_raffle` / `out_of_raffle`) and «Prezent»
+   * A line's raffle ticks (§984), entity `event`: «Participă la tombolă» (`in_raffle` / `out_of_raffle`) and «Prezent»
    * (`present` / `absent`), set on «Ziua cursei» → «Tombolă». The metadata is the line's id and the tick's new value — never the name.
    */
   | "event_elite.in_raffle"
@@ -666,7 +666,7 @@ export type AuditAction =
   | "event_elite.present"
   | "event_elite.absent"
   /**
-   * «Înscrierea la tombolă» (§NNN, `volunteers/raffle-entries.ts`), entity `event`: a person signed up for the event's raffle —
+   * «Înscrierea la tombolă» (§984, `volunteers/raffle-entries.ts`), entity `event`: a person signed up for the event's raffle —
    * the door (`method`: LINK, FORM, DESK, STAFF), the person's group (`kind`: RUNNER, ELITE, VOLUNTEER) and the entry's id — or
    * withdrew or was taken off the sign-ups (`by`: `person` from their own link, `staff` at «Șterge înscrierea»). Never a name, a
    * number or a typed word: the row the metadata names is deleted thirty days after the event, and the trail outlives it.
@@ -757,7 +757,7 @@ export type AuditAction =
   /**
    * «Transformă în alergător» (§948, `volunteers/transform.ts`), entity `event`: the volunteer was cancelled and entered on the
    * official waiting list's own entry, in one transaction. The metadata is the volunteer's id, the registration's and the
-   * state it landed in — and, when the person held a raffle sign-up, its id, moved to the registration (`raffleEntryId`, §NNN)
+   * state it landed in — and, when the person held a raffle sign-up, its id, moved to the registration (`raffleEntryId`, §984)
    * — never a name or an address.
    */
   | "volunteer.became_runner"
@@ -793,7 +793,7 @@ export type AuditAction =
   | "event_result.updated"
   | "event_result.deleted"
   /**
-   * «Cronometrare» (§NNN): a press of a number already «Sosit» — another volunteer, or the same one a different second — or of a
+   * «Cronometrare» (§986): a press of a number already «Sosit» — another volunteer, or the same one a different second — or of a
    * runner «Clasament» wrote off whose decision stays («Descalificat», or an «Abandon» / «Neprezentat» written after the moment
    * pressed). The stored row stays as it was; this row keeps the press's own time beside the stored one (`{ bibNumber, gunTimeMs,
    * storedGunTimeMs, storedStatus, storedResultId, finishLine: true }`; who pressed is the row's actor), so «Istoricul sosirilor»
@@ -804,7 +804,7 @@ export type AuditAction =
    */
   | "event_result.finish_duplicate"
   /**
-   * «Start» and «Anulează startul» on «Cronometrare» (§NNN), entity `event`: the gun as an organizer pressed it at the start line
+   * «Start» and «Anulează startul» on «Cronometrare» (§986), entity `event`: the gun as an organizer pressed it at the start line
    * (`{ at, previous }`, ISO instants, `previous` null for a first press) or taken off, back to the planned gun (`{ previous }`).
    */
   | "event.race_gun_set"

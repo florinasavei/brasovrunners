@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `…_race_gun` (§NNN «Start» on «Cronometrare»), proven on real PostgreSQL (PGlite): two nullable columns on `events` —
+ * Migration `…_race_gun` (§986 «Start» on «Cronometrare»), proven on real PostgreSQL (PGlite): two nullable columns on `events` —
  * the gun as pressed and who pressed it, the account's key `ON DELETE SET NULL` — and a CHECK that names nobody without a moment; on
  * a database migrated by the release before, every event reads no gun pressed, so every race counts from its planned start; and the
  * file only expands. **Found by its name, not its number**: a branch merged beside it may take the number first, and the landing

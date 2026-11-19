@@ -157,7 +157,7 @@ export const RETENTION = {
   groupRunIdDocumentDaysAfterEvent: GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS,
   /** A volunteer's offer goes thirty days after the event's start (§754); the privacy notice says exactly this. */
   volunteerDaysAfterEvent: RETENTION_PERIODS.volunteerDaysAfterEvent,
-  /** A raffle sign-up goes thirty days after the event's start (§NNN); the privacy notice says exactly this. */
+  /** A raffle sign-up goes thirty days after the event's start (§984); the privacy notice says exactly this. */
   raffleDaysAfterEvent: RETENTION_PERIODS.raffleDaysAfterEvent,
   /** An answer «Vin!» goes thirty days after the event's end (§811); the privacy notice says exactly this. */
   rsvpDaysAfterEvent: RETENTION_PERIODS.rsvpDaysAfterEvent,
@@ -197,7 +197,7 @@ export type PruneCounts = {
   volunteers: number;
   /** The club's invitations to volunteer, gone with the offers, thirty days after the event started (§820). */
   volunteerInvitations: number;
-  /** Raffle sign-ups, gone thirty days after the event started (§NNN). */
+  /** Raffle sign-ups, gone thirty days after the event started (§984). */
   raffleEntries: number;
   /** A race's results rows deleted with its registrations, three years after the race (§808). */
   results: number;
@@ -719,7 +719,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
   if (counts.volunteers > 0) revalidatePublicContent("places");
 
   /*
-    The raffle's sign-ups (§NNN): who signed up for an event's raffle, the name typed on the form, the rules' acceptance with its trace
+    The raffle's sign-ups (§984): who signed up for an event's raffle, the name typed on the form, the rules' acceptance with its trace
     or its recorder — kept to hold the draw and as proof of the acceptance. Deleted thirty days after the event's start, as the volunteers'
     offers are, and the privacy notice's sections 5 and 7 say so; the row's own age is asked too, so one wrong year typed in the editor
     never takes a sign-up of yesterday. A row the step above left without its volunteer went with it already (`ON DELETE CASCADE`), as

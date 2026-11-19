@@ -26,7 +26,7 @@ import { canTakeRaffleList } from "./raffle-list";
 import { entryColumnOf, findRaffleEntry, raffleEligible, type RafflePersonFacts, type RafflePersonRef, readRaffleGateFacts, readRafflePerson, readRaffleRules } from "./raffle-roster";
 
 /*
-  «Înscrierea la tombolă» (§NNN; the owner, 2026-11-18: «Tot pentru ziua cursei vreau să am un tab de tombolă unde să văd toți
+  «Înscrierea la tombolă» (§984; the owner, 2026-11-18: «Tot pentru ziua cursei vreau să am un tab de tombolă unde să văd toți
   participanții la tombolă» — «Dar pentru tombolă trebuie să am o înscriere separată» — and, asked: in the sign-up mode only those
   who sign up are in; they sign up three ways — a tick on their own registration's page, a public form on the site, at the desk on
   race day — and they accept a «Regulamentul tombolei» approved by the club, without which the sign-up does not open).
@@ -331,7 +331,7 @@ export async function deleteRaffleEntry<T extends Record<string, unknown>>(db: D
 }
 
 /**
- * A person's sign-up moved to the row they became (§NNN): «Transformă în voluntar» and «Transformă în alergător» (§948) cancel one row
+ * A person's sign-up moved to the row they became (§984): «Transformă în voluntar» and «Transformă în alergător» (§948) cancel one row
  * and enter another for the same person at the same event, so the sign-up follows them, as the organizers' exclusion does (§953) —
  * the same row, its door, its acceptance of the same rules for the same event and its trace unchanged; a press about something else
  * neither drops a person who signed up nor asks them to sign up again. Inside the caller's transaction, which asked the role (the
@@ -353,7 +353,7 @@ export function isEliteRaffleTick(value: unknown): value is EliteRaffleTick {
 }
 
 /**
- * A line of the elite list's raffle tick (§NNN), on the «Tombolă» tab (`canTakeRaffleList`): taken out or put back, ticked present
+ * A line of the elite list's raffle tick (§984), on the «Tombolă» tab (`canTakeRaffleList`): taken out or put back, ticked present
  * or not, at any time. One statement that changes the tick only where it says otherwise; audited by the line's id, never its name.
  * No public page reads either tick: nothing is expired.
  */

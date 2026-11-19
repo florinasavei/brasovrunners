@@ -102,7 +102,7 @@ type Props = {
     answersRefused?: string;
     /** «Da, vin la cursă»'s outcome (the decision «Cere reconfirmarea»): 1 recorded or already recorded, 0 refused. */
     reconfirm?: string;
-    /** The raffle card's outcome (§NNN): 1 signed up, w withdrawn, a the rules' tick missing, 0 refused. */
+    /** The raffle card's outcome (§984): 1 signed up, w withdrawn, a the rules' tick missing, 0 refused. */
     raffle?: string;
   }>;
 };
@@ -281,7 +281,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   );
 
   /*
-    «Tombola» (§NNN): per person, while the raffle's sign-up gate is open for their group and they are a confirmed real registration
+    «Tombola» (§984): per person, while the raffle's sign-up gate is open for their group and they are a confirmed real registration
     with a number — signed up, «Nu mai particip»; not yet, the rules, the tick and «Particip la tombolă». One read of the gate for the
     page; nothing drawn, and no further query, while it is shut.
   */
@@ -661,7 +661,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                   </Box>
                 )}
 
-                {/* «Tombola» (§NNN): the person's own raffle sign-up — the token read, never spent; drawn only while the gate is open. */}
+                {/* «Tombola» (§984): the person's own raffle sign-up — the token read, never spent; drawn only while the gate is open. */}
                 {raffleCards.get(one.id)}
 
                 {/*

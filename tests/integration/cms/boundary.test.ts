@@ -180,11 +180,11 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin",
       "/admin/checkin",
       "/admin/checkin/[code]",
-      // «Cronometrare», «Ziua cursei»'s finish line (§NNN), by hand.
+      // «Cronometrare», «Ziua cursei»'s finish line (§986), by hand.
       "/admin/checkin/cronometrare",
       // «Lucruri de adus», the third tab of «Ziua cursei» (§979), by hand.
       "/admin/checkin/lucruri",
-      // «Tombolă», the organizers' tab of «Ziua cursei» (§NNN), by hand.
+      // «Tombolă», the organizers' tab of «Ziua cursei» (§984), by hand.
       "/admin/checkin/tombola",
       // The design system page (§692), by hand.
       "/admin/design",
@@ -203,7 +203,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/events/[id]/plan-voluntari",
       // A race's results (§808), entered or imported by race number and ranked: by hand, like the pages beside it.
       "/admin/events/[id]/results",
-      // The finish line's first page (§850), kept to send a saved link on to «Cronometrare» (§NNN) — by hand.
+      // The finish line's first page (§850), kept to send a saved link on to «Cronometrare» (§986) — by hand.
       "/admin/events/[id]/results/sosire",
       // The emergency sheet (§322), printed and carried on race day: by hand, like the rest.
       "/admin/events/[id]/urgente",
@@ -280,7 +280,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       // A group run's optional self-declaration (§393): signed, never edited here.
       "/events/[slug]/declaration",
       "/events/[slug]/register",
-      // The raffle's own sign-up form (§NNN): a page of the platform, never one the CMS makes.
+      // The raffle's own sign-up form (§984): a page of the platform, never one the CMS makes.
       "/events/[slug]/tombola",
       "/events/[slug]/volunteers",
       // «Întrebări frecvente» (§525): a platform page like «Echipa», never one the CMS makes.

@@ -58,7 +58,7 @@ type ResultsEvent = Pick<PublicEvent, "id" | "type" | "resultsPublished" | "resu
  * stack, tightened to three lines): the place at the left, the name over the number and the time, the category under them. The one
  * island, `ResultsFilter`, narrows the rows by category and by number; without a script everything shows.
  *
- * ## Public from the start, and live while the race runs (§NNN)
+ * ## Public from the start, and live while the race runs (§985)
  *
  * The Administrator may tick the results public before the race; nothing above changes for that — the read is `null` until the start,
  * so the section is not drawn — and from the start the «Publicat …» line names the start, not the earlier tick (`resultsShownSince`).
@@ -98,7 +98,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
   const { rows } = results;
   const categories = categoriesPresent(rows.map((row) => row.categoryKey)).map((key) => ({ key, label: categoryLabel(key), glyph: categoryGlyphOf(key) }));
   const day = (date: Date, withTime: boolean) => formatDay(date, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline", withTime });
-  // Ticked before the race (§NNN), the results have been on the page since its start, not since the tick.
+  // Ticked before the race (§985), the results have been on the page since its start, not since the tick.
   const shownSince = resultsShownSince(results.publishedAt, event.startsAt);
   const line = shownSince
     ? t("results.published", { published: day(shownSince, true), until: day(results.closesAt, true) })
@@ -135,7 +135,7 @@ async function resultsSectionOrThrow(event: ResultsEvent, now: Date, live: { fro
           {line}
         </Typography>
 
-        {/* While the race runs (§NNN): the clock, with its line, under «Publicat …». */}
+        {/* While the race runs (§985): the clock, with its line, under «Publicat …». */}
         {live && <ResultsLiveRefresh from={live.from.getTime()} until={live.until.getTime()} line={t("results.live")} />}
 
         {rows.length > 1 && (

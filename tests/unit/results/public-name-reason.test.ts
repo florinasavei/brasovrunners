@@ -4,7 +4,7 @@ import { type PublicNameInput, publicResultName } from "@/modules/results/domain
 import { PUBLIC_NAME_REASONS, publicNameReason, publicNameVerdict, type PublicNameReasonInput, UNNAMED_REASONS } from "@/modules/results/domain/public-name-reason";
 
 /**
- * §NNN, BR-REQ-039-01 — why a published result is «Participant #…» (the owner, 2026-11-18, with every line of «Clasament» reading «Pe site:
+ * §985, BR-REQ-039-01 — why a published result is «Participant #…» (the owner, 2026-11-18, with every line of «Clasament» reading «Pe site:
  * Participant #001»). The reason is read from `publicResultName`'s own input and is `named` exactly when that function gives a name: one
  * rule, walked here over every combination of the input, and then each reason with the case it names.
  */
@@ -55,7 +55,7 @@ const named: PublicNameInput = {
 };
 const typed: PublicNameInput = { ...named, registered: false, ticked: false, displayName: null, confirmed: false, noticeVersion: null, typedNameAgreed: true, typedDisplayName: "Ion Vasile" };
 
-describe("§NNN publicNameReason is publicResultName's own rule", () => {
+describe("§985 publicNameReason is publicResultName's own rule", () => {
   it("is «named» exactly when publicResultName gives a name, over every combination of the input — and every other answer is a known reason", () => {
     let count = 0;
     const seen = new Set<string>();
@@ -82,7 +82,7 @@ describe("§NNN publicNameReason is publicResultName's own rule", () => {
   });
 });
 
-describe("§NNN each reason names its case", () => {
+describe("§985 each reason names its case", () => {
   it("names a runner the rule names", () => {
     expect(publicNameReason(named)).toBe("named");
     expect(publicNameReason(typed)).toBe("named");
@@ -126,7 +126,7 @@ describe("§NNN each reason names its case", () => {
   });
 });
 
-describe("§NNN BR-REQ-040-04 every reason has its sentence in both languages", () => {
+describe("§985 BR-REQ-040-04 every reason has its sentence in both languages", () => {
   it("has `Admin.results.publicWhy.<reason>` for every reason but «named», in Romanian and in English", () => {
     for (const locale of ["ro", "en"] as const) {
       const why = (catalogueOf(locale) as unknown as { Admin: { results: { publicWhy: Record<string, string> } } }).Admin.results.publicWhy;

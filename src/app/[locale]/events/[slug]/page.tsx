@@ -225,7 +225,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   const volunteersList = !membersOnly && event.volunteersListPublic === true ? { offerOpen: advertised } : null;
   if (volunteersList && event.startsAt) await holdPageUntil([new Date(event.startsAt.getTime() + RETENTION_PERIODS.volunteerDaysAfterEvent * 86_400_000)], now);
   /*
-    «Înscrie-te la tombolă» (§NNN): one calm link while the raffle's sign-up gate is open (`cachedRaffleSignUpOpen`), from the public
+    «Înscrie-te la tombolă» (§984): one calm link while the raffle's sign-up gate is open (`cachedRaffleSignUpOpen`), from the public
     cache — expired by the editor's save and by an approval — and the page made again when the sign-up ends with the event. Never on a
     members' event; while the database is away the link is simply not drawn.
   */

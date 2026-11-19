@@ -54,7 +54,7 @@ export const routing = defineRouting({
      */
     "/events/[slug]/volunteers": { ro: "/evenimente/[slug]/voluntari", en: "/events/[slug]/volunteers" },
     /**
-     * The event's raffle sign-up (§NNN; the owner, 2026-11-18: «Practic oamenii trebuie să își treacă numărul de concurs și numele»):
+     * The event's raffle sign-up (§984; the owner, 2026-11-18: «Practic oamenii trebuie să își treacă numărul de concurs și numele»):
      * «Înscrie-te la tombolă» — a race number, a name, «Sunt voluntar», the rules and their acceptance. It answers 404 while the
      * raffle's sign-up gate is shut (`raffleSignUpClosedFor`).
      */
@@ -263,7 +263,7 @@ export const routing = defineRouting({
      */
     "/admin/events/[id]/results": "/admin/events/[id]/results",
     /**
-     * «Sosire» (§850): the finish line's page under «Clasament» until «Cronometrare» took its place (§NNN): kept so a saved link still
+     * «Sosire» (§850): the finish line's page under «Clasament» until «Cronometrare» took its place (§986): kept so a saved link still
      * works, it sends the reader on to `/admin/checkin/cronometrare?eventId=<id>`. One spelling in both locales, like `mesaje`.
      */
     "/admin/events/[id]/results/sosire": "/admin/events/[id]/results/sosire",
@@ -325,11 +325,11 @@ export const routing = defineRouting({
     /** «Lucruri de adus» (§979): «Ziua cursei»'s checklist of the things to bring. A static segment, so it wins over `[code]`. */
     "/admin/checkin/lucruri": "/admin/checkin/lucruri",
     /**
-     * «Cronometrare» (§NNN): «Ziua cursei»'s finish line — a number typed or an elite pressed as the runner crosses, saved at once.
+     * «Cronometrare» (§986): «Ziua cursei»'s finish line — a number typed or an elite pressed as the runner crosses, saved at once.
      * One spelling in both locales, like `lucruri`; a static segment, so it wins over `[code]`.
      */
     "/admin/checkin/cronometrare": "/admin/checkin/cronometrare",
-    /** «Tombolă» (§NNN): «Ziua cursei»'s raffle tab, the organizers'. A static segment, so it wins over `[code]`. */
+    /** «Tombolă» (§984): «Ziua cursei»'s raffle tab, the organizers'. A static segment, so it wins over `[code]`. */
     "/admin/checkin/tombola": "/admin/checkin/tombola",
     "/admin/checkin/[code]": "/admin/checkin/[code]",
     "/admin/legal": "/admin/legal",

@@ -237,7 +237,7 @@ describe("§639 whom the email asks a lawyer to read", () => {
     expect(lawyerReads("ro", ["VOLUNTEER_AGREEMENT"])).toBe("Înainte de aprobare, un jurist ar trebui să citească contractul de voluntariat.");
     expect(lawyerReads("en", ["EVENT_DECLARATION", "TERMS", "VOLUNTEER_AGREEMENT"])).toBe("Before approving, a lawyer should read the declarations, the terms and the volunteer agreement.");
     expect(lawyerReads("ro", ["PRIVACY_NOTICE", "VOLUNTEER_AGREEMENT"])).toBe("Înainte de aprobare, un jurist ar trebui să citească textele schimbate, mai ales contractul de voluntariat.");
-    // «Regulamentul tombolei» (§NNN) likewise: a raffle's rules, never a declaration.
+    // «Regulamentul tombolei» (§984) likewise: a raffle's rules, never a declaration.
     expect(lawyerReads("ro", ["RAFFLE_RULES"])).toBe("Înainte de aprobare, un jurist ar trebui să citească regulamentul tombolei.");
     expect(lawyerReads("en", ["PRIVACY_NOTICE", "RAFFLE_RULES"])).toBe("Before approving, a lawyer should read the changed texts, above all the raffle rules.");
     // A key the catalogue does not know is ignored, as on the bold line; no section of any text is named.

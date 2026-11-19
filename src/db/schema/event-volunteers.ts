@@ -288,7 +288,7 @@ export const eventVolunteers = pgTable(
      */
     inRaffle: boolean("in_raffle").notNull().default(true),
     /**
-     * «Prezent» (migration `0215`, §NNN; the owner, 2026-11-18, three days before the race: «La voluntari trebuie să trec
+     * «Prezent» (migration `0215`, §983; the owner, 2026-11-18, three days before the race: «La voluntari trebuie să trec
      * prezent/absent ca să pot face tombola doar pentru cei prezenți»): the organizers' own mark that the person came on the day —
      * one press on the «Voluntari» list's row or on the person's page, by whoever works the volunteers, audited as every edit of a
      * person's boxes. Unticked is absent: there is no third state, so every volunteer from before reads not present. It decides one

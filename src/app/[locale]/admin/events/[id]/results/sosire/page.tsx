@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
- * «Sosire» (§850), the finish line's first page, under «Clasament» — whose place «Cronometrare» took (§NNN): «Ziua cursei»'s timing
+ * «Sosire» (§850), the finish line's first page, under «Clasament» — whose place «Cronometrare» took (§986): «Ziua cursei»'s timing
  * tab, `/admin/checkin/cronometrare`. The old address is kept so a link saved on a phone, or the guide of a release before, still
  * lands on the finish line: it sends the reader on with its event (`?eventId=`). Whoever records finishes is sent on
  * (`canRecordFinishes`, the new page's own gate, asserted again there); anybody else meets the 404 an unknown page gets
