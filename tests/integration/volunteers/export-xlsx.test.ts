@@ -132,7 +132,7 @@ describe("«Descarcă Excel» (§839)", () => {
     expect(text).toContain("Ana Pop");
   });
 
-  it("holds one <definedNames>, as a workbook may (CT_Workbook), carrying the filter's and the printed titles' names — so Excel opens it without «recover» (§NNN)", async () => {
+  it("holds one <definedNames>, as a workbook may (CT_Workbook), carrying the filter's and the printed titles' names — so Excel opens it without «recover» (§988)", async () => {
     for (const lang of ["ro", "en"]) {
       const workbook = unzip(Buffer.from(await (await download(`format=xlsx&lang=${lang}`)).arrayBuffer())).get("xl/workbook.xml") ?? "";
       // The writer's own empty `<definedNames/>` is the one that carries the names; a second element after `</sheets>` was what Excel repaired.

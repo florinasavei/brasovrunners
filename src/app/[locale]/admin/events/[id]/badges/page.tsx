@@ -34,7 +34,7 @@ type Props = { params: Promise<{ locale: string; id: string }>; searchParams: Pr
  * Administrator and the Superadministrator (`canDesignVolunteerBadges`), asserted here, in the actions,
  * the service and the routes; anyone else meets the 404 an unknown page gets. A print the route refused
  * comes back here with `?refused=` and an alert that says why. Of the volunteers the page reads the
- * confirmed ones' names for «Ecusoane cu nume» (§NNN) and, for «Tipărire», how many they are — nothing
+ * confirmed ones' names for «Ecusoane cu nume» (§988) and, for «Tipărire», how many they are — nothing
  * else of them; a badge per role carries a role, never a person.
  */
 export default async function EventBadgesPage({ params, searchParams }: Props) {

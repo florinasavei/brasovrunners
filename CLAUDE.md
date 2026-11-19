@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.68-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.69-2026-11-19 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V4.68-2026-11-19`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V4.69-2026-11-19`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -206,7 +206,7 @@ than any training data can be trusted on. Pin exact versions in `package.json`.
   main` PR the owner merges; approving the production migration run and redeploying after it
   are authorised ("approve / deploy prod for me").
 - Branch from `qa` with `--no-track`, PR into `qa`. `main` is production. **A branch is named for
-  all it carries** (the owner, 2026-11-19, §NNN), never a generated `claude/quirky-ramanujan-…`.
+  all it carries** (the owner, 2026-11-19, §988), never a generated `claude/quirky-ramanujan-…`.
   `SETUP.md` § Contributing.
 - Windows development machine, Linux CI. Anything with paths or line endings: test both.
 - The owner also works from a phone through Claude Code on the web. A cloud session prepares

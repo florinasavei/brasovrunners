@@ -12,7 +12,7 @@ import {
 import { BIB_COLOURS, COLOR } from "@/theme/brand";
 
 /**
- * §NNN — «Ecusoane cu nume», the hotfix of 2026-11-19 (BR-REQ-050-02, amending §764's «no name is printed»; the owner: «pune-mi și
+ * §988 — «Ecusoane cu nume», the hotfix of 2026-11-19 (BR-REQ-050-02, amending §764's «no name is printed»; the owner: «pune-mi și
  * numele lor pe ele», «Vreau doar prenume pe ele», «Vreau să pot customiza textele de pe fiecare ecuson în parte», «Culoarea benzii, pe
  * fiecare»). The list the badges page posts, one line a badge — «the word on the band; the first name; the band's colour» — as
  * `parseNamedBadgeLines` reads it; the colour names it knows (`namedBadgeColour`), every one readable at AA; the first-name rule
@@ -24,7 +24,7 @@ const hexOf = (key: (typeof BIB_COLOURS)[number]["key"]) => BIB_COLOURS.find((co
 /** Every colour word the help line lists, in both languages, and «violet», which the reader knows besides. */
 const COLOUR_WORDS = [...NAMED_COLOUR_WORDS.ro.split(", "), ...NAMED_COLOUR_WORDS.en.split(", "), "violet"];
 
-describe("§NNN parseNamedBadgeLines — one line a badge", () => {
+describe("§988 parseNamedBadgeLines — one line a badge", () => {
   it("reads each line as one badge, in its order: the word on the band, «;», the first name and, if typed, «;» and the colour", () => {
     expect(parseNamedBadgeLines("Fotograf; Amalia\nOrganizator; Dany; albastru\nVoluntar; Ion; #C62828", DEFAULT)).toEqual([
       { label: "Fotograf", name: "Amalia", colour: null },
@@ -94,7 +94,7 @@ describe("§NNN parseNamedBadgeLines — one line a badge", () => {
   });
 });
 
-describe("§NNN namedBadgeColour — the band's colour by its name", () => {
+describe("§988 namedBadgeColour — the band's colour by its name", () => {
   it("reads a name in Romanian or in English, with or without diacritics, in any case", () => {
     const cases: Array<[string[], string]> = [
       [["Roșu", "rosu", "ROȘU", "roşu", "red", "RED", "Red", "  Roșu  "], hexOf("red")],
@@ -153,7 +153,7 @@ describe("§NNN namedBadgeColour — the band's colour by its name", () => {
   });
 });
 
-describe("§NNN the first name and the box's first text", () => {
+describe("§988 the first name and the box's first text", () => {
   it("takes the first word of a name as typed, as the elite bib's line does", () => {
     expect(badgeFirstName("Ana Maria Pop")).toBe("Ana");
     expect(badgeFirstName("  Dany   Ionescu ")).toBe("Dany");

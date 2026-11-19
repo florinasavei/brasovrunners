@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.68-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.69-2026-11-19 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V4.68-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.69-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -856,7 +856,7 @@ prefixes, and the branch is deleted after merge:
 | `hotfix/` | production emergency only; branches from `main`, not `qa` |
 
 **A branch's name says what is in it** — the owner's standing rule since 2026-11-19: «ține minte
-de acum! numele branch-urilor trebuie să reflecte ce se află în ele» (`DECISIONS.md` §NNN). Name it
+de acum! numele branch-urilor trebuie să reflecte ce se află în ele» (`DECISIONS.md` §988). Name it
 after what it carries, not after the file it touches or the tool that opened it:
 `feat/waitlist-offer-expiry`, not `feat/update-registrations`;
 `hotfix/volunteers-excel-one-defined-names`, never a generated name such as

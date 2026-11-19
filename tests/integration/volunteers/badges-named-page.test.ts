@@ -14,7 +14,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Ecusoane cu nume» on «Ecusoane pentru voluntari» (`/admin/events/[id]/badges`; the hotfix of 2026-11-19, amending §764's
+ * §988 — «Ecusoane cu nume» on «Ecusoane pentru voluntari» (`/admin/events/[id]/badges`; the hotfix of 2026-11-19, amending §764's
  * «no name is printed» and the page's «no volunteer is read»; BR-REQ-050-02, BR-REQ-060-01), read from a real database: below
  * «Tipărire», a box whose list starts with one «WORD; First name» line per confirmed volunteer of the event — the design's word, the
  * first name only, never a person still «Înscris», a cancelled one or another event's — posting to `/badges/named` with the page's
@@ -155,7 +155,7 @@ function linesOf(html: string): string {
   return textareas[0][2].replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 }
 
-describe("§NNN «Ecusoane cu nume» on the badges page", () => {
+describe("§988 «Ecusoane cu nume» on the badges page", () => {
   it("is the last box, below «Tipărire», for the event and in the page's language", async () => {
     const tree = await pageTree();
     const all = elements(tree);

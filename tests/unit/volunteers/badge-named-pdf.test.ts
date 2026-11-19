@@ -9,7 +9,7 @@ import { type BadgeSheetEntry, renderBadgeSheet } from "@/modules/volunteers/bad
 import { BIB_COLOURS, COLOR } from "@/theme/brand";
 
 /**
- * §NNN — «Ecusoane cu nume» drawn (BR-REQ-050-02; the hotfixes of 2026-11-19, amending §764's «no name is printed»): a badge of the
+ * §988 — «Ecusoane cu nume» drawn (BR-REQ-050-02; the hotfixes of 2026-11-19, amending §764's «no name is printed»): a badge of the
  * list carries its own word on the band, in capitals, its first name printed large in ink where «Nume:» and the marker's line would be,
  * and its own band colour when the line named one that reads at AA — else the design's band, and the club's orange for a colour no
  * word reads on. Nothing to write on: no «Nume:», no line, no marker's area. With «Logo-ul clubului jos, ca filigran» (§965) the name
@@ -91,7 +91,7 @@ const named = (label: string, printedName: string, colour?: string): BadgeSheetE
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("§NNN a badge of the list", () => {
+describe("§988 a badge of the list", () => {
   it("draws its own word on the band in capitals and its first name — never «Nume:», the line for the name or the marker's area", async () => {
     const { calls, pdf } = await sheetCalls(WRITING, [named("Fotografă", "Amalia"), named("Organizator", "Dany")]);
     expect(texts(calls)).toEqual([TITLE, "FOTOGRAFĂ", "Amalia", TITLE, "ORGANIZATOR", "Dany"]);
@@ -139,7 +139,7 @@ describe("§NNN a badge of the list", () => {
   });
 });
 
-describe("§NNN the band of a badge of the list", () => {
+describe("§988 the band of a badge of the list", () => {
   const slots = (design: BadgeDesign, count: number) => badgeSheetSlots(count, badgePaper(design));
 
   it("takes the colour its line named, checked at AA like a role's", async () => {
@@ -175,7 +175,7 @@ describe("§NNN the band of a badge of the list", () => {
   });
 });
 
-describe("§NNN the printed name and «Logo-ul clubului jos, ca filigran» (§965)", () => {
+describe("§988 the printed name and «Logo-ul clubului jos, ca filigran» (§965)", () => {
   /** The writing area and the watermark of the sheet's first badge, in the page's points. */
   const areaOf = (design: BadgeDesign) => {
     const layout = layoutOf(design, "Fotograf");

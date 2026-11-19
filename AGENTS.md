@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.68-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.69-2026-11-19 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.68-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.69-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -565,7 +565,7 @@ a branch that gathers several changes names all of them (`feat/race-day-timing-r
 the branch a pull request comes from MUST NOT be a generated name such as `claude/quirky-ramanujan-…`
 (a cloud session's given branch only carries the work until it goes up under its name,
 `docs/DEVELOPMENT.md` § Coding from the phone) — the owner, 2026-11-19:
-«numele branch-urilor trebuie să reflecte ce se află în ele» (`DECISIONS.md` §NNN). A batch keeps
+«numele branch-urilor trebuie să reflecte ce se află în ele» (`DECISIONS.md` §988). A batch keeps
 its `batch/` prefix, which `yarn handoff` reads, and is named for what it gathers.
 
 ### 6.3 Normal flow

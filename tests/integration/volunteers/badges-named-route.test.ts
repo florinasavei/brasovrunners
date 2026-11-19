@@ -12,7 +12,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Descarcă PDF cu nume», `POST /api/admin/events/<id>/badges/named` (the hotfix of 2026-11-19, amending §764's «no name is
+ * §988 — «Descarcă PDF cu nume», `POST /api/admin/events/<id>/badges/named` (the hotfix of 2026-11-19, amending §764's «no name is
  * printed»; BR-REQ-050-02, BR-REQ-060-01), against the real schema on PGlite: whoever designs the badges — the Organizer, the
  * Administrator and the Superadministrator (`canDesignVolunteerBadges`) — gets the posted list printed with the event's design as a PDF
  * to save, never kept by the browser; a stranger gets a 401 and every other role a 403 whatever the page drew; an id that is no uuid
@@ -96,7 +96,7 @@ async function drawn(fields: Record<string, string>): Promise<{ response: Respon
   }
 }
 
-describe("§NNN «Descarcă PDF cu nume» — who may print it (BR-REQ-060-01)", () => {
+describe("§988 «Descarcă PDF cu nume» — who may print it (BR-REQ-060-01)", () => {
   it("answers 401 without a staff session, and writes nothing", async () => {
     state.actor = undefined;
     const response = await post({ locale: "ro", lines: LIST });
@@ -149,7 +149,7 @@ describe("§NNN «Descarcă PDF cu nume» — who may print it (BR-REQ-060-01)",
   });
 });
 
-describe("§NNN «Descarcă PDF cu nume» — the file", () => {
+describe("§988 «Descarcă PDF cu nume» — the file", () => {
   it("is a PDF to save — an attachment named for the event and the language, its length said, never kept: private, no-store", async () => {
     const response = await post({ locale: "ro", lines: LIST });
     expect(response.status).toBe(200);

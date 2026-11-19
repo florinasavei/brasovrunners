@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.68-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.69-2026-11-19 -->
 
 # Running this locally
 
-**Baseline `BR-V4.68-2026-11-19`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V4.69-2026-11-19`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -423,7 +423,7 @@ workflow (`DECISIONS.md` §31). The weather and anything else outside the policy
 stays silent, as it is built to. To run the same setup on a Linux machine of your own,
 `bash scripts/cloud-setup.sh --force`.
 
-**The branch is named for the work, not for the session** (the owner, 2026-11-19, §NNN). A cloud
+**The branch is named for the work, not for the session** (the owner, 2026-11-19, §988). A cloud
 session starts on a branch it did not name, `claude/<words>-<letters>`; the pull request goes from
 one named for what it carries — `feat/<what>`, `fix/<what>`, a gathering of several changes named
 for all of them. Write the release entry for that name from the first commit
