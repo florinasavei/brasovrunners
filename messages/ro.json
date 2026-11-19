@@ -6532,7 +6532,7 @@
       },
       "presence": {
         "column": "Prezent",
-        "hint": "Bifat: persoana a venit în ziua cursei; nebifat: absentă. „Lista pentru tombolă — doar prezenții” ia, dintre cei care participă — confirmați, cu număr, „Participă” bifat și, la înscrierea separată, înscriși —, doar voluntarii bifați aici și alergătorii marcați prezenți la masă sau cu „Am ajuns” din linkul lor. Intern: nu e anunțată.",
+        "hint": "Bifat: a venit; nebifat: absent. Fișierul „doar prezenții” ia, dintre cei confirmați, cu număr, care participă, voluntarii bifați aici și alergătorii prezenți la masă sau cu „Am ajuns”. Intern.",
         "tick": "Prezent",
         "summaryPresent": "Prezenți: {count}",
         "summaryAbsent": "Absenți: {count}",

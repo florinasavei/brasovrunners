@@ -6532,7 +6532,7 @@
       },
       "presence": {
         "column": "Present",
-        "hint": "Ticked: the person came on race day; unticked: absent. “Raffle list — present only” takes, of those taking part — confirmed, with a number, “In the raffle” ticked and, with a separate sign-up, signed up —, only the volunteers ticked here and the runners checked in at the desk or with “I have arrived” from their own link. Internal: the person is not told.",
+        "hint": "Ticked: came; unticked: absent. “Present only” takes, of the confirmed with a number taking part, the volunteers ticked here and runners checked in at the desk or by “I have arrived”. Internal.",
         "tick": "Present",
         "summaryPresent": "Present: {count}",
         "summaryAbsent": "Absent: {count}",
