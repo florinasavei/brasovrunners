@@ -247,7 +247,9 @@ async function readRouteGpxBytes(key: string): Promise<Buffer | null> {
   try {
     const bytes = await getStorage().get(key);
     return bytes && bytes.byteLength > 0 ? bytes : null;
-  } catch {
+  } catch (error) {
+    // Why the store said no — a wrong key, its credentials, a timeout — for whoever reads the log in race week; never the file or its address.
+    console.warn("[email-outbox] the store refused the route's GPX", { reason: error instanceof Error ? error.message : String(error) });
     return null;
   }
 }

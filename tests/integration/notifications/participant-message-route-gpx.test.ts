@@ -494,6 +494,8 @@ describe("§NNN the email as it leaves: the file attached, and the line with its
     const get = vi.spyOn(getStorage(), "get").mockRejectedValue(new Error("the bucket is having a bad minute"));
     linkOnly(await emailTo(ana.id));
     get.mockRestore();
+    // The log says why the store refused, and nothing of the file.
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("store refused the route's GPX"), { reason: "the bucket is having a bad minute" });
     // The object is gone from the store.
     await getStorage().delete(gpx.key);
     linkOnly(await emailTo(bogdan.id));
