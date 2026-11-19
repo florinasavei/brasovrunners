@@ -9662,7 +9662,7 @@
               "steps": [
                 "«Ziua cursei» → «Cronometrare» și alege cursa. Organizatorul apasă «Start» la pistol; tu vezi ceasul de la start.",
                 "Trece o elită: apasă-i butonul de sus (eticheta de pe BIB, cu numele sub ea). Trece oricine altcineva: scrie numărul de pe BIB și apasă «Sosit». Căsuța se golește pe loc pentru următorul.",
-                "Vin mai mulți deodată: apasă «Prinde timpul» o dată pentru fiecare, apoi scrie numerele în ordine.",
+                "Vin mai mulți deodată: apasă «Finish» o dată pentru fiecare, apoi scrie numerele în ordine.",
                 "Un rând roșu îți spune ce să notezi pe hârtie, cu timpul. Fără semnal, apăsările așteaptă pe telefon și pleacă singure.",
                 "Ai greșit? «Anulează» pe rândul tău din «Ultimii sosiți», în primele 10 minute, cât nu l-a mai trecut nimeni după tine. Altfel spune-i organizatorului: corectează la «Clasament»."
               ]
@@ -9932,7 +9932,7 @@
               "steps": [
                 "«Clasament» e în editorul cursei, în cardul «Înscrierile primite» de la sfârșitul paginii (lângă «Vezi înscrierile acestui eveniment»), nu în «Participare, înscrieri și regulament». Butonul apare doar la o cursă publicată sau al cărei start a trecut; la o ciornă, deschide adresa paginii direct.",
                 "La linia de sosire deschide «Cronometrare» pe telefon: «Ziua cursei» în bara de sus → «Cronometrare» (sau linkul de pe «Clasament»). La start apasă «Start» exact când se dă startul; fără el, timpii se numără de la «Startul cursei» din editor. Când trece o elită, apasă-i butonul (eticheta de pe BIB, cu numele sub ea); pe oricine altcineva îl treci cu numărul de pe BIB și «Sosit». Se salvează pe loc, cu timpul de la start, iar «Ultimii sosiți» arată cine a introdus fiecare rând. Nu e nevoie de cronometru.",
-                "Vin mai mulți deodată? Apasă «Prinde timpul» o dată pentru fiecare, apoi scrie numerele în ordine: fiecare ia cel mai vechi timp prins. Un număr fără înscriere confirmată e refuzat, cu timpul lui pe rând: notează-l pe hârtie și scrie-l după cursă la «Clasament», la «Alergători neînscriși». Un număr trecut a doua oară — de tine sau de alt voluntar — nu schimbă nimic: rămâne primul timp, iar al doilea apare în «Istoricul sosirilor», la «Clasament». Un alergător trecut «Descalificat» la «Clasament» rămâne așa când îi treci numărul. Ai greșit? «Anulează» pe rândul tău, 10 minute, cât nu l-a mai trecut nimeni după tine; după aceea, la «Clasament». Dacă preferi cronometrul sau o aplicație, notează numărul și timpul fiecăruia și scrie-i după, la «Clasament» — pașii următori.",
+                "Vin mai mulți deodată? Apasă «Finish» o dată pentru fiecare, apoi scrie numerele în ordine: fiecare ia cel mai vechi timp prins. Un număr fără înscriere confirmată e refuzat, cu timpul lui pe rând: notează-l pe hârtie și scrie-l după cursă la «Clasament», la «Alergători neînscriși». Un număr trecut a doua oară — de tine sau de alt voluntar — nu schimbă nimic: rămâne primul timp, iar al doilea apare în «Istoricul sosirilor», la «Clasament». Un alergător trecut «Descalificat» la «Clasament» rămâne așa când îi treci numărul. Ai greșit? «Anulează» pe rândul tău, 10 minute, cât nu l-a mai trecut nimeni după tine; după aceea, la «Clasament». Dacă preferi cronometrul sau o aplicație, notează numărul și timpul fiecăruia și scrie-i după, la «Clasament» — pașii următori.",
                 "La «Alergători înscriși» e un rând pentru fiecare înscris cu număr. Scrie timpul în «Timp» (h:mm:ss sau mm:ss) — merg și doar cifrele, fără două puncte: 12345 devine 1:23:45 când ieși din căsuță — sau apasă ceasul de lângă căsuță, alege orele (de la 0 la 23), minutele și secundele și apasă «OK». Zecimile (mm:ss.t) le scrii în căsuță. «Stare» rămâne pe «Din timp (Sosit / Neprezentat)» — un timp înseamnă «Sosit». Pentru cine n-a terminat alege «Abandon», «Neprezentat» sau «Descalificat», fără timp. «Timp cip» și «Notă» sunt opționale; «Timp cip» are și el ceasul lui.",
                 "Ai timpii într-un fișier? Deschide «Importă din CSV», lipește textul (număr, timp pe fiecare rând; cu timp cip și stare dacă ai) sau alege fișierul și apasă «Importă din CSV». Rândurile intră în căsuțe; nimic nu se salvează încă.",
                 "Un număr pe care nu-l are nicio înscriere ajunge la «Alergători neînscriși»: scrie-i numele și, pentru categorie, sexul și data nașterii. Bifează «A acceptat să apară cu numele în clasament» doar dacă persoana ți-a spus-o. «Adaugă un alergător neînscris» face un rând gol.",
@@ -13257,7 +13257,7 @@
       "title": "Cronometrare",
       "show": "Arată",
       "intro": "Când trece cineva linia: la o elită apasă-i butonul, la oricine altcineva scrie numărul de pe BIB și apasă «Sosit». Se salvează pe loc; corecturile se fac la «Clasament».",
-      "more": "Vin mulți deodată? Apasă «Prinde timpul» pentru fiecare, apoi scrie numerele în ordine. Fără semnal, apăsările așteaptă pe telefon. Un număr trecut de două ori păstrează primul timp.",
+      "more": "Vin mulți deodată? Apasă «Finish» pentru fiecare, apoi scrie numerele în ordine. Fără semnal, apăsările așteaptă pe telefon. Un număr trecut de două ori păstrează primul timp.",
       "clock": "De la start: {time}",
       "notStarted": "Cursa nu a pornit încă.",
       "boxLabel": "Numărul de pe BIB",
@@ -13288,7 +13288,7 @@
         "giveNumberAria": "Dă-i un număr: {label} — {name}"
       },
       "keep": {
-        "button": "Prinde timpul",
+        "button": "Finish",
         "help": "Vin mai mulți deodată: apasă o dată pentru fiecare, apoi scrie numerele în ordine — fiecare ia cel mai vechi timp prins. Un timp prins de peste 10 minute se șterge: îl notezi pe hârtie.",
         "kept": "Timpi prinși",
         "drop": "Șterge timpul prins {time}",

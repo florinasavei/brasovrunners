@@ -94,7 +94,7 @@ const number = (raw: string | undefined) => (raw !== undefined && /^\d{1,9}$/.te
  * results (`canEnterResults`), pressed at the gun and moved or taken off until the first finisher; without it the editor's «Startul
  * cursei» counts — and the finish line (`FinishLine`, the page's island): the elites' buttons first — a line of the elite list
  * without a number is «Dă-i un număr» for whoever writes the list (§990), back here with `?numbered=` and the line's button blue —,
- * the number box, «⏱ Prinde timpul», the presses of this phone and «Ultimii sosiți» with who entered each. With scripts off every form posts and the page comes
+ * the number box, «⏱ Finish», the presses of this phone and «Ultimii sosiți» with who entered each. With scripts off every form posts and the page comes
  * back here saying what happened (`?ok=`, `?dup=` with `?s=` when the row is a decision of «Clasament», `?refused=` —
  * `RACE_GUN_CHANGED`, a «Start» whose page saw another gun than the one stored, said with the gun as it stands (§986) —, `?undone=`,
  * `?gun=` — `repeat` for an organizer's own «Start» heard again within ten seconds —: numbers and codes, never a name). The gun's
