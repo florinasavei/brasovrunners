@@ -93,6 +93,12 @@ const POINT_LINK_SX = { ...PHONE_LINK_SX, fontWeight: 700, overflowWrap: "anywhe
 const TABLE_PHONE_SX = { ...PHONE_LINK_SX, whiteSpace: "nowrap" } as const;
 
 /**
+ * The address beside the telephone in «Punctele, pe scurt» (§NNN): a `mailto:` link with the telephone's shape — a thumb's 44
+ * pixels, on paper the address as text — that breaks inside the cell rather than widening the table.
+ */
+const TABLE_EMAIL_SX = { ...PHONE_LINK_SX, overflowWrap: "anywhere" } as const;
+
+/**
  * «Deschide pe hartă» beside a point's coordinates (§961): a link a thumb can press, 44 pixels tall (BR-REQ-041-01
  * criterion 6). Never on the paper, where the numbers stand as text and a link's words say nothing.
  */
@@ -446,7 +452,9 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
       key: "people",
       label: t("volunteers.plan.table.columns.people"),
       // The point's people in the point's order, a line each: the name and the telephone to ring — and under it the organizers'
-      // decision and notes about the person (§981).
+      // decision and notes about the person (§981). Since §NNN (the owner, 2026-11-19: «Aici vreau numele cu caps și vreau și
+      // mailul»), the name in capitals, so each person stands out from the words under them — the text stays as typed, for a
+      // screen reader and a copy —, and the address after the telephone.
       render: ({ people }) =>
         people.length === 0 ? (
           <Box component="span" sx={{ color: "text.secondary", fontStyle: "italic" }} data-testid="plan-table-nobody">
@@ -456,7 +464,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
           <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
             {people.map((person) => (
               <li key={person.id} data-testid="plan-table-person">
-                <Box component="span" sx={{ overflowWrap: "anywhere" }} data-testid="plan-table-person-name">
+                <Box component="span" sx={{ overflowWrap: "anywhere", textTransform: "uppercase" }} data-testid="plan-table-person-name">
                   {person.name}
                 </Box>
                 {person.phone && (
@@ -464,6 +472,14 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
                     {" "}
                     <Box component="a" href={dialOf(person.phone)} sx={TABLE_PHONE_SX} data-testid="plan-table-phone">
                       {formatPhone(person.phone)}
+                    </Box>
+                  </>
+                )}
+                {person.email && (
+                  <>
+                    {" "}
+                    <Box component="a" href={`mailto:${person.email}`} sx={TABLE_EMAIL_SX} data-testid="plan-table-email">
+                      {person.email}
                     </Box>
                   </>
                 )}

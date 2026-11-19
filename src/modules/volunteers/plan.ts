@@ -59,13 +59,14 @@ import { listVolunteers, type VolunteerItem } from "./volunteers";
 */
 
 /**
- * One person as the plan says them: the name, how to reach them, what they were given to do, and the point they stand at — and,
+ * One person as the plan says them: the name, how to reach them — the telephone and, since §NNN, the address —, what they were
+ * given to do, and the point they stand at — and,
  * since §981 (amending §954 and §935; the owner, 2026-11-18: «să văd în plan și comentariile mele»), the organizers' own words about
  * them: the race-day decision (`raceDayDecision`, §954, null while there is none), which the page prints, and the live internal
  * notes, newest first (`notes`, empty while there are none, and always empty for a role the notes' own gate refuses), which it
  * draws on the screen only.
  */
-export type VolunteerPlanPerson = Pick<VolunteerItem, "id" | "name" | "phone" | "state" | "bibNumber" | "roleIds" | "checkpointId" | "raceDayDecision"> & {
+export type VolunteerPlanPerson = Pick<VolunteerItem, "id" | "name" | "email" | "phone" | "state" | "bibNumber" | "roleIds" | "checkpointId" | "raceDayDecision"> & {
   notes: VolunteerPlanNote[];
 };
 
@@ -189,9 +190,10 @@ export async function readVolunteerPlan<T extends Record<string, unknown>>(db: D
   ]);
   const people: VolunteerPlanPerson[] = everybody
     .filter((person) => person.state !== "CANCELLED")
-    .map(({ id, name, phone, state, bibNumber, roleIds, checkpointId, raceDayDecision }) => ({
+    .map(({ id, name, email, phone, state, bibNumber, roleIds, checkpointId, raceDayDecision }) => ({
       id,
       name,
+      email,
       phone,
       state,
       bibNumber,
