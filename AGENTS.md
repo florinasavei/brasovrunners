@@ -3323,7 +3323,7 @@ it to change): the raffle is the organizers' own to run, and the tick moves noth
 edit of a person's boxes. A tick decides one thing: whether the person's number is written on «Lista pentru tombolă»
 (§15.10), which also says, beside each person, whether they were there — a runner the desk checked in, a volunteer
 ticked «Prezent» (below). Read by those two lists, that file, the raffle's one answer below — the «Tombolă» tab, the
-person's pages and the desk's view of a person say what it decides — and «Toate datele unei persoane»; never by a public
+person's pages and the desk — its list and its view of a person — say what it decides — and «Toate datele unei persoane»; never by a public
 page, an email, another export, the allocator or the
 capacity formula (`tests/unit/registrations/raffle-never-leaves.test.ts`). No state, place, number, email or
 declaration moves, and the person is not told.
@@ -3364,9 +3364,10 @@ may, the rules and the tick, the notice's line; the honeypot, the timing check, 
 throttles (§19.4). The number names a confirmed real registration of a ticked group (or, with «Sunt voluntar», a confirmed
 volunteer) whose registered name holds every word typed — both folded: case, diacritics, punctuation, spaces; at least two
 words unless the name has one (`typedNameMatches`); anything else is one neutral sentence that says neither which half was
-wrong nor whether the number exists, and a person in already reads the thank-you again. **DESK** — the desk's view of a
-person says «Tombolă: participă / nu participă» and why, to every desk role, in both modes, and offers «Înscrie la tombolă»
-in the open sign-up mode, the person having accepted the rules on paper or aloud. **STAFF** — the organizers' «Înscrie» on
+wrong nor whether the number exists, and a person in already reads the thank-you again. **DESK** — inside every row of the
+desk's list (where a search by name or number, or a typed code, lands; one read for the rows shown) and on the view of a
+scanned person: «Tombolă: participă / nu participă» and why, to every desk role, in both modes, and «Înscrie la tombolă» in
+the open sign-up mode, the person having accepted the rules on paper or aloud, coming back where it was pressed. **STAFF** — the organizers' «Înscrie» on
 a volunteer's page and on the tab, a line of the elite list's only door. Nobody is emailed at any door, at a withdrawal or at
 «Șterge înscrierea», and no public cache is expired: no public page reads a sign-up
 (`tests/unit/volunteers/raffle-entries-never-leave.test.ts`).
@@ -3470,6 +3471,13 @@ and with that writer's audit row — and a press about something else never drop
 tombolă — doar prezenții». «Transformă în alergător» carries nothing: checking a runner in is the desk's verb, with its
 own conditions (a confirmed registration, at an event neither over nor cancelled), and the entry makes a registration
 that waits or holds a place.
+
+**A raffle sign-up moves both ways** (2026-11-18, `DECISIONS.md` §NNN): where the event's raffle asks a sign-up of its own,
+the person's sign-up — the same `event_raffle_entries` row, its door and its acceptance of the same rules for the same
+event — moves to the row the person becomes, in the transform's transaction (`raffle-entries.ts#moveRaffleEntry`), its id
+in the transform's own trail row (`raffleEntryId`). Otherwise the cancelled row would keep it and the new one read «nu s-a
+înscris»: a press about something else would drop a person who signed up. A registration the entry restarted that holds a
+sign-up already keeps its own, and the other stays with its cancelled row until the sweep.
 
 ---
 

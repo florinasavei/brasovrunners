@@ -1034,14 +1034,14 @@
       "name": "Numele",
       "nameHelp": "Numele cu care te-ai înscris, de exemplu „Ana Popescu”.",
       "volunteer": "Sunt voluntar",
-      "volunteerHelp": "Scrie atunci, mai sus, numărul tău de voluntar.",
+      "volunteerHelp": "Atunci scrie mai sus numărul tău de voluntar.",
       "rules": "Citește Regulamentul tombolei",
       "accept": "Am citit și accept Regulamentul tombolei",
       "notice": "Ce păstrăm despre înscriere scrie în <privacy>nota de confidențialitate</privacy>. Nu primești niciun e-mail pentru ea.",
       "submit": "Particip la tombolă",
       "submitting": "Te înscriem…",
       "done": "Gata: ești înscris la tombolă. Mult noroc la extragere!",
-      "noMatch": "Nu am găsit o înscriere confirmată cu numărul și numele acestea. Verifică numărul de pe BIB și scrie numele cu care te-ai înscris — sau întreabă la masa organizatorilor.",
+      "noMatch": "Nu am găsit o înscriere confirmată cu acest număr și acest nume. Verifică numărul de pe BIB și scrie numele cu care te-ai înscris — sau întreabă la masa organizatorilor.",
       "limited": "Prea multe încercări. Încearcă din nou peste o oră sau întreabă la masa organizatorilor.",
       "captcha": "Verificarea anti-roboți nu a trecut. Încearcă din nou.",
       "fix": "Verifică ce ai scris mai jos.",
@@ -4117,7 +4117,7 @@
         "howAutomatic": "Din oficiu: toți cei bifați mai sus",
         "howSignUp": "Cu înscriere separată: doar cei care se înscriu",
         "howHelp": "Cu înscriere separată, oamenii se înscriu din pagina înscrierii lor, din formularul de pe pagina evenimentului sau la masă, în ziua cursei, și acceptă Regulamentul tombolei.",
-        "howHelpMore": "Înscrierea se deschide doar cu Regulamentul tombolei aprobat și cu o notă de confidențialitate care o descrie — „Sarcini” spune cum. Până atunci, „Din oficiu” merge ca înainte.",
+        "howHelpMore": "Înscrierea se deschide doar cu Regulamentul tombolei aprobat și o notă de confidențialitate care o descrie — vezi „Sarcini”. Până atunci lasă „Din oficiu”: altfel nu participă nimeni.",
         "open": "Înscrierile la tombolă sunt deschise",
         "openHelp": "Contează doar „Cu înscriere separată”. Debifează la extragere: formularul și butoanele de înscriere dispar."
       }
@@ -5654,7 +5654,7 @@
         },
         "raffleRules": {
           "title": "Regulamentul tombolei",
-          "todo": "Un eveniment are tombolă cu înscriere separată, dar Regulamentul tombolei nu e în vigoare: înscrierea nu se deschide. „Din oficiu” merge între timp.",
+          "todo": "Un eveniment are tombolă cu înscriere separată, dar Regulamentul tombolei nu e în vigoare: înscrierea nu se deschide și nu participă nimeni. Până atunci pune „Cum participă” pe „Din oficiu”.",
           "done": "Regulamentul tombolei e în vigoare: cine se înscrie la tombolă îl acceptă.",
           "how": [
             "/admin/legal → cardul „Regulamentul tombolei” → „Regenerează din șablon” → confirmă.",
@@ -5664,7 +5664,7 @@
         },
         "raffleNotice": {
           "title": "Nota de confidențialitate: înscrierea la tombolă",
-          "todo": "Un eveniment are tombolă cu înscriere separată, dar nota în vigoare nu descrie înscrierea la tombolă: înscrierea nu se deschide. „Din oficiu” merge între timp.",
+          "todo": "Un eveniment are tombolă cu înscriere separată, dar nota în vigoare nu o descrie: înscrierea nu se deschide și nu participă nimeni. Până atunci pune „Cum participă” pe „Din oficiu”.",
           "done": "Nota în vigoare descrie înscrierea la tombolă: ce păstrăm, de ce, cine vede și cât timp.",
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful „Tombola”, din secțiunea 5, descrie înscrierea.",
@@ -12866,7 +12866,6 @@
       "yes": "Da",
       "no": "Nu",
       "reasons": {
-        "in": "da",
         "groupNotAllowed": "grupa nu e bifată",
         "notConfirmed": "neconfirmat",
         "noNumber": "fără număr",
@@ -12944,7 +12943,6 @@
     "privacyTitle": "Notă de confidențialitate",
     "volunteerAgreementTitle": "Contract de voluntariat",
     "volunteerAgreementBlanks": "Un singur text pentru toate evenimentele: numele, rolul, evenimentul, data și locul se completează când accepți, iar PDF-ul pe care îl primești le arată.",
-    "raffleRulesTitle": "Regulamentul tombolei",
     "raffleGroups": {
       "RUNNER": "alergătorii înscriși și confirmați, cu număr de concurs",
       "ELITE": "sportivii de top ai cursei",
@@ -13849,7 +13847,7 @@
       "withdrawn": "Nu mai participi la tombolă.",
       "failed": "Nu s-a putut: înscrierile la tombolă s-au închis, sau persoana nu mai poate participa.",
       "needAccept": "Bifează întâi că accepți Regulamentul tombolei.",
-      "otherAdult": "Persoana se înscrie singură, din pagina înscrierii ei. De aici o poți doar retrage.",
+      "otherAdult": "Persoana se înscrie la tombolă singură, din pagina înscrierii ei.",
       "withdrawing": "Te scoatem…"
     }
   },

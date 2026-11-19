@@ -23,7 +23,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { type RaffleGateFacts, type RaffleKind, type RaffleSettings, raffleNumberOf, raffleSignUpClosedFor, typedNameMatches, typedNameOf } from "./domain/raffle";
 import { canTakeRaffleList } from "./raffle-list";
-import { findRaffleEntry, raffleEligible, type RafflePersonFacts, type RafflePersonRef, readRaffleGateFacts, readRafflePerson, readRaffleRules } from "./raffle-roster";
+import { entryColumnOf, findRaffleEntry, raffleEligible, type RafflePersonFacts, type RafflePersonRef, readRaffleGateFacts, readRafflePerson, readRaffleRules } from "./raffle-roster";
 
 /*
   «Înscrierea la tombolă» (§NNN; the owner, 2026-11-18: «Tot pentru ziua cursei vreau să am un tab de tombolă unde să văd toți
@@ -328,6 +328,21 @@ export async function deleteRaffleEntry<T extends Record<string, unknown>>(db: D
   const person = await readRafflePerson(db, ref);
   await withdraw(db, { id: entry.id, eventId: entry.eventId, kind: person?.kind ?? "RUNNER", method: entry.method }, "staff", actor.id, now);
   return { eventId: entry.eventId };
+}
+
+/**
+ * A person's sign-up moved to the row they became (§NNN): «Transformă în voluntar» and «Transformă în alergător» (§948) cancel one row
+ * and enter another for the same person at the same event, so the sign-up follows them, as the organizers' exclusion does (§953) —
+ * the same row, its door, its acceptance of the same rules for the same event and its trace unchanged; a press about something else
+ * neither drops a person who signed up nor asks them to sign up again. Inside the caller's transaction, which asked the role (the
+ * transform's, `canManageRegistrations`); the moved entry's id, for the transform's own trail row, or null when the person had none —
+ * or when the row they became holds a sign-up already (a staff entry may restart a cancelled registration that kept its own): that one
+ * stands, and the other stays with its cancelled row until the sweep.
+ */
+export async function moveRaffleEntry<T extends Record<string, unknown>>(tx: Database<T>, from: RafflePersonRef, to: RafflePersonRef): Promise<string | null> {
+  if (!isUuid(from.id) || !isUuid(to.id) || (await findRaffleEntry(tx, to))) return null;
+  const [moved] = await tx.update(eventRaffleEntries).set(personColumns(to)).where(eq(entryColumnOf(from), from.id)).returning({ id: eventRaffleEntries.id });
+  return moved?.id ?? null;
 }
 
 /** A line of the elite list's two raffle ticks: «Participă la tombolă» and «Prezent». */

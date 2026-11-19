@@ -28,12 +28,12 @@ import type { LegalDocumentBody } from "../domain/content-hash";
 
 const organiserRo = [
   "Tombola este organizată de <DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>, cu sediul în <ADRESA SEDIULUI>, <NUMĂR DE ÎNREGISTRARE / CUI>, care poate fi contactată la <EMAIL DE CONTACT> (numită mai jos „organizatorul”).",
-  "Tombola are loc la evenimentul {{event}}, care are loc {{eventDate}}, în {{eventLocation}}.",
+  "Tombola se ține la evenimentul {{event}}, care are loc {{eventDate}}, în {{eventLocation}}.",
 ];
 
 const organiserEn = [
   "The raffle is organised by <THE CLUB'S FULL LEGAL NAME>, with its registered seat at <REGISTERED ADDRESS>, <REGISTRATION NUMBER>, which can be contacted at <CONTACT EMAIL> (below, “the organiser”).",
-  "The raffle takes place at the event {{event}}, which takes place on {{eventDate}}, at {{eventLocation}}.",
+  "The raffle is held at the event {{event}}, which takes place on {{eventDate}}, at {{eventLocation}}.",
 ];
 
 const whoRo = [

@@ -368,6 +368,16 @@ export async function raffleReasonsFor<T extends Record<string, unknown>>(
 /** One person's raffle line: the answer, whether the event asks a sign-up and whether they hold one, and whether «Înscrie» may be offered. */
 export type RaffleLine = { reason: RaffleReason; signUpMode: boolean; signedUp: boolean; maySignUp: boolean };
 
+/** The line from what was read — the one place it is decided, for one person and for a page of them. */
+function raffleLineOf(person: Omit<RafflePerson, "signedUp">, facts: RaffleGateFacts, signedUp: boolean, now: Date): RaffleLine {
+  return {
+    reason: raffleParticipation({ ...person, signedUp }, facts.settings),
+    signUpMode: facts.settings.signUp,
+    signedUp,
+    maySignUp: facts.settings.signUp && !signedUp && raffleEligible(person) && raffleSignUpClosedFor(facts, now, person.kind) === null,
+  };
+}
+
 /**
  * One person's raffle line, for their page or the desk (§NNN): null for an event that holds no raffle; else the answer, and whether a
  * staff «Înscrie la tombolă» may be offered — the gate open for their group, the person eligible and not in yet.
@@ -378,12 +388,37 @@ export async function readRaffleLine<T extends Record<string, unknown>>(db: Data
   const facts = await readRaffleGateFacts(db, person.eventId, now);
   if (!facts || !facts.settings.hasRaffle) return null;
   const entry = facts.settings.signUp ? await findRaffleEntry(db, ref) : null;
-  return {
-    reason: raffleParticipation({ ...person.person, signedUp: entry !== null }, facts.settings),
-    signUpMode: facts.settings.signUp,
-    signedUp: entry !== null,
-    maySignUp: facts.settings.signUp && entry === null && raffleEligible(person.person) && raffleSignUpClosedFor(facts, now, person.kind) === null,
-  };
+  return raffleLineOf(person.person, facts, entry !== null, now);
+}
+
+/**
+ * The desk list's lines (§NNN), one read for the rows it shows — a search by name or number, or a typed code, lands there and not on
+ * the scanned person's view, so every row says the raffle too. Per event on the page (one, or two when a code found a runner of
+ * another event): the gate's facts once, the rows and their sign-ups in one query each. A row of an event without a raffle has none.
+ */
+export async function readRaffleDeskLines<T extends Record<string, unknown>>(db: Database<T>, rows: ReadonlyArray<{ id: string; eventId: string }>, now: Date): Promise<Map<string, RaffleLine>> {
+  const lines = new Map<string, RaffleLine>();
+  const byEvent = new Map<string, string[]>();
+  for (const row of rows) {
+    if (isUuid(row.id) && isUuid(row.eventId)) byEvent.set(row.eventId, [...(byEvent.get(row.eventId) ?? []), row.id]);
+  }
+  for (const [eventId, ids] of byEvent) {
+    const facts = await readRaffleGateFacts(db, eventId, now);
+    if (!facts || !facts.settings.hasRaffle) continue;
+    const [people, entries] = await Promise.all([
+      db
+        .select({ id: registrations.id, status: registrations.status, kind: registrations.kind, elite: registrations.elite, bibNumber: registrations.bibNumber, inRaffle: registrations.inRaffle })
+        .from(registrations)
+        .where(and(eq(registrations.eventId, eventId), inArray(registrations.id, ids))),
+      facts.settings.signUp ? db.select({ registrationId: eventRaffleEntries.registrationId }).from(eventRaffleEntries).where(inArray(eventRaffleEntries.registrationId, ids)) : Promise.resolve([]),
+    ]);
+    const signed = new Set(entries.map((entry) => entry.registrationId));
+    for (const one of people) {
+      const person = { kind: raffleKindOfRegistration(one), confirmed: one.status === "CONFIRMED" && one.kind === "REAL", hasNumber: one.bibNumber !== null, inRaffle: one.inRaffle };
+      lines.set(one.id, raffleLineOf(person, facts, signed.has(one.id), now));
+    }
+  }
+  return lines;
 }
 
 /**

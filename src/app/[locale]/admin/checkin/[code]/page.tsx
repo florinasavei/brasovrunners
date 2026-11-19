@@ -70,12 +70,11 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
         {saved && <Alert severity="success">{t(`desk.saved.${saved}`)}</Alert>}
       </div>
       {row ? (
-        <>
-          <Stack component="ul" spacing={1} sx={{ m: 0, p: 0 }}>
-            <DeskRow row={row} locale={locale} back="code" showEvent minorSigns={minorSigns} spare={spares[row.eventId]} family={family} role={actor.role} />
-          </Stack>
-          {raffle && (await raffleDeskLine({ line: raffle, locale, code, registrationId: row.id, name: row.registeredName, action: raffleDeskSignUpAction }))}
-        </>
+        <Stack component="ul" spacing={1} sx={{ m: 0, p: 0 }}>
+          <DeskRow row={row} locale={locale} back="code" showEvent minorSigns={minorSigns} spare={spares[row.eventId]} family={family} role={actor.role}>
+            {raffle && (await raffleDeskLine({ line: raffle, locale, back: { to: "code", code }, registrationId: row.id, name: row.registeredName, action: raffleDeskSignUpAction }))}
+          </DeskRow>
+        </Stack>
       ) : (
         <Alert severity="warning">{t("desk.unknownCode")}</Alert>
       )}

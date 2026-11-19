@@ -24,6 +24,9 @@ type ServerAction = (form: FormData) => Promise<void>;
  *
  * A function the page awaits, returning the element its tree draws — the page's own tests render it synchronously. A public page's
  * file: its icons are their own files, its buttons the house's `SubmitButton`, 44 pixels.
+ *
+ * Nothing is drawn for a person who could sign up while no rules can be read in the page's language (`rules` null — the gate asks
+ * every language, so only a text withdrawn between the two reads): a card with no tick and no button would only say a wrong thing.
  */
 export async function raffleManageCard(props: {
   locale: string;
@@ -37,7 +40,8 @@ export async function raffleManageCard(props: {
   outcome: string | null;
   signUpAction: ServerAction;
   withdrawAction: ServerAction;
-}): Promise<ReactElement> {
+}): Promise<ReactElement | null> {
+  if (!props.card.signedUp && props.card.maySignUp && !props.rules) return null;
   const t = await getTranslations("Registrations");
   const hidden = (
     <>
@@ -110,6 +114,7 @@ export async function raffleManageCard(props: {
           </Box>
         </Box>
       ) : (
+        // Another adult on the address, not signed up (§421): their acceptance is their own, so nothing here but where they sign up.
         <Typography variant="body2" color="text.secondary" data-testid="manage-raffle-other-adult">
           {t("raffle.otherAdult")}
         </Typography>

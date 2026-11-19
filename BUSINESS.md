@@ -692,7 +692,8 @@ a participant signs up in one of three ways while the club keeps the sign-ups op
 «Sunt voluntar», and the name they registered with — or at the desk on race day. Each way asks them to accept the
 club's **«Regulamentul tombolei»** (the raffle's rules), a legal text like the others: the platform's template, approved
 by the club, never by the platform. Until the rules are approved and the privacy notice in force describes the sign-up,
-no way of signing up opens and the raffle stays «din oficiu». A sign-up sends no email, publishes no name and is
+no way of signing up opens — and with a sign-up of its own nobody takes part who has not signed up, so until then the
+club leaves the raffle «din oficiu». A sign-up sends no email, publishes no name and is
 deleted thirty days after the event; a participant withdraws before the draw from the same page, or by telling the
 organizers. The form never says whether a number exists: a number and a name that do not belong together get one
 neutral answer. The draw itself happens at the event, outside the site, among those signed up.

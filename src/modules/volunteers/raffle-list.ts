@@ -18,9 +18,10 @@ import { type RaffleRoster, readRaffleRosterRows } from "./raffle-roster";
   took out — «Participă la tombolă» unticked (`registrations.in_raffle`, `event_volunteers.in_raffle`) — and, beside each person,
   whether they were there («Prezent»). A column rather than a condition: a desk that did not check everybody in must not empty the list.
 
-  Since the decision of 2026-11-18 that added «Prezent» on a volunteer: a volunteer's «Prezent» is the organizers' own tick on the
-  «Voluntari» list (`event_volunteers.present`), and beside the full file, never in place of it, a second one: **«Lista pentru tombolă
-  — doar prezenții»** (`onlyPresent`) — the same people, of whom only the runners the desk checked in and the volunteers ticked «Prezent».
+  Since the decision of 2026-11-18 titled «Prezent» on a volunteer, and «Lista pentru tombolă — doar prezenții»: a volunteer's
+  «Prezent» is the organizers' own tick on the «Voluntari» list (`event_volunteers.present`), and beside the full file, never in
+  place of it, a second one: **«Lista pentru tombolă — doar prezenții»** (`onlyPresent`) — the same people, of whom only the
+  runners the desk checked in and the volunteers ticked «Prezent».
 
   Since §NNN (the owner, 2026-11-18: «trebuie să bifez acolo cine se poate înscrie: doar alergătorii și elitele și voluntarii» and «tombolă
   din oficiu vs tombolă cu înscriere separată»): who is in the file is the one function's answer (`domain/raffle.ts#raffleParticipation`,

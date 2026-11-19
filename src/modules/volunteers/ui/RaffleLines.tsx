@@ -12,8 +12,9 @@ import type { RaffleLine } from "../raffle-roster";
 
 /*
   «În dreptul fiecărei persoane» (§NNN; the owner, 2026-11-18: «vreau să văd în dreptul fiecărei persoane dacă participă la tombolă»): the
-  one line that says whether a person takes part in the event's raffle and, when not, why — the same words on the desk's view of a person,
-  a registration's page, a volunteer's page and under the lists' «Tombolă» tick, all from the one answer (`raffleParticipation`). Beside it,
+  one line that says whether a person takes part in the event's raffle and, when not, why — the same words on the desk (each row of its
+  list and a scanned person's view), a registration's page, a volunteer's page and under the lists' «Tombolă» tick, all from the one
+  answer (`raffleParticipation`). Beside it,
   where the door is a staff member's, «Înscrie la tombolă» with the acceptance's tick: the desk's (DESK) and the organizers' (STAFF).
 
   Functions the page awaits, not async components: the element each returns is drawn in the page's own tree, which every screen test
@@ -61,13 +62,17 @@ function signUpForm(props: { action: ServerAction; hidden: ReactElement; label: 
   );
 }
 
+/** Where the desk's «Înscrie la tombolă» comes back to: the scanned person's view, or the desk's list with its event and search. */
+export type RaffleDeskBack = { to: "code"; code: string } | { to: "desk"; eventId?: string; q?: string };
+
 /**
- * The desk's view of a person (§NNN): «Tombolă: participă / nu participă» for every desk role, always, in both modes; and, in the
- * sign-up mode with its gate open for a person who may still sign up, «Înscrie la tombolă» — the person having accepted the rules on
- * paper or aloud, which the desk member ticks.
+ * A person at the desk (§NNN), under their row on the desk's list and on the scanned person's view: «Tombolă: participă / nu
+ * participă» for every desk role, always, in both modes; and, in the sign-up mode with its gate open for a person who may still sign
+ * up, «Înscrie la tombolă» — the person having accepted the rules on paper or aloud, which the desk member ticks.
  */
-export async function raffleDeskLine(props: { line: RaffleLine; locale: string; code: string; registrationId: string; name: string; action: ServerAction }): Promise<ReactElement> {
+export async function raffleDeskLine(props: { line: RaffleLine; locale: string; back: RaffleDeskBack; registrationId: string; name: string; action: ServerAction }): Promise<ReactElement> {
   const t = await getTranslations("Admin");
+  const { back } = props;
   return (
     <Stack spacing={1} data-testid="desk-raffle">
       {standingChip(t, props.line.reason, "desk-raffle-line")}
@@ -77,7 +82,10 @@ export async function raffleDeskLine(props: { line: RaffleLine; locale: string; 
           hidden: (
             <>
               <input type="hidden" name="uiLocale" value={props.locale} />
-              <input type="hidden" name="code" value={props.code} />
+              <input type="hidden" name="back" value={back.to} />
+              {back.to === "code" && <input type="hidden" name="code" value={back.code} />}
+              {back.to === "desk" && back.eventId && <input type="hidden" name="eventId" value={back.eventId} />}
+              {back.to === "desk" && back.q && <input type="hidden" name="q" value={back.q} />}
               <input type="hidden" name="registrationId" value={props.registrationId} />
             </>
           ),

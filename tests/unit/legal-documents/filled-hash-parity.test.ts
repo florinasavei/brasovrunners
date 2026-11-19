@@ -60,11 +60,12 @@ const RECORDED: Record<string, { ro: string; en: string; both: string }> = {
     en: "d9ebe8f8340ba9d30534eb64eac69f24d1253f99d8d072334e95f96c13bf8762",
     both: "b0910e76c29f7b57e8109a74b1cca7f776f4bb49648c97c0ba59c8697c1ae4aa",
   },
-  // «Regulamentul tombolei» (§NNN): a new template, recorded as written — the elites named «sportivii de top» (§917).
+  // «Regulamentul tombolei» (§NNN): a new template, recorded as written — the elites named «sportivii de top» (§917), and the
+  // event's sentence saying «are loc» / “takes place” once («Tombola se ține la evenimentul …, care are loc …»).
   RAFFLE_RULES: {
-    ro: "8710143232cad3595bb0a56fae639688be796e09561f90df8ea190d973e3fc93",
-    en: "b167ae50d261b163635108bbd8c19f7c2d861902d8e6cd2e4ae352dcf63fd388",
-    both: "cb917ff3ff8cffa25e04799fa533d3929eccf8aab401fb471e178c224b61eb99",
+    ro: "64d7c161808ff438d9fd489da55a9ee20418adfabdbc951c714c1a1aef4d7e81",
+    en: "df01842273e0a6c3947ce57204a4e6cc88daed90bc7bfb6a904b2a54556d9467",
+    both: "882c63752ec8a9afbbf008a8f2e2274931ab2403c88c3b6e27a1a78a3a62a35b",
   },
 };
 

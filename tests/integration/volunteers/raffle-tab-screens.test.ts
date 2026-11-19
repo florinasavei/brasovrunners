@@ -32,8 +32,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *   up in the sign-up mode, whether they were there; «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» and a line's «Prezent»;
  *   the two files; a 404 for every other role; both languages;
  * - its presses, each asking its capability and coming back with the toast or the refusal's code;
- * - the desk's view of a person: «Tombolă: participă / nu participă» for every desk role, and «Înscrie la tombolă» in the open
- *   sign-up mode; a volunteer's page and a registration's page, the same line.
+ * - the desk — inside each row of its list, where a search by name or number lands, and on a scanned person's view: «Tombolă:
+ *   participă / nu participă» for every desk role, and «Înscrie la tombolă» in the open sign-up mode, coming back where it was
+ *   pressed; a volunteer's page and a registration's page, the same line.
  *
  * The events start in 2099, so the pages' own clock keeps the gate open; the made-up people are nobody.
  */
@@ -100,6 +101,8 @@ vi.mock("@/modules/notifications/send-now-choice", () => ({ sendNowChoiceFor: as
 const { default: RafflePage } = await import("@/app/[locale]/admin/checkin/tombola/page");
 const actions = await import("@/app/[locale]/admin/checkin/tombola/actions");
 const { default: ScannedCodePage } = await import("@/app/[locale]/admin/checkin/[code]/page");
+const { default: DeskPage } = await import("@/app/[locale]/admin/checkin/page");
+const { default: DeskRow } = await import("@/modules/registrations/ui/DeskRow");
 const { default: AdminVolunteerPage } = await import("@/app/[locale]/admin/volunteers/[id]/page");
 const { raceDayTabs } = await import("@/modules/race-day/ui/RaceDayTabs");
 
@@ -385,11 +388,21 @@ describe("§NNN BR-REQ-060-01 the tab's presses: each asks its capability and co
       toast: { kind: "success", key: "raffleSignedUp" },
     });
     expect(await press(actions.raffleSignUpAction, { table: "volunteer", personId: people.ion, accepted: "on" })).toMatchObject({ toast: { key: "raffleAlready" } });
-    // From the volunteer's own page, back to it.
+    // From a volunteer's own page, back to it: a refusal to the page's alert (`volunteerError`), a sign-up to the raffle's line.
+    const maria = await volunteer("Maria Voluntar", 501);
+    expect(await press(actions.raffleSignUpAction, { table: "volunteer", personId: maria, back: "volunteer" })).toEqual({
+      to: `/ro/admin/volunteers/${maria}?volunteerError=RAFFLE_RULES_NOT_ACCEPTED#admin-alert`,
+      toast: null,
+    });
+    expect(await press(actions.raffleSignUpAction, { table: "volunteer", personId: maria, accepted: "on", back: "volunteer" })).toEqual({
+      to: `/ro/admin/volunteers/${maria}#volunteer-raffle`,
+      toast: { kind: "success", key: "raffleSignedUp" },
+    });
+    // `back=volunteer` names a volunteer's page: any other person comes back to the tab, at the row.
     expect((await press(actions.raffleSignUpAction, { table: "elite", personId: people.zoe, accepted: "on", back: "volunteer" })).to).toBe(`/ro/admin/checkin/tombola?eventId=${eventId}#raffle-${people.zoe}`);
-    const ionBack = await press(actions.raffleSignUpAction, { table: "registration", personId: people.eliud, accepted: "on" });
-    expect(ionBack.toast).toMatchObject({ key: "raffleSignedUp" });
-    expect((await entries()).map((row) => row.method)).toEqual(["STAFF", "STAFF", "STAFF"]);
+    const eliudBack = await press(actions.raffleSignUpAction, { table: "registration", personId: people.eliud, accepted: "on" });
+    expect(eliudBack.toast).toMatchObject({ key: "raffleSignedUp" });
+    expect((await entries()).map((row) => row.method)).toEqual(["STAFF", "STAFF", "STAFF", "STAFF"]);
   });
 
   it("«Scoate» and «Pune înapoi» each kind through its own tick, and a line's «Prezent»", async () => {
@@ -428,7 +441,7 @@ describe("§NNN BR-REQ-060-01 the tab's presses: each asks its capability and co
   });
 });
 
-describe("§NNN BR-REQ-037-08 beside each person: the desk's view, a volunteer's page, every desk role", () => {
+describe("§NNN BR-REQ-037-08 beside each person: the desk's list and its view of a person, a volunteer's page, every desk role", () => {
   const codeOf = async (id: string) => String((await db.select({ code: registrations.checkinCode }).from(registrations).where(eq(registrations.id, id)))[0].code);
   const deskView = async (id: string) => ScannedCodePage({ params: Promise.resolve({ locale: state.locale, code: await codeOf(id) }), searchParams: Promise.resolve({}) });
 
@@ -456,6 +469,53 @@ describe("§NNN BR-REQ-037-08 beside each person: the desk's view, a volunteer's
     state.locale = "ro";
     await db.update(events).set({ hasRaffle: false }).where(eq(events.id, eventId));
     expect(byTestId(await deskView(people.ana), "desk-raffle")).toEqual([]);
+  });
+
+  it("says it under every row of the desk's list — where a search by name lands — and its «Înscrie» comes back to the list", async () => {
+    const people = await saturday();
+    state.actor = staff.CONTRIBUTOR;
+    const deskList = async (q: string) => DeskPage({ params: Promise.resolve({ locale: state.locale }), searchParams: Promise.resolve({ eventId, q }) });
+    /** Each row the desk's list draws: whose it is, and the raffle line inside it, in words. */
+    const rowsOf = async (q: string) =>
+      Promise.all(
+        elements(await deskList(q))
+          .filter((element) => element.type === DeskRow)
+          .map(async (element) => {
+            const lines = byTestId(element.props.children as ReactNode, "desk-raffle");
+            return [(element.props.row as { id: string }).id, lines.length === 1 ? words(await html(lines[0])) : `${lines.length} lines`];
+          }),
+      );
+    // «Din oficiu»: one line inside the one row a search by name, or by the number, finds.
+    expect(await rowsOf("Ana Popescu")).toEqual([[people.ana, "Tombolă: participă"]]);
+    expect(await rowsOf("7")).toEqual([[people.ana, "Tombolă: participă"]]);
+    // A search that finds several: a line inside each, each its own person's answer.
+    expect(await rowsOf("e")).toEqual(
+      expect.arrayContaining([
+        [people.eliud, "Tombolă: participă"],
+        [people.elena, "Tombolă: nu participă De ce: neconfirmat"],
+      ]),
+    );
+    // «Cu înscriere separată», open: «Înscrie la tombolă» under the row, for the desk role, coming back to the list with its search.
+    await signUpMode();
+    const lines = byTestId(await deskList("Ana Popescu"), "desk-raffle");
+    expect(words(await html(lines[0]))).toMatch(/^Tombolă: nu participă De ce: nu s-a înscris/);
+    const signUp = elements(lines[0]).find((element) => element.props["data-testid"] === "desk-raffle-sign-up");
+    expect(signUp?.props.action).toBe(actions.raffleDeskSignUpAction);
+    const hidden = (name: string) => elements(signUp).find((element) => element.props.name === name)?.props.value;
+    expect([hidden("back"), hidden("eventId"), hidden("q"), hidden("registrationId"), hidden("code")]).toEqual(["desk", eventId, "Ana Popescu", people.ana, undefined]);
+    expect(await press(actions.raffleDeskSignUpAction, { back: "desk", q: "Ana Popescu", registrationId: people.ana })).toEqual({
+      to: `/ro/admin/checkin?eventId=${eventId}&q=Ana+Popescu&error=RAFFLE_RULES_NOT_ACCEPTED#admin-alert`,
+      toast: null,
+    });
+    expect(await press(actions.raffleDeskSignUpAction, { back: "desk", q: "Ana Popescu", registrationId: people.ana, accepted: "on" })).toEqual({
+      to: `/ro/admin/checkin?eventId=${eventId}&q=Ana+Popescu&saved=raffleSignedUp#admin-alert`,
+      toast: null,
+    });
+    expect((await entries()).map((entry) => [entry.registrationId, entry.method])).toEqual([[people.ana, "DESK"]]);
+    expect(words(await html(byTestId(await deskList("Ana Popescu"), "desk-raffle")[0]))).toBe("Tombolă: participă");
+    // No raffle on the event: no line under any row.
+    await db.update(events).set({ hasRaffle: false }).where(eq(events.id, eventId));
+    expect(byTestId(await deskList("Ana Popescu"), "desk-raffle")).toEqual([]);
   });
 
   it("says it on a volunteer's page, with the organizers' «Înscrie la tombolă» in the open sign-up mode", async () => {

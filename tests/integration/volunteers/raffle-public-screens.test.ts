@@ -80,6 +80,7 @@ const { default: ManageRegistrationPage } = await import("@/app/[locale]/registr
 const { default: RaffleCallout } = await import("@/modules/volunteers/ui/RaffleCallout");
 const { cachedRaffleSignUpOpen } = await import("@/modules/public-cache/reads");
 const { signUpForRaffleByLink } = await import("@/modules/volunteers/raffle-entries");
+const { raffleManageCard } = await import("@/modules/volunteers/ui/RaffleManageCard");
 
 const START = new Date("2099-11-21T07:00:00.000Z");
 const EFFECTIVE = new Date("2026-01-01T00:00:00.000Z");
@@ -235,7 +236,7 @@ describe("§NNN BR-REQ-050-02 the raffle's own page: the form while the gate is 
     expect(tagOf(markup, 'data-testid="raffle-rules"')).toMatch(/^<details/);
     expect(tagOf(markup, 'data-testid="raffle-rules"')).not.toMatch(/\sopen/);
     expect(words(fold)).toContain("Regulamentul tombolei");
-    expect(words(fold)).toContain(`Tombola are loc la evenimentul Crosul tombolei ${serial}`);
+    expect(words(fold)).toContain(`Tombola se ține la evenimentul Crosul tombolei ${serial}`);
     expect(words(fold)).toContain("în Parcul Noua");
     // The filled blank is drawn in bold: its words, the sentence's period after the tag.
     expect(words(fold)).toContain("Pot participa la tombolă alergătorii înscriși și confirmați, cu număr de concurs, sportivii de top ai cursei și voluntarii confirmați, cu număr de voluntar");
@@ -327,7 +328,7 @@ describe("§NNN BR-REQ-050-02 the raffle's own page: the form while the gate is 
     expect(page).not.toBeNull();
     const text = words(page);
     for (const sentence of [en.Event.raffle.title, en.Event.raffle.number, en.Event.raffle.name, en.Event.raffle.volunteer, en.Event.raffle.accept, en.Event.raffle.submit]) expect(text).toContain(sentence);
-    expect(text).toContain(`The raffle takes place at the event The raffle cross ${serial}`);
+    expect(text).toContain(`The raffle is held at the event The raffle cross ${serial}`);
     expect(text).toContain("Raffle rules");
     expect(page).toContain('href="/legal/privacy"');
   });
@@ -391,6 +392,30 @@ describe("§NNN BR-REQ-036-02 «Gestionează înscrierea»'s «Tombola» card", 
     expect(words(page)).toContain(ro.Registrations.raffle.done);
     expect(words(await managePage(secret, { raffle: "a" }))).toContain(ro.Registrations.raffle.needAccept);
     expect(words(await managePage(secret, { raffle: "w" }))).toContain(ro.Registrations.raffle.withdrawn);
+  });
+
+  it("draws nothing where no rules can be read, and tells another adult on the address only where they sign up", async () => {
+    const base = {
+      locale: "ro",
+      token: "t",
+      registrationId: "00000000-0000-4000-8000-000000000001",
+      own: false,
+      family: true,
+      outcome: null,
+      signUpAction: async () => {},
+      withdrawAction: async () => {},
+    };
+    // Eligible, not in, and no rules to read in the page's language: no card with no tick and no button.
+    expect(await raffleManageCard({ ...base, card: { signedUp: false, maySignUp: true }, rules: null })).toBeNull();
+    // Another adult, not in: one sentence, no form, and no promise of a way out the card does not offer.
+    const other = await html(await raffleManageCard({ ...base, card: { signedUp: false, maySignUp: false }, rules: null }));
+    expect(words(other)).toContain(ro.Registrations.raffle.otherAdult);
+    expect(other).not.toContain("<form");
+    expect(other).not.toContain("<button");
+    expect(ro.Registrations.raffle.otherAdult).not.toMatch(/retrag/);
+    expect(en.Registrations.raffle.otherAdult).not.toMatch(/take them out/);
+    // Another adult already in keeps the way out.
+    expect(await html(await raffleManageCard({ ...base, card: { signedUp: true, maySignUp: false }, rules: null }))).toContain('data-testid="manage-raffle-withdraw"');
   });
 
   it("is not drawn while the gate is shut, nor for a runner the raffle does not take — and speaks English", async () => {

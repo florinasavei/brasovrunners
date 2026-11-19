@@ -207,8 +207,9 @@ export default async function RafflePage({ params, searchParams }: Props) {
       key: "name",
       label: t("raffle.columns.name"),
       primary: true,
+      // The row's address (`#raffle-<id>`, where a press comes back) is the table's `rowId`: AdminTable draws each row twice.
       render: (row) => (
-        <Box component="span" id={`raffle-${row.ref.id}`} sx={{ scrollMarginTop: 16, overflowWrap: "anywhere" }} data-testid="raffle-row-name">
+        <Box component="span" sx={{ overflowWrap: "anywhere" }} data-testid="raffle-row-name">
           {row.name}
         </Box>
       ),
@@ -358,6 +359,7 @@ export default async function RafflePage({ params, searchParams }: Props) {
               columns={columns}
               rows={rows}
               rowKey={(row) => `${row.ref.table}-${row.ref.id}`}
+              rowId={(row) => `raffle-${row.ref.id}`}
               basePath={tabPath}
               currentParams={{ eventId, ...(filter === "all" ? {} : { filter }) }}
               query={{ page: 1, perPage: Math.max(rows.length, 1), sort: "number", dir: "asc", offset: 0, limit: Math.max(rows.length, 1) }}

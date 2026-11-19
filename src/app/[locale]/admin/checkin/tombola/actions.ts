@@ -143,19 +143,42 @@ export async function raffleDeleteEntryAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Înscrie la tombolă» at the desk (DESK), on the desk's view of a person: every desk role, the person having accepted the rules on
- * paper or aloud (`accepted=on`). Back on the same view, with the desk's own sentence (`saved=`), or its refusal (`error=`).
+ * Where the desk's press comes back to, rebuilt from fields and never taken from the form as a path: the desk's list with its event
+ * and its search (`back=desk`, as the desk's other verbs come back to it), or else the scanned person's view.
+ */
+function deskAddress(form: FormData, outcome: { saved: string } | { error: string }): string {
+  const locale = localeOf(form);
+  const query = new URLSearchParams();
+  let path: string;
+  if (field(form, "back") === "desk") {
+    path = getPathname({ locale, href: "/admin/checkin" });
+    const eventId = eventIdOf(form);
+    if (eventId) query.set("eventId", eventId);
+    // The desk's search, carried in the address as the desk's own verbs carry it — never into a toast.
+    const q = field(form, "q").trim();
+    if (q) query.set("q", q.slice(0, 200));
+  } else {
+    const code = field(form, "code");
+    path = getPathname({ locale, href: { pathname: "/admin/checkin/[code]", params: { code: /^[A-Za-z0-9-]{1,32}$/.test(code) ? code : "-" } } });
+  }
+  if ("saved" in outcome) query.set("saved", outcome.saved);
+  else query.set("error", outcome.error);
+  return `${path}?${query.toString()}#admin-alert`;
+}
+
+/**
+ * «Înscrie la tombolă» at the desk (DESK), under a row of the desk's list or on a scanned person's view: every desk role, the person
+ * having accepted the rules on paper or aloud (`accepted=on`). Back where it was pressed, with the desk's own sentence (`saved=`), or
+ * its refusal (`error=`).
  */
 export async function raffleDeskSignUpAction(form: FormData): Promise<void> {
-  const code = field(form, "code");
-  const path = getPathname({ locale: localeOf(form), href: { pathname: "/admin/checkin/[code]", params: { code: /^[A-Za-z0-9-]{1,32}$/.test(code) ? code : "-" } } });
   let outcome: "created" | "already";
   try {
     const actor = await requireStaffCapability(canWorkTheDesk);
     outcome = await signUpForRaffleAtDesk(getDb(), actor, { registrationId: field(form, "registrationId"), accepted: form.get("accepted") === "on" }, new Date());
   } catch (error) {
     if (!isDomainError(error)) throw error;
-    redirect(`${path}?error=${error.code}#admin-alert`);
+    redirect(deskAddress(form, { error: error.code }));
   }
-  redirect(`${path}?saved=${outcome === "created" ? "raffleSignedUp" : "raffleAlready"}#admin-alert`);
+  redirect(deskAddress(form, { saved: outcome === "created" ? "raffleSignedUp" : "raffleAlready" }));
 }

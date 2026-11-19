@@ -25,7 +25,7 @@ const NAMES_THE_ENTRIES = /\beventRaffleEntries\b|"event_raffle_entries"|\braffl
 /** The one writer: every door's sign-up and withdrawal. */
 const WRITER = path.join(SRC, "modules", "volunteers", "raffle-entries");
 /** The roster's reads that return a sign-up — whether a person signed up, how and when. */
-const ENTRY_READS = /\b(readRaffleRosterRows|readRaffleRoster|findRaffleEntry|readRaffleManageView|readRaffleManageCards|raffleReasonsFor|readRaffleLine|signUpForRaffleBy\w+|signUpForRaffleAtDesk|withdrawFromRaffleByLink|deleteRaffleEntry)\b/;
+const ENTRY_READS = /\b(readRaffleRosterRows|readRaffleRoster|findRaffleEntry|readRaffleManageView|readRaffleManageCards|raffleReasonsFor|readRaffleLine|readRaffleDeskLines|signUpForRaffleBy\w+|signUpForRaffleAtDesk|withdrawFromRaffleByLink|deleteRaffleEntry|moveRaffleEntry)\b/;
 
 const namesTheEntries = (file: string, source: string): boolean => NAMES_THE_ENTRIES.test(source) || importsModule(file, source, WRITER, SRC);
 
@@ -40,6 +40,8 @@ const READERS = new Set(
     "src/app/[locale]/events/[slug]/tombola/actions.ts",
     "src/app/[locale]/registrations/manage/[token]/actions.ts",
     "src/app/[locale]/admin/checkin/tombola/actions.ts",
+    // «Transformă în voluntar» / «în alergător»: the person's sign-up moves to the row they become, in the transform's transaction.
+    "src/modules/volunteers/transform.ts",
     // The sweep: thirty days after the event's start.
     "src/modules/jobs/retention.ts",
     // «Toate datele unei persoane» (art. 15).

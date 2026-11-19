@@ -122,7 +122,8 @@ export type AuditAction =
   /**
    * «Transformă în voluntar» (§948, `volunteers/transform.ts`): the registration was cancelled by the staff verb and its person
    * entered on the event's volunteers, in one transaction. Beside the cancellation's own row; the metadata is the volunteer's
-   * id, the role given and the state the registration left — never a name.
+   * id, the role given and the state the registration left — and, when the person held a raffle sign-up, its id, moved to the
+   * volunteer (`raffleEntryId`, §NNN) — never a name.
    */
   | "registration.became_volunteer"
   /**
@@ -756,7 +757,8 @@ export type AuditAction =
   /**
    * «Transformă în alergător» (§948, `volunteers/transform.ts`), entity `event`: the volunteer was cancelled and entered on the
    * official waiting list's own entry, in one transaction. The metadata is the volunteer's id, the registration's and the
-   * state it landed in — never a name or an address.
+   * state it landed in — and, when the person held a raffle sign-up, its id, moved to the registration (`raffleEntryId`, §NNN)
+   * — never a name or an address.
    */
   | "volunteer.became_runner"
   | "volunteer.signed_up"

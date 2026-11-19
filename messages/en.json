@@ -4117,7 +4117,7 @@
         "howAutomatic": "Automatically: everybody ticked above",
         "howSignUp": "With a separate sign-up: only those who sign up",
         "howHelp": "With a separate sign-up, people sign up from their registration's page, from the form on the event's page or at the desk on race day, and accept the raffle rules.",
-        "howHelpMore": "The sign-up opens only once the raffle rules are approved and a privacy notice describes it — “Tasks” says how. Until then, “Automatically” works as before.",
+        "howHelpMore": "The sign-up opens only once the raffle rules are approved and a privacy notice describes it — see “Tasks”. Until then keep “Automatically”: otherwise nobody takes part.",
         "open": "Raffle sign-ups are open",
         "openHelp": "Counts only “With a separate sign-up”. Untick it at the draw: the form and the sign-up buttons go."
       }
@@ -5654,7 +5654,7 @@
         },
         "raffleRules": {
           "title": "The raffle rules",
-          "todo": "An event holds a raffle with a separate sign-up, but no raffle rules are in force: the sign-up does not open. “Automatically” works meanwhile.",
+          "todo": "An event's raffle asks a separate sign-up, but no raffle rules are in force: the sign-up does not open and nobody takes part. Until then, set “How people take part” to “Automatically”.",
           "done": "The raffle rules are in force: whoever signs up for the raffle accepts them.",
           "how": [
             "/admin/legal → the “Raffle rules” card → “Regenerate from template” → confirm.",
@@ -5664,7 +5664,7 @@
         },
         "raffleNotice": {
           "title": "Privacy notice: the raffle sign-up",
-          "todo": "An event holds a raffle with a separate sign-up, but the notice in force does not describe the raffle's sign-up: the sign-up does not open. “Automatically” works meanwhile.",
+          "todo": "An event's raffle asks a separate sign-up, but the notice in force does not describe it: the sign-up does not open and nobody takes part. Until then, set “How people take part” to “Automatically”.",
           "done": "The notice in force describes the raffle's sign-up: what we keep, why, who sees it and for how long.",
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from template” → confirm. The paragraph “The raffle”, in section 5, describes the sign-up.",
@@ -12866,7 +12866,6 @@
       "yes": "Yes",
       "no": "No",
       "reasons": {
-        "in": "yes",
         "groupNotAllowed": "group not ticked",
         "notConfirmed": "not confirmed",
         "noNumber": "no number",
@@ -12944,7 +12943,6 @@
     "privacyTitle": "Privacy notice",
     "volunteerAgreementTitle": "Volunteer agreement",
     "volunteerAgreementBlanks": "One text for every event: the name, the role, the event, its date and place are filled in when you accept, and the PDF you receive shows them.",
-    "raffleRulesTitle": "Raffle rules",
     "raffleGroups": {
       "RUNNER": "the registered and confirmed runners with a race number",
       "ELITE": "the race's top athletes",
@@ -13849,7 +13847,7 @@
       "withdrawn": "You no longer take part in the raffle.",
       "failed": "It did not work: the raffle's sign-ups have closed, or the person can no longer take part.",
       "needAccept": "First tick that you accept the raffle rules.",
-      "otherAdult": "The person signs up themselves, from their own registration's page. From here you can only take them out.",
+      "otherAdult": "The person signs up for the raffle themselves, from their own registration's page.",
       "withdrawing": "Taking you out…"
     }
   },

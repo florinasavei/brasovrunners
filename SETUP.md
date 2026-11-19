@@ -2690,8 +2690,9 @@ An agent never approves either text.
    volunteer's own number) while the volunteers may take part, the rules in a fold and «Am citit și accept Regulamentul tombolei». A
    number and a name that do not belong together get one neutral sentence; a person already in reads the thank-you again; nobody is
    emailed. On «Gestionează înscrierea» (the link in every email) a confirmed runner with a number has a «Tombola» card: the rules, the
-   tick, «Particip la tombolă», and once in, «Nu mai particip». At the desk, every volunteer sees «Tombolă: participă / nu participă» on a
-   person's view and signs them up with «Înscrie la tombolă», having heard the person accept the rules (or read them a paper copy). A line
+   tick, «Particip la tombolă», and once in, «Nu mai particip». At the desk, every volunteer sees «Tombolă: participă / nu participă» under
+   each person the search finds (and on a scanned person's view) and signs them up with «Înscrie la tombolă», having heard the person
+   accept the rules (or read them a paper copy). A runner turned volunteer, or back, keeps their sign-up. A line
    of the race's elite list has no number and no link: the organizers sign it up on the «Tombolă» tab.
 5. **On race day:** «Ziua cursei» → **«Tombolă»** (the Organizer and the Administrators): everybody of the three groups with «Participă: Da»
    or «Nu» and why, how and when each signed up, «Prezent», the counts, the filters «Participă», «Nu participă», «Doar prezenții», the

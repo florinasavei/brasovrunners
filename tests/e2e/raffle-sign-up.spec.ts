@@ -189,7 +189,7 @@ test.describe("§NNN the raffle with a sign-up of its own: the form, the link, t
         // The rules read in their fold, the event's facts filled.
         const rules = page.getByTestId("raffle-rules");
         await rules.locator("summary").click();
-        await expect(rules).toContainText(`Tombola are loc la evenimentul Crosul tombolei ${tag}`);
+        await expect(rules).toContainText(`Tombola se ține la evenimentul Crosul tombolei ${tag}`);
         await page.getByTestId("raffle-number").fill("1");
         await page.getByTestId("raffle-name").fill("Ion Altcineva");
         await accept.check();
@@ -197,7 +197,7 @@ test.describe("§NNN the raffle with a sign-up of its own: the form, the link, t
         // A person reads before pressing: a press faster than the timing check allows is kept as nothing (§97).
         await page.waitForTimeout(HUMAN_PAUSE_MS);
         await submit.click();
-        await expect(page.getByTestId("raffle-no-match")).toContainText("Nu am găsit o înscriere confirmată cu numărul și numele acestea.", { timeout: 30_000 });
+        await expect(page.getByTestId("raffle-no-match")).toContainText("Nu am găsit o înscriere confirmată cu acest număr și acest nume.", { timeout: 30_000 });
         await hydrated(page);
         await expect(page.getByTestId("raffle-number")).toHaveValue("1");
         await expect(page.getByTestId("raffle-name")).toHaveValue("Ion Altcineva");
@@ -247,7 +247,7 @@ test.describe("§NNN the raffle with a sign-up of its own: the form, the link, t
         expect(spent).toEqual([{ used: null }]);
       });
 
-      await test.step("the desk's volunteer records a third at the desk's view of the person, who accepted on paper", async () => {
+      await test.step("the desk's volunteer records a third at the desk's view of the person, who accepted on paper; the desk's list says it too", async () => {
         await signIn(page, "Dev Contributor");
         await page.goto(`/ro/admin/checkin/${seeded.cristina.code}`);
         await hydrated(page);
@@ -264,6 +264,12 @@ test.describe("§NNN the raffle with a sign-up of its own: the form, the link, t
         const entries = await entriesOf(seeded.eventId);
         expect(entries.at(-1)).toMatchObject({ registrationId: seeded.cristina.id, method: "DESK", ip: null });
         expect(entries.at(-1)?.recordedBy).not.toBeNull();
+        // The desk's list says it too, inside each row a search finds (§NNN): Ana, in by the form a moment ago.
+        await page.goto(`/ro/admin/checkin?eventId=${seeded.eventId}&q=${encodeURIComponent(seeded.ana.name)}`);
+        await hydrated(page);
+        const row = page.getByTestId("desk-row").filter({ hasText: seeded.ana.name });
+        await expect(row.getByTestId("desk-raffle-line")).toContainText("Tombolă: participă");
+        await fitsTheScreen(page);
       });
 
       await test.step("the Organizer sees everybody on «Ziua cursei» → «Tombolă», the three with «Participă: Da»", async () => {
@@ -275,9 +281,19 @@ test.describe("§NNN the raffle with a sign-up of its own: the form, the link, t
         await hydrated(page);
         const tabs = page.getByTestId("race-day-tabs");
         await expect(tabs.getByRole("link", { name: "Tombolă" })).toHaveAttribute("aria-current", "page");
-        // How wide the race day's row is on this screen, said in the report: the tabs of the other branches join this row (§979).
-        const row = await tabs.locator("nav").evaluate((nav) => ({ scroll: nav.scrollWidth, client: nav.clientWidth }));
-        console.log(`race-day tabs (${test.info().project.name}): ${row.scroll}px of entries in ${row.client}px`);
+        // Four entries are wider than a phone's row (§NNN), so the row is no `fits` row: its current entry is brought into view —
+        // «Tombolă», the last, wholly inside the row, on the phone and on the desktop alike (`SubNavCurrent`, §731).
+        await expect
+          .poll(async () =>
+            tabs.locator("nav").evaluate((nav) => {
+              const entry = nav.querySelector('[aria-current="page"]');
+              if (!entry) return "no current entry";
+              const bar = nav.getBoundingClientRect();
+              const box = entry.getBoundingClientRect();
+              return box.left >= bar.left - 1 && box.right <= bar.right + 1 ? "in view" : `${Math.round(box.left - bar.left)}–${Math.round(box.right - bar.left)} px of a ${Math.round(bar.width)} px row`;
+            }),
+          )
+          .toBe("in view");
         await expect(page.getByTestId("raffle-settings-line")).toHaveText("Participă: alergătorii, elitele, voluntarii · cu înscriere separată · înscrieri deschise");
         await expect(page.getByTestId("raffle-counts")).toHaveText("Participă: 3 · Alergători: 3 · Elite: 0 · Voluntari: 0 · Prezenți dintre ei: 1");
         const names = page.locator('[data-testid="raffle-row-name"]:visible');

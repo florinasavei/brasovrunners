@@ -118,6 +118,8 @@ describe("§974 a row that fits carries no script", () => {
     expect(fitting).toMatch(/<a\b[^>]*aria-current="page"[^>]*>Stare<\/a>/);
     // The plan's views are the one row that says so: two short words.
     expect(read("src/app/[locale]/admin/events/[id]/plan-voluntari/page.tsx")).toMatch(/<SubNav\s+fits\s/);
+    // «Ziua cursei»'s row is not one since the organizers' fourth entry (§NNN): its current entry is scrolled into view.
+    expect(read("src/modules/race-day/ui/RaceDayTabs.tsx")).not.toMatch(/<SubNav\b[^>]*\bfits\b/);
   });
 });
 
@@ -173,7 +175,7 @@ describe("§360 one look for every backoffice sub-navigation", () => {
         "src/modules/content/shop/ui/ShopTabs.tsx",
         "src/modules/diagnostics/ui/TasksSubNav.tsx",
         "src/modules/notifications/ui/ParticipantEmailsPanel.tsx",
-        // «Ziua cursei»'s three tabs (§979): «Prezența», «Clasament», «Lucruri de adus» — a row that fits, with no scroller.
+        // «Ziua cursei»'s tabs (§979): «Prezența», «Clasament», «Lucruri de adus» and the organizers' «Tombolă» (§NNN), with the scroller.
         "src/modules/race-day/ui/RaceDayTabs.tsx",
         "src/modules/staff-identity/ui/SettingsSubNav.tsx",
       ].sort(),

@@ -28,15 +28,18 @@ const TAB_GLYPH = {
  * pe aceasta pagina e de fapt "Prezenta"», and «un alt tab pentru ziua cursei unde sa bifam "lucruri de adus"»): «Prezența» —
  * the desk as it was —, «Clasament» — the chosen event's results (§808) — and «Lucruri de adus», the event's checklist.
  *
- * The house's row of sub-tabs (`SubNav`, §360), `fits` — three short words a phone holds, «Lucruri» alone below `sm` — so no
- * script: plain links drawn on the server, the current one marked (`aria-current`), never on paper. Each carries the event
+ * The house's row of sub-tabs (`SubNav`, §360), in short words («Lucruri» alone below `sm`): plain links drawn on the server,
+ * the current one marked (`aria-current`), never on paper. Each carries the event
  * chosen on the page (the desk's select; on a results page, the page's own event); with none chosen the desk and the list
  * pick their default as the desk does, and «Clasament», which has no page without an event, is not drawn. A tab whose page
  * the viewer's role cannot open is not drawn either — «Clasament» is `canEnterResults`' — and every page still asserts its
  * own gate on the server (BR-REQ-060-01).
  *
  * «Tombolă» (§NNN; the owner, 2026-11-18: «un tab de tombolă unde să văd toți participanții la tombolă») is the organizers' fourth
- * (`canTakeRaffleList`), drawn only for an event chosen that holds a raffle — one read of the event's own switch.
+ * (`canTakeRaffleList`), drawn only for an event chosen that holds a raffle — one read of the event's own switch. With it the row is
+ * no longer one a phone holds (four entries and their glyphs, about 365 pixels in a 288-pixel row), so it is not `fits` any more:
+ * it carries `SubNavCurrent` (§731), which scrolls the current entry into view — «Tombolă», the last, included — and the entry cut
+ * at the edge says there is more. A row that fits is left alone by it; the links stay plain and server-drawn.
  *
  * A function the page awaits, not an async component: the element it returns is drawn in the page's own tree, which every
  * screen test renders synchronously.
@@ -75,7 +78,8 @@ export async function raceDayTabs({ locale, active, eventId, actor }: { locale: 
   }
   return (
     <Box sx={{ "@media print": { display: "none" } }} data-testid="race-day-tabs">
-      <SubNav fits label={t("raceDay.tabs.label")} items={items} />
+      {/* Not `fits` (§NNN): the organizers' four entries are wider than a phone, so the current one is scrolled into view. */}
+      <SubNav label={t("raceDay.tabs.label")} items={items} />
     </Box>
   );
 }
