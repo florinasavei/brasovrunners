@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.78-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.79-2026-11-20 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.78-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.79-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31374,3 +31374,11 @@ Baseline `BR-V4.78-2026-11-19`.
 **Not in this change.** The results' further conditions (a privacy notice that describes them, a special guest the event hides): the eye says the person's wish and the club's hide, which is what the desk can act on.
 
 Baseline `BR-V4.78-2026-11-19`.
+
+## 1005. «Clasament» lists the elites first among «Alergători înscriși»
+
+**The owner, 2026-11-19, with a picture of «Clasament»'s «Alergători înscriși» — a line per registered runner, the checked-in first, then by number:** «și aici trebuie să afișez mai întâi elitele». The elites — the race's fastest, timed first on the day — were scattered among everybody else by their numbers.
+
+**Decision.** The registrations marked «Elită» (§897) come first among «Alergători înscriși»; then, as before, the checked-in, then by number — the same order inside the elites. One sort in `results.ts#readEventResults`, which the page draws as it reads it; the «Elită» chip already on each such line says why it is at the top. An ambassador alone — a label that changes nothing (§949) — keeps its place. The places, the published results, the export and «Alergători neînscriși» are as they were: only the order of the lines on the page changes.
+
+Baseline `BR-V4.79-2026-11-20`.

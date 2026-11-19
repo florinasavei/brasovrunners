@@ -628,6 +628,15 @@ describe("§948 «Clasament» and «Premii» say whose result it is: «Elită»,
     expect(text(linesOf(await render(raceId, "en"))["101"])).toContain("On the site: not shown — an ambassador out of the results");
   });
 
+  it("draws the elites' lines first — the owner's «mai întâi elitele» —, then the checked-in, then by number; an ambassador's where it was", async () => {
+    await runners();
+    await mark(102, { elite: true });
+    await mark(103, { ambassador: true });
+    const html = await render();
+    // Bia (102) is an elite: first, though not checked in; Ana (101) and Dan (103, an ambassador only) follow, checked in, by number.
+    expect([...html.matchAll(/data-testid="result-line" data-bib="(\d+)"/g)].map((match) => match[1])).toEqual(["102", "101", "103"]);
+  });
+
   it("draws no mark anywhere on a race where nobody wears one", async () => {
     await runners();
     const html = strip(await render());

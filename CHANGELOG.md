@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.79-2026-11-20
+
+- **«Clasament» lists the elites first** — among «Alergători înscriși», the registrations marked «Elită» come first, then the checked-in, then by number. §1005.
 ## BR-V4.78-2026-11-19
 
 - **The race-day desk folds by state** — «Prezența» lists its runners in sections, in working order: «De ridicat numărul» and «Fără declarație semnată» open, «Prezenți», «Adresă neconfirmată», «Ofertă de loc deschisă» and «Pe lista de așteptare» folded, each with how many; a search opens what it found, and a press comes back to its row, its section open. §1002.
