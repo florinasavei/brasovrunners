@@ -21,13 +21,17 @@ import TurnIntoRunnerPanel from "@/modules/volunteers/ui/TurnIntoRunnerPanel";
 import VolunteerDecisionCard from "@/modules/volunteers/ui/VolunteerDecisionCard";
 import VolunteerPerson, { STATE_CHIP, volunteerHiddenFields } from "@/modules/volunteers/ui/VolunteerPerson";
 import { listVolunteerNotes } from "@/modules/volunteers/volunteer-notes";
+import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
+import { readRaffleLine } from "@/modules/volunteers/raffle-roster";
+import { raffleVolunteerLine } from "@/modules/volunteers/ui/RaffleLines";
+import { raffleSignUpAction } from "../../checkin/tombola/actions";
 import { isUuid } from "@/shared/ids";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import StatusChip from "@/shared/ui/StatusChip";
 import TickButton from "@/shared/ui/TickButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { turnVolunteerIntoRunnerAction } from "../../registrations/actions";
-import { setVolunteerDecisionAction, setVolunteerKitAction } from "../actions";
+import { setVolunteerDecisionAction, setVolunteerKitAction, setVolunteerPresentAction } from "../actions";
 import { addVolunteerNoteAction, deleteVolunteerNoteAction, editVolunteerNoteAction } from "./note-actions";
 
 type Props = {
@@ -78,6 +82,8 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
     // «Note interne»: the person's live notes, newest first; the service asks for the role again.
     listVolunteerNotes(db, actor, person.id),
   ]);
+  // The raffle's line (§984), for the organizers — the roles that take the raffle's file — of an event that holds one.
+  const raffle = canTakeRaffleList(actor) ? await readRaffleLine(db, { table: "volunteer", id: person.id }, now) : null;
   const { volunteerError, saved } = await searchParams;
   const errorCode = volunteerError && /^[A-Z_]{1,48}$/.test(volunteerError) && t.has(`errors.${volunteerError}`) ? volunteerError : null;
   const eventCardHref = `${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: person.eventId } } })}#box-volunteers`;
@@ -98,6 +104,20 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
           {person.name}
         </Typography>
         <StatusChip glyph={STATE_CHIP[person.state].glyph} color={STATE_CHIP[person.state].color} label={t(`volunteers.states.${person.state}`)} testId="volunteer-state" />
+        {/*
+          «Prezent» (§983; the owner, 2026-11-18: «La voluntari trebuie să trec prezent/absent ca să pot face tombola doar pentru cei
+          prezenți»): the list's one-press tick beside the name, before «Are kit» as the list's columns stand — the same plain form and
+          action, posting the state it wants (`present=1|0`), working with scripts off and coming back here (`returnTo`). Unticked is
+          absent. The service asks for the role again (`canManageVolunteers`).
+        */}
+        <Box component="form" action={setVolunteerPresentAction} data-testid="volunteer-page-present-form">
+          {volunteerHiddenFields({ locale, eventId: person.eventId, returnTo: path })}
+          <input type="hidden" name="volunteerId" value={person.id} />
+          <input type="hidden" name="present" value={person.present ? "0" : "1"} />
+          <TickButton checked={person.present} data-testid="volunteer-page-present-tick">
+            {t("volunteers.presence.tick")}
+          </TickButton>
+        </Box>
         {/*
           «Are kit» (§971; the owner, 2026-11-17, on this page: «nu pot bifa aici că are kit»): the list's one-press tick (§904) beside
           the name — before, it sat only inside «Modifică» at the page's foot. The same plain form and action as the list's row: it
@@ -123,6 +143,9 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
           {t("volunteers.screen.eventCard")}
         </GlyphButton>
       </Stack>
+
+      {/* The raffle (§984): whether the person takes part, in one line, and the organizers' «Înscrie la tombolă» while the sign-up is open. */}
+      {raffle && (await raffleVolunteerLine({ line: raffle, locale, eventId: person.eventId, volunteerId: person.id, name: person.name, action: raffleSignUpAction }))}
 
       {/* «Note interne» first, before the person's block: what the organizers left about the person is read before anything else. */}
       <NotesCard

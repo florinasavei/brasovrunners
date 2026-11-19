@@ -25,6 +25,8 @@ export type RateLimitScope =
   | "newsletter-subscribe"
   | "volunteer-signup"
   | "volunteer-event"
+  | "raffle-signup"
+  | "raffle-event"
   | "rsvp-confirm"
   | "rsvp-event"
   | "rsvp-name"
@@ -122,6 +124,17 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
    * the public-cache expiries (`places`) a leaked link could cause.
    */
   "rsvp-name": { limit: 30, windowMs: 60 * 60_000 },
+  /**
+   * The raffle's public form (§984), keyed on the hashed event and number typed — the form takes no address, and the key is never
+   * an IP (§19.4): the person defended is the number's, against a script trying names for it. Five an hour is a person mistyping
+   * their name and trying again; the form answers one neutral sentence whatever it finds, refused or not.
+   */
+  "raffle-signup": { limit: 5, windowMs: 60 * 60_000 },
+  /**
+   * The same form, keyed on the event's id: no email leaves from it, so this only bounds what one event's page can be made to do in
+   * an hour. A thousand is more than a race's runners and volunteers signing up in the hour before a draw.
+   */
+  "raffle-event": { limit: 1000, windowMs: 60 * 60_000 },
   /** «Tradu din română» (§464), per staff id; the daily character budget bounds the cost. */
   "content-translate": { limit: 60, windowMs: 60 * 60_000 },
   /**

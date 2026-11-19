@@ -54,6 +54,9 @@ import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
 import { listEliteEntries } from "@/modules/registrations/elite-list";
 import { listEliteMarkedRegistrations } from "@/modules/registrations/elite-mark";
 import { eventHoldsRaffle } from "@/modules/registrations/raffle-mark";
+import type { RaffleReason } from "@/modules/volunteers/domain/raffle";
+import { raffleReasonsFor } from "@/modules/volunteers/raffle-roster";
+import { RaffleStandingNote, raffleNoteWords } from "@/modules/volunteers/ui/RaffleLines";
 import { listAmbassadorMarkedRegistrations } from "@/modules/registrations/ambassador-mark";
 import AmbassadorPanel from "@/modules/registrations/ui/AmbassadorPanel";
 import ElitePanel from "@/modules/registrations/ui/ElitePanel";
@@ -530,6 +533,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const specialGuestsOn = waitlistAddOpen && filters.eventId ? await specialGuestsListOn(filters.eventId) : false;
   // «Tombolă» (§949): the column of an event that holds a raffle («Avem tombolă» in its editor), with that one event chosen.
   const raffleOn = filters.eventId ? await eventHoldsRaffle(db, filters.eventId) : false;
+  // Beside the tick (§984): whether each row takes part, and why not, by the one answer — one read for the page's rows.
+  const raffleReasons = raffleOn && filters.eventId ? await raffleReasonsFor(db, filters.eventId, { registrationIds: rows.map((row) => row.id) }) : new Map<string, RaffleReason>();
   // The editor's elite card (§895): the kits' elites, the «Elite» fold and the way back from «Mută pe lista de elită» link there.
   const eliteCardHref = filters.eventId ? `${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: filters.eventId } } })}#bib-elite` : null;
   /*
@@ -890,6 +895,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 >
                   {t("registrations.raffle.tick")}
                 </TickButton>
+                {/* «În dreptul fiecărei persoane» (§984): Da, or Nu with the reason in a few words. */}
+                {raffleReasons.has(row.id) && <RaffleStandingNote words={raffleNoteWords(t, raffleReasons.get(row.id) ?? "in")} takesPart={raffleReasons.get(row.id) === "in"} />}
               </Box>
             ),
           } satisfies AdminColumn<RegistrationListRow>,
@@ -1448,6 +1455,21 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               data-testid="registrations-raffle-list"
             >
               {t("registrations.raffle.button")}
+            </GlyphButton>
+          )}
+          {/* «Lista pentru tombolă — doar prezenții» (§983; the owner, 2026-11-18: «ca să pot face tombola doar pentru cei prezenți»):
+              beside the whole file, never in place of it — the runners the desk checked in and the volunteers ticked «Prezent». */}
+          {filters.eventId && canTakeRaffleList(actor.role) && (
+            <GlyphButton
+              icon="download"
+              href={`/api/admin/events/${filters.eventId}/raffle?present=1&lang=${locale}`}
+              variant="text"
+              size="small"
+              sx={TAP_TARGET}
+              aria-label={t("registrations.raffle.presentButtonLabel")}
+              data-testid="registrations-raffle-present"
+            >
+              {t("registrations.raffle.presentButton")}
             </GlyphButton>
           )}
           {/* With one event chosen, the organizer's own message to its registrants (§364) —

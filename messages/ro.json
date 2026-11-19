@@ -914,6 +914,7 @@
       "anonymous": "Participant #{bib}",
       "published": "Publicat {published} · rămâne pe pagină până {until}",
       "until": "Rămâne pe pagină până {until}",
+      "live": "Se actualizează singur la 30 de secunde.",
       "caption": "Clasamentul cursei: întâi cei care au terminat, în ordinea sosirii, apoi cei care nu au terminat.",
       "columnPlace": "Loc",
       "columnName": "Nume",
@@ -1022,6 +1023,38 @@
         "few": "{count} vin",
         "other": "{count} vin",
         "go": "spune dacă vii"
+      }
+    },
+    "raffle": {
+      "title": "Înscrie-te la tombolă",
+      "metaTitle": "Tombola — {event}",
+      "intro": "La {event} tragem la sorți premii dintre cei înscriși la tombolă. Înscrie-te cu numărul tău de concurs și cu numele cu care te-ai înscris.",
+      "introVolunteer": "Ești voluntar? Bifează „Sunt voluntar” și scrie numărul tău de voluntar.",
+      "number": "Numărul de concurs",
+      "numberHelp": "Numărul de pe BIB, doar cifre.",
+      "name": "Numele",
+      "nameHelp": "Numele cu care te-ai înscris, de exemplu „Ana Popescu”.",
+      "volunteer": "Sunt voluntar",
+      "volunteerHelp": "Atunci scrie mai sus numărul tău de voluntar.",
+      "rules": "Citește Regulamentul tombolei",
+      "accept": "Am citit și accept Regulamentul tombolei",
+      "notice": "Ce păstrăm despre înscriere scrie în <privacy>nota de confidențialitate</privacy>. Nu primești niciun e-mail pentru ea.",
+      "submit": "Particip la tombolă",
+      "submitting": "Te înscriem…",
+      "done": "Gata: ești înscris la tombolă. Mult noroc la extragere!",
+      "noMatch": "Nu am găsit o înscriere confirmată cu acest număr și acest nume. Verifică numărul de pe BIB și scrie numele cu care te-ai înscris — sau întreabă la masa organizatorilor.",
+      "limited": "Prea multe încercări. Încearcă din nou peste o oră sau întreabă la masa organizatorilor.",
+      "captcha": "Verificarea anti-roboți nu a trecut. Încearcă din nou.",
+      "fix": "Verifică ce ai scris mai jos.",
+      "errors": {
+        "number": "Scrie numărul de concurs, doar cifre.",
+        "name": "Scrie numele, cel mult 120 de caractere.",
+        "accept": "Bifează că accepți Regulamentul tombolei."
+      },
+      "back": "Înapoi la eveniment",
+      "callout": {
+        "line": "Avem tombolă! Înscrie-te cu numărul tău de concurs.",
+        "button": "Înscrie-te la tombolă"
       }
     }
   },
@@ -1380,12 +1413,14 @@
       },
       "raffle": {
         "column": "Tombolă",
-        "columnHint": "Bifat: numărul persoanei apare pe „Lista pentru tombolă”, dacă înscrierea e confirmată și are număr. Debifează ca s-o scoți. Intern: persoana nu e anunțată.",
+        "columnHint": "Bifat: participă; debifează ca s-o scoți. Dedesubt: dacă participă acum — după grupele bifate și, cu înscriere separată, dacă s-a înscris. Intern: persoana nu e anunțată.",
         "tick": "Participă",
         "takeOutFor": "Scoate de la tombolă: {name}",
         "putInFor": "Pune la tombolă: {name}",
         "button": "Lista pentru tombolă (CSV)",
-        "buttonLabel": "Descarcă lista pentru tombolă: alergătorii și voluntarii confirmați care au număr și participă, cu numărul, numele, categoria și dacă alergătorul e prezent",
+        "buttonLabel": "Lista pentru tombolă (CSV): alergătorii, elitele și voluntarii care participă, cu numărul, numele, grupa și dacă persoana e prezentă",
+        "presentButton": "Lista pentru tombolă — doar prezenții (CSV)",
+        "presentButtonLabel": "Lista pentru tombolă — doar prezenții (CSV): cei care participă și au fost prezenți — alergătorii marcați la masă sau cu „Am ajuns” din linkul lor, voluntarii și elitele bifați „Prezent”",
         "columns": {
           "number": "Număr",
           "name": "Nume",
@@ -1398,7 +1433,8 @@
         },
         "kinds": {
           "RUNNER": "Alergător",
-          "VOLUNTEER": "Voluntar"
+          "VOLUNTEER": "Voluntar",
+          "ELITE": "Elită"
         }
       },
       "export": "Descarcă CSV",
@@ -2803,7 +2839,6 @@
       "RESULTS_IMPORT_INVALID": "Fișierul CSV nu poate fi citit: {where}{problem}. Nimic nu s-a importat.",
       "RESULTS_NOTICE": "Nota de confidențialitate în vigoare nu descrie încă clasamentul. Aprobă o notă nouă din șablon, în «Documente legale»; «Sarcini» spune cum.",
       "RESULTS_TERMS": "Termenii în vigoare nu descriu încă clasamentul: cei vechi promiteau că te întreabă înainte. Aprobă termeni noi din șablon, în «Documente legale»; «Sarcini» spune cum.",
-      "RESULTS_NOT_STARTED": "Clasamentul se poate publica după ce a început cursa. Îl poți scrie de pe acum.",
       "RESULTS_NOT_OPEN": "Doar o cursă are clasament.",
       "MEMBER_TIER_HAS_MEMBERS": "Nivelul nu s-a șters. Membri cu acest nivel: {count}. Dă-le alt nivel întâi, în „Echipa”.",
       "MEMBER_TIER_IN_CODES": "Nivelul nu s-a șters. Coduri de reducere doar pentru el: {count}. Schimbă-le nivelurile întâi.",
@@ -2818,7 +2853,6 @@
       "VINVITE_NOT_FOUND": "Invitația nu mai există.",
       "RESULTS_AGE_BANDS": "Categoriile de vârstă nu s-au salvat: {problem}.",
       "RESULT_BIB_UNKNOWN": "Numărul {bib} nu are o înscriere confirmată. Timpul lui: {time} — notează-l și scrie-l la «Clasament», la „Alergători neînscriși”.",
-      "RESULT_ALREADY_FINISHED": "Numărul {bib} e deja sosit, la {time}. O corectură se face la «Clasament».",
       "RESULT_FINISH_NOT_STARTED": "Cursa nu a început încă: o sosire nu poate fi înainte de start.",
       "RESULT_FINISH_CLOSED": "Startul a fost cu mai mult de o zi în urmă: timpii se scriu la «Clasament».",
       "REFUSAL_NEEDS_EMAIL": "Nu s-a anulat nimic: refuzul clubului pleacă întotdeauna cu emailul care îi spune persoanei motivul.",
@@ -2832,7 +2866,14 @@
       "ADDRESS_INVALID": "Nu s-a schimbat nimic: adresa nu e o adresă de email validă. Verifică ce ai scris.",
       "ADDRESS_TRY_AGAIN": "Nu s-a schimbat nimic: înscrierea se schimba chiar în acel moment. Apasă din nou «Schimbă adresa».",
       "PARTNER_NAME_MISSING": "Scrie numele partenerului sau sponsorului, sau debifează «E de la parteneri».",
-      "RACE_DAY_ITEMS_FULL": "Lista are deja {max} de lucruri, cât poate ține. Șterge ce nu mai trebuie, apoi adaugă."
+      "RACE_DAY_ITEMS_FULL": "Lista are deja {max} de lucruri, cât poate ține. Șterge ce nu mai trebuie, apoi adaugă.",
+      "RAFFLE_SIGN_UP_CLOSED": "Înscrierile la tombolă sunt închise acum — sau regulamentul ori nota de confidențialitate nu sunt aprobate. Nu s-a scris nimic.",
+      "RAFFLE_NOT_ELIGIBLE": "Persoana nu poate participa la tombolă: trebuie să fie confirmată, cu număr, dintr-o grupă bifată. Nu s-a scris nimic.",
+      "RAFFLE_RULES_NOT_ACCEPTED": "Bifează întâi că persoana a acceptat Regulamentul tombolei. Nu s-a scris nimic.",
+      "RESULT_UNDO_NOT_ALLOWED": "Nu se mai anulează aici: doar sosirea ta, neschimbată, în primele 10 minute. Corectează la «Clasament».",
+      "RACE_GUN_WINDOW": "«Start» se apasă de cu 3 ore înainte de startul planificat până la 6 ore după.",
+      "RACE_GUN_FIXED": "Startul e fixat: au sosit deja alergători. Corectează timpii la «Clasament».",
+      "RACE_GUN_CHANGED": "Startul a fost dat, mutat sau anulat între timp de altcineva: apăsarea ta nu a schimbat nimic. Pagina arată acum startul așa cum e."
     },
     "editor": {
       "draftPreview": {
@@ -3038,7 +3079,7 @@
       "kitShirt": "Tricou",
       "kitShirtHelp": "Dacă e bifat, formularul cere mărimea tricoului.",
       "hasRaffle": "Avem tombolă",
-      "hasRaffleHelp": "Doar pentru organizatori: pe site nu apare nimic. Bifat, listele de înscrieri și de voluntari arată coloana „Tombolă”, din care scoți pe cine nu participă.",
+      "hasRaffleHelp": "Pentru organizatori: listele de înscrieri și de voluntari arată coloana „Tombolă”, iar „Ziua cursei” fila „Tombolă”. Pe site apare doar formularul, cu înscriere separată deschisă.",
       "askHealthNote": "Informații medicale",
       "askHealthNoteHelp": "Dacă e bifat, formularul cere informații medicale (afecțiuni, alergii, medicație); se șterg la {days} după eveniment.",
       "registrationClosesAt": "Înscrierile se închid",
@@ -4065,6 +4106,23 @@
           "few": "{count} membri confirmați",
           "other": "{count} de membri confirmați"
         }
+      },
+      "raffle": {
+        "who": "Cine poate participa la tombolă",
+        "runners": "Alergătorii",
+        "elites": "Elitele",
+        "volunteers": "Voluntarii",
+        "runnersHelp": "Înscrierile confirmate, cu număr de concurs, nemarcate „Elită” — și ambasadorii.",
+        "elitesHelp": "Înscrierile marcate „Elită” și cei de pe lista de elită a cursei. În regulament: „sportivii de top ai cursei”.",
+        "volunteersHelp": "Voluntarii confirmați, cu număr de voluntar.",
+        "whoHelp": "Bifele contează în ambele moduri de mai jos.",
+        "how": "Cum participă",
+        "howAutomatic": "Din oficiu: toți cei bifați mai sus",
+        "howSignUp": "Cu înscriere separată: doar cei care se înscriu",
+        "howHelp": "Cu înscriere separată, oamenii se înscriu din pagina înscrierii lor, din formularul de pe pagina evenimentului sau la masă, în ziua cursei, și acceptă Regulamentul tombolei.",
+        "howHelpMore": "Înscrierea se deschide doar cu Regulamentul tombolei aprobat și o notă de confidențialitate care o descrie — vezi „Sarcini”. Până atunci lasă „Din oficiu”: altfel nu participă nimeni.",
+        "open": "Înscrierile la tombolă sunt deschise",
+        "openHelp": "Contează doar „Cu înscriere separată”. Debifează la extragere: formularul și butoanele de înscriere dispar."
       }
     },
     "preview": {
@@ -4112,9 +4170,9 @@
       "deactivateAccountBody": "Contul lui {name} se oprește la furnizor: nu se mai poate autentica nicăieri. Rândul din Echipa rămâne.",
       "revokeTitle": "Retragi accesul?",
       "revokeBody": "{name} nu mai intră în backoffice. Contul de la furnizor rămâne — dezactivează-l separat dacă pleacă din club.",
-      "roleHelp": "Fiecare rol poate ce poate cel de sub el, plus ce scrie aici. Voluntarii văd doar masa de ridicare.",
+      "roleHelp": "Fiecare rol poate ce poate cel de sub el, plus ce scrie aici. Voluntarii văd doar ziua cursei: masa de ridicare și «Cronometrare».",
       "roles": {
-        "CONTRIBUTOR": "masa de ridicare: scanează codurile, marchează prezența, confirmă pe hârtie, dă un loc liber, scrie un număr. Atât.",
+        "CONTRIBUTOR": "masa de ridicare: scanează codurile, marchează prezența, confirmă pe hârtie, dă un loc liber, scrie un număr, înscrie la tombolă; la «Cronometrare» trece sosirile și își anulează apăsarea. Atât.",
         "COPYWRITER": "textele: descrierea, regulamentul, programul și paginile site-ului, în ambele limbi. Fără setări, fără publicare.",
         "MODERATOR": "înscrierile și ziua cursei: citește evenimentele, înscrierile, exportul și numerele, scrie participanților, lucrează la masă, ține galeria. Nu creează, nu setează, nu publică un eveniment.",
         "DEV": "pagina tehnică /devs, ca să depaneze. Nu creează și nu setează evenimente; nu vede datele participanților.",
@@ -4273,7 +4331,8 @@
         "GROUP_RUN_DECLARATION_ASPHALT": "Opțională, pentru o alergare de grup pe asfalt; se semnează pe pagina alergării, o dată pentru toate datele ei. Aprob-o împreună cu o notă de confidențialitate nouă.",
         "GROUP_RUN_DECLARATION_TRAIL": "Opțională, pentru o alergare de grup pe teren accidentat; se semnează pe pagina alergării, o dată pentru toate datele ei. Aprob-o împreună cu o notă de confidențialitate nouă.",
         "EVENT_DECLARATION_ROAD": "Declarația unui eveniment pe șosea sau în parc, cu riscurile asfaltului și ale traficului. Până o aprobi, aceste evenimente semnează declarația pentru eveniment montan.",
-        "VOLUNTEER_AGREEMENT": "Contractul pe care îl acceptă fiecare voluntar al unui eveniment: ajutor neplătit, ce face voluntarul, ce face clubul. Până îl aprobi, paginile nu arată formularul de voluntari."
+        "VOLUNTEER_AGREEMENT": "Contractul pe care îl acceptă fiecare voluntar al unui eveniment: ajutor neplătit, ce face voluntarul, ce face clubul. Până îl aprobi, paginile nu arată formularul de voluntari.",
+        "RAFFLE_RULES": "Regulamentul pe care îl acceptă cine se înscrie la tombola unui eveniment cu înscriere separată. Până îl aprobi, înscrierea la tombolă nu se deschide; tombola „din oficiu” nu are nevoie de el."
       },
       "empty": "Nu există niciun document legal. Înscrierile sunt refuzate până când există o notă de confidențialitate aprobată.",
       "emptyCanCreate": "Nu există încă niciun document legal, așa că înscrierile sunt refuzate. Începe cu nota de confidențialitate: Versiune nouă.",
@@ -4292,7 +4351,8 @@
         "GROUP_RUN_DECLARATION_ASPHALT": "Declarație pe propria răspundere (alergare de grup, asfalt)",
         "GROUP_RUN_DECLARATION_TRAIL": "Declarație pe propria răspundere (alergare de grup, teren accidentat)",
         "EVENT_DECLARATION_ROAD": "Declarație pe propria răspundere — eveniment pe asfalt / în parc",
-        "VOLUNTEER_AGREEMENT": "Contract de voluntariat"
+        "VOLUNTEER_AGREEMENT": "Contract de voluntariat",
+        "RAFFLE_RULES": "Regulamentul tombolei"
       },
       "referenced": "{signatures} semnături · {events} evenimente",
       "unreferenced": "Nefolosit încă",
@@ -4428,7 +4488,9 @@
         "rsvp": "Doar în nota de confidențialitate: numele butonului „Vin!”, între ghilimele. Cu el în nota în vigoare, paginile evenimentelor bifate primesc răspunsuri „Vin!” și arată câți vin",
         "rsvpAsk": "Doar în nota de confidențialitate: numele temei „Întrebarea «Vii?» înaintea alergărilor”, între ghilimele. Cu ea în nota în vigoare, abonații temei primesc întrebarea „Vii?” înainte de eveniment",
         "rsvpAskAnswerers": "Doar în nota de confidențialitate: numele butonului „Nu mă mai întreba la seria aceasta”, între ghilimele. Cu el în nota în vigoare, se întreabă „Vii?” și cei care au mai răspuns „Vin!”",
-        "rsvpMember": "Doar în nota de confidențialitate: semnul „{short}”, între ghilimele. Cu el în nota în vigoare, „Vin!” are bifa „Sunt membru al grupului …”, iar „Cine vine” arată semnul lângă numele afișate ale membrilor"
+        "rsvpMember": "Doar în nota de confidențialitate: semnul „{short}”, între ghilimele. Cu el în nota în vigoare, „Vin!” are bifa „Sunt membru al grupului …”, iar „Cine vine” arată semnul lângă numele afișate ale membrilor",
+        "raffleGroups": "Doar în Regulamentul tombolei: cine poate participa, după bifele evenimentului de la „Cine poate participa la tombolă”",
+        "raffle": "Doar în nota de confidențialitate: numele formularului tombolei, între ghilimele. Cu el în nota în vigoare, înscrierea la tombolă se poate deschide"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -4555,7 +4617,8 @@
         "general": "Documente generale",
         "race": "Declarații de cursă",
         "groupRun": "Declarații pentru alergările de grup",
-        "volunteers": "Contractul voluntarilor"
+        "volunteers": "Contractul voluntarilor",
+        "raffle": "Regulamentul tombolei"
       },
       "shortKeys": {
         "PRIVACY_NOTICE": "GDPR",
@@ -4564,7 +4627,8 @@
         "EVENT_DECLARATION_ROAD": "Eveniment asfalt / parc",
         "GROUP_RUN_DECLARATION_ASPHALT": "Grup asfalt",
         "GROUP_RUN_DECLARATION_TRAIL": "Grup teren accidentat",
-        "VOLUNTEER_AGREEMENT": "Voluntari"
+        "VOLUNTEER_AGREEMENT": "Voluntari",
+        "RAFFLE_RULES": "Tombolă"
       },
       "filter": {
         "label": "Filtrează versiunile",
@@ -5590,6 +5654,25 @@
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Pleacă întrebarea doar spre cei al căror răspuns a fost dat sub nota nouă ori sub una mai nouă.",
             "Deschide ciorna, citește, „Salvează ciorna”, apoi „Aprobă și publică”, în ambele limbi. Dacă nu vrei această categorie, în „Setări” → „Emailuri” alege din nou „Abonații newsletterului”."
           ]
+        },
+        "raffleRules": {
+          "title": "Regulamentul tombolei",
+          "todo": "Un eveniment are tombolă cu înscriere separată, dar Regulamentul tombolei nu e în vigoare: înscrierea nu se deschide și nu participă nimeni. Până atunci pune „Cum participă” pe „Din oficiu”.",
+          "done": "Regulamentul tombolei e în vigoare: cine se înscrie la tombolă îl acceptă.",
+          "how": [
+            "/admin/legal → cardul „Regulamentul tombolei” → „Regenerează din șablon” → confirmă.",
+            "Citește textul: organizatorul, cine poate participa, cum se face înscrierea, extragerea, premiile, câștigătorii, datele. Un jurist ar trebui să-l citească întâi.",
+            "Completează datele clubului rămase între paranteze unghiulare, „Salvează ciorna”, apoi „Aprobă și publică”, în ambele limbi."
+          ]
+        },
+        "raffleNotice": {
+          "title": "Nota de confidențialitate: înscrierea la tombolă",
+          "todo": "Un eveniment are tombolă cu înscriere separată, dar nota în vigoare nu o descrie: înscrierea nu se deschide și nu participă nimeni. Până atunci pune „Cum participă” pe „Din oficiu”.",
+          "done": "Nota în vigoare descrie înscrierea la tombolă: ce păstrăm, de ce, cine vede și cât timp.",
+          "how": [
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful „Tombola”, din secțiunea 5, descrie înscrierea.",
+            "Deschide ciorna, citește-o, „Salvează ciorna”, apoi „Aprobă și publică”, în ambele limbi."
+          ]
         }
       },
       "freeVerdict": {
@@ -6423,7 +6506,7 @@
         "raffleOut": "Nu participă la tombolă",
         "columnRaffle": "Tombolă",
         "raffleTick": "Participă",
-        "raffleHint": "Bifat: numărul persoanei apare pe „Lista pentru tombolă”, dacă e confirmată și are număr. Debifează ca s-o scoți. Intern: persoana nu e anunțată.",
+        "raffleHint": "Bifat: participă; debifează ca s-o scoți. Dedesubt: dacă participă acum — după grupele bifate și, cu înscriere separată, dacă s-a înscris. Intern: persoana nu e anunțată.",
         "columnMessage": "Mesaj",
         "messageHint": "Ce a scris persoana pentru organizatori când s-a oferit ca voluntar. Gol: n-a scris nimic.",
         "columnNotes": "Note interne",
@@ -6447,6 +6530,18 @@
         "agreements": "Contractele (PDF)",
         "agreementsToSign": "De semnat pe hârtie (PDF)",
         "agreementsHelp": "Toți voluntarii care nu sunt anulați, fiecare de la o pagină nouă: cine a acceptat, cu contractul acceptat; ceilalți, cu foaia de semnat pe hârtie. Cine nu are un contract în vigoare nu apare."
+      },
+      "presence": {
+        "column": "Prezent",
+        "hint": "Bifat: a venit; nebifat: absent. Fișierul „doar prezenții” ia, dintre cei confirmați, cu număr, care participă, voluntarii bifați aici și alergătorii prezenți la masă sau cu „Am ajuns”. Intern.",
+        "tick": "Prezent",
+        "summaryPresent": "Prezenți: {count}",
+        "summaryAbsent": "Absenți: {count}",
+        "filter": "Prezență",
+        "all": "Toți, prezenți sau absenți",
+        "yes": "Prezenți",
+        "no": "Absenți",
+        "chip": "Prezent"
       },
       "decision": {
         "column": "Decizie ziua cursei",
@@ -7712,7 +7807,11 @@
       "eventInvitationsEraseBody": "Invitațiile deschise se retrag întâi, ca la „Retrage”: locul lor trece prin lista de așteptare. Apoi se șterg cele neacceptate; cele acceptate rămân cu înscrierea. Nu se poate anula.",
       "eventInvitationsErased": "Invitațiile acestei adrese au fost retrase și șterse; cele acceptate rămân cu înscrierile lor.",
       "eventInvitationsAcceptedKept": "O invitație acceptată e parte din înscrierea ei: se șterge odată cu înscrierea, din pagina înscrierii.",
-      "reconfirmations": "Reconfirmări ({count})"
+      "reconfirmations": "Reconfirmări ({count})",
+      "raffleEntries": "Înscrieri la tombolă ({count})",
+      "raffleEntry": "{event} · {method} · {when} · regulamentul, versiunea {version}",
+      "raffleTyped": "numele scris: {name}",
+      "raffleRecorded": "înregistrată de {role}"
     },
     "desk": {
       "title": "Masa de ridicare a numerelor",
@@ -7789,7 +7888,9 @@
         "checkinUndone": "Prezența a fost anulată.",
         "eliteMarked": "Marcat ca elită: BIB-ul lui se tipărește cu eticheta în locul numărului.",
         "eliteUnmarked": "Nu mai e elită: BIB-ul lui se tipărește din nou cu numărul.",
-        "eliteLabelSaved": "Eticheta pe BIB a fost salvată."
+        "eliteLabelSaved": "Eticheta pe BIB a fost salvată.",
+        "raffleSignedUp": "Gata: persoana e înscrisă la tombolă.",
+        "raffleAlready": "Persoana era deja înscrisă la tombolă."
       },
       "bibFree": "Numere libere la acest eveniment: {numbers}. Numărul salvat ajunge la participant pe email, cu codul QR; un număr deja purtat de altcineva este refuzat.",
       "guardian": "Minor — părinte/tutore: {name}",
@@ -9415,6 +9516,16 @@
               ]
             },
             {
+              "title": "La linia de sosire: «Cronometrare»",
+              "steps": [
+                "«Ziua cursei» → «Cronometrare» și alege cursa. Organizatorul apasă «Start» la pistol; tu vezi ceasul de la start.",
+                "Trece o elită: apasă-i butonul de sus (eticheta de pe BIB, cu numele sub ea). Trece oricine altcineva: scrie numărul de pe BIB și apasă «Sosit». Căsuța se golește pe loc pentru următorul.",
+                "Vin mai mulți deodată: apasă «Prinde timpul» o dată pentru fiecare, apoi scrie numerele în ordine.",
+                "Un rând roșu îți spune ce să notezi pe hârtie, cu timpul. Fără semnal, apăsările așteaptă pe telefon și pleacă singure.",
+                "Ai greșit? «Anulează» pe rândul tău din «Ultimii sosiți», în primele 10 minute, cât nu l-a mai trecut nimeni după tine. Altfel spune-i organizatorului: corectează la «Clasament»."
+              ]
+            },
+            {
               "title": "Ce nu faci de la masă (și e în regulă)",
               "steps": [
                 "Nu vezi adrese de email, nu anulezi, nu ștergi și nu exporți liste. Pentru astea, cheamă un Administrator."
@@ -9667,8 +9778,8 @@
               "title": "Clasamentul cursei: cum înregistrezi sosiții",
               "steps": [
                 "«Clasament» e în editorul cursei, în cardul «Înscrierile primite» de la sfârșitul paginii (lângă «Vezi înscrierile acestui eveniment»), nu în «Participare, înscrieri și regulament». Butonul apare doar la o cursă publicată sau al cărei start a trecut; la o ciornă, deschide adresa paginii direct.",
-                "La linia de sosire deschide «Sosire» (din «Clasament», sau «Alergări» → cursa → cardul «Înscrierile primite», de la sfârșitul editorului → «Clasament» → «Sosire»), pe telefon. Pagina arată ceasul de la start. Când un alergător trece linia, scrie numărul lui de concurs și apasă «Sosit»: site-ul îi pune timpul de la start, iar «Ultimii sosiți» arată ce ai înregistrat. Nu e nevoie de cronometru.",
-                "Un număr fără înscriere confirmată e refuzat, cu timpul lui în propoziție: notează-l pe hârtie și scrie-l după cursă la «Clasament», la «Alergători neînscriși». Cineva trecut din greșeală la abandon devine sosit când îi scrii numărul. Dacă preferi cronometrul sau o aplicație, notează numărul și timpul fiecăruia și scrie-i după, la «Clasament» — pașii următori.",
+                "La linia de sosire deschide «Cronometrare» pe telefon: «Ziua cursei» în bara de sus → «Cronometrare» (sau linkul de pe «Clasament»). La start apasă «Start» exact când se dă startul; fără el, timpii se numără de la «Startul cursei» din editor. Când trece o elită, apasă-i butonul (eticheta de pe BIB, cu numele sub ea); pe oricine altcineva îl treci cu numărul de pe BIB și «Sosit». Se salvează pe loc, cu timpul de la start, iar «Ultimii sosiți» arată cine a introdus fiecare rând. Nu e nevoie de cronometru.",
+                "Vin mai mulți deodată? Apasă «Prinde timpul» o dată pentru fiecare, apoi scrie numerele în ordine: fiecare ia cel mai vechi timp prins. Un număr fără înscriere confirmată e refuzat, cu timpul lui pe rând: notează-l pe hârtie și scrie-l după cursă la «Clasament», la «Alergători neînscriși». Un număr trecut a doua oară — de tine sau de alt voluntar — nu schimbă nimic: rămâne primul timp, iar al doilea apare în «Istoricul sosirilor», la «Clasament». Un alergător trecut «Descalificat» la «Clasament» rămâne așa când îi treci numărul. Ai greșit? «Anulează» pe rândul tău, 10 minute, cât nu l-a mai trecut nimeni după tine; după aceea, la «Clasament». Dacă preferi cronometrul sau o aplicație, notează numărul și timpul fiecăruia și scrie-i după, la «Clasament» — pașii următori.",
                 "La «Alergători înscriși» e un rând pentru fiecare înscris cu număr. Scrie timpul în «Timp» (h:mm:ss sau mm:ss); «Stare» rămâne pe «Din timp (Sosit / Neprezentat)» — un timp înseamnă «Sosit». Pentru cine n-a terminat alege «Abandon», «Neprezentat» sau «Descalificat», fără timp. «Timp cip» și «Notă» sunt opționale.",
                 "Ai timpii într-un fișier? Deschide «Importă din CSV», lipește textul (număr, timp pe fiecare rând; cu timp cip și stare dacă ai) sau alege fișierul și apasă «Importă din CSV». Rândurile intră în căsuțe; nimic nu se salvează încă.",
                 "Un număr pe care nu-l are nicio înscriere ajunge la «Alergători neînscriși»: scrie-i numele și, pentru categorie, sexul și data nașterii. Bifează «A acceptat să apară cu numele în clasament» doar dacă persoana ți-a spus-o. «Adaugă un alergător neînscris» face un rând gol.",
@@ -10068,8 +10179,10 @@
             {
               "title": "Publică clasamentul pe pagina evenimentului",
               "steps": [
-                "Clasamentul apare pe site doar după ce îl publici, doar după ce a început cursa și doar dacă nota de confidențialitate și termenii în vigoare descriu clasamentul — «Documente legale» spune dacă trebuie aprobate texte noi; «Sarcini» are rândul.",
+                "Clasamentul apare pe site doar după ce îl publici, doar de la startul cursei și doar dacă nota de confidențialitate și termenii în vigoare descriu clasamentul — «Documente legale» spune dacă trebuie aprobate texte noi; «Sarcini» are rândul.",
                 "Pe «Clasament», la «Pe pagina evenimentului», bifează «Clasamentul e public pe pagina evenimentului» și apasă «Salvează». Pagina arată locul, numărul, timpul și categoria; numele doar la cine a bifat lista la înscriere sau la alergătorul neînscris care a acceptat — ceilalți apar ca „Participant #număr”.",
+                "Poți bifa și înainte de cursă: cardul spune «Public de la start», cu ziua și ora startului. Până la start pe site nu apare nimic; de la start apare fiecare rezultat pe care îl salvezi, iar cât ține cursa pagina se actualizează singură la 30 de secunde.",
+                "Sub fiecare „Pe site: Participant #…” scrie de ce nu apare numele, iar sus, «Cu nume pe site…» spune câți din cei din clasament apar cu numele. La un alergător înscris, numele îl pune doar bifa lui; un administrator poate doar să-l ascundă.",
                 "Clasamentul stă pe pagină cât lista publică a participanților, de la sfârșitul cursei («Setări» → «Termene»). Debifezi oricând; rezultatele rămân salvate.",
                 "Cine s-a înscris sub o notă de confidențialitate mai veche, care nu descria clasamentul, apare ca „Participant #număr”, chiar dacă a bifat lista. Abia după ce clubul aprobă o notă de confidențialitate care numește bifa lângă clasament (câmpul {{resultsNameAsk}}, în «Documente legale») — după ce clubul și avocatul modifică fraza care le spune că apar doar cu numărul — pagina înscrierii lor (linkul din emailul ei) le arată «Vreau să apar cu numele în clasament». Clubul nu trimite un email nou pentru asta: spune-le cu «Trimite un mesaj participanților», din editorul cursei, că pot bifa din linkul înscrierii și că pot debifa oricând."
               ]
@@ -12225,7 +12338,8 @@
       "intro": "Scrie timpii, importă-i dintr-un CSV și salvează tot dintr-o dată. Locurile se calculează singure.",
       "introMore": "Un rând pe alergător, după numărul de concurs. Locurile sunt în total, la sex și la categorie; timpurile egale împart locul. Un rând cu doar o notă înseamnă neprezentat.",
       "notRace": "Doar o cursă are clasament. Alergările de grup și celelalte evenimente nu au.",
-      "notStarted": "Cursa nu a început încă. Poți scrie rezultate de pe acum.",
+      "notStarted": "Cursa nu a început încă. Poți scrie rezultate și bifa clasamentul public de pe acum; pe site nu apare nimic până la start.",
+      "notStartedEnterOnly": "Cursa nu a început încă. Poți scrie rezultate de pe acum; pe site nu apare nimic până la start.",
       "summary": {
         "FINISHED": "Sosiți: {count}",
         "DNF": "Abandon: {count}",
@@ -12283,6 +12397,17 @@
         "outOfRanking": "Pe site: nu apare — elită în afara clasamentului",
         "outOfRankingAmbassador": "Pe site: nu apare — ambasador în afara clasamentului"
       },
+      "namedCount": "Cu nume pe site: {named} din {shown}",
+      "publicWhy": {
+        "noResultsNotice": "Nota de confidențialitate în vigoare nu descrie clasamentul: nimeni nu apare cu numele.",
+        "noName": "Nu are un nume de arătat.",
+        "typedNoAgreement": "Alergător trecut de mână: nu s-a notat acordul pentru nume.",
+        "notTicked": "N-a bifat „Vreau să apar pe lista de participanți & rezultate”.",
+        "hiddenByClub": "Un administrator a debifat „Apare pe site”.",
+        "notConfirmed": "Înscrierea nu e confirmată.",
+        "hiddenGuest": "Invitat special: evenimentul nu arată public invitații speciali.",
+        "olderNotice": "Înscris sub o notă de confidențialitate mai veche: apare cu numele doar dacă cere din pagina înscrierii, când nota o permite."
+      },
       "outOfRanking": "în afara clasamentului",
       "nameless": "Fără nume: înscrierea a fost ștearsă. Rezultatul rămâne, fără nume.",
       "addRow": "Adaugă un alergător neînscris",
@@ -12291,6 +12416,8 @@
       "agreedHelp": "Bifezi doar dacă persoana ți-a spus-o; pentru un minor, părintele sau tutorele. Cine a bifat și când rămân în jurnal.",
       "noPlace": "fără loc încă",
       "noPlaceSettled": "fără loc",
+      "placeHint": "„Loc” e locul în clasament: general și, sub el, la sex și la categorie. Îl calculează site-ul din timpi; până scrii un timp, rândul spune „fără loc încă”.",
+      "placeHelp": "Timpii egali împart locul, iar următorul e sărit (1, 2, 2, 4). Categoria e sexul și grupa de vârstă din ziua cursei. „Fără loc” rămâne la abandon, neprezentat și descalificat.",
       "place": {
         "sex": "la sex: {position}",
         "category": "la categorie ({category}): {position}"
@@ -12308,17 +12435,22 @@
         "help": "Pagina arată locul, numărul, timpul și categoria. Numele apare doar la cine a bifat lista sau la cel adăugat de mână care a acceptat să apară cu numele; ceilalți apar ca „Participant #număr”.",
         "confirmOnTitle": "Faci clasamentul public?",
         "confirmOnBody": "Oricine poate citi clasamentul pe pagina evenimentului, cu numele doar al celor care au bifat sau au acceptat.",
+        "confirmOnBodyFromStart": "De la start, oricine poate citi clasamentul pe pagina evenimentului, pe măsură ce sosesc alergătorii, cu numele doar al celor care au bifat sau au acceptat. Până la start nu apare nimic.",
         "confirmOffTitle": "Scoți clasamentul de pe site?",
         "confirmOffBody": "Pagina evenimentului nu mai arată clasamentul. Rezultatele rămân salvate.",
         "gate": "Nota de confidențialitate în vigoare nu descrie încă clasamentul, așa că nu-l poți publica.",
         "gateTerms": "Termenii în vigoare nu descriu încă clasamentul: cei vechi promiteau că te întreabă înainte. Aprobă termeni noi ca să-l publici.",
-        "gateStart": "Clasamentul se poate publica după ce a început cursa.",
+        "beforeStart": "Poți bifa de pe acum: pe site, clasamentul apare de la start, {start}, pe măsură ce sosesc alergătorii.",
+        "beforeStartUnannounced": "Poți bifa de pe acum: pe site, clasamentul apare de la start, după ce anunți ora startului, pe măsură ce sosesc alergătorii.",
+        "fromStart": "Clasamentul apare pe site de la start, {start}, pe măsură ce sosesc alergătorii.",
+        "fromStartUnannounced": "Clasamentul apare pe site de la start, după ce anunți ora startului, pe măsură ce sosesc alergătorii.",
         "gateLink": "Documente legale",
         "adminOnly": "Doar un administrator poate publica clasamentul.",
         "empty": "Nu e niciun rezultat salvat încă.",
         "save": "Salvează",
         "saving": "Se salvează…",
         "stateOn": "Public",
+        "stateFromStart": "Public de la start",
         "stateOff": "Nepublic"
       },
       "export": "Descarcă clasamentul (CSV)",
@@ -12403,25 +12535,48 @@
         "saving": "Se salvează…"
       },
       "finish": {
-        "title": "Sosire: {event}",
-        "link": "Sosire",
-        "backToResults": "Înapoi la clasament",
-        "intro": "Scrie numărul de concurs când alergătorul trece linia și apasă «Sosit»: site-ul îi pune timpul de la start. Corecturile se fac la «Clasament».",
-        "more": "Un număr fără înscriere confirmată e refuzat cu timpul în propoziție: notează-l și scrie-l la «Clasament». Cineva trecut din greșeală la abandon devine sosit.",
-        "gun": "Startul: {time}",
-        "elapsed": "De la start: {time}",
-        "notStarted": "Cursa nu a început încă. Sosirile se înregistrează după start.",
-        "bibLabel": "Numărul de concurs",
-        "record": "Sosit",
-        "recording": "Se înregistrează…",
-        "recorded": "Sosit: #{bib} {name} · {time} · locul {position}",
-        "recordedNameless": "Sosit: #{bib} · {time} · locul {position}",
-        "recent": {
-          "title": "Ultimii sosiți",
-          "aside": "{finished} sosiți din {withNumber} cu număr",
-          "empty": "Nimeni nu a sosit încă.",
-          "line": "#{bib} {name} · {time} · locul {position}",
-          "lineNameless": "#{bib} · {time} · locul {position}"
+        "link": "Cronometrare"
+      },
+      "history": {
+        "title": "Istoricul sosirilor",
+        "count": {
+          "one": "{count} rând",
+          "few": "{count} rânduri",
+          "other": "{count} de rânduri"
+        },
+        "intro": "Fiecare scriere a clasamentului, cea mai nouă prima: când, cine, ce și de unde. Numele de lângă număr e cel de azi: istoricul păstrează doar numărul.",
+        "empty": "Nimic scris încă.",
+        "limited": "Se văd cele mai noi {count}.",
+        "line": "{when} · {by} {what} · {where}",
+        "where": {
+          "timing": "Cronometrare",
+          "results": "Clasament"
+        },
+        "what": {
+          "finish": "a trecut {runner} la {time}",
+          "finishTurned": "a trecut {runner} la {time} (era trecut ca nesosit)",
+          "duplicate": "a trecut din nou {runner} la {time} — rămâne {stored}",
+          "kept": "a trecut {runner} la {time} — rămâne {status}, cum e la «Clasament»",
+          "undo": "a anulat {runner} ({time})",
+          "created": "a adăugat {runner}: {status}",
+          "updated": "a modificat {runner}: {status}",
+          "updatedBoxes": "a modificat {runner}: {status} ({boxes})",
+          "deleted": "a șters rezultatul {runner} ({status})",
+          "gunSet": "a dat startul la {time}",
+          "gunMoved": "a mutat startul la {time} (era {previous})",
+          "gunCleared": "a anulat startul (era {previous})"
+        },
+        "box": {
+          "bib": "număr",
+          "status": "stare",
+          "time": "timp",
+          "chip": "timp cip",
+          "note": "notă",
+          "name": "nume",
+          "sex": "sex",
+          "birthDate": "data nașterii",
+          "registration": "înscriere",
+          "nameAgreed": "acordul pentru nume"
         }
       }
     },
@@ -12677,7 +12832,10 @@
         "desk": "Prezența",
         "results": "Clasament",
         "items": "Lucruri de adus",
-        "itemsShort": "Lucruri"
+        "itemsShort": "Lucruri",
+        "raffle": "Tombolă",
+        "timing": "Cronometrare",
+        "timingShort": "Sosiri"
       },
       "items": {
         "title": "Lucruri de adus",
@@ -12716,6 +12874,233 @@
           "FORBIDDEN": "Rolul tău nu permite această acțiune.",
           "NOT_FOUND": "Lucrul nu mai e pe listă — poate l-a șters un coleg.",
           "VALIDATION_ERROR": "Numele are între 1 și 120 de caractere, iar nota cel mult 200."
+        }
+      }
+    },
+    "raffle": {
+      "title": "Tombolă",
+      "intro": "Toți alergătorii, elitele și voluntarii evenimentului și dacă participă la tombolă. Extragerea o faceți voi, din fișier.",
+      "noEvent": "Niciun eveniment de arătat.",
+      "noRaffle": "Evenimentul ales nu are tombolă. „Avem tombolă” se bifează în editorul evenimentului, la „Numere de concurs”.",
+      "event": "Evenimentul",
+      "show": "Arată",
+      "settings": {
+        "who": "Participă: {groups}",
+        "nobody": "nicio grupă",
+        "groups": {
+          "RUNNER": "alergătorii",
+          "ELITE": "elitele",
+          "VOLUNTEER": "voluntarii"
+        },
+        "automatic": "din oficiu",
+        "signUp": "cu înscriere separată",
+        "open": "înscrieri deschise",
+        "closed": "înscrieri închise",
+        "why": "Închise pentru că: {why}",
+        "closedWhy": {
+          "noRaffle": "evenimentul nu are tombolă",
+          "notSignUpMode": "tombola e din oficiu",
+          "signUpClosed": "bifa „Înscrierile la tombolă sunt deschise” nu e pusă",
+          "notARace": "doar o cursă primește înscrieri la tombolă",
+          "notPublished": "evenimentul nu e publicat",
+          "notScheduled": "evenimentul e anulat sau încheiat",
+          "ended": "evenimentul s-a terminat",
+          "noRules": "Regulamentul tombolei nu e aprobat încă",
+          "noNotice": "nota de confidențialitate nu descrie încă tombola",
+          "groupNotAllowed": "nicio grupă nu e bifată"
+        },
+        "edit": "Schimbă în editor"
+      },
+      "counts": {
+        "total": "Participă: {count}",
+        "RUNNER": "Alergători: {count}",
+        "ELITE": "Elite: {count}",
+        "VOLUNTEER": "Voluntari: {count}",
+        "present": "Prezenți dintre ei: {count}"
+      },
+      "filters": {
+        "label": "Filtru",
+        "all": "Toți: {count}",
+        "in": "Participă: {count}",
+        "out": "Nu participă: {count}",
+        "present": "Doar prezenții: {count}",
+        "presentHint": "„Doar prezenții”: cei care participă și au fost prezenți — aceiași ca în fișierul „doar prezenții”."
+      },
+      "columns": {
+        "number": "Nr.",
+        "name": "Nume",
+        "kind": "Grupa",
+        "in": "Participă",
+        "how": "Înscris",
+        "present": "Prezent",
+        "actions": "Acțiuni"
+      },
+      "yes": "Da",
+      "no": "Nu",
+      "reasons": {
+        "groupNotAllowed": "grupa nu e bifată",
+        "notConfirmed": "neconfirmat",
+        "noNumber": "fără număr",
+        "takenOut": "scos de organizatori",
+        "notSignedUp": "nu s-a înscris"
+      },
+      "standing": {
+        "in": "Tombolă: participă",
+        "out": "Tombolă: nu participă",
+        "why": "De ce: {reason}"
+      },
+      "methods": {
+        "LINK": "din pagina înscrierii",
+        "FORM": "din formular",
+        "DESK": "la masă",
+        "STAFF": "de organizatori"
+      },
+      "signedUpAt": "{method} · {when}",
+      "accepted": "A acceptat regulamentul",
+      "acceptedHelp": "Persoana a acceptat Regulamentul tombolei, pe hârtie sau verbal.",
+      "signUp": "Înscrie la tombolă",
+      "signUpShort": "Înscrie",
+      "signUpFor": "Înscrie la tombolă: {name}",
+      "takeOut": "Scoate",
+      "putBack": "Pune înapoi",
+      "takeOutFor": "Scoate de la tombolă: {name}",
+      "putBackFor": "Pune înapoi la tombolă: {name}",
+      "present": "Prezent",
+      "presentFor": "Prezent: {name}",
+      "delete": "Șterge înscrierea",
+      "deleteFor": "Șterge înscrierea la tombolă: {name}",
+      "deleteTitle": "Ștergi înscrierea la tombolă a persoanei {name}?",
+      "deleteBody": "Persoana nu mai participă la tombolă până nu se înscrie din nou. Nu i se trimite niciun e-mail.",
+      "cancel": "Renunță",
+      "print": "Tipărește",
+      "empty": "Nimeni de arătat aici."
+    },
+    "timing": {
+      "title": "Cronometrare",
+      "show": "Arată",
+      "intro": "Când trece cineva linia: la o elită apasă-i butonul, la oricine altcineva scrie numărul de pe BIB și apasă «Sosit». Se salvează pe loc; corecturile se fac la «Clasament».",
+      "more": "Vin mulți deodată? Apasă «Prinde timpul» pentru fiecare, apoi scrie numerele în ordine. Fără semnal, apăsările așteaptă pe telefon. Un număr trecut de două ori păstrează primul timp.",
+      "clock": "De la start: {time}",
+      "notStarted": "Cursa nu a pornit încă.",
+      "boxLabel": "Numărul de pe BIB",
+      "bibHint": "Doar cifre: numărul de pe BIB.",
+      "record": "Sosit",
+      "place": "locul {position}",
+      "accountGone": "cont șters",
+      "enteredBy": "introdus de {name}",
+      "changedBy": "modificat de {name}",
+      "offline": "Fără legătură cu site-ul: ce ai apăsat așteaptă pe telefon și pleacă singur când revine semnalul.",
+      "session": "Sesiunea ta s-a încheiat: intră din nou în cont. Ce ai apăsat rămâne pe telefon și pleacă după ce intri.",
+      "reload": "Site-ul a fost actualizat: reîncarcă pagina. Ce ai apăsat așteaptă pe telefon și pleacă după reîncărcare.",
+      "elsewhere": {
+        "one": "{count} apăsare așteaptă la {event}: se trimite doar de pe pagina lui.",
+        "few": "{count} apăsări așteaptă la {event}: se trimit doar de pe pagina lui.",
+        "other": "{count} de apăsări așteaptă la {event}: se trimit doar de pe pagina lui."
+      },
+      "elsewhereOpen": "Deschide pagina",
+      "elsewhereUnnamed": "alt eveniment",
+      "elites": {
+        "title": "Elite",
+        "help": "Apasă pe elită când trece linia: pe BIB-ul ei e doar eticheta, fără număr.",
+        "aria": "Sosit: {label} — {name}",
+        "finished": "✓ {time}",
+        "noNumberLine": "Fără număr: un Administrator îi pune unul pe lista de elită (pe BIB tot nu se tipărește). Până atunci, notează-i timpul pe hârtie.",
+        "noNumberRegistration": "Fără număr de concurs: dă-i unul la «Prezența» (pe BIB tot nu se tipărește). Până atunci, notează-i timpul pe hârtie."
+      },
+      "keep": {
+        "button": "Prinde timpul",
+        "help": "Vin mai mulți deodată: apasă o dată pentru fiecare, apoi scrie numerele în ordine — fiecare ia cel mai vechi timp prins. Un timp prins de peste 10 minute se șterge: îl notezi pe hârtie.",
+        "kept": "Timpi prinși",
+        "drop": "Șterge timpul prins {time}",
+        "ageSeconds": "acum {count} s",
+        "ageMinutes": "acum {count} min",
+        "stale": {
+          "one": "Un timp prins acum mai bine de 10 minute s-a șters, nu mai e dat unui număr: {times} — notează-l pe hârtie.",
+          "few": "{count} timpi prinși acum mai bine de 10 minute s-au șters, nu mai sunt dați unui număr: {times} — notează-i pe hârtie.",
+          "other": "{count} de timpi prinși acum mai bine de 10 minute s-au șters, nu mai sunt dați unui număr: {times} — notează-i pe hârtie."
+        },
+        "staleDone": "Am notat"
+      },
+      "entries": {
+        "title": "Pe telefonul acesta",
+        "waiting": "se salvează…",
+        "saved": "salvat",
+        "waitingCount": "de trimis: {count}",
+        "duplicate": "era deja trecut de {by} la {time} — rămâne așa; apăsarea ta ({mine}) e în «Istoricul sosirilor».",
+        "decided": "e trecut «{status}» de {by} la «Clasament» — rămâne așa; apăsarea ta ({mine}) e în «Istoricul sosirilor».",
+        "otherAccount": "apăsat în alt cont pe telefonul acesta — nu se trimite de aici; notează pe hârtie: {time}"
+      },
+      "refused": {
+        "RESULT_BIB_UNKNOWN": "nicio înscriere confirmată și nicio elită cu numărul acesta — notează pe hârtie: {time}",
+        "RESULT_FINISH_NOT_STARTED": "cursa nu a pornit încă — notează pe hârtie ora: {clock}",
+        "RESULT_FINISH_CLOSED": "startul a fost acum mai bine de o zi — timpul se scrie la «Clasament»: {time}",
+        "RESULTS_NOT_OPEN": "doar o cursă are cronometrare — notează pe hârtie: {time}",
+        "VALIDATION_ERROR": "numărul nu e bun — notează pe hârtie: {time}",
+        "FORBIDDEN": "rolul tău nu poate trece sosiri — notează pe hârtie: {time}",
+        "NOT_FOUND": "evenimentul nu mai e pe site — notează pe hârtie: {time}",
+        "RESULT_PRESS_UNDONE": "anulat între timp — vezi «Clasament»",
+        "other": "nu s-a salvat — notează pe hârtie: {time}"
+      },
+      "recent": {
+        "title": "Ultimii sosiți",
+        "aside": "{finished} sosiți din {withNumber} cu număr",
+        "empty": "Nimeni nu a sosit încă."
+      },
+      "undo": {
+        "button": "Anulează",
+        "aria": "Anulează sosirea {who}",
+        "done": "anulat",
+        "refused": {
+          "RESULT_UNDO_NOT_ALLOWED": "nu se mai anulează aici: corectează la «Clasament»",
+          "NOT_FOUND": "nu mai e în clasament",
+          "FORBIDDEN": "rolul tău nu poate anula",
+          "other": "nu s-a anulat: corectează la «Clasament»"
+        },
+        "pressedAgain": {
+          "other": "alt voluntar l-a trecut și el după tine: nu se mai anulează aici — corectează la «Clasament»",
+          "self": "l-ai mai trecut o dată după aceea: nu se mai anulează aici — corectează la «Clasament»"
+        }
+      },
+      "gun": {
+        "start": "Start",
+        "move": "Mută startul acum",
+        "sending": "Se trimite…",
+        "clear": "Anulează startul",
+        "clearTitle": "Anulezi startul?",
+        "clearBody": "Sosirile se vor număra din nou de la startul planificat ({time}).",
+        "pressed": "Startul: {time} · apăsat de {by}",
+        "planned": "Startul planificat: {time} (din editor). Până la «Start», sosirile se numără de la el.",
+        "startHelp": "Apasă «Start» exact când se dă startul: de atunci se numără timpii.",
+        "moveHelp": "Ai apăsat devreme sau târziu? Apasă din nou exact la start, la peste zece secunde de prima apăsare. După primul sosit, startul nu se mai mută.",
+        "fixed": "Startul e fixat: au sosit deja alergători. O corectură a timpilor se face la «Clasament».",
+        "window": "Butonul «Start» apare cu 3 ore înainte de startul planificat și rămâne până la 6 ore după."
+      },
+      "banner": {
+        "recorded": "Sosit: {who} · {time}",
+        "recordedShort": "Sosit: {who}.",
+        "duplicate": "{who} era deja trecut de {by} la {time} — rămâne așa; apăsarea ta ({mine}) e în «Istoricul sosirilor».",
+        "duplicateShort": "{who} era deja trecut — rămâne primul timp; apăsarea ta ({mine}) e în «Istoricul sosirilor».",
+        "decided": "{who} e trecut «{status}» la «Clasament» — rămâne așa; apăsarea ta ({mine}) e în «Istoricul sosirilor».",
+        "undone": "Anulat: {who}.",
+        "gun": {
+          "set": "Startul a fost dat: {time}.",
+          "cleared": "Startul a fost anulat: sosirile se numără de la startul planificat.",
+          "unchanged": "Startul nu era dat: nimic de anulat.",
+          "repeat": "Startul rămâne la {time}: a doua apăsare, în cel mult zece secunde de la prima, nu îl mută.",
+          "changed": "Startul a fost dat deja de {by} la {time}: apăsarea ta nu l-a mutat.",
+          "changedCleared": "Startul a fost anulat între timp: apăsarea ta nu l-a dat. Apasă «Start» exact când se dă startul."
+        },
+        "refused": {
+          "RESULT_BIB_UNKNOWN": "{who}: nicio înscriere confirmată și nicio elită cu numărul acesta. Timpul lui: {time} — notează-l pe hârtie.",
+          "RESULT_FINISH_NOT_STARTED": "{who}: cursa nu a pornit încă — o sosire nu poate fi înainte de start.",
+          "RESULT_FINISH_CLOSED": "{who}: startul a fost acum mai bine de o zi — timpii se scriu la «Clasament».",
+          "RESULT_UNDO_NOT_ALLOWED": "Nu se mai anulează aici: doar sosirea ta, apăsată aici, neschimbată și netrecută din nou de nimeni, în primele 10 minute. Corectează la «Clasament».",
+          "RACE_GUN_FIXED": "Startul e fixat: au sosit deja alergători. Corectează timpii la «Clasament».",
+          "RACE_GUN_WINDOW": "«Start» se apasă de cu 3 ore înainte de startul planificat până la 6 ore după.",
+          "RESULTS_NOT_OPEN": "Doar o cursă are cronometrare.",
+          "VALIDATION_ERROR": "Scrie numărul de pe BIB, doar cifre.",
+          "FORBIDDEN": "Rolul tău nu poate face asta.",
+          "NOT_FOUND": "Nu mai e: evenimentul sau rândul a fost șters între timp."
         }
       }
     }
@@ -12758,7 +13143,13 @@
     "termsTitle": "Termeni și condiții",
     "privacyTitle": "Notă de confidențialitate",
     "volunteerAgreementTitle": "Contract de voluntariat",
-    "volunteerAgreementBlanks": "Un singur text pentru toate evenimentele: numele, rolul, evenimentul, data și locul se completează când accepți, iar PDF-ul pe care îl primești le arată."
+    "volunteerAgreementBlanks": "Un singur text pentru toate evenimentele: numele, rolul, evenimentul, data și locul se completează când accepți, iar PDF-ul pe care îl primești le arată.",
+    "raffleGroups": {
+      "RUNNER": "alergătorii înscriși și confirmați, cu număr de concurs",
+      "ELITE": "sportivii de top ai cursei",
+      "VOLUNTEER": "voluntarii confirmați, cu număr de voluntar",
+      "and": "și"
+    }
   },
   "Registration": {
     "title": "Înscriere: {event}",
@@ -13643,6 +14034,22 @@
       "cannot": "Nu mai poți ajunge? Folosește „Anulează înscrierea” mai jos.",
       "done": "Am notat că vii — ne-ai răspuns {date}.",
       "failed": "Răspunsul nu a fost înregistrat pentru această înscriere."
+    },
+    "raffle": {
+      "title": "Tombola",
+      "intro": "La eveniment avem tombolă, cu înscriere separată: participi doar dacă te înscrii.",
+      "rules": "Citește Regulamentul tombolei",
+      "accept": "Am citit și accept Regulamentul tombolei",
+      "signUp": "Particip la tombolă",
+      "signingUp": "Te înscriem…",
+      "signedUp": "Ești înscris la tombolă.",
+      "withdraw": "Nu mai particip",
+      "done": "Gata: te-am înscris la tombolă.",
+      "withdrawn": "Nu mai participi la tombolă.",
+      "failed": "Nu s-a putut: înscrierile la tombolă s-au închis, sau persoana nu mai poate participa.",
+      "needAccept": "Bifează întâi că accepți Regulamentul tombolei.",
+      "otherAdult": "Persoana se înscrie la tombolă singură, din pagina înscrierii ei.",
+      "withdrawing": "Te scoatem…"
     }
   },
   "Devs": {
@@ -13752,7 +14159,7 @@
     "rolesIntro": "Fiecare rol poate tot ce poate cel de sub el, plus încă ceva. Linia care contează este între Tehnic și Administrator: de acolo în sus se văd datele participanților.",
     "youAre": "rolul tău",
     "roleSummary": {
-      "CONTRIBUTOR": "masa de ridicare a numerelor, și atât",
+      "CONTRIBUTOR": "masa de ridicare a numerelor și înscrierea la tombolă, plus «Cronometrare»: trece sosirile și își anulează apăsarea; atât",
       "COPYWRITER": "textele oricărui eveniment și ale paginilor; trimite spre aprobare",
       "MODERATOR": "înscrierile și ziua cursei: citește evenimentele, înscrierile, exportul și numerele, scrie participanților, ține galeria; nu modifică un eveniment",
       "DEV": "pagina de configurare; nu modifică evenimente, fără date despre participanți",
@@ -14379,7 +14786,8 @@
       "familySignOneLeft": "A mai rămas o singură declarație de semnat la acest eveniment: se semnează din linkul primit pe email pentru acea persoană.",
       "familyWithdrawn": "Gata: înscrierea e anulată, iar adresa primește un email de confirmare.",
       "volunteerSent": "Oferta ta de voluntar a ajuns la organizatori.",
-      "volunteerGuardianAccepted": "Acordul tău a fost înregistrat."
+      "volunteerGuardianAccepted": "Acordul tău a fost înregistrat.",
+      "raffleEntered": "Ești înscris la tombolă. Mult noroc!"
     },
     "toast": {
       "saved": "Salvat.",
@@ -14594,6 +15002,8 @@
       "volunteerDecisionCleared": "Decizia pentru ziua cursei a fost ștearsă. Nu s-a trimis nimic nimănui.",
       "volunteerRaffleOn": "Participă la tombolă: e din nou pe lista pentru tombolă.",
       "volunteerRaffleOff": "Nu mai participă la tombolă: nu apare pe lista pentru tombolă.",
+      "volunteerPresentOn": "Bifat: prezent.",
+      "volunteerPresentOff": "Debifat: absent.",
       "volunteerPlaced": "Stă la punctul ales: apare în planul voluntarilor.",
       "volunteerUnplaced": "Nu mai stă la niciun punct: e din nou la „Fără punct”.",
       "eventTodoDone": "Bifat. Rândul e la „Gata”.",
@@ -14830,6 +15240,7 @@
       },
       "resultDeleted": "Rezultat șters. Locurile celorlalți s-au recalculat.",
       "resultsPublished": "Clasamentul e acum public pe pagina evenimentului.",
+      "resultsPublishedFromStart": "Gata: clasamentul apare pe pagina evenimentului de la start, pe măsură ce sosesc alergătorii.",
       "resultsUnpublished": "Clasamentul nu mai e public pe pagina evenimentului.",
       "resultsPublicUnchanged": "Era deja așa; nimic de schimbat.",
       "rsvpAskAudience": "Alegerea pentru întrebarea „Vii?” a fost salvată.",
@@ -14888,7 +15299,15 @@
       "raceDayItemRemoved": "Lucru șters.",
       "raceDayItemBrought": "Bifat ca adus.",
       "raceDayItemUnbrought": "Debifat.",
-      "raceDayItemUnchanged": "Era deja așa; nimic de schimbat."
+      "raceDayItemUnchanged": "Era deja așa; nimic de schimbat.",
+      "raffleSignedUp": "Gata: persoana e înscrisă la tombolă.",
+      "raffleAlready": "Persoana era deja înscrisă la tombolă.",
+      "raffleDeleted": "Înscrierea la tombolă e ștearsă.",
+      "raffleTakenOut": "Scos de la tombolă.",
+      "rafflePutBack": "Pus înapoi la tombolă.",
+      "rafflePresentOn": "Bifat: prezent.",
+      "rafflePresentOff": "Debifat: absent.",
+      "raffleUnchanged": "Era deja așa; nimic de schimbat."
     },
     "mail": {
       "now": "Pleacă acum{road}: {what}.",

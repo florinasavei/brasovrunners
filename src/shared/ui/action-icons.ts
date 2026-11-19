@@ -29,6 +29,7 @@ import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import EventSeatIcon from "@mui/icons-material/EventSeat";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
+import FlagIcon from "@mui/icons-material/Flag";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
@@ -80,6 +81,7 @@ import StraightenIcon from "@mui/icons-material/Straighten";
 import SubjectIcon from "@mui/icons-material/Subject";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import TextRotationNoneIcon from "@mui/icons-material/TextRotationNone";
+import TimerIcon from "@mui/icons-material/Timer";
 import TranslateIcon from "@mui/icons-material/Translate";
 import UndoIcon from "@mui/icons-material/Undo";
 import UploadIcon from "@mui/icons-material/Upload";
@@ -278,7 +280,11 @@ export type ActionIconName =
   // «Voluntari» (§839): the tab's icon, the event card's «Voluntari» box's heart in the hand.
   | "volunteers"
   // «Unelte» (§926): the speed dial its public page wears, on its «Pagini» row and its «Ordinea meniului» entry.
-  | "tools";
+  | "tools"
+  // «Cronometrare» (§986): «Start» — the flag an organizer drops at the gun — and «⏱ Prinde timpul», the stopwatch that keeps one
+  // moment for the next number pressed when runners arrive in a bunch.
+  | "raceStart"
+  | "keepTime";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,
 // because this table must never reach a public page (above).
 
@@ -388,4 +394,6 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   // «Voluntari» (§839): the heart in the hand the event card's «Voluntari» box wears, so the tab and the box read as one subject.
   volunteers: VolunteerActivismIcon,
   tools: SpeedIcon,
+  raceStart: FlagIcon,
+  keepTime: TimerIcon,
 };

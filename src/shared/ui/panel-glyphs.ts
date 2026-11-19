@@ -73,6 +73,7 @@ import PrintIcon from "@mui/icons-material/Print";
 import PrivacyTipIcon from "@mui/icons-material/PrivacyTip";
 import PublicIcon from "@mui/icons-material/Public";
 import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
+import RedeemIcon from "@mui/icons-material/Redeem";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import ReorderIcon from "@mui/icons-material/Reorder";
 import RouteIcon from "@mui/icons-material/Route";
@@ -216,6 +217,10 @@ export const PANEL_GLYPHS = {
   // clock of a managed history), the consent withdrawn (the privacy shield), cancel and erase (their verbs' glyphs).
   tell: RecordVoiceOverIcon,
   raceDay: EmojiEventsIcon,
+  // «Cronometrare» (§986): «Ziua cursei»'s finish line — the stopwatch, the deadlines' own picture of time running.
+  timing: TimerIcon,
+  // «Ziua cursei» → «Tombolă» (§984): a wrapped prize.
+  raffle: RedeemIcon,
   answers: BadgeIcon,
   emergency: MedicalServicesIcon,
   auditTrail: ManageHistoryIcon,

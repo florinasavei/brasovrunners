@@ -1,0 +1,1 @@
+ALTER TYPE "public"."legal_document_key" ADD VALUE 'RAFFLE_RULES';

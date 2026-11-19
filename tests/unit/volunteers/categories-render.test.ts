@@ -141,6 +141,7 @@ const person = (over: Partial<VolunteerItem>): VolunteerItem => ({
   checkpointId: null,
   raceDayDecision: null,
   inRaffle: true,
+  present: false,
   shirtSize: null,
   createdAt: AT,
   updatedAt: AT,

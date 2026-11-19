@@ -122,7 +122,8 @@ export type AuditAction =
   /**
    * «Transformă în voluntar» (§948, `volunteers/transform.ts`): the registration was cancelled by the staff verb and its person
    * entered on the event's volunteers, in one transaction. Beside the cancellation's own row; the metadata is the volunteer's
-   * id, the role given and the state the registration left — never a name.
+   * id, the role given and the state the registration left — and, when the person held a raffle sign-up, its id, moved to the
+   * volunteer (`raffleEntryId`, §984) — never a name.
    */
   | "registration.became_volunteer"
   /**
@@ -657,6 +658,22 @@ export type AuditAction =
   | "event_elite.on_site"
   | "event_elite.off_site"
   /**
+   * A line's raffle ticks (§984), entity `event`: «Participă la tombolă» (`in_raffle` / `out_of_raffle`) and «Prezent»
+   * (`present` / `absent`), set on «Ziua cursei» → «Tombolă». The metadata is the line's id and the tick's new value — never the name.
+   */
+  | "event_elite.in_raffle"
+  | "event_elite.out_of_raffle"
+  | "event_elite.present"
+  | "event_elite.absent"
+  /**
+   * «Înscrierea la tombolă» (§984, `volunteers/raffle-entries.ts`), entity `event`: a person signed up for the event's raffle —
+   * the door (`method`: LINK, FORM, DESK, STAFF), the person's group (`kind`: RUNNER, ELITE, VOLUNTEER) and the entry's id — or
+   * withdrew or was taken off the sign-ups (`by`: `person` from their own link, `staff` at «Șterge înscrierea»). Never a name, a
+   * number or a typed word: the row the metadata names is deleted thirty days after the event, and the trail outlives it.
+   */
+  | "event_raffle.entry_created"
+  | "event_raffle.entry_withdrawn"
+  /**
    * An event's volunteers (§754), entity `event`: the switch «Primește voluntari», a role added, changed,
    * moved or removed (the club's own words), and a volunteer entered, changed, confirmed, cancelled,
    * deleted or signed up on the page (`volunteer.signed_up`, no actor). The metadata holds ids, the roles'
@@ -740,7 +757,8 @@ export type AuditAction =
   /**
    * «Transformă în alergător» (§948, `volunteers/transform.ts`), entity `event`: the volunteer was cancelled and entered on the
    * official waiting list's own entry, in one transaction. The metadata is the volunteer's id, the registration's and the
-   * state it landed in — never a name or an address.
+   * state it landed in — and, when the person held a raffle sign-up, its id, moved to the registration (`raffleEntryId`, §984)
+   * — never a name or an address.
    */
   | "volunteer.became_runner"
   | "volunteer.signed_up"
@@ -774,6 +792,23 @@ export type AuditAction =
   | "event_result.created"
   | "event_result.updated"
   | "event_result.deleted"
+  /**
+   * «Cronometrare» (§986): a press of a number already «Sosit» — another volunteer, or the same one a different second — or of a
+   * runner «Clasament» wrote off whose decision stays («Descalificat», or an «Abandon» / «Neprezentat» written after the moment
+   * pressed). The stored row stays as it was; this row keeps the press's own time beside the stored one (`{ bibNumber, gunTimeMs,
+   * storedGunTimeMs, storedStatus, storedResultId, finishLine: true }`; who pressed is the row's actor), so «Istoricul sosirilor»
+   * shows both for the organizers to compare, and a later «Anulează» of the stored row knows its number was pressed again. A finish
+   * pressed at the line marks its `event_result.created` / `.updated` with `finishLine: true` and the row's `resultId` (the undo's
+   * proof the line wrote it), and the line's own «Anulează» its `event_result.deleted` with `{ finishLine: true, undo: true }`.
+   * Never a name.
+   */
+  | "event_result.finish_duplicate"
+  /**
+   * «Start» and «Anulează startul» on «Cronometrare» (§986), entity `event`: the gun as an organizer pressed it at the start line
+   * (`{ at, previous }`, ISO instants, `previous` null for a first press) or taken off, back to the planned gun (`{ previous }`).
+   */
+  | "event.race_gun_set"
+  | "event.race_gun_cleared"
   /**
    * «Clasamentul e public pe pagina evenimentului» (§808), entity `event`: the Administrator made a race's results public or took
    * them off, and «Descarcă clasamentul (CSV)» — the file has the names, so who downloaded it and how many rows are recorded.

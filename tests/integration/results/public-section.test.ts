@@ -22,8 +22,8 @@ import { A_YEAR_AFTER, AFTER_THE_RACE, approvePrivacyNotice, approveResultsTexts
  * - the section in Romanian and in English: named and «Participant #bib» rows, the chip time under the time, the three who did not
  *   finish at the end with their words and no place, the «Publicat la … până la …» line, the stacked phone shape's words (`data-label`);
  * - the name rule is the read's, unchanged: an unticked runner and one the club typed are never named;
- * - nothing at all — no heading, no «în curând» — when it is not published, when the notice or the terms do not describe it, before the
- *   race, after the period, and for a group run;
+ * - nothing at all — no heading, no «în curând» — when it is not published, when the notice or the terms do not describe it, after the
+ *   period, and for a group run; before the race nothing to see either — only, on a ticked race, the live clock, hidden (§985);
  * - the chip: which of a page's events get one, and what the card draws with it.
  */
 const messages = { ro, en };
@@ -69,6 +69,8 @@ vi.mock("@/modules/public-cache/page-lifetime", async (importOriginal) => {
     },
   };
 });
+/** `next/navigation` for the live island a ticked race draws before its start (§985): a router the server render never calls. */
+vi.mock("next/navigation", async (importOriginal) => ({ ...(await importOriginal<typeof import("next/navigation")>()), useRouter: () => ({ refresh: () => {} }) }));
 /** The locale-aware link, as a plain anchor: the event's page is `/<locale>/evenimente/<slug>`. */
 vi.mock("@/i18n/navigation", () => {
   const path = (href: { pathname?: string; params?: { slug?: string } }) => `/${language}/evenimente/${href.params?.slug ?? ""}`;
@@ -353,9 +355,10 @@ describe("§809 «Clasament» is absent, with no heading and no «în curând»,
     expect(await section()).toBe("");
   });
 
-  it("draws nothing before the race has started, and nothing once the public list's period is over", async () => {
+  it("draws nothing to see before the race has started, and nothing once the public list's period is over", async () => {
     await publishedRace();
-    expect(await section(new Date(RACE_STARTS_AT.getTime() - 3_600_000))).toBe("");
+    // Before the start: no heading, no row — only the live clock, hidden and armed to the start (§985).
+    expect(await section(new Date(RACE_STARTS_AT.getTime() - 3_600_000))).toBe('<span hidden="" data-testid="results-live-quiet"></span>');
     expect(await section(A_YEAR_AFTER)).toBe("");
     // …and the day before the period ends it is still there.
     expect(await section(new Date(RACE_STARTS_AT.getTime() + 29 * 86_400_000))).not.toBe("");

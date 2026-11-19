@@ -1,107 +1,118 @@
-import { and, eq, isNotNull } from "drizzle-orm";
-import { eventVolunteers } from "@/db/schema/event-volunteers";
-import { events } from "@/db/schema/events";
-import { registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { CSV_BOM } from "@/modules/newsletter/subscribers-csv";
 import { csvCell } from "@/modules/registrations/csv";
-import { canManageVolunteers, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManageVolunteers, canReadRegistrations, type StaffSubject } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
+import type { RaffleKind } from "./domain/raffle";
+import { type RaffleRoster, readRaffleRosterRows } from "./raffle-roster";
 
 /*
   «Lista pentru tombolă» (§948; the owner, 2026-11-15: «vreau să fac o tombolă și trebuie să pot exporta toți voluntarii
-  și toți participanții»): one file for one event — everybody who wears a number there, runner or volunteer, by the
-  number: the number, the name, which of the two they are.
-
-  Who is in it: a **confirmed** registration with a race number, and a **confirmed** volunteer with a number of the
-  volunteers' own series. Nobody else — not a registration that is waiting, held, cancelled or expired, not a test one
-  (§30: omitted from everything the club is given), not a cancelled volunteer whose number stays retired, not a line of
-  the race's elite list (a name printed on a bib, nobody registered, §895). One number is one person at an event
-  (`bibs.ts`), so the file never holds a number twice.
+  și toți participanții»): one file for one event — everybody who takes part in its raffle, by the number: the number, the name,
+  which group they are, and whether they were there.
 
   Since §949 (the owner, 2026-11-16: «o bifă importantă, și coloană peste tot de „participă la tombolă"»): nobody an organizer
-  took out — «Participă la tombolă» unticked on the registrations' or the volunteers' list (`registrations.in_raffle`,
-  `event_volunteers.in_raffle`) — and, beside each runner, whether the desk checked them in («Prezent»): the owner chose a
-  raffle among who is there, and the draw is made outside the site, so the file says who was there and the club filters by
-  it. A column rather than a condition: a desk that did not check everybody in must not empty the list. The desk checks no
-  volunteer in, so a volunteer's cell is empty.
+  took out — «Participă la tombolă» unticked (`registrations.in_raffle`, `event_volunteers.in_raffle`) — and, beside each person,
+  whether they were there («Prezent»). A column rather than a condition: a desk that did not check everybody in must not empty the list.
 
-  A name and a number, for the club's own table: nothing else of the person — no address, telephone, age or state. It is
-  still a file of names that leaves the site, so it is taken only by a role that reads the registrations and works the
-  volunteers (the Organizer and the Administrators), asserted here (BR-REQ-060-01), and recorded as the other exports
-  are (§322): who, which event and how many of each — never a name.
+  Since the decision of 2026-11-18 titled «Prezent» on a volunteer, and «Lista pentru tombolă — doar prezenții»: a volunteer's
+  «Prezent» is the organizers' own tick on the «Voluntari» list (`event_volunteers.present`), and beside the full file, never in
+  place of it, a second one: **«Lista pentru tombolă — doar prezenții»** (`onlyPresent`) — the same people, of whom only the
+  runners checked in — at the desk, or by «Am ajuns» from their own link — and the volunteers ticked «Prezent».
+
+  Since §984 (the owner, 2026-11-18: «trebuie să bifez acolo cine se poate înscrie: doar alergătorii și elitele și voluntarii» and «tombolă
+  din oficiu vs tombolă cu înscriere separată»): who is in the file is the one function's answer (`domain/raffle.ts#raffleParticipation`,
+  read through `raffle-roster.ts#readRaffleRosterRows`) — the groups the event ticks in «Cine poate participa», and, «Cu înscriere separată»,
+  only those who signed up — and the file has three groups: «Alergător», «Elită» — a registration marked «Elită» (§897) and a line of the
+  race's elite list (§895), which takes part by name: its number when it has one, else an empty number cell, the numberless lines after
+  the numbered ones, by name — and «Voluntar». A line's «Prezent» is the organizers' tick on the «Tombolă» tab.
+
+  A name and a number, for the club's own table: nothing else of the person — no address, telephone, age or state. It is still a file
+  of names that leaves the site, so it is taken only by a role that reads the registrations and works the volunteers (the Organizer and
+  the Administrators), asserted here (BR-REQ-060-01), and recorded as the other exports are (§322): who, which event, how many of each
+  group and which of the two files — never a name.
 */
 
-export type RaffleKind = "RUNNER" | "VOLUNTEER";
+export type { RaffleKind };
 
-/** `present`: whether the desk checked the runner in; null for a volunteer, whom the desk checks nobody in as. */
-export type RaffleRow = { number: number; name: string; kind: RaffleKind; present: boolean | null };
+/** `present`: whether the person was there — a registration checked in (at the desk or by «Am ajuns»), a volunteer or an elite line ticked «Prezent». */
+export type RaffleRow = { number: number | null; name: string; kind: RaffleKind; present: boolean };
 
-export type RaffleList = { rows: RaffleRow[]; runners: number; volunteers: number };
+export type RaffleList = { rows: RaffleRow[]; runners: number; elites: number; volunteers: number };
 
-/** Whoever reads the registrations' list and works the volunteers: the Organizer and the Administrators. */
-export function canTakeRaffleList(role: StaffUser["role"]): boolean {
-  return canReadRegistrations(role) && canManageVolunteers(role);
+/**
+ * Which of the two files: `onlyPresent` keeps only the people there — the runners checked in at the desk or by «Am ajuns» from their
+ * own link, the volunteers and the elite lines ticked «Prezent» — everything else as for the whole file. Absent or false is the whole file.
+ */
+export type RaffleListOptions = { onlyPresent?: boolean };
+
+/**
+ * Whoever reads the registrations' list and works the volunteers: the Organizer and the Administrators. A role or an account, so an
+ * action may ask it at its door (`requireStaffCapability(canTakeRaffleList)`, §984).
+ */
+export function canTakeRaffleList(subject: StaffSubject): boolean {
+  return canReadRegistrations(subject) && canManageVolunteers(subject);
 }
 
-/** The event's list for a raffle, by number, and the download's record in the trail. */
-export async function exportRaffleList<T extends Record<string, unknown>>(db: Database<T>, actor: Pick<StaffUser, "id" | "role">, eventId: string, now: Date): Promise<RaffleList> {
+/** Everybody of the event's three groups with the answer — the «Tombolă» tab's read — for the organizers alone (BR-REQ-060-01). */
+export async function readRaffleRoster<T extends Record<string, unknown>>(db: Database<T>, actor: Pick<StaffUser, "role">, eventId: string, now: Date): Promise<RaffleRoster | null> {
+  if (!canTakeRaffleList(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not read the raffle`);
+  return readRaffleRosterRows(db, eventId, now);
+}
+
+/** The event's list for a raffle, by number — the whole of it, or only the people there — and the download's record in the trail. */
+export async function exportRaffleList<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  eventId: string,
+  now: Date,
+  options: RaffleListOptions = {},
+): Promise<RaffleList> {
   if (!canTakeRaffleList(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not take the list of numbers for a raffle`);
   if (!isUuid(eventId)) throw new DomainError("NOT_FOUND", "the event is not there");
-  const [event] = await db.select({ id: events.id }).from(events).where(eq(events.id, eventId)).limit(1);
-  if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
+  const roster = await readRaffleRosterRows(db, eventId, now);
+  if (!roster) throw new DomainError("NOT_FOUND", "the event is not there");
+  // Only a real `true` asks for the short file: anything else is the whole one, the file that never empties.
+  const onlyPresent = options.onlyPresent === true;
 
-  const runners = await db
-    .select({ number: registrations.bibNumber, name: registrations.registeredName, checkedInAt: registrations.checkedInAt })
-    .from(registrations)
-    .where(
-      and(
-        eq(registrations.eventId, eventId),
-        eq(registrations.status, "CONFIRMED"),
-        eq(registrations.kind, "REAL"),
-        isNotNull(registrations.bibNumber),
-        // «Participă la tombolă» (§949): nobody the Organizer or an Administrator took out.
-        eq(registrations.inRaffle, true),
-      ),
-    );
-  const volunteers = await db
-    .select({ number: eventVolunteers.bibNumber, name: eventVolunteers.name })
-    .from(eventVolunteers)
-    .where(and(eq(eventVolunteers.eventId, eventId), eq(eventVolunteers.state, "CONFIRMED"), isNotNull(eventVolunteers.bibNumber), eq(eventVolunteers.inRaffle, true)));
-
-  const rows: RaffleRow[] = [
-    ...runners.flatMap((row) => (row.number === null ? [] : [{ number: row.number, name: row.name, kind: "RUNNER" as const, present: row.checkedInAt !== null }])),
-    ...volunteers.flatMap((row) => (row.number === null ? [] : [{ number: row.number, name: row.name, kind: "VOLUNTEER" as const, present: null }])),
-  ].sort((a, b) => a.number - b.number || a.kind.localeCompare(b.kind) || a.name.localeCompare(b.name));
+  const rows: RaffleRow[] = roster.rows
+    .filter((row) => row.reason === "in" && (!onlyPresent || row.present))
+    .map((row) => ({ number: row.number, name: row.name, kind: row.kind, present: row.present }));
+  const count = (kind: RaffleKind) => rows.filter((row) => row.kind === kind).length;
+  const list: RaffleList = { rows, runners: count("RUNNER"), elites: count("ELITE"), volunteers: count("VOLUNTEER") };
 
   await recordAuditEvent(db, {
     actorStaffUserId: actor.id,
     action: "event.raffle_list_exported",
     entityType: "event",
     entityId: eventId,
-    metadata: { runners: runners.length, volunteers: volunteers.length },
+    // Which of the two files beside the counts: a trail that says a file of names left the site says which one, never a name.
+    metadata: { runners: list.runners, elites: list.elites, volunteers: list.volunteers, onlyPresent, signUp: roster.settings.signUp },
     now,
   });
-  return { rows, runners: runners.length, volunteers: volunteers.length };
+  return list;
 }
 
 export type RaffleCsvWords = { number: string; name: string; kind: string; kinds: Record<RaffleKind, string>; present: string; presentYes: string; presentNo: string };
 
 /**
- * The file: four columns — the number, the name, which of the two, and whether the desk checked the runner in — one row per number. The registrations export's rules (`registrations/csv.ts`): every cell
- * through the one `csvCell`, so a name starting with `=`, `+`, `-` or `@` opens as text and never as a formula; CRLF
- * between lines and a BOM first, because the club opens the file in Excel on Windows.
+ * The file: four columns — the number (empty for an elite line without one), the name, which group, and whether the person was there —
+ * one row per person; the present-only file has the same four. The registrations export's rules (`registrations/csv.ts`): every cell
+ * through the one `csvCell`, so a name starting with `=`, `+`, `-` or `@` opens as text and never as a formula; CRLF between lines and a
+ * BOM first, because the club opens the file in Excel on Windows.
  */
 export function buildRaffleCsv(words: RaffleCsvWords, rows: readonly RaffleRow[]): string {
-  const present = (row: RaffleRow) => (row.present === null ? "" : row.present ? words.presentYes : words.presentNo);
-  const lines = [[words.number, words.name, words.kind, words.present], ...rows.map((row) => [String(row.number), row.name, words.kinds[row.kind], present(row)])];
+  const lines = [
+    [words.number, words.name, words.kind, words.present],
+    ...rows.map((row) => [row.number === null ? "" : String(row.number), row.name, words.kinds[row.kind], row.present ? words.presentYes : words.presentNo]),
+  ];
   return `${CSV_BOM}${lines.map((line) => line.map(csvCell).join(",")).join("\r\n")}\r\n`;
 }
 
-/** The file's name, with the club's date: `tombola-2026-11-21.csv`. */
-export function raffleCsvFileName(day: string): string {
-  return `tombola-${day}.csv`;
+/** The file's name, with the club's date: `tombola-2026-11-21.csv`, and the present-only one `tombola-prezenti-2026-11-21.csv`. */
+export function raffleCsvFileName(day: string, options: RaffleListOptions = {}): string {
+  return options.onlyPresent === true ? `tombola-prezenti-${day}.csv` : `tombola-${day}.csv`;
 }

@@ -323,6 +323,9 @@ const BACKOFFICE_FILES: ReadonlySet<string> = new Set([
   // The card's «Cine se poate oferi» and «Invitații» (§820): the staff's, drawn inside the card above.
   "src/modules/volunteers/ui/VolunteerAccessChoice.tsx",
   "src/modules/volunteers/ui/VolunteerInvitations.tsx",
+  // The raffle's line beside a person (§984): drawn by the desk, a registration's and a volunteer's page and the two lists — the staff's.
+  // The public form's link and the manage page's card are other files of the same area, and stay public.
+  "src/modules/volunteers/ui/RaffleLines.tsx",
   // A race's «Clasament» lines (§808): the staff's; the public results beside them are another file of the same area.
   "src/modules/results/ui/ResultRows.tsx",
   "src/modules/registrations/ui/DeskRow.tsx",

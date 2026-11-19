@@ -12,8 +12,8 @@ export function eventTakesResults(type: string): boolean {
 /**
  * Whether a «Clasament» door is drawn for this event (§808, amended by §816: the owner, 2026-10-18, «unde găsesc clasamentul?»).
  *
- * A door should not hide a page that answers. The results page opens before the race starts and says so itself («Cursa nu a început
- * încă. Poți scrie rezultate de pe acum.»), so the editor's button and the registrations list's header read this one rule, which has
+ * A door should not hide a page that answers. The results page opens before the race starts and says itself that the race has not
+ * started yet (`Admin.results.notStarted`), so the editor's button and the registrations list's header read this one rule, which has
  * no start condition: the event is a race (`eventTakesResults`) and either published or already started. The one exception is a race
  * still ahead that is not public (a draft, in review, archived): it is not expected to have results typed before its start, so no
  * link is drawn, though the typed address still works. Once the start has passed the door is open whatever the editorial state,

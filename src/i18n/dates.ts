@@ -242,6 +242,14 @@ export function formatTime(date: Date, options: { locale: string; timeZone: stri
 }
 
 /**
+ * "09:30:07", always 24-hour, in the zone the caller names: a moment a second decides — «Start» as pressed and the lines of
+ * «Istoricul sosirilor» (§986), where two presses of one number may be a second apart.
+ */
+export function formatTimeWithSeconds(date: Date, options: { locale: string; timeZone: string }): string {
+  return formatter(intlLocale(options.locale), { ...DATE_FORMATS.time, second: "2-digit", timeZone: options.timeZone }).format(date);
+}
+
+/**
  * The words of a short, inline calendar day — "mie., 30 sept. 2026" / "Wed, 30 Sept 2026" — for a
  * client island that echoes a date while it is typed (the Recurență box's live sentence, §350).
  * The island may not format a date itself (§324), so the server hands it these strings and it

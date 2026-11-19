@@ -33,8 +33,12 @@ import { readSpareLines, spareLineWords } from "@/modules/registrations/spare-li
 import { raceDayTabs } from "@/modules/race-day/ui/RaceDayTabs";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { canTakeRaffleList } from "@/modules/volunteers/raffle-list";
+import { type RaffleLine, readRaffleDeskLines } from "@/modules/volunteers/raffle-roster";
+import { raffleDeskLine } from "@/modules/volunteers/ui/RaffleLines";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import { raffleDeskSignUpAction } from "./tombola/actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -93,6 +97,20 @@ export default async function DeskPage({ params, searchParams }: Props) {
   const spares = rows.length > 0 ? await spareStates(db, rows.map((row) => row.eventId)) : {};
   // Who came with whom (§543): the other people on each row's address, names only, one query.
   const family = await familyOf(db, rows);
+  // The raffle (§984): every row says whether its person takes part — a search by name or number, or a typed code, lands here and
+  // not on the scanned person's view — and, in the open sign-up mode, offers the desk's «Înscrie la tombolă». One read for every row.
+  const raffleLines = rows.length > 0 ? await readRaffleDeskLines(db, rows, now) : new Map<string, RaffleLine>();
+  const raffleOf = new Map(
+    await Promise.all(
+      rows.map(async (row) => {
+        const line = raffleLines.get(row.id);
+        const drawn = line
+          ? await raffleDeskLine({ line, locale, back: { to: "desk", eventId, q }, registrationId: row.id, name: row.registeredName, action: raffleDeskSignUpAction, organizer: canTakeRaffleList(actor) })
+          : null;
+        return [row.id, drawn] as const;
+      }),
+    ),
+  );
 
   const codeHrefTemplate = getPathname({
     locale,
@@ -245,7 +263,9 @@ export default async function DeskPage({ params, searchParams }: Props) {
               spare={spares[row.eventId]}
               family={(family.get(row.id) ?? []).map((member) => member.name)}
               role={actor.role}
-            />
+            >
+              {raffleOf.get(row.id)}
+            </DeskRow>
           ))}
         </Stack>
       )}

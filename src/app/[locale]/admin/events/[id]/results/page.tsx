@@ -7,18 +7,23 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
+import { countForm } from "@/i18n/count-form";
+import { CLUB_TIME_ZONE, formatDay, formatTimeWithSeconds } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventTitle } from "@/modules/content/events/repository";
+import { startHeldBack } from "@/modules/events/domain/dated";
 import { noticeDescribesResults, termsDescribeResults } from "@/modules/legal-documents/repository";
 import { bandWordsFrom, categoryLabelOf } from "@/modules/results/category-words";
 import { bandKeysOf, bandLabelOf, formatAgeBandStarts } from "@/modules/results/domain/age-bands";
 import { awardsOf } from "@/modules/results/domain/awards";
+import { resultsPublishState } from "@/modules/results/domain/from-start";
 import { formatResultTime } from "@/modules/results/domain/result-time";
 import { RESULT_STATUSES } from "@/modules/results/domain/ranking";
 import { anonymousResultLabel } from "@/modules/results/domain/public-name";
 import ImportFilePicker from "@/modules/results/ui/ImportFilePicker";
 import { eventTakesResults } from "@/modules/results/domain/event-type";
+import { type FinishHistoryEntry, readFinishHistory } from "@/modules/results/finish-history";
 import { readEventResults, type ResultRunner } from "@/modules/results/results";
 import {
   DELETE_RESULT_FORM_ID,
@@ -60,7 +65,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /** The codes the page's banner says: a one-button form that has no boxes to keep redirects with `?resultsError=`. */
-const BANNER_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "RESULTS_NOTICE", "RESULTS_TERMS", "RESULTS_NOT_STARTED"] as const;
+const BANNER_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "RESULTS_NOTICE", "RESULTS_TERMS"] as const;
 
 /**
  * «Clasament» (`DECISIONS.md` §808; the owner, 2026-10-17: «Aș vrea să pot pune și clasament la final după cursă»): one race's results, on
@@ -104,6 +109,14 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   const noticeDescribes = takes ? await noticeDescribesResults(db, now) : false;
   const termsDescribe = takes ? await termsDescribeResults(db, now) : false;
   const started = event.startsAt.getTime() <= now.getTime();
+  // Whether the tick could be set now (§985): an Administrator, and the notice and the terms in force describing the results — else the
+  // tick is refused, and the cards below say why; no sentence says it may be ticked before the race while it cannot.
+  const canTick = mayPublish && noticeDescribes && termsDescribe;
+  // The tick as the page says it (§985): off, «Public de la start» while ticked before the race — nothing shows until then — or «Public».
+  const publishState = resultsPublishState(event, now);
+  // The start's day and hour, as the site will show them — none while the date or the hour is to be announced (§533): the public read
+  // has no start then, so nothing shows until it is announced, and the card says that instead of the hour stored.
+  const startWords = startHeldBack(event) ? null : formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short", position: "inline", withTime: true });
   const errorCode = BANNER_ERRORS.find((code) => code === resultsError);
 
   const eventPath = { pathname: "/admin/events/[id]", params: { id } } as const;
@@ -184,6 +197,13 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       : runner.named
         ? t("results.publicLine.named")
         : t("results.publicLine.anonymous", { label: anonymousLabel });
+  // Why a «Participant #…» line shows no name (§985, `publicNameReason`, read with `named`): under the line — or, while no approved
+  // notice describes the results (the same reason for every line), once at the top of the page instead.
+  const nobodyNamed = [...view.registered, ...view.typed].some((runner) => runner.nameReason === "noResultsNotice");
+  const publicReasonOf = (runner: ResultRunner) => (runner.named || runner.outOfRanking || nobodyNamed ? undefined : t(`results.publicWhy.${runner.nameReason}`));
+  // «Cu nume pe site: N din M» (§985): M, the lines the published results would show — a stored result, not an elite out of the ranking; N, those named.
+  const onSite = [...view.registered, ...view.typed].filter((runner) => runner.result !== null && !runner.outOfRanking);
+  const namedOnSite = onSite.filter((runner) => runner.named).length;
   const valuesOf = (runner: ResultRunner) => ({
     time: formatResultTime(runner.result?.gunTimeMs),
     // A runner with no result yet shows the blank status; one with a result shows it — the line is saved exactly as drawn.
@@ -199,6 +219,9 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   ];
   const marksByBib = new Map(view.registered.map((runner) => [runner.bibNumber, marksOf(runner)]));
 
+  // Who last wrote a stored result (§986): «introdus de …» while it is as first written, «modificat de …» once changed; «cont șters» for an account gone.
+  const writtenByOf = (runner: ResultRunner) =>
+    runner.result ? t(runner.result.writtenBy.changed ? "timing.changedBy" : "timing.enteredBy", { name: runner.result.writtenBy.name ?? t("timing.accountGone") }) : undefined;
   const registered: RegisteredLine[] = view.registered.map((runner) => ({
     bibNumber: runner.bibNumber,
     name: runner.name ?? "",
@@ -206,11 +229,13 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     // What the published list would say of the runner — `publicResultName`'s own answer (the tick, a confirmed registration, a notice that
     // described the results), never a guess from the tick alone; an elite out of the ranking (§910) is not on it at all.
     publicLine: publicLineOf(runner, anonymousResultLabel(locale, runner.bibNumber, event.raceNumberFormat)),
+    publicReason: publicReasonOf(runner),
     values: valuesOf(runner),
     place: placeOf(runner),
     hasResult: runner.result !== null,
     outOfRanking: runner.outOfRanking,
     marks: marksOf(runner),
+    writtenBy: writtenByOf(runner),
   }));
   const typed: TypedLine[] = view.typed.map((runner) => ({
     values: {
@@ -223,9 +248,12 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     agreed: runner.nameAgreed === true,
     // The registered lines' caption, from the same answer (`publicResultName`): a tick saved while no notice describes the results names nobody yet.
     publicLine: publicLineOf(runner, anonymousResultLabel(locale, runner.bibNumber)),
+    // A nameless line (an erased registration's) says why in its own sentence («Fără nume: …»).
+    publicReason: runner.name === null ? undefined : publicReasonOf(runner),
     place: placeOf(runner),
     hasResult: true,
     outOfRanking: runner.outOfRanking,
+    writtenBy: writtenByOf(runner),
   }));
 
   // ---- The refusal summary's labels, by the unindexed name of a box (`fieldLabelOf`) ------------------------------
@@ -262,6 +290,55 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   const total = view.counts.FINISHED + view.counts.DNF + view.counts.DNS + view.counts.DSQ;
   const downloadHref = `/api/admin/events/${id}/results?lang=${locale}`;
 
+  // «Istoricul sosirilor» (§986): one line a write — when, who, what with the number and the time, and from where; the runner's
+  // name read live beside the number (the trail stores none).
+  const history = await readFinishHistory(db, actor, id);
+  const zone = event.timezone || CLUB_TIME_ZONE;
+  const historyLineWords = (line: FinishHistoryEntry): string => {
+    const when = `${formatDay(line.at, { locale, timeZone: zone, style: "short" })}, ${formatTimeWithSeconds(line.at, { locale, timeZone: zone })}`;
+    const what = line.what;
+    const runner = (bib: number | null) => (bib === null ? "#?" : `#${bib}${line.liveName ? ` ${line.liveName}` : ""}`);
+    const status = (value: string | null) => (value && (RESULT_STATUSES as readonly string[]).includes(value) ? t(`results.status.${value}`) : "");
+    const statusAndTime = (value: string | null, ms: number | null) => (value === "FINISHED" && ms !== null ? `${status(value)}, ${formatResultTime(ms)}` : status(value));
+    const instant = (at: Date | null) => (at === null ? "—" : formatTimeWithSeconds(at, { locale, timeZone: zone }));
+    let words: string;
+    switch (what.kind) {
+      case "finish":
+        words = t(what.turned ? "results.history.what.finishTurned" : "results.history.what.finish", { runner: runner(what.bibNumber), time: formatResultTime(what.gunTimeMs) || "—" });
+        break;
+      case "duplicate":
+        // A press of a runner «Clasament» wrote off: the decision stays, said by its word; of a «Sosit», the first time stays.
+        words =
+          what.storedStatus !== "FINISHED" && status(what.storedStatus) !== ""
+            ? t("results.history.what.kept", { runner: runner(what.bibNumber), time: formatResultTime(what.gunTimeMs) || "—", status: status(what.storedStatus) })
+            : t("results.history.what.duplicate", { runner: runner(what.bibNumber), time: formatResultTime(what.gunTimeMs) || "—", stored: formatResultTime(what.storedGunTimeMs) || "—" });
+        break;
+      case "undo":
+        words = t("results.history.what.undo", { runner: runner(what.bibNumber), time: formatResultTime(what.gunTimeMs) || "—" });
+        break;
+      case "created":
+        words = t("results.history.what.created", { runner: runner(what.bibNumber), status: statusAndTime(what.status, what.gunTimeMs) });
+        break;
+      case "updated":
+        words = t(what.boxes.length > 0 ? "results.history.what.updatedBoxes" : "results.history.what.updated", {
+          runner: runner(what.bibNumber),
+          status: statusAndTime(what.status, what.gunTimeMs),
+          boxes: what.boxes.map((box) => t(`results.history.box.${box}`)).join(", "),
+        });
+        break;
+      case "deleted":
+        words = t("results.history.what.deleted", { runner: runner(what.bibNumber), status: status(what.status) });
+        break;
+      case "gunSet":
+        words = what.previous === null ? t("results.history.what.gunSet", { time: instant(what.at) }) : t("results.history.what.gunMoved", { time: instant(what.at), previous: instant(what.previous) });
+        break;
+      case "gunCleared":
+        words = t("results.history.what.gunCleared", { previous: instant(what.previous) });
+        break;
+    }
+    return t("results.history.line", { when, by: line.who ?? t("timing.accountGone"), what: words, where: t(`results.history.where.${line.where}`) });
+  };
+
   return (
     <Stack spacing={2}>
       {head}
@@ -273,11 +350,23 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
         {RESULT_STATUSES.map((status) => (
           <StatusChip key={status} glyph={status === "FINISHED" ? "done" : status === "DNS" ? "didNotStart" : status === "DNF" ? "droppedOut" : "failed"} variant="outlined" label={t(`results.summary.${status}`, { count: String(view.counts[status]) })} />
         ))}
-        <StatusChip glyph={event.resultsPublished ? "visible" : "hidden"} color={event.resultsPublished ? "success" : "default"} label={event.resultsPublished ? t("results.publish.stateOn") : t("results.publish.stateOff")} testId="results-published-chip" />
+        <StatusChip glyph="wantsList" variant="outlined" label={t("results.namedCount", { named: String(namedOnSite), shown: String(onSite.length) })} testId="results-named-count" />
+        <StatusChip
+          glyph={publishState === "on" ? "visible" : publishState === "fromStart" ? "planned" : "hidden"}
+          color={publishState === "on" ? "success" : publishState === "fromStart" ? "primary" : "default"}
+          label={t(publishState === "on" ? "results.publish.stateOn" : publishState === "fromStart" ? "results.publish.stateFromStart" : "results.publish.stateOff")}
+          testId="results-published-chip"
+        />
       </Stack>
+      {nobodyNamed && (
+        <Alert severity="info" data-testid="results-names-nobody">
+          {t("results.publicWhy.noResultsNotice")} <Link href="/admin/legal">{t("results.publish.gateLink")}</Link>
+        </Alert>
+      )}
       {!started && (
         <Alert severity="info" data-testid="results-not-started">
-          {t("results.notStarted")}
+          {/* The tick is the Administrator's (`canPublishResults`), and only while the texts describe the results: anybody else is told only what they may do before the start. */}
+          {t(canTick ? "results.notStarted" : "results.notStartedEnterOnly")}
         </Alert>
       )}
       {errorCode && (
@@ -318,6 +407,15 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
               </Box>
             </Stack>
           </Panel>
+
+          {/* «Loc» in plain words (§985; the owner, 2026-11-18: «ce inseamna "Loc" aici?») — once, above both panels of lines, since a phone
+              has no column header and a typed runner's line says «Loc:» too; nothing while there is no line at all. */}
+          {(registered.length > 0 || typed.length > 0) && (
+            <Typography variant="body2" color="text.secondary" data-testid="results-place-hint">
+              {t("results.placeHint")}
+              <QuietHelp text={t("results.placeHelp")} testId="results-place-help" />
+            </Typography>
+          )}
 
           <Panel glyph="results" level={3} title={t("results.registered.title")} aside={t("results.registered.aside", { count: String(registered.length) })} id="box-results-registered" data-testid="results-registered">
             {registered.length === 0 ? (
@@ -452,7 +550,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
         </Stack>
       </Panel>
 
-      <Panel glyph="publication" level={3} title={t("results.publish.title")} aside={event.resultsPublished ? t("results.publish.stateOn") : t("results.publish.stateOff")} id="box-results-publish" data-testid="results-publish">
+      <Panel glyph="publication" level={3} title={t("results.publish.title")} aside={t(publishState === "on" ? "results.publish.stateOn" : publishState === "fromStart" ? "results.publish.stateFromStart" : "results.publish.stateOff")} id="box-results-publish" data-testid="results-publish">
         <Stack spacing={1.5}>
           <Typography variant="body2" color="text.secondary">
             {t("results.publish.help")}
@@ -469,10 +567,21 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
               <Link href="/admin/legal">{t("results.publish.gateLink")}</Link>
             </Alert>
           )}
-          {!started && (
-            <Alert severity="info" data-testid="results-publish-not-started">
-              {t("results.publish.gateStart")}
-            </Alert>
+          {/* Before the race (§985) the tick may be set: ticked, it says so with the start's day and hour; unticked, that it may be. Nothing shows before the start either way. */}
+          {publishState === "fromStart" ? (
+            <Stack direction="row" sx={{ gap: 1, alignItems: "center", flexWrap: "wrap" }} data-testid="results-publish-from-start">
+              <StatusChip glyph="planned" color="primary" variant="outlined" label={t("results.publish.stateFromStart")} testId="results-from-start-chip" />
+              <Typography variant="body2">{startWords !== null ? t("results.publish.fromStart", { start: startWords }) : t("results.publish.fromStartUnannounced")}</Typography>
+            </Stack>
+          ) : (
+            // «Poți bifa de pe acum» is said to whoever may tick it, while the texts allow it: the Organizer's card says «Doar un
+            // administrator…» below, and the gates' own sentences above say what an Administrator must approve first.
+            !started &&
+            canTick && (
+              <Alert severity="info" data-testid="results-publish-not-started">
+                {startWords !== null ? t("results.publish.beforeStart", { start: startWords }) : t("results.publish.beforeStartUnannounced")}
+              </Alert>
+            )
           )}
           {mayPublish ? (
             <ActionForm
@@ -481,7 +590,14 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
               messages={publishBoxes}
               // Making the ranking public, and taking it off the site, ask first (§384): the first spec asks when the box is ticked, the second — no `when` — otherwise.
               confirm={[
-                { when: [{ field: "published", equals: "on" }], title: t("results.publish.confirmOnTitle"), body: t("results.publish.confirmOnBody"), confirmLabel: t("results.publish.save"), cancelLabel: confirm.cancel },
+                {
+                  when: [{ field: "published", equals: "on" }],
+                  title: t("results.publish.confirmOnTitle"),
+                  // Before the race (§985) the question says the results show from the start, not now.
+                  body: t(started ? "results.publish.confirmOnBody" : "results.publish.confirmOnBodyFromStart"),
+                  confirmLabel: t("results.publish.save"),
+                  cancelLabel: confirm.cancel,
+                },
                 { title: t("results.publish.confirmOffTitle"), body: t("results.publish.confirmOffBody"), confirmLabel: t("results.publish.save"), cancelLabel: confirm.cancel },
               ]}
               data-testid="results-publish-form"
@@ -505,9 +621,36 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
         </Stack>
       </Panel>
 
+      {/* «Istoricul sosirilor» (§986): every write of the race's results — the line's presses, duplicates and undos, this page's saves, «Start» — newest first, with who. */}
+      <Panel glyph="history" collapsible level={3} title={t("results.history.title")} aside={t(`results.history.count.${countForm(history.lines.length, locale)}`, { count: String(history.lines.length) })} id="box-results-history" data-testid="results-history">
+        <Stack spacing={1}>
+          <Typography variant="body2" color="text.secondary">
+            {t("results.history.intro")}
+          </Typography>
+          {history.lines.length === 0 ? (
+            <Typography variant="body2" data-testid="results-history-empty">
+              {t("results.history.empty")}
+            </Typography>
+          ) : (
+            <Box component="ol" sx={{ m: 0, pl: 2.5, display: "grid", gap: 0.5 }}>
+              {history.lines.map((line) => (
+                <Typography component="li" variant="body2" key={line.id} sx={{ overflowWrap: "anywhere" }} data-testid="results-history-line" data-where={line.where}>
+                  {historyLineWords(line)}
+                </Typography>
+              ))}
+            </Box>
+          )}
+          {history.limited && (
+            <Typography variant="caption" color="text.secondary">
+              {t("results.history.limited", { count: String(history.lines.length) })}
+            </Typography>
+          )}
+        </Stack>
+      </Panel>
+
       <Box>
-        {/* «Sosire» (§850): the finish line's page — a number typed as the runner crosses, the time since the gun stamped. */}
-        <GlyphButton icon="checkIn" href={getPathname({ locale, href: { pathname: "/admin/events/[id]/results/sosire", params: { id } } })} variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="results-finish-link">
+        {/* «Cronometrare» (§986, in «Sosire»'s place, §850): «Ziua cursei»'s finish line — a number or an elite pressed as the runner crosses. */}
+        <GlyphButton icon="checkIn" href={`${getPathname({ locale, href: "/admin/checkin/cronometrare" })}?eventId=${id}`} variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="results-finish-link">
           {t("results.finish.link")}
         </GlyphButton>
       </Box>
