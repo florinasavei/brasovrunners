@@ -55,6 +55,7 @@ import { invitationOpen } from "./invitation-repository";
 import { PLACE_HOLDING_STATUSES } from "./domain/state-machine";
 import type { RaceNumberFormat } from "./domain/race-number";
 import { releaseDeadlineOfHold } from "./domain/unsigned-release";
+import { namedOnPublicList } from "./repository";
 
 /**
  * Read queries for the Administrator-only backoffice (AGENTS.md §15.8, §15.10; BR-REQ-060-01,
@@ -1482,6 +1483,13 @@ export type DeskRegistration = {
   /** «Elită» (§897): the bib prints as an elite bib — part of the picture's address, so a mark is a fresh picture. */
   elite: boolean;
   /**
+   * Whether the person appears by name on the site (§NNN; the owner, 2026-11-19, on the desk: «trebuie să văd dacă oamenii doresc să
+   * apară anonimi sau nu, să apară un ochișor»): the public list's one condition (`repository.ts#namedOnPublicList`) — their own «Vreau
+   * să apar pe lista de participanți & rezultate», and no Administrator's «Apare pe site» unticked on an elite or an ambassador. A wish
+   * the row already carries for every desk role, never an address.
+   */
+  namedOnSite: boolean;
+  /**
    * «Eticheta pe BIB» in force (§975, `bib-elite.ts#eliteBibName`): what the elite bib in the volunteer's hand says where the
    * number goes — the label the Administrator typed, else the first name. Said on the row only while `elite`; a name the row
    * already shows, never an address (`AGENTS.md` §15.11). Part of the picture's address as a fingerprint (`bibPictureSrc`'s `l=`).
@@ -1541,6 +1549,8 @@ const DESK_COLUMNS = {
   raceNumberFormat: RACE_NUMBER_FORMAT,
   bibStamp: BIB_STAMP,
   elite: registrations.elite,
+  // «Cu nume» / «Anonim» (§NNN): the public list's own condition, so the desk's eye and the list never disagree.
+  namedOnSite: sql<boolean>`${namedOnPublicList()}`.mapWith(Boolean),
   // The two halves «Eticheta pe BIB» is decided from (§975), read by `deskRowOf` alone and never handed to the row as they are.
   deskFirstName: registrations.firstName,
   deskStoredLabel: registrations.eliteBibLabel,

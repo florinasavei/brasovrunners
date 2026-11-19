@@ -698,7 +698,7 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
  * ever hides: there is no condition here under which a staff mark shows a name its owner did not tick. Every public list query
  * takes this one condition, so the list, its counts and its pages cannot disagree about who is named.
  */
-function namedOnPublicList(): SQL {
+export function namedOnPublicList(): SQL {
   return sql`(${registrations.listOptOut} = false and not ((${registrations.elite} or ${registrations.ambassador}) and ${registrations.eliteHiddenFromSite}))`;
 }
 
