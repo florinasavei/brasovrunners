@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.72-2026-11-19
+
+- **The volunteer agreement is signed by both parties on paper** — every agreement's PDF, alone or in the event's file of all agreements, keeps the volunteer's side on the left as it was and has «Asociația» on the right: the club's legal name and dotted lines for its representative's name and position, signature and date; the sheet's «Pentru organizator» line is that column now. The legal text is unchanged, so nothing waits for approval, and the race declaration prints as before. §991.
 ## BR-V4.71-2026-11-19
 
 - **Every elite is timed on «Cronometrare»** — a name added to the elite list without a number now gets the race's next free one by itself (nobody else's, and still not printed on the bib); «Dă-i un număr» on «Cronometrare» and «Dă număr elitelor fără număr» on the elite card number the names left without one in one press, so «Ingrid» is a blue button like every other elite and her finish is recorded; and each name's «Număr» can be changed on the card until a result is stored on it. §990.

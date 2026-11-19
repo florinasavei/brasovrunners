@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.71-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.72-2026-11-19 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V4.71-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.72-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -31093,3 +31093,27 @@ Baseline `BR-V4.70-2026-11-19`.
 **Not done.** Retiring a deleted line's number: deleting still frees it (§895) — a line's draw steps over any number a stored result carries, but a runner's draw does not read the results.
 
 Baseline `BR-V4.71-2026-11-19`.
+
+## 991. The volunteer agreement is signed by both parties on paper: the Association's column on the right (amending §758 and §966)
+
+**The owner, 2026-11-19, from his phone, two days before Saturday's race (2026-11-21), «destul de urgent»:** «pentru contractele de voluntariat trebuie să modific template-ul și să las în dreapta și „Asociația” ca să printăm și să semnăm fizic». The club prints the volunteer agreements for the race — one at a time from a person's page, or every one at once with §966's «Contractele (PDF)» and «De semnat pe hârtie (PDF)» — and wants each signed on paper by both parties: the volunteer on the left, the Association on the right. Until now the accepted copy carried the volunteer's acceptance alone, and the sheet to sign stacked «Semnătura voluntarului» and «Pentru organizator (nume și semnătură)» down the left margin. Amends §758 (the agreement's PDF) and §966 (the event's file of every agreement).
+
+**Decision.**
+
+- *Two columns, on every shape.* Every signature block of the volunteer agreement's PDF — the accepted copy the emails carry and the card downloads, the sheet to sign at the desk, a minor's sheet and copy, the parent's or guardian's own entry once they accepted, and every person's pages in the event's file of all agreements, alone or in the sheets' file — is two columns under «DREPT PENTRU CARE SEMNĂM,» / “IN WITNESS WHEREOF, WE SIGN,”: two parties sign. **On the left**, the volunteer's side, exactly the rows it always had: the signature with the typed name in its hand, the date, the electronic signature's trace (§771) and how it was accepted — with «încă neprimit» while a minor's parent's consent is still to come — or, on a sheet, the blank lines; for a minor, the volunteer's line and the parent's or guardian's under it. **On the right**, from past the page's middle, «Asociația» / “The Association”, the club's legal name under it, and the three lines its representative fills in by hand — «Reprezentant (nume și funcție)» / “Representative (name and position)”, «Semnătura» / “Signature”, «Data» / “Date” — each a label over a dotted line across the column. Under both columns, across the page: the version and the text's sha256, and the proof of signing (§556), whose 64-character hash needs the page's width. The sheet's «Pentru organizator (nume și semnătură)» is this column now, not a second line beside it: an adult's sheet has the volunteer's line alone on the left.
+- *The club's name comes from its facts, never from the code.* `CLUB_LEGAL_NAME` — the fact the approved text's «<DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>» is filled with when a version starts from the platform's text (§132) — else the club's one name (`CLUB_NAME`, `club/club.json`), as the emails' privacy line names the controller (§323): `agreement-pdf.ts#agreementHostName`. No literal, the repository being public (§98) and a fork another club (§882).
+- *Drawn by the renderer, on request.* The agreement's words (`WORDS`, Romanian and English) hand the column to the renderer the declarations share as `labels.hostSignature` (`volunteerAgreementLabels`); `registrations/declaration-pdf.ts#drawSignatureColumns` draws it — two equal columns and a 24-point gutter. The whole block is measured before a line of it is drawn — the heading, the taller of the two columns, the lines under both — so it moves to the next page whole, as the single-column block does, and never reaches the footer. Every word stays inside its column: a value that does not fit beside its label goes under it, a long typed name is set smaller under its label, from 26 points down to 14, and wraps inside the column there; the trace and the method wrap inside it. The signer's rows are one list (`signerRows`), which both shapes of block draw.
+- *The legal text is unchanged.* The signature block is the renderer's, not the approved text's: no template moved, no version waits for approval, no «Șablon nou» email goes out, and a copy of an acceptance already recorded prints with the column too — its fingerprint is over the text, which is the same.
+- *The race declaration is unchanged.* It, its blank form for the desk, a minor's beside a parent's (§330), the event's bundle (§418) and the group run's (§769) pass no column and draw byte for byte what they drew before: `tests/unit/registrations/declaration-pdf-unchanged.test.ts` holds ten of their shapes against digests captured from the code before the change, and finds no «Asociația» in any. The one-person agreement's own digests (§966's `agreements-route.test.ts`) were captured again: the column is their one change.
+
+**Not in this change.**
+
+- *«L.S.»*, where a stamp goes: the house's legal texts and PDFs use none; it is one more word in `WORDS` if the club stamps its contracts.
+- *A record of the Association's signature.* Its representative signs the paper by hand; «Semnat pe hârtie» still records the volunteer's signature alone, naming the staff member who recorded it (§758).
+
+**Refused.**
+
+- *Signature lines written into the agreement's template.* A new version for the club to approve two days before the race, and every acceptance recorded under the version in force would still print without them: the block is the renderer's to draw.
+- *The column on the race declaration.* A declaration is the runner's own, a minor's with a parent's beside it (§95, §330): the club signs nothing there, and its file stays the one already printed and signed.
+
+Baseline `BR-V4.72-2026-11-19`.
