@@ -562,7 +562,9 @@ hotfix/<what-it-carries>
 
 Use lowercase kebab-case. Delete after merge. The name MUST say what the branch carries, and
 a branch that gathers several changes names all of them (`feat/race-day-timing-raffle-results-presence`);
-it MUST NOT be a generated name such as `claude/quirky-ramanujan-…` — the owner, 2026-11-19:
+the branch a pull request comes from MUST NOT be a generated name such as `claude/quirky-ramanujan-…`
+(a cloud session's given branch only carries the work until it goes up under its name,
+`docs/DEVELOPMENT.md` § Coding from the phone) — the owner, 2026-11-19:
 «numele branch-urilor trebuie să reflecte ce se află în ele» (`DECISIONS.md` §NNN). A batch keeps
 its `batch/` prefix, which `yarn handoff` reads, and is named for what it gathers.
 
