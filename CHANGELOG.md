@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.76-2026-11-19
+
+- **The desk no longer shows identity documents to volunteers** — «Act de identitate» (series and number, a minor's and the parent's too) is on a desk row only for the Organizer and the Administrators; «Voluntar», «Tehnic» and «Redactor» accounts no longer receive it. §995.
+## BR-V4.75-2026-11-19
+
+- **The volunteers' addresses, on the list and on the plan** — «Voluntari» has a «Contact» column after the name, the address to write to and the telephone to ring; on the plan's table «Punctele, pe scurt» each name is in capitals and the address follows the telephone, on paper too. For the Organizer and the Administrators, who already read them on each person's page. §994.
 ## BR-V4.74-2026-11-19
 
 - **The registrations list says when someone cancelled** — under «Anulată» in «Stare», the day and the minute the registration was cancelled; under «Expirată», when it lapsed; on a phone's card too. §993.
