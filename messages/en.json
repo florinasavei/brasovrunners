@@ -1455,6 +1455,7 @@
       "confirmed": "Confirmed",
       "cancelled": "Cancelled",
       "cancelReasonLabel": "Cancellation reason",
+      "cancelledByStaff": "Cancelled by the organisers",
       "cancelReasonOther": "{kind} — “{text}”",
       "cancelReasonKinds": {
         "INJURY_OR_ILLNESS": "Injury or illness",
@@ -7936,6 +7937,8 @@
         "Every confirmed participant got a QR code by email. At the desk: press “Scan” (on Android) or open the phone's camera and point it at the code — the person's row opens.",
         "Under the row it says “Scanned before: …”? The code was opened at the desk before: check the person has not already picked up their number.",
         "Or search by name or by race number.",
+        "The list is split by state, with how many are in each. “To pick up” and “Declaration not signed” stay open; “Present”, “On the waiting list” and the rest open from their title.",
+        "A search opens only the sections with a match. After a press you are back on the person's row, its section open: whoever is marked present moves to “Present”.",
         "Press “Mark present” and hand over the number from the pile. No number? Type it in the box and press “Save no.”.",
         "No email arrived, or they cannot find the QR: search by name.",
         "If it says “Așteaptă semnarea declarației” (awaiting the declaration), give them the paper declaration to sign, press “Confirm on paper”, then “Mark present”.",
@@ -8024,7 +8027,18 @@
       "scanSwitch": "Another camera",
       "scanCamera": "Camera {n} of {total}",
       "eliteLabel": "On the bib: {label}",
+      "siteNamed": "By name",
+      "siteAnonymous": "Anonymous",
       "eliteFold": "Elite and bib",
+      "sections": {
+        "toPickUp": "To pick up ({n})",
+        "unsigned": "Declaration not signed ({n})",
+        "checkedIn": "Present ({n})",
+        "addressUnconfirmed": "Address not confirmed ({n})",
+        "offered": "Place offered ({n})",
+        "waitlisted": "On the waiting list ({n})",
+        "voided": "Cancelled or expired ({n})"
+      },
       "spares": {
         "free": {
           "one": "Free spare number ({count}): {numbers}",
@@ -9570,6 +9584,8 @@
                 "Sign in with your own account, never a colleague's: everything you press at the desk carries the account's name, and the organizers read it under «Log».",
                 "Under «Event» pick today's race, then press «Search».",
                 "At the top you see how many are confirmed, how many are here, how many have no number and how many are unconfirmed. Those are the race's figures.",
+                "Below them, the list is in sections, by state, in the order you work them: «To pick up», «Declaration not signed», «Present», «Address not confirmed», «Place offered», «On the waiting list». Beside each title, how many there are; a section with nobody in it is not shown.",
+                "The first two stay open. You open or close the others with a press on their title.",
                 "Take two piles from the organizer: the numbers printed with names, and the spare numbers, with an empty name line, for people who register at the desk. Nobody who registered online gets a spare."
               ]
             },
@@ -9590,7 +9606,9 @@
               "steps": [
                 "In the «Name, number or code» box type part of the name, the race number or the code from the email.",
                 "Press «Search».",
-                "On the right row: «Mark present», then hand over the number."
+                "Only the sections with somebody who matches appear, open.",
+                "On the right row: «Mark present», then hand over the number.",
+                "The page comes back to their row, now in the section «Present», open. From there too, if needed, «Undo»."
               ]
             },
             {
@@ -9633,6 +9651,7 @@
             {
               "title": "A red box: cancelled or expired registration",
               "steps": [
+                "Searched by race number, the row appears in the section «Cancelled or expired», open.",
                 "The person no longer has a place, even with the email in hand: give no number and do not mark them present.",
                 "If it says the number was printed, pull that bib from the pile — numbers are never reused.",
                 "Call an organizer. If places are left, you register them again with «Add somebody»."

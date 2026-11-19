@@ -16,12 +16,14 @@ import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import {
   countDesk,
+  type DeskRegistration,
   findRegistrationByCheckinCode,
   isEventCompleted,
   listDeskRegistrations,
   listEventsAcceptingRegistrations,
   listEventsForDesk,
 } from "@/modules/registrations/admin-repository";
+import { type DeskSectionKey, deskSections, returnedRowOf } from "@/modules/registrations/domain/desk-sections";
 import { declarationAsksMinorToSignByLocale } from "@/modules/legal-documents/repository";
 import { spareStates } from "@/modules/registrations/bibs";
 import { isCheckinCode, normalizeCheckinCode } from "@/modules/registrations/checkin-code";
@@ -38,14 +40,33 @@ import { type RaffleLine, readRaffleDeskLines } from "@/modules/volunteers/raffl
 import { raffleDeskLine } from "@/modules/volunteers/ui/RaffleLines";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import Panel from "@/shared/ui/Panel";
+import type { PanelGlyphName } from "@/shared/ui/panel-glyphs";
 import { raffleDeskSignUpAction } from "./tombola/actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ eventId?: string; q?: string; saved?: string; error?: string } & Partial<Record<keyof PlacesTaken, string>>>;
+  /** `row`: the registration the last press on the list named (§1002), whose section the page draws open. */
+  searchParams: Promise<{ eventId?: string; q?: string; saved?: string; error?: string; row?: string } & Partial<Record<keyof PlacesTaken, string>>>;
 };
 
 export const dynamic = "force-dynamic";
+
+/**
+ * Each section's glyph, by name (`panel-glyphs.ts`, §521): the picture of what its rows share — the bib still to hand, the paper
+ * to sign, the person-with-tick of «Marchează prezent», the address, the seat and the hourglass their state's chip wears, the row
+ * that is over — so a column of closed sections is read by picture as well as by words.
+ */
+const SECTION_GLYPH = {
+  toPickUp: { glyph: "bibs" },
+  unsigned: { glyph: "declaration" },
+  // «Prezenți»: the runners checked in — named `checkedIn`, the registration's own word, never a volunteer's «Prezent» (§983).
+  checkedIn: { glyph: "registration" },
+  addressUnconfirmed: { glyph: "email" },
+  offered: { glyph: "placeOffered" },
+  waitlisted: { glyph: "queue" },
+  voided: { glyph: "cancelRegistration" },
+} as const satisfies Record<DeskSectionKey, { glyph: PanelGlyphName }>;
 
 /**
  * The race-day desk (BR-REQ-037-07, BR-REQ-037-08; `DECISIONS.md` §67).
@@ -58,6 +79,14 @@ export const dynamic = "force-dynamic";
  *
  * A GET reads and never writes: the search is a form with method="get", and every button on a
  * row is its own POST.
+ *
+ * The list folds by state (§1002; the owner, 2026-11-19: «Pe ziua cursei trebuie să fac secțiuni collapsible în funcție de
+ * status»): one section per state in the table's working order — «De ridicat numărul», «Fără declarație semnată», «Prezenți»,
+ * «Adresă neconfirmată», «Ofertă de loc deschisă», «Pe lista de așteptare», and «Anulate sau expirate» when a number found such
+ * a row — each a level-3 `Panel` whose summary says its words and the count of its rows, the empty ones not drawn
+ * (`domain/desk-sections.ts` decides which open). A search opens every section it found somebody in; a press on a row comes back
+ * with the row (`row=`) and its section open; a typed code draws its one runner alone, as before. Server Components only:
+ * every section is a `<details>`, so it folds before hydration and with JavaScript off.
  */
 export default async function DeskPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -121,6 +150,32 @@ export default async function DeskPage({ params, searchParams }: Props) {
   const walkInHref = eventId
     ? `${getPathname({ locale, href: "/admin/registrations/new" })}?eventId=${eventId}&back=desk`
     : null;
+
+  // The desk's list in sections, one per state (§1002): a search (a name fragment or a number) opens each section it found somebody
+  // in, and the row a press came back with (`row=`) opens the section that holds it now. A typed code draws its runner alone.
+  const returnedRow = returnedRowOf(query.row);
+  const sections = byCode
+    ? []
+    : deskSections(rows, { searching: q.trim() !== "", returned: returnedRow ? { id: returnedRow, refused: Boolean(error) } : null });
+  // One runner's row, wherever the page draws it: the code's one row, or a row of a section.
+  const deskRow = (row: DeskRegistration) => (
+    <DeskRow
+      key={row.id}
+      row={row}
+      locale={locale}
+      back="desk"
+      eventId={eventId}
+      q={q}
+      showEvent={Boolean(byCode)}
+      readOnly={closed}
+      minorSigns={minorSigns}
+      spare={spares[row.eventId]}
+      family={(family.get(row.id) ?? []).map((member) => member.name)}
+      role={actor.role}
+    >
+      {raffleOf.get(row.id)}
+    </DeskRow>
+  );
 
   return (
     <Stack spacing={3}>
@@ -247,27 +302,31 @@ export default async function DeskPage({ params, searchParams }: Props) {
         <Typography color="text.secondary">
           {isCheckinCode(code) ? t("desk.unknownCode") : t("desk.nobody")}
         </Typography>
-      ) : (
+      ) : byCode ? (
         <Stack component="ul" spacing={1} sx={{ m: 0, p: 0 }}>
-          {rows.map((row) => (
-            <DeskRow
-              key={row.id}
-              row={row}
-              locale={locale}
-              back="desk"
-              eventId={eventId}
-              q={q}
-              showEvent={Boolean(byCode)}
-              readOnly={closed}
-              minorSigns={minorSigns}
-              spare={spares[row.eventId]}
-              family={(family.get(row.id) ?? []).map((member) => member.name)}
-              role={actor.role}
-            >
-              {raffleOf.get(row.id)}
-            </DeskRow>
-          ))}
+          {deskRow(byCode)}
         </Stack>
+      ) : (
+        sections.length > 0 && (
+          <Stack spacing={1.5} data-testid="desk-sections">
+            {sections.map((section) => (
+              <Panel
+                key={section.key}
+                collapsible
+                level={3}
+                glyph={SECTION_GLYPH[section.key].glyph}
+                title={t(`desk.sections.${section.key}`, { n: section.count })}
+                openWhen={section.openWhen}
+                id={`desk-section-${section.key}`}
+                data-testid={`desk-section-${section.key}`}
+              >
+                <Stack component="ul" spacing={1} sx={{ m: 0, p: 0 }}>
+                  {section.rows.map((row) => deskRow(row))}
+                </Stack>
+              </Panel>
+            ))}
+          </Stack>
+        )
       )}
     </Stack>
   );

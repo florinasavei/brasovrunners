@@ -14,6 +14,8 @@ import { changeVolunteer } from "@/modules/volunteers/volunteers";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
 import { isUuid } from "@/shared/ids";
+import { returnedRowOf } from "@/modules/registrations/domain/desk-sections";
+import { listReturnAnchor } from "@/modules/registrations/domain/list-row";
 import { eventIdOf, field, localeOf } from "@/app/[locale]/admin/events/[id]/volunteer-return";
 
 /*
@@ -145,11 +147,16 @@ export async function raffleDeleteEntryAction(form: FormData): Promise<void> {
 /**
  * Where the desk's press comes back to, rebuilt from fields and never taken from the form as a path: the desk's list with its event
  * and its search (`back=desk`, as the desk's other verbs come back to it), or else the scanned person's view.
+ *
+ * On the desk's list (§1002) the row comes back too, as the desk's other verbs bring it (`row=`, the registration's id alone): the
+ * section that holds it is drawn open, and a sign-up that went through lands on the row — its toast saying so — a refusal on
+ * the alert (`listReturnAnchor`, §943).
  */
 function deskAddress(form: FormData, outcome: { saved: string } | { error: string }): string {
   const locale = localeOf(form);
   const query = new URLSearchParams();
   let path: string;
+  let hash = "admin-alert";
   if (field(form, "back") === "desk") {
     path = getPathname({ locale, href: "/admin/checkin" });
     const eventId = eventIdOf(form);
@@ -157,13 +164,21 @@ function deskAddress(form: FormData, outcome: { saved: string } | { error: strin
     // The desk's search, carried in the address as the desk's own verbs carry it — never into a toast.
     const q = field(form, "q").trim();
     if (q) query.set("q", q.slice(0, 200));
+    const row = returnedRowOf(field(form, "registrationId"));
+    if (row) query.set("row", row);
+    hash = listReturnAnchor("error" in outcome ? { error: outcome.error } : {}, row ?? undefined);
   } else {
     const code = field(form, "code");
     path = getPathname({ locale, href: { pathname: "/admin/checkin/[code]", params: { code: /^[A-Za-z0-9-]{1,32}$/.test(code) ? code : "-" } } });
   }
   if ("saved" in outcome) query.set("saved", outcome.saved);
   else query.set("error", outcome.error);
-  return `${path}?${query.toString()}#admin-alert`;
+  return `${path}?${query.toString()}#${hash}`;
+}
+
+/** The desk's list lands on the row (`deskAddress`), out of the alert's sight: the sign-up's toast says what the alert says. */
+async function toastAtDeskRow(form: FormData, saved: string): Promise<void> {
+  if (field(form, "back") === "desk") await flashOutcome({ saved });
 }
 
 /**
@@ -180,5 +195,7 @@ export async function raffleDeskSignUpAction(form: FormData): Promise<void> {
     if (!isDomainError(error)) throw error;
     redirect(deskAddress(form, { error: error.code }));
   }
-  redirect(deskAddress(form, { saved: outcome === "created" ? "raffleSignedUp" : "raffleAlready" }));
+  const saved = outcome === "created" ? "raffleSignedUp" : "raffleAlready";
+  await toastAtDeskRow(form, saved);
+  redirect(deskAddress(form, { saved }));
 }

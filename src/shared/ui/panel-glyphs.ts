@@ -27,6 +27,7 @@ import EmojiPeopleIcon from "@mui/icons-material/EmojiPeople";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import EventIcon from "@mui/icons-material/Event";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
+import EventSeatIcon from "@mui/icons-material/EventSeat";
 import FeedbackIcon from "@mui/icons-material/Feedback";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import FlagIcon from "@mui/icons-material/Flag";
@@ -209,6 +210,9 @@ export const PANEL_GLYPHS = {
   // What an event's registrations are, once it has them.
   registrations: ListAltIcon,
   queue: HourglassTopIcon,
+  // «Ofertă de loc deschisă», a section of the desk's list (§1002): a place offered from the waiting list — the seat the state's
+  // chip wears (`status-glyphs.ts#placeOffered`), so the section and the chip on each of its rows are one picture.
+  placeOffered: EventSeatIcon,
   // «Note interne» (§777): what the organizers tell each other about one registration — the sticky note.
   internalNotes: StickyNote2Icon,
   // One registration's page (§847), its cards in the page's order: what to tell the person who asks (the voice), race
