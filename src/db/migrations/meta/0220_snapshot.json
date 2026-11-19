@@ -1,6 +1,6 @@
 {
   "id": "4200db96-64ff-46b6-bca9-fa672b100375",
-  "prevId": "eb6c38a5-cada-422b-a70f-da8898e23d70",
+  "prevId": "2c4fa5f6-cbab-4ff9-bdc1-0983a206dc23",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1501,6 +1501,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "blank_bib": {
+          "name": "blank_bib",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "accepted_at": {
           "name": "accepted_at",
