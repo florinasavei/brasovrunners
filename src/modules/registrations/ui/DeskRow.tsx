@@ -14,6 +14,7 @@ import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
 import { bibPictureSrc } from "@/modules/registrations/domain/bib-stamp";
 import { hasOneBib, oneBibHref } from "@/modules/registrations/domain/one-bib";
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
+import { registrationRowAnchor } from "@/modules/registrations/domain/list-row";
 import { formatRaceNumber, raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
@@ -166,6 +167,8 @@ export default async function DeskRow({
   return (
     <Box
       component="li"
+      // The row a press comes back to (§NNN): the desk's list lands here, in the section that now holds it, drawn open.
+      id={registrationRowAnchor(row.id)}
       data-testid="desk-row"
       sx={{
         listStyle: "none",
@@ -174,6 +177,7 @@ export default async function DeskRow({
         borderRadius: 1,
         p: 1.5,
         bgcolor: row.checkedInAt ? "success.50" : "background.paper",
+        scrollMarginTop: 16,
       }}
     >
       {/*
