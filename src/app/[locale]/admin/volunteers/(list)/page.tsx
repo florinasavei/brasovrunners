@@ -128,7 +128,7 @@ const EMAIL_CELL_SX = { display: "inline-block", minWidth: { xs: 0, md: "12rem" 
  * while one event is in scope (§862; the owner, 2026-10-28: «as vrea sa pot adauga manual un voluntar si de aici»):
  * the card's own form, for that event, coming back to this list.
  *
- * «Contract semnat» (§NNN): a row whose signed agreement is attached wears the chip, the strip says «Contracte semnate: N din M»
+ * «Contract semnat» (§998): a row whose signed agreement is attached wears the chip, the strip says «Contracte semnate: N din M»
  * and the filters take «Cu / Fără contract semnat»; with one event in scope, «Încarcă contractele semnate» attaches a folder of
  * the club's files at once, each to the one volunteer of that event whose name it carries.
  */
@@ -163,7 +163,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   const presentFilter = presentFilterOf(present);
   // «Doar membrii {club}» (§981): «1»; anything else in the address is no filter.
   const memberFilter = memberFilterOf(member);
-  // «Contract semnat» (§NNN): «yes» or «no»; anything else in the address is no filter.
+  // «Contract semnat» (§998): «yes» or «no»; anything else in the address is no filter.
   const contractFilter = contractFilterOf(contract);
   const filters: VolunteerAdminFilters = {
     eventId: eventFilter.eventId,
@@ -200,10 +200,10 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     // Administrator and the Superadministrator, whose the person's own «Emailuri» is (§915). For the Organizer the reader is not
     // called and the column is not drawn; the reader asks for the role again (BR-REQ-060-01).
     canManageRegistrations(actor) ? readEmailSummaries(db, actor, { volunteerIds: rows.map((row) => row.id) }) : Promise.resolve(null),
-    // «Contract semnat» (§NNN): which of the page's rows have their signed agreement attached — ONE read over the page's ids; the
+    // «Contract semnat» (§998): which of the page's rows have their signed agreement attached — ONE read over the page's ids; the
     // service asks for the role again. Existence only: no name, no byte of a file reaches the list.
     volunteersWithSignedContract(db, actor, rows.map((row) => row.id)),
-    // «Prezent» (§NNN): who ticked each ticked row, and when — ONE read over the page's ticked rows, never a query per row.
+    // «Prezent» (§996): who ticked each ticked row, and when — ONE read over the page's ticked rows, never a query per row.
     readPresentTicks(db, rows),
   ]);
   // The marker's tooltip and the column (§945, §950): the newest notes' words, the older ones counted — no author's name, and since
@@ -441,7 +441,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
   );
 
   /**
-   * Under «Prezent» while ticked, who ticked it and when (§NNN; the owner, 2026-11-19: «vreau si tracing pentru voluntarim
+   * Under «Prezent» while ticked, who ticked it and when (§996; the owner, 2026-11-19: «vreau si tracing pentru voluntarim
    * [voluntari] gen cine a scanat, cine a marcat prezent»): «QR1, 08:20» under the tick, on the event's clock — from the trail, read
    * once for the page (`present-by.ts`). Unticked, nothing; a tick the trail does not name, nothing either.
    */
@@ -662,7 +662,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       render: (row) => (
         <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
           <StatusChip glyph={STATE_CHIP[row.state].glyph} color={STATE_CHIP[row.state].color} label={t(`volunteers.states.${row.state}`)} testId="volunteer-state" />
-          {/* «Contract semnat» (§NNN): the signed agreement is attached to the person's record — on the organizers' list alone. */}
+          {/* «Contract semnat» (§998): the signed agreement is attached to the person's record — on the organizers' list alone. */}
           {withContract.has(row.id) && <StatusChip glyph="signedContract" color="success" variant="outlined" label={t("volunteers.contract.chip")} testId="volunteer-contract-chip" />}
           {/* A minor whose parent has not agreed: the person's block's own chips — the parent's agreement missing, or a link sent — never a second condition. */}
           {guardianAskOf(row, true, now).kind !== "none" && (
@@ -949,7 +949,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
           {pill({ present: "yes" }, t("volunteers.presence.summaryPresent", { count: summary.present }), presentFilter === true)}
           {pill({ present: "no" }, t("volunteers.presence.summaryAbsent", { count: summary.absent }), presentFilter === false)}
           {/*
-            «Contracte semnate: N din M» (§NNN; the owner, 2026-11-19: «trebuie pentru fiecare voluntar să pot atașa „contract
+            «Contracte semnate: N din M» (§998; the owner, 2026-11-19: «trebuie pentru fiecare voluntar să pot atașa „contract
             semnat”»): among «Înscris» and «Confirmat», how many have their signed agreement attached — always said, a nought too — a
             pill to exactly those people; «Fără contract semnat» in the filters lists the others.
           */}
@@ -988,7 +988,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
       )}
 
       {/*
-        «Încarcă contractele semnate» (§NNN; the owner, 2026-11-19, holding one Word file per volunteer named
+        «Încarcă contractele semnate» (§998; the owner, 2026-11-19, holding one Word file per volunteer named
         «Contract-voluntariat-<Nume>.docx»): every file at once, each attached to the one volunteer of THIS event whose name it
         carries, the rest listed with the reason to attach by hand. With one event in scope only: a name is matched among one
         event's people. A plain form posting the files to the event's route, so it works with scripts off; the island matches the
@@ -1098,7 +1098,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
               <MenuItem value="yes">{t("volunteers.presence.yes")}</MenuItem>
               <MenuItem value="no">{t("volunteers.presence.no")}</MenuItem>
             </TextField>
-            {/* «Contract semnat» (§NNN): with it, without it — who is left after «Încarcă contractele semnate» — or everyone. */}
+            {/* «Contract semnat» (§998): with it, without it — who is left after «Încarcă contractele semnate» — or everyone. */}
             <TextField
               select
               name="contract"

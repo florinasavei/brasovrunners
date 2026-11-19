@@ -14,7 +14,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-037-08 — the registration's own page (the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a
+ * §996, BR-REQ-037-08 — the registration's own page (the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a
  * scanat, cine a marcat prezent»):
  *
  * - its trail «Ce a făcut echipa» names each scan of the code at the desk — «Cod scanat la masă» / “Code scanned at the desk” —
@@ -193,7 +193,7 @@ const trailLines = (tree: ReactNode) => {
   return panel ? elements(panel.props.children).filter((element) => element.props.variant === "body2").map((element) => text(element)) : [];
 };
 
-describe("§NNN the registration's own page", () => {
+describe("§996 the registration's own page", () => {
   it("names each scan of the code in its trail, with the moment and the account — in both languages", async () => {
     const ana = await runner("Ana Pop");
     await recordCodeScan(db, qr2, { id: ana.id, eventId, participantId: ana.participantId }, at("08:12"));

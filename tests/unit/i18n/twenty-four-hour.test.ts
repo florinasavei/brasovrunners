@@ -72,7 +72,7 @@ const ASKS_HOUR = /\bhour\b\s*[:,}]/;
 const PINS_H23 = /hourCycle:\s*["']h23["']|hour12:\s*false/;
 
 /**
- * MUI X's `ampm` prop, unless it is written `ampm={false}` — the one spelling that pins the 24-hour clock (§NNN: the results'
+ * MUI X's `ampm` prop, unless it is written `ampm={false}` — the one spelling that pins the 24-hour clock (§999: the results'
  * clock picker passes it, so its hours never follow the adapter's language). Any other `ampm` asks for, or leaves room for, AM/PM.
  */
 const TWELVE_HOUR_PROP = /\bampm\b(?!=\{false\})/;

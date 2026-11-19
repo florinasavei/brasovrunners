@@ -19,11 +19,11 @@ import ro from "../../../messages/ro.json";
 import { pdfOfSize, SAMPLE_FILES } from "../../helpers/signed-contract-files";
 
 /**
- * «Contract semnat» (§NNN), the pure half: what a file is, read from its own bytes and never from its name; the name kept as it was
+ * «Contract semnat» (§998), the pure half: what a file is, read from its own bytes and never from its name; the name kept as it was
  * uploaded, made safe; and which volunteer of the event a file of «Încarcă contractele semnate» is, by the name it carries.
  */
 
-describe("§NNN a signed agreement is what its own bytes say", () => {
+describe("§998 a signed agreement is what its own bytes say", () => {
   it("reads a PDF, a Word file (DOCX and DOC), a JPEG, a PNG and a phone's HEIC / HEIF", () => {
     expect(sniffSignedContract(SAMPLE_FILES.pdf())).toBe("PDF");
     expect(sniffSignedContract(SAMPLE_FILES.docx())).toBe("DOCX");
@@ -80,7 +80,7 @@ describe("§NNN a signed agreement is what its own bytes say", () => {
   });
 });
 
-describe("§NNN the name a signed agreement keeps, and the one it downloads under", () => {
+describe("§998 the name a signed agreement keeps, and the one it downloads under", () => {
   it("keeps the name as uploaded, without a path, control characters or the marks that turn a line's direction", () => {
     expect(cleanFileName("Contract-voluntariat-Anais-Meyson.docx")).toBe("Contract-voluntariat-Anais-Meyson.docx");
     expect(cleanFileName("C:\\fakepath\\Contract Ana Pop.pdf")).toBe("Contract Ana Pop.pdf");
@@ -107,7 +107,7 @@ describe("§NNN the name a signed agreement keeps, and the one it downloads unde
   });
 });
 
-describe("§NNN «Încarcă contractele semnate» matches each file to one volunteer of the event by name", () => {
+describe("§998 «Încarcă contractele semnate» matches each file to one volunteer of the event by name", () => {
   const people = [
     { id: "anais", name: "Anaïs Meyson", cancelled: false },
     { id: "musat", name: "Ion Mușat", cancelled: false },

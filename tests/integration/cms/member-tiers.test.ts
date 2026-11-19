@@ -560,7 +560,7 @@ describe("§811 the member tiers", () => {
       const [withLevel, without] = ["cu@dev.test", "fara@dev.test"].map((email) => mails.find((row) => row.recipientEmail === email)!);
       expect(withLevel.messageType).toBe(without.messageType);
       expect(withLevel.payloadJson).toEqual(without.payloadJson);
-      // §NNN added `signInSteps`, whose the account is (a word, never a name); the level is still not among the keys.
+      // §1000 added `signInSteps`, whose the account is (a word, never a name); the level is still not among the keys.
       expect(Object.keys(withLevel.payloadJson as object).sort()).toEqual(["displayName", "inviterName", "role", "signInSteps"]);
       expect(JSON.stringify(mails)).not.toContain(first.id);
     });

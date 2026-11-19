@@ -16,7 +16,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { statementsOf } from "../../helpers/statements";
 
 /**
- * §NNN, §983, BR-REQ-050-02 — who ticked a volunteer «Prezent», and when (the owner, 2026-11-19: «vreau si tracing pentru
+ * §996, §983, BR-REQ-050-02 — who ticked a volunteer «Prezent», and when (the owner, 2026-11-19: «vreau si tracing pentru
  * voluntarim [voluntari] gen cine a scanat, cine a marcat prezent»), on the «Voluntari» list and on the person's page, read from a real
  * database: while ticked, «Org1, 08:20» under the tick — from the newest trail row that set it, a tick again after an untick naming
  * the second —, «cont șters» for an account gone since; unticked, nothing; ticked with no such row, nothing; both languages; read
@@ -175,7 +175,7 @@ async function presentLines(query: Record<string, string> = {}): Promise<Record<
   );
 }
 
-describe("§NNN who ticked a volunteer «Prezent», and when", () => {
+describe("§996 who ticked a volunteer «Prezent», and when", () => {
   it("says it under the tick on the «Voluntari» list while ticked — the newest tick — and nothing unticked or with no trail row", async () => {
     expect(await presentLines()).toEqual({
       "Ana Pop": "Org1, 08:20",

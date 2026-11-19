@@ -5,7 +5,7 @@ import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN — «Resetează clasamentul» (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01), walked at 320 pixels and on a desk against a production
+ * §997 — «Resetează clasamentul» (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01), walked at 320 pixels and on a desk against a production
  * build: an Administrator tries «Cronometrare» on a race whose planned start is an hour ahead — a test «Start», a finish typed —, opens
  * «Clasament», opens the danger card at its foot, reads the question that counts what goes, resets, and reads no result back; on
  * «Cronometrare» the clock says again that the race has not started, and a press the phone kept from before the reset is refused with
@@ -70,7 +70,7 @@ async function noHorizontalScroll(page: Page) {
   expect(overflow).toBeLessThanOrEqual(1);
 }
 
-test.describe("§NNN «Resetează clasamentul»", () => {
+test.describe("§997 «Resetează clasamentul»", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("an Administrator's trial — a «Start» and a finish — is wiped from «Clasament» after the question; «Cronometrare» says the race has not started, and a press kept from before is refused", async ({ page }) => {

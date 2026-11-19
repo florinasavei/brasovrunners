@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { clockOfResultTime, formatResultTime, normalizeTypedResultTime, parseResultTime, resultTimeOfClock } from "@/modules/results/domain/result-time";
 
 /**
- * §NNN, BR-REQ-050-02 — «Clasament»'s «Timp» and «Timp cip», typed in any shape a stopwatch, a phone's decimal keypad or a
+ * §999, BR-REQ-050-02 — «Clasament»'s «Timp» and «Timp cip», typed in any shape a stopwatch, a phone's decimal keypad or a
  * timing sheet gives, read on leaving the box as the server reads them (`normalizeTypedResultTime`, beside `parseResultTime`);
  * and the clock picker beside them: where it opens for what a box holds (`clockOfResultTime`) and what «OK» writes
  * (`resultTimeOfClock`). The server's parser is not changed: everything the box writes is one of the shapes it already reads.
@@ -78,7 +78,7 @@ const UNREAD: readonly string[] = [
   "1..23",
 ];
 
-describe("§NNN normalizeTypedResultTime: what a time box makes of what was typed", () => {
+describe("§999 normalizeTypedResultTime: what a time box makes of what was typed", () => {
   it.each(READ)("reads «%s» as «%s»", (typed, shown, ms) => {
     expect(normalizeTypedResultTime(typed)).toBe(shown);
     expect(parseResultTime(normalizeTypedResultTime(typed))).toBe(ms);
@@ -137,7 +137,7 @@ describe("§NNN normalizeTypedResultTime: what a time box makes of what was type
   });
 });
 
-describe("§NNN the clock picker's readings of a box", () => {
+describe("§999 the clock picker's readings of a box", () => {
   it("opens at the box's time, read as the box reads it, in whole seconds", () => {
     expect(clockOfResultTime("1:23:45")).toEqual({ hours: 1, minutes: 23, seconds: 45 });
     expect(clockOfResultTime("45:12")).toEqual({ hours: 0, minutes: 45, seconds: 12 });

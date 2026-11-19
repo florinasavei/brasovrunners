@@ -5,7 +5,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the club's invitation waits until Zitadel has been asked (the owner, 2026-11-19: «cumva trebuie un delay intre
+ * §1000 — the club's invitation waits until Zitadel has been asked (the owner, 2026-11-19: «cumva trebuie un delay intre
  * mailurile de logare, sau sa fie instructiunile mai clare»).
  *
  * A press that will ask Zitadel for the account queues the invitation with `next_attempt_at` a minute ahead
@@ -112,7 +112,7 @@ async function redirectOf(press: Promise<unknown>): Promise<string> {
   throw new Error("expected a redirect");
 }
 
-describe("§NNN the invitation's hold, at the service", () => {
+describe("§1000 the invitation's hold, at the service", () => {
   it("holds the invitation a minute when the press will ask Zitadel, with Zitadel's steps — no claim takes it before", async () => {
     await inviteStaffUser(db, admin, person(), { zitadelInvite: true });
     const [row] = await outboxOf();
@@ -191,7 +191,7 @@ describe("§NNN the invitation's hold, at the service", () => {
   });
 });
 
-describe("§NNN the invitation as it renders from the row", () => {
+describe("§1000 the invitation as it renders from the row", () => {
   it("says Zitadel's steps, Zitadel's email named in the row's language in both halves", async () => {
     const member = await inviteStaffUser(db, admin, person(), { zitadelInvite: true });
     await releaseInvitationHold(db, member.id, "zitadel");
@@ -218,7 +218,7 @@ describe("§NNN the invitation as it renders from the row", () => {
   });
 });
 
-describe("§NNN through the presses: the club's invitation leaves only after Zitadel was asked", () => {
+describe("§1000 through the presses: the club's invitation leaves only after Zitadel was asked", () => {
   it("«Adaugă»: Zitadel is asked while the invitation is held, then the invitation is due", async () => {
     const to = await redirectOf(inviteStaffAction(null, form({ uiLocale: "ro", ...person(), preferredLocale: "ro" })));
     expect(to).toContain("saved=invited");

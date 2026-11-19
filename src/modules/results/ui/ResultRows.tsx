@@ -24,7 +24,7 @@ import { clockOfResultTime, normalizeTypedResultTime, resultTimeOfClock } from "
  * page's input latency where the event editor's is (§371) — still 44 pixels tall, still named by an `aria-label` that says whose
  * line it is, and still coming back as it was typed after a refusal (`useRecall`, §315), marked when the refusal named it.
  *
- * **«Timp» and «Timp cip» are picked or typed** (§NNN): beside each, a 44-pixel clock button opens the page's ONE picker
+ * **«Timp» and «Timp cip» are picked or typed** (§999): beside each, a 44-pixel clock button opens the page's ONE picker
  * (`ClockPickerHost`, mounted once by the page and loaded on the first press) — hours, minutes and seconds on the 24-hour clock —
  * which writes `h:mm:ss` into the box; and the box reads digits alone and the usual separators as a time when it is left
  * («12345» → «1:23:45», `normalizeTypedResultTime`). The button and its wrapper are plain elements styled once by the list
@@ -55,7 +55,7 @@ export type ResultWords = {
   sexOptions: readonly { value: string; label: string }[];
   /** «Șterge rezultatul: {runner}» — the delete button's accessible name, `{runner}` filled here. */
   deleteFor: string;
-  /** «Alege timpul: {runner}» and «Alege timpul cip: {runner}» — the clock buttons beside «Timp» and «Timp cip» (§NNN), `{runner}` filled here. */
+  /** «Alege timpul: {runner}» and «Alege timpul cip: {runner}» — the clock buttons beside «Timp» and «Timp cip» (§999), `{runner}` filled here. */
   pickTime: string;
   pickChip: string;
   delete: string;
@@ -148,7 +148,7 @@ const TIME_BOX_SX = { ...BOX_SX, width: "auto", flex: "1 1 0%", minWidth: 0 } as
 const TIME_CELL_CLASS = "result-time-cell";
 
 /**
- * The time cells' styles, written once on each list rather than once per box (§NNN): a race has a few hundred lines, and the cell
+ * The time cells' styles, written once on each list rather than once per box (§999): a race has a few hundred lines, and the cell
  * and the button are plain elements. The button is the volunteers' calendar button's (`BirthDatePicker`): 44 pixels, a round hover
  * disc inside them, the theme's own outline when the keyboard reaches it.
  */
@@ -225,7 +225,7 @@ type BoxAttributes = {
 };
 
 /**
- * A time box — «Timp», «Timp cip» — and, beside it, the clock button (§NNN).
+ * A time box — «Timp», «Timp cip» — and, beside it, the clock button (§999).
  *
  * - **Typed:** what the server reads is left as it is; on leaving the box, or on Enter before the form's own submit, digits alone
  *   and the usual separators become the time they stand for (`normalizeTypedResultTime`: «12345» → «1:23:45», «2345,6» →
@@ -311,7 +311,7 @@ function LineBox({
   inputMode?: "text" | "numeric" | "decimal";
   testId?: string;
   span?: boolean;
-  /** A time box (§NNN): the clock button's accessible name beside it, and the box read as a time when it is left. */
+  /** A time box (§999): the clock button's accessible name beside it, and the box read as a time when it is left. */
   pickLabel?: string;
 }) {
   const recall = useRecall();

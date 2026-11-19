@@ -19,7 +19,7 @@ import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-037-08, BR-REQ-060-01 — a scan is recorded (the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine
+ * §996, BR-REQ-037-08, BR-REQ-060-01 — a scan is recorded (the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine
  * a scanat, cine a marcat prezent»), read from a real database through the scanned page itself (`/admin/checkin/<code>`):
  *
  * - opened by a desk role for a code that names a registration: one `registration.code_scanned` row — the registration, the staff
@@ -167,7 +167,7 @@ const scannedBefore = (page: string) => {
   return match ? words(match[1]) : null;
 };
 
-describe("§NNN a scan is recorded when a desk role opens the code's page", () => {
+describe("§996 a scan is recorded when a desk role opens the code's page", () => {
   it("writes one row on open — the registration, the staff account and the event's id, never a name or the code — and draws the runner", async () => {
     const page = await open(at("08:12"));
     expect(words(page)).toContain("Ana Pop");
@@ -267,7 +267,7 @@ describe("§NNN a scan is recorded when a desk role opens the code's page", () =
   });
 });
 
-describe("§NNN «Scanat înainte» under the scanned row", () => {
+describe("§996 «Scanat înainte» under the scanned row", () => {
   it("says nothing when nobody opened the code before", async () => {
     expect(scannedBefore(await open(at("08:12")))).toBeNull();
   });

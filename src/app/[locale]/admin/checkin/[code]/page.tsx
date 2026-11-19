@@ -39,7 +39,7 @@ export const dynamic = "force-dynamic";
  * identifies, it does not authorize. A code nobody has is a sentence with a way back, not a 404, because at a desk the likeliest
  * cause is a mistyped letter.
  *
- * **A scan is recorded (§NNN; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a
+ * **A scan is recorded (§996; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a
  * marcat prezent»).** Opened for a code that names a registration, one `registration.code_scanned` row under the viewer's staff
  * account (`admin-service.ts#recordCodeScan`, one per account and registration within two minutes) — unless the page is coming back
  * from a desk verb (`saved`, `error`), is the page already open switched to the other language (`from=language`, what the language
@@ -65,7 +65,7 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
   const now = new Date();
   const row = isCheckinCode(code) ? await findRegistrationByCheckinCode(db, code, locale) : undefined;
 
-  // The scan (§NNN): never for the same visit again — the page back from a verb, or switched to the other language —, a prefetch of
+  // The scan (§996): never for the same visit again — the page back from a verb, or switched to the other language —, a prefetch of
   // the address, or the registration's own link to it.
   const sameVisit = saved !== undefined || error !== undefined || query.from === OPENED_IN_THE_OTHER_LANGUAGE;
   const requestHeaders = await headers();
@@ -88,7 +88,7 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
   const family = row ? ((await familyOf(db, [row])).get(row.id) ?? []).map((member) => member.name) : [];
   // The raffle (§984): whether the person takes part, for every desk role — and, in the sign-up mode with its gate open, the desk's sign-up.
   const raffle = row ? await readRaffleLine(db, { table: "registration", id: row.id }, now) : null;
-  // «Scanat înainte» (§NNN): the code's newest scans, one more than the line names, so this visit's own can be left out.
+  // «Scanat înainte» (§996): the code's newest scans, one more than the line names, so this visit's own can be left out.
   const earlier = row ? earlierScans(await listCodeScans(db, row.id, EARLIER_SCANS_SHOWN + 1), { ownScanId, sameVisit, viewerId: actor.id }) : [];
   // Each on the event's clock: the hour alone on today's date, the day beside it otherwise (a code opened the day before).
   const scanWords = (scan: CodeScan) => {
@@ -120,7 +120,7 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
                 (await raffleDeskLine({ line: raffle, locale, back: { to: "code", code }, registrationId: row.id, name: row.registeredName, action: raffleDeskSignUpAction, organizer: canTakeRaffleList(actor) }))}
             </DeskRow>
           </Stack>
-          {/* A second pickup, seen at the table (§NNN): who opened this code before, and when — nothing when nobody did. */}
+          {/* A second pickup, seen at the table (§996): who opened this code before, and when — nothing when nobody did. */}
           {earlier.length > 0 && (
             <Alert severity="info" data-testid="desk-scanned-before">
               {t("desk.scannedBefore", { scans: earlier.map(scanWords).join(", ") })}

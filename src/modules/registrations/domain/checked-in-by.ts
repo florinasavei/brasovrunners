@@ -1,5 +1,5 @@
 /**
- * Who marked a runner present (§NNN), the pure half of `../checked-in-by.ts`: the row's two facts — the staff account's name, joined,
+ * Who marked a runner present (§996), the pure half of `../checked-in-by.ts`: the row's two facts — the staff account's name, joined,
  * and whether the person pressed «Am ajuns» themselves (`CHECKED_IN_BY_SELF`) — as one answer, and that answer in the chip's words.
  */
 export type CheckedInBy = { kind: "staff"; name: string } | { kind: "self" } | { kind: "removed" };

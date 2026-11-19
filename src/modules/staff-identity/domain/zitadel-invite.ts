@@ -3,7 +3,7 @@ import { CLUB_NAME } from "@/theme/brand";
 import type { InviteOutcome } from "../zitadel-users";
 
 /**
- * What the club's invitation says about Zitadel's own email and sign-in page (§NNN; the owner, 2026-11-19: «am o alta
+ * What the club's invitation says about Zitadel's own email and sign-in page (§1000; the owner, 2026-11-19: «am o alta
  * problema a invitarea voluntarilor in echpa, cumva trebuie un delay intre mailurile de logare, sau sa fie
  * instructiunile mai clare»).
  *
@@ -42,9 +42,9 @@ export function zitadelInviteButton(locale: Locale): string {
 export const ZITADEL_LOGIN_LABELS = { register: "Register new user", resendCode: "Resend code" } as const;
 
 /**
- * Whose the sign-in account is, in the invitation's steps (§NNN), written in its payload at the press: `zitadel` — the
+ * Whose the sign-in account is, in the invitation's steps (§1000), written in its payload at the press: `zitadel` — the
  * press asks Zitadel for the account, and Zitadel emails the link to choose a password; `self` — there is no key, so the
- * person makes the account at the sign-in page. A row queued before §NNN carries neither and reads as `zitadel`, which
+ * person makes the account at the sign-in page. A row queued before §1000 carries neither and reads as `zitadel`, which
  * is what every environment with the key had asked of Zitadel.
  */
 export type SignInSteps = "zitadel" | "self" | "ready";
@@ -58,7 +58,7 @@ export function signInStepsOf(value: unknown): SignInSteps {
 }
 
 /**
- * The steps once Zitadel answered (§NNN): an account made, one found without a password (Zitadel sent it a new code) or
+ * The steps once Zitadel answered (§1000): an account made, one found without a password (Zitadel sent it a new code) or
  * one found with its password (nothing to send — the email's «Sari peste pasul 1») keeps Zitadel's steps; a refusal, or
  * no key, leaves the person to make the account themselves.
  */

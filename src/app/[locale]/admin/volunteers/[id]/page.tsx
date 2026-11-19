@@ -61,7 +61,7 @@ export const dynamic = "force-dynamic";
  * «Decizie pentru ziua cursei» (§954) stands right after it, still before the person's block: the organizers' one line about
  * what they decided for the person on race day, with the form that writes it (`VolunteerDecisionCard`, `../actions.ts`).
  *
- * Under the person's block: «Contract semnat» (§NNN, `SignedContractCard`), the signed copy of the agreement — attach, download,
+ * Under the person's block: «Contract semnat» (§998, `SignedContractCard`), the signed copy of the agreement — attach, download,
  * replace, delete — and, for the Administrator alone, «Transformă în alergător» (§948, `TurnIntoRunnerPanel`).
  */
 export default async function AdminVolunteerPage({ params, searchParams }: Props) {
@@ -86,9 +86,9 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
     canManageRegistrations(actor) ? readEmailHistory(db, actor, { volunteerId: person.id }, now) : Promise.resolve(null),
     // «Note interne»: the person's live notes, newest first; the service asks for the role again.
     listVolunteerNotes(db, actor, person.id),
-    // «Contract semnat» (§NNN): the signed copy's facts, never its bytes; the service asks for the role again.
+    // «Contract semnat» (§998): the signed copy's facts, never its bytes; the service asks for the role again.
     readSignedContract(db, actor, person.id),
-    // «Prezent» (§NNN): who ticked it and when, while ticked — the list's one read, for this one row.
+    // «Prezent» (§996): who ticked it and when, while ticked — the list's one read, for this one row.
     readPresentTicks(db, [person]),
   ]);
   const presentBy = person.present ? presentTicks.get(person.id) : undefined;
@@ -128,7 +128,7 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
             {t("volunteers.presence.tick")}
           </TickButton>
         </Box>
-        {/* While ticked, who ticked it and when (§NNN), on the event's clock, as the list's row says it; unticked, nothing. */}
+        {/* While ticked, who ticked it and when (§996), on the event's clock, as the list's row says it; unticked, nothing. */}
         {presentBy && (
           <Typography variant="body2" color="text.secondary" data-testid="volunteer-page-present-by">
             {t("volunteers.presence.by", { who: presentBy.name ?? t("desk.byRemoved"), time: formatTime(presentBy.at, { locale, timeZone: presentBy.timezone }) })}
@@ -186,7 +186,7 @@ export default async function AdminVolunteerPage({ params, searchParams }: Props
       <VolunteerPerson person={person} context={context} as="section" />
 
       {/*
-        «Contract semnat» (§NNN; the owner, 2026-11-19: «trebuie pentru fiecare voluntar să pot atașa „contract semnat”»): the signed
+        «Contract semnat» (§998; the owner, 2026-11-19: «trebuie pentru fiecare voluntar să pot atașa „contract semnat”»): the signed
         copy of the agreement, right under the person's block, where the agreement's acceptance is said — kept in the database, read
         and downloaded only by whoever works the volunteers, gone with the person's data.
       */}

@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { type CodeScan, EARLIER_SCANS_SHOWN, earlierScans, OPENED_FROM_REGISTRATION, OPENED_IN_THE_OTHER_LANGUAGE } from "@/modules/registrations/domain/code-scans";
 
 /**
- * §NNN — «Scanat înainte» under the scanned row, the pure half (`registrations/domain/code-scans.ts`, the desk's own module, never
+ * §996 — «Scanat înainte» under the scanned row, the pure half (`registrations/domain/code-scans.ts`, the desk's own module, never
  * the organizers' «Jurnal»): the newest three earlier scans of a code, oldest first, never the one this visit counts as — the row it
  * wrote or repeated, or, on the same visit again (back from a desk verb, or switched to the other language), the viewer's newest;
  * and the two marks of an address that opens the page without a scan.
  */
-describe("§NNN «Scanat înainte»", () => {
+describe("§996 «Scanat înainte»", () => {
   const scan = (id: string, minute: number, actorId: string | null): CodeScan => ({ id, at: new Date(Date.UTC(2099, 10, 21, 6, minute)), actorId, actorName: actorId });
   // The code's newest scans, newest first, as `listCodeScans` reads them.
   const scans = [scan("d", 12, "qr2"), scan("c", 9, "admin"), scan("b", 7, "qr3"), scan("a", 5, "qr1")];

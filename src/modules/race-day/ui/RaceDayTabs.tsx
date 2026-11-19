@@ -14,7 +14,7 @@ export type RaceDayTab = "desk" | "results" | "timing" | "raffle" | "items" | "j
 
 /**
  * Each tab's picture, by its name in the subjects' table (§521): the desk's own cup, the results' board, the stopwatch, a
- * wrapped prize, a checklist, and the trail's clock with its arrow (the registration's «Ce a făcut echipa», §NNN). Looked up here,
+ * wrapped prize, a checklist, and the trail's clock with its arrow (the registration's «Ce a făcut echipa», §996). Looked up here,
  * on the server; only the drawn `<svg>` reaches the browser.
  */
 const TAB_GLYPH = {
@@ -32,7 +32,7 @@ const TAB_GLYPH = {
  * day, §986: «pentru ziua cursei am nevoie de o pagina noua pentru cronometrare», and §984: «un tab de tombolă unde să văd toți
  * participanții la tombolă»): «Prezența» — the desk as it was —, «Clasament» — the chosen event's results (§808) —,
  * «Cronometrare» — the finish line, a number or an elite pressed as the runner crosses —, «Tombolă» — the organizers' raffle,
- * everybody of the three groups — and «Lucruri de adus», the event's checklist; and, after it, §NNN (the owner, 2026-11-19: «vreau
+ * everybody of the three groups — and «Lucruri de adus», the event's checklist; and, after it, §996 (the owner, 2026-11-19: «vreau
  * si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a marcat prezent»): «Jurnal», who scanned, who marked present and who
  * ticked a volunteer, for the organizers alone (`canReadRaceDayJournal`).
  *
@@ -95,7 +95,7 @@ export async function raceDayTabs({ locale, active, eventId, actor }: { locale: 
       glyph: glyph("items"),
     });
   }
-  // «Jurnal» (§NNN): the organizers' tab (`canReadRaceDayJournal`), last; one word already, so a phone draws it whole. The page asserts it again.
+  // «Jurnal» (§996): the organizers' tab (`canReadRaceDayJournal`), last; one word already, so a phone draws it whole. The page asserts it again.
   if (canReadRaceDayJournal(actor)) {
     items.push({ href: withEvent(getPathname({ locale, href: "/admin/checkin/jurnal" })), label: t("raceDay.tabs.journal"), active: active === "journal", glyph: glyph("journal") });
   }

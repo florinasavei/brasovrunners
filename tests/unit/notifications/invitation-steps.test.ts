@@ -10,7 +10,7 @@ import { signInStepsAfter, signInStepsOf, ZITADEL_LOGIN_LABELS, zitadelInviteBut
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
- * §NNN — the club's invitation says the sign-in steps in order (the owner, 2026-11-19: «am o alta problema a invitarea
+ * §1000 — the club's invitation says the sign-in steps in order (the owner, 2026-11-19: «am o alta problema a invitarea
  * voluntarilor in echpa, cumva trebuie un delay intre mailurile de logare, sau sa fie instructiunile mai clare»).
  *
  * Two shapes, by whose the account is, carried in the payload at the press (`signInSteps`): Zitadel's — its email first,
@@ -37,7 +37,7 @@ function halves(text: string): [string, string] {
   return [first, second];
 }
 
-describe("§NNN the invitation's steps when the press asked Zitadel for the account", () => {
+describe("§1000 the invitation's steps when the press asked Zitadel for the account", () => {
   for (const type of TYPES) {
     it(`${type}: says who sends what, Zitadel's email by its subject, and the steps in order, in both halves`, () => {
       const email = render(type, "ro", { signInSteps: "zitadel", zitadelSubject: zitadelInviteSubject("ro"), zitadelButton: zitadelInviteButton("ro") });
@@ -83,7 +83,7 @@ describe("§NNN the invitation's steps when the press asked Zitadel for the acco
     expect(ro).toContain(`cu subiectul „Invitation to ${CLUB_NAME}” și butonul „Accept invite”`);
   });
 
-  it("reads a row queued before §NNN, with no steps in its payload, as Zitadel's shape", () => {
+  it("reads a row queued before §1000, with no steps in its payload, as Zitadel's shape", () => {
     const [ro] = halves(render("STAFF_INVITATION", "ro").text);
     expect(ro).toContain("1. Deschide emailul de la Zitadel");
     expect(ro).toContain(`cu subiectul „Invitație la ${CLUB_NAME}”`);
@@ -97,7 +97,7 @@ describe("§NNN the invitation's steps when the press asked Zitadel for the acco
   });
 });
 
-describe("§NNN the invitation's steps when the person makes the account", () => {
+describe("§1000 the invitation's steps when the person makes the account", () => {
   for (const type of TYPES) {
     it(`${type}: the button, then «${ZITADEL_LOGIN_LABELS.register}» with exactly this address, in both halves`, () => {
       const email = render(type, "ro", { signInSteps: "self" });
@@ -129,7 +129,7 @@ describe("§NNN the invitation's steps when the person makes the account", () =>
   });
 });
 
-describe("§NNN the club's own words for the invitation", () => {
+describe("§1000 the club's own words for the invitation", () => {
   const written = emailCopySchema.parse({
     [emailCopyKey("STAFF_INVITATION", "ro")]: { subject: "Bun venit în echipă", paragraphs: ["Textul clubului, cu pașii lui."] },
     [emailCopyKey("STAFF_INVITATION", "en")]: { subject: "Welcome to the team", paragraphs: ["The club's own words, with its steps."] },
@@ -150,7 +150,7 @@ describe("§NNN the club's own words for the invitation", () => {
   });
 });
 
-describe("§NNN «Setări» → «Emailuri» previews both shapes", () => {
+describe("§1000 «Setări» → «Emailuri» previews both shapes", () => {
   it("previews Zitadel's shape on the message's own card, the sample's subject named in both halves", () => {
     for (const type of TYPES) {
       const [first, second] = halves(renderBilingual(type, "ro", emailSampleFor(type, "ro"), ACTION, null).text);
@@ -176,7 +176,7 @@ describe("§NNN «Setări» → «Emailuri» previews both shapes", () => {
   });
 });
 
-describe("§NNN the invitation's steps for an account that already signs in with its password (`ready`)", () => {
+describe("§1000 the invitation's steps for an account that already signs in with its password (`ready`)", () => {
   for (const type of TYPES) {
     it(`${type}: the button alone, with the address and the person's own password — no email of Zitadel's announced`, () => {
       const email = render(type, "ro", { signInSteps: "ready" });

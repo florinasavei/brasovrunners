@@ -12,7 +12,7 @@ import { isUuid } from "@/shared/ids";
 import { cleanFileName, type ContractFileMatch, type ContractNameRefusal, fallbackFileName, matchContractFiles, mayBeSignedContract, sniffSignedContract } from "./domain/signed-contract";
 
 /**
- * «Contract semnat» (§NNN, amending §758; the owner, 2026-11-19: «trebuie pentru fiecare voluntar să pot atașa „contract
+ * «Contract semnat» (§998, amending §758; the owner, 2026-11-19: «trebuie pentru fiecare voluntar să pot atașa „contract
  * semnat”»): the signed copy of each volunteer's agreement — the club's Word file, a scan, a photograph of the paper — attached to
  * the volunteer's record, one per volunteer, and kept **in the database**, never in the media bucket, whose reads are public.
  *
@@ -74,7 +74,7 @@ function assertSize(size: number): void {
 }
 
 /**
- * A whole file, checked before a byte is written (§NNN): not empty, at most `SIGNED_CONTRACT_MAX_BYTES`, and one of the formats by
+ * A whole file, checked before a byte is written (§998): not empty, at most `SIGNED_CONTRACT_MAX_BYTES`, and one of the formats by
  * its own bytes. Each refusal its own code, so the page and the upload's list say which.
  */
 export function checkSignedContract(bytes: Uint8Array): VolunteerDocumentFormat {
@@ -133,7 +133,7 @@ async function writeSignedContract<T extends Record<string, unknown>>(
 }
 
 /**
- * «Încarcă» / «Înlocuiește» on the volunteer's card, and each file «Încarcă contractele semnate» matched to a person (§NNN): one
+ * «Încarcă» / «Înlocuiește» on the volunteer's card, and each file «Încarcă contractele semnate» matched to a person (§998): one
  * whole file attached to one volunteer of the event, replacing the copy they had. Asserted, then checked whole by its bytes,
  * then written under the volunteer's lock — or refused with nothing written: `FORBIDDEN`, `NOT_FOUND` (another event's person, a
  * malformed or unknown id), `VOLUNTEER_CONTRACT_EMPTY`, `…_TOO_LARGE`, `…_TYPE`.
@@ -156,7 +156,7 @@ export async function attachSignedContract<T extends Record<string, unknown>>(
 }
 
 /**
- * The first piece of a file larger than one request carries (§NNN, `SIGNED_CONTRACT_PART_BYTES`): the whole length declared and
+ * The first piece of a file larger than one request carries (§998, `SIGNED_CONTRACT_PART_BYTES`): the whole length declared and
  * checked against the limit, the piece's signature read so ten megabytes of something else never go up, and the piece kept for the
  * next ones — replacing any upload of the same person left half-sent. A piece that is already the whole file is attached at once.
  */
@@ -188,7 +188,7 @@ export async function startSignedContractUpload<T extends Record<string, unknown
 }
 
 /**
- * The next piece of a file sent in pieces (§NNN): appended in order — `offset` must be what arrived so far, so a piece sent twice or
+ * The next piece of a file sent in pieces (§998): appended in order — `offset` must be what arrived so far, so a piece sent twice or
  * out of turn is refused (`VOLUNTEER_CONTRACT_UPLOAD_GONE`, as is an upload replaced by a newer one or gone with its person) — and,
  * with the last one, the whole file checked by its bytes and moved into the volunteer's copy in the same transaction, the upload's
  * row deleted. A whole file that is not one of the formats is refused and its pieces deleted.
@@ -239,7 +239,7 @@ export async function continueSignedContractUpload<T extends Record<string, unkn
 }
 
 /**
- * «Șterge» on the volunteer's card (§NNN): the signed copy gone, with any upload of the person left half-sent, and one trail row —
+ * «Șterge» on the volunteer's card (§998): the signed copy gone, with any upload of the person left half-sent, and one trail row —
  * the id, the length and the format. `deleted: false` when there was none (another colleague's delete first): nothing to record.
  */
 export async function deleteSignedContract<T extends Record<string, unknown>>(
@@ -290,7 +290,7 @@ export async function readSignedContract<T extends Record<string, unknown>>(db: 
 }
 
 /**
- * The download (§NNN): the copy's bytes, name and format, for a volunteer of this event, with one trail row — the id, the length and
+ * The download (§998): the copy's bytes, name and format, for a volunteer of this event, with one trail row — the id, the length and
  * the format — because a file with a person's signature leaves the site. Null while there is none (and no row written).
  */
 export async function takeSignedContractFile<T extends Record<string, unknown>>(
@@ -329,7 +329,7 @@ export async function volunteersWithSignedContract<T extends Record<string, unkn
 }
 
 /**
- * Whether the volunteer the column names has a signed copy attached, as a condition of a query (§NNN): the «Voluntari» list's
+ * Whether the volunteer the column names has a signed copy attached, as a condition of a query (§998): the «Voluntari» list's
  * filter and its strip's «Contracte semnate: N din M» read the table through this alone, never its rows.
  */
 export function hasSignedContract(volunteerId: AnyPgColumn | SQL): SQL {
@@ -377,7 +377,7 @@ async function contractCandidates<T extends Record<string, unknown>>(db: Databas
 }
 
 /**
- * «Încarcă contractele semnate», first step (§NNN): which volunteer of **this** event each file is, by the name it carries
+ * «Încarcă contractele semnate», first step (§998): which volunteer of **this** event each file is, by the name it carries
  * (`matchContractFiles`) — only the names travel, never a byte, so a file nobody matches never goes up. The page then sends each
  * matched file to its volunteer (`attachSignedContract`, in pieces when large) and lists the rest with the reason.
  */
@@ -407,7 +407,7 @@ export function batchReasonOf(code: string): "empty" | "tooLarge" | "type" | "go
 }
 
 /**
- * «Încarcă contractele semnate» in one request (§NNN) — the form as it posts with scripts off: every file matched by its name, and
+ * «Încarcă contractele semnate» in one request (§998) — the form as it posts with scripts off: every file matched by its name, and
  * each matched one attached in a transaction of its own, so **one bad file never stops the others**: a file refused by its bytes,
  * or whose volunteer was deleted meanwhile, is listed with the reason and the next one goes on — and a later file for the same
  * person (`twice`) takes its turn then, since nothing of this upload is theirs yet. The page's own way, with scripts, is the match

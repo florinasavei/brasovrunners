@@ -319,11 +319,11 @@ describe("the banner after «Adaugă mai mulți membri» says an invitation was 
 });
 
 /**
- * §NNN — after «Adaugă» or «Retrimite invitația», one line on the page says what the person receives, by Zitadel's answer:
+ * §1000 — after «Adaugă» or «Retrimite invitația», one line on the page says what the person receives, by Zitadel's answer:
  * two emails, Zitadel's (named by its button) and the club's — in no promised order, which neither sender can keep; the club's
  * alone; or the one email with the person's own steps — a refusal with its reason.
  */
-describe("§NNN the inviter's one line after a press, as the page draws it", () => {
+describe("§1000 the inviter's one line after a press, as the page draws it", () => {
   async function line(query: Record<string, string>) {
     actor = member("reader", "ADMIN");
     team = [actor];

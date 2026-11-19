@@ -73,7 +73,7 @@ async function answerOf(response: Response): Promise<Record<string, unknown> | n
 }
 
 /**
- * One file to one volunteer's route (§NNN): whole when it fits one request, else in pieces of `partBytes`, each appended in order —
+ * One file to one volunteer's route (§998): whole when it fits one request, else in pieces of `partBytes`, each appended in order —
  * a request to a function on the host carries at most 4.5 MB, a signed scan up to ten. The route checks everything again.
  */
 async function sendFile(file: File, url: string, partBytes: number): Promise<Sent> {
@@ -136,7 +136,7 @@ function RefreshOnce() {
 const fill = (text: string, values: Record<string, string | number>) => Object.entries(values).reduce((out, [name, value]) => out.replaceAll(`{${name}}`, String(value)), text);
 
 /**
- * «Contract semnat» (§NNN): the file box and its press — on a volunteer's card one file («Încarcă» / «Înlocuiește»), on the
+ * «Contract semnat» (§998): the file box and its press — on a volunteer's card one file («Încarcă» / «Înlocuiește»), on the
  * event's «Voluntari» list every file at once («Încarcă contractele semnate»).
  *
  * **A real form first.** It posts multipart to the route as it stands, so with scripts off it works: one file comes back to the

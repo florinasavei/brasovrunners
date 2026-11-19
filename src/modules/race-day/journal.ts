@@ -30,7 +30,7 @@ import {
 } from "./domain/journal";
 
 /*
-  «Ziua cursei» → «Jurnal» (§NNN; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a
+  «Ziua cursei» → «Jurnal» (§996; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a
   marcat prezent»), the reads: one event's scans, check-ins and undos of its registrations and «Prezent» ticks of its volunteers,
   newest first, with how many each staff account did. The organizers' alone (`canReadRaceDayJournal`), and so never imported by a
   page of the desk: the scanned page's «Scanat înainte» reads the same scan rows through the desk's own module
@@ -112,7 +112,7 @@ function whoOf(actorId: string | null, actorName: string | null): JournalWho {
 }
 
 /**
- * The log of one event (§NNN), for the Organizer, the Administrator and the Superadministrator (`canReadRaceDayJournal`, asserted
+ * The log of one event (§996), for the Organizer, the Administrator and the Superadministrator (`canReadRaceDayJournal`, asserted
  * here as on the page, BR-REQ-060-01): the summary per account, the accounts the filter offers, and the newest lines the filter
  * holds — at most `JOURNAL_LINES_MAX` — with how many more. Six queries, whatever the rows: three grouped counts, three reads.
  */

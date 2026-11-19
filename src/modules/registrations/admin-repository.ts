@@ -1060,7 +1060,7 @@ export type RegistrationDetail = {
   checkedInAt: Date | null;
   /** Null when the participant checked themselves in, or the staff row is gone. */
   checkedInByName: string | null;
-  /** Checked in by the person themselves, «Am ajuns» (§NNN, `checked-in-by.ts`): what tells a null name apart from a deleted account. */
+  /** Checked in by the person themselves, «Am ajuns» (§996, `checked-in-by.ts`): what tells a null name apart from a deleted account. */
   checkedInBySelf: boolean;
   /** Who vouched for the address at the desk, when nobody clicked a link. */
   emailConfirmedByName: string | null;
@@ -1507,7 +1507,7 @@ export type DeskRegistration = {
   checkedInAt: Date | null;
   /** The staff account that marked the runner present; null for the person's own «Am ajuns», or an account gone since. */
   checkedInByName: string | null;
-  /** Checked in by the person themselves, «Am ajuns» (§NNN, `checked-in-by.ts`): what tells a null name apart from a deleted account. */
+  /** Checked in by the person themselves, «Am ajuns» (§996, `checked-in-by.ts`): what tells a null name apart from a deleted account. */
   checkedInBySelf: boolean;
   /**
    * The desk sees whom an email does not reach (`DECISIONS.md` §76, §663, §670) — which, when and why: its own
@@ -1550,7 +1550,7 @@ const DESK_COLUMNS = {
   idDocument: latestIdDocument,
   minorIdDocument: latestMinorIdDocument,
   checkedInAt: registrations.checkedInAt,
-  // Who marked the runner present (§NNN): the account's name by the join below, and the person's own «Am ajuns» told apart from
+  // Who marked the runner present (§996): the account's name by the join below, and the person's own «Am ajuns» told apart from
   // an account deleted since by one indexed probe of the trail — inside this query, never one per row.
   checkedInByName: checkedInBy.displayName,
   checkedInBySelf: CHECKED_IN_BY_SELF,

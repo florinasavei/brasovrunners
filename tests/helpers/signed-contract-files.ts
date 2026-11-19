@@ -1,5 +1,5 @@
 /**
- * Made-up files for «Contract semnat» (§NNN): the leading bytes and the inner names each format is read by, and nothing a person
+ * Made-up files for «Contract semnat» (§998): the leading bytes and the inner names each format is read by, and nothing a person
  * wrote — a few hundred bytes each, padded to any length a test asks. Never a real document.
  */
 

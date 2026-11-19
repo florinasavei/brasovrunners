@@ -58,7 +58,7 @@ import { type PostedResultRow, resultBox } from "./rows";
  *
  * **Who.** The Organizer, the Administrator and the Superadministrator enter, import, rank and read (`canEnterResults`); the
  * Administrator and the Superadministrator alone publish (`canPublishResults`) and, before the start, wipe the whole list
- * («Resetează clasamentul», `canResetResults`, §NNN: `resetEventResults`). The Tehnic role, the Redactor, the desk Volunteer
+ * («Resetează clasamentul», `canResetResults`, §997: `resetEventResults`). The Tehnic role, the Redactor, the desk Volunteer
  * and a member are refused here, whatever the page drew (BR-REQ-060-01) — but for the finish line (§986): every role that works
  * the desk records a finish on «Cronometrare» and undoes its own press for ten minutes (`canRecordFinishes`), and only whoever
  * enters results presses «Start». **Nothing about a registration changes**: a result reads
@@ -933,7 +933,7 @@ export type ResetResultsRequest = {
 export type ResetResultsOutcome = { changed: boolean; deleted: number; gunCleared: boolean };
 
 /**
- * «Resetează clasamentul» (§NNN; the trial runs before a race: a test «Start», a few test finishes): the race's whole list wiped
+ * «Resetează clasamentul» (§997; the trial runs before a race: a test «Start», a few test finishes): the race's whole list wiped
  * **before the start**, so race day starts from zero.
  *
  * **Who** — the Administrator and the Superadministrator (`canResetResults`, FORBIDDEN otherwise). **What** — a race only
@@ -975,7 +975,7 @@ export async function resetEventResults<T extends Record<string, unknown>>(db: D
 }
 
 /**
- * Whether «Resetează clasamentul» wiped the race after `sinceMs` (§NNN): an `event.results_reset` row of the race's trail newer than
+ * Whether «Resetează clasamentul» wiped the race after `sinceMs` (§997): an `event.results_reset` row of the race's trail newer than
  * that instant, `sinceMs` a moment already come on the server's clock. The indexed key (`audit_logs_entity_idx`: the entity type, the
  * id, the time), read from the instant on — a press made now reads the last seconds of the race's trail, a queued one the minutes it
  * waited.
@@ -1076,7 +1076,7 @@ function finishTargetOf(runners: Runners, bibNumber: number): FinishTarget | nul
  * to be named (the line is ranked, or run hors concours, by `hors-concours.ts`' rule 3); anything else is refused carrying the time
  * (`RESULT_BIB_UNKNOWN`), so the volunteer writes it down and the runner is typed on «Clasament» later.
  *
- * **A press older than «Resetează clasamentul» (§NNN)** — made during the trial the reset wiped, and sent after it from a phone that
+ * **A press older than «Resetează clasamentul» (§997)** — made during the trial the reset wiped, and sent after it from a phone that
  * found its signal again — is refused (`RESULT_PRESS_BEFORE_RESET`, `resetSince`), before anything else is read: no test finish
  * comes back, and the phone's line says why.
  *
@@ -1119,7 +1119,7 @@ export async function recordFinish<T extends Record<string, unknown>>(
   const outcome = await db.transaction(async (tx): Promise<FinishOutcome> => {
     const event = await loadEvent(tx, request.eventId, true);
     if (!eventTakesResults(event.type)) throw new DomainError("RESULTS_NOT_OPEN", "only a race takes results");
-    // A press a phone made before «Resetează clasamentul» and sent after it (§NNN) — a trial the reset wiped, waiting on a phone
+    // A press a phone made before «Resetează clasamentul» and sent after it (§997) — a trial the reset wiped, waiting on a phone
     // without signal: refused, its line on the phone saying why, so no test finish comes back; its retry too, whatever it was
     // answered then. Read under the event's lock the reset takes, so a press is before it or after it. A press claims its moment;
     // one with none — or one claiming a moment not yet come on the server's clock — is after any reset there was.

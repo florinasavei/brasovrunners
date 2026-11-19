@@ -633,7 +633,7 @@ export function markUndone(entries: readonly FinishEntry[], staffId: string, bib
 
 /** How a line under the box reads an entry: waiting, another account's left unsent, saved, undone since, already there, or refused. */
 /**
- * «Golește lista» (§NNN; the owner, 2026-11-19, with a picture of the test presses refused before the start: «cum pot să șterg
+ * «Golește lista» (§1001; the owner, 2026-11-19, with a picture of the test presses refused before the start: «cum pot să șterg
  * înregistrările astea?»): this phone's lines without the ones the server already answered — saved, refused, a duplicate, undone —
  * and with every press still waiting to leave, this account's or another's, so clearing the list never loses a finish.
  */

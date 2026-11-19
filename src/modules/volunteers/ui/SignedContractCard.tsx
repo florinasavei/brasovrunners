@@ -16,7 +16,7 @@ import { signedContractMaxWords, signedContractUploadLabels } from "./signed-con
 import { shortText } from "./VolunteerPerson";
 
 /**
- * «Contract semnat» on a volunteer's page (§NNN, amending §758; the owner, 2026-11-19: «trebuie pentru fiecare voluntar să pot
+ * «Contract semnat» on a volunteer's page (§998, amending §758; the owner, 2026-11-19: «trebuie pentru fiecare voluntar să pot
  * atașa „contract semnat”»): the signed copy of the person's agreement, kept privately with their record.
  *
  * - **None yet:** the file box and «Încarcă» — a plain form posting multipart to the volunteer's route, so it works with scripts

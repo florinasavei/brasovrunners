@@ -16,7 +16,7 @@ import { type ClockTime, DESKTOP_POINTER_QUERY, isMidnight, MIDNIGHT } from "./c
 import type { ClockPickerWords } from "./ClockPickerHost";
 
 /**
- * The clock the page's host opens beside a time box (§NNN), loaded by `ClockPickerHost` on the first press and never
+ * The clock the page's host opens beside a time box (§999), loaded by `ClockPickerHost` on the first press and never
  * before: MUI X's `MultiSectionDigitalClock` — hours, minutes and seconds as three scrollable columns, every minute
  * and every second — with the one line of help and «Anulează» / «OK». The house's date picker's two shapes
  * (`DateField`, §345): a popover beside the button with a mouse, a dialog on a phone (`DESKTOP_POINTER_QUERY`).

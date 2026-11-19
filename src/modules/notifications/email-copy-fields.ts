@@ -145,9 +145,9 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     inviterName: sample.inviterName,
     staffEmail: sample.staffEmail,
     signInUrl: `${base}/${locale}/EXAMPLE`,
-    // Zitadel's email by its subject in the account's language — the previewed one — in both halves, as the send names it (§NNN).
+    // Zitadel's email by its subject in the account's language — the previewed one — in both halves, as the send names it (§1000).
     zitadelSubject: zitadelInviteSubject(locale),
-    // …and by its button, «Acceptare invitație» / “Accept invite”, the same way (§NNN).
+    // …and by its button, «Acceptare invitație» / “Accept invite”, the same way (§1000).
     zitadelButton: zitadelInviteButton(locale),
     // "Detalii actualizate" and "Eveniment anulat" (§331): a new place and start, the
     // organizer's note, and a reason — read only by those two messages' templates. Each in both

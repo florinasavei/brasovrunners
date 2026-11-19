@@ -13,7 +13,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { SAMPLE_FILES } from "../../helpers/signed-contract-files";
 
 /**
- * «Contract semnat» (§NNN), the two routes, BR-REQ-060-01 and BR-REQ-050-02: the volunteer's own — `GET` the download, `POST` the
+ * «Contract semnat» (§998), the two routes, BR-REQ-060-01 and BR-REQ-050-02: the volunteer's own — `GET` the download, `POST` the
  * upload, whole or in pieces — and the event's «Încarcă contractele semnate». Every route asks the session and the role again
  * (401 without one, 403 for every role but the Organizer's and the Administrators'), answers 404 for another event's person or a
  * malformed id, and writes nothing when it refuses. The download is an attachment under the file's name made safe, typed by its
@@ -121,7 +121,7 @@ function bulk(fields: Array<[string, string | File]>, actor: StaffUser | undefin
 }
 const toast = () => decodeFlash(state.cookies.find(([name]) => name === FLASH_COOKIE)?.[1]);
 
-describe("§NNN the volunteer's route: the download", () => {
+describe("§998 the volunteer's route: the download", () => {
   it("sends the file as an attachment under its own name made safe, typed by its format, never sniffed, never cached", async () => {
     const bytes = SAMPLE_FILES.docx();
     await upload({ answer: "json", file: file(bytes, "Contract-voluntariat-Anaïs-Meyson.docx") }, staff.ADMIN);
@@ -163,7 +163,7 @@ describe("§NNN the volunteer's route: the download", () => {
   });
 });
 
-describe("§NNN the volunteer's route: the upload", () => {
+describe("§998 the volunteer's route: the upload", () => {
   it("with scripts off, attaches and comes back to the person's card with the toast; a replace says so", async () => {
     const first = await upload({ locale: "ro", file: file(SAMPLE_FILES.pdf(), "Contract-voluntariat-Anais-Meyson.pdf") }, staff.MODERATOR);
     expect(first.status).toBe(303);
@@ -232,7 +232,7 @@ describe("§NNN the volunteer's route: the upload", () => {
   });
 });
 
-describe("§NNN the event's route: «Încarcă contractele semnate»", () => {
+describe("§998 the event's route: «Încarcă contractele semnate»", () => {
   it("with scripts, matches the names alone to this event's volunteers and answers each one's match or reason", async () => {
     const response = await bulk(
       [

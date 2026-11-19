@@ -131,7 +131,7 @@ test.describe("§986 «Cronometrare»", () => {
     const eventId = await seedRace(tag);
     const timingUrl = `/ro/admin/checkin/cronometrare?eventId=${eventId}`;
 
-    // The Organizer, at the gun — whose row of «Ziua cursei» holds all six tabs, «Jurnal» last (§NNN): wider than a phone, so it scrolls inside itself.
+    // The Organizer, at the gun — whose row of «Ziua cursei» holds all six tabs, «Jurnal» last (§996): wider than a phone, so it scrolls inside itself.
     await signIn(page, "Dev Moderator");
     await page.goto(timingUrl);
     await hydrated(page);

@@ -37,7 +37,7 @@ function returnToOf(form: FormData): string | null {
   return volunteersScreenPathOf(field(form, "returnTo"));
 }
 
-/** `raw` when it is a path of the «Voluntari» screen — the list with its query, or one person's page — else null: a route's way back (§NNN). */
+/** `raw` when it is a path of the «Voluntari» screen — the list with its query, or one person's page — else null: a route's way back (§998). */
 export function volunteersScreenPathOf(raw: string): string | null {
   return VOLUNTEERS_SCREEN_PATH.test(raw) ? raw : null;
 }

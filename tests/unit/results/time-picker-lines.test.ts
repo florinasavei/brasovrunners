@@ -8,7 +8,7 @@ import ClockPickerHost, { CLOCK_BUTTON_CLASS } from "@/shared/forms/pickers/Cloc
 import { RecallProvider } from "@/shared/forms/recall";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-041-01 criterion 6 — «Clasament»'s lines under the page's one clock picker, as the server draws them:
+ * §999, BR-REQ-050-02, BR-REQ-041-01 criterion 6 — «Clasament»'s lines under the page's one clock picker, as the server draws them:
  *
  * - beside «Timp» and «Timp cip» of every line — a registered runner's, a typed runner's, the blank one — a button
  *   (`type="button"`, so it never posts or submits) named with whose time it is, «Alege timpul: #101 Ana Popescu» and
@@ -73,7 +73,7 @@ const postedNames = (html: string) => [...html.matchAll(/<(?:input|select|textar
 describe.each([
   ["ro", ro],
   ["en", en as unknown as typeof ro],
-] as const)("§NNN the clock buttons beside «Timp» and «Timp cip» (%s)", (_locale, catalogue) => {
+] as const)("§999 the clock buttons beside «Timp» and «Timp cip» (%s)", (_locale, catalogue) => {
   const resultWords = words(catalogue);
 
   it("draws one beside each time box of a registered runner's line, named with whose time it is, 44 pixels by the list's rule", () => {
@@ -149,7 +149,7 @@ describe.each([
   });
 });
 
-describe("§NNN without the page's host, and without scripts", () => {
+describe("§999 without the page's host, and without scripts", () => {
   it("draws no button for a line drawn alone, its boxes as they are", () => {
     const html = renderToStaticMarkup(createElement(RegisteredResultLines, { lines: [line], words: words(ro) }));
     expect(clockButtons(html)).toEqual([]);

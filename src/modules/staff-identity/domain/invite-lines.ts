@@ -1,5 +1,5 @@
 /**
- * «Echipa»'s one line after «Adaugă» or «Retrimite invitația» (§NNN): what the person receives — two emails, Zitadel's
+ * «Echipa»'s one line after «Adaugă» or «Retrimite invitația» (§1000): what the person receives — two emails, Zitadel's
  * first, or the club's alone — by what Zitadel answered. The banner tells the inviter; the email tells the person the
  * same, as numbered steps (`notifications/templates.ts`, `signInStepsWords`).
  *

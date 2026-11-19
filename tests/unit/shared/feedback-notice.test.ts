@@ -88,7 +88,7 @@ describe("§384 the notice a redirect's outcome becomes", () => {
       expect(noticeOf({ saved, invite: "invited" })).toEqual({ kind: "success", key: saved });
     }
     expect(noticeOf({ saved: "invited", invite: "exists" })?.kind).toBe("success");
-    // §NNN: an account that already signs in needed nothing from Zitadel — the verb happened, a green toast.
+    // §1000: an account that already signs in needed nothing from Zitadel — the verb happened, a green toast.
     expect(noticeOf({ saved: "invited", invite: "ready" })).toEqual({ kind: "success", key: "invited" });
     expect(noticeOf({ saved: "reinvited", invite: "ready" })).toEqual({ kind: "success", key: "reinvited" });
   });

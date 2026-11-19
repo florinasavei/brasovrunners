@@ -52,7 +52,7 @@ const TIME_SX = { fontVariantNumeric: "tabular-nums", color: "text.secondary", m
 const WHOM_LINK_STYLE = { display: "inline-flex", alignItems: "center", minHeight: 44 } as const;
 
 /**
- * «Jurnal» — «Ziua cursei»'s log (§NNN; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a
+ * «Jurnal» — «Ziua cursei»'s log (§996; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a
  * marcat prezent»), its last tab (`raceDayTabs`): for the chosen event, newest first, every code scanned at the desk, every runner
  * marked present — at the desk, or by their own «Am ajuns» — and every check-in taken back, and every volunteer ticked or unticked
  * «Prezent». Each line: the time to the second on the event's clock (the day beside it when it is not the race's), who — the staff
@@ -215,7 +215,7 @@ export default async function RaceDayJournalPage({ params, searchParams }: Props
             </Stack>
           </Box>
 
-          {/* One line per account (§NNN): what each one did at this event, every kind and every line, the filter aside. */}
+          {/* One line per account (§996): what each one did at this event, every kind and every line, the filter aside. */}
           {journal.summary.length > 0 && (
             <Box component="section" aria-labelledby="race-day-journal-summary-title" data-testid="race-day-journal-summary">
               <Typography variant="h3" id="race-day-journal-summary-title" sx={{ ...HEADING_SX[3], mb: 0.5 }}>

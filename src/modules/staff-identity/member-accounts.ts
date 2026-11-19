@@ -8,7 +8,7 @@ import type { InviteOutcome } from "./zitadel-users";
  * against the provider, never one by one for minutes — and every member ends with a line of the
  * report, whatever happened to the others: `created` (a new account, its invitation sent),
  * `invited` (the account was there, the invitation sent again), `ready` (the account was there and
- * already signs in: Zitadel sent nothing, §NNN), `failed` with the provider's or the network's words,
+ * already signs in: Zitadel sent nothing, §1000), `failed` with the provider's or the network's words,
  * or `unconfigured` (no key: nothing was asked). Pure over the invite function it is given, so the
  * batching and the report are tested without a network.
  */

@@ -17,7 +17,7 @@ const ROMANIAN = roRO.components.MuiLocalizationProvider.defaultProps.localeText
  * `tests/unit/shared/pickers-backoffice-only.test.ts` fails if one ever reaches this.
  * `TimeField` no longer needs it: since §400 and §439 it is a typed 24-hour text box, but stays
  * under `shared/forms/pickers` beside `DateField`, the box it
- * still pairs with (`WallTimeField`). «Clasament»'s clock picker (`ClockPicker`, §NNN) does: MUI
+ * still pairs with (`WallTimeField`). «Clasament»'s clock picker (`ClockPicker`, §999) does: MUI
  * X's multi-section clock reads its adapter here — never its 12- or 24-hour clock, which the
  * picker pins itself.
  *

@@ -206,7 +206,7 @@ export type AuditAction =
   | "registration.checked_in"
   | "registration.checkin_undone"
   /**
-   * The registration's desk code opened at the desk (§NNN; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a
+   * The registration's desk code opened at the desk (§996; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a
    * scanat, cine a marcat prezent»): `/admin/checkin/<code>` — what the phone's camera or «Scanează» opens — drawn for a desk role,
    * not as the page coming back from a desk verb, not as a router prefetch and not from the registration's own page. One row per
    * account and registration within two minutes (`registrations/admin-service.ts#recordCodeScan`): a reload or a second look is
@@ -836,7 +836,7 @@ export type AuditAction =
   | "event.race_gun_set"
   | "event.race_gun_cleared"
   /**
-   * «Resetează clasamentul» on «Clasament» (§NNN), entity `event`: every result of a race deleted and the gun pressed on «Cronometrare»
+   * «Resetează clasamentul» on «Clasament» (§997), entity `event`: every result of a race deleted and the gun pressed on «Cronometrare»
    * taken off, before the planned start, by an Administrator — `{ results, gunCleared }`, how many rows went and whether a gun was
    * cleared; never a name, a number or a time. The moment is the row's own: a press a phone made before it is refused after it.
    */
@@ -863,7 +863,7 @@ export type AuditAction =
   /** The agreement's PDF downloaded from the card (§758): a file with a name in it leaves the site; who and when. */
   | "volunteer.agreement_downloaded"
   /**
-   * «Contract semnat» (§NNN), entity `event`: a volunteer's signed agreement attached (`uploaded`), attached in place of another
+   * «Contract semnat» (§998), entity `event`: a volunteer's signed agreement attached (`uploaded`), attached in place of another
    * (`replaced`, with the old copy's length and format), deleted, and downloaded — a file with a signature leaves the site. The
    * metadata is the volunteer's id, the file's length in bytes and its format (`PDF`, `DOCX`…) — **never the file's name**, which
    * carries the person's, and never a byte of it.

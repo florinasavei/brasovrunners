@@ -555,7 +555,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                         {offer.guardianIp || offer.guardianUserAgent
                           ? ` · ${t("person.traceGuardian", { ip: show(offer.guardianIp), browser: show(offer.guardianUserAgent) })}`
                           : ""}
-                        {/* «Contract semnat» (§NNN): the signed copy the organizers attached — its name, format, length and moment; the file is on the volunteer's page. */}
+                        {/* «Contract semnat» (§998): the signed copy the organizers attached — its name, format, length and moment; the file is on the volunteer's page. */}
                         {offer.signedContract
                           ? ` · ${t("person.signedContract", {
                               name: offer.signedContract.fileName,

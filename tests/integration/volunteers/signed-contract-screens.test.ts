@@ -16,7 +16,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { SAMPLE_FILES } from "../../helpers/signed-contract-files";
 
 /**
- * «Contract semnat» on the organizers' screens (§NNN, amending §758; the owner, 2026-11-19: «trebuie pentru fiecare voluntar să
+ * «Contract semnat» on the organizers' screens (§998, amending §758; the owner, 2026-11-19: «trebuie pentru fiecare voluntar să
  * pot atașa „contract semnat”»), BR-REQ-050-02 and BR-REQ-060-01, read from a real database:
  *
  * - the «Voluntari» list draws the chip «Contract semnat» on each row whose signed agreement is attached, and the strip
@@ -212,7 +212,7 @@ async function cardOf(id: string, locale: "ro" | "en" = "ro") {
 }
 const chipsIn = (node: ReactNode) => elements(node).filter((element) => element.type === StatusChip && element.props.testId === "volunteer-contract-chip");
 
-describe("§NNN the «Voluntari» list: the chip, the count, the filter", () => {
+describe("§998 the «Voluntari» list: the chip, the count, the filter", () => {
   it("draws «Contract semnat» on the rows whose signed agreement is attached, and on no other, in both languages", async () => {
     const { cell } = tableOf(await listTree({ eventId: raceId }));
     expect(chipsIn(cell("state", people.ana))).toHaveLength(1);
@@ -256,7 +256,7 @@ describe("§NNN the «Voluntari» list: the chip, the count, the filter", () => 
   });
 });
 
-describe("§NNN «Încarcă contractele semnate» on the list", () => {
+describe("§998 «Încarcă contractele semnate» on the list", () => {
   it("stands with one event in scope: a form posting to the event's route, sending each matched file to its volunteer's own route", async () => {
     const tree = await listTree({ eventId: raceId, sort: "name" });
     const [island] = elements(tree).filter((element) => element.type === SignedContractUpload);
@@ -300,7 +300,7 @@ describe("§NNN «Încarcă contractele semnate» on the list", () => {
   });
 });
 
-describe("§NNN the volunteer's card «Contract semnat»", () => {
+describe("§998 the volunteer's card «Contract semnat»", () => {
   it("with one attached: its name, length, when and by whom, «Descarcă» to the authenticated route, «Șterge» behind the question, «Înlocuiește»", async () => {
     const { card: tree } = await cardOf(people.ana);
     const [file] = byTestId(tree, "volunteer-contract-file");
@@ -347,7 +347,7 @@ describe("§NNN the volunteer's card «Contract semnat»", () => {
   });
 });
 
-describe("§NNN deleteSignedContractAction — «Șterge»", () => {
+describe("§998 deleteSignedContractAction — «Șterge»", () => {
   const form = (fields: Record<string, string>) => {
     const data = new FormData();
     for (const [key, value] of Object.entries({ uiLocale: "ro", eventId: raceId, volunteerId: people.ana, returnTo: `/ro/admin/volunteers/${people.ana}`, ...fields })) data.set(key, value);
@@ -390,7 +390,7 @@ describe("§NNN deleteSignedContractAction — «Șterge»", () => {
   });
 });
 
-describe("§NNN «Toate datele unei persoane» lists the signed copy", () => {
+describe("§998 «Toate datele unei persoane» lists the signed copy", () => {
   it("names the offer's copy — its name, format, length and moment — and never its bytes, on the screen and in the file", async () => {
     const data = await viewPersonData(db, staff.ADMIN!, "ana.pop@example.test", NOW);
     expect(data.volunteerOffers).toHaveLength(1);

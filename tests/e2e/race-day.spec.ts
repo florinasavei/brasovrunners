@@ -11,14 +11,14 @@ import { openFold } from "./support/fold";
  * opens the desk, enters a walk-in who never registered, sees them confirmed on the spot,
  * types their number, marks them here, and then opens the page their QR would have opened and
  * takes the check-in back. The QR image itself is fetched as the email would fetch it. Then the
- * organizer reads «Ziua cursei» → «Jurnal» (§NNN): the scan, the check-in and the undo, each named
+ * organizer reads «Ziua cursei» → «Jurnal» (§996): the scan, the check-in and the undo, each named
  * with the volunteer's account, on a phone and on a desktop.
  *
  * Runs against the seeded database; both Playwright projects share it, so every name, address
  * and race number carries the project's name.
  */
 test.describe("BR-REQ-037-08 the race-day desk", () => {
-  // One long story on one page, four server actions in a row and a second sign-in for «Jurnal» (§NNN): under the full
+  // One long story on one page, four server actions in a row and a second sign-in for «Jurnal» (§996): under the full
   // suite's load a round trip can take longer than the five seconds an expectation waits by default.
   test.describe.configure({ timeout: 90_000 });
 
@@ -89,7 +89,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     // Check-in asks nothing (§384): one tap per runner at the desk.
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.locator("#admin-alert")).toContainText("Marcat prezent", { timeout: 15_000 });
-    // …and who marked them (§NNN): the volunteer's own account, on the row's chip.
+    // …and who marked them (§996): the volunteer's own account, on the row's chip.
     await expect(page.getByTestId("desk-row").filter({ hasText: suffix }).getByTestId("desk-checked-in")).toContainText(/Prezent la \d\d:\d\d · Dev Contributor/);
 
     // The QR the email links to, and the page it opens.
@@ -113,12 +113,12 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     }));
     expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
 
-    // The volunteer has no «Jurnal»: not among the tabs, and its address is the 404 of an unknown page (§NNN).
+    // The volunteer has no «Jurnal»: not among the tabs, and its address is the 404 of an unknown page (§996).
     await page.goto(`/ro/admin/checkin?eventId=${eventId}`);
     await expect(page.getByTestId("race-day-tabs").getByRole("link", { name: "Jurnal" })).toHaveCount(0);
     expect((await page.goto(`/ro/admin/checkin/jurnal?eventId=${eventId}`))?.status()).toBe(404);
 
-    // The organizer reads who did what (§NNN): the scan, the check-in and the undo, each with the volunteer's account.
+    // The organizer reads who did what (§996): the scan, the check-in and the undo, each with the volunteer's account.
     await page.goto("/ro/admin/checkin");
     await page.getByRole("button", { name: "Ieși din cont" }).click();
     await expect(page).not.toHaveURL(/\/admin/, { timeout: 30_000 });

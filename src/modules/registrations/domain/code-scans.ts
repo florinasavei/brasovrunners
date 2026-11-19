@@ -1,5 +1,5 @@
 /**
- * A desk code's scans as the scanned page reads them (§NNN; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari]
+ * A desk code's scans as the scanned page reads them (§996; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari]
  * gen cine a scanat, cine a marcat prezent»), the pure half of `../code-scans.ts`: what a scan is to «Scanat înainte», the two
  * marks of an address that opens the page without a scan, and which earlier scans the line names.
  *

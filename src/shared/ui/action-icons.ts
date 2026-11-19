@@ -286,7 +286,7 @@ export type ActionIconName =
   // moment for the next number pressed when runners arrive in a bunch.
   | "raceStart"
   | "keepTime"
-  // «Clasament»'s «Timp» and «Timp cip» (§NNN): the clock face on the button beside each box that opens the page's one clock
+  // «Clasament»'s «Timp» and «Timp cip» (§999): the clock face on the button beside each box that opens the page's one clock
   // picker — a time picked, never the stopwatch of «Cronometrare», which keeps one.
   | "pickTime";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,

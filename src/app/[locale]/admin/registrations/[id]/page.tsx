@@ -1084,7 +1084,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                       {registration.checkedInAt
                         ? tr("registrations.checkedIn", {
                             time: dt(registration.checkedInAt) ?? "",
-                            // Who (§NNN): the account, the person's own «Am ajuns», or an account gone since — as the desk says it.
+                            // Who (§996): the account, the person's own «Am ajuns», or an account gone since — as the desk says it.
                             who: checkedInWords(checkedInByOf(registration), { self: tr("desk.bySelf"), removed: tr("desk.byRemoved") }),
                           })
                         : tr("registrations.notCheckedIn")}
@@ -1115,7 +1115,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                       </Typography>
                       <Typography variant="body2" sx={{ mt: 1 }}>
                         {/*
-                          The desk's view of this runner, opened from the backoffice — not a scan (§NNN): `from=registration` keeps the
+                          The desk's view of this runner, opened from the backoffice — not a scan (§996): `from=registration` keeps the
                           open out of the trail and out of «Scanat înainte», and the link is never prefetched, so viewing this page opens
                           nothing behind it (a prefetch is refused as a scan anyway, by its header).
                         */}

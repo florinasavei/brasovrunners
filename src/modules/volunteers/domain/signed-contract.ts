@@ -3,7 +3,7 @@ import { BROWSER_SEND_BYTES } from "@/modules/media/limits";
 import { foldName } from "@/modules/registrations/domain/name-fold";
 
 /**
- * «Contract semnat» (§NNN): what a signed agreement may be, read from the file itself, and which volunteer a file is, read from
+ * «Contract semnat» (§998): what a signed agreement may be, read from the file itself, and which volunteer a file is, read from
  * its name. Pure: no database, no request — the service (`../signed-contract.ts`) asks these and decides.
  */
 
@@ -13,7 +13,7 @@ export { SIGNED_CONTRACT_MAX_BYTES };
 export const SIGNED_CONTRACT_ANCHOR = "contract-semnat";
 
 /**
- * The most one request of the page carries (§NNN): a request to a function on the host carries at most 4.5 MB (§66), so a larger
+ * The most one request of the page carries (§998): a request to a function on the host carries at most 4.5 MB (§66), so a larger
  * file goes up in pieces of this size, the house's own browser send limit (`media/limits.ts#BROWSER_SEND_BYTES`), with room for
  * the multipart envelope. The server takes a piece of any size up to the whole file; only the page cuts at this one.
  */
@@ -102,7 +102,7 @@ function heifFormatOf(bytes: Uint8Array): "HEIC" | "HEIF" | null {
 }
 
 /**
- * What a whole file is, from its own bytes (§NNN) — never from its name or the type the browser claimed: a name is typed and a
+ * What a whole file is, from its own bytes (§998) — never from its name or the type the browser claimed: a name is typed and a
  * type is the browser's guess. Null for anything else, a renamed program or a page among them.
  *
  * - **JPEG**, **PNG**: their signatures.
@@ -122,7 +122,7 @@ export function sniffSignedContract(bytes: Uint8Array): VolunteerDocumentFormat 
 }
 
 /**
- * Whether the first piece of a file sent in pieces may still be one of the formats (§NNN): its signature alone, refused at once
+ * Whether the first piece of a file sent in pieces may still be one of the formats (§998): its signature alone, refused at once
  * when it is none, so ten megabytes of something else never go up. The whole file is read again by `sniffSignedContract` the
  * moment its last piece arrives — a Word file's folders can stand anywhere in it.
  */
@@ -148,7 +148,7 @@ export function mayBeSignedContract(firstBytes: Uint8Array): boolean {
 const UNSAFE_IN_NAME = /[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b-\u200f\u2028-\u202e\u2060-\u2069\ufeff]/g;
 
 /**
- * The name a file was uploaded with, as it is kept (§NNN): its last path segment (an older browser sent «C:\fakepath\…»),
+ * The name a file was uploaded with, as it is kept (§998): its last path segment (an older browser sent «C:\fakepath\…»),
  * composed (NFC), without control characters or direction marks, its spaces collapsed, and cut at `SIGNED_CONTRACT_NAME_MAX`
  * characters with its extension kept. Empty when nothing is left; the service names it then.
  */
@@ -192,7 +192,7 @@ export function fallbackFileName(format: VolunteerDocumentFormat): string {
 const PLAIN_LETTERS: Readonly<Record<string, string>> = { ß: "ss", ø: "o", ł: "l", đ: "d", æ: "ae", œ: "oe", þ: "th", ı: "i" };
 
 /**
- * A person's name as the match reads it (§NNN): the house's name fold (`name-fold.ts` — case, the diacritics with a comma below
+ * A person's name as the match reads it (§998): the house's name fold (`name-fold.ts` — case, the diacritics with a comma below
  * or a cedilla, «ș» and «ş» alike, the characters nobody sees), then every mark that is not a letter or a digit — a hyphen, an
  * underscore, a dot, an apostrophe — as one space. «Anaïs Meyson» and «Anais-Meyson» read «anais meyson»; «Țâmpu» and «Ţampu»
  * read «tampu».
@@ -211,7 +211,7 @@ const FILE_EXTENSIONS: ReadonlySet<string> = new Set(Object.values(SIGNED_CONTRA
 const CONTRACT_PREFIXES = ["contract de voluntariat", "contract voluntariat"] as const;
 
 /**
- * The person a file is named after (§NNN), folded: the name without its extensions and a browser's « (1)» for a second download,
+ * The person a file is named after (§998), folded: the name without its extensions and a browser's « (1)» for a second download,
  * then without a leading «Contract-voluntariat-» in any case or spelling. «Contract-voluntariat-Anais-Meyson.docx» is «anais
  * meyson»; a file named only «Contract-voluntariat.docx» is "" — nobody.
  */
@@ -229,7 +229,7 @@ export function nameInContractFile(fileName: string): string {
   return folded;
 }
 
-/** Why a file of «Încarcă contractele semnate» was not attached, by name (§NNN); the words are `Admin.volunteers.contract.reasons.*`. */
+/** Why a file of «Încarcă contractele semnate» was not attached, by name (§998); the words are `Admin.volunteers.contract.reasons.*`. */
 export type ContractNameRefusal =
   /** The name says nobody: «Contract-voluntariat.docx». */
   | "noName"
@@ -247,7 +247,7 @@ export type ContractFileMatch =
   /**
    * A later file naming the volunteer an earlier one matched: a spare, with the person's id. It goes up only when every earlier
    * file of the same upload for that person was refused (by its bytes, or never received), and otherwise is left as `twice` — so
-   * one upload never replaces its own file, and a good file never stays out behind a bad one (§NNN).
+   * one upload never replaces its own file, and a good file never stays out behind a bad one (§998).
    */
   | { kind: "refused"; reason: "twice"; volunteerId: string }
   | { kind: "refused"; reason: Exclude<ContractNameRefusal, "twice"> };
@@ -259,7 +259,7 @@ export type ContractCandidate = { id: string; name: string; cancelled: boolean }
 const wordsInOrder = (folded: string): string => folded.split(" ").filter(Boolean).sort().join(" ");
 
 /**
- * «Încarcă contractele semnate» (§NNN): each file matched to **one** volunteer of the event by the name it carries, or refused
+ * «Încarcă contractele semnate» (§998): each file matched to **one** volunteer of the event by the name it carries, or refused
  * with the reason — never a guess. A file is first compared with the volunteers who are not cancelled: the folded name exactly,
  * and only when nobody has it, the same words in another order («Popescu-Ion» for «Ion Popescu»). Exactly one is the match; two
  * or more is `ambiguous`. Nobody among them, and a cancelled volunteer with the name, is `cancelledOnly`; nobody at all is

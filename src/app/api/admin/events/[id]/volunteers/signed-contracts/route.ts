@@ -11,7 +11,7 @@ import { flashOutcome } from "@/shared/feedback/flash";
 import { isUuid } from "@/shared/ids";
 
 /**
- * «Încarcă contractele semnate» on the «Voluntari» list of one event (§NNN): many files, each attached to the one volunteer **of
+ * «Încarcă contractele semnate» on the «Voluntari» list of one event (§998): many files, each attached to the one volunteer **of
  * this event** whose name it carries (`domain/signed-contract.ts#matchContractFiles`), the rest named with the reason.
  *
  * - **With scripts** the list's island posts `answer=json` and the files' **names** alone (`names`): the answer is each one's match

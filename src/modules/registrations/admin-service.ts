@@ -1483,11 +1483,11 @@ export async function checkInByStaff<T extends Record<string, unknown>>(
   return result;
 }
 
-/** How long a second open of one code by one account is the same scan (§NNN): a reload, a second look, the phone woken again. */
+/** How long a second open of one code by one account is the same scan (§996): a reload, a second look, the phone woken again. */
 export const CODE_SCAN_REPEAT_MS = 120_000;
 
 /**
- * A desk code opened at the desk (§NNN; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a
+ * A desk code opened at the desk (§996; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a
  * marcat prezent»): one `registration.code_scanned` row — the registration as the entity, the staff account as the actor, the
  * event's id as the whole of the metadata, never a name or the code — unless the same account recorded one for the same
  * registration in the last two minutes (`CODE_SCAN_REPEAT_MS`): one read on `audit_logs_entity_idx` (the registration, a range of

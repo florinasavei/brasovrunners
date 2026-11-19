@@ -11,7 +11,7 @@ import { ClockPanel } from "@/shared/forms/pickers/ClockPicker";
 import { type ClockTime, isMidnight, MIDNIGHT, writeBox } from "@/shared/forms/pickers/clock-values";
 
 /**
- * §NNN, BR-REQ-050-02, §439 — the clock picker «Clasament» opens beside «Timp» and «Timp cip», drawn on the server: its inside
+ * §999, BR-REQ-050-02, §439 — the clock picker «Clasament» opens beside «Timp» and «Timp cip», drawn on the server: its inside
  * (`ClockPanel`, the part both of its shapes draw) under a Day.js adapter, read from the markup.
  *
  * - **24 hours, never AM/PM, whatever the adapter's language.** Day.js's `en` (US English) is a 12-hour locale: without
@@ -52,7 +52,7 @@ function selected(html: string): string[] {
 const twoDigits = (count: number) => Array.from({ length: count }, (_, index) => String(index).padStart(2, "0"));
 const text = (html: string) => html.replace(/<style[\s\S]*?<\/style>/g, "").replace(/<[^>]+>/g, " ");
 
-describe.each(["en", "en-gb", "ro"] as const)("§NNN the clock, under Day.js %s", (adapterLocale) => {
+describe.each(["en", "en-gb", "ro"] as const)("§999 the clock, under Day.js %s", (adapterLocale) => {
   it("has three columns: hours 00 to 23, minutes and seconds 00 to 59, one step each, and no AM/PM", () => {
     const html = draw(adapterLocale, { hours: 13, minutes: 5, seconds: 9 });
     expect(columns(html)).toEqual([twoDigits(24), twoDigits(60), twoDigits(60)]);
@@ -67,7 +67,7 @@ describe.each(["en", "en-gb", "ro"] as const)("§NNN the clock, under Day.js %s"
   });
 });
 
-describe("§NNN the picker's words and buttons", () => {
+describe("§999 the picker's words and buttons", () => {
   const button = (html: string, testId: string) => new RegExp(`<button[^>]*data-testid="${testId}"[^>]*>`).exec(html)?.[0] ?? "";
 
   it("says its one line of help and names whose time it is", () => {
@@ -90,7 +90,7 @@ describe("§NNN the picker's words and buttons", () => {
   });
 });
 
-describe("§NNN writeBox: a picked or normalized time reaches the box as typing would", () => {
+describe("§999 writeBox: a picked or normalized time reaches the box as typing would", () => {
   it("sets the value, then an input and a change event that bubble — and nothing for a box that already holds it", () => {
     const heard: Array<{ type: string; bubbles: boolean }> = [];
     const box = { value: "12345", dispatchEvent: (event: Event) => heard.push({ type: event.type, bubbles: event.bubbles }) > 0 };
@@ -105,7 +105,7 @@ describe("§NNN writeBox: a picked or normalized time reaches the box as typing 
   });
 });
 
-describe("§NNN the picker is loaded on the first press, and only there", () => {
+describe("§999 the picker is loaded on the first press, and only there", () => {
   function sources(directory: string): string[] {
     return readdirSync(path.join(ROOT, directory)).flatMap((entry) => {
       const relative = `${directory}/${entry}`;

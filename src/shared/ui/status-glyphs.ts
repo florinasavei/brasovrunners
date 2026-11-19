@@ -137,7 +137,7 @@ export const STATUS_GLYPHS = {
   // «A reconfirmat» on a registration (the decision «Cere reconfirmarea»): the calendar-with-tick the manage page's
   // «Da, vin la cursă» and the email's «Vin» wear — the person said they come; information, never a state.
   reconfirmed: EventAvailableIcon,
-  // «Contract semnat» on a volunteer (§NNN): the signed copy of the agreement is attached — the sheet with a tick, information, never a state.
+  // «Contract semnat» on a volunteer (§998): the signed copy of the agreement is attached — the sheet with a tick, information, never a state.
   signedContract: AssignmentTurnedInIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 

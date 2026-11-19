@@ -3,7 +3,7 @@ import { auditLogs } from "@/db/schema/audit-logs";
 import { registrations } from "@/db/schema/registrations";
 
 /**
- * Who marked a runner present, as the desk and the registration's page say it beside «Prezent la HH:MM» (§NNN; the owner,
+ * Who marked a runner present, as the desk and the registration's page say it beside «Prezent la HH:MM» (§996; the owner,
  * 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a marcat prezent»): the staff account by its name, the
  * person themselves by «Am ajuns» (BR-REQ-037-08 criterion 5: `checked_in_by_staff_user_id` null), or an account deleted since.
  *

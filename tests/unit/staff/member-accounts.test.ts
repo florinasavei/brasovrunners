@@ -39,7 +39,7 @@ describe("§524 the members' sign-in accounts, batched and reported", () => {
       b: { kind: "failed", reason: "403 membership not found" },
       c: new TypeError("fetch failed"),
       d: { kind: "unconfigured" },
-      // §NNN: the account already has its password — Zitadel sent nothing, only the club's email goes.
+      // §1000: the account already has its password — Zitadel sent nothing, only the club's email goes.
       e: { kind: "ready" },
     };
     const lines = await createMemberAccounts(

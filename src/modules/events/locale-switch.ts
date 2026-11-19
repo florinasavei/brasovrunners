@@ -152,7 +152,7 @@ export async function resolveLocaleSwitch(
 
   /*
     The desk code is the same in either language (BR-REQ-037-08). And the page in the other language is the page already open, not
-    a code scanned again (§NNN): the switch knows the path alone, never the query the page had — a `?saved=` an hour after the scan,
+    a code scanned again (§996): the switch knows the path alone, never the query the page had — a `?saved=` an hour after the scan,
     the registration's own `?from=registration` — so it lands marked `from=language`, which records no scan.
   */
   if (parsed.route === "/admin/checkin/[code]") {

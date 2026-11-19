@@ -19,7 +19,7 @@ import { contentDisposition } from "@/shared/http/content-disposition";
 import { isUuid } from "@/shared/ids";
 
 /**
- * «Contract semnat» for one volunteer (§NNN): `GET` downloads the signed copy, `POST` attaches one (or the next piece of a large one).
+ * «Contract semnat» for one volunteer (§998): `GET` downloads the signed copy, `POST` attaches one (or the next piece of a large one).
  *
  * **Whoever works the volunteers** (`canManageVolunteers`: the Organizer and the Administrators), asserted here and again by the
  * service (BR-REQ-060-01): a request with no session is 401, any other role 403, and a volunteer of another event, a malformed or an

@@ -26,7 +26,7 @@ export function signedContractMaxWords(locale: string): string {
 }
 
 /**
- * The words of «Contract semnat»'s upload island (§NNN), for one volunteer's card (`one`, the press «Încarcă» or, over a copy
+ * The words of «Contract semnat»'s upload island (§998), for one volunteer's card (`one`, the press «Încarcă» or, over a copy
  * already there, «Înlocuiește») or for the event's every file at once (`many`): strings only, `{max}` filled here.
  */
 export function signedContractUploadLabels(t: Words, locale: string, mode: "one" | "replace" | "many"): SignedContractUploadLabels {
@@ -39,7 +39,7 @@ export function signedContractUploadLabels(t: Words, locale: string, mode: "one"
   }
   return {
     ...common,
-    // Pressed with nothing chosen: the sentence the plain form comes back with (§NNN), the files in the plural.
+    // Pressed with nothing chosen: the sentence the plain form comes back with (§998), the files in the plural.
     chooseFirst: t("errors.VOLUNTEER_CONTRACTS_NONE_CHOSEN"),
     choose: t("volunteers.contract.bulkChoose"),
     submit: t("volunteers.contract.bulkSubmit"),

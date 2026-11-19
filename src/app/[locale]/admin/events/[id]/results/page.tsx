@@ -67,7 +67,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
  * The codes the page's banner says: a one-button form that has no boxes to keep redirects with `?resultsError=`. CONFLICT and
- * `RESULTS_RESET_AFTER_START` are «Resetează clasamentul»'s (§NNN) — the save says its own CONFLICT in place, so here the code is
+ * `RESULTS_RESET_AFTER_START` are «Resetează clasamentul»'s (§997) — the save says its own CONFLICT in place, so here the code is
  * the reset's and the banner says so in the reset's words.
  */
 const BANNER_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "RESULTS_NOTICE", "RESULTS_TERMS", "CONFLICT", "RESULTS_RESET_AFTER_START"] as const;
@@ -82,7 +82,7 @@ const BANNER_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "RESULTS_NO
  * one small form beside, asked first. The Administrator's tick «Clasamentul e public pe pagina evenimentului» is a form of its own: the
  * disclosure has its own gate (the privacy notice in force must describe the results) and its own audit row, and does not ride on a save.
  * «Descarcă clasamentul (CSV)» is the file, names included — the backoffice sees every name. At the foot, the Administrator's danger
- * card «Resetează clasamentul» (§NNN): before the planned start, one asked press wipes every result and the gun pressed on
+ * card «Resetează clasamentul» (§997): before the planned start, one asked press wipes every result and the gun pressed on
  * «Cronometrare», the question counting what goes; after the start it is drawn disabled with the sentence why, for anybody else not
  * at all.
  *
@@ -346,7 +346,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
         words = t("results.history.what.gunCleared", { previous: instant(what.previous) });
         break;
       case "reset": {
-        // «Resetează clasamentul» (§NNN): how many results went, counted by `countForm`, and the gun with them when one was given.
+        // «Resetează clasamentul» (§997): how many results went, counted by `countForm`, and the gun with them when one was given.
         const count = what.results ?? 0;
         const reset = t(`results.history.what.reset.${countForm(count, locale)}`, { count: String(count) });
         words = what.gunCleared ? t("results.history.what.resetGun", { reset }) : reset;
@@ -356,7 +356,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     return t("results.history.line", { when, by: line.who ?? t("timing.accountGone"), what: words, where: t(`results.history.where.${line.where}`) });
   };
 
-  // «Resetează clasamentul» (§NNN): the Administrator's card, open while the planned gun is ahead on the server's clock — a test «Start»
+  // «Resetează clasamentul» (§997): the Administrator's card, open while the planned gun is ahead on the server's clock — a test «Start»
   // moves the line's gun, never the plan. The question counts what goes: the results, the gun when one was given, the phones' queue.
   const mayReset = canResetResults(actor.role);
   const resetOpen = plannedGunOf(event).getTime() > now.getTime();
@@ -401,12 +401,12 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       )}
       {errorCode && (
         <Alert severity="error" data-testid="results-error">
-          {/* A CONFLICT here is the reset's (§NNN): results arrived or the start changed since its page was drawn — nothing was wiped. */}
+          {/* A CONFLICT here is the reset's (§997): results arrived or the start changed since its page was drawn — nothing was wiped. */}
           {errorCode === "CONFLICT" ? t("results.reset.changed") : t(`errors.${errorCode}`)}
         </Alert>
       )}
 
-      {/* The page's ONE clock picker (§NNN), for every «Timp» and «Timp cip» of both panels: loaded on the first press, and outside the
+      {/* The page's ONE clock picker (§999), for every «Timp» and «Timp cip» of both panels: loaded on the first press, and outside the
           form, so nothing it draws is the form's. */}
       <ClockPickerHost words={{ help: t("results.picker.help"), ok: t("results.picker.ok"), cancel: t("results.picker.cancel") }}>
         {/* The one form of the page: the import box, the registered runners' lines, the typed ones and the one «Salvează tot clasamentul». */}
@@ -702,7 +702,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       </Box>
 
       {/*
-        «Resetează clasamentul» (§NNN): the page's one card that destroys, at its foot, a closed fold whose border says so (`Panel`'s
+        «Resetează clasamentul» (§997): the page's one card that destroys, at its foot, a closed fold whose border says so (`Panel`'s
         `danger`, the registration's erase card's shape). The Administrator's alone (`canResetResults`; the action and the service ask
         again). Before the planned start: one press, asked first, posting what the page drew — the count and the gun —, so a page
         older than another result wipes nothing. With nothing to wipe, or once the planned start has passed, the button is drawn

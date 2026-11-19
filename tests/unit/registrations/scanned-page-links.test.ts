@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * §NNN — a scan is what the desk opens, never a link that prefetched the page (the owner, 2026-11-19: «vreau si tracing pentru
+ * §996 — a scan is what the desk opens, never a link that prefetched the page (the owner, 2026-11-19: «vreau si tracing pentru
  * voluntarim [voluntari] gen cine a scanat, cine a marcat prezent»). The scanned page (`/admin/checkin/<code>`) records a scan when it is
  * drawn; a Next `<Link>` to it in view would prefetch it — a request with `Next-Router-Prefetch`, which the page refuses as a scan
  * by that header (`tests/integration/race-day/scan-record.test.ts`) — and would cost a function per view besides. So every
@@ -40,7 +40,7 @@ function linkTags(source: string): string[] {
   return tags;
 }
 
-describe("§NNN no <Link> prefetches the scanned page", () => {
+describe("§996 no <Link> prefetches the scanned page", () => {
   const links = sourceFiles(SRC).flatMap((file) =>
     linkTags(readFileSync(file, "utf8"))
       .filter((tag) => tag.includes('"/admin/checkin/[code]"'))

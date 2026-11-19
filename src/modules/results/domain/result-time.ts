@@ -11,7 +11,7 @@
  * Pure: no database, no React, no catalogue, and no import at all. A time that is not one of these, or is zero, or
  * runs past two days, is `null` — the caller says which box and why.
  *
- * The browser's half lives here too (§NNN): what the «Timp» and «Timp cip» boxes make of a time typed in another
+ * The browser's half lives here too (§999): what the «Timp» and «Timp cip» boxes make of a time typed in another
  * shape — digits alone, dots, commas, spaces — on leaving the box (`normalizeTypedResultTime`), and what the clock
  * picker beside them opens at and writes (`clockOfResultTime`, `resultTimeOfClock`). Both answer in the shapes
  * `parseResultTime` reads, so the server's parser and its refusals stay as they were.
@@ -107,7 +107,7 @@ function typedShapes(text: string): string[] {
 }
 
 /**
- * What the «Timp» and «Timp cip» boxes make of what was typed, on leaving the box or pressing Enter in it (§NNN): a
+ * What the «Timp» and «Timp cip» boxes make of what was typed, on leaving the box or pressing Enter in it (§999): a
  * phone's decimal keypad has digits and one separator, and no colon. A text the server already reads is left exactly
  * as typed (trimmed) — `h:mm:ss`, `mm:ss`, `mm:ss.t` and their commas; digits alone and the usual separators become the
  * shape they stand for (`typedShapes`): «2345» → «23:45», «12345» → «1:23:45», «2345,6» → «23:45.6», «1.23.45» →
@@ -132,7 +132,7 @@ type ClockReading = { hours: number; minutes: number; seconds: number };
 const DAY_SECONDS = 24 * 60 * 60;
 
 /**
- * Where the clock picker opens for what a box holds (§NNN): the time as `normalizeTypedResultTime` reads it, in whole
+ * Where the clock picker opens for what a box holds (§999): the time as `normalizeTypedResultTime` reads it, in whole
  * seconds — a box with tenths («45:12.3») opens at 0:45:12. Null — the picker opens at 0:00:00 — for an empty box, a
  * text that is no time, or a time of 24 hours or more, which the clock's hours cannot show.
  */

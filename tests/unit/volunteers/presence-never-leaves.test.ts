@@ -23,7 +23,7 @@ import { importsModule } from "../../helpers/module-imports";
  * by any spelling: the `@/` alias or a relative path, resolved from the importing file (`tests/helpers/module-imports.ts`).
  *
  * Since §984 the raffle's roster and «Ziua cursei» → «Tombolă» read it too: that tab is the organizers' (`canTakeRaffleList`),
- * not the desk, and shows who was there beside whether they take part. Since §NNN «Ziua cursei» → «Jurnal» and the «Voluntari»
+ * not the desk, and shows who was there beside whether they take part. Since §996 «Ziua cursei» → «Jurnal» and the «Voluntari»
  * list's «Org1, 08:20» read the trail of who ticked it: that tab is the organizers' too (`canReadRaceDayJournal`), never the desk's.
  * The desk's own pages stay held to reading none — and to importing none of the log's two modules, which the sweep exempts: the
  * scanned page's «Scanat înainte» reads its scans through the desk's own (`registrations/code-scans.ts`), held like the rest.
@@ -45,7 +45,7 @@ const READS_A_PRESENT_FIELD = /\.present\b|[{,]\s*present\s*[,}:]|\[\s*["'`]pres
 const ACTIONS_MODULE = path.join(SRC, "app", "[locale]", "admin", "volunteers", "actions");
 
 /**
- * «Ziua cursei» → «Jurnal»'s two modules (§NNN), the organizers' log, which reads a volunteer's ticks and so is exempt from the
+ * «Ziua cursei» → «Jurnal»'s two modules (§996), the organizers' log, which reads a volunteer's ticks and so is exempt from the
  * sweep below: a surface that imported them would read through the exemption, so none may.
  */
 const JOURNAL_MODULES = [path.join(SRC, "modules", "race-day", "journal"), path.join(SRC, "modules", "race-day", "domain", "journal")];
@@ -83,7 +83,7 @@ const READERS = new Set(
     "src/app/[locale]/admin/checkin/tombola/page.tsx",
     // §984: a line of the race's elite list's own «Prezent» (`event_elite_entries.present`), named alike — the organizers' tick on that tab.
     "src/db/schema/event-elite-entries.ts",
-    // §NNN: who ticked it and when — the trail's `volunteer.edited` rows of `setPresent` — under the tick on the «Voluntari» list and
+    // §996: who ticked it and when — the trail's `volunteer.edited` rows of `setPresent` — under the tick on the «Voluntari» list and
     // the person's page, and the ticks on and off as lines of «Ziua cursei» → «Jurnal», the organizers' tab (`canReadRaceDayJournal`).
     "src/modules/volunteers/present-by.ts",
     "src/modules/race-day/journal.ts",
@@ -106,7 +106,7 @@ const relative = (file: string) => path.relative(ROOT, file).replaceAll("\\", "/
 function readsVolunteers(at: string): boolean {
   // «Ziua cursei» → «Tombolă» (§984) is the organizers' raffle tab, not the desk: who was there is what its «Doar prezenții» filters by.
   if (at.startsWith("src/app/[locale]/admin/checkin/tombola/")) return false;
-  // «Ziua cursei» → «Jurnal» (§NNN) is the organizers' log, not the desk: a volunteer's «Prezent» ticked and unticked is its lines.
+  // «Ziua cursei» → «Jurnal» (§996) is the organizers' log, not the desk: a volunteer's «Prezent» ticked and unticked is its lines.
   if (at.startsWith("src/app/[locale]/admin/checkin/jurnal/") || at === "src/modules/race-day/journal.ts" || at === "src/modules/race-day/domain/journal.ts") return false;
   return (
     // The event's pages, its volunteers' page and its public form; the event page's own module and the public cache that feeds it.
@@ -134,7 +134,7 @@ function readsVolunteers(at: string): boolean {
     at.startsWith("src/modules/volunteers/badges/") ||
     at.startsWith("src/app/[locale]/admin/events/[id]/badges/") ||
     at.startsWith("src/app/api/admin/events/[id]/badges/") ||
-    // The race-day desk: «Ziua cursei» and its «Prezența», the desk's rows, and the scanned page's «Scanat înainte» (§NNN).
+    // The race-day desk: «Ziua cursei» and its «Prezența», the desk's rows, and the scanned page's «Scanat înainte» (§996).
     at.startsWith("src/app/[locale]/admin/checkin/") ||
     at.startsWith("src/modules/race-day/") ||
     /^src\/modules\/registrations\/ui\/Desk[^/]*\.tsx$/.test(at) ||
@@ -205,7 +205,7 @@ describe("§983 a volunteer's «Prezent» stays with the organizers", () => {
       expect(namesThePresence(source), relative(file)).toBe(false);
       // Nor may one reach the press: the screen's actions are the staff's, by whatever path they are imported.
       expect(importsModule(file, source, ACTIONS_MODULE, SRC), relative(file)).toBe(false);
-      // Nor read through the organizers' log, which the sweep exempts (§NNN): the desk's scans are its own module's.
+      // Nor read through the organizers' log, which the sweep exempts (§996): the desk's scans are its own module's.
       for (const journal of JOURNAL_MODULES) expect(importsModule(file, source, journal, SRC), `${relative(file)} imports ${relative(journal)}`).toBe(false);
     }
   });
@@ -226,7 +226,7 @@ describe("§983 a volunteer's «Prezent» stays with the organizers", () => {
     expect(importsModule(at("app", "[locale]", "events", "[slug]", "page.tsx"), borrowed, ACTIONS_MODULE, SRC)).toBe(true);
     expect(importsModule(at("app", "[locale]", "events", "[slug]", "page.tsx"), `import { setVolunteerPresentAction } from "@/app/[locale]/admin/volunteers/actions";`, ACTIONS_MODULE, SRC)).toBe(true);
     expect(importsModule(at("app", "[locale]", "admin", "events", "[id]", "page.tsx"), `import { x } from "./actions";`, ACTIONS_MODULE, SRC)).toBe(false);
-    // The organizers' log, imported by a desk page — the alias or a relative path — and the desk's own scans, which are not it (§NNN).
+    // The organizers' log, imported by a desk page — the alias or a relative path — and the desk's own scans, which are not it (§996).
     const scanned = at("app", "[locale]", "admin", "checkin", "[code]", "page.tsx");
     expect(importsModule(scanned, `import { listCodeScans } from "@/modules/race-day/journal";`, JOURNAL_MODULES[0], SRC)).toBe(true);
     expect(importsModule(at("modules", "race-day", "ui", "RaceDayTabs.tsx"), `import { JOURNAL_KINDS } from "../domain/journal";`, JOURNAL_MODULES[1], SRC)).toBe(true);

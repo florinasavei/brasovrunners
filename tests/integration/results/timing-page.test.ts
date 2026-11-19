@@ -136,7 +136,7 @@ describe("§986 «Cronometrare»: the page", () => {
       { href: `/ro/admin/events/${raceId}/results`, label: "Clasament", current: false },
       { href: `/ro/admin/checkin/cronometrare?eventId=${raceId}`, label: "Cronometrare Sosiri", current: true },
       { href: `/ro/admin/checkin/lucruri?eventId=${raceId}`, label: "Lucruri de adus Lucruri", current: false },
-      // «Jurnal» (§NNN), the organizers' last.
+      // «Jurnal» (§996), the organizers' last.
       { href: `/ro/admin/checkin/jurnal?eventId=${raceId}`, label: "Jurnal", current: false },
     ]);
     expect(text(html)).toContain("Cronometrare");
@@ -409,10 +409,10 @@ describe("§986 «Clasament»: who wrote each line, «Istoricul sosirilor», and
 });
 
 /**
- * §NNN — a press this phone kept from before «Resetează clasamentul», refused after it: the island has the reason's words in both
+ * §997 — a press this phone kept from before «Resetează clasamentul», refused after it: the island has the reason's words in both
  * languages, so the press's line says why it no longer counts instead of «nu s-a salvat — notează pe hârtie».
  */
-describe("§NNN «Cronometrare»: the words of a press older than the reset", () => {
+describe("§997 «Cronometrare»: the words of a press older than the reset", () => {
   type Element = { props: Record<string, unknown> };
   const elementsOf = (node: unknown): Element[] => {
     if (Array.isArray(node)) return node.flatMap(elementsOf);

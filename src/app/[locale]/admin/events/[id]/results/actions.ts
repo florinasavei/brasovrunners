@@ -223,7 +223,7 @@ export async function setResultAgeBandsAction(_previous: FormOutcome | null, for
 }
 
 /**
- * The gun a «Resetează clasamentul» form says its page saw (§NNN, as «Start»'s `seenGunAtMs`, §986): empty for none, else the instant
+ * The gun a «Resetează clasamentul» form says its page saw (§997, as «Start»'s `seenGunAtMs`, §986): empty for none, else the instant
  * the page drew; anything else is taken for none, so a forged value wipes no gun that stands unseen. A form without the field (none is
  * drawn so) is not asked.
  */
@@ -235,7 +235,7 @@ function seenGunOf(form: FormData): number | null | undefined {
 }
 
 /**
- * «Resetează clasamentul» (§NNN): the Administrator's one press at the foot of «Clasament», asked first, before the race's planned
+ * «Resetează clasamentul» (§997): the Administrator's one press at the foot of «Clasament», asked first, before the race's planned
  * start. It posts what the page drew — how many results (`results`) and the gun it saw (`seenGunAtMs`) — so a page drawn before
  * another result arrived, or before «Start» was given, moved or taken off, wipes nothing (CONFLICT). Back to the page with the toast
  * «Clasamentul a fost resetat.» — or, a one-button form with no boxes to keep, the refusal's code for the page's banner: CONFLICT,

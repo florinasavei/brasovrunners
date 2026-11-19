@@ -157,7 +157,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   // «Lucruri de adus» (§979) cascade from their event; deleted first like the to-dos.
   await db.delete(eventRaceDayItems);
   // An event's volunteers (§754) cascade from it, and their role is `RESTRICT`: the people first, then the roles.
-  // Their internal notes and their signed agreements (§NNN, and an upload left half-sent) cascade from them; named first like the other children.
+  // Their internal notes and their signed agreements (§998, and an upload left half-sent) cascade from them; named first like the other children.
   await db.delete(eventVolunteerNotes);
   await db.delete(eventVolunteerDocumentUploads);
   await db.delete(eventVolunteerDocuments);

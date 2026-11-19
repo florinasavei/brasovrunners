@@ -818,7 +818,7 @@ export function canRecordFinishes(subject: StaffSubject): boolean {
 }
 
 /**
- * **«Ziua cursei» → «Jurnal» (§NNN)** — who scanned a runner's code, who marked a runner present or took it back and who ticked a
+ * **«Ziua cursei» → «Jurnal» (§996)** — who scanned a runner's code, who marked a runner present or took it back and who ticked a
  * volunteer «Prezent», for one event, newest first, with how many each staff account did. The owner, 2026-11-19: «vreau si tracing
  * pentru voluntarim [voluntari] gen cine a scanat, cine a marcat prezent». Whoever reads the participant list (`canReadRegistrations`): **the
  * Organizer, the Administrator and the Superadministrator**, written as that function so moving the line moves both — the log names
@@ -842,7 +842,7 @@ export function canPublishResults(subject: StaffSubject): boolean {
 }
 
 /**
- * **«Resetează clasamentul» (§NNN)** — a race's whole list wiped before the start: every result, its time, state and note, every
+ * **«Resetează clasamentul» (§997)** — a race's whole list wiped before the start: every result, its time, state and note, every
  * runner typed by hand, and the gun pressed on «Cronometrare», so race day starts from zero after the trial runs. The results'
  * one destructive verb over the whole list, so **the Administrator and the Superadministrator** alone — whoever makes the results
  * public (`canPublishResults`), written as that function so the two lines move together. The Organizer enters, imports and deletes

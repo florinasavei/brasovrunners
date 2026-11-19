@@ -151,11 +151,11 @@ describe("«Retrimite invitația» for a person never given an account", () => {
 });
 
 /**
- * §NNN — an account that already signs in. Zitadel refuses an invite code to an account that has its password (its check
+ * §1000 — an account that already signs in. Zitadel refuses an invite code to an account that has its password (its check
  * `CreationAllowed`, error `COMMAND-EF34g`, «User is already initialized»), and the person needs none: that is `ready`,
  * never `failed` — «Echipa» says only the club's email goes, and the email's «Ai deja cont? Sari peste pasul 1.» fits.
  */
-describe("§NNN an account that already has its password", () => {
+describe("§1000 an account that already has its password", () => {
   const person = { email: "mihai@example.ro", displayName: "Mihai Pop", locale: "ro" as const };
   const initialised = () => new Response(JSON.stringify({ code: 9, message: "User is already initialized (COMMAND-EF34g)" }), { status: 400 });
 

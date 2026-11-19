@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.76-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.77-2026-11-19 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.76-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.77-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -3978,7 +3978,7 @@ makes the Zitadel account when it is missing (`DECISIONS.md` §912). Its body, a
 Zitadel's email first when the press asks Zitadel for the account, the person's own account
 otherwise — and when the press asks Zitadel the row waits (`next_attempt_at` a minute ahead)
 until the action has Zitadel's answer and lets it go, so it never leaves before Zitadel was
-asked (`DECISIONS.md` §NNN).
+asked (`DECISIONS.md` §1000).
 
 `CLUB_CONFIRMATION_NOTICE` is the club's own: queued in the transaction that confirms a real
 registration, one row per address the club named under "anunță-ne când cineva confirmă" on

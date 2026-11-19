@@ -12,7 +12,7 @@
  *   (`event_result.finish_duplicate`, both times) — or of a runner «Clasament» wrote off, whose decision stays (the same row, its
  *   `storedStatus` the decision; a row without one is a «Sosit»'s); the line's own «Anulează» (`event_result.deleted` with `undo: true`); a
  *   «Clasament» save's created, changed and deleted rows (the boxes that changed named); «Start» set or taken off; and «Resetează
- *   clasamentul» (§NNN, `event.results_reset`: how many results went and whether a gun went with them), the line that says why
+ *   clasamentul» (§997, `event.results_reset`: how many results went and whether a gun went with them), the line that says why
  *   every press and save older than it has no row any more.
  * - **Where.** «Cronometrare» for a press at the line and for «Start» — the old «Sosire» wrote `finishLine` too —, «Clasament» for
  *   the rest.
@@ -51,7 +51,7 @@ export type FinishHistoryWhat =
   | { kind: "deleted"; bibNumber: number | null; status: string | null }
   | { kind: "gunSet"; at: Date | null; previous: Date | null }
   | { kind: "gunCleared"; previous: Date | null }
-  /** «Resetează clasamentul» (§NNN): how many results went — null for a count that cannot be read — and whether a gun went too. */
+  /** «Resetează clasamentul» (§997): how many results went — null for a count that cannot be read — and whether a gun went too. */
   | { kind: "reset"; results: number | null; gunCleared: boolean };
 
 export type FinishHistoryLine = {

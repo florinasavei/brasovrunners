@@ -15,7 +15,7 @@ import { withClientWords } from "../../helpers/client-words";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §979, §984, §986, §NNN — «Ziua cursei» as the server draws it (BR-REQ-037-07, BR-REQ-060-01, BR-REQ-041-01 criterion 6): the tabs
+ * §979, §984, §986, §996 — «Ziua cursei» as the server draws it (BR-REQ-037-07, BR-REQ-060-01, BR-REQ-041-01 criterion 6): the tabs
  * on the desk, «Lucruri de adus», «Cronometrare», «Clasament» and «Jurnal» — the current one marked, the event carried, «Clasament»
  * not drawn for a role that cannot open it, «Cronometrare» for every role that works the desk, its short word for a phone, the
  * organizers' «Tombolă» fourth of six for an event that holds a raffle and their «Jurnal» last, in a row that scrolls rather than
@@ -227,7 +227,7 @@ describe("§979 the tabs of «Ziua cursei»", () => {
     expect(html).toMatch(/data-testid="race-day-tabs"/);
   });
 
-  it("stand on «Lucruri de adus», current, on «Clasament» for the page's own event, on «Cronometrare» (§986) and on «Jurnal» (§NNN), current", async () => {
+  it("stand on «Lucruri de adus», current, on «Clasament» for the page's own event, on «Cronometrare» (§986) and on «Jurnal» (§996), current", async () => {
     const id = await race();
     expect(tabs(await items(id)).map((tab) => [tab.label, tab.current])).toEqual([
       ["Prezența", false],
@@ -262,12 +262,12 @@ describe("§979 the tabs of «Ziua cursei»", () => {
   it("draw no glyph below `sm` (`compact`), so a role's row of three fits a 320-pixel phone, and every glyph from `sm` up", async () => {
     const id = await race();
     const raw = renderToStaticMarkup(withClientWords(await raceDayTabs({ locale: "ro", active: "timing", eventId: id, actor: staff.ADMIN! }), "ro"));
-    // Five glyph wrappers — «Jurnal»'s the trail's clock (§NNN) —, each `display: none` below `sm` and inline-flex from it.
+    // Five glyph wrappers — «Jurnal»'s the trail's clock (§996) —, each `display: none` below `sm` and inline-flex from it.
     expect(strip(raw).match(/<span[^>]*aria-hidden="true"[^>]*><svg/g)).toHaveLength(5);
     expect(raw).toMatch(/@media \(min-width:600px\)\{[^}]*display:inline-flex/);
   });
 
-  it("stand six for the organizers of an event that holds a raffle — «Tombolă» fourth, before «Lucruri de adus», «Jurnal» last — in a row that scrolls (§984, §NNN)", async () => {
+  it("stand six for the organizers of an event that holds a raffle — «Tombolă» fourth, before «Lucruri de adus», «Jurnal» last — in a row that scrolls (§984, §996)", async () => {
     const id = await race({ hasRaffle: true });
     for (const role of ["MODERATOR", "ADMIN"] as const) {
       state.actor = staff[role];
@@ -485,7 +485,7 @@ describe("§979 the top nav on «Lucruri de adus»", () => {
     const { activeAdminTabHref } = await import("@/modules/staff-identity/domain/admin-tab-match");
     const nav = [{ href: "/ro/admin" }, { href: "/ro/admin/checkin" }, { href: "/ro/admin/registrations" }];
     expect(activeAdminTabHref(nav, "/ro/admin/checkin/lucruri")).toBe("/ro/admin/checkin");
-    // «Cronometrare» (§986) the same: under the desk's path — and «Jurnal» (§NNN).
+    // «Cronometrare» (§986) the same: under the desk's path — and «Jurnal» (§996).
     expect(activeAdminTabHref(nav, "/ro/admin/checkin/cronometrare")).toBe("/ro/admin/checkin");
     expect(activeAdminTabHref(nav, "/ro/admin/checkin/jurnal")).toBe("/ro/admin/checkin");
     expect(activeAdminTabHref(nav, "/ro/admin/events/0b6c1e7e-6f6a-4c55-9a43-2f6f3c5b8a10/results")).toBe("/ro/admin");

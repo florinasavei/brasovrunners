@@ -6,13 +6,13 @@ import ro from "../../../messages/ro.json";
 import { INVITE_LINE_KEYS, inviteLineOf } from "@/modules/staff-identity/domain/invite-lines";
 
 /**
- * §NNN — «Echipa»'s one line after «Adaugă» or «Retrimite invitația» (the owner, 2026-11-19: «cumva trebuie un delay intre
+ * §1000 — «Echipa»'s one line after «Adaugă» or «Retrimite invitația» (the owner, 2026-11-19: «cumva trebuie un delay intre
  * mailurile de logare, sau sa fie instructiunile mai clare»): what the person receives — two emails, Zitadel's first, or
  * the club's alone — for each answer Zitadel gives, in both languages.
  */
 const staff = { ro: ro.Admin.staff as Record<string, unknown>, en: en.Admin.staff as Record<string, unknown> };
 
-describe("§NNN the inviter's one line after a press", () => {
+describe("§1000 the inviter's one line after a press", () => {
   it("says two emails, Zitadel's first, for an account made or found without a password", () => {
     expect(inviteLineOf("invited", "invited")).toEqual({ key: "inviteSent", severity: "success" });
     expect(inviteLineOf("invited", "exists")).toEqual({ key: "inviteExists", severity: "success" });
@@ -44,7 +44,7 @@ describe("§NNN the inviter's one line after a press", () => {
         expect((line as string).length, `${locale} staff.${key}`).toBeLessThanOrEqual(200);
       }
     }
-    // Two emails and who sends which — never an order, which neither Zitadel nor the outbox promises (the review, §NNN).
+    // Two emails and who sends which — never an order, which neither Zitadel nor the outbox promises (the review, §1000).
     expect(staff.ro.inviteSent).toBe("Adăugat. Primește două emailuri: unul de la Zitadel, cu butonul „Acceptare invitație”, pentru parolă, și unul de la noi, cu pașii.");
     expect(staff.en.inviteSent).toBe("Added. They get two emails: one from Zitadel, with the “Accept invite” button, for the password, and one from us, with the steps.");
     for (const key of ["inviteExists", "resendSent"]) {

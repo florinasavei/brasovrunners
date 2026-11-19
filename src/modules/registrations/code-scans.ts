@@ -9,7 +9,7 @@ import type { CodeScan } from "./domain/code-scans";
 const scannedBy = alias(staffUsers, "code_scanned_by");
 
 /**
- * The newest scans of one desk code (§NNN), newest first, with who: one indexed read (`audit_logs_entity_idx`, the registration),
+ * The newest scans of one desk code (§996), newest first, with who: one indexed read (`audit_logs_entity_idx`, the registration),
  * one more than «Scanat înainte» names, so the visit's own scan can be left out (`domain/code-scans.ts#earlierScans`). The desk's
  * own read, beside the verb that writes the rows (`admin-service.ts#recordCodeScan`): the scanned page, which every desk role
  * opens, reads nothing of the organizers' «Jurnal» (`race-day/journal.ts`).

@@ -481,7 +481,7 @@ describe("§986 the queue: in the order pressed, answered once, the waiting ones
     expect(nextRetryAt(entries, "radu", new Map([["c", { tries: 1, untilMs: now }]]))).toBeNull();
   });
 
-  it("«Golește lista» (§NNN) drops every line the server answered — saved, refused, a duplicate, undone — and keeps every press still waiting, any account's", () => {
+  it("«Golește lista» (§1001) drops every line the server answered — saved, refused, a duplicate, undone — and keeps every press still waiting, any account's", () => {
     const recorded = (bibNumber: number) => ({ kind: "recorded" as const, bibNumber, name: null, label: null, gunTimeMs: 1_000, positionOverall: 1, outOfRanking: false, again: false });
     let entries: FinishEntry[] = [];
     entries = settleEntry(pressEntry(entries, entry("saved", 101, at(10))), "saved", recorded(101));

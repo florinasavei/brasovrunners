@@ -23,7 +23,7 @@ const words: ResultWords = {
   statusOptions: [{ value: "", label: "Din timp" }],
   sexOptions: [{ value: "", label: "Nespecificat" }],
   deleteFor: "Șterge: {runner}",
-  // The clock buttons' names (§NNN): drawn only under the page's picker host, which this test does not mount.
+  // The clock buttons' names (§999): drawn only under the page's picker host, which this test does not mount.
   pickTime: "Alege timpul: {runner}",
   pickChip: "Alege timpul cip: {runner}",
   delete: "Șterge",

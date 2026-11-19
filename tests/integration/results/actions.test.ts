@@ -381,10 +381,10 @@ describe("§850 «Salvează premiile»", () => {
 });
 
 /**
- * §NNN — «Resetează clasamentul» as the page posts it: what the page drew (the count, the gun), the toast «Clasamentul a fost resetat.»,
+ * §997 — «Resetează clasamentul» as the page posts it: what the page drew (the count, the gun), the toast «Clasamentul a fost resetat.»,
  * and the banner's code for every refusal. The action reads the real clock, so the race to reset is ahead of it, by two hours.
  */
-describe("§NNN «Resetează clasamentul»", () => {
+describe("§997 «Resetează clasamentul»", () => {
   let aheadId: string;
   let gunAt: Date;
   const aheadRows = () => db.select().from(eventResults).where(eq(eventResults.eventId, aheadId));

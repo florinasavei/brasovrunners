@@ -4,7 +4,7 @@ import { createContext, lazy, type ReactNode, Suspense, useCallback, useContext,
 import { type ClockTime, MIDNIGHT, pointsFinely, writeBox } from "./clock-values";
 
 /**
- * The page's ONE clock picker (§NNN; the owner, 2026-11-19, on «Clasament»'s «Timp»: «aici vreau "timepicker"»), shared
+ * The page's ONE clock picker (§999; the owner, 2026-11-19, on «Clasament»'s «Timp»: «aici vreau "timepicker"»), shared
  * by every time box on it: a race has a few hundred lines, and a picker per box would be a few hundred pickers.
  *
  * - **A box asks, the host answers.** A box's button calls the function `useClockPicker` hands it with the box, the

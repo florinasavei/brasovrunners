@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.76-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.77-2026-11-19 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V4.76-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.77-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1083,7 +1083,7 @@ even on the free plan. Nothing is charged inside the allowance.
    `R2_PUBLIC_BASE_URL`. Reads are public because the gallery is; writes only ever go through
    the token below, and keys are opaque, so nothing is listable or guessable. So nothing private
    is ever put there: a volunteer's signed agreement («Contract semnat») is kept in the database
-   and downloaded only through the backoffice (`DECISIONS.md` §NNN).
+   and downloaded only through the backoffice (`DECISIONS.md` §998).
 4. **Token.** R2 → "Manage R2 API Tokens" → Create API token → name `brasovrunners-site`,
    permission **Object Read & Write**, scoped to that one bucket, no TTL. Copy the **Access Key
    ID**, the **Secret Access Key** and the **endpoint** (`https://<account id>.r2.cloudflarestorage.com`)
@@ -1360,9 +1360,9 @@ it "Add" creates the account too and Zitadel sends the password link.
    way, Zitadel's first, and two mails arrive: Zitadel's from `noreply@mail.<club domain>`
    (Zitadel's SMTP, §35), subject «Invitație la …» («Invitation to …» for an English account),
    and the club's (through Mailgun), whose numbered steps say to open Zitadel's first. The
-   club's leaves only once Zitadel has answered (`DECISIONS.md` §NNN). A colleague who never
+   club's leaves only once Zitadel has answered (`DECISIONS.md` §1000). A colleague who never
    signed in has "Resend the invitation" on their row.
-6. **Zitadel's own email, in the club's words** — once, the owner's to do (`DECISIONS.md` §NNN).
+6. **Zitadel's own email, in the club's words** — once, the owner's to do (`DECISIONS.md` §1000).
    Zitadel writes its invitation in its default words; written here, the two emails speak the
    same language. Zitadel console → **Organization** → **Settings** → **Message Texts** →
    **Invite User** → language **Română**:
@@ -2556,7 +2556,7 @@ enter them; **only the Administrator and the Superadministrator make them public
    and lets you write from now on; a typed address works for any race). The page has a line for every
    registered runner who holds a race number — the checked-in first, then by number — with four boxes: **«Timp»** (`h:mm:ss`, `mm:ss` or
    `mm:ss.t`), **«Stare»** (Sosit, Abandon, Neprezentat, Descalificat), **«Timp cip»** (optional) and **«Notă»**. The two time boxes are
-   typed or picked (§NNN): digits alone become a time when the box is left (`12345` → `1:23:45`, `2345,6` → `23:45.6`; a dot, a comma or a
+   typed or picked (§999): digits alone become a time when the box is left (`12345` → `1:23:45`, `2345,6` → `23:45.6`; a dot, a comma or a
    space stands for a colon), and the clock beside each box opens the hours, minutes and seconds on the 24-hour clock — «OK» writes
    `h:mm:ss`, tenths are typed. A line with every box empty is
    no result. The blank choice of «Stare» reads «Din timp (Sosit / Neprezentat)» because it is exactly that: a time typed with no state is

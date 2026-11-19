@@ -13,7 +13,7 @@ import { ZITADEL_APPLICATION_NAME } from "./domain/zitadel-invite";
  * (`ZITADEL_MANAGEMENT_PAT`, `SETUP.md` §37). Two calls: create the human user with the
  * address verified — the invitation proves the mailbox — then an invite code that Zitadel
  * sends. An account that already exists is left alone and reported as such — `exists` when it
- * had no password yet and Zitadel sent it a new code, `ready` when it already signs in (§NNN); a
+ * had no password yet and Zitadel sent it a new code, `ready` when it already signs in (§1000); a
  * missing token is not an error but "not configured", so the row is still added and the page says
  * what to do by hand. Nothing here decides who is staff: `staff_users` does (`AGENTS.md` §13).
  */
@@ -22,7 +22,7 @@ export type InviteOutcome =
   | { kind: "invited" }
   | { kind: "exists" }
   /**
-   * The account is there and already has its password, a passkey or a linked login (§NNN): Zitadel refuses a code
+   * The account is there and already has its password, a passkey or a linked login (§1000): Zitadel refuses a code
    * for it — «already initialised» — and the person needs none. Only the club's email goes.
    */
   | { kind: "ready" }
@@ -138,7 +138,7 @@ async function createAndInvite(
 }
 
 /**
- * Zitadel's refusal of an invite code to an account that already signs in (§NNN): its check `CreationAllowed` — no
+ * Zitadel's refusal of an invite code to an account that already signs in (§1000): its check `CreationAllowed` — no
  * password, passkey or linked login yet — fails with the error `COMMAND-EF34g`, «User is already initialized», and
  * Zitadel writes the id in parentheses after its words. The id first, the words as a second chance.
  */
@@ -193,7 +193,7 @@ const NO_ACCOUNT = "no account with this address at the identity provider";
 
 /**
  * Send the invitation again to an account that exists — the previous code is replaced. An account that already signs in
- * is `ready` (§NNN): Zitadel sends it nothing, and nothing is missing.
+ * is `ready` (§1000): Zitadel sends it nothing, and nothing is missing.
  */
 export async function resendZitadelInvite(email: string, deps: Deps = {}): Promise<InviteOutcome> {
   const connected = connection(deps);

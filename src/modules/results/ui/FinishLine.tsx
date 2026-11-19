@@ -124,7 +124,7 @@ export type FinishLineWords = {
   /** The volunteer wrote them down: the line goes. */
   keptStaleDone: string;
   entriesTitle: string;
-  /** «Golește lista»: the lines the server already answered go from this phone; what has not left stays (§NNN). */
+  /** «Golește lista»: the lines the server already answered go from this phone; what has not left stays (§1001). */
   entriesClear: string;
   waiting: string;
   saved: string;
@@ -789,7 +789,7 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
               {words.entriesTitle}
               {waiting > 0 ? ` · ${fill(words.waitingCount, { count: String(waiting) })}` : ""}
             </Typography>
-            {/* «Golește lista» (§NNN): only while a line the server answered is there; a press still waiting is never cleared. */}
+            {/* «Golește lista» (§1001): only while a line the server answered is there; a press still waiting is never cleared. */}
             {entries.some((entry) => entry.outcome !== null) && (
               <GlyphButton
                 type="button"

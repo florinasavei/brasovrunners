@@ -1,7 +1,7 @@
 import { isUuid } from "@/shared/ids";
 
 /**
- * «Ziua cursei» → «Jurnal» (§NNN; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a
+ * «Ziua cursei» → «Jurnal» (§996; the owner, 2026-11-19: «vreau si tracing pentru voluntarim [voluntari] gen cine a scanat, cine a
  * marcat prezent»), the pure half: what a line is, the page's two filters as the address carries them, which of the three reads a
  * filter asks, the reads' newest lines merged under one cap, and the counts per account. No database, no request, no words:
  * `journal.ts` reads, the page says it. The organizers' alone (`canReadRaceDayJournal`): the desk's «Scanat înainte» is its own
@@ -108,7 +108,7 @@ export type JournalTally = { actorId: string | null; actorName: string | null; k
 const NO_COUNTS: JournalCounts = { scanned: 0, checkedIn: 0, undone: 0, volunteerTicks: 0 };
 
 /**
- * One line per account that acted at the event (§NNN): how many scans, check-ins, undos and volunteer ticks — the staff accounts
+ * One line per account that acted at the event (§996): how many scans, check-ins, undos and volunteer ticks — the staff accounts
  * by name, then the deleted accounts as one, then the participants' own «Am ajuns» (their check-ins alone). A test registration's
  * row is omitted from every count the club is given (§30, AGENTS.md §12.6), but its account is still one the filter offers
  * (`accounts`), so a rehearsal on test rows can be read by account too.

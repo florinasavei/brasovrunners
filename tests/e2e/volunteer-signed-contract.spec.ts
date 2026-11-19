@@ -6,7 +6,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
- * §NNN, BR-REQ-050-02, BR-REQ-060-01 — «Contract semnat» (the owner, 2026-11-19: «trebuie pentru fiecare voluntar să pot atașa
+ * §998, BR-REQ-050-02, BR-REQ-060-01 — «Contract semnat» (the owner, 2026-11-19: «trebuie pentru fiecare voluntar să pot atașa
  * „contract semnat”»), walked as the Organizer at 320 pixels and on a desktop, against the production build.
  *
  * What only a browser can see: the volunteer's card takes a file from the file box (44 pixels, like its press) and, once it is
@@ -93,7 +93,7 @@ const DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingm
 /** A made-up program, whatever its name says: none of the formats by its bytes. */
 const PROGRAM = Buffer.concat([Buffer.from("MZ", "latin1"), Buffer.alloc(58), Buffer.from([0x80, 0, 0, 0]), Buffer.alloc(64), Buffer.from("PE\0\0", "latin1")]);
 
-test.describe("§NNN «Contract semnat» — attached on the volunteer's page, seen on the list, downloaded, and a folder at once", () => {
+test.describe("§998 «Contract semnat» — attached on the volunteer's page, seen on the list, downloaded, and a folder at once", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("the Organizer attaches a signed agreement, sees it on the list, downloads it, and uploads the others by name", async ({ page }) => {

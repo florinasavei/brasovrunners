@@ -15,7 +15,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { AFTER_THE_RACE, createRace, person, RACE_STARTS_AT, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * §NNN — «Resetează clasamentul» on «Clasament» as the server draws it, in both languages (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01
+ * §997 — «Resetează clasamentul» on «Clasament» as the server draws it, in both languages (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-041-01
  * criterion 6): the Administrator's danger card at the foot of the page, its one button asking first with the question that counts what
  * goes — the results by `countForm`, the start given and its hour, the phones' presses not sent — and posting what the page drew; drawn
  * disabled with the sentence why once the planned start has passed, or when there is nothing to wipe; not drawn for the Organizer, nor
@@ -130,7 +130,7 @@ function resetForm(tree: ReactNode) {
 const strip = (html: string) => html.replace(/<style[\s\S]*?<\/style>/g, "");
 const text = (html: string) => strip(html).replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/\s+/g, " ");
 
-describe("§NNN «Resetează clasamentul» on «Clasament»", () => {
+describe("§997 «Resetează clasamentul» on «Clasament»", () => {
   it("is the danger card at the foot of the page, its one button asking first with what goes, posting the count and the gun the page drew", async () => {
     await trial(3);
     const { tree, html } = await draw();

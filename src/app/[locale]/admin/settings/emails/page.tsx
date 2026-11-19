@@ -325,7 +325,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     // what a participant will actually receive rather than what the platform ships.
     const content = renderBilingual(messageType, emailLocale, sample, actionUrl, written.copy);
     /*
-      The invitation whose account the person makes (§NNN) — no Zitadel key, or Zitadel did not make it: its own preview
+      The invitation whose account the person makes (§1000) — no Zitadel key, or Zitadel did not make it: its own preview
       after the one Zitadel's email comes first in, the platform's steps alone.
     */
     const selfSignIn =
@@ -571,7 +571,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
               />
             ) : undefined,
           };
-          // The invitation in its second shape (§NNN): the steps of an account the person makes, right after the first.
+          // The invitation in its second shape (§1000): the steps of an account the person makes, right after the first.
           if (selfSignIn) {
             return [
               card,

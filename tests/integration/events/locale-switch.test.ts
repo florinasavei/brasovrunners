@@ -115,7 +115,7 @@ describe("BR-REQ-040-01 where a language switch lands", () => {
   });
 
   /*
-    §NNN — the scanned page in the other language is the page already open, never a code scanned again: the switch, which knows the
+    §996 — the scanned page in the other language is the page already open, never a code scanned again: the switch, which knows the
     path alone, lands marked so (`from=language`), and the page records no scan for it (`race-day/scan-record.test.ts`).
   */
   it("keeps the desk code on its page in the other language, marked as the page already open", async () => {

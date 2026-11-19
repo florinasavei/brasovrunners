@@ -23,7 +23,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { statementsOf } from "../../helpers/statements";
 
 /**
- * §NNN, BR-REQ-037-08, BR-REQ-050-02, BR-REQ-060-01 — «Ziua cursei» → «Jurnal» (the owner, 2026-11-19: «vreau si tracing pentru
+ * §996, BR-REQ-037-08, BR-REQ-050-02, BR-REQ-060-01 — «Ziua cursei» → «Jurnal» (the owner, 2026-11-19: «vreau si tracing pentru
  * voluntarim [voluntari] gen cine a scanat, cine a marcat prezent»), read from a real database through the page:
  *
  * - for the Organizer, the Administrator and the Superadministrator; a 404 and no tab for every other role, and the read refuses them;
@@ -245,7 +245,7 @@ const ALL_LINES = [
   "08:05:03 QR1 a scanat Ana Pop (nr. 27)",
 ];
 
-describe("§NNN «Jurnal» — who may read it", () => {
+describe("§996 «Jurnal» — who may read it", () => {
   it("opens for the Organizer, the Administrator and the Superadministrator, and is a 404 for every other role", async () => {
     for (const role of ["MODERATOR", "ADMIN", "SUPERADMIN"] as const) {
       state.actor = staff[role];
@@ -285,7 +285,7 @@ describe("§NNN «Jurnal» — who may read it", () => {
   });
 });
 
-describe("§NNN «Jurnal» — the lines and the summary", () => {
+describe("§996 «Jurnal» — the lines and the summary", () => {
   it("lists every scan, check-in, undo and volunteer tick of the event, newest first, to the second, with who, what and whom", async () => {
     await morning();
     const markup = await page();
@@ -369,7 +369,7 @@ describe("§NNN «Jurnal» — the lines and the summary", () => {
   });
 });
 
-describe("§NNN «Jurnal» — the filters", () => {
+describe("§996 «Jurnal» — the filters", () => {
   const ids = () => ({ qr1: desk.qr1.id, qr2: desk.qr2.id });
 
   it("filters by account: one account, the participants' own «Am ajuns», the deleted accounts", async () => {
@@ -407,7 +407,7 @@ describe("§NNN «Jurnal» — the filters", () => {
   });
 });
 
-describe("§NNN «Jurnal» — the cap and the cost", () => {
+describe("§996 «Jurnal» — the cap and the cost", () => {
   /** `n` scans of one runner by QR1, a second apart, written as the trail holds them. */
   async function scans(n: number, id: string) {
     const [row] = await db.select({ participantId: registrations.participantId }).from(registrations).where(eq(registrations.id, id));

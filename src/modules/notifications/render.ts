@@ -964,7 +964,7 @@ async function renderRow(
     data.inviterName = typeof payload.inviterName === "string" ? payload.inviterName : undefined;
     data.staffEmail = row.recipientEmail;
     /*
-      Whose the account is, as the press left it (§NNN): Zitadel's steps or the person's own. And Zitadel's email by its
+      Whose the account is, as the press left it (§1000): Zitadel's steps or the person's own. And Zitadel's email by its
       subject in the row's language — the one the press gave Zitadel for the account — so both halves name the email the
       person really has.
     */

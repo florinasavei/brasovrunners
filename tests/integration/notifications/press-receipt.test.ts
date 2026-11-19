@@ -259,7 +259,7 @@ describe("the toast after a press says what the press queued", () => {
   });
 
   /**
-   * §NNN: an account found without a password gets a new code from Zitadel — its email goes too; one that already signs in
+   * §1000: an account found without a password gets a new code from Zitadel — its email goes too; one that already signs in
    * (`ready`) gets nothing from Zitadel, and the toast names the club's email alone, still green.
    */
   it("names Zitadel's email for an account found without a password, and not for one that already signs in", async () => {

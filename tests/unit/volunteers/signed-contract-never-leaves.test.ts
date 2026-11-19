@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * «Contract semnat» (§NNN, BR-REQ-060-01) — a volunteer's signed agreement carries a signature and personal data, so it reaches only
+ * «Contract semnat» (§998, BR-REQ-060-01) — a volunteer's signed agreement carries a signature and personal data, so it reaches only
  * the surfaces that carry it: the volunteer's card (its facts, the authenticated download, attach, replace, delete), the «Voluntari»
  * list (whether it is attached, the count, «Încarcă contractele semnate») and «Toate datele unei persoane» (its facts, art. 15).
  * Never the public pages, an email, a badge or the media bucket. The structural half of that promise: no file outside the list
@@ -54,7 +54,7 @@ const SCHEMA_FILE = path.join(SRC, "db", "schema", "event-volunteer-documents.ts
 /** The table's names wherever they would be spelled. */
 const NAMES_TABLE = /event[_-]volunteer[_-]document|eventVolunteerDocument|signed[_-]?contract|SignedContract/i;
 
-describe("§NNN «Contract semnat» — who reads a volunteer's signed agreement", () => {
+describe("§998 «Contract semnat» — who reads a volunteer's signed agreement", () => {
   const files = sourceFiles(SRC);
 
   it("is imported by no file but the service, its pure half, the list's reads, the card, the two pages, the two routes and the person's record", () => {

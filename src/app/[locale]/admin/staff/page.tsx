@@ -114,7 +114,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
   const nobodyAdded = count === "0";
   /** Whichever of the three account verbs was pressed (§171) — they share their four answers. */
   const accountVerb = saved === "passwordReset" || saved === "accountDeactivated" || saved === "accountReactivated";
-  /** The invitation's one line (§NNN): who sends what to the person, by Zitadel's answer. */
+  /** The invitation's one line (§1000): who sends what to the person, by Zitadel's answer. */
   const inviteLine = inviteLineOf(saved, invite);
   // Whether "Add" also creates the Zitadel account and sends the invitation (§123).
   const invitesSend = env.STAFF_AUTH_MODE === "provider" && isZitadelInviteConfigured();
@@ -412,7 +412,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
-        {/* After «Adaugă» or «Retrimite invitația», one line (§NNN): what the person receives — two emails, Zitadel's
+        {/* After «Adaugă» or «Retrimite invitația», one line (§1000): what the person receives — two emails, Zitadel's
             first, or ours alone — by what Zitadel answered; a refusal says Zitadel's reason (§170). */}
         {inviteLine && (
           <Alert severity={inviteLine.severity} data-testid="staff-invite-line">

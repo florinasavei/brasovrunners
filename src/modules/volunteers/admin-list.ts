@@ -49,7 +49,7 @@ export type VolunteerAdminFilters = {
    */
   member?: true;
   /**
-   * «Contract semnat» (§NNN): only the people whose signed agreement is attached (`true`), only the ones whose is not (`false`) —
+   * «Contract semnat» (§998): only the people whose signed agreement is attached (`true`), only the ones whose is not (`false`) —
    * who is left after «Încarcă contractele semnate» —, or everyone (absent). Either half leaves the cancelled out, as the strip's
    * «Contracte semnate: N din M» does: a cancelled person owes no agreement.
    */
@@ -71,7 +71,7 @@ export function presentFilterOf(value: string | undefined): boolean | undefined 
   return value === "yes" ? true : value === "no" ? false : undefined;
 }
 
-/** `?contract=` as the list's address carries it (§NNN): «yes» with a signed agreement, «no» without, or nothing — anything else is no filter. */
+/** `?contract=` as the list's address carries it (§998): «yes» with a signed agreement, «no» without, or nothing — anything else is no filter. */
 export function contractFilterOf(value: string | undefined): boolean | undefined {
   return value === "yes" ? true : value === "no" ? false : undefined;
 }
@@ -117,7 +117,7 @@ function whereOf(filters: VolunteerAdminFilters): SQL | undefined {
   // people its figure counts, and «Absenți» never lists everybody who cancelled.
   if (filters.present !== undefined) parts.push(eq(eventVolunteers.present, filters.present), ne(eventVolunteers.state, "CANCELLED"));
   if (filters.member) parts.push(eq(eventVolunteers.clubMember, true));
-  // «Contract semnat» (§NNN): the strip's own people — among «Înscris» and «Confirmat» — with the copy attached, or without it.
+  // «Contract semnat» (§998): the strip's own people — among «Înscris» and «Confirmat» — with the copy attached, or without it.
   if (filters.contract !== undefined) parts.push(filters.contract ? hasSignedContract(eventVolunteers.id) : not(hasSignedContract(eventVolunteers.id)), ne(eventVolunteers.state, "CANCELLED"));
   return parts.length > 0 ? and(...parts) : undefined;
 }
@@ -228,13 +228,13 @@ export type VolunteerAdminSummary = {
   present: number;
   /** «Absenți» (§983): «Înscris» and «Confirmat» not ticked «Prezent» — unticked is absent; the cancelled left out, as above. */
   absent: number;
-  /** «Contracte semnate: N din M» (§NNN): «Înscris» and «Confirmat» whose signed agreement is attached — N; M is the two states' sum. */
+  /** «Contracte semnate: N din M» (§998): «Înscris» and «Confirmat» whose signed agreement is attached — N; M is the two states' sum. */
   withContract: number;
 };
 
 /**
  * The strip's figures (§246's shape): by state, how many wait for a role, how many get a kit, how many came and did not, and how many
- * signed agreements are attached (§NNN). Blind to the state, role, kit, presence and contract filters on purpose — the strip says how
+ * signed agreements are attached (§998). Blind to the state, role, kit, presence and contract filters on purpose — the strip says how
  * the scope stands, and its pills are what set those filters. One grouped query and two counts.
  */
 export async function summariseVolunteersForAdmin<T extends Record<string, unknown>>(
@@ -266,7 +266,7 @@ export async function summariseVolunteersForAdmin<T extends Record<string, unkno
     .from(eventVolunteers)
     .innerJoin(events, eq(events.id, eventVolunteers.eventId))
     .where(and(scope, noRoleGiven(), sql`${eventVolunteers.state} <> 'CANCELLED'`));
-  // «Contracte semnate» (§NNN): the active people whose signed copy is attached — its existence only, never a row of the table.
+  // «Contracte semnate» (§998): the active people whose signed copy is attached — its existence only, never a row of the table.
   const [signed] = await db
     .select({ n: count() })
     .from(eventVolunteers)

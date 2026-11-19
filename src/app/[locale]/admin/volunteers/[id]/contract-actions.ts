@@ -10,7 +10,7 @@ import type { FormOutcome } from "@/shared/forms/outcome";
 import { backToCard, eventIdOf, field } from "@/app/[locale]/admin/events/[id]/volunteer-return";
 
 /**
- * «Șterge» on a volunteer's «Contract semnat» card (§NNN), behind the house's question: the signed copy deleted, with any upload of
+ * «Șterge» on a volunteer's «Contract semnat» card (§998), behind the house's question: the signed copy deleted, with any upload of
  * the person left half-sent. The coarse gate here (`requireStaffCapability(canManageVolunteers)`: the Tehnic role, the Redactor,
  * the volunteer and a member never reach the service), and the service asserts the role and the volunteer's event again
  * (BR-REQ-060-01). Back to the volunteer's page (`returnTo`, the screen's validated way back), the toast saying it is deleted — or,

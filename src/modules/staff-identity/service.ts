@@ -56,7 +56,7 @@ import {
  * platform also *tells* them — `STAFF_INVITATION`, queued in the same transaction as the row,
  * through the club's own outbox: who added them, as what, and the sign-in page. The Zitadel
  * account itself is created by the action when the club's key is set (§123), and otherwise by
- * the person at the sign-in page. Since §NNN the email says which, as numbered steps
+ * the person at the sign-in page. Since §1000 the email says which, as numbered steps
  * (`signInSteps` in its payload), and when the action will ask Zitadel the row is held until
  * Zitadel answered (`INVITATION_HOLD_MS`, `releaseInvitationHold`): the club's email never leaves
  * before Zitadel was asked.
@@ -253,7 +253,7 @@ async function holdGivableTier<T extends Record<string, unknown>>(tx: Database<T
  * so (the row and the message by id and name, never an address). The action then asks nothing of Zitadel either, and
  * «Retrimite invitația» later sends both — making the account first when it is missing.
  *
- * `zitadelInvite` (§NNN): the action will ask Zitadel for the account once this commits. The invitation then says
+ * `zitadelInvite` (§1000): the action will ask Zitadel for the account once this commits. The invitation then says
  * Zitadel's steps and waits (`INVITATION_HOLD_MS`) until the action lets it go (`releaseInvitationHold`); without it
  * the steps are the person's own and the row is due at once, as every invitation was.
  */
@@ -345,7 +345,7 @@ async function recordInvitationNotSent<T extends Record<string, unknown>>(tx: Da
  * `sendEmail: false` («Adaugă membrii fără invitații», slice 4, §976): the rows are written and no invitation is queued; the
  * action asks nothing of Zitadel and writes `emailSkipped` on its `staff.members_invited` row.
  *
- * `zitadelInvite` (§NNN): as `inviteStaffUser`'s — each invitation says Zitadel's steps and waits until the action, member
+ * `zitadelInvite` (§1000): as `inviteStaffUser`'s — each invitation says Zitadel's steps and waits until the action, member
  * by member, lets it go once Zitadel answered for that member.
  */
 export async function inviteMembers<T extends Record<string, unknown>>(
@@ -409,7 +409,7 @@ export async function resendStaffInvitation<T extends Record<string, unknown>>(
    * does; «queue», the default, leaves it to «Când pleacă emailurile».
    */
   delivery: DeliveryChoice = "queue",
-  /** `zitadelInvite` (§NNN): the action asks Zitadel again after this — Zitadel's steps, and the hold until it answers. */
+  /** `zitadelInvite` (§1000): the action asks Zitadel again after this — Zitadel's steps, and the hold until it answers. */
   options: { zitadelInvite?: boolean } = {},
 ): Promise<StaffUser> {
   assertAdministrator(actor);
@@ -445,7 +445,7 @@ function invitationMessageType(member: StaffUser): "STAFF_INVITATION" | "MEMBER_
 }
 
 /**
- * How long the club's invitation waits for Zitadel (§NNN; the owner, 2026-11-19: «cumva trebuie un delay intre mailurile de
+ * How long the club's invitation waits for Zitadel (§1000; the owner, 2026-11-19: «cumva trebuie un delay intre mailurile de
  * logare»). A press that will ask Zitadel for the account queues it with `next_attempt_at` this far ahead — the column the
  * claim already waits on, and the one a first attempt is held by too (`EnqueueEmailParams.notBefore`) — and the action lets
  * it go the moment Zitadel answers (`releaseInvitationHold`), before the press's response. So the press's own drain, which
@@ -468,7 +468,7 @@ async function enqueueStaffInvitation<T extends Record<string, unknown>>(
 ): Promise<{ id: string | null; key: string }> {
   const delivery = how.delivery ?? "queue";
   const key = `${invitationKeyPrefix(member.id)}${now.toISOString()}`;
-  // Whose the account is, said as the email's steps (§NNN): Zitadel's when the action asks it, the person's otherwise.
+  // Whose the account is, said as the email's steps (§1000): Zitadel's when the action asks it, the person's otherwise.
   const signInSteps: SignInSteps = how.zitadelInvite ? "zitadel" : "self";
   const queued = await enqueueEmail(tx, {
     participantId: null,
@@ -483,7 +483,7 @@ async function enqueueStaffInvitation<T extends Record<string, unknown>>(
     requestedByStaffUserId: actor.id,
     isManualResend: how.isManualResend ?? false,
     now,
-    // Held until Zitadel answered (§NNN): the action lets it go, or the bound does.
+    // Held until Zitadel answered (§1000): the action lets it go, or the bound does.
     ...(how.zitadelInvite ? { notBefore: new Date(now.getTime() + INVITATION_HOLD_MS) } : {}),
     // Sent now by the press's own drain after the transaction (§540), not by the timing's.
     drainAfter: delivery !== "now",
@@ -492,7 +492,7 @@ async function enqueueStaffInvitation<T extends Record<string, unknown>>(
 }
 
 /**
- * The club's invitation let go once Zitadel answered (§NNN): due at once, so the drain that follows the press's response
+ * The club's invitation let go once Zitadel answered (§1000): due at once, so the drain that follows the press's response
  * sends it — after Zitadel was asked, never before. Only what the hold still holds: this person's invitations, waiting and
  * never tried, queued with Zitadel's steps. `steps` is what Zitadel's answer makes true (`signInStepsAfter`): `self` — it
  * refused, or there was no key after all — rewrites the email's steps to the person's own, since no email from Zitadel is

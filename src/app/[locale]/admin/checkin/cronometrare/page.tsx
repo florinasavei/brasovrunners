@@ -66,7 +66,7 @@ const BANNER_REFUSALS = [
 ] as const;
 /**
  * The island's refusals by code, each `Admin.timing.refused.<code>`; any other is `refusedOther`. `RESULT_PRESS_BEFORE_RESET` is a
- * press this phone kept from before «Resetează clasamentul» (§NNN): settled with the reason, never sent again.
+ * press this phone kept from before «Resetează clasamentul» (§997): settled with the reason, never sent again.
  */
 const LINE_REFUSALS = [
   "RESULT_BIB_UNKNOWN",

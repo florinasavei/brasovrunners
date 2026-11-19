@@ -75,7 +75,7 @@ describe("§986 «Istoricul sosirilor»", () => {
     expect(FINISH_HISTORY_ACTIONS).toContain("event_result.finish_duplicate");
   });
 
-  /** §NNN — «Resetează clasamentul»: a line of «Clasament» saying how many results went and whether the gun went with them. */
+  /** §997 — «Resetează clasamentul»: a line of «Clasament» saying how many results went and whether the gun went with them. */
   it("reads «Resetează clasamentul» as «Clasament»'s, with its count and its gun, about no runner", () => {
     expect(FINISH_HISTORY_ACTIONS).toContain("event.results_reset");
     expect(finishHistoryLine(row("14", "event.results_reset", 5, { results: 4, gunCleared: true }, "Ana Admin"))).toMatchObject({

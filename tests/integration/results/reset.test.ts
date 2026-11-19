@@ -26,7 +26,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { AFTER_THE_RACE, approveResultsTexts, createRace, person, RACE_STARTS_AT, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * §NNN — «Resetează clasamentul», through the service on real PostgreSQL (BR-REQ-050-02, BR-REQ-060-01): the trial runs before a race
+ * §997 — «Resetează clasamentul», through the service on real PostgreSQL (BR-REQ-050-02, BR-REQ-060-01): the trial runs before a race
  * wiped in one transaction — every result of the race, the runners typed by hand among them, and the gun a test «Start» set — by the
  * Administrator and the Superadministrator alone, on a race only, only while the planned gun is ahead (a test «Start» does not close
  * it), refused with CONFLICT when the page drew another count or another gun; the configuration, the elite list, the registrations, their
@@ -97,7 +97,7 @@ async function trialRun() {
 const reset = (actor: StaffUser, now: Date, seen: { results?: number; gun?: number | null } = {}) =>
   resetEventResults(db, actor, { eventId: raceId, seenResults: seen.results ?? 4, seenGunAtMs: seen.gun === undefined ? TRIAL_GUN.getTime() : seen.gun }, now);
 
-describe("§NNN resetEventResults — the trial runs wiped before the start", () => {
+describe("§997 resetEventResults — the trial runs wiped before the start", () => {
   it("deletes every result of the race and clears the gun, in one go, keeping every setting, the elite list and the registrations", async () => {
     await approveResultsTexts(db);
     await setResultAwards(db, staff.ADMIN!, raceId, { places: 5, categories: false }, before(70));
@@ -244,7 +244,7 @@ describe("§NNN resetEventResults — the trial runs wiped before the start", ()
   });
 });
 
-describe("§NNN «Cronometrare» after a reset — a press made before it never brings a test finish back", () => {
+describe("§997 «Cronometrare» after a reset — a press made before it never brings a test finish back", () => {
   it("refuses a press a phone kept from before the reset — even with a new «Start» given right before it reached the server", async () => {
     await trialRun();
     await reset(staff.ADMIN!, before(50));

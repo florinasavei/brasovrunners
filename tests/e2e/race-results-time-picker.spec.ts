@@ -4,7 +4,7 @@ import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN — «Clasament»'s «Timp» and «Timp cip», picked or typed (BR-REQ-050-02, BR-REQ-041-01 criterion 6), at 320 pixels and on a
+ * §999 — «Clasament»'s «Timp» and «Timp cip», picked or typed (BR-REQ-050-02, BR-REQ-041-01 criterion 6), at 320 pixels and on a
  * desk: the 44-pixel clock beside every time box opens the page's one picker — loaded on that first press, a dialog on the phone and a
  * popover beside the button with a mouse — at 0:00:00 or at the box's own time in whole seconds; «OK» writes `h:mm:ss` through the
  * box's own events, «Anulează» writes nothing; digits alone become a time on leaving the box and on Enter; the one save ranks what
@@ -110,7 +110,7 @@ async function layoutHolds(page: Page) {
   expect(problems).toEqual([]);
 }
 
-test.describe("§NNN «Timp» and «Timp cip», picked or typed", () => {
+test.describe("§999 «Timp» and «Timp cip», picked or typed", () => {
   test.describe.configure({ timeout: 240_000 });
 
   test("picks a time with the page's one clock, cancels, takes tenths as whole seconds, reads digits on leaving the box and on Enter, and ranks the lot", async ({ page }, testInfo) => {

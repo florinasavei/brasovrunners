@@ -4,7 +4,7 @@ import { eventVolunteers } from "./event-volunteers";
 import { staffUsers } from "./staff-users";
 
 /**
- * The largest signed agreement kept, in bytes (§NNN): 10 MB — a phone's photograph of two pages, or a scanner app's PDF, with
+ * The largest signed agreement kept, in bytes (§998): 10 MB — a phone's photograph of two pages, or a scanner app's PDF, with
  * room to spare; a Word file is a few hundred kilobytes. The service refuses past it before anything is written, and the
  * tables' own checks say the same. Written once: the service, the checks and the page's help read it.
  */
@@ -37,7 +37,7 @@ const bytea = customType<{ data: Buffer; driverData: Buffer | Uint8Array | strin
 export const volunteerDocumentFormat = pgEnum("event_volunteer_document_format", ["PDF", "DOCX", "DOC", "JPEG", "PNG", "HEIC", "HEIF"]);
 
 /**
- * «Contract semnat» (§NNN, amending §758; the owner, 2026-11-19: «trebuie pentru fiecare voluntar să pot atașa „contract
+ * «Contract semnat» (§998, amending §758; the owner, 2026-11-19: «trebuie pentru fiecare voluntar să pot atașa „contract
  * semnat”»): the signed copy of one volunteer's agreement — the Word file the club printed and the president signed, a scan or a
  * photograph of the paper — attached by whoever works the volunteers (`canManageVolunteers`), **one per volunteer**: attaching
  * another replaces it (`UNIQUE (volunteer_id)`).
@@ -78,7 +78,7 @@ export const eventVolunteerDocuments = pgTable(
 );
 
 /**
- * A signed agreement on its way up in parts (§NNN): a request to a function on the host carries at most 4.5 MB, so the page sends a
+ * A signed agreement on its way up in parts (§998): a request to a function on the host carries at most 4.5 MB, so the page sends a
  * file larger than that in pieces of at most 4 MB (`ui/SignedContractUpload.tsx`), each one appended here in order, and moves it
  * into `event_volunteer_documents` — replacing the copy there, checked whole by its bytes — the moment the last piece arrives,
  * deleting this row in the same transaction. A smaller file never comes here.

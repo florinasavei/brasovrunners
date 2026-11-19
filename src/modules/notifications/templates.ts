@@ -1092,14 +1092,14 @@ export type TemplateData = {
   staffEmail?: string;
   signInUrl?: string;
   /**
-   * Whose the sign-in account is, in the invitation's numbered steps (§NNN): `zitadel` — the press asked Zitadel, whose
+   * Whose the sign-in account is, in the invitation's numbered steps (§1000): `zitadel` — the press asked Zitadel, whose
    * email to choose a password comes first; `self` — the person makes it at the sign-in page; `ready` — the account already
    * signs in with its password, so Zitadel sends nothing and the button is the one step. Absent reads as `zitadel`.
    */
   signInSteps?: SignInSteps;
-  /** Zitadel's email by its subject, in the account's language, named the same in both halves (§NNN); absent, the half's own. */
+  /** Zitadel's email by its subject, in the account's language, named the same in both halves (§1000); absent, the half's own. */
   zitadelSubject?: string;
-  /** Zitadel's email's button, «Acceptare invitație» / “Accept invite”, in the account's language like the subject (§NNN). */
+  /** Zitadel's email's button, «Acceptare invitație» / “Accept invite”, in the account's language like the subject (§1000). */
   zitadelButton?: string;
   /**
    * «Șabloanele textelor legale s-au schimbat» (§639): the keys of the texts whose template is newer
@@ -1987,7 +1987,7 @@ function invitationForAnotherBody(locale: EmailLocale, d: TemplateData): string[
 }
 
 /**
- * The sign-in steps of a colleague's or a member's invitation (§NNN; the owner, 2026-11-19: «cumva trebuie un delay intre
+ * The sign-in steps of a colleague's or a member's invitation (§1000; the owner, 2026-11-19: «cumva trebuie un delay intre
  * mailurile de logare, sau sa fie instructiunile mai clare»), numbered, in this half's language, each its own paragraph —
  * so a text the club saves from the editor keeps them as it keeps any sentence. Right whichever email arrives first.
  *
@@ -2090,7 +2090,7 @@ const RSVP_NAME_COUNTED = {
   en: "On the button's page you can also show or hide your name under “Who's coming”; your answer goes only if you press “I'm not coming any more” there.",
 } as const;
 
-/** The two invitations' buttons (§141, §524), which their numbered steps name (§NNN): one string each, so a step says the button's own words. */
+/** The two invitations' buttons (§141, §524), which their numbered steps name (§1000): one string each, so a step says the button's own words. */
 const INVITATION_BUTTON = {
   ro: { team: "Intră în backoffice", member: "Intră în zona membrilor" },
   en: { team: "Open the backoffice", member: "Open the members' area" },
@@ -2392,7 +2392,7 @@ const T = {
       subject: `Ești în echipa ${CLUB_NAME}`,
       body: (d: TemplateData) => [
         `${d.inviterName || "Un coleg"} te-a adăugat în echipa care administrează site-ul ${CLUB_NAME}, ca ${d.staffRole ?? "membru al echipei"}.`,
-        // The steps, numbered, by whose the account is (§NNN): Zitadel's email first, or the account the person makes.
+        // The steps, numbered, by whose the account is (§1000): Zitadel's email first, or the account the person makes.
         ...signInStepsWords("ro", d, INVITATION_BUTTON.ro.team, true),
         // What the club keeps about its own team (§323), said to the person it is kept about.
         "Pentru cont folosim Zitadel, cu numele și adresa ta; ce faci în backoffice rămâne în jurnalul clubului, cu numele tău, cel mult trei ani. Detalii în nota de confidențialitate.",
@@ -2405,7 +2405,7 @@ const T = {
       subject: `Ai cont de membru ${CLUB_NAME}`,
       body: (d: TemplateData) => [
         `${d.inviterName || "Un coleg"} ți-a făcut cont de membru ${CLUB_NAME}: cu el intri în zona membrilor de pe site, unde clubul pune ce e doar pentru membri.`,
-        // The same steps as the team's (§NNN), to the members' zone.
+        // The same steps as the team's (§1000), to the members' zone.
         ...signInStepsWords("ro", d, INVITATION_BUTTON.ro.member, false),
         "Pentru cont folosim Zitadel, cu numele și adresa ta. Detalii în nota de confidențialitate.",
       ],
@@ -4562,7 +4562,7 @@ export function buildTemplateContent(
   // «Vin!» (§811): the shapes that are about the answer's state — already counted, or taken back — are the platform's sentence alone.
   const rsvpState = messageType === "RSVP_CONFIRM" && data.rsvpStage !== undefined && data.rsvpStage !== "confirm";
   /*
-    An invitation whose account the person makes themselves (§NNN) — no Zitadel key, or Zitadel refused it — or whose
+    An invitation whose account the person makes themselves (§1000) — no Zitadel key, or Zitadel refused it — or whose
     account already signs in with its password (`ready`) is the platform's steps alone: the club's words for the invitation
     are written for the press that asks Zitadel, whose email comes first, and would send the person to an email that is not
     coming.

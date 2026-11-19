@@ -1,5 +1,5 @@
 /*
-  What the clock picker beside a native time box holds and hands back (§NNN): «Clasament»'s «Timp» and
+  What the clock picker beside a native time box holds and hands back (§999): «Clasament»'s «Timp» and
   «Timp cip» first. Kept apart from `ClockPicker.tsx`, which is loaded only on the first press, so that the
   box, the button and the page's one host (`ClockPickerHost.tsx`) carry these few lines and not the picker.
 

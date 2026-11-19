@@ -15,7 +15,7 @@ import {
 import { checkedInByOf, checkedInWords } from "@/modules/registrations/domain/checked-in-by";
 
 /**
- * §NNN — «Ziua cursei» → «Jurnal», the pure half (`race-day/domain/journal.ts`): the address's two filters, which reads a filter
+ * §996 — «Ziua cursei» → «Jurnal», the pure half (`race-day/domain/journal.ts`): the address's two filters, which reads a filter
  * asks, the reads merged under one cap with how many more, the counts per account (a test registration's never counted, its
  * account still offered) and an unknown account read as everybody; and who marked a runner present, in the desk chip's words.
  * The desk's «Scanat înainte» is its own module's (`tests/unit/registrations/code-scans.test.ts`).
@@ -23,7 +23,7 @@ import { checkedInByOf, checkedInWords } from "@/modules/registrations/domain/ch
 const ACCOUNT = "0b6c1e7e-6f6a-4c55-9a43-2f6f3c5b8a10";
 const OTHER = "1c7d2f8f-7a7b-4d66-8b54-3a7a4d6c9b21";
 
-describe("§NNN the address's filters", () => {
+describe("§996 the address's filters", () => {
   it("reads `account` as everybody, one account by id, the participants or the deleted accounts — and writes it back", () => {
     expect(journalAccountOf(undefined)).toEqual({ kind: "all" });
     expect(journalAccountOf("")).toEqual({ kind: "all" });
@@ -63,7 +63,7 @@ describe("§NNN the address's filters", () => {
 
 const line = (id: string, iso: string): JournalLine => ({ id, at: new Date(iso), kind: "scanned", who: { kind: "removed" }, whom: { kind: "volunteer", id: "v", name: "x" } });
 
-describe("§NNN the reads merged", () => {
+describe("§996 the reads merged", () => {
   it("puts the newest first, a tie by the id so a reload never reorders two lines of one second", () => {
     const merged = mergeJournalLines([
       { lines: [line("a", "2099-11-21T06:00:01Z"), line("c", "2099-11-21T06:00:00Z")], total: 2 },
@@ -88,7 +88,7 @@ describe("§NNN the reads merged", () => {
   });
 });
 
-describe("§NNN the counts per account", () => {
+describe("§996 the counts per account", () => {
   it("is one line per account — the staff by name, then the deleted accounts, then the participants — a test row never counted", () => {
     const { rows, accounts } = journalSummary(
       [
@@ -127,7 +127,7 @@ describe("§NNN the counts per account", () => {
   });
 });
 
-describe("§NNN who marked a runner present", () => {
+describe("§996 who marked a runner present", () => {
   const words = { self: "prin „Am ajuns”", removed: "cont șters" };
   it("is the account's name, the person's own press, or an account gone since", () => {
     expect(checkedInWords(checkedInByOf({ checkedInByName: "QR2", checkedInBySelf: false }), words)).toBe("QR2");

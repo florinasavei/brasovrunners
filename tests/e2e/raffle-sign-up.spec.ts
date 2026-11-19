@@ -282,7 +282,7 @@ test.describe("§984 the raffle with a sign-up of its own: the form, the link, t
         await hydrated(page);
         const tabs = page.getByTestId("race-day-tabs");
         await expect(tabs.getByRole("link", { name: "Tombolă" })).toHaveAttribute("aria-current", "page");
-        // The organizers' six (§984, §986, §NNN): «Prezența», «Clasament», «Cronometrare» («Sosiri» on a phone), «Tombolă», «Lucruri de adus», «Jurnal».
+        // The organizers' six (§984, §986, §996): «Prezența», «Clasament», «Cronometrare» («Sosiri» on a phone), «Tombolă», «Lucruri de adus», «Jurnal».
         await expect(tabs.getByRole("link")).toHaveText([/Prezența/, /Clasament/, /Cronometrare|Sosiri/, /Tombolă/, /Lucruri/, /Jurnal/], { useInnerText: true });
         // Six entries are wider than a phone's row, so the row is no `fits` row: its current entry is brought into view —
         // «Tombolă», wholly inside the row, on the phone and on the desktop alike (`SubNavCurrent`, §731).

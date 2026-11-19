@@ -24,7 +24,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { pdfOfSize, SAMPLE_FILES } from "../../helpers/signed-contract-files";
 
 /**
- * «Contract semnat» (§NNN, amending §758; the owner, 2026-11-19: «trebuie pentru fiecare voluntar să pot atașa „contract
+ * «Contract semnat» (§998, amending §758; the owner, 2026-11-19: «trebuie pentru fiecare voluntar să pot atașa „contract
  * semnat”»), BR-REQ-050-02 and BR-REQ-060-01, read from a real database: a volunteer's signed agreement attached, replaced and
  * deleted — one per volunteer, at most 10 MB, a PDF, a Word file or a photograph by its own bytes —, a large one in pieces, the
  * whole event's files matched by name, the role on every function, and the file gone with the person's data. The trail names the
@@ -83,7 +83,7 @@ const uploads = () => db.select().from(eventVolunteerDocumentUploads);
 const trail = () => db.select().from(auditLogs).where(inArray(auditLogs.action, ["volunteer.signed_contract_uploaded", "volunteer.signed_contract_replaced", "volunteer.signed_contract_deleted", "volunteer.signed_contract_downloaded"]));
 const attach = (actor: StaffUser, volunteerId: string, fileName: string, bytes: Uint8Array, eventId = raceId) => attachSignedContract(db, actor, { eventId, volunteerId, fileName, bytes }, NOW);
 
-describe("§NNN one signed agreement per volunteer: attach, replace, delete", () => {
+describe("§998 one signed agreement per volunteer: attach, replace, delete", () => {
   it("attaches the file as uploaded — its name, its format by its bytes, its length, who and when — and records the id, the length and the format, never the name", async () => {
     const bytes = SAMPLE_FILES.docx();
     expect(await attach(staff.MODERATOR!, people.anais, "Contract-voluntariat-Anais-Meyson.docx", bytes)).toEqual({ replaced: false, format: "DOCX", size: bytes.length });
@@ -143,7 +143,7 @@ describe("§NNN one signed agreement per volunteer: attach, replace, delete", ()
   });
 });
 
-describe("§NNN what a signed agreement may be: 10 MB at most, and a PDF, a Word file or a photograph by its own bytes", () => {
+describe("§998 what a signed agreement may be: 10 MB at most, and a PDF, a Word file or a photograph by its own bytes", () => {
   it("refuses an empty file, and one byte past ten megabytes, writing nothing", async () => {
     await expect(attach(staff.ADMIN!, people.anais, "gol.pdf", new Uint8Array())).rejects.toMatchObject({ code: "VOLUNTEER_CONTRACT_EMPTY" });
     await expect(attach(staff.ADMIN!, people.anais, "mare.pdf", pdfOfSize(SIGNED_CONTRACT_MAX_BYTES + 1))).rejects.toMatchObject({ code: "VOLUNTEER_CONTRACT_TOO_LARGE" });
@@ -184,7 +184,7 @@ describe("§NNN what a signed agreement may be: 10 MB at most, and a PDF, a Word
   });
 });
 
-describe("§NNN a file larger than one request carries goes up in pieces", () => {
+describe("§998 a file larger than one request carries goes up in pieces", () => {
   const PART = 1024;
   const pieces = (bytes: Buffer) => Array.from({ length: Math.ceil(bytes.length / PART) }, (_, index) => bytes.subarray(index * PART, (index + 1) * PART));
 
@@ -250,7 +250,7 @@ describe("§NNN a file larger than one request carries goes up in pieces", () =>
   });
 });
 
-describe("§NNN BR-REQ-060-01 whoever works the volunteers, and nobody else, on every function", () => {
+describe("§998 BR-REQ-060-01 whoever works the volunteers, and nobody else, on every function", () => {
   it("lets the Organizer, the Administrator and the Superadministrator attach, read, download and delete", async () => {
     for (const role of ["MODERATOR", "ADMIN", "SUPERADMIN"] as const) {
       await attach(staff[role]!, people.anais, `${role}.pdf`, SAMPLE_FILES.pdf());
@@ -293,7 +293,7 @@ describe("§NNN BR-REQ-060-01 whoever works the volunteers, and nobody else, on 
   });
 });
 
-describe("§NNN «Încarcă contractele semnate»: each file to one volunteer of the event, the rest reported", () => {
+describe("§998 «Încarcă contractele semnate»: each file to one volunteer of the event, the rest reported", () => {
   it("matches the owner's file names — «Anaïs», «Mușat», «Țâmpu» — and reports the ambiguous, the unknown, the cancelled and another event's name", async () => {
     expect(
       await matchSignedContractFiles(db, staff.MODERATOR!, raceId, [
@@ -363,7 +363,7 @@ describe("§NNN «Încarcă contractele semnate»: each file to one volunteer of
   });
 });
 
-describe("§NNN the file goes with the person's data, at the same moment", () => {
+describe("§998 the file goes with the person's data, at the same moment", () => {
   it("«Șterge voluntarul» takes the signed copy and a half-sent upload with the row", async () => {
     await attach(staff.ADMIN!, people.anais, "a.pdf", SAMPLE_FILES.pdf());
     await startSignedContractUpload(db, staff.ADMIN!, { eventId: raceId, volunteerId: people.anais, fileName: "b.pdf", size: 5000, part: SAMPLE_FILES.pdf() }, NOW);
@@ -393,7 +393,7 @@ describe("§NNN the file goes with the person's data, at the same moment", () =>
   });
 });
 
-describe("§NNN the trail never carries a file's name or its bytes", () => {
+describe("§998 the trail never carries a file's name or its bytes", () => {
   it("names no file and no person in any row it writes, through every verb", async () => {
     const name = "Contract-voluntariat-Anais-Meyson.docx";
     await attach(staff.ADMIN!, people.anais, name, SAMPLE_FILES.docx());
