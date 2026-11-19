@@ -492,3 +492,53 @@ describe("§980 «Descarcă BIB-ul» in the registrations list's «⋮»", () =>
     expect(bibItems(await listPage(), numbered)[0]?.label).toBe(en.Admin.registrations.oneBib.menu);
   });
 });
+
+/**
+ * §NNN — the identity document on the desk row (the owner, 2026-11-19: «Nu e ok că afișăm info din buletin (codul de buletin)
+ * pentru voluntari»): drawn for a role that reads the registrations — the Organizer and the Administrators — and for no other
+ * desk role, nor for a row drawn with no role; a minor's two documents the same way. The row is a Server Component, so the
+ * document is absent from what the other roles' browsers receive.
+ */
+describe("§NNN the desk row's identity document, by role", () => {
+  const deskRowWith = async (id: string, documents: { idDocument: string | null; minorIdDocument?: string | null; guardianName?: string | null }, role?: StaffRole) => {
+    const row = (await listDeskRegistrations(db, { eventId, query: "", locale: "ro" })).find((candidate) => candidate.id === id);
+    expect(row, id).toBeDefined();
+    return elements(await DeskRow({ row: { ...row!, ...documents }, locale: "ro", back: "desk", eventId, minorSigns: { ro: false, en: false }, ...(role ? { role } : {}) }));
+  };
+  const textOf = (all: ReactElement<Props>[]) =>
+    all
+      .flatMap((element) => (Array.isArray(element.props.children) ? element.props.children : [element.props.children]))
+      .filter((child): child is string => typeof child === "string")
+      .join(" ");
+
+  it("says the document to the Organizer and the Administrators, and to no other desk role", async () => {
+    const adult = await runner("Ion Ionescu", { bibNumber: 12 });
+    for (const role of READERS) {
+      const said = textOf(await deskRowWith(adult, { idDocument: "BV 654321" }, role));
+      expect(said, role).toContain(ro.Admin.desk.idDocument);
+      expect(said, role).toContain("BV 654321");
+    }
+    for (const role of OTHERS) {
+      const said = textOf(await deskRowWith(adult, { idDocument: "BV 654321" }, role));
+      expect(said, role).not.toContain("BV 654321");
+      expect(said, role).not.toContain(ro.Admin.desk.idDocument);
+    }
+    // No role given: nothing.
+    expect(textOf(await deskRowWith(adult, { idDocument: "BV 654321" }))).not.toContain("BV 654321");
+    // The desk's volunteers are among the others.
+    expect(OTHERS).toContain("CONTRIBUTOR");
+  });
+
+  it("says a minor's two documents to a reader alone", async () => {
+    const minor = await runner("Maria Popescu", { bibNumber: 13 });
+    const documents = { idDocument: "BV 654321", minorIdDocument: "MP 123456", guardianName: "Ion Popescu" };
+    const reader = textOf(await deskRowWith(minor, documents, "MODERATOR"));
+    expect(reader).toContain("MP 123456");
+    expect(reader).toContain("BV 654321");
+    for (const role of OTHERS) {
+      const said = textOf(await deskRowWith(minor, documents, role));
+      expect(said, role).not.toContain("MP 123456");
+      expect(said, role).not.toContain("BV 654321");
+    }
+  });
+});
