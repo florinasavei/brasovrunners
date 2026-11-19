@@ -29,7 +29,8 @@ import {
   withdrawOptionalData,
   type WaitlistEntryByStaffResult,
 } from "@/modules/registrations/admin-service";
-import { listReturnHref } from "@/modules/registrations/domain/list-row";
+import { listReturnAnchor, listReturnHref } from "@/modules/registrations/domain/list-row";
+import { returnedRowOf } from "@/modules/registrations/domain/desk-sections";
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
 import { setRegistrationAmbassador } from "@/modules/registrations/ambassador-mark";
 import { deleteSponsorListRecord, SPONSOR_REGISTER_ANCHOR } from "@/modules/registrations/sponsor-register";
@@ -98,6 +99,8 @@ async function backTo(
   outcome: Record<string, string | undefined>,
   /** The page's own query, carried in the URL and never into the flash (a desk search is a name). */
   params: Record<string, string | undefined> = {},
+  /** Where the page lands: the alert unless the caller names the row its press changed (the desk's list, §NNN). */
+  hash = "admin-alert",
 ): Promise<never> {
   await flashOutcome(outcome);
   const query = new URLSearchParams(
@@ -106,7 +109,18 @@ async function backTo(
   // `#admin-alert` so the browser lands on the outcome rather than at the top of a long page,
   // where a one-line alert about a save that failed is easy to walk straight past. Every
   // backoffice page gives that id to its alert region; it costs no JavaScript.
-  redirect(query ? `${path}?${query}#admin-alert` : path);
+  redirect(query ? `${path}?${query}#${hash}` : path);
+}
+
+/**
+ * The desk's list after a press on one of its rows (§NNN): the row in the address (`row=`, a registration's id and nothing
+ * about the person), so the page draws open the section that now holds it — whatever moved it, a check-in moving a runner to
+ * «Prezenți» — and the fragment that lands on the row when the press went through, on the alert when it was refused (as a
+ * row's press on the registrations list, §943: `listReturnAnchor`). The outcome is the toast's to say, as always.
+ */
+function deskRowReturn(registrationId: string, outcome: Readonly<Record<string, string | undefined>>): { row: string | undefined; hash: string } {
+  const row = returnedRowOf(registrationId) ?? undefined;
+  return { row, hash: listReturnAnchor(outcome, row) };
 }
 
 /**
@@ -166,6 +180,11 @@ async function backToDesk(form: FormData, locale: Locale, registrationId: string
     return backToList(locale, text(form, "listQuery"), said, registrationId);
   }
   const target = returnTo(form, locale, registrationId);
+  // A row of the desk's list (§NNN): back to that row, in the section that now holds it, drawn open.
+  if (text(form, "back") === "desk") {
+    const { row, hash } = deskRowReturn(registrationId, outcome);
+    return backTo(target.path, outcome, { ...target.params, row }, hash);
+  }
   return backTo(target.path, outcome, target.params);
 }
 
@@ -371,6 +390,8 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
 
     let outcome: { error?: string; saved?: string };
     let reserveEventId: string | null = null;
+    // The row the entry wrote or restarted: the desk comes back to it, in the section its state put it in (§NNN).
+    let createdId: string | null = null;
     try {
       // Every role: a walk-in on race morning is entered by the volunteer at the table
       // (BR-REQ-037-07). The service asserts the same.
@@ -439,6 +460,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
         await settleReserveEntry(getDb(), actor, reserveEntryId, created.registrationId, new Date());
         reserveEventId = eventId;
       }
+      createdId = created.registrationId ?? null;
       outcome = { saved: "registrationCreated" };
     } catch (error) {
       /*
@@ -488,10 +510,12 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
     }
 
     // A success goes to where the new row is visible with the status it actually landed in —
-    // the desk, when the form was opened from there, otherwise the list.
+    // the desk, when the form was opened from there (on the new row, in the section its state put it in, drawn open, §NNN),
+    // otherwise the list.
     const fromDesk = text(form, "back") === "desk";
     if (fromDesk) {
-      return backTo(getPathname({ locale, href: "/admin/checkin" }), outcome, { eventId });
+      const back = createdId ? deskRowReturn(createdId, outcome) : { row: undefined, hash: "admin-alert" };
+      return backTo(getPathname({ locale, href: "/admin/checkin" }), outcome, { eventId, row: back.row }, back.hash);
     }
     // From the internal list (§854): back to that event's list, where the new row and what is left of the list are.
     return backTo(getPathname({ locale, href: "/admin/registrations" }), outcome, reserveEventId ? { eventId: reserveEventId } : {});
