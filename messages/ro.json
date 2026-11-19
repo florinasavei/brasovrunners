@@ -1455,6 +1455,7 @@
       "confirmed": "Confirmată",
       "cancelled": "Anulată",
       "cancelReasonLabel": "Motivul anulării",
+      "cancelledByStaff": "Anulată de organizatori",
       "cancelReasonOther": "{kind} — „{text}”",
       "cancelReasonKinds": {
         "INJURY_OR_ILLNESS": "Accidentare sau boală",
@@ -7936,6 +7937,8 @@
         "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” (pe Android) sau deschide camera telefonului și îndreapt-o spre cod — se deschide rândul persoanei.",
         "Sub rând scrie „Scanat înainte: …”? Codul a mai fost deschis la masă: verifică dacă persoana nu și-a luat deja numărul.",
         "Sau caută după nume ori după numărul de concurs.",
+        "Lista e împărțită pe stări, cu câți sunt în fiecare. „De ridicat numărul” și „Fără declarație semnată” stau deschise; „Prezenți”, „Pe lista de așteptare” și celelalte se deschid din titlu.",
+        "O căutare deschide doar secțiunile cu potriviri. După o apăsare revii la rândul persoanei, cu secțiunea lui deschisă: cine e marcat prezent trece la „Prezenți”.",
         "Apasă „Marchează prezent” și dă-i numărul din teanc. Nu are număr? Scrie-l în căsuță și apasă „Salvează nr.”.",
         "Nu a primit emailul sau nu găsește QR-ul: caută după nume.",
         "Dacă scrie „Așteaptă semnarea declarației”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă pe hârtie”, apoi „Marchează prezent”.",
@@ -8024,7 +8027,18 @@
       "scanSwitch": "Altă cameră",
       "scanCamera": "Camera {n} din {total}",
       "eliteLabel": "Pe BIB: {label}",
+      "siteNamed": "Cu nume",
+      "siteAnonymous": "Anonim",
       "eliteFold": "Elită și BIB",
+      "sections": {
+        "toPickUp": "De ridicat numărul ({n})",
+        "unsigned": "Fără declarație semnată ({n})",
+        "checkedIn": "Prezenți ({n})",
+        "addressUnconfirmed": "Adresă neconfirmată ({n})",
+        "offered": "Ofertă de loc deschisă ({n})",
+        "waitlisted": "Pe lista de așteptare ({n})",
+        "voided": "Anulate sau expirate ({n})"
+      },
       "spares": {
         "free": {
           "one": "Număr de rezervă liber ({count}): {numbers}",
@@ -9570,6 +9584,8 @@
                 "Intră cu contul tău, nu cu al unui coleg: tot ce apeși la masă poartă numele contului, iar organizatorii îl citesc în «Jurnal».",
                 "La «Eveniment» alege cursa de azi, apoi apasă «Caută».",
                 "Sus vezi câți sunt confirmați, câți au venit, câți nu au număr și câți nu au confirmat. Sunt cifrele cursei.",
+                "Dedesubt, lista e pe secțiuni, după stare, în ordinea în care lucrezi: «De ridicat numărul», «Fără declarație semnată», «Prezenți», «Adresă neconfirmată», «Ofertă de loc deschisă», «Pe lista de așteptare». Lângă fiecare titlu, câți sunt; o secțiune fără nimeni nu apare.",
+                "Primele două stau deschise. Pe celelalte le deschizi sau le închizi apăsând pe titlu.",
                 "Ia de la organizator două teancuri: numerele tipărite cu nume și numerele de rezervă, cu linia pentru nume goală, pentru cine se înscrie la masă. Pe cele de rezervă nu le primește nimeni înscris online."
               ]
             },
@@ -9590,7 +9606,9 @@
               "steps": [
                 "În căsuța «Nume, număr sau cod» scrie o parte din nume, numărul de concurs sau codul din email.",
                 "Apasă «Caută».",
-                "Pe rândul potrivit: «Marchează prezent», apoi îi dai numărul."
+                "Apar doar secțiunile în care e cineva care se potrivește, deschise.",
+                "Pe rândul potrivit: «Marchează prezent», apoi îi dai numărul.",
+                "Pagina revine la rândul lui, acum în secțiunea «Prezenți», deschisă. Tot de acolo, la nevoie, «Anulează prezența»."
               ]
             },
             {
@@ -9633,6 +9651,7 @@
             {
               "title": "Un chenar roșu: înscriere anulată sau expirată",
               "steps": [
+                "Căutat după numărul de concurs, rândul apare în secțiunea «Anulate sau expirate», deschisă.",
                 "Persoana nu mai are loc, chiar dacă are emailul în mână: nu-i da număr și nu o marca prezentă.",
                 "Dacă scrie că numărul a fost tipărit, scoate BIB-ul acela din teanc — numerele nu se refolosesc.",
                 "Cheamă un organizator. Dacă mai sunt locuri, o înscrieți din nou cu «Adaugă pe cineva»."
