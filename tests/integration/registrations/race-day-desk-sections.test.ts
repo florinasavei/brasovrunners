@@ -10,6 +10,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { countDesk } from "@/modules/registrations/admin-repository";
+import { CHECKIN_CODE_ALPHABET } from "@/modules/registrations/checkin-code";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { type FoldOpenWhen, opensByItself } from "@/shared/ui/fold";
@@ -23,9 +24,10 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * BR-REQ-037-08 (criteria 3, 4, 8), `DECISIONS.md` §NNN — the desk's list in folding sections, one per state (the owner,
  * 2026-11-19: «Pe ziua cursei trebuie să fac secțiuni collapsible în funcție de status»), as the server draws the page on a
  * real database (PGlite): the seven sections in the table's working order, each a level-3 fold whose summary says its words and
- * the count of its real rows, open or closed as decided, the empty ones absent, each section's rows in the list's own order; a
- * search drawing only the sections it found somebody in, each open; a typed code drawing its one runner alone; the counters above
- * the list as they were; a race that is over folding the same, with no verb; and both languages.
+ * the count of its real rows, open or closed as decided, the empty ones absent, each section's rows in the list's own order; every
+ * row of a race bigger than a screenful, none cut by name, so the sections' numbers add up to the counters; a search drawing only
+ * the sections it found somebody in, each open; a typed code drawing its one runner alone; the counters above the list as they
+ * were; a race that is over folding the same, with no verb; and both languages.
  *
  * And the way back, through the real actions: each press on a row — «Marchează prezent», «Anulează prezența», «Salvează nr.»,
  * «Confirmă pe hârtie», «Elită și BIB», and the walk-in's «Adaugă înscrierea» — comes back with the row in the address (`row=`)
@@ -172,48 +174,81 @@ async function race(over: Partial<typeof events.$inferInsert> = {}): Promise<str
   return event.id;
 }
 
-/** A desk code from the desk's alphabet (no 0/O/1/I), one per runner. */
-const deskCode = (n: number) => `DESKRUNR${"ABCDEFGHJK"[Math.floor(n / 10) % 10]}${"ABCDEFGHJK"[n % 10]}`;
+/** A desk code from the desk's alphabet (no 0/O/1/I), one per runner — 1024 of them, so a race of a few hundred has one each. */
+const deskCode = (n: number) => `DESKRUNR${CHECKIN_CODE_ALPHABET[Math.floor(n / 32) % 32]}${CHECKIN_CODE_ALPHABET[n % 32]}`;
+
+/**
+ * Registrations of the event, one per name, each on its own address, in the state asked, with the columns that state carries:
+ * two statements however many — a race bigger than a screenful is a few hundred rows. `over(index)` adds the columns of one.
+ */
+async function registerMany(
+  names: readonly string[],
+  status: RegistrationStatus,
+  over: (index: number) => Partial<typeof registrations.$inferInsert> = () => ({}),
+): Promise<string[]> {
+  const people = names.map((name) => {
+    serial += 1;
+    return { name, n: serial, email: `runner${serial}@example.org` };
+  });
+  const addresses = await db
+    .insert(participants)
+    .values(
+      people.map(({ name, email }): typeof participants.$inferInsert => ({
+        deliveryEmail: email,
+        normalizedEmail: email,
+        canonicalEmail: email,
+        canonicalizationVersion: 2,
+        defaultName: name,
+        preferredLocale: "ro",
+      })),
+    )
+    .returning({ id: participants.id, email: participants.deliveryEmail });
+  const addressOf = new Map(addresses.map((address) => [address.email, address.id]));
+  const rows = await db
+    .insert(registrations)
+    .values(
+      people.map(({ name, n, email }, index): typeof registrations.$inferInsert => {
+        const [first, ...rest] = name.split(" ");
+        return {
+          eventId,
+          participantId: addressOf.get(email) as string,
+          kind: "REAL",
+          locale: "ro",
+          registeredName: name,
+          firstName: first,
+          lastName: rest.join(" "),
+          displayName: resolveDisplayName({ legalName: name }),
+          privacyNoticeVersion: 1,
+          privacyAcknowledgedAt: NOW,
+          resultsNameConsent: false,
+          resultsConsentVersion: 1,
+          status,
+          emailConfirmedAt: status === "PENDING_EMAIL_CONFIRMATION" ? null : NOW,
+          confirmedAt: status === "CONFIRMED" ? NOW : null,
+          checkinCode: status === "CONFIRMED" ? deskCode(n) : null,
+          waitlistedAt: status === "WAITLISTED" || status === "WAITLIST_OFFERED" ? NOW : null,
+          holdExpiresAt: status === "WAITLIST_OFFERED" || status === "PENDING_DECLARATION" ? FAR : null,
+          cancelledAt: status === "CANCELLED" ? NOW : null,
+          cancellationSource: status === "CANCELLED" ? "ADMIN" : null,
+          expiredAt: status === "EXPIRED" ? NOW : null,
+          expiryReason: status === "EXPIRED" ? "EVENT_STARTED" : null,
+          ...over(index),
+        };
+      }),
+    )
+    .returning({ id: registrations.id, name: registrations.registeredName });
+  const idOf = new Map(rows.map((row) => [row.name, row.id]));
+  return names.map((name) => idOf.get(name) as string);
+}
 
 /** One registration of the event, in the state asked, with the columns that state carries. */
 async function register(name: string, status: RegistrationStatus, over: Partial<typeof registrations.$inferInsert> = {}): Promise<string> {
-  serial += 1;
-  const email = `runner${serial}@example.org`;
-  const [participant] = await db
-    .insert(participants)
-    .values({ deliveryEmail: email, normalizedEmail: email, canonicalEmail: email, canonicalizationVersion: 2, defaultName: name, preferredLocale: "ro" })
-    .returning();
-  const [first, ...rest] = name.split(" ");
-  const [row] = await db
-    .insert(registrations)
-    .values({
-      eventId,
-      participantId: participant.id,
-      kind: "REAL",
-      locale: "ro",
-      registeredName: name,
-      firstName: first,
-      lastName: rest.join(" "),
-      displayName: resolveDisplayName({ legalName: name }),
-      privacyNoticeVersion: 1,
-      privacyAcknowledgedAt: NOW,
-      resultsNameConsent: false,
-      resultsConsentVersion: 1,
-      status,
-      emailConfirmedAt: status === "PENDING_EMAIL_CONFIRMATION" ? null : NOW,
-      confirmedAt: status === "CONFIRMED" ? NOW : null,
-      checkinCode: status === "CONFIRMED" ? deskCode(serial) : null,
-      waitlistedAt: status === "WAITLISTED" || status === "WAITLIST_OFFERED" ? NOW : null,
-      holdExpiresAt: status === "WAITLIST_OFFERED" || status === "PENDING_DECLARATION" ? FAR : null,
-      cancelledAt: status === "CANCELLED" ? NOW : null,
-      cancellationSource: status === "CANCELLED" ? "ADMIN" : null,
-      expiredAt: status === "EXPIRED" ? NOW : null,
-      expiryReason: status === "EXPIRED" ? "EVENT_STARTED" : null,
-      ...over,
-    })
-    .returning({ id: registrations.id });
-  return row.id;
+  const [id] = await registerMany([name], status, () => over);
+  return id;
 }
+
+/** `count` names that sort in their own order: «Zeno Ridică 001» … «Zeno Ridică 100». */
+const numbered = (name: string, count: number) => Array.from({ length: count }, (_, index) => `${name} ${String(index + 1).padStart(3, "0")}`);
 
 /** One of each state, named so the list's order (by name) interleaves them. */
 async function saturday() {
@@ -351,6 +386,42 @@ describe("§NNN BR-REQ-037-08 the desk's list in sections, one per state", () =>
     expect(counts).toEqual({ confirmed: 3, checkedIn: 1, withoutBib: 0, pending: 5 });
     const labels = elements(tree).map((element) => element.props.label).filter((label): label is string => typeof label === "string");
     expect(labels).toEqual(expect.arrayContaining(["Confirmați: 3", "Prezenți: 1", "Neconfirmați: 5"]));
+  });
+
+  it("draws every row of a race bigger than a screenful, none cut by name: «De ridicat numărul (N)» and «Prezenți (N)» add up to «Confirmați»", async () => {
+    // A full race — 110 confirmed, four declarations' holds and two open offers on its 116 places — with three addresses still
+    // to confirm and 120 waiting: 239 rows not over. By name the runners still to pick up come last: the cut at 200 rows by name
+    // the list had took 39 of them out of «De ridicat numărul» and said «(61)».
+    await db.update(events).set({ capacity: 116 }).where(eq(events.id, eventId));
+    await registerMany(numbered("Ana Așteaptă", 120), "WAITLISTED");
+    await registerMany(numbered("Bianca Semnează", 4), "PENDING_DECLARATION");
+    await registerMany(numbered("Corina Adresă", 3), "PENDING_EMAIL_CONFIRMATION");
+    await registerMany(numbered("Dora Ofertă", 2), "WAITLIST_OFFERED");
+    await registerMany(numbered("Mara Prezentă", 10), "CONFIRMED", (index) => ({ bibNumber: 1 + index, checkedInAt: HERE }));
+    await registerMany(numbered("Zeno Ridică", 100), "CONFIRMED", (index) => ({ bibNumber: 11 + index }));
+    const tree = await desk();
+    const sections = sectionsOf(tree);
+    expect(sections.map((section) => [section.key, section.title, section.open, section.rows.length])).toEqual([
+      ["toPickUp", "De ridicat numărul (100)", true, 100],
+      ["unsigned", "Fără declarație semnată (4)", true, 4],
+      ["present", "Prezenți (10)", false, 10],
+      ["addressUnconfirmed", "Adresă neconfirmată (3)", false, 3],
+      ["offered", "Ofertă de loc deschisă (2)", false, 2],
+      ["waitlisted", "Pe lista de așteptare (120)", false, 120],
+    ]);
+    // The name that sorts last of the race is there, at the end of its section; every row is drawn once.
+    expect(sections[0].rows.at(-1)).toBe("Zeno Ridică 100");
+    expect(deskRows(tree)).toHaveLength(239);
+    // What the sections say is what the counters above the list say (§30): the confirmed are the ones to pick up and the present,
+    // the unconfirmed the four sections of those not confirmed yet.
+    const counts = await countDesk(db, eventId);
+    expect(counts).toEqual({ confirmed: 110, checkedIn: 10, withoutBib: 0, pending: 129 });
+    const labels = elements(tree).map((element) => element.props.label).filter((label): label is string => typeof label === "string");
+    expect(labels).toEqual(expect.arrayContaining(["Confirmați: 110", "Prezenți: 10", "Neconfirmați: 129"]));
+    const said = (key: string) => Number(/\((\d+)\)$/.exec(sections.find((section) => section.key === key)?.title ?? "")?.[1]);
+    expect(said("toPickUp") + said("present")).toBe(counts.confirmed);
+    expect(said("present")).toBe(counts.checkedIn);
+    expect(said("unsigned") + said("addressUnconfirmed") + said("offered") + said("waitlisted")).toBe(counts.pending);
   });
 
   it("says it in English too", async () => {

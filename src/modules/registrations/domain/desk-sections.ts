@@ -31,7 +31,7 @@ import { isUuid } from "@/shared/ids";
  *
  * The count is of the section's real rows (§30, §420, `AGENTS.md` §12.6): a test registration is drawn in its section, labelled
  * «Test», and left out of the number, as the desk's counters above the list leave it out — the section's number and the
- * counters agree.
+ * counters agree, because the rows handed here are every row the desk's search matches, never cut (`listDeskRegistrations`).
  */
 export const DESK_SECTION_KEYS = ["toPickUp", "unsigned", "present", "addressUnconfirmed", "offered", "waitlisted", "voided"] as const;
 
