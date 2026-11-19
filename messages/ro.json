@@ -8031,7 +8031,7 @@
       "sections": {
         "toPickUp": "De ridicat numărul ({n})",
         "unsigned": "Fără declarație semnată ({n})",
-        "present": "Prezenți ({n})",
+        "checkedIn": "Prezenți ({n})",
         "addressUnconfirmed": "Adresă neconfirmată ({n})",
         "offered": "Ofertă de loc deschisă ({n})",
         "waitlisted": "Pe lista de așteptare ({n})",

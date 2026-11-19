@@ -33,7 +33,7 @@ import { isUuid } from "@/shared/ids";
  * «Test», and left out of the number, as the desk's counters above the list leave it out — the section's number and the
  * counters agree, because the rows handed here are every row the desk's search matches, never cut (`listDeskRegistrations`).
  */
-export const DESK_SECTION_KEYS = ["toPickUp", "unsigned", "present", "addressUnconfirmed", "offered", "waitlisted", "voided"] as const;
+export const DESK_SECTION_KEYS = ["toPickUp", "unsigned", "checkedIn", "addressUnconfirmed", "offered", "waitlisted", "voided"] as const;
 
 export type DeskSectionKey = (typeof DESK_SECTION_KEYS)[number];
 
@@ -44,7 +44,7 @@ type Placed = { status: RegistrationStatus; checkedInAt: Date | null };
 export function deskSectionOf(row: Placed): DeskSectionKey {
   switch (row.status) {
     case "CONFIRMED":
-      return row.checkedInAt === null ? "toPickUp" : "present";
+      return row.checkedInAt === null ? "toPickUp" : "checkedIn";
     case "PENDING_DECLARATION":
       return "unsigned";
     case "PENDING_EMAIL_CONFIRMATION":

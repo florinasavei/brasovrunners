@@ -29,7 +29,7 @@ describe("§NNN BR-REQ-037-08 the desk's sections", () => {
   it("place every state in its section — confirmed by whether the person is here, a row that is over by its state alone", () => {
     const cases: Array<[RegistrationStatus, Date | null, DeskSectionKey]> = [
       ["CONFIRMED", null, "toPickUp"],
-      ["CONFIRMED", HERE, "present"],
+      ["CONFIRMED", HERE, "checkedIn"],
       ["PENDING_DECLARATION", null, "unsigned"],
       ["PENDING_EMAIL_CONFIRMATION", null, "addressUnconfirmed"],
       ["WAITLIST_OFFERED", null, "offered"],
@@ -56,16 +56,16 @@ describe("§NNN BR-REQ-037-08 the desk's sections", () => {
     expect(drawn(rows, { searching: false })).toEqual([
       ["toPickUp", [bogdan.id, elena.id], 2, true],
       ["unsigned", [cristina.id], 1, true],
-      ["present", [dan.id], 1, false],
+      ["checkedIn", [dan.id], 1, false],
       ["addressUnconfirmed", [florin.id], 1, false],
       ["offered", [gina.id], 1, false],
       ["waitlisted", [ana.id, horia.id], 2, false],
     ]);
     // Only what holds somebody: no «Fără declarație semnată» without a row to confirm on paper, nothing at all for no rows.
-    expect(drawn([bogdan, dan], { searching: false }).map(([key]) => key)).toEqual(["toPickUp", "present"]);
+    expect(drawn([bogdan, dan], { searching: false }).map(([key]) => key)).toEqual(["toPickUp", "checkedIn"]);
     expect(deskSections([], { searching: false })).toEqual([]);
     // The order is the table's whatever the rows: the seven keys, in it.
-    expect([...DESK_SECTION_KEYS]).toEqual(["toPickUp", "unsigned", "present", "addressUnconfirmed", "offered", "waitlisted", "voided"]);
+    expect([...DESK_SECTION_KEYS]).toEqual(["toPickUp", "unsigned", "checkedIn", "addressUnconfirmed", "offered", "waitlisted", "voided"]);
   });
 
   it("open by themselves for the reasons the house names (§336): the desk's work, a declaration to sign, a void bib to pull", () => {
@@ -74,7 +74,7 @@ describe("§NNN BR-REQ-037-08 the desk's sections", () => {
     expect(why).toEqual({
       toPickUp: { primary: true },
       unsigned: { attention: true },
-      present: {},
+      checkedIn: {},
       addressUnconfirmed: {},
       offered: {},
       waitlisted: {},
@@ -87,7 +87,7 @@ describe("§NNN BR-REQ-037-08 the desk's sections", () => {
     const waiting = row("WAITLISTED");
     const here = row("CONFIRMED", { checkedInAt: HERE });
     expect(drawn([here, waiting], { searching: true })).toEqual([
-      ["present", [here.id], 1, true],
+      ["checkedIn", [here.id], 1, true],
       ["waitlisted", [waiting.id], 1, true],
     ]);
     // A number that found a cancelled runner (criterion 8): «Anulate sau expirate», open.
@@ -103,7 +103,7 @@ describe("§NNN BR-REQ-037-08 the desk's sections", () => {
     // Checked in: the row stands in «Prezenți» now, which opens; the waiting list stays shut.
     expect(drawn([ana, bogdan, cristina], { searching: false, returned: { id: ana.id, refused: false } })).toEqual([
       ["toPickUp", [bogdan.id], 1, true],
-      ["present", [ana.id], 1, true],
+      ["checkedIn", [ana.id], 1, true],
       ["waitlisted", [cristina.id], 1, false],
     ]);
     expect(deskSections([ana], { searching: false, returned: { id: ana.id, refused: false } })[0].openWhen).toEqual({ saved: true });
@@ -136,7 +136,7 @@ describe("§NNN BR-REQ-037-08 the desk's sections", () => {
     expect(words(ro)).toEqual({
       toPickUp: "De ridicat numărul ({n})",
       unsigned: "Fără declarație semnată ({n})",
-      present: "Prezenți ({n})",
+      checkedIn: "Prezenți ({n})",
       addressUnconfirmed: "Adresă neconfirmată ({n})",
       offered: "Ofertă de loc deschisă ({n})",
       waitlisted: "Pe lista de așteptare ({n})",
@@ -145,7 +145,7 @@ describe("§NNN BR-REQ-037-08 the desk's sections", () => {
     expect(words(en)).toEqual({
       toPickUp: "To pick up ({n})",
       unsigned: "Declaration not signed ({n})",
-      present: "Present ({n})",
+      checkedIn: "Present ({n})",
       addressUnconfirmed: "Address not confirmed ({n})",
       offered: "Place offered ({n})",
       waitlisted: "On the waiting list ({n})",

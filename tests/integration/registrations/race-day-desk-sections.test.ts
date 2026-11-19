@@ -330,7 +330,7 @@ describe("§NNN BR-REQ-037-08 the desk's list in sections, one per state", () =>
     expect(sectionsOf(await desk())).toEqual([
       { key: "toPickUp", title: "De ridicat numărul (2)", open: true, rows: ["Ana Pop", "Bogdan Pop"] },
       { key: "unsigned", title: "Fără declarație semnată (1)", open: true, rows: ["Cristina Ionescu"] },
-      { key: "present", title: "Prezenți (1)", open: false, rows: ["Dan Pop"] },
+      { key: "checkedIn", title: "Prezenți (1)", open: false, rows: ["Dan Pop"] },
       { key: "addressUnconfirmed", title: "Adresă neconfirmată (1)", open: false, rows: ["Elena Marin"] },
       { key: "offered", title: "Ofertă de loc deschisă (1)", open: false, rows: ["Florin Stan"] },
       { key: "waitlisted", title: "Pe lista de așteptare (2)", open: false, rows: ["Gina Pop", "Horia Dobre"] },
@@ -353,7 +353,7 @@ describe("§NNN BR-REQ-037-08 the desk's list in sections, one per state", () =>
     // The summary is a thumb's target (BR-REQ-041-01 criterion 6): the boxed fold's 44 pixels.
     expect(raw("toPickUp")).toMatch(/>summary\{[^}]*min-height:44px/);
     // A closed one carries no `open`, and each wears its state's picture.
-    const present = drawn("present");
+    const present = drawn("checkedIn");
     expect(present).not.toMatch(/<details[^>]*open=""/);
     expect(present).toContain('data-testid="HowToRegIcon"');
     expect(drawn("unsigned")).toContain('data-testid="DrawIcon"');
@@ -367,7 +367,7 @@ describe("§NNN BR-REQ-037-08 the desk's list in sections, one per state", () =>
     await register("Dan Pop", "CONFIRMED", { bibNumber: 3, checkedInAt: HERE });
     expect(sectionsOf(await desk()).map((section) => [section.key, section.title, section.open])).toEqual([
       ["toPickUp", "De ridicat numărul (1)", true],
-      ["present", "Prezenți (1)", false],
+      ["checkedIn", "Prezenți (1)", false],
     ]);
     // Nobody at all: the sentence it always said, and no section.
     await db.delete(registrations);
@@ -404,7 +404,7 @@ describe("§NNN BR-REQ-037-08 the desk's list in sections, one per state", () =>
     expect(sections.map((section) => [section.key, section.title, section.open, section.rows.length])).toEqual([
       ["toPickUp", "De ridicat numărul (100)", true, 100],
       ["unsigned", "Fără declarație semnată (4)", true, 4],
-      ["present", "Prezenți (10)", false, 10],
+      ["checkedIn", "Prezenți (10)", false, 10],
       ["addressUnconfirmed", "Adresă neconfirmată (3)", false, 3],
       ["offered", "Ofertă de loc deschisă (2)", false, 2],
       ["waitlisted", "Pe lista de așteptare (120)", false, 120],
@@ -419,8 +419,8 @@ describe("§NNN BR-REQ-037-08 the desk's list in sections, one per state", () =>
     const labels = elements(tree).map((element) => element.props.label).filter((label): label is string => typeof label === "string");
     expect(labels).toEqual(expect.arrayContaining(["Confirmați: 110", "Prezenți: 10", "Neconfirmați: 129"]));
     const said = (key: string) => Number(/\((\d+)\)$/.exec(sections.find((section) => section.key === key)?.title ?? "")?.[1]);
-    expect(said("toPickUp") + said("present")).toBe(counts.confirmed);
-    expect(said("present")).toBe(counts.checkedIn);
+    expect(said("toPickUp") + said("checkedIn")).toBe(counts.confirmed);
+    expect(said("checkedIn")).toBe(counts.checkedIn);
     expect(said("unsigned") + said("addressUnconfirmed") + said("offered") + said("waitlisted")).toBe(counts.pending);
   });
 
@@ -443,7 +443,7 @@ describe("§NNN BR-REQ-037-08 criterion 4 a search opens the sections it found s
     await saturday();
     expect(sectionsOf(await desk({ q: "pop" }))).toEqual([
       { key: "toPickUp", title: "De ridicat numărul (2)", open: true, rows: ["Ana Pop", "Bogdan Pop"] },
-      { key: "present", title: "Prezenți (1)", open: true, rows: ["Dan Pop"] },
+      { key: "checkedIn", title: "Prezenți (1)", open: true, rows: ["Dan Pop"] },
       { key: "waitlisted", title: "Pe lista de așteptare (1)", open: true, rows: ["Gina Pop"] },
     ]);
     // The search's results are what they were: the same rows, every one of them drawn.
@@ -452,7 +452,7 @@ describe("§NNN BR-REQ-037-08 criterion 4 a search opens the sections it found s
 
   it("a race number: the one runner wearing it, a confirmed one in its section, a cancelled one in «Anulate sau expirate», open (criterion 8)", async () => {
     await saturday();
-    expect(sectionsOf(await desk({ q: "3" }))).toEqual([{ key: "present", title: "Prezenți (1)", open: true, rows: ["Dan Pop"] }]);
+    expect(sectionsOf(await desk({ q: "3" }))).toEqual([{ key: "checkedIn", title: "Prezenți (1)", open: true, rows: ["Dan Pop"] }]);
     expect(sectionsOf(await desk({ q: "9" }))).toEqual([{ key: "voided", title: "Anulate sau expirate (1)", open: true, rows: ["Ion Retras"] }]);
     // Without its number the cancelled runner is on no section of the list, as before.
     expect(sectionsOf(await desk()).flatMap((section) => section.rows)).not.toContain("Ion Retras");
@@ -489,7 +489,7 @@ describe("§NNN BR-REQ-037-08 a race that is over folds the same, and offers no 
     expect(sectionsOf(tree).map((section) => [section.key, section.open])).toEqual([
       ["toPickUp", true],
       ["unsigned", true],
-      ["present", false],
+      ["checkedIn", false],
       ["addressUnconfirmed", false],
       ["offered", false],
       ["waitlisted", false],
@@ -507,7 +507,7 @@ describe("§NNN BR-REQ-037-08 the way back: each press comes back to its row, in
     expectBackOnTheRow(checkedIn, people.ana, "checkedIn");
     expect(state.flashed).toEqual([{ saved: "checkedIn" }]);
     const after = sectionsOf(await deskAt(checkedIn));
-    expect(after.find((section) => section.key === "present")).toEqual({ key: "present", title: "Prezenți (2)", open: true, rows: ["Ana Pop", "Dan Pop"] });
+    expect(after.find((section) => section.key === "checkedIn")).toEqual({ key: "checkedIn", title: "Prezenți (2)", open: true, rows: ["Ana Pop", "Dan Pop"] });
     expect(after.find((section) => section.key === "toPickUp")).toEqual({ key: "toPickUp", title: "De ridicat numărul (1)", open: true, rows: ["Bogdan Pop"] });
     // Nothing else opened: the waiting list stays shut.
     expect(after.find((section) => section.key === "waitlisted")?.open).toBe(false);
@@ -517,7 +517,7 @@ describe("§NNN BR-REQ-037-08 the way back: each press comes back to its row, in
     const back = sectionsOf(await deskAt(undone));
     expect(back.find((section) => section.key === "toPickUp")).toEqual({ key: "toPickUp", title: "De ridicat numărul (2)", open: true, rows: ["Ana Pop", "Bogdan Pop"] });
     // «Prezenți» holds nobody the press touched now: closed again.
-    expect(back.find((section) => section.key === "present")).toEqual({ key: "present", title: "Prezenți (1)", open: false, rows: ["Dan Pop"] });
+    expect(back.find((section) => section.key === "checkedIn")).toEqual({ key: "checkedIn", title: "Prezenți (1)", open: false, rows: ["Dan Pop"] });
   });
 
   it("keeps the desk's search on the way back, the row's section open among the ones the search opened", async () => {
@@ -526,7 +526,7 @@ describe("§NNN BR-REQ-037-08 the way back: each press comes back to its row, in
     expectBackOnTheRow(to, people.bogdan, "checkedIn", "pop");
     expect(sectionsOf(await deskAt(to)).map((section) => [section.key, section.open, section.rows])).toEqual([
       ["toPickUp", true, ["Ana Pop"]],
-      ["present", true, ["Bogdan Pop", "Dan Pop"]],
+      ["checkedIn", true, ["Bogdan Pop", "Dan Pop"]],
       ["waitlisted", true, ["Gina Pop"]],
     ]);
   });
@@ -536,8 +536,8 @@ describe("§NNN BR-REQ-037-08 the way back: each press comes back to its row, in
     const late = await register("Mara Fără Număr", "CONFIRMED", { bibNumber: null, checkedInAt: HERE });
     const to = await redirectedTo(setBibNumberAction(null, form({ registrationId: late, back: "desk", eventId, bibNumber: "42" })));
     expectBackOnTheRow(to, late, "bibSet");
-    const present = sectionsOf(await deskAt(to)).find((section) => section.key === "present");
-    expect(present).toEqual({ key: "present", title: "Prezenți (2)", open: true, rows: ["Dan Pop", "Mara Fără Număr"] });
+    const present = sectionsOf(await deskAt(to)).find((section) => section.key === "checkedIn");
+    expect(present).toEqual({ key: "checkedIn", title: "Prezenți (2)", open: true, rows: ["Dan Pop", "Mara Fără Număr"] });
     expect((await db.select({ bib: registrations.bibNumber }).from(registrations).where(eq(registrations.id, late)))[0].bib).toBe(42);
   });
 
@@ -560,7 +560,7 @@ describe("§NNN BR-REQ-037-08 the way back: each press comes back to its row, in
     const after = sectionsOf(await deskAt(waitlisted));
     expect(after.find((section) => section.key === "waitlisted")).toEqual({ key: "waitlisted", title: "Pe lista de așteptare (3)", open: true, rows: ["Elena Marin", "Gina Pop", "Horia Dobre"] });
     // The other shut sections stay shut.
-    expect(after.filter((section) => !section.open).map((section) => section.key)).toEqual(["present", "offered"]);
+    expect(after.filter((section) => !section.open).map((section) => section.key)).toEqual(["checkedIn", "offered"]);
   });
 
   it("«Elită și BIB»: the Administrator's mark comes back to its row, its section open", async () => {
@@ -568,7 +568,7 @@ describe("§NNN BR-REQ-037-08 the way back: each press comes back to its row, in
     state.actor = await staff("ADMIN");
     const to = await redirectedTo(setRegistrationEliteAction(null, form({ registrationId: people.dan, back: "desk", eventId, elite: "1" })));
     expectBackOnTheRow(to, people.dan, "eliteMarked");
-    expect(sectionsOf(await deskAt(to)).find((section) => section.key === "present")?.open).toBe(true);
+    expect(sectionsOf(await deskAt(to)).find((section) => section.key === "checkedIn")?.open).toBe(true);
   });
 
   it("the walk-in's «Adaugă înscrierea» from the desk: back on the new row, in the section its state put it in, opened", async () => {

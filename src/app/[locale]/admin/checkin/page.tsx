@@ -60,7 +60,8 @@ export const dynamic = "force-dynamic";
 const SECTION_GLYPH = {
   toPickUp: { glyph: "bibs" },
   unsigned: { glyph: "declaration" },
-  present: { glyph: "registration" },
+  // «Prezenți»: the runners checked in — named `checkedIn`, the registration's own word, never a volunteer's «Prezent» (§983).
+  checkedIn: { glyph: "registration" },
   addressUnconfirmed: { glyph: "email" },
   offered: { glyph: "placeOffered" },
   waitlisted: { glyph: "queue" },

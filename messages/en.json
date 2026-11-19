@@ -8031,7 +8031,7 @@
       "sections": {
         "toPickUp": "To pick up ({n})",
         "unsigned": "Declaration not signed ({n})",
-        "present": "Present ({n})",
+        "checkedIn": "Present ({n})",
         "addressUnconfirmed": "Address not confirmed ({n})",
         "offered": "Place offered ({n})",
         "waitlisted": "On the waiting list ({n})",

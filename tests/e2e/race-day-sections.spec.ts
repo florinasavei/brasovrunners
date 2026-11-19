@@ -163,7 +163,7 @@ test.describe("§NNN BR-REQ-037-08 the desk's list folded by state", () => {
         for (const [key, open] of [
           ["toPickUp", true],
           ["unsigned", true],
-          ["present", false],
+          ["checkedIn", false],
           ["addressUnconfirmed", false],
           ["offered", false],
           ["waitlisted", false],
@@ -175,14 +175,14 @@ test.describe("§NNN BR-REQ-037-08 the desk's list folded by state", () => {
         // The cancelled runner is on no section of the whole list.
         await expect(section(page, "voided")).toHaveCount(0);
         // A shut section's rows are out of sight until it is opened: the present runner's row is there, not shown.
-        await expect(rowOf(section(page, "present"), dan)).toBeHidden();
+        await expect(rowOf(section(page, "checkedIn"), dan)).toBeHidden();
         await fitsTheScreen(page);
       });
 
       await test.step("«Marchează prezent» on the whole list: back on the row, in «Prezenți», opened and in sight", async () => {
         await rowOf(section(page, "toPickUp"), ana).getByRole("button", { name: "Marchează prezent", exact: true }).click();
         await expect(page).toHaveURL(new RegExp(`[?&]row=${ana.id}&saved=checkedIn#reg-${ana.id}$`), { timeout: 30_000 });
-        const present = section(page, "present");
+        const present = section(page, "checkedIn");
         await expect(present).toHaveAttribute("open", "");
         await expect(summaryOf(present)).toHaveText("Prezenți (2)");
         await expect(summaryOf(section(page, "toPickUp"))).toHaveText("De ridicat numărul (1)");
@@ -195,14 +195,14 @@ test.describe("§NNN BR-REQ-037-08 the desk's list folded by state", () => {
 
       await test.step("«Anulează prezența» from «Prezenți»: back in «De ridicat numărul», open, «Prezenți» shut again", async () => {
         await hydrated(page);
-        await rowOf(section(page, "present"), ana).getByRole("button", { name: "Anulează prezența", exact: true }).click();
+        await rowOf(section(page, "checkedIn"), ana).getByRole("button", { name: "Anulează prezența", exact: true }).click();
         await expect(page).toHaveURL(new RegExp(`[?&]row=${ana.id}&saved=checkinUndone#reg-${ana.id}$`), { timeout: 30_000 });
         await expect(summaryOf(section(page, "toPickUp"))).toHaveText("De ridicat numărul (2)");
         await expect(section(page, "toPickUp")).toHaveAttribute("open", "");
         await expect(rowOf(section(page, "toPickUp"), ana)).toBeInViewport();
         await landedOn(rowOf(section(page, "toPickUp"), ana));
-        await expect(summaryOf(section(page, "present"))).toHaveText("Prezenți (1)");
-        await expect(section(page, "present")).not.toHaveAttribute("open");
+        await expect(summaryOf(section(page, "checkedIn"))).toHaveText("Prezenți (1)");
+        await expect(section(page, "checkedIn")).not.toHaveAttribute("open");
       });
 
       await test.step("a search by name draws only the section it found somebody in, open", async () => {
