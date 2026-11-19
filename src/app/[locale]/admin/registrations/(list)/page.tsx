@@ -767,7 +767,24 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       essential: true,
       sortable: true,
       // The state as the registration's page and the desk draw it (§847): one table, the glyph before the word.
-      render: (row) => <RegistrationStatusChip status={row.status} />,
+      render: (row) => {
+        /*
+          Under «Anulată» or «Expirată», when it ended (§NNN; the owner, 2026-11-19: «când anulează cineva, vreau să văd
+          și când a anulat»): the row's own `cancelled_at` or `expired_at`, no query, to the minute as the timeline says
+          it. The journey's cell carried the moment only in its hover title, which a phone never shows.
+        */
+        const endedAt = row.status === "CANCELLED" ? row.cancelledAt : row.status === "EXPIRED" ? row.expiredAt : null;
+        return (
+          <>
+            <RegistrationStatusChip status={row.status} />
+            {endedAt && (
+              <Box component="span" data-testid="row-ended-at" sx={{ display: "block", mt: 0.5, color: "text.secondary", fontVariantNumeric: "tabular-nums" }}>
+                {formatDay(endedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true })}
+              </Box>
+            )}
+          </>
+        );
+      },
     },
     {
       // The owner's "what step each participant is in" (§145): steps done out of six and the

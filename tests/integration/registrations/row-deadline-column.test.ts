@@ -1,4 +1,4 @@
-import { isValidElement, type ReactElement, type ReactNode } from "react";
+import { createElement, Fragment, isValidElement, type ReactElement, type ReactNode } from "react";
 import { eq } from "drizzle-orm";
 import { createTranslator } from "next-intl";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -278,6 +278,36 @@ describe("§650 «Până când» on the registrations list", () => {
     expect(last("Elena Rezervat")).toEqual([at.reserved.toISOString(), "reserved"]);
     expect(last("Felix Link")).toEqual([at.link.toISOString(), "link"]);
     expect(last("Ana Confirmată")).toEqual(["", ""]);
+  });
+
+  it("§NNN «Stare»: under «Anulată» and «Expirată» the moment the row ended, from the row; nothing under a live one", async () => {
+    // The owner, 2026-11-19: «când anulează cineva, vreau să văd și când a anulat».
+    const race = await createRace("Crosul");
+    const cancelledAt = new Date("2026-11-18T19:42:00.000Z");
+    const expiredAt = new Date("2026-11-17T06:05:00.000Z");
+    await register(race.id, "Ana Confirmată", { status: "CONFIRMED" });
+    await register(race.id, "Bogdan Anulat", { status: "CANCELLED", cancelledAt, cancellationSource: "PARTICIPANT" });
+    await register(race.id, "Carmen Expirată", { status: "EXPIRED", expiredAt, expiryReason: "DECLARATION_HOLD_LAPSED" });
+    for (const role of ["ADMIN", "MODERATOR"] as const) {
+      state.actor = await staff(role);
+      const tree = await AdminRegistrationsPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({ eventId: race.id }) } as never);
+      const table = elements(tree).find((element) => element.type === AdminTable);
+      const columns = table!.props.columns as { key: string; essential?: boolean; render: (row: unknown) => ReactNode }[];
+      const column = columns.find((candidate) => candidate.key === "status");
+      // On a phone's card as well: the column is one the card always draws.
+      expect(column?.essential, role).toBe(true);
+      const said = new Map<string, string>();
+      for (const row of table!.props.rows as { registeredName: string }[]) {
+        said.set(row.registeredName, renderToStaticMarkup(createElement(Fragment, null, column!.render(row))));
+      }
+      const day = (value: Date) => formatDay(value, { locale: "ro", timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
+      const ended = (html: string | undefined) => /data-testid="row-ended-at"[^>]*>([^<]*)</.exec(html ?? "")?.[1];
+      expect(ended(said.get("Bogdan Anulat")), role).toBe(day(cancelledAt));
+      expect(text(said.get("Bogdan Anulat") ?? "")).toContain("Anulată");
+      expect(ended(said.get("Carmen Expirată")), role).toBe(day(expiredAt));
+      expect(said.get("Ana Confirmată")).not.toContain("row-ended-at");
+      await db.delete(staffUsers);
+    }
   });
 
   /** Past its stored deadline, with its `WAITLIST_SPOT_OFFER` still queued (§520): the night's hourly tick. */
