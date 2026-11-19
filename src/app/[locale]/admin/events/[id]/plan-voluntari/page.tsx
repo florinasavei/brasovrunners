@@ -93,7 +93,7 @@ const POINT_LINK_SX = { ...PHONE_LINK_SX, fontWeight: 700, overflowWrap: "anywhe
 const TABLE_PHONE_SX = { ...PHONE_LINK_SX, whiteSpace: "nowrap" } as const;
 
 /**
- * The address beside the telephone in «Punctele, pe scurt» (§NNN): a `mailto:` link with the telephone's shape — a thumb's 44
+ * The address beside the telephone in «Punctele, pe scurt» (§994): a `mailto:` link with the telephone's shape — a thumb's 44
  * pixels, on paper the address as text — that breaks inside the cell rather than widening the table.
  */
 const TABLE_EMAIL_SX = { ...PHONE_LINK_SX, overflowWrap: "anywhere" } as const;
@@ -452,7 +452,7 @@ export default async function VolunteerPlanPage({ params, searchParams }: Props)
       key: "people",
       label: t("volunteers.plan.table.columns.people"),
       // The point's people in the point's order, a line each: the name and the telephone to ring — and under it the organizers'
-      // decision and notes about the person (§981). Since §NNN (the owner, 2026-11-19: «Aici vreau numele cu caps și vreau și
+      // decision and notes about the person (§981). Since §994 (the owner, 2026-11-19: «Aici vreau numele cu caps și vreau și
       // mailul»), the name in capitals, so each person stands out from the words under them — the text stays as typed, for a
       // screen reader and a copy —, and the address after the telephone.
       render: ({ people }) =>

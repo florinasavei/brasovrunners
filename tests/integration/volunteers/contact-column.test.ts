@@ -10,7 +10,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Contact» on the «Voluntari» list (the owner, 2026-11-19, with a picture of this list: «și aici vreau să văd mailurile»),
+ * §994 — «Contact» on the «Voluntari» list (the owner, 2026-11-19, with a picture of this list: «și aici vreau să văd mailurile»),
  * from a real database and the page as the server draws it, in Romanian and in English:
  *
  * - the column stands right after «Nume», under the registrations list's heading «Contact» and its own «?»;
@@ -171,7 +171,7 @@ const linksOf = (part: string, testid: string) =>
 /** The wide table's row of one person: the `<tr>` holding the link to their own page. */
 const tableRowOf = (page: string, id: string) => [...page.matchAll(/<tr\b[\s\S]*?<\/tr>/g)].map((match) => match[0]).find((row) => row.includes(`/admin/volunteers/${id}"`)) ?? "";
 
-describe("§NNN «Contact» on the «Voluntari» list", () => {
+describe("§994 «Contact» on the «Voluntari» list", () => {
   it("stands right after «Nume», under the heading «Contact» and its own «?», sorting nothing, its empty cell no line on a phone", async () => {
     for (const [locale, catalogue] of [["ro", ro], ["en", en]] as const) {
       const { columns } = tableOf(await listTree({}, locale));

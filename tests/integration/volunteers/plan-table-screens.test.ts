@@ -272,7 +272,7 @@ describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view
         "tel:+40700000033",
         "tel:+40700000044",
       ]);
-      // §NNN — «și vreau și mailul»: after the telephone, the address to write to, a `mailto:` link; Zoe, typed with none, has none.
+      // §994 — «și vreau și mailul»: after the telephone, the address to write to, a `mailto:` link; Zoe, typed with none, has none.
       expect(tagsOf(wideOf(section), "plan-table-email").map((tag) => /href="([^"]*)"/.exec(tag)?.[1])).toEqual(
         ["Ana Pop", "Dan Ene", "Ion Lupu", "Radu Liber"].map((name) => `mailto:${planAddressOf(name)}`),
       );
@@ -362,7 +362,7 @@ describe("§974 «Punctele, pe scurt»: the plan's points as one table, the view
     // The map's link stays off the paper; the numbers print.
     for (const tag of tagsOf(section, "plan-table-map")) expect(printOf(page, classesIn(tag))).toMatch(/display:none/);
     expect(tagsOf(section, "plan-table-coordinates")[0]).toBe('<span data-testid="plan-table-coordinates">');
-    // §NNN — «Aici vreau numele cu caps»: each person's name in capitals, on the screen and on the paper, the words as typed.
+    // §994 — «Aici vreau numele cu caps»: each person's name in capitals, on the screen and on the paper, the words as typed.
     const personName = classesIn(tagsOf(section, "plan-table-person-name")[0]);
     expect(personName.some((name) => new RegExp(`\\.${name}\\{[^}]*text-transform:uppercase`).test(rulesOf(page)))).toBe(true);
     expect(textsOf(section, "plan-table-person-name")[0]).toBe("Ana Pop");

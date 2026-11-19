@@ -59,7 +59,7 @@ import { listVolunteers, type VolunteerItem } from "./volunteers";
 */
 
 /**
- * One person as the plan says them: the name, how to reach them — the telephone and, since §NNN, the address —, what they were
+ * One person as the plan says them: the name, how to reach them — the telephone and, since §994, the address —, what they were
  * given to do, and the point they stand at — and,
  * since §981 (amending §954 and §935; the owner, 2026-11-18: «să văd în plan și comentariile mele»), the organizers' own words about
  * them: the race-day decision (`raceDayDecision`, §954, null while there is none), which the page prints, and the live internal

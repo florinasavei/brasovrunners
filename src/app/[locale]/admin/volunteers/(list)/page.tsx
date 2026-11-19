@@ -100,7 +100,7 @@ function isVolunteerState(value: string | undefined): value is VolunteerState {
 const MESSAGE_CELL_SX = { display: "inline-block", minWidth: { xs: 0, md: "12rem" }, maxWidth: "26rem", whiteSpace: "pre-line", overflowWrap: "break-word" } as const;
 
 /**
- * A person's address in the list's «Contact» column (§NNN): on a line of its own, as the registrations list's «Contact» writes
+ * A person's address in the list's «Contact» column (§994): on a line of its own, as the registrations list's «Contact» writes
  * one (§943) — a floor so a full table cannot squeeze it to a letter a line, broken only when it is longer than the column.
  */
 const EMAIL_CELL_SX = { display: "inline-block", minWidth: { xs: 0, md: "12rem" }, overflowWrap: "anywhere" } as const;
@@ -498,7 +498,7 @@ export default async function AdminVolunteersPage({ params, searchParams }: Prop
     },
     {
       /*
-        «Contact» (§NNN; the owner, 2026-11-19: «și aici vreau să văd mailurile»), right after the name, as the registrations
+        «Contact» (§994; the owner, 2026-11-19: «și aici vreau să văd mailurile»), right after the name, as the registrations
         list's «Contact» (§943): the address, a `mailto:` link, and under it the telephone, a `tel:` link a phone rings — each as
         the person typed it, or as the organizer did on a row the club entered. Both were on the person's page alone. The same
         three roles as the rest of the list (`canManageVolunteers`); a row the club typed with neither has an empty cell and no
