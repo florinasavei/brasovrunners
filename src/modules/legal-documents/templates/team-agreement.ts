@@ -1,7 +1,7 @@
 import type { LegalDocumentBody } from "../domain/content-hash";
 
 /**
- * «Angajament de confidențialitate și protecția datelor pentru echipă» (§NNN; the owner, 2026-11-19: «Voluntarii trebuie să
+ * «Angajament de confidențialitate și protecția datelor pentru echipă» (§1006; the owner, 2026-11-19: «Voluntarii trebuie să
  * semneze acordul GDPR când intră în platformă» — the volunteers must sign the GDPR agreement when they enter the platform).
  *
  * One text for the club's whole team below the Administrator — the volunteer, the Redactor, the Organizer, the Tehnic — accepted

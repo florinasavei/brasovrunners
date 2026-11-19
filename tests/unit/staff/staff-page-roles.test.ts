@@ -14,7 +14,7 @@ import { STAFF_ROLES, type StaffRole } from "@/modules/staff-identity/domain/rol
  */
 let actor: StaffUser;
 let team: StaffUser[];
-/** Each row's state of the team's undertaking (§NNN), as `teamAgreementStates` would read it; none unless a test says. */
+/** Each row's state of the team's undertaking (§1006), as `teamAgreementStates` would read it; none unless a test says. */
 let agreements = new Map<string, unknown>();
 
 vi.mock("next-intl/server", async () => {
@@ -55,7 +55,7 @@ vi.mock("@/modules/notifications/send-now-choice", () => ({ sendNowChoiceFor: as
 vi.mock("@/shared/forms/refusal-messages", () => ({ refusalMessages: async () => ({}) }));
 // The invitations' refusals (§671) are a read of the outbox; the roles do not depend on them.
 vi.mock("@/modules/notifications/delivery-evidence", () => ({ refusedInvitations: async () => new Map() }));
-// The team's undertaking (§NNN): each row's state, as the test sets it.
+// The team's undertaking (§1006): each row's state, as the test sets it.
 vi.mock("@/modules/staff-identity/team-agreement", () => ({ teamAgreementStates: async () => agreements }));
 vi.mock("@/app/[locale]/admin/actions", () => ({
   changeStaffRoleAction: vi.fn(),
@@ -364,7 +364,7 @@ describe("§1000 the inviter's one line after a press, as the page draws it", ()
   });
 });
 
-describe("§NNN BR-REQ-060-01 «Echipa» says where each colleague stands with the team's undertaking", () => {
+describe("§1006 BR-REQ-060-01 «Echipa» says where each colleague stands with the team's undertaking", () => {
   const lineOf = (tree: ReactElement<Props>[]) => tree.find((element) => element.props["data-testid"] === "staff-team-agreement");
   const words = (node: ReactNode): string => (Array.isArray(node) ? node.map(words).join("") : typeof node === "string" || typeof node === "number" ? String(node) : isValidElement<Props>(node) ? words(node.props.children) : "");
 

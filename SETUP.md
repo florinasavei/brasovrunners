@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.79-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.80-2026-11-20 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V4.79-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.80-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2786,7 +2786,7 @@ An agent never approves either text.
 The owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în platformă». Every colleague below the
 Administrator — a **Voluntar**, a **Redactor**, an **Organizator**, a **Tehnic** — accepts the club's «Angajament de
 confidențialitate și protecția datelor pentru echipă» once per version, before any backoffice page opens to them
-(`DECISIONS.md` §NNN). **Nobody is asked anything until the club approves a version**: an agent never approves it, the seed
+(`DECISIONS.md` §1006). **Nobody is asked anything until the club approves a version**: an agent never approves it, the seed
 never puts one in force (`yarn db:seed:legal` included), and no migration brings one to production. So the club's steps are:
 
 1. **A lawyer reads the platform's text first.** `/admin/legal` → «Versiune nouă» → under «Pornește de la șablon»,

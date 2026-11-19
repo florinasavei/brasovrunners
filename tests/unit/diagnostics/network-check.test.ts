@@ -16,7 +16,7 @@ const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8").replace(/\r\n/g, "\n");
 
 const session = vi.hoisted(() => ({ staff: null as null | { id: string; role: string } }));
-// The session's refusal as it is thrown: a domain error — the probe asks `requireStaff` since §NNN, the team's undertaking's one door.
+// The session's refusal as it is thrown: a domain error — the probe asks `requireStaff` since §1006, the team's undertaking's one door.
 vi.mock("@/modules/staff-identity/session", async () => {
   const { DomainError } = await import("@/shared/errors/domain-error");
   return {

@@ -74,7 +74,7 @@ export function regenerationOutcome(
  *   that changes nothing on the site is a record that misleads;
  * - `placeholders` — a club fact is still a `<PLACEHOLDER>`: a notice that reads
  *   `<ADRESA SEDIULUI>` is not a notice, the refusal `approvePlatformTemplates` makes (§132);
- * - `alone` — the team's undertaking (`STAFF_DATA_AGREEMENT`, §NNN), a draft the press would
+ * - `alone` — the team's undertaking (`STAFF_DATA_AGREEMENT`, §1006), a draft the press would
  *   otherwise approve: from the moment a version of it is in force, every colleague below the
  *   Administrator is stopped at their next request until they accept it — on race day, the whole
  *   desk. So it is approved on its own, on its draft's page («Aprobă și publică»), read and pressed

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.79-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.80-2026-11-20 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.79-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.80-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2154,7 +2154,7 @@ until a version is in force in every language **and** the privacy notice in forc
 (`describesRaffle`, `noticeDescribesRaffle`, the cached twins in `public-cache/reads.ts`); «Din oficiu» needs neither.
 
 **«Angajament de confidențialitate și protecția datelor pentru echipă»** (`STAFF_DATA_AGREEMENT`, 2026-11-19, `DECISIONS.md`
-§NNN; its value and its acceptances' table in migration `0221`, which names the value nowhere else) is what every colleague
+§1006; its value and its acceptances' table in migration `0221`, which names the value nowhere else) is what every colleague
 below the Administrator accepts, once per version, before the backoffice answers them (§13.1): the platform's template in
 both languages (`templates/team-agreement.ts` — the club's authority, GDPR art. 29 and 32(4); the data only for the role's
 tasks; confidentiality during and after the role; no copies beyond the task; the printed lists; the session; incidents;
@@ -2694,7 +2694,7 @@ next request exactly as a changed role does; the development switcher takes the 
 `requireStaffCapability(predicate)` hands the predicate that actor, never its role alone, and an
 actor read without its grants holds none — a forgotten read refuses, it never opens.
 
-**The team's undertaking is asserted in `requireStaff` (`DECISIONS.md` §NNN).** While an approved version of
+**The team's undertaking is asserted in `requireStaff` (`DECISIONS.md` §1006).** While an approved version of
 `STAFF_DATA_AGREEMENT` is in force (§12.5), a colleague `mustAcceptTeamAgreement` names — every backoffice role below
 `ADMIN` — who has not accepted *that* version is answered by nothing of the backoffice: a page being drawn (the proxy's
 `x-br-path`, no `next-action` header) is sent to `/admin/acord?returnTo=<the page>`, a same-site path only; a Server

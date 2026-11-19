@@ -110,7 +110,7 @@ describe("every legal text at once (§532)", () => {
       await resetTables(db);
       [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" }).returning();
       await approvePlatformTemplates(db, admin, FACTS, NOW);
-      // Every template the press approved; the team's undertaking it leaves out (§NNN), so that one still has a draft to make.
+      // Every template the press approved; the team's undertaking it leaves out (§1006), so that one still has a draft to make.
       const approvedPlan = await planTemplateRegeneration(db, FACTS, LATER);
       expect(approvedPlan.filter((item) => item.key !== "STAFF_DATA_AGREEMENT").every((item) => item.outcome === "unchanged")).toBe(true);
       expect(approvedPlan.find((item) => item.key === "STAFF_DATA_AGREEMENT")?.outcome).toBe("create");
@@ -123,7 +123,7 @@ describe("every legal text at once (§532)", () => {
     it("drafts the text again when the club's facts changed, the version in force untouched", async () => {
       await approvePlatformTemplates(db, admin, FACTS, NOW);
       const moved = { ...FACTS, registeredAddress: "Str. Nouă nr. 2, Brașov" };
-      // The texts the press put in force; the team's undertaking it leaves out (§NNN) has no version in force to keep.
+      // The texts the press put in force; the team's undertaking it leaves out (§1006) has no version in force to keep.
       const result = await regenerateFromTemplates(db, admin, moved, [...PLATFORM_APPROVAL_KEYS], LATER);
       // Only the texts that name the seat change.
       expect(result.created.length).toBeGreaterThan(0);
@@ -178,7 +178,7 @@ describe("every legal text at once (§532)", () => {
     it("approves the ready drafts in one press, each in force from the press", async () => {
       await regenerateFromTemplates(db, admin, FACTS, [...LEGAL_DOCUMENT_KEYS], NOW);
       const plan = await planDraftApproval(db);
-      // Every text of the catalogue is ready but the team's undertaking, held back on its own (§NNN, the next test).
+      // Every text of the catalogue is ready but the team's undertaking, held back on its own (§1006, the next test).
       expect(plan.filter((item) => item.outcome === "ready").map((item) => item.row.key).sort()).toEqual([...PLATFORM_APPROVAL_KEYS].sort());
       const ready = plan.filter((item) => item.outcome === "ready");
 
@@ -192,7 +192,7 @@ describe("every legal text at once (§532)", () => {
       expect(rows.every((row) => row.isApproved && row.approvedByStaffUserId === admin.id && row.effectiveAt.getTime() === LATER.getTime())).toBe(true);
     });
 
-    it("§NNN never puts the team's undertaking in force: «Regenerează din șabloane» drafts it, «Aprobă ciornele» holds it back", async () => {
+    it("§1006 never puts the team's undertaking in force: «Regenerează din șabloane» drafts it, «Aprobă ciornele» holds it back", async () => {
       // The two presses as an Administrator two days before the race would make them, on a deployment that knows the club's
       // four facts — so no placeholder is left to stop the undertaking's draft.
       const regenerated = await regenerateFromTemplates(db, admin, FACTS, [...LEGAL_DOCUMENT_KEYS], NOW);

@@ -7,7 +7,7 @@ import { confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN, BR-REQ-060-01, BR-REQ-053-01 — the team's undertaking at sign-in, end to end, on a production build and both projects
+ * §1006, BR-REQ-060-01, BR-REQ-053-01 — the team's undertaking at sign-in, end to end, on a production build and both projects
  * (the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în platformă»):
  *
  * 1. an Administrator finds the template under «Pornește de la șablon» and approves a version on `/admin/legal` — the draft is
@@ -127,7 +127,7 @@ async function expectThumbFriendly(page: Page): Promise<void> {
   expect(overflow).toBeLessThanOrEqual(1);
 }
 
-test.describe("§NNN the team's undertaking at sign-in", () => {
+test.describe("§1006 the team's undertaking at sign-in", () => {
   test("an Administrator approves it; a volunteer and an Organizer are asked, accept and go on; «Echipa» says who; an Administrator never", async ({ page }) => {
     test.setTimeout(240_000);
     await withGateLock(async () => {

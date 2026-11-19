@@ -23,7 +23,7 @@ export const LEGAL_KIND_GROUPS = [
   { id: "volunteers", keys: ["VOLUNTEER_AGREEMENT"] },
   // «Regulamentul tombolei» (§984): its own group — what a person accepts to sign up for a raffle, no registration's text.
   { id: "raffle", keys: ["RAFFLE_RULES"] },
-  // The team's undertaking (§NNN): its own group, last — the club's own colleagues accept it, no participant ever reads it.
+  // The team's undertaking (§1006): its own group, last — the club's own colleagues accept it, no participant ever reads it.
   { id: "team", keys: ["STAFF_DATA_AGREEMENT"] },
 ] as const satisfies ReadonlyArray<{ id: string; keys: readonly LegalDocumentKey[] }>;
 

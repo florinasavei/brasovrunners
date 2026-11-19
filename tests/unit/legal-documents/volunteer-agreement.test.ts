@@ -32,7 +32,7 @@ const FACTS = clubFactsFromEnv({
 });
 
 describe("§758 the volunteer agreement is a legal document of the platform", () => {
-  it("is a key of its own, last in the enum and in the backoffice's list but for «Regulamentul tombolei» (§984) and the team's undertaking (§NNN) after it, in a group of its own, approved by the one press too", () => {
+  it("is a key of its own, last in the enum and in the backoffice's list but for «Regulamentul tombolei» (§984) and the team's undertaking (§1006) after it, in a group of its own, approved by the one press too", () => {
     expect(VOLUNTEER_AGREEMENT_KEY).toBe("VOLUNTEER_AGREEMENT");
     expect(legalDocumentKey.enumValues.at(-3)).toBe("VOLUNTEER_AGREEMENT");
     expect(LEGAL_DOCUMENT_KEYS.at(-3)).toBe("VOLUNTEER_AGREEMENT");

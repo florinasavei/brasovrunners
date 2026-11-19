@@ -178,7 +178,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     expect(Object.keys(routing.pathnames).sort()).toEqual([
       "/",
       "/admin",
-      // The team's undertaking, where a colleague below the Administrator accepts it (§NNN), by hand.
+      // The team's undertaking, where a colleague below the Administrator accepts it (§1006), by hand.
       "/admin/acord",
       "/admin/checkin",
       "/admin/checkin/[code]",

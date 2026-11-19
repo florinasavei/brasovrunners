@@ -14,7 +14,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 export const dynamic = "force-dynamic";
 
 export async function POST(): Promise<Response> {
-  // The staff session's one door (§NNN): a colleague who owes the team's undertaking is refused here too, the same 404.
+  // The staff session's one door (§1006): a colleague who owes the team's undertaking is refused here too, the same 404.
   try {
     await requireStaff();
   } catch (error) {

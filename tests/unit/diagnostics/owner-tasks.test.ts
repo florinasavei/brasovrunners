@@ -301,7 +301,7 @@ describe("owner tasks", () => {
     }
   });
 
-  it("§NNN: the team's undertaking's row is open while no version is in force, done once one is, never blocking, always the club's", () => {
+  it("§1006: the team's undertaking's row is open while no version is in force, done once one is, never blocking, always the club's", () => {
     expect(stateOf({ ...LAUNCHED, teamAgreementInForce: false }, "teamAgreement")).toBe("open");
     expect(stateOf(LAUNCHED, "teamAgreement")).toBe("done");
     const row = ownerTasks({ ...LAUNCHED, teamAgreementInForce: false }).find((task) => task.id === "teamAgreement");
@@ -696,7 +696,7 @@ describe("owner tasks", () => {
       // §984: the raffle's rules and its notice, shown done while both are in force.
       "raffleRules",
       "raffleNotice",
-      // §NNN: the team's undertaking, shown done while a version is in force; always on the list — every club has a team.
+      // §1006: the team's undertaking, shown done while a version is in force; always on the list — every club has a team.
       "teamAgreement",
       "refusalTerms",
       "resultsTerms",

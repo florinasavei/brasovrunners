@@ -41,7 +41,7 @@ export const legalDocumentKey = pgEnum("legal_document_key", [
   // part, how to sign up, the draw, the prizes, the winner, the data. Added in a migration of its own (`0216`): PostgreSQL
   // cannot use an enum value in the transaction that adds it.
   "RAFFLE_RULES",
-  // «Angajament de confidențialitate și protecția datelor pentru echipă» (§NNN): what a colleague below the Administrator
+  // «Angajament de confidențialitate și protecția datelor pentru echipă» (§1006): what a colleague below the Administrator
   // accepts, once per version, before the backoffice opens to them — acting under the club's authority (GDPR art. 29,
   // 32(4)). Its migration adds the value and the acceptances' table, which never names the value: nothing uses it in the
   // transaction that adds it.

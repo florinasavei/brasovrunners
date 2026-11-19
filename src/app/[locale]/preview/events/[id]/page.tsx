@@ -79,7 +79,7 @@ export default async function PreviewEventPage({ params }: Props) {
     if (isDevStaffSwitcherEnabled()) redirect(getPathname({ locale, href: "/sign-in" }));
     notFound();
   }
-  // The team's undertaking (§NNN): a draft is the backoffice's, so a colleague who owes the version in force reads it first,
+  // The team's undertaking (§1006): a draft is the backoffice's, so a colleague who owes the version in force reads it first,
   // this preview kept as the way back — a page's own redirect, as `requireStaff` sends every backoffice page.
   await assertTeamAgreementAccepted(staffUser);
 

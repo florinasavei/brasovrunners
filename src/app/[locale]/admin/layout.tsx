@@ -70,7 +70,7 @@ export default async function AdminLayout({ children, params }: Props) {
   try {
     staffUser = await getCurrentStaffUser();
     /*
-      The team's undertaking (§NNN): while a colleague below the Administrator owes the version in force, the shell draws no
+      The team's undertaking (§1006): while a colleague below the Administrator owes the version in force, the shell draws no
       tabs — every one of them would only lead to `/admin/acord` — and keeps who is signed in and the sign-out. This layout never
       sends them there itself: the client router keeps a layout's redirect with the layout and replays it under it, the
       undertaking's own page included — a loop the first end-to-end run met from the sign-in. The page under it does, through its

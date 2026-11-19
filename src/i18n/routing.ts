@@ -285,7 +285,7 @@ export const routing = defineRouting({
     "/devs/docs/[name]": "/devs/docs/[name]",
     "/admin/guide": "/admin/guide",
     /**
-     * The team's undertaking (§NNN): where a colleague below the Administrator reads and accepts it before the backoffice opens
+     * The team's undertaking (§1006): where a colleague below the Administrator reads and accepts it before the backoffice opens
      * to them. One spelling in both locales, like every backoffice path.
      */
     "/admin/acord": "/admin/acord",

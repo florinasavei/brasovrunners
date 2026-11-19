@@ -608,7 +608,7 @@ describe("BR-REQ-071-01 §929 «Cui dai lista» is required", () => {
     expect(await nameless.json()).toEqual({ error: "RECIPIENT_REQUIRED" });
 
     // Nothing read: the database hears from a nameless request exactly what it hears from the Administrator's sign-in alone. The
-    // baseline is that sign-in itself since §NNN: a refused Tehnic's is one read longer, the question whether the team's undertaking
+    // baseline is that sign-in itself since §1006: a refused Tehnic's is one read longer, the question whether the team's undertaking
     // is owed, which an Administrator is never asked.
     const asked: string[] = [];
     state.db = new Proxy(db as object, {

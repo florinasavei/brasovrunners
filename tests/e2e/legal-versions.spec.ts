@@ -291,7 +291,7 @@ test.describe("legal documents: every text at once", () => {
 
     // Regenerate the rest: the dialog names the texts, nothing is in force, the toast counts the drafts.
     // «din 9»: the catalogue's nine texts, the volunteer agreement the seventh (§758), «Regulamentul tombolei» the eighth (§984),
-    // the team's undertaking the ninth (§NNN) — never seeded, so its draft is among those made here, and never approved here.
+    // the team's undertaking the ninth (§1006) — never seeded, so its draft is among those made here, and never approved here.
     const regenerateRest = tools.getByRole("button", { name: /^Regenerează din șabloane \(\d+ din 9\)$/ });
     if ((await regenerateRest.count()) > 0) {
       // «N din 9» and the rule beside it (§555): only the texts wearing «Șablon nou» are regenerated.

@@ -16,7 +16,7 @@ import { STAFF_ROLES, type StaffRole } from "@/modules/staff-identity/domain/rol
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-060-01, BR-REQ-053-01 — the team's undertaking at sign-in (the owner, 2026-11-19: «Voluntarii trebuie să semneze
+ * §1006, BR-REQ-060-01, BR-REQ-053-01 — the team's undertaking at sign-in (the owner, 2026-11-19: «Voluntarii trebuie să semneze
  * acordul GDPR când intră în platformă»), read through the real session (`session.ts`, the development switcher's cookie) over a
  * real database:
  *
@@ -118,7 +118,7 @@ const route = () => {
   state.headers = new Headers();
 };
 
-describe("§NNN the team's undertaking, at sign-in", () => {
+describe("§1006 the team's undertaking, at sign-in", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   const staff = {} as Record<StaffRole, StaffUser>;

@@ -15,7 +15,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — «Angajament de confidențialitate și protecția datelor pentru echipă», a legal document of the platform (BR-REQ-053-01;
+ * §1006 — «Angajament de confidențialitate și protecția datelor pentru echipă», a legal document of the platform (BR-REQ-053-01;
  * the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în platformă»):
  *
  * - a key of its own, last, in a group of its own on `/admin/legal`, its code one word in both languages;
@@ -30,7 +30,7 @@ import ro from "../../../messages/ro.json";
 const text = (body: { sections: ReadonlyArray<{ heading?: string; paragraphs: readonly string[] }> }) =>
   body.sections.flatMap((section) => [section.heading ?? "", ...section.paragraphs]).join("\n");
 
-describe("§NNN BR-REQ-053-01 the team's undertaking is a legal document of the platform", () => {
+describe("§1006 BR-REQ-053-01 the team's undertaking is a legal document of the platform", () => {
   it("is a key of its own, last in the enum and in the list, in a group of its own, with a one-word code and a name in both languages", () => {
     expect(TEAM_AGREEMENT_KEY).toBe("STAFF_DATA_AGREEMENT");
     expect(legalDocumentKey.enumValues.at(-1)).toBe("STAFF_DATA_AGREEMENT");

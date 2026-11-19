@@ -89,7 +89,7 @@ describe("§357 the sample legal documents, seeded and re-seeded", () => {
     for (const key of KEYS) expect((await versionsOf(key)).map((row) => row.version), key).toEqual([1]);
   });
 
-  it("never writes the team's undertaking, so a test database signs every colleague in where they asked (§NNN)", async () => {
+  it("never writes the team's undertaking, so a test database signs every colleague in where they asked (§1006)", async () => {
     await seedSampleLegalDocuments(NOW);
     await seedSampleLegalDocuments(new Date(NOW.getTime() + 60_000));
     expect(await versionsOf("STAFF_DATA_AGREEMENT")).toEqual([]);

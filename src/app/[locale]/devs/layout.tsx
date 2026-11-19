@@ -38,7 +38,7 @@ export default async function DevsLayout({ children, params }: Props) {
     redirect(getPathname({ locale, href: "/sign-in" }));
   }
   if (!canSeeDiagnostics(staffUser.role)) notFound();
-  // The team's undertaking (§NNN): a Tehnic who owes the version in force reads it on `/admin/acord` first, `/devs` kept as the
+  // The team's undertaking (§1006): a Tehnic who owes the version in force reads it on `/admin/acord` first, `/devs` kept as the
   // way back — sent there by the page under this layout (`requireStaff`, as every page under `/devs` asks), never by the layout,
   // whose redirect the client router would keep and replay; the shell meanwhile draws no tabs.
   const teamAgreementOwed = await teamAgreementOwedFor(staffUser);

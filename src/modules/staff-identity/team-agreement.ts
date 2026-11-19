@@ -16,7 +16,7 @@ import { mustAcceptTeamAgreement } from "./domain/roles";
 import { teamAgreementName } from "./domain/team-agreement";
 
 /**
- * The team's undertaking at sign-in (§NNN; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în
+ * The team's undertaking at sign-in (§1006; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în
  * platformă»): what the gate reads (`session.ts`), what `/admin/acord` writes, and what «Echipa» and «Sarcini» show.
  *
  * **In force** is what every legal text's «in force» is (`findCurrentApprovedVersionId`): the highest version of
@@ -39,7 +39,7 @@ export async function findTeamAgreementInForce<T extends Record<string, unknown>
   return row ?? null;
 }
 
-/** Whether a version of the undertaking is in force (§NNN): «Sarcini»'s row is done once one is. */
+/** Whether a version of the undertaking is in force (§1006): «Sarcini»'s row is done once one is. */
 export async function teamAgreementInForce<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   return (await findTeamAgreementInForce(db, now)) !== null;
 }
@@ -107,7 +107,7 @@ export type TeamAgreementAcceptanceInput = {
 export type TeamAgreementOutcome = "accepted" | "already" | "notRequired";
 
 /**
- * «Accept și intru» (§NNN): the acceptance of the version in force, once per account and version, with the declarations' proof
+ * «Accept și intru» (§1006): the acceptance of the version in force, once per account and version, with the declarations' proof
  * (§556, §771) — the version and its own hash, the language, the name typed, the SHA-256 of the exact text read in that language
  * (`signedTextHash`, the title and every paragraph; the text has no blanks), the moment, the IP address and browser — and the
  * trail's row `staff.team_agreement_accepted`, which names the version and never the name typed.
@@ -168,7 +168,7 @@ export async function acceptTeamAgreement<T extends Record<string, unknown>>(
   });
 }
 
-/** One colleague's state on «Echipa» (§NNN): not asked, not accepted, or accepted — which version, when, under which name. */
+/** One colleague's state on «Echipa» (§1006): not asked, not accepted, or accepted — which version, when, under which name. */
 export type TeamAgreementState =
   | { kind: "notRequired" }
   | { kind: "notAccepted" }

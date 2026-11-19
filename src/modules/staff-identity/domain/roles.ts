@@ -1013,7 +1013,7 @@ export function canWriteLegalTexts(subject: StaffSubject): boolean {
 }
 
 /**
- * **Who accepts the team's undertaking before the backoffice opens (§NNN; the owner, 2026-11-19: «Voluntarii trebuie să
+ * **Who accepts the team's undertaking before the backoffice opens (§1006; the owner, 2026-11-19: «Voluntarii trebuie să
  * semneze acordul GDPR când intră în platformă»)** — every backoffice role below the Administrator: the volunteer, the Redactor,
  * the Organizer and the Tehnic, each of whom sees some of the participants', volunteers' or members' data under the club's
  * authority (GDPR art. 29, 32(4)). Not the Administrator or the Superadministrator, who run the club and approve the text

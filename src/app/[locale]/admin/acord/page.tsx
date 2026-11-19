@@ -31,7 +31,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * The team's undertaking, read and accepted (§NNN; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră
+ * The team's undertaking, read and accepted (§1006; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră
  * în platformă»): where the gate (`requireStaff`, the admin layout) sends a colleague below the Administrator who has not accepted
  * the version of `STAFF_DATA_AGREEMENT` in force — the text as the other legal pages draw it, its version line, «Numele tău
  * complet», «Am citit și accept angajamentul» and «Accept și intru», then back to where they were going (`returnTo`, a same-site

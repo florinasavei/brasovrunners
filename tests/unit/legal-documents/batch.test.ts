@@ -67,7 +67,7 @@ describe("draftApprovalOutcome", () => {
     expect(draftApprovalOutcome(older, [older, { ...approved, withdrawnAt: new Date() }], false)).toBe("ready");
   });
 
-  it("§NNN holds the team's undertaking back where it would be approved: alone, never with the other drafts", () => {
+  it("§1006 holds the team's undertaking back where it would be approved: alone, never with the other drafts", () => {
     // A draft the press would approve: never, it is approved on its own page — a version in force stops the whole team.
     const team = row({ id: "t1", version: 1, key: "STAFF_DATA_AGREEMENT" });
     expect(draftApprovalOutcome(team, [team], false)).toBe("alone");

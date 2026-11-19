@@ -2,7 +2,7 @@ import { TEAM_AGREEMENT_NAME_MAX } from "@/db/schema/staff-team-agreement-accept
 import { REQUEST_PATH_HEADER } from "@/modules/resilience/domain/resting-page";
 
 /**
- * The team's undertaking at sign-in (§NNN; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în
+ * The team's undertaking at sign-in (§1006; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în
  * platformă»), the parts that are rules rather than reads: which request is a page being drawn, where a refused page wanted to
  * go, the undertaking's own address, and the name typed under it. Pure: headers arrive as an object with `get`, so a unit test
  * needs no request.
@@ -22,7 +22,7 @@ const ROUTER_PARAMETER = "_rsc";
 type HeaderReader = { get(name: string): string | null };
 
 /**
- * What kind of request met the gate (§NNN), which decides how it is refused.
+ * What kind of request met the gate (§1006), which decides how it is refused.
  *
  * - **A page being drawn** — a GET the proxy saw (`proxy.ts` writes the visited path into `x-br-path` on every request it
  *   passes, always overwriting what a caller sent), with no `next-action` header: the reader is sent to the undertaking, the
@@ -85,7 +85,7 @@ export function localeOfPath(path: string | null | undefined): string | null {
 }
 
 /**
- * The full name as kept (§NNN): trimmed, inner whitespace collapsed to one space; null when nothing is left or it is longer
+ * The full name as kept (§1006): trimmed, inner whitespace collapsed to one space; null when nothing is left or it is longer
  * than the 200 characters the column holds (`TEAM_AGREEMENT_NAME_MAX`).
  */
 export function teamAgreementName(value: unknown): string | null {
@@ -94,5 +94,5 @@ export function teamAgreementName(value: unknown): string | null {
   return name.length >= 1 && name.length <= TEAM_AGREEMENT_NAME_MAX ? name : null;
 }
 
-/** The sentence a refusal carries for the logs (§NNN): what to do, never who. */
+/** The sentence a refusal carries for the logs (§1006): what to do, never who. */
 export const TEAM_AGREEMENT_REFUSAL = "the team's undertaking in force has not been accepted by this account: accept it on /admin/acord first";

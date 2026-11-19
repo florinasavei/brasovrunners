@@ -76,9 +76,9 @@ export async function getCurrentStaffUser(): Promise<StaffAccount | null> {
 }
 
 /**
- * The staff member signing this request — and, since §NNN, one who owes the team's undertaking nothing.
+ * The staff member signing this request — and, since §1006, one who owes the team's undertaking nothing.
  *
- * **The team's undertaking (§NNN; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în
+ * **The team's undertaking (§1006; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în
  * platformă»).** A colleague below the Administrator (`mustAcceptTeamAgreement`) who has not accepted the version of
  * `STAFF_DATA_AGREEMENT` in force is answered by nothing of the backoffice until they do, and it is asserted here — the one line
  * every backoffice page, action and route handler asks before anything else — never by hiding a button:
@@ -97,7 +97,7 @@ export async function requireStaff(): Promise<StaffAccount> {
 }
 
 /**
- * The team's undertaking asked of a staff member the caller has read already (§NNN): nothing when nothing is owed; otherwise a
+ * The team's undertaking asked of a staff member the caller has read already (§1006): nothing when nothing is owed; otherwise a
  * page being drawn is sent to `/admin/acord` and anything else is refused with `FORBIDDEN`. `requireStaff` asks it, and so does
  * the staff preview of a draft, which reads its staff member itself to answer a stranger 404.
  */
@@ -106,7 +106,7 @@ export async function assertTeamAgreementAccepted(staffUser: StaffSubject & { id
 }
 
 /**
- * The version of the undertaking an account has not accepted, asked of the database once per request (§NNN) however many doors
+ * The version of the undertaking an account has not accepted, asked of the database once per request (§1006) however many doors
  * ask it — the layout's bare shell, the page's `requireStaff`, a page that asks the door again —, as `deadlinesForThisRequest` is
  * read once per backoffice render. React scopes `cache` to the render of one request; outside a render — a Server Action's body, a
  * route handler, a test — it calls through every time, so a press that has just written the acceptance is never answered from a
@@ -125,7 +125,7 @@ async function owedThisRequest(staffUser: StaffSubject & { id: string }): Promis
 }
 
 /**
- * The staff session alone, before the team's undertaking (§NNN): for `/admin/acord` and its «Accept și intru» only — the one page
+ * The staff session alone, before the team's undertaking (§1006): for `/admin/acord` and its «Accept și intru» only — the one page
  * and the one action a colleague who owes the undertaking may reach. Everything else asks `requireStaff`.
  */
 export async function requireStaffBeforeTeamAgreement(): Promise<StaffAccount> {
@@ -140,7 +140,7 @@ export async function requireStaffBeforeTeamAgreement(): Promise<StaffAccount> {
 }
 
 /**
- * The undertaking's address for a reader who was going to `path` (§NNN), in the path's own language: `/ro/admin/acord?returnTo=…`,
+ * The undertaking's address for a reader who was going to `path` (§1006), in the path's own language: `/ro/admin/acord?returnTo=…`,
  * or without a way back when the path is none a reader may be sent to (`teamAgreementReturnTo`).
  */
 function teamAgreementHref(path: string): string {
@@ -158,7 +158,7 @@ async function refuseUntilTeamAgreementAccepted(): Promise<never> {
 }
 
 /**
- * What a layout drawing the backoffice's shell asks (§NNN): the version of the team's undertaking this colleague owes, if any —
+ * What a layout drawing the backoffice's shell asks (§1006): the version of the team's undertaking this colleague owes, if any —
  * the shell then draws no tabs, only who is signed in and the sign-out. **A layout never redirects for it**: the client router
  * keeps a layout's answer with the layout and replays it on every navigation beneath it, so a layout's redirect to
  * `/admin/acord` — a page under that same layout — is replayed on the undertaking's own page, a loop of requests and a page that

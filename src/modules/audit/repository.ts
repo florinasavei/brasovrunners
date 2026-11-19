@@ -1058,7 +1058,7 @@ export type AuditAction =
   | "staff.permission.granted"
   | "staff.permission.revoked"
   /**
-   * The team's undertaking accepted on `/admin/acord` (§NNN): the colleague is the actor and the entity (`staff_user`); the
+   * The team's undertaking accepted on `/admin/acord` (§1006): the colleague is the actor and the entity (`staff_user`); the
    * metadata is the version — `legalDocumentId`, `version`, the `locale` read — and the acceptance's row id. Never the name typed,
    * which stays on the acceptance's own row. Written once per account and version: a second press writes nothing.
    */

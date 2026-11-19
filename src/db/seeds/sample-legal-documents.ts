@@ -64,7 +64,7 @@ function sample(key: LegalDocumentKey, locale: "ro" | "en"): LegalDocumentTransl
 }
 
 /**
- * The texts the seed never puts in force (§NNN): the team's undertaking. Approved, it stops every colleague below the
+ * The texts the seed never puts in force (§1006): the team's undertaking. Approved, it stops every colleague below the
  * Administrator at their next request until they accept it — every development, test and end-to-end database would sign in
  * its volunteer, Redactor, Organizer and Tehnic onto `/admin/acord` instead of the page they asked for. A database that wants
  * the gate approves a version itself, from the template in `/admin/legal`, as the club does and as the gate's own tests do.

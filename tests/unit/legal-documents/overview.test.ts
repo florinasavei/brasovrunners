@@ -48,7 +48,7 @@ function row(key: LegalDocumentKey, version: number, extra: Partial<OverviewVers
 describe("the texts' groups", () => {
   it("are the catalogue's nine texts in six groups, in the catalogue's own order", () => {
     // The volunteer agreement in a group of its own (§758), «Regulamentul tombolei» in one of its own (§984), and the team's
-    // undertaking in one of its own, last (§NNN).
+    // undertaking in one of its own, last (§1006).
     expect(LEGAL_KIND_GROUPS.map((group) => group.id)).toEqual(["general", "race", "groupRun", "volunteers", "raffle", "team"]);
     expect(LEGAL_KIND_GROUPS.flatMap((group) => group.keys)).toEqual([...LEGAL_DOCUMENT_KEYS]);
   });

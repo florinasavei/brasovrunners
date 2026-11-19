@@ -838,7 +838,7 @@ function grepPermissionsHas(dir: string): string[] {
   return found;
 }
 
-describe("§NNN BR-REQ-060-01 who accepts the team's undertaking before the backoffice opens", () => {
+describe("§1006 BR-REQ-060-01 who accepts the team's undertaking before the backoffice opens", () => {
   // In STAFF_ROLES order: Membru, Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadministrator.
   const ASKED: Record<StaffRole, boolean> = {
     MEMBER: false,

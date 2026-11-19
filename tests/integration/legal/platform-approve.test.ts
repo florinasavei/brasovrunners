@@ -53,7 +53,7 @@ describe("the platform's texts approved in one act", () => {
   it("creates and approves version 1 of each text with the facts in, in the approver's name", async () => {
     const result = await approvePlatformTemplates(db, superadmin, FACTS, NOW);
     expect(result).toEqual({ approved: [...PLATFORM_APPROVAL_KEYS], alreadyApproved: [] });
-    // The team's undertaking is not the press's (§NNN): approved, it stops every colleague below the Administrator at
+    // The team's undertaking is not the press's (§1006): approved, it stops every colleague below the Administrator at
     // their next request, so it is approved on its own — never as a side effect of the participants' texts.
     expect(await findCurrentApprovedDocument(db, "STAFF_DATA_AGREEMENT", "ro", NOW)).toBeUndefined();
 

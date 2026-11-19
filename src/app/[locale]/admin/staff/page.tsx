@@ -125,7 +125,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
   const words = await confirmWords();
   const staff = await listStaff(getDb(), actor);
   /*
-    The team's undertaking (§NNN), on every row for the Administrators who read this page: «Acceptat — versiunea N, <data>, ca
+    The team's undertaking (§1006), on every row for the Administrators who read this page: «Acceptat — versiunea N, <data>, ca
     „<numele scris>”», «Neacceptat», or «Nu e cerut» for the roles that are not asked (an Administrator, a member). One read of
     the acceptances for the whole list.
   */
@@ -228,7 +228,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
             {t("staff.superadminRow")}
           </Typography>
         )}
-        {/* The team's undertaking (§NNN): a line of words, never a chip — an accepted one carries the version, the day and the name typed. */}
+        {/* The team's undertaking (§1006): a line of words, never a chip — an accepted one carries the version, the day and the name typed. */}
         {agreement && (
           <Typography variant="body2" color="text.secondary" sx={{ display: "block", overflowWrap: "anywhere" }} data-testid="staff-team-agreement" data-state={agreement.kind}>
             {t("staff.teamAgreement.line", { state: agreementWords(agreement) })}

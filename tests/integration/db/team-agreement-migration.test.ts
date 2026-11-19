@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0221_staff_team_agreement` (§NNN; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în
+ * Migration `0221_staff_team_agreement` (§1006; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în
  * platformă»), proven on real PostgreSQL (PGlite) over a database migrated by the release before (BR-REQ-053-01 for the key,
  * BR-REQ-060-01 for the gate it records):
  *

@@ -45,7 +45,7 @@ export default async function BackofficeShell({
   /** The sign-out Server Action; handed in so this module never imports the app's actions. */
   signOut: (form: FormData) => Promise<void>;
   /**
-   * The team's undertaking waits (§NNN): the title, who is signed in and the sign-out, and no tabs — every section would only
+   * The team's undertaking waits (§1006): the title, who is signed in and the sign-out, and no tabs — every section would only
    * send the colleague back to `/admin/acord` — so no count is read either.
    */
   bare?: boolean;

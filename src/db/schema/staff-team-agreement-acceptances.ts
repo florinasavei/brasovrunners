@@ -4,11 +4,11 @@ import { legalDocuments } from "./legal-documents";
 import { locale } from "./locale";
 import { staffUsers } from "./staff-users";
 
-/** The longest full name a colleague types under the team's undertaking (§NNN): the house's 200 characters. */
+/** The longest full name a colleague types under the team's undertaking (§1006): the house's 200 characters. */
 export const TEAM_AGREEMENT_NAME_MAX = 200;
 
 /**
- * The team's undertaking, accepted (§NNN; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în
+ * The team's undertaking, accepted (§1006; the owner, 2026-11-19: «Voluntarii trebuie să semneze acordul GDPR când intră în
  * platformă»): one row per account and per version of «Angajament de confidențialitate și protecția datelor pentru echipă»
  * (`STAFF_DATA_AGREEMENT`) the account accepted on `/admin/acord`.
  *

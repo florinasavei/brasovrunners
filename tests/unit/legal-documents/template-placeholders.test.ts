@@ -64,7 +64,7 @@ describe("§357 the gaps of the platform's legal texts survive the seed and the 
 
   for (const key of KEYS) {
     for (const locale of LOCALES) {
-      // The team's undertaking is never seeded (§NNN): its prefill below still keeps every gap.
+      // The team's undertaking is never seeded (§1006): its prefill below still keeps every gap.
       it.skipIf(NEVER_SEEDED_KEYS.has(key))(`${key} ${locale}: the seeded sample carries every merge field and placeholder, as often as the template`, () => {
         const template = LEGAL_TEMPLATES[key][locale].body;
         const sample = SAMPLE_DOCUMENTS.find((document) => document.key === key)!.translations.find((t) => t.locale === locale)!.body;

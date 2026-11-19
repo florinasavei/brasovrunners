@@ -161,7 +161,7 @@ it is the authority, this is the summary):
     `docs/PLATFORM.md` § (c) Vercel after December, «The fit» — only if two consecutive months show under 3 Active CPU-hours (`/devs` → «Vercel: consumul
     lunii»); otherwise stay on Pro, because October paced 6.9 hours against Hobby's 4 and passing it pauses the site for
     about 30 days.
-26. **Approve the team's undertaking — before the next race day** (§NNN; the owner, 2026-11-19: «Voluntarii trebuie să
+26. **Approve the team's undertaking — before the next race day** (§1006; the owner, 2026-11-19: «Voluntarii trebuie să
     semneze acordul GDPR când intră în platformă»). A ninth text, «Angajament de confidențialitate și protecția datelor
     pentru echipă»: a lawyer reads the template first (its questions are at the top of
     `src/modules/legal-documents/templates/team-agreement.ts`), then `/admin/legal` → «Versiune nouă» → the template → the

@@ -11,13 +11,13 @@ import {
 } from "@/modules/staff-identity/domain/team-agreement";
 
 /**
- * §NNN BR-REQ-060-01 — the team's undertaking at sign-in, the parts that are rules rather than reads: which request is a page
+ * §1006 BR-REQ-060-01 — the team's undertaking at sign-in, the parts that are rules rather than reads: which request is a page
  * being drawn (sent to the undertaking) and which is refused (a Server Action, a route handler), where a refused page wanted to
  * go — a same-site path only —, the undertaking's own address, and the full name typed under it.
  */
 const headers = (entries: Record<string, string>) => new Headers(entries);
 
-describe("§NNN which request the gate sends to the undertaking, and which it refuses", () => {
+describe("§1006 which request the gate sends to the undertaking, and which it refuses", () => {
   it("sends a page being drawn, the path the proxy wrote kept", () => {
     expect(gateRequestOf(headers({ "x-br-path": "/ro/admin/checkin/ABC123" }))).toEqual({ kind: "page", path: "/ro/admin/checkin/ABC123" });
     // A router request is a page too (`RSC: 1`), its own parameter dropped later by the way back.
@@ -39,7 +39,7 @@ describe("§NNN which request the gate sends to the undertaking, and which it re
   });
 });
 
-describe("§NNN the undertaking's own page", () => {
+describe("§1006 the undertaking's own page", () => {
   it("is /admin/acord, with or without its locale, its query or a trailing slash", () => {
     expect(TEAM_AGREEMENT_PATH).toBe("/admin/acord");
     for (const path of ["/admin/acord", "/ro/admin/acord", "/en/admin/acord", "/ro/admin/acord?returnTo=%2Fro%2Fadmin", "/ro/admin/acord/"]) {
@@ -54,7 +54,7 @@ describe("§NNN the undertaking's own page", () => {
   });
 });
 
-describe("§NNN the way back — a same-site path only", () => {
+describe("§1006 the way back — a same-site path only", () => {
   it("keeps where a page wanted to go, its query included", () => {
     expect(teamAgreementReturnTo("/ro/admin/checkin/ABC123")).toBe("/ro/admin/checkin/ABC123");
     expect(teamAgreementReturnTo("/ro/admin/checkin?eventId=e1&q=Ana")).toBe("/ro/admin/checkin?eventId=e1&q=Ana");
@@ -98,7 +98,7 @@ describe("§NNN the way back — a same-site path only", () => {
   });
 });
 
-describe("§NNN the full name typed under the undertaking", () => {
+describe("§1006 the full name typed under the undertaking", () => {
   it("is trimmed, its spaces collapsed, 1 to 200 characters", () => {
     expect(teamAgreementName("  Ana   Maria\tPop ")).toBe("Ana Maria Pop");
     expect(teamAgreementName("A")).toBe("A");

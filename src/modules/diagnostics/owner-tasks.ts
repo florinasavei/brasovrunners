@@ -361,7 +361,7 @@ export type OwnerTaskInputs = {
   /** Does the notice in force, in every language, name `{{raffle}}` (§984, `noticeDescribesRaffle`)? Until it does, no door of a raffle's sign-up opens. */
   raffleDescribed: boolean;
   /**
-   * Is a version of the team's undertaking in force (§NNN, `teamAgreementInForce`)? Until one is, no colleague is asked
+   * Is a version of the team's undertaking in force (§1006, `teamAgreementInForce`)? Until one is, no colleague is asked
    * anything at sign-in — a text the club has not approved binds nobody — and the club's row says to approve it.
    */
   teamAgreementInForce: boolean;
@@ -930,7 +930,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   }
 
   /*
-    The team's undertaking (§NNN): open while no version of it is in force — the volunteers, the Redactors, the Organizers and
+    The team's undertaking (§1006): open while no version of it is in force — the volunteers, the Redactors, the Organizers and
     the Tehnic work with the participants' data having undertaken nothing, and nobody is asked at sign-in —, done by itself the
     day a version takes effect. Always on the list: every club has a team. Never blocking: nothing a runner does waits on it.
   */
