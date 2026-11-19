@@ -1239,6 +1239,15 @@ export type TemplateData = {
    */
   organizerProgramme?: boolean;
   /**
+   * «Atașează traseul (GPX)» (§987): the send ticked it and the event has a GPX as the message leaves — the line under the
+   * organizers' words, with `url`, the address the event page's «Descarcă traseul (GPX)» opens (`getStorage().publicUrl`,
+   * never a host typed here), under `fileName`, the file's own name. `attached` says whether the file rides on this very
+   * email: the line says «atașat» only then — never on a club copy (§320), nor when the store gave no file. Set by the
+   * renderer from the row's flag and by the composer's preview from the box, never by a sample; read by the organizers'
+   * message alone. The file itself is the renderer's attachment, never data of the template.
+   */
+  organizerRouteGpx?: { url: string; fileName: string; attached: boolean };
+  /**
    * "Înscrierile mele" without a token (§77): the page that asks for an address and mails the link.
    * On the organizer's message, which mints nothing, so its reader can still find their registration.
    */
@@ -1897,6 +1906,27 @@ function organizerQrEmphasis(locale: EmailLocale, d: TemplateData): Emphasis {
 /** …and the confirmation's own QR figure — whose it is, the number, the code — under them (§943, §547). */
 function organizerQrImage(locale: EmailLocale, d: TemplateData): TemplateContent["image"] {
   return d.organizerQr ? qrImage(locale, { ...d, checkinCode: d.organizerQr.checkinCode, checkinQrUrl: d.organizerQr.qrUrl }) : undefined;
+}
+
+/**
+ * «Atașează traseul (GPX)» (§987; the owner, 2026-11-19: «vreau să pot pune în mail și traseul cursei GPX»): under the
+ * organizers' words — and under the number and the desk code of §943 — one line in this half's language with the link to
+ * the route's file, under the file's own name, so a mail client that hides attachments still gives it. It says the file
+ * is attached only when it is (`attached`, as the volunteer agreement's sentence is said only when the PDF rides along,
+ * §758); a club copy (§320), or a store that gave no file, gets the link alone. Only with `organizerRouteGpx` in hand:
+ * the renderer sets it only for a row its send flagged and an event with a GPX as it leaves, so a message without it is
+ * built exactly as before.
+ */
+function organizerRouteGpxLines(locale: EmailLocale, d: TemplateData): EmailBodyPart[] {
+  const gpx = d.organizerRouteGpx;
+  if (!gpx) return [];
+  const sentence = gpx.attached ? T[locale].routeGpx.attached : T[locale].routeGpx.linkOnly;
+  return [
+    {
+      html: `<p data-email-part="route-gpx" style="margin:0 0 14px;font-size:16px;line-height:1.5">${escapeHtml(sentence)} <a href="${escapeHtml(gpx.url)}" style="color:${COLOR.blueInk}">${escapeHtml(gpx.fileName)}</a></p>`,
+      text: [`${sentence} ${gpx.url}`],
+    },
+  ];
 }
 
 /**
@@ -2977,6 +3007,14 @@ const T = {
       label: "Semnează declarația",
       note: "Încă nu ai semnat declarația pe proprie răspundere: înscrierea ta este completă doar după ce o semnezi.",
     },
+    /**
+     * «Atașează traseul (GPX)» (§987), on a send that ticked it: the line under the organizers' words, before the link to
+     * the file — «atașat» only when the file rides on this email, the link alone on a club copy or when the store gave none.
+     */
+    routeGpx: {
+      attached: "Traseul e atașat acestui email, ca fișier GPX. Îl poți descărca și de aici:",
+      linkOnly: "Traseul, ca fișier GPX, îl descarci de aici:",
+    },
     /** Under "you are already registered", on a re-send for a slip (§446): the one way to register somebody else. */
     anotherPersonHint: "Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.",
     /** In front of the verification email re-sent by itself (§653): why it came, and that the deadline did not move. */
@@ -3888,6 +3926,10 @@ const T = {
       label: "Sign the declaration",
       note: "You have not signed the declaration of own responsibility yet: your registration is complete only once you sign it.",
     },
+    routeGpx: {
+      attached: "The route is attached to this email as a GPX file. You can also download it here:",
+      linkOnly: "Download the route as a GPX file here:",
+    },
     anotherPersonHint: "If you want to register someone else, send the form with that person's full name and birth date.",
     /** In front of the verification email re-sent by itself (§653): why it came, and that the deadline did not move. */
     confirmationRetry: (deadline: string) =>
@@ -4361,6 +4403,8 @@ export function buildTemplateContent(
       organizerQr: undefined,
       // …nor the link to anybody's declaration (§947): it signs for one person, and is that person's alone.
       signDeclarationUrl: undefined,
+      // The route's link names nobody and stays (§987); the file is never on a copy (§320), so the line does not say it is.
+      organizerRouteGpx: data.organizerRouteGpx ? { ...data.organizerRouteGpx, attached: false } : undefined,
       thanksUrl: undefined,
       // «Spune-ne cum a fost» (§676) goes with the button it may be, as the results link does.
       feedbackUrl: undefined,
@@ -4786,6 +4830,8 @@ export function buildTemplateContent(
       ...organizerMessageParts(messageType, data, locale, bulkCopy),
       // …and under it, where the send asked for them, the confirmed runner's own number and desk code (§943).
       ...(messageType === "ORGANIZER_MESSAGE" ? organizerQrLines(locale, data) : []),
+      // …and, where the send ticked «Atașează traseul (GPX)», the line with the route's file (§987).
+      ...(messageType === "ORGANIZER_MESSAGE" ? organizerRouteGpxLines(locale, data) : []),
       // A newsletter's own words, and what the platform says around every newsletter message (§445).
       ...newsletterParts(messageType, data),
       ...newsletterLines(messageType, locale, data),
