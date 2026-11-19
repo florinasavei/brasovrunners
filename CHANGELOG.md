@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.80-2026-11-20
+
+- **The team's undertaking at sign-in** — a ninth legal text, «Angajament de confidențialitate și protecția datelor pentru echipă», which the club approves on its own in «Documente legale», on its draft's page (never by «Aprobă acum textele care lipsesc…» or «Aprobă ciornele», which lists its draft apart with the reason, never by the seed); once a version is in force, every Voluntar, Redactor, Organizator and Tehnic reads it on `/admin/acord`, types their full name, ticks «Am citit și accept angajamentul» and presses «Accept și intru» before any backoffice page, press or file answers them — then lands where they were going, a scanned race number included; a new version is asked once more, Administrators never; «Echipa» says who accepted which version, when and as whom, and «Sarcini» asks the club to approve the text. §1006.
+- **«Cronometrare» counts only who can finish** — «… din N cu număr» counts the confirmed runners' numbers and the elite list's numbered lines, never a number a cancelled or expired registration keeps. §1007.
+- **«Prinde timpul» is now «Finish»** — on «Cronometrare», the button pressed once for each runner of a bunch before typing their numbers, and in the guide. §1008.
 ## BR-V4.79-2026-11-20
 
 - **«Clasament» lists the elites first** — among «Alergători înscriși», the registrations marked «Elită» come first, then the checked-in, then by number. §1005.

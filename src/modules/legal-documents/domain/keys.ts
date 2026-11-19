@@ -17,8 +17,11 @@ export const LEGAL_DOCUMENT_KEYS = [
   "GROUP_RUN_DECLARATION_ASPHALT",
   "GROUP_RUN_DECLARATION_TRAIL",
   "VOLUNTEER_AGREEMENT",
-  // «Regulamentul tombolei» (§984), last: what a person accepts to sign up for an event's raffle.
+  // «Regulamentul tombolei» (§984): what a person accepts to sign up for an event's raffle.
   "RAFFLE_RULES",
+  // «Angajament de confidențialitate și protecția datelor pentru echipă» (§1006), last: what a colleague below the
+  // Administrator accepts before the backoffice opens to them.
+  "STAFF_DATA_AGREEMENT",
 ] as const satisfies readonly LegalDocumentKey[];
 
 /**
@@ -37,8 +40,17 @@ export const REGISTRATION_LEGAL_KEYS = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLAR
  * that takes the platform's texts has everything covered from the same press. Approving a group
  * run's text only makes it available: a run offers it only once its organizer ticks the box (§393).
  * The page and its messages count this list; no sentence says a number of its own.
+ *
+ * **But the team's undertaking (§1006).** Approving `STAFF_DATA_AGREEMENT` stops every colleague below
+ * the Administrator at their next request until they accept it — on race day, the whole desk. So it is
+ * approved on its own, read and pressed for itself («Versiune nouă» or its card's «Regenerează din
+ * șablon», then «Aprobă și publică»), never as a side effect of a press about the participants' texts:
+ * this press leaves it out, and «Aprobă ciornele» holds its draft back (`draftApprovalOutcome`'s
+ * `alone`, `domain/batch.ts`) even when «Regenerează din șabloane» made it with the others.
  */
-export const PLATFORM_APPROVAL_KEYS = LEGAL_DOCUMENT_KEYS;
+export const PLATFORM_APPROVAL_KEYS = LEGAL_DOCUMENT_KEYS.filter(
+  (key): key is Exclude<(typeof LEGAL_DOCUMENT_KEYS)[number], "STAFF_DATA_AGREEMENT"> => key !== "STAFF_DATA_AGREEMENT",
+);
 
 /**
  * The volunteer agreement (§758, amending §754; the owner, 2026-10-13: «trebuie să avem și un document gen
@@ -57,6 +69,15 @@ export const VOLUNTEER_AGREEMENT_KEY = "VOLUNTEER_AGREEMENT" as const satisfies 
  * (`RAFFLE_RULES_MERGE_FIELDS`). No door of the sign-up opens until a version is in force in every language (`raffleSignUpGate`).
  */
 export const RAFFLE_RULES_KEY = "RAFFLE_RULES" as const satisfies LegalDocumentKey;
+
+/**
+ * «Angajament de confidențialitate și protecția datelor pentru echipă» (§1006; the owner, 2026-11-19: «Voluntarii trebuie să
+ * semneze acordul GDPR când intră în platformă»): what a colleague below the Administrator accepts, once per version, before
+ * any backoffice page, action or route answers them — that they act under the club's authority (GDPR art. 29, 32(4)), use the
+ * participants', volunteers' and members' data only for their role's tasks and keep them confidential. One text for the whole
+ * team, no blanks but the club's facts. While no version is in force nobody is asked (`staff-identity/team-agreement.ts`).
+ */
+export const TEAM_AGREEMENT_KEY = "STAFF_DATA_AGREEMENT" as const satisfies LegalDocumentKey;
 
 /**
  * The race's two declarations (§515; the owner's review of 2026-09-27: "Două tipuri:

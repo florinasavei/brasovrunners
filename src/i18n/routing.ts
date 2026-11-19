@@ -284,6 +284,11 @@ export const routing = defineRouting({
     /** The repository's documents, rendered for the roles that read `/devs` (`DECISIONS.md` §88). */
     "/devs/docs/[name]": "/devs/docs/[name]",
     "/admin/guide": "/admin/guide",
+    /**
+     * The team's undertaking (§1006): where a colleague below the Administrator reads and accepts it before the backoffice opens
+     * to them. One spelling in both locales, like every backoffice path.
+     */
+    "/admin/acord": "/admin/acord",
     /** «Sistemul de design» (§692): the look as the code draws it, and the redesign plan; reached from «Setări» → «Aspect». */
     "/admin/design": "/admin/design",
     /** What a staff member's network lets through, and what to ask IT to allow (§436). */

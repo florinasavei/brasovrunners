@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.79-2026-11-20 -->
+<!-- PROJECT_BASELINE: BR-V4.80-2026-11-20 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V4.79-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.80-2026-11-20`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -747,6 +747,13 @@ by rank); it is given and taken away on the team page by whoever may manage that
 the person themselves, and every change is recorded. Changing the person's role to one that may
 not hold it takes it away. A permission opens the job and nothing more: it is never a way to a
 member's or a participant's address.
+
+**The team's undertaking, before the backoffice opens (`DECISIONS.md` §1006).** Every colleague below the administrator — a
+volunteer, a copywriter, an organizer, a technical helper — accepts the club's «Angajament de confidențialitate și protecția
+datelor pentru echipă» once per version before any page, press or file of the backoffice answers them: that they act under
+the club's authority, use the participants', volunteers' and members' data only for their role's tasks and keep them
+confidential, during and after the role. Until the club approves a version nobody is asked; an admin and a superadmin
+never are; a new version is asked once more. The team page says who accepted which version, when and under which name.
 
 Participants are not application roles. Having permission to write articles does not grant access to participant data.
 

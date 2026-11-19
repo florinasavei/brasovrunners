@@ -364,7 +364,7 @@ describe("§986 «Anulează»: one's own press at the line, written once, not pr
   });
 });
 
-describe("§986 «⏱ Prinde timpul»: kept times, oldest first, each account's own", () => {
+describe("§986 «⏱ Finish»: kept times, oldest first, each account's own", () => {
   it("keeps the kept times of each staff account apart on the phone's line", () => {
     let line = withKept({ entries: [], kept: {}, title: null }, "vlad", [at(10), at(10, 2)]);
     line = withKept(line, "radu", [at(11)]);

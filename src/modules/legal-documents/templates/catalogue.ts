@@ -6,6 +6,7 @@ import { declarationRoadEn, declarationRoadRo, declarationTrailEn, declarationTr
 import { groupRunAsphaltEn, groupRunAsphaltRo, groupRunTrailEn, groupRunTrailRo } from "./group-run-declaration";
 import { privacyNoticeEn, privacyNoticeRo } from "./privacy-notice";
 import { raffleRulesEn, raffleRulesRo } from "./raffle-rules";
+import { teamAgreementEn, teamAgreementRo } from "./team-agreement";
 import { termsEn, termsRo } from "./terms";
 import { volunteerAgreementEn, volunteerAgreementRo } from "./volunteer-agreement";
 
@@ -68,6 +69,11 @@ export const LEGAL_TEMPLATES: Record<LegalDocumentKey, Record<Locale, { title: s
   RAFFLE_RULES: {
     ro: { title: "Regulamentul tombolei", body: raffleRulesRo },
     en: { title: "Raffle rules", body: raffleRulesEn },
+  },
+  // The team's undertaking (§1006): what a colleague below the Administrator accepts before the backoffice opens to them.
+  STAFF_DATA_AGREEMENT: {
+    ro: { title: "Angajament de confidențialitate și protecția datelor pentru echipă", body: teamAgreementRo },
+    en: { title: "Team confidentiality and data protection undertaking", body: teamAgreementEn },
   },
 };
 
