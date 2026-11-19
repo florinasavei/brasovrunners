@@ -132,17 +132,17 @@ export type SpareCard = {
   /** At most this many per print. */
   perPrint: number;
   /**
-   * The spares somebody wears (§NNN, `bibs.ts#givenSpareBibs`), lowest first: the number as the event writes it, the
+   * The spares somebody wears (§989, `bibs.ts#givenSpareBibs`), lowest first: the number as the event writes it, the
    * registration it is on, its name and its state — «154 → Radu Pop». Names only, for whoever reads the bibs.
    */
   given?: ReadonlyArray<GivenSpareLine>;
 };
 
-/** One line of the spares given (§NNN): the number written as the bib prints it, and whose it is. */
+/** One line of the spares given (§989): the number written as the bib prints it, and whose it is. */
 export type GivenSpareLine = { registrationId: string; number: string; name: string; status: RegistrationStatus };
 
 /**
- * «N BIB-uri goale date:» (§NNN; the owner, 2026-11-19: «spre ex. 154 deja e la …»): each spare given, lowest first,
+ * «N BIB-uri goale date:» (§989; the owner, 2026-11-19: «spre ex. 154 deja e la …»): each spare given, lowest first,
  * the whole line a link to the registration — «154 → Radu Pop» — and the state beside a line that is not confirmed (a
  * cancelled runner's spare stays retired, §311). What a person sees at a glance before handing the next blank bib.
  */
@@ -206,7 +206,7 @@ async function SpareBibsSection({ spares, mayReserve }: { spares: SpareCard; may
               : t("bibs.sparesNone", { from: band.from, to: band.to })}
           </Typography>
         )}
-        {/* Who wears the spares already given (§NNN): «154 → Radu Pop», each a link to the registration. */}
+        {/* Who wears the spares already given (§989): «154 → Radu Pop», each a link to the registration. */}
         {band && <GivenSpareBibs given={spares.given ?? []} />}
         <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
           {mayReserve && spares.nextFrom !== null ? (

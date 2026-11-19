@@ -147,7 +147,7 @@ function auditLabelValues(metadata: unknown): Record<string, string> | undefined
 }
 
 /**
- * A trail row written by «Dă-i un BIB gol» (§NNN): `registration.bib_set` with `spare: true` — the blank bib's number, the
+ * A trail row written by «Dă-i un BIB gol» (§989): `registration.bib_set` with `spare: true` — the blank bib's number, the
  * number it replaced or none, and whether that one was printed. Null for any other row, a typed number's included.
  */
 function spareBibOf(action: string, metadata: unknown): { from: number | null; to: number; printedReplaced: boolean } | null {
@@ -418,7 +418,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       ? tr(`registrations.answers.fields.${field}`, { club: CLUB_NAME })
       : field;
   const trailLabel = (action: string, metadata: unknown): string => {
-    // «Dă-i un BIB gol» (§NNN): the blank bib given, and the number it retired — the printed one named as printed, the bib to pull.
+    // «Dă-i un BIB gol» (§989): the blank bib given, and the number it retired — the printed one named as printed, the bib to pull.
     const blankBib = spareBibOf(action, metadata);
     if (blankBib) {
       if (blankBib.from === null) return tr("registrations.spareBib.trail", { to: written(blankBib.to) });
@@ -439,7 +439,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   };
   const trailMetadata = (action: string, metadata: unknown): Record<string, unknown> => {
     const shown = { ...((metadata ?? {}) as Record<string, unknown>) };
-    // A blank bib's label already says both numbers (§NNN): no second «— → 154» under it.
+    // A blank bib's label already says both numbers (§989): no second «— → 154» under it.
     if (spareBibOf(action, metadata)) {
       delete shown.from;
       delete shown.to;
@@ -521,7 +521,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const bibRefusal = await refusalMessages({ bibNumber: tr("registrations.bibNumber") });
   bibRefusal.keptConflict = bibRefusal.kept;
   /*
-    «Dă-i un BIB gol» (§NNN): the event's free desk spares, lowest first, for a confirmed real registration, printed or not.
+    «Dă-i un BIB gol» (§989): the event's free desk spares, lowest first, for a confirmed real registration, printed or not.
     Replacing a number is the Administrator's (§548), so another role is offered it only on a row with no number yet; read
     only where the fold can be drawn, and the service decides again under the event's lock.
   */
@@ -962,7 +962,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   )}
                   {spareRefusal && (
                     /*
-                      «Dă-i un BIB gol» (§NNN; the owner, 2026-11-19: «trebuie să pot aloca numere dintre cele goale, adică astea —
+                      «Dă-i un BIB gol» (§989; the owner, 2026-11-19: «trebuie să pot aloca numere dintre cele goale, adică astea —
                       spre ex. 154 deja e la …»): one of the event's free desk spares, for the runner holding that blank
                       bib, printed or not — the one way a printed number changes. A native select, lowest first and the lowest
                       chosen; the question names the number chosen and the one retired, and the email is the answer pressed

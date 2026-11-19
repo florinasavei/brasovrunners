@@ -1218,14 +1218,14 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   return writeBibNumberByStaff(db, actor, registrationId, bibNumber, now, { sendEmail: options.sendEmail !== false, blankBib: false });
 }
 
-/** «Dă-i un BIB gol»'s select on the registration's page (§NNN): the box every refusal of that press names. */
+/** «Dă-i un BIB gol»'s select on the registration's page (§989): the box every refusal of that press names. */
 export const SPARE_BIB_FIELD = "spareNumber";
 
-/** The mark on a refusal of «Dă-i un BIB gol» whose blank bib is somebody's already — given a moment ago, or retired (§NNN). */
+/** The mark on a refusal of «Dă-i un BIB gol» whose blank bib is somebody's already — given a moment ago, or retired (§989). */
 const SPARE_BIB_TAKEN = "spareBibTaken";
 
 /**
- * The page's word for a refused blank bib (§NNN): `SPARE_BIB_TAKEN` when the bib chosen was given to somebody else
+ * The page's word for a refused blank bib (§989): `SPARE_BIB_TAKEN` when the bib chosen was given to somebody else
  * meanwhile or is retired, null for any other error, which keeps its own code.
  */
 export function spareBibRefusalCode(error: unknown): "SPARE_BIB_TAKEN" | null {
@@ -1233,7 +1233,7 @@ export function spareBibRefusalCode(error: unknown): "SPARE_BIB_TAKEN" | null {
 }
 
 /**
- * «Dă-i un BIB gol» (§NNN; the owner, 2026-11-19, holding the sheet of spares: «trebuie să pot aloca numere dintre cele
+ * «Dă-i un BIB gol» (§989; the owner, 2026-11-19, holding the sheet of spares: «trebuie să pot aloca numere dintre cele
  * goale, adică astea — spre ex. 154 deja e la …»): a confirmed runner is given one of the event's free desk
  * spares (§444) — the blank bib already in their hand, the name written on in marker — and wears its number from now on.
  *
@@ -1265,7 +1265,7 @@ export async function giveSpareBibByStaff<T extends Record<string, unknown>>(
 
 /**
  * A race number by hand, for both presses: «Schimbă numărul» (`blankBib: false`) and «Dă-i un BIB gol» (`blankBib: true`,
- * §NNN). One rule, two differences: the blank bib must be one of the event's spares and may replace a printed number; the
+ * §989). One rule, two differences: the blank bib must be one of the event's spares and may replace a printed number; the
  * typed number may be any free number and never replaces a printed one (§311). The typed box's refusals keep the fields
  * they always had (its action names the box); the blank bib's name its select.
  */
@@ -1322,7 +1322,7 @@ async function writeBibNumberByStaff<T extends Record<string, unknown>>(
   }
   /*
     A number that is on paper stays on it (§311): moving it would leave the printed bib pointing at nobody. The blank bib
-    alone replaces one (§NNN): the paper in the runner's hand is then the spare, and the printed number is retired below.
+    alone replaces one (§989): the paper in the runner's hand is then the spare, and the printed number is retired below.
   */
   if (!blankBib && current.bibNumber !== null && current.bibPrintedAt !== null) {
     throw new DomainError("VALIDATION_ERROR", "this race number is already printed; it cannot be changed");
@@ -1357,7 +1357,7 @@ async function writeBibNumberByStaff<T extends Record<string, unknown>>(
       /*
         A desk spare is on paper already (§444): printed blank and handed out with the name written
         on. Marked printed, so the next "unprinted" sheet does not print a second one with the name,
-        and a cancellation lists it among the bibs that exist (§311). The blank bib must be one (§NNN):
+        and a cancellation lists it among the bibs that exist (§311). The blank bib must be one (§989):
         a number nobody printed blank is the typed box's, with its own rules.
       */
       const spare = await isEventSpareNumber(tx, current.eventId, bibNumber);
@@ -1374,7 +1374,7 @@ async function writeBibNumberByStaff<T extends Record<string, unknown>>(
           The refusals above, again, in the write itself (§311): `current` was read before this
           transaction, so a registration cancelled — or a number printed — in between would
           otherwise still have its number moved. No row back means one of them became true. The
-          blank bib replaces a printed number (§NNN), so its write asks only the state and the number.
+          blank bib replaces a printed number (§989), so its write asks only the state and the number.
         */
         .where(
           and(
@@ -1404,7 +1404,7 @@ async function writeBibNumberByStaff<T extends Record<string, unknown>>(
         The audit row, in the same transaction: its `from` is what retires the replaced number
         (`bibs.ts#replacedBibNumbers`), so a draw that could see the new number and not the row
         saying the old one is retired must be impossible. The event is named so the read can find it.
-        A blank bib says so (§NNN), and whether the number it replaced was on paper — the bib to pull
+        A blank bib says so (§989), and whether the number it replaced was on paper — the bib to pull
         from the pile; never a name.
       */
       await recordAuditEvent(tx, {

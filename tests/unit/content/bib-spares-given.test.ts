@@ -6,7 +6,7 @@ import ro from "../../../messages/ro.json";
 import type { GivenSpareLine, SpareCard } from "@/modules/content/events/ui/boxes/BibPrint";
 
 /**
- * §NNN, BR-REQ-038-01 — the spares already given, on «Numere de rezervă pentru înscrierile de la fața locului» (the owner,
+ * §989, BR-REQ-038-01 — the spares already given, on «Numere de rezervă pentru înscrierile de la fața locului» (the owner,
  * 2026-11-19: «spre ex. 154 deja e la …»): under the reservation's line and how many are free, «N BIB-uri goale
  * date:» and one line a spare, lowest first, the whole line a link to the registration — «154 → Radu Pop» — the state
  * beside a line that is not confirmed. Names only; the card is drawn for whoever reads the bibs (the page's gate).
@@ -74,7 +74,7 @@ const given: GivenSpareLine[] = [
 ];
 const card = (lines: GivenSpareLine[] = given, free = 8): SpareCard => ({ band: { from: 154, to: 163 }, free, nextFrom: 164, perPrint: 50, given: lines });
 
-describe("§NNN the spares given, on the spares' card", () => {
+describe("§989 the spares given, on the spares' card", () => {
   it("lists each spare given lowest first, the whole line a link to the registration, under how many are still free", async () => {
     const html = block(await render(card()), "bib-spares");
     // How many are still free, the card's own line, before the list.

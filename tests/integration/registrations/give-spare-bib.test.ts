@@ -29,7 +29,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-038-01, BR-REQ-037-07, BR-REQ-060-01 — «Dă-i un BIB gol» (the owner, 2026-11-19, holding the sheet of
+ * §989, BR-REQ-038-01, BR-REQ-037-07, BR-REQ-060-01 — «Dă-i un BIB gol» (the owner, 2026-11-19, holding the sheet of
  * spares: «trebuie să pot aloca numere dintre cele goale, adică astea — spre ex. 154 deja e la …»).
  *
  * A confirmed runner is given one of the event's free desk spares (§444) — the blank bib in their hand — printed or not:
@@ -162,7 +162,7 @@ async function bibEmails(registrationId: string) {
   return rows.filter((row) => row.messageType === "BIB_ASSIGNED").map((row) => row.payloadJson);
 }
 
-describe("§NNN BR-REQ-038-01 «Dă-i un BIB gol» replaces a printed number with a free spare", () => {
+describe("§989 BR-REQ-038-01 «Dă-i un BIB gol» replaces a printed number with a free spare", () => {
   it("gives a printed runner the spare, marks it printed, retires the old number for good and tells the runner", async () => {
     const event = await createRace();
     const radu = await printedRunner(event.id, "Radu Pop");
@@ -220,7 +220,7 @@ describe("§NNN BR-REQ-038-01 «Dă-i un BIB gol» replaces a printed number wit
   });
 });
 
-describe("§NNN only the event's free spares are accepted, on the server", () => {
+describe("§989 only the event's free spares are accepted, on the server", () => {
   it("refuses a number that is not one of the spares, naming the select, and the typed box still never moves a printed number", async () => {
     const event = await createRace();
     const radu = await printedRunner(event.id, "Radu Pop");
@@ -288,7 +288,7 @@ describe("§NNN only the event's free spares are accepted, on the server", () =>
   });
 });
 
-describe("§NNN the event row's lock: two presses for one spare", () => {
+describe("§989 the event row's lock: two presses for one spare", () => {
   it("gives the spare to one runner and tells the other press it was taken, nothing written for it", async () => {
     const event = await createRace();
     const radu = await printedRunner(event.id, "Radu Pop");
@@ -335,7 +335,7 @@ describe("§NNN the event row's lock: two presses for one spare", () => {
   });
 });
 
-describe("§NNN BR-REQ-060-01 who may give a blank bib, asserted on the server", () => {
+describe("§989 BR-REQ-060-01 who may give a blank bib, asserted on the server", () => {
   it("lets only an Administrator replace a number; any desk role fills a row with none; a member is no staff", async () => {
     const event = await createRace();
     const radu = await printedRunner(event.id, "Radu Pop");
@@ -384,7 +384,7 @@ describe("§NNN BR-REQ-060-01 who may give a blank bib, asserted on the server",
   });
 });
 
-describe("§NNN §976 the email is the answer pressed", () => {
+describe("§989 §976 the email is the answer pressed", () => {
   it("queues BIB_ASSIGNED for «… și trimite emailul» and nothing for «… fără email», the change written either way", async () => {
     const event = await createRace();
     const sent = await printedRunner(event.id, "Radu Pop");
@@ -400,7 +400,7 @@ describe("§NNN §976 the email is the answer pressed", () => {
   });
 });
 
-describe("§NNN the spares given, for the card", () => {
+describe("§989 the spares given, for the card", () => {
   it("lists every real wearer of the reservation lowest first, a cancelled one with its state, and nothing outside it", async () => {
     const event = await createRace([154, 158]);
     const radu = await printedRunner(event.id, "Radu Pop");

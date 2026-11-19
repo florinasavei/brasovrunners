@@ -6,7 +6,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox, openFold } from "./support/fold";
 
 /**
- * §NNN, BR-REQ-038-01, BR-REQ-041-01 — «Dă-i un BIB gol» (the owner, 2026-11-19, holding the sheet of spares: «trebuie să
+ * §989, BR-REQ-038-01, BR-REQ-041-01 — «Dă-i un BIB gol» (the owner, 2026-11-19, holding the sheet of spares: «trebuie să
  * pot aloca numere dintre cele goale, adică astea»): an Administrator gives a runner whose named bib is already printed
  * one of the desk's free spares; the registration's page then says the spare's number, and the spares' card on the
  * event's editor lists it with the runner's name, a link to the registration.
@@ -90,7 +90,7 @@ async function bibAudits(registrationId: string): Promise<unknown[]> {
   });
 }
 
-test.describe("§NNN «Dă-i un BIB gol»", () => {
+test.describe("§989 «Dă-i un BIB gol»", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("an Administrator gives a printed runner a blank bib: the page wears its number and the card lists it", async ({ page }) => {

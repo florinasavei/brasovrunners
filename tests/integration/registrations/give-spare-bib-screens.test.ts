@@ -13,7 +13,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN, BR-REQ-038-01, BR-REQ-060-01 — «Dă-i un BIB gol» on a registration's page (the owner, 2026-11-19: «trebuie să pot
+ * §989, BR-REQ-038-01, BR-REQ-060-01 — «Dă-i un BIB gol» on a registration's page (the owner, 2026-11-19: «trebuie să pot
  * aloca numere dintre cele goale, adică astea — spre ex. 154 deja e la …»): a fold beside the number, offered on
  * a confirmed real registration whether or not its bib is printed, with a native select of the event's free spares —
  * lowest first, the lowest chosen — and one press behind the house's question, which says what happens: the runner wears
@@ -199,7 +199,7 @@ beforeEach(async () => {
   state.locale = "ro";
 });
 
-describe("§NNN «Dă-i un BIB gol» on the registration's page", () => {
+describe("§989 «Dă-i un BIB gol» on the registration's page", () => {
   it("offers the free spares to a printed runner, lowest first and chosen, behind a question that says what happens", async () => {
     const race = await createRace();
     // 154 is on somebody already: the select starts at 155.

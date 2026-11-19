@@ -53,7 +53,7 @@ export const EMAILING_PRESSES: Readonly<Record<string, Press>> = {
   confirmRegistrationNowAction: { file: REGISTRATIONS, causes: ["registrations.confirmPaper"], actor: "named" },
   promoteRegistrationAction: { file: REGISTRATIONS, causes: ["registrations.givePlace"], actor: "named" },
   setBibNumberAction: { file: REGISTRATIONS, causes: ["registrations.setBib"], actor: "named" },
-  // «Dă-i un BIB gol» (§NNN): a number given by hand too — the same cause, its own file beside the page.
+  // «Dă-i un BIB gol» (§989): a number given by hand too — the same cause, its own file beside the page.
   giveSpareBibAction: { file: SPARE_BIB, causes: ["registrations.setBib"], actor: "named" },
   setOutsideCapacityAction: { file: REGISTRATIONS, causes: ["registrations.specialGuests"], actor: "named" },
   changeRegistrationAddressAction: { file: REGISTRATIONS, causes: ["registrations.changeAddress"], actor: "named" },

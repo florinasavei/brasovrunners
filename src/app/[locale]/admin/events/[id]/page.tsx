@@ -270,7 +270,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const rsvpRows = canReadRegistrations(staffUser.role) && rsvpCounts.confirmed + rsvpCounts.unconfirmed > 0 ? await listRsvpsForAdmin(db, event.id) : null;
   // The desk's spares (§444): what is reserved, how much of it is free, where the next print starts.
   const spareState = bibCounts ? await spareCardState(db, event.id) : null;
-  // Who wears the spares already given (§NNN): «154 → Radu Pop» on the card — read only once there is a reservation.
+  // Who wears the spares already given (§989): «154 → Radu Pop» on the card — read only once there is a reservation.
   const givenSpares = spareState?.band ? await givenSpareBibs(db, event.id) : [];
   const spares = spareState
     ? {

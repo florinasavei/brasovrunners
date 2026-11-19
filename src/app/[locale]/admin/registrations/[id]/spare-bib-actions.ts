@@ -13,7 +13,7 @@ import { mailSkippedOf, sendEmailOf } from "@/shared/forms/send-email";
 import { wholeDigits } from "@/shared/forms/whole-digits";
 
 /**
- * «Dă-i un BIB gol» on a registration's page (§NNN): the free desk spare chosen in the select becomes the runner's number,
+ * «Dă-i un BIB gol» on a registration's page (§989): the free desk spare chosen in the select becomes the runner's number,
  * printed or not, and the old number is retired (`giveSpareBibByStaff`). A desk verb as «Schimbă numărul» is: any staff
  * session reaches the service, which asserts the desk and, to replace a number, the Administrator (BR-REQ-060-01) — the
  * page offers the fold only where the press can succeed, a courtesy. The question's answer decides `BIB_ASSIGNED` (§976).

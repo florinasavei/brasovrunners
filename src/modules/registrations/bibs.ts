@@ -631,7 +631,7 @@ export async function freeSpareBibNumbers<T extends Record<string, unknown>>(
   return { band: spare, free: freeSpareNumbers(spare, await numbersInUse(db, eventId)) };
 }
 
-/** One desk spare somebody wears (§NNN): the number, the registration, its name and its state. */
+/** One desk spare somebody wears (§989): the number, the registration, its name and its state. */
 export type GivenSpareBib = {
   registrationId: string;
   bibNumber: number;
@@ -642,7 +642,7 @@ export type GivenSpareBib = {
 };
 
 /**
- * The desk's spares already given (§NNN; the owner, 2026-11-19: «spre ex. 154 deja e la …»): every real
+ * The desk's spares already given (§989; the owner, 2026-11-19: «spre ex. 154 deja e la …»): every real
  * registration of the event wearing a number of the reservation, lowest first — handed at the desk with the paper
  * (§444), typed by hand, or given as «Dă-i un BIB gol». A number a print stepped over is its runner's own, never a
  * blank bib (`skippedSpareNumbers`), so it is not listed. Every state is listed: a cancelled runner's spare stays
