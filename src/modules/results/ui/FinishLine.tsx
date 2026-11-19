@@ -60,7 +60,7 @@ import { measureServerClock, seedServerClock, serverClockNow } from "./server-cl
  *   (`mayNumber`), in its place «Dă-i un număr» (§990), a plain form that gives the line the race's next free number and comes back
  *   with the line's button like every other —; one already «Sosit» says «✓ <time>» and is not pressed.
  * - **The box**: the numeric keypad, Enter or «Sosit» records, and the box is empty at once, keeping the focus for the next number.
- * - **«⏱ Prinde timpul»** for a bunch: each press keeps one moment (oldest first, each with its age and its ✕); the next number or
+ * - **«⏱ Finish»** for a bunch: each press keeps one moment (oldest first, each with its age and its ✕); the next number or
  *   elite pressed takes the oldest kept moment instead of now — one older than ten minutes is no bunch any more: it is dropped when
  *   the line is read or pressed, and a line says its time, for paper (`staleKept`).
  * - **The times** are stamped at the press on the server's clock (`server-clock.ts`: the phone's wall clock and the offset measured
@@ -725,7 +725,7 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
         )}
       </Box>
 
-      {/* «⏱ Prinde timpul» works only in the page: with scripts off there is nothing to keep a moment in, so it is not drawn. */}
+      {/* «⏱ Finish» works only in the page: with scripts off there is nothing to keep a moment in, so it is not drawn. */}
       {hydrated && (
         <Box data-testid="finish-keep">
           <Stack direction="row" sx={{ gap: 1, alignItems: "center", flexWrap: "wrap" }}>

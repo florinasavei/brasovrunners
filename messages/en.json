@@ -9708,7 +9708,7 @@
               "steps": [
                 "«Race day» → «Timing» and choose the race. The organizer presses «Start» at the gun; you see the clock since the start.",
                 "An elite crosses: press their button at the top (the bib's label, with the name under it). Anyone else crosses: type the number on the bib and press «Finished». The box empties at once for the next one.",
-                "Several at once: press «Catch the time» once for each, then type the numbers in order.",
+                "Several at once: press «Finish» once for each, then type the numbers in order.",
                 "A red line tells you what to write on paper, with the time. Without signal, the presses wait on the phone and go by themselves.",
                 "Pressed the wrong one? «Undo» on your line in «Latest finishers», in the first 10 minutes, while nobody entered it again after you. Otherwise tell the organizer: they correct it under «Results»."
               ]
@@ -9978,7 +9978,7 @@
               "steps": [
                 "«Results» is in the race's editor, in the card «Registrations received» at the end of the page (beside «See this event's registrations»), not in «Taking part, registration and rules». The button shows only for a published race or one whose start has passed; for a draft, open the page's address directly.",
                 "At the finish line open «Timing» on a phone: «Race day» in the top bar → «Timing» (or the link on «Results»). At the start press «Start» right at the gun; without it, the times count from «Race start» in the editor. When an elite crosses, press their button (the bib's label, with the name under it); anyone else you enter by the number on the bib and «Finished». It is saved at once, with the time since the start, and «Latest finishers» shows who entered each line. No stopwatch needed.",
-                "Several arriving at once? Press «Catch the time» once for each, then type the numbers in order: each takes the oldest time caught. A number with no confirmed registration is refused, with its time on its line: write it on paper and enter it after the race under «Results», under «Runners who did not register». A number entered a second time — by you or by another volunteer — changes nothing: the first time stays, and the second shows in «Finish history», under «Results». A runner marked «Disqualified» under «Results» stays so when you enter their number. Pressed the wrong one? «Undo» on your line, for 10 minutes, while nobody entered it again after you; after that, under «Results». If you prefer a stopwatch or an app, note each runner's number and time and enter them afterwards under «Results» — the next steps.",
+                "Several arriving at once? Press «Finish» once for each, then type the numbers in order: each takes the oldest time caught. A number with no confirmed registration is refused, with its time on its line: write it on paper and enter it after the race under «Results», under «Runners who did not register». A number entered a second time — by you or by another volunteer — changes nothing: the first time stays, and the second shows in «Finish history», under «Results». A runner marked «Disqualified» under «Results» stays so when you enter their number. Pressed the wrong one? «Undo» on your line, for 10 minutes, while nobody entered it again after you; after that, under «Results». If you prefer a stopwatch or an app, note each runner's number and time and enter them afterwards under «Results» — the next steps.",
                 "Under «Registered runners» there is a line for every registered runner with a number. Write the time in «Time» (h:mm:ss or mm:ss) — digits alone work too, without colons: 12345 becomes 1:23:45 when you leave the box — or press the clock beside the box, pick the hours (0 to 23), minutes and seconds and press «OK». Tenths (mm:ss.t) are typed in the box. «Status» stays on «From the time (Finished / Did not start)» — a time means «Finished». For who did not finish choose «Dropped out», «Did not start» or «Disqualified», with no time. «Chip time» and «Note» are optional; «Chip time» has its own clock too.",
                 "Have the times in a file? Open «Import from CSV», paste the text (number, time on each line; with chip time and status if you have them) or choose the file and press «Import from CSV». The lines fill the boxes; nothing is saved yet.",
                 "A number no registration holds goes under «Runners who did not register»: write the name and, for a category, the sex and the date of birth. Tick «Agreed to appear by name in the results» only if the person told you so. «Add a runner who did not register» makes an empty line.",
@@ -13315,7 +13315,7 @@
       "title": "Timing",
       "show": "Show",
       "intro": "When someone crosses the line: for an elite, press their button; for anyone else, type the bib's number and press «Finished». Saved at once; corrections are made under «Results».",
-      "more": "Several at once? Press «Catch the time» for each, then type the numbers in order. Without signal, the presses wait on the phone. A number entered twice keeps the first time.",
+      "more": "Several at once? Press «Finish» for each, then type the numbers in order. Without signal, the presses wait on the phone. A number entered twice keeps the first time.",
       "clock": "Since the start: {time}",
       "notStarted": "The race has not started yet.",
       "boxLabel": "Number on the bib",
@@ -13346,7 +13346,7 @@
         "giveNumberAria": "Give a number: {label} — {name}"
       },
       "keep": {
-        "button": "Catch the time",
+        "button": "Finish",
         "help": "Several at once: press once for each, then type the numbers in order — each takes the oldest time caught. A time caught more than 10 minutes ago is removed: write it on paper.",
         "kept": "Times caught",
         "drop": "Remove the caught time {time}",

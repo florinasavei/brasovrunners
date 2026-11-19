@@ -2641,7 +2641,7 @@ enter them; **only the Administrator and the Superadministrator make them public
      a number — the bib's label large and the full name under it; press it as the elite crosses. A line with no number is drawn
      disabled: give it a number on the elite list (the bib still prints none). An elite already in shows «✓» and the time.
    - **Everyone else:** type the number on the bib and press «Sosit» (or Enter); the box empties at once for the next number. Several
-     at once: «Prinde timpul» once for each, then the numbers in order — each takes the oldest caught time. Every press is saved at
+     at once: «Finish» once for each, then the numbers in order — each takes the oldest caught time. Every press is saved at
      once with the moment it was pressed, on the site's clock (a phone whose clock is wrong, or whose screen locked, still stamps
      right); without signal it waits on that phone and goes by itself, and a reload sends what is left — by the account that pressed
      it: on a phone another volunteer signs into, their presses stand unsent with the time to write on paper. A press the site answers

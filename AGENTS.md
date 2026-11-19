@@ -1679,7 +1679,7 @@ themselves are §808's: one row per race number, ranked from the live answers, p
   record (`failed`, logged) waits out a backoff while the ones after it go, and is tried again until the server answers
   it — never given up, a later press of its number waiting behind it; one whose request hangs, neither answered nor
   failed, is still awaited, and after ten seconds the line says the signal is weak (`FINISH_PRESS_SLOW_MS`); a site
-  deployed under the page asks for a reload. **«⏱ Prinde timpul»** keeps one moment a press, each account its own, each
+  deployed under the page asks for a reload. **«⏱ Finish»** keeps one moment a press, each account its own, each
   chip saying its age; the next number or elite takes the oldest — but a moment older than ten minutes
   (`KEPT_TIME_MAX_AGE_MS`, `staleKept`) is no bunch any more: it is dropped when the line is read or pressed, and one
   line says its time, to be written on paper.
