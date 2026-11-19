@@ -1,4 +1,6 @@
+import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
@@ -25,6 +27,7 @@ import { findMemberTier, findMemberTierShared } from "@/modules/content/member-t
 import { isUuid } from "@/shared/ids";
 import { MEMBER_ROWS_MAX, type MemberRow } from "./domain/member-rows";
 import { STAFF_ROLE_LABEL } from "./domain/staff-labels";
+import type { SignInSteps } from "./domain/zitadel-invite";
 import {
   countSuperadministrators,
   deleteStaffPermissions,
@@ -53,7 +56,10 @@ import {
  * platform also *tells* them — `STAFF_INVITATION`, queued in the same transaction as the row,
  * through the club's own outbox: who added them, as what, and the sign-in page. The Zitadel
  * account itself is created by the action when the club's key is set (§123), and otherwise by
- * the person at the sign-in page; either way the email is the same.
+ * the person at the sign-in page. Since §NNN the email says which, as numbered steps
+ * (`signInSteps` in its payload), and when the action will ask Zitadel the row is held until
+ * Zitadel answered (`INVITATION_HOLD_MS`, `releaseInvitationHold`): the club's email never leaves
+ * before Zitadel was asked.
  *
  * Every function takes the acting staff user explicitly rather than reading a session. The
  * server asserts authorization here, once, and the pages and actions above pass in whoever
@@ -246,12 +252,16 @@ async function holdGivableTier<T extends Record<string, unknown>>(tx: Database<T
  * sends», slice 4): the row is written as ever and no invitation is queued; one `staff.invitation_not_sent` audit row says
  * so (the row and the message by id and name, never an address). The action then asks nothing of Zitadel either, and
  * «Retrimite invitația» later sends both — making the account first when it is missing.
+ *
+ * `zitadelInvite` (§NNN): the action will ask Zitadel for the account once this commits. The invitation then says
+ * Zitadel's steps and waits (`INVITATION_HOLD_MS`) until the action lets it go (`releaseInvitationHold`); without it
+ * the steps are the person's own and the row is due at once, as every invitation was.
  */
 export async function inviteStaffUser<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: StaffUser,
   input: unknown,
-  options: { tierId?: string | null; sendEmail?: boolean } = {},
+  options: { tierId?: string | null; sendEmail?: boolean; zitadelInvite?: boolean } = {},
 ): Promise<StaffUser> {
   assertAdministrator(actor);
 
@@ -296,7 +306,7 @@ export async function inviteStaffUser<T extends Record<string, unknown>>(
         now,
       });
     }
-    if (options.sendEmail !== false) await enqueueStaffInvitation(tx, actor, member, now);
+    if (options.sendEmail !== false) await enqueueStaffInvitation(tx, actor, member, now, { zitadelInvite: options.zitadelInvite });
     else await recordInvitationNotSent(tx, actor, member, now);
     return member;
   });
@@ -334,11 +344,14 @@ async function recordInvitationNotSent<T extends Record<string, unknown>>(tx: Da
  *
  * `sendEmail: false` («Adaugă membrii fără invitații», slice 4, §976): the rows are written and no invitation is queued; the
  * action asks nothing of Zitadel and writes `emailSkipped` on its `staff.members_invited` row.
+ *
+ * `zitadelInvite` (§NNN): as `inviteStaffUser`'s — each invitation says Zitadel's steps and waits until the action, member
+ * by member, lets it go once Zitadel answered for that member.
  */
 export async function inviteMembers<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: StaffUser,
-  input: { rows: readonly MemberRow[]; preferredLocale: "ro" | "en"; tierId?: string | null; sendEmail?: boolean },
+  input: { rows: readonly MemberRow[]; preferredLocale: "ro" | "en"; tierId?: string | null; sendEmail?: boolean; zitadelInvite?: boolean },
 ): Promise<{ added: StaffUser[]; existing: StaffUser[] }> {
   assertAdministrator(actor);
   assertMayAssign(actor, "MEMBER");
@@ -377,7 +390,7 @@ export async function inviteMembers<T extends Record<string, unknown>>(
       const email = normalizeStaffEmail(invite.email);
       if (existing.has(email)) continue;
       const member = await insertStaffUser(tx, { ...invite, email, memberTierId: tierId });
-      if (input.sendEmail !== false) await enqueueStaffInvitation(tx, actor, member, now);
+      if (input.sendEmail !== false) await enqueueStaffInvitation(tx, actor, member, now, { zitadelInvite: input.zitadelInvite });
       members.push(member);
     }
     return members;
@@ -396,6 +409,8 @@ export async function resendStaffInvitation<T extends Record<string, unknown>>(
    * does; «queue», the default, leaves it to «Când pleacă emailurile».
    */
   delivery: DeliveryChoice = "queue",
+  /** `zitadelInvite` (§NNN): the action asks Zitadel again after this — Zitadel's steps, and the hold until it answers. */
+  options: { zitadelInvite?: boolean } = {},
 ): Promise<StaffUser> {
   assertAdministrator(actor);
   const member = await findStaffUserByEmail(db, email);
@@ -405,7 +420,7 @@ export async function resendStaffInvitation<T extends Record<string, unknown>>(
   // Inside the day's allowance, asked before anything is queued (§80, §540): a refusal leaves nothing.
   if (delivery === "now") await assertRoomToSendNow(db, [invitationMessageType(member)], now);
   const key = await db.transaction(async (tx) => {
-    const queued = await enqueueStaffInvitation(tx, actor, member, now, true, delivery);
+    const queued = await enqueueStaffInvitation(tx, actor, member, now, { isManualResend: true, delivery, zitadelInvite: options.zitadelInvite });
     // The press on the audit trail (§540): who, which message, and that it passed the round.
     if (delivery === "now" && queued.id) {
       await recordAuditEvent(tx, {
@@ -429,15 +444,32 @@ function invitationMessageType(member: StaffUser): "STAFF_INVITATION" | "MEMBER_
   return isBackofficeRole(member.role) ? "STAFF_INVITATION" : "MEMBER_INVITATION";
 }
 
+/**
+ * How long the club's invitation waits for Zitadel (§NNN; the owner, 2026-11-19: «cumva trebuie un delay intre mailurile de
+ * logare»). A press that will ask Zitadel for the account queues it with `next_attempt_at` this far ahead — the column the
+ * claim already waits on, and the one a first attempt is held by too (`EnqueueEmailParams.notBefore`) — and the action lets
+ * it go the moment Zitadel answers (`releaseInvitationHold`), before the press's response. So the press's own drain, which
+ * runs after that response, sends it after Zitadel was asked, and no other drain or pinger takes it in between. The minute is
+ * the bound for an action that never got to the release: the row is then due at its end, for the next pass.
+ */
+export const INVITATION_HOLD_MS = 60_000;
+
+/** Every invitation of one person is keyed under this (`enqueueStaffInvitation`): the add's, each resend's. */
+function invitationKeyPrefix(staffUserId: string): string {
+  return `staff:${staffUserId}:invitation:`;
+}
+
 async function enqueueStaffInvitation<T extends Record<string, unknown>>(
   tx: Parameters<typeof enqueueEmail<T>>[0],
   actor: StaffUser,
   member: StaffUser,
   now: Date,
-  isManualResend = false,
-  delivery: DeliveryChoice = "queue",
+  how: { isManualResend?: boolean; delivery?: DeliveryChoice; zitadelInvite?: boolean } = {},
 ): Promise<{ id: string | null; key: string }> {
-  const key = `staff:${member.id}:invitation:${now.toISOString()}`;
+  const delivery = how.delivery ?? "queue";
+  const key = `${invitationKeyPrefix(member.id)}${now.toISOString()}`;
+  // Whose the account is, said as the email's steps (§NNN): Zitadel's when the action asks it, the person's otherwise.
+  const signInSteps: SignInSteps = how.zitadelInvite ? "zitadel" : "self";
   const queued = await enqueueEmail(tx, {
     participantId: null,
     registrationId: null,
@@ -446,15 +478,54 @@ async function enqueueStaffInvitation<T extends Record<string, unknown>>(
     locale: member.preferredLocale,
     recipientEmail: member.email,
     // Marked for the queue panel's «Pleacă acum» on a press that sends now (§540).
-    payload: markedForNow({ displayName: member.displayName, role: STAFF_ROLE_LABEL[member.role], inviterName: actor.displayName }, delivery),
+    payload: markedForNow({ displayName: member.displayName, role: STAFF_ROLE_LABEL[member.role], inviterName: actor.displayName, signInSteps }, delivery),
     idempotencyKey: key,
     requestedByStaffUserId: actor.id,
-    isManualResend,
+    isManualResend: how.isManualResend ?? false,
     now,
+    // Held until Zitadel answered (§NNN): the action lets it go, or the bound does.
+    ...(how.zitadelInvite ? { notBefore: new Date(now.getTime() + INVITATION_HOLD_MS) } : {}),
     // Sent now by the press's own drain after the transaction (§540), not by the timing's.
     drainAfter: delivery !== "now",
   });
   return { id: queued?.id ?? null, key };
+}
+
+/**
+ * The club's invitation let go once Zitadel answered (§NNN): due at once, so the drain that follows the press's response
+ * sends it — after Zitadel was asked, never before. Only what the hold still holds: this person's invitations, waiting and
+ * never tried, queued with Zitadel's steps. `steps` is what Zitadel's answer makes true (`signInStepsAfter`): `self` — it
+ * refused, or there was no key after all — rewrites the email's steps to the person's own, since no email from Zitadel is
+ * coming. Called by the action, outside the row's transaction, which had to commit before Zitadel was asked. Returns how
+ * many rows it let go; a row let go is not held any more, so a second call finds nothing.
+ */
+export async function releaseInvitationHold<T extends Record<string, unknown>>(
+  db: Database<T>,
+  staffUserId: string,
+  steps: SignInSteps,
+): Promise<number> {
+  const prefix = invitationKeyPrefix(staffUserId);
+  const released = await db
+    .update(emailOutbox)
+    .set({
+      nextAttemptAt: null,
+      ...(steps !== "zitadel" ? { payloadJson: sql`${emailOutbox.payloadJson} || ${JSON.stringify({ signInSteps: steps })}::jsonb` } : {}),
+    })
+    .where(
+      and(
+        eq(emailOutbox.status, "PENDING"),
+        eq(emailOutbox.attemptCount, 0),
+        isNotNull(emailOutbox.nextAttemptAt),
+        // A row a provider's pause handed back (`releaseForPause`) also reads attempt 0 with a next attempt: it carries its error
+        // and waits for its own moment — only the hold this press queued is let go.
+        isNull(emailOutbox.lastError),
+        inArray(emailOutbox.messageType, ["STAFF_INVITATION", "MEMBER_INVITATION"]),
+        sql`left(${emailOutbox.idempotencyKey}, ${prefix.length}) = ${prefix}`,
+        sql`(${emailOutbox.payloadJson} ->> 'signInSteps') = 'zitadel'`,
+      ),
+    )
+    .returning({ id: emailOutbox.id });
+  return released.length;
 }
 
 export async function changeStaffRole<T extends Record<string, unknown>>(

@@ -492,7 +492,8 @@ const OPT_OUT_PRESSES: Readonly<Record<string, { file: string; passes: RegExp }>
   assignVolunteerAction: { file: VOLUNTEERS, passes: /runVolunteer\([^;]*, press, sendEmail\)/ },
   unassignVolunteerAction: { file: VOLUNTEERS, passes: /runVolunteer\([^;]*, press, sendEmail\)/ },
   recordPaperVolunteerGuardianAction: { file: VOLUNTEERS, passes: /recordPaperVolunteerGuardian\([^;]*\{ sendEmail \},?\s*\)/ },
-  inviteStaffAction: { file: ADMIN, passes: /\{ tierId: [^}]*, sendEmail \}/ },
+  // §NNN: beside it whether the press asks Zitadel (`zitadelInvite`), which «… fără invitație» never does.
+  inviteStaffAction: { file: ADMIN, passes: /\{ tierId: [^}]*, sendEmail, zitadelInvite \}/ },
   inviteMembersAction: { file: ADMIN, passes: /inviteMembers\([^;]*\bsendEmail,/ },
   moveShopOrderAction: { file: SHOP, passes: /moveOrderByClub\(getDb\(\), \{ actor, orderId, verb, sendEmail \}\)/ },
 };

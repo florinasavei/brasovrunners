@@ -1,6 +1,6 @@
 import type { Locale } from "@/i18n/routing";
 import { env } from "@/shared/config/env";
-import { CLUB_NAME } from "@/theme/brand";
+import { ZITADEL_APPLICATION_NAME } from "./domain/zitadel-invite";
 
 /**
  * The invitation (`DECISIONS.md` §123): when a colleague is added on Echipa, their Zitadel
@@ -12,14 +12,20 @@ import { CLUB_NAME } from "@/theme/brand";
  * Zitadel's User API v2, called with a service user's personal access token
  * (`ZITADEL_MANAGEMENT_PAT`, `SETUP.md` §37). Two calls: create the human user with the
  * address verified — the invitation proves the mailbox — then an invite code that Zitadel
- * sends. An account that already exists is left alone and reported as such; a missing token
- * is not an error but "not configured", so the row is still added and the page says what to
- * do by hand. Nothing here decides who is staff: `staff_users` does (`AGENTS.md` §13).
+ * sends. An account that already exists is left alone and reported as such — `exists` when it
+ * had no password yet and Zitadel sent it a new code, `ready` when it already signs in (§NNN); a
+ * missing token is not an error but "not configured", so the row is still added and the page says
+ * what to do by hand. Nothing here decides who is staff: `staff_users` does (`AGENTS.md` §13).
  */
 
 export type InviteOutcome =
   | { kind: "invited" }
   | { kind: "exists" }
+  /**
+   * The account is there and already has its password, a passkey or a linked login (§NNN): Zitadel refuses a code
+   * for it — «already initialised» — and the person needs none. Only the club's email goes.
+   */
+  | { kind: "ready" }
   | { kind: "unconfigured" }
   | { kind: "failed"; reason: string };
 
@@ -125,10 +131,19 @@ async function createAndInvite(
   const invited = await call(`${issuer}/v2/users/${userId}/invite_code`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ sendCode: { applicationName: CLUB_NAME } }),
+    body: JSON.stringify({ sendCode: { applicationName: ZITADEL_APPLICATION_NAME } }),
   });
   if (!invited.ok) return { kind: "failed", reason: await reasonOf(invited) };
   return { kind: "invited" };
+}
+
+/**
+ * Zitadel's refusal of an invite code to an account that already signs in (§NNN): its check `CreationAllowed` — no
+ * password, passkey or linked login yet — fails with the error `COMMAND-EF34g`, «User is already initialized», and
+ * Zitadel writes the id in parentheses after its words. The id first, the words as a second chance.
+ */
+export function isAlreadyInitialised(reason: string): boolean {
+  return /COMMAND-EF34g|AlreadyInitiali[sz]ed|already initiali[sz]ed/i.test(reason);
 }
 
 /**
@@ -176,7 +191,10 @@ async function findZitadelUserId(email: string, deps: Deps = {}): Promise<string
 
 const NO_ACCOUNT = "no account with this address at the identity provider";
 
-/** Send the invitation again to an account that exists — the previous code is replaced. */
+/**
+ * Send the invitation again to an account that exists — the previous code is replaced. An account that already signs in
+ * is `ready` (§NNN): Zitadel sends it nothing, and nothing is missing.
+ */
 export async function resendZitadelInvite(email: string, deps: Deps = {}): Promise<InviteOutcome> {
   const connected = connection(deps);
   if (!connected) return { kind: "unconfigured" };
@@ -189,9 +207,12 @@ export async function resendZitadelInvite(email: string, deps: Deps = {}): Promi
     const invited = await call(`${issuer}/v2/users/${userId}/invite_code`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ sendCode: { applicationName: CLUB_NAME } }),
+      body: JSON.stringify({ sendCode: { applicationName: ZITADEL_APPLICATION_NAME } }),
     });
-    if (!invited.ok) return { kind: "failed", reason: await reasonOf(invited) };
+    if (!invited.ok) {
+      const reason = await reasonOf(invited);
+      return isAlreadyInitialised(reason) ? { kind: "ready" } : { kind: "failed", reason };
+    }
     return { kind: "invited" };
   } catch (error) {
     return { kind: "failed", reason: describeFailure(error) };

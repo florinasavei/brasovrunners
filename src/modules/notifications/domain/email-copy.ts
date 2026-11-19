@@ -70,7 +70,7 @@ export const EMAIL_COPY_PLACEHOLDERS = [
 
 export type EmailCopyPlaceholder = (typeof EMAIL_COPY_PLACEHOLDERS)[number];
 
-/** Enough for any message this platform sends; the longest shipped one has four. */
+/** Enough for any message this platform sends; the longest shipped one, a colleague's invitation with its numbered steps (§NNN), has seven. */
 export const EMAIL_COPY_MAX_PARAGRAPHS = 8;
 
 const PLACEHOLDER = /\{([A-Za-z0-9_]*)\}/g;

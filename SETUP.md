@@ -1354,10 +1354,31 @@ it "Add" creates the account too and Zitadel sends the password link.
 4. Vercel → the production project → Settings → Environment Variables:
    `ZITADEL_MANAGEMENT_PAT` = the token (Production). The same on the QA project. Redeploy
    both.
-5. Check: Echipa → add yourself with a second address → the alert says the invitation is on
-   its way with the password link, and two mails arrive: the club's (through Mailgun) and
-   Zitadel's from `noreply@mail.<club domain>` (Zitadel's SMTP, §35). A colleague who never
+5. Check: Echipa → add yourself with a second address → the alert says two emails are on their
+   way, Zitadel's first, and two mails arrive: Zitadel's from `noreply@mail.<club domain>`
+   (Zitadel's SMTP, §35), subject «Invitație la …» («Invitation to …» for an English account),
+   and the club's (through Mailgun), whose numbered steps say to open Zitadel's first. The
+   club's leaves only once Zitadel has answered (`DECISIONS.md` §NNN). A colleague who never
    signed in has "Resend the invitation" on their row.
+6. **Zitadel's own email, in the club's words** — once, the owner's to do (`DECISIONS.md` §NNN).
+   Zitadel writes its invitation in its default words; written here, the two emails speak the
+   same language. Zitadel console → **Organization** → **Settings** → **Message Texts** →
+   **Invite User** → language **Română**:
+   - **Subject**: leave it `Invitație la {{.ApplicationName}}`. The club's email names
+     Zitadel's by this subject; a different one sends people looking for an email they cannot
+     find.
+   - **Title**: `Invitație la {{.ApplicationName}}`.
+   - **Greeting**: `Bună, {{.DisplayName}},`
+   - **Text**: `Te-am adăugat la {{.ApplicationName}}: în echipa care administrează site-ul,
+     sau ca membru. Apasă butonul de mai jos și alege-ți parola. Apoi intră pe site cu
+     butonul din celălalt email, de la noi.`
+   - **Button text**: `Alege-ți parola`.
+
+   Save, then **English**: Subject `Invitation to {{.ApplicationName}}`, Text `You were added to
+   {{.ApplicationName}}: to the team that runs the website, or as a member. Press the button
+   below and choose your password. Then sign in with the button in the other email, ours.`,
+   Button text `Choose your password`. `{{.ApplicationName}}` is the club's name, which "Add"
+   sends Zitadel with every invitation; nothing on this screen is a secret.
 
 Locally the development switcher is the provider, so nothing is sent and the alert says so.
 

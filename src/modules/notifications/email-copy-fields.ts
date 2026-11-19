@@ -38,6 +38,7 @@ import { topicsPhrase } from "@/modules/newsletter/topic-words";
 import type { EmailEventFacts } from "./domain/event-facts";
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { buildTemplateContent, platformWords, type TemplateData } from "./templates";
+import { zitadelInviteButton, zitadelInviteSubject } from "@/modules/staff-identity/domain/zitadel-invite";
 
 /**
  * The club's words and the page's sample kept apart (`DECISIONS.md` §359; the owner, 2026-09-24:
@@ -144,6 +145,10 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     inviterName: sample.inviterName,
     staffEmail: sample.staffEmail,
     signInUrl: `${base}/${locale}/EXAMPLE`,
+    // Zitadel's email by its subject in the account's language — the previewed one — in both halves, as the send names it (§NNN).
+    zitadelSubject: zitadelInviteSubject(locale),
+    // …and by its button, «Acceptare invitație» / “Accept invite”, the same way (§NNN).
+    zitadelButton: zitadelInviteButton(locale),
     // "Detalii actualizate" and "Eveniment anulat" (§331): a new place and start, the
     // organizer's note, and a reason — read only by those two messages' templates. Each in both
     // languages, as the organizer now writes them (§354, bilingual everywhere): the previewed
@@ -250,7 +255,7 @@ export function emailSampleActionUrl(locale: EmailLocale): string {
  *   message about an event, since only a published event, both languages written, takes
  *   registrations (§28); the colleague's role and inviter in every invitation's payload;
  * - **the colleague's address is absent**: `{staffEmail}` is not in the set, so the invitation's
- *   sentence reads with the platform's own fallback, "Intri cu adresa aceasta" — true, because the
+ *   sentence reads with the platform's own fallback, "intră cu adresa aceasta și parola aleasă" — true, because the
  *   invitation goes to that address;
  * - **the thank-you's link is absent**: "the results are at the link below" would be kept by a
  *   saved text on a thank-you sent without one; the button, which names itself, is the machinery;

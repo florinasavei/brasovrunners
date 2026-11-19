@@ -279,8 +279,13 @@ describe("§359 the editor starts from the platform's words, with the fields", (
   });
 
   it("says the invitation's address as the platform's own fallback, since {staffEmail} is not a field", () => {
-    expect(emailCopyPrefill("STAFF_INVITATION", "ro").paragraphs[1]).toMatch(/^Intri cu adresa aceasta:/);
-    expect(emailCopyPrefill("STAFF_INVITATION", "en").paragraphs[1]).toMatch(/^You sign in with this address:/);
+    // In the numbered steps since §NNN, the shape Zitadel's email comes first in: the second step signs in with it.
+    expect(emailCopyPrefill("STAFF_INVITATION", "ro").paragraphs).toContain(
+      "2. Apoi apasă „Intră în backoffice”, mai jos, și intră cu adresa aceasta și parola aleasă. Accesul începe la prima autentificare.",
+    );
+    expect(emailCopyPrefill("STAFF_INVITATION", "en").paragraphs).toContain(
+      "2. Then press “Open the backoffice”, below, and sign in with this address and the password you chose. Access begins at your first sign-in.",
+    );
   });
 
   it("gives each sentence a fact may be missing from a paragraph of its own, and keeps a paragraph that opens with one whole", () => {

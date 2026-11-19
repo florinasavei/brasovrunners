@@ -80,9 +80,14 @@ describe("§357 no hardcoded value in the emails' own sentences", () => {
     // carries its Author. Neither is one of our templates, and both still leave with the name.
     // The From line's default, the share picture's lockup (the club's name is its artwork, §609), the calendar's product id and file
     // name, and a legal document PDF's Author are the same kind of thing (§369): each leaves the
-    // platform with the name on it.
+    // platform with the name on it. Since §NNN the application name is taken from the constant in
+    // `domain/zitadel-invite.ts`, which the club's invitation also names Zitadel's email by; the
+    // call in `zitadel-users.ts` sends that, and holds no name of its own.
+    const zitadelCall = readFileSync(path.join(process.cwd(), "src/modules/staff-identity/zitadel-users.ts"), "utf8");
+    expect(zitadelCall).not.toMatch(/Bra(?:ș|s)ov Runners/);
+    expect(zitadelCall).toContain("applicationName: ZITADEL_APPLICATION_NAME");
     for (const file of [
-      "src/modules/staff-identity/zitadel-users.ts",
+      "src/modules/staff-identity/domain/zitadel-invite.ts",
       "src/modules/registrations/bibs-pdf.ts",
       "src/modules/events/share-image.tsx",
       "src/modules/events/ical.ts",

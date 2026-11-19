@@ -3973,7 +3973,12 @@ colleague's language — who added them, as what, the sign-in page as the action
 the sign-in page asserts who they are. Sent again from the row until they first sign in
 (`DECISIONS.md` §141). Answered «Adaugă fără invitație» the colleague is added and
 nothing is queued — nor is Zitadel asked; «Retrimite invitația» later sends the invitation and
-makes the Zitadel account when it is missing (`DECISIONS.md` §912).
+makes the Zitadel account when it is missing (`DECISIONS.md` §912). Its body, and
+`MEMBER_INVITATION`'s, says the sign-in as numbered steps by `signInSteps` in the payload —
+Zitadel's email first when the press asks Zitadel for the account, the person's own account
+otherwise — and when the press asks Zitadel the row waits (`next_attempt_at` a minute ahead)
+until the action has Zitadel's answer and lets it go, so it never leaves before Zitadel was
+asked (`DECISIONS.md` §NNN).
 
 `CLUB_CONFIRMATION_NOTICE` is the club's own: queued in the transaction that confirms a real
 registration, one row per address the club named under "anunță-ne când cineva confirmă" on

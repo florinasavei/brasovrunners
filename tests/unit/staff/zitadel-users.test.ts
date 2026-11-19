@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { ZITADEL_APPLICATION_NAME } from "@/modules/staff-identity/domain/zitadel-invite";
+import { CLUB_NAME } from "@/theme/brand";
 import {
   inviteZitadelUser,
+  isAlreadyInitialised,
   listZitadelHumanAccounts,
   reinviteZitadelUser,
   resendZitadelInvite,
@@ -144,6 +147,54 @@ describe("«Retrimite invitația» for a person never given an account", () => {
     expect(calls.some((entry) => entry.url.endsWith("/v2/users/human"))).toBe(false);
     // Without the key, nothing is asked of anybody.
     expect(await reinviteZitadelUser(person, { issuer: "", token: "", fetch: call })).toEqual({ kind: "unconfigured" });
+  });
+});
+
+/**
+ * §NNN — an account that already signs in. Zitadel refuses an invite code to an account that has its password (its check
+ * `CreationAllowed`, error `COMMAND-EF34g`, «User is already initialized»), and the person needs none: that is `ready`,
+ * never `failed` — «Echipa» says only the club's email goes, and the email's «Ai deja cont? Sari peste pasul 1.» fits.
+ */
+describe("§NNN an account that already has its password", () => {
+  const person = { email: "mihai@example.ro", displayName: "Mihai Pop", locale: "ro" as const };
+  const initialised = () => new Response(JSON.stringify({ code: 9, message: "User is already initialized (COMMAND-EF34g)" }), { status: 400 });
+
+  it("recognises Zitadel's refusal by its id or its words, and nothing else", () => {
+    expect(isAlreadyInitialised("400 User is already initialized (COMMAND-EF34g)")).toBe(true);
+    expect(isAlreadyInitialised("400 Errors.User.AlreadyInitialised (COMMAND-EF34g)")).toBe(true);
+    expect(isAlreadyInitialised("412 user already initialised")).toBe(true);
+    expect(isAlreadyInitialised("403 permission denied")).toBe(false);
+    expect(isAlreadyInitialised("400 User could not be found (COMMAND-Wgvn4)")).toBe(false);
+  });
+
+  it("is `ready` when «Adaugă» finds it: the 409, then the code Zitadel will not make", async () => {
+    const { call, calls } = fakeFetch({
+      "/v2/users/human": () => new Response(JSON.stringify({ message: "User already exists" }), { status: 409 }),
+      "/v2/users": () => new Response(JSON.stringify({ result: [{ userId: "42" }] }), { status: 200 }),
+      "/v2/users/42/invite_code": initialised,
+    });
+    expect(await inviteZitadelUser(person, { ...deps, fetch: call })).toEqual({ kind: "ready" });
+    expect(calls.at(-1)?.url).toBe("https://id.example.test/v2/users/42/invite_code");
+  });
+
+  it("is `ready` on «Retrimite invitația» too, and the account is never made again", async () => {
+    const { call, calls } = fakeFetch({
+      "/v2/users/7/invite_code": initialised,
+      "/v2/users": () => new Response(JSON.stringify({ result: [{ userId: "7" }] }), { status: 200 }),
+    });
+    expect(await resendZitadelInvite(person.email, { ...deps, fetch: call })).toEqual({ kind: "ready" });
+    expect(await reinviteZitadelUser(person, { ...deps, fetch: call })).toEqual({ kind: "ready" });
+    expect(calls.some((entry) => entry.url.endsWith("/v2/users/human"))).toBe(false);
+  });
+
+  it("sends the club's name as the application name its email repeats", async () => {
+    const { call, calls } = fakeFetch({
+      "/v2/users/human": () => new Response(JSON.stringify({ userId: "42" }), { status: 201 }),
+      "/v2/users/42/invite_code": () => new Response("{}", { status: 200 }),
+    });
+    await inviteZitadelUser(person, { ...deps, fetch: call });
+    expect(calls[1].body).toEqual({ sendCode: { applicationName: ZITADEL_APPLICATION_NAME } });
+    expect(ZITADEL_APPLICATION_NAME).toBe(CLUB_NAME);
   });
 });
 

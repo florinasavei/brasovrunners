@@ -4173,10 +4173,14 @@
       "invite": "Adaugă",
       "inviteHelp": "Adaugă adresa pe lista echipei și trimite invitația pe email. Contul de autentificare se creează singur doar cu cheia Zitadel pusă; până atunci, din consola Zitadel.",
       "inviteHelpSends": "Adaugă adresa pe lista echipei, îi creează contul de autentificare și îi trimite pe email invitația și linkul pentru parolă.",
-      "inviteSent": "Adăugat. Invitația e pe drum către căsuța lui de email, cu linkul pentru alegerea parolei.",
-      "inviteExists": "Adăugat, invitația e pe drum. Are deja un cont de autentificare cu această adresă — se poate autentifica la /admin imediat.",
-      "inviteManual": "Adăugat, iar invitația e pe drum, dar contul de autentificare nu s-a creat: lipsește cheia Zitadel. Creează-l din consola Zitadel cu exact această adresă.",
-      "inviteFailed": "Adăugat și invitația e pe drum, dar furnizorul de autentificare a refuzat să creeze contul ({reason}). Își poate face contul din pagina de autentificare, cu exact această adresă.",
+      "inviteSent": "Adăugat. Primește două emailuri: unul de la Zitadel, cu butonul „Acceptare invitație”, pentru parolă, și unul de la noi, cu pașii.",
+      "inviteExists": "Adăugat. Avea deja cont la Zitadel, fără parolă: primește tot două emailuri, unul de la Zitadel, cu un cod nou, și unul de la noi, cu pașii.",
+      "inviteReady": "Adăugat. Are deja cont la Zitadel, cu parolă: primește doar emailul nostru, cu pașii, și intră cu parola pe care o are.",
+      "inviteManual": "Adăugat. Primește un singur email, de la noi, cu pașii ca să-și facă singur contul: lipsește cheia Zitadel, așa că nu s-a creat aici.",
+      "inviteFailed": "Adăugat, dar Zitadel nu a făcut contul ({reason}): primește doar emailul nostru, cu pașii ca să-și facă singur contul din pagina de autentificare.",
+      "resendSent": "Trimisă din nou. Primește două emailuri: unul de la Zitadel, cu un cod nou (cel vechi nu mai merge), și unul de la noi, cu pașii.",
+      "resendReady": "Trimisă din nou, doar de la noi: are deja cont la Zitadel, cu parolă, și intră cu ea.",
+      "resendManual": "Trimisă din nou: primește un singur email, de la noi, cu pașii ca să-și facă singur contul — lipsește cheia Zitadel.",
       "resendInvite": "Retrimite invitația",
       "resendInvitePending": "Se trimite…",
       "pending": "Nu s-a autentificat încă",
@@ -4206,7 +4210,7 @@
         "SUPERADMIN": "plus setările tehnice care pot opri serviciul — cât de des verifică site-ul, limitele bazei de date, verificarea anti-robot — și numirea altui Superadministrator.",
         "MEMBER": "zona membrilor de pe site, după autentificare. Fără backoffice."
       },
-      "resendFailed": "Invitația nu a plecat: la furnizorul de autentificare nu există cont cu această adresă ({reason}). Verifică adresa din listă — dacă e greșită, retrage accesul și adaugă persoana din nou cu adresa corectă.",
+      "resendFailed": "Emailul nostru e pe drum, dar Zitadel nu a trimis codul ({reason}): primește doar emailul nostru, cu pașii ca să-și facă singur contul din pagina de autentificare.",
       "passwordReset": "Trimite resetare de parolă",
       "passwordResetPending": "Se trimite…",
       "passwordResetSent": "Gata. I-am trimis pe email linkul cu care își pune o parolă nouă.",
@@ -4250,10 +4254,11 @@
       "membersInviteFailed": "Membri adăugați: {count}, invitațiile sunt pe drum — dar pentru {failed} dintre ei contul de autentificare nu s-a putut face. Apasă din nou „Adaugă membrii” cu adresele lor ca să reîncerci.",
       "membersRetried": "Erau deja membri: {retried} — li s-a reîncercat doar contul.",
       "membersOutcome": {
-        "created": "cont creat, invitația trimisă",
-        "invited": "contul exista, invitația trimisă din nou",
-        "failed": "eșuat: {reason}",
-        "unconfigured": "fără cheie de invitații: contul se face din consola Zitadel"
+        "created": "cont creat: două emailuri, întâi de la Zitadel, pentru parolă, apoi de la noi",
+        "invited": "contul exista, fără parolă: două emailuri, întâi de la Zitadel, cu un cod nou, apoi de la noi",
+        "ready": "are deja cont, cu parolă: doar emailul nostru",
+        "failed": "Zitadel nu a făcut contul ({reason}): doar emailul nostru, își face singur contul",
+        "unconfigured": "fără cheia Zitadel: doar emailul nostru, își face singur contul"
       },
       "permissions": {
         "shopManage": "Gestionează magazinul",
@@ -9089,6 +9094,12 @@
         "whenShort": "după ultima declarație a unei familii",
         "when": "Când o adresă a înscris mai multe persoane deodată și le-a confirmat pe toate: un singur email, cu codul QR, codul de la masă și numărul de concurs al fiecăreia.",
         "platformWords": "Folosește mereu textul implicit. Textul scris de club pentru «Înscriere confirmată (cu QR și număr)» e pentru o singură persoană și nu intră aici."
+      },
+      "selfSignIn": {
+        "name": "{type} — persoana își face singură contul",
+        "whenShort": "când contul nu îl face Zitadel",
+        "when": "Când „Adaugă” sau „Retrimite invitația” nu poate cere contul de la Zitadel — lipsește cheia sau Zitadel nu l-a făcut: persoana își face contul din pagina de autentificare.",
+        "platformWords": "Folosește mereu textul implicit. Textul scris de club pentru acest email e pentru contul făcut de Zitadel și nu intră aici."
       },
       "whenMore": {
         "COMPLETE_DECLARATION": "Locul e ținut {hold} de la plecarea emailului, sau până la termen la un eveniment îndepărtat. Termenul contează doar dacă așteaptă cineva; altfel declarația se semnează și la masă.",
