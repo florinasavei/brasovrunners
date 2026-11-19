@@ -322,6 +322,18 @@ export function readOrganizerIncludeProgramme(payload: unknown): boolean {
 }
 
 /**
+ * Whether this row carries «Atașează traseul (GPX)» (§987; the owner, 2026-11-19: «vreau să pot pune în mail și traseul
+ * cursei GPX»): the payload's `includeRouteGpx`, beside the words — the twin of `includeProgramme` above. About nobody in
+ * particular too, so the send sets it on **every** row it queues, whatever the registration's state, and on the club's
+ * copy; anything but `true` — a send that did not tick it, a tick on an event with no GPX, an older row, a hand-made one —
+ * is no. A flag, never the file: the event's GPX is read from the store when the email leaves, and an event with no GPX
+ * by then sends the message without it.
+ */
+export function readOrganizerIncludeRouteGpx(payload: unknown): boolean {
+  return Boolean(payload && typeof payload === "object" && (payload as { includeRouteGpx?: unknown }).includeRouteGpx === true);
+}
+
+/**
  * What the line before «Trimite» says about a send (the decision «Cere reconfirmarea», part two), worked out on the
  * server for the road the send's messages take, with no reserve: the outbox claims a send to many after every
  * registration's own message on its road (`domain/bulk.ts#SEND_TO_MANY_MESSAGE_TYPES`) and holds none of it back.
