@@ -274,8 +274,8 @@ const PUBLIC_COLUMNS = {
   // when the Administrator's tick is on **and** the race has at least one result row: a published race with an empty sheet draws no
   // section (`ResultsSection`), so it must not wear a chip that links to one — the chip, the hold and the section read this one fact.
   resultsPublished: sql<boolean>`(${events.resultsPublished} AND EXISTS (SELECT 1 FROM ${eventResults} WHERE ${eventResults.eventId} = ${events.id}))`.mapWith(Boolean),
-  // The same tick as saved, with no row needed (§NNN): only the live «Clasament»'s clock reads it — while the race runs a page opened
-  // before the first finish refreshes itself, so that finish reaches it (`results/domain/live-window.ts#resultsLiveRefreshUntil`).
+  // The same tick as saved, with no row needed (§NNN): only the live «Clasament»'s clock reads it — a page opened before the start, or
+  // before the first finish, refreshes itself once the race runs, so that finish reaches it (`results/domain/live-window.ts#resultsLiveRefreshWindow`).
   // Never the section, the chip or what is shown: those read `resultsPublished`.
   resultsTicked: events.resultsPublished,
   // The meeting point is one fact on the event row (`DECISIONS.md` §36); its *name* is read in

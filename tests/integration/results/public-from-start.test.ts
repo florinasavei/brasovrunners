@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { createFormatter, createTranslator } from "next-intl";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
@@ -8,7 +8,9 @@ import { events, eventTranslations } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { datedOrNull } from "@/modules/events/domain/dated";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
+import { RESULTS_REFRESH_MS } from "@/modules/results/domain/live-window";
 import type { PostedResultRow } from "@/modules/results/rows";
+import { startLiveRefresh } from "@/modules/results/ui/live-refresh";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { withClientWords } from "../../helpers/client-words";
@@ -22,8 +24,9 @@ import { approvePrivacyNotice, approveResultsTexts, approveTerms, createRace, pe
  *
  * The Administrator ticks the results public two days before the race, with a «Neprezentat» already typed: the service accepts it (every
  * other gate kept, the audit row as before) — and until the race starts NOTHING is public: not the read, not the cached read, not the
- * section, not the listing's chip, and the page and the listing are held to the start. From the start every stored row shows, the
- * «Publicat …» line names the start rather than the tick, and the section carries the live island while the race runs and not after.
+ * section, not the listing's chip, and the page and the listing are held to the start; the page carries only the live island, hidden and
+ * armed to the start, which asks nothing before it. From the start every stored row shows, the «Publicat …» line names the start rather
+ * than the tick, and the section carries the live island while the race runs and not after.
  */
 const messages = { ro, en };
 let language: "ro" | "en" = "ro";
@@ -56,6 +59,7 @@ vi.mock("@/modules/public-cache/page-lifetime", async (importOriginal) => {
 vi.mock("next/navigation", async (importOriginal) => ({ ...(await importOriginal<typeof import("next/navigation")>()), useRouter: () => ({ refresh: () => {} }) }));
 
 const { default: ResultsSection } = await import("@/modules/results/ui/ResultsSection");
+const { default: ResultsLiveRefresh } = await import("@/modules/results/ui/ResultsLiveRefresh");
 const { eventsWithResultsChip, readEventResultsForPage, readResultsGates } = await import("@/modules/results/public-page");
 const { cachedPublicEventResults } = await import("@/modules/public-cache/reads");
 const { readPublicEventResults, saveEventResults, setResultsPublished } = await import("@/modules/results/results");
@@ -113,6 +117,8 @@ async function section(at: Date): Promise<string> {
   return withoutStyles(renderToStaticMarkup(withClientWords(node as ReactNode, language)));
 }
 const text = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+/** The live island drawn alone, with nothing to read or see: the whole of the section's markup. */
+const QUIET = '<span hidden="" data-testid="results-live-quiet"></span>';
 
 describe("§NNN the tick before the race: accepted, every other gate kept, audited as before", () => {
   it("accepts it two days before the race, says it shows from the start, and records the moment and one audit row", async () => {
@@ -150,12 +156,13 @@ describe("§NNN nothing public before the start, even with a row stored", () => 
     }
   });
 
-  it("the section draws nothing at all — no heading, no «în curând», no number, no clock — and holds the page to the start", async () => {
+  it("the section draws nothing to see — no heading, no «în curând», no number, no line — only the hidden clock, and holds the page to the start", async () => {
     await tickedBeforeTheRace();
     for (const at of [BEFORE, JUST_BEFORE]) {
       state.holds = [];
-      expect(await section(at), at.toISOString()).toBe("");
-      // The live window's start and end (the island comes at the start), then the section's own: the start and the period's end.
+      // The island alone, hidden and armed to the start: it says the results are ticked, never a result.
+      expect(await section(at), at.toISOString()).toBe(QUIET);
+      // The live window's start and end (the island starts asking at the start), then the section's own: the start and the period's end.
       expect(state.holds, at.toISOString()).toEqual([
         [RACE_STARTS_AT, LIVE_UNTIL],
         [RACE_STARTS_AT, CLOSES],
@@ -244,7 +251,7 @@ function awayDatabase(): unknown {
   );
 }
 
-describe("§NNN the clock with no section: an empty sheet before the first finish, and a database away at a render", () => {
+describe("§NNN the clock with no section: before the start, an empty sheet before the first finish, and a database away at a render", () => {
   /** Ana (ticked); the texts approved; the results ticked public two days before the race — and nothing typed. */
   async function tickedWithAnEmptySheet() {
     await registerRunner(db, raceId, { name: "Ana Popescu", bibNumber: 101, sex: "FEMALE", birthDate: "1996-05-01" });
@@ -258,8 +265,8 @@ describe("§NNN the clock with no section: an empty sheet before the first finis
     const event = await eventRow();
     expect({ resultsTicked: event.resultsTicked, resultsPublished: event.resultsPublished }).toEqual({ resultsTicked: true, resultsPublished: false });
 
-    // Before the start: nothing at all, the page held to the start so the copy is made again with the clock.
-    expect(await section(BEFORE)).toBe("");
+    // Before the start: the clock alone, hidden and armed to the start; the page held to the start and the window's end.
+    expect(await section(BEFORE)).toBe(QUIET);
     expect(state.holds).toEqual([[RACE_STARTS_AT, LIVE_UNTIL]]);
 
     // From the start: the island alone, hidden — nothing to read, nothing to see — and the page held to the window's end.
@@ -291,14 +298,54 @@ describe("§NNN the clock with no section: an empty sheet before the first finis
   it("draws no clock for a race whose results are not ticked, nor once the texts in force no longer describe the results", async () => {
     await registerRunner(db, raceId, { name: "Ana Popescu", bibNumber: 101 });
     await approveResultsTexts(db);
+    expect(await section(BEFORE)).toBe("");
     expect(await section(RACE_STARTS_AT)).toBe("");
     expect(state.holds).toEqual([]);
 
     await setResultsPublished(db, admin, raceId, true, BEFORE);
-    expect(await section(RACE_STARTS_AT)).toContain('data-testid="results-live-quiet"');
+    expect(await section(BEFORE)).toBe(QUIET);
+    expect(await section(RACE_STARTS_AT)).toBe(QUIET);
     // A newer notice in force that does not describe the results: no result saved could show, so there is nothing to refresh for.
     await approvePrivacyNotice(db, { results: false });
+    expect(await section(BEFORE)).toBe("");
     expect(await section(RACE_STARTS_AT)).toBe("");
+  });
+
+  it("before the start draws the hidden clock with no line, armed to the start — and over its props nothing is asked until the start", async () => {
+    await tickedWithAnEmptySheet();
+    const event = await eventRow();
+    const node = (await atTheClock(BEFORE, () => ResultsSection({ event }))) as ReactElement<{ from: number; until: number; line: string | null }>;
+    // The island itself, with plain props: the window's start and end, and no line to read.
+    expect(node.type).toBe(ResultsLiveRefresh);
+    expect(node.props).toEqual({ from: RACE_STARTS_AT.getTime(), until: LIVE_UNTIL.getTime(), line: null });
+    expect(withoutStyles(renderToStaticMarkup(withClientWords(node, language)))).toBe(QUIET);
+
+    // Its clock over those props, from that render two days before the race: no request until the start, then the first.
+    let refreshes = 0;
+    vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
+    try {
+      vi.setSystemTime(BEFORE);
+      const clock = startLiveRefresh(
+        {
+          now: () => Date.now(),
+          visible: () => true,
+          refresh: () => {
+            refreshes += 1;
+          },
+          setTimeout: (callback, ms) => setTimeout(callback, ms),
+          clearTimeout: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
+        },
+        { from: node.props.from, until: node.props.until, everyMs: RESULTS_REFRESH_MS },
+      );
+      vi.advanceTimersByTime(RACE_STARTS_AT.getTime() - BEFORE.getTime() - 1);
+      clock.onVisibilityChange();
+      expect(refreshes).toBe(0);
+      vi.advanceTimersByTime(1);
+      expect(refreshes).toBe(1);
+      clock.stop();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("keeps the clock while the database is away at a render: «Clasament» is left out of that render, the island stays, alone", async () => {

@@ -1580,7 +1580,9 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
   for a race saved without one (`domain/live-window.ts`) — `ResultsLiveRefresh` refreshes the open page
   every 30 seconds while the tab is visible and stops at the window's end, decided from the event's row
   alone (the tick as saved, `resultsTicked`), so a page opened before the first finish refreshes too,
-  silently: the one public timer §577 allows, named in `tests/unit/config/idle-client.test.ts`. A
+  silently, and a page opened before the start carries it hidden and armed to the start, asking nothing
+  until then (one timer, re-armed at most once a day): the one public island that asks the server again
+  on a timer (§577), named in `tests/unit/config/idle-client.test.ts`. A
   refresh is a CDN request for an anonymous visitor at the bare address, but a full server render each
   time for a signed-in tab or an address with a query the page reads (the live twin, §549). Who is
   named does not change; «Clasament»

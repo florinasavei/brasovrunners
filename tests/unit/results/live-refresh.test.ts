@@ -6,20 +6,21 @@ import {
   RESULTS_REFRESH_MS,
   resultsLiveAt,
   resultsLiveInstants,
-  resultsLiveRefreshUntil,
+  resultsLiveRefreshWindow,
   resultsLiveUntil,
 } from "@/modules/results/domain/live-window";
-import { startLiveRefresh } from "@/modules/results/ui/live-refresh";
+import { LIVE_REFRESH_MAX_WAIT_MS, startLiveRefresh } from "@/modules/results/ui/live-refresh";
 
 /**
  * §NNN, BR-REQ-039-01 — a race's public «Clasament» from the start and live while it runs (the owner, 2026-11-18: «pe site live trebuie
  * sa vad lista de finish»): the window in which the open page refreshes itself (the start until the end, or six hours for a race saved
- * without one), the clock that refreshes it every 30 seconds while the page is visible and stops at the window's end, and the two words
- * of «Public de la start» — what «Clasament» says of the tick and the moment the public line names.
+ * without one), the clock that asks nothing before the start, refreshes every 30 seconds while the page is visible and stops at the
+ * window's end, and the two words of «Public de la start» — what «Clasament» says of the tick and the moment the public line names.
  */
 const STARTS = new Date("2026-11-21T07:00:00.000Z");
 const ENDS = new Date("2026-11-21T11:00:00.000Z");
 const HOUR = 3_600_000;
+const DAY = 24 * HOUR;
 
 describe("§NNN the live window", () => {
   it("runs from the start until the end", () => {
@@ -59,18 +60,25 @@ describe("§NNN the island from the event's row alone: the tick as saved, a race
   const BEFORE = new Date(STARTS.getTime() - 2 * 24 * HOUR);
 
   it("refreshes inside the window of a race whose results are ticked — an empty sheet included — and stops at its end", () => {
-    expect(resultsLiveRefreshUntil(race, STARTS)).toEqual(ENDS);
-    expect(resultsLiveRefreshUntil(race, new Date(ENDS.getTime() - 1))).toEqual(ENDS);
-    expect(resultsLiveRefreshUntil(race, new Date(STARTS.getTime() - 1))).toBeNull();
-    expect(resultsLiveRefreshUntil(race, ENDS)).toBeNull();
+    expect(resultsLiveRefreshWindow(race, STARTS)).toEqual({ from: STARTS, until: ENDS });
+    expect(resultsLiveRefreshWindow(race, new Date(ENDS.getTime() - 1))).toEqual({ from: STARTS, until: ENDS });
+    expect(resultsLiveRefreshWindow(race, ENDS)).toBeNull();
     // Saved without an end: six hours from the start.
-    expect(resultsLiveRefreshUntil({ ...race, endsAt: null }, STARTS)).toEqual(new Date(STARTS.getTime() + 6 * HOUR));
+    expect(resultsLiveRefreshWindow({ ...race, endsAt: null }, STARTS)).toEqual({ from: STARTS, until: new Date(STARTS.getTime() + 6 * HOUR) });
+  });
+
+  it("is drawn before the start too — a moment or weeks ahead — armed to the start, from which it refreshes", () => {
+    for (const at of [new Date(STARTS.getTime() - 1), BEFORE, new Date(STARTS.getTime() - 40 * DAY)]) {
+      expect(resultsLiveRefreshWindow(race, at), at.toISOString()).toEqual({ from: STARTS, until: ENDS });
+    }
   });
 
   it("never refreshes a race whose results are not ticked, an event that takes none, or an event whose date is to be announced", () => {
-    expect(resultsLiveRefreshUntil({ ...race, resultsTicked: false }, STARTS)).toBeNull();
-    expect(resultsLiveRefreshUntil({ ...race, type: "GROUP_RUN" }, STARTS)).toBeNull();
-    expect(resultsLiveRefreshUntil({ ...race, startsAt: null }, STARTS)).toBeNull();
+    for (const at of [BEFORE, STARTS]) {
+      expect(resultsLiveRefreshWindow({ ...race, resultsTicked: false }, at), at.toISOString()).toBeNull();
+      expect(resultsLiveRefreshWindow({ ...race, type: "GROUP_RUN" }, at), at.toISOString()).toBeNull();
+      expect(resultsLiveRefreshWindow({ ...race, startsAt: null }, at), at.toISOString()).toBeNull();
+    }
   });
 
   it("holds the page to the window's start and end still ahead, so a copy made before the race is made again with the island", () => {
@@ -127,7 +135,8 @@ describe("§NNN the refresh clock", () => {
   });
   afterEach(() => vi.useRealTimers());
 
-  const start = (until = ENDS.getTime()) => startLiveRefresh(clock(), { until, everyMs: RESULTS_REFRESH_MS, onEnd: () => (ended += 1) });
+  const start = ({ from, until = ENDS.getTime() }: { from?: number; until?: number } = {}) =>
+    startLiveRefresh(clock(), { from, until, everyMs: RESULTS_REFRESH_MS, onEnd: () => (ended += 1) });
 
   it("refreshes every 30 seconds while the page is visible — not before the first period", () => {
     start();
@@ -172,7 +181,7 @@ describe("§NNN the refresh clock", () => {
 
   it("stops at the window's end — no refresh, no timer, the end said once — and becoming visible after it does nothing", () => {
     const until = STARTS.getTime() + 75_000;
-    const live = start(until);
+    const live = start({ until });
     vi.advanceTimersByTime(60_000);
     expect(refreshes).toBe(2);
     expect(ended).toBe(0);
@@ -187,7 +196,7 @@ describe("§NNN the refresh clock", () => {
   });
 
   it("does nothing at all when started after the window — and stops for good when the island goes", () => {
-    start(STARTS.getTime() - 1);
+    start({ until: STARTS.getTime() - 1 });
     expect(ended).toBe(1);
     expect(vi.getTimerCount()).toBe(0);
     vi.advanceTimersByTime(60_000);
@@ -201,5 +210,95 @@ describe("§NNN the refresh clock", () => {
     expect(refreshes).toBe(0);
     expect(ended).toBe(0);
     expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe("§NNN the refresh clock on a page drawn before the start (`from`): one timer to the start, nothing asked before it", () => {
+  let visible = true;
+  let refreshes = 0;
+  /** Every wait the clock asked the browser for, in milliseconds. */
+  let waits: number[] = [];
+  const clock = () => ({
+    now: () => Date.now(),
+    visible: () => visible,
+    refresh: () => {
+      refreshes += 1;
+    },
+    setTimeout: (callback: () => void, ms: number) => {
+      waits.push(ms);
+      return setTimeout(callback, ms);
+    },
+    clearTimeout: (handle: unknown) => clearTimeout(handle as ReturnType<typeof setTimeout>),
+  });
+  const start = (from: number) => startLiveRefresh(clock(), { from, until: ENDS.getTime(), everyMs: RESULTS_REFRESH_MS });
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
+    visible = true;
+    refreshes = 0;
+    waits = [];
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it("asks nothing before the start — not on its timer, not on becoming visible — then refreshes at the start and every 30 seconds", () => {
+    // Drawn two days before the race: one timer, armed to the start.
+    vi.setSystemTime(STARTS.getTime() - 2 * DAY);
+    const live = start(STARTS.getTime());
+    expect(vi.getTimerCount()).toBe(1);
+    vi.advanceTimersByTime(2 * DAY - 1);
+    expect(refreshes).toBe(0);
+    // Hidden and shown again before the start: still nothing, and still the one timer to the start.
+    visible = false;
+    live.onVisibilityChange();
+    visible = true;
+    live.onVisibilityChange();
+    expect(refreshes).toBe(0);
+    expect(vi.getTimerCount()).toBe(1);
+    // The start: the page was drawn long before it, so it refreshes at once — then every period.
+    vi.advanceTimersByTime(1);
+    expect(refreshes).toBe(1);
+    vi.advanceTimersByTime(29_999);
+    expect(refreshes).toBe(1);
+    vi.advanceTimersByTime(1);
+    expect(refreshes).toBe(2);
+  });
+
+  it("never sleeps longer than a day: a start weeks away — past the browser's 2^31-millisecond timer — wakes once a day and asks nothing", () => {
+    expect(LIVE_REFRESH_MAX_WAIT_MS).toBe(DAY);
+    expect(LIVE_REFRESH_MAX_WAIT_MS).toBeLessThan(2 ** 31 - 1);
+    const ahead = 40 * DAY;
+    expect(ahead).toBeGreaterThan(2 ** 31 - 1);
+    vi.setSystemTime(STARTS.getTime() - ahead);
+    start(STARTS.getTime());
+    vi.advanceTimersByTime(ahead - 1);
+    expect(refreshes).toBe(0);
+    // One wait a day — each at most a day — and no more than one timer at a time.
+    expect(waits).toHaveLength(40);
+    expect(Math.max(...waits)).toBeLessThanOrEqual(LIVE_REFRESH_MAX_WAIT_MS);
+    expect(vi.getTimerCount()).toBe(1);
+    vi.advanceTimersByTime(1);
+    expect(refreshes).toBe(1);
+  });
+
+  it("drawn less than a period before the start, refreshes a period after it was drawn; hidden at the start, at once on coming back", () => {
+    vi.setSystemTime(STARTS.getTime() - 10_000);
+    const late = start(STARTS.getTime());
+    vi.advanceTimersByTime(29_999);
+    expect(refreshes).toBe(0);
+    vi.advanceTimersByTime(1);
+    expect(refreshes).toBe(1);
+    late.stop();
+
+    refreshes = 0;
+    vi.setSystemTime(STARTS.getTime() - HOUR);
+    const live = start(STARTS.getTime());
+    visible = false;
+    vi.advanceTimersByTime(HOUR + 60_000);
+    // Hidden at the start: nothing asked, and no timer left — coming back decides.
+    expect(refreshes).toBe(0);
+    expect(vi.getTimerCount()).toBe(0);
+    visible = true;
+    live.onVisibilityChange();
+    expect(refreshes).toBe(1);
   });
 });

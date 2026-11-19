@@ -5,13 +5,13 @@ import { confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN — a race's «Clasament» public from the start and live while it runs (BR-REQ-039-01, BR-REQ-053-01, BR-REQ-041-01 criterion 6; the
+ * §NNN — a race's «Clasament» public from the start and live while it runs (BR-REQ-039-01, BR-REQ-053-01, BR-REQ-041-01 criterion 1; the
  * owner, 2026-11-18: «pe site live trebuie sa vad lista de finish, atat ca admin cat si public» — and, asked, «public from the start»,
  * «LIVE»), walked at 320 pixels and on a desk against a production build:
  *
  * 1. two days before the race the Administrator types a «Neprezentat» and ticks the results public: accepted, «Public de la start» with the
  *    start's day and hour, «Cursa nu a început încă», and under the unticked runner's «Pe site: Participant #102» the reason;
- * 2. the race's page, for a visitor, shows nothing of it;
+ * 2. the race's page, for a visitor, shows nothing of it — only the clock, silent and armed to the start;
  * 3. the race starts (its start moved into the past — the setup, not the subject) and a finisher is saved: the visitor's page shows the
  *    ranking with «Se actualizează singur la 30 de secunde»;
  * 4. the visitor narrows the table to «101»; another finisher is saved while the page stays open: nothing changes by itself until the
@@ -20,7 +20,9 @@ import { hydrated, signIn } from "./support/featured-event";
  * 5. past the race's window the line goes and the page asks nothing more — counted across a further fast-forward.
  *
  * And a page opened during the race **before the first finish** — the sheet still empty, so no «Clasament» yet — shows that first finish
- * at its next refresh: the clock is drawn alone and silent while there is no section to draw it in.
+ * at its next refresh: the clock is drawn alone and silent while there is no section to draw it in. A page opened **before the start** —
+ * a spectator's tab opened at 08:50 for a 09:00 start and kept open — asks nothing until its own clock reaches the start it was drawn
+ * with, then shows the finish saved since.
  *
  * The page is anonymous on purpose: its rows come through the public cache and the static page, so the row appearing proves the tag the
  * results' save expires is the one the section's read is filed under (§333). The backoffice is a second browser context.
@@ -171,6 +173,9 @@ test.describe("§NNN «Clasament» public from the start, and live while the rac
       await expect(page.getByRole("heading", { name: `Cursa în direct ${tag}` })).toBeVisible();
       await expect(page.getByTestId("results-section")).toHaveCount(0);
       await expect(page.getByText("Participant #102")).toHaveCount(0);
+      // Only the clock, silent and armed to the start: nothing to read, nothing seen.
+      await expect(page.getByTestId("results-live-quiet")).toHaveCount(1);
+      await expect(page.getByTestId("results-live-quiet")).toBeHidden();
 
       // ---- 3. The race starts; a finisher is saved; the visitor's page shows the ranking, live --------------------------------------
       await sql(`UPDATE events SET starts_at = now() - interval '10 minutes' WHERE id = $1`, [eventId]);
@@ -269,6 +274,56 @@ test.describe("§NNN «Clasament» public from the start, and live while the rac
       await expect(row(page, 101).getByTestId("result-name")).toHaveText(`Ana Popescu ${tag}`);
       await expect(section.getByTestId("results-live")).toHaveText("Se actualizează singur la 30 de secunde.");
       await expect(page.getByTestId("results-live-quiet")).toHaveCount(0);
+      expect(await sameDocument(page)).toBe(true);
+    } finally {
+      await backoffice.close();
+    }
+  });
+
+  test("a page opened before the start asks nothing until it, then shows the finish saved since, with no reload", async ({ page, browser }) => {
+    const tag = `${test.info().project.name}-early-${Date.now().toString(36)}`;
+    const { eventId, slug } = await seedRace(tag);
+    test.skip(!(await textsNameResults()), "the texts in force do not describe the results: nothing can be published (the first test walks that refusal)");
+    // Ticked yesterday, the race in an hour, nothing typed — the setup, not the subject (the first test walks the tick).
+    await sql(`UPDATE events SET results_published = true, results_published_at = now() - interval '1 day', starts_at = now() + interval '1 hour' WHERE id = $1`, [eventId]);
+    const backoffice = await browser.newContext({ baseURL: test.info().project.use.baseURL });
+    const admin = await backoffice.newPage();
+    try {
+      await signIn(admin, "Dev Administrator");
+
+      // The visitor opens the race's page an hour before the start: no «Clasament», nothing to read — the clock alone, armed to the start.
+      await page.clock.install();
+      await page.goto(publicUrl(slug));
+      await hydrated(page);
+      await expect(page.getByRole("heading", { name: `Cursa în direct ${tag}` })).toBeVisible();
+      await expect(page.getByTestId("results-section")).toHaveCount(0);
+      await expect(page.getByTestId("results-live-quiet")).toHaveCount(1);
+      await expect(page.getByTestId("results-live-quiet")).toBeHidden();
+      await markDocument(page);
+      await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1_000);
+
+      // Half an hour of the page's clock before the start: nothing is asked — not every 30 seconds, not at all.
+      const early = recordRequests(page, slug);
+      await page.clock.fastForward(30 * 60_000);
+      await page.waitForTimeout(2_000);
+      expect(early.all).toEqual([]);
+
+      // The race starts (its start moved into the past — the setup, not the subject) and its first finisher is saved while the page stays open.
+      await sql(`UPDATE events SET starts_at = now() - interval '10 minutes' WHERE id = $1`, [eventId]);
+      await saveLine(admin, eventId, (p) => p.locator('[name="r[101].time"]').fill("29:40"));
+      await page.waitForTimeout(2_000);
+      await expect(page.getByTestId("results-section")).toHaveCount(0);
+      expect(early.all).toEqual([]);
+
+      // The page's clock reaches the start it was drawn with: it refreshes, and the ranking is there, live, in the same document.
+      await page.clock.fastForward(31 * 60_000);
+      await page.clock.resume();
+      const section = page.getByTestId("results-section");
+      await expect(section).toBeVisible({ timeout: 45_000 });
+      await expect(row(page, 101).getByTestId("result-name")).toHaveText(`Ana Popescu ${tag}`);
+      await expect(section.getByTestId("results-live")).toHaveText("Se actualizează singur la 30 de secunde.");
+      await expect(page.getByTestId("results-live-quiet")).toHaveCount(0);
+      expect(early.refreshes()).toBeGreaterThan(0);
       expect(await sameDocument(page)).toBe(true);
     } finally {
       await backoffice.close();

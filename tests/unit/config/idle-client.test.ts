@@ -51,11 +51,12 @@ const ALLOWED_INTERVALS: Record<string, string> = {
 
 /**
  * The one public island that asks the server again on a timer, decided rather than slipped in (§NNN; the owner, 2026-11-18, choosing
- * «LIVE» for a race's results): «Clasament» while the race runs — every 30 seconds, only while the tab is visible, nothing from the
- * window's end (`results/domain/live-window.ts`). Any other island that refreshes the page from a timer is a poll this rule refuses.
+ * «LIVE» for a race's results): «Clasament» while the race runs — every 30 seconds, only while the tab is visible, nothing before the
+ * race's start (a page drawn earlier is armed to it) and nothing from the window's end (`results/domain/live-window.ts`). Any other
+ * island that refreshes the page from a timer is a poll this rule refuses.
  */
 const ALLOWED_TIMED_REFRESH: Record<string, string> = {
-  "src/modules/results/ui/ResultsLiveRefresh.tsx": "a race's results while it runs: 30 s, a visible tab only, nothing after the race",
+  "src/modules/results/ui/ResultsLiveRefresh.tsx": "a race's results while it runs: 30 s, a visible tab only, nothing before the start or after the race",
 };
 
 function clientFiles(dir: string): string[] {
@@ -88,9 +89,10 @@ describe("§577 no client island polls or keeps alive on a timer", () => {
       .map((path) => relative(root, path).replace(/\\/g, "/"))
       .filter((path) => !(path in ALLOWED_TIMED_REFRESH));
     expect(offenders).toEqual([]);
-    // The named one is bounded: it stops at the window's end, and asks nothing while the tab is hidden.
+    // The named one is bounded: it stops at the window's end, asks nothing before its start, and nothing while the tab is hidden.
     const source = readFileSync(join(root, "src/modules/results/ui/live-refresh.ts"), "utf8");
     expect(source).toMatch(/clock\.now\(\) < options\.until/);
+    expect(source).toMatch(/clock\.now\(\) >= from &&/);
     expect(source).toMatch(/if \(!clock\.visible\(\)\) return;/);
   });
 
