@@ -2666,7 +2666,7 @@ An agent never approves either text.
 
 1. **Write and approve «Regulamentul tombolei» — a lawyer reads it first.** `/admin/legal` → the card «Regulamentul tombolei» →
    «Regenerează din șablon» → confirm. The platform's text has nine sections: the organiser, who may take part (the groups the event
-   ticks, filled in by itself), how to sign up (the three ways), the draw (at the event, at the announced time, among those signed up,
+   ticks, filled in by itself — the elites are «sportivii de top ai cursei» there, the mark «Elită» being the organizers' own), how to sign up (the three ways), the draw (at the event, at the announced time, among those signed up,
    the winner present), the prizes (as the organizers announce them), the winners (no name online without the person's agreement), the
    data (pointing to the privacy notice), withdrawal, disputes. Type the club's facts where a `<…>` stands — the approval refuses a
    text that still holds one —, «Salvează ciorna», then «Aprobă și publică», in **both** languages. The lawyer's questions are written at
