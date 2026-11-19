@@ -1783,6 +1783,7 @@
           "promoted_by_staff": "Loc dat înaintea listei de așteptare",
           "checked_in": "Marcat prezent",
           "checkin_undone": "Prezență anulată",
+          "code_scanned": "Cod scanat la masă",
           "bibs_printed": "BIB marcat ca printat",
           "bibs_unprinted": "BIB marcat ca neprintat",
           "list_consent_changed": "Alegerea pentru lista publică schimbată de participant",
@@ -6567,7 +6568,8 @@
         "all": "Toți, prezenți sau absenți",
         "yes": "Prezenți",
         "no": "Absenți",
-        "chip": "Prezent"
+        "chip": "Prezent",
+        "by": "{who}, {time}"
       },
       "decision": {
         "column": "Decizie ziua cursei",
@@ -7856,13 +7858,15 @@
       "title": "Masa de ridicare a numerelor",
       "howTitle": "Cum merge ziua cursei, pas cu pas",
       "how": [
-        "Sus sunt trei taburi: „Prezența” (această masă), „Clasament” (rezultatele cursei alese) și „Lucruri de adus” (lista de bifat cu ce aducem la cursă).",
+        "Sus sunt taburile zilei cursei: „Prezența” (această masă), „Cronometrare” și „Lucruri de adus”; organizatorii au și „Clasament”, „Tombolă” și „Jurnal” (cine a scanat, cine a marcat prezent).",
         "Înainte de cursă (organizator): în „Participare, înscrieri și regulament” → „Alocare și tipărire”, apasă „Descarcă toate numerele (PDF)” și tipărește-le — două pe o foaie A4.",
         "Tipărește și câteva „Formular declarație pe hârtie (PDF)”, pentru cine semnează pe loc.",
         "Un administrator tipărește din „Numere de rezervă pentru înscrierile de la fața locului” numere goale pentru cine se înscrie la masă.",
         "Voluntarii: un Administrator le face conturi din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr.",
+        "Fiecare om de la masă intră cu contul lui, nu cu al altcuiva: „Jurnal” arată cine a scanat fiecare cod și cine a marcat prezent pe fiecare.",
         "Nu văd adrese de email și nu pot anula pe nimeni.",
         "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” (pe Android) sau deschide camera telefonului și îndreapt-o spre cod — se deschide rândul persoanei.",
+        "Sub rând scrie „Scanat înainte: …”? Codul a mai fost deschis la masă: verifică dacă persoana nu și-a luat deja numărul.",
         "Sau caută după nume ori după numărul de concurs.",
         "Apasă „Marchează prezent” și dă-i numărul din teanc. Nu are număr? Scrie-l în căsuță și apasă „Salvează nr.”.",
         "Nu a primit emailul sau nu găsește QR-ul: caută după nume.",
@@ -7870,7 +7874,7 @@
         "Nu s-a înscris deloc: „Adaugă pe cineva”. Nume și email.",
         "Bifa „Persoana este la masă” e deja pusă, iar la „Numărul dat acum” e ales cel mai mic număr de rezervă liber: îi dai BIB-ul acela și îi scrii numele cu markerul.",
         "Semnează declarația pe hârtie, apoi „Marchează prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
-        "Ai greșit? „Anulează prezența” o scoate. Orice apăsare rămâne în istoricul înscrierii, cu numele tău.",
+        "Ai greșit? „Anulează prezența” o scoate. Orice apăsare rămâne în istoricul înscrierii și în „Jurnal”, cu numele tău.",
         "La final, cifrele de pe această pagină sunt cifrele cursei: câți confirmați, câți prezenți. Cine nu a venit rămâne fără „prezent”.",
         "Apare un chenar roșu „Înscriere anulată” sau „expirată”? Persoana nu mai are loc, chiar dacă are emailul în mână: nu i se dă număr și nu se marchează prezentă.",
         "Dacă scrie că numărul a fost tipărit, scoate BIB-ul acela din teanc — numerele nu se refolosesc."
@@ -7896,6 +7900,9 @@
       "nobody": "Nimeni nu se potrivește.",
       "backToDesk": "← Înapoi la masă",
       "scannedTitle": "Participant scanat",
+      "scannedBefore": "Scanat înainte: {scans}",
+      "scannedBeforeAt": "{who} la {time}",
+      "scannedBeforeOn": "{who} la {time} ({day})",
       "confirmHere": "Confirmă pe hârtie",
       "idDocument": "Act de identitate",
       "idDocumentMinor": "Act de identitate (minor)",
@@ -7909,7 +7916,8 @@
       "checkIn": "Marchează prezent",
       "undoCheckIn": "Anulează prezența",
       "checkedInAt": "Prezent la {time} · {who}",
-      "bySelf": "singur",
+      "bySelf": "prin „Am ajuns”",
+      "byRemoved": "cont șters",
       "fastTrack": "Persoana este la masă: confirm eu adresa, iar declarația se semnează pe hârtie acum.",
       "fastTrackHelp": "Confirmată pe loc, fără link din email: participantul semnează declarația pe hârtie în fața ta, iar tu o înregistrezi. Dacă e plin, intră pe lista de așteptare; altfel primește emailul de confirmare.",
       "paperWhen": "Doar la masă, cu declarația semnată pe hârtie de participant în fața ta. Declarația și, dacă adresa nu era confirmată, adresa se înregistrează pe numele tău; nu semnezi tu.",
@@ -9485,6 +9493,7 @@
               "title": "Deschide masa",
               "steps": [
                 "Intră în backoffice (vezi „Primii pași”). Un Voluntar ajunge direct la masă; ceilalți apasă «Ziua cursei» în bara de sus.",
+                "Intră cu contul tău, nu cu al unui coleg: tot ce apeși la masă poartă numele contului, iar organizatorii îl citesc în «Jurnal».",
                 "La «Eveniment» alege cursa de azi, apoi apasă «Caută».",
                 "Sus vezi câți sunt confirmați, câți au venit, câți nu au număr și câți nu au confirmat. Sunt cifrele cursei.",
                 "Ia de la organizator două teancuri: numerele tipărite cu nume și numerele de rezervă, cu linia pentru nume goală, pentru cine se înscrie la masă. Pe cele de rezervă nu le primește nimeni înscris online."
@@ -9496,6 +9505,7 @@
                 "Participantul îți arată codul QR din emailul de confirmare.",
                 "Apasă «Scanează» și ține codul în cadru (merge pe Android). Pe iPhone: deschide aplicația Cameră, îndreapt-o spre cod și atinge linkul care apare.",
                 "Se deschide rândul persoanei: verifică numele cu ea.",
+                "Sub rând scrie «Scanat înainte: …»? Codul a mai fost deschis la masă: verifică dacă persoana nu și-a luat deja numărul; dacă și l-a luat, cheamă un organizator.",
                 "Apasă «Marchează prezent». Nu te întreabă nimic; jos apare un mesaj.",
                 "Dă-i numărul de concurs din teanc — numărul e scris mare pe rând. Ca să vezi numărul desenat: «Vezi numărul de concurs (BIB)».",
                 "Pentru următorul: «Înapoi la masă»."
@@ -9543,7 +9553,7 @@
               "title": "Ai apăsat greșit",
               "steps": [
                 "Pe același rând apasă «Anulează prezența».",
-                "Tot ce apeși rămâne în istoricul înscrierii, cu numele tău. Nu se pierde nimic."
+                "Tot ce apeși rămâne în istoricul înscrierii și în «Jurnal», cu numele tău. Nu se pierde nimic."
               ]
             },
             {
@@ -9562,6 +9572,17 @@
                 "Vin mai mulți deodată: apasă «Prinde timpul» o dată pentru fiecare, apoi scrie numerele în ordine.",
                 "Un rând roșu îți spune ce să notezi pe hârtie, cu timpul. Fără semnal, apăsările așteaptă pe telefon și pleacă singure.",
                 "Ai greșit? «Anulează» pe rândul tău din «Ultimii sosiți», în primele 10 minute, cât nu l-a mai trecut nimeni după tine. Altfel spune-i organizatorului: corectează la «Clasament»."
+              ]
+            },
+            {
+              "title": "Jurnalul: cine a scanat, cine a marcat prezent",
+              "steps": [
+                "Îl deschid Organizatorul și Administratorii: «Ziua cursei» → «Jurnal», apoi alege cursa la «Eveniment» și apasă «Arată».",
+                "Sus, «Pe conturi»: pentru fiecare cont, câte coduri a scanat, câți alergători a marcat prezenți, câte prezențe a anulat și câți voluntari a bifat.",
+                "Dedesubt, cel mai nou primul: ora, cine, ce a făcut și pe cine. Numele duce la înscriere sau la pagina voluntarului.",
+                "„participantul” înseamnă că alergătorul a apăsat singur «Am ajuns — marchează-mă prezent» din linkul lui; „cont șters”, un cont scos de atunci din «Echipa».",
+                "«Cont» și «Ce s-a făcut» aleg ce vezi; apoi «Arată». Se văd cele mai noi 300 de rânduri, iar dedesubt câte mai sunt.",
+                "Ca jurnalul să numească omul, fiecare om de la masă are contul lui de Voluntar: nu folosiți un singur cont pe mai multe telefoane."
               ]
             },
             {
@@ -9794,7 +9815,7 @@
                 "Tipărește numerele (vezi mai sus).",
                 "«Alergări» → «Deschide» → «Înscrierile primite»: tipărește câteva «Formular declarație pe hârtie (PDF)» și, dacă apare, «Formular declarație pentru un minor (PDF)».",
                 "Tot acolo, «Fișă de urgență»: telefoanele și contactele de urgență ale celor confirmați, pe o pagină. O iei la cursă și o distrugi după.",
-                "Voluntarii: roagă un Administrator să le facă conturi cu rolul Voluntar, apoi arată-le secțiunea „Ziua cursei” din ghidul acesta.",
+                "Voluntarii: roagă un Administrator să le facă fiecăruia un cont cu rolul Voluntar — câte unul de om, ca «Jurnal» să spună cine a scanat și cine a marcat prezent —, apoi arată-le secțiunea „Ziua cursei” din ghidul acesta.",
                 "În ziua cursei: «Ziua cursei» în bara de sus."
               ]
             },
@@ -12888,7 +12909,8 @@
         "itemsShort": "Lucruri",
         "raffle": "Tombolă",
         "timing": "Cronometrare",
-        "timingShort": "Sosiri"
+        "timingShort": "Sosiri",
+        "journal": "Jurnal"
       },
       "items": {
         "title": "Lucruri de adus",
@@ -12928,6 +12950,74 @@
           "NOT_FOUND": "Lucrul nu mai e pe listă — poate l-a șters un coleg.",
           "VALIDATION_ERROR": "Numele are între 1 și 120 de caractere, iar nota cel mult 200."
         }
+      },
+      "journal": {
+        "title": "Jurnalul zilei cursei",
+        "intro": "Cine a scanat codurile, cine a marcat prezenți alergătorii și cine a bifat voluntarii, cel mai nou primul.",
+        "ownAccount": "Ca jurnalul să numească omul, fiecare lucrează la masă cu contul lui.",
+        "account": "Cont",
+        "accounts": {
+          "all": "Toate conturile",
+          "participant": "Participanții, prin „Am ajuns”",
+          "removed": "Conturi șterse"
+        },
+        "kind": "Ce s-a făcut",
+        "kinds": {
+          "all": "Tot",
+          "scanned": "Coduri scanate",
+          "checkedIn": "Marcați prezenți",
+          "undone": "Prezențe anulate",
+          "volunteerPresent": "Voluntari bifați prezenți",
+          "volunteerAbsent": "Voluntari debifați"
+        },
+        "show": "Arată",
+        "summaryTitle": "Pe conturi",
+        "counts": {
+          "scanned": {
+            "one": "{count} scanare",
+            "few": "{count} scanări",
+            "other": "{count} de scanări"
+          },
+          "checkedIn": {
+            "one": "{count} marcat prezent",
+            "few": "{count} marcați prezenți",
+            "other": "{count} de marcați prezenți"
+          },
+          "undone": {
+            "one": "{count} prezență anulată",
+            "few": "{count} prezențe anulate",
+            "other": "{count} de prezențe anulate"
+          },
+          "volunteerTicks": {
+            "one": "{count} bifă la voluntari",
+            "few": "{count} bife la voluntari",
+            "other": "{count} de bife la voluntari"
+          }
+        },
+        "linesTitle": "Ce s-a întâmplat, cel mai nou primul",
+        "verbs": {
+          "scanned": "a scanat",
+          "checkedIn": "a marcat prezent",
+          "undone": "a anulat prezența",
+          "volunteerPresent": "a bifat prezent",
+          "volunteerAbsent": "a debifat prezent"
+        },
+        "who": {
+          "participant": "participantul"
+        },
+        "whom": {
+          "numbered": "{name} (nr. {number})",
+          "test": "{name} (test)",
+          "volunteer": "{name} (voluntar)"
+        },
+        "timeOnDay": "{time} ({day})",
+        "more": {
+          "one": "și încă {count} rând, mai vechi",
+          "few": "și încă {count} rânduri, mai vechi",
+          "other": "și încă {count} de rânduri, mai vechi"
+        },
+        "empty": "Nimic încă la acest eveniment: niciun cod scanat, nimeni marcat prezent, niciun voluntar bifat.",
+        "emptyFiltered": "Nimic pentru alegerea aceasta. Alege „Toate conturile” și „Tot”."
       }
     },
     "raffle": {

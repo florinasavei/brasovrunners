@@ -23,7 +23,9 @@ import { importsModule } from "../../helpers/module-imports";
  * by any spelling: the `@/` alias or a relative path, resolved from the importing file (`tests/helpers/module-imports.ts`).
  *
  * Since §984 the raffle's roster and «Ziua cursei» → «Tombolă» read it too: that tab is the organizers' (`canTakeRaffleList`),
- * not the desk, and shows who was there beside whether they take part. The desk's own pages stay held to reading none.
+ * not the desk, and shows who was there beside whether they take part. Since §NNN «Ziua cursei» → «Jurnal» and the «Voluntari»
+ * list's «Org1, 08:20» read the trail of who ticked it: that tab is the organizers' too (`canReadRaceDayJournal`), never the desk's.
+ * The desk's own pages stay held to reading none.
  */
 const ROOT = process.cwd();
 const SRC = path.join(ROOT, "src");
@@ -74,6 +76,11 @@ const READERS = new Set(
     "src/app/[locale]/admin/checkin/tombola/page.tsx",
     // §984: a line of the race's elite list's own «Prezent» (`event_elite_entries.present`), named alike — the organizers' tick on that tab.
     "src/db/schema/event-elite-entries.ts",
+    // §NNN: who ticked it and when — the trail's `volunteer.edited` rows of `setPresent` — under the tick on the «Voluntari» list and
+    // the person's page, and the ticks on and off as lines of «Ziua cursei» → «Jurnal», the organizers' tab (`canReadRaceDayJournal`).
+    "src/modules/volunteers/present-by.ts",
+    "src/modules/race-day/journal.ts",
+    "src/modules/race-day/domain/journal.ts",
   ].map((file) => path.join(ROOT, file)),
 );
 
@@ -92,6 +99,8 @@ const relative = (file: string) => path.relative(ROOT, file).replaceAll("\\", "/
 function readsVolunteers(at: string): boolean {
   // «Ziua cursei» → «Tombolă» (§984) is the organizers' raffle tab, not the desk: who was there is what its «Doar prezenții» filters by.
   if (at.startsWith("src/app/[locale]/admin/checkin/tombola/")) return false;
+  // «Ziua cursei» → «Jurnal» (§NNN) is the organizers' log, not the desk: a volunteer's «Prezent» ticked and unticked is its lines.
+  if (at.startsWith("src/app/[locale]/admin/checkin/jurnal/") || at === "src/modules/race-day/journal.ts" || at === "src/modules/race-day/domain/journal.ts") return false;
   return (
     // The event's pages, its volunteers' page and its public form; the event page's own module and the public cache that feeds it.
     at.startsWith("src/app/[locale]/events/") ||

@@ -46,6 +46,8 @@ import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import { isMinorOn } from "@/modules/registrations/domain/age";
 import { fieldId } from "@/shared/forms/outcome";
 import { formatRaceNumber, raceNumberTextOf } from "@/modules/registrations/domain/race-number";
+import { checkedInByOf, checkedInWords } from "@/modules/registrations/domain/checked-in-by";
+import { OPENED_FROM_REGISTRATION } from "@/modules/race-day/domain/journal";
 import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition, holdsAPlace, isActiveStatus, isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import { missingAnswersHeld } from "@/modules/registrations/missing-answers";
@@ -1082,7 +1084,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                       {registration.checkedInAt
                         ? tr("registrations.checkedIn", {
                             time: dt(registration.checkedInAt) ?? "",
-                            who: registration.checkedInByName ?? tr("desk.bySelf"),
+                            // Who (§NNN): the account, the person's own «Am ajuns», or an account gone since — as the desk says it.
+                            who: checkedInWords(checkedInByOf(registration), { self: tr("desk.bySelf"), removed: tr("desk.byRemoved") }),
                           })
                         : tr("registrations.notCheckedIn")}
                     </Typography>
@@ -1111,7 +1114,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                         {tr("registrations.checkinCodeHelp")}
                       </Typography>
                       <Typography variant="body2" sx={{ mt: 1 }}>
-                        <Link href={{ pathname: "/admin/checkin/[code]", params: { code: registration.checkinCode } }}>
+                        {/*
+                          The desk's view of this runner, opened from the backoffice — not a scan (§NNN): `from=registration` keeps the
+                          open out of the trail and out of «Scanat înainte», and the link is never prefetched, so viewing this page opens
+                          nothing behind it (a prefetch is refused as a scan anyway, by its header).
+                        */}
+                        <Link href={{ pathname: "/admin/checkin/[code]", params: { code: registration.checkinCode }, query: { from: OPENED_FROM_REGISTRATION } }} prefetch={false}>
                           {tr("registrations.openDesk")}
                         </Link>
                       </Typography>

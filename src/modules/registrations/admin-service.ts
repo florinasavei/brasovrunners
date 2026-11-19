@@ -1,4 +1,5 @@
-import { and, asc, count, eq, isNull, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, isNull, or, sql } from "drizzle-orm";
+import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { type EmailMessageType, emailOutbox } from "@/db/schema/email-outbox";
 import { eventInvitations } from "@/db/schema/event-invitations";
@@ -1480,6 +1481,57 @@ export async function checkInByStaff<T extends Record<string, unknown>>(
     now,
   });
   return result;
+}
+
+/** How long a second open of one code by one account is the same scan (§NNN): a reload, a second look, the phone woken again. */
+export const CODE_SCAN_REPEAT_MS = 120_000;
+
+/**
+ * A desk code opened at the desk (§NNN; the owner, 2026-11-19: «vreau și tracing pentru voluntariat, gen cine a scanat, cine a
+ * marcat prezent»): one `registration.code_scanned` row — the registration as the entity, the staff account as the actor, the
+ * event's id as the whole of the metadata, never a name or the code — unless the same account recorded one for the same
+ * registration in the last two minutes (`CODE_SCAN_REPEAT_MS`): one read on `audit_logs_entity_idx` (the registration, a range of
+ * `created_at`) and no write then, so a reload is one scan. Every desk role (`canWorkTheDesk`), asserted here as on every desk verb.
+ *
+ * The scanned page (`admin/checkin/[code]/page.tsx`) is the one caller, and it decides what is a scan: not the page coming back
+ * from a desk verb, not a router prefetch, not the registration's own «Deschide la masă». Returns the id of the row this open
+ * counts as — the one written, or the recent one it repeats — which that page leaves out of «Scanat înainte».
+ *
+ * Not in a transaction and with no lock: two opens at the same millisecond may both write, and the trail then holds two rows a
+ * moment apart — a record of what was opened, never a change to anything a registration owns.
+ */
+export async function recordCodeScan<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registration: Pick<Registration, "id" | "eventId" | "participantId">,
+  now: Date,
+): Promise<{ scanId: string; recorded: boolean }> {
+  assertDesk(actor);
+  const [recent] = await db
+    .select({ id: auditLogs.id })
+    .from(auditLogs)
+    .where(
+      and(
+        eq(auditLogs.entityType, "registration"),
+        eq(auditLogs.entityId, registration.id),
+        gt(auditLogs.createdAt, new Date(now.getTime() - CODE_SCAN_REPEAT_MS)),
+        eq(auditLogs.action, "registration.code_scanned"),
+        eq(auditLogs.actorStaffUserId, actor.id),
+      ),
+    )
+    .orderBy(desc(auditLogs.createdAt))
+    .limit(1);
+  if (recent) return { scanId: recent.id, recorded: false };
+  const scanId = await recordAuditEvent(db, {
+    actorStaffUserId: actor.id,
+    participantId: registration.participantId,
+    action: "registration.code_scanned",
+    entityType: "registration",
+    entityId: registration.id,
+    metadata: { eventId: registration.eventId },
+    now,
+  });
+  return { scanId, recorded: true };
 }
 
 /**

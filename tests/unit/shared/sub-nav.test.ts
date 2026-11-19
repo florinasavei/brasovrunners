@@ -177,7 +177,7 @@ describe("§360 one look for every backoffice sub-navigation", () => {
         "src/modules/content/shop/ui/ShopTabs.tsx",
         "src/modules/diagnostics/ui/TasksSubNav.tsx",
         "src/modules/notifications/ui/ParticipantEmailsPanel.tsx",
-        // «Ziua cursei»'s tabs (§979, §984, §986): «Prezența», «Clasament», «Cronometrare», «Tombolă», «Lucruri de adus» — with the scroller.
+        // «Ziua cursei»'s tabs (§979, §984, §986, §NNN): «Prezența», «Clasament», «Cronometrare», «Tombolă», «Lucruri de adus», «Jurnal» — with the scroller.
         "src/modules/race-day/ui/RaceDayTabs.tsx",
         "src/modules/staff-identity/ui/SettingsSubNav.tsx",
       ].sort(),

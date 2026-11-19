@@ -331,6 +331,11 @@ export const routing = defineRouting({
     "/admin/checkin/cronometrare": "/admin/checkin/cronometrare",
     /** «Tombolă» (§984): «Ziua cursei»'s raffle tab, the organizers'. A static segment, so it wins over `[code]`. */
     "/admin/checkin/tombola": "/admin/checkin/tombola",
+    /**
+     * «Jurnal» (§NNN): «Ziua cursei»'s log — who scanned, who marked present, who ticked a volunteer — the organizers'. One spelling
+     * in both locales, like `lucruri`; a static segment, so it wins over `[code]` (a desk code is ten characters, never «jurnal»).
+     */
+    "/admin/checkin/jurnal": "/admin/checkin/jurnal",
     "/admin/checkin/[code]": "/admin/checkin/[code]",
     "/admin/legal": "/admin/legal",
     "/admin/legal/new": "/admin/legal/new",
