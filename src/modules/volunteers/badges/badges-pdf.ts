@@ -49,7 +49,26 @@ export type BadgeSheetEntry = {
   role: BadgeFaceRole | null;
   /** How many badges of it, spares included. */
   count: number;
+  /**
+   * «Ecusoane cu nume» (the hotfix of 2026-11-19, `badge-named.ts`): the word on these badges' band in place of the design's
+   * («FOTOGRAF», «ORGANIZATOR»), on a badge with no role; absent, the design's word.
+   */
+  label?: string;
+  /** «Ecusoane cu nume»: the first name printed large where «Nume:» and the marker's line would be; absent, «Nume:» as always. */
+  printedName?: string;
+  /** «Ecusoane cu nume»: the band's own colour, a hex triplet checked again here (`badgeRoleColour`); absent, the design's. */
+  colour?: string;
 };
+
+/** One badge of the sheet, in print order. */
+type BadgeSheetItem = Pick<BadgeSheetEntry, "role" | "label" | "printedName" | "colour">;
+
+/** The badges of a sheet in print order, each with its own words: every pile in the order given. */
+function badgeSheetItems(entries: readonly BadgeSheetEntry[]): BadgeSheetItem[] {
+  return entries.flatMap((entry) =>
+    Array.from({ length: Math.max(0, Math.floor(entry.count)) }, () => ({ role: entry.role, label: entry.label, printedName: entry.printedName, colour: entry.colour })),
+  );
+}
 
 export type BadgeSheetInput = {
   design: BadgeDesign;
@@ -76,7 +95,7 @@ export async function renderBadgeSheet(input: BadgeSheetInput): Promise<Buffer> 
   const L = BADGE_LAYOUT;
   const paper = badgePaper(design);
   const grid = badgeSheetGrid(paper);
-  const badges = badgeSheetOrder(input.entries);
+  const badges = badgeSheetItems(input.entries);
   const slots = badgeSheetSlots(badges.length, paper);
   const band = badgeBandColour(design);
   const bandText = badgeTextOn(band);
@@ -112,9 +131,11 @@ export async function renderBadgeSheet(input: BadgeSheetInput): Promise<Buffer> 
   // Laid out once per role: every badge of a pile is the same badge. Keyed by everything the words hold, the category's name among them
   // (§962): «Direcționare» under two categories is two badges, never the first one's twice.
   const layouts = new Map<string, BadgeLayout>();
-  const layoutFor = (role: BadgeSheetEntry["role"]) => {
-    const laid = badgeLayoutWords(design, words, locale, role);
-    const key = role ? JSON.stringify(["role", laid.role, laid.phone, laid.category ?? null]) : "none";
+  const layoutFor = (item: BadgeSheetItem) => {
+    const { role } = item;
+    // «Ecusoane cu nume»: a badge's own word on its band, in place of the design's (the hotfix of 2026-11-19).
+    const laid = badgeLayoutWords(design, item.label !== undefined ? { ...words, label: item.label } : words, locale, role);
+    const key = role ? JSON.stringify(["role", laid.role, laid.phone, laid.category ?? null, laid.label]) : JSON.stringify(["none", laid.label]);
     let layout = layouts.get(key);
     if (!layout) {
       layout = badgeLayout({ ...design, showPhone: badgePhoneRow(design), headerPicture: header !== null }, laid, measure);
@@ -132,8 +153,29 @@ export async function renderBadgeSheet(input: BadgeSheetInput): Promise<Buffer> 
     return left + (width - doc.widthOfString(line.text)) / 2;
   };
 
-  const drawBadge = (role: BadgeSheetEntry["role"], x: number, y: number) => {
-    const layout = layoutFor(role);
+  /**
+   * «Ecusoane cu nume» (the hotfix of 2026-11-19): the first name in the writing area, bold and in ink, centred both ways, at the
+   * largest size its width and half the area's height allow — one line, never wrapped, shrunk to fit and never cut.
+   */
+  const drawPrintedName = (name: string, layout: BadgeLayout, x: number, y: number) => {
+    const width = layout.content.width - 2 * layout.pad;
+    const ems = Math.max(bibTitleWidth(name), 0.01);
+    // Where «Nume:» goes: above the watermark (§965 stands it under «Nume:»'s line), so the name never sits on the logo — unless the
+    // logo leaves less than a third of the writing area above it (a size the club typed, §969); then the area's middle, over it.
+    const mark = layout.footerLogo;
+    const above = mark ? mark.top - layout.writing.top : 0;
+    const overLogo = !mark || above < layout.writing.height / 3;
+    const room = overLogo ? layout.writing : { top: layout.writing.top, height: above };
+    const size = Math.max(6, Math.min(room.height * (overLogo ? 0.5 : 0.75), width / ems));
+    doc.font("bold").fontSize(size).fillColor(COLOR.ink);
+    const left = x + layout.content.left + layout.pad + (width - doc.widthOfString(name)) / 2;
+    const top = y + room.top + (room.height - size) / 2;
+    doc.text(name, left, top, { lineBreak: false });
+  };
+
+  const drawBadge = (item: BadgeSheetItem, x: number, y: number) => {
+    const { role } = item;
+    const layout = layoutFor(item);
     const { content, pad } = layout;
     // The header: the club's picture across the band, or the band's colour with the logo and the title.
     if (header) {
@@ -160,7 +202,8 @@ export async function renderBadgeSheet(input: BadgeSheetInput): Promise<Buffer> 
     }
     // The role's band in its colour; «VOLUNTAR» small above the role's name, or alone and large.
     // A badge with no role wears the one badge's colour in `single` mode (§783), the club's orange in `perRole` mode (§764).
-    const roleColour = role ? badgeRoleColour(role.colour) : badgeNoRoleColour(design);
+    // «Ecusoane cu nume»: a badge's own colour when its line named one (the hotfix of 2026-11-19), checked at AA like a role's.
+    const roleColour = item.colour ? badgeRoleColour(item.colour) : role ? badgeRoleColour(role.colour) : badgeNoRoleColour(design);
     const roleText = badgeTextOn(roleColour);
     doc.rect(x + content.left, y + layout.role.top, content.width, layout.role.height).fill(roleColour);
     const bandWidth = content.width - 2 * pad;
@@ -179,6 +222,12 @@ export async function renderBadgeSheet(input: BadgeSheetInput): Promise<Buffer> 
       doc.opacity(mark.opacity);
       doc.image(lockup, x + mark.left, y + mark.top, { fit: [mark.width, mark.height], align: "center", valign: "center" });
       doc.restore();
+    }
+    // «Ecusoane cu nume»: the first name printed, and nothing to write on — no «Nume:», no line, no marker's area.
+    if (item.printedName !== undefined) {
+      if (item.printedName !== "") drawPrintedName(item.printedName, layout, x, y);
+      if (layout.phoneLine) text("body", layout.phoneLine, centredX("body", layout.phoneLine, x + content.left + pad, bandWidth), y, COLOR.ink);
+      return;
     }
     // The writing area: «Nume:», and the faint line the name is written on.
     text("body", layout.name, x + layout.name.left, y, COLOR.inkMuted);
@@ -239,9 +288,9 @@ export async function renderBadgeSheet(input: BadgeSheetInput): Promise<Buffer> 
   const pages = badges.length === 0 ? 0 : slots[slots.length - 1].page + 1;
   for (let page = 0; page < pages; page++) {
     doc.addPage();
-    const onPage = badges.map((role, index) => ({ role, slot: slots[index] })).filter((entry) => entry.slot.page === page);
+    const onPage = badges.map((item, index) => ({ item, slot: slots[index] })).filter((entry) => entry.slot.page === page);
     const rowsUsed = Math.ceil(onPage.length / grid.columns);
-    for (const entry of onPage) drawBadge(entry.role, entry.slot.x, entry.slot.y);
+    for (const entry of onPage) drawBadge(entry.item, entry.slot.x, entry.slot.y);
     drawCuts(rowsUsed);
   }
   // A sheet with nothing to print is still a file that says so (the bib's «—» page).
