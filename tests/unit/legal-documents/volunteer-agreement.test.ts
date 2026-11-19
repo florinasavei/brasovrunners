@@ -186,13 +186,20 @@ describe("§758 the agreement's blanks", () => {
 });
 
 describe("§758 the PDF's own words", () => {
-  it("signs as the volunteer and, on paper, the organizer — never with an identity document", () => {
-    const labels = volunteerAgreementLabels("ro", new Date("2026-10-13T10:00:00Z"));
+  it("signs as the volunteer — the parent or guardian under them for a minor — and, on the right, the Association (§991), never with an identity document", () => {
+    const labels = volunteerAgreementLabels("ro", new Date("2026-10-13T10:00:00Z"), false, "Asociația Exemplu");
     expect(labels.signature).toBe("Semnătura voluntarului");
     expect(labels.minorSignature).toBe("Semnătura voluntarului");
-    expect(labels.guardianSignature).toBe("Pentru organizator (nume și semnătură)");
+    expect(labels.guardianSignature).toBe("Semnătura părintelui sau tutorelui");
     expect(labels.whereuponTogether).toBe("DREPT PENTRU CARE SEMNĂM,");
-    expect(volunteerAgreementLabels("en", new Date("2026-10-13T10:00:00Z")).guardianSignature).toBe("For the organiser (name and signature)");
+    // The organizer's line of the sheet became the Association's column: the party, the club's legal name, the lines to fill in.
+    expect(labels.hostSignature).toEqual({ heading: "Asociația", name: "Asociația Exemplu", lines: ["Reprezentant (nume și funcție)", "Semnătura", "Data"] });
+    expect(volunteerAgreementLabels("en", new Date("2026-10-13T10:00:00Z"), false, "Asociația Exemplu").hostSignature).toEqual({
+      heading: "The Association",
+      name: "Asociația Exemplu",
+      lines: ["Representative (name and position)", "Signature", "Date"],
+    });
+    expect(JSON.stringify([labels, volunteerAgreementLabels("en", new Date("2026-10-13T10:00:00Z"))])).not.toMatch(/Pentru organizator|For the organiser/);
   });
 
   it("says how it was accepted: on the page, from the link, or on paper and who recorded it", () => {
