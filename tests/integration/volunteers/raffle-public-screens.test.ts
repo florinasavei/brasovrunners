@@ -220,12 +220,12 @@ describe("§NNN BR-REQ-050-02 the raffle's own page: the form while the gate is 
     expect(words(markup.slice(markup.indexOf('data-testid="raffle-title"'), markup.indexOf("</h1>")))).toContain(ro.Event.raffle.title);
     // The race number: digits only, on a phone's number pad; the name as at registration, at most the column's length.
     const number = tagOf(markup, 'name="number"') ?? "";
-    expect(number).toMatch(/inputmode="numeric"/);
+    expect(number).toMatch(/inputmode="numeric"/i);
     expect(number).toMatch(/pattern="\[0-9\]\*"/);
     expect(number).toMatch(/required/);
     const name = tagOf(markup, 'name="name"') ?? "";
-    expect(name).toMatch(/maxlength="120"/);
-    expect(name).toMatch(/autocomplete="name"/);
+    expect(name).toMatch(/maxlength="120"/i);
+    expect(name).toMatch(/autocomplete="name"/i);
     // «Sunt voluntar» while the volunteers may take part, with its line.
     expect(markup).toContain('name="volunteer"');
     expect(words(markup)).toContain(ro.Event.raffle.volunteer);
@@ -237,15 +237,16 @@ describe("§NNN BR-REQ-050-02 the raffle's own page: the form while the gate is 
     expect(words(fold)).toContain("Regulamentul tombolei");
     expect(words(fold)).toContain(`Tombola are loc la evenimentul Crosul tombolei ${serial}`);
     expect(words(fold)).toContain("în Parcul Noua");
-    expect(words(fold)).toContain("Pot participa la tombolă alergătorii înscriși și confirmați, cu număr de concurs, elitele cursei și voluntarii confirmați, cu număr de voluntar.");
+    // The filled blank is drawn in bold: its words, the sentence's period after the tag.
+    expect(words(fold)).toContain("Pot participa la tombolă alergătorii înscriși și confirmați, cu număr de concurs, elitele cursei și voluntarii confirmați, cu număr de voluntar");
     expect(fold).not.toContain("{{");
     // The acceptance's tick, required, its words the owner's; the notice's line with its link; no email promised.
     expect(tagOf(markup, 'name="accept"')).toMatch(/required/);
     expect(words(markup)).toContain(ro.Event.raffle.accept);
     expect(words(markup.slice(markup.indexOf('data-testid="raffle-notice"')))).toContain("nota de confidențialitate");
-    expect(markup).toContain('href="/ro/confidentialitate"');
+    expect(markup).toContain('href="/legal/privacy"');
     // The house's public-form defences: the honeypot, the render time — and no Turnstile without its keys.
-    expect(tagOf(markup, 'name="honeypot"')).toMatch(/tabindex="-1"/);
+    expect(tagOf(markup, 'name="honeypot"')).toMatch(/tabindex="-1"/i);
     expect(markup).toMatch(/name="renderedAt" value="\d{4}-\d{2}-\d{2}T/);
     expect(markup).not.toContain("cf-turnstile");
     expect(words(markup)).toContain(ro.Event.raffle.submit);
@@ -300,8 +301,10 @@ describe("§NNN BR-REQ-050-02 the raffle's own page: the form while the gate is 
     expect(page).not.toBeNull();
     expect(words(page)).toContain(ro.Event.raffle.done);
     expect(page).not.toContain('name="number"');
-    // …but not on an event that holds no raffle at all.
-    await db.update(events).set({ hasRaffle: false }).where(eq(events.id, eventId));
+    // …but not on an event that holds no raffle, nor on one «Din oficiu»: an address typed with the answer says nothing there.
+    await db.update(events).set({ raffleSignUp: false }).where(eq(events.id, eventId));
+    expect(await rafflePage({ tombola: "done" })).toBeNull();
+    await db.update(events).set({ raffleSignUp: true, hasRaffle: false }).where(eq(events.id, eventId));
     expect(await rafflePage({ tombola: "done" })).toBeNull();
   });
 
@@ -326,7 +329,7 @@ describe("§NNN BR-REQ-050-02 the raffle's own page: the form while the gate is 
     for (const sentence of [en.Event.raffle.title, en.Event.raffle.number, en.Event.raffle.name, en.Event.raffle.volunteer, en.Event.raffle.accept, en.Event.raffle.submit]) expect(text).toContain(sentence);
     expect(text).toContain(`The raffle takes place at the event The raffle cross ${serial}`);
     expect(text).toContain("Raffle rules");
-    expect(page).toContain('href="/en/privacy"');
+    expect(page).toContain('href="/legal/privacy"');
   });
 });
 

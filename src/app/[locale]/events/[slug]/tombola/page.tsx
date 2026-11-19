@@ -90,7 +90,8 @@ export default async function RafflePage({ params, searchParams }: Props) {
   const answer = one(asked.tombola);
   const outcome: Outcome | null = (OUTCOMES as readonly string[]).includes(answer ?? "") ? (answer as Outcome) : null;
   const [open, raffle] = await Promise.all([readOrWhileAway(() => cachedRaffleSignUpOpen(event.id, now), false), readOrWhileAway(() => cachedRaffleEvent(event.id), null)]);
-  if (!raffle || (!open && outcome !== "done")) notFound();
+  // The thank-you too only where a raffle asks a sign-up: an address typed with `?tombola=done` never says «ești înscris» elsewhere.
+  if (!raffle || !raffle.settings.hasRaffle || !raffle.settings.signUp || (!open && outcome !== "done")) notFound();
 
   const t = await getTranslations("Event");
   const tForm = await getTranslations("Registration");
