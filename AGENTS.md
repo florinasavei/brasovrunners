@@ -3322,10 +3322,63 @@ it to change): the raffle is the organizers' own to run, and the tick moves noth
 (`event_volunteers.in_raffle`), pressed by whoever works the volunteers (`canManageVolunteers`) and audited as every
 edit of a person's boxes. A tick decides one thing: whether the person's number is written on «Lista pentru tombolă»
 (§15.10), which also says, beside each person, whether they were there — a runner the desk checked in, a volunteer
-ticked «Prezent» (below). Read by those two lists, that file and
-«Toate datele unei persoane»; never by a public page, an email, the desk, a count, another export, the allocator or the
+ticked «Prezent» (below). Read by those two lists, that file, the raffle's one answer below — the «Tombolă» tab, the
+person's pages and the desk's view of a person say what it decides — and «Toate datele unei persoane»; never by a public
+page, an email, another export, the allocator or the
 capacity formula (`tests/unit/registrations/raffle-never-leaves.test.ts`). No state, place, number, email or
 declaration moves, and the person is not told.
+
+**A raffle with a sign-up of its own** (2026-11-18, `DECISIONS.md` §NNN; the owner: «Dar pentru tombolă trebuie să am o
+înscriere separată» — «Practic oamenii trebuie să își treacă numărul de concurs și numele, dar trebuie să am și o bifă de
+„voluntar”» — «trebuie să bifez acolo cine se poate înscrie: doar alergătorii și elitele și voluntarii» — «vreau să văd în
+dreptul fiecărei persoane dacă participă la tombolă»). Beside «Avem tombolă», in the editor (the Administrator's save,
+§542; one edition's own, as `has_raffle`: no series edit, copy or event file carries them, and no public query reads them but
+the gate below): **«Cine poate participa»** — «Alergătorii», «Elitele», «Voluntarii» (`events.raffle_runners`,
+`raffle_elites`, `raffle_volunteers`, each on by default) —, **«Cum»** — «Din oficiu», everybody of the ticked groups, the
+file as it was, or «Cu înscriere separată» (`events.raffle_sign_up`, off by default): only those who signed up — and
+**«Înscrierile la tombolă sunt deschise»** (`events.raffle_sign_up_open`, off by default; unticked at the draw). The groups
+decide in both modes. A line of the race's elite list takes part like a person: «Participă la tombolă» and «Prezent» of its
+own (`event_elite_entries.in_raffle`, on by default; `present`, off by default — the desk checks no line in), both ticked on
+the «Tombolă» tab by the Organizer and the Administrators (`canTakeRaffleList`), audited by the line's id.
+
+*Who takes part* is one pure function (`volunteers/domain/raffle.ts#raffleParticipation`), and every file, count, list
+column, page, the desk and the tab read it: `in`, or the first thing that keeps the person out — `groupNotAllowed`,
+`notConfirmed`, `noNumber`, `takenOut`, `notSignedUp` (the last only «Cu înscriere separată»). *The gate* is one pure rule
+(`raffleSignUpClosedFor`): a raffle, the sign-up mode, the sign-ups open, a published, scheduled race not ended (its end,
+else the next midnight after its start day on its own clock), «Regulamentul tombolei» in force and the privacy notice in
+force naming `{{raffle}}`, both in every language (§12.5), and the person's group ticked. Shut, no door is drawn and every
+action refuses, writing nothing. *The store* is `event_raffle_entries`: one row per person per event — exactly one of a
+registration, a volunteer or a line of the elite list, each `ON DELETE CASCADE` like the event —, the door (`method` LINK,
+FORM, DESK, STAFF), the rules' acceptance (version, moment, language, `signedTextHash` over the text with its blanks filled,
+the blanks), the name typed on the form, the IP address and browser of an electronic door, the staff member who recorded a
+desk's or the organizers' one (`SET NULL`) and the notice's version; deleted thirty days after the event's start by the
+maintenance sweep (`jobs/retention.ts`, step `event-raffle-entries`), listed in «Toate datele unei persoane», audited as
+`event_raffle.entry_created` / `entry_withdrawn` with the door and the group — never a name.
+
+*The doors*, while the gate is open: **LINK** — a «Tombola» card on the person's own «Gestionează înscrierea» for a confirmed
+real registration with a number of a ticked group: the rules in a fold, «Am citit și accept Regulamentul tombolei»,
+«Particip la tombolă»; once in, «Nu mai particip»; POST only, the link read and never spent, another adult on the address
+taken out from it but never signed up (§547, §421). **FORM** — the event's own page `/events/[slug]/tombola`, linked from
+the event page by one calm link while the gate is open: «Numărul de concurs», «Numele», «Sunt voluntar» while the volunteers
+may, the rules and the tick, the notice's line; the honeypot, the timing check, Turnstile when its keys are set and two
+throttles (§19.4). The number names a confirmed real registration of a ticked group (or, with «Sunt voluntar», a confirmed
+volunteer) whose registered name holds every word typed — both folded: case, diacritics, punctuation, spaces; at least two
+words unless the name has one (`typedNameMatches`); anything else is one neutral sentence that says neither which half was
+wrong nor whether the number exists, and a person in already reads the thank-you again. **DESK** — the desk's view of a
+person says «Tombolă: participă / nu participă» and why, to every desk role, in both modes, and offers «Înscrie la tombolă»
+in the open sign-up mode, the person having accepted the rules on paper or aloud. **STAFF** — the organizers' «Înscrie» on
+a volunteer's page and on the tab, a line of the elite list's only door. Nobody is emailed at any door, at a withdrawal or at
+«Șterge înscrierea», and no public cache is expired: no public page reads a sign-up
+(`tests/unit/volunteers/raffle-entries-never-leave.test.ts`).
+
+*Beside each person*: the registrations list's and the «Voluntari» list's «Tombolă» column (one event chosen that holds a
+raffle) says «Da», or «Nu» with the reason in a few words, under the organizers' tick; a registration's page and a
+volunteer's page say it in one line. **«Ziua cursei» → «Tombolă»** (`/admin/checkin/tombola`, the Organizer's and the
+Administrators', drawn among the tabs only for an event that holds a raffle) has the settings in one line, the counts by
+group and how many of them were there, the filters «Toți», «Participă», «Nu participă», «Doar prezenții», everybody of the
+three groups in one table — number, name, group, «Participă» with the reason, how and when they signed up, «Prezent» —, the
+organizers' «Înscrie», «Scoate» / «Pune înapoi», «Șterge înscrierea» (asked first) and a line's «Prezent», both files, and
+prints without its controls. The draw itself is the club's, outside the site.
 
 Beside that tick, and like it a mark that changes nothing else: **«Prezent»** on a volunteer (2026-11-18, `DECISIONS.md`
 §NNN; the owner, three days before the race: «La voluntari trebuie să trec prezent/absent ca să pot face tombola doar
@@ -4247,6 +4300,7 @@ an IP or a device. One key per surface, and each names what is actually being de
 | Admin resend | the registration id | two organizers, or one loop, filling a participant's inbox |
 | Token validation | the presented token's **hash**, never the secret | one email link hammered in a retry loop. Not enumeration: a 32-byte secret is not guessed |
 | Management/profile link request | the canonical email identity (§10.4) | one address typed repeatedly into a form nobody has to prove they own — a mailbox flood aimed at **somebody else's** inbox. Built: `/registrations/resend` takes an address and answers identically whatever it finds, generically as §15.1 requires, so it cannot be used to discover who is registered. The profile half is still unbuilt (M4). Since §675 both link forms (`/registrations/resend` and «Înscrierile mele», `/registrations/mine`) also carry the honeypot, the timing check and Turnstile, answered with the form's silence: a spam-looking post counts nothing and looks nothing up; only a token Cloudflare rejected comes back, with the refusal line and never the address in the URL |
+| The raffle's public form (`DECISIONS.md` §NNN) | the number typed at the event, hashed with the scope (five an hour), and, apart, the event (a thousand an hour) | a script trying names for one number, or numbers at one event. The form takes no address, so the person defended is the number's; it answers one neutral sentence whatever it finds, and «limited» says only to try again later or ask at the desk |
 | Job endpoints (auth-adjacent) | the job name | a leaked `JOB_SECRET` draining the outbox without limit. Counted only *after* the secret verifies, so an anonymous flood cannot lock the scheduler out |
 | Uploads | not built; media storage is deferred (§17) | — |
 

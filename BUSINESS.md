@@ -66,6 +66,7 @@ They can:
 - accept a time-limited waiting-list offer;
 - unregister through a secure email link before the event starts;
 - request or receive a replacement management link;
+- sign up for an event's raffle, where the club asks a sign-up of its own, and withdraw before the draw (BR-BUS-053);
 - optionally create and publish a small public runner profile with selected social links.
 
 ### Author
@@ -682,6 +683,19 @@ lawyer can edit a concrete draft rather than face a blank page, and blank in sub
 in them can be mistaken for a decision the club made. Each one says so at the top of its own
 page, in both languages. Production carries none, and registration there correctly refuses
 everyone until the approved text is loaded.
+
+**An event's raffle** (2026-11-18) is the organizers' to run, and by default everybody of the groups the club ticks —
+the confirmed runners with a race number, the race's elites, the confirmed volunteers with a number — is in it «din
+oficiu», with nothing to do. Where the club asks **a sign-up of its own** for it, only those who sign up take part, and
+a participant signs up in one of three ways while the club keeps the sign-ups open: from their own registration's page
+(the link in the emails), on the raffle's form on the event's page — their race number, or their volunteer number with
+«Sunt voluntar», and the name they registered with — or at the desk on race day. Each way asks them to accept the
+club's **«Regulamentul tombolei»** (the raffle's rules), a legal text like the others: the platform's template, approved
+by the club, never by the platform. Until the rules are approved and the privacy notice in force describes the sign-up,
+no way of signing up opens and the raffle stays «din oficiu». A sign-up sends no email, publishes no name and is
+deleted thirty days after the event; a participant withdraws before the draw from the same page, or by telling the
+organizers. The form never says whether a number exists: a number and a name that do not belong together get one
+neutral answer. The draw itself happens at the event, outside the site, among those signed up.
 
 ### BR-BUS-060 — Staff roles and least privilege
 
