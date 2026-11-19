@@ -56,7 +56,7 @@ import { measureServerClock, seedServerClock, serverClockNow } from "./server-cl
  *
  * - **The elites first**: one big button an elite, the bib's label large and the full name under it; pressing it records that
  *   elite's number. A line with no number is drawn disabled with what to do — or, for a viewer who writes the elite list
- *   (`mayNumber`), in its place «Dă-i un număr» (§NNN), a plain form that gives the line the race's next free number and comes back
+ *   (`mayNumber`), in its place «Dă-i un număr» (§990), a plain form that gives the line the race's next free number and comes back
  *   with the line's button like every other —; one already «Sosit» says «✓ <time>» and is not pressed.
  * - **The box**: the numeric keypad, Enter or «Sosit» records, and the box is empty at once, keeping the focus for the next number.
  * - **«⏱ Prinde timpul»** for a bunch: each press keeps one moment (oldest first, each with its age and its ✕); the next number or
@@ -105,7 +105,7 @@ export type FinishLineWords = {
   eliteFinished: string;
   eliteNoNumberLine: string;
   eliteNoNumberRegistration: string;
-  /** «Dă-i un număr» on a line drawn without a number, for a viewer who writes the elite list (§NNN), and its name for a reader: «… {label} — {name}». */
+  /** «Dă-i un număr» on a line drawn without a number, for a viewer who writes the elite list (§990), and its name for a reader: «… {label} — {name}». */
   eliteGiveNumber: string;
   eliteGiveNumberAria: string;
   boxLabel: string;
@@ -184,13 +184,13 @@ type Props = {
   undoForm: (form: FormData) => Promise<void>;
   /**
    * Whether the viewer writes the race's elite list (`canManageRegistrations`): only then is a line drawn without a number
-   * «Dă-i un număr» (§NNN) — the server asks again — and `numberForm` is the plain form's action (`giveEliteNumberFormAction`).
+   * «Dă-i un număr» (§990) — the server asks again — and `numberForm` is the plain form's action (`giveEliteNumberFormAction`).
    */
   mayNumber: boolean;
   numberForm: (form: FormData) => Promise<void>;
 };
 
-/** The one plain form «Dă-i un număr» posts (§NNN), beside the elites' form — forms cannot nest —, each button naming its line. */
+/** The one plain form «Dă-i un număr» posts (§990), beside the elites' form — forms cannot nest —, each button naming its line. */
 const NUMBER_FORM_ID = "finish-elite-number";
 
 /** A template's placeholders filled; a placeholder with no value is left as written. */
@@ -551,7 +551,7 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
     </>
   );
 
-  /** A line drawn without a number, for a viewer who writes the elite list: «Dă-i un număr» in the grey button's place (§NNN). */
+  /** A line drawn without a number, for a viewer who writes the elite list: «Dă-i un număr» in the grey button's place (§990). */
   const numberable = (elite: EliteButtonView): elite is EliteButtonView & { entryId: string } => mayNumber && elite.kind === "line" && elite.bibNumber === null && elite.entryId !== null;
 
   const eliteButton = (elite: EliteButtonView) => {
@@ -667,7 +667,7 @@ export default function FinishLine({ eventId, eventTitle, uiLocale, timeZone, st
             {hidden}
             {state.elites.map(eliteButton)}
           </Box>
-          {/* «Dă-i un număr»'s own form (§NNN), beside the elites' — never inside it: each button names it and posts its line's id. */}
+          {/* «Dă-i un număr»'s own form (§990), beside the elites' — never inside it: each button names it and posts its line's id. */}
           {state.elites.some(numberable) && (
             <Box component="form" id={NUMBER_FORM_ID} action={numberForm} hidden data-testid="finish-elite-number-form">
               {hidden}

@@ -93,7 +93,7 @@ export function seriesBounds(band: { start: number; hiddenStart: number | null }
  * drawn for somebody else in the minutes between the deploy and that run.
  *
  * And the numbers of the lines of «Elită — doar numele pe BIB» (§895) — typed, or given by the line's own
- * draw since §NNN (`pickEliteLineNumber`): the line's number is its runner's at the finish line, so a
+ * draw since §990 (`pickEliteLineNumber`): the line's number is its runner's at the finish line, so a
  * draw — a confirmation's, the hidden list's, «Alocă numerele», a volunteer's —, the desk's box, a
  * suggestion and a print of spares treat it as worn, and no runner is handed the number an elite runner
  * runs under. Only the numbers are read — never a name, and the lines are in no count. `addEliteEntry`
@@ -416,7 +416,7 @@ async function storedResultNumbers<T extends Record<string, unknown>>(db: Databa
 }
 
 /**
- * The number a line of the race's elite list is given when it has none (§NNN, amending §895 and §986; the owner, 2026-11-19,
+ * The number a line of the race's elite list is given when it has none (§990, amending §895 and §986; the owner, 2026-11-19,
  * of an elite drawn grey on «Cronometrare»: «vreau să apară la fel! și să o pot cronometra»). The elite bib prints its label
  * and never a number (§963, §975), so the number is the line's at the finish line alone — the press, the results,
  * «Participant #…» — and the finish line keys everything by a number.

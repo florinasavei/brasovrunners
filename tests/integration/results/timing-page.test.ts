@@ -173,7 +173,7 @@ describe("§986 «Cronometrare»: the page", () => {
       { eventId: raceId, name: "Andrei Pop", bibNumber: null },
     ]);
     await recordFinish(db, staff.CONTRIBUTOR!, { eventId: raceId, bibNumber: 110 }, at(31, 5));
-    // The desk Volunteer, who does not write the elite list: the numberless line keeps its note (§NNN — an Administrator's page, below).
+    // The desk Volunteer, who does not write the elite list: the numberless line keeps its note (§990 — an Administrator's page, below).
     state.actor = staff.CONTRIBUTOR;
     const html = await timing();
     const elites = [...html.matchAll(/data-testid="finish-elite" data-bib="(\d*)"/g)].map((match) => match[1]);
@@ -194,7 +194,7 @@ describe("§986 «Cronometrare»: the page", () => {
     expect(html).not.toContain('id="finish-elite-number"');
   });
 
-  it("draws «Dă-i un număr» in a numberless line's grey button's place for whoever writes the elite list, and the line's button blue once numbered (§NNN)", async () => {
+  it("draws «Dă-i un număr» in a numberless line's grey button's place for whoever writes the elite list, and the line's button blue once numbered (§990)", async () => {
     await db.insert(eventEliteEntries).values({ eventId: raceId, name: "Andrei Munteanu", bibNumber: 7 });
     const [ingrid] = await db.insert(eventEliteEntries).values({ eventId: raceId, name: "Ingrid Pop", bibNumber: null }).returning({ id: eventEliteEntries.id });
     // The Administrator: in the place of the grey button, one press naming the line, posting a plain form of its own beside the elites'.

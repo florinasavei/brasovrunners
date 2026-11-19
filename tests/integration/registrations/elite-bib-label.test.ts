@@ -327,7 +327,7 @@ describe("§975 «Eticheta pe BIB» on a line of the race's elite list", () => {
 
   it("is the Administrator's alone, and never on the public «Elitele cursei»", async () => {
     const admin = await staff("ADMIN");
-    // No number typed: the line draws its own (§NNN), which «Elitele cursei» says beside the name.
+    // No number typed: the line draws its own (§990), which «Elitele cursei» says beside the name.
     const { id, bibNumber } = await addEliteEntry(db, admin, eventId, { name: "Mara Ionescu", bibNumber: "" }, NOW);
     expect(Number.isInteger(bibNumber)).toBe(true);
     for (const role of REFUSED) {

@@ -12,7 +12,7 @@ import { assignBibNumbers } from "@/modules/registrations/bibs";
 import { addEliteEntry, giveEliteNumbers } from "@/modules/registrations/elite-list";
 
 /**
- * §NNN — a line of the race's elite list added with no number draws one by itself (BR-REQ-038-01), on real connections racing:
+ * §990 — a line of the race's elite list added with no number draws one by itself (BR-REQ-038-01), on real connections racing:
  * several Administrators adding names at the same instant, and a confirmation's draw («Alocă numerele») beside them, each get a
  * number of their own. Every one of them reads the numbers taken under the event row's lock — the one every draw of a number at
  * an event takes (`AGENTS.md` §10.6) — so none reads a «next free» number another is about to write; nothing else stops two
@@ -23,7 +23,7 @@ import { addEliteEntry, giveEliteNumbers } from "@/modules/registrations/elite-l
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
 
-describe("§NNN elite lines numbered by themselves, at once, on real connections", () => {
+describe("§990 elite lines numbered by themselves, at once, on real connections", () => {
   const pool = new pg.Pool({ connectionString: DATABASE_URL, max: 20 });
   const db = drizzle(pool);
   const NOW = new Date();

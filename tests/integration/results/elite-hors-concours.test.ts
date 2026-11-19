@@ -136,7 +136,7 @@ describe("§910 a separate-list elite out of the ranking, by its number or its n
 
   it("by the name, for a line with no number: the one typed row carrying it — folded — and none while two rows carry it", async () => {
     await field();
-    // A line from before every line drew its own number (§NNN) — production still holds such lines —, written as it was then.
+    // A line from before every line drew its own number (§990) — production still holds such lines —, written as it was then.
     const [faith] = await db.insert(eventEliteEntries).values({ eventId: raceId, name: "Faith Kipyegon", bibNumber: null, createdByStaffUserId: admin.id }).returning({ id: eventEliteEntries.id });
     await save([line(101, { time: "44:00" }), typed(0, { bib: "900", name: "faith  KIPYEGON", sex: "female", time: "40:00" }), typed(1, { bib: "901", name: "Maria Pop", sex: "female", time: "46:00" })]);
     await setEliteEntryTick(db, admin, faith.id, "inResults", false, NOW);
@@ -147,7 +147,7 @@ describe("§910 a separate-list elite out of the ranking, by its number or its n
     expect(await storedPositions()).toMatchObject({ 900: [1, 1, null], 101: [2, 2, 1], 901: [3, 3, null] });
   });
 
-  it("a number given to a line matched by its name ends the match, ranked again in the same press — and its box can take the row's number (§NNN)", async () => {
+  it("a number given to a line matched by its name ends the match, ranked again in the same press — and its box can take the row's number (§990)", async () => {
     await field();
     const [faith] = await db.insert(eventEliteEntries).values({ eventId: raceId, name: "Faith Kipyegon", bibNumber: null, createdByStaffUserId: admin.id }).returning({ id: eventEliteEntries.id });
     await save([line(101, { time: "44:00" }), typed(0, { bib: "900", name: "Faith Kipyegon", sex: "female", time: "40:00" })]);

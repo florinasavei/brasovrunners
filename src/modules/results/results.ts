@@ -1409,7 +1409,7 @@ export async function readFinishLine<T extends Record<string, unknown>>(db: Data
       label: labels.lines.get(line.id) ?? line.name,
       name: line.name,
       bibNumber: line.bibNumber,
-      // What «Dă-i un număr» posts for a line drawn without a number (§NNN): the line's id, never shown.
+      // What «Dă-i un număr» posts for a line drawn without a number (§990): the line's id, never shown.
       entryId: line.id,
       finishedGunTimeMs: line.bibNumber === null ? null : finishedTime(index.freeByBib.get(line.bibNumber)),
     });

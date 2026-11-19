@@ -89,7 +89,7 @@ async function failureOf(operation: Promise<unknown>) {
 }
 
 describe("§895 the race's elite list", () => {
-  it("keeps names in the order typed, each with a number — typed, or drawn by itself (§NNN) — and registers, emails and tells nobody", async () => {
+  it("keeps names in the order typed, each with a number — typed, or drawn by itself (§990) — and registers, emails and tells nobody", async () => {
     const race = await createRace();
     const admin = await staff("ADMIN");
     // No number typed: the race's next free one, 1 on a race nobody has a number at yet.
@@ -217,7 +217,7 @@ describe("§895 the race's elite list", () => {
       const refusal = await failureOf(addEliteEntry(db, admin, race, { name: "Eliud Kipchoge", bibNumber: number }, later(1)));
       expect([refusal.code, refusal.fields], number).toEqual(["CONFLICT", ["bibNumber"]]);
     }
-    // Without a number the same name goes in, drawing the race's next free one (§NNN): 1 the runner's, 2 the other line's — 3.
+    // Without a number the same name goes in, drawing the race's next free one (§990): 1 the runner's, 2 the other line's — 3.
     await addEliteEntry(db, admin, race, { name: "Eliud Kipchoge", bibNumber: "" }, later(2));
     expect((await listEliteEntries(db, admin, race)).map((row) => row.bibNumber)).toEqual([2, 3]);
     expect((await db.select().from(auditLogs)).map((row) => row.action)).toEqual(["event_elite.added", "event_elite.added", "event_elite.number_given"]);

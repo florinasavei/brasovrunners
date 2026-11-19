@@ -203,7 +203,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * The elite card's presses (`actions.ts#backToEliteCard`): back from one, the card and every fold around it open, and the page's
- * generic «Salvat» banner stays away — the toast says what happened. «Număr» and «Dă număr elitelor fără număr» since §NNN.
+ * generic «Salvat» banner stays away — the toast says what happened. «Număr» and «Dă număr elitelor fără număr» since §990.
  */
 const ELITE_CARD_SAVES: readonly string[] = [
   "eliteAdded",

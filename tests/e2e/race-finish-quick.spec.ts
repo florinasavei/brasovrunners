@@ -220,7 +220,7 @@ test.describe("§986 «Cronometrare»", () => {
   });
 
   /**
-   * §NNN — the owner, 2026-11-19, of «Ingrid» drawn grey with «Fără număr: …»: «vreau să apară la fel! și să o pot cronometra». An
+   * §990 — the owner, 2026-11-19, of «Ingrid» drawn grey with «Fără număr: …»: «vreau să apară la fel! și să o pot cronometra». An
    * elite line written before every line drew its own number: an Administrator presses «Dă-i un număr» in the grey button's place,
    * the page comes back saying the number, the line's button is the same blue button as every other elite's, and a press records
    * its «Sosit» under the line's name.

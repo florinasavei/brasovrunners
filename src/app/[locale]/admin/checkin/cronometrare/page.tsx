@@ -61,7 +61,7 @@ const BANNER_REFUSALS = [
   "VALIDATION_ERROR",
   "FORBIDDEN",
   "NOT_FOUND",
-  // «Dă-i un număr» on an elite line with no number left in the race's series (§NNN).
+  // «Dă-i un număr» on an elite line with no number left in the race's series (§990).
   "ELITE_NO_FREE_NUMBER",
 ] as const;
 /** The island's refusals by code, each `Admin.timing.refused.<code>`; any other is `refusedOther`. */
@@ -80,7 +80,7 @@ const number = (raw: string | undefined) => (raw !== undefined && /^\d{1,9}$/.te
  * desk's own default, as «Lucruri de adus» picks it; the desk's select changes it. On a race: the gun — «Start» for whoever enters
  * results (`canEnterResults`), pressed at the gun and moved or taken off until the first finisher; without it the editor's «Startul
  * cursei» counts — and the finish line (`FinishLine`, the page's island): the elites' buttons first — a line of the elite list
- * without a number is «Dă-i un număr» for whoever writes the list (§NNN), back here with `?numbered=` and the line's button blue —,
+ * without a number is «Dă-i un număr» for whoever writes the list (§990), back here with `?numbered=` and the line's button blue —,
  * the number box, «⏱ Prinde timpul», the presses of this phone and «Ultimii sosiți» with who entered each. With scripts off every form posts and the page comes
  * back here saying what happened (`?ok=`, `?dup=` with `?s=` when the row is a decision of «Clasament», `?refused=` —
  * `RACE_GUN_CHANGED`, a «Start» whose page saw another gun than the one stored, said with the gun as it stands (§986) —, `?undone=`,
@@ -159,7 +159,7 @@ export default async function TimingPage({ params, searchParams }: Props) {
     }
     const undone = number(query.undone);
     if (undone !== null) return { severity: "success" as const, text: t("timing.banner.undone", { who: `#${undone}` }) };
-    // «Dă-i un număr» (§NNN): the line, by its bib's label and the number it now holds, its button the blue one below.
+    // «Dă-i un număr» (§990): the line, by its bib's label and the number it now holds, its button the blue one below.
     const numbered = number(query.numbered);
     if (numbered !== null) {
       const elite = view?.elites.find((candidate) => candidate.bibNumber === numbered);
@@ -397,7 +397,7 @@ export default async function TimingPage({ params, searchParams }: Props) {
         clock={readFinishClockAction}
         recordForm={recordFinishFormAction}
         undoForm={undoFinishFormAction}
-        // «Dă-i un număr» on an elite line drawn without a number (§NNN): for whoever writes the elite list; the action asks again.
+        // «Dă-i un număr» on an elite line drawn without a number (§990): for whoever writes the elite list; the action asks again.
         mayNumber={canManageRegistrations(actor.role)}
         numberForm={giveEliteNumberFormAction}
       />

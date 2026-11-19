@@ -13,7 +13,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — every line of the race's elite list has a number (the owner, 2026-11-19, of «Ingrid» drawn grey on «Cronometrare»: «de ce
+ * §990 — every line of the race's elite list has a number (the owner, 2026-11-19, of «Ingrid» drawn grey on «Cronometrare»: «de ce
  * apare Ingrid separat?» — «vreau să apară la fel! și să o pot cronometra»; BR-REQ-038-01, BR-REQ-050-02, BR-REQ-060-01), on real
  * PostgreSQL (PGlite): a line added with no number typed — or moved from the internal list — draws the race's next free number
  * under the event's lock, nobody else's and never a spare, a result's or the hidden list's series; every later draw — a
@@ -117,7 +117,7 @@ const numbersOf = async (eventId: string) => (await listEliteEntries(db, admin, 
 const trailOf = async (eventId: string, action: string) =>
   (await db.select().from(auditLogs).where(and(eq(auditLogs.entityId, eventId), eq(auditLogs.action, action)))).map((row) => [row.actorStaffUserId, row.metadataJson]);
 
-describe("§NNN a line added with no number draws the race's next free one, nobody else's", () => {
+describe("§990 a line added with no number draws the race's next free one, nobody else's", () => {
   it("steps over every number somebody wears, wore or holds, the spares, a stored result and the hidden list's series", async () => {
     // The race counts from 1; the hidden list's own series from 40, above it; the desk's spares 10–14, 13 stepped over by a print.
     const eventId = await race({ bibStartNumber: 1, hiddenListEnabled: true, hiddenListBibStart: 40, walkInBibStart: 10, walkInBibCount: 5 });
@@ -183,7 +183,7 @@ describe("§NNN a line added with no number draws the race's next free one, nobo
   });
 });
 
-describe("§NNN every later draw steps over a line's number", () => {
+describe("§990 every later draw steps over a line's number", () => {
   it("«Alocă numerele» — the race's series and the hidden list's — and a confirmation's draw never hand out a line's number", async () => {
     const eventId = await race({ bibStartNumber: 1, hiddenListEnabled: true, hiddenListBibStart: 50 });
     await runner(eventId, { bibNumber: 1 });
@@ -226,7 +226,7 @@ describe("§NNN every later draw steps over a line's number", () => {
   });
 });
 
-describe("§NNN «Dă-i un număr» and «Dă număr elitelor fără număr»", () => {
+describe("§990 «Dă-i un număr» and «Dă număr elitelor fără număr»", () => {
   it("number exactly the lines without one, in the order typed, each the race's next free number, audited by id and number", async () => {
     const eventId = await race({ bibStartNumber: 1 });
     await runner(eventId, { bibNumber: 1 });
@@ -301,7 +301,7 @@ describe("§NNN «Dă-i un număr» and «Dă număr elitelor fără număr»", 
   });
 });
 
-describe("§NNN a line's «Număr» box", () => {
+describe("§990 a line's «Număr» box", () => {
   it("changes the number with the add's checks, audits from and to, and frees the old one", async () => {
     const eventId = await race({ bibStartNumber: 1, walkInBibStart: 40, walkInBibCount: 5 });
     await runner(eventId, { bibNumber: 1 });

@@ -330,7 +330,7 @@ describe("§986 an elite at the line", () => {
     ]);
   });
 
-  it("draws a line numbered by «Dă-i un număr» as every other elite, and its press records «Sosit» under the line's name (§NNN)", async () => {
+  it("draws a line numbered by «Dă-i un număr» as every other elite, and its press records «Sosit» under the line's name (§990)", async () => {
     const ingrid = await eliteLine("Ingrid Pop", null);
     const before = await readFinishLine(db, staff.ADMIN!, raceId, at(29), 20);
     // Without a number: the line's id for «Dă-i un număr», nothing to press.

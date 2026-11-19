@@ -129,7 +129,7 @@ describe("§895 the elite list's Server Actions", () => {
     expect(await db.select().from(auditLogs)).toHaveLength(0);
   });
 
-  it("adds a name with no number typed and lands on the card, the line holding the number it drew (§NNN)", async () => {
+  it("adds a name with no number typed and lands on the card, the line holding the number it drew (§990)", async () => {
     await as("ADMIN");
     expect(await outcomeOf(addEliteEntryAction(null, form({ eliteName: "Ingrid Pop", eliteNumber: "" })))).toEqual({ redirect: "/ro/admin/events/x?saved=eliteAdded#bib-elite" });
     const [line] = await db.select().from(eventEliteEntries);
@@ -209,11 +209,11 @@ describe("the elite panel's «Nu mai e elită» press (2026-11-11)", () => {
 });
 
 /**
- * §NNN — the elite lines' numbers, through the real actions (BR-REQ-060-01): «Dă număr elitelor fără număr (N)» and a line's
+ * §990 — the elite lines' numbers, through the real actions (BR-REQ-060-01): «Dă număr elitelor fără număr (N)» and a line's
  * «Număr» on the editor's card, «Dă-i un număr» on «Cronometrare». The Administrator's alone, asked at each door and again in the
  * service; each comes back where it was pressed with what happened, numbers and codes only.
  */
-describe("§NNN the elite lines' numbers, pressed", () => {
+describe("§990 the elite lines' numbers, pressed", () => {
   const numberOf = async (id: string) => (await db.select({ number: eventEliteEntries.bibNumber }).from(eventEliteEntries).where(eq(eventEliteEntries.id, id)))[0]?.number;
 
   it("«Dă număr elitelor fără număr» numbers the lines without one and lands on the card; a second press says there were none", async () => {

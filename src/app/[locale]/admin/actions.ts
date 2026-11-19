@@ -1272,7 +1272,7 @@ export async function setEliteBibLabelAction(_previous: FormOutcome | null, form
 }
 
 /**
- * «Dă număr elitelor fără număr (N)» on the elite card (§NNN): every line of the event's elite list without a number given the
+ * «Dă număr elitelor fără număr (N)» on the elite card (§990): every line of the event's elite list without a number given the
  * race's next free one, nobody else's (`elite-list.ts#giveEliteNumbers`), so «Cronometrare» times each like every other elite.
  * The Administrator's (`canManageRegistrations`), here at the door and again in the service (BR-REQ-060-01). It asks nothing
  * (§384): it tells nobody, prints nothing — the bib carries the label alone — and each line's «Număr» box changes the number.
@@ -1294,7 +1294,7 @@ export async function giveEliteNumbersAction(_previous: FormOutcome | null, form
 }
 
 /**
- * «Număr» and its «Salvează» on one line of the elite card (§NNN): the number the Administrator types for the line — the line's
+ * «Număr» and its «Salvează» on one line of the elite card (§990): the number the Administrator types for the line — the line's
  * first, or another in the place of its own (`elite-list.ts#setEliteEntryNumber`, the add's checks). The Administrator's
  * (`canManageRegistrations`), here at the door and again in the service (BR-REQ-060-01). A plain form a line, posting the box
  * beside it; it asks nothing (§384) — it tells nobody, prints nothing and the same box changes it again. Back to the elite card,

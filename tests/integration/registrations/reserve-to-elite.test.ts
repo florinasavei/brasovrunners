@@ -130,7 +130,7 @@ describe("§903 «Mută pe lista de elită» on a line of the internal list", ()
 
     const [moved, ...more] = await elite();
     expect(more).toEqual([]);
-    // The race's next free number (§NNN): nobody has one yet, so 1 — «Cronometrare» times the line like every other elite.
+    // The race's next free number (§990): nobody has one yet, so 1 — «Cronometrare» times the line like every other elite.
     expect(moved).toMatchObject({ eventId, name: "Mara Munteanu Pop", bibNumber: 1, createdByStaffUserId: admin.id });
     expect(await lines()).toEqual([]);
     // Not a registration: no person, no row, no email, and the note on nothing.
@@ -150,7 +150,7 @@ describe("§903 «Mută pe lista de elită» on a line of the internal list", ()
     const [added] = await trail("event_elite.added");
     expect(added).toMatchObject({ actorStaffUserId: admin.id, entityType: "event", entityId: eventId });
     expect(added.metadataJson).toEqual({ entryId: eliteEntryId, reserveEntryId: entryId });
-    // The number the line drew (§NNN), by the line's id and the number alone.
+    // The number the line drew (§990), by the line's id and the number alone.
     const [given] = await trail("event_elite.number_given");
     expect(given).toMatchObject({ actorStaffUserId: admin.id, entityType: "event", entityId: eventId });
     expect(given.metadataJson).toEqual({ entryId: eliteEntryId, bibNumber: 1 });

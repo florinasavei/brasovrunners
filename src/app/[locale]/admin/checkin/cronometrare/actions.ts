@@ -28,7 +28,7 @@ import { eventIdOf, field, localeOf } from "@/app/[locale]/admin/events/[id]/vol
   at its answer), and once for the plain form a page with scripts off posts (`…FormAction`: back to the page with the outcome in its
   address, numbers and codes only, never a name) — «Start» / «Anulează startul», a plain form the island only stamps, the
   server's clock the island asks as it wakes (`readFinishClockAction`), with the gun, and «Dă-i un număr» on an elite line drawn
-  without one (§NNN, `giveEliteNumberFormAction`). Each asks its capability here, at the door (`requireStaffCapability`: the
+  without one (§990, `giveEliteNumberFormAction`). Each asks its capability here, at the door (`requireStaffCapability`: the
   finish, the undo and the clock `canRecordFinishes`, the gun `canEnterResults`, the line's number `canManageRegistrations` — who
   writes the elite list), and the service asks again (BR-REQ-060-01). None of them emails anybody.
 */
@@ -222,7 +222,7 @@ export async function recordFinishFormAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Dă-i un număr» on «Cronometrare» (§NNN; the owner, 2026-11-19, of «Ingrid» drawn grey: «vreau să apară la fel! și să o pot
+ * «Dă-i un număr» on «Cronometrare» (§990; the owner, 2026-11-19, of «Ingrid» drawn grey: «vreau să apară la fel! și să o pot
  * cronometra»): the elite line the button names (`entryId`) given the race's next free number, nobody else's
  * (`elite-list.ts#giveEliteLineNumber`), so its button is pressed like every other elite's. Who writes the elite list — the
  * Administrator (`canManageRegistrations`) — at the door and again in the service; the page draws the button for nobody else.

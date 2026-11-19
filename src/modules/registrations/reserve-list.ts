@@ -459,7 +459,7 @@ export async function settleReserveEntry<T extends Record<string, unknown>>(db: 
  * One transaction: the event row locked as `addEliteEntry` locks it (the lock every draw takes, `AGENTS.md`
  * §10.6), then the line — the order an event's delete takes them in — then the elite line written with the line's
  * first and last name through `parseEliteEntry` (trimmed, inner spaces collapsed, 1 to `ELITE_NAME_MAX`
- * characters; a longer name is refused naming `name`, and nothing is written) and **a number of its own** (§NNN,
+ * characters; a longer name is refused naming `name`, and nothing is written) and **a number of its own** (§990,
  * amending «no number» here: the line drew none, and «Cronometrare» drew it grey and could not time it) — the race's next
  * free one, nobody else's, drawn under the same lock as an add with an empty box draws it (`bibs.ts#pickEliteLineNumber`;
  * none left in the race's series is refused, `ELITE_NO_FREE_NUMBER`, nothing written) — and the line deleted. The note is

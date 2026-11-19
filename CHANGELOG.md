@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V4.71-2026-11-19
+
+- **Every elite is timed on «Cronometrare»** — a name added to the elite list without a number now gets the race's next free one by itself (nobody else's, and still not printed on the bib); «Dă-i un număr» on «Cronometrare» and «Dă număr elitelor fără număr» on the elite card number the names left without one in one press, so «Ingrid» is a blue button like every other elite and her finish is recorded; and each name's «Număr» can be changed on the card until a result is stored on it. §990.
 ## BR-V4.70-2026-11-19
 
 - **«Dă-i un BIB gol»: a blank bib from the desk's spares for a runner already registered** — on a confirmed registration's page, choose one of the event's free spare numbers and the runner wears it from then on, even when their named bib was already printed; the old number is retired and never given to anybody again, the email is your choice, and the spares card lists who has each blank bib («154 → name»). §989.

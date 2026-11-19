@@ -26,7 +26,7 @@ import { isSpareNumber, spareBandOf } from "./domain/spare-bibs";
  * person's own signed declaration, and an elite line is a name to print, nothing else. A name and a number are all it
  * stores, and two ticks. The one thing of it the race numbers read is that number, as worn (`addEliteEntry`).
  *
- * **Every line has a number (§NNN; the owner, 2026-11-19, of «Ingrid» drawn grey on «Cronometrare»: «de ce apare Ingrid
+ * **Every line has a number (§990; the owner, 2026-11-19, of «Ingrid» drawn grey on «Cronometrare»: «de ce apare Ingrid
  * separat?» — «vreau să apară la fel! și să o pot cronometra»).** The bib prints the label and never the number (§963, §975),
  * so the number is the line's at the finish line, in the results and in «Participant #…» — and the finish line keys every
  * press by a number. A line added with none typed draws one by itself (`bibs.ts#pickEliteLineNumber`: the race's next free
@@ -104,7 +104,7 @@ export function parseEliteEntry(input: EliteEntryInput): { name: string; bibNumb
 }
 
 /**
- * A line's «Număr» typed in its own box on the card (§NNN): a whole number from 1 to `ELITE_NUMBER_MAX`, spaces round it
+ * A line's «Număr» typed in its own box on the card (§990): a whole number from 1 to `ELITE_NUMBER_MAX`, spaces round it
  * read, as at the add. Never empty — every line keeps a number, so an empty box is refused, naming it (`bibNumber`).
  */
 export function parseEliteLineNumber(raw: unknown): number {
@@ -202,7 +202,7 @@ export async function setEliteEntryTick<T extends Record<string, unknown>>(
  * never hand one out. Under the event row's lock, the one every draw takes (§10.6), so a confirmation cannot
  * reach the same number between the check and the insert.
  *
- * **No number typed, one is given (§NNN).** The box left empty, the line draws its number by itself in the same transaction
+ * **No number typed, one is given (§990).** The box left empty, the line draws its number by itself in the same transaction
  * and under the same lock (`bibs.ts#pickEliteLineNumber`: the race's next free number, nobody else's — never a spare, never the
  * hidden list's series, never a number a stored result carries), and the trail says which (`event_elite.number_given`,
  * `{ entryId, bibNumber }`), so «Cronometrare» times the line like every other elite. No number left in the race's series is
@@ -248,7 +248,7 @@ export async function addEliteEntry<T extends Record<string, unknown>>(
   return { id: outcome.id, bibNumber: outcome.bibNumber };
 }
 
-/** One line numbered by a press (§NNN): which, the number it holds, and whether this press gave it (false: it had one already). */
+/** One line numbered by a press (§990): which, the number it holds, and whether this press gave it (false: it had one already). */
 export type GivenEliteNumber = { entryId: string; bibNumber: number; given: boolean };
 
 /**
@@ -277,7 +277,7 @@ async function numberTheLines<T extends Record<string, unknown>>(
 }
 
 /**
- * «Dă număr elitelor fără număr (N)» on the elite card (§NNN): every line of the event that has no number — one left from
+ * «Dă număr elitelor fără număr (N)» on the elite card (§990): every line of the event that has no number — one left from
  * before a line drew its own — given the race's next free one, each nobody else's (`numberTheLines`). The Administrator's
  * (FORBIDDEN otherwise); an event that is not there is NOT_FOUND. Under the event row's lock, the lines locked after it, the
  * order `addEliteEntry` takes; a press that finds none without a number — a stale card, a colleague first — writes nothing.
@@ -307,7 +307,7 @@ export async function giveEliteNumbers<T extends Record<string, unknown>>(db: Da
 }
 
 /**
- * «Dă-i un număr» on «Cronometrare» (§NNN), in the place of a line's grey button: that one line given the race's next free
+ * «Dă-i un număr» on «Cronometrare» (§990), in the place of a line's grey button: that one line given the race's next free
  * number, as `giveEliteNumbers` gives it, so the line's button is pressed like every other elite's. The Administrator's
  * (FORBIDDEN otherwise — the desk's other roles keep the line's note); a line that is gone is NOT_FOUND. Under the event row's
  * lock, then the line's; a line that has a number already — a page drawn before a colleague's press — is answered with it,
@@ -328,7 +328,7 @@ export async function giveEliteLineNumber<T extends Record<string, unknown>>(db:
 }
 
 /**
- * «Număr» on one line of the elite card (§NNN): the number the Administrator types for the line — a first one, or another in
+ * «Număr» on one line of the elite card (§990): the number the Administrator types for the line — a first one, or another in
  * the place of the one it holds. The same checks as a number typed at the add (`addEliteEntry`): refused (`CONFLICT` on
  * `bibNumber`) when somebody at the event has it, had it or another line carries it (`bibs.ts#bibNumberInUse`), or it is one of
  * the desk's spares. And refused while a result is stored on the line's present number (`ELITE_NUMBER_HAS_RESULT`): the
