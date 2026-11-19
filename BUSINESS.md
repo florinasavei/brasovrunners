@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.69-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.70-2026-11-19 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V4.69-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.70-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -400,7 +400,9 @@ A participant gets a **race number** when their registration is confirmed, in or
 confirmation, and a number is never given twice. The backoffice prints them as a sheet, two per
 A4 page with the club's logo, the number and the name, all of them or a range. Test
 registrations get no number and are never printed. A confirmed runner's number can be replaced
-by hand while it is not printed — the old one stays retired — and it is never cleared.
+by hand while it is not printed — the old one stays retired — and it is never cleared. A printed
+one changes only when the runner is handed one of the desk's blank spare bibs: they wear its
+number from then on, and the printed number is retired too, so no two people ever wear one number.
 
 **Race day has a desk** (2026-09-18). Every confirmed participant receives, in the confirmation
 email, a code and its QR; at the pickup table a volunteer — any staff role, on a phone — scans

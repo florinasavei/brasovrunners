@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V4.69-2026-11-19 -->
+<!-- PROJECT_BASELINE: BR-V4.70-2026-11-19 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V4.69-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V4.70-2026-11-19`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -3247,7 +3247,9 @@ BR-REQ-037-05):
      question on a race that filled since the page was read is refused
      (`SUPPLEMENTARY_PLACE_UNCONFIRMED`), nothing written. It confirms nothing: the runner signs from
      the email. The desk's «Dă-i un loc» still needs a free place (§589).
-   - **A number by hand** (BR-REQ-038-01 criterion 7) and **check-in** (`checked_in_at`, by
+   - **A number by hand** (BR-REQ-038-01 criterion 7) — or one of the desk's free spares, «Dă-i un
+     BIB gol» (`giveSpareBibByStaff`, §989), the one way a printed number changes: the old number
+     retired as a replaced one is, replacing it the Administrator's — and **check-in** (`checked_in_at`, by
      whom or by the participant from their own link). The code the QR encodes is
      `registrations.checkin_code`: an identifier, stored in clear, that confers nothing — the
      page it opens is behind staff sign-in.
