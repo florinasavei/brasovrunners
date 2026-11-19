@@ -9,9 +9,12 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { canDesignVolunteerBadges } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
-import { badgePictureStamp } from "@/modules/volunteers/badges/badge-design";
-import { BADGE_COUNT_MAX, BADGE_REFUSED_PARAM, BADGE_TOTAL_MAX, findEventForBadges, listBadgeRoles, readBadgeSingleStart } from "@/modules/volunteers/badges/badges";
+import { type BadgeLocale, badgePictureStamp, badgeWords } from "@/modules/volunteers/badges/badge-design";
+import { namedBadgeLinesText } from "@/modules/volunteers/badges/badge-named";
+import { badgeDefaultWords } from "@/modules/volunteers/badges/badge-words";
+import { BADGE_COUNT_MAX, BADGE_REFUSED_PARAM, BADGE_TOTAL_MAX, findEventForBadges, listBadgeRoles, listConfirmedVolunteerNames, readBadgeSingleStart } from "@/modules/volunteers/badges/badges";
 import BadgeDesignPanel from "@/modules/volunteers/badges/ui/BadgeDesignPanel";
+import BadgeNamedPanel from "@/modules/volunteers/badges/ui/BadgeNamedPanel";
 import BadgePrintPanel from "@/modules/volunteers/badges/ui/BadgePrintPanel";
 import BadgeRoleColours from "@/modules/volunteers/badges/ui/BadgeRoleColours";
 import { isUuid } from "@/shared/ids";
@@ -75,6 +78,19 @@ export default async function EventBadgesPage({ params, searchParams }: Props) {
         eventTitle={event.title}
         refused={refused === "number" || refused === "total"}
         singleStart={event.design.mode === "single" ? await readBadgeSingleStart(db, id, roles) : null}
+      />
+      {/*
+        «Ecusoane cu nume» (the hotfix of 2026-11-19, amending §764's «no name is printed» and this page's «no volunteer is read»): the
+        list starts from the confirmed volunteers' first names under the design's own word — their names alone, for whoever designs the
+        badges, asserted above.
+      */}
+      <BadgeNamedPanel
+        eventId={id}
+        locale={locale}
+        lines={namedBadgeLinesText(
+          badgeWords(event.design, locale as BadgeLocale, event.title, await badgeDefaultWords(locale as BadgeLocale)).label,
+          await listConfirmedVolunteerNames(db, id),
+        )}
       />
     </Stack>
   );
